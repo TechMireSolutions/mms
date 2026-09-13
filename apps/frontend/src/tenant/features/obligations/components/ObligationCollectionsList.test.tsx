@@ -19,12 +19,27 @@ vi.mock("@/hooks/useWorkDirectoryViewMode", () => ({
   }),
 }));
 
+let passedContactIds: string[] = [];
 vi.mock("@/tenant/features/obligations/hooks/useObligationLookups", () => ({
-  useMergedObligationContacts: () => [],
+  useMergedObligationContacts: (ids: string[]) => {
+    passedContactIds = ids;
+    return [
+      { id: "c-1", name: "Muhammad Ali", phone: "+923001112222" },
+      { id: "ref-1", name: "Sayyid Kazim", phone: "+923219998888" },
+    ];
+  },
 }));
 
 vi.mock("@/tenant/features/obligations/components/ObligationCollectionsListFilters", () => ({
-  ObligationCollectionsListFilters: () => <div data-testid="filters" />,
+  ObligationCollectionsListFilters: ({ search, onSearchChange }: { search: string; onSearchChange: (v: string) => void }) => (
+    <div data-testid="filters">
+      <input
+        data-testid="search-input"
+        value={search}
+        onChange={(e) => onSearchChange(e.target.value)}
+      />
+    </div>
+  ),
 }));
 
 vi.mock("@/tenant/features/obligations/components/ObligationsBulkActionBar", () => ({
@@ -32,7 +47,11 @@ vi.mock("@/tenant/features/obligations/components/ObligationsBulkActionBar", () 
 }));
 
 vi.mock("@/tenant/features/obligations/components/ObligationCollectionsListContent", () => ({
-  ObligationCollectionsListContent: () => <div data-testid="content" />,
+  ObligationCollectionsListContent: ({ collections }: { collections: unknown[] }) => (
+    <div data-testid="content">
+      <span data-testid="rendered-count">{collections.length}</span>
+    </div>
+  ),
 }));
 
 const mockCollections: ObligationCollection[] = [
@@ -133,5 +152,45 @@ describe("ObligationCollectionsList Component", () => {
     });
 
     expect(container?.querySelector('[data-testid="filters"]')).not.toBeNull();
+  });
+
+  it("deduplicates contact IDs across sender and reference contacts", async () => {
+    const multiCollections: ObligationCollection[] = [
+      {
+        ...mockCollections[0]!,
+        id: "col-1",
+        sender_id: "c-1",
+        reference_id: "ref-1",
+      },
+      {
+        ...mockCollections[0]!,
+        id: "col-2",
+        sender_id: "c-1",
+        reference_id: null,
+      },
+      {
+        ...mockCollections[0]!,
+        id: "col-3",
+        sender_id: "c-2",
+        reference_id: "ref-1",
+      },
+    ];
+
+    const root = createRoot(container!);
+
+    await act(async () => {
+      root.render(
+        <ObligationCollectionsList
+          collections={multiCollections}
+          obligationTypes={mockObligationTypes}
+          reps={mockReps}
+          mujtahids={mockMujtahids}
+          onAddNew={vi.fn()}
+          onView={vi.fn()}
+        />,
+      );
+    });
+
+    expect(passedContactIds).toEqual(["c-1", "ref-1", "c-2"]);
   });
 });

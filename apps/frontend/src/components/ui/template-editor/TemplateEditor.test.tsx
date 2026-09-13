@@ -179,6 +179,19 @@ describe("TemplateEditor Component", () => {
     expect(html).toContain('aria-label="templateEditor.toggleGuides"');
     expect(html).toContain('aria-pressed="true"');
   });
+
+  it("renders role='region' without aria-modal when fullscreen is false", () => {
+    const html = renderToStaticMarkup(
+      <TemplateEditor
+        template={sampleTemplate}
+        fullscreen={false}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(html).toContain('role="region"');
+    expect(html).not.toContain('aria-modal="true"');
+  });
 });
 
 describe("TemplateElementRenderer Component", () => {

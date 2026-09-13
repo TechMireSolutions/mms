@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useMemo } from "react";
 import type {
   ObligationDistribution,
   ObligationType,
@@ -64,8 +64,8 @@ export interface ObligationsSetupTierProps {
   onChangeDistributions: (distributions: ObligationDistribution[]) => Promise<void>;
 }
 
-export const ObligationsSetupTier = (function ObligationsSetupTier({
-  tabs,
+export function ObligationsSetupTier({
+  tabs = [],
   activeTab,
   canEditSetup,
   obligationTypes,
@@ -89,12 +89,17 @@ export const ObligationsSetupTier = (function ObligationsSetupTier({
     onChange: onTabChange,
   });
 
+  const subTabBarItems = useMemo(
+    () => tabs.map((tab) => ({ key: tab.id, label: tab.label })),
+    [tabs]
+  );
+
   return (
     <ModuleTierMotion tier="setup">
       <ErrorBoundary>
         <div className="space-y-4">
           <SubTabBar
-            tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
+            tabs={subTabBarItems}
             value={subTabs.sub}
             onChange={subTabs.handleSubTabChange}
           />
@@ -134,7 +139,10 @@ export const ObligationsSetupTier = (function ObligationsSetupTier({
               {subTabs.sub === "invoice_template" && (
                 <InvoiceTemplateEditor 
                   fullscreen={false} 
-                  onClose={() => {}} 
+                  obligationTypes={obligationTypes}
+                  reps={reps}
+                  mujtahids={mujtahids}
+                  onClose={() => subTabs.handleSubTabChange("types")} 
                 />
               )}
             </Suspense>
@@ -143,6 +151,6 @@ export const ObligationsSetupTier = (function ObligationsSetupTier({
       </ErrorBoundary>
     </ModuleTierMotion>
   );
-});
+}
 
 export default ObligationsSetupTier;

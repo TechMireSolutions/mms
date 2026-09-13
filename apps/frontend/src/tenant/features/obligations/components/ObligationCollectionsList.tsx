@@ -70,16 +70,21 @@ export function ObligationCollectionsList({
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [printCollection, setPrintCollection] = useState<ObligationCollection | null>(null);
+  const [editorCollection, setEditorCollection] = useState<ObligationCollection | null>(null);
   const [showEditor, setShowEditor] = useState(false);
   const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
-  const senderIds = useMemo(
-    () => collections.map((collection) => collection.sender_id),
-    [collections],
-  );
-  const contacts = useMergedObligationContacts(senderIds);
+  const contactIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const collection of collections) {
+      if (collection.sender_id) ids.add(collection.sender_id);
+      if (collection.reference_id) ids.add(collection.reference_id);
+    }
+    return Array.from(ids);
+  }, [collections]);
+  const contacts = useMergedObligationContacts(contactIds);
 
   const contactsMap = useMemo(() => {
     const map = new Map<string, (typeof contacts)[number]>();
@@ -124,16 +129,29 @@ export function ObligationCollectionsList({
   }, [getRep, mujtahidsMap]);
   const getObType = useCallback((obligationTypeId: string) => obTypesMap.get(obligationTypeId), [obTypesMap]);
 
-  const filtered = useMemo(() => collections.filter((collection) => {
-    if (typeFilter !== "all" && collection.obligation_type_id !== typeFilter) return false;
-    if (debouncedSearch) {
-      const searchQuery = debouncedSearch.toLowerCase();
-      const sender = getContact(collection.sender_id)?.name?.toLowerCase() || "";
-      const receipt = collection.receipt_no.toLowerCase();
-      if (!sender.includes(searchQuery) && !receipt.includes(searchQuery)) return false;
-    }
-    return true;
-  }), [collections, typeFilter, debouncedSearch, getContact]);
+  const filtered = useMemo(() => {
+    const query = debouncedSearch.trim().toLowerCase();
+    return collections.filter((collection) => {
+      if (typeFilter !== "all" && collection.obligation_type_id !== typeFilter) return false;
+      if (query) {
+        const receipt = collection.receipt_no.toLowerCase();
+        const senderContact = getContact(collection.sender_id);
+        const refContact = getContact(collection.reference_id);
+        const senderName = senderContact?.name?.toLowerCase() || "";
+        const senderPhone = senderContact?.phone?.toLowerCase() || "";
+        const refName = refContact?.name?.toLowerCase() || "";
+        if (
+          !receipt.includes(query) &&
+          !senderName.includes(query) &&
+          !senderPhone.includes(query) &&
+          !refName.includes(query)
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [collections, typeFilter, debouncedSearch, getContact]);
 
   useEffect(() => {
     onFilteredCountChange?.(filtered.length);
@@ -148,7 +166,6 @@ export function ObligationCollectionsList({
 
   const {
     selectedIds,
-    setSelectedIds,
     allVisibleSelected,
     someVisibleSelected,
     toggleSelectAll,
@@ -160,17 +177,23 @@ export function ObligationCollectionsList({
     clearSelection();
   }, [showDeleted, clearSelection]);
 
-  const confirmRowTrash = (): void => {
+  const confirmRowTrash = async (): Promise<void> => {
     if (!pendingTrashId) return;
-    void onDelete?.(pendingTrashId);
-    setPendingTrashId(null);
+    try {
+      await onDelete?.(pendingTrashId);
+    } finally {
+      setPendingTrashId(null);
+    }
   };
 
-  const confirmBulkTrash = (): void => {
-    if (showDeleted) void onBulkRestore?.(selectedIds);
-    else void onBulkDelete?.(selectedIds);
-    clearSelection();
-    setConfirmBulkOpen(false);
+  const confirmBulkTrash = async (): Promise<void> => {
+    try {
+      if (showDeleted) await onBulkRestore?.(selectedIds);
+      else await onBulkDelete?.(selectedIds);
+    } finally {
+      clearSelection();
+      setConfirmBulkOpen(false);
+    }
   };
 
   const canBulkTrash = canDelete && Boolean(showDeleted ? onBulkRestore : onBulkDelete);
@@ -242,6 +265,7 @@ export function ObligationCollectionsList({
             mujtahids={mujtahids}
             onClose={() => setPrintCollection(null)}
             onOpenEditor={() => {
+              setEditorCollection(printCollection);
               setPrintCollection(null);
               setShowEditor(true);
             }}
@@ -251,7 +275,19 @@ export function ObligationCollectionsList({
 
       {showEditor && (
         <Suspense fallback={null}>
-          <InvoiceTemplateEditor onClose={() => setShowEditor(false)} />
+          <InvoiceTemplateEditor
+            collection={editorCollection}
+            obligationTypes={obligationTypes}
+            reps={reps}
+            mujtahids={mujtahids}
+            onClose={() => {
+              setShowEditor(false);
+              if (editorCollection) {
+                setPrintCollection(editorCollection);
+              }
+              setEditorCollection(null);
+            }}
+          />
         </Suspense>
       )}
 

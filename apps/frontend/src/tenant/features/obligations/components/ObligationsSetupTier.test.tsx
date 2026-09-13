@@ -1,6 +1,26 @@
 import React from "react";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
+
+vi.mock("react", async () => {
+  const actual = await vi.importActual<typeof import("react")>("react");
+  return {
+    ...actual,
+    lazy: (importer: () => Promise<{ default: React.ComponentType<any> }>) => {
+      let Component: React.ComponentType<any> | null = null;
+      importer().then((m) => {
+        Component = m.default;
+      });
+      return (props: any) => {
+        if (Component) {
+          return React.createElement(Component, props);
+        }
+        return <div data-testid="lazy-loading" />;
+      };
+    },
+  };
+});
+
 import { ObligationsSetupTier } from "./ObligationsSetupTier";
 
 vi.mock("@/hooks/useTranslation", () => ({
@@ -40,18 +60,46 @@ vi.mock("./WakalaTypeManager", () => ({
   WakalaTypeManager: () => <div data-testid="wakala-type-manager">Wakala Type Manager</div>,
 }));
 
+vi.mock("@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor", () => ({
+  default: (props: { obligationTypes?: unknown[]; mujtahids?: unknown[]; reps?: unknown[] }) => (
+    <div
+      data-testid="invoice-template-editor"
+      data-types-count={props.obligationTypes?.length ?? 0}
+      data-mujtahids-count={props.mujtahids?.length ?? 0}
+      data-reps-count={props.reps?.length ?? 0}
+    >
+      Invoice Template Editor
+    </div>
+  ),
+  InvoiceTemplateEditor: (props: { obligationTypes?: unknown[]; mujtahids?: unknown[]; reps?: unknown[] }) => (
+    <div
+      data-testid="invoice-template-editor"
+      data-types-count={props.obligationTypes?.length ?? 0}
+      data-mujtahids-count={props.mujtahids?.length ?? 0}
+      data-reps-count={props.reps?.length ?? 0}
+    >
+      Invoice Template Editor
+    </div>
+  ),
+}));
+
 describe("ObligationsSetupTier Component", () => {
+  beforeAll(async () => {
+    await new Promise((resolve) => setTimeout(resolve, 20));
+  });
+
   const defaultProps = {
     tabs: [
       { id: "types", label: "Types" },
       { id: "mujtahids", label: "Mujtahids" },
       { id: "wakala", label: "Wakala" },
+      { id: "invoice_template", label: "Invoice Template" },
     ],
     activeTab: "types",
     canEditSetup: true,
-    obligationTypes: [],
-    mujtahids: [],
-    reps: [],
+    obligationTypes: [{ id: "type-1", name: "Khums" } as any],
+    mujtahids: [{ id: "muj-1", name: "Sistani" } as any],
+    reps: [{ id: "rep-1", name: "Representative" } as any],
     wakalaTypes: [],
     distributions: [],
     onTabChange: vi.fn(),
@@ -66,6 +114,17 @@ describe("ObligationsSetupTier Component", () => {
     const html = renderToStaticMarkup(<ObligationsSetupTier {...defaultProps} />);
     expect(html).toContain("module-tier-motion");
     expect(html).toContain("SubTabBar");
+    expect(html).toContain("obligation-type-manager");
+  });
+
+  it("renders invoice template editor with lookups when activeTab is invoice_template", () => {
+    const html = renderToStaticMarkup(
+      <ObligationsSetupTier {...defaultProps} activeTab="invoice_template" />,
+    );
+    expect(html).toContain("invoice-template-editor");
+    expect(html).toContain('data-types-count="1"');
+    expect(html).toContain('data-mujtahids-count="1"');
+    expect(html).toContain('data-reps-count="1"');
   });
 
   it("renders read-only message when canEditSetup is false", () => {

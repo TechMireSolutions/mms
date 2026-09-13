@@ -4,7 +4,7 @@
  * Parametric over document payload schemas with native Typst and Zoho sync integrations.
  */
 
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useCallback, useRef, useState } from "react";
 import { useBranding } from "@/tenant/hooks/useBranding";
 import { notify } from "@/lib/notify";
 import type {
@@ -15,6 +15,7 @@ import type {
 } from "@mms/shared";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { useTemplateEditor } from "./template-editor/useTemplateEditor";
+import { useTemplateEditorModal } from "./template-editor/useTemplateEditorModal";
 import { TemplateEditorToolbar } from "./template-editor/TemplateEditorToolbar";
 import { TemplateEditorElementPalette } from "./template-editor/TemplateEditorElementPalette";
 import { TemplateEditorCanvas } from "./template-editor/TemplateEditorCanvas";
@@ -51,29 +52,22 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
   onExportTypst,
   onExportZoho,
 }: TemplateEditorProps<TPayload>): React.JSX.Element {
-  const [isFullscreen, setIsFullscreen] = useState(fullscreen);
-  // Track whether the user has toggled fullscreen manually (vs launched with fullscreen=true)
-  const [isUserToggled, setIsUserToggled] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const containerRef = React.useRef<HTMLDivElement>(null);
-  const previousFocusRef = React.useRef<HTMLElement | null>(null);
   const branding = useBranding();
+  const editorRef = useRef<ReturnType<typeof useTemplateEditor<TPayload>> | null>(null);
 
-  const handleClose = useCallback(() => {
-    if (editorRef.current?.isDirty) {
-      const confirmed = window.confirm(
-        editorRef.current.t("templateEditor.discardUnsavedPrompt")
-      );
-      if (!confirmed) return;
-    }
-    // If user toggled into fullscreen manually, collapse first instead of closing
-    if (isFullscreen && isUserToggled) {
-      setIsFullscreen(false);
-      setIsUserToggled(false);
-    } else {
-      onClose();
-    }
-  }, [isFullscreen, isUserToggled, onClose]);
+  const confirmDiscardPrompt = useCallback(() => {
+    const t = editorRef.current?.t;
+    const msg = t ? t("templateEditor.discardUnsavedPrompt") : "Discard unsaved changes?";
+    return window.confirm(msg);
+  }, []);
+
+  const modal = useTemplateEditorModal({
+    initialFullscreen: fullscreen,
+    isDirty: Boolean(editorRef.current?.isDirty),
+    onClose,
+    confirmDiscardPrompt,
+  });
 
   const editor = useTemplateEditor<TPayload>({
     initialTemplate,
@@ -82,82 +76,53 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
     presets,
     documentType,
     onSave,
-    onClose: handleClose,
+    onClose: modal.handleClose,
   });
 
-  const editorRef = React.useRef(editor);
-  React.useEffect(() => {
-    editorRef.current = editor;
-  }, [editor]);
+  editorRef.current = editor;
 
-  // Protect against accidental browser tab closure/reload when changes are unsaved
-  useEffect(() => {
-    if (!editor.isDirty) return;
-    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      e.preventDefault();
-    };
-    window.addEventListener("beforeunload", handleBeforeUnload);
-    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
-  }, [editor.isDirty]);
+  const handleToggleGuides = useCallback(() => {
+    editor.setShowGuides((prev) => !prev);
+  }, [editor.setShowGuides]);
 
-  // Focus management: capture previous focus on mount, focus dialog container, restore focus on unmount
-  useEffect(() => {
-    previousFocusRef.current = document.activeElement as HTMLElement | null;
-    if (isFullscreen && containerRef.current) {
-      containerRef.current.focus();
+  const handleTogglePreview = useCallback(() => {
+    editor.setIsPreviewMode((prev) => !prev);
+  }, [editor.setIsPreviewMode]);
+
+  const handlePrint = useCallback(() => {
+    window.print();
+  }, []);
+
+  const handleExportTypst = useCallback(async () => {
+    if (!onExportTypst) return;
+    setIsExporting(true);
+    try {
+      const payload = (sampleData || {}) as TPayload;
+      await onExportTypst(payload);
+    } catch (err) {
+      console.error("Typst export failed:", err);
+      notify.error(editor.t("templateEditor.exportFailed"));
+    } finally {
+      setIsExporting(false);
     }
-    return () => {
-      previousFocusRef.current?.focus?.();
-    };
-  }, [isFullscreen]);
+  }, [editor.t, onExportTypst, sampleData]);
 
-  // Lock background page scroll when fullscreen modal is active
-  useEffect(() => {
-    if (!isFullscreen) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [isFullscreen]);
-
-  const handleToggleFullscreen = () => {
-    setIsFullscreen((prev) => !prev);
-    setIsUserToggled(true);
-  };
-
-  const handleExportTypst = onExportTypst
-    ? async () => {
-        setIsExporting(true);
-        try {
-          const payload = (sampleData || {}) as TPayload;
-          await onExportTypst(payload);
-        } catch (err) {
-          console.error("Typst export failed:", err);
-          notify.error(editor.t("templateEditor.exportFailed"));
-        } finally {
-          setIsExporting(false);
-        }
-      }
-    : undefined;
-
-  const handleExportZoho = onExportZoho
-    ? async () => {
-        setIsExporting(true);
-        try {
-          const zohoPayload = mapToZohoInvoice(
-            (sampleData || {}) as Record<string, unknown>,
-            editor.template as DocumentTemplate
-          );
-          await onExportZoho(zohoPayload);
-        } catch (err) {
-          console.error("Zoho export failed:", err);
-          notify.error(editor.t("templateEditor.exportFailed"));
-        } finally {
-          setIsExporting(false);
-        }
-      }
-    : undefined;
+  const handleExportZoho = useCallback(async () => {
+    if (!onExportZoho) return;
+    setIsExporting(true);
+    try {
+      const zohoPayload = mapToZohoInvoice(
+        (sampleData || {}) as Record<string, unknown>,
+        editor.template as DocumentTemplate
+      );
+      await onExportZoho(zohoPayload);
+    } catch (err) {
+      console.error("Zoho export failed:", err);
+      notify.error(editor.t("templateEditor.exportFailed"));
+    } finally {
+      setIsExporting(false);
+    }
+  }, [editor.t, editor.template, onExportZoho, sampleData]);
 
   const editorLabel =
     title ||
@@ -167,15 +132,15 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
 
   return (
     <div
-      ref={containerRef}
+      ref={modal.containerRef}
       tabIndex={-1}
-      role={isFullscreen ? "dialog" : "region"}
-      aria-modal={isFullscreen ? "true" : undefined}
+      role={modal.isFullscreen ? "dialog" : "region"}
+      aria-modal={modal.isFullscreen ? "true" : undefined}
       aria-label={editorLabel}
       className={
-        isFullscreen
+        modal.isFullscreen
           ? "fixed inset-0 z-modal flex flex-col bg-background outline-hidden print:static print:bg-white print:overflow-visible print:border-none print:p-0 print:m-0"
-          : "flex flex-col bg-background rounded-xl border border-border overflow-hidden h-max-h-modal max-h-modal min-h-preview-2xl outline-hidden print:static print:bg-white print:overflow-visible print:border-none print:p-0 print:m-0"
+          : "flex flex-col bg-background rounded-xl border border-border overflow-hidden h-[calc(100dvh-14rem)] min-h-[580px] max-h-[860px] outline-hidden print:static print:bg-white print:overflow-visible print:border-none print:p-0 print:m-0"
       }
     >
       <TemplateEditorToolbar
@@ -187,7 +152,7 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
         saving={editor.saving}
         isDirty={editor.isDirty}
         showGuides={editor.showGuides}
-        fullscreen={isFullscreen}
+        fullscreen={modal.isFullscreen}
         presets={presets}
         canvasScale={editor.canvasScale}
         isPreviewMode={editor.isPreviewMode}
@@ -195,8 +160,8 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
         onRedo={editor.redo}
         onPageSizeChange={editor.handlePageSize}
         onOrientationChange={editor.handleOrientationChange}
-        onToggleGuides={() => editor.setShowGuides(!editor.showGuides)}
-        onTogglePreview={() => editor.setIsPreviewMode(!editor.isPreviewMode)}
+        onToggleGuides={handleToggleGuides}
+        onTogglePreview={handleTogglePreview}
         onZoomIn={editor.zoomIn}
         onZoomOut={editor.zoomOut}
         onZoomReset={editor.zoomReset}
@@ -205,12 +170,12 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
         onImportJson={editor.importTemplateJson}
         onResetDefault={editor.resetToDefault}
         onApplyPreset={editor.applyPreset}
-        onToggleFullscreen={handleToggleFullscreen}
+        onToggleFullscreen={modal.handleToggleFullscreen}
         onSave={editor.handleSave}
-        onClose={handleClose}
-        onExportTypst={handleExportTypst}
-        onExportZoho={handleExportZoho}
-        onPrint={() => window.print()}
+        onClose={modal.handleClose}
+        onExportTypst={onExportTypst ? handleExportTypst : undefined}
+        onExportZoho={onExportZoho ? handleExportZoho : undefined}
+        onPrint={handlePrint}
         isExporting={isExporting}
         t={editor.t}
       />
@@ -250,7 +215,7 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
               onMouseDownElement={editor.onMouseDownElement}
               onMouseDownResize={editor.onMouseDownResize}
               onDeleteElement={editor.deleteElement}
-              onSelectElements={(ids) => editor.setSelectedIds(ids)}
+              onSelectElements={editor.setSelectedIds}
               sampleData={sampleData}
               t={editor.t}
             />

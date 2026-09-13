@@ -2,16 +2,115 @@ import type { BrandingSettings } from "@mms/shared";
 import {
   PAGE_SIZES,
   getPageDimensions,
+  pageSizeKeySchema,
+  templateOrientationSchema,
+  elementStyleSchema,
+  templateElementSchema,
+  templateElementTypeSchema,
+  templateTableColumnSchema,
+  templateTableConfigSchema,
+  documentTemplateSchema,
+  isRtlText,
   type PageSizeInfo,
+  type PageSizeKey,
   type ElementStyle,
   type TemplateElement,
+  type TemplateElementType,
   type TemplateOrientation,
+  type TemplateTableColumn,
+  type TemplateTableConfig,
   type DocumentTemplate,
+  type TemplateFieldDefinition,
+  type DocumentTemplatePreset,
 } from "@mms/shared";
 
-export { PAGE_SIZES, getPageDimensions };
-export type { PageSizeInfo, ElementStyle, TemplateElement, TemplateOrientation };
-export type InvoiceTemplate = DocumentTemplate<Record<string, unknown>>;
+export {
+  PAGE_SIZES,
+  getPageDimensions,
+  pageSizeKeySchema,
+  templateOrientationSchema,
+  elementStyleSchema,
+  templateElementSchema,
+  templateElementTypeSchema,
+  templateTableColumnSchema,
+  templateTableConfigSchema,
+  documentTemplateSchema,
+  isRtlText,
+};
+
+export type {
+  PageSizeInfo,
+  PageSizeKey,
+  ElementStyle,
+  TemplateElement,
+  TemplateElementType,
+  TemplateOrientation,
+  TemplateTableColumn,
+  TemplateTableConfig,
+  DocumentTemplate,
+  TemplateFieldDefinition,
+  DocumentTemplatePreset,
+};
+
+/**
+ * Standard well-known receipt field identifiers available in the obligation template engine.
+ */
+export type StandardInvoiceField =
+  | "receipt_no"
+  | "received_date"
+  | "received_by"
+  | "sender"
+  | "sender_phone"
+  | "sender_email"
+  | "reference"
+  | "reference_phone"
+  | "reference_email"
+  | "obligation_type"
+  | "mujtahid"
+  | "representative"
+  | "amount"
+  | "amount_in_words"
+  | "currency"
+  | "payment_mode"
+  | "institution_name"
+  | "institution_phone"
+  | "institution_email"
+  | "institution_address";
+
+/**
+ * Field key for invoice elements. Combines strongly-typed standard keys with
+ * an open-ended string union for dynamic custom fields.
+ */
+export type InvoiceTemplateFieldKey = StandardInvoiceField | (string & {});
+
+/**
+ * Strongly typed payload representing data passed into the invoice template renderer.
+ */
+export interface InvoiceReceiptPayload {
+  receipt_no: string;
+  received_date: string;
+  received_by: string;
+  sender: string;
+  sender_phone?: string;
+  sender_email?: string;
+  reference?: string;
+  reference_phone?: string;
+  reference_email?: string;
+  obligation_type: string;
+  mujtahid?: string;
+  representative?: string;
+  amount: string;
+  amount_in_words: string;
+  currency: string;
+  payment_mode?: string;
+  institution_name?: string;
+  institution_phone?: string;
+  institution_email?: string;
+  institution_address?: string;
+  [customField: string]: unknown;
+}
+
+export type InvoiceTemplate = DocumentTemplate<InvoiceReceiptPayload>;
 export type BrandingInfo = BrandingSettings;
 
 export interface LookupItem {
@@ -30,4 +129,15 @@ export interface FieldLookupInfo {
   mujtahids?: LookupItem[];
   reps?: LookupItem[];
   currencies?: LookupItem[];
+  branding?: Partial<BrandingInfo>;
+}
+
+export interface IndexedFieldLookups {
+  contacts?: Map<string, LookupItem>;
+  users?: Map<string, LookupItem>;
+  obligationTypes?: Map<string, LookupItem>;
+  mujtahids?: Map<string, LookupItem>;
+  reps?: Map<string, LookupItem>;
+  currencies?: Map<string, LookupItem>;
+  branding?: FieldLookupInfo["branding"];
 }

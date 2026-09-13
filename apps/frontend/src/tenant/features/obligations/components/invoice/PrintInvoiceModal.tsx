@@ -1,6 +1,6 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
 import { Printer, FileDown, Loader2, Settings } from "lucide-react";
-import { getPageDimensions, loadTemplate, type InvoiceTemplate } from "@/lib/invoiceTemplateStore";
+import { getPageDimensions, useInvoiceTemplate } from "@/lib/invoiceTemplateStore";
 import { type ObligationCollection, type ObligationType, type MujtahidRep, type Mujtahid } from '@/lib/data/obligationsData';
 import { DEFAULT_CURRENCIES } from '@mms/shared';
 import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
@@ -8,6 +8,75 @@ import { InvoicePrintPreview } from "@/tenant/features/obligations/components/in
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { useTranslation } from "@/hooks/useTranslation";
+import { notify } from "@/lib/notify";
+
+interface PrintHtmlOptions {
+  windowTitle: string;
+  language: string;
+  width: number;
+  height: number;
+  orientation?: string;
+  bodyContent: string;
+}
+
+function buildPrintWindowHtml({
+  windowTitle,
+  language,
+  width,
+  height,
+  orientation = "portrait",
+  bodyContent,
+}: PrintHtmlOptions): string {
+  return `<!DOCTYPE html>
+<html lang="${language || "en"}">
+<head>
+  <meta charset="utf-8" />
+  <title>${windowTitle}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { background: #ffffff; direction: ltr; }
+    @page { size: ${width}px ${height}px ${orientation}; margin: 0; }
+    @media print {
+      body {
+        width: ${width}px;
+        print-color-adjust: exact;
+        -webkit-print-color-adjust: exact;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" />
+</head>
+<body>
+  ${bodyContent}
+  <script>
+    function triggerPrint() {
+      window.focus();
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(function() {
+          window.print();
+        }).catch(function() {
+          window.print();
+        });
+      } else {
+        setTimeout(function() {
+          window.print();
+        }, 200);
+      }
+    }
+
+    if (document.readyState === 'complete') {
+      triggerPrint();
+    } else {
+      window.addEventListener('load', triggerPrint);
+    }
+
+    window.onafterprint = function() {
+      window.close();
+    };
+  </script>
+</body>
+</html>`;
+}
 
 export interface PrintInvoiceModalProps {
   collection: ObligationCollection;
@@ -33,77 +102,72 @@ export function PrintInvoiceModal({
   onClose,
   onOpenEditor = undefined,
 }: PrintInvoiceModalProps) {
-  const { t } = useTranslation();
+  const { t, language } = useTranslation();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const template: InvoiceTemplate = loadTemplate();
+  const { template } = useInvoiceTemplate();
   const size = getPageDimensions(template.pageSize, template.orientation);
   const printRef = useRef<HTMLDivElement>(null);
   const exportRef = useRef<HTMLDivElement>(null);
 
-  const contactIds = (() => [collection.sender_id, collection.reference_id])();
+  const contactIds = useMemo(
+    () => [collection.sender_id, collection.reference_id],
+    [collection.sender_id, collection.reference_id]
+  );
+  const userIds = useMemo(
+    () => [collection.received_by],
+    [collection.received_by]
+  );
   const liveContacts = useMergedObligationContacts(contactIds);
-  const liveUsers = useMergedObligationUsers([collection.received_by]);
+  const liveUsers = useMergedObligationUsers(userIds);
   const currencies = DEFAULT_CURRENCIES;
 
-  const lookups = (() => ({
-    contacts: liveContacts,
-    users: liveUsers,
-    currencies,
-    obligationTypes,
-    mujtahids,
-    reps,
-  }))();
+  const lookups = useMemo(
+    () => ({
+      contacts: liveContacts,
+      users: liveUsers,
+      currencies,
+      obligationTypes,
+      mujtahids,
+      reps,
+    }),
+    [liveContacts, liveUsers, currencies, obligationTypes, mujtahids, reps]
+  );
 
-  const handlePrint = () => {
+  const handlePrint = useCallback(() => {
     const content = printRef.current;
     if (!content) return;
 
     const printWindow = window.open("", "_blank", "width=800,height=700");
-    if (!printWindow) return;
+    if (!printWindow) {
+      notify.error(t("templateEditor.exportFailed"));
+      return;
+    }
 
-    printWindow.document.write(`
-      <!DOCTYPE html>
-      <html lang="en">
-      <head>
-        <title>${t("obligations.print.windowTitle", { number: collection.receipt_no })}</title>
-        <style>
-          * { margin: 0; padding: 0; box-sizing: border-box; }
-          body { background: white; }
-          @page { size: ${size.width}px ${size.height}px ${template.orientation || "portrait"}; margin: 0; }
-          @media print {
-            body {
-              width: ${size.width}px;
-              print-color-adjust: exact;
-              -webkit-print-color-adjust: exact;
-            }
-          }
-        </style>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" />
-      </head>
-      <body>
-        ${content.innerHTML}
-        <script>
-          window.addEventListener('load', function() {
-            window.focus();
-            window.print();
-          });
-        </script>
-      </body>
-      </html>
-    `);
+    printWindow.document.write(
+      buildPrintWindowHtml({
+        windowTitle: t("obligations.print.windowTitle", { number: collection.receipt_no }),
+        language: language || "en",
+        width: size.width,
+        height: size.height,
+        orientation: template.orientation || "portrait",
+        bodyContent: content.innerHTML,
+      })
+    );
     printWindow.document.close();
+  }, [collection.receipt_no, language, size.height, size.width, t, template.orientation]);
 
-    setTimeout(() => {
-      try {
-        printWindow.focus();
-        printWindow.print();
-      } catch {
-        // Window already handled or closed
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "p") {
+        e.preventDefault();
+        handlePrint();
       }
-    }, 300);
-  };
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [handlePrint]);
 
-  const handleExportPDF = async () => {
+  const handleExportPDF = useCallback(async () => {
     const target = exportRef.current || printRef.current;
     if (!target || isGeneratingPdf) return;
 
@@ -138,8 +202,11 @@ export function PrintInvoiceModal({
       const html2canvas = html2canvasModule.default;
       const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
 
+      const pixelRatio = typeof window !== "undefined" ? window.devicePixelRatio || 2 : 2;
+      const adaptiveScale = Math.max(2, Math.min(3, pixelRatio));
+
       const canvas = await html2canvas(target, {
-        scale: 2.5,
+        scale: adaptiveScale,
         useCORS: true,
         logging: false,
         backgroundColor: "#ffffff",
@@ -167,12 +234,12 @@ export function PrintInvoiceModal({
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
       pdf.save(`Receipt-${collection.receipt_no || "obligation"}.pdf`);
     } catch {
-      // Fallback to print dialog if canvas capture fails
+      notify.error(t("templateEditor.exportFailed"));
       handlePrint();
     } finally {
       setIsGeneratingPdf(false);
     }
-  };
+  }, [collection.receipt_no, handlePrint, isGeneratingPdf, size.height, size.width, t]);
 
   return (
     <Modal
@@ -275,7 +342,12 @@ export function PrintInvoiceModal({
         </div>
       </div>
 
-      <div className="flex min-h-preview-tall justify-center overflow-x-auto rounded-xl border border-dashed border-border bg-muted/20 p-4">
+      <div
+        role="region"
+        tabIndex={0}
+        aria-label={t("obligations.print.preview")}
+        className="flex min-h-preview-tall justify-center overflow-x-auto rounded-xl border border-dashed border-border bg-muted/20 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+      >
         <div className="origin-top scale-preview-sm sm:scale-preview-md md:scale-preview-lg lg:scale-preview-xl" style={{ direction: "ltr" }}>
           <div
             ref={printRef}
