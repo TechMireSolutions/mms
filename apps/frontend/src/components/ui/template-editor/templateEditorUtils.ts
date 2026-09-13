@@ -3,6 +3,8 @@
  * @description Coordinate snapping, unique ID generation, and multi-element alignment utilities.
  */
 
+import type { DocumentTemplate } from "@mms/shared";
+
 export const SNAP = 4;
 
 export function snap(value: number): number {
@@ -88,4 +90,36 @@ export function alignElements<T extends BoundingBox & { id: string }>(
         return { ...el, y: snap(targetVal - (el.h || 0) / 2) };
     }
   });
+}
+
+export function downloadTemplateJson<TPayload = Record<string, unknown>>(
+  template: DocumentTemplate<TPayload>
+): void {
+  const blob = new Blob([JSON.stringify(template, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `document-template-${template.pageSize.toLowerCase()}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function readTemplateJsonFile<TPayload = Record<string, unknown>>(
+  file: File,
+  onSuccess: (parsed: DocumentTemplate<TPayload>) => void,
+  onError?: (err: unknown) => void
+): void {
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    try {
+      const text = e.target?.result as string;
+      const parsed = JSON.parse(text) as DocumentTemplate<TPayload>;
+      if (parsed && typeof parsed.pageSize === "string" && Array.isArray(parsed.elements)) {
+        onSuccess(parsed);
+      }
+    } catch (err) {
+      onError?.(err);
+    }
+  };
+  reader.readAsText(file);
 }

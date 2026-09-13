@@ -9,14 +9,18 @@ import {
   getPageDimensions,
   type DocumentTemplate,
   type DocumentTemplatePreset,
-  type ElementStyle,
   type TemplateElement,
   type TemplateFieldDefinition,
   type TemplateOrientation,
 } from "@mms/shared";
-import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
-import { alignElements, newId, type AlignmentType } from "./templateEditorUtils";
-import { useTemplateEditorInteractions, type DragStateInfo, type ResizeStateInfo } from "./useTemplateEditorInteractions";
+import {
+  useTemplateEditorInteractions,
+  type DragStateInfo,
+  type ResizeStateInfo,
+} from "./useTemplateEditorInteractions";
+import { useTemplateEditorShortcuts } from "./useTemplateEditorShortcuts";
+import { useTemplateEditorElementActions } from "./useTemplateEditorElementActions";
+import { downloadTemplateJson, readTemplateJsonFile } from "./templateEditorUtils";
 
 export interface UseTemplateEditorOptions<TPayload = Record<string, unknown>> {
   initialTemplate?: DocumentTemplate<TPayload>;
@@ -91,7 +95,7 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
 
   const undo = () => {
     if (!history.length) return;
-    const prev = history[history.length - 1];
+    const prev = history[history.length - 1]!;
     setFuture((futureStack) => [template, ...futureStack]);
     setHistory((historyStack) => historyStack.slice(0, -1));
     setTemplate(prev);
@@ -99,20 +103,24 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
 
   const redo = () => {
     if (!future.length) return;
-    const nextTemplate = future[0];
+    const nextTemplate = future[0]!;
     setHistory((historyStack) => [...historyStack, template]);
     setFuture((futureStack) => futureStack.slice(1));
     setTemplate(nextTemplate);
   };
 
-  const updateElements = (updateFn: (elements: TemplateElement<keyof TPayload & string>[]) => TemplateElement<keyof TPayload & string>[]) => {
-    setTemplate((currentTemplate) => ({ ...currentTemplate, elements: updateFn(currentTemplate.elements) }));
+  type ElementUpdater = (
+    elements: TemplateElement<keyof TPayload & string>[]
+  ) => TemplateElement<keyof TPayload & string>[];
+
+  const updateElements = (updateFn: ElementUpdater) => {
+    setTemplate((curr) => ({ ...curr, elements: updateFn(curr.elements) }));
   };
 
-  const commitUpdate = (updateFn: (elements: TemplateElement<keyof TPayload & string>[]) => TemplateElement<keyof TPayload & string>[]) => {
-    setTemplate((currentTemplate) => {
-      const nextTemplate = { ...currentTemplate, elements: updateFn(currentTemplate.elements) };
-      setHistory((historyStack) => [...historyStack.slice(-30), currentTemplate]);
+  const commitUpdate = (updateFn: ElementUpdater) => {
+    setTemplate((curr) => {
+      const nextTemplate = { ...curr, elements: updateFn(curr.elements) };
+      setHistory((historyStack) => [...historyStack.slice(-30), curr]);
       setFuture([]);
       return nextTemplate;
     });
@@ -128,216 +136,38 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     setFuture,
   });
 
-  const patchElement = (elementId: string, patch: Partial<TemplateElement<keyof TPayload & string>>) => {
-    commitUpdate((elements) => elements.map((el) => (el.id === elementId ? { ...el, ...patch } : el)));
-  };
+  const elementActions = useTemplateEditorElementActions<TPayload>({
+    elements: template.elements,
+    selectedIds,
+    setSelectedIds,
+    commitUpdate,
+    size,
+    t,
+  });
 
-  const patchStyle = (elementId: string, stylePatch: Partial<ElementStyle>) => {
-    commitUpdate((elements) =>
-      elements.map((el) => (el.id === elementId ? { ...el, style: { ...el.style, ...stylePatch } } : el))
-    );
-  };
+  useTemplateEditorShortcuts({
+    undo,
+    redo,
+    selectAll,
+    deselectAll,
+    duplicateSelected: elementActions.duplicateSelected,
+    deleteSelected: elementActions.deleteSelected,
+    nudgeSelected: elementActions.nudgeSelected,
+    hasSelection: selectedIds.length > 0,
+  });
 
-  const deleteElement = (elementId: string) => {
-    commitUpdate((elements) => elements.filter((el) => el.id !== elementId));
-    setSelectedIds((prev) => prev.filter((id) => id !== elementId));
-  };
-
-  const deleteSelected = () => {
-    if (selectedIds.length === 0) return;
-    const idSet = new Set(selectedIds);
-    commitUpdate((elements) => elements.filter((el) => !idSet.has(el.id)));
-    setSelectedIds([]);
-  };
-
-  const nudgeSelected = (dx: number, dy: number) => {
-    if (selectedIds.length === 0) return;
-    const idSet = new Set(selectedIds);
-    commitUpdate((elements) =>
-      elements.map((el) =>
-        idSet.has(el.id)
-          ? {
-              ...el,
-              x: Math.max(0, el.x + dx),
-              y: Math.max(0, el.y + dy),
-            }
-          : el
-      )
-    );
-  };
-
-  const bringToFront = (elementId?: string) => {
-    const targetId = elementId || selectedId;
-    if (!targetId) return;
-    commitUpdate((elements) => {
-      const idx = elements.findIndex((el) => el.id === targetId);
-      if (idx === -1 || idx === elements.length - 1) return elements;
-      const copy = [...elements];
-      const [item] = copy.splice(idx, 1);
-      if (item) copy.push(item);
-      return copy;
-    });
-  };
-
-  const sendToBack = (elementId?: string) => {
-    const targetId = elementId || selectedId;
-    if (!targetId) return;
-    commitUpdate((elements) => {
-      const idx = elements.findIndex((el) => el.id === targetId);
-      if (idx <= 0) return elements;
-      const copy = [...elements];
-      const [item] = copy.splice(idx, 1);
-      if (item) copy.unshift(item);
-      return copy;
-    });
-  };
-
-  const moveForward = (elementId?: string) => {
-    const targetId = elementId || selectedId;
-    if (!targetId) return;
-    commitUpdate((elements) => {
-      const idx = elements.findIndex((el) => el.id === targetId);
-      if (idx === -1 || idx === elements.length - 1) return elements;
-      const copy = [...elements];
-      const temp = copy[idx]!;
-      copy[idx] = copy[idx + 1]!;
-      copy[idx + 1] = temp;
-      return copy;
-    });
-  };
-
-  const moveBackward = (elementId?: string) => {
-    const targetId = elementId || selectedId;
-    if (!targetId) return;
-    commitUpdate((elements) => {
-      const idx = elements.findIndex((el) => el.id === targetId);
-      if (idx <= 0) return elements;
-      const copy = [...elements];
-      const temp = copy[idx]!;
-      copy[idx] = copy[idx - 1]!;
-      copy[idx - 1] = temp;
-      return copy;
-    });
-  };
-
-  const exportTemplateJson = () => {
-    const blob = new Blob([JSON.stringify(template, null, 2)], { type: "application/json" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `document-template-${template.pageSize.toLowerCase()}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-  };
+  const exportTemplateJson = () => downloadTemplateJson(template);
 
   const importTemplateJson = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      try {
-        const text = e.target?.result as string;
-        const parsed = JSON.parse(text) as DocumentTemplate<TPayload>;
-        if (parsed && typeof parsed.pageSize === "string" && Array.isArray(parsed.elements)) {
-          commitUpdate(() => parsed.elements);
-          if (parsed.orientation) {
-            handleOrientationChange(parsed.orientation);
-          }
-          if (parsed.pageSize) {
-            handlePageSize(parsed.pageSize);
-          }
-        }
-      } catch (err) {
-        console.error("Failed to parse template JSON:", err);
+    readTemplateJsonFile<TPayload>(file, (parsed) => {
+      commitUpdate(() => parsed.elements);
+      if (parsed.orientation) {
+        handleOrientationChange(parsed.orientation);
       }
-    };
-    reader.readAsText(file);
-  };
-
-  const duplicateElement = (elementId: string) => {
-    const el = template.elements.find((e) => e.id === elementId);
-    if (!el) return;
-    const duplicated: TemplateElement<keyof TPayload & string> = {
-      ...el,
-      id: newId(),
-      x: el.x + 12,
-      y: el.y + 12,
-      style: { ...el.style },
-    };
-    commitUpdate((elements) => [...elements, duplicated]);
-    setSelectedIds([duplicated.id]);
-  };
-
-  const duplicateSelected = () => {
-    if (selectedIds.length === 0) return;
-    const idSet = new Set(selectedIds);
-    const targets = template.elements.filter((el) => idSet.has(el.id));
-    if (targets.length === 0) return;
-    const newElements = targets.map((el) => ({ ...el, id: newId(), x: el.x + 12, y: el.y + 12, style: { ...el.style } }));
-    commitUpdate((elements) => [...elements, ...newElements]);
-    setSelectedIds(newElements.map((el) => el.id));
-  };
-
-  const alignSelected = (alignType: AlignmentType) => {
-    commitUpdate((elements) => alignElements(elements, selectedIds, alignType));
-  };
-
-  const addStaticText = () => {
-    const el: TemplateElement<keyof TPayload & string> = {
-      id: newId(),
-      type: "static",
-      label: t("templateEditor.newText"),
-      x: 20,
-      y: 20,
-      w: 200,
-      h: 18,
-      style: { fontSize: 11, color: PRINT_NEUTRAL.text },
-    };
-    commitUpdate((elements) => [...elements, el]);
-    setSelectedIds([el.id]);
-  };
-
-  const addDivider = () => {
-    const el: TemplateElement<keyof TPayload & string> = {
-      id: newId(),
-      type: "divider",
-      label: "",
-      x: 20,
-      y: 20,
-      w: size.width - 40,
-      h: 1,
-      style: { color: PRINT_NEUTRAL.border },
-    };
-    commitUpdate((elements) => [...elements, el]);
-    setSelectedIds([el.id]);
-  };
-
-  const addField = (fieldDef: TemplateFieldDefinition<TPayload>) => {
-    const el: TemplateElement<keyof TPayload & string> = {
-      id: newId(),
-      type: "field",
-      label: fieldDef.label,
-      field: fieldDef.field,
-      x: 20,
-      y: 20,
-      w: 160,
-      h: 16,
-      style: { fontSize: 10, color: PRINT_NEUTRAL.text },
-    };
-    commitUpdate((elements) => [...elements, el]);
-    setSelectedIds([el.id]);
-  };
-
-  const addQrCode = () => {
-    const el: TemplateElement<keyof TPayload & string> = {
-      id: newId(),
-      type: "qrcode",
-      label: t("templateEditor.qrCode"),
-      x: 20,
-      y: 20,
-      w: 64,
-      h: 64,
-    };
-    commitUpdate((elements) => [...elements, el]);
-    setSelectedIds([el.id]);
+      if (parsed.pageSize) {
+        handlePageSize(parsed.pageSize);
+      }
+    });
   };
 
   const applyPreset = (presetKey: string) => {
@@ -357,14 +187,18 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     const isMulti = event.shiftKey || event.metaKey || event.ctrlKey;
     let activeIds = selectedIds;
     if (isMulti) {
-      activeIds = selectedIds.includes(elementId) ? selectedIds.filter((id) => id !== elementId) : [...selectedIds, elementId];
+      activeIds = selectedIds.includes(elementId)
+        ? selectedIds.filter((id) => id !== elementId)
+        : [...selectedIds, elementId];
       setSelectedIds(activeIds);
     } else if (!selectedIds.includes(elementId)) {
       activeIds = [elementId];
       setSelectedIds(activeIds);
     }
 
-    const itemsToDrag = template.elements.filter((el) => activeIds.includes(el.id)).map((el) => ({ id: el.id, origX: el.x, origY: el.y }));
+    const itemsToDrag = template.elements
+      .filter((el) => activeIds.includes(el.id))
+      .map((el) => ({ id: el.id, origX: el.x, origY: el.y }));
     dragState.current = {
       items: itemsToDrag.length > 0 ? itemsToDrag : [{ id: elementId, origX: 0, origY: 0 }],
       startX: event.clientX,
@@ -420,81 +254,6 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     setSelectedIds([]);
   };
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable ||
-          target.tagName === "SELECT")
-      ) {
-        return;
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "z") {
-        e.preventDefault();
-        if (e.shiftKey) {
-          redo();
-        } else {
-          undo();
-        }
-        return;
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "y") {
-        e.preventDefault();
-        redo();
-        return;
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "a") {
-        e.preventDefault();
-        selectAll();
-        return;
-      }
-
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "d") {
-        e.preventDefault();
-        duplicateSelected();
-        return;
-      }
-
-      if (e.key === "Escape") {
-        e.preventDefault();
-        deselectAll();
-        return;
-      }
-
-      if (e.key === "Delete" || e.key === "Backspace") {
-        if (selectedIds.length > 0) {
-          e.preventDefault();
-          deleteSelected();
-        }
-        return;
-      }
-
-      const step = e.shiftKey ? 8 : 1;
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        nudgeSelected(-step, 0);
-      } else if (e.key === "ArrowRight") {
-        e.preventDefault();
-        nudgeSelected(step, 0);
-      } else if (e.key === "ArrowUp") {
-        e.preventDefault();
-        nudgeSelected(0, -step);
-      } else if (e.key === "ArrowDown") {
-        e.preventDefault();
-        nudgeSelected(0, step);
-      }
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedIds, history.length, future.length, template]);
-
   return {
     t,
     template,
@@ -525,24 +284,8 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     orientation,
     undo,
     redo,
-    patchElement,
-    patchStyle,
-    deleteElement,
-    deleteSelected,
-    duplicateElement,
-    duplicateSelected,
-    alignSelected,
-    bringToFront,
-    sendToBack,
-    moveForward,
-    moveBackward,
-    nudgeSelected,
     exportTemplateJson,
     importTemplateJson,
-    addStaticText,
-    addDivider,
-    addField,
-    addQrCode,
     applyPreset,
     onMouseDownElement,
     onMouseDownResize,
@@ -552,5 +295,6 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     resetToDefault,
     availableFields,
     presets,
+    ...elementActions,
   };
 }

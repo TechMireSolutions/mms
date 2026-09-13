@@ -6,8 +6,6 @@ import {
   Maximize2,
   Minimize2,
   Pencil,
-  RectangleHorizontal,
-  RectangleVertical,
   Redo2,
   RotateCcw,
   Save,
@@ -15,13 +13,13 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
-import {
-  PAGE_SIZES,
-  type DocumentTemplate,
-  type DocumentTemplatePreset,
-  type TemplateOrientation,
+import type {
+  DocumentTemplate,
+  DocumentTemplatePreset,
+  TemplateOrientation,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { TemplateEditorPageControls } from "./TemplateEditorPageControls";
 import { TemplateEditorZoomControls } from "./TemplateEditorZoomControls";
 import { TemplateEditorExportActions } from "./TemplateEditorExportActions";
 
@@ -123,47 +121,13 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         </Button>
       </div>
 
-      <div className="flex items-center gap-1.5 ms-2 bg-muted/40 p-0.5 rounded-lg border border-border/70">
-        <FormSelect
-          aria-label={t("templateEditor.pageSize")}
-          value={template.pageSize}
-          onChange={(val) => onPageSizeChange(val)}
-          options={Object.entries(PAGE_SIZES).map(([key, info]) => ({
-            value: key,
-            label: info.label,
-          }))}
-          className="h-8 text-xs font-medium py-0 min-w-[130px] border-0 bg-transparent shadow-none"
-        />
-
-        <Button
-          type="button"
-          onClick={() =>
-            onOrientationChange(
-              template.orientation === "landscape" ? "portrait" : "landscape"
-            )
-          }
-          variant="ghost"
-          size="sm"
-          className="h-8 px-2 text-xs font-medium rounded hover:bg-background/80 transition-all flex items-center gap-1"
-          title={
-            template.orientation === "landscape"
-              ? t("templateEditor.portrait")
-              : t("templateEditor.landscape")
-          }
-        >
-          {template.orientation === "landscape" ? (
-            <>
-              <RectangleHorizontal className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-              <span className="hidden sm:inline">{t("templateEditor.landscape")}</span>
-            </>
-          ) : (
-            <>
-              <RectangleVertical className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
-              <span className="hidden sm:inline">{t("templateEditor.portrait")}</span>
-            </>
-          )}
-        </Button>
-      </div>
+      <TemplateEditorPageControls
+        pageSize={template.pageSize}
+        orientation={template.orientation || "portrait"}
+        onPageSizeChange={onPageSizeChange}
+        onOrientationChange={onOrientationChange}
+        t={t}
+      />
 
       <div className="flex items-center gap-1 ms-2">
         <Button
