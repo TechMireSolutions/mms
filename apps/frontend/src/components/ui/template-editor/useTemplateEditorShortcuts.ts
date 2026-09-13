@@ -15,6 +15,9 @@ export interface UseTemplateEditorShortcutsOptions {
   deleteSelected: () => void;
   nudgeSelected: (dx: number, dy: number) => void;
   hasSelection: boolean;
+  onSave?: () => void;
+  copySelected?: () => void;
+  paste?: () => void;
 }
 
 export function useTemplateEditorShortcuts({
@@ -26,6 +29,9 @@ export function useTemplateEditorShortcuts({
   deleteSelected,
   nudgeSelected,
   hasSelection,
+  onSave,
+  copySelected,
+  paste,
 }: UseTemplateEditorShortcutsOptions): void {
   const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
     const target = e.target as HTMLElement | null;
@@ -36,6 +42,24 @@ export function useTemplateEditorShortcuts({
         target.isContentEditable ||
         target.tagName === "SELECT")
     ) {
+      return;
+    }
+
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
+      e.preventDefault();
+      onSave?.();
+      return;
+    }
+
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "c") {
+      if (hasSelection) {
+        copySelected?.();
+      }
+      return;
+    }
+
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "v") {
+      paste?.();
       return;
     }
 
@@ -80,6 +104,8 @@ export function useTemplateEditorShortcuts({
       }
       return;
     }
+
+    if (!hasSelection) return;
 
     const step = e.shiftKey ? 8 : 1;
     if (e.key === "ArrowLeft") {

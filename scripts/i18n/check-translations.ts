@@ -77,6 +77,8 @@ function isInvariantValue(key: string, value: string): boolean {
       '(vCard / .vcf)',
       'al-noor',
       '09:00 - 11:00',
+      'PK36MEZN00012345678901',
+      'MEZNPKKA',
     ].includes(value)
   ) {
     return true;

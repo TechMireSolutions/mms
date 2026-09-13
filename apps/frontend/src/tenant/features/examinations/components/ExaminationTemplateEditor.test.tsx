@@ -24,7 +24,7 @@ describe("ExaminationTemplateEditor", () => {
   it("renders the examinations template editor with report card fields", () => {
     const html = renderToStaticMarkup(<ExaminationTemplateEditor onClose={vi.fn()} />);
 
-    expect(html).toContain("Examinations Document Template Editor");
+    expect(html).toContain("examinations.templateEditorTitle");
     expect(html).toContain("Typst");
   });
 });

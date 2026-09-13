@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { TemplateEditor } from "@/components/ui/TemplateEditor";
 import { getObject, saveObject } from "@/lib/db";
 import {
@@ -111,9 +112,11 @@ export function FinanceTemplateEditor({
     transactionRef: "STRIPE_CH_991823",
   };
 
+  const { t } = useTranslation();
+
   const handleSave = (tmpl: DocumentTemplate<TypstFeeReceiptPayload>) => {
     saveObject(FINANCE_TEMPLATE_STORAGE_KEY, tmpl);
-    notify.success("Finance template saved successfully");
+    notify.success(t("finance.templateSaved"));
   };
 
   const handleExportTypst = (payload: TypstFeeReceiptPayload) => {
@@ -126,7 +129,7 @@ export function FinanceTemplateEditor({
     a.download = `typst-fee-receipt-${conforming.receiptNo}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    notify.success("Typst JSON payload exported for worker queue");
+    notify.success(t("templateEditor.typstExported"));
   };
 
   const handleExportZoho = (zohoPayload: ZohoInvoicePayload) => {
@@ -139,12 +142,12 @@ export function FinanceTemplateEditor({
     a.download = `zoho-invoice-${conforming.invoice_number}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    notify.success("Zoho Invoice sync payload exported");
+    notify.success(t("finance.zohoExported"));
   };
 
   return (
     <TemplateEditor<TypstFeeReceiptPayload>
-      title="Finance Document Template Editor"
+      title={t("finance.templateEditorTitle")}
       template={currentTemplate}
       defaultTemplate={DEFAULT_FINANCE_TEMPLATE}
       availableFields={FINANCE_AVAILABLE_FIELDS}

@@ -24,7 +24,7 @@ describe("FinanceTemplateEditor", () => {
   it("renders the finance document template editor with fee receipt fields", () => {
     const html = renderToStaticMarkup(<FinanceTemplateEditor onClose={vi.fn()} />);
 
-    expect(html).toContain("Finance Document Template Editor");
+    expect(html).toContain("finance.templateEditorTitle");
     expect(html).toContain("Typst");
     expect(html).toContain("Zoho");
   });

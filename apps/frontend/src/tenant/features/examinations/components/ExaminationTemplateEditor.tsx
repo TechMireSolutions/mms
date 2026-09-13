@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { TemplateEditor } from "@/components/ui/TemplateEditor";
 import { getObject, saveObject } from "@/lib/db";
 import {
@@ -112,9 +113,11 @@ export function ExaminationTemplateEditor({
     remarks: "مستوى ممتاز وتقدم ملحوظ خلال الفصل الدراسي",
   };
 
+  const { t } = useTranslation();
+
   const handleSave = (tmpl: DocumentTemplate<TypstReportCardPayload>) => {
     saveObject(EXAMINATION_TEMPLATE_STORAGE_KEY, tmpl);
-    notify.success("Examination template saved successfully");
+    notify.success(t("examinations.templateSaved"));
   };
 
   const handleExportTypst = (payload: TypstReportCardPayload) => {
@@ -127,12 +130,12 @@ export function ExaminationTemplateEditor({
     a.download = `typst-report-card-${conforming.rollNumber}.json`;
     a.click();
     URL.revokeObjectURL(a.href);
-    notify.success("Typst JSON payload exported for worker queue");
+    notify.success(t("templateEditor.typstExported"));
   };
 
   return (
     <TemplateEditor<TypstReportCardPayload>
-      title="Examinations Document Template Editor"
+      title={t("examinations.templateEditorTitle")}
       template={currentTemplate}
       defaultTemplate={DEFAULT_EXAMINATION_TEMPLATE}
       availableFields={EXAMINATION_AVAILABLE_FIELDS}

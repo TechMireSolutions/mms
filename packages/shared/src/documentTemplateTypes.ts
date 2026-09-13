@@ -51,6 +51,11 @@ export interface ElementStyle {
   fontFamily?: string;
   direction?: 'ltr' | 'rtl';
   fontStyle?: 'normal' | 'italic';
+  textDecoration?: 'none' | 'underline' | 'line-through';
+  backgroundColor?: string;
+  borderRadius?: number;
+  borderWidth?: number;
+  borderColor?: string;
 }
 
 export interface TemplateElement<TField = string> {

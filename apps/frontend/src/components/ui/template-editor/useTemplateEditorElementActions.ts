@@ -11,7 +11,15 @@ import type {
 } from "@mms/shared";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { alignElements, newId, type AlignmentType } from "./templateEditorUtils";
+import {
+  alignElements,
+  bringSelectedToFront as bringSelectedToFrontUtil,
+  centerElementOnPage,
+  distributeElements,
+  newId,
+  sendSelectedToBack as sendSelectedToBackUtil,
+  type AlignmentType,
+} from "./templateEditorUtils";
 
 export interface UseTemplateEditorElementActionsOptions<TPayload = Record<string, unknown>> {
   elements: TemplateElement<keyof TPayload & string>[];
@@ -105,6 +113,16 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     });
   };
 
+  const bringSelectedToFront = () => {
+    if (selectedIds.length === 0) return;
+    commitUpdate((els) => bringSelectedToFrontUtil(els, selectedIds));
+  };
+
+  const sendSelectedToBack = () => {
+    if (selectedIds.length === 0) return;
+    commitUpdate((els) => sendSelectedToBackUtil(els, selectedIds));
+  };
+
   const moveForward = (elementId?: string) => {
     const targetId = elementId || selectedId;
     if (!targetId) return;
@@ -167,6 +185,18 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     commitUpdate((els) => alignElements(els, selectedIds, alignType));
   };
 
+  const distributeSelected = (axis: "horizontal" | "vertical") => {
+    commitUpdate((els) => distributeElements(els, selectedIds, axis));
+  };
+
+  const centerSelected = (axis: "both" | "h" | "v" = "both") => {
+    if (selectedIds.length === 0) return;
+    const idSet = new Set(selectedIds);
+    commitUpdate((els) =>
+      els.map((el) => (idSet.has(el.id) ? centerElementOnPage(el, size.width, size.height, axis) : el))
+    );
+  };
+
   const addStaticText = () => {
     const el: TemplateElement<keyof TPayload & string> = {
       id: newId(),
@@ -177,6 +207,21 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       w: 200,
       h: 18,
       style: { fontSize: 11, color: PRINT_NEUTRAL.text },
+    };
+    commitUpdate((els) => [...els, el]);
+    setSelectedIds([el.id]);
+  };
+
+  const addHeading = () => {
+    const el: TemplateElement<keyof TPayload & string> = {
+      id: newId(),
+      type: "static",
+      label: t("templateEditor.heading"),
+      x: 20,
+      y: 20,
+      w: Math.min(320, Math.max(160, size.width - 40)),
+      h: 26,
+      style: { fontSize: 16, fontWeight: "bold", color: PRINT_NEUTRAL.text },
     };
     commitUpdate((els) => [...els, el]);
     setSelectedIds([el.id]);
@@ -227,6 +272,20 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     setSelectedIds([el.id]);
   };
 
+  const addLogo = () => {
+    const el: TemplateElement<keyof TPayload & string> = {
+      id: newId(),
+      type: "logo",
+      label: t("templateEditor.logo"),
+      x: 20,
+      y: 20,
+      w: 80,
+      h: 80,
+    };
+    commitUpdate((els) => [...els, el]);
+    setSelectedIds([el.id]);
+  };
+
   return {
     patchElement,
     patchStyle,
@@ -235,14 +294,20 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     nudgeSelected,
     bringToFront,
     sendToBack,
+    bringSelectedToFront,
+    sendSelectedToBack,
     moveForward,
     moveBackward,
     duplicateElement,
     duplicateSelected,
     alignSelected,
+    distributeSelected,
+    centerSelected,
     addStaticText,
+    addHeading,
     addDivider,
     addField,
     addQrCode,
+    addLogo,
   };
 }

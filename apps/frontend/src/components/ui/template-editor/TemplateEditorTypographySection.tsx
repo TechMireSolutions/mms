@@ -10,6 +10,7 @@ import {
   AlignRight,
   Bold,
   Italic,
+  Underline,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -17,6 +18,7 @@ import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import type { ElementStyle } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { StyleBtn, StyleInput } from "./TemplateEditorStyleControls";
+import { normalizeHexColor } from "./templateEditorUtils";
 
 export interface TemplateEditorTypographySectionProps {
   elementId: string;
@@ -55,7 +57,7 @@ export function TemplateEditorTypographySection({
           {t("templateEditor.fontFamily")}
         </label>
         <FormSelect
-          aria-label="Font Family"
+          aria-label={t("templateEditor.fontFamily")}
           value={elStyle.fontFamily || "Inter, sans-serif"}
           onChange={(val) => onPatchStyle(elementId, { fontFamily: val })}
           options={[
@@ -76,15 +78,23 @@ export function TemplateEditorTypographySection({
           min={6}
           max={72}
           value={elStyle.fontSize || 10}
-          onChange={(val) => onPatchStyle(elementId, { fontSize: Number(val) })}
+          onChange={(val) => {
+            const num = Number(val);
+            if (!Number.isNaN(num)) {
+              onPatchStyle(elementId, { fontSize: Math.max(6, Math.min(72, num)) });
+            }
+          }}
         />
         <div className="flex flex-col gap-0.5">
-          <label className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
+          <label htmlFor={`font-color-${elementId}`} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
             {t("templateEditor.color")}
           </label>
           <input
+            id={`font-color-${elementId}`}
+            name={`font-color-${elementId}`}
+            aria-label={t("templateEditor.color")}
             type="color"
-            value={elStyle.color || PRINT_NEUTRAL.text}
+            value={normalizeHexColor(elStyle.color, PRINT_NEUTRAL.text)}
             onChange={(e) => onPatchStyle(elementId, { color: e.target.value })}
             className="w-full min-h-11 h-11 p-1 border border-border rounded-lg bg-background cursor-pointer"
           />
@@ -92,8 +102,8 @@ export function TemplateEditorTypographySection({
       </div>
 
       <div className="space-y-1.5">
-        <span className="text-[11px] text-muted-foreground font-semibold">{t("templateEditor.themePalette")}:</span>
-        <div className="flex items-center gap-2 flex-wrap">
+        <span className="text-3xs text-muted-foreground font-semibold">{t("templateEditor.themePalette")}:</span>
+        <div className="flex items-center gap-0.5 flex-wrap">
           {[
             { labelKey: "Primary", color: primaryColor || "#059669" },
             { labelKey: "Secondary", color: secondaryColor || "#047857" },
@@ -105,14 +115,19 @@ export function TemplateEditorTypographySection({
                 key={swatch.color}
                 type="button"
                 title={swatch.labelKey}
+                aria-label={swatch.labelKey}
                 onClick={() => onPatchStyle(elementId, { color: swatch.color })}
-                style={{ backgroundColor: swatch.color }}
-                className={`w-6 h-6 rounded-full border transition-all cursor-pointer shadow-xs ${
-                  isSelected
-                    ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 border-transparent"
-                    : "border-border/80 hover:scale-110"
-                }`}
-              />
+                className="min-h-11 min-w-11 flex items-center justify-center p-1 rounded-lg hover:bg-muted/40 cursor-pointer"
+              >
+                <span
+                  style={{ backgroundColor: swatch.color }}
+                  className={`w-6 h-6 rounded-full border transition-all shadow-xs ${
+                    isSelected
+                      ? "ring-2 ring-primary ring-offset-2 ring-offset-background scale-110 border-transparent"
+                      : "border-border/80 hover:scale-110"
+                  }`}
+                />
+              </button>
             );
           })}
         </div>
@@ -140,6 +155,17 @@ export function TemplateEditorTypographySection({
           title={t("templateEditor.italic")}
         >
           <Italic className="w-3.5 h-3.5" aria-hidden="true" />
+        </StyleBtn>
+        <StyleBtn
+          active={elStyle.textDecoration === "underline"}
+          onClick={() =>
+            onPatchStyle(elementId, {
+              textDecoration: elStyle.textDecoration === "underline" ? "none" : "underline",
+            })
+          }
+          title={t("templateEditor.underline")}
+        >
+          <Underline className="w-3.5 h-3.5" aria-hidden="true" />
         </StyleBtn>
         <StyleBtn
           active={elStyle.textAlign === "left" || !elStyle.textAlign}

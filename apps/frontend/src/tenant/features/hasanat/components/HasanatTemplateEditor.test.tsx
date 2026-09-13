@@ -24,7 +24,7 @@ describe("HasanatTemplateEditor", () => {
   it("renders the hasanat template editor with award voucher fields", () => {
     const html = renderToStaticMarkup(<HasanatTemplateEditor onClose={vi.fn()} />);
 
-    expect(html).toContain("Hasanat Voucher");
+    expect(html).toContain("hasanat.templateEditorTitle");
     expect(html).toContain("50 Hasanat");
   });
 });

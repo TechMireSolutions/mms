@@ -7,12 +7,15 @@ import React from "react";
 import { ZoomIn, ZoomOut, Scan } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+
 export interface TemplateEditorZoomControlsProps {
   canvasScale?: number;
   onZoomIn: () => void;
   onZoomOut: () => void;
   onZoomReset?: () => void;
   onZoomFit?: () => void;
+  t: TranslationFunction;
 }
 
 export function TemplateEditorZoomControls({
@@ -21,6 +24,7 @@ export function TemplateEditorZoomControls({
   onZoomOut,
   onZoomReset,
   onZoomFit,
+  t,
 }: TemplateEditorZoomControlsProps): React.JSX.Element {
   return (
     <div className="flex items-center gap-0.5 ms-2 border border-border/80 bg-muted/40 rounded-lg p-0.5 shadow-2xs">
@@ -30,7 +34,8 @@ export function TemplateEditorZoomControls({
         variant="ghost"
         size="icon"
         className="min-h-11 min-w-11 rounded hover:bg-background/80"
-        title="Zoom Out"
+        title={t("templateEditor.zoomOut")}
+        aria-label={t("templateEditor.zoomOut")}
       >
         <ZoomOut className="w-3.5 h-3.5" aria-hidden="true" />
       </Button>
@@ -38,8 +43,9 @@ export function TemplateEditorZoomControls({
         type="button"
         onClick={onZoomReset}
         variant="ghost"
-        className="min-h-11 px-2 text-[11px] font-mono font-medium hover:bg-background/80"
-        title="Reset Zoom to 100%"
+        className="min-h-11 px-2 text-3xs font-mono font-medium hover:bg-background/80"
+        title={t("templateEditor.zoomReset")}
+        aria-label={t("templateEditor.zoomReset")}
       >
         {canvasScale ? `${Math.round(canvasScale * 100)}%` : "100%"}
       </Button>
@@ -49,7 +55,8 @@ export function TemplateEditorZoomControls({
         variant="ghost"
         size="icon"
         className="min-h-11 min-w-11 rounded hover:bg-background/80"
-        title="Zoom In"
+        title={t("templateEditor.zoomIn")}
+        aria-label={t("templateEditor.zoomIn")}
       >
         <ZoomIn className="w-3.5 h-3.5" aria-hidden="true" />
       </Button>
@@ -60,7 +67,8 @@ export function TemplateEditorZoomControls({
           variant="ghost"
           size="icon"
           className="min-h-11 min-w-11 rounded hover:bg-background/80"
-          title="Fit to Width"
+          title={t("templateEditor.zoomFit")}
+          aria-label={t("templateEditor.zoomFit")}
         >
           <Scan className="w-3.5 h-3.5" aria-hidden="true" />
         </Button>

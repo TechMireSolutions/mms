@@ -4,6 +4,7 @@
  */
 
 import React, { useMemo } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { TemplateEditor } from "@/components/ui/TemplateEditor";
 import { getObject, saveObject } from "@/lib/db";
 import type {
@@ -110,14 +111,16 @@ export function HasanatTemplateEditor({
     issuedBy: "Admin Office",
   };
 
+  const { t } = useTranslation();
+
   const handleSave = (tmpl: DocumentTemplate<HasanatPayload>) => {
     saveObject(HASANAT_TEMPLATE_STORAGE_KEY, tmpl);
-    notify.success("Hasanat template saved successfully");
+    notify.success(t("hasanat.templateSaved"));
   };
 
   return (
     <TemplateEditor<HasanatPayload>
-      title="Hasanat Voucher & Receipt Template Editor"
+      title={t("hasanat.templateEditorTitle")}
       template={currentTemplate}
       defaultTemplate={DEFAULT_HASANAT_TEMPLATE}
       availableFields={HASANAT_AVAILABLE_FIELDS}

@@ -30,6 +30,7 @@ export interface TemplateEditorToolbarProps<TPayload = Record<string, unknown>> 
   futureLength: number;
   saved: boolean;
   saving?: boolean;
+  isDirty?: boolean;
   showGuides: boolean;
   fullscreen?: boolean;
   presets?: DocumentTemplatePreset<TPayload>[];
@@ -64,6 +65,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   futureLength,
   saved,
   saving = false,
+  isDirty = false,
   showGuides,
   fullscreen = false,
   presets = [],
@@ -92,9 +94,19 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
 }: TemplateEditorToolbarProps<TPayload>): React.JSX.Element {
   return (
     <header className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-card flex-shrink-0 flex-wrap">
-      <h2 className="font-bold text-sm text-foreground m-0">
-        {title || t("templateEditor.title")}
-      </h2>
+      <div className="flex items-center gap-2">
+        <h2 className="font-bold text-sm text-foreground m-0">
+          {title || t("templateEditor.title")}
+        </h2>
+        {isDirty && !saved && (
+          <span
+            className="px-2 py-0.5 rounded-full text-3xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/25"
+            title={t("templateEditor.dirtyNotice")}
+          >
+            {t("templateEditor.dirtyNotice")}
+          </span>
+        )}
+      </div>
 
       <div className="flex items-center gap-0.5 ms-2">
         <Button
@@ -157,17 +169,17 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
               ? "bg-primary text-primary-foreground border-primary shadow-xs"
               : "border-border hover:bg-muted"
             }`}
-          title={isPreviewMode ? "Switch to Edit Mode" : "Switch to Live Preview"}
+          title={isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")}
         >
           {isPreviewMode ? (
             <>
               <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Edit Mode</span>
+              <span>{t("templateEditor.editMode")}</span>
             </>
           ) : (
             <>
               <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>Preview</span>
+              <span>{t("templateEditor.preview")}</span>
             </>
           )}
         </Button>
@@ -180,6 +192,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           onZoomOut={onZoomOut}
           onZoomReset={onZoomReset}
           onZoomFit={onZoomFit}
+          t={t}
         />
       )}
 

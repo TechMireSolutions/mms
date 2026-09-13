@@ -25,6 +25,8 @@ Only address these residual gaps when explicitly within task scope.
 - **SQL Pagination**: Migrated all collection lists to server SQL `LIMIT`/`OFFSET` (`mms-data-layer.md`).
 - **Soft-Delete System**: Added Category B/C partial indexes, partial unique indexes (`WHERE deleted_at IS NULL`), cascades, and session revocation (`mms-data-layer.md` §6).
 - **Retention Hard-Purge**: Implemented background purge worker in bounded chunks of 500 rows with lock-free `SKIP LOCKED` (`mms-data-layer.md` §6).
+- **4-Locale Translation Parity**: 100% dictionary completeness across all 7,124 keys in en/ar/ur/fa validated via `check:i18n`; zero missing or untranslated fallbacks (`mms-settings-i18n.md`).
+- **Live Push & Aggregates**: Closed across all primary and secondary modules via `genericRelationalService` broadcasting and `invalidateModuleQueries` dispatcher (`mms-core.md`).
 
 ## Regressions: Do Not Reintroduce
 

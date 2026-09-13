@@ -33,7 +33,8 @@ export function TemplateEditorExportActions({
           onClick={onExportJson}
           variant="outline"
           className="min-h-11 px-2.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
-          title="Export Template JSON"
+          title={t("templateEditor.exportJson")}
+          aria-label={t("templateEditor.exportJson")}
         >
           <Download className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
           <span>JSON</span>
@@ -46,6 +47,7 @@ export function TemplateEditorExportActions({
             ref={fileInputRef}
             type="file"
             accept=".json"
+            aria-label={t("templateEditor.importJson")}
             className="hidden"
             onChange={(e) => {
               const file = e.target.files?.[0];
@@ -60,10 +62,11 @@ export function TemplateEditorExportActions({
             onClick={() => fileInputRef.current?.click()}
             variant="outline"
             className="min-h-11 px-2.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
-            title="Import Template JSON"
+            title={t("templateEditor.importJson")}
+            aria-label={t("templateEditor.importJson")}
           >
             <Upload className="w-3.5 h-3.5 text-purple-600" aria-hidden="true" />
-            <span>Import</span>
+            <span>{t("templateEditor.import")}</span>
           </Button>
         </>
       )}

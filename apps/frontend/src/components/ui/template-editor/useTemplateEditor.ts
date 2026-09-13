@@ -20,7 +20,9 @@ import {
 } from "./useTemplateEditorInteractions";
 import { useTemplateEditorShortcuts } from "./useTemplateEditorShortcuts";
 import { useTemplateEditorElementActions } from "./useTemplateEditorElementActions";
-import { downloadTemplateJson, readTemplateJsonFile } from "./templateEditorUtils";
+import { useTemplateEditorZoom } from "./useTemplateEditorZoom";
+import { downloadTemplateJson, newId, readTemplateJsonFile } from "./templateEditorUtils";
+import { notify } from "@/lib/notify";
 
 export interface UseTemplateEditorOptions<TPayload = Record<string, unknown>> {
   initialTemplate?: DocumentTemplate<TPayload>;
@@ -51,21 +53,19 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
   const [saving, setSaving] = useState(false);
   const [history, setHistory] = useState<DocumentTemplate<TPayload>[]>([]);
   const [future, setFuture] = useState<DocumentTemplate<TPayload>[]>([]);
-  const [autoScale, setAutoScale] = useState(1);
-  const [customZoom, setCustomZoom] = useState<number | null>(null);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
-  const canvasViewportRef = useRef<HTMLElement>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<DragStateInfo<TPayload> | null>(null);
   const resizeState = useRef<ResizeStateInfo<TPayload> | null>(null);
   // Timer ref for the "saved" flash — cleared on unmount to prevent state update on unmounted component
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  const canvasScale = customZoom ?? autoScale;
   const orientation = template.orientation || "portrait";
 
   // Memoize derived values to avoid recomputation on every render
   const size = useMemo(() => getPageDimensions(template.pageSize, orientation), [template.pageSize, orientation]);
+  const zoom = useTemplateEditorZoom({ size });
+
   const selectedId = useMemo(
     () => (selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null),
     [selectedIds]
@@ -82,30 +82,6 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
   const setSelectedId = useCallback((id: string | null) => setSelectedIds(id ? [id] : []), []);
   const deselectAll = useCallback(() => setSelectedIds([]), []);
   const selectAll = useCallback(() => setSelectedIds(template.elements.map((el) => el.id)), [template.elements]);
-
-  const zoomIn = useCallback(
-    () => setCustomZoom((prev) => Math.min(2.5, Number(((prev ?? canvasScale) + 0.1).toFixed(2)))),
-    [canvasScale]
-  );
-  const zoomOut = useCallback(
-    () => setCustomZoom((prev) => Math.max(0.3, Number(((prev ?? canvasScale) - 0.1).toFixed(2)))),
-    [canvasScale]
-  );
-  const zoomReset = useCallback(() => setCustomZoom(1), []);
-  const zoomFit = useCallback(() => setCustomZoom(null), []);
-
-  useEffect(() => {
-    const viewport = canvasViewportRef.current;
-    if (!viewport) return;
-    const updateCanvasScale = () => {
-      const availableWidth = Math.max(0, viewport.clientWidth - 32);
-      if (availableWidth > 0) setAutoScale(Math.min(1, availableWidth / size.width));
-    };
-    const observer = new ResizeObserver(updateCanvasScale);
-    observer.observe(viewport);
-    updateCanvasScale();
-    return () => observer.disconnect();
-  }, [size.width]);
 
   // Cleanup the saved-flash timer on unmount to prevent state update on unmounted component
   useEffect(() => {
@@ -156,10 +132,13 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     });
   }, []);
 
+  const clipboardRef = useRef<TemplateElement<keyof TPayload & string>[]>([]);
+
   useTemplateEditorInteractions({
-    canvasScale,
+    canvasScale: zoom.canvasScale,
     dragState,
     resizeState,
+    canvasViewportRef: zoom.canvasViewportRef,
     updateElements,
     setTemplate,
     setHistory,
@@ -175,6 +154,56 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     t,
   });
 
+  const handlePageSize = useCallback((pageSizeKey: string) => {
+    pushHistory(template);
+    setTemplate((curr) => ({ ...curr, pageSize: pageSizeKey }));
+  }, [pushHistory, template]);
+
+  const handleOrientationChange = useCallback((nextOrientation: TemplateOrientation) => {
+    pushHistory(template);
+    setTemplate((curr) => ({ ...curr, orientation: nextOrientation }));
+  }, [pushHistory, template]);
+
+  const handleSave = useCallback(async () => {
+    if (!onSave) return;
+    setSaving(true);
+    try {
+      await onSave(template);
+      setSaved(true);
+      // Cleanup any existing timer before scheduling a new one
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
+    }
+  }, [onSave, template]);
+
+  const copySelected = useCallback(() => {
+    if (selectedIds.length === 0) return;
+    const toCopy = template.elements.filter((el) => selectedIds.includes(el.id));
+    if (toCopy.length > 0) {
+      clipboardRef.current = toCopy;
+    }
+  }, [selectedIds, template.elements]);
+
+  const paste = useCallback(() => {
+    if (clipboardRef.current.length === 0) return;
+    const newElements: TemplateElement<keyof TPayload & string>[] = [];
+    const newIds: string[] = [];
+    for (const el of clipboardRef.current) {
+      const id = newId();
+      newIds.push(id);
+      newElements.push({
+        ...el,
+        id,
+        x: el.x + 16,
+        y: el.y + 16,
+      });
+    }
+    commitUpdate((curr) => [...curr, ...newElements]);
+    setSelectedIds(newIds);
+  }, [commitUpdate]);
+
   useTemplateEditorShortcuts({
     undo,
     redo,
@@ -184,18 +213,28 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     deleteSelected: elementActions.deleteSelected,
     nudgeSelected: elementActions.nudgeSelected,
     hasSelection: selectedIds.length > 0,
+    onSave: handleSave,
+    copySelected,
+    paste,
   });
 
   const exportTemplateJson = useCallback(() => downloadTemplateJson(template), [template]);
 
   const importTemplateJson = useCallback((file: File) => {
-    readTemplateJsonFile<TPayload>(file, (parsed) => {
-      commitUpdate(() => parsed.elements);
-      if (parsed.orientation) handleOrientationChange(parsed.orientation);
-      if (parsed.pageSize) handlePageSize(parsed.pageSize);
-    });
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [commitUpdate]);
+    readTemplateJsonFile<TPayload>(
+      file,
+      (parsed) => {
+        commitUpdate(() => parsed.elements);
+        if (parsed.orientation) handleOrientationChange(parsed.orientation);
+        if (parsed.pageSize) handlePageSize(parsed.pageSize);
+        notify.success(t("templateEditor.importSuccess"));
+      },
+      (err) => {
+        console.error(err);
+        notify.error(t("templateEditor.importFailed"));
+      }
+    );
+  }, [commitUpdate, handleOrientationChange, handlePageSize, t]);
 
   const applyPreset = useCallback((presetKey: string) => {
     const match = presets.find((p) => p.key === presetKey);
@@ -235,7 +274,7 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     };
   }, [selectedIds, template]);
 
-  const onMouseDownResize = useCallback((event: ReactMouseEvent, elementId: string) => {
+  const onMouseDownResize = useCallback((event: ReactMouseEvent, elementId: string, handle: "se" | "e" | "s" = "se") => {
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
@@ -243,6 +282,7 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     if (!el) return;
     resizeState.current = {
       id: elementId,
+      handle,
       startX: event.clientX,
       startY: event.clientY,
       origW: el.w,
@@ -252,35 +292,13 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     };
   }, [template]);
 
-  const handleSave = useCallback(async () => {
-    if (!onSave) return;
-    setSaving(true);
-    try {
-      await onSave(template);
-      setSaved(true);
-      // Cleanup any existing timer before scheduling a new one
-      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
-      savedTimerRef.current = setTimeout(() => setSaved(false), 2000);
-    } finally {
-      setSaving(false);
-    }
-  }, [onSave, template]);
-
-  const handlePageSize = useCallback((pageSizeKey: string) => {
-    pushHistory(template);
-    setTemplate((curr) => ({ ...curr, pageSize: pageSizeKey }));
-  }, [pushHistory, template]);
-
-  const handleOrientationChange = useCallback((nextOrientation: TemplateOrientation) => {
-    pushHistory(template);
-    setTemplate((curr) => ({ ...curr, orientation: nextOrientation }));
-  }, [pushHistory, template]);
-
   const resetToDefault = useCallback(() => {
     pushHistory(template);
     setTemplate(defaultTemplate);
     setSelectedIds([]);
   }, [defaultTemplate, pushHistory, template]);
+
+  const isDirty = history.length > 0;
 
   return {
     t,
@@ -299,14 +317,10 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     setIsPreviewMode,
     saved,
     saving,
+    isDirty,
     history,
     future,
-    canvasScale,
-    zoomIn,
-    zoomOut,
-    zoomReset,
-    zoomFit,
-    canvasViewportRef,
+    ...zoom,
     canvasRef,
     size,
     orientation,
@@ -315,6 +329,8 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     exportTemplateJson,
     importTemplateJson,
     applyPreset,
+    copySelected,
+    paste,
     onMouseDownElement,
     onMouseDownResize,
     handleSave,

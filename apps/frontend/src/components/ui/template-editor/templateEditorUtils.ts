@@ -90,6 +90,113 @@ export function alignElements<T extends BoundingBox & { id: string }>(
   });
 }
 
+export function centerElementOnPage<T extends BoundingBox>(
+  element: T,
+  pageWidth: number,
+  pageHeight: number,
+  axis: "both" | "h" | "v" = "both"
+): T {
+  const newX = axis === "v" ? element.x : snap(Math.max(0, (pageWidth - element.w) / 2));
+  const newY = axis === "h" ? element.y : snap(Math.max(0, (pageHeight - element.h) / 2));
+  return {
+    ...element,
+    x: newX,
+    y: newY,
+  };
+}
+
+export function distributeElements<T extends BoundingBox & { id: string }>(
+  elements: T[],
+  selectedIds: string[],
+  axis: "horizontal" | "vertical"
+): T[] {
+  if (selectedIds.length < 3) return elements;
+  const idSet = new Set(selectedIds);
+  const targets = elements.filter((el) => idSet.has(el.id));
+  if (targets.length < 3) return elements;
+
+  if (axis === "horizontal") {
+    const sorted = [...targets].sort((a, b) => a.x - b.x);
+    const minX = sorted[0]!.x;
+    const last = sorted[sorted.length - 1]!;
+    const maxX = last.x + (last.w || 0);
+    const totalElementWidth = sorted.reduce((sum, el) => sum + (el.w || 0), 0);
+    const availableGap = maxX - minX - totalElementWidth;
+    const gap = availableGap / (sorted.length - 1);
+
+    let currentX = minX;
+    const posMap = new Map<string, number>();
+    for (const el of sorted) {
+      posMap.set(el.id, snap(currentX));
+      currentX += (el.w || 0) + gap;
+    }
+    return elements.map((el) => {
+      const newX = posMap.get(el.id);
+      return newX !== undefined ? { ...el, x: newX } : el;
+    });
+  } else {
+    const sorted = [...targets].sort((a, b) => a.y - b.y);
+    const minY = sorted[0]!.y;
+    const last = sorted[sorted.length - 1]!;
+    const maxY = last.y + (last.h || 0);
+    const totalElementHeight = sorted.reduce((sum, el) => sum + (el.h || 0), 0);
+    const availableGap = maxY - minY - totalElementHeight;
+    const gap = availableGap / (sorted.length - 1);
+
+    let currentY = minY;
+    const posMap = new Map<string, number>();
+    for (const el of sorted) {
+      posMap.set(el.id, snap(currentY));
+      currentY += (el.h || 0) + gap;
+    }
+    return elements.map((el) => {
+      const newY = posMap.get(el.id);
+      return newY !== undefined ? { ...el, y: newY } : el;
+    });
+  }
+}
+
+/**
+ * Reorders selected elements to the top of the render stack (end of array), preserving relative order.
+ */
+export function bringSelectedToFront<T extends { id: string }>(
+  elements: T[],
+  selectedIds: string[]
+): T[] {
+  if (selectedIds.length === 0) return elements;
+  const idSet = new Set(selectedIds);
+  const unselected = elements.filter((el) => !idSet.has(el.id));
+  const selected = elements.filter((el) => idSet.has(el.id));
+  return [...unselected, ...selected];
+}
+
+/**
+ * Reorders selected elements to the bottom of the render stack (start of array), preserving relative order.
+ */
+export function sendSelectedToBack<T extends { id: string }>(
+  elements: T[],
+  selectedIds: string[]
+): T[] {
+  if (selectedIds.length === 0) return elements;
+  const idSet = new Set(selectedIds);
+  const unselected = elements.filter((el) => !idSet.has(el.id));
+  const selected = elements.filter((el) => idSet.has(el.id));
+  return [...selected, ...unselected];
+}
+
+/**
+ * Normalizes any CSS color string to a valid 7-character `#rrggbb` format required by HTML5 `<input type="color">`.
+ */
+export function normalizeHexColor(color?: string, fallback = "#0f172a"): string {
+  if (!color || typeof color !== "string") return fallback;
+  const trimmed = color.trim().toLowerCase();
+  if (/^#[0-9a-f]{6}$/.test(trimmed)) return trimmed;
+  if (/^#[0-9a-f]{3}$/.test(trimmed)) {
+    return `#${trimmed[1]}${trimmed[1]}${trimmed[2]}${trimmed[2]}${trimmed[3]}${trimmed[3]}`;
+  }
+  return fallback;
+}
+
 export function downloadTemplateJson<TPayload = Record<string, unknown>>(
   template: DocumentTemplate<TPayload>
 ): void {
@@ -98,8 +205,15 @@ export function downloadTemplateJson<TPayload = Record<string, unknown>>(
   const a = document.createElement("a");
   a.href = url;
   a.download = `document-template-${template.pageSize.toLowerCase()}.json`;
-  a.click();
-  URL.revokeObjectURL(url);
+  if (typeof Node !== "undefined" && a instanceof Node && typeof document !== "undefined" && document.body) {
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+  } else {
+    a.click();
+  }
+  // Delay revocation to prevent downloads from aborting in Safari/Firefox/Chrome
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
 }
 
 export function readTemplateJsonFile<TPayload = Record<string, unknown>>(
@@ -114,10 +228,16 @@ export function readTemplateJsonFile<TPayload = Record<string, unknown>>(
       const parsed = JSON.parse(text) as DocumentTemplate<TPayload>;
       if (parsed && typeof parsed.pageSize === "string" && Array.isArray(parsed.elements)) {
         onSuccess(parsed);
+      } else {
+        onError?.(new Error("Invalid template structure: missing pageSize or elements array"));
       }
     } catch (err) {
       onError?.(err);
     }
   };
+  reader.onerror = (e) => {
+    onError?.(e);
+  };
   reader.readAsText(file);
 }
+

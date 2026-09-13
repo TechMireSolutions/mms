@@ -1,14 +1,17 @@
 import React, { useMemo, useState } from "react";
-import { Minus, QrCode, Type, Search, Database, Plus } from "lucide-react";
+import { Minus, QrCode, Type, Search, Database, Plus, Heading1, Image as ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import type { TemplateFieldDefinition } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export interface TemplateEditorElementPaletteProps<TPayload = Record<string, unknown>> {
   availableFields?: TemplateFieldDefinition<TPayload>[];
   onAddStaticText: () => void;
+  onAddHeading?: () => void;
   onAddDivider: () => void;
   onAddQrCode: () => void;
+  onAddLogo?: () => void;
   onAddField: (fieldOption: TemplateFieldDefinition<TPayload>) => void;
   t: TranslationFunction;
 }
@@ -16,8 +19,10 @@ export interface TemplateEditorElementPaletteProps<TPayload = Record<string, unk
 export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>({
   availableFields = [],
   onAddStaticText,
+  onAddHeading,
   onAddDivider,
   onAddQrCode,
+  onAddLogo,
   onAddField,
   t,
 }: TemplateEditorElementPaletteProps<TPayload>): React.JSX.Element {
@@ -40,9 +45,26 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
           <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest m-0">
             {t("templateEditor.addElements")}
           </p>
-          <span className="text-[10px] text-muted-foreground/80 font-mono">Primitives</span>
+          <span className="text-2xs text-muted-foreground/80 font-mono">{t("templateEditor.primitives")}</span>
         </div>
         <div className="space-y-1.5">
+          {onAddHeading && (
+            <Button
+              type="button"
+              onClick={onAddHeading}
+              variant="outline"
+              className="w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border bg-card hover:bg-primary/5 hover:border-primary/40 hover:text-primary transition-all flex items-center justify-between group shadow-2xs"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                  <Heading1 className="w-3.5 h-3.5" aria-hidden="true" />
+                </div>
+                <span>{t("templateEditor.heading")}</span>
+              </div>
+              <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-primary" />
+            </Button>
+          )}
+
           <Button
             type="button"
             onClick={onAddStaticText}
@@ -87,6 +109,23 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
             </div>
             <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-sky-600" />
           </Button>
+
+          {onAddLogo && (
+            <Button
+              type="button"
+              onClick={onAddLogo}
+              variant="outline"
+              className="w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border bg-card hover:bg-primary/5 hover:border-primary/40 hover:text-primary transition-all flex items-center justify-between group shadow-2xs"
+            >
+              <div className="flex items-center gap-2">
+                <div className="p-1 rounded bg-amber-500/10 text-amber-600 group-hover:bg-amber-600 group-hover:text-white transition-colors">
+                  <ImageIcon className="w-3.5 h-3.5" aria-hidden="true" />
+                </div>
+                <span>{t("templateEditor.logo")}</span>
+              </div>
+              <Plus className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity text-amber-600" />
+            </Button>
+          )}
         </div>
       </div>
 
@@ -97,20 +136,21 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
               <Database className="w-3.5 h-3.5 text-primary" />
               <span>{t("templateEditor.addFields")}</span>
             </p>
-            <span className="text-[10px] bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded-full">
+            <span className="text-2xs bg-primary/10 text-primary font-bold px-1.5 py-0.5 rounded-full">
               {availableFields.length}
             </span>
           </div>
 
           {availableFields.length > 5 && (
             <div className="relative">
-              <Search className="w-3 h-3 text-muted-foreground absolute start-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
+              <Search className="w-3.5 h-3.5 text-muted-foreground absolute start-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Filter fields..."
-                className="w-full ps-8 pe-2 py-1 text-xs border border-border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+                placeholder={t("templateEditor.filterFieldsPlaceholder")}
+                aria-label={t("templateEditor.filterFieldsPlaceholder")}
+                className="w-full ps-8 pe-2 py-1 text-xs border border-border rounded-md bg-background focus:outline-none focus:ring-1 focus:ring-primary min-h-11"
               />
             </div>
           )}
@@ -126,7 +166,7 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
               >
                 <div className="truncate">
                   <p className="truncate font-medium m-0">{fieldOption.label}</p>
-                  <p className="text-[10px] text-muted-foreground font-mono m-0 truncate">
+                  <p className="text-2xs text-muted-foreground font-mono m-0 truncate">
                     {`{${String(fieldOption.field)}}`}
                   </p>
                 </div>
@@ -136,7 +176,7 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
             {filteredFields.length === 0 && (
               <div className="flex flex-col items-center justify-center py-4 text-center">
                 <Search className="w-4 h-4 text-muted-foreground/40 mb-1" aria-hidden="true" />
-                <p className="text-xs text-muted-foreground m-0">No fields matched</p>
+                <p className="text-xs text-muted-foreground m-0">{t("templateEditor.noFieldsMatched")}</p>
               </div>
             )}
           </div>
