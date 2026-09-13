@@ -9,6 +9,8 @@ cd "$ROOT_DIR"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 # shellcheck source=lib/curl-local-backend.sh
 source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
 # shellcheck source=lib/tenant-https-guard.sh
@@ -19,33 +21,12 @@ ENV_FILE="${2:-apps/backend/.env}"
 FAIL=0
 ALL_SUBDOMAINS=()
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  # Strip carriage returns and leading/trailing whitespace
-  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-  echo "$value"
-}
-
 warn() { echo "WARNING: $*"; }
 fail() { echo "ERROR: $*"; FAIL=1; }
 ok() { echo "OK: $*"; }
 
-BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
-APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '')"
+BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
 LOCAL="http://127.0.0.1:${BACKEND_PORT}"
 
 echo "══ Tenant host verification ══"

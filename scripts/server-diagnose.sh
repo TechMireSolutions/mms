@@ -7,6 +7,8 @@ cd "$ROOT_DIR"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 # shellcheck source=lib/curl-local-backend.sh
 source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
 
@@ -14,27 +16,8 @@ ENV_FILE="${1:-apps/backend/.env}"
 BACKEND_PORT="$MMS_PROD_BACKEND_PORT"
 FRONTEND_PORT="$MMS_PROD_FRONTEND_PORT"
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  echo "$value"
-}
-
-BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
-FRONTEND_PORT="$(read_env_var FRONTEND_PORT "$MMS_PROD_FRONTEND_PORT")"
+BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
+FRONTEND_PORT="$(read_env_var FRONTEND_PORT "$MMS_PROD_FRONTEND_PORT" "$ENV_FILE")"
 if ! assert_production_backend_port "$BACKEND_PORT" "Backend PORT in ${ENV_FILE}"; then
   echo "Fix: bash scripts/merge-backend-env.sh ${ENV_FILE}"
 fi
@@ -43,7 +26,7 @@ echo "══ MMS server diagnose ══"
 echo "Root: ${ROOT_DIR}"
 echo "Node: $(node -v 2>/dev/null || echo 'missing')"
 echo "pnpm: $(pnpm -v 2>/dev/null || echo 'missing')"
-APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '')"
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
 echo "MMS_APP_DOMAIN: ${APP_DOMAIN:-<NOT SET — tenant subdomains will not work>}"
 echo "PORT: ${BACKEND_PORT}"
 echo ""

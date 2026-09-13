@@ -17,6 +17,8 @@ cd "$ROOT_DIR" || { echo "FATAL: cannot cd to ${ROOT_DIR}"; exit 1; }
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 
 export GIT_TERMINAL_PROMPT=0
 GIT_CMD="git"
@@ -143,28 +145,7 @@ else
   echo "Skipping pnpm install — pnpm-lock.yaml unchanged (${CURRENT_LOCK_HASH:0:12}…)"
 fi
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  # Strip carriage returns and leading/trailing whitespace
-  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-  echo "$value"
-}
-
-export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
+export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
 export NODE_ENV=production
 assert_production_backend_port "$PORT" "Deploy PORT" || exit 1
 
@@ -191,7 +172,7 @@ fi
 
 # Schema DDL + data migrations run on backend startup (initDb / drizzle migrate) — no separate deploy migrate step.
 
-APP_DOMAIN_FOR_FP="$(read_env_var MMS_APP_DOMAIN '')"
+APP_DOMAIN_FOR_FP="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
 if [[ -z "$APP_DOMAIN_FOR_FP" && -n "${MMS_APP_DOMAIN:-}" ]]; then
   APP_DOMAIN_FOR_FP="${MMS_APP_DOMAIN}"
 fi
