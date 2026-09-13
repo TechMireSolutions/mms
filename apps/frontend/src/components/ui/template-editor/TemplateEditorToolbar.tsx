@@ -1,23 +1,17 @@
-import React, { useRef } from "react";
+import React from "react";
 import {
   Eye,
   EyeOff,
   LayoutTemplate,
   Maximize2,
   Minimize2,
+  Pencil,
   RectangleHorizontal,
   RectangleVertical,
   Redo2,
   RotateCcw,
   Save,
   Undo2,
-  FileCode2,
-  CloudUpload,
-  Download,
-  Upload,
-  ZoomIn,
-  ZoomOut,
-  Scan,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -28,6 +22,8 @@ import {
   type TemplateOrientation,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { TemplateEditorZoomControls } from "./TemplateEditorZoomControls";
+import { TemplateEditorExportActions } from "./TemplateEditorExportActions";
 
 export interface TemplateEditorToolbarProps<TPayload = Record<string, unknown>> {
   title?: string;
@@ -96,8 +92,6 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   onExportZoho,
   t,
 }: TemplateEditorToolbarProps<TPayload>): React.JSX.Element {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
   return (
     <header className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-card flex-shrink-0 flex-wrap">
       <h2 className="font-bold text-sm text-foreground m-0">
@@ -129,28 +123,18 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         </Button>
       </div>
 
-      <div className="flex items-center gap-1.5 ms-2">
-        <span className="text-xs text-muted-foreground font-semibold">
-          {t("templateEditor.pageSize")}
-        </span>
-        {Object.entries(PAGE_SIZES).map(([pageSizeKey]) => (
-          <Button
-            type="button"
-            key={pageSizeKey}
-            onClick={() => onPageSizeChange(pageSizeKey)}
-            variant={template.pageSize === pageSizeKey ? "default" : "outline"}
-            className={`min-h-11 px-2.5 text-xs font-semibold rounded border transition-colors shadow-none ${
-              template.pageSize === pageSizeKey
-                ? "bg-primary text-primary-foreground border-primary"
-                : "border-border hover:bg-muted"
-            }`}
-          >
-            {pageSizeKey}
-          </Button>
-        ))}
-      </div>
+      <div className="flex items-center gap-1.5 ms-2 bg-muted/40 p-0.5 rounded-lg border border-border/70">
+        <FormSelect
+          aria-label={t("templateEditor.pageSize")}
+          value={template.pageSize}
+          onChange={(val) => onPageSizeChange(val)}
+          options={Object.entries(PAGE_SIZES).map(([key, info]) => ({
+            value: key,
+            label: info.label,
+          }))}
+          className="h-8 text-xs font-medium py-0 min-w-[130px] border-0 bg-transparent shadow-none"
+        />
 
-      <div className="flex items-center gap-1 ms-2">
         <Button
           type="button"
           onClick={() =>
@@ -158,8 +142,9 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
               template.orientation === "landscape" ? "portrait" : "landscape"
             )
           }
-          variant="outline"
-          className="min-h-11 px-2.5 text-xs font-semibold rounded border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
+          variant="ghost"
+          size="sm"
+          className="h-8 px-2 text-xs font-medium rounded hover:bg-background/80 transition-all flex items-center gap-1"
           title={
             template.orientation === "landscape"
               ? t("templateEditor.portrait")
@@ -168,13 +153,13 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         >
           {template.orientation === "landscape" ? (
             <>
-              <RectangleHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{t("templateEditor.landscape")}</span>
+              <RectangleHorizontal className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+              <span className="hidden sm:inline">{t("templateEditor.landscape")}</span>
             </>
           ) : (
             <>
-              <RectangleVertical className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{t("templateEditor.portrait")}</span>
+              <RectangleVertical className="w-3.5 h-3.5 text-primary" aria-hidden="true" />
+              <span className="hidden sm:inline">{t("templateEditor.portrait")}</span>
             </>
           )}
         </Button>
@@ -185,9 +170,9 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           type="button"
           onClick={onToggleGuides}
           variant="outline"
-          className={`min-h-11 px-2 text-xs rounded border transition-colors shadow-none ${
+          className={`min-h-11 px-2.5 text-xs rounded-lg border transition-all shadow-none ${
             showGuides
-              ? "border-primary/40 bg-primary/10 text-primary"
+              ? "border-primary/40 bg-primary/10 text-primary font-medium"
               : "border-border text-muted-foreground hover:bg-muted"
           }`}
           title={t("templateEditor.toggleGuides")}
@@ -205,62 +190,35 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           type="button"
           onClick={onTogglePreview}
           variant={isPreviewMode ? "default" : "outline"}
-          className={`min-h-11 px-2.5 text-xs font-semibold rounded border transition-colors shadow-none flex items-center gap-1.5 ms-2 ${
+          className={`min-h-11 px-3 text-xs font-semibold rounded-lg border transition-all shadow-none flex items-center gap-1.5 ms-2 ${
             isPreviewMode
-              ? "bg-primary text-primary-foreground border-primary"
+              ? "bg-primary text-primary-foreground border-primary shadow-xs"
               : "border-border hover:bg-muted"
           }`}
-          title="Toggle Live Preview"
+          title={isPreviewMode ? "Switch to Edit Mode" : "Switch to Live Preview"}
         >
-          <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>{isPreviewMode ? "Edit Mode" : "Preview"}</span>
+          {isPreviewMode ? (
+            <>
+              <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Edit Mode</span>
+            </>
+          ) : (
+            <>
+              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>Preview</span>
+            </>
+          )}
         </Button>
       )}
 
       {onZoomIn && onZoomOut && (
-        <div className="flex items-center gap-0.5 ms-2 border border-border rounded px-1 py-0.5">
-          <Button
-            type="button"
-            onClick={onZoomOut}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 rounded hover:bg-muted"
-            title="Zoom Out"
-          >
-            <ZoomOut className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-          <Button
-            type="button"
-            onClick={onZoomReset}
-            variant="ghost"
-            className="h-7 px-1.5 text-[11px] font-mono hover:bg-muted"
-            title="Reset Zoom to 100%"
-          >
-            {canvasScale ? `${Math.round(canvasScale * 100)}%` : "100%"}
-          </Button>
-          <Button
-            type="button"
-            onClick={onZoomIn}
-            variant="ghost"
-            size="icon"
-            className="h-7 w-7 rounded hover:bg-muted"
-            title="Zoom In"
-          >
-            <ZoomIn className="w-3.5 h-3.5" aria-hidden="true" />
-          </Button>
-          {onZoomFit && (
-            <Button
-              type="button"
-              onClick={onZoomFit}
-              variant="ghost"
-              size="icon"
-              className="h-7 w-7 rounded hover:bg-muted"
-              title="Fit to Width"
-            >
-              <Scan className="w-3.5 h-3.5" aria-hidden="true" />
-            </Button>
-          )}
-        </div>
+        <TemplateEditorZoomControls
+          canvasScale={canvasScale}
+          onZoomIn={onZoomIn}
+          onZoomOut={onZoomOut}
+          onZoomReset={onZoomReset}
+          onZoomFit={onZoomFit}
+        />
       )}
 
       {presets.length > 0 && (
@@ -281,72 +239,13 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         </div>
       )}
 
-      {onExportJson && (
-        <Button
-          type="button"
-          onClick={onExportJson}
-          variant="outline"
-          className="min-h-11 px-2.5 text-xs font-semibold rounded border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5 ms-2"
-          title="Export Template JSON"
-        >
-          <Download className="w-3.5 h-3.5 text-emerald-600" aria-hidden="true" />
-          <span>JSON</span>
-        </Button>
-      )}
-
-      {onImportJson && (
-        <>
-          <input
-            ref={fileInputRef}
-            type="file"
-            accept=".json"
-            className="hidden"
-            onChange={(e) => {
-              const file = e.target.files?.[0];
-              if (file) {
-                onImportJson(file);
-                e.target.value = "";
-              }
-            }}
-          />
-          <Button
-            type="button"
-            onClick={() => fileInputRef.current?.click()}
-            variant="outline"
-            className="min-h-11 px-2.5 text-xs font-semibold rounded border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
-            title="Import Template JSON"
-          >
-            <Upload className="w-3.5 h-3.5 text-purple-600" aria-hidden="true" />
-            <span>Import</span>
-          </Button>
-        </>
-      )}
-
-      {onExportTypst && (
-        <Button
-          type="button"
-          onClick={onExportTypst}
-          variant="outline"
-          className="min-h-11 px-2.5 text-xs font-semibold rounded border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
-          title={t("templateEditor.exportTypst")}
-        >
-          <FileCode2 className="w-3.5 h-3.5 text-sky-600" aria-hidden="true" />
-          <span>Typst</span>
-        </Button>
-      )}
-
-      {onExportZoho && (
-        <Button
-          type="button"
-          onClick={onExportZoho}
-          variant="outline"
-          className="min-h-11 px-2.5 text-xs font-semibold rounded border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
-          title={t("templateEditor.exportZoho")}
-        >
-          <CloudUpload className="w-3.5 h-3.5 text-amber-600" aria-hidden="true" />
-          <span>Zoho</span>
-        </Button>
-      )}
+      <TemplateEditorExportActions
+        onExportJson={onExportJson}
+        onImportJson={onImportJson}
+        onExportTypst={onExportTypst}
+        onExportZoho={onExportZoho}
+        t={t}
+      />
 
       <div className="ms-auto flex items-center gap-2">
         <Button

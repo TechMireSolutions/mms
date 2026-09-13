@@ -122,8 +122,20 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
   return (
     <main
       ref={canvasViewportRef as React.RefObject<HTMLDivElement>}
-      className="flex-1 bg-muted/40 overflow-auto p-4 flex items-start justify-center relative min-h-[300px]"
+      className="flex-1 bg-muted/30 overflow-auto p-6 flex flex-col items-center justify-start relative min-h-[300px] select-none"
     >
+      <div className="mb-3 px-3 py-1 rounded-full bg-background/80 border border-border/80 text-[11px] text-muted-foreground font-mono shadow-2xs backdrop-blur-xs flex items-center gap-2">
+        <span className="font-semibold text-foreground">{size.label}</span>
+        <span>•</span>
+        <span>{size.width} × {size.height} pt</span>
+        {isPreviewMode && (
+          <>
+            <span>•</span>
+            <span className="text-emerald-600 font-bold uppercase tracking-wider text-[10px]">Preview Mode</span>
+          </>
+        )}
+      </div>
+
       <div
         ref={canvasRef}
         onMouseDown={onMouseDownBackground}
@@ -132,9 +144,10 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
           height: size.height,
           transform: `scale(${canvasScale})`,
           transformOrigin: "top center",
-          boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1)",
+          boxShadow:
+            "0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.06)",
         }}
-        className="relative bg-white text-black select-none transition-shadow rounded-sm border border-border flex-shrink-0"
+        className="relative bg-white text-black select-none transition-shadow rounded-xs border border-border/40 flex-shrink-0"
       >
         {!isPreviewMode && showGuides && (
           <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:16px_16px]" />
@@ -177,7 +190,9 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
                 backgroundColor: isSelected ? "rgba(2, 132, 199, 0.05)" : "transparent",
                 cursor: isPreviewMode ? "default" : "move",
               }}
-              className="group flex items-center overflow-hidden px-1 focus-visible:outline-2 focus-visible:outline-sky-600"
+              className={`group flex items-center overflow-visible px-1 focus-visible:outline-2 focus-visible:outline-sky-600 ${
+                !isPreviewMode && !isSelected ? "hover:border-sky-400/40" : ""
+              }`}
             >
               {el.type === "divider" ? (
                 <hr className="w-full border-t border-slate-300" />
@@ -200,10 +215,16 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
               )}
 
               {isSelected && (
-                <div
-                  onMouseDown={(e) => onMouseDownResize(e, el.id)}
-                  className="absolute bottom-0 end-0 w-2.5 h-2.5 bg-sky-600 border border-white cursor-se-resize"
-                />
+                <>
+                  <div
+                    onMouseDown={(e) => onMouseDownResize(e, el.id)}
+                    className="absolute bottom-0 end-0 w-3 h-3 rounded-full bg-white border-2 border-sky-600 shadow-xs cursor-se-resize translate-x-1/2 translate-y-1/2 rtl:-translate-x-1/2 z-10 hover:scale-125 transition-transform"
+                    title="Drag to resize"
+                  />
+                  <div className="absolute -top-5 start-0 bg-sky-600 text-white font-mono text-[9px] px-1.5 py-0.5 rounded shadow-xs whitespace-nowrap pointer-events-none z-10">
+                    {`${Math.round(el.w)} × ${Math.round(el.h)}`}
+                  </div>
+                </>
               )}
             </div>
           );
@@ -217,8 +238,9 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
               top: Math.min(marquee.startY, marquee.currentY),
               width: Math.abs(marquee.currentX - marquee.startX),
               height: Math.abs(marquee.currentY - marquee.startY),
-              backgroundColor: "rgba(2, 132, 199, 0.1)",
+              backgroundColor: "rgba(2, 132, 199, 0.08)",
               border: "1px dashed #0284c7",
+              borderRadius: "2px",
               pointerEvents: "none",
             }}
           />
