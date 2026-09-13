@@ -45,7 +45,7 @@ export function TemplateEditorPageControls({
         }
         variant="ghost"
         size="sm"
-        className="h-8 px-2 text-xs font-medium rounded hover:bg-background/80 transition-all flex items-center gap-1"
+        className="min-h-11 px-2 text-xs font-medium rounded hover:bg-background/80 transition-all flex items-center gap-1"
         title={
           orientation === "landscape"
             ? t("templateEditor.portrait")

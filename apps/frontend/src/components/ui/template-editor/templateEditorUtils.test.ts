@@ -21,11 +21,12 @@ describe("templateEditorUtils", () => {
   });
 
   describe("newId", () => {
-    it("generates unique element IDs", () => {
+    it("generates unique element IDs with el_ prefix and UUID suffix", () => {
       const id1 = newId();
       const id2 = newId();
-      expect(id1).toMatch(/^el_\d+$/);
-      expect(id2).toMatch(/^el_\d+$/);
+      // crypto.randomUUID() format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
+      expect(id1).toMatch(/^el_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      expect(id2).toMatch(/^el_[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
       expect(id1).not.toBe(id2);
     });
   });

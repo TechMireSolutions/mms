@@ -7076,4 +7076,13 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "templateEditor.duplicate": "ڈپلیکیٹ کریں",
   "templateEditor.emptyHint": "کسی عنصر پر کلک کر کے اس کی خصوصیات میں ترمیم کریں",
   "templateEditor.emptyHintDetail": "منتقل کرنے کے لیے گھسیٹیں • سائز تبدیل کرنے کے لیے کونے کو گھسیٹیں",
+  "templateEditor.labelText": "سرخط / متن",
+  "templateEditor.fontFamily": "خط کا خاندان",
+  "templateEditor.themePalette": "رنگ پیلیٹ",
+  "templateEditor.elementsSelected": "{count} عناصر منتخب",
+  "templateEditor.layerOrdering": "پرتیں ترتیب دینا",
+  "templateEditor.toFront": "آگے لائیں",
+  "templateEditor.toBack": "پیچھے لے جائیں",
+  "templateEditor.logoPlaceholder": "لوگو",
+  "templateEditor.previewMode": "معائنہ موڈ",
 };

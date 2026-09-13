@@ -43,7 +43,7 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
       <div className="flex items-center gap-2 pb-2 border-b border-border">
         <Layers className="w-4 h-4 text-primary" aria-hidden="true" />
         <p className="text-xs font-bold uppercase tracking-wider text-foreground m-0">
-          {selectedElements.length} Elements Selected
+          {t("templateEditor.elementsSelected", { count: selectedElements.length })}
         </p>
       </div>
 
@@ -85,7 +85,7 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
       {onBringToFront && onSendToBack && (
         <div className="pt-2 border-t border-border">
           <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest mb-1.5 m-0">
-            Layer Ordering
+            {t("templateEditor.layerOrdering")}
           </p>
           <div className="grid grid-cols-2 gap-1.5">
             <Button
@@ -96,7 +96,7 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
               title="Bring to Front"
             >
               <ArrowUpToLine className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>To Front</span>
+              <span>{t("templateEditor.toFront")}</span>
             </Button>
             <Button
               type="button"
@@ -106,7 +106,7 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
               title="Send to Back"
             >
               <ArrowDownToLine className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>To Back</span>
+              <span>{t("templateEditor.toBack")}</span>
             </Button>
           </div>
         </div>

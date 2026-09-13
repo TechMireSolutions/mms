@@ -124,10 +124,11 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
       </div>
 
       <div className="space-y-2">
-        <label className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
-          Label / Text
+        <label htmlFor={`label-input-${selectedElement.id}`} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
+          {t("templateEditor.labelText")}
         </label>
         <input
+          id={`label-input-${selectedElement.id}`}
           type="text"
           value={selectedElement.label}
           onChange={(e) => onPatchElement(selectedElement.id, { label: e.target.value })}

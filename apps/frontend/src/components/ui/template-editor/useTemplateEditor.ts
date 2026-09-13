@@ -3,7 +3,7 @@
  * @description Headless hook managing template state, undo/redo stacks, element lifecycle, and shortcut commands.
  */
 
-import { useEffect, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   getPageDimensions,
@@ -58,22 +58,41 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<DragStateInfo<TPayload> | null>(null);
   const resizeState = useRef<ResizeStateInfo<TPayload> | null>(null);
+  // Timer ref for the "saved" flash — cleared on unmount to prevent state update on unmounted component
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const canvasScale = customZoom ?? autoScale;
   const orientation = template.orientation || "portrait";
-  const size = getPageDimensions(template.pageSize, orientation);
-  const selectedId = selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null;
-  const selectedElements = template.elements.filter((el) => selectedIds.includes(el.id));
-  const selectedElement = template.elements.find((el) => el.id === selectedId);
 
-  const setSelectedId = (id: string | null) => setSelectedIds(id ? [id] : []);
-  const deselectAll = () => setSelectedIds([]);
-  const selectAll = () => setSelectedIds(template.elements.map((el) => el.id));
+  // Memoize derived values to avoid recomputation on every render
+  const size = useMemo(() => getPageDimensions(template.pageSize, orientation), [template.pageSize, orientation]);
+  const selectedId = useMemo(
+    () => (selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null),
+    [selectedIds]
+  );
+  const selectedElements = useMemo(
+    () => template.elements.filter((el) => selectedIds.includes(el.id)),
+    [template.elements, selectedIds]
+  );
+  const selectedElement = useMemo(
+    () => template.elements.find((el) => el.id === selectedId),
+    [template.elements, selectedId]
+  );
 
-  const zoomIn = () => setCustomZoom((prev) => Math.min(2.5, Number(((prev ?? canvasScale) + 0.1).toFixed(2))));
-  const zoomOut = () => setCustomZoom((prev) => Math.max(0.3, Number(((prev ?? canvasScale) - 0.1).toFixed(2))));
-  const zoomReset = () => setCustomZoom(1);
-  const zoomFit = () => setCustomZoom(null);
+  const setSelectedId = useCallback((id: string | null) => setSelectedIds(id ? [id] : []), []);
+  const deselectAll = useCallback(() => setSelectedIds([]), []);
+  const selectAll = useCallback(() => setSelectedIds(template.elements.map((el) => el.id)), [template.elements]);
+
+  const zoomIn = useCallback(
+    () => setCustomZoom((prev) => Math.min(2.5, Number(((prev ?? canvasScale) + 0.1).toFixed(2)))),
+    [canvasScale]
+  );
+  const zoomOut = useCallback(
+    () => setCustomZoom((prev) => Math.max(0.3, Number(((prev ?? canvasScale) - 0.1).toFixed(2)))),
+    [canvasScale]
+  );
+  const zoomReset = useCallback(() => setCustomZoom(1), []);
+  const zoomFit = useCallback(() => setCustomZoom(null), []);
 
   useEffect(() => {
     const viewport = canvasViewportRef.current;
@@ -88,43 +107,54 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     return () => observer.disconnect();
   }, [size.width]);
 
-  const pushHistory = (currentTemplate: DocumentTemplate<TPayload>) => {
+  // Cleanup the saved-flash timer on unmount to prevent state update on unmounted component
+  useEffect(() => {
+    return () => {
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    };
+  }, []);
+
+  const pushHistory = useCallback((currentTemplate: DocumentTemplate<TPayload>) => {
     setHistory((historyStack) => [...historyStack.slice(-30), currentTemplate]);
     setFuture([]);
-  };
+  }, []);
 
-  const undo = () => {
-    if (!history.length) return;
-    const prev = history[history.length - 1]!;
-    setFuture((futureStack) => [template, ...futureStack]);
-    setHistory((historyStack) => historyStack.slice(0, -1));
-    setTemplate(prev);
-  };
+  const undo = useCallback(() => {
+    setHistory((historyStack) => {
+      if (!historyStack.length) return historyStack;
+      const prev = historyStack[historyStack.length - 1]!;
+      setFuture((futureStack) => [template, ...futureStack]);
+      setTemplate(prev);
+      return historyStack.slice(0, -1);
+    });
+  }, [template]);
 
-  const redo = () => {
-    if (!future.length) return;
-    const nextTemplate = future[0]!;
-    setHistory((historyStack) => [...historyStack, template]);
-    setFuture((futureStack) => futureStack.slice(1));
-    setTemplate(nextTemplate);
-  };
+  const redo = useCallback(() => {
+    setFuture((futureStack) => {
+      if (!futureStack.length) return futureStack;
+      const nextTemplate = futureStack[0]!;
+      setHistory((historyStack) => [...historyStack, template]);
+      setTemplate(nextTemplate);
+      return futureStack.slice(1);
+    });
+  }, [template]);
 
   type ElementUpdater = (
     elements: TemplateElement<keyof TPayload & string>[]
   ) => TemplateElement<keyof TPayload & string>[];
 
-  const updateElements = (updateFn: ElementUpdater) => {
+  const updateElements = useCallback((updateFn: ElementUpdater) => {
     setTemplate((curr) => ({ ...curr, elements: updateFn(curr.elements) }));
-  };
+  }, []);
 
-  const commitUpdate = (updateFn: ElementUpdater) => {
+  const commitUpdate = useCallback((updateFn: ElementUpdater) => {
     setTemplate((curr) => {
       const nextTemplate = { ...curr, elements: updateFn(curr.elements) };
       setHistory((historyStack) => [...historyStack.slice(-30), curr]);
       setFuture([]);
       return nextTemplate;
     });
-  };
+  }, []);
 
   useTemplateEditorInteractions({
     canvasScale,
@@ -156,29 +186,26 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     hasSelection: selectedIds.length > 0,
   });
 
-  const exportTemplateJson = () => downloadTemplateJson(template);
+  const exportTemplateJson = useCallback(() => downloadTemplateJson(template), [template]);
 
-  const importTemplateJson = (file: File) => {
+  const importTemplateJson = useCallback((file: File) => {
     readTemplateJsonFile<TPayload>(file, (parsed) => {
       commitUpdate(() => parsed.elements);
-      if (parsed.orientation) {
-        handleOrientationChange(parsed.orientation);
-      }
-      if (parsed.pageSize) {
-        handlePageSize(parsed.pageSize);
-      }
+      if (parsed.orientation) handleOrientationChange(parsed.orientation);
+      if (parsed.pageSize) handlePageSize(parsed.pageSize);
     });
-  };
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [commitUpdate]);
 
-  const applyPreset = (presetKey: string) => {
+  const applyPreset = useCallback((presetKey: string) => {
     const match = presets.find((p) => p.key === presetKey);
     if (!match) return;
     pushHistory(template);
     setTemplate(match.template);
     setSelectedIds([]);
-  };
+  }, [presets, pushHistory, template]);
 
-  const onMouseDownElement = (event: ReactMouseEvent, elementId: string) => {
+  const onMouseDownElement = useCallback((event: ReactMouseEvent, elementId: string) => {
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
@@ -206,9 +233,9 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
       initialTemplate: template,
       hasMoved: false,
     };
-  };
+  }, [selectedIds, template]);
 
-  const onMouseDownResize = (event: ReactMouseEvent, elementId: string) => {
+  const onMouseDownResize = useCallback((event: ReactMouseEvent, elementId: string) => {
     if (event.button !== 0) return;
     event.preventDefault();
     event.stopPropagation();
@@ -223,36 +250,37 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
       initialTemplate: template,
       hasMoved: false,
     };
-  };
+  }, [template]);
 
-  const handleSave = async () => {
-    if (onSave) {
-      setSaving(true);
-      try {
-        await onSave(template);
-        setSaved(true);
-        setTimeout(() => setSaved(false), 2000);
-      } finally {
-        setSaving(false);
-      }
+  const handleSave = useCallback(async () => {
+    if (!onSave) return;
+    setSaving(true);
+    try {
+      await onSave(template);
+      setSaved(true);
+      // Cleanup any existing timer before scheduling a new one
+      if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      savedTimerRef.current = setTimeout(() => setSaved(false), 2000);
+    } finally {
+      setSaving(false);
     }
-  };
+  }, [onSave, template]);
 
-  const handlePageSize = (pageSizeKey: string) => {
+  const handlePageSize = useCallback((pageSizeKey: string) => {
     pushHistory(template);
     setTemplate((curr) => ({ ...curr, pageSize: pageSizeKey }));
-  };
+  }, [pushHistory, template]);
 
-  const handleOrientationChange = (nextOrientation: TemplateOrientation) => {
+  const handleOrientationChange = useCallback((nextOrientation: TemplateOrientation) => {
     pushHistory(template);
     setTemplate((curr) => ({ ...curr, orientation: nextOrientation }));
-  };
+  }, [pushHistory, template]);
 
-  const resetToDefault = () => {
+  const resetToDefault = useCallback(() => {
     pushHistory(template);
     setTemplate(defaultTemplate);
     setSelectedIds([]);
-  };
+  }, [defaultTemplate, pushHistory, template]);
 
   return {
     t,

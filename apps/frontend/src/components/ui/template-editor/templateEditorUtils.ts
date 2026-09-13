@@ -11,10 +11,8 @@ export function snap(value: number): number {
   return Math.round(value / SNAP) * SNAP;
 }
 
-let idCounter = Date.now();
-
 export function newId(): string {
-  return `el_${++idCounter}`;
+  return `el_${crypto.randomUUID()}`;
 }
 
 export type AlignmentType = "left" | "right" | "top" | "bottom" | "centerH" | "centerV";

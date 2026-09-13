@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Minus, QrCode, Type, Search, Database, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TemplateFieldDefinition } from "@mms/shared";
@@ -23,10 +23,14 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
 }: TemplateEditorElementPaletteProps<TPayload>): React.JSX.Element {
   const [searchQuery, setSearchQuery] = useState("");
 
-  const filteredFields = availableFields.filter(
-    (f) =>
-      f.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      String(f.field).toLowerCase().includes(searchQuery.toLowerCase())
+  const filteredFields = useMemo(
+    () =>
+      availableFields.filter(
+        (f) =>
+          f.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          String(f.field).toLowerCase().includes(searchQuery.toLowerCase())
+      ),
+    [availableFields, searchQuery]
   );
 
   return (

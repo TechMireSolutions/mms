@@ -7076,4 +7076,13 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "templateEditor.duplicate": "تکثیر",
   "templateEditor.emptyHint": "برای ویرایش مشخصات، روی یک عنصر کلیک کنید",
   "templateEditor.emptyHintDetail": "کشیدن برای حرکت • کشیدن گوشه برای تغییر اندازه",
+  "templateEditor.labelText": "برچسب / متن",
+  "templateEditor.fontFamily": "خانواده فونت",
+  "templateEditor.themePalette": "پالت رنگ",
+  "templateEditor.elementsSelected": "{count} عنصر انتخاب شده",
+  "templateEditor.layerOrdering": "مرتب‌سازی لایه‌ها",
+  "templateEditor.toFront": "به جلو",
+  "templateEditor.toBack": "به عقب",
+  "templateEditor.logoPlaceholder": "لوگو",
+  "templateEditor.previewMode": "حالت پیش‌نمایش",
 };

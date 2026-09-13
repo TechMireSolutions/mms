@@ -7078,4 +7078,13 @@ export const APP_TRANSLATIONS_EN = {
   "templateEditor.duplicate": "Duplicate",
   "templateEditor.emptyHint": "Click an element to edit its properties",
   "templateEditor.emptyHintDetail": "Drag to move • Drag corner to resize",
+  "templateEditor.labelText": "Label / Text",
+  "templateEditor.fontFamily": "Font Family",
+  "templateEditor.themePalette": "Theme Palette",
+  "templateEditor.elementsSelected": "{count} Elements Selected",
+  "templateEditor.layerOrdering": "Layer Ordering",
+  "templateEditor.toFront": "To Front",
+  "templateEditor.toBack": "To Back",
+  "templateEditor.logoPlaceholder": "Logo",
+  "templateEditor.previewMode": "Preview Mode",
 } as const;

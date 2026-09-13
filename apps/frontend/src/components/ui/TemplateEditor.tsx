@@ -72,7 +72,7 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
   const handleExportTypst = onExportTypst
     ? () => {
         const payload = (sampleData || {}) as TPayload;
-        void onExportTypst(payload);
+        onExportTypst(payload)?.catch?.(console.error);
       }
     : undefined;
 
@@ -82,7 +82,7 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
           (sampleData || {}) as Record<string, unknown>,
           editor.template as DocumentTemplate
         );
-        void onExportZoho(zohoPayload);
+        onExportZoho(zohoPayload)?.catch?.(console.error);
       }
     : undefined;
 
@@ -154,7 +154,6 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
           onDeselect={editor.deselectAll}
           onMouseDownElement={editor.onMouseDownElement}
           onMouseDownResize={editor.onMouseDownResize}
-          onDuplicateElement={editor.duplicateElement}
           onDeleteElement={editor.deleteElement}
           onSelectElements={(ids) => editor.setSelectedIds(ids)}
           sampleData={sampleData}

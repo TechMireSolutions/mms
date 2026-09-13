@@ -29,7 +29,7 @@ export function TemplateEditorZoomControls({
         onClick={onZoomOut}
         variant="ghost"
         size="icon"
-        className="h-8 w-8 rounded hover:bg-background/80"
+        className="min-h-11 min-w-11 rounded hover:bg-background/80"
         title="Zoom Out"
       >
         <ZoomOut className="w-3.5 h-3.5" aria-hidden="true" />
@@ -38,7 +38,7 @@ export function TemplateEditorZoomControls({
         type="button"
         onClick={onZoomReset}
         variant="ghost"
-        className="h-8 px-2 text-[11px] font-mono font-medium hover:bg-background/80"
+        className="min-h-11 px-2 text-[11px] font-mono font-medium hover:bg-background/80"
         title="Reset Zoom to 100%"
       >
         {canvasScale ? `${Math.round(canvasScale * 100)}%` : "100%"}
@@ -48,7 +48,7 @@ export function TemplateEditorZoomControls({
         onClick={onZoomIn}
         variant="ghost"
         size="icon"
-        className="h-8 w-8 rounded hover:bg-background/80"
+        className="min-h-11 min-w-11 rounded hover:bg-background/80"
         title="Zoom In"
       >
         <ZoomIn className="w-3.5 h-3.5" aria-hidden="true" />
@@ -59,7 +59,7 @@ export function TemplateEditorZoomControls({
           onClick={onZoomFit}
           variant="ghost"
           size="icon"
-          className="h-8 w-8 rounded hover:bg-background/80"
+          className="min-h-11 min-w-11 rounded hover:bg-background/80"
           title="Fit to Width"
         >
           <Scan className="w-3.5 h-3.5" aria-hidden="true" />

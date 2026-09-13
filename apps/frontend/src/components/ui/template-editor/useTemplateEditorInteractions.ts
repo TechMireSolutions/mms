@@ -1,9 +1,11 @@
 /**
  * @file useTemplateEditorInteractions.ts
  * @description Drag, resize, and mouse interaction handling for the visual template canvas.
+ * Uses React 19 useEffectEvent for stable handlers that always read current canvasScale
+ * without causing listener re-subscription on every render.
  */
 
-import { useCallback, useEffect, type Dispatch, type RefObject, type SetStateAction } from "react";
+import { useEffect, useEffectEvent, type Dispatch, type RefObject, type SetStateAction } from "react";
 import type { DocumentTemplate, TemplateElement } from "@mms/shared";
 import { snap } from "./templateEditorUtils";
 
@@ -52,7 +54,7 @@ export function useTemplateEditorInteractions<TPayload = Record<string, unknown>
   setHistory,
   setFuture,
 }: UseTemplateEditorInteractionsOptions<TPayload>) {
-  const onMouseMove = useCallback((event: MouseEvent) => {
+  const onMouseMove = useEffectEvent((event: MouseEvent) => {
     const currentDrag = dragState.current;
     if (currentDrag) {
       currentDrag.hasMoved = true;
@@ -86,9 +88,9 @@ export function useTemplateEditorInteractions<TPayload = Record<string, unknown>
         )
       );
     }
-  }, [canvasScale, dragState, resizeState, updateElements]);
+  });
 
-  const onMouseUp = useCallback(() => {
+  const onMouseUp = useEffectEvent(() => {
     if (dragState.current?.hasMoved) {
       const initial = dragState.current.initialTemplate;
       setHistory((historyStack) => [...historyStack.slice(-30), initial]);
@@ -100,14 +102,16 @@ export function useTemplateEditorInteractions<TPayload = Record<string, unknown>
     }
     dragState.current = null;
     resizeState.current = null;
-  }, [dragState, resizeState, setFuture, setHistory]);
+  });
 
   useEffect(() => {
-    window.addEventListener("mousemove", onMouseMove);
+    // passive: true is safe here — we never call preventDefault() in mousemove
+    window.addEventListener("mousemove", onMouseMove, { passive: true });
     window.addEventListener("mouseup", onMouseUp);
     return () => {
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("mouseup", onMouseUp);
     };
-  }, [onMouseMove, onMouseUp]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 }

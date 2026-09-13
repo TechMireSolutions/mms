@@ -7076,4 +7076,13 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "templateEditor.duplicate": "تكرار",
   "templateEditor.emptyHint": "انقر على عنصر لتعديل خصائصه",
   "templateEditor.emptyHintDetail": "اسحب للتحريك • اسحب الزاوية لتغيير الحجم",
+  "templateEditor.labelText": "التسمية / النص",
+  "templateEditor.fontFamily": "عائلة الخط",
+  "templateEditor.themePalette": "لوحة الألوان",
+  "templateEditor.elementsSelected": "{count} عناصر محددة",
+  "templateEditor.layerOrdering": "ترتيب الطبقات",
+  "templateEditor.toFront": "إلى الأمام",
+  "templateEditor.toBack": "إلى الخلف",
+  "templateEditor.logoPlaceholder": "شعار",
+  "templateEditor.previewMode": "وضع المعاينة",
 };

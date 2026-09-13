@@ -27,6 +27,15 @@ export interface TemplateEditorTypographySectionProps {
   t: TranslationFunction;
 }
 
+// Stable outside component — recreating this array on every render is wasteful
+const STATIC_SWATCHES = [
+  { labelKey: "Dark", color: "#0f172a" },
+  { labelKey: "Muted", color: "#64748b" },
+  { labelKey: "Emerald", color: "#10b981" },
+  { labelKey: "Amber", color: "#f59e0b" },
+  { labelKey: "Red", color: "#ef4444" },
+] as const;
+
 export function TemplateEditorTypographySection({
   elementId,
   elStyle,
@@ -43,7 +52,7 @@ export function TemplateEditorTypographySection({
 
       <div className="space-y-1">
         <label className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
-          Font Family
+          {t("templateEditor.fontFamily")}
         </label>
         <FormSelect
           aria-label="Font Family"
@@ -83,23 +92,19 @@ export function TemplateEditorTypographySection({
       </div>
 
       <div className="space-y-1.5">
-        <span className="text-[11px] text-muted-foreground font-semibold">Theme Palette:</span>
+        <span className="text-[11px] text-muted-foreground font-semibold">{t("templateEditor.themePalette")}:</span>
         <div className="flex items-center gap-2 flex-wrap">
           {[
-            { label: "Primary", color: primaryColor || "#059669" },
-            { label: "Secondary", color: secondaryColor || "#047857" },
-            { label: "Dark", color: "#0f172a" },
-            { label: "Muted", color: "#64748b" },
-            { label: "Emerald", color: "#10b981" },
-            { label: "Amber", color: "#f59e0b" },
-            { label: "Red", color: "#ef4444" },
+            { labelKey: "Primary", color: primaryColor || "#059669" },
+            { labelKey: "Secondary", color: secondaryColor || "#047857" },
+            ...STATIC_SWATCHES,
           ].map((swatch) => {
             const isSelected = (elStyle.color || "").toLowerCase() === swatch.color.toLowerCase();
             return (
               <button
                 key={swatch.color}
                 type="button"
-                title={swatch.label}
+                title={swatch.labelKey}
                 onClick={() => onPatchStyle(elementId, { color: swatch.color })}
                 style={{ backgroundColor: swatch.color }}
                 className={`w-6 h-6 rounded-full border transition-all cursor-pointer shadow-xs ${
@@ -161,13 +166,13 @@ export function TemplateEditorTypographySection({
 
       <div className="flex items-center gap-2 pt-1">
         <Checkbox
-          id="dir-rtl-toggle"
+          id={`dir-rtl-toggle-${elementId}`}
           checked={elStyle.direction === "rtl"}
           onCheckedChange={(checked) =>
             onPatchStyle(elementId, { direction: checked ? "rtl" : "ltr" })
           }
         />
-        <label htmlFor="dir-rtl-toggle" className="text-xs font-medium cursor-pointer">
+        <label htmlFor={`dir-rtl-toggle-${elementId}`} className="text-xs font-medium cursor-pointer">
           {t("templateEditor.rtl")}
         </label>
       </div>
