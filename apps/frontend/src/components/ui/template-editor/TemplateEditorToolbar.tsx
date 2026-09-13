@@ -134,11 +134,10 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           type="button"
           onClick={onToggleGuides}
           variant="outline"
-          className={`min-h-11 px-2.5 text-xs rounded-lg border transition-all shadow-none ${
-            showGuides
+          className={`min-h-11 px-2.5 text-xs rounded-lg border transition-all shadow-none ${showGuides
               ? "border-primary/40 bg-primary/10 text-primary font-medium"
               : "border-border text-muted-foreground hover:bg-muted"
-          }`}
+            }`}
           title={t("templateEditor.toggleGuides")}
         >
           {showGuides ? (
@@ -154,11 +153,10 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           type="button"
           onClick={onTogglePreview}
           variant={isPreviewMode ? "default" : "outline"}
-          className={`min-h-11 px-3 text-xs font-semibold rounded-lg border transition-all shadow-none flex items-center gap-1.5 ms-2 ${
-            isPreviewMode
+          className={`min-h-11 px-3 text-xs font-semibold rounded-lg border transition-all shadow-none flex items-center gap-1.5 ms-2 ${isPreviewMode
               ? "bg-primary text-primary-foreground border-primary shadow-xs"
               : "border-border hover:bg-muted"
-          }`}
+            }`}
           title={isPreviewMode ? "Switch to Edit Mode" : "Switch to Live Preview"}
         >
           {isPreviewMode ? (
@@ -242,11 +240,10 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className={`min-h-11 px-4 text-xs font-semibold rounded-lg transition-all shadow-none flex items-center gap-1.5 ${
-            saved
+          className={`min-h-11 px-4 text-xs font-semibold rounded-lg transition-all shadow-none flex items-center gap-1.5 ${saved
               ? "bg-emerald-600 hover:bg-emerald-600 text-white"
               : "bg-primary text-primary-foreground hover:bg-primary/90"
-          }`}
+            }`}
         >
           <Save className="w-3.5 h-3.5" aria-hidden="true" />
           <span>
