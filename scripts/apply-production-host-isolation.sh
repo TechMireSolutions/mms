@@ -61,7 +61,11 @@ export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
 export NODE_ENV=production
 assert_production_backend_port "$PORT" "Backend PORT" || exit 1
 
-pm2 restart mmsv2-backend --update-env 2>/dev/null || bash scripts/deploy-recover-backend.sh "$ENV_FILE"
+if [ -f scripts/deploy-recover-backend.sh ]; then
+  bash scripts/deploy-recover-backend.sh "$ENV_FILE"
+else
+  pm2 restart mmsv2-backend --update-env 2>/dev/null || true
+fi
 bash scripts/deploy-verify.sh "$ENV_FILE"
 pm2 save 2>/dev/null || true
 
