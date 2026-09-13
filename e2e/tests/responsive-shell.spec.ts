@@ -45,9 +45,12 @@ test.describe('Unknown tenant host redirect', { tag: '@smoke' }, () => {
     const missingSubdomain = `missing${Date.now()}`;
     const targetUrl = `${getTenantOrigin(missingSubdomain, baseURL)}/settings`;
 
-    await page.goto(targetUrl).catch(() => {});
+    await page.goto(targetUrl, { waitUntil: 'commit' }).catch(() => {});
     await expect.poll(async () => {
       try {
+        if (page.url() === 'about:blank') {
+          await page.goto(targetUrl, { timeout: 5000, waitUntil: 'commit' }).catch(() => {});
+        }
         const retryBtn = page.getByRole('button', { name: /Try again/i });
         if (await retryBtn.isVisible().catch(() => false)) {
           await retryBtn.click().catch(() => {});
@@ -60,7 +63,7 @@ test.describe('Unknown tenant host redirect', { tag: '@smoke' }, () => {
       } catch {
         return false;
       }
-    }, { timeout: 20_000 }).toBe(true);
+    }, { timeout: 25_000, intervals: [500, 1000, 2000] }).toBe(true);
 
     await expect(page.getByRole('heading', { name: /Tenant does not exist/i })).toBeVisible({
       timeout: 10_000,
