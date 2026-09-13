@@ -124,6 +124,22 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
 
       {isSelected && !isPreviewMode && (
         <>
+          {/* Top-Left corner marker */}
+          <div
+            aria-hidden="true"
+            className="absolute -top-1 -start-1 w-1.5 h-1.5 bg-white border border-sky-600 rounded-2xs pointer-events-none z-10"
+          />
+          {/* Top-Right corner marker */}
+          <div
+            aria-hidden="true"
+            className="absolute -top-1 -end-1 w-1.5 h-1.5 bg-white border border-sky-600 rounded-2xs pointer-events-none z-10"
+          />
+          {/* Bottom-Left corner marker */}
+          <div
+            aria-hidden="true"
+            className="absolute -bottom-1 -start-1 w-1.5 h-1.5 bg-white border border-sky-600 rounded-2xs pointer-events-none z-10"
+          />
+
           {/* East (width) handle */}
           <div
             role="button"
@@ -134,7 +150,7 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
               right: -4,
               top: "calc(50% - 6px)",
             }}
-            className="absolute w-2.5 h-3 rounded-xs bg-white border-2 border-sky-600 shadow-xs cursor-ew-resize z-10 hover:scale-125 transition-transform focus-visible:ring-2 focus-visible:ring-sky-600"
+            className="absolute w-2.5 h-3 rounded-xs bg-white border-2 border-sky-600 shadow-xs cursor-ew-resize z-10 hover:scale-125 hover:bg-sky-50 transition-transform focus-visible:ring-2 focus-visible:ring-sky-600"
             title={t("templateEditor.dragToResize")}
           />
           {/* South (height) handle */}
@@ -147,7 +163,7 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
               bottom: -4,
               left: "calc(50% - 6px)",
             }}
-            className="absolute w-3 h-2.5 rounded-xs bg-white border-2 border-sky-600 shadow-xs cursor-ns-resize z-10 hover:scale-125 transition-transform focus-visible:ring-2 focus-visible:ring-sky-600"
+            className="absolute w-3 h-2.5 rounded-xs bg-white border-2 border-sky-600 shadow-xs cursor-ns-resize z-10 hover:scale-125 hover:bg-sky-50 transition-transform focus-visible:ring-2 focus-visible:ring-sky-600"
             title={t("templateEditor.dragToResize")}
           />
           {/* South-East (2D) handle */}
@@ -160,12 +176,12 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
               right: -5,
               bottom: -5,
             }}
-            className="absolute w-3 h-3 rounded-full bg-white border-2 border-sky-600 shadow-xs cursor-se-resize z-10 hover:scale-125 transition-transform focus-visible:ring-2 focus-visible:ring-sky-600"
+            className="absolute w-3 h-3 rounded-xs bg-white border-2 border-sky-600 shadow-xs cursor-se-resize z-10 hover:scale-125 hover:bg-sky-50 transition-transform focus-visible:ring-2 focus-visible:ring-sky-600"
             title={t("templateEditor.dragToResize")}
           />
           <div
-            style={{ left: 0, top: -20 }}
-            className="absolute bg-sky-600 text-white font-mono text-2xs px-1.5 py-0.5 rounded shadow-xs whitespace-nowrap pointer-events-none z-10"
+            style={{ left: 0, top: -22 }}
+            className="absolute bg-sky-600 text-white font-mono text-3xs font-medium px-1.5 py-0.5 rounded shadow-xs whitespace-nowrap pointer-events-none z-20"
           >
             {`${Math.round(el.w)} × ${Math.round(el.h)}`}
           </div>

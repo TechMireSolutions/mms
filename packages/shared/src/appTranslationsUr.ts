@@ -7137,6 +7137,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "templateEditor.transparent": "شفاف",
   "templateEditor.emptyCanvasHint": "خالی دستاویز کینوس",
   "templateEditor.emptyCanvasHintDetail": "ڈیزائن شروع کرنے کے لیے بائیں جانب کے پینل سے عناصر شامل کریں",
+  "templateEditor.properties": "خصوصیات",
   "examinations.templateSaved": "امتحانات کا ٹیمپلیٹ کامیابی سے محفوظ ہو گیا",
   "examinations.templateEditorTitle": "امتحانی دستاویز ٹیمپلیٹ ایڈیٹر",
   "finance.templateSaved": "مالیاتی ٹیمپلیٹ کامیابی سے محفوظ ہو گیا",

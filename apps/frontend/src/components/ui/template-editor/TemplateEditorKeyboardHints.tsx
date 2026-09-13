@@ -1,6 +1,6 @@
 /**
  * @file TemplateEditorKeyboardHints.tsx
- * @description Bottom footer displaying platform-aware keyboard shortcut hints.
+ * @description Sleek bottom footer displaying platform-aware keyboard shortcut hints in a compact single-line bar.
  */
 
 import React, { useMemo } from "react";
@@ -33,19 +33,26 @@ export function TemplateEditorKeyboardHints({
   ];
 
   return (
-    <footer className="flex-shrink-0 border-t border-border/80 bg-card/95 px-4 py-1.5 flex items-center gap-4 flex-wrap select-none">
-      <div className="flex items-center gap-1 text-3xs font-semibold text-muted-foreground me-1">
-        <Keyboard className="w-3.5 h-3.5 text-primary/70" aria-hidden="true" />
-        <span className="hidden sm:inline">{t("templateEditor.shortcuts")}:</span>
+    <footer
+      aria-label={t("templateEditor.shortcuts")}
+      className="flex-shrink-0 h-7 border-t border-border/70 bg-card/95 backdrop-blur-xs px-3 flex items-center justify-between gap-3 select-none overflow-hidden"
+    >
+      <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5 w-full">
+        <div className="flex items-center gap-1.5 font-semibold text-muted-foreground shrink-0 text-3xs uppercase tracking-wider">
+          <Keyboard className="w-3.5 h-3.5 text-primary/80" aria-hidden="true" />
+          <span>{t("templateEditor.shortcuts")}:</span>
+        </div>
+        <div className="flex items-center gap-3 shrink-0">
+          {shortcuts.map(([shortcutKey, shortcutLabel]) => (
+            <span key={shortcutKey} className="text-muted-foreground/90 flex items-center gap-1 whitespace-nowrap">
+              <kbd className="px-1.5 py-0.5 rounded border border-border/80 bg-muted/60 text-foreground font-mono text-3xs font-medium shadow-2xs">
+                {shortcutKey}
+              </kbd>
+              <span className="text-3xs">{shortcutLabel}</span>
+            </span>
+          ))}
+        </div>
       </div>
-      {shortcuts.map(([shortcutKey, shortcutLabel]) => (
-        <span key={shortcutKey} className="text-xs text-muted-foreground/90 flex items-center gap-1">
-          <kbd className="px-1.5 py-0.5 rounded border border-border/80 bg-muted/70 text-foreground font-mono text-3xs shadow-2xs">
-            {shortcutKey}
-          </kbd>
-          <span>{shortcutLabel}</span>
-        </span>
-      ))}
     </footer>
   );
 }

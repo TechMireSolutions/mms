@@ -7139,6 +7139,7 @@ export const APP_TRANSLATIONS_EN = {
   "templateEditor.transparent": "Transparent",
   "templateEditor.emptyCanvasHint": "Blank document canvas",
   "templateEditor.emptyCanvasHintDetail": "Add elements from the left palette to start designing",
+  "templateEditor.properties": "Properties",
   "examinations.templateSaved": "Examination template saved successfully",
   "examinations.templateEditorTitle": "Examinations Document Template Editor",
   "finance.templateSaved": "Finance template saved successfully",
