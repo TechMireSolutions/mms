@@ -18,6 +18,11 @@ export interface UseTemplateEditorShortcutsOptions {
   onSave?: () => void;
   copySelected?: () => void;
   paste?: () => void;
+  resizeSelected?: (dw: number, dh: number) => void;
+  onClose?: () => void;
+  zoomIn?: () => void;
+  zoomOut?: () => void;
+  zoomReset?: () => void;
 }
 
 export function useTemplateEditorShortcuts({
@@ -32,28 +37,65 @@ export function useTemplateEditorShortcuts({
   onSave,
   copySelected,
   paste,
+  resizeSelected,
+  onClose,
+  zoomIn,
+  zoomOut,
+  zoomReset,
 }: UseTemplateEditorShortcutsOptions): void {
   const handleKeyDown = useEffectEvent((e: KeyboardEvent) => {
-    const target = e.target as HTMLElement | null;
-    if (
-      target &&
-      (target.tagName === "INPUT" ||
-        target.tagName === "TEXTAREA" ||
-        target.isContentEditable ||
-        target.tagName === "SELECT")
-    ) {
-      return;
-    }
-
+    // Intercept global Cmd/Ctrl+S before anything else
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "s") {
       e.preventDefault();
       onSave?.();
       return;
     }
 
+    // Intercept Zoom shortcuts before form input returns
+    if ((e.metaKey || e.ctrlKey) && (e.key === "=" || e.key === "+")) {
+      e.preventDefault();
+      zoomIn?.();
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && (e.key === "-" || e.key === "_")) {
+      e.preventDefault();
+      zoomOut?.();
+      return;
+    }
+    if ((e.metaKey || e.ctrlKey) && e.key === "0") {
+      e.preventDefault();
+      zoomReset?.();
+      return;
+    }
+
+    const target = e.target as HTMLElement | null;
+    const isInputFocused = Boolean(
+      target &&
+        (target.tagName === "INPUT" ||
+          target.tagName === "TEXTAREA" ||
+          target.isContentEditable ||
+          target.tagName === "SELECT")
+    );
+
+    if (isInputFocused) {
+      if (e.key === "Escape") {
+        target?.blur();
+      }
+      return;
+    }
+
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "c") {
       if (hasSelection) {
         copySelected?.();
+      }
+      return;
+    }
+
+    if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "x") {
+      if (hasSelection) {
+        e.preventDefault();
+        copySelected?.();
+        deleteSelected();
       }
       return;
     }
@@ -93,7 +135,11 @@ export function useTemplateEditorShortcuts({
 
     if (e.key === "Escape") {
       e.preventDefault();
-      deselectAll();
+      if (hasSelection) {
+        deselectAll();
+      } else {
+        onClose?.();
+      }
       return;
     }
 
@@ -106,6 +152,30 @@ export function useTemplateEditorShortcuts({
     }
 
     if (!hasSelection) return;
+
+    if (e.altKey && resizeSelected) {
+      const step = e.shiftKey ? 8 : 1;
+      if (e.key === "ArrowRight") {
+        e.preventDefault();
+        resizeSelected(step, 0);
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        resizeSelected(-step, 0);
+        return;
+      }
+      if (e.key === "ArrowDown") {
+        e.preventDefault();
+        resizeSelected(0, step);
+        return;
+      }
+      if (e.key === "ArrowUp") {
+        e.preventDefault();
+        resizeSelected(0, -step);
+        return;
+      }
+    }
 
     const step = e.shiftKey ? 8 : 1;
     if (e.key === "ArrowLeft") {

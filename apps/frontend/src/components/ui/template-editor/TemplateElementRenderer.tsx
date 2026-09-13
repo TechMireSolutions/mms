@@ -1,13 +1,15 @@
 /**
  * @file TemplateElementRenderer.tsx
- * @description Memoized visual renderer for individual canvas elements with selection handles and a11y.
+ * @description Memoized visual renderer for individual canvas elements with 8-point selection handles, table primitives, and a11y.
  */
 
 import React from "react";
 import { generateQrSvgUri } from "@/lib/qrCodeGenerator";
-import type { DocumentTemplate } from "@mms/shared";
+import { isRtlText, type DocumentTemplate } from "@mms/shared";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { interpolateTemplateTokens } from "./templateEditorUtils";
+import type { ResizeHandle } from "./useTemplateEditorInteractions";
 
 export interface TemplateElementRendererProps<TPayload = Record<string, unknown>> {
   el: DocumentTemplate<TPayload>["elements"][number];
@@ -18,10 +20,27 @@ export interface TemplateElementRendererProps<TPayload = Record<string, unknown>
   };
   sampleData?: TPayload;
   onMouseDownElement: (event: React.MouseEvent, elementId: string) => void;
-  onMouseDownResize: (event: React.MouseEvent, elementId: string, handle?: "se" | "e" | "s") => void;
+  onMouseDownResize: (event: React.MouseEvent, elementId: string, handle?: ResizeHandle) => void;
   onDeleteElement: (elementId: string) => void;
   t: TranslationFunction;
 }
+
+const RESIZE_HANDLES: { handle: ResizeHandle; style: React.CSSProperties; cursor: string }[] = [
+  { handle: "n", style: { top: -4, left: "calc(50% - 6px)" }, cursor: "cursor-ns-resize" },
+  { handle: "s", style: { bottom: -4, left: "calc(50% - 6px)" }, cursor: "cursor-ns-resize" },
+  { handle: "w", style: { left: -4, top: "calc(50% - 6px)" }, cursor: "cursor-ew-resize" },
+  { handle: "e", style: { right: -4, top: "calc(50% - 6px)" }, cursor: "cursor-ew-resize" },
+  { handle: "nw", style: { top: -5, left: -5 }, cursor: "cursor-nwse-resize" },
+  { handle: "ne", style: { top: -5, right: -5 }, cursor: "cursor-nesw-resize" },
+  { handle: "sw", style: { bottom: -5, left: -5 }, cursor: "cursor-nesw-resize" },
+  { handle: "se", style: { bottom: -5, right: -5 }, cursor: "cursor-se-resize" },
+];
+
+const DEFAULT_TABLE_ROWS: Record<string, unknown>[] = [
+  { id: "1", description: "Tuition / Fee Item 1", amount: "300.00" },
+  { id: "2", description: "Syllabus / Materials", amount: "100.00" },
+  { id: "3", description: "Activity & Facilities", amount: "50.00" },
+];
 
 export const TemplateElementRenderer = React.memo(function TemplateElementRenderer<
   TPayload = Record<string, unknown>
@@ -36,13 +55,53 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
   onDeleteElement,
   t,
 }: TemplateElementRendererProps<TPayload>) {
+  const [logoLoadFailed, setLogoLoadFailed] = React.useState(false);
+
+  React.useEffect(() => {
+    setLogoLoadFailed(false);
+  }, [branding.logoUrl]);
+
+  const qrPayload = React.useMemo(() => {
+    if (el.type !== "qrcode") return "";
+    if (el.field && sampleData) {
+      const fieldVal = (sampleData as Record<string, unknown>)[el.field];
+      if (fieldVal) return String(fieldVal);
+    }
+    if (el.label && el.label !== t("templateEditor.qrCode") && el.label !== "QR Code") {
+      return el.label;
+    }
+    return branding.logoUrl || "MMS-DOC";
+  }, [el.type, el.field, el.label, sampleData, branding.logoUrl, t]);
+
+  const qrSvgUri = React.useMemo(
+    () => (el.type === "qrcode" ? generateQrSvgUri(qrPayload) : ""),
+    [el.type, qrPayload]
+  );
+
   const st = el.style || {};
 
   let content = el.label;
   if (el.type === "field" && el.field && sampleData) {
     const val = (sampleData as Record<string, unknown>)[el.field];
-    if (val != null) content = String(val);
+    if (val != null && String(val).trim() !== "") {
+      content = String(val);
+    } else if (!isPreviewMode) {
+      content = `{${el.field}}`;
+    } else {
+      content = "";
+    }
+  } else if (sampleData) {
+    content = interpolateTemplateTokens(content, sampleData as Record<string, unknown>);
   }
+  if (!content.trim() && !isPreviewMode) {
+    content = el.label || `{${el.type}}`;
+  }
+
+  const isArabic = isRtlText(content);
+  const elementDirection = st.direction || (isArabic ? "rtl" : "ltr");
+  const elementTextAlign = st.textAlign || (isArabic ? "right" : "left");
+  const defaultColAlign = elementDirection === "rtl" ? "right" : "left";
+  const tableFontSize = st.fontSize ? Math.max(7, st.fontSize - 2) : 9;
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
     if (isPreviewMode) return;
@@ -60,15 +119,25 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
     ? `${el.label} (${el.type})`
     : `${t("templateEditor.element")} ${el.type}`;
 
+  // Find array rows for table primitives if available
+  let tableRows: Record<string, unknown>[] = DEFAULT_TABLE_ROWS;
+  if (el.type === "table" && sampleData && typeof sampleData === "object") {
+    for (const key of Object.keys(sampleData)) {
+      const val = (sampleData as Record<string, unknown>)[key];
+      if (Array.isArray(val) && val.length > 0) {
+        tableRows = val as Record<string, unknown>[];
+        break;
+      }
+    }
+  }
+
   return (
     <div
-      role="button"
+      dir={elementDirection}
+      role={isPreviewMode ? undefined : "button"}
       tabIndex={isPreviewMode ? -1 : 0}
       aria-label={elementAriaLabel}
       aria-pressed={isSelected}
-      onClick={(e) => {
-        if (!isPreviewMode) onMouseDownElement(e, el.id);
-      }}
       onMouseDown={(e) => {
         if (!isPreviewMode) onMouseDownElement(e, el.id);
       }}
@@ -85,8 +154,8 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
         textDecoration: st.textDecoration || "none",
         fontFamily: st.fontFamily || "inherit",
         color: st.color || PRINT_NEUTRAL.text,
-        textAlign: st.textAlign || "left",
-        direction: st.direction || "ltr",
+        textAlign: elementTextAlign,
+        direction: elementDirection,
         border: isSelected
           ? "1.5px solid #0284c7"
           : st.borderWidth
@@ -103,84 +172,114 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
       }`}
     >
       {el.type === "divider" ? (
-        <hr className="w-full border-t border-slate-300" />
+        <hr
+          style={{
+            borderColor: st.borderColor || st.color || "#cbd5e1",
+            borderTopWidth: st.borderWidth != null ? `${st.borderWidth}px` : "1px",
+          }}
+          className="w-full border-0 border-t m-0"
+        />
       ) : el.type === "qrcode" ? (
         <img
-          src={generateQrSvgUri(branding.logoUrl || "MMS-DOC")}
-          alt="QR"
+          src={qrSvgUri}
+          alt={t("templateEditor.qrCode")}
           className="w-full h-full object-contain pointer-events-none"
         />
       ) : el.type === "logo" ? (
-        branding.logoUrl ? (
-          <img src={branding.logoUrl} alt="Logo" className="w-full h-full object-contain pointer-events-none" />
+        branding.logoUrl && !logoLoadFailed ? (
+          <img
+            src={branding.logoUrl}
+            alt={t("templateEditor.logo")}
+            onError={() => setLogoLoadFailed(true)}
+            className="w-full h-full object-contain pointer-events-none"
+          />
         ) : (
           <div className="w-full h-full border border-dashed border-slate-300 flex items-center justify-center text-2xs text-slate-400 font-medium">
             {t("templateEditor.logoPlaceholder")}
           </div>
         )
+      ) : el.type === "table" ? (
+        <div className="w-full h-full overflow-hidden flex flex-col select-none text-xs pointer-events-none">
+          {el.tableConfig?.showHeader !== false && (
+            <div
+              style={{
+                fontSize: `${tableFontSize}px`,
+                backgroundColor: el.tableConfig?.headerBackground || "#f1f5f9",
+                borderBottom: `1px solid ${el.tableConfig?.borderColor || "#cbd5e1"}`,
+              }}
+              className="flex items-center font-bold uppercase tracking-wider text-muted-foreground shrink-0 px-1 py-1"
+            >
+              {(el.columns || []).map((col, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    width: col.width ? `${col.width}px` : undefined,
+                    flex: col.width ? undefined : 1,
+                    textAlign: col.align || defaultColAlign,
+                  }}
+                  className="truncate px-1"
+                >
+                  {col.header}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex-1 overflow-hidden divide-y divide-border/40">
+            {tableRows.slice(0, 4).map((row, rIdx) => (
+              <div
+                key={rIdx}
+                style={{
+                  fontSize: `${tableFontSize}px`,
+                  height: el.tableConfig?.rowHeight || 22,
+                  backgroundColor: el.tableConfig?.zebra && rIdx % 2 === 1 ? "rgba(0,0,0,0.03)" : "transparent",
+                }}
+                className="flex items-center px-1"
+              >
+                {(el.columns || []).map((col, cIdx) => (
+                  <div
+                    key={cIdx}
+                    style={{
+                      width: col.width ? `${col.width}px` : undefined,
+                      flex: col.width ? undefined : 1,
+                      textAlign: col.align || defaultColAlign,
+                    }}
+                    className="truncate px-1"
+                  >
+                    {String(row[col.field] ?? row[col.header.toLowerCase()] ?? "-")}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
       ) : (
-        <span className="truncate w-full">{content}</span>
+        <span
+          className={`w-full ${
+            el.h > 32 || content.includes("\n")
+              ? "break-words whitespace-pre-wrap leading-tight"
+              : "truncate"
+          }`}
+        >
+          {content}
+        </span>
       )}
 
       {isSelected && !isPreviewMode && (
         <>
-          {/* Top-Left corner marker */}
+          {RESIZE_HANDLES.map(({ handle, style, cursor }) => (
+            <div
+              key={handle}
+              tabIndex={-1}
+              aria-hidden="true"
+              onMouseDown={(e) => onMouseDownResize(e, el.id, handle)}
+              style={style}
+              className={`absolute w-3 h-3 rounded-xs bg-white border-2 border-sky-600 shadow-xs z-10 hover:scale-125 hover:bg-sky-50 transition-transform touch-none ${cursor}`}
+              title={t("templateEditor.dragToResize")}
+            />
+          ))}
           <div
-            aria-hidden="true"
-            className="absolute -top-1 -start-1 w-1.5 h-1.5 bg-white border border-sky-600 rounded-2xs pointer-events-none z-10"
-          />
-          {/* Top-Right corner marker */}
-          <div
-            aria-hidden="true"
-            className="absolute -top-1 -end-1 w-1.5 h-1.5 bg-white border border-sky-600 rounded-2xs pointer-events-none z-10"
-          />
-          {/* Bottom-Left corner marker */}
-          <div
-            aria-hidden="true"
-            className="absolute -bottom-1 -start-1 w-1.5 h-1.5 bg-white border border-sky-600 rounded-2xs pointer-events-none z-10"
-          />
-
-          {/* East (width) handle */}
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label={t("templateEditor.dragToResize")}
-            onMouseDown={(e) => onMouseDownResize(e, el.id, "e")}
-            style={{
-              right: -4,
-              top: "calc(50% - 6px)",
-            }}
-            className="absolute w-2.5 h-3 rounded-xs bg-white border-2 border-sky-600 shadow-xs cursor-ew-resize z-10 hover:scale-125 hover:bg-sky-50 transition-transform focus-visible:ring-2 focus-visible:ring-sky-600"
-            title={t("templateEditor.dragToResize")}
-          />
-          {/* South (height) handle */}
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label={t("templateEditor.dragToResize")}
-            onMouseDown={(e) => onMouseDownResize(e, el.id, "s")}
-            style={{
-              bottom: -4,
-              left: "calc(50% - 6px)",
-            }}
-            className="absolute w-3 h-2.5 rounded-xs bg-white border-2 border-sky-600 shadow-xs cursor-ns-resize z-10 hover:scale-125 hover:bg-sky-50 transition-transform focus-visible:ring-2 focus-visible:ring-sky-600"
-            title={t("templateEditor.dragToResize")}
-          />
-          {/* South-East (2D) handle */}
-          <div
-            role="button"
-            tabIndex={0}
-            aria-label={t("templateEditor.dragToResize")}
-            onMouseDown={(e) => onMouseDownResize(e, el.id, "se")}
-            style={{
-              right: -5,
-              bottom: -5,
-            }}
-            className="absolute w-3 h-3 rounded-xs bg-white border-2 border-sky-600 shadow-xs cursor-se-resize z-10 hover:scale-125 hover:bg-sky-50 transition-transform focus-visible:ring-2 focus-visible:ring-sky-600"
-            title={t("templateEditor.dragToResize")}
-          />
-          <div
-            style={{ left: 0, top: -22 }}
+            style={{ left: 0, top: el.y < 24 ? el.h + 4 : -22 }}
+            aria-live="polite"
             className="absolute bg-sky-600 text-white font-mono text-3xs font-medium px-1.5 py-0.5 rounded shadow-xs whitespace-nowrap pointer-events-none z-20"
           >
             {`${Math.round(el.w)} × ${Math.round(el.h)}`}

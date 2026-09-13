@@ -10,9 +10,9 @@ import {
   type PageSizeInfo,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { boxesIntersect } from "./templateEditorUtils";
+import { boxesIntersect, type SmartGuideLine } from "./templateEditorUtils";
 import { TemplateElementRenderer } from "./TemplateElementRenderer";
-
+import type { ResizeHandle } from "./useTemplateEditorInteractions";
 
 export interface TemplateEditorCanvasProps<TPayload = Record<string, unknown>> {
   template: DocumentTemplate<TPayload>;
@@ -30,10 +30,14 @@ export interface TemplateEditorCanvasProps<TPayload = Record<string, unknown>> {
   printTokens?: never;
   onDeselect: () => void;
   onMouseDownElement: (event: React.MouseEvent, elementId: string) => void;
-  onMouseDownResize: (event: React.MouseEvent, elementId: string, handle?: "se" | "e" | "s") => void;
+  onMouseDownResize: (event: React.MouseEvent, elementId: string, handle?: ResizeHandle) => void;
   onSelectElements?: (elementIds: string[]) => void;
   onDeleteElement: (elementId: string) => void;
   sampleData?: TPayload;
+  activeGuides?: SmartGuideLine[];
+  isSpacePressed?: boolean;
+  isPanning?: boolean;
+  onPointerDownViewport?: (event: React.PointerEvent<HTMLElement>) => void;
   t: TranslationFunction;
 }
 
@@ -54,6 +58,10 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
   onSelectElements,
   onDeleteElement,
   sampleData,
+  activeGuides = [],
+  isSpacePressed = false,
+  isPanning = false,
+  onPointerDownViewport,
   t,
 }: TemplateEditorCanvasProps<TPayload>): React.JSX.Element {
   const [marquee, setMarquee] = React.useState<{ startX: number; startY: number; currentX: number; currentY: number } | null>(null);
@@ -62,8 +70,10 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
   const marqueeRef = React.useRef(marquee);
   React.useEffect(() => { marqueeRef.current = marquee; }, [marquee]);
 
+  const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
+
   const onMouseDownBackground = (event: React.MouseEvent) => {
-    if (event.button !== 0) return;
+    if (event.button !== 0 || isPreviewMode || isSpacePressed) return;
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
     const startX = (event.clientX - rect.left) / canvasScale;
@@ -78,8 +88,8 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
     if (!current) return;
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
-    const currentX = (event.clientX - rect.left) / canvasScale;
-    const currentY = (event.clientY - rect.top) / canvasScale;
+    const currentX = Math.max(0, Math.min(size.width, (event.clientX - rect.left) / canvasScale));
+    const currentY = Math.max(0, Math.min(size.height, (event.clientY - rect.top) / canvasScale));
     if (Math.abs(currentX - current.startX) > 4 || Math.abs(currentY - current.startY) > 4) {
       marqueeMovedRef.current = true;
     }
@@ -121,13 +131,21 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
 
   return (
     <main
-      ref={canvasViewportRef as React.RefObject<HTMLDivElement>}
+      role="region"
+      ref={canvasViewportRef as React.RefObject<HTMLElement>}
       tabIndex={-1}
-      aria-label="Template Canvas Viewport"
-      className="flex-1 bg-muted/30 overflow-auto p-6 flex flex-col items-center justify-start relative min-h-[300px] select-none focus:outline-none"
+      aria-label={t("templateEditor.canvasViewport")}
+      onPointerDown={onPointerDownViewport}
+      className={`flex-1 bg-muted/30 overflow-auto p-6 flex flex-col items-center justify-start relative min-h-[300px] select-none focus:outline-none print:p-0 print:m-0 print:bg-white print:overflow-visible ${
+        isSpacePressed ? (isPanning ? "cursor-grabbing" : "cursor-grab") : ""
+      }`}
     >
       {/* Status pill */}
-      <div className="mb-3 px-3 py-1 rounded-full bg-background/90 border border-border/70 text-3xs text-muted-foreground font-mono shadow-sm backdrop-blur-md flex items-center gap-2 ring-1 ring-black/[0.04]">
+      <div
+        role="status"
+        aria-label={t("templateEditor.canvasViewport")}
+        className="mb-3 px-3 py-1 rounded-full bg-background/90 border border-border/70 text-3xs text-muted-foreground font-mono shadow-sm backdrop-blur-md flex items-center gap-2 ring-1 ring-black/[0.04] print:hidden"
+      >
         <span className="font-semibold text-foreground/80">{size.label}</span>
         <span className="text-border">·</span>
         <span>{size.width} × {size.height} pt</span>
@@ -156,20 +174,53 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
           boxShadow:
             "0 25px 50px -12px rgba(0, 0, 0, 0.16), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(0, 0, 0, 0.08)",
         }}
-        className="relative bg-white text-black select-none transition-shadow rounded-xs border border-border/40 flex-shrink-0"
+        className={`relative bg-white text-black select-none transition-shadow rounded-xs border border-border/40 shrink-0 print:border-none print:shadow-none print:m-0 print:transform-none ${
+          isSpacePressed ? (isPanning ? "cursor-grabbing" : "cursor-grab") : ""
+        }`}
       >
         {!isPreviewMode && showGuides && (
-          <>
+          <div className="print:hidden" aria-hidden="true">
             <div className="absolute inset-0 pointer-events-none opacity-20 bg-[radial-gradient(#94a3b8_1px,transparent_1px)] [background-size:16px_16px]" />
             <div
               className="absolute inset-[24px] pointer-events-none border border-dashed border-sky-400/35 rounded-xs"
               title={t("templateEditor.safeMargins")}
             />
-          </>
+          </div>
         )}
 
+        {!isPreviewMode && activeGuides.map((guide) => (
+          <div
+            key={`guide-${guide.orientation}-${guide.position}`}
+            aria-hidden="true"
+            className="print:hidden"
+            style={
+              guide.orientation === "vertical"
+                ? {
+                    position: "absolute",
+                    left: guide.position,
+                    top: 0,
+                    bottom: 0,
+                    width: 1,
+                    borderLeft: "1px dashed #0284c7",
+                    pointerEvents: "none",
+                    zIndex: 25,
+                  }
+                : {
+                    position: "absolute",
+                    top: guide.position,
+                    left: 0,
+                    right: 0,
+                    height: 1,
+                    borderTop: "1px dashed #0284c7",
+                    pointerEvents: "none",
+                    zIndex: 25,
+                  }
+            }
+          />
+        ))}
+
         {template.elements.length === 0 && !isPreviewMode && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+          <div aria-hidden="true" className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none print:hidden">
             <div className="flex flex-col items-center gap-3 opacity-40">
               <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-slate-400 flex items-center justify-center">
                 <LayoutTemplate className="w-7 h-7 text-slate-400" />
@@ -186,7 +237,7 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
           <TemplateElementRenderer
             key={el.id}
             el={el}
-            isSelected={!isPreviewMode && (selectedIds.includes(el.id) || selectedId === el.id)}
+            isSelected={!isPreviewMode && (selectedSet.has(el.id) || selectedId === el.id)}
             isPreviewMode={isPreviewMode}
             branding={branding}
             sampleData={sampleData}
@@ -199,6 +250,8 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
 
         {!isPreviewMode && marquee && (
           <div
+            aria-hidden="true"
+            className="print:hidden"
             style={{
               position: "absolute",
               left: Math.min(marquee.startX, marquee.currentX),

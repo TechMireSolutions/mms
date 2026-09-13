@@ -4,8 +4,10 @@ import {
   boxesIntersect,
   bringSelectedToFront,
   centerElementOnPage,
+  computeSmartGuides,
   distributeElements,
   downloadTemplateJson,
+  interpolateTemplateTokens,
   newId,
   normalizeHexColor,
   readTemplateJsonFile,
@@ -177,6 +179,17 @@ describe("templateEditorUtils", () => {
       expect(normalizeHexColor("#10B981")).toBe("#10b981");
     });
 
+    it("converts rgb and rgba strings to 6-digit hex", () => {
+      expect(normalizeHexColor("rgb(16, 185, 129)")).toBe("#10b981");
+      expect(normalizeHexColor("rgba(255, 255, 255, 0.8)")).toBe("#ffffff");
+      expect(normalizeHexColor("rgb(0, 0, 0)")).toBe("#000000");
+    });
+
+    it("handles common named colors", () => {
+      expect(normalizeHexColor("white")).toBe("#ffffff");
+      expect(normalizeHexColor("black")).toBe("#000000");
+    });
+
     it("falls back to default for invalid colors", () => {
       expect(normalizeHexColor("invalid-color", "#0f172a")).toBe("#0f172a");
       expect(normalizeHexColor(undefined, "#123456")).toBe("#123456");
@@ -197,15 +210,19 @@ describe("templateEditorUtils", () => {
       globalThis.URL.createObjectURL = createObjectURLMock;
       globalThis.URL.revokeObjectURL = revokeObjectURLMock;
 
+      let downloadName = "";
       const clickSpy = vi.fn();
       vi.spyOn(document, "createElement").mockReturnValue({
         set href(_val: string) {},
-        set download(_val: string) {},
+        set download(val: string) {
+          downloadName = val;
+        },
         click: clickSpy,
       } as unknown as HTMLElement);
 
-      downloadTemplateJson(template);
+      downloadTemplateJson(template, "invoice");
 
+      expect(downloadName).toBe("invoice-template-a5.json");
       expect(createObjectURLMock).toHaveBeenCalled();
       expect(clickSpy).toHaveBeenCalled();
       expect(revokeObjectURLMock).not.toHaveBeenCalled();
@@ -217,6 +234,15 @@ describe("templateEditorUtils", () => {
   });
 
   describe("readTemplateJsonFile", () => {
+    it("rejects files exceeding 5MB limit", () => {
+      const hugeFile = { size: 6 * 1024 * 1024, name: "huge.json" } as File;
+      const onSuccess = vi.fn();
+      const onError = vi.fn();
+      readTemplateJsonFile(hugeFile, onSuccess, onError);
+      expect(onError).toHaveBeenCalledWith(expect.any(Error));
+      expect(onSuccess).not.toHaveBeenCalled();
+    });
+
     it("parses valid template JSON and triggers onSuccess", () => {
       const template: DocumentTemplate = {
         pageSize: "A4",
@@ -236,6 +262,75 @@ describe("templateEditorUtils", () => {
       // simulate reader load
       const readerInstance = (globalThis as unknown as { FileReader: unknown }).FileReader;
       expect(readerInstance).toBeDefined();
+    });
+  });
+
+  describe("interpolateTemplateTokens", () => {
+    it("interpolates mustache tokens with corresponding data keys", () => {
+      const result = interpolateTemplateTokens("Hello {{studentName}}, ID: {{studentId}}", {
+        studentName: "Fatima Zahra",
+        studentId: 1042,
+      });
+      expect(result).toBe("Hello Fatima Zahra, ID: 1042");
+    });
+
+    it("resolves nested dotted paths in structured data", () => {
+      const result = interpolateTemplateTokens("Student: {{ student.profile.fullName }}, Due: {{ invoice.total }}", {
+        student: { profile: { fullName: "Ali Khan" } },
+        invoice: { total: 0 },
+      });
+      expect(result).toBe("Student: Ali Khan, Due: 0");
+    });
+
+    it("leaves unresolved tokens intact when key is missing in data", () => {
+      const result = interpolateTemplateTokens("Fee: {{feeAmount}}, Due: {{dueDate}}", {
+        feeAmount: "500.00",
+      });
+      expect(result).toBe("Fee: 500.00, Due: {{dueDate}}");
+    });
+
+    it("returns raw text when data is missing or empty string", () => {
+      expect(interpolateTemplateTokens("")).toBe("");
+      expect(interpolateTemplateTokens("No tokens here")).toBe("No tokens here");
+      expect(interpolateTemplateTokens("{{token}}", undefined)).toBe("{{token}}");
+    });
+  });
+
+  describe("computeSmartGuides", () => {
+    const pageWidth = 400;
+    const pageHeight = 600;
+
+    it("snaps active box left edge to neighboring box left edge within threshold", () => {
+      const activeBox = { x: 52, y: 100, w: 50, h: 30 }; // within 5px of 50
+      const otherBoxes = [{ x: 50, y: 200, w: 100, h: 40 }];
+
+      const result = computeSmartGuides(activeBox, otherBoxes, pageWidth, pageHeight, 5);
+
+      expect(result.x).toBe(52); // 50 snapped to nearest 4 = 52
+      expect(result.guides).toContainEqual({ orientation: "vertical", position: 50 });
+    });
+
+    it("snaps active box to center of page horizontally", () => {
+      // Page width 400, center is 200. Box w=60, center is x + 30.
+      // If x = 171, center is 201 (within 5px of 200).
+      const activeBox = { x: 171, y: 100, w: 60, h: 30 };
+      const otherBoxes: { x: number; y: number; w: number; h: number }[] = [];
+
+      const result = computeSmartGuides(activeBox, otherBoxes, pageWidth, pageHeight, 5);
+
+      // Snapped x = 200 - 30 = 170 -> snapped nearest 4 = 172
+      expect(result.x).toBe(172);
+      expect(result.guides).toContainEqual({ orientation: "vertical", position: 200 });
+    });
+
+    it("does not snap when distance exceeds threshold", () => {
+      const activeBox = { x: 88, y: 100, w: 50, h: 30 };
+      const otherBoxes = [{ x: 50, y: 200, w: 100, h: 40 }];
+
+      const result = computeSmartGuides(activeBox, otherBoxes, pageWidth, pageHeight, 5);
+
+      expect(result.x).toBe(88);
+      expect(result.guides.filter((g) => g.orientation === "vertical")).toHaveLength(0);
     });
   });
 });

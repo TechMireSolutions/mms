@@ -11,6 +11,7 @@ import {
   CheckCheck,
   Undo2,
   LayoutTemplate,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -56,6 +57,8 @@ export interface TemplateEditorToolbarProps<TPayload = Record<string, unknown>> 
   onClose: () => void;
   onExportTypst?: () => void;
   onExportZoho?: () => void;
+  onPrint?: () => void;
+  isExporting?: boolean;
   t: TranslationFunction;
 }
 
@@ -96,10 +99,16 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   onClose,
   onExportTypst,
   onExportZoho,
+  onPrint,
+  isExporting = false,
   t,
 }: TemplateEditorToolbarProps<TPayload>): React.JSX.Element {
   return (
-    <header className="flex items-center gap-1 px-3 py-1.5 border-b border-border bg-card/95 backdrop-blur-sm flex-shrink-0 overflow-x-auto overflow-y-hidden min-h-[52px]">
+    <header
+      role="toolbar"
+      aria-label={title || t("templateEditor.title")}
+      className="flex items-center gap-1 px-3 py-1.5 border-b border-border bg-card/95 backdrop-blur-sm flex-shrink-0 overflow-x-auto overflow-y-hidden min-h-[52px] print:hidden"
+    >
       {/* Group 1: Title */}
       <div className="flex items-center gap-2 shrink-0">
         <h2 className="font-bold text-sm text-foreground m-0 whitespace-nowrap">
@@ -107,7 +116,9 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         </h2>
         {isDirty && !saved && (
           <span
-            className="px-1.5 py-0.5 rounded-full text-3xs font-bold bg-amber-500/10 text-amber-600 border border-amber-500/25 animate-pulse whitespace-nowrap"
+            role="status"
+            aria-live="polite"
+            className="px-1.5 py-0.5 rounded-full text-3xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 dark:border-amber-500/40 animate-pulse whitespace-nowrap"
             title={t("templateEditor.dirtyNotice")}
           >
             {t("templateEditor.dirtyNotice")}
@@ -118,26 +129,32 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       <Divider />
 
       {/* Group 2: Undo / Redo */}
-      <div className="flex items-center gap-0.5 shrink-0">
+      <div
+        role="group"
+        aria-label={t("templateEditor.undo")}
+        className="flex items-center gap-0.5 shrink-0"
+      >
         <Button
           type="button"
           onClick={onUndo}
-          disabled={!historyLength}
+          disabled={!historyLength || saving}
           title={t("templateEditor.undo")}
+          aria-label={t("templateEditor.undo")}
           variant="ghost"
           size="icon"
-          className="min-h-9 min-w-9 h-9 w-9 rounded-md hover:bg-muted disabled:opacity-30 transition-all shadow-none"
+          className="touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md hover:bg-muted disabled:opacity-30 transition-all shadow-none"
         >
           <Undo2 className="w-3.5 h-3.5" aria-hidden="true" />
         </Button>
         <Button
           type="button"
           onClick={onRedo}
-          disabled={!futureLength}
+          disabled={!futureLength || saving}
           title={t("templateEditor.redo")}
+          aria-label={t("templateEditor.redo")}
           variant="ghost"
           size="icon"
-          className="min-h-9 min-w-9 h-9 w-9 rounded-md hover:bg-muted disabled:opacity-30 transition-all shadow-none"
+          className="touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md hover:bg-muted disabled:opacity-30 transition-all shadow-none"
         >
           <Redo2 className="w-3.5 h-3.5" aria-hidden="true" />
         </Button>
@@ -159,18 +176,24 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       <Divider />
 
       {/* Group 4: Guides + Preview toggle */}
-      <div className="flex items-center gap-0.5 shrink-0">
+      <div
+        role="group"
+        aria-label={t("templateEditor.preview")}
+        className="flex items-center gap-0.5 shrink-0"
+      >
         <Button
           type="button"
           onClick={onToggleGuides}
+          aria-pressed={showGuides}
+          aria-label={t("templateEditor.toggleGuides")}
+          title={t("templateEditor.toggleGuides")}
           variant="ghost"
           size="icon"
-          className={`min-h-9 min-w-9 h-9 w-9 rounded-md transition-all shadow-none ${
+          className={`touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md transition-all shadow-none ${
             showGuides
               ? "bg-primary/10 text-primary hover:bg-primary/20"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
-          title={t("templateEditor.toggleGuides")}
         >
           {showGuides ? (
             <Eye className="w-3.5 h-3.5" aria-hidden="true" />
@@ -183,14 +206,16 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           <Button
             type="button"
             onClick={onTogglePreview}
+            aria-pressed={isPreviewMode}
+            aria-label={isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")}
+            title={isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")}
             variant="ghost"
             size="icon"
-            className={`min-h-9 min-w-9 h-9 w-9 rounded-md transition-all shadow-none ${
+            className={`touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md transition-all shadow-none ${
               isPreviewMode
                 ? "bg-primary/10 text-primary hover:bg-primary/20"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
-            title={isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")}
           >
             {isPreviewMode ? (
               <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
@@ -227,8 +252,13 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
             <FormSelect
               aria-label={t("templateEditor.presets")}
               value=""
+              disabled={saving}
               onChange={(val) => {
-                if (val) onApplyPreset(val);
+                if (!val) return;
+                if (isDirty && !window.confirm(t("templateEditor.discardUnsavedPrompt"))) {
+                  return;
+                }
+                onApplyPreset(val);
               }}
               options={[
                 { value: "", label: t("templateEditor.presets") },
@@ -247,6 +277,9 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           onImportJson={onImportJson}
           onExportTypst={onExportTypst}
           onExportZoho={onExportZoho}
+          onPrint={onPrint}
+          isExporting={isExporting}
+          disabled={saving}
           t={t}
         />
       </div>
@@ -254,15 +287,21 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       {/* Spacer */}
       <div className="flex-1" />
 
-      {/* Group 8: Right actions */}
-      <div className="flex items-center gap-1.5 shrink-0">
+      {/* Group 8: Right actions — sticky on horizontal scroll */}
+      <div
+        role="group"
+        aria-label={t("templateEditor.save")}
+        className="flex items-center gap-1.5 shrink-0 sticky end-0 bg-card/95 ps-2 border-s border-border/50 backdrop-blur-sm z-10"
+      >
         <Button
           type="button"
           onClick={onResetDefault}
+          disabled={saving}
           variant="ghost"
           size="icon"
-          className="min-h-9 min-w-9 h-9 w-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
+          className="touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
           title={t("templateEditor.resetDefault")}
+          aria-label={t("templateEditor.resetDefault")}
         >
           <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
         </Button>
@@ -271,10 +310,12 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           <Button
             type="button"
             onClick={onToggleFullscreen}
+            aria-pressed={fullscreen}
             variant="ghost"
             size="icon"
-            className="min-h-9 min-w-9 h-9 w-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
+            className="touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
             title={t("templateEditor.toggleFullscreen")}
+            aria-label={t("templateEditor.toggleFullscreen")}
           >
             {fullscreen ? (
               <Minimize2 className="w-3.5 h-3.5" aria-hidden="true" />
@@ -286,18 +327,25 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
 
         <Divider />
 
-        {/* Save button — animated success state */}
+        {/* Save button — animated success state & loading spinner */}
         <Button
           type="button"
           onClick={onSave}
           disabled={saving}
-          className={`min-h-9 h-9 px-3.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-none flex items-center gap-1.5 ${
+          aria-busy={saving}
+          aria-label={saving ? t("global.saving") : saved ? t("templateEditor.saved") : t("templateEditor.save")}
+          className={`min-h-10 sm:min-h-9 h-10 sm:h-9 px-3.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-none flex items-center gap-1.5 ${
             saved
               ? "bg-emerald-500 hover:bg-emerald-500 text-white scale-[1.03] shadow-[0_0_12px_rgba(16,185,129,0.35)]"
               : "bg-primary text-primary-foreground hover:bg-primary/90"
           }`}
         >
-          {saved ? (
+          {saving ? (
+            <>
+              <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+              <span>{t("global.saving")}</span>
+            </>
+          ) : saved ? (
             <>
               <CheckCheck className="w-3.5 h-3.5" aria-hidden="true" />
               <span>{t("templateEditor.saved")}</span>
@@ -313,8 +361,11 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         <Button
           type="button"
           onClick={onClose}
+          disabled={saving}
           variant="outline"
-          className="min-h-9 h-9 px-3 text-xs font-medium rounded-lg border-border hover:bg-muted transition-all shadow-none"
+          title={t("templateEditor.close")}
+          aria-label={t("templateEditor.close")}
+          className="min-h-10 sm:min-h-9 h-10 sm:h-9 px-3 text-xs font-medium rounded-lg border-border hover:bg-muted transition-all shadow-none"
         >
           {t("templateEditor.close")}
         </Button>

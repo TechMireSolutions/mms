@@ -80,8 +80,39 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
         idSet.has(el.id)
           ? {
               ...el,
-              x: Math.max(0, el.x + dx),
-              y: Math.max(0, el.y + dy),
+              x: Math.min(Math.max(0, size.width - el.w), Math.max(0, el.x + dx)),
+              y: Math.min(Math.max(0, size.height - el.h), Math.max(0, el.y + dy)),
+            }
+          : el
+      )
+    );
+  };
+
+  const resizeSelected = (dw: number, dh: number) => {
+    if (selectedIds.length === 0) return;
+    const idSet = new Set(selectedIds);
+    commitUpdate((els) =>
+      els.map((el) =>
+        idSet.has(el.id)
+          ? {
+              ...el,
+              w: Math.min(Math.max(20, size.width - el.x), Math.max(20, el.w + dw)),
+              h: Math.min(Math.max(4, size.height - el.y), Math.max(4, el.h + dh)),
+            }
+          : el
+      )
+    );
+  };
+
+  const patchSelectedStyles = (stylePatch: Partial<ElementStyle>) => {
+    if (selectedIds.length === 0) return;
+    const idSet = new Set(selectedIds);
+    commitUpdate((els) =>
+      els.map((el) =>
+        idSet.has(el.id)
+          ? {
+              ...el,
+              style: { ...el.style, ...stylePatch },
             }
           : el
       )
@@ -155,12 +186,19 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   const duplicateElement = (elementId: string) => {
     const el = elements.find((e) => e.id === elementId);
     if (!el) return;
+    const nextX = el.x + 12;
+    const nextY = el.y + 12;
+    const clampedX = nextX + el.w > size.width ? Math.max(0, size.width - el.w - 12) : nextX;
+    const clampedY = nextY + el.h > size.height ? Math.max(0, size.height - el.h - 12) : nextY;
+
     const duplicated: TemplateElement<keyof TPayload & string> = {
       ...el,
       id: newId(),
-      x: el.x + 12,
-      y: el.y + 12,
+      x: clampedX,
+      y: clampedY,
       style: { ...el.style },
+      columns: el.columns ? el.columns.map((col) => ({ ...col })) : undefined,
+      tableConfig: el.tableConfig ? { ...el.tableConfig } : undefined,
     };
     commitUpdate((els) => [...els, duplicated]);
     setSelectedIds([duplicated.id]);
@@ -171,13 +209,21 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     const idSet = new Set(selectedIds);
     const targets = elements.filter((el) => idSet.has(el.id));
     if (targets.length === 0) return;
-    const newElements = targets.map((el) => ({
-      ...el,
-      id: newId(),
-      x: el.x + 12,
-      y: el.y + 12,
-      style: { ...el.style },
-    }));
+    const newElements = targets.map((el) => {
+      const nextX = el.x + 12;
+      const nextY = el.y + 12;
+      const clampedX = nextX + el.w > size.width ? Math.max(0, size.width - el.w - 12) : nextX;
+      const clampedY = nextY + el.h > size.height ? Math.max(0, size.height - el.h - 12) : nextY;
+      return {
+        ...el,
+        id: newId(),
+        x: clampedX,
+        y: clampedY,
+        style: { ...el.style },
+        columns: el.columns ? el.columns.map((col) => ({ ...col })) : undefined,
+        tableConfig: el.tableConfig ? { ...el.tableConfig } : undefined,
+      };
+    });
     commitUpdate((els) => [...els, ...newElements]);
     setSelectedIds(newElements.map((el) => el.id));
   };
@@ -198,13 +244,28 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     );
   };
 
+  const getInsertionPos = (w: number, h: number) => {
+    if (elements.length === 0) return { x: 20, y: 20 };
+    const last = elements[elements.length - 1]!;
+    const nextY = last.y + last.h + 10;
+    if (nextY + h <= size.height - 20) {
+      return { x: 20, y: nextY };
+    }
+    const stagger = (elements.length % 6) * 16;
+    return {
+      x: Math.min(Math.max(0, size.width - w - 20), 20 + stagger),
+      y: Math.min(Math.max(0, size.height - h - 20), 20 + stagger),
+    };
+  };
+
   const addStaticText = () => {
+    const { x, y } = getInsertionPos(200, 18);
     const el: TemplateElement<keyof TPayload & string> = {
       id: newId(),
       type: "static",
       label: t("templateEditor.newText"),
-      x: 20,
-      y: 20,
+      x,
+      y,
       w: 200,
       h: 18,
       style: { fontSize: 11, color: PRINT_NEUTRAL.text },
@@ -214,14 +275,17 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   };
 
   const addHeading = () => {
+    const w = Math.min(320, Math.max(160, size.width - 40));
+    const h = 26;
+    const { x, y } = getInsertionPos(w, h);
     const el: TemplateElement<keyof TPayload & string> = {
       id: newId(),
       type: "static",
       label: t("templateEditor.heading"),
-      x: 20,
-      y: 20,
-      w: Math.min(320, Math.max(160, size.width - 40)),
-      h: 26,
+      x,
+      y,
+      w,
+      h,
       style: { fontSize: 16, fontWeight: "bold", color: PRINT_NEUTRAL.text },
     };
     commitUpdate((els) => [...els, el]);
@@ -229,14 +293,17 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   };
 
   const addDivider = () => {
+    const w = Math.max(40, size.width - 40);
+    const h = 1;
+    const { x, y } = getInsertionPos(w, h);
     const el: TemplateElement<keyof TPayload & string> = {
       id: newId(),
       type: "divider",
       label: "",
-      x: 20,
-      y: 20,
-      w: size.width - 40,
-      h: 1,
+      x,
+      y,
+      w,
+      h,
       style: { color: PRINT_NEUTRAL.border },
     };
     commitUpdate((els) => [...els, el]);
@@ -244,13 +311,14 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   };
 
   const addField = (fieldDef: TemplateFieldDefinition<TPayload>) => {
+    const { x, y } = getInsertionPos(160, 16);
     const el: TemplateElement<keyof TPayload & string> = {
       id: newId(),
       type: "field",
       label: fieldDef.label,
       field: fieldDef.field,
-      x: 20,
-      y: 20,
+      x,
+      y,
       w: 160,
       h: 16,
       style: { fontSize: 10, color: PRINT_NEUTRAL.text },
@@ -260,12 +328,13 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   };
 
   const addQrCode = () => {
+    const { x, y } = getInsertionPos(64, 64);
     const el: TemplateElement<keyof TPayload & string> = {
       id: newId(),
       type: "qrcode",
       label: t("templateEditor.qrCode"),
-      x: 20,
-      y: 20,
+      x,
+      y,
       w: 64,
       h: 64,
     };
@@ -274,14 +343,50 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   };
 
   const addLogo = () => {
+    const { x, y } = getInsertionPos(80, 80);
     const el: TemplateElement<keyof TPayload & string> = {
       id: newId(),
       type: "logo",
       label: t("templateEditor.logo"),
-      x: 20,
-      y: 20,
+      x,
+      y,
       w: 80,
       h: 80,
+    };
+    commitUpdate((els) => [...els, el]);
+    setSelectedIds([el.id]);
+  };
+
+  const addTable = () => {
+    const w = Math.min(500, Math.max(240, size.width - 40));
+    const h = 120;
+    const { x, y } = getInsertionPos(w, h);
+    const el: TemplateElement<keyof TPayload & string> = {
+      id: newId(),
+      type: "table",
+      label: t("templateEditor.table"),
+      x,
+      y,
+      w,
+      h,
+      columns: [
+        { header: "#", field: "id", width: 40, align: "center" },
+        { header: t("accounting.ledger.columns.description") || "Description", field: "description", width: 220, align: "left" },
+        { header: t("finance.columns.amount") || "Amount", field: "amount", width: 100, align: "right" },
+      ],
+      tableConfig: {
+        showHeader: true,
+        rowHeight: 24,
+        zebra: true,
+        borderColor: PRINT_NEUTRAL.border,
+      },
+      style: {
+        fontSize: 10,
+        color: PRINT_NEUTRAL.text,
+        backgroundColor: "#ffffff",
+        borderWidth: 1,
+        borderColor: PRINT_NEUTRAL.border,
+      },
     };
     commitUpdate((els) => [...els, el]);
     setSelectedIds([el.id]);
@@ -290,9 +395,11 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   return {
     patchElement,
     patchStyle,
+    patchSelectedStyles,
     deleteElement,
     deleteSelected,
     nudgeSelected,
+    resizeSelected,
     bringToFront,
     sendToBack,
     bringSelectedToFront,
@@ -310,5 +417,6 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     addField,
     addQrCode,
     addLogo,
+    addTable,
   };
 }

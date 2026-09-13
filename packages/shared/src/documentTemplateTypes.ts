@@ -21,7 +21,11 @@ export const PAGE_SIZES: Record<string, PageSizeInfo> = {
   '58mm': { width: 220, height: 460, label: 'Thermal 58mm' },
 };
 
-export type TemplateOrientation = 'portrait' | 'landscape';
+export const pageSizeKeySchema = z.enum(['A6', 'A5', 'A4', 'Letter', '80mm', '58mm']);
+export type PageSizeKey = z.infer<typeof pageSizeKeySchema> | (string & {});
+
+export const templateOrientationSchema = z.enum(['portrait', 'landscape']);
+export type TemplateOrientation = z.infer<typeof templateOrientationSchema>;
 
 export function getPageDimensions(
   pageSizeKey: string,
@@ -42,21 +46,74 @@ export function getPageDimensions(
   };
 }
 
-export interface ElementStyle {
-  objectFit?: 'contain' | 'cover' | 'fill' | 'none' | 'scale-down';
-  fontSize?: number;
-  fontWeight?: string;
-  textAlign?: 'left' | 'right' | 'center' | 'justify';
-  color?: string;
-  fontFamily?: string;
-  direction?: 'ltr' | 'rtl';
-  fontStyle?: 'normal' | 'italic';
-  textDecoration?: 'none' | 'underline' | 'line-through';
-  backgroundColor?: string;
-  borderRadius?: number;
-  borderWidth?: number;
-  borderColor?: string;
+export const elementStyleSchema = z.object({
+  objectFit: z.enum(['contain', 'cover', 'fill', 'none', 'scale-down']).optional(),
+  fontSize: z.number().optional(),
+  fontWeight: z.string().optional(),
+  textAlign: z.enum(['left', 'right', 'center', 'justify']).optional(),
+  color: z.string().optional(),
+  fontFamily: z.string().optional(),
+  direction: z.enum(['ltr', 'rtl']).optional(),
+  fontStyle: z.enum(['normal', 'italic']).optional(),
+  textDecoration: z.enum(['none', 'underline', 'line-through']).optional(),
+  backgroundColor: z.string().optional(),
+  borderRadius: z.number().optional(),
+  borderWidth: z.number().optional(),
+  borderColor: z.string().optional(),
+}).strict();
+
+export type ElementStyle = z.infer<typeof elementStyleSchema>;
+
+export const templateTableColumnSchema = z.object({
+  id: z.string().optional(),
+  header: z.string(),
+  field: z.string(),
+  width: z.number().optional(),
+  align: z.enum(['left', 'right', 'center']).optional(),
+}).strict();
+
+export type TemplateTableColumn = z.infer<typeof templateTableColumnSchema>;
+
+export const templateTableConfigSchema = z.object({
+  showHeader: z.boolean().optional(),
+  rowHeight: z.number().optional(),
+  zebra: z.boolean().optional(),
+  borderColor: z.string().optional(),
+  headerBackground: z.string().optional(),
+}).strict();
+
+export type TemplateTableConfig = z.infer<typeof templateTableConfigSchema>;
+
+export const templateElementTypeSchema = z.enum([
+  'static',
+  'heading',
+  'field',
+  'divider',
+  'logo',
+  'qrcode',
+  'table',
+]);
+
+export type TemplateElementType = z.infer<typeof templateElementTypeSchema> | (string & {});
+
+export function isRtlText(text: string): boolean {
+  if (!text) return false;
+  return /[\u0590-\u05FF\u0600-\u06FF\u0750-\u077F\u0870-\u089F\u08A0-\u08FF\uFB50-\uFDFF\uFE70-\uFEFF]/.test(text);
 }
+
+export const templateElementSchema = z.object({
+  id: z.string(),
+  type: z.string(),
+  label: z.string(),
+  x: z.number(),
+  y: z.number(),
+  w: z.number(),
+  h: z.number(),
+  style: elementStyleSchema.optional(),
+  field: z.string().optional(),
+  columns: z.array(templateTableColumnSchema).optional(),
+  tableConfig: templateTableConfigSchema.optional(),
+}).strict();
 
 export interface TemplateElement<TField = string> {
   id: string;
@@ -68,7 +125,15 @@ export interface TemplateElement<TField = string> {
   h: number;
   style?: ElementStyle;
   field?: TField;
+  columns?: TemplateTableColumn[];
+  tableConfig?: TemplateTableConfig;
 }
+
+export const documentTemplateSchema = z.object({
+  pageSize: z.string(),
+  orientation: templateOrientationSchema.optional(),
+  elements: z.array(templateElementSchema),
+}).strict();
 
 export interface DocumentTemplate<TPayload = Record<string, unknown>> {
   pageSize: string;
