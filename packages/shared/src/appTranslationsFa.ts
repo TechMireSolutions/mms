@@ -7139,6 +7139,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "templateEditor.borderRadius": "شعاع گوشه",
   "templateEditor.borderColor": "رنگ حاشیه",
   "templateEditor.transparent": "شفاف",
+  "templateEditor.emptyCanvasHint": "بوم طراحی سند خالی است",
+  "templateEditor.emptyCanvasHintDetail": "برای شروع طراحی، عناصری را از پنل سمت چپ اضافه کنید",
   "examinations.templateSaved": "الگوی آزمون با موفقیت ذخیره شد",
   "examinations.templateEditorTitle": "ویرایشگر الگوی اسناد آزمون‌ها",
   "finance.templateSaved": "الگوی مالی با موفقیت ذخیره شد",

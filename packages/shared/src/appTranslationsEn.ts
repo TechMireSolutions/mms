@@ -7137,6 +7137,8 @@ export const APP_TRANSLATIONS_EN = {
   "templateEditor.borderRadius": "Corner Radius",
   "templateEditor.borderColor": "Border Color",
   "templateEditor.transparent": "Transparent",
+  "templateEditor.emptyCanvasHint": "Blank document canvas",
+  "templateEditor.emptyCanvasHintDetail": "Add elements from the left palette to start designing",
   "examinations.templateSaved": "Examination template saved successfully",
   "examinations.templateEditorTitle": "Examinations Document Template Editor",
   "finance.templateSaved": "Finance template saved successfully",

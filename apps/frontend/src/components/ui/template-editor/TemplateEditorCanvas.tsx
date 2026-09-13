@@ -1,9 +1,10 @@
 /**
  * @file TemplateEditorCanvas.tsx
- * @description Central interactive visual design surface with selection handles, marquee, and drag-and-drop.
+ * @description Central interactive visual design surface with selection handles, marquee, drag-and-drop, and canvas empty state.
  */
 
 import React, { useEffectEvent } from "react";
+import { LayoutTemplate } from "lucide-react";
 import {
   type DocumentTemplate,
   type PageSizeInfo,
@@ -125,16 +126,18 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
       aria-label="Template Canvas Viewport"
       className="flex-1 bg-muted/30 overflow-auto p-6 flex flex-col items-center justify-start relative min-h-[300px] select-none focus:outline-none"
     >
-      <div className="mb-3 px-3.5 py-1 rounded-full bg-background/90 border border-border text-3xs text-muted-foreground font-mono shadow-xs backdrop-blur-md flex items-center gap-2">
-        <span className="font-semibold text-foreground">{size.label}</span>
-        <span>•</span>
+      {/* Status pill */}
+      <div className="mb-3 px-3 py-1 rounded-full bg-background/90 border border-border/70 text-3xs text-muted-foreground font-mono shadow-sm backdrop-blur-md flex items-center gap-2 ring-1 ring-black/[0.04]">
+        <span className="font-semibold text-foreground/80">{size.label}</span>
+        <span className="text-border">·</span>
         <span>{size.width} × {size.height} pt</span>
-        <span>•</span>
-        <span className="font-medium text-foreground">{Math.round(canvasScale * 100)}%</span>
+        <span className="text-border">·</span>
+        <span className="font-medium text-foreground/90">{Math.round(canvasScale * 100)}%</span>
         {isPreviewMode && (
           <>
-            <span>•</span>
-            <span className="text-emerald-600 font-bold uppercase tracking-wider text-2xs">
+            <span className="text-border">·</span>
+            <span className="text-emerald-600 font-bold uppercase tracking-wider text-2xs flex items-center gap-1">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
               {t("templateEditor.previewMode")}
             </span>
           </>
@@ -163,6 +166,20 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
               title={t("templateEditor.safeMargins")}
             />
           </>
+        )}
+
+        {template.elements.length === 0 && !isPreviewMode && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none">
+            <div className="flex flex-col items-center gap-3 opacity-40">
+              <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-slate-400 flex items-center justify-center">
+                <LayoutTemplate className="w-7 h-7 text-slate-400" />
+              </div>
+              <div className="text-center">
+                <p className="text-xs font-semibold text-slate-500 m-0">{t("templateEditor.emptyCanvasHint")}</p>
+                <p className="text-2xs text-slate-400 mt-0.5 m-0">{t("templateEditor.emptyCanvasHintDetail")}</p>
+              </div>
+            </div>
+          </div>
         )}
 
         {template.elements.map((el) => (

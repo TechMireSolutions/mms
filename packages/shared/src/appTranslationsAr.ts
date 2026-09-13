@@ -7135,6 +7135,8 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "templateEditor.borderRadius": "نصف قطر الزاوية",
   "templateEditor.borderColor": "لون الإطار",
   "templateEditor.transparent": "شفاف",
+  "templateEditor.emptyCanvasHint": "مساحة تصميم المستند فارغة",
+  "templateEditor.emptyCanvasHintDetail": "أضف عناصر من القائمة الجانبية لبدء التصميم",
   "examinations.templateSaved": "تم حفظ قالب الاختبارات بنجاح",
   "examinations.templateEditorTitle": "محرر قوالب مستندات الاختبارات",
   "finance.templateSaved": "تم حفظ القالب المالي بنجاح",

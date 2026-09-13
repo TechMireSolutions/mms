@@ -2,14 +2,15 @@ import React from "react";
 import {
   Eye,
   EyeOff,
-  LayoutTemplate,
   Maximize2,
   Minimize2,
   Pencil,
   Redo2,
   RotateCcw,
   Save,
+  CheckCheck,
   Undo2,
+  LayoutTemplate,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -58,6 +59,11 @@ export interface TemplateEditorToolbarProps<TPayload = Record<string, unknown>> 
   t: TranslationFunction;
 }
 
+/** Thin vertical separator between toolbar groups */
+function Divider() {
+  return <div className="h-5 w-px bg-border/60 mx-1 shrink-0" aria-hidden="true" />;
+}
+
 export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   title,
   template,
@@ -93,14 +99,15 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   t,
 }: TemplateEditorToolbarProps<TPayload>): React.JSX.Element {
   return (
-    <header className="flex items-center gap-3 px-4 py-2.5 border-b border-border bg-card flex-shrink-0 flex-wrap">
-      <div className="flex items-center gap-2">
-        <h2 className="font-bold text-sm text-foreground m-0">
+    <header className="flex items-center gap-1 px-3 py-1.5 border-b border-border bg-card/95 backdrop-blur-sm flex-shrink-0 overflow-x-auto overflow-y-hidden min-h-[52px]">
+      {/* Group 1: Title */}
+      <div className="flex items-center gap-2 shrink-0">
+        <h2 className="font-bold text-sm text-foreground m-0 whitespace-nowrap">
           {title || t("templateEditor.title")}
         </h2>
         {isDirty && !saved && (
           <span
-            className="px-2 py-0.5 rounded-full text-3xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/25"
+            className="px-1.5 py-0.5 rounded-full text-3xs font-bold bg-amber-500/10 text-amber-600 border border-amber-500/25 animate-pulse whitespace-nowrap"
             title={t("templateEditor.dirtyNotice")}
           >
             {t("templateEditor.dirtyNotice")}
@@ -108,7 +115,10 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         )}
       </div>
 
-      <div className="flex items-center gap-0.5 ms-2">
+      <Divider />
+
+      {/* Group 2: Undo / Redo */}
+      <div className="flex items-center gap-0.5 shrink-0">
         <Button
           type="button"
           onClick={onUndo}
@@ -116,9 +126,9 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           title={t("templateEditor.undo")}
           variant="ghost"
           size="icon"
-          className="min-h-11 min-w-11 rounded-lg hover:bg-muted disabled:opacity-30 transition-all shadow-none"
+          className="min-h-9 min-w-9 h-9 w-9 rounded-md hover:bg-muted disabled:opacity-30 transition-all shadow-none"
         >
-          <Undo2 className="w-4 h-4" aria-hidden="true" />
+          <Undo2 className="w-3.5 h-3.5" aria-hidden="true" />
         </Button>
         <Button
           type="button"
@@ -127,29 +137,39 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           title={t("templateEditor.redo")}
           variant="ghost"
           size="icon"
-          className="min-h-11 min-w-11 rounded-lg hover:bg-muted disabled:opacity-30 transition-all shadow-none"
+          className="min-h-9 min-w-9 h-9 w-9 rounded-md hover:bg-muted disabled:opacity-30 transition-all shadow-none"
         >
-          <Redo2 className="w-4 h-4" aria-hidden="true" />
+          <Redo2 className="w-3.5 h-3.5" aria-hidden="true" />
         </Button>
       </div>
 
-      <TemplateEditorPageControls
-        pageSize={template.pageSize}
-        orientation={template.orientation || "portrait"}
-        onPageSizeChange={onPageSizeChange}
-        onOrientationChange={onOrientationChange}
-        t={t}
-      />
+      <Divider />
 
-      <div className="flex items-center gap-1 ms-2">
+      {/* Group 3: Page controls */}
+      <div className="shrink-0">
+        <TemplateEditorPageControls
+          pageSize={template.pageSize}
+          orientation={template.orientation || "portrait"}
+          onPageSizeChange={onPageSizeChange}
+          onOrientationChange={onOrientationChange}
+          t={t}
+        />
+      </div>
+
+      <Divider />
+
+      {/* Group 4: Guides + Preview toggle */}
+      <div className="flex items-center gap-0.5 shrink-0">
         <Button
           type="button"
           onClick={onToggleGuides}
-          variant="outline"
-          className={`min-h-11 px-2.5 text-xs rounded-lg border transition-all shadow-none ${showGuides
-              ? "border-primary/40 bg-primary/10 text-primary font-medium"
-              : "border-border text-muted-foreground hover:bg-muted"
-            }`}
+          variant="ghost"
+          size="icon"
+          className={`min-h-9 min-w-9 h-9 w-9 rounded-md transition-all shadow-none ${
+            showGuides
+              ? "bg-primary/10 text-primary hover:bg-primary/20"
+              : "text-muted-foreground hover:bg-muted hover:text-foreground"
+          }`}
           title={t("templateEditor.toggleGuides")}
         >
           {showGuides ? (
@@ -158,87 +178,102 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
             <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
           )}
         </Button>
+
+        {onTogglePreview && (
+          <Button
+            type="button"
+            onClick={onTogglePreview}
+            variant="ghost"
+            size="icon"
+            className={`min-h-9 min-w-9 h-9 w-9 rounded-md transition-all shadow-none ${
+              isPreviewMode
+                ? "bg-primary/10 text-primary hover:bg-primary/20"
+                : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            }`}
+            title={isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")}
+          >
+            {isPreviewMode ? (
+              <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+            ) : (
+              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+            )}
+          </Button>
+        )}
       </div>
 
-      {onTogglePreview && (
-        <Button
-          type="button"
-          onClick={onTogglePreview}
-          variant={isPreviewMode ? "default" : "outline"}
-          className={`min-h-11 px-3 text-xs font-semibold rounded-lg border transition-all shadow-none flex items-center gap-1.5 ms-2 ${isPreviewMode
-              ? "bg-primary text-primary-foreground border-primary shadow-xs"
-              : "border-border hover:bg-muted"
-            }`}
-          title={isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")}
-        >
-          {isPreviewMode ? (
-            <>
-              <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{t("templateEditor.editMode")}</span>
-            </>
-          ) : (
-            <>
-              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
-              <span>{t("templateEditor.preview")}</span>
-            </>
-          )}
-        </Button>
+      {/* Group 5: Zoom controls */}
+      {onZoomIn && onZoomOut && (
+        <>
+          <Divider />
+          <div className="shrink-0">
+            <TemplateEditorZoomControls
+              canvasScale={canvasScale}
+              onZoomIn={onZoomIn}
+              onZoomOut={onZoomOut}
+              onZoomReset={onZoomReset}
+              onZoomFit={onZoomFit}
+              t={t}
+            />
+          </div>
+        </>
       )}
 
-      {onZoomIn && onZoomOut && (
-        <TemplateEditorZoomControls
-          canvasScale={canvasScale}
-          onZoomIn={onZoomIn}
-          onZoomOut={onZoomOut}
-          onZoomReset={onZoomReset}
-          onZoomFit={onZoomFit}
+      {/* Group 6: Presets */}
+      {presets.length > 0 && (
+        <>
+          <Divider />
+          <div className="flex items-center gap-1 shrink-0">
+            <LayoutTemplate className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden="true" />
+            <FormSelect
+              aria-label={t("templateEditor.presets")}
+              value=""
+              onChange={(val) => {
+                if (val) onApplyPreset(val);
+              }}
+              options={[
+                { value: "", label: t("templateEditor.presets") },
+                ...presets.map((p) => ({ value: p.key, label: p.label })),
+              ]}
+              className="h-8 text-xs py-0 min-w-[120px]"
+            />
+          </div>
+        </>
+      )}
+
+      {/* Group 7: Export / Import */}
+      <div className="shrink-0">
+        <TemplateEditorExportActions
+          onExportJson={onExportJson}
+          onImportJson={onImportJson}
+          onExportTypst={onExportTypst}
+          onExportZoho={onExportZoho}
           t={t}
         />
-      )}
+      </div>
 
-      {presets.length > 0 && (
-        <div className="flex items-center gap-1 ms-2">
-          <LayoutTemplate className="w-3.5 h-3.5 text-muted-foreground" aria-hidden="true" />
-          <FormSelect
-            aria-label={t("templateEditor.presets")}
-            value=""
-            onChange={(val) => {
-              if (val) onApplyPreset(val);
-            }}
-            options={[
-              { value: "", label: t("templateEditor.presets") },
-              ...presets.map((p) => ({ value: p.key, label: p.label })),
-            ]}
-            className="h-8 text-xs py-0 min-w-[130px]"
-          />
-        </div>
-      )}
+      {/* Spacer */}
+      <div className="flex-1" />
 
-      <TemplateEditorExportActions
-        onExportJson={onExportJson}
-        onImportJson={onImportJson}
-        onExportTypst={onExportTypst}
-        onExportZoho={onExportZoho}
-        t={t}
-      />
-
-      <div className="ms-auto flex items-center gap-2">
+      {/* Group 8: Right actions */}
+      <div className="flex items-center gap-1.5 shrink-0">
         <Button
           type="button"
           onClick={onResetDefault}
-          variant="outline"
-          className="min-h-11 px-2.5 text-xs font-semibold rounded-lg border-border hover:bg-muted transition-all shadow-none flex items-center gap-1.5"
+          variant="ghost"
+          size="icon"
+          className="min-h-9 min-w-9 h-9 w-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
+          title={t("templateEditor.resetDefault")}
         >
           <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>{t("templateEditor.resetDefault")}</span>
         </Button>
 
         {onToggleFullscreen && (
           <Button
             type="button"
             onClick={onToggleFullscreen}
-            variant="outline"
-            className="min-h-11 min-w-11 px-0 flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-all shadow-none"
+            variant="ghost"
+            size="icon"
+            className="min-h-9 min-w-9 h-9 w-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
             title={t("templateEditor.toggleFullscreen")}
           >
             {fullscreen ? (
@@ -249,26 +284,37 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           </Button>
         )}
 
+        <Divider />
+
+        {/* Save button — animated success state */}
         <Button
           type="button"
           onClick={onSave}
           disabled={saving}
-          className={`min-h-11 px-4 text-xs font-semibold rounded-lg transition-all shadow-none flex items-center gap-1.5 ${saved
-              ? "bg-emerald-600 hover:bg-emerald-600 text-white"
+          className={`min-h-9 h-9 px-3.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-none flex items-center gap-1.5 ${
+            saved
+              ? "bg-emerald-500 hover:bg-emerald-500 text-white scale-[1.03] shadow-[0_0_12px_rgba(16,185,129,0.35)]"
               : "bg-primary text-primary-foreground hover:bg-primary/90"
-            }`}
+          }`}
         >
-          <Save className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>
-            {saved ? t("templateEditor.saved") : t("templateEditor.save")}
-          </span>
+          {saved ? (
+            <>
+              <CheckCheck className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t("templateEditor.saved")}</span>
+            </>
+          ) : (
+            <>
+              <Save className="w-3.5 h-3.5" aria-hidden="true" />
+              <span>{t("templateEditor.save")}</span>
+            </>
+          )}
         </Button>
 
         <Button
           type="button"
           onClick={onClose}
           variant="outline"
-          className="min-h-11 px-3 text-xs font-semibold rounded-lg border-border hover:bg-muted transition-all shadow-none"
+          className="min-h-9 h-9 px-3 text-xs font-medium rounded-lg border-border hover:bg-muted transition-all shadow-none"
         >
           {t("templateEditor.close")}
         </Button>

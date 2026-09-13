@@ -69,7 +69,7 @@ describe("TemplateEditor Component", () => {
       />
     );
 
-    expect(html).toContain("templateEditor.preview");
+    expect(html).toContain("templateEditor.switchToPreview");
     expect(html).toContain("JSON");
     expect(html).toContain("100%");
   });
