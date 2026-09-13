@@ -6,7 +6,6 @@
 
 import React, { useState } from "react";
 import { useBranding } from "@/tenant/hooks/useBranding";
-import { getPrintBrandingTokens } from "@/lib/printBrandingTokens";
 import type {
   DocumentTemplate,
   DocumentTemplatePreset,
@@ -50,8 +49,9 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
   onExportZoho,
 }: TemplateEditorProps<TPayload>): React.JSX.Element {
   const [isFullscreen, setIsFullscreen] = useState(fullscreen);
+  // Track whether the user has toggled fullscreen manually (vs launched with fullscreen=true)
+  const [isUserToggled, setIsUserToggled] = useState(false);
   const branding = useBranding();
-  const printTokens = getPrintBrandingTokens();
 
   const editor = useTemplateEditor<TPayload>({
     initialTemplate,
@@ -62,11 +62,18 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
   });
 
   const handleClose = () => {
-    if (isFullscreen && !fullscreen) {
+    // If user toggled into fullscreen manually, collapse first instead of closing
+    if (isFullscreen && isUserToggled) {
       setIsFullscreen(false);
+      setIsUserToggled(false);
     } else {
       onClose();
     }
+  };
+
+  const handleToggleFullscreen = () => {
+    setIsFullscreen((prev) => !prev);
+    setIsUserToggled(true);
   };
 
   const handleExportTypst = onExportTypst
@@ -121,7 +128,7 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
         onImportJson={editor.importTemplateJson}
         onResetDefault={editor.resetToDefault}
         onApplyPreset={editor.applyPreset}
-        onToggleFullscreen={() => setIsFullscreen((prev) => !prev)}
+        onToggleFullscreen={handleToggleFullscreen}
         onSave={editor.handleSave}
         onClose={handleClose}
         onExportTypst={handleExportTypst}
@@ -153,7 +160,6 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
           canvasViewportRef={editor.canvasViewportRef}
           canvasRef={editor.canvasRef}
           branding={branding}
-          printTokens={printTokens}
           onDeselect={editor.deselectAll}
           onMouseDownElement={editor.onMouseDownElement}
           onMouseDownResize={editor.onMouseDownResize}

@@ -53,10 +53,11 @@ export function TemplateEditorTypographySection({
       </p>
 
       <div className="space-y-1">
-        <label className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
+        <label htmlFor={`font-family-${elementId}`} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
           {t("templateEditor.fontFamily")}
         </label>
         <FormSelect
+          id={`font-family-${elementId}`}
           aria-label={t("templateEditor.fontFamily")}
           value={elStyle.fontFamily || "Inter, sans-serif"}
           onChange={(val) => onPatchStyle(elementId, { fontFamily: val })}
@@ -195,7 +196,7 @@ export function TemplateEditorTypographySection({
           id={`dir-rtl-toggle-${elementId}`}
           checked={elStyle.direction === "rtl"}
           onCheckedChange={(checked) =>
-            onPatchStyle(elementId, { direction: checked ? "rtl" : "ltr" })
+            onPatchStyle(elementId, { direction: checked === true ? "rtl" : "ltr" })
           }
         />
         <label htmlFor={`dir-rtl-toggle-${elementId}`} className="text-xs font-medium cursor-pointer">

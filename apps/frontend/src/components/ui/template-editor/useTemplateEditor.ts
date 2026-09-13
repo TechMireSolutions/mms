@@ -59,6 +59,8 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
   const resizeState = useRef<ResizeStateInfo<TPayload> | null>(null);
   // Timer ref for the "saved" flash — cleared on unmount to prevent state update on unmounted component
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Tracks the history length at the point of last save to compute isDirty correctly
+  const savedAtHistoryLengthRef = useRef<number>(0);
 
   const orientation = template.orientation || "portrait";
 
@@ -170,13 +172,15 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     try {
       await onSave(template);
       setSaved(true);
+      // Reset isDirty baseline to current history length
+      savedAtHistoryLengthRef.current = history.length;
       // Cleanup any existing timer before scheduling a new one
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
       savedTimerRef.current = setTimeout(() => setSaved(false), 2000);
     } finally {
       setSaving(false);
     }
-  }, [onSave, template]);
+  }, [onSave, template, history.length]);
 
   const copySelected = useCallback(() => {
     if (selectedIds.length === 0) return;
@@ -298,7 +302,7 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     setSelectedIds([]);
   }, [defaultTemplate, pushHistory, template]);
 
-  const isDirty = history.length > 0;
+  const isDirty = history.length !== savedAtHistoryLengthRef.current;
 
   return {
     t,

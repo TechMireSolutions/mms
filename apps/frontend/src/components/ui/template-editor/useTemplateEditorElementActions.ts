@@ -3,6 +3,7 @@
  * @description Hook providing element lifecycle operations: add, delete, duplicate, layer, nudge, and patch.
  */
 
+import type { Dispatch, SetStateAction } from "react";
 import type {
   ElementStyle,
   PageSizeInfo,
@@ -24,7 +25,7 @@ import {
 export interface UseTemplateEditorElementActionsOptions<TPayload = Record<string, unknown>> {
   elements: TemplateElement<keyof TPayload & string>[];
   selectedIds: string[];
-  setSelectedIds: React.Dispatch<React.SetStateAction<string[]>>;
+  setSelectedIds: Dispatch<SetStateAction<string[]>>;
   commitUpdate: (
     updateFn: (
       elements: TemplateElement<keyof TPayload & string>[]

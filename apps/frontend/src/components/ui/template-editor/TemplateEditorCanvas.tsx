@@ -8,12 +8,10 @@ import {
   type DocumentTemplate,
   type PageSizeInfo,
 } from "@mms/shared";
-import type { getPrintBrandingTokens } from "@/lib/printBrandingTokens";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { boxesIntersect } from "./templateEditorUtils";
 import { TemplateElementRenderer } from "./TemplateElementRenderer";
 
-type PrintBrandingTokens = ReturnType<typeof getPrintBrandingTokens>;
 
 export interface TemplateEditorCanvasProps<TPayload = Record<string, unknown>> {
   template: DocumentTemplate<TPayload>;
@@ -28,7 +26,7 @@ export interface TemplateEditorCanvasProps<TPayload = Record<string, unknown>> {
   branding: {
     logoUrl?: string | null;
   };
-  printTokens: PrintBrandingTokens;
+  printTokens?: never;
   onDeselect: () => void;
   onMouseDownElement: (event: React.MouseEvent, elementId: string) => void;
   onMouseDownResize: (event: React.MouseEvent, elementId: string, handle?: "se" | "e" | "s") => void;
@@ -49,7 +47,6 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
   canvasViewportRef,
   canvasRef,
   branding,
-  printTokens: _printTokens,
   onDeselect,
   onMouseDownElement,
   onMouseDownResize,
