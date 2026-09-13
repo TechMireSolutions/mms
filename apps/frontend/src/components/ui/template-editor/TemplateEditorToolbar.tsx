@@ -96,7 +96,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         {title || t("templateEditor.title")}
       </h2>
 
-      <div className="flex items-center gap-1 ms-2">
+      <div className="flex items-center gap-0.5 ms-2">
         <Button
           type="button"
           onClick={onUndo}
@@ -104,7 +104,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           title={t("templateEditor.undo")}
           variant="ghost"
           size="icon"
-          className="rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"
+          className="min-h-11 min-w-11 rounded-lg hover:bg-muted disabled:opacity-30 transition-all shadow-none"
         >
           <Undo2 className="w-4 h-4" aria-hidden="true" />
         </Button>
@@ -115,7 +115,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           title={t("templateEditor.redo")}
           variant="ghost"
           size="icon"
-          className="rounded hover:bg-muted disabled:opacity-30 transition-colors shadow-none"
+          className="min-h-11 min-w-11 rounded-lg hover:bg-muted disabled:opacity-30 transition-all shadow-none"
         >
           <Redo2 className="w-4 h-4" aria-hidden="true" />
         </Button>
@@ -216,7 +216,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           type="button"
           onClick={onResetDefault}
           variant="outline"
-          className="min-h-11 px-2.5 text-xs font-semibold rounded border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1"
+          className="min-h-11 px-2.5 text-xs font-semibold rounded-lg border-border hover:bg-muted transition-all shadow-none flex items-center gap-1.5"
         >
           <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
           <span>{t("templateEditor.resetDefault")}</span>
@@ -227,7 +227,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
             type="button"
             onClick={onToggleFullscreen}
             variant="outline"
-            className="min-h-11 px-2 text-xs rounded border border-border hover:bg-muted transition-colors shadow-none"
+            className="min-h-11 min-w-11 px-0 flex items-center justify-center rounded-lg border border-border hover:bg-muted transition-all shadow-none"
             title={t("templateEditor.toggleFullscreen")}
           >
             {fullscreen ? (
@@ -242,7 +242,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           type="button"
           onClick={onSave}
           disabled={saving}
-          className={`min-h-11 px-4 text-xs font-semibold rounded transition-colors shadow-none flex items-center gap-1.5 ${
+          className={`min-h-11 px-4 text-xs font-semibold rounded-lg transition-all shadow-none flex items-center gap-1.5 ${
             saved
               ? "bg-emerald-600 hover:bg-emerald-600 text-white"
               : "bg-primary text-primary-foreground hover:bg-primary/90"
@@ -258,7 +258,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           type="button"
           onClick={onClose}
           variant="outline"
-          className="min-h-11 px-3 text-xs font-semibold rounded border-border hover:bg-muted transition-colors shadow-none"
+          className="min-h-11 px-3 text-xs font-semibold rounded-lg border-border hover:bg-muted transition-all shadow-none"
         >
           {t("templateEditor.close")}
         </Button>
