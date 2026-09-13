@@ -22,7 +22,7 @@ catalog:
   vite: "^8.2.1"
   "@tanstack/react-query": "^5.101.4"
   "@ts-rest/react-query": "3.52.1"
-  react-router-dom: "^7.18.2"
+  react-router-dom: "^7.18.3"
 
 minimumReleaseAgeExclude:
   - nodemailer@9.0.1
