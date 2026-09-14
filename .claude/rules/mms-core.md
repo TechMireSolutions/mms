@@ -11,11 +11,12 @@ Madrasa Management System monorepo — applies on every task across both **tenan
 ## Monorepo Layout & Stack
 
 ```
-apps/frontend/     React 19 + Vite 8 · Tailwind v4 · Radix/shadcn · TanStack Query v5 · Framer Motion · Lucide · Recharts
-apps/backend/      Fastify 5 + Node.js 24 (--experimental-strip-types, native built-ins, AsyncLocalStorage on AsyncContextFrame) · PostgreSQL + Drizzle ORM (strictly normalized 3NF/BCNF, RLS, parameterized SQL only)
-packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, constants, pure utils)
+apps/frontend/     React 19 + Vite 8 · React Router 7 · Tailwind v4 · Radix UI/shadcn · TanStack Query v5 + @ts-rest · Zustand 5 · Framer Motion 13 · Lucide · Recharts 3
+apps/backend/      Fastify 5 + Node.js 24 (--experimental-strip-types, native built-ins, AsyncLocalStorage on AsyncContextFrame) · @ts-rest/fastify · PostgreSQL 16 + Drizzle ORM 0.45 · BullMQ 6 + Redis · Pino 10
+packages/shared/   @mms/shared (SSOT for types, strict Zod 4 DTOs, @ts-rest contracts, schemas, constants, pure utils)
 ```
 
+- **Tooling & Runtimes:** Node.js `>=24.14.0`, pnpm `11.15.1`, Turbo `^2.10.9`, TypeScript `~7.0.2`.
 - **Root commands:** `pnpm dev`, `pnpm build`, `pnpm typecheck`, `pnpm test`.
 - **Environment:** `VITE_API_URL` (FE); `JWT_SECRET`, `DATABASE_URL` (BE).
 
@@ -45,15 +46,13 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
 - **Tenant Writes:** `authenticateTenant` + transaction RLS (`SET LOCAL app.current_tenant`) + `can()` / collection check. Validate with `@mms/shared` Zod before DB persistence. Never trust client body `workspaceSubdomain` or authz `userId`.
 - **Platform Writes:** `authenticatePlatform` + `platformUserCan` / `requirePlatformPermission` + password re-auth on destructive ops.
 - **Contacts Canonical:** Persons link by `contactId`; profile fields live on contacts. Hydrate on read, strip on write (`mms-fields.md`, `mms-form-architecture.md`).
-- **Data Standards:** Phone numbers E.164 via `parsePhoneNumber`; WhatsApp number ID via `PuppeteerWhatsAppProvider.getNumberId`; Money as decimal strings (`/^\d+(\.\d{1,2})?$/`).
-- **Node.js 24 Runtime Standards:**
-  - **Native Built-Ins Over Packages:** Native `--env-file` / `process.loadEnvFile()` (no `dotenv`), global `fetch()`, `FormData`, `WebSocket` (no `axios`, `node-fetch`, `ws`), `node:fs/promises` `glob`, `node:crypto` `crypto.hash()`, WHATWG `URLPattern` (no `path-to-regexp`).
-  - **Modern Protocol Imports & Resource Lifecycle:** Mandatory `node:` imports (`node:fs`, `node:crypto`, `node:async_hooks`); WHATWG `new URL()` (never `url.parse()`); `using` / `await using` for connection/handle disposal.
-  - **Tracing, Types & Lifecycle:** `AsyncLocalStorage` (Node 24 `AsyncContextFrame`); Pino structured stdout; Vitest + `node:test` + `node:assert/strict`; native `--experimental-strip-types`; graceful `SIGTERM`/`SIGINT` lifecycle.
-- **Module Pages:** Three tiers only (Work, Reports, Setup) via `PageHeader` + `useFilteredModuleTierTabs`.
-- **Write Mechanism:** Cookie SPA + `apiClient` only (No React Server Actions).
-- **Audit Trail & Immutability:** Enterprise state changes tracked via 5-dimension RFC 8785 canonical JSON payloads in transactional outboxes; sharded cryptographic hash chains with Merkle tree rollups; `INSERT`-only DB privileges on audit tables (revoking `UPDATE`/`DELETE`); right-to-erasure via crypto-shredding or redact-and-append without historical row destruction — `mms-data-layer.md` §5, `mms-auth-security.md`, skill `mms-audit-trail`.
-- **Soft-Delete Architecture & Lifecycle:** Mandatory for all entity tables in tenant modules per 4-Bucket deletion taxonomy. Schema `BEFORE DELETE` triggers (`forbid_hard_delete()`) forbid physical row deletions except via `SET LOCAL app.allow_hard_purge = 'true'`. Soft-deleting accounts revokes active sessions/tokens (`deleted_at IS NULL` invariant). Unique constraints on recyclable identifiers require partial unique indexes `WHERE deleted_at IS NULL`. Child relations require explicit `where: isNull(child.deletedAt)`. Details & purge worker — `mms-data-layer.md` §6, skill `mms-soft-delete`.
+- **Data Standards:** Phone numbers E.164 via `parsePhoneNumber`; WhatsApp number ID via `PuppeteerWhatsAppProvider.getNumberId`; Money as decimal strings (`/^\d+(\.\d{1,2})?$/`); Sequential UUIDv7 (RFC 9562) for distributed/public primary keys to prevent B-Tree fragmentation.
+- **Node.js 24 Runtime Standards:** Mandatory `node:` imports, WHATWG `new URL()`, native built-ins, and `using` / `await using` resource lifecycle — norms `mms-dependencies.md`.
+- **React 19 & Frontend Standards:** Native `ref` as prop (ban `forwardRef` in newly authored components); mandatory `useId()` for accessible control/label pairs; TanStack Query as authoritative server state.
+- **Module Pages:** Three tiers only (Work, Reports, Setup) via `PageHeader` + `useFilteredModuleTierTabs` (`mms-module-architecture.md`).
+- **Write Mechanism:** Cookie SPA + `apiClient` only (no RSC server action posts) — `mms-form-architecture.md`.
+- **Audit Trail & Immutability:** RFC 8785 canonical JSON, outbox pattern, sharded hash chains, and right-to-erasure via crypto-shredding — `mms-data-layer.md` §5, skill `mms-audit-trail`.
+- **Soft-Delete Architecture & Lifecycle:** Mandatory for tenant entity tables; Category B partial index (`WHERE deleted_at IS NULL`), partial unique indexes, session revocation on delete, and lock-free chunked retention purge — `mms-data-layer.md` §6, skill `mms-soft-delete`.
 
 ## Standards Index (Ownership Matrix)
 
@@ -90,4 +89,4 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod DTOs, schemas, consta
 2. **Rendering & Memoization:** Route-level `lazy` + `Suspense`. Memoize non-trivial calculations (`useMemo`) and callback/object references passed as dependencies (`useCallback`) to prevent render churn; avoid premature memoization on primitive operations. Leverage `startTransition` / `useDeferredValue` / `useEffectEvent` — always-on `mms-performance.md`.
 3. **File Sizing:** Hard ceiling ~300 lines / soft target ~220 lines. Split by concern behind stable barrels (`mms-structure-naming.md`).
 4. **Clean Boundary:** Remove dead code, unused imports, and debug logs. Run `pnpm typecheck` after non-trivial changes.
-5. **Git Safety:** Conventional Commits (`feat`/`fix`/`chore`). Never commit or push unless explicitly requested. Never commit `.env` or credentials.
+5. **Git Safety:** Conventional Commits (`feat`/`fix`/`chore`). Never commit or push unless explicitly requested. Never commit `.env` or credentials — `mms-agent-universal.md`.

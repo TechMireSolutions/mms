@@ -1,9 +1,18 @@
 ---
 name: mms-ops-deploy
-description: MMS production deploy on Hetzner — Apache vhost isolation, PORT=5002, MMS_APP_DOMAIN, GitHub Actions, PM2, merge-backend-env. Use when fixing production server, deploy failures, wrong domain routing, or Apache ProxyPass.
+description: MMS production deploy on Hetzner — Apache vhost isolation, PORT=5002, MMS_APP_DOMAIN, GitHub Actions, PM2, merge-backend-env. Use when fixing production server, deploy failures, wrong domain routing, or Apache ProxyPass. Do NOT use for local developer workstation setup (use mms-dev-setup) or Linux line-ending verification (use mms-linux-compatibility).
 ---
 
 # MMS Ops & Production Deploy
+
+**Rule (norms SSOT):** `mms-ops-infrastructure.md` · `mms-auth-security.md` · `mms-completion-review.md`.
+
+## Anti-Patterns & Banned Operations
+
+- ❌ **NEVER run backend on ports 3000/3001 in production**: Production backend MUST bind to `127.0.0.1:5002` behind Apache reverse proxy.
+- ❌ **NEVER edit code directly on production host**: Deploy via GitHub Actions artifacts and `deploy-on-server.sh`.
+- ❌ **NEVER proxy unrelated vhosts to MMS**: Keep Apache vhost isolation strict via `apply-production-host-isolation.sh`.
+- ❌ **NEVER run `drizzle-kit push` against production database**: Apply schema changes forward-only via migration scripts.
 
 ## Domains
 

@@ -1,5 +1,6 @@
 ---
-trigger: always_on
+trigger: model_decision
+description: Mandatory performance, resource efficiency, caching, streaming, query optimization, and DOM virtualization rules.
 ---
 
 # MMS Performance & Resource Efficiency Rules
@@ -14,7 +15,7 @@ Authoritative performance and resource constraints across **tenant workspaces an
 
 - **Zero Queries in Loops (N+1 Elimination):** NEVER execute database queries inside iterative loops (`for`, `forEach`, `map`, `Promise.all`).
   - Batch iterations using Drizzle relational `with: { ... }` queries, `inArray(table.column, ids)` predicates (bounded to $\le 500$ IDs via shared `bulkIdsBodySchema`), SQL `JOIN`s, or batch resolution endpoints (`/resolve`).
-- **Zero Wildcard Projections (`SELECT *` Strict Ban):** NEVER emit `SELECT *` or bare Drizzle `db.select().from(table)` without column selection across network boundaries.
+- **Zero Wildcard Projections (`SELECT *` Strict Ban):** NEVER emit `SELECT *` or bare Drizzle `db.select().from(table)` without column selection across network — enforced by `pnpm run check:db-projections` (CI). 18 pre-existing sites are baselined in that script as a ratchet (17 in `sessionRepositoryHydrate.ts`, 1 in the outbox CDC processor); the ban is not retroactively satisfied, and no NEW site may be added. The hazard is future bloat, not measured cost today: the tables are 5–17 columns and their mappers read most of them, so adding one wide `jsonb` to `session_classes` would silently inflate every session-list query with nothing to catch it boundaries.
   - Explicit typed column projection required (e.g. `db.select({ id: table.id }).from(table)` or `db.query.findMany({ columns: { id: true } })`). Strip heavy text, notes, and audit blobs from list queries; load only on `GET /:id`. Align projections 1:1 with `@mms/shared` Response DTOs.
 - **Mandatory Indexing for Query Predicates:**
   - ALWAYS back columns used in `where()` filters, `leftJoin() ... on()` foreign key links, and `orderBy()` sorting with explicit indexes in Drizzle schema definitions.
@@ -33,6 +34,9 @@ Authoritative performance and resource constraints across **tenant workspaces an
 - **Soft-Delete Indexing & Storage Engine Efficiency:**
   - Active list queries must hit Category B partial indexes (`WHERE deleted_at IS NULL`), trash queries hit Category C (`WHERE deleted_at IS NOT NULL`).
   - High-churn soft-deleted tables (`message_logs`, `attendance_records`) must configure aggressive autovacuum thresholds in DDL (`autovacuum_vacuum_scale_factor = 0.05`) — details `mms-data-layer.md` §6.10.
+- **BRIN (Block Range Index) for Append-Only Time-Series:**
+  - Sequential append-only tables (`audit_trail_events`, `message_logs`) must index monotonic timestamp columns (`transaction_timestamp`, `created_at`) using PostgreSQL BRIN indexes (`using: 'brin'`) rather than standard B-Trees.
+  - BRIN indexes consume < 1% of the disk space of B-Trees, maintain high buffer cache residency, and eliminate B-Tree page split / rebalancing write amplification during continuous inserts.
 
 ---
 

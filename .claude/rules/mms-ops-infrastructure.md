@@ -11,7 +11,6 @@ paths:
   - "scripts/apache/**"
   - "apps/backend/src/index.ts"
   - ".github/workflows/**"
-  - "ecosystem.config.js"
   - "scripts/pm2/**"
   - "docker-compose*.yml"
 ---
@@ -23,18 +22,20 @@ paths:
 Canonical operational and deployment standards for the Madrasa Management System (MMS) monorepo.
 
 ## 1. Prerequisites & Environment Setup
-- **Node.js**: Match root `package.json` `engines.node` exactly in CI/Docker (Node >= 24) — do not restate pin numbers here; bumps → **`mms-dependencies.md`** / skill `mms-dependency-upgrade`.
+- **Node.js**: Match root `package.json` `engines.node` exactly in CI/Docker (Node >= 24.14.0) — bumps → **`mms-dependencies.md`** / skill `mms-dependency-upgrade`.
   - **Native Configuration**: Use `--env-file=.env` flag or `process.loadEnvFile()` natively. The `dotenv` package is banned.
-  - **TypeScript Script Execution**: Use `--experimental-strip-types` for development scripts and lightweight CLI tools to execute `.ts` files directly without an upfront compile step.
-- **pnpm**: Match root `packageManager` via Corepack (`corepack enable`). Docker/CI must use that exact pnpm version.
+  - **TypeScript Script Execution**: Use `--experimental-strip-types` for development scripts and lightweight CLI tools to execute `.ts` files directly without an upfront compile step (standard in TypeScript 7.0 / Node 24).
+- **pnpm**: Match root `packageManager` via Corepack (`pnpm@11.15.1`, `corepack enable`). Docker/CI must use that exact pnpm version.
+- **Turborepo**: Turbo v2 (`^2.10.9`) orchestrates workspace caching and concurrent pipelines.
+- **Database**: PostgreSQL 16 for primary data layer and CI integration services.
 
 ### Workspace Commands (from repo root)
 ```bash
 pnpm install          # Install all dependencies across workspaces
 pnpm dev              # Start frontend + backend concurrently via Turbo
 pnpm build            # Build shared package and applications
-pnpm typecheck        # Run typechecking across the entire monorepo
-pnpm test             # Run Vitest / node:test suites for all workspaces
+pnpm typecheck        # Run typechecking across the entire monorepo (TypeScript 7.0)
+pnpm test             # Run Vitest 4 / node:test suites for all workspaces
 ```
 
 ### Local Dev Helper Scripts
@@ -77,7 +78,7 @@ pnpm test             # Run Vitest / node:test suites for all workspaces
 
 **Client bundle hygiene:** Only `VITE_*` (and Vite-injected `import.meta.env`) may ship in the frontend bundle. **Ban** leaking `JWT_SECRET`, `DATABASE_URL`, or other server secrets into FE code / Vite `define` — bumps/env layout → `mms-dependencies.md` when touching tooling.
 
-- **Graceful Shutdown:** Catch `SIGTERM` and `SIGINT`, call `server.close()`, and unref a fallback timeout (10s) before forced process exit.
+- **Graceful Shutdown:** Catch `SIGTERM`/`SIGINT`, flip `/ready` to 503, wait `SHUTDOWN_DRAIN_DELAY_MS` to drain ingress traffic, call `server.close()`, pause BullMQ workers, close DB pools, and unref a fallback timeout (drain delay + 10s) before forced exit — details §4 Health Checks.
 
 ### Data wipe / purge (do not invent new wipe APIs)
 - **Tenant workspace delete**: `deleteWorkspace` → `purgeTenantDataBySubdomain` then remove workspace row (platform workspaces API).
@@ -122,6 +123,7 @@ Treat `turbo.json` inputs/outputs as sensitive — change only with intentional 
 
 ### Health Checks (SSOT)
 - **Graceful Shutdown (two-phase)**: On SIGTERM/SIGINT the process flips `/ready` to 503 and WAITS `SHUTDOWN_DRAIN_DELAY_MS` (default 5s) BEFORE closing the socket, so whatever routes traffic can take the instance out of rotation while in-flight requests still complete (`lib/lifecycle.ts`). `/health` (liveness) keeps returning 200 while draining — a liveness failure would trigger a restart. Size the drain against the ROUTER's health-check interval, not docker-compose's healthcheck (that only reports container state). Behind Apache + a single pm2 instance nothing re-checks, so `SHUTDOWN_DRAIN_DELAY_MS=0` is appropriate there. The force-exit ceiling is derived from the drain delay plus 10s — keep it that way, or adding a drain wait makes shutdown MORE likely to be force-killed, not less.
+- **Reverse-Proxy Keep-Alive Alignment (502 Bad Gateway Prevention)**: Fastify's `keepAliveTimeout` (65,000ms) and `headersTimeout` (66,000ms) must exceed the upstream reverse proxy's (Apache/Nginx) keep-alive timeout (e.g. 60,000ms) to prevent race conditions where Node closes an idle connection right as the proxy dispatches a request.
 - **Operational Metrics**: `GET /metrics` (Prometheus text format) is off unless `METRICS_ENABLED=true`, and requires `Authorization: Bearer $METRICS_TOKEN` when that is set — the payload reveals pool sizes and the full route inventory. HTTP metrics label on the ROUTE PATTERN and status CLASS only; labelling the raw URL would mint a time series per id (`lib/metrics.ts`).
 - **Liveness**: `GET /health` → 200 (server up; unauthenticated; used by `AuthContext.checkAppState()`).
 - **Readiness**: `GET /ready` → 200 on DB ping, `503` if PostgreSQL is down.

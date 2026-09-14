@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Universal module architecture — manifest schemas, three-tier layout, soft-delete, gold-standard parity (§7), background jobs, and lifecycle rules. Applies to tenant modules and platform pages.
 ---
 
 # MMS Universal Module Architecture

@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Testing strategies (unit, API, E2E), logging hygiene, ErrorBoundary/Sentry, and frontend resilience. Health endpoints → mms-ops-infrastructure.
 ---
 
 # MMS Testing & Observability
@@ -11,11 +12,11 @@ Governs testing patterns, logging hygiene, error reporting, and frontend resilie
 ---
 
 ## 1. Testing Strategy & Environments
-`pnpm test` executes tests across the monorepo workspaces via **Vitest**:
-- **`@mms/shared`**: Unit tests for validation schemas, pure utilities, date/currency formatters, and permission calculations using Vitest.
-- **`mms-backend`**: Integration tests utilizing Fastify's `inject()` and Vitest with in-memory repository mock fixtures (`vi.hoisted()`). Cover tenant auth/RBAC/token rotation **and** apex platform auth/settings/workspaces allow+deny (wrong host → `403`, cookie session, `super_user` / permission gates, reset-database validation).
-- **`mms-frontend`**: Client and hook tests run in a **`happy-dom`** environment (configured in `vitest.config.ts`) to support `localStorage` and DOM mocks. Mock network boundaries with **MSW** (Mock Service Worker) — ban ad-hoc `fetch` stubs that bypass `apiClient` credentials/error mapping.
-- **E2E Playwright**: Critical UI flows in `e2e/tests/*.spec.ts`: `platform-onboarding.spec.ts` (platform setup → tenant onboard → …); `tenant-settings-navigation.spec.ts`; `messaging-campaign.spec.ts`; `responsive-shell.spec.ts` (public apex + tenant login — overflow, 44px touch, RTL at 375/768/1440); `responsive-authenticated.spec.ts` (tenant bootstrap → AppLayout hamburger `< lg`, dashboard RTL/overflow, Work-route sweep with table wrappers). Run via `pnpm exec playwright test` or `pnpm test:e2e`. Prefer `getByRole` / `getByLabel` user-centric queries; after bumping `@playwright/test`, run `pnpm exec playwright install`. Auth states may be seeded via scripts (e.g. `reset-platform-users.ts`) rather than recreating every login step.
+`pnpm test` executes tests across the monorepo workspaces via **Vitest 4**:
+- **`@mms/shared`**: Unit tests for validation schemas (Zod 4), `@ts-rest` contracts, pure utilities, date/currency formatters, and permission calculations using Vitest 4.
+- **`mms-backend`**: Integration tests utilizing Fastify 5 `inject()` and Vitest with in-memory repository mock fixtures (`vi.hoisted()`), as well as `@ts-rest/fastify` contract route verification. Cover tenant auth/RBAC/token rotation **and** apex platform auth/settings/workspaces allow+deny (wrong host → `403`, cookie session, `super_user` / permission gates, reset-database validation).
+- **`mms-frontend`**: Client and hook tests run in a **`happy-dom`** environment (configured in `vitest.config.ts`) to support `localStorage` and DOM mocks. Mock network boundaries with **MSW** (Mock Service Worker) or test `@ts-rest/react-query` contract hooks — ban ad-hoc `fetch` stubs that bypass `apiClient` credentials/error mapping.
+- **E2E Playwright**: Critical UI flows in `e2e/tests/*.spec.ts` using **Playwright 1.62** (`@playwright/test`) and **Axe Core 4** (`@axe-core/playwright`): `platform-onboarding.spec.ts` (platform setup → tenant onboard → …); `tenant-settings-navigation.spec.ts`; `messaging-campaign.spec.ts`; `responsive-shell.spec.ts` (public apex + tenant login — overflow, 44px touch, RTL at 375/768/1440); `responsive-authenticated.spec.ts` (tenant bootstrap → AppLayout hamburger `< lg`, dashboard RTL/overflow, Work-route sweep with table wrappers). Run via `pnpm exec playwright test` or `pnpm test:e2e`. Prefer `getByRole` / `getByLabel` user-centric queries; after bumping `@playwright/test`, run `pnpm exec playwright install`. Auth states may be seeded via scripts (e.g. `reset-platform-users.ts`) rather than recreating every login step.
 
 ### Test Quality & Architecture Invariants
 1. **Deterministic Execution (Zero Skip Latches)**: Banned: `if (!isDbAvailable) return;` or conditional live database checks. All backend integration tests must execute deterministically in CI and local dev using in-memory repository mock fixtures and Fastify `inject()`.
@@ -34,12 +35,12 @@ Governs testing patterns, logging hygiene, error reporting, and frontend resilie
 *Banned*: Test runs must not make live calls to external providers (e.g. WhatsApp / Puppeteer) or commit secrets.
 
 ### E2E / Playwright Best Practices
-- Prefer `getByRole`, `getByLabel`, and `getByText` — avoid brittle CSS classes or internal DOM hierarchy selectors.
-- Prefer Playwright project `storageState` / shared auth fixtures over re-running full login in every spec; keep seeding scripts for bootstrap only.
-- Ban fixed `waitForTimeout` sleeps; wait on explicit UI states, network assertions, or TanStack Query settling instead.
-- Backend integration tests that touch tenant tables must set RLS context the same way as production (`withTenant` / SET LOCAL).
-- Layout/responsiveness: keep specs named in **`mms-ui-ux-design.md` §7** green after shell/RTL/touch/table changes.
-- **a11y Smoke**: Prefer `@axe-core/playwright` smoke on shell + one Work directory at 375/1440; fail on serious/critical issues when AppLayout / FormModal / Table primitives change.
+- **Deterministic Auto-Waiting Assertions**: Strictly ban fixed `waitForTimeout` sleeps. Use web-first auto-waiting assertions (`expect(locator).toBeVisible()`, `expect(locator).toHaveCount(n)`) and explicit network/state wait helpers (`waitForResponse`, Query settling).
+- **User-Centric Locators**: Always use `getByRole`, `getByLabel`, and `getByText` — internal DOM traversal and brittle CSS selector chains are forbidden.
+- **Shared Session Fixtures**: Prefer Playwright project `storageState` / shared auth fixtures over re-running full login in every spec; keep seeding scripts for bootstrap only.
+- **Tenant Context Parity**: Backend integration tests that touch tenant tables must set RLS context the same way as production (`withTenant` / `SET LOCAL`).
+- **Layout & Responsiveness**: Keep responsive specs named in **`mms-ui-ux-design.md` §7** green after shell/RTL/touch/table changes.
+- **a11y Smoke Gate**: Run `@axe-core/playwright` smoke across the app shell and at least one Work directory at 375px and 1440px; fail CI on any serious or critical violations whenever `AppLayout`, `FormModal`, or `Table` primitives change.
 - CI orchestration + trace artifacts → **`mms-ops-infrastructure.md`**.
 
 ---
@@ -54,8 +55,7 @@ Assert production-safe JSON `{ type, message }` — never leak SQL/stack traces.
 - **AsyncLocalStorage Context**: Use `AsyncLocalStorage` (running on Node 24 `AsyncContextFrame` by default) for high-performance request ID and `traceId` context propagation across asynchronous call stacks without parameter drilling.
 - **Structured Logging to stdout**: Emit JSON logs directly to `stdout` via high-throughput loggers (such as Pino) and let container orchestrators / PM2 handle log shipping instead of writing directly to log files within the application process.
 - **Fastify Logger**: `LOG_LEVEL` env. Prefer structured fields: `requestId` / `reqId`, route, status, tenant subdomain when known — never PII, passwords, JWTs, OTP, or full collection payloads.
-- **Failure Logging**: Record `4xx`/`5xx` on `onResponse` with the same correlation id as the request.
-- **Tracing (target)**: Prefer OpenTelemetry (or Fastify-compatible tracing) with `trace_id` / `span_id` alongside `requestId`; scrub PII the same as logs — do not invent a second log pipeline.
+- **Tracing & OpenTelemetry Semantic Conventions (v1.26+)**: Standardize telemetry, span attributes, and structured log fields to OpenTelemetry v1.26+ conventions: HTTP (`http.request.method`, `http.response.status_code`, `url.path`, `network.protocol.version`), tenancy (`tenant.id`, `workspace.subdomain`), database operations (`db.system.name: "postgresql"`, `db.operation.name`), and errors (`error.type`). Scrub PII identically across logs and traces — do not invent divergent key formats.
 - **Sentry**: Scrub PII; set tenant tag when available; do not double-report handled `notify.error` paths as unhandled exceptions.
 
 ---

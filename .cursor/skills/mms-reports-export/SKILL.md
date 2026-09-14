@@ -1,11 +1,12 @@
 ---
 name: mms-reports-export
-description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboards, and PDF/Excel/print exports. Use when editing Reports tabs, KPIs, ExportToolbar, drill-down, saved reports, or dashboard widgets.
+description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboards, and PDF/Excel/print exports. Use when editing Reports tabs, KPIs, ExportToolbar, drill-down, saved reports, or dashboard widgets. Do NOT use for primary entity CRUD directories (use mms-module-work), multi-tier module layout (use mms-module-page), or background worker scheduling (use mms-background-jobs).
 ---
 
 # MMS Reports & Export Workflow
 
-**Rules:** `mms-reports.mdc`, `mms-data-layer.mdc` (Query-first policy), `mms-performance.mdc` §1-2 (Server Aggregates, Streaming & Heavy Exports), `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`, `mms-settings-i18n.mdc`. Soft-Delete Workflow → **`mms-soft-delete`**.
+**Rule (norms SSOT):** `mms-reports.mdc` · `mms-data-layer.mdc` · `mms-performance.mdc` §1-2 · `mms-module-architecture.mdc`.
+**Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
 ## Placement
 
@@ -56,40 +57,10 @@ export function ModuleReportsTier(): React.JSX.Element {
 }
 ```
 
-## Chart Rules
-
-```tsx
-// ✅ Lazy-loaded chart component — recharts stays out of the Reports tab initial bundle
-const ModuleReportCharts = lazy(() =>
-  import('./ModuleReportCharts').then((mod) => ({ default: mod.ModuleReportCharts })),
-);
-
-// ✅ Usage with Suspense skeleton
-<Suspense fallback={<Skeleton className="h-chart-md w-full rounded-xl" />}>
-  <ModuleReportCharts data={aggregates} />
-</Suspense>
-
-// ✅ All charts wrapped in ReportChartCard (includes SafeResponsiveContainer)
-<ReportChartCard title={t('module.reports.chartTitle')} accentColor="primary" heightClass="h-chart-md">
-  <BarChart data={data} barSize={28}>
-    <XAxis dataKey="name" tick={chartAxisTick(10)} />
-    <YAxis tick={chartAxisTick(11)} />
-    <Tooltip formatter={(v) => [formatNumber(v), t('module.reports.label')]} />
-    <Bar dataKey="count" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-  </BarChart>
-</ReportChartCard>
-
-// ✅ Empty state inside chart card
-<ReportChartCard
-  empty={data.length === 0}
-  emptyNode={<EmptyState icon={BarChart2} title={t('module.reports.noData')} compact />}
->
-  ...
-</ReportChartCard>
-
-// ❌ Banned — direct recharts import in non-lazy component
-import { BarChart, Bar } from 'recharts'; // in a parent report component
-```
+## Chart Rules & Lazy Loading
+- **Chart Component Isolation**: Recharts must NOT be imported directly into parent report components. Extract chart JSX into a `{Module}ReportCharts.tsx` sibling and lazy-load it with Suspense and Skeleton fallback.
+- **Safe Responsive Container**: Wrap all charts in `ReportChartCard` (which enforces `SafeResponsiveContainer` and handles empty states).
+- **Reference Example**: [examples/ModuleReportCharts.tsx](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-reports-export/examples/ModuleReportCharts.tsx).
 
 ## Add / Change a Report
 
@@ -106,25 +77,9 @@ import { BarChart, Bar } from 'recharts'; // in a parent report component
 9. Add `aria-label` on the `<section>` root and `aria-label` on each `ReportChartCard`.
 10. All text rendered in charts (axis, tooltips, legends) must go through `t()`.
 
-## Export
-
-| Format | Implementation | Size gate | Notes |
-|--------|----------------|-----------|-------|
-| Print | CSS `@media print` | any | Set `isAnimationActive={false}` on charts for print |
-| CSV | Streaming `ReadableStream` → `Blob` | always stream | No full in-memory stringify |
-| Excel | `xlsx` via dynamic `import()` (FE inline) | ≤500 rows | `resolveRows` callback — never pass raw in-memory array >1000 items |
-| Excel large | Backend ExcelJS stream pipe via BullMQ | >500 rows → background | Background job + tray download |
-| PDF | `jspdf` + `jspdf-autotable` (FE inline) | ≤200 rows | |
-| PDF large | Backend Typst worker via BullMQ | >200 rows → background | Background job + tray download |
-
-- Use shared `ExportToolbar` — not a deleted `ReportExportBar`.
-- Always use `columns`+`rows` prop API on `ExportToolbar` — not the deprecated `data`+`headers`.
-- Escape formula-prefix cells (`=`, `+`, `-`, `@`) — formula injection vector.
-- Export filename: `{module}-report-{date-range}-{YYYY-MM-DD}.{ext}`.
-- Include `generatedAt` timestamp and `generatedBy` in the export file header row.
-- Respect filters, RBAC, field visibility, soft-delete policy (hide export CTAs in trash when `exportsIncludeDeleted: false`; filter archived rows), `can()`.
-- Log PII exports to audit log before streaming.
-- Background export jobs must emit BullMQ progress events at ≥10% increments.
+## Export Standards & Compliance
+Detailed size gates, background queuing, formula injection protection, and tamper-evident compliance export specs:
+- Reference [references/export-standards.md](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-reports-export/references/export-standards.md) · `mms-background-jobs`.
 
 ## Accessibility Checklist
 
@@ -157,13 +112,6 @@ import { BarChart, Bar } from 'recharts'; // in a parent report component
 - [ ] Month/date labels via formatMonthName() / formatDate() from @mms/shared
 - [ ] Export column headers via t() — same keys as table column headers
 ```
-
-## Tamper-Evident Compliance & Audit Exports
-
-For regulatory compliance (HIPAA, SOX, PCI-DSS, GDPR) and audit logs (`audit_trail_events`):
-- **Cryptographic Attestation in Exports**: When exporting audit records (`POST /api/audit/export`), embed the cryptographic chain hash, the published Merkle root proof, and the verification status directly into the document metadata (PDF document properties or JSON envelope).
-- **Auditing the Auditor**: Every view, query, filter evaluation, or export targeting audit logs must itself emit an immutable audit event (`action_type: 'VIEW'`, `tableName: 'audit_trail_events'`).
-- **Data Minimization**: Compliance exports must strip raw decrypted PII unless explicitly requested under an authorized break-glass session.
 
 ## Completion Checklist
 

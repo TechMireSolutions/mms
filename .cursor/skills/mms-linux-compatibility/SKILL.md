@@ -1,11 +1,18 @@
 ---
 name: mms-linux-compatibility
-description: Checks and enforces Linux/Ubuntu VPS compatibility — case-sensitive imports, LF line endings, permissions, PM2. Use when preparing deploy, fixing VPS path/casing issues, or reviewing shell scripts for CRLF.
+description: Checks and enforces Linux/Ubuntu VPS compatibility — case-sensitive imports, LF line endings, permissions, PM2. Use when preparing deploy, fixing VPS path/casing issues, or reviewing shell scripts for CRLF. Do NOT use for local dev startup (use mms-dev-setup) or production Apache/domain routing (use mms-ops-deploy).
 ---
 
 # Linux VPS Compatibility Verification Workflow
 
-**Rules / deploy:** `mms-ops-infrastructure.mdc` · skill **`mms-ops-deploy`**. This skill is the pre-deploy casing/LF/permissions/PM2 checklist only.
+**Rule (norms SSOT):** `mms-ops-infrastructure.mdc` · `mms-completion-review.mdc`.
+
+## Anti-Patterns & Banned Operations
+
+- ❌ **NEVER commit CRLF line endings**: All `.sh`, `.json`, `.ts`, and config files must use LF line endings.
+- ❌ **NEVER use case-mismatched imports**: Linux paths are strictly case-sensitive. Imports like `'./user'` for `'./User.js'` break in CI/VPS.
+- ❌ **NEVER leave scripts non-executable**: Ensure all deployment and migration helper scripts have `chmod +x`.
+- ❌ **NEVER run processes as root**: Fastify process on Ubuntu VPS runs under `deploy-user` with scoped write permissions.
 
 Follow this workflow to verify that code and scripts are compatible with a Linux environment before deploying them to the Ubuntu VPS.
 

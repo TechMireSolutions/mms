@@ -1,42 +1,63 @@
 ---
 name: mms-query-factories
-description: Adds TanStack Query v5 queryOptions/mutationOptions factories, tuple keys, invalidation, and optimistic-update policy for REST collections. Use when creating collection hooks, facades under @/tenant/hooks/collections/*, or mutation cache patterns.
+description: Implements TanStack Query v5 queryOptions/mutationOptions factories, tuple keys, optimistic updates, and API facades. Use when building query hooks, data fetching facades under @/tenant/hooks/collections/*, or caching mutations. Do NOT use for app routing (use mms-frontend), legacy document-store db.ts (use mms-data-sync), or Work tier directory UI (use mms-module-work).
 ---
 
 # MMS Query Factories Workflow
 
-**Rules (norms SSOT):** `mms-hooks.md` · `mms-data-layer.md` §3 · `mms-api-interface.md` · `mms-dry.md` · `mms-performance.md` §5.
+**Rule (norms SSOT):** `mms-hooks.md` · `mms-data-layer.md` §3 · `mms-api-interface.md` · `mms-performance.md` §5.
+**Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
-Do **not** use for app shell/routing → `mms-frontend`. Do **not** use for db.ts/legacy collections → `mms-data-sync`. Do **not** use for Work directory UX → `mms-module-work`.
+## Anti-Patterns & Banned Operations
 
-## Workflow
+- ❌ **NEVER fetch data via manual `useEffect`**: All server state reads must go through TanStack Query options.
+- ❌ **NEVER use ad-hoc string keys**: Always define structured tuple key constants with `as const satisfies readonly unknown[]`.
+- ❌ **NEVER perform optimistic updates on financial or bulk writes**: Optimistic updates are strictly limited to idempotent, low-risk UI (e.g. single-item soft-delete hide with 5–10s undo toast).
+- ❌ **NEVER deep-import feature hooks across modules**: Always re-export public surfaces through `@/tenant/hooks/collections/{module}.ts`.
 
-1. Confirm the entity is REST Query-first — no new `useLiveCollection` for REST-migrated entities.
-2. Reuse the shared `lib/query/` factories first — `createModuleQueryInvalidator` / `createModuleSetupConfigApi` / `createModuleSetupConfigHooks` / `createModuleLookupsHooks` — before hand-rolling per-module factories (`mms-hooks.md`). Thin module facades under `@/tenant/hooks/collections/{module}` or `@/platform/hooks/collections/{module}` wrap them.
-3. Define tuple key constants / key factory (named exports; no ad-hoc string keys).
-4. Colocate TanStack Query v5 `queryOptions` / `mutationOptions` with those keys to deduplicate inflight network requests and cache query states. Strict ban on manual `useEffect(() => { fetch(...) }, [])` calls for server state (`mms-performance.md`).
-5. Thin hooks wrap factories: `enabled: isAuthenticated` (tenant) or `enabled: !!session` (platform), pass Query `signal` into `apiJson` / `apiFetch`.
-6. Mutations: narrow invalidate list + count (+ `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY` for contacts). Pair every mutation with targeted cache invalidation and WebSocket real-time updates.
-7. Await `mutateAsync`; toast success/error at the **call site** via `notify.*` + `t()` — no global `MutationCache` toast bus.
-8. **Optimistic updates**: only for idempotent, easily-rollbackable UX. **Ban** for money, bulk, backup/restore, messaging send. Single-record soft-delete uses optimistic cache hide with 5–10s Undo toast (`docs/soft-delete.md` §7.8, skill `mms-soft-delete`). Reconcile via invalidate + server response.
-9. Export cross-feature facade from `@/tenant/hooks/collections/{module}` or `@/platform/hooks/collections/{module}` — ban feature→feature deep imports.
-10. Align client defaults with `queryClient.ts` (`staleTime` 30s, `gcTime` 5m, etc.) — `mms-data-layer.md`, `mms-performance.md`.
-11. Paginated lists: `placeholderData: (previousData) => previousData` (Query v5) for smooth pagination without layout flickers — not the v4 boolean `keepPreviousData`.
-12. When the API supports **keyset/cursor**, wire Query to that contract (not only offset `page`/`limit`) — `mms-data-layer.md`.
+## Step-by-Step Workflow
 
-## Checklist
+1. **Verify REST Authority**: Confirm entity is server-authoritative REST. Never add `useLiveCollection` for REST entities.
+2. **Tuple Query Keys**: Define query key constants and tuple factories in `features/{module}/hooks/{module}QueryKeys.ts`.
+3. **Query Options Factory**: Colocate `queryOptions` with AbortSignal forwarding:
+   ```ts
+   export function entityListQueryOptions(query: Record<string, unknown> = {}) {
+     return queryOptions({
+       queryKey: [...ENTITY_QUERY_KEY, 'list', query] as const,
+       queryFn: async ({ signal }) => {
+         const res = await apiContract.entities.list({ query, signal, fetchOptions: { signal } });
+         if (res.status !== 200) throw new Error('Failed to fetch entities');
+         return res.body;
+       },
+       placeholderData: (prev) => prev,
+       staleTime: 15_000,
+     });
+   }
+   ```
+4. **Invalidator Helper**: Create colocated `invalidate{Module}Queries(queryClient)` invalidating list, metrics, and lookups.
+5. **Mutation Hook**: Return mutation wrapping `useMutation` with target invalidation:
+   ```ts
+   export function useEntityCreateMutation() {
+     const qc = useQueryClient();
+     return useMutation({
+       mutationFn: async (payload: InsertEntityDto) => {
+         const res = await apiContract.entities.create({ body: payload });
+         if (res.status !== 201) throw new Error('Create failed');
+         return res.body;
+       },
+       onSuccess: () => invalidateEntityQueries(qc),
+     });
+   }
+   ```
+6. **Cross-Feature Facade**: Re-export query options, hooks, and types in `@/tenant/hooks/collections/{module}.ts`.
+
+## Verification Checklist
 
 ```
-- [ ] queryOptions / mutationOptions colocated with keys (no manual useEffect fetch)
-- [ ] Inflight request deduplication via TanStack Query tuple keys
-- [ ] AbortSignal wired through apiClient
-- [ ] No saveCollection dual-write on mutation success
-- [ ] Optimistic policy respected (optimistic single soft-delete with 5–10s Undo toast allowed; money/bulk/backup banned)
-- [ ] Paginated lists use placeholderData: (prev) => prev when needed
-- [ ] Keyset/cursor Query when API supports it (hot/large lists)
-- [ ] Facade exported for cross-feature use when needed (tenant/platform)
+- [ ] queryOptions/mutationOptions colocated with tuple keys
+- [ ] AbortSignal forwarded to apiContract/fetchOptions
+- [ ] placeholderData: (prev) => prev used on paginated queries
+- [ ] No manual useEffect fetch calls
+- [ ] Re-exported through @/tenant/hooks/collections/{module}.ts
+- [ ] Run: pnpm typecheck
 ```
-
-## Done
-
-Typecheck; one read + one mutation path verified — `mms-completion-review.md`.

@@ -1,23 +1,23 @@
 ---
 name: mms-testing-e2e
-description: Automated testing guide for MMS — Vitest unit/integration tests, MSW (Mock Service Worker) API mocking, Playwright E2E specs, responsive/RTL smoke suites, and axe-core accessibility checks. Use when writing, running, or debugging frontend, backend, shared package, or end-to-end tests.
+description: Automated testing guide for MMS — Vitest unit/integration tests, Fastify inject() API tests, Playwright E2E specs, responsive/RTL smoke suites, and axe-core accessibility checks. Use when writing, running, or debugging frontend, backend, shared package, or end-to-end tests. Do NOT use for static TypeScript typechecks (use pnpm typecheck) or dependency auditing (use mms-dependency-upgrade).
 ---
 
 # MMS Testing & E2E Workflow
 
-**Rules (norms SSOT):** `mms-testing-observability.md` · `mms-ui-ux-design.md` §7 · `mms-performance.md` §6 (Safety & Verification) · `mms-completion-review.md`
+**Rules (norms SSOT):** `mms-testing-observability.md` · `mms-agent-universal.md` · `mms-completion-review.md` · `mms-ui-ux-design.md` §3–§4 · `mms-performance.md` §6. Accessibility smoke specifics → **`mms-a11y-smoke`**.
 
-Comprehensive testing standard across unit, integration, network mocking, and Playwright E2E suites.
+Comprehensive guide for writing, running, and debugging automated tests across the Madrasa Management System monorepo.
 
 ---
 
-## 1. Testing Stack & Layers
+## 1. Monorepo Testing Tiers
 
 | Layer | Framework & Tools | Scope & Target Files | Command |
 |---|---|---|---|
 | **Unit & Pure Helpers** | Vitest | `@mms/shared` utils, formatters, validation schemas (`packages/shared/**/*.test.ts`). | `pnpm --filter @mms/shared test` |
 | **Backend Integration** | Vitest + Fastify `inject()` | Route schemas, `authenticateTenant`, in-memory mock repositories (`vi.hoisted()`), RBAC allow/deny tests (`apps/backend/**/*.test.ts`). | `pnpm --filter mms-backend test` |
-| **Frontend Component & Hooks** | Vitest + React Testing Library + MSW | TanStack Query hooks, complex modals, state facades, form validation errors (`apps/frontend/**/*.test.tsx`). | `pnpm --filter mms-frontend test` |
+| **Frontend Component & Hooks** | Vitest + React Testing Library | TanStack Query hooks, complex modals, state facades, form validation errors (`apps/frontend/**/*.test.tsx`). | `pnpm --filter mms-frontend test` |
 | **Lightweight Scripts / CLIs** | `node:test` + `--experimental-strip-types` | Standalone test/utility scripts without upfront compilation. | `node --experimental-strip-types script.ts` |
 | **End-to-End (E2E)** | Playwright | Full browser flows: auth, responsive shell (375/768/1440), RTL mirroring, navigation, directory CRUD. | `pnpm test:e2e` |
 | **Accessibility Smoke** | axe-core via Playwright / Vitest | Serious and critical WCAG 2.1 AA violations on shells, dialogs, and tables. | `pnpm test:e2e tests/responsive-shell.spec.ts` |
@@ -49,59 +49,14 @@ Comprehensive testing standard across unit, integration, network mocking, and Pl
 ### Pure Utilities (`@mms/shared`) (Vitest)
 - Every exported helper (`formatDate`, `formatMoney`, `parsePhoneNumber`, `buildWorkspaceBackupEnvelope`) must have exhaustive unit tests covering happy paths, null/undefined inputs, and boundary values.
 
-### Backend Route Testing (Fastify `inject` & `vi.hoisted`)
-```typescript
-import { describe, expect, it, vi } from 'vitest';
-import { createServer } from '../server.js';
+### Backend Route & RLS Testing (Fastify `inject` & `withTenant`)
+- **Fastify `inject()` Route Pattern**: Reference [examples/fastify-inject.test.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/fastify-inject.test.ts).
+- **Multi-Tenant RLS Concurrency**: Reference [examples/tenant-rls-concurrency.test.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/tenant-rls-concurrency.test.ts).
 
-test('POST /api/contacts rejects unauthenticated tenant', async () => {
-  const app = await createServer();
-  const res = await app.inject({
-    method: 'POST',
-    url: '/api/contacts',
-    payload: { name: 'Test Contact' },
-  });
-  expect(res.statusCode).toBe(401);
-});
-```
-
-### Multi-Tenant RLS Concurrency Test
-When adding tenant tables, ensure the shared connection pool prevents cross-tenant data leakage:
-```typescript
-// apps/backend/src/__tests__/tenantIsolation.test.ts
-import { describe, it, expect } from 'vitest';
-import { withTenant } from '../db/tenant-context.js';
-import { students } from '../db/schema.js';
-
-describe('Row Level Security Concurrency Test', () => {
-  it('prevents cross-tenant data leakage within the shared connection pool', async () => {
-    const tenantA = '00000000-0000-0000-0000-000000000001';
-    const tenantB = '00000000-0000-0000-0000-000000000002';
-
-    // Seed records
-    await withTenant(tenantA, async (tx) => {
-      await tx.insert(students).values({ name: 'Tenant A Student', tenantId: tenantA });
-    });
-    await withTenant(tenantB, async (tx) => {
-      await tx.insert(students).values({ name: 'Tenant B Student', tenantId: tenantB });
-    });
-
-    // Concurrently query across both tenants with explicit column projection (no SELECT *)
-    const [resultA, resultB] = await Promise.all([
-      withTenant(tenantA, async (tx) => tx.select({ id: students.id, name: students.name, tenantId: students.tenantId }).from(students)),
-      withTenant(tenantB, async (tx) => tx.select({ id: students.id, name: students.name, tenantId: students.tenantId }).from(students)),
-    ]);
-
-    expect(resultA.every((s) => s.tenantId === tenantA)).toBe(true);
-    expect(resultB.every((s) => s.tenantId === tenantB)).toBe(true);
-    expect(resultA.find((s) => s.name === 'Tenant B Student')).toBeUndefined();
-    expect(resultB.find((s) => s.name === 'Tenant A Student')).toBeUndefined();
-  });
-});
-```
-
-### Network Mocking (MSW - Mock Service Worker)
-- **Do not mock `fetch` manually with ad-hoc `vi.fn()`**: Use MSW HTTP handlers in `apps/frontend/src/test/mocks/handlers.ts` to simulate server responses and errors realistically at the network boundary.
+### API & Client Mocking (Frontend)
+- **Centralized API Mocking**: Mock `@/lib/apiClient` functions (`apiJson`, `apiFetch`) via Vitest spies and module mocks (`vi.mock('@/lib/apiClient')`).
+- **TanStack Query Test Wrapper**: Wrap hook and component tests in a `QueryClientProvider` using an isolated `new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })` fixture.
+- **Backend API Mocking**: Use Fastify `app.inject()` with `vi.hoisted()` in-memory repository fixtures for zero-dependency API route testing.
 
 ---
 
@@ -120,32 +75,11 @@ pnpm test:e2e tests/responsive-authenticated.spec.ts
 3. **No Flaky Timeouts**: Avoid `page.waitForTimeout()`; use locator assertions (`expect(locator).toBeVisible()`, `expect(locator).toBeEnabled()`) that auto-retry.
 4. **Auth Fixtures**: Reuse authenticated browser contexts via `e2e/helpers/tenantBootstrap.ts` rather than repeatedly walking through the login form on every test.
 5. **RTL Verification**: Test RTL layout mirroring by mounting in Arabic/Urdu (`dir="rtl"`) and verifying no page-level horizontal scroll (`document.documentElement.scrollWidth <= window.innerWidth`).
-
-### BiDi Visual Assertion Test (Playwright)
-```typescript
-// e2e/specs/bidi-layout.spec.ts
-import { test, expect } from '@playwright/test';
-
-test('verifies bidirectional layout and Nastaliq rendering parity', async ({ page }) => {
-  // English LTR View
-  await page.goto('/tenant/students?lang=en');
-  await expect(page.locator('h1')).toHaveCSS('text-align', 'start');
-  const enBox = await page.locator('[data-testid="search-input"]').boundingBox();
-
-  // Urdu RTL View
-  await page.goto('/tenant/students?lang=ur');
-  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
-  await expect(page.locator('h1')).toHaveCSS('font-family', /Noto Nastaliq Urdu/);
-  
-  // Verify mirrored search icon position
-  const urBox = await page.locator('[data-testid="search-input"]').boundingBox();
-  expect(urBox?.x).not.toEqual(enBox?.x);
-});
-```
+6. **BiDi & Trash Specs**: Reference [examples/playwright-smoke.spec.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/playwright-smoke.spec.ts).
 
 ---
 
-## 4. Soft-Delete Integration & Parity Testing (`docs/soft-delete.md` §12)
+## 4. Soft-Delete Integration & Parity Testing (`docs/soft-delete.md` §12 · `mms-soft-delete`)
 
 Every soft-deletable module must include integration tests (`inject()`) verifying:
 1. **Single-Record 404 on Archived**: Standard `GET /:id` returns `404 Not Found` for soft-deleted entities; `GET /:id?includeDeleted=true` returns `200 OK` when caller has `canDeleteCollection`.
@@ -153,52 +87,7 @@ Every soft-deletable module must include integration tests (`inject()`) verifyin
 3. **Idempotency & State Latches**: `DELETE /:id` on an already-archived row returns `404 Not Found`. `POST /:id/restore` on an active row returns `404 Not Found`.
 4. **Partial Unique Index Verification**: Creating a new active entity with the same email/phone as an archived entity succeeds without a uniqueness violation (validating `WHERE deleted_at IS NULL` index).
 5. **Bulk Counts Accuracy**: `POST /bulk-delete` and `POST /bulk-restore` with mixed active/archived IDs accurately return `{ succeeded: N, failed: M }`.
-6. **Session Invalidation**: Soft-deleting a user account immediately invalidates active tokens in Redis and prevents subsequent authentication.
-
-```typescript
-// Fastify inject() soft-delete integration pattern
-test('DELETE /api/contacts/:id soft-deletes and subsequent GET returns 404', async () => {
-  const app = await createServer();
-  const deleteRes = await app.inject({
-    method: 'DELETE',
-    url: `/api/contacts/${contactId}`,
-    headers: { host: 'tenant.localhost' },
-    cookies: { mms_tenant_session: validSessionCookie },
-  });
-  expect(deleteRes.statusCode).toBe(200);
-
-  // Standard GET returns 404
-  const getRes = await app.inject({
-    method: 'GET',
-    url: `/api/contacts/${contactId}`,
-    headers: { host: 'tenant.localhost' },
-    cookies: { mms_tenant_session: validSessionCookie },
-  });
-  expect(getRes.statusCode).toBe(404);
-});
-```
-
-### Playwright E2E Trash & Undo Verification
-```typescript
-test('soft-delete row hides item, shows Undo toast, and trash toggle syncs URL', async ({ page }) => {
-  await page.goto('/tenant/students');
-
-  // 1. Single delete triggers optimistic hide + Undo toast
-  await page.locator('[data-testid="row-actions-btn"]').first().click();
-  await page.locator('[data-testid="archive-row-btn"]').click();
-  await expect(page.locator('text=Record archived')).toBeVisible();
-  await expect(page.locator('button:has-text("Undo")')).toBeVisible();
-
-  // 2. Toggle trash syncs URL to ?view=trash and preserves filters
-  await page.locator('[data-testid="search-input"]').fill('Ali');
-  await page.locator('[data-testid="module-trash-toggle"]').click();
-  await expect(page).toHaveURL(/.*view=trash.*/);
-  await expect(page.locator('[data-testid="search-input"]')).toHaveValue('Ali');
-
-  // 3. Add CTA hidden in trash mode
-  await expect(page.locator('[data-testid="add-record-btn"]')).toBeHidden();
-});
-```
+6. **Session Invalidation**: Soft-deleting a user account immediately invalidates active tokens in Redis and prevents subsequent authentication. Reference [examples/fastify-inject.test.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/fastify-inject.test.ts) and [examples/playwright-smoke.spec.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/playwright-smoke.spec.ts).
 
 ---
 

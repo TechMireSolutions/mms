@@ -77,6 +77,6 @@ describe('security rate limiter', () => {
     const res = await app.inject({ method: 'GET', url: '/anything' });
     expect(res.statusCode).toBe(200);
     // The global limiter advertises its budget on every response.
-    expect(res.headers['x-ratelimit-limit']).toBeDefined();
+    expect(typeof res.headers['x-ratelimit-limit']).toBe('string');
   });
 });

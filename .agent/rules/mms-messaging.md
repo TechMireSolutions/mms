@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Unified SMS/WhatsApp campaign composition, templates, and message history specifications.
 ---
 
 # MMS Messaging & Campaign Specification

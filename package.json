@@ -17,7 +17,8 @@
     "check:i18n": "pnpm --filter mms-backend exec tsx ../../scripts/i18n/check-translations.ts",
     "verify:rules": "node scripts/verify-rules-integrity.mjs",
     "check:bundle": "node scripts/check-bundle-budget.mjs",
-    "check:migration-indexes": "node scripts/check-migration-indexes.mjs"
+    "check:migration-indexes": "node scripts/check-migration-indexes.mjs",
+    "check:db-projections": "node scripts/check-db-projections.mjs"
   },
   "devDependencies": {
     "turbo": "^2.10.9",

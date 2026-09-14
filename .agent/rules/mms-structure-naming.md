@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Folder structure, colocation, file size limits, naming conventions for symbols/files, and database-to-UI name alignments.
 ---
 
 # MMS File Structure & Naming Conventions

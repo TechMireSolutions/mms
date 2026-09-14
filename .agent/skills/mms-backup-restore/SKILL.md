@@ -1,41 +1,57 @@
 ---
 name: mms-backup-restore
-description: Implements or audits workspace encrypted backup/export and wipe-restore — safety backup, validate-before-wipe, KDF/envelope, sync timeout rollback. Use when changing BackupRestore UI, /api/db/backup or /api/db/sync, backup crypto, or restore safety gates.
+description: Implements or audits workspace encrypted backup/export and wipe-restore — safety backup, validate-before-wipe, KDF/envelope, sync timeout rollback. Use when modifying BackupRestore UI, /api/db/backup or /api/db/sync, backup crypto, or restore safety gates. Do NOT use for raw PostgreSQL ops dumps (use mms-ops-deploy), general application settings/i18n (use mms-settings-i18n), or collection sync primary path (use mms-data-sync).
 ---
 
 # MMS Backup & Restore Workflow
 
-**Rules (norms SSOT):** `mms-settings-i18n.md` (two-step UI) · `mms-data-layer.md` (envelope/KDF/sync) · `mms-auth-security.md` (admin + `canBulkSync`).
+**Rule (norms SSOT):** `mms-settings-i18n.md` · `mms-data-layer.md` §6 · `mms-auth-security.md`.
+**Workflows:** `/code-review` · **Manifest:** `.agent/skills-manifest.json`
 
-Do **not** use for Postgres ops dumps → `mms-ops-deploy` / production scripts. Do **not** use for general settings/i18n → `mms-settings-i18n`. Do **not** use for collection sync primary path → `mms-data-sync`.
+## Anti-Patterns & Banned Operations
 
-## Workflow
+- ❌ **NEVER execute wipe without dry-run validation**: Always validate snapshot integrity and schema conformance before purging existing data.
+- ❌ **NEVER commit a partial restore**: Entire wipe-restore sequence must run within an atomic transaction with timeout rollback.
+- ❌ **NEVER truncate or alter audit trail events**: Restore operations must append an immutable audit record (`action_type = 'RESTORE'`).
+- ❌ **NEVER restore across tenant boundaries**: Reject backup files immediately if snapshot subdomain does not match current tenant session.
 
-1. Confirm route gates: admin + `canBulkSync` on `/api/db/backup` and `/api/db/sync`.
-2. **Export**: server snapshot → workspace envelope → AES-GCM (`encryptWorkspaceBackup`). Disable download when local history is metadata-only (`!backup.data`).
-3. **Restore step 1**: current-password step-up + mandatory safety backup (`createSafetyBackup` → `safetyReady`).
-4. Early-reject encrypted file `subdomain` ≠ current tenant (`backup.workspaceMismatch`) before decrypt prompt.
-5. Run `validateWorkspaceBackupJson` / `validateAndNormalizeSnapshot` (dry-run) **before** wipe — never commit a partial restore.
-6. **Restore step 2**: wipe-restore under `withSyncTimeout`; abort → full rollback + `408` / `backup.syncTimeout`.
-7. Strip `SERVER_ONLY_OBJECT_KEYS`; exclude credential tables from `relationalReplaceMapping`.
-8. **Audit Trail Preservation**: Wipe-restore must NEVER truncate or mutate historical `audit_trail_events` or break cryptographic chains. Restore operations must append an immutable audit event (`action_type = 'RESTORE'`, `tableName = 'workspace_snapshot'`). Encrypted backup exports carrying audit trails must include cryptographic chain hashes and verification status in metadata (`mms-audit-trail`).
-9. After success: clear FE collection cache by tenant prefix; keep settings/singleton objects only.
-10. All UI copy via `backup.*` keys (en/ar/ur/fa). Confirm modal must not close while busy.
-11. **Soft-Delete Continuity & Purge Bypass**: Encrypted backup exports include soft-delete metadata columns (`deleted_at`, `deleted_by`, etc.) to preserve historical audit links. During restore step 2, the wipe-restore transaction executes `SET LOCAL app.allow_hard_purge = 'true'` to bypass the `forbid_hard_delete()` trigger when purging pre-existing rows before restoring snapshot entities (`docs/soft-delete.md` §1 & §2.5 · `mms-soft-delete`). Note: Right-to-Erasure crypto-shredding permanently renders encrypted custom fields unrecoverable even across historical backups.
+## Two-Step Wipe-Restore Implementation Pattern
 
-## Checklist
+```ts
+import { db } from '@/db';
+import { sql } from 'drizzle-orm';
+
+export async function executeWipeRestoreTransaction(tenantSubdomain: string, snapshotData: ValidatedSnapshot) {
+  return await db.transaction(async (tx) => {
+    // 1. Enforce tenant isolation & bypass hard-delete triggers for pre-existing records
+    await tx.execute(sql`SET LOCAL app.current_tenant = ${tenantSubdomain}`);
+    await tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
+
+    // 2. Validate dry-run snapshot schema conformance
+    validateAndNormalizeSnapshot(snapshotData);
+
+    // 3. Purge pre-existing tenant records safely
+    await purgeTenantEntitiesForRestore(tx, tenantSubdomain);
+
+    // 4. Insert restored entities with historical audit timestamps
+    await insertRestoredEntities(tx, snapshotData);
+
+    // 5. Append immutable audit trail event
+    await tx.execute(sql`
+      INSERT INTO audit_trail_events (workspace_subdomain, action_type, table_name, details)
+      VALUES (${tenantSubdomain}, 'RESTORE', 'workspace_snapshot', '{"status":"success"}')
+    `);
+  });
+}
+```
+
+## Verification Checklist
 
 ```
-- [ ] No wipe without validate-before-wipe
-- [ ] Two-step + safetyReady gate intact
-- [ ] Same-subdomain enforced
-- [ ] Timeout rolls back (no partial commit)
-- [ ] Secrets/credentials stripped from snapshot
-- [ ] No dual-write restore from browser cache alone
-- [ ] Audit trail preserved (no truncation) and restore operation audited
-- [ ] Backup preserves soft-delete metadata; wipe-restore executes under SET LOCAL app.allow_hard_purge = 'true'
+- [ ] Two-step UI gate intact (password step-up + mandatory safety backup)
+- [ ] Subdomain check rejects foreign tenant backups before decryption prompt
+- [ ] Validate-before-wipe ensures zero partial-commit failures
+- [ ] Wipe transaction executes under SET LOCAL app.allow_hard_purge = 'true'
+- [ ] Audit trail preserved without truncation; RESTORE action appended
+- [ ] Run: pnpm typecheck && cd apps/backend && pnpm test
 ```
-
-## Done
-
-Allow+deny / auth path sanity; UI two-step still gated — `mms-completion-review.md`.

@@ -41,17 +41,15 @@ CLAUDE.md            # Session entry (points here + sync commands)
   docs/workflows/    # reference copies of .agent/workflows/
 ```
 
-## Always-on rules (both tools)
+## Always-on rules (all tools)
 
 | Antigravity | Cursor |
 |-------------|--------|
-| `rules/antigravity-global.md` | `rules/antigravity-global.mdc` |
+| `rules/mms-agent-universal.md` | `rules/mms-agent-universal.mdc` |
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
-| `rules/mms-migration-status.md` | `rules/mms-migration-status.mdc` |
 | `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
-| `rules/mms-performance.md` | `rules/mms-performance.mdc` |
 
-Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker), `mms-structure-naming` (layout/size bands).
+Scoped: `mms-performance` (compute/virtualization), `mms-migration-status` (active debt), `mms-data-layer` (Postgres/RLS/Query), `mms-dry`, `mms-dependencies`, `mms-structure-naming`.
 
 **Rule → skill map:** each rule has a **Workflow skill:** line; full matrix in `mms-core` Standards index (rules = norms; skills = how-to).
 
@@ -120,7 +118,7 @@ bash .agent/scripts/sync-all.sh
 
 Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cursor), `sync-claude.sh` (→ Claude).
 
-**21 rules** (5 always-on + 16 scoped): product (`mms-ui-ux-design`, `mms-fields`, `mms-module-architecture`, `mms-form-architecture`, `mms-messaging`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-auth-security`, ...). Index: `.cursor/rules/README.md`.
+**21 rules** (3 always-on + 18 scoped): product (`mms-ui-ux-design`, `mms-fields`, `mms-module-architecture`, `mms-form-architecture`, `mms-messaging`, ...), platform (`mms-dependencies`, `mms-dry`, `mms-auth-security`, ...). Index: `.cursor/rules/README.md`.
 
 **Rule index:** [.cursor/rules/README.md](.cursor/rules/README.md) — canonical owner per topic (avoids duplicating tier/isolation/i18n prose).
 
@@ -129,7 +127,7 @@ Individual targets: `sync-rules.sh` (→ Antigravity), `sync-skills.sh` (→ Cur
 ## Layout
 
 ```
-apps/frontend/     React 19 + Vite
+apps/frontend/     React 19 + Vite 8
 apps/backend/      Fastify 5 + Node.js 24 + PostgreSQL
 packages/shared/   @mms/shared
 ```

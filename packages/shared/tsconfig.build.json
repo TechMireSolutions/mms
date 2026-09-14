@@ -1,0 +1,10 @@
+{
+  // Build-only config: emit the library, not its tests.
+  //
+  // `tsconfig.json` intentionally includes `src/**/*` so `pnpm typecheck`
+  // (`tsc --noEmit`) also type-checks the test suite. Without this file, `tsc`
+  // would EMIT that suite into `dist/` — shipping test code, test-only imports
+  // (vitest), and test `.d.ts` files as part of the package's public surface.
+  "extends": "./tsconfig.json",
+  "exclude": ["src/**/*.test.ts", "src/**/*.spec.ts", "src/**/__tests__/**"]
+}

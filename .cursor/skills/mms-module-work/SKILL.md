@@ -1,6 +1,6 @@
 ---
 name: mms-module-work
-description: Implements or reviews MMS module command centres and Work tabs — metrics, directories, drawers, bulk actions, soft-delete trash, column prefs. Use when changing PageHeader command centre, Work directory, trash/restore, bulk actions, detail drawers, filters, or mobile cards.
+description: Implements or reviews MMS module command centres and Work tabs — metrics, directories, drawers, bulk actions, soft-delete trash, column prefs. Use when changing PageHeader command centre, Work directory, trash/restore, bulk actions, detail drawers, filters, or mobile cards. Do NOT use for top-level 3-tier module shells (use mms-module-page), module preferences configuration (use mms-module-setup), or analytical report charts (use mms-reports-export).
 ---
 
 # MMS Module Work Workflow

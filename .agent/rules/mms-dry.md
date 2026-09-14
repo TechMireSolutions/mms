@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: DRY (Don't Repeat Yourself) guidelines, extraction thresholds, boundaries, and @mms/shared exports standards.
 ---
 
 # MMS DRY & Shared Package Policy

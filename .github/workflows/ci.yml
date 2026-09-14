@@ -83,6 +83,10 @@ jobs:
       - name: Dependency audit (high and critical)
         run: pnpm audit --audit-level=high
 
+      # Ratchet: no new bare `.select()` wildcard projections (mms-performance ban).
+      - name: DB projection safety
+        run: pnpm run check:db-projections
+
       # Ratchet: no new write-blocking CREATE INDEX on large tables in migrations.
       # CONCURRENTLY cannot live in a migration (Drizzle runs each migration run in
       # one transaction) — use `pnpm --filter mms-backend index:concurrent`.

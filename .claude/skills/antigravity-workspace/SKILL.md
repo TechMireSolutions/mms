@@ -1,9 +1,18 @@
 ---
 name: antigravity-workspace
-description: Orients Antigravity agents to the MMS workspace layout — .agent rules, skills, workflows, and parity with Cursor. Use when starting work in Antigravity, loading project context, or unsure where rules and skills live.
+description: Orients Antigravity agents to the MMS workspace layout — .agent rules, skills, workflows, and parity with Cursor and Claude Code. Use when starting work in Antigravity, loading project context, or syncing agent standards. Do NOT use for local server operations (use mms-dev-setup) or code review checklists (use mms-code-review).
 ---
 
 # Antigravity Workspace — MMS
+
+**Rule (norms SSOT):** `mms-agent-universal.md` · `mms-core.md` · `mms-completion-review.md`.
+
+## Anti-Patterns & Banned Operations
+
+- ❌ **NEVER edit rules/skills without running sync**: Running `bash .agent/scripts/sync-all.sh` is mandatory to keep Cursor, Claude, and Antigravity aligned.
+- ❌ **NEVER run `cd` in tool commands**: Specify absolute execution `Cwd` or pass paths directly to scripts.
+- ❌ **NEVER commit or push to remotes**: Commits require explicit user instruction; remote pushes are exclusively performed by the user.
+- ❌ **NEVER rewrite full files**: Use targeted `replace_file_content` patches with minimal anchor context.
 
 ## Directory layout
 
@@ -19,17 +28,15 @@ Claude Code equivalent: `.claude/rules/` + `.claude/skills/` + root `CLAUDE.md`
 
 Keep in sync when editing: `bash .agent/scripts/sync-all.sh`
 
-## Always-on rules
+## Always-on rules (3)
 
 | File | Purpose |
 |------|---------|
-| `rules/antigravity-global.md` | Agent cognition, output, security, React Compiler discipline |
-| `rules/mms-core.md` | MMS stack, boundaries, ownership matrix |
-| `rules/mms-migration-status.md` | Do not reintroduce + short open-gaps summary |
-| `rules/mms-completion-review.md` | Self-review after code edits — verify, then mark done |
-| `rules/mms-performance.md` | Performance, query optimization, streaming, Redis caching & virtualization |
+| `rules/mms-agent-universal.md` | Universal agent cognition, output economy, security, TS/git standards |
+| `rules/mms-core.md` | MMS stack, boundaries, ownership matrix, edit discipline |
+| `rules/mms-completion-review.md` | Self-review after code edits — verify, fix bugs, then mark done |
 
-Scoped: `mms-dry` (shared/hooks/features), `mms-dependencies` (package/CI/Docker), `mms-structure-naming` (file-size bands + barrels), `mms-hooks` (page controllers).
+Scoped (18 rules, 21 total): `mms-performance` (compute/virtualization), `mms-migration-status` (active debt register), `mms-data-layer` (Postgres/RLS/Query), `mms-dry`, `mms-dependencies`, `mms-structure-naming`, `mms-hooks`, `mms-module-architecture`, `mms-ui-ux-design`, etc.
 
 ## Priority skills (daily)
 

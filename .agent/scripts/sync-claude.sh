@@ -45,10 +45,22 @@ for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) 
   const lines = ["---"];
   if (descMatch) lines.push(`description: ${descMatch[1].trim()}`);
   if (!alwaysApply && globsMatch) {
-    const paths = globsMatch[1]
-      .split(",")
-      .map((p) => p.trim())
-      .filter(Boolean);
+    const rawGlobs = globsMatch[1];
+    const paths = [];
+    let current = "";
+    let braceDepth = 0;
+    for (let i = 0; i < rawGlobs.length; i++) {
+      const char = rawGlobs[i];
+      if (char === "{" || char === "(" || char === "[") braceDepth++;
+      else if (char === "}" || char === ")" || char === "]") braceDepth--;
+      else if (char === "," && braceDepth === 0) {
+        if (current.trim()) paths.push(current.trim());
+        current = "";
+        continue;
+      }
+      current += char;
+    }
+    if (current.trim()) paths.push(current.trim());
     if (paths.length > 0) {
       lines.push("paths:");
       for (const p of paths) lines.push(`  - "${p}"`);
@@ -81,11 +93,13 @@ for dir in "$ROOT/.agent/skills"/*/; do
     cp "$dir/SKILL.md" "$ROOT/.claude/skills/$name/SKILL.md"
     echo "synced skill $name"
   fi
-  if [[ -d "$dir/scripts" ]]; then
-    mkdir -p "$ROOT/.claude/skills/$name/scripts"
-    cp -R "$dir/scripts/." "$ROOT/.claude/skills/$name/scripts/"
-    echo "synced scripts $name"
-  fi
+  for sub in scripts references examples; do
+    if [[ -d "$dir/$sub" ]]; then
+      mkdir -p "$ROOT/.claude/skills/$name/$sub"
+      cp -R "$dir/$sub/." "$ROOT/.claude/skills/$name/$sub/"
+      echo "synced $sub $name"
+    fi
+  done
 done
 
 cp "$ROOT/.agent/rules/README.md" "$ROOT/.claude/rules/README.md" 2>/dev/null || true

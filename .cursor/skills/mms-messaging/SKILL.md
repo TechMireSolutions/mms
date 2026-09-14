@@ -1,6 +1,6 @@
 ---
 name: mms-messaging
-description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, and /api/messaging REST. Use when modifying MessagingPage, MessageComposer, messaging templates/campaigns/logs, MessagingVariableTokensBar, or backend messaging routes/repositories.
+description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, and /api/messaging REST. Use when modifying MessagingPage, MessageComposer, messaging templates/campaigns/logs, MessagingVariableTokensBar, or backend messaging routes/repositories. Do NOT use for transactional audit events (use mms-audit-trail) or email background queuing (use mms-background-jobs).
 ---
 
 # MMS Messaging Workflow

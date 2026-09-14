@@ -1,14 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { sql } from 'drizzle-orm';
-import { readFileSync } from 'node:fs';
-import { resolve, dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import {
-  initializeDatabaseConnection,
-  pingDatabase,
-  closeDatabase,
-  getRootDb,
-} from '../../db/dbConnection.js';
+import { closeDatabase, getRootDb } from '../../db/dbConnection.js';
+import { requireDatabaseConnection } from './dbTestSupport.js';
 import { workspaces } from '../../db/schema.js';
 import { withTenantRead } from '../../db/tenant-context.js';
 
@@ -27,26 +20,8 @@ import { withTenantRead } from '../../db/tenant-context.js';
  */
 const TEST_SUBDOMAIN = 'readonly-path-audit';
 
-const backendRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
-
-function applyDatabaseUrlFromEnvFile(): void {
-  if (process.env.DATABASE_URL) return;
-  try {
-    const content = readFileSync(join(backendRoot, '.env'), 'utf-8');
-    const match = content.match(/^DATABASE_URL\s*=\s*"?([^"\n]+)"?$/m);
-    if (match) process.env.DATABASE_URL = match[1].trim();
-  } catch {
-    // no .env present — loadServerConfig will use its test default
-  }
-}
-
-let dbAvailable = false;
-
 beforeAll(async () => {
-  applyDatabaseUrlFromEnvFile();
-  initializeDatabaseConnection();
-  dbAvailable = await pingDatabase();
-  if (!dbAvailable) return;
+  await requireDatabaseConnection();
 
   // The subdomain only needs to exist so tenant-scoped predicates match cleanly;
   // these paths are reads, so no fixture rows are required.
@@ -66,7 +41,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (dbAvailable) {
+  {
     await getRootDb()
       .delete(workspaces)
       .where(sql`${workspaces.subdomain} = ${TEST_SUBDOMAIN}`)
@@ -178,11 +153,6 @@ async function buildReadCases(): Promise<ReadCase[]> {
 
 describe('withTenantRead read-path audit (real Postgres)', () => {
   it('every converted read path executes inside a read-only transaction without writing', async () => {
-    if (!dbAvailable) {
-      console.warn('[readonly audit] No database reachable — skipping.');
-      return;
-    }
-
     const cases = await buildReadCases();
     const failures: string[] = [];
 
@@ -214,11 +184,6 @@ describe('withTenantRead enforces read-only access at the database level', () =>
    * wrong reason.
    */
   it('rejects a write inside withTenantRead with SQLSTATE 25006', async () => {
-    if (!dbAvailable) {
-      console.warn('[readonly audit] No database reachable — skipping.');
-      return;
-    }
-
     let caught: { code?: string; message: string } | null = null;
     try {
       await withTenantRead(TEST_SUBDOMAIN, async (tx) => {

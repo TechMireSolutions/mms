@@ -413,11 +413,9 @@
   ],
   "rules": {
     "always_on": [
-      "rules/antigravity-global.md",
+      "rules/mms-agent-universal.md",
       "rules/mms-core.md",
-      "rules/mms-migration-status.md",
-      "rules/mms-completion-review.md",
-      "rules/mms-performance.md"
+      "rules/mms-completion-review.md"
     ],
     "directory": "rules/"
   },

@@ -4,17 +4,15 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 
 **Architecture rules:** `mms-module-architecture.mdc`, `mms-ops-infrastructure.mdc`, `mms-ui-ux-design.mdc`, `mms-data-layer.mdc`.
 
-## Always Applied (5)
+## Always Applied (3)
 
 | Rule | Purpose |
 |------|---------|
-| `antigravity-global.mdc` | Agent cognition, output economy, security, TS/git standards |
+| `mms-agent-universal.mdc` | Universal agent cognition, output economy, security, TS/git standards |
 | `mms-core.mdc` | Stack, boundaries, ownership matrix, edit discipline |
-| `mms-migration-status.mdc` | Do not reintroduce themes + short open-gaps summary (full gaps → `mms-migration-fixes` skill) |
 | `mms-completion-review.mdc` | Self-review after code edits — verify, fix bugs, then mark done |
-| `mms-performance.mdc` | Performance & resource efficiency (DB, streaming, Redis caching, bundle, virtualization) |
 
-## Scoped Rules (16)
+## Scoped Rules (18)
 
 ### Architecture & Platform Standards
 
@@ -24,6 +22,8 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-structure-naming.mdc` | Monorepo layout, colocation, **file-size bands (~300 hard / ~220 soft)**, Title Case on save, naming |
 | `mms-dependencies.mdc` | Latest stable Node, pnpm, and workspace dependency upgrades |
 | `mms-ops-infrastructure.mdc` | Local dev setup, environment variables, Docker backend ports, health endpoints, Linux compatibility, and CI orchestration |
+| `mms-performance.mdc` | Performance & resource efficiency (DB, streaming, Redis caching, bundle, virtualization) |
+| `mms-migration-status.mdc` | Residual open debt register (full gaps → `mms-migration-fixes` skill; closed milestones → `docs/migration-milestones.md`) |
 
 ### Backend, Data & Security
 
@@ -141,7 +141,8 @@ bash .agent/scripts/sync-all.sh
 
 | Removed | Merged into |
 |---------|-------------|
-| `mms-ai-editing.mdc` | `mms-core` + `antigravity-global` |
+| `antigravity-global.mdc` | Renamed & generalized to `mms-agent-universal.mdc` |
+| `mms-ai-editing.mdc` | `mms-core` + `mms-agent-universal` |
 | `mms-ops.mdc`, `mms-production-ports.mdc`, `mms-linux-compatibility.mdc`, `mms-ci.mdc`, `saas-architecture.mdc` | `mms-ops-infrastructure.mdc` |
 | `mms-ui-visual.mdc`, `mms-ui-rendering.mdc`, `mms-ui-tabs.mdc`, `mms-ui-forms.mdc`, `mms-a11y.mdc` | `mms-ui-ux-design.mdc` |
 | `mms-module-work.mdc`, `mms-module-setup.mdc`, `mms-module-isolation.mdc`, `mms-module-crosscutting.mdc`, `mms-background-jobs.mdc` | `mms-module-architecture.mdc` |
@@ -156,4 +157,4 @@ bash .agent/scripts/sync-all.sh
 
 ## Verify in Cursor
 
-**Settings → Rules** — five always-apply rules + 16 file-scoped rules when matching paths are open (**21 total**).
+**Settings → Rules** — three always-apply rules + 18 file-scoped rules when matching paths are open (**21 total**).

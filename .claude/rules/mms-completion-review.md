@@ -44,8 +44,13 @@ After **creating or editing code**, run a completion review **before** marking t
 | Work `ErrorState` title-only | Add hint description (`loadFailedHint` pattern) — `mms-module-architecture.md` §7 |
 | Manifest `directoryViews: list` with table\|cards UI | Align to `['table','cards']` — `mms-module-architecture.md` §3 |
 | Touched file still ≫300 lines with a clean seam | Split by concern behind a stable barrel — `mms-structure-naming.md` |
+| Bulk PUT wipe missing rows | Upsert/merge existing rows without deleting absent rows — `mms-api-interface.md` §5 |
+| Form closed before mutation resolves | Await `mutateAsync` before closing dialog/clearing state — `mms-form-architecture.md` |
+| Direct SQL DELETE on tenant entity | Route through soft-delete or check `app.allow_hard_purge` — `mms-data-layer.md` §6 |
+| Unique constraint on soft-deletable column | Use partial unique index `WHERE deleted_at IS NULL` — `mms-data-layer.md` §6 |
 | Cross-feature import added | Route through `@/tenant/hooks/collections/*` facade or extract to `components/ui` / `lib/` / `@mms/shared` — the FE boundary lint fails otherwise — `mms-dry.md` |
 | Banned Node 24 package introduced | Replace with native built-in (`--env-file`, `fetch`, `glob`, `crypto.hash`, `URLPattern`) — `mms-dependencies.md` |
+| Non-erasable TS syntax (enum/namespace) | Replace with union types / const objects for Node 24 native stripping — `mms-dependencies.md` |
 | Unprefixed core module import | Prefix with `node:` (`node:fs`, `node:crypto`, `node:path`, `node:async_hooks`) — `mms-structure-naming.md` |
 | Deprecated Node API (`url.parse()`) | Replace with WHATWG `new URL()` — `mms-structure-naming.md` |
 | Undocumented performance refactor | Explicitly document baseline bottleneck and quantified resource saved — `mms-performance.md` |

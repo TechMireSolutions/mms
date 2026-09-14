@@ -33,9 +33,15 @@ for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) 
   if (!match) throw new Error(`No frontmatter: ${file}`);
   const front = match[1];
   const body = match[2].replace(/^\s+/, "");
+  const descMatch = front.match(/^description:\s*(.+)$/m);
   const trigger = /alwaysApply:\s*true/.test(front) ? "always_on" : "model_decision";
   const agentBody = body.replace(/\.mdc\b/g, ".md");
-  const out = `---\ntrigger: ${trigger}\n---\n\n${agentBody}`;
+  const frontLines = ["---", `trigger: ${trigger}`];
+  if (descMatch) {
+    frontLines.push(`description: ${descMatch[1].trim()}`);
+  }
+  frontLines.push("---");
+  const out = `${frontLines.join("\n")}\n\n${agentBody}`;
   fs.writeFileSync(path.join(agentsDir, `${base}.md`), out.endsWith("\n") ? out : `${out}\n`);
   console.log(`synced ${base}.md`);
 }

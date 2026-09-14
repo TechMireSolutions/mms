@@ -1,9 +1,11 @@
 ---
 name: mms-module-setup
-description: Implements or modifies module Setup tier per mms-module-architecture.md — Preferences, defaults, setup audit, prefs cascade. Use when editing module settings and preferences.
+description: Implements or modifies the module Setup tier per mms-module-architecture.md — Preferences, system defaults, setup audit, and preference cascading. Use when configuring module settings, setup tabs, or module preferences. Do NOT use for global workspace settings under /settings (use mms-settings-i18n), Work tier tables/drawers (use mms-module-work), or custom field definitions (use mms-fields-registry).
 ---
 
 # MMS Module Setup Workflow
+
+**Rule (norms SSOT):** `mms-module-architecture.md` · `mms-fields.md` · `mms-settings-i18n.md`.
 
 **Source:** Rules: `mms-module-architecture.md`, `mms-settings-i18n.md`, `mms-performance.md` §3 (300s TTL for static configs/lookups, invalidation on mutations).
 

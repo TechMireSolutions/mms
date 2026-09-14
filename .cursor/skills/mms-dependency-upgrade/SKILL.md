@@ -1,11 +1,11 @@
 ---
 name: mms-dependency-upgrade
-description: Upgrades MMS workspace dependencies with pnpm catalogs, Dependabot/Renovate + dependency-review, audits, and the React Compiler enablement checklist. Use when bumping Node/pnpm/React/Vite/Fastify/Drizzle/Zod/Query, enabling Dependabot, or turning on React Compiler.
+description: Upgrades MMS workspace dependencies with pnpm catalogs, Dependabot/Renovate + dependency-review, audits, and the React Compiler enablement checklist. Use when bumping Node/pnpm/React/Vite/Fastify/Drizzle/Zod/Query, enabling Dependabot, or turning on React Compiler. Do NOT use for routine feature bug fixes (use mms-frontend or mms-backend-api) or migration technical debt (use mms-migration-fixes).
 ---
 
 # MMS Dependency Upgrade Workflow
 
-**Rule (norms SSOT):** `mms-dependencies.mdc`. Also `mms-performance.mdc` §4 (Client Bundle & Asset Optimization), `mms-ops-infrastructure.mdc` (CI), `antigravity-global.mdc` (memo hygiene), `mms-completion-review.mdc`.
+**Rule (norms SSOT):** `mms-dependencies.mdc`. Also `mms-performance.mdc` §4 (Client Bundle & Asset Optimization), `mms-ops-infrastructure.mdc` (CI), `mms-agent-universal.mdc` (memo hygiene), `mms-completion-review.mdc`.
 
 Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use for prod host deploy → `mms-ops-deploy`.
 
@@ -34,6 +34,8 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 - [ ] Compiler not half-enabled (plugin + eslint + memo cleanup together)
 - [ ] Banned Node 24 dependencies (dotenv, axios, node-fetch, ws, glob, fast-glob, path-to-regexp) are not reintroduced
 - [ ] Tree-shaking verified; no banned monolithic libraries (lodash, moment, ramda) or CJS-only packages added
+- [ ] Zero non-erasable TypeScript syntax (enum, namespace, parameter properties) for Node 24 --experimental-strip-types
+- [ ] Native ECMAScript non-mutating methods used (toSorted, toReversed, toSpliced, with, Object.groupBy)
 ```
 
 ## Done

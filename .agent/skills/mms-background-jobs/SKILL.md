@@ -1,9 +1,11 @@
 ---
 name: mms-background-jobs
-description: Implements or reviews MMS background jobs and queued processing — large exports, imports, bulk ops, dedup scans, progress UI, artifacts. Use when adding or changing background processing, export downloads, job tray UX, or queued sync recovery.
+description: Implements or reviews MMS background jobs and queued processing — large exports, imports, bulk ops, dedup scans, progress UI, and artifacts. Use when adding or changing background processing, export downloads, job tray UX, or queued sync recovery. Do NOT use for immediate synchronous REST endpoints (use mms-backend-api), UI module page layout (use mms-module-page), or database schema migrations (use mms-schema-migrate).
 ---
 
 # MMS Background Jobs Workflow
+
+**Rule (norms SSOT):** `mms-module-architecture.md` §5 · `mms-auth-security.md` · `mms-performance.md` §2 · `mms-api-interface.md` §6.
 
 Source: `mms-module-architecture.md` §5. Rules: `mms-module-architecture.md`, `mms-auth-security.md`, `mms-performance.md` §2 (Zero Memory Buffering & Streaming Background Workers). Retention hard-purge workflow → **`mms-soft-delete`**.
 

@@ -1,6 +1,6 @@
 ---
 name: mms-schema-migrate
-description: Forward-only Drizzle migrations with journal/meta, expand/contract DDL, FORCE RLS on new tenant tables, and ban on drizzle-kit push against shared/prod DBs. Use when changing schema.ts, writing SQL migrations, or reviewing DDL PRs.
+description: Forward-only Drizzle migrations with journal/meta, expand/contract DDL, FORCE RLS on new tenant tables, and ban on drizzle-kit push against shared/prod DBs. Use when changing schema.ts, writing SQL migrations, or reviewing DDL PRs. Do NOT use for client-side query caching (use mms-query-factories) or application Fastify route handlers (use mms-backend-api).
 ---
 
 # MMS Schema & Drizzle Migration Workflow
@@ -39,11 +39,7 @@ Use when designing and implementing PostgreSQL database schemas, Drizzle ORM mod
     WITH CHECK (true);
   ```
 - **Composite Tenant Uniqueness:** Any entity-level unique constraint must include the tenant identifier (e.g., `UNIQUE(tenant_id, email)` or `UNIQUE(tenant_id, code)`).
-- **Immutable Audit Ledger & Partitioning (`mms-audit-trail`):** Every state change, balance modification, and critical entity update must be backed by an append-only audit trail (`audit_trail_events` / `audit_trail_ledger`). Audit tables must use monthly date partitioning (`PARTITION BY RANGE (transaction_timestamp)`), include cryptographic chaining columns (`hash_previous`, `hash_current`), enforce `INSERT`-only database permissions for the application user, and strictly execute:
-  ```sql
-  REVOKE UPDATE, DELETE, TRUNCATE ON audit_trail_events FROM PUBLIC, mms_app_user;
-  ```
-  Archive older partitions (91+ days to cold WORM storage) by detaching partitions (`ALTER TABLE audit_trail_events DETACH PARTITION ...`) rather than running `DELETE` queries, eliminating table locks, transaction bloat, and WAL churn.
+- **Immutable Audit Ledger & Partitioning (`mms-audit-trail`):** Audit tables use monthly range partitioning (`transaction_timestamp`), cryptographic chaining (`hash_previous`, `hash_current`), and `INSERT`-only DB privileges (`REVOKE UPDATE, DELETE, TRUNCATE`). Cold partitions detached rather than deleted — **`mms-audit-trail`**.
 
 ## 3. Data Typing & Column Standards
 - **Primary Keys:** Standardize on:
@@ -58,23 +54,10 @@ Use when designing and implementing PostgreSQL database schemas, Drizzle ORM mod
 - **Mandatory Indexing for Query Predicates (`mms-performance.md`):** Every column used in `where()` filters, `leftJoin() ... on()` foreign keys, and `orderBy()` sorting clauses must have an explicit B-Tree index. Prefix multi-tenant compound indexes with tenant scope (`(tenant_id, status, created_at DESC)`).
 - **Foreign Key Indexing:** Every foreign key column must have an explicit B-Tree index to prevent full table scans during joins and cascade deletes.
 - **Database-Enforced Integrity:** Never rely solely on application-layer validation. Enforce invariants with `CHECK`, `NOT NULL`, `DEFAULT`, and `FOREIGN KEY` definitions directly in DDL.
-- **Soft-Delete Column Quintuple (`softDeleteColumns` mixin):** Every soft-deletable entity table carries `deletedAt` (Date), `deletedBy` (text), `deletionReason` (varchar 500), `restoredAt` (Date), `restoredBy` (text), and `deletedWithCascade` (boolean default false). For automated lifecycle purge, add `purgeAfter` generated column (`deleted_at + INTERVAL '90 days'`) (`mms-soft-delete`).
-- **Filter Predicates & Three-Tier Soft-Delete Index Strategy:** Create composite indexes matching query patterns left-to-right, and implement the three soft-delete index categories:
-  - **Category A (Non-partial trash index):** `index('table_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt)` for `includeDeleted=true` queries.
-  - **Category B (Active-record partial index):** `index('table_workspace_active_idx').on(table.workspaceSubdomain).where(sql`${table.deletedAt} is null`)` for hot active reads.
-  - **Category C (Archived-record partial index):** `index('table_workspace_deleted_records_idx').on(table.workspaceSubdomain, table.deletedAt).where(sql`${table.deletedAt} is not null`)` for trash browser pagination.
-  ```ts
-  (table) => [
-    uniqueIndex('contacts_email_active_unique').on(table.workspaceSubdomain, table.email).where(sql`${table.deletedAt} is null`),
-    index('contacts_workspace_active_idx').on(table.workspaceSubdomain).where(sql`${table.deletedAt} is null`),
-    index('contacts_workspace_deleted_records_idx').on(table.workspaceSubdomain, table.deletedAt).where(sql`${table.deletedAt} is not null`),
-  ]
-  ```
-- **Partial Unique Indexes vs `NULLS NOT DISTINCT`:** Recyclable unique fields (`email`, `phone`, `employee_id`, `student_id`, slug) MUST use partial unique indexes `WHERE deleted_at IS NULL`. Banned: PostgreSQL 15+ `UNIQUE NULLS NOT DISTINCT` (it treats NULLs as identical, permitting only 1 soft-deleted row).
-- **Schema-Level Hard-Delete Guard (`BEFORE DELETE` Trigger):** Attach `forbid_hard_delete()` trigger on soft-deletable tables (`students`, `contacts`, etc.) to prevent physical row deletions unless `current_setting('app.allow_hard_purge', true) = 'true'`.
-- **Row-Level Security (RLS) Policy:** Configure `tenant_soft_delete_isolation` policy ensuring queries automatically exclude soft-deleted rows unless `current_setting('app.include_deleted', true) = 'true'`.
+- **Soft-Delete Schema Architecture (`mms-soft-delete`):** Soft-deletable tables include `softDeleteColumns` mixin, `purgeAfter` generated column, three-tier index strategy (Category A non-partial, Category B `WHERE deleted_at IS NULL` for active reads, Category C `WHERE deleted_at IS NOT NULL` for trash), partial unique indexes (banning `NULLS NOT DISTINCT`), and `forbid_hard_delete()` trigger. Full DDL & index patterns → **`mms-soft-delete`**.
 - **High-Churn Autovacuum Tuning:** High-churn soft-deleted tables (`message_logs`, `attendance_records`) must declare tuned vacuum parameters in DDL (`autovacuum_vacuum_scale_factor = 0.05, autovacuum_vacuum_cost_limit = 1000`).
-- **Zero Wildcard Projections (`SELECT *` Strict Ban):** Query surfaces must explicitly project only required columns matching `@mms/shared` Response DTOs. Never emit unconstrained `db.select().from(table)` across network boundaries. Strip heavy blobs/notes from list queries.
+- **Zero Wildcard Projections (`SELECT *` Strict Ban):** Query surfaces must explicitly project only required columns matching `@mms/shared` Response DTOs. Never emit unconstrained `db.select().from(table)` across network boundaries (`pnpm run check:db-projections`). Strip heavy blobs/notes from list queries.
+- **Non-Blocking Index Additions (`check:migration-indexes`):** Drizzle migrations run inside a single transaction block where `CREATE INDEX CONCURRENTLY` cannot execute. Never commit write-blocking `CREATE INDEX` on large production tables in migration SQL files. Execute concurrent indexes via `pnpm --filter mms-backend index:concurrent` or guard with `IF NOT EXISTS`.
 
 ## 5. Drizzle ORM & Migration Guidelines
 - **Bidirectional Relations:** Every `pgTable` definition must have corresponding `relations()` configured in Drizzle to support typed relational queries (`db.query`):
@@ -115,6 +98,7 @@ When generating code for any feature or entity, provide:
 7. Prefer partial indexes for hot active lists (`WHERE deleted_at IS NULL`) when adding soft-delete.
 8. Statement/sql safety budgets → `mms-data-layer.md` (`statement_timeout`, parameterized `sql` only).
 9. Audit trail tables: Monthly date partitioning (`PARTITION BY RANGE (transaction_timestamp)`), `INSERT`-only database privileges (`REVOKE UPDATE, DELETE, TRUNCATE ON audit_trail_events FROM PUBLIC, mms_app_user, mms_admin;`), and partition detachment (`ALTER TABLE ... DETACH PARTITION ...`) for zero-downtime archival without `DELETE` table locks (`mms-audit-trail`).
+10. Run CI migration ratchets: `pnpm run check:migration-indexes` and `pnpm run check:db-projections`.
 
 ## Checklist
 
@@ -132,6 +116,8 @@ When generating code for any feature or entity, provide:
 - [ ] Fastify routes use transaction-scoped RLS (SET LOCAL app.current_tenant)
 - [ ] schema.ts + SQL DDL + journal/meta committed together
 - [ ] No drizzle-kit push in CI/prod docs or scripts
+- [ ] No write-blocking CREATE INDEX on large tables in migrations (pnpm run check:migration-indexes)
+- [ ] Zero bare .select() projections (pnpm run check:db-projections)
 - [ ] FORCE RLS on new tenant tables
 - [ ] Audit tables partitioned by date with INSERT-only privileges (UPDATE/DELETE revoked)
 - [ ] Soft-delete column sextuple via `softDeleteColumns` mixin (`Date` objects contract)

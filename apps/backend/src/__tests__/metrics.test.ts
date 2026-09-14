@@ -39,8 +39,9 @@ describe('MetricsRegistry (Prometheus text exposition format)', () => {
     const { body } = registry.render();
     expect(body).toContain('route="/a\\"b\\\\c\\nd"');
     // The value must stay on one line — a raw newline would corrupt the scrape.
-    const sampleLine = body.split('\n').find((l) => l.startsWith('mms_esc_total{'))!;
-    expect(sampleLine).toBeDefined();
+    const sampleLines = body.split('\n').filter((l) => l.startsWith('mms_esc_total{'));
+    expect(sampleLines).toHaveLength(1);
+    expect(sampleLines[0]).toMatch(/^mms_esc_total\{route=".*"\} 1$/);
   });
 
   it('renders histograms with cumulative buckets, +Inf, _sum and _count', () => {

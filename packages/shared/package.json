@@ -39,7 +39,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint . --quiet",
     "test": "vitest run",

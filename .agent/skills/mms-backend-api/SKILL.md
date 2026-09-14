@@ -1,6 +1,6 @@
 ---
 name: mms-backend-api
-description: Adds or modifies Fastify routes, middleware (authenticateTenant), services, Zod validation, auth artifacts, and WhatsApp integration in the MMS backend. Use when creating API endpoints, db sync, students/contacts REST, error handling, or backend services. For Drizzle DDL/migrations use mms-schema-migrate first.
+description: Adds or modifies Fastify routes, middleware (authenticateTenant), services, Zod validation, auth artifacts, and WhatsApp integration in the MMS backend. Use when creating API endpoints, db sync, students/contacts REST, error handling, or backend services. Do NOT use for database DDL/migrations (use mms-schema-migrate), session/CSRF security hardening (use mms-backend-security), or background worker queuing (use mms-background-jobs).
 ---
 
 # MMS Backend API Workflow
@@ -31,8 +31,11 @@ routes/ (thin) → {module}/use-cases/ → {module}/repository/ (interface) → 
 - Use-case functions take the repository **interface** via DI (testable with fakes).
 - A single repository interface (`ContactsRepository`) is the sole storage gateway; the Drizzle adapter (`{module}RepositoryAdapter`) is the only concrete implementation.
 - Legacy `services/*.ts` module paths stay as **stable re-export shims** of the composition root.
+- **Reference Implementation**: [examples/clean-architecture-route.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-backend-api/examples/clean-architecture-route.ts).
 
 Never query `pg` from handlers. Prefer repositories / `withTenant`. Use **`dbSyncService`** only for legacy JSON documents (`/api/db/...`).
+- **Explicit Column Projections (`check:db-projections`)**: Bare `.select().from(table)` and `SELECT *` are strictly banned (`mms-performance.md`). Every query must supply an explicit typed column projection (`db.select({ id: table.id, name: table.name }).from(table)`).
+- **Explicit Resource Management**: Leverage Node 24 `await using` on pooled client checkouts or stream handles to guarantee deterministic disposal without manual `finally` blocks.
 
 ## Document store vs REST
 
@@ -44,30 +47,17 @@ Never query `pg` from handlers. Prefer repositories / `withTenant`. Use **`dbSyn
 
 Shipped REST: students, contacts, teachers, finance, enrollments, obligations, accounting, hasanat, examinations, question-bank, users, attendance, sessions, messaging (`routes/tenant/`). After REST migration, remove entity from `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`.
 
-## Soft delete on REST resources
+## Soft Delete on REST Resources (`mms-soft-delete`)
 
 All soft-delete route logic flows through shared route factories (`crudResourceRoutes.ts`, `crudBulkRouteFactories.ts`, `crudBulkRouteHelpers.ts`). Never hand-roll ad-hoc delete/restore endpoints (complete workflow & checklist → **`mms-soft-delete`**):
 
-- **Factory Route Registration**: Use `registerResourceRoutes` (`deleteFn`, `restoreFn`) and `registerSoftDeletableBulkTrashRoutes` (`bulkDeleteFn`, `bulkRestoreFn`). Gated on `canDeleteCollection(user, collection)` or module `canDelete`.
-- **Trash-Aware List Loading**: Use `handleBulkListGet` with `supportsIncludeDeleted: true` (parses `isQueryFlagTrue(request.query.includeDeleted)` and enforces `canDeleteCollection` gate). Ban `scopeDeleted()` in memory.
-- **Single-Record Read Semantics (`GET /:id`)**: Standard reads MUST append `isNull(table.deletedAt)` and return `404 Not Found` for archived records. Detail inspection with `?includeDeleted=true` requires `canDeleteCollection` check and sets `SET LOCAL app.include_deleted = 'true'` (`docs/soft-delete.md` §4.7).
-- **Atomic Conditional Latch**: Avoid TOCTOU race conditions by updating with an atomic conditional latch:
-  ```ts
-  const [deleted] = await db.update(table)
-    .set({ deletedAt: new Date(), deletedBy: userId, deletionReason: reason ?? null })
-    .where(and(eq(table.id, id), eq(table.workspaceSubdomain, tenant), isNull(table.deletedAt)))
-    .returning({ id: table.id });
-  if (!deleted) throw new NotFoundError('Record not found or already archived');
-  ```
-- **Batched Single-Statement Bulk Updates**: `bulkDeleteFn` and `bulkRestoreFn` implementations must execute a single batched SQL statement (`inArray(table.id, ids)`). Never iterate sequentially row-by-row (`mms-performance.md` §1).
-- **Dynamic Query AST**: Construct Drizzle query branches dynamically (`isNull(table.deletedAt)` vs `isNotNull(table.deletedAt)`). Never emit parameterized booleans (`$2::boolean IS TRUE OR deleted_at IS NULL`) which disable Category B partial indexes.
-- **Relational Child Guardrails**: Nested relations in Drizzle `db.query.table.findMany({ with: { ... } })` do NOT auto-filter soft-deleted children. Declare explicit `where: (c, { isNull }) => isNull(c.deletedAt)`.
-- **Uniqueness-on-Restore & Error 23505 Trap**: When restoring entities with unique fields (`email`, `phone`, `employee_id`), check for conflicts first, execute update, and catch PostgreSQL error `23505` (`unique_violation`), mapping it cleanly to `409 Conflict` (`docs/soft-delete.md` §4.5).
-- **Session Revocation Invariant**: Immediately revoke active sessions and refresh tokens in Redis upon soft-deleting users or teachers. Gate auth resolvers on `deleted_at IS NULL`.
-- **Active Foreign Key Guarding**: Reject writes attempting to assign foreign keys pointing to soft-deleted entities.
-- **CDC Outbox Events**: Emit `entity.soft_deleted` and `entity.restored` transactional outbox events with monotonic versioning (`version: Date.now()`) for search index and Redis eviction.
-- **Write Schemas**: Create/Update write schemas strip client soft-delete fields (`deletedAt`, `deletedBy`, `deletionReason`). Default excludes deleted; trash = deleted-only.
-- **Audit Hooks**: Call `onAfterDelete` and `onAfterRestore` hooks; capture text snapshots on archival for forensics survival.
+- **Factory Route Registration**: Use `registerResourceRoutes` (`deleteFn`, `restoreFn`) and `registerSoftDeletableBulkTrashRoutes` (`bulkDeleteFn`, `bulkRestoreFn`). Gated on `canDeleteCollection(user, collection)`.
+- **Trash-Aware List Loading**: Use `handleBulkListGet` with `supportsIncludeDeleted: true` (parses `isQueryFlagTrue(request.query.includeDeleted)` and enforces `canDeleteCollection`).
+- **Single-Record Reads (`GET /:id`)**: Append `isNull(table.deletedAt)` and return `404 Not Found` for archived records unless caller has delete permissions and specifies `?includeDeleted=true`.
+- **Atomic Latch & Batched SQL**: Use atomic conditional updates (`isNull(table.deletedAt)`) and batched SQL (`inArray(table.id, ids)`) for bulk operations.
+- **Relational Child Filtering**: Nested Drizzle relations do not auto-filter soft-deleted children; declare explicit `where: (c, { isNull }) => isNull(c.deletedAt)`.
+- **Session & Conflict Guards**: Revoke active Redis sessions on user soft-delete; catch PostgreSQL `23505` on unique field restore and map to `409 Conflict`.
+- **Outbox CDC**: Emit monotonic `entity.soft_deleted` and `entity.restored` events for search index sync.
 
 ## Bulk PUT
 
@@ -75,10 +65,7 @@ Upsert only (`bulkSave` + `conflictTarget`). **Never** wire `replaceForWorkspace
 
 ## Transactional Outbox Audit Capture (`mms-audit-trail`)
 
-When mutating audited entities (Contacts, Students, Teachers, Invoices, Accounting, Sessions):
-- Capture audit events within the primary `withTenant` using the transactional outbox pattern to ensure atomicity.
-- Populate the 5 dimensions: Who (`real_user_id`, `session_id`, `ip_address`), What (`table_name`, `record_id`, `old_state`, `new_state` as RFC 8785 canonical JSON), When (`clock_timestamp()`), Why (`correlation_id` from W3C `traceparent` header, `action_type`), and Integrity (`hash_previous`, `hash_current`).
-- Strip non-essential PII and secrets (passwords, tokens) before serializing state deltas.
+When mutating audited entities (Contacts, Students, Teachers, Invoices, Accounting, Sessions), capture audit events inside the primary `withTenant` transaction using the outbox pattern. Populate the 5 dimensions (Who, What as RFC 8785 canonical JSON, When, Why, Integrity) and strip secrets/tokens prior to persistence. Full specs → **`mms-audit-trail`**.
 
 ## Deliverable Format for Entity & Feature Generation
 When generating backend code for any feature or entity, provide:
@@ -153,6 +140,7 @@ E.164 + title-case via repository (FORCE RLS). Runtime dial/label defaults from 
 
 ```bash
 cd apps/backend && pnpm typecheck && pnpm test && pnpm lint
+pnpm run check:db-projections                         # Ratchet: zero bare .select() projections
 # probes: mms-ops-infrastructure — GET /health , GET /ready
 ```
 

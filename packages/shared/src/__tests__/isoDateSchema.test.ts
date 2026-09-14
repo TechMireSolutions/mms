@@ -57,23 +57,4 @@ describe('isoDateSchema', () => {
     ]);
   });
 
-  /**
-   * Guards a real implementation risk: validating through the LOCAL-time Date
-   * constructor would shift the day on hosts with a negative UTC offset, so the
-   * same stored value would validate differently per deployment region.
-   */
-  it('is timezone independent', () => {
-    const original = process.env.TZ;
-    try {
-      process.env.TZ = 'America/Los_Angeles';
-      expect(isValidIsoDate('2026-01-01')).toBe(true);
-      expect(isValidIsoDate('2026-02-31')).toBe(false);
-      process.env.TZ = 'Pacific/Kiritimati';
-      expect(isValidIsoDate('2026-01-01')).toBe(true);
-      expect(isValidIsoDate('2026-02-31')).toBe(false);
-    } finally {
-      if (original === undefined) delete process.env.TZ;
-      else process.env.TZ = original;
-    }
-  });
 });

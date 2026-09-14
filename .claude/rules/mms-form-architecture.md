@@ -53,9 +53,18 @@ Simple static forms with design-system primitives — not dynamic layout engines
 ## 2. State & React 19 defaults
 
 - Prefer simple controlled state (or RHF + zodResolver for complex multi-step forms). Same Zod schema as BE DTOs from `@mms/shared`.
-- **Ban** React 19 Server Actions / `useActionState` / native form `action=` posts for all MMS writes (tenant or platform) — cookie SPA + `apiClient` / Query mutations only (no RSC action posts against the Fastify API).
+- **RSC Server Actions Ban & Client Actions**: React Server Components (RSC) Server Actions (`"use server"`) and multi-page native HTML form `action=` POST submissions are strictly banned — MMS is a Vite Single Page Application communicating with Fastify REST via `apiClient`. TanStack Query mutations (`useMutation`) remain the primary server cache synchronizer; client-side `useActionState` or `useOptimistic` interacting with `apiClient` async handlers is permitted only where it streamlines local pending/optimistic state without bypassing Query cache invalidation.
 - Initialize fields to avoid uncontrolled→controlled warnings: strings `""`, numbers/dates `null`, lists `[]`.
-- Every control needs `name` + `id` (fallback `useId()`).
+- Every control needs `name` + `id` (mandatory `useId()` fallback paired with `<label htmlFor={id}>` for WCAG 2.2 AA accessibility).
+- **Mobile Keyboard Ergonomics & Autocomplete**: Form inputs must provide semantic `inputMode` and standard `autoComplete` hints to optimize mobile virtual keyboards:
+  - Currency/Money: `inputMode="decimal"`
+  - Phone: `type="tel"`, `inputMode="tel"`, `autoComplete="tel"`
+  - OTP / 2FA: `inputMode="numeric"`, `autoComplete="one-time-code"`
+  - Names: `autoComplete="given-name"` / `autoComplete="family-name"`
+  - Email: `type="email"`, `inputMode="email"`, `autoComplete="email"`, `autoCapitalize="none"`, `autoCorrect="off"`
+  - Navigation: Use `enterKeyHint="next"` on intermediate inputs and `enterKeyHint="done"` or `enterKeyHint="send"` on the form's final action input.
+  - **Pasteability Invariant (WCAG 2.2 Accessible Authentication 3.3.8)**: Never block copy-paste on OTP, 2FA, or password inputs (`onPaste` prevention is strictly banned).
+- Custom form controls use React 19 native `ref` as prop — `forwardRef` is banned in newly authored form primitives.
 - Phones: single `type="tel"` input; parse/normalize E.164 on blur/save via `parsePhoneNumber` + `normalizeToE164` from `@mms/shared`.
 
 ## 3. Collection list tabs (phones / emails / addresses / socials / relationships / custom_*)

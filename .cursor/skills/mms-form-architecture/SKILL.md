@@ -1,49 +1,94 @@
 ---
 name: mms-form-architecture
-description: Implements static FormModal forms with shared Zod DTOs, React 19 defaults, decimal-as-string money, tenant RLS saves, and authenticated multipart uploads. Use when building or auditing create/edit forms, FormModal tabs, DatePicker/TimePicker/DateTimePicker/phone fields, or upload flows.
+description: Implements static FormModal forms with shared Zod DTOs, React 19 defaults, decimal-as-string money, tenant RLS saves, and authenticated multipart uploads. Use when building or auditing create/edit forms, FormModal tabs, DatePicker/TimePicker/DateTimePicker/phone fields, or upload flows. Do NOT use for table/card directory views (use mms-module-work), multi-tier module tabs (use mms-module-page), or accessibility audits (use mms-a11y-smoke).
 ---
 
 # MMS Form Architecture Skill
 
-**Rule (norms SSOT):** `mms-form-architecture.mdc` — shell, Zod, collection clears, uploads. Also `mms-performance.mdc` §2 (streaming uploads, zero memory buffering).
+**Rule (norms SSOT):** `mms-form-architecture.mdc` · `mms-core.mdc` · `mms-ui-ux-design.mdc` §4 · `mms-performance.mdc` §2.
+**Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
-Related: `mms-ui-ux-design.mdc` §7 (dialog `@container`), `mms-fields.mdc`, `mms-data-layer.mdc`, `mms-settings-i18n.mdc`.
+## Anti-Patterns & Banned Operations
 
-## Workflow
+- ❌ **NEVER use Server Actions or `useActionState`**: All MMS writes run via client-side `apiClient` / `apiContract` with cookie authentication.
+- ❌ **NEVER use `forwardRef` in newly authored components**: React 19 supports `ref` directly as a component prop.
+- ❌ **NEVER accept client soft-delete fields**: Strip `deletedAt`, `deletedBy`, `deletionReason` on create/update schemas.
+- ❌ **NEVER assign soft-deleted foreign keys**: Enforce active foreign key guarding (`deleted_at IS NULL`).
+- ❌ **NEVER buffer uploads into memory**: Stream files directly using Fastify `@fastify/multipart`.
 
-1. `FormModal` for create/edit/builders; raw `Modal` for confirm/preview only.
-2. Primitives + `formStyles` (`FORM_INPUT`, `FORM_ERROR`, `FORM_CARD`, `FORM_INPUT_BUILDER`); inline errors via `FieldErrorMessage`; shared Zod write schema via `parseRequest` / `mapZodFormErrors` (`.strict()` preferred). Form inputs/footers: `LeadingIconInput` for leading-icon inputs and `FormFooterChip` (`FormFooterEntityChip` / `FormFooterBadge` / `FormFooterErrorChip`) for form-footer badges — do not hand-roll in features.
-3. Init fields safely; money as strings; phones via `parsePhoneNumber` + E.164. **Ban** Server Actions / `useActionState` / form `action=` for all MMS writes (tenant and platform).
-4. Collection tabs: `cleanContactDraft` / `mergeContactEditSavePayload` — empty arrays clear scalars (rule §3).
-5. Persist with `mutateAsync`; soft-delete only via dedicated DELETE/restore routes (`mms-soft-delete`). Write schemas reject/strip client soft-delete fields (`deletedAt`, `deletedBy`, `deletionReason`). Enforce **Active Foreign Key Guarding**: write forms and validators assigning foreign keys (`contactId`, `sessionId`, `teacherId`, `accountId`) must verify referenced entities are active (`deleted_at IS NULL`), preventing ghost relationships (`mms-data-layer.mdc` §6).
-6. Uploads: authenticated multipart `/api/uploads/*` + `resolveApiUrl`; stream chunks directly to disk/storage via Fastify `@fastify/multipart` — never buffer files into process memory (`Buffer.concat`, `file.toBuffer()`) (`mms-performance.mdc`); magic-byte + size + dimension/page caps; auth (or short-TTL) to read.
-7. Tall FormModal: prefer `dvh`/`svh` + safe-area when touching chrome.
-8. On close: **focus-return** to the control that opened the dialog.
+## Canonical FormModal Implementation Pattern
 
-## Checklist
+```tsx
+import { useId, useState } from 'react';
+import { FormModal } from '@/components/ui/FormModal';
+import { FORM_INPUT, FORM_ERROR } from '@/components/ui/formStyles';
+import { FieldErrorMessage } from '@/components/ui/FieldErrorMessage';
+import { useTranslation } from '@/lib/i18n';
+
+interface EntityFormModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (data: InsertEntityDto) => Promise<void>;
+  initialData?: Partial<InsertEntityDto>;
+}
+
+export function EntityFormModal({ isOpen, onClose, onSubmit, initialData }: EntityFormModalProps) {
+  const { t } = useTranslation();
+  const nameId = useId();
+  const [formData, setFormData] = useState(initialData ?? {});
+  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    try {
+      await onSubmit(formData as InsertEntityDto);
+      onClose();
+    } catch (err: unknown) {
+      // Map Zod or backend errors to field state
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <FormModal
+      isOpen={isOpen}
+      onClose={onClose}
+      title={t('entities.createTitle')}
+      isSubmitting={isSubmitting}
+      onSubmit={handleSubmit}
+    >
+      <div className="space-y-4">
+        <div>
+          <label htmlFor={nameId} className="block text-sm font-medium text-slate-700 dark:text-slate-200">
+            {t('common.name')}
+          </label>
+          <input
+            id={nameId}
+            type="text"
+            className={FORM_INPUT}
+            value={formData.name ?? ''}
+            onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+            required
+          />
+          {errors.name && <FieldErrorMessage error={errors.name} />}
+        </div>
+      </div>
+    </FormModal>
+  );
+}
+```
+
+## Verification Checklist
 
 ```
-- [ ] FormModal + tall/scroll rules from rule §1 (dvh/svh when touching)
-- [ ] Focus-return to opener on close
-- [ ] No Server Actions / useActionState for tenant or platform writes
-- [ ] Shared Zod write/read DTOs; soft-delete stripped on write; active foreign key guarding (reject soft-deleted FK references)
-- [ ] Contact-linked modules (`contactId`): strip `CONTACT_PROFILE_FIELDS` / guardian dual-write on prepare; hydrate on read (Students closed)
-- [ ] formStyles + DatePicker / TimePicker / DateTimePicker; name + id on controls; field errors via `FieldErrorMessage` / `FORM_ERROR`
-- [ ] Empty collection arrays persist; no scalar resurrection
-- [ ] canWrite gates; no fire-and-forget mutate close
-- [ ] Upload stream chunks directly to storage (no memory buffering) + sniff + size + dimension/page caps
-- [ ] Copy via t() / labelKey; no hardcoded labels (en/ar/ur/fa + RTL)
+- [ ] FormModal with React 19 ref-as-prop and useId() accessibility pairs
+- [ ] No Server Actions or form action= posts
+- [ ] Shared Zod write schema validates inputs strictly (.strict())
+- [ ] Dates validated with isoDateSchema / isoDateOrEmptySchema
+- [ ] Active foreign keys verified (deleted_at IS NULL)
+- [ ] Focus-return restored to opener on dialog close
+- [ ] Run: pnpm typecheck && cd apps/frontend && pnpm lint
 ```
-
-## Do Not
-
-- Reintroduce dynamic form compilers on the frontend
-- Dual-write Query + `saveCollection` on save
-- Persist person profile keys on student/teacher JSONB when `contactId` is set
-- Accept client soft-delete fields on create/update or assign foreign keys to soft-deleted entities
-- Rebuild list rows from legacy scalars when arrays are `[]`
-- Invent React Server Actions posts against the Fastify cookie API
-
-## Done
-
-`mms-completion-review.mdc` — typecheck + FE lint.

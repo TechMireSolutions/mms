@@ -1,6 +1,6 @@
 ---
 description: Folder structure, colocation, file size limits, naming conventions for symbols/files, and database-to-UI name alignments.
-globs: apps/frontend/src/tenant/features/**,apps/frontend/src/tenant/hooks/**,apps/frontend/src/tenant/pages/**,apps/frontend/src/tenant/components/**,apps/frontend/src/tenant/routes/**,apps/frontend/src/platform/**,apps/frontend/src/components/**,apps/frontend/src/hooks/**,apps/backend/src/routes/**,apps/backend/src/services/**,apps/backend/src/contacts/**,apps/backend/src/lib/**,packages/shared/src/**,scripts/**/*.sh,e2e/**
+globs: apps/frontend/src/tenant/features/**,apps/frontend/src/platform/**,apps/backend/src/routes/**,apps/backend/src/services/**,packages/shared/src/**,scripts/**
 alwaysApply: false
 ---
 

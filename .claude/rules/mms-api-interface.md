@@ -20,34 +20,34 @@ Governs the communications contract between the React SPA frontend and the Fasti
 ---
 
 ## 1. Client-Server Communication Flow
-All frontend requests to backend resources (tenant or platform) must use `apiFetch` or `apiJson` from the `apiClient.ts` wrapper.
+All frontend requests to backend resources (tenant or platform) must use `apiClient` (`apiFetch` / `apiJson`) or type-safe `@ts-rest` contract hooks (`initTsrReactQuery` / `tsr` in `apps/frontend/src/lib/api.ts` bound to `@mms/shared` contracts and transporting through `apiFetch`).
 - **Native Networking**: Use native global `fetch()`, `FormData`, and global `WebSocket`. Banned third-party packages: `axios`, `node-fetch`, and `ws` for standard client communication.
 - **Credentials**: Always `credentials: 'include'`. Cookie names, refresh rules, JWT trust → **`mms-auth-security.md`**.
 - **AbortSignal**: Pass Query/`fetch` `signal` into `apiFetch` / `apiJson` — required for cancellation (`mms-data-layer.md`). Support composite signals via `AbortSignal.any([userSignal, AbortSignal.timeout(ms)])` for bounded client fetches.
 - **URL Pattern Matching**: Leverage the globally available `URLPattern` API and WHATWG `new URL()` for pattern matching and URL parsing rather than custom regex or `path-to-regexp` / `url.parse()`.
-- **REST Trajectory**: New features must implement resource-specific endpoints (e.g. `GET /api/students`) instead of the generic collections sync API.
-- **Data Types**: DTOs via `@mms/shared` only. Zod `parseRequest` / form schemas are the write boundary — do **not** enable parallel Fastify Ajv/JSON-Schema body validation for the same DTO.
+- **REST Trajectory & Contracts**: New features must implement resource-specific endpoints (e.g. `GET /api/students`) or declared `@ts-rest` contracts instead of the generic collections sync API. Contracts live in `packages/shared/src/contracts/*` using `@ts-rest/core`, executed on the backend via `@ts-rest/fastify` and on the frontend via `@ts-rest/react-query`.
+- **Data Types & Validation SSOT**: DTOs via `@mms/shared` only. Zod 4 schemas (`parseRequest` / `@ts-rest` contracts) are the write boundary — do **not** enable parallel Fastify Ajv/JSON-Schema body validation for the same DTO.
 - **Write DTOs / write-vs-read**: Prefer shared write schemas — norms → **`mms-form-architecture.md`** (`.strict()`, soft-delete strip).
 - **Response shapes**: Derive serializers / type guards from the same `@mms/shared` Zod — still ban hand-forked Fastify JSON Schema DTOs.
 - **Destructive merges**: Atomic server transaction (`POST …/merge`) — ban FE-only dual delete+upsert.
-- **429 handling**: Honor `Retry-After` header — `mms-auth-security.md`.
-- **Request Tracing, Context & W3C Traceparent**: Propagate `X-Request-Id` (or Fastify `req.id`) through API responses. Extract and validate W3C Trace Context `traceparent` headers, propagating them through `AsyncLocalStorage` (`tenantStorage`, backed by Node 24 `AsyncContextFrame`) to serve as (or alongside) `correlation_id` in database audit records and outbox events. Banned: generating ad-hoc random UUIDs that break correlation with external APM / distributed tracing stacks.
+- **429 handling**: Honor `Retry-After` and IETF draft headers (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`) — `mms-auth-security.md`.
+- **End-to-End Distributed Tracing (W3C Trace Context)**: The frontend `apiClient` must generate (or pass through) a compliant W3C `traceparent` (version 00) header on all outbound requests. Fastify middleware extracts and binds `traceparent` into `AsyncLocalStorage` (`tenantStorage` on Node 24 `AsyncContextFrame`), propagating it across all asynchronous DB queries, outbox audit records (as `correlation_id`), and outbound HTTP calls. Fastify responses must echo both `traceparent` and `x-request-id` headers, guaranteeing 1:1 trace correlation between client-side UI error toasts and server telemetry. Banned: generating ad-hoc random UUIDs that break correlation with external APM / distributed tracing stacks.
 
 ---
 
 ## 2. Fastify Router & Layering
 Backend route handlers must remain lean, delegating operations to the service layer:
 ```
-request → route barrel / sub-routes (routes/**) → service handler (services/*.ts) → database model (db/*)
+request → route barrel / contract router (routes/**) → service handler (services/*.ts) → database model (db/*)
 ```
 For refactored/growing modules (Contacts is the reference) the delegation path is:
 ```
-request → route barrel / sub-routes (routes/**) → use cases ({module}/use-cases/**) → repository interface ({module}/repository/**) → Drizzle adapter (db/**)
+request → route barrel / @ts-rest contract router (routes/**) → use cases ({module}/use-cases/**) → repository interface ({module}/repository/**) → Drizzle adapter (db/**)
 ```
-- **Controller Rules**: Route files must never import raw Drizzle pg pool drivers. Validate bodies with Zod via `parseRequest`.
+- **Controller Rules**: Route files must never import raw Drizzle pg pool drivers. Validate bodies with Zod 4 via `parseRequest` or `@ts-rest` contract schemas.
 - **Use-case layer**: Domain orchestration lives in `{module}/use-cases/**` — pure functions/factories that receive the module repository interface as a DI parameter. Import the module **composition root** (e.g. `contactUseCases`) at call sites; route handlers must not reach past it into the DB.
 - **Repository interface = sole storage gateway**: A single repository interface (Contacts: `ContactsRepository`) declares every storage operation; a Drizzle adapter (`{module}/repository/*Adapter.ts`) is the only concrete implementation. Use-case functions take the interface (testable with fakes), never raw `db` / `pg`. Keep stable re-export shims at legacy `services/*.ts` paths for backward compatibility.
-- **Plugin encapsulation**: Register domain routes as Fastify plugins (`FastifyPluginAsync`) with stable public registration paths; prefer thin barrels + colocated `*Routes.ts` — `mms-structure-naming.md`.
+- **Plugin & Contract encapsulation**: Register domain routes as Fastify plugins (`FastifyPluginAsync`) or `@ts-rest/fastify` router instances (`initServer().router(contract, ...)` with `s.registerRouter`) with stable public registration paths; prefer thin barrels + colocated `*Routes.ts` or `*ContractRouter.ts` — `mms-structure-naming.md`.
 - **Boot Guards**: Fail fast if `DATABASE_URL` or `JWT_SECRET` is missing.
 - **Request budgets & Streaming**: Wire Fastify from `serverConfig` — `bodyLimit` (`REQUEST_BODY_LIMIT_BYTES`) and `requestTimeout` (`REQUEST_TIMEOUT_MS`). Oversized sync/upload routes may raise `bodyLimit` explicitly; do not leave unbounded bodies. NEVER buffer large file uploads or datasets into memory (`Buffer.concat` ban); stream multipart files via `@fastify/multipart` directly to storage and stream export responses via `node:stream` — `mms-performance.md`.
 - **Outbound HTTP**: Backend fetches to external providers must use `AbortSignal.timeout(...)` (see `outboundUrl.ts`) — do not hang the event loop on provider stalls. FE Query cancellation stays `mms-data-layer.md`.
@@ -95,7 +95,7 @@ Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload
 - **HTTP contract**: clients **should send** `page` and `limit` (shared `baseListQuerySchema`, default 25, hard cap 100); omit may default safely. SQL page rules, cards/table parity, and `loadAllFn` ban → **`mms-data-layer.md`**.
 - **Target**: tighten schemas to required `page` (+ `limit`) when clients are all migrated — do not claim Zod already requires them.
 - **HTTP Caching Headers**: Emit `ETag` and `Cache-Control: private, no-cache` (or immutable TTL headers) on idempotent GET responses. Return `304 Not Modified` on `If-None-Match` match — `mms-performance.md`.
-- **Idempotency**: POSTs that enqueue jobs or send campaigns must accept an idempotency key (header `Idempotency-Key` or body `idempotencyKey`) when retries are likely. **Bind** the key to a cryptographic body digest (computed via `crypto.hash('sha256', normalizedPayload)` from `node:crypto`) and reject mismatched replays with `409` / `conflict` — do not accept the same key for a different payload.
+- **Idempotency Standard**: State-changing POSTs (campaign sends, batch operations, imports, payment processing) MUST accept an `Idempotency-Key` header. The backend binds the key to a SHA-256 digest of the canonical body (`crypto.hash('sha256', canonicalBody)`) persisted in Redis with a 24-hour TTL (`SET key digest NX EX 86400`). Identical replays return the cached completion; mismatched payloads with the same key MUST reject with `409 Conflict` (`type: 'conflict'`).
 - **Optimistic concurrency**: Contested single-row PUTs should prefer `updated_at` / version checks → `409 conflict`, or document intentional last-write-wins. Write DTO fields → `mms-form-architecture.md`.
 - Production error `message` fields must stay non-sensitive; keep verbose debug messages for development only.
 

@@ -1,9 +1,11 @@
 ---
 name: mms-code-review
-description: Reviews MMS code against project rules, skills, and migration status. Use when reviewing PRs, doing a code review, checking rule compliance, or auditing backend/frontend changes before merge.
+description: Reviews MMS code against project rules, skills, and migration status. Use when reviewing PRs, doing a code review, checking rule compliance, or auditing backend/frontend changes before merge. Do NOT use for initial environment setup (use mms-dev-setup), new module scaffolding (use mms-module-page), or executing end-to-end browser test suites (use mms-testing-e2e).
 ---
 
 # MMS Code Review
+
+**Rule (norms SSOT):** `mms-completion-review.mdc` · `mms-core.mdc` · `mms-structure-naming.mdc` · `mms-performance.mdc`.
 
 Agent self-review after edits → also follow always-on `mms-completion-review.mdc`.
 
@@ -173,6 +175,9 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 
 ### Testing
 - [ ] New `@mms/shared` pure helpers have unit tests
+- [ ] Strict assertion specificity: ban `toBeTruthy()`, `toBeFalsy()`, generic `toBeDefined()`; use strict types, ISO regex (`/^\d{4}-\d{2}-\d{2}T/`), or typed DOM instances (`toBeInstanceOf(...)`) — `mms-testing-observability.mdc` §1
+- [ ] Zero DB skip latches: ban `isDbAvailable`; integration tests use in-memory repository mock fixture (`vi.hoisted()`) and Fastify `inject()` — `mms-testing-observability.mdc` §1
+- [ ] Negative tests spy on `console.error` / `console.warn` for silent test output
 - [ ] Auth/RBAC/tenant changes have `inject()` allow+deny tests
 - [ ] Playwright: prefer `getByRole`/`getByLabel` — no `waitForTimeout` sleeps
 - [ ] Shell / touch / RTL / table changes: keep `responsive-shell` + `responsive-authenticated` green; extend when touching platform `md` nav or Reports/Setup builders
@@ -180,11 +185,14 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 ### Accessibility
 - [ ] When shells/primitives/FormModal change → run skill **`mms-a11y-smoke`** (axe serious/critical + focus-return)
 - [ ] Icon buttons `aria-label` from `t()`; Suspense `role="status"`; honor `prefers-reduced-motion`
+- [ ] Form controls use `useId()` for accessible control/label association
 
-### Performance / deps / React 19
+### Performance / deps / React 19 / Runtime
 - [ ] Export artifacts generated via backend BullMQ + Typst/ExcelJS; no client-side DOM canvas/jspdf injection
 - [ ] Targeted memoization: memoize non-trivial calculations (`useMemo`) and callback/object references passed to dependencies or memoized components (`useCallback`) to avoid render churn; avoid premature memoization on primitives — `mms-performance.mdc`
-- [ ] React 19: leverage `startTransition`, `useDeferredValue`, and `useEffectEvent` alongside targeted memoization — `mms-performance.mdc`
+- [ ] React 19: native `ref` as prop (ban `forwardRef` in newly authored components); leverage `startTransition`, `useDeferredValue`, and `useEffectEvent` alongside targeted memoization — `mms-performance.mdc`
+- [ ] Zero non-erasable TypeScript syntax (`enum`, `namespace`, constructor parameter properties) for Node 24 native type stripping (`--experimental-strip-types`) — `mms-dependencies.mdc`
+- [ ] Native ECMAScript non-mutating methods (`toSorted()`, `toReversed()`, `toSpliced()`, `with()`, `Object.groupBy()`)
 - [ ] Zero queries inside loops (N+1); batch via Drizzle relational `with`, `inArray` ($\le 500$), SQL joins, or `/resolve` — `mms-performance.mdc`
 - [ ] Zero wildcard projections (`SELECT *` or bare `db.select().from(table)`); use explicit column projection objects matching Response DTOs — `mms-performance.mdc`
 - [ ] Virtualize DOM lists, tables, and feeds > 30 items with `@tanstack/react-virtual` — `mms-performance.mdc`

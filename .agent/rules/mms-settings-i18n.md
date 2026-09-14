@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: App settings configurations, live preview draft states, sidebar/in-page navigation directories, and localized translation keys (en/ar/ur/fa).
 ---
 
 # MMS Settings, Navigation & Internationalization

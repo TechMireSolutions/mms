@@ -1,14 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
-import { readFileSync } from 'node:fs';
-import { resolve, dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import {
-  initializeDatabaseConnection,
-  pingDatabase,
-  closeDatabase,
-  beginLongLivedTenantTransaction,
-} from '../../db/dbConnection.js';
+import { closeDatabase, beginLongLivedTenantTransaction } from '../../db/dbConnection.js';
+import { requireDatabaseConnection } from './dbTestSupport.js';
 import { workspaces, tenantUsers } from '../../db/schema.js';
 import {
   findTenantUserRowById,
@@ -47,21 +40,6 @@ const VICTIM = 'x-tenant-victim';
 const VICTIM_USER_ID = 'victim-user-1';
 const ATTACKER_USER_ID = 'attacker-admin-1';
 
-const backendRoot = resolve(dirname(fileURLToPath(import.meta.url)), '..', '..', '..');
-
-function applyDatabaseUrlFromEnvFile(): void {
-  if (process.env.DATABASE_URL) return;
-  try {
-    const content = readFileSync(join(backendRoot, '.env'), 'utf-8');
-    const match = content.match(/^DATABASE_URL\s*=\s*"?([^"\n]+)"?$/m);
-    if (match) process.env.DATABASE_URL = match[1].trim();
-  } catch {
-    // no .env present — loadServerConfig will use its test default
-  }
-}
-
-let dbAvailable = false;
-
 async function cleanup(): Promise<void> {
   const tx = await beginLongLivedTenantTransaction(null);
   try {
@@ -77,10 +55,7 @@ async function cleanup(): Promise<void> {
 }
 
 beforeAll(async () => {
-  applyDatabaseUrlFromEnvFile();
-  initializeDatabaseConnection();
-  dbAvailable = await pingDatabase();
-  if (!dbAvailable) return;
+  await requireDatabaseConnection();
 
   await cleanup();
 
@@ -116,7 +91,7 @@ beforeAll(async () => {
 });
 
 afterAll(async () => {
-  if (dbAvailable) await cleanup().catch(() => undefined);
+  await cleanup().catch(() => undefined);
   await closeDatabase().catch(() => undefined);
 });
 
@@ -127,7 +102,6 @@ async function readVictimUnscoped() {
 
 describe('cross-tenant tenant_users isolation (exploit reproduction, real Postgres)', () => {
   it('confirms the victim row really is reachable by id when scoping is absent', async () => {
-    if (!dbAvailable) return;
 
     // This is the pre-fix behaviour: an id-only lookup inside an RLS-bypassed
     // transaction finds the victim. If this returned null, the rest of the
@@ -141,7 +115,6 @@ describe('cross-tenant tenant_users isolation (exploit reproduction, real Postgr
   });
 
   it('refuses to read a foreign workspace user by id', async () => {
-    if (!dbAvailable) return;
 
     const viaScoped = await findTenantUserRowById(ATTACKER, VICTIM_USER_ID);
     expect(viaScoped).toBeNull();
@@ -151,7 +124,6 @@ describe('cross-tenant tenant_users isolation (exploit reproduction, real Postgr
   });
 
   it('refuses to soft-delete a foreign workspace user', async () => {
-    if (!dbAvailable) return;
 
     const result = await softDeleteTenantUserRow(ATTACKER, VICTIM_USER_ID, ATTACKER_USER_ID);
     expect(result).toBe(false);
@@ -163,7 +135,6 @@ describe('cross-tenant tenant_users isolation (exploit reproduction, real Postgr
   });
 
   it('refuses to restore a foreign workspace user', async () => {
-    if (!dbAvailable) return;
 
     // Soft-delete the victim legitimately (as the victim workspace) so a
     // restore attempt has something to target.
@@ -184,7 +155,6 @@ describe('cross-tenant tenant_users isolation (exploit reproduction, real Postgr
   });
 
   it('refuses to email-verify a foreign workspace user', async () => {
-    if (!dbAvailable) return;
 
     const result = await verifyTenantUserEmailRow(ATTACKER, VICTIM_USER_ID);
     expect(result).toBe(false);
@@ -192,11 +162,10 @@ describe('cross-tenant tenant_users isolation (exploit reproduction, real Postgr
     // `rowToTenantUser` only sets emailVerifiedAt when truthy, so an unverified
     // user surfaces as undefined rather than null.
     const victimAfter = await readVictimUnscoped();
-    expect(victimAfter?.emailVerifiedAt).toBeFalsy();
+    expect(victimAfter?.emailVerifiedAt).toBeUndefined();
   });
 
   it('refuses to reset a foreign workspace user password', async () => {
-    if (!dbAvailable) return;
 
     const result = await resetTenantUserPasswordRow(
       ATTACKER,
@@ -211,7 +180,6 @@ describe('cross-tenant tenant_users isolation (exploit reproduction, real Postgr
   });
 
   it('scopes the users use-cases to the request workspace', async () => {
-    if (!dbAvailable) return;
 
     const { usersUseCases } = await import('../../users/use-cases/usersUseCases.js');
 
@@ -238,7 +206,6 @@ describe('cross-tenant tenant_users isolation (exploit reproduction, real Postgr
   });
 
   it('still lets a workspace act on its own users', async () => {
-    if (!dbAvailable) return;
 
     // Guards against the fix being an over-correction that breaks legitimate use.
     const ownRow = await findTenantUserRowById(ATTACKER, ATTACKER_USER_ID);

@@ -1,6 +1,6 @@
 ---
 name: mms-ui-ux-design
-description: Covers the Master Module Scaffold Layout, Tailwind CSS v4 BiDi Design Tokens, and Directional Class Refactoring Guide. Use this skill when designing UI/UX components, enforcing logical CSS properties for BiDi layouts, or adhering to the layout contract.
+description: Covers the Master Module Scaffold Layout, Tailwind CSS v4 BiDi Design Tokens, and Directional Class Refactoring Guide. Use when designing UI/UX components, enforcing logical CSS properties for BiDi layouts, or adhering to the layout contract. Do NOT use for form field validation and form modals (use mms-form-architecture) or accessibility axe testing (use mms-a11y-smoke).
 ---
 
 # MMS UI/UX Design System & BiDi Layout Contract
@@ -8,6 +8,13 @@ description: Covers the Master Module Scaffold Layout, Tailwind CSS v4 BiDi Desi
 **Rules (norms SSOT):** `mms-ui-ux-design.mdc` · `mms-structure-naming.mdc` · `mms-performance.mdc`
 
 Use this skill when designing UI/UX components, enforcing logical CSS properties for BiDi layouts, or adhering to the master layout contract.
+
+## Anti-Patterns & Banned Operations
+
+- ❌ **NEVER use physical directional classes**: Banned: `pl-*`, `pr-*`, `ml-*`, `mr-*`, `left-*`, `right-*`, `text-left`, `text-right`, `border-l-*`, `border-r-*`. Use BiDi logical properties exclusively (`ps-*`, `pe-*`, `ms-*`, `me-*`, `start-*`, `end-*`, `text-start`, `text-end`, `border-s-*`, `border-e-*`). Reference [references/bidi-tokens.md](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-ui-ux-design/references/bidi-tokens.md); validate via `node .agent/skills/mms-ui-ux-design/scripts/check-bidi-classes.mjs`.
+- ❌ **NEVER use ad-hoc hex colors or raw Tailwind palette**: Banned: `text-red-500`, `bg-blue-600`. Use semantic tokens (`var(--text-destructive)`, `var(--primary)`, `StatusBadge`, `semanticTone`).
+- ❌ **NEVER unvirtualize lists > 30 items**: Long table and card lists must use `@tanstack/react-virtual`.
+- ❌ **NEVER hardcode English copy**: Render all labels, tooltips, and messages through `t('key')`.
 
 ## 1. Master Module Scaffold Layout
 
