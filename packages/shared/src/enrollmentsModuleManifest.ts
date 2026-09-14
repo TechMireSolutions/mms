@@ -1,5 +1,6 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
+import { isoDateSchema } from './isoDateSchema.js';
 
 export const ENROLLMENT_STATUSES = ['pending', 'confirmed', 'cancelled', 'completed'] as const;
 export type EnrollmentStatus = (typeof ENROLLMENT_STATUSES)[number];
@@ -59,7 +60,7 @@ export const enrollmentRecordInsertSchema = z
     sessionName: z.string().optional().default(''),
     classId: z.string().min(1, 'Class is required'),
     className: z.string().optional().default(''),
-    enrolledDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Enrolled date must be YYYY-MM-DD'),
+    enrolledDate: isoDateSchema,
     baseFee: z.number().nonnegative().optional().default(0),
     discountType: z.string().optional().default('none'),
     discountLabel: z.string().optional().default(''),

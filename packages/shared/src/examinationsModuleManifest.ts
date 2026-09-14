@@ -4,6 +4,7 @@
  */
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
+import { isoDateSchema } from './isoDateSchema.js';
 
 /** Zod schema for single Exam record. */
 export const examRecordSchema = z
@@ -38,7 +39,7 @@ export const examRecordInsertSchema = z
     subject: z.string().optional().default(''),
     totalMarks: z.number().positive().default(100),
     passingMarks: z.number().nonnegative().default(50),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    date: isoDateSchema,
     duration: z.number().positive().default(60),
     classIds: z.array(z.string()).optional().default([]),
     status: z

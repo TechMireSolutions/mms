@@ -6,6 +6,7 @@ import {
   paymentAllocationInsertSchema,
   paymentAllocationRecordSchema,
 } from './financeBilling.js';
+import { isoDateSchema } from './isoDateSchema.js';
 
 export const invoiceRecordSchema = z
   .object({
@@ -61,7 +62,7 @@ export const invoiceRecordInsertSchema = z
       .enum(['paid', 'pending', 'overdue', 'partial', 'cancelled'])
       .optional()
       .default('pending'),
-    dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD'),
+    dueDate: isoDateSchema,
     paidDate: z.string().nullable().optional(),
     method: z.string().nullable().optional(),
     paidAmt: z.number().nonnegative().optional(),
@@ -144,7 +145,7 @@ export const paymentRecordInsertSchema = z
     studentId: z.string().nullable().optional(),
     studentName: z.string().nullable().optional(),
     amount: z.number().positive('Amount must be greater than 0'),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    date: isoDateSchema,
     method: z.string().optional().default('cash'),
     receivedByUserId: z.string().nullable().optional(),
     receivedBy: z.string().nullable().optional(),

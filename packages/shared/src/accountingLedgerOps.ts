@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { isoDateSchema } from './isoDateSchema.js';
 
 export const postingRulesRecordSchema = z
   .object({
@@ -44,7 +45,7 @@ export type OpeningBalanceInsert = z.infer<typeof openingBalanceInsertSchema>;
 export const bankStatementLineRecordSchema = z
   .object({
     id: z.string(),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    date: isoDateSchema,
     description: z.string().default(''),
     amount: z.number(),
   })
@@ -58,8 +59,8 @@ export const bankStatementRecordSchema = z
   .object({
     id: z.string(),
     accountId: z.string().min(1),
-    periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    periodStart: isoDateSchema,
+    periodEnd: isoDateSchema,
     openingBalance: z.number().default(0),
     closingBalance: z.number().default(0),
     lines: z.array(bankStatementLineRecordSchema).default([]),
@@ -72,8 +73,8 @@ export const bankStatementInsertSchema = z
   .object({
     id: z.string().optional(),
     accountId: z.string().min(1),
-    periodStart: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    periodEnd: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    periodStart: isoDateSchema,
+    periodEnd: isoDateSchema,
     openingBalance: z.number().optional().default(0),
     closingBalance: z.number().optional().default(0),
     lines: z.array(bankStatementLineInsertSchema).optional().default([]),

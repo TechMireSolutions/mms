@@ -1,6 +1,7 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
 import { JOURNAL_SOURCE_TYPES } from './accountingLedgerInvariants.js';
+import { isoDateSchema } from './isoDateSchema.js';
 
 export const accountRecordSchema = z
   .object({
@@ -85,7 +86,7 @@ export const journalEntryRecordSchema = z
 export const journalEntryRecordInsertSchema = z
   .object({
     id: z.string().optional(),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    date: isoDateSchema,
     ref: z.string().optional().default(''),
     description: z.string().optional().default(''),
     status: z.enum(['posted', 'draft']).optional().default('posted'),
@@ -131,8 +132,8 @@ export const fiscalYearRecordInsertSchema = z
   .object({
     id: z.string().optional(),
     label: z.string().min(1, 'Label is required'),
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD'),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be YYYY-MM-DD'),
+    startDate: isoDateSchema,
+    endDate: isoDateSchema,
     status: z.enum(['active', 'closed', 'upcoming']).optional().default('upcoming'),
   })
   .strict();

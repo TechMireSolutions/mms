@@ -3,6 +3,7 @@ import type { AppTranslationKey } from './appTranslations.js';
 import type { Student } from './studentTypes.js';
 import { baseListQuerySchema } from './apiSchemas.js';
 import { isQueryFlagTrue } from './paginationUtils.js';
+import { isoDateSchema } from './isoDateSchema.js';
 
 export interface StudentsListQuery {
   page?: number;
@@ -90,7 +91,7 @@ export interface StudentsListPageResult {
 }
 
 export const studentsNextGrNumberQuerySchema = z.object({
-  registeredDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  registeredDate: isoDateSchema,
   template: z.string().max(64).optional(),
   digits: z.coerce.number().int().min(1).max(12).optional(),
   restartAnnually: z
