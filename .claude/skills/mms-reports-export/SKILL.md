@@ -12,6 +12,8 @@ metadata:
 **Rule (norms SSOT):** `mms-reports.md` · `mms-data-layer.md` · `mms-performance.md` §1-2 · `mms-module-architecture.md`.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
+Report checklists (accessibility, filters, i18n/formatting, completion): **`references/report-checklists.md`**.
+
 ## Placement
 
 Reports tab **inside** each module — no standalone `/reports` page. Shared UI: `apps/frontend/src/components/ui/reports/` · utils: `@/lib/reports/*`.
@@ -64,7 +66,7 @@ export function ModuleReportsTier(): React.JSX.Element {
 ## Chart Rules & Lazy Loading
 - **Chart Component Isolation**: Recharts must NOT be imported directly into parent report components. Extract chart JSX into a `{Module}ReportCharts.tsx` sibling and lazy-load it with Suspense and Skeleton fallback.
 - **Safe Responsive Container**: Wrap all charts in `ReportChartCard` (which enforces `SafeResponsiveContainer` and handles empty states).
-- **Reference Example**: [examples/ModuleReportCharts.tsx](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-reports-export/examples/ModuleReportCharts.tsx).
+- **Reference Example**: `.agent/skills/mms-reports-export/examples/ModuleReportCharts.tsx`.
 
 ## Add / Change a Report
 
@@ -83,68 +85,7 @@ export function ModuleReportsTier(): React.JSX.Element {
 
 ## Export Standards & Compliance
 Detailed size gates, background queuing, formula injection protection, and tamper-evident compliance export specs:
-- Reference [references/export-standards.md](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-reports-export/references/export-standards.md) · `mms-background-jobs`.
-
-## Accessibility Checklist
-
-```
-- [ ] <section aria-label={t('module.reports.aria')}> on report root
-- [ ] aria-hidden="true" on chart containers (table is the accessible alternative)
-- [ ] <table> has <caption> or aria-labelledby pointing to section heading
-- [ ] Interactive chart bars/segments: tabIndex={0} + onKeyDown Enter/Space drill-down
-- [ ] KPI delta badges: aria-label="Up 12% vs last month" (not just colored icon)
-- [ ] ExportToolbar shows spinner + aria-busy="true" during export
-```
-
-## Filter Standards
-
-```
-- [ ] Date range defaults to current academic session (or current month for finance)
-- [ ] Date strings normalized to UTC midnight before querying
-- [ ] Free-text debounced 300ms
-- [ ] Filter state URL-serializable (bookmarkable)
-- [ ] Clearing a filter resets to module default, not unbounded "all time"
-- [ ] CATEGORY_FILTERS in ReportFilters.tsx updated for new module
-```
-
-## i18n / Formatting
-
-```
-- [ ] All chart labels, tooltips, legends via t()
-- [ ] Numbers via formatNumber() from @mms/shared
-- [ ] Currency via formatCurrency()
-- [ ] Month/date labels via formatMonthName() / formatDate() from @mms/shared
-- [ ] Export column headers via t() — same keys as table column headers
-```
-
-## Completion Checklist
-
-```
-- [ ] Query/server data for REST modules — no limit:500 page dumps
-- [ ] /report-aggregates backend route for any new monthly/weekly bucketing
-- [ ] staleTime: 5 * 60 * 1000 on report aggregate queries
-- [ ] KPI StatCards on /metrics where available — no forced collection dumps
-- [ ] Widget collections gated with requiredCollections
-- [ ] No academic category on module reports
-- [ ] Chart JSX in lazy-loaded sibling file; parent imports via lazy() + Suspense
-- [ ] SafeResponsiveContainer via ReportChartCard (not raw ResponsiveContainer)
-- [ ] Skeleton fallback on Suspense; EmptyState via emptyNode on ReportChartCard
-- [ ] ErrorState with description hint when isError
-- [ ] Tables / drill-down grids in overflow-x-auto; no page-level scroll at 375px
-- [ ] Print: isAnimationActive={false} on charts for @media print
-- [ ] ExportToolbar uses columns+rows API (not deprecated data+headers)
-- [ ] Export filename includes module + date range + timestamp
-- [ ] Formula injection escaped in Excel/CSV cells
-- [ ] PII exports logged to audit log
-- [ ] Tamper-evident compliance exports embed chain hash + Merkle root proof
-- [ ] Accessing audit logs emits 'VIEW' audit entry (Auditing the Auditor)
-- [ ] Background job for exports >500 rows Excel / >200 rows PDF
-- [ ] Permissions match Work boundary (can(), field visibility, soft-delete policy: reportsIncludeDeleted / exportsIncludeDeleted from manifest; Export CTA hidden in trash mode)
-- [ ] a11y: aria-label, table caption, keyboard drill-down, aria-busy on export
-- [ ] All strings via t(); numbers via formatNumber(); dates via formatDate()
-- [ ] Filter state URL-serializable; date ranges UTC-normalized
-- [ ] Tier shell: ModuleTierMotion space-y-4, no inner wrapper divs
-```
+- Reference `.agent/skills/mms-reports-export/references/export-standards.md` · `mms-background-jobs`.
 
 ## Done
 

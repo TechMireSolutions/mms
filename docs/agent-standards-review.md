@@ -8,6 +8,37 @@
 
 ---
 
+## 0. Status: APPLIED (2026-09-15)
+
+This review was executed, not just written. Current state:
+
+| Area | Result |
+|---|---|
+| Verifier | `scripts/verify-rules-integrity.mjs` rebuilt from a path/format checker into a standards linter (43 real defects found on first run, all now fixed) |
+| Rules | 21 rules corrected; always-on set cut from 2,573 → 2,056 words (the ownership matrix and the 25-row fix table moved to `.cursor/rules/README.md` and the `mms-code-review` skill reference); `mms-performance.mdc` globs narrowed from 97.4% of the tree to `*/src/**`; 7 zero-match globs fixed; 8 phantom `§7` citations repointed |
+| Rules added | migration lock safety (§7), business-date/timezone semantics (§8), API versioning/deprecation, client error surface + correlation, table/live-region/contrast a11y, env-var & secret lifecycle, job contract, review criteria + a defined "change boundary" |
+| Skills | 30 corrected in place (canonical scaffold now compiles, 5 broken/misleading example files repaired, 5 false-green scripts made to actually fail, 7 orphan scripts wired in, the 5 largest skills split into `references/`), 8 new skills added → **38** (3,471 SKILL.md lines) |
+| Frontmatter | all 38 skills carry `license` + `metadata.owner` + `metadata.last-verified`; 6 carry `allowed-tools`; 5 carry `compatibility`; 6 colliding trigger descriptions rewritten |
+| Tooling | `CLAUDE.md` is now a thin `@AGENTS.md` import; 6 slash commands × 2 tools; 4 Claude subagents; real hooks (format-on-edit, shell guard) replacing the empty `hooks.json`; committed deny-list permissions |
+| Enforcement | new `pnpm run check:code-norms` ratchet (55 `any`, 37 hex-colour files, 77 files > 300 lines baselined); `check:i18n` wired into CI for the first time; `sync-*.sh` gained `--dry-run` and a context-aware reference rewrite that no longer corrupts `.cursor/rules/*.mdc` paths |
+| Gate | `node scripts/verify-rules-integrity.mjs` green — 38 skills, 21 rules, zero warnings; `pnpm run check:code-norms` green; `pnpm typecheck` green; mirrors byte-identical after `sync-all.sh` |
+
+**Deliberately not done**
+
+- The four discovered defects below are *application* defects, not standards defects: they are reported and recorded in the debt register rather than fixed here (an RLS migration and a shared-package refactor each deserve their own reviewed change).
+- `.cursor/hooks/_common.py` is still a 0-byte leftover; `mms-agent-universal.mdc` forbids deleting files without confirmation, so it was left in place deliberately. Note the same pattern was fixed for `.cursor/hooks.json`, which is now a valid hook manifest.
+- The `mms-messaging` skill overlaps its rule on a handful of lines, but its content is operational (paths, workflow, checklist) rather than restated norms, so it was kept; the row-for-row BiDi table duplication *was* removed.
+
+### Defects discovered while applying (not agent-standards issues — surfaced by the new checks)
+
+1. **27 tenant tables have no `ENABLE ROW LEVEL SECURITY`** anywhere in the migration set, so their `tenant_isolation_policy` is inert: 16 created with `FORCE` only (`0082_new_modules.sql` — inventory, ecommerce, ijara, fundraising, workshops, competitions, fatwa, orphan profiles, `custom_tabs`) and 11 with neither statement (`finance_fee_*`, `finance_invoice_lines`, `finance_payment_allocations`, `accounting_*`, `audit_trail_events`, `audit_verification_runs`). `FORCE` alone does not enable policies. Recorded as a concrete row in the Open Gaps Register (`mms-migration-status.mdc`) and reproducible via `bash .agent/skills/mms-schema-migrate/scripts/check-migrations.sh`, which now exits non-zero on this class. **Worth a dedicated fix pass.**
+2. **`@mms/shared` is not environment-pure**: 9 source files touch `window`/`document`/`localStorage` (`tenantUrlUtils.ts`, `utils.test.ts`, `moneyFormatUtils.ts`, `sessionPolicy.ts`, `settingsDateProvider.ts`, `tenantStorage.ts`, `backupEnvelopeUtils.ts`, `languageUtils.ts`, `imageOptimizationUtils.ts`), and `tenantUrlUtils.ts:24` dereferences `window.location.hostname` unguarded — it would throw on the Node backend. The widened `check-shared-exports.sh` now detects all of it.
+3. **`prettier` is configured but not installed** (`.prettierrc.json` + `.prettierignore`, no dependency, no CI step), so the format hook falls back to `eslint --fix` and formatting is unenforced.
+4. `apps/backend/src/app.ts` sets `keepAliveTimeout` but never `headersTimeout`, so the 502-prevention pair described in `mms-ops-infrastructure.md` is only half-applied.
+
+---
+
+
 ## 1. Verdict
 
 The framework is **structurally excellent and factually stale**. The scaffolding — three-tool mirrors, generated bodies, CI drift gate, integrity verifier, rule→skill routing, "Do NOT use for…" trigger boundaries, progressive-disclosure folders — is better than most repositories have. What it lacks is (a) **correctness maintenance**, (b) **enforcement** of the norms it declares, and (c) **context discipline**.

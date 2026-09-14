@@ -329,7 +329,7 @@ const NODE_BUILTIN = /^node:/;
 const KNOWN_MMS_TOKENS = new Set([
   'mms-backend', 'mms-frontend', 'mms-shared', 'mms-boundary', 'mms-bidi',
   'mmsv2', 'mmsv2-worker', 'mms-production-ports', 'mms_access',
-  'mms_tenant_session', 'mms-app', 'mms-monorepo', 'mms-db',
+  'mms_tenant_session', 'mms-app', 'mms-monorepo', 'mms-db', 'mms-dist',
 ]);
 
 /** Resolve an import specifier written inside a skill example file. */

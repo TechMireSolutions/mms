@@ -56,8 +56,8 @@ Comprehensive guide for writing, running, and debugging automated tests across t
 - Every exported helper (`formatDate`, `formatMoney`, `parsePhoneNumber`, `buildWorkspaceBackupEnvelope`) must have exhaustive unit tests covering happy paths, null/undefined inputs, and boundary values.
 
 ### Backend Route & RLS Testing (Fastify `inject` & `withTenant`)
-- **Fastify `inject()` Route Pattern**: Reference [examples/fastify-inject.test.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/fastify-inject.test.ts).
-- **Multi-Tenant RLS Concurrency**: Reference [examples/tenant-rls-concurrency.test.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/tenant-rls-concurrency.test.ts).
+- **Fastify `inject()` Route Pattern**: Reference `.agent/skills/mms-testing-e2e/examples/fastify-inject.test.ts`.
+- **Multi-Tenant RLS Concurrency**: Reference `.agent/skills/mms-testing-e2e/examples/tenant-rls-concurrency.test.ts`.
 
 ### API & Client Mocking (Frontend)
 - **Centralized API Mocking**: Mock `@/lib/apiClient` functions (`apiJson`, `apiFetch`) via Vitest spies and module mocks (`vi.mock('@/lib/apiClient')`).
@@ -81,7 +81,7 @@ pnpm test:e2e tests/responsive-authenticated.spec.ts
 3. **No Flaky Timeouts**: Avoid `page.waitForTimeout()`; use locator assertions (`expect(locator).toBeVisible()`, `expect(locator).toBeEnabled()`) that auto-retry.
 4. **Auth Fixtures**: Reuse authenticated browser contexts via `e2e/helpers/tenantBootstrap.ts` rather than repeatedly walking through the login form on every test.
 5. **RTL Verification**: Test RTL layout mirroring by mounting in Arabic/Urdu (`dir="rtl"`) and verifying no page-level horizontal scroll (`document.documentElement.scrollWidth <= window.innerWidth`).
-6. **BiDi & Trash Specs**: Reference [examples/playwright-smoke.spec.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/playwright-smoke.spec.ts).
+6. **BiDi & Trash Specs**: Reference `.agent/skills/mms-testing-e2e/examples/playwright-smoke.spec.ts`.
 
 ---
 
@@ -93,7 +93,7 @@ Every soft-deletable module must include integration tests (`inject()`) verifyin
 3. **Idempotency & State Latches**: `DELETE /:id` on an already-archived row returns `404 Not Found`. `POST /:id/restore` on an active row returns `404 Not Found`.
 4. **Partial Unique Index Verification**: Creating a new active entity with the same email/phone as an archived entity succeeds without a uniqueness violation (validating `WHERE deleted_at IS NULL` index).
 5. **Bulk Counts Accuracy**: `POST /bulk-delete` and `POST /bulk-restore` with mixed active/archived IDs accurately return `{ succeeded: N, failed: M }`.
-6. **Session Invalidation**: Soft-deleting a user account immediately invalidates active tokens in Redis and prevents subsequent authentication. Reference [examples/fastify-inject.test.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/fastify-inject.test.ts) and [examples/playwright-smoke.spec.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-testing-e2e/examples/playwright-smoke.spec.ts).
+6. **Session Invalidation**: Soft-deleting a user account immediately invalidates active tokens in Redis and prevents subsequent authentication. Reference `.agent/skills/mms-testing-e2e/examples/fastify-inject.test.ts` and `.agent/skills/mms-testing-e2e/examples/playwright-smoke.spec.ts`.
 
 ---
 

@@ -169,3 +169,15 @@ Forward-only migrations (`mms-schema-migrate` skill owns the authoring workflow)
 5. **Additive Defaults Only:** Adding a `NOT NULL` column requires a default (PostgreSQL 11+ stores it without a full rewrite) or a two-phase backfill. Adding a nullable column is always safe; adding a constraint to existing rows is not — validate it against real data first.
 6. **Reversible Data, Forward-Only Schema:** Schema changes are forward-only (no `down` migration). Data backfills must be idempotent and resumable so a redeploy can safely re-run them.
 7. **Ban `drizzle-kit push`** against shared/staging/production databases — it diffs and applies destructive DDL non-deterministically. Migrations are the only sanctioned path (`mms-schema-migrate` skill).
+
+## 8. Business Dates & Timezone Semantics
+
+Instants and calendar days are different types of value. Conflating them produces off-by-one-day bugs that only appear in some timezones — and a madrasa operates on local calendar days (attendance, enrolment, invoice due dates, session schedules).
+
+1. **Instants are `TIMESTAMPTZ`:** every audit/created/updated column stores an absolute instant with timezone (`timestamp({ withTimezone: true, mode: "date" })`). Never store a naive local time for an instant.
+2. **Business calendar days are dates, not instants:** attendance day, enrolment date, invoice due date, and session date are *calendar days in the tenant's timezone*. Model them explicitly (a `date` column, or a `varchar(10)` `YYYY-MM-DD`, matching the shared schema) and never derive them by truncating a `timestamptz` in application code — truncating in UTC shifts the day for tenants east of UTC.
+3. **The tenant's timezone is the authority:** resolve "today" in the workspace timezone, not the server's and not the browser's. The browser is a display surface; the server decides what day it is for a write.
+4. **Formatting is a presentation concern:** render through `formatDate`/`formatMoney` from `@mms/shared` (skill `mms-i18n-completeness`), never with ad-hoc `Intl`/`toLocaleDateString` calls scattered per module. Formats differ per locale; stored values do not.
+5. **DST boundaries are real:** a day is not always 24 hours and a local midnight may not exist. Never compute a day boundary as `start + 24h`; construct the boundary from the calendar date in the tenant timezone.
+6. **Comparison and range filters** must use the same representation as storage: comparing a `date` column against an instant, or a `timestamptz` against a naive string, silently drops the index and can return a wrong day. Verify with `EXPLAIN` (skill `mms-db-performance`).
+7. **Calendar policy:** the product stores and compares Gregorian values; any lunar/Hijri display is a derived, tenant-configurable presentation (see `mms-form-architecture.mdc` on the calendar field). Do not let a display calendar change stored semantics.

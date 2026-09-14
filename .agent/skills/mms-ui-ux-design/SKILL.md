@@ -15,7 +15,7 @@ Use this skill when designing UI/UX components, enforcing logical CSS properties
 
 ## Anti-Patterns & Banned Operations
 
-- ❌ **NEVER use physical directional classes**: Banned: `pl-*`, `pr-*`, `ml-*`, `mr-*`, `left-*`, `right-*`, `text-left`, `text-right`, `border-l-*`, `border-r-*`. Use BiDi logical properties exclusively (`ps-*`, `pe-*`, `ms-*`, `me-*`, `start-*`, `end-*`, `text-start`, `text-end`, `border-s-*`, `border-e-*`). Reference [references/bidi-tokens.md](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-ui-ux-design/references/bidi-tokens.md); validate via `node .agent/skills/mms-ui-ux-design/scripts/check-bidi-classes.mjs`.
+- ❌ **NEVER use physical directional classes**: Banned: `pl-*`, `pr-*`, `ml-*`, `mr-*`, `left-*`, `right-*`, `text-left`, `text-right`, `border-l-*`, `border-r-*`. Use BiDi logical properties exclusively (`ps-*`, `pe-*`, `ms-*`, `me-*`, `start-*`, `end-*`, `text-start`, `text-end`, `border-s-*`, `border-e-*`). Reference `.agent/skills/mms-ui-ux-design/references/bidi-tokens.md`; validate via `node .agent/skills/mms-ui-ux-design/scripts/check-bidi-classes.mjs`.
 - ❌ **NEVER use ad-hoc hex colors or raw Tailwind palette**: Banned: `text-red-500`, `bg-blue-600`. Use semantic tokens (`var(--text-destructive)`, `var(--primary)`, `StatusBadge`, `semanticTone`).
 - ❌ **NEVER unvirtualize lists > 30 items**: Long table and card lists must use `@tanstack/react-virtual`.
 - ❌ **NEVER hardcode English copy**: Render all labels, tooltips, and messages through `t('key')`.
@@ -103,15 +103,9 @@ Ensure these rules apply globally to adapt font families and text rendering auto
 
 ## 3. Directional Class Refactoring Guide
 
-Enforce logical CSS properties across all shared UI primitives. **Do not use physical classes** (`pl-`, `pr-`, `left-`, `right-`).
+Enforce logical CSS properties across all shared UI primitives. **The physical→logical class mapping is owned by the rule — see `mms-ui-ux-design.md` §2** (`pl-*`→`ps-*`, `ml-*`→`ms-*`, `left-*`→`inset-inline-start-*`, `text-left`→`text-start`, `border-l-*`→`border-s-*`). Do not re-author the table here; it drifted the last time it was duplicated.
 
-| Physical Class (Forbidden) | Logical Class (Required) | Behavior |
-| --- | --- | --- |
-| `pl-4`, `pr-2` | `ps-4`, `pe-2` | Inset padding aligns to start/end based on reading direction. |
-| `ml-auto`, `mr-2` | `ms-auto`, `me-2` | Margins shift appropriately between LTR and RTL. |
-| `left-0`, `right-4` | `inset-inline-start-0`, `inset-inline-end-4` | Positions absolute and fixed elements relative to current script. |
-| `text-left`, `text-right` | `text-start`, `text-end` | Text aligns to reading start/end boundary. |
-| `border-l-2`, `border-r-0` | `border-s-2`, `border-e-0` | Accent borders attach to logical start side. |
+The enforcement is mechanical: `mms-bidi/no-physical-directional-classes` (ESLint, error level) inspects JSX `className` in `.tsx` files. Class tokens held in `.ts` files (e.g. `formStyles.ts`) are outside its reach — check those by eye.
 
 ## Checklist
 

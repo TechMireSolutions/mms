@@ -110,6 +110,16 @@ jobs:
       - name: Lint (all packages)
         run: pnpm lint
 
+      # Ratchet: declared-but-unenforced norms (no `any` in source, no raw hex
+      # colours outside @theme, file-size bands). Baselines live in the script.
+      - name: Code-norm ratchets
+        run: pnpm run check:code-norms
+
+      # i18n key parity across en/ar/ur/fa. The script existed but ran in no
+      # workflow, so translation drift was never actually gated.
+      - name: i18n key parity
+        run: pnpm run check:i18n
+
       - name: Verify Agent & Rule Mirrors Sync
         run: |
           bash .agent/scripts/sync-all.sh

@@ -6,6 +6,8 @@ description: Mandatory self-review after code edits — verify, fix bugs, then m
 
 After **creating or editing code**, run a completion review **before** marking the task done.
 
+The **change boundary** is: the files you edited, plus the files that must change with them to stay correct (a DTO and its consumer, a schema and its migration, a rule and its mirror, a test for new behaviour). It does **not** include pre-existing violations elsewhere in those files: fix them when they sit inside the code you touched, and record them as debt (skill `mms-migration-fixes`) when the fix is a separate concern. Never widen a change into an unrelated refactor to satisfy a rule — and never report a task done while leaving a bug you introduced inside the boundary.
+
 **Workflow skills:** checklist index → `mms-code-review` · shell/primitive a11y → `mms-a11y-smoke` · standards sync → `antigravity-workspace`.
 
 ## Required steps
@@ -32,31 +34,11 @@ After **creating or editing code**, run a completion review **before** marking t
 
 ## Fix before done
 
-| Finding | Action |
-|---------|--------|
-| Type error | Fix and re-run typecheck |
-| ESLint error | Fix in changed files |
-| Failing test | Fix or revert — do not ship broken tests |
-| Weak assertion in tests | Replace `toBeTruthy()` / `toBeFalsy()` / generic `toBeDefined()` with strict type, regex (`/^\d{4}-\d{2}-\d{2}T/`), or DOM instance (`toBeInstanceOf(...)`) — `mms-testing-observability.md` §1 |
-| DB skip latch (`isDbAvailable`) | Replace with in-memory repository mock fixture (`vi.hoisted()`) — `mms-testing-observability.md` §1 |
-| Unspied error logs in tests | Spy on `console.error` / `console.warn` during negative tests for silent test output |
-| Hardcoded copy | Add `t()` keys — `mms-settings-i18n.md` (ban `t(key) \|\| 'English'`) |
-| Work `ErrorState` title-only | Add hint description (`loadFailedHint` pattern) — `mms-module-architecture.md` §7 |
-| Manifest `directoryViews: list` with table\|cards UI | Align to `['table','cards']` — `mms-module-architecture.md` §3 |
-| Touched file still ≫300 lines with a clean seam | Split by concern behind a stable barrel — `mms-structure-naming.md` |
-| Bulk PUT wipe missing rows | Upsert/merge existing rows without deleting absent rows — `mms-api-interface.md` §5 |
-| Form closed before mutation resolves | Await `mutateAsync` before closing dialog/clearing state — `mms-form-architecture.md` |
-| Direct SQL DELETE on tenant entity | Route through soft-delete or check `app.allow_hard_purge` — `mms-data-layer.md` §6 |
-| Unique constraint on soft-deletable column | Use partial unique index `WHERE deleted_at IS NULL` — `mms-data-layer.md` §6 |
-| Cross-feature import added | Route through `@/tenant/hooks/collections/*` facade or extract to `components/ui` / `lib/` / `@mms/shared` — the FE boundary lint fails otherwise — `mms-dry.md` |
-| Banned Node 24 package introduced | Replace with native built-in (`--env-file`, `fetch`, `glob`, `crypto.hash`, `URLPattern`) — `mms-dependencies.md` |
-| Non-erasable TS syntax (enum/namespace) | Replace with union types / const objects for Node 24 native stripping — `mms-dependencies.md` |
-| Unprefixed core module import | Prefix with `node:` (`node:fs`, `node:crypto`, `node:path`, `node:async_hooks`) — `mms-structure-naming.md` |
-| Deprecated Node API (`url.parse()`) | Replace with WHATWG `new URL()` — `mms-structure-naming.md` |
-| Undocumented performance refactor | Explicitly document baseline bottleneck and quantified resource saved — `mms-performance.md` |
-| Unvirtualized list/table > 30 items | Add `@tanstack/react-virtual` virtualization — `mms-performance.md` |
-| Wildcard DB query (`SELECT *` / bare select) | Replace with explicit typed column projection — `mms-performance.md` |
-| Rule violation in touched code | Fix when inside the change boundary |
+The per-finding remedies (weak assertions, skip latches, missing partial indexes, wildcard queries, unused `node:` imports, cross-feature imports, and ~20 more) are a lookup table, not a per-task norm: **skill `mms-code-review`, `references/fix-before-done.md`**.
+
+Rule of thumb while finishing: **fix everything you introduced or touched inside the change boundary, and name anything you deliberately left** — never report a task done while a bug you introduced is still there.
+
+Review criteria (reviewable size, elevated-scrutiny areas, evidence expectations) → same reference file, §Review criteria.
 
 ## Skip verification only when
 

@@ -72,6 +72,18 @@ Physical direction classes are strictly forbidden across both tenant and platfor
 | `rounded-l-*`, `rounded-r-*` | `rounded-s-*`, `rounded-e-*` | Border corner rounding |
 
 
+## 5. Data Tables, Live Regions & Contrast Modes
+
+Accessibility work that stops at labels and touch targets still fails real assistive-technology users on the surfaces MMS uses most: dense tables and long-running background work.
+
+1. **Tables carry structure, not just visuals:** every data table uses real `<table>` semantics with `<th scope="col">` (or `scope="row"` for row headers) and a `<caption>` (visually hidden is fine) naming the dataset. Styling a grid of `<div>`s into a table is banned.
+2. **Sortable columns announce state:** the sorted column sets `aria-sort="ascending|descending|none"` on its header, and the control that changes sorting is a real button inside the header cell with an accessible name ("Sort by Name").
+3. **Async work speaks:** background job progress (`BackgroundJobsTray`), save confirmations, and filter-result counts expose a polite live region (`aria-live="polite"` / `role="status"`), and busy containers set `aria-busy`. A spinner with no announcement is silent to a screen reader.
+4. **State changes after an action are announced:** restore-from-trash, bulk delete counts, and inline validation must move focus or announce the change — otherwise the user cannot tell whether the action happened.
+5. **Honour user contrast preferences:** support `prefers-contrast` and `forced-colors` (Windows high contrast) — decorative shadows/gradients must not carry meaning, focus indicators must remain visible, and status must never be encoded by colour alone (pair it with an icon or text).
+6. **Focus order follows visual order** in RTL: verify tab order after the direction flips, and never rely on DOM order alone to convey sequence.
+7. **Automated checks are a floor, not proof:** the axe smoke (`e2e/tests/a11y-shell.spec.ts`, skill `mms-a11y-smoke`) catches serious/critical violations only; announcements, focus movement, and table semantics need the manual checklist above.
+
 ## 4. Mobile-First Responsiveness & Breakpoints
 
 | Breakpoint | Range | Prefix | Shell Layout Standards |

@@ -11,6 +11,10 @@ metadata:
 
 **Rules (norms SSOT):** `mms-api-interface.md` · `mms-data-layer.md` §5–§6 · `mms-performance.md` · `mms-auth-security.md` §5 · `mms-testing-observability.md` · `mms-form-architecture.md`. Modern Audit Trail Workflow → **`mms-audit-trail`**. Soft-Delete Workflow → **`mms-soft-delete`**.
 
+The 40-item new-route checklist: **`references/new-route-checklist.md`**. Use it when adding a route or resource; it walks layering, validation, RBAC, soft-delete, audit, errors, and tests.
+
+Step-by-step walkthrough for adding a REST resource: **`references/add-rest-resource.md`**.
+
 ## When to use
 
 - New/changed route in `apps/backend/src/routes/`
@@ -35,7 +39,7 @@ routes/ (thin) → {module}/use-cases/ → {module}/repository/ (interface) → 
 - Use-case functions take the repository **interface** via DI (testable with fakes).
 - A single repository interface (`ContactsRepository`) is the sole storage gateway; the Drizzle adapter (`{module}RepositoryAdapter`) is the only concrete implementation.
 - Legacy `services/*.ts` module paths stay as **stable re-export shims** of the composition root.
-- **Reference Implementation**: [examples/clean-architecture-route.ts](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-backend-api/examples/clean-architecture-route.ts).
+- **Reference Implementation**: `.agent/skills/mms-backend-api/examples/clean-architecture-route.ts`.
 
 Never query `pg` from handlers. Prefer repositories / `withTenant`. Use **`dbSyncService`** only for legacy JSON documents (`/api/db/...`).
 - **Explicit Column Projections (`check:db-projections`)**: Bare `.select().from(table)` and `SELECT *` are strictly banned (`mms-performance.md`). Every query must supply an explicit typed column projection (`db.select({ id: table.id, name: table.name }).from(table)`).
@@ -76,58 +80,6 @@ When generating backend code for any feature or entity, provide:
 1. **Drizzle Table & Relations Definition** (`apps/backend/src/db/schema/[entity].ts`) with full constraints and indexes.
 2. **Shared Zod Validation Schemas & DTO Types** (`packages/shared/src/schemas/[entity].ts`).
 3. **Database Migration Script / SQL DDL** representing the changes.
-
-## Add a REST resource
-
-1. **Zod Schemas & Contracts**: Define strictly-typed API endpoints using `@ts-rest/core` contracts in `@mms/shared/contracts`. Write schemas in `@mms/shared` (`.strict()` on write bodies) + explicit Insert/Update/Response DTO types aligning 1:1 with Drizzle tables.
-2. **Domain & DB Layer**:
-   - Drizzle schema with typed columns (3NF/BCNF, zero semi-structured storage, multi-tenancy `tenantId` FK, bidirectional relations).
-   - Domain use-cases in `{module}/use-cases/**` (orchestration, repo DI) + `{module}/repository/` interface + Drizzle adapter + composition root (`{module}UseCases`) — `mms-api-interface.md` §2.
-3. **Service & Transaction RLS**: Execute tenant writes inside `withTenant` applying `SET LOCAL app.current_tenant = ?`. Always validate payloads via `@mms/shared` Zod schemas before persistence.
-4. **Fastify Route**: Implement endpoints using `@ts-rest/fastify` connected to the shared contracts. `routes/tenant/{resource}.ts` — `authenticateTenant` + `registerStandardTenantRoutes` (+ bulk when needed) + `canWriteCollection` (or `authenticatePlatform` + `platformUserCan` for platform routes); call the composition root.
-5. **Registration**: Register under `/api/{resource}` or `/api/platform/{resource}` in `routes/index.ts`.
-6. **Tests**: `inject()` tests with `host: 'tenant.localhost'`.
-7. **FE Query Hooks**: **`mms-query-factories`** / **`mms-frontend`**.
-
-Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.ts`, `hasanat.ts`; Contacts Clean Architecture refactor (`contacts/use-cases/` + `contacts/repository/` + `contactUseCases`).
-
-## New route checklist
-
-```
-- [ ] FastifyPluginAsync in routes/
-- [ ] preHandler: `authenticateTenant` or `authenticatePlatform` (not raw jwtVerify)
-- [ ] Zod via parseRequest + replyValidationError on writes
-- [ ] rbacService / canWrite on mutations
-- [ ] Errors: { type, message } + correct status
-- [ ] Registered prefix; inject() with tenant host + cookie
-- [ ] Tenant writes: withTenant + SET LOCAL (+ app.current_user_id for audit) utilizing Node 24 explicit resource management (`await using` db handles for auto-cleanup)
-- [ ] Prefer SET LOCAL statement_timeout / idle_in_transaction_session_timeout on tenant write txs — mms-data-layer
-- [ ] Parameterized sql only — ban user/tenant input → sql.raw
-- [ ] Large/hot list APIs: prefer keyset/cursor; OFFSET OK for small Work pages — mms-data-layer
-- [ ] Zero queries inside loops (N+1); batch via Drizzle relational `with`, `inArray` ($\le 500$), SQL joins, or `/resolve` — `mms-performance.md`
-- [ ] Zero wildcard projections (`SELECT *` or bare select); use explicit column projection objects matching Response DTOs — `mms-performance.md`
-- [ ] Mandatory pagination with hard caps: default 25, max 100 via `baseListQuerySchema` — `mms-performance.md`
-- [ ] Large file uploads stream via `@fastify/multipart` (no memory buffering); exports stream via `node:stream` / async generators; datasets $> 500$ rows offloaded to background jobs — `mms-performance.md`
-- [ ] Redis caching: tenant-scoped key `mms:{tenantId}:{module}:{resource}:{hash}`; mutations trigger cache eviction + `/api/ws` invalidation — `mms-performance.md`
-- [ ] HTTP caching headers: emit `ETag` and `Cache-Control: private, no-cache` on idempotent GET responses (`304 Not Modified` on match) — `mms-performance.md`
-- [ ] Contested PUT: updated_at/version → 409 conflict, or document LWW — mms-api-interface §6
-- [ ] bodyLimit / requestTimeout from serverConfig (or explicit raise for sync/upload)
-- [ ] Outbound provider fetch uses native `fetch()` + `AbortSignal.timeout` (no `axios`/`node-fetch`/`ws` for client comms)
-- [ ] Use `node:crypto` `crypto.hash()` instead of `createHash().update().digest()` chains
-- [ ] Use `URLPattern` for matching instead of `path-to-regexp`
-- [ ] Replace legacy `url.parse()` with WHATWG `new URL()`
-- [ ] Core module imports prefixed with `node:` (`node:fs/promises`, `node:crypto`, `node:path`, `node:async_hooks`)
-- [ ] Request / tenant tracking via `AsyncLocalStorage` (`AsyncContextFrame`)
-- [ ] Soft-delete endpoints use registerResourceRoutes (deleteFn/restoreFn) + registerSoftDeletableBulkTrashRoutes
-- [ ] Atomic conditional latch on soft-delete (`WHERE deleted_at IS NULL RETURNING id`)
-- [ ] Batched single-statement SQL for bulk delete/restore (no per-row loops)
-- [ ] Dynamic AST in Drizzle queries matching Category B/C partial indexes (no parameterized booleans)
-- [ ] Relational child queries in `with: { ... }` explicitly declare `where: (c, { isNull }) => isNull(c.deletedAt)`
-- [ ] Restore traps PostgreSQL error `23505` mapping to `409 Conflict`
-- [ ] Single-record `GET /:id` returns 404 for archived records unless `?includeDeleted=true` with `canDelete`
-- [ ] Session invalidation on user/teacher soft delete + `deleted_at IS NULL` verification in auth resolvers
-- [ ] CDC outbox events emitted with monotonic versioning (`entity.soft_deleted` / `entity.restored`)
-```
 
 ## Auth / workspace routes
 

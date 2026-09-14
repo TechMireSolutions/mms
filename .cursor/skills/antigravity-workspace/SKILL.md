@@ -63,10 +63,10 @@ bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
 
 ## Architecture blueprints & docs
 
-- [Architecture Blueprint](file:///Users/syedaalin/Documents/mms/docs/architecture.md)
-- [Migration Plan](file:///Users/syedaalin/Documents/mms/docs/MigrationPlan.md)
-- [ADR 0001: Shared Package & DRY Reuse](file:///Users/syedaalin/Documents/mms/docs/adr/0001-shared-package-and-dry-reuse.md)
-- [Skills Index](file:///Users/syedaalin/Documents/mms/.agent/skills/README.md)
+- `docs/architecture.md`
+- `docs/adr/0001-shared-package-and-dry-reuse.md`
+- `docs/MigrationPlan.md`
+- `.agent/skills/README.md`
 
 ## Sync policy
 

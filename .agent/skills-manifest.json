@@ -27,6 +27,22 @@
       ]
     },
     {
+      "name": "mms-agent-standards",
+      "path": "skills/mms-agent-standards",
+      "keywords": [
+        "authors",
+        "verifies",
+        "agent-standards",
+        "corpus",
+        "itself",
+        "rules",
+        "skills",
+        "workflows",
+        "commands",
+        "hooks"
+      ]
+    },
+    {
       "name": "mms-audit-trail",
       "path": "skills/mms-audit-trail",
       "keywords": [
@@ -124,6 +140,22 @@
       ]
     },
     {
+      "name": "mms-db-performance",
+      "path": "skills/mms-db-performance",
+      "keywords": [
+        "triages",
+        "postgresql",
+        "performance",
+        "slow",
+        "queries",
+        "missing",
+        "unused",
+        "indexes",
+        "patterns",
+        "autovacuum/bloat"
+      ]
+    },
+    {
       "name": "mms-dependency-upgrade",
       "path": "skills/mms-dependency-upgrade",
       "keywords": [
@@ -151,6 +183,22 @@
       ]
     },
     {
+      "name": "mms-error-triage",
+      "path": "skills/mms-error-triage",
+      "keywords": [
+        "triages",
+        "production",
+        "error",
+        "report",
+        "sentry",
+        "issue",
+        "request",
+        "traceparent",
+        "audit",
+        "responsible"
+      ]
+    },
+    {
       "name": "mms-fields-registry",
       "path": "skills/mms-fields-registry",
       "keywords": [
@@ -158,6 +206,20 @@
         "tab registry",
         "CustomFieldsBuilder",
         "DraggableFieldList"
+      ]
+    },
+    {
+      "name": "mms-finance-accounting",
+      "path": "skills/mms-finance-accounting",
+      "keywords": [
+        "finance",
+        "accounting",
+        "invoices",
+        "payments",
+        "ledger",
+        "entries",
+        "fiscal year",
+        "chart of accounts"
       ]
     },
     {
@@ -189,6 +251,38 @@
         "components",
         "playwright",
         "contacts"
+      ]
+    },
+    {
+      "name": "mms-i18n-completeness",
+      "path": "skills/mms-i18n-completeness",
+      "keywords": [
+        "audits",
+        "fixes",
+        "translation",
+        "coverage",
+        "across",
+        "en/ar/ur/fa",
+        "missing",
+        "keys",
+        "untranslated",
+        "strings"
+      ]
+    },
+    {
+      "name": "mms-incident-response",
+      "path": "skills/mms-incident-response",
+      "keywords": [
+        "runs",
+        "production",
+        "incident",
+        "procedure",
+        "hetzner",
+        "host",
+        "diagnose",
+        "decide",
+        "rollback",
+        "fix-forward"
       ]
     },
     {
@@ -299,6 +393,38 @@
       ]
     },
     {
+      "name": "mms-queue-ops",
+      "path": "skills/mms-queue-ops",
+      "keywords": [
+        "diagnoses",
+        "safely",
+        "operates",
+        "bullmq",
+        "worker",
+        "stuck",
+        "retrying",
+        "failed",
+        "jobs",
+        "queue"
+      ]
+    },
+    {
+      "name": "mms-release-versioning",
+      "path": "skills/mms-release-versioning",
+      "keywords": [
+        "manages",
+        "release",
+        "bookkeeping",
+        "version",
+        "bumps",
+        "changelog",
+        "entries",
+        "migration-milestone",
+        "updates",
+        "deploy"
+      ]
+    },
+    {
       "name": "mms-reports-export",
       "path": "skills/mms-reports-export",
       "keywords": [
@@ -339,20 +465,6 @@
         "logical properties",
         "formatting",
         "preview"
-      ]
-    },
-    {
-      "name": "mms-finance-accounting",
-      "path": "skills/mms-finance-accounting",
-      "keywords": [
-        "finance",
-        "accounting",
-        "invoices",
-        "payments",
-        "ledger",
-        "entries",
-        "fiscal year",
-        "chart of accounts"
       ]
     },
     {
@@ -408,6 +520,22 @@
         "typography",
         "scaffold layout",
         "primitives"
+      ]
+    },
+    {
+      "name": "mms-vuln-response",
+      "path": "skills/mms-vuln-response",
+      "keywords": [
+        "triages",
+        "responds",
+        "dependency",
+        "security",
+        "advisory",
+        "reachability",
+        "analysis",
+        "override",
+        "policy",
+        "reviewed-exception"
       ]
     }
   ],

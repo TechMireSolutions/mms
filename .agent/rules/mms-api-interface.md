@@ -93,6 +93,18 @@ Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload
 
 ---
 
+## 8. Versioning, Deprecation & Contract Change Discipline
+
+There is no `/v2` URL scheme in MMS: the SPA and the API ship together, so the contract is versioned by *compatibility*, not by path. That makes breaking a shipped client a self-inflicted outage (a stale browser tab, a cached bundle, or an older mobile-ish client).
+
+1. **Additive by default:** new optional response fields and new optional request fields are safe. Removing a field, renaming one, changing its type, or tightening validation (new `.strict()` key, new `.min()`) is **breaking** — treat it as a migration, not a tweak.
+2. **Contract changes land with the DTO:** the Zod schema in `@mms/shared`, the Fastify handler, and the frontend consumer change in one commit. A response field added server-side but absent from the shared Response DTO is drift, not a feature.
+3. **Deprecate in place, visibly:** mark the field/endpoint in the shared schema with a comment naming the replacement, keep returning it until consumers are gone, and only then remove it — in a later release, with a changelog entry (skill `mms-release-versioning`).
+4. **Never repurpose a field.** If the meaning changes, add a new field and stop writing the old one; readers must not have to guess which semantic a payload carries.
+5. **Error envelope is part of the contract:** `{ type, message }` shapes and status codes (`400/401/403/404/409/429/5xx`) are consumed by the client's error mapping — changing a status code is a breaking change even when the body is unchanged.
+6. **Query-parameter flags parse strictly:** booleans arrive as strings and must go through the shared flag helper (`isQueryFlagTrue` pattern) so `?includeDeleted=1` and `?includeDeleted=true` behave identically and unknown values fail loudly.
+7. **OpenAPI is a developer aid, not a compat guarantee:** the spec is generated and exposure is gated by `MMS_EXPOSE_OPENAPI`; do not rely on it to detect consumer breakage.
+
 ## 7. Soft-Delete & Restore REST Contracts
 Standardizes lifecycle deletion endpoints per `docs/soft-delete.md` · skill **`mms-soft-delete`**:
 - **Standard Endpoints**: `DELETE /:id` (soft-delete), `POST /:id/restore` (restore), `POST /bulk-delete` (bulk soft-delete), `POST /bulk-restore` (bulk restore), and `GET /?includeDeleted=true` (trash list).

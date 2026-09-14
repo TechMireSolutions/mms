@@ -125,6 +125,18 @@ Treat `turbo.json` inputs/outputs as sensitive — change only with intentional 
 
 ---
 
+## 6. Environment Variables & Secret Lifecycle
+
+Configuration drift between local, CI, and the VPS is a leading cause of "works locally" incidents. Every variable has one owner (the env file for its process) and one documented shape.
+
+1. **Document the shape, never the secret:** adding an environment variable requires updating `apps/backend/.env.example` (or the frontend equivalent) in the same change, with a comment stating purpose, required/optional, and a safe placeholder. Real `.env` files are never committed (`mms-agent-universal.md`; gitleaks scans full history).
+2. **Only `VITE_*` reaches the browser.** Anything bundled is public: never put `JWT_SECRET`, `DATABASE_URL`, `REDIS_URL`, provider keys, or `MMS_*` server flags in a `VITE_*` name — the frontend bundle is readable by every tenant user.
+3. **Fail closed on missing security-critical config:** startup must refuse to boot (or the feature must stay disabled) when a required secret is absent. A defaulted `JWT_SECRET`, an empty `METRICS_TOKEN`, or a wildcard CORS fallback is a vulnerability, not a convenience.
+4. **Environment identity is exact:** `NODE_ENV` must be exactly `production` in production — do not test for its absence, and never enable developer affordances (verbose credential logging, dev-only providers, open CORS) behind anything other than an explicit opt-in flag with a name that says so.
+5. **Rotation is scheduled work, not incident work:** rotating a secret means updating the VPS env (`scripts/merge-backend-env.sh` deliberately, then reload), confirming the app reconnects, and revoking the old value at the provider. Record the rotation date next to the variable in the env example.
+6. **Per-environment values, one code path:** staging/production differ by values, never by branches. If behaviour must differ, gate it on an explicit flag (`METRICS_ENABLED`, `MMS_EXPOSE_OPENAPI`) that defaults to the safe state.
+7. **Never echo secrets:** not into logs, error payloads, health output, CI logs, or an agent transcript. The `/metrics` and health endpoints are token-gated for this reason.
+
 ## 5. Audit Operations, Statement Auditing & Storage Tiering
 - **Database Statement Auditing (`pgAudit`)**: Install `pgaudit` extension on the PostgreSQL host (`postgresql-16-pgaudit`), configure `shared_preload_libraries = 'pgaudit'` in `postgresql.conf`, and enable statement auditing (`pgaudit.log = 'write, ddl, role'`). Essential for capturing out-of-band direct database console access, DBA queries, and schema DDL that bypass the Fastify application layer.
 - **Scheduled Verification Jobs**: Register a scheduled background cron/timer executing automated chain and Merkle root verification (`runAuditVerificationJob`). Persist results in `audit_verification_runs` and emit immediate P1 security alerts on hash breaks, missing sequence numbers, or timestamp regressions.

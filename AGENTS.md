@@ -56,7 +56,7 @@ Start here in Antigravity: **skill `antigravity-workspace`**.
 
 **Rule → skill map:** every rule carries a **Workflow skills:** line, and the full ownership matrix lives in [.cursor/rules/README.md](.cursor/rules/README.md) (that file is the single owner of the topic→rule→skill index — do not restate it here).
 
-## Skills (30)
+## Skills (38)
 
 | Skill | Purpose |
 |-------|---------|

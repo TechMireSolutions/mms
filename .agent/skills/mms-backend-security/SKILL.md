@@ -11,6 +11,8 @@ metadata:
 
 **Rule (norms SSOT):** `mms-auth-security.md` · `mms-data-layer.md` §5–§6. Also `mms-performance.md` §3 (Cache Namespacing & Tenant Isolation). Modern Audit Trail & Tamper-Evidence → **`mms-audit-trail`**. Soft-Delete System → **`mms-soft-delete`**. Route/service wiring → **`mms-backend-api`**.
 
+Consolidated route-audit checklist (merges the tenant-isolation and per-PR audits): **`references/route-audit-checklist.md`**.
+
 ## When to use
 
 - New protected route or auth endpoint
@@ -99,18 +101,7 @@ Security Invariants:
 - Rate limiting: on `429`, emit `Retry-After` header — `mms-auth-security.md`.
 - **Soft-Delete Session & RBAC Invariants**: Revoke JWT/Redis sessions on soft-delete; gate trash routes and `includeDeleted=true` on `canDeleteCollection`. Hard delete blocked via PostgreSQL trigger — **`mms-soft-delete`**.
 - **Audit Trails & Tamper-Evidence**: RFC 8785 canonical JSON outbox payloads, sharded hash chains, `INSERT`-only DB privileges, MFA on audit reads — **`mms-audit-trail`**.
-- **Reference Specification**: [references/auth-rbac-matrix.md](file:///Users/syedaalin/Documents/mms/.agent/skills/mms-backend-security/references/auth-rbac-matrix.md).
-
-## Tenant isolation checklist
-
-- [ ] Tenant from host header — not from client JSON body on protected routes
-- [ ] Cookie CSRF / Origin check on state-changing cookie-auth routes
-- [ ] Storage keys `t:{subdomain}:{logicalKey}` on server (`database.ts` + `tenantContext.ts`)
-- [ ] JWT subdomain matches resolved tenant
-- [ ] Apex routes do not expose other tenants' data
-- [ ] Tests use `host: '{subdomain}.localhost'` in `inject()`
-- [ ] Typed REST routes use repositories + `withTenant` / SET LOCAL RLS (not `dbSyncService`); `dbSyncService` only for `/api/db` JSON documents
-- [ ] Redis cache keys strictly isolate by tenant and context (`mms:{tenantId}:{module}:{resource}:{hash(queryParams)}`) with viewer role scope when permissions alter payload (`mms-performance.md`)
+- **Reference Specification**: `.agent/skills/mms-backend-security/references/auth-rbac-matrix.md`.
 
 ## Secrets & logging
 
@@ -132,19 +123,6 @@ Encrypted workspace backups (`.mmsbak`): bound PBKDF2 iterations (`BACKUP_KDF_MI
 ```bash
 cd apps/backend && pnpm test
 ```
-
-## Route audit checklist (new PR)
-
-1. Is the route tenant-scoped? → `authenticateTenant` (+ `bindRequestUserId`)
-2. Is the route platform apex? → `requireMainDomain` + `authenticatePlatform` (+ `requireSuperUser` / `requirePlatformPermission` as needed)
-3. Is it a mutation **or** sensitive read? → `rbacService` / `canReadCollection` / `requireAdmin` (tenant) or `platformUserCan` (platform)
-4. Is body validated? → Zod via `parseRequest` before service layer (write schema strips soft-delete when applicable)
-5. Never trust body `workspaceSubdomain` / authz `userId` — session only
-6. Does it touch auth or messaging send? → rate limit preserved
-7. Prod cookies `Secure`; prefer Helmet/secure headers when touching `app.ts`
-8. Integration test with wrong-subdomain host returns `403`? (platform routes: tenant host must `403`)
-9. New secret store? → FORCE-RLS table + exclude from backup snapshots
-10. New tenant table? → composite PK `(workspace_subdomain, id)` + `FORCE RLS` + tenant-scoping policy
 
 ## Rules
 

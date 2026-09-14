@@ -88,6 +88,17 @@ Assert production-safe JSON `{ type, message }` — never leak SQL/stack traces.
 
 ---
 
+## 7. Client Error Surface, Correlation & Retry Policy
+
+Logging an error is not the same as a user being able to report it. Every user-visible failure must be traceable to a server request without asking the user for a timestamp.
+
+1. **Show the correlation id:** when a request fails, surface the response's `x-request-id` (or Sentry event id) in the error UI — a support message that carries an id beats one that carries a screenshot of a red toast. Server side, both `x-request-id` and `traceparent` are echoed (`mms-api-interface.mdc`).
+2. **Boundary granularity is deliberate:** `ErrorBoundary` catches *render* crashes; a heavy Work/Reports/Setup tier and each lazy route are wrapped so one crash does not blank the whole shell. Fetch failures are Query `isError` states (`ErrorState` with retry + hint), never a thrown render error.
+3. **Retry only what is safe:** TanStack Query retries idempotent `GET`s; mutations do **not** auto-retry (double-submitting a payment or a broadcast is worse than a visible failure). On `429`, honour `Retry-After` (`mms-auth-security.mdc`); on `5xx` for a mutation, surface a retry affordance rather than retrying silently.
+4. **Offline / chunk-load failures are first-class:** a failed dynamic import (stale bundle after a deploy) must offer a reload path instead of an infinite spinner; treat it as a normal error state with a retry that reloads.
+5. **No silent catches:** every `catch` either recovers, or reports through `notify.error(t(...))` and/or the error reporter — a swallowed error is invisible in production and untestable.
+6. **Never double-report:** handled `notify.error` paths must not also be sent as unhandled exceptions to Sentry (see §3 Sentry rules); duplicates destroy alert signal.
+
 ## 6. Soft-Delete Verification Testing
 Standardizes test verification for soft-deletable entities per `docs/soft-delete.md` · skill **`mms-soft-delete`**:
 - **Single-Record 404 Verification**: Assert `GET /:id` returns `404 Not Found` for soft-deleted entities on standard reads, and `200 OK` on `?includeDeleted=true` when caller has `canDeleteCollection`.

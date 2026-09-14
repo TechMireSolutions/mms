@@ -52,9 +52,66 @@ Project rules for the Madrasa Management System. Claude Code loads `.md` files f
 | `mms-reports.md` | Analytics implementation & exports, KPI SSOT, `ExportToolbar`, saved reports |
 | `mms-testing-observability.md` | Vitest, API tests, logging, ErrorBoundary, Sentry, request-id |
 
-## Ownership (see `mms-core.md`)
+## Ownership matrix (topic → owner rule → workflow skill)
 
-Single prose owner per topic. Duplicate essays elsewhere must be short pointers. Full matrix in always-on `mms-core.md` Standards index (soft-delete schema vs Work UX, write Zod, bulk PUT, `mutateAsync` split there).
+Single prose owner per topic. A duplicate essay elsewhere must be a short pointer —
+`mms-agent-universal.md` makes that a banned operation, and the skills/scripts
+in the enforcement registry below are how the norm is actually held.
+
+| Topic | Owner rule | Workflow skill |
+|---|---|---|
+| Agent cognition, output economy, TS/git discipline | `mms-agent-universal.md` | `antigravity-workspace` |
+| Stack, boundaries, layering, ownership | `mms-core.md` | `mms-dev-setup` |
+| Post-edit verification | `mms-completion-review.md` | `mms-code-review` |
+| Dependencies, engines, catalogs | `mms-dependencies.md` | `mms-dependency-upgrade` · `mms-vuln-response` |
+| File structure, naming, size bands | `mms-structure-naming.md` | `mms-frontend` · `mms-shared-package` |
+| DRY, extraction, `@mms/shared` boundaries | `mms-dry.md` | `mms-shared-package` |
+| Auth, sessions, CSRF, RBAC, tenant isolation | `mms-auth-security.md` | `mms-backend-security` |
+| REST contracts, errors, pagination, bulk PUT | `mms-api-interface.md` | `mms-backend-api` · `mms-frontend` |
+| PostgreSQL, Drizzle, RLS, migrations, Query policy | `mms-data-layer.md` | `mms-schema-migrate` · `mms-query-factories` · `mms-db-performance` |
+| Soft-delete lifecycle and index tiers | `mms-data-layer.md` §6 · `mms-module-architecture.md` | `mms-soft-delete` |
+| Audit trail, tamper evidence, retention | `mms-data-layer.md` §5 | `mms-audit-trail` |
+| Module pages, tiers, background jobs | `mms-module-architecture.md` | `mms-module-page` · `mms-background-jobs` · `mms-queue-ops` |
+| Work directory, drawer, trash UX | `mms-module-architecture.md` | `mms-module-work` |
+| Setup tier, preferences, sub-tabs | `mms-module-architecture.md` | `mms-module-setup` |
+| Field/tab registry and guards | `mms-fields.md` | `mms-fields-registry` |
+| Forms, FormModal, write schemas, uploads | `mms-form-architecture.md` | `mms-form-architecture` |
+| Hooks, page controllers, facades | `mms-hooks.md` | `mms-query-factories` · `mms-frontend` |
+| UI primitives, tokens, a11y, responsiveness | `mms-ui-ux-design.md` | `mms-ui-ux-design` · `mms-a11y-smoke` |
+| Settings, navigation, i18n keys | `mms-settings-i18n.md` | `mms-settings-i18n` · `mms-i18n-completeness` |
+| Reports, analytics, exports | `mms-reports.md` | `mms-reports-export` |
+| Messaging campaigns and logs | `mms-messaging.md` | `mms-messaging` |
+| Performance, caching, virtualization | `mms-performance.md` | `mms-db-performance` · `mms-frontend` |
+| Testing, logging, telemetry, resilience | `mms-testing-observability.md` | `mms-testing-e2e` · `mms-error-triage` |
+| Ops, ports, health, CI, deploy | `mms-ops-infrastructure.md` | `mms-ops-deploy` · `mms-incident-response` · `mms-linux-compatibility` |
+| Open migration debt | `mms-migration-status.md` | `mms-migration-fixes` · `mms-release-versioning` |
+
+## Enforcement registry (norm → how it is actually held)
+
+A norm is either **machine-enforced** or explicitly **advisory** (`mms-agent-universal.md`).
+Update this table in the same change that adds or removes a check.
+
+| Norm | Enforced by | Kind |
+|---|---|---|
+| Cross-feature import boundary | `mms-boundary/no-cross-feature-imports` (ESLint, error) | lint |
+| Physical directional CSS classes | `mms-bidi/no-physical-directional-classes` (ESLint, error) | lint |
+| Surface/token misuse | `no-restricted-syntax` selectors (ESLint, warn — advisory until promoted) | lint |
+| `any` in frontend source | `pnpm run check:code-norms` ratchet | ratchet |
+| Raw hex colours / file-size bands | `pnpm run check:code-norms` ratchet | ratchet |
+| Wildcard DB projections | `pnpm run check:db-projections` (CI) | ratchet |
+| Write-blocking index in a migration | `pnpm run check:migration-indexes` (CI) | ratchet |
+| Bundle budget | `pnpm run check:bundle` (CI, build-dist job) | ratchet |
+| i18n key parity across en/ar/ur/fa | `pnpm run check:i18n` (CI) | script |
+| Dependency advisories | `pnpm audit --audit-level=high` + dependency-review (CI) | CI |
+| Secrets in history | gitleaks (CI, full history) | CI |
+| Rule/skill/mirror integrity | `node scripts/verify-rules-integrity.mjs` + sync drift diff (CI) | CI |
+| `git push` / `drizzle-kit push` / destructive rm / .env reads | `.cursor/hooks/guard-shell.sh` (Claude + Cursor hooks) | hook |
+| Tenant RLS enablement per table | `mms-schema-migrate/scripts/check-migrations.sh` | skill script |
+| `@mms/shared` runtime purity | `mms-shared-package/scripts/check-shared-exports.sh` | skill script |
+| a11y serious/critical violations | `e2e/tests/a11y-shell.spec.ts` (CI e2e job) | test |
+| Coverage floors (FE 41/39, BE 45/27) | vitest thresholds in each workspace | test |
+| Tier structure, trunk tests, review criteria, UX polish | none — **advisory** (review discipline) | advisory |
+
 
 ## Tenant = Platform Parity Principle
 
@@ -80,7 +137,7 @@ The only *differences* are intentional domain split: `authenticatePlatform` vs `
 
 Rules = norms/SSOT. Skills = workflows/checklists that **point** at rules (do not re-author norms).
 
-Every rule starts with a **Workflow skill:** line; the full rule→skill map lives in always-on **`mms-core.md`** Standards index. Highlights:
+Every rule starts with a **Workflow skills:** line; the full topic→rule→skill map is the Ownership matrix above. Quick routing:
 
 | When working on… | Invoke skill |
 |------------------|--------------|
