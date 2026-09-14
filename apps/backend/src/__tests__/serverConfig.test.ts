@@ -41,6 +41,20 @@ describe('loadServerConfig proxy trust', () => {
     process.env.TRUST_PROXY = 'true';
     expect(() => loadServerConfig()).toThrow('TRUST_PROXY=true is unsafe');
   });
+
+  it('defaults to loopback proxies in production when TRUST_PROXY is unset', () => {
+    const prevNodeEnv = process.env.NODE_ENV;
+    const prevJwt = process.env.JWT_SECRET;
+    try {
+      process.env.NODE_ENV = 'production';
+      process.env.JWT_SECRET = 'a-secure-production-jwt-secret-with-at-least-32-chars';
+      delete process.env.TRUST_PROXY;
+      expect(loadServerConfig().trustProxy).toEqual(['127.0.0.1', '::1']);
+    } finally {
+      process.env.NODE_ENV = prevNodeEnv;
+      process.env.JWT_SECRET = prevJwt;
+    }
+  });
 });
 
 describe('loadServerConfig PG tenant tx budgets', () => {

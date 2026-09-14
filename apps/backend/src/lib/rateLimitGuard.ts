@@ -27,9 +27,10 @@ export function createStrictRateLimitGuard(
   fastify: FastifyInstance,
   options: RateLimitOptions,
 ): (request: FastifyRequest, reply: FastifyReply) => Promise<void> {
-  const check = fastify.createRateLimit(
-    options as Parameters<FastifyInstance['createRateLimit']>[0],
-  );
+  const check = fastify.createRateLimit({
+    allowList: () => false,
+    ...options,
+  } as Parameters<FastifyInstance['createRateLimit']>[0]);
 
   return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const result = await check(request);

@@ -35,6 +35,12 @@ if [[ -z "$APP_DOMAIN" ]]; then
 fi
 log_info "MMS_APP_DOMAIN=${APP_DOMAIN}"
 
+TRUST_PROXY_VAL="$(read_env_var TRUST_PROXY "" "$ENV_FILE")"
+if [[ -z "$TRUST_PROXY_VAL" ]]; then
+  echo 'TRUST_PROXY="127.0.0.1,::1"' >> "$ENV_FILE"
+  log_info "Configured default TRUST_PROXY=\"127.0.0.1,::1\" in $ENV_FILE"
+fi
+
 bash scripts/apache/isolate-mms-vhost.sh "$ENV_FILE"
 export MMS_REQUIRE_WILDCARD_TLS=1
 bash scripts/apache/install-mms-vhost.sh "$ENV_FILE"

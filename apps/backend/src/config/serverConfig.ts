@@ -124,7 +124,7 @@ function buildServerConfig(): ServerConfig {
   }
   const trustedProxies = trustProxyValue && trustProxyValue !== 'false'
     ? trustProxyValue.split(',').map((entry) => entry.trim()).filter(Boolean)
-    : [];
+    : (isProd && trustProxyValue === undefined ? ['127.0.0.1', '::1'] : []);
 
   const rawLogLevel = process.env.LOG_LEVEL as LogLevel | undefined;
   const logLevel: LogLevel = rawLogLevel && VALID_LOG_LEVELS.has(rawLogLevel)

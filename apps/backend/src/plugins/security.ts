@@ -61,6 +61,24 @@ function injectNonce(html: string, nonce: string): string {
   });
 }
 
+/**
+ * Determines if a request URL should bypass the global API rate limiter.
+ * Probe endpoints (/health, /ready, /metrics) and non-API paths (SPA document
+ * routes, built static assets under /assets/, site manifests, icons, and static uploads)
+ * are exempt so that client asset loading never fails with HTTP 429.
+ */
+export function isRateLimitExempt(rawUrl: string): boolean {
+  const path = (rawUrl.split('?')[0] ?? '').toLowerCase().replace(/\/+/g, '/');
+  if (path === '/health' || path === '/ready' || path === '/metrics') {
+    return true;
+  }
+  // All backend REST APIs are mounted under /api — non-API requests are client SPA & static assets
+  if (!path.startsWith('/api')) {
+    return true;
+  }
+  return false;
+}
+
 export async function registerSecurityPlugins(
   app: FastifyInstance,
   config?: ServerConfig,
@@ -137,12 +155,8 @@ export async function registerSecurityPlugins(
     max: GLOBAL_RATE_LIMIT.max,
     timeWindow: GLOBAL_RATE_LIMIT.timeWindow,
     errorResponseBuilder: GLOBAL_RATE_LIMIT.errorResponseBuilder,
-    // Health/readiness probes must never be throttled, or a saturated node would
-    // be reported unhealthy and pulled out of rotation.
-    allowList: (request) => {
-      const path = request.url.split('?')[0] ?? '';
-      return path === '/health' || path === '/ready';
-    },
+    // Health/readiness probes, static assets, and SPA document routes must never be throttled.
+    allowList: (request) => isRateLimitExempt(request.url),
     ...(redisClient && checkIsRedisConnected() ? { redis: redisClient } : {}),
     addHeadersOnExceeding: {
       'x-ratelimit-limit': true,
