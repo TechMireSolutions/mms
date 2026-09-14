@@ -7,11 +7,11 @@ import {
   questionTags,
   questionCitations,
 } from '../schema.js';
-import { type withTenant } from '../tenant-context.js';
+import { type TenantTransaction } from '../tenant-context.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type QuestionRow = typeof questions.$inferSelect;
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+type Transaction = TenantTransaction;
 
 export function questionRowToRecord(
   row: QuestionRow,

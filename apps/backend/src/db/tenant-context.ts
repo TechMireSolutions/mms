@@ -8,10 +8,26 @@ import { logger } from '../lib/logger.js';
 export type TenantTransaction = Parameters<Parameters<DbClient['transaction']>[0]>[0];
 export type AppDb = TenantTransaction;
 
+export interface WithTenantOptions {
+  readOnly?: boolean;
+  statementTimeoutMs?: number;
+  /**
+   * Explicit opt-in for genuine platform/global work — platform-admin routes,
+   * migrations, the worker, seeding.
+   *
+   * A falsy `tenantId` sets `app.rls_bypass = 'on'` for the transaction
+   * (tenantTransactionGuards.ts), which makes every tenant RLS policy match
+   * ALL rows. Requiring this flag keeps that escape hatch deliberate: without
+   * it, a caller binding an unset request property would silently run with
+   * tenant isolation disabled instead of failing closed.
+   */
+  allowGlobal?: boolean;
+}
+
 export async function withTenant<T>(
   tenantId: string | null | undefined,
   callback: (tx: TenantTransaction) => Promise<T>,
-  options: { readOnly?: boolean; statementTimeoutMs?: number } = {}
+  options: WithTenantOptions = {}
 ): Promise<T> {
   const resolvedTenantId = tenantId || '';
 
@@ -22,6 +38,15 @@ export async function withTenant<T>(
   if (resolvedTenantId === 'undefined' || resolvedTenantId === 'null') {
     throw new Error(
       `withTenant received the literal string "${resolvedTenantId}" as tenant id — a caller is binding an unset request property. Check that authentication middleware decorates request.tenant.`
+    );
+  }
+
+  // Fail closed: an empty tenant would disable row-level security for this
+  // transaction, so it must be requested explicitly.
+  if (!resolvedTenantId && options.allowGlobal !== true) {
+    throw new Error(
+      '[withTenant] empty tenant id — refusing to run with RLS bypassed. ' +
+        'Pass a real workspace subdomain, or { allowGlobal: true } for intentional platform/global work.',
     );
   }
 
@@ -111,8 +136,26 @@ export async function withTenant<T>(
 export async function withTenantRead<T>(
   tenantId: string | null | undefined,
   callback: (tx: TenantTransaction) => Promise<T>,
-  options: { statementTimeoutMs?: number } = {},
+  options: { statementTimeoutMs?: number; allowGlobal?: boolean } = {},
 ): Promise<T> {
   return withTenant(tenantId, callback, { ...options, readOnly: true });
+}
+
+/**
+ * Runs work with tenant isolation intentionally disabled, across every
+ * workspace.
+ *
+ * This is the explicit, greppable form of `withTenant(null, …, { allowGlobal:
+ * true })`. Legitimate callers: platform-admin routes, schema/data migrations,
+ * the background worker boot, seeding, and whole-database backup/restore.
+ *
+ * NEVER call this from a tenant-scoped request path — it makes every tenant RLS
+ * policy match all rows.
+ */
+export async function withGlobalTenant<T>(
+  callback: (tx: TenantTransaction) => Promise<T>,
+  options: { statementTimeoutMs?: number } = {},
+): Promise<T> {
+  return withTenant(null, callback, { ...options, allowGlobal: true });
 }
 

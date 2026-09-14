@@ -9,7 +9,7 @@ import {
   type FinancePaymentsListPageResult,
 } from '@mms/shared';
 import { financeInvoices, financePayments } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { invoiceRowToRecord, paymentRowToRecord } from './financeRepository.js';
 
@@ -129,7 +129,7 @@ export async function listInvoicesPage(
 ): Promise<FinanceInvoicesListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, financeInvoices, {
       conditions: buildInvoiceListConditions(subdomain, query),
       orderBy: buildInvoiceOrderBy(query.sortField, query.sortDir),
@@ -158,7 +158,7 @@ export async function listPaymentsPage(
 ): Promise<FinancePaymentsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, financePayments, {
       conditions: buildPaymentListConditions(subdomain, query),
       orderBy: buildPaymentOrderBy(query.sortField, query.sortDir),
@@ -198,7 +198,7 @@ export async function aggregateFinanceCommandMetrics(
   const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
   const prevMonth = `${prev.getFullYear()}-${pad2(prev.getMonth() + 1)}`;
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const activeInvoices = and(
       eq(financeInvoices.workspaceSubdomain, subdomain),
       isNull(financeInvoices.deletedAt),

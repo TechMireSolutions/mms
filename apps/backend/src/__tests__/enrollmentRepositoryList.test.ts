@@ -4,6 +4,8 @@ const mockWithTenantTransaction = vi.fn();
 
 vi.mock('../db/tenant-context.js', () => ({
   withTenant: (...args: unknown[]) => mockWithTenantTransaction(...args),
+  // Read paths now go through withTenantRead (read replica + read-only tx).
+  withTenantRead: (...args: unknown[]) => mockWithTenantTransaction(...args),
 }));
 
 vi.mock('../db/repositories/enrollmentRepository.js', () => ({

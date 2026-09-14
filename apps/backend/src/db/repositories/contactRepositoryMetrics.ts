@@ -8,7 +8,7 @@ import {
   type FieldConfig,
 } from '@mms/shared';
 import { contacts } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import {
   hasEmailSql,
   hasPhoneSql,
@@ -28,7 +28,7 @@ export async function aggregateContactsCommandMetrics(
   const periodDays = options?.periodDays ?? CONTACT_METRICS_DEFAULT_PERIOD_DAYS;
   const incompleteSql = buildProfileIncompleteSql(fieldConfig);
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         total: sql<number>`count(*)::int`,
@@ -63,7 +63,7 @@ export async function aggregateContactsReportAnalytics(
   const referenceDate = options?.referenceDate ?? new Date();
   const refIso = referenceDate.toISOString();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         total: sql<number>`count(*)::int`,
@@ -137,7 +137,7 @@ export async function aggregateContactsMonthlyCreatedCounts(
   const subdomain = tenant.trim().toLowerCase();
   const monthLabels = formatContactsMonthLabels(language, monthCount);
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     // Single grouped query over all requested years (one scan) instead of one
     // GROUP BY query per year inside a loop → eliminates the per-year N+1.
     const rows = await tx

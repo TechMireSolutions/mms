@@ -6,6 +6,7 @@ import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/cont
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { usersUseCases } from '../../../users/use-cases/usersUseCases.js';
 import { AUTH_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../../lib/rateLimitGuard.js';
 import {
   dependencyForDiagnosticStage,
   getRequestDiagnosticContext,
@@ -76,7 +77,7 @@ function handleUserRouterError(
 }
 
 export const userContractRouter: FastifyPluginAsync = async (fastify) => {
-  const resetPasswordRateLimit = fastify.rateLimit(AUTH_RATE_LIMIT);
+  const resetPasswordRateLimit = createStrictRateLimitGuard(fastify, AUTH_RATE_LIMIT);
   const router = s.router(userContract, {
     list: async ({ query, request }: ContractRouteArgs<typeof userContract['list']>): Promise<ContractRouteResponse<typeof userContract['list']>> => {
       const user = request.user as User;
@@ -215,7 +216,7 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         },
         preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
           markRequestDiagnosticStage(request, 'rate_limit');
-          await resetPasswordRateLimit.call(fastify, request, reply);
+          await resetPasswordRateLimit(request, reply);
         },
       },
       handler: async ({ params: { id }, body, request }: ContractRouteArgs<typeof userContract['resetPassword']>): Promise<ContractRouteResponse<typeof userContract['resetPassword']>> => {

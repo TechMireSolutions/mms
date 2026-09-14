@@ -127,7 +127,10 @@ describe('Soft Delete Route Semantics & Session Invalidation Integration', () =>
     clearInMemoryRedisFallback();
     vi.clearAllMocks();
 
-    mockFindTenantUserRowById.mockImplementation(async (id: string) => {
+    // Tenant-aware, mirroring the real repository: rows are only visible inside
+    // their own workspace (see tenantUserRepositoryHydrate.ts).
+    mockFindTenantUserRowById.mockImplementation(async (tenant: string, id: string) => {
+      if (tenant !== 'demo') return null;
       if (id === 'u-admin') {
         return {
           id: 'u-admin',
@@ -276,7 +279,10 @@ describe('Soft Delete Route Semantics & Session Invalidation Integration', () =>
     const targetUserId = 'u-test-staff-99';
     let userDeletedAt: string | null = null;
 
-    mockFindTenantUserRowById.mockImplementation(async (id: string) => {
+    // Tenant-aware, mirroring the real repository: rows are only visible inside
+    // their own workspace (see tenantUserRepositoryHydrate.ts).
+    mockFindTenantUserRowById.mockImplementation(async (tenant: string, id: string) => {
+      if (tenant !== 'demo') return null;
       if (id === targetUserId) {
         return {
           id: targetUserId,
@@ -327,7 +333,7 @@ describe('Soft Delete Route Semantics & Session Invalidation Integration', () =>
     expect(meResBefore.json().isAuthenticated).toBe(true);
 
     // Soft-delete the tenant user
-    const deleteResult = await softDeleteTenantUserRow(targetUserId, 'u-admin');
+    const deleteResult = await softDeleteTenantUserRow('demo', targetUserId, 'u-admin');
     expect(deleteResult).toBe(true);
 
     // Verify Redis session key was deleted by revokeUserSessionKeys pattern deletion

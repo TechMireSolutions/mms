@@ -16,10 +16,10 @@ import {
   scholarshipEligibilities,
   sessionClassScholarships,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, type TenantTransaction } from '../tenant-context.js';
 import { mapAuditToInsert } from './repositoryMappers.js';
 
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+type Transaction = TenantTransaction;
 
 export function sessionWriteValues(
   subdomain: string,

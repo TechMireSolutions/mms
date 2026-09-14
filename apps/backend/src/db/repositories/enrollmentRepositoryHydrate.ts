@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Enrollment } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type EnrollmentRow = typeof enrollments.$inferSelect;
@@ -49,7 +49,7 @@ export async function listEnrollmentsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: enrollments.id,
@@ -124,7 +124,7 @@ export async function findEnrollmentById(
   id: string,
 ): Promise<Enrollment | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: enrollments.id,
@@ -195,7 +195,7 @@ export async function findEnrollmentsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = [
       eq(enrollments.workspaceSubdomain, subdomain),
       inArray(enrollments.id, cleanIds),

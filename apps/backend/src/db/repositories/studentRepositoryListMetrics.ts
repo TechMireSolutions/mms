@@ -4,7 +4,7 @@ import {
   type StudentsCommandMetricsSnapshot,
 } from '@mms/shared';
 import { students } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { statusExpr } from './studentRepositoryListQuery.js';
 
 /** SQL aggregates for Students command-centre metrics (active rows only). */
@@ -13,7 +13,7 @@ export async function aggregateStudentsCommandMetrics(
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): Promise<StudentsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const registeredRaw = sql`NULLIF(trim(COALESCE(
       ${students.registeredDate},
       to_char(${students.createdAt}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),

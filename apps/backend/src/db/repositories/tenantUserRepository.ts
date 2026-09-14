@@ -2,10 +2,12 @@ export type { TenantUserRow } from './tenantUserRepositoryHydrate.js';
 export {
   rowToTenantUser,
   listTenantUsersByIds,
+  listTenantUsersByIdsGlobal,
   countTenantUsersByWorkspace,
   listTenantUsersByWorkspace,
   listAllTenantUsersByWorkspace,
   findTenantUserRowById,
+  findTenantUserRowByIdGlobal,
 } from './tenantUserRepositoryHydrate.js';
 export {
   replaceTenantUsersForWorkspace,
@@ -14,5 +16,6 @@ export {
   softDeleteTenantUserRow,
   restoreTenantUserRow,
   verifyTenantUserEmailRow,
+  verifyTenantUserEmailRowGlobal,
   resetTenantUserPasswordRow,
 } from './tenantUserRepositoryPersist.js';

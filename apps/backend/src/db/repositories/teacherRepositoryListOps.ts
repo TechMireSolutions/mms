@@ -7,7 +7,7 @@ import {
   type TeachersCommandMetricsSnapshot,
 } from '@mms/shared';
 import { teachers } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { teacherStatusExpr } from './teacherRepositoryListQuery.js';
 
 /**
@@ -82,7 +82,7 @@ export async function aggregateTeachersCommandMetrics(
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): Promise<TeachersCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const joinDateRaw = sql`NULLIF(trim(COALESCE(
       ${teachers.joinDate},
       to_char(${teachers.createdAt}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),

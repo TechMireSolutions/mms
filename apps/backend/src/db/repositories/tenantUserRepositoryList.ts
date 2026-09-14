@@ -7,7 +7,7 @@ import {
   type UsersListQuery,
 } from '@mms/shared';
 import { tenantUsers } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { rowToTenantUser, type TenantUserRow } from './tenantUserRepository.js';
 
@@ -139,7 +139,7 @@ export async function listTenantUsersPage(
 ): Promise<{ rows: TenantUserRow[]; total: number; page: number; limit: number; hasMore: boolean; nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, tenantUsers, {
       conditions: buildListConditions(subdomain, query),
       orderBy: buildOrderBy(query.sortField, query.sortDir),
@@ -165,7 +165,7 @@ export async function listTenantUsersPage(
 
 export async function countTenantUsersActive(tenant: string): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(tenantUsers)
@@ -180,7 +180,7 @@ export async function aggregateUsersCommandMetrics(
   _periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
 ): Promise<UsersCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         total: sql<number>`count(*)::int`,

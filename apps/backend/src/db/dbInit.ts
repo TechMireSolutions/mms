@@ -140,6 +140,17 @@ export function initDb(options?: { force?: boolean }): Promise<void> {
     try {
       await applyDrizzleMigrations();
 
+      // Keep the rolling monthly audit partitions ahead of the clock so the
+      // DEFAULT partition stays empty and retention can still detach by month.
+      const { ensureAuditTrailPartitions } = await import(
+        '../services/auditPartitionService.js'
+      );
+      await ensureAuditTrailPartitions().catch((error: unknown) => {
+        // Never block boot on partition provisioning: writes still land in the
+        // DEFAULT partition, so this degrades retention rather than availability.
+        logger.error({ err: error }, 'Audit partition provisioning failed at boot');
+      });
+
       await runDataMigrations();
       await purgeExpiredAuthArtifacts();
       await ensurePlatformSuperUserFromEnv();

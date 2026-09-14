@@ -26,7 +26,7 @@ Governs campaign composition, templates, and sent-history for the Messaging modu
 - Recipients: Work directory `GET /recipients` (paged); select-all `GET /recipients/match` (lean `MessagingRecipient`, cap `MESSAGING_RECIPIENTS_MATCH_LIMIT`); hydrate `POST /contacts/resolve` (batch max). No FE page-walk for select-all or CSV when these endpoints exist.
 - Reports CSV: queue `POST /export/csv` → runner `messaging:export` → artifact download; gate **`canWriteMessaging`**; never export archived (`includeDeleted` omitted from export body).
 - Column prefs: server paths under `/recipients|/history|/templates/column-preferences` (manifest object keys).
-- BE: `authenticateTenant` + RLS/`withTenantTransaction`; force `userId` from session; strip client `deletedAt` on POST; never echo SQL to clients.
+- BE: `authenticateTenant` + RLS/`withTenant`; force `userId` from session; strip client `deletedAt` on POST; never echo SQL to clients.
 - Campaign/send POSTs: accept an **idempotency key** when the client may retry — bind key to a **body digest** and reject mismatched replays with `409` / `conflict` (`mms-api-interface.mdc` §6). Surface `429` / `Retry-After` via shared notify — `mms-auth-security.mdc`.
 - `GET /logs?includeDeleted` requires `canClearMessagingLogs` (not only `messaging.read`).
 - Clear-logs (`DELETE /logs`) soft-archives and **audits** `messaging.logs.clear`.

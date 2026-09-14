@@ -1,7 +1,7 @@
 import { and, asc, eq, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import type { Teacher } from '@mms/shared';
 import { teachers } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { teacherRowToRecord } from './teacherRepository.js';
 import { employeeIdExpr } from './teacherRepositoryListQuerySql.js';
 
@@ -10,7 +10,7 @@ export async function countTeachersActive(
   options?: { includeDeleted?: boolean },
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const whereClause = options?.includeDeleted
       ? eq(teachers.workspaceSubdomain, subdomain)
       : and(eq(teachers.workspaceSubdomain, subdomain), isNull(teachers.deletedAt));
@@ -32,7 +32,7 @@ export async function listActiveTeachersMissingEmployeeId(
   workspaceSubdomain: string,
 ): Promise<Teacher[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: teachers.id,
@@ -75,7 +75,7 @@ export async function listTeacherLinkedContactIdsSql(
   excludeTeacherId?: string,
 ): Promise<Array<string | number>> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions: SQL[] = [
       eq(teachers.workspaceSubdomain, subdomain),
       isNull(teachers.deletedAt),
@@ -107,7 +107,7 @@ export async function findSoftDeletedTeacherByContactIdSql(
   const subdomain = tenant.trim().toLowerCase();
   const trimmedContactId = contactId.trim();
   if (!trimmedContactId) return null;
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: teachers.id,
@@ -158,7 +158,7 @@ export async function findTeacherRegistrationConflictSql(
   },
 ): Promise<'contact' | 'employeeId' | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const exclude = input.excludeId?.trim();
     const baseConditions: SQL[] = [
       eq(teachers.workspaceSubdomain, subdomain),

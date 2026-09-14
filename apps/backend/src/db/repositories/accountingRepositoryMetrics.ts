@@ -4,7 +4,7 @@ import {
   type AccountingCommandMetricsSnapshot,
 } from '@mms/shared';
 import { accountingAccounts, accountingEntries, accountingJournalLines } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 
 /**
  * SQL aggregates for Accounting command-centre metrics. Sign conventions
@@ -30,7 +30,7 @@ export async function aggregateAccountingCommandMetrics(
     .toISOString()
     .slice(0, 10);
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const activeEntries = and(
       eq(accountingEntries.workspaceSubdomain, subdomain),
       isNull(accountingEntries.deletedAt),

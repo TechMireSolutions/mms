@@ -14,10 +14,10 @@ import {
   scholarshipEligibilities,
   sessionClassScholarships,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead, type TenantTransaction } from '../tenant-context.js';
 import { sessionRowToRecord } from './sessionRepositoryMappers.js';
 
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+type Transaction = TenantTransaction;
 
 type SessionRow = typeof sessions.$inferSelect;
 
@@ -267,7 +267,7 @@ export async function listSessionsByWorkspace(
   options?: { limit?: number; offset?: number },
 ): Promise<Session[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const baseQuery = tx
       .select()
       .from(sessions)
@@ -285,7 +285,7 @@ export async function listSessionsByWorkspace(
 
 export async function findSessionById(tenant: string, id: string): Promise<Session | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     if (!tx || typeof (tx as any).select !== 'function') return null;
     const rows = await tx
       .select()
@@ -301,7 +301,7 @@ export async function findSessionById(tenant: string, id: string): Promise<Sessi
 export async function findSessionsByIds(tenant: string, ids: string[]): Promise<Session[]> {
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     if (!tx || typeof (tx as any).select !== 'function') return [];
     const rows = await tx
       .select()
@@ -317,7 +317,7 @@ export async function findSessionsSummaryByIds(
 ): Promise<Session[]> {
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select()
       .from(sessions)

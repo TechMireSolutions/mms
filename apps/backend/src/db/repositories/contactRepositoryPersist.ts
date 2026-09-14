@@ -22,7 +22,7 @@ import {
   teachers,
   tenantUsers,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, type TenantTransaction } from '../tenant-context.js';
 import {
   countContactsByWorkspace,
   findContactById,
@@ -32,7 +32,7 @@ import {
 import { syncContactChildrenTx, bulkInsertContactChildrenTx } from './contactRepositoryPersistChildren.js';
 import { mapAuditToInsert } from './repositoryMappers.js';
 
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+type Transaction = TenantTransaction;
 
 export type ContactInsert = typeof contacts.$inferInsert;
 

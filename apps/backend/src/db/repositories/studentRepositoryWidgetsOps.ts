@@ -1,6 +1,6 @@
 import { and, eq, isNotNull, isNull, ne, sql, type SQL } from 'drizzle-orm';
 import { students, contacts, contactEmails } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { studentRowToRecord } from './studentRepositoryMappers.js';
 
 export async function listStudentLinkedContactIdsSql(
@@ -8,7 +8,7 @@ export async function listStudentLinkedContactIdsSql(
   excludeStudentId?: string,
 ): Promise<Array<string | number>> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions: SQL[] = [eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt)];
     if (excludeStudentId?.trim()) {
       conditions.push(ne(students.id, excludeStudentId.trim()));
@@ -33,7 +33,7 @@ export async function countStudentsForNextGrNumber(
   const subdomain = tenant.trim().toLowerCase();
   const parsedYear = regDate ? new Date(regDate).getFullYear() : NaN;
   const year = Number.isFinite(parsedYear) ? parsedYear : new Date().getFullYear();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const base = and(eq(students.workspaceSubdomain, subdomain), isNull(students.deletedAt));
     if (!restartAnnually) {
       const rows = await tx
@@ -71,7 +71,7 @@ export async function findStudentRegistrationConflictSql(
   },
 ): Promise<'contact' | 'email' | 'nameDob' | 'grNumber' | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const exclude = input.excludeId?.trim();
     const baseConditions: SQL[] = [
       eq(students.workspaceSubdomain, subdomain),
@@ -170,7 +170,7 @@ export async function findSoftDeletedStudentByContactIdSql(
   const subdomain = tenant.trim().toLowerCase();
   const trimmedContactId = contactId.trim();
   if (!trimmedContactId) return null;
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: students.id,

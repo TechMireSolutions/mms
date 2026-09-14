@@ -7,7 +7,7 @@ import {
   assessmentResults,
   assessmentAnswers,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 
 const VALID_DIFFICULTIES_SET = new Set(['easy', 'medium', 'hard']);
 
@@ -24,7 +24,7 @@ export async function aggregateQuestionBankReport(
 ): Promise<QuestionBankReportAggregates> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const activeQuestions = and(
       eq(questions.workspaceSubdomain, subdomain),
       isNull(questions.deletedAt),

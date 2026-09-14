@@ -7,7 +7,7 @@ import {
   type ContactsListQuery,
 } from '@mms/shared';
 import { contacts, students, teachers, tenantUsers, contactEmails, contactAddresses } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import {
   hasEmailSql,
@@ -282,7 +282,7 @@ export async function listContactsPage(
     return { contacts: [], total: 0, page, limit, hasMore: false };
   }
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, contacts, {
       conditions: buildListConditions(subdomain, query, excludeIds, includeIds),
       orderBy: buildOrderBy(query.sortField, query.sortDir),

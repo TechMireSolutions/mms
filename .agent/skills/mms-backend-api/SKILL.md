@@ -32,7 +32,7 @@ routes/ (thin) → {module}/use-cases/ → {module}/repository/ (interface) → 
 - A single repository interface (`ContactsRepository`) is the sole storage gateway; the Drizzle adapter (`{module}RepositoryAdapter`) is the only concrete implementation.
 - Legacy `services/*.ts` module paths stay as **stable re-export shims** of the composition root.
 
-Never query `pg` from handlers. Prefer repositories / `withTenantTransaction`. Use **`dbSyncService`** only for legacy JSON documents (`/api/db/...`).
+Never query `pg` from handlers. Prefer repositories / `withTenant`. Use **`dbSyncService`** only for legacy JSON documents (`/api/db/...`).
 
 ## Document store vs REST
 
@@ -76,7 +76,7 @@ Upsert only (`bulkSave` + `conflictTarget`). **Never** wire `replaceForWorkspace
 ## Transactional Outbox Audit Capture (`mms-audit-trail`)
 
 When mutating audited entities (Contacts, Students, Teachers, Invoices, Accounting, Sessions):
-- Capture audit events within the primary `withTenantTransaction` using the transactional outbox pattern to ensure atomicity.
+- Capture audit events within the primary `withTenant` using the transactional outbox pattern to ensure atomicity.
 - Populate the 5 dimensions: Who (`real_user_id`, `session_id`, `ip_address`), What (`table_name`, `record_id`, `old_state`, `new_state` as RFC 8785 canonical JSON), When (`clock_timestamp()`), Why (`correlation_id` from W3C `traceparent` header, `action_type`), and Integrity (`hash_previous`, `hash_current`).
 - Strip non-essential PII and secrets (passwords, tokens) before serializing state deltas.
 
@@ -92,7 +92,7 @@ When generating backend code for any feature or entity, provide:
 2. **Domain & DB Layer**:
    - Drizzle schema with typed columns (3NF/BCNF, zero semi-structured storage, multi-tenancy `tenantId` FK, bidirectional relations).
    - Domain use-cases in `{module}/use-cases/**` (orchestration, repo DI) + `{module}/repository/` interface + Drizzle adapter + composition root (`{module}UseCases`) — `mms-api-interface.md` §2.
-3. **Service & Transaction RLS**: Execute tenant writes inside `withTenantTransaction` applying `SET LOCAL app.current_tenant = ?`. Always validate payloads via `@mms/shared` Zod schemas before persistence.
+3. **Service & Transaction RLS**: Execute tenant writes inside `withTenant` applying `SET LOCAL app.current_tenant = ?`. Always validate payloads via `@mms/shared` Zod schemas before persistence.
 4. **Fastify Route**: Implement endpoints using `@ts-rest/fastify` connected to the shared contracts. `routes/tenant/{resource}.ts` — `authenticateTenant` + `registerStandardTenantRoutes` (+ bulk when needed) + `canWriteCollection` (or `authenticatePlatform` + `platformUserCan` for platform routes); call the composition root.
 5. **Registration**: Register under `/api/{resource}` or `/api/platform/{resource}` in `routes/index.ts`.
 6. **Tests**: `inject()` tests with `host: 'tenant.localhost'`.
@@ -109,7 +109,7 @@ Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.t
 - [ ] rbacService / canWrite on mutations
 - [ ] Errors: { type, message } + correct status
 - [ ] Registered prefix; inject() with tenant host + cookie
-- [ ] Tenant writes: withTenantTransaction + SET LOCAL (+ app.current_user_id for audit) utilizing Node 24 explicit resource management (`await using` db handles for auto-cleanup)
+- [ ] Tenant writes: withTenant + SET LOCAL (+ app.current_user_id for audit) utilizing Node 24 explicit resource management (`await using` db handles for auto-cleanup)
 - [ ] Prefer SET LOCAL statement_timeout / idle_in_transaction_session_timeout on tenant write txs — mms-data-layer
 - [ ] Parameterized sql only — ban user/tenant input → sql.raw
 - [ ] Large/hot list APIs: prefer keyset/cursor; OFFSET OK for small Work pages — mms-data-layer

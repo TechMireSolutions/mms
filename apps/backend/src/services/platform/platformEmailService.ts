@@ -1,6 +1,7 @@
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
-import { isBlockedHostname } from '../../lib/outboundUrl.js';
+import { fetchWithTimeout, isBlockedHostname } from '../../lib/outboundUrl.js';
+import { SMTP_TIMEOUT_OPTIONS } from '../../lib/outboundTimeouts.js';
 import { logger } from '../../lib/logger.js';
 
 export interface PlatformEmailInput {
@@ -50,7 +51,9 @@ async function sendViaResend(input: PlatformEmailInput): Promise<PlatformEmailRe
   }
 
   try {
-    const response = await fetch('https://api.resend.com/emails', {
+    // Bound the call: a hung provider must not hold the request open until the
+    // global request timeout. `fetchWithTimeout` applies OUTBOUND_FETCH_TIMEOUT_MS.
+    const response = await fetchWithTimeout('https://api.resend.com/emails', {
       method: 'POST',
       headers: {
         Authorization: `Bearer ${apiKey}`,
@@ -99,6 +102,8 @@ function createPlatformTransporter(): Transporter | null {
       user: readEnv('PLATFORM_SMTP_USER'),
       pass: readEnv('PLATFORM_SMTP_PASS'),
     },
+    // Explicit budget — nodemailer's socketTimeout default is 10 minutes.
+    ...SMTP_TIMEOUT_OPTIONS,
   });
 }
 

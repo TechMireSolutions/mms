@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withGlobalTenant } from '../tenant-context.js';
 import {
   normalizeHasanatSettings,
   normalizeHasanatModulePreferences,
@@ -33,7 +33,7 @@ export async function runMigration060(): Promise<void> {
 
   let migrated = 0;
   
-  await withTenant(null, async (tx) => {
+  await withGlobalTenant(async (tx) => {
     for (const [tenant, raw] of settingsByTenant) {
       const [workspace] = await tx
         .select({ subdomain: schema.workspaces.subdomain })

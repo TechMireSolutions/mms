@@ -7,6 +7,7 @@ node_modules/
 **/node_modules/
 .pnpm-store/
 .npm/
+.npm-tmp-cache*/
 
 # 2. Build & Compilation Outputs
 dist/

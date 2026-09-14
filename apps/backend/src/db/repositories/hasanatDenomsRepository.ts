@@ -1,7 +1,7 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Denomination } from '@mms/shared';
 import { hasanatDenoms } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 type DenomRow = typeof hasanatDenoms.$inferSelect;
 export function denomRowToRecord(row: DenomRow): Denomination {
@@ -18,7 +18,7 @@ export function denomRowToRecord(row: DenomRow): Denomination {
 
 export async function listDenomsByWorkspace(tenant: string): Promise<Denomination[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatDenoms.id,
@@ -42,7 +42,7 @@ export async function findDenomById(tenant: string, id: string): Promise<Denomin
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatDenoms.id,
@@ -73,7 +73,7 @@ export async function findDenomsByIds(tenant: string, ids: string[]): Promise<De
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatDenoms.id,

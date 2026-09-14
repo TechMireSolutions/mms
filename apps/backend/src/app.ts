@@ -3,6 +3,7 @@ import { misconfiguredAppDomainHint } from '@mms/shared';
 import fastify, { type FastifyInstance } from 'fastify';
 import { serializerCompiler, validatorCompiler } from 'fastify-type-provider-zod';
 import { loadBackendEnv } from './config/loadEnv.js';
+import { LOG_REDACTION_OPTIONS } from './lib/logRedaction.js';
 import { loadServerConfig } from './config/serverConfig.js';
 import { initDb } from './db/database.js';
 import { registerFrontendSpa } from './plugins/frontendSpa.js';
@@ -16,7 +17,7 @@ export async function buildApp(): Promise<FastifyInstance> {
   const config = loadServerConfig();
 
   const app = fastify({
-    logger: { level: config.logLevel },
+    logger: { level: config.logLevel, redact: LOG_REDACTION_OPTIONS },
     trustProxy: config.trustProxy,
     bodyLimit: config.bodyLimit,
     requestTimeout: config.requestTimeoutMs,

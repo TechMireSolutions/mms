@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull, notInArray, sql, type SQL } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Contact } from '@mms/shared';
 import { contacts, contactPhones, contactEmails, contactAddresses } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { hydrateContactsList } from './contactRepositoryCore.js';
 
 export interface ContactUniqueLookupValues {
@@ -35,7 +35,7 @@ export async function findExistingNormalizedContactNames(
   if (normalized.length === 0) return new Set();
 
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         name: sql<string>`lower(trim(${contacts.name}))`,
@@ -182,7 +182,7 @@ export async function findActiveContactsMatchingUniqueValues(
     whereParts.push(notInArray(contacts.id, excluded));
   }
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: contacts.id,

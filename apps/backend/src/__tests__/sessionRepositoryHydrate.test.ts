@@ -4,6 +4,7 @@ const mockWithTenant = vi.fn();
 
 vi.mock('../db/tenant-context.js', () => ({
   withTenant: (_tenant: string, cb: (tx: unknown) => Promise<unknown>) => mockWithTenant(cb),
+  withTenantRead: (_tenant: string, cb: (tx: unknown) => Promise<unknown>) => mockWithTenant(cb),
 }));
 
 import {

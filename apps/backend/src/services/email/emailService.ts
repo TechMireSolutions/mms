@@ -12,6 +12,7 @@ import {
 } from './emailIntegrationService.js';
 import { loadGlobalSettings as loadTenantGlobalSettings } from '../globalSettingsService.js';
 import { isBlockedHostname } from '../../lib/outboundUrl.js';
+import { SMTP_TIMEOUT_OPTIONS } from '../../lib/outboundTimeouts.js';
 
 export interface SendEmailInput {
   to: string;
@@ -75,6 +76,9 @@ async function createTransporter(
     port: smtp.port,
     secure: smtp.secure,
     auth: smtp.auth,
+    // Explicit budget — nodemailer's socketTimeout default is 10 minutes, which
+    // would let a stalled SMTP server pin the sending caller that long.
+    ...SMTP_TIMEOUT_OPTIONS,
   });
 }
 

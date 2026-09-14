@@ -1,7 +1,7 @@
 import { and, eq, isNull, sql } from 'drizzle-orm';
 import type { AccountingReportAggregates } from '@mms/shared';
 import { accountingAccounts, accountingEntries, accountingJournalLines } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 
 export interface AccountingReportQuery {
   dateFrom?: string;
@@ -17,7 +17,7 @@ export async function aggregateAccountingReport(
 ): Promise<AccountingReportAggregates> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const dateFrom = query.dateFrom?.trim() || undefined;
     const dateTo = query.dateTo?.trim() || undefined;
     const entryDateFilter = and(

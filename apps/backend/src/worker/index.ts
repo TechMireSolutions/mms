@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import { initDb, closeDatabase } from '../db/database.js';
 import { and, eq, lt } from 'drizzle-orm';
-import { withTenant } from '../db/tenant-context.js';
+import { withGlobalTenant } from '../db/tenant-context.js';
 import { backgroundJobs, workspaces } from '../db/schema.js';
 import { activeDb } from '../db/dbConnection.js';
 import { disconnectRedis } from '../lib/redis.js';
@@ -27,7 +27,7 @@ const STALE_PENDING_MS = 10 * 60 * 1000;
 
 export async function cleanupOrphanedJobs(): Promise<void> {
   try {
-    await withTenant(null, async (tx) => {
+    await withGlobalTenant(async (tx) => {
       // Jobs that were running when the worker restarted are orphaned.
       const running = await tx.update(backgroundJobs)
         .set({

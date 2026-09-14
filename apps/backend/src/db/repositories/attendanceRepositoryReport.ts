@@ -12,7 +12,7 @@ import {
   type AttendanceReportOverview,
 } from '@mms/shared';
 import { getQueryRows } from '../documentStoreKeys.js';
-import { withTenant, type TenantTransaction } from '../tenant-context.js';
+import { withTenantRead, type TenantTransaction } from '../tenant-context.js';
 
 function activeAttendanceWhere(subdomain: string, alias = 'a'): ReturnType<typeof sql> {
   return sql`
@@ -198,7 +198,7 @@ export async function loadAttendanceReportAggregatesSql(
   const subdomain = tenant.trim().toLowerCase();
   if (!subdomain) return { ...EMPTY_ATTENDANCE_REPORT_AGGREGATES };
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const aggregates: AttendanceReportAggregates = {
       overview: await loadAttendanceOverview(tx, subdomain, query?.classId),
     };

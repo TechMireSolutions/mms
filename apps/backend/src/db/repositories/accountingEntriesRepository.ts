@@ -6,7 +6,7 @@ import {
   accountingEntryTags,
   accountingEntryAttachments,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type EntryRow = typeof accountingEntries.$inferSelect;
@@ -63,7 +63,7 @@ export async function listEntriesByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly
@@ -188,7 +188,7 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: accountingEntries.id,
@@ -280,7 +280,7 @@ export async function findEntriesByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly
@@ -408,7 +408,7 @@ export async function findEntryIdBySource(
   sourceId: string,
 ): Promise<string | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({ id: accountingEntries.id })
       .from(accountingEntries)

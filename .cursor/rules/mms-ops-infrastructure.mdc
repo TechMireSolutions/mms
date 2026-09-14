@@ -109,6 +109,8 @@ Supply-chain: Dependabot/Renovate + dependency-review → **`mms-dependencies.md
 Treat `turbo.json` inputs/outputs as sensitive — change only with intentional cache invalidation.
 
 ### Health Checks (SSOT)
+- **Graceful Shutdown (two-phase)**: On SIGTERM/SIGINT the process flips `/ready` to 503 and WAITS `SHUTDOWN_DRAIN_DELAY_MS` (default 5s) BEFORE closing the socket, so whatever routes traffic can take the instance out of rotation while in-flight requests still complete (`lib/lifecycle.ts`). `/health` (liveness) keeps returning 200 while draining — a liveness failure would trigger a restart. Size the drain against the ROUTER's health-check interval, not docker-compose's healthcheck (that only reports container state). Behind Apache + a single pm2 instance nothing re-checks, so `SHUTDOWN_DRAIN_DELAY_MS=0` is appropriate there. The force-exit ceiling is derived from the drain delay plus 10s — keep it that way, or adding a drain wait makes shutdown MORE likely to be force-killed, not less.
+- **Operational Metrics**: `GET /metrics` (Prometheus text format) is off unless `METRICS_ENABLED=true`, and requires `Authorization: Bearer $METRICS_TOKEN` when that is set — the payload reveals pool sizes and the full route inventory. HTTP metrics label on the ROUTE PATTERN and status CLASS only; labelling the raw URL would mint a time series per id (`lib/metrics.ts`).
 - **Liveness**: `GET /health` → 200 (server up; unauthenticated; used by `AuthContext.checkAppState()`).
 - **Readiness**: `GET /ready` → 200 on DB ping, `503` if PostgreSQL is down.
 - PM2 deployments must curl `/ready` post-restart.

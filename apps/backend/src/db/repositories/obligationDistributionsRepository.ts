@@ -1,7 +1,7 @@
 import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type ObligationDistribution } from '@mms/shared';
 import { obligationDistributions } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 type ObligationDistributionRow = typeof obligationDistributions.$inferSelect;
 
@@ -17,7 +17,7 @@ export function obligationDistributionRowToRecord(row: ObligationDistributionRow
 
 export async function listObligationDistributionsByWorkspace(tenant: string): Promise<ObligationDistribution[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: obligationDistributions.id,
@@ -39,7 +39,7 @@ export async function findObligationDistributionById(tenant: string, id: string)
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: obligationDistributions.id,
@@ -63,7 +63,7 @@ export async function findObligationDistributionsByIds(tenant: string, ids: stri
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: obligationDistributions.id,

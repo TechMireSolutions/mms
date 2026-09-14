@@ -1,7 +1,7 @@
 import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Mujtahid, type MujtahidRep } from '@mms/shared';
 import { mujtahids, mujtahidReps } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 type MujtahidRow = typeof mujtahids.$inferSelect;
 
@@ -14,7 +14,7 @@ export function mujtahidRowToRecord(row: MujtahidRow): Mujtahid {
 
 export async function listMujtahidsByWorkspace(tenant: string): Promise<Mujtahid[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahids.id,
@@ -33,7 +33,7 @@ export async function findMujtahidById(tenant: string, id: string): Promise<Mujt
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahids.id,
@@ -54,7 +54,7 @@ export async function findMujtahidsByIds(tenant: string, ids: string[]): Promise
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahids.id,
@@ -176,7 +176,7 @@ export function mujtahidRepRowToRecord(row: MujtahidRepRow): MujtahidRep {
 
 export async function listMujtahidRepsByWorkspace(tenant: string): Promise<MujtahidRep[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahidReps.id,
@@ -196,7 +196,7 @@ export async function findMujtahidRepById(tenant: string, id: string): Promise<M
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahidReps.id,
@@ -218,7 +218,7 @@ export async function findMujtahidRepsByIds(tenant: string, ids: string[]): Prom
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahidReps.id,

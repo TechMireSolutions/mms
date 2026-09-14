@@ -109,7 +109,7 @@ Security Invariants:
 - [ ] JWT subdomain matches resolved tenant
 - [ ] Apex routes do not expose other tenants' data
 - [ ] Tests use `host: '{subdomain}.localhost'` in `inject()`
-- [ ] Typed REST routes use repositories + `withTenantTransaction` / SET LOCAL RLS (not `dbSyncService`); `dbSyncService` only for `/api/db` JSON documents
+- [ ] Typed REST routes use repositories + `withTenant` / SET LOCAL RLS (not `dbSyncService`); `dbSyncService` only for `/api/db` JSON documents
 - [ ] Redis cache keys strictly isolate by tenant and context (`mms:{tenantId}:{module}:{resource}:{hash(queryParams)}`) with viewer role scope when permissions alter payload (`mms-performance.mdc`)
 
 ## Secrets & logging

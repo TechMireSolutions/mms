@@ -111,7 +111,7 @@ When generating code for any feature or entity, provide:
 3. Update `_journal.json` + meta snapshots in the same change.
 4. Prefer expand/contract: add nullable → backfill → constrain; drop only after dual-read window.
 5. **Ban** `drizzle-kit push` / `db push` against shared/prod.
-6. New tenant tables: RLS + `FORCE ROW LEVEL SECURITY`; writes via `withTenantTransaction` / `SET LOCAL`.
+6. New tenant tables: RLS + `FORCE ROW LEVEL SECURITY`; writes via `withTenant` / `SET LOCAL`.
 7. Prefer partial indexes for hot active lists (`WHERE deleted_at IS NULL`) when adding soft-delete.
 8. Statement/sql safety budgets → `mms-data-layer.mdc` (`statement_timeout`, parameterized `sql` only).
 9. Audit trail tables: Monthly date partitioning (`PARTITION BY RANGE (transaction_timestamp)`), `INSERT`-only database privileges (`REVOKE UPDATE, DELETE, TRUNCATE ON audit_trail_events FROM PUBLIC, mms_app_user, mms_admin;`), and partition detachment (`ALTER TABLE ... DETACH PARTITION ...`) for zero-downtime archival without `DELETE` table locks (`mms-audit-trail`).

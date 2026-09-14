@@ -915,7 +915,7 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
           })),
         })),
       };
-      vi.mocked(withTenant).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
+      vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
 
       const { findInvoicesByIds } = await import('../db/repositories/financeInvoicesRepository.js');
       await findInvoicesByIds('demo', ['inv-1']);
@@ -933,7 +933,7 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
           })),
         })),
       };
-      vi.mocked(withTenant).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
+      vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
 
       const { findPaymentsByIds } = await import('../db/repositories/financePaymentsRepository.js');
       await findPaymentsByIds('demo', ['pay-1']);
@@ -951,7 +951,7 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
           })),
         })),
       };
-      vi.mocked(withTenant).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
+      vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
 
       const { findEnrollmentsByIds } = await import('../db/repositories/enrollmentRepositoryHydrate.js');
       await findEnrollmentsByIds('demo', ['enr-1']);

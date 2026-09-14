@@ -25,7 +25,7 @@ Authoritative performance and resource constraints across **tenant workspaces an
   - Apply standard defaults: default `limit: 25`, maximum hard upper bound `limit: 100` via shared `baseListQuerySchema`.
   - Unpaged collection dumps (`loadAllFn`, unbounded queries without `limit`) are strictly banned.
 - **Connection Pool Reuse & Explicit Lifecycle:**
-  - Maintain and reuse the persistent connection pool (`PG_POOL_MAX`, default 20) with `withTenantTransaction`.
+  - Maintain and reuse the persistent connection pool (`PG_POOL_MAX`, default 20) with `withTenant`.
   - NEVER open ad-hoc, unpooled database connections (`new Pool()` or `new Client()` per request).
   - Use Node.js 24 Explicit Resource Management (`using` / `await using`) for automatic cleanup and checkout release back to the pool without boilerplate `finally` blocks.
 - **Audit Hash Chain Sharding & Partition Detachment (`mms-audit-trail`):**

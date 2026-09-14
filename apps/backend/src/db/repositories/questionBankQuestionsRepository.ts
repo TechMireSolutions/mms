@@ -8,7 +8,7 @@ import {
   questionTags,
   questionCitations,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead, type TenantTransaction } from '../tenant-context.js';
 import { questionRowToRecord, syncQuestionChildren } from './questionBankQuestionsSync.js';
 
 export { questionRowToRecord } from './questionBankQuestionsSync.js';
@@ -23,7 +23,7 @@ export async function listQuestionsByWorkspace(
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(questions, subdomain, deletedFilter);
     const rows = await tx
       .select({
@@ -157,7 +157,7 @@ export async function findQuestionById(tenant: string, id: string): Promise<Ques
   const cleanId = id?.trim();
   if (!cleanId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: questions.id,
@@ -264,7 +264,7 @@ export async function findQuestionsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly
@@ -446,7 +446,7 @@ export async function saveQuestion(tenant: string, record: QuestionBankQuestion)
   });
 }
 
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+type Transaction = TenantTransaction;
 
 async function insertQuestionChildrenTx(
   tx: Transaction,

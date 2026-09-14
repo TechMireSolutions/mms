@@ -9,7 +9,7 @@ import {
   mujtahidReps,
   mujtahids,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type ObligationCollectionRow = typeof obligationCollections.$inferSelect;
@@ -45,7 +45,7 @@ export async function listObligationCollectionsByWorkspace(
   const limit = Math.min(Math.max(options?.limit ?? 2000, 1), 10000);
   const offset = Math.max(options?.offset ?? 0, 0);
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(obligationCollections, subdomain, deletedFilter);
     const rows = await tx
       .select({
@@ -82,7 +82,7 @@ export async function findObligationCollectionById(tenant: string, id: string): 
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: obligationCollections.id,
@@ -122,7 +122,7 @@ export async function findObligationCollectionsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly

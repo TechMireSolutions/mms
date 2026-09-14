@@ -8,12 +8,14 @@ import { registerRequestHooks } from './requestHooks.js';
 import { registerSecurityPlugins } from './security.js';
 import { registerStaticAssets } from './staticAssets.js';
 import { registerTelemetryPlugin } from './telemetryPlugin.js';
+import { registerMetricsPlugin } from './metricsPlugin.js';
 
 export async function registerPlugins(
   app: FastifyInstance,
   config: ServerConfig,
 ): Promise<void> {
   registerTelemetryPlugin(app);
+  registerMetricsPlugin(app);
   registerErrorHandlers(app, config.isProd);
   await registerSecurityPlugins(app, config);
   registerCsrfOriginGuard(app, config);

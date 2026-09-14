@@ -3,12 +3,17 @@ import { findTenantUserRowById } from '../../db/repositories/tenantUserRepositor
 import { updateContactById } from '../contactService.js';
 import { assertPasswordMeetsPolicy } from '../globalSettingsService.js';
 import { hashPassword, verifyPassword } from './passwordService.js';
-import { getRawUsers, type PersistedUser, type PublicUser } from './userServiceShared.js';
+import {
+  getRawUsers,
+  requireTenantSubdomain,
+  type PersistedUser,
+  type PublicUser,
+} from './userServiceShared.js';
 import { getLinkedContactId, saveUsers } from './userServiceList.js';
 import { getPublicUserById } from './userServiceAuth.js';
 
 export async function verifyUserPassword(userId: string, password: string): Promise<boolean> {
-  const row = await findTenantUserRowById(userId);
+  const row = await findTenantUserRowById(requireTenantSubdomain(), userId);
   if (row?.deletedAt) return false;
   const passwordHash = typeof row?.passwordHash === 'string' ? row.passwordHash : '';
   if (!passwordHash) {

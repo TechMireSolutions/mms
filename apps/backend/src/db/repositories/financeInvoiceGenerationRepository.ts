@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import type { EnrollmentBillingSource } from '@mms/shared';
 import { enrollments, financeInvoices } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 
 const BILLABLE_STATUSES = ['pending', 'confirmed'] as const;
 const PAGE_SIZE = 100;
@@ -72,7 +72,7 @@ export async function listBillableEnrollments(
   query: BillableEnrollmentQuery,
 ): Promise<EnrollmentBillingSource[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = [
       eq(enrollments.workspaceSubdomain, subdomain),
       isNull(enrollments.deletedAt),
@@ -104,7 +104,7 @@ export async function listEnrollmentInvoiceMarks(
 ): Promise<EnrollmentInvoiceMark[]> {
   if (enrollmentIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         enrollmentId: financeInvoices.enrollmentId,

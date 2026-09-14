@@ -1,5 +1,15 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { loadServerConfig } from '../config/serverConfig.js';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import {
+  loadServerConfig,
+  resetServerConfigCacheForTesting,
+} from '../config/serverConfig.js';
+
+// loadServerConfig() is memoized in production (it runs on every tenant
+// transaction). These tests mutate the environment between assertions, so the
+// cache has to be dropped for each one.
+beforeEach(() => {
+  resetServerConfigCacheForTesting();
+});
 
 describe('loadServerConfig proxy trust', () => {
   const previousTrustProxy = process.env.TRUST_PROXY;
@@ -89,6 +99,8 @@ describe('loadServerConfig database URL validation', () => {
     process.env.DATABASE_URL = 'postgresql://user:pass@localhost:5432/mms';
     expect(loadServerConfig().databaseUrl).toBe('postgresql://user:pass@localhost:5432/mms');
 
+    // Config is memoized after the first load, so re-read the environment.
+    resetServerConfigCacheForTesting();
     process.env.DATABASE_URL = 'postgres://user:pass@localhost:5432/mms';
     expect(loadServerConfig().databaseUrl).toBe('postgres://user:pass@localhost:5432/mms');
   });

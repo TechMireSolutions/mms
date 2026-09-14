@@ -1,7 +1,7 @@
 import { and, sql } from 'drizzle-orm';
 import type { StudentsListPageResult, StudentsListQuery } from '@mms/shared';
 import { students } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { hydrateStudentsList } from './studentRepository.js';
 import { buildListConditions, buildOrderBy } from './studentRepositoryListQuery.js';
 
@@ -19,7 +19,7 @@ export async function listStudentsPage(
   const isCursorPaging = Boolean(query.afterId?.trim());
   const offset = isCursorPaging ? 0 : (page - 1) * limit;
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildListConditions(subdomain, query);
     const baseWhereClause = and(...conditions);
     if (isCursorPaging) {

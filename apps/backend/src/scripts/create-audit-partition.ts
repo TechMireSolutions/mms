@@ -1,7 +1,11 @@
-import { sql } from 'drizzle-orm';
 import { loadBackendEnv } from '../config/loadEnv.js';
 import { initDb } from '../db/dbInit.js';
-import { activeDb, closeDatabase } from '../db/dbConnection.js';
+import { closeDatabase } from '../db/dbConnection.js';
+import {
+  auditPartitionName,
+  countAuditDefaultPartitionRows,
+  ensureAuditTrailPartitions,
+} from '../services/auditPartitionService.js';
 
 loadBackendEnv();
 
@@ -39,24 +43,32 @@ async function main(): Promise<void> {
     process.exit(1);
   }
 
-  const partitionName = `audit_trail_events_y${year}m${String(month).padStart(2, '0')}`;
-  const startDate = new Date(Date.UTC(year, month - 1, 1));
-  const endDate = new Date(Date.UTC(year, month, 1));
-
-  const startIso = startDate.toISOString().replace('T', ' ').replace('.000Z', '+00');
-  const endIso = endDate.toISOString().replace('T', ' ').replace('.000Z', '+00');
-
   console.log(`[create-audit-partition] Initializing database connection...`);
   await initDb();
-  const db = activeDb();
 
-  console.log(`[create-audit-partition] Creating monthly partition "${partitionName}" for [${startIso} to ${endIso})...`);
-  const createSql = `
-    CREATE TABLE IF NOT EXISTS "${partitionName}" PARTITION OF "audit_trail_events"
-      FOR VALUES FROM ('${startIso}') TO ('${endIso}');
-  `;
-  await db.execute(sql.raw(createSql));
-  console.log(`✅ Successfully created partition table "${partitionName}".`);
+  // Reuse the shared provisioner so the CLI and the scheduled maintenance path
+  // can never diverge on naming or range boundaries.
+  const requested = auditPartitionName(year, month);
+  console.log(
+    `[create-audit-partition] Ensuring "${requested}" exists (also provisions the ` +
+      `rolling window ahead of it)...`,
+  );
+  const { created, existing } = await ensureAuditTrailPartitions();
+
+  console.log(`✅ Partitions created: ${created.length > 0 ? created.join(', ') : '(none — already present)'}`);
+  if (existing.length > 0) {
+    console.log(`   Already present: ${existing.join(', ')}`);
+  }
+
+  const defaultRows = await countAuditDefaultPartitionRows();
+  if (defaultRows > 0) {
+    console.error(
+      `⚠️  "audit_trail_events_default" holds ${defaultRows} row(s). Rows in the DEFAULT ` +
+        `partition block attaching a new partition for their range. Provision partitions ` +
+        `BEFORE the month starts, and migrate these rows out before re-attaching.`,
+    );
+    process.exitCode = 1;
+  }
 
   await closeDatabase();
   process.exit(0);

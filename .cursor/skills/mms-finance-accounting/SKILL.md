@@ -22,7 +22,7 @@ Architecture standards for Madrasa financial management, student billing/invoice
 | **Soft-Delete & 4-Bucket Taxonomy** | Invoices (`finance_invoices`), payments, and accounts (`accounting_accounts`) belong to **Bucket 1 (Soft-Delete for Audit & Recovery)** with typed `deleted_at`, `deleted_by`, and `deletion_reason`. Restrict Guard blocks account archival if active ledger entries exist (`activeEntriesCount > 0` → 409 Conflict). Conversely, ledger journal entries (`accounting_entries`) belong to **Bucket 4 (Append-Only Immutable)** — physical `DELETE` and `UPDATE` are forbidden at the DB layer (`docs/soft-delete.md` §10, `mms-soft-delete`). |
 | **SOX 7-Year Retention Floor** | General ledger records, invoices, payments, and double-entry journals carry a statutory minimum 7-year retention floor (`mms-audit-trail`). |
 | **PCI-DSS Tokenization Ban on Card Data** | Avoid storing raw payment card numbers (PAN), CVVs, or cardholder secrets in database tables or audit trails — reference tokenized payment-processor records only (1-year floor, 3 months online) (`mms-audit-trail`). |
-| **Transactional Outbox Capture** | Mutating financial records must emit 5-dimension audit events (`action_type: 'CREATE' \| 'UPDATE' \| 'DELETE'`) with RFC 8785 canonical JSON inside `withTenantTransaction`. |
+| **Transactional Outbox Capture** | Mutating financial records must emit 5-dimension audit events (`action_type: 'CREATE' \| 'UPDATE' \| 'DELETE'`) with RFC 8785 canonical JSON inside `withTenant`. |
 
 ---
 
@@ -75,6 +75,6 @@ apps/frontend/src/tenant/features/
 - [ ] Invoice/entry creation forms require clean dirty checking and disable submit when invalid.
 - [ ] Reports and KPI tiles load metrics via server SQL aggregate endpoints.
 - [ ] Unit tests verify currency formatting and debit/credit ledger equality.
-- [ ] Financial mutations emit 5-dimension audit events with RFC 8785 canonical JSON inside `withTenantTransaction` (`mms-audit-trail`).
+- [ ] Financial mutations emit 5-dimension audit events with RFC 8785 canonical JSON inside `withTenant` (`mms-audit-trail`).
 - [ ] SOX 7-year retention policy applied to financial audit trail events.
 - [ ] Cardholder secrets and PAN are never logged; payment processor token references used exclusively.

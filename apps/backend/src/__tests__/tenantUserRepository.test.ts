@@ -36,7 +36,10 @@ vi.mock('../db/dbConnection.js', () => ({
 }));
 
 import {
+  findTenantUserRowById,
+  listTenantUsersByIds,
   replaceTenantUsersForWorkspace,
+  softDeleteTenantUserRow,
   upsertTenantUserRow,
 } from '../db/repositories/tenantUserRepository.js';
 
@@ -71,7 +74,7 @@ describe('upsertTenantUserRow', () => {
   });
 
   it('preserves name, loginEmail, and passwordHash when contact-linked payload blanks them', async () => {
-    await upsertTenantUserRow({
+    await upsertTenantUserRow('dar-ul-quran', {
       id: 'u-1',
       workspaceSubdomain: 'dar-ul-quran',
       contactId: 'c-1',
@@ -95,7 +98,9 @@ describe('upsertTenantUserRow', () => {
   });
 
   it('keeps the existing workspace subdomain (rejects reassignment)', async () => {
-    await upsertTenantUserRow({
+    // The tenant argument is authoritative: a payload claiming another
+    // workspace must not move the row.
+    await upsertTenantUserRow('dar-ul-quran', {
       id: 'u-1',
       workspaceSubdomain: 'other-tenant',
       loginEmail: 'teacher@workspace.local',
@@ -114,7 +119,7 @@ describe('upsertTenantUserRow', () => {
   });
 
   it('applies non-empty name and loginEmail updates', async () => {
-    await upsertTenantUserRow({
+    await upsertTenantUserRow('dar-ul-quran', {
       id: 'u-1',
       workspaceSubdomain: 'dar-ul-quran',
       name: 'Updated Name',
@@ -248,5 +253,93 @@ describe('replaceTenantUsersForWorkspace', () => {
     expect(inserted[1]?.passwordHash).toMatch(/^!restore-/);
     // No `salt:hash` separator, so `verifyPassword` can never accept a parked hash.
     expect(inserted[1]?.passwordHash).not.toContain(':');
+  });
+});
+
+/**
+ * Collects the bound parameter values and column names from a Drizzle `SQL`
+ * clause, so a test can assert what actually reaches Postgres.
+ */
+function collectSqlParts(clause: unknown): { columns: string[]; params: unknown[] } {
+  const columns: string[] = [];
+  const params: unknown[] = [];
+  const walk = (node: unknown, depth = 0): void => {
+    if (!node || typeof node !== 'object' || depth > 8) return;
+    const asRecord = node as Record<string, unknown>;
+    if (typeof asRecord.name === 'string' && 'columnType' in asRecord) {
+      columns.push(asRecord.name);
+      return;
+    }
+    if ('value' in asRecord && !('queryChunks' in asRecord)) {
+      params.push(asRecord.value);
+      return;
+    }
+    if (Array.isArray(asRecord.queryChunks)) {
+      for (const chunk of asRecord.queryChunks) walk(chunk, depth + 1);
+    }
+  };
+  walk(clause);
+  return { columns, params };
+}
+
+/**
+ * Regression tests for the cross-tenant `tenant_users` read/write break.
+ *
+ * `tenant_users` is protected by a row-level security policy that matches every
+ * row whenever `app.rls_bypass = 'on'`, and that flag is set for any transaction
+ * opened without a tenant. An id-only lookup is therefore NOT implicitly
+ * tenant-safe: the workspace predicate has to be in the query itself.
+ */
+describe('tenantUsers workspace scoping (regression)', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    mockSelect.mockReturnValue({ from: mockSelectFrom });
+    mockSelectFrom.mockReturnValue({ where: mockSelectWhere });
+    mockUpdate.mockReturnValue({ set: mockSet });
+    mockSet.mockReturnValue({ where: mockWhere });
+    mockWhere.mockResolvedValue(undefined);
+    mockSelectWhere.mockResolvedValue([]);
+  });
+
+  it('findTenantUserRowById scopes the query to the caller workspace', async () => {
+    await findTenantUserRowById('dar-ul-quran', 'u-1');
+
+    expect(mockSelectWhere).toHaveBeenCalledTimes(1);
+    const { columns, params } = collectSqlParts(mockSelectWhere.mock.calls[0]?.[0]);
+    expect(columns).toContain('workspace_subdomain');
+    expect(params).toContain('dar-ul-quran');
+    expect(params).toContain('u-1');
+  });
+
+  it('listTenantUsersByIds scopes the query to the caller workspace', async () => {
+    await listTenantUsersByIds('dar-ul-quran', ['u-1', 'u-2']);
+
+    expect(mockSelectWhere).toHaveBeenCalledTimes(1);
+    const { columns, params } = collectSqlParts(mockSelectWhere.mock.calls[0]?.[0]);
+    expect(columns).toContain('workspace_subdomain');
+    expect(params).toContain('dar-ul-quran');
+  });
+
+  it('refuses to read without a workspace instead of falling back to an unscoped query', async () => {
+    await expect(findTenantUserRowById('', 'u-1')).resolves.toBeNull();
+    await expect(listTenantUsersByIds('', ['u-1'])).resolves.toEqual([]);
+    expect(mockSelect).not.toHaveBeenCalled();
+  });
+
+  it('softDeleteTenantUserRow refuses to write without a workspace', async () => {
+    await expect(softDeleteTenantUserRow('', 'u-1', 'u-admin')).resolves.toBe(false);
+    expect(mockUpdate).not.toHaveBeenCalled();
+  });
+
+  it('softDeleteTenantUserRow scopes the UPDATE to the caller workspace', async () => {
+    mockSelectWhere.mockResolvedValue([existingDbRow]);
+
+    await softDeleteTenantUserRow('dar-ul-quran', 'u-1', 'u-admin');
+
+    expect(mockSet).toHaveBeenCalledTimes(1);
+    expect(mockWhere).toHaveBeenCalledTimes(1);
+    const { columns, params } = collectSqlParts(mockWhere.mock.calls[0]?.[0]);
+    expect(columns).toContain('workspace_subdomain');
+    expect(params).toContain('dar-ul-quran');
   });
 });

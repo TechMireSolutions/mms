@@ -1,0 +1,52 @@
+# Gitleaks configuration.
+#
+# Secret scanning runs in CI (`ci.yml` → "Secret scan (gitleaks)"). The default
+# rule set scans full git history, which is the point: a credential that was
+# committed and later deleted is still recoverable from the repository and must
+# still be treated as compromised.
+#
+# Every entry below is a REVIEWED FALSE POSITIVE, verified by inspecting the
+# matched line. Allowlists are kept as narrow as possible — a path-only
+# exclusion would silently stop scanning whole directories, so most entries pair
+# a specific path with a specific value pattern.
+#
+# If this scan ever fails on a real finding: rotate the credential first, then
+# purge it from history. Adding an allowlist entry without rotating is not a fix.
+
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Reviewed false positives: test fixtures, localStorage key names, and placeholder values."
+
+# --- Test-only credentials -------------------------------------------------
+# Fixed values used to construct a Fastify instance in tests. They are not
+# secrets and are deliberately public so tests are reproducible.
+regexes = [
+  '''e2e-test-jwt-secret-key-at-least-32-chars-long''',
+  '''test-secret-at-least-32-chars-long''',
+  '''test-jwt-secret-[a-z0-9-]{8,}''',
+  # Local docker-compose / integration-test database URL.
+  '''postgres://postgres:postgres@''',
+  # Documented placeholder for the Resend API key in .env.example.
+  '''re_123456789''',
+]
+
+# Reviewed paths:
+#  - frontend `mms_*` constants are localStorage KEYS, not credentials;
+#    `generic-api-key` matches them because they contain "key" and are long
+#    identifiers.
+#  - test files use obviously-fake values throughout.
+#  - .env.example contains commented placeholders only.
+#  - scratch/naming_report.txt was removed from the tree but remains in history;
+#    it listed exported symbol NAMES, one of which resembles an Asana client
+#    secret. The matched line is an "Exports:" line, not a credential.
+paths = [
+  '''apps/frontend/src/lib/ContactConfigContext\.tsx''',
+  '''apps/frontend/src/lib/contactConfig/prefsStorage\.ts''',
+  '''apps/frontend/src/lib/twoFactor\.ts''',
+  '''apps/frontend/src/tenant/features/(hasanat|examinations)/components/.*TemplateEditor\.tsx''',
+  '''apps/backend/src/__tests__/.*\.ts''',
+  '''apps/backend/\.env\.example''',
+  '''scratch/naming_report\.txt''',
+]

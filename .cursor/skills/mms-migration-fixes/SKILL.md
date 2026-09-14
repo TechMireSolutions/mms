@@ -120,7 +120,7 @@ Residual Work SQL-page debt for **other** modules (not Teachers/Users/Sessions) 
 
 ### P7 — PG statement timeout budgets (residual)
 
-**Problem:** Tenant-bound budgets ship on `withTenantTransaction` + `runInTransaction` (`PG_STATEMENT_TIMEOUT_MS` / `PG_IDLE_IN_TX_TIMEOUT_MS`). Residual: optional tighter per-route budgets on hot paths.
+**Problem:** Tenant-bound budgets ship on `withTenant` + `runInTransaction` (`PG_STATEMENT_TIMEOUT_MS` / `PG_IDLE_IN_TX_TIMEOUT_MS`). Residual: optional tighter per-route budgets on hot paths.
 
 **Fix:** When touching hot routes, prefer tighter `SET LOCAL` budgets — `mms-data-layer.mdc` (align with Fastify `requestTimeout`).
 

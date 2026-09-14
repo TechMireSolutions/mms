@@ -6,11 +6,11 @@ import {
   testSections,
   testSectionQuestions,
 } from '../schema.js';
-import { type withTenant } from '../tenant-context.js';
+import { type TenantTransaction } from '../tenant-context.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type TestRow = typeof tests.$inferSelect;
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+type Transaction = TenantTransaction;
 
 export function testRowToRecord(
   row: TestRow,

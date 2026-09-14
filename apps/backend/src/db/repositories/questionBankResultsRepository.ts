@@ -13,7 +13,7 @@ import {
   assessmentResults,
   assessmentAnswers,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead, type TenantTransaction } from '../tenant-context.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type ResultRow = typeof assessmentResults.$inferSelect;
@@ -41,7 +41,7 @@ export function resultRowToRecord(
 }
 
 async function syncResultChildren(
-  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
+  tx: TenantTransaction,
   subdomain: string,
   record: QuestionBankResult,
 ): Promise<void> {
@@ -78,7 +78,7 @@ export async function listResultsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: assessmentResults.id,
@@ -135,7 +135,7 @@ export async function findResultById(tenant: string, id: string): Promise<Questi
   const cleanId = id?.trim();
   if (!cleanId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: assessmentResults.id,
@@ -188,7 +188,7 @@ export async function findResultsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly

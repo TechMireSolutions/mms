@@ -49,7 +49,18 @@ overrides:
   nanoid: "^3.3.18"
   # Security: bump transitive dep flagged by `pnpm audit`.
   # - uuid: exceljs pulls uuid@8 (deprecated + missing buffer bounds check); 11.x is CJS-compatible.
-  #   (ts-deepmerge was NOT overridden: @anatine/zod-openapi calls `.default()` which
-  #   ts-deepmerge@8's CJS build no longer exports — the override broke /api/openapi.json.)
   uuid: "^11.1.1"
+  # REVIEWED EXCEPTION — ts-deepmerge@6 (via @ts-rest/open-api > @anatine/zod-openapi)
+  # carries CVE-2026-12644 (GHSA-87mf-gv2c-c62c): prototype-method-override DoS.
+  # Deliberately NOT overridden to >=8:
+  #   1. ts-deepmerge@8's CJS build no longer exports `.default()`, which
+  #      @anatine/zod-openapi calls — the override breaks /api/openapi.json
+  #      outright (guarded by a test in apps/backend/src/__tests__/app.health.test.ts).
+  #   2. The advisory is NOT reachable here. The only consumer is
+  #      `generateOpenApi(rootContract, {info})` in routes/common/openapi.ts, whose
+  #      two arguments are static, developer-authored module constants — no
+  #      attacker-controlled object ever reaches the merge. The route additionally
+  #      404s in production unless MMS_EXPOSE_OPENAPI=true.
+  # Revisit when @ts-rest/open-api ships a Zod-4-compatible generator (all current
+  # releases, including prereleases, pin `zod: ^3.22.3` and @anatine/zod-openapi@1.x).
   fast-uri: "^4.1.3"

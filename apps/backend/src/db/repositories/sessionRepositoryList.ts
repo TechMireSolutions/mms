@@ -7,7 +7,7 @@ import {
   type SessionsListQuery,
 } from '@mms/shared';
 import { sessions } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { findSessionsSummaryByIds } from './sessionRepository.js';
 
@@ -104,7 +104,7 @@ export async function listSessionsPage(
 ): Promise<SessionsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, sessions, {
       conditions: buildListConditions(subdomain, query),
       orderBy: buildOrderBy(query.sortField, query.sortDir),
@@ -151,7 +151,7 @@ export async function listSessionsPage(
 
 export async function countSessionsActive(tenant: string): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(sessions)
@@ -165,7 +165,7 @@ export async function aggregateSessionsCommandMetrics(
   tenant: string,
 ): Promise<SessionsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await tx.execute(sql`
       SELECT
         COUNT(*)::int AS total,

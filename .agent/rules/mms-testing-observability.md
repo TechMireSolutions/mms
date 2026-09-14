@@ -37,7 +37,7 @@ Governs testing patterns, logging hygiene, error reporting, and frontend resilie
 - Prefer `getByRole`, `getByLabel`, and `getByText` — avoid brittle CSS classes or internal DOM hierarchy selectors.
 - Prefer Playwright project `storageState` / shared auth fixtures over re-running full login in every spec; keep seeding scripts for bootstrap only.
 - Ban fixed `waitForTimeout` sleeps; wait on explicit UI states, network assertions, or TanStack Query settling instead.
-- Backend integration tests that touch tenant tables must set RLS context the same way as production (`withTenantTransaction` / SET LOCAL).
+- Backend integration tests that touch tenant tables must set RLS context the same way as production (`withTenant` / SET LOCAL).
 - Layout/responsiveness: keep specs named in **`mms-ui-ux-design.md` §7** green after shell/RTL/touch/table changes.
 - **a11y Smoke**: Prefer `@axe-core/playwright` smoke on shell + one Work directory at 375/1440; fail on serious/critical issues when AppLayout / FormModal / Table primitives change.
 - CI orchestration + trace artifacts → **`mms-ops-infrastructure.md`**.

@@ -5,6 +5,7 @@ import { withTenant } from '../tenant-context.js';
 import { tenantUsers } from '../schema.js';
 import {
   findTenantUserRowById,
+  findTenantUserRowByIdGlobal,
   listAllTenantUsersByWorkspace,
   type TenantUserRow,
 } from './tenantUserRepositoryHydrate.js';
@@ -170,36 +171,63 @@ export async function replaceTenantUsersForWorkspace(
   });
 }
 
-export async function upsertTenantUserRow(user: TenantUserRow): Promise<void> {
+/**
+ * Upserts a single tenant user.
+ *
+ * `workspaceSubdomain` is the CALLER's tenant and is authoritative: the stored
+ * workspace always comes from it, never from the payload, so a client cannot
+ * pivot a write into another workspace by supplying a foreign id or workspace.
+ */
+export async function upsertTenantUserRow(
+  workspaceSubdomain: string,
+  user: TenantUserRow,
+): Promise<void> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  if (!tenant) {
+    throw new Error('[upsertTenantUserRow] workspaceSubdomain is required');
+  }
   const processedUser = applyTitleCaseRecursive(user) as TenantUserRow;
-  const { columns } = splitProfileFields(processedUser);
-  const existing = await findTenantUserRowById(columns.id);
+  const { columns } = splitProfileFields({ ...processedUser, workspaceSubdomain: tenant });
+  const existing = await findTenantUserRowById(tenant, columns.id);
 
   if (existing) {
-    const existingWorkspace =
-      typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
     // Contact-linked clients may strip profile fields; never blank auth credentials.
-    // Keep workspace bound to the existing row (no cross-tenant reassignment).
     const merged = {
       ...omitUndefinedColumns(columns),
-      workspaceSubdomain: existingWorkspace,
+      workspaceSubdomain: tenant,
       name: nonEmptyString(columns.name) || existing.name || '',
       loginEmail: nonEmptyString(columns.loginEmail) || existing.loginEmail || '',
       passwordHash: nonEmptyString(columns.passwordHash) || existing.passwordHash || '',
       updatedAt: new Date(),
     };
-    await withTenant(existingWorkspace, async (tx) => {
-      await tx.update(tenantUsers).set(merged).where(tenantUserIdWhere(columns.id, existingWorkspace));
+    await withTenant(tenant, async (tx) => {
+      await tx.update(tenantUsers).set(merged).where(tenantUserIdWhere(columns.id, tenant));
     });
     return;
   }
 
-  await withTenant(columns.workspaceSubdomain, async (tx) => {
+  await withTenant(tenant, async (tx) => {
     await tx.insert(tenantUsers).values(omitUndefinedColumns(columns) as typeof columns);
   });
 }
 
-export async function upsertTenantUsersBatch(users: TenantUserRow[]): Promise<void> {
+/**
+ * Bulk upsert of tenant users.
+ *
+ * `workspaceSubdomain` is the CALLER's tenant and is authoritative — every row
+ * is written into it regardless of any `workspaceSubdomain` present in the
+ * payload. Previously the target workspace came from the first payload row
+ * (client-controlled) and existing rows kept their own workspace, so a forged
+ * payload could address another workspace's rows by id.
+ */
+export async function upsertTenantUsersBatch(
+  workspaceSubdomain: string,
+  users: TenantUserRow[],
+): Promise<void> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  if (!tenant) {
+    throw new Error('[upsertTenantUsersBatch] workspaceSubdomain is required');
+  }
   if (users.length === 0) return;
 
   const dedupedMap = new Map<string, TenantUserRow>();
@@ -210,9 +238,8 @@ export async function upsertTenantUsersBatch(users: TenantUserRow[]): Promise<vo
 
   const processedUsers = uniqueUsers.map((u) => applyTitleCaseRecursive(u) as TenantUserRow);
   const userIds = processedUsers.map((u) => String(u.id));
-  const subdomain = (uniqueUsers[0]?.workspaceSubdomain as string)?.trim().toLowerCase() || '';
 
-  await withTenant(subdomain, async (tx) => {
+  await withTenant(tenant, async (tx) => {
     const existingRows = await tx
       .select({
         id: tenantUsers.id,
@@ -222,24 +249,24 @@ export async function upsertTenantUsersBatch(users: TenantUserRow[]): Promise<vo
         passwordHash: tenantUsers.passwordHash,
       })
       .from(tenantUsers)
-      .where(inArray(tenantUsers.id, userIds));
+      .where(
+        and(
+          eq(tenantUsers.workspaceSubdomain, tenant),
+          inArray(tenantUsers.id, userIds),
+        ),
+      );
     const existingById = new Map(existingRows.map((r) => [String(r.id), r]));
 
     // Build a single consistent value set for every row (new + existing), then
     // upsert in one query. Semantics are identical to the previous per-user
-    // insert/update: existing rows keep their workspace and any empty auth
-    // fields fall back to the stored values; new rows are inserted.
+    // insert/update: empty auth fields fall back to the stored values, and the
+    // workspace is always the caller's tenant.
     const values: Array<typeof tenantUsers.$inferInsert> = processedUsers.map((user) => {
       const { columns } = splitProfileFields(user);
       const existing = existingById.get(columns.id);
-      const workspaceSubdomain = existing
-        ? typeof existing.workspaceSubdomain === 'string'
-          ? existing.workspaceSubdomain
-          : subdomain
-        : columns.workspaceSubdomain;
       return {
         id: columns.id,
-        workspaceSubdomain,
+        workspaceSubdomain: tenant,
         loginEmail: existing
           ? nonEmptyString(columns.loginEmail) || existing.loginEmail || ''
           : columns.loginEmail,
@@ -285,15 +312,25 @@ export async function upsertTenantUsersBatch(users: TenantUserRow[]): Promise<vo
   });
 }
 
+/**
+ * Soft-deletes a tenant user.
+ *
+ * `workspaceSubdomain` is the CALLER's tenant and is mandatory: the lookup and
+ * the UPDATE are both scoped to it, so a caller can never address a user that
+ * belongs to another workspace. (Previously the workspace was derived from the
+ * fetched row, which — combined with an RLS-bypassing id-only lookup — allowed
+ * cross-tenant deletes.)
+ */
 export async function softDeleteTenantUserRow(
+  workspaceSubdomain: string,
   id: string,
   deletedBy: string,
 ): Promise<boolean> {
-  const existing = await findTenantUserRowById(id);
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  if (!tenant) return false;
+  const existing = await findTenantUserRowById(tenant, id);
   if (!existing || existing.deletedAt) return false;
-  const workspaceSubdomain =
-    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
-  await withTenant(workspaceSubdomain, async (tx) => {
+  await withTenant(tenant, async (tx) => {
     await tx
       .update(tenantUsers)
       .set({
@@ -301,19 +338,23 @@ export async function softDeleteTenantUserRow(
         deletedBy,
         updatedAt: new Date(),
       })
-      .where(tenantUserIdWhere(id, workspaceSubdomain));
+      .where(tenantUserIdWhere(id, tenant));
   });
   await revokeAllUserSessions(id);
   await revokeUserSessionKeys(id);
   return true;
 }
 
-export async function restoreTenantUserRow(id: string): Promise<boolean> {
-  const existing = await findTenantUserRowById(id);
+/** Restores a soft-deleted tenant user. Scoped to the CALLER's workspace. */
+export async function restoreTenantUserRow(
+  workspaceSubdomain: string,
+  id: string,
+): Promise<boolean> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  if (!tenant) return false;
+  const existing = await findTenantUserRowById(tenant, id);
   if (!existing || !existing.deletedAt) return false;
-  const workspaceSubdomain =
-    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
-  await withTenant(workspaceSubdomain, async (tx) => {
+  await withTenant(tenant, async (tx) => {
     await tx
       .update(tenantUsers)
       .set({
@@ -321,38 +362,68 @@ export async function restoreTenantUserRow(id: string): Promise<boolean> {
         deletedBy: null,
         updatedAt: new Date(),
       })
-      .where(tenantUserIdWhere(id, workspaceSubdomain));
+      .where(tenantUserIdWhere(id, tenant));
   });
   return true;
 }
 
-export async function verifyTenantUserEmailRow(id: string): Promise<boolean> {
-  const existing = await findTenantUserRowById(id);
+/** Marks a tenant user's email verified. Scoped to the CALLER's workspace. */
+export async function verifyTenantUserEmailRow(
+  workspaceSubdomain: string,
+  id: string,
+): Promise<boolean> {
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  if (!tenant) return false;
+  const existing = await findTenantUserRowById(tenant, id);
   if (!existing || existing.deletedAt) return false;
-  const workspaceSubdomain =
-    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
-  await withTenant(workspaceSubdomain, async (tx) => {
+  await withTenant(tenant, async (tx) => {
     await tx
       .update(tenantUsers)
       .set({
         emailVerifiedAt: new Date(),
         updatedAt: new Date(),
       })
-      .where(tenantUserIdWhere(id, workspaceSubdomain));
+      .where(tenantUserIdWhere(id, tenant));
   });
   return true;
 }
 
-/** Replaces an active user's credential and requires a password change at next sign-in. */
+/**
+ * Platform-admin variant of {@link verifyTenantUserEmailRow}: resolves the
+ * target user's own workspace explicitly. Only call from platform routes.
+ */
+export async function verifyTenantUserEmailRowGlobal(id: string): Promise<boolean> {
+  const existing = await findTenantUserRowByIdGlobal(id);
+  if (!existing || existing.deletedAt) return false;
+  const tenant =
+    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain.trim().toLowerCase() : '';
+  if (!tenant) return false;
+  await withTenant(tenant, async (tx) => {
+    await tx
+      .update(tenantUsers)
+      .set({
+        emailVerifiedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(tenantUserIdWhere(id, tenant));
+  });
+  return true;
+}
+
+/**
+ * Replaces an active user's credential and requires a password change at next
+ * sign-in. Scoped to the CALLER's workspace.
+ */
 export async function resetTenantUserPasswordRow(
+  workspaceSubdomain: string,
   id: string,
   passwordHash: string,
 ): Promise<boolean> {
-  const existing = await findTenantUserRowById(id);
+  const tenant = workspaceSubdomain.trim().toLowerCase();
+  if (!tenant) return false;
+  const existing = await findTenantUserRowById(tenant, id);
   if (!existing || existing.deletedAt) return false;
-  const workspaceSubdomain =
-    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
-  await withTenant(workspaceSubdomain, async (tx) => {
+  await withTenant(tenant, async (tx) => {
     await tx
       .update(tenantUsers)
       .set({
@@ -360,7 +431,7 @@ export async function resetTenantUserPasswordRow(
         mustChangePassword: true,
         updatedAt: new Date(),
       })
-      .where(tenantUserIdWhere(id, workspaceSubdomain));
+      .where(tenantUserIdWhere(id, tenant));
   });
   return true;
 }

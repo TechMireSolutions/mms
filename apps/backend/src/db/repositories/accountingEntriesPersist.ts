@@ -13,10 +13,10 @@ import {
   accountingOpeningBalances,
   accountingPostingRules,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, type TenantTransaction } from '../tenant-context.js';
 
 async function syncEntryChildren(
-  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
+  tx: TenantTransaction,
   subdomain: string,
   entry: JournalEntry,
 ): Promise<void> {

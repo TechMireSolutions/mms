@@ -150,38 +150,60 @@ vi.mock('../db/repositories/tenantUserRepository.js', () => ({
         !u.deletedAt,
     );
   }),
-  findTenantUserRowById: vi.fn().mockImplementation(async (id: string) => {
-    return mockTenantUsers.find((u) => u.id === id) ?? null;
+  // Mirrors the real repository: id lookups are ALWAYS scoped to the caller's
+  // workspace (tenantUserRepositoryHydrate.ts). Keeping the tenant predicate in
+  // the fake is what makes these cross-tenant assertions meaningful.
+  findTenantUserRowById: vi.fn().mockImplementation(async (tenant: string, id: string) => {
+    const target = tenant.trim().toLowerCase();
+    return (
+      mockTenantUsers.find(
+        (u) => u.id === id && (u.workspaceSubdomain || '').toLowerCase() === target,
+      ) ?? null
+    );
   }),
-  upsertTenantUserRow: vi.fn().mockImplementation(async (row: TenantUserRow) => {
-    const idx = mockTenantUsers.findIndex((u) => u.id === row.id);
+  upsertTenantUserRow: vi.fn().mockImplementation(async (tenant: string, row: TenantUserRow) => {
+    const scoped = { ...row, workspaceSubdomain: tenant.trim().toLowerCase() };
+    const idx = mockTenantUsers.findIndex((u) => u.id === scoped.id);
     if (idx >= 0) {
-      mockTenantUsers[idx] = { ...mockTenantUsers[idx], ...row };
+      mockTenantUsers[idx] = { ...mockTenantUsers[idx], ...scoped };
     } else {
-      mockTenantUsers.push(row);
+      mockTenantUsers.push(scoped);
     }
   }),
-  softDeleteTenantUserRow: vi.fn().mockImplementation(async (id: string, deletedBy: string) => {
-    const idx = mockTenantUsers.findIndex((u) => u.id === id);
-    if (idx >= 0) {
-      mockTenantUsers[idx].deletedAt = new Date().toISOString();
-      mockTenantUsers[idx].deletedBy = deletedBy;
-      return true;
-    }
-    return false;
-  }),
-  resetTenantUserPasswordRow: vi.fn().mockImplementation(async (id: string, passwordHash: string) => {
-    const idx = mockTenantUsers.findIndex((u) => u.id === id);
-    if (idx >= 0) {
-      mockTenantUsers[idx].passwordHash = passwordHash;
-      return true;
-    }
-    return false;
-  }),
+  softDeleteTenantUserRow: vi.fn().mockImplementation(
+    async (tenant: string, id: string, deletedBy: string) => {
+      const target = tenant.trim().toLowerCase();
+      const idx = mockTenantUsers.findIndex(
+        (u) => u.id === id && (u.workspaceSubdomain || '').toLowerCase() === target,
+      );
+      if (idx >= 0) {
+        mockTenantUsers[idx].deletedAt = new Date().toISOString();
+        mockTenantUsers[idx].deletedBy = deletedBy;
+        return true;
+      }
+      return false;
+    },
+  ),
+  resetTenantUserPasswordRow: vi.fn().mockImplementation(
+    async (tenant: string, id: string, passwordHash: string) => {
+      const target = tenant.trim().toLowerCase();
+      const idx = mockTenantUsers.findIndex(
+        (u) => u.id === id && (u.workspaceSubdomain || '').toLowerCase() === target,
+      );
+      if (idx >= 0) {
+        mockTenantUsers[idx].passwordHash = passwordHash;
+        return true;
+      }
+      return false;
+    },
+  ),
   verifyTenantUserEmailRow: vi.fn().mockResolvedValue(true),
   restoreTenantUserRow: vi.fn().mockResolvedValue(true),
-  listTenantUsersByIds: vi.fn().mockImplementation(async (ids: string[]) => {
-    return mockTenantUsers.filter((u) => ids.includes(u.id));
+  listTenantUsersByIds: vi.fn().mockImplementation(async (tenant: string, ids: string[]) => {
+    const target = tenant.trim().toLowerCase();
+    return mockTenantUsers.filter(
+      (u) => ids.includes(u.id) && (u.workspaceSubdomain || '').toLowerCase() === target,
+    );
   }),
 }));
 

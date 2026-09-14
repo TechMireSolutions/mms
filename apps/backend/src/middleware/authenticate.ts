@@ -106,7 +106,10 @@ export async function authenticateTenant(
     if (userActiveCached !== 'active') {
       try {
         const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepositoryHydrate.js');
-        const userRow = await findTenantUserRowById(String(user.id));
+        // Session validation must be scoped to the request's workspace: an
+        // id-only lookup runs with RLS bypassed and could resolve another
+        // tenant's user.
+        const userRow = await findTenantUserRowById(tenant, String(user.id));
         if (userRow?.deletedAt || (userRow as { deleted_at?: unknown })?.deleted_at) {
           await sendUnauthorized(reply, 'Session revoked');
           return;

@@ -24,6 +24,7 @@ import { loadGlobalSettings } from '../globalSettingsService.js';
 import { sendTenantEmail } from '../email/emailService.js';
 import { runWithTenant } from '../../lib/tenantContext.js';
 import { logger } from '../../lib/logger.js';
+import { isDevCredentialLoggingEnabled } from '../../lib/devLogging.js';
 
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
 const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
@@ -106,8 +107,13 @@ async function dispatchTwoFactorCode(email: string, code: string): Promise<void>
     return;
   }
 
-  if (process.env.NODE_ENV !== 'production') {
-    logger.info({ channel, code }, '2FA code generated (dev)');
+  // Never log a live credential by default: the log stream is shipped, indexed
+  // and retained. Local development can opt in with MMS_LOG_DEV_CREDENTIALS=true;
+  // the code is also filtered out by lib/logRedaction.ts as a backstop.
+  if (isDevCredentialLoggingEnabled()) {
+    logger.info({ channel, code }, '2FA code generated (dev credential logging enabled)');
+  } else {
+    logger.info({ channel }, '2FA code generated');
   }
 }
 

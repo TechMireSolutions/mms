@@ -72,6 +72,33 @@ jobs:
       - name: Run Typecheck
         run: pnpm typecheck
 
+      # Fails on high/critical advisories. One moderate finding is a reviewed,
+      # documented exception (ts-deepmerge via @ts-rest/open-api) — see the
+      # `overrides` block in pnpm-workspace.yaml and the OpenAPI test in
+      # apps/backend/src/__tests__/app.health.test.ts for the full rationale.
+      # Keeping this at `high` means the exception never masks a serious
+      # advisory, which is the failure mode of blanket-ignoring audit output.
+      - name: Dependency audit (high and critical)
+        run: pnpm audit --audit-level=high
+
+      # Ratchet: no new write-blocking CREATE INDEX on large tables in migrations.
+      # CONCURRENTLY cannot live in a migration (Drizzle runs each migration run in
+      # one transaction) — use `pnpm --filter mms-backend index:concurrent`.
+      - name: Migration index lock safety
+        run: pnpm run check:migration-indexes
+
+      # Scans the FULL git history: a credential that was committed and later
+      # deleted is still recoverable from the repository and must be treated as
+      # compromised. Image is pinned by digest (not `latest`) so the scanner
+      # cannot change under us between runs. `--redact` keeps any finding out of
+      # the CI log. Reviewed false positives live in .gitleaks.toml.
+      - name: Secret scan (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" \
+            zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            detect --source=/repo --config=/repo/.gitleaks.toml \
+            --no-banner --redact --exit-code 1
+
       # Lints every package that has a lint script (frontend, backend,
       # @mms/shared, e2e) via turbo — shared/e2e were previously unlinted.
       - name: Lint (all packages)
@@ -82,6 +109,26 @@ jobs:
           bash .agent/scripts/sync-all.sh
           git diff --exit-code -- .agent .cursor .claude || (echo "Agent rule/skill mirrors out of sync! Run 'bash .agent/scripts/sync-all.sh'" && exit 1)
           node scripts/verify-rules-integrity.mjs
+
+  # Fails a pull request that introduces a dependency with a known vulnerability.
+  # Complements the `pnpm audit` gate above: audit checks what is installed NOW,
+  # dependency-review checks what the PR is ADDING, and can block it before merge.
+  dependency-review:
+    name: Dependency Review
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v7
+
+      - name: Review dependency changes
+        uses: actions/dependency-review-action@v4
+        with:
+          fail-on-severity: high
+          comment-summary-in-pr: on-failure
 
   test-frontend:
     name: Frontend Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
@@ -219,13 +266,14 @@ jobs:
   ci-gate:
     name: CI Gate (All Checks Passed)
     if: always()
-    needs: [changes, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db]
+    needs: [changes, lint-and-typecheck, dependency-review, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db]
     runs-on: ubuntu-latest
     steps:
       - name: Check Status of All Jobs
         run: |
           echo "==================== CI Gate Summary ===================="
           echo "Lint & Typecheck:       ${{ needs.lint-and-typecheck.result }}"
+          echo "Dependency Review:      ${{ needs.dependency-review.result }}"
           echo "Frontend Tests:         ${{ needs.test-frontend.result }}"
           echo "Frontend Coverage:      ${{ needs.test-frontend-coverage.result }}"
           echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
@@ -236,6 +284,12 @@ jobs:
 
           if [ "${{ needs.lint-and-typecheck.result }}" != "success" ]; then
             echo "::error::lint-and-typecheck failed or was cancelled (result: ${{ needs.lint-and-typecheck.result }})"
+            failed=1
+          fi
+
+          # PR-only job: "skipped" on push to main is expected, not a failure.
+          if [ "${{ needs.dependency-review.result }}" != "success" ] && [ "${{ needs.dependency-review.result }}" != "skipped" ]; then
+            echo "::error::dependency-review failed or was cancelled (result: ${{ needs.dependency-review.result }})"
             failed=1
           fi
 
@@ -398,6 +452,8 @@ jobs:
             echo "::warning::MMS_APP_DOMAIN secret empty — Vite build may lack production app domain"
           fi
           pnpm run build
+          # Fail the build if the frontend bundle grew past its budget.
+          pnpm run check:bundle
           tar czf mms-dist.tar.gz apps/backend/dist apps/frontend/dist packages/shared/dist
           sha256sum mms-dist.tar.gz > mms-dist.tar.gz.sha256
           cat mms-dist.tar.gz.sha256

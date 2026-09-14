@@ -1,7 +1,7 @@
 import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type WakalaType } from '@mms/shared';
 import { wakalaTypes } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 type WakalaTypeRow = typeof wakalaTypes.$inferSelect;
 
@@ -15,7 +15,7 @@ export function wakalaTypeRowToRecord(row: WakalaTypeRow): WakalaType {
 
 export async function listWakalaTypesByWorkspace(tenant: string): Promise<WakalaType[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: wakalaTypes.id,
@@ -35,7 +35,7 @@ export async function findWakalaTypeById(tenant: string, id: string): Promise<Wa
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: wakalaTypes.id,
@@ -57,7 +57,7 @@ export async function findWakalaTypesByIds(tenant: string, ids: string[]): Promi
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: wakalaTypes.id,

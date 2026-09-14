@@ -1,7 +1,7 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { type Teacher, type RepositoryListOptions } from '@mms/shared';
 import { teachers } from '../schema.js';
-import { withTenant, type AppDb } from '../tenant-context.js';
+import { withTenant, withTenantRead, type AppDb } from '../tenant-context.js';
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { mapAuditTimestamps, mapAuditToInsert } from './repositoryMappers.js';
 
@@ -75,7 +75,7 @@ export async function listTeachersByWorkspace(
 ): Promise<Teacher[]> {
   const subdomain = tenant.trim().toLowerCase();
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(teachers, subdomain, deletedFilter);
 
     const baseQuery = tx
@@ -115,7 +115,7 @@ export async function listTeachersByWorkspace(
 
 export async function findTeacherById(tenant: string, id: string): Promise<Teacher | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: teachers.id,
@@ -152,7 +152,7 @@ export async function findTeacherById(tenant: string, id: string): Promise<Teach
 export async function findTeachersByIds(tenant: string, ids: string[]): Promise<Teacher[]> {
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: teachers.id,
@@ -237,7 +237,7 @@ export async function countTeachersByWorkspace(
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(teachers, subdomain, deletedFilter);
 
     const rows = await tx

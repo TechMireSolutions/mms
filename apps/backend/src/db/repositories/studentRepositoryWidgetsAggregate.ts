@@ -4,7 +4,7 @@ import type {
   StudentsWidgetQuery,
 } from '@mms/shared';
 import { students } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import {
   activeWorkspaceWhere,
   resolveChartLimit,
@@ -21,7 +21,7 @@ export async function aggregateStudentsWidgetQueries(
   const results: Record<string, StudentsWidgetAggregateResult> = {};
   if (queries.length === 0) return results;
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const totalRows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(students)

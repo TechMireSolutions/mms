@@ -8,7 +8,7 @@ import {
   type AttendanceListPageResult,
 } from '@mms/shared';
 import { attendance, sessionClasses, sessions } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import {
   attendanceRowToRecord as rowToRecord,
   type AttendanceRow,
@@ -117,7 +117,7 @@ export async function listAttendancePage(
   query: AttendanceListQuery & { afterId?: string; skipCount?: boolean },
 ): Promise<AttendanceListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const page = Math.max(1, query.page ?? 1);
     const limit = Math.min(Math.max(1, query.limit ?? 15), 500);
     const isCursorPaging = Boolean(query.afterId?.trim());
@@ -210,7 +210,7 @@ export async function listAttendancePage(
 /** Active (non-deleted) attendance count for the tenant — used by `/count`. */
 export async function countAttendanceActiveByWorkspace(tenant: string): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(attendance)
@@ -245,7 +245,7 @@ export async function aggregateAttendanceCommandMetrics(
     .toISOString()
     .slice(0, 10);
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const active = and(
       eq(attendance.workspaceSubdomain, subdomain),
       isNull(attendance.deletedAt),

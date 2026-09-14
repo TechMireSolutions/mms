@@ -1,7 +1,7 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { type Student, type RepositoryListOptions } from '@mms/shared';
 import { students, studentEnrolledSessions } from '../schema.js';
-import { withTenant, type AppDb } from '../tenant-context.js';
+import { withTenantRead, type AppDb } from '../tenant-context.js';
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { studentRowToRecord } from './studentRepositoryMappers.js';
 
@@ -46,7 +46,7 @@ export async function listStudentsByWorkspace(
 ): Promise<Student[]> {
   const subdomain = tenant.trim().toLowerCase();
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(students, subdomain, deletedFilter);
 
     const baseQuery = tx
@@ -95,7 +95,7 @@ export async function listStudentsByWorkspace(
 
 export async function findStudentById(tenant: string, id: string): Promise<Student | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     if (!tx || typeof (tx as any).select !== 'function') return null;
     const rows = await tx
       .select({
@@ -140,7 +140,7 @@ export async function findStudentById(tenant: string, id: string): Promise<Stude
 export async function findStudentsByIds(tenant: string, ids: string[]): Promise<Student[]> {
   const subdomain = tenant.trim().toLowerCase();
   if (ids.length === 0) return [];
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     if (!tx || typeof (tx as any).select !== 'function') return [];
     const rows = await tx
       .select({
@@ -185,7 +185,7 @@ export async function countStudentsByWorkspace(
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(students, subdomain, deletedFilter);
 
     const rows = await tx

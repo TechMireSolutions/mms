@@ -53,7 +53,7 @@ Capture five dimensions per state-change event. Store row states as canonical JS
 Fastify Route Handler
    │
    ▼
-withTenantTransaction(async (tx) => {
+withTenant(async (tx) => {
    1. Mutate Business Entity (e.g. students, invoices, contacts)
    2. Compute Delta (oldState, newState) via RFC 8785
    3. Insert Audit Event in Outbox / Audit Table (same tx)
@@ -286,7 +286,7 @@ ALTER TABLE audit_trail_events DETACH PARTITION audit_trail_events_y2026m06;
 - [ ] RFC 8785 Canonical JSON used for payload hashing and state deltas
 - [ ] Non-essential PII and secrets stripped from old/new state
 - [ ] W3C `traceparent` extracted from request and saved as `correlationId`
-- [ ] Written atomically inside transactional outbox (`withTenantTransaction`)
+- [ ] Written atomically inside transactional outbox (`withTenant`)
 - [ ] Sharded per tenant partition (no global sequential hash contention)
 - [ ] Crypto-shredding or redact-and-append configured for erasure
 - [ ] `UPDATE` and `DELETE` revoked on database audit tables

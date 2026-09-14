@@ -22,6 +22,7 @@ import { hashPassword } from '../../services/auth/passwordService.js';
 import { replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../lib/rateLimitGuard.js';
 
 const s = initServer();
 
@@ -29,7 +30,7 @@ export default async function platformUsersRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  const authRateLimit = fastify.rateLimit(AUTH_RATE_LIMIT);
+  const authRateLimit = createStrictRateLimitGuard(fastify, AUTH_RATE_LIMIT);
 
   fastify.addHook('preHandler', authenticatePlatform);
   fastify.addHook('preHandler', requirePlatformPermission('admins'));
@@ -133,7 +134,7 @@ export default async function platformUsersRoutes(
     setAdminDisabled: {
       hooks: {
         preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
-          await authRateLimit.call(fastify, request, reply);
+          await authRateLimit(request, reply);
         },
       },
       handler: async ({
@@ -177,7 +178,7 @@ export default async function platformUsersRoutes(
     deleteAdmin: {
       hooks: {
         preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
-          await authRateLimit.call(fastify, request, reply);
+          await authRateLimit(request, reply);
         },
       },
       handler: async ({

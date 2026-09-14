@@ -42,7 +42,27 @@ function validatePostgresUrl(url: string, envVarName: string): void {
   }
 }
 
+/**
+ * Memoized server config.
+ *
+ * `loadServerConfig()` is called on every tenant transaction
+ * (`applyTenantTransactionGuards`), so building it fresh meant re-reading and
+ * re-validating the whole environment on the hottest path in the system. The
+ * config is immutable after boot, so compute it once.
+ *
+ * Test-only env mutations must call {@link resetServerConfigCacheForTesting}.
+ */
+let cachedServerConfig: ServerConfig | null = null;
+
+export function resetServerConfigCacheForTesting(): void {
+  cachedServerConfig = null;
+}
+
 export function loadServerConfig(): ServerConfig {
+  return (cachedServerConfig ??= buildServerConfig());
+}
+
+function buildServerConfig(): ServerConfig {
   const isProd = process.env.NODE_ENV === 'production';
   const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
 

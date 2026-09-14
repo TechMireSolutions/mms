@@ -1,7 +1,7 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type StockBatch } from '@mms/shared';
 import { hasanatBatches } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 type BatchRow = typeof hasanatBatches.$inferSelect;
 
@@ -26,7 +26,7 @@ export async function listBatchesByWorkspace(tenant: string, options?: { limit?:
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatBatches.id,
@@ -54,7 +54,7 @@ export async function findBatchById(tenant: string, id: string): Promise<StockBa
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatBatches.id,
@@ -87,7 +87,7 @@ export async function findBatchesByIds(tenant: string, ids: string[]): Promise<S
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatBatches.id,

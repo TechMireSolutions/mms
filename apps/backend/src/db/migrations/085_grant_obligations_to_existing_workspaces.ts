@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withGlobalTenant } from '../tenant-context.js';
 import { invalidateWorkspaceCache } from '../../services/workspaceService.js';
 
 /**
@@ -13,7 +13,7 @@ export async function runMigration085(): Promise<void> {
   const workspaces = await db.select().from(schema.workspaces);
   let updatedCount = 0;
 
-  await withTenant(null, async (tx) => {
+  await withGlobalTenant(async (tx) => {
     for (const ws of workspaces) {
       let needsUpdate = false;
       const granted = (ws.grantedModules as Record<string, boolean> | null)

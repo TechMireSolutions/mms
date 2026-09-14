@@ -20,6 +20,7 @@ import { verifyPlatformUserPassword } from '../../services/platform/platformUser
 import { replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../lib/rateLimitGuard.js';
 import { blockTenant, unblockTenant } from '../../services/session.service.js';
 
 const s = initServer();
@@ -28,7 +29,7 @@ export default async function platformWorkspaceRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  const deleteRateLimit = fastify.rateLimit(AUTH_RATE_LIMIT);
+  const deleteRateLimit = createStrictRateLimitGuard(fastify, AUTH_RATE_LIMIT);
 
   fastify.addHook('preHandler', authenticatePlatform);
   fastify.addHook('preHandler', requirePlatformPermission('workspaces'));
@@ -143,12 +144,14 @@ export default async function platformWorkspaceRoutes(
         verifyTenantUserEmailRow,
         findTenantUserRowById,
       } = await import('../../db/repositories/tenantUserRepository.js');
-      const user = await findTenantUserRowById(userId);
-      if (!user || user.workspaceSubdomain !== subdomain) {
+      // The target workspace is an explicit route param, so scope the lookup and
+      // the write to it rather than resolving the row globally.
+      const user = await findTenantUserRowById(subdomain, userId);
+      if (!user) {
         return { status: 404 as const, body: { type: 'not_found', message: 'User not found in workspace' } };
       }
 
-      const ok = await verifyTenantUserEmailRow(userId);
+      const ok = await verifyTenantUserEmailRow(subdomain, userId);
       if (!ok) {
         return { status: 404 as const, body: { type: 'not_found', message: 'User not found in workspace' } };
       }
@@ -169,7 +172,7 @@ export default async function platformWorkspaceRoutes(
     deleteWorkspace: {
       hooks: {
         preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
-          await deleteRateLimit.call(fastify, request, reply);
+          await deleteRateLimit(request, reply);
           if (reply.sent) return;
           const req = request as PlatformAuthenticatedRequest;
           if (req.platformUser?.role !== 'super_user') {

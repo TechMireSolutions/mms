@@ -4,7 +4,7 @@ import {
   type TeachersListQuery,
 } from '@mms/shared';
 import { teachers } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { teacherRowToRecord } from './teacherRepository.js';
 import { buildListConditions, buildOrderBy } from './teacherRepositoryListQuerySql.js';
@@ -38,7 +38,7 @@ export async function listTeachersPage(
 ): Promise<TeachersListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const sortDir = query.sortDir === 'desc' ? 'desc' : query.sortDir === 'asc' ? 'asc' : undefined;
     const result = await runListPage(tx, teachers, {
       conditions: buildListConditions(subdomain, query),

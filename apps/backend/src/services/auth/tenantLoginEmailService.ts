@@ -17,6 +17,7 @@ import {
 } from './userService.js';
 import { sendTenantEmail } from '../email/emailService.js';
 import { logger } from '../../lib/logger.js';
+import { maskEmail } from '../../lib/devLogging.js';
 
 const CHANGE_TTL_MS = 15 * 60 * 1000;
 
@@ -73,7 +74,10 @@ async function dispatchChangeCode(
   });
   if (result.sent) return { sent: true };
   if (process.env.NODE_ENV !== 'production') {
-    logger.info({ email, code }, 'Login email change code generated (dev)');
+    logger.info(
+      { email: maskEmail(email) },
+      'Login email change code generated (code withheld; set MMS_LOG_DEV_CREDENTIALS=true to log it)',
+    );
     return { sent: false, devCode: code };
   }
   throw new LoginEmailChangeError('email_send_failed', 'Failed to send verification email');

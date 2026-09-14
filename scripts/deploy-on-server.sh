@@ -153,6 +153,24 @@ mkdir -p "$ROOT_DIR/.logs"
 # Legacy vite-preview PM2 app — SPA is served by Fastify from apps/frontend/dist.
 pm2 delete mmsv2-frontend 2>/dev/null || true
 
+# Apply schema DDL + data migrations BEFORE swapping the backend over.
+#
+# initDb() still runs them on startup as a safety net, but doing it here means a
+# failing or slow migration fails the deploy while the previous release is still
+# serving, instead of taking the API down mid-restart. The runner is idempotent
+# (Drizzle tracks applied DDL; data migrations are guarded by an advisory lock
+# and a `data_migrations` ledger), so re-running it on boot is harmless.
+if [ -f "$ROOT_DIR/apps/backend/dist/scripts/migrateDb.js" ]; then
+  echo "Applying database migrations (pre-restart)..."
+  if ! (cd "$ROOT_DIR/apps/backend" && node dist/scripts/migrateDb.js); then
+    echo "ERROR: database migration failed — leaving the running release in place"
+    exit 1
+  fi
+  echo "Migrations applied."
+else
+  echo "Notice: dist/scripts/migrateDb.js not found — migrations will run on backend startup."
+fi
+
 if [ -f "$ROOT_DIR/ecosystem.config.cjs" ]; then
   pm2 startOrReload "$ROOT_DIR/ecosystem.config.cjs" --only mmsv2-backend --update-env \
     || pm2 restart mmsv2-backend --update-env 2>/dev/null || true
@@ -170,7 +188,7 @@ if [ -f scripts/deploy-recover-backend.sh ]; then
   }
 fi
 
-# Schema DDL + data migrations run on backend startup (initDb / drizzle migrate) — no separate deploy migrate step.
+# Migrations were applied above; initDb() re-checks on startup and is idempotent.
 
 APP_DOMAIN_FOR_FP="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
 if [[ -z "$APP_DOMAIN_FOR_FP" && -n "${MMS_APP_DOMAIN:-}" ]]; then

@@ -186,29 +186,29 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       throw new HttpDomainError(400, 'self_delete', 'Cannot delete your own account');
     }
 
-    const existing = await repo.findTenantUserRowById(id);
+    // Fail closed: the tenant comes from the request and scopes both the lookup
+    // and the write, so a foreign id can never be addressed.
+    const tenant = requireTenant();
+    const existing = await repo.findTenantUserRowById(tenant, id);
     if (!existing || existing.deletedAt) return false;
 
     if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
       throw new HttpDomainError(403, 'forbidden_super_admin_deletion', 'Cannot delete a Super Admin user account');
     }
 
-    const ok = await repo.softDeleteTenantUserRow(id, deletedBy);
+    const ok = await repo.softDeleteTenantUserRow(tenant, id, deletedBy);
     if (ok) {
       await deleteRefreshTokensForUser(id);
       await broadcastCollection('users');
 
-      const tenant = getRequestTenant();
-      if (tenant) {
-        await recordUserActivityLog(
-          repo,
-          tenant,
-          deletedBy,
-          'delete',
-          `Deleted user ${existing.name || id}`,
-          ip,
-        );
-      }
+      await recordUserActivityLog(
+        repo,
+        tenant,
+        deletedBy,
+        'delete',
+        `Deleted user ${existing.name || id}`,
+        ip,
+      );
     }
     return ok;
   };
@@ -219,28 +219,26 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     actorId = 'system',
     ip = '127.0.0.1',
   ): Promise<boolean> => {
-    const existing = await repo.findTenantUserRowById(id);
+    const tenant = requireTenant();
+    const existing = await repo.findTenantUserRowById(tenant, id);
     if (!existing) return false;
 
     if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
       throw new HttpDomainError(403, 'forbidden_super_admin_mutation', 'Cannot restore a Super Admin user account');
     }
 
-    const ok = await repo.restoreTenantUserRow(id);
+    const ok = await repo.restoreTenantUserRow(tenant, id);
     if (ok) {
       await broadcastCollection('users');
 
-      const tenant = getRequestTenant();
-      if (tenant) {
-        await recordUserActivityLog(
-          repo,
-          tenant,
-          actorId,
-          'update',
-          `Restored user ${existing.name || id}`,
-          ip,
-        );
-      }
+      await recordUserActivityLog(
+        repo,
+        tenant,
+        actorId,
+        'update',
+        `Restored user ${existing.name || id}`,
+        ip,
+      );
     }
     return ok;
   };
@@ -255,7 +253,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       }
       const page = await repo.listTenantUsersPage(tenant, query);
       const ids = page.rows.map((row) => String(row.id));
-      const rows = ids.length > 0 ? await repo.listTenantUsersByIds(ids) : [];
+      const rows = ids.length > 0 ? await repo.listTenantUsersByIds(tenant, ids) : [];
       const byId = new Map(rows.map((row) => [String(row.id), row]));
       const ordered = ids.map((id) => byId.get(id)).filter(Boolean) as typeof rows;
       const users = await hydrateUserRows(ordered);
@@ -271,7 +269,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     loadUsersByIds: async (ids: string[], includeDeleted = false): Promise<WorkspaceUser[]> => {
       const uniqueIds = dedupeTrimmedIds(ids);
       if (uniqueIds.length === 0) return [];
-      const rows = await repo.listTenantUsersByIds(uniqueIds);
+      const tenant = requireTenant();
+      const rows = await repo.listTenantUsersByIds(tenant, uniqueIds);
       const filtered = includeDeleted ? rows : rows.filter((r) => !r.deletedAt);
       return hydrateUserRows(filtered);
     },
@@ -279,7 +278,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     loadUserById: async (id: string, includeDeleted = false): Promise<WorkspaceUser | null> => {
       const cleanId = id?.trim();
       if (!cleanId) return null;
-      const rows = await repo.listTenantUsersByIds([cleanId]);
+      const tenant = requireTenant();
+      const rows = await repo.listTenantUsersByIds(tenant, [cleanId]);
       const row = rows[0];
       if (!row) return null;
       if (!includeDeleted && row.deletedAt) return null;
@@ -356,7 +356,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     ): Promise<WorkspaceUser> => {
       const tenant = requireTenant();
 
-      const existingRow = await repo.findTenantUserRowById(id);
+      const existingRow = await repo.findTenantUserRowById(tenant, id);
       if (!existingRow || existingRow.deletedAt) {
         throw new HttpDomainError(404, 'not_found', 'User not found');
       }
@@ -429,14 +429,15 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     restoreUserById,
 
     verifyUserEmailById: async (id: string, actorRole?: string): Promise<boolean> => {
-      const existing = await repo.findTenantUserRowById(id);
+      const tenant = requireTenant();
+      const existing = await repo.findTenantUserRowById(tenant, id);
       if (!existing) return false;
 
       if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
         throw new HttpDomainError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
       }
 
-      const ok = await repo.verifyTenantUserEmailRow(id);
+      const ok = await repo.verifyTenantUserEmailRow(tenant, id);
       if (ok) await broadcastCollection('users');
       return ok;
     },

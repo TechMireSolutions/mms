@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type CreditNote, type Invoice } from '@mms/shared';
 import { financeCreditNotes, financeInvoices } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { invoiceRowToRecord } from './financeInvoicesRepository.js';
 
 const OPEN_STATUSES = ['pending', 'overdue', 'partial'] as const;
@@ -27,7 +27,7 @@ export async function markOverdueInvoices(tenant: string, today: string): Promis
 
 export async function listOpenInvoicesForCollect(tenant: string): Promise<Invoice[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: financeInvoices.id,
@@ -122,7 +122,7 @@ export async function markInvoicesReminded(tenant: string, invoiceIds: string[])
 
 export async function listCreditNotesForInvoice(tenant: string, invoiceId: string): Promise<CreditNote[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: financeCreditNotes.id,
@@ -163,7 +163,7 @@ export async function listInvoicesByIds(tenant: string, invoiceIds: string[]): P
   const cleanIds = dedupeTrimmedIds(invoiceIds).slice(0, 100);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: financeInvoices.id,

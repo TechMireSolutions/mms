@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type FiscalYear } from '@mms/shared';
 import { accountingFiscalYears } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type FiscalYearRow = typeof accountingFiscalYears.$inferSelect;
@@ -27,7 +27,7 @@ export async function listFiscalYearsByWorkspace(
   options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
 ): Promise<FiscalYear[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly
@@ -70,7 +70,7 @@ export async function findFiscalYearById(tenant: string, id: string): Promise<Fi
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: accountingFiscalYears.id,
@@ -106,7 +106,7 @@ export async function findFiscalYearsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly

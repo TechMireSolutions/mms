@@ -165,7 +165,7 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - [ ] RFC 8785 Canonical JSON (JCS) used for delta and hash computation
 - [ ] W3C `traceparent` extracted and recorded as `correlationId`
 - [ ] Minimization: non-essential PII and secrets stripped from old/new state
-- [ ] Atomically written in transactional outbox (`withTenantTransaction`)
+- [ ] Atomically written in transactional outbox (`withTenant`)
 - [ ] Sharded hash chains (no global serial chain contention); Merkle root rollups
 - [ ] Right-to-erasure: crypto-shredding (destroy key) or redact-and-append (`action_type = 'REDACT'`); no historical row deletion or hash recomputation
 - [ ] Database permissions: `INSERT`-only for app user; `UPDATE`/`DELETE` revoked
