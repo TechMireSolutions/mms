@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Quick production diagnostics — run on the Hetzner host over SSH.
+# Usage: bash scripts/server-diagnose.sh [apps/backend/.env]
 set -uo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -29,6 +30,8 @@ echo "pnpm: $(pnpm -v 2>/dev/null || echo 'missing')"
 APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
 echo "MMS_APP_DOMAIN: ${APP_DOMAIN:-<NOT SET — tenant subdomains will not work>}"
 echo "PORT: ${BACKEND_PORT}"
+DEPLOYED_SHA="$(cat "${ROOT_DIR}/.deploy-current-sha" 2>/dev/null || echo 'unknown')"
+echo "Deployed SHA: ${DEPLOYED_SHA}"
 echo ""
 
 echo "── PM2 ──"
@@ -60,6 +63,19 @@ echo ""
 if [[ -n "$APP_DOMAIN" ]] && [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
   echo "── Tenant subdomain checks ──"
   bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || true
+  echo ""
+fi
+
+DATABASE_URL="$(read_env_var DATABASE_URL '' "$ENV_FILE")"
+if [[ -n "$DATABASE_URL" ]] && command -v psql &>/dev/null; then
+  echo "── Workspace module grants (DB) ──"
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=0 -c \
+    "SELECT subdomain, granted_modules, enabled_modules FROM workspaces ORDER BY subdomain;" \
+    2>/dev/null | head -50 || echo "psql query failed"
+  echo ""
+else
+  echo "── Workspace module grants ──"
+  echo "skipped (no DATABASE_URL or psql)"
   echo ""
 fi
 
