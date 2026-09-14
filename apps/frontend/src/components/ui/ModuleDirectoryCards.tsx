@@ -35,7 +35,7 @@ export function ModuleDirectoryCards<T>({
   checkboxIdPrefix = "module-cards",
 }: ModuleDirectoryCardsProps<T>) {
   const parentRef = useRef<HTMLDivElement | null>(null);
-  const isVirtualized = items.length > 50;
+  const isVirtualized = items.length > 30;
 
   const itemPairs = useMemo(() => {
     if (!isVirtualized) return [];

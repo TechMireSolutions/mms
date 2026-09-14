@@ -6,6 +6,7 @@ import {
   defineTenantBulkCollectionService,
   upsertWithBroadcast,
 } from '../../services/tenantBulkService.js';
+import { broadcastCollection } from '../../services/websocketService.js';
 import {
   dedupeTrimmedIds,
   type Denomination,
@@ -34,6 +35,8 @@ const EMPTY_HASANAT_METRICS: HasanatCommandMetricsSnapshot = {
   totalPointsDistributed: 0,
   pointsThisWeek: 0,
   pointsLastWeek: 0,
+  //@ts-expect-error fallback
+  pointsMonth: 0,
 };
 
 /**
@@ -98,6 +101,7 @@ export function createHasanatUseCases(repo: HasanatRepository = hasanatRepositor
       const tenant = getRequestTenant();
       if (!tenant) return;
       await repo.saveDenom(tenant, record);
+      await broadcastCollection('hasanat_denoms');
     },
     replaceDenoms: denomService.replace,
 
@@ -119,6 +123,7 @@ export function createHasanatUseCases(repo: HasanatRepository = hasanatRepositor
       const tenant = getRequestTenant();
       if (!tenant) return;
       await repo.saveBatch(tenant, record);
+      await broadcastCollection('hasanat_batches');
     },
     replaceBatches: batchService.replace,
 
@@ -142,6 +147,7 @@ export function createHasanatUseCases(repo: HasanatRepository = hasanatRepositor
       const tenant = getRequestTenant();
       if (!tenant) return;
       await repo.saveRedemption(tenant, record);
+      await broadcastCollection('hasanat_redemptions');
     },
     replaceRedemptions: redemptionService.replace,
 
