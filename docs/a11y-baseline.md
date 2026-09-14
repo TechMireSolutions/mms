@@ -83,6 +83,17 @@ The component now drops the widget role when marked decorative, so the two ARIA
 contracts cannot contradict. Covered by
 `apps/frontend/src/components/ui/ProgressBar.test.tsx`.
 
+**Recommended follow-up (not done — it is a product decision).** Honouring
+`aria-hidden` makes the violation go away, but it does not make the data
+available: those bars carry real information (attendance rate, fee collection,
+session utilisation) that is currently conveyed only visually. The more
+accessible end state is to REMOVE `aria-hidden` at those call sites and give each
+bar an accessible name via `aria-label`/`aria-labelledby` describing what it
+measures ("Attendance rate for Grade 5"). That needs per-site labelling decisions
+about context, which is why it is flagged here rather than done unilaterally.
+`ProgressBar` supports it already: omit `aria-hidden` and it exposes the widget
+with its value.
+
 ### Status: still baselined, deliberately
 
 **This fix has NOT been confirmed as the cause of the dashboard finding**, so the
