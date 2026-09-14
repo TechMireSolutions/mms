@@ -11,8 +11,7 @@ paths:
   - "apps/frontend/src/tenant/features/**/hooks/use*Write*.ts"
   - "apps/frontend/src/tenant/features/**/hooks/use*Form*.ts"
   - "apps/frontend/src/platform/**/*Form*.tsx"
-  - "apps/frontend/src/platform/**/hooks/use*Write*.ts"
-  - "apps/frontend/src/platform/**/hooks/use*Form*.ts"
+  - "apps/frontend/src/platform/**/hooks/**"
   - "packages/shared/src/**/*Schema*.ts"
   - "packages/shared/src/contactFormNormalize.ts"
   - "packages/shared/src/contactItemNormalize.ts"
@@ -38,7 +37,7 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `TimePicker`, `DateTimePicker`, `EditableSelect`) — currency as `inputMode="decimal"` text (never `type="number"`), phone as `type="tel"` + E.164, date/datetime via the shared pickers.
 - **Stable Heights**: Tabbed forms use `<FormModal tall>` with a tall viewport height + `max-h-[43.75rem]` and scrollable body `flex-1 overflow-y-auto`. Prefer `dvh`/`svh` (+ `safe-area-inset` padding) over raw `vh` when touching FormModal chrome — iOS keyboard/browser chrome.
 - **Scroll Containment**: `useBodyScrollLock()` + `overscroll-contain` on scrollable modal boxes.
-- **Tabs / field grids:** layout follows the dialog `@container` (`@md:` / `@sm:`), not the viewport — `mms-ui-ux-design.md` §4 (§7 Layout).
+- **Tabs / field grids:** layout follows the dialog `@container` (`@md:` / `@sm:`), not the viewport — `mms-ui-ux-design.md` §4.
 - Long forms split major tasks into purposeful `FormModal` tabs; preserve form state across tab switches.
 - **Tabs:** one tab per persisted table when a record spans tables; workflow-only tabs OK when the saved payload stays explicit. Visible tabs follow Setup enablement SSOT — `mms-fields.md`.
 - **Enabled fields must render**: if validation can require a registry field, the form must show a control (and the drawer a read row). Ban hard-coded key allowlists.

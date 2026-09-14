@@ -1,6 +1,11 @@
 ---
 name: mms-dev-setup
 description: Sets up and runs the MMS monorepo (pnpm matching packageManager, Node per engines >=24.14, PostgreSQL, backend :3000, frontend :5173, typecheck, lint, tests). Use when installing dependencies, starting dev servers, fixing env issues, or onboarding to the project. Do NOT use for production VPS deployments (use mms-ops-deploy) or production Linux compatibility audits (use mms-linux-compatibility).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
+compatibility: Requires Node >=24.14, pnpm 11.15.1, and a reachable PostgreSQL instance.
 ---
 
 # MMS Dev Setup

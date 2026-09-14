@@ -1,6 +1,10 @@
 ---
 name: mms-schema-migrate
 description: Forward-only Drizzle migrations with journal/meta, expand/contract DDL, FORCE RLS on new tenant tables, and ban on drizzle-kit push against shared/prod DBs. Use when changing schema.ts, writing SQL migrations, or reviewing DDL PRs. Do NOT use for client-side query caching (use mms-query-factories) or application Fastify route handlers (use mms-backend-api).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Schema & Drizzle Migration Workflow
@@ -127,6 +131,17 @@ When generating code for any feature or entity, provide:
 - [ ] `tenant_soft_delete_isolation` RLS policy configured with `app.include_deleted` gate
 ```
 
+## Script
+
+`scripts/check-migrations.sh` audits the migration set before you push:
+
+```bash
+bash scripts/check-migrations.sh                # fails on missing RLS ENABLE, banned push, new lock-unsafe index
+MMS_RLS_STRICT=1 bash scripts/check-migrations.sh  # also fail on missing FORCE RLS
+```
+
+It verifies journal/SQL parity, per-table `ENABLE ROW LEVEL SECURITY` across the **whole** migration set, the `drizzle-kit push` ban, and the index-lock ratchet.
+
 ## Done
 
-Migration applies cleanly on empty + existing DB; Zod and Drizzle types compile with `pnpm typecheck` — `mms-completion-review.mdc`.
+Migration applies cleanly on empty + existing DB; Zod and Drizzle types compile with `pnpm typecheck`; `bash scripts/check-migrations.sh` is green — `mms-completion-review.mdc`.

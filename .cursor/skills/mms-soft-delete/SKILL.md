@@ -1,6 +1,10 @@
 ---
 name: mms-soft-delete
 description: Implements, verifies, or audits the MMS Soft-Delete System — column quintuple, 3-tier index strategy, partial unique indexes, BEFORE DELETE triggers, RLS policies, dynamic query ASTs, and trash UX. Use when adding or changing soft-delete, trash directories, restore handlers, DDL migrations, or auditing deletion lifecycles. Do NOT use for ephemeral scratchpad data (hard-delete directly per mms-data-layer.mdc) or immutable audit log events (use mms-audit-trail).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Soft-Delete System Workflow
@@ -129,3 +133,11 @@ pnpm --filter @mms/backend test:inject
 - [ ] Active reads return 0 soft-deleted records.
 - [ ] Direct SQL `DELETE` is rejected with `check_violation` unless `app.allow_hard_purge = 'true'`.
 - [ ] Account soft-deletion immediately terminates active user sessions.
+
+## Script
+
+```bash
+bash scripts/verify-soft-delete-schema.sh
+```
+
+Runs the migration-index ratchet, then asserts every soft-deletable tenant schema exposes the column sextuple and a Category B partial index (`WHERE deleted_at IS NULL`). It fails when a **targeted** schema file is missing rather than skipping it, so keep the target list in sync with the schema directory.

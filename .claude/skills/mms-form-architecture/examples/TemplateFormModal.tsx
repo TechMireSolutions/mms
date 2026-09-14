@@ -1,18 +1,12 @@
 import React, { useId, useState } from 'react';
 import { z } from 'zod';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from '@/components/ui/dialog';
-import { Button } from '@/components/ui/button';
+import { FormModal } from '@/components/ui/FormModal';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useTranslation } from '@/lib/i18n';
+import { FieldErrorMessage } from '@/components/ui/FormPrimitives';
+import { useTranslation } from '@/hooks/useTranslation';
 
-// 1. Strict write schema (aligned with @mms/shared)
+// 1. Strict write schema (aligned 1:1 with the @mms/shared write DTO)
 export const templateFormSchema = z
   .object({
     name: z.string().trim().min(1, 'Name is required'),
@@ -25,18 +19,22 @@ export type TemplateFormData = z.infer<typeof templateFormSchema>;
 
 export interface TemplateFormModalProps {
   open: boolean;
-  onOpenChange: (open: boolean) => void;
+  onClose: () => void;
   initialData?: TemplateFormData | null;
   onSubmit: (data: TemplateFormData) => Promise<void>;
 }
 
 /**
  * Canonical static FormModal template.
- * Uses native React 19 prop passing, useId() accessibility, and awaits mutateAsync before closing.
+ *
+ * Uses the shared `FormModal` shell (never a raw Radix Dialog — that is reserved
+ * for confirm/preview per `mms-form-architecture.md` §1), React 19 native props,
+ * `useId()` for accessible control/label pairs, and awaits the mutation before
+ * the modal is dismissed.
  */
 export function TemplateFormModal({
   open,
-  onOpenChange,
+  onClose,
   initialData,
   onSubmit,
 }: TemplateFormModalProps) {
@@ -54,89 +52,74 @@ export function TemplateFormModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  // FormModal owns the footer buttons and calls onSave(); validation runs there.
+  const handleSave = async () => {
     setErrors({});
 
     const result = templateFormSchema.safeParse(formData);
     if (!result.success) {
       const fieldErrors: Record<string, string> = {};
       for (const issue of result.error.issues) {
-        if (issue.path[0]) {
-          fieldErrors[issue.path[0].toString()] = issue.message;
-        }
+        if (issue.path[0]) fieldErrors[issue.path[0].toString()] = issue.message;
       }
       setErrors(fieldErrors);
       return;
     }
 
+    setSubmitting(true);
     try {
-      setSubmitting(true);
-      // Invariant: await mutation resolution before dismissing modal dialog
+      // Invariant: await the mutation before the shell closes the dialog.
       await onSubmit(result.data);
-      onOpenChange(false);
-    } catch (err: unknown) {
-      // Handled by global toast / mutation boundary
+      onClose();
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
-        <DialogHeader>
-          <DialogTitle>
-            {initialData ? t('common.edit') : t('common.create')}
-          </DialogTitle>
-        </DialogHeader>
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={initialData ? t('common.edit') : t('common.create')}
+      size="md"
+      saving={submitting}
+      saveDisabled={submitting}
+      onSave={handleSave}
+    >
+      <div className="space-y-4">
+        <div className="space-y-1.5">
+          <Label htmlFor={nameId}>{t('fields.name')}</Label>
+          <Input
+            id={nameId}
+            value={formData.name}
+            onChange={(e) => setFormData((prev) => ({ ...prev, name: e.target.value }))}
+            aria-invalid={errors.name ? true : undefined}
+            aria-describedby={errors.name ? `${nameId}-error` : undefined}
+          />
+          {errors.name && <FieldErrorMessage id={`${nameId}-error`} message={errors.name} />}
+        </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 py-2">
-          <div className="space-y-1.5">
-            <Label htmlFor={nameId}>{t('fields.name')}</Label>
-            <Input
-              id={nameId}
-              value={formData.name}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, name: e.target.value }))
-              }
-              aria-invalid={!!errors.name}
-            />
-            {errors.name && (
-              <p className="text-destructive text-xs">{errors.name}</p>
-            )}
-          </div>
+        <div className="space-y-1.5">
+          <Label htmlFor={codeId}>{t('fields.code')}</Label>
+          <Input
+            id={codeId}
+            value={formData.code}
+            onChange={(e) => setFormData((prev) => ({ ...prev, code: e.target.value }))}
+            aria-invalid={errors.code ? true : undefined}
+            aria-describedby={errors.code ? `${codeId}-error` : undefined}
+          />
+          {errors.code && <FieldErrorMessage id={`${codeId}-error`} message={errors.code} />}
+        </div>
 
-          <div className="space-y-1.5">
-            <Label htmlFor={codeId}>{t('fields.code')}</Label>
-            <Input
-              id={codeId}
-              value={formData.code}
-              onChange={(e) =>
-                setFormData((prev) => ({ ...prev, code: e.target.value }))
-              }
-              aria-invalid={!!errors.code}
-            />
-            {errors.code && (
-              <p className="text-destructive text-xs">{errors.code}</p>
-            )}
-          </div>
-
-          <DialogFooter className="pt-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              disabled={submitting}
-            >
-              {t('common.cancel')}
-            </Button>
-            <Button type="submit" disabled={submitting}>
-              {submitting ? t('common.saving') : t('common.save')}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+        <div className="space-y-1.5">
+          <Label htmlFor={descId}>{t('fields.description')}</Label>
+          <Input
+            id={descId}
+            value={formData.description ?? ''}
+            onChange={(e) => setFormData((prev) => ({ ...prev, description: e.target.value }))}
+          />
+        </div>
+      </div>
+    </FormModal>
   );
 }

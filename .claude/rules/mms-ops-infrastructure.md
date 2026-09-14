@@ -9,9 +9,10 @@ paths:
   - "apps/backend/.env.example"
   - "scripts/**/*.sh"
   - "scripts/apache/**"
+  - "scripts/production/**"
   - "apps/backend/src/index.ts"
   - ".github/workflows/**"
-  - "scripts/pm2/**"
+  - "ecosystem.config.cjs"
   - "docker-compose*.yml"
 ---
 
@@ -35,7 +36,7 @@ pnpm install          # Install all dependencies across workspaces
 pnpm dev              # Start frontend + backend concurrently via Turbo
 pnpm build            # Build shared package and applications
 pnpm typecheck        # Run typechecking across the entire monorepo (TypeScript 7.0)
-pnpm test             # Run Vitest 4 / node:test suites for all workspaces
+pnpm test             # Run Vitest 4 suites for all workspaces (root turbo task)
 ```
 
 ### Local Dev Helper Scripts
@@ -114,7 +115,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) runs a parallelized Dir
 `deploy.yml` triggers on CI success for `main` (`workflow_run`) or manual dispatch: downloads the CI artifact (or builds on dispatch), SCPs to the VPS, runs `scripts/deploy-on-server.sh` pinned to `DEPLOY_SHA` (= CI `head_sha`). Schema DDL runs on backend startup via `initDb` / Drizzle migrate — no separate deploy migrate step. Rollback: `bash scripts/deploy-rollback.sh` (uses `.deploy-releases/`).
 
 CI Node/pnpm images must match root `engines` / `packageManager` exactly — upgrade workflow → **`mms-dependencies.md`**. Never commit `.env` or secrets in artifacts.
-Run responsive Playwright specs as **separate** CI steps (no bare `--` before the path) — `mms-testing-observability.md` / `mms-ui-ux-design.md` §7.
+Run responsive Playwright specs as **separate** CI steps (no bare `--` before the path) — `mms-testing-observability.md` / `mms-ui-ux-design.md` §4.
 Retain Playwright **trace/video on failure** for responsive (and a11y smoke) specs as CI artifacts — do not discard failure diagnostics.
 Supply-chain: Dependabot/Renovate + dependency-review → **`mms-dependencies.md`**.
 

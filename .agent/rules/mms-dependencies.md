@@ -89,7 +89,7 @@ Developing with Node.js 24 leverages native runtime capabilities to eliminate th
 | **Resource Cleanup** | `using` / `await using` (Explicit Resource Management) | Manual `try/finally` connection cleanup boilerplate |
 | **Request Tracking** | `AsyncLocalStorage` via `AsyncContextFrame` | Manual trace parameter drilling |
 | **Structured Logging** | Pino / stdout JSON logging for container/orchestrator shipping | In-process direct-to-file log writers |
-| **Native Testing** | `node:test` + `node:assert/strict` (auto-awaits subtests) | `jest`, `mocha` |
+| **Test Runner** | `vitest` (workspace standard everywhere) | `jest`, `mocha` |
 | **TS Execution** | `--experimental-strip-types` for scripts/CLIs | Unnecessary upfront build steps for simple TS scripts |
 | **Security Controls** | `--permission` model (`--allow-fs-read`, etc.) | Unrestricted process execution in hardened environments |
 | **Process Lifecycle** | Catch `SIGTERM`/`SIGINT`, clean drain, unref fallback timeout | Ungraced process kills or hanging connection pools |

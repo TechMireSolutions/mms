@@ -4,7 +4,6 @@ paths:
   - "apps/frontend/src/hooks/**"
   - "apps/frontend/src/tenant/hooks/**"
   - "apps/frontend/src/tenant/features/**/hooks/**"
-  - "apps/frontend/src/platform/**/*hook*"
   - "apps/frontend/src/platform/**/hooks/**"
   - "apps/frontend/src/lib/contexts/ContactConfigContext.tsx"
   - "apps/frontend/src/lib/contacts/**"
@@ -60,7 +59,7 @@ Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / brandi
 
 ## 5. Module Config (Standard Hook)
 
-Module configuration should build on the shared `createStandardModuleConfigHook` (`hooks/createStandardModuleConfigHook.ts`) — used by Teachers / Students / Sessions / Users / Enrollments via `useStandardModuleConfig` (`hooks/useStandardModuleConfig.ts`). Contacts is the richer reference: `useContactStandardConfig` (`lib/contacts/useContactStandardConfig.ts`) calls the same hook with optional params for lookups, column-layout, relationship mirrors, and custom-tab sync, surfaced through `ContactConfigContext` (`lib/contexts/ContactConfigContext.tsx` + `lib/contacts/*` slices: `useContactConfigPrefs`, `useContactsConfigEnhance`). Mount the provider once via `TenantScopedProviders` (tenant host only) — never nest on child pages. Extend the hook (optional params) instead of forking a bespoke provider per module.
+Module configuration should build on the shared `createStandardModuleConfigHook` (`hooks/createStandardModuleConfigHook.ts`) — used by Teachers / Students / Sessions / Users / Enrollments via `useStandardModuleConfig` (`hooks/useStandardModuleConfig.ts`). Contacts is the richer reference: `useContactConfigProviderValue` (`apps/frontend/src/lib/contacts/useContactConfigProviderValue.ts`) supplies the optional params for lookups, column-layout, relationship mirrors, and custom-tab sync, surfaced through `ContactConfigContext` (`ContactConfigProvider` / `useContactConfig` / `useContactColumns` in `apps/frontend/src/lib/contexts/ContactConfigContext.tsx`). Mount the provider once via `TenantScopedProviders` (tenant host only) — never nest on child pages. Extend the hook (optional params) instead of forking a bespoke provider per module.
 
 ## 6. RBAC & Viewer Permissions
 

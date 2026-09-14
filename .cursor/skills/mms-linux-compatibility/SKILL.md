@@ -1,6 +1,10 @@
 ---
 name: mms-linux-compatibility
-description: Checks and enforces Linux/Ubuntu VPS compatibility — case-sensitive imports, LF line endings, permissions, PM2. Use when preparing deploy, fixing VPS path/casing issues, or reviewing shell scripts for CRLF. Do NOT use for local dev startup (use mms-dev-setup) or production Apache/domain routing (use mms-ops-deploy).
+description: Audits the repository for Linux/Ubuntu VPS portability — CRLF line endings, case-sensitive imports, execute bits, and path casing. Use when preparing a deploy or chasing an error that only reproduces on the server. Do NOT use for local workstation setup (use mms-dev-setup) or for Apache/domain routing and PM2 topology (use mms-ops-deploy).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # Linux VPS Compatibility Verification Workflow
@@ -64,3 +68,13 @@ To manage application processes securely and ensure they survive reboots:
   pm2 logs mmsv2-backend --lines 50
   pm2 status
   ```
+
+## Script
+
+`scripts/check-linux-compat.sh` audits CRLF line endings and missing execute bits across `scripts/`, `.agent/`, `apps/*/src`, `.github/workflows`, and `e2e/`:
+
+```bash
+bash scripts/check-linux-compat.sh
+```
+
+Run it before any deploy; it exits non-zero on the first class of failure it finds.

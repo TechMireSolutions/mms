@@ -1,6 +1,10 @@
 ---
 name: mms-shared-package
 description: Extends @mms/shared with types, settings defaults, module manifests, translation keys, messaging schemas, and pure utilities shared by frontend and backend. Use when adding shared types, formatDate, formatMoney, parsePhoneNumber, manifests, or moving duplicated logic to packages/shared. Do NOT use for DOM/React-specific UI components (use mms-frontend) or Fastify backend-only services (use mms-backend-api).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # @mms/shared Package Workflow
@@ -88,6 +92,16 @@ If used in 2+ modules OR FE+BE → extract pure helper → replace duplicates �
 - [ ] No React/Fastify/browser APIs
 - [ ] pnpm typecheck
 ```
+
+## Script
+
+`scripts/check-shared-exports.sh` enforces the leaf-package purity contract:
+
+```bash
+bash scripts/check-shared-exports.sh
+```
+
+Flags runtime imports (React, Fastify, Drizzle, pg, Redis, BullMQ, Pino) and environment-bound APIs (`window.*`, `document.*`, `localStorage`, `sessionStorage`, `node:` builtins). Anything it reports belongs in `apps/frontend` or `apps/backend`, not here.
 
 ## Done
 

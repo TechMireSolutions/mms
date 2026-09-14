@@ -15,7 +15,7 @@ Authoritative performance and resource constraints across **tenant workspaces an
 
 - **Zero Queries in Loops (N+1 Elimination):** NEVER execute database queries inside iterative loops (`for`, `forEach`, `map`, `Promise.all`).
   - Batch iterations using Drizzle relational `with: { ... }` queries, `inArray(table.column, ids)` predicates (bounded to $\le 500$ IDs via shared `bulkIdsBodySchema`), SQL `JOIN`s, or batch resolution endpoints (`/resolve`).
-- **Zero Wildcard Projections (`SELECT *` Strict Ban):** NEVER emit `SELECT *` or bare Drizzle `db.select().from(table)` without column selection across network — enforced by `pnpm run check:db-projections` (CI). 18 pre-existing sites are baselined in that script as a ratchet (17 in `sessionRepositoryHydrate.ts`, 1 in the outbox CDC processor); the ban is not retroactively satisfied, and no NEW site may be added. The hazard is future bloat, not measured cost today: the tables are 5–17 columns and their mappers read most of them, so adding one wide `jsonb` to `session_classes` would silently inflate every session-list query with nothing to catch it boundaries.
+- **Zero Wildcard Projections (`SELECT *` Strict Ban):** NEVER emit `SELECT *` or bare Drizzle `db.select().from(table)` without column selection across the network. `pnpm run check:db-projections` (CI) holds the pre-existing sites as a ratchet — it prints `count` against its own `BASELINE`, and no NEW site may be added. The hazard is future bloat, not measured cost today: these tables are narrow and their mappers read most columns, but adding one wide `jsonb` column would silently inflate every list query. Do not restate the count here — the script is the SSOT.
   - Explicit typed column projection required (e.g. `db.select({ id: table.id }).from(table)` or `db.query.findMany({ columns: { id: true } })`). Strip heavy text, notes, and audit blobs from list queries; load only on `GET /:id`. Align projections 1:1 with `@mms/shared` Response DTOs.
 - **Mandatory Indexing for Query Predicates:**
   - ALWAYS back columns used in `where()` filters, `leftJoin() ... on()` foreign key links, and `orderBy()` sorting with explicit indexes in Drizzle schema definitions.
@@ -33,7 +33,7 @@ Authoritative performance and resource constraints across **tenant workspaces an
   - Archive hot audit partitions by detaching date partitions (`ALTER TABLE ... DETACH PARTITION`) instead of running `DELETE` — details `mms-data-layer.md` §5.
 - **Soft-Delete Indexing & Storage Engine Efficiency:**
   - Active list queries must hit Category B partial indexes (`WHERE deleted_at IS NULL`), trash queries hit Category C (`WHERE deleted_at IS NOT NULL`).
-  - High-churn soft-deleted tables (`message_logs`, `attendance_records`) must configure aggressive autovacuum thresholds in DDL (`autovacuum_vacuum_scale_factor = 0.05`) — details `mms-data-layer.md` §6.10.
+  - High-churn soft-deleted tables (`message_logs`, `attendance_records`) must configure aggressive autovacuum thresholds in DDL (`autovacuum_vacuum_scale_factor = 0.05`) — details `mms-data-layer.md` §6.3.
 - **BRIN (Block Range Index) for Append-Only Time-Series:**
   - Sequential append-only tables (`audit_trail_events`, `message_logs`) must index monotonic timestamp columns (`transaction_timestamp`, `created_at`) using PostgreSQL BRIN indexes (`using: 'brin'`) rather than standard B-Trees.
   - BRIN indexes consume < 1% of the disk space of B-Trees, maintain high buffer cache residency, and eliminate B-Tree page split / rebalancing write amplification during continuous inserts.
@@ -57,7 +57,7 @@ Authoritative performance and resource constraints across **tenant workspaces an
   - Never serialize internal database attributes (`tenantId`, password hashes, salts, internal flags) to client consumers. Format money as exact decimal strings (`/^\d+(\.\d{1,2})?$/`).
 - **Audit Payload Minimization & Canonical Hashing (`mms-audit-trail`):**
   - Minimize audit payloads at capture time: never log full raw PII or secrets into `old_state`/`new_state`.
-  - State hashing and delta comparisons must strictly use RFC 8785 (JSON Canonicalization Scheme - JCS) for deterministic representation, avoiding CPU-heavy custom recursive sorting on hot write paths — `mms-data-layer.md` §5.1.
+  - State hashing and delta comparisons must strictly use RFC 8785 (JSON Canonicalization Scheme - JCS) for deterministic representation, avoiding CPU-heavy custom recursive sorting on hot write paths — `mms-data-layer.md` §5.2.
 - **Batched Single-Statement Bulk Updates:**
   - `bulkDeleteFn` and `bulkRestoreFn` must execute a single batched SQL `UPDATE` statement scoped via `inArray(table.id, ids)`. Sequential row update loops ($N+1$) are strictly banned — `mms-data-layer.md` §6.9.
 - **Chunked Lock-Free Background Purge Processing:**
@@ -90,6 +90,6 @@ Authoritative performance and resource constraints across **tenant workspaces an
 ---
 
 ## 6. Safety, Verification & Documentation Standards
-- **Backward Compatibility:** Maintain 100% contract and schema compatibility during performance refactors.
-- **Verification Gate:** Run `pnpm typecheck && pnpm test` after all performance edits.
+- **Backward Compatibility:** Performance refactors must not change response contracts or schema. If a shape must change, land the contract change separately with its DTO and tests.
+- **Verification Gate:** Run `pnpm typecheck` plus the scoped tests for what you touched (`pnpm test` = turbo unit/integration across workspaces; `pnpm test:e2e` for browser flows). Performance-sensitive changes also have ratchets in CI — `pnpm run check:db-projections`, `pnpm run check:migration-indexes`, `pnpm run check:bundle` — run the relevant one locally.
 - **Document Bottlenecks:** Document Baseline Bottleneck and Quantified Resource Saved (CPU, RAM, DB queries, bundle size) in PR / completion reviews.

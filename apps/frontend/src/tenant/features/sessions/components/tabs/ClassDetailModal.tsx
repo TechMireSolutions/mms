@@ -5,15 +5,15 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GraduationCap, Calendar, Coffee, Award, Wallet } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
+import { SubTabBar } from '@/components/ui/SubTabBar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTeachersContractList, useTeachersByIds } from '@/tenant/hooks/collections/teachers';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
-import { TEACHERS_MODULE_MANIFEST, type Teacher } from '@mms/shared';
+import { TEACHERS_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from '@mms/shared';
 import type { Class } from '@/lib/data/sessionsData';
 import {
   type ClassDetailTabId,
   type ClassDetailTabItem,
-  formatTeacherDisplayName,
   useClassDetailDraft,
   ClassDetailGeneralTab,
   ClassDetailFeesTab,
@@ -31,11 +31,11 @@ interface ClassDetailModalProps {
 }
 
 const TABS: readonly ClassDetailTabItem[] = [
-  { id: 'general', label: 'General & Rules', icon: GraduationCap },
-  { id: 'fees', label: 'Fees & Discounts', icon: Wallet },
-  { id: 'schedule', label: 'Schedule & Timetable', icon: Calendar },
-  { id: 'budget', label: 'Budget & Refreshment', icon: Coffee },
-  { id: 'scholarship', label: 'Scholarships', icon: Award },
+  { id: 'general', labelKey: 'sessions.classes.detail.tab.general', icon: GraduationCap },
+  { id: 'fees', labelKey: 'sessions.classes.detail.tab.fees', icon: Wallet },
+  { id: 'schedule', labelKey: 'sessions.classes.detail.tab.schedule', icon: Calendar },
+  { id: 'budget', labelKey: 'sessions.classes.detail.tab.budget', icon: Coffee },
+  { id: 'scholarship', labelKey: 'sessions.classes.detail.tab.scholarship', icon: Award },
 ];
 
 export function ClassDetailModal({
@@ -56,25 +56,6 @@ export function ClassDetailModal({
     open,
   );
   const teachersList = (teachersData?.body?.teachers ?? []) as Teacher[];
-
-  const initialTeacherId = sessionClass?.teacherId;
-  const { data: selectedTeachersData } = useTeachersByIds(
-    initialTeacherId ? [initialTeacherId] : [],
-  );
-  const selectedTeachers = (selectedTeachersData ?? []) as Teacher[];
-
-  const allTeachers = useMemo(() => {
-    const map = new Map<string, Teacher>();
-    for (const teacher of teachersList) {
-      if (teacher?.id) map.set(String(teacher.id), teacher);
-    }
-    for (const teacher of selectedTeachers) {
-      if (teacher?.id && !map.has(String(teacher.id))) {
-        map.set(String(teacher.id), teacher);
-      }
-    }
-    return Array.from(map.values());
-  }, [teachersList, selectedTeachers]);
 
   const {
     classDraft,
@@ -101,7 +82,31 @@ export function ClassDetailModal({
     activeScholarship,
     updateScholarship,
     updateEligibility,
-  } = useClassDetailDraft({ open, sessionClass, allTeachers });
+  } = useClassDetailDraft({ open, sessionClass, allTeachers: teachersList });
+
+  // Track the live draft teacher so a newly assigned teacher not present in the
+  // active list is still resolved by id.
+  const selectedTeacherId = classDraft.teacherId ? [classDraft.teacherId] : [];
+  const { data: selectedTeachersData } = useTeachersByIds(selectedTeacherId);
+  const selectedTeachers = (selectedTeachersData ?? []) as Teacher[];
+
+  const allTeachers = useMemo(() => {
+    const map = new Map<string, Teacher>();
+    for (const teacher of teachersList) {
+      if (teacher?.id) map.set(String(teacher.id), teacher);
+    }
+    for (const teacher of selectedTeachers) {
+      if (teacher?.id && !map.has(String(teacher.id))) {
+        map.set(String(teacher.id), teacher);
+      }
+    }
+    return Array.from(map.values());
+  }, [teachersList, selectedTeachers]);
+
+  const subTabs = useMemo(
+    () => TABS.map((tab) => ({ key: tab.id, label: t(tab.labelKey), icon: tab.icon })),
+    [t],
+  );
 
   useEffect(() => {
     if (open) {
@@ -127,7 +132,7 @@ export function ClassDetailModal({
 
     let resolvedTeacherName = classDraft.teacherName;
     if (classDraft.teacherId) {
-      const teacher = allTeachers.find((t) => String(t.id) === String(classDraft.teacherId));
+      const teacher = allTeachers.find((candidate) => String(candidate.id) === String(classDraft.teacherId));
       if (teacher) {
         resolvedTeacherName = formatTeacherDisplayName(teacher) || resolvedTeacherName;
       }
@@ -140,7 +145,11 @@ export function ClassDetailModal({
     <FormModal
       open={open}
       onClose={onClose}
-      title={classDraft.name ? `Class: ${classDraft.name}` : 'New Session Class'}
+      title={
+        classDraft.name
+          ? t('sessions.classes.detail.title', { name: classDraft.name })
+          : t('sessions.classes.detail.newTitle')
+      }
       icon={GraduationCap}
       cancelLabel={t('common.cancel')}
       saveLabel={t('common.save')}
@@ -149,28 +158,7 @@ export function ClassDetailModal({
       error={Object.values(errors)[0]}
     >
       <div className="max-w-3xl space-y-4">
-        {/* Navigation SubTabs */}
-        <div className="flex gap-1.5 overflow-x-auto pb-2 border-b border-border/60 scrollbar-none">
-          {TABS.map((tab) => {
-            const Icon = tab.icon;
-            const isActive = activeTab === tab.id;
-            return (
-              <button
-                key={tab.id}
-                type="button"
-                onClick={() => setActiveTab(tab.id)}
-                className={`flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
-                  isActive
-                    ? 'bg-primary text-primary-foreground shadow-xs'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-muted/60'
-                }`}
-              >
-                <Icon className="h-3.5 w-3.5" />
-                <span>{tab.label}</span>
-              </button>
-            );
-          })}
-        </div>
+        <SubTabBar tabs={subTabs} value={activeTab} onChange={setActiveTab} />
 
         {/* Tab Body */}
         <div className="space-y-4">

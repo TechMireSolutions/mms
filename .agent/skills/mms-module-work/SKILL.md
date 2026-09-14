@@ -1,6 +1,10 @@
 ---
 name: mms-module-work
 description: Implements or reviews MMS module command centres and Work tabs — metrics, directories, drawers, bulk actions, soft-delete trash, column prefs. Use when changing PageHeader command centre, Work directory, trash/restore, bulk actions, detail drawers, filters, or mobile cards. Do NOT use for top-level 3-tier module shells (use mms-module-page), module preferences configuration (use mms-module-setup), or analytical report charts (use mms-reports-export).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Module Work Workflow
@@ -64,7 +68,7 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 - [ ] Directory viewMode SSOT — cards default `< md`, table `md+`; toggle overrides without CSS dual-render
 - [ ] Column widths persist — local + `/column-preferences`; merge preserves device widths
 - [ ] Copy via t(); no raw fetch('/api/...')
-- [ ] Mandatory virtualization: `@tanstack/react-virtual` for tables/lists/cards > 30 items (`mms-performance.md`); card rows `< md` and/or `overflow-x-auto` tables; touch ≥ 44px (`mms-ui-ux-design.md` §7)
+- [ ] Mandatory virtualization: `@tanstack/react-virtual` for tables/lists/cards > 30 items (`mms-performance.md`); card rows `< md` and/or `overflow-x-auto` tables; touch ≥ 44px (`mms-ui-ux-design.md` §4)
 ```
 
 ## Do Not

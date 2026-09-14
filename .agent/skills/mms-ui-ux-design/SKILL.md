@@ -1,6 +1,10 @@
 ---
 name: mms-ui-ux-design
 description: Covers the Master Module Scaffold Layout, Tailwind CSS v4 BiDi Design Tokens, and Directional Class Refactoring Guide. Use when designing UI/UX components, enforcing logical CSS properties for BiDi layouts, or adhering to the layout contract. Do NOT use for form field validation and form modals (use mms-form-architecture) or accessibility axe testing (use mms-a11y-smoke).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS UI/UX Design System & BiDi Layout Contract

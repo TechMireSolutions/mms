@@ -1,6 +1,11 @@
 ---
 name: mms-code-review
-description: Reviews MMS code against project rules, skills, and migration status. Use when reviewing PRs, doing a code review, checking rule compliance, or auditing backend/frontend changes before merge. Do NOT use for initial environment setup (use mms-dev-setup), new module scaffolding (use mms-module-page), or executing end-to-end browser test suites (use mms-testing-e2e).
+description: Reviews a concrete change set (PR or local diff) against MMS rules before merge — severity triage, rule citations, and a merge/no-merge verdict. Use when a specific diff must be accepted or rejected before merge. Do NOT use for finding and fixing a security weakness (use mms-backend-security), for authoring a new module (use mms-module-page), or for running the browser test suites (use mms-testing-e2e).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
+allowed-tools: Read Grep Glob Bash(pnpm typecheck) Bash(pnpm lint) Bash(pnpm test) Bash(bash scripts/pre-pr-review.sh)
 ---
 
 # MMS Code Review
@@ -59,7 +64,7 @@ cd apps/frontend && pnpm lint
 cd apps/backend && pnpm lint
 ```
 
-E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical path: `e2e/tests/onboarding-login.spec.ts`)
+E2E when touching auth/routing/onboard: `pnpm test:e2e` (critical path: `e2e/tests/platform-onboarding.spec.ts`)
 
 ## Checklist
 
@@ -212,6 +217,16 @@ E2E when touching auth/routing/onboard: `pnpm exec playwright test` (critical pa
 - **Minor:** style, optional DRY, residual `role ===` in untouched files
 
 ## References
+
+## Script
+
+`scripts/pre-pr-review.sh` runs the deterministic gate set before you review by hand:
+
+```bash
+bash scripts/pre-pr-review.sh
+```
+
+It runs the standards verifier, the migration-index and DB-projection ratchets, `pnpm typecheck` and `pnpm lint`. It does **not** run tests, e2e, or gitleaks — add `pnpm test` / `pnpm test:e2e` for the areas you touched, and remember CI scans the full git history for secrets.
 
 - Rules: `mms-api-interface.mdc`, `mms-data-layer.mdc`, `mms-hooks.mdc`, `mms-ui-ux-design.mdc`, `mms-auth-security.mdc`, `mms-form-architecture.mdc`, `mms-messaging.mdc`, `mms-migration-status.mdc`, `mms-performance.mdc`
 - Skills: `mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-soft-delete`, `mms-audit-trail`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`

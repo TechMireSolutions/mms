@@ -1,6 +1,11 @@
 ---
 name: mms-ops-deploy
-description: MMS production deploy on Hetzner — Apache vhost isolation, PORT=5002, MMS_APP_DOMAIN, GitHub Actions, PM2, merge-backend-env. Use when fixing production server, deploy failures, wrong domain routing, or Apache ProxyPass. Do NOT use for local developer workstation setup (use mms-dev-setup) or Linux line-ending verification (use mms-linux-compatibility).
+description: Operates the MMS production deployment on Hetzner — Apache vhost isolation, PORT 5002, MMS_APP_DOMAIN, GitHub Actions deploy, PM2 topology, and merge-backend-env. Use when fixing a production server, a failed deploy, or wrong domain routing. Do NOT use for local dev servers (use mms-dev-setup), repo-wide portability auditing (use mms-linux-compatibility), or diagnosing a live outage (use mms-incident-response).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
+compatibility: Requires SSH access to the Hetzner VPS and PM2/Apache on the server; never run against production without an explicit instruction.
 ---
 
 # MMS Ops & Production Deploy

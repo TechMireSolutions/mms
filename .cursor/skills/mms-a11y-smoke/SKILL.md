@@ -1,6 +1,12 @@
 ---
 name: mms-a11y-smoke
-description: Runs accessibility smoke audits, axe-core scans, focus-return verification, and touch target checks across AppLayout, FormModal, Table, and interactive primitives. Use when authoring or refactoring UI components, shell layouts, or modal dialogs. Do NOT use for inventing design tokens (use mms-ui-ux-design) or building create/edit forms (use mms-form-architecture).
+description: Runs accessibility verification for MMS UI work — axe scans, focus-return checks, and touch-target floors on AppLayout, FormModal, Table, and interactive primitives. Use when a11y conformance must be PROVEN for a change (run the axe spec, triage serious/critical violations). Do NOT use for designing tokens or layout (use mms-ui-ux-design), building create/edit forms (use mms-form-architecture), or general component authoring (use mms-frontend).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
+compatibility: Requires Playwright browsers for the full axe mode; static mode is dependency-free.
+allowed-tools: Read Grep Glob Bash(bash scripts/smoke-a11y.sh) Bash(pnpm test:e2e)
 ---
 
 # MMS A11y Smoke Workflow
@@ -39,6 +45,17 @@ Do **not** use to invent design tokens → `mms-ui-ux-design.mdc` rule. Do **not
 - [ ] FormModal chrome: dvh/svh / safe-area when touched
 - [ ] 375 / 768 / 1440 spot-check when shell touched
 ```
+
+## Script
+
+`scripts/smoke-a11y.sh` — two modes:
+
+```bash
+bash scripts/smoke-a11y.sh          # static heuristics (advisory, exits 0; MMS_A11Y_STRICT=1 to fail)
+bash scripts/smoke-a11y.sh full     # real axe gate: Playwright tests/a11y-shell.spec.ts (exits non-zero on violations)
+```
+
+Run `full` for any change to `AppLayout`, `FormModal`, `Table`, or shared primitives; static mode is a quick nudge, not evidence.
 
 ## Done
 

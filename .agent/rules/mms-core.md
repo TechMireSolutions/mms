@@ -7,19 +7,20 @@ description: MMS stack, boundaries, ownership index, and MMS-specific edit disci
 
 Madrasa Management System monorepo — applies on every task across both **tenant** and **platform** boundaries.
 
-**Workflow skills:** orientation → `antigravity-workspace` · install/run → `mms-dev-setup`. Matrix below (rules = norms; skills = checklists).
+**Workflow skills:** orientation → `antigravity-workspace` · install/run → `mms-dev-setup`.
+**Ownership matrix** (topic → owner rule → workflow skill) → `.cursor/rules/README.md`. Rules = norms (SSOT); skills = checklists that point back at them.
 
 ## Monorepo Layout & Stack
 
 ```
 apps/frontend/     React 19 + Vite 8 · React Router 7 · Tailwind v4 · Radix UI/shadcn · TanStack Query v5 + @ts-rest · Zustand 5 · Framer Motion 13 · Lucide · Recharts 3
-apps/backend/      Fastify 5 + Node.js 24 (--experimental-strip-types, native built-ins, AsyncLocalStorage on AsyncContextFrame) · @ts-rest/fastify · PostgreSQL 16 + Drizzle ORM 0.45 · BullMQ 6 + Redis · Pino 10
+apps/backend/      Fastify 5 + Node.js 24 (native type stripping, built-ins, AsyncLocalStorage) · @ts-rest/fastify · PostgreSQL 16 + Drizzle ORM 0.45 · BullMQ 6 + Redis 7 · Pino 10
 packages/shared/   @mms/shared (SSOT for types, strict Zod 4 DTOs, @ts-rest contracts, schemas, constants, pure utils)
 ```
 
 - **Tooling & Runtimes:** Node.js `>=24.14.0`, pnpm `11.15.1`, Turbo `^2.10.9`, TypeScript `~7.0.2`.
-- **Root commands:** `pnpm dev`, `pnpm build`, `pnpm typecheck`, `pnpm test`.
-- **Environment:** `VITE_API_URL` (FE); `JWT_SECRET`, `DATABASE_URL` (BE).
+- **Root commands:** `pnpm dev`, `pnpm build`, `pnpm typecheck`, `pnpm test`, `pnpm lint`.
+- **Registry of every version pin, and the Node 24 runtime rules** → `mms-dependencies.md` (do not restate versions here).
 
 ## Boundaries & Layering
 
@@ -47,47 +48,19 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod 4 DTOs, @ts-rest cont
 - **Tenant Writes:** `authenticateTenant` + transaction RLS (`SET LOCAL app.current_tenant`) + `can()` / collection check. Validate with `@mms/shared` Zod before DB persistence. Never trust client body `workspaceSubdomain` or authz `userId`.
 - **Platform Writes:** `authenticatePlatform` + `platformUserCan` / `requirePlatformPermission` + password re-auth on destructive ops.
 - **Contacts Canonical:** Persons link by `contactId`; profile fields live on contacts. Hydrate on read, strip on write (`mms-fields.md`, `mms-form-architecture.md`).
-- **Data Standards:** Phone numbers E.164 via `parsePhoneNumber`; WhatsApp number ID via `PuppeteerWhatsAppProvider.getNumberId`; Money as decimal strings (`/^\d+(\.\d{1,2})?$/`); Sequential UUIDv7 (RFC 9562) for distributed/public primary keys to prevent B-Tree fragmentation.
-- **Node.js 24 Runtime Standards:** Mandatory `node:` imports, WHATWG `new URL()`, native built-ins, and `using` / `await using` resource lifecycle — norms `mms-dependencies.md`.
+- **Data Standards:** Phone numbers E.164 via `parsePhoneNumber`; WhatsApp number ID via `PuppeteerWhatsAppProvider.getNumberId`; money as decimal strings (`/^\d+(\.\d{1,2})?$/`); sequential UUIDv7 (RFC 9562) for distributed/public primary keys.
 - **React 19 & Frontend Standards:** Native `ref` as prop (ban `forwardRef` in newly authored components); mandatory `useId()` for accessible control/label pairs; TanStack Query as authoritative server state.
 - **Module Pages:** Three tiers only (Work, Reports, Setup) via `PageHeader` + `useFilteredModuleTierTabs` (`mms-module-architecture.md`).
 - **Write Mechanism:** Cookie SPA + `apiClient` only (no RSC server action posts) — `mms-form-architecture.md`.
-- **Audit Trail & Immutability:** RFC 8785 canonical JSON, outbox pattern, sharded hash chains, and right-to-erasure via crypto-shredding — `mms-data-layer.md` §5, skill `mms-audit-trail`.
-- **Soft-Delete Architecture & Lifecycle:** Mandatory for tenant entity tables; Category B partial index (`WHERE deleted_at IS NULL`), partial unique indexes, session revocation on delete, and lock-free chunked retention purge — `mms-data-layer.md` §6, skill `mms-soft-delete`.
+- **Audit Trail & Immutability:** RFC 8785 canonical JSON, outbox pattern, sharded hash chains, right-to-erasure via crypto-shredding — `mms-data-layer.md` §5, skill `mms-audit-trail`.
+- **Soft-Delete Architecture & Lifecycle:** Mandatory for tenant entity tables; Category B partial index (`WHERE deleted_at IS NULL`), partial unique indexes, session revocation on delete, lock-free chunked retention purge — `mms-data-layer.md` §6, skill `mms-soft-delete`.
+- **Background Jobs:** Long work runs in the BullMQ worker process, never in the request path — `mms-module-architecture.md` §5, skill `mms-background-jobs`.
+- **Migrations:** Forward-only DDL, expand/contract, lock-safe indexes (never a write-blocking `CREATE INDEX` in a migration) — `mms-data-layer.md` §7, skill `mms-schema-migrate`.
 
-## Standards Index (Ownership Matrix)
+## Edit Discipline
 
-| Topic | Owner Rule | Workflow Skill |
-|---|---|---|
-| Dependencies & Version Freshness | `mms-dependencies.md` | `mms-dependency-upgrade` |
-| File Structure, Naming & Title Case | `mms-structure-naming.md` | `mms-frontend` · `mms-shared-package` |
-| DRY, Extractions & Shared Package | `mms-dry.md` | `mms-shared-package` |
-| Auth, Sessions, CSRF, RBAC & Isolation | `mms-auth-security.md` | `mms-backend-security` |
-| API Contracts, Errors, Pagination & Bulk PUT | `mms-api-interface.md` | `mms-frontend` · `mms-backend-api` |
-| Data Layer, Drizzle RLS, PG Timeouts & Query | `mms-data-layer.md` | `mms-query-factories` · `mms-schema-migrate` |
-| Soft-Delete Architecture & Lifecycle | `mms-data-layer.md` · `mms-module-architecture.md` | `mms-soft-delete` · `mms-module-work` |
-| Audit Trails, Tamper-Evidence & Retention | `mms-data-layer.md` · `mms-auth-security.md` | `mms-audit-trail` · `mms-backend-security` |
-| Backend Architecture & Repository Gateway | `mms-api-interface.md` §2 · `mms-structure-naming.md` | `mms-backend-api` |
-| Work Directory, Detail Drawer & Trash UX | `mms-module-architecture.md` | `mms-module-work` · `mms-module-page` |
-| Background Jobs & Queue Processing | `mms-module-architecture.md` §5 | `mms-background-jobs` |
-| React Hook Recipes & Facades | `mms-hooks.md` | `mms-query-factories` · `mms-frontend` |
-| FormModal Architecture & Write Schemas | `mms-form-architecture.md` | `mms-form-architecture` |
-| UI Design System, Tokens, a11y & §7 Layout | `mms-ui-ux-design.md` | `mms-ui-ux-design` · `mms-frontend` · `mms-a11y-smoke` |
-| Module Work/Reports/Setup & Gold Standard §7 | `mms-module-architecture.md` | `mms-module-page` · `mms-module-work` · `mms-module-setup` |
-| Field & Tab Registries | `mms-fields.md` | `mms-fields-registry` · `mms-module-setup` |
-| Settings, i18n (en/ar/ur/fa) & Backup UI | `mms-settings-i18n.md` | `mms-settings-i18n` · `mms-backup-restore` |
-| Ops, Health, Ports (5002 prod / 3000 dev) & CI | `mms-ops-infrastructure.md` | `mms-dev-setup` · `mms-ops-deploy` · `mms-linux-compatibility` |
-| Testing, Observability & ErrorBoundary | `mms-testing-observability.md` | `mms-code-review` · `mms-a11y-smoke` |
-| Reports, Analytics & Exports | `mms-reports.md` | `mms-reports-export` |
-| Messaging Campaigns & Logs | `mms-messaging.md` | `mms-messaging` |
-| Performance, Efficiency, Caching & Virtualization | `mms-performance.md` | `mms-code-review` · `mms-backend-api` · `mms-frontend` |
-| Migration Debt Register | `mms-migration-status.md` | `mms-migration-fixes` |
-| Post-Edit Verification Checklist | `mms-completion-review.md` | `mms-code-review` |
-
-## Performance & Edit Discipline
-
-1. **Route-Lazy Heavy Deps:** Split charts, PDF, Excel, code editors into deferred chunks. Declare explicit dimensions on media/charts for zero CLS.
-2. **Rendering & Memoization:** Route-level `lazy` + `Suspense`. Memoize non-trivial calculations (`useMemo`) and callback/object references passed as dependencies (`useCallback`) to prevent render churn; avoid premature memoization on primitive operations. Leverage `startTransition` / `useDeferredValue` / `useEffectEvent` — always-on `mms-performance.md`.
+1. **Scope:** Edit in-scope files only; ask before deletions or large removals.
+2. **Clean Boundary:** Remove dead code, unused imports, and debug logs in the change boundary. Run `pnpm typecheck` after non-trivial changes.
 3. **File Sizing:** Hard ceiling ~300 lines / soft target ~220 lines. Split by concern behind stable barrels (`mms-structure-naming.md`).
-4. **Clean Boundary:** Remove dead code, unused imports, and debug logs. Run `pnpm typecheck` after non-trivial changes.
+4. **Performance & Rendering:** Route-lazy heavy deps; memoize non-trivial work; virtualize > 30 items — norms `mms-performance.md` (do not restate recipes here).
 5. **Git Safety:** Conventional Commits (`feat`/`fix`/`chore`). Never commit or push unless explicitly requested. Never commit `.env` or credentials — `mms-agent-universal.md`.

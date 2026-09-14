@@ -1,6 +1,10 @@
 ---
 name: mms-backup-restore
 description: Implements or audits workspace encrypted backup/export and wipe-restore — safety backup, validate-before-wipe, KDF/envelope, sync timeout rollback. Use when modifying BackupRestore UI, /api/db/backup or /api/db/sync, backup crypto, or restore safety gates. Do NOT use for raw PostgreSQL ops dumps (use mms-ops-deploy), general application settings/i18n (use mms-settings-i18n), or collection sync primary path (use mms-data-sync).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Backup & Restore Workflow

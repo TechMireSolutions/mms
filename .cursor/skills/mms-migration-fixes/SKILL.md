@@ -1,6 +1,11 @@
 ---
 name: mms-migration-fixes
-description: Addresses known MMS technical debt and active migration gaps documented in mms-migration-status.mdc. Use when tackling remaining architectural migrations, schema realignments, or soft-delete debt. Do NOT use for routine feature development (use mms-module-page), upgrading third-party packages (use mms-dependency-upgrade), or refactoring code without documented debt.
+description: Addresses the open priorities P1–P7 in mms-migration-status.mdc — schema realignment, soft-delete debt, and residual architecture gaps. Use when working an item that is explicitly listed as open debt in that register. Do NOT use for new feature work (use mms-module-page), schema DDL authoring (use mms-schema-migrate), soft-delete feature work (use mms-soft-delete), or dependency bumps (use mms-dependency-upgrade).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
+allowed-tools: Read Grep Glob Bash(pnpm typecheck) Bash(pnpm test)
 ---
 
 # MMS Migration Fixes
@@ -52,7 +57,7 @@ When the user asks to fix migration debt, work from the open priorities here and
 | Students & Teachers soft-delete Work UI | Trash toggle + restore/bulk restore (Contacts-style) |
 | Expanded soft-delete Work trash | Sessions, Attendance, Enrollments, Finance, Accounting, Obligations, Hasanat, Examinations, Question Bank (questions), Users (`tenant_users.deleted_at`) |
 | Module gold-standard parity | Hasanat → Examinations → Users → Messaging → Question Bank: upsert bulk PUT, awaited saves, setupSubTabs, ErrorState, Cmd/Ctrl+N |
-| Onboarding E2E critical path | `e2e/tests/onboarding-login.spec.ts` |
+| Onboarding E2E critical path | `e2e/tests/platform-onboarding.spec.ts` |
 | Contacts FORCE RLS + typed soft-delete SQL | Squashed `0000_init` (+ journal forward migrations); list filters on `deleted_at` |
 | Contacts entity leave document-store | Removed from `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`; typed `contacts` table only |
 | Google Contacts OAuth secrets table | `contact_google_sync_credentials` FORCE RLS; not `objects` |
@@ -92,8 +97,8 @@ Residual Work SQL-page debt for **other** modules (not Teachers/Users/Sessions) 
 5. **Low**: Unimplemented scheduled retention hard-purge worker (`purgeExpiredArchivedRecords`).
 
 **Fix:**
-- DDL migration `086_add_soft_delete_partial_unique_indexes.ts` for partial unique indexes (`WHERE deleted_at IS NULL`).
-- DDL migration `085_add_soft_delete_partial_indexes.ts` for Category B & C partial indexes.
+- Partial unique indexes (`WHERE deleted_at IS NULL`) already landed in `apps/backend/src/db/migrations_drizzle/0104_soft_delete_system_complete.sql`; verify remaining tables against the three-tier index strategy rather than adding a new migration by hand.
+- Category B/C partial indexes live in the same baseline — audit coverage with `pnpm run check:migration-indexes` and add missing pairs as forward-only DDL (`mms-data-layer.mdc` §7).
 - Add `deleted_with_cascade` column to enrollments; update session cascade soft-delete and restore logic (`docs/soft-delete.md` §2.2).
 - Standardize all query-flag parsing on `isQueryFlagTrue`.
 - Implement `purgeExpiredArchivedRecords` in `apps/backend/src/worker/` using chunked `LIMIT 500 FOR UPDATE SKIP LOCKED` (`docs/soft-delete.md` §13).
@@ -118,7 +123,7 @@ Residual Work SQL-page debt for **other** modules (not Teachers/Users/Sessions) 
 
 **Problem:** Shells + Work-route smoke are green (`responsive-shell` / `responsive-authenticated`). Platform `md` bottom nav and deep Reports/Setup builders are not asserted.
 
-**Fix:** Extend those specs when touching those surfaces — `mms-ui-ux-design.mdc` §7, `mms-testing-observability.mdc`. Do not treat missing depth as license to regress shell overflow/touch floors.
+**Fix:** Extend those specs when touching those surfaces — `mms-ui-ux-design.mdc` §4, `mms-testing-observability.mdc`. Do not treat missing depth as license to regress shell overflow/touch floors.
 
 ### P7 — PG statement timeout budgets (residual)
 

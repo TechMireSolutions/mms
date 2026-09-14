@@ -3,12 +3,12 @@ import { Calendar, Clock, Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
-import type { Teacher } from '@mms/shared';
+import { useTranslation } from '@/hooks/useTranslation';
+import { formatTeacherDisplayName, type Teacher } from '@mms/shared';
 import type {
   SessionClassSchedule,
   SessionClassTimetablePeriod,
 } from '@/lib/data/sessionsData';
-import { formatTeacherDisplayName } from './types';
 
 interface ClassDetailScheduleTabProps {
   schedules: SessionClassSchedule[];
@@ -33,6 +33,8 @@ export function ClassDetailScheduleTab({
   onRemovePeriod,
   onUpdatePeriod,
 }: ClassDetailScheduleTabProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-6">
       {/* Schedules Card */}
@@ -40,16 +42,16 @@ export function ClassDetailScheduleTab({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Calendar className="h-4 w-4 text-primary" />
-            <h4 className="text-sm font-semibold text-foreground">Class Schedule Dates</h4>
+            <h4 className="text-sm font-semibold text-foreground">{t('sessions.classes.detail.schedule.title')}</h4>
           </div>
           <Button size="sm" variant="outline" onClick={onAddSchedule} className="h-8 gap-1 text-xs">
-            <Plus className="h-3.5 w-3.5" /> Add Schedule Block
+            <Plus className="h-3.5 w-3.5" /> {t('sessions.classes.detail.schedule.add')}
           </Button>
         </div>
 
         {schedules.length === 0 ? (
           <p className="text-xs text-muted-foreground italic py-2 text-center">
-            No custom schedule block. Session start/end dates will apply.
+            {t('sessions.classes.detail.schedule.empty')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -61,10 +63,10 @@ export function ClassDetailScheduleTab({
                   value={sch.scheduleType}
                   onChange={(val) => onUpdateSchedule(sch.id, { scheduleType: val })}
                   options={[
-                    { value: 'daily', label: 'Daily' },
-                    { value: 'weekly', label: 'Weekly' },
-                    { value: 'monthly', label: 'Monthly' },
-                    { value: 'custom', label: 'Custom' },
+                    { value: 'daily', label: t('sessions.classes.detail.schedule.daily') },
+                    { value: 'weekly', label: t('sessions.classes.detail.schedule.weekly') },
+                    { value: 'monthly', label: t('sessions.classes.detail.schedule.monthly') },
+                    { value: 'custom', label: t('sessions.classes.detail.schedule.custom') },
                   ]}
                   className="w-40 min-w-[150px] shrink-0 text-xs"
                 />
@@ -74,7 +76,7 @@ export function ClassDetailScheduleTab({
                   onChange={(e) => onUpdateSchedule(sch.id, { startDate: e.target.value })}
                   className="text-xs"
                 />
-                <span className="text-xs text-muted-foreground">to</span>
+                <span className="text-xs text-muted-foreground">{t('sessions.classes.detail.to')}</span>
                 <Input
                   type="date"
                   value={sch.endDate}
@@ -84,6 +86,7 @@ export function ClassDetailScheduleTab({
                 <Button
                   size="icon"
                   variant="ghost"
+                  aria-label={t('sessions.classes.detail.removeItem')}
                   className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   onClick={() => onRemoveSchedule(sch.id)}
                 >
@@ -100,16 +103,16 @@ export function ClassDetailScheduleTab({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <Clock className="h-4 w-4 text-indigo-600" />
-            <h4 className="text-sm font-semibold text-foreground">Timetable & Period Breakdown</h4>
+            <h4 className="text-sm font-semibold text-foreground">{t('sessions.classes.detail.timetable.title')}</h4>
           </div>
           <Button size="sm" variant="outline" onClick={onAddPeriod} className="h-8 gap-1 text-xs">
-            <Plus className="h-3.5 w-3.5" /> Add Period
+            <Plus className="h-3.5 w-3.5" /> {t('sessions.classes.detail.timetable.add')}
           </Button>
         </div>
 
         {periods.length === 0 ? (
           <p className="text-xs text-muted-foreground italic py-2 text-center">
-            No periods defined yet. Click "Add Period" to specify class subjects, timings, and instructors.
+            {t('sessions.classes.detail.timetable.empty')}
           </p>
         ) : (
           <div className="space-y-2">
@@ -129,7 +132,7 @@ export function ClassDetailScheduleTab({
                   className="w-28 text-xs"
                 />
                 <Input
-                  placeholder="Subject (e.g. Hifz, Tajweed, Fiqh)"
+                  placeholder={t('sessions.classes.detail.timetable.subjectPlaceholder')}
                   value={period.subject}
                   onChange={(e) => onUpdatePeriod(period.id, { subject: e.target.value })}
                   className="flex-1 text-xs"
@@ -140,7 +143,7 @@ export function ClassDetailScheduleTab({
                   value={period.teacherName || ''}
                   onChange={(val) => {
                     const found = allTeachers.find(
-                      (t) => formatTeacherDisplayName(t) === val || (t.name || '').trim() === val,
+                      (teacher) => formatTeacherDisplayName(teacher) === val || (teacher.name || '').trim() === val,
                     );
                     onUpdatePeriod(period.id, {
                       teacherName: val,
@@ -148,9 +151,9 @@ export function ClassDetailScheduleTab({
                     });
                   }}
                   options={[
-                    { value: '', label: 'Select Teacher' },
-                    ...allTeachers.map((t) => {
-                      const label = formatTeacherDisplayName(t);
+                    { value: '', label: t('sessions.classes.detail.timetable.selectTeacher') },
+                    ...allTeachers.map((teacher) => {
+                      const label = formatTeacherDisplayName(teacher);
                       return {
                         value: label,
                         label,
@@ -162,6 +165,7 @@ export function ClassDetailScheduleTab({
                 <Button
                   size="icon"
                   variant="ghost"
+                  aria-label={t('sessions.classes.detail.removeItem')}
                   className="h-8 w-8 text-muted-foreground hover:text-destructive"
                   onClick={() => onRemovePeriod(period.id)}
                 >

@@ -3,9 +3,9 @@ import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { FORM_LABEL, FORM_INPUT_ERROR } from '@/components/ui/formStyles';
 import { FieldErrorMessage, RequiredMark } from '@/components/ui/FormPrimitives';
-import type { Teacher } from '@mms/shared';
+import { useTranslation } from '@/hooks/useTranslation';
+import { formatTeacherDisplayName, type Teacher } from '@mms/shared';
 import type { Class } from '@/lib/data/sessionsData';
-import { formatTeacherDisplayName } from './types';
 
 interface ClassDetailGeneralTabProps {
   classDraft: Class;
@@ -20,19 +20,21 @@ export function ClassDetailGeneralTab({
   errors,
   allTeachers,
 }: ClassDetailGeneralTabProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label className={FORM_LABEL} htmlFor="class-name">
-            Class Name<RequiredMark />
+            {t('sessions.classes.form.name')}<RequiredMark />
           </label>
           <Input
             id="class-name"
             name="name"
             value={classDraft.name}
             onChange={(e) => updateDraft('name', e.target.value)}
-            placeholder="e.g. Hifz Level 1, Nazra Boys"
+            placeholder={t('sessions.classes.form.namePlaceholder')}
             aria-invalid={Boolean(errors.name)}
             className={errors.name ? FORM_INPUT_ERROR : undefined}
           />
@@ -41,7 +43,7 @@ export function ClassDetailGeneralTab({
 
         <div>
           <label className={FORM_LABEL} htmlFor="class-gender">
-            Gender Group
+            {t('sessions.classes.detail.genderGroup')}
           </label>
           <FormSelect
             id="class-gender"
@@ -49,9 +51,9 @@ export function ClassDetailGeneralTab({
             value={classDraft.gender}
             onChange={(val) => updateDraft('gender', val as 'male' | 'female' | 'mixed')}
             options={[
-              { value: 'mixed', label: 'Mixed / Co-ed' },
-              { value: 'male', label: 'Male Only' },
-              { value: 'female', label: 'Female Only' },
+              { value: 'mixed', label: t('sessions.classes.detail.gender.mixed') },
+              { value: 'male', label: t('sessions.classes.detail.gender.male') },
+              { value: 'female', label: t('sessions.classes.detail.gender.female') },
             ]}
             className="w-full"
           />
@@ -60,7 +62,7 @@ export function ClassDetailGeneralTab({
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="class-min-age">Minimum Age</label>
+          <label className={FORM_LABEL} htmlFor="class-min-age">{t('sessions.classes.form.minAge')}</label>
           <Input
             id="class-min-age"
             name="minAge"
@@ -73,7 +75,7 @@ export function ClassDetailGeneralTab({
         </div>
 
         <div>
-          <label className={FORM_LABEL} htmlFor="class-max-age">Maximum Age</label>
+          <label className={FORM_LABEL} htmlFor="class-max-age">{t('sessions.classes.form.maxAge')}</label>
           <Input
             id="class-max-age"
             name="maxAge"
@@ -89,7 +91,7 @@ export function ClassDetailGeneralTab({
         </div>
 
         <div>
-          <label className={FORM_LABEL} htmlFor="class-calc-date">Age Calculation Date</label>
+          <label className={FORM_LABEL} htmlFor="class-calc-date">{t('sessions.classes.detail.ageCalculationDate')}</label>
           <Input
             id="class-calc-date"
             type="date"
@@ -102,7 +104,7 @@ export function ClassDetailGeneralTab({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
         <div>
           <label className={FORM_LABEL} htmlFor="class-capacity">
-            Maximum Students (Capacity)
+            {t('sessions.classes.form.capacity')}
           </label>
           <Input
             id="class-capacity"
@@ -114,7 +116,7 @@ export function ClassDetailGeneralTab({
         </div>
 
         <div>
-          <label className={FORM_LABEL} htmlFor="class-deadline">Enrollment Deadline</label>
+          <label className={FORM_LABEL} htmlFor="class-deadline">{t('sessions.classes.detail.enrollmentDeadline')}</label>
           <Input
             id="class-deadline"
             type="date"
@@ -124,15 +126,15 @@ export function ClassDetailGeneralTab({
         </div>
 
         <div>
-          <label className={FORM_LABEL} htmlFor="class-status">Status</label>
+          <label className={FORM_LABEL} htmlFor="class-status">{t('common.status')}</label>
           <FormSelect
             id="class-status"
             name="status"
             value={classDraft.status}
             onChange={(val) => updateDraft('status', val as 'active' | 'inactive')}
             options={[
-              { value: 'active', label: 'Active' },
-              { value: 'inactive', label: 'Inactive' },
+              { value: 'active', label: t('sessions.status.active') },
+              { value: 'inactive', label: t('sessions.classes.detail.status.inactive') },
             ]}
             className="w-full"
           />
@@ -141,17 +143,17 @@ export function ClassDetailGeneralTab({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="class-teacher">Lead Instructor</label>
+          <label className={FORM_LABEL} htmlFor="class-teacher">{t('sessions.classes.detail.leadInstructor')}</label>
           <FormSelect
             id="class-teacher"
             name="teacherId"
             value={classDraft.teacherId || ''}
             onChange={(val) => updateDraft('teacherId', val)}
             options={[
-              { value: '', label: 'Unassigned' },
-              ...allTeachers.map((t) => ({
-                value: String(t.id),
-                label: formatTeacherDisplayName(t),
+              { value: '', label: t('sessions.classes.unassigned') },
+              ...allTeachers.map((teacher) => ({
+                value: String(teacher.id),
+                label: formatTeacherDisplayName(teacher),
               })),
             ]}
             className="w-full"
@@ -159,12 +161,12 @@ export function ClassDetailGeneralTab({
         </div>
 
         <div>
-          <label className={FORM_LABEL} htmlFor="class-room">Classroom / Hall</label>
+          <label className={FORM_LABEL} htmlFor="class-room">{t('sessions.classes.detail.classroom')}</label>
           <Input
             id="class-room"
             value={classDraft.room || ''}
             onChange={(e) => updateDraft('room', e.target.value)}
-            placeholder="e.g. Hall A, Room 102"
+            placeholder={t('sessions.classes.form.roomPlaceholder')}
           />
         </div>
       </div>

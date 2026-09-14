@@ -1,6 +1,10 @@
 ---
 name: mms-backend-security
-description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, CSRF/Origin, rate limits, and auth artifacts. Use when reviewing security, fixing auth bypass, adding protected routes, auditing Fastify middleware, cookies, CORS, CSRF, Origin checks, Helmet/headers, or session/OTP flows. Do NOT use for general route implementation (use mms-backend-api), encrypted workspace backup crypto (use mms-backup-restore), or database RLS policies (use mms-data-layer.md and mms-soft-delete).
+description: Finds and fixes MMS backend auth weaknesses — tenant isolation, RBAC gaps, cookie/CSRF/Origin handling, rate limits, and session flows. Use when hardening or auditing a security mechanism (correctness of the control itself). Do NOT use for general route implementation (use mms-backend-api), for reviewing an unrelated change set (use mms-code-review), or for encrypted backup crypto (use mms-backup-restore).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Backend Security Workflow

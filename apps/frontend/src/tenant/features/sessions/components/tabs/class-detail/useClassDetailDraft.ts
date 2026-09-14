@@ -1,5 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
-import type { Teacher } from '@mms/shared';
+import { useState, useEffect, useCallback, useMemo } from 'react';
+import { formatTeacherDisplayName, type Teacher } from '@mms/shared';
 import type {
   Class,
   SessionClassFee,
@@ -10,8 +10,8 @@ import type {
   SessionClassTimetablePeriod,
   SessionClassRefreshment,
   SessionClassScholarship,
+  ScholarshipEligibility,
 } from '@/lib/data/sessionsData';
-import { formatTeacherDisplayName } from './types';
 
 export const EMPTY_CLASS: Class = {
   id: '',
@@ -36,6 +36,39 @@ export const EMPTY_CLASS: Class = {
   scholarships: [],
 };
 
+function createEmptyTimetable(classId: string): SessionClassTimetable {
+  return {
+    id: crypto.randomUUID(),
+    classId,
+    date: new Date().toISOString().slice(0, 10),
+    periods: [],
+  };
+}
+
+function createEmptyEligibility(): ScholarshipEligibility {
+  return {
+    id: crypto.randomUUID(),
+    orphan: false,
+    job: false,
+    business: false,
+    property: false,
+    familyMembers: 0,
+    onJobMembers: 0,
+    schoolGoingSiblings: 0,
+    residence: 'rental',
+  };
+}
+
+function createEmptyScholarship(classId: string): SessionClassScholarship {
+  return {
+    id: crypto.randomUUID(),
+    classId,
+    percentage: 0,
+    expiryDate: '',
+    eligibility: createEmptyEligibility(),
+  };
+}
+
 interface UseClassDetailDraftOptions {
   open: boolean;
   sessionClass: Class | null;
@@ -59,184 +92,214 @@ export function useClassDetailDraft({ open, sessionClass, allTeachers }: UseClas
 
   // 1. Fee Handlers
   const addFeeRow = useCallback(() => {
-    const newFee: SessionClassFee = {
-      id: crypto.randomUUID(),
-      classId: classDraft.id,
-      feeType: 'Tuition Fee',
-      amount: 0,
-    };
-    updateDraft('fees', [...(classDraft.fees || []), newFee]);
-  }, [classDraft.id, classDraft.fees, updateDraft]);
+    setClassDraft((prev) => {
+      const newFee: SessionClassFee = {
+        id: crypto.randomUUID(),
+        classId: prev.id,
+        feeType: 'Tuition Fee',
+        amount: 0,
+      };
+      return { ...prev, fees: [...(prev.fees || []), newFee] };
+    });
+  }, []);
 
   const removeFeeRow = useCallback((id: string) => {
-    updateDraft('fees', (classDraft.fees || []).filter((f) => f.id !== id));
-  }, [classDraft.fees, updateDraft]);
+    setClassDraft((prev) => ({ ...prev, fees: (prev.fees || []).filter((f) => f.id !== id) }));
+  }, []);
 
   const updateFeeRow = useCallback((id: string, patch: Partial<SessionClassFee>) => {
-    updateDraft('fees', (classDraft.fees || []).map((f) => (f.id === id ? { ...f, ...patch } : f)));
-  }, [classDraft.fees, updateDraft]);
+    setClassDraft((prev) => ({
+      ...prev,
+      fees: (prev.fees || []).map((f) => (f.id === id ? { ...f, ...patch } : f)),
+    }));
+  }, []);
 
   // 2. Discount Handlers
   const addDiscountRow = useCallback(() => {
-    const newDiscount: SessionClassDiscount = {
-      id: crypto.randomUUID(),
-      classId: classDraft.id,
-      discountType: 'Sibling Discount',
-      percentage: 0,
-      status: 'active',
-      startDate: '',
-      endDate: '',
-      eligibilityCriteria: {},
-    };
-    updateDraft('discounts', [...(classDraft.discounts || []), newDiscount]);
-  }, [classDraft.id, classDraft.discounts, updateDraft]);
+    setClassDraft((prev) => {
+      const newDiscount: SessionClassDiscount = {
+        id: crypto.randomUUID(),
+        classId: prev.id,
+        discountType: 'Sibling Discount',
+        percentage: 0,
+        status: 'active',
+        startDate: '',
+        endDate: '',
+        eligibilityCriteria: {},
+      };
+      return { ...prev, discounts: [...(prev.discounts || []), newDiscount] };
+    });
+  }, []);
 
   const removeDiscountRow = useCallback((id: string) => {
-    updateDraft('discounts', (classDraft.discounts || []).filter((d) => d.id !== id));
-  }, [classDraft.discounts, updateDraft]);
+    setClassDraft((prev) => ({
+      ...prev,
+      discounts: (prev.discounts || []).filter((d) => d.id !== id),
+    }));
+  }, []);
 
   const updateDiscountRow = useCallback((id: string, patch: Partial<SessionClassDiscount>) => {
-    updateDraft('discounts', (classDraft.discounts || []).map((d) => (d.id === id ? { ...d, ...patch } : d)));
-  }, [classDraft.discounts, updateDraft]);
+    setClassDraft((prev) => ({
+      ...prev,
+      discounts: (prev.discounts || []).map((d) => (d.id === id ? { ...d, ...patch } : d)),
+    }));
+  }, []);
 
   // 3. Schedule Handlers
   const addScheduleRow = useCallback(() => {
-    const newSchedule: SessionClassSchedule = {
-      id: crypto.randomUUID(),
-      classId: classDraft.id,
-      scheduleType: 'daily',
-      startDate: '',
-      endDate: '',
-    };
-    updateDraft('schedules', [...(classDraft.schedules || []), newSchedule]);
-  }, [classDraft.id, classDraft.schedules, updateDraft]);
+    setClassDraft((prev) => {
+      const newSchedule: SessionClassSchedule = {
+        id: crypto.randomUUID(),
+        classId: prev.id,
+        scheduleType: 'daily',
+        startDate: '',
+        endDate: '',
+      };
+      return { ...prev, schedules: [...(prev.schedules || []), newSchedule] };
+    });
+  }, []);
 
   const removeScheduleRow = useCallback((id: string) => {
-    updateDraft('schedules', (classDraft.schedules || []).filter((s) => s.id !== id));
-  }, [classDraft.schedules, updateDraft]);
+    setClassDraft((prev) => ({
+      ...prev,
+      schedules: (prev.schedules || []).filter((s) => s.id !== id),
+    }));
+  }, []);
 
   const updateScheduleRow = useCallback((id: string, patch: Partial<SessionClassSchedule>) => {
-    updateDraft('schedules', (classDraft.schedules || []).map((s) => (s.id === id ? { ...s, ...patch } : s)));
-  }, [classDraft.schedules, updateDraft]);
+    setClassDraft((prev) => ({
+      ...prev,
+      schedules: (prev.schedules || []).map((s) => (s.id === id ? { ...s, ...patch } : s)),
+    }));
+  }, []);
 
   // Timetable Period Handlers
-  const activeTimetable: SessionClassTimetable = classDraft.timetables?.[0] || {
-    id: crypto.randomUUID(),
-    classId: classDraft.id,
-    date: new Date().toISOString().slice(0, 10),
-    periods: [],
-  };
+  const activeTimetable = useMemo(
+    () => classDraft.timetables?.[0] ?? createEmptyTimetable(classDraft.id),
+    [classDraft.timetables, classDraft.id],
+  );
 
   const addPeriodRow = useCallback(() => {
     const firstTeacher = allTeachers[0];
     const initialTeacherName = formatTeacherDisplayName(firstTeacher) || 'Instructor';
-    const newPeriod: SessionClassTimetablePeriod = {
-      id: crypto.randomUUID(),
-      timetableId: activeTimetable.id,
-      startTime: '08:00',
-      endTime: '09:00',
-      subject: 'Quran Memorization',
-      teacherId: firstTeacher?.id ? String(firstTeacher.id) : '',
-      teacherName: initialTeacherName,
-    };
-    updateDraft('timetables', [{ ...activeTimetable, periods: [...(activeTimetable.periods || []), newPeriod] }]);
-  }, [activeTimetable, allTeachers, updateDraft]);
+    setClassDraft((prev) => {
+      const timetable = prev.timetables?.[0] ?? createEmptyTimetable(prev.id);
+      const newPeriod: SessionClassTimetablePeriod = {
+        id: crypto.randomUUID(),
+        timetableId: timetable.id,
+        startTime: '08:00',
+        endTime: '09:00',
+        subject: 'Quran Memorization',
+        teacherId: firstTeacher?.id ? String(firstTeacher.id) : '',
+        teacherName: initialTeacherName,
+      };
+      return {
+        ...prev,
+        timetables: [{ ...timetable, periods: [...(timetable.periods || []), newPeriod] }],
+      };
+    });
+  }, [allTeachers]);
 
   const removePeriodRow = useCallback((id: string) => {
-    const updatedPeriods = (activeTimetable.periods || []).filter((p) => p.id !== id);
-    updateDraft('timetables', [{ ...activeTimetable, periods: updatedPeriods }]);
-  }, [activeTimetable, updateDraft]);
+    setClassDraft((prev) => {
+      const timetable = prev.timetables?.[0] ?? createEmptyTimetable(prev.id);
+      const updatedPeriods = (timetable.periods || []).filter((p) => p.id !== id);
+      return { ...prev, timetables: [{ ...timetable, periods: updatedPeriods }] };
+    });
+  }, []);
 
   const updatePeriodRow = useCallback((id: string, patch: Partial<SessionClassTimetablePeriod>) => {
-    const updatedPeriods = (activeTimetable.periods || []).map((p) => (p.id === id ? { ...p, ...patch } : p));
-    updateDraft('timetables', [{ ...activeTimetable, periods: updatedPeriods }]);
-  }, [activeTimetable, updateDraft]);
+    setClassDraft((prev) => {
+      const timetable = prev.timetables?.[0] ?? createEmptyTimetable(prev.id);
+      const updatedPeriods = (timetable.periods || []).map((p) => (p.id === id ? { ...p, ...patch } : p));
+      return { ...prev, timetables: [{ ...timetable, periods: updatedPeriods }] };
+    });
+  }, []);
 
   // 4. Budget Handlers
   const addBudgetRow = useCallback(() => {
-    const newBudget: SessionClassBudget = {
-      id: crypto.randomUUID(),
-      classId: classDraft.id,
-      budgetType: 'expense',
-      detail: 'Class Materials & Stationary',
-      amount: 0,
-    };
-    updateDraft('budgets', [...(classDraft.budgets || []), newBudget]);
-  }, [classDraft.id, classDraft.budgets, updateDraft]);
+    setClassDraft((prev) => {
+      const newBudget: SessionClassBudget = {
+        id: crypto.randomUUID(),
+        classId: prev.id,
+        budgetType: 'expense',
+        detail: 'Class Materials & Stationary',
+        amount: 0,
+      };
+      return { ...prev, budgets: [...(prev.budgets || []), newBudget] };
+    });
+  }, []);
 
   const removeBudgetRow = useCallback((id: string) => {
-    updateDraft('budgets', (classDraft.budgets || []).filter((b) => b.id !== id));
-  }, [classDraft.budgets, updateDraft]);
+    setClassDraft((prev) => ({
+      ...prev,
+      budgets: (prev.budgets || []).filter((b) => b.id !== id),
+    }));
+  }, []);
 
   const updateBudgetRow = useCallback((id: string, patch: Partial<SessionClassBudget>) => {
-    updateDraft('budgets', (classDraft.budgets || []).map((b) => (b.id === id ? { ...b, ...patch } : b)));
-  }, [classDraft.budgets, updateDraft]);
+    setClassDraft((prev) => ({
+      ...prev,
+      budgets: (prev.budgets || []).map((b) => (b.id === id ? { ...b, ...patch } : b)),
+    }));
+  }, []);
 
   // Refreshment Handlers
   const addRefreshmentRow = useCallback(() => {
-    const newRefreshment: SessionClassRefreshment = {
-      id: crypto.randomUUID(),
-      classId: classDraft.id,
-      date: new Date().toISOString().slice(0, 10),
-      item: 'Snacks & Juices',
-      quantity: 0,
-      pricePerUnit: 0,
-      paidAmount: 0,
-    };
-    updateDraft('refreshments', [...(classDraft.refreshments || []), newRefreshment]);
-  }, [classDraft.id, classDraft.refreshments, updateDraft]);
+    setClassDraft((prev) => {
+      const newRefreshment: SessionClassRefreshment = {
+        id: crypto.randomUUID(),
+        classId: prev.id,
+        date: new Date().toISOString().slice(0, 10),
+        item: 'Snacks & Juices',
+        quantity: 0,
+        pricePerUnit: 0,
+        paidAmount: 0,
+      };
+      return { ...prev, refreshments: [...(prev.refreshments || []), newRefreshment] };
+    });
+  }, []);
 
   const removeRefreshmentRow = useCallback((id: string) => {
-    updateDraft('refreshments', (classDraft.refreshments || []).filter((r) => r.id !== id));
-  }, [classDraft.refreshments, updateDraft]);
+    setClassDraft((prev) => ({
+      ...prev,
+      refreshments: (prev.refreshments || []).filter((r) => r.id !== id),
+    }));
+  }, []);
 
   const updateRefreshmentRow = useCallback((id: string, patch: Partial<SessionClassRefreshment>) => {
-    updateDraft('refreshments', (classDraft.refreshments || []).map((r) => (r.id === id ? { ...r, ...patch } : r)));
-  }, [classDraft.refreshments, updateDraft]);
+    setClassDraft((prev) => ({
+      ...prev,
+      refreshments: (prev.refreshments || []).map((r) => (r.id === id ? { ...r, ...patch } : r)),
+    }));
+  }, []);
 
   // 5. Scholarship Handlers
-  const activeScholarship: SessionClassScholarship = classDraft.scholarships?.[0] || {
-    id: crypto.randomUUID(),
-    classId: classDraft.id,
-    percentage: 0,
-    expiryDate: '',
-    eligibility: {
-      id: crypto.randomUUID(),
-      orphan: false,
-      job: false,
-      business: false,
-      property: false,
-      familyMembers: 0,
-      onJobMembers: 0,
-      schoolGoingSiblings: 0,
-      residence: 'rental',
-    },
-  };
+  const activeScholarship = useMemo(
+    () => classDraft.scholarships?.[0] ?? createEmptyScholarship(classDraft.id),
+    [classDraft.scholarships, classDraft.id],
+  );
 
   const updateScholarship = useCallback((patch: Partial<SessionClassScholarship>) => {
-    updateDraft('scholarships', [{ ...activeScholarship, ...patch }]);
-  }, [activeScholarship, updateDraft]);
+    setClassDraft((prev) => {
+      const current = prev.scholarships?.[0] ?? createEmptyScholarship(prev.id);
+      return { ...prev, scholarships: [{ ...current, ...patch }] };
+    });
+  }, []);
 
-  const updateEligibility = useCallback((patch: Partial<NonNullable<SessionClassScholarship['eligibility']>>) => {
-    const updated = {
-      ...activeScholarship,
-      eligibility: {
-        ...(activeScholarship.eligibility || {
-          id: crypto.randomUUID(),
-          orphan: false,
-          job: false,
-          business: false,
-          property: false,
-          familyMembers: 0,
-          onJobMembers: 0,
-          schoolGoingSiblings: 0,
-          residence: 'rental',
-        }),
-        ...patch,
-      },
-    };
-    updateDraft('scholarships', [updated]);
-  }, [activeScholarship, updateDraft]);
+  const updateEligibility = useCallback(
+    (patch: Partial<NonNullable<SessionClassScholarship['eligibility']>>) => {
+      setClassDraft((prev) => {
+        const current = prev.scholarships?.[0] ?? createEmptyScholarship(prev.id);
+        const eligibility = current.eligibility ?? createEmptyEligibility();
+        return {
+          ...prev,
+          scholarships: [{ ...current, eligibility: { ...eligibility, ...patch } }],
+        };
+      });
+    },
+    [],
+  );
 
   return {
     classDraft,

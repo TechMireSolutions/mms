@@ -1,6 +1,11 @@
 ---
 name: antigravity-workspace
 description: Orients Antigravity agents to the MMS workspace layout — .agent rules, skills, workflows, and parity with Cursor and Claude Code. Use when starting work in Antigravity, loading project context, or syncing agent standards. Do NOT use for local server operations (use mms-dev-setup) or code review checklists (use mms-code-review).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
+allowed-tools: Read Grep Glob Bash(bash .agent/scripts/sync-all.sh) Bash(node scripts/verify-rules-integrity.mjs)
 ---
 
 # Antigravity Workspace — MMS

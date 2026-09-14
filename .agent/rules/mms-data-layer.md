@@ -7,7 +7,7 @@ description: Data Layer — PostgreSQL, Drizzle schema, migrations, database tra
 
 **Workflow skills:** REST Query factories → `mms-query-factories` · Drizzle DDL/RLS/Schema → `mms-schema-migrate` · backend API → `mms-backend-api` · shared package → `mms-shared-package` · legacy `/api/db` → `mms-data-sync` · backup wipe → `mms-backup-restore` · audit trail → `mms-audit-trail` · soft-delete → `mms-soft-delete`.
 
-Authoritative standards for backend databases (PostgreSQL 16), Drizzle ORM 0.45, Redis 6 / BullMQ 6 worker queues, transactions, shared Zod 4 contracts, and TanStack Query v5 across **tenant and platform** boundaries.
+Authoritative standards for backend databases (PostgreSQL 16), Drizzle ORM 0.45, Redis 7 / BullMQ 6 worker queues, transactions, shared Zod 4 contracts, and TanStack Query v5 across **tenant and platform** boundaries.
 
 ## 1. Normalization, Multi-Tenancy & Drizzle Schema Standards
 
@@ -156,3 +156,15 @@ Operational workflows, complete code snippets, and UI interaction standards → 
 9. **Single-Statement Bulk Updates:** `bulkDeleteFn` and `bulkRestoreFn` execute a single batched SQL `UPDATE ... WHERE id IN (...) AND deleted_at IS NULL`. N+1 loops are strictly banned.
 10. **Uniqueness-on-Restore:** Pre-check active conflicts before restore and trap PostgreSQL error `23505` (`unique_violation`), mapping cleanly to `409 Conflict`.
 11. **Lock-Free Chunked Background Purge:** Purge worker (`purgeExpiredArchivedRecords`) runs off-peak in bounded chunks of 500 rows using `LIMIT 500 FOR UPDATE SKIP LOCKED` with 50ms pauses, emitting `entity.hard_purge` audit events and executing `SET LOCAL app.allow_hard_purge = 'true'`.
+
+## 7. Migration Safety & Zero-Downtime DDL
+
+Forward-only migrations (`mms-schema-migrate` skill owns the authoring workflow). Every DDL statement must be safe to run against a live database with concurrent traffic — a migration that takes a blocking lock is an outage, not a deploy.
+
+1. **No Write-Blocking Index Builds:** `CREATE INDEX` (non-concurrent) takes a `SHARE` lock that blocks all writes for the duration of the build. NEVER commit a plain `CREATE INDEX` on a large or hot table in a migration file. Build it out-of-band with `pnpm --filter mms-backend index:concurrent`, or use `CREATE INDEX IF NOT EXISTS` for small/new tables only. Enforced by `pnpm run check:migration-indexes` (CI ratchet).
+2. **Why `CONCURRENTLY` Cannot Live in a Migration:** Drizzle runs each migration inside a single transaction, and PostgreSQL forbids `CREATE INDEX CONCURRENTLY` in a transaction block. Do not "fix" this by wrapping it in a DO block — move it to the concurrent script.
+3. **Lock Timeout Guard:** Any `ALTER TABLE` on a populated table must set a bounded `lock_timeout` in the same transaction so a queued `ACCESS EXCLUSIVE` lock cannot stall the whole application behind it; retry after the timeout rather than retrying blindly.
+4. **Expand / Contract, Never In-Place Rename:** Add the new column/index, backfill in bounded batches, dual-write or backfill from the old shape, switch reads, then drop the old shape in a **later** migration. Banned: renaming or retyping a column in the same release that still reads it.
+5. **Additive Defaults Only:** Adding a `NOT NULL` column requires a default (PostgreSQL 11+ stores it without a full rewrite) or a two-phase backfill. Adding a nullable column is always safe; adding a constraint to existing rows is not — validate it against real data first.
+6. **Reversible Data, Forward-Only Schema:** Schema changes are forward-only (no `down` migration). Data backfills must be idempotent and resumable so a redeploy can safely re-run them.
+7. **Ban `drizzle-kit push`** against shared/staging/production databases — it diffs and applies destructive DDL non-deterministically. Migrations are the only sanctioned path (`mms-schema-migrate` skill).

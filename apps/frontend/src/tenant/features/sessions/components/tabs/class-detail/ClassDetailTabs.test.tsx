@@ -1,8 +1,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Teacher } from '@mms/shared';
-import { formatTeacherDisplayName } from './types';
+import { type Teacher } from '@mms/shared';
 import { ClassDetailGeneralTab } from './ClassDetailGeneralTab';
 import { ClassDetailFeesTab } from './ClassDetailFeesTab';
 import { ClassDetailScheduleTab } from './ClassDetailScheduleTab';
@@ -15,11 +14,21 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-vi.mock('@/hooks/useTranslation', () => ({
-  useTranslation: () => ({
-    t: (key: string) => key,
-  }),
-}));
+vi.mock('@/hooks/useTranslation', () => {
+  const labels: Record<string, string> = {
+    'sessions.classes.detail.fees.add': 'Add Fee Item',
+    'sessions.discounts.add': 'Add Discount',
+    'sessions.classes.detail.schedule.add': 'Add Schedule Block',
+    'sessions.classes.detail.timetable.add': 'Add Period',
+    'sessions.classes.detail.budget.add': 'Add Budget Item',
+    'sessions.classes.detail.refreshments.add': 'Add Refreshment',
+  };
+  return {
+    useTranslation: () => ({
+      t: (key: string) => labels[key] ?? key,
+    }),
+  };
+});
 
 describe('ClassDetail Sub-Tabs & Helpers', () => {
   let container: HTMLDivElement;
@@ -37,25 +46,6 @@ describe('ClassDetail Sub-Tabs & Helpers', () => {
       root.unmount();
     });
     container.remove();
-  });
-
-  describe('formatTeacherDisplayName helper', () => {
-    it('formats teacher name with employee ID', () => {
-      expect(formatTeacherDisplayName({ name: 'Zaid Khan', employeeId: 'EMP-01' })).toBe(
-        'Zaid Khan (EMP-01)',
-      );
-    });
-
-    it('falls back to firstName and lastName if name is empty', () => {
-      expect(formatTeacherDisplayName({ firstName: 'Umar', lastName: 'Farooq' })).toBe(
-        'Umar Farooq',
-      );
-    });
-
-    it('returns empty string for nullish teacher', () => {
-      expect(formatTeacherDisplayName(null)).toBe('');
-      expect(formatTeacherDisplayName(undefined)).toBe('');
-    });
   });
 
   describe('ClassDetailGeneralTab', () => {

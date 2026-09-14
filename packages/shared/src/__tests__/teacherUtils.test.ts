@@ -1,9 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeStoredTeacher, hydrateTeacherFromContact } from '../teacherUtils.js';
+import { normalizeStoredTeacher, hydrateTeacherFromContact, formatTeacherDisplayName } from '../teacherUtils.js';
 import type { Teacher } from '../teacherTypes.js';
 import type { Contact } from '../contactTypes.js';
 
 describe('teacherUtils', () => {
+  describe('formatTeacherDisplayName', () => {
+    it('appends employee ID when a name is present', () => {
+      expect(formatTeacherDisplayName({ name: 'Zaid Khan', employeeId: 'EMP-01' })).toBe('Zaid Khan (EMP-01)');
+    });
+
+    it('falls back to firstName and lastName when name is empty', () => {
+      expect(formatTeacherDisplayName({ firstName: 'Umar', lastName: 'Farooq' })).toBe('Umar Farooq');
+    });
+
+    it('falls back to employee ID only', () => {
+      expect(formatTeacherDisplayName({ employeeId: 'EMP-09' })).toBe('Teacher (EMP-09)');
+    });
+
+    it('returns an empty string for nullish teachers', () => {
+      expect(formatTeacherDisplayName(null)).toBe('');
+      expect(formatTeacherDisplayName(undefined)).toBe('');
+    });
+  });
+
   describe('normalizeStoredTeacher', () => {
     it('strips contact-owned display fields from teacher record', () => {
       const rawTeacher = {

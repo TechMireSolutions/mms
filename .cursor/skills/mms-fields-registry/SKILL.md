@@ -1,6 +1,10 @@
 ---
 name: mms-fields-registry
 description: Adds or changes field/tab registries, module Setup Fields UI, and field configuration per mms-fields.mdc. Use when working with custom fields, system tabs, field types, column registries, field delete guards, or useSortedFields. Do NOT use for core entity Drizzle database migrations (use mms-schema-migrate) or generic form modal layouts (use mms-form-architecture).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Field & Tab Registry

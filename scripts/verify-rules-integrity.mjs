@@ -1,4 +1,21 @@
 #!/usr/bin/env node
+/**
+ * MMS agent-standards verifier.
+ *
+ * Validates the rule/skill corpus in .cursor/rules + .agent/skills against:
+ *   1. skill inventory parity (disk ↔ manifest ↔ AGENTS.md ↔ CLAUDE.md)
+ *   2. rule always-on parity (Cursor frontmatter ↔ manifest ↔ docs)
+ *   3. SKILL.md frontmatter conformance (Agent Skills spec limits)
+ *   4. rule→skill / skill→rule reference integrity
+ *   5. backticked path existence, in EVERY skill file (incl. examples/ + references/)
+ *   6. import-specifier resolution for skill examples (alias-aware)
+ *   7. script reachability + executable bit for skill scripts/
+ *   8. section citations (§N must resolve to a real heading number)
+ *   9. Cursor `globs:` frontmatter validity (existing base dir, non-empty match)
+ *  10. freshness metadata (warn-only)
+ *
+ * Errors fail the run; warnings never do. Exit code 1 on any error.
+ */
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -10,263 +27,536 @@ const claudeMdPath = path.join(ROOT, 'CLAUDE.md');
 const agentsMdPath = path.join(ROOT, 'AGENTS.md');
 
 let errors = 0;
+let warnings = 0;
 
-function fail(msg) {
+const fail = (msg) => {
   console.error(`❌ [RULE INTEGRITY ERROR] ${msg}`);
   errors++;
+};
+const warn = (msg) => {
+  console.log(`⚠️  [warn] ${msg}`);
+  warnings++;
+};
+const pass = (msg) => console.log(`✅ ${msg}`);
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Repo indexing helpers
+// ─────────────────────────────────────────────────────────────────────────────
+
+const IGNORED_DIRS = new Set([
+  'node_modules', '.git', 'dist', 'build', 'coverage', '.turbo', '.pnpm-store',
+  'playwright-report', 'test-results', 'blob-report', '.vitest-reports', '.logs',
+]);
+
+/** Basename → relative paths, for bare-filename references like `SubTabBar.tsx`. */
+const fileIndex = new Map();
+(function buildFileIndex(dir = ROOT) {
+  let entries;
+  try {
+    entries = fs.readdirSync(dir, { withFileTypes: true });
+  } catch {
+    return;
+  }
+  for (const entry of entries) {
+    if (IGNORED_DIRS.has(entry.name)) continue;
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) {
+      buildFileIndex(full);
+    } else {
+      const list = fileIndex.get(entry.name) ?? [];
+      list.push(path.relative(ROOT, full));
+      fileIndex.set(entry.name, list);
+    }
+  }
+})();
+
+const isFile = (p) => {
+  try {
+    return fs.statSync(p).isFile();
+  } catch {
+    return false;
+  }
+};
+const isDir = (p) => {
+  try {
+    return fs.statSync(p).isDirectory();
+  } catch {
+    return false;
+  }
+};
+
+/** True when a repo-relative path (globs allowed) resolves to something real. */
+function pathExists(repoRel) {
+  if (fs.existsSync(path.join(ROOT, repoRel))) return true;
+  if (fileIndex.has(path.basename(repoRel))) return true;
+  return false;
 }
 
-function pass(msg) {
-  console.log(`✅ ${msg}`);
+const TS_EXTENSIONS = ['', '.ts', '.tsx', '.js', '.jsx', '.mjs', '.cjs', '.json', '/index.ts', '/index.tsx', '/index.js'];
+
+/**
+ * Case-SENSITIVE existence check. A macOS/Windows dev machine resolves
+ * `@/components/ui/Skeleton` even when the file is `skeleton.tsx`, so a
+ * case-insensitive stat() check would pass locally and break the Linux deploy
+ * (`mms-linux-compatibility.mdc`). Compare against the real directory entries.
+ */
+function resolvesToFile(absPath) {
+  const rel = path.relative(ROOT, absPath);
+  if (rel.startsWith('..')) return false;
+  for (const ext of TS_EXTENSIONS) {
+    const candidate = `${rel}${ext}`.split(path.sep).join('/');
+    const directory = path.dirname(path.join(ROOT, candidate));
+    const base = path.basename(candidate);
+    let entries;
+    try {
+      entries = fs.readdirSync(directory);
+    } catch {
+      continue;
+    }
+    if (entries.includes(base)) return true;
+  }
+  return false;
 }
 
-// 1. Check skill counts and parity
-const diskSkills = fs.readdirSync(skillsDir).filter(f => fs.statSync(path.join(skillsDir, f)).isDirectory());
-if (diskSkills.length !== 30) {
-  fail(`Expected 30 skills on disk, found ${diskSkills.length}`);
-} else {
-  pass(`Skill count on disk: ${diskSkills.length}`);
-}
+// ─────────────────────────────────────────────────────────────────────────────
+// 1. Inventory
+// ─────────────────────────────────────────────────────────────────────────────
+
+const diskSkills = fs
+  .readdirSync(skillsDir, { withFileTypes: true })
+  .filter((e) => e.isDirectory())
+  .map((e) => e.name)
+  .sort();
+
+const ruleFiles = fs.readdirSync(cursorRulesDir).filter((f) => f.endsWith('.mdc')).sort();
+const knownRuleNames = new Set(ruleFiles.map((f) => f.replace(/\.mdc$/, '')));
+const knownSkillNames = new Set(diskSkills);
 
 const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
-if (!manifest.skills || manifest.skills.length !== 30) {
-  fail(`Expected 30 skills in skills-manifest.json, found ${manifest.skills?.length}`);
+const manifestSkillNames = new Set((manifest.skills ?? []).map((s) => s.name));
+
+const missingFromManifest = diskSkills.filter((s) => !manifestSkillNames.has(s));
+const orphanManifestEntries = [...manifestSkillNames].filter((s) => !knownSkillNames.has(s));
+if (missingFromManifest.length || orphanManifestEntries.length) {
+  fail(
+    'skills-manifest.json does not match disk\n' +
+      `     missing from manifest: ${missingFromManifest.join(', ') || '(none)'}\n` +
+      `     stale manifest entries: ${orphanManifestEntries.join(', ') || '(none)'}`,
+  );
 } else {
-  pass(`Skill count in manifest: ${manifest.skills.length}`);
+  pass(`Skill inventory matches manifest (${diskSkills.length})`);
 }
 
 const claudeMd = fs.readFileSync(claudeMdPath, 'utf8');
-if (!claudeMd.includes(`Skills (${diskSkills.length})`)) {
-  fail(`CLAUDE.md skill count header does not match ${diskSkills.length}`);
-} else {
-  pass(`CLAUDE.md matches skill count (${diskSkills.length})`);
-}
-
 const agentsMd = fs.readFileSync(agentsMdPath, 'utf8');
-if (!agentsMd.includes(`${diskSkills.length} capability modules`)) {
-  fail(`AGENTS.md does not match ${diskSkills.length} capability modules`);
-} else {
-  pass(`AGENTS.md matches skill count (${diskSkills.length})`);
+
+// Counts are DERIVED from disk; the docs must simply agree. (They used to be
+// hardcoded here, so adding a skill required editing the verifier itself.)
+// CLAUDE.md is a thin wrapper that imports AGENTS.md, so it deliberately does
+// NOT restate the count — instead we assert the import exists, because losing it
+// would silently drop every project convention from a Claude session.
+{
+  const m = agentsMd.match(/(\d+) capability modules/) ?? agentsMd.match(/## Skills \((\d+)\)/);
+  if (!m) {
+    fail('AGENTS.md is missing its skill-count header');
+  } else if (Number(m[1]) !== diskSkills.length) {
+    fail(`AGENTS.md says ${m[1]} skills but disk has ${diskSkills.length}`);
+  } else {
+    pass(`AGENTS.md matches skill count (${diskSkills.length})`);
+  }
+
+  if (!/^@AGENTS\.md\s*$/m.test(claudeMd) && !/^@AGENTS\.md\b/m.test(claudeMd)) {
+    fail('CLAUDE.md does not import AGENTS.md (`@AGENTS.md`) — Claude would load no project conventions');
+  } else {
+    pass('CLAUDE.md imports AGENTS.md');
+  }
 }
 
-const ruleFiles = fs.readdirSync(cursorRulesDir).filter(f => f.endsWith('.mdc'));
+// ─────────────────────────────────────────────────────────────────────────────
+// 2. Always-on parity
+// ─────────────────────────────────────────────────────────────────────────────
 
-// 2. Check always_on rules parity.
-//
-// The canonical set is derived from .cursor/rules/*.mdc FRONTMATTER, because
-// `alwaysApply: true` is what Cursor actually honours. Previously this section
-// compared the manifest against a hardcoded array — a third source of truth that
-// could itself drift — and never checked CLAUDE.md or AGENTS.md at all, so
-// CLAUDE.md silently listed five always-on rules while only three carried
-// `alwaysApply: true`.
+const frontmatterOf = (file) => {
+  const content = fs.readFileSync(file, 'utf8');
+  const m = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  return { front: m ? m[1] : '', body: m ? content.slice(m[0].length) : content };
+};
+
 const frontmatterAlwaysOn = ruleFiles
-  .filter((file) => {
-    const content = fs.readFileSync(path.join(cursorRulesDir, file), 'utf8');
-    return /^alwaysApply:\s*true\s*$/m.test(content);
-  })
+  .filter((file) => /^alwaysApply:\s*true\s*$/m.test(frontmatterOf(path.join(cursorRulesDir, file)).front))
   .map((file) => `rules/${file.replace(/\.mdc$/, '.md')}`)
   .sort();
 
-const manifestAlwaysOn = [...(manifest.rules?.always_on || [])].sort();
-
+const manifestAlwaysOn = [...(manifest.rules?.always_on ?? [])].sort();
 const alwaysOnMismatch =
   frontmatterAlwaysOn.length !== manifestAlwaysOn.length ||
-  frontmatterAlwaysOn.some((rule, index) => rule !== manifestAlwaysOn[index]);
+  frontmatterAlwaysOn.some((rule, i) => rule !== manifestAlwaysOn[i]);
 
 if (alwaysOnMismatch) {
   fail(
     'Always-on rules disagree between .cursor/rules frontmatter and skills-manifest.json\n' +
-      `     frontmatter (alwaysApply: true): ${frontmatterAlwaysOn.join(', ') || '(none)'}\n` +
-      `     skills-manifest.json:            ${manifestAlwaysOn.join(', ') || '(none)'}`,
+      `     frontmatter:  ${frontmatterAlwaysOn.join(', ') || '(none)'}\n` +
+      `     manifest:     ${manifestAlwaysOn.join(', ') || '(none)'}`,
   );
 } else {
   pass(`Always-on rules match frontmatter (${frontmatterAlwaysOn.length})`);
 }
 
-// CLAUDE.md must list exactly the same always-on rules.
-// The list sits in the section introduced by the "Always-on rules" heading, so
-// scope the search to that section rather than guessing at line offsets.
-const claudeAlwaysOnSection =
-  claudeMd.split(/^## /m).find((section) => /^Always-on rules/i.test(section)) ?? '';
-
-// Only count backticked names that correspond to real rule files, so unrelated
-// inline code (paths, commands) in the section cannot be misread as a rule.
-const knownRuleNames = new Set(ruleFiles.map((file) => file.replace(/\.mdc$/, '')));
-const claudeAlwaysOn = [
-  ...new Set([...claudeAlwaysOnSection.matchAll(/`([a-z0-9-]+)`/g)].map((m) => m[1])),
-]
-  .filter((name) => knownRuleNames.has(name))
-  .map((name) => `rules/${name}.md`)
-  .sort();
-
-const claudeMismatch =
-  claudeAlwaysOn.length !== frontmatterAlwaysOn.length ||
-  claudeAlwaysOn.some((rule, index) => rule !== frontmatterAlwaysOn[index]);
-
-if (claudeMismatch) {
-  fail(
-    'CLAUDE.md always-on list does not match frontmatter\n' +
-      `     CLAUDE.md:   ${claudeAlwaysOn.join(', ') || '(not found)'}\n` +
-      `     frontmatter: ${frontmatterAlwaysOn.join(', ')}`,
-  );
-} else {
-  pass(`CLAUDE.md always-on list matches frontmatter (${claudeAlwaysOn.length})`);
-}
-
-// AGENTS.md must mention every always-on rule in its always-on section.
-const agentsAlwaysOnSection = agentsMd.split(/^## /m).find((section) => /^Always-on rules/i.test(section)) ?? '';
-const missingFromAgents = frontmatterAlwaysOn.filter(
-  (rule) => !agentsAlwaysOnSection.includes(rule),
-);
-if (missingFromAgents.length > 0) {
-  fail(
-    `AGENTS.md always-on section omits: ${missingFromAgents.join(', ')}`,
-  );
+const agentsAlwaysOnSection = agentsMd.split(/^## /m).find((s) => /^Always-on rules/i.test(s)) ?? '';
+const missingFromAgents = frontmatterAlwaysOn.filter((rule) => !agentsAlwaysOnSection.includes(rule));
+if (missingFromAgents.length) {
+  fail(`AGENTS.md always-on section omits: ${missingFromAgents.join(', ')}`);
 } else {
   pass('AGENTS.md always-on section lists every always-on rule');
 }
 
-// 3. Check rule cross-references and sections
-const ruleHeadings = new Map();
+// ─────────────────────────────────────────────────────────────────────────────
+// 3. Headings + citation resolution
+// ─────────────────────────────────────────────────────────────────────────────
 
-for (const file of ruleFiles) {
-  const content = fs.readFileSync(path.join(cursorRulesDir, file), 'utf8');
-  const headings = content.split('\n')
-    .filter(line => line.startsWith('#'))
-    .map(line => line.trim());
-  ruleHeadings.set(file, headings);
-  ruleHeadings.set(file.replace(/\.mdc$/, '.md'), headings);
-  ruleHeadings.set(file.replace(/\.mdc$/, ''), headings);
-}
-
-for (const file of ruleFiles) {
-  const content = fs.readFileSync(path.join(cursorRulesDir, file), 'utf8');
-  
-  // Check section references like mms-foo.mdc §X
-  const sectionMatches = content.matchAll(/([a-zA-Z0-9_-]+\.mdc)[`\]\s]*?(§\s*(\d+))/gi);
-  for (const match of sectionMatches) {
-    const targetFile = match[1];
-    const sectionNum = match[3];
-    const headings = ruleHeadings.get(targetFile);
-    if (!headings) {
-      fail(`In ${file}: references unknown rule ${targetFile}`);
+/** Heading numbers owned by a document: only `## 4.` / `### 5.1` style headings count. */
+const headingNumbers = new Map();
+function indexHeadings(key, content) {
+  const numbers = new Set();
+  let currentSection = null;
+  for (const line of content.split('\n')) {
+    const heading = line.match(/^#{1,6}\s+(\d+)(?:\.(\d+))?[.\s)]/);
+    if (heading) {
+      currentSection = heading[1];
+      numbers.add(heading[1]);
+      if (heading[2]) numbers.add(`${heading[1]}.${heading[2]}`);
       continue;
     }
-    const hasSection = headings.some(h => {
-      const secRegex = new RegExp(`(^#+\\s*${sectionNum}\\.|§\\s*${sectionNum}\\b)`, 'i');
-      return secRegex.test(h);
-    });
-    if (!hasSection) {
-      fail(`In ${file}: referenced section §${sectionNum} does not exist in ${targetFile}`);
-    }
+    // Numbered list items inside a numbered section are addressable as N.M.
+    const item = line.match(/^\s*(\d+)\.\s+\S/);
+    if (item && currentSection) numbers.add(`${currentSection}.${item[1]}`);
   }
-
-  // Check file paths mentioned in backticks
-  const pathMatches = content.matchAll(/`((apps|packages|scripts|docs|\.agent|\.cursor|\.github)\/[^`]+)`/g);
-  for (const m of pathMatches) {
-    let p = m[1].split('#')[0].split('?')[0];
-    if (p.includes('*') || p.includes('...') || p.includes('{') || p.includes('[')) continue;
-    if (p.endsWith('.env')) continue;
-    if (!fs.existsSync(path.join(ROOT, p))) {
-      fail(`In ${file}: referenced path does not exist on disk: ${p}`);
-    }
-  }
+  headingNumbers.set(key, numbers);
 }
 
-if (errors === 0) {
-  pass(`All rule cross-references and section citations are valid!`);
+for (const file of ruleFiles) {
+  const content = fs.readFileSync(path.join(cursorRulesDir, file), 'utf8');
+  const base = file.replace(/\.mdc$/, '');
+  for (const key of [file, `${base}.md`, base]) indexHeadings(key, content);
 }
 
-// 4. Check skills integrity (frontmatter, citations, and file paths)
 const docsDir = path.join(ROOT, 'docs');
-const docsFiles = fs.existsSync(docsDir) ? fs.readdirSync(docsDir).filter(f => f.endsWith('.md')) : [];
-for (const file of docsFiles) {
-  const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
-  const headings = content.split('\n').filter(l => l.startsWith('#')).map(l => l.trim());
-  ruleHeadings.set(file, headings);
-  ruleHeadings.set(`docs/${file}`, headings);
+if (isDir(docsDir)) {
+  for (const file of fs.readdirSync(docsDir).filter((f) => f.endsWith('.md'))) {
+    const content = fs.readFileSync(path.join(docsDir, file), 'utf8');
+    indexHeadings(file, content);
+    indexHeadings(`docs/${file}`, content);
+  }
 }
+
+/** `§N` / `§N.M` citations must map to a heading number that actually exists. */
+function checkCitations(citationText, citeFile, ownerLabel) {
+  const citations = citationText.matchAll(
+    /([a-zA-Z0-9_./-]+\.mdc?|docs\/[a-zA-Z0-9_.-]+\.md)[`\])\s]*(?:§|section\s+)(\d+(?:\.\d+)?)/gi,
+  );
+  for (const [, target, rawSection] of citations) {
+    const numbers = headingNumbers.get(target) ?? headingNumbers.get(path.basename(target));
+    if (!numbers) {
+      fail(`In ${ownerLabel}: references unknown rule or doc ${target}`);
+      continue;
+    }
+    // A dotted citation (5.1) may resolve to either the section or the sub-item;
+    // `headingNumbers` already holds both forms.
+    if (!numbers.has(rawSection)) {
+      fail(`In ${ownerLabel}: referenced section §${rawSection} does not exist in ${target} (${citeFile})`);
+    }
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 4. Glob frontmatter validation (.cursor/rules/*.mdc)
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** Convert a Cursor glob into an anchored RegExp. */
+function globToRegExp(glob) {
+  let out = "";
+  for (let i = 0; i < glob.length; i++) {
+    const ch = glob[i];
+    if (ch === "*") {
+      if (glob[i + 1] === "*") {
+        if (glob[i + 2] === "/") { out += "(?:.*/)?"; i += 2; } else { out += ".*"; i += 1; }
+      } else out += "[^/]*";
+    } else if (ch === "?") out += "[^/]";
+    else out += ch.replace(/[.+^${}()|[\]\\]/g, "\\$&");
+  }
+  return new RegExp("^" + out + "$");
+}
+
+const allRepoFiles = [...fileIndex.values()].flat();
+
+/**
+ * A glob is valid when at least one tracked file matches it. Catches dead
+ * paths (a removed directory) and typos that silently match nothing.
+ */
+function globMatchesAnything(glob) {
+  const re = globToRegExp(glob);
+  return allRepoFiles.some((f) => re.test(f));
+}
+
+const allGlobs = new Map(); // glob string → rules declaring it
+for (const file of ruleFiles) {
+  const { front } = frontmatterOf(path.join(cursorRulesDir, file));
+  const globLine = front.match(/^globs:\s*(.+)$/m);
+  if (!globLine) continue;
+  const globs = globLine[1].split(',').map((g) => g.trim()).filter(Boolean);
+  for (const glob of globs) {
+    if (!globMatchesAnything(glob)) {
+      fail(`In ${file}: glob matches no file in the repo: ${glob}`);
+    }
+    const declaring = allGlobs.get(glob) ?? [];
+    declaring.push(file);
+    allGlobs.set(glob, declaring);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 5. Skill files: frontmatter, references, paths, imports, scripts
+// ─────────────────────────────────────────────────────────────────────────────
+
+const AGENT_SKILLS_PREFIX = '.agent/skills';
+const PACKAGE_NAMES = new Set(['@mms/shared', '@mms/backend', 'mms-backend', 'mms-frontend', 'e2e-tests']);
+const NODE_BUILTIN = /^node:/;
+
+/**
+ * Tokens that look like mms-* rule/skill names but are not one:
+ * package names, plugin names, env vars, cookies, hosts. Verified real.
+ */
+const KNOWN_MMS_TOKENS = new Set([
+  'mms-backend', 'mms-frontend', 'mms-shared', 'mms-boundary', 'mms-bidi',
+  'mmsv2', 'mmsv2-worker', 'mms-production-ports', 'mms_access',
+  'mms_tenant_session', 'mms-app', 'mms-monorepo', 'mms-db',
+]);
+
+/** Resolve an import specifier written inside a skill example file. */
+function importResolves(specifier, containingFile) {
+  if (specifier.startsWith('.')) {
+    return resolvesToFile(path.resolve(path.dirname(containingFile), specifier));
+  }
+  if (specifier.startsWith('@/')) {
+    return resolvesToFile(path.join(ROOT, 'apps/frontend/src', specifier.slice(2)));
+  }
+  return true; // bare package specifier — out of scope here
+}
+
+const MAX_DESCRIPTION = 1024;
+const NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
+
+/** Naming-convention patterns in tables (e.g. `kebab-case.sh`) are not files. */
+const CONVENTION_TOKENS = new Set(['kebab-case.sh', 'kebab-case.ts', 'PascalCase.tsx', 'camelCase.ts', 'snake_case.ts']);
+
+const today = new Date();
+const FRESHNESS_DAYS = 180;
 
 for (const skill of diskSkills) {
-  const skillFile = path.join(skillsDir, skill, 'SKILL.md');
-  if (!fs.existsSync(skillFile)) {
+  const skillDir = path.join(skillsDir, skill);
+  const skillFile = path.join(skillDir, 'SKILL.md');
+  if (!isFile(skillFile)) {
     fail(`Missing SKILL.md in ${skill}`);
     continue;
   }
-  const content = fs.readFileSync(skillFile, 'utf8');
+  const raw = fs.readFileSync(skillFile, 'utf8');
+  const { front, body } = frontmatterOf(skillFile);
 
-  // Validate YAML frontmatter
-  const hasFrontmatter = content.startsWith('---\n');
-  const nameMatch = content.match(/^name:\s*([^\n]+)/m);
-  const descMatch = content.match(/^description:\s*([^\n]+)/m);
+  const nameMatch = front.match(/^name:\s*([^\n]+)$/m);
+  const descMatch = front.match(/^description:\s*([^\n]+)$/m);
 
-  if (!hasFrontmatter || !nameMatch || !descMatch) {
+  if (!raw.startsWith('---\n') || !nameMatch || !descMatch) {
     fail(`Invalid or missing frontmatter in ${skill}/SKILL.md`);
-  } else if (nameMatch[1].trim() !== skill) {
-    fail(`Skill name mismatch: directory '${skill}' vs frontmatter '${nameMatch[1].trim()}'`);
+    continue;
   }
+  const name = nameMatch[1].trim();
+  const description = descMatch[1].trim();
 
-  // Validate 3-sentence formula with negative routing bounds
-  const desc = descMatch ? descMatch[1].trim() : '';
-  if (!desc.includes('Do not') && !desc.includes('Do NOT')) {
-    fail(`Skill ${skill}: description lacks explicit negative routing boundary ("Do NOT use for...")`);
+  if (name !== skill) fail(`Skill name mismatch: directory '${skill}' vs frontmatter '${name}'`);
+  if (name.length > 64) fail(`Skill ${skill}: name exceeds 64 characters`);
+  if (!NAME_RE.test(name)) fail(`Skill ${skill}: name must be lowercase alphanumeric with single hyphens`);
+  if (description.length > MAX_DESCRIPTION) {
+    fail(`Skill ${skill}: description is ${description.length} chars (max ${MAX_DESCRIPTION})`);
   }
-
-  // Validate SSOT rule header
-  if (!content.includes('**Rule (norms SSOT):**') && !content.includes('**Rules (norms SSOT):**')) {
+  if (!/Do not use|Do NOT use/i.test(description)) {
+    fail(`Skill ${skill}: description lacks an explicit negative routing boundary ("Do NOT use for…")`);
+  }
+  if (!body.includes('**Rule (norms SSOT):**') && !body.includes('**Rules (norms SSOT):**')) {
     fail(`Skill ${skill}: missing '**Rule (norms SSOT):**' header`);
   }
 
-  // Validate executable scripts in scripts/ directory
-  const skillScriptsDir = path.join(skillsDir, skill, 'scripts');
-  if (fs.existsSync(skillScriptsDir) && fs.statSync(skillScriptsDir).isDirectory()) {
-    for (const scriptFile of fs.readdirSync(skillScriptsDir)) {
-      const scriptPath = path.join(skillScriptsDir, scriptFile);
-      const stat = fs.statSync(scriptPath);
-      if ((stat.mode & 0o111) === 0) {
-        fail(`Skill ${skill}: script '${scriptFile}' is not executable (mode: ${stat.mode.toString(8)})`);
+  // Freshness metadata (warn-only so it never blocks a fix-forward commit).
+  const verified = front.match(/^\s*last-verified:\s*(\S+)/m);
+  if (!verified) {
+    warn(`Skill ${skill}: no metadata.last-verified (staleness is untracked)`);
+  } else {
+    const age = (today - new Date(verified[1])) / 86_400_000;
+    if (Number.isNaN(age)) warn(`Skill ${skill}: metadata.last-verified is not a date`);
+    else if (age > FRESHNESS_DAYS) warn(`Skill ${skill}: metadata.last-verified is ${Math.round(age)} days old`);
+  }
+
+  const sectionNames = [skill];
+  const walk = (dir) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else sectionNames.push(path.relative(ROOT, full));
+    }
+  };
+  walk(skillDir);
+
+  const label = (file) => path.relative(ROOT, file);
+
+  for (const rel of sectionNames) {
+    const file = path.join(ROOT, rel);
+    if (!rel.endsWith('.md') && !rel.endsWith('.ts') && !rel.endsWith('.tsx') && !rel.endsWith('.sql') && !rel.endsWith('.mjs')) {
+      continue;
+    }
+    const content = fs.readFileSync(file, 'utf8');
+    const ownerLabel = rel === skill ? `skill ${skill}` : `skill ${skill} (${path.relative(skillDir, file)})`;
+
+    checkCitations(content, file, ownerLabel);
+
+    // Backticked paths: repo-anchored roots, plus e2e/ (previously excluded —
+    // that blind spot let a deleted Playwright spec keep passing).
+    const pathMatches = content.matchAll(
+      /`((?:apps|packages|scripts|docs|e2e|\.agent|\.cursor|\.claude|\.github)\/[^`\s]+)`/g,
+    );
+    for (const m of pathMatches) {
+      const candidate = m[1].split('#')[0].split('?')[0].replace(/[.,;:]$/, '');
+      if (/[*{[]|\.\.\./.test(candidate)) continue;
+      if (candidate.endsWith('.env')) continue;
+      if (!pathExists(candidate)) {
+        fail(`In ${ownerLabel}: referenced path does not exist on disk: ${candidate}`);
+      }
+    }
+
+    // Bare filenames in backticks (`Foo.tsx`) must exist somewhere in the repo.
+    const bareMatches = content.matchAll(/`([A-Za-z0-9_.-]+\.(?:tsx?|mjs|cjs|sql|json|sh))`/g);
+    for (const m of bareMatches) {
+      const candidate = m[1];
+      if (CONVENTION_TOKENS.has(candidate)) continue;
+      if (!fileIndex.has(candidate)) {
+        fail(`In ${ownerLabel}: referenced filename does not exist anywhere in the repo: ${candidate}`);
+      }
+    }
+
+    // Alias imports (`@/…`) must resolve into the frontend src tree. Relative
+    // specifiers inside examples/ are skipped: those files are templates that
+    // are copied into the app tree, so their relative depth is contextual.
+    if (file.endsWith('.ts') || file.endsWith('.tsx')) {
+      const inExamples = /[\\/]examples[\\/]/.test(file);
+      const imports = content.matchAll(/from\s+['"]([^'"]+)['"]/g);
+      for (const m of imports) {
+        const specifier = m[1];
+        if (NODE_BUILTIN.test(specifier)) continue;
+        if (specifier.startsWith('.') && inExamples) continue;
+        if (!specifier.startsWith('.') && !specifier.startsWith('@/')) continue; // external package
+        if (importResolves(specifier, file)) continue;
+        fail(`In ${ownerLabel}: import does not resolve: '${specifier}'`);
       }
     }
   }
 
-  // Check section references
-  const sectionMatches = content.matchAll(/(?:`|\[)?((?:docs\/)?[a-zA-Z0-9_-]+\.mdc?)(?:`|\])?[\s]*?(§\s*([\d.]+))/gi);
-  for (const match of sectionMatches) {
-    const rawTarget = match[1];
-    const targetKey = rawTarget.replace(/\.mdc?$/, '');
-    const secNum = match[3];
-    const headings = ruleHeadings.get(rawTarget) || ruleHeadings.get(targetKey) || ruleHeadings.get(path.basename(rawTarget));
-    if (!headings) {
-      fail(`In skill ${skill}: references unknown rule or doc ${rawTarget}`);
-      continue;
-    }
-    const secBase = secNum.split('.')[0];
-    const hasSection = headings.some(h => {
-      const secRegex = new RegExp(`(^#+\\s*${secBase}\\.|§\\s*${secBase}\\b)`, 'i');
-      return secRegex.test(h);
-    });
-    if (!hasSection) {
-      fail(`In skill ${skill}: referenced section §${secNum} does not exist in ${rawTarget}`);
-    }
-  }
-
-  // Check file paths mentioned in backticks
-  const pathMatches = content.matchAll(/`((apps|packages|scripts|docs|\.agent|\.cursor|\.github)\/[^`]+)`/g);
-  for (const m of pathMatches) {
-    let p = m[1].split('#')[0].split('?')[0];
-    if (p.includes('*') || p.includes('...') || p.includes('{') || p.includes('[')) continue;
-    if (p.endsWith('.env')) continue;
-    if (!fs.existsSync(path.join(ROOT, p))) {
-      fail(`In skill ${skill}: referenced path does not exist on disk: ${p}`);
+  // Skill scripts must be executable AND reachable from SKILL.md, or they are
+  // dead weight that never runs.
+  const scriptsDir = path.join(skillDir, 'scripts');
+  if (isDir(scriptsDir)) {
+    for (const scriptFile of fs.readdirSync(scriptsDir)) {
+      const scriptPath = path.join(scriptsDir, scriptFile);
+      if ((fs.statSync(scriptPath).mode & 0o111) === 0) {
+        fail(`Skill ${skill}: script '${scriptFile}' is not executable`);
+      }
+      if (!raw.includes(scriptFile)) {
+        fail(`Skill ${skill}: script '${scriptFile}' is never referenced from SKILL.md`);
+      }
     }
   }
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// 6. Rule-side path checks + rule↔skill reference integrity
+// ─────────────────────────────────────────────────────────────────────────────
+
+for (const file of ruleFiles) {
+  const raw = fs.readFileSync(path.join(cursorRulesDir, file), 'utf8');
+  checkCitations(raw, file, file);
+
+  const pathMatches = raw.matchAll(
+    /`((?:apps|packages|scripts|docs|e2e|\.agent|\.cursor|\.claude|\.github)\/[^`\s]+)`/g,
+  );
+  for (const m of pathMatches) {
+    const candidate = m[1].split('#')[0].split('?')[0].replace(/[.,;:]$/, '');
+    if (/[*{[]|\.\.\./.test(candidate)) continue;
+    if (candidate.endsWith('.env')) continue;
+    if (!pathExists(candidate)) fail(`In ${file}: referenced path does not exist on disk: ${candidate}`);
+  }
+
+  const bareMatches = raw.matchAll(/`([A-Za-z0-9_.-]+\.(?:tsx?|mjs|cjs|sql|json|sh))`/g);
+  for (const m of bareMatches) {
+    if (CONVENTION_TOKENS.has(m[1])) continue;
+    if (!fileIndex.has(m[1])) {
+      fail(`In ${file}: referenced filename does not exist anywhere in the repo: ${m[1]}`);
+    }
+  }
+
+  // Any skill or rule named in a rule should exist. Unknown mms-* tokens are
+  // warnings only: some are legitimate code/package identifiers, but a stale
+  // router target must still be visible.
+  for (const m of raw.matchAll(/`?(mms-[a-z0-9-]+|antigravity-workspace)`?/g)) {
+    const token = m[1];
+    if (knownSkillNames.has(token) || knownRuleNames.has(token) || KNOWN_MMS_TOKENS.has(token)) continue;
+    warn(`In ${file}: unrecognised mms-* token '${token}' (stale router target or real identifier?)`);
+  }
+}
+
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 7. Rule README counts
+// ─────────────────────────────────────────────────────────────────────────────
+
+const ruleReadme = path.join(cursorRulesDir, 'README.md');
+if (isFile(ruleReadme)) {
+  const readme = fs.readFileSync(ruleReadme, 'utf8');
+  const alwaysOnClaim = readme.match(/## Always Applied \((\d+)\)/);
+  const scopedClaim = readme.match(/## Scoped Rules \((\d+)\)/);
+  if (!alwaysOnClaim || Number(alwaysOnClaim[1]) !== frontmatterAlwaysOn.length) {
+    fail(
+      `.cursor/rules/README.md always-on header says ${alwaysOnClaim?.[1] ?? '(missing)'}, frontmatter has ${frontmatterAlwaysOn.length}`,
+    );
+  }
+  const scopedCount = ruleFiles.length - frontmatterAlwaysOn.length;
+  if (!scopedClaim || Number(scopedClaim[1]) !== scopedCount) {
+    fail(`.cursor/rules/README.md scoped header says ${scopedClaim?.[1] ?? '(missing)'}, disk has ${scopedCount}`);
+  }
+  if (alwaysOnClaim && scopedClaim) {
+    pass(`Rule README counts match (${frontmatterAlwaysOn.length} always-on + ${scopedCount} scoped)`);
+  }
+}
+
+const skillsReadme = path.join(skillsDir, 'README.md');
+if (isFile(skillsReadme)) {
+  const readme = fs.readFileSync(skillsReadme, 'utf8');
+  const m = readme.match(/## Skills index \((\d+)\)/);
+  if (!m) fail('.agent/skills/README.md is missing its "## Skills index (N)" header');
+  else if (Number(m[1]) !== diskSkills.length) {
+    fail(`.agent/skills/README.md says ${m[1]} skills, disk has ${diskSkills.length}`);
+  } else {
+    pass(`Skills README index matches disk (${diskSkills.length})`);
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Result
+// ─────────────────────────────────────────────────────────────────────────────
+
 if (errors === 0) {
-  pass(`All 30 skills verified: frontmatter, citations, and paths valid!`);
-  console.log('\n✨ All rules and skills integrity checks passed successfully.\n');
+  console.log(
+    `\n✨ All agent-standards checks passed (${diskSkills.length} skills, ${ruleFiles.length} rules` +
+      `${warnings ? `, ${warnings} warning(s)` : ''}).\n`,
+  );
   process.exit(0);
 } else {
-  console.error(`\n💥 Integrity check failed with ${errors} error(s).\n`);
+  console.error(`\n💥 Agent-standards check failed with ${errors} error(s).\n`);
   process.exit(1);
 }

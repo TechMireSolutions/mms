@@ -12,7 +12,7 @@ import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTeachersContractList, useTeachersByIds } from '@/tenant/hooks/collections/teachers';
-import { TEACHERS_MODULE_MANIFEST, type Teacher } from '@mms/shared';
+import { TEACHERS_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from '@mms/shared';
 import type { Session, SessionFaculty } from '@/lib/data/sessionsData';
 
 const COMMON_FACULTY_ROLES = [
@@ -25,18 +25,6 @@ const COMMON_FACULTY_ROLES = [
   'Examiner',
   'Administrator',
 ];
-
-function formatTeacherDisplayName(teacher?: Partial<Teacher> | null): string {
-  if (!teacher) return '';
-  const name = (teacher.name || [teacher.firstName, teacher.lastName].filter(Boolean).join(' ')).trim();
-  if (name) {
-    return teacher.employeeId ? `${name} (${teacher.employeeId})` : name;
-  }
-  if (teacher.employeeId) {
-    return `Teacher (${teacher.employeeId})`;
-  }
-  return teacher.id ? `Teacher #${String(teacher.id).slice(0, 8)}` : '';
-}
 
 interface FacultyManagementTabProps {
   session: Session;

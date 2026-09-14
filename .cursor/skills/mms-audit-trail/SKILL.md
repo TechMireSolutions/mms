@@ -1,6 +1,10 @@
 ---
 name: mms-audit-trail
 description: Implements or audits the database audit trail — RFC 8785 canonical JSON, sharded hash chains, crypto-shredding, monthly partitions, and outbox capture. Use when tracking entity mutations, compliance exports, or right-to-erasure events. Do NOT use for transient error logging (use Pino in mms-backend-api), soft-delete trash recovery (use mms-soft-delete), or financial invoice posting (use mms-finance-accounting).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Modern Audit Trail Workflow

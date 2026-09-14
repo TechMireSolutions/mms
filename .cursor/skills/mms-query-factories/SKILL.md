@@ -1,6 +1,10 @@
 ---
 name: mms-query-factories
 description: Implements TanStack Query v5 queryOptions/mutationOptions factories, tuple keys, optimistic updates, and API facades. Use when building query hooks, data fetching facades under @/tenant/hooks/collections/*, or caching mutations. Do NOT use for app routing (use mms-frontend), legacy document-store db.ts (use mms-data-sync), or Work tier directory UI (use mms-module-work).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Query Factories Workflow

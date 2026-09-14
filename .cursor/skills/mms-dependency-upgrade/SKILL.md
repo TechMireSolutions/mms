@@ -1,6 +1,10 @@
 ---
 name: mms-dependency-upgrade
 description: Upgrades MMS workspace dependencies with pnpm catalogs, Dependabot/Renovate + dependency-review, audits, and the React Compiler enablement checklist. Use when bumping Node/pnpm/React/Vite/Fastify/Drizzle/Zod/Query, enabling Dependabot, or turning on React Compiler. Do NOT use for routine feature bug fixes (use mms-frontend or mms-backend-api) or migration technical debt (use mms-migration-fixes).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Dependency Upgrade Workflow
@@ -37,6 +41,17 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 - [ ] Zero non-erasable TypeScript syntax (enum, namespace, parameter properties) for Node 24 --experimental-strip-types
 - [ ] Native ECMAScript non-mutating methods used (toSorted, toReversed, toSpliced, with, Object.groupBy)
 ```
+
+## Script
+
+`scripts/audit-deps.sh` — engines, catalog references, and advisories:
+
+```bash
+bash scripts/audit-deps.sh                  # full audit (fails on high/critical advisories)
+MMS_SKIP_AUDIT=1 bash scripts/audit-deps.sh # offline: engines + catalog references only
+```
+
+A non-zero exit is actionable: fix the version, or add a reviewed exception **with a reachability analysis** to the `overrides` block in `pnpm-workspace.yaml` (the ts-deepmerge entry is the pattern to copy).
 
 ## Done
 

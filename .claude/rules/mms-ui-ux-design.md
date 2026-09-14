@@ -80,7 +80,7 @@ Physical direction classes are strictly forbidden across both tenant and platfor
 | `rounded-l-*`, `rounded-r-*` | `rounded-s-*`, `rounded-e-*` | Border corner rounding |
 
 
-## 4. Mobile-First Responsiveness & Breakpoints (§7 Layout)
+## 4. Mobile-First Responsiveness & Breakpoints
 
 | Breakpoint | Range | Prefix | Shell Layout Standards |
 |---|---|---|---|

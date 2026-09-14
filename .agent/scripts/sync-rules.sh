@@ -4,10 +4,20 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
 cd "$ROOT"
 
+DRY_RUN=0
+for arg in "$@"; do
+  case "$arg" in
+    --dry-run) DRY_RUN=1 ;;
+    *) echo "Unknown option: $arg" >&2; exit 2 ;;
+  esac
+done
+export MMS_SYNC_DRY_RUN="$DRY_RUN"
+
 node <<'SCRIPT'
 const fs = require("fs");
 const path = require("path");
 
+const DRY = process.env.MMS_SYNC_DRY_RUN === "1";
 const cursorDir = ".cursor/rules";
 const agentsDir = ".agent/rules";
 
@@ -21,8 +31,8 @@ const cursorRules = new Set(
 for (const file of fs.readdirSync(agentsDir).filter((f) => f.endsWith(".md") && f !== "README.md")) {
   const base = file.replace(/\.md$/, "");
   if (!cursorRules.has(base)) {
-    fs.unlinkSync(path.join(agentsDir, file));
-    console.log(`pruned orphaned rule: ${file}`);
+    if (!DRY) fs.unlinkSync(path.join(agentsDir, file));
+    console.log(`${DRY ? "would prune" : "pruned"} orphaned rule: ${file}`);
   }
 }
 
@@ -35,7 +45,9 @@ for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) 
   const body = match[2].replace(/^\s+/, "");
   const descMatch = front.match(/^description:\s*(.+)$/m);
   const trigger = /alwaysApply:\s*true/.test(front) ? "always_on" : "model_decision";
-  const agentBody = body.replace(/\.mdc\b/g, ".md");
+  // Rewrite RULE-NAME references (*.mdc -> *.md) but never a Cursor directory path
+// (`.cursor/rules/*.mdc` must keep its real extension in the mirrors).
+  const agentBody = body.replace(/(?<!\.cursor\/rules\/)\b([a-z0-9-]+)\.mdc\b/g, "$1.md");
   const frontLines = ["---", `trigger: ${trigger}`];
   if (descMatch) {
     frontLines.push(`description: ${descMatch[1].trim()}`);
@@ -43,7 +55,7 @@ for (const file of fs.readdirSync(cursorDir).filter((f) => f.endsWith(".mdc"))) 
   frontLines.push("---");
   const out = `${frontLines.join("\n")}\n\n${agentBody}`;
   fs.writeFileSync(path.join(agentsDir, `${base}.md`), out.endsWith("\n") ? out : `${out}\n`);
-  console.log(`synced ${base}.md`);
+  console.log(`${DRY ? "would write" : "synced"} ${base}.md`);
 }
 
 // Sync README.md from .cursor/rules/README.md to .agent/rules/README.md
@@ -70,7 +82,7 @@ if (fs.existsSync(readmePath)) {
       /Cursor loads `\.md` files from this directory automatically\./g,
       "Antigravity loads `.md` files from this directory (synced from Cursor `.mdc`)."
     );
-  fs.writeFileSync(path.join(agentsDir, "README.md"), translatedReadme, "utf8");
+  if (!DRY) fs.writeFileSync(path.join(agentsDir, "README.md"), translatedReadme, "utf8");
   console.log("synced README.md");
 }
 SCRIPT
