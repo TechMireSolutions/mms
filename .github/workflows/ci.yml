@@ -24,6 +24,7 @@ jobs:
   changes:
     name: Detect File Changes
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     outputs:
       backend_db: ${{ steps.filter.outputs.backend_db }}
       frontend: ${{ steps.filter.outputs.frontend }}
@@ -62,6 +63,7 @@ jobs:
   lint-and-typecheck:
     name: Lint & Typecheck
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -117,6 +119,7 @@ jobs:
     name: Dependency Review
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     permissions:
       contents: read
       pull-requests: write
@@ -135,6 +138,7 @@ jobs:
     needs: [changes]
     if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -176,6 +180,7 @@ jobs:
     needs: [changes, test-frontend]
     if: ${{ (needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request') && !cancelled() && needs.test-frontend.result == 'success' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -207,6 +212,7 @@ jobs:
     needs: [changes]
     if: ${{ needs.changes.outputs.backend_unit == 'true' || github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -227,6 +233,7 @@ jobs:
     needs: [changes]
     if: ${{ needs.changes.outputs.backend_db == 'true' || github.event_name != 'pull_request' }}
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16-alpine
@@ -241,6 +248,7 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
+          --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1024m
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
@@ -266,8 +274,9 @@ jobs:
   ci-gate:
     name: CI Gate (All Checks Passed)
     if: always()
-    needs: [changes, lint-and-typecheck, dependency-review, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db]
+    needs: [changes, lint-and-typecheck, dependency-review, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
     steps:
       - name: Check Status of All Jobs
         run: |
@@ -278,6 +287,7 @@ jobs:
           echo "Frontend Coverage:      ${{ needs.test-frontend-coverage.result }}"
           echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
           echo "Backend DB Tests:       ${{ needs.test-backend-db.result }}"
+          echo "E2E Tests:              ${{ needs.e2e.result }}"
           echo "========================================================="
 
           failed=0
@@ -313,6 +323,11 @@ jobs:
             failed=1
           fi
 
+          if [ "${{ needs.e2e.result }}" != "success" ] && [ "${{ needs.e2e.result }}" != "skipped" ]; then
+            echo "::error::e2e failed or was cancelled (result: ${{ needs.e2e.result }})"
+            failed=1
+          fi
+
           if [ "$failed" -ne 0 ]; then
             echo "CI Gate failed: One or more required checks did not succeed."
             exit 1
@@ -331,11 +346,13 @@ jobs:
           | **Frontend Tests** | `${{ needs.test-frontend.result }}` | 2-Way Sharded Parallel Matrix |
           | **Frontend Coverage** | `${{ needs.test-frontend-coverage.result }}` | Merged Blob Reports & Coverage Enforcement |
           | **Backend Unit Tests** | `${{ needs.test-backend-unit.result }}` | In-Memory Fast Unit + Coverage Gate |
-          | **Backend DB Tests** | `${{ needs.test-backend-db.result }}` | Docker Postgres 16 (Healthchecked) |
+          | **Backend DB Tests** | `${{ needs.test-backend-db.result }}` | Docker Postgres 16 (Healthchecked, tmpfs) |
+          | **E2E Tests** | `${{ needs.e2e.result }}` | 2-Way Sharded Playwright Matrix |
           EOF
 
   e2e:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -355,6 +372,7 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
+          --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1024m
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
@@ -405,6 +423,7 @@ jobs:
     if: always()
     needs: [e2e]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -438,6 +457,7 @@ jobs:
     needs: [ci-gate]
     if: needs.ci-gate.result == 'success'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -459,7 +479,17 @@ jobs:
           sha256sum mms-dist.tar.gz > mms-dist.tar.gz.sha256
           cat mms-dist.tar.gz.sha256
 
+      - name: Report Build Artifact Summary
+        run: |
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ### 📦 Production Distribution Bundle
+          - **File:** \`mms-dist.tar.gz\`
+          - **Size:** $(du -h mms-dist.tar.gz | cut -f1)
+          - **SHA256:** \`$(cat mms-dist.tar.gz.sha256 | cut -d' ' -f1)\`
+          EOF
+
       - name: Upload mms-dist artifact
+        if: github.ref == 'refs/heads/main'
         uses: actions/upload-artifact@v7
         with:
           name: mms-dist
