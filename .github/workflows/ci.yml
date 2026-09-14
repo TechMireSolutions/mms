@@ -436,6 +436,7 @@ jobs:
 
   build-dist:
     needs: [ci-gate]
+    if: needs.ci-gate.result == 'success'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
