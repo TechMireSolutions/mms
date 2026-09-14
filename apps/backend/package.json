@@ -25,7 +25,8 @@
     "audit:detach": "tsx src/scripts/detach-audit-partition.ts",
     "benchmark:worker": "tsx src/scripts/benchmarkWorkerHeap.ts",
     "audit:partitions": "tsx src/scripts/create-audit-partition.ts",
-    "index:concurrent": "tsx src/scripts/create-index-concurrently.ts"
+    "index:concurrent": "tsx src/scripts/create-index-concurrently.ts",
+    "audit:dates": "tsx src/scripts/audit-date-formats.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1115.0",

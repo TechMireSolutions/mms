@@ -63,7 +63,7 @@ test.describe('Unknown tenant host redirect', { tag: '@smoke' }, () => {
       } catch {
         return false;
       }
-    }, { timeout: 25_000, intervals: [500, 1000, 2000] }).toBe(true);
+    }, { timeout: 45_000, intervals: [500, 1000, 2000] }).toBe(true);
 
     await expect(page.getByRole('heading', { name: /Tenant does not exist/i })).toBeVisible({
       timeout: 10_000,

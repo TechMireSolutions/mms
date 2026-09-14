@@ -34,4 +34,46 @@ describe('isoDateSchema', () => {
     expect(compareIsoDates('2026-02-15', '2026-02-15')).toBe(0);
     expect(compareIsoDates('2026-12-31', '2026-05-01')).toBe(1);
   });
+
+  it('rejects wrong shapes, not just impossible dates', () => {
+    for (const value of [
+      '2026-1-5', // not zero-padded
+      '15-01-2026', // day-first
+      '2026/01/15', // wrong separator
+      '2026-01-15T00:00:00Z', // a timestamp, not a date
+      '0000-00-00',
+      '',
+    ]) {
+      expect(isoDateSchema.safeParse(value).success, value).toBe(false);
+    }
+  });
+
+  it('sorts a mixed list chronologically', () => {
+    expect(['2026-03-01', '2025-12-31', '2026-01-15', '2026-01-01'].sort(compareIsoDates)).toEqual([
+      '2025-12-31',
+      '2026-01-01',
+      '2026-01-15',
+      '2026-03-01',
+    ]);
+  });
+
+  /**
+   * Guards a real implementation risk: validating through the LOCAL-time Date
+   * constructor would shift the day on hosts with a negative UTC offset, so the
+   * same stored value would validate differently per deployment region.
+   */
+  it('is timezone independent', () => {
+    const original = process.env.TZ;
+    try {
+      process.env.TZ = 'America/Los_Angeles';
+      expect(isValidIsoDate('2026-01-01')).toBe(true);
+      expect(isValidIsoDate('2026-02-31')).toBe(false);
+      process.env.TZ = 'Pacific/Kiritimati';
+      expect(isValidIsoDate('2026-01-01')).toBe(true);
+      expect(isValidIsoDate('2026-02-31')).toBe(false);
+    } finally {
+      if (original === undefined) delete process.env.TZ;
+      else process.env.TZ = original;
+    }
+  });
 });
