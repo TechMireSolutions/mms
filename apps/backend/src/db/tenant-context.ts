@@ -24,6 +24,30 @@ export interface WithTenantOptions {
   allowGlobal?: boolean;
 }
 
+/**
+ * Tenant is known to be present — no global opt-in needed.
+ *
+ * The overloads below are what make the fail-closed behaviour enforceable at
+ * COMPILE time rather than only at runtime. Without them, a call site whose
+ * tenant is `string | null | undefined` type-checks happily and then throws the
+ * first time it runs outside a request context (migrations, seeding, worker
+ * boot) — which is exactly how the document-store paths broke when this guard
+ * was introduced.
+ */
+export function withTenant<T>(
+  tenantId: string,
+  callback: (tx: TenantTransaction) => Promise<T>,
+  options?: WithTenantOptions,
+): Promise<T>;
+/**
+ * Tenant MAY be absent — the caller must pass an explicit `allowGlobal`, so
+ * RLS-bypassing access is always a visible decision at the call site.
+ */
+export function withTenant<T>(
+  tenantId: string | null | undefined,
+  callback: (tx: TenantTransaction) => Promise<T>,
+  options: WithTenantOptions & { allowGlobal: boolean },
+): Promise<T>;
 export async function withTenant<T>(
   tenantId: string | null | undefined,
   callback: (tx: TenantTransaction) => Promise<T>,
@@ -133,12 +157,28 @@ export async function withTenant<T>(
  * Automatically routes queries to the read replica pool and configures explicit
  * PostgreSQL `read only` transaction access mode.
  */
+export function withTenantRead<T>(
+  tenantId: string,
+  callback: (tx: TenantTransaction) => Promise<T>,
+  options?: { statementTimeoutMs?: number },
+): Promise<T>;
+export function withTenantRead<T>(
+  tenantId: string | null | undefined,
+  callback: (tx: TenantTransaction) => Promise<T>,
+  options: { statementTimeoutMs?: number; allowGlobal: boolean },
+): Promise<T>;
 export async function withTenantRead<T>(
   tenantId: string | null | undefined,
   callback: (tx: TenantTransaction) => Promise<T>,
   options: { statementTimeoutMs?: number; allowGlobal?: boolean } = {},
 ): Promise<T> {
-  return withTenant(tenantId, callback, { ...options, readOnly: true });
+  // Mirrors `withTenant`'s overloads, so a nullable tenant here also requires an
+  // explicit `allowGlobal` rather than failing at runtime.
+  return withTenant(
+    tenantId as string,
+    callback,
+    { ...options, readOnly: true } as WithTenantOptions,
+  );
 }
 
 /**
