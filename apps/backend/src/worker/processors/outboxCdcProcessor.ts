@@ -43,7 +43,14 @@ export async function processOutboxCdcBatch(
   // Select up to BATCH_SIZE unprocessed events, lock rows to avoid concurrent
   // worker collisions (SKIP LOCKED prevents blocking under contention).
   const rows = await db
-    .select()
+    .select({
+      id: outboxEvents.id,
+      workspaceSubdomain: outboxEvents.workspaceSubdomain,
+      entityType: outboxEvents.entityType,
+      entityId: outboxEvents.entityId,
+      eventType: outboxEvents.eventType,
+      payload: outboxEvents.payload,
+    })
     .from(outboxEvents)
     .where(isNull(outboxEvents.processedAt))
     .orderBy(asc(outboxEvents.createdAt))

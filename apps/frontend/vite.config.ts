@@ -97,7 +97,11 @@ export default defineConfig({
             }
             if (
               id.includes('/mermaid/') ||
-              id.includes('/@mermaid-js/') ||
+              id.includes('/@mermaid-js/')
+            ) {
+              return 'vendor-mermaid';
+            }
+            if (
               id.includes('/cytoscape') ||
               id.includes('/dagre')
             ) {
@@ -186,8 +190,13 @@ export default defineConfig({
               priority: 30,
             },
             {
+              name: 'vendor-mermaid',
+              test: /node_modules[\\/](?:mermaid|@mermaid-js)[\\/]/,
+              priority: 26,
+            },
+            {
               name: 'vendor-diagrams',
-              test: /node_modules[\\/](?:mermaid|@mermaid-js|cytoscape|dagre)[\\/]/,
+              test: /node_modules[\\/](?:cytoscape|dagre)[\\/]/,
               priority: 25,
             },
             {

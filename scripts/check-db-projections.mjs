@@ -8,10 +8,10 @@
  *
  * Why a ratchet rather than a fix-everything pass
  * ----------------------------------------------
- * There are 18 pre-existing sites (17 in `sessionRepositoryHydrate.ts`, 1 in the
- * outbox CDC processor). They are NOT a measured performance problem today: the
- * affected tables are 5–17 columns wide and the mappers read most of those
- * columns to build full domain records, so a projection would save little.
+ * There are 17 pre-existing sites (all in `sessionRepositoryHydrate.ts`).
+ * They are NOT a measured performance problem today: the affected tables are
+ * 5–17 columns wide and the mappers read most of those columns to build full domain
+ * records, so a projection would save little.
  *
  * The real hazard the ban guards is FUTURE bloat — adding one wide `jsonb` to
  * `session_classes` would silently inflate every session-list query, with
@@ -34,8 +34,8 @@ import { fileURLToPath } from 'node:url';
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const srcDir = path.join(rootDir, 'apps', 'backend', 'src');
 
-/** Measured 2026-09-14. Raise deliberately with a reason; never casually. */
-const BASELINE = 18;
+/** Measured 2026-09-15. Raise deliberately with a reason; never casually. */
+const BASELINE = 13;
 
 /** Recursively collects non-test TypeScript sources. */
 function collectSourceFiles(dir) {

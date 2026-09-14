@@ -1,5 +1,5 @@
 export { sessionRowToRecord } from './sessionRepositoryMappers.js';
-export { listSessionsByWorkspace, findSessionById, findSessionsByIds, findSessionsSummaryByIds } from './sessionRepositoryHydrate.js';
+export { listSessionsByWorkspace, findSessionById, findSessionsByIds, findSessionsSummaryByIds } from './sessionRepositoryQueries.js';
 export {
   saveSession,
   bulkSaveSessions,

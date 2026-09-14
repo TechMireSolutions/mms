@@ -29,7 +29,7 @@ const assetsDir = path.join(rootDir, 'apps', 'frontend', 'dist', 'assets');
 /**
  * Budgets are deliberately a little above the measured baseline so ordinary
  * code changes do not trip them; they exist to catch real regressions.
- * Baseline (measured): ~11.6 MB total JS, ~3.1 MB largest chunk (vendor-diagrams).
+ * Baseline (measured): ~11.6 MB total JS, ~3.1 MB largest chunk (vendor-mermaid).
  */
 const TOTAL_JS_BUDGET_MB = Number.parseFloat(process.env.BUNDLE_BUDGET_TOTAL_MB ?? '13');
 const LARGEST_CHUNK_BUDGET_MB = Number.parseFloat(

@@ -1,7 +1,7 @@
-import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { type Session } from '@mms/shared';
 import {
-  sessions,
+  type sessions,
   sessionFaculty,
   sessionClasses,
   sessionClassFees,
@@ -14,14 +14,21 @@ import {
   scholarshipEligibilities,
   sessionClassScholarships,
 } from '../schema.js';
-import { withTenantRead, type TenantTransaction } from '../tenant-context.js';
+import { type TenantTransaction } from '../tenant-context.js';
 import { sessionRowToRecord } from './sessionRepositoryMappers.js';
+
+export {
+  listSessionsByWorkspace,
+  findSessionById,
+  findSessionsByIds,
+  findSessionsSummaryByIds,
+} from './sessionRepositoryQueries.js';
 
 type Transaction = TenantTransaction;
 
-type SessionRow = typeof sessions.$inferSelect;
+export type SessionRow = typeof sessions.$inferSelect;
 
-async function hydrateSessionsList(
+export async function hydrateSessionsList(
   tx: Transaction,
   subdomain: string,
   sessionRows: SessionRow[],
@@ -209,7 +216,7 @@ async function hydrateSessionsList(
 /**
  * Lean hydration for the Work list: loads `classes` & `faculty` counts for the directory cards/table.
  */
-async function hydrateSessionsListSummary(
+export async function hydrateSessionsListSummary(
   tx: Transaction,
   subdomain: string,
   sessionRows: SessionRow[],
@@ -262,66 +269,3 @@ async function hydrateSessionsListSummary(
   );
 }
 
-export async function listSessionsByWorkspace(
-  tenant: string,
-  options?: { limit?: number; offset?: number },
-): Promise<Session[]> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenantRead(subdomain, async (tx) => {
-    const baseQuery = tx
-      .select()
-      .from(sessions)
-      .where(and(eq(sessions.workspaceSubdomain, subdomain), isNull(sessions.deletedAt)))
-      .orderBy(sessions.startDate);
-    if (options?.offset) {
-      baseQuery.offset(Math.max(0, options.offset));
-    }
-    const rows = options?.limit
-      ? await baseQuery.limit(Math.min(Math.max(1, options.limit), 5000))
-      : await baseQuery;
-    return hydrateSessionsList(tx, subdomain, rows);
-  });
-}
-
-export async function findSessionById(tenant: string, id: string): Promise<Session | null> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenantRead(subdomain, async (tx) => {
-    if (!tx || typeof (tx as any).select !== 'function') return null;
-    const rows = await tx
-      .select()
-      .from(sessions)
-      .where(and(eq(sessions.workspaceSubdomain, subdomain), eq(sessions.id, id)));
-    const row = rows[0];
-    if (!row) return null;
-    const [result] = await hydrateSessionsList(tx, subdomain, rows);
-    return result ?? null;
-  });
-}
-
-export async function findSessionsByIds(tenant: string, ids: string[]): Promise<Session[]> {
-  if (ids.length === 0) return [];
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenantRead(subdomain, async (tx) => {
-    if (!tx || typeof (tx as any).select !== 'function') return [];
-    const rows = await tx
-      .select()
-      .from(sessions)
-      .where(and(eq(sessions.workspaceSubdomain, subdomain), inArray(sessions.id, ids)));
-    return hydrateSessionsList(tx, subdomain, rows);
-  });
-}
-
-export async function findSessionsSummaryByIds(
-  tenant: string,
-  ids: string[],
-): Promise<Session[]> {
-  if (ids.length === 0) return [];
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenantRead(subdomain, async (tx) => {
-    const rows = await tx
-      .select()
-      .from(sessions)
-      .where(and(eq(sessions.workspaceSubdomain, subdomain), inArray(sessions.id, ids)));
-    return hydrateSessionsListSummary(tx, subdomain, rows);
-  });
-}

@@ -52,7 +52,7 @@ report_setup_status() {
 
 resolve_public_url() {
   local app_domain
-  app_domain="$(read_env_var MMS_APP_DOMAIN '')"
+  app_domain="${APP_DOMAIN:-$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")}"
   if [[ -n "$app_domain" ]]; then
     echo "https://${app_domain}"
   fi

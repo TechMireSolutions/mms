@@ -1,4 +1,4 @@
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { type QuestionBankQuestion } from '@mms/shared';
 import {
   type questions,
@@ -128,3 +128,113 @@ export async function syncQuestionChildren(
     );
   }
 }
+
+export async function hydrateQuestionRecords(
+  tx: Transaction,
+  subdomain: string,
+  rows: QuestionRow[],
+): Promise<QuestionBankQuestion[]> {
+  if (rows.length === 0) return [];
+  const qIds = rows.map((r) => r.id);
+
+  const [allCats, allOpts, allTags, allCits] = await Promise.all([
+    tx
+      .select({
+        questionId: questionCategories.questionId,
+        categoryId: questionCategories.categoryId,
+      })
+      .from(questionCategories)
+      .where(
+        and(
+          eq(questionCategories.workspaceSubdomain, subdomain),
+          inArray(questionCategories.questionId, qIds),
+        ),
+      ),
+    tx
+      .select({
+        questionId: questionOptions.questionId,
+        optionIndex: questionOptions.optionIndex,
+        optionText: questionOptions.optionText,
+      })
+      .from(questionOptions)
+      .where(
+        and(
+          eq(questionOptions.workspaceSubdomain, subdomain),
+          inArray(questionOptions.questionId, qIds),
+        ),
+      ),
+    tx
+      .select({
+        questionId: questionTags.questionId,
+        tag: questionTags.tag,
+      })
+      .from(questionTags)
+      .where(
+        and(
+          eq(questionTags.workspaceSubdomain, subdomain),
+          inArray(questionTags.questionId, qIds),
+        ),
+      ),
+    tx
+      .select({
+        questionId: questionCitations.questionId,
+        bookId: questionCitations.bookId,
+        citation: questionCitations.citation,
+      })
+      .from(questionCitations)
+      .where(
+        and(
+          eq(questionCitations.workspaceSubdomain, subdomain),
+          inArray(questionCitations.questionId, qIds),
+        ),
+      ),
+  ]);
+
+  const catsByQ = new Map<string, string[]>();
+  for (const c of allCats) {
+    const arr = catsByQ.get(c.questionId) ?? [];
+    arr.push(c.categoryId);
+    catsByQ.set(c.questionId, arr);
+  }
+
+  const optsByQ = new Map<string, Array<{ optionIndex: number; optionText: string }>>();
+  for (const o of allOpts) {
+    const arr = optsByQ.get(o.questionId) ?? [];
+    arr.push(o);
+    optsByQ.set(o.questionId, arr);
+  }
+
+  const tagsByQ = new Map<string, string[]>();
+  for (const t of allTags) {
+    const arr = tagsByQ.get(t.questionId) ?? [];
+    arr.push(t.tag);
+    tagsByQ.set(t.questionId, arr);
+  }
+
+  const citsByQ = new Map<string, Array<{ bookId: string; citation: Record<string, unknown> }>>();
+  for (const ci of allCits) {
+    let parsed: Record<string, unknown> = {};
+    try {
+      parsed = JSON.parse(ci.citation || '{}');
+    } catch {
+      // ignore
+    }
+    const arr = citsByQ.get(ci.questionId) ?? [];
+    arr.push({ bookId: ci.bookId, citation: parsed });
+    citsByQ.set(ci.questionId, arr);
+  }
+
+  return rows.map((r) => {
+    const sortedOpts = (optsByQ.get(r.id) ?? [])
+      .sort((a, b) => a.optionIndex - b.optionIndex)
+      .map((o) => o.optionText);
+    return questionRowToRecord(
+      r,
+      catsByQ.get(r.id) ?? [],
+      sortedOpts,
+      tagsByQ.get(r.id) ?? [],
+      citsByQ.get(r.id) ?? [],
+    );
+  });
+}
+
