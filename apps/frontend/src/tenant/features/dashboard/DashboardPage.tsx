@@ -48,6 +48,7 @@ export function DashboardPage() {
     dashboardMetricCards,
     selectedDashboardCardCount,
     visibleDashboardMetricCards,
+    visiblePinnedWidgets,
     pinnedDashboardWidgetCount,
     notifications,
     activeSessionsCount,
@@ -159,7 +160,7 @@ export function DashboardPage() {
 
       <ErrorBoundary>
         <DashboardWidgets
-          widgets={customWidgets.filter((widget) => widget.isPinnedToDashboard && widget.widgetType !== 'card')}
+          widgets={visiblePinnedWidgets}
           onUnpin={handleUnpinWidget}
           isEditMode={isEditMode}
           onEditWidget={handleEditWidget}

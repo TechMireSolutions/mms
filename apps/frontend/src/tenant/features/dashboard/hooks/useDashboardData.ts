@@ -35,6 +35,7 @@ import {
   type HasanatCommandMetricsSnapshot,
   type QuestionBankCommandMetricsSnapshot,
   type AccountingCommandMetricsSnapshot,
+  type Permission,
 } from '@mms/shared';
 
 export interface DashboardCollectionData {
@@ -67,33 +68,58 @@ function needsWidgetAggregate(widget: CustomWidget): boolean {
 export function useDashboardData(
   widgets: CustomWidget[],
   dashboardRole: DashboardRole,
+  enabledModules?: Record<string, boolean | undefined>,
+  can?: (permission: Permission) => boolean,
 ): DashboardCollectionData {
-  const requiredDashboardCollections = (() => getRequiredDashboardCollections(widgets, dashboardRole))();
+  const isModuleEnabled = (mod: string) => !enabledModules || enabledModules[mod] !== false;
+  const hasPermission = (perm: Permission) => !can || can(perm);
 
-  const shouldLoadContacts = requiredDashboardCollections.has('contacts');
-  const shouldLoadStudents = requiredDashboardCollections.has('students') || isDashboardAdmin(dashboardRole);
-  const shouldLoadTeachers = requiredDashboardCollections.has('teachers');
+  const requiredDashboardCollections = (() =>
+    getRequiredDashboardCollections(widgets, dashboardRole, enabledModules, can)
+  )();
+
+  const shouldLoadContacts =
+    requiredDashboardCollections.has('contacts') && isModuleEnabled('contacts') && hasPermission('contacts.read');
+  const shouldLoadStudents =
+    (requiredDashboardCollections.has('students') || isDashboardAdmin(dashboardRole)) &&
+    isModuleEnabled('students') &&
+    hasPermission('students.read');
+  const shouldLoadTeachers =
+    requiredDashboardCollections.has('teachers') && isModuleEnabled('teachers') && hasPermission('teachers.read');
   // Role shell needs: teacher banner (sessions), admin/accountant notifications (finance + attendance).
   const shouldLoadSessions =
-    requiredDashboardCollections.has('sessions') || isDashboardTeacher(dashboardRole);
+    (requiredDashboardCollections.has('sessions') || isDashboardTeacher(dashboardRole)) &&
+    isModuleEnabled('sessions') &&
+    hasPermission('sessions.read');
   const shouldLoadAttendance =
-    requiredDashboardCollections.has('attendance_records') ||
-    isDashboardAdminOrAccountant(dashboardRole) ||
-    isDashboardTeacher(dashboardRole);
+    (requiredDashboardCollections.has('attendance_records') ||
+      isDashboardAdminOrAccountant(dashboardRole) ||
+      isDashboardTeacher(dashboardRole)) &&
+    isModuleEnabled('attendance') &&
+    hasPermission('attendance.read');
 
   const shouldLoadFinance =
-    requiredDashboardCollections.has('finance_invoices') || isDashboardAdminOrAccountant(dashboardRole);
-  const shouldLoadHasanat = requiredDashboardCollections.has('hasanat_distributions');
+    (requiredDashboardCollections.has('finance_invoices') || isDashboardAdminOrAccountant(dashboardRole)) &&
+    isModuleEnabled('finance') &&
+    hasPermission('finance.read');
+  const shouldLoadHasanat =
+    requiredDashboardCollections.has('hasanat_distributions') &&
+    isModuleEnabled('hasanat') &&
+    hasPermission('hasanat.read');
   const shouldLoadQuestionBank =
-    requiredDashboardCollections.has('questions') ||
-    requiredDashboardCollections.has('tests') ||
-    requiredDashboardCollections.has('assessment_results');
-  const shouldLoadAccounting = (() =>
-      widgets.some(
-        (widget) =>
-          isWidgetActiveForDashboard(widget, dashboardRole) &&
-          (widget.category === ACCOUNTING_MODULE_MANIFEST.moduleId || DASHBOARD_ACCOUNTING_WIDGET_IDS.has(widget.id)),
-      ))();
+    (requiredDashboardCollections.has('questions') ||
+      requiredDashboardCollections.has('tests') ||
+      requiredDashboardCollections.has('assessment_results')) &&
+    isModuleEnabled('questionBank') &&
+    hasPermission('questionBank.read');
+  const shouldLoadAccounting =
+    isModuleEnabled('accounting') &&
+    hasPermission('accounting.read') &&
+    widgets.some(
+      (widget) =>
+        isWidgetActiveForDashboard(widget, dashboardRole) &&
+        (widget.category === ACCOUNTING_MODULE_MANIFEST.moduleId || DASHBOARD_ACCOUNTING_WIDGET_IDS.has(widget.id)),
+    );
 
   const collectionWidgets = {
     contacts: filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole).filter(needsWidgetAggregate),

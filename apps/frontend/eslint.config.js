@@ -20,7 +20,7 @@ const appFiles = [
 
 export default tseslint.config(
   {
-    ignores: ["dist/**"],
+    ignores: ["dist/**", "public/**"],
   },
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,

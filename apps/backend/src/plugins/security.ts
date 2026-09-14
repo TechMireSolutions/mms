@@ -28,9 +28,16 @@ const nonceStore = new WeakMap<FastifyRequest, string>();
  *  - `frame-ancestors 'none'` and `object-src 'none'` block framing and plugins.
  */
 function buildCspDirectives(isProd?: boolean, nonce?: string) {
+  const scriptSources = ["'self'"];
+  if (nonce) {
+    scriptSources.push(`'nonce-${nonce}'`);
+  }
+  // Allow the theme bootstrap script even if older index.html is cached in user browsers
+  scriptSources.push("'sha256-gk4Z7QZVEdEVHj4eZeOlFNEC2ZefOM9Ohn11Fh6G3Vo='");
+
   return {
     'default-src': ["'self'"],
-    'script-src': nonce ? ["'self'", `'nonce-${nonce}'`] : ["'self'"],
+    'script-src': scriptSources,
     'script-src-attr': ["'none'"],
     'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
     'img-src': ["'self'", 'data:', 'blob:'],
