@@ -72,7 +72,7 @@ Frontend uses Vite proxy `/api` → `:3000` with `credentials: 'include'` for co
 PostgreSQL is used as the relational database. Ensure a PostgreSQL instance is running and reachable via `DATABASE_URL`.
 
 - Empty DB seeds minimal defaults via `minimalSeeds.ts` (using `getMinimalCollectionsForSeed()` and `getMinimalObjects()`)
-- Legacy `seeds.json` is not used for automatic empty-DB seeding
+- Legacy seed dump (`seeds.ts` / `seeds.json`) is not used for automatic empty-DB seeding
 
 ## Drizzle migration gotcha
 

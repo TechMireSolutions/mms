@@ -346,8 +346,8 @@ function importResolves(specifier, containingFile) {
 const MAX_DESCRIPTION = 1024;
 const NAME_RE = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 
-/** Naming-convention patterns in tables (e.g. `kebab-case.sh`) are not files. */
-const CONVENTION_TOKENS = new Set(['kebab-case.sh', 'kebab-case.ts', 'PascalCase.tsx', 'camelCase.ts', 'snake_case.ts']);
+/** Naming-convention patterns in tables (e.g. `kebab-case.sh`) and gitignored seed artifacts are not tracked files. */
+const CONVENTION_TOKENS = new Set(['kebab-case.sh', 'kebab-case.ts', 'PascalCase.tsx', 'camelCase.ts', 'snake_case.ts', 'seeds.json']);
 
 const today = new Date();
 const FRESHNESS_DAYS = 180;
