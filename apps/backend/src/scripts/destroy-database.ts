@@ -1,7 +1,9 @@
-process.loadEnvFile('.env');
+import { loadBackendEnv } from '../config/loadEnv.js';
 import { getDb } from '../db/dbClient.js';
 import { sql } from 'drizzle-orm';
 import { initDb } from '../db/database.js';
+
+loadBackendEnv();
 
 async function main() {
   console.log('Initializing database connection...');
