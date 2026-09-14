@@ -49,7 +49,7 @@ curl http://localhost:3000/ready    # 503 if PostgreSQL down
 
 ## Required env (backend)
 
-Create `apps/backend/.env` (never commit):
+Create `apps/backend/.env` (from `apps/backend/.env.example`, never commit):
 
 | Variable | Notes |
 |----------|-------|

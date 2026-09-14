@@ -166,6 +166,7 @@ for (const file of ruleFiles) {
   for (const m of pathMatches) {
     let p = m[1].split('#')[0].split('?')[0];
     if (p.includes('*') || p.includes('...') || p.includes('{') || p.includes('[')) continue;
+    if (p.endsWith('.env')) continue;
     if (!fs.existsSync(path.join(ROOT, p))) {
       fail(`In ${file}: referenced path does not exist on disk: ${p}`);
     }
@@ -254,6 +255,7 @@ for (const skill of diskSkills) {
   for (const m of pathMatches) {
     let p = m[1].split('#')[0].split('?')[0];
     if (p.includes('*') || p.includes('...') || p.includes('{') || p.includes('[')) continue;
+    if (p.endsWith('.env')) continue;
     if (!fs.existsSync(path.join(ROOT, p))) {
       fail(`In skill ${skill}: referenced path does not exist on disk: ${p}`);
     }
