@@ -20,7 +20,7 @@ export async function getCollection(name: string): Promise<unknown[] | null> {
       const row = rows[0];
       if (!row) return null;
       return row.data;
-    });
+    }, { allowGlobal: !tenant });
   } catch (error) {
     logger.error({ name, err: error }, 'Error getting collection');
     throw error;
@@ -43,7 +43,7 @@ export async function getCollectionForUpdate(name: string): Promise<unknown[] | 
       `);
       const row = getQueryRows<{ data: unknown[] }>(result)[0];
       return row?.data ?? null;
-    });
+    }, { allowGlobal: !tenant });
   } catch (error) {
     logger.error({ name, err: error }, 'Error locking collection');
     throw error;
@@ -94,7 +94,7 @@ export async function saveCollection(
           }
         }
       }
-    });
+    }, { allowGlobal: !tenant });
 
     if (tenant) {
       const { broadcastTenantUpdate } = await import('../services/websocketService.js');
@@ -113,7 +113,7 @@ export async function deleteCollection(name: string): Promise<void> {
   const tenant = getRequestTenant();
   await withTenant(tenant, async (tx) => {
     await tx.delete(schema.collections).where(eq(schema.collections.name, storageName));
-  });
+  }, { allowGlobal: !tenant });
   
   if (tenant) {
     const { broadcastTenantUpdate } = await import('../services/websocketService.js');

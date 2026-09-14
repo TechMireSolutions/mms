@@ -20,7 +20,7 @@ export async function getObject(key: string): Promise<unknown | null> {
       const row = rows[0];
       if (!row) return null;
       return row.data;
-    });
+    }, { allowGlobal: !tenant });
   } catch (error) {
     logger.error({ key, err: error }, 'Error getting object');
     throw error;
@@ -40,7 +40,7 @@ export async function saveObject(key: string, data: unknown): Promise<void> {
           target: schema.objects.key,
           set: { data: processedData },
         });
-    });
+    }, { allowGlobal: !tenant });
 
     if (tenant) {
       const { broadcastTenantUpdate } = await import('../services/websocketService.js');

@@ -46,11 +46,13 @@ export const A11Y_BASELINE: Record<string, string> = {
   // Resolution is a design-token decision (`--primary` vs surface), not a
   // one-line markup fix, so it is tracked rather than silently changed here.
   'color-contrast': 'Settings nav active-tab label; needs a design-token contrast fix.',
-  // Intermittent and data-dependent: observed only when dashboard KPI/widget
-  // cards render. The reported node is an `aria-hidden` wrapper that axe
-  // considers to contain focusable content. Needs the specific widget pinned
-  // down before fixing — see docs/a11y-baseline.md.
-  'aria-hidden-focus': 'Dashboard widget wrapper; intermittent, source not yet pinned down.',
+  // Intermittent and data-dependent (seen only when dashboard widgets render).
+  // Related fix already applied: `ProgressBar` used to spread `aria-hidden` onto
+  // a `role="progressbar"` element across 8+ call sites — a real ARIA conflict,
+  // now resolved in the component. That has NOT been confirmed as this finding's
+  // cause, so the entry stays until a firing run identifies the node directly
+  // (the `html:` diagnostic prints it). See docs/a11y-baseline.md.
+  'aria-hidden-focus': 'Dashboard widget; intermittent — not yet attributable to a component.',
 };
 
 /**
@@ -90,7 +92,12 @@ function summarize(violations: AxeResults['violations']): AxeViolationSummary[] 
     impact: (violation.impact as Impact | null) ?? null,
     help: violation.help,
     nodes: violation.nodes.length,
-    sampleTargets: violation.nodes.slice(0, 3).map((node) => node.target.join(' ')),
+    // axe's `target` is an ARRAY of selectors that walks into frames/shadow roots.
+    // Joining it with a space (the obvious thing) silently produced a composite
+    // like `.card > .child[aria-hidden]` that looked like one CSS selector but
+    // was actually two different elements — which sent me chasing the wrong
+    // component. Keep the steps visually distinct so the target is unambiguous.
+    sampleTargets: violation.nodes.slice(0, 3).map((node) => node.target.join(' >> ')),
     sampleHtml: (violation.nodes[0]?.html ?? '').replace(/\s+/g, ' ').slice(0, 300),
   }));
 }

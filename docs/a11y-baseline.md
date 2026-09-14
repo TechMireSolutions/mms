@@ -66,17 +66,42 @@ something a screen reader cannot announce.
 
 Observed only on the dashboard and only on some runs, which points at
 data-dependent widget rendering (KPI/widget cards appear once their data lands).
-The reported node was an `aria-hidden` wrapper inside a `min-h-card-sm` card.
 
-**Not yet fixed because the source is not pinned down.** The `flex-shrink-0` +
-`aria-hidden` combinations found by grepping the frontend are all `<svg>` icons or
-plain `<div>`s, none of which are focusable — so the culprit is a wrapper that
-gains focusable content at runtime, most likely an interactive element rendered
-inside an `aria-hidden` container.
+### A real ARIA conflict was found and fixed while investigating
 
-**Next step:** re-run with the helper's `html:` diagnostic (it prints the first
-offending node's `outerHTML`) capturing a run where the violation fires, then
-trace that element to its component.
+`ProgressBar` (the SSOT progress/rate bar) spread `...props` onto the same element
+that carried `role="progressbar"` + `aria-valuenow`. Eight call sites — attendance,
+accounting (×3), sessions (×2), profile, question-bank (×2), dashboard charts —
+pass `aria-hidden="true"` to mark a bar *decorative*, so those elements both
+declared a widget **and** hid it from assistive tech. Two consequences:
+
+1. An `aria-hidden-focus` violation at every one of those sites.
+2. The progress value was never announced — the parent rows convey it only
+   visually (their `aria-label` sits on a role-less `<div>`, which AT ignores).
+
+The component now drops the widget role when marked decorative, so the two ARIA
+contracts cannot contradict. Covered by
+`apps/frontend/src/components/ui/ProgressBar.test.tsx`.
+
+### Status: still baselined, deliberately
+
+**This fix has NOT been confirmed as the cause of the dashboard finding**, so the
+baseline entry stays. The evidence is weaker than it first appears:
+
+- The violation is intermittent (~1 in 6 runs before the fix); 4 clean runs after
+  it is supporting, not conclusive.
+- The originally reported selector was **misleading**: my helper joined axe's
+  `node.target` array with a space, and that array can hold multiple selectors for
+  a multi-element target. It produced `.min-h-card-sm > .flex-shrink-0[aria-hidden="true"]`,
+  which reads as one CSS selector but was two separate elements — that sent the
+  investigation at the wrong component. The helper now joins with `>>` so the
+  steps are distinguishable.
+
+### Next step
+
+Re-run until the violation fires and read the `html:` line the helper prints
+(first offending node's `outerHTML`), then trace that element to its component. If
+it turns out to be `ProgressBar`-related, delete the entry.
 
 ## Regenerating the baseline
 

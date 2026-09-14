@@ -55,7 +55,7 @@ export async function getAllData(): Promise<{ collections: Record<string, unknow
       }
 
       return { collections, objects };
-    });
+    }, { allowGlobal: !tenant });
   } catch (error) {
     logger.error({ err: error }, 'Error retrieving all database data');
     throw error;
@@ -68,7 +68,7 @@ export async function listCollectionStorageNames(): Promise<string[]> {
   return withTenant(tenant, async (tx) => {
     const colRows = await tx.select({ name: schema.collections.name }).from(schema.collections);
     return colRows.map((row) => row.name);
-  });
+  }, { allowGlobal: !tenant });
 }
 
 /** Reads a collection by exact storage name (no tenant prefixing). */
@@ -83,7 +83,7 @@ export async function getCollectionByStorageName(name: string): Promise<unknown[
     const row = rows[0];
     if (!row) return null;
     return row.data;
-  });
+  }, { allowGlobal: !tenant });
 }
 
 /** Deletes a collection row by exact storage name. */
@@ -91,7 +91,7 @@ export async function deleteCollectionByStorageName(name: string): Promise<void>
   const tenant = getRequestTenant();
   await withTenant(tenant, async (tx) => {
     await tx.delete(schema.collections).where(eq(schema.collections.name, name));
-  });
+  }, { allowGlobal: !tenant });
 }
 
 /** Deletes an object row by exact storage key. */
@@ -99,7 +99,7 @@ export async function deleteObjectByStorageKey(key: string): Promise<void> {
   const tenant = getRequestTenant();
   await withTenant(tenant, async (tx) => {
     await tx.delete(schema.objects).where(eq(schema.objects.key, key));
-  });
+  }, { allowGlobal: !tenant });
 }
 
 /** Lists all object storage keys (including tenant-prefixed). */
@@ -108,7 +108,7 @@ export async function listObjectStorageKeys(): Promise<string[]> {
   return withTenant(tenant, async (tx) => {
     const objRows = await tx.select({ key: schema.objects.key }).from(schema.objects);
     return objRows.map((row) => row.key);
-  });
+  }, { allowGlobal: !tenant });
 }
 
 /**
@@ -166,5 +166,5 @@ export async function getObjectByStorageKey(key: string): Promise<unknown | null
     const row = rows[0];
     if (!row) return null;
     return row.data;
-  });
+  }, { allowGlobal: !tenant });
 }
