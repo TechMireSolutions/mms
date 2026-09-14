@@ -178,7 +178,7 @@ jobs:
   test-frontend-coverage:
     name: Frontend Coverage Gate
     needs: [changes, test-frontend]
-    if: ${{ (needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request') && !cancelled() && needs.test-frontend.result == 'success' }}
+    if: ${{ (needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request') && !cancelled() && needs['test-frontend'].result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
@@ -455,7 +455,7 @@ jobs:
 
   build-dist:
     needs: [ci-gate]
-    if: needs.ci-gate.result == 'success'
+    if: always() && needs['ci-gate'].result == 'success'
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
