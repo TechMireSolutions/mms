@@ -1,3 +1,4 @@
+import { sql } from 'drizzle-orm';
 import { activeDb, getReadReplicaDb, hasActiveTransaction, withActiveTransaction } from './dbConnection.js';
 import type { DbClient } from './dbConnection.js';
 
@@ -76,13 +77,39 @@ export async function withTenant<T>(
 
   if (typeof hasActiveTransaction === 'function' && hasActiveTransaction()) {
     const active = activeDb();
+    // Capture the outer transaction's RLS context first: `SET LOCAL` persists
+    // until the transaction ends, so without restoring it, queries the outer
+    // callback runs *after* this nested block would execute under the nested
+    // tenant (a cross-tenant read/write window).
+    const previousResult = await (active as unknown as {
+      execute: (query: unknown) => Promise<{ rows?: Array<Record<string, unknown>> }>;
+    }).execute(
+      sql`SELECT
+        current_setting('app.current_tenant', true) AS tenant,
+        current_setting('app.rls_bypass', true) AS bypass`,
+    );
+    const previous = previousResult?.rows?.[0];
+
     // Re-apply tenant RLS guards so a nested `withTenant` runs under its own
     // requested tenant rather than silently inheriting the outer transaction's
     // context. Idempotent when the tenant matches; correct when it differs.
     await applyTenantTransactionGuards(active as unknown as AppDb, resolvedTenantId, {
       statementTimeoutMs: options.statementTimeoutMs,
     });
-    return callback(active as unknown as TenantTransaction);
+    try {
+      return await callback(active as unknown as TenantTransaction);
+    } finally {
+      const previousBypass = previous?.bypass;
+      const previousTenant = previous?.tenant;
+      if (previousBypass === 'on') {
+        // Outer scope was global (RLS bypassed) — restore that.
+        await applyTenantTransactionGuards(active as unknown as AppDb, '');
+      } else if (typeof previousTenant === 'string' && previousTenant) {
+        await applyTenantTransactionGuards(active as unknown as AppDb, previousTenant);
+      }
+      // If neither was set the outer transaction had no guards of its own;
+      // leaving the nested context in place is the safe choice.
+    }
   }
 
   let pool: DbClient | undefined;

@@ -63,9 +63,15 @@ async function loadPermissionsForUsers(
   return map;
 }
 
-async function writePermissions(userId: string, permissions: PlatformAdminPermissions): Promise<void> {
-  // Delete existing then insert — simple and correct for ≤10 keys.
-  await activeDb().delete(platformUserPermissions).where(eq(platformUserPermissions.platformUserId, userId));
+async function writePermissions(
+  userId: string,
+  permissions: PlatformAdminPermissions,
+  client: ReturnType<typeof activeDb> = activeDb(),
+): Promise<void> {
+  // Delete existing then insert — simple and correct for ≤10 keys, but it MUST
+  // run in the caller's transaction: a failure between the delete and the
+  // insert would otherwise leave the user with no permissions at all.
+  await client.delete(platformUserPermissions).where(eq(platformUserPermissions.platformUserId, userId));
 
   const rows = PERMISSION_KEYS.map((key) => ({
     platformUserId: userId,
@@ -73,7 +79,7 @@ async function writePermissions(userId: string, permissions: PlatformAdminPermis
     isGranted: Boolean(permissions[key]),
   }));
   if (rows.length > 0) {
-    await activeDb().insert(platformUserPermissions).values(rows);
+    await client.insert(platformUserPermissions).values(rows);
   }
 }
 
@@ -223,19 +229,22 @@ export async function insertPlatformUser(user: StoredPlatformUser): Promise<void
       ? FULL_PLATFORM_ADMIN_PERMISSIONS
       : normalizePlatformAdminPermissions(processedUser.permissions);
 
-  await activeDb().insert(platformUsers).values({
-    id: processedUser.id,
-    email: processedUser.email.toLowerCase(),
-    name: processedUser.name,
-    passwordHash: processedUser.passwordHash,
-    role: processedUser.role,
-    sessionVersion: processedUser.sessionVersion ?? 0,
-    emailVerifiedAt: processedUser.emailVerifiedAt ? new Date(processedUser.emailVerifiedAt) : null,
-    disabledAt: processedUser.disabledAt ? new Date(processedUser.disabledAt) : null,
-    createdAt: new Date(processedUser.createdAt),
-  });
+  await activeDb().transaction(async (tx) => {
+    const client = tx as unknown as ReturnType<typeof activeDb>;
+    await client.insert(platformUsers).values({
+      id: processedUser.id,
+      email: processedUser.email.toLowerCase(),
+      name: processedUser.name,
+      passwordHash: processedUser.passwordHash,
+      role: processedUser.role,
+      sessionVersion: processedUser.sessionVersion ?? 0,
+      emailVerifiedAt: processedUser.emailVerifiedAt ? new Date(processedUser.emailVerifiedAt) : null,
+      disabledAt: processedUser.disabledAt ? new Date(processedUser.disabledAt) : null,
+      createdAt: new Date(processedUser.createdAt),
+    });
 
-  await writePermissions(processedUser.id, permissions);
+    await writePermissions(processedUser.id, permissions, client);
+  });
 }
 
 export async function updatePlatformUserRow(
@@ -275,24 +284,27 @@ export async function updatePlatformUserRow(
     next.permissions = FULL_PLATFORM_ADMIN_PERMISSIONS;
   }
 
-  await activeDb()
-    .update(platformUsers)
-    .set({
-      email: next.email,
-      name: next.name,
-      passwordHash: next.passwordHash,
-      role: next.role,
-      sessionVersion: next.sessionVersion,
-      emailVerifiedAt: next.emailVerifiedAt ? new Date(next.emailVerifiedAt) : null,
-      disabledAt: next.disabledAt ? new Date(next.disabledAt) : null,
-      updatedAt: new Date(),
-    })
-    .where(eq(platformUsers.id, userId));
+  await activeDb().transaction(async (tx) => {
+    const client = tx as unknown as ReturnType<typeof activeDb>;
+    await client
+      .update(platformUsers)
+      .set({
+        email: next.email,
+        name: next.name,
+        passwordHash: next.passwordHash,
+        role: next.role,
+        sessionVersion: next.sessionVersion,
+        emailVerifiedAt: next.emailVerifiedAt ? new Date(next.emailVerifiedAt) : null,
+        disabledAt: next.disabledAt ? new Date(next.disabledAt) : null,
+        updatedAt: new Date(),
+      })
+      .where(eq(platformUsers.id, userId));
 
-  // Write permissions to child table if they changed.
-  if (processedPatch.permissions !== undefined || processedPatch.role !== undefined) {
-    await writePermissions(userId, next.permissions);
-  }
+    // Write permissions to child table if they changed.
+    if (processedPatch.permissions !== undefined || processedPatch.role !== undefined) {
+      await writePermissions(userId, next.permissions, client);
+    }
+  });
 
   return next;
 }

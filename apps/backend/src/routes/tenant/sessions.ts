@@ -1,5 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { initServer, type RouterImplementation } from '@ts-rest/fastify';
+import { handleContractError } from '../../lib/contractError.js';
+import { standardRequestValidationErrorHandler } from '../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
 import {
@@ -71,8 +73,10 @@ export default async function sessionsRoutes(
       try {
         const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsPage({ ...query, includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: result };
-      } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list sessions' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to list sessions' } });
+
       }
     },
 
@@ -83,9 +87,10 @@ export default async function sessionsRoutes(
       try {
         const item = await withTenant(String(request.tenant?.id), () => sessionsUseCases.createSession(body), { readOnly: false });
         return { status: 201 as const, body: { session: item } };
-      } catch (error: unknown) {
-        request.log.error(error, 'Failed to create session');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create session' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to create session' } });
+
       }
     },
 
@@ -100,8 +105,10 @@ export default async function sessionsRoutes(
         const item = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionById(id, includeDeleted), { readOnly: true });
         if (!item) return { status: 404 as const, body: { type: 'not_found', message: 'Session not found' } };
         return { status: 200 as const, body: { session: item } };
-      } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load session' } });
+
       }
     },
 
@@ -113,8 +120,10 @@ export default async function sessionsRoutes(
         const updated = await withTenant(String(request.tenant?.id), () => sessionsUseCases.updateSessionById(id, body), { readOnly: false });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Session not found' } };
         return { status: 200 as const, body: { session: updated } };
-      } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update session' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to update session' } });
+
       }
     },
 
@@ -125,8 +134,10 @@ export default async function sessionsRoutes(
       try {
         await withTenant(String(request.tenant?.id), () => sessionsUseCases.deleteSessionById(id, String(user.id), body?.deletionReason), { readOnly: false });
         return { status: 200 as const, body: { success: true } };
-      } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete session' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to delete session' } });
+
       }
     },
 
@@ -137,8 +148,10 @@ export default async function sessionsRoutes(
       try {
         await withTenant(String(request.tenant?.id), () => sessionsUseCases.restoreSessionById(id, String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true } };
-      } catch (error: unknown) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to restore session' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to restore session' } });
+
       }
     },
 
@@ -149,8 +162,10 @@ export default async function sessionsRoutes(
       try {
         const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.bulkSoftDeleteSessions(body.ids.map(String), String(user.id), body.deletionReason), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete sessions' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk delete sessions' } });
+
       }
     },
 
@@ -161,8 +176,10 @@ export default async function sessionsRoutes(
       try {
         const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.bulkUpdateSessionsStatus(body.ids.map(String), body.status), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update session status' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk update session status' } });
+
       }
     },
 
@@ -173,8 +190,10 @@ export default async function sessionsRoutes(
       try {
         const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.bulkRestoreSessions(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore sessions' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk restore sessions' } });
+
       }
     },
 
@@ -193,8 +212,10 @@ export default async function sessionsRoutes(
       try {
         const result = await withTenant(String(request.tenant?.id), () => sessionsUseCases.loadSessionsWidgetAggregates(body.widgets, request), { readOnly: true });
         return { status: 200 as const, body: { results: result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load widget aggregates' } });
+
       }
     },
 
@@ -205,8 +226,10 @@ export default async function sessionsRoutes(
       try {
         const aggregates = await sessionsUseCases.loadSessionsReportAggregates();
         return { status: 200 as const, body: aggregates };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load sessions report aggregates' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load sessions report aggregates' } });
+
       }
     },
 
@@ -217,9 +240,10 @@ export default async function sessionsRoutes(
       try {
         const config = await loadSessionFieldConfig();
         return { status: 200 as const, body: { config: (config ?? null) as Record<string, unknown> | null } };
-      } catch (error: unknown) {
-        request.log.error(error, 'Failed to load session field config');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session field config' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load session field config' } });
+
       }
     },
 
@@ -231,9 +255,10 @@ export default async function sessionsRoutes(
         const saved = await saveSessionFieldConfig(body);
         await auditSession(user, 'session.field-config', 'Updated session field configuration', 'field-config');
         return { status: 200 as const, body: { success: true, config: saved as unknown as Record<string, unknown> } };
-      } catch (error: unknown) {
-        request.log.error(error, 'Failed to save session field config');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save session field config' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to save session field config' } });
+
       }
     },
 
@@ -245,9 +270,10 @@ export default async function sessionsRoutes(
         const raw = await loadSessionModulePreferences();
         const preferences = normalizeSessionModulePreferences(raw ?? undefined);
         return { status: 200 as const, body: { preferences } };
-      } catch (error: unknown) {
-        request.log.error(error, 'Failed to load session preferences');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session preferences' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load session preferences' } });
+
       }
     },
 
@@ -260,9 +286,10 @@ export default async function sessionsRoutes(
         await saveSessionModulePreferences(normalized);
         await auditSession(user, 'session.preferences', 'Updated session module preferences', 'preferences');
         return { status: 200 as const, body: { success: true, preferences: normalized } };
-      } catch (error: unknown) {
-        request.log.error(error, 'Failed to save session preferences');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save session preferences' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to save session preferences' } });
+
       }
     },
 
@@ -273,9 +300,10 @@ export default async function sessionsRoutes(
       try {
         const lookups = await loadSessionLookupsMap();
         return { status: 200 as const, body: { lookups: { statuses: lookups.statuses ?? [], types: lookups.types ?? [] } } };
-      } catch (error: unknown) {
-        request.log.error(error, 'Failed to load session lookups');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session lookups' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load session lookups' } });
+
       }
     },
 
@@ -288,12 +316,15 @@ export default async function sessionsRoutes(
       try {
         const map = await loadSessionLookupsMap();
         return { status: 200 as const, body: map[kind as SessionLookupKind] };
-      } catch (error: unknown) {
-        request.log.error(error, 'Failed to load session lookup kind');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load session lookup kind' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load session lookup kind' } });
+
       }
     },
   } as unknown as RouterImplementation<typeof sessionContract>);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: standardRequestValidationErrorHandler,
+  });
 }

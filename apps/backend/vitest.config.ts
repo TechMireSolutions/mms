@@ -14,6 +14,9 @@ export default defineConfig({
       LOG_LEVEL: 'silent',
       JWT_SECRET: 'test-secret-at-least-32-chars-long!!',
       PORT: '0',
+      // Tests assert local-dev OTP/reset-code flows; opt in explicitly rather
+      // than relying on the removed `NODE_ENV !== 'production'` check.
+      MMS_LOG_DEV_CREDENTIALS: 'true',
     },
     include: ['src/__tests__/**/*.{test,spec}.ts'],
     // Real-Postgres integration tests live in db-integration/ and are opt-in

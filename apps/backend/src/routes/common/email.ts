@@ -20,12 +20,18 @@ import {
 } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendForbidden } from '../../lib/httpErrors.js';
+import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../lib/rateLimitGuard.js';
 
 export default async function emailRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+
+  // Sending mail is a side-effect with cost and abuse potential — keep it on
+  // the strict auth budget rather than the 300/min global default.
+  const emailSendLimit = createStrictRateLimitGuard(fastify, AUTH_RATE_LIMIT);
 
   fastify.get('/integration', async (request, reply) => {
     const user = request.user as User;
@@ -110,7 +116,7 @@ export default async function emailRoutes(
     return reply.send({ success: true, config: saved });
   });
 
-  fastify.post('/verification-code', async (request, reply) => {
+  fastify.post('/verification-code', { preHandler: emailSendLimit }, async (request, reply) => {
     const user = request.user as User;
     const parsed = parseRequest(verificationCodeBodySchema, request.body);
     if (!parsed.ok) return replyValidationError(reply, parsed.message);

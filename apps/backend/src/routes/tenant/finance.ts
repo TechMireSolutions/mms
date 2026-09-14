@@ -12,6 +12,8 @@ import { financeSetupConfigRoutes } from './finance/financeSetupConfigRoutes.js'
 import { financeBillingRoutes } from './finance/financeBillingRoutes.js';
 import { financeCollectRoutes } from './finance/financeCollectRoutes.js';
 import { initServer, type RouterImplementation } from '@ts-rest/fastify';
+import { handleContractError } from '../../lib/contractError.js';
+import { standardRequestValidationErrorHandler } from '../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { withTenant } from '../../db/tenant-context.js';
 
@@ -79,7 +81,9 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadInvoicesPage({ ...query, includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list invoices' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to list invoices' } });
+
       }
     },
     getInvoice: async ({ params: { id }, query, request }: ContractRouteArgs<typeof financeContract['getInvoice']>): Promise<ContractRouteResponse<typeof financeContract['getInvoice']>> => {
@@ -94,7 +98,9 @@ export default async function financeRoutes(
         if (!item) return { status: 404 as const, body: { type: 'not_found', message: 'Invoice not found' } };
         return { status: 200 as const, body: { invoice: item } };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load invoice' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load invoice' } });
+
       }
     },
     createInvoice: async ({ body, request }: ContractRouteArgs<typeof financeContract['createInvoice']>): Promise<ContractRouteResponse<typeof financeContract['createInvoice']>> => {
@@ -104,7 +110,9 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () => financeUseCases.createInvoice(body), { readOnly: false });
         return { status: 201 as const, body: { invoice: result } };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create invoice' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to create invoice' } });
+
       }
     },
     updateInvoice: async ({ params: { id }, body, request }: ContractRouteArgs<typeof financeContract['updateInvoice']>): Promise<ContractRouteResponse<typeof financeContract['updateInvoice']>> => {
@@ -115,7 +123,9 @@ export default async function financeRoutes(
         if (!result) return { status: 404 as const, body: { type: 'not_found', message: 'Invoice not found' } };
         return { status: 200 as const, body: { invoice: result } };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update invoice' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to update invoice' } });
+
       }
     },
     deleteInvoice: async ({ params: { id }, body, request }: ContractRouteArgs<typeof financeContract['deleteInvoice']>): Promise<ContractRouteResponse<typeof financeContract['deleteInvoice']>> => {
@@ -126,7 +136,9 @@ export default async function financeRoutes(
         if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Invoice not found' } };
         return { status: 200 as const, body: { success: true as const } };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete invoice' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to delete invoice' } });
+
       }
     },
     listPayments: async ({ query, request }: ContractRouteArgs<typeof financeContract['listPayments']>): Promise<ContractRouteResponse<typeof financeContract['listPayments']>> => {
@@ -138,7 +150,9 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadPaymentsPage({ ...query, includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list payments' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to list payments' } });
+
       }
     },
     getPayment: async ({ params: { id }, query, request }: ContractRouteArgs<typeof financeContract['getPayment']>): Promise<ContractRouteResponse<typeof financeContract['getPayment']>> => {
@@ -153,7 +167,9 @@ export default async function financeRoutes(
         if (!item) return { status: 404 as const, body: { type: 'not_found', message: 'Payment not found' } };
         return { status: 200 as const, body: { payment: item } };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load payment' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load payment' } });
+
       }
     },
     createPayment: async ({ body, request }: ContractRouteArgs<typeof financeContract['createPayment']>): Promise<ContractRouteResponse<typeof financeContract['createPayment']>> => {
@@ -163,7 +179,9 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () => financeUseCases.createPayment(body), { readOnly: false });
         return { status: 201 as const, body: { payment: result } };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create payment' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to create payment' } });
+
       }
     },
     updatePayment: async ({ params: { id }, body, request }: ContractRouteArgs<typeof financeContract['updatePayment']>): Promise<ContractRouteResponse<typeof financeContract['updatePayment']>> => {
@@ -174,7 +192,9 @@ export default async function financeRoutes(
         if (!result) return { status: 404 as const, body: { type: 'not_found', message: 'Payment not found' } };
         return { status: 200 as const, body: { payment: result } };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update payment' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to update payment' } });
+
       }
     },
     deletePayment: async ({ params: { id }, body, request }: ContractRouteArgs<typeof financeContract['deletePayment']>): Promise<ContractRouteResponse<typeof financeContract['deletePayment']>> => {
@@ -185,7 +205,9 @@ export default async function financeRoutes(
         if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Payment not found' } };
         return { status: 200 as const, body: { success: true as const } };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete payment' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to delete payment' } });
+
       }
     },
 
@@ -196,8 +218,10 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () =>
           financeUseCases.bulkSoftDeleteInvoices(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true as const, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete invoices' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk delete invoices' } });
+
       }
     },
 
@@ -208,8 +232,10 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () =>
           financeUseCases.bulkRestoreInvoices(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true as const, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore invoices' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk restore invoices' } });
+
       }
     },
 
@@ -220,8 +246,10 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () =>
           financeUseCases.bulkUpdateInvoicesStatus(body.ids, body.status), { readOnly: false });
         return { status: 200 as const, body: { success: true as const, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update invoice status' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk update invoice status' } });
+
       }
     },
 
@@ -232,8 +260,10 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () =>
           financeUseCases.bulkSoftDeletePayments(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true as const, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete payments' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk delete payments' } });
+
       }
     },
 
@@ -244,8 +274,10 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () =>
           financeUseCases.bulkRestorePayments(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true as const, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore payments' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk restore payments' } });
+
       }
     },
 
@@ -254,8 +286,10 @@ export default async function financeRoutes(
       if (!canReadCollection(user, FINANCE_COLLECTION)) return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       try {
         return { status: 200 as const, body: { metrics: await financeUseCases.loadFinanceCommandMetrics() } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load finance metrics' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load finance metrics' } });
+
       }
     },
     widgetAggregates: async ({ body, request }: ContractRouteArgs<typeof financeContract['widgetAggregates']>): Promise<ContractRouteResponse<typeof financeContract['widgetAggregates']>> => {
@@ -265,10 +299,14 @@ export default async function financeRoutes(
         const result = await withTenant(String(request.tenant?.id), () => financeUseCases.loadFinanceWidgetAggregates(body.widgets), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load widget aggregates' } });
+
       }
     },
   } as unknown as RouterImplementation<typeof financeContract>);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: standardRequestValidationErrorHandler,
+  });
 }

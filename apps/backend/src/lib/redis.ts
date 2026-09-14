@@ -31,9 +31,11 @@ export function getRedisClient(): Redis | null {
       keepAlive: 30000,
       disconnectTimeout: 2000,
       autoResendUnfulfilledCommands: false,
+      // Never give up: returning null permanently disables reconnection, so a
+      // brief Redis restart would freeze this process (cache + revocation
+      // checks) until it was restarted by hand.
       retryStrategy(times: number) {
-        if (times > 5) return null;
-        return Math.min(times * 150 + Math.floor(Math.random() * 75), 2000);
+        return Math.min(times * 150 + Math.floor(Math.random() * 75), 30_000);
       },
       reconnectOnError(err: Error) {
         return err.message.includes('READONLY');
@@ -84,9 +86,11 @@ export function getRedisSubscriberClient(): Redis | null {
       keepAlive: 30000,
       disconnectTimeout: 2000,
       autoResubscribe: true,
+      // Never give up: returning null permanently disables reconnection, so a
+      // brief Redis restart would freeze this process (cache + revocation
+      // checks) until it was restarted by hand.
       retryStrategy(times: number) {
-        if (times > 5) return null;
-        return Math.min(times * 150 + Math.floor(Math.random() * 75), 2000);
+        return Math.min(times * 150 + Math.floor(Math.random() * 75), 30_000);
       },
     });
 

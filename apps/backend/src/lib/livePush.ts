@@ -71,7 +71,7 @@ export function configureRedisPubSub(
           if (subdomain && type && key) {
             broadcastLocalTenantUpdate(subdomain, type, key);
           }
-        } else if (channel === 'mms:job-event') {
+        } else if (channel === JOB_EVENT_CHANNEL) {
           const jobEvent = JSON.parse(message);
           if (jobEvent && jobEvent.tenantId) {
             broadcastLocalJobEvent(jobEvent);

@@ -1,6 +1,7 @@
 import {
   type PlatformPasswordForgotResult,
 } from '@mms/shared';
+import { isDevCredentialLoggingEnabled } from '../../lib/devLogging.js';
 
 /**
  * Normalizes OTP dispatching results for non-production environments to avoid code duplication in password reset flows.
@@ -10,7 +11,7 @@ export function buildDevForgotResult(
   resetId: string,
 ): PlatformPasswordForgotResult {
   const result: PlatformPasswordForgotResult = { accepted: true };
-  if (process.env.NODE_ENV !== 'production' && dispatch.devCode) {
+  if (isDevCredentialLoggingEnabled() && dispatch.devCode) {
     result.devReset = { resetId, code: dispatch.devCode };
   }
   return result;

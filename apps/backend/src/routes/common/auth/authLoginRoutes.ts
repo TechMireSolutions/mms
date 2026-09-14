@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from 'fastify';
-import rateLimit from '@fastify/rate-limit';
 import {
   loginUser,
   onboardUser,
@@ -8,6 +7,7 @@ import {
 import { resendTwoFactorChallenge } from '../../../services/auth/twoFactorService.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { AUTH_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../../lib/rateLimitGuard.js';
 import {
   authenticatePlatform,
   requirePlatformPermission,
@@ -19,7 +19,9 @@ import { sendNotFound } from '../../../lib/httpErrors.js';
 /** Rate-limited login, onboarding, and two-factor challenge routes. */
 export const authLoginRoutes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(async function authRateLimited(inner) {
-    await inner.register(rateLimit, AUTH_RATE_LIMIT);
+    // Must use the strict guard: the global limiter has already marked the
+    // request, so `inner.register(rateLimit, …)` would be a silent no-op.
+    inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
 
     inner.post('/login', async (request, reply) => {
       const body = parseRequest(loginBodySchema, request.body);

@@ -196,6 +196,22 @@ export async function deleteAuthArtifact(id: string): Promise<void> {
   await db().delete(authArtifacts).where(eq(authArtifacts.id, id));
 }
 
+/**
+ * Atomically consumes an artifact: `DELETE … WHERE id = ? AND kind = ? RETURNING`.
+ *
+ * Returns `true` only to the single caller that actually deleted the row. This
+ * is the primitive that makes refresh-token rotation race-safe — two concurrent
+ * refreshes presenting the same token both resolve the artifact id, but only
+ * one wins the delete, so the loser cannot mint a second token pair.
+ */
+export async function consumeAuthArtifact(id: string, kind: AuthArtifactKind): Promise<boolean> {
+  const rows = await db()
+    .delete(authArtifacts)
+    .where(and(eq(authArtifacts.id, id), eq(authArtifacts.kind, kind)))
+    .returning({ id: authArtifacts.id });
+  return rows.length > 0;
+}
+
 export async function purgeExpiredAuthArtifacts(): Promise<void> {
   await db().delete(authArtifacts).where(lt(authArtifacts.expiresAt, new Date()));
 }

@@ -12,6 +12,8 @@ import {
   type AttendanceLookupKind,
 } from '@mms/shared';
 import { initServer, type RouterImplementation } from '@ts-rest/fastify';
+import { handleContractError } from '../../../lib/contractError.js';
+import { standardRequestValidationErrorHandler } from '../../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
@@ -69,9 +71,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
           { readOnly: true },
         );
         return { status: 200 as const, body: result };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to list attendance records');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list attendance' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to list attendance' } });
+
       }
     },
 
@@ -89,9 +92,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const item = await withTenant(tenantId, () => attendanceUseCases.createAttendanceRecord(body), { readOnly: false });
         return { status: 201 as const, body: item };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to create attendance record');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create attendance' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to create attendance' } });
+
       }
     },
 
@@ -109,9 +113,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const records = await withTenant(tenantId, () => attendanceUseCases.upsertAttendanceRecords(body.records), { readOnly: false });
         return { status: 200 as const, body: { records } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to update attendance records');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update attendance records' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to update attendance records' } });
+
       }
     },
 
@@ -133,9 +138,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
           { readOnly: false },
         );
         return { status: 200 as const, body: { success: true, ...result } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to bulk delete attendance records');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk delete attendance records' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk delete attendance records' } });
+
       }
     },
 
@@ -153,9 +159,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(tenantId, () => attendanceUseCases.bulkRestoreAttendance(body.ids.map(String), String(user.id)), { readOnly: false });
         return { status: 200 as const, body: { success: true, ...result } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to bulk restore attendance records');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk restore attendance records' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to bulk restore attendance records' } });
+
       }
     },
 
@@ -170,20 +177,27 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Missing tenant context' } };
       }
 
+      const bodyRecord = (body && typeof body === 'object') ? (body as Record<string, unknown>) : {};
+      // The URL id is authoritative — reject a mismatched body id rather than
+      // updating a different record.
+      if (bodyRecord.id !== undefined && bodyRecord.id !== null && String(bodyRecord.id) !== id) {
+        return { status: 400 as const, body: { type: 'validation_error', message: 'Body id does not match the URL id' } };
+      }
+
       try {
-        const bodyRecord = (body && typeof body === 'object') ? (body as Record<string, unknown>) : {};
         const updated = await withTenant(
           tenantId,
-          () => attendanceUseCases.updateAttendanceRecordById(id, { ...bodyRecord, id: (bodyRecord.id as string) ?? id }),
+          () => attendanceUseCases.updateAttendanceRecordById(id, { ...bodyRecord, id }),
           { readOnly: false },
         );
         if (!updated) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Attendance record not found' } };
         }
         return { status: 200 as const, body: { record: updated } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to update attendance');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update attendance' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to update attendance' } });
+
       }
     },
 
@@ -209,9 +223,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
           return { status: 404 as const, body: { type: 'not_found', message: 'Attendance record not found' } };
         }
         return { status: 200 as const, body: { success: true } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to delete attendance');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete attendance' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to delete attendance' } });
+
       }
     },
 
@@ -236,9 +251,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
           return { status: 404 as const, body: { type: 'not_found', message: 'Attendance record not found' } };
         }
         return { status: 200 as const, body: { success: true } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to restore attendance');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to restore attendance' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to restore attendance' } });
+
       }
     },
 
@@ -260,9 +276,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
           { readOnly: true },
         );
         return { status: 200 as const, body: result };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to load widget aggregates');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load widget aggregates' } });
+
       }
     },
 
@@ -278,9 +295,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
           ...(query.classId?.trim() ? { classId: query.classId.trim() } : {}),
         });
         return { status: 200 as const, body: aggregates };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to load attendance report aggregates');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance report aggregates' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load attendance report aggregates' } });
+
       }
     },
 
@@ -292,9 +310,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const config = await getAttendanceFieldConfigService();
         return { status: 200 as const, body: { config: (config ?? null) as Record<string, unknown> | null } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to load attendance field config');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance field config' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load attendance field config' } });
+
       }
     },
 
@@ -307,9 +326,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         const saved = await updateAttendanceFieldConfigService(body);
         await auditAttendance(user, 'UPDATE_ATTENDANCE_CONFIG', 'Updated attendance field configuration', 'field-config');
         return { status: 200 as const, body: { success: true, config: saved as unknown as Record<string, unknown> } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to save attendance field config');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save attendance field config' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to save attendance field config' } });
+
       }
     },
 
@@ -322,9 +342,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         const raw = await getAttendancePreferencesService();
         const preferences = normalizeAttendanceModulePreferences(raw ?? undefined);
         return { status: 200 as const, body: { preferences } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to load attendance preferences');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance preferences' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load attendance preferences' } });
+
       }
     },
 
@@ -338,9 +359,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
         await updateAttendancePreferencesService(normalized);
         await auditAttendance(user, 'UPDATE_ATTENDANCE_PREFERENCES', 'Updated attendance module preferences', 'preferences');
         return { status: 200 as const, body: { success: true, preferences: normalized } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to save attendance preferences');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to save attendance preferences' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to save attendance preferences' } });
+
       }
     },
 
@@ -352,9 +374,10 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const lookups = await loadAttendanceLookupsMap();
         return { status: 200 as const, body: { lookups } };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to load attendance lookups');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance lookups' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load attendance lookups' } });
+
       }
     },
 
@@ -369,12 +392,15 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const map = await loadAttendanceLookupsMap();
         return { status: 200 as const, body: map[kind as AttendanceLookupKind] };
-      } catch (error: unknown) {
-        request.log?.error(error, 'Failed to load attendance lookup kind');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load attendance lookup kind' } };
+      } catch (error) {
+
+        return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to load attendance lookup kind' } });
+
       }
     },
   } as unknown as RouterImplementation<typeof attendanceContract>);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: standardRequestValidationErrorHandler,
+  });
 };

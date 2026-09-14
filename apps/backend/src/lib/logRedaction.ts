@@ -58,19 +58,20 @@ const SENSITIVE_KEYS = [
 ] as const;
 
 /**
- * Builds pino redact paths for each key at the top level and one level deep.
+ * Builds pino redact paths for each key at the top level and up to two levels
+ * deep.
  *
- * pino's wildcard (`*`) matches exactly one segment, so `*.password` does NOT
- * cover a top-level `password`; both forms are required. Two levels is a
- * deliberate ceiling: deeper wildcards cost interception time on every log line,
- * and the structured payloads in this codebase nest at most one level
- * (`{ user: { passwordHash } }`, `{ req: { headers: {...} } }`).
+ * pino's wildcard (`*`) matches exactly one segment, so each depth needs its own
+ * path: `password` (top level), `*.password` (depth 2, e.g. `{ user: { password } }`),
+ * and `*.*.password` (depth 3, e.g. `{ err: { data: { password } } }` — a shape
+ * that reaches logs whenever an error object carries a parsed request body).
  */
 function buildRedactPaths(): string[] {
   const paths: string[] = [];
   for (const key of SENSITIVE_KEYS) {
     paths.push(key);
     paths.push(`*.${key}`);
+    paths.push(`*.*.${key}`);
   }
   // Header locations that pino's serializer sees verbatim.
   paths.push('req.headers.authorization', 'req.headers.cookie', 'headers.authorization', 'headers.cookie');

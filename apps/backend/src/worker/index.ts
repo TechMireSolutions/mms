@@ -21,22 +21,36 @@ import { logger } from '../lib/logger.js';
 import { defaultSearchAdapter } from './adapters/searchIndexAdapter.js';
 import { purgeExpiredArchivedRecords } from './purgeArchivedRecordsJob.js';
 import { startOutboxCdcListener, type OutboxCdcHandle } from './outboxCdcListener.js';
+import { LEADER_LOCK_RETENTION_PURGE, tryAcquireLeaderLease } from '../lib/leaderElection.js';
 
 /** A 'pending' job older than this is assumed to have never been dispatched. */
 const STALE_PENDING_MS = 10 * 60 * 1000;
+/**
+ * A 'running' job whose heartbeat is older than this is assumed orphaned.
+ * `executeJob` refreshes `updated_at` every minute, so this is ~15 missed
+ * heartbeats. Crucially this must NOT fail every running row: with more than
+ * one worker replica, startup cleanup would otherwise kill jobs that are
+ * actively running on the other replica.
+ */
+const STALE_RUNNING_MS = 15 * 60 * 1000;
 
 export async function cleanupOrphanedJobs(): Promise<void> {
   try {
     await withGlobalTenant(async (tx) => {
-      // Jobs that were running when the worker restarted are orphaned.
+      // Only reclaim running jobs whose heartbeat has gone silent — not jobs
+      // that another live worker is still processing.
+      const runningCutoff = new Date(Date.now() - STALE_RUNNING_MS);
       const running = await tx.update(backgroundJobs)
         .set({
           status: 'failed',
-          error: 'Worker process restarted while job was running',
+          error: 'Worker heartbeat lost while job was running',
           completedAt: new Date(),
           updatedAt: new Date(),
         })
-        .where(eq(backgroundJobs.status, 'running'))
+        .where(and(
+          eq(backgroundJobs.status, 'running'),
+          lt(backgroundJobs.updatedAt, runningCutoff),
+        ))
         .returning({ id: backgroundJobs.id });
 
       if (running.length > 0) {
@@ -123,13 +137,24 @@ export function scheduleNextDailyPurge(dbClient = activeDb(), targetUtcHour = 2)
   logger.info({ delayMs, targetUtcHour }, '[RetentionPurge] Scheduled next daily purge run');
 
   purgeSchedulerTimer = setTimeout(() => {
-    void runRetentionPurgeCycle(dbClient)
-      .catch((err) => {
+    void (async () => {
+      // Single-leader election: with more than one worker replica, only one
+      // should run the retention purge for a given day.
+      const lease = await tryAcquireLeaderLease(LEADER_LOCK_RETENTION_PURGE);
+      if (!lease) {
+        logger.info('[RetentionPurge] Another replica holds the purge lease; skipping this run');
+        return;
+      }
+      try {
+        await runRetentionPurgeCycle(dbClient);
+      } catch (err) {
         logger.error({ err }, '[RetentionPurge] Error during scheduled purge run');
-      })
-      .finally(() => {
-        scheduleNextDailyPurge(dbClient, targetUtcHour);
-      });
+      } finally {
+        await lease.release();
+      }
+    })().finally(() => {
+      scheduleNextDailyPurge(dbClient, targetUtcHour);
+    });
   }, delayMs);
   purgeSchedulerTimer.unref?.();
 }
@@ -262,7 +287,11 @@ export async function startWorkerDaemon(): Promise<void> {
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
   process.on('SIGINT', () => void shutdown('SIGINT'));
   process.on('unhandledRejection', (reason) => {
-    logger.error({ reason }, 'Unhandled rejection');
+    // Treat like an uncaught exception: an unknown rejected promise can leave
+    // locks / DB rows in an inconsistent state, so shut down cleanly rather
+    // than continuing in an undefined state.
+    logger.fatal({ reason }, 'Unhandled rejection');
+    void shutdown('unhandledRejection');
   });
   process.on('uncaughtException', (error) => {
     logger.fatal({ err: error }, 'Uncaught exception');

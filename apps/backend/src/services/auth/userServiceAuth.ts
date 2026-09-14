@@ -13,6 +13,12 @@ import {
 } from './userServiceShared.js';
 import { getHydratedUsers, getWorkspaceUserRow, saveUsers } from './userServiceList.js';
 
+/**
+ * Fixed-format "salt:hash" used to burn a scrypt verification when the account
+ * does not exist, so login timing does not reveal which emails are registered.
+ */
+const DUMMY_PASSWORD_HASH = `${'0'.repeat(32)}:${'0'.repeat(128)}`;
+
 async function findUserByLoginEmailAndWorkspace(
   email: string,
   workspaceSubdomain: string,
@@ -130,6 +136,10 @@ export async function validateCredentials(
   let user = await findUserByLoginEmailAndWorkspace(email, workspaceSubdomain);
 
   let valid = user ? await verifyPassword(password, user.passwordHash) : false;
+  if (!user) {
+    // Unknown account: run the same scrypt work so response timing is uniform.
+    await verifyPassword(password, DUMMY_PASSWORD_HASH);
+  }
   if (!user || !valid) {
     // Self-healing: if login email matches platform superuser, check platform credentials & sync
     try {

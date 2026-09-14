@@ -151,7 +151,11 @@ function buildServerConfig(): ServerConfig {
     readReplicaDatabaseUrl,
     trustProxy: trustedProxies.length > 0 ? trustedProxies : false,
     logLevel,
-    allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
+    // In production never silently fall back to a localhost origin: prefer the
+    // configured app domain so CORS is scoped to the real site.
+    allowedOrigin:
+      process.env.ALLOWED_ORIGIN
+      || (isProd && appDomain ? `https://${appDomain}` : 'http://localhost:5173'),
     bodyLimit: parsePositiveInt(process.env.REQUEST_BODY_LIMIT_BYTES, 1024 * 1024, 1024, 50 * 1024 * 1024),
     requestTimeoutMs,
     pgPoolMax: parsePositiveInt(process.env.PG_POOL_MAX, 20, 1, 100),

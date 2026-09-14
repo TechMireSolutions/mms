@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from 'fastify';
-import rateLimit from '@fastify/rate-limit';
 import {
   establishSession,
   type User,
@@ -13,6 +12,7 @@ import {
   verifyPasswordBodySchema,
 } from '@mms/shared';
 import { AUTH_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../../lib/rateLimitGuard.js';
 import { clearAuthCookies } from '../../../services/auth/authCookieService.js';
 import { authenticateTenant } from '../../../middleware/authenticate.js';
 import {
@@ -76,7 +76,8 @@ export const authProfileRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   await fastify.register(async function tenantProfileRateLimited(inner) {
-    await inner.register(rateLimit, AUTH_RATE_LIMIT);
+    // Strict guard, not `inner.register(rateLimit, …)` — see rateLimitGuard.ts.
+    inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
 
     inner.post('/change-password', { preHandler: authenticateTenant }, async (request, reply) => {
       const user = request.user as User;

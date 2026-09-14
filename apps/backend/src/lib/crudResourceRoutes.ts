@@ -204,10 +204,17 @@ export function registerResourceRoutes<T extends ResourceRecord>(
         if (!isValid) return;
       }
 
+      // The URL id is authoritative. Without this guard, `PUT /things/A` with a
+      // body id of `B` would update B — a cross-record write.
+      const bodyId = (body.data as { id?: unknown }).id;
+      if (bodyId !== undefined && bodyId !== null && String(bodyId) !== params.data.id) {
+        return replyValidationError(reply, 'Body id does not match the URL id');
+      }
+
       try {
         const updated = await updateFn(params.data.id, {
           ...body.data,
-          id: body.data.id ?? params.data.id,
+          id: params.data.id,
         });
         if (!updated) {
           return sendNotFound(reply, `${nameSingular.charAt(0).toUpperCase() + nameSingular.slice(1)} not found`);

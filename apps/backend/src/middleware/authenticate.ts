@@ -123,8 +123,18 @@ export async function authenticateTenant(
           }
         }
         await redisSet(activeKey, 'active', 60);
-      } catch {
-        // Fall through for tests without DB context
+      } catch (error) {
+        // Tests run without a database and expect the request to proceed.
+        if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+          // Fail closed: if we cannot confirm the account is still active we
+          // must not grant access (a DB outage previously bypassed the check).
+          request.log.error(
+            { err: error, tenant, userId: String(user.id) },
+            'Failed to verify account active state; denying request',
+          );
+          await sendUnauthorized(reply, 'Session validation failed');
+          return;
+        }
       }
     }
   }

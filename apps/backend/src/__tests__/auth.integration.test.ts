@@ -10,6 +10,7 @@ vi.mock('../db/database.js', () => ({
 
 const mockFindRefreshTokenByHash = vi.fn();
 const mockDeleteAuthArtifact = vi.fn();
+const mockConsumeAuthArtifact = vi.fn().mockResolvedValue(true);
 const mockPutAuthArtifact = vi.fn();
 const mockGetPublicUserById = vi.fn();
 const mockGetTenantUserProfile = vi.fn();
@@ -23,6 +24,7 @@ vi.mock('../services/auth/authArtifactService.js', async (importOriginal) => {
     purgeExpiredAuthArtifacts: vi.fn().mockResolvedValue(undefined),
     findRefreshTokenByHash: (...args: unknown[]) => mockFindRefreshTokenByHash(...args),
     deleteAuthArtifact: (...args: unknown[]) => mockDeleteAuthArtifact(...args),
+    consumeAuthArtifact: (...args: unknown[]) => mockConsumeAuthArtifact(...args),
     putAuthArtifact: (...args: unknown[]) => mockPutAuthArtifact(...args),
   };
 });
@@ -168,6 +170,7 @@ describe('auth routes', () => {
     process.env.JWT_SECRET = 'test-secret';
     mockFindRefreshTokenByHash.mockReset();
     mockDeleteAuthArtifact.mockReset().mockResolvedValue(undefined);
+    mockConsumeAuthArtifact.mockReset().mockResolvedValue(true);
     mockPutAuthArtifact.mockReset().mockResolvedValue('new-artifact-id');
     mockGetPublicUserById.mockReset();
     mockGetTenantUserProfile.mockReset();
@@ -267,7 +270,7 @@ describe('auth routes', () => {
       cookies: { mms_refresh: token },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockDeleteAuthArtifact).toHaveBeenCalledWith('artifact-1');
+    expect(mockConsumeAuthArtifact).toHaveBeenCalledWith('artifact-1', 'refresh_token');
     expect(res.json()).toMatchObject({ user: { email: 'admin@test.com' } });
     await app.close();
   });

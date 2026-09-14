@@ -22,6 +22,7 @@ export default defineConfig({
       LOG_LEVEL: 'silent',
       JWT_SECRET: 'test-secret-at-least-32-chars-long!!',
       PORT: '0',
+      MMS_LOG_DEV_CREDENTIALS: 'true',
     },
     include: ['src/__tests__/db-integration/**/*.{test,spec}.ts'],
     pool: 'threads',

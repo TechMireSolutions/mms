@@ -9,6 +9,11 @@ import {
   ensureAuditTrailPartitions,
 } from './auditPartitionService.js';
 import { mapWithConcurrency } from '../lib/concurrencyLimiter.js';
+import {
+  LEADER_LOCK_AUDIT_VERIFICATION,
+  tryAcquireLeaderLease,
+  type LeaderLease,
+} from '../lib/leaderElection.js';
 
 const DEFAULT_VERIFICATION_INTERVAL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
@@ -53,7 +58,30 @@ export function startAuditVerificationScheduler(
     options?.concurrency ?? DEFAULT_VERIFICATION_CONCURRENCY,
   );
 
+  // Single-leader election: without it every API replica runs the verifier and
+  // publishes a duplicate Merkle checkpoint each interval.
+  let leaderLease: LeaderLease | null = null;
+  let leadershipLogged = false;
+
+  const ensureLeadership = async (): Promise<boolean> => {
+    if (leaderLease?.isHeld()) return true;
+    leaderLease = await tryAcquireLeaderLease(LEADER_LOCK_AUDIT_VERIFICATION);
+    if (!leaderLease) {
+      if (!leadershipLogged) {
+        log.info(
+          {},
+          'Another replica holds the audit verification leader lease; this replica stays passive',
+        );
+        leadershipLogged = true;
+      }
+      return false;
+    }
+    return true;
+  };
+
   const tick = async (): Promise<void> => {
+    if (!(await ensureLeadership())) return;
+
     // Partition maintenance runs first and in its own try/catch: if chain
     // verification or the Merkle rollup throws, monthly provisioning must still
     // happen, or rows would spill into the DEFAULT partition (which then blocks
@@ -121,6 +149,7 @@ export function startAuditVerificationScheduler(
 
   return () => {
     clearInterval(timer);
+    void leaderLease?.release();
   };
 }
 

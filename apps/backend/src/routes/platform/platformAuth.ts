@@ -1,5 +1,4 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import rateLimit from '@fastify/rate-limit';
 import {
   authenticatePlatform,
   optionalAuthenticatePlatform,
@@ -11,7 +10,10 @@ import {
   issuePlatformSession,
   loginPlatformUser,
   logoutPlatformUser,
+  type PlatformAccessTokenPayload,
 } from '../../services/platform/platformAuthService.js';
+import { PLATFORM_ACCESS_COOKIE } from '../../services/platform/platformCookieService.js';
+import { revokeToken } from '../../services/session.service.js';
 import { verifyPlatformTwoFactorChallenge, resendPlatformTwoFactorChallenge } from '../../services/platform/platformTwoFactorService.js';
 import {
   platformSessionScope,
@@ -35,6 +37,7 @@ import {
   resendPlatformPasswordReset,
 } from '../../services/platform/platformPasswordResetService.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../lib/rateLimitGuard.js';
 import {
   platformChangePasswordBodySchema,
   platformPasswordForgotBodySchema,
@@ -59,7 +62,7 @@ export default async function platformAuthRoutes(
   });
 
   await fastify.register(async function platformSetupRateLimited(inner) {
-    await inner.register(rateLimit, AUTH_RATE_LIMIT);
+    inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
 
     inner.post('/setup/register', async (request, reply) => {
       const parsed = parseRequest(platformSetupRegisterBodySchema, request.body);
@@ -77,7 +80,7 @@ export default async function platformAuthRoutes(
   });
 
   await fastify.register(async function platformPasswordResetRateLimited(inner) {
-    await inner.register(rateLimit, AUTH_RATE_LIMIT);
+    inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
 
     inner.post('/password/forgot', async (request, reply) => {
       const parsed = parseRequest(platformPasswordForgotBodySchema, request.body);
@@ -112,7 +115,7 @@ export default async function platformAuthRoutes(
   });
 
   await fastify.register(async function platformAuthRateLimited(inner) {
-    await inner.register(rateLimit, AUTH_RATE_LIMIT);
+    inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
 
     inner.post('/login', async (request, reply) => {
       const parsed = parseRequest(platformLoginBodySchema, request.body);
@@ -183,7 +186,19 @@ export default async function platformAuthRoutes(
     });
   });
 
-  fastify.post('/logout', async (_request, reply) => {
+  fastify.post('/logout', async (request, reply) => {
+    // Revoke the platform session server-side so a copied access token cannot
+    // be replayed after sign-out. Platform access tokens live 8h, so the
+    // revocation entry must outlive the token's remaining lifetime.
+    const token = request.cookies?.[PLATFORM_ACCESS_COOKIE];
+    if (token) {
+      try {
+        const decoded = fastify.jwt.decode(token) as PlatformAccessTokenPayload | null;
+        if (decoded?.jti) await revokeToken(decoded.jti, 8 * 60 * 60 + 300);
+      } catch {
+        // Best effort — logout still clears cookies.
+      }
+    }
     logoutPlatformUser(reply);
     return reply.send({ success: true });
   });
@@ -244,7 +259,7 @@ export default async function platformAuthRoutes(
   );
 
   await fastify.register(async function platformChangePasswordRateLimited(inner) {
-    await inner.register(rateLimit, AUTH_RATE_LIMIT);
+    inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
 
     inner.post(
       '/change-password',

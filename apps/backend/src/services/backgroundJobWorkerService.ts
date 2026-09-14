@@ -158,6 +158,16 @@ export async function executeJob(
     return;
   }
 
+  // Heartbeat: refresh updated_at while the runner is in flight so the startup
+  // orphan-cleanup on other replicas can tell a live long-running job from one
+  // whose worker actually died.
+  const heartbeat = setInterval(() => {
+    void patchJob(tenant, userId, jobId, {}).catch(() => {
+      // A failed heartbeat must never fail the job itself.
+    });
+  }, 60_000);
+  heartbeat.unref?.();
+
   try {
     await runWithTenant(tenant, async () => {
       await runner(payload, runContext);
@@ -169,6 +179,8 @@ export async function executeJob(
     // fires on the final attempt. Without this, BullMQ records the job as
     // "completed" even though the DB row says "failed", so retries never run.
     throw error;
+  } finally {
+    clearInterval(heartbeat);
   }
 }
 

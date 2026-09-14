@@ -17,6 +17,7 @@ import {
   QUESTION_BANK_MODULE_MANIFEST,
   USERS_MODULE_MANIFEST,
   MESSAGING_MODULE_MANIFEST,
+  LIST_PAGE_MAX_LIMIT,
 } from '@mms/shared';
 import { canDeleteCollection, canReadCollection } from './rbacCanHelpers.js';
 import { sendForbidden, sendDatabaseError } from './httpErrors.js';
@@ -189,6 +190,16 @@ export type BulkListLoadContext = {
   canDelete?: (user: User) => boolean;
 };
 
+/**
+ * Parses a positive integer query param, falling back on NaN/0/negative and
+ * clamping to `max` so a caller cannot request an unbounded page size.
+ */
+function parseClampedInt(value: string | undefined, fallback: number, max: number): number {
+  const parsed = Number.parseInt(value ?? '', 10);
+  if (!Number.isFinite(parsed) || parsed < 1) return fallback;
+  return Math.min(parsed, max);
+}
+
 export async function handleBulkListGet(
   request: FastifyRequest,
   reply: FastifyReply,
@@ -255,7 +266,7 @@ export async function handleBulkListGet(
       const data = await runInScope(() =>
         loadPageFn({
           ...pageQuery,
-          limit: pageQuery.limit ?? defaultPageSize,
+          limit: Math.min(Number(pageQuery.limit ?? defaultPageSize ?? 50) || 50, LIST_PAGE_MAX_LIMIT),
           ...(supportsIncludeDeleted ? { includeDeleted } : {}),
         }),
       );
@@ -266,8 +277,10 @@ export async function handleBulkListGet(
       const queryParams = request.query as Record<string, string>;
       const isPaginated = !!(queryParams.page || queryParams.limit || queryParams.sortField);
       if (isPaginated && loadPageFn) {
-        const page = parseInt(queryParams.page || '1', 10);
-        const limit = parseInt(queryParams.limit || '50', 10);
+        // Clamp + NaN-guard: these values come straight off the query string
+        // (no schema on this path), so `?limit=999999` previously reached the DB.
+        const page = parseClampedInt(queryParams.page, 1, Number.MAX_SAFE_INTEGER);
+        const limit = parseClampedInt(queryParams.limit, 50, LIST_PAGE_MAX_LIMIT);
         const data = await runInScope(() =>
           loadPageFn({
             page,

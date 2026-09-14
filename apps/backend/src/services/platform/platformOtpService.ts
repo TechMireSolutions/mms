@@ -1,5 +1,6 @@
 import { dispatchPlatformVerificationEmail } from './platformEmailService.js';
 import { PlatformError } from './platformErrorService.js';
+import { isDevCredentialLoggingEnabled } from '../../lib/devLogging.js';
 
 export interface DispatchPlatformOtpOptions {
   email: string;
@@ -35,9 +36,9 @@ export async function dispatchPlatformOtp(
   }
 }
 
-/** Utility to attach devReset or devCode hints in non-production environments. */
+/** Utility to attach devReset or devCode hints only under the explicit local-dev gate. */
 export function getDevOtpCode(dispatch: PlatformOtpDispatchResult): string | undefined {
-  if (process.env.NODE_ENV !== 'production' && dispatch.devCode) {
+  if (isDevCredentialLoggingEnabled() && dispatch.devCode) {
     return dispatch.devCode;
   }
   return undefined;

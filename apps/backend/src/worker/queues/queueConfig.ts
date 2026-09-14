@@ -40,9 +40,10 @@ export function getBullMQConnectionOptions(): ConnectionOptions {
       connectTimeout: 5000,
       keepAlive: 30000,
       disconnectTimeout: 2000,
+      // Never give up — a transient Redis outage must not permanently stop the
+      // workers from consuming jobs.
       retryStrategy(times: number) {
-        if (times > 5) return null;
-        return Math.min(times * 150 + Math.floor(Math.random() * 50), 2000);
+        return Math.min(times * 150 + Math.floor(Math.random() * 50), 30_000);
       },
     };
   } catch {
@@ -55,9 +56,10 @@ export function getBullMQConnectionOptions(): ConnectionOptions {
       connectTimeout: 5000,
       keepAlive: 30000,
       disconnectTimeout: 2000,
+      // Never give up — a transient Redis outage must not permanently stop the
+      // workers from consuming jobs.
       retryStrategy(times: number) {
-        if (times > 5) return null;
-        return Math.min(times * 150 + Math.floor(Math.random() * 50), 2000);
+        return Math.min(times * 150 + Math.floor(Math.random() * 50), 30_000);
       },
     };
   }

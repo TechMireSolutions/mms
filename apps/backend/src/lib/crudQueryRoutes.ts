@@ -41,7 +41,11 @@ export function registerMetricsRoute(
     if (!canReadCollection(user, collection)) return sendForbidden(reply);
 
     const tenant = getRequestTenant()?.trim().toLowerCase();
-    const cacheKey = tenant ? redisKeys.metrics(tenant, collection) : null;
+    // Role is part of the key: metrics are RBAC-filtered per caller, so a
+    // shared tenant+collection key could serve one role's numbers to another.
+    const cacheKey = tenant
+      ? redisKeys.metrics(tenant, `${collection}:${user.role ?? 'user'}`)
+      : null;
     if (cacheKey) {
       const cached = await redisGet(cacheKey);
       if (cached) {

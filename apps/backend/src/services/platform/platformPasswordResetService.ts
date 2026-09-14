@@ -13,6 +13,7 @@ import {
   getAuthArtifact,
   putAuthArtifact,
 } from '../auth/authArtifactService.js';
+import { isDevCredentialLoggingEnabled } from '../../lib/devLogging.js';
 import {
   generateOtpCode,
   hashOtpCode,
@@ -62,7 +63,7 @@ async function dispatchResetCode(email: string, code: string, resetId: string): 
 
 function assertResetEmailDeliverable(dispatch: { sent: boolean; devCode?: string }): void {
   if (dispatch.sent) return;
-  if (process.env.NODE_ENV !== 'production' && dispatch.devCode) return;
+  if (isDevCredentialLoggingEnabled() && dispatch.devCode) return;
   throw new PlatformError(
     'email_send_failed',
     'Failed to send password reset email. Configure PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM.',

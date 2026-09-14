@@ -1,6 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { isQueryFlagTrue, type User, accountingContract } from '@mms/shared';
 import { initServer, type RouterImplementation } from '@ts-rest/fastify';
+import { standardRequestValidationErrorHandler } from '../../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { handleContractError } from '../../../lib/contractError.js';
@@ -97,5 +98,7 @@ export const accountingContractRouter: FastifyPluginAsync = async (fastify) => {
     },
   } as unknown as RouterImplementation<typeof accountingContract>);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: standardRequestValidationErrorHandler,
+  });
 };

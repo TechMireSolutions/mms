@@ -9,6 +9,28 @@ import { logger } from '../lib/logger.js';
 const CHUNK_SIZE = 500;
 const INTER_CHUNK_PAUSE_MS = 50;
 
+/**
+ * Sets the transaction-local GUCs required for retention purge.
+ *
+ * The worker runs on the root pool (no request tenant context), so without
+ * this the FORCE-RLS soft-delete policy on `message_logs`/`attendance` filters
+ * out every archived row (`deleted_at IS NOT NULL`) and the candidate SELECT
+ * returns zero rows — i.e. nothing is ever purged.
+ *
+ * `app.rls_bypass = 'on'` disables the policy filter; the query still scopes
+ * explicitly by `workspace_subdomain`, so isolation is preserved. The
+ * `app.allow_hard_purge` flag is what lets the physical DELETE past the
+ * `forbid_hard_delete` trigger.
+ */
+function purgeTransactionContext(tenant: string) {
+  return sql`SELECT
+    set_config('app.current_tenant', ${tenant}, true),
+    set_config('app.current_tenant_id', ${tenant}, true),
+    set_config('app.rls_bypass', 'on', true),
+    set_config('app.include_deleted', 'true', true),
+    set_config('app.allow_hard_purge', 'true', true)`;
+}
+
 export interface PurgeExpiredOptions {
   targetTables?: Array<{
     name: string;
@@ -48,18 +70,23 @@ export async function purgeExpiredArchivedRecords(
     let totalPurged = 0;
 
     if (dryRun) {
-      const countRes = await db
-        .select({ count: sql<number>`count(*)::int` })
-        .from(table)
-        .where(
-          and(
-            eq(table.workspaceSubdomain, normalizedTenant),
-            isNotNull(table.deletedAt),
-            // Use the DB-generated purge_after column — query planner hits the partial index
-            lte(table.purgeAfter, now),
-          ),
-        );
-      const count = countRes[0]?.count ?? 0;
+      // Must run inside a transaction with the purge GUCs applied, otherwise
+      // RLS hides the archived rows and the count is always 0.
+      const count = await db.transaction(async (tx) => {
+        await tx.execute(purgeTransactionContext(normalizedTenant));
+        const countRes = await tx
+          .select({ count: sql<number>`count(*)::int` })
+          .from(table)
+          .where(
+            and(
+              eq(table.workspaceSubdomain, normalizedTenant),
+              isNotNull(table.deletedAt),
+              // Use the DB-generated purge_after column — query planner hits the partial index
+              lte(table.purgeAfter, now),
+            ),
+          );
+        return countRes[0]?.count ?? 0;
+      });
       results[name] = count;
       if (name === 'attendance') {
         results['attendance_records'] = count;
@@ -70,8 +97,8 @@ export async function purgeExpiredArchivedRecords(
 
     while (true) {
       const chunkPurgedCount = await db.transaction(async (tx) => {
-        // 1. Bypass BEFORE DELETE trigger within this worker transaction
-        await tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
+        // 1. Apply tenant/purge GUCs (RLS bypass + include archived + trigger bypass)
+        await tx.execute(purgeTransactionContext(normalizedTenant));
 
         // 2. Select batch of IDs using SKIP LOCKED to prevent transaction lock contention
         const candidates = await tx

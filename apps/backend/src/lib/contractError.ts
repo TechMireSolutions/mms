@@ -24,6 +24,8 @@ interface ContractErrorBody {
  *     });
  *   }
  */
+const CLIENT_ERROR_STATUSES = new Set([400, 401, 403, 404, 409, 422, 429]);
+
 export function handleContractError(
   request: FastifyRequest,
   error: unknown,
@@ -39,6 +41,20 @@ export function handleContractError(
         message: `Invalid request: ${error.issues
           .map((issue) => `${issue.path.join('.') || '(root)'}: ${issue.message}`)
           .join('; ')}`,
+      },
+    };
+  }
+
+  // Preserve intentional domain statuses (HttpDomainError and friends) instead
+  // of flattening every failure to the caller's 500 fallback.
+  const statusCode = (error as { statusCode?: unknown } | null)?.statusCode;
+  if (typeof statusCode === 'number' && CLIENT_ERROR_STATUSES.has(statusCode)) {
+    const type = (error as { type?: unknown }).type;
+    return {
+      status: statusCode,
+      body: {
+        type: typeof type === 'string' && type ? type : 'error',
+        message: error instanceof Error ? error.message : fallback.body.message,
       },
     };
   }

@@ -13,7 +13,14 @@ import * as schema from './schema.js';
 
 async function deleteTenantRowsByColumn(columnName: 'workspace_subdomain' | 'tenant_id', tenant: string): Promise<void> {
   await withTenant(tenant, async (tx) => {
-    await tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
+    // `include_deleted` is required so the soft-delete RLS policy does not hide
+    // archived rows; without it a workspace purge silently leaves all trashed
+    // records behind. `allow_hard_purge` bypasses the BEFORE DELETE trigger.
+    await tx.execute(sql`
+      SELECT
+        set_config('app.include_deleted', 'true', true),
+        set_config('app.allow_hard_purge', 'true', true)
+    `);
     const result = await tx.execute(sql`
       SELECT table_name
       FROM information_schema.columns

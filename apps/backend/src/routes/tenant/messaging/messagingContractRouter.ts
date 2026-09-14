@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import type { User } from '@mms/shared';
 import { messagingContract } from '@mms/shared';
 import { initServer, type RouterImplementation } from '@ts-rest/fastify';
+import { standardRequestValidationErrorHandler } from '../../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadMessaging } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
@@ -67,5 +68,7 @@ export const messagingContractRouter: FastifyPluginAsync = async (fastify) => {
     },
   } as unknown as RouterImplementation<typeof messagingContract>);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: standardRequestValidationErrorHandler,
+  });
 };

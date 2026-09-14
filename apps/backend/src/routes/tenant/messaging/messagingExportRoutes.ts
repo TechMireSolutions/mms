@@ -1,9 +1,9 @@
 import crypto from 'node:crypto';
-import rateLimit from '@fastify/rate-limit';
 import type { FastifyPluginAsync } from 'fastify';
 import type { BackgroundJobRecord, User } from '@mms/shared';
 import { MESSAGING_MODULE_MANIFEST, messagingCsvExportBodySchema } from '@mms/shared';
 import { MESSAGING_LOG_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../../lib/rateLimitGuard.js';
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendForbidden } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
@@ -31,7 +31,7 @@ function messagingExportBodyDigest(input: {
 /** Queues messaging logs CSV export as a background job. */
 export const messagingExportRoutes: FastifyPluginAsync = async (fastify) => {
   await fastify.register(async (scoped) => {
-    await scoped.register(rateLimit, MESSAGING_LOG_RATE_LIMIT);
+    scoped.addHook('preHandler', createStrictRateLimitGuard(scoped, MESSAGING_LOG_RATE_LIMIT));
 
     scoped.post('/export/csv', async (request, reply) => {
       const user = request.user as User;

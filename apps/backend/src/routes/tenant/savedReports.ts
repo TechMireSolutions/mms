@@ -20,6 +20,7 @@ import {
   USERS_MODULE_MANIFEST,
 } from '@mms/shared';
 import { initServer, type RouterImplementation } from '@ts-rest/fastify';
+import { standardRequestValidationErrorHandler } from '../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { withTenant } from '../../db/tenant-context.js';
@@ -145,6 +146,8 @@ export default async function savedReportsRoutes(
   fastify: Parameters<FastifyPluginAsync>[0],
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
-  await fastify.register(s.plugin(savedReportsRouter));
+  await fastify.register(s.plugin(savedReportsRouter), {
+    requestValidationErrorHandler: standardRequestValidationErrorHandler,
+  });
 }
 

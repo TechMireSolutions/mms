@@ -778,6 +778,13 @@
       "when": 1787270400000,
       "tag": "0110_academic_sessions_model6",
       "breakpoints": true
+    },
+    {
+      "idx": 111,
+      "version": "7",
+      "when": 1787356800000,
+      "tag": "0111_outbox_events_rls_bypass_and_attempts",
+      "breakpoints": true
     }
   ]
 }

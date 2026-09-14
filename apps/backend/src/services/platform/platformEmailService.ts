@@ -3,6 +3,7 @@ import type { Transporter } from 'nodemailer';
 import { fetchWithTimeout, isBlockedHostname } from '../../lib/outboundUrl.js';
 import { SMTP_TIMEOUT_OPTIONS } from '../../lib/outboundTimeouts.js';
 import { logger } from '../../lib/logger.js';
+import { isDevCredentialLoggingEnabled, maskEmail } from '../../lib/devLogging.js';
 
 export interface PlatformEmailInput {
   to: string;
@@ -156,9 +157,7 @@ export interface PlatformVerificationEmailInput {
   logLabel: string;
 }
 
-function isProductionNodeEnv(): boolean {
-  return process.env.NODE_ENV === 'production';
-}
+
 
 /**
  * Sends a platform OTP email.
@@ -189,21 +188,21 @@ export async function dispatchPlatformVerificationEmail(
     }
 
     const detail = result.message || 'unknown';
-    if (isProductionNodeEnv()) {
-      logger.warn({ email: input.email, detail, label: input.logLabel }, 'email delivery failed');
+    if (!isDevCredentialLoggingEnabled()) {
+      logger.warn({ email: maskEmail(input.email), detail, label: input.logLabel }, 'email delivery failed');
       return { sent: false };
     }
 
-    logger.warn({ email: input.email, code: input.code, detail, label: input.logLabel }, 'email delivery failed (dev)');
+    logger.warn({ email: maskEmail(input.email), code: input.code, detail, label: input.logLabel }, 'email delivery failed (dev credential logging enabled)');
     return { sent: false, devCode: input.code };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    if (isProductionNodeEnv()) {
-      logger.warn({ email: input.email, detail, label: input.logLabel }, 'email delivery threw');
+    if (!isDevCredentialLoggingEnabled()) {
+      logger.warn({ email: maskEmail(input.email), detail, label: input.logLabel }, 'email delivery threw');
       return { sent: false };
     }
 
-    logger.warn({ email: input.email, code: input.code, detail, label: input.logLabel }, 'email delivery threw (dev)');
+    logger.warn({ email: maskEmail(input.email), code: input.code, detail, label: input.logLabel }, 'email delivery threw (dev credential logging enabled)');
     return { sent: false, devCode: input.code };
   }
 }

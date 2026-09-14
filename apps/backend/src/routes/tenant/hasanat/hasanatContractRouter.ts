@@ -2,6 +2,7 @@ import type { FastifyPluginAsync } from 'fastify';
 import { isQueryFlagTrue, type User } from '@mms/shared';
 import { hasanatContract } from '@mms/shared';
 import { initServer, type RouterImplementation } from '@ts-rest/fastify';
+import { standardRequestValidationErrorHandler } from '../../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
@@ -142,5 +143,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
     },
   } as unknown as RouterImplementation<typeof hasanatContract>);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: standardRequestValidationErrorHandler,
+  });
 };

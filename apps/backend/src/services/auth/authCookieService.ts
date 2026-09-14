@@ -83,9 +83,18 @@ export function clearAuthCookies(reply: FastifyReply): void {
 function getAuthArtifactSecret(): string {
   const dedicated = process.env.AUTH_ARTIFACT_SECRET?.trim();
   if (dedicated) return dedicated;
-  return createHmac('sha256', 'mms-auth-artifact-v1')
-    .update(process.env.JWT_SECRET ?? 'dev-insecure')
-    .digest('hex');
+
+  const jwtSecret = process.env.JWT_SECRET?.trim();
+  if (!jwtSecret) {
+    // Fail closed: a predictable pepper makes refresh-token hashes and OTPs
+    // forgeable. JWT_SECRET is mandatory to boot, so this only fires on
+    // genuinely broken configuration.
+    throw new Error(
+      'No auth artifact secret configured. Set AUTH_ARTIFACT_SECRET (preferred) or JWT_SECRET.',
+    );
+  }
+
+  return createHmac('sha256', 'mms-auth-artifact-v1').update(jwtSecret).digest('hex');
 }
 
 export function hashOtpCode(code: string): string {
