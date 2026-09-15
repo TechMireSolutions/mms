@@ -20,7 +20,7 @@ export function TemplateEditorKeyboardHints({
     if (platformData) {
       return /Mac|iPhone|iPad|iPod/i.test(platformData);
     }
-    return /Mac|iPod|iPhone|iPad/.test(navigator.platform || navigator.userAgent);
+    return /Mac|iPhone|iPad|iPod/i.test(navigator.userAgent);
   }, []);
 
   const mod = isMac ? "⌘" : "Ctrl+";

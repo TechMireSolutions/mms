@@ -63,14 +63,23 @@ export function TemplateEditorSection({
           />
         </button>
       </h3>
+      {/*
+       * CSS grid-rows trick: animates between `grid-rows-[0fr]` (collapsed) and
+       * `grid-rows-[1fr]` (expanded) with no JS height measurement.
+       * The panel is never `hidden` from the DOM so `aria-controls` always has a valid target.
+       */}
       <div
         id={panelId}
         role="group"
         aria-labelledby={headingId}
-        hidden={!isOpen}
-        className={`mt-1 ${panelClassName}`}
+        aria-hidden={!isOpen}
+        className={`grid transition-[grid-template-rows] duration-200 ease-in-out ${
+          isOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+        }`}
       >
-        {children}
+        <div className={`min-h-0 overflow-hidden mt-1 ${isOpen ? panelClassName : ""}`}>
+          {children}
+        </div>
       </div>
     </section>
   );

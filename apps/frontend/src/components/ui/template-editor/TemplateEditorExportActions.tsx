@@ -42,6 +42,8 @@ export function TemplateEditorExportActions({
     if (file) {
       if (file.size <= MAX_TEMPLATE_FILE_SIZE && onImportJson) {
         onImportJson(file);
+      } else if (file.size > MAX_TEMPLATE_FILE_SIZE) {
+        window.alert(t("templateEditor.importFileTooLarge"));
       }
       e.target.value = "";
     }

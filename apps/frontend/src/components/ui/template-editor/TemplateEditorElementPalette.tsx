@@ -27,6 +27,12 @@ export interface TemplateEditorElementPaletteProps<TPayload = Record<string, unk
  * data-driven fields carry the single primary accent, which is the only
  * distinction that means anything here.
  */
+/**
+ * Show the field search box once the field list reaches this count.
+ * At 6+ entries the palette is tall enough to benefit from filtering.
+ */
+const FIELD_SEARCH_THRESHOLD = 6;
+
 const PRIMITIVE_BUTTON =
   "w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[3px] border-s-muted-foreground/40 bg-card hover:bg-muted/50 hover:border-s-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-colors flex items-center justify-between group shadow-2xs";
 
@@ -115,7 +121,7 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
             </span>
           </div>
 
-          {availableFields.length > 5 && (
+          {availableFields.length >= FIELD_SEARCH_THRESHOLD && (
             <div className="relative">
               <Search className="w-3.5 h-3.5 text-muted-foreground absolute start-2.5 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden="true" />
               <Input

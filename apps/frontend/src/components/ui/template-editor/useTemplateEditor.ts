@@ -80,6 +80,7 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
   const [deletionNotice, setDeletionNotice] = useState<{ nonce: number; message: string } | null>(
     null
   );
+  const [activePresetKey, setActivePresetKey] = useState<string | null>(null);
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<DragStateInfo<TPayload> | null>(null);
   const resizeState = useRef<ResizeStateInfo<TPayload> | null>(null);
@@ -182,6 +183,7 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
       setFuture([]);
       return nextTemplate;
     });
+    setActivePresetKey(null);
   }, []);
 
   /**
@@ -397,6 +399,7 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
       elements: clonedElements,
     });
     setSelectedIds([]);
+    setActivePresetKey(presetKey);
   }, [presets, pushHistory, template]);
 
   const onMouseDownElement = useCallback((event: ReactMouseEvent, elementId: string) => {
@@ -504,6 +507,7 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     exportTemplateJson,
     importTemplateJson,
     applyPreset,
+    activePresetKey,
     copySelected,
     paste,
     onMouseDownElement,

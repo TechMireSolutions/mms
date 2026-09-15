@@ -9,6 +9,8 @@ import {
   AlignHorizontalDistributeCenter,
   AlignVerticalDistributeCenter,
   ArrowDownToLine,
+  ArrowLeftToLine,
+  ArrowRightToLine,
   ArrowUpToLine,
   Copy,
   Layers,
@@ -23,17 +25,22 @@ import { StyleInput } from "./TemplateEditorStyleControls";
 import { normalizeHexColor, type AlignmentType } from "./templateEditorUtils";
 import { TemplateEditorSection } from "./TemplateEditorSection";
 import { TemplateEditorAlignmentGrid } from "./TemplateEditorAlignmentGrid";
+import { TemplateEditorTypographySection } from "./TemplateEditorTypographySection";
 
 export interface TemplateEditorMultiSelectPanelProps<TPayload = Record<string, unknown>> {
   selectedElements: TemplateElement<keyof TPayload & string>[];
   onAlignSelected?: (alignType: AlignmentType) => void;
   onDistributeSelected?: (axis: "horizontal" | "vertical") => void;
   onCenterSelected?: (axis: "both" | "h" | "v") => void;
+  onSnapSelected?: (edge: "top" | "bottom" | "left" | "right") => void;
   onBringToFront?: () => void;
   onSendToBack?: () => void;
   onDuplicateSelected?: () => void;
   onDeleteSelected?: () => void;
   onPatchSelectedStyles?: (stylePatch: Partial<ElementStyle>) => void;
+  primaryColor?: string;
+  secondaryColor?: string;
+  isRtl?: boolean;
   t: TranslationFunction;
 }
 
@@ -42,11 +49,15 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
   onAlignSelected,
   onDistributeSelected,
   onCenterSelected,
+  onSnapSelected,
   onBringToFront,
   onSendToBack,
   onDuplicateSelected,
   onDeleteSelected,
   onPatchSelectedStyles,
+  primaryColor,
+  secondaryColor,
+  isRtl = false,
   t,
 }: TemplateEditorMultiSelectPanelProps<TPayload>): React.JSX.Element {
   const [openSections, setOpenSections] = useState({
@@ -54,19 +65,33 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
     distribute: true,
     center: true,
     layers: true,
-    batchStyle: true,
+    typography: true,
+    appearance: true,
   });
   const toggleSection = (section: keyof typeof openSections) =>
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
 
-  const colorId = useId();
   const bgColorId = useId();
+  const borderColorId = useId();
+
+  const hasTextLike = selectedElements.some(
+    (el) => el.type === "static" || el.type === "field"
+  );
 
   const sampleStyle = selectedElements[0]?.style || {};
-  const initialColor = normalizeHexColor(sampleStyle.color, "#0f172a");
   const initialBgColor = normalizeHexColor(sampleStyle.backgroundColor, "#ffffff");
-  const initialFontSize = sampleStyle.fontSize ?? 12;
+  const initialBorderColor = normalizeHexColor(sampleStyle.borderColor, "#cbd5e1");
   const initialBorderRadius = sampleStyle.borderRadius ?? 0;
+  const initialBorderWidth = sampleStyle.borderWidth ?? 0;
+
+  const bounds = React.useMemo(() => {
+    if (selectedElements.length === 0) return null;
+    const minX = Math.min(...selectedElements.map((el) => el.x));
+    const minY = Math.min(...selectedElements.map((el) => el.y));
+    const maxX = Math.max(...selectedElements.map((el) => el.x + el.w));
+    const maxY = Math.max(...selectedElements.map((el) => el.y + el.h));
+    return { w: Math.round(maxX - minX), h: Math.round(maxY - minY) };
+  }, [selectedElements]);
 
   /*
    * Alignment here is deliberately physical (left/right edge of the selection), not
@@ -78,11 +103,21 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
       aria-label={t("templateEditor.elementsSelected", { count: selectedElements.length })}
       className="max-h-64 w-full shrink-0 space-y-3 overflow-y-auto border-t border-border bg-card p-3 lg:max-h-none lg:w-60 lg:border-t-0 lg:border-s print:hidden"
     >
-      <div className="flex items-center gap-2 pb-2 border-b border-border">
-        <Layers className="w-4 h-4 text-primary" aria-hidden="true" />
-        <p className="text-xs font-bold uppercase tracking-wider text-foreground m-0">
-          {t("templateEditor.elementsSelected", { count: selectedElements.length })}
-        </p>
+      <div className="flex items-center justify-between gap-2 pb-2 border-b border-border">
+        <div className="flex items-center gap-2 min-w-0">
+          <Layers className="w-4 h-4 text-primary shrink-0" aria-hidden="true" />
+          <h2 className="text-xs font-bold uppercase tracking-wider text-foreground m-0 truncate">
+            {t("templateEditor.elementsSelected", { count: selectedElements.length })}
+          </h2>
+        </div>
+        {bounds && (
+          <span
+            aria-label={`${bounds.w} by ${bounds.h} mm`}
+            className="text-3xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0"
+          >
+            {bounds.w} × {bounds.h} mm
+          </span>
+        )}
       </div>
 
       <TemplateEditorSection
@@ -105,14 +140,14 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
           t={t}
           panelClassName="space-y-1.5"
         >
-          <div className="grid grid-cols-2 gap-1.5">
+          <div role="group" aria-label={t("templateEditor.distribute")} className="grid grid-cols-2 gap-1.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => onDistributeSelected("horizontal")}
               title={t("templateEditor.distributeHorizontally")}
               aria-label={t("templateEditor.distributeHorizontally")}
-              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center"
+              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
             >
               <AlignHorizontalDistributeCenter className="w-4 h-4" aria-hidden="true" />
             </Button>
@@ -122,7 +157,7 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
               onClick={() => onDistributeSelected("vertical")}
               title={t("templateEditor.distributeVertically")}
               aria-label={t("templateEditor.distributeVertically")}
-              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center"
+              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
             >
               <AlignVerticalDistributeCenter className="w-4 h-4" aria-hidden="true" />
             </Button>
@@ -130,37 +165,106 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
         </TemplateEditorSection>
       )}
 
-      {onCenterSelected && (
+      {(onCenterSelected || onSnapSelected) && (
         <TemplateEditorSection
           titleKey="templateEditor.centerOnPage"
           icon={AlignCenterHorizontal}
           isOpen={openSections.center}
           onToggle={() => toggleSection("center")}
           t={t}
-          panelClassName="space-y-1.5"
+          panelClassName="space-y-2.5"
         >
-          <div className="grid grid-cols-2 gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onCenterSelected("h")}
-              className="min-h-11 text-xs rounded-lg border-border hover:bg-muted flex items-center justify-center"
-              title={t("templateEditor.centerHorizontally")}
-              aria-label={t("templateEditor.centerHorizontally")}
-            >
-              <span className="truncate">{t("templateEditor.centerHorizontally")}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onCenterSelected("v")}
-              className="min-h-11 text-xs rounded-lg border-border hover:bg-muted flex items-center justify-center"
-              title={t("templateEditor.centerVertically")}
-              aria-label={t("templateEditor.centerVertically")}
-            >
-              <span className="truncate">{t("templateEditor.centerVertically")}</span>
-            </Button>
-          </div>
+          {onCenterSelected && (
+            <div role="group" aria-label={t("templateEditor.centerOnPage")} className="space-y-1.5">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => onCenterSelected("both")}
+                className="w-full min-h-11 text-xs rounded-lg border-border hover:bg-muted flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
+                title={t("templateEditor.centerOnPage")}
+                aria-label={t("templateEditor.centerOnPage")}
+              >
+                <AlignCenterHorizontal className="w-4 h-4" aria-hidden="true" />
+                <span>{t("templateEditor.centerOnPage")}</span>
+              </Button>
+              <div className="grid grid-cols-2 gap-1.5">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onCenterSelected("h")}
+                  className="min-h-11 text-xs rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
+                  title={t("templateEditor.centerHorizontally")}
+                  aria-label={t("templateEditor.centerHorizontally")}
+                >
+                  <span className="truncate">{t("templateEditor.centerHorizontally")}</span>
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onCenterSelected("v")}
+                  className="min-h-11 text-xs rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
+                  title={t("templateEditor.centerVertically")}
+                  aria-label={t("templateEditor.centerVertically")}
+                >
+                  <span className="truncate">{t("templateEditor.centerVertically")}</span>
+                </Button>
+              </div>
+            </div>
+          )}
+
+          {onSnapSelected && (
+            <div className="pt-2 border-t border-border space-y-1.5">
+              <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest m-0">
+                {t("templateEditor.snapToEdge")}
+              </p>
+              <div role="group" aria-label={t("templateEditor.snapToEdge")} className="grid grid-cols-4 gap-1">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onSnapSelected("top")}
+                  className="min-h-11 w-full rounded-lg border-border hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
+                  title={t("templateEditor.snapTop")}
+                  aria-label={t("templateEditor.snapTop")}
+                >
+                  <ArrowUpToLine className="w-4 h-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onSnapSelected("bottom")}
+                  className="min-h-11 w-full rounded-lg border-border hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
+                  title={t("templateEditor.snapBottom")}
+                  aria-label={t("templateEditor.snapBottom")}
+                >
+                  <ArrowDownToLine className="w-4 h-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onSnapSelected("left")}
+                  className="min-h-11 w-full rounded-lg border-border hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
+                  title={t("templateEditor.snapLeft")}
+                  aria-label={t("templateEditor.snapLeft")}
+                >
+                  <ArrowLeftToLine className="w-4 h-4" aria-hidden="true" />
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => onSnapSelected("right")}
+                  className="min-h-11 w-full rounded-lg border-border hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
+                  title={t("templateEditor.snapRight")}
+                  aria-label={t("templateEditor.snapRight")}
+                >
+                  <ArrowRightToLine className="w-4 h-4" aria-hidden="true" />
+                </Button>
+              </div>
+            </div>
+          )}
         </TemplateEditorSection>
       )}
 
@@ -173,12 +277,12 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
           t={t}
           panelClassName="space-y-1.5"
         >
-          <div className="grid grid-cols-2 gap-1.5">
+          <div role="group" aria-label={t("templateEditor.layerOrdering")} className="grid grid-cols-2 gap-1.5">
             <Button
               type="button"
               variant="outline"
               onClick={() => onBringToFront()}
-              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center"
+              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
               title={t("templateEditor.bringToFront")}
               aria-label={t("templateEditor.bringToFront")}
             >
@@ -188,7 +292,7 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
               type="button"
               variant="outline"
               onClick={() => onSendToBack()}
-              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center"
+              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
               title={t("templateEditor.sendToBack")}
               aria-label={t("templateEditor.sendToBack")}
             >
@@ -198,33 +302,30 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
         </TemplateEditorSection>
       )}
 
+      {hasTextLike && onPatchSelectedStyles && (
+        <TemplateEditorTypographySection
+          elStyle={sampleStyle}
+          selectedElements={selectedElements}
+          isOpen={openSections.typography}
+          onToggle={() => toggleSection("typography")}
+          onPatchStyle={onPatchSelectedStyles}
+          primaryColor={primaryColor}
+          secondaryColor={secondaryColor}
+          isRtl={isRtl}
+          t={t}
+        />
+      )}
+
       {onPatchSelectedStyles && (
         <TemplateEditorSection
-          titleKey="templateEditor.batchStyle"
+          titleKey="templateEditor.appearance"
           icon={Palette}
-          isOpen={openSections.batchStyle}
-          onToggle={() => toggleSection("batchStyle")}
+          isOpen={openSections.appearance}
+          onToggle={() => toggleSection("appearance")}
           t={t}
+          panelClassName="space-y-3"
         >
           <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-0.5">
-              <label htmlFor={colorId} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
-                {t("templateEditor.color")}
-              </label>
-              <input
-                id={colorId}
-                name={colorId}
-                type="color"
-                /* Controlled, not defaultValue: the panel stays mounted while the
-                   selection changes, so an uncontrolled swatch kept showing the
-                   previous selection's colour. */
-                value={initialColor}
-                onChange={(e) => onPatchSelectedStyles({ color: e.target.value })}
-                className="w-full min-h-11 h-11 p-1 border border-border rounded-lg bg-background cursor-pointer"
-                title={t("templateEditor.color")}
-                aria-label={t("templateEditor.color")}
-              />
-            </div>
             <div className="flex flex-col gap-0.5">
               <label htmlFor={bgColorId} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
                 {t("templateEditor.backgroundColor")}
@@ -244,7 +345,7 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
                   type="button"
                   variant="ghost"
                   onClick={() => onPatchSelectedStyles({ backgroundColor: undefined })}
-                  className="min-h-11 text-3xs px-2"
+                  className="min-h-11 text-3xs px-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
                   title={t("templateEditor.transparent")}
                   aria-label={t("templateEditor.transparent")}
                 >
@@ -252,17 +353,34 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
                 </Button>
               </div>
             </div>
+
+            <div className="flex flex-col gap-0.5">
+              <label htmlFor={borderColorId} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
+                {t("templateEditor.borderColor")}
+              </label>
+              <input
+                id={borderColorId}
+                name={borderColorId}
+                type="color"
+                value={initialBorderColor}
+                onChange={(e) => onPatchSelectedStyles({ borderColor: e.target.value })}
+                className="w-full min-h-11 h-11 p-1 border border-border rounded-lg bg-background cursor-pointer"
+                title={t("templateEditor.borderColor")}
+                aria-label={t("templateEditor.borderColor")}
+              />
+            </div>
           </div>
+
           <div className="grid grid-cols-2 gap-2">
             <StyleInput
-              label={t("templateEditor.fontSize")}
+              label={t("templateEditor.borderWidth")}
               type="number"
-              min={6}
-              max={72}
-              value={initialFontSize}
+              min={0}
+              max={12}
+              value={initialBorderWidth}
               onChange={(val) => {
                 const num = Number(val);
-                if (!Number.isNaN(num)) onPatchSelectedStyles({ fontSize: Math.max(6, Math.min(72, num)) });
+                if (!Number.isNaN(num)) onPatchSelectedStyles({ borderWidth: Math.max(0, Math.min(12, num)) });
               }}
             />
             <StyleInput
@@ -297,11 +415,13 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
           variant="outline"
           onClick={onDeleteSelected}
           className="flex-1 text-xs min-h-11 border-destructive/40 text-destructive hover:bg-destructive/10 flex items-center justify-center gap-1.5 rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-          title={t("templateEditor.delete")}
-          aria-label={t("templateEditor.delete")}
+          title={`${t("templateEditor.delete")} (${selectedElements.length})`}
+          aria-label={`${t("templateEditor.delete")} (${selectedElements.length})`}
         >
           <Trash2 className="w-4 h-4" aria-hidden="true" />
-          <span>{t("templateEditor.delete")}</span>
+          <span>
+            {t("templateEditor.delete")} ({selectedElements.length})
+          </span>
         </Button>
       </div>
     </aside>

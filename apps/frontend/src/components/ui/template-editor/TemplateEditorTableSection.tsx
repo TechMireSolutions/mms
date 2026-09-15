@@ -28,6 +28,7 @@ export function TemplateEditorTableSection<TFieldKey extends string = string>({
     const newCols = [
       ...existingCols,
       {
+        id: crypto.randomUUID(),
         header: `${t('templateEditor.columnHeader')} ${existingCols.length + 1}`,
         field: `field_${existingCols.length + 1}`,
         width: 80,
@@ -89,7 +90,7 @@ export function TemplateEditorTableSection<TFieldKey extends string = string>({
           return (
             <div
               role="listitem"
-              key={cIdx}
+              key={col.id ?? cIdx}
               className="p-2 rounded-lg border border-border/70 bg-muted/20 space-y-1.5"
             >
               <div className="space-y-1">

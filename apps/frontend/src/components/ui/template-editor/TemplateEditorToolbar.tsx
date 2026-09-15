@@ -61,6 +61,8 @@ export interface TemplateEditorToolbarProps<TPayload = Record<string, unknown>> 
   onExportZoho?: () => void;
   onPrint?: () => void;
   isExporting?: boolean;
+  /** Key of the currently active preset (set by applyPreset, cleared by any edit). */
+  activePresetKey?: string | null;
   t: TranslationFunction;
 }
 
@@ -118,10 +120,19 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   onExportZoho,
   onPrint,
   isExporting = false,
+  activePresetKey = null,
   t,
 }: TemplateEditorToolbarProps<TPayload>): React.JSX.Element {
   return (
-    <header className="flex items-center gap-1 px-3 py-1.5 border-b border-border bg-card/95 backdrop-blur-sm flex-shrink-0 overflow-x-auto overflow-y-hidden min-h-[60px] print:hidden">
+    <header className="flex items-center border-b border-border bg-card/95 backdrop-blur-sm flex-shrink-0 min-h-[60px] print:hidden relative">
+      {/*
+       * Scrollable region: all controls left of the spacer.
+       * The right-edge fade mask signals there are more controls to the right
+       * without obscuring the sticky right group (which lives outside this div).
+       */}
+      <div className="flex items-center gap-1 px-3 py-1.5 overflow-x-auto overflow-y-hidden flex-1 min-w-0
+        [mask-image:linear-gradient(to_right,black_calc(100%-48px),transparent_100%)]
+        rtl:[mask-image:linear-gradient(to_left,black_calc(100%-48px),transparent_100%)]">
       {/* Group 1: Title */}
       <div className="flex items-center gap-2 shrink-0">
         <h2
@@ -263,7 +274,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         </>
       )}
 
-      {/* Group 6: Presets */}
+      {/* Group 6: Presets — value reflects the active preset so the user knows what's loaded */}
       {presets.length > 0 && (
         <>
           <Divider />
@@ -271,7 +282,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
             <LayoutTemplate className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
             <FormSelect
               aria-label={t("templateEditor.presets")}
-              value=""
+              value={activePresetKey ?? ""}
               disabled={saving}
               onChange={(val) => {
                 if (!val) return;
@@ -284,7 +295,9 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
                 { value: "", label: t("templateEditor.presets") },
                 ...presets.map((p) => ({ value: p.key, label: p.label })),
               ]}
-              className="h-11 text-xs py-0 min-w-[130px]"
+              className={`h-11 text-xs py-0 min-w-[130px] ${
+                activePresetKey ? "border-primary/50 text-primary" : ""
+              }`}
             />
           </div>
         </>
@@ -303,15 +316,13 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           t={t}
         />
       </div>
+      </div>{/* end scrollable region */}
 
-      {/* Spacer */}
-      <div className="flex-1" />
-
-      {/* Group 8: Right actions — sticky on horizontal scroll */}
+      {/* Group 8: Right actions — always visible, outside the scroll + fade region */}
       <div
         role="group"
         aria-label={t("templateEditor.documentActions")}
-        className="flex items-center gap-1.5 shrink-0 sticky end-0 bg-card/95 ps-2 border-s border-border/50 backdrop-blur-sm z-elevated"
+        className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-s border-border/50 bg-card/95 backdrop-blur-sm"
       >
         <Button
           type="button"

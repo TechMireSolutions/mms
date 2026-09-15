@@ -191,6 +191,7 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
         onExportZoho={onExportZoho ? handleExportZoho : undefined}
         onPrint={handlePrint}
         isExporting={isExporting}
+        activePresetKey={editor.activePresetKey}
         t={editor.t}
       />
 
@@ -264,6 +265,7 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
               onAlignSelected={editor.alignSelected}
               onDistributeSelected={editor.distributeSelected}
               onCenterSelected={editor.centerSelected}
+              onSnapSelected={editor.snapSelected}
               onBringToFront={editor.bringToFront}
               onSendToBack={editor.sendToBack}
               onBringSelectedToFront={editor.bringSelectedToFront}

@@ -245,9 +245,7 @@ export function InvoiceTemplateEditor({
   const handleExportZoho = useCallback(
     (zohoPayload: ZohoInvoicePayload) => {
       try {
-        const conforming = mapToZohoInvoice(
-          zohoPayload as unknown as Record<string, unknown>
-        );
+        const conforming = mapToZohoInvoice({ ...zohoPayload });
         const jsonStr = JSON.stringify(conforming, null, 2);
         triggerFileDownload(`zoho-invoice-${safeFilenamePart(conforming.invoice_number)}.json`, jsonStr);
         notify.success(t("templateEditor.zohoExported"));

@@ -190,7 +190,8 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
               top: el.y < 24 ? el.h + 4 : -22,
               backgroundColor: CANVAS_ACCENT.selectionStrong,
             }}
-            aria-live="polite"
+            aria-live="off"
+            aria-hidden="true"
             className="absolute text-white font-mono text-3xs font-medium px-1.5 py-0.5 rounded shadow-xs whitespace-nowrap pointer-events-none z-sticky print:hidden"
           >
             {`${Math.round(el.w)} × ${Math.round(el.h)}`}

@@ -1,11 +1,14 @@
-import React from "react";
+import React, { act } from "react";
+import { createRoot } from "react-dom/client";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { TemplateEditor } from "../TemplateEditor";
 import { TemplateElementRenderer } from "./TemplateElementRenderer";
 import { TemplateEditorPropertiesPanel } from "./TemplateEditorPropertiesPanel";
 import { TemplateEditorExportActions } from "./TemplateEditorExportActions";
-import type { DocumentTemplate } from "@mms/shared";
+import { TemplateEditorTypographySection } from "./TemplateEditorTypographySection";
+import { useTemplateEditorElementActions } from "./useTemplateEditorElementActions";
+import type { DocumentTemplate, TemplateElement } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 const mockT = ((key: string) => key) as TranslationFunction;
@@ -274,8 +277,8 @@ describe("TemplateElementRenderer Component", () => {
     expect(html).toContain("cursor-nesw-resize");
     expect(html).toContain("cursor-se-resize");
 
-    // Dimension badge with aria-live="polite"
-    expect(html).toContain('aria-live="polite"');
+    // Dimension badge with aria-live="off" (prevents screen-reader announcement floods during drag)
+    expect(html).toContain('aria-live="off"');
     expect(html).toContain("200 × 20");
   });
 
@@ -500,7 +503,8 @@ describe("TemplateEditorPropertiesPanel Component", () => {
       />
     );
 
-    expect(html).toContain("templateEditor.batchStyle");
+    expect(html).toContain("templateEditor.typography");
+    expect(html).toContain("templateEditor.appearance");
     expect(html).toContain("templateEditor.color");
     expect(html).toContain("templateEditor.fontSize");
   });
@@ -589,6 +593,32 @@ describe("TemplateEditorPropertiesPanel Component", () => {
     expect(html).toContain("templateEditor.emptyHintDetail");
   });
 
+  it("renders multi-select panel with dimensions badge, snap-to-edge, and appearance controls", () => {
+    const html = renderToStaticMarkup(
+      <TemplateEditorPropertiesPanel
+        selectedElements={[
+          { id: "el_1", type: "static", label: "A", x: 10, y: 10, w: 100, h: 30 },
+          { id: "el_2", type: "static", label: "B", x: 20, y: 50, w: 120, h: 40 },
+        ]}
+        selectedElement={undefined}
+        onDuplicateElement={vi.fn()}
+        onDeleteElement={vi.fn()}
+        onPatchElement={vi.fn()}
+        onPatchStyle={vi.fn()}
+        onPatchSelectedStyles={vi.fn()}
+        onSnapSelected={vi.fn()}
+        t={mockT}
+      />
+    );
+
+    // Bounding box from (10,10) to (140, 90) => 130 × 80 mm
+    expect(html).toContain("130 × 80 mm");
+    expect(html).toContain("templateEditor.borderColor");
+    expect(html).toContain("templateEditor.borderWidth");
+    expect(html).toContain('aria-label="templateEditor.snapTop"');
+    expect(html).toContain('aria-label="templateEditor.snapRight"');
+  });
+
   describe("TemplateEditorExportActions", () => {
     it("renders export group with accessible role, labels, and print isolation", () => {
       const html = renderToStaticMarkup(
@@ -631,4 +661,382 @@ describe("TemplateEditorPropertiesPanel Component", () => {
       expect(html).toContain("animate-spin");
     });
   });
+
+  describe("TemplateEditorTypographySection", () => {
+    it("renders font size decrement and increment stepper buttons", () => {
+      const html = renderToStaticMarkup(
+        <TemplateEditorTypographySection
+          elementId="el_1"
+          elStyle={{ fontSize: 14 }}
+          isOpen={true}
+          onToggle={vi.fn()}
+          onPatchStyle={vi.fn()}
+          t={mockT}
+        />
+      );
+
+      expect(html).toContain('aria-label="templateEditor.decreaseFontSize"');
+      expect(html).toContain('aria-label="templateEditor.increaseFontSize"');
+      expect(html).toContain('value="14"');
+    });
+
+    it("evaluates allBold across multiple selected elements", () => {
+      const mixedElements: TemplateElement[] = [
+        { id: "el_1", type: "static", label: "A", x: 0, y: 0, w: 10, h: 10, style: { fontWeight: "bold" } },
+        { id: "el_2", type: "static", label: "B", x: 0, y: 0, w: 10, h: 10, style: { fontWeight: "normal" } },
+      ];
+
+      const html = renderToStaticMarkup(
+        <TemplateEditorTypographySection
+          elStyle={{ fontWeight: "bold" }}
+          selectedElements={mixedElements}
+          isOpen={true}
+          onToggle={vi.fn()}
+          onPatchStyle={vi.fn()}
+          t={mockT}
+        />
+      );
+
+      // In mixed state, allBold is false, so aria-pressed should be false
+      expect(html).toContain('aria-label="templateEditor.bold"');
+      expect(html).toContain('aria-pressed="false"');
+    });
+
+    it("renders indeterminate state on RTL checkbox when direction is mixed across elements", () => {
+      const mixedElements: TemplateElement[] = [
+        { id: "el_1", type: "static", label: "A", x: 0, y: 0, w: 10, h: 10, style: { direction: "rtl" } },
+        { id: "el_2", type: "static", label: "B", x: 0, y: 0, w: 10, h: 10, style: { direction: "ltr" } },
+      ];
+
+      const html = renderToStaticMarkup(
+        <TemplateEditorTypographySection
+          elStyle={{ direction: "rtl" }}
+          selectedElements={mixedElements}
+          isOpen={true}
+          onToggle={vi.fn()}
+          onPatchStyle={vi.fn()}
+          t={mockT}
+        />
+      );
+
+      expect(html).toContain('data-state="indeterminate"');
+    });
+
+    it("evaluates mixed alignment and mixed colors across multiple selected elements", () => {
+      const mixedElements: TemplateElement[] = [
+        { id: "el_1", type: "static", label: "A", x: 0, y: 0, w: 10, h: 10, style: { textAlign: "left", color: "#10b981" } },
+        { id: "el_2", type: "static", label: "B", x: 0, y: 0, w: 10, h: 10, style: { textAlign: "center", color: "#ef4444" } },
+      ];
+
+      const html = renderToStaticMarkup(
+        <TemplateEditorTypographySection
+          elStyle={{ textAlign: "left", color: "#10b981" }}
+          selectedElements={mixedElements}
+          isOpen={true}
+          onToggle={vi.fn()}
+          onPatchStyle={vi.fn()}
+          t={mockT}
+        />
+      );
+
+      // In mixed alignment, start alignment is not active across all elements
+      expect(html).toContain('aria-label="templateEditor.alignStart"');
+      expect(html).toContain('aria-label="templateEditor.alignCenter"');
+
+      // In mixed color, the first element's swatch is not falsely selected with ring
+      expect(html).not.toContain("ring-2 ring-primary ring-offset-2");
+    });
+  });
+
+  describe("useTemplateEditorElementActions", () => {
+    it("snaps right and bottom edges to the 4mm grid", async () => {
+      let actions!: ReturnType<typeof useTemplateEditorElementActions>;
+      let currentElements: TemplateElement[] = [
+        { id: "el_1", type: "static", label: "A", x: 10, y: 10, w: 65, h: 45 },
+      ];
+      const commitUpdate = vi.fn((fn: (els: TemplateElement[]) => TemplateElement[]) => {
+        currentElements = fn(currentElements);
+      });
+
+      function Harness() {
+        actions = useTemplateEditorElementActions<Record<string, unknown>>({
+          elements: currentElements,
+          selectedIds: ["el_1"],
+          setSelectedIds: vi.fn(),
+          commitUpdate,
+          commitUpdateCoalesced: vi.fn(),
+          size: { width: 210, height: 297, label: "A4" },
+          t: mockT,
+        });
+        return null;
+      }
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const root = createRoot(container);
+      await act(async () => {
+        root.render(<Harness />);
+      });
+
+      // Snap to right edge: size.width - el.w = 210 - 65 = 145 -> snap(145) = 144
+      act(() => {
+        actions.snapSelected("right");
+      });
+      expect(currentElements[0].x).toBe(144);
+
+      // Snap to bottom edge: size.height - el.h = 297 - 45 = 252 -> snap(252) = 252
+      act(() => {
+        actions.snapSelected("bottom");
+      });
+      expect(currentElements[0].y).toBe(252);
+
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    });
+
+    it("equalizes dimensions across selected elements", async () => {
+      let actions!: ReturnType<typeof useTemplateEditorElementActions>;
+      let currentElements: TemplateElement[] = [
+        { id: "el_1", type: "static", label: "A", x: 10, y: 10, w: 100, h: 50 },
+        { id: "el_2", type: "static", label: "B", x: 20, y: 80, w: 60, h: 30 },
+      ];
+      const commitUpdate = vi.fn((fn: (els: TemplateElement[]) => TemplateElement[]) => {
+        currentElements = fn(currentElements);
+      });
+
+      function Harness() {
+        actions = useTemplateEditorElementActions<Record<string, unknown>>({
+          elements: currentElements,
+          selectedIds: ["el_1", "el_2"],
+          setSelectedIds: vi.fn(),
+          commitUpdate,
+          commitUpdateCoalesced: vi.fn(),
+          size: { width: 210, height: 297, label: "A4" },
+          t: mockT,
+        });
+        return null;
+      }
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const root = createRoot(container);
+      await act(async () => {
+        root.render(<Harness />);
+      });
+
+      act(() => {
+        actions.equalizeSelectedDimensions("width");
+      });
+      expect(currentElements[1].w).toBe(100);
+      expect(currentElements[1].h).toBe(30);
+
+      act(() => {
+        actions.equalizeSelectedDimensions("both");
+      });
+      expect(currentElements[1].w).toBe(100);
+      expect(currentElements[1].h).toBe(50);
+
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    });
+
+    it("creates table with unique column IDs in addTable", async () => {
+      let actions!: ReturnType<typeof useTemplateEditorElementActions>;
+      let currentElements: TemplateElement[] = [];
+      const commitUpdate = vi.fn((fn: (els: TemplateElement[]) => TemplateElement[]) => {
+        currentElements = fn(currentElements);
+      });
+
+      function Harness() {
+        actions = useTemplateEditorElementActions<Record<string, unknown>>({
+          elements: currentElements,
+          selectedIds: [],
+          setSelectedIds: vi.fn(),
+          commitUpdate,
+          commitUpdateCoalesced: vi.fn(),
+          size: { width: 210, height: 297, label: "A4" },
+          t: mockT,
+        });
+        return null;
+      }
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const root = createRoot(container);
+      await act(async () => {
+        root.render(<Harness />);
+      });
+
+      act(() => {
+        actions.addTable();
+      });
+      const tableEl = currentElements[0];
+      expect(tableEl.type).toBe("table");
+      expect(tableEl.columns).toBeDefined();
+      expect(tableEl.columns?.length).toBe(3);
+      tableEl.columns?.forEach((col) => {
+        expect(col.id).toBeDefined();
+        expect(typeof col.id).toBe("string");
+        expect(col.id?.length).toBeGreaterThan(0);
+      });
+
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    });
+
+    it("maintains stable action handler references across renders when state is unchanged", async () => {
+      const capturedActions: ReturnType<typeof useTemplateEditorElementActions>[] = [];
+      const currentElements: TemplateElement[] = [
+        { id: "el_1", type: "static", label: "A", x: 10, y: 10, w: 100, h: 50 },
+      ];
+      const selectedIds = ["el_1"];
+      const setSelectedIds = vi.fn();
+      const commitUpdate = vi.fn();
+      const commitUpdateCoalesced = vi.fn();
+      const size = { width: 210, height: 297, label: "A4" };
+
+      function Harness({ count }: { count: number }) {
+        const actions = useTemplateEditorElementActions<Record<string, unknown>>({
+          elements: currentElements,
+          selectedIds,
+          setSelectedIds,
+          commitUpdate,
+          commitUpdateCoalesced,
+          size,
+          t: mockT,
+        });
+        capturedActions.push(actions);
+        return <div>{count}</div>;
+      }
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const root = createRoot(container);
+      await act(async () => {
+        root.render(<Harness count={1} />);
+      });
+      await act(async () => {
+        root.render(<Harness count={2} />);
+      });
+
+      expect(capturedActions.length).toBe(2);
+      expect(capturedActions[0].selectElement).toBe(capturedActions[1].selectElement);
+      expect(capturedActions[0].deleteElement).toBe(capturedActions[1].deleteElement);
+      expect(capturedActions[0].snapSelected).toBe(capturedActions[1].snapSelected);
+      expect(capturedActions[0].addStaticText).toBe(capturedActions[1].addStaticText);
+      expect(capturedActions[0].equalizeSelectedDimensions).toBe(capturedActions[1].equalizeSelectedDimensions);
+
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    });
+
+    it("regenerates unique column IDs when duplicating a table element", async () => {
+      let actions!: ReturnType<typeof useTemplateEditorElementActions>;
+      let currentElements: TemplateElement[] = [
+        {
+          id: "table_1",
+          type: "table",
+          label: "Table",
+          x: 20,
+          y: 20,
+          w: 300,
+          h: 120,
+          columns: [
+            { id: "col_1", header: "Item", field: "id", width: 100, align: "left" },
+            { id: "col_2", header: "Price", field: "amount", width: 100, align: "right" },
+          ],
+        },
+      ];
+      const commitUpdate = vi.fn((fn: (els: TemplateElement[]) => TemplateElement[]) => {
+        currentElements = fn(currentElements);
+      });
+
+      function Harness() {
+        actions = useTemplateEditorElementActions<Record<string, unknown>>({
+          elements: currentElements,
+          selectedIds: ["table_1"],
+          setSelectedIds: vi.fn(),
+          commitUpdate,
+          commitUpdateCoalesced: vi.fn(),
+          size: { width: 210, height: 297, label: "A4" },
+          t: mockT,
+        });
+        return null;
+      }
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const root = createRoot(container);
+      await act(async () => {
+        root.render(<Harness />);
+      });
+
+      act(() => {
+        actions.duplicateElement("table_1");
+      });
+
+      expect(currentElements.length).toBe(2);
+      const duplicated = currentElements[1];
+      expect(duplicated.type).toBe("table");
+      expect(duplicated.id).not.toBe("table_1");
+      expect(duplicated.columns).toBeDefined();
+      expect(duplicated.columns?.length).toBe(2);
+      expect(duplicated.columns?.[0].id).not.toBe("col_1");
+      expect(duplicated.columns?.[1].id).not.toBe("col_2");
+
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    });
+
+    it("does not trigger history update for align or distribute when fewer than 2 items are selected", async () => {
+      let actions!: ReturnType<typeof useTemplateEditorElementActions>;
+      const currentElements: TemplateElement[] = [
+        { id: "el_1", type: "static", label: "A", x: 10, y: 10, w: 100, h: 50 },
+      ];
+      const commitUpdate = vi.fn();
+
+      function Harness() {
+        actions = useTemplateEditorElementActions<Record<string, unknown>>({
+          elements: currentElements,
+          selectedIds: ["el_1"],
+          setSelectedIds: vi.fn(),
+          commitUpdate,
+          commitUpdateCoalesced: vi.fn(),
+          size: { width: 210, height: 297, label: "A4" },
+          t: mockT,
+        });
+        return null;
+      }
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const root = createRoot(container);
+      await act(async () => {
+        root.render(<Harness />);
+      });
+
+      act(() => {
+        actions.alignSelected("left");
+        actions.distributeSelected("horizontal");
+      });
+
+      expect(commitUpdate).not.toHaveBeenCalled();
+
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    });
+  });
 });
+

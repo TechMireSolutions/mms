@@ -39,6 +39,7 @@ export interface TemplateEditorPropertiesPanelProps<TPayload = Record<string, un
   onAlignSelected?: (alignType: AlignmentType) => void;
   onDistributeSelected?: (axis: 'horizontal' | 'vertical') => void;
   onCenterSelected?: (axis: 'both' | 'h' | 'v') => void;
+  onSnapSelected?: (edge: 'top' | 'bottom' | 'left' | 'right') => void;
   onBringToFront?: (elementId?: string) => void;
   onSendToBack?: (elementId?: string) => void;
   onBringSelectedToFront?: () => void;
@@ -68,6 +69,7 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
   onAlignSelected,
   onDistributeSelected,
   onCenterSelected,
+  onSnapSelected,
   onBringToFront,
   onSendToBack,
   onBringSelectedToFront,
@@ -84,7 +86,7 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
     position: true,
     layers: true,
     appearance: true,
-    typography: false,
+    typography: true,
     table: false,
     layerList: false,
   });
@@ -102,6 +104,7 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
         onAlignSelected={onAlignSelected}
         onDistributeSelected={onDistributeSelected}
         onCenterSelected={onCenterSelected}
+        onSnapSelected={onSnapSelected}
         onBringToFront={
           onBringSelectedToFront || (onBringToFront ? () => onBringToFront() : undefined)
         }
@@ -109,6 +112,9 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
         onDuplicateSelected={onDuplicateSelected}
         onDeleteSelected={onDeleteSelected}
         onPatchSelectedStyles={onPatchSelectedStyles}
+        primaryColor={primaryColor}
+        secondaryColor={secondaryColor}
+        isRtl={isRtl}
         t={t}
       />
     );
@@ -224,6 +230,7 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
         onToggle={() => toggleSection('position')}
         onPatchElement={onPatchElement}
         onCenterSelected={onCenterSelected}
+        onSnapSelected={onSnapSelected}
         t={t}
       />
 
@@ -253,9 +260,10 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
         <TemplateEditorTypographySection
           elementId={selectedElement.id}
           elStyle={elStyle}
+          selectedElements={[selectedElement]}
           isOpen={openSections.typography}
           onToggle={() => toggleSection('typography')}
-          onPatchStyle={onPatchStyle}
+          onPatchStyle={(patch) => onPatchStyle(selectedElement.id, patch)}
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}
           isRtl={isRtl}

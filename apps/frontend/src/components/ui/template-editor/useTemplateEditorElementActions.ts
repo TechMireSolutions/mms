@@ -3,14 +3,13 @@
  * @description Hook providing element lifecycle operations: add, delete, duplicate, layer, nudge, and patch.
  */
 
-import type { Dispatch, SetStateAction } from "react";
+import { useCallback, useMemo, useRef, type Dispatch, type SetStateAction } from "react";
 import type {
   ElementStyle,
   PageSizeInfo,
   TemplateElement,
   TemplateFieldDefinition,
 } from "@mms/shared";
-import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import {
   alignElements,
@@ -19,8 +18,19 @@ import {
   distributeElements,
   newId,
   sendSelectedToBack as sendSelectedToBackUtil,
+  snap,
   type AlignmentType,
 } from "./templateEditorUtils";
+import {
+  createDividerElement,
+  createFieldElement,
+  createHeadingElement,
+  createLogoElement,
+  createQrCodeElement,
+  createStaticTextElement,
+  createTableElement,
+  findInsertionPos,
+} from "./templateEditorElementFactories";
 
 export interface UseTemplateEditorElementActionsOptions<TPayload = Record<string, unknown>> {
   elements: TemplateElement<keyof TPayload & string>[];
@@ -63,190 +73,231 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   onElementDeleted,
   t,
 }: UseTemplateEditorElementActionsOptions<TPayload>) {
+  const elementsRef = useRef(elements);
+  elementsRef.current = elements;
+
   const selectedId = selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null;
 
   /** Event-free selection, usable from keyboard handlers (which have no `button`). */
-  const selectElement = (elementId: string) => {
-    setSelectedIds([elementId]);
-  };
+  const selectElement = useCallback(
+    (elementId: string) => {
+      setSelectedIds([elementId]);
+    },
+    [setSelectedIds]
+  );
 
-  const patchElement = (
-    elementId: string,
-    patch: Partial<TemplateElement<keyof TPayload & string>>
-  ) => {
-    const keys = Object.keys(patch).join(",");
-    commitUpdateCoalesced(`patch:${elementId}:${keys}`, (els) =>
-      els.map((el) => (el.id === elementId ? { ...el, ...patch } : el))
-    );
-  };
+  const patchElement = useCallback(
+    (
+      elementId: string,
+      patch: Partial<TemplateElement<keyof TPayload & string>>
+    ) => {
+      const keys = Object.keys(patch).join(",");
+      commitUpdateCoalesced(`patch:${elementId}:${keys}`, (els) =>
+        els.map((el) => (el.id === elementId ? { ...el, ...patch } : el))
+      );
+    },
+    [commitUpdateCoalesced]
+  );
 
-  const patchStyle = (elementId: string, stylePatch: Partial<ElementStyle>) => {
-    const keys = Object.keys(stylePatch).join(",");
-    commitUpdateCoalesced(`style:${elementId}:${keys}`, (els) =>
-      els.map((el) =>
-        el.id === elementId ? { ...el, style: { ...el.style, ...stylePatch } } : el
-      )
-    );
-  };
+  const patchStyle = useCallback(
+    (elementId: string, stylePatch: Partial<ElementStyle>) => {
+      const keys = Object.keys(stylePatch).join(",");
+      commitUpdateCoalesced(`style:${elementId}:${keys}`, (els) =>
+        els.map((el) =>
+          el.id === elementId ? { ...el, style: { ...el.style, ...stylePatch } } : el
+        )
+      );
+    },
+    [commitUpdateCoalesced]
+  );
 
-  const deleteElement = (elementId: string) => {
-    commitUpdate((els) => els.filter((el) => el.id !== elementId));
-    setSelectedIds((prev) => prev.filter((id) => id !== elementId));
-    onElementDeleted?.(1);
-  };
+  const deleteElement = useCallback(
+    (elementId: string) => {
+      commitUpdate((els) => els.filter((el) => el.id !== elementId));
+      setSelectedIds((prev) => prev.filter((id) => id !== elementId));
+      onElementDeleted?.(1);
+    },
+    [commitUpdate, onElementDeleted, setSelectedIds]
+  );
 
-  const deleteSelected = () => {
+  const deleteSelected = useCallback(() => {
     if (selectedIds.length === 0) return;
     const idSet = new Set(selectedIds);
     commitUpdate((els) => els.filter((el) => !idSet.has(el.id)));
     setSelectedIds([]);
     onElementDeleted?.(selectedIds.length);
-  };
+  }, [commitUpdate, onElementDeleted, selectedIds, setSelectedIds]);
 
-  const nudgeSelected = (dx: number, dy: number) => {
-    if (selectedIds.length === 0) return;
-    const idSet = new Set(selectedIds);
-    // Holding an arrow key repeats this: one undo step per gesture, not per repeat.
-    commitUpdateCoalesced("nudge", (els) =>
-      els.map((el) =>
-        idSet.has(el.id)
-          ? {
-              ...el,
-              x: Math.min(Math.max(0, size.width - el.w), Math.max(0, el.x + dx)),
-              y: Math.min(Math.max(0, size.height - el.h), Math.max(0, el.y + dy)),
-            }
-          : el
-      )
-    );
-  };
+  const nudgeSelected = useCallback(
+    (dx: number, dy: number) => {
+      if (selectedIds.length === 0) return;
+      const idSet = new Set(selectedIds);
+      commitUpdateCoalesced("nudge", (els) =>
+        els.map((el) =>
+          idSet.has(el.id)
+            ? {
+                ...el,
+                x: Math.min(Math.max(0, size.width - el.w), Math.max(0, el.x + dx)),
+                y: Math.min(Math.max(0, size.height - el.h), Math.max(0, el.y + dy)),
+              }
+            : el
+        )
+      );
+    },
+    [commitUpdateCoalesced, selectedIds, size.height, size.width]
+  );
 
-  const resizeSelected = (dw: number, dh: number) => {
-    if (selectedIds.length === 0) return;
-    const idSet = new Set(selectedIds);
-    commitUpdateCoalesced("resize", (els) =>
-      els.map((el) =>
-        idSet.has(el.id)
-          ? {
-              ...el,
-              w: Math.min(Math.max(20, size.width - el.x), Math.max(20, el.w + dw)),
-              h: Math.min(Math.max(4, size.height - el.y), Math.max(4, el.h + dh)),
-            }
-          : el
-      )
-    );
-  };
+  const resizeSelected = useCallback(
+    (dw: number, dh: number) => {
+      if (selectedIds.length === 0) return;
+      const idSet = new Set(selectedIds);
+      commitUpdateCoalesced("resize", (els) =>
+        els.map((el) =>
+          idSet.has(el.id)
+            ? {
+                ...el,
+                w: Math.min(Math.max(20, size.width - el.x), Math.max(20, el.w + dw)),
+                h: Math.min(Math.max(4, size.height - el.y), Math.max(4, el.h + dh)),
+              }
+            : el
+        )
+      );
+    },
+    [commitUpdateCoalesced, selectedIds, size.height, size.width]
+  );
 
-  const patchSelectedStyles = (stylePatch: Partial<ElementStyle>) => {
-    if (selectedIds.length === 0) return;
-    const idSet = new Set(selectedIds);
-    const keys = Object.keys(stylePatch).join(",");
-    commitUpdateCoalesced(`styleSelected:${keys}`, (els) =>
-      els.map((el) =>
-        idSet.has(el.id)
-          ? {
-              ...el,
-              style: { ...el.style, ...stylePatch },
-            }
-          : el
-      )
-    );
-  };
+  const patchSelectedStyles = useCallback(
+    (stylePatch: Partial<ElementStyle>) => {
+      if (selectedIds.length === 0) return;
+      const idSet = new Set(selectedIds);
+      const keys = Object.keys(stylePatch).join(",");
+      commitUpdateCoalesced(`styleSelected:${keys}`, (els) =>
+        els.map((el) =>
+          idSet.has(el.id)
+            ? {
+                ...el,
+                style: { ...el.style, ...stylePatch },
+              }
+            : el
+        )
+      );
+    },
+    [commitUpdateCoalesced, selectedIds]
+  );
 
-  const bringToFront = (elementId?: string) => {
-    const targetId = elementId || selectedId;
-    if (!targetId) return;
-    commitUpdate((els) => {
-      const idx = els.findIndex((el) => el.id === targetId);
-      if (idx === -1 || idx === els.length - 1) return els;
-      const copy = [...els];
-      const [item] = copy.splice(idx, 1);
-      if (item) copy.push(item);
-      return copy;
-    });
-  };
+  const bringToFront = useCallback(
+    (elementId?: string) => {
+      const targetId = elementId || selectedId;
+      if (!targetId) return;
+      commitUpdate((els) => {
+        const idx = els.findIndex((el) => el.id === targetId);
+        if (idx === -1 || idx === els.length - 1) return els;
+        const copy = [...els];
+        const [item] = copy.splice(idx, 1);
+        if (item) copy.push(item);
+        return copy;
+      });
+    },
+    [commitUpdate, selectedId]
+  );
 
-  const sendToBack = (elementId?: string) => {
-    const targetId = elementId || selectedId;
-    if (!targetId) return;
-    commitUpdate((els) => {
-      const idx = els.findIndex((el) => el.id === targetId);
-      if (idx <= 0) return els;
-      const copy = [...els];
-      const [item] = copy.splice(idx, 1);
-      if (item) copy.unshift(item);
-      return copy;
-    });
-  };
+  const sendToBack = useCallback(
+    (elementId?: string) => {
+      const targetId = elementId || selectedId;
+      if (!targetId) return;
+      commitUpdate((els) => {
+        const idx = els.findIndex((el) => el.id === targetId);
+        if (idx <= 0) return els;
+        const copy = [...els];
+        const [item] = copy.splice(idx, 1);
+        if (item) copy.unshift(item);
+        return copy;
+      });
+    },
+    [commitUpdate, selectedId]
+  );
 
-  const bringSelectedToFront = () => {
+  const bringSelectedToFront = useCallback(() => {
     if (selectedIds.length === 0) return;
     commitUpdate((els) => bringSelectedToFrontUtil(els, selectedIds));
-  };
+  }, [commitUpdate, selectedIds]);
 
-  const sendSelectedToBack = () => {
+  const sendSelectedToBack = useCallback(() => {
     if (selectedIds.length === 0) return;
     commitUpdate((els) => sendSelectedToBackUtil(els, selectedIds));
-  };
+  }, [commitUpdate, selectedIds]);
 
-  const moveForward = (elementId?: string) => {
-    const targetId = elementId || selectedId;
-    if (!targetId) return;
-    commitUpdate((els) => {
-      const idx = els.findIndex((el) => el.id === targetId);
-      if (idx === -1 || idx === els.length - 1) return els;
-      const copy = [...els];
-      const temp = copy[idx]!;
-      copy[idx] = copy[idx + 1]!;
-      copy[idx + 1] = temp;
-      return copy;
-    });
-  };
+  const moveForward = useCallback(
+    (elementId?: string) => {
+      const targetId = elementId || selectedId;
+      if (!targetId) return;
+      commitUpdate((els) => {
+        const idx = els.findIndex((el) => el.id === targetId);
+        if (idx === -1 || idx === els.length - 1) return els;
+        const copy = [...els];
+        const temp = copy[idx]!;
+        copy[idx] = copy[idx + 1]!;
+        copy[idx + 1] = temp;
+        return copy;
+      });
+    },
+    [commitUpdate, selectedId]
+  );
 
-  const moveBackward = (elementId?: string) => {
-    const targetId = elementId || selectedId;
-    if (!targetId) return;
-    commitUpdate((els) => {
-      const idx = els.findIndex((el) => el.id === targetId);
-      if (idx <= 0) return els;
-      const copy = [...els];
-      const temp = copy[idx]!;
-      copy[idx] = copy[idx - 1]!;
-      copy[idx - 1] = temp;
-      return copy;
-    });
-  };
+  const moveBackward = useCallback(
+    (elementId?: string) => {
+      const targetId = elementId || selectedId;
+      if (!targetId) return;
+      commitUpdate((els) => {
+        const idx = els.findIndex((el) => el.id === targetId);
+        if (idx <= 0) return els;
+        const copy = [...els];
+        const temp = copy[idx]!;
+        copy[idx] = copy[idx - 1]!;
+        copy[idx - 1] = temp;
+        return copy;
+      });
+    },
+    [commitUpdate, selectedId]
+  );
 
-  const offsetFrom = (el: TemplateElement<keyof TPayload & string>, delta: number) => {
-    const nextX = el.x + delta;
-    const nextY = el.y + delta;
-    return {
-      x: nextX + el.w > size.width ? Math.max(0, size.width - el.w - delta) : nextX,
-      y: nextY + el.h > size.height ? Math.max(0, size.height - el.h - delta) : nextY,
-    };
-  };
+  const offsetFrom = useCallback(
+    (el: TemplateElement<keyof TPayload & string>, delta: number) => {
+      const nextX = el.x + delta;
+      const nextY = el.y + delta;
+      return {
+        x: nextX + el.w > size.width ? snap(Math.max(0, size.width - el.w - delta)) : snap(nextX),
+        y: nextY + el.h > size.height ? snap(Math.max(0, size.height - el.h - delta)) : snap(nextY),
+      };
+    },
+    [size.height, size.width]
+  );
 
-  const duplicateElement = (elementId: string) => {
-    const el = elements.find((e) => e.id === elementId);
-    if (!el) return;
-    const { x, y } = offsetFrom(el, 12);
-    const duplicated: TemplateElement<keyof TPayload & string> = {
-      ...el,
-      id: newId(),
-      x,
-      y,
-      style: { ...el.style },
-      columns: el.columns ? el.columns.map((col) => ({ ...col })) : undefined,
-      tableConfig: el.tableConfig ? { ...el.tableConfig } : undefined,
-    };
-    commitUpdate((els) => [...els, duplicated]);
-    setSelectedIds([duplicated.id]);
-    onElementAdded?.(duplicated.id);
-  };
+  const duplicateElement = useCallback(
+    (elementId: string) => {
+      const el = elementsRef.current.find((e) => e.id === elementId);
+      if (!el) return;
+      const { x, y } = offsetFrom(el, 12);
+      const duplicated: TemplateElement<keyof TPayload & string> = {
+        ...el,
+        id: newId(),
+        x,
+        y,
+        style: { ...el.style },
+        columns: el.columns ? el.columns.map((col) => ({ ...col, id: newId() })) : undefined,
+        tableConfig: el.tableConfig ? { ...el.tableConfig } : undefined,
+      };
+      commitUpdate((els) => [...els, duplicated]);
+      setSelectedIds([duplicated.id]);
+      onElementAdded?.(duplicated.id);
+    },
+    [commitUpdate, offsetFrom, onElementAdded, setSelectedIds]
+  );
 
-  const duplicateSelected = () => {
+  const duplicateSelected = useCallback(() => {
     if (selectedIds.length === 0) return;
     const idSet = new Set(selectedIds);
-    const targets = elements.filter((el) => idSet.has(el.id));
+    const targets = elementsRef.current.filter((el) => idSet.has(el.id));
     if (targets.length === 0) return;
     const newElements = targets.map((el) => {
       const { x, y } = offsetFrom(el, 12);
@@ -256,211 +307,212 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
         x,
         y,
         style: { ...el.style },
-        columns: el.columns ? el.columns.map((col) => ({ ...col })) : undefined,
+        columns: el.columns ? el.columns.map((col) => ({ ...col, id: newId() })) : undefined,
         tableConfig: el.tableConfig ? { ...el.tableConfig } : undefined,
       };
     });
     commitUpdate((els) => [...els, ...newElements]);
     setSelectedIds(newElements.map((el) => el.id));
     if (newElements[0]) onElementAdded?.(newElements[0].id);
-  };
+  }, [commitUpdate, offsetFrom, onElementAdded, selectedIds, setSelectedIds]);
 
-  const alignSelected = (alignType: AlignmentType) => {
-    commitUpdate((els) => alignElements(els, selectedIds, alignType));
-  };
+  const alignSelected = useCallback(
+    (alignType: AlignmentType) => {
+      if (selectedIds.length < 2) return;
+      commitUpdate((els) => alignElements(els, selectedIds, alignType));
+    },
+    [commitUpdate, selectedIds]
+  );
 
-  const distributeSelected = (axis: "horizontal" | "vertical") => {
-    commitUpdate((els) => distributeElements(els, selectedIds, axis));
-  };
+  const distributeSelected = useCallback(
+    (axis: "horizontal" | "vertical") => {
+      if (selectedIds.length < 2) return;
+      commitUpdate((els) => distributeElements(els, selectedIds, axis));
+    },
+    [commitUpdate, selectedIds]
+  );
 
-  const centerSelected = (axis: "both" | "h" | "v" = "both") => {
-    if (selectedIds.length === 0) return;
-    const idSet = new Set(selectedIds);
-    commitUpdate((els) =>
-      els.map((el) => (idSet.has(el.id) ? centerElementOnPage(el, size.width, size.height, axis) : el))
-    );
-  };
-
-  /**
-   * Finds a free spot for a new element instead of stacking it on top of the last one.
-   *
-   * The old rule was "below the last element, else stagger by element count", which on a
-   * shipped 25-element preset dropped every new element around (36,36) — underneath the
-   * logo — so "Add" looked like it had done nothing.
-   */
-  const getInsertionPos = (w: number, h: number) => {
-    const pad = 6;
-    const overlaps = (x: number, y: number) =>
-      elements.some(
-        (el) =>
-          x < el.x + el.w + pad &&
-          x + w + pad > el.x &&
-          y < el.y + el.h + pad &&
-          y + h + pad > el.y
+  const centerSelected = useCallback(
+    (axis: "both" | "h" | "v" = "both") => {
+      if (selectedIds.length === 0) return;
+      const idSet = new Set(selectedIds);
+      commitUpdate((els) =>
+        els.map((el) => (idSet.has(el.id) ? centerElementOnPage(el, size.width, size.height, axis) : el))
       );
-    const x = 20;
-    for (let y = 20; y + h <= size.height - 20; y += 10) {
-      if (!overlaps(x, y)) return { x, y };
-    }
-    const stagger = (elements.length % 6) * 16;
-    return {
-      x: Math.min(Math.max(0, size.width - w - 20), 20 + stagger),
-      y: Math.min(Math.max(0, size.height - h - 20), 20 + stagger),
-    };
-  };
+    },
+    [commitUpdate, selectedIds, size.height, size.width]
+  );
 
-  const addElement = (el: TemplateElement<keyof TPayload & string>) => {
-    commitUpdate((els) => [...els, el]);
-    setSelectedIds([el.id]);
-    onElementAdded?.(el.id);
-  };
+  /** Snaps all selected elements to one of the four page edges conforming to the grid. */
+  const snapSelected = useCallback(
+    (edge: "top" | "bottom" | "left" | "right") => {
+      if (selectedIds.length === 0) return;
+      const idSet = new Set(selectedIds);
+      commitUpdate((els) =>
+        els.map((el) => {
+          if (!idSet.has(el.id)) return el;
+          switch (edge) {
+            case "top":    return { ...el, y: 0 };
+            case "bottom": return { ...el, y: snap(Math.max(0, size.height - el.h)) };
+            case "left":   return { ...el, x: 0 };
+            case "right":  return { ...el, x: snap(Math.max(0, size.width - el.w)) };
+          }
+        })
+      );
+    },
+    [commitUpdate, selectedIds, size.height, size.width]
+  );
 
-  const addStaticText = () => {
+  /** Equalizes width, height, or both across selected elements to match the largest in the selection. */
+  const equalizeSelectedDimensions = useCallback(
+    (dimension: "width" | "height" | "both") => {
+      if (selectedIds.length < 2) return;
+      const idSet = new Set(selectedIds);
+
+      commitUpdate((els) => {
+        const targets = els.filter((el) => idSet.has(el.id));
+        if (targets.length < 2) return els;
+        const maxWidth = Math.max(...targets.map((el) => el.w));
+        const maxHeight = Math.max(...targets.map((el) => el.h));
+
+        return els.map((el) => {
+          if (!idSet.has(el.id)) return el;
+          return {
+            ...el,
+            w: dimension === "height" ? el.w : Math.max(4, Math.min(maxWidth, size.width - el.x)),
+            h: dimension === "width" ? el.h : Math.max(4, Math.min(maxHeight, size.height - el.y)),
+          };
+        });
+      });
+    },
+    [commitUpdate, selectedIds, size.height, size.width]
+  );
+
+  const getInsertionPos = useCallback(
+    (w: number, h: number) => findInsertionPos(elementsRef.current, w, h, size),
+    [size]
+  );
+
+  const addElement = useCallback(
+    (el: TemplateElement<keyof TPayload & string>) => {
+      commitUpdate((els) => [...els, el]);
+      setSelectedIds([el.id]);
+      onElementAdded?.(el.id);
+    },
+    [commitUpdate, onElementAdded, setSelectedIds]
+  );
+
+  const addStaticText = useCallback(() => {
     const { x, y } = getInsertionPos(200, 18);
-    addElement({
-      id: newId(),
-      type: "static",
-      label: t("templateEditor.newText"),
-      x,
-      y,
-      w: 200,
-      h: 18,
-      style: { fontSize: 11, color: PRINT_NEUTRAL.text },
-    });
-  };
+    addElement(createStaticTextElement(x, y, t("templateEditor.newText")) as TemplateElement<keyof TPayload & string>);
+  }, [addElement, getInsertionPos, t]);
 
-  const addHeading = () => {
+  const addHeading = useCallback(() => {
     const w = Math.min(320, Math.max(160, size.width - 40));
     const h = 26;
     const { x, y } = getInsertionPos(w, h);
-    addElement({
-      id: newId(),
-      type: "static",
-      label: t("templateEditor.heading"),
-      x,
-      y,
-      w,
-      h,
-      style: { fontSize: 16, fontWeight: "bold", color: PRINT_NEUTRAL.text },
-    });
-  };
+    addElement(createHeadingElement(x, y, w, t("templateEditor.heading")) as TemplateElement<keyof TPayload & string>);
+  }, [addElement, getInsertionPos, size.width, t]);
 
-  const addDivider = () => {
+  const addDivider = useCallback(() => {
     const w = Math.max(40, size.width - 40);
     const h = 1;
     const { x, y } = getInsertionPos(w, h);
-    addElement({
-      id: newId(),
-      type: "divider",
-      label: "",
-      x,
-      y,
-      w,
-      h,
-      style: { color: PRINT_NEUTRAL.border },
-    });
-  };
+    addElement(createDividerElement(x, y, w) as TemplateElement<keyof TPayload & string>);
+  }, [addElement, getInsertionPos, size.width]);
 
-  const addField = (fieldDef: TemplateFieldDefinition<TPayload>) => {
-    const { x, y } = getInsertionPos(160, 16);
-    addElement({
-      id: newId(),
-      type: "field",
-      label: fieldDef.label,
-      field: fieldDef.field,
-      x,
-      y,
-      w: 160,
-      h: 16,
-      style: { fontSize: 10, color: PRINT_NEUTRAL.text },
-    });
-  };
+  const addField = useCallback(
+    (fieldDef: TemplateFieldDefinition<TPayload>) => {
+      const { x, y } = getInsertionPos(160, 16);
+      addElement(createFieldElement(x, y, fieldDef));
+    },
+    [addElement, getInsertionPos]
+  );
 
-  const addQrCode = () => {
+  const addQrCode = useCallback(() => {
     const { x, y } = getInsertionPos(64, 64);
-    addElement({
-      id: newId(),
-      type: "qrcode",
-      label: t("templateEditor.qrCode"),
-      x,
-      y,
-      w: 64,
-      h: 64,
-    });
-  };
+    addElement(createQrCodeElement(x, y, t("templateEditor.qrCode")) as TemplateElement<keyof TPayload & string>);
+  }, [addElement, getInsertionPos, t]);
 
-  const addLogo = () => {
+  const addLogo = useCallback(() => {
     const { x, y } = getInsertionPos(80, 80);
-    addElement({
-      id: newId(),
-      type: "logo",
-      label: t("templateEditor.logo"),
-      x,
-      y,
-      w: 80,
-      h: 80,
-    });
-  };
+    addElement(createLogoElement(x, y, t("templateEditor.logo")) as TemplateElement<keyof TPayload & string>);
+  }, [addElement, getInsertionPos, t]);
 
-  const addTable = () => {
+  const addTable = useCallback(() => {
     const w = Math.min(500, Math.max(240, size.width - 40));
     const h = 120;
     const { x, y } = getInsertionPos(w, h);
-    addElement({
-      id: newId(),
-      type: "table",
-      label: t("templateEditor.table"),
-      x,
-      y,
-      w,
-      h,
-      columns: [
-        { header: t("templateEditor.columnIndex"), field: "id", width: 40, align: "center" },
-        { header: t("templateEditor.columnDescription"), field: "description", width: 220, align: "left" },
-        { header: t("templateEditor.columnAmount"), field: "amount", width: 100, align: "right" },
-      ],
-      tableConfig: {
-        showHeader: true,
-        rowHeight: 24,
-        zebra: true,
-        borderColor: PRINT_NEUTRAL.border,
-      },
-      style: {
-        fontSize: 10,
-        color: PRINT_NEUTRAL.text,
-        backgroundColor: "#ffffff",
-        borderWidth: 1,
-        borderColor: PRINT_NEUTRAL.border,
-      },
-    });
-  };
+    addElement(
+      createTableElement(x, y, w, {
+        label: t("templateEditor.table"),
+        columnIndex: t("templateEditor.columnIndex"),
+        columnDescription: t("templateEditor.columnDescription"),
+        columnAmount: t("templateEditor.columnAmount"),
+      }) as TemplateElement<keyof TPayload & string>
+    );
+  }, [addElement, getInsertionPos, size.width, t]);
 
-  return {
-    selectElement,
-    patchElement,
-    patchStyle,
-    patchSelectedStyles,
-    deleteElement,
-    deleteSelected,
-    nudgeSelected,
-    resizeSelected,
-    bringToFront,
-    sendToBack,
-    bringSelectedToFront,
-    sendSelectedToBack,
-    moveForward,
-    moveBackward,
-    duplicateElement,
-    duplicateSelected,
-    alignSelected,
-    distributeSelected,
-    centerSelected,
-    addStaticText,
-    addHeading,
-    addDivider,
-    addField,
-    addQrCode,
-    addLogo,
-    addTable,
-  };
+  return useMemo(
+    () => ({
+      selectElement,
+      patchElement,
+      patchStyle,
+      patchSelectedStyles,
+      deleteElement,
+      deleteSelected,
+      nudgeSelected,
+      resizeSelected,
+      bringToFront,
+      sendToBack,
+      bringSelectedToFront,
+      sendSelectedToBack,
+      moveForward,
+      moveBackward,
+      duplicateElement,
+      duplicateSelected,
+      alignSelected,
+      distributeSelected,
+      centerSelected,
+      snapSelected,
+      equalizeSelectedDimensions,
+      addStaticText,
+      addHeading,
+      addDivider,
+      addField,
+      addQrCode,
+      addLogo,
+      addTable,
+    }),
+    [
+      selectElement,
+      patchElement,
+      patchStyle,
+      patchSelectedStyles,
+      deleteElement,
+      deleteSelected,
+      nudgeSelected,
+      resizeSelected,
+      bringToFront,
+      sendToBack,
+      bringSelectedToFront,
+      sendSelectedToBack,
+      moveForward,
+      moveBackward,
+      duplicateElement,
+      duplicateSelected,
+      alignSelected,
+      distributeSelected,
+      centerSelected,
+      snapSelected,
+      equalizeSelectedDimensions,
+      addStaticText,
+      addHeading,
+      addDivider,
+      addField,
+      addQrCode,
+      addLogo,
+      addTable,
+    ]
+  );
 }
