@@ -38,6 +38,12 @@ export function canWriteObject(user: User, key: string): boolean {
   if (key === PLATFORM_SUPER_USERS_OBJECT_KEY) {
     return false;
   }
+  // Platform-authoritative module grants: tenants may read (SystemModulesSettings)
+  // but never write. Without this the unmapped key fell through to WRITE_ROLES,
+  // letting any teacher/accountant self-grant modules.
+  if (key === 'platform_settings') {
+    return false;
+  }
   if (!isAllowedObjectKey(key)) {
     return false;
   }

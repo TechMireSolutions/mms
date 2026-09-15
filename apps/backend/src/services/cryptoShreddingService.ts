@@ -158,15 +158,25 @@ export async function executeSubjectErasure(
   const db = activeDb();
 
   if (erasureType === 'CRYPTO_SHRED') {
-    // 1. Destroy the subject key
-    await db
+    // 1. Destroy the subject key. Capture the affected rows: zero rows means no
+    // subject key was ever created (subject data was never envelope-encrypted),
+    // so the shred is a no-op and must be logged rather than reported silently.
+    const shreddedRows = await db
       .update(cryptoShreddingKeys)
       .set({
         status: 'SHREDDED',
         encryptedKey: '[SHREDDED_KEY_DESTROYED]',
         destroyedAt: now,
       })
-      .where(eq(cryptoShreddingKeys.subjectId, subjectId));
+      .where(eq(cryptoShreddingKeys.subjectId, subjectId))
+      .returning({ id: cryptoShreddingKeys.id });
+
+    if (shreddedRows.length === 0) {
+      logger.warn(
+        { requestId, subjectId, regime },
+        'Crypto-shredding requested but no active subject key existed — nothing was shredded',
+      );
+    }
 
     // 2. Record erasure request
     await db.insert(auditErasureRequests).values({

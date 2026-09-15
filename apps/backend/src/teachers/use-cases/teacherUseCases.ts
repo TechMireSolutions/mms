@@ -34,8 +34,11 @@ export function createTeachersUseCases(repo: TeachersRepository = teachersReposi
       load.loadTeacherLinkedContactIds(excludeTeacherId, repo),
     loadTeachersCommandMetrics: () => load.loadTeachersCommandMetrics(repo),
     loadTeachersWidgetAggregates: (queries: Parameters<typeof load.loadTeachersWidgetAggregates>[0]) =>
-      load.loadTeachersWidgetAggregates(queries, repo),    createTeacher: (record: Parameters<typeof write.createTeacher>[0]) =>
-      write.createTeacher(record, repo),
+      load.loadTeachersWidgetAggregates(queries, repo),
+    createTeacher: (
+      record: Parameters<typeof write.createTeacher>[0],
+      options?: Parameters<typeof write.createTeacher>[2],
+    ) => write.createTeacher(record, repo, options),
     updateTeacherById: (id: string, record: Parameters<typeof write.updateTeacherById>[1]) =>
       write.updateTeacherById(id, record, repo),
     softDeleteTeacherById: (id: string, deletedBy: string, deletionReason?: string) =>

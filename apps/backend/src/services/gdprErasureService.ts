@@ -1,4 +1,4 @@
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import type { DbClient } from '../db/dbConnection.js';
 import { activeDb } from '../db/dbConnection.js';
 import {
@@ -93,32 +93,9 @@ export async function executeGdprErasure(
     );
   }
 
-  // 2. In-place overwrite PII
-  // Direct SQL update matching the SSOT specification:
-  // first_name = 'Anonymized', last_name = 'Subject', email = 'erased-' || id || '@deleted.local', phone = NULL, custom_data = '{}'::jsonb
-  try {
-    if (typeof db.execute === 'function') {
-      await db.execute(sql`
-        UPDATE contacts
-        SET
-          first_name = 'Anonymized',
-          last_name = 'Subject',
-          name = 'Anonymized Subject',
-          email = ${pseudonymizedEmail},
-          phone = NULL,
-          custom_data = '{}'::jsonb,
-          deleted_at = ${now},
-          deletion_reason = 'GDPR Article 17 Erasure Request',
-          updated_at = ${now}
-        WHERE id = ${normalizedContactId} AND workspace_subdomain = ${normalizedTenant}
-      `);
-    }
-  } catch {
-    // If scalar columns (email, phone, custom_data) were dropped/normalized into child tables,
-    // continue to normalized Drizzle table updates below
-  }
-
-  // Update contacts table via Drizzle
+  // 2. In-place overwrite PII. Scalar `email`/`phone`/`custom_data` were moved
+  // to child tables (migrations 0056/0075) and are handled below; the previous
+  // raw UPDATE referenced those dropped columns and was silently swallowed.
   try {
     if (typeof db.update === 'function') {
       await db
@@ -127,6 +104,13 @@ export async function executeGdprErasure(
           firstName: 'Anonymized',
           lastName: 'Subject',
           name: 'Anonymized Subject',
+          // Every remaining identifying/scalar attribute must be scrubbed too —
+          // omitting these left DOB, gender, and WhatsApp status in place.
+          gender: null,
+          dob: null,
+          whatsappStatus: 'unknown',
+          isSyed: false,
+          lastCheckedAt: null,
           cnic: null,
           avatar: null,
           notes: null,

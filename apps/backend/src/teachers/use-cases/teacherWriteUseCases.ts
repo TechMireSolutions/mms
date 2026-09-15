@@ -12,6 +12,21 @@ export interface CreateTeacherResult {
   restored: boolean;
 }
 
+/** Thrown when a create would un-delete an archived teacher without delete permission. */
+export class TeacherPermissionError extends Error {
+  readonly statusCode = 403;
+  readonly type = 'forbidden';
+  constructor(message = 'Restoring an archived teacher requires delete permission') {
+    super(message);
+    this.name = 'TeacherPermissionError';
+  }
+}
+
+export interface CreateTeacherOptions {
+  /** False when the caller lacks `teachers.delete`; blocks implicit restore. */
+  canRestore?: boolean;
+}
+
 /**
  * Creates a teacher. When the incoming record carries a `contactId` that matches a
  * soft-deleted teacher (re-registration), the archived row is restored in place —
@@ -21,6 +36,7 @@ export interface CreateTeacherResult {
 export async function createTeacher(
   record: TeacherRecord | TeacherWrite | Record<string, unknown>,
   repo: TeachersRepository = teachersRepository,
+  options: CreateTeacherOptions = {},
 ): Promise<CreateTeacherResult> {
   const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
@@ -31,6 +47,11 @@ export async function createTeacher(
     if (contactId) {
       const archived = await repo.findSoftDeletedByContactId(tenant, contactId);
       if (archived) {
+        // Restore-on-create is effectively an un-delete; require delete permission
+        // (Contacts/Students already enforce this).
+        if (options.canRestore === false) {
+          throw new TeacherPermissionError();
+        }
         const merged = prepareTeacherRecord({
           ...archived,
           ...normalized,

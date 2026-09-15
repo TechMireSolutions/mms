@@ -84,6 +84,29 @@ export function parseVCard(text: string, options?: ParseVCardOptions): Contact[]
 }
 
 /**
+ * Escapes a value for use in a vCard 3.0 text field: backslash, newlines, and
+ * the `;`/`,` component separators. Without this a value containing
+ * `\r\nEND:VCARD\r\nBEGIN:VCARD…` injects forged cards.
+ */
+function escapeVCardText(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  const raw = typeof value === 'string' ? value : String(value);
+  if (!raw) return '';
+  return raw
+    .replace(/\\/g, '\\\\')
+    .replace(/\r\n|\r|\n/g, '\\n')
+    .replace(/;/g, '\\;')
+    .replace(/,/g, '\\,');
+}
+
+/** Restricts a `TYPE=` token to safe characters. */
+function sanitizeVCardType(label: unknown, fallback: string): string {
+  const raw = typeof label === 'string' ? label : '';
+  const token = raw.toUpperCase().replace(/[^A-Z0-9-]/g, '');
+  return token || fallback;
+}
+
+/**
  * Converts a Contact object into a standard vCard 3.0 (.vcf) formatted string.
  *
  * @param contact - The contact object to convert.
@@ -93,19 +116,19 @@ export function toVCard(contact: Contact): string {
   const lines = [
     'BEGIN:VCARD',
     'VERSION:3.0',
-    `FN:${contact.name || ''}`,
-    `N:${contact.lastName || ''};${contact.firstName || ''};;;`,
+    `FN:${escapeVCardText(contact.name)}`,
+    `N:${escapeVCardText(contact.lastName)};${escapeVCardText(contact.firstName)};;;`,
   ];
 
   (contact.phones || []).forEach((phoneEntry) =>
-    lines.push(`TEL;TYPE=${phoneEntry.label?.toUpperCase() || 'CELL'}:${phoneEntry.number}`),
+    lines.push(`TEL;TYPE=${sanitizeVCardType(phoneEntry.label, 'CELL')}:${escapeVCardText(phoneEntry.number)}`),
   );
   (contact.emails || []).forEach((emailEntry) =>
-    lines.push(`EMAIL;TYPE=${emailEntry.label?.toUpperCase() || 'INTERNET'}:${emailEntry.address}`),
+    lines.push(`EMAIL;TYPE=${sanitizeVCardType(emailEntry.label, 'INTERNET')}:${escapeVCardText(emailEntry.address)}`),
   );
-  if (contact.employer) lines.push(`ORG:${contact.employer}`);
-  if (contact.designation) lines.push(`TITLE:${contact.designation}`);
-  if (contact.notes) lines.push(`NOTE:${contact.notes}`);
+  if (contact.employer) lines.push(`ORG:${escapeVCardText(contact.employer)}`);
+  if (contact.designation) lines.push(`TITLE:${escapeVCardText(contact.designation)}`);
+  if (contact.notes) lines.push(`NOTE:${escapeVCardText(contact.notes)}`);
   if (contact.dob) lines.push(`BDAY:${contact.dob.replace(/-/g, '')}`);
 
   lines.push('END:VCARD');

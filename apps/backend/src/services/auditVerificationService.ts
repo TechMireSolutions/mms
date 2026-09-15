@@ -213,29 +213,33 @@ export async function computeAndPublishMerkleCheckpoint(periodStart?: Date): Pro
   const start = periodStart ?? new Date(Date.now() - 24 * 60 * 60 * 1000); // 24h default
   const db = activeDb();
 
-  // Get chronologically latest hash per workspace shard using DISTINCT ON
+  // Get chronologically latest hash per workspace shard using DISTINCT ON.
   // MAX(hash_current) is incorrect: SHA-256 hex is NOT alphabetically sortable.
-  const shardHeads = await db
-    .select({
+  // NOTE: the outer select must reference the aliased subquery's columns — the
+  // previous version selected `auditTrailEvents.*` from the derived table, which
+  // PostgreSQL rejects ("missing FROM-clause entry"), so no checkpoint was ever
+  // published.
+  const shardHeads = db
+    .selectDistinctOn([auditTrailEvents.workspaceSubdomain], {
       workspaceSubdomain: auditTrailEvents.workspaceSubdomain,
-      latestHash: auditTrailEvents.hashCurrent,
+      hashCurrent: auditTrailEvents.hashCurrent,
     })
-    .from(
-      db
-        .selectDistinctOn([auditTrailEvents.workspaceSubdomain], {
-          workspaceSubdomain: auditTrailEvents.workspaceSubdomain,
-          hashCurrent: auditTrailEvents.hashCurrent,
-        })
-        .from(auditTrailEvents)
-        .orderBy(
-          auditTrailEvents.workspaceSubdomain,
-          desc(auditTrailEvents.transactionTimestamp),
-          desc(auditTrailEvents.id),
-        )
-        .as('shard_heads'),
-    );
+    .from(auditTrailEvents)
+    .orderBy(
+      auditTrailEvents.workspaceSubdomain,
+      desc(auditTrailEvents.transactionTimestamp),
+      desc(auditTrailEvents.id),
+    )
+    .as('shard_heads');
 
-  const leafHashes = shardHeads
+  const shardHeadRows = await db
+    .select({
+      workspaceSubdomain: shardHeads.workspaceSubdomain,
+      latestHash: shardHeads.hashCurrent,
+    })
+    .from(shardHeads);
+
+  const leafHashes = shardHeadRows
     .map((h: { workspaceSubdomain: string; latestHash: string | null }) => h.latestHash)
     .filter((hash): hash is string => typeof hash === 'string' && hash.length > 0);
   const rootHash = buildMerkleRoot(leafHashes);

@@ -25,25 +25,20 @@ export async function aggregateAccountingReport(
       dateTo ? sql`${accountingEntries.date} <= ${dateTo}` : undefined,
     );
 
-    // Trial balance by account
-    const trialBalanceRows = await tx
+    // Only posted, non-deleted entries within the date range may contribute to
+    // the trial balance. These filters must live in an INNER join / derived
+    // table: placing them in the ON clause of a LEFT JOIN (the previous code)
+    // retained every journal line with NULL entry columns and summed draft,
+    // deleted, and out-of-period rows.
+    const postedLines = tx
       .select({
-        id: accountingAccounts.id,
-        code: accountingAccounts.code,
-        name: accountingAccounts.name,
-        type: accountingAccounts.type,
-        totalDebit: sql<number>`coalesce(sum(${accountingJournalLines.debit}), 0)::float8`,
-        totalCredit: sql<number>`coalesce(sum(${accountingJournalLines.credit}), 0)::float8`,
+        workspaceSubdomain: accountingJournalLines.workspaceSubdomain,
+        accountId: accountingJournalLines.accountId,
+        debit: accountingJournalLines.debit,
+        credit: accountingJournalLines.credit,
       })
-      .from(accountingAccounts)
-      .leftJoin(
-        accountingJournalLines,
-        and(
-          eq(accountingJournalLines.workspaceSubdomain, accountingAccounts.workspaceSubdomain),
-          eq(accountingJournalLines.accountId, accountingAccounts.id),
-        ),
-      )
-      .leftJoin(
+      .from(accountingJournalLines)
+      .innerJoin(
         accountingEntries,
         and(
           eq(accountingJournalLines.workspaceSubdomain, accountingEntries.workspaceSubdomain),
@@ -51,6 +46,26 @@ export async function aggregateAccountingReport(
           isNull(accountingEntries.deletedAt),
           eq(accountingEntries.status, 'posted'),
           entryDateFilter,
+        ),
+      )
+      .as('posted_lines');
+
+    // Trial balance by account
+    const trialBalanceRows = await tx
+      .select({
+        id: accountingAccounts.id,
+        code: accountingAccounts.code,
+        name: accountingAccounts.name,
+        type: accountingAccounts.type,
+        totalDebit: sql<number>`coalesce(sum(${postedLines.debit}), 0)::float8`,
+        totalCredit: sql<number>`coalesce(sum(${postedLines.credit}), 0)::float8`,
+      })
+      .from(accountingAccounts)
+      .leftJoin(
+        postedLines,
+        and(
+          eq(postedLines.workspaceSubdomain, accountingAccounts.workspaceSubdomain),
+          eq(postedLines.accountId, accountingAccounts.id),
         ),
       )
       .where(

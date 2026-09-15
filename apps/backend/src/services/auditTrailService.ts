@@ -1,5 +1,5 @@
 import crypto from 'node:crypto';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import {
   canonicalizeJson,
   formatAuditEventHashInput,
@@ -147,6 +147,15 @@ export async function recordModernAuditEvent(
   const subdomain = input.workspaceSubdomain.trim().toLowerCase();
   const timestamp = input.transactionTimestamp ?? new Date();
   const timestampIso = timestamp.toISOString();
+
+  // 0. Serialize appends per shard. Without this, two concurrent transactions
+  // both read the same head hash and insert with the same `hash_previous`,
+  // forking the chain and making verification report BROKEN_CHAIN. The lock is
+  // transaction-scoped and released on commit/rollback.
+  if (typeof tx.execute === 'function') {
+    await tx.execute(sql`SELECT pg_advisory_xact_lock(hashtext(${`audit:${subdomain}`}))`);
+  }
+
 
   // 1. Sharded Hash Resolution: Fetch latest hash in this tenant shard
   const hashPrevious = await getLatestShardHash(subdomain, tx);

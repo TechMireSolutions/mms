@@ -84,7 +84,13 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
         }
       }
       try {
-        const result = await withTenant(String(tenant), () => teacherUseCases.createTeacher(body), { readOnly: false });
+        const result = await withTenant(
+          String(tenant),
+          () => teacherUseCases.createTeacher(body, {
+            canRestore: canDeleteCollection(user, 'teachers'),
+          }),
+          { readOnly: false },
+        );
         await auditTeacher(user, 'teacher.create', `Created teacher ${result.record.id}`, String(result.record.id));
         const teacher = await sanitizeOneTeacherForUser(result.record as Teacher, user);
         return result.restored
@@ -96,7 +102,10 @@ export const teacherCrudRoutes: FastifyPluginAsync = async (fastify) => {
               status: 201 as const,
               body: { success: true as const, teacher },
             };
-      } catch {
+      } catch (error: unknown) {
+        if ((error as { statusCode?: number }).statusCode === 403) {
+          return { status: 403 as const, body: { type: 'forbidden', message: error instanceof Error ? error.message : 'Forbidden' } };
+        }
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create teacher' } };
       }
     },
