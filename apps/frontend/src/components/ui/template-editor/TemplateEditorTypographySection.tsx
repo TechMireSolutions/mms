@@ -4,27 +4,22 @@
  */
 
 import React, { useId, useState } from "react";
-import {
-  AlignCenter,
-  AlignJustify,
-  AlignLeft,
-  AlignRight,
-  Bold,
-  Italic,
-  Minus,
-  Plus,
-  Strikethrough,
-  Type,
-  Underline,
-} from "lucide-react";
+import { Minus, Plus, Type } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import type { ElementStyle, TemplateElement } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { StyleBtn } from "./TemplateEditorStyleControls";
 import { normalizeHexColor } from "./templateEditorUtils";
 import { TemplateEditorSection } from "./TemplateEditorSection";
+import { TemplateEditorTypographyStyleButtons } from "./TemplateEditorTypographyStyleButtons";
+import {
+  FONT_OPTIONS,
+  SWATCHES,
+  resolveTypographyStates,
+} from "./templateEditorTypographyUtils";
+
+export { FONT_OPTIONS, SWATCHES };
 
 export interface TemplateEditorTypographySectionProps {
   elementId?: string;
@@ -39,32 +34,6 @@ export interface TemplateEditorTypographySectionProps {
   isRtl?: boolean;
   t: TranslationFunction;
 }
-
-/*
- * Swatch colours stay literal hex on purpose: they are print-ink colours, so they
- * must not follow the dark/light UI theme. The names are translated, the values are
- * not derived from tokens.
- */
-export const SWATCHES = [
-  { labelKey: "templateEditor.swatchText", color: PRINT_NEUTRAL.text },
-  { labelKey: "templateEditor.swatchMuted", color: PRINT_NEUTRAL.muted },
-  { labelKey: "templateEditor.swatchSuccess", color: "#10b981" },
-  { labelKey: "templateEditor.swatchWarning", color: "#f59e0b" },
-  { labelKey: "templateEditor.swatchDestructive", color: "#ef4444" },
-] as const;
-
-/*
- * Font stacks are invariant proper nouns — the descriptor that used to follow each
- * name ("Modern Sans", "Arabic Serif", …) was English prose in a translated menu and
- * has been dropped rather than left untranslated.
- */
-export const FONT_OPTIONS = [
-  { value: "Inter, sans-serif", label: "Inter" },
-  { value: "'Amiri', serif", label: "Amiri" },
-  { value: "'Cairo', sans-serif", label: "Cairo" },
-  { value: "'Noto Nastaliq Urdu', serif", label: "Noto Nastaliq Urdu" },
-  { value: "monospace", label: "Monospace" },
-];
 
 export function TemplateEditorTypographySection({
   elStyle,
@@ -84,64 +53,8 @@ export function TemplateEditorTypographySection({
 
   const handlePatch = onPatchStyle;
 
-  const isMulti = Boolean(selectedElements && selectedElements.length > 1);
-  const textElements = isMulti
-    ? selectedElements!.filter((el) => el.type === "static" || el.type === "field")
-    : [];
-  const targetElements = textElements.length > 0 ? textElements : (selectedElements ?? []);
-
-  const allBold = isMulti
-    ? targetElements.length > 0 && targetElements.every((el) => el.style?.fontWeight === "bold")
-    : elStyle.fontWeight === "bold";
-
-  const allItalic = isMulti
-    ? targetElements.length > 0 && targetElements.every((el) => el.style?.fontStyle === "italic")
-    : elStyle.fontStyle === "italic";
-
-  const allUnderline = isMulti
-    ? targetElements.length > 0 && targetElements.every((el) => el.style?.textDecoration === "underline")
-    : elStyle.textDecoration === "underline";
-
-  const allStrikethrough = isMulti
-    ? targetElements.length > 0 && targetElements.every((el) => el.style?.textDecoration === "line-through")
-    : elStyle.textDecoration === "line-through";
-
-  const hasRtl = isMulti && targetElements.some((el) => el.style?.direction === "rtl");
-  const allRtl = isMulti
-    ? targetElements.length > 0 && targetElements.every((el) => el.style?.direction === "rtl")
-    : elStyle.direction === "rtl";
-  const isMixedRtl = isMulti && hasRtl && !allRtl;
-
-  const startAlign = isRtl ? "right" : "left";
-  const endAlign = isRtl ? "left" : "right";
-
-  const allAlignStart = isMulti
-    ? targetElements.length > 0 &&
-      targetElements.every((el) => (el.style?.textAlign || startAlign) === startAlign)
-    : (elStyle.textAlign === startAlign || !elStyle.textAlign);
-
-  const allAlignCenter = isMulti
-    ? targetElements.length > 0 &&
-      targetElements.every((el) => el.style?.textAlign === "center")
-    : elStyle.textAlign === "center";
-
-  const allAlignEnd = isMulti
-    ? targetElements.length > 0 &&
-      targetElements.every((el) => el.style?.textAlign === endAlign)
-    : elStyle.textAlign === endAlign;
-
-  const allAlignJustify = isMulti
-    ? targetElements.length > 0 &&
-      targetElements.every((el) => el.style?.textAlign === "justify")
-    : elStyle.textAlign === "justify";
-
-  const effectiveColor = normalizeHexColor(elStyle.color, PRINT_NEUTRAL.text).toLowerCase();
-  const allSameColor = isMulti
-    ? targetElements.length > 0 &&
-      targetElements.every(
-        (el) => normalizeHexColor(el.style?.color, PRINT_NEUTRAL.text).toLowerCase() === effectiveColor
-      )
-    : true;
+  const states = resolveTypographyStates(elStyle, selectedElements, isRtl);
+  const { isMixedRtl, allRtl, effectiveColor, allSameColor } = states;
 
   const currentFontSize = Number(elStyle.fontSize ?? 10) || 10;
   const [fontSizeDraft, setFontSizeDraft] = useState<string | null>(null);
@@ -287,70 +200,7 @@ export function TemplateEditorTypographySection({
         </div>
       </div>
 
-      <div role="group" aria-label={t("templateEditor.textStyle")} className="flex flex-wrap items-center gap-1.5">
-        <StyleBtn
-          active={allBold}
-          onClick={() => handlePatch({ fontWeight: allBold ? "normal" : "bold" })}
-          title={t("templateEditor.bold")}
-        >
-          <Bold className="w-4 h-4" aria-hidden="true" />
-        </StyleBtn>
-        <StyleBtn
-          active={allItalic}
-          onClick={() => handlePatch({ fontStyle: allItalic ? "normal" : "italic" })}
-          title={t("templateEditor.italic")}
-        >
-          <Italic className="w-4 h-4" aria-hidden="true" />
-        </StyleBtn>
-        <StyleBtn
-          active={allUnderline}
-          onClick={() => handlePatch({ textDecoration: allUnderline ? "none" : "underline" })}
-          title={t("templateEditor.underline")}
-        >
-          <Underline className="w-4 h-4" aria-hidden="true" />
-        </StyleBtn>
-        <StyleBtn
-          active={allStrikethrough}
-          onClick={() => handlePatch({ textDecoration: allStrikethrough ? "none" : "line-through" })}
-          title={t("templateEditor.strikethrough")}
-        >
-          <Strikethrough className="w-4 h-4" aria-hidden="true" />
-        </StyleBtn>
-
-        {/*
-         * Alignment is presented as start/end, not left/right: in an Urdu or Arabic
-         * workspace "align left" is the *end* of the line, and the icons mirror with
-         * `rtl:-scale-x-100` so the glyph points at the edge it actually aligns to.
-         */}
-        <StyleBtn
-          active={allAlignStart}
-          onClick={() => handlePatch({ textAlign: startAlign })}
-          title={t("templateEditor.alignStart")}
-        >
-          <AlignLeft className="w-4 h-4 rtl:-scale-x-100" aria-hidden="true" />
-        </StyleBtn>
-        <StyleBtn
-          active={allAlignCenter}
-          onClick={() => handlePatch({ textAlign: "center" })}
-          title={t("templateEditor.alignCenter")}
-        >
-          <AlignCenter className="w-4 h-4" aria-hidden="true" />
-        </StyleBtn>
-        <StyleBtn
-          active={allAlignEnd}
-          onClick={() => handlePatch({ textAlign: endAlign })}
-          title={t("templateEditor.alignEnd")}
-        >
-          <AlignRight className="w-4 h-4 rtl:-scale-x-100" aria-hidden="true" />
-        </StyleBtn>
-        <StyleBtn
-          active={allAlignJustify}
-          onClick={() => handlePatch({ textAlign: "justify" })}
-          title={t("templateEditor.alignJustify")}
-        >
-          <AlignJustify className="w-4 h-4" aria-hidden="true" />
-        </StyleBtn>
-      </div>
+      <TemplateEditorTypographyStyleButtons states={states} onPatchStyle={handlePatch} t={t} />
 
       <div className="pt-1">
         <label
