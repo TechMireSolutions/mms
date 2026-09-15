@@ -331,7 +331,7 @@ model a status vocabulary.
 | BiDi sweep (2,539 files) | pass — 0 violations |
 | `vite build` | pass |
 | Built-CSS assertions | `text-2xs/3xs/4xs` emit at 12/11/10px; all 10 `z-*` tokens emit their intended values; the print block contains none of the harmful selectors and both new hooks |
-| **`e2e/tests/a11y-shell.spec.ts` (axe, WCAG 2.1 A/AA)** | **pass with the `color-contrast` baseline entry DELETED** — 15 audit contexts (5 routes × 2 viewports, 4 overlay dialogs, + RTL), zero violations of any severity |
+| **`e2e/tests/a11y-shell.spec.ts` (axe, WCAG 2.1 + 2.2 A/AA)** | **pass with the `color-contrast` baseline entry DELETED** — 15 audit contexts (5 routes × 2 viewports, 4 overlay dialogs, + RTL), zero violations of any severity. Note the blind spot above: the tenant is empty, so module surfaces that need records are not covered. |
 | `brandingTheme.test.ts` three-role assertions | pass in both modes for every preset + light-brand colours; confirmed to **fail** (2 tests, dozens of pairs) before the pipeline fix |
 | `designTokens.contrast.test.ts` | 39 pass; confirmed to **fail** when a token, the Urdu leading, or the Amiri scoping is reverted |
 | `printStyles.test.ts` | 9 pass; confirmed to **fail** when `.shadow-sm` returns to the print hide-list |
@@ -495,3 +495,63 @@ better instrumented now — a firing run prints the offending node's `html:` and
 measured values — so a recurrence names the element instead of restarting the
 investigation from scratch.
 
+
+---
+
+## Update 4 — the gate's blind spot, and two real defects it hid
+
+The `ProgressBar` baseline entry closed on a note that has been sitting there the
+whole time: honouring `aria-hidden` made the *violation* go away without making the
+*data* available. Chasing that turned up something more useful than the original
+finding.
+
+### The gate audits an empty tenant
+
+`bootstrapAuthenticatedTenant` creates a tenant with **no records**. So every
+data-dependent surface — populated tables, detail drawers, charts, metric widgets,
+wizard steps — is never rendered, and therefore never checked. The green gate covers
+the shell, empty states, and dialogs that need no data. That is a real limit on what
+"the gate passes" means, and it also explains why the drawer audit kept skipping.
+
+It is not academic: the follow-up found two places where meaningful data was hidden
+from assistive tech inside populated components, neither of which could ever have
+surfaced:
+
+- **`ClassCard`** (sessions) hid its capacity row with `aria-hidden` and compensated
+  with `aria-label` on the wrapper — but that wrapper is a role-less `<div>`, and
+  naming is not exposed for the generic role, so the compensation never landed and
+  class capacity was silent. Fixed by announcing the visible text and dropping the
+  ineffective label.
+- **`Step4ClassAssignment`** (enrollments) hid its entire remaining-capacity block,
+  including "X spots left" — the single most decision-relevant number when picking a
+  class — and the block sits inside the option `<Button>`, so it was excluded from the
+  option's accessible name. Fixed by un-hiding the block.
+
+Both keep the bar itself `aria-hidden`, because the adjacent figures already carry the
+value and a widget role would announce it twice.
+
+Recorded as a known blind spot in `docs/a11y-baseline.md`, with what closing it
+requires: seeding the tenant before the sweep. I could not do that here — the
+existing `tenantOperations` UI helpers are fragile enough that
+`registerStudentJaneDoe` failed mid-flow when I tried to reuse it, and a proper fix
+means either an API seed endpoint or repairing those helpers.
+
+### Gate widened to WCAG 2.2
+
+The tag set was pinned to WCAG **2.1**, silently excluding every 2.2 criterion —
+notably `target-size` (2.5.8, the 24×24 minimum). `wcag22aa` is now included and the
+sweep passes, which independently confirms the 44px-by-construction touch-target
+finding from the original review.
+
+### A negative result worth keeping
+
+While looking at the `ClassCard` bug I found **21** `aria-label`s on role-less
+`div`/`span` elements and nearly mass-refactored them, on the reading that ARIA 1.2
+prohibits naming for the generic role. I checked first, by injecting the exact pattern
+and running axe against it: **axe reports no violation.** So they are a spec-level
+fragility, not a confirmed defect, and a 21-site refactor would have been unilateral
+churn on my own reading rather than evidence. Left alone, and noted here so the next
+person does not repeat the investigation.
+
+The lesson is the same one that keeps recurring in this work: verify that the problem
+is real before fixing it, and verify that the fix is doing anything afterwards.

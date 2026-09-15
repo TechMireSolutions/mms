@@ -233,6 +233,24 @@ anything. Any conditional audit now logs when it skips:
 [a11y] students (Work, dense table) @ 1440px (ltr): no drawer trigger found — skipped
 ```
 
+### Known blind spot: the tenant has no data
+
+`bootstrapAuthenticatedTenant` creates an **empty** tenant, so everything the gate
+audits is a shell, an empty state, or a dialog that needs no records. Every
+data-dependent module surface — populated tables, detail drawers, charts, metric
+widgets, wizard steps — is never rendered and therefore never checked.
+
+That is a real limit on what a green gate means, and it is not theoretical: while
+chasing the `ProgressBar` follow-up I found two places where meaningful data was
+hidden from assistive tech inside a populated component
+(`ClassCard`'s capacity row, `Step4ClassAssignment`'s remaining-spots block). Neither
+could ever have surfaced here, because neither component renders without records.
+
+Closing it means seeding the tenant before the sweep — either an API seed or making
+the existing `tenantOperations` UI helpers robust (they are currently fragile enough
+that `registerStudentJaneDoe` failed mid-flow when I tried to reuse it). Until then,
+treat this gate as covering the shell and the empty state, not the modules.
+
 ## Adjacent guards
 
 Two other suites protect things this one cannot see:

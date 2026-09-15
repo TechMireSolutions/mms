@@ -130,7 +130,15 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                     </div>
                   </div>
                 </div>
-                <div className="text-end flex-shrink-0" aria-hidden="true">
+                {/*
+                  Not `aria-hidden`: the class's remaining capacity is exactly the
+                  information that decides whether this class is a sensible choice,
+                  and hiding the whole block made it unavailable to assistive tech
+                  (this element is inside the option `<Button>`, so its content is
+                  the option's name). The bar stays `aria-hidden` — the figures next
+                  to it already carry the value.
+                */}
+                <div className="text-end flex-shrink-0">
                   <div className="flex items-center gap-1 text-xs text-muted-foreground">
                     <Users className="w-3.5 h-3.5" />
                     <span>{enrolled}/{maxCapacity}</span>
