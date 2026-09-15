@@ -4,8 +4,10 @@ import {
   isJournalEntryBalanced,
   isJournalLineSingleSided,
   isJournalSourceType,
+  moneyAmountSchema,
   moneyToCents,
   resolveFiscalYearRef,
+  signedMoneyAmountSchema,
 } from './accountingLedgerInvariants.js';
 
 describe('accountingLedgerInvariants', () => {
@@ -59,5 +61,16 @@ describe('accountingLedgerInvariants', () => {
   it('narrows journal source types', () => {
     expect(isJournalSourceType('payment')).toBe(true);
     expect(isJournalSourceType('wire')).toBe(false);
+  });
+
+  it('rejects money with more than two decimal places or negative values', () => {
+    expect(moneyAmountSchema.safeParse(10.25).success).toBe(true);
+    expect(moneyAmountSchema.safeParse(0).success).toBe(true);
+    expect(moneyAmountSchema.safeParse(10.005).success).toBe(false);
+    expect(moneyAmountSchema.safeParse(-1).success).toBe(false);
+    expect(moneyAmountSchema.safeParse(Number.POSITIVE_INFINITY).success).toBe(false);
+
+    expect(signedMoneyAmountSchema.safeParse(-10.5).success).toBe(true);
+    expect(signedMoneyAmountSchema.safeParse(10.005).success).toBe(false);
   });
 });

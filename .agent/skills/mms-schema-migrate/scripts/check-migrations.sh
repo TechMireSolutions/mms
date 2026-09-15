@@ -76,6 +76,18 @@ for (const { content } of sqlFiles) {
   }
 }
 
+// Pass 3 — dynamic DO-block RLS: FOREACH tbl IN ARRAY ARRAY[...] LOOP with
+// EXECUTE format(... ENABLE/FORCE ROW LEVEL SECURITY, tbl). The literal regex
+// above cannot see these; without this pass tables hardened via dynamic DDL
+// (0093_finance_accounting_complete.sql) are reported as uncovered.
+for (const { content } of sqlFiles) {
+  for (const block of content.matchAll(/FOREACH\s+\w+\s+IN\s+ARRAY\s+ARRAY\s*\[([\s\S]*?)\]\s*LOOP([\s\S]*?)END\s+LOOP/gi)) {
+    const names = [...block[1].matchAll(/[\x27"`]([a-zA-Z0-9_]+)[\x27"`]/g)].map((m) => m[1]);
+    if (/ENABLE ROW LEVEL SECURITY/i.test(block[2])) names.forEach((n) => enabled.add(n));
+    if (/FORCE ROW LEVEL SECURITY/i.test(block[2])) names.forEach((n) => forced.add(n));
+  }
+}
+
 const noEnable = [];
 const noForce = [];
 for (const [table, tag] of tables) {

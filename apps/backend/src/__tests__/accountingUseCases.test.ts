@@ -21,6 +21,7 @@ function createFakeRepo(): AccountingRepository {
     listEntriesByWorkspace: vi.fn().mockResolvedValue([]),
     findEntryById: vi.fn().mockResolvedValue(null),
     findEntriesByIds: vi.fn().mockResolvedValue([]),
+    findPostedEntryIds: vi.fn().mockResolvedValue([]),
     saveEntry: vi.fn().mockResolvedValue(undefined),
     bulkSaveEntries: vi.fn().mockResolvedValue(undefined),
     replaceEntriesForWorkspace: vi.fn().mockResolvedValue(undefined),
@@ -222,6 +223,43 @@ describe('accounting use-cases (DI with fake repository)', () => {
       const batchRes = await useCases.loadFiscalYearsByIds(['fy_1', 'fy_2']);
       expect(batchRes).toHaveLength(1);
       expect(batchRes[0]?.id).toBe('fy_1');
+    });
+  });
+
+  it('allows unchanged posted entries but rejects in-place edits of posted entries', async () => {
+    const storedPosted = {
+      id: 'je_1',
+      date: '2026-01-01',
+      ref: 'JE-0001',
+      description: 'Tuition',
+      status: 'posted' as const,
+      created_by: 'admin',
+      fiscal_year: 'FY 2026',
+      simple_mode: false,
+      tags: [],
+      attachments: [],
+      lines: [
+        { id: 'l1', account_id: 'acc_ar', debit: 100, credit: 0, description: '' },
+        { id: 'l2', account_id: 'acc_income', debit: 0, credit: 100, description: '' },
+      ],
+    };
+
+    const repo = createFakeRepo();
+    vi.mocked(repo.findPostedEntryIds!).mockResolvedValue(['je_1']);
+    vi.mocked(repo.findEntriesByIds).mockResolvedValue([storedPosted]);
+    const useCases = createAccountingUseCases(repo);
+
+    await runWithTenant('demo', async () => {
+      await expect(useCases.upsertEntries([{ ...storedPosted }])).resolves.toHaveLength(1);
+
+      const mutated = {
+        ...storedPosted,
+        lines: [
+          { id: 'l1', account_id: 'acc_ar', debit: 999, credit: 0, description: '' },
+          { id: 'l2', account_id: 'acc_income', debit: 0, credit: 999, description: '' },
+        ],
+      };
+      await expect(useCases.upsertEntries([mutated])).rejects.toThrow('immutable');
     });
   });
 

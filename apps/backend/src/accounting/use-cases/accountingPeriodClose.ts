@@ -43,6 +43,9 @@ export async function closeFiscalYearForTenant(
       net: row.balance,
     }));
   const lines = buildClosingEntryLines(retainedEarnings, balances);
+  if (!lines && balances.some((row) => row.net !== 0)) {
+    throw ledgerError('Unable to produce a balanced closing entry for this fiscal year');
+  }
   if (lines) {
     const existingId = await findEntryIdBySource(tenant, 'closing', fiscalYearId);
     if (!existingId) {

@@ -121,8 +121,10 @@ export function buildPaymentPostingLines(input: PaymentPostingInput): JournalLin
 }
 
 /**
- * Close P&L into retained earnings: Dr each revenue net, Cr each expense net,
- * plug the difference to RE.
+ * Close P&L into retained earnings by zeroing every revenue/expense account
+ * (contra balances flip the debit/credit side), then plug the net difference to
+ * retained earnings. Returns null only when there is no P&L activity or the
+ * retained-earnings account is missing.
  */
 export function buildClosingEntryLines(
   retainedEarningsAccountId: string,
@@ -130,22 +132,26 @@ export function buildClosingEntryLines(
 ): JournalLine[] | null {
   if (!retainedEarningsAccountId) return null;
   const lines: JournalLine[] = [];
-  let revenueCents = 0;
-  let expenseCents = 0;
+  let debitCents = 0;
+  let creditCents = 0;
   for (const row of balances) {
     const netCents = moneyToCents(row.net);
     if (netCents === 0) continue;
     const amount = Math.abs(netCents) / 100;
-    if (row.type === 'Revenue' && netCents > 0) {
-      revenueCents += netCents;
-      lines.push(line(`cl-rev-${row.accountId}`, row.accountId, amount, 0, 'Close revenue'));
-    } else if (row.type === 'Expense' && netCents > 0) {
-      expenseCents += netCents;
-      lines.push(line(`cl-exp-${row.accountId}`, row.accountId, 0, amount, 'Close expense'));
-    }
+    // Revenue credit balances are debited; expense debit balances are credited.
+    // A negative net is a contra balance and takes the opposite side.
+    const isDebit = row.type === 'Revenue' ? netCents > 0 : netCents < 0;
+    const prefix = row.type === 'Revenue' ? 'cl-rev' : 'cl-exp';
+    const label = row.type === 'Revenue' ? 'Close revenue' : 'Close expense';
+    lines.push(
+      isDebit
+        ? line(`${prefix}-${row.accountId}`, row.accountId, amount, 0, label)
+        : line(`${prefix}-${row.accountId}`, row.accountId, 0, amount, label),
+    );
+    if (isDebit) debitCents += Math.abs(netCents);
+    else creditCents += Math.abs(netCents);
   }
-  const plugCents = revenueCents - expenseCents;
-  if (lines.length === 0 && plugCents === 0) return null;
+  const plugCents = debitCents - creditCents;
   if (plugCents > 0) {
     lines.push(line('cl-re', retainedEarningsAccountId, 0, plugCents / 100, 'Retained earnings'));
   } else if (plugCents < 0) {

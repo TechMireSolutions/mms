@@ -9,6 +9,7 @@ import {
 import {
   EMPTY_ACCOUNTING_REPORT_AGGREGATES,
   dedupeTrimmedIds,
+  moneyToCents,
   type Account,
   type JournalEntry,
   type FiscalYear,
@@ -38,6 +39,42 @@ const EMPTY_ACCOUNTING_METRICS: AccountingCommandMetricsSnapshot = {
   assets: 0,
   liabilities: 0,
 };
+
+function normalizeLines(lines: JournalEntry['lines']): string {
+  return (lines ?? [])
+    .map((line) =>
+      [line.account_id, moneyToCents(line.debit), moneyToCents(line.credit), line.description ?? ''].join('|'),
+    )
+    .sort()
+    .join(';');
+}
+
+function normalizeList(values: readonly string[] | undefined): string {
+  return [...(values ?? [])].sort().join('|');
+}
+
+/**
+ * True when a posted entry's financial content differs from what is stored.
+ * Identity/audit fields (ids, created_by, timestamps) are intentionally ignored.
+ */
+function journalEntryContentChanged(incoming: JournalEntry, stored: JournalEntry): boolean {
+  return (
+    incoming.date !== stored.date ||
+    (incoming.ref ?? '') !== (stored.ref ?? '') ||
+    (incoming.description ?? '') !== (stored.description ?? '') ||
+    incoming.status !== stored.status ||
+    (incoming.fiscal_year ?? '') !== (stored.fiscal_year ?? '') ||
+    (incoming.fiscal_year_id ?? '') !== (stored.fiscal_year_id ?? '') ||
+    (incoming.source_type ?? '') !== (stored.source_type ?? '') ||
+    (incoming.source_id ?? '') !== (stored.source_id ?? '') ||
+    (incoming.transaction_type ?? '') !== (stored.transaction_type ?? '') ||
+    (incoming.reversed_ref ?? '') !== (stored.reversed_ref ?? '') ||
+    Boolean(incoming.simple_mode) !== Boolean(stored.simple_mode) ||
+    normalizeLines(incoming.lines) !== normalizeLines(stored.lines) ||
+    normalizeList(incoming.tags) !== normalizeList(stored.tags) ||
+    normalizeList(incoming.attachments) !== normalizeList(stored.attachments)
+  );
+}
 
 export interface AccountingUseCasesDependencies {
   countActiveJournalLinesForAccount?: (tenant: string, accountId: string) => Promise<number>;
@@ -97,6 +134,32 @@ export function createAccountingUseCases(
     websocketCollection: 'accounting_accounts',
     idPrefix: 'acc',
   });
+
+  /**
+   * Append-only immutability: posted journal entries may not be edited in
+   * place — corrections must be posted as reversals/adjustments. Unchanged
+   * posted rows are tolerated because the Work directory saves the whole
+   * collection back through the bulk upsert route.
+   */
+  const assertEntriesMutable = async (entries: JournalEntry[]): Promise<void> => {
+    const tenant = getRequestTenant();
+    if (!tenant || !repo.findPostedEntryIds || entries.length === 0) return;
+    const postedIds = await repo.findPostedEntryIds(tenant, entries.map((entry) => entry.id));
+    if (postedIds.length === 0) return;
+    const postedSet = new Set(postedIds);
+    const stored = await repo.findEntriesByIds(tenant, postedIds);
+    const storedById = new Map(stored.map((entry) => [entry.id, entry]));
+    for (const incoming of entries) {
+      if (!postedSet.has(incoming.id)) continue;
+      const existing = storedById.get(incoming.id);
+      if (existing && journalEntryContentChanged(incoming, existing)) {
+        throw Object.assign(
+          new Error('Posted journal entries are immutable — reverse them instead of editing'),
+          { statusCode: 422, type: 'validation_error' },
+        );
+      }
+    }
+  };
 
   const deleteJournalEntryById = async (
     id: string,
@@ -183,6 +246,7 @@ export function createAccountingUseCases(
     upsertAccounts: (accounts: Account[]) =>
       upsertWithBroadcast(accountListSchema, accounts, repo.bulkSaveAccounts, 'accounting_accounts'),
     upsertEntries: async (entries: JournalEntry[]) => {
+      await assertEntriesMutable(entries);
       const fiscalYears = await fiscalYearService.load();
       const prepared = entries.map((entry) => prepareJournalEntryForPersist(entry, fiscalYears));
       return upsertWithBroadcast(journalEntryListSchema, prepared, repo.bulkSaveEntries, 'accounting_entries');
@@ -195,6 +259,7 @@ export function createAccountingUseCases(
       return entryCrud.create(prepareJournalEntryForPersist(record, fiscalYears));
     },
     updateJournalEntryById: async (id: string, record: JournalEntry) => {
+      await assertEntriesMutable([{ ...record, id }]);
       const fiscalYears = await fiscalYearService.load();
       return entryCrud.updateById(id, prepareJournalEntryForPersist(record, fiscalYears));
     },

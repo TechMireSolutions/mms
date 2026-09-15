@@ -60,6 +60,8 @@ export interface AccountingRepository {
     ids: string[],
     options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
   ): Promise<JournalEntry[]>;
+  /** Posted, non-deleted entry ids among `ids` — append-only immutability guard. */
+  findPostedEntryIds?(tenant: string, ids: string[]): Promise<string[]>;
   saveEntry(tenant: string, record: JournalEntry): Promise<void>;
   bulkSaveEntries(tenant: string, records: JournalEntry[]): Promise<void>;
   replaceEntriesForWorkspace(tenant: string, records: JournalEntry[]): Promise<void>;

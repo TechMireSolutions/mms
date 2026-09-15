@@ -9,6 +9,16 @@ export interface AccountingReportQuery {
 }
 
 /**
+ * Cash/bank classification heuristic shared with the local financials helper:
+ * asset accounts under code 10xx or whose name/subtype mentions cash or bank.
+ */
+function isCashAccount(row: { type: string; code: string; name: string; subtype: string }): boolean {
+  if (row.type !== 'Asset') return false;
+  const haystack = `${row.name} ${row.subtype}`.toLowerCase();
+  return row.code.startsWith('10') || haystack.includes('cash') || haystack.includes('bank');
+}
+
+/**
  * SQL aggregates for Accounting Reports tier (Trial Balance & Financial Statements).
  */
 export async function aggregateAccountingReport(
@@ -57,6 +67,7 @@ export async function aggregateAccountingReport(
         code: accountingAccounts.code,
         name: accountingAccounts.name,
         type: accountingAccounts.type,
+        subtype: accountingAccounts.subtype,
         totalDebit: sql<number>`coalesce(sum(${postedLines.debit}), 0)::float8`,
         totalCredit: sql<number>`coalesce(sum(${postedLines.credit}), 0)::float8`,
       })
@@ -79,6 +90,7 @@ export async function aggregateAccountingReport(
         accountingAccounts.code,
         accountingAccounts.name,
         accountingAccounts.type,
+        accountingAccounts.subtype,
       )
       .orderBy(accountingAccounts.code);
 
@@ -103,18 +115,27 @@ export async function aggregateAccountingReport(
     let assets = 0;
     let liabilities = 0;
     let equity = 0;
+    let cashInflow = 0;
+    let cashOutflow = 0;
 
-    for (const row of trialBalance) {
-      if (row.type === 'Revenue') revenue += row.totalCredit - row.totalDebit;
-      else if (row.type === 'Expense') expenses += row.totalDebit - row.totalCredit;
-      else if (row.type === 'Asset') assets += row.totalDebit - row.totalCredit;
-      else if (row.type === 'Liability') liabilities += row.totalCredit - row.totalDebit;
-      else if (row.type === 'Equity') equity += row.totalCredit - row.totalDebit;
+    for (const row of trialBalanceRows) {
+      const totalDebit = Number(row.totalDebit);
+      const totalCredit = Number(row.totalCredit);
+      if (row.type === 'Revenue') revenue += totalCredit - totalDebit;
+      else if (row.type === 'Expense') expenses += totalDebit - totalCredit;
+      else if (row.type === 'Asset') assets += totalDebit - totalCredit;
+      else if (row.type === 'Liability') liabilities += totalCredit - totalDebit;
+      else if (row.type === 'Equity') equity += totalCredit - totalDebit;
+
+      // Cash flow is measured from actual movements on cash/bank accounts —
+      // not from revenue/expense, which ignores AR/AP timing and non-cash items.
+      if (isCashAccount(row)) {
+        cashInflow += totalDebit;
+        cashOutflow += totalCredit;
+      }
     }
 
     const netSurplus = revenue - expenses;
-    const cashInflow = revenue;
-    const cashOutflow = expenses;
     const netCashFlow = cashInflow - cashOutflow;
 
     return {

@@ -5,16 +5,16 @@ import {
   buildOpeningEntryLines,
   buildPaymentPostingLines,
   buildReversalLines,
+  type FiscalYear,
   type Invoice,
   type JournalEntry,
   type OpeningBalance,
   type Payment,
 } from '@mms/shared';
-import { bulkSaveEntries, findEntryById, findEntryIdBySource, saveEntry } from '../../db/repositories/accountingRepository.js';
+import { findEntryById, findEntryIdBySource, saveEntry } from '../../db/repositories/accountingRepository.js';
 import { getPostingRules } from '../../db/repositories/accountingLedgerOpsRepository.js';
 import { listFiscalYearsByWorkspace } from '../../db/repositories/accountingFiscalYearsRepository.js';
 import { prepareJournalEntryForPersist } from '../use-cases/accountingLedgerGuards.js';
-import { resolveFiscalYearRef } from '@mms/shared';
 
 function postingDate(value: string | undefined): string {
   return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : new Date().toISOString().slice(0, 10);
@@ -23,11 +23,12 @@ function postingDate(value: string | undefined): string {
 async function persistGeneratedEntry(
   tenant: string,
   entry: JournalEntry,
+  years?: readonly FiscalYear[],
 ): Promise<JournalEntry | null> {
   const existingId = await findEntryIdBySource(tenant, entry.source_type ?? '', entry.source_id ?? '');
   if (existingId) return null;
-  const years = await listFiscalYearsByWorkspace(tenant);
-  const prepared = prepareJournalEntryForPersist(entry, years);
+  const resolvedYears = years ?? (await listFiscalYearsByWorkspace(tenant));
+  const prepared = prepareJournalEntryForPersist(entry, resolvedYears);
   await saveEntry(tenant, prepared);
   return prepared;
 }
@@ -57,10 +58,13 @@ function entryForSource(
   };
 }
 
-async function resolveYearId(tenant: string, date: string): Promise<string | undefined> {
-  const years = await listFiscalYearsByWorkspace(tenant);
-  const match = years.find((year) => year.startDate <= date && date <= year.endDate);
-  return match?.id ?? resolveFiscalYearRef(years, years.find((year) => year.status === 'active')?.id)?.id;
+/**
+ * Fiscal year whose range contains the posting date. Returns undefined when the
+ * date falls outside every configured year rather than silently posting to the
+ * active year.
+ */
+function resolveYearId(years: readonly FiscalYear[], date: string): string | undefined {
+  return years.find((year) => year.startDate <= date && date <= year.endDate)?.id;
 }
 
 /** Posts Dr AR / Cr Income when posting accounts are configured. Skips otherwise. */
@@ -77,9 +81,11 @@ export async function tryPostInvoiceJournal(tenant: string, invoice: Invoice): P
     accounts,
   });
   if (!lines) return;
+  const years = await listFiscalYearsByWorkspace(tenant);
   await persistGeneratedEntry(
     tenant,
-    entryForSource('invoice', invoice.id, date, `Invoice ${invoice.invoiceNumber ?? invoice.id}`, lines, await resolveYearId(tenant, date)),
+    entryForSource('invoice', invoice.id, date, `Invoice ${invoice.invoiceNumber ?? invoice.id}`, lines, resolveYearId(years, date)),
+    years,
   );
 }
 
@@ -95,9 +101,11 @@ export async function tryPostPaymentJournal(tenant: string, payment: Payment): P
     accounts,
   });
   if (!lines) return;
+  const years = await listFiscalYearsByWorkspace(tenant);
   await persistGeneratedEntry(
     tenant,
-    entryForSource('payment', payment.id, date, `Payment ${payment.id}`, lines, await resolveYearId(tenant, date)),
+    entryForSource('payment', payment.id, date, `Payment ${payment.id}`, lines, resolveYearId(years, date)),
+    years,
   );
 }
 
@@ -119,6 +127,7 @@ export async function tryPostOpeningJournal(
   return persistGeneratedEntry(
     tenant,
     entryForSource('opening', fiscalYearId, year.startDate, `Opening balances ${year.label}`, lines, fiscalYearId),
+    years,
   );
 }
 
@@ -129,9 +138,11 @@ export async function tryPostInvoiceReversalJournal(tenant: string, invoice: Inv
   if (!original?.lines?.length) return;
   const date = postingDate(undefined);
   const lines = buildReversalLines(original.lines);
+  const years = await listFiscalYearsByWorkspace(tenant);
   await persistGeneratedEntry(
     tenant,
-    entryForSource('reversal', invoice.id, date, `Cancel ${invoice.invoiceNumber ?? invoice.id}`, lines, await resolveYearId(tenant, date)),
+    entryForSource('reversal', invoice.id, date, `Cancel ${invoice.invoiceNumber ?? invoice.id}`, lines, resolveYearId(years, date)),
+    years,
   );
 }
 
@@ -143,9 +154,7 @@ export async function tryPostLateFeeJournals(
   const accounts = await getPostingRules(tenant);
   const years = await listFiscalYearsByWorkspace(tenant);
   const date = postingDate(undefined);
-  const yearId = years.find((year) => year.startDate <= date && date <= year.endDate)?.id
-    ?? resolveFiscalYearRef(years, years.find((year) => year.status === 'active')?.id)?.id;
-  const entries: JournalEntry[] = [];
+  const yearId = resolveYearId(years, date);
   for (const fee of fees) {
     const lines = buildLateFeePostingLines({
       invoiceId: fee.invoice.id,
@@ -154,14 +163,12 @@ export async function tryPostLateFeeJournals(
       accounts,
     });
     if (!lines) continue;
-    entries.push(
-      prepareJournalEntryForPersist(
-        entryForSource('invoice', `latefee:${fee.invoice.id}`, date, `Late fee ${fee.invoice.invoiceNumber ?? fee.invoice.id}`, lines, yearId),
-        years,
-      ),
+    await persistGeneratedEntry(
+      tenant,
+      entryForSource('invoice', `latefee:${fee.invoice.id}`, date, `Late fee ${fee.invoice.invoiceNumber ?? fee.invoice.id}`, lines, yearId),
+      years,
     );
   }
-  if (entries.length > 0) await bulkSaveEntries(tenant, entries);
 }
 
 export async function tryPostCreditNoteJournal(
@@ -179,8 +186,10 @@ export async function tryPostCreditNoteJournal(
     accounts,
   });
   if (!lines) return;
+  const years = await listFiscalYearsByWorkspace(tenant);
   await persistGeneratedEntry(
     tenant,
-    entryForSource('reversal', creditNoteId, date, `Credit note ${invoice.invoiceNumber ?? invoice.id}`, lines, await resolveYearId(tenant, date)),
+    entryForSource('reversal', creditNoteId, date, `Credit note ${invoice.invoiceNumber ?? invoice.id}`, lines, resolveYearId(years, date)),
+    years,
   );
 }

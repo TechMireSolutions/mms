@@ -87,6 +87,25 @@ describe('accountingLedgerPosting', () => {
     expect(lines?.find((line) => line.account_id === 'a3100')?.credit).toBe(150);
   });
 
+  it('closes contra (negative-net) revenue and expense balances on the opposite side', () => {
+    const lines = buildClosingEntryLines('a3100', [
+      { accountId: 'a4000', type: 'Revenue', net: 200 },
+      { accountId: 'a4100', type: 'Revenue', net: -30 },
+      { accountId: 'a5000', type: 'Expense', net: 50 },
+      { accountId: 'a5100', type: 'Expense', net: -20 },
+    ]);
+    expect(isJournalEntryBalanced(lines ?? [])).toBe(true);
+    // a4100 contra-revenue (net -30 → debit balance) is credited 30; a5100
+    // contra-expense (net -20 → credit balance) is debited 20.
+    expect(lines?.find((line) => line.account_id === 'a4100')?.credit).toBe(30);
+    expect(lines?.find((line) => line.account_id === 'a5100')?.debit).toBe(20);
+  });
+
+  it('returns null when there is no P&L activity to close', () => {
+    expect(buildClosingEntryLines('a3100', [])).toBeNull();
+    expect(buildClosingEntryLines('a3100', [{ accountId: 'a4000', type: 'Revenue', net: 0 }])).toBeNull();
+  });
+
   it('rejects unbalanced opening balances', () => {
     expect(buildOpeningEntryLines([{ accountId: 'a1000', debit: 10, credit: 0 }])).toBeNull();
     const balanced = buildOpeningEntryLines([

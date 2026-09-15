@@ -1,6 +1,6 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
-import { JOURNAL_SOURCE_TYPES } from './accountingLedgerInvariants.js';
+import { JOURNAL_SOURCE_TYPES, moneyAmountSchema } from './accountingLedgerInvariants.js';
 import { isoDateSchema } from './isoDateSchema.js';
 
 export const accountRecordSchema = z
@@ -46,8 +46,8 @@ export const journalLineRecordSchema = z
   .object({
     id: z.string(),
     account_id: z.string(),
-    debit: z.number().default(0),
-    credit: z.number().default(0),
+    debit: moneyAmountSchema.default(0),
+    credit: moneyAmountSchema.default(0),
     description: z.string().default(''),
   })
   .strict();
@@ -167,13 +167,13 @@ export const ACCOUNTING_MODULE_MANIFEST = {
     retentionDays: null,
   },
   permissions: {
-    read: 'finance.write',
-    write: 'finance.write',
-    delete: 'finance.write',
+    read: 'accounting.read',
+    write: 'accounting.write',
+    delete: 'accounting.delete',
     setupView: 'configuration.view',
     setupWrite: 'settings.global.write',
-    export: 'finance.write',
-    reports: 'finance.write',
+    export: 'accounting.read',
+    reports: 'accounting.read',
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['overview', 'journal', 'ledger', 'trial', 'coa'] as const,

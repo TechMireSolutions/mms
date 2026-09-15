@@ -1,5 +1,6 @@
 import { z } from 'zod';
 import { isoDateSchema } from './isoDateSchema.js';
+import { moneyAmountSchema, signedMoneyAmountSchema } from './accountingLedgerInvariants.js';
 
 export const postingRulesRecordSchema = z
   .object({
@@ -23,8 +24,8 @@ export const openingBalanceRecordSchema = z
     id: z.string(),
     fiscalYearId: z.string().min(1),
     accountId: z.string().min(1),
-    debit: z.number().nonnegative().default(0),
-    credit: z.number().nonnegative().default(0),
+    debit: moneyAmountSchema.default(0),
+    credit: moneyAmountSchema.default(0),
   })
   .strict();
 
@@ -47,7 +48,7 @@ export const bankStatementLineRecordSchema = z
     id: z.string(),
     date: isoDateSchema,
     description: z.string().default(''),
-    amount: z.number(),
+    amount: signedMoneyAmountSchema,
   })
   .strict();
 

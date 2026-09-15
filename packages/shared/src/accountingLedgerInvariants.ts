@@ -1,4 +1,8 @@
-/** How a journal entry was created — used for idempotent finance posting. */
+import { z } from 'zod';
+
+/**
+ * How a journal entry was created — used for idempotent finance posting.
+ */
 export const JOURNAL_SOURCE_TYPES = [
   'manual',
   'invoice',
@@ -29,6 +33,25 @@ export interface FiscalYearRef {
 export function moneyToCents(amount: number): number {
   return Math.round(amount * 100);
 }
+
+const hasAtMostTwoDecimals = (value: number): boolean =>
+  Math.abs(value - Math.round(value * 100) / 100) < 1e-9;
+
+/**
+ * Non-negative money with at most two decimal places, so ledger arithmetic can
+ * round-trip through integer cents without silent precision loss.
+ */
+export const moneyAmountSchema = z
+  .number()
+  .finite()
+  .nonnegative()
+  .refine(hasAtMostTwoDecimals, { message: 'accounting.validation.moneyTwoDecimals' });
+
+/** Signed money with at most two decimal places (bank statement lines). */
+export const signedMoneyAmountSchema = z
+  .number()
+  .finite()
+  .refine(hasAtMostTwoDecimals, { message: 'accounting.validation.moneyTwoDecimals' });
 
 /**
  * A journal line is single-sided when at most one of debit/credit is positive

@@ -402,6 +402,31 @@ export async function findEntriesByIds(
   });
 }
 
+/**
+ * Returns the subset of `ids` that currently exist as posted, non-deleted
+ * journal entries. Used to enforce append-only immutability: posted entries
+ * must be reversed, never edited in place.
+ */
+export async function findPostedEntryIds(tenant: string, ids: string[]): Promise<string[]> {
+  const cleanIds = dedupeTrimmedIds(ids);
+  if (cleanIds.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantRead(subdomain, async (tx) => {
+    const rows = await tx
+      .select({ id: accountingEntries.id })
+      .from(accountingEntries)
+      .where(
+        and(
+          eq(accountingEntries.workspaceSubdomain, subdomain),
+          inArray(accountingEntries.id, cleanIds),
+          eq(accountingEntries.status, 'posted'),
+          isNull(accountingEntries.deletedAt),
+        ),
+      );
+    return rows.map((row) => row.id);
+  });
+}
+
 export async function findEntryIdBySource(
   tenant: string,
   sourceType: string,

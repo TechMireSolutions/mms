@@ -149,12 +149,12 @@ describe('ledgerPostingService', () => {
     );
   });
 
-  it('tryPostLateFeeJournals bulk saves late fee entries', async () => {
+  it('tryPostLateFeeJournals posts late fee entries through the idempotent save path', async () => {
     mockLedgerOpsRepo.getPostingRules.mockResolvedValue({
       arAccountId: 'acc-ar',
       incomeAccountId: 'acc-inc',
     });
-    mockAccountingRepo.bulkSaveEntries.mockResolvedValue(undefined);
+    mockAccountingRepo.saveEntry.mockResolvedValue(undefined);
 
     const fees = [
       { invoice: { id: 'inv-1', invoiceNumber: 'INV-1' } as any, amount: 25 },
@@ -162,14 +162,13 @@ describe('ledgerPostingService', () => {
 
     await tryPostLateFeeJournals('tenant-1', fees);
 
-    expect(mockAccountingRepo.bulkSaveEntries).toHaveBeenCalledWith(
+    expect(mockAccountingRepo.findEntryIdBySource).toHaveBeenCalledWith('tenant-1', 'invoice', 'latefee:inv-1');
+    expect(mockAccountingRepo.saveEntry).toHaveBeenCalledWith(
       'tenant-1',
-      expect.arrayContaining([
-        expect.objectContaining({
-          source_type: 'invoice',
-          source_id: 'latefee:inv-1',
-        }),
-      ]),
+      expect.objectContaining({
+        source_type: 'invoice',
+        source_id: 'latefee:inv-1',
+      }),
     );
   });
 

@@ -51,7 +51,7 @@ export function JournalEntryRowActions({
       deleteLabel={t('common.delete')}
       restoreLabel={t('accounting.trash.restore')}
       archived={showDeleted}
-      canWrite={canWrite}
+      canWrite={canWrite && isDraft}
       canDelete={canDelete && (isDraft || showDeleted)}
       onView={() => onView(entry)}
       onEdit={() => onEdit(entry)}
