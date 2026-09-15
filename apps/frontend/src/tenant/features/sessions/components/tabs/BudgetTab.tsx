@@ -106,11 +106,11 @@ export function BudgetTab({ session, onUpdate, canWrite = true, canMutate }: Bud
   return (
     <div className="space-y-5">
       {/* Overview Cards */}
-      <section aria-label="Budget summary" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+      <section aria-label={t("sessions.budget.summaryAria")} className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         {[
-          { label: "Total Budgeted Income", value: totalIncome, icon: TrendingUp, color: "text-success", bg: "bg-success/10" },
-          { label: "Total Budgeted Expenses", value: totalExpenses, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive/10" },
-          { label: "Net Margin / Balance", value: balance, icon: Wallet, color: balance >= 0 ? "text-success" : "text-destructive", bg: balance >= 0 ? "bg-success/10" : "bg-destructive/10" },
+          { label: t("sessions.budget.totalIncome"), value: totalIncome, icon: TrendingUp, color: "text-success", bg: "bg-success/10" },
+          { label: t("sessions.budget.totalExpenses"), value: totalExpenses, icon: TrendingDown, color: "text-destructive", bg: "bg-destructive/10" },
+          { label: t("sessions.budget.netBalance"), value: balance, icon: Wallet, color: balance >= 0 ? "text-success" : "text-destructive", bg: balance >= 0 ? "bg-success/10" : "bg-destructive/10" },
         ].map((stat) => (
           <article key={stat.label} className={`${WORK_SURFACE_INNER} p-4`}>
             <div className={`w-8 h-8 rounded-lg ${stat.bg} flex items-center justify-center mb-2`} aria-hidden="true">
@@ -129,7 +129,7 @@ export function BudgetTab({ session, onUpdate, canWrite = true, canMutate }: Bud
           headingId="income-heading"
           icon={<TrendingUp className="w-4 h-4 text-success" aria-hidden="true" />}
           iconClassName="bg-success/10"
-          title="Class Incomes"
+          title={t("sessions.budget.incomeTitle")}
           actions={
             isWritable && classes.length > 0 && (
               <Button
@@ -143,7 +143,7 @@ export function BudgetTab({ session, onUpdate, canWrite = true, canMutate }: Bud
         />
         <div className="rounded-xl border border-border overflow-hidden">
           {incomes.length === 0 ? (
-            <EmptyState title="No budgeted income logged yet" compact icon={null} />
+            <EmptyState title={t("sessions.budget.emptyIncomeLogged")} compact icon={null} />
           ) : (
             incomes.map((item, index) => (
               <article key={item.id} className={`flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
@@ -178,7 +178,7 @@ export function BudgetTab({ session, onUpdate, canWrite = true, canMutate }: Bud
           headingId="expense-heading"
           icon={<TrendingDown className="w-4 h-4 text-destructive" aria-hidden="true" />}
           iconClassName="bg-destructive/10"
-          title="Class Expenses"
+          title={t("sessions.budget.expenseTitle")}
           actions={
             isWritable && classes.length > 0 && (
               <Button
@@ -192,7 +192,7 @@ export function BudgetTab({ session, onUpdate, canWrite = true, canMutate }: Bud
         />
         <div className="rounded-xl border border-border overflow-hidden">
           {expenses.length === 0 ? (
-            <EmptyState title="No budgeted expenses logged yet" compact icon={null} />
+            <EmptyState title={t("sessions.budget.emptyExpenseLogged")} compact icon={null} />
           ) : (
             expenses.map((item, index) => (
               <article key={item.id} className={`flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:gap-3 ${index > 0 ? "border-t border-border/50" : ""}`}>
@@ -224,10 +224,10 @@ export function BudgetTab({ session, onUpdate, canWrite = true, canMutate }: Bud
       <FormModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        title={budgetType === 'income' ? 'Add Budgeted Income' : 'Add Budgeted Expense'}
+        title={budgetType === 'income' ? t("sessions.budget.addIncomeTitle") : t("sessions.budget.addExpenseTitle")}
         icon={Wallet}
-        cancelLabel="Cancel"
-        saveLabel="Save"
+        cancelLabel={t("common.cancel")}
+        saveLabel={t("common.save")}
         onSave={handleSaveItem}
         saving={saving}
       >
@@ -250,12 +250,12 @@ export function BudgetTab({ session, onUpdate, canWrite = true, canMutate }: Bud
               id="budget-detail"
               value={detail}
               onChange={(e) => setDetail(e.target.value)}
-              placeholder="e.g. Books sale, Classroom renovation, Stationary"
+              placeholder={t("sessions.budget.detailPlaceholder")}
             />
           </div>
 
           <div>
-            <label className={FORM_LABEL} htmlFor="budget-amount">Amount{currencyLabel ? ` (${currencyLabel})` : ''}</label>
+            <label className={FORM_LABEL} htmlFor="budget-amount">{currencyLabel ? t("sessions.budget.form.amount", { currency: currencyLabel }) : t("sessions.budget.form.amountPlain")}</label>
             <Input
               id="budget-amount"
               type="number"
@@ -270,9 +270,9 @@ export function BudgetTab({ session, onUpdate, canWrite = true, canMutate }: Bud
       <ConfirmAlertDialog
         open={deleteTarget !== null}
         onOpenChange={(open) => { if (!open) setDeleteTarget(null); }}
-        title="Confirm Delete"
-        description={`Are you sure you want to delete "${deleteTarget?.detail}"?`}
-        confirmLabel="Delete"
+        title={t("sessions.budget.confirmDeleteTitle")}
+        description={t("sessions.budget.confirmDeleteDescription", { name: deleteTarget?.detail ?? "" })}
+        confirmLabel={t("common.delete")}
         destructive
         onConfirm={() => { void handleDeleteItem(); }}
       />

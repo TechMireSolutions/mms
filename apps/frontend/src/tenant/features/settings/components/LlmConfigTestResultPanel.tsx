@@ -27,7 +27,7 @@ export function LlmConfigTestResultPanel({
           'rounded-xl border p-4 text-sm',
           testResult.success
             ? 'border-success/20 bg-success/5 text-success'
-            : 'border-destructive/20 bg-destructive/5 text-destructive-foreground',
+            : 'border-destructive/20 bg-destructive/5 text-destructive',
         )}
       >
         <div className="flex items-start gap-3">

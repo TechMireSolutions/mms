@@ -92,7 +92,7 @@ export default function BrandColorPanel({
           onChange={onSecondaryChange}
         />
 
-        <div className="hidden lg:flex absolute start-1/2 top-10 -translate-x-1/2 rtl:translate-x-1/2 z-10">
+        <div className="hidden lg:flex absolute start-1/2 top-10 -translate-x-1/2 rtl:translate-x-1/2 z-elevated">
           <Button
             type="button"
             variant="outline"

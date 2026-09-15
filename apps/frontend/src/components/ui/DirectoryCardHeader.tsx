@@ -3,6 +3,7 @@ import type { ReactNode } from "react";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import { BiDiText } from "@/components/ui/BiDiText";
 import { cn } from "@/lib/utils";
 
 export interface DirectoryCardHeaderProps {
@@ -51,12 +52,13 @@ export const DirectoryCardHeader = (function DirectoryCardHeader({
         )}
       />
       <div className="min-w-0 flex-1">
-        <h4
+        <BiDiText
+          as="h4"
           className="text-sm font-black text-foreground tracking-tight truncate group-hover:text-primary transition-colors"
-          title={displayName}
+          titleFromContent
         >
           {displayName}
-        </h4>
+        </BiDiText>
         {subtitle}
       </div>
     </>

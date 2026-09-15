@@ -75,6 +75,7 @@ export function renderStudentsListDesktopTableCell({
                 type="button"
                 variant="ghost"
                 onClick={() => onViewStudent(studentRow)}
+                dir="auto"
                 className="h-auto p-0 text-sm font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
                 title={studentName}
               >

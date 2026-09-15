@@ -58,6 +58,7 @@ export * from './appTranslations.js';
 export * from './backupCrypto.js';
 export * from './backupTypes.js';
 export * from './brandingChartPalette.js';
+export * from './brandingColorContrast.js';
 export * from './brandingColorUtils.js';
 export * from './brandingCornerStyle.js';
 export * from './brandingCssVariables.js';

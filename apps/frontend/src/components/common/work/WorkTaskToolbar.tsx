@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface WorkTaskStatusOption {
   id: string;
@@ -107,6 +108,7 @@ export function WorkTaskToolbar({
   primaryAction,
   children,
 }: WorkTaskToolbarProps): JSX.Element {
+  const { t } = useTranslation();
   const hasMiddleContent = Boolean(statusFilter || dateRange || children);
 
   return (
@@ -137,7 +139,7 @@ export function WorkTaskToolbar({
           {statusFilter && statusFilter.options.length > 0 && (
             <div
               role="group"
-              aria-label="Status filters"
+              aria-label={t("common.statusFilters")}
               className="flex flex-wrap items-center gap-1.5"
             >
               {statusFilter.allLabel && statusFilter.onResetAll && (
@@ -199,7 +201,7 @@ export function WorkTaskToolbar({
                 }
                 placeholder={dateRange.startPlaceholder}
                 className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                aria-label={dateRange.startPlaceholder ?? "Start date"}
+                aria-label={dateRange.startPlaceholder ?? t("common.startDate")}
               />
               <span className="text-muted-foreground">–</span>
               <input
@@ -213,7 +215,7 @@ export function WorkTaskToolbar({
                 }
                 placeholder={dateRange.endPlaceholder}
                 className="h-8 rounded-md border border-input bg-background px-2 py-1 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                aria-label={dateRange.endPlaceholder ?? "End date"}
+                aria-label={dateRange.endPlaceholder ?? t("common.endDate")}
               />
             </div>
           )}

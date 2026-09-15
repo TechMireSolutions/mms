@@ -114,7 +114,7 @@ export function ObligationCollectionFormFields({
         accentColor="primary"
         icon={Users}
         title={t('obligations.form.section.sender')}
-        className="p-0 text-start z-20"
+        className="p-0 text-start z-sticky"
       >
         <fieldset className="space-y-4 border-0 m-0 p-0 text-start">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -143,13 +143,13 @@ export function ObligationCollectionFormFields({
         accentColor="primary"
         icon={Coins}
         title={t('obligations.form.section.financial')}
-        className="p-0 text-start z-10"
+        className="p-0 text-start z-elevated"
       >
         <fieldset className="space-y-4 border-0 m-0 p-0 text-start">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {formField('amount', t('obligations.form.amount'), true,
               <div className="relative flex items-center group/input w-full">
-                <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none z-10" />
+                <DollarSign className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none z-elevated" />
                 <Input
                   id="obligation-amount"
                   name="amount"

@@ -51,13 +51,59 @@ on a tinted surface:
 At 14px semibold the text is **not** "large text" under WCAG (that needs ≥18.66px
 bold or ≥24px), so it must reach **4.5:1**, not 3:1.
 
-**Why it is not fixed here:** `text-primary` is a global token used across the
-app. The fix is a palette decision — darken `--primary`, or use a dedicated
-higher-contrast token for small text on tinted surfaces — and that changes the
-product's appearance everywhere. It needs a design owner, not a drive-by edit.
+**Status: root cause fixed (see below); entry pending one axe confirmation run.**
 
-**Suggested direction:** keep `--primary` for accents/backgrounds and introduce a
-`--primary-strong` (or reuse `--foreground`) for small text and badges.
+### Resolution
+
+This was never three sites — it was one token-level defect with a very wide blast
+radius. The light palette's semantic tokens were mid-tones picked for hue, and each
+served three roles at once:
+
+1. a solid fill — `bg-primary` with `text-primary-foreground` on it;
+2. text/icons — `text-primary` on `--card` / `--background`;
+3. text/icons on the token's own tint — `bg-primary/10 text-primary`, the standard
+   chip pattern (188 usages at `/10`, plus `/15` and `/20` variants).
+
+Measured against the pre-fix palette with the repo's own `getContrastRatio()`:
+
+| Pair | Before | Now |
+|---|---|---|
+| `--primary-foreground` on `--primary` (every default Button label) | 2.61:1 | 5.91:1 |
+| `--primary` as text on `--card` | 2.61:1 | 5.91:1 |
+| `--destructive` as text on `--card` | 3.76:1 | 6.52:1 |
+| `--success` as text on `--card` | 3.52:1 | 5.94:1 |
+| `--warning` as text on `--card` | 3.16:1 | 5.96:1 |
+| `--primary` on its own `/15` tint | 3.5:1 | 4.78:1 |
+| `--ring` vs `--card` (WCAG 1.4.11, needs 3:1) | 2.61:1 | 5.91:1 |
+| dark `--destructive` as text on `--card` | **1.66:1** | 5.29:1 |
+| `--muted-foreground` on `--muted` | 3.95:1 | 4.61:1 |
+
+Two structural fixes, not a spot patch:
+
+- **Light theme** tokens are solved so all three roles clear 4.5:1 simultaneously.
+  Roles (1) and (2) reduce to the same luminance constraint; role (3) is the
+  binding one, because a tint of the token lightens the surface it is read
+  against. The values therefore sit near Tailwind's **700** step, not 500/600 —
+  `amber-600` (3.19:1), `emerald-600` (3.77:1) and `orange-600` (3.56:1) all fail
+  AA with white text, let alone on a tint.
+- **Dark theme** already used the correct "light solid + dark foreground" shape for
+  `--primary`; `--destructive`, `--success`, `--warning` and `--info` were migrated
+  to match, which is what fixed the 1.66:1 `text-destructive`.
+
+A few resting chips used a tint stronger than one hue can satisfy (`/20`, `/30`),
+and those were normalised to `/10`–`/15`. `dark:bg-<role>/20` chips became `/10`.
+
+**Enforcement:** `apps/frontend/src/__tests__/designTokens.contrast.test.ts` parses
+`src/index.css` and asserts every role against every surface, its own tint, and its
+fill in both themes, using the shared `getContrastRatio()`. It fails if anyone
+lightens a token without re-checking.
+
+**Remaining step:** the axe gate is a rendered-browser check and has not been re-run
+since the palette change, so the `color-contrast` entry stays for now. Delete it
+when a CI run reports zero `color-contrast` nodes. A colour-contrast rule can also
+fire on surfaces the tokens do not cover — disabled text at reduced opacity, or text
+over a tenant gradient — and if it still fires, the `html:` line in the failure
+output names the offending node.
 
 ## Finding 2 — `aria-hidden-focus` (serious, intermittent)
 

@@ -84,11 +84,12 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
   return (
     <AnimatePresence>
       <div
+        data-overlay-backdrop
         className={cn("fixed inset-0 z-modal flex items-start justify-center pt-16 px-4", OVERLAY_BACKDROP)}
         onClick={onClose}
         role="dialog"
         aria-modal="true"
-        aria-label="Command Palette"
+        aria-label={t("common.commandPalette")}
       >
         <motion.div
           initial={reducedMotion ? false : { opacity: 0, scale: 0.96, y: -8 }}

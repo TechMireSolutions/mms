@@ -37,12 +37,50 @@ const permanentPassword = 'Madrasa@5678';
 const platformEmail = `platform-a11y-${Date.now()}@test.com`;
 const platformPassword = 'Pa$$w0rd123';
 
-/** Shell + one Work surface + a Setup surface, each with a readiness selector. */
+/**
+ * Shell + Work surfaces + a Setup surface, each with a readiness selector.
+ *
+ * The original set was shell-only, on the theory that most a11y breakage comes
+ * from shared primitives. That holds for primitives, but module *composition* of
+ * them (dense tables, drawers, wizards) is where the remaining risk sits, so a
+ * few module surfaces are included. Kept deliberately small: runtime is paid on
+ * every CI run.
+ */
 const AUDIT_ROUTES = [
   { path: '/', ready: '#main-content', label: 'dashboard (shell)' },
   { path: '/contacts', ready: '#main-content', label: 'contacts (Work)' },
+  { path: '/students', ready: '#main-content', label: 'students (Work, dense table)' },
+  { path: '/finance', ready: '#main-content', label: 'finance (Work, money)' },
   { path: '/settings', ready: '#main-content', label: 'settings (Setup)' },
 ];
+
+/**
+ * Open the first directory row's detail drawer, audit it, then dismiss with
+ * Escape. Best-effort: if the tenant has no seed data there is no row to open,
+ * and a missing drawer must not fail the gate.
+ *
+ * Dismissing via Escape also exercises overlay Escape ownership — a regression
+ * there would surface as the drawer staying open (or closing something else).
+ */
+async function auditDetailDrawer(page: Page, context: string): Promise<void> {
+  const viewButton = page.locator('table tbody tr').first().getByRole('button').first();
+  if ((await viewButton.count()) === 0) return;
+
+  await viewButton.click({ timeout: 10_000 }).catch(() => undefined);
+  const drawer = page.locator('[role="dialog"]').first();
+  const opened = await drawer
+    .waitFor({ state: 'visible', timeout: 10_000 })
+    .then(() => true)
+    .catch(() => false);
+  if (!opened) return;
+
+  await assertNoSeriousA11yViolations(page, { context: `${context} (detail drawer)` });
+
+  await page.keyboard.press('Escape');
+  await drawer
+    .waitFor({ state: 'hidden', timeout: 5_000 })
+    .catch(() => undefined);
+}
 
 /** Viewports the skill names explicitly: 375 (mobile) and 1440 (desktop). */
 const AUDIT_VIEWPORTS = RESPONSIVE_VIEWPORTS.filter(
@@ -91,7 +129,7 @@ test.describe('accessibility smoke @smoke', () => {
 
     await loginTenant(page, tenantOrigin, adminEmail, permanentPassword);
 
-    // --- LTR sweep: shell + one Work surface + one Setup surface ------------
+    // --- LTR sweep: shell + Work surfaces + one Setup surface ---------------
     for (const viewport of AUDIT_VIEWPORTS) {
       await page.setViewportSize({ width: viewport.width, height: viewport.height });
 
@@ -100,6 +138,13 @@ test.describe('accessibility smoke @smoke', () => {
         await assertNoSeriousA11yViolations(page, {
           context: `${route.label} @ ${viewport.width}px (ltr)`,
         });
+
+        // The drawer is a different composition of the same primitives (overlay,
+        // focus trap, tabs), so it is audited as its own surface. Desktop only:
+        // the row-action affordance differs at 375px.
+        if (viewport.width === 1440 && route.path !== '/' && route.path !== '/settings') {
+          await auditDetailDrawer(page, `${route.label} @ ${viewport.width}px (ltr)`);
+        }
       }
     }
 
@@ -112,5 +157,11 @@ test.describe('accessibility smoke @smoke', () => {
     await forceRtl(page, 'ar');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await assertNoSeriousA11yViolations(page, { context: 'dashboard @ 1440px (rtl)' });
+
+    // RTL detail drawer — the direction flip is most likely to break overlays
+    // (logical inset, sheet edge, close-button placement).
+    await gotoAndSettle(page, tenantOrigin, '/students', '#main-content');
+    await forceRtl(page, 'ar');
+    await auditDetailDrawer(page, 'students @ 1440px (rtl)');
   });
 });

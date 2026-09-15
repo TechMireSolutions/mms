@@ -24,7 +24,7 @@ function Calendar({
         month: "space-y-3 transition-opacity duration-150 animate-in fade-in-50",
         month_caption: "flex justify-center pt-1 relative items-center min-h-9",
         caption_label: "text-xs font-semibold text-foreground tracking-wide",
-        nav: "flex items-center justify-between absolute inset-x-0 top-1 pointer-events-none z-10 px-0.5",
+        nav: "flex items-center justify-between absolute inset-x-0 top-1 pointer-events-none z-elevated px-0.5",
         button_previous: cn(
           buttonVariants({ variant: "ghost", size: "icon" }),
           "relative h-8 w-8 min-h-8 min-w-8 p-0 text-muted-foreground/70 hover:text-foreground hover:bg-muted/80 rounded-lg transition-colors pointer-events-auto cursor-pointer after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
@@ -38,7 +38,7 @@ function Calendar({
         weekday: "text-muted-foreground/70 font-semibold text-3xs uppercase tracking-wider w-8 text-center select-none",
         week: "flex w-full mt-1 justify-around",
         day: cn(
-          "relative p-0 text-center text-sm focus-within:relative focus-within:z-20",
+          "relative p-0 text-center text-sm focus-within:relative focus-within:z-sticky",
           props.mode === "range"
             ? "[&:has(>.day-range-end)]:rounded-e-lg [&:has(>.day-range-start)]:rounded-s-lg first:[&:has([aria-selected])]:rounded-s-lg last:[&:has([aria-selected])]:rounded-e-lg [&:has([aria-selected])]:bg-primary/10"
             : "[&:has([aria-selected])]:rounded-lg"
@@ -58,7 +58,7 @@ function Calendar({
         range_middle:
           "aria-selected:bg-accent aria-selected:text-accent-foreground",
         hidden: "invisible",
-        dropdowns: "flex justify-center gap-1.5 items-center z-10",
+        dropdowns: "flex justify-center gap-1.5 items-center z-elevated",
         ...classNames,
       }}
       {...props}

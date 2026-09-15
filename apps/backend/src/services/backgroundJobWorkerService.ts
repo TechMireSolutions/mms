@@ -7,7 +7,7 @@ export class QueueUnavailableError extends Error {
   }
 }
 import type { BackgroundJobRecord } from '@mms/shared';
-import { runWithTenant, getRequestTenant } from '../lib/tenantContext.js';
+import { runWithTenant } from '../lib/tenantContext.js';
 import { withTenant } from '../db/tenant-context.js';
 import { backgroundJobs } from '../db/schema.js';
 import {
@@ -243,66 +243,8 @@ export async function enqueueBackgroundJob(
   return job;
 }
 
-export async function getUserBackgroundJob(
-  userId: string,
-  jobId: string,
-  explicitTenantId?: string,
-): Promise<BackgroundJobRecord | null> {
-  const tenantId = explicitTenantId ?? getRequestTenant();
-  if (!tenantId) return null;
+export {
+  getUserBackgroundJob,
+  getUserBackgroundJobPayload,
+} from './backgroundJobService.js';
 
-  return withTenant(tenantId, async (tx) => {
-    const rows = await tx
-      .select({
-        id: backgroundJobs.id,
-        tenantId: backgroundJobs.tenantId,
-        userId: backgroundJobs.userId,
-        moduleId: backgroundJobs.moduleId,
-        kind: backgroundJobs.kind,
-        status: backgroundJobs.status,
-        label: backgroundJobs.label,
-        payload: backgroundJobs.payload,
-        progressCurrent: backgroundJobs.progressCurrent,
-        progressTotal: backgroundJobs.progressTotal,
-        artifactId: backgroundJobs.artifactId,
-        hasDownload: backgroundJobs.hasDownload,
-        error: backgroundJobs.error,
-        completedAt: backgroundJobs.completedAt,
-        createdAt: backgroundJobs.createdAt,
-        updatedAt: backgroundJobs.updatedAt,
-      })
-      .from(backgroundJobs)
-      .where(and(
-        eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
-        eq(backgroundJobs.id, jobId)
-      ))
-      .limit(1);
-
-    const row = rows[0];
-    return row ? rowToJobRecord(row) : null;
-  });
-}
-
-/** Returns the stored enqueue payload for an existing user job (idempotency body binding). */
-export async function getUserBackgroundJobPayload(
-  userId: string,
-  jobId: string,
-  explicitTenantId?: string,
-): Promise<Record<string, unknown> | null> {
-  const tenantId = explicitTenantId ?? getRequestTenant();
-  if (!tenantId) return null;
-
-  return withTenant(tenantId, async (tx) => {
-    const rows = await tx.select({ payload: backgroundJobs.payload })
-      .from(backgroundJobs)
-      .where(and(
-        eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
-        eq(backgroundJobs.id, jobId),
-      ))
-      .limit(1);
-
-    return rows[0]?.payload ?? null;
-  });
-}

@@ -24,6 +24,12 @@ export interface ModalProps {
   footer?: React.ReactNode;
   /** Raise above other modals (nested dialogs). */
   priority?: boolean;
+  /**
+   * Whether the user may dismiss via Escape, the backdrop, or the close button.
+   * Defaults to true. Set false for overlays that must be resolved explicitly
+   * (the session-timeout warning) — focus trapping and scroll lock still apply.
+   */
+  dismissible?: boolean;
   children: React.ReactNode;
 }
 
@@ -54,22 +60,27 @@ export function Modal({
   panelClassName,
   footer,
   priority = false,
+  dismissible = true,
   children,
 }: ModalProps): React.ReactElement {
   const { t } = useTranslation();
-  const containerRef = useOverlayBehavior<HTMLDivElement>({ open, onClose });
+  const containerRef = useOverlayBehavior<HTMLDivElement>({ open, onClose, dismissible });
   const titleId = React.useId();
 
   return createPortal(
     <AnimatePresence>
       {open && (
-        <div className={cn("fixed inset-0 flex items-center justify-center p-3 sm:p-4", priority ? "z-modal-priority" : "z-modal")}>
+        <div
+          data-print-unclamp
+          className={cn("fixed inset-0 flex items-center justify-center p-3 sm:p-4", priority ? "z-modal-priority" : "z-modal")}
+        >
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            data-overlay-backdrop
             className={cn("absolute inset-0", OVERLAY_BACKDROP)}
-            onClick={onClose}
+            onClick={dismissible ? onClose : undefined}
           />
           <motion.div
             ref={containerRef}
@@ -80,8 +91,9 @@ export function Modal({
             role="dialog"
             aria-modal="true"
             aria-labelledby={titleId}
+            data-print-unclamp
             className={cn(
-              "relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full z-10 max-h-modal flex flex-col backdrop-blur-xl min-w-0",
+              "relative bg-card/90 rounded-2xl border border-border/80 shadow-2xl w-full z-elevated max-h-modal flex flex-col backdrop-blur-xl min-w-0",
               SIZE[size],
               panelClassName
             )}
@@ -102,29 +114,31 @@ export function Modal({
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
                   {headerActions}
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={onClose}
-                    aria-label={t("common.close")}
-                    className="min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
+                  {dismissible ? (
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="icon"
+                      onClick={onClose}
+                      aria-label={t("common.close")}
+                      className="min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
+                    >
+                      <X className="w-4 h-4" />
+                    </Button>
+                  ) : null}
                 </div>
               </div>
               {headerExtra ? <div className="mt-3">{headerExtra}</div> : null}
             </div>
 
             {/* Body */}
-            <div className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 min-h-0">
+            <div data-print-unclamp className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 min-h-0">
               {children}
             </div>
 
             {/* Footer */}
             {footer && (
-              <div className="px-5 py-4 border-t border-border flex justify-end gap-2.5 flex-shrink-0 bg-muted/20">
+              <div data-print-hide className="px-5 py-4 border-t border-border flex justify-end gap-2.5 flex-shrink-0 bg-muted/20">
                 {footer}
               </div>
             )}

@@ -123,6 +123,7 @@ export const DetailDrawerShell = (function DetailDrawerShell({
             exit={{ opacity: 0 }}
             transition={{ duration: reducedMotion ? 0 : 0.2 }}
             className={cn("absolute inset-0", OVERLAY_BACKDROP)}
+            data-overlay-backdrop
             onClick={onClose}
           />
 
@@ -139,7 +140,7 @@ export const DetailDrawerShell = (function DetailDrawerShell({
             aria-label={ariaLabel}
             {...dragProps}
             className={cn(
-              "relative z-10 flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-drawer backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-drawer sm:max-h-full rounded-t-3xl sm:rounded-none",
+              "relative z-elevated flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-drawer backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-drawer sm:max-h-full rounded-t-3xl sm:rounded-none",
               SIZE_MAP[size],
               className
             )}
@@ -156,7 +157,7 @@ export const DetailDrawerShell = (function DetailDrawerShell({
             </div>
 
             {/* Sticky Header */}
-            <div className="sticky top-0 z-10 px-5 pt-2 sm:pt-4 pb-3 border-b border-border/30 flex-shrink-0 space-y-3">
+            <div className="sticky top-0 z-elevated px-5 pt-2 sm:pt-4 pb-3 border-b border-border/30 flex-shrink-0 space-y-3">
               <div 
                 className="flex items-center justify-between gap-4 touch-none sm:touch-auto select-none"
                 onPointerDown={(e) => {

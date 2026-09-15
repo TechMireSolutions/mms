@@ -221,13 +221,13 @@ export const InvoiceReceiptModal = (function InvoiceReceiptModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-modal flex flex-col bg-background/95 backdrop-blur-sm overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={t("finance.receipt.title")}
     >
       {/* Toolbar */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/90 backdrop-blur px-4 py-3 print:hidden">
+      <div className="sticky top-0 z-elevated flex items-center justify-between border-b border-border bg-background/90 backdrop-blur px-4 py-3 print:hidden">
         <div className="flex items-center gap-2">
           <ReceiptText className="w-4 h-4 text-primary" aria-hidden />
           <span className="text-sm font-semibold text-foreground">

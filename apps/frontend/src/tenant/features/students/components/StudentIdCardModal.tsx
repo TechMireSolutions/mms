@@ -71,6 +71,7 @@ export function StudentIdCardModal({
         {/* Printable Cards Container */}
         <div
           ref={printAreaRef}
+          data-print-unclamp
           className="id-card-print-container grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-dialog-scroll overflow-y-auto p-2"
         >
           {items.map(({ student, sessionNames, guardianName, emergencyPhone, bloodGroup }) => (

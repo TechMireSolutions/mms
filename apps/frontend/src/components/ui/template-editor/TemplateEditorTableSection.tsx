@@ -108,7 +108,7 @@ export function TemplateEditorTableSection<TFieldKey extends string = string>({
                   min={20}
                   max={400}
                   value={col.width ?? 80}
-                  aria-label="Column width"
+                  aria-label={t("common.columnWidth")}
                   onChange={(e) => {
                     const w = Number(e.target.value);
                     if (!Number.isNaN(w)) {

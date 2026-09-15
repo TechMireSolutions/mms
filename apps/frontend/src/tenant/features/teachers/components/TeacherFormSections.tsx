@@ -63,7 +63,7 @@ export function TeacherContactSection({
   const hasProfilePills = Boolean(teacherDraft.contactId) && (Boolean(primaryPhone) || Boolean(primaryEmail));
 
   return (
-    <SectionCard title={contactLabel} icon={User} accentColor="primary" className="z-20">
+    <SectionCard title={contactLabel} icon={User} accentColor="primary" className="z-sticky">
       <div className="space-y-3">
         <ContactPicker
           label={contactLabel}
@@ -123,7 +123,7 @@ export function TeacherBasicSection({
   const qualificationLabel = resolveTeacherFieldLabel(fields, "basic", "qualification", t);
 
   return (
-    <SectionCard title={t("teachers.form.sectionDetails")} icon={School} accentColor="primary" className="z-10">
+    <SectionCard title={t("teachers.form.sectionDetails")} icon={School} accentColor="primary" className="z-elevated">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
             {showSpecialization ? (
               <Field label={specializationLabel} id="specialization" required={isFieldRequired("specialization")}>

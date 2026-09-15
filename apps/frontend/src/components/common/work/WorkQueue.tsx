@@ -135,7 +135,7 @@ export function WorkQueue<TData extends { id: string | number }>({
         <div
           className={cn(
             "flex flex-wrap items-center justify-between gap-3 border-b border-border/60 pb-3 px-1",
-            stickyHeader && "sticky top-0 z-10 bg-background/95 backdrop-blur-xs",
+            stickyHeader && "sticky top-0 z-elevated bg-background/95 backdrop-blur-xs",
           )}
         >
           <div className="flex items-center gap-3">

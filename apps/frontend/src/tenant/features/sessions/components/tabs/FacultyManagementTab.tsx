@@ -288,7 +288,7 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
                 id="faculty-custom-role"
                 value={customRole}
                 onChange={(e) => setCustomRole(e.target.value)}
-                placeholder="e.g. Vice Principal, Spiritual Advisor"
+                placeholder={t("sessions.faculty.rolePlaceholder")}
               />
             </div>
           )}

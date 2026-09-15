@@ -4,6 +4,7 @@ import { ModuleScaffoldSkeleton } from "@/components/common/ModuleScaffold";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppFooter } from "@/components/ui/AppFooter";
+import { SkipToContentLink } from "@/components/ui/SkipToContentLink";
 import Sidebar from "@/tenant/components/layout/Sidebar";
 import TopBar from "@/tenant/components/layout/TopBar";
 import TopBarActions from "@/tenant/components/layout/TopBarActions";
@@ -43,6 +44,8 @@ export default function AppLayout(): React.JSX.Element {
 
   return (
     <div className="box-border min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern">
+      <SkipToContentLink />
+
       {/* Desktop Sidebar */}
       <div className="hidden lg:block">
         <Sidebar

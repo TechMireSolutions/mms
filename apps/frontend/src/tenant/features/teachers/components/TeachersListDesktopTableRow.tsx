@@ -82,7 +82,7 @@ export const TeachersListDesktopTableRow = React.memo(function TeachersListDeskt
           className={cn(
             "px-4 py-3",
             col.key === "name" &&
-              "sticky start-12 z-10 transition-colors border-e border-border/30",
+              "sticky start-12 z-elevated transition-colors border-e border-border/30",
             col.key === "name" && workTableStickyCellBg(isSelected),
             col.key !== "name" && teacherWorkColumnCellClass(col.key),
           )}

@@ -36,7 +36,7 @@ export const ModuleTableSelectionCell = React.memo(function ModuleTableSelection
       onClick={stopPropagation || onClick ? handleClick : undefined}
       className={cn(
         "w-12 min-w-12 px-4 py-3 transition-colors",
-        sticky && "sticky start-0 z-20 border-e border-border/30",
+        sticky && "sticky start-0 z-sticky border-e border-border/30",
         sticky ? workTableStickyCellBg(checked) : undefined,
         className,
       )}

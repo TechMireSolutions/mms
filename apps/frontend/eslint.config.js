@@ -106,7 +106,8 @@ export default tseslint.config(
         },
         {
           selector: "Literal[value=/\\btext-\\[1[01]px\\]/]",
-          message: "Use text-2xs (10px) or text-3xs (11px) micro-typography tokens.",
+          message:
+            "Use the micro-typography scale: text-4xs (10px), text-3xs (11px) or text-2xs (12px).",
         },
         {
           selector: "Literal[value=/\\bmin-h-\\[44px\\]/]",

@@ -34,7 +34,7 @@ export default function PlatformLoginPage(): React.JSX.Element {
   if (isError) {
     return (
       <AuthPageFrame dir="ltr">
-        <div className="relative z-10 w-full max-w-md">
+        <div className="relative z-elevated w-full max-w-md">
           <ErrorState
             title={t('platform.loadFailed')}
             description={t('platform.loadFailedHint')}

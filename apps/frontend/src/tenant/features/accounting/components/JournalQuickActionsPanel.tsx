@@ -66,7 +66,7 @@ export function JournalQuickActionsPanel({
                 className="w-full px-4 py-3"
               />
               {nlSuggestion && (
-                <div className="absolute top-full start-0 mt-1 max-w-full px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold shadow-lg z-10 flex items-center gap-1.5" role="status">
+                <div className="absolute top-full start-0 mt-1 max-w-full px-3 py-2 rounded-lg bg-primary text-primary-foreground text-xs font-semibold shadow-lg z-elevated flex items-center gap-1.5" role="status">
                   <CheckCircle2 className="w-3 h-3 shrink-0" aria-hidden="true" /> {t("accounting.journal.dashboard.autoDetected", { label: t(nlSuggestion.labelKey) })}
                 </div>
               )}

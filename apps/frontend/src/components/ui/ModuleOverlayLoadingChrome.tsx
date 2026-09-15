@@ -7,6 +7,7 @@ export function ModuleOverlayLoadingFallback(): React.JSX.Element {
   const { t } = useTranslation();
   return (
     <div
+      data-overlay-backdrop
       className="fixed inset-0 z-modal flex items-center justify-center bg-black/20"
       role="status"
       aria-live="polite"
@@ -21,7 +22,7 @@ export function ModuleOverlayLoadingFallback(): React.JSX.Element {
 export function ModuleDrawerLoadingSkeleton(): React.JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="fixed inset-0 z-modal flex items-center justify-end bg-black/20">
+    <div data-overlay-backdrop className="fixed inset-0 z-modal flex items-center justify-end bg-black/20">
       <div
         className="flex h-full w-full max-w-full flex-col gap-3 border-s border-border bg-card p-5 sm:max-w-sm"
         role="status"

@@ -73,7 +73,7 @@ export function DashboardWidgetsGrid({
               </ErrorBoundary>
 
               <div
-                className={`absolute top-2.5 end-2.5 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 z-10 transition-all ${
+                className={`absolute top-2.5 end-2.5 flex items-center gap-1 opacity-100 md:opacity-0 md:group-hover:opacity-100 md:focus-within:opacity-100 z-elevated transition-all ${
                   gridMode === 'compact' ? 'top-0.5 end-0.5' : ''
                 }`}
               >

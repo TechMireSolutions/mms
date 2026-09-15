@@ -273,14 +273,14 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
               aria-hidden="true"
               onMouseDown={(e) => onMouseDownResize(e, el.id, handle)}
               style={style}
-              className={`absolute w-3 h-3 rounded-xs bg-white border-2 border-sky-600 shadow-xs z-10 hover:scale-125 hover:bg-sky-50 transition-transform touch-none ${cursor}`}
+              className={`absolute w-3 h-3 rounded-xs bg-white border-2 border-sky-600 shadow-xs z-elevated hover:scale-125 hover:bg-sky-50 transition-transform touch-none ${cursor}`}
               title={t("templateEditor.dragToResize")}
             />
           ))}
           <div
             style={{ left: 0, top: el.y < 24 ? el.h + 4 : -22 }}
             aria-live="polite"
-            className="absolute bg-sky-600 text-white font-mono text-3xs font-medium px-1.5 py-0.5 rounded shadow-xs whitespace-nowrap pointer-events-none z-20"
+            className="absolute bg-sky-600 text-white font-mono text-3xs font-medium px-1.5 py-0.5 rounded shadow-xs whitespace-nowrap pointer-events-none z-sticky"
           >
             {`${Math.round(el.w)} × ${Math.round(el.h)}`}
           </div>

@@ -139,7 +139,7 @@ export function EditableMultiSelectOptionList({
                 "flex min-h-9 items-center justify-between gap-2 px-3 py-1.5 text-sm cursor-pointer transition-colors select-none",
                 isSelected
                   ? isHighlighted
-                    ? "bg-primary/20 text-primary font-medium"
+                    ? "bg-primary/15 text-primary font-medium"
                     : "bg-primary/10 text-primary font-medium"
                   : isHighlighted
                     ? "bg-muted/80 text-foreground"

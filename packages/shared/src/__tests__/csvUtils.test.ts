@@ -14,11 +14,18 @@ describe('csvUtils', () => {
       expect(escapeCsvCell('@ADMIN')).toBe('"\'@ADMIN"');
     });
 
+    it('preserves valid negative numbers and numeric values without formula escaping', () => {
+      expect(escapeCsvCell(-42)).toBe('"-42"');
+      expect(escapeCsvCell('-42.50')).toBe('"-42.50"');
+      expect(escapeCsvCell(100)).toBe('"100"');
+    });
+
     it('handles null and undefined values safely', () => {
       expect(escapeCsvCell(null)).toBe('""');
       expect(escapeCsvCell(undefined)).toBe('""');
     });
   });
+
 
   describe('buildCsvContent', () => {
     it('formats multi-row CSV content', () => {

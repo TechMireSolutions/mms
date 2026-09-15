@@ -73,7 +73,7 @@ function TenantBootGate({ children }: { children: React.ReactNode }): React.JSX.
   if (workspaceLookupFailed) {
     return (
       <AuthPageFrame dir="ltr">
-        <div className="relative z-10 mx-auto w-full max-w-md">
+        <div className="relative z-elevated mx-auto w-full max-w-md">
           <ErrorState
             type="network"
             title={t("errors.boundary.title")}

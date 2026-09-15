@@ -41,11 +41,20 @@ const BLOCKING_IMPACTS: readonly Impact[] = ['serious', 'critical'];
  * See `docs/a11y-baseline.md` for the current findings and their triage.
  */
 export const A11Y_BASELINE: Record<string, string> = {
-  // Active settings-nav tabs render their label in `text-primary`; at 14px
-  // semibold that does not reach the 4.5:1 WCAG AA ratio on the card surface.
-  // Resolution is a design-token decision (`--primary` vs surface), not a
-  // one-line markup fix, so it is tracked rather than silently changed here.
-  'color-contrast': 'Settings nav active-tab label; needs a design-token contrast fix.',
+  // The ROOT CAUSE of this one has been fixed at the token layer: the light
+  // palette's semantic tokens were mid-tones that failed AA as text, as fills
+  // with white labels, and on their own tints. `--primary`/`--destructive`/
+  // `--success`/`--warning`/`--info` (plus `--ring` and `--muted-foreground`)
+  // are now solved so that all three roles clear 4.5:1 / 3:1, and
+  // `apps/frontend/src/__tests__/designTokens.contrast.test.ts` holds that line.
+  //
+  // The entry is retained ONLY because the axe gate is a rendered-browser check
+  // and has not been re-run since the palette change — a colour-contrast rule can
+  // also fire on surfaces the tokens do not cover (disabled text at reduced
+  // opacity, text on tenant gradients). DELETE this entry once a CI run reports
+  // zero `color-contrast` nodes; if it still fires, the `html:` diagnostic in the
+  // failure output names the node.
+  'color-contrast': 'Root cause fixed in the token palette; entry pending an axe confirmation run.',
   // Intermittent and data-dependent (seen only when dashboard widgets render).
   // Related fix already applied: `ProgressBar` used to spread `aria-hidden` onto
   // a `role="progressbar"` element across 8+ call sites — a real ARIA conflict,

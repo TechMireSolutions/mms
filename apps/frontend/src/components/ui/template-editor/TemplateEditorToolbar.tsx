@@ -291,7 +291,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       <div
         role="group"
         aria-label={t("templateEditor.save")}
-        className="flex items-center gap-1.5 shrink-0 sticky end-0 bg-card/95 ps-2 border-s border-border/50 backdrop-blur-sm z-10"
+        className="flex items-center gap-1.5 shrink-0 sticky end-0 bg-card/95 ps-2 border-s border-border/50 backdrop-blur-sm z-elevated"
       >
         <Button
           type="button"
