@@ -4,7 +4,7 @@
  * Parametric over document payload schemas with native Typst and Zoho sync integrations.
  */
 
-import React, { useCallback, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import { useBranding } from "@/tenant/hooks/useBranding";
 import { notify } from "@/lib/notify";
 import type {
@@ -54,20 +54,16 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
 }: TemplateEditorProps<TPayload>): React.JSX.Element {
   const [isExporting, setIsExporting] = useState(false);
   const branding = useBranding();
-  const editorRef = useRef<ReturnType<typeof useTemplateEditor<TPayload>> | null>(null);
 
-  const confirmDiscardPrompt = useCallback(() => {
-    const t = editorRef.current?.t;
-    const msg = t ? t("templateEditor.discardUnsavedPrompt") : "Discard unsaved changes?";
-    return window.confirm(msg);
+  // The editor's Escape/Ctrl-close handler must invoke the modal's close logic,
+  // but the modal needs the editor's live `isDirty` — a circular dependency.
+  // Break it with a stable indirection so neither value is read a render late
+  // (the previous `editorRef.current = editor` pattern made the discard prompt
+  // miss the most recent edit, and wrote a ref during render).
+  const modalCloseRef = useRef<() => void>(() => {});
+  const handleEditorClose = useCallback(() => {
+    modalCloseRef.current();
   }, []);
-
-  const modal = useTemplateEditorModal({
-    initialFullscreen: fullscreen,
-    isDirty: Boolean(editorRef.current?.isDirty),
-    onClose,
-    confirmDiscardPrompt,
-  });
 
   const editor = useTemplateEditor<TPayload>({
     initialTemplate,
@@ -76,10 +72,23 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
     presets,
     documentType,
     onSave,
-    onClose: modal.handleClose,
+    onClose: handleEditorClose,
   });
 
-  editorRef.current = editor;
+  const confirmDiscardPrompt = useCallback(() => {
+    return window.confirm(editor.t("templateEditor.discardUnsavedPrompt"));
+  }, [editor.t]);
+
+  const modal = useTemplateEditorModal({
+    initialFullscreen: fullscreen,
+    isDirty: editor.isDirty,
+    onClose,
+    confirmDiscardPrompt,
+  });
+
+  useEffect(() => {
+    modalCloseRef.current = modal.handleClose;
+  }, [modal.handleClose]);
 
   const handleToggleGuides = useCallback(() => {
     editor.setShowGuides((prev) => !prev);

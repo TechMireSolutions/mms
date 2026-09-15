@@ -5,6 +5,7 @@
  */
 
 import {
+  DEFAULT_CURRENCY_CODE,
   typstFeeReceiptPayloadSchema,
   type TypstFeeReceiptPayload,
   typstReportCardPayloadSchema,
@@ -112,7 +113,7 @@ export function mapToTypstFinancialLedger(
   const rawPayload = {
     institution: String(data.institution ?? data.madrasaName ?? "Madrasa Management System"),
     period: String(data.period ?? "الفترة المالية الحالية"),
-    currency: String(data.currency ?? "USD"),
+    currency: String(data.currency ?? DEFAULT_CURRENCY_CODE),
     entries,
     totalDebit: String(data.totalDebit ?? "0.00"),
     totalCredit: String(data.totalCredit ?? "0.00"),
@@ -160,7 +161,7 @@ export function mapToZohoInvoice(
     balance: typeof data.balance === "number" ? data.balance : String(data.balance ?? data.outstanding ?? "0.00"),
     notes: data.notes ? String(data.notes) : undefined,
     terms: data.terms ? String(data.terms) : undefined,
-    currency_code: data.currency_code ? String(data.currency_code) : (data.currency ? String(data.currency) : "USD"),
+    currency_code: data.currency_code ? String(data.currency_code) : (data.currency ? String(data.currency) : DEFAULT_CURRENCY_CODE),
   };
 
   return zohoInvoicePayloadSchema.parse(rawPayload);

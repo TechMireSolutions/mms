@@ -1,11 +1,20 @@
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
-import type { BrandingInfo, InvoiceTemplate } from "./invoiceTemplateTypes.js";
+import {
+  identityTranslate,
+  INVOICE_TEMPLATE_STATIC_KEY_PREFIX,
+  type BrandingInfo,
+  type InvoiceTemplate,
+  type TemplateTranslate,
+} from "./invoiceTemplateTypes.js";
 
 export function buildInvoiceTemplateHeaderElements(
   b: BrandingInfo,
   primary: string,
+  translate: TemplateTranslate = identityTranslate,
 ): InvoiceTemplate["elements"] {
   const { muted, border, label } = PRINT_NEUTRAL;
+  const tr = (key: string, fallback: string) =>
+    translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`, fallback);
   return [
     {
       id: "logo",
@@ -38,7 +47,7 @@ export function buildInvoiceTemplateHeaderElements(
     {
       id: "receipt_label",
       type: "static",
-      label: "Receipt No:",
+      label: tr("receiptNo", "Receipt No:"),
       x: 20, y: 162, w: 80, h: 16,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -53,7 +62,7 @@ export function buildInvoiceTemplateHeaderElements(
     {
       id: "date_label",
       type: "static",
-      label: "Date:",
+      label: tr("date", "Date:"),
       x: 230, y: 162, w: 40, h: 16,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },

@@ -24,6 +24,12 @@ export const PAGE_SIZES: Record<string, PageSizeInfo> = {
 export const pageSizeKeySchema = z.enum(['A6', 'A5', 'A4', 'Letter', '80mm', '58mm']);
 export type PageSizeKey = z.infer<typeof pageSizeKeySchema> | (string & {});
 
+/**
+ * Currency used when a document/template payload omits one. Centralized so the
+ * template resolver and the Typst/Zoho payload mappers agree.
+ */
+export const DEFAULT_CURRENCY_CODE = 'PKR';
+
 export const templateOrientationSchema = z.enum(['portrait', 'landscape']);
 export type TemplateOrientation = z.infer<typeof templateOrientationSchema>;
 

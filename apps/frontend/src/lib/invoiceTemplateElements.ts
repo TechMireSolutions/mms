@@ -1,20 +1,31 @@
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import { buildInvoiceTemplateHeaderElements } from "./invoiceTemplateHeaderElements";
 import { buildInvoiceTemplateFooterElements } from "./invoiceTemplateFooterElements";
-import type { BrandingInfo, InvoiceTemplate } from "./invoiceTemplateTypes.js";
+import {
+  identityTranslate,
+  INVOICE_TEMPLATE_STATIC_KEY_PREFIX,
+  type BrandingInfo,
+  type InvoiceTemplate,
+  type TemplateTranslate,
+} from "./invoiceTemplateTypes.js";
 
 /**
  * Builds the default A6 invoice template element list from branding settings.
  */
-export function buildDefaultInvoiceTemplateElements(b: BrandingInfo): InvoiceTemplate["elements"] {
+export function buildDefaultInvoiceTemplateElements(
+  b: BrandingInfo,
+  translate: TemplateTranslate = identityTranslate,
+): InvoiceTemplate["elements"] {
   const primary = b.primaryColor;
   const { text, border, label, labelLight } = PRINT_NEUTRAL;
+  const tr = (key: string, fallback: string) =>
+    translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`, fallback);
   return [
-    ...buildInvoiceTemplateHeaderElements(b, primary),
+    ...buildInvoiceTemplateHeaderElements(b, primary, translate),
     {
       id: "from_label",
       type: "static",
-      label: "Received From:",
+      label: tr("receivedFrom", "Received From:"),
       x: 20, y: 192, w: 110, h: 14,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -36,7 +47,7 @@ export function buildDefaultInvoiceTemplateElements(b: BrandingInfo): InvoiceTem
     {
       id: "ref_label",
       type: "static",
-      label: "Reference:",
+      label: tr("reference", "Reference:"),
       x: 20, y: 220, w: 90, h: 14,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -58,7 +69,7 @@ export function buildDefaultInvoiceTemplateElements(b: BrandingInfo): InvoiceTem
     {
       id: "account_label",
       type: "static",
-      label: "In Account Of:",
+      label: tr("inAccountOf", "In Account Of:"),
       x: 20, y: 248, w: 110, h: 14,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -73,7 +84,7 @@ export function buildDefaultInvoiceTemplateElements(b: BrandingInfo): InvoiceTem
     {
       id: "mujtahid_label",
       type: "static",
-      label: "Mujtahid:",
+      label: tr("mujtahid", "Mujtahid:"),
       x: 20, y: 268, w: 80, h: 14,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -95,7 +106,7 @@ export function buildDefaultInvoiceTemplateElements(b: BrandingInfo): InvoiceTem
     {
       id: "amount_label",
       type: "static",
-      label: "Amount:",
+      label: tr("amount", "Amount:"),
       x: 20, y: 300, w: 60, h: 18,
       style: { fontSize: 11, fontWeight: "bold", color: label },
     },
@@ -110,7 +121,7 @@ export function buildDefaultInvoiceTemplateElements(b: BrandingInfo): InvoiceTem
     {
       id: "recv_label",
       type: "static",
-      label: "Received By:",
+      label: tr("receivedBy", "Received By:"),
       x: 222, y: 300, w: 90, h: 16,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -125,7 +136,7 @@ export function buildDefaultInvoiceTemplateElements(b: BrandingInfo): InvoiceTem
     {
       id: "payment_label",
       type: "static",
-      label: "Payment Mode:",
+      label: tr("paymentMode", "Payment Mode:"),
       x: 20, y: 322, w: 100, h: 14,
       style: { fontSize: 9, fontWeight: "bold", color: labelLight },
     },

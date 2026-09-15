@@ -37,9 +37,12 @@ export function useTemplateEditorModal({
     }
   }, [initialFullscreen, isUserToggled]);
 
-  // Synchronously store volatile options in a ref to keep handleClose 100% stable
+  // Keep volatile options in a ref so handleClose stays 100% stable. Updated in
+  // an effect (not during render) to stay correct under concurrent rendering.
   const optionsRef = useRef({ isDirty, confirmDiscardPrompt, onClose, isFullscreen, isUserToggled });
-  optionsRef.current = { isDirty, confirmDiscardPrompt, onClose, isFullscreen, isUserToggled };
+  useEffect(() => {
+    optionsRef.current = { isDirty, confirmDiscardPrompt, onClose, isFullscreen, isUserToggled };
+  });
 
   const handleClose = useCallback(() => {
     const opts = optionsRef.current;

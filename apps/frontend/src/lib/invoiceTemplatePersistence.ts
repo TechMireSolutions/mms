@@ -1,7 +1,16 @@
-import { formatAmountInWords, formatDate, formatMoney, INVOICE_TEMPLATE_OBJECT_KEY, type TemplateFieldDefinition } from "@mms/shared";
+import {
+  DEFAULT_CURRENCY_CODE,
+  documentTemplateSchema,
+  formatAmountInWords,
+  formatDate,
+  formatMoney,
+  INVOICE_TEMPLATE_OBJECT_KEY,
+  type TemplateFieldDefinition,
+} from "@mms/shared";
 import { getObject, saveObject } from "@/lib/db";
 import { getDefaultTemplate } from "./invoiceTemplateDefaults.js";
 import type {
+  BrandingInfo,
   FieldLookupInfo,
   InvoiceTemplate,
   LookupItem,
@@ -22,18 +31,14 @@ export const INVOICE_TEMPLATE_CHANGED_EVENT = "mms:invoice-template-changed";
  *
  * @returns {InvoiceTemplate} The loaded template config.
  */
-export function loadTemplate(): InvoiceTemplate {
-  const fallback = getDefaultTemplate();
+export function loadTemplate(branding?: BrandingInfo): InvoiceTemplate {
+  const fallback = getDefaultTemplate(branding);
   const loaded = getObject<InvoiceTemplate>(STORAGE_KEY, fallback);
-  if (
-    !loaded ||
-    typeof loaded !== "object" ||
-    typeof loaded.pageSize !== "string" ||
-    !Array.isArray(loaded.elements)
-  ) {
-    return fallback;
-  }
-  return loaded;
+  // Validate against the shared SSOT schema rather than ad-hoc shape checks: a
+  // legacy/corrupt template with an unknown pageSize or malformed element is
+  // otherwise loaded and breaks the canvas.
+  const parsed = documentTemplateSchema.safeParse(loaded);
+  return parsed.success ? (parsed.data as InvoiceTemplate) : fallback;
 }
 
 /**
@@ -44,17 +49,20 @@ export function loadTemplate(): InvoiceTemplate {
  * @returns {void}
  */
 export function saveTemplate(tmpl: InvoiceTemplate): void {
-  if (
-    !tmpl ||
-    typeof tmpl !== "object" ||
-    typeof tmpl.pageSize !== "string" ||
-    !Array.isArray(tmpl.elements)
-  ) {
-    throw new TypeError("Cannot save invalid invoice template: missing pageSize or elements array.");
+  const parsed = documentTemplateSchema.safeParse(tmpl);
+  if (!parsed.success) {
+    const detail = parsed.error.issues
+      .map((issue) => `${issue.path.join(".") || "(root)"}: ${issue.message}`)
+      .join("; ");
+    // Keep the established message prefix (asserted by tests) and append detail.
+    throw new TypeError(
+      `Cannot save invalid invoice template: missing pageSize or elements array. ${detail}`,
+    );
   }
-  saveObject(STORAGE_KEY, tmpl);
+  const validTemplate = parsed.data as InvoiceTemplate;
+  saveObject(STORAGE_KEY, validTemplate);
   if (typeof window !== "undefined") {
-    window.dispatchEvent(new CustomEvent(INVOICE_TEMPLATE_CHANGED_EVENT, { detail: tmpl }));
+    window.dispatchEvent(new CustomEvent(INVOICE_TEMPLATE_CHANGED_EVENT, { detail: validTemplate }));
   }
 }
 
@@ -63,8 +71,8 @@ export function saveTemplate(tmpl: InvoiceTemplate): void {
  *
  * @returns {InvoiceTemplate} The restored default template config.
  */
-export function resetTemplate(): InvoiceTemplate {
-  const defaultTmpl = getDefaultTemplate();
+export function resetTemplate(branding?: BrandingInfo): InvoiceTemplate {
+  const defaultTmpl = getDefaultTemplate(branding);
   saveTemplate(defaultTmpl);
   return defaultTmpl;
 }
@@ -102,11 +110,13 @@ export function indexLookups(lookups?: FieldLookupInfo): IndexedFieldLookups {
     for (const item of arr) {
       if (item.id != null) {
         const key = String(item.id).trim().toLowerCase();
-        if (key) map.set(key, item);
+        // First registration wins: an item's id must not be overwritten by a
+        // later item whose `code` happens to equal it.
+        if (key && !map.has(key)) map.set(key, item);
       }
       if (item.code) {
         const codeKey = String(item.code).trim().toLowerCase();
-        if (codeKey) map.set(codeKey, item);
+        if (codeKey && !map.has(codeKey)) map.set(codeKey, item);
       }
     }
     return map;
@@ -122,6 +132,21 @@ export function indexLookups(lookups?: FieldLookupInfo): IndexedFieldLookups {
     branding: lookups?.branding,
   };
 }
+
+/**
+ * Renders a resolved field value as text. Objects/arrays/functions are not
+ * meaningful in a text template, so they render as empty rather than
+ * `"[object Object]"`.
+ */
+const stringifyFieldValue = (val: unknown): string => {
+  if (val == null) return "";
+  if (typeof val === "string") return val;
+  if (typeof val === "number" || typeof val === "boolean" || typeof val === "bigint") {
+    return String(val);
+  }
+  if (val instanceof Date) return val.toISOString();
+  return "";
+};
 
 const findItem = (
   source?: LookupItem[] | Map<string, LookupItem>,
@@ -149,12 +174,12 @@ const resolveCurrencyCode = (
   currencies?: LookupItem[] | Map<string, LookupItem>,
   currencyId?: unknown
 ): string => {
-  if (currencyId == null) return "PKR";
+  if (currencyId == null) return DEFAULT_CURRENCY_CODE;
   const found = findItem(currencies, currencyId);
   if (found?.code && typeof found.code === "string") return found.code.trim().toUpperCase();
   const raw = String(currencyId).trim().toUpperCase();
   if (/^[A-Z]{3}$/.test(raw)) return raw;
-  return "PKR";
+  return DEFAULT_CURRENCY_CODE;
 };
 
 /**
@@ -220,7 +245,7 @@ export function resolveField(
     }
     default: {
       if (collection[field] != null && collection[field] !== "") {
-        return String(collection[field]);
+        return stringifyFieldValue(collection[field]);
       }
       let customData = collection.custom_data;
       if (typeof customData === "string") {
@@ -231,8 +256,7 @@ export function resolveField(
         }
       }
       if (customData && typeof customData === "object" && field in customData) {
-        const val = (customData as Record<string, unknown>)[field];
-        return val != null ? String(val) : "";
+        return stringifyFieldValue((customData as Record<string, unknown>)[field]);
       }
       return "";
     }

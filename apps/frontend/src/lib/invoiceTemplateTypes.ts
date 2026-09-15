@@ -132,6 +132,21 @@ export interface FieldLookupInfo {
   branding?: Partial<BrandingInfo>;
 }
 
+/**
+ * Resolves a translation key to a localized string, falling back to the
+ * provided English default when the key is missing. Defaults to identity so
+ * pure/non-React callers (tests, store snapshot) keep English labels.
+ */
+export type TemplateTranslate = (key: string, fallback: string) => string;
+
+export const identityTranslate: TemplateTranslate = (_key, fallback) => fallback;
+
+/** i18n key namespace for palette field labels. */
+export const INVOICE_TEMPLATE_FIELD_KEY_PREFIX = "obligations.invoiceTemplate.field.";
+
+/** i18n key namespace for baked-in template (static) labels. */
+export const INVOICE_TEMPLATE_STATIC_KEY_PREFIX = "obligations.invoiceTemplate.static.";
+
 export interface IndexedFieldLookups {
   contacts?: Map<string, LookupItem>;
   users?: Map<string, LookupItem>;

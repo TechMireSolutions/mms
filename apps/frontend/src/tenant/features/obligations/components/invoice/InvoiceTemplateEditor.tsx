@@ -12,15 +12,18 @@ import {
   getAvailablePresets,
   getDefaultTemplate,
   indexLookups,
+  INVOICE_TEMPLATE_FIELD_KEY_PREFIX,
   loadTemplate,
   resolveField,
   saveTemplate,
   type InvoiceTemplate,
   type InvoiceReceiptPayload,
+  type TemplateTranslate,
 } from "@/lib/invoiceTemplateStore";
 import {
   DEFAULT_CURRENCIES,
   formatBrandingAddress,
+  todayISO,
   type DocumentTemplatePreset,
   type Mujtahid,
   type MujtahidRep,
@@ -47,6 +50,16 @@ export interface InvoiceTemplateEditorProps {
   mujtahids?: Mujtahid[];
 }
 
+/** Stable empty-array defaults so optional list props don't defeat memoization. */
+const EMPTY_OBLIGATION_TYPES: ObligationType[] = [];
+const EMPTY_REPS: MujtahidRep[] = [];
+const EMPTY_MUJTAHIDS: Mujtahid[] = [];
+
+/** Strips path/control characters from a user-derived value used in a filename. */
+function safeFilenamePart(value: string): string {
+  return value.replace(/[^a-zA-Z0-9._-]+/g, "_").slice(0, 80) || "document";
+}
+
 function triggerFileDownload(filename: string, content: string, mimeType = "application/json"): void {
   const blob = new Blob([content], { type: mimeType });
   const url = URL.createObjectURL(blob);
@@ -64,12 +77,22 @@ export function InvoiceTemplateEditor({
   onClose,
   fullscreen = true,
   collection = null,
-  obligationTypes = [],
-  reps = [],
-  mujtahids = [],
+  obligationTypes = EMPTY_OBLIGATION_TYPES,
+  reps = EMPTY_REPS,
+  mujtahids = EMPTY_MUJTAHIDS,
 }: InvoiceTemplateEditorProps): React.JSX.Element {
   const { t } = useTranslation();
   const branding = useBranding();
+
+  // Translate a key, falling back to the supplied English default when the key
+  // is missing (some translation implementations return the key itself).
+  const translate = useCallback<TemplateTranslate>(
+    (key, fallback) => {
+      const translated = t(key as Parameters<typeof t>[0]);
+      return translated && translated !== key ? translated : fallback;
+    },
+    [t],
+  );
 
   const contactIds = useMemo(() => {
     if (!collection) return [];
@@ -88,13 +111,28 @@ export function InvoiceTemplateEditor({
 
   const liveUsers = useMergedObligationUsers(userIds);
 
+  // Use the same reactive branding the preview renders with, so the default /
+  // reset template and presets can't diverge from the on-screen branding.
   const initialTemplate = useMemo<InvoiceTemplate>(
-    () => loadTemplate(),
-    []
+    () => loadTemplate(branding),
+    [branding]
   );
   const defaultTemplate = useMemo<InvoiceTemplate>(
-    () => getDefaultTemplate(),
-    []
+    () => getDefaultTemplate(branding, translate),
+    [branding, translate]
+  );
+
+  const availableFields = useMemo(
+    () =>
+      AVAILABLE_FIELDS.map((field) => {
+        const key = `${INVOICE_TEMPLATE_FIELD_KEY_PREFIX}${field.field}`;
+        const translated = t(key as Parameters<typeof t>[0]);
+        return {
+          ...field,
+          label: translated && translated !== key ? translated : field.label,
+        };
+      }),
+    [t]
   );
 
   const defaultSampleData = useMemo<InvoiceReceiptPayload>(() => {
@@ -109,7 +147,7 @@ export function InvoiceTemplateEditor({
       institution_email: branding.email || "office@alhuda.edu",
       institution_address: institutionAddress,
       receipt_no: "REC-2026-0042",
-      received_date: new Date().toISOString().slice(0, 10),
+      received_date: todayISO(),
       sender: "Muhammad Ali Raza",
       sender_phone: "+92 300 1234567",
       sender_email: "ali.raza@example.com",
@@ -155,12 +193,12 @@ export function InvoiceTemplateEditor({
   }, [collection, defaultSampleData, liveContacts, liveUsers, obligationTypes, mujtahids, reps, branding]);
 
   const presets = useMemo<DocumentTemplatePreset<InvoiceReceiptPayload>[]>(() => {
-    return getAvailablePresets().map((p) => ({
+    return getAvailablePresets(branding, translate).map((p) => ({
       key: p.key,
       label: t(p.nameKey as Parameters<typeof t>[0]) || p.key,
       template: p.template,
     }));
-  }, [t]);
+  }, [branding, translate, t]);
 
   const handleSave = useCallback(
     (tmpl: InvoiceTemplate) => {
@@ -180,7 +218,7 @@ export function InvoiceTemplateEditor({
       try {
         const conforming = mapToTypstFeeReceipt(payload);
         const jsonStr = JSON.stringify(conforming, null, 2);
-        triggerFileDownload(`typst-invoice-${conforming.receiptNo}.json`, jsonStr);
+        triggerFileDownload(`typst-invoice-${safeFilenamePart(conforming.receiptNo)}.json`, jsonStr);
         notify.success(t("templateEditor.typstExported"));
       } catch (err) {
         console.error("Typst export failed:", err);
@@ -197,7 +235,7 @@ export function InvoiceTemplateEditor({
           zohoPayload as unknown as Record<string, unknown>
         );
         const jsonStr = JSON.stringify(conforming, null, 2);
-        triggerFileDownload(`zoho-invoice-${conforming.invoice_number}.json`, jsonStr);
+        triggerFileDownload(`zoho-invoice-${safeFilenamePart(conforming.invoice_number)}.json`, jsonStr);
         notify.success(t("templateEditor.zohoExported"));
       } catch (err) {
         console.error("Zoho export failed:", err);
@@ -212,9 +250,9 @@ export function InvoiceTemplateEditor({
       title={t("obligations.templateEditorTitle")}
       template={initialTemplate}
       defaultTemplate={defaultTemplate}
-      availableFields={AVAILABLE_FIELDS}
+      availableFields={availableFields}
       presets={presets}
-      documentType="invoice"
+      documentType="receipt"
       sampleData={sampleData}
       fullscreen={fullscreen}
       onSave={handleSave}

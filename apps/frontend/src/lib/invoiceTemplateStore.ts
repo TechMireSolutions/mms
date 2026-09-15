@@ -27,7 +27,13 @@ export type {
   InvoiceReceiptPayload,
   StandardInvoiceField,
 } from "./invoiceTemplateTypes.js";
-export { PAGE_SIZES, getPageDimensions } from "./invoiceTemplateTypes.js";
+export {
+  PAGE_SIZES,
+  getPageDimensions,
+  INVOICE_TEMPLATE_FIELD_KEY_PREFIX,
+  INVOICE_TEMPLATE_STATIC_KEY_PREFIX,
+  type TemplateTranslate,
+} from "./invoiceTemplateTypes.js";
 export { getDefaultTemplate } from "./invoiceTemplateDefaults.js";
 export { getInvoiceTemplateBranding } from "./invoiceTemplateBranding.js";
 export {
