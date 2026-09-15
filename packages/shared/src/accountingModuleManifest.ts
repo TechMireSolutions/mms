@@ -20,6 +20,8 @@ export const accountRecordSchema = z
     deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
   })
   .strict();
 
@@ -32,6 +34,8 @@ export const accountRecordInsertSchema = z
     subtype: z.string().optional().default(''),
     description: z.string().optional().default(''),
     isActive: z.boolean().optional().default(true),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
   })
   .strict();
 
@@ -62,6 +66,8 @@ export const journalEntryRecordSchema = z
     description: z.string().default(''),
     status: z.enum(['posted', 'draft']).default('posted'),
     created_by: z.string().default(''),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
     tags: z.array(z.string()).default([]),
     attachments: z.array(z.string()).default([]),
     fiscal_year: z.string().default(''),
@@ -91,6 +97,8 @@ export const journalEntryRecordInsertSchema = z
     description: z.string().optional().default(''),
     status: z.enum(['posted', 'draft']).optional().default('posted'),
     created_by: z.string().optional().default(''),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
     tags: z.array(z.string()).optional().default([]),
     attachments: z.array(z.string()).optional().default([]),
     fiscal_year: z.string().optional().default(''),
@@ -125,6 +133,8 @@ export const fiscalYearRecordSchema = z
     deletionReason: z.string().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
   })
   .strict();
 
@@ -135,6 +145,8 @@ export const fiscalYearRecordInsertSchema = z
     startDate: isoDateSchema,
     endDate: isoDateSchema,
     status: z.enum(['active', 'closed', 'upcoming']).optional().default('upcoming'),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
   })
   .strict();
 
