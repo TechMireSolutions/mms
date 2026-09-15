@@ -108,7 +108,9 @@ export default function Accounting() {
   );
   const accountsEnvelope = accountsResult.data as { body?: { accounts?: Account[] }; accounts?: Account[] } | null;
   const fiscalYearsEnvelope = fiscalYearsResult.data as { body?: { fiscalYears?: FiscalYear[] }; fiscalYears?: FiscalYear[] } | null;
-  const accounts: Account[] = accountsEnvelope?.body?.accounts ?? accountsEnvelope?.accounts ?? [];
+  const accounts: Account[] = Array.isArray(accountsResult.data)
+    ? accountsResult.data
+    : (accountsEnvelope?.body?.accounts ?? accountsEnvelope?.accounts ?? []);
   const journalEntries: JournalEntry[] = entriesResult.data?.entries ?? [];
   /**
    * The server's count of every entry matching the active filters — the number
