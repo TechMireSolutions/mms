@@ -2,7 +2,7 @@ import React, { useMemo, useState } from "react";
 import { Minus, QrCode, Type, Search, Database, Plus, Heading1, Image as ImageIcon, Table, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { TemplateFieldDefinition } from "@mms/shared";
+import type { AppTranslationKey, TemplateFieldDefinition } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export interface TemplateEditorElementPaletteProps<TPayload = Record<string, unknown>> {
@@ -16,6 +16,25 @@ export interface TemplateEditorElementPaletteProps<TPayload = Record<string, unk
   onAddField: (fieldOption: TemplateFieldDefinition<TPayload>) => void;
   t: TranslationFunction;
 }
+
+/**
+ * One consistent treatment for every "add" affordance.
+ *
+ * These used to carry six different raw Tailwind accent colours (indigo, sky,
+ * slate, emerald, amber, teal) with two more inside the icon chip, which is both a
+ * design-token violation and visual noise: colour conveyed nothing, so six hues
+ * read as six different kinds of action. Primitives are now neutral and
+ * data-driven fields carry the single primary accent, which is the only
+ * distinction that means anything here.
+ */
+const PRIMITIVE_BUTTON =
+  "w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[3px] border-s-muted-foreground/40 bg-card hover:bg-muted/50 hover:border-s-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-colors flex items-center justify-between group shadow-2xs";
+
+const PRIMITIVE_ICON =
+  "p-1 rounded bg-muted text-muted-foreground group-hover:bg-foreground group-hover:text-background transition-colors";
+
+const FIELD_BUTTON =
+  "w-full text-start min-h-11 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-border border-s-[3px] border-s-primary/40 bg-card hover:bg-primary/5 hover:border-primary/50 hover:border-s-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-colors flex items-center justify-between group shadow-2xs";
 
 export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>({
   availableFields = [],
@@ -40,6 +59,25 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
     [availableFields, searchQuery]
   );
 
+  const primitive = (
+    labelKey: AppTranslationKey,
+    Icon: React.ComponentType<{ className?: string; "aria-hidden"?: boolean | "true" | "false" }>,
+    onClick: () => void,
+  ) => (
+    <Button type="button" onClick={onClick} variant="outline" className={PRIMITIVE_BUTTON}>
+      <div className="flex items-center gap-2">
+        <div className={PRIMITIVE_ICON}>
+          <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+        </div>
+        <span>{t(labelKey)}</span>
+      </div>
+      <Plus
+        className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground"
+        aria-hidden="true"
+      />
+    </Button>
+  );
+
   return (
     <aside
       aria-label={t("templateEditor.addElements")}
@@ -56,101 +94,12 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
           </span>
         </div>
         <div className="space-y-1.5">
-          {onAddHeading && (
-            <Button
-              type="button"
-              onClick={onAddHeading}
-              variant="outline"
-              className="w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[3px] border-s-indigo-500 bg-card hover:bg-indigo-500/5 hover:border-indigo-400/50 hover:text-indigo-600 dark:hover:text-indigo-400 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-all flex items-center justify-between group shadow-2xs"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-1 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 group-hover:bg-indigo-500 group-hover:text-white transition-colors">
-                  <Heading1 className="w-3.5 h-3.5" aria-hidden="true" />
-                </div>
-                <span>{t("templateEditor.heading")}</span>
-              </div>
-              <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-indigo-500" aria-hidden="true" />
-            </Button>
-          )}
-
-          <Button
-            type="button"
-            onClick={onAddStaticText}
-            variant="outline"
-            className="w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[3px] border-s-sky-500 bg-card hover:bg-sky-500/5 hover:border-sky-400/50 hover:text-sky-600 dark:hover:text-sky-400 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-all flex items-center justify-between group shadow-2xs"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-1 rounded bg-sky-500/10 text-sky-600 dark:text-sky-400 group-hover:bg-sky-500 group-hover:text-white transition-colors">
-                <Type className="w-3.5 h-3.5" aria-hidden="true" />
-              </div>
-              <span>{t("templateEditor.staticText")}</span>
-            </div>
-            <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-sky-500" aria-hidden="true" />
-          </Button>
-
-          <Button
-            type="button"
-            onClick={onAddDivider}
-            variant="outline"
-            className="w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[3px] border-s-slate-400 bg-card hover:bg-slate-500/5 hover:border-slate-400/50 hover:text-slate-700 dark:hover:text-slate-300 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-all flex items-center justify-between group shadow-2xs"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-1 rounded bg-muted text-muted-foreground group-hover:bg-slate-500 group-hover:text-white transition-colors">
-                <Minus className="w-3.5 h-3.5" aria-hidden="true" />
-              </div>
-              <span>{t("templateEditor.divider")}</span>
-            </div>
-            <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-slate-500" aria-hidden="true" />
-          </Button>
-
-          <Button
-            type="button"
-            onClick={onAddQrCode}
-            variant="outline"
-            className="w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[3px] border-s-emerald-500 bg-card hover:bg-emerald-500/5 hover:border-emerald-400/50 hover:text-emerald-600 dark:hover:text-emerald-400 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-all flex items-center justify-between group shadow-2xs"
-          >
-            <div className="flex items-center gap-2">
-              <div className="p-1 rounded bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 group-hover:bg-emerald-500 group-hover:text-white transition-colors">
-                <QrCode className="w-3.5 h-3.5" aria-hidden="true" />
-              </div>
-              <span>{t("templateEditor.qrCode")}</span>
-            </div>
-            <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-          </Button>
-
-          {onAddLogo && (
-            <Button
-              type="button"
-              onClick={onAddLogo}
-              variant="outline"
-              className="w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[3px] border-s-amber-500 bg-card hover:bg-amber-500/5 hover:border-amber-400/50 hover:text-amber-600 dark:hover:text-amber-400 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-all flex items-center justify-between group shadow-2xs"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-1 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 group-hover:bg-amber-500 group-hover:text-white transition-colors">
-                  <ImageIcon className="w-3.5 h-3.5" aria-hidden="true" />
-                </div>
-                <span>{t("templateEditor.logo")}</span>
-              </div>
-              <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-amber-600 dark:text-amber-400" aria-hidden="true" />
-            </Button>
-          )}
-
-          {onAddTable && (
-            <Button
-              type="button"
-              onClick={onAddTable}
-              variant="outline"
-              className="w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[3px] border-s-teal-500 bg-card hover:bg-teal-500/5 hover:border-teal-400/50 hover:text-teal-600 dark:hover:text-teal-400 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-all flex items-center justify-between group shadow-2xs"
-            >
-              <div className="flex items-center gap-2">
-                <div className="p-1 rounded bg-teal-500/10 text-teal-600 dark:text-teal-400 group-hover:bg-teal-500 group-hover:text-white transition-colors">
-                  <Table className="w-3.5 h-3.5" aria-hidden="true" />
-                </div>
-                <span>{t("templateEditor.table")}</span>
-              </div>
-              <Plus className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity text-teal-500" aria-hidden="true" />
-            </Button>
-          )}
+          {onAddHeading && primitive("templateEditor.heading", Heading1, onAddHeading)}
+          {primitive("templateEditor.staticText", Type, onAddStaticText)}
+          {primitive("templateEditor.divider", Minus, onAddDivider)}
+          {primitive("templateEditor.qrCode", QrCode, onAddQrCode)}
+          {onAddLogo && primitive("templateEditor.logo", ImageIcon, onAddLogo)}
+          {onAddTable && primitive("templateEditor.table", Table, onAddTable)}
         </div>
       </div>
 
@@ -184,10 +133,10 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
                 <button
                   type="button"
                   onClick={() => setSearchQuery("")}
-                  aria-label={t("common.cancel")}
-                  className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-1 rounded-sm focus-visible:ring-1 focus-visible:ring-primary"
+                  aria-label={t("templateEditor.clearFilter")}
+                  className="absolute end-0.5 top-1/2 -translate-y-1/2 flex min-h-11 min-w-11 items-center justify-center text-muted-foreground hover:text-foreground rounded-md focus-visible:ring-1 focus-visible:ring-primary"
                 >
-                  <X className="w-3 h-3" aria-hidden="true" />
+                  <X className="w-4 h-4" aria-hidden="true" />
                 </button>
               )}
             </div>
@@ -205,7 +154,7 @@ export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>
                 key={String(fieldOption.field)}
                 onClick={() => onAddField(fieldOption)}
                 variant="outline"
-                className="w-full text-start min-h-11 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-border border-s-[3px] border-s-primary/40 bg-card hover:bg-primary/5 hover:border-primary/50 hover:border-s-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-all flex items-center justify-between group shadow-2xs"
+                className={FIELD_BUTTON}
               >
                 <div className="truncate">
                   <p className="truncate font-medium m-0">{fieldOption.label}</p>

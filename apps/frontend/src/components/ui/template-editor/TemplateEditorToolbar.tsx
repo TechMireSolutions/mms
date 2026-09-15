@@ -27,6 +27,8 @@ import { TemplateEditorExportActions } from "./TemplateEditorExportActions";
 
 export interface TemplateEditorToolbarProps<TPayload = Record<string, unknown>> {
   title?: string;
+  /** Id of the visible `<h2>`, so the dialog can use `aria-labelledby`. */
+  titleId?: string;
   template: DocumentTemplate<TPayload>;
   historyLength: number;
   futureLength: number;
@@ -64,11 +66,26 @@ export interface TemplateEditorToolbarProps<TPayload = Record<string, unknown>> 
 
 /** Thin vertical separator between toolbar groups */
 function Divider() {
-  return <div className="h-5 w-px bg-border/60 mx-1 shrink-0" aria-hidden="true" />;
+  return <div className="h-6 w-px bg-border/60 mx-1 shrink-0" aria-hidden="true" />;
 }
 
+/** Shared sizing for every control in the toolbar — one 44px row, no exceptions. */
+const TOOLBAR_ICON_BUTTON =
+  "touch-manipulation rounded-md transition-all shadow-none min-h-11 min-w-11";
+
+/**
+ * Toolbar for the shared document template editor.
+ *
+ * Deliberately NOT `role="toolbar"`: the WAI-ARIA toolbar pattern requires a
+ * single tab stop plus arrow-key navigation, and half-implementing it (a toolbar
+ * role with ~15 independent tab stops and a `<select>` in the middle) is worse for
+ * screen-reader users than an honest, labelled container. Each control cluster is
+ * exposed as its own labelled `role="group"` instead, and the visible `<h2>` is the
+ * dialog's accessible name via `aria-labelledby`.
+ */
 export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   title,
+  titleId,
   template,
   historyLength,
   futureLength,
@@ -104,21 +121,20 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   t,
 }: TemplateEditorToolbarProps<TPayload>): React.JSX.Element {
   return (
-    <header
-      role="toolbar"
-      aria-label={title || t("templateEditor.title")}
-      className="flex items-center gap-1 px-3 py-1.5 border-b border-border bg-card/95 backdrop-blur-sm flex-shrink-0 overflow-x-auto overflow-y-hidden min-h-[52px] print:hidden"
-    >
+    <header className="flex items-center gap-1 px-3 py-1.5 border-b border-border bg-card/95 backdrop-blur-sm flex-shrink-0 overflow-x-auto overflow-y-hidden min-h-[60px] print:hidden">
       {/* Group 1: Title */}
       <div className="flex items-center gap-2 shrink-0">
-        <h2 className="font-bold text-sm text-foreground m-0 whitespace-nowrap">
+        <h2
+          id={titleId}
+          className="font-bold text-sm text-foreground m-0 whitespace-nowrap max-w-[38ch] truncate"
+        >
           {title || t("templateEditor.title")}
         </h2>
         {isDirty && !saved && (
           <span
             role="status"
             aria-live="polite"
-            className="px-1.5 py-0.5 rounded-full text-3xs font-bold bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/25 dark:border-amber-500/40 animate-pulse whitespace-nowrap"
+            className="px-1.5 py-0.5 rounded-full text-3xs font-bold border border-warning/30 bg-warning/10 text-warning whitespace-nowrap animate-pulse"
             title={t("templateEditor.dirtyNotice")}
           >
             {t("templateEditor.dirtyNotice")}
@@ -131,7 +147,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       {/* Group 2: Undo / Redo */}
       <div
         role="group"
-        aria-label={t("templateEditor.undo")}
+        aria-label={t("templateEditor.history")}
         className="flex items-center gap-0.5 shrink-0"
       >
         <Button
@@ -142,9 +158,9 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           aria-label={t("templateEditor.undo")}
           variant="ghost"
           size="icon"
-          className="touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md hover:bg-muted disabled:opacity-30 transition-all shadow-none"
+          className={`${TOOLBAR_ICON_BUTTON} hover:bg-muted disabled:opacity-30`}
         >
-          <Undo2 className="w-3.5 h-3.5" aria-hidden="true" />
+          <Undo2 className="w-4 h-4" aria-hidden="true" />
         </Button>
         <Button
           type="button"
@@ -154,9 +170,9 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           aria-label={t("templateEditor.redo")}
           variant="ghost"
           size="icon"
-          className="touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md hover:bg-muted disabled:opacity-30 transition-all shadow-none"
+          className={`${TOOLBAR_ICON_BUTTON} hover:bg-muted disabled:opacity-30`}
         >
-          <Redo2 className="w-3.5 h-3.5" aria-hidden="true" />
+          <Redo2 className="w-4 h-4" aria-hidden="true" />
         </Button>
       </div>
 
@@ -178,7 +194,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       {/* Group 4: Guides + Preview toggle */}
       <div
         role="group"
-        aria-label={t("templateEditor.preview")}
+        aria-label={t("templateEditor.viewOptions")}
         className="flex items-center gap-0.5 shrink-0"
       >
         <Button
@@ -189,16 +205,16 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           title={t("templateEditor.toggleGuides")}
           variant="ghost"
           size="icon"
-          className={`touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md transition-all shadow-none ${
+          className={`${TOOLBAR_ICON_BUTTON} ${
             showGuides
               ? "bg-primary/10 text-primary hover:bg-primary/20"
               : "text-muted-foreground hover:bg-muted hover:text-foreground"
           }`}
         >
           {showGuides ? (
-            <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+            <Eye className="w-4 h-4" aria-hidden="true" />
           ) : (
-            <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />
+            <EyeOff className="w-4 h-4" aria-hidden="true" />
           )}
         </Button>
 
@@ -207,20 +223,24 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
             type="button"
             onClick={onTogglePreview}
             aria-pressed={isPreviewMode}
-            aria-label={isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")}
-            title={isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")}
+            aria-label={
+              isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")
+            }
+            title={
+              isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")
+            }
             variant="ghost"
             size="icon"
-            className={`touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md transition-all shadow-none ${
+            className={`${TOOLBAR_ICON_BUTTON} ${
               isPreviewMode
                 ? "bg-primary/10 text-primary hover:bg-primary/20"
                 : "text-muted-foreground hover:bg-muted hover:text-foreground"
             }`}
           >
             {isPreviewMode ? (
-              <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+              <Pencil className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <Eye className="w-3.5 h-3.5" aria-hidden="true" />
+              <Eye className="w-4 h-4" aria-hidden="true" />
             )}
           </Button>
         )}
@@ -248,7 +268,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         <>
           <Divider />
           <div className="flex items-center gap-1 shrink-0">
-            <LayoutTemplate className="w-3 h-3 text-muted-foreground shrink-0" aria-hidden="true" />
+            <LayoutTemplate className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
             <FormSelect
               aria-label={t("templateEditor.presets")}
               value=""
@@ -264,7 +284,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
                 { value: "", label: t("templateEditor.presets") },
                 ...presets.map((p) => ({ value: p.key, label: p.label })),
               ]}
-              className="h-8 text-xs py-0 min-w-[120px]"
+              className="h-11 text-xs py-0 min-w-[130px]"
             />
           </div>
         </>
@@ -290,7 +310,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       {/* Group 8: Right actions — sticky on horizontal scroll */}
       <div
         role="group"
-        aria-label={t("templateEditor.save")}
+        aria-label={t("templateEditor.documentActions")}
         className="flex items-center gap-1.5 shrink-0 sticky end-0 bg-card/95 ps-2 border-s border-border/50 backdrop-blur-sm z-elevated"
       >
         <Button
@@ -299,11 +319,11 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           disabled={saving}
           variant="ghost"
           size="icon"
-          className="touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
+          className={`${TOOLBAR_ICON_BUTTON} text-muted-foreground hover:text-foreground hover:bg-muted`}
           title={t("templateEditor.resetDefault")}
           aria-label={t("templateEditor.resetDefault")}
         >
-          <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" />
+          <RotateCcw className="w-4 h-4" aria-hidden="true" />
         </Button>
 
         {onToggleFullscreen && (
@@ -313,14 +333,14 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
             aria-pressed={fullscreen}
             variant="ghost"
             size="icon"
-            className="touch-manipulation min-h-10 min-w-10 sm:min-h-9 sm:min-w-9 h-10 w-10 sm:h-9 sm:w-9 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted transition-all shadow-none"
+            className={`${TOOLBAR_ICON_BUTTON} text-muted-foreground hover:text-foreground hover:bg-muted`}
             title={t("templateEditor.toggleFullscreen")}
             aria-label={t("templateEditor.toggleFullscreen")}
           >
             {fullscreen ? (
-              <Minimize2 className="w-3.5 h-3.5" aria-hidden="true" />
+              <Minimize2 className="w-4 h-4" aria-hidden="true" />
             ) : (
-              <Maximize2 className="w-3.5 h-3.5" aria-hidden="true" />
+              <Maximize2 className="w-4 h-4" aria-hidden="true" />
             )}
           </Button>
         )}
@@ -334,25 +354,25 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           disabled={saving}
           aria-busy={saving}
           aria-label={saving ? t("global.saving") : saved ? t("templateEditor.saved") : t("templateEditor.save")}
-          className={`min-h-10 sm:min-h-9 h-10 sm:h-9 px-3.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-none flex items-center gap-1.5 ${
+          className={`min-h-11 h-11 px-3.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-none flex items-center gap-1.5 ${
             saved
-              ? "bg-emerald-500 hover:bg-emerald-500 text-white scale-[1.03] shadow-[0_0_12px_rgba(16,185,129,0.35)]"
+              ? "bg-success hover:bg-success text-success-foreground"
               : "bg-primary text-primary-foreground hover:bg-primary/90"
           }`}
         >
           {saving ? (
             <>
-              <Loader2 className="w-3.5 h-3.5 animate-spin" aria-hidden="true" />
+              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
               <span>{t("global.saving")}</span>
             </>
           ) : saved ? (
             <>
-              <CheckCheck className="w-3.5 h-3.5" aria-hidden="true" />
+              <CheckCheck className="w-4 h-4" aria-hidden="true" />
               <span>{t("templateEditor.saved")}</span>
             </>
           ) : (
             <>
-              <Save className="w-3.5 h-3.5" aria-hidden="true" />
+              <Save className="w-4 h-4" aria-hidden="true" />
               <span>{t("templateEditor.save")}</span>
             </>
           )}
@@ -365,7 +385,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
           variant="outline"
           title={t("templateEditor.close")}
           aria-label={t("templateEditor.close")}
-          className="min-h-10 sm:min-h-9 h-10 sm:h-9 px-3 text-xs font-medium rounded-lg border-border hover:bg-muted transition-all shadow-none"
+          className="min-h-11 h-11 px-3 text-xs font-medium rounded-lg border-border hover:bg-muted transition-all shadow-none"
         >
           {t("templateEditor.close")}
         </Button>

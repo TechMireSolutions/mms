@@ -1,10 +1,11 @@
 /**
  * @file TemplateEditorExportActions.tsx
- * @description Toolbar action buttons for JSON import/export, Typst generation, and Zoho sync.
+ * @description Toolbar action buttons for printing, template JSON import/export, and
+ * data export for the Typst renderer / Zoho invoices.
  */
 
 import React, { useRef } from "react";
-import { Download, Upload, FileCode2, CloudUpload, Printer, Loader2 } from "lucide-react";
+import { Download, Upload, FileJson2, FileCode2, Printer, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -21,6 +22,9 @@ export interface TemplateEditorExportActionsProps {
 
 const MAX_TEMPLATE_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
+const ACTION_BUTTON =
+  "min-h-11 h-11 px-2.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5";
+
 export function TemplateEditorExportActions({
   onExportJson,
   onImportJson,
@@ -32,7 +36,6 @@ export function TemplateEditorExportActions({
   t,
 }: TemplateEditorExportActionsProps): React.JSX.Element {
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const isDisabled = disabled || isExporting;
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -44,10 +47,12 @@ export function TemplateEditorExportActions({
     }
   };
 
+  const isDisabled = disabled || isExporting;
+
   return (
     <div
       role="group"
-      aria-label={t("common.export")}
+      aria-label={t("templateEditor.exportImport")}
       className="flex items-center gap-1.5 ms-2 flex-nowrap shrink-0 print:hidden"
     >
       <Button
@@ -55,11 +60,11 @@ export function TemplateEditorExportActions({
         onClick={onPrint || (() => window.print())}
         disabled={isDisabled}
         variant="outline"
-        className="min-h-11 px-2.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
+        className={ACTION_BUTTON}
         title={t("templateEditor.print")}
         aria-label={t("templateEditor.print")}
       >
-        <Printer className="w-3.5 h-3.5 text-slate-700 dark:text-slate-300" aria-hidden="true" />
+        <Printer className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
         <span className="hidden sm:inline">{t("templateEditor.print")}</span>
       </Button>
 
@@ -69,12 +74,12 @@ export function TemplateEditorExportActions({
           onClick={onExportJson}
           disabled={isDisabled}
           variant="outline"
-          className="min-h-11 px-2.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
+          className={ACTION_BUTTON}
           title={t("templateEditor.exportJson")}
           aria-label={t("templateEditor.exportJson")}
         >
-          <Download className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
-          <span className="hidden sm:inline">JSON</span>
+          <Download className="w-4 h-4 text-success" aria-hidden="true" />
+          <span className="hidden sm:inline">{t("templateEditor.templateFile")}</span>
         </Button>
       )}
 
@@ -93,11 +98,11 @@ export function TemplateEditorExportActions({
             onClick={() => fileInputRef.current?.click()}
             disabled={isDisabled}
             variant="outline"
-            className="min-h-11 px-2.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
+            className={ACTION_BUTTON}
             title={t("templateEditor.importJson")}
             aria-label={t("templateEditor.importJson")}
           >
-            <Upload className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" aria-hidden="true" />
+            <Upload className="w-4 h-4 text-info" aria-hidden="true" />
             <span className="hidden sm:inline">{t("templateEditor.import")}</span>
           </Button>
         </>
@@ -109,12 +114,13 @@ export function TemplateEditorExportActions({
           onClick={onExportTypst}
           disabled={isDisabled}
           variant="outline"
-          className="min-h-11 px-2.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
+          className={ACTION_BUTTON}
           title={t("templateEditor.exportTypst")}
           aria-label={t("templateEditor.exportTypst")}
         >
-          <FileCode2 className="w-3.5 h-3.5 text-sky-600 dark:text-sky-400" aria-hidden="true" />
-          <span className="hidden sm:inline">Typst</span>
+          <FileCode2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
+          {/* Product name, taken from the catalog so locales may transliterate it. */}
+          <span className="hidden sm:inline">{t("templateEditor.typst")}</span>
         </Button>
       )}
 
@@ -124,16 +130,22 @@ export function TemplateEditorExportActions({
           onClick={onExportZoho}
           disabled={isDisabled}
           variant="outline"
-          className="min-h-11 px-2.5 text-xs font-semibold rounded-lg border border-border hover:bg-muted transition-colors shadow-none flex items-center gap-1.5"
+          className={ACTION_BUTTON}
           title={t("templateEditor.exportZoho")}
           aria-label={t("templateEditor.exportZoho")}
         >
           {isExporting ? (
-            <Loader2 className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400 animate-spin" aria-hidden="true" />
+            <Loader2 className="w-4 h-4 text-muted-foreground animate-spin" aria-hidden="true" />
           ) : (
-            <CloudUpload className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            /*
+             * Deliberately a download icon, not a cloud-upload icon: this button
+             * writes a JSON file. Labelling it "sync" with an upload affordance
+             * promised a live Zoho integration that does not exist in the backend.
+             */
+            <FileJson2 className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
           )}
-          <span className="hidden sm:inline">Zoho</span>
+          {/* Product name, taken from the catalog so locales may transliterate it. */}
+          <span className="hidden sm:inline">{t("templateEditor.zoho")}</span>
         </Button>
       )}
     </div>

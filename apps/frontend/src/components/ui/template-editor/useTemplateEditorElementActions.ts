@@ -31,7 +31,24 @@ export interface UseTemplateEditorElementActionsOptions<TPayload = Record<string
       elements: TemplateElement<keyof TPayload & string>[]
     ) => TemplateElement<keyof TPayload & string>[]
   ) => void;
+  /**
+   * Commits an edit that repeats while the user types or holds a key. History is
+   * coalesced per key so a 14-character label is one undo step, not fourteen.
+   */
+  commitUpdateCoalesced: (
+    coalesceKey: string,
+    updateFn: (
+      elements: TemplateElement<keyof TPayload & string>[]
+    ) => TemplateElement<keyof TPayload & string>[]
+  ) => void;
   size: PageSizeInfo;
+  /** Highlights and scrolls to a freshly added element. */
+  onElementAdded?: (elementId: string) => void;
+  /**
+   * Called after a deletion. The delete button unmounts itself, so without this focus
+   * falls to `<body>` and nothing tells a screen-reader user that the element is gone.
+   */
+  onElementDeleted?: (deletedCount: number) => void;
   t: TranslationFunction;
 }
 
@@ -40,20 +57,32 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   selectedIds,
   setSelectedIds,
   commitUpdate,
+  commitUpdateCoalesced,
   size,
+  onElementAdded,
+  onElementDeleted,
   t,
 }: UseTemplateEditorElementActionsOptions<TPayload>) {
   const selectedId = selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null;
+
+  /** Event-free selection, usable from keyboard handlers (which have no `button`). */
+  const selectElement = (elementId: string) => {
+    setSelectedIds([elementId]);
+  };
 
   const patchElement = (
     elementId: string,
     patch: Partial<TemplateElement<keyof TPayload & string>>
   ) => {
-    commitUpdate((els) => els.map((el) => (el.id === elementId ? { ...el, ...patch } : el)));
+    const keys = Object.keys(patch).join(",");
+    commitUpdateCoalesced(`patch:${elementId}:${keys}`, (els) =>
+      els.map((el) => (el.id === elementId ? { ...el, ...patch } : el))
+    );
   };
 
   const patchStyle = (elementId: string, stylePatch: Partial<ElementStyle>) => {
-    commitUpdate((els) =>
+    const keys = Object.keys(stylePatch).join(",");
+    commitUpdateCoalesced(`style:${elementId}:${keys}`, (els) =>
       els.map((el) =>
         el.id === elementId ? { ...el, style: { ...el.style, ...stylePatch } } : el
       )
@@ -63,6 +92,7 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   const deleteElement = (elementId: string) => {
     commitUpdate((els) => els.filter((el) => el.id !== elementId));
     setSelectedIds((prev) => prev.filter((id) => id !== elementId));
+    onElementDeleted?.(1);
   };
 
   const deleteSelected = () => {
@@ -70,12 +100,14 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     const idSet = new Set(selectedIds);
     commitUpdate((els) => els.filter((el) => !idSet.has(el.id)));
     setSelectedIds([]);
+    onElementDeleted?.(selectedIds.length);
   };
 
   const nudgeSelected = (dx: number, dy: number) => {
     if (selectedIds.length === 0) return;
     const idSet = new Set(selectedIds);
-    commitUpdate((els) =>
+    // Holding an arrow key repeats this: one undo step per gesture, not per repeat.
+    commitUpdateCoalesced("nudge", (els) =>
       els.map((el) =>
         idSet.has(el.id)
           ? {
@@ -91,7 +123,7 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   const resizeSelected = (dw: number, dh: number) => {
     if (selectedIds.length === 0) return;
     const idSet = new Set(selectedIds);
-    commitUpdate((els) =>
+    commitUpdateCoalesced("resize", (els) =>
       els.map((el) =>
         idSet.has(el.id)
           ? {
@@ -107,7 +139,8 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
   const patchSelectedStyles = (stylePatch: Partial<ElementStyle>) => {
     if (selectedIds.length === 0) return;
     const idSet = new Set(selectedIds);
-    commitUpdate((els) =>
+    const keys = Object.keys(stylePatch).join(",");
+    commitUpdateCoalesced(`styleSelected:${keys}`, (els) =>
       els.map((el) =>
         idSet.has(el.id)
           ? {
@@ -183,25 +216,31 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     });
   };
 
+  const offsetFrom = (el: TemplateElement<keyof TPayload & string>, delta: number) => {
+    const nextX = el.x + delta;
+    const nextY = el.y + delta;
+    return {
+      x: nextX + el.w > size.width ? Math.max(0, size.width - el.w - delta) : nextX,
+      y: nextY + el.h > size.height ? Math.max(0, size.height - el.h - delta) : nextY,
+    };
+  };
+
   const duplicateElement = (elementId: string) => {
     const el = elements.find((e) => e.id === elementId);
     if (!el) return;
-    const nextX = el.x + 12;
-    const nextY = el.y + 12;
-    const clampedX = nextX + el.w > size.width ? Math.max(0, size.width - el.w - 12) : nextX;
-    const clampedY = nextY + el.h > size.height ? Math.max(0, size.height - el.h - 12) : nextY;
-
+    const { x, y } = offsetFrom(el, 12);
     const duplicated: TemplateElement<keyof TPayload & string> = {
       ...el,
       id: newId(),
-      x: clampedX,
-      y: clampedY,
+      x,
+      y,
       style: { ...el.style },
       columns: el.columns ? el.columns.map((col) => ({ ...col })) : undefined,
       tableConfig: el.tableConfig ? { ...el.tableConfig } : undefined,
     };
     commitUpdate((els) => [...els, duplicated]);
     setSelectedIds([duplicated.id]);
+    onElementAdded?.(duplicated.id);
   };
 
   const duplicateSelected = () => {
@@ -210,15 +249,12 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     const targets = elements.filter((el) => idSet.has(el.id));
     if (targets.length === 0) return;
     const newElements = targets.map((el) => {
-      const nextX = el.x + 12;
-      const nextY = el.y + 12;
-      const clampedX = nextX + el.w > size.width ? Math.max(0, size.width - el.w - 12) : nextX;
-      const clampedY = nextY + el.h > size.height ? Math.max(0, size.height - el.h - 12) : nextY;
+      const { x, y } = offsetFrom(el, 12);
       return {
         ...el,
         id: newId(),
-        x: clampedX,
-        y: clampedY,
+        x,
+        y,
         style: { ...el.style },
         columns: el.columns ? el.columns.map((col) => ({ ...col })) : undefined,
         tableConfig: el.tableConfig ? { ...el.tableConfig } : undefined,
@@ -226,6 +262,7 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     });
     commitUpdate((els) => [...els, ...newElements]);
     setSelectedIds(newElements.map((el) => el.id));
+    if (newElements[0]) onElementAdded?.(newElements[0].id);
   };
 
   const alignSelected = (alignType: AlignmentType) => {
@@ -244,12 +281,26 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     );
   };
 
+  /**
+   * Finds a free spot for a new element instead of stacking it on top of the last one.
+   *
+   * The old rule was "below the last element, else stagger by element count", which on a
+   * shipped 25-element preset dropped every new element around (36,36) — underneath the
+   * logo — so "Add" looked like it had done nothing.
+   */
   const getInsertionPos = (w: number, h: number) => {
-    if (elements.length === 0) return { x: 20, y: 20 };
-    const last = elements[elements.length - 1]!;
-    const nextY = last.y + last.h + 10;
-    if (nextY + h <= size.height - 20) {
-      return { x: 20, y: nextY };
+    const pad = 6;
+    const overlaps = (x: number, y: number) =>
+      elements.some(
+        (el) =>
+          x < el.x + el.w + pad &&
+          x + w + pad > el.x &&
+          y < el.y + el.h + pad &&
+          y + h + pad > el.y
+      );
+    const x = 20;
+    for (let y = 20; y + h <= size.height - 20; y += 10) {
+      if (!overlaps(x, y)) return { x, y };
     }
     const stagger = (elements.length % 6) * 16;
     return {
@@ -258,9 +309,15 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     };
   };
 
+  const addElement = (el: TemplateElement<keyof TPayload & string>) => {
+    commitUpdate((els) => [...els, el]);
+    setSelectedIds([el.id]);
+    onElementAdded?.(el.id);
+  };
+
   const addStaticText = () => {
     const { x, y } = getInsertionPos(200, 18);
-    const el: TemplateElement<keyof TPayload & string> = {
+    addElement({
       id: newId(),
       type: "static",
       label: t("templateEditor.newText"),
@@ -269,16 +326,14 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       w: 200,
       h: 18,
       style: { fontSize: 11, color: PRINT_NEUTRAL.text },
-    };
-    commitUpdate((els) => [...els, el]);
-    setSelectedIds([el.id]);
+    });
   };
 
   const addHeading = () => {
     const w = Math.min(320, Math.max(160, size.width - 40));
     const h = 26;
     const { x, y } = getInsertionPos(w, h);
-    const el: TemplateElement<keyof TPayload & string> = {
+    addElement({
       id: newId(),
       type: "static",
       label: t("templateEditor.heading"),
@@ -287,16 +342,14 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       w,
       h,
       style: { fontSize: 16, fontWeight: "bold", color: PRINT_NEUTRAL.text },
-    };
-    commitUpdate((els) => [...els, el]);
-    setSelectedIds([el.id]);
+    });
   };
 
   const addDivider = () => {
     const w = Math.max(40, size.width - 40);
     const h = 1;
     const { x, y } = getInsertionPos(w, h);
-    const el: TemplateElement<keyof TPayload & string> = {
+    addElement({
       id: newId(),
       type: "divider",
       label: "",
@@ -305,14 +358,12 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       w,
       h,
       style: { color: PRINT_NEUTRAL.border },
-    };
-    commitUpdate((els) => [...els, el]);
-    setSelectedIds([el.id]);
+    });
   };
 
   const addField = (fieldDef: TemplateFieldDefinition<TPayload>) => {
     const { x, y } = getInsertionPos(160, 16);
-    const el: TemplateElement<keyof TPayload & string> = {
+    addElement({
       id: newId(),
       type: "field",
       label: fieldDef.label,
@@ -322,14 +373,12 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       w: 160,
       h: 16,
       style: { fontSize: 10, color: PRINT_NEUTRAL.text },
-    };
-    commitUpdate((els) => [...els, el]);
-    setSelectedIds([el.id]);
+    });
   };
 
   const addQrCode = () => {
     const { x, y } = getInsertionPos(64, 64);
-    const el: TemplateElement<keyof TPayload & string> = {
+    addElement({
       id: newId(),
       type: "qrcode",
       label: t("templateEditor.qrCode"),
@@ -337,14 +386,12 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       y,
       w: 64,
       h: 64,
-    };
-    commitUpdate((els) => [...els, el]);
-    setSelectedIds([el.id]);
+    });
   };
 
   const addLogo = () => {
     const { x, y } = getInsertionPos(80, 80);
-    const el: TemplateElement<keyof TPayload & string> = {
+    addElement({
       id: newId(),
       type: "logo",
       label: t("templateEditor.logo"),
@@ -352,16 +399,14 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       y,
       w: 80,
       h: 80,
-    };
-    commitUpdate((els) => [...els, el]);
-    setSelectedIds([el.id]);
+    });
   };
 
   const addTable = () => {
     const w = Math.min(500, Math.max(240, size.width - 40));
     const h = 120;
     const { x, y } = getInsertionPos(w, h);
-    const el: TemplateElement<keyof TPayload & string> = {
+    addElement({
       id: newId(),
       type: "table",
       label: t("templateEditor.table"),
@@ -370,9 +415,9 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       w,
       h,
       columns: [
-        { header: "#", field: "id", width: 40, align: "center" },
-        { header: t("accounting.ledger.columns.description") || "Description", field: "description", width: 220, align: "left" },
-        { header: t("finance.columns.amount") || "Amount", field: "amount", width: 100, align: "right" },
+        { header: t("templateEditor.columnIndex"), field: "id", width: 40, align: "center" },
+        { header: t("templateEditor.columnDescription"), field: "description", width: 220, align: "left" },
+        { header: t("templateEditor.columnAmount"), field: "amount", width: 100, align: "right" },
       ],
       tableConfig: {
         showHeader: true,
@@ -387,12 +432,11 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
         borderWidth: 1,
         borderColor: PRINT_NEUTRAL.border,
       },
-    };
-    commitUpdate((els) => [...els, el]);
-    setSelectedIds([el.id]);
+    });
   };
 
   return {
+    selectElement,
     patchElement,
     patchStyle,
     patchSelectedStyles,

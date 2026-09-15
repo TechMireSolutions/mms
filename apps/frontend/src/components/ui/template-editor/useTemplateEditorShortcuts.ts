@@ -19,7 +19,6 @@ export interface UseTemplateEditorShortcutsOptions {
   copySelected?: () => void;
   paste?: () => void;
   resizeSelected?: (dw: number, dh: number) => void;
-  onClose?: () => void;
   zoomIn?: () => void;
   zoomOut?: () => void;
   zoomReset?: () => void;
@@ -38,7 +37,6 @@ export function useTemplateEditorShortcuts({
   copySelected,
   paste,
   resizeSelected,
-  onClose,
   zoomIn,
   zoomOut,
   zoomReset,
@@ -134,11 +132,15 @@ export function useTemplateEditorShortcuts({
     }
 
     if (e.key === "Escape") {
-      e.preventDefault();
+      /*
+       * Only the selection is cleared here. Closing the editor on Escape belongs to
+       * `useOverlayBehavior` (`useTemplateEditorModal`), which knows whether a nested
+       * dialog owns the key — a second handler here used to close the whole editor out
+       * from under a confirm dialog.
+       */
       if (hasSelection) {
+        e.preventDefault();
         deselectAll();
-      } else {
-        onClose?.();
       }
       return;
     }

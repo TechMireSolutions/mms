@@ -1,5 +1,7 @@
 import type { BrandingSettings } from "@mms/shared";
 import {
+  translateApp,
+  type AppTranslationKey,
   PAGE_SIZES,
   getPageDimensions,
   pageSizeKeySchema,
@@ -137,9 +139,29 @@ export interface FieldLookupInfo {
  * provided English default when the key is missing. Defaults to identity so
  * pure/non-React callers (tests, store snapshot) keep English labels.
  */
-export type TemplateTranslate = (key: string, fallback: string) => string;
+/**
+ * Translator passed into the element/preset builders.
+ *
+ * Single-argument on purpose: the previous `(key, fallback)` shape invited
+ * `t(key) || 'English label'`, which `.cursor/rules/mms-settings-i18n.mdc` bans. Every
+ * key these builders use exists in all four locale packs (asserted by
+ * `pnpm check:i18n`), so an English fallback was dead code that silently masked a
+ * missing translation.
+ */
+export type TemplateTranslate = (key: string) => string;
 
-export const identityTranslate: TemplateTranslate = (_key, fallback) => fallback;
+/**
+ * Default translator for non-React callers — the persistence/store snapshots and the
+ * default template fallback, which have no translation provider and must still produce
+ * a language-stable document.
+ *
+ * It resolves the **English pack from the shared catalog**, the same SSOT the running
+ * app uses, instead of an inline English literal: the 24 strings these builders emit
+ * were previously written twice (once as a hardcoded fallback here, once in
+ * `appTranslationsEn.ts`) and the copies had to be kept in sync by hand.
+ */
+export const defaultTemplateTranslate: TemplateTranslate = (key) =>
+  translateApp(key as AppTranslationKey, "en");
 
 /** i18n key namespace for palette field labels. */
 export const INVOICE_TEMPLATE_FIELD_KEY_PREFIX = "obligations.invoiceTemplate.field.";

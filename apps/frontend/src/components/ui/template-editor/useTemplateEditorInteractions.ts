@@ -75,6 +75,18 @@ export function useTemplateEditorInteractions<TPayload = Record<string, unknown>
         return;
       }
       if (e.code === "Space" && !e.repeat) {
+        /*
+         * Space is the standard activation key for buttons, and this listener is on
+         * `window`: calling preventDefault unconditionally meant that while the editor
+         * was open, Space silently did nothing on every focused button (Save, Close,
+         * palette, inspector) — and it put the canvas into pan mode at the same time.
+         * Interactive elements keep their native behaviour; the canvas element itself is
+         * a `role="button"` that handles Space in its own key handler.
+         */
+        const interactive = target?.closest(
+          'button, a[href], [role="button"], summary, [contenteditable="true"]'
+        );
+        if (interactive) return;
         e.preventDefault();
         setIsSpacePressed(true);
       }

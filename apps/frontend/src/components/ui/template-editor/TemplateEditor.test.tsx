@@ -62,7 +62,7 @@ describe("TemplateEditor Component", () => {
     expect(html).toContain("Zoho");
   });
 
-  it("renders zoom controls, preview button, and JSON export", () => {
+  it("renders zoom controls, preview button, and template file export", () => {
     const html = renderToStaticMarkup(
       <TemplateEditor
         template={sampleTemplate}
@@ -71,7 +71,8 @@ describe("TemplateEditor Component", () => {
     );
 
     expect(html).toContain("templateEditor.switchToPreview");
-    expect(html).toContain("JSON");
+    // The button label is translated now; "JSON" was hardcoded English in the toolbar.
+    expect(html).toContain("templateEditor.templateFile");
     expect(html).toContain("100%");
   });
 
@@ -135,7 +136,10 @@ describe("TemplateEditor Component", () => {
       />
     );
 
-    expect(html).toContain("templateEditor.copy / templateEditor.paste");
+    // Copy/cut and paste are separate entries now, and the cut shortcut (which the
+    // shortcut layer has always implemented) is finally advertised.
+    expect(html).toContain("templateEditor.copy / templateEditor.cut");
+    expect(html).toContain("templateEditor.paste");
     expect(html).toContain("templateEditor.spaceToPan");
     expect(html).toContain("templateEditor.altResize");
   });
@@ -151,7 +155,7 @@ describe("TemplateEditor Component", () => {
     expect(html).toContain("templateEditor.print");
   });
 
-  it("renders accessible dialog semantics with role, aria-modal, and documentType label", () => {
+  it("names the dialog through the visible heading, not a concatenated string", () => {
     const html = renderToStaticMarkup(
       <TemplateEditor
         template={sampleTemplate}
@@ -163,11 +167,17 @@ describe("TemplateEditor Component", () => {
 
     expect(html).toContain('role="dialog"');
     expect(html).toContain('aria-modal="true"');
-    expect(html).toContain('aria-label="Receipt Template Editor"');
     expect(html).toContain('tabindex="-1"');
+
+    // The dialog is labelled by the heading the user can see. The label used to be
+    // built by string concatenation (`"Receipt Template Editor"`) in English only.
+    const labelledBy = /aria-labelledby="([^"]+)"/.exec(html)?.[1];
+    expect(labelledBy).toBeTruthy();
+    expect(html).toContain(`id="${labelledBy}"`);
+    expect(html).toContain("templateEditor.documentTitle");
   });
 
-  it("renders toolbar with role=toolbar and accessible control states", () => {
+  it("exposes labelled control groups instead of a half-implemented toolbar role", () => {
     const html = renderToStaticMarkup(
       <TemplateEditor
         template={sampleTemplate}
@@ -175,9 +185,57 @@ describe("TemplateEditor Component", () => {
       />
     );
 
-    expect(html).toContain('role="toolbar"');
+    /*
+     * `role="toolbar"` promised the WAI-ARIA toolbar pattern (one tab stop, arrow-key
+     * navigation) while offering ~15 independent tab stops and a `<select>` in the
+     * middle. The groups are individually labelled instead, and a test now pins that
+     * decision so it cannot be half-reverted.
+     */
+    expect(html).not.toContain('role="toolbar"');
+    expect(html).toContain('aria-label="templateEditor.history"');
+    expect(html).toContain('aria-label="templateEditor.viewOptions"');
+    expect(html).toContain('aria-label="templateEditor.documentActions"');
     expect(html).toContain('aria-label="templateEditor.toggleGuides"');
     expect(html).toContain('aria-pressed="true"');
+  });
+
+  it("makes exactly one canvas element a tab stop (roving tabindex)", () => {
+    const html = renderToStaticMarkup(
+      <TemplateEditor
+        template={sampleTemplate}
+        onClose={vi.fn()}
+      />
+    );
+
+    // With 20+ absolutely positioned elements, one tab stop per element put the
+    // inspector dozens of tabs away from the canvas.
+    expect(html).toMatch(/tabindex="0"[^>]*aria-label="Invoice Title \(static\)"/);
+    expect(html).toMatch(/tabindex="-1"[^>]*aria-label="Student Name \(field\)"/);
+  });
+
+  it("labels the page size in pixels, the unit the editor actually stores", () => {
+    const html = renderToStaticMarkup(
+      <TemplateEditor
+        template={sampleTemplate}
+        onClose={vi.fn()}
+      />
+    );
+
+    // PAGE_SIZES are CSS pixels at 96dpi; the status pill used to claim "pt".
+    expect(html).toContain("559 × 794 px");
+    expect(html).not.toContain("559 × 794 pt");
+  });
+
+  it("makes the scrollable canvas region keyboard focusable", () => {
+    const html = renderToStaticMarkup(
+      <TemplateEditor
+        template={sampleTemplate}
+        onClose={vi.fn()}
+      />
+    );
+
+    expect(html).toContain('aria-label="templateEditor.canvasViewport"');
+    expect(html).toMatch(/tabindex="0"[^>]*aria-label="templateEditor\.canvasViewport"/);
   });
 
   it("renders role='region' without aria-modal when fullscreen is false", () => {
@@ -447,6 +505,74 @@ describe("TemplateEditorPropertiesPanel Component", () => {
     expect(html).toContain("templateEditor.fontSize");
   });
 
+  it("offers the layer list when nothing is selected, so covered elements are reachable", () => {
+    const elements = [
+      { id: "el_divider", type: "divider" as const, label: "", x: 0, y: 40, w: 300, h: 1 },
+      { id: "el_logo", type: "logo" as const, label: "Logo", x: 10, y: 10, w: 60, h: 60 },
+    ];
+    const html = renderToStaticMarkup(
+      <TemplateEditorPropertiesPanel
+        selectedElement={undefined}
+        elements={elements}
+        onSelectElement={vi.fn()}
+        onPatchElement={vi.fn()}
+        onPatchStyle={vi.fn()}
+        onDuplicateElement={vi.fn()}
+        onDeleteElement={vi.fn()}
+        t={mockT}
+      />
+    );
+
+    expect(html).toContain("templateEditor.layerList");
+    // 1px dividers cannot be hit with a pointer; the list is their selection path.
+    expect(html).toContain("divider ·");
+  });
+
+  it("lets an existing field element be re-bound to another data field", () => {
+    const html = renderToStaticMarkup(
+      <TemplateEditorPropertiesPanel
+        selectedElement={{
+          id: "el_field",
+          type: "field",
+          label: "Receipt No",
+          field: "receipt_no",
+          x: 10,
+          y: 10,
+          w: 120,
+          h: 16,
+        }}
+        availableFields={[
+          { field: "receipt_no", label: "Receipt No" },
+          { field: "amount", label: "Amount" },
+        ]}
+        onPatchElement={vi.fn()}
+        onPatchStyle={vi.fn()}
+        onDuplicateElement={vi.fn()}
+        onDeleteElement={vi.fn()}
+        t={mockT}
+      />
+    );
+
+    expect(html).toContain("templateEditor.dataField");
+    expect(html).toContain("templateEditor.labelFieldHint");
+    expect(html).toContain("Amount");
+  });
+
+  it("explains that a static element's label is the printed text", () => {
+    const html = renderToStaticMarkup(
+      <TemplateEditorPropertiesPanel
+        selectedElement={{ id: "el_1", type: "static", label: "Title", x: 10, y: 10, w: 50, h: 20 }}
+        onPatchElement={vi.fn()}
+        onPatchStyle={vi.fn()}
+        onDuplicateElement={vi.fn()}
+        onDeleteElement={vi.fn()}
+        t={mockT}
+      />
+    );
+
+    expect(html).toContain("templateEditor.labelStaticHint");
+  });
+
   it("renders empty hint when no element is selected", () => {
     const html = renderToStaticMarkup(
       <TemplateEditorPropertiesPanel
@@ -477,7 +603,8 @@ describe("TemplateEditorPropertiesPanel Component", () => {
       );
 
       expect(html).toContain('role="group"');
-      expect(html).toContain('aria-label="common.export"');
+      // The group holds Print and Import too, so labelling it "Export" was wrong.
+      expect(html).toContain('aria-label="templateEditor.exportImport"');
       expect(html).toContain("print:hidden");
       expect(html).toContain('aria-label="templateEditor.print"');
       expect(html).toContain('aria-label="templateEditor.exportJson"');

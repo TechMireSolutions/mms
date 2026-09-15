@@ -31,6 +31,10 @@ export interface UseTemplateEditorOptions<TPayload = Record<string, unknown>> {
   availableFields?: TemplateFieldDefinition<TPayload>[];
   presets?: DocumentTemplatePreset<TPayload>[];
   onSave?: (template: DocumentTemplate<TPayload>) => void | Promise<void>;
+  /**
+   * Called when the editor itself wants to close. Escape is owned by the overlay
+   * behaviour hook (see `useTemplateEditorModal`), which understands nested overlays.
+   */
   onClose?: () => void;
   documentType?: string;
 }
@@ -41,16 +45,24 @@ const FALLBACK_TEMPLATE: DocumentTemplate = {
   elements: [],
 };
 
+/** Repeated edits closer together than this collapse into a single undo step. */
+const COALESCE_WINDOW_MS = 700;
+
+/** How long a freshly added element stays highlighted on the canvas. */
+const FLASH_DURATION_MS = 1600;
+
+/** How long the "element deleted" status message stays available to assistive tech. */
+const DELETION_NOTICE_MS = 4000;
+
 export function useTemplateEditor<TPayload = Record<string, unknown>>({
   initialTemplate,
   defaultTemplate = FALLBACK_TEMPLATE as DocumentTemplate<TPayload>,
   availableFields = [],
   presets = [],
   onSave,
-  onClose,
   documentType,
 }: UseTemplateEditorOptions<TPayload> = {}) {
-  const { t } = useTranslation();
+  const { t, isRtl } = useTranslation();
   const [template, setTemplate] = useState<DocumentTemplate<TPayload>>(() => initialTemplate || defaultTemplate);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showGuides, setShowGuides] = useState(true);
@@ -59,11 +71,24 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
   const [history, setHistory] = useState<DocumentTemplate<TPayload>[]>([]);
   const [future, setFuture] = useState<DocumentTemplate<TPayload>[]>([]);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
+  /** Briefly set after an element is added so the canvas can reveal and flash it. */
+  const [flashElementId, setFlashElementId] = useState<string | null>(null);
+  /**
+   * Deletion feedback for screen readers. `nonce` also tells the shell to move focus back
+   * to the canvas, because the control that was activated no longer exists.
+   */
+  const [deletionNotice, setDeletionNotice] = useState<{ nonce: number; message: string } | null>(
+    null
+  );
   const canvasRef = useRef<HTMLDivElement>(null);
   const dragState = useRef<DragStateInfo<TPayload> | null>(null);
   const resizeState = useRef<ResizeStateInfo<TPayload> | null>(null);
   // Timer ref for the "saved" flash — cleared on unmount to prevent state update on unmounted component
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const deletionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Coalescing window for repeated edits (typing, key repeat, colour-picker drags)
+  const lastCoalesceRef = useRef<{ key: string; at: number } | null>(null);
   // Serialized snapshot of the template at the point of last save to compute isDirty accurately
   const lastSavedTemplateJsonRef = useRef<string>(JSON.stringify(initialTemplate || defaultTemplate));
   const hasHydratedRef = useRef(false);
@@ -108,10 +133,12 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
   const deselectAll = useCallback(() => setSelectedIds([]), []);
   const selectAll = useCallback(() => setSelectedIds(template.elements.map((el) => el.id)), [template.elements]);
 
-  // Cleanup the saved-flash timer on unmount to prevent state update on unmounted component
+  // Cleanup the saved-flash and element-flash timers on unmount
   useEffect(() => {
     return () => {
       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      if (deletionTimerRef.current) clearTimeout(deletionTimerRef.current);
     };
   }, []);
 
@@ -157,6 +184,52 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     });
   }, []);
 
+  /**
+   * Commit for edits that repeat while the user works: typing in a field, holding an
+   * arrow key, dragging in an OS colour picker.
+   *
+   * Each of those used to push its own history entry through `commitUpdate`. A
+   * fourteen-character label therefore consumed fourteen of the thirty undo slots, and
+   * a single label edit could flush the undo history of a whole design session.
+   * Repeated edits that share a coalesce key inside {@link COALESCE_WINDOW_MS} collapse
+   * into one entry, so undo steps match user intent.
+   */
+  const commitUpdateCoalesced = useCallback((coalesceKey: string, updateFn: ElementUpdater) => {
+    setTemplate((curr) => {
+      const nextTemplate = { ...curr, elements: updateFn(curr.elements) };
+      const now = Date.now();
+      const last = lastCoalesceRef.current;
+      const startsNewStep =
+        !last || last.key !== coalesceKey || now - last.at > COALESCE_WINDOW_MS;
+      if (startsNewStep) {
+        setHistory((historyStack) => [...historyStack.slice(-30), curr]);
+        setFuture([]);
+      }
+      lastCoalesceRef.current = { key: coalesceKey, at: now };
+      return nextTemplate;
+    });
+  }, []);
+
+  /** Reveals and highlights a newly added element so "Add" never looks like a no-op. */
+  const handleElementAdded = useCallback((elementId: string) => {
+    setFlashElementId(elementId);
+    if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    flashTimerRef.current = setTimeout(() => setFlashElementId(null), FLASH_DURATION_MS);
+  }, []);
+
+  /** Announces a deletion and asks the shell to return focus to the canvas. */
+  const handleElementDeleted = useCallback(
+    (deletedCount: number) => {
+      setDeletionNotice((prev) => ({
+        nonce: (prev?.nonce ?? 0) + 1,
+        message: `${t("templateEditor.elementDeleted")} (${deletedCount})`,
+      }));
+      if (deletionTimerRef.current) clearTimeout(deletionTimerRef.current);
+      deletionTimerRef.current = setTimeout(() => setDeletionNotice(null), DELETION_NOTICE_MS);
+    },
+    [t]
+  );
+
   const clipboardRef = useRef<TemplateElement<keyof TPayload & string>[]>([]);
 
   const interactions = useTemplateEditorInteractions({
@@ -176,7 +249,10 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     selectedIds,
     setSelectedIds,
     commitUpdate,
+    commitUpdateCoalesced,
     size,
+    onElementAdded: handleElementAdded,
+    onElementDeleted: handleElementDeleted,
     t,
   });
 
@@ -255,7 +331,12 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     onSave: handleSave,
     copySelected,
     paste,
-    onClose,
+    /*
+     * `onClose` is deliberately NOT passed any more: Escape-to-close is owned by
+     * `useOverlayBehavior` in `useTemplateEditorModal`, which only honours Escape for
+     * the topmost overlay. Two handlers meant Escape closed the editor while a nested
+     * confirm dialog was open.
+     */
     zoomIn: zoom.zoomIn,
     zoomOut: zoom.zoomOut,
     zoomReset: zoom.zoomReset,
@@ -392,6 +473,7 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
 
   return {
     t,
+    isRtl,
     template,
     selectedId,
     selectedIds,
@@ -408,6 +490,8 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     saved,
     saving,
     isDirty,
+    flashElementId,
+    deletionNotice,
     history,
     future,
     ...zoom,

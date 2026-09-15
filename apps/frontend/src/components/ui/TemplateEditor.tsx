@@ -4,9 +4,8 @@
  * Parametric over document payload schemas with native Typst and Zoho sync integrations.
  */
 
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useId, useRef, useState } from "react";
 import { useBranding } from "@/tenant/hooks/useBranding";
-import { notify } from "@/lib/notify";
 import type {
   DocumentTemplate,
   DocumentTemplatePreset,
@@ -21,7 +20,12 @@ import { TemplateEditorElementPalette } from "./template-editor/TemplateEditorEl
 import { TemplateEditorCanvas } from "./template-editor/TemplateEditorCanvas";
 import { TemplateEditorPropertiesPanel } from "./template-editor/TemplateEditorPropertiesPanel";
 import { TemplateEditorKeyboardHints } from "./template-editor/TemplateEditorKeyboardHints";
-import { mapToZohoInvoice } from "./template-editor/templatePayloadMappers";
+import { useTemplateEditorExport } from "./template-editor/useTemplateEditorExport";
+import { TemplateEditorPrintRules } from "./template-editor/TemplateEditorPrintRules";
+import {
+  TemplateEditorPaneSwitcher,
+  type EditorPane,
+} from "./template-editor/TemplateEditorPaneSwitcher";
 
 export interface TemplateEditorProps<TPayload = Record<string, unknown>> {
   title?: string;
@@ -36,6 +40,8 @@ export interface TemplateEditorProps<TPayload = Record<string, unknown>> {
   onClose: () => void;
   onExportTypst?: (payload: TPayload) => void | Promise<void>;
   onExportZoho?: (payload: ZohoInvoicePayload) => void | Promise<void>;
+  /** Overrides the built-in browser print of the editing surface. */
+  onPrint?: () => void;
 }
 
 export function TemplateEditor<TPayload = Record<string, unknown>>({
@@ -51,15 +57,15 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
   onClose,
   onExportTypst,
   onExportZoho,
+  onPrint,
 }: TemplateEditorProps<TPayload>): React.JSX.Element {
-  const [isExporting, setIsExporting] = useState(false);
+  const [pane, setPane] = useState<EditorPane>("canvas");
   const branding = useBranding();
+  const titleId = useId();
 
   // The editor's Escape/Ctrl-close handler must invoke the modal's close logic,
   // but the modal needs the editor's live `isDirty` — a circular dependency.
-  // Break it with a stable indirection so neither value is read a render late
-  // (the previous `editorRef.current = editor` pattern made the discard prompt
-  // miss the most recent edit, and wrote a ref during render).
+  // Break it with a stable indirection so neither value is read a render late.
   const modalCloseRef = useRef<() => void>(() => {});
   const handleEditorClose = useCallback(() => {
     modalCloseRef.current();
@@ -79,16 +85,36 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
     return window.confirm(editor.t("templateEditor.discardUnsavedPrompt"));
   }, [editor.t]);
 
+  const hasSelection = editor.selectedIds.length > 0;
   const modal = useTemplateEditorModal({
     initialFullscreen: fullscreen,
     isDirty: editor.isDirty,
     onClose,
     confirmDiscardPrompt,
+    // Escape clears the selection first (the shortcut layer owns that press); only a
+    // second Escape with nothing selected leaves the editor.
+    ignoreEscapeWhen: () => hasSelection,
   });
 
   useEffect(() => {
     modalCloseRef.current = modal.handleClose;
   }, [modal.handleClose]);
+
+  /* Deleting unmounts the activated control, so recover focus and announce the change. */
+  const deletionNonce = editor.deletionNotice?.nonce ?? 0;
+  useEffect(() => {
+    if (!deletionNonce) return;
+    editor.canvasViewportRef.current?.focus();
+  }, [deletionNonce, editor.canvasViewportRef]);
+
+  const { isExporting, handlePrint, handleExportTypst, handleExportZoho } = useTemplateEditorExport({
+    template: editor.template,
+    sampleData,
+    onExportTypst,
+    onExportZoho,
+    onPrint,
+    t: editor.t,
+  });
 
   const handleToggleGuides = useCallback(() => {
     editor.setShowGuides((prev) => !prev);
@@ -98,46 +124,16 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
     editor.setIsPreviewMode((prev) => !prev);
   }, [editor.setIsPreviewMode]);
 
-  const handlePrint = useCallback(() => {
-    window.print();
-  }, []);
-
-  const handleExportTypst = useCallback(async () => {
-    if (!onExportTypst) return;
-    setIsExporting(true);
-    try {
-      const payload = (sampleData || {}) as TPayload;
-      await onExportTypst(payload);
-    } catch (err) {
-      console.error("Typst export failed:", err);
-      notify.error(editor.t("templateEditor.exportFailed"));
-    } finally {
-      setIsExporting(false);
-    }
-  }, [editor.t, onExportTypst, sampleData]);
-
-  const handleExportZoho = useCallback(async () => {
-    if (!onExportZoho) return;
-    setIsExporting(true);
-    try {
-      const zohoPayload = mapToZohoInvoice(
-        (sampleData || {}) as Record<string, unknown>,
-        editor.template as DocumentTemplate
-      );
-      await onExportZoho(zohoPayload);
-    } catch (err) {
-      console.error("Zoho export failed:", err);
-      notify.error(editor.t("templateEditor.exportFailed"));
-    } finally {
-      setIsExporting(false);
-    }
-  }, [editor.t, editor.template, onExportZoho, sampleData]);
-
+  const documentLabel = documentType ? documentType.charAt(0).toUpperCase() + documentType.slice(1) : "";
   const editorLabel =
     title ||
-    (documentType
-      ? `${documentType.charAt(0).toUpperCase() + documentType.slice(1)} Template Editor`
+    (documentLabel
+      ? editor.t("templateEditor.documentTitle", { document: documentLabel })
       : editor.t("templateEditor.title"));
+
+
+  /** Visible when it is the selected mobile pane, and always visible from `lg` up. */
+  const paneClass = (candidate: EditorPane) => (pane === candidate ? "flex" : "hidden");
 
   return (
     <div
@@ -145,15 +141,24 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
       tabIndex={-1}
       role={modal.isFullscreen ? "dialog" : "region"}
       aria-modal={modal.isFullscreen ? "true" : undefined}
-      aria-label={editorLabel}
+      aria-labelledby={titleId}
+      data-print-unclamp
       className={
         modal.isFullscreen
           ? "fixed inset-0 z-modal flex flex-col bg-background outline-hidden print:static print:bg-white print:overflow-visible print:border-none print:p-0 print:m-0"
-          : "flex flex-col bg-background rounded-xl border border-border overflow-hidden h-[calc(100dvh-14rem)] min-h-[580px] max-h-[860px] outline-hidden print:static print:bg-white print:overflow-visible print:border-none print:p-0 print:m-0"
+          : "flex flex-col bg-background rounded-xl border border-border overflow-hidden h-[calc(100dvh-14rem)] min-h-[580px] max-h-[860px] outline-hidden print:static print:bg-white print:h-auto print:max-h-none print:overflow-visible print:border-none print:p-0 print:m-0"
       }
     >
+      <TemplateEditorPrintRules
+        width={editor.size.width}
+        height={editor.size.height}
+        orientation={editor.orientation}
+      />
+
       <TemplateEditorToolbar
-        title={title}
+        /* `editorLabel` already applies the title → documentType → generic fallbacks. */
+        title={editorLabel}
+        titleId={titleId}
         template={editor.template}
         historyLength={editor.history.length}
         futureLength={editor.future.length}
@@ -189,21 +194,29 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
         t={editor.t}
       />
 
+      <TemplateEditorPaneSwitcher value={pane} onChange={setPane} t={editor.t} />
+
       <div className="flex min-h-0 flex-1 flex-col overflow-hidden lg:flex-row">
         {!editor.isPreviewMode && (
-          <TemplateEditorElementPalette
-            availableFields={availableFields}
-            onAddStaticText={editor.addStaticText}
-            onAddHeading={editor.addHeading}
-            onAddDivider={editor.addDivider}
-            onAddQrCode={editor.addQrCode}
-            onAddLogo={editor.addLogo}
-            onAddField={editor.addField}
-            onAddTable={editor.addTable}
-            t={editor.t}
-          />
+          /* `lg:contents` restores flex stretch at lg — see TemplateEditorPaneSwitcher. */
+          <div className={`${paneClass("elements")} lg:contents`}>
+            <TemplateEditorElementPalette
+              availableFields={availableFields}
+              onAddStaticText={editor.addStaticText}
+              onAddHeading={editor.addHeading}
+              onAddDivider={editor.addDivider}
+              onAddQrCode={editor.addQrCode}
+              onAddLogo={editor.addLogo}
+              onAddField={editor.addField}
+              onAddTable={editor.addTable}
+              t={editor.t}
+            />
+          </div>
         )}
-        <div className="flex-1 min-h-[320px] relative flex flex-col overflow-hidden">
+        <div
+          /* `print:flex`: below lg an inactive pane is `hidden`, and print is not a screen. */
+          className={`${paneClass("canvas")} lg:flex print:flex flex-1 min-h-[320px] relative flex-col overflow-hidden`}
+        >
           <ErrorBoundary>
             <TemplateEditorCanvas
               template={editor.template}
@@ -225,39 +238,53 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
               onMouseDownResize={editor.onMouseDownResize}
               onDeleteElement={editor.deleteElement}
               onSelectElements={editor.setSelectedIds}
+              onSelectElement={editor.selectElement}
+              flashElementId={editor.flashElementId}
+              appDir={editor.isRtl ? "rtl" : "ltr"}
               sampleData={sampleData}
               t={editor.t}
             />
           </ErrorBoundary>
         </div>
         {!editor.isPreviewMode && (
-          <TemplateEditorPropertiesPanel
-            selectedElement={editor.selectedElement}
-            selectedElements={editor.selectedElements}
-            onPatchElement={editor.patchElement}
-            onPatchStyle={editor.patchStyle}
-            onPatchSelectedStyles={editor.patchSelectedStyles}
-            onDuplicateElement={editor.duplicateElement}
-            onDeleteElement={editor.deleteElement}
-            onDuplicateSelected={editor.duplicateSelected}
-            onDeleteSelected={editor.deleteSelected}
-            onAlignSelected={editor.alignSelected}
-            onDistributeSelected={editor.distributeSelected}
-            onCenterSelected={editor.centerSelected}
-            onBringToFront={editor.bringToFront}
-            onSendToBack={editor.sendToBack}
-            onBringSelectedToFront={editor.bringSelectedToFront}
-            onSendSelectedToBack={editor.sendSelectedToBack}
-            onMoveForward={editor.moveForward}
-            onMoveBackward={editor.moveBackward}
-            primaryColor={branding.primaryColor}
-            secondaryColor={branding.secondaryColor}
-            t={editor.t}
-          />
+          <div className={`${paneClass("properties")} lg:contents`}>
+            <TemplateEditorPropertiesPanel
+              selectedElement={editor.selectedElement}
+              selectedElements={editor.selectedElements}
+              elements={editor.template.elements}
+              availableFields={availableFields}
+              onSelectElement={editor.selectElement}
+              onPatchElement={editor.patchElement}
+              onPatchStyle={editor.patchStyle}
+              onPatchSelectedStyles={editor.patchSelectedStyles}
+              onDuplicateElement={editor.duplicateElement}
+              onDeleteElement={editor.deleteElement}
+              onDuplicateSelected={editor.duplicateSelected}
+              onDeleteSelected={editor.deleteSelected}
+              onAlignSelected={editor.alignSelected}
+              onDistributeSelected={editor.distributeSelected}
+              onCenterSelected={editor.centerSelected}
+              onBringToFront={editor.bringToFront}
+              onSendToBack={editor.sendToBack}
+              onBringSelectedToFront={editor.bringSelectedToFront}
+              onSendSelectedToBack={editor.sendSelectedToBack}
+              onMoveForward={editor.moveForward}
+              onMoveBackward={editor.moveBackward}
+              primaryColor={branding.primaryColor}
+              secondaryColor={branding.secondaryColor}
+              isRtl={editor.isRtl}
+              t={editor.t}
+            />
+          </div>
         )}
       </div>
 
       <TemplateEditorKeyboardHints t={editor.t} />
+
+      {/* Polite status region: deletions only. Visually hidden, announced on change. */}
+      <div role="status" aria-live="polite" className="sr-only">
+        {editor.deletionNotice?.message ?? ""}
+      </div>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import {
   Bold,
   Italic,
   Underline,
+  Type,
 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormSelect } from "@/components/ui/FormSelect";
@@ -19,39 +20,75 @@ import type { ElementStyle } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { StyleBtn, StyleInput } from "./TemplateEditorStyleControls";
 import { normalizeHexColor } from "./templateEditorUtils";
+import { TemplateEditorSection } from "./TemplateEditorSection";
 
 export interface TemplateEditorTypographySectionProps {
   elementId: string;
   elStyle: ElementStyle;
+  isOpen: boolean;
+  onToggle: () => void;
   onPatchStyle: (elementId: string, stylePatch: Partial<ElementStyle>) => void;
   primaryColor?: string;
   secondaryColor?: string;
+  /** Whether the *application* is rendered right-to-left (ar/ur/fa). */
+  isRtl: boolean;
   t: TranslationFunction;
 }
 
-// Stable outside component — recreating this array on every render is wasteful
-const STATIC_SWATCHES = [
-  { labelKey: "Dark", color: "#0f172a" },
-  { labelKey: "Muted", color: "#64748b" },
-  { labelKey: "Emerald", color: "#10b981" },
-  { labelKey: "Amber", color: "#f59e0b" },
-  { labelKey: "Red", color: "#ef4444" },
+/*
+ * Swatch colours stay literal hex on purpose: they are print-ink colours, so they
+ * must not follow the dark/light UI theme. The names are translated, the values are
+ * not derived from tokens.
+ */
+const SWATCHES = [
+  { labelKey: "templateEditor.swatchText", color: PRINT_NEUTRAL.text },
+  { labelKey: "templateEditor.swatchMuted", color: PRINT_NEUTRAL.muted },
+  { labelKey: "templateEditor.swatchSuccess", color: "#10b981" },
+  { labelKey: "templateEditor.swatchWarning", color: "#f59e0b" },
+  { labelKey: "templateEditor.swatchDestructive", color: "#ef4444" },
 ] as const;
+
+/*
+ * Font stacks are invariant proper nouns — the descriptor that used to follow each
+ * name ("Modern Sans", "Arabic Serif", …) was English prose in a translated menu and
+ * has been dropped rather than left untranslated.
+ */
+const FONT_OPTIONS = [
+  { value: "Inter, sans-serif", label: "Inter" },
+  { value: "'Amiri', serif", label: "Amiri" },
+  { value: "'Cairo', sans-serif", label: "Cairo" },
+  { value: "'Noto Nastaliq Urdu', serif", label: "Noto Nastaliq Urdu" },
+  { value: "monospace", label: "Monospace" },
+];
 
 export function TemplateEditorTypographySection({
   elementId,
   elStyle,
+  isOpen,
+  onToggle,
   onPatchStyle,
   primaryColor,
   secondaryColor,
+  isRtl,
   t,
 }: TemplateEditorTypographySectionProps): React.JSX.Element {
-  return (
-    <div className="space-y-3 pt-2 border-t border-border">
-      <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest m-0">
-        {t("templateEditor.typography")}
-      </p>
+  const startAlign = isRtl ? "right" : "left";
+  const endAlign = isRtl ? "left" : "right";
 
+  const swatches = [
+    { label: t("templateEditor.swatchBrandPrimary"), color: primaryColor || "#059669" },
+    { label: t("templateEditor.swatchBrandSecondary"), color: secondaryColor || "#047857" },
+    ...SWATCHES.map((s) => ({ label: t(s.labelKey), color: s.color })),
+  ];
+
+  return (
+    <TemplateEditorSection
+      titleKey="templateEditor.typography"
+      icon={Type}
+      isOpen={isOpen}
+      onToggle={onToggle}
+      t={t}
+    >
       <div className="space-y-1">
         <label htmlFor={`font-family-${elementId}`} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
           {t("templateEditor.fontFamily")}
@@ -61,14 +98,8 @@ export function TemplateEditorTypographySection({
           aria-label={t("templateEditor.fontFamily")}
           value={elStyle.fontFamily || "Inter, sans-serif"}
           onChange={(val) => onPatchStyle(elementId, { fontFamily: val })}
-          options={[
-            { value: "Inter, sans-serif", label: "Inter (Modern Sans)" },
-            { value: "'Amiri', serif", label: "Amiri (Arabic Serif)" },
-            { value: "'Cairo', sans-serif", label: "Cairo (Arabic Modern)" },
-            { value: "'Noto Nastaliq Urdu', serif", label: "Nastaliq (Urdu)" },
-            { value: "monospace", label: "Monospace (Numbers)" },
-          ]}
-          className="h-8 text-xs py-0 w-full"
+          options={FONT_OPTIONS}
+          className="h-11 text-xs py-0 w-full"
         />
       </div>
 
@@ -105,20 +136,17 @@ export function TemplateEditorTypographySection({
       <div className="space-y-1.5">
         <span className="text-3xs text-muted-foreground font-semibold">{t("templateEditor.themePalette")}:</span>
         <div className="flex items-center gap-0.5 flex-wrap">
-          {[
-            { labelKey: "Primary", color: primaryColor || "#059669" },
-            { labelKey: "Secondary", color: secondaryColor || "#047857" },
-            ...STATIC_SWATCHES,
-          ].map((swatch) => {
+          {swatches.map((swatch) => {
             const isSelected = (elStyle.color || "").toLowerCase() === swatch.color.toLowerCase();
             return (
               <button
                 key={swatch.color}
                 type="button"
-                title={swatch.labelKey}
-                aria-label={swatch.labelKey}
+                title={swatch.label}
+                aria-label={swatch.label}
+                aria-pressed={isSelected}
                 onClick={() => onPatchStyle(elementId, { color: swatch.color })}
-                className="min-h-11 min-w-11 flex items-center justify-center p-1 rounded-lg hover:bg-muted/40 cursor-pointer"
+                className="min-h-11 min-w-11 flex items-center justify-center p-1 rounded-lg hover:bg-muted/40 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-hidden"
               >
                 <span
                   style={{ backgroundColor: swatch.color }}
@@ -134,7 +162,7 @@ export function TemplateEditorTypographySection({
         </div>
       </div>
 
-      <div className="flex items-center gap-1.5">
+      <div role="group" aria-label={t("templateEditor.textStyle")} className="flex flex-wrap items-center gap-1.5">
         <StyleBtn
           active={elStyle.fontWeight === "bold"}
           onClick={() =>
@@ -144,7 +172,7 @@ export function TemplateEditorTypographySection({
           }
           title={t("templateEditor.bold")}
         >
-          <Bold className="w-3.5 h-3.5" aria-hidden="true" />
+          <Bold className="w-4 h-4" aria-hidden="true" />
         </StyleBtn>
         <StyleBtn
           active={elStyle.fontStyle === "italic"}
@@ -155,7 +183,7 @@ export function TemplateEditorTypographySection({
           }
           title={t("templateEditor.italic")}
         >
-          <Italic className="w-3.5 h-3.5" aria-hidden="true" />
+          <Italic className="w-4 h-4" aria-hidden="true" />
         </StyleBtn>
         <StyleBtn
           active={elStyle.textDecoration === "underline"}
@@ -166,28 +194,34 @@ export function TemplateEditorTypographySection({
           }
           title={t("templateEditor.underline")}
         >
-          <Underline className="w-3.5 h-3.5" aria-hidden="true" />
+          <Underline className="w-4 h-4" aria-hidden="true" />
         </StyleBtn>
+
+        {/*
+         * Alignment is presented as start/end, not left/right: in an Urdu or Arabic
+         * workspace "align left" is the *end* of the line, and the icons mirror with
+         * `rtl:-scale-x-100` so the glyph points at the edge it actually aligns to.
+         */}
         <StyleBtn
-          active={elStyle.textAlign === "left" || !elStyle.textAlign}
-          onClick={() => onPatchStyle(elementId, { textAlign: "left" })}
-          title={t("templateEditor.alignLeft")}
+          active={elStyle.textAlign === startAlign || !elStyle.textAlign}
+          onClick={() => onPatchStyle(elementId, { textAlign: startAlign })}
+          title={t("templateEditor.alignStart")}
         >
-          <AlignLeft className="w-3.5 h-3.5" aria-hidden="true" />
+          <AlignLeft className="w-4 h-4 rtl:-scale-x-100" aria-hidden="true" />
         </StyleBtn>
         <StyleBtn
           active={elStyle.textAlign === "center"}
           onClick={() => onPatchStyle(elementId, { textAlign: "center" })}
           title={t("templateEditor.alignCenter")}
         >
-          <AlignCenter className="w-3.5 h-3.5" aria-hidden="true" />
+          <AlignCenter className="w-4 h-4" aria-hidden="true" />
         </StyleBtn>
         <StyleBtn
-          active={elStyle.textAlign === "right"}
-          onClick={() => onPatchStyle(elementId, { textAlign: "right" })}
-          title={t("templateEditor.alignRight")}
+          active={elStyle.textAlign === endAlign}
+          onClick={() => onPatchStyle(elementId, { textAlign: endAlign })}
+          title={t("templateEditor.alignEnd")}
         >
-          <AlignRight className="w-3.5 h-3.5" aria-hidden="true" />
+          <AlignRight className="w-4 h-4 rtl:-scale-x-100" aria-hidden="true" />
         </StyleBtn>
       </div>
 
@@ -203,6 +237,6 @@ export function TemplateEditorTypographySection({
           {t("templateEditor.rtl")}
         </label>
       </div>
-    </div>
+    </TemplateEditorSection>
   );
 }

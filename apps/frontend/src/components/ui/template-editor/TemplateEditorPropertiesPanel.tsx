@@ -6,8 +6,7 @@
 import React, { useState } from 'react';
 import { Copy, Layers, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import type { ElementStyle, TemplateElement } from '@mms/shared';
+import type { ElementStyle, TemplateElement, TemplateFieldDefinition } from '@mms/shared';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AlignmentType } from './templateEditorUtils';
 import { TemplateEditorMultiSelectPanel } from './TemplateEditorMultiSelectPanel';
@@ -16,10 +15,18 @@ import { TemplateEditorPositionSection } from './TemplateEditorPositionSection';
 import { TemplateEditorLayersSection } from './TemplateEditorLayersSection';
 import { TemplateEditorAppearanceSection } from './TemplateEditorAppearanceSection';
 import { TemplateEditorTableSection } from './TemplateEditorTableSection';
+import { TemplateEditorLayerList } from './TemplateEditorLayerList';
+import { TemplateEditorElementIdentitySection } from './TemplateEditorElementIdentitySection';
+import { TemplateEditorSection } from './TemplateEditorSection';
 
 export interface TemplateEditorPropertiesPanelProps<TPayload = Record<string, unknown>> {
   selectedElement: TemplateElement<keyof TPayload & string> | undefined;
   selectedElements?: TemplateElement<keyof TPayload & string>[];
+  /** Every element on the page, for the layer list. */
+  elements?: TemplateElement<keyof TPayload & string>[];
+  /** Selectable data fields, so an existing field element can be re-bound. */
+  availableFields?: TemplateFieldDefinition<TPayload>[];
+  onSelectElement?: (elementId: string) => void;
   onPatchElement: (
     elementId: string,
     patch: Partial<TemplateElement<keyof TPayload & string>>,
@@ -41,12 +48,17 @@ export interface TemplateEditorPropertiesPanelProps<TPayload = Record<string, un
   onPatchSelectedStyles?: (stylePatch: Partial<ElementStyle>) => void;
   primaryColor?: string;
   secondaryColor?: string;
+  /** Whether the application is rendered right-to-left (ar/ur/fa). */
+  isRtl?: boolean;
   t: TranslationFunction;
 }
 
 export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>>({
   selectedElement,
   selectedElements = [],
+  elements = [],
+  availableFields = [],
+  onSelectElement,
   onPatchElement,
   onPatchStyle,
   onDuplicateElement,
@@ -65,14 +77,16 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
   onPatchSelectedStyles,
   primaryColor,
   secondaryColor,
+  isRtl = false,
   t,
 }: TemplateEditorPropertiesPanelProps<TPayload>): React.JSX.Element {
   const [openSections, setOpenSections] = useState({
     position: true,
     layers: true,
     appearance: true,
-    typography: true,
-    table: true,
+    typography: false,
+    table: false,
+    layerList: false,
   });
 
   const toggleSection = (section: keyof typeof openSections) => {
@@ -104,15 +118,34 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
     return (
       <aside
         aria-label={t('templateEditor.properties')}
-        className="max-h-64 w-full shrink-0 flex flex-col items-center justify-center p-6 text-center border-t border-border bg-card lg:max-h-none lg:w-60 lg:border-t-0 lg:border-s select-none print:hidden"
+        className="max-h-64 w-full shrink-0 space-y-4 overflow-y-auto border-t border-border bg-card p-3 lg:max-h-none lg:w-60 lg:border-t-0 lg:border-s select-none print:hidden"
       >
-        <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-3 text-primary shadow-xs">
-          <Layers className="w-6 h-6" />
+        <div className="flex flex-col items-center justify-center p-2 text-center">
+          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-3 text-primary shadow-xs">
+            <Layers className="w-6 h-6" aria-hidden="true" />
+          </div>
+          <p className="text-xs font-semibold text-foreground m-0">{t('templateEditor.emptyHint')}</p>
+          <p className="text-3xs text-muted-foreground mt-1.5 max-w-[190px] leading-relaxed m-0">
+            {t('templateEditor.emptyHintDetail')}
+          </p>
         </div>
-        <p className="text-xs font-semibold text-foreground m-0">{t('templateEditor.emptyHint')}</p>
-        <p className="text-3xs text-muted-foreground/80 mt-1.5 max-w-[170px] leading-relaxed m-0">
-          {t('templateEditor.emptyHintDetail')}
-        </p>
+
+        {/*
+         * With nothing selected the layer list is the primary way to pick an element:
+         * presets place 1–2px dividers and heavily overlapped elements on the page,
+         * which are all but unhittable with a pointer.
+         */}
+        <section className="space-y-2 pt-2 border-t border-border">
+          <h3 className="m-0 text-xs font-bold uppercase text-muted-foreground tracking-widest">
+            {t('templateEditor.layerList')}
+          </h3>
+          <TemplateEditorLayerList
+            elements={elements}
+            selectedIds={[]}
+            onSelectElement={onSelectElement || (() => {})}
+            t={t}
+          />
+        </section>
       </aside>
     );
   }
@@ -160,23 +193,30 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
         </div>
       </div>
 
-      <div className="space-y-2">
-        <label
-          htmlFor={`label-input-${selectedElement.id}`}
-          className="text-xs font-bold uppercase text-muted-foreground tracking-wide"
+      <TemplateEditorElementIdentitySection
+        selectedElement={selectedElement}
+        availableFields={availableFields}
+        onPatchElement={onPatchElement}
+        t={t}
+      />
+
+      {onSelectElement && elements.length > 0 && (
+        <TemplateEditorSection
+          titleKey="templateEditor.layerList"
+          icon={Layers}
+          isOpen={openSections.layerList}
+          onToggle={() => toggleSection('layerList')}
+          t={t}
+          panelClassName="space-y-1.5"
         >
-          {t('templateEditor.labelText')}
-        </label>
-        <Input
-          id={`label-input-${selectedElement.id}`}
-          name={`label-input-${selectedElement.id}`}
-          type="text"
-          dir="auto"
-          value={selectedElement.label}
-          onChange={(e) => onPatchElement(selectedElement.id, { label: e.target.value })}
-          className="w-full min-h-11 px-2 py-1.5 text-xs border border-border rounded bg-background"
-        />
-      </div>
+          <TemplateEditorLayerList
+            elements={elements}
+            selectedIds={[selectedElement.id]}
+            onSelectElement={onSelectElement}
+            t={t}
+          />
+        </TemplateEditorSection>
+      )}
 
       <TemplateEditorPositionSection
         selectedElement={selectedElement}
@@ -213,9 +253,12 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
         <TemplateEditorTypographySection
           elementId={selectedElement.id}
           elStyle={elStyle}
+          isOpen={openSections.typography}
+          onToggle={() => toggleSection('typography')}
           onPatchStyle={onPatchStyle}
           primaryColor={primaryColor}
           secondaryColor={secondaryColor}
+          isRtl={isRtl}
           t={t}
         />
       )}
@@ -223,6 +266,8 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
       {selectedElement.type === 'table' && (
         <TemplateEditorTableSection
           selectedElement={selectedElement}
+          isOpen={openSections.table}
+          onToggle={() => toggleSection('table')}
           onPatchElement={onPatchElement}
           t={t}
         />

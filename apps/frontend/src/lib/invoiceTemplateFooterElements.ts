@@ -1,7 +1,7 @@
 import { formatBrandingAddress } from "@mms/shared";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import {
-  identityTranslate,
+  defaultTemplateTranslate,
   INVOICE_TEMPLATE_STATIC_KEY_PREFIX,
   type BrandingInfo,
   type InvoiceTemplate,
@@ -11,14 +11,13 @@ import {
 export function buildInvoiceTemplateFooterElements(
   b: BrandingInfo,
   primary: string,
-  translate: TemplateTranslate = identityTranslate,
+  translate: TemplateTranslate = defaultTemplateTranslate,
 ): InvoiceTemplate["elements"] {
   const { muted, border } = PRINT_NEUTRAL;
-  const tr = (key: string, fallback: string) =>
-    translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`, fallback);
+  const tr = (key: string) => translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`);
   const contactLine = [
-    b.phone ? `${tr("phone", "Phone:")} ${b.phone}` : '',
-    b.email ? `${tr("email", "Email:")} ${b.email}` : '',
+    b.phone ? `${tr("phone")} ${b.phone}` : '',
+    b.email ? `${tr("email")} ${b.email}` : '',
   ].filter(Boolean).join('   |   ');
 
   return [

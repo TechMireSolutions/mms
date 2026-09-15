@@ -3,7 +3,7 @@ import { formatBrandingAddress, mergeBrandingSettings } from "@mms/shared";
 import { getInvoiceTemplateBranding } from "./invoiceTemplateBranding.js";
 import { buildDefaultInvoiceTemplateElements } from "./invoiceTemplateElements.js";
 import {
-  identityTranslate,
+  defaultTemplateTranslate,
   INVOICE_TEMPLATE_STATIC_KEY_PREFIX,
   type BrandingInfo,
   type InvoiceTemplate,
@@ -21,7 +21,7 @@ export interface InvoiceTemplatePreset {
  */
 export function buildClassicPreset(
   b: BrandingInfo,
-  translate: TemplateTranslate = identityTranslate,
+  translate: TemplateTranslate = defaultTemplateTranslate,
 ): InvoiceTemplate {
   return {
     pageSize: "A6",
@@ -34,12 +34,11 @@ export function buildClassicPreset(
  */
 export function buildThermalPreset(
   b: BrandingInfo,
-  translate: TemplateTranslate = identityTranslate,
+  translate: TemplateTranslate = defaultTemplateTranslate,
 ): InvoiceTemplate {
   const primary = b.primaryColor;
   const { text, border, label, muted } = PRINT_NEUTRAL;
-  const tr = (key: string, fallback: string) =>
-    translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`, fallback);
+  const tr = (key: string) => translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`);
 
   return {
     pageSize: "80mm",
@@ -48,24 +47,24 @@ export function buildThermalPreset(
       { id: "th_org_name", type: "static", label: b.madrasaName, x: 10, y: 82, w: 282, h: 20, style: { fontSize: 14, fontWeight: "bold", textAlign: "center", color: primary } },
       { id: "th_tagline", type: "static", label: b.tagline || "", x: 10, y: 104, w: 282, h: 14, style: { fontSize: 9, textAlign: "center", color: muted } },
       { id: "th_div1", type: "divider", label: "", x: 10, y: 122, w: 282, h: 1, style: { color: border } },
-      { id: "th_rcpt_lbl", type: "static", label: tr("receipt", "Receipt:"), x: 10, y: 130, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
+      { id: "th_rcpt_lbl", type: "static", label: tr("receipt"), x: 10, y: 130, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
       { id: "th_rcpt_val", type: "field", label: "Receipt No", field: "receipt_no", x: 85, y: 130, w: 205, h: 14, style: { fontSize: 9, fontWeight: "bold", color: primary, fontFamily: "monospace" } },
-      { id: "th_date_lbl", type: "static", label: tr("date", "Date:"), x: 10, y: 148, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
+      { id: "th_date_lbl", type: "static", label: tr("date"), x: 10, y: 148, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
       { id: "th_date_val", type: "field", label: "Date", field: "received_date", x: 85, y: 148, w: 205, h: 14, style: { fontSize: 9, color: text } },
       { id: "th_div2", type: "divider", label: "", x: 10, y: 166, w: 282, h: 1, style: { color: border } },
-      { id: "th_from_lbl", type: "static", label: tr("donor", "Donor:"), x: 10, y: 174, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
+      { id: "th_from_lbl", type: "static", label: tr("donor"), x: 10, y: 174, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
       { id: "th_from_val", type: "field", label: "Sender", field: "sender", x: 85, y: 174, w: 205, h: 14, style: { fontSize: 9, color: text } },
-      { id: "th_type_lbl", type: "static", label: tr("category", "Category:"), x: 10, y: 194, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
+      { id: "th_type_lbl", type: "static", label: tr("category"), x: 10, y: 194, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
       { id: "th_type_val", type: "field", label: "Obligation Type", field: "obligation_type", x: 85, y: 194, w: 205, h: 14, style: { fontSize: 9, color: text } },
-      { id: "th_mujtahid_lbl", type: "static", label: tr("mujtahid", "Mujtahid:"), x: 10, y: 214, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
+      { id: "th_mujtahid_lbl", type: "static", label: tr("mujtahid"), x: 10, y: 214, w: 70, h: 14, style: { fontSize: 9, fontWeight: "bold", color: label } },
       { id: "th_mujtahid_val", type: "field", label: "Mujtahid", field: "mujtahid", x: 85, y: 214, w: 205, h: 14, style: { fontSize: 9, color: text } },
       { id: "th_div3", type: "divider", label: "", x: 10, y: 234, w: 282, h: 2, style: { color: border } },
-      { id: "th_amt_lbl", type: "static", label: tr("total", "TOTAL:"), x: 10, y: 244, w: 70, h: 18, style: { fontSize: 12, fontWeight: "bold", color: label } },
+      { id: "th_amt_lbl", type: "static", label: tr("total"), x: 10, y: 244, w: 70, h: 18, style: { fontSize: 12, fontWeight: "bold", color: label } },
       { id: "th_amt_val", type: "field", label: "Amount", field: "amount", x: 85, y: 242, w: 205, h: 22, style: { fontSize: 15, fontWeight: "bold", color: primary, fontFamily: "monospace" } },
       { id: "th_amt_words", type: "field", label: "Amount in Words", field: "amount_in_words", x: 10, y: 268, w: 282, h: 26, style: { fontSize: 8.5, fontStyle: "italic", color: muted } },
       { id: "th_div4", type: "divider", label: "", x: 10, y: 298, w: 282, h: 1, style: { color: border } },
       { id: "th_qr", type: "qrcode", label: "Verification QR", x: 116, y: 310, w: 70, h: 70 },
-      { id: "th_qr_lbl", type: "static", label: tr("scanToVerify", "Scan to verify authentic receipt"), x: 10, y: 386, w: 282, h: 12, style: { fontSize: 8, textAlign: "center", color: muted } },
+      { id: "th_qr_lbl", type: "static", label: tr("scanToVerify"), x: 10, y: 386, w: 282, h: 12, style: { fontSize: 8, textAlign: "center", color: muted } },
       { id: "th_div5", type: "divider", label: "", x: 10, y: 404, w: 282, h: 1, style: { color: border } },
       { id: "th_bless", type: "static", label: "تقبل اللہ منکم", x: 10, y: 414, w: 282, h: 20, style: { fontSize: 14, fontWeight: "bold", textAlign: "center", color: primary, fontFamily: "serif", direction: "rtl" } },
       { id: "th_foot", type: "static", label: b.phone ? `Phone: ${b.phone}` : "", x: 10, y: 440, w: 282, h: 12, style: { fontSize: 8, textAlign: "center", color: muted } },
@@ -78,12 +77,11 @@ export function buildThermalPreset(
  */
 export function buildFormalA5Preset(
   b: BrandingInfo,
-  translate: TemplateTranslate = identityTranslate,
+  translate: TemplateTranslate = defaultTemplateTranslate,
 ): InvoiceTemplate {
   const primary = b.primaryColor;
   const { text, border, label, muted } = PRINT_NEUTRAL;
-  const tr = (key: string, fallback: string) =>
-    translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`, fallback);
+  const tr = (key: string) => translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`);
 
   return {
     pageSize: "A5",
@@ -94,23 +92,23 @@ export function buildFormalA5Preset(
       { id: "fm_address", type: "static", label: formatBrandingAddress(b), x: 115, y: 74, w: 414, h: 16, style: { fontSize: 9, color: muted } },
       { id: "fm_div1", type: "divider", label: "", x: 30, y: 106, w: 499, h: 2, style: { color: primary } },
       { id: "fm_title", type: "static", label: "OFFICIAL OBLIGATION RECEIPT / سند استلام الحقوق الشرعية", x: 30, y: 118, w: 499, h: 20, style: { fontSize: 11, fontWeight: "bold", textAlign: "center", color: label } },
-      { id: "fm_rcpt_lbl", type: "static", label: tr("receiptNo", "Receipt No:"), x: 30, y: 148, w: 80, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
+      { id: "fm_rcpt_lbl", type: "static", label: tr("receiptNo"), x: 30, y: 148, w: 80, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
       { id: "fm_rcpt_val", type: "field", label: "Receipt No", field: "receipt_no", x: 115, y: 148, w: 140, h: 16, style: { fontSize: 10, fontWeight: "bold", color: primary, fontFamily: "monospace" } },
-      { id: "fm_date_lbl", type: "static", label: tr("date", "Date:"), x: 320, y: 148, w: 60, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
+      { id: "fm_date_lbl", type: "static", label: tr("date"), x: 320, y: 148, w: 60, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
       { id: "fm_date_val", type: "field", label: "Date", field: "received_date", x: 385, y: 148, w: 140, h: 16, style: { fontSize: 10, color: text } },
       { id: "fm_div2", type: "divider", label: "", x: 30, y: 172, w: 499, h: 1, style: { color: border } },
-      { id: "fm_from_lbl", type: "static", label: tr("receivedFrom", "Received From:"), x: 30, y: 182, w: 110, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
+      { id: "fm_from_lbl", type: "static", label: tr("receivedFrom"), x: 30, y: 182, w: 110, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
       { id: "fm_from_val", type: "field", label: "Sender", field: "sender", x: 145, y: 182, w: 200, h: 16, style: { fontSize: 10, color: text } },
-      { id: "fm_phone_lbl", type: "static", label: tr("phone", "Phone:"), x: 350, y: 182, w: 50, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
+      { id: "fm_phone_lbl", type: "static", label: tr("phone"), x: 350, y: 182, w: 50, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
       { id: "fm_phone_val", type: "field", label: "Sender Phone", field: "sender_phone", x: 405, y: 182, w: 120, h: 16, style: { fontSize: 10, color: text } },
-      { id: "fm_type_lbl", type: "static", label: tr("obligationType", "Obligation Type:"), x: 30, y: 206, w: 110, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
+      { id: "fm_type_lbl", type: "static", label: tr("obligationType"), x: 30, y: 206, w: 110, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
       { id: "fm_type_val", type: "field", label: "Obligation Type", field: "obligation_type", x: 145, y: 206, w: 380, h: 16, style: { fontSize: 10, color: text } },
-      { id: "fm_mujtahid_lbl", type: "static", label: tr("underAuthorityOf", "Under Authority of:"), x: 30, y: 230, w: 110, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
+      { id: "fm_mujtahid_lbl", type: "static", label: tr("underAuthorityOf"), x: 30, y: 230, w: 110, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
       { id: "fm_mujtahid_val", type: "field", label: "Mujtahid", field: "mujtahid", x: 145, y: 230, w: 380, h: 16, style: { fontSize: 10, color: text } },
       { id: "fm_div3", type: "divider", label: "", x: 30, y: 258, w: 499, h: 2, style: { color: border } },
-      { id: "fm_amt_lbl", type: "static", label: tr("amountReceived", "Amount Received:"), x: 30, y: 272, w: 120, h: 22, style: { fontSize: 12, fontWeight: "bold", color: label } },
+      { id: "fm_amt_lbl", type: "static", label: tr("amountReceived"), x: 30, y: 272, w: 120, h: 22, style: { fontSize: 12, fontWeight: "bold", color: label } },
       { id: "fm_amt_val", type: "field", label: "Amount", field: "amount", x: 155, y: 270, w: 200, h: 24, style: { fontSize: 16, fontWeight: "bold", color: primary, fontFamily: "monospace" } },
-      { id: "fm_words_lbl", type: "static", label: tr("inWords", "In Words:"), x: 30, y: 302, w: 70, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
+      { id: "fm_words_lbl", type: "static", label: tr("inWords"), x: 30, y: 302, w: 70, h: 16, style: { fontSize: 10, fontWeight: "bold", color: label } },
       { id: "fm_words_val", type: "field", label: "Amount in Words", field: "amount_in_words", x: 105, y: 302, w: 420, h: 20, style: { fontSize: 10, fontStyle: "italic", color: text } },
       { id: "fm_div4", type: "divider", label: "", x: 30, y: 334, w: 499, h: 1, style: { color: border } },
       { id: "fm_qr", type: "qrcode", label: "Verification QR", x: 40, y: 360, w: 75, h: 75 },
@@ -126,12 +124,11 @@ export function buildFormalA5Preset(
  */
 export function buildModernPreset(
   b: BrandingInfo,
-  translate: TemplateTranslate = identityTranslate,
+  translate: TemplateTranslate = defaultTemplateTranslate,
 ): InvoiceTemplate {
   const primary = b.primaryColor;
   const { text, border, label, muted } = PRINT_NEUTRAL;
-  const tr = (key: string, fallback: string) =>
-    translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`, fallback);
+  const tr = (key: string) => translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`);
 
   return {
     pageSize: "A6",
@@ -142,18 +139,18 @@ export function buildModernPreset(
       { id: "md_rcpt_badge", type: "field", label: "Receipt No", field: "receipt_no", x: 80, y: 46, w: 180, h: 16, style: { fontSize: 10, fontWeight: "bold", color: primary, fontFamily: "monospace" } },
       { id: "md_date_val", type: "field", label: "Date", field: "received_date", x: 270, y: 46, w: 107, h: 16, style: { fontSize: 10, textAlign: "right", color: muted } },
       { id: "md_div1", type: "divider", label: "", x: 20, y: 80, w: 357, h: 1, style: { color: border } },
-      { id: "md_from_lbl", type: "static", label: tr("donorUpper", "DONOR"), x: 20, y: 92, w: 100, h: 12, style: { fontSize: 8, fontWeight: "bold", color: label } },
+      { id: "md_from_lbl", type: "static", label: tr("donorUpper"), x: 20, y: 92, w: 100, h: 12, style: { fontSize: 8, fontWeight: "bold", color: label } },
       { id: "md_from_val", type: "field", label: "Sender", field: "sender", x: 20, y: 106, w: 357, h: 16, style: { fontSize: 11, fontWeight: "bold", color: text } },
-      { id: "md_type_lbl", type: "static", label: tr("obligationTypeUpper", "OBLIGATION TYPE"), x: 20, y: 130, w: 140, h: 12, style: { fontSize: 8, fontWeight: "bold", color: label } },
+      { id: "md_type_lbl", type: "static", label: tr("obligationTypeUpper"), x: 20, y: 130, w: 140, h: 12, style: { fontSize: 8, fontWeight: "bold", color: label } },
       { id: "md_type_val", type: "field", label: "Obligation Type", field: "obligation_type", x: 20, y: 144, w: 357, h: 16, style: { fontSize: 10, color: text } },
       { id: "md_div2", type: "divider", label: "", x: 20, y: 172, w: 357, h: 2, style: { color: primary } },
-      { id: "md_amt_lbl", type: "static", label: tr("amountReceivedUpper", "AMOUNT RECEIVED"), x: 20, y: 186, w: 140, h: 14, style: { fontSize: 9, fontWeight: "bold", color: primary } },
+      { id: "md_amt_lbl", type: "static", label: tr("amountReceivedUpper"), x: 20, y: 186, w: 140, h: 14, style: { fontSize: 9, fontWeight: "bold", color: primary } },
       { id: "md_amt_val", type: "field", label: "Amount", field: "amount", x: 20, y: 202, w: 357, h: 24, style: { fontSize: 16, fontWeight: "800", color: primary, fontFamily: "monospace" } },
       { id: "md_words", type: "field", label: "Amount in Words", field: "amount_in_words", x: 20, y: 230, w: 357, h: 20, style: { fontSize: 9, fontStyle: "italic", color: muted } },
       { id: "md_div3", type: "divider", label: "", x: 20, y: 260, w: 357, h: 1, style: { color: border } },
       { id: "md_qr", type: "qrcode", label: "Verification QR", x: 20, y: 280, w: 60, h: 60 },
-      { id: "md_recv_lbl", type: "static", label: tr("receivedByUpper", "Received By"), x: 95, y: 284, w: 90, h: 12, style: { fontSize: 8, fontWeight: "bold", color: label } },
-      { id: "md_recv_val", type: "field", label: tr("receivedByUpper", "Received By"), field: "received_by", x: 95, y: 298, w: 200, h: 14, style: { fontSize: 9, color: text } },
+      { id: "md_recv_lbl", type: "static", label: tr("receivedByUpper"), x: 95, y: 284, w: 90, h: 12, style: { fontSize: 8, fontWeight: "bold", color: label } },
+      { id: "md_recv_val", type: "field", label: tr("receivedByUpper"), field: "received_by", x: 95, y: 298, w: 200, h: 14, style: { fontSize: 9, color: text } },
       { id: "md_bless", type: "static", label: "تقبل اللہ منکم", x: 20, y: 360, w: 357, h: 20, style: { fontSize: 14, fontWeight: "bold", textAlign: "center", color: primary, fontFamily: "serif", direction: "rtl" } },
     ],
   };
@@ -164,7 +161,7 @@ export function buildModernPreset(
  */
 export function getAvailablePresets(
   branding?: BrandingInfo,
-  translate: TemplateTranslate = identityTranslate,
+  translate: TemplateTranslate = defaultTemplateTranslate,
 ): InvoiceTemplatePreset[] {
   const b = branding ? mergeBrandingSettings(branding) : getInvoiceTemplateBranding();
   return [

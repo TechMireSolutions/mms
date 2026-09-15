@@ -2,7 +2,7 @@ import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
 import { buildInvoiceTemplateHeaderElements } from "./invoiceTemplateHeaderElements";
 import { buildInvoiceTemplateFooterElements } from "./invoiceTemplateFooterElements";
 import {
-  identityTranslate,
+  defaultTemplateTranslate,
   INVOICE_TEMPLATE_STATIC_KEY_PREFIX,
   type BrandingInfo,
   type InvoiceTemplate,
@@ -14,18 +14,17 @@ import {
  */
 export function buildDefaultInvoiceTemplateElements(
   b: BrandingInfo,
-  translate: TemplateTranslate = identityTranslate,
+  translate: TemplateTranslate = defaultTemplateTranslate,
 ): InvoiceTemplate["elements"] {
   const primary = b.primaryColor;
   const { text, border, label, labelLight } = PRINT_NEUTRAL;
-  const tr = (key: string, fallback: string) =>
-    translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`, fallback);
+  const tr = (key: string) => translate(`${INVOICE_TEMPLATE_STATIC_KEY_PREFIX}${key}`);
   return [
     ...buildInvoiceTemplateHeaderElements(b, primary, translate),
     {
       id: "from_label",
       type: "static",
-      label: tr("receivedFrom", "Received From:"),
+      label: tr("receivedFrom"),
       x: 20, y: 192, w: 110, h: 14,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -47,7 +46,7 @@ export function buildDefaultInvoiceTemplateElements(
     {
       id: "ref_label",
       type: "static",
-      label: tr("reference", "Reference:"),
+      label: tr("reference"),
       x: 20, y: 220, w: 90, h: 14,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -69,7 +68,7 @@ export function buildDefaultInvoiceTemplateElements(
     {
       id: "account_label",
       type: "static",
-      label: tr("inAccountOf", "In Account Of:"),
+      label: tr("inAccountOf"),
       x: 20, y: 248, w: 110, h: 14,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -84,7 +83,7 @@ export function buildDefaultInvoiceTemplateElements(
     {
       id: "mujtahid_label",
       type: "static",
-      label: tr("mujtahid", "Mujtahid:"),
+      label: tr("mujtahid"),
       x: 20, y: 268, w: 80, h: 14,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -106,7 +105,7 @@ export function buildDefaultInvoiceTemplateElements(
     {
       id: "amount_label",
       type: "static",
-      label: tr("amount", "Amount:"),
+      label: tr("amount"),
       x: 20, y: 300, w: 60, h: 18,
       style: { fontSize: 11, fontWeight: "bold", color: label },
     },
@@ -121,7 +120,7 @@ export function buildDefaultInvoiceTemplateElements(
     {
       id: "recv_label",
       type: "static",
-      label: tr("receivedBy", "Received By:"),
+      label: tr("receivedBy"),
       x: 222, y: 300, w: 90, h: 16,
       style: { fontSize: 10, fontWeight: "bold", color: label },
     },
@@ -136,7 +135,7 @@ export function buildDefaultInvoiceTemplateElements(
     {
       id: "payment_label",
       type: "static",
-      label: tr("paymentMode", "Payment Mode:"),
+      label: tr("paymentMode"),
       x: 20, y: 322, w: 100, h: 14,
       style: { fontSize: 9, fontWeight: "bold", color: labelLight },
     },

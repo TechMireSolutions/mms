@@ -16,8 +16,23 @@ interface PrintHtmlOptions {
   width: number;
   height: number;
   orientation?: string;
+  /** Writing direction of the document — the active locale decides it. */
+  direction?: "ltr" | "rtl";
   bodyContent: string;
 }
+
+/**
+ * Fonts the printed document may use.
+ *
+ * The window used to load Inter + Amiri only, while `--font-urdu` (Noto Nastaliq Urdu)
+ * and `--font-persian` (Vazirmatn) were unreachable — so an Urdu or Persian receipt
+ * printed with fallback glyphs even though the app renders it correctly on screen.
+ */
+const PRINT_FONT_STACK =
+  "'Inter', 'Readex Pro', 'Noto Nastaliq Urdu', 'Vazirmatn', 'Amiri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
+
+const PRINT_FONT_LINK =
+  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&family=Readex+Pro:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&family=Vazirmatn:wght@400;600&display=swap";
 
 function buildPrintWindowHtml({
   windowTitle,
@@ -25,16 +40,20 @@ function buildPrintWindowHtml({
   width,
   height,
   orientation = "portrait",
+  direction = "ltr",
   bodyContent,
 }: PrintHtmlOptions): string {
   return `<!DOCTYPE html>
-<html lang="${language || "en"}">
+<html lang="${language || "en"}" dir="${direction}">
 <head>
   <meta charset="utf-8" />
   <title>${windowTitle}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { background: #ffffff; direction: ltr; }
+    /* The document direction follows the locale: this used to be hardcoded LTR while
+       <html lang> was set from the active language, so ar/ur/fa receipts printed
+       left-to-right. */
+    body { background: #ffffff; direction: ${direction}; font-family: ${PRINT_FONT_STACK}; }
     @page { size: ${width}px ${height}px ${orientation}; margin: 0; }
     @media print {
       body {
@@ -44,7 +63,7 @@ function buildPrintWindowHtml({
       }
     }
   </style>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&display=swap" />
+  <link rel="stylesheet" href="${PRINT_FONT_LINK}" />
 </head>
 <body>
   ${bodyContent}
@@ -102,7 +121,7 @@ export function PrintInvoiceModal({
   onClose,
   onOpenEditor = undefined,
 }: PrintInvoiceModalProps) {
-  const { t, language } = useTranslation();
+  const { t, language, isRtl } = useTranslation();
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const { template } = useInvoiceTemplate();
   const size = getPageDimensions(template.pageSize, template.orientation);
@@ -147,6 +166,7 @@ export function PrintInvoiceModal({
       buildPrintWindowHtml({
         windowTitle: t("obligations.print.windowTitle", { number: collection.receipt_no }),
         language: language || "en",
+        direction: isRtl ? "rtl" : "ltr",
         width: size.width,
         height: size.height,
         orientation: template.orientation || "portrait",
@@ -154,7 +174,7 @@ export function PrintInvoiceModal({
       })
     );
     printWindow.document.close();
-  }, [collection.receipt_no, language, size.height, size.width, t, template.orientation]);
+  }, [collection.receipt_no, isRtl, language, size.height, size.width, t, template.orientation]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -283,8 +303,11 @@ export function PrintInvoiceModal({
               type="button"
               onClick={handleExportPDF}
               disabled={isGeneratingPdf}
+              /* The label switches to a generating state; `aria-busy` is what makes that
+                 change perceivable to assistive tech. */
+              aria-busy={isGeneratingPdf}
               variant="outline"
-              className="flex min-h-11 items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors shadow-none disabled:opacity-50"
+              className="flex min-h-11 items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50 shadow-none"
             >
               {isGeneratingPdf ? (
                 <>
@@ -329,7 +352,7 @@ export function PrintInvoiceModal({
             backgroundColor: "#ffffff",
             position: "relative",
             lineHeight: 1.25,
-            direction: "ltr",
+            direction: isRtl ? "rtl" : "ltr",
           }}
         >
           <InvoicePrintPreview
@@ -348,7 +371,7 @@ export function PrintInvoiceModal({
         aria-label={t("obligations.print.preview")}
         className="flex min-h-preview-tall justify-center overflow-x-auto rounded-xl border border-dashed border-border bg-muted/20 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <div className="origin-top scale-preview-sm sm:scale-preview-md md:scale-preview-lg lg:scale-preview-xl" style={{ direction: "ltr" }}>
+        <div className="origin-top scale-preview-sm sm:scale-preview-md md:scale-preview-lg lg:scale-preview-xl" style={{ direction: isRtl ? "rtl" : "ltr" }}>
           <div
             ref={printRef}
             style={{ lineHeight: 1.4, width: size.width, height: size.height }}

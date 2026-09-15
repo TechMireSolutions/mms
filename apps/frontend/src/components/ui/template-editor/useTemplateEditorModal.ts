@@ -1,20 +1,30 @@
 /**
  * @file useTemplateEditorModal.ts
- * @description Manages fullscreen modal dialog state, focus trap, body scroll locking, and beforeunload safeguards.
+ * @description Manages fullscreen modal dialog state and the beforeunload safeguard.
+ * Focus trapping, focus restore, body scroll locking and Escape handling are delegated
+ * to the shared overlay primitive (`useOverlayBehavior`).
  */
 
-import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
 
 export interface UseTemplateEditorModalOptions {
   initialFullscreen?: boolean;
   isDirty?: boolean;
   onClose: () => void;
   confirmDiscardPrompt?: () => boolean;
+  /**
+   * Lets the editor reserve Escape for a nearer concern. The shortcut layer uses
+   * Escape to clear the canvas selection, and both layers listen on `window`, so
+   * without this guard one Escape press cleared the selection *and* closed the editor.
+   * The Close button deliberately ignores this.
+   */
+  ignoreEscapeWhen?: () => boolean;
 }
 
 export interface UseTemplateEditorModalReturn {
   isFullscreen: boolean;
-  containerRef: RefObject<HTMLDivElement | null>;
+  containerRef: React.RefObject<HTMLDivElement | null>;
   handleClose: () => void;
   handleToggleFullscreen: () => void;
 }
@@ -24,11 +34,10 @@ export function useTemplateEditorModal({
   isDirty = false,
   onClose,
   confirmDiscardPrompt,
+  ignoreEscapeWhen,
 }: UseTemplateEditorModalOptions): UseTemplateEditorModalReturn {
   const [isFullscreen, setIsFullscreen] = useState(initialFullscreen);
   const [isUserToggled, setIsUserToggled] = useState(false);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const previousFocusRef = useRef<HTMLElement | null>(null);
 
   // Sync state if parent toggles initialFullscreen prop and user hasn't explicitly toggled it locally
   useEffect(() => {
@@ -58,6 +67,31 @@ export function useTemplateEditorModal({
     }
   }, []);
 
+  /*
+   * The shared overlay primitive owns everything the hand-rolled version got wrong:
+   * it captures the opener once when the overlay becomes active and restores focus on
+   * cleanup (the old effect re-captured `document.activeElement` on every fullscreen
+   * change, so leaving fullscreen dropped focus onto the page behind the still-open
+   * editor and then remembered *that* as the opener), it traps Tab, it locks body
+   * scroll, and it only honours Escape for the topmost overlay — so dismissing a
+   * nested confirm dialog no longer closes the editor underneath it.
+   */
+  const ignoreEscapeRef = useRef(ignoreEscapeWhen);
+  useEffect(() => {
+    ignoreEscapeRef.current = ignoreEscapeWhen;
+  });
+
+  const handleEscapeClose = useCallback(() => {
+    if (ignoreEscapeRef.current?.()) return;
+    handleClose();
+  }, [handleClose]);
+
+  const containerRef = useOverlayBehavior<HTMLDivElement>({
+    open: isFullscreen,
+    onClose: handleEscapeClose,
+    dismissible: true,
+  });
+
   // Protect against accidental browser tab closure/reload when changes are unsaved
   useEffect(() => {
     if (!isDirty) return;
@@ -68,65 +102,6 @@ export function useTemplateEditorModal({
     window.addEventListener("beforeunload", handleBeforeUnload);
     return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [isDirty]);
-
-  // Focus management: capture previous focus, focus dialog container, restore focus on unmount
-  useEffect(() => {
-    previousFocusRef.current = document.activeElement as HTMLElement | null;
-    if (isFullscreen && containerRef.current) {
-      containerRef.current.focus();
-    }
-    return () => {
-      previousFocusRef.current?.focus?.();
-    };
-  }, [isFullscreen]);
-
-  // Focus trap for modal dialog mode (WCAG 2.1 AA)
-  useEffect(() => {
-    if (!isFullscreen) return;
-    const container = containerRef.current;
-    if (!container) return;
-
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== "Tab") return;
-
-      const rawFocusables = container.querySelectorAll<HTMLElement>(
-        'button:not([disabled]), [href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
-      );
-      // Filter visible and non-aria-hidden interactive controls only
-      const focusables = Array.from(rawFocusables).filter(
-        (el) => el.offsetParent !== null && !el.hasAttribute("aria-hidden")
-      );
-      if (focusables.length === 0) return;
-
-      const first = focusables[0];
-      const last = focusables[focusables.length - 1];
-
-      if (e.shiftKey) {
-        if (document.activeElement === first || document.activeElement === container) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    };
-
-    container.addEventListener("keydown", handleKeyDown);
-    return () => container.removeEventListener("keydown", handleKeyDown);
-  }, [isFullscreen]);
-
-  // Lock background page scroll when fullscreen modal is active
-  useEffect(() => {
-    if (!isFullscreen) return;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = "hidden";
-    return () => {
-      document.body.style.overflow = prevOverflow;
-    };
-  }, [isFullscreen]);
 
   const handleToggleFullscreen = useCallback(() => {
     setIsFullscreen((prev) => !prev);

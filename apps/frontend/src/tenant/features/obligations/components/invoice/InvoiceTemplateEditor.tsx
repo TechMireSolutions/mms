@@ -84,13 +84,15 @@ export function InvoiceTemplateEditor({
   const { t } = useTranslation();
   const branding = useBranding();
 
-  // Translate a key, falling back to the supplied English default when the key
-  // is missing (some translation implementations return the key itself).
+  /*
+   * Straight pass-through to the catalog. The previous version returned an English
+   * fallback when the key was missing, which `.cursor/rules/mms-settings-i18n.mdc` bans:
+   * every key the builders use exists in en/ar/ur/fa (enforced by `pnpm check:i18n` and
+   * by the `Record<AppTranslationKey, string>` type on the RTL packs), so the fallback
+   * only ever hid a missing translation.
+   */
   const translate = useCallback<TemplateTranslate>(
-    (key, fallback) => {
-      const translated = t(key as Parameters<typeof t>[0]);
-      return translated && translated !== key ? translated : fallback;
-    },
+    (key) => t(key as Parameters<typeof t>[0]),
     [t],
   );
 
@@ -124,14 +126,11 @@ export function InvoiceTemplateEditor({
 
   const availableFields = useMemo(
     () =>
-      AVAILABLE_FIELDS.map((field) => {
-        const key = `${INVOICE_TEMPLATE_FIELD_KEY_PREFIX}${field.field}`;
-        const translated = t(key as Parameters<typeof t>[0]);
-        return {
-          ...field,
-          label: translated && translated !== key ? translated : field.label,
-        };
-      }),
+      AVAILABLE_FIELDS.map((field) => ({
+        ...field,
+        // The catalog value is authoritative; no English fallback (see `translate`).
+        label: t(`${INVOICE_TEMPLATE_FIELD_KEY_PREFIX}${field.field}` as Parameters<typeof t>[0]),
+      })),
     [t]
   );
 
@@ -195,7 +194,7 @@ export function InvoiceTemplateEditor({
   const presets = useMemo<DocumentTemplatePreset<InvoiceReceiptPayload>[]>(() => {
     return getAvailablePresets(branding, translate).map((p) => ({
       key: p.key,
-      label: t(p.nameKey as Parameters<typeof t>[0]) || p.key,
+      label: t(p.nameKey as Parameters<typeof t>[0]),
       template: p.template,
     }));
   }, [branding, translate, t]);
@@ -216,6 +215,21 @@ export function InvoiceTemplateEditor({
   const handleExportTypst = useCallback(
     (payload: Record<string, unknown>) => {
       try {
+        /*
+         * KNOWN LIMITATION (reviewed and deliberately left as-is).
+         *
+         * This produces a *fee-receipt* shaped payload (`mapToTypstFeeReceipt` maps the
+         * sender onto `studentName` and leaves `rollNo`/`className` empty) because the
+         * worker only ships fee-receipt / report-card / financial-ledger templates — there
+         * is no obligations-receipt template or payload schema. Nothing consumes the file
+         * automatically, so it is an export of print data, and the button's label,
+         * tooltip and success toast now say exactly that instead of promising a rendered
+         * obligations document.
+         *
+         * Do not "fix" this by inventing a schema: obligations receipts need their own
+         * `typstObligationReceiptPayloadSchema` in @mms/shared plus a backend
+         * `obligations-receipt.typ`, and a caller that renders it.
+         */
         const conforming = mapToTypstFeeReceipt(payload);
         const jsonStr = JSON.stringify(conforming, null, 2);
         triggerFileDownload(`typst-invoice-${safeFilenamePart(conforming.receiptNo)}.json`, jsonStr);

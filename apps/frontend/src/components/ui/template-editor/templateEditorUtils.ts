@@ -5,6 +5,28 @@
 
 import type { DocumentTemplate } from "@mms/shared";
 
+/**
+ * Canvas chrome colours, defined once.
+ *
+ * The editing surface is deliberately NOT branded: the page below it is a print
+ * document whose colours come from the template (see `printBrandingTokens`), and a
+ * tenant-emerald selection outline disappears against emerald document content. These
+ * were previously six copies of the same raw hex and raw Tailwind palette classes
+ * scattered across the canvas and the element renderer.
+ */
+export const CANVAS_ACCENT = {
+  /** Selection outline / handles. */
+  selection: "#0284c7",
+  /** Darker variant, for text on the accent (contrast >= 4.5:1 on white). */
+  selectionStrong: "#075985",
+  /** Selection tint over the element box. */
+  selectionSoft: "rgba(2, 132, 199, 0.06)",
+  /** Marquee fill. */
+  marqueeSoft: "rgba(2, 132, 199, 0.08)",
+  /** Guide grid dots. */
+  grid: "#94a3b8",
+} as const;
+
 export const SNAP = 4;
 
 export function snap(value: number): number {

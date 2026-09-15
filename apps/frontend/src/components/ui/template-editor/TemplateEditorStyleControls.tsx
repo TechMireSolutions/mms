@@ -3,7 +3,7 @@
  * @description Reusable style button and style input controls with strict 44x44px minimum touch targets.
  */
 
-import React from "react";
+import React, { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -19,6 +19,13 @@ export function StyleBtn({ active, onClick, children, title }: StyleBtnProps): R
     <Button
       type="button"
       title={title}
+      aria-label={title}
+      /*
+       * `aria-pressed` is what makes these toggles perceivable to a screen reader:
+       * bold / italic / underline / alignment previously communicated their state
+       * only through a background colour.
+       */
+      aria-pressed={Boolean(active)}
       onClick={onClick}
       variant="ghost"
       className={`min-h-11 min-w-11 flex items-center justify-center p-0 rounded text-xs transition-colors border shadow-none ${
@@ -43,6 +50,15 @@ export interface StyleInputProps {
   className?: string;
 }
 
+/**
+ * Number/text field for the inspector.
+ *
+ * Edits are held as local draft text and only committed once they parse, so
+ * clearing the field no longer snaps the element to a value: `Number("")` is `0`,
+ * which previously meant "delete the X value" teleported the element to 0 and
+ * "delete the font size" clamped it to the 6px floor. The draft is discarded on
+ * blur so the field always re-syncs with the authoritative template value.
+ */
 export function StyleInput({
   label,
   value,
@@ -53,7 +69,36 @@ export function StyleInput({
   step,
   className = "",
 }: StyleInputProps): React.JSX.Element {
-  const inputId = `style-input-${label.toLowerCase().replace(/[^a-z0-9]/g, "-")}`;
+  // `useId` (not a slug of the label) — the slug was built from the *translated*
+  // label, and in Persian "عرض حاشیه" and "شعاع گوشه" both collapsed to the same
+  // all-hyphen id, leaving two fields sharing one DOM id in the same panel.
+  const inputId = useId();
+  const isNumber = type === "number";
+  const [draft, setDraft] = useState<string | null>(null);
+  const displayValue = draft ?? String(value ?? "");
+
+  const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = event.target.value;
+    setDraft(raw);
+    if (!isNumber) {
+      onChange(raw);
+      return;
+    }
+    // An empty or in-progress edit ("-", "1.") is not a value yet.
+    if (raw.trim() === "") return;
+    const parsed = Number(raw);
+    if (!Number.isNaN(parsed)) onChange(parsed);
+  };
+
+  const handleBlur = () => {
+    if (draft === null) return;
+    if (isNumber && draft.trim() !== "") {
+      const parsed = Number(draft);
+      if (!Number.isNaN(parsed)) onChange(parsed);
+    }
+    setDraft(null);
+  };
+
   return (
     <div className={`flex flex-col gap-0.5 ${className}`}>
       <label htmlFor={inputId} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
@@ -62,11 +107,11 @@ export function StyleInput({
       <Input
         id={inputId}
         name={inputId}
-        aria-label={label}
         type={type}
-        inputMode={type === "number" ? "decimal" : undefined}
-        value={value}
-        onChange={(event) => onChange(type === "number" ? Number(event.target.value) : event.target.value)}
+        inputMode={isNumber ? "decimal" : undefined}
+        value={displayValue}
+        onChange={handleChange}
+        onBlur={handleBlur}
         min={min}
         max={max}
         step={step}

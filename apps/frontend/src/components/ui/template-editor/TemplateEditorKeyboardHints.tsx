@@ -32,8 +32,10 @@ export function TemplateEditorKeyboardHints({
     [`${mod}Z`, t("templateEditor.undo")],
     [isMac ? "⇧⌘Z" : "Ctrl+Y", t("templateEditor.redo")],
     [`${mod}A`, t("templateEditor.selectAll")],
-    [`${mod}C / ${mod}V`, `${t("templateEditor.copy")} / ${t("templateEditor.paste")}`],
+    [`${mod}C / ${mod}X`, `${t("templateEditor.copy")} / ${t("templateEditor.cut")}`],
+    [`${mod}V`, t("templateEditor.paste")],
     [`${mod}D`, t("templateEditor.duplicate")],
+    [`${mod}+ / ${mod}-`, `${t("templateEditor.zoomIn")} / ${t("templateEditor.zoomOut")}`],
     ["Space+Drag", t("templateEditor.spaceToPan")],
     ["Arrows", t("templateEditor.nudgeHint")],
     [`${altKey}Arrows`, t("templateEditor.altResize")],
@@ -46,7 +48,8 @@ export function TemplateEditorKeyboardHints({
       aria-label={t("templateEditor.shortcuts")}
       className="hidden sm:flex flex-shrink-0 h-7 border-t border-border/70 bg-card/95 backdrop-blur-xs px-3 items-center justify-between gap-3 select-none overflow-hidden print:hidden"
     >
-      <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5 w-full [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)]">
+      {/* The fade-out mask follows the writing direction, not the physical right edge. */}
+      <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5 w-full [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] rtl:[mask-image:linear-gradient(to_left,black_calc(100%-24px),transparent)]">
         <div className="flex items-center gap-1.5 font-semibold text-muted-foreground shrink-0 text-3xs uppercase tracking-wider">
           <Keyboard className="w-3.5 h-3.5 text-primary/80" aria-hidden="true" />
           <span>{t("templateEditor.shortcuts")}:</span>

@@ -26,6 +26,7 @@ export function TemplateEditorZoomControls({
   onZoomFit,
   t,
 }: TemplateEditorZoomControlsProps): React.JSX.Element {
+  const zoomPercent = canvasScale ? `${Math.round(canvasScale * 100)}%` : "100%";
   return (
     <div className="flex items-center gap-0.5 ms-2 border border-border/80 bg-muted/40 rounded-lg p-0.5 shadow-2xs">
       <Button
@@ -37,7 +38,7 @@ export function TemplateEditorZoomControls({
         title={t("templateEditor.zoomOut")}
         aria-label={t("templateEditor.zoomOut")}
       >
-        <ZoomOut className="w-3.5 h-3.5" aria-hidden="true" />
+        <ZoomOut className="w-4 h-4" aria-hidden="true" />
       </Button>
       <Button
         type="button"
@@ -45,9 +46,14 @@ export function TemplateEditorZoomControls({
         variant="ghost"
         className="min-h-11 px-2 text-3xs font-mono font-medium hover:bg-background/80"
         title={t("templateEditor.zoomReset")}
-        aria-label={t("templateEditor.zoomReset")}
+        /*
+         * The accessible name must contain the visible text (WCAG 2.5.3 "Label in
+         * Name"): the button reads "150%" but used to be named "Reset zoom" only, so
+         * voice control could not activate it by what it says.
+         */
+        aria-label={`${zoomPercent} — ${t("templateEditor.zoomReset")}`}
       >
-        {canvasScale ? `${Math.round(canvasScale * 100)}%` : "100%"}
+        {zoomPercent}
       </Button>
       <Button
         type="button"
@@ -58,7 +64,7 @@ export function TemplateEditorZoomControls({
         title={t("templateEditor.zoomIn")}
         aria-label={t("templateEditor.zoomIn")}
       >
-        <ZoomIn className="w-3.5 h-3.5" aria-hidden="true" />
+        <ZoomIn className="w-4 h-4" aria-hidden="true" />
       </Button>
       {onZoomFit && (
         <Button
@@ -70,7 +76,7 @@ export function TemplateEditorZoomControls({
           title={t("templateEditor.zoomFit")}
           aria-label={t("templateEditor.zoomFit")}
         >
-          <Scan className="w-3.5 h-3.5" aria-hidden="true" />
+          <Scan className="w-4 h-4" aria-hidden="true" />
         </Button>
       )}
     </div>
