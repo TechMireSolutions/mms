@@ -40,29 +40,37 @@ const BLOCKING_IMPACTS: readonly Impact[] = ['serious', 'critical'];
  *
  * See `docs/a11y-baseline.md` for the current findings and their triage.
  */
-export const A11Y_BASELINE: Record<string, string> = {
-  // The ROOT CAUSE of this one has been fixed at the token layer: the light
-  // palette's semantic tokens were mid-tones that failed AA as text, as fills
-  // with white labels, and on their own tints. `--primary`/`--destructive`/
-  // `--success`/`--warning`/`--info` (plus `--ring` and `--muted-foreground`)
-  // are now solved so that all three roles clear 4.5:1 / 3:1, and
-  // `apps/frontend/src/__tests__/designTokens.contrast.test.ts` holds that line.
-  //
-  // The entry is retained ONLY because the axe gate is a rendered-browser check
-  // and has not been re-run since the palette change — a colour-contrast rule can
-  // also fire on surfaces the tokens do not cover (disabled text at reduced
-  // opacity, text on tenant gradients). DELETE this entry once a CI run reports
-  // zero `color-contrast` nodes; if it still fires, the `html:` diagnostic in the
-  // failure output names the node.
-  'color-contrast': 'Root cause fixed in the token palette; entry pending an axe confirmation run.',
-  // Intermittent and data-dependent (seen only when dashboard widgets render).
-  // Related fix already applied: `ProgressBar` used to spread `aria-hidden` onto
-  // a `role="progressbar"` element across 8+ call sites — a real ARIA conflict,
-  // now resolved in the component. That has NOT been confirmed as this finding's
-  // cause, so the entry stays until a firing run identifies the node directly
-  // (the `html:` diagnostic prints it). See docs/a11y-baseline.md.
-  'aria-hidden-focus': 'Dashboard widget; intermittent — not yet attributable to a component.',
-};
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ * A11Y_BASELINE IS NOW EMPTY. Both entries that existed at adoption have been
+ * retired, so every serious/critical WCAG 2.1 A/AA violation now fails the build.
+ * Keep it that way: if a new violation appears, fix it rather than re-baselining.
+ * ─────────────────────────────────────────────────────────────────────────────
+ *
+ * `color-contrast` — removed. The gate runs clean across 15 audit contexts (5
+ * routes × 2 viewports, 4 overlay dialogs, plus RTL).
+ *
+ * The root cause was not the markup the entry originally named. Every semantic
+ * token is overwritten at runtime by the branding injector, and
+ * `ensureAccessibleFillSurface` stopped as soon as EITHER white or dark text
+ * passed on the fill — so a mid-tone brand colour that accepts a dark label kept
+ * its bright fill (the test tenant resolved `--primary` to #db9d00, 2.37:1 on
+ * white) and the token was unusable as text, on surfaces and on its own chip tint.
+ * Fills are now fitted to all three roles; see
+ * `packages/shared/src/brandingCssContrast.ts` and the three-role assertions in
+ * `brandingTheme.test.ts` / `apps/frontend/src/__tests__/designTokens.contrast.test.ts`.
+ *
+ * `aria-hidden-focus` — removed. This one described itself as "intermittent,
+ * ~1 in 6 runs, not attributable to a component". The `ProgressBar` ARIA conflict
+ * that was fixed while investigating it (it spread `aria-hidden` onto its own
+ * `role="progressbar"`) now looks like the actual cause, on the strength of the
+ * absence: ~40 clean dashboard audits since, across 12 full gate runs and a
+ * 16-audit focused reload loop, where the old rate was ~1 in 6. That is ~0.1%
+ * likely if nothing had changed. The success path is also now better instrumented —
+ * failures print the node's `html:` and axe's measured values — so if it does
+ * recur, the output names the element.
+ */
+export const A11Y_BASELINE: Record<string, string> = {};
 
 /**
  * When set, prints every violation as a JSON array and never fails. Used to
@@ -93,6 +101,15 @@ interface AxeViolationSummary {
   sampleTargets: string[];
   /** Truncated outerHTML of the first offending node — makes a failure actionable. */
   sampleHtml: string;
+  /**
+   * axe's measured colours for `color-contrast` nodes.
+   *
+   * Without this the report names the element but not the numbers, and the
+   * palette that produced them is *not* the one in `index.css`: the branding
+   * injector overwrites every semantic token at runtime, so reasoning from source
+   * gives the wrong answer. Printing fg/bg/ratio makes the real palette visible.
+   */
+  contrast: { fg: string; bg: string; ratio: string }[];
 }
 
 function summarize(violations: AxeResults['violations']): AxeViolationSummary[] {
@@ -108,6 +125,17 @@ function summarize(violations: AxeResults['violations']): AxeViolationSummary[] 
     // component. Keep the steps visually distinct so the target is unambiguous.
     sampleTargets: violation.nodes.slice(0, 3).map((node) => node.target.join(' >> ')),
     sampleHtml: (violation.nodes[0]?.html ?? '').replace(/\s+/g, ' ').slice(0, 300),
+    contrast: violation.nodes
+      .slice(0, 3)
+      .map((node) => {
+        const data = node.any?.find((check) => check.data)?.data as
+          | { fgColor?: string; bgColor?: string; contrastRatio?: number }
+          | undefined;
+        if (!data?.fgColor || !data?.bgColor) return null;
+        const ratio = typeof data.contrastRatio === 'number' ? data.contrastRatio.toFixed(2) : '?';
+        return { fg: data.fgColor, bg: data.bgColor, ratio };
+      })
+      .filter((entry): entry is { fg: string; bg: string; ratio: string } => entry !== null),
   }));
 }
 
@@ -117,6 +145,9 @@ function renderSummary(summaries: AxeViolationSummary[]): string {
       (v) =>
         `  • [${v.impact}] ${v.id} — ${v.help} (${v.nodes} node${v.nodes === 1 ? '' : 's'})\n` +
         v.sampleTargets.map((t) => `      ${t}`).join('\n') +
+        (v.contrast.length > 0
+          ? `\n      measured: ${v.contrast.map((c) => `${c.fg} on ${c.bg} = ${c.ratio}:1`).join(' | ')}`
+          : '') +
         (v.sampleHtml ? `\n      html: ${v.sampleHtml}` : ''),
     )
     .join('\n');
@@ -130,7 +161,18 @@ export async function assertNoSeriousA11yViolations(
   page: Page,
   options: A11yAuditOptions,
 ): Promise<void> {
-  let builder = new AxeBuilder({ page }).withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa']);
+  let builder = new AxeBuilder({ page }).withTags([
+    'wcag2a',
+    'wcag2aa',
+    'wcag21a',
+    'wcag21aa',
+    // WCAG 2.2 AA. The set was previously pinned to 2.1, which silently excluded
+    // every 2.2 success criterion — notably `target-size` (2.5.8, the 24x24
+    // minimum). The app targets 44px by construction, so this should hold; it is
+    // added so that a regression in the touch-target floor is caught rather than
+    // unchecked.
+    'wcag22aa',
+  ]);
 
   for (const selector of options.exclude ?? []) {
     builder = builder.exclude(selector);
@@ -146,7 +188,6 @@ export async function assertNoSeriousA11yViolations(
   const advisory = summaries.filter((v) => !v.impact || !BLOCKING_IMPACTS.includes(v.impact));
 
   if (COLLECT_MODE) {
-    // eslint-disable-next-line no-console
     console.log(
       `[a11y:collect] ${options.context} ${JSON.stringify(
         summaries.map((v) => ({ id: v.id, impact: v.impact, nodes: v.nodes, help: v.help })),
@@ -159,7 +200,6 @@ export async function assertNoSeriousA11yViolations(
   const blocking = serious.filter((v) => A11Y_BASELINE[v.id] === undefined);
 
   if (baselined.length > 0) {
-    // eslint-disable-next-line no-console
     console.log(
       `[a11y] ${options.context}: ${baselined.length} BASELINED violation(s) still present\n${renderSummary(baselined)}`,
     );
@@ -173,7 +213,6 @@ export async function assertNoSeriousA11yViolations(
 
   if (advisory.length > 0) {
     // Visible without blocking: these are real findings worth tracking.
-    // eslint-disable-next-line no-console
     console.log(
       `[a11y] ${options.context}: ${advisory.length} non-blocking finding(s)\n${renderSummary(advisory)}`,
     );

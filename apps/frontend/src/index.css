@@ -13,16 +13,28 @@
   --font-urdu: var(--font-urdu, "Noto Nastaliq Urdu", "Amiri", serif);
   --font-persian: var(--font-persian, "Vazirmatn", "Noto Sans Arabic", sans-serif);
   /*
-   * Sub-xs type scale with a legibility floor. Previously 2xs was 10px and 4xs
-   * was 9px, which is below a comfortable reading size — and much worse in
-   * Arabic/Urdu/Persian, where 10px Nastaliq is effectively unreadable.
-   * Floor is now 10px, and the two workhorse steps land on 11px/12px.
-   * `2xs` intentionally coincides with `text-xs` (12px): 12px is the smallest
-   * size we are willing to ship for real content, so the steps converge there.
+   * Sub-xs type scale with a legibility floor.
+   *
+   * NAMESPACE: these MUST be `--text-*`. Tailwind v4's font-size namespace is
+   * `--text-*`; there is no `--font-size-*` namespace, so the three tokens used to
+   * be inert — `text-2xs` / `text-3xs` / `text-4xs` generated no CSS at all and
+   * their 217 call sites silently inherited whatever size was around them. The
+   * declared values below are therefore new *behaviour*, not just new numbers:
+   * micro-labels will now actually render at 10/11/12px.
+   *
+   * Sizes: the floor is 10px and the two workhorse steps land on 11px/12px (2xs
+   * previously declared 10px and 4xs 9px, both below a comfortable reading size —
+   * and much worse in Arabic/Urdu/Persian, where 10px Nastaliq is unreadable).
+   * `2xs` intentionally coincides with `text-xs` at 12px: that is the smallest size
+   * we are willing to ship for real content, so the steps converge there.
+   * Explicit line-heights keep the density these micro-labels were designed for.
    */
-  --font-size-3xs: 0.6875rem;
-  --font-size-2xs: 0.75rem;
-  --font-size-4xs: 0.625rem;
+  --text-4xs: 0.625rem;
+  --text-4xs--line-height: 0.875rem;
+  --text-3xs: 0.6875rem;
+  --text-3xs--line-height: 0.9375rem;
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1rem;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);

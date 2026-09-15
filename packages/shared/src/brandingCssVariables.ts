@@ -7,6 +7,7 @@ import {
   tone,
 } from './brandingColorUtils.js';
 import {
+  brandingSurfaces,
   darkModePrimaryUi,
   darkModeSecondaryUi,
   ensureAccessibleFillSurface,
@@ -26,11 +27,20 @@ export function buildBrandingCssVariables(
   const primaryBase = hexToHslColor(primaryHex) ?? DEFAULT_PRIMARY;
   const secondaryBase = hexToHslColor(secondaryHex) ?? DEFAULT_SECONDARY;
 
+  // The surfaces the tokens are read against, built from the same hues the
+  // surface tokens use so the contrast constraint is evaluated against reality
+  // rather than pure white.
+  const surfaces = brandingSurfaces(mode, primaryBase.h);
+
   const primaryUi = ensureAccessibleFillSurface(
     mode === 'dark' ? darkModePrimaryUi(primaryBase) : primaryBase,
+    mode,
+    [surfaces.card, surfaces.background],
   );
   const secondaryUi = ensureAccessibleFillSurface(
     mode === 'dark' ? darkModeSecondaryUi(secondaryBase) : secondaryBase,
+    mode,
+    [surfaces.card, surfaces.background],
   );
 
   const primaryToken = hslColorToToken(primaryUi);
@@ -39,7 +49,7 @@ export function buildBrandingCssVariables(
   const chart4 = tone(secondaryUi, { s: -Math.round(secondaryUi.s * 0.35), l: -12 });
   const chart5 = tone(primaryUi, { s: -Math.round(primaryUi.s * 0.75), l: 22 });
 
-  const semanticTokens = buildSemanticStatusTokens(mode);
+  const semanticTokens = buildSemanticStatusTokens(mode, primaryBase.h);
   const surfaceTokens = buildBrandingSurfaceTokens(mode, primaryBase.h, secondaryBase.h);
   const brandTokens = {
     '--primary': primaryToken,

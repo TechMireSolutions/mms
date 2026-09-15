@@ -177,12 +177,49 @@ describe("design tokens — typography legibility floor", () => {
   it("keeps the sub-xs scale at or above 10px", () => {
     // 9px and 10px steps were unreadable, and much worse for Nastaliq.
     const sizeOf = (token: string) => {
-      const match = new RegExp(`--font-size-${token}:\\s*([\\d.]+)rem`).exec(css);
-      if (!match) throw new Error(`--font-size-${token} is missing`);
+      const match = new RegExp(`--text-${token}:\\s*([\\d.]+)rem`).exec(css);
+      if (!match) throw new Error(`--text-${token} is missing`);
       return Number(match[1]) * 16;
     };
     expect(sizeOf("4xs")).toBeGreaterThanOrEqual(10);
     expect(sizeOf("3xs")).toBeGreaterThanOrEqual(11);
     expect(sizeOf("2xs")).toBeGreaterThanOrEqual(12);
+  });
+
+  it("declares the scale in the namespace Tailwind v4 consumes", () => {
+    // These were `--font-size-*`, which Tailwind v4 does not consume: no utility
+    // was emitted for any of the 217 `text-2xs`/`3xs`/`4xs` call sites, and nothing
+    // failed. The same invariant is enforced pre-build by
+    // `scripts/check-code-norms.mjs`; this asserts it from the consumer side.
+    expect(css).not.toMatch(/--font-size-[a-z0-9]+:/);
+    expect(css).not.toMatch(/--line-height-[a-z0-9]+:/);
+    expect(css).not.toMatch(/--box-shadow-[a-z0-9]+:/);
+  });
+});
+
+describe("design tokens — locale typography", () => {
+  it("gives Urdu the Nastaliq leading the design contract requires", () => {
+    // Nastaliq stacks letterforms and has deep descenders. The contract in
+    // `mms-ui-ux-design` §2 asks for 2.2; the stylesheet had drifted to 1.8.
+    const urduRule = /:lang\(ur\)[^{]*\{[^}]*line-height:\s*([\d.]+)/.exec(css);
+    expect(urduRule, "no line-height declared for :lang(ur)").not.toBeNull();
+    expect(Number(urduRule![1])).toBeGreaterThanOrEqual(2.2);
+  });
+
+  it("does not force the Amiri serif on locales that never load it", () => {
+    // Amiri is fetched only for ar/ur (`lib/localeFonts.ts`). Naming it in the
+    // global `:root` made English and Persian brand text fall back to a generic
+    // serif — the mobile header, sidebar brand and login headline.
+    const rootBlock = /:root\s*\{([\s\S]*?)\n\}/.exec(css);
+    expect(rootBlock, "no :root block").not.toBeNull();
+    expect(
+      rootBlock![1],
+      "--font-display names Amiri in :root, where en/fa cannot load it",
+    ).not.toMatch(/--font-display:[^;]*Amiri/);
+  });
+
+  it("scopes the Amiri display stack to the locales that load it", () => {
+    expect(css).toMatch(/\[lang="ar"\][^{]*\{[^}]*--font-display:[^;]*Amiri/);
+    expect(css).toMatch(/\[lang="ur"\][^{]*\{[^}]*--font-display:[^;]*Amiri/);
   });
 });

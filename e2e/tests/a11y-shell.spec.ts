@@ -55,31 +55,74 @@ const AUDIT_ROUTES = [
 ];
 
 /**
- * Open the first directory row's detail drawer, audit it, then dismiss with
- * Escape. Best-effort: if the tenant has no seed data there is no row to open,
- * and a missing drawer must not fail the gate.
+ * Audit a real overlay on the current route, then dismiss it with Escape.
  *
- * Dismissing via Escape also exercises overlay Escape ownership — a regression
- * there would surface as the drawer staying open (or closing something else).
+ * Overlays matter more than most surfaces: they are where the focus trap, the
+ * backdrop, the z-index scale and Escape ownership all meet, and they portal to
+ * `<body>` so they sit outside the tree the shell rules cover.
+ *
+ * Two triggers are used because they have different data requirements:
+ *  - the column-customiser dialog (`aria-haspopup="dialog"`) needs no seed data,
+ *    so it always runs;
+ *  - a directory row's detail drawer needs a row, so it is best-effort.
+ *
+ * Every attempt logs its outcome. A "best-effort" step that silently no-ops is
+ * worse than no step at all: the suite reported a clean drawer audit for months
+ * while the tenant had no rows and no drawer ever opened.
  */
-async function auditDetailDrawer(page: Page, context: string): Promise<void> {
-  const viewButton = page.locator('table tbody tr').first().getByRole('button').first();
-  if ((await viewButton.count()) === 0) return;
+async function auditOverlay(page: Page, context: string, kind: 'dialog' | 'drawer'): Promise<boolean> {
+  const trigger =
+    kind === 'dialog'
+      ? page.locator('button[aria-haspopup="dialog"]').first()
+      : page.locator('table tbody tr').first().getByRole('button').first();
 
-  await viewButton.click({ timeout: 10_000 }).catch(() => undefined);
-  const drawer = page.locator('[role="dialog"]').first();
-  const opened = await drawer
+  if ((await trigger.count()) === 0) {
+    console.log(`[a11y] ${context}: no ${kind} trigger found — skipped`);
+    return false;
+  }
+
+  await trigger.click({ timeout: 10_000 }).catch(() => undefined);
+  const overlay = page.locator('[role="dialog"]').first();
+  const opened = await overlay
     .waitFor({ state: 'visible', timeout: 10_000 })
     .then(() => true)
     .catch(() => false);
-  if (!opened) return;
 
-  await assertNoSeriousA11yViolations(page, { context: `${context} (detail drawer)` });
+  if (!opened) {
+    console.log(`[a11y] ${context}: ${kind} trigger present but no dialog opened — skipped`);
+    return false;
+  }
 
+  await assertNoSeriousA11yViolations(page, { context: `${context} (${kind})` });
+
+  // While the overlay is open, assert its scrim does not print. Radix portals
+  // overlays into <body>, outside the app tree the print rules target, and
+  // `print-color-adjust: exact` forces backgrounds on — so a scrim left visible
+  // would ink the whole page. Live here rather than in `print-documents.spec.ts`
+  // because that spec is deliberately tenant-free and this one already has an
+  // overlay open.
+  const backdrop = page.locator('[data-overlay-backdrop]').first();
+  if (await backdrop.count()) {
+    await page.emulateMedia({ media: 'print' });
+    const printDisplay = await backdrop.first().evaluate((el) => getComputedStyle(el).display);
+    await page.emulateMedia({ media: 'screen' });
+    expect(
+      printDisplay,
+      `the overlay scrim still prints under print media (display: ${printDisplay}) — it needs data-overlay-backdrop`,
+    ).toBe('none');
+  }
+
+  // Dismissing via Escape also exercises overlay Escape ownership: a regression
+  // there shows up as the overlay staying open (or closing something else).
   await page.keyboard.press('Escape');
-  await drawer
+  const closed = await overlay
     .waitFor({ state: 'hidden', timeout: 5_000 })
-    .catch(() => undefined);
+    .then(() => true)
+    .catch(() => false);
+  if (!closed) {
+    console.log(`[a11y] ${context}: ${kind} did not close on Escape`);
+  }
+  return true;
 }
 
 /** Viewports the skill names explicitly: 375 (mobile) and 1440 (desktop). */
@@ -139,11 +182,15 @@ test.describe('accessibility smoke @smoke', () => {
           context: `${route.label} @ ${viewport.width}px (ltr)`,
         });
 
-        // The drawer is a different composition of the same primitives (overlay,
-        // focus trap, tabs), so it is audited as its own surface. Desktop only:
-        // the row-action affordance differs at 375px.
+        // Overlays are a different composition of the same primitives (focus
+        // trap, backdrop, Escape), so they are audited as their own surface.
+        // Desktop only — the trigger affordance differs at 375px.
         if (viewport.width === 1440 && route.path !== '/' && route.path !== '/settings') {
-          await auditDetailDrawer(page, `${route.label} @ ${viewport.width}px (ltr)`);
+          const context = `${route.label} @ ${viewport.width}px (ltr)`;
+          // Needs no seed data, so this one always runs.
+          await auditOverlay(page, context, 'dialog');
+          // Needs a directory row; logs when it has none.
+          await auditOverlay(page, context, 'drawer');
         }
       }
     }
@@ -158,10 +205,11 @@ test.describe('accessibility smoke @smoke', () => {
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await assertNoSeriousA11yViolations(page, { context: 'dashboard @ 1440px (rtl)' });
 
-    // RTL detail drawer — the direction flip is most likely to break overlays
+    // RTL overlay — the direction flip is most likely to break overlays
     // (logical inset, sheet edge, close-button placement).
     await gotoAndSettle(page, tenantOrigin, '/students', '#main-content');
     await forceRtl(page, 'ar');
-    await auditDetailDrawer(page, 'students @ 1440px (rtl)');
+    await auditOverlay(page, 'students @ 1440px (rtl)', 'dialog');
+    await auditOverlay(page, 'students @ 1440px (rtl)', 'drawer');
   });
 });

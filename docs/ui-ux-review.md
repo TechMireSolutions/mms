@@ -1,5 +1,10 @@
 # UI/UX Review — MMS Frontend
 
+> **STATUS: all 16 findings addressed.** See `docs/ui-ux-review-resolution.md` for
+> what changed per finding, the verification run, and the residual items that need a
+> rendered-browser (axe) confirmation. The findings below are kept as the original
+> record and are written in the present tense as of the review date.
+
 **Scope:** `apps/frontend` (2,533 TS/TSX files, ~241k LOC) plus the design-token layer
 (`src/index.css`), the `@mms/shared` translation corpus, and the E2E a11y gate.
 **Method:** code reading plus measured checks — contrast computed with the project's own

@@ -90,8 +90,17 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
           )}
         </div>
 
-        <div aria-label={t("sessions.classes.enrolledCapacity", { enrolled: enrolledCount, capacity: maxCapacity })}>
-          <div className="mb-1 flex items-center justify-between" aria-hidden="true">
+        {/*
+          The capacity figures must reach assistive tech as TEXT. This block used to
+          hide them with `aria-hidden` and compensate with an `aria-label` on the
+          wrapper — but that wrapper is a role-less `<div>`, and naming is not
+          exposed for the generic role, so the compensation did not land and the
+          class capacity was silent. Announcing the visible text is the reliable
+          fix; the bar below stays `aria-hidden` so the same number is not
+          announced twice.
+        */}
+        <div>
+          <div className="mb-1 flex items-center justify-between">
             <span className="text-xs text-muted-foreground">{t("sessions.classes.form.capacity")}</span>
             <span className="text-xs font-semibold text-foreground">
               {enrolledCount}/{maxCapacity}
