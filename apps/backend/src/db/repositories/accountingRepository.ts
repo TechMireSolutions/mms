@@ -25,7 +25,6 @@ export {
   findEntryById,
   findEntriesByIds,
   findEntryIdBySource,
-  findPostedEntryIds,
   type JournalLineRow,
 } from './accountingEntriesRepository.js';
 export {

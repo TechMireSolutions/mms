@@ -1,14 +1,12 @@
 import { createElement, type Dispatch, type SetStateAction } from "react";
-import { Upload } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account } from "@/lib/data/accountingData";
-import { getTransactionGroupColorClasses, type QuickActionType, type WizardFormState } from "./simpleTransactionWizardTypes";
-
-const CASH_ACCOUNT_IDS = new Set(["a1000", "a1010", "a1020"]);
+import { getTransactionGroupColorClasses, wizardAccountOptions, type QuickActionType, type WizardFormState } from "./simpleTransactionWizardTypes";
+import { parseMoneyInput } from "./simpleTransactionMoney";
 
 interface StepTransactionFormProps {
   type: QuickActionType;
@@ -22,8 +20,16 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
   const { t } = useTranslation();
   const isMoneyIn = type.groupKey === "accounting.journal.dashboard.group.moneyIn";
   const isTransfer = type.groupKey === "accounting.journal.dashboard.group.transfers";
-  const cashAccounts = accounts.filter((account) => CASH_ACCOUNT_IDS.has(account.id));
-  const cashAccountOptions = cashAccounts.map((account) => ({ value: account.id, label: account.name }));
+  /**
+   * Cash/bank options come from the live chart: accounts created in the UI carry
+   * generated ids, so filtering by the seed ids ("a1000"…) left every workspace
+   * with its own cash/bank accounts unable to record a simple transaction.
+   */
+  const accountOptions = wizardAccountOptions(accounts);
+  const selectAccountPlaceholder = t("accounting.journal.form.selectAccount");
+  const amountIsEmpty = form.amount.trim() === "";
+  const parsedAmount = parseMoneyInput(form.amount);
+  const amountIsInvalid = !amountIsEmpty && (parsedAmount === null || parsedAmount <= 0);
 
   return (
     <fieldset className="space-y-4 border-0 p-0 m-0">
@@ -62,10 +68,11 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
               placeholder="0.00"
               onChange={(event) => setForm({ ...form, amount: event.target.value })}
               className="ps-8 text-lg font-bold"
-              aria-invalid={!form.amount}
+              aria-invalid={amountIsEmpty || amountIsInvalid}
             />
           </div>
-          {!form.amount && <p className="text-xs text-warning mt-1" role="alert">{t("accounting.journal.dashboard.wizard.errorAmount")}</p>}
+          {amountIsEmpty && <p className="text-xs text-warning mt-1" role="alert">{t("accounting.journal.dashboard.wizard.errorAmount")}</p>}
+          {amountIsInvalid && <p className="text-xs text-destructive mt-1" role="alert">{t("accounting.journal.dashboard.wizard.errorAmountInvalid")}</p>}
         </div>
 
         {isMoneyIn ? (
@@ -76,7 +83,8 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
               name="debitAcc"
               value={form.debitAcc}
               onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
-              options={cashAccountOptions}
+              options={accountOptions}
+              placeholder={selectAccountPlaceholder}
             />
           </div>
         ) : isTransfer ? (
@@ -88,7 +96,8 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
                 name="debitAcc"
                 value={form.debitAcc}
                 onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
-                options={cashAccountOptions}
+                options={accountOptions}
+                placeholder={selectAccountPlaceholder}
               />
             </div>
             <div>
@@ -98,7 +107,8 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
                 name="creditAcc"
                 value={form.creditAcc}
                 onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
-                options={cashAccountOptions}
+                options={accountOptions}
+                placeholder={selectAccountPlaceholder}
               />
             </div>
           </>
@@ -110,7 +120,8 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
               name="creditAcc"
               value={form.creditAcc}
               onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
-              options={cashAccountOptions}
+              options={accountOptions}
+              placeholder={selectAccountPlaceholder}
             />
           </div>
         )}
@@ -126,7 +137,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
           />
         </div>
 
-        <div>
+        <div className="sm:col-span-2">
           <label htmlFor="wizard-ref" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.refNo")} <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span></label>
           <Input
             id="wizard-ref"
@@ -135,22 +146,6 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
             onChange={(event) => setForm({ ...form, ref: event.target.value })}
             placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
           />
-        </div>
-
-        <div>
-          <label htmlFor="wizard-receipt" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.receipt")} <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span></label>
-          <label htmlFor="wizard-receipt" className={`${FORM_INPUT} flex items-center gap-2 cursor-pointer text-muted-foreground hover:text-foreground`}>
-            <Upload className="w-4 h-4 flex-shrink-0" aria-hidden="true" />
-            <span className="text-xs">{form.receipt ? form.receipt : t("accounting.journal.dashboard.wizard.uploadReceipt")}</span>
-            <Input
-              id="wizard-receipt"
-              name="receipt"
-              type="file"
-              accept="image/*,application/pdf"
-              className="hidden"
-              onChange={(event) => setForm({ ...form, receipt: event.target.files?.[0]?.name || "" })}
-            />
-          </label>
         </div>
       </div>
     </fieldset>

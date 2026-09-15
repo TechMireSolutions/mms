@@ -56,8 +56,8 @@ interface BalanceSheetPanelProps {
   equityRows: ReportRow[];
   assets: number;
   liabilities: number;
+  /** Cumulative (as-of `dateTo`) equity — the server figure, incl. unclosed P&L. */
   equity: number;
-  equityTotal: number;
 }
 
 export function BalanceSheetPanel({
@@ -67,7 +67,6 @@ export function BalanceSheetPanel({
   assets,
   liabilities,
   equity,
-  equityTotal,
 }: BalanceSheetPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
@@ -95,7 +94,7 @@ export function BalanceSheetPanel({
         title={t('accounting.reports.equity')}
         rows={equityRows}
         totalLabel={t('accounting.reports.totalEquity')}
-        total={equityTotal}
+        total={equity}
         debitNormal={false}
         color="bg-primary/10"
       />

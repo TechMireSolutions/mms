@@ -3,7 +3,7 @@ import { generateJERef, type Account, type JournalEntry, type FiscalYear } from 
 import { hasFieldValue } from "@/lib/formCompleteness";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
-import { journalEntryRecordSchema, todayISO } from "@mms/shared";
+import { isJournalEntryBalanced, journalEntryRecordSchema, moneyToCents, todayISO } from "@mms/shared";
 import type { DraftForm, DraftLine } from "./journalEntryFormTypes";
 
 const EMPTY_LINE = (): DraftLine => ({ id: `l-${crypto.randomUUID()}`, account_id: "", debit: "", credit: "", description: "" });
@@ -69,9 +69,24 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     setErrors({});
   }, [initial, activeFiscalYear, activeFiscalYearRecord?.label, user?.name]);
 
-  const totalDebit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.debit) || 0), 0);
-  const totalCredit = form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.credit) || 0), 0);
-  const isBalanced  = Math.abs(totalDebit - totalCredit) < 0.01 && totalDebit > 0;
+  // Money is summed through integer cents (and converted once) so the totals
+  // shown beside the lines are the same figures the ledger posts, with no float
+  // artefacts such as 0.30000000000000004.
+  const totalDebit = moneyToCents(form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.debit) || 0), 0)) / 100;
+  const totalCredit = moneyToCents(form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.credit) || 0), 0)) / 100;
+  /**
+   * Balanced by the same rule the server enforces (`isJournalEntryBalanced`:
+   * exact integer cents, at least two lines, each single-sided) instead of a
+   * second, weaker float comparison with a 0.01 tolerance. Two definitions of
+   * "balanced" meant the form could accept what the API then rejected with a
+   * generic error.
+   */
+  const isBalanced = isJournalEntryBalanced(
+    form.lines.map((journalLine) => ({
+      debit: Number(journalLine.debit) || 0,
+      credit: Number(journalLine.credit) || 0,
+    })),
+  );
 
   const completeness = (() => {
     const total = 4;
@@ -99,27 +114,35 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     setForm({ ...form, tags });
   };
 
-  const validate = (): Record<string, string> => {
+  const validate = (targetStatus: "draft" | "posted"): Record<string, string> => {
     const validationErrors: Record<string, string> = {};
     if (!form.date) validationErrors.date = t("accounting.journal.form.errorDate");
     if (!form.description.trim()) validationErrors.description = t("accounting.journal.form.errorNarration");
     const filledLines = form.lines.filter((journalLine) => journalLine.account_id);
     if (filledLines.length < 2) validationErrors.lines = t("accounting.journal.form.errorLines");
-    if (!isBalanced) validationErrors.balance = t("accounting.journal.form.errorBalance");
+    /**
+     * Balance is a **posted**-entry invariant, matching the server
+     * (`prepareJournalEntryForPersist` rejects only `status === 'posted'`
+     * unbalanced writes). Requiring it unconditionally made the "Save draft"
+     * control unusable for a work-in-progress entry, so users invented equal
+     * placeholder amounts that later posted as real ledger figures.
+     */
+    if (targetStatus === "posted" && !isBalanced) validationErrors.balance = t("accounting.journal.form.errorBalance");
     form.lines.forEach((journalLine, lineIndex) => { if (!journalLine.account_id) validationErrors[`line${lineIndex}`] = t("accounting.journal.form.errorAccountRequired"); });
 
     return validationErrors;
   };
 
   const saveEntry = async (saveAs?: "draft" | "posted") => {
-    const validationErrors = validate();
+    const targetStatus = saveAs ?? form.status;
+    const validationErrors = validate(targetStatus);
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     const journalReference = isEdit ? form.ref : generateJERef(entries);
     const candidate = {
       ...form,
       id: isEdit ? form.id : `je${crypto.randomUUID()}`,
       ref: journalReference,
-      status: saveAs || form.status,
+      status: targetStatus,
       created_by: form.created_by || user?.name || "system",
       lines: form.lines.map((journalLine) => ({
         ...journalLine,

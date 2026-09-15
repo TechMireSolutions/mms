@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { ArrowLeft, ArrowRight, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -6,11 +6,18 @@ import { FormModal } from "@/components/ui/FormModal";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { generateJERef, type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
-import { todayISO } from "@mms/shared";
+import { isJournalEntryBalanced, journalEntryRecordSchema, todayISO, type AppTranslationKey } from "@mms/shared";
 import { StepTransactionForm } from "./SimpleTransactionStepForm";
 import { StepReview } from "./SimpleTransactionStepReview";
 import { StepTypeSelection } from "./SimpleTransactionStepTypeSelection";
-import type { QuickActionType, WizardFormState } from "./simpleTransactionWizardTypes";
+import {
+  buildWizardFormState,
+  resolveSimpleTransactionAccounts,
+  validateWizardForm,
+  type QuickActionType,
+  type WizardFormState,
+} from "./simpleTransactionWizardTypes";
+import { parseMoneyInput } from "./simpleTransactionMoney";
 
 interface SimpleTransactionWizardProps {
   open: boolean;
@@ -25,69 +32,89 @@ interface SimpleTransactionWizardProps {
 export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, onSave, onClose, prefillType }: SimpleTransactionWizardProps) {
   const { t } = useTranslation();
   const { formatCurrency, activeCurrency } = useAccountingCurrency();
-  const [step, setStep] = useState(prefillType ? 2 : 1);
+  const activeFiscalYearLabel = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
+  const [step, setStep] = useState(() => (prefillType ? 2 : 1));
   const [selectedType, setSelectedType] = useState<QuickActionType | null>(prefillType || null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const activeFiscalYearLabel = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
+  const [form, setForm] = useState<WizardFormState>(() =>
+    buildWizardFormState(prefillType ?? null, accounts, { date: todayISO(), fiscalYearLabel: activeFiscalYearLabel }, (key) => t(key)),
+  );
 
-  const [form, setForm] = useState<WizardFormState>({
-    date: todayISO(),
-    amount: "",
-    debitAcc: prefillType?.debitAcc || "a1000",
-    creditAcc: prefillType?.creditAcc || "a1010",
-    description: prefillType?.descriptionKey ? t(prefillType.descriptionKey) : "",
-    ref: "",
-    receipt: "",
-    fiscal_year: activeFiscalYearLabel,
+  /**
+   * Latest chart/labels for the reset effect below. They are read through a ref
+   * on purpose: a background refetch of the accounts (or a language switch) must
+   * not wipe what the user is typing, only an actual opening of the dialog may.
+   */
+  const resetContextRef = useRef({ accounts, fiscalYearLabel: activeFiscalYearLabel, translate: (key: AppTranslationKey) => t(key) as string });
+  useEffect(() => {
+    resetContextRef.current = { accounts, fiscalYearLabel: activeFiscalYearLabel, translate: (key: AppTranslationKey) => t(key) as string };
   });
+
+  /**
+   * The dialog stays mounted between openings (the modal only unmounts its
+   * portal), so without this every open after the first reused the previous
+   * transaction: the wizard reopened on the review step with the old figures and
+   * its Post button wrote a duplicate, permanently posted entry.
+   */
+  useEffect(() => {
+    if (!open) return;
+    const { accounts: liveAccounts, fiscalYearLabel, translate } = resetContextRef.current;
+    setStep(prefillType ? 2 : 1);
+    setSelectedType(prefillType ?? null);
+    setShowAdvanced(false);
+    setForm(buildWizardFormState(prefillType ?? null, liveAccounts, { date: todayISO(), fiscalYearLabel }, translate));
+  }, [open, prefillType]);
+
+  const parsedAmount = useMemo(() => parseMoneyInput(form.amount), [form.amount]);
 
   const handleTypeSelect = (type: QuickActionType) => {
     setSelectedType(type);
     setForm((previousForm) => ({
       ...previousForm,
-      debitAcc: type.debitAcc,
-      creditAcc: type.creditAcc,
+      ...resolveSimpleTransactionAccounts(type, accounts),
       description: t(type.descriptionKey),
     }));
     setStep(2);
   };
 
   const canProceed = () => {
-    if (step === 2) return !!form.amount && parseFloat(form.amount) > 0;
+    if (step === 2) return parsedAmount !== null && parsedAmount > 0;
     return true;
   };
 
-  const validate = () => {
-    if (!form.amount || parseFloat(form.amount) <= 0) return t("accounting.journal.dashboard.wizard.errorAmount");
-    if (!form.debitAcc || !form.creditAcc) return t("accounting.journal.dashboard.wizard.errorSource");
-    if (!form.date) return t("accounting.journal.dashboard.wizard.errorDate");
-    return null;
-  };
-
   const handleSave = async (status: "draft" | "posted") => {
-    const validationError = validate();
-    if (validationError) { alert(validationError); return; }
-    const amount = parseFloat(form.amount);
+    const validation = validateWizardForm(form, accounts);
+    if (!validation.ok) { alert(t(validation.errorKey)); return; }
+    if (!selectedType) { alert(t("accounting.journal.dashboard.wizard.errorSource")); return; }
     const generatedReference = generateJERef(entries);
-    const description = form.description || t(selectedType!.labelKey);
-    await onSave({
+    const description = form.description.trim() || t(selectedType.labelKey);
+    const candidate: JournalEntry = {
       id: `je${crypto.randomUUID()}`,
       ref: form.ref ? `${form.ref}` : generatedReference,
       date: form.date,
       description,
       status,
       created_by: "system",
-      tags: [selectedType!.tag],
+      tags: [selectedType.tag],
       attachments: [],
       fiscal_year: form.fiscal_year,
       fiscal_year_id: (fiscalYears || []).find((year) => year.label === form.fiscal_year || year.id === form.fiscal_year)?.id,
       simple_mode: true,
-      transaction_type: selectedType!.id,
+      transaction_type: selectedType.id,
       lines: [
-        { id: `l-${crypto.randomUUID()}`, account_id: form.debitAcc, debit: amount, credit: 0, description },
-        { id: `l-${crypto.randomUUID()}`, account_id: form.creditAcc, debit: 0, credit: amount, description },
+        { id: `l-${crypto.randomUUID()}`, account_id: validation.debitAccount.id, debit: validation.amount, credit: 0, description },
+        { id: `l-${crypto.randomUUID()}`, account_id: validation.creditAccount.id, debit: 0, credit: validation.amount, description },
       ],
-    });
+    };
+    /**
+     * The same contract the API enforces, checked before anything is sent: a
+     * rejected entry must never reach the append-only ledger. Balance is the
+     * other half of that contract — `isJournalEntryBalanced` is the exact
+     * function the server decides with.
+     */
+    const parsedEntry = journalEntryRecordSchema.safeParse(candidate);
+    if (!parsedEntry.success || !isJournalEntryBalanced(parsedEntry.data.lines)) { alert(t("common.formPleaseFixErrors")); return; }
+    await onSave(parsedEntry.data);
   };
 
   const steps = [

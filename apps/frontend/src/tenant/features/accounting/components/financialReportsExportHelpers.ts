@@ -13,16 +13,23 @@ export interface TrialBalanceRow {
 
 export interface BuildFinancialReportExportRowsOptions {
   view: "income" | "balance" | "cashflow";
+  /** Range-based rows — the Income Statement source. */
   tb: TrialBalanceRow[];
+  /** Cumulative Asset/Liability/Equity rows as of `dateTo` — the Balance Sheet source. */
+  balanceSheetTb: TrialBalanceRow[];
   revenue: number;
   expenses: number;
   netSurplus: number;
   assets: number;
   liabilities: number;
-  equityTotal: number;
+  /** Cumulative (as-of `dateTo`) equity, incl. unclosed P&L. */
+  equity: number;
   depreciationAdjustment: number;
   receivablesChange: number;
   payablesChange: number;
+  /** Indirect-method subtotal (`netCashFlowIndirect`). */
+  netCashFlowIndirect: number;
+  /** Direct-method net movement on cash/bank accounts within the window. */
   netCashFlow: number;
   cashInflow: number;
   cashOutflow: number;
@@ -41,26 +48,33 @@ export function getFinancialReportExportColumns(
   ];
 }
 
+/** Two server-computed figures can differ by a cent without being a real mismatch. */
+const RECONCILIATION_TOLERANCE = 0.01;
+
 export function buildFinancialReportExportRows({
   view,
   tb,
+  balanceSheetTb,
   revenue,
   expenses,
   netSurplus,
   assets,
   liabilities,
-  equityTotal,
+  equity,
   depreciationAdjustment,
   receivablesChange,
   payablesChange,
+  netCashFlowIndirect,
   netCashFlow,
   cashInflow,
   cashOutflow,
   formatCurrency,
   t,
 }: BuildFinancialReportExportRowsOptions): Record<string, string>[] {
+  // Income Statement rows are range-based; Balance Sheet rows are cumulative as of `dateTo`.
+  const sourceTb = view === "balance" ? balanceSheetTb : tb;
   const rowsByType = new Map<string, TrialBalanceRow[]>();
-  for (const row of tb) {
+  for (const row of sourceTb) {
     let list = rowsByType.get(row.type);
     if (!list) {
       list = [];
@@ -147,49 +161,67 @@ export function buildFinancialReportExportRows({
       section: "",
       code: "",
       account: t("accounting.reports.totalEquity"),
-      amount: formatCurrency(equityTotal),
+      amount: formatCurrency(equity),
     });
   } else if (view === "cashflow") {
+    const section = t("accounting.reports.views.cashflow");
     rows.push({
-      section: t("accounting.reports.views.cashflow"),
+      section,
       code: "",
-      account: t("accounting.reports.netSurplus"),
+      account: t("accounting.reports.cashflow.netSurplusOrDeficit"),
       amount: formatCurrency(netSurplus),
     });
     rows.push({
-      section: t("accounting.reports.views.cashflow"),
+      section,
       code: "",
-      account: t("accounting.reports.totalRevenue"),
+      account: t("accounting.reports.cashflow.depreciation"),
       amount: formatCurrency(depreciationAdjustment),
     });
     rows.push({
-      section: t("accounting.reports.views.cashflow"),
+      section,
       code: "",
-      account: t("accounting.reports.totalAssets"),
+      account: t("accounting.reports.cashflow.receivables"),
       amount: formatCurrency(receivablesChange),
     });
     rows.push({
-      section: t("accounting.reports.views.cashflow"),
+      section,
       code: "",
-      account: t("accounting.reports.totalLiabilities"),
+      account: t("accounting.reports.cashflow.payables"),
       amount: formatCurrency(payablesChange),
     });
     rows.push({
       section: "",
       code: "",
-      account: t("accounting.reports.views.cashflow"),
-      amount: formatCurrency(netCashFlow),
+      account: t("accounting.reports.cashflow.netCashOperations"),
+      amount: formatCurrency(netCashFlowIndirect),
     });
     rows.push({
-      section: t("accounting.reports.views.cashflow"),
+      section: "",
       code: "",
-      account: t("accounting.reports.totalRevenue"),
+      account: t("accounting.reports.cashflow.netCashFlow"),
+      amount: formatCurrency(netCashFlow),
+    });
+
+    const reconciliationDifference = Math.abs(netCashFlowIndirect - netCashFlow);
+    if (reconciliationDifference >= RECONCILIATION_TOLERANCE) {
+      rows.push({
+        section: "",
+        code: "",
+        account: t("accounting.dashboard.difference", { amount: formatCurrency(reconciliationDifference) }),
+        amount: formatCurrency(reconciliationDifference),
+      });
+    }
+
+    rows.push({
+      section,
+      code: "",
+      account: t("accounting.reports.cashflow.cashInflow"),
       amount: formatCurrency(cashInflow),
     });
     rows.push({
-      section: t("accounting.reports.views.cashflow"),
+      section,
       code: "",
-      account: t("accounting.reports.totalExpenses"),
+      account: t("accounting.reports.cashflow.cashOutflow"),
       amount: formatCurrency(cashOutflow),
     });
   }

@@ -94,3 +94,30 @@ export function resolveFiscalYearRef(
 export function isFiscalYearClosed(year: FiscalYearRef | null | undefined): boolean {
   return year?.status === 'closed';
 }
+
+/** A fiscal year that also carries the date range used for date-based resolution. */
+export interface FiscalYearRange extends FiscalYearRef {
+  startDate: string;
+  endDate: string;
+}
+
+/**
+ * The fiscal year whose `[startDate, endDate]` range contains `date`.
+ *
+ * Closed-period enforcement must key off the entry DATE, not only off the
+ * declared `fiscal_year` / `fiscal_year_id` label: reports filter by date, so an
+ * entry dated inside a closed period contaminates that period's figures no
+ * matter which year it claims to belong to.
+ *
+ * Returns null for a missing/malformed date or a date that falls outside every
+ * configured year (a workspace with no fiscal years configured must stay
+ * postable, so callers treat null as "unregulated" rather than "reject").
+ */
+export function findFiscalYearForDate<T extends FiscalYearRange>(
+  years: readonly T[],
+  date: string | undefined | null,
+): T | null {
+  const needle = date?.trim() ?? '';
+  if (!needle) return null;
+  return years.find((year) => year.startDate <= needle && needle <= year.endDate) ?? null;
+}

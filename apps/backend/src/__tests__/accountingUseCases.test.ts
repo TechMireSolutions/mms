@@ -21,7 +21,6 @@ function createFakeRepo(): AccountingRepository {
     listEntriesByWorkspace: vi.fn().mockResolvedValue([]),
     findEntryById: vi.fn().mockResolvedValue(null),
     findEntriesByIds: vi.fn().mockResolvedValue([]),
-    findPostedEntryIds: vi.fn().mockResolvedValue([]),
     saveEntry: vi.fn().mockResolvedValue(undefined),
     bulkSaveEntries: vi.fn().mockResolvedValue(undefined),
     replaceEntriesForWorkspace: vi.fn().mockResolvedValue(undefined),
@@ -245,7 +244,6 @@ describe('accounting use-cases (DI with fake repository)', () => {
     };
 
     const repo = createFakeRepo();
-    vi.mocked(repo.findPostedEntryIds!).mockResolvedValue(['je_1']);
     vi.mocked(repo.findEntriesByIds).mockResolvedValue([storedPosted]);
     const useCases = createAccountingUseCases(repo);
 
@@ -263,8 +261,7 @@ describe('accounting use-cases (DI with fake repository)', () => {
     });
   });
 
-  it('deleteAccountById blocks soft-deletion and throws 400 when account has active ledger entries', async () => {
-    const repo = createFakeRepo();
+  it('deleteAccountById blocks soft-deletion and throws 400 when account has active ledger entries', async () => {    const repo = createFakeRepo();
     const countActiveJournalLinesForAccount = vi.fn().mockResolvedValue(3);
     const useCases = createAccountingUseCases(repo, { countActiveJournalLinesForAccount });
 
@@ -290,5 +287,206 @@ describe('accounting use-cases (DI with fake repository)', () => {
 
     expect(result.succeeded).toBe(1);
     expect(result.failed).toBe(1); // acc_2 was blocked
+  });
+});
+
+describe('accounting write guards', () => {
+  const closedYear = {
+    id: 'fy-shut',
+    label: 'FY 2025',
+    startDate: '2025-01-01',
+    endDate: '2025-12-31',
+    status: 'closed' as const,
+  };
+  const openYear = {
+    id: 'fy-open',
+    label: 'FY 2026',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    status: 'active' as const,
+  };
+
+  function postedEntry(overrides: Record<string, unknown> = {}) {
+    return {
+      id: 'je_1',
+      date: '2026-03-01',
+      ref: 'JE-0001',
+      description: 'Tuition',
+      status: 'posted' as const,
+      created_by: 'admin',
+      fiscal_year: 'FY 2026',
+      fiscal_year_id: 'fy-open',
+      simple_mode: false,
+      tags: [],
+      attachments: [],
+      lines: [
+        { id: 'l1', account_id: 'acc_ar', debit: 100, credit: 0, description: '' },
+        { id: 'l2', account_id: 'acc_income', debit: 0, credit: 100, description: '' },
+      ],
+      ...overrides,
+    };
+  }
+
+  /** The payload handed to the repository on the last bulk save. */
+  function lastBulkSaved(repo: AccountingRepository): any[] {
+    const calls = vi.mocked(repo.bulkSaveEntries).mock.calls;
+    return (calls.at(-1)?.[1] as any[]) ?? [];
+  }
+
+  it('rejects a NEW posted entry dated inside a closed fiscal year', async () => {
+    // Regression: the guard used to key off the declared fiscal-year reference
+    // only, so a back-dated posting — or one stamped with the active year, which
+    // is what the journal form produces — went straight in.
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear, closedYear] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.upsertEntries([
+          postedEntry({
+            id: 'je-backdated',
+            date: '2025-06-15',
+            fiscal_year: 'FY 2026',
+            fiscal_year_id: 'fy-open',
+          }) as any,
+        ]),
+      ),
+    ).rejects.toThrow(/closed fiscal year/);
+    expect(repo.bulkSaveEntries).not.toHaveBeenCalled();
+  });
+
+  it('still saves unchanged entries that belong to a closed fiscal year', async () => {
+    // The Work tier re-sends the whole collection; rows whose fiscal year has
+    // since closed must stay writable, otherwise any workspace that closes a year
+    // can no longer save its journal at all.
+    const stored = postedEntry({ fiscal_year: 'FY 2025', fiscal_year_id: 'fy-shut', date: '2025-06-15' });
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear, closedYear] as any);
+    vi.mocked(repo.findEntriesByIds).mockResolvedValue([stored] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(runWithTenant('demo', () => useCases.upsertEntries([stored as any]))).resolves.toHaveLength(1);
+    expect(repo.bulkSaveEntries).toHaveBeenCalled();
+  });
+
+  it('rejects a new entry that references an unknown or archived account', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.upsertEntries([postedEntry({ id: 'je_new' }) as any])),
+    ).rejects.toThrow(/unknown, archived or deactivated accounts: acc_income/);
+    expect(repo.bulkSaveEntries).not.toHaveBeenCalled();
+  });
+
+  it('rejects a new entry that references a deactivated account', async () => {
+    // The chart-of-accounts UI's only "delete" sets isActive:false, and the
+    // picker hides such accounts — so the write path must reject them too, or the
+    // client and server disagree about what removal means.
+    const repo = createFakeRepo();
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([
+      { id: 'acc_ar', isActive: true },
+      { id: 'acc_income', isActive: false },
+    ] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.upsertEntries([postedEntry({ id: 'je_inactive' }) as any])),
+    ).rejects.toThrow(/unknown, archived or deactivated accounts: acc_income/);
+    expect(repo.bulkSaveEntries).not.toHaveBeenCalled();
+  });
+
+  it('does not re-check accounts for unchanged rows', async () => {
+    const stored = postedEntry({ id: 'je_old' });
+    const repo = createFakeRepo();
+    vi.mocked(repo.findEntriesByIds).mockResolvedValue([stored] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([]); // account since archived
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(runWithTenant('demo', () => useCases.upsertEntries([stored as any]))).resolves.toHaveLength(1);
+    expect(repo.findAccountsByIds).not.toHaveBeenCalled();
+  });
+
+  it('forces client-supplied source keys to manual and preserves stored ones', async () => {
+    // source_type/source_id are the finance module's idempotency keys; a client
+    // able to set them could pre-claim a source and suppress the real posting.
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    const storedSystemEntry = postedEntry({ id: 'je_system', source_type: 'invoice', source_id: 'inv-1' });
+    vi.mocked(repo.findEntriesByIds).mockResolvedValue([storedSystemEntry] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await runWithTenant('demo', () =>
+      useCases.upsertEntries([
+        postedEntry({ id: 'je_new', source_type: 'closing', source_id: 'forged' }) as any,
+        { ...storedSystemEntry, source_type: 'manual', source_id: undefined } as any,
+      ]),
+    );
+
+    const saved = lastBulkSaved(repo);
+    const fresh = saved.find((entry) => entry.id === 'je_new');
+    const existing = saved.find((entry) => entry.id === 'je_system');
+    expect(fresh.source_type).toBe('manual');
+    expect(fresh.source_id).toBeUndefined();
+    expect(existing.source_type).toBe('invoice');
+    expect(existing.source_id).toBe('inv-1');
+  });
+
+  it('rejects reopening a closed fiscal year through the bulk collection route', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.findFiscalYearsByIds).mockResolvedValue([closedYear] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.upsertFiscalYears([{ ...closedYear, status: 'active' } as any])),
+    ).rejects.toThrow(/cannot be reopened/);
+    expect(repo.bulkSaveFiscalYears).not.toHaveBeenCalled();
+  });
+
+  it('rejects changing the date range of a closed fiscal year', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.findFiscalYearsByIds).mockResolvedValue([closedYear] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.upsertFiscalYears([{ ...closedYear, endDate: '2026-06-30' } as any])),
+    ).rejects.toThrow(/date range changed/);
+  });
+
+  it('rejects closing a fiscal year through the bulk collection route', async () => {
+    // Closing must post the closing entry and require retained earnings; the
+    // generic write would flip the switch the entire period lock depends on.
+    const repo = createFakeRepo();
+    vi.mocked(repo.findFiscalYearsByIds).mockResolvedValue([openYear] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.upsertFiscalYears([{ ...openYear, status: 'closed' } as any])),
+    ).rejects.toThrow(/close-fiscal-year action/);
+  });
+
+  it('allows re-saving a closed fiscal year unchanged', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.findFiscalYearsByIds).mockResolvedValue([closedYear] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.upsertFiscalYears([{ ...closedYear } as any])),
+    ).resolves.toHaveLength(1);
+    expect(repo.bulkSaveFiscalYears).toHaveBeenCalled();
+  });
+
+  it('rejects a new fiscal year created directly as closed', async () => {
+    const repo = createFakeRepo();
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.upsertFiscalYears([{ ...openYear, id: 'fy-brand-new', status: 'closed' } as any]),
+      ),
+    ).rejects.toThrow(/close-fiscal-year action/);
   });
 });

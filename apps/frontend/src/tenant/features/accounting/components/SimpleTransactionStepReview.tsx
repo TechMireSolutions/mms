@@ -1,5 +1,5 @@
 import type { Dispatch, SetStateAction } from "react";
-import { CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, CheckCircle2, ChevronDown, ChevronUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { FORM_LABEL } from "@/components/ui/formStyles";
@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account } from "@/lib/data/accountingData";
 import type { QuickActionType, WizardFormState } from "./simpleTransactionWizardTypes";
+import { parseMoneyInput } from "./simpleTransactionMoney";
 
 interface StepReviewProps {
   type: QuickActionType;
@@ -35,14 +36,20 @@ export function StepReview({
   formatCurrency,
 }: StepReviewProps) {
   const { t } = useTranslation();
-  const amount = parseFloat(form.amount) || 0;
+  /**
+   * The reviewed amount is the parsed one — the same value the wizard posts.
+   * An unparseable amount must never be shown as `formatCurrency(0)`, which
+   * reads like a real zero-value transaction.
+   */
+  const amount = parseMoneyInput(form.amount);
+  const amountLabel = amount === null ? "—" : formatCurrency(amount);
   const debitAccount = accounts.find((account) => account.id === form.debitAcc);
   const creditAccount = accounts.find((account) => account.id === form.creditAcc);
 
   const rows = [
     { label: t("accounting.journal.dashboard.wizard.transactionType"), value: t(type.labelKey) },
     { label: t("accounting.columns.journal.date"), value: form.date },
-    { label: t("accounting.journal.dashboard.wizard.amountLabel"), value: formatCurrency(amount) },
+    { label: t("accounting.journal.dashboard.wizard.amountLabel"), value: amountLabel },
     type.groupKey === "accounting.journal.dashboard.group.moneyIn"
       ? { label: t("accounting.journal.dashboard.wizard.receivedIntoLabel"), value: debitAccount?.name || "—" }
       : type.groupKey === "accounting.journal.dashboard.group.transfers"
@@ -66,10 +73,17 @@ export function StepReview({
             <span className="min-w-0 flex-1 break-words text-sm font-semibold text-foreground">{row.value}</span>
           </div>
         ))}
-        <div className="px-4 py-3 bg-success/10 border-t border-success/20 flex items-center gap-2">
-          <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />
-          <span className="text-sm font-semibold text-success">{t("accounting.journal.dashboard.wizard.postMessage")}</span>
-        </div>
+        {amount === null ? (
+          <div className="px-4 py-3 bg-destructive/10 border-t border-destructive/20 flex items-center gap-2" role="alert">
+            <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" aria-hidden="true" />
+            <span className="text-sm font-semibold text-destructive">{t("accounting.journal.dashboard.wizard.errorAmountInvalid")}</span>
+          </div>
+        ) : (
+          <div className="px-4 py-3 bg-success/10 border-t border-success/20 flex items-center gap-2">
+            <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />
+            <span className="text-sm font-semibold text-success">{t("accounting.journal.dashboard.wizard.postMessage")}</span>
+          </div>
+        )}
       </div>
 
       <div className="rounded-xl border border-border overflow-hidden">
@@ -92,7 +106,7 @@ export function StepReview({
                 <StatGrid>
                   <StatRow
                     label={t("accounting.columns.journal.debit")}
-                    value={formatCurrency(amount)}
+                    value={amountLabel}
                     ddClassName="font-mono text-xs font-bold text-info"
                   />
                   <StatRow
@@ -113,7 +127,7 @@ export function StepReview({
                   />
                   <StatRow
                     label={t("accounting.columns.journal.credit")}
-                    value={formatCurrency(amount)}
+                    value={amountLabel}
                     ddClassName="font-mono text-xs font-bold text-success"
                   />
                 </StatGrid>
@@ -128,13 +142,13 @@ export function StepReview({
                 </div>
                 <div className="grid grid-cols-3 bg-info/5 border-b border-border">
                   <div className="px-3 py-2 font-semibold text-foreground">{debitAccount?.name || "—"}</div>
-                  <div className="px-3 py-2 text-end font-mono text-info font-bold">{formatCurrency(amount)}</div>
+                  <div className="px-3 py-2 text-end font-mono text-info font-bold">{amountLabel}</div>
                   <div className="px-3 py-2 text-end text-muted-foreground">—</div>
                 </div>
-                <div className="grid grid-cols-3 bg-success/10/50">
+                <div className="grid grid-cols-3 bg-success/10">
                   <div className="px-3 py-2 font-semibold text-foreground">{creditAccount?.name || "—"}</div>
                   <div className="px-3 py-2 text-end text-muted-foreground">—</div>
-                  <div className="px-3 py-2 text-end font-mono text-success font-bold">{formatCurrency(amount)}</div>
+                  <div className="px-3 py-2 text-end font-mono text-success font-bold">{amountLabel}</div>
                 </div>
               </div>
             </div>

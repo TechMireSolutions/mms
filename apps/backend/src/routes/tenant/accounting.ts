@@ -6,7 +6,14 @@ import {
   accountListSchema,
   journalEntryListSchema,
   fiscalYearListSchema,
+  bulkIdsBodySchema,
+  resourceIdParamsSchema,
+  softDeleteBodySchema,
+  type User,
 } from '@mms/shared';
+import { canDeleteCollection } from '../../services/rbacService.js';
+import { sendForbidden, sendIfHttpDomainError, sendDatabaseError } from '../../lib/httpErrors.js';
+import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import {
   registerBulkRoutes,
   registerIncludableBulkRoutes,
@@ -47,6 +54,64 @@ export default async function accountingRoutes(
         errorMessagePrefix: 'accounts',
 
         customGetRoute: true,
+      });
+
+      /**
+       * Archive / restore routes for the chart of accounts.
+       *
+       * `deleteAccountById` and `bulkSoftDeleteAccounts` carry the ledger guard
+       * ("Cannot archive account with active ledger entries") but were reachable
+       * from no HTTP route, so the only "delete" the UI had was an unguarded
+       * `isActive: false` write through the bulk upsert. These routes make the
+       * guard the thing the UI actually calls.
+       */
+      sub.delete('/accounts/:id', async (request, reply) => {
+        const user = request.user as User;
+        if (!canDeleteCollection(user, ACCOUNTING_ACCOUNTS_COLLECTION)) return sendForbidden(reply);
+        const params = parseRequest(resourceIdParamsSchema, request.params);
+        if (!params.ok) return replyValidationError(reply, params.message);
+        const body = parseRequest(softDeleteBodySchema, request.body ?? {});
+        if (!body.ok) return replyValidationError(reply, body.message);
+        try {
+          const archived = await accountingUseCases.deleteAccountById(
+            params.data.id,
+            String(user.id),
+            body.data.deletionReason,
+          );
+          return reply.send({ success: true, archived });
+        } catch (error) {
+          return sendIfHttpDomainError(reply, error) ?? sendDatabaseError(reply, 'Failed to archive account', error);
+        }
+      });
+
+      sub.post('/accounts/:id/restore', async (request, reply) => {
+        const user = request.user as User;
+        if (!canDeleteCollection(user, ACCOUNTING_ACCOUNTS_COLLECTION)) return sendForbidden(reply);
+        const params = parseRequest(resourceIdParamsSchema, request.params);
+        if (!params.ok) return replyValidationError(reply, params.message);
+        try {
+          const restored = await accountingUseCases.restoreAccountById(params.data.id, String(user.id));
+          return reply.send({ success: true, restored });
+        } catch (error) {
+          return sendIfHttpDomainError(reply, error) ?? sendDatabaseError(reply, 'Failed to restore account', error);
+        }
+      });
+
+      sub.post('/accounts/bulk-delete', async (request, reply) => {
+        const user = request.user as User;
+        if (!canDeleteCollection(user, ACCOUNTING_ACCOUNTS_COLLECTION)) return sendForbidden(reply);
+        const body = parseRequest(bulkIdsBodySchema, request.body);
+        if (!body.ok) return replyValidationError(reply, body.message);
+        try {
+          const result = await accountingUseCases.bulkSoftDeleteAccounts(
+            body.data.ids.map(String),
+            String(user.id),
+            body.data.deletionReason,
+          );
+          return reply.send({ success: true, ...result });
+        } catch (error) {
+          return sendIfHttpDomainError(reply, error) ?? sendDatabaseError(reply, 'Failed to archive accounts', error);
+        }
       });
 
       registerSoftDeletableBulkRoutes(sub, {

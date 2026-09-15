@@ -1,17 +1,55 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { keepPreviousData, useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   BankReconciliationMatch,
   BankStatement,
   BankStatementInsert,
   FiscalYear,
   OpeningBalance,
+  OpeningBalanceInsert,
   PostingRules,
 } from "@mms/shared";
 import { apiJson } from "@/lib/apiClient";
+import { invalidateAccountingQueries } from "@/tenant/features/accounting/hooks/invalidateAccountingQueries";
 
 const RULES_KEY = ["accounting", "posting-rules"] as const;
 const OPENING_KEY = ["accounting", "opening-balances"] as const;
 const BANK_KEY = ["accounting", "bank-statements"] as const;
+
+export type MoneySeparator = "period" | "comma";
+
+/**
+ * Separator-aware money input parser for Setup money fields.
+ *
+ * `Number("1.234")` silently produced 1.234 on a comma-decimal workspace — a
+ * 1000× money error — and `Number("1,50")` produced `NaN` on a period one.
+ * Grouping separators are accepted **only** in valid thousands groups
+ * (`1,234.56` / `1.234,56`) for the configured `decimalSeparator`; anything
+ * ambiguous (`1,50` on a period workspace) returns `null` so the field shows a
+ * validation message instead of silently rescaling the amount.
+ */
+export function parseMoneyInput(
+  raw: string | null | undefined,
+  decimalSeparator: MoneySeparator = "period",
+): number | null {
+  const body = (raw ?? "").replace(/\s/g, "");
+  if (!body) return null;
+  const thousands = decimalSeparator === "comma" ? "\\." : ",";
+  const decimal = decimalSeparator === "comma" ? "," : "\\.";
+  const grouped = new RegExp(`^-?\\d{1,3}(?:${thousands}\\d{3})*(?:${decimal}\\d+)?$`);
+  const plain = new RegExp(`^-?\\d+(?:${decimal}\\d+)?$`);
+  if (!grouped.test(body) && !plain.test(body)) return null;
+  const normalized = body
+    .split(decimalSeparator === "comma" ? "." : ",")
+    .join("")
+    .replace(decimalSeparator === "comma" ? "," : ".", ".");
+  const parsed = Number(normalized);
+  return Number.isFinite(parsed) ? parsed : null;
+}
+
+/** Mirrors the shared `moneyAmountSchema` precision rule (at most 2 decimals). */
+export function hasAtMostTwoDecimals(value: number): boolean {
+  return Number.isFinite(value) && Math.abs(value - Math.round(value * 100) / 100) < 1e-9;
+}
 
 export function useAccountingPostingRules(enabled = true) {
   return useQuery({
@@ -33,21 +71,59 @@ export function useSaveAccountingPostingRules() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(rules),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: RULES_KEY }),
+    /**
+     * The server resolves cash/receivables classification from these rules, and
+     * `report-aggregates` holds a 5-minute `staleTime` — invalidating only
+     * `RULES_KEY` left the Trial Balance and Income Statement classifying
+     * figures with the previous rules.
+     */
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: RULES_KEY });
+      invalidateAccountingQueries(queryClient);
+    },
   });
 }
 
+export interface CloseFiscalYearInput {
+  id: string;
+  /**
+   * Retained-earnings account for the closing entry. The server falls back to
+   * the stored preference and rejects the close with a 422 when neither is set,
+   * so callers must send it explicitly whenever the preference is empty.
+   */
+  retainedEarningsAccountId?: string;
+}
+
+/**
+ * Closing a fiscal year posts the closing entry, flips the year's status and
+ * changes every revenue/expense/equity figure. Nothing here used to invalidate,
+ * so the ledger, the fiscal-year list and the reports all stayed stale until a
+ * manual refresh.
+ */
 export function useCloseFiscalYear() {
+  const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
+    mutationFn: ({ id, retainedEarningsAccountId }: CloseFiscalYearInput) =>
       apiJson<{ fiscalYear: FiscalYear }>(`/api/accounting/fiscal-years/${id}/close`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({}),
+        body: JSON.stringify(
+          retainedEarningsAccountId ? { retainedEarningsAccountId } : {},
+        ),
       }),
+    onSuccess: () => invalidateAccountingQueries(queryClient),
   });
 }
 
+/**
+ * Opening balances for one year.
+ *
+ * `keepPreviousData` is load-bearing: the Setup panel PUTs a *full replace* of
+ * the year's rows, so a bare year switch that left `data` undefined made the
+ * first Add write `[newRow]` — deleting every stored balance for that year while
+ * reporting success. Keeping the previous data (plus an `isPlaceholderData`
+ * gate in the panel) anchors the replace to rows that really exist.
+ */
 export function useOpeningBalances(fiscalYearId: string | undefined) {
   return useQuery({
     queryKey: [...OPENING_KEY, fiscalYearId],
@@ -59,28 +135,48 @@ export function useOpeningBalances(fiscalYearId: string | undefined) {
       return body.balances;
     },
     enabled: Boolean(fiscalYearId),
+    placeholderData: keepPreviousData,
   });
+}
+
+export interface SaveOpeningBalancesInput {
+  fiscalYearId: string;
+  balances: OpeningBalanceInsert[];
 }
 
 export function useSaveOpeningBalances() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (payload: { fiscalYearId: string; balances: OpeningBalance[] }) =>
+    mutationFn: (payload: SaveOpeningBalancesInput) =>
       apiJson<{ balances: OpeningBalance[] }>("/api/accounting/opening-balances", {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       }),
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: OPENING_KEY }),
+    onSuccess: (saved, payload) => {
+      // The response is the authoritative replacement set; seeding it directly
+      // closes the window where a second Add would replay a stale list over the
+      // rows the server just stored.
+      queryClient.setQueryData([...OPENING_KEY, payload.fiscalYearId], saved.balances);
+      void queryClient.invalidateQueries({ queryKey: OPENING_KEY });
+    },
   });
 }
 
+/**
+ * Posting opening balances creates a journal entry, so the ledger keys must refresh too.
+ *
+ * `posted: false` means the balances were already posted unchanged — an
+ * idempotent replay, not a new posting.
+ */
 export function usePostOpeningBalances() {
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (fiscalYearId: string) =>
-      apiJson<{ success: boolean }>(`/api/accounting/opening-balances/${fiscalYearId}/post`, {
+      apiJson<{ success: boolean; posted: boolean }>(`/api/accounting/opening-balances/${fiscalYearId}/post`, {
         method: "POST",
       }),
+    onSuccess: () => invalidateAccountingQueries(queryClient),
   });
 }
 

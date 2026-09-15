@@ -98,26 +98,26 @@ export function useAccountingContractFiscalYears(query: Record<string, unknown>,
   });
 }
 
-export function useAccountingContractReplaceAccounts() {
+export function useAccountingContractUpsertAccounts() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.accounting.replaceAccounts.useMutation({
+  return tsrClient.accounting.upsertAccounts.useMutation({
     onSuccess: () => invalidateAccountingQueries(queryClient),
   });
 }
 
-export function useAccountingContractReplaceEntries() {
+export function useAccountingContractUpsertEntries() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.accounting.replaceEntries.useMutation({
+  return tsrClient.accounting.upsertEntries.useMutation({
     onSuccess: () => invalidateAccountingQueries(queryClient),
   });
 }
 
-export function useAccountingContractReplaceFiscalYears() {
+export function useAccountingContractUpsertFiscalYears() {
   const queryClient = useQueryClient();
   // @ts-expect-error - TS union discrimination limit with ts-rest
-  return tsrClient.accounting.replaceFiscalYears.useMutation({
+  return tsrClient.accounting.upsertFiscalYears.useMutation({
     onSuccess: () => invalidateAccountingQueries(queryClient),
   });
 }

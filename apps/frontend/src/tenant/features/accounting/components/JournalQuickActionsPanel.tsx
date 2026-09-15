@@ -12,10 +12,13 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import type { JournalEntry } from "@/lib/data/accountingData";
-import { QUICK_ACTIONS, type QuickActionType } from "@/tenant/features/accounting/components/journalEntriesQuickActions";
+import { QUICK_ACTIONS, resolveEntryDirection, type QuickActionType } from "@/tenant/features/accounting/components/journalEntriesQuickActions";
 
-const MONEY_IN_TAGS = new Set(["Fees", "Donation", "Capital"]);
-const MONEY_IN_TRANSACTION_TYPES = new Set(["fee_collection", "donation", "rent_income", "other_income"]);
+// Cash-flow direction comes from `resolveEntryDirection`, which reads the
+// entry's own transaction type / tags through ONE source — the quick-action
+// definitions — so the money-in and money-out tag sets cannot overlap. The old
+// local set claimed "Capital", which the "Other expense" quick action also used,
+// so a posted expense rendered as a green "+" inflow with the wrong tone.
 
 interface JournalQuickActionsPanelProps {
   entries: JournalEntry[];
@@ -131,9 +134,7 @@ export function JournalQuickActionsPanel({
           <div className="space-y-2">
             {[...entries].sort((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date)).slice(0, 20).map((entry) => {
               const amount = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
-              const isMoneyIn =
-                (entry.tags || []).some((tag) => MONEY_IN_TAGS.has(tag)) ||
-                (entry.transaction_type ? MONEY_IN_TRANSACTION_TYPES.has(entry.transaction_type) : false);
+              const isMoneyIn = resolveEntryDirection(entry) === "in";
               return (
                 <Card key={entry.id} accentColor={isMoneyIn ? "success" : "destructive"} className="flex flex-col gap-3 px-5 py-3 hover:bg-muted/20 transition-all duration-300 sm:flex-row sm:items-center sm:gap-4">
                   <div className="flex min-w-0 flex-1 items-center gap-3">

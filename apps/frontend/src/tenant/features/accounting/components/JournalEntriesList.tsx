@@ -1,32 +1,58 @@
 import type React from "react";
 import { Receipt } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ListPagination } from "@/components/ui/ListPagination";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { JournalEntriesListCards } from "@/tenant/features/accounting/components/JournalEntriesListCards";
 import { JournalEntriesListDesktopTable } from "@/tenant/features/accounting/components/JournalEntriesListDesktopTable";
+import type { JournalEntriesListPaging } from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
 import type { JournalEntriesListProps } from "@/tenant/features/accounting/components/journalEntriesListShared";
 
-export function JournalEntriesList(props: JournalEntriesListProps): React.JSX.Element {
+/**
+ * The shared list frame keeps the cards/table split and adds the pager once, so
+ * both variants (mobile cards and desktop table) page the same way.
+ */
+export type JournalEntriesListWithPagingProps = JournalEntriesListProps & JournalEntriesListPaging;
+
+export function JournalEntriesList(props: JournalEntriesListWithPagingProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { entries } = props;
+  const { entries, page, limit, total, hasMore, onPageChange } = props;
 
-  if (entries.length === 0) {
-    return (
-      <EmptyState
-        variant="dashed"
-        icon={Receipt}
-        title={t("accounting.journal.dashboard.noEntriesMatch")}
-        description={t("accounting.journal.dashboard.noEntriesHint")}
-      />
-    );
-  }
+  return (
+    <>
+      {entries.length === 0 ? (
+        <EmptyState
+          variant="dashed"
+          icon={Receipt}
+          title={t("accounting.journal.dashboard.noEntriesMatch")}
+          description={t("accounting.journal.dashboard.noEntriesHint")}
+        />
+      ) : props.viewMode === "cards" ? (
+        <JournalEntriesListCards {...props} />
+      ) : (
+        <div className={WORK_SURFACE}>
+          <JournalEntriesListDesktopTable {...props} />
+        </div>
+      )}
 
-  return props.viewMode === "cards" ? (
-    <JournalEntriesListCards {...props} />
-  ) : (
-    <div className={WORK_SURFACE}>
-      <JournalEntriesListDesktopTable {...props} />
-    </div>
+      {/*
+        Rendered for any non-empty result, not only when more pages exist: the
+        "1–100 of 3,412" line is the only place the real size of the filtered
+        journal is visible, and `total` is the server's count for the active
+        filter rather than the length of the loaded page.
+      */}
+      {total > 0 && (
+        <ListPagination
+          page={page}
+          total={total}
+          limit={limit}
+          hasMore={hasMore}
+          onPageChange={onPageChange}
+          i18nNamespace="accounting"
+          variant="range"
+        />
+      )}
+    </>
   );
 }

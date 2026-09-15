@@ -23,7 +23,12 @@ const mockWs = vi.hoisted(() => ({
   broadcastTenantUpdate: vi.fn(),
 }));
 
+const mockAccountsRepo = vi.hoisted(() => ({
+  findAccountsByIds: vi.fn(),
+}));
+
 vi.mock('../db/repositories/accountingLedgerOpsRepository.js', () => mockRepo);
+vi.mock('../db/repositories/accountingAccountsRepository.js', () => mockAccountsRepo);
 vi.mock('../accounting/use-cases/accountingPeriodClose.js', () => mockPeriodClose);
 vi.mock('../accounting/ledgerPosting/ledgerPostingService.js', () => mockPosting);
 vi.mock('../services/websocketService.js', () => mockWs);
@@ -60,6 +65,10 @@ describe('accountingLedgerOpsUseCases', () => {
 
     it('upsertPostingRules validates and broadcasts update', async () => {
       mockRepo.savePostingRules.mockResolvedValue(undefined);
+      mockAccountsRepo.findAccountsByIds.mockResolvedValue([
+        { id: 'acc-ar', type: 'Asset', code: '1100', name: 'Accounts Receivable' },
+        { id: 'acc-cash', type: 'Asset', code: '1000', name: 'Cash' },
+      ]);
 
       const res = await runWithTenant('t-1', () =>
         upsertPostingRules({ arAccountId: 'acc-ar', cashAccountId: 'acc-cash' }),
@@ -68,6 +77,48 @@ describe('accountingLedgerOpsUseCases', () => {
       expect(res).toEqual({ arAccountId: 'acc-ar', cashAccountId: 'acc-cash' });
       expect(mockRepo.savePostingRules).toHaveBeenCalledWith('t-1', res);
       expect(mockWs.broadcastTenantUpdate).toHaveBeenCalledWith('t-1', 'collection', 'accounting_posting_rules');
+    });
+
+    it('rejects a posting rule pointing at the wrong account type', async () => {
+      // An Expense account as the income account silently misclassified revenue
+      // in the Trial Balance and Income Statement, with no error anywhere.
+      mockAccountsRepo.findAccountsByIds.mockResolvedValue([
+        { id: 'acc-exp', type: 'Expense', code: '5000', name: 'Salaries' },
+      ]);
+
+      await expect(
+        runWithTenant('t-1', () => upsertPostingRules({ incomeAccountId: 'acc-exp' })),
+      ).rejects.toThrow(/expected Revenue/);
+      expect(mockRepo.savePostingRules).not.toHaveBeenCalled();
+    });
+
+    it('rejects a posting rule pointing at an unknown or archived account', async () => {
+      mockAccountsRepo.findAccountsByIds.mockResolvedValue([]);
+
+      await expect(runWithTenant('t-1', () => upsertPostingRules({ arAccountId: 'acc-gone' }))).rejects.toThrow(
+        /unknown or archived account/,
+      );
+      expect(mockRepo.savePostingRules).not.toHaveBeenCalled();
+    });
+
+    it('rejects a posting rule pointing at a deactivated account', async () => {
+      mockAccountsRepo.findAccountsByIds.mockResolvedValue([
+        { id: 'acc-cash', type: 'Asset', code: '1000', name: 'Cash', isActive: false },
+      ]);
+
+      await expect(
+        runWithTenant('t-1', () => upsertPostingRules({ cashAccountId: 'acc-cash' })),
+      ).rejects.toThrow(/is deactivated/);
+      expect(mockRepo.savePostingRules).not.toHaveBeenCalled();
+    });
+
+    it('skips the account lookup when no accounts are configured', async () => {
+      mockRepo.savePostingRules.mockResolvedValue(undefined);
+
+      await runWithTenant('t-1', () => upsertPostingRules({}));
+
+      expect(mockAccountsRepo.findAccountsByIds).not.toHaveBeenCalled();
+      expect(mockRepo.savePostingRules).toHaveBeenCalled();
     });
   });
 
@@ -95,12 +146,25 @@ describe('accountingLedgerOpsUseCases', () => {
 
     it('postOpeningBalances triggers journal posting and broadcasts', async () => {
       mockRepo.listOpeningBalances.mockResolvedValue([{ id: 'ob-1', accountId: 'acc-1', debit: 100, credit: 100 }]);
-      mockPosting.tryPostOpeningJournal.mockResolvedValue(undefined);
+      mockPosting.tryPostOpeningJournal.mockResolvedValue({ id: 'je-opening' });
 
-      await runWithTenant('t-1', () => postOpeningBalances('fy-1'));
+      const res = await runWithTenant('t-1', () => postOpeningBalances('fy-1'));
 
+      expect(res).toEqual({ posted: true });
       expect(mockPosting.tryPostOpeningJournal).toHaveBeenCalledWith('t-1', 'fy-1', expect.any(Array));
       expect(mockWs.broadcastTenantUpdate).toHaveBeenCalledWith('t-1', 'collection', 'accounting_entries');
+    });
+
+    it('postOpeningBalances reports an unchanged replay as not posted', async () => {
+      // Previously this always answered `{ success: true }`, so editing opening
+      // balances after the first post looked like it had been applied while the
+      // ledger kept the original figures.
+      mockRepo.listOpeningBalances.mockResolvedValue([{ id: 'ob-1', accountId: 'acc-1', debit: 100, credit: 100 }]);
+      mockPosting.tryPostOpeningJournal.mockResolvedValue(null);
+
+      const res = await runWithTenant('t-1', () => postOpeningBalances('fy-1'));
+
+      expect(res).toEqual({ posted: false });
     });
   });
 

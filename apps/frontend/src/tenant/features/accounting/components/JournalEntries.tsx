@@ -1,9 +1,17 @@
 import { JournalEntriesAdvancedMode } from '@/tenant/features/accounting/components/JournalEntriesAdvancedMode';
 import { JournalEntriesSimpleMode } from '@/tenant/features/accounting/components/JournalEntriesSimpleMode';
 import type { JournalEntriesProps } from '@/tenant/features/accounting/components/journalEntriesTypes';
+import type { JournalEntriesServerQueryProps } from '@/tenant/features/accounting/components/journalEntriesControllerFilters';
 import { useJournalEntriesController } from '@/tenant/features/accounting/components/useJournalEntriesController';
 
 export type { JournalEntriesProps } from '@/tenant/features/accounting/components/journalEntriesTypes';
+
+/**
+ * `journalEntriesTypes` keeps the directory-level contract; the server query
+ * (filter values + pager) is added here by the accounting feature because the
+ * controller only reads it through this component.
+ */
+export type JournalEntriesWithQueryProps = JournalEntriesProps & JournalEntriesServerQueryProps;
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
@@ -13,7 +21,7 @@ const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
  * Renders the main dashboard for accounting entries. Supports a simple mode
  * with quick actions and guided templates, as well as an advanced mode for double-entry bookkeeping.
  */
-export function JournalEntries(props: JournalEntriesProps) {
+export function JournalEntries(props: JournalEntriesWithQueryProps) {
   const {
     entries,
     accounts,
@@ -73,6 +81,7 @@ export function JournalEntries(props: JournalEntriesProps) {
       tagFilter={controller.tagFilter}
       dateFrom={controller.dateFrom}
       dateTo={controller.dateTo}
+      paging={controller.paging}
       showFilters={controller.showFilters}
       modal={controller.modal}
       selected={controller.selected}

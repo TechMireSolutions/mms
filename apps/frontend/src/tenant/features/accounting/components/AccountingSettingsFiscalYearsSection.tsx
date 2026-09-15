@@ -1,5 +1,5 @@
 import { type AccountingSettings, type FiscalYear, formatDate } from "@mms/shared";
-import { Calendar, Lock, Pencil, Plus, Trash2 } from "lucide-react";
+import { Calendar, Lock, Pencil, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -25,8 +25,12 @@ interface AccountingSettingsFiscalYearsSectionProps {
   fyStatusConfig: Record<string, StatusBadgeConfigItem>;
   canEditSetup: boolean;
   onEditFiscalYear: (fiscalYear: Partial<FiscalYear>) => void;
-  onDeleteFiscalYear: (fiscalYearId: string) => void;
-  onCloseFiscalYear?: (fiscalYearId: string) => void;
+  /**
+   * Asks the panel to confirm the (irreversible) close with a retained-earnings
+   * account. It must never close the year directly: the action cannot be undone
+   * and the server rejects a close that has no retained-earnings account.
+   */
+  onRequestCloseFiscalYear?: (fiscalYearId: string) => void;
 }
 
 export function AccountingSettingsFiscalYearsSection({
@@ -36,8 +40,7 @@ export function AccountingSettingsFiscalYearsSection({
   fyStatusConfig,
   canEditSetup,
   onEditFiscalYear,
-  onDeleteFiscalYear,
-  onCloseFiscalYear,
+  onRequestCloseFiscalYear,
 }: AccountingSettingsFiscalYearsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const sortedYears = [...fiscalYears].sort((firstYear, secondYear) => secondYear.startDate.localeCompare(firstYear.startDate));
@@ -95,14 +98,15 @@ export function AccountingSettingsFiscalYearsSection({
                 </div>
                 {canEditSetup && (
                   <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
-                    {onCloseFiscalYear && fiscalYear.status !== "closed" && (
+                    {onRequestCloseFiscalYear && fiscalYear.status !== "closed" && (
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
-                        onClick={() => onCloseFiscalYear(fiscalYear.id)}
+                        onClick={() => onRequestCloseFiscalYear(fiscalYear.id)}
                         className="min-h-11 min-w-11 text-xs"
                         aria-label={`${t("accounting.settings.fy.close")} ${fiscalYear.label}`}
+                        title={t("accounting.settings.fy.closeConfirmTitle")}
                       >
                         <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                       </Button>
@@ -116,16 +120,6 @@ export function AccountingSettingsFiscalYearsSection({
                       aria-label={`${t("common.edit")} ${fiscalYear.label}`}
                     >
                       <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDeleteFiscalYear(fiscalYear.id)}
-                      className="min-h-11 min-w-11 text-xs text-destructive hover:text-destructive/80"
-                      aria-label={`${t("common.delete")} ${fiscalYear.label}`}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                     </Button>
                   </div>
                 )}
@@ -159,14 +153,15 @@ export function AccountingSettingsFiscalYearsSection({
                     {canEditSetup && (
                       <TableCell className="text-end">
                         <div className="flex items-center justify-end gap-1">
-                          {onCloseFiscalYear && fiscalYear.status !== "closed" && (
+                          {onRequestCloseFiscalYear && fiscalYear.status !== "closed" && (
                             <Button
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => onCloseFiscalYear(fiscalYear.id)}
+                              onClick={() => onRequestCloseFiscalYear(fiscalYear.id)}
                               className="min-h-11 min-w-11"
                               aria-label={`${t("accounting.settings.fy.close")} ${fiscalYear.label}`}
+                              title={t("accounting.settings.fy.closeConfirmTitle")}
                             >
                               <Lock className="w-3.5 h-3.5" aria-hidden="true" />
                             </Button>
@@ -180,16 +175,6 @@ export function AccountingSettingsFiscalYearsSection({
                             aria-label={`${t("common.edit")} ${fiscalYear.label}`}
                           >
                             <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
-                          </Button>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onDeleteFiscalYear(fiscalYear.id)}
-                            className="min-h-11 min-w-11 text-destructive hover:text-destructive/80"
-                            aria-label={`${t("common.delete")} ${fiscalYear.label}`}
-                          >
-                            <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                           </Button>
                         </div>
                       </TableCell>
@@ -207,6 +192,16 @@ export function AccountingSettingsFiscalYearsSection({
             </Table>
           </div>
         </div>
+        {/*
+          The fiscal-year route is a *bulk upsert* and there is no DELETE route,
+          so the old Delete button filtered the row out of a whole-collection PUT
+          that simply ignored the absence: the dialog closed, a 200 came back and
+          the year reappeared with no message. The action is gone rather than
+          faked, and the limitation is stated here.
+        */}
+        <p className="m-0 mt-2 text-xs text-muted-foreground">
+          {t("accounting.settings.fy.deleteNotSupported")}
+        </p>
       </div>
     </SectionCard>
   );

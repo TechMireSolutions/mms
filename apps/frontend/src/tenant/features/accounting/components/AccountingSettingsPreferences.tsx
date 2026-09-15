@@ -24,8 +24,7 @@ interface AccountingSettingsPreferencesProps {
   fyStatusConfig: Record<string, StatusBadgeConfigItem>;
   canEditSetup: boolean;
   onEditFiscalYear: (fiscalYear: Partial<FiscalYear>) => void;
-  onDeleteFiscalYear: (fiscalYearId: string) => void;
-  onCloseFiscalYear?: (fiscalYearId: string) => void;
+  onRequestCloseFiscalYear?: (fiscalYearId: string) => void;
 }
 
 export function AccountingSettingsPreferences({
@@ -39,8 +38,7 @@ export function AccountingSettingsPreferences({
   fyStatusConfig,
   canEditSetup,
   onEditFiscalYear,
-  onDeleteFiscalYear,
-  onCloseFiscalYear,
+  onRequestCloseFiscalYear,
 }: AccountingSettingsPreferencesProps): React.JSX.Element {
   return (
     <div className="space-y-6">
@@ -59,8 +57,7 @@ export function AccountingSettingsPreferences({
         fyStatusConfig={fyStatusConfig}
         canEditSetup={canEditSetup}
         onEditFiscalYear={onEditFiscalYear}
-        onDeleteFiscalYear={onDeleteFiscalYear}
-        onCloseFiscalYear={onCloseFiscalYear}
+        onRequestCloseFiscalYear={onRequestCloseFiscalYear}
       />
 
       <AccountingSettingsRulesSection
@@ -70,8 +67,15 @@ export function AccountingSettingsPreferences({
       />
 
       <AccountingSettingsPostingSection accounts={accounts} />
-      <AccountingSettingsOpeningSection accounts={accounts} fiscalYears={fiscalYears} />
-      <AccountingSettingsBankRecSection accounts={accounts} />
+      <AccountingSettingsOpeningSection
+        accounts={accounts}
+        fiscalYears={fiscalYears}
+        decimalSeparator={settingsDraft.decimalSeparator}
+      />
+      <AccountingSettingsBankRecSection
+        accounts={accounts}
+        decimalSeparator={settingsDraft.decimalSeparator}
+      />
     </div>
   );
 }

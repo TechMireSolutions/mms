@@ -36,10 +36,17 @@ import {
   type FiscalYear,
 } from "@mms/shared";
 import {
-  useAccountingAccountsPaginated,
-  useAccountingEntriesPaginated,
   useAccountingFiscalYearsPaginated,
+  useAllAccountingAccounts,
+  useAllAccountingEntries,
 } from "./hooks/useAccountingApi";
+import {
+  useAccountingEntriesPage,
+} from "./hooks/accountingListFetch";
+import {
+  JOURNAL_PAGE_SIZE,
+  useJournalEntriesListQueryState,
+} from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
 import { useAccountingPageActions } from "@/tenant/features/accounting/hooks/useAccountingPageActions";
 import {
   ACCOUNTING_PAGE_ICON,
@@ -70,14 +77,46 @@ export default function Accounting() {
   const [showDeleted, setShowDeleted] = useTrashMode();
   const [createJournalRequestKey, setCreateJournalRequestKey] = useState(0);
 
-  const accountsResult = useAccountingAccountsPaginated({ includeDeleted: false, page: 1, limit: 100 });
-  const entriesResult = useAccountingEntriesPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
+  /**
+   * The chart of accounts is fetched whole (paged through internally). A single
+   * `page: 1, limit: 100` slice of a default `createdAt desc` order returned only
+   * the 100 newest accounts, silently dropping the rest from the chart, the
+   * journal account picker, every report and the duplicate-code check.
+   */
+  const accountsResult = useAllAccountingAccounts({ includeDeleted: false });
+
+  /**
+   * The Journal list is server-driven: the filters, the order (`date desc`) and
+   * the page live in the request, so the server counts and returns the matching
+   * rows instead of the browser narrowing whichever 100 happened to load first.
+   */
+  const journalList = useJournalEntriesListQueryState(showDeleted);
+  const entriesResult = useAccountingEntriesPage(journalList.query);
   const fiscalYearsResult = useAccountingFiscalYearsPaginated({ page: 1, limit: 100 });
+
+  /**
+   * The whole-ledger views need every entry, not page 1 of 100: computing the
+   * Trial Balance / Overview / General Ledger from a capped slice understates
+   * every account while the balance badge still reads "Balanced". Fetched only
+   * while one of those sub-tabs is open, and kept separate from `journalEntries`
+   * so saving an entry never re-uploads the entire journal.
+   */
+  const aggregateSubTab = activeTab === "work" && (activeSubTab === "overview" || activeSubTab === "ledger" || activeSubTab === "trial");
+  const aggregateEntriesResult = useAllAccountingEntries(
+    { includeDeleted: false },
+    { enabled: aggregateSubTab },
+  );
   const accountsEnvelope = accountsResult.data as { body?: { accounts?: Account[] }; accounts?: Account[] } | null;
-  const entriesEnvelope = entriesResult.data as { body?: { entries?: JournalEntry[] }; entries?: JournalEntry[] } | null;
   const fiscalYearsEnvelope = fiscalYearsResult.data as { body?: { fiscalYears?: FiscalYear[] }; fiscalYears?: FiscalYear[] } | null;
   const accounts: Account[] = accountsEnvelope?.body?.accounts ?? accountsEnvelope?.accounts ?? [];
-  const journalEntries: JournalEntry[] = entriesEnvelope?.body?.entries ?? entriesEnvelope?.entries ?? [];
+  const journalEntries: JournalEntry[] = entriesResult.data?.entries ?? [];
+  /**
+   * The server's count of every entry matching the active filters — the number
+   * the pager and the "shown" metric read. `journalEntries.length` is only the
+   * rows on this page.
+   */
+  const journalTotal = entriesResult.data?.total ?? 0;
+  const aggregateEntries: JournalEntry[] = aggregateEntriesResult.data ?? [];
   const fiscalYears: FiscalYear[] = fiscalYearsEnvelope?.body?.fiscalYears ?? fiscalYearsEnvelope?.fiscalYears ?? [];
   const { settings } = useAccountingConfig();
   const { activeCurrency } = useAccountingCurrency();
@@ -96,9 +135,12 @@ export default function Accounting() {
   } = useAccountingPageActions({ accounts, journalEntries, fiscalYears });
 
   useEffect(() => {
+    // The Journal list reports itself (server total for the active filter) and
+    // the chart of accounts reports its own count; the remaining sub-tabs show
+    // the whole journal, so mirror that count instead.
     if (activeSubTab === "journal" || activeSubTab === "coa") return;
-    setFilteredCount(journalEntries.length);
-  }, [activeSubTab, journalEntries.length]);
+    setFilteredCount(journalTotal);
+  }, [activeSubTab, journalTotal]);
 
   const openJournalCreate = () => {
     setActiveTab("work");
@@ -119,7 +161,10 @@ export default function Accounting() {
   });
 
   const activeFiscalYear = fiscalYears.find((fiscalYear) => fiscalYear.status === "active");
-  const listLoadFailed = accountsResult.isError || entriesResult.isError;
+  const listLoadFailed =
+    accountsResult.isError
+    || entriesResult.isError
+    || (aggregateSubTab && aggregateEntriesResult.isError);
 
   return (
     <ModulePageShell
@@ -137,7 +182,7 @@ export default function Accounting() {
         />
       }
       metricsStrip={
-        <AccountingCommandMetrics entryTotal={journalEntries.length} shown={filteredCount} />
+        <AccountingCommandMetrics entryTotal={journalTotal} shown={filteredCount} />
       }
     >
       <ResponsiveAccordionTabs
@@ -163,6 +208,7 @@ export default function Accounting() {
             <AccountingWorkTier
               accounts={accounts}
               entries={journalEntries}
+              aggregateEntries={aggregateEntries}
               fiscalYears={fiscalYears}
               settings={settings}
               activeSubTab={activeSubTab}
@@ -171,6 +217,15 @@ export default function Accounting() {
               canWrite={canWrite}
               canDelete={canDelete}
               listLoadFailed={listLoadFailed}
+              journalFilters={journalList.filters}
+              onJournalFiltersChange={journalList.patchFilters}
+              journalPaging={{
+                page: journalList.page,
+                limit: JOURNAL_PAGE_SIZE,
+                total: journalTotal,
+                hasMore: entriesResult.data?.hasMore ?? false,
+                onPageChange: journalList.setPage,
+              }}
               createJournalRequestKey={createJournalRequestKey}
               onSubTabChange={(next) => {
                 setActiveSubTab(next);
@@ -180,6 +235,7 @@ export default function Accounting() {
               onRetry={() => {
                 void accountsResult.refetch();
                 void entriesResult.refetch();
+                void aggregateEntriesResult.refetch();
               }}
               onAccountsChange={setAccounts}
               onEntriesChange={setEntries}

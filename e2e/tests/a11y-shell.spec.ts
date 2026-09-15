@@ -51,6 +51,9 @@ const AUDIT_ROUTES = [
   { path: '/contacts', ready: '#main-content', label: 'contacts (Work)' },
   { path: '/students', ready: '#main-content', label: 'students (Work, dense table)' },
   { path: '/finance', ready: '#main-content', label: 'finance (Work, money)' },
+  // Accounting is the other money module and the only one with a ledger grid,
+  // Trial Balance and financial-statement panels; it was previously unaudited.
+  { path: '/accounting', ready: '#main-content', label: 'accounting (Work, ledger)' },
   { path: '/settings', ready: '#main-content', label: 'settings (Setup)' },
 ];
 

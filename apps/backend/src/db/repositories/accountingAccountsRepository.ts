@@ -349,6 +349,10 @@ export async function countActiveJournalLinesForAccount(
           eq(accountingJournalLines.workspaceSubdomain, subdomain),
           eq(accountingJournalLines.accountId, cleanAccountId),
           isNull(accountingEntries.deletedAt),
+          // Posted only: drafts are not in the ledger, so an account referenced
+          // solely by an unbalanced draft must stay archivable. Drafts that
+          // reference an archived account are rejected when they are posted.
+          eq(accountingEntries.status, 'posted'),
         ),
       );
     return Number(result[0]?.count ?? 0);
@@ -382,6 +386,8 @@ export async function countActiveJournalLinesForAccounts(
           eq(accountingJournalLines.workspaceSubdomain, subdomain),
           inArray(accountingJournalLines.accountId, cleanIds),
           isNull(accountingEntries.deletedAt),
+          // Posted only — see countActiveJournalLinesForAccount.
+          eq(accountingEntries.status, 'posted'),
         ),
       )
       .groupBy(accountingJournalLines.accountId);

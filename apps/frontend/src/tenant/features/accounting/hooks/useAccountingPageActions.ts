@@ -1,9 +1,29 @@
 import { useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
-import type { Account, FiscalYear, JournalEntry } from "@mms/shared";
+import type { Account, AppTranslationKey, FiscalYear, JournalEntry } from "@mms/shared";
 import { useAccountingMutations } from "@/tenant/features/accounting/hooks/useAccountingApi";
 import { NotifiedMutationError } from "@/lib/notifiedMutationError";
+import { getApiValidationMessage } from "@/lib/apiValidationMessage";
+
+/**
+ * Human-readable reason for a failed write.
+ *
+ * The ts-rest React Query hooks do NOT reject with an `Error`: they
+ * `throw result` (see `@ts-rest/react-query` `create-hooks`: `if
+ * (isErrorResponse(result)) throw result;`), i.e. the raw `{ status, body,
+ * headers }` object. `String(error)` therefore rendered every accounting
+ * refusal — closed fiscal year, posted-entry immutability, unknown/archived
+ * account, unbalanced posted write — as the literal text "[object Object]".
+ * {@link getApiValidationMessage} already knows that shape and unwraps the
+ * server's own message, which is what the bookkeeper needs to read.
+ */
+function describeActionFailure(error: unknown): string | undefined {
+  const apiMessage = getApiValidationMessage(error);
+  if (apiMessage) return apiMessage;
+  if (error instanceof Error && error.message.trim()) return error.message;
+  return undefined;
+}
 
 interface UseAccountingPageActionsParams {
   accounts: Account[];
@@ -18,26 +38,29 @@ export function useAccountingPageActions({
 }: UseAccountingPageActionsParams) {
   const { t } = useTranslation();
   const {
-    replaceAccounts,
-    replaceEntries,
-    replaceFiscalYears,
+    upsertAccounts,
+    upsertEntries,
+    upsertFiscalYears,
     deleteEntry,
     restoreEntry,
     bulkDeleteEntries,
     bulkRestoreEntries,
   } = useAccountingMutations();
 
-  const notifySaveFailure = useCallback((error: unknown) => {
+  const notifyActionFailure = useCallback((messageKey: AppTranslationKey, error: unknown) => {
     if (error instanceof NotifiedMutationError) return;
-    notify.error(t("accounting.settings.saveEntriesFailed"), {
-      description: error instanceof Error ? error.message : String(error),
-    });
+    const description = describeActionFailure(error);
+    notify.error(t(messageKey), description ? { description } : undefined);
   }, [t]);
+
+  const notifySaveFailure = useCallback((error: unknown) => {
+    notifyActionFailure("accounting.settings.saveEntriesFailed", error);
+  }, [notifyActionFailure]);
 
   const setAccounts = (async (updater: Account[] | ((prev: Account[]) => Account[])) => {
     const nextAccounts = typeof updater === "function" ? updater(accounts) : updater;
     try {
-      await replaceAccounts.mutateAsync(nextAccounts);
+      await upsertAccounts.mutateAsync(nextAccounts);
     } catch (error: unknown) {
       notifySaveFailure(error);
       throw error;
@@ -47,7 +70,7 @@ export function useAccountingPageActions({
   const setEntries = (async (updater: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => {
     const nextJournalEntries = typeof updater === "function" ? updater(journalEntries) : updater;
     try {
-      await replaceEntries.mutateAsync(nextJournalEntries);
+      await upsertEntries.mutateAsync(nextJournalEntries);
     } catch (error: unknown) {
       notifySaveFailure(error);
       throw error;
@@ -57,7 +80,7 @@ export function useAccountingPageActions({
   const setFiscalYears = (async (updater: FiscalYear[] | ((prev: FiscalYear[]) => FiscalYear[])) => {
     const nextFiscalYears = typeof updater === "function" ? updater(fiscalYears) : updater;
     try {
-      await replaceFiscalYears.mutateAsync(nextFiscalYears);
+      await upsertFiscalYears.mutateAsync(nextFiscalYears);
     } catch (error: unknown) {
       notifySaveFailure(error);
       throw error;
@@ -69,9 +92,7 @@ export function useAccountingPageActions({
       await deleteEntry.mutateAsync(id);
       notify.success(t("accounting.trash.deleted"));
     } catch (error: unknown) {
-      notify.error(t("accounting.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
+      notifyActionFailure("accounting.trash.actionFailed", error);
       throw error;
     }
   });
@@ -81,9 +102,7 @@ export function useAccountingPageActions({
       await restoreEntry.mutateAsync(id);
       notify.success(t("accounting.trash.restored"));
     } catch (error: unknown) {
-      notify.error(t("accounting.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
+      notifyActionFailure("accounting.trash.actionFailed", error);
       throw error;
     }
   });
@@ -104,9 +123,7 @@ export function useAccountingPageActions({
         );
       }
     } catch (error: unknown) {
-      notify.error(t("accounting.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
+      notifyActionFailure("accounting.trash.actionFailed", error);
       throw error;
     }
   });
@@ -127,9 +144,7 @@ export function useAccountingPageActions({
         );
       }
     } catch (error: unknown) {
-      notify.error(t("accounting.trash.actionFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
+      notifyActionFailure("accounting.trash.actionFailed", error);
       throw error;
     }
   });

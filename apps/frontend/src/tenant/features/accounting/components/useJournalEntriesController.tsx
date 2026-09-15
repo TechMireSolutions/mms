@@ -10,7 +10,7 @@ import {
 } from '@/tenant/features/accounting/components/journalEntriesControllerConfig';
 import {
   computeJournalGrandTotals,
-  filterJournalEntries,
+  type JournalEntriesServerQueryProps,
 } from '@/tenant/features/accounting/components/journalEntriesControllerFilters';
 import {
   createJournalPostHandler,
@@ -28,6 +28,8 @@ import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directory
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from '@/components/ui/ModuleRowActionsMenu';
 import type { QuickActionType } from '@/tenant/features/accounting/components/journalEntriesQuickActions';
 
+type JournalEntriesControllerProps = JournalEntriesProps & JournalEntriesServerQueryProps;
+
 export function useJournalEntriesController({
   entries,
   accounts: _accounts,
@@ -43,7 +45,10 @@ export function useJournalEntriesController({
   onRestore,
   onBulkDelete,
   onBulkRestore,
-}: JournalEntriesProps) {
+  filters,
+  onFiltersChange,
+  paging,
+}: JournalEntriesControllerProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
   const journalStatusConfig = (() => buildJournalStatusConfig(t))();
@@ -55,11 +60,6 @@ export function useJournalEntriesController({
   const [simpleModal, setSimpleModal] = useState<{ prefillType: QuickActionType | null } | null>(null);
   const [nlInput, setNlInput] = useState('');
   const [nlSuggestion, setNlSuggestion] = useState<QuickActionType | null>(null);
-  const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [tagFilter, setTagFilter] = useState('all');
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [modal, setModal] = useState<'new' | 'edit' | 'view' | null>(null);
   const [selected, setSelected] = useState<JournalEntry | null>(null);
@@ -76,11 +76,18 @@ export function useJournalEntriesController({
     }
   }, [createRequestKey, canWrite, showDeleted]);
 
-  const filtered = (() => filterJournalEntries(entries, { search, statusFilter, tagFilter, dateFrom, dateTo }))();
+  /**
+   * `entries` is already the page the server filtered and ordered for the active
+   * filters — a second, client-side filter pass here would only narrow that page
+   * and report "no results" while matching entries sit on another page.
+   */
+  const filtered = entries;
 
+  // The metric is the server's total for the active filter, so page 2 does not
+  // report 100 rows as if that were the result size.
   useEffect(() => {
-    onFilteredCountChange?.(filtered.length);
-  }, [filtered.length, onFilteredCountChange]);
+    onFilteredCountChange?.(paging.total);
+  }, [paging.total, onFilteredCountChange]);
 
   const actionDeps = {
     entries,
@@ -197,18 +204,19 @@ export function useJournalEntriesController({
     someVisibleSelected,
     grandDebit,
     grandCredit,
-    search,
-    setSearch,
-    statusFilter,
-    setStatusFilter,
-    tagFilter,
-    setTagFilter,
-    dateFrom,
-    setDateFrom,
-    dateTo,
-    setDateTo,
+    search: filters.search,
+    setSearch: (value: string) => onFiltersChange({ search: value }),
+    statusFilter: filters.statusFilter,
+    setStatusFilter: (value: string) => onFiltersChange({ statusFilter: value }),
+    tagFilter: filters.tagFilter,
+    setTagFilter: (value: string) => onFiltersChange({ tagFilter: value }),
+    dateFrom: filters.dateFrom,
+    setDateFrom: (value: string) => onFiltersChange({ dateFrom: value }),
+    dateTo: filters.dateTo,
+    setDateTo: (value: string) => onFiltersChange({ dateTo: value }),
     showFilters,
     setShowFilters,
+    paging,
     modal,
     selected,
     setSelected,

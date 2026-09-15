@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { moneyToCents } from '@mms/shared';
 import { computeLedger, type Account, type JournalEntry, type AccountType } from '@/lib/data/accountingData';
 
 export interface GeneralLedgerLineWithRunning {
@@ -25,18 +26,30 @@ export function useGeneralLedger(accounts: Account[], entries: JournalEntry[]) {
   const activeAccount = accounts.find((account) => account.id === selectedAccount);
   const lines = (() => selectedAccount ? computeLedger(selectedAccount, entries, dateFrom || undefined, dateTo || undefined) : [])();
 
-  let totalDebit = 0;
-  let totalCredit = 0;
-  let running = 0;
+  /**
+   * The running balance accumulates in integer cents and converts once, so a
+   * long ledger cannot drift and the exported column is valid money — a float
+   * accumulator turned 0.10 + 0.20 into 0.30000000000000004.
+   */
+  let totalDebitCents = 0;
+  let totalCreditCents = 0;
+  let runningCents = 0;
   const linesWithRunning: GeneralLedgerLineWithRunning[] = new Array(lines.length);
   for (let i = 0; i < lines.length; i++) {
     const ledgerLine = lines[i];
-    totalDebit += ledgerLine.debit;
-    totalCredit += ledgerLine.credit;
-    running += ledgerLine.debit - ledgerLine.credit;
-    linesWithRunning[i] = { ...ledgerLine, running };
+    const debitCents = moneyToCents(ledgerLine.debit);
+    const creditCents = moneyToCents(ledgerLine.credit);
+    totalDebitCents += debitCents;
+    totalCreditCents += creditCents;
+    runningCents += debitCents - creditCents;
+    linesWithRunning[i] = {
+      ...ledgerLine,
+      debit: debitCents / 100,
+      credit: creditCents / 100,
+      running: runningCents / 100,
+    };
   }
-  const balance = totalDebit - totalCredit;
+  const balance = (totalDebitCents - totalCreditCents) / 100;
 
   return {
     selectedAccount,
@@ -51,8 +64,8 @@ export function useGeneralLedger(accounts: Account[], entries: JournalEntry[]) {
     activeAccount,
     lines,
     linesWithRunning,
-    totalDebit,
-    totalCredit,
+    totalDebit: totalDebitCents / 100,
+    totalCredit: totalCreditCents / 100,
     balance,
   };
 }

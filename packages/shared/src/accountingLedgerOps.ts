@@ -19,6 +19,15 @@ export const postingRulesUpdateSchema = postingRulesRecordSchema
 export type PostingRules = z.infer<typeof postingRulesRecordSchema>;
 export type PostingRulesUpdate = z.infer<typeof postingRulesUpdateSchema>;
 
+/**
+ * A single-sided opening-balance row. Both sides positive is rejected rather
+ * than silently netted: the resulting journal line fails
+ * `isJournalLineSingleSided`, which surfaced to the user as the unrelated
+ * "Opening balances must form a balanced journal" error.
+ */
+const isSingleSidedOpeningBalance = (row: { debit: number; credit: number }): boolean =>
+  !(row.debit > 0 && row.credit > 0);
+
 export const openingBalanceRecordSchema = z
   .object({
     id: z.string(),
@@ -29,9 +38,19 @@ export const openingBalanceRecordSchema = z
   })
   .strict();
 
-export const openingBalanceInsertSchema = openingBalanceRecordSchema
-  .extend({ id: z.string().optional() })
-  .strict();
+export const openingBalanceInsertSchema = z
+  .object({
+    id: z.string().optional(),
+    fiscalYearId: z.string().min(1),
+    accountId: z.string().min(1),
+    debit: moneyAmountSchema.default(0),
+    credit: moneyAmountSchema.default(0),
+  })
+  .strict()
+  .refine(isSingleSidedOpeningBalance, {
+    message: 'accounting.openingBalances.singleSided',
+    path: ['debit'],
+  });
 
 export const openingBalancesReplaceSchema = z
   .object({

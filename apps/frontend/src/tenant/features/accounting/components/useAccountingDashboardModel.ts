@@ -37,22 +37,23 @@ export function useAccountingDashboardModel(accounts: Account[], entries: Journa
     }));
   })();
 
-  const expenseBreakdown = (() => (
-    financials.tb
-      .filter((trialBalanceRow) => trialBalanceRow.type === 'Expense' && trialBalanceRow.totalDebit > 0)
-      .map((trialBalanceRow) => ({ name: trialBalanceRow.name, value: trialBalanceRow.totalDebit - trialBalanceRow.totalCredit }))
-      .sort((firstExpense, secondExpense) => secondExpense.value - firstExpense.value)
-      .slice(0, 5)
-  ))();
 
   const recentEntries = (() => [...entries].sort((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date)).slice(0, 5))();
 
+  /**
+   * `netCashFlow` is deliberately NOT surfaced: the client derived it as
+   * `assets - liabilities`, which is not a cash-flow figure (buying a building
+   * would read as a cash inflow). The dashboard takes the real cash-account
+   * movement from the server's report aggregates; `expenseBreakdown` likewise
+   * comes from the server's trial balance.
+   */
+  const { netCashFlow: _unusedNetCashFlow, ...flows } = financials;
+
   return {
-    ...financials,
+    ...flows,
     postedEntries,
     draftEntries,
     monthlyData,
-    expenseBreakdown,
     recentEntries,
   };
 }

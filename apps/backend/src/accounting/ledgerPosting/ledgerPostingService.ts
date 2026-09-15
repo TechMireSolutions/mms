@@ -5,6 +5,7 @@ import {
   buildOpeningEntryLines,
   buildPaymentPostingLines,
   buildReversalLines,
+  findFiscalYearForDate,
   type FiscalYear,
   type Invoice,
   type JournalEntry,
@@ -14,12 +15,25 @@ import {
 import { findEntryById, findEntryIdBySource, saveEntry } from '../../db/repositories/accountingRepository.js';
 import { getPostingRules } from '../../db/repositories/accountingLedgerOpsRepository.js';
 import { listFiscalYearsByWorkspace } from '../../db/repositories/accountingFiscalYearsRepository.js';
-import { prepareJournalEntryForPersist } from '../use-cases/accountingLedgerGuards.js';
+import {
+  assertJournalEntryPeriodOpen,
+  prepareJournalEntryForPersist,
+} from '../use-cases/accountingLedgerGuards.js';
+import { isUniqueViolation } from '../../lib/pgErrors.js';
 
 function postingDate(value: string | undefined): string {
   return value && /^\d{4}-\d{2}-\d{2}$/.test(value) ? value : new Date().toISOString().slice(0, 10);
 }
 
+/**
+ * Persist a system-generated entry at most once per `(source_type, source_id)`.
+ *
+ * Idempotency is enforced twice: this pre-check, and the partial unique index
+ * `accounting_entries_workspace_source_uidx`. Two concurrent callers can both
+ * pass the pre-check, so a unique violation on save means "the other caller won
+ * the race and the posting already exists" — an expected outcome, not an error,
+ * and it must not surface to the user as a 500.
+ */
 async function persistGeneratedEntry(
   tenant: string,
   entry: JournalEntry,
@@ -28,8 +42,15 @@ async function persistGeneratedEntry(
   const existingId = await findEntryIdBySource(tenant, entry.source_type ?? '', entry.source_id ?? '');
   if (existingId) return null;
   const resolvedYears = years ?? (await listFiscalYearsByWorkspace(tenant));
+  // System postings are always new, so the period lock applies unconditionally.
+  assertJournalEntryPeriodOpen(entry, resolvedYears);
   const prepared = prepareJournalEntryForPersist(entry, resolvedYears);
-  await saveEntry(tenant, prepared);
+  try {
+    await saveEntry(tenant, prepared);
+  } catch (error) {
+    if (isUniqueViolation(error)) return null;
+    throw error;
+  }
   return prepared;
 }
 
@@ -64,7 +85,7 @@ function entryForSource(
  * active year.
  */
 function resolveYearId(years: readonly FiscalYear[], date: string): string | undefined {
-  return years.find((year) => year.startDate <= date && date <= year.endDate)?.id;
+  return findFiscalYearForDate(years, date)?.id;
 }
 
 /** Posts Dr AR / Cr Income when posting accounts are configured. Skips otherwise. */
@@ -124,11 +145,38 @@ export async function tryPostOpeningJournal(
       type: 'validation_error',
     });
   }
-  return persistGeneratedEntry(
-    tenant,
-    entryForSource('opening', fiscalYearId, year.startDate, `Opening balances ${year.label}`, lines, fiscalYearId),
-    years,
-  );
+  const entry = entryForSource('opening', fiscalYearId, year.startDate, `Opening balances ${year.label}`, lines, fiscalYearId);
+
+  // Opening balances are edited over time, but the source key allows only one
+  // entry per fiscal year. Rather than reporting success while silently ignoring
+  // the edit, distinguish "unchanged replay" from "the balances actually moved".
+  const existingId = await findEntryIdBySource(tenant, 'opening', fiscalYearId);
+  if (existingId) {
+    const original = await findEntryById(tenant, existingId);
+    if (openingLinesMatch(original?.lines, lines)) return null;
+    throw Object.assign(
+      new Error(
+        'Opening balances were already posted for this fiscal year — reverse that entry before posting revised balances',
+      ),
+      { statusCode: 422, type: 'validation_error' },
+    );
+  }
+
+  return persistGeneratedEntry(tenant, entry, years);
+}
+
+/** Same accounts and same debit/credit on each side, ignoring line ids/descriptions. */
+function openingLinesMatch(
+  stored: JournalEntry['lines'] | undefined,
+  incoming: JournalEntry['lines'],
+): boolean {
+  if (!stored || stored.length !== incoming.length) return false;
+  const normalize = (lines: JournalEntry['lines']): string =>
+    lines
+      .map((line) => `${line.account_id}|${line.debit}|${line.credit}`)
+      .sort()
+      .join(';');
+  return normalize(stored) === normalize(incoming);
 }
 
 export async function tryPostInvoiceReversalJournal(tenant: string, invoice: Invoice): Promise<void> {
@@ -169,6 +217,44 @@ export async function tryPostLateFeeJournals(
       years,
     );
   }
+}
+
+/** Reverses an existing posting identified by its `(source_type, source_id)` key. */
+export async function tryPostReversalOfSource(
+  tenant: string,
+  sourceType: NonNullable<JournalEntry['source_type']>,
+  sourceId: string,
+  description: string,
+): Promise<void> {
+  const existingId = await findEntryIdBySource(tenant, sourceType, sourceId);
+  if (!existingId) return;
+  const original = await findEntryById(tenant, existingId);
+  if (!original?.lines?.length) return;
+  const date = postingDate(undefined);
+  const lines = buildReversalLines(original.lines);
+  const years = await listFiscalYearsByWorkspace(tenant);
+  await persistGeneratedEntry(
+    tenant,
+    entryForSource('reversal', sourceId, date, description, lines, resolveYearId(years, date)),
+    years,
+  );
+}
+
+/**
+ * Reverses the late-fee posting for an invoice.
+ *
+ * `tryPostInvoiceReversalJournal` reverses only `('invoice', invoiceId)`, while
+ * late fees post under `('invoice', 'latefee:<invoiceId>')` (see
+ * {@link tryPostLateFeeJournals}). Without this the fee survived cancellation
+ * and left AR and income overstated by the fee amount.
+ */
+export async function tryPostLateFeeReversalJournal(tenant: string, invoice: Invoice): Promise<void> {
+  await tryPostReversalOfSource(
+    tenant,
+    'invoice',
+    `latefee:${invoice.id}`,
+    `Reverse late fee ${invoice.invoiceNumber ?? invoice.id}`,
+  );
 }
 
 export async function tryPostCreditNoteJournal(

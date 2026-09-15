@@ -18,7 +18,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { CARD_STRIPE_INSET } from '@/lib/semanticTone';
 import { cn } from '@/lib/utils';
 import { useAccountingDashboardModel } from '@/tenant/features/accounting/components/useAccountingDashboardModel';
-import { useAccountingMetrics } from '@/tenant/features/accounting/hooks/useAccountingApi';
+import { useAccountingMetrics, useAccountingReportAggregates } from '@/tenant/features/accounting/hooks/useAccountingApi';
 
 interface AccountingDashboardProps {
   accounts: Account[];
@@ -36,6 +36,12 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
   const { primary, secondary, charts } = useBrandPalette();
   const pieColors = (() => [...charts])();
   const { data: serverMetrics } = useAccountingMetrics();
+  /**
+   * Net cash flow must come from actual movements on cash/bank accounts. The
+   * client model derived it as `assets - liabilities`, which is not a cash-flow
+   * figure at all (a building purchase reads as positive cash flow).
+   */
+  const { data: serverAggregates } = useAccountingReportAggregates();
 
   const {
     revenue: modelRevenue,
@@ -44,11 +50,9 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
     assets: modelAssets,
     liabilities: modelLiabilities,
     equity,
-    netCashFlow,
     postedEntries,
     draftEntries,
     monthlyData,
-    expenseBreakdown,
     recentEntries,
   } = useAccountingDashboardModel(accounts, entries);
 
@@ -59,6 +63,16 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
   const liabilities = serverMetrics?.liabilities ?? modelLiabilities;
   const postedCount = serverMetrics?.posted ?? postedEntries.length;
   const draftCount = serverMetrics?.draft ?? draftEntries.length;
+  const netCashFlow = serverAggregates?.netCashFlow ?? 0;
+  /**
+   * Top expense accounts from the server's own trial balance rather than a
+   * client re-derivation over the loaded journal.
+   */
+  const expenseBreakdown = (serverAggregates?.trialBalance ?? [])
+    .filter((row) => row.type === 'Expense' && row.totalDebit > 0)
+    .map((row) => ({ name: row.name, value: row.totalDebit - row.totalCredit }))
+    .sort((first, second) => second.value - first.value)
+    .slice(0, 5);
 
   const bsData = [
     { id: 'Assets', name: t('accounting.dashboard.assets'), value: Math.max(0, assets) },

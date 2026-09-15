@@ -6,6 +6,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
+import { accountingErrorMessage } from "@/tenant/features/accounting/hooks/useAccountingSetupSaveActions";
 import type { FiscalYear } from "@/lib/data/accountingData";
 
 interface AccountingFiscalYearModalProps {
@@ -30,6 +31,13 @@ export function AccountingFiscalYearModal({
 }: AccountingFiscalYearModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const isEdit = !!initial?.id;
+  /**
+   * A closed year is immutable where it matters: the server rejects reopening
+   * it, rejects a date-range change and rejects writing `closed` through the
+   * bulk route. `closed` is therefore not an option here — only the close
+   * action may set it — and the date range is locked once the year is closed.
+   */
+  const isClosed = initial?.status === "closed";
   const [form, setForm] = useState<Partial<FiscalYear>>(initial || blankFiscalYear);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitting, setSubmitting] = useState(false);
@@ -71,8 +79,18 @@ export function AccountingFiscalYearModal({
     try {
       await onSave({
         ...form,
+        // A closed year keeps the status the server already stored; sending any
+        // other value is rejected outright.
+        status: isClosed ? "closed" : (form.status ?? "upcoming"),
         id: isEdit ? form.id : `fy${crypto.randomUUID()}`,
       } as FiscalYear);
+    } catch (error) {
+      // Surface what the server actually said (closed-year guards, overlapping
+      // ranges, …) instead of a generic "failed to save".
+      setErrors((prev) => ({
+        ...prev,
+        form: accountingErrorMessage(error) ?? t("accounting.settings.fy.saveFailed"),
+      }));
     } finally {
       setSubmitting(false);
     }
@@ -112,6 +130,7 @@ export function AccountingFiscalYearModal({
               value={form.startDate || ""}
               onChange={(startDateValue) => updateFormField("startDate", startDateValue)}
               max={form.endDate || undefined}
+              disabled={isClosed}
               required
             />
           </div>
@@ -123,6 +142,7 @@ export function AccountingFiscalYearModal({
               value={form.endDate || ""}
               onChange={(endDateValue) => updateFormField("endDate", endDateValue)}
               min={form.startDate || undefined}
+              disabled={isClosed}
               required
             />
           </div>
@@ -132,14 +152,23 @@ export function AccountingFiscalYearModal({
           <FormSelect
             id="financial-year-status"
             name="status"
-            value={form.status || "upcoming"}
+            value={isClosed ? "closed" : (form.status || "upcoming")}
+            disabled={isClosed}
             onChange={(statusValue) => updateFormField("status", statusValue as FiscalYear["status"] | "upcoming")}
-            options={[
-              { value: "upcoming", label: t("accounting.settings.fy.status.upcoming") },
-              { value: "active", label: t("accounting.settings.fy.status.active") },
-              { value: "closed", label: t("accounting.settings.fy.status.closed") }
-            ]}
+            options={
+              isClosed
+                ? [{ value: "closed", label: t("accounting.settings.fy.status.closed") }]
+                : [
+                    { value: "upcoming", label: t("accounting.settings.fy.status.upcoming") },
+                    { value: "active", label: t("accounting.settings.fy.status.active") },
+                  ]
+            }
           />
+          {isClosed && (
+            <p className="m-0 mt-1 text-xs text-muted-foreground">
+              {t("accounting.settings.fy.closedLockedHint")}
+            </p>
+          )}
         </div>
       </div>
     </FormModal>

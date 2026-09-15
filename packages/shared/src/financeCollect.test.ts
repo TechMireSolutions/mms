@@ -48,6 +48,11 @@ describe('financeCollect', () => {
     expect(canCreditInvoice(open, 200)).toBe(false);
     expect(canCancelInvoice(open)).toBe(true);
     expect(canCancelInvoice({ ...open, paidAmt: 10 })).toBe(false);
+    // A credit note posts its own Dr Income / Cr AR entry, and cancelling an
+    // invoice reverses only the invoice entry — so a partially credited invoice
+    // left behind a credit AR balance and negative revenue.
+    expect(canCancelInvoice({ ...open, creditedAmt: 30 })).toBe(false);
+    expect(canCancelInvoice({ ...open, creditedAmt: 0 })).toBe(true);
   });
 
   it('prefers guardian, then father, then the student contact', () => {

@@ -15,6 +15,7 @@ const mockLedgerPosting = vi.hoisted(() => ({
   tryPostCreditNoteJournal: vi.fn(),
   tryPostInvoiceReversalJournal: vi.fn(),
   tryPostLateFeeJournals: vi.fn(),
+  tryPostLateFeeReversalJournal: vi.fn(),
 }));
 
 const mockPrefs = vi.hoisted(() => ({
@@ -165,12 +166,33 @@ describe('financeCollectUseCases', () => {
       mockFinanceUseCases.financeUseCases.getInvoiceById.mockResolvedValue(invoice);
       mockFinanceUseCases.financeUseCases.updateInvoiceById.mockResolvedValue(cancelled);
       mockLedgerPosting.tryPostInvoiceReversalJournal.mockResolvedValue(undefined);
+      mockLedgerPosting.tryPostLateFeeReversalJournal.mockResolvedValue(undefined);
 
       const result = await runWithTenant('tenant-1', () => cancelInvoice('inv-1'));
 
       expect(result.status).toBe('cancelled');
       expect(mockLedgerPosting.tryPostInvoiceReversalJournal).toHaveBeenCalledWith('tenant-1', cancelled);
+      // Late fees post under their own source key, so reversing only the invoice
+      // entry left the fee on the books.
+      expect(mockLedgerPosting.tryPostLateFeeReversalJournal).toHaveBeenCalledWith('tenant-1', cancelled);
       expect(mockWs.broadcastTenantUpdate).toHaveBeenCalledWith('tenant-1', 'collection', 'finance_invoices');
+    });
+
+    it('refuses to cancel a partially credited invoice and says what to do instead', async () => {
+      // Cancelling reverses only the invoice entry, so the credit note's
+      // Dr Income / Cr AR would survive and leave a credit AR balance.
+      mockFinanceUseCases.financeUseCases.getInvoiceById.mockResolvedValue({
+        id: 'inv-credited',
+        status: 'pending',
+        paidAmt: 0,
+        creditedAmt: 30,
+        finalAmt: 100,
+      });
+
+      await expect(runWithTenant('tenant-1', () => cancelInvoice('inv-credited'))).rejects.toThrow(
+        /Reverse the credit notes/,
+      );
+      expect(mockFinanceUseCases.financeUseCases.updateInvoiceById).not.toHaveBeenCalled();
     });
   });
 

@@ -1,6 +1,6 @@
 import { Pencil, CheckCircle2, RotateCcw, Tag } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
-import { formatDate } from "@mms/shared";
+import { formatDate, isJournalEntryBalanced, moneyToCents } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
@@ -44,8 +44,19 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
     return config;
   })() as Record<string, StatusBadgeConfigItem>;
   const getAccount = (id: string) => accounts.find((account) => account.id === id);
-  const totalDebit = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
-  const totalCredit = entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0);
+  const totalDebit = moneyToCents(entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0)) / 100;
+  const totalCredit = moneyToCents(entry.lines.reduce((sum, journalLine) => sum + journalLine.credit, 0)) / 100;
+  /**
+   * The same rule the server enforces (`isJournalEntryBalanced`: exact integer
+   * cents, at least two lines, each single-sided, total > 0) instead of a
+   * second, weaker `Math.abs(totalDebit - totalCredit) < 0.01` float test. That
+   * tolerance called a two-line 0/0 draft "Balanced" although the API refuses to
+   * post it, and it also hid sub-cent float drift.
+   */
+  const isBalanced = isJournalEntryBalanced(
+    entry.lines.map((journalLine) => ({ debit: journalLine.debit, credit: journalLine.credit })),
+  );
+  const balanceDifference = Math.abs(moneyToCents(totalDebit) - moneyToCents(totalCredit)) / 100;
 
   return (
     <DetailDrawerShell
@@ -111,10 +122,10 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
             t={t}
           />
 
-          <div className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border", balanceToneClass(Math.abs(totalDebit - totalCredit) < 0.01))} role="status">
-            {Math.abs(totalDebit - totalCredit) < 0.01
+          <div className={cn("flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-semibold border", balanceToneClass(isBalanced))} role="status">
+            {isBalanced
               ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.detail.balanced")}</>
-              : <>{t("accounting.journal.detail.unbalanced", { diff: formatCurrency(Math.abs(totalDebit - totalCredit)) })}</>
+              : <>{t("accounting.journal.detail.unbalanced", { diff: formatCurrency(balanceDifference) })}</>
             }
           </div>
       </div>

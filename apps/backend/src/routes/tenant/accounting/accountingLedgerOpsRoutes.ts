@@ -118,10 +118,13 @@ export const accountingLedgerOpsRoutes: FastifyPluginAsync = async (fastify) => 
       const params = parseRequest(fiscalYearParamsSchema, request.params);
       if (!params.ok) return replyValidationError(reply, params.message);
       try {
-        await withTenant(String(request.tenant?.id), () => postOpeningBalances(params.data.fiscalYearId), {
-          readOnly: false,
-        });
-        return reply.send({ success: true });
+        const outcome = await withTenant(
+          String(request.tenant?.id),
+          () => postOpeningBalances(params.data.fiscalYearId),
+          { readOnly: false },
+        );
+        // `posted: false` = the balances were already posted unchanged.
+        return reply.send({ success: true, posted: outcome.posted });
       } catch (error) {
         return sendIfHttpDomainError(reply, error) ?? sendDatabaseError(reply, 'Failed to post opening balances', error);
       }

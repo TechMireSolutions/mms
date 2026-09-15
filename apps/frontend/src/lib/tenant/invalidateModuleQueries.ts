@@ -51,10 +51,17 @@ export function invalidateModuleQueries(queryClient: QueryClient, key: string): 
     case 'questions':
     case 'tests':
     case 'assessment_results': return invalidateQuestionBankQueries(queryClient);
+    // Ledger-op collections the accounting routes actually broadcast
+    // (posting rules, opening balances, bank statements, reconciliations).
+    // Omitting them left other clients' changes invisible until a reload.
     case 'accounting':
     case 'accounting_entries':
     case 'accounting_accounts':
-    case 'accounting_fiscal_years': return invalidateAccountingQueries(queryClient);
+    case 'accounting_fiscal_years':
+    case 'accounting_posting_rules':
+    case 'accounting_opening_balances':
+    case 'accounting_bank_statements':
+    case 'accounting_bank_reconciliations': return invalidateAccountingQueries(queryClient);
     case 'obligations':
     case 'obligation_collections':
     case 'obligation_types':

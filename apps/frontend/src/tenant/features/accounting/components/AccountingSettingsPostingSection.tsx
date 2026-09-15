@@ -13,9 +13,16 @@ import {
 } from "@/tenant/features/accounting/hooks/useAccountingLedgerOps";
 import React, { useState, useEffect } from "react";
 
-function accountOptions(accounts: Account[], type?: Account["type"]) {
+/**
+ * Mirrors the server's `POSTING_RULE_ACCOUNT_TYPES`: `arAccountId`/`cashAccountId`
+ * must be Asset, `incomeAccountId` Revenue and `discountAccountId` Expense **or**
+ * Revenue (contra-revenue) — offering only Expense hid every contra-revenue
+ * account the server would have accepted.
+ */
+function accountOptions(accounts: Account[], types?: Account["type"] | Account["type"][]) {
+  const allowed = types === undefined ? null : Array.isArray(types) ? types : [types];
   return accounts
-    .filter((account) => account.isActive !== false && (!type || account.type === type))
+    .filter((account) => account.isActive !== false && (!allowed || allowed.includes(account.type)))
     .sort((left, right) => left.code.localeCompare(right.code))
     .map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }));
 }
@@ -104,7 +111,7 @@ export function AccountingSettingsPostingSection({
             value={draft.discountAccountId}
             onChange={(value) => setDraft((current) => ({ ...current, discountAccountId: value }))}
             placeholder={t("accounting.journal.form.none")}
-            options={accountOptions(accounts, "Expense")}
+            options={accountOptions(accounts, ["Expense", "Revenue"])}
           />
         </Field>
       </div>
