@@ -97,7 +97,7 @@ export const StatCard = (function StatCard({
                 {formattedValue}
               </p>
               {sub && (
-                <p className="text-xs font-semibold text-muted-foreground mt-1 opacity-70 truncate">
+                <p className="text-xs font-semibold text-muted-foreground mt-1 truncate">
                   {sub}
                 </p>
               )}
@@ -142,7 +142,7 @@ export const StatCard = (function StatCard({
               {formattedValue}
             </p>
             {sub && (
-              <p className="text-xs font-semibold text-muted-foreground mt-1 opacity-70 truncate">
+              <p className="text-xs font-semibold text-muted-foreground mt-1 truncate">
                 {sub}
               </p>
             )}

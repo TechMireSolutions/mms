@@ -186,10 +186,16 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
               );
             })}
           </div>
-          <div className={`mt-4 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg ${Math.abs(assets - (liabilities + equity)) < 1 ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'}`}>
+          {/*
+            The message text uses the high-contrast foreground token rather than a
+            semantic colour: `--success`/`--destructive` are branding-overridable, and
+            a lighter brand green measured 3.84:1 as small text on its own 10% tint.
+            The status colour is carried by the tint and the (non-text) icon instead.
+          */}
+          <div className={`mt-4 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg text-foreground ${Math.abs(assets - (liabilities + equity)) < 1 ? 'bg-success/10' : 'bg-destructive/10'}`}>
             {Math.abs(assets - (liabilities + equity)) < 1
-              ? <><CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t('accounting.dashboard.balanceSheetBalanced')}</>
-              : <><AlertCircle className="w-3.5 h-3.5" aria-hidden="true" /> {t('accounting.dashboard.difference', { amount: formatCurrency(Math.abs(assets - (liabilities + equity))) })}</>
+              ? <><CheckCircle2 className="w-3.5 h-3.5 text-success" aria-hidden="true" /> {t('accounting.dashboard.balanceSheetBalanced')}</>
+              : <><AlertCircle className="w-3.5 h-3.5 text-destructive" aria-hidden="true" /> {t('accounting.dashboard.difference', { amount: formatCurrency(Math.abs(assets - (liabilities + equity))) })}</>
             }
           </div>
         </Card>
