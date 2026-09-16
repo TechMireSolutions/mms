@@ -1,5 +1,8 @@
 import type { BrandingInfo } from "@/lib/invoiceTemplateStore";
 import type { StudentCardTemplate } from "./studentCardTemplateTypes";
+import { getDefaultStudentCardBackElements } from "./studentCardTemplateBackDefaults";
+
+export { getDefaultStudentCardBackElements };
 
 /**
  * Returns the default system template for Student ID cards (CR80 landscape).
@@ -20,7 +23,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 8,
         w: 220,
         h: 16,
-        style: { fontSize: 11, fontWeight: "bold", color: "#0f172a" },
+        style: { fontSize: 11, fontWeight: "bold", color: "rgb(15, 23, 42)" },
       },
       {
         id: "card_title",
@@ -30,7 +33,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 25,
         w: 220,
         h: 12,
-        style: { fontSize: 7, fontWeight: "bold", color: "#0284c7" },
+        style: { fontSize: 7, fontWeight: "bold", color: "rgb(2, 132, 199)" },
       },
       {
         id: "top_divider",
@@ -40,7 +43,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 38,
         w: 300,
         h: 1,
-        style: { borderColor: "#cbd5e1", borderWidth: 1 },
+        style: { borderColor: "rgb(203, 213, 225)", borderWidth: 1 },
       },
       {
         id: "student_photo",
@@ -51,7 +54,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 44,
         w: 58,
         h: 68,
-        style: { borderWidth: 1, borderColor: "#cbd5e1", borderRadius: 6, backgroundColor: "#f8fafc" },
+        style: { borderWidth: 1, borderColor: "rgb(203, 213, 225)", borderRadius: 6, backgroundColor: "rgb(248, 250, 252)" },
       },
       {
         id: "student_name",
@@ -62,7 +65,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 44,
         w: 160,
         h: 16,
-        style: { fontSize: 11, fontWeight: "bold", color: "#0f172a" },
+        style: { fontSize: 11, fontWeight: "bold", color: "rgb(15, 23, 42)" },
       },
       {
         id: "session_name",
@@ -73,7 +76,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 62,
         w: 160,
         h: 13,
-        style: { fontSize: 8, fontWeight: "600", color: "#0284c7" },
+        style: { fontSize: 8, fontWeight: "600", color: "rgb(2, 132, 199)" },
       },
       {
         id: "guardian_name",
@@ -84,7 +87,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 76,
         w: 160,
         h: 13,
-        style: { fontSize: 8, color: "#475569" },
+        style: { fontSize: 8, color: "rgb(71, 85, 105)" },
       },
       {
         id: "emergency_phone",
@@ -95,7 +98,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 90,
         w: 160,
         h: 13,
-        style: { fontSize: 8, color: "#475569" },
+        style: { fontSize: 8, color: "rgb(71, 85, 105)" },
       },
       {
         id: "blood_group",
@@ -106,7 +109,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 104,
         w: 50,
         h: 13,
-        style: { fontSize: 8, fontWeight: "bold", color: "#dc2626" },
+        style: { fontSize: 8, fontWeight: "bold", color: "rgb(220, 38, 38)" },
       },
       {
         id: "student_qr",
@@ -116,7 +119,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 44,
         w: 64,
         h: 64,
-        style: { color: "#0f172a" },
+        style: { color: "rgb(15, 23, 42)" },
       },
       {
         id: "gr_number",
@@ -127,7 +130,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 110,
         w: 72,
         h: 12,
-        style: { fontSize: 7, fontWeight: "bold", textAlign: "center", color: "#0f172a" },
+        style: { fontSize: 7, fontWeight: "bold", textAlign: "center", color: "rgb(15, 23, 42)" },
       },
       {
         id: "bottom_divider",
@@ -137,7 +140,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 126,
         w: 300,
         h: 1,
-        style: { borderColor: "#cbd5e1", borderWidth: 1 },
+        style: { borderColor: "rgb(203, 213, 225)", borderWidth: 1 },
       },
       {
         id: "student_id",
@@ -148,7 +151,7 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 131,
         w: 140,
         h: 12,
-        style: { fontSize: 7, color: "#64748b" },
+        style: { fontSize: 7, color: "rgb(100, 116, 139)" },
       },
       {
         id: "issue_date",
@@ -159,147 +162,9 @@ export function getDefaultStudentCardTemplate(branding?: BrandingInfo): StudentC
         y: 131,
         w: 132,
         h: 12,
-        style: { fontSize: 7, textAlign: "right", color: "#64748b" },
+        style: { fontSize: 7, textAlign: "right", color: "rgb(100, 116, 139)" },
       },
     ],
     backElements: getDefaultStudentCardBackElements(branding),
   };
 }
-
-/**
- * Returns default back-of-card elements (Instructions, Return Address, Terms, Signatures).
- */
-export function getDefaultStudentCardBackElements(
-  branding?: BrandingInfo,
-): StudentCardTemplate["elements"] {
-  const madrasaName = branding?.madrasaName || "Madrasa Management System";
-
-  return [
-    {
-      id: "back_header",
-      type: "text",
-      label: "TERMS & EMERGENCY INSTRUCTIONS",
-      x: 12,
-      y: 10,
-      w: 300,
-      h: 14,
-      style: { fontSize: 8, fontWeight: "bold", color: "#0284c7" },
-    },
-    {
-      id: "back_top_divider",
-      type: "divider",
-      label: "Divider",
-      x: 12,
-      y: 24,
-      w: 300,
-      h: 1,
-      style: { borderColor: "#cbd5e1", borderWidth: 1 },
-    },
-    {
-      id: "back_terms",
-      type: "field",
-      field: "card_terms",
-      label: "Card Terms",
-      x: 12,
-      y: 28,
-      w: 300,
-      h: 36,
-      style: { fontSize: 7, color: "#334155" },
-    },
-    {
-      id: "back_return_notice",
-      type: "text",
-      label: "If found, please return to:",
-      x: 12,
-      y: 66,
-      w: 200,
-      h: 11,
-      style: { fontSize: 7, fontWeight: "600", color: "#0f172a" },
-    },
-    {
-      id: "back_inst_name",
-      type: "field",
-      field: "institution_name",
-      label: madrasaName,
-      x: 12,
-      y: 77,
-      w: 200,
-      h: 12,
-      style: { fontSize: 7, fontWeight: "bold", color: "#0f172a" },
-    },
-    {
-      id: "back_inst_address",
-      type: "field",
-      field: "institution_address",
-      label: "Institution Address",
-      x: 12,
-      y: 89,
-      w: 200,
-      h: 22,
-      style: { fontSize: 6.5, color: "#475569" },
-    },
-    {
-      id: "back_inst_phone",
-      type: "field",
-      field: "institution_phone",
-      label: "Helpline Phone",
-      x: 12,
-      y: 112,
-      w: 200,
-      h: 12,
-      style: { fontSize: 7, color: "#0284c7", fontWeight: "600" },
-    },
-    {
-      id: "back_qr",
-      type: "qrcode",
-      label: "Verification QR",
-      x: 234,
-      y: 66,
-      w: 64,
-      h: 64,
-      style: { color: "#0f172a" },
-    },
-    {
-      id: "back_bottom_divider",
-      type: "divider",
-      label: "Divider",
-      x: 12,
-      y: 132,
-      w: 300,
-      h: 1,
-      style: { borderColor: "#cbd5e1", borderWidth: 1 },
-    },
-    {
-      id: "back_auth_line",
-      type: "divider",
-      label: "Signature Line",
-      x: 190,
-      y: 168,
-      w: 115,
-      h: 1,
-      style: { borderColor: "#475569", borderWidth: 1 },
-    },
-    {
-      id: "back_signature_title",
-      type: "text",
-      label: "Principal / Authorized Signature",
-      x: 190,
-      y: 172,
-      w: 115,
-      h: 12,
-      style: { fontSize: 6.5, fontWeight: "600", textAlign: "center", color: "#334155" },
-    },
-    {
-      id: "back_validity",
-      type: "field",
-      field: "expiry_date",
-      label: "Valid Until",
-      x: 12,
-      y: 140,
-      w: 160,
-      h: 12,
-      style: { fontSize: 7, color: "#64748b" },
-    },
-  ];
-}
-
