@@ -50,8 +50,9 @@ export async function computeNextGrNumberForDate(
 export async function checkStudentRegistrationDuplicate(
   input: StudentDuplicateCheckInput,
   repo: StudentsRepository = studentsRepository,
+  tenantOverride?: string,
 ): Promise<{ reason: 'contact' | 'email' | 'nameDob' | 'grNumber' | null }> {
-  const tenant = getRequestTenant();
+  const tenant = tenantOverride || getRequestTenant();
   if (!tenant) return { reason: null };
   const reason = await repo.findRegistrationConflict(tenant, input);
   return { reason };

@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { withTenant } from '../../../db/tenant-context.js';
+import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../../services/rbacService.js';
 import {
   STUDENTS_MODULE_MANIFEST,
@@ -236,9 +237,13 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
+      const tenantId = request.tenant?.id || getRequestTenant();
+      if (!tenantId) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'This endpoint requires a tenant subdomain' } };
+      }
       try {
-        const result = await withTenant(String(request.tenant?.id), () =>
-          studentUseCases.checkStudentRegistrationDuplicate(body), { readOnly: false });
+        const result = await withTenant(tenantId, () =>
+          studentUseCases.checkStudentRegistrationDuplicate(body, tenantId), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
         request.log.error(error, 'Failed to check student duplicate');

@@ -24,7 +24,7 @@ function resolveTeacherFieldExpr(field: string): SQL {
     return sql`COALESCE((SELECT c.gender FROM ${contacts} c WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain} AND c.id = ${teachers.contactId} LIMIT 1), '')`;
   }
   if (f === 'dob') {
-    return sql`COALESCE((SELECT c.dob FROM ${contacts} c WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain} AND c.id = ${teachers.contactId} LIMIT 1), '')`;
+    return sql`COALESCE((SELECT c.dob::text FROM ${contacts} c WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain} AND c.id = ${teachers.contactId} LIMIT 1), '')`;
   }
   if (f === 'city') {
     return sql`COALESCE((SELECT c.city FROM ${contacts} c WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain} AND c.id = ${teachers.contactId} LIMIT 1), '')`;

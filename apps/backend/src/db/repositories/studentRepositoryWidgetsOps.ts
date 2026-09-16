@@ -146,7 +146,7 @@ export async function findStudentRegistrationConflictSql(
                   lower(trim(COALESCE(c.name, ''))) = ${name}
                   OR lower(trim(concat_ws(' ', c.first_name, c.last_name))) = ${name}
                 )
-                AND NULLIF(trim(c.dob), '') = ${dob}
+                AND c.dob::text = ${dob}
             )`,
           ),
         )

@@ -36,7 +36,7 @@ export function linkedContactGenderExpr(): SQL {
 /** DOB from linked contact (Contacts SSOT). */
 export function linkedContactDobExpr(): SQL {
   return sql`NULLIF(trim(COALESCE((
-    SELECT c.dob
+    SELECT c.dob::text
     FROM ${contacts} c
     WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
       AND c.id = ${students.contactId}
