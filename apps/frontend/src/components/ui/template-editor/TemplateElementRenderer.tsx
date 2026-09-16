@@ -147,7 +147,9 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
       }}
       className={`group flex items-center overflow-visible px-1 focus-visible:outline-2 focus-visible:outline-ring ${
         !isPreviewMode && !isSelected ? "hover:border-primary/40" : ""
-      } ${isNew ? "ring-2 ring-primary ring-offset-2 ring-offset-white" : ""}`}
+      } ${isNew ? "ring-2 ring-primary ring-offset-2 ring-offset-white" : ""} ${
+        el.h < 14 ? "before:absolute before:-top-2 before:-bottom-2 before:left-0 before:right-0 before:content-[''] print:before:hidden" : ""
+      }`}
     >
       <TemplateElementContent
         el={el}

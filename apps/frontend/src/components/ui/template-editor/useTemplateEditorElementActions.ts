@@ -8,29 +8,12 @@ import type {
   ElementStyle,
   PageSizeInfo,
   TemplateElement,
-  TemplateFieldDefinition,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import {
-  alignElements,
-  bringSelectedToFront as bringSelectedToFrontUtil,
-  centerElementOnPage,
-  distributeElements,
-  newId,
-  sendSelectedToBack as sendSelectedToBackUtil,
-  snap,
-  type AlignmentType,
-} from "./templateEditorUtils";
-import {
-  createDividerElement,
-  createFieldElement,
-  createHeadingElement,
-  createLogoElement,
-  createQrCodeElement,
-  createStaticTextElement,
-  createTableElement,
-  findInsertionPos,
-} from "./templateEditorElementFactories";
+import { newId, snap } from "./templateEditorUtils";
+import { useTemplateEditorAlignActions } from "./useTemplateEditorAlignActions";
+import { useTemplateEditorLayerActions } from "./useTemplateEditorLayerActions";
+import { useTemplateEditorAddActions } from "./useTemplateEditorAddActions";
 
 export interface UseTemplateEditorElementActionsOptions<TPayload = Record<string, unknown>> {
   elements: TemplateElement<keyof TPayload & string>[];
@@ -185,82 +168,6 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     [commitUpdateCoalesced, selectedIds]
   );
 
-  const bringToFront = useCallback(
-    (elementId?: string) => {
-      const targetId = elementId || selectedId;
-      if (!targetId) return;
-      commitUpdate((els) => {
-        const idx = els.findIndex((el) => el.id === targetId);
-        if (idx === -1 || idx === els.length - 1) return els;
-        const copy = [...els];
-        const [item] = copy.splice(idx, 1);
-        if (item) copy.push(item);
-        return copy;
-      });
-    },
-    [commitUpdate, selectedId]
-  );
-
-  const sendToBack = useCallback(
-    (elementId?: string) => {
-      const targetId = elementId || selectedId;
-      if (!targetId) return;
-      commitUpdate((els) => {
-        const idx = els.findIndex((el) => el.id === targetId);
-        if (idx <= 0) return els;
-        const copy = [...els];
-        const [item] = copy.splice(idx, 1);
-        if (item) copy.unshift(item);
-        return copy;
-      });
-    },
-    [commitUpdate, selectedId]
-  );
-
-  const bringSelectedToFront = useCallback(() => {
-    if (selectedIds.length === 0) return;
-    commitUpdate((els) => bringSelectedToFrontUtil(els, selectedIds));
-  }, [commitUpdate, selectedIds]);
-
-  const sendSelectedToBack = useCallback(() => {
-    if (selectedIds.length === 0) return;
-    commitUpdate((els) => sendSelectedToBackUtil(els, selectedIds));
-  }, [commitUpdate, selectedIds]);
-
-  const moveForward = useCallback(
-    (elementId?: string) => {
-      const targetId = elementId || selectedId;
-      if (!targetId) return;
-      commitUpdate((els) => {
-        const idx = els.findIndex((el) => el.id === targetId);
-        if (idx === -1 || idx === els.length - 1) return els;
-        const copy = [...els];
-        const temp = copy[idx]!;
-        copy[idx] = copy[idx + 1]!;
-        copy[idx + 1] = temp;
-        return copy;
-      });
-    },
-    [commitUpdate, selectedId]
-  );
-
-  const moveBackward = useCallback(
-    (elementId?: string) => {
-      const targetId = elementId || selectedId;
-      if (!targetId) return;
-      commitUpdate((els) => {
-        const idx = els.findIndex((el) => el.id === targetId);
-        if (idx <= 0) return els;
-        const copy = [...els];
-        const temp = copy[idx]!;
-        copy[idx] = copy[idx - 1]!;
-        copy[idx - 1] = temp;
-        return copy;
-      });
-    },
-    [commitUpdate, selectedId]
-  );
-
   const offsetFrom = useCallback(
     (el: TemplateElement<keyof TPayload & string>, delta: number) => {
       const nextX = el.x + delta;
@@ -316,142 +223,26 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
     if (newElements[0]) onElementAdded?.(newElements[0].id);
   }, [commitUpdate, offsetFrom, onElementAdded, selectedIds, setSelectedIds]);
 
-  const alignSelected = useCallback(
-    (alignType: AlignmentType) => {
-      if (selectedIds.length < 2) return;
-      commitUpdate((els) => alignElements(els, selectedIds, alignType));
-    },
-    [commitUpdate, selectedIds]
-  );
+  const alignActions = useTemplateEditorAlignActions<TPayload>({
+    selectedIds,
+    commitUpdate,
+    size,
+  });
 
-  const distributeSelected = useCallback(
-    (axis: "horizontal" | "vertical") => {
-      if (selectedIds.length < 2) return;
-      commitUpdate((els) => distributeElements(els, selectedIds, axis));
-    },
-    [commitUpdate, selectedIds]
-  );
+  const layerActions = useTemplateEditorLayerActions<TPayload>({
+    selectedId,
+    selectedIds,
+    commitUpdate,
+  });
 
-  const centerSelected = useCallback(
-    (axis: "both" | "h" | "v" = "both") => {
-      if (selectedIds.length === 0) return;
-      const idSet = new Set(selectedIds);
-      commitUpdate((els) =>
-        els.map((el) => (idSet.has(el.id) ? centerElementOnPage(el, size.width, size.height, axis) : el))
-      );
-    },
-    [commitUpdate, selectedIds, size.height, size.width]
-  );
-
-  /** Snaps all selected elements to one of the four page edges conforming to the grid. */
-  const snapSelected = useCallback(
-    (edge: "top" | "bottom" | "left" | "right") => {
-      if (selectedIds.length === 0) return;
-      const idSet = new Set(selectedIds);
-      commitUpdate((els) =>
-        els.map((el) => {
-          if (!idSet.has(el.id)) return el;
-          switch (edge) {
-            case "top":    return { ...el, y: 0 };
-            case "bottom": return { ...el, y: snap(Math.max(0, size.height - el.h)) };
-            case "left":   return { ...el, x: 0 };
-            case "right":  return { ...el, x: snap(Math.max(0, size.width - el.w)) };
-          }
-        })
-      );
-    },
-    [commitUpdate, selectedIds, size.height, size.width]
-  );
-
-  /** Equalizes width, height, or both across selected elements to match the largest in the selection. */
-  const equalizeSelectedDimensions = useCallback(
-    (dimension: "width" | "height" | "both") => {
-      if (selectedIds.length < 2) return;
-      const idSet = new Set(selectedIds);
-
-      commitUpdate((els) => {
-        const targets = els.filter((el) => idSet.has(el.id));
-        if (targets.length < 2) return els;
-        const maxWidth = Math.max(...targets.map((el) => el.w));
-        const maxHeight = Math.max(...targets.map((el) => el.h));
-
-        return els.map((el) => {
-          if (!idSet.has(el.id)) return el;
-          return {
-            ...el,
-            w: dimension === "height" ? el.w : Math.max(4, Math.min(maxWidth, size.width - el.x)),
-            h: dimension === "width" ? el.h : Math.max(4, Math.min(maxHeight, size.height - el.y)),
-          };
-        });
-      });
-    },
-    [commitUpdate, selectedIds, size.height, size.width]
-  );
-
-  const getInsertionPos = useCallback(
-    (w: number, h: number) => findInsertionPos(elementsRef.current, w, h, size),
-    [size]
-  );
-
-  const addElement = useCallback(
-    (el: TemplateElement<keyof TPayload & string>) => {
-      commitUpdate((els) => [...els, el]);
-      setSelectedIds([el.id]);
-      onElementAdded?.(el.id);
-    },
-    [commitUpdate, onElementAdded, setSelectedIds]
-  );
-
-  const addStaticText = useCallback(() => {
-    const { x, y } = getInsertionPos(200, 18);
-    addElement(createStaticTextElement(x, y, t("templateEditor.newText")) as TemplateElement<keyof TPayload & string>);
-  }, [addElement, getInsertionPos, t]);
-
-  const addHeading = useCallback(() => {
-    const w = Math.min(320, Math.max(160, size.width - 40));
-    const h = 26;
-    const { x, y } = getInsertionPos(w, h);
-    addElement(createHeadingElement(x, y, w, t("templateEditor.heading")) as TemplateElement<keyof TPayload & string>);
-  }, [addElement, getInsertionPos, size.width, t]);
-
-  const addDivider = useCallback(() => {
-    const w = Math.max(40, size.width - 40);
-    const h = 1;
-    const { x, y } = getInsertionPos(w, h);
-    addElement(createDividerElement(x, y, w) as TemplateElement<keyof TPayload & string>);
-  }, [addElement, getInsertionPos, size.width]);
-
-  const addField = useCallback(
-    (fieldDef: TemplateFieldDefinition<TPayload>) => {
-      const { x, y } = getInsertionPos(160, 16);
-      addElement(createFieldElement(x, y, fieldDef));
-    },
-    [addElement, getInsertionPos]
-  );
-
-  const addQrCode = useCallback(() => {
-    const { x, y } = getInsertionPos(64, 64);
-    addElement(createQrCodeElement(x, y, t("templateEditor.qrCode")) as TemplateElement<keyof TPayload & string>);
-  }, [addElement, getInsertionPos, t]);
-
-  const addLogo = useCallback(() => {
-    const { x, y } = getInsertionPos(80, 80);
-    addElement(createLogoElement(x, y, t("templateEditor.logo")) as TemplateElement<keyof TPayload & string>);
-  }, [addElement, getInsertionPos, t]);
-
-  const addTable = useCallback(() => {
-    const w = Math.min(500, Math.max(240, size.width - 40));
-    const h = 120;
-    const { x, y } = getInsertionPos(w, h);
-    addElement(
-      createTableElement(x, y, w, {
-        label: t("templateEditor.table"),
-        columnIndex: t("templateEditor.columnIndex"),
-        columnDescription: t("templateEditor.columnDescription"),
-        columnAmount: t("templateEditor.columnAmount"),
-      }) as TemplateElement<keyof TPayload & string>
-    );
-  }, [addElement, getInsertionPos, size.width, t]);
+  const addActions = useTemplateEditorAddActions<TPayload>({
+    elementsRef,
+    setSelectedIds,
+    commitUpdate,
+    size,
+    onElementAdded,
+    t,
+  });
 
   return useMemo(
     () => ({
@@ -463,26 +254,11 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       deleteSelected,
       nudgeSelected,
       resizeSelected,
-      bringToFront,
-      sendToBack,
-      bringSelectedToFront,
-      sendSelectedToBack,
-      moveForward,
-      moveBackward,
       duplicateElement,
       duplicateSelected,
-      alignSelected,
-      distributeSelected,
-      centerSelected,
-      snapSelected,
-      equalizeSelectedDimensions,
-      addStaticText,
-      addHeading,
-      addDivider,
-      addField,
-      addQrCode,
-      addLogo,
-      addTable,
+      ...layerActions,
+      ...alignActions,
+      ...addActions,
     }),
     [
       selectElement,
@@ -493,26 +269,11 @@ export function useTemplateEditorElementActions<TPayload = Record<string, unknow
       deleteSelected,
       nudgeSelected,
       resizeSelected,
-      bringToFront,
-      sendToBack,
-      bringSelectedToFront,
-      sendSelectedToBack,
-      moveForward,
-      moveBackward,
       duplicateElement,
       duplicateSelected,
-      alignSelected,
-      distributeSelected,
-      centerSelected,
-      snapSelected,
-      equalizeSelectedDimensions,
-      addStaticText,
-      addHeading,
-      addDivider,
-      addField,
-      addQrCode,
-      addLogo,
-      addTable,
+      layerActions,
+      alignActions,
+      addActions,
     ]
   );
 }

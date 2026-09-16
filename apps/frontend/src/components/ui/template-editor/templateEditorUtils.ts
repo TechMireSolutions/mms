@@ -3,7 +3,6 @@
  * @description Coordinate snapping, unique ID generation, and multi-element alignment utilities.
  */
 
-import type { DocumentTemplate } from "@mms/shared";
 
 /**
  * Canvas chrome colours, defined once.
@@ -261,166 +260,13 @@ export function interpolateTemplateTokens(
   });
 }
 
-export interface SmartGuideLine {
-  orientation: "horizontal" | "vertical";
-  position: number;
-}
+export {
+  computeSmartGuides,
+  type SmartGuideLine,
+  type SnapResult,
+} from "./templateSmartGuides";
 
-export interface SnapResult {
-  x: number;
-  y: number;
-  guides: SmartGuideLine[];
-}
-
-export function computeSmartGuides(
-  activeBox: BoundingBox,
-  otherBoxes: BoundingBox[],
-  pageWidth: number,
-  pageHeight: number,
-  threshold = 5
-): SnapResult {
-  let snappedX = activeBox.x;
-  let snappedY = activeBox.y;
-  const guides: SmartGuideLine[] = [];
-
-  const activeCenterX = activeBox.x + activeBox.w / 2;
-  const activeRight = activeBox.x + activeBox.w;
-
-  const activeCenterY = activeBox.y + activeBox.h / 2;
-  const activeBottom = activeBox.y + activeBox.h;
-
-  const xTargets = [
-    { pos: 0, guide: 0 },
-    { pos: pageWidth / 2, guide: pageWidth / 2 },
-    { pos: pageWidth, guide: pageWidth },
-  ];
-  for (const b of otherBoxes) {
-    xTargets.push({ pos: b.x, guide: b.x });
-    xTargets.push({ pos: b.x + b.w / 2, guide: b.x + b.w / 2 });
-    xTargets.push({ pos: b.x + b.w, guide: b.x + b.w });
-  }
-
-  let minDeltaX = threshold + 1;
-  let chosenXGuide: number | null = null;
-  let chosenSnappedX = snappedX;
-
-  for (const t of xTargets) {
-    const dLeft = Math.abs(activeBox.x - t.pos);
-    if (dLeft < minDeltaX) {
-      minDeltaX = dLeft;
-      chosenSnappedX = t.pos;
-      chosenXGuide = t.guide;
-    }
-    const dRight = Math.abs(activeRight - t.pos);
-    if (dRight < minDeltaX) {
-      minDeltaX = dRight;
-      chosenSnappedX = t.pos - activeBox.w;
-      chosenXGuide = t.guide;
-    }
-    const dCenter = Math.abs(activeCenterX - t.pos);
-    if (dCenter < minDeltaX) {
-      minDeltaX = dCenter;
-      chosenSnappedX = t.pos - activeBox.w / 2;
-      chosenXGuide = t.guide;
-    }
-  }
-
-  if (minDeltaX <= threshold && chosenXGuide !== null) {
-    snappedX = snap(chosenSnappedX);
-    guides.push({ orientation: "vertical", position: chosenXGuide });
-  }
-
-  const yTargets = [
-    { pos: 0, guide: 0 },
-    { pos: pageHeight / 2, guide: pageHeight / 2 },
-    { pos: pageHeight, guide: pageHeight },
-  ];
-  for (const b of otherBoxes) {
-    yTargets.push({ pos: b.y, guide: b.y });
-    yTargets.push({ pos: b.y + b.h / 2, guide: b.y + b.h / 2 });
-    yTargets.push({ pos: b.y + b.h, guide: b.y + b.h });
-  }
-
-  let minDeltaY = threshold + 1;
-  let chosenYGuide: number | null = null;
-  let chosenSnappedY = snappedY;
-
-  for (const t of yTargets) {
-    const dTop = Math.abs(activeBox.y - t.pos);
-    if (dTop < minDeltaY) {
-      minDeltaY = dTop;
-      chosenSnappedY = t.pos;
-      chosenYGuide = t.guide;
-    }
-    const dBottom = Math.abs(activeBottom - t.pos);
-    if (dBottom < minDeltaY) {
-      minDeltaY = dBottom;
-      chosenSnappedY = t.pos - activeBox.h;
-      chosenYGuide = t.guide;
-    }
-    const dCenter = Math.abs(activeCenterY - t.pos);
-    if (dCenter < minDeltaY) {
-      minDeltaY = dCenter;
-      chosenSnappedY = t.pos - activeBox.h / 2;
-      chosenYGuide = t.guide;
-    }
-  }
-
-  if (minDeltaY <= threshold && chosenYGuide !== null) {
-    snappedY = snap(chosenSnappedY);
-    guides.push({ orientation: "horizontal", position: chosenYGuide });
-  }
-
-  return { x: snappedX, y: snappedY, guides };
-}
-
-export function downloadTemplateJson<TPayload = Record<string, unknown>>(
-  template: DocumentTemplate<TPayload>,
-  documentType?: string
-): void {
-  const blob = new Blob([JSON.stringify(template, null, 2)], { type: "application/json" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  const prefix = documentType ? `${documentType.toLowerCase()}-template` : "document-template";
-  a.download = `${prefix}-${template.pageSize.toLowerCase()}.json`;
-  if (typeof Node !== "undefined" && a instanceof Node && typeof document !== "undefined" && document.body) {
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-  } else {
-    a.click();
-  }
-  // Delay revocation to prevent downloads from aborting in Safari/Firefox/Chrome
-  setTimeout(() => URL.revokeObjectURL(url), 1000);
-}
-
-export function readTemplateJsonFile<TPayload = Record<string, unknown>>(
-  file: File,
-  onSuccess: (parsed: DocumentTemplate<TPayload>) => void,
-  onError?: (err: unknown) => void
-): void {
-  if (file.size > 5 * 1024 * 1024) {
-    onError?.(new Error("File exceeds maximum allowed size of 5MB"));
-    return;
-  }
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    try {
-      const text = e.target?.result as string;
-      const parsed = JSON.parse(text) as DocumentTemplate<TPayload>;
-      if (parsed && typeof parsed.pageSize === "string" && Array.isArray(parsed.elements)) {
-        onSuccess(parsed);
-      } else {
-        onError?.(new Error("Invalid template structure: missing pageSize or elements array"));
-      }
-    } catch (err) {
-      onError?.(err);
-    }
-  };
-  reader.onerror = (e) => {
-    onError?.(e);
-  };
-  reader.readAsText(file);
-}
-
+export {
+  downloadTemplateJson,
+  readTemplateJsonFile,
+} from "./templateJsonIo";

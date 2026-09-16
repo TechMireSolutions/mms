@@ -3,29 +3,26 @@
  * @description Inspector sidebar panel displayed when multiple template canvas elements are selected.
  */
 
-import React, { useId, useState } from "react";
+import React, { useState } from "react";
 import {
-  AlignCenterHorizontal,
   AlignHorizontalDistributeCenter,
   AlignVerticalDistributeCenter,
   ArrowDownToLine,
-  ArrowLeftToLine,
-  ArrowRightToLine,
   ArrowUpToLine,
   Copy,
   Layers,
   Move,
-  Palette,
   Trash2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import type { ElementStyle, TemplateElement } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { StyleInput } from "./TemplateEditorStyleControls";
 import { normalizeHexColor, type AlignmentType } from "./templateEditorUtils";
 import { TemplateEditorSection } from "./TemplateEditorSection";
 import { TemplateEditorAlignmentGrid } from "./TemplateEditorAlignmentGrid";
 import { TemplateEditorTypographySection } from "./TemplateEditorTypographySection";
+import { TemplateEditorMultiSelectCenterSnap } from "./TemplateEditorMultiSelectCenterSnap";
+import { TemplateEditorMultiSelectAppearance } from "./TemplateEditorMultiSelectAppearance";
 
 export interface TemplateEditorMultiSelectPanelProps<TPayload = Record<string, unknown>> {
   selectedElements: TemplateElement<keyof TPayload & string>[];
@@ -71,9 +68,6 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
   const toggleSection = (section: keyof typeof openSections) =>
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
 
-  const bgColorId = useId();
-  const borderColorId = useId();
-
   const hasTextLike = selectedElements.some(
     (el) => el.type === "static" || el.type === "field"
   );
@@ -112,10 +106,10 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
         </div>
         {bounds && (
           <span
-            aria-label={`${bounds.w} by ${bounds.h} mm`}
+            aria-label={`${bounds.w} by ${bounds.h} px`}
             className="text-3xs font-mono text-muted-foreground bg-muted px-1.5 py-0.5 rounded shrink-0"
           >
-            {bounds.w} × {bounds.h} mm
+            {bounds.w} × {bounds.h} px
           </span>
         )}
       </div>
@@ -165,108 +159,13 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
         </TemplateEditorSection>
       )}
 
-      {(onCenterSelected || onSnapSelected) && (
-        <TemplateEditorSection
-          titleKey="templateEditor.centerOnPage"
-          icon={AlignCenterHorizontal}
-          isOpen={openSections.center}
-          onToggle={() => toggleSection("center")}
-          t={t}
-          panelClassName="space-y-2.5"
-        >
-          {onCenterSelected && (
-            <div role="group" aria-label={t("templateEditor.centerOnPage")} className="space-y-1.5">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => onCenterSelected("both")}
-                className="w-full min-h-11 text-xs rounded-lg border-border hover:bg-muted flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-                title={t("templateEditor.centerOnPage")}
-                aria-label={t("templateEditor.centerOnPage")}
-              >
-                <AlignCenterHorizontal className="w-4 h-4" aria-hidden="true" />
-                <span>{t("templateEditor.centerOnPage")}</span>
-              </Button>
-              <div className="grid grid-cols-2 gap-1.5">
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onCenterSelected("h")}
-                  className="min-h-11 text-xs rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-                  title={t("templateEditor.centerHorizontally")}
-                  aria-label={t("templateEditor.centerHorizontally")}
-                >
-                  <span className="truncate">{t("templateEditor.centerHorizontally")}</span>
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => onCenterSelected("v")}
-                  className="min-h-11 text-xs rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-                  title={t("templateEditor.centerVertically")}
-                  aria-label={t("templateEditor.centerVertically")}
-                >
-                  <span className="truncate">{t("templateEditor.centerVertically")}</span>
-                </Button>
-              </div>
-            </div>
-          )}
-
-          {onSnapSelected && (
-            <div className="pt-2 border-t border-border space-y-1.5">
-              <p className="text-xs font-bold uppercase text-muted-foreground tracking-widest m-0">
-                {t("templateEditor.snapToEdge")}
-              </p>
-              <div role="group" aria-label={t("templateEditor.snapToEdge")} className="grid grid-cols-4 gap-1">
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onSnapSelected("top")}
-                  className="min-h-11 w-full rounded-lg border-border hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-                  title={t("templateEditor.snapTop")}
-                  aria-label={t("templateEditor.snapTop")}
-                >
-                  <ArrowUpToLine className="w-4 h-4" aria-hidden="true" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onSnapSelected("bottom")}
-                  className="min-h-11 w-full rounded-lg border-border hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-                  title={t("templateEditor.snapBottom")}
-                  aria-label={t("templateEditor.snapBottom")}
-                >
-                  <ArrowDownToLine className="w-4 h-4" aria-hidden="true" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onSnapSelected("left")}
-                  className="min-h-11 w-full rounded-lg border-border hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-                  title={t("templateEditor.snapLeft")}
-                  aria-label={t("templateEditor.snapLeft")}
-                >
-                  <ArrowLeftToLine className="w-4 h-4" aria-hidden="true" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  onClick={() => onSnapSelected("right")}
-                  className="min-h-11 w-full rounded-lg border-border hover:bg-muted focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-                  title={t("templateEditor.snapRight")}
-                  aria-label={t("templateEditor.snapRight")}
-                >
-                  <ArrowRightToLine className="w-4 h-4" aria-hidden="true" />
-                </Button>
-              </div>
-            </div>
-          )}
-        </TemplateEditorSection>
-      )}
+      <TemplateEditorMultiSelectCenterSnap
+        isOpen={openSections.center}
+        onToggle={() => toggleSection("center")}
+        onCenterSelected={onCenterSelected}
+        onSnapSelected={onSnapSelected}
+        t={t}
+      />
 
       {onBringToFront && onSendToBack && (
         <TemplateEditorSection
@@ -317,85 +216,16 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
       )}
 
       {onPatchSelectedStyles && (
-        <TemplateEditorSection
-          titleKey="templateEditor.appearance"
-          icon={Palette}
+        <TemplateEditorMultiSelectAppearance
           isOpen={openSections.appearance}
           onToggle={() => toggleSection("appearance")}
+          initialBgColor={initialBgColor}
+          initialBorderColor={initialBorderColor}
+          initialBorderRadius={initialBorderRadius}
+          initialBorderWidth={initialBorderWidth}
+          onPatchSelectedStyles={onPatchSelectedStyles}
           t={t}
-          panelClassName="space-y-3"
-        >
-          <div className="grid grid-cols-2 gap-2">
-            <div className="flex flex-col gap-0.5">
-              <label htmlFor={bgColorId} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
-                {t("templateEditor.backgroundColor")}
-              </label>
-              <div className="flex items-center gap-1.5">
-                <input
-                  id={bgColorId}
-                  name={bgColorId}
-                  type="color"
-                  value={initialBgColor}
-                  onChange={(e) => onPatchSelectedStyles({ backgroundColor: e.target.value })}
-                  className="w-11 h-11 p-0.5 border border-border rounded-md bg-background cursor-pointer touch-manipulation min-h-11 min-w-11"
-                  title={t("templateEditor.backgroundColor")}
-                  aria-label={t("templateEditor.backgroundColor")}
-                />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => onPatchSelectedStyles({ backgroundColor: undefined })}
-                  className="min-h-11 text-3xs px-2 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-                  title={t("templateEditor.transparent")}
-                  aria-label={t("templateEditor.transparent")}
-                >
-                  {t("templateEditor.transparent")}
-                </Button>
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-0.5">
-              <label htmlFor={borderColorId} className="text-xs font-bold uppercase text-muted-foreground tracking-wide">
-                {t("templateEditor.borderColor")}
-              </label>
-              <input
-                id={borderColorId}
-                name={borderColorId}
-                type="color"
-                value={initialBorderColor}
-                onChange={(e) => onPatchSelectedStyles({ borderColor: e.target.value })}
-                className="w-full min-h-11 h-11 p-1 border border-border rounded-lg bg-background cursor-pointer"
-                title={t("templateEditor.borderColor")}
-                aria-label={t("templateEditor.borderColor")}
-              />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-2">
-            <StyleInput
-              label={t("templateEditor.borderWidth")}
-              type="number"
-              min={0}
-              max={12}
-              value={initialBorderWidth}
-              onChange={(val) => {
-                const num = Number(val);
-                if (!Number.isNaN(num)) onPatchSelectedStyles({ borderWidth: Math.max(0, Math.min(12, num)) });
-              }}
-            />
-            <StyleInput
-              label={t("templateEditor.borderRadius")}
-              type="number"
-              min={0}
-              max={32}
-              value={initialBorderRadius}
-              onChange={(val) => {
-                const num = Number(val);
-                if (!Number.isNaN(num)) onPatchSelectedStyles({ borderRadius: Math.max(0, Math.min(32, num)) });
-              }}
-            />
-          </div>
-        </TemplateEditorSection>
+        />
       )}
 
       <div role="group" aria-label={t("common.actions")} className="flex gap-2 pt-2 border-t border-border">

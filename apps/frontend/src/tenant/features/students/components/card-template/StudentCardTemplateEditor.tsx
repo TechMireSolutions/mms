@@ -197,6 +197,20 @@ export function StudentCardTemplateEditor({
     [fullTemplate, activeSide, t],
   );
 
+  const handleSideTemplateChange = useCallback(
+    (currentSideTmpl: StudentCardTemplate) => {
+      setFullTemplate((prev) => ({
+        ...prev,
+        pageSize: currentSideTmpl.pageSize,
+        orientation: currentSideTmpl.orientation,
+        ...(activeSide === "front"
+          ? { elements: currentSideTmpl.elements }
+          : { backElements: currentSideTmpl.elements }),
+      }));
+    },
+    [activeSide],
+  );
+
   const sideSwitcher = (
     <div className="flex items-center gap-1 p-1 bg-muted/80 rounded-lg border border-border/80 shadow-2xs">
       <button
@@ -250,6 +264,7 @@ export function StudentCardTemplateEditor({
           documentType="student-card"
           sampleData={sampleData}
           fullscreen={fullscreen}
+          onChange={handleSideTemplateChange}
           onSave={handleSave}
           onClose={onClose}
         />

@@ -18,6 +18,7 @@ import { TemplateEditorTableSection } from './TemplateEditorTableSection';
 import { TemplateEditorLayerList } from './TemplateEditorLayerList';
 import { TemplateEditorElementIdentitySection } from './TemplateEditorElementIdentitySection';
 import { TemplateEditorSection } from './TemplateEditorSection';
+import { TemplateEditorPropertiesEmptyState } from './TemplateEditorPropertiesEmptyState';
 
 export interface TemplateEditorPropertiesPanelProps<TPayload = Record<string, unknown>> {
   selectedElement: TemplateElement<keyof TPayload & string> | undefined;
@@ -122,37 +123,11 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
 
   if (!selectedElement) {
     return (
-      <aside
-        aria-label={t('templateEditor.properties')}
-        className="max-h-64 w-full shrink-0 space-y-4 overflow-y-auto border-t border-border bg-card p-3 lg:max-h-none lg:w-60 lg:border-t-0 lg:border-s select-none print:hidden"
-      >
-        <div className="flex flex-col items-center justify-center p-2 text-center">
-          <div className="w-12 h-12 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-3 text-primary shadow-xs">
-            <Layers className="w-6 h-6" aria-hidden="true" />
-          </div>
-          <p className="text-xs font-semibold text-foreground m-0">{t('templateEditor.emptyHint')}</p>
-          <p className="text-3xs text-muted-foreground mt-1.5 max-w-[190px] leading-relaxed m-0">
-            {t('templateEditor.emptyHintDetail')}
-          </p>
-        </div>
-
-        {/*
-         * With nothing selected the layer list is the primary way to pick an element:
-         * presets place 1–2px dividers and heavily overlapped elements on the page,
-         * which are all but unhittable with a pointer.
-         */}
-        <section className="space-y-2 pt-2 border-t border-border">
-          <h3 className="m-0 text-xs font-bold uppercase text-muted-foreground tracking-widest">
-            {t('templateEditor.layerList')}
-          </h3>
-          <TemplateEditorLayerList
-            elements={elements}
-            selectedIds={[]}
-            onSelectElement={onSelectElement || (() => {})}
-            t={t}
-          />
-        </section>
-      </aside>
+      <TemplateEditorPropertiesEmptyState
+        elements={elements}
+        onSelectElement={onSelectElement}
+        t={t}
+      />
     );
   }
 

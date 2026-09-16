@@ -28,6 +28,7 @@ export interface UseTemplateMarqueeOptions {
 
 export interface UseTemplateMarqueeReturn {
   marquee: MarqueeBox | null;
+  onPointerDownBackground: (event: React.PointerEvent) => void;
   onMouseDownBackground: (event: React.MouseEvent) => void;
 }
 
@@ -36,7 +37,7 @@ const MARQUEE_THRESHOLD_PX = 4;
 
 /**
  * Extracted from the canvas component: the marquee is a self-contained pointer
- * interaction (start on background, track on window, commit on mouse up) and had grown
+ * interaction (start on background, track on window, commit on pointer up) and had grown
  * the canvas file past the repository's 300-line ceiling on its own.
  */
 export function useTemplateMarquee({
@@ -58,7 +59,7 @@ export function useTemplateMarquee({
     marqueeRef.current = marquee;
   }, [marquee]);
 
-  const onMouseDownBackground = (event: React.MouseEvent) => {
+  const onPointerDownBackground = (event: React.PointerEvent) => {
     if (event.button !== 0 || isPreviewMode || isSpacePressed) return;
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -69,7 +70,7 @@ export function useTemplateMarquee({
     setMarquee({ startX, startY, currentX: startX, currentY: startY });
   };
 
-  const handleMarqueeMove = useEffectEvent((event: MouseEvent) => {
+  const handleMarqueeMove = useEffectEvent((event: PointerEvent) => {
     const current = marqueeRef.current;
     if (!current || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -108,14 +109,20 @@ export function useTemplateMarquee({
 
   React.useEffect(() => {
     if (!marquee) return;
-    window.addEventListener("mousemove", handleMarqueeMove, { passive: true });
-    window.addEventListener("mouseup", handleMarqueeUp);
+    window.addEventListener("pointermove", handleMarqueeMove, { passive: true });
+    window.addEventListener("pointerup", handleMarqueeUp);
+    window.addEventListener("pointercancel", handleMarqueeUp);
     return () => {
-      window.removeEventListener("mousemove", handleMarqueeMove);
-      window.removeEventListener("mouseup", handleMarqueeUp);
+      window.removeEventListener("pointermove", handleMarqueeMove);
+      window.removeEventListener("pointerup", handleMarqueeUp);
+      window.removeEventListener("pointercancel", handleMarqueeUp);
     };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [marquee != null]);
 
-  return { marquee, onMouseDownBackground };
+  return {
+    marquee,
+    onPointerDownBackground,
+    onMouseDownBackground: onPointerDownBackground as unknown as (event: React.MouseEvent) => void,
+  };
 }

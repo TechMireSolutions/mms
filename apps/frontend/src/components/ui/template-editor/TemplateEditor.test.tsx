@@ -104,6 +104,38 @@ describe("TemplateEditor Component", () => {
     expect(html).toContain("templateEditor.undo");
   });
 
+  it("invokes onChange and onDirtyChange callbacks with template state", async () => {
+    const onChange = vi.fn();
+    const onDirtyChange = vi.fn();
+
+    const container = document.createElement("div");
+    document.body.appendChild(container);
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <TemplateEditor
+          template={sampleTemplate}
+          onChange={onChange}
+          onDirtyChange={onDirtyChange}
+          onClose={vi.fn()}
+        />
+      );
+    });
+
+    expect(onChange).toHaveBeenCalledWith(
+      expect.objectContaining({
+        pageSize: "A5",
+        elements: expect.any(Array),
+      })
+    );
+    expect(onDirtyChange).toHaveBeenCalledWith(false);
+
+    await act(async () => {
+      root.unmount();
+    });
+    container.remove();
+  });
+
   it("renders enhanced primitives including heading, logo, and table in element palette", () => {
     const html = renderToStaticMarkup(
       <TemplateEditor
@@ -611,8 +643,8 @@ describe("TemplateEditorPropertiesPanel Component", () => {
       />
     );
 
-    // Bounding box from (10,10) to (140, 90) => 130 × 80 mm
-    expect(html).toContain("130 × 80 mm");
+    // Bounding box from (10,10) to (140, 90) => 130 × 80 px
+    expect(html).toContain("130 × 80 px");
     expect(html).toContain("templateEditor.borderColor");
     expect(html).toContain("templateEditor.borderWidth");
     expect(html).toContain('aria-label="templateEditor.snapTop"');

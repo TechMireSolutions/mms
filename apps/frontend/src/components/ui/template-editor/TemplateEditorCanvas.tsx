@@ -4,7 +4,6 @@
  */
 
 import React from "react";
-import { LayoutTemplate } from "lucide-react";
 import {
   type DocumentTemplate,
   type PageSizeInfo,
@@ -13,6 +12,8 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { CANVAS_ACCENT, type SmartGuideLine } from "./templateEditorUtils";
 import { useTemplateMarquee } from "./useTemplateMarquee";
 import { TemplateElementRenderer } from "./TemplateElementRenderer";
+import { TemplateEditorCanvasEmptyState } from "./TemplateEditorCanvasEmptyState";
+import { TemplateEditorCanvasGuides } from "./TemplateEditorCanvasGuides";
 import { TEMPLATE_PAGE_WRAPPER_ATTR } from "./useTemplateEditorZoom";
 import type { ResizeHandle } from "./useTemplateEditorInteractions";
 
@@ -82,7 +83,7 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
    */
   const focusTargetId = selectedId ?? template.elements[0]?.id ?? null;
 
-  const { marquee, onMouseDownBackground } = useTemplateMarquee({
+  const { marquee, onPointerDownBackground } = useTemplateMarquee({
     canvasRef,
     canvasScale,
     size,
@@ -171,7 +172,7 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
         <div
           ref={canvasRef}
           dir="ltr"
-          onMouseDown={onMouseDownBackground}
+          onPointerDown={onPointerDownBackground}
           style={{
             width: size.width,
             height: size.height,
@@ -200,53 +201,10 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
             </div>
           )}
 
-          {!isPreviewMode && activeGuides.map((guide) => (
-            <div
-              key={`guide-${guide.orientation}-${guide.position}`}
-              aria-hidden="true"
-              className="print:hidden"
-              style={
-                guide.orientation === "vertical"
-                  ? {
-                      position: "absolute",
-                      left: guide.position,
-                      top: 0,
-                      bottom: 0,
-                      width: 1,
-                      borderLeft: `1px dashed ${CANVAS_ACCENT.selection}`,
-                      pointerEvents: "none",
-                      zIndex: 25,
-                    }
-                  : {
-                      position: "absolute",
-                      top: guide.position,
-                      left: 0,
-                      right: 0,
-                      height: 1,
-                      borderTop: `1px dashed ${CANVAS_ACCENT.selection}`,
-                      pointerEvents: "none",
-                      zIndex: 25,
-                    }
-              }
-            />
-          ))}
+          {!isPreviewMode && <TemplateEditorCanvasGuides activeGuides={activeGuides} />}
 
           {template.elements.length === 0 && (
-            <div aria-hidden="true" className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none select-none print:hidden">
-              <div className="flex flex-col items-center gap-3 opacity-40">
-                <div className="w-14 h-14 rounded-2xl border-2 border-dashed border-muted-foreground/40 flex items-center justify-center">
-                  <LayoutTemplate className="w-7 h-7 text-muted-foreground/60" />
-                </div>
-                <div className="text-center" dir="auto">
-                  <p className="text-xs font-semibold text-muted-foreground m-0">
-                    {t(isPreviewMode ? "templateEditor.emptyPreviewHint" : "templateEditor.emptyCanvasHint")}
-                  </p>
-                  {!isPreviewMode && (
-                    <p className="text-2xs text-muted-foreground/80 mt-0.5 m-0">{t("templateEditor.emptyCanvasHintDetail")}</p>
-                  )}
-                </div>
-              </div>
-            </div>
+            <TemplateEditorCanvasEmptyState isPreviewMode={isPreviewMode} t={t} />
           )}
 
           {template.elements.map((el) => (

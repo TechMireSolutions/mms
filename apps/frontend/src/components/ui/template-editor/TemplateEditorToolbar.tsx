@@ -1,29 +1,16 @@
-import React from "react";
-import {
-  Eye,
-  EyeOff,
-  Maximize2,
-  Minimize2,
-  Pencil,
-  Redo2,
-  RotateCcw,
-  Save,
-  CheckCheck,
-  Undo2,
-  LayoutTemplate,
-  Loader2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { FormSelect } from "@/components/ui/FormSelect";
+import { TemplateEditorViewControls } from "./TemplateEditorViewControls";
 import type {
   DocumentTemplate,
   DocumentTemplatePreset,
   TemplateOrientation,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { TemplateEditorHistoryControls } from "./TemplateEditorHistoryControls";
 import { TemplateEditorPageControls } from "./TemplateEditorPageControls";
 import { TemplateEditorZoomControls } from "./TemplateEditorZoomControls";
 import { TemplateEditorExportActions } from "./TemplateEditorExportActions";
+import { TemplateEditorPresetsControl } from "./TemplateEditorPresetsControl";
+import { TemplateEditorHeaderActions } from "./TemplateEditorHeaderActions";
 
 export interface TemplateEditorToolbarProps<TPayload = Record<string, unknown>> {
   title?: string;
@@ -156,36 +143,14 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       <Divider />
 
       {/* Group 2: Undo / Redo */}
-      <div
-        role="group"
-        aria-label={t("templateEditor.history")}
-        className="flex items-center gap-0.5 shrink-0"
-      >
-        <Button
-          type="button"
-          onClick={onUndo}
-          disabled={!historyLength || saving}
-          title={t("templateEditor.undo")}
-          aria-label={t("templateEditor.undo")}
-          variant="ghost"
-          size="icon"
-          className={`${TOOLBAR_ICON_BUTTON} hover:bg-muted disabled:opacity-30`}
-        >
-          <Undo2 className="w-4 h-4" aria-hidden="true" />
-        </Button>
-        <Button
-          type="button"
-          onClick={onRedo}
-          disabled={!futureLength || saving}
-          title={t("templateEditor.redo")}
-          aria-label={t("templateEditor.redo")}
-          variant="ghost"
-          size="icon"
-          className={`${TOOLBAR_ICON_BUTTON} hover:bg-muted disabled:opacity-30`}
-        >
-          <Redo2 className="w-4 h-4" aria-hidden="true" />
-        </Button>
-      </div>
+      <TemplateEditorHistoryControls
+        onUndo={onUndo}
+        onRedo={onRedo}
+        historyLength={historyLength}
+        futureLength={futureLength}
+        saving={saving}
+        t={t}
+      />
 
       <Divider />
 
@@ -203,59 +168,14 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       <Divider />
 
       {/* Group 4: Guides + Preview toggle */}
-      <div
-        role="group"
-        aria-label={t("templateEditor.viewOptions")}
-        className="flex items-center gap-0.5 shrink-0"
-      >
-        <Button
-          type="button"
-          onClick={onToggleGuides}
-          aria-pressed={showGuides}
-          aria-label={t("templateEditor.toggleGuides")}
-          title={t("templateEditor.toggleGuides")}
-          variant="ghost"
-          size="icon"
-          className={`${TOOLBAR_ICON_BUTTON} ${
-            showGuides
-              ? "bg-primary/10 text-primary hover:bg-primary/20"
-              : "text-muted-foreground hover:bg-muted hover:text-foreground"
-          }`}
-        >
-          {showGuides ? (
-            <Eye className="w-4 h-4" aria-hidden="true" />
-          ) : (
-            <EyeOff className="w-4 h-4" aria-hidden="true" />
-          )}
-        </Button>
-
-        {onTogglePreview && (
-          <Button
-            type="button"
-            onClick={onTogglePreview}
-            aria-pressed={isPreviewMode}
-            aria-label={
-              isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")
-            }
-            title={
-              isPreviewMode ? t("templateEditor.switchToEdit") : t("templateEditor.switchToPreview")
-            }
-            variant="ghost"
-            size="icon"
-            className={`${TOOLBAR_ICON_BUTTON} ${
-              isPreviewMode
-                ? "bg-primary/10 text-primary hover:bg-primary/20"
-                : "text-muted-foreground hover:bg-muted hover:text-foreground"
-            }`}
-          >
-            {isPreviewMode ? (
-              <Pencil className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <Eye className="w-4 h-4" aria-hidden="true" />
-            )}
-          </Button>
-        )}
-      </div>
+      <TemplateEditorViewControls
+        showGuides={showGuides}
+        isPreviewMode={isPreviewMode}
+        onToggleGuides={onToggleGuides}
+        onTogglePreview={onTogglePreview}
+        iconButtonClassName={TOOLBAR_ICON_BUTTON}
+        t={t}
+      />
 
       {/* Group 5: Zoom controls */}
       {onZoomIn && onZoomOut && (
@@ -274,32 +194,18 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
         </>
       )}
 
-      {/* Group 6: Presets — value reflects the active preset so the user knows what's loaded */}
+      {/* Group 6: Presets */}
       {presets.length > 0 && (
         <>
           <Divider />
-          <div className="flex items-center gap-1 shrink-0">
-            <LayoutTemplate className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden="true" />
-            <FormSelect
-              aria-label={t("templateEditor.presets")}
-              value={activePresetKey ?? ""}
-              disabled={saving}
-              onChange={(val) => {
-                if (!val) return;
-                if (isDirty && !window.confirm(t("templateEditor.discardUnsavedPrompt"))) {
-                  return;
-                }
-                onApplyPreset(val);
-              }}
-              options={[
-                { value: "", label: t("templateEditor.presets") },
-                ...presets.map((p) => ({ value: p.key, label: p.label })),
-              ]}
-              className={`h-11 text-xs py-0 min-w-[130px] ${
-                activePresetKey ? "border-primary/50 text-primary" : ""
-              }`}
-            />
-          </div>
+          <TemplateEditorPresetsControl
+            presets={presets}
+            activePresetKey={activePresetKey}
+            saving={saving}
+            isDirty={isDirty}
+            onApplyPreset={onApplyPreset}
+            t={t}
+          />
         </>
       )}
 
@@ -318,89 +224,17 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
       </div>
       </div>{/* end scrollable region */}
 
-      {/* Group 8: Right actions — always visible, outside the scroll + fade region */}
-      <div
-        role="group"
-        aria-label={t("templateEditor.documentActions")}
-        className="flex items-center gap-1.5 shrink-0 px-3 py-1.5 border-s border-border/50 bg-card/95 backdrop-blur-sm"
-      >
-        <Button
-          type="button"
-          onClick={onResetDefault}
-          disabled={saving}
-          variant="ghost"
-          size="icon"
-          className={`${TOOLBAR_ICON_BUTTON} text-muted-foreground hover:text-foreground hover:bg-muted`}
-          title={t("templateEditor.resetDefault")}
-          aria-label={t("templateEditor.resetDefault")}
-        >
-          <RotateCcw className="w-4 h-4" aria-hidden="true" />
-        </Button>
-
-        {onToggleFullscreen && (
-          <Button
-            type="button"
-            onClick={onToggleFullscreen}
-            aria-pressed={fullscreen}
-            variant="ghost"
-            size="icon"
-            className={`${TOOLBAR_ICON_BUTTON} text-muted-foreground hover:text-foreground hover:bg-muted`}
-            title={t("templateEditor.toggleFullscreen")}
-            aria-label={t("templateEditor.toggleFullscreen")}
-          >
-            {fullscreen ? (
-              <Minimize2 className="w-4 h-4" aria-hidden="true" />
-            ) : (
-              <Maximize2 className="w-4 h-4" aria-hidden="true" />
-            )}
-          </Button>
-        )}
-
-        <Divider />
-
-        {/* Save button — animated success state & loading spinner */}
-        <Button
-          type="button"
-          onClick={onSave}
-          disabled={saving}
-          aria-busy={saving}
-          aria-label={saving ? t("global.saving") : saved ? t("templateEditor.saved") : t("templateEditor.save")}
-          className={`min-h-11 h-11 px-3.5 text-xs font-semibold rounded-lg transition-all duration-300 shadow-none flex items-center gap-1.5 ${
-            saved
-              ? "bg-success hover:bg-success text-success-foreground"
-              : "bg-primary text-primary-foreground hover:bg-primary/90"
-          }`}
-        >
-          {saving ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" />
-              <span>{t("global.saving")}</span>
-            </>
-          ) : saved ? (
-            <>
-              <CheckCheck className="w-4 h-4" aria-hidden="true" />
-              <span>{t("templateEditor.saved")}</span>
-            </>
-          ) : (
-            <>
-              <Save className="w-4 h-4" aria-hidden="true" />
-              <span>{t("templateEditor.save")}</span>
-            </>
-          )}
-        </Button>
-
-        <Button
-          type="button"
-          onClick={onClose}
-          disabled={saving}
-          variant="outline"
-          title={t("templateEditor.close")}
-          aria-label={t("templateEditor.close")}
-          className="min-h-11 h-11 px-3 text-xs font-medium rounded-lg border-border hover:bg-muted transition-all shadow-none"
-        >
-          {t("templateEditor.close")}
-        </Button>
-      </div>
+      {/* Group 8: Right actions */}
+      <TemplateEditorHeaderActions
+        onResetDefault={onResetDefault}
+        onToggleFullscreen={onToggleFullscreen}
+        fullscreen={fullscreen}
+        onSave={onSave}
+        onClose={onClose}
+        saved={saved}
+        saving={saving}
+        t={t}
+      />
     </header>
   );
 }
