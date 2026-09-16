@@ -46,15 +46,34 @@ export function StepReview({
   const debitAccount = accounts.find((account) => account.id === form.debitAcc);
   const creditAccount = accounts.find((account) => account.id === form.creditAcc);
 
+  const formatAccountName = (account?: Account) => {
+    if (!account) return "—";
+    return account.code ? `${account.code} — ${account.name}` : account.name;
+  };
+
+  const accountRows: ReviewRow[] =
+    type.groupKey === "accounting.journal.dashboard.group.moneyIn"
+      ? [
+          { label: t("accounting.journal.dashboard.wizard.receivedIntoLabel"), value: formatAccountName(debitAccount) },
+          { label: t("accounting.journal.dashboard.wizard.incomeCategory"), value: formatAccountName(creditAccount) },
+        ]
+      : type.groupKey === "accounting.journal.dashboard.group.transfers"
+        ? [
+            {
+              label: t("accounting.journal.dashboard.wizard.transferLabel"),
+              value: `${formatAccountName(creditAccount)} → ${formatAccountName(debitAccount)}`,
+            },
+          ]
+        : [
+            { label: t("accounting.journal.dashboard.wizard.paidFromLabel"), value: formatAccountName(creditAccount) },
+            { label: t("accounting.journal.dashboard.wizard.expenseCategory"), value: formatAccountName(debitAccount) },
+          ];
+
   const rows = [
     { label: t("accounting.journal.dashboard.wizard.transactionType"), value: t(type.labelKey) },
     { label: t("accounting.columns.journal.date"), value: form.date },
     { label: t("accounting.journal.dashboard.wizard.amountLabel"), value: amountLabel },
-    type.groupKey === "accounting.journal.dashboard.group.moneyIn"
-      ? { label: t("accounting.journal.dashboard.wizard.receivedIntoLabel"), value: debitAccount?.name || "—" }
-      : type.groupKey === "accounting.journal.dashboard.group.transfers"
-        ? { label: t("accounting.journal.dashboard.wizard.transferLabel"), value: `${creditAccount?.name || "—"} → ${debitAccount?.name || "—"}` }
-        : { label: t("accounting.journal.dashboard.wizard.paidFromLabel"), value: creditAccount?.name || "—" },
+    ...accountRows,
     { label: t("accounting.columns.journal.description"), value: form.description || "—" },
     form.ref ? { label: t("accounting.journal.dashboard.wizard.referenceLabel"), value: form.ref } : null,
   ].filter(isReviewRow);
@@ -102,7 +121,7 @@ export function StepReview({
             <div className="space-y-3 md:hidden">
               <article className="space-y-2 rounded-xl border border-border bg-info/10 p-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.account")}</p>
-                <p className="text-sm font-semibold text-foreground m-0">{debitAccount?.name || "—"}</p>
+                <p className="text-sm font-semibold text-foreground m-0">{formatAccountName(debitAccount)}</p>
                 <StatGrid>
                   <StatRow
                     label={t("accounting.columns.journal.debit")}
@@ -118,7 +137,7 @@ export function StepReview({
               </article>
               <article className="space-y-2 rounded-xl border border-border bg-success/10 p-3">
                 <p className="text-xs font-semibold text-muted-foreground uppercase m-0">{t("accounting.journal.detail.account")}</p>
-                <p className="text-sm font-semibold text-foreground m-0">{creditAccount?.name || "—"}</p>
+                <p className="text-sm font-semibold text-foreground m-0">{formatAccountName(creditAccount)}</p>
                 <StatGrid>
                   <StatRow
                     label={t("accounting.columns.journal.debit")}
@@ -141,12 +160,12 @@ export function StepReview({
                   <div className="px-3 py-2 font-bold text-muted-foreground uppercase text-end">{t("accounting.columns.journal.credit")}</div>
                 </div>
                 <div className="grid grid-cols-3 bg-info/5 border-b border-border">
-                  <div className="px-3 py-2 font-semibold text-foreground">{debitAccount?.name || "—"}</div>
+                  <div className="px-3 py-2 font-semibold text-foreground">{formatAccountName(debitAccount)}</div>
                   <div className="px-3 py-2 text-end font-mono text-info font-bold">{amountLabel}</div>
                   <div className="px-3 py-2 text-end text-muted-foreground">—</div>
                 </div>
                 <div className="grid grid-cols-3 bg-success/10">
-                  <div className="px-3 py-2 font-semibold text-foreground">{creditAccount?.name || "—"}</div>
+                  <div className="px-3 py-2 font-semibold text-foreground">{formatAccountName(creditAccount)}</div>
                   <div className="px-3 py-2 text-end text-muted-foreground">—</div>
                   <div className="px-3 py-2 text-end font-mono text-success font-bold">{amountLabel}</div>
                 </div>

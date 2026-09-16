@@ -106,7 +106,16 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     setForm({ ...form, lines });
   };
 
-  const addLine    = () => setForm({ ...form, lines: [...form.lines, EMPTY_LINE()] });
+  const addLine = () => {
+    const unbalance = Math.round((totalDebit - totalCredit) * 100) / 100;
+    const newLine = EMPTY_LINE();
+    if (unbalance > 0) {
+      newLine.credit = unbalance.toFixed(2);
+    } else if (unbalance < 0) {
+      newLine.debit = Math.abs(unbalance).toFixed(2);
+    }
+    setForm({ ...form, lines: [...form.lines, newLine] });
+  };
   const removeLine = (lineIndex: number) => { if (form.lines.length <= 2) return; setForm({ ...form, lines: form.lines.filter((_, currentIndex) => currentIndex !== lineIndex) }); };
 
   const toggleTag = (tag: string) => {

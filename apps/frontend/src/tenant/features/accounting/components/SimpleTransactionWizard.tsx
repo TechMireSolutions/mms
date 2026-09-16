@@ -7,6 +7,7 @@ import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { generateJERef, type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { isJournalEntryBalanced, journalEntryRecordSchema, todayISO, type AppTranslationKey } from "@mms/shared";
+import { notify } from "@/lib/notify";
 import { StepTransactionForm } from "./SimpleTransactionStepForm";
 import { StepReview } from "./SimpleTransactionStepReview";
 import { StepTypeSelection } from "./SimpleTransactionStepTypeSelection";
@@ -84,8 +85,8 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
 
   const handleSave = async (status: "draft" | "posted") => {
     const validation = validateWizardForm(form, accounts);
-    if (!validation.ok) { alert(t(validation.errorKey)); return; }
-    if (!selectedType) { alert(t("accounting.journal.dashboard.wizard.errorSource")); return; }
+    if (!validation.ok) { notify.error(t(validation.errorKey)); return; }
+    if (!selectedType) { notify.error(t("accounting.journal.dashboard.wizard.errorSource")); return; }
     const generatedReference = generateJERef(entries);
     const description = form.description.trim() || t(selectedType.labelKey);
     const candidate: JournalEntry = {
@@ -113,7 +114,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
      * function the server decides with.
      */
     const parsedEntry = journalEntryRecordSchema.safeParse(candidate);
-    if (!parsedEntry.success || !isJournalEntryBalanced(parsedEntry.data.lines)) { alert(t("common.formPleaseFixErrors")); return; }
+    if (!parsedEntry.success || !isJournalEntryBalanced(parsedEntry.data.lines)) { notify.error(t("common.formPleaseFixErrors")); return; }
     await onSave(parsedEntry.data);
   };
 

@@ -1,11 +1,17 @@
-import { createElement, type Dispatch, type SetStateAction } from "react";
+import { createElement, useState, type Dispatch, type SetStateAction } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account } from "@/lib/data/accountingData";
-import { getTransactionGroupColorClasses, wizardAccountOptions, type QuickActionType, type WizardFormState } from "./simpleTransactionWizardTypes";
+import {
+  getTransactionGroupColorClasses,
+  wizardAccountOptions,
+  wizardCategoryAccountOptions,
+  type QuickActionType,
+  type WizardFormState,
+} from "./simpleTransactionWizardTypes";
 import { parseMoneyInput } from "./simpleTransactionMoney";
 
 interface StepTransactionFormProps {
@@ -18,6 +24,7 @@ interface StepTransactionFormProps {
 
 export function StepTransactionForm({ type, form, setForm, accounts, currencySymbol }: StepTransactionFormProps) {
   const { t } = useTranslation();
+  const [amountTouched, setAmountTouched] = useState(false);
   const isMoneyIn = type.groupKey === "accounting.journal.dashboard.group.moneyIn";
   const isTransfer = type.groupKey === "accounting.journal.dashboard.group.transfers";
   /**
@@ -26,10 +33,13 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
    * with its own cash/bank accounts unable to record a simple transaction.
    */
   const accountOptions = wizardAccountOptions(accounts);
+  const revenueOptions = wizardCategoryAccountOptions(accounts, "Revenue");
+  const expenseOptions = wizardCategoryAccountOptions(accounts, "Expense");
   const selectAccountPlaceholder = t("accounting.journal.form.selectAccount");
   const amountIsEmpty = form.amount.trim() === "";
   const parsedAmount = parseMoneyInput(form.amount);
   const amountIsInvalid = !amountIsEmpty && (parsedAmount === null || parsedAmount <= 0);
+  const showAmountRequired = amountTouched && amountIsEmpty;
 
   return (
     <fieldset className="space-y-4 border-0 p-0 m-0">
@@ -66,27 +76,44 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
               inputMode="decimal"
               value={form.amount}
               placeholder="0.00"
-              onChange={(event) => setForm({ ...form, amount: event.target.value })}
+              onBlur={() => setAmountTouched(true)}
+              onChange={(event) => {
+                setAmountTouched(true);
+                setForm({ ...form, amount: event.target.value });
+              }}
               className="ps-8 text-lg font-bold"
-              aria-invalid={amountIsEmpty || amountIsInvalid}
+              aria-invalid={showAmountRequired || amountIsInvalid}
             />
           </div>
-          {amountIsEmpty && <p className="text-xs text-warning mt-1" role="alert">{t("accounting.journal.dashboard.wizard.errorAmount")}</p>}
+          {showAmountRequired && <p className="text-xs text-warning mt-1" role="alert">{t("accounting.journal.dashboard.wizard.errorAmount")}</p>}
           {amountIsInvalid && <p className="text-xs text-destructive mt-1" role="alert">{t("accounting.journal.dashboard.wizard.errorAmountInvalid")}</p>}
         </div>
 
         {isMoneyIn ? (
-          <div className="sm:col-span-2">
-            <label htmlFor="wizard-acc-in" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.receivedInto")}</label>
-            <FormSelect
-              id="wizard-acc-in"
-              name="debitAcc"
-              value={form.debitAcc}
-              onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
-              options={accountOptions}
-              placeholder={selectAccountPlaceholder}
-            />
-          </div>
+          <>
+            <div>
+              <label htmlFor="wizard-acc-in" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.receivedInto")}</label>
+              <FormSelect
+                id="wizard-acc-in"
+                name="debitAcc"
+                value={form.debitAcc}
+                onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
+                options={accountOptions}
+                placeholder={selectAccountPlaceholder}
+              />
+            </div>
+            <div>
+              <label htmlFor="wizard-acc-category-in" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.incomeCategory")}</label>
+              <FormSelect
+                id="wizard-acc-category-in"
+                name="creditAcc"
+                value={form.creditAcc}
+                onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
+                options={revenueOptions}
+                placeholder={selectAccountPlaceholder}
+              />
+            </div>
+          </>
         ) : isTransfer ? (
           <>
             <div>
@@ -113,17 +140,30 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
             </div>
           </>
         ) : (
-          <div className="sm:col-span-2">
-            <label htmlFor="wizard-acc-out" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.paidFrom")}</label>
-            <FormSelect
-              id="wizard-acc-out"
-              name="creditAcc"
-              value={form.creditAcc}
-              onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
-              options={accountOptions}
-              placeholder={selectAccountPlaceholder}
-            />
-          </div>
+          <>
+            <div>
+              <label htmlFor="wizard-acc-out" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.paidFrom")}</label>
+              <FormSelect
+                id="wizard-acc-out"
+                name="creditAcc"
+                value={form.creditAcc}
+                onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
+                options={accountOptions}
+                placeholder={selectAccountPlaceholder}
+              />
+            </div>
+            <div>
+              <label htmlFor="wizard-acc-category-out" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.expenseCategory")}</label>
+              <FormSelect
+                id="wizard-acc-category-out"
+                name="debitAcc"
+                value={form.debitAcc}
+                onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
+                options={expenseOptions}
+                placeholder={selectAccountPlaceholder}
+              />
+            </div>
+          </>
         )}
 
         <div className="sm:col-span-2">

@@ -129,25 +129,61 @@ function isUsableWizardAccount(account: Account): boolean {
   return account.isActive !== false && !account.deletedAt;
 }
 
+const NON_CASH_ASSET_RE = /receiv|prepaid|accumulated|contra|deposit|advance|equipment|building|furniture|vehicle|land/i;
+
+function isLiquidAsset(account: Account): boolean {
+  if (account.type !== "Asset") return false;
+  const subtype = account.subtype?.toLowerCase() || "";
+  if (subtype === "cash" || subtype === "bank") return true;
+  const haystack = `${account.name} ${subtype}`.toLowerCase();
+  if (NON_CASH_ASSET_RE.test(haystack)) return false;
+  return account.code.startsWith("10") || haystack.includes("cash") || haystack.includes("bank");
+}
+
 /**
  * The cash/bank accounts offered for the money legs of a simple transaction.
  *
  * Derived from the live chart instead of the seed ids ("a1000", "a1010",
  * "a1020") the form used to hardcode: accounts created in the UI get
  * `a${crypto.randomUUID()}` ids, so a workspace with its own cash/bank accounts
- * could not record a simple transaction at all. Asset accounts are preferred
- * (cash and bank live there); a chart with none falls back to every usable
- * account rather than showing an empty select.
+ * could not record a simple transaction at all. Liquid asset accounts (cash and
+ * bank) are preferred, carved out from fixed assets and receivables; a chart
+ * with none falls back to any asset, and then to every usable account rather
+ * than showing an empty select.
  */
 export function wizardCashAccounts(accounts: readonly Account[]): Account[] {
   const usableAccounts = accounts.filter(isUsableWizardAccount);
+  const liquidAssets = usableAccounts.filter(isLiquidAsset);
   const assetAccounts = usableAccounts.filter((account) => account.type === "Asset");
-  const candidateAccounts = assetAccounts.length > 0 ? assetAccounts : usableAccounts;
+  const candidateAccounts =
+    liquidAssets.length > 0 ? liquidAssets : assetAccounts.length > 0 ? assetAccounts : usableAccounts;
   return [...candidateAccounts].sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code));
 }
 
 export function wizardAccountOptions(accounts: readonly Account[]): WizardAccountOption[] {
-  return wizardCashAccounts(accounts).map((account) => ({ value: account.id, label: account.name }));
+  return wizardCashAccounts(accounts).map((account) => ({
+    value: account.id,
+    label: account.code ? `${account.code} — ${account.name}` : account.name,
+  }));
+}
+
+/**
+ * The category accounts (Revenue or Expense) offered for the counter-leg of a
+ * simple transaction.
+ */
+export function wizardCategoryAccountOptions(
+  accounts: readonly Account[],
+  categoryType: "Revenue" | "Expense",
+): WizardAccountOption[] {
+  const usableAccounts = accounts.filter(isUsableWizardAccount);
+  const targetAccounts = usableAccounts.filter((account) => account.type === categoryType);
+  const candidateAccounts = targetAccounts.length > 0 ? targetAccounts : usableAccounts;
+  return [...candidateAccounts]
+    .sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code))
+    .map((account) => ({
+      value: account.id,
+      label: account.code ? `${account.code} — ${account.name}` : account.name,
+    }));
 }
 
 function firstAccountIdOfType(

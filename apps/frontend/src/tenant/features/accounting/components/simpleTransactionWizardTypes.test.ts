@@ -6,6 +6,7 @@ import {
   resolveSimpleTransactionAccounts,
   validateWizardForm,
   wizardAccountOptions,
+  wizardCategoryAccountOptions,
   type WizardFormState,
 } from "./simpleTransactionWizardTypes";
 
@@ -165,13 +166,13 @@ describe("resolveSimpleTransactionAccounts", () => {
 });
 
 describe("wizardAccountOptions", () => {
-  it("derives options from the live chart, assets first", () => {
+  it("derives options from the live chart, assets first with code and name", () => {
     const options = wizardAccountOptions(generatedChart);
     expect(options.map((option) => option.value)).toEqual([
       "a1f2e3d4-0000-4000-8000-000000000001",
       "a1f2e3d4-0000-4000-8000-000000000002",
     ]);
-    expect(options.map((option) => option.label)).toEqual(["Main Cash Box", "Meezan Current"]);
+    expect(options.map((option) => option.label)).toEqual(["1000 — Main Cash Box", "1010 — Meezan Current"]);
   });
 
   it("skips archived accounts and falls back to every account when a chart has no assets", () => {
@@ -186,6 +187,20 @@ describe("wizardAccountOptions", () => {
     expect(wizardAccountOptions(noAssets).map((option) => option.value)).toEqual([
       "a1f2e3d4-0000-4000-8000-000000000003",
       "a1f2e3d4-0000-4000-8000-000000000004",
+    ]);
+  });
+});
+
+describe("wizardCategoryAccountOptions", () => {
+  it("filters accounts by category type", () => {
+    const revenueOptions = wizardCategoryAccountOptions(generatedChart, "Revenue");
+    expect(revenueOptions).toEqual([
+      { value: "a1f2e3d4-0000-4000-8000-000000000003", label: "4000 — Tuition Income" },
+    ]);
+
+    const expenseOptions = wizardCategoryAccountOptions(generatedChart, "Expense");
+    expect(expenseOptions).toEqual([
+      { value: "a1f2e3d4-0000-4000-8000-000000000004", label: "5000 — Wages" },
     ]);
   });
 });

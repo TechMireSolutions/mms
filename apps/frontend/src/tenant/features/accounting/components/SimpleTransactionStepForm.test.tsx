@@ -45,6 +45,7 @@ vi.mock("@/components/ui/FormSelect", () => ({
     onChange: (val: string) => void;
   }) => (
     <input
+      id={id}
       data-testid={id}
       value={value}
       onChange={(e) => onChange(e.target.value)}
@@ -59,6 +60,7 @@ const mockActionType = QUICK_ACTIONS[0]!.type;
 const mockAccounts: Account[] = [
   { id: "a1000", code: "1000", name: "Cash on Hand", type: "Asset", subtype: "Current Asset", description: "", isActive: true },
   { id: "a4000", code: "4000", name: "Fee Income", type: "Revenue", subtype: "Operating Revenue", description: "", isActive: true },
+  { id: "a5000", code: "5000", name: "Staff Salaries", type: "Expense", subtype: "Operating Expense", description: "", isActive: true },
 ];
 
 function setInputValue(input: HTMLInputElement, value: string) {
@@ -142,12 +144,75 @@ describe("StepTransactionForm", () => {
     });
 
     const amountInput = container.querySelector("#wizard-amount") as HTMLInputElement;
-    expect(container.textContent).toContain("accounting.journal.dashboard.wizard.errorAmount");
+    expect(container.textContent).not.toContain("accounting.journal.dashboard.wizard.errorAmount");
 
     await act(async () => {
       setInputValue(amountInput, "300.50");
     });
 
     expect(setForm).toHaveBeenCalled();
+
+    await act(async () => {
+      setInputValue(amountInput, "");
+    });
+
+    expect(container.textContent).toContain("accounting.journal.dashboard.wizard.errorAmount");
+  });
+
+  it("renders both receivedInto and incomeCategory selectors for moneyIn transactions", async () => {
+    const formState: WizardFormState = {
+      date: "2026-09-01",
+      amount: "100.00",
+      description: "Fee",
+      debitAcc: "a1000",
+      creditAcc: "a4000",
+      ref: "",
+      receipt: "",
+      fiscal_year: "2026",
+    };
+
+    await act(async () => {
+      root.render(
+        <StepTransactionForm
+          type={mockActionType}
+          form={formState}
+          setForm={vi.fn()}
+          accounts={mockAccounts}
+          currencySymbol="$"
+        />,
+      );
+    });
+
+    expect(container.querySelector("#wizard-acc-in")).not.toBeNull();
+    expect(container.querySelector("#wizard-acc-category-in")).not.toBeNull();
+  });
+
+  it("renders both paidFrom and expenseCategory selectors for moneyOut transactions", async () => {
+    const salaryActionType = QUICK_ACTIONS.find((action) => action.type.groupKey === "accounting.journal.dashboard.group.moneyOut")!.type;
+    const formState: WizardFormState = {
+      date: "2026-09-01",
+      amount: "500.00",
+      description: "Staff Salary",
+      debitAcc: "a5000",
+      creditAcc: "a1000",
+      ref: "",
+      receipt: "",
+      fiscal_year: "2026",
+    };
+
+    await act(async () => {
+      root.render(
+        <StepTransactionForm
+          type={salaryActionType}
+          form={formState}
+          setForm={vi.fn()}
+          accounts={mockAccounts}
+          currencySymbol="$"
+        />,
+      );
+    });
+
+    expect(container.querySelector("#wizard-acc-out")).not.toBeNull();
+    expect(container.querySelector("#wizard-acc-category-out")).not.toBeNull();
   });
 });

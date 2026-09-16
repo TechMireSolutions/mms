@@ -39,9 +39,16 @@ vi.mock("@/components/ui/FormModal", () => ({
   FormModal: ({ open, children }: any) => (open ? <div data-testid="wizard-modal">{children}</div> : null),
 }));
 
-/** happy-dom has no `alert`; the wizard uses it to surface validation errors. */
-const alertMock = vi.fn();
-vi.stubGlobal("alert", alertMock);
+import { notify } from "@/lib/notify";
+
+vi.mock("@/lib/notify", () => ({
+  notify: {
+    error: vi.fn(),
+    success: vi.fn(),
+    info: vi.fn(),
+    warning: vi.fn(),
+  },
+}));
 
 const group = (groupKey: string) => TRANSACTION_GROUPS.find((transactionGroup) => transactionGroup.groupKey === groupKey)!;
 const feeCollection = group("accounting.journal.dashboard.group.moneyIn").items.find((item) => item.id === "fee_collection")!;
@@ -85,7 +92,7 @@ describe("SimpleTransactionWizard", () => {
     root = createRoot(container);
     onSave = vi.fn();
     onClose = vi.fn();
-    alertMock.mockClear();
+    (notify.error as Mock).mockClear();
   });
 
   afterEach(async () => {
@@ -139,7 +146,7 @@ describe("SimpleTransactionWizard", () => {
     expect(posted.status).toBe("posted");
     // Nothing the shared contract would reject may reach the append-only ledger.
     expect(journalEntryRecordSchema.safeParse(posted).success).toBe(true);
-    expect(alertMock).not.toHaveBeenCalled();
+    expect(notify.error).not.toHaveBeenCalled();
   });
 
   it("blocked an unparseable amount instead of posting a truncated one", async () => {
@@ -197,7 +204,7 @@ describe("SimpleTransactionWizard", () => {
     });
 
     expect(onSave).not.toHaveBeenCalled();
-    expect(alertMock).toHaveBeenCalledWith("accounting.journal.dashboard.wizard.errorSameAccount");
+    expect(notify.error).toHaveBeenCalledWith("accounting.journal.dashboard.wizard.errorSameAccount");
   });
 
   it("posts an adjustment once a real counter-account is chosen", async () => {
@@ -215,7 +222,7 @@ describe("SimpleTransactionWizard", () => {
       findButton(container, "accounting.journal.dashboard.wizard.postTransaction").click();
     });
 
-    expect(alertMock).not.toHaveBeenCalled();
+    expect(notify.error).not.toHaveBeenCalled();
     expect(onSave).toHaveBeenCalledTimes(1);
     const posted = onSave.mock.calls[0]![0];
     expect(posted.lines.map((line) => [line.account_id, line.debit, line.credit])).toEqual([
