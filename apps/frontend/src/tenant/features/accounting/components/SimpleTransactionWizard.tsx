@@ -1,13 +1,13 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { FormModal } from "@/components/ui/FormModal";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { generateJERef, type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { isJournalEntryBalanced, journalEntryRecordSchema, todayISO, type AppTranslationKey } from "@mms/shared";
 import { notify } from "@/lib/notify";
+import { SimpleTransactionWizardFooter } from "./SimpleTransactionWizardFooter";
+import { SimpleTransactionWizardSteps } from "./SimpleTransactionWizardSteps";
 import { StepTransactionForm } from "./SimpleTransactionStepForm";
 import { StepReview } from "./SimpleTransactionStepReview";
 import { StepTypeSelection } from "./SimpleTransactionStepTypeSelection";
@@ -172,15 +172,6 @@ export function SimpleTransactionWizard({
     }
   };
 
-  const steps = useMemo(
-    () => [
-      { stepNumber: 1, label: t("accounting.journal.dashboard.wizard.stepSelect") },
-      { stepNumber: 2, label: t("accounting.journal.dashboard.wizard.stepDetails") },
-      { stepNumber: 3, label: t("accounting.journal.dashboard.wizard.stepReview") },
-    ],
-    [t],
-  );
-
   return (
     <FormModal
       open={open}
@@ -190,53 +181,7 @@ export function SimpleTransactionWizard({
       size="lg"
       panelClassName="max-h-modal-xl"
       hideFooter
-      headerExtra={
-        <nav aria-label={t("accounting.journal.dashboard.wizard.stepsAria")} className="flex items-center gap-2">
-          {steps.map((stepDefinition, index) => {
-            const isCompleted = step > stepDefinition.stepNumber;
-            const isCurrent = step === stepDefinition.stepNumber;
-            const circleClass = isCompleted
-              ? "bg-success text-white"
-              : isCurrent
-                ? "bg-primary text-primary-foreground"
-                : "bg-muted text-muted-foreground";
-
-            return (
-              <React.Fragment key={stepDefinition.stepNumber}>
-                <div className="flex items-center gap-1.5">
-                  {isCompleted ? (
-                    <button
-                      type="button"
-                      onClick={() => setStep(stepDefinition.stepNumber)}
-                      aria-label={`${stepDefinition.label} (${t("accounting.journal.dashboard.wizard.back")})`}
-                      className="flex min-h-11 min-w-11 items-center justify-center -m-2.5 p-2.5 rounded-full hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                    >
-                      <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all ${circleClass}`}>
-                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-                      </span>
-                    </button>
-                  ) : (
-                    <div
-                      className="flex min-h-11 min-w-11 items-center justify-center -m-2.5 p-2.5"
-                      aria-current={isCurrent ? "step" : undefined}
-                    >
-                      <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all ${circleClass}`}>
-                        {stepDefinition.stepNumber}
-                      </span>
-                    </div>
-                  )}
-                  <span className={`hidden text-xs font-semibold sm:block ${isCurrent ? "text-foreground" : "text-muted-foreground"}`}>
-                    {stepDefinition.label}
-                  </span>
-                </div>
-                {index < steps.length - 1 && (
-                  <div className={`h-0.5 flex-1 rounded-full transition-all ${isCompleted ? "bg-success" : "bg-border"}`} aria-hidden="true" />
-                )}
-              </React.Fragment>
-            );
-          })}
-        </nav>
-      }
+      headerExtra={<SimpleTransactionWizardSteps currentStep={step} onSelectStep={setStep} />}
     >
       <div
         className="space-y-4"
@@ -269,53 +214,16 @@ export function SimpleTransactionWizard({
             {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} formatCurrency={formatCurrency} />}
           </motion.div>
         </AnimatePresence>
-        <div className="flex w-full flex-wrap items-center justify-between gap-2">
-          <Button type="button" variant="outline" onClick={() => step > 1 ? setStep(step - 1) : onClose()}>
-            <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-            {step === 1 ? t("accounting.journal.dashboard.wizard.cancel") : t("accounting.journal.dashboard.wizard.back")}
-          </Button>
-          <div className="flex flex-wrap items-center gap-2">
-            {step < 3 && (
-              <Button type="button" onClick={() => setStep(step + 1)} disabled={!canProceed() || !selectedType}>
-                {t("accounting.journal.dashboard.wizard.next")} <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-              </Button>
-            )}
-            {step === 3 && (
-              <>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => { void handleSave("draft"); }}
-                  disabled={!canProceed() || isSubmitting}
-                >
-                  {submittingStatus === "draft" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-                  {t("accounting.journal.dashboard.wizard.saveDraft")}
-                </Button>
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => { void handleSave("posted", true); }}
-                  disabled={!canProceed() || isSubmitting}
-                >
-                  {submittingStatus === "posted_and_new" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-                  {t("accounting.journal.dashboard.wizard.postAndNew")}
-                </Button>
-                <Button
-                  type="button"
-                  onClick={() => { void handleSave("posted"); }}
-                  disabled={!canProceed() || isSubmitting}
-                >
-                  {submittingStatus === "posted" ? (
-                    <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                  ) : (
-                    <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
-                  )}
-                  {t("accounting.journal.dashboard.wizard.postTransaction")}
-                </Button>
-              </>
-            )}
-          </div>
-        </div>
+        <SimpleTransactionWizardFooter
+          step={step}
+          canProceed={canProceed()}
+          hasSelectedType={Boolean(selectedType)}
+          isSubmitting={isSubmitting}
+          submittingStatus={submittingStatus}
+          onStepChange={setStep}
+          onClose={onClose}
+          onSave={handleSave}
+        />
       </div>
     </FormModal>
   );
