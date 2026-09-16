@@ -171,4 +171,29 @@ describe("useJournalEntryForm validation", () => {
     expect(String(controller!.totalDebit)).toBe("0.3");
     expect(controller!.isBalanced).toBe(true);
   });
+
+  it("preserves custom reference number and custom tags", async () => {
+    const onSave = vi.fn();
+    await act(async () => {
+      root.render(<TestHarness onSave={onSave} onController={(c) => { controller = c; }} />);
+    });
+    await fillEntry("50", "50");
+
+    await act(async () => {
+      controller!.setForm((current) => ({
+        ...current,
+        ref: "CUSTOM-VOUCHER-001",
+        tags: ["BuildingFund", "Cash"],
+      }));
+    });
+
+    await act(async () => {
+      await controller!.saveEntry("posted");
+    });
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    const saved = onSave.mock.calls[0]![0] as JournalEntry;
+    expect(saved.ref).toBe("CUSTOM-VOUCHER-001");
+    expect(saved.tags).toEqual(["BuildingFund", "Cash"]);
+  });
 });

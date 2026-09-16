@@ -215,4 +215,40 @@ describe("StepTransactionForm", () => {
     expect(container.querySelector("#wizard-acc-out")).not.toBeNull();
     expect(container.querySelector("#wizard-acc-category-out")).not.toBeNull();
   });
+
+  it("renders financial year select and tag controls", async () => {
+    const setForm = vi.fn();
+    const formState: WizardFormState = {
+      date: "2026-09-01",
+      amount: "100.00",
+      description: "Fee",
+      debitAcc: "a1000",
+      creditAcc: "a4000",
+      ref: "REF-001",
+      receipt: "",
+      fiscal_year: "2026",
+      tags: ["Fees", "CustomTag"],
+    };
+    const fiscalYears = [
+      { id: "fy-2026", label: "2026", startDate: "2026-01-01", endDate: "2026-12-31", status: "active" as const },
+    ];
+
+    await act(async () => {
+      root.render(
+        <StepTransactionForm
+          type={mockActionType}
+          form={formState}
+          setForm={setForm}
+          accounts={mockAccounts}
+          currencySymbol="$"
+          fiscalYears={fiscalYears}
+        />,
+      );
+    });
+
+    expect(container.querySelector("#wizard-fiscal-year")).not.toBeNull();
+    expect(container.querySelector("#wizard-ref")).not.toBeNull();
+    expect(container.querySelector("#wizard-custom-tag")).not.toBeNull();
+    expect(container.textContent).toContain("CustomTag");
+  });
 });

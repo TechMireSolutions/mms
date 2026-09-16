@@ -72,10 +72,12 @@ export function StepReview({
   const rows = [
     { label: t("accounting.journal.dashboard.wizard.transactionType"), value: t(type.labelKey) },
     { label: t("accounting.columns.journal.date"), value: form.date },
+    form.fiscal_year ? { label: t("accounting.journal.form.financialYear"), value: form.fiscal_year } : null,
     { label: t("accounting.journal.dashboard.wizard.amountLabel"), value: amountLabel },
     ...accountRows,
     { label: t("accounting.columns.journal.description"), value: form.description || "—" },
     form.ref ? { label: t("accounting.journal.dashboard.wizard.referenceLabel"), value: form.ref } : null,
+    form.tags && form.tags.length > 0 ? { label: t("accounting.columns.journal.tags"), value: form.tags.join(", ") } : null,
   ].filter(isReviewRow);
 
   return (

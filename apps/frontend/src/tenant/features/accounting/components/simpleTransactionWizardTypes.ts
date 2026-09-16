@@ -36,6 +36,7 @@ export interface WizardFormState {
    */
   receipt: string;
   fiscal_year: string;
+  tags?: string[];
 }
 
 export interface WizardAccountOption {
@@ -207,6 +208,7 @@ export function buildWizardFormState(
     ref: "",
     receipt: "",
     fiscal_year: defaults.fiscalYearLabel,
+    tags: prefillType?.tag ? [prefillType.tag] : [],
   };
 }
 

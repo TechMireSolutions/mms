@@ -74,6 +74,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       ...previousForm,
       ...resolveSimpleTransactionAccounts(type, accounts),
       description: t(type.descriptionKey),
+      tags: type.tag ? [type.tag] : [],
     }));
     setStep(2);
   };
@@ -89,6 +90,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
     if (!selectedType) { notify.error(t("accounting.journal.dashboard.wizard.errorSource")); return; }
     const generatedReference = generateJERef(entries);
     const description = form.description.trim() || t(selectedType.labelKey);
+    const candidateTags = form.tags && form.tags.length > 0 ? form.tags : (selectedType.tag ? [selectedType.tag] : []);
     const candidate: JournalEntry = {
       id: `je${crypto.randomUUID()}`,
       ref: form.ref ? `${form.ref}` : generatedReference,
@@ -96,7 +98,7 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       description,
       status,
       created_by: "system",
-      tags: [selectedType.tag],
+      tags: candidateTags,
       attachments: [],
       fiscal_year: form.fiscal_year,
       fiscal_year_id: (fiscalYears || []).find((year) => year.label === form.fiscal_year || year.id === form.fiscal_year)?.id,
@@ -155,7 +157,16 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
         <AnimatePresence mode="wait">
           <motion.div key={step} initial={{ opacity: 0, x: 16 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -16 }} transition={{ duration: 0.15 }}>
             {step === 1 && <StepTypeSelection selected={selectedType} onSelect={handleTypeSelect} />}
-            {step === 2 && selectedType && <StepTransactionForm type={selectedType} form={form} setForm={setForm} accounts={accounts} currencySymbol={activeCurrency.symbol} />}
+            {step === 2 && selectedType && (
+              <StepTransactionForm
+                type={selectedType}
+                form={form}
+                setForm={setForm}
+                accounts={accounts}
+                currencySymbol={activeCurrency.symbol}
+                fiscalYears={fiscalYears}
+              />
+            )}
             {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} formatCurrency={formatCurrency} />}
           </motion.div>
         </AnimatePresence>

@@ -146,7 +146,8 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     const targetStatus = saveAs ?? form.status;
     const validationErrors = validate(targetStatus);
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
-    const journalReference = isEdit ? form.ref : generateJERef(entries);
+    const trimmedRef = form.ref?.trim();
+    const journalReference = trimmedRef || (isEdit ? form.ref : generateJERef(entries));
     const candidate = {
       ...form,
       id: isEdit ? form.id : `je${crypto.randomUUID()}`,

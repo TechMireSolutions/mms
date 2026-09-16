@@ -4,7 +4,7 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Account } from "@/lib/data/accountingData";
+import type { Account, FiscalYear } from "@/lib/data/accountingData";
 import {
   getTransactionGroupColorClasses,
   wizardAccountOptions,
@@ -13,6 +13,7 @@ import {
   type WizardFormState,
 } from "./simpleTransactionWizardTypes";
 import { parseMoneyInput } from "./simpleTransactionMoney";
+import { SimpleTransactionTagSelector } from "./SimpleTransactionTagSelector";
 
 interface StepTransactionFormProps {
   type: QuickActionType;
@@ -20,9 +21,10 @@ interface StepTransactionFormProps {
   setForm: Dispatch<SetStateAction<WizardFormState>>;
   accounts: Account[];
   currencySymbol: string;
+  fiscalYears?: FiscalYear[];
 }
 
-export function StepTransactionForm({ type, form, setForm, accounts, currencySymbol }: StepTransactionFormProps) {
+export function StepTransactionForm({ type, form, setForm, accounts, currencySymbol, fiscalYears }: StepTransactionFormProps) {
   const { t } = useTranslation();
   const [amountTouched, setAmountTouched] = useState(false);
   const isMoneyIn = type.groupKey === "accounting.journal.dashboard.group.moneyIn";
@@ -66,6 +68,29 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
         </div>
 
         <div>
+          <label htmlFor="wizard-fiscal-year" className={FORM_LABEL}>{t("accounting.journal.form.financialYear")}</label>
+          <FormSelect
+            id="wizard-fiscal-year"
+            name="fiscalYear"
+            value={form.fiscal_year || ""}
+            onChange={(fiscalYearValue) => {
+              const selected = (fiscalYears || []).find(
+                (fiscalYear) => fiscalYear.id === fiscalYearValue || fiscalYear.label === fiscalYearValue,
+              );
+              setForm({
+                ...form,
+                fiscal_year: selected?.label ?? fiscalYearValue,
+              });
+            }}
+            placeholder={t("accounting.journal.form.none")}
+            options={(fiscalYears || []).map((fiscalYear) => ({
+              value: fiscalYear.label,
+              label: fiscalYear.label,
+            }))}
+          />
+        </div>
+
+        <div>
           <label htmlFor="wizard-amount" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.amount")}</label>
           <div className="relative">
             <span className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground" aria-hidden="true">{currencySymbol}</span>
@@ -87,6 +112,20 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
           </div>
           {showAmountRequired && <p className="text-xs text-warning mt-1" role="alert">{t("accounting.journal.dashboard.wizard.errorAmount")}</p>}
           {amountIsInvalid && <p className="text-xs text-destructive mt-1" role="alert">{t("accounting.journal.dashboard.wizard.errorAmountInvalid")}</p>}
+        </div>
+
+        <div>
+          <label htmlFor="wizard-ref" className={FORM_LABEL}>
+            {t("accounting.journal.dashboard.wizard.refNo")}{" "}
+            <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span>
+          </label>
+          <Input
+            id="wizard-ref"
+            name="ref"
+            value={form.ref}
+            onChange={(event) => setForm({ ...form, ref: event.target.value })}
+            placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
+          />
         </div>
 
         {isMoneyIn ? (
@@ -177,16 +216,11 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
           />
         </div>
 
-        <div className="sm:col-span-2">
-          <label htmlFor="wizard-ref" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.refNo")} <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span></label>
-          <Input
-            id="wizard-ref"
-            name="ref"
-            value={form.ref}
-            onChange={(event) => setForm({ ...form, ref: event.target.value })}
-            placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
-          />
-        </div>
+        <SimpleTransactionTagSelector
+          typeTag={type.tag}
+          tags={form.tags || []}
+          onChangeTags={(tags) => setForm({ ...form, tags })}
+        />
       </div>
     </fieldset>
   );

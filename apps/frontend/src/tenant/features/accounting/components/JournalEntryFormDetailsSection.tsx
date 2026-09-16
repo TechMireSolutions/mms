@@ -27,7 +27,7 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
       className="shadow-sm text-start"
     >
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div>
             <label htmlFor="je-date" className={FORM_LABEL}>{t("accounting.journal.form.dateLabel")}</label>
             <DatePicker
@@ -62,7 +62,20 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
               }))}
             />
           </div>
-          <div className="sm:col-span-2">
+          <div>
+            <label htmlFor="journal-entry-ref" className={FORM_LABEL}>
+              {t("accounting.journal.dashboard.wizard.refNo")}{" "}
+              <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span>
+            </label>
+            <Input
+              id="journal-entry-ref"
+              name="ref"
+              value={form.ref || ""}
+              onChange={(event) => setForm({ ...form, ref: event.target.value })}
+              placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
+            />
+          </div>
+          <div className="sm:col-span-3">
             <label htmlFor="journal-entry-description" className={FORM_LABEL}>{t("accounting.journal.form.narrationLabel")}</label>
             <div className="relative flex items-center group/input">
               <BookOpen className="absolute start-3.5 w-4 h-4 text-muted-foreground/60 group-focus-within/input:text-primary transition-colors pointer-events-none" />
