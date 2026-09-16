@@ -1,4 +1,4 @@
-import { useState, type Dispatch, type SetStateAction } from 'react';
+import { useCallback, useState, type Dispatch, type SetStateAction } from 'react';
 import type { JournalEntry } from '@/lib/data/accountingData';
 
 /** Work directory row selection SSOT for journal entries (Obligations-shaped). */
@@ -10,21 +10,33 @@ export function useJournalEntrySelection(entries: JournalEntry[]) {
     && entries.every((entry) => selectedSet.has(entry.id));
   const someVisibleSelected = selectedSet.size > 0 && entries.some((entry) => selectedSet.has(entry.id));
 
-  const toggleSelectAll = ((checked: boolean) => {
+  const toggleSelectAll = useCallback((checked: boolean) => {
     const visibleIds = entries.map((entry) => entry.id);
     const visibleSet = new Set(visibleIds);
-    setSelectedIds((currentIds) => checked
-      ? [...new Set([...currentIds, ...visibleIds])]
-      : currentIds.filter((id) => !visibleSet.has(id)));
-  });
+    setSelectedIds((currentIds) => {
+      if (checked) {
+        const missing = visibleIds.filter((id) => !currentIds.includes(id));
+        return missing.length === 0 ? currentIds : [...currentIds, ...missing];
+      }
+      const remaining = currentIds.filter((id) => !visibleSet.has(id));
+      return remaining.length === currentIds.length ? currentIds : remaining;
+    });
+  }, [entries]);
 
-  const toggleSelectedEntry = ((id: string, checked: boolean) => {
-    setSelectedIds((currentIds) => checked
-      ? [...currentIds, id]
-      : currentIds.filter((selectedId) => selectedId !== id));
-  });
+  const toggleSelectedEntry = useCallback((id: string, checked: boolean) => {
+    setSelectedIds((currentIds) => {
+      if (checked) {
+        return currentIds.includes(id) ? currentIds : [...currentIds, id];
+      }
+      return currentIds.includes(id)
+        ? currentIds.filter((selectedId) => selectedId !== id)
+        : currentIds;
+    });
+  }, []);
 
-  const clearSelection = (() => setSelectedIds([]));
+  const clearSelection = useCallback(() => {
+    setSelectedIds((currentIds) => (currentIds.length === 0 ? currentIds : []));
+  }, []);
 
   return {
     selectedIds,

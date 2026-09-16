@@ -53,6 +53,7 @@ vi.mock("@/lib/notify", () => ({
     success: vi.fn(),
     info: vi.fn(),
     warning: vi.fn(),
+    archivedWithUndo: vi.fn(),
   },
 }));
 
@@ -108,7 +109,11 @@ describe("SimpleTransactionWizard", () => {
     container.remove();
   });
 
-  const renderWizard = async (open: boolean, prefillType: typeof feeCollection | typeof adjustment | null, accounts: Account[] = seedAccounts) => {
+  const renderWizard = async (
+    open: boolean,
+    prefillType: typeof feeCollection | typeof adjustment | null = null,
+    accounts: Account[] = seedAccounts,
+  ) => {
     await act(async () => {
       root.render(
         <SimpleTransactionWizard
@@ -329,7 +334,8 @@ describe("SimpleTransactionWizard", () => {
       (step1Btn as HTMLButtonElement).click();
     });
 
-    expect(container.textContent).toContain("accounting.journal.dashboard.whatHappened");
+    expect(amountInput()).toBeNull();
+    expect(container.textContent).toContain("accounting.journal.dashboard.group.moneyIn");
   });
 
   it("posts transaction when Enter is pressed on review step", async () => {
@@ -388,5 +394,43 @@ describe("SimpleTransactionWizard", () => {
     // Wizard navigated back to step 2 with amount cleared
     expect(amountInput().value).toBe("");
     expect(notify.success).toHaveBeenCalled();
+  });
+
+  it("navigates from step 3 back to step 2 when edit button is clicked on review step", async () => {
+    await renderWizard(true, feeCollection);
+    await act(async () => {
+      setInputValue(amountInput(), "50.00");
+    });
+    await act(async () => {
+      findButton(container, "accounting.journal.dashboard.wizard.next").click();
+    });
+    expect(container.textContent).toContain("accounting.journal.dashboard.wizard.postTransaction");
+    const editBtn = container.querySelector('button[aria-label^="common.edit"]');
+    expect(editBtn).not.toBeNull();
+    await act(async () => {
+      (editBtn as HTMLButtonElement).click();
+    });
+    expect(amountInput()).not.toBeNull();
+  });
+
+  it("persists selected action type in sessionStorage", async () => {
+    sessionStorage.clear();
+    await renderWizard(true);
+    const typeBtn = container.querySelector('button[aria-pressed]') as HTMLButtonElement;
+    expect(typeBtn).not.toBeNull();
+    await act(async () => {
+      typeBtn.click();
+    });
+    expect(sessionStorage.getItem("mms-wizard-last-type-id")).toBeTruthy();
+  });
+
+  it("captures draft when closed mid-entry and offers restoration on next open", async () => {
+    await renderWizard(true, feeCollection);
+    await act(async () => {
+      setInputValue(amountInput(), "99.99");
+    });
+    await renderWizard(false);
+    await renderWizard(true);
+    expect(notify.archivedWithUndo).toHaveBeenCalled();
   });
 });

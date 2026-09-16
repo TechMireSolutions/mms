@@ -21,21 +21,13 @@ export function createJournalNlHandlers(
     const type = parseNaturalLanguage(nlInput);
     const amount = extractAmountFromNaturalLanguage(nlInput);
     const description = nlInput.trim();
-    if (type) {
-      setSimpleModal({
-        prefillType: type,
-        initialAmount: amount ?? undefined,
-        initialDescription: description || undefined,
-      });
-      setNlInput('');
-      setNlSuggestion(null);
-    } else {
-      setSimpleModal({
-        prefillType: null,
-        initialAmount: amount ?? undefined,
-        initialDescription: description || undefined,
-      });
-    }
+    setSimpleModal({
+      prefillType: type ?? null,
+      initialAmount: amount ?? undefined,
+      initialDescription: description || undefined,
+    });
+    setNlInput('');
+    setNlSuggestion(null);
   };
 
   const handleNlChange = (inputValue: string) => {

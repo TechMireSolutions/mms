@@ -1,4 +1,4 @@
-import { ArrowLeft, ArrowRight, CheckCircle2, Loader2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CheckCircle2, Loader2, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -32,10 +32,17 @@ export function SimpleTransactionWizardFooter({
         variant="outline"
         onClick={() => (step > 1 ? onStepChange(step - 1) : onClose())}
       >
-        <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
-        {step === 1
-          ? t("accounting.journal.dashboard.wizard.cancel")
-          : t("accounting.journal.dashboard.wizard.back")}
+        {step === 1 ? (
+          <>
+            <X className="h-4 w-4" aria-hidden="true" />
+            {t("accounting.journal.dashboard.wizard.cancel")}
+          </>
+        ) : (
+          <>
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
+            {t("accounting.journal.dashboard.wizard.back")}
+          </>
+        )}
       </Button>
       <div className="flex flex-wrap items-center gap-2">
         {step < 3 && (
@@ -52,7 +59,7 @@ export function SimpleTransactionWizardFooter({
           <>
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => {
                 void onSave("draft");
               }}
@@ -80,6 +87,7 @@ export function SimpleTransactionWizardFooter({
                 void onSave("posted");
               }}
               disabled={!canProceed || isSubmitting}
+              title={t("accounting.journal.dashboard.wizard.postTransactionHint")}
             >
               {submittingStatus === "posted" ? (
                 <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />

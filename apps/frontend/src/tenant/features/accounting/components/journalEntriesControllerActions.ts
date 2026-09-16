@@ -3,6 +3,7 @@ import { createReversalEntry, type JournalEntry } from '@/lib/data/accountingDat
 import { runGridCsvExportJob } from '@/lib/backgroundJobs/runGridCsvExportJob';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { getJournalEntryLineTotals } from '@/tenant/features/accounting/components/journalEntriesListShared';
+import type { QuickActionType } from '@/tenant/features/accounting/components/journalEntriesQuickActions';
 
 export interface JournalEntryActionDeps {
   entries: JournalEntry[];
@@ -15,7 +16,7 @@ export interface JournalEntryActionDeps {
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
   setModal: (modal: 'new' | 'edit' | 'view' | null) => void;
   setSelected: (entry: JournalEntry | null) => void;
-  setSimpleModal: (modal: { prefillType: import('@/tenant/features/accounting/components/journalEntriesQuickActions').QuickActionType | null; initialAmount?: string; initialDescription?: string } | null) => void;
+  setSimpleModal: (modal: { prefillType: QuickActionType | null; initialAmount?: string; initialDescription?: string } | null) => void;
   setSelectedIds: (ids: string[] | ((prev: string[]) => string[])) => void;
 }
 

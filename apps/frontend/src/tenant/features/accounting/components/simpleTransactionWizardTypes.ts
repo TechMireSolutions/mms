@@ -2,19 +2,10 @@ import type { ElementType } from "react";
 import { moneyToCents, type Account, type AppTranslationKey } from "@mms/shared";
 import { parseMoneyInput } from "./simpleTransactionMoney";
 
-export type TransactionGroupColor = "emerald" | "red" | "blue";
+import type { QuickActionType } from "./journalEntriesQuickActions";
 
-export interface QuickActionType {
-  id: string;
-  labelKey: AppTranslationKey;
-  icon: ElementType;
-  debitAcc: string;
-  creditAcc: string;
-  tag: string;
-  descriptionKey: AppTranslationKey;
-  groupKey: AppTranslationKey;
-  color: string;
-}
+export type { QuickActionType };
+export type TransactionGroupColor = "emerald" | "red" | "blue";
 
 export interface TransactionGroup {
   groupKey: AppTranslationKey;

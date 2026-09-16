@@ -233,6 +233,7 @@ describe("StepTransactionForm", () => {
       tags: ["Fees", "CustomTag"],
     };
     const fiscalYears = [
+      { id: "fy-2025", label: "2025", startDate: "2025-01-01", endDate: "2025-12-31", status: "closed" as const },
       { id: "fy-2026", label: "2026", startDate: "2026-01-01", endDate: "2026-12-31", status: "active" as const },
     ];
 
@@ -253,6 +254,38 @@ describe("StepTransactionForm", () => {
     expect(container.querySelector("#wizard-ref")).not.toBeNull();
     expect(container.querySelector("#wizard-custom-tag")).not.toBeNull();
     expect(container.textContent).toContain("CustomTag");
+  });
+
+  it("hides financial year select when there is only one fiscal year (D3)", async () => {
+    const setForm = vi.fn();
+    const formState: WizardFormState = {
+      date: "2026-09-01",
+      amount: "100.00",
+      description: "Sample",
+      debitAcc: "a1000",
+      creditAcc: "a4000",
+      ref: "",
+      receipt: "",
+      fiscal_year: "2026",
+    };
+    const singleFiscalYear = [
+      { id: "fy-2026", label: "2026", startDate: "2026-01-01", endDate: "2026-12-31", status: "active" as const },
+    ];
+
+    await act(async () => {
+      root.render(
+        <StepTransactionForm
+          type={mockActionType}
+          form={formState}
+          setForm={setForm}
+          accounts={mockAccounts}
+          currencySymbol="$"
+          fiscalYears={singleFiscalYear}
+        />,
+      );
+    });
+
+    expect(container.querySelector("#wizard-fiscal-year")).toBeNull();
   });
 
   it("triggers onProceed when Enter is pressed on description input", async () => {

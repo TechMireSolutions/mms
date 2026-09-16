@@ -1,4 +1,5 @@
-import { createElement, useId, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { createElement, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { AlertTriangle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FORM_LABEL } from "@/components/ui/formStyles";
@@ -7,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
 import {
+  calculateAccountBalanceCents,
   getTransactionGroupColorClasses,
   wizardAccountOptions,
   wizardCategoryAccountOptions,
@@ -27,6 +29,8 @@ interface StepTransactionFormProps {
   entries?: readonly JournalEntry[];
   formatCurrency?: (amount: number | string | null | undefined) => string;
   idPrefix?: string;
+  amountTouched?: boolean;
+  onAmountTouched?: () => void;
   onChangeType?: () => void;
   onProceed?: () => void;
 }
@@ -41,15 +45,23 @@ export function StepTransactionForm({
   entries,
   formatCurrency,
   idPrefix,
+  amountTouched: amountTouchedProp,
+  onAmountTouched,
   onChangeType,
   onProceed,
 }: StepTransactionFormProps) {
   const { t } = useTranslation();
-  const reactId = useId();
   const prefix = idPrefix ?? "wizard";
-  const [amountTouched, setAmountTouched] = useState(false);
+  // D2: amountTouched may be lifted from the wizard (survives step changes) or local fallback
+  const [localAmountTouched, setLocalAmountTouched] = useState(false);
+  const amountTouched = amountTouchedProp ?? localAmountTouched;
+  const markAmountTouched = () => {
+    setLocalAmountTouched(true);
+    onAmountTouched?.();
+  };
   const isMoneyIn = type.groupKey === "accounting.journal.dashboard.group.moneyIn";
   const isTransfer = type.groupKey === "accounting.journal.dashboard.group.transfers";
+  const showFiscalYear = (fiscalYears ?? []).length > 1;
   /**
    * Cash/bank options come from the live chart: accounts created in the UI carry
    * generated ids, so filtering by the seed ids ("a1000"…) left every workspace
@@ -70,20 +82,28 @@ export function StepTransactionForm({
   const parsedAmount = parseMoneyInput(form.amount);
   const isTypingDecimal = form.amount.endsWith(".") || form.amount.endsWith(",");
   const amountIsInvalid = !amountIsEmpty && !isTypingDecimal && (parsedAmount === null || parsedAmount <= 0);
-  const showAmountRequired = amountTouched && amountIsEmpty;
   const isSameAccount = Boolean(form.debitAcc && form.creditAcc && form.debitAcc === form.creditAcc);
   const currencyPaddingClass = currencySymbol.length > 2 ? "ps-14" : currencySymbol.length > 1 ? "ps-11" : "ps-8";
 
+  // D7: warn when the money-leg account has zero or negative balance
+  const moneyLegAccountId = isMoneyIn ? form.debitAcc : form.creditAcc;
+  const moneyLegBalanceCents = useMemo(
+    () => (moneyLegAccountId && entries ? calculateAccountBalanceCents(moneyLegAccountId, entries) : null),
+    [moneyLegAccountId, entries],
+  );
+  const showLowBalanceWarning = !isMoneyIn && moneyLegBalanceCents !== null && moneyLegBalanceCents <= 0;
+
+  // D4: Transfer legs shown as "From → To" (human reading order)
   const leg1 = isMoneyIn
     ? { id: `${prefix}-acc-in`, label: t("accounting.journal.dashboard.wizard.receivedInto"), field: "debitAcc" as const, options: accountOptions }
     : isTransfer
-      ? { id: `${prefix}-acc-to`, label: t("accounting.journal.dashboard.wizard.transferTo"), field: "debitAcc" as const, options: accountOptions }
+      ? { id: `${prefix}-acc-from`, label: t("accounting.journal.dashboard.wizard.transferFrom"), field: "creditAcc" as const, options: accountOptions }
       : { id: `${prefix}-acc-out`, label: t("accounting.journal.dashboard.wizard.paidFrom"), field: "creditAcc" as const, options: accountOptions };
 
   const leg2 = isMoneyIn
     ? { id: `${prefix}-acc-category-in`, label: t("accounting.journal.dashboard.wizard.incomeCategory"), field: "creditAcc" as const, options: revenueOptions }
     : isTransfer
-      ? { id: `${prefix}-acc-from`, label: t("accounting.journal.dashboard.wizard.transferFrom"), field: "creditAcc" as const, options: accountOptions }
+      ? { id: `${prefix}-acc-to`, label: t("accounting.journal.dashboard.wizard.transferTo"), field: "debitAcc" as const, options: accountOptions }
       : { id: `${prefix}-acc-category-out`, label: t("accounting.journal.dashboard.wizard.expenseCategory"), field: "debitAcc" as const, options: expenseOptions };
 
   return (
@@ -123,45 +143,46 @@ export function StepTransactionForm({
           />
         </div>
 
-        <div>
-          <label htmlFor={`${prefix}-fiscal-year`} className={FORM_LABEL}>{t("accounting.journal.form.financialYear")}</label>
-          <FormSelect
-            id={`${prefix}-fiscal-year`}
-            name="fiscalYear"
-            value={form.fiscal_year || ""}
-            onChange={(fiscalYearValue) => {
-              const selected = (fiscalYears || []).find(
-                (fiscalYear) => fiscalYear.id === fiscalYearValue || fiscalYear.label === fiscalYearValue,
-              );
-              setForm((prev) => ({
-                ...prev,
-                fiscal_year: selected?.label ?? fiscalYearValue,
-              }));
-            }}
-            placeholder={t("accounting.journal.form.none")}
-            options={fiscalYearOptions}
-          />
-        </div>
+        {showFiscalYear && (
+          <div>
+            <label htmlFor={`${prefix}-fiscal-year`} className={FORM_LABEL}>{t("accounting.journal.form.financialYear")}</label>
+            <FormSelect
+              id={`${prefix}-fiscal-year`}
+              name="fiscalYear"
+              value={form.fiscal_year || ""}
+              onChange={(fiscalYearValue) => {
+                const selected = (fiscalYears || []).find(
+                  (fiscalYear) => fiscalYear.id === fiscalYearValue || fiscalYear.label === fiscalYearValue,
+                );
+                setForm((prev) => ({
+                  ...prev,
+                  fiscal_year: selected?.label ?? fiscalYearValue,
+                }));
+              }}
+              placeholder={t("accounting.journal.form.none")}
+              options={fiscalYearOptions}
+            />
+          </div>
+        )}
 
         <SimpleTransactionAmountInput
           prefix={prefix}
           amount={form.amount}
           currencySymbol={currencySymbol}
           currencyPaddingClass={currencyPaddingClass}
-          showAmountRequired={showAmountRequired}
+          showAmountRequired={amountTouched && form.amount.trim() === ""}
           amountIsInvalid={amountIsInvalid}
           onChange={(val) => {
-            setAmountTouched(true);
+            markAmountTouched();
             setForm((prev) => ({ ...prev, amount: val }));
           }}
-          onBlur={() => setAmountTouched(true)}
+          onBlur={markAmountTouched}
           onProceed={onProceed}
         />
 
         <div>
           <label htmlFor={`${prefix}-ref`} className={FORM_LABEL}>
-            {t("accounting.journal.dashboard.wizard.refNo")}{" "}
-            <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span>
+            {t("accounting.journal.dashboard.wizard.refNo")}
           </label>
           <Input
             id={`${prefix}-ref`}
@@ -180,6 +201,7 @@ export function StepTransactionForm({
             }}
             placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
           />
+          <p className="text-xs text-muted-foreground mt-1">{t("accounting.journal.dashboard.wizard.optional")}</p>
         </div>
 
         <div>
@@ -194,6 +216,12 @@ export function StepTransactionForm({
             aria-invalid={isSameAccount}
             aria-describedby={isSameAccount ? `${prefix}-account-same-error` : undefined}
           />
+          {showLowBalanceWarning && leg1.field === "creditAcc" && (
+            <p className="flex items-center gap-1 text-xs text-warning mt-1">
+              <AlertTriangle className="w-3 h-3 shrink-0" aria-hidden="true" />
+              {t("accounting.journal.dashboard.wizard.lowBalanceWarning")}
+            </p>
+          )}
         </div>
         <div>
           <label htmlFor={leg2.id} className={FORM_LABEL}>{leg2.label}</label>

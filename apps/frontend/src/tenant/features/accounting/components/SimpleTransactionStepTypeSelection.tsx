@@ -5,7 +5,7 @@ import { TRANSACTION_GROUP_COLORS, TRANSACTION_GROUPS, type QuickActionType } fr
 
 interface StepTypeSelectionProps {
   selected: QuickActionType | null;
-  onSelect: (type: QuickActionType) => void;
+  onSelect: (type: QuickActionType, advance: boolean) => void;
 }
 
 export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps) {
@@ -13,10 +13,6 @@ export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps
 
   return (
     <div className="space-y-5">
-      <header className="text-center space-y-1 pb-2">
-        <h3 className="text-lg font-bold text-foreground m-0">{t("accounting.journal.dashboard.whatHappened")}</h3>
-        <p className="text-sm text-muted-foreground m-0">{t("accounting.journal.dashboard.subtitleSimple")}</p>
-      </header>
       {TRANSACTION_GROUPS.map((group) => {
         const colors = TRANSACTION_GROUP_COLORS[group.color];
         const GroupIcon = group.icon;
@@ -28,7 +24,7 @@ export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps
               <GroupIcon className="w-3.5 h-3.5" aria-hidden="true" />
               <SectionLabel as="h4" weight="bold" tracking="wide" tone="inherit" className="m-0">{translatedGroupName}</SectionLabel>
             </header>
-            <div role="group" aria-label={translatedGroupName} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div role="group" aria-label={translatedGroupName} className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const isSelected = selected?.id === item.id;
@@ -39,7 +35,14 @@ export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps
                     type="button"
                     variant="ghost"
                     aria-pressed={isSelected}
-                    onClick={() => onSelect({ ...item, groupKey: group.groupKey, color: group.color })}
+                    onClick={() => onSelect({ ...item, groupKey: group.groupKey, color: group.color }, true)}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        // Keyboard: select without advancing — user confirms via Next
+                        onSelect({ ...item, groupKey: group.groupKey, color: group.color }, false);
+                      }
+                    }}
                     className={`h-auto min-h-11 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${isSelected ? colors.selected : `border-border bg-card hover:bg-muted/50 ${colors.item}`}`}
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isSelected ? colors.icon : "bg-muted text-muted-foreground"}`} aria-hidden="true">

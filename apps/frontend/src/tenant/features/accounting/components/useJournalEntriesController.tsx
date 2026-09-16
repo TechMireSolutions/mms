@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { JournalEntry } from '@/lib/data/accountingData';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAccountingCurrency } from '@/hooks/useCurrency';
@@ -120,8 +120,12 @@ export function useJournalEntriesController({
     clearSelection,
   } = useJournalEntrySelection(filtered);
 
+  const wasShowDeletedRef = useRef(showDeleted);
   useEffect(() => {
-    clearSelection();
+    if (wasShowDeletedRef.current !== showDeleted) {
+      wasShowDeletedRef.current = showDeleted;
+      clearSelection();
+    }
   }, [showDeleted, clearSelection]);
 
   const exportCSV = () => exportJournalEntriesCsv(filtered, t);

@@ -15,10 +15,13 @@ import {
   buildWizardFormState,
   resolveSimpleTransactionAccounts,
   validateWizardForm,
+  TRANSACTION_GROUPS,
   type QuickActionType,
   type WizardFormState,
 } from "./simpleTransactionWizardTypes";
 import { parseMoneyInput } from "./simpleTransactionMoney";
+
+const LAST_TYPE_SESSION_KEY = "mms-wizard-last-type-id";
 
 interface SimpleTransactionWizardProps {
   open: boolean;
@@ -49,6 +52,7 @@ export function SimpleTransactionWizard({
   const [step, setStep] = useState(() => (prefillType ? 2 : 1));
   const [selectedType, setSelectedType] = useState<QuickActionType | null>(prefillType || null);
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [amountTouched, setAmountTouched] = useState(false);
   const [submittingStatus, setSubmittingStatus] = useState<"draft" | "posted" | "posted_and_new" | null>(null);
   const isSubmitting = submittingStatus !== null;
   const [form, setForm] = useState<WizardFormState>(() =>
@@ -81,28 +85,87 @@ export function SimpleTransactionWizard({
    * closed to open, never while the user is actively typing or editing.
    */
   const wasOpenRef = useRef(false);
+  /** W3: stash an in-progress draft when the dialog is dismissed mid-entry */
+  const draftRef = useRef<{ form: WizardFormState; type: QuickActionType | null; closedAt: number } | null>(null);
+  /** W3/S4: stable snapshot of live state for reading inside close-transition effect */
+  const formRef = useRef(form);
+  const selectedTypeRef = useRef(selectedType);
+  useEffect(() => { formRef.current = form; });
+  useEffect(() => { selectedTypeRef.current = selectedType; });
   useEffect(() => {
     if (open && !wasOpenRef.current) {
       const { accounts: liveAccounts, fiscalYearLabel, translate } = resetContextRef.current;
+
+      // W3: offer draft restoration if the user closed mid-entry within 30 s
+      const draft = draftRef.current;
+      if (!prefillType && draft && draft.form.amount.trim() !== "" && Date.now() - draft.closedAt < 30_000) {
+        const snapForm = draft.form;
+        const snapType = draft.type;
+        notify.archivedWithUndo(
+          t("accounting.journal.dashboard.wizard.restoreDraft"),
+          () => {
+            if (snapType) {
+              setSelectedType(snapType);
+              setStep(2);
+            }
+            setForm(snapForm);
+          },
+          { undoLabel: t("accounting.journal.dashboard.wizard.restoreAction"), duration: 8000 },
+        );
+      }
+      draftRef.current = null;
+
       setStep(prefillType ? 2 : 1);
       setSelectedType(prefillType ?? null);
       setShowAdvanced(false);
+      setAmountTouched(false);
+
+      // S4: pre-select last used type (keyboard users see it highlighted on step 1)
+      let lastType: QuickActionType | null = null;
+      if (!prefillType) {
+        try {
+          const lastId = sessionStorage.getItem(LAST_TYPE_SESSION_KEY);
+          if (lastId) {
+            for (const group of TRANSACTION_GROUPS) {
+              const item = group.items.find((i) => i.id === lastId);
+              if (item) { lastType = { ...item, groupKey: group.groupKey, color: group.color }; break; }
+            }
+          }
+        } catch { /* sessionStorage unavailable */ }
+      }
+
       setForm(
         buildWizardFormState(
-          prefillType ?? null,
+          prefillType ?? lastType,
           liveAccounts,
           { date: todayISO(), fiscalYearLabel },
           translate,
           { amount: prefillAmount, description: prefillDescription },
         ),
       );
+      if (lastType && !prefillType) {
+        setSelectedType(lastType);
+        // Stay on step 1 — user must press Next to confirm
+      }
+    } else if (!open && wasOpenRef.current) {
+      // W3: capture draft when closing with unsaved data
+      if (formRef.current.amount.trim() !== "") {
+        draftRef.current = { form: formRef.current, type: selectedTypeRef.current, closedAt: Date.now() };
+      }
     }
     wasOpenRef.current = open;
   }, [open, prefillType, prefillAmount, prefillDescription]);
 
   const parsedAmount = useMemo(() => parseMoneyInput(form.amount), [form.amount]);
 
-  const handleTypeSelect = (type: QuickActionType) => {
+  // S3: dynamic subtitle eliminates the redundant inner heading in StepTypeSelection
+  const stepSubtitle = useMemo(() => {
+    if (step === 2 && selectedType) return t(selectedType.labelKey);
+    if (step === 3) return t("accounting.journal.dashboard.wizard.reviewTitle");
+    return t("accounting.journal.dashboard.subtitleSimple");
+  }, [step, selectedType, t]);
+
+  const handleTypeSelect = (type: QuickActionType, advance: boolean) => {
     setSelectedType(type);
     setForm((previousForm) => ({
       ...previousForm,
@@ -110,7 +173,9 @@ export function SimpleTransactionWizard({
       description: t(type.descriptionKey),
       tags: type.tag ? [type.tag] : [],
     }));
-    setStep(2);
+    // S4: remember last used type for the next session
+    try { sessionStorage.setItem(LAST_TYPE_SESSION_KEY, type.id); } catch { /* ignore */ }
+    if (advance) setStep(2);
   };
 
   const canProceed = () => {
@@ -163,6 +228,7 @@ export function SimpleTransactionWizard({
           ref: "",
           description: t(selectedType.descriptionKey),
         }));
+        setAmountTouched(false);
         setStep(2);
       }
     } catch (error) {
@@ -177,11 +243,19 @@ export function SimpleTransactionWizard({
       open={open}
       onClose={onClose}
       title={t("accounting.journal.dashboard.recordTransaction")}
-      subtitle={t("accounting.journal.dashboard.subtitleSimple")}
+      subtitle={stepSubtitle}
       size="lg"
       panelClassName="max-h-modal-xl"
       hideFooter
-      headerExtra={<SimpleTransactionWizardSteps currentStep={step} onSelectStep={setStep} />}
+      headerExtra={
+        <SimpleTransactionWizardSteps
+          currentStep={step}
+          onSelectStep={(n) => {
+            if (n > step && !canProceed()) return;
+            setStep(n);
+          }}
+        />
+      }
     >
       <div
         className="space-y-4"
@@ -205,13 +279,25 @@ export function SimpleTransactionWizard({
                 fiscalYears={fiscalYears}
                 entries={entries}
                 formatCurrency={formatCurrency}
+                amountTouched={amountTouched}
+                onAmountTouched={() => setAmountTouched(true)}
                 onChangeType={() => setStep(1)}
                 onProceed={() => {
                   if (canProceed()) setStep(3);
                 }}
               />
             )}
-            {step === 3 && selectedType && <StepReview type={selectedType} form={form} accounts={accounts} showAdvanced={showAdvanced} setShowAdvanced={setShowAdvanced} formatCurrency={formatCurrency} />}
+            {step === 3 && selectedType && (
+              <StepReview
+                type={selectedType}
+                form={form}
+                accounts={accounts}
+                showAdvanced={showAdvanced}
+                setShowAdvanced={setShowAdvanced}
+                formatCurrency={formatCurrency}
+                onEditDetails={() => setStep(2)}
+              />
+            )}
           </motion.div>
         </AnimatePresence>
         <SimpleTransactionWizardFooter
