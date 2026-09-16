@@ -138,6 +138,10 @@ export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData>
 
 export async function startWorkerDaemon(): Promise<void> {
   logger.info('Initializing Worker Daemon...');
+  // Force UTC regardless of host timezone — see loadEnv.ts for why this must run
+  // before the first Date/DB call (timestamptz round-trips otherwise shift by the
+  // host's UTC offset, e.g. auth_artifacts / background job TTL checks).
+  process.env.TZ = 'UTC';
   if (process.env.NODE_ENV !== 'production') {
     try {
       process.loadEnvFile();
