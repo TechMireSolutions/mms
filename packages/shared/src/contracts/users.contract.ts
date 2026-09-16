@@ -41,7 +41,17 @@ export const userContract = c.router({
     method: 'POST',
     path: '/api/users',
     body: createWorkspaceUserSchema.or(workspaceUserRecordSchema),
-    responses: { 200: z.object({ user: workspaceUserRecordSchema }), 400: errorResponse, 403: errorResponse, 409: errorResponse, 500: errorResponse },
+    responses: {
+      200: z.object({
+        user: workspaceUserRecordSchema,
+        inviteEmailSent: z.boolean().optional(),
+        inviteEmailError: z.string().optional(),
+      }),
+      400: errorResponse,
+      403: errorResponse,
+      409: errorResponse,
+      500: errorResponse,
+    },
     summary: 'Create a single workspace user',
   },
   update: {
@@ -56,7 +66,17 @@ export const userContract = c.router({
     method: 'POST',
     path: '/api/users/invite',
     body: inviteWorkspaceUserSchema,
-    responses: { 200: z.object({ user: workspaceUserRecordSchema }), 400: errorResponse, 403: errorResponse, 409: errorResponse, 500: errorResponse },
+    responses: {
+      200: z.object({
+        user: workspaceUserRecordSchema,
+        inviteEmailSent: z.boolean().optional(),
+        inviteEmailError: z.string().optional(),
+      }),
+      400: errorResponse,
+      403: errorResponse,
+      409: errorResponse,
+      500: errorResponse,
+    },
     summary: 'Invite a workspace user',
   },
   activity: {

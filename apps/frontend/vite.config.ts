@@ -6,6 +6,10 @@ import { visualizer } from 'rollup-plugin-visualizer';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
+// Backend origin the dev proxy forwards `/api`, `/health`, `/uploads` to.
+// Override with MMS_BACKEND_PROXY when the backend runs on a non-default port.
+const backendProxyTarget = process.env.MMS_BACKEND_PROXY ?? 'http://127.0.0.1:3000';
+
 // https://vite.dev/config/
 export default defineConfig({
   resolve: {
@@ -18,7 +22,7 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:3000',
+        target: backendProxyTarget,
         changeOrigin: true,
         ws: true,
         timeout: 600_000,
@@ -39,11 +43,11 @@ export default defineConfig({
         },
       },
       '/health': {
-        target: 'http://127.0.0.1:3000',
+        target: backendProxyTarget,
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://127.0.0.1:3000',
+        target: backendProxyTarget,
         changeOrigin: true,
       },
     },

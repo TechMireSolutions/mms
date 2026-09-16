@@ -799,6 +799,20 @@
       "when": 1787529600000,
       "tag": "0113_faculty_department_designation",
       "breakpoints": true
+    },
+    {
+      "idx": 114,
+      "version": "7",
+      "when": 1789587124579,
+      "tag": "0114_auth_artifacts_tenant_user_invite",
+      "breakpoints": true
+    },
+    {
+      "idx": 115,
+      "version": "7",
+      "when": 1789587124580,
+      "tag": "0115_auth_artifacts_tenant_password_otp",
+      "breakpoints": true
     }
   ]
 }

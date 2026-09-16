@@ -101,7 +101,7 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
   const handleSubmit = async (): Promise<void> => {
     if (!validate()) return;
     setSubmitting(true);
-    const newUser: SystemUser = {
+    const newUser = {
       id: `u${crypto.randomUUID()}`,
       contactId: form.contactId!,
       name: toTitleCase(form.name.trim()) as string,
@@ -117,9 +117,23 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
       failedLoginAttempts: 0,
       activeSessions: 0,
       avatarInitials: getInitials(form.name),
+      // The `create` contract (createWorkspaceUserSchema) requires these two — without
+      // them the request silently matches the looser workspaceUserRecordSchema union
+      // branch instead, and both the password and the invite email are dropped.
+      setupMethod: form.setupMethod,
+      password: form.setupMethod === 'password' ? form.password : undefined,
+      forceReset: form.forceReset,
+      temporaryRole: form.temporaryRole,
+      roleExpiry: form.temporaryRole ? form.roleExpiry : undefined,
       ...Object.fromEntries(
         customFields.map((customField) => [customField.id, form[customField.id] ?? customField.defaultValue ?? ''])
       ),
+    } satisfies SystemUser & {
+      setupMethod: AddUserFormState['setupMethod'];
+      password?: string;
+      forceReset?: boolean;
+      temporaryRole?: boolean;
+      roleExpiry?: string;
     };
     try {
       await onAdd(newUser);

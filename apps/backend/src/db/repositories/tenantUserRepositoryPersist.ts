@@ -435,3 +435,26 @@ export async function resetTenantUserPasswordRow(
   });
   return true;
 }
+
+/** Sets a self-chosen password from an accepted invite: verifies email, no forced re-change. */
+export async function activateInvitedTenantUserRow(
+  id: string,
+  passwordHash: string,
+): Promise<boolean> {
+  const existing = await findTenantUserRowById(id);
+  if (!existing || existing.deletedAt) return false;
+  const workspaceSubdomain =
+    typeof existing.workspaceSubdomain === 'string' ? existing.workspaceSubdomain : '';
+  await withTenant(workspaceSubdomain, async (tx) => {
+    await tx
+      .update(tenantUsers)
+      .set({
+        passwordHash,
+        mustChangePassword: false,
+        emailVerifiedAt: new Date(),
+        updatedAt: new Date(),
+      })
+      .where(tenantUserIdWhere(id, workspaceSubdomain));
+  });
+  return true;
+}

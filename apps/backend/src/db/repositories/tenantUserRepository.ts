@@ -18,4 +18,5 @@ export {
   verifyTenantUserEmailRow,
   verifyTenantUserEmailRowGlobal,
   resetTenantUserPasswordRow,
+  activateInvitedTenantUserRow,
 } from './tenantUserRepositoryPersist.js';

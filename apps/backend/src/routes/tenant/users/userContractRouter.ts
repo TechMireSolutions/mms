@@ -8,6 +8,7 @@ import { canReadCollection, canWriteCollection, canDeleteCollection } from '../.
 import { usersUseCases } from '../../../users/use-cases/usersUseCases.js';
 import { AUTH_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
 import { createStrictRateLimitGuard } from '../../../lib/rateLimitGuard.js';
+import { resolveRequestOrigin } from '../../../lib/requestHost.js';
 import {
   dependencyForDiagnosticStage,
   getRequestDiagnosticContext,
@@ -105,8 +106,14 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const created = await usersUseCases.createWorkspaceUser(body, String(user.id), user.role, request.ip);
-        return { status: 200 as const, body: { user: created } };
+        const { user: created, inviteEmailSent, inviteEmailError } = await usersUseCases.createWorkspaceUser(
+          body,
+          String(user.id),
+          user.role,
+          request.ip,
+          resolveRequestOrigin(request),
+        );
+        return { status: 200 as const, body: { user: created, inviteEmailSent, inviteEmailError } };
       } catch (err: unknown) {
         return handleUserRouterError(err, request, 'Failed to create workspace user');
       }
@@ -129,8 +136,14 @@ export const userContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const invited = await usersUseCases.inviteWorkspaceUser(body, String(user.id), user.role, request.ip);
-        return { status: 200 as const, body: { user: invited } };
+        const { user: invited, inviteEmailSent, inviteEmailError } = await usersUseCases.inviteWorkspaceUser(
+          body,
+          String(user.id),
+          user.role,
+          request.ip,
+          resolveRequestOrigin(request),
+        );
+        return { status: 200 as const, body: { user: invited, inviteEmailSent, inviteEmailError } };
       } catch (err: unknown) {
         return handleUserRouterError(err, request, 'Failed to invite workspace user');
       }
