@@ -13,6 +13,17 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+vi.mock("@/tenant/hooks/usePermissions", () => ({
+  useModulePermissions: () => ({ canEditSetup: true }),
+}));
+
+vi.mock("@/tenant/hooks/useBranding", () => ({
+  useBranding: () => ({
+    madrasaName: "Test Madrasa",
+    logoUrl: "https://example.com/logo.png",
+  }),
+}));
+
 vi.mock("@/components/ui/Modal", () => ({
   Modal: ({ title, children, footer }: {
     title: string;
@@ -57,6 +68,11 @@ describe("StudentIdCardModal Component", () => {
     );
 
     expect(html).toContain("students.idCard.title");
+    expect(html).toContain("students.idCard.customize");
+    expect(html).toContain("students.idCard.printFrontOnly");
+    expect(html).toContain("students.idCard.printBackOnly");
+    expect(html).toContain("students.idCard.printBothSides");
+    expect(html).toContain("students.idCard.cutGuides");
     expect(html).toContain("Zayd Harith");
     expect(html).toContain("GR-001");
     expect(html).toContain("Quran Hifz 2025");

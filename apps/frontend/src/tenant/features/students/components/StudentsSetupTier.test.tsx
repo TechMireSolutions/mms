@@ -18,8 +18,10 @@ vi.mock("@/components/ui/ModuleTierMotion", () => ({
 }));
 
 describe("StudentsSetupTier Component", () => {
-  it("renders setup tier container without crashing", () => {
+  it("renders setup tier container with Preferences and Card Template subtabs", () => {
     const html = renderToStaticMarkup(<StudentsSetupTier />);
     expect(html).toBeDefined();
+    expect(html).toContain("students.setup.preferences");
+    expect(html).toContain("students.setup.cardTemplate");
   });
 });

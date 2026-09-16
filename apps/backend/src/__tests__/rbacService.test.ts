@@ -1,5 +1,11 @@
 import { describe, expect, it } from "vitest";
-import { DASHBOARD_PREFERENCES_KEY, INVOICE_TEMPLATE_OBJECT_KEY, MESSAGING_MODULE_MANIFEST, type User } from "@mms/shared";
+import {
+  DASHBOARD_PREFERENCES_KEY,
+  INVOICE_TEMPLATE_OBJECT_KEY,
+  STUDENT_CARD_TEMPLATE_OBJECT_KEY,
+  MESSAGING_MODULE_MANIFEST,
+  type User,
+} from "@mms/shared";
 import {
   canBulkSync,
   canDeleteContacts,
@@ -61,8 +67,8 @@ describe("rbacService", () => {
     expect(canWriteObject(admin, "tenant_escape")).toBe(false);
   });
 
-  it("allows staff persistence for frontend dashboard and invoice configuration objects", () => {
-    for (const key of [DASHBOARD_PREFERENCES_KEY, INVOICE_TEMPLATE_OBJECT_KEY]) {
+  it("allows staff persistence for frontend dashboard, invoice, and student card configuration objects", () => {
+    for (const key of [DASHBOARD_PREFERENCES_KEY, INVOICE_TEMPLATE_OBJECT_KEY, STUDENT_CARD_TEMPLATE_OBJECT_KEY]) {
       expect(canReadObject(admin, key)).toBe(true);
       expect(canWriteObject(admin, key)).toBe(true);
       expect(canReadObject(teacher, key)).toBe(true);

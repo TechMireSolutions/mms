@@ -19,9 +19,10 @@ export const PAGE_SIZES: Record<string, PageSizeInfo> = {
   Letter: { width: 816, height: 1056, label: 'Letter (8.5×11in)' },
   '80mm': { width: 302, height: 580, label: 'Thermal 80mm' },
   '58mm': { width: 220, height: 460, label: 'Thermal 58mm' },
+  CR80: { width: 324, height: 204, label: 'ID Card (CR80 86×54mm)' },
 };
 
-export const pageSizeKeySchema = z.enum(['A6', 'A5', 'A4', 'Letter', '80mm', '58mm']);
+export const pageSizeKeySchema = z.enum(['A6', 'A5', 'A4', 'Letter', '80mm', '58mm', 'CR80']);
 export type PageSizeKey = z.infer<typeof pageSizeKeySchema> | (string & {});
 
 /**
@@ -139,12 +140,14 @@ export const documentTemplateSchema = z.object({
   pageSize: z.string(),
   orientation: templateOrientationSchema.optional(),
   elements: z.array(templateElementSchema),
+  backElements: z.array(templateElementSchema).optional(),
 }).strict();
 
 export interface DocumentTemplate<TPayload = Record<string, unknown>> {
   pageSize: string;
   orientation?: TemplateOrientation;
   elements: TemplateElement<keyof TPayload & string>[];
+  backElements?: TemplateElement<keyof TPayload & string>[];
 }
 
 export interface TemplateFieldDefinition<TPayload = Record<string, unknown>> {

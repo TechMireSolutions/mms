@@ -67,6 +67,7 @@ describe('documentTemplateTypes', () => {
     it('validates supported page size keys', () => {
       expect(pageSizeKeySchema.safeParse('A4').success).toBe(true);
       expect(pageSizeKeySchema.safeParse('80mm').success).toBe(true);
+      expect(pageSizeKeySchema.safeParse('CR80').success).toBe(true);
       expect(pageSizeKeySchema.safeParse('A3').success).toBe(false);
     });
 
@@ -156,6 +157,38 @@ describe('documentTemplateTypes', () => {
       };
 
       const result = documentTemplateSchema.safeParse(sampleTemplate);
+      expect(result.success).toBe(true);
+    });
+
+    it('accepts dual-sided templates with backElements', () => {
+      const dualSidedTemplate = {
+        pageSize: 'CR80',
+        orientation: 'landscape' as const,
+        elements: [
+          {
+            id: 'front_title',
+            type: 'heading',
+            label: 'Front Card',
+            x: 10,
+            y: 10,
+            w: 100,
+            h: 20,
+          },
+        ],
+        backElements: [
+          {
+            id: 'back_terms',
+            type: 'static',
+            label: 'Card Terms & Conditions',
+            x: 10,
+            y: 10,
+            w: 200,
+            h: 50,
+          },
+        ],
+      };
+
+      const result = documentTemplateSchema.safeParse(dualSidedTemplate);
       expect(result.success).toBe(true);
     });
 

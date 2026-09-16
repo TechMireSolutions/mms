@@ -4,6 +4,10 @@ import { renderToStaticMarkup } from "react-dom/server";
 import type { Student } from "@mms/shared";
 import { StudentDetail } from "./StudentDetail";
 
+vi.mock("react-router-dom", () => ({
+  useNavigate: () => vi.fn(),
+}));
+
 vi.mock("@/tenant/features/students/components/useStudentDetailModel", () => ({
   useStudentDetailModel: (_student: Student) => ({
     t: (key: string, params?: Record<string, string | number>) => {
