@@ -36,7 +36,13 @@ vi.mock("@/components/ui/DatePicker", () => ({
 
 /** The real modal keeps the wizard mounted between openings; only its portal unmounts. */
 vi.mock("@/components/ui/FormModal", () => ({
-  FormModal: ({ open, children }: any) => (open ? <div data-testid="wizard-modal">{children}</div> : null),
+  FormModal: ({ open, headerExtra, children }: any) =>
+    open ? (
+      <div data-testid="wizard-modal">
+        {headerExtra}
+        {children}
+      </div>
+    ) : null,
 }));
 
 import { notify } from "@/lib/notify";
@@ -282,5 +288,82 @@ describe("SimpleTransactionWizard", () => {
     expect(container.textContent).toContain("accounting.journal.dashboard.wizard.errorAmountInvalid");
     expect(container.textContent).not.toContain("accounting.journal.dashboard.wizard.postMessage");
     expect(formatCurrency).not.toHaveBeenCalled();
+  });
+
+  it("advances to review step when Enter is pressed on valid amount input", async () => {
+    await renderWizard(true, feeCollection);
+    await act(async () => {
+      setInputValue(amountInput(), "250.00");
+    });
+    await act(async () => {
+      amountInput().dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+    expect(container.textContent).toContain("accounting.journal.dashboard.wizard.postTransaction");
+  });
+
+  it("renders same account error alert on review step when both legs match", async () => {
+    await act(async () => {
+      root.render(
+        <StepReview
+          type={adjustment}
+          form={{ date: "2026-01-15", amount: "50", debitAcc: "a1000", creditAcc: "a1000", description: "Adj", ref: "", receipt: "", fiscal_year: "2026" }}
+          accounts={seedAccounts}
+          showAdvanced={false}
+          setShowAdvanced={vi.fn()}
+          formatCurrency={(amount) => `$${amount}`}
+        />,
+      );
+    });
+
+    expect(container.textContent).toContain("accounting.journal.dashboard.wizard.errorSameAccount");
+    expect(container.textContent).not.toContain("accounting.journal.dashboard.wizard.postMessage");
+  });
+
+  it("navigates back to step 1 when clicking the completed step 1 button in the stepper", async () => {
+    await renderWizard(true, feeCollection);
+    expect(amountInput()).not.toBeNull();
+
+    const step1Btn = container.querySelector('nav[aria-label="accounting.journal.dashboard.wizard.stepsAria"] button');
+    expect(step1Btn).not.toBeNull();
+    await act(async () => {
+      (step1Btn as HTMLButtonElement).click();
+    });
+
+    expect(container.textContent).toContain("accounting.journal.dashboard.whatHappened");
+  });
+
+  it("posts transaction when Enter is pressed on review step", async () => {
+    await renderWizard(true, feeCollection);
+    await act(async () => {
+      setInputValue(amountInput(), "75.00");
+    });
+    await act(async () => {
+      findButton(container, "accounting.journal.dashboard.wizard.next").click();
+    });
+
+    expect(container.textContent).toContain("accounting.journal.dashboard.wizard.postTransaction");
+    await act(async () => {
+      const stepWrapper = container.querySelector(".space-y-4");
+      stepWrapper?.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSave.mock.calls[0]![0].lines[0]!.debit).toBe(75);
+  });
+
+  it("surfaces an error notification if onSave rejects", async () => {
+    onSave.mockRejectedValueOnce(new Error("Network Failure"));
+    await renderWizard(true, feeCollection);
+    await act(async () => {
+      setInputValue(amountInput(), "100.00");
+    });
+    await act(async () => {
+      findButton(container, "accounting.journal.dashboard.wizard.next").click();
+    });
+    await act(async () => {
+      findButton(container, "accounting.journal.dashboard.wizard.postTransaction").click();
+    });
+
+    expect(notify.error).toHaveBeenCalledWith("Network Failure");
   });
 });

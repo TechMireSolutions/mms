@@ -254,4 +254,39 @@ describe("StepTransactionForm", () => {
     expect(container.querySelector("#wizard-custom-tag")).not.toBeNull();
     expect(container.textContent).toContain("CustomTag");
   });
+
+  it("triggers onProceed when Enter is pressed on description input", async () => {
+    const onProceed = vi.fn();
+    const formState: WizardFormState = {
+      date: "2026-09-01",
+      amount: "100.00",
+      description: "Sample Description",
+      debitAcc: "a1000",
+      creditAcc: "a4000",
+      ref: "",
+      receipt: "",
+      fiscal_year: "2026",
+    };
+
+    await act(async () => {
+      root.render(
+        <StepTransactionForm
+          type={mockActionType}
+          form={formState}
+          setForm={vi.fn()}
+          accounts={mockAccounts}
+          currencySymbol="$"
+          onProceed={onProceed}
+        />,
+      );
+    });
+
+    const descInput = container.querySelector("#wizard-description") as HTMLInputElement;
+    expect(descInput).not.toBeNull();
+    await act(async () => {
+      descInput.dispatchEvent(new KeyboardEvent("keydown", { key: "Enter", bubbles: true }));
+    });
+
+    expect(onProceed).toHaveBeenCalledTimes(1);
+  });
 });

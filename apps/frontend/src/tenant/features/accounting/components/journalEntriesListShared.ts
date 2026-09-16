@@ -76,6 +76,24 @@ export function getJournalBalanceDifference(
   return formatAmount(Math.abs(moneyToCents(grandDebit) - moneyToCents(grandCredit)) / 100);
 }
 
+const KNOWN_JOURNAL_TAG_KEYS = new Set([
+  "adjustment",
+  "capital",
+  "donation",
+  "expense",
+  "fees",
+  "obligation",
+  "opening",
+  "payroll",
+  "rent",
+  "reversal",
+  "utilities",
+]);
+
 export function getJournalTagLabel(tag: string, t: TranslationFunction): string {
-  return t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey);
+  const normalized = tag.toLowerCase();
+  if (KNOWN_JOURNAL_TAG_KEYS.has(normalized)) {
+    return t(`accounting.journal.tag.${normalized}` as AppTranslationKey);
+  }
+  return tag;
 }

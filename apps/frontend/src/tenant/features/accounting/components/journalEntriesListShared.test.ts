@@ -3,6 +3,7 @@ import type { JournalEntry } from '@/lib/data/accountingData';
 import {
   getJournalBalanceDifference,
   getJournalEntryLineTotals,
+  getJournalTagLabel,
   isJournalBalanced,
 } from './journalEntriesListShared';
 
@@ -62,5 +63,15 @@ describe('footer balance semantics', () => {
     const formatAmount = (amount: number) => amount.toFixed(2);
     expect(getJournalBalanceDifference(0.30000000000000004, 0.3, formatAmount)).toBe('0.00');
     expect(getJournalBalanceDifference(1.1, 1, formatAmount)).toBe('0.10');
+  });
+});
+
+describe('getJournalTagLabel', () => {
+  it('translates known tags and preserves custom tags directly', () => {
+    const mockT = ((key: string) => `translated:${key}`) as any;
+    expect(getJournalTagLabel('Payroll', mockT)).toBe('translated:accounting.journal.tag.payroll');
+    expect(getJournalTagLabel('payroll', mockT)).toBe('translated:accounting.journal.tag.payroll');
+    expect(getJournalTagLabel('CustomProject', mockT)).toBe('CustomProject');
+    expect(getJournalTagLabel('Fundraiser-2026', mockT)).toBe('Fundraiser-2026');
   });
 });

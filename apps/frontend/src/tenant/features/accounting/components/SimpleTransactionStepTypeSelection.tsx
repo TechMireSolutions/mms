@@ -28,7 +28,7 @@ export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps
               <GroupIcon className="w-3.5 h-3.5" aria-hidden="true" />
               <SectionLabel as="h4" weight="bold" tracking="wide" tone="inherit" className="m-0">{translatedGroupName}</SectionLabel>
             </header>
-            <nav aria-label={`Select ${translatedGroupName} transaction type`} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div role="group" aria-label={translatedGroupName} className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {group.items.map((item) => {
                 const Icon = item.icon;
                 const isSelected = selected?.id === item.id;
@@ -43,13 +43,13 @@ export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps
                     className={`h-auto flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${isSelected ? colors.selected : `border-border bg-card hover:bg-muted/50 ${colors.item}`}`}
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isSelected ? colors.icon : "bg-muted text-muted-foreground"}`} aria-hidden="true">
-                      <Icon className="h-4.5 w-4.5" />
+                      <Icon className="w-5 h-5" />
                     </div>
                     <span className={`text-xs font-semibold leading-tight ${isSelected ? "text-foreground" : "text-muted-foreground"}`}>{t(item.labelKey)}</span>
                   </Button>
                 );
               })}
-            </nav>
+            </div>
           </article>
         );
       })}

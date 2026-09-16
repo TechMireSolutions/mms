@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -20,7 +20,10 @@ export function SimpleTransactionTagSelector({
 }: SimpleTransactionTagSelectorProps) {
   const { t } = useTranslation();
   const [customTagInput, setCustomTagInput] = useState("");
-  const customTags = tags.filter((tag) => !JOURNAL_TAGS.includes(tag) && tag !== typeTag);
+  const customTags = useMemo(
+    () => tags.filter((tag) => !JOURNAL_TAGS.includes(tag) && tag !== typeTag),
+    [tags, typeTag],
+  );
 
   const toggleTag = (tag: string) => {
     const updated = tags.includes(tag)
@@ -40,7 +43,9 @@ export function SimpleTransactionTagSelector({
 
   return (
     <div className="sm:col-span-2 space-y-2 pt-1">
-      <label className={FORM_LABEL}>{t("accounting.columns.journal.tags")}</label>
+      <label htmlFor="wizard-custom-tag" className={FORM_LABEL}>
+        {t("accounting.columns.journal.tags")}
+      </label>
       <div className="flex flex-wrap items-center gap-1.5">
         {typeTag && (
           <Button
@@ -75,8 +80,8 @@ export function SimpleTransactionTagSelector({
             <button
               type="button"
               onClick={() => toggleTag(tag)}
-              aria-label={`Remove tag ${tag}`}
-              className="hover:text-destructive transition-colors focus:outline-none"
+              aria-label={`${t("common.delete")} ${tag}`}
+              className="hover:text-destructive transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
             >
               <X className="w-3 h-3" aria-hidden="true" />
             </button>
@@ -95,6 +100,8 @@ export function SimpleTransactionTagSelector({
             }
           }}
           placeholder={t("contacts.form.typeTagPlaceholder")}
+          aria-label={t("contacts.form.typeTagPlaceholder")}
+          autoComplete="off"
           className="max-w-xs text-xs h-8"
         />
         <Button

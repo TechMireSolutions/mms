@@ -1,5 +1,5 @@
-import type React from "react";
-import { formatDate, type AppTranslationKey } from "@mms/shared";
+import { useMemo, type FormEvent } from "react";
+import { formatDate } from "@mms/shared";
 import { CheckCircle2, DollarSign, Download, Plus, Sparkles, TrendingUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +13,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import type { JournalEntry } from "@/lib/data/accountingData";
 import { QUICK_ACTIONS, resolveEntryDirection, type QuickActionType } from "@/tenant/features/accounting/components/journalEntriesQuickActions";
+import { getJournalEntryLineTotals, getJournalTagLabel } from "@/tenant/features/accounting/components/journalEntriesListShared";
 
 // Cash-flow direction comes from `resolveEntryDirection`, which reads the
 // entry's own transaction type / tags through ONE source — the quick-action
@@ -25,7 +26,7 @@ interface JournalQuickActionsPanelProps {
   canWrite: boolean;
   nlInput: string;
   nlSuggestion: QuickActionType | null;
-  onNlSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  onNlSubmit: (event: FormEvent<HTMLFormElement>) => void;
   onNlChange: (inputValue: string) => void;
   onOpenPrefill: (prefillType: QuickActionType | null) => void;
   onExportCsv: () => void;
@@ -43,10 +44,22 @@ export function JournalQuickActionsPanel({
 }: JournalQuickActionsPanelProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
-  const journalStatusConfig: Record<string, StatusBadgeConfigItem> = {
-    posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },
-    draft: { label: t("accounting.journal.status.draft"), cls: SEMANTIC_BADGE.warningStrong },
-  };
+
+  const journalStatusConfig: Record<string, StatusBadgeConfigItem> = useMemo(
+    () => ({
+      posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },
+      draft: { label: t("accounting.journal.status.draft"), cls: SEMANTIC_BADGE.warningStrong },
+    }),
+    [t],
+  );
+
+  const recentEntries = useMemo(
+    () =>
+      entries
+        .toSorted((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date))
+        .slice(0, 20),
+    [entries],
+  );
 
   return (
     <>
@@ -66,6 +79,7 @@ export function JournalQuickActionsPanel({
                 value={nlInput}
                 onChange={(event) => onNlChange(event.target.value)}
                 placeholder={t("accounting.journal.dashboard.placeholderNl")}
+                autoComplete="off"
                 className="w-full px-4 py-3"
               />
               {nlSuggestion && (
@@ -84,7 +98,7 @@ export function JournalQuickActionsPanel({
       {canWrite && (
         <section aria-label={t("accounting.journal.dashboard.quickActions")}>
           <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-wide mb-2.5 m-0">{t("accounting.journal.dashboard.quickActions")}</h3>
-          <nav className="flex flex-wrap gap-2">
+          <div role="group" aria-label={t("accounting.journal.dashboard.quickActions")} className="flex flex-wrap gap-2">
             {QUICK_ACTIONS.map((quickAction) => {
               const Icon = quickAction.icon;
               return (
@@ -107,7 +121,7 @@ export function JournalQuickActionsPanel({
             >
               <Plus className="w-4 h-4" aria-hidden="true" /> {t("accounting.journal.dashboard.otherTransaction")}
             </Button>
-          </nav>
+          </div>
         </section>
       )}
 
@@ -132,8 +146,8 @@ export function JournalQuickActionsPanel({
           />
         ) : (
           <div className="space-y-2">
-            {[...entries].sort((firstEntry, secondEntry) => secondEntry.date.localeCompare(firstEntry.date)).slice(0, 20).map((entry) => {
-              const amount = entry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
+            {recentEntries.map((entry) => {
+              const { totalDebit: amount } = getJournalEntryLineTotals(entry);
               const isMoneyIn = resolveEntryDirection(entry) === "in";
               return (
                 <Card key={entry.id} accentColor={isMoneyIn ? "success" : "destructive"} className="flex flex-col gap-3 px-5 py-3 hover:bg-muted/20 transition-all duration-300 sm:flex-row sm:items-center sm:gap-4">
@@ -148,7 +162,7 @@ export function JournalQuickActionsPanel({
                         <span className="text-xs font-mono text-muted-foreground">{entry.ref}</span>
                         {(entry.tags || []).map((tag) => (
                           <Badge key={tag} pill tone="primary" className="px-1.5 font-bold">
-                            {t(`accounting.journal.tag.${tag.toLowerCase()}` as AppTranslationKey)}
+                            {getJournalTagLabel(tag, t)}
                           </Badge>
                         ))}
                       </div>
