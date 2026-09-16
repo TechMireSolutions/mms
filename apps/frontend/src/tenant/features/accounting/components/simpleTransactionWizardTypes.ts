@@ -1,5 +1,5 @@
 import type { ElementType } from "react";
-import type { Account, AppTranslationKey } from "@mms/shared";
+import { moneyToCents, type Account, type AppTranslationKey } from "@mms/shared";
 import { parseMoneyInput } from "./simpleTransactionMoney";
 
 export type TransactionGroupColor = "emerald" | "red" | "blue";
@@ -95,11 +95,38 @@ export function wizardCashAccounts(accounts: readonly Account[]): Account[] {
   return [...candidateAccounts].sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code));
 }
 
-export function wizardAccountOptions(accounts: readonly Account[]): WizardAccountOption[] {
-  return wizardCashAccounts(accounts).map((account) => ({
-    value: account.id,
-    label: account.code ? `${account.code} — ${account.name}` : account.name,
-  }));
+export function calculateAccountBalanceCents(
+  accountId: string,
+  entries: readonly { lines: Array<{ account_id: string; debit: number; credit: number }>; status: string }[],
+): number {
+  let balanceCents = 0;
+  for (const entry of entries) {
+    if (entry.status !== "posted") continue;
+    for (const line of entry.lines) {
+      if (line.account_id === accountId) {
+        balanceCents += moneyToCents(line.debit) - moneyToCents(line.credit);
+      }
+    }
+  }
+  return balanceCents;
+}
+
+export function wizardAccountOptions(
+  accounts: readonly Account[],
+  entries?: readonly { lines: Array<{ account_id: string; debit: number; credit: number }>; status: string }[],
+  formatCurrency?: (amount: number) => string,
+): WizardAccountOption[] {
+  return wizardCashAccounts(accounts).map((account) => {
+    let balanceSuffix = "";
+    if (entries && formatCurrency) {
+      const balanceCents = calculateAccountBalanceCents(account.id, entries);
+      balanceSuffix = ` (${formatCurrency(balanceCents / 100)})`;
+    }
+    return {
+      value: account.id,
+      label: account.code ? `${account.code} — ${account.name}${balanceSuffix}` : `${account.name}${balanceSuffix}`,
+    };
+  });
 }
 
 /**
@@ -199,12 +226,13 @@ export function buildWizardFormState(
   accounts: readonly Account[],
   defaults: WizardFormDefaults,
   translate: (key: AppTranslationKey) => string,
+  initialValues?: { amount?: string; description?: string },
 ): WizardFormState {
   return {
     date: defaults.date,
-    amount: "",
+    amount: initialValues?.amount ?? "",
     ...resolveSimpleTransactionAccounts(prefillType, accounts),
-    description: prefillType ? translate(prefillType.descriptionKey) : "",
+    description: initialValues?.description ?? (prefillType ? translate(prefillType.descriptionKey) : ""),
     ref: "",
     receipt: "",
     fiscal_year: defaults.fiscalYearLabel,

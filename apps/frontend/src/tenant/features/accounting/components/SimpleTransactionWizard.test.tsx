@@ -89,7 +89,7 @@ function findButton(container: HTMLElement, textFragment: string): HTMLButtonEle
 describe("SimpleTransactionWizard", () => {
   let container: HTMLDivElement;
   let root: Root;
-  let onSave: Mock<(entry: JournalEntry) => void | Promise<void>>;
+  let onSave: Mock<(entry: JournalEntry, stayOpen?: boolean) => void | Promise<void>>;
   let onClose: Mock<() => void>;
 
   beforeEach(() => {
@@ -365,5 +365,28 @@ describe("SimpleTransactionWizard", () => {
     });
 
     expect(notify.error).toHaveBeenCalledWith("Network Failure");
+  });
+
+  it("posts and resets form for another transaction when Post & Record Another is clicked", async () => {
+    await renderWizard(true, feeCollection);
+    await act(async () => {
+      setInputValue(amountInput(), "150.00");
+    });
+    await act(async () => {
+      findButton(container, "accounting.journal.dashboard.wizard.next").click();
+    });
+
+    const postAndNewBtn = findButton(container, "accounting.journal.dashboard.wizard.postAndNew");
+    expect(postAndNewBtn).not.toBeNull();
+
+    await act(async () => {
+      postAndNewBtn.click();
+    });
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    expect(onSave.mock.calls[0]![1]).toBe(true);
+    // Wizard navigated back to step 2 with amount cleared
+    expect(amountInput().value).toBe("");
+    expect(notify.success).toHaveBeenCalled();
   });
 });

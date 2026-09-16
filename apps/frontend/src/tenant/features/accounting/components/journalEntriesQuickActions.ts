@@ -101,27 +101,35 @@ const MONEY_IN_GROUP = "accounting.journal.dashboard.group.moneyIn";
  * above rather than a second hand-maintained list — a drift between the two was
  * what let "Other expense" carry the money-in tag `Capital`.
  */
-export const QUICK_ACTION_DIRECTIONS: Record<string, QuickActionDirection> = Object.fromEntries(
-  QUICK_ACTIONS.map((quickAction) => [
-    quickAction.type.id,
-    quickAction.type.groupKey === MONEY_IN_GROUP ? "in" : "out",
-  ]),
-);
+export const QUICK_ACTION_DIRECTIONS: Record<string, QuickActionDirection> = {
+  ...Object.fromEntries(
+    QUICK_ACTIONS.map((quickAction) => [
+      quickAction.type.id,
+      quickAction.type.groupKey === MONEY_IN_GROUP ? "in" : "out",
+    ]),
+  ),
+  rent_income: "in",
+  other_income: "in",
+  supplies: "out",
+  rent_payment: "out",
+};
 
 /** Tags of the money-in quick actions; disjoint from {@link MONEY_OUT_ACTION_TAGS} by construction. */
-export const MONEY_IN_ACTION_TAGS: ReadonlySet<string> = new Set(
-  QUICK_ACTIONS.filter((quickAction) => quickAction.type.groupKey === MONEY_IN_GROUP).map(
+export const MONEY_IN_ACTION_TAGS: ReadonlySet<string> = new Set([
+  ...QUICK_ACTIONS.filter((quickAction) => quickAction.type.groupKey === MONEY_IN_GROUP).map(
     (quickAction) => quickAction.type.tag,
   ),
-);
+  "Income",
+]);
 
 /** Tags of the money-out quick actions, excluding any tag claimed by money-in. */
-export const MONEY_OUT_ACTION_TAGS: ReadonlySet<string> = new Set(
-  QUICK_ACTIONS.filter(
+export const MONEY_OUT_ACTION_TAGS: ReadonlySet<string> = new Set([
+  ...QUICK_ACTIONS.filter(
     (quickAction) =>
       quickAction.type.groupKey !== MONEY_IN_GROUP && !MONEY_IN_ACTION_TAGS.has(quickAction.type.tag),
   ).map((quickAction) => quickAction.type.tag),
-);
+  "Rent",
+]);
 
 /**
  * Direction implied by an entry's own tags / transaction type, or `null` when the
@@ -163,6 +171,17 @@ export function parseNaturalLanguage(text: string): QuickActionType | null {
     normalizedText.includes("purchase")
   ) {
     return OTHER_EXPENSE;
+  }
+  return null;
+}
+
+export function extractAmountFromNaturalLanguage(text: string): string | null {
+  const tokens = text.split(/\s+/);
+  for (const token of tokens) {
+    const cleaned = token.replace(/^[$€£Rs.\s]+/, "").replace(/,/g, "");
+    if (/^\d+(?:\.\d{1,2})?$/.test(cleaned) && Number(cleaned) > 0) {
+      return cleaned;
+    }
   }
   return null;
 }

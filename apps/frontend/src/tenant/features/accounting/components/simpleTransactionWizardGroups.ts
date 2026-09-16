@@ -43,8 +43,8 @@ export const TRANSACTION_GROUPS: TransactionGroup[] = [
     items: [
       { id: "fee_collection", labelKey: "accounting.journal.dashboard.label.feeCollection", icon: BookOpen, debitAcc: "a1000", creditAcc: "a4000", tag: "Fees", descriptionKey: "accounting.journal.dashboard.desc.feeCollection", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
       { id: "donation", labelKey: "accounting.journal.dashboard.label.donationReceived", icon: Heart, debitAcc: "a1000", creditAcc: "a4100", tag: "Donation", descriptionKey: "accounting.journal.dashboard.desc.donationReceived", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
-      { id: "rent_income", labelKey: "accounting.journal.dashboard.label.rentIncome", icon: Home, debitAcc: "a1000", creditAcc: "a4300", tag: "Capital", descriptionKey: "accounting.journal.dashboard.desc.rentIncome", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
-      { id: "other_income", labelKey: "accounting.journal.dashboard.label.otherIncome", icon: Plus, debitAcc: "a1000", creditAcc: "a4400", tag: "Capital", descriptionKey: "accounting.journal.dashboard.desc.otherIncome", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
+      { id: "rent_income", labelKey: "accounting.journal.dashboard.label.rentIncome", icon: Home, debitAcc: "a1000", creditAcc: "a4300", tag: "Income", descriptionKey: "accounting.journal.dashboard.desc.rentIncome", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
+      { id: "other_income", labelKey: "accounting.journal.dashboard.label.otherIncome", icon: Plus, debitAcc: "a1000", creditAcc: "a4400", tag: "Income", descriptionKey: "accounting.journal.dashboard.desc.otherIncome", groupKey: "accounting.journal.dashboard.group.moneyIn", color: "emerald" },
     ],
   },
   {
@@ -54,9 +54,9 @@ export const TRANSACTION_GROUPS: TransactionGroup[] = [
     items: [
       { id: "salary", labelKey: "accounting.journal.dashboard.label.salaryPayment", icon: UserCheck, debitAcc: "a5000", creditAcc: "a1010", tag: "Payroll", descriptionKey: "accounting.journal.dashboard.desc.salaryPayment", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
       { id: "utilities", labelKey: "accounting.journal.dashboard.label.utilities", icon: Zap, debitAcc: "a5200", creditAcc: "a1000", tag: "Utilities", descriptionKey: "accounting.journal.dashboard.desc.utilities", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
-      { id: "supplies", labelKey: "accounting.journal.dashboard.label.supplies", icon: Package, debitAcc: "a5300", creditAcc: "a1000", tag: "Capital", descriptionKey: "accounting.journal.dashboard.desc.supplies", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
+      { id: "supplies", labelKey: "accounting.journal.dashboard.label.supplies", icon: Package, debitAcc: "a5300", creditAcc: "a1000", tag: "Expense", descriptionKey: "accounting.journal.dashboard.desc.supplies", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
       { id: "rent_payment", labelKey: "accounting.journal.dashboard.label.rentPayment", icon: Building2, debitAcc: "a5100", creditAcc: "a1010", tag: "Rent", descriptionKey: "accounting.journal.dashboard.desc.rentPayment", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
-      { id: "other_expense", labelKey: "accounting.journal.dashboard.label.otherExpense", icon: TrendingDown, debitAcc: "a5700", creditAcc: "a1000", tag: "Capital", descriptionKey: "accounting.journal.dashboard.desc.otherExpense", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
+      { id: "other_expense", labelKey: "accounting.journal.dashboard.label.otherExpense", icon: TrendingDown, debitAcc: "a5700", creditAcc: "a1000", tag: "Expense", descriptionKey: "accounting.journal.dashboard.desc.otherExpense", groupKey: "accounting.journal.dashboard.group.moneyOut", color: "red" },
     ],
   },
   {

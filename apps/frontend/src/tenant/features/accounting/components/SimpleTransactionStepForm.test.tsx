@@ -289,4 +289,75 @@ describe("StepTransactionForm", () => {
 
     expect(onProceed).toHaveBeenCalledTimes(1);
   });
+
+  it("renders Change Type button and triggers onChangeType", async () => {
+    const onChangeType = vi.fn();
+    const formState: WizardFormState = {
+      date: "2026-09-01",
+      amount: "100.00",
+      description: "Sample",
+      debitAcc: "a1000",
+      creditAcc: "a4000",
+      ref: "",
+      receipt: "",
+      fiscal_year: "2026",
+    };
+
+    await act(async () => {
+      root.render(
+        <StepTransactionForm
+          type={mockActionType}
+          form={formState}
+          setForm={vi.fn()}
+          accounts={mockAccounts}
+          currencySymbol="$"
+          onChangeType={onChangeType}
+        />,
+      );
+    });
+
+    const changeTypeBtn = Array.from(container.querySelectorAll("button")).find((btn) =>
+      btn.textContent?.includes("accounting.journal.dashboard.wizard.changeType"),
+    );
+    expect(changeTypeBtn).not.toBeUndefined();
+    await act(async () => {
+      changeTypeBtn?.click();
+    });
+    expect(onChangeType).toHaveBeenCalledTimes(1);
+  });
+
+  it("adds increment to amount when a denomination chip is clicked", async () => {
+    const setForm = vi.fn();
+    const formState: WizardFormState = {
+      date: "2026-09-01",
+      amount: "100",
+      description: "Sample",
+      debitAcc: "a1000",
+      creditAcc: "a4000",
+      ref: "",
+      receipt: "",
+      fiscal_year: "2026",
+    };
+
+    await act(async () => {
+      root.render(
+        <StepTransactionForm
+          type={mockActionType}
+          form={formState}
+          setForm={setForm}
+          accounts={mockAccounts}
+          currencySymbol="$"
+        />,
+      );
+    });
+
+    const chip500 = Array.from(container.querySelectorAll("button")).find((btn) =>
+      btn.textContent?.includes("+500"),
+    );
+    expect(chip500).not.toBeUndefined();
+    await act(async () => {
+      chip500?.click();
+    });
+    expect(setForm).toHaveBeenCalled();
+  });
 });

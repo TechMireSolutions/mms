@@ -1,10 +1,11 @@
-import { createElement, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { createElement, useId, useMemo, useState, type Dispatch, type SetStateAction } from "react";
+import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Account, FiscalYear } from "@/lib/data/accountingData";
+import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
 import {
   getTransactionGroupColorClasses,
   wizardAccountOptions,
@@ -22,6 +23,10 @@ interface StepTransactionFormProps {
   accounts: Account[];
   currencySymbol: string;
   fiscalYears?: FiscalYear[];
+  entries?: readonly JournalEntry[];
+  formatCurrency?: (amount: number | string | null | undefined) => string;
+  idPrefix?: string;
+  onChangeType?: () => void;
   onProceed?: () => void;
 }
 
@@ -32,9 +37,15 @@ export function StepTransactionForm({
   accounts,
   currencySymbol,
   fiscalYears,
+  entries,
+  formatCurrency,
+  idPrefix,
+  onChangeType,
   onProceed,
 }: StepTransactionFormProps) {
   const { t } = useTranslation();
+  const reactId = useId();
+  const prefix = idPrefix ?? "wizard";
   const [amountTouched, setAmountTouched] = useState(false);
   const isMoneyIn = type.groupKey === "accounting.journal.dashboard.group.moneyIn";
   const isTransfer = type.groupKey === "accounting.journal.dashboard.group.transfers";
@@ -43,7 +54,10 @@ export function StepTransactionForm({
    * generated ids, so filtering by the seed ids ("a1000"…) left every workspace
    * with its own cash/bank accounts unable to record a simple transaction.
    */
-  const accountOptions = useMemo(() => wizardAccountOptions(accounts), [accounts]);
+  const accountOptions = useMemo(
+    () => wizardAccountOptions(accounts, entries, formatCurrency ? (amount) => formatCurrency(amount) : undefined),
+    [accounts, entries, formatCurrency],
+  );
   const revenueOptions = useMemo(() => wizardCategoryAccountOptions(accounts, "Revenue"), [accounts]);
   const expenseOptions = useMemo(() => wizardCategoryAccountOptions(accounts, "Expense"), [accounts]);
   const fiscalYearOptions = useMemo(
@@ -60,35 +74,48 @@ export function StepTransactionForm({
   const currencyPaddingClass = currencySymbol.length > 2 ? "ps-14" : currencySymbol.length > 1 ? "ps-11" : "ps-8";
 
   const leg1 = isMoneyIn
-    ? { id: "wizard-acc-in", label: t("accounting.journal.dashboard.wizard.receivedInto"), field: "debitAcc" as const, options: accountOptions }
+    ? { id: `${prefix}-acc-in`, label: t("accounting.journal.dashboard.wizard.receivedInto"), field: "debitAcc" as const, options: accountOptions }
     : isTransfer
-      ? { id: "wizard-acc-to", label: t("accounting.journal.dashboard.wizard.transferTo"), field: "debitAcc" as const, options: accountOptions }
-      : { id: "wizard-acc-out", label: t("accounting.journal.dashboard.wizard.paidFrom"), field: "creditAcc" as const, options: accountOptions };
+      ? { id: `${prefix}-acc-to`, label: t("accounting.journal.dashboard.wizard.transferTo"), field: "debitAcc" as const, options: accountOptions }
+      : { id: `${prefix}-acc-out`, label: t("accounting.journal.dashboard.wizard.paidFrom"), field: "creditAcc" as const, options: accountOptions };
 
   const leg2 = isMoneyIn
-    ? { id: "wizard-acc-category-in", label: t("accounting.journal.dashboard.wizard.incomeCategory"), field: "creditAcc" as const, options: revenueOptions }
+    ? { id: `${prefix}-acc-category-in`, label: t("accounting.journal.dashboard.wizard.incomeCategory"), field: "creditAcc" as const, options: revenueOptions }
     : isTransfer
-      ? { id: "wizard-acc-from", label: t("accounting.journal.dashboard.wizard.transferFrom"), field: "creditAcc" as const, options: accountOptions }
-      : { id: "wizard-acc-category-out", label: t("accounting.journal.dashboard.wizard.expenseCategory"), field: "debitAcc" as const, options: expenseOptions };
+      ? { id: `${prefix}-acc-from`, label: t("accounting.journal.dashboard.wizard.transferFrom"), field: "creditAcc" as const, options: accountOptions }
+      : { id: `${prefix}-acc-category-out`, label: t("accounting.journal.dashboard.wizard.expenseCategory"), field: "debitAcc" as const, options: expenseOptions };
 
   return (
     <fieldset className="space-y-4 border-0 p-0 m-0">
       <legend className="sr-only">{t("accounting.journal.dashboard.wizard.stepDetails")}</legend>
-      <header className="flex items-center gap-3 p-3 rounded-xl bg-muted/40 border border-border">
-        <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${getTransactionGroupColorClasses(type.color).icon}`} aria-hidden="true">
-          {createElement(type.icon, { className: "w-5 h-5" })}
+      <header className="flex items-center justify-between gap-3 p-3 rounded-xl bg-muted/40 border border-border">
+        <div className="flex items-center gap-3 min-w-0">
+          <div className={`w-10 h-10 rounded-xl flex items-center justify-center shrink-0 ${getTransactionGroupColorClasses(type.color).icon}`} aria-hidden="true">
+            {createElement(type.icon, { className: "w-5 h-5" })}
+          </div>
+          <div className="min-w-0">
+            <h3 className="text-sm font-bold text-foreground truncate m-0">{t(type.labelKey)}</h3>
+            <p className="text-xs text-muted-foreground truncate m-0">{t(type.groupKey)}</p>
+          </div>
         </div>
-        <div>
-          <h3 className="text-sm font-bold text-foreground m-0">{t(type.labelKey)}</h3>
-          <p className="text-xs text-muted-foreground m-0">{t(type.groupKey)}</p>
-        </div>
+        {onChangeType && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={onChangeType}
+            className="shrink-0 text-xs font-semibold text-muted-foreground hover:text-foreground"
+          >
+            {t("accounting.journal.dashboard.wizard.changeType")}
+          </Button>
+        )}
       </header>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div>
-          <label htmlFor="wizard-date" className={FORM_LABEL}>{t("accounting.columns.journal.date")}</label>
+          <label htmlFor={`${prefix}-date`} className={FORM_LABEL}>{t("accounting.columns.journal.date")}</label>
           <DatePicker
-            id="wizard-date"
+            id={`${prefix}-date`}
             name="date"
             value={form.date}
             onChange={(dateValue) => setForm((prev) => ({ ...prev, date: dateValue }))}
@@ -96,9 +123,9 @@ export function StepTransactionForm({
         </div>
 
         <div>
-          <label htmlFor="wizard-fiscal-year" className={FORM_LABEL}>{t("accounting.journal.form.financialYear")}</label>
+          <label htmlFor={`${prefix}-fiscal-year`} className={FORM_LABEL}>{t("accounting.journal.form.financialYear")}</label>
           <FormSelect
-            id="wizard-fiscal-year"
+            id={`${prefix}-fiscal-year`}
             name="fiscalYear"
             value={form.fiscal_year || ""}
             onChange={(fiscalYearValue) => {
@@ -116,7 +143,7 @@ export function StepTransactionForm({
         </div>
 
         <div>
-          <label htmlFor="wizard-amount" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.amount")}</label>
+          <label htmlFor={`${prefix}-amount`} className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.amount")}</label>
           <div className="relative">
             <span
               className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground pointer-events-none select-none"
@@ -125,7 +152,7 @@ export function StepTransactionForm({
               {currencySymbol}
             </span>
             <Input
-              id="wizard-amount"
+              id={`${prefix}-amount`}
               name="amount"
               type="text"
               inputMode="decimal"
@@ -150,32 +177,51 @@ export function StepTransactionForm({
               aria-invalid={showAmountRequired || amountIsInvalid}
               aria-describedby={
                 showAmountRequired
-                  ? "wizard-amount-required-error"
+                  ? `${prefix}-amount-required-error`
                   : amountIsInvalid
-                    ? "wizard-amount-invalid-error"
+                    ? `${prefix}-amount-invalid-error`
                     : undefined
               }
             />
           </div>
+          <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
+            {[100, 500, 1000, 5000].map((inc) => (
+              <Button
+                key={inc}
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => {
+                  setAmountTouched(true);
+                  const current = parseMoneyInput(form.amount) ?? 0;
+                  const next = current + inc;
+                  setForm((prev) => ({ ...prev, amount: next % 1 === 0 ? String(next) : next.toFixed(2) }));
+                }}
+                className="h-6 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
+              >
+                +{inc.toLocaleString()}
+              </Button>
+            ))}
+          </div>
           {showAmountRequired && (
-            <p id="wizard-amount-required-error" className="text-xs text-warning mt-1" role="alert">
+            <p id={`${prefix}-amount-required-error`} className="text-xs text-warning mt-1" role="alert">
               {t("accounting.journal.dashboard.wizard.errorAmount")}
             </p>
           )}
           {amountIsInvalid && (
-            <p id="wizard-amount-invalid-error" className="text-xs text-destructive mt-1" role="alert">
+            <p id={`${prefix}-amount-invalid-error`} className="text-xs text-destructive mt-1" role="alert">
               {t("accounting.journal.dashboard.wizard.errorAmountInvalid")}
             </p>
           )}
         </div>
 
         <div>
-          <label htmlFor="wizard-ref" className={FORM_LABEL}>
+          <label htmlFor={`${prefix}-ref`} className={FORM_LABEL}>
             {t("accounting.journal.dashboard.wizard.refNo")}{" "}
             <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span>
           </label>
           <Input
-            id="wizard-ref"
+            id={`${prefix}-ref`}
             name="ref"
             autoComplete="off"
             value={form.ref}
@@ -203,7 +249,7 @@ export function StepTransactionForm({
             options={leg1.options}
             placeholder={selectAccountPlaceholder}
             aria-invalid={isSameAccount}
-            aria-describedby={isSameAccount ? "wizard-account-same-error" : undefined}
+            aria-describedby={isSameAccount ? `${prefix}-account-same-error` : undefined}
           />
         </div>
         <div>
@@ -216,22 +262,22 @@ export function StepTransactionForm({
             options={leg2.options}
             placeholder={selectAccountPlaceholder}
             aria-invalid={isSameAccount}
-            aria-describedby={isSameAccount ? "wizard-account-same-error" : undefined}
+            aria-describedby={isSameAccount ? `${prefix}-account-same-error` : undefined}
           />
         </div>
 
         {isSameAccount && (
           <div className="sm:col-span-2">
-            <p id="wizard-account-same-error" className="text-xs text-destructive m-0" role="alert">
+            <p id={`${prefix}-account-same-error`} className="text-xs text-destructive m-0" role="alert">
               {t("accounting.journal.dashboard.wizard.errorSameAccount")}
             </p>
           </div>
         )}
 
         <div className="sm:col-span-2">
-          <label htmlFor="wizard-description" className={FORM_LABEL}>{t("accounting.columns.journal.description")}</label>
+          <label htmlFor={`${prefix}-description`} className={FORM_LABEL}>{t("accounting.columns.journal.description")}</label>
           <Input
-            id="wizard-description"
+            id={`${prefix}-description`}
             name="description"
             value={form.description}
             onChange={(event) => {
@@ -252,6 +298,7 @@ export function StepTransactionForm({
           typeTag={type.tag}
           tags={form.tags || []}
           onChangeTags={(tags) => setForm((prev) => ({ ...prev, tags }))}
+          idPrefix={prefix}
         />
       </div>
     </fieldset>

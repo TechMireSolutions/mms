@@ -25,22 +25,40 @@ interface SimpleTransactionWizardProps {
   accounts: Account[];
   entries: JournalEntry[];
   fiscalYears: FiscalYear[];
-  onSave: (entry: JournalEntry) => void | Promise<void>;
+  onSave: (entry: JournalEntry, stayOpen?: boolean) => void | Promise<void>;
   onClose: () => void;
   prefillType?: QuickActionType | null;
+  prefillAmount?: string;
+  prefillDescription?: string;
 }
 
-export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, onSave, onClose, prefillType }: SimpleTransactionWizardProps) {
+export function SimpleTransactionWizard({
+  open,
+  accounts,
+  entries,
+  fiscalYears,
+  onSave,
+  onClose,
+  prefillType,
+  prefillAmount,
+  prefillDescription,
+}: SimpleTransactionWizardProps) {
   const { t } = useTranslation();
   const { formatCurrency, activeCurrency } = useAccountingCurrency();
   const activeFiscalYearLabel = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
   const [step, setStep] = useState(() => (prefillType ? 2 : 1));
   const [selectedType, setSelectedType] = useState<QuickActionType | null>(prefillType || null);
   const [showAdvanced, setShowAdvanced] = useState(false);
-  const [submittingStatus, setSubmittingStatus] = useState<"draft" | "posted" | null>(null);
+  const [submittingStatus, setSubmittingStatus] = useState<"draft" | "posted" | "posted_and_new" | null>(null);
   const isSubmitting = submittingStatus !== null;
   const [form, setForm] = useState<WizardFormState>(() =>
-    buildWizardFormState(prefillType ?? null, accounts, { date: todayISO(), fiscalYearLabel: activeFiscalYearLabel }, (key) => t(key)),
+    buildWizardFormState(
+      prefillType ?? null,
+      accounts,
+      { date: todayISO(), fiscalYearLabel: activeFiscalYearLabel },
+      (key) => t(key),
+      { amount: prefillAmount, description: prefillDescription },
+    ),
   );
 
   /**
@@ -69,10 +87,18 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
       setStep(prefillType ? 2 : 1);
       setSelectedType(prefillType ?? null);
       setShowAdvanced(false);
-      setForm(buildWizardFormState(prefillType ?? null, liveAccounts, { date: todayISO(), fiscalYearLabel }, translate));
+      setForm(
+        buildWizardFormState(
+          prefillType ?? null,
+          liveAccounts,
+          { date: todayISO(), fiscalYearLabel },
+          translate,
+          { amount: prefillAmount, description: prefillDescription },
+        ),
+      );
     }
     wasOpenRef.current = open;
-  }, [open, prefillType]);
+  }, [open, prefillType, prefillAmount, prefillDescription]);
 
   const parsedAmount = useMemo(() => parseMoneyInput(form.amount), [form.amount]);
 
@@ -92,12 +118,12 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
     return true;
   };
 
-  const handleSave = async (status: "draft" | "posted") => {
+  const handleSave = async (status: "draft" | "posted", recordAnother = false) => {
     if (isSubmitting) return;
     const validation = validateWizardForm(form, accounts);
     if (!validation.ok) { notify.error(t(validation.errorKey)); return; }
     if (!selectedType) { notify.error(t("accounting.journal.dashboard.wizard.errorSource")); return; }
-    setSubmittingStatus(status);
+    setSubmittingStatus(recordAnother ? "posted_and_new" : status);
     try {
       const generatedReference = generateJERef(entries);
       const description = form.description.trim() || t(selectedType.labelKey);
@@ -128,7 +154,17 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
        */
       const parsedEntry = journalEntryRecordSchema.safeParse(candidate);
       if (!parsedEntry.success || !isJournalEntryBalanced(parsedEntry.data.lines)) { notify.error(t("common.formPleaseFixErrors")); return; }
-      await onSave(parsedEntry.data);
+      await onSave(parsedEntry.data, recordAnother);
+      if (recordAnother) {
+        notify.success(`${candidate.ref}: ${t("accounting.journal.dashboard.wizard.postMessage")}`);
+        setForm((prev) => ({
+          ...prev,
+          amount: "",
+          ref: "",
+          description: t(selectedType.descriptionKey),
+        }));
+        setStep(2);
+      }
     } catch (error) {
       notify.error(error instanceof Error ? error.message : t("accounting.settings.saveEntriesFailed"));
     } finally {
@@ -173,16 +209,20 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
                       type="button"
                       onClick={() => setStep(stepDefinition.stepNumber)}
                       aria-label={`${stepDefinition.label} (${t("accounting.journal.dashboard.wizard.back")})`}
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary ${circleClass}`}
+                      className="flex min-h-11 min-w-11 items-center justify-center -m-2.5 p-2.5 rounded-full hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
                     >
-                      <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all ${circleClass}`}>
+                        <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+                      </span>
                     </button>
                   ) : (
                     <div
-                      className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all ${circleClass}`}
+                      className="flex min-h-11 min-w-11 items-center justify-center -m-2.5 p-2.5"
                       aria-current={isCurrent ? "step" : undefined}
                     >
-                      {stepDefinition.stepNumber}
+                      <span className={`flex h-6 w-6 items-center justify-center rounded-full text-xs font-bold transition-all ${circleClass}`}>
+                        {stepDefinition.stepNumber}
+                      </span>
                     </div>
                   )}
                   <span className={`hidden text-xs font-semibold sm:block ${isCurrent ? "text-foreground" : "text-muted-foreground"}`}>
@@ -218,6 +258,9 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
                 accounts={accounts}
                 currencySymbol={activeCurrency.symbol}
                 fiscalYears={fiscalYears}
+                entries={entries}
+                formatCurrency={formatCurrency}
+                onChangeType={() => setStep(1)}
                 onProceed={() => {
                   if (canProceed()) setStep(3);
                 }}
@@ -228,13 +271,13 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
         </AnimatePresence>
         <div className="flex w-full flex-wrap items-center justify-between gap-2">
           <Button type="button" variant="outline" onClick={() => step > 1 ? setStep(step - 1) : onClose()}>
-            <ArrowLeft className="h-4 w-4" aria-hidden="true" />
+            <ArrowLeft className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
             {step === 1 ? t("accounting.journal.dashboard.wizard.cancel") : t("accounting.journal.dashboard.wizard.back")}
           </Button>
           <div className="flex flex-wrap items-center gap-2">
             {step < 3 && (
               <Button type="button" onClick={() => setStep(step + 1)} disabled={!canProceed() || !selectedType}>
-                {t("accounting.journal.dashboard.wizard.next")} <ArrowRight className="h-4 w-4" aria-hidden="true" />
+                {t("accounting.journal.dashboard.wizard.next")} <ArrowRight className="h-4 w-4 rtl:rotate-180" aria-hidden="true" />
               </Button>
             )}
             {step === 3 && (
@@ -247,6 +290,15 @@ export function SimpleTransactionWizard({ open, accounts, entries, fiscalYears, 
                 >
                   {submittingStatus === "draft" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
                   {t("accounting.journal.dashboard.wizard.saveDraft")}
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => { void handleSave("posted", true); }}
+                  disabled={!canProceed() || isSubmitting}
+                >
+                  {submittingStatus === "posted_and_new" && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
+                  {t("accounting.journal.dashboard.wizard.postAndNew")}
                 </Button>
                 <Button
                   type="button"

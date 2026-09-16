@@ -57,7 +57,11 @@ export function useJournalEntriesController({
 
   const [mode, setMode] = useState<'simple' | 'advanced'>('simple');
   const [tab, setTab] = useState<'transactions' | 'cashbook'>('transactions');
-  const [simpleModal, setSimpleModal] = useState<{ prefillType: QuickActionType | null } | null>(null);
+  const [simpleModal, setSimpleModal] = useState<{
+    prefillType: QuickActionType | null;
+    initialAmount?: string;
+    initialDescription?: string;
+  } | null>(null);
   const [nlInput, setNlInput] = useState('');
   const [nlSuggestion, setNlSuggestion] = useState<QuickActionType | null>(null);
   const [showFilters, setShowFilters] = useState(false);

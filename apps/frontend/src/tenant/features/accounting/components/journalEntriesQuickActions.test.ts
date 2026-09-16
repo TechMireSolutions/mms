@@ -4,6 +4,7 @@ import {
   MONEY_OUT_ACTION_TAGS,
   QUICK_ACTIONS,
   QUICK_ACTION_DIRECTIONS,
+  extractAmountFromNaturalLanguage,
   parseNaturalLanguage,
   resolveEntryDirection,
 } from "@/tenant/features/accounting/components/journalEntriesQuickActions";
@@ -19,6 +20,18 @@ describe("parseNaturalLanguage", () => {
 
   it("returns null when no quick action matches", () => {
     expect(parseNaturalLanguage("adjust opening balance")).toBeNull();
+  });
+});
+
+describe("extractAmountFromNaturalLanguage", () => {
+  it("extracts clean monetary amounts from natural language text", () => {
+    expect(extractAmountFromNaturalLanguage("paid 1500 for electricity")).toBe("1500");
+    expect(extractAmountFromNaturalLanguage("collected $250.50 tuition fee")).toBe("250.50");
+    expect(extractAmountFromNaturalLanguage("received donation Rs. 5000")).toBe("5000");
+  });
+
+  it("returns null when no amount is present", () => {
+    expect(extractAmountFromNaturalLanguage("paid electricity")).toBeNull();
   });
 });
 

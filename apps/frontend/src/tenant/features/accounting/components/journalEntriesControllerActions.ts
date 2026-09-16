@@ -15,21 +15,23 @@ export interface JournalEntryActionDeps {
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
   setModal: (modal: 'new' | 'edit' | 'view' | null) => void;
   setSelected: (entry: JournalEntry | null) => void;
-  setSimpleModal: (modal: { prefillType: import('@/tenant/features/accounting/components/journalEntriesQuickActions').QuickActionType | null } | null) => void;
+  setSimpleModal: (modal: { prefillType: import('@/tenant/features/accounting/components/journalEntriesQuickActions').QuickActionType | null; initialAmount?: string; initialDescription?: string } | null) => void;
   setSelectedIds: (ids: string[] | ((prev: string[]) => string[])) => void;
 }
 
 export function createJournalSaveHandler(deps: Pick<JournalEntryActionDeps, 'onChange' | 'setModal' | 'setSelected' | 'setSimpleModal'>) {
-  return async (entry: JournalEntry) => {
+  return async (entry: JournalEntry, stayOpen = false) => {
     await deps.onChange((prev) => {
       if (prev.find((journalEntry) => journalEntry.id === entry.id)) {
         return prev.map((journalEntry) => (journalEntry.id === entry.id ? entry : journalEntry));
       }
       return [...prev, entry];
     });
-    deps.setModal(null);
-    deps.setSelected(null);
-    deps.setSimpleModal(null);
+    if (!stayOpen) {
+      deps.setModal(null);
+      deps.setSelected(null);
+      deps.setSimpleModal(null);
+    }
   };
 }
 

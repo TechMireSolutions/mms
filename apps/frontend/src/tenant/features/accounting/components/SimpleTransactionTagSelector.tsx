@@ -11,14 +11,17 @@ interface SimpleTransactionTagSelectorProps {
   typeTag?: string;
   tags: string[];
   onChangeTags: (tags: string[]) => void;
+  idPrefix?: string;
 }
 
 export function SimpleTransactionTagSelector({
   typeTag,
   tags,
   onChangeTags,
+  idPrefix,
 }: SimpleTransactionTagSelectorProps) {
   const { t } = useTranslation();
+  const inputId = `${idPrefix ?? "wizard"}-custom-tag`;
   const [customTagInput, setCustomTagInput] = useState("");
   const customTags = useMemo(
     () => tags.filter((tag) => !JOURNAL_TAGS.includes(tag) && tag !== typeTag),
@@ -43,7 +46,7 @@ export function SimpleTransactionTagSelector({
 
   return (
     <div className="sm:col-span-2 space-y-2 pt-1">
-      <label htmlFor="wizard-custom-tag" className={FORM_LABEL}>
+      <label htmlFor={inputId} className={FORM_LABEL}>
         {t("accounting.columns.journal.tags")}
       </label>
       <div className="flex flex-wrap items-center gap-1.5">
@@ -90,7 +93,7 @@ export function SimpleTransactionTagSelector({
       </div>
       <div className="flex items-center gap-2 pt-1">
         <Input
-          id="wizard-custom-tag"
+          id={inputId}
           value={customTagInput}
           onChange={(event) => setCustomTagInput(event.target.value)}
           onKeyDown={(event) => {

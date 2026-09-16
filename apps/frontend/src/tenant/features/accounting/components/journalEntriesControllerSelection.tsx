@@ -2,23 +2,39 @@ import type { Dispatch, FormEvent, ReactNode, SetStateAction } from 'react';
 import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from '@/components/ui/ModuleRowActionsMenu';
 import type { JournalEntry } from '@/lib/data/accountingData';
 import { JournalEntryRowActions } from '@/tenant/features/accounting/components/JournalEntryRowActions';
-import { parseNaturalLanguage, type QuickActionType } from '@/tenant/features/accounting/components/journalEntriesQuickActions';
+import {
+  extractAmountFromNaturalLanguage,
+  parseNaturalLanguage,
+  type QuickActionType,
+} from '@/tenant/features/accounting/components/journalEntriesQuickActions';
 
 export function createJournalNlHandlers(
   nlInput: string,
   setNlInput: Dispatch<SetStateAction<string>>,
   setNlSuggestion: Dispatch<SetStateAction<QuickActionType | null>>,
-  setSimpleModal: Dispatch<SetStateAction<{ prefillType: QuickActionType | null } | null>>,
+  setSimpleModal: Dispatch<
+    SetStateAction<{ prefillType: QuickActionType | null; initialAmount?: string; initialDescription?: string } | null>
+  >,
 ) {
   const handleNlSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     const type = parseNaturalLanguage(nlInput);
+    const amount = extractAmountFromNaturalLanguage(nlInput);
+    const description = nlInput.trim();
     if (type) {
-      setSimpleModal({ prefillType: type });
+      setSimpleModal({
+        prefillType: type,
+        initialAmount: amount ?? undefined,
+        initialDescription: description || undefined,
+      });
       setNlInput('');
       setNlSuggestion(null);
     } else {
-      setSimpleModal({ prefillType: null });
+      setSimpleModal({
+        prefillType: null,
+        initialAmount: amount ?? undefined,
+        initialDescription: description || undefined,
+      });
     }
   };
 

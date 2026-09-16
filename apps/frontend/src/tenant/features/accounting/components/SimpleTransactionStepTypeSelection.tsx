@@ -40,7 +40,7 @@ export function StepTypeSelection({ selected, onSelect }: StepTypeSelectionProps
                     variant="ghost"
                     aria-pressed={isSelected}
                     onClick={() => onSelect({ ...item, groupKey: group.groupKey, color: group.color })}
-                    className={`h-auto flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${isSelected ? colors.selected : `border-border bg-card hover:bg-muted/50 ${colors.item}`}`}
+                    className={`h-auto min-h-11 flex flex-col items-center gap-2 p-3 rounded-xl border-2 transition-all text-center ${isSelected ? colors.selected : `border-border bg-card hover:bg-muted/50 ${colors.item}`}`}
                   >
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${isSelected ? colors.icon : "bg-muted text-muted-foreground"}`} aria-hidden="true">
                       <Icon className="w-5 h-5" />
