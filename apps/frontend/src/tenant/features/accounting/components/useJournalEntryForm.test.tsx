@@ -196,4 +196,25 @@ describe("useJournalEntryForm validation", () => {
     expect(saved.ref).toBe("CUSTOM-VOUCHER-001");
     expect(saved.tags).toEqual(["BuildingFund", "Cash"]);
   });
+
+  it("handles comma-separated amounts in journal entry lines without NaN", async () => {
+    const onSave = vi.fn();
+    await act(async () => {
+      root.render(<TestHarness onSave={onSave} onController={(c) => { controller = c; }} />);
+    });
+    await fillEntry("1,500", "1,500");
+
+    expect(controller!.totalDebit).toBe(1500);
+    expect(controller!.totalCredit).toBe(1500);
+    expect(controller!.isBalanced).toBe(true);
+
+    await act(async () => {
+      await controller!.saveEntry("posted");
+    });
+
+    expect(onSave).toHaveBeenCalledTimes(1);
+    const saved = onSave.mock.calls[0]![0] as JournalEntry;
+    expect(saved.lines[0]!.debit).toBe(1500);
+    expect(saved.lines[1]!.credit).toBe(1500);
+  });
 });

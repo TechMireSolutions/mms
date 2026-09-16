@@ -69,11 +69,19 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     setErrors({});
   }, [initial, activeFiscalYear, activeFiscalYearRecord?.label, user?.name]);
 
+function parseLineAmount(val: string | number | null | undefined): number {
+  if (typeof val === "number") return Number.isFinite(val) ? val : 0;
+  if (typeof val !== "string") return 0;
+  const cleaned = val.replace(/,/g, "").trim();
+  const num = Number(cleaned);
+  return Number.isFinite(num) ? num : 0;
+}
+
   // Money is summed through integer cents (and converted once) so the totals
   // shown beside the lines are the same figures the ledger posts, with no float
   // artefacts such as 0.30000000000000004.
-  const totalDebit = moneyToCents(form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.debit) || 0), 0)) / 100;
-  const totalCredit = moneyToCents(form.lines.reduce((sum, journalLine) => sum + (Number(journalLine.credit) || 0), 0)) / 100;
+  const totalDebit = moneyToCents(form.lines.reduce((sum, journalLine) => sum + parseLineAmount(journalLine.debit), 0)) / 100;
+  const totalCredit = moneyToCents(form.lines.reduce((sum, journalLine) => sum + parseLineAmount(journalLine.credit), 0)) / 100;
   /**
    * Balanced by the same rule the server enforces (`isJournalEntryBalanced`:
    * exact integer cents, at least two lines, each single-sided) instead of a
@@ -83,8 +91,8 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
    */
   const isBalanced = isJournalEntryBalanced(
     form.lines.map((journalLine) => ({
-      debit: Number(journalLine.debit) || 0,
-      credit: Number(journalLine.credit) || 0,
+      debit: parseLineAmount(journalLine.debit),
+      credit: parseLineAmount(journalLine.credit),
     })),
   );
 
@@ -99,11 +107,13 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
   })();
 
   const updateLine = (lineIndex: number, field: keyof DraftLine, fieldValue: string | number) => {
-    const lines = [...form.lines];
-    lines[lineIndex] = { ...lines[lineIndex], [field]: fieldValue };
-    if (field === "debit"  && fieldValue) lines[lineIndex].credit = "";
-    if (field === "credit" && fieldValue) lines[lineIndex].debit  = "";
-    setForm({ ...form, lines });
+    setForm((prev) => {
+      const lines = [...prev.lines];
+      lines[lineIndex] = { ...lines[lineIndex], [field]: fieldValue };
+      if (field === "debit" && fieldValue) lines[lineIndex].credit = "";
+      if (field === "credit" && fieldValue) lines[lineIndex].debit = "";
+      return { ...prev, lines };
+    });
   };
 
   const addLine = () => {
@@ -114,13 +124,18 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
     } else if (unbalance < 0) {
       newLine.debit = Math.abs(unbalance).toFixed(2);
     }
-    setForm({ ...form, lines: [...form.lines, newLine] });
+    setForm((prev) => ({ ...prev, lines: [...prev.lines, newLine] }));
   };
-  const removeLine = (lineIndex: number) => { if (form.lines.length <= 2) return; setForm({ ...form, lines: form.lines.filter((_, currentIndex) => currentIndex !== lineIndex) }); };
+  const removeLine = (lineIndex: number) => {
+    if (form.lines.length <= 2) return;
+    setForm((prev) => ({ ...prev, lines: prev.lines.filter((_, currentIndex) => currentIndex !== lineIndex) }));
+  };
 
   const toggleTag = (tag: string) => {
-    const tags = form.tags?.includes(tag) ? form.tags.filter((existingTag) => existingTag !== tag) : [...(form.tags || []), tag];
-    setForm({ ...form, tags });
+    setForm((prev) => {
+      const tags = prev.tags?.includes(tag) ? prev.tags.filter((existingTag) => existingTag !== tag) : [...(prev.tags || []), tag];
+      return { ...prev, tags };
+    });
   };
 
   const validate = (targetStatus: "draft" | "posted"): Record<string, string> => {
@@ -156,8 +171,8 @@ export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscal
       created_by: form.created_by || user?.name || "system",
       lines: form.lines.map((journalLine) => ({
         ...journalLine,
-        debit: typeof journalLine.debit === "string" ? Number(journalLine.debit) || 0 : journalLine.debit,
-        credit: typeof journalLine.credit === "string" ? Number(journalLine.credit) || 0 : journalLine.credit,
+        debit: parseLineAmount(journalLine.debit),
+        credit: parseLineAmount(journalLine.credit),
       })),
     };
     const parsed = journalEntryRecordSchema.safeParse(candidate);

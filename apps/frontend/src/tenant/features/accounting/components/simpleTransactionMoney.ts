@@ -50,13 +50,21 @@ function countOccurrences(value: string, character: MoneySeparator): number {
  * Parse a money string into a number with at most two decimals, or `null` when
  * the input cannot be read with confidence.
  */
+const CURRENCY_PREFIX_RE = /^(?:[$€£¥₹₨]|(?:Rs\b\.?|(?:PKR|USD|EUR|GBP|SAR|AED|INR)\b))\s*/i;
+const CURRENCY_SUFFIX_RE = /\s*(?:[$€£¥₹₨]|(?:Rs\b\.?|(?:PKR|USD|EUR|GBP|SAR|AED|INR)\b))$/i;
+
 export function parseMoneyInput(raw: string | null | undefined): number | null {
   if (typeof raw !== "string") return null;
-  const trimmed = raw.trim();
-  if (trimmed === "" || !ALLOWED_CHARACTERS.test(trimmed)) return null;
+  // Clean surrounding whitespace and specific currency symbols/codes
+  const cleaned = raw
+    .trim()
+    .replace(CURRENCY_PREFIX_RE, "")
+    .replace(CURRENCY_SUFFIX_RE, "")
+    .trim();
+  if (cleaned === "" || !ALLOWED_CHARACTERS.test(cleaned)) return null;
 
-  const dotCount = countOccurrences(trimmed, ".");
-  const commaCount = countOccurrences(trimmed, ",");
+  const dotCount = countOccurrences(cleaned, ".");
+  const commaCount = countOccurrences(cleaned, ",");
   const separatorCount = dotCount + commaCount;
 
   let decimalSeparator: MoneySeparator | null = null;
@@ -64,13 +72,13 @@ export function parseMoneyInput(raw: string | null | undefined): number | null {
 
   if (dotCount > 0 && commaCount > 0) {
     // Both separators present: the last one wrote the decimals, the other groups.
-    decimalSeparator = trimmed.lastIndexOf(".") > trimmed.lastIndexOf(",") ? "." : ",";
+    decimalSeparator = cleaned.lastIndexOf(".") > cleaned.lastIndexOf(",") ? "." : ",";
     groupingSeparator = decimalSeparator === "." ? "," : ".";
   } else if (separatorCount === 1) {
     const separator: MoneySeparator = dotCount === 1 ? "." : ",";
-    const digitsAfterSeparator = trimmed.length - trimmed.indexOf(separator) - 1;
+    const digitsAfterSeparator = cleaned.length - cleaned.indexOf(separator) - 1;
     // 0 digits: dangling separator. 3+ digits: either more than two decimals or
-    // the ambiguous grouping form ("12.345"). Both are refused.
+    // the ambiguous grouping form ("12.345" / "1,234"). Both are refused.
     if (digitsAfterSeparator === 0 || digitsAfterSeparator > 2) return null;
     decimalSeparator = separator;
   } else if (separatorCount > 1) {
@@ -78,12 +86,12 @@ export function parseMoneyInput(raw: string | null | undefined): number | null {
     groupingSeparator = dotCount > 1 ? "." : ",";
   }
 
-  let integerPart = trimmed;
+  let integerPart = cleaned;
   let decimalPart = "";
   if (decimalSeparator !== null) {
-    const decimalIndex = trimmed.lastIndexOf(decimalSeparator);
-    integerPart = trimmed.slice(0, decimalIndex);
-    decimalPart = trimmed.slice(decimalIndex + 1);
+    const decimalIndex = cleaned.lastIndexOf(decimalSeparator);
+    integerPart = cleaned.slice(0, decimalIndex);
+    decimalPart = cleaned.slice(decimalIndex + 1);
     if (!DECIMAL_DIGITS.test(decimalPart)) return null;
   }
 

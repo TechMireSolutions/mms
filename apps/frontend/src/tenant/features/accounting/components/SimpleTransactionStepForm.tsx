@@ -40,8 +40,10 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
   const selectAccountPlaceholder = t("accounting.journal.form.selectAccount");
   const amountIsEmpty = form.amount.trim() === "";
   const parsedAmount = parseMoneyInput(form.amount);
-  const amountIsInvalid = !amountIsEmpty && (parsedAmount === null || parsedAmount <= 0);
+  const isTypingDecimal = form.amount.endsWith(".") || form.amount.endsWith(",");
+  const amountIsInvalid = !amountIsEmpty && !isTypingDecimal && (parsedAmount === null || parsedAmount <= 0);
   const showAmountRequired = amountTouched && amountIsEmpty;
+  const currencyPaddingClass = currencySymbol.length > 2 ? "ps-14" : currencySymbol.length > 1 ? "ps-11" : "ps-8";
 
   return (
     <fieldset className="space-y-4 border-0 p-0 m-0">
@@ -63,7 +65,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
             id="wizard-date"
             name="date"
             value={form.date}
-            onChange={(dateValue) => setForm({ ...form, date: dateValue })}
+            onChange={(dateValue) => setForm((prev) => ({ ...prev, date: dateValue }))}
           />
         </div>
 
@@ -77,10 +79,10 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
               const selected = (fiscalYears || []).find(
                 (fiscalYear) => fiscalYear.id === fiscalYearValue || fiscalYear.label === fiscalYearValue,
               );
-              setForm({
-                ...form,
+              setForm((prev) => ({
+                ...prev,
                 fiscal_year: selected?.label ?? fiscalYearValue,
-              });
+              }));
             }}
             placeholder={t("accounting.journal.form.none")}
             options={(fiscalYears || []).map((fiscalYear) => ({
@@ -93,7 +95,12 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
         <div>
           <label htmlFor="wizard-amount" className={FORM_LABEL}>{t("accounting.journal.dashboard.wizard.amount")}</label>
           <div className="relative">
-            <span className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground" aria-hidden="true">{currencySymbol}</span>
+            <span
+              className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground pointer-events-none select-none"
+              aria-hidden="true"
+            >
+              {currencySymbol}
+            </span>
             <Input
               id="wizard-amount"
               name="amount"
@@ -104,9 +111,10 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
               onBlur={() => setAmountTouched(true)}
               onChange={(event) => {
                 setAmountTouched(true);
-                setForm({ ...form, amount: event.target.value });
+                const val = event.target.value;
+                setForm((prev) => ({ ...prev, amount: val }));
               }}
-              className="ps-8 text-lg font-bold"
+              className={`${currencyPaddingClass} text-lg font-bold`}
               aria-invalid={showAmountRequired || amountIsInvalid}
             />
           </div>
@@ -123,7 +131,10 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
             id="wizard-ref"
             name="ref"
             value={form.ref}
-            onChange={(event) => setForm({ ...form, ref: event.target.value })}
+            onChange={(event) => {
+              const val = event.target.value;
+              setForm((prev) => ({ ...prev, ref: val }));
+            }}
             placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
           />
         </div>
@@ -136,7 +147,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
                 id="wizard-acc-in"
                 name="debitAcc"
                 value={form.debitAcc}
-                onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
+                onChange={(accountId) => setForm((prev) => ({ ...prev, debitAcc: accountId }))}
                 options={accountOptions}
                 placeholder={selectAccountPlaceholder}
               />
@@ -147,7 +158,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
                 id="wizard-acc-category-in"
                 name="creditAcc"
                 value={form.creditAcc}
-                onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
+                onChange={(accountId) => setForm((prev) => ({ ...prev, creditAcc: accountId }))}
                 options={revenueOptions}
                 placeholder={selectAccountPlaceholder}
               />
@@ -161,7 +172,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
                 id="wizard-acc-to"
                 name="debitAcc"
                 value={form.debitAcc}
-                onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
+                onChange={(accountId) => setForm((prev) => ({ ...prev, debitAcc: accountId }))}
                 options={accountOptions}
                 placeholder={selectAccountPlaceholder}
               />
@@ -172,7 +183,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
                 id="wizard-acc-from"
                 name="creditAcc"
                 value={form.creditAcc}
-                onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
+                onChange={(accountId) => setForm((prev) => ({ ...prev, creditAcc: accountId }))}
                 options={accountOptions}
                 placeholder={selectAccountPlaceholder}
               />
@@ -186,7 +197,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
                 id="wizard-acc-out"
                 name="creditAcc"
                 value={form.creditAcc}
-                onChange={(accountId) => setForm({ ...form, creditAcc: accountId })}
+                onChange={(accountId) => setForm((prev) => ({ ...prev, creditAcc: accountId }))}
                 options={accountOptions}
                 placeholder={selectAccountPlaceholder}
               />
@@ -197,7 +208,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
                 id="wizard-acc-category-out"
                 name="debitAcc"
                 value={form.debitAcc}
-                onChange={(accountId) => setForm({ ...form, debitAcc: accountId })}
+                onChange={(accountId) => setForm((prev) => ({ ...prev, debitAcc: accountId }))}
                 options={expenseOptions}
                 placeholder={selectAccountPlaceholder}
               />
@@ -211,7 +222,10 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
             id="wizard-description"
             name="description"
             value={form.description}
-            onChange={(event) => setForm({ ...form, description: event.target.value })}
+            onChange={(event) => {
+              const val = event.target.value;
+              setForm((prev) => ({ ...prev, description: val }));
+            }}
             placeholder={t(type.descriptionKey)}
           />
         </div>
@@ -219,7 +233,7 @@ export function StepTransactionForm({ type, form, setForm, accounts, currencySym
         <SimpleTransactionTagSelector
           typeTag={type.tag}
           tags={form.tags || []}
-          onChangeTags={(tags) => setForm({ ...form, tags })}
+          onChangeTags={(tags) => setForm((prev) => ({ ...prev, tags }))}
         />
       </div>
     </fieldset>

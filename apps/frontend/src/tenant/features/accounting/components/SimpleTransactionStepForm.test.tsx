@@ -116,6 +116,9 @@ describe("StepTransactionForm", () => {
     expect(amountInput.getAttribute("inputmode")).toBe("decimal");
     expect(amountInput.value).toBe("250.00");
     expect(container.textContent).toContain("$");
+
+    const currencySpan = amountInput.parentElement?.querySelector("span");
+    expect(currencySpan?.className).toContain("pointer-events-none");
   });
 
   it("triggers setForm callback when amount is updated", async () => {
