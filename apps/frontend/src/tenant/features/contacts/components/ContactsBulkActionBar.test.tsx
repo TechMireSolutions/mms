@@ -3,16 +3,37 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ContactsBulkActionBar } from "./ContactsBulkActionBar";
 
+type ExportAction = {
+  label: string;
+  onClick: () => void | Promise<void>;
+  isPending?: boolean;
+};
+
+let lastExportAction: ExportAction | undefined;
+
 vi.mock("@/components/ui/ModuleWorkBulkActionBar", () => ({
-  ModuleWorkBulkActionBar: ({ countLabel, deleteAction }: {
+  ModuleWorkBulkActionBar: ({
+    countLabel,
+    deleteAction,
+    exportAction,
+  }: {
     countLabel: string;
     deleteAction?: { label: string; onClick: () => void };
-  }) => (
-    <div data-testid="bulk-action-bar">
-      <span>{countLabel}</span>
-      {deleteAction && <button>{deleteAction.label}</button>}
-    </div>
-  ),
+    exportAction?: ExportAction;
+  }) => {
+    lastExportAction = exportAction;
+    return (
+      <div data-testid="bulk-action-bar">
+        <span>{countLabel}</span>
+        {deleteAction && <button>{deleteAction.label}</button>}
+        {exportAction && (
+          <button data-exporting={String(Boolean(exportAction.isPending))}>
+            {exportAction.label}
+          </button>
+        )}
+      </div>
+    );
+  },
 }));
 
 vi.mock("@/hooks/useTranslation", () => ({
@@ -24,32 +45,55 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+const baseProps: React.ComponentProps<typeof ContactsBulkActionBar> = {
+  selectedCount: 3,
+  viewingDeleted: false,
+  bulkActions: ["delete", "export"],
+  canWriteMessaging: true,
+  canExport: true,
+  canDelete: true,
+  selectedTargets: { waTargets: [], smsReady: [], emailReady: [] },
+  onWhatsApp: vi.fn(),
+  onSms: vi.fn(),
+  onEmail: vi.fn(),
+  onBulkExport: vi.fn(),
+  onRequestBulkDelete: vi.fn(),
+  onRequestBulkRestore: vi.fn(),
+  onClearSelection: vi.fn(),
+};
+
+function render(overrides: Partial<React.ComponentProps<typeof ContactsBulkActionBar>> = {}) {
+  lastExportAction = undefined;
+  return renderToStaticMarkup(<ContactsBulkActionBar {...baseProps} {...overrides} />);
+}
+
 describe("ContactsBulkActionBar Component", () => {
   it("renders bulk action bar with selection count and actions", () => {
-    const html = renderToStaticMarkup(
-      <ContactsBulkActionBar
-        selectedCount={3}
-        viewingDeleted={false}
-        bulkActions={["delete", "export"]}
-        canWriteMessaging={true}
-        canExport={true}
-        canDelete={true}
-        selectedTargets={{
-          waTargets: [],
-          smsReady: [],
-          emailReady: [],
-        }}
-        onWhatsApp={vi.fn()}
-        onSms={vi.fn()}
-        onEmail={vi.fn()}
-        onBulkExport={vi.fn()}
-        onRequestBulkDelete={vi.fn()}
-        onRequestBulkRestore={vi.fn()}
-        onClearSelection={vi.fn()}
-      />,
-    );
+    const html = render();
 
     expect(html).toContain("contacts.selectedCount:3");
     expect(html).toContain("contacts.bulkDelete");
+  });
+
+  it("exposes the export action, wired to onBulkExport", async () => {
+    const onBulkExport = vi.fn().mockResolvedValue(undefined);
+    const html = render({ onBulkExport });
+
+    expect(html).toContain("contacts.bulkExport");
+    expect(lastExportAction?.label).toBe("contacts.bulkExport");
+    await lastExportAction?.onClick();
+    expect(onBulkExport).toHaveBeenCalledTimes(1);
+  });
+
+  it("omits the export action without canExport or the export bulk action", () => {
+    expect(render({ canExport: false })).not.toContain("contacts.bulkExport");
+    expect(render({ bulkActions: ["delete"] })).not.toContain("contacts.bulkExport");
+  });
+
+  it("flags the export action as pending while an export is in flight", () => {
+    expect(render({ isExporting: true })).toContain('data-exporting="true"');
+    expect(lastExportAction?.isPending).toBe(true);
+    expect(render({ isExporting: false })).toContain('data-exporting="false"');
+    expect(lastExportAction?.isPending).toBe(false);
   });
 });

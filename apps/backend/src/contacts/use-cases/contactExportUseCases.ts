@@ -4,6 +4,7 @@ import {
   buildContactsExportRows,
   buildCsvContent,
   filterContactExportColumnsForViewer,
+  resolveContactFieldConfigSnapshot,
   sanitizeContactsForViewer,
   toVCard,
   type Contact,
@@ -94,16 +95,14 @@ const contactsCsv = createModuleCsvExportService<
     };
   },
   yieldDataChunks: (contacts, columns, chunkSize, context) => {
-    const sanitizeSnapshot = context.fieldConfig
-      ? { fields: context.fieldConfig.fields, tabs: context.fieldConfig.formTabs ?? [] }
-      : null;
+    // Always sanitize: an absent tenant config falls back to the default seed rather than
+    // skipping viewer restrictions entirely.
+    const sanitizeSnapshot = resolveContactFieldConfigSnapshot(context.fieldConfig);
 
     function* gen(): Generator<string, void, undefined> {
       for (let i = 0; i < contacts.length; i += chunkSize) {
         const chunk = contacts.slice(i, i + chunkSize);
-        const sanitizedChunk = sanitizeSnapshot
-          ? sanitizeContactsForViewer(chunk, context.viewerRole, sanitizeSnapshot)
-          : chunk;
+        const sanitizedChunk = sanitizeContactsForViewer(chunk, context.viewerRole, sanitizeSnapshot);
         const chunkExportRows = buildContactsExportRows(sanitizedChunk, columns, EXPORT_LABELS);
         const dataRows = chunkExportRows.slice(1);
         if (dataRows.length > 0) {

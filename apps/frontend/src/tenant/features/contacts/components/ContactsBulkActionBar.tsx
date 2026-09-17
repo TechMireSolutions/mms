@@ -24,6 +24,8 @@ export interface ContactsBulkActionBarProps {
   onSms: (targets: Contact[]) => void;
   onEmail: (targets: Contact[]) => void;
   onBulkExport: () => void | Promise<void>;
+  /** Server export in flight — disables the export CTA and swaps in a spinner. */
+  isExporting?: boolean;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
   onClearSelection: () => void;
@@ -44,6 +46,7 @@ export const ContactsBulkActionBar = React.memo(function ContactsBulkActionBar({
   onSms,
   onEmail,
   onBulkExport,
+  isExporting,
   onRequestBulkDelete,
   onRequestBulkRestore,
   onClearSelection,
@@ -100,7 +103,7 @@ export const ContactsBulkActionBar = React.memo(function ContactsBulkActionBar({
         }
         exportAction={
           bulkActions.includes("export") && canExport
-            ? { label: t("contacts.bulkExport"), onClick: onBulkExport }
+            ? { label: t("contacts.bulkExport"), onClick: onBulkExport, isPending: isExporting }
             : undefined
         }
         extraActions={

@@ -121,13 +121,15 @@ export function useStudentsPageController() {
   const { handleExportCSV, handleBulkExport } = useStudentsExportActions({
     tableColumns: exportColumns,
     canExport,
-    search: directory.studentSearch,
+    // Debounced: the export must cover exactly what the visible list was filtered by.
+    search: directory.debouncedSearch,
     filterStatus: directory.studentFilterStatus,
     filterGender: directory.studentFilterGender,
     quickFilter: directory.quickFilter,
     sortField: directory.sortField,
     sortDir: directory.sortDir,
     viewingDeleted: directory.viewingDeleted,
+    hasActiveFilters: directory.hasActiveFilters,
     selectedIds: directory.selectedIds,
     logExportAudit: mutations.logExportAudit,
   });

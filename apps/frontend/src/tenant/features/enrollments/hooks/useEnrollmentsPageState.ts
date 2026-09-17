@@ -54,6 +54,9 @@ export function useEnrollmentsPageState() {
   } = directoryFilters;
 
   const useServerWork = tab === "work" && activeSubTab === "directory";
+  /** Drives the export audit scope and the shortcuts gate (same definition, one place). */
+  const hasActiveFilters =
+    statusFilter !== "all" || sessionFilter !== "all" || Boolean(debouncedSearch.trim());
   const {
     data: workPageData,
     isError: isWorkPageError,
@@ -90,10 +93,12 @@ export function useEnrollmentsPageState() {
   const exportActions = useEnrollmentsExportActions({
     tableColumns: exportColumns,
     canExport,
-    search,
+    // Debounced: the export must cover exactly what the visible list was filtered by.
+    search: debouncedSearch,
     statusFilter,
     sessionFilter,
     viewingDeleted: showDeleted,
+    hasActiveFilters,
     selectedIds: selection.selectedIds,
     logExportAudit,
   });
@@ -107,7 +112,7 @@ export function useEnrollmentsPageState() {
   useModuleShortcuts({
     searchInputId: "enrollments-search-input",
     selectedCount: selection.selectedIds.length,
-    hasActiveFilters: statusFilter !== "all" || sessionFilter !== "all" || Boolean(search),
+    hasActiveFilters,
     clearFilters: () => {
       setStatusFilter("all");
       setSessionFilter("all");

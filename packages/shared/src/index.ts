@@ -173,6 +173,7 @@ export * from './schemas/contacts.dto.js';
 export * from './schemas/auth.dto.js';
 export * from './schemas/common.dto.js';
 export * from './schemas/csvExport.dto.js';
+export * from './schemas/contactsImport.dto.js';
 export * from './schemas/teachers.dto.js';
 export * from './schemas/finance.dto.js';
 export * from './schemas/sessions.dto.js';

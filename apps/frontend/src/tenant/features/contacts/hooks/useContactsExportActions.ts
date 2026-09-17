@@ -11,12 +11,15 @@ import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleS
 interface UseContactsExportActionsOptions {
   tableColumns: ContactExportColumn[];
   canExport: boolean;
+  /** Debounced directory search — the same value the visible list was filtered by. */
   search: string;
   filterGender: string;
   sortField: string;
   sortDir: "asc" | "desc";
   quickFilter: ContactsQuickFilter;
   viewingDeleted: boolean;
+  /** Whether any directory filter is applied — selects the audit scope. */
+  hasActiveFilters: boolean;
   selected: (string | number)[];
   logExportAudit: {
     mutateAsync: (payload: {
@@ -37,22 +40,24 @@ export function useContactsExportActions({
   sortDir,
   quickFilter,
   viewingDeleted,
+  hasActiveFilters,
   selected,
   logExportAudit,
   handleError,
   t,
 }: UseContactsExportActionsOptions) {
-  const buildFilteredQuery = ((): ContactsListQuery => ({
-      search,
-      gender: filterGender || undefined,
-      sortField,
-      sortDir,
-      quickFilter,
-    }));
+  /** Mirrors `buildContactsPageUrl` so the export scope matches the visible list. */
+  const buildFilteredQuery = (): ContactsListQuery => ({
+    search: search.trim() || undefined,
+    gender: filterGender || undefined,
+    sortField,
+    sortDir,
+    quickFilter: quickFilter === "all" ? undefined : quickFilter,
+  });
 
-  const onError = ((err: unknown, scope: string) => {
-      handleError(err, scope, "contacts.exportFailed");
-    });
+  const onError = (err: unknown, scope: string) => {
+    handleError(err, scope, "contacts.exportFailed");
+  };
 
   return useModuleServerCsvExportActions<ContactExportColumn, ContactsListQuery>({
     canExport,
@@ -65,6 +70,7 @@ export function useContactsExportActions({
     auditScope: "contacts.export_audit",
     filteredErrorScope: "contacts.server_export_csv",
     selectionErrorScope: "contacts.server_export_csv_selection",
+    hasActiveFilters,
     buildFilteredQuery,
     startExport: startServerContactsCsvExport,
     logExportAudit,

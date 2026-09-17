@@ -13,6 +13,8 @@ export interface UseEnrollmentsExportActionsOptions {
   statusFilter: string;
   sessionFilter: string;
   viewingDeleted: boolean;
+  /** Whether any directory filter is applied — selects the audit scope. */
+  hasActiveFilters: boolean;
   selectedIds: string[];
   logExportAudit: {
     mutateAsync: (payload: {
@@ -30,22 +32,23 @@ export function useEnrollmentsExportActions({
   statusFilter,
   sessionFilter,
   viewingDeleted,
+  hasActiveFilters,
   selectedIds,
   logExportAudit,
 }: UseEnrollmentsExportActionsOptions) {
   const { t } = useTranslation();
 
-  const buildFilteredQuery = ((): EnrollmentsListQuery => ({
-      search: search.trim() || undefined,
-      status: statusFilter !== "all" ? statusFilter : undefined,
-      sessionId: sessionFilter !== "all" ? sessionFilter : undefined,
-    }));
+  const buildFilteredQuery = (): EnrollmentsListQuery => ({
+    search: search.trim() || undefined,
+    status: statusFilter !== "all" ? statusFilter : undefined,
+    sessionId: sessionFilter !== "all" ? sessionFilter : undefined,
+  });
 
-  const onError = ((err: unknown, _scope: string) => {
-      notify.error(t("enrollments.exportFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      });
+  const onError = (err: unknown, _scope: string) => {
+    notify.error(t("enrollments.exportFailed"), {
+      description: err instanceof Error ? err.message : String(err),
     });
+  };
 
   return useModuleServerCsvExportActions<EnrollmentExportColumn, EnrollmentsListQuery>({
     canExport,
@@ -58,6 +61,7 @@ export function useEnrollmentsExportActions({
     auditScope: "enrollments.export_audit",
     filteredErrorScope: "enrollments.server_export_csv",
     selectionErrorScope: "enrollments.server_export_csv_selection",
+    hasActiveFilters,
     buildFilteredQuery,
     startExport: startServerEnrollmentsCsvExport,
     logExportAudit,

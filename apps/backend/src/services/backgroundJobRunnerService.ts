@@ -1,5 +1,5 @@
 import { CONTACTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, SESSIONS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST, TEACHERS_MODULE_MANIFEST, USERS_MODULE_MANIFEST } from '@mms/shared';
-import type { ContactExportColumn, EnrollmentExportColumn, MessagingCsvExportQueryDto, SessionExportColumn, StudentExportColumn, TeacherExportColumn } from '@mms/shared';
+import type { ContactExportColumn, ContactsImportJobPayload, EnrollmentExportColumn, MessagingCsvExportQueryDto, SessionExportColumn, StudentExportColumn, TeacherExportColumn } from '@mms/shared';
 import type { ContactsExportQueryInput } from './contactsExportService.js';
 import { buildContactsCsvExport, generateContactsCsvStreamChunks } from './contactsExportService.js';
 import { buildContactsVcfExport } from './contactsVcfExportService.js';
@@ -19,6 +19,10 @@ const MAX_EXCEL_PAYLOAD_ENTRIES = 50_000;
 import { buildMessagingCsvExport, generateMessagingCsvStreamChunks } from './messagingExportService.js';
 import { saveExportArtifact, saveStreamedExportArtifact } from './exportArtifactService.js';
 import { runContactsDuplicateScan } from './contactDuplicateScanService.js';
+import {
+  buildContactsImportJobLabel,
+  runContactsImportJob,
+} from '../contacts/use-cases/contactImportJobUseCases.js';
 import { registerBackgroundJobRunner } from './backgroundJobWorkerService.js';
 import { registerModuleCsvExportJobRunner } from '../lib/registerModuleCsvExportJobRunner.js';
 
@@ -127,6 +131,20 @@ export function registerDefaultBackgroundJobRunners(): void {
     await ctx.complete({
       label: `Found ${result.pairCount} duplicate pairs`,
       progress: { current: result.pairCount, total: Math.max(result.pairCount, 1) },
+    });
+  });
+
+  registerBackgroundJobRunner(`${contactsModuleId}:import`, async (payload, ctx) => {
+    const result = await runContactsImportJob(payload as ContactsImportJobPayload, {
+      tenant: ctx.tenant,
+      userId: ctx.userId,
+      jobId: ctx.jobId,
+      updateProgress: (current, total) => ctx.updateProgress(current, total),
+    });
+    await ctx.complete({
+      label: buildContactsImportJobLabel(result),
+      // `current` = imported, `total` = received, so the client can derive the failure count.
+      progress: { current: result.imported, total: Math.max(result.total, 1) },
     });
   });
 

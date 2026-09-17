@@ -11,6 +11,7 @@ import {
   buildContactMergeBodySchema,
   moduleSetupAuditBodySchema as contactSetupAuditSchema,
   contactsCsvExportBodySchema,
+  contactsImportBodySchema,
   contactsVcfExportBodySchema,
 } from '@mms/shared';
 import {
@@ -34,6 +35,40 @@ export const contactAuditExportRoutes: FastifyPluginAsync = async (fastify) => {
     entityNoun: 'contact',
     exportAuditAction: 'contact.export',
     queueAuditAction: 'contact.export.queue',
+  });
+
+  /**
+   * Queued vCard import. One job per batch (client chunks > `CONTACTS_IMPORT_MAX_BATCH`) so a
+   * large import no longer costs one POST per contact; the worker upserts and audits.
+   */
+  fastify.post('/import', { bodyLimit: 2 * 1024 * 1024 }, async (request, reply) => {
+    const user = request.user as User;
+    if (!requireContactPermission(reply, user, 'write')) return;
+
+    const parsed = parseRequest(contactsImportBodySchema, request.body);
+    if (!parsed.ok) return replyValidationError(reply, parsed.message);
+
+    const label = parsed.data.label?.trim() || 'Importing contacts…';
+    const job = await enqueueContactBackgroundJob({
+      moduleId: CONTACTS_MODULE_MANIFEST.moduleId,
+      kind: 'import',
+      label,
+      payload: {
+        contacts: parsed.data.contacts,
+        label,
+        viewerRole: user.role,
+        language: (request.headers?.['accept-language'] as string | undefined) || 'en',
+      },
+      idempotencyKey: parsed.data.idempotencyKey,
+      user,
+    });
+    await auditContact(
+      user,
+      'contact.import.queue',
+      `Queued contact import "${label}" (${parsed.data.contacts.length} contacts)`,
+      job.id,
+    );
+    return reply.status(202).send({ job });
   });
 
   fastify.post('/export/vcf', async (request, reply) => {

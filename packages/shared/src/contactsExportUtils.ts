@@ -1,5 +1,7 @@
-import type { Contact, FieldConfig } from './contactTypes.js';
-import { canViewContactColumn, type ContactColumnFieldContext } from './contactColumnAccess.js';
+import type { Contact, FieldConfig, FieldDefinition, TabDefinition } from './contactTypes.js';
+import { canViewContactColumn, resolveContactColumnField, type ContactColumnFieldContext } from './contactColumnAccess.js';
+import { COLUMN_FIELD_MAPPING, DEFAULT_COLUMN_REGISTRY, DEFAULT_FORM_TABS } from './contactTabRegistry.js';
+import { INITIAL_FIELD_SEED } from './contactFieldSeed.js';
 import { canViewContactTab } from './contactFieldAccess.js';
 import {
   isContactLockedEnabledTab,
@@ -19,6 +21,20 @@ export interface ContactExportColumn {
 export interface ContactExportLabels {
   yes: string;
   no: string;
+}
+
+/**
+ * Sanitizer snapshot for a tenant, falling back to the default seed when the tenant has no
+ * stored field config. Returning `null` there (the previous behaviour) silently disabled
+ * viewer sanitization for exactly the tenants whose restrictions were unknown.
+ */
+export function resolveContactFieldConfigSnapshot(
+  fieldConfig: FieldConfig | null | undefined,
+): { fields: Record<string, FieldDefinition[]>; tabs: TabDefinition[] } {
+  if (fieldConfig?.fields) {
+    return { fields: fieldConfig.fields, tabs: fieldConfig.formTabs ?? [] };
+  }
+  return { fields: INITIAL_FIELD_SEED, tabs: DEFAULT_FORM_TABS };
 }
 
 function buildColumnFieldContext(
@@ -67,6 +83,43 @@ export const DEFAULT_CONTACT_EXPORT_COLUMNS: readonly ContactExportColumn[] = [
   { id: 'city', label: 'City' },
 ] as const;
 
+/** Registry column ids the Work directory can render (SSOT: column registry + field mapping). */
+const KNOWN_EXPORT_COLUMN_IDS: ReadonlySet<string> = new Set<string>([
+  ...DEFAULT_COLUMN_REGISTRY.map((column) => column.key),
+  ...Object.keys(COLUMN_FIELD_MAPPING),
+]);
+
+/**
+ * Fail-closed gate for a client-requested export column.
+ *
+ * `canViewContactColumn` returns `true` for any key it cannot resolve to a field — right for
+ * internally generated Work columns, wrong for the export endpoint, where the column list
+ * arrives in the request body: an unresolvable key would fall through to
+ * `compileContactColumnExtractor`'s raw-property stringify and disclose unconfigured fields.
+ *
+ * A column is exportable only when it is either
+ * 1. a known registry column whose governing tab/field is enabled for the viewer, or
+ * 2. a key that resolves to a configured field the viewer may read (custom fields).
+ */
+export function isExportableContactColumn(
+  viewerRole: string,
+  columnKey: string,
+  columnFieldContext: ContactColumnFieldContext | null,
+): boolean {
+  const mapping = COLUMN_FIELD_MAPPING[columnKey];
+  const knownColumn = mapping != null || KNOWN_EXPORT_COLUMN_IDS.has(columnKey);
+  if (!columnFieldContext) return knownColumn;
+  if (!canViewContactColumn(viewerRole, columnKey, columnFieldContext)) return false;
+  if (knownColumn) {
+    if (!mapping) return true;
+    return (
+      columnFieldContext.enabledTabIds.has(mapping.tabId) &&
+      columnFieldContext.isTabFieldEnabled(mapping.tabId, mapping.fieldId)
+    );
+  }
+  return resolveContactColumnField(columnKey, columnFieldContext) != null;
+}
+
 /** Filters export columns by the same field/tab visibility rules as Work columns. */
 export function filterContactExportColumnsForViewer(
   columns: ContactExportColumn[],
@@ -74,9 +127,12 @@ export function filterContactExportColumnsForViewer(
   viewerRole: string,
 ): ContactExportColumn[] {
   const source = columns.length > 0 ? columns : [...DEFAULT_CONTACT_EXPORT_COLUMNS];
-  if (!fieldConfig?.fields) return source;
-  const columnFieldContext = buildColumnFieldContext(fieldConfig, viewerRole);
-  return source.filter((column) => canViewContactColumn(viewerRole, column.id, columnFieldContext));
+  const columnFieldContext = fieldConfig?.fields
+    ? buildColumnFieldContext(fieldConfig, viewerRole)
+    : null;
+  return source.filter((column) =>
+    isExportableContactColumn(viewerRole, column.id, columnFieldContext),
+  );
 }
 
 function compileContactColumnExtractor(

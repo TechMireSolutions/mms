@@ -7,6 +7,8 @@ import {
 import { type Contact, parseVCard } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n";
+import { getApiValidationMessage } from "@/lib/apiValidationMessage";
+import { reportClientError } from "@/lib/clientErrorReporting";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
@@ -22,7 +24,10 @@ export function useAppleContactsPanel({
   onImport,
   canWrite,
 }: {
-  onImport: (contacts: Contact[]) => void | Promise<void>;
+  onImport: (
+    contacts: Contact[],
+    options?: { onProgress?: (progress: { imported: number; total: number }) => void },
+  ) => void | Promise<void>;
   canWrite: boolean;
 }) {
   const { t } = useTranslation();
@@ -33,7 +38,16 @@ export function useAppleContactsPanel({
   const { data: metrics } = useContactsMetrics({ enabled: true });
   const exportCount = metrics?.total ?? 0;
   const [previewList, setPreviewList] = useState<Contact[]>([]);
-  const importing = matchContactIdentity.isPending;
+  const [isWriting, setIsWriting] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ imported: number; total: number } | null>(
+    null,
+  );
+  /**
+   * Busy flag for the whole import, not just the identity match: the queued batch job keeps
+   * running after the match resolves, and the CTA must stay disabled until it finishes or a
+   * second click re-imports the same list.
+   */
+  const importing = matchContactIdentity.isPending || isWriting;
   const [exporting, setExporting] = useState(false);
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -70,16 +84,27 @@ export function useAppleContactsPanel({
   };
 
   const handleImport = async (): Promise<void> => {
-    if (!canWrite) return;
+    if (!canWrite || importing) return;
+    setIsWriting(true);
+    setImportProgress({ imported: 0, total: previewList.length });
     try {
       const candidates = buildAppleImportIdentityCandidates(previewList, defaultPhoneCountryCode);
       const existing = await matchContactIdentity.mutateAsync(candidates);
       const fresh = filterAppleImportFreshContacts(previewList, existing);
-      await onImport(fresh);
+      await onImport(fresh, { onProgress: setImportProgress });
       setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
       setPreviewList([]);
-    } catch {
-      notify.error(t("contacts.saveFailed"));
+    } catch (err) {
+      // Surface the API/validation detail (e.g. a duplicate phone) instead of a bare failure toast.
+      const validationMessage = getApiValidationMessage(err);
+      notify.error(
+        t("contacts.saveFailed"),
+        validationMessage ? { description: validationMessage } : undefined,
+      );
+      reportClientError(err, { scope: "contacts.import_identity_match" });
+    } finally {
+      setIsWriting(false);
+      setImportProgress(null);
     }
   };
 
@@ -117,6 +142,7 @@ export function useAppleContactsPanel({
   return {
     previewList,
     importing,
+    importProgress,
     exporting,
     exportCount,
     result,

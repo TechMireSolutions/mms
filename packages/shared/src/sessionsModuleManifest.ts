@@ -39,7 +39,7 @@ export const SESSIONS_MODULE_MANIFEST = {
     bulkActions: ['export', 'status', 'delete'] as const,
   },
   defaultExportFilename: 'sessions.csv',
-  exportInlineMaxRows: 500,
+  /** Server CSV export page-walk size (rows per streamed chunk). */
   exportChunkSize: 100,
   softDelete: {
     workExcludesDeleted: true,

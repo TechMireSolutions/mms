@@ -10,6 +10,19 @@ function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+/**
+ * Poll budget exhausted while the job was still `pending`/`running`.
+ *
+ * Distinct from a job that actually failed: callers must not report a timeout as an
+ * export failure — the worker keeps going and the artifact still reaches the jobs tray.
+ */
+export class BackgroundJobTimeoutError extends Error {
+  constructor(message = 'Background job timed out') {
+    super(message);
+    this.name = 'BackgroundJobTimeoutError';
+  }
+}
+
 export async function fetchBackgroundJob(jobId: string): Promise<BackgroundJobRecord | null> {
   try {
     const jobResponse = await apiJson<{ job: BackgroundJobRecord }>(`${BACKGROUND_JOBS_API_PATH}/${jobId}`);
@@ -19,7 +32,12 @@ export async function fetchBackgroundJob(jobId: string): Promise<BackgroundJobRe
   }
 }
 
-/** Polls until a background job completes, fails, or times out. */
+/**
+ * Polls until a background job completes, fails, or times out.
+ *
+ * @throws {Error} when the job itself failed (message = worker error).
+ * @throws {BackgroundJobTimeoutError} when the poll budget elapsed first — the job may still finish.
+ */
 export async function pollBackgroundJobUntilDone(
   jobId: string,
   options?: { timeoutMs?: number; onUpdate?: (job: BackgroundJobRecord) => void },
@@ -40,5 +58,5 @@ export async function pollBackgroundJobUntilDone(
     await sleep(POLL_INTERVAL_MS);
   }
 
-  throw new Error('Background job timed out');
+  throw new BackgroundJobTimeoutError();
 }

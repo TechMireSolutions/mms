@@ -81,8 +81,7 @@ export const STUDENTS_MODULE_MANIFEST = {
     captureDeletionReason: true,
     retentionDays: null,
   },
-  /** Rows above this count use chunked / page-walk export with progress. */
-  exportInlineMaxRows: 500,
+  /** Server CSV export page-walk size (rows per streamed chunk). */
   exportChunkSize: 100,
   /** Default Work directory page size when using server pagination. */
   defaultPageSize: 50,
