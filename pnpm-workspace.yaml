@@ -63,4 +63,7 @@ overrides:
   #      404s in production unless MMS_EXPOSE_OPENAPI=true.
   # Revisit when @ts-rest/open-api ships a Zod-4-compatible generator (all current
   # releases, including prereleases, pin `zod: ^3.22.3` and @anatine/zod-openapi@1.x).
+  # Security: lodash-es >=4.0.0 <=4.17.23 carries a code injection vuln in _.template().
+  # Transitive path: mermaid → chevrotain → lodash-es. Pin to >=4.17.24 (patch-safe).
+  lodash-es: ">=4.17.24"
   fast-uri: "^4.1.3"
