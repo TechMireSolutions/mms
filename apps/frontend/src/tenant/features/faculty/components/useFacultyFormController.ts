@@ -2,10 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
-import {
-  useUsersContractList,
-  invalidateUsersQueries,
-} from "@/tenant/hooks/collections/users";
+import { useUsersContractList, invalidateUsersQueries } from "@/tenant/hooks/collections/users";
 import { useFacultyLookupMutation } from "@/tenant/features/faculty/hooks/useFacultyLookups";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/tenant/features/faculty/hooks/useFaculty";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
@@ -21,7 +18,7 @@ import {
   resolveTeacherEnabledTabIds,
   resolveTeacherFieldsMapForColumnSync,
 } from "@mms/shared";
-import { getInitialTeacherDraft, teacherDraftSnapshot } from "@/tenant/features/faculty/components/facultyFormDraft";
+import { extractEmployeeId, getInitialTeacherDraft, teacherDraftSnapshot } from "@/tenant/features/faculty/components/facultyFormDraft";
 import { confirmPendingTeacherSave, runTeacherSaveFlow } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/faculty/components/facultyFormValidation";
 import type { TeacherStatusOption } from '@/tenant/features/faculty/components/FacultyFormSections';
@@ -166,21 +163,20 @@ export function useTeacherFormController({
 
   const handleRegenerateEmployeeId = useCallback(async () => {
     const res = await refetchNextEmployeeId();
-    if (res.data) {
-      setTeacherDraft((prev) => ({ ...prev, employeeId: res.data }));
-    }
+    const nextId = extractEmployeeId(res.data);
+    if (nextId) setTeacherDraft((prev) => ({ ...prev, employeeId: nextId }));
   }, [refetchNextEmployeeId]);
 
   useEffect(() => {
-    if (teacher?.id || !autoGenerateId || !nextEmployeeId) return;
-    if (!teacherDraft.employeeId) {
-      setTeacherDraft((prev) => {
-        if (prev.employeeId) return prev;
-        const nextDraft = { ...prev, employeeId: nextEmployeeId };
-        setBaselineSnapshot(teacherDraftSnapshot(nextDraft));
-        return nextDraft;
-      });
-    }
+    if (teacher?.id || !autoGenerateId) return;
+    const resolved = extractEmployeeId(nextEmployeeId);
+    if (!resolved || teacherDraft.employeeId) return;
+    setTeacherDraft((prev) => {
+      if (prev.employeeId) return prev;
+      const nextDraft = { ...prev, employeeId: resolved };
+      setBaselineSnapshot(teacherDraftSnapshot(nextDraft));
+      return nextDraft;
+    });
   }, [nextEmployeeId, teacher?.id, teacherDraft.employeeId, autoGenerateId]);
 
   const usersQuery = useUsersContractList({ limit: 100 }, Boolean(teacherDraft.contactId));
@@ -295,5 +291,3 @@ export function useTeacherFormController({
 }
 
 export const useFacultyFormController = useTeacherFormController;
-
-

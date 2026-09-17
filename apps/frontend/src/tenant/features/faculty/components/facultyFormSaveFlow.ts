@@ -19,6 +19,7 @@ import {
   teacherValidationErrorsByField,
   validateTeacherDraft,
 } from "@/tenant/features/faculty/components/facultyFormValidation";
+import { extractEmployeeId } from "@/tenant/features/faculty/components/facultyFormDraft";
 import type { FacultyUserAccountDraft } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 
 export interface TeacherSaveFlowInput {
@@ -65,8 +66,9 @@ function buildTeacherSavePayload(input: {
   autoGenerateId: boolean;
   nextEmployeeId?: string;
 }): Record<string, unknown> {
-  const resolvedEmployeeId = input.teacherDraft.employeeId?.trim()
-    || (input.autoGenerateId && !input.teacher?.id ? input.nextEmployeeId?.trim() : undefined);
+  const rawEmployeeId = extractEmployeeId(input.teacherDraft.employeeId);
+  const rawNextEmployeeId = extractEmployeeId(input.nextEmployeeId);
+  const resolvedEmployeeId = rawEmployeeId || (input.autoGenerateId && !input.teacher?.id ? rawNextEmployeeId : undefined);
 
   return {
     ...input.teacherDraft,

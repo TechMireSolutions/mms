@@ -8,6 +8,7 @@ import {
   FormFooterEntityChip,
 } from "@/components/ui/FormFooterChip";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+import { extractEmployeeId } from "@/tenant/features/faculty/components/facultyFormDraft";
 
 export interface TeacherFormFooterProps {
   linkedContact?: Contact | null;
@@ -26,12 +27,13 @@ export function TeacherFormFooter({
 }: TeacherFormFooterProps): React.JSX.Element | null {
   if (linkedContact?.name) {
     const status = resolveTeacherStatus(teacherDraft.status);
+    const employeeId = extractEmployeeId(teacherDraft.employeeId);
     return (
       <div className="flex flex-wrap items-center gap-2.5 text-xs">
         <FormFooterEntityChip>{linkedContact.name}</FormFooterEntityChip>
         <div className="flex items-center gap-1.5">
           <FormFooterBadge>
-            {t("teachers.form.employeeIdBadge", { id: teacherDraft.employeeId || t("common.notSpecified") })}
+            {t("teachers.form.employeeIdBadge", { id: employeeId || t("common.notSpecified") })}
           </FormFooterBadge>
           <StatusBadge status={status} config={statusConfig} size="sm" />
         </div>

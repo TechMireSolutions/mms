@@ -14,7 +14,7 @@ import {
 import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 
-import { tsrClient, apiContract } from '@/lib/api';
+import { apiContract } from '@/lib/api';
 import { useQuery } from '@tanstack/react-query';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
 import {
@@ -82,15 +82,23 @@ export const fetchAllTeachersForQuery = fetchAllFacultyForQuery;
 
 export function useFacultyLinkedContactIds(excludeId?: string, enabled = true) {
   const { isAuthenticated } = useAuth();
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const query = tsrClient.teachers.linkedContactIds.useQuery({
+  
+  return useQuery({
     queryKey: [...FACULTY_QUERY_KEY, 'linked-contact-ids', excludeId ?? ''] as const,
-    queryData: { query: { excludeId } },
+    queryFn: async ({ signal }) => {
+      const res = await apiContract.teachers.linkedContactIds({
+        query: { excludeId },
+        fetchOptions: { signal },
+      });
+      if (res.status !== 200) {
+        throw new Error('Failed to fetch linked contact IDs');
+      }
+      const body = res.body as { contactIds?: Array<string | number> } | undefined;
+      return body?.contactIds ?? [];
+    },
     enabled: isAuthenticated && enabled,
     staleTime: 30_000,
   });
-  
-  return { ...query, data: (query.data?.body as { contactIds?: Array<string | number> } | null)?.contactIds };
 }
 export const useTeacherLinkedContactIds = useFacultyLinkedContactIds;
 
@@ -116,23 +124,28 @@ export function useFacultyNextEmployeeId(params: FacultyNextEmployeeIdParams = {
   const { isAuthenticated } = useAuth();
   const enabled = params.enabled ?? true;
 
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const query = tsrClient.teachers.nextEmployeeId.useQuery({
+  return useQuery({
     queryKey: [...FACULTY_QUERY_KEY, 'next-employee-id', params] as const,
-    queryData: {
-      query: {
-        prefix: params.prefix,
-        template: params.template,
-        digits: params.digits,
-        startSeq: params.startSeq,
-        restartAnnually: params.restartAnnually,
-      },
+    queryFn: async ({ signal }) => {
+      const res = await apiContract.teachers.nextEmployeeId({
+        query: {
+          prefix: params.prefix,
+          template: params.template,
+          digits: params.digits,
+          startSeq: params.startSeq,
+          restartAnnually: params.restartAnnually,
+        },
+        fetchOptions: { signal },
+      });
+      if (res.status !== 200) {
+        throw new Error('Failed to fetch next employee ID');
+      }
+      const body = res.body as { employeeId?: string } | undefined;
+      return typeof body?.employeeId === 'string' ? body.employeeId : '';
     },
     enabled: isAuthenticated && enabled,
     staleTime: 15_000,
   });
-  
-  return { ...query, data: (query.data?.body as { employeeId?: string } | null)?.employeeId };
 }
 export const useTeacherNextEmployeeId = useFacultyNextEmployeeId;
 

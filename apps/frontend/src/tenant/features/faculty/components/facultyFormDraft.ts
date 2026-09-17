@@ -51,3 +51,24 @@ export function getInitialTeacherDraft(
 export function teacherDraftSnapshot(draft: Partial<Teacher>): string {
   return draftSnapshot(draft);
 }
+
+function isRecord(val: unknown): val is Record<string, unknown> {
+  return typeof val === "object" && val !== null;
+}
+
+/** Safely extract a string employee ID from a raw string, response object, or nested wrapper. */
+export function extractEmployeeId(value: unknown): string {
+  if (typeof value === "string") return value.trim();
+  if (isRecord(value)) {
+    if (typeof value.employeeId === "string") {
+      return value.employeeId.trim();
+    }
+    if (isRecord(value.body)) {
+      return extractEmployeeId(value.body);
+    }
+    if (isRecord(value.data)) {
+      return extractEmployeeId(value.data);
+    }
+  }
+  return "";
+}

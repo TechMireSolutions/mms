@@ -22,6 +22,7 @@ import {
   type Teacher,
 } from "@mms/shared";
 import { resolveTeacherFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
+import { extractEmployeeId } from "@/tenant/features/faculty/components/facultyFormDraft";
 
 export interface TeacherSectionBaseProps {
   teacherDraft: Partial<Teacher>;
@@ -198,7 +199,7 @@ export function TeacherEmploymentSection({
                     id="employeeId"
                     name="employeeId"
                     icon={Hash}
-                    value={teacherDraft.employeeId || ""}
+                    value={extractEmployeeId(teacherDraft.employeeId)}
                     onChange={(event) => onDraftChange({ employeeId: event.target.value })}
                     placeholder={t("teachers.form.employeeIdPlaceholder", { prefix: idPrefix })}
                     disabled={autoGenerateId && !teacher?.id && Boolean(nextEmployeeId)}
