@@ -101,13 +101,10 @@ export async function dispatchJobToQueue(
   };
 
   try {
-    const addPromise = (async () => {
-      await queue.waitUntilReady();
-      return queue.add(`${job.moduleId}:${job.kind}`, jobData, {
-        jobId: job.id,
-        priority: QUEUE_SETTINGS[queueName]?.priority ?? 2,
-      });
-    })();
+    const addPromise = queue.add(`${job.moduleId}:${job.kind}`, jobData, {
+      jobId: job.id,
+      priority: QUEUE_SETTINGS[queueName]?.priority ?? 2,
+    });
     
     // Fail fast if Redis is unreachable to prevent API request hanging
     let timeoutId: NodeJS.Timeout;
