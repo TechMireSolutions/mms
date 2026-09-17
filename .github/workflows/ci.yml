@@ -126,9 +126,8 @@ jobs:
           git diff --exit-code -- .agent .cursor .claude || (echo "Agent rule/skill mirrors out of sync! Run 'bash .agent/scripts/sync-all.sh'" && exit 1)
           node scripts/verify-rules-integrity.mjs
 
-  # Fails a pull request that introduces a dependency with a known vulnerability.
-  # Complements the `pnpm audit` gate above: audit checks what is installed NOW,
-  # dependency-review checks what the PR is ADDING, and can block it before merge.
+  # Fails a pull request that introduces a dependency with a known high/critical vulnerability.
+  # Uses pnpm audit locally — no GitHub Dependency Graph feature required.
   dependency-review:
     name: Dependency Review
     if: github.event_name == 'pull_request'
@@ -136,16 +135,15 @@ jobs:
     timeout-minutes: 5
     permissions:
       contents: read
-      pull-requests: write
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
 
-      - name: Review dependency changes
-        uses: actions/dependency-review-action@v5
-        with:
-          fail-on-severity: high
-          comment-summary-in-pr: on-failure
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
+
+      - name: Audit dependencies for high/critical vulnerabilities
+        run: pnpm audit --audit-level=high
 
   test-frontend:
     name: Frontend Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
