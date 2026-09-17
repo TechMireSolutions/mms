@@ -220,7 +220,11 @@ export async function resetTenantPassword(input: {
 
   await deleteAuthArtifact(entry.id);
 
-  const activated = await activateInvitedTenantUserRow(entry.payload.userId, passwordHash);
+  const activated = await activateInvitedTenantUserRow(
+    entry.payload.workspaceSubdomain,
+    entry.payload.userId,
+    passwordHash,
+  );
   if (!activated) {
     throw new TenantPasswordOtpError('not_found', 'This account is no longer available');
   }
