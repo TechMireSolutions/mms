@@ -4,7 +4,8 @@ import {
   type ChangeEvent,
   type RefObject,
 } from "react";
-import { type Contact, parseVCard } from "@mms/shared";
+import { type Contact, buildTenantExportFilename, parseContactsCsv, parseVCard } from "@mms/shared";
+import { useOptionalTenant } from "@/lib/contexts/TenantContext";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n";
 import { getApiValidationMessage } from "@/lib/apiValidationMessage";
@@ -53,22 +54,32 @@ export function useAppleContactsPanel({
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const processFile = ((file: File): void => {
-      const reader = new FileReader();
-      reader.onload = (readerEvent) => {
-        if (readerEvent.target && typeof readerEvent.target.result === "string") {
+  const processFile = (file: File): void => {
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      if (readerEvent.target && typeof readerEvent.target.result === "string") {
+        const text = readerEvent.target.result;
+        const isCsv = file.name.toLowerCase().endsWith(".csv") || file.type === "text/csv";
+        if (isCsv) {
+          const { contacts } = parseContactsCsv(text, {
+            defaultPhoneLabel: mobileLabel,
+            defaultEmailLabel: personalLabel,
+          });
+          setPreviewList(contacts);
+        } else {
           setPreviewList(
-            parseVCard(readerEvent.target.result, {
+            parseVCard(text, {
               mobileLabel,
               personalLabel,
               defaultPhoneCountryCode,
             }),
           );
-          setResult(null);
         }
-      };
-      reader.readAsText(file);
-    });
+        setResult(null);
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const handleFile = (event: ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
@@ -108,10 +119,18 @@ export function useAppleContactsPanel({
     }
   };
 
+  const optionalTenant = useOptionalTenant();
+  const effectiveTenantName =
+    optionalTenant?.workspace?.madrasaName ??
+    optionalTenant?.publicBranding?.madrasaName ??
+    optionalTenant?.subdomain ??
+    null;
+
   const handleExport = async (): Promise<void> => {
     setExporting(true);
     try {
-      const filename = t("contacts.sync.vcfFileName");
+      const baseFilename = t("contacts.sync.vcfFileName");
+      const filename = buildTenantExportFilename(effectiveTenantName, baseFilename);
       const job = await startServerContactsVcfExport({
         filename,
         label: t("contacts.jobs.exportLabelServer"),

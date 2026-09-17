@@ -1,5 +1,6 @@
-import { useCallback, useRef, useState } from "react";
-import type { BackgroundJobRecord } from "@mms/shared";
+import { useCallback, useMemo, useRef, useState } from "react";
+import { buildTenantExportFilename, type BackgroundJobRecord } from "@mms/shared";
+import { useOptionalTenant } from "@/lib/contexts/TenantContext";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import {
   csvExportAttemptSignature,
@@ -54,6 +55,7 @@ export interface UseModuleServerCsvExportActionsOptions<
     }) => Promise<unknown>;
   };
   onError: (err: unknown, scope: string) => void;
+  tenantName?: string;
 }
 
 const sanitizeColumns = (cols: ModuleServerCsvExportColumn[]) =>
@@ -86,9 +88,22 @@ export function useModuleServerCsvExportActions<
   startExport,
   logExportAudit,
   onError,
+  tenantName,
 }: UseModuleServerCsvExportActionsOptions<TColumn, TQuery>) {
   const [isExporting, setIsExporting] = useState(false);
   const attemptRef = useRef<CsvExportAttempt | null>(null);
+
+  const optionalTenant = useOptionalTenant();
+  const effectiveTenantName =
+    tenantName ??
+    optionalTenant?.workspace?.madrasaName ??
+    optionalTenant?.publicBranding?.madrasaName ??
+    optionalTenant?.subdomain ??
+    null;
+  const resolvedFilename = useMemo(
+    () => buildTenantExportFilename(effectiveTenantName, filename),
+    [effectiveTenantName, filename],
+  );
 
   const runExport = useCallback(
     async (
@@ -106,7 +121,7 @@ export function useModuleServerCsvExportActions<
         const job = await startExport(buildBody(attempt.key));
         attemptRef.current = null;
         if (job.hasDownload && job.status === "completed") {
-          await downloadBackgroundJobArtifact(job.id, filename);
+          await downloadBackgroundJobArtifact(job.id, resolvedFilename);
         }
         notify.success(successMessage);
         safeAudit(
@@ -127,7 +142,7 @@ export function useModuleServerCsvExportActions<
         onError(err, errorScope);
       }
     },
-    [auditScope, filename, label, logExportAudit, onError, startExport, successMessage],
+    [auditScope, resolvedFilename, label, logExportAudit, onError, startExport, successMessage],
   );
 
   const handleExportCSV = async (): Promise<void> => {
@@ -141,7 +156,7 @@ export function useModuleServerCsvExportActions<
         (idempotencyKey) => ({
           query,
           columns: sanitizeColumns(columns),
-          filename,
+          filename: resolvedFilename,
           label,
           idempotencyKey,
         }),
@@ -164,7 +179,7 @@ export function useModuleServerCsvExportActions<
         (idempotencyKey) => ({
           query: {} as TQuery,
           columns: sanitizeColumns(columns),
-          filename,
+          filename: resolvedFilename,
           label,
           ids: selectedIds,
           idempotencyKey,

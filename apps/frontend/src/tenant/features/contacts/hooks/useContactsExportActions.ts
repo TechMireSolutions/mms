@@ -34,6 +34,7 @@ interface UseContactsExportActionsOptions {
   };
   handleError?: (err: unknown, scope: string, messageKey?: AppTranslationKey) => void;
   t: TranslationFunction;
+  tenantName?: string;
 }
 
 export function useContactsExportActions({
@@ -49,10 +50,11 @@ export function useContactsExportActions({
   selected,
   logExportAudit,
   t,
+  tenantName,
 }: UseContactsExportActionsOptions) {
   const resolvedColumns = useMemo(
-    () => resolveContactsExportColumns(tableColumns, t),
-    [tableColumns, t],
+    () => defaultContactsExportColumns(t),
+    [t],
   );
 
   /** Mirrors `buildContactsPageUrl` so the export scope matches the visible list. */
@@ -87,6 +89,7 @@ export function useContactsExportActions({
     startExport: startServerContactsCsvExport,
     logExportAudit,
     onError,
+    tenantName,
   });
 }
 

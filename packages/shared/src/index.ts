@@ -152,6 +152,8 @@ export {
 } from './contactsSavedReportUtils.js';
 export * from './socialPlatformUtils.js';
 export * from './contactNestedSchemas.js';
+export * from './csvParserCore.js';
+export * from './contactsCsvParser.js';
 
 
 // ---------------------------------------------------------------------------

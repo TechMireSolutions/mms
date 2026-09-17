@@ -246,4 +246,22 @@ describe("useModuleServerCsvExportActions", () => {
     });
     expect(actions.isExporting).toBe(false);
   });
+
+  it("prepends tenantName to the export filename", async () => {
+    renderHook({ tenantName: "Al Huda Academy", hasActiveFilters: true });
+
+    await act(async () => {
+      await actions.handleExportCSV();
+    });
+
+    expect(startExport).toHaveBeenCalledWith(
+      expect.objectContaining({
+        filename: "Al_Huda_Academy_contacts.csv",
+      }),
+    );
+    expect(downloadBackgroundJobArtifact).toHaveBeenCalledWith(
+      "job-1",
+      "Al_Huda_Academy_contacts.csv",
+    );
+  });
 });

@@ -11,8 +11,8 @@ describe("contacts export column helpers", () => {
     const columns = defaultContactsExportColumns(fakeT);
     expect(columns.length).toBeGreaterThan(0);
     expect(columns[0]).toEqual({
-      id: "name",
-      label: "translated:contacts.columns.name",
+      id: "firstName",
+      label: "translated:contacts.columns.firstName",
     });
   });
 

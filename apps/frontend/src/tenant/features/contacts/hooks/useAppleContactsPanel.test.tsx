@@ -48,8 +48,12 @@ const VCARD = [
  */
 class SyncFileReader {
   onload: ((event: { target: { result: string } }) => void) | null = null;
-  readAsText(): void {
-    this.onload?.({ target: { result: VCARD } });
+  readAsText(file?: Blob): void {
+    if (file instanceof File && file.name.endsWith(".csv")) {
+      this.onload?.({ target: { result: "First Name,Last Name,Phone Number\nSajjad,Haider,03001234567" } });
+    } else {
+      this.onload?.({ target: { result: VCARD } });
+    }
   }
 }
 
@@ -190,5 +194,20 @@ describe("useAppleContactsPanel import flow", () => {
       description: "Identity index unavailable",
     });
     expect(onImport).not.toHaveBeenCalled();
+  });
+
+  it("parses a chosen CSV into the preview list with all contact fields", async () => {
+    renderHook(vi.fn().mockResolvedValue(undefined));
+    const file = new File(["First Name,Last Name,Phone Number\nSajjad,Haider,03001234567"], "contacts.csv", { type: "text/csv" });
+    const input = document.createElement("input");
+    Object.defineProperty(input, "files", { value: [file], configurable: true });
+    act(() => {
+      panel.handleFile({ target: input } as unknown as ChangeEvent<HTMLInputElement>);
+    });
+
+    expect(panel.previewList).toHaveLength(1);
+    expect(panel.previewList[0]?.firstName).toBe("Sajjad");
+    expect(panel.previewList[0]?.lastName).toBe("Haider");
+    expect(panel.previewList[0]?.phones?.[0]?.number).toBe("03001234567");
   });
 });

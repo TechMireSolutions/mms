@@ -43,3 +43,37 @@ export function buildCsvContent(rows: unknown[][]): string {
   }
   return lines.join("\n");
 }
+
+/**
+ * Ensures an export filename starts with the tenant/workspace name.
+ * Sanitizes unsafe characters and prevents duplicate prefixes.
+ */
+export function buildTenantExportFilename(
+  tenantName: string | null | undefined,
+  baseFilename: string,
+): string {
+  const cleanBase = (typeof baseFilename === 'string' ? baseFilename : '').trim() || 'export.csv';
+  if (!tenantName || typeof tenantName !== 'string' || !tenantName.trim()) return cleanBase;
+
+  const cleanTenant = tenantName
+    .trim()
+    .replace(/[/\\?%*:|"<>]/g, '')
+    .replace(/\s+/g, '_')
+    .replace(/_+/g, '_')
+    .replace(/^_+|_+$/g, '');
+
+  if (!cleanTenant) return cleanBase;
+
+  const lowerBase = cleanBase.toLowerCase();
+  const lowerTenant = cleanTenant.toLowerCase();
+  if (
+    lowerBase === lowerTenant ||
+    lowerBase.startsWith(`${lowerTenant}_`) ||
+    lowerBase.startsWith(`${lowerTenant}-`) ||
+    lowerBase.startsWith(`${lowerTenant}.`)
+  ) {
+    return cleanBase;
+  }
+
+  return `${cleanTenant}_${cleanBase}`;
+}

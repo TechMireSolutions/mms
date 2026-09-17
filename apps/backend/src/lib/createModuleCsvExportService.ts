@@ -1,8 +1,10 @@
+import { buildTenantExportFilename } from '@mms/shared';
 import {
   buildCsvExportFromGenerator,
   generateCsvStreamChunks,
   streamCsvExportFromGenerator,
 } from './csvExportStreamFactory.js';
+import { getRequestTenant } from './tenantContext.js';
 
 export type ModuleCsvExportColumn = { id?: string; label: string };
 
@@ -77,8 +79,9 @@ export function createModuleCsvExportService<
     const normalized = options.normalizeQuery(query, exportOptions.allowDeleted === true);
     const includeIds = normalized.includeIds?.map(String).filter(Boolean);
     const prepared = await options.prepareExport(exportOptions);
-    const filename =
+    const rawFilename =
       exportOptions.filename?.trim() || options.manifest.defaultExportFilename;
+    const filename = buildTenantExportFilename(getRequestTenant(), rawFilename);
     const chunkSize = Math.max(
       1,
       exportOptions.chunkSize ?? options.manifest.exportChunkSize,
@@ -113,9 +116,12 @@ export function createModuleCsvExportService<
     query: TQuery,
     exportOptions: ModuleCsvExportOptions & { columns?: TCol[] },
   ): Promise<ModuleCsvExportResult> {
+    const rawFilename =
+      exportOptions.filename?.trim() || options.manifest.defaultExportFilename;
+    const filename = buildTenantExportFilename(getRequestTenant(), rawFilename);
     return buildCsvExportFromGenerator(
       generateStreamChunks(query, exportOptions),
-      exportOptions.filename?.trim() || options.manifest.defaultExportFilename,
+      filename,
     );
   }
 

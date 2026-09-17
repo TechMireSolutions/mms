@@ -1,4 +1,4 @@
-import { CONTACTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, SESSIONS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST, TEACHERS_MODULE_MANIFEST, USERS_MODULE_MANIFEST } from '@mms/shared';
+import { buildTenantExportFilename, CONTACTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, SESSIONS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST, TEACHERS_MODULE_MANIFEST, USERS_MODULE_MANIFEST } from '@mms/shared';
 import type { ContactExportColumn, ContactsImportJobPayload, EnrollmentExportColumn, MessagingCsvExportQueryDto, SessionExportColumn, StudentExportColumn, TeacherExportColumn } from '@mms/shared';
 import type { ContactsExportQueryInput } from './contactsExportService.js';
 import { buildContactsCsvExport, generateContactsCsvStreamChunks } from './contactsExportService.js';
@@ -112,8 +112,12 @@ export function registerDefaultBackgroundJobRunners(): void {
   registerBackgroundJobRunner(`${contactsModuleId}:export-vcf`, async (payload, ctx) => {
     const exportPayload = payload as ContactsVcfExportJobPayload;
     await ctx.updateProgress(0, 1);
+    const targetFilename = buildTenantExportFilename(
+      ctx.tenant,
+      exportPayload.filename?.trim() || 'contacts.vcf',
+    );
     const { vcf, filename, count } = await buildContactsVcfExport({
-      filename: exportPayload.filename,
+      filename: targetFilename,
       onProgress: (processed, total) => ctx.updateProgress(processed, Math.max(total, 1)),
     });
     await saveExportArtifact(ctx.userId, ctx.jobId, vcf, filename);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { escapeCsvCell, buildCsvContent } from '../csvUtils.js';
+import { escapeCsvCell, buildCsvContent, buildTenantExportFilename } from '../csvUtils.js';
 
 describe('csvUtils', () => {
   describe('escapeCsvCell', () => {
@@ -26,7 +26,6 @@ describe('csvUtils', () => {
     });
   });
 
-
   describe('buildCsvContent', () => {
     it('formats multi-row CSV content', () => {
       const rows = [
@@ -36,6 +35,35 @@ describe('csvUtils', () => {
       ];
       const csv = buildCsvContent(rows);
       expect(csv).toBe('"Name","Role"\n"Alice","Admin"\n"Bob","Teacher"');
+    });
+  });
+
+  describe('buildTenantExportFilename', () => {
+    it('prepends sanitized tenant name to base filename', () => {
+      expect(buildTenantExportFilename('Al Huda', 'contacts.csv')).toBe('Al_Huda_contacts.csv');
+      expect(buildTenantExportFilename('TechMire', 'contacts.vcf')).toBe('TechMire_contacts.vcf');
+    });
+
+    it('strips unsafe filesystem characters from tenant name', () => {
+      expect(buildTenantExportFilename('Madrasa/Test:Special?', 'contacts.csv')).toBe('MadrasaTestSpecial_contacts.csv');
+    });
+
+    it('prevents duplicate prefixing if base filename already starts with tenant name', () => {
+      expect(buildTenantExportFilename('Al_Huda', 'Al_Huda_contacts.csv')).toBe('Al_Huda_contacts.csv');
+      expect(buildTenantExportFilename('al_huda', 'Al_Huda_contacts.csv')).toBe('Al_Huda_contacts.csv');
+      expect(buildTenantExportFilename('Al-Huda', 'al-huda-contacts.csv')).toBe('al-huda-contacts.csv');
+    });
+
+    it('falls back to clean base filename if tenant name is missing or empty', () => {
+      expect(buildTenantExportFilename(null, 'contacts.csv')).toBe('contacts.csv');
+      expect(buildTenantExportFilename(undefined, 'contacts.csv')).toBe('contacts.csv');
+      expect(buildTenantExportFilename('', 'contacts.csv')).toBe('contacts.csv');
+      expect(buildTenantExportFilename('   ', 'contacts.csv')).toBe('contacts.csv');
+    });
+
+    it('falls back to export.csv if base filename is empty', () => {
+      expect(buildTenantExportFilename('Al_Huda', '')).toBe('Al_Huda_export.csv');
+      expect(buildTenantExportFilename('', '')).toBe('export.csv');
     });
   });
 });

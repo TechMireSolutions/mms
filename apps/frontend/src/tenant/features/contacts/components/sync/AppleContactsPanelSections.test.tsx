@@ -53,6 +53,6 @@ describe("AppleContactsPanelSections Components", () => {
     );
 
     expect(html).toContain('type="file"');
-    expect(html).toContain('accept=".vcf,text/vcard"');
+    expect(html).toContain('accept=".vcf,text/vcard,.csv,text/csv"');
   });
 });
