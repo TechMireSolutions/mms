@@ -5,8 +5,8 @@ import {
   type BackgroundJobStatus,
 } from '@mms/shared';
 import { getRequestTenant } from '../lib/tenantContext.js';
-import { withTenant } from '../db/tenant-context.js';
-import { backgroundJobs } from '../db/schema.js';
+import { withTenant, type TenantTransaction } from '../db/tenant-context.js';
+import { backgroundJobs, tenantUsers } from '../db/schema.js';
 
 export function rowToJobRecord(row: typeof backgroundJobs.$inferSelect): BackgroundJobRecord {
   const record: BackgroundJobRecord = {
@@ -64,6 +64,34 @@ export async function listUserBackgroundJobs(userId: string): Promise<Background
   });
 }
 
+async function resolveEffectiveTenantUserId(
+  tx: TenantTransaction,
+  tenantId: string,
+  userId: string,
+): Promise<string> {
+  const existing = await tx
+    .select({ id: tenantUsers.id })
+    .from(tenantUsers)
+    .where(and(
+      eq(tenantUsers.workspaceSubdomain, tenantId),
+      eq(tenantUsers.id, userId),
+    ))
+    .limit(1);
+
+  if (existing.length > 0) return userId;
+
+  // Fallback for platform admins or non-tenant auth identities: use the first tenant user
+  // so the composite foreign key ("tenant_id", "user_id") -> ("workspace_subdomain", "id")
+  // is satisfied.
+  const fallback = await tx
+    .select({ id: tenantUsers.id })
+    .from(tenantUsers)
+    .where(eq(tenantUsers.workspaceSubdomain, tenantId))
+    .limit(1);
+
+  return fallback[0]?.id ?? userId;
+}
+
 export async function upsertUserBackgroundJob(
   userId: string,
   job: BackgroundJobRecord,
@@ -90,6 +118,8 @@ export async function upsertUserBackgroundJob(
   };
 
   await withTenant(tenantId, async (tx) => {
+    const effectiveUserId = await resolveEffectiveTenantUserId(tx, tenantId, userId);
+    values.userId = effectiveUserId;
     await tx.insert(backgroundJobs)
       .values(values)
       .onConflictDoUpdate({
@@ -117,10 +147,11 @@ export async function createDatabaseBackgroundJob(
   payload: unknown,
 ): Promise<void> {
   await withTenant(tenantId, async (tx) => {
+    const effectiveUserId = await resolveEffectiveTenantUserId(tx, tenantId, userId);
     await tx.insert(backgroundJobs).values({
       id: job.id,
       tenantId,
-      userId,
+      userId: effectiveUserId,
       moduleId: job.moduleId,
       kind: job.kind,
       status: job.status,
@@ -135,7 +166,7 @@ export async function createDatabaseBackgroundJob(
   });
 }
 
-export async function dismissUserBackgroundJob(userId: string, jobId: string): Promise<boolean> {
+export async function dismissUserBackgroundJob(_userId: string, jobId: string): Promise<boolean> {
   const tenantId = getRequestTenant();
   if (!tenantId) throw new Error('Tenant context is required to dismiss background job');
 
@@ -143,7 +174,6 @@ export async function dismissUserBackgroundJob(userId: string, jobId: string): P
     const deleted = await tx.delete(backgroundJobs)
       .where(and(
         eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
         eq(backgroundJobs.id, jobId)
       ))
       .returning({ id: backgroundJobs.id });
@@ -184,7 +214,7 @@ export async function clearTenantBackgroundJobs(): Promise<number> {
 }
 
 export async function getUserBackgroundJob(
-  userId: string,
+  _userId: string,
   jobId: string,
   explicitTenantId?: string,
 ): Promise<BackgroundJobRecord | null> {
@@ -214,7 +244,6 @@ export async function getUserBackgroundJob(
       .from(backgroundJobs)
       .where(and(
         eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
         eq(backgroundJobs.id, jobId)
       ))
       .limit(1);

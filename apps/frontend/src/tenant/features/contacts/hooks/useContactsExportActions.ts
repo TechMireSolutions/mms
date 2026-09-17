@@ -1,15 +1,20 @@
-import type {
-  ContactExportColumn,
-  ContactsListQuery,
-  ContactsQuickFilter,
-  AppTranslationKey,
+import { useMemo } from "react";
+import {
+  DEFAULT_CONTACT_EXPORT_COLUMNS,
+  type ContactExportColumn,
+  type ContactsListQuery,
+  type ContactsQuickFilter,
+  type AppTranslationKey,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { startServerContactsCsvExport } from "@/lib/backgroundJobs/startServerContactsCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
+import { notify } from "@/lib/notify";
+import { reportClientError } from "@/lib/clientErrorReporting";
+import { getApiValidationMessage } from "@/lib/apiValidationMessage";
 
 interface UseContactsExportActionsOptions {
-  tableColumns: ContactExportColumn[];
+  tableColumns: Array<{ id?: string; key?: string; label?: string; labelKey?: AppTranslationKey }>;
   canExport: boolean;
   /** Debounced directory search — the same value the visible list was filtered by. */
   search: string;
@@ -27,7 +32,7 @@ interface UseContactsExportActionsOptions {
       scope: "all" | "filtered" | "selection";
     }) => Promise<unknown>;
   };
-  handleError: (err: unknown, scope: string, messageKey?: AppTranslationKey) => void;
+  handleError?: (err: unknown, scope: string, messageKey?: AppTranslationKey) => void;
   t: TranslationFunction;
 }
 
@@ -43,9 +48,13 @@ export function useContactsExportActions({
   hasActiveFilters,
   selected,
   logExportAudit,
-  handleError,
   t,
 }: UseContactsExportActionsOptions) {
+  const resolvedColumns = useMemo(
+    () => resolveContactsExportColumns(tableColumns, t),
+    [tableColumns, t],
+  );
+
   /** Mirrors `buildContactsPageUrl` so the export scope matches the visible list. */
   const buildFilteredQuery = (): ContactsListQuery => ({
     search: search.trim() || undefined,
@@ -56,14 +65,17 @@ export function useContactsExportActions({
   });
 
   const onError = (err: unknown, scope: string) => {
-    handleError(err, scope, "contacts.exportFailed");
+    const validationMessage = getApiValidationMessage(err);
+    const description = validationMessage || (err instanceof Error ? err.message : String(err));
+    notify.error(t("contacts.exportFailed"), description ? { description } : undefined);
+    reportClientError(err, { scope });
   };
 
   return useModuleServerCsvExportActions<ContactExportColumn, ContactsListQuery>({
     canExport,
     trashMode: viewingDeleted,
     selectedIds: selected,
-    columns: tableColumns,
+    columns: resolvedColumns,
     filename: t("contacts.exportFilename"),
     label: t("contacts.jobs.exportLabelServer"),
     successMessage: t("contacts.exportSuccess"),
@@ -77,3 +89,36 @@ export function useContactsExportActions({
     onError,
   });
 }
+
+/** Default Work export columns when registry is unavailable. */
+export function defaultContactsExportColumns(
+  t: (key: AppTranslationKey) => string,
+): ContactExportColumn[] {
+  return DEFAULT_CONTACT_EXPORT_COLUMNS.map((column) => {
+    const key = `contacts.columns.${column.id}` as AppTranslationKey;
+    return {
+      id: column.id,
+      label: t(key) || column.label,
+    };
+  });
+}
+
+/** Resolves and sanitizes active export columns for backend CSV job. */
+export function resolveContactsExportColumns(
+  columns: Array<{ id?: string; key?: string; label?: string; labelKey?: AppTranslationKey }>,
+  t: (key: AppTranslationKey) => string,
+): ContactExportColumn[] {
+  const mapped = columns
+    .map((col) => {
+      const id = (col.id || col.key || "").trim();
+      const label = (col.labelKey ? t(col.labelKey) : (col.label || id)).trim();
+      return { id, label: label || id };
+    })
+    .filter((col) => col.id.length > 0 && col.id.length <= 64 && col.label.length > 0);
+
+  if (mapped.length === 0) {
+    return defaultContactsExportColumns(t);
+  }
+  return mapped.slice(0, 50);
+}
+

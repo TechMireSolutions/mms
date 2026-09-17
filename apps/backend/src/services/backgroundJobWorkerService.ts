@@ -39,7 +39,7 @@ export function registerBackgroundJobRunner(key: string, runner: BackgroundJobRu
 
 async function patchJob(
   tenantId: string,
-  userId: string,
+  _userId: string,
   jobId: string,
   patch: Partial<BackgroundJobRecord>,
 ): Promise<BackgroundJobRecord> {
@@ -75,7 +75,6 @@ async function patchJob(
       .set(updateValues)
       .where(and(
         eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
         eq(backgroundJobs.id, jobId),
       ))
       .returning();
