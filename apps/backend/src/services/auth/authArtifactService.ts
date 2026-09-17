@@ -12,7 +12,9 @@ export type AuthArtifactKind =
   | 'platform_password_reset'
   | 'platform_two_factor_challenge'
   | 'login_email_change'
-  | 'messaging_idempotency';
+  | 'messaging_idempotency'
+  | 'tenant_user_invite'
+  | 'tenant_password_otp';
 
 export interface AuthArtifactRecord<T> {
   id: string;

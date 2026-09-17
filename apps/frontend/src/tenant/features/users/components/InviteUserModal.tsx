@@ -78,7 +78,7 @@ export function InviteUserModal({
     const name = toTitleCase(contact.name.trim()) as string;
     const email = (getPrimaryEmail(contact) || '').toLowerCase();
     const phone = getPrimaryPhone(contact) || '';
-    const user: SystemUser = {
+    const user = {
       id: `u${crypto.randomUUID()}`,
       contactId: contact.id,
       name,
@@ -92,7 +92,8 @@ export function InviteUserModal({
       failedLoginAttempts: 0,
       twoFactorEnabled: false,
       activeSessions: 0,
-    };
+      sendEmail: values.sendEmail,
+    } satisfies SystemUser & { sendEmail: boolean };
     setSubmitting(true);
     try {
       await onInvite(user);

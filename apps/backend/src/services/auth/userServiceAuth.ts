@@ -19,7 +19,7 @@ import { getHydratedUsers, getWorkspaceUserRow, saveUsers } from './userServiceL
  */
 const DUMMY_PASSWORD_HASH = `${'0'.repeat(32)}:${'0'.repeat(128)}`;
 
-async function findUserByLoginEmailAndWorkspace(
+export async function findUserByLoginEmailAndWorkspace(
   email: string,
   workspaceSubdomain: string,
 ): Promise<StoredUser | undefined> {

@@ -96,14 +96,26 @@ export function useUsersPageActions({
     notify.success(t('users.saveChanges'));
   };
 
-  const handleInvite = async (user: SystemUser): Promise<void> => {
-    await inviteUser.mutateAsync(user as unknown as Record<string, unknown>);
+  const notifyUserCreated = (result: unknown): void => {
+    const body = (result as { body?: { inviteEmailSent?: boolean; inviteEmailError?: string } } | undefined)
+      ?.body;
+    if (body?.inviteEmailSent === false) {
+      notify.warning(t('users.inviteEmailFailedTitle'), {
+        description: body.inviteEmailError || t('users.inviteEmailFailedDesc'),
+      });
+      return;
+    }
     notify.success(t('users.addSuccessTitle'));
   };
 
+  const handleInvite = async (user: SystemUser): Promise<void> => {
+    const result = await inviteUser.mutateAsync(user as unknown as Record<string, unknown>);
+    notifyUserCreated(result);
+  };
+
   const handleAddUser = async (user: SystemUser): Promise<void> => {
-    await createUser.mutateAsync(user as unknown as Record<string, unknown>);
-    notify.success(t('users.addSuccessTitle'));
+    const result = await createUser.mutateAsync(user as unknown as Record<string, unknown>);
+    notifyUserCreated(result);
   };
 
   return {

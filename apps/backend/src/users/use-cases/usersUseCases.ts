@@ -6,6 +6,7 @@ import { broadcastCollection } from '../../services/websocketService.js';
 import { getHydratedUsers, saveUsers } from '../../services/auth/userService.js';
 import { getRawUsers, type PersistedUser } from '../../services/auth/userServiceShared.js';
 import { deleteRefreshTokensForUser } from '../../services/auth/authArtifactService.js';
+import { sendTenantWelcomeEmail } from '../../services/auth/tenantPasswordOtpService.js';
 import { hashPassword } from '../../services/auth/passwordService.js';
 import { assertPasswordMeetsPolicy } from '../../services/globalSettingsService.js';
 import { loadContactsByIds } from '../../services/contactService.js';
@@ -53,6 +54,9 @@ export type {
 };
 export { UserPasswordResetError, runPasswordResetStage, runPasswordResetAuxiliaryStep };
 
+/** Dev-only fallback when a route handler couldn't resolve a trusted request origin. */
+const DEFAULT_INVITE_ORIGIN = process.env.PLATFORM_APP_URL?.trim() || 'http://localhost:5173';
+
 /**
  * Users use-cases — composition root binding a {@link UsersRepository} to every
  * operation. Production uses the default Drizzle-backed `usersUseCases`; tests
@@ -92,7 +96,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     actorId: string,
     actorRole?: string,
     ip = '127.0.0.1',
-  ): Promise<WorkspaceUser> => {
+    origin?: string,
+  ): Promise<{ user: WorkspaceUser; inviteEmailSent?: boolean; inviteEmailError?: string }> => {
     const tenant = requireTenant();
 
     if (actorRole && !canAssignRole(actorRole, input.role)) {
@@ -133,6 +138,10 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       await assertPasswordMeetsPolicy(password);
       passwordHash = await hashPassword(password);
       mustChangePassword = forceReset !== false;
+    } else if (setupMethod === 'invite') {
+      // No password is collected from the admin — the account gets a random unusable
+      // hash and the new person sets their own via the welcome email's OTP flow.
+      passwordHash = await hashPassword(randomBytes(32).toString('hex'));
     }
 
     const userId = 'id' in input && input.id ? String(input.id) : randomBytes(8).toString('hex');
@@ -172,8 +181,30 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     );
 
     const reloaded = await loadWorkspaceUsers();
-    const created = reloaded.find((u) => String(u.id) === userId);
-    return created ?? normalizeWorkspaceUser(userRecord);
+    const created = reloaded.find((u) => String(u.id) === userId) ?? normalizeWorkspaceUser(userRecord);
+
+    let inviteEmailSent: boolean | undefined;
+    let inviteEmailError: string | undefined;
+    if (setupMethod === 'invite' && (input as { sendEmail?: boolean }).sendEmail !== false) {
+      // The user row above is already committed — a failure here (SMTP down, transient
+      // DB error) must degrade to `inviteEmailSent: false`, never fail the whole create.
+      try {
+        const dispatch = await sendTenantWelcomeEmail({
+          workspaceSubdomain: tenant,
+          email,
+          name: name || email,
+          origin: origin ?? DEFAULT_INVITE_ORIGIN,
+        });
+        inviteEmailSent = dispatch.sent;
+        inviteEmailError = dispatch.error;
+      } catch (inviteError: unknown) {
+        console.error(`[Invite] Failed to send welcome email for user ${userId}:`, inviteError);
+        inviteEmailSent = false;
+        inviteEmailError = inviteError instanceof Error ? inviteError.message : 'The invite email could not be sent.';
+      }
+    }
+
+    return { user: created, inviteEmailSent, inviteEmailError };
   };
 
   const deleteUserById = async (
@@ -410,7 +441,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       actorId: string,
       actorRole?: string,
       ip = '127.0.0.1',
-    ): Promise<WorkspaceUser> => {
+      origin?: string,
+    ): Promise<{ user: WorkspaceUser; inviteEmailSent?: boolean; inviteEmailError?: string }> => {
       return createWorkspaceUser(
         {
           ...input,
@@ -421,6 +453,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
         actorId,
         actorRole,
         ip,
+        origin,
       );
     },
 

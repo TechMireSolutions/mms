@@ -203,6 +203,30 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     mark2FAVerified();
   };
 
+  const requestPasswordOtp = async (email: string): Promise<void> => {
+    await apiJson('/api/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    });
+  };
+
+  const verifyPasswordOtp = async (email: string, code: string): Promise<void> => {
+    await apiJson('/api/auth/forgot-password/verify', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    });
+  };
+
+  const resetPasswordWithOtp = async (email: string, code: string, password: string): Promise<void> => {
+    setAuthError(null);
+    const authResponse = await apiJson<{ user: User }>('/api/auth/forgot-password/reset', {
+      method: 'POST',
+      body: JSON.stringify({ email, code, password }),
+    });
+    await applyAuthSession(authResponse.user);
+    mark2FAVerified();
+  };
+
   const navigateToLogin = (): void => {
     appNavigate(ROUTES.login, { replace: true });
   };
@@ -275,6 +299,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAppState,
     onboard,
     exchangeHandoff,
+    requestPasswordOtp,
+    verifyPasswordOtp,
+    resetPasswordWithOtp,
   }), [
     user,
     isAuthenticated,
