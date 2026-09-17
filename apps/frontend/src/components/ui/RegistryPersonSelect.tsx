@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useStudentsContractList } from '@/tenant/features/students/hooks/useStudentsTsrHooks';
-import { useTeachersContractList } from '@/tenant/features/teachers/hooks/useTeachersTsrHooks';
+import { useTeachersContractList } from '@/tenant/features/faculty/hooks/useFacultyTsrHooks';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { SearchBar } from '@/components/ui/SearchBar';

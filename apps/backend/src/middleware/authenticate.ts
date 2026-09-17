@@ -115,7 +115,7 @@ export async function authenticateTenant(
           return;
         }
         if (user.role === 'teacher') {
-          const { teachersRepository } = await import('../teachers/repository/teachersRepositoryAdapter.js');
+          const { teachersRepository } = await import('../faculty/repository/facultyRepositoryAdapter.js');
           const teacherRow = await teachersRepository.findById(tenant, String(user.id));
           if (teacherRow?.deletedAt || (teacherRow as { deleted_at?: unknown })?.deleted_at) {
             await sendUnauthorized(reply, 'Session revoked');

@@ -72,7 +72,7 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
   { id: "contacts",    label: "Contacts",       description: "Comprehensive CRM directory",         icon: "Users",           category: "core",     required: true },
   { id: "messaging",   label: "Messaging",      description: "SMS, WhatsApp and announcements",     icon: "MessageSquare",   category: "core",     required: true },
   { id: "students",    label: "Students",       description: "Student directory and records",       icon: "GraduationCap",   category: "academic", required: true },
-  { id: "teachers",    label: "Teachers",       description: "Faculty directory and assignments",   icon: "School",          category: "academic" },
+  { id: "teachers",    label: "Faculty",        description: "Faculty directory and assignments",   icon: "School",          category: "academic" },
   { id: "sessions",    label: "Sessions",       description: "Classes, schedules and timetables",   icon: "Calendar",        category: "academic" },
   { id: "attendance",  label: "Attendance",     description: "Tracking and reporting",              icon: "UserCheck",       category: "academic" },
   { id: "enrollment",  label: "Enrollments",    description: "Student enrollment into sessions",    icon: "ClipboardList",   category: "academic" },
@@ -113,12 +113,13 @@ export type SystemModuleNavEntry = SystemModuleNavItem | SystemModuleNavGroup;
 export const SYSTEM_MODULE_NAV: SystemModuleNavEntry[] = [
   { type: "module", moduleId: "dashboard" },
   { type: "module", moduleId: "contacts" },
+  { type: "module", moduleId: "teachers" },
   { type: "module", moduleId: "messaging" },
   {
     type: "group",
     labelKey: "nav.academics",
     icon: "BookOpen",
-    moduleIds: ["students", "teachers", "sessions", "attendance", "enrollment", "hasanat", "examination", "questionBank"],
+    moduleIds: ["students", "sessions", "attendance", "enrollment", "hasanat", "examination", "questionBank"],
   },
   { type: "module", moduleId: "finance" },
   { type: "module", moduleId: "accounting" },

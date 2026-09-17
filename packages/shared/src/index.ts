@@ -125,7 +125,7 @@ export {
   CONTACT_CLIENT_SOFT_DELETE_KEYS,
 } from './contactSoftDelete.js';
 export * from './studentSoftDelete.js';
-export * from './teacherSoftDelete.js';
+export * from './facultySoftDelete.js';
 export * from './sessionSoftDelete.js';
 export * from './enrollmentSoftDelete.js';
 export * from './softDelete.js';
@@ -174,7 +174,7 @@ export * from './schemas/auth.dto.js';
 export * from './schemas/common.dto.js';
 export * from './schemas/csvExport.dto.js';
 export * from './schemas/contactsImport.dto.js';
-export * from './schemas/teachers.dto.js';
+export * from './schemas/faculty.dto.js';
 export * from './schemas/finance.dto.js';
 export * from './schemas/sessions.dto.js';
 export * from './schemas/moduleColumnPreferences.dto.js';
@@ -190,7 +190,6 @@ export * from './schemas/questionBank.dto.js';
 export * from './schemas/backgroundJob.dto.js';
 export * from './schemas/messaging.dto.js';
 export * from './schemas/api.dto.js';
-export * from './schemas/csvExport.dto.js';
 export * from './contracts/ai.contract.js';
 export * from './contracts/health.contract.js';
 export * from './contracts/index.js';
@@ -208,31 +207,33 @@ export {
 } from './studentValidation.js';
 
 // ---------------------------------------------------------------------------
-// 7. Teachers Feature Module
+// 7. Faculty / Teachers Feature Module
 // ---------------------------------------------------------------------------
-export * from './teacherColumnRegistrySync.js';
-export * from './teacherDirectoryColumns.js';
-export * from './teacherEnabledTabs.js';
-export * from './teacherFieldCellFormat.js';
-export * from './teacherFieldDependencies.js';
-export * from './teacherFormCustomFields.js';
-export * from './teacherLookupTypes.js';
-export * from './teacherRegistrationUtils.js';
-export * from './teacherResponseSanitizer.js';
-export * from './teacherSetupConfigTypes.js';
-export * from './teacherTypes.js';
-export * from './teacherUtils.js';
-export * from './teachersExportUtils.js';
-export * from './teachersListQuery.js';
-export * from './teachersModuleManifest.js';
-export * from './teachersModuleSettings.js';
-export * from './teachersWidgetAggregate.js';
+export * from './facultyTypes.js';
+export * from './facultyModuleManifest.js';
 export {
-  TEACHER_WRITE_SYSTEM_KEYS,
-  buildDynamicTeacherSchema,
-  collectTeacherWriteExtraFieldKeys,
-  formatTeacherZodIssues,
-} from './teacherValidation.js';
+  facultyListPageResponseSchema,
+  facultyPreferencesResponseSchema,
+  teacherListPageResponseSchema,
+} from './contracts/faculty.contract.js';
+export * from './facultyDirectoryColumns.js';
+export * from './facultyLookupTypes.js';
+export * from './facultyColumnRegistrySync.js';
+export * from './facultyEnabledTabs.js';
+export * from './facultyFieldCellFormat.js';
+export * from './facultyFieldDependencies.js';
+export * from './facultyFormCustomFields.js';
+export * from './facultyRegistrationUtils.js';
+export * from './facultyResponseSanitizer.js';
+export * from './facultySetupConfigTypes.js';
+export * from './facultyUtils.js';
+export * from './facultyValidation.js';
+export * from './facultyExportUtils.js';
+export * from './facultyListQuery.js';
+export * from './facultyModuleSettings.js';
+export * from './facultyWidgetAggregate.js';
+export * from './demoSeedFaculty.js';
+export * from './demoFaculty.js';
 
 // ---------------------------------------------------------------------------
 // 8. Sessions & Enrollments Modules

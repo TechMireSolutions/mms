@@ -57,7 +57,7 @@ export function createSessionsUseCases(
     if (teacherIds.length > 0) {
       const getTeachers =
         deps?.findTeachersByIds ??
-        (await import('../../db/repositories/teacherRepository.js')).findTeachersByIds;
+        (await import('../../db/repositories/facultyRepository.js')).findTeachersByIds;
       const teachers = await getTeachers(tenant, teacherIds);
       const activeTeacherIds = new Set(
         teachers.filter((t) => !t.deletedAt).map((t) => String(t.id)),

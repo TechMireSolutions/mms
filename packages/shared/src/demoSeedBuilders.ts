@@ -5,7 +5,7 @@ export {
   DEMO_STUDENT_CONTACT_ID_START,
   DEMO_PARENT_CONTACT_ID_START,
 } from './demoSeedConstants.js';
-export { buildDemoTeacherContacts, buildDemoTeachers } from './demoSeedTeachers.js';
+export { buildDemoTeacherContacts, buildDemoTeachers } from './demoSeedFaculty.js';
 export {
   buildDemoStudentParentContacts,
   buildDemoStudentContacts,

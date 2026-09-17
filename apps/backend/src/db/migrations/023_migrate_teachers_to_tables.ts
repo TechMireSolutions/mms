@@ -9,7 +9,7 @@ import {
   getCollectionByStorageName,
   listCollectionStorageNames,
 } from '../database.js';
-import { bulkSaveTeachers } from '../repositories/teacherRepository.js';
+import { bulkSaveTeachers } from '../repositories/facultyRepository.js';
 
 async function discoverTenantSubdomains(): Promise<Set<string>> {
   const subdomains = new Set<string>();

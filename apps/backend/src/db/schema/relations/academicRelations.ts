@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 import { workspaces } from "../platform.js";
 import { contacts, tenantUsers } from "../contacts.js";
 import { students, studentEnrolledSessions } from "../students.js";
-import { teachers } from "../teachers.js";
+import { faculty } from "../faculty.js";
 import {
   sessions,
   sessionFaculty,
@@ -114,21 +114,23 @@ export const studentEnrolledSessionsRelations = relations(studentEnrolledSession
   }),
 }));
 
-export const teachersRelations = relations(teachers, ({ one, many }) => ({
+export const facultyRelations = relations(faculty, ({ one, many }) => ({
   workspace: one(workspaces, {
-    fields: [teachers.workspaceSubdomain],
+    fields: [faculty.workspaceSubdomain],
     references: [workspaces.subdomain],
   }),
   contact: one(contacts, {
-    fields: [teachers.workspaceSubdomain, teachers.contactId],
+    fields: [faculty.workspaceSubdomain, faculty.contactId],
     references: [contacts.workspaceSubdomain, contacts.id],
   }),
   user: one(tenantUsers, {
-    fields: [teachers.workspaceSubdomain, teachers.userId],
+    fields: [faculty.workspaceSubdomain, faculty.userId],
     references: [tenantUsers.workspaceSubdomain, tenantUsers.id],
   }),
   hasanatDistributions: many(hasanatDistributions),
 }));
+
+export const teachersRelations = facultyRelations;
 
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({
   workspace: one(workspaces, {

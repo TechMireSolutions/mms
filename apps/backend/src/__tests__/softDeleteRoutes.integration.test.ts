@@ -64,12 +64,16 @@ vi.mock('../db/repositories/tenantUserRepositoryHydrate.js', async (importOrigin
   };
 });
 
-vi.mock('../teachers/repository/teachersRepositoryAdapter.js', async (importOriginal) => {
-  const actual = await importOriginal<typeof import('../teachers/repository/teachersRepositoryAdapter.js')>();
+vi.mock('../faculty/repository/facultyRepositoryAdapter.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../faculty/repository/facultyRepositoryAdapter.js')>();
   return {
     ...actual,
     teachersRepository: {
       ...actual.teachersRepository,
+      findById: (...args: unknown[]) => mockFindTeacherById(...args),
+    },
+    facultyRepository: {
+      ...actual.facultyRepository,
       findById: (...args: unknown[]) => mockFindTeacherById(...args),
     },
   };

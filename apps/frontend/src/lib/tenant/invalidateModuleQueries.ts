@@ -4,7 +4,7 @@ import { invalidateEnrollmentsQueries } from '@/tenant/hooks/collections/enrollm
 import { invalidateMessagingQueries } from '@/tenant/hooks/collections/messaging';
 import { invalidateSessionsQueries } from '@/tenant/hooks/collections/sessions';
 import { invalidateStudentsQueries } from '@/tenant/hooks/collections/students';
-import { invalidateTeachersQueries } from '@/tenant/hooks/collections/teachers';
+import { invalidateTeachersQueries } from '@/tenant/hooks/collections/faculty';
 import { invalidateUsersQueries } from '@/tenant/hooks/collections/users';
 import { invalidateAttendanceQueries } from '@/tenant/hooks/collections/attendance';
 import { invalidateFinanceQueries } from '@/tenant/hooks/collections/finance';

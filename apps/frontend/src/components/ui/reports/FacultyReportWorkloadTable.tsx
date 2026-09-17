@@ -11,7 +11,7 @@ import {
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
-import type { FacultyWorkloadItem } from "@/components/ui/reports/teacherReportTypes";
+import type { FacultyWorkloadItem } from "@/components/ui/reports/facultyReportTypes";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 interface FacultyReportWorkloadTableProps {

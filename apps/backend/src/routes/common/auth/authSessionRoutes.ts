@@ -87,7 +87,7 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
         if (user.role === 'teacher') {
           const tenant = getRequestTenant() ?? user.workspaceSubdomain;
           if (tenant) {
-            const { teachersRepository } = await import('../../../teachers/repository/teachersRepositoryAdapter.js');
+            const { teachersRepository } = await import('../../../faculty/repository/facultyRepositoryAdapter.js');
             const teacherRow = await teachersRepository.findById(tenant, String(user.id));
             if (teacherRow?.deletedAt) {
               return sendUnauthorized(reply, 'Session revoked');

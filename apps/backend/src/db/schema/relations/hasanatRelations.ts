@@ -1,7 +1,7 @@
 import { relations } from "drizzle-orm";
 import { workspaces } from "../platform.js";
 import { students } from "../students.js";
-import { teachers } from "../teachers.js";
+import { faculty } from "../faculty.js";
 import {
   hasanatDenoms,
   hasanatBatches,
@@ -47,9 +47,13 @@ export const hasanatDistributionsRelations = relations(hasanatDistributions, ({ 
     fields: [hasanatDistributions.workspaceSubdomain, hasanatDistributions.recipientStudentId],
     references: [students.workspaceSubdomain, students.id],
   }),
-  recipientTeacher: one(teachers, {
+  recipientTeacher: one(faculty, {
     fields: [hasanatDistributions.workspaceSubdomain, hasanatDistributions.recipientTeacherId],
-    references: [teachers.workspaceSubdomain, teachers.id],
+    references: [faculty.workspaceSubdomain, faculty.id],
+  }),
+  recipientFaculty: one(faculty, {
+    fields: [hasanatDistributions.workspaceSubdomain, hasanatDistributions.recipientTeacherId],
+    references: [faculty.workspaceSubdomain, faculty.id],
   }),
   redemptions: many(hasanatRedemptions),
 }));

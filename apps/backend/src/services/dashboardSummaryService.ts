@@ -13,7 +13,7 @@ import { getRequestTenant } from '../lib/tenantContext.js';
 import { withTenant } from '../db/tenant-context.js';
 import { redisGet, redisSet, redisKeys } from '../lib/redis.js';
 import { studentUseCases } from '../students/use-cases/studentUseCases.js';
-import { teacherUseCases } from '../teachers/use-cases/teacherUseCases.js';
+import { teacherUseCases } from '../faculty/use-cases/facultyUseCases.js';
 import { contactUseCases } from '../contacts/use-cases/contactUseCases.js';
 import { loadSessionsCommandMetrics } from './sessionService.js';
 import { aggregateAttendanceCommandMetrics } from '../db/repositories/attendanceRepositoryList.js';

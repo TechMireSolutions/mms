@@ -1,0 +1,232 @@
+import { initContract } from '@ts-rest/core';
+import { z } from 'zod';
+import {
+  facultyRecordSchema,
+  facultyBulkStatusSchema,
+  facultyBulkSpecializationSchema,
+  facultyNextEmployeeIdQuerySchema,
+} from '../facultyModuleManifest.js';
+import { teachersListQuerySchema } from '../facultyListQuery.js';
+import { teacherLookupsMapSchema } from '../facultyLookupTypes.js';
+import { teacherWriteSchema, teachersDuplicateCheckBodySchema } from '../schemas/faculty.dto.js';
+
+const c = initContract();
+const errorResponse = z.unknown();
+
+const facultyWidgetAggregateResultSchema = z.object({
+  value: z.number(),
+  totalCount: z.number(),
+  chartData: z.array(z.object({ name: z.string(), value: z.number() })),
+});
+
+/** Envelope for paginated faculty list responses (`FacultyListPageResult`). */
+export const facultyListPageResponseSchema = z.object({
+  teachers: z.array(facultyRecordSchema),
+  total: z.number(),
+  page: z.number(),
+  limit: z.number(),
+  hasMore: z.boolean(),
+});
+
+/** `{ success: true, teacher }` envelope returned by create/update. */
+const facultyWrappedResponseSchema = z.object({
+  success: z.literal(true),
+  teacher: facultyRecordSchema,
+});
+
+/** `{ success: true, succeeded, failed }` bulk-operation envelope. */
+const facultyBulkResultResponseSchema = z.object({
+  success: z.literal(true),
+  succeeded: z.number(),
+  failed: z.number(),
+});
+
+/** Normalized Faculty Setup employee-ID / contact-link prefs (`FacultyModulePreferences`). */
+export const facultyPreferencesResponseSchema = z.object({
+  idPrefix: z.string(),
+  autoGenerateId: z.boolean(),
+  requireContactLink: z.boolean(),
+  defaultSpecialization: z.string(),
+});
+
+export const facultyContract = c.router({
+  list: {
+    method: 'GET',
+    path: '/api/teachers',
+    query: teachersListQuerySchema,
+    responses: { 200: facultyListPageResponseSchema, 403: errorResponse, 500: errorResponse },
+    summary: 'List faculty members',
+  },
+  get: {
+    method: 'GET',
+    path: '/api/teachers/:id',
+    query: z.object({ includeDeleted: z.union([z.boolean(), z.literal('true'), z.literal('false')]).optional() }).optional(),
+    responses: { 200: z.object({ teacher: facultyRecordSchema }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    summary: 'Get a single faculty member',
+  },
+  create: {
+    method: 'POST',
+    path: '/api/teachers',
+    body: teacherWriteSchema,
+    responses: { 200: facultyWrappedResponseSchema, 201: facultyWrappedResponseSchema, 403: errorResponse, 400: errorResponse, 500: errorResponse },
+    summary: 'Create a faculty member',
+  },
+  update: {
+    method: 'PUT',
+    path: '/api/teachers/:id',
+    body: teacherWriteSchema,
+    responses: { 200: facultyWrappedResponseSchema, 403: errorResponse, 404: errorResponse, 400: errorResponse, 500: errorResponse },
+    summary: 'Update a faculty member',
+  },
+  delete: {
+    method: 'DELETE',
+    path: '/api/teachers/:id',
+    body: z.object({ deletionReason: z.string().optional() }).optional(),
+    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    summary: 'Soft delete a faculty member',
+  },
+  bulkStatus: {
+    method: 'POST',
+    path: '/api/teachers/bulk-status',
+    body: facultyBulkStatusSchema,
+    responses: { 200: facultyBulkResultResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
+    summary: 'Bulk update faculty status',
+  },
+  bulkSpecialization: {
+    method: 'POST',
+    path: '/api/teachers/bulk-specialization',
+    body: facultyBulkSpecializationSchema,
+    responses: { 200: facultyBulkResultResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
+    summary: 'Bulk update faculty specialization',
+  },
+  duplicateCheck: {
+    method: 'POST',
+    path: '/api/teachers/duplicate-check',
+    body: teachersDuplicateCheckBodySchema,
+    responses: {
+      200: z.object({ reason: z.enum(['contact', 'employeeId']).nullable() }),
+      400: errorResponse,
+      403: errorResponse,
+      500: errorResponse,
+    },
+    summary: 'Check for duplicate faculty registration',
+  },
+  nextEmployeeId: {
+    method: 'GET',
+    path: '/api/teachers/next-employee-id',
+    query: facultyNextEmployeeIdQuerySchema,
+    responses: { 200: z.object({ employeeId: z.string() }), 400: errorResponse, 403: errorResponse, 500: errorResponse },
+    summary: 'Get next available employee ID',
+  },
+  migrateEmployeeIds: {
+    method: 'POST',
+    path: '/api/teachers/migrate-employee-ids',
+    body: z.object({}).optional(),
+    responses: { 200: z.object({ success: z.literal(true), updated: z.number() }), 403: errorResponse, 500: errorResponse },
+    summary: 'Migrate faculty missing employee IDs',
+  },
+  restore: {
+    method: 'POST',
+    path: '/api/teachers/:id/restore',
+    body: z.unknown(),
+    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    summary: 'Restore a soft-deleted faculty member',
+  },
+  bulkDelete: {
+    method: 'POST',
+    path: '/api/teachers/bulk-delete',
+    body: z.object({ ids: z.array(z.union([z.string(), z.number()])), deletionReason: z.string().optional() }),
+    responses: { 200: facultyBulkResultResponseSchema, 403: errorResponse, 500: errorResponse },
+    summary: 'Bulk delete faculty members',
+  },
+  bulkRestore: {
+    method: 'POST',
+    path: '/api/teachers/bulk-restore',
+    body: z.object({ ids: z.array(z.union([z.string(), z.number()])) }),
+    responses: { 200: facultyBulkResultResponseSchema, 403: errorResponse, 500: errorResponse },
+    summary: 'Bulk restore faculty members',
+  },
+  exportAudit: {
+    method: 'POST',
+    path: '/api/teachers/export-audit',
+    body: z.object({ count: z.number(), scope: z.enum(['all', 'filtered', 'selection']) }),
+    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 500: errorResponse },
+    summary: 'Log export audit',
+  },
+  setupAudit: {
+    method: 'POST',
+    path: '/api/teachers/setup-audit',
+    body: z.object({ area: z.enum(['fields', 'preferences']), summary: z.string() }),
+    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 500: errorResponse },
+    summary: 'Log setup audit',
+  },
+  resolve: {
+    method: 'POST',
+    path: '/api/teachers/resolve',
+    body: z.object({ ids: z.array(z.string()) }),
+    responses: { 200: z.object({ teachers: z.array(facultyRecordSchema) }), 403: errorResponse, 500: errorResponse },
+    summary: 'Resolve faculty members by IDs',
+  },
+  linkedContactIds: {
+    method: 'GET',
+    path: '/api/teachers/linked-contact-ids',
+    query: z.object({ excludeId: z.string().optional() }).optional(),
+    responses: {
+      200: z.object({ contactIds: z.array(z.union([z.string(), z.number()])) }),
+      403: errorResponse,
+      500: errorResponse,
+    },
+    summary: 'Get linked contact IDs',
+  },
+  widgetAggregates: {
+    method: 'POST',
+    path: '/api/teachers/widget-aggregates',
+    body: z.object({ widgets: z.array(z.unknown()) }),
+    responses: { 200: z.object({ results: z.record(z.string(), facultyWidgetAggregateResultSchema) }), 403: errorResponse, 500: errorResponse },
+    summary: 'Get widget aggregates',
+  },
+
+  getFieldConfig: {
+    method: 'GET',
+    path: '/api/teachers/field-config',
+    responses: { 200: z.object({ config: z.record(z.string(), z.unknown()).nullable() }), 403: errorResponse, 500: errorResponse },
+    summary: 'Get field config',
+  },
+  updateFieldConfig: {
+    method: 'PUT',
+    path: '/api/teachers/field-config',
+    body: z.unknown(),
+    responses: { 200: z.object({ success: z.literal(true), config: z.record(z.string(), z.unknown()) }), 403: errorResponse, 500: errorResponse },
+    summary: 'Update field config',
+  },
+  getPreferences: {
+    method: 'GET',
+    path: '/api/teachers/preferences',
+    responses: { 200: z.object({ preferences: facultyPreferencesResponseSchema }), 403: errorResponse, 500: errorResponse },
+    summary: 'Get preferences',
+  },
+  updatePreferences: {
+    method: 'PUT',
+    path: '/api/teachers/preferences',
+    body: z.unknown(),
+    responses: { 200: z.object({ success: z.literal(true), preferences: facultyPreferencesResponseSchema }), 403: errorResponse, 500: errorResponse },
+    summary: 'Update preferences',
+  },
+  getLookups: {
+    method: 'GET',
+    path: '/api/teachers/lookups',
+    responses: { 200: z.object({ lookups: teacherLookupsMapSchema }), 403: errorResponse, 500: errorResponse },
+    summary: 'Get all lookups',
+  },
+  getLookupKind: {
+    method: 'GET',
+    path: '/api/teachers/lookups/:kind',
+    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    summary: 'Get a specific lookup kind',
+  },
+});
+
+
+
+export const teacherContract = facultyContract;
+export const teacherListPageResponseSchema = facultyListPageResponseSchema;

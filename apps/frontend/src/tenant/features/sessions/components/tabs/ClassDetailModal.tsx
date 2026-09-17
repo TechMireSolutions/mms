@@ -7,7 +7,7 @@ import { GraduationCap, Calendar, Coffee, Award, Wallet } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useTeachersContractList, useTeachersByIds } from '@/tenant/hooks/collections/teachers';
+import { useTeachersContractList, useTeachersByIds } from '@/tenant/hooks/collections/faculty';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { TEACHERS_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from '@mms/shared';
 import type { Class } from '@/lib/data/sessionsData';

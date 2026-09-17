@@ -19,7 +19,7 @@ import {
   tenantUsers,
 } from "../contacts.js";
 import { students } from "../students.js";
-import { teachers } from "../teachers.js";
+import { teachers } from "../faculty.js";
 import { messageLogs } from "../messaging.js";
 
 export const contactsRelations = relations(contacts, ({ one, many }) => ({

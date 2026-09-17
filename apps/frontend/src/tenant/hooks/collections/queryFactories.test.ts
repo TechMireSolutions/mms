@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import * as contactsFacade from './contacts';
 import * as studentsFacade from './students';
-import * as teachersFacade from './teachers';
+import * as facultyFacade from './faculty';
 import * as sessionsFacade from './sessions';
 import * as enrollmentsFacade from './enrollments';
 import * as financeFacade from './finance';
@@ -50,18 +50,18 @@ describe('TanStack Query v5 Query Options Factories (P8)', () => {
     });
   });
 
-  describe('teachers collection facade', () => {
-    it('exports teachersListQueryOptions and teachersCommandMetricsQueryOptions', () => {
-      expect(typeof teachersFacade.teachersListQueryOptions).toBe('function');
-      expect(typeof teachersFacade.teachersCommandMetricsQueryOptions).toBe('function');
+  describe('faculty collection facade', () => {
+    it('exports facultyListQueryOptions and facultyCommandMetricsQueryOptions', () => {
+      expect(typeof facultyFacade.facultyListQueryOptions).toBe('function');
+      expect(typeof facultyFacade.facultyCommandMetricsQueryOptions).toBe('function');
 
-      const listOptions = teachersFacade.teachersListQueryOptions({ page: 1, limit: 25 });
+      const listOptions = facultyFacade.facultyListQueryOptions({ page: 1, limit: 25 });
       expect(listOptions.queryKey).toBeDefined();
       expect(typeof listOptions.queryFn).toBe('function');
       expect(listOptions.staleTime).toBe(15_000);
 
-      const metricsOptions = teachersFacade.teachersCommandMetricsQueryOptions();
-      expect(metricsOptions.queryKey).toEqual(['teachers', 'metrics']);
+      const metricsOptions = facultyFacade.facultyCommandMetricsQueryOptions();
+      expect(metricsOptions.queryKey).toEqual(['faculty', 'metrics']);
       expect(typeof metricsOptions.queryFn).toBe('function');
       expect(metricsOptions.staleTime).toBe(SUMMARY_STALE_TIME);
     });

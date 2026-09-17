@@ -69,7 +69,7 @@ export const moduleFieldsPrefsAuditBodySchema = z.preprocess((raw) => {
 
 import { contactsListQuerySchema } from '../contactsListQuery.js';
 import { studentsListQuerySchema } from '../studentsListQuery.js';
-import { teachersListQuerySchema } from '../teachersListQuery.js';
+import { teachersListQuerySchema } from '../facultyListQuery.js';
 import { sessionsListQuerySchema } from '../sessionsListQuery.js';
 import { enrollmentsListQuerySchema } from '../enrollmentsListQuery.js';
 import { usersListQuerySchema } from '../usersListQuery.js';

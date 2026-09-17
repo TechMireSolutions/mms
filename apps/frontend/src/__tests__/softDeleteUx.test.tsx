@@ -19,7 +19,7 @@ import {
 } from "@/components/ui/DetailDrawerArchiveChrome";
 import { ContactArchivedBanner } from "@/tenant/features/contacts/components/ContactArchivedBanner";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
-import { TeacherArchivedBanner } from "@/tenant/features/teachers/components/TeacherArchivedBanner";
+import { TeacherArchivedBanner } from "@/tenant/features/faculty/components/FacultyArchivedBanner";
 import { SessionArchivedBanner } from "@/tenant/features/sessions/components/SessionArchivedBanner";
 import { ContactDetailDrawerHeaderActions } from "@/tenant/features/contacts/components/detail/ContactDetailDrawerChrome";
 import { notify } from "@/lib/notify";

@@ -8,7 +8,7 @@ import PinnedWidgets from './PinnedWidgets';
 import { ReportFilterBanner } from './ReportFilterBanner';
 import { FacultyReportTables } from './FacultyReportTables';
 import { useFacultyReportController } from './useFacultyReportController';
-import type { TeacherReportProps } from './teacherReportTypes';
+import type { TeacherReportProps } from './facultyReportTypes';
 
 const FacultyReportChartSection = lazy(() =>
   import('./FacultyReportSections').then((mod) => ({ default: mod.FacultyReportChartSection })),
@@ -19,7 +19,7 @@ export type {
   ReportTeacher,
   TeacherReportFilters,
   TeacherReportProps,
-} from './teacherReportTypes';
+} from './facultyReportTypes';
 
 const FacultyReport = (function FacultyReport({ filters }: TeacherReportProps): React.JSX.Element {
   const report = useFacultyReportController({ filters });

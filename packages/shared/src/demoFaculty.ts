@@ -1,0 +1,15 @@
+import {
+  buildDemoTeacherContacts,
+  buildDemoTeachers,
+} from './demoSeedBuilders.js';
+
+export { DEMO_TEACHER_COUNT } from './demoSeedBuilders.js';
+
+/** Faculty contact profiles (ids 1–{@link DEMO_TEACHER_COUNT}). */
+export const DEMO_TEACHER_CONTACTS = buildDemoTeacherContacts();
+
+/** Demo faculty rows — profile fields live on linked contacts. */
+export const DEMO_TEACHERS = buildDemoTeachers();
+
+export const DEMO_FACULTY_CONTACTS = DEMO_TEACHER_CONTACTS;
+export const DEMO_FACULTY = DEMO_TEACHERS;

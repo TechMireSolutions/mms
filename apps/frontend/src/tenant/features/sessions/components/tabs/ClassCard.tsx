@@ -10,7 +10,7 @@ import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Class } from "@/lib/data/sessionsData";
 import { genderStatusBadgeConfig } from "@/lib/genderStatusBadge";
-import { teacherNameById } from "@/lib/teachers/teacherAssignment";
+import { teacherNameById } from "@/lib/faculty/facultyAssignment";
 
 interface ClassCardProps {
   sessionClass: Class;

@@ -128,7 +128,7 @@ export function getCategoryLabelKey(category: string): AppTranslationKey | undef
     examinations: 'nav.examinations',
     questionBank: 'nav.questionBank',
     enrollments: 'nav.enrollments',
-    faculty: 'nav.teachers',
+    faculty: 'nav.faculty',
     teachers: 'nav.teachers',
     accounting: 'nav.accounting',
     obligations: 'nav.obligations',

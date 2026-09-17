@@ -8,7 +8,7 @@ import {
 } from '../services/genericRelationalService.js';
 import { ConflictError, NotFoundError, ValidationError } from '../lib/httpErrors.js';
 import { restoreContactById, bulkRestoreContacts } from '../contacts/use-cases/contactSoftDeleteUseCases.js';
-import { restoreTeacherById, bulkRestoreTeachers } from '../teachers/use-cases/teacherSoftDeleteUseCases.js';
+import { restoreTeacherById, bulkRestoreTeachers } from '../faculty/use-cases/facultySoftDeleteUseCases.js';
 import { restoreStudentById, bulkRestoreStudents } from '../students/use-cases/studentSoftDeleteUseCases.js';
 import { StudentRestoreConflictError } from '../students/use-cases/studentNormalizeUseCases.js';
 import { createEnrollmentsUseCases } from '../enrollments/use-cases/enrollmentsUseCases.js';
@@ -16,7 +16,7 @@ import { createFinanceUseCases } from '../finance/use-cases/financeUseCases.js';
 import { createAttendanceUseCases } from '../attendance/use-cases/attendanceUseCases.js';
 import { createSessionsUseCases } from '../sessions/use-cases/sessionsUseCases.js';
 import type { ContactsRepository } from '../contacts/repository/contactsRepository.js';
-import type { TeachersRepository } from '../teachers/repository/teachersRepository.js';
+import type { FacultyRepository as TeachersRepository } from '../faculty/repository/facultyRepository.js';
 import type { StudentsRepository } from '../students/repository/studentsRepository.js';
 import type { EnrollmentsRepository } from '../enrollments/repository/enrollmentsRepository.js';
 import { runWithTenant } from '../lib/tenantContext.js';

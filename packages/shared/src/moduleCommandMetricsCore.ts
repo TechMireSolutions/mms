@@ -1,4 +1,4 @@
-import { resolveTeacherStatusRoles, TEACHER_STATUS_VALUES } from './teacherTypes.js';
+import { resolveTeacherStatusRoles, TEACHER_STATUS_VALUES } from './facultyTypes.js';
 
 /** Default rolling window for "new records" command-centre metrics (globle1 §2.1). */
 export const MODULE_METRICS_DEFAULT_PERIOD_DAYS = 30;
@@ -20,6 +20,9 @@ export interface TeachersCommandMetricsSnapshot {
   other: number;
   newThisPeriod: number;
 }
+
+export type FacultyCommandMetricsSnapshot = TeachersCommandMetricsSnapshot;
+
 
 export interface FinanceCommandMetricsSnapshot {
   totalInvoices: number;
@@ -176,6 +179,11 @@ export function computeTeachersCommandMetrics(
     newThisPeriod,
   };
 }
+
+export const computeFacultyCommandMetrics = computeTeachersCommandMetrics;
+export const computeFacultyCommandMetricsSnapshot = computeTeachersCommandMetrics;
+
+
 
 export function computeUsersCommandMetrics(
   users: WorkspaceUserMetricRecord[],

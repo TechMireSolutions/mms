@@ -5,8 +5,8 @@ import { buildContactsCsvExport, generateContactsCsvStreamChunks } from './conta
 import { buildContactsVcfExport } from './contactsVcfExportService.js';
 import type { StudentsExportQueryInput } from './studentsExportService.js';
 import { buildStudentsCsvExport, generateStudentsCsvStreamChunks } from './studentsExportService.js';
-import type { TeachersExportQueryInput } from './teachersExportService.js';
-import { buildTeachersCsvExport, generateTeachersCsvStreamChunks } from './teachersExportService.js';
+import type { FacultyExportQueryInput as TeachersExportQueryInput } from './facultyExportService.js';
+import { buildFacultyCsvExport as buildTeachersCsvExport, generateFacultyCsvStreamChunks as generateTeachersCsvStreamChunks } from './facultyExportService.js';
 import type { SessionsExportQueryInput } from './sessionsExportService.js';
 import { buildSessionsCsvExport, generateSessionsCsvStreamChunks } from './sessionsExportService.js';
 import type { EnrollmentsExportQueryInput } from './enrollmentsExportService.js';

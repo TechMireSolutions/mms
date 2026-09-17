@@ -15,4 +15,4 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 6. **Tests**: `inject()` tests with `host: 'tenant.localhost'`.
 7. **FE Query Hooks**: **`mms-query-factories`** / **`mms-frontend`**.
 
-Refs: `routes/tenant/students.ts`, `contacts.ts`, `teachers.ts`, `examinations.ts`, `hasanat.ts`; Contacts Clean Architecture refactor (`contacts/use-cases/` + `contacts/repository/` + `contactUseCases`).
+Refs: `routes/tenant/students.ts`, `contacts.ts`, `faculty.ts`, `examinations.ts`, `hasanat.ts`; Contacts Clean Architecture refactor (`contacts/use-cases/` + `contacts/repository/` + `contactUseCases`).

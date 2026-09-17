@@ -16,7 +16,10 @@ export const ALL_PERMISSIONS = [
   "students.read",
   "students.write",
   "students.delete",
-  // Teachers
+  // Faculty & Teachers
+  "faculty.read",
+  "faculty.write",
+  "faculty.delete",
   "teachers.read",
   "teachers.write",
   "teachers.delete",
@@ -96,10 +99,13 @@ const PERMISSION_RULES: Readonly<Record<Permission, PermissionRule>> = Object.fr
   "students.write": { module: "students", requiredActions: ["create", "update"] },
   "students.delete": { module: "students", requiredActions: ["delete"] },
 
-  // Teachers
-  "teachers.read": { module: "teachers", requiredActions: ["read"] },
-  "teachers.write": { module: "teachers", requiredActions: ["create", "update"] },
-  "teachers.delete": { module: "teachers", requiredActions: ["delete"] },
+  // Faculty & Teachers
+  "faculty.read": { module: "faculty", requiredActions: ["read"], fallbackModules: ["teachers"] },
+  "faculty.write": { module: "faculty", requiredActions: ["create", "update"], fallbackModules: ["teachers"] },
+  "faculty.delete": { module: "faculty", requiredActions: ["delete"], fallbackModules: ["teachers"] },
+  "teachers.read": { module: "teachers", requiredActions: ["read"], fallbackModules: ["faculty"] },
+  "teachers.write": { module: "teachers", requiredActions: ["create", "update"], fallbackModules: ["faculty"] },
+  "teachers.delete": { module: "teachers", requiredActions: ["delete"], fallbackModules: ["faculty"] },
 
   // Sessions
   "sessions.read": { module: "sessions", requiredActions: ["read"] },

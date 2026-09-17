@@ -7,9 +7,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-import { useTeachersContractList } from '@/tenant/hooks/collections/teachers';
+import { useTeachersContractList } from '@/tenant/hooks/collections/faculty';
 import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
-import { activeTeachersForAssignment } from '@/lib/teachers/teacherAssignment';
+import { activeTeachersForAssignment } from '@/lib/faculty/facultyAssignment';
 import { useTranslation } from '@/hooks/useTranslation';
 import { todayISO } from '@mms/shared';
 

@@ -173,6 +173,7 @@ export const DEFAULT_WORKSPACE_ROLES: readonly WorkspaceRole[] = [
       dashboard: ['read'],
       contacts: ['create', 'read', 'update'],
       students: ['create', 'read', 'update'],
+      faculty: ['create', 'read', 'update'],
       teachers: ['create', 'read', 'update'],
       sessions: ['create', 'read', 'update'],
       attendance: ['create', 'read', 'update'],
@@ -198,6 +199,7 @@ export const DEFAULT_WORKSPACE_ROLES: readonly WorkspaceRole[] = [
       dashboard: ['read'],
       contacts: ['create', 'read', 'update', 'delete'],
       students: ['create', 'read', 'update'],
+      faculty: ['read'],
       teachers: ['read'],
       sessions: ['read'],
       attendance: ['read'],
@@ -217,6 +219,7 @@ export const DEFAULT_WORKSPACE_ROLES: readonly WorkspaceRole[] = [
     permissions: {
       dashboard: ['read'],
       students: ['read', 'update'],
+      faculty: ['read', 'update'],
       teachers: ['read', 'update'],
       enrollments: ['create', 'read', 'update'],
       sessions: ['read', 'update'],
@@ -236,6 +239,7 @@ export const DEFAULT_WORKSPACE_ROLES: readonly WorkspaceRole[] = [
     permissions: {
       dashboard: ['read'],
       students: ['read'],
+      faculty: ['read'],
       teachers: ['read'],
       sessions: ['read'],
       attendance: ['create', 'read'],

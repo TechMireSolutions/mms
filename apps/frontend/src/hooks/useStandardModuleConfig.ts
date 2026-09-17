@@ -28,7 +28,7 @@ import {
 import { useSessionLookupsQuery } from '@/tenant/features/sessions/hooks/useSessionLookups';
 import { useAttendanceLookupsQuery } from '@/tenant/features/attendance/hooks/useAttendanceLookups';
 import { useStudentLookupsQuery } from '@/tenant/features/students/hooks/useStudentLookups';
-import { useTeacherLookupsQuery } from '@/tenant/features/teachers/hooks/useTeacherLookups';
+import { useTeacherLookupsQuery } from '@/tenant/features/faculty/hooks/useFacultyLookups';
 
 export type {
   StandardModuleId,
@@ -66,7 +66,7 @@ export function useUsersConfig(): StandardModuleConfigCore<UsersSettings> {
 
 const useTeacherConfigImpl = createStandardModuleConfigHook<
   TeachersSettings,
-  { statuses: string[]; specializations: string[]; genderFilters: string[] }
+  { statuses: string[]; specializations: string[]; genderFilters: string[]; designations: string[] }
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultSettings as TeachersSettings,
   defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultFieldDefs as unknown as ModuleFieldDef[],
@@ -89,6 +89,7 @@ const useTeacherConfigImpl = createStandardModuleConfigHook<
       statuses: lookups.statuses,
       specializations: lookups.specializations,
       genderFilters: lookups.genderFilters,
+      designations: lookups.designations,
     };
   },
 });
@@ -97,6 +98,9 @@ export function useTeacherConfig() {
   return useTeacherConfigImpl() as StandardModuleConfigCore<TeachersSettings> &
     StandardModuleConfigExtraMap['teachers'];
 }
+
+export const useFacultyConfig = useTeacherConfig;
+
 
 const useStudentConfigImpl = createStandardModuleConfigHook<
   StudentsSettings,

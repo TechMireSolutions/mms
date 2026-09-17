@@ -19,7 +19,7 @@ vi.mock("@/tenant/hooks/collections/sessions", () => ({
   ],
 }));
 
-vi.mock("@/tenant/hooks/collections/teachers", () => ({
+vi.mock("@/tenant/hooks/collections/faculty", () => ({
   useTeachersContractList: () => ({
     data: {
       body: {

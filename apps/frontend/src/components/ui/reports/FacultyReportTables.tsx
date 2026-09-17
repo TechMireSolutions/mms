@@ -17,7 +17,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { toTitleCase } from "@mms/shared";
 import { FacultyReportWorkloadTable } from "@/components/ui/reports/FacultyReportWorkloadTable";
 
-import type { TeacherReportTablesProps } from "./teacherReportTypes";
+import type { TeacherReportTablesProps } from "./facultyReportTypes";
 
 export const FacultyReportTables = (function FacultyReportTables({
   activeSubTab,

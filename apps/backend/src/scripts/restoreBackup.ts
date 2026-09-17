@@ -108,7 +108,7 @@ async function runRestore() {
 
   const { listContactsByWorkspace } = await import('../db/repositories/contactRepository.js');
   const { listStudentsByWorkspace } = await import('../db/repositories/studentRepository.js');
-  const { listTeachersByWorkspace } = await import('../db/repositories/teacherRepository.js');
+  const { listTeachersByWorkspace } = await import('../db/repositories/facultyRepository.js');
 
   const hydratedContacts = await listContactsByWorkspace(subdomain);
   const hydratedStudents = await listStudentsByWorkspace(subdomain);

@@ -11,7 +11,7 @@ import { FORM_LABEL } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useTeachersContractList, useTeachersByIds } from '@/tenant/hooks/collections/teachers';
+import { useTeachersContractList, useTeachersByIds } from '@/tenant/hooks/collections/faculty';
 import { TEACHERS_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from '@mms/shared';
 import type { Session, SessionFaculty } from '@/lib/data/sessionsData';
 

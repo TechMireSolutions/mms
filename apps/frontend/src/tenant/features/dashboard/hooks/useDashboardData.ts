@@ -13,7 +13,7 @@ import {
 } from '@/lib/dashboardCollections';
 import { isSeededDashboardWidget } from '@/lib/dashboardWidgets';
 import { useStudentsMetrics, useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
-import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
+import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/hooks/collections/faculty';
 import { useContactsMetrics, useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useSessionsMetrics, useSessionsWidgetAggregates } from '@/tenant/hooks/collections/sessions';
 import { useAttendanceMetrics } from '@/tenant/hooks/collections/attendance';

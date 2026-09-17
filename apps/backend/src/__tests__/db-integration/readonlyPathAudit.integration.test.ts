@@ -84,7 +84,7 @@ async function buildReadCases(): Promise<ReadCase[]> {
     import('../../db/repositories/contactRepositoryMetrics.js'),
     import('../../db/repositories/studentRepositoryHydrate.js'),
     import('../../db/repositories/studentRepositoryListPage.js'),
-    import('../../db/repositories/teacherRepository.js'),
+    import('../../db/repositories/facultyRepository.js'),
     import('../../db/repositories/tenantUserRepositoryHydrate.js'),
     import('../../db/repositories/tenantUserRepositoryList.js'),
     import('../../db/repositories/attendanceRepository.js'),

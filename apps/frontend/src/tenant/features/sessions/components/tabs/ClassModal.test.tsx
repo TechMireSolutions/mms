@@ -14,7 +14,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("@/tenant/hooks/collections/teachers", () => ({
+vi.mock("@/tenant/hooks/collections/faculty", () => ({
   useTeachersContractList: () => ({
     data: { body: { teachers: [{ id: "t1", name: "Ustadh Ali", status: "active" }] } },
   }),

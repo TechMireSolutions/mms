@@ -16,7 +16,7 @@ import {
 import { useSessionsMetrics } from '@/tenant/hooks/collections/sessions';
 import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
 import { useStudentsMetrics } from '@/tenant/hooks/collections/students';
-import { useTeachersMetrics } from '@/tenant/hooks/collections/teachers';
+import { useTeachersMetrics } from '@/tenant/hooks/collections/faculty';
 import type { KpiCategoryFlags } from './kpiSummaryCategoryFlags';
 
 export type KpiSummaryDataSources = ReturnType<typeof useKpiSummaryDataSources>;

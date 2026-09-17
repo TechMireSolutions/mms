@@ -35,11 +35,11 @@ import {
 import {
   TEACHER_CLIENT_SOFT_DELETE_KEYS,
   stripTeacherClientSoftDeleteFields,
-} from '../teacherUtils.js';
+} from '../facultyUtils.js';
 import {
   filterActiveTeachers,
   isTeacherDeleted,
-} from '../teacherTypes.js';
+} from '../facultyTypes.js';
 import {
   SESSION_CLIENT_SOFT_DELETE_KEYS,
   stripSessionClientSoftDeleteFields,
@@ -57,7 +57,7 @@ import {
   isEnrollmentDeleted,
 } from '../enrollmentsModuleManifest.js';
 import * as studentSoftDelete from '../studentSoftDelete.js';
-import * as teacherSoftDelete from '../teacherSoftDelete.js';
+import * as teacherSoftDelete from '../facultySoftDelete.js';
 import * as sessionSoftDelete from '../sessionSoftDelete.js';
 import * as enrollmentSoftDelete from '../enrollmentSoftDelete.js';
 import {
@@ -69,14 +69,14 @@ import { isQueryFlagTrue } from '../paginationUtils.js';
 import { manifestSoftDeleteSchema } from '../types/moduleManifest.js';
 import { contactWriteSchema } from '../schemas/contacts.dto.js';
 import { studentWriteSchema } from '../schemas/students.dto.js';
-import { buildDynamicTeacherSchema } from '../schemas/teachers.dto.js';
+import { buildDynamicTeacherSchema } from '../schemas/faculty.dto.js';
 import { sessionCreateBodySchema, sessionUpdateBodySchema } from '../schemas/sessions.dto.js';
 import { SessionInsertSchema } from '../sessionTypes.js';
 import type { Contact } from '../contactTypes.js';
-import { DEFAULT_TEACHERS_SETTINGS } from '../teachersModuleSettings.js';
+import { DEFAULT_TEACHERS_SETTINGS } from '../facultyModuleSettings.js';
 import { CONTACTS_MODULE_MANIFEST } from '../contactsModuleManifest.js';
 import { STUDENTS_MODULE_MANIFEST } from '../studentsModuleManifest.js';
-import { TEACHERS_MODULE_MANIFEST } from '../teachersModuleManifest.js';
+import { TEACHERS_MODULE_MANIFEST } from '../facultyModuleManifest.js';
 import { SESSIONS_MODULE_MANIFEST } from '../sessionsModuleManifest.js';
 import {
   ENROLLMENTS_MODULE_MANIFEST,
