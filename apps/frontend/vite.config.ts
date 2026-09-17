@@ -95,18 +95,8 @@ export default defineConfig({
             ) {
               return 'vendor-charts';
             }
-            if (
-              id.includes('/mermaid/') ||
-              id.includes('/@mermaid-js/')
-            ) {
-              return 'vendor-mermaid';
-            }
-            if (
-              id.includes('/cytoscape') ||
-              id.includes('/dagre')
-            ) {
-              return 'vendor-diagrams';
-            }
+
+
             if (
               id.includes('/@radix-ui/') ||
               id.includes('/@floating-ui/') ||
@@ -189,16 +179,8 @@ export default defineConfig({
               test: /node_modules[\\/](?:recharts|victory-vendor|d3-|react-redux|@reduxjs[\\/]toolkit)[\\/]/,
               priority: 30,
             },
-            {
-              name: 'vendor-mermaid',
-              test: /node_modules[\\/](?:mermaid|@mermaid-js)[\\/]/,
-              priority: 26,
-            },
-            {
-              name: 'vendor-diagrams',
-              test: /node_modules[\\/](?:cytoscape|dagre)[\\/]/,
-              priority: 25,
-            },
+
+
             {
               name: 'vendor-validation',
               test: /node_modules[\\/](?:zod|@ts-rest)[\\/]/,
