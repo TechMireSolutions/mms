@@ -105,11 +105,13 @@ export async function dispatchJobToQueue(
       jobId: job.id,
       priority: QUEUE_SETTINGS[queueName]?.priority ?? 2,
     });
+    // Guard against unhandled rejections if timeoutPromise wins the race
+    addPromise.catch(() => {});
     
     // Fail fast if Redis is unreachable to prevent API request hanging
     let timeoutId: NodeJS.Timeout;
     const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error('BullMQ queue.add timeout (Redis unreachable)')), 3000);
+      timeoutId = setTimeout(() => reject(new Error('BullMQ queue.add timeout (Redis unreachable)')), 6000);
     });
     
     try {

@@ -26,6 +26,8 @@ import {
 import { prepareJournalEntryForPersist, assertJournalEntryPeriodOpen } from './accountingLedgerGuards.js';
 import { getPostingRules } from '../../db/repositories/accountingLedgerOpsRepository.js';
 import { withTenant } from '../../db/tenant-context.js';
+import { ConflictError } from '../../lib/httpErrors.js';
+import { isUniqueViolation } from '../../lib/pgErrors.js';
 import { randomUUID } from 'node:crypto';
 
 const EMPTY_ACCOUNTING_METRICS: AccountingCommandMetricsSnapshot = {
@@ -398,13 +400,27 @@ export function createAccountingUseCases(
         assertEntriesMutable(sanitized, storedById);
         await assertEntriesWritable(tenant, sanitized, storedById, fiscalYears);
         const prepared = sanitized.map((entry) => prepareJournalEntryForPersist(entry, fiscalYears));
-        return upsertWithBroadcast(
-          journalEntryListSchema,
-          prepared,
-          repo.bulkSaveEntries,
-          'accounting_entries',
-          { skipValidation: true },
-        );
+        try {
+          return await upsertWithBroadcast(
+            journalEntryListSchema,
+            prepared,
+            repo.bulkSaveEntries,
+            'accounting_entries',
+            { skipValidation: true },
+          );
+        } catch (error) {
+          // The partial unique index accounting_entries_workspace_source_uidx
+          // backs the finance module's post-at-most-once source keys. A client
+          // write conflicting with an existing (source_type, source_id) is a
+          // conflict to report, not a server fault — map it instead of letting
+          // the raw Postgres error escape as a 500.
+          if (isUniqueViolation(error)) {
+            throw new ConflictError(
+              'A journal entry already exists for this source (conflicting source_type/source_id)',
+            );
+          }
+          throw error;
+        }
       });
     },
     upsertFiscalYears: async (fiscalYears: FiscalYear[]) => {

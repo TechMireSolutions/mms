@@ -1,4 +1,4 @@
-import { and, eq, ne, desc } from 'drizzle-orm';
+import { and, eq, ne, desc, or } from 'drizzle-orm';
 import {
   BACKGROUND_JOBS_MAX_PER_USER,
   type BackgroundJobRecord,
@@ -33,6 +33,7 @@ export async function listUserBackgroundJobs(userId: string): Promise<Background
   if (!tenantId) return [];
 
   return withTenant(tenantId, async (tx) => {
+    const effectiveUserId = await resolveEffectiveTenantUserId(tx, tenantId, userId);
     const rows = await tx
       .select({
         id: backgroundJobs.id,
@@ -55,7 +56,10 @@ export async function listUserBackgroundJobs(userId: string): Promise<Background
       .from(backgroundJobs)
       .where(and(
         eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId)
+        or(
+          eq(backgroundJobs.userId, userId),
+          eq(backgroundJobs.userId, effectiveUserId),
+        ),
       ))
       .orderBy(desc(backgroundJobs.createdAt))
       .limit(BACKGROUND_JOBS_MAX_PER_USER);
@@ -187,10 +191,14 @@ export async function clearFinishedUserBackgroundJobs(userId: string): Promise<n
   if (!tenantId) throw new Error('Tenant context is required to clear background jobs');
 
   return withTenant(tenantId, async (tx) => {
+    const effectiveUserId = await resolveEffectiveTenantUserId(tx, tenantId, userId);
     const cleared = await tx.delete(backgroundJobs)
       .where(and(
         eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
+        or(
+          eq(backgroundJobs.userId, userId),
+          eq(backgroundJobs.userId, effectiveUserId),
+        ),
         ne(backgroundJobs.status, 'running')
       ))
       .returning({ id: backgroundJobs.id });
@@ -263,11 +271,15 @@ export async function getUserBackgroundJobPayload(
   if (!tenantId) return null;
 
   return withTenant(tenantId, async (tx) => {
+    const effectiveUserId = await resolveEffectiveTenantUserId(tx, tenantId, userId);
     const rows = await tx.select({ payload: backgroundJobs.payload })
       .from(backgroundJobs)
       .where(and(
         eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
+        or(
+          eq(backgroundJobs.userId, userId),
+          eq(backgroundJobs.userId, effectiveUserId),
+        ),
         eq(backgroundJobs.id, jobId),
       ))
       .limit(1);

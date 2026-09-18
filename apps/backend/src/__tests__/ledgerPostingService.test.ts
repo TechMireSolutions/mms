@@ -166,17 +166,99 @@ describe('ledgerPostingService', () => {
     expect(mockAccountingRepo.saveEntry).not.toHaveBeenCalled();
   });
 
+  /**
+   * In-memory stand-in for accounting_entries: the source-pair lookup sees
+   * exactly what saveEntry stored, so calling a tryPost* function twice
+   * exercises the real idempotency short-circuit rather than hand-tuned stubs.
+   */
+  function fakePostedEntryStore() {
+    const posted = new Map<string, any>();
+    return {
+      findEntryIdBySource: async (_tenant: string, sourceType: string, sourceId: string) =>
+        posted.get(`${sourceType}:${sourceId}`)?.id ?? null,
+      findEntryById: async (_tenant: string, id: string) =>
+        [...posted.values()].find((entry) => entry.id === id) ?? null,
+      saveEntry: async (_tenant: string, entry: any) => {
+        posted.set(`${entry.source_type}:${entry.source_id}`, entry);
+      },
+    };
+  }
+
+  function usePostedEntryStore(store: ReturnType<typeof fakePostedEntryStore>): void {
+    mockAccountingRepo.findEntryIdBySource.mockImplementation(store.findEntryIdBySource);
+    mockAccountingRepo.findEntryById.mockImplementation(store.findEntryById);
+    mockAccountingRepo.saveEntry.mockImplementation(store.saveEntry);
+  }
+
+  it('tryPostInvoiceJournal persists only the first of two identical submissions', async () => {
+    mockLedgerOpsRepo.getPostingRules.mockResolvedValue({
+      arAccountId: 'acc-ar',
+      incomeAccountId: 'acc-inc',
+    });
+    usePostedEntryStore(fakePostedEntryStore());
+    const invoice = {
+      id: 'inv-1',
+      invoiceNumber: 'INV-1',
+      status: 'pending',
+      dueDate: '2026-06-01',
+      finalAmt: 100,
+      discountAmt: 0,
+    } as any;
+
+    await tryPostInvoiceJournal('tenant-1', invoice);
+    await tryPostInvoiceJournal('tenant-1', invoice);
+
+    expect(mockAccountingRepo.saveEntry).toHaveBeenCalledTimes(1);
+  });
+
+  it('tryPostLateFeeJournals persists only the first of two identical submissions', async () => {
+    mockLedgerOpsRepo.getPostingRules.mockResolvedValue({
+      arAccountId: 'acc-ar',
+      incomeAccountId: 'acc-inc',
+    });
+    usePostedEntryStore(fakePostedEntryStore());
+    const fees = [{ invoice: { id: 'inv-1', invoiceNumber: 'INV-1' } as any, amount: 25 }];
+
+    await tryPostLateFeeJournals('tenant-1', fees);
+    await tryPostLateFeeJournals('tenant-1', fees);
+
+    expect(mockAccountingRepo.saveEntry).toHaveBeenCalledTimes(1);
+  });
+
+  it('tryPostOpeningJournal saves once and returns null when the same balances are resubmitted', async () => {
+    usePostedEntryStore(fakePostedEntryStore());
+    const balances = [
+      { id: 'ob-1', accountId: 'acc-cash', debit: 1000, credit: 0 },
+      { id: 'ob-2', accountId: 'acc-cap', debit: 0, credit: 1000 },
+    ] as any;
+
+    await expect(tryPostOpeningJournal('tenant-1', 'fy-1', balances)).resolves.not.toBeNull();
+    await expect(tryPostOpeningJournal('tenant-1', 'fy-1', balances)).resolves.toBeNull();
+
+    expect(mockAccountingRepo.saveEntry).toHaveBeenCalledTimes(1);
+  });
+
   it('treats a duplicate-source unique violation as "already posted" rather than failing', async () => {
     // Two concurrent callers can both pass the pre-check; the partial unique
     // index rejects the loser, which must not surface as a 500.
+    mockLedgerOpsRepo.getPostingRules.mockResolvedValue({
+      cashAccountId: 'acc-cash',
+      arAccountId: 'acc-ar',
+    });
     mockAccountingRepo.saveEntry.mockRejectedValue(Object.assign(new Error('duplicate key'), { code: '23505' }));
 
     await expect(
       tryPostPaymentJournal('tenant-1', { id: 'pmt-1', date: '2026-06-05', amount: 500 } as any),
     ).resolves.toBeUndefined();
+    // The 23505 path only matters if the insert was actually attempted.
+    expect(mockAccountingRepo.saveEntry).toHaveBeenCalledTimes(1);
   });
 
   it('does not swallow unrelated database errors', async () => {
+    mockLedgerOpsRepo.getPostingRules.mockResolvedValue({
+      cashAccountId: 'acc-cash',
+      arAccountId: 'acc-ar',
+    });
     mockAccountingRepo.saveEntry.mockRejectedValue(Object.assign(new Error('boom'), { code: '23503' }));
 
     await expect(

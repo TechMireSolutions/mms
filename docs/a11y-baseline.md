@@ -8,7 +8,12 @@ check but had no tooling installed to run it.
 
 - Sweeps the app shell, one Work surface (Contacts) and one Setup surface
   (Settings) at **375px** and **1440px**, plus an **RTL** pass at 1440px.
-- Runs axe-core with the **WCAG 2.1 A + AA** tag set.
+- Runs axe-core with the **WCAG 2.1 A + AA** tag set as the automated floor, extended
+  with the **`wcag22aa` tag** (`e2e/helpers/a11y.ts` — currently axe's `target-size`
+  rule, SC 2.5.8). The design target is **WCAG 2.2 AA** (`mms-ui-ux-design.mdc` §3);
+  2.2-specific success criteria axe does not automate (Focus Appearance 2.4.11,
+  Redundant Entry 3.3.7, Accessible Authentication 3.3.8) are covered by manual
+  review, not by this gate.
 - **Fails** on `serious` / `critical` violations that are not baselined.
 - **Reports without failing** on `moderate` / `minor` (these are logged per run).
 

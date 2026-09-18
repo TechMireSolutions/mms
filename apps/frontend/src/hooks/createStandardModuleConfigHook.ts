@@ -1,9 +1,11 @@
+import { useCallback, useMemo, useRef } from "react";
 import {
   getFlatFieldsConfig,
   getSortedFields,
   type ModuleCustomField,
   type ModuleFieldDef,
 } from "@mms/shared";
+import { reportClientError } from "@/lib/clientErrorReporting";
 
 export interface StandardModuleConfigSettingsLike {
   fields?: Record<string, unknown>;
@@ -36,6 +38,8 @@ export interface CreateStandardModuleConfigHookOptions<
 > {
   defaultSettings: TSettings;
   defaultFieldDefs: ModuleFieldDef[];
+  useSettings?: () => TSettings;
+  useUpdateSettingsAsync?: () => (draft: TSettings) => Promise<void>;
   customFieldsFrom?: (settings: TSettings) => ModuleCustomField[];
   orderedFieldsFrom?: (ctx: { fieldOrder: string[]; settings: TSettings }) => ModuleFieldDef[];
   lookupsFrom?: () => TExtra;
@@ -49,45 +53,86 @@ export function createStandardModuleConfigHook<
   const {
     defaultSettings,
     defaultFieldDefs,
+    useSettings,
+    useUpdateSettingsAsync,
     customFieldsFrom,
     orderedFieldsFrom,
     lookupsFrom,
     useEnhance,
   } = options;
 
-  return function useStandardModuleConfigHook() {
-    const settings = defaultSettings;
+  const useModuleSettings = useSettings ?? (() => defaultSettings);
+  const useModuleUpdate = useUpdateSettingsAsync ?? (() => undefined);
 
-    const mergeSettings = ((settingsDraft: Partial<TSettings> | null | undefined): TSettings => {
+  return function useStandardModuleConfigHook() {
+    const loadedSettings = useModuleSettings();
+    const settings = loadedSettings ?? defaultSettings;
+
+    const mergeSettings = useCallback(
+      (settingsDraft: Partial<TSettings> | null | undefined): TSettings => {
         return {
           ...defaultSettings,
+          ...settings,
           ...(settingsDraft ?? {}),
         };
-      });
+      },
+      [defaultSettings, settings],
+    );
 
-    const updateSettings = ((settingsDraft: TSettings) => {});
-    const updateSettingsAsync = (async (settingsDraft: TSettings) => {});
+    const updateAsyncFn = useModuleUpdate();
+    const updateAsyncRef = useRef(updateAsyncFn);
+    updateAsyncRef.current = updateAsyncFn;
 
-    const fields = (() => getFlatFieldsConfig(settings.fields))();
+    const updateSettingsAsync = useCallback(
+      async (settingsDraft: TSettings): Promise<void> => {
+        if (updateAsyncRef.current) {
+          await updateAsyncRef.current(settingsDraft);
+        }
+      },
+      [],
+    );
 
-    const customFields = (() =>
+    const updateSettings = useCallback(
+      (settingsDraft: TSettings): void => {
+        void updateSettingsAsync(settingsDraft).catch((error) => {
+          reportClientError(error, { context: "standardModuleConfig.updateSettings" });
+        });
+      },
+      [updateSettingsAsync],
+    );
+
+    const fields = useMemo(() => getFlatFieldsConfig(settings.fields), [settings.fields]);
+
+    const customFields = useMemo(
+      () =>
         customFieldsFrom
           ? customFieldsFrom(settings)
-          : ((settings.customFields ?? []) as ModuleCustomField[]))() as ModuleCustomField[];
+          : ((settings.customFields ?? []) as ModuleCustomField[]),
+      [customFieldsFrom, settings],
+    );
 
-    const fieldOrder = (() => settings.fieldOrder ?? defaultSettings.fieldOrder ?? [])();
+    const fieldOrder = settings.fieldOrder ?? defaultSettings.fieldOrder ?? [];
 
-    const orderedFields = (() =>
+    const orderedFields = useMemo(
+      () =>
         orderedFieldsFrom
           ? orderedFieldsFrom({ fieldOrder, settings })
-          : getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields))();
+          : getSortedFields(defaultFieldDefs, fieldOrder, fields, customFields),
+      [orderedFieldsFrom, defaultFieldDefs, fieldOrder, settings, fields, customFields],
+    );
 
-    const reloadConfig = (() => {});
-    const loadSettings = (() => settings);
+    const reloadConfig = useCallback(() => {}, []);
+    const loadSettings = useCallback(() => settings, [settings]);
 
-    const isFieldEnabled = ((fieldId: string): boolean => fields[fieldId]?.enabled !== false);
+    const isFieldEnabled = useCallback(
+      (fieldId: string): boolean => fields[fieldId]?.enabled !== false,
+      [fields],
+    );
 
-    const isFieldRequired = ((fieldId: string): boolean => !!fields[fieldId]?.required);
+    const isFieldRequired = useCallback(
+      (fieldId: string): boolean => !!fields[fieldId]?.required,
+      [fields],
+    );
 
     const extra = lookupsFrom ? lookupsFrom() : ({} as TExtra);
     const core: StandardModuleConfigCore<TSettings> = {

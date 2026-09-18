@@ -24,10 +24,10 @@ export {
 } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 export { invalidateHasanatQueries } from '@/tenant/features/hasanat/hooks/invalidateHasanatQueries';
 export {
-  
-  
+  useComposedHasanatSettings,
   useHasanatPreferencesQuery,
   useHasanatPreferencesMutation,
+  HASANAT_PREFERENCES_QUERY_KEY,
 } from '@/tenant/features/hasanat/hooks/useHasanatSetupConfig';
 // Phase 7: contract-driven tsrClient hooks & query factories
 export {

@@ -64,6 +64,15 @@ for (const { tag, content } of sqlFiles) {
   }
 }
 
+// Pass 1b — tables dropped later in the migration set no longer exist in any
+// fully-migrated database (e.g. custom_tabs, created in 0000_init and dropped
+// by 0043_drop_custom_fields_and_tabs.sql); exclude them from the audit set.
+for (const { content } of sqlFiles) {
+  for (const m of content.matchAll(/DROP TABLE\s+(?:IF EXISTS\s+)?["`]?([a-zA-Z0-9_]+)["`]?/gi)) {
+    tables.delete(m[1]);
+  }
+}
+
 // Pass 2 — every RLS statement in the whole migration set.
 const enabled = new Set();
 const forced = new Set();

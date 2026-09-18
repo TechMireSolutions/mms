@@ -14,12 +14,16 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("@/tenant/hooks/collections/faculty", () => ({
-  useTeachersContractList: () => ({
-    data: { body: { teachers: [{ id: "t1", name: "Ustadh Ali", status: "active" }] } },
-  }),
-  useTeachersByIds: () => ({ data: [] }),
-}));
+vi.mock("@/tenant/hooks/collections/faculty", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/tenant/hooks/collections/faculty")>();
+  return {
+    ...actual,
+    useTeachersContractList: () => ({
+      data: { body: { teachers: [{ id: "t1", name: "Ustadh Ali", status: "active" }] } },
+    }),
+    useTeachersByIds: () => ({ data: [] }),
+  };
+});
 
 vi.mock("@/components/ui/FormModal", () => ({
   FormModal: ({

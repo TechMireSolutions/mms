@@ -435,6 +435,59 @@ describe('accounting write guards', () => {
     expect(existing.source_id).toBe('inv-1');
   });
 
+  it('maps a unique violation on the entries insert to a 409 conflict, not a raw 500', async () => {
+    // G2: the partial unique index accounting_entries_workspace_source_uidx
+    // raises SQLSTATE 23505 when a write lands on an existing
+    // (source_type, source_id) pair. The client must see a conflict, not the
+    // unmapped database error surfacing as a 500.
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    const pgError = Object.assign(
+      new Error('duplicate key value violates unique constraint "accounting_entries_workspace_source_uidx"'),
+      { code: '23505', constraint: 'accounting_entries_workspace_source_uidx' },
+    );
+    vi.mocked(repo.bulkSaveEntries).mockRejectedValue(pgError);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.upsertEntries([postedEntry({ id: 'je_dup' }) as any])),
+    ).rejects.toMatchObject({ statusCode: 409, type: 'conflict' });
+    expect(repo.bulkSaveEntries).toHaveBeenCalledTimes(1);
+  });
+
+  it('maps a driver-wrapped unique violation (cause chain) to a 409 conflict', async () => {
+    // node-postgres wraps driver errors, hiding the 23505 code one level down
+    // in `cause` — the probe must walk the chain like the real driver does.
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    const pgError = Object.assign(new Error('insert into accounting_entries failed'), {
+      cause: Object.assign(new Error('duplicate key value violates unique constraint'), { code: '23505' }),
+    });
+    vi.mocked(repo.bulkSaveEntries).mockRejectedValue(pgError);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.upsertEntries([postedEntry({ id: 'je_dup' }) as any])),
+    ).rejects.toMatchObject({ statusCode: 409, type: 'conflict' });
+  });
+
+  it('does not map unrelated database errors to a conflict', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    vi.mocked(repo.bulkSaveEntries).mockRejectedValue(Object.assign(new Error('fk violated'), { code: '23503' }));
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.upsertEntries([postedEntry({ id: 'je_fk' }) as any])),
+    ).rejects.toMatchObject({ code: '23503' });
+    await expect(
+      runWithTenant('demo', () => useCases.upsertEntries([postedEntry({ id: 'je_fk' }) as any])),
+    ).rejects.not.toMatchObject({ statusCode: 409 });
+  });
+
   it('rejects reopening a closed fiscal year through the bulk collection route', async () => {
     const repo = createFakeRepo();
     vi.mocked(repo.findFiscalYearsByIds).mockResolvedValue([closedYear] as any);

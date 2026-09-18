@@ -1,4 +1,5 @@
 import { and, eq } from 'drizzle-orm';
+import { logger } from '../lib/logger.js';
 
 export class QueueUnavailableError extends Error {
   constructor(message = 'Failed to enqueue background job. The task queue service may be unavailable.') {
@@ -231,12 +232,16 @@ export async function enqueueBackgroundJob(
   const enqueued = await dispatchJobToQueue(tenant, userId, pendingJob, payload);
   
   if (!enqueued) {
-    const errorMsg = 'Failed to enqueue background job. The task queue service may be unavailable.';
-    await patchJob(tenant, userId, job.id, { 
-      status: 'failed', 
-      error: errorMsg 
+    logger.warn(
+      { jobId: job.id, moduleId: job.moduleId, kind: job.kind },
+      'Queue service unavailable (Redis unreachable or timed out); falling back to in-process background job execution',
+    );
+    setImmediate(() => {
+      executeJob(tenant, userId, pendingJob.id, pendingJob.moduleId, pendingJob.kind, payload).catch((err) => {
+        logger.error({ jobId: job.id, err }, 'In-process fallback background job execution failed');
+      });
     });
-    throw new QueueUnavailableError(errorMsg);
+    return pendingJob;
   }
 
   return job;

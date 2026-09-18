@@ -13,6 +13,12 @@ export {
   ACCOUNTING_REPORT_AGGREGATES_QUERY_KEY,
 } from "@/tenant/features/accounting/hooks/useAccountingApi";
 export { invalidateAccountingQueries } from '@/tenant/features/accounting/hooks/invalidateAccountingQueries';
+export {
+  useComposedAccountingSettings,
+  useAccountingPreferencesMutation,
+  useAccountingPreferencesQuery,
+  ACCOUNTING_PREFERENCES_QUERY_KEY,
+} from '@/tenant/features/accounting/hooks/useAccountingSetupConfig';
 // Phase 7: contract-driven tsrClient hooks & query factories
 export {
   accountingAccountsListQueryOptions,

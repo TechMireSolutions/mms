@@ -1,6 +1,26 @@
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useContext } from "react";
+import { QueryClient, QueryClientContext, useMutation, useQuery } from "@tanstack/react-query";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { SETUP_STALE_TIME } from "@/lib/queryClient";
+
+const fallbackQueryClient = new QueryClient({
+  defaultOptions: {
+    queries: { retry: false },
+  },
+});
+
+function useSafeQueryClient(): QueryClient {
+  const client = useContext(QueryClientContext);
+  return client ?? fallbackQueryClient;
+}
+
+function useSafeAuth() {
+  try {
+    return useAuth();
+  } catch {
+    return null;
+  }
+}
 
 function resolveValue<T>(value: T | (() => T)): T {
   return typeof value === "function" ? (value as () => T)() : value;
@@ -30,29 +50,36 @@ export function createModuleSetupConfigHooks<
 }: CreateModuleSetupConfigHooksOptions<TPreferences, TPreferencesInput>) {
 
   function usePreferencesQuery() {
-    const { isAuthenticated } = useAuth();
-    return useQuery({
-      queryKey: preferencesQueryKey,
-      queryFn: ({ signal }) => fetchPreferences(signal),
-      enabled: isAuthenticated,
-      // TanStack Query NonFunctionGuard cannot be proven for generic TPreferences.
-      // @ts-expect-error generic placeholderData vs NonFunctionGuard<TPreferences>
-      placeholderData: resolveValue(preferencesPlaceholder),
-      staleTime: SETUP_STALE_TIME,
-      gcTime: 10 * 60_000,
-    });
+    const auth = useSafeAuth();
+    const queryClient = useSafeQueryClient();
+    return useQuery(
+      {
+        queryKey: preferencesQueryKey,
+        queryFn: ({ signal }) => fetchPreferences(signal),
+        enabled: Boolean(auth?.isAuthenticated),
+        // TanStack Query NonFunctionGuard cannot be proven for generic TPreferences.
+        // @ts-expect-error generic placeholderData vs NonFunctionGuard<TPreferences>
+        placeholderData: resolveValue(preferencesPlaceholder),
+        staleTime: SETUP_STALE_TIME,
+        gcTime: 10 * 60_000,
+      },
+      queryClient
+    );
   }
 
   function usePreferencesMutation() {
-    const queryClient = useQueryClient();
-    return useMutation({
-      mutationFn: (preferences: TPreferencesInput) => savePreferences(preferences),
-      onSuccess: (saved) => {
-        setPreferencesMemory?.(saved);
-        queryClient.setQueryData(preferencesQueryKey, saved);
-        void queryClient.invalidateQueries({ queryKey: preferencesQueryKey });
+    const queryClient = useSafeQueryClient();
+    return useMutation(
+      {
+        mutationFn: (preferences: TPreferencesInput) => savePreferences(preferences),
+        onSuccess: (saved) => {
+          setPreferencesMemory?.(saved);
+          queryClient.setQueryData(preferencesQueryKey, saved);
+          void queryClient.invalidateQueries({ queryKey: preferencesQueryKey });
+        },
       },
-    });
+      queryClient
+    );
   }
 
   return {
