@@ -388,6 +388,13 @@ async function openWorkspaceCard(page: Page, workspaceSubdomain: string) {
   await expect(searchInput).toBeVisible({ timeout: 20_000 });
   await searchInput.fill(workspaceSubdomain);
 
+  // Wait for useDeferredValue to settle: the shown-count status reads "1 of N"
+  // before the deferred filter fires, sortedItems is still empty and the card
+  // never renders — this gate ensures the filtered list has been committed.
+  await expect(page.getByRole('status').filter({ hasText: /^1 of/ })).toBeVisible({
+    timeout: 20_000,
+  });
+
   const workspaceToggle = page.locator(`[id="toggle-${workspaceSubdomain}"]`);
   await expect(workspaceToggle).toBeVisible({ timeout: 20_000 });
   return workspaceToggle;
