@@ -1,0 +1,70 @@
+name: Renew TLS Certificate
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-run only (certbot --dry-run, no actual renewal)'
+        type: boolean
+        default: false
+
+jobs:
+  renew-cert:
+    name: Renew Let's Encrypt certificate on production
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Renew TLS cert via SSH
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -euo pipefail
+
+            echo "=== Current certificate status ==="
+            sudo certbot certificates 2>&1 | grep -A5 "Certificate Name\|Expiry\|Domains" || true
+
+            if [ "${{ inputs.dry_run }}" = "true" ]; then
+              echo "=== DRY RUN ==="
+              sudo certbot renew --dry-run
+            else
+              echo "=== Renewing certificate ==="
+              sudo certbot renew --force-renewal
+
+              echo "=== Reloading Apache ==="
+              sudo systemctl reload apache2
+
+              echo "=== New expiry ==="
+              echo | openssl s_client \
+                -servername "${{ secrets.MMS_APP_DOMAIN }}" \
+                -connect "${{ secrets.MMS_APP_DOMAIN }}:443" 2>/dev/null \
+                | openssl x509 -noout -dates 2>/dev/null | grep notAfter || echo "unknown"
+
+              echo "=== Health check ==="
+              sleep 3
+              curl -fsS --max-time 10 "https://${{ secrets.MMS_APP_DOMAIN }}/health"
+              echo ""
+              echo "Certificate renewal complete."
+            fi
+
+      - name: Ensure certbot timer is active (auto-renewal)
+        if: inputs.dry_run == false
+        uses: appleboy/ssh-action@v1.2.5
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            set -euo pipefail
+            if ! systemctl is-active --quiet certbot.timer; then
+              echo "Certbot timer inactive — re-enabling..."
+              sudo systemctl enable --now certbot.timer
+            fi
+            echo "Certbot timer status:"
+            sudo systemctl status certbot.timer --no-pager || true
+            echo "Next scheduled renewal:"
+            sudo systemctl list-timers certbot.timer --no-pager || true
