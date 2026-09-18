@@ -142,4 +142,9 @@ fi
 [[ "$DRY_RUN" == "1" ]] || mkdir -p "$ROOT/.claude/docs/workflows"
 [[ "$DRY_RUN" == "1" ]] || cp "$ROOT/.agent/workflows/"*.md "$ROOT/.claude/docs/workflows/" 2>/dev/null || true
 
-echo "Done"${DRY_RUN:+ (dry-run)}". Claude mirror: .claude/rules/ + .claude/skills/"
+DRY_SUFFIX=""
+if [[ "$DRY_RUN" == "1" ]]; then
+  DRY_SUFFIX=" (dry-run)"
+fi
+echo "Done${DRY_SUFFIX}. Claude mirror: .claude/rules/ + .claude/skills/"
+
