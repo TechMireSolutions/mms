@@ -267,7 +267,7 @@ const CONTACT_LIST_COLUMNS = {
  */
 export async function listContactsPage(
   tenant: string,
-  query: ContactsListQuery & { afterId?: string },
+  query: ContactsListQuery & { afterId?: string; skipCount?: boolean },
 ): Promise<ContactsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
   const excludeIds = dedupeTrimmedIds(query.excludeIds ?? []);
@@ -290,6 +290,7 @@ export async function listContactsPage(
       page: query.page,
       limit: query.limit,
       afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 50,
       rowMapper: (row) => row as typeof contacts.$inferSelect,
     });

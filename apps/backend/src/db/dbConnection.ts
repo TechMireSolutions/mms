@@ -22,8 +22,8 @@ export function initializeDatabaseConnection(): void {
 
   const config = loadServerConfig();
   const poolConfig: pg.PoolConfig = {
-    max: config.pgPoolMax,
-    connectionTimeoutMillis: 10_000,
+    max: Math.min(Math.max(config.pgPoolMax, 20), 30),
+    connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 30_000,
     maxUses: 7_500,
     keepAlive: true,

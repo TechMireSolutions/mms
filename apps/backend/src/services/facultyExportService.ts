@@ -61,6 +61,7 @@ const facultyCsv = createModuleCsvExportService<
       page,
       limit,
       afterId,
+      skipCount: true,
     } as never);
     return {
       rows: pageResult.teachers as Teacher[],

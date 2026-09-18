@@ -25,11 +25,7 @@ export const contacts = pgTable('contacts', {
   updatedBy: text('updated_by'),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  index('contacts_workspace_name_idx').on(table.workspaceSubdomain, table.name),
-  index('contacts_workspace_first_name_idx').on(table.workspaceSubdomain, table.firstName),
-  index('contacts_workspace_last_name_idx').on(table.workspaceSubdomain, table.lastName),
   index('contacts_workspace_cnic_idx').on(table.workspaceSubdomain, table.cnic),
-  index('contacts_workspace_gender_idx').on(table.workspaceSubdomain, table.gender),
   index('contacts_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('contacts_workspace_created_at_active_idx')
     .on(table.workspaceSubdomain, table.createdAt)
@@ -42,9 +38,6 @@ export const contacts = pgTable('contacts', {
     .where(sql`${table.deletedAt} is null`),
   index('contacts_workspace_id_active_idx')
     .on(table.workspaceSubdomain, table.id)
-    .where(sql`${table.deletedAt} is null`),
-  index('contacts_workspace_gender_active_idx')
-    .on(table.workspaceSubdomain, table.gender)
     .where(sql`${table.deletedAt} is null`),
   index('contacts_workspace_gender_id_active_idx')
     .on(table.workspaceSubdomain, table.gender, table.id)

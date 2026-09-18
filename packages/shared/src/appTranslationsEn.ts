@@ -7402,4 +7402,7 @@ export const APP_TRANSLATIONS_EN = {
   "hasanat.templateEditorTitle": "Hasanat Voucher & Receipt Template Editor",
   "obligations.templateSaved": "Invoice template saved successfully",
   "obligations.templateEditorTitle": "Obligations Invoice Template Editor",
+  "network.offlineBanner": "You are currently offline. Working from local cache.",
+  "network.reconnectingBanner": "Reconnecting to network and syncing data...",
+  "network.onlineRestored": "Connection restored. State synchronized.",
 } as const;

@@ -31,11 +31,12 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+      const skipCount = isQueryFlagTrue(query?.skipCount);
       if (includeDeleted && !canDeleteCollection(user, 'teachers')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted faculty requires delete permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => facultyUseCases.loadTeachersPage({ ...query, includeDeleted }), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => facultyUseCases.loadTeachersPage({ ...query, includeDeleted, skipCount }), { readOnly: true });
         return {
           status: 200 as const,
           body: { ...result, teachers: await sanitizeFacultyForUser(result.teachers, user) },

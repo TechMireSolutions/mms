@@ -31,9 +31,15 @@ loadBackendEnv();
  * to inject arbitrary SQL by accident.
  */
 
+import fs from 'node:fs';
+import path from 'node:path';
+
 interface ParsedArgs {
-  table: string;
-  columns: string[];
+  file?: string;
+  table?: string;
+  columns?: string[];
+  include?: string[];
+  using?: string;
   name?: string;
   unique: boolean;
   where?: string;
@@ -41,6 +47,7 @@ interface ParsedArgs {
 
 /** Conservative identifier check: letters, digits, underscore; not empty. */
 const IDENTIFIER = /^[A-Za-z_][A-Za-z0-9_]*$/;
+const ALLOWED_INDEX_METHODS = new Set(['btree', 'brin', 'gin', 'gist', 'hash']);
 
 function parseArgs(argv: string[]): ParsedArgs {
   const get = (flag: string): string | undefined => {
@@ -48,13 +55,22 @@ function parseArgs(argv: string[]): ParsedArgs {
     return index >= 0 ? argv[index + 1] : undefined;
   };
 
+  const file = get('--file');
+  if (file) {
+    return {
+      file,
+      unique: false,
+    };
+  }
+
   const table = get('--table');
   const columnsRaw = get('--columns');
 
   if (!table || !columnsRaw) {
     console.error(
       'Usage: tsx src/scripts/create-index-concurrently.ts --table <table> ' +
-        '--columns <col1,col2> [--name <index_name>] [--unique] [--where "<predicate>"]',
+        '--columns <col1,col2> [--name <index_name>] [--unique] [--using <method>] [--include <col1,col2>] [--where "<predicate>"]\n' +
+        '   OR: tsx src/scripts/create-index-concurrently.ts --file <path/to/script.sql>',
     );
     process.exit(1);
   }
@@ -70,6 +86,25 @@ function parseArgs(argv: string[]): ParsedArgs {
     .filter(Boolean);
   if (columns.length === 0 || columns.some((c) => !IDENTIFIER.test(c))) {
     console.error(`Invalid column list: ${columnsRaw}`);
+    process.exit(1);
+  }
+
+  const includeRaw = get('--include');
+  let include: string[] | undefined;
+  if (includeRaw) {
+    include = includeRaw
+      .split(',')
+      .map((c) => c.trim())
+      .filter(Boolean);
+    if (include.length === 0 || include.some((c) => !IDENTIFIER.test(c))) {
+      console.error(`Invalid include column list: ${includeRaw}`);
+      process.exit(1);
+    }
+  }
+
+  const using = get('--using')?.toLowerCase();
+  if (using && !ALLOWED_INDEX_METHODS.has(using)) {
+    console.error(`Invalid index method: ${using}. Allowed: ${Array.from(ALLOWED_INDEX_METHODS).join(', ')}`);
     process.exit(1);
   }
 
@@ -91,6 +126,8 @@ function parseArgs(argv: string[]): ParsedArgs {
   return {
     table,
     columns,
+    include,
+    using,
     name: name ?? `${table}_${columns.join('_')}_cix`,
     unique: argv.includes('--unique'),
     where,
@@ -106,19 +143,52 @@ async function main(): Promise<void> {
   const { databaseUrl } = loadServerConfig();
   const client = new pg.Client({ connectionString: databaseUrl });
 
-  const concurrent = `CREATE ${args.unique ? 'UNIQUE ' : ''}INDEX CONCURRENTLY IF NOT EXISTS ` +
-    `"${args.name}" ON "${args.table}" (${args.columns.map((c) => `"${c}"`).join(', ')})` +
-    (args.where ? ` WHERE ${args.where}` : '') +
-    ';';
-
-  console.log(`[create-index-concurrently] ${concurrent}`);
-  console.log(
-    '[create-index-concurrently] Note: CONCURRENTLY cannot run inside a transaction; ' +
-      'this runs in autocommit mode and is safe on a live table (slower than a plain build).',
-  );
-
   try {
     await client.connect();
+
+    if (args.file) {
+      const resolvedPath = path.resolve(args.file);
+      if (!fs.existsSync(resolvedPath)) {
+        throw new Error(`File not found: ${resolvedPath}`);
+      }
+      const rawSql = fs.readFileSync(resolvedPath, 'utf8');
+      const strippedSql = rawSql
+        .replace(/\/\*[\s\S]*?\*\//g, '')
+        .split('\n')
+        .map((line) => {
+          const commentIdx = line.indexOf('--');
+          return commentIdx >= 0 ? line.slice(0, commentIdx) : line;
+        })
+        .join('\n');
+
+      const statements = strippedSql
+        .split(';')
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+
+      console.log(`[create-index-concurrently] Executing ${statements.length} statements from ${args.file}...`);
+      for (const statement of statements) {
+        console.log(`[create-index-concurrently] > ${statement.slice(0, 120)}...`);
+        await client.query(statement);
+      }
+      console.log(`✅ All statements from ${args.file} executed successfully.`);
+      return;
+    }
+
+    const usingClause = args.using ? `USING ${args.using} ` : '';
+    const includeClause = args.include ? ` INCLUDE (${args.include.map((c) => `"${c}"`).join(', ')})` : '';
+    const concurrent = `CREATE ${args.unique ? 'UNIQUE ' : ''}INDEX CONCURRENTLY IF NOT EXISTS ` +
+      `"${args.name}" ON "${args.table}" ${usingClause}(${args.columns!.map((c) => `"${c}"`).join(', ')})` +
+      includeClause +
+      (args.where ? ` WHERE ${args.where}` : '') +
+      ';';
+
+    console.log(`[create-index-concurrently] ${concurrent}`);
+    console.log(
+      '[create-index-concurrently] Note: CONCURRENTLY cannot run inside a transaction; ' +
+        'this runs in autocommit mode and is safe on a live table (slower than a plain build).',
+    );
+
     // `CREATE INDEX CONCURRENTLY` can leave an INVALID index behind if it fails;
     // it is then not used by the planner and must be dropped before retrying.
     await client.query(concurrent);

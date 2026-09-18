@@ -1,9 +1,12 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import {
   registerConnection,
+  registerSseConnection,
+  broadcastLocalTenantUpdate,
   broadcastLocalJobEvent,
   configureRedisPubSub,
   type MinimalWebSocket,
+  type MinimalSseResponse,
 } from '../lib/livePush.js';
 
 describe('Worker Redis Pub/Sub & WebSocket Hub Integration (Phase 5)', () => {
@@ -140,6 +143,42 @@ describe('Worker Redis Pub/Sub & WebSocket Hub Integration (Phase 5)', () => {
 
     expect(socketMessages.length).toBe(1);
     expect(JSON.parse(socketMessages[0]).jobId).toBe('job-888');
+
+    cleanup();
+  });
+
+  it('delivers job and database updates to active SSE connections with chunked frames', () => {
+    const sseChunks: string[] = [];
+    const headersSent: Record<string, string> = {};
+    const mockResponse: MinimalSseResponse = {
+      writeHead: vi.fn((_status: number, headers: Record<string, string>) => {
+        Object.assign(headersSent, headers);
+      }),
+      write: vi.fn((chunk: string | Buffer) => {
+        sseChunks.push(chunk.toString());
+        return true;
+      }),
+      end: vi.fn(),
+      on: vi.fn(),
+    };
+
+    const cleanup = registerSseConnection('alpha', mockResponse, 'user-sse');
+
+    expect(headersSent['Content-Type']).toBe('text/event-stream');
+    expect(headersSent['Transfer-Encoding']).toBe('chunked');
+    expect(headersSent['X-Accel-Buffering']).toBe('no');
+    expect(sseChunks).toContain(': connected\n\n');
+
+    broadcastLocalTenantUpdate('alpha', 'collection', 'students');
+    expect(sseChunks.some((c) => c.includes('event: database-update') && c.includes('students'))).toBe(true);
+
+    broadcastLocalJobEvent({
+      event: 'job-progress',
+      tenantId: 'alpha',
+      userId: 'user-sse',
+      jobId: 'job-999',
+    });
+    expect(sseChunks.some((c) => c.includes('event: job-event') && c.includes('job-999'))).toBe(true);
 
     cleanup();
   });

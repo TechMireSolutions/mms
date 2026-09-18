@@ -37,6 +37,9 @@ export const attendance = pgTable('attendance', {
   index('attendance_workspace_class_date_active_idx')
     .on(table.workspaceSubdomain, table.classId, table.date)
     .where(sql`${table.deletedAt} is null`),
+  index('attendance_workspace_class_date_status_active_idx')
+    .on(table.workspaceSubdomain, table.classId, table.date, table.status)
+    .where(sql`${table.deletedAt} is null`),
   foreignKey({
     columns: [table.workspaceSubdomain, table.studentId],
     foreignColumns: [students.workspaceSubdomain, students.id],

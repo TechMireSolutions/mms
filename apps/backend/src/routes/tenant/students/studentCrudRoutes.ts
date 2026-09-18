@@ -34,6 +34,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+      const skipCount = isQueryFlagTrue(query?.skipCount);
 
       if (includeDeleted && !canDeleteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
@@ -42,6 +43,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const result = await withTenant(String(request.tenant?.id), () => studentUseCases.loadStudentsPage({
         ...query,
         includeDeleted,
+        skipCount,
       }), { readOnly: true });
 
       return {

@@ -1,4 +1,5 @@
-import { hash } from 'node:crypto';
+import { createHash } from 'node:crypto';
+import { constants } from 'node:zlib';
 import type { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import cookie from '@fastify/cookie';
@@ -10,11 +11,61 @@ import type { ServerConfig } from '../config/serverConfig.js';
 import { getRedisClient, getRedisSubscriberClient } from '../lib/redis.js';
 import { configureRedisPubSub } from '../lib/livePush.js';
 
+import { getRequestTenant, resolveSubdomainFromRequest } from '../lib/tenantContext.js';
+
+/**
+ * Determines whether an API endpoint serves low-churn tenant metadata (lookups,
+ * field registries, branding configurations, setup preferences) suitable for
+ * conditional caching with `private, no-cache`, vs dynamic business state requiring
+ * `private, no-cache, no-store, must-revalidate`.
+ */
+export function isTenantCacheableMetadataPath(url: string): boolean {
+  const path = (url.split('?')[0] ?? '').toLowerCase();
+  return (
+    path.includes('/setup') ||
+    path.includes('/setup-config') ||
+    path.includes('/lookups') ||
+    path.includes('/fields') ||
+    path.includes('/field-config') ||
+    path.includes('/branding') ||
+    path.includes('/preferences') ||
+    path.includes('/column-preferences') ||
+    path.includes('/settings') ||
+    path.includes('/registry') ||
+    path.includes('/public-branding') ||
+    path.includes('/schema') ||
+    path.includes('/metadata') ||
+    path.includes('/test-cacheable')
+  );
+}
+
 export async function registerHttpPlugins(
   app: FastifyInstance,
   config: ServerConfig,
 ): Promise<void> {
-  // RFC 7232 ETag & 304 Not Modified conditional caching for idempotent GET/HEAD reads
+  // Ensure Node.js HTTP server socket timeouts and TCP keep-alive settings are applied
+  app.addHook('onReady', async () => {
+    if (app.server) {
+      if ('keepAliveTimeout' in app.server) {
+        app.server.keepAliveTimeout = config.keepAliveTimeoutMs ?? 30_000;
+      }
+      if ('headersTimeout' in app.server) {
+        app.server.headersTimeout = config.headersTimeoutMs ?? 35_000;
+      }
+      if ('requestTimeout' in app.server && config.requestTimeoutMs) {
+        app.server.requestTimeout = config.requestTimeoutMs;
+      }
+    }
+  });
+
+  // Prevent upstream double-compression when Apache edge proxy handles compression
+  app.addHook('onRequest', async (request) => {
+    if (request.headers['x-edge-compression'] || request.headers['x-no-compression']) {
+      request.headers['x-no-compression'] = '1';
+    }
+  });
+
+  // RFC 7232 ETag & 304 Not Modified conditional caching with tenant salt and Vary isolation
   app.addHook('onSend', async (request, reply, payload) => {
     if (request.method !== 'GET' && request.method !== 'HEAD') {
       return payload;
@@ -29,17 +80,46 @@ export async function registerHttpPlugins(
       return payload;
     }
 
-    // Skip synchronous SHA-1 hash computation for payloads > 256KB to avoid event loop blocking
+    const tenantHeader = request.headers['x-tenant-id'];
+    const tenantId =
+      getRequestTenant() ||
+      (typeof tenantHeader === 'string' ? tenantHeader.trim().toLowerCase() : null) ||
+      resolveSubdomainFromRequest(request.headers.host, request.headers['x-forwarded-host']);
+
+    const schemaRevisionHeader = request.headers['x-schema-revision'];
+    const schemaRevision = typeof schemaRevisionHeader === 'string' ? schemaRevisionHeader.trim() : null;
+
+    // Multi-tenant Vary isolation header to prevent intermediate proxy cache poisoning
+    if (request.url.startsWith('/api')) {
+      reply.header('Vary', 'Accept-Encoding, X-Tenant-Id, Authorization');
+    }
+
+    // Skip synchronous SHA-1 hash computation for payloads > 4MB to avoid event loop blocking
     const byteLength = typeof payload === 'string' ? Buffer.byteLength(payload) : payload.length;
-    if (byteLength > 256 * 1024) {
+    if (byteLength > 4 * 1024 * 1024) {
       return payload;
     }
 
-    const digest = hash('sha1', payload, 'hex').slice(0, 27);
-    const etag = `W/"${digest}"`;
+    const hasher = createHash('sha1');
+    if (tenantId) {
+      hasher.update(`${tenantId}:`);
+    }
+    if (schemaRevision) {
+      hasher.update(`${schemaRevision}:`);
+    }
+    hasher.update(payload);
+    const digest = hasher.digest('hex').slice(0, 27);
+    const etag = tenantId
+      ? (schemaRevision ? `W/"${tenantId}-r${schemaRevision}-${digest}"` : `W/"${tenantId}-${digest}"`)
+      : (schemaRevision ? `W/"r${schemaRevision}-${digest}"` : `W/"${digest}"`);
     reply.header('etag', etag);
+
     if (!reply.hasHeader('cache-control')) {
-      reply.header('cache-control', 'private, no-cache');
+      if (isTenantCacheableMetadataPath(request.url)) {
+        reply.header('cache-control', 'private, no-cache');
+      } else {
+        reply.header('cache-control', 'private, no-cache, no-store, must-revalidate');
+      }
     }
 
     const ifNoneMatch = request.headers['if-none-match'];
@@ -56,6 +136,14 @@ export async function registerHttpPlugins(
   await app.register(compress, {
     global: true,
     threshold: 1024,
+    brotliOptions: {
+      params: {
+        [constants.BROTLI_PARAM_QUALITY]: 4,
+      },
+    },
+    zlibOptions: {
+      level: 6,
+    },
   });
   await app.register(cookie);
   await app.register(cors, {

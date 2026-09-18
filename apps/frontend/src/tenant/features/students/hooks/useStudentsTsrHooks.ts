@@ -3,7 +3,8 @@
  * Uses tsrClient (@ts-rest/react-query v5) for full contract schema enforcement.
  */
 import { apiContract, tsrClient } from '@/lib/api';
-import { queryOptions, useQueryClient } from '@tanstack/react-query';
+import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import type { StudentsListPageResult } from '@mms/shared';
 import { STUDENTS_QUERY_KEY } from '@/tenant/features/students/hooks/studentsQueryKeys';
 import { invalidateStudentsQueries } from '@/tenant/features/students/hooks/invalidateStudentsQueries';
 import { SESSIONS_QUERY_KEY } from '@/tenant/hooks/collections/sessions';
@@ -18,6 +19,8 @@ export function studentsListQueryOptions(
     relatedContactIds?: string;
     fatherName?: string;
     excludeId?: string;
+    afterId?: string;
+    skipCount?: boolean;
     [key: string]: unknown;
   } = {},
 ) {
@@ -32,10 +35,70 @@ export function studentsListQueryOptions(
       if (response.status !== 200) {
         throw new Error('Failed to fetch students');
       }
-      return response.body;
+      return response.body as StudentsListPageResult;
     },
     placeholderData: (prev) => prev,
     staleTime: 15_000,
+  });
+}
+
+export function studentsInfiniteQueryOptions(
+  query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sessionId?: string;
+    className?: string;
+    relatedContactIds?: string;
+    fatherName?: string;
+    excludeId?: string;
+    afterId?: string;
+    skipCount?: boolean;
+    [key: string]: unknown;
+  } = {},
+) {
+  return infiniteQueryOptions({
+    queryKey: [...STUDENTS_QUERY_KEY, 'contract-infinite-list', query] as const,
+    queryFn: async ({ pageParam, signal }) => {
+      const effectiveQuery = {
+        ...query,
+        ...(pageParam ? { afterId: pageParam } : {}),
+      };
+      const response = await apiContract.students.list({
+        query: effectiveQuery as Record<string, string>,
+        signal,
+        fetchOptions: { signal },
+      });
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch students');
+      }
+      return response.body as StudentsListPageResult;
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    staleTime: 15_000,
+  });
+}
+
+export function useStudentsInfiniteList(
+  query: {
+    page?: number;
+    limit?: number;
+    search?: string;
+    sessionId?: string;
+    className?: string;
+    relatedContactIds?: string;
+    fatherName?: string;
+    excludeId?: string;
+    afterId?: string;
+    skipCount?: boolean;
+    [key: string]: unknown;
+  } = {},
+  enabled = true,
+) {
+  return useInfiniteQuery({
+    ...studentsInfiniteQueryOptions(query),
+    enabled,
   });
 }
 

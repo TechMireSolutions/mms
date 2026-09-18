@@ -42,12 +42,14 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (includeDeleted && !canDeleteCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
+      const skipCount = isQueryFlagTrue(query?.skipCount);
       try {
         const effectiveQuery = {
           page: 1,
           limit: 25,
           ...query,
           includeDeleted,
+          skipCount,
         };
         const result = await contactUseCases.loadContactsPage(effectiveQuery);
         const contacts = result.contacts;

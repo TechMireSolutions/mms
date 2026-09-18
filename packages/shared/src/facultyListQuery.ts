@@ -91,8 +91,9 @@ export type TeachersListQueryParsed = z.infer<typeof teachersListQuerySchema>;
  * Service / FE Query / SQL list query — Zod wire fields with boolean `includeDeleted`
  * after HTTP normalize (same authority as {@link teachersListQuerySchema}).
  */
-export type TeachersListQuery = Omit<TeachersListQueryParsed, 'includeDeleted'> & {
+export type TeachersListQuery = Omit<TeachersListQueryParsed, 'includeDeleted' | 'skipCount'> & {
   includeDeleted?: boolean;
+  skipCount?: boolean;
 };
 
 /** Server SQL page result shape (FE Query + BE repository). */
@@ -103,6 +104,7 @@ export interface TeachersListPageResult {
   page: number;
   limit: number;
   hasMore: boolean;
+  nextCursor?: string;
 }
 
 export type FacultyListPageResult = TeachersListPageResult;

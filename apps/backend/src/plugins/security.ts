@@ -3,8 +3,11 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import type { ServerConfig } from '../config/serverConfig.js';
-import { GLOBAL_RATE_LIMIT } from '../lib/rateLimitConfig.js';
-import { checkIsRedisConnected, getRedisClient } from '../lib/redis.js';
+import { GLOBAL_RATE_LIMIT, generateCompositeRateLimitKey } from '../lib/rateLimitConfig.js';
+import {
+  checkIsRateLimitRedisConnected,
+  getRateLimitRedisClient,
+} from '../lib/redis.js';
 
 /**
  * Per-request CSP nonce store. The nonce is generated in `onRequest` and
@@ -148,9 +151,9 @@ export async function registerSecurityPlugins(
   // ceiling once more than one backend process serves traffic, so it is an
   // explicit opt-in — set RATE_LIMIT_REDIS_STORE=true when scaling out.
   const redisStoreRequested = process.env.RATE_LIMIT_REDIS_STORE === 'true';
-  const redisClient = redisStoreRequested ? getRedisClient() : null;
+  const redisClient = redisStoreRequested ? getRateLimitRedisClient() : null;
 
-  if (redisStoreRequested && (!redisClient || !checkIsRedisConnected())) {
+  if (redisStoreRequested && (!redisClient || !checkIsRateLimitRedisConnected())) {
     app.log.warn(
       'RATE_LIMIT_REDIS_STORE=true but Redis is unavailable — falling back to the ' +
         'in-process rate-limit store (limits are per-process until Redis recovers).',
@@ -161,10 +164,11 @@ export async function registerSecurityPlugins(
     global: true,
     max: GLOBAL_RATE_LIMIT.max,
     timeWindow: GLOBAL_RATE_LIMIT.timeWindow,
+    keyGenerator: (request) => generateCompositeRateLimitKey(request),
     errorResponseBuilder: GLOBAL_RATE_LIMIT.errorResponseBuilder,
     // Health/readiness probes, static assets, and SPA document routes must never be throttled.
     allowList: (request) => isRateLimitExempt(request.url),
-    ...(redisClient && checkIsRedisConnected() ? { redis: redisClient } : {}),
+    ...(redisClient && checkIsRateLimitRedisConnected() ? { redis: redisClient } : {}),
     addHeadersOnExceeding: {
       'x-ratelimit-limit': true,
       'x-ratelimit-remaining': true,

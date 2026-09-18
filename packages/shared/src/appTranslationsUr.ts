@@ -7400,4 +7400,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "hasanat.templateEditorTitle": "حسنات واؤچر اور رسید ٹیمپلیٹ ایڈیٹر",
   "obligations.templateSaved": "انوائس ٹیمپلیٹ کامیابی سے محفوظ ہو گیا",
   "obligations.templateEditorTitle": "واجبات انوائس ٹیمپلیٹ ایڈیٹر",
+  "network.offlineBanner": "آپ اس وقت آف لائن ہیں۔ مقامی کیشے سے کام جاری ہے۔",
+  "network.reconnectingBanner": "نیٹ ورک سے دوبارہ رابطہ اور ڈیٹا ہم آہنگ کیا جا رہا ہے...",
+  "network.onlineRestored": "کنکشن بحال ہو گیا۔ حالت ہم آہنگ ہو گئی۔",
 };

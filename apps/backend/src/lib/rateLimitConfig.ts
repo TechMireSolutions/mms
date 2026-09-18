@@ -1,3 +1,6 @@
+import type { FastifyRequest } from 'fastify';
+import { getRequestTenant, resolveSubdomainFromRequest } from './tenantContext.js';
+
 interface RateLimitErrorContext {
   statusCode: number;
 }
@@ -11,6 +14,26 @@ function buildRateLimitError(message: string, context: RateLimitErrorContext) {
     type: 'rate_limit_exceeded',
     message,
   };
+}
+
+/**
+ * Derives a composite identity key (tenant_id:client_ip) for multi-tenant rate limiting.
+ * Ensures that traffic or brute-force attempts on one tenant cannot starve or throttle another.
+ */
+export function generateCompositeRateLimitKey(request: FastifyRequest): string {
+  const tenantHeader = request.headers['x-tenant-id'];
+  const tenantFromHeader =
+    typeof tenantHeader === 'string' && tenantHeader.trim().length > 0
+      ? tenantHeader.trim().toLowerCase()
+      : null;
+  const tenantContext = getRequestTenant();
+  const subdomain = resolveSubdomainFromRequest(
+    request.headers.host,
+    request.headers['x-forwarded-host']
+  );
+  const tenantId = tenantContext || tenantFromHeader || subdomain?.trim().toLowerCase() || 'platform';
+  const clientIp = request.ip || request.socket?.remoteAddress || '127.0.0.1';
+  return `${tenantId}:${clientIp}`;
 }
 
 /**
@@ -54,6 +77,7 @@ export const GLOBAL_RATE_LIMIT_MAX =
 export const GLOBAL_RATE_LIMIT = {
   max: GLOBAL_RATE_LIMIT_MAX,
   timeWindow: '1 minute' as const,
+  keyGenerator: (request: FastifyRequest) => generateCompositeRateLimitKey(request),
   errorResponseBuilder: (_request: unknown, context: RateLimitErrorContext) =>
     buildRateLimitError(RATE_LIMIT_MESSAGE, context),
 };
@@ -61,6 +85,7 @@ export const GLOBAL_RATE_LIMIT = {
 export const AUTH_RATE_LIMIT = {
   max: isProduction() ? 10 : 1000,
   timeWindow: '1 minute' as const,
+  keyGenerator: (request: FastifyRequest) => generateCompositeRateLimitKey(request),
   errorResponseBuilder: (_request: unknown, context: RateLimitErrorContext) =>
     buildRateLimitError(RATE_LIMIT_MESSAGE, context),
 };
@@ -69,6 +94,7 @@ export const AUTH_RATE_LIMIT = {
 export const MESSAGING_LOG_RATE_LIMIT = {
   max: isProduction() ? 30 : 1000,
   timeWindow: '1 minute' as const,
+  keyGenerator: (request: FastifyRequest) => generateCompositeRateLimitKey(request),
   errorResponseBuilder: (_request: unknown, context: RateLimitErrorContext) =>
     buildRateLimitError(
       'Too many message log requests. Please try again later.',

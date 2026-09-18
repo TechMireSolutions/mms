@@ -20,6 +20,12 @@ export interface ServerConfig {
   pgStatementTimeoutMs: number;
   /** Tenant-bound SET LOCAL idle_in_transaction_session_timeout (ms). Capped by statement timeout. */
   pgIdleInTxTimeoutMs: number;
+  /** Node.js HTTP server socket keep-alive timeout (ms). Defaults to 30s to coordinate with Apache. */
+  keepAliveTimeoutMs: number;
+  /** Node.js HTTP server headers timeout (ms). Must exceed keepAliveTimeoutMs. */
+  headersTimeoutMs: number;
+  /** TCP Keep-Alive initial delay (ms) on accepted client sockets. */
+  tcpKeepAliveInitialDelayMs: number;
 }
 
 const VALID_LOG_LEVELS = new Set<LogLevel>(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']);
@@ -161,5 +167,8 @@ function buildServerConfig(): ServerConfig {
     pgPoolMax: parsePositiveInt(process.env.PG_POOL_MAX, 20, 1, 100),
     pgStatementTimeoutMs,
     pgIdleInTxTimeoutMs,
+    keepAliveTimeoutMs: parsePositiveInt(process.env.KEEP_ALIVE_TIMEOUT_MS, 30_000, 1_000, 300_000),
+    headersTimeoutMs: parsePositiveInt(process.env.HEADERS_TIMEOUT_MS, 35_000, 1_000, 300_000),
+    tcpKeepAliveInitialDelayMs: parsePositiveInt(process.env.TCP_KEEP_ALIVE_DELAY_MS, 10_000, 1_000, 60_000),
   };
 }

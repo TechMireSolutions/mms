@@ -58,4 +58,13 @@ const app = (
 
 ReactDOM.createRoot(rootElement).render(
   import.meta.env.DEV ? <React.StrictMode>{app}</React.StrictMode> : app,
-)
+);
+
+// Register Service Worker in production browser environment for offline client resilience
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator && !import.meta.env.DEV) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(() => {
+      // Non-blocking fallback
+    });
+  });
+}

@@ -24,7 +24,7 @@ describe('BullMQ Queue Architecture (Phase 5)', () => {
       priority: 2,
     });
     expect(QUEUE_SETTINGS[QUEUE_MESSAGING_BROADCAST]).toEqual({
-      concurrency: 10,
+      concurrency: 6,
       priority: 3,
     });
   });

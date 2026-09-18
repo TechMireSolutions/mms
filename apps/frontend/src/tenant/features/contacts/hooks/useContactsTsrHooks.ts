@@ -2,7 +2,8 @@
  * Phase 7: Contract-driven query/mutation hooks for the Contacts module.
  */
 import { apiContract, tsrClient } from '@/lib/api';
-import { queryOptions, useQueryClient } from '@tanstack/react-query';
+import { infiniteQueryOptions, queryOptions, useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
+import type { ContactsListPageResult } from '@mms/shared';
 import { CONTACTS_QUERY_KEY, CONTACTS_REPORT_ANALYTICS_QUERY_KEY } from '@/tenant/features/contacts/hooks/contactsQueryKeys';
 import { invalidateContactsQueries } from '@/tenant/features/contacts/hooks/invalidateContactsQueries';
 
@@ -22,6 +23,37 @@ export function contactsListQueryOptions(query: Record<string, unknown> = {}) {
     },
     placeholderData: (prev) => prev,
     staleTime: 15_000,
+  });
+}
+
+export function contactsInfiniteQueryOptions(query: Record<string, unknown> = {}) {
+  return infiniteQueryOptions({
+    queryKey: [...CONTACTS_QUERY_KEY, 'contract-infinite-list', query] as const,
+    queryFn: async ({ pageParam, signal }) => {
+      const effectiveQuery = {
+        ...query,
+        ...(pageParam ? { afterId: pageParam } : {}),
+      };
+      const response = await apiContract.contacts.list({
+        query: effectiveQuery as Record<string, string>,
+        signal,
+        fetchOptions: { signal },
+      });
+      if (response.status !== 200) {
+        throw new Error('Failed to fetch contacts');
+      }
+      return response.body as ContactsListPageResult;
+    },
+    initialPageParam: undefined as string | undefined,
+    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    staleTime: 15_000,
+  });
+}
+
+export function useContactsInfiniteList(query: Record<string, unknown> = {}, enabled = true) {
+  return useInfiniteQuery({
+    ...contactsInfiniteQueryOptions(query),
+    enabled,
   });
 }
 

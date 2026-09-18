@@ -88,6 +88,7 @@ export interface StudentsListPageResult {
   page: number;
   limit: number;
   hasMore: boolean;
+  nextCursor?: string;
 }
 
 export const studentsNextGrNumberQuerySchema = z.object({

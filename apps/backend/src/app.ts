@@ -10,6 +10,7 @@ import { registerFrontendSpa } from './plugins/frontendSpa.js';
 import { registerPlugins } from './plugins/index.js';
 import { registerRoutes } from './routes/index.js';
 import { registerDefaultBackgroundJobRunners } from './services/backgroundJobRunnerService.js';
+import { setStaticAssetHeaders } from './plugins/staticAssets.js';
 
 loadBackendEnv();
 
@@ -21,13 +22,24 @@ export async function buildApp(): Promise<FastifyInstance> {
     trustProxy: config.trustProxy,
     bodyLimit: config.bodyLimit,
     requestTimeout: config.requestTimeoutMs,
-    keepAliveTimeout: 65000,
+    keepAliveTimeout: config.keepAliveTimeoutMs,
     genReqId: (request) => {
       const incoming = request.headers['x-request-id'];
       if (typeof incoming === 'string' && incoming.length > 0) return incoming;
       return randomUUID();
     },
   });
+
+  if (app.server && 'headersTimeout' in app.server) {
+    app.server.headersTimeout = config.headersTimeoutMs;
+  }
+
+  if (app.server && typeof app.server.on === 'function') {
+    app.server.on('connection', (socket) => {
+      socket.setKeepAlive(true, config.tcpKeepAliveInitialDelayMs);
+      socket.setNoDelay(true);
+    });
+  }
 
   app.setValidatorCompiler(validatorCompiler);
   app.setSerializerCompiler(serializerCompiler);
@@ -65,6 +77,7 @@ export async function buildApp(): Promise<FastifyInstance> {
       if (pathname.startsWith('/api') || pathname.startsWith('/uploads')) {
         return reply.status(404).send({ type: 'not_found', message: 'Not found' });
       }
+      setStaticAssetHeaders(reply, 'index.html');
       return reply.sendFile('index.html');
     });
   } else {

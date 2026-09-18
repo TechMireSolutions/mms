@@ -5,6 +5,8 @@ import type { FastifyInstance } from 'fastify';
 import type { ServerConfig } from '../config/serverConfig.js';
 import { resolveBackendRoot } from '../config/loadEnv.js';
 
+import { setStaticAssetHeaders } from './staticAssets.js';
+
 /** Production: serve built SPA static assets on the API port (Apache → :5002). Returns true when SPA is active. */
 export async function registerFrontendSpa(
   app: FastifyInstance,
@@ -26,6 +28,10 @@ export async function registerFrontendSpa(
     prefix: '/',
     wildcard: false,
     decorateReply: true,
+    preCompressed: true,
+    setHeaders(res, path) {
+      setStaticAssetHeaders(res, path);
+    },
   });
 
   app.log.info({ distRoot }, 'Serving frontend SPA from backend');

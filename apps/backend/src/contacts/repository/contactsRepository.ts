@@ -46,7 +46,10 @@ export interface ContactsReportAnalyticsOptions {
  */
 export interface ContactsRepository {
   countByWorkspace(tenant: string, options?: ListContactsOptions): Promise<number>;
-  listPage(tenant: string, query: ContactsListQuery): Promise<ContactsListPageResult>;
+  listPage(
+    tenant: string,
+    query: ContactsListQuery & { afterId?: string; skipCount?: boolean },
+  ): Promise<ContactsListPageResult & { nextCursor?: string }>;
   findById(tenant: string, id: string): Promise<Contact | null>;
   findByIds(tenant: string, ids: string[]): Promise<Contact[]>;
   save(tenant: string, contact: Contact): Promise<void>;

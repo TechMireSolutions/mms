@@ -114,6 +114,8 @@ curl -fsS "https://${MMS_APP_DOMAIN}/health"
 curl -fsS "https://${MMS_APP_DOMAIN}/ready"
 curl -fsS "https://${MMS_APP_DOMAIN}/api/public/deployment-config"
 curl -fsS "https://${MMS_APP_DOMAIN}/api/platform/auth/setup/status"  # not 403
+# Verify HTTP/2 and Brotli pre-compression on edge
+curl -s -I --http2 -H "Accept-Encoding: br" "https://${MMS_APP_DOMAIN}/" | grep -iE 'HTTP/|content-encoding|cache-control'
 bash scripts/verify-tenant-hosts.sh dar-ul-quran apps/backend/.env   # on server
 curl -fsS "https://dar-ul-quran.${MMS_APP_DOMAIN}/health"            # replace slug
 ```

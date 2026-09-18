@@ -19,6 +19,9 @@ function createMockConfig(overrides: Partial<ServerConfig> = {}): ServerConfig {
     pgPoolMax: 10,
     pgStatementTimeoutMs: 10000,
     pgIdleInTxTimeoutMs: 5000,
+    keepAliveTimeoutMs: 30000,
+    headersTimeoutMs: 35000,
+    tcpKeepAliveInitialDelayMs: 10000,
     ...overrides,
   };
 }

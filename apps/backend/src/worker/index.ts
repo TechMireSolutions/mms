@@ -107,6 +107,15 @@ export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData>
   const worker = new Worker<EnqueuedJobData>(
     queueName,
     async (job) => {
+      // Heap backpressure sentinel: check memory usage before running heavy background jobs
+      const mem = process.memoryUsage();
+      if (mem.heapUsed > 0.85 * mem.heapTotal && mem.heapUsed > 256 * 1024 * 1024) {
+        logger.warn(
+          { queue: queueName, jobId: job.id, heapUsed: mem.heapUsed, heapTotal: mem.heapTotal },
+          'Worker memory backpressure threshold exceeded; pausing briefly to allow GC',
+        );
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
       await processBackgroundJob(job);
     },
     {

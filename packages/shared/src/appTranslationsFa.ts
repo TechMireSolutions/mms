@@ -7404,4 +7404,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "hasanat.templateEditorTitle": "ویرایشگر الگوی رسید و قبض حسنات",
   "obligations.templateSaved": "الگوی فاکتور با موفقیت ذخیره شد",
   "obligations.templateEditorTitle": "ویرایشگر الگوی فاکتور تعهدات",
+  "network.offlineBanner": "در حال حاضر آفلاین هستید. کار از حافظه پنهان محلی انجام می‌شود.",
+  "network.reconnectingBanner": "در حال اتصال مجدد به شبکه و همگام‌سازی داده‌ها...",
+  "network.onlineRestored": "اتصال برقرار شد. وضعیت همگام‌سازی گردید.",
 };

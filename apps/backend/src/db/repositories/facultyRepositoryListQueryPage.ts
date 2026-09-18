@@ -34,7 +34,7 @@ const TEACHER_LIST_COLUMNS = {
  */
 export async function listTeachersPage(
   tenant: string,
-  query: TeachersListQuery & { includeDeleted?: boolean; afterId?: string },
+  query: TeachersListQuery & { includeDeleted?: boolean; afterId?: string; skipCount?: boolean },
 ): Promise<TeachersListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
@@ -47,6 +47,7 @@ export async function listTeachersPage(
       page: query.page,
       limit: query.limit,
       afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: TEACHERS_MODULE_MANIFEST.defaultPageSize,
       rowMapper: (row) => teacherRowToRecord(row as typeof teachers.$inferSelect),
     });

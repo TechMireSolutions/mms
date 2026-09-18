@@ -101,6 +101,20 @@ jobs:
           fi
           echo "Platform setup/status → HTTP ${SETUP_CODE}"
 
+          # Verify HTTP/2 negotiation and edge headers
+          HTTP_VER="$(curl -s -I --http2 "${BASE}/health" | head -n 1)"
+          echo "Edge protocol: ${HTTP_VER}"
+
+          # Verify pre-compression negotiation (Brotli/Gzip) and edge caching headers
+          echo "Verifying Brotli/Gzip negotiation and Cache-Control headers..."
+          curl -sI -H "Accept-Encoding: br, gzip" "${BASE}/" | grep -iE "(content-encoding|cache-control|vary)" || true
+
+          # Verify /ws and /api/ws endpoint presence and proxy pass routing
+          WS_STATUS="$(curl -s -o /dev/null -w '%{http_code}' -H "Upgrade: websocket" -H "Connection: Upgrade" "${BASE}/ws" || true)"
+          echo "/ws upgrade probe → HTTP ${WS_STATUS}"
+          API_WS_STATUS="$(curl -s -o /dev/null -w '%{http_code}' -H "Upgrade: websocket" -H "Connection: Upgrade" "${BASE}/api/ws" || true)"
+          echo "/api/ws upgrade probe → HTTP ${API_WS_STATUS}"
+
           for foreign in aabtaab.com darulquran.pk; do
             title="$(curl -sS --connect-timeout 10 --max-time 15 "https://${foreign}/" 2>/dev/null | grep -o '<title>[^<]*</title>' | head -1 || true)"
             if echo "${title}" | grep -qi 'Madrasa Management System'; then

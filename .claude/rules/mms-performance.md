@@ -56,7 +56,10 @@ Authoritative performance and resource constraints across **tenant workspaces an
   - Always clean up resources: pair `addEventListener` with `removeEventListener`, clear intervals/timeouts (`clearInterval`, `clearTimeout`), and remove `AbortSignal` listeners on completion.
   - Ban unbounded module-scoped caches, arrays, or maps (`const cache = {}`) without LRU eviction and strict maximum item limits.
 - **Lean Network Payloads & Compression:**
-  - Keep payloads minimal: serialize only required DTO fields, strip `null`/`undefined` keys where practical, and ensure Fastify `@fastify/compress` (gzip/Brotli) is active on responses.
+  - Keep payloads minimal: serialize only required DTO fields, strip `null`/`undefined` keys where practical.
+  - Dynamic compression: configure Fastify `@fastify/compress` with fast Brotli (quality 4) and gzip (level 6) for API JSON payloads to prevent event-loop stalls.
+  - Static pre-compression: configure `@fastify/static` with `preCompressed: true` so pre-generated `.br` and `.gz` files are streamed directly with zero runtime compression CPU overhead.
+  - Streaming & Realtime Transport: use `Transfer-Encoding: chunked` and unbuffered streaming (`flushpackets=auto`, `X-Accel-Buffering: no`) for SSE and live-push updates.
   - Never serialize internal database attributes (`tenantId`, password hashes, salts, internal flags) to client consumers. Format money as exact decimal strings (`/^\d+(\.\d{1,2})?$/`).
 - **Audit Payload Minimization & Canonical Hashing (`mms-audit-trail`):**
   - Minimize audit payloads at capture time: never log full raw PII or secrets into `old_state`/`new_state`.
@@ -72,11 +75,22 @@ Authoritative performance and resource constraints across **tenant workspaces an
 - **Multi-Tier TTLs:** Cache read-heavy queries via Redis (`apps/backend/src/lib/redis.ts`) / LRU. Standard TTLs: `60s` for aggregate metrics/KPIs; `300s` for static config/lookups/branding. SWR on high-traffic read paths.
 - **Tenant Isolation:** Cache keys MUST isolate by tenant and context: `mms:{tenantId}:{module}:{resource}:{hash(queryParams)}`. Include role/permission scope when payload varies by viewer. Global keys for tenant data are strictly banned.
 - **Write Invalidation:** Every mutation (`POST`/`PUT`/`PATCH`/`DELETE`) must evict affected keys and broadcast real-time invalidation via `/api/ws` (`broadcastTenantUpdate`).
-- **HTTP Caching:** Emit `ETag` and `Cache-Control: private, no-cache` on idempotent `GET`s. Return `304 Not Modified` on matching `If-None-Match`.
+- **HTTP Caching & Edge Strategy:**
+  - Idempotent API reads: Emit tenant-salted weak ETags (`W/"<tenantId>-<digest>"` or `W/"<tenantId>-r<rev>-<digest>"`, incorporating `x-schema-revision` when provided) and differential `Cache-Control`. Return `304 Not Modified` on matching `If-None-Match`.
+  - Multi-tenant `Vary` isolation: every `/api/*` response must inject `Vary: Accept-Encoding, X-Tenant-Id, Authorization` to strictly eliminate cross-tenant cache contamination on intermediate proxies.
+  - Differential `Cache-Control`: Tenant metadata and lookups (`/preferences`, `/field-config`, `/lookups`, `/branding`, `/setup-config`, `/column-preferences`) emit `Cache-Control: private, no-cache`. Dynamic business endpoints emit `Cache-Control: private, no-cache, no-store, must-revalidate`.
+  - Hashed static assets (`/assets/*.[hash].js`, `/assets/*.[hash].css`): Emit `Cache-Control: public, max-age=31536000, immutable` and `Vary: Accept-Encoding`.
+  - Brand & root assets (`/favicon.ico`, `/favicon.svg`, `/platform-logo.*`, `/icon-*.png`, `apple-touch-icon.*`): Emit `Cache-Control: public, max-age=86400, must-revalidate` and `Vary: Accept-Encoding` (preventing multi-year stale locks while permitting repeat caching).
+  - Application shell entry files (`index.html`, `site.webmanifest`, `/sw.js`): Emit `Cache-Control: no-cache, no-store, must-revalidate`, `Pragma: no-cache`, and `Vary: Accept-Encoding` to ensure instant client adoption of new releases and service workers.
+  - Edge & Origin Transport: Apache reverse proxy terminates HTTP/2 (`Protocols h2 http/1.1`) over TLS, Brotli/gzip compression, explicit `KeepAlive On`, `KeepAliveTimeout 30`, `MaxKeepAliveRequests 1000`, and `ProxyTimeout 60`. Fastify Node HTTP server enforces synchronized `keepAliveTimeout` (30s) and `headersTimeout` (35s) with TCP Keep-Alive (`socket.setKeepAlive(true, 10000)`).
+  - Streaming SSE / Real-time Push: Emit `Content-Type: text/event-stream`, `Cache-Control: no-cache, no-transform`, `Connection: keep-alive`, `X-Accel-Buffering: no`, and `Transfer-Encoding: chunked` with proxy buffering disabled (`flushpackets=auto`, `SetEnv proxy-sendchunked 1`, `disablereuse=Off`).
+  - WebSocket Backpressure & Heartbeats: Enforce 30s ping cycle with 10s pong deadline (`WS_PONG_DEADLINE_MS = 10000`). Drop non-essential telemetry if `bufferedAmount > 64 KB` and terminate stalled sockets if `bufferedAmount > 512 KB`. Sanitize job payloads for strict tenant isolation.
+  - Client Offline Persistence: Hydrate TanStack Query v5 cache via native IndexedDB persister (`mms_offline_cache`) with 24-hour `gcTime`, exponential backoff retry ($2^n \times 1000\text{ ms}$), and `networkMode: 'online'` with automatic mutation pause/resume. Service Worker caches core static shell (CacheFirst) and tenant branding/icons (StaleWhileRevalidate) while passing mutations directly to network (NetworkOnly).
 
 ---
 
 ## 4. Client Bundle & Asset Optimization
+- **Build-Time Pre-compression:** Vite builds must integrate `vite-plugin-compression2` to automatically generate `.br` (Brotli quality 11) and `.gz` (gzip level 9) files for all static bundle outputs exceeding 1 KB (`.js`, `.css`, `.html`, `.svg`, `.json`, `.webmanifest`), achieving > 65% transfer size reduction without runtime CPU cost. Fastify serves these directly from disk via `@fastify/static` with `preCompressed: true`.
 - **Modular Imports:** Ban `lodash`, `moment`, `date-fns` (full), `ramda`. Use native modern JS (`toSorted`, `Object.groupBy`, `Intl.*`), pure `@mms/shared` (`formatDate`, `formatMoney`), and named icon imports (`import { Plus } from 'lucide-react'`).
 - **Dynamic Imports & Splitting:** Route code-splitting with React `lazy` + `Suspense` across all feature routes. Dynamically import heavy libraries (Recharts, `jspdf`, `xlsx`, editors) on demand in action handlers (`mms-reports.md`).
 - **Tree-Shaking:** Ban CommonJS-only packages that bloat the vendor chunk.

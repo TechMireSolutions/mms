@@ -7400,4 +7400,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "hasanat.templateEditorTitle": "محرر قوالب سندات وقسائم حسنات",
   "obligations.templateSaved": "تم حفظ قالب الفاتورة بنجاح",
   "obligations.templateEditorTitle": "محرر قوالب فواتير الالتزامات",
+  "network.offlineBanner": "أنت غير متصل حالياً. يتم العمل من الذاكرة المؤقتة المحلية.",
+  "network.reconnectingBanner": "جارٍ إعادة الاتصال بالشبكة ومزامنة البيانات...",
+  "network.onlineRestored": "تمت استعادة الاتصال. تمت مزامنة الحالة.",
 };

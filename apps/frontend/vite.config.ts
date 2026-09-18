@@ -1,8 +1,10 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { constants } from 'node:zlib';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type PluginOption } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { compression } from 'vite-plugin-compression2';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -217,6 +219,26 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    compression({
+      algorithm: 'brotliCompress',
+      threshold: 1024,
+      deleteOriginalAssets: false,
+      include: /\.(js|mjs|cjs|css|html|svg|json|webmanifest)$/i,
+      compressionOptions: {
+        params: {
+          [constants.BROTLI_PARAM_QUALITY]: 11,
+        },
+      },
+    }),
+    compression({
+      algorithm: 'gzip',
+      threshold: 1024,
+      deleteOriginalAssets: false,
+      include: /\.(js|mjs|cjs|css|html|svg|json|webmanifest)$/i,
+      compressionOptions: {
+        level: 9,
+      },
+    }),
     visualizer({
       filename: path.resolve(rootDir, 'dist/stats.html'),
       title: 'MMS Frontend Bundle Analysis',

@@ -24,6 +24,7 @@ export const studentListPageResponseSchema = z.object({
   page: z.number(),
   limit: z.number(),
   hasMore: z.boolean(),
+  nextCursor: z.string().optional(),
 });
 
 /** `{ student }` envelope returned by get/create/update. */

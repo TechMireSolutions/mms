@@ -70,5 +70,6 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(auditRoutes);
   await app.register(backgroundJobRoutes, { prefix: '/api/background-jobs' });
   await app.register(aiRoutes, { prefix: '/api/ai' });
+  await app.register(websocketRoutes);
   await app.register(websocketRoutes, { prefix: '/api' });
 }
