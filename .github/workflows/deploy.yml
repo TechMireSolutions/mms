@@ -176,6 +176,18 @@ jobs:
             exit 0
           fi
           BASE="https://${MMS_APP_DOMAIN}"
+
+          # Fast-fail on TLS certificate errors — retrying won't fix an expired cert.
+          TLS_CHECK=$(curl -sS --connect-timeout 5 --max-time 10 "${BASE}/health" 2>&1 || true)
+          if echo "${TLS_CHECK}" | grep -qi "certificate has expired\|SSL certificate problem\|certificate verify failed"; then
+            EXPIRY=$(echo | openssl s_client -servername "${MMS_APP_DOMAIN}" \
+              -connect "${MMS_APP_DOMAIN}:443" 2>/dev/null \
+              | openssl x509 -noout -dates 2>/dev/null | grep notAfter || echo "unknown")
+            echo "::error::TLS CERTIFICATE EXPIRED on ${MMS_APP_DOMAIN} (${EXPIRY})"
+            echo "Fix: SSH to the server and run: sudo certbot renew --force-renewal && sudo systemctl reload apache2"
+            exit 1
+          fi
+
           for i in 1 2 3 4 5 6 7 8 9 10; do
             if curl -fsS --connect-timeout 5 --max-time 15 "${BASE}/health" >/dev/null \
               && curl -fsS --connect-timeout 5 --max-time 15 "${BASE}/ready" >/dev/null \
@@ -186,6 +198,7 @@ jobs:
             sleep 10
             if [ "$i" -eq 10 ]; then
               echo "ERROR: ${BASE} unreachable — check Apache ProxyPass → :5002"
+              echo "Diagnose: ssh to server and run: bash scripts/server-diagnose.sh apps/backend/.env"
               exit 1
             fi
           done
