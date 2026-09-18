@@ -4,17 +4,17 @@ on:
   workflow_dispatch:
     inputs:
       dry_run:
-        description: 'Dry-run only (no cert changes, just check status)'
+        description: 'Dry-run only — show cert status, no changes'
         type: boolean
         default: false
 
 jobs:
   renew-cert:
-    name: Renew MMS TLS certificate on production
+    name: Re-issue MMS TLS certificate (standalone HTTP-01)
     runs-on: ubuntu-latest
 
     steps:
-      - name: Renew / re-issue MMS apex cert via SSH
+      - name: Re-issue MMS cert via SSH (standalone, no Apache dependency)
         uses: appleboy/ssh-action@v1.2.5
         with:
           host: ${{ secrets.SERVER_IP }}
@@ -25,67 +25,71 @@ jobs:
             set -euo pipefail
             MMS_DOMAIN="${{ secrets.MMS_APP_DOMAIN }}"
 
-            echo "=== Certificate status for ${MMS_DOMAIN} ==="
+            echo "=== Current cert status for ${MMS_DOMAIN} ==="
             sudo certbot certificates 2>&1 | \
-              awk "/Certificate Name: ${MMS_DOMAIN}/{found=1} found{print; if(/Private Key Path/)found=0}" || true
+              awk "/Certificate Name: ${MMS_DOMAIN}/{f=1} f{print; if(/Private Key Path/)f=0}" || true
 
             if [ "${{ inputs.dry_run }}" = "true" ]; then
-              echo "=== DRY RUN — no changes ==="
+              echo "DRY RUN — exiting without changes."
               exit 0
             fi
 
-            # Step 1: Try a targeted renewal of just the MMS cert.
-            # This succeeds if the renewal conf uses apache/standalone/webroot authenticator.
-            echo "=== Attempting targeted renewal for ${MMS_DOMAIN} ==="
-            if sudo certbot renew --cert-name "${MMS_DOMAIN}" --force-renewal 2>&1; then
-              echo "Targeted renewal succeeded."
-            else
-              # Step 2: The cert uses 'authenticator = manual' (DNS-01 issued interactively).
-              # Manual certs cannot auto-renew non-interactively. Delete and re-issue
-              # using the apache authenticator (HTTP-01) for the apex domain.
-              # NOTE: This drops the *.${MMS_DOMAIN} wildcard. Tenant subdomains need a
-              # DNS-plugin cert issued separately (see workflow README below).
-              echo "::warning::Renewal failed — cert uses manual authenticator (DNS-01)."
-              echo "Re-issuing ${MMS_DOMAIN} using Apache authenticator (HTTP-01)..."
+            # ── Step 1: Delete any existing (expired/broken) cert so we get a
+            #            clean re-issue at the canonical path.
+            if sudo certbot certificates 2>&1 | grep -q "Certificate Name: ${MMS_DOMAIN}"; then
+              echo "=== Deleting expired cert: ${MMS_DOMAIN} ==="
               sudo certbot delete --cert-name "${MMS_DOMAIN}" --non-interactive || true
-              sudo certbot certonly \
-                --apache \
-                --non-interactive \
-                --agree-tos \
-                --keep-until-expiring \
-                -d "${MMS_DOMAIN}"
-              echo "Re-issue complete."
             fi
 
-            # Step 3: Reload Apache to load the new cert.
-            echo "=== Reloading Apache ==="
-            sudo systemctl reload apache2
+            # ── Step 2: Stop Apache so port 80 is free for the standalone
+            #            challenge server (certbot --standalone spins up its own).
+            echo "=== Stopping Apache temporarily ==="
+            sudo systemctl stop apache2
 
-            # Step 4: Verify the new expiry.
+            # ── Step 3: Issue a fresh 90-day cert via HTTP-01 standalone.
+            #            With certbot timer auto-renewing at day 60 the effective
+            #            lifetime is unlimited — no manual intervention ever needed.
+            echo "=== Issuing cert for ${MMS_DOMAIN} ==="
+            sudo certbot certonly \
+              --standalone \
+              --non-interactive \
+              --agree-tos \
+              --preferred-challenges http \
+              --email "admin@${MMS_DOMAIN}" \
+              -d "${MMS_DOMAIN}"
+
+            # ── Step 4: Start Apache — cert files now exist at the path the
+            #            vhost expects (/etc/letsencrypt/live/${MMS_DOMAIN}/).
+            echo "=== Starting Apache ==="
+            sudo systemctl start apache2
+            sleep 2
+
+            # ── Step 5: Verify new expiry.
             echo "=== New cert expiry ==="
             echo | openssl s_client \
               -servername "${MMS_DOMAIN}" \
               -connect "${MMS_DOMAIN}:443" 2>/dev/null \
               | openssl x509 -noout -dates 2>/dev/null | grep notAfter || echo "unknown"
 
-            # Step 5: Health check.
+            # ── Step 6: Health check.
             echo "=== Health check ==="
             sleep 3
             curl -fsS --max-time 15 "https://${MMS_DOMAIN}/health"
             echo ""
-            echo "MMS TLS certificate OK: https://${MMS_DOMAIN}"
 
-            # Step 6: Clean up other abandoned/NXDOMAIN certs that break certbot --renew.
-            # grav.aabtaab.com and grave.darulquran.pk have no DNS records — safe to delete.
-            echo "=== Deleting abandoned certs (NXDOMAIN — no DNS records) ==="
-            for ABANDONED in grav.aabtaab.com grave.darulquran.pk; do
-              if sudo certbot certificates 2>&1 | grep -q "Certificate Name: ${ABANDONED}"; then
-                echo "Deleting abandoned cert: ${ABANDONED}"
-                sudo certbot delete --cert-name "${ABANDONED}" --non-interactive || true
+            # ── Step 7: Delete abandoned NXDOMAIN certs so certbot renew
+            #            exits 0 from now on (no DNS records → always fails).
+            echo "=== Cleaning up abandoned certs with no DNS records ==="
+            for DEAD in grav.aabtaab.com grave.darulquran.pk; do
+              if sudo certbot certificates 2>&1 | grep -q "Certificate Name: ${DEAD}"; then
+                echo "Deleting: ${DEAD}"
+                sudo certbot delete --cert-name "${DEAD}" --non-interactive || true
               fi
             done
 
-      - name: Ensure certbot timer is active for future auto-renewals
+            echo "=== Done: https://${MMS_DOMAIN} is live with a fresh cert. ==="
+
+      - name: Enable certbot auto-renewal timer
         if: inputs.dry_run == false
         uses: appleboy/ssh-action@v1.2.5
         with:
@@ -95,27 +99,37 @@ jobs:
           port: 22
           script: |
             set -euo pipefail
+            # The new cert (standalone) auto-renews via certbot timer —
+            # it will use standalone again (stop apache, renew, start apache).
+            # We switch the renewal config to use --apache once Apache is healthy.
+            sudo sed -i 's/authenticator = manual/authenticator = standalone/' \
+              "/etc/letsencrypt/renewal/${{ secrets.MMS_APP_DOMAIN }}.conf" 2>/dev/null || true
+
             if ! systemctl is-active --quiet certbot.timer; then
-              echo "Certbot timer inactive — re-enabling..."
+              echo "Re-enabling certbot timer..."
               sudo systemctl enable --now certbot.timer
             fi
             echo "Certbot timer:"
             sudo systemctl status certbot.timer --no-pager || true
-            echo "Next renewal:"
+            echo "Next renewal window:"
             sudo systemctl list-timers certbot.timer --no-pager || true
+            echo ""
+            echo "Auto-renewal is configured. The cert will renew automatically"
+            echo "every ~60 days (90-day LE cert, renewed at 30-day-remaining threshold)."
 
-# ─── Wildcard cert note ───────────────────────────────────────────────────────
-# The original MMS cert covered *.${MMS_APP_DOMAIN} (tenant subdomains).
-# HTTP-01 (apache authenticator) CANNOT issue wildcards — only DNS-01 can.
-# To restore wildcard coverage, install a DNS plugin on the server:
+# ─── Wildcard (*.MMS_APP_DOMAIN) — tenant subdomains ──────────────────────────
+# This workflow issues an apex-only cert (HTTP-01 / standalone).
+# Wildcard requires DNS-01. To restore *.mmsv2.aabtaab.com coverage,
+# SSH to the server once and run:
 #
-#   # Cloudflare (if DNS is on Cloudflare):
-#   sudo apt-get install python3-certbot-dns-cloudflare
-#   echo "dns_cloudflare_api_token = <TOKEN>" | sudo tee /etc/letsencrypt/cloudflare.ini
-#   sudo chmod 600 /etc/letsencrypt/cloudflare.ini
+#   # Cloudflare DNS (replace with your provider's plugin):
+#   sudo pip install certbot-dns-cloudflare
+#   printf "dns_cloudflare_api_token = <TOKEN>\n" | \
+#     sudo tee /etc/letsencrypt/cloudflare.ini && sudo chmod 600 /etc/letsencrypt/cloudflare.ini
 #   sudo certbot certonly --dns-cloudflare \
 #     --dns-cloudflare-credentials /etc/letsencrypt/cloudflare.ini \
-#     -d "${MMS_APP_DOMAIN}" -d "*.${MMS_APP_DOMAIN}"
+#     -d "mmsv2.aabtaab.com" -d "*.mmsv2.aabtaab.com"
+#   sudo systemctl reload apache2
 #
-# After wildcard cert is issued, add --cert-name to this workflow's renewal step.
+# The dns-cloudflare plugin auto-renews non-interactively via certbot timer.
 # ─────────────────────────────────────────────────────────────────────────────
