@@ -384,17 +384,19 @@ async function openWorkspaceCard(page: Page, workspaceSubdomain: string) {
   await expect(viewModeGroup).toBeVisible({ timeout: 20_000 });
   await viewModeGroup.getByRole('button', { name: 'Cards view' }).click();
 
+  // Force a fresh server fetch so the newly-created workspace is guaranteed to
+  // appear (guards against stale TanStack Query cache on first attempt and stale
+  // IDB-hydrated cache on retry).
+  const refreshBtn = page.getByRole('button', { name: /Refresh/i });
+  await expect(refreshBtn).toBeVisible({ timeout: 10_000 });
+  await refreshBtn.click();
+
   const searchInput = page.getByPlaceholder('Search');
   await expect(searchInput).toBeVisible({ timeout: 20_000 });
   await searchInput.fill(workspaceSubdomain);
 
-  // Wait for useDeferredValue to settle: the shown-count status reads "1 of N"
-  // before the deferred filter fires, sortedItems is still empty and the card
-  // never renders — this gate ensures the filtered list has been committed.
-  await expect(page.getByRole('status').filter({ hasText: /^1 of/ })).toBeVisible({
-    timeout: 20_000,
-  });
-
+  // Wait for the workspace card to appear — useDeferredValue settles within
+  // one additional render after the search value commits to the URL params.
   const workspaceToggle = page.locator(`[id="toggle-${workspaceSubdomain}"]`);
   await expect(workspaceToggle).toBeVisible({ timeout: 20_000 });
   return workspaceToggle;

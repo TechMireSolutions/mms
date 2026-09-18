@@ -61,6 +61,10 @@ export async function initQueryClientPersistence(): Promise<void> {
       try {
         const state = dehydrate(queryClientInstance, {
           shouldDehydrateQuery: (query) => {
+            const firstKey = query.queryKey[0];
+            // Never persist platform super-user queries — they are session-scoped
+            // and must not bleed across logins or test retries via IDB hydration.
+            if (firstKey === 'platform') return false;
             return (
               query.state.status === 'success' &&
               query.state.data !== undefined &&
