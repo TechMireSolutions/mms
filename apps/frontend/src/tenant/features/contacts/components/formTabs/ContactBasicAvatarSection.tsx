@@ -1,13 +1,17 @@
-import React, { useState, useMemo, useCallback, type ChangeEvent, type DragEvent } from "react";
+import React, { useState, useMemo, useCallback, Suspense, type ChangeEvent, type DragEvent } from "react";
 import { Camera, X } from "lucide-react";
-import { AvatarCropper } from "@/components/ui/AvatarCropper";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type Contact, getDisplayName, getInitials, IMAGE_UPLOAD_MAX_INPUT_BYTES } from "@mms/shared";
 import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { genderAvatarGradient } from "@/lib/semanticTone";
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { notify } from "@/lib/notify";
 import { cn } from "@/lib/utils";
+
+const AvatarCropper = React.lazy(() =>
+  import("@/components/ui/AvatarCropper").then((m) => ({ default: m.AvatarCropper })),
+);
 
 export interface ContactBasicAvatarSectionProps {
   contactDraft: Partial<Contact>;
@@ -73,14 +77,16 @@ export function ContactBasicAvatarSection({
   return (
     <div className="mb-2 flex flex-col items-center gap-6 border-b border-border/60 pb-6 @sm:flex-row">
       {cropSrc && (
-        <AvatarCropper
-          src={cropSrc}
-          onCrop={(url) => {
-            updateDraft({ avatar: url });
-            setCropSrc(null);
-          }}
-          onCancel={() => setCropSrc(null)}
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs"><Skeleton className="w-full max-w-md h-96 rounded-2xl" /></div>}>
+          <AvatarCropper
+            src={cropSrc}
+            onCrop={(url) => {
+              updateDraft({ avatar: url });
+              setCropSrc(null);
+            }}
+            onCancel={() => setCropSrc(null)}
+          />
+        </Suspense>
       )}
       <div
         className="relative flex-shrink-0 group"

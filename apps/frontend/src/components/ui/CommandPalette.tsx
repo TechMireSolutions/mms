@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useDeferredValue, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Search } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
@@ -16,6 +16,7 @@ export interface CommandPaletteProps {
 
 export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JSX.Element | null {
   const [query, setQuery] = useState("");
+  const deferredQuery = useDeferredValue(query);
   const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
   const { t } = useTranslation();
@@ -33,8 +34,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
     [t],
   );
 
-  const filteredItems = (() => {
-    const q = query.trim().toLowerCase();
+  const filteredItems = useMemo(() => {
+    const q = deferredQuery.trim().toLowerCase();
     if (!q) return COMMAND_ITEMS;
     return COMMAND_ITEMS.filter((item) => {
       const translatedLabel = translate(item.labelKey) || item.fallbackLabel;
@@ -44,11 +45,11 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
         item.keywords.some((k) => k.toLowerCase().includes(q))
       );
     });
-  })();
+  }, [deferredQuery, translate]);
 
   useEffect(() => {
     setSelectedIndex(0);
-  }, [query]);
+  }, [deferredQuery]);
 
   const handleSelect = useCallback(
     (path: string) => {

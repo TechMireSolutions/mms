@@ -43,7 +43,7 @@ export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
       }
       className={cn(
         FORM_CARD,
-        "p-4 space-y-4 shadow-xs",
+        "p-4 space-y-4 shadow-xs [contain-intrinsic-size:180px] [content-visibility:auto]",
         accentClassName && CARD_STRIPE_INSET,
         reducedMotion ? "hover:shadow-none" : "hover:shadow-md",
         isSelected
@@ -51,6 +51,10 @@ export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
           : "border-border/50 hover:border-primary/35",
         className,
       )}
+      style={{
+        contain: "content",
+        ...motionProps.style,
+      }}
       {...motionProps}
     >
       {accentClassName ? (

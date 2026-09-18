@@ -96,9 +96,11 @@ Authoritative performance and resource constraints across **tenant workspaces an
 ---
 
 ## 5. Client Rendering & Interaction Performance
-- **Subtree Isolation:** Colocate transient input/toggle state to leaf components; never store keystroke state in page controllers.
-- **Targeted Memoization:** Memoize non-trivial calculations (`useMemo` for sorting/filtering/aggregates) and callbacks/objects passed to memoized children (`useCallback`, `React.memo`) or dependency arrays. Complement with React 19 `startTransition`, `useDeferredValue`, and `useEffectEvent`.
-- **Mandatory Virtualization (> 30 Items):** ALWAYS virtualize lists, tables, and card grids > 30 items via `@tanstack/react-virtual` (`useVirtualizer` as in `ContactsListDesktopTable.tsx`).
+- **Subtree Isolation & Keystroke Non-Blocking:** Colocate transient input/toggle state to leaf components; never store keystroke state in page controllers. Wrap search inputs, filter bars, and command palettes in `React.useDeferredValue` to isolate high-frequency typing from list filtering reconciliation passes.
+- **Targeted Memoization:** Memoize non-trivial calculations (`useMemo` for sorting/filtering/aggregates) and callbacks/objects passed to memoized children (`useCallback`, `React.memo` with fine-grained comparators) or dependency arrays. Complement with React 19 `startTransition`, `useDeferredValue`, and `useEffectEvent`.
+- **Mandatory Virtualization (> 30 Items):** ALWAYS virtualize lists, tables, card grids, and high-cardinality multi-select option menus (> 50 items) via `@tanstack/react-virtual` (`useVirtualizer`). Calibrate overscan to 5–8 items to eliminate blank scroll flickers, use dynamic measurement (`measureElement`), and preserve scroll offsets/anchors across drawer openings.
+- **CSS Layout Containment & Paint Optimization:** Apply CSS layout and paint containment (`contain: content`, `content-visibility: auto`, `contain-intrinsic-size: 180px`) on repeating directory cards (`DirectoryEntityCard.tsx`) and inactive panels to allow the browser to skip off-viewport layout and paint phases. Ensure animated drawers and modals enforce hardware-accelerated transforms (`transform: translate3d(...)`, `will-change: transform, opacity`) with zero layout thrashing.
+- **Real-Time WebSocket Cache Reconciliation:** Batch incoming WebSocket collection push invalidations arriving in the same frame tick using `requestAnimationFrame` or microtask consolidation to avoid duplicate component remounts and render cascades.
 - **TanStack Query State:** Deduplicate network requests using tuple keys (`queryOptions` factories). Strict ban on `useEffect` fetch loops. Use `placeholderData: (prev) => prev` for smooth pagination.
 
 ---

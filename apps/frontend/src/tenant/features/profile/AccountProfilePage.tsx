@@ -1,12 +1,15 @@
-import type { JSX } from 'react';
+import React, { Suspense, type JSX } from 'react';
 import { User } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
-import { AvatarCropper } from '@/components/ui/AvatarCropper';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { AccountProfileHeaderCard } from '@/tenant/features/profile/AccountProfileHeaderCard';
 import { AccountProfileSettingsTabs } from '@/tenant/features/profile/AccountProfileSettingsTabs';
 import { useAccountProfilePageController } from '@/tenant/features/profile/hooks/useAccountProfilePageController';
+
+const AvatarCropper = React.lazy(() =>
+  import('@/components/ui/AvatarCropper').then((m) => ({ default: m.AvatarCropper })),
+);
 
 export default function AccountProfile(): JSX.Element {
   const c = useAccountProfilePageController();
@@ -103,11 +106,13 @@ export default function AccountProfile(): JSX.Element {
       ) : null}
 
       {c.showCropper && (
-        <AvatarCropper
-          src={c.showCropper}
-          onCrop={c.handleAvatarCrop}
-          onCancel={() => c.setShowCropper(null)}
-        />
+        <Suspense fallback={<div className="fixed inset-0 z-modal flex items-center justify-center p-4 bg-background/80 backdrop-blur-xs"><Skeleton className="w-full max-w-md h-96 rounded-2xl" /></div>}>
+          <AvatarCropper
+            src={c.showCropper}
+            onCrop={c.handleAvatarCrop}
+            onCancel={() => c.setShowCropper(null)}
+          />
+        </Suspense>
       )}
     </ModulePageShell>
   );

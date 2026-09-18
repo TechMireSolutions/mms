@@ -1,4 +1,4 @@
-import { useEffect, useCallback } from 'react';
+import { useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { connectTenantDatabaseSocket } from '@/lib/tenantWebSocket';
@@ -31,15 +31,52 @@ export function useTenantDatabaseUpdates(): void {
   const { isAuthenticated, authChecked } = useAuth();
   const queryClient = useQueryClient();
 
-  const handleInvalidate = useCallback((key: string) => {
+  // Coalesce rapid collection invalidations arriving in the same frame tick
+  const pendingKeysRef = useRef<Set<string>>(new Set());
+  const rafHandleRef = useRef<number | null>(null);
+
+  const flushInvalidations = useCallback(() => {
+    rafHandleRef.current = null;
+    const keys = Array.from(pendingKeysRef.current);
+    pendingKeysRef.current.clear();
+
+    if (keys.length === 0) return;
+
     void getInvalidateModuleQueries()
       .then(({ invalidateModuleQueries }) => {
-        invalidateModuleQueries(queryClient, key);
+        for (const key of keys) {
+          invalidateModuleQueries(queryClient, key);
+        }
       })
       .catch((err) => {
         console.error('Failed to dispatch module query invalidation:', err);
       });
   }, [queryClient]);
+
+  const scheduleInvalidate = useCallback((key: string) => {
+    pendingKeysRef.current.add(key);
+    if (rafHandleRef.current === null) {
+      if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
+        rafHandleRef.current = window.requestAnimationFrame(flushInvalidations);
+      } else {
+        rafHandleRef.current = setTimeout(flushInvalidations, 16) as unknown as number;
+      }
+    }
+  }, [flushInvalidations]);
+
+  useEffect(() => {
+    return () => {
+      if (rafHandleRef.current !== null) {
+        if (typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
+          window.cancelAnimationFrame(rafHandleRef.current);
+        } else {
+          clearTimeout(rafHandleRef.current);
+        }
+        rafHandleRef.current = null;
+      }
+      pendingKeysRef.current.clear();
+    };
+  }, []);
 
   useEffect(() => {
     if (!isAuthenticated || !authChecked) return;
@@ -47,7 +84,7 @@ export function useTenantDatabaseUpdates(): void {
     return connectTenantDatabaseSocket({
       onDatabaseUpdate: (message) => {
         if (message.type !== 'collection') return;
-        handleInvalidate(message.key);
+        scheduleInvalidate(message.key);
       },
 
       onJobEvent: (message: BackgroundJobEventMessage) => {
@@ -70,9 +107,9 @@ export function useTenantDatabaseUpdates(): void {
         // On completion, invalidate the relevant module collection so directory
         // refreshes automatically (e.g. after a CSV import or bulk operation).
         if (message.event === 'job-completed' && message.moduleId) {
-          handleInvalidate(message.moduleId);
+          scheduleInvalidate(message.moduleId);
         }
       },
     });
-  }, [authChecked, handleInvalidate, isAuthenticated]);
+  }, [authChecked, isAuthenticated, scheduleInvalidate]);
 }

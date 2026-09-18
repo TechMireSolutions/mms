@@ -139,6 +139,10 @@ export const DetailDrawerShell = (function DetailDrawerShell({
             aria-labelledby={ariaLabel ? undefined : titleId}
             aria-label={ariaLabel}
             {...dragProps}
+            style={{
+              transform: "translate3d(0, 0, 0)",
+              willChange: "transform, opacity",
+            }}
             className={cn(
               "relative z-elevated flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-drawer backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-drawer sm:max-h-full rounded-t-3xl sm:rounded-none",
               SIZE_MAP[size],

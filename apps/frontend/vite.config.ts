@@ -93,6 +93,12 @@ export default defineConfig({
             if (id.includes('/@tanstack/react-query/')) {
               return 'vendor-query';
             }
+            if (id.includes('/@tanstack/react-virtual/')) {
+              return 'vendor-virtual';
+            }
+            if (id.includes('/react-easy-crop/')) {
+              return 'vendor-crop';
+            }
             if (
               id.includes('/recharts/') ||
               id.includes('/victory-vendor/') ||
@@ -169,6 +175,16 @@ export default defineConfig({
               name: 'vendor-query',
               test: /node_modules[\\/]@tanstack[\\/]react-query[\\/]/,
               priority: 45,
+            },
+            {
+              name: 'vendor-virtual',
+              test: /node_modules[\\/]@tanstack[\\/]react-virtual[\\/]/,
+              priority: 44,
+            },
+            {
+              name: 'vendor-crop',
+              test: /node_modules[\\/]react-easy-crop[\\/]/,
+              priority: 42,
             },
             {
               name: 'vendor-ui',

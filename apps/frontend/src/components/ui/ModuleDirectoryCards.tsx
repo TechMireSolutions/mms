@@ -50,7 +50,7 @@ export function ModuleDirectoryCards<T>({
     count: itemPairs.length,
     getScrollElement: () => parentRef.current,
     estimateSize: () => 180,
-    overscan: 5,
+    overscan: 6,
     enabled: isVirtualized,
   });
 
