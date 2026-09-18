@@ -235,5 +235,24 @@ describe('parseContactsCsv', () => {
     expect(contacts).toHaveLength(1);
     expect(contacts[0].firstName).toBe('+923009876543');
   });
+
+  it('correctly maps contacts.columns.* prefixed headers', () => {
+    const csv = [
+      '"contacts.columns.firstName","contacts.columns.lastName","Gender","Date of Birth","CNIC / National ID","Is Syed","Tag","Notes","contacts.columns.phone_label","contacts.columns.phone_number","contacts.columns.email_label","contacts.columns.email_address","contacts.columns.address_label","contacts.columns.line1","City","State / Province","Country"',
+      '"Abid Raza","","Male","","","No","","","Mobile","3132894360","","","Home","R.5 42 /20 F.b Area","Karachi","Sindh","Pakistan"',
+      '"Adnan Ul Khizar","Arain","Male","1990-04-04","42401 6801664 1","No","Staff","","Mobile","3442241024","Personal","adnan4428@yahoo.com","Home","House #120","Karachi","Sindh","Pakistan"',
+    ].join('\n');
+
+    const { contacts, errors } = parseContactsCsv(csv);
+    expect(errors).toHaveLength(0);
+    expect(contacts).toHaveLength(2);
+    expect(contacts[0].firstName).toBe('Abid Raza');
+    expect(contacts[0].gender).toBe('Male');
+    expect(contacts[0].phones?.[0]?.number).toBe('3132894360');
+    expect(contacts[1].firstName).toBe('Adnan Ul Khizar');
+    expect(contacts[1].lastName).toBe('Arain');
+    expect(contacts[1].phones?.[0]?.number).toBe('3442241024');
+    expect(contacts[1].emails?.[0]?.address).toBe('adnan4428@yahoo.com');
+  });
 });
 

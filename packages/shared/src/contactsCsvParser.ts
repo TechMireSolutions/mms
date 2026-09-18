@@ -21,7 +21,11 @@ export interface ParseContactsCsvOptions {
 }
 
 function normalizeHeaderKey(raw: string): string {
-  return raw.toLowerCase().replace(/[^a-z0-9]/g, '');
+  let clean = raw.trim().toLowerCase();
+  clean = clean.replace(/^contacts?\.(columns?|fields?)\./i, '');
+  clean = clean.replace(/^(columns?|fields?)\./i, '');
+  const norm = clean.replace(/[^a-z0-9]/g, '');
+  return norm.replace(/^contacts?(columns?|fields?)/i, '');
 }
 
 const HEADER_ALIASES: Record<string, string[]> = {

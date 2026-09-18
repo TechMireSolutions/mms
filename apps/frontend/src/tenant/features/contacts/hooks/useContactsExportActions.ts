@@ -99,9 +99,10 @@ export function defaultContactsExportColumns(
 ): ContactExportColumn[] {
   return DEFAULT_CONTACT_EXPORT_COLUMNS.map((column) => {
     const key = `contacts.columns.${column.id}` as AppTranslationKey;
+    const translated = t(key);
     return {
       id: column.id,
-      label: t(key) || column.label,
+      label: translated && translated !== key ? translated : column.label,
     };
   });
 }
