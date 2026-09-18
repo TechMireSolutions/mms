@@ -42,7 +42,8 @@ if [[ -z "$TRUST_PROXY_VAL" ]]; then
 fi
 
 bash scripts/apache/isolate-mms-vhost.sh "$ENV_FILE"
-export MMS_REQUIRE_WILDCARD_TLS=1
+# Honour caller override (e.g. MMS_REQUIRE_WILDCARD_TLS=0 via GH secret) — default 1.
+export MMS_REQUIRE_WILDCARD_TLS="${MMS_REQUIRE_WILDCARD_TLS:-1}"
 bash scripts/apache/install-mms-vhost.sh "$ENV_FILE"
 bash scripts/fix-apache-upstream.sh "$ENV_FILE"
 
