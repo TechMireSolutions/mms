@@ -2143,6 +2143,7 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.sync.dismissConflictsConfirmTitle": "Dismiss all sync conflicts?",
   "contacts.sync.dragDropBrowse": "Drag & drop or click to browse",
   "contacts.sync.editCredentials": "Edit Credentials",
+  "contacts.sync.emptyOrInvalidFile": "No valid contacts found in {filename}. Check that the file contains contact rows with names or phone numbers.",
   "contacts.sync.exportAppleHint": "Export contacts to import into Apple Contacts",
   "contacts.sync.exportVcf": "Export .vcf ({count})",
   "contacts.sync.flushPartial": "Some changes could not sync",

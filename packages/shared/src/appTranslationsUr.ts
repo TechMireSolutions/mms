@@ -2144,6 +2144,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "contacts.sync.dismissConflictsConfirmTitle": "تمام sync تنازعات برخاست کریں؟",
   "contacts.sync.dragDropBrowse": "گھسیٹیں یا براؤز کرنے کے لیے کلک کریں",
   "contacts.sync.editCredentials": "اسناد میں ترمیم",
+  "contacts.sync.emptyOrInvalidFile": "{filename} میں کوئی درست رابطے نہیں ملے۔ چیک کریں کہ فائل میں نام یا فون نمبر کے ساتھ رابطوں کی قطاریں موجود ہیں۔",
   "contacts.sync.exportAppleHint": "Apple Contacts میں درآمد کے لیے رابطے برآمد کریں",
   "contacts.sync.exportVcf": ".vcf برآمد ({count})",
   "contacts.sync.flushPartial": "کچھ تبدیلیاں sync نہیں ہو سکیں",

@@ -2148,6 +2148,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "contacts.sync.dismissConflictsConfirmTitle": "تمام تداخل‌های همگام‌سازی رد شوند؟",
   "contacts.sync.dragDropBrowse": "فایل را بکشید و رها کنید یا برای انتخاب کلیک کنید",
   "contacts.sync.editCredentials": "ویرایش اطلاعات اعتبارنامه‌ها",
+  "contacts.sync.emptyOrInvalidFile": "هیچ مخاطب معتبری در {filename} یافت نشد. بررسی کنید که فایل حاوی ردیف‌های مخاطب با نام یا شماره تلفن باشد.",
   "contacts.sync.exportAppleHint": "خروجی گرفتن از مخاطبین جهت درون‌ریزی در مخاطبین اپل",
   "contacts.sync.exportVcf": "خروجی گرفتن به صورت .vcf ({count})",
   "contacts.sync.flushPartial": "برخی از تغییرات همگام نشدند",

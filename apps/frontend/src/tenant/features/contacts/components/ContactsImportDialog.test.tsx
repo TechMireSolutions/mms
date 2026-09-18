@@ -7,6 +7,8 @@ const clearPreview = vi.fn();
 const handleImport = vi.fn();
 const importPanelState = {
   previewList: [] as Array<{ id: string; name: string }>,
+  fileName: null as string | null,
+  fileError: null as string | null,
   importing: false,
   importProgress: null as { imported: number; total: number } | null,
   result: null as { imported: number; skipped: number } | null,
@@ -127,4 +129,26 @@ describe("ContactsImportDialog", () => {
 
     expect(render()).not.toContain("contacts.importProgress");
   });
+
+  it("shows file error message when file cannot be parsed or has no valid contacts", () => {
+    importPanelState.previewList = [];
+    importPanelState.result = null;
+    importPanelState.fileError = "No valid contacts found in export.csv";
+
+    const html = render();
+
+    expect(html).toContain("No valid contacts found in export.csv");
+    expect(html).toContain('role="alert"');
+  });
+
+  it("displays selected file name in preview list", () => {
+    importPanelState.previewList = [{ id: "1", name: "Ali" }];
+    importPanelState.fileName = "contacts_export.csv";
+    importPanelState.fileError = null;
+
+    const html = render();
+
+    expect(html).toContain("contacts_export.csv");
+  });
 });
+

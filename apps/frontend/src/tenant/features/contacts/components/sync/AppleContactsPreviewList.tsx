@@ -1,5 +1,5 @@
 import type React from "react";
-import { RefreshCw, Upload } from "lucide-react";
+import { FileText, RefreshCw, Upload } from "lucide-react";
 import type { Contact } from "@mms/shared";
 import { getDisplayName, getPrimaryEmail, getPrimaryPhone } from "@mms/shared";
 import { Button } from "@/components/ui/button";
@@ -7,6 +7,7 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export interface AppleContactsPreviewListProps {
   previewList: Contact[];
+  fileName?: string | null;
   importing: boolean;
   onClear: () => void;
   onImport: () => void;
@@ -16,6 +17,7 @@ export interface AppleContactsPreviewListProps {
 
 export function AppleContactsPreviewList({
   previewList,
+  fileName,
   importing,
   onClear,
   onImport,
@@ -25,9 +27,17 @@ export function AppleContactsPreviewList({
   return (
     <div className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <p className="min-w-0 text-sm font-semibold text-foreground">
-          {previewList.length} {t("contacts.sync.contactsFound")}
-        </p>
+        <div className="min-w-0 flex items-center gap-2">
+          {fileName && (
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-xs font-medium text-foreground max-w-[200px] truncate" title={fileName}>
+              <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
+              <span className="truncate">{fileName}</span>
+            </span>
+          )}
+          <p className="min-w-0 text-sm font-semibold text-foreground">
+            {previewList.length} {t("contacts.sync.contactsFound")}
+          </p>
+        </div>
         <Button
           type="button"
           variant="ghost"

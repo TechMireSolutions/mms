@@ -39,6 +39,8 @@ export function useAppleContactsPanel({
   const { data: metrics } = useContactsMetrics({ enabled: true });
   const exportCount = metrics?.total ?? 0;
   const [previewList, setPreviewList] = useState<Contact[]>([]);
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
   const [isWriting, setIsWriting] = useState(false);
   const [importProgress, setImportProgress] = useState<{ imported: number; total: number } | null>(
     null,
@@ -55,26 +57,38 @@ export function useAppleContactsPanel({
   const fileRef = useRef<HTMLInputElement>(null);
 
   const processFile = (file: File): void => {
+    setFileName(file.name);
+    setFileError(null);
     const reader = new FileReader();
     reader.onload = (readerEvent) => {
       if (readerEvent.target && typeof readerEvent.target.result === "string") {
         const text = readerEvent.target.result;
         const isCsv = file.name.toLowerCase().endsWith(".csv") || file.type === "text/csv";
+        let parsed: Contact[] = [];
         if (isCsv) {
-          const { contacts } = parseContactsCsv(text, {
+          const { contacts, errors } = parseContactsCsv(text, {
             defaultPhoneLabel: mobileLabel,
             defaultEmailLabel: personalLabel,
           });
-          setPreviewList(contacts);
+          parsed = contacts;
+          if (contacts.length === 0) {
+            const reason = errors[0] || t("contacts.sync.emptyOrInvalidFile", { filename: file.name });
+            setFileError(reason);
+            notify.error(reason);
+          }
         } else {
-          setPreviewList(
-            parseVCard(text, {
-              mobileLabel,
-              personalLabel,
-              defaultPhoneCountryCode,
-            }),
-          );
+          parsed = parseVCard(text, {
+            mobileLabel,
+            personalLabel,
+            defaultPhoneCountryCode,
+          });
+          if (parsed.length === 0) {
+            const reason = t("contacts.sync.emptyOrInvalidFile", { filename: file.name });
+            setFileError(reason);
+            notify.error(reason);
+          }
         }
+        setPreviewList(parsed);
         setResult(null);
       }
     };
@@ -147,10 +161,16 @@ export function useAppleContactsPanel({
     }
   };
 
-  const clearPreview = (): void => setPreviewList([]);
+  const clearPreview = (): void => {
+    setPreviewList([]);
+    setFileName(null);
+    setFileError(null);
+  };
 
   const chooseDifferentFile = (): void => {
     setPreviewList([]);
+    setFileName(null);
+    setFileError(null);
     fileRef.current?.click();
   };
 
@@ -160,6 +180,8 @@ export function useAppleContactsPanel({
 
   return {
     previewList,
+    fileName,
+    fileError,
     importing,
     importProgress,
     exporting,

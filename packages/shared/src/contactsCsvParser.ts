@@ -25,35 +25,35 @@ function normalizeHeaderKey(raw: string): string {
 }
 
 const HEADER_ALIASES: Record<string, string[]> = {
-  firstName: ['firstname', 'first', 'first_name'],
-  lastName: ['lastname', 'last', 'last_name'],
-  name: ['name', 'fullname', 'full_name'],
-  gender: ['gender'],
-  dob: ['dob', 'dateofbirth', 'birthdate'],
-  cnic: ['cnic', 'nationalid', 'cnicnationalid'],
+  firstName: ['firstname', 'first', 'first_name', 'givenname', 'forename'],
+  lastName: ['lastname', 'last', 'last_name', 'surname', 'familyname'],
+  name: ['name', 'fullname', 'full_name', 'contact', 'contactname', 'displayname'],
+  gender: ['gender', 'sex'],
+  dob: ['dob', 'dateofbirth', 'birthdate', 'birthday'],
+  cnic: ['cnic', 'nationalid', 'cnicnationalid', 'idnumber'],
   isSyed: ['issyed', 'syed'],
   tag: ['tag', 'tags'],
-  notes: ['notes', 'note'],
+  notes: ['notes', 'note', 'comment', 'comments', 'remarks'],
   phone_label: ['phonetype', 'phonelabel'],
-  phone_number: ['phone', 'phonenumber', 'mobile'],
+  phone_number: ['phone', 'phonenumber', 'mobile', 'cell', 'telephone'],
   email_label: ['emailtype', 'emaillabel'],
-  email_address: ['email', 'emailaddress'],
+  email_address: ['email', 'emailaddress', 'mail'],
   address_label: ['addresstype', 'addresslabel'],
-  line1: ['streetaddress', 'street', 'line1', 'address'],
-  city: ['city'],
-  state: ['state', 'stateprovince', 'province'],
-  country: ['country'],
+  line1: ['streetaddress', 'street', 'line1', 'address', 'residentialaddress'],
+  city: ['city', 'town'],
+  state: ['state', 'stateprovince', 'province', 'region'],
+  country: ['country', 'nation'],
   socials_platform: ['socialplatform', 'socialplatforms'],
-  socials_url: ['socialurl', 'sociallinks'],
+  socials_url: ['socialurl', 'sociallinks', 'sociallink'],
   education_degree: ['degree', 'qualification', 'degreequalification'],
-  education_institution: ['institution', 'school', 'university'],
-  education_fieldOfStudy: ['fieldofstudy', 'field', 'major'],
+  education_institution: ['institution', 'school', 'university', 'college', 'madrasa', 'hawza'],
+  education_fieldOfStudy: ['fieldofstudy', 'field', 'major', 'subject'],
   education_year: ['graduationyear', 'passingyear', 'year'],
-  education_grade: ['gradescore', 'grade', 'score'],
-  experience_title: ['jobtitle', 'title'],
-  experience_organization: ['organization', 'employer', 'company'],
+  education_grade: ['gradescore', 'grade', 'score', 'division'],
+  experience_title: ['jobtitle', 'title', 'designation', 'position', 'role'],
+  experience_organization: ['organization', 'employer', 'company', 'workplace'],
   experience_employmentType: ['employmenttype'],
-  experience_location: ['joblocation', 'location'],
+  experience_location: ['joblocation', 'location', 'worklocation'],
   experience_startDate: ['jobstartdate', 'startdate'],
   experience_endDate: ['jobenddate', 'enddate'],
   experience_isCurrent: ['currentlyworkinghere', 'iscurrent'],
@@ -62,14 +62,14 @@ const HEADER_ALIASES: Record<string, string[]> = {
   skills_category: ['skillcategory', 'category'],
   skills_proficiency: ['skillproficiency', 'proficiencylevel', 'proficiency'],
   skills_yearsOfExperience: ['yearsofexperience', 'experienceyears'],
-  skills_isCertified: ['certified'],
-  skills_issuer: ['certifyingbodyissuer', 'issuedby', 'issuer'],
+  skills_isCertified: ['certified', 'iscertified'],
+  skills_issuer: ['certifyingbodyissuer', 'issuedby', 'issuer', 'certifyingbody'],
   skills_description: ['skillnotes'],
-  relationship_contact: ['relationshipcontact'],
+  relationship_contact: ['relationshipcontact', 'linkedcontact', 'emergencycontact'],
   relationship_type: ['relationshiptype', 'relationship'],
   bank_name: ['bankname'],
   bank_accountTitle: ['bankaccounttitle', 'accounttitle'],
-  bank_accountNumber: ['bankaccountnumber', 'accountnumber', 'accountnumberiban', 'iban'],
+  bank_accountNumber: ['bankaccountnumber', 'accountnumber', 'accountnumberiban', 'iban', 'account'],
 };
 
 export const HEADER_FIELD_MAP: Record<string, string> = {};
@@ -144,7 +144,19 @@ export function parseContactsCsv(
       firstName = parts[0] || '';
       lastName = parts.slice(1).join(' ');
     }
-    if (!firstName && !lastName) continue;
+
+    // Fallback: if row has phones/emails/cnic but no name, construct a fallback rather than dropping
+    if (!firstName && !lastName) {
+      const fallbackPhone = getVal(row, 'phone_number');
+      const fallbackEmail = getVal(row, 'email_address');
+      const fallbackCnic = getVal(row, 'cnic');
+      if (fallbackPhone || fallbackEmail || fallbackCnic) {
+        firstName = fallbackPhone || fallbackEmail || fallbackCnic;
+      } else {
+        errors.push(`Row ${r + 1}: Skipped row without name or identifier`);
+        continue;
+      }
+    }
 
     const phoneNums = splitList(getVal(row, 'phone_number'));
     const phoneLabels = splitList(getVal(row, 'phone_label'));

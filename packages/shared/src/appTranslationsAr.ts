@@ -2144,6 +2144,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "contacts.sync.dismissConflictsConfirmTitle": "تجاهل جميع تعارضات المزامنة؟",
   "contacts.sync.dragDropBrowse": "اسحب وأفلت أو انقر للتصفح",
   "contacts.sync.editCredentials": "تعديل بيانات الاعتماد",
+  "contacts.sync.emptyOrInvalidFile": "لم يتم العثور على جهات اتصال صالحة في {filename}. تأكد من أن الملف يحتوي على صفوف تتضمن أسماء أو أرقام هواتف.",
   "contacts.sync.exportAppleHint": "صدّر جهات الاتصال لاستيرادها في Apple Contacts",
   "contacts.sync.exportVcf": "تصدير .vcf ({count})",
   "contacts.sync.flushPartial": "تعذرت مزامنة بعض التغييرات",

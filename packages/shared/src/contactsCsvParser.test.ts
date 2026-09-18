@@ -209,4 +209,31 @@ describe('parseContactsCsv', () => {
     expect(roundTripped.relationshipContacts?.[0].name).toBe(original.relationshipContacts?.[0].name);
     expect(roundTripped.bankDetails?.[0].accountNumber).toBe(original.bankDetails?.[0].accountNumber);
   });
+
+  it('parses CSV with unified Name column and variations of headers', () => {
+    const csv = [
+      'Name,Mobile,Mail,City',
+      'Syed Ali,03001234567,ali@example.com,Karachi',
+    ].join('\n');
+
+    const { contacts, errors } = parseContactsCsv(csv);
+    expect(errors).toHaveLength(0);
+    expect(contacts).toHaveLength(1);
+    expect(contacts[0].firstName).toBe('Syed');
+    expect(contacts[0].lastName).toBe('Ali');
+    expect(contacts[0].phones?.[0].number).toBe('03001234567');
+    expect(contacts[0].emails?.[0].address).toBe('ali@example.com');
+  });
+
+  it('falls back to phone/email if row has no name', () => {
+    const csv = [
+      'Phone Number,Email Address',
+      '+923009876543,no-name@example.com',
+    ].join('\n');
+
+    const { contacts } = parseContactsCsv(csv);
+    expect(contacts).toHaveLength(1);
+    expect(contacts[0].firstName).toBe('+923009876543');
+  });
 });
+
