@@ -249,9 +249,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
           --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1024m
-          -c fsync=off
-          -c synchronous_commit=off
-          -c full_page_writes=off
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
@@ -369,9 +366,6 @@ jobs:
           --health-timeout 5s
           --health-retries 5
           --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1024m
-          -c fsync=off
-          -c synchronous_commit=off
-          -c full_page_writes=off
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
