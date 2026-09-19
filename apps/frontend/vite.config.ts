@@ -79,16 +79,13 @@ export default defineConfig({
       // OSS licences don't require in-binary comment preservation for web bundles.
       legalComments: 'none',
     },
-    modulePreload: {
-      resolveDependencies(_url, deps) {
-        // Exclude the Rolldown internal runtime bootstrap — it is not a standard
-        // ES module and cannot be safely declared via <link rel="modulepreload">.
-        // Doing so triggers a SW cross-world mismatch and an unused-preload warning.
-        return deps.filter(
-          (dep) => !dep.includes('rolldown-runtime'),
-        );
-      },
-    },
+    // Disabled: the Workbox SW intercepts every modulepreload fetch via the
+    // CacheFirst /assets/ rule and returns a response from the SW's world.
+    // The browser refuses to use that response for module preloading (cross-world
+    // security boundary), producing a warning for every chunk. Since the SW's
+    // CacheFirst strategy already serves all assets from cache after first install,
+    // preload hints are redundant and only create noise.
+    modulePreload: false,
     rollupOptions: {
       output: {
         banner: chunkBanner,
