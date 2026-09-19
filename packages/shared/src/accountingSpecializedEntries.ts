@@ -12,7 +12,7 @@ export type FeeEntryPaymentMethod = (typeof FEE_ENTRY_PAYMENT_METHODS)[number];
 
 const specializedEntryBaseSchema = z.object({
   date: isoDateSchema,
-  note: z.string().max(500).optional().default(''),
+  note: z.string().max(500),
 });
 
 /**
@@ -25,10 +25,10 @@ export const feeEntrySchema = specializedEntryBaseSchema
     type: z.literal('fee'),
     studentId: z.string().min(1, 'Student is required'),
     /** Denormalised display name for the invoice directory, as the invoice form also supplies. */
-    studentName: z.string().optional().default(''),
+    studentName: z.string(),
     feePeriod: periodSchema,
     amount: moneyAmountSchema,
-    paymentMethod: z.enum(FEE_ENTRY_PAYMENT_METHODS).default('cash'),
+    paymentMethod: z.enum(FEE_ENTRY_PAYMENT_METHODS),
   })
   .strict();
 
