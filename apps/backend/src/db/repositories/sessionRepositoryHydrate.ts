@@ -202,7 +202,7 @@ export async function hydrateSessionsListAggregated(
         FROM session_classes c
         WHERE c.session_id = s.id AND c.workspace_subdomain = ${subdomain}
       ), '[]'::json) AS classes
-    FROM unnest(${sessionIds}::text[]) AS s(id)
+    FROM (VALUES ${sql.join(sessionIds.map((id) => sql`(${id}::text)`), sql`, `)}) AS s(id)
   `);
 
   const rows = Array.isArray(queryResult) ? queryResult : ((queryResult as any)?.rows ?? []);
@@ -638,7 +638,7 @@ export async function hydrateSessionsListSummary(
         FROM session_classes c
         WHERE c.session_id = s.id AND c.workspace_subdomain = ${subdomain}
       ), '[]'::json) AS classes
-    FROM unnest(${sessionIds}::text[]) AS s(id)
+    FROM (VALUES ${sql.join(sessionIds.map((id) => sql`(${id}::text)`), sql`, `)}) AS s(id)
   `);
 
   const rows = Array.isArray(queryResult) ? queryResult : ((queryResult as any)?.rows ?? []);

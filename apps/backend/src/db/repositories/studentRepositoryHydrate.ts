@@ -31,7 +31,7 @@ export async function hydrateStudentsList(
       ) AS sessions
     FROM student_enrolled_sessions ses
     WHERE ses.workspace_subdomain = ${subdomain}
-      AND ses.student_id = ANY(${ids}::text[])
+      AND ses.student_id IN (${sql.join(ids.map((id) => sql`${id}`), sql`, `)})
     GROUP BY ses.student_id
   `);
   

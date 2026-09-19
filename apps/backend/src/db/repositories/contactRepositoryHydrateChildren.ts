@@ -381,7 +381,7 @@ export async function loadContactChildMapsAggregated(
         FROM contact_bank_details b
         WHERE b.contact_id = c.id AND b.workspace_subdomain = ${subdomain}
       ), '[]'::json) AS "bankDetails"
-    FROM unnest(${contactIds}::text[]) AS c(id)
+    FROM (VALUES ${sql.join(contactIds.map((id) => sql`(${id}::text)`), sql`, `)}) AS c(id)
   `);
 
   const rows = Array.isArray(queryResult) ? queryResult : ((queryResult as any)?.rows ?? []);
@@ -533,7 +533,7 @@ export async function loadContactSummaryChildMapsAggregated(
         FROM contact_relationships r
         WHERE r.contact_id = c.id AND r.workspace_subdomain = ${subdomain}
       ), '[]'::json) AS relationships
-    FROM unnest(${contactIds}::text[]) AS c(id)
+    FROM (VALUES ${sql.join(contactIds.map((id) => sql`(${id}::text)`), sql`, `)}) AS c(id)
   `);
 
   const rows = Array.isArray(queryResult) ? queryResult : ((queryResult as any)?.rows ?? []);
