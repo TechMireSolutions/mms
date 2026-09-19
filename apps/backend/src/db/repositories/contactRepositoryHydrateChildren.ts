@@ -285,7 +285,10 @@ export async function loadContactChildMapsAggregated(
           'workspaceSubdomain', ed.workspace_subdomain,
           'institution', ed.institution,
           'degree', ed.degree,
+          'fieldOfStudy', ed.field_of_study,
           'year', ed.year,
+          'grade', ed.grade,
+          'label', ed.label,
           'sortOrder', ed.sort_order,
           'createdAt', ed.created_at
         ) ORDER BY ed.sort_order)
@@ -297,9 +300,14 @@ export async function loadContactChildMapsAggregated(
           'id', ex.id,
           'contactId', ex.contact_id,
           'workspaceSubdomain', ex.workspace_subdomain,
-          'company', ex.company,
-          'role', ex.role,
-          'duration', ex.duration,
+          'title', ex.title,
+          'organization', ex.organization,
+          'employmentType', ex.employment_type,
+          'location', ex.location,
+          'startDate', ex.start_date,
+          'endDate', ex.end_date,
+          'isCurrent', ex.is_current,
+          'description', ex.description,
           'sortOrder', ex.sort_order,
           'createdAt', ex.created_at
         ) ORDER BY ex.sort_order)
@@ -312,6 +320,12 @@ export async function loadContactChildMapsAggregated(
           'contactId', sk.contact_id,
           'workspaceSubdomain', sk.workspace_subdomain,
           'name', sk.name,
+          'category', sk.category,
+          'proficiency', sk.proficiency,
+          'yearsOfExperience', sk.years_of_experience,
+          'isCertified', sk.is_certified,
+          'issuer', sk.issuer,
+          'description', sk.description,
           'sortOrder', sk.sort_order,
           'createdAt', sk.created_at
         ) ORDER BY sk.sort_order)

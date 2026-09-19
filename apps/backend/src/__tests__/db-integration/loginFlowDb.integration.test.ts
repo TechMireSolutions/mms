@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { eq, sql } from 'drizzle-orm';
 import { buildApp } from '../../app.js';
 import { requireDatabaseConnection } from './dbTestSupport.js';
-import { workspaces, tenantUsers, platformUsers } from '../../db/schema.js';
+import { workspaces, tenantUsers, platformUsers, contacts } from '../../db/schema.js';
 import { beginLongLivedTenantTransaction, closeDatabase, getRootDb } from '../../db/dbConnection.js';
 import { hashPassword } from '../../services/auth/passwordService.js';
 import type { FastifyInstance } from 'fastify';
@@ -23,6 +23,7 @@ beforeAll(async () => {
   try {
     await cleanTx.tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
     await cleanTx.tx.delete(tenantUsers).where(eq(tenantUsers.workspaceSubdomain, TEST_SUBDOMAIN));
+    await cleanTx.tx.delete(contacts).where(eq(contacts.workspaceSubdomain, TEST_SUBDOMAIN));
     await cleanTx.tx.delete(workspaces).where(eq(workspaces.subdomain, TEST_SUBDOMAIN));
     await cleanTx.tx.delete(platformUsers).where(eq(platformUsers.email, TEST_SUPER_EMAIL));
     await cleanTx.commit();
@@ -64,7 +65,16 @@ beforeAll(async () => {
       });
     }
 
-    // Seed regular tenant user
+    // Seed contact
+    await seedTx.tx.insert(contacts).values({
+      id: 'contact-user-login-test',
+      workspaceSubdomain: TEST_SUBDOMAIN,
+      name: 'Tenant User',
+      firstName: 'Tenant',
+      lastName: 'User',
+    });
+
+    // Seed regular tenant user linked to contact
     await seedTx.tx.insert(tenantUsers).values({
       id: 'tenant-user-login-test',
       workspaceSubdomain: TEST_SUBDOMAIN,
@@ -73,6 +83,7 @@ beforeAll(async () => {
       passwordHash: hash,
       role: 'admin',
       emailVerifiedAt: new Date(),
+      contactId: 'contact-user-login-test',
     });
 
     await seedTx.commit();
@@ -90,6 +101,7 @@ afterAll(async () => {
   try {
     await cleanTx.tx.execute(sql`SET LOCAL app.allow_hard_purge = 'true'`);
     await cleanTx.tx.delete(tenantUsers).where(eq(tenantUsers.workspaceSubdomain, TEST_SUBDOMAIN));
+    await cleanTx.tx.delete(contacts).where(eq(contacts.workspaceSubdomain, TEST_SUBDOMAIN));
     await cleanTx.tx.delete(workspaces).where(eq(workspaces.subdomain, TEST_SUBDOMAIN));
     await cleanTx.tx.delete(platformUsers).where(eq(platformUsers.email, TEST_SUPER_EMAIL));
     await cleanTx.commit();
@@ -157,5 +169,33 @@ describe('POST /api/auth/login DB Integration', () => {
       SELECT id FROM workspaces WHERE id IN (${sql.join(studentIds.map((id) => sql`${id}`), sql`, `)})
     `);
     expect(Array.isArray(inQuery.rows)).toBe(true);
+  });
+
+  it('test loadContactChildMapsAggregated with contactIds', async () => {
+    const { loadContactChildMapsAggregated, loadContactSummaryChildMapsAggregated } = await import('../../db/repositories/contactRepositoryHydrateChildren.js');
+    const db = getRootDb();
+    const res = await loadContactChildMapsAggregated(db as any, TEST_SUBDOMAIN, ['c1', 'c2']);
+    expect(res).toBeDefined();
+    const summaryRes = await loadContactSummaryChildMapsAggregated(db as any, TEST_SUBDOMAIN, ['c1', 'c2']);
+    expect(summaryRes).toBeDefined();
+  });
+
+  it('test hydrateSessionsListAggregated with sessionIds', async () => {
+    const { hydrateSessionsListAggregated, hydrateSessionsListSummary } = await import('../../db/repositories/sessionRepositoryHydrate.js');
+    const db = getRootDb();
+    const classesMap = await hydrateSessionsListAggregated(db as any, TEST_SUBDOMAIN, [{ id: 'sess1' } as any, { id: 'sess2' } as any]);
+    expect(classesMap).toBeDefined();
+    const summaryMap = await hydrateSessionsListSummary(db as any, TEST_SUBDOMAIN, [{ id: 'sess1' } as any, { id: 'sess2' } as any]);
+    expect(summaryMap).toBeDefined();
+  });
+
+  it('test hydrateStudentsList with student rows', async () => {
+    const { hydrateStudentsList } = await import('../../db/repositories/studentRepositoryHydrate.js');
+    const db = getRootDb();
+    const studentsList = await hydrateStudentsList(db as any, TEST_SUBDOMAIN, [
+      { id: 'st1', workspaceSubdomain: TEST_SUBDOMAIN, name: 'Student 1' } as any,
+      { id: 'st2', workspaceSubdomain: TEST_SUBDOMAIN, name: 'Student 2' } as any,
+    ]);
+    expect(studentsList).toHaveLength(2);
   });
 });

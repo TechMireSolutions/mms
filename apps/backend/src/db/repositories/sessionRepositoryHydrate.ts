@@ -610,9 +610,10 @@ export async function hydrateSessionsListSummary(
           'id', f.id,
           'sessionId', f.session_id,
           'workspaceSubdomain', f.workspace_subdomain,
-          'teacherId', f.teacher_id,
-          'teacherName', f.teacher_name,
+          'facultyId', f.faculty_id,
+          'facultyName', f.faculty_name,
           'role', f.role,
+          'status', f.status,
           'createdAt', f.created_at
         ))
         FROM session_faculty f
