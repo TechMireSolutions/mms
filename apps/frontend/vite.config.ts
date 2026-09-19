@@ -63,13 +63,13 @@ export default defineConfig({
     cssMinify: true,
     chunkSizeWarningLimit: 600,
     modulePreload: {
-      resolveDependencies(url, deps) {
-        return deps.filter((dep) => {
-          return (
-            dep.includes('rolldown-runtime') ||
-            dep.includes('vendor-react')
-          );
-        });
+      resolveDependencies(_url, deps) {
+        // Exclude the Rolldown internal runtime bootstrap — it is not a standard
+        // ES module and cannot be safely declared via <link rel="modulepreload">.
+        // Doing so triggers a SW cross-world mismatch and an unused-preload warning.
+        return deps.filter(
+          (dep) => !dep.includes('rolldown-runtime'),
+        );
       },
     },
     rollupOptions: {
