@@ -279,4 +279,37 @@ describe('AuthContext', () => {
       root.unmount();
     });
   });
+
+  it('does not call /api/auth/me on mount when no user is persisted', async () => {
+    let capturedAuth: ReturnType<typeof useAuth> = undefined as any;
+    function Consumer() {
+      capturedAuth = useAuth();
+      return <div>{capturedAuth.user?.name ?? 'Guest'}</div>;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <AuthProvider>
+          <Consumer />
+        </AuthProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const authMeCalls = vi.mocked(apiJson).mock.calls.filter(([url]) => url === '/api/auth/me');
+    expect(authMeCalls.length).toBe(0);
+    expect(capturedAuth.isAuthenticated).toBe(false);
+    expect(capturedAuth.user).toBeNull();
+    expect(capturedAuth.isLoadingAuth).toBe(false);
+    expect(capturedAuth.authChecked).toBe(true);
+
+    act(() => {
+      root.unmount();
+    });
+  });
 });

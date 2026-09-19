@@ -31,10 +31,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [initialUser] = useState<User | null>(() => (typeof window !== 'undefined' ? getPersistedAuthUser() : null));
   const [user, setUser] = useState<User | null>(initialUser);
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(Boolean(initialUser));
-  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(!initialUser);
+  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(false);
   const [isLoadingPublicSettings] = useState<boolean>(false);
   const [authError, setAuthError] = useState<AuthError | null>(null);
-  const [authChecked, setAuthChecked] = useState<boolean>(Boolean(initialUser));
+  const [authChecked, setAuthChecked] = useState<boolean>(true);
   const [appPublicSettings] = useState<unknown | null>(null);
 
   const userRef = useRef<User | null>(initialUser);
@@ -53,6 +53,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const checkUserAuth = useCallback(async (signal?: AbortSignal): Promise<void> => {
     if (isCurrentHostApex()) {
+      setUser(null);
+      setIsAuthenticated(false);
+      setAuthChecked(true);
+      setIsLoadingAuth(false);
+      return;
+    }
+
+    if (!getPersistedAuthUser() && !userRef.current) {
       setUser(null);
       setIsAuthenticated(false);
       setAuthChecked(true);
@@ -234,7 +242,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const controller = new AbortController();
 
-    void checkUserAuth(controller.signal);
+    if (getPersistedAuthUser()) {
+      void checkUserAuth(controller.signal);
+    }
 
     const handleStorage = (event: StorageEvent) => {
       if (event.key === AUTH_USER_STORAGE_KEY) {
