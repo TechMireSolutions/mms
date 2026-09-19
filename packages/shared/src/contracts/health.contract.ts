@@ -4,6 +4,7 @@ import { z } from 'zod';
 const c = initContract();
 
 export const poolSubMetricsSchema = z.object({
+  role: z.string().optional(),
   totalCount: z.number(),
   idleCount: z.number(),
   waitingCount: z.number(),
