@@ -63,4 +63,4 @@ packages/shared/   @mms/shared (SSOT for types, strict Zod 4 DTOs, @ts-rest cont
 2. **Clean Boundary:** Remove dead code, unused imports, and debug logs in the change boundary. Run `pnpm typecheck` after non-trivial changes.
 3. **File Sizing:** Hard ceiling ~300 lines / soft target ~220 lines. Split by concern behind stable barrels (`mms-structure-naming.md`).
 4. **Performance & Rendering:** Route-lazy heavy deps; memoize non-trivial work; virtualize > 30 items — norms `mms-performance.md` (do not restate recipes here).
-5. **Git Safety:** Conventional Commits (`feat`/`fix`/`chore`). Never commit or push unless explicitly requested. Never commit `.env` or credentials — `mms-agent-universal.md`.
+5. **Git Safety:** Conventional Commits (`type(scope): description`). Short-lived branches; protected `main`. Never commit or push unless explicitly requested. Never commit `.env` or credentials — `mms-agent-universal.md`.
