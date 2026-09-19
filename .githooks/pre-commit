@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+# Git hook: Fast pre-commit verification
+set -euo pipefail
+
+echo "🔍 Running pre-commit verification..."
+
+# 1. Check for staged secrets/credentials
+pnpm run check:secrets
+
+# 2. Check code norms ratchet (any, hex, file size)
+pnpm run check:code-norms
+
+# 3. Check rules & skills integrity
+node scripts/verify-rules-integrity.mjs
+
+echo "✅ Pre-commit checks passed."
