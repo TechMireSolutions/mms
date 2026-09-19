@@ -2,7 +2,10 @@ const JSON_CONTENT_TYPE = 'application/json';
 
 let refreshPromise: Promise<boolean> | null = null;
 let lastRefreshedAt = 0;
-const REFRESH_GRACE_PERIOD_MS = 5000;
+const REFRESH_GRACE_PERIOD_MS = 5_000;
+
+// Set for O(1) lookup — avoids a per-call array allocation in the hot CSRF path.
+const CSRF_METHODS = new Set(['POST', 'PUT', 'PATCH', 'DELETE'] as const);
 
 export const SESSION_EXPIRED_EVENT = 'mms:session-expired';
 
@@ -68,45 +71,47 @@ function parseRetryAfterSeconds(header: string | null): number | undefined {
   return undefined;
 }
 
-export { resolveApiUrl } from '@/lib/apiClientHelpers';
-
 import {
   API_REFRESH_PATH,
   executeFetchWithTimeout,
+  type FetchWithTimeoutOptions,
   isTenantSessionRequest,
   sanitizeColumnPreferencesBody,
 } from '@/lib/apiClientHelpers';
+
+// Re-export for callers that need to build absolute API URLs.
+export { resolveApiUrl } from '@/lib/apiClientHelpers';
 
 async function refreshSession(): Promise<boolean> {
   if (!refreshPromise) {
     const headers = new Headers();
     const csrf = getCsrfCookieValue();
-    if (csrf) {
-      headers.set('X-CSRF-Token', csrf);
-    }
-    const reqId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : Math.random().toString(36).substring(2, 15);
-    headers.set('X-Request-Id', reqId);
+    if (csrf) headers.set('X-CSRF-Token', csrf);
+    headers.set('X-Request-Id', crypto.randomUUID());
 
+    // Two-argument .then(onFulfilled, onRejected) is intentional: it handles
+    // both non-ok responses and network failures in a single rejection path,
+    // preventing an unhandled-rejection window between .then() and .catch().
     refreshPromise = executeFetchWithTimeout(API_REFRESH_PATH, {
       method: 'POST',
       credentials: 'include',
       headers,
-      timeout: 10000,
-    } as RequestInit)
-      .then((response) => {
-        if (response.ok) {
-          lastRefreshedAt = Date.now();
-          return true;
-        }
-        notifySessionExpired('refresh_failed');
-        return false;
-      })
-      .catch(() => {
-        notifySessionExpired('refresh_failed');
-        return false;
-      })
+      timeout: 10_000,
+    } satisfies FetchWithTimeoutOptions)
+      .then(
+        (response): boolean => {
+          if (response.ok) {
+            lastRefreshedAt = Date.now();
+            return true;
+          }
+          notifySessionExpired('refresh_failed');
+          return false;
+        },
+        (): boolean => {
+          notifySessionExpired('refresh_failed');
+          return false;
+        },
+      )
       .finally(() => {
         refreshPromise = null;
       });
@@ -117,7 +122,12 @@ async function refreshSession(): Promise<boolean> {
 
 async function isAuthenticationRequired(response: Response): Promise<boolean> {
   if (response.status !== 401) return false;
-  const body = await response.clone().json().catch(() => null) as ApiErrorBody | null;
+  // Narrow the parsed JSON before casting — json() can return any JSON value.
+  const raw = await response.clone().json().catch((): null => null);
+  const body: ApiErrorBody | null =
+    raw !== null && typeof raw === 'object' && !Array.isArray(raw)
+      ? (raw as ApiErrorBody)
+      : null;
   if (body?.type === 'session_idle_expired' || body?.type === 'session_absolute_expired') {
     notifySessionExpired(body.type);
     return false;
@@ -131,27 +141,33 @@ function getCsrfCookieValue(): string | null {
   return match && match[1] ? decodeURIComponent(match[1]) : null;
 }
 
+// Throws synchronously if the signal has already been aborted, propagating
+// the original abort reason rather than hiding it under a generic error.
+function throwIfAborted(signal: AbortSignal | null | undefined): void {
+  if (signal?.aborted) {
+    // Use ?? not || — signal.reason may be 0 or '' which are valid abort reasons.
+    throw signal.reason ?? new DOMException('The user aborted a request.', 'AbortError');
+  }
+}
+
 /** Cookie-first API client (`credentials: 'include'`). */
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers ?? {});
-  const isFormData = typeof FormData !== 'undefined' && init.body instanceof FormData;
+  // FormData is natively available in all targets (browsers + Node 18+);
+  // no typeof guard needed.
+  const isFormData = init.body instanceof FormData;
   if (!headers.has('Content-Type') && init.body && !isFormData) {
     headers.set('Content-Type', JSON_CONTENT_TYPE);
   }
 
   if (!headers.has('X-Request-Id')) {
-    const reqId = typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function'
-      ? crypto.randomUUID()
-      : Math.random().toString(36).substring(2, 15);
-    headers.set('X-Request-Id', reqId);
+    headers.set('X-Request-Id', crypto.randomUUID());
   }
 
   const method = (init.method || 'GET').toUpperCase();
-  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method) && !headers.has('X-CSRF-Token')) {
+  if (CSRF_METHODS.has(method as 'POST' | 'PUT' | 'PATCH' | 'DELETE') && !headers.has('X-CSRF-Token')) {
     const csrf = getCsrfCookieValue();
-    if (csrf) {
-      headers.set('X-CSRF-Token', csrf);
-    }
+    if (csrf) headers.set('X-CSRF-Token', csrf);
   }
 
   const sanitizedInit = sanitizeColumnPreferencesBody(path, init);
@@ -165,17 +181,13 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   const response = await executeFetchWithTimeout(path, requestInit);
 
   if (isTenantSessionRequest(path) && await isAuthenticationRequired(response)) {
-    // If a refresh succeeded moments ago, retry the request immediately without re-refreshing
+    // If a refresh succeeded moments ago, retry immediately without re-refreshing.
     if (Date.now() - lastRefreshedAt < REFRESH_GRACE_PERIOD_MS) {
-      if (requestInit.signal?.aborted) {
-        throw requestInit.signal.reason || new DOMException('The user aborted a request.', 'AbortError');
-      }
+      throwIfAborted(requestInit.signal);
       return executeFetchWithTimeout(path, requestInit);
     }
     if (await refreshSession()) {
-      if (requestInit.signal?.aborted) {
-        throw requestInit.signal.reason || new DOMException('The user aborted a request.', 'AbortError');
-      }
+      throwIfAborted(requestInit.signal);
       return executeFetchWithTimeout(path, requestInit);
     }
   }
@@ -185,7 +197,7 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
 
 export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await apiFetch(path, init);
-  const text = await res.text().catch(() => '');
+  const text = await res.text().catch((): string => '');
 
   if (!res.ok) {
     let errorBody: ApiErrorBody = {};
@@ -196,7 +208,7 @@ export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
     } catch {
       errorBody = { message: text.substring(0, 100) || res.statusText || `Request failed (${res.status})` };
     }
-    const requestId = res.headers.get('x-request-id') || undefined;
+    const requestId = res.headers.get('x-request-id') ?? undefined;
     throw new ApiError(
       res.status,
       errorBody.message ?? `Request failed (${res.status})`,
@@ -214,6 +226,9 @@ export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
   try {
     return JSON.parse(text) as T;
   } catch (err) {
-    throw new Error(`Failed to parse success JSON response: ${err instanceof Error ? err.message : String(err)}`, { cause: err });
+    throw new Error(
+      `Failed to parse success JSON response: ${err instanceof Error ? err.message : String(err)}`,
+      { cause: err },
+    );
   }
 }
