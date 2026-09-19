@@ -127,6 +127,11 @@ export async function registerSecurityPlugins(
       return payload;
     }
 
+    const encoding = String(reply.getHeader('content-encoding') ?? '');
+    if (encoding && encoding !== 'identity') {
+      return payload;
+    }
+
     if (typeof payload === 'string') {
       return injectNonce(payload, nonce);
     }

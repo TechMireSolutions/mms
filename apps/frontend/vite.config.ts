@@ -240,7 +240,7 @@ export default defineConfig({
       algorithm: 'brotliCompress',
       threshold: 1024,
       deleteOriginalAssets: false,
-      include: /\.(js|mjs|cjs|css|html|svg|json|webmanifest)$/i,
+      include: /\.(js|mjs|cjs|css|svg|json|webmanifest)$/i,
       compressionOptions: {
         params: {
           [constants.BROTLI_PARAM_QUALITY]: 11,
@@ -251,7 +251,7 @@ export default defineConfig({
       algorithm: 'gzip',
       threshold: 1024,
       deleteOriginalAssets: false,
-      include: /\.(js|mjs|cjs|css|html|svg|json|webmanifest)$/i,
+      include: /\.(js|mjs|cjs|css|svg|json|webmanifest)$/i,
       compressionOptions: {
         level: 9,
       },

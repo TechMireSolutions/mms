@@ -28,7 +28,7 @@ export async function registerFrontendSpa(
     prefix: '/',
     wildcard: false,
     decorateReply: true,
-    preCompressed: true,
+    preCompressed: false,
     setHeaders(res, path) {
       setStaticAssetHeaders(res, path);
     },
