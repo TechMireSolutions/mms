@@ -1,4 +1,4 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodType } from 'zod';
 import type { z } from 'zod';
 import type { Permission, User } from '@mms/shared';
@@ -58,7 +58,7 @@ export function registerModuleSetupConfigRoutes<
 
   const domain = options.domain ?? options.fieldConfigAuditAction.split('.')[0] ?? 'setup';
 
-  fastify.get('/field-config', async (request, reply) => {
+  const handleGetFieldConfig = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as User;
     if (!options.canRead(user)) return sendForbidden(reply);
     const tenant = getRequestTenant() ?? user.workspaceSubdomain;
@@ -82,9 +82,11 @@ export function registerModuleSetupConfigRoutes<
         error,
       );
     }
-  });
+  };
+  fastify.get('/field-config', handleGetFieldConfig);
+  fastify.get('/config/fields', handleGetFieldConfig);
 
-  fastify.put('/field-config', async (request, reply) => {
+  const handlePutFieldConfig = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as User;
     if (!canWriteSetup(user)) return sendForbidden(reply);
     const body = parseRequest(options.fieldConfigSchema, request.body);
@@ -117,9 +119,11 @@ export function registerModuleSetupConfigRoutes<
         error,
       );
     }
-  });
+  };
+  fastify.put('/field-config', handlePutFieldConfig);
+  fastify.put('/config/fields', handlePutFieldConfig);
 
-  fastify.get('/preferences', async (request, reply) => {
+  const handleGetPreferences = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as User;
     if (!options.canRead(user)) return sendForbidden(reply);
     const tenant = getRequestTenant() ?? user.workspaceSubdomain;
@@ -150,9 +154,11 @@ export function registerModuleSetupConfigRoutes<
         error,
       );
     }
-  });
+  };
+  fastify.get('/preferences', handleGetPreferences);
+  fastify.get('/config/preferences', handleGetPreferences);
 
-  fastify.put('/preferences', async (request, reply) => {
+  const handlePutPreferences = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as User;
     if (!canWriteSetup(user)) return sendForbidden(reply);
     const body = parseRequest(options.preferencesSchema, request.body);
@@ -187,6 +193,8 @@ export function registerModuleSetupConfigRoutes<
         error,
       );
     }
-  });
+  };
+  fastify.put('/preferences', handlePutPreferences);
+  fastify.put('/config/preferences', handlePutPreferences);
 }
 
