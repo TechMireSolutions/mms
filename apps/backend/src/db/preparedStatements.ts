@@ -118,7 +118,9 @@ export const preparedSessionColumns = {
 /**
  * Hot read path: fetch tenant user by workspace and id with compiled PostgreSQL prepared statement.
  */
-export function getPreparedTenantUserById(client?: any) {
+export function getPreparedTenantUserById(_client?: any) {
+  return null;
+  /*
   if (client) {
     if (typeof client.select === 'function') {
       try {
@@ -143,6 +145,7 @@ export function getPreparedTenantUserById(client?: any) {
     }
     return null;
   }
+  */
   if (!preparedTenantUserById) {
     const db = getRootDb();
     preparedTenantUserById = db
@@ -163,7 +166,9 @@ export function getPreparedTenantUserById(client?: any) {
 /**
  * Hot read path: fetch active contact by workspace and id with compiled prepared statement.
  */
-export function getPreparedContactById(client?: any) {
+export function getPreparedContactById(_client?: any) {
+  return null;
+  /*
   if (client) {
     if (typeof client.select === 'function') {
       try {
@@ -188,6 +193,7 @@ export function getPreparedContactById(client?: any) {
     }
     return null;
   }
+  */
   if (!preparedContactById) {
     const db = getRootDb();
     preparedContactById = db
@@ -208,7 +214,9 @@ export function getPreparedContactById(client?: any) {
 /**
  * Hot read path: fetch active student by workspace and id with compiled prepared statement.
  */
-export function getPreparedStudentById(client?: any) {
+export function getPreparedStudentById(_client?: any) {
+  return null;
+  /*
   if (client) {
     if (typeof client.select === 'function') {
       try {
@@ -233,6 +241,7 @@ export function getPreparedStudentById(client?: any) {
     }
     return null;
   }
+  */
   if (!preparedStudentById) {
     const db = getRootDb();
     preparedStudentById = db
@@ -253,7 +262,9 @@ export function getPreparedStudentById(client?: any) {
 /**
  * Hot read path: fetch active session by workspace and id with compiled prepared statement.
  */
-export function getPreparedSessionById(client?: any) {
+export function getPreparedSessionById(_client?: any) {
+  return null;
+  /*
   if (client) {
     if (typeof client.select === 'function') {
       try {
@@ -278,6 +289,7 @@ export function getPreparedSessionById(client?: any) {
     }
     return null;
   }
+  */
   if (!preparedSessionById) {
     const db = getRootDb();
     preparedSessionById = db
