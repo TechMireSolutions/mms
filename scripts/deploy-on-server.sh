@@ -172,11 +172,16 @@ else
 fi
 
 if [ -f "$ROOT_DIR/ecosystem.config.cjs" ]; then
-  pm2 startOrReload "$ROOT_DIR/ecosystem.config.cjs" --only mmsv2-backend --update-env \
-    || pm2 restart mmsv2-backend --update-env 2>/dev/null || true
+  pm2 startOrReload "$ROOT_DIR/ecosystem.config.cjs" --update-env \
+    || {
+      pm2 restart mmsv2-backend --update-env 2>/dev/null || true
+      pm2 restart mmsv2-worker --update-env 2>/dev/null || true
+    }
 else
   pm2 restart mmsv2-backend --update-env 2>/dev/null || pm2 restart mmsv2-backend 2>/dev/null || true
+  pm2 restart mmsv2-worker --update-env 2>/dev/null || true
 fi
+pm2 save 2>/dev/null || true
 
 DEPLOY_OK=true
 
