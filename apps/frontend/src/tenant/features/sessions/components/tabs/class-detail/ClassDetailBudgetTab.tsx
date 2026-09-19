@@ -75,15 +75,12 @@ export function ClassDetailBudgetTab({
                   className="flex-1 text-xs"
                 />
                 <div className="relative w-32">
-                  {currencySymbol && (
-                    <span className="absolute start-2.5 top-2 text-xs text-muted-foreground">{currencySymbol}</span>
-                  )}
                   <Input
                     type="number"
                     min={0}
                     value={b.amount ?? 0}
                     onChange={(e) => onUpdateBudget(b.id, { amount: parseFloat(e.target.value) || 0 })}
-                    className={cn('text-xs', currencySymbol && 'ps-6')}
+                    className="text-xs"
                   />
                 </div>
                 <Button
@@ -142,29 +139,23 @@ export function ClassDetailBudgetTab({
                   className="w-16 text-xs"
                 />
                 <div className="relative w-24">
-                  {currencySymbol && (
-                    <span className="absolute start-2.5 top-2 text-xs text-muted-foreground">{currencySymbol}</span>
-                  )}
                   <Input
                     type="number"
                     placeholder={t('sessions.classes.detail.refreshments.price')}
                     min={0}
                     value={r.pricePerUnit ?? 0}
                     onChange={(e) => onUpdateRefreshment(r.id, { pricePerUnit: parseFloat(e.target.value) || 0 })}
-                    className={cn('text-xs', currencySymbol && 'ps-6')}
+                    className="text-xs"
                   />
                 </div>
                 <div className="relative w-24">
-                  {currencySymbol && (
-                    <span className="absolute start-2.5 top-2 text-xs text-muted-foreground">{currencySymbol}</span>
-                  )}
                   <Input
                     type="number"
                     placeholder={t('sessions.classes.detail.refreshments.paid')}
                     min={0}
                     value={r.paidAmount ?? 0}
                     onChange={(e) => onUpdateRefreshment(r.id, { paidAmount: parseFloat(e.target.value) || 0 })}
-                    className={cn('text-xs', currencySymbol && 'ps-6')}
+                    className="text-xs"
                   />
                 </div>
                 <Button

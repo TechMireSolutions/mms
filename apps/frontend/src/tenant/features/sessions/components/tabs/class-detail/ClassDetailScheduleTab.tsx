@@ -60,7 +60,7 @@ export function ClassDetailScheduleTab({
                 <FormSelect
                   id={`sch-type-${sch.id}`}
                   name="scheduleType"
-                  value={sch.scheduleType}
+                  value={sch.scheduleType?.toLowerCase() || 'daily'}
                   onChange={(val) => onUpdateSchedule(sch.id, { scheduleType: val })}
                   options={[
                     { value: 'daily', label: t('sessions.classes.detail.schedule.daily') },
@@ -68,7 +68,7 @@ export function ClassDetailScheduleTab({
                     { value: 'monthly', label: t('sessions.classes.detail.schedule.monthly') },
                     { value: 'custom', label: t('sessions.classes.detail.schedule.custom') },
                   ]}
-                  className="w-40 min-w-[150px] shrink-0 text-xs"
+                  className="w-32 min-w-[120px] shrink-0 text-xs"
                 />
                 <Input
                   type="date"

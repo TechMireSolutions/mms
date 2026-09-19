@@ -129,7 +129,9 @@ export function hydrateTeacherFromContact<T extends Teacher>(
 /** Formats a teacher's display name, appending the employee ID when available. */
 export function formatTeacherDisplayName(teacher?: Partial<Teacher> | null): string {
   if (!teacher) return '';
-  const name = (teacher.name || [teacher.firstName, teacher.lastName].filter(Boolean).join(' ')).trim();
+  const firstName = (teacher as any).firstName || (teacher as any).contact?.firstName || '';
+  const lastName = (teacher as any).lastName || (teacher as any).contact?.lastName || '';
+  const name = (teacher.name || [firstName, lastName].filter(Boolean).join(' ')).trim();
   if (name) {
     return teacher.employeeId ? `${name} (${teacher.employeeId})` : name;
   }
