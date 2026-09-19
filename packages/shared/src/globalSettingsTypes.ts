@@ -127,6 +127,27 @@ export const SYSTEM_MODULE_NAV: SystemModuleNavEntry[] = [
   { type: "module", moduleId: "users" },
 ];
 
+/** Fields any authenticated tenant user may read and write (Language & Region, Theme mode). */
+export const GLOBAL_SETTINGS_PUBLIC_FIELD_KEYS = [
+  "language",
+  "timezone",
+  "dateFormat",
+  "theme",
+] as const satisfies readonly (keyof GlobalSettings)[];
+
+/** Fields restricted to `settings.global.write` (Notifications, Security, AI assistance, System Modules). */
+export const GLOBAL_SETTINGS_ADMIN_FIELD_KEYS = [
+  "emailNotifications",
+  "smsNotifications",
+  "twoFactor",
+  "sessionTimeout",
+  "passwordPolicy",
+  "enabledModules",
+  "llmProvider",
+  "llmApiKey",
+  "llmConfigs",
+] as const satisfies readonly (keyof GlobalSettings)[];
+
 /** Authoritative default values for GlobalSettings. */
 export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   language: "en",

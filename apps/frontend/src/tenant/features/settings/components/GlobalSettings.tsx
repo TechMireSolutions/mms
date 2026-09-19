@@ -21,6 +21,8 @@ import DateFormatSelect from '@/tenant/features/settings/components/DateFormatSe
 import EmailIntegrationPanel from '@/tenant/features/settings/components/EmailIntegrationPanel';
 import TimezoneSelect from '@/tenant/features/settings/components/TimezoneSelect';
 import { GlobalSettingsSecuritySection } from '@/tenant/features/settings/components/GlobalSettingsSecuritySection';
+import { SettingsAdminOnlyNotice } from '@/tenant/features/settings/components/SettingsAdminOnlyNotice';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import {
   SettingsCallout,
   SettingsFieldGroup,
@@ -30,11 +32,13 @@ import {
 } from '@/components/ui/SettingsShell';
 
 /**
- * Regional preferences, notifications, and security.
+ * Regional preferences (everyone), notifications and security (admin only).
  * Visual theming lives in ThemeSettings (`/settings/theme`).
  */
 export default function GlobalSettings(): React.JSX.Element {
   const { t } = useTranslation();
+  const { can } = usePermissions();
+  const canWriteGlobal = can('settings.global.write');
 
   const {
     data,
@@ -122,40 +126,49 @@ export default function GlobalSettings(): React.JSX.Element {
         </div>
       </SectionCard>
 
-      <SectionCard title={t('global.notifications')} subtitle={t('global.notificationsDesc')} icon={Bell}>
-        <div className="space-y-3">
-          <SettingsCallout>{t('global.notificationsNote')}</SettingsCallout>
-          <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
-            <span className="text-muted-foreground">{t('global.notificationsActiveChannel')}:</span>
-            {notificationChannel === 'email' && (
-              <SettingsMetaBadge variant="primary">{t('global.notificationsChannelEmail')}</SettingsMetaBadge>
-            )}
-            {notificationChannel === 'sms' && (
-              <SettingsMetaBadge variant="primary">{t('global.notificationsChannelSms')}</SettingsMetaBadge>
-            )}
-            {notificationChannel === 'none' && (
-              <SettingsMetaBadge variant="warning">{t('global.notificationsChannelNone')}</SettingsMetaBadge>
-            )}
-          </div>
-          <SettingsToggleRow
-            id="emailNotifications"
-            label={t('global.emailNotifications')}
-            description={t('global.emailNotificationsDesc')}
-            checked={Boolean(data.emailNotifications)}
-            onCheckedChange={(v) => upd('emailNotifications', v)}
-          />
-          <SettingsToggleRow
-            id="smsNotifications"
-            label={t('global.smsNotifications')}
-            description={t('global.smsNotificationsDesc')}
-            checked={Boolean(data.smsNotifications)}
-            onCheckedChange={(v) => upd('smsNotifications', v)}
-          />
-          <EmailIntegrationPanel emailNotificationsEnabled={Boolean(data.emailNotifications)} />
-        </div>
-      </SectionCard>
+      {canWriteGlobal ? (
+        <>
+          <SectionCard title={t('global.notifications')} subtitle={t('global.notificationsDesc')} icon={Bell}>
+            <div className="space-y-3">
+              <SettingsCallout>{t('global.notificationsNote')}</SettingsCallout>
+              <div className="flex flex-wrap items-center gap-2 text-xs font-medium" aria-live="polite">
+                <span className="text-muted-foreground">{t('global.notificationsActiveChannel')}:</span>
+                {notificationChannel === 'email' && (
+                  <SettingsMetaBadge variant="primary">{t('global.notificationsChannelEmail')}</SettingsMetaBadge>
+                )}
+                {notificationChannel === 'sms' && (
+                  <SettingsMetaBadge variant="primary">{t('global.notificationsChannelSms')}</SettingsMetaBadge>
+                )}
+                {notificationChannel === 'none' && (
+                  <SettingsMetaBadge variant="warning">{t('global.notificationsChannelNone')}</SettingsMetaBadge>
+                )}
+              </div>
+              <SettingsToggleRow
+                id="emailNotifications"
+                label={t('global.emailNotifications')}
+                description={t('global.emailNotificationsDesc')}
+                checked={Boolean(data.emailNotifications)}
+                onCheckedChange={(v) => upd('emailNotifications', v)}
+              />
+              <SettingsToggleRow
+                id="smsNotifications"
+                label={t('global.smsNotifications')}
+                description={t('global.smsNotificationsDesc')}
+                checked={Boolean(data.smsNotifications)}
+                onCheckedChange={(v) => upd('smsNotifications', v)}
+              />
+              <EmailIntegrationPanel emailNotificationsEnabled={Boolean(data.emailNotifications)} />
+            </div>
+          </SectionCard>
 
-      <GlobalSettingsSecuritySection data={data} upd={upd} />
+          <GlobalSettingsSecuritySection data={data} upd={upd} />
+        </>
+      ) : (
+        <SettingsAdminOnlyNotice
+          titleKey="global.notificationsSecurityAdminOnlyTitle"
+          descKey="global.notificationsSecurityAdminOnlyDesc"
+        />
+      )}
     </SettingsPanel>
   );
 }
