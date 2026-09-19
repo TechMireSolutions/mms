@@ -150,12 +150,13 @@ export async function registerSecurityPlugins(
   // (the previous deliberate choice). Redis only makes the limit a *shared*
   // ceiling once more than one backend process serves traffic, so it is an
   // explicit opt-in — set RATE_LIMIT_REDIS_STORE=true when scaling out.
-  const redisStoreRequested = process.env.RATE_LIMIT_REDIS_STORE === 'true';
+  const redisStoreRequested =
+    process.env.RATE_LIMIT_REDIS_STORE === 'true' || (isProd && Boolean(process.env.REDIS_URL));
   const redisClient = redisStoreRequested ? getRateLimitRedisClient() : null;
 
   if (redisStoreRequested && (!redisClient || !checkIsRateLimitRedisConnected())) {
     app.log.warn(
-      'RATE_LIMIT_REDIS_STORE=true but Redis is unavailable — falling back to the ' +
+      'Redis rate-limit store requested but Redis is unavailable — falling back to the ' +
         'in-process rate-limit store (limits are per-process until Redis recovers).',
     );
   }

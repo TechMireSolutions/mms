@@ -85,9 +85,9 @@ export function NetworkStatusIndicator({ className }: NetworkStatusIndicatorProp
           networkState === 'offline' &&
             'bg-destructive/15 text-destructive border border-destructive/25 dark:bg-destructive/20',
           networkState === 'reconnecting' &&
-            'bg-amber-500/15 text-amber-700 border border-amber-500/25 dark:text-amber-300 dark:bg-amber-500/20',
+            'bg-warning/15 text-warning border border-warning/25 dark:bg-warning/20',
           networkState === 'online' &&
-            'bg-emerald-500/15 text-emerald-700 border border-emerald-500/25 dark:text-emerald-300 dark:bg-emerald-500/20'
+            'bg-success/15 text-success border border-success/25 dark:bg-success/20'
         )}
       >
         {networkState === 'offline' && (
@@ -98,13 +98,13 @@ export function NetworkStatusIndicator({ className }: NetworkStatusIndicatorProp
         )}
         {networkState === 'reconnecting' && (
           <>
-            <RefreshCw className="h-3.5 w-3.5 shrink-0 animate-spin text-amber-600 dark:text-amber-400" aria-hidden="true" />
+            <RefreshCw className="h-3.5 w-3.5 shrink-0 animate-spin text-warning" aria-hidden="true" />
             <span>{t('network.reconnectingBanner')}</span>
           </>
         )}
         {networkState === 'online' && (
           <>
-            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+            <CheckCircle2 className="h-3.5 w-3.5 shrink-0 text-success" aria-hidden="true" />
             <span>{t('network.onlineRestored')}</span>
           </>
         )}

@@ -5,6 +5,7 @@ import react from '@vitejs/plugin-react';
 import { defineConfig, type PluginOption } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
 import { compression } from 'vite-plugin-compression2';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
 
@@ -262,5 +263,63 @@ export default defineConfig({
       brotliSize: true,
       open: false,
     }) as PluginOption,
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      manifest: false,
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globIgnores: ['**/stats.html', '**/*.map'],
+        cleanupOutdatedCaches: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/uploads\//, /^\/health/],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url, request }) =>
+              url.pathname.startsWith('/api/') ||
+              url.pathname.startsWith('/uploads/') ||
+              url.pathname.startsWith('/health') ||
+              request.method !== 'GET',
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: ({ url, request }) =>
+              request.method === 'GET' &&
+              (url.pathname.startsWith('/assets/') ||
+                /\.(?:js|css|woff2|woff|ttf|png|jpg|jpeg|svg|ico)$/i.test(url.pathname)),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mms-static-assets',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: ({ url, request }) =>
+              request.method === 'GET' &&
+              (url.pathname === '/' ||
+                url.pathname.endsWith('.html') ||
+                url.pathname.endsWith('.webmanifest') ||
+                url.pathname.endsWith('manifest.json')),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'mms-html-manifest',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 24 * 60 * 60, // 24 hours
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+      },
+    }),
   ],
 });

@@ -10,13 +10,19 @@ describe('HTTP ETag & 304 Not Modified (RFC 7232)', () => {
     logLevel: 'silent',
     isProd: false,
     jwtSecret: 'test-secret-at-least-32-chars-long-1234567890',
+    databaseUrl: 'postgresql://dummy:dummy@localhost:5432/mms_test',
+    readReplicaDatabaseUrl: 'postgresql://dummy:dummy@localhost:5432/mms_test',
     allowedOrigin: 'http://localhost:3000',
     trustProxy: false,
     bodyLimit: 1048576,
     requestTimeoutMs: 30000,
+    pgPoolMax: 20,
+    pgStatementTimeoutMs: 25000,
+    pgIdleInTxTimeoutMs: 10000,
     keepAliveTimeoutMs: 30000,
     headersTimeoutMs: 35000,
-  } as ServerConfig;
+    tcpKeepAliveInitialDelayMs: 10000,
+  } satisfies ServerConfig;
 
   async function createTestApp() {
     const app = fastify({ logger: false });
@@ -222,6 +228,35 @@ describe('HTTP ETag & 304 Not Modified (RFC 7232)', () => {
     if (app.server) {
       expect(app.server.keepAliveTimeout).toBe(dummyConfig.keepAliveTimeoutMs || 30000);
       expect(app.server.headersTimeout).toBe(dummyConfig.headersTimeoutMs || 35000);
+    }
+  });
+
+  it('wires TCP keep-alive and TCP no-delay on accepted client sockets in onReady', async () => {
+    const app = await createTestApp();
+    await app.ready();
+
+    if (app.server) {
+      expect(app.server.listenerCount('connection')).toBeGreaterThan(0);
+      let keepAliveEnabled = false;
+      let initialDelay = 0;
+      let noDelayEnabled = false;
+      const fakeSocket = {
+        setKeepAlive: (enable: boolean, delay: number) => {
+          keepAliveEnabled = enable;
+          initialDelay = delay;
+        },
+        setNoDelay: (enable: boolean) => {
+          noDelayEnabled = enable;
+        },
+        on: () => fakeSocket,
+        once: () => fakeSocket,
+        removeListener: () => fakeSocket,
+        emit: () => false,
+      };
+      app.server.emit('connection', fakeSocket);
+      expect(keepAliveEnabled).toBe(true);
+      expect(initialDelay).toBe(dummyConfig.tcpKeepAliveInitialDelayMs);
+      expect(noDelayEnabled).toBe(true);
     }
   });
 });

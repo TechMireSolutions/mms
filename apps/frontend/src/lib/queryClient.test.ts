@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { dehydrate } from '@tanstack/react-query';
+import { describe, it, expect, vi } from 'vitest';
+import { dehydrate, onlineManager } from '@tanstack/react-query';
 import { queryClientInstance } from './queryClient';
 import { ApiError } from './apiClient';
 
@@ -62,5 +62,22 @@ describe('queryClient configuration', () => {
     expect(keys).not.toContain('platform');
     // Cleanup
     queryClientInstance.removeQueries({ queryKey: ['platform', 'workspaces'] });
+  });
+
+  it('updates onlineManager and resumes paused mutations on window online/offline events', () => {
+    const resumeSpy = vi.spyOn(queryClientInstance, 'resumePausedMutations').mockResolvedValue([]);
+    const setOnlineSpy = vi.spyOn(onlineManager, 'setOnline');
+
+    window.dispatchEvent(new Event('offline'));
+    expect(setOnlineSpy).toHaveBeenCalledWith(false);
+    expect(onlineManager.isOnline()).toBe(false);
+
+    window.dispatchEvent(new Event('online'));
+    expect(setOnlineSpy).toHaveBeenCalledWith(true);
+    expect(onlineManager.isOnline()).toBe(true);
+    expect(resumeSpy).toHaveBeenCalled();
+
+    resumeSpy.mockRestore();
+    setOnlineSpy.mockRestore();
   });
 });

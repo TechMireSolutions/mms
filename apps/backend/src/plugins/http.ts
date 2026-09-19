@@ -55,6 +55,16 @@ export async function registerHttpPlugins(
       if ('requestTimeout' in app.server && config.requestTimeoutMs) {
         app.server.requestTimeout = config.requestTimeoutMs;
       }
+      if (typeof app.server.on === 'function') {
+        app.server.on('connection', (socket) => {
+          if (typeof socket?.setKeepAlive === 'function') {
+            socket.setKeepAlive(true, config.tcpKeepAliveInitialDelayMs ?? 10_000);
+          }
+          if (typeof socket?.setNoDelay === 'function') {
+            socket.setNoDelay(true);
+          }
+        });
+      }
     }
   });
 
