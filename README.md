@@ -344,7 +344,7 @@ Start with [`AGENTS.md`](AGENTS.md) for the full skill/rule index and workspace 
 
 ## Contributing
 
-1. Branch off `main` using Conventional Commits: `feat/`, `fix/`, `chore/`.
+1. Branch off `main` using standard prefixes (`feat/`, `fix/`, `chore/`) and format commit messages per Conventional Commits (`feat:`, `fix:`).
 2. Run `pnpm typecheck && pnpm lint && pnpm test` before opening a PR.
 3. Never commit `.env` files, secrets, or credentials.
 4. When changing rules or skills, run `bash .agent/scripts/sync-all.sh` to keep Antigravity, Cursor, and Claude Code in sync.

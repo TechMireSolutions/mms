@@ -19,6 +19,10 @@ describe('teacherUtils', () => {
       expect(formatTeacherDisplayName({ firstName: 'Umar', lastName: 'Farooq' })).toBe('Umar Farooq');
     });
 
+    it('falls back to contact firstName and lastName when top-level names are empty', () => {
+      expect(formatTeacherDisplayName({ contact: { firstName: 'Ali', lastName: 'Hassan' } })).toBe('Ali Hassan');
+    });
+
     it('falls back to employee ID only', () => {
       expect(formatTeacherDisplayName({ employeeId: 'EMP-09' })).toBe('Teacher (EMP-09)');
     });
