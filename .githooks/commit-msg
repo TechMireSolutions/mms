@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# Git hook: Validate Conventional Commits format
+# Expected: type(scope): description
+set -euo pipefail
+
+commit_msg_file="$1"
+commit_msg=$(head -n 1 "$commit_msg_file")
+
+# Allow automated/special commits
+if [[ "$commit_msg" =~ ^(Merge|Revert|fixup!|squash!) ]]; then
+  exit 0
+fi
+
+pattern="^(feat|fix|chore|refactor|perf|test|docs)(\([a-zA-Z0-9_.-]+\))?: .+"
+if ! [[ "$commit_msg" =~ $pattern ]]; then
+  echo "❌ [Git Hook Error] Invalid commit message format." >&2
+  echo "Expected Conventional Commits: type(scope): description" >&2
+  echo "Valid types: feat, fix, chore, refactor, perf, test, docs" >&2
+  echo "Example: feat(contacts): add keyset pagination support" >&2
+  echo "Received: '$commit_msg'" >&2
+  exit 1
+fi

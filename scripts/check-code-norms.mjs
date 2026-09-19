@@ -187,12 +187,51 @@ if (process.argv.includes('--json')) {
   process.exit(0);
 }
 
+const isRatchetMode = process.argv.includes('--ratchet');
+const isUpdateBaselines = process.argv.includes('--update-baselines');
+
+if (isUpdateBaselines) {
+  let updated = false;
+  const newBaseline = { ...BASELINE };
+  if (anyCount < BASELINE.anyAnnotations) {
+    newBaseline.anyAnnotations = anyCount;
+    updated = true;
+  }
+  if (hexFiles.length < BASELINE.hexColourFiles) {
+    newBaseline.hexColourFiles = hexFiles.length;
+    updated = true;
+  }
+  if (oversized.length < BASELINE.filesOverHardLimit) {
+    newBaseline.filesOverHardLimit = oversized.length;
+    updated = true;
+  }
+
+  if (updated) {
+    const scriptPath = path.join(ROOT, 'scripts/check-code-norms.mjs');
+    const content = fs.readFileSync(scriptPath, 'utf8');
+    const replaced = content.replace(
+      /const BASELINE = \{[\s\S]*?\};/,
+      `const BASELINE = {\n  anyAnnotations: ${newBaseline.anyAnnotations},\n  hexColourFiles: ${newBaseline.hexColourFiles},\n  filesOverHardLimit: ${newBaseline.filesOverHardLimit},\n};`
+    );
+    fs.writeFileSync(scriptPath, replaced, 'utf8');
+    console.log(`✅ Baselines successfully ratcheted down:`, newBaseline);
+  } else {
+    console.log(`ℹ️ No baseline improvements to update (counts are at or above current baselines).`);
+  }
+  process.exit(0);
+}
+
 let regressions = 0;
+let improvements = 0;
 for (const result of results) {
   const delta = result.count - result.baseline;
   const mark = delta > 0 ? '✗' : '✓';
   if (delta > 0) regressions++;
+  if (delta < 0 && result.baseline > 0) improvements++;
   console.log(`${mark} ${result.name}: ${result.count} (baseline ${result.baseline})  [${result.norm}]`);
+  if (delta < 0 && result.baseline > 0) {
+    console.log(`   🎉 Improved by ${Math.abs(delta)}! Run with --update-baselines to ratchet down.`);
+  }
   if (delta > 0) {
     for (const site of result.sample) console.log(`      ${site}`);
   }
@@ -202,6 +241,12 @@ console.log('');
 if (regressions > 0) {
   console.error(
     `💥 ${regressions} code-norm ratchet(s) regressed. Fix the new sites, or — only with a reviewed reason — lower the BASELINE in scripts/check-code-norms.mjs.`,
+  );
+  process.exit(1);
+}
+if (isRatchetMode && improvements > 0) {
+  console.error(
+    `⚠️ ${improvements} baseline(s) improved! Run 'node scripts/check-code-norms.mjs --update-baselines' to lock in improvements.`,
   );
   process.exit(1);
 }

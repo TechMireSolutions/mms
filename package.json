@@ -20,7 +20,9 @@
     "check:migration-indexes": "node scripts/check-migration-indexes.mjs",
     "check:db-projections": "node scripts/check-db-projections.mjs",
     "check:code-norms": "node scripts/check-code-norms.mjs",
-    "sync:skills-index": "node scripts/sync-skill-index.mjs"
+    "check:secrets": "node scripts/check-staged-secrets.mjs",
+    "sync:skills-index": "node scripts/sync-skill-index.mjs",
+    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
   },
   "devDependencies": {
     "turbo": "^2.10.13",

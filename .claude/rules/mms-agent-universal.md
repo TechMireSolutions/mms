@@ -11,14 +11,15 @@ description: Universal agent cognition, behaviour, output economy, security, and
 - **Plan:** Output a concise `<plan>` before structural or multi-file changes.
 - **Check:** Search the workspace (especially `@mms/shared`) before writing new logic — extraction thresholds `mms-dry.md` · skill `mms-shared-package`.
 - **Type-check:** Verify types against schemas and `@mms/shared` before emitting code.
+- **Docs & research:** Prefer documentation MCPs (e.g. Context7) or scoped official docs over broad web searches for external libraries/SDKs. Query targeted concepts; do not use for local repository business logic.
 - **Review:** On code edits, run completion review per `mms-completion-review.md` — skill `mms-code-review`; fix all bugs in scope before marking done.
 
 ## Behaviour
 
 - **Focus:** Edit in-scope files only. Ask before deletions or large removals.
-- **Style:** Terse, functional code. Zero boilerplate or narrating comments.
+- **Style:** Terse, functional, idiomatic code. Zero boilerplate or narrating comments.
 - **Precision:** Prefer targeted patches — altered functions/blocks, not whole files unless requested.
-- **Names:** Semantic identifiers — `mms-structure-naming.md`.
+- **Assumptions:** Assume standard library and framework knowledge. Use semantic identifiers — `mms-structure-naming.md`.
 - **Rendering hygiene:** Memoize non-trivial work and stabilize callback references passed to memoized children; avoid premature memoization — norms `mms-performance.md`.
 
 ## Communication (two modes)
@@ -28,12 +29,14 @@ description: Universal agent cognition, behaviour, output economy, security, and
 | **Chat with user** | Clear structured prose; explain trade-offs when non-obvious |
 | **Code output** | Lead with the change; one-line rationale only if needed |
 
-Do not echo file contents already in context.
+Zero conversational preambles, pleasantries, or postambles. Never restate user prompts. Do not echo file contents already in context.
 
 ## Output economy
 
-- **Edits:** Targeted patches with minimal anchor context — never rewrite a whole file to change a few lines.
-- **Tests:** Follow `mms-completion-review.md`. Pure `@mms/shared` helpers need unit tests — `mms-testing-observability.md`.
+- **Edits:** Targeted patches with minimal anchor context — never rewrite a whole file to change a few lines. Output only modified functions/classes; never include unchanged code blocks or placeholder fillers.
+- **Artifacts:** Never echo or summarize artifact contents in chat responses; provide a direct clickable link with 1-line context only.
+- **Tool output limiting:** Inspect only necessary code blocks (<150 lines); scope searches with specific globs/regex to prevent broad output dumps; limit shell command output via flags (`git log -n 5`, `head -n 50`, `--silent`).
+- **Tests:** Follow `mms-completion-review.md`. Pure `@mms/shared` helpers need unit tests — `mms-testing-observability.md`. UI unit tests only when explicitly requested.
 - **JSDoc:** Required on **public exports** in `packages/shared` only. Omit elsewhere.
 
 ## Security & state
@@ -50,7 +53,7 @@ Do not echo file contents already in context.
 - **Node.js 24 runtime** (`node:` imports, WHATWG `new URL()`, native built-ins, `using` / `await using`) — details `mms-dependencies.md`; do not restate here.
 - **Native immutability:** Never mutate array state in place (`sort()`, `reverse()`, `splice()`). Use `toSorted()`, `toReversed()`, `toSpliced()`, `with()`, `Object.groupBy()`.
 - **Errors:** Handle explicitly; zero silent empty `catch` blocks; map user-facing messages to localized translation keys via `t()`.
-- **A11y floor:** Accessible interactive controls, semantic landmarks (`<main>`, `<nav>`, `<header>`, `<section>`), minimum 44×44px touch targets — `mms-ui-ux-design.md` §3.
+- **HTML/CSS & A11y:** Semantic HTML5 and Tailwind utility classes (`mms-ui-ux-design.md`). Accessible interactive controls, semantic landmarks (`<main>`, `<nav>`, `<header>`, `<section>`), minimum 44×44px touch targets — `mms-ui-ux-design.md` §3.
 - **Git:** Conventional Commits (`type(scope): description` using `feat`, `fix`, `chore`, `refactor`, `perf`, `test`, `docs`). Short-lived feature branches (`feat/*`, `fix/*`); protected `main` (no direct commits; merge via PR). Pre-commit local verification (`pnpm typecheck`, tests, lint). **NEVER run `git add`, `git commit`, or `git push` (or any equivalent) unless the user explicitly says "commit" in that exact message. Never push to GitHub under any circumstance — the user handles all pushes themselves. Do not stage or commit as a "convenience" after edits. The user owns all git operations.**
 - **Shell commands:** Never leave the session in a changed directory — pass an explicit working directory when the tool accepts one, or use a single-shot `cd <dir> && <cmd>`. Never emit unpaged, unbounded output (`git log -n 5`, `head -n 50`).
 - **Rules maintenance:** After editing standards run `bash .agent/scripts/sync-all.sh`, then `node scripts/verify-rules-integrity.mjs` (CI fails on drift). The canonical always-on set is the rules whose `.cursor/rules/*.mdc` frontmatter says `alwaysApply: true`; `skills-manifest.json`, `AGENTS.md`, and `CLAUDE.md` must all agree — the verifier enforces this.
