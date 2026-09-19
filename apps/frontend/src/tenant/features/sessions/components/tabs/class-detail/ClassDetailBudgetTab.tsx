@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { useTranslation } from '@/hooks/useTranslation';
-import { cn } from '@/lib/utils';
 import type {
   SessionClassBudget,
   SessionClassRefreshment,
