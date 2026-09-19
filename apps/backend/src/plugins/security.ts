@@ -48,7 +48,7 @@ function buildCspDirectives(isProd?: boolean, nonce?: string) {
     'media-src': ["'self'", 'data:', 'blob:'],
     'worker-src': ["'self'", 'blob:'],
     'manifest-src': ["'self'"],
-    'connect-src': ["'self'", 'ws:', 'wss:'],
+    'connect-src': ["'self'", 'ws:', 'wss:', 'https://fonts.googleapis.com', 'https://fonts.gstatic.com'],
     'object-src': ["'none'"],
     'base-uri': ["'self'"],
     'form-action': ["'self'"],

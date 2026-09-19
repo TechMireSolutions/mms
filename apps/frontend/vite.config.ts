@@ -282,6 +282,14 @@ export default defineConfig({
               request.method !== 'GET',
             handler: 'NetworkOnly',
           },
+          // Google Fonts — pass through; browser caches them natively
+          // and SW fetch would violate connect-src CSP
+          {
+            urlPattern: ({ url }) =>
+              url.hostname === 'fonts.googleapis.com' ||
+              url.hostname === 'fonts.gstatic.com',
+            handler: 'NetworkOnly',
+          },
           {
             urlPattern: ({ url, request }) =>
               request.method === 'GET' &&
