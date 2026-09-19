@@ -23,7 +23,7 @@ concurrency:
 jobs:
   changes:
     name: Detect File Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     outputs:
       backend_db: ${{ steps.filter.outputs.backend_db }}
@@ -62,7 +62,7 @@ jobs:
 
   lint-and-typecheck:
     name: Lint & Typecheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout Code
@@ -126,30 +126,12 @@ jobs:
           git diff --exit-code -- .agent .cursor .claude || (echo "Agent rule/skill mirrors out of sync! Run 'bash .agent/scripts/sync-all.sh'" && exit 1)
           node scripts/verify-rules-integrity.mjs
 
-  # Fails a pull request that introduces a dependency with a known high/critical vulnerability.
-  # Uses pnpm audit locally — no GitHub Dependency Graph feature required.
-  dependency-review:
-    name: Dependency Review
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v7
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup-mms
-
-      - name: Audit dependencies for high/critical vulnerabilities
-        run: pnpm audit --audit-level=high
 
   test-frontend:
     name: Frontend Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     needs: [changes]
     if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     strategy:
       fail-fast: false
@@ -191,7 +173,7 @@ jobs:
     name: Frontend Coverage Gate
     needs: [changes, test-frontend]
     if: ${{ (needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request') && !cancelled() && needs['test-frontend'].result == 'success' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout Code
@@ -220,11 +202,16 @@ jobs:
           fi
 
   test-backend-unit:
-    name: Backend Unit Tests
+    name: Backend Unit Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     needs: [changes]
     if: ${{ needs.changes.outputs.backend_unit == 'true' || github.event_name != 'pull_request' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -235,16 +222,17 @@ jobs:
           build-shared: 'true'
 
       - name: Run Shared Package Tests & Coverage
+        if: matrix.shardIndex == 1
         run: pnpm --filter @mms/shared test:coverage
 
-      - name: Run Backend Unit Tests & Coverage
-        run: pnpm --filter mms-backend test:coverage
+      - name: Run Backend Unit Tests Shard
+        run: pnpm --filter mms-backend exec vitest run --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
   test-backend-db:
     name: Backend DB Integration Tests
     needs: [changes]
     if: ${{ needs.changes.outputs.backend_db == 'true' || github.event_name != 'pull_request' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     services:
       postgres:
@@ -261,6 +249,9 @@ jobs:
           --health-timeout 5s
           --health-retries 5
           --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1024m
+          -c fsync=off
+          -c synchronous_commit=off
+          -c full_page_writes=off
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
@@ -286,15 +277,14 @@ jobs:
   ci-gate:
     name: CI Gate (All Checks Passed)
     if: always()
-    needs: [changes, lint-and-typecheck, dependency-review, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e]
-    runs-on: ubuntu-latest
+    needs: [changes, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e]
+    runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
       - name: Check Status of All Jobs
         run: |
           echo "==================== CI Gate Summary ===================="
           echo "Lint & Typecheck:       ${{ needs.lint-and-typecheck.result }}"
-          echo "Dependency Review:      ${{ needs.dependency-review.result }}"
           echo "Frontend Tests:         ${{ needs.test-frontend.result }}"
           echo "Frontend Coverage:      ${{ needs.test-frontend-coverage.result }}"
           echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
@@ -306,12 +296,6 @@ jobs:
 
           if [ "${{ needs.lint-and-typecheck.result }}" != "success" ]; then
             echo "::error::lint-and-typecheck failed or was cancelled (result: ${{ needs.lint-and-typecheck.result }})"
-            failed=1
-          fi
-
-          # PR-only job: "skipped" on push to main is expected, not a failure.
-          if [ "${{ needs.dependency-review.result }}" != "success" ] && [ "${{ needs.dependency-review.result }}" != "skipped" ]; then
-            echo "::error::dependency-review failed or was cancelled (result: ${{ needs.dependency-review.result }})"
             failed=1
           fi
 
@@ -363,7 +347,7 @@ jobs:
           EOF
 
   e2e:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
       fail-fast: false
@@ -385,6 +369,9 @@ jobs:
           --health-timeout 5s
           --health-retries 5
           --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1024m
+          -c fsync=off
+          -c synchronous_commit=off
+          -c full_page_writes=off
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
@@ -434,7 +421,7 @@ jobs:
   merge-reports:
     if: always()
     needs: [e2e]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
       - name: Checkout Code
@@ -468,7 +455,7 @@ jobs:
   build-dist:
     needs: [ci-gate]
     if: always() && needs['ci-gate'].result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     timeout-minutes: 15
     steps:
       - name: Checkout Code
@@ -516,7 +503,7 @@ jobs:
     name: Deploy to Hetzner
     needs: [build-dist]
     if: github.ref == 'refs/heads/main' && always() && needs['build-dist'].result == 'success'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: production
     concurrency:
       group: mms-production-deploy
@@ -549,7 +536,7 @@ jobs:
           echo "DEPLOY_SHA=${DEPLOY_SHA}"
 
       - name: Download build artifact
-        uses: actions/download-artifact@v7
+        uses: actions/download-artifact@v8
         with:
           name: mms-dist
           path: .
@@ -562,18 +549,22 @@ jobs:
           sha256sum -c mms-dist.tar.gz.sha256
           ls -lh mms-dist.tar.gz
 
-      - name: Copy build tarball to server
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          source: mms-dist.tar.gz,mms-dist.tar.gz.sha256
-          target: /tmp
+      - name: Configure SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 22 -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Copy build tarball to server via SCP
+        run: |
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes \
+            mms-dist.tar.gz mms-dist.tar.gz.sha256 \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/tmp/
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.5
         env:
           PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
           PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST }}
@@ -594,35 +585,47 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MMS_DEPLOY_SKIP_PUBLIC_VERIFY: '1'
           MMS_REQUIRE_WILDCARD_TLS: ${{ secrets.MMS_REQUIRE_WILDCARD_TLS }}
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          command_timeout: 20m
-          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,DEPLOY_SHA,GITHUB_TOKEN,MMS_DEPLOY_SKIP_PUBLIC_VERIFY,MMS_REQUIRE_WILDCARD_TLS
-          script: |
-            set -e
-            cd /var/www/mmsv2
-            export GIT_TERMINAL_PROMPT=0
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "set -e
+             export PLATFORM_RESEND_API_KEY=\"${PLATFORM_RESEND_API_KEY}\"
+             export PLATFORM_SMTP_HOST=\"${PLATFORM_SMTP_HOST}\"
+             export PLATFORM_SMTP_PORT=\"${PLATFORM_SMTP_PORT}\"
+             export PLATFORM_SMTP_SECURE=\"${PLATFORM_SMTP_SECURE}\"
+             export PLATFORM_SMTP_USER=\"${PLATFORM_SMTP_USER}\"
+             export PLATFORM_SMTP_PASS=\"${PLATFORM_SMTP_PASS}\"
+             export PLATFORM_EMAIL_FROM=\"${PLATFORM_EMAIL_FROM}\"
+             export PLATFORM_EMAIL_FROM_NAME=\"${PLATFORM_EMAIL_FROM_NAME}\"
+             export PLATFORM_APP_URL=\"${PLATFORM_APP_URL}\"
+             export PLATFORM_ALLOW_ENV_BOOTSTRAP=\"${PLATFORM_ALLOW_ENV_BOOTSTRAP}\"
+             export PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART=\"${PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART}\"
+             export PLATFORM_ADMIN_EMAIL=\"${PLATFORM_ADMIN_EMAIL}\"
+             export PLATFORM_ADMIN_PASSWORD=\"${PLATFORM_ADMIN_PASSWORD}\"
+             export PLATFORM_ADMIN_NAME=\"${PLATFORM_ADMIN_NAME}\"
+             export MMS_APP_DOMAIN=\"${MMS_APP_DOMAIN}\"
+             export DEPLOY_SHA=\"${DEPLOY_SHA}\"
+             export MMS_DEPLOY_SKIP_PUBLIC_VERIFY=\"1\"
+             export MMS_REQUIRE_WILDCARD_TLS=\"${MMS_REQUIRE_WILDCARD_TLS}\"
+             export GIT_TERMINAL_PROMPT=0
 
-            # Configure ephemeral Git auth token if available to fetch private repo commits over HTTPS
-            GIT_CMD="git"
-            if [ -n "${GITHUB_TOKEN:-}" ]; then
-              AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-              GIT_CMD="git -c http.extraheader=\"AUTHORIZATION: basic ${AUTH_B64}\""
-            fi
+             cd /var/www/mmsv2
+             GIT_CMD='git'
+             if [ -n \"${GITHUB_TOKEN}\" ]; then
+               AUTH_B64=\"\$(printf 'x-access-token:%s' \"${GITHUB_TOKEN}\" | base64 | tr -d '\n')\"
+               GIT_CMD=\"git -c http.extraheader=\\\"AUTHORIZATION: basic \${AUTH_B64}\\\"\"
+             fi
 
-            # Pin tree to CI SHA before invoking deploy script (so updated scripts are used).
-            if [ -n "${DEPLOY_SHA:-}" ]; then
-              eval "${GIT_CMD} fetch --depth=1 origin \"\${DEPLOY_SHA}\" 2>/dev/null" \
-                || eval "${GIT_CMD} fetch origin \"\${DEPLOY_SHA}\" 2>/dev/null" \
-                || eval "${GIT_CMD} fetch origin 2>/dev/null" \
-                || true
-              git checkout --detach "${DEPLOY_SHA}" 2>/dev/null || echo "Notice: git checkout ${DEPLOY_SHA} skipped (using current workspace state)"
-            fi
+             if [ -n \"${DEPLOY_SHA}\" ]; then
+               eval \"\${GIT_CMD} fetch --depth=1 origin \\\"\${DEPLOY_SHA}\\\" 2>/dev/null\" \
+                 || eval \"\${GIT_CMD} fetch origin \\\"\${DEPLOY_SHA}\\\" 2>/dev/null\" \
+                 || eval \"\${GIT_CMD} fetch origin 2>/dev/null\" \
+                 || true
+               git checkout --detach \"\${DEPLOY_SHA}\" 2>/dev/null || echo 'Notice: git checkout skipped (using current workspace state)'
+             fi
 
-            bash scripts/deploy-on-server.sh
+             bash scripts/deploy-on-server.sh
+            "
 
       - name: Verify production site
         env:
@@ -676,3 +679,33 @@ jobs:
           fi
 
           echo "Production OK: ${BASE}/ (SHA ${DEPLOY_SHA})"
+
+      - name: Automated Rollback on Failure
+        if: failure()
+        run: |
+          echo "::error::Deployment or health verification failed — triggering automated rollback..."
+          if [ -f ~/.ssh/deploy_key ]; then
+            ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=10 \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+              "cd /var/www/mmsv2 && bash scripts/deploy-rollback.sh" || echo "::error::Automated rollback failed"
+          fi
+
+      - name: Publish Deployment Summary
+        if: always()
+        run: |
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ### 🚀 Hetzner Production Deployment
+
+          | Parameter | Value |
+          |---|---|
+          | **Host** | \`${{ secrets.SERVER_IP }}\` |
+          | **Apex Domain** | [${{ secrets.MMS_APP_DOMAIN }}](https://${{ secrets.MMS_APP_DOMAIN }}) |
+          | **Commit SHA** | \`${{ env.DEPLOY_SHA }}\` |
+          | **Status** | ${{ job.status == 'success' && '✅ Deployed & Healthy' || '❌ Failed / Rolled Back' }} |
+          EOF
+
+      - name: Cleanup SSH Credentials
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
+

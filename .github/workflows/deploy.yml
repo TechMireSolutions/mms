@@ -2,10 +2,22 @@ name: Deploy MMSv2 to Hetzner (Manual Dispatch)
 
 on:
   workflow_dispatch:
+    inputs:
+      target_sha:
+        description: 'Commit SHA / Git Ref to deploy (blank for current branch tip)'
+        required: false
+        default: ''
+      force_pnpm_install:
+        description: 'Force clean pnpm install on production server'
+        type: boolean
+        default: false
+      force_apache:
+        description: 'Force Apache vhost re-installation'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
-  actions: read
 
 concurrency:
   group: mms-production-deploy
@@ -13,11 +25,13 @@ concurrency:
 
 jobs:
   deploy:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     environment: production
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
-      DEPLOY_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
+      DEPLOY_SHA: ${{ inputs.target_sha != '' && inputs.target_sha || github.sha }}
+      MMS_FORCE_PNPM_INSTALL: ${{ inputs.force_pnpm_install == true && '1' || '0' }}
+      MMS_FORCE_APACHE: ${{ inputs.force_apache == true && '1' || '0' }}
 
     steps:
       - name: Validate deploy secrets
@@ -51,33 +65,18 @@ jobs:
         with:
           ref: ${{ env.DEPLOY_SHA }}
 
-      - name: Download CI dist artifact
-        if: github.event_name == 'workflow_run'
-        uses: actions/download-artifact@v8
+      - name: Setup Environment
+        uses: ./.github/actions/setup-mms
         with:
-          name: mms-dist
-          path: .
-          run-id: ${{ github.event.workflow_run.id }}
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          install: 'true'
+          build-shared: 'true'
 
-      - name: Setup pnpm
-        if: github.event_name == 'workflow_dispatch'
-        uses: pnpm/action-setup@v6
-
-      - name: Setup Node
-        if: github.event_name == 'workflow_dispatch'
-        uses: actions/setup-node@v7
-        with:
-          node-version: 24
-          cache: 'pnpm'
-
-      - name: Install and build on runner (manual dispatch fallback)
-        if: github.event_name == 'workflow_dispatch'
+      - name: Production build & bundle check
         env:
           VITE_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
         run: |
-          pnpm install --frozen-lockfile
           pnpm run build
+          pnpm run check:bundle
           tar czf mms-dist.tar.gz apps/backend/dist apps/frontend/dist packages/shared/dist
           sha256sum mms-dist.tar.gz > mms-dist.tar.gz.sha256
 
@@ -89,26 +88,22 @@ jobs:
           sha256sum -c mms-dist.tar.gz.sha256
           ls -lh mms-dist.tar.gz
 
-      # Required secrets (Settings → Secrets → Actions):
-      #   SERVER_IP, SERVER_USER, SSH_PRIVATE_KEY
-      #   MMS_APP_DOMAIN=mmsv2.aabtaab.com  (full apex — NOT the root domain alone)
-      #   PLATFORM_APP_URL=https://mmsv2.aabtaab.com
-      #   PLATFORM_RESEND_API_KEY + PLATFORM_EMAIL_FROM  OR  PLATFORM_SMTP_*
-      # Optional: PLATFORM_ALLOW_ENV_BOOTSTRAP, PLATFORM_ADMIN_*
-      # Public URL / deploy health checks use MMS_APP_DOMAIN only (do not set MMS_API_URL)
-      # Server backend listens on PORT=5002 (scripts/lib/deploy-ports.sh)
-      - name: Copy build tarball to server
-        uses: appleboy/scp-action@v1.0.0
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          source: mms-dist.tar.gz,mms-dist.tar.gz.sha256
-          target: /tmp
+      - name: Configure SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 22 -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Copy build tarball to server via SCP
+        run: |
+          scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes \
+            mms-dist.tar.gz mms-dist.tar.gz.sha256 \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/tmp/
 
       - name: Deploy via SSH
-        uses: appleboy/ssh-action@v1.2.5
         env:
           PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
           PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST }}
@@ -129,35 +124,51 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           MMS_DEPLOY_SKIP_PUBLIC_VERIFY: '1'
           MMS_REQUIRE_WILDCARD_TLS: ${{ secrets.MMS_REQUIRE_WILDCARD_TLS }}
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          command_timeout: 20m
-          envs: PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_APP_URL,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,MMS_APP_DOMAIN,DEPLOY_SHA,GITHUB_TOKEN,MMS_DEPLOY_SKIP_PUBLIC_VERIFY,MMS_REQUIRE_WILDCARD_TLS
-          script: |
-            set -e
-            cd /var/www/mmsv2
-            export GIT_TERMINAL_PROMPT=0
+          MMS_FORCE_PNPM_INSTALL: ${{ env.MMS_FORCE_PNPM_INSTALL }}
+          MMS_FORCE_APACHE: ${{ env.MMS_FORCE_APACHE }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "set -e
+             export PLATFORM_RESEND_API_KEY=\"${PLATFORM_RESEND_API_KEY}\"
+             export PLATFORM_SMTP_HOST=\"${PLATFORM_SMTP_HOST}\"
+             export PLATFORM_SMTP_PORT=\"${PLATFORM_SMTP_PORT}\"
+             export PLATFORM_SMTP_SECURE=\"${PLATFORM_SMTP_SECURE}\"
+             export PLATFORM_SMTP_USER=\"${PLATFORM_SMTP_USER}\"
+             export PLATFORM_SMTP_PASS=\"${PLATFORM_SMTP_PASS}\"
+             export PLATFORM_EMAIL_FROM=\"${PLATFORM_EMAIL_FROM}\"
+             export PLATFORM_EMAIL_FROM_NAME=\"${PLATFORM_EMAIL_FROM_NAME}\"
+             export PLATFORM_APP_URL=\"${PLATFORM_APP_URL}\"
+             export PLATFORM_ALLOW_ENV_BOOTSTRAP=\"${PLATFORM_ALLOW_ENV_BOOTSTRAP}\"
+             export PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART=\"${PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART}\"
+             export PLATFORM_ADMIN_EMAIL=\"${PLATFORM_ADMIN_EMAIL}\"
+             export PLATFORM_ADMIN_PASSWORD=\"${PLATFORM_ADMIN_PASSWORD}\"
+             export PLATFORM_ADMIN_NAME=\"${PLATFORM_ADMIN_NAME}\"
+             export MMS_APP_DOMAIN=\"${MMS_APP_DOMAIN}\"
+             export DEPLOY_SHA=\"${DEPLOY_SHA}\"
+             export MMS_DEPLOY_SKIP_PUBLIC_VERIFY=\"1\"
+             export MMS_REQUIRE_WILDCARD_TLS=\"${MMS_REQUIRE_WILDCARD_TLS}\"
+             export MMS_FORCE_PNPM_INSTALL=\"${MMS_FORCE_PNPM_INSTALL}\"
+             export MMS_FORCE_APACHE=\"${MMS_FORCE_APACHE}\"
+             export GIT_TERMINAL_PROMPT=0
 
-            # Configure ephemeral Git auth token if available to fetch private repo commits over HTTPS
-            GIT_CMD="git"
-            if [ -n "${GITHUB_TOKEN:-}" ]; then
-              AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-              GIT_CMD="git -c http.extraheader=\"AUTHORIZATION: basic ${AUTH_B64}\""
-            fi
+             cd /var/www/mmsv2
+             GIT_CMD='git'
+             if [ -n \"${GITHUB_TOKEN}\" ]; then
+               AUTH_B64=\"\$(printf 'x-access-token:%s' \"${GITHUB_TOKEN}\" | base64 | tr -d '\n')\"
+               GIT_CMD=\"git -c http.extraheader=\\\"AUTHORIZATION: basic \${AUTH_B64}\\\"\"
+             fi
 
-            # Pin tree to CI SHA before invoking deploy script (so updated scripts are used).
-            if [ -n "${DEPLOY_SHA:-}" ]; then
-              eval "${GIT_CMD} fetch --depth=1 origin \"\${DEPLOY_SHA}\" 2>/dev/null" \
-                || eval "${GIT_CMD} fetch origin \"\${DEPLOY_SHA}\" 2>/dev/null" \
-                || eval "${GIT_CMD} fetch origin 2>/dev/null" \
-                || true
-              git checkout --detach "${DEPLOY_SHA}" 2>/dev/null || echo "Notice: git checkout ${DEPLOY_SHA} skipped (using current workspace state)"
-            fi
+             if [ -n \"${DEPLOY_SHA}\" ]; then
+               eval \"\${GIT_CMD} fetch --depth=1 origin \\\"\${DEPLOY_SHA}\\\" 2>/dev/null\" \
+                 || eval \"\${GIT_CMD} fetch origin \\\"\${DEPLOY_SHA}\\\" 2>/dev/null\" \
+                 || eval \"\${GIT_CMD} fetch origin 2>/dev/null\" \
+                 || true
+               git checkout --detach \"\${DEPLOY_SHA}\" 2>/dev/null || echo 'Notice: git checkout skipped (using current workspace state)'
+             fi
 
-            bash scripts/deploy-on-server.sh
+             bash scripts/deploy-on-server.sh
+            "
 
       - name: Verify production site
         env:
@@ -211,3 +222,34 @@ jobs:
           fi
 
           echo "Production OK: ${BASE}/ (SHA ${DEPLOY_SHA})"
+
+      - name: Automated Rollback on Failure
+        if: failure()
+        run: |
+          echo "::error::Deployment or health verification failed — triggering automated rollback..."
+          if [ -f ~/.ssh/deploy_key ]; then
+            ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes -o ConnectTimeout=10 \
+              ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+              "cd /var/www/mmsv2 && bash scripts/deploy-rollback.sh" || echo "::error::Automated rollback failed"
+          fi
+
+      - name: Publish Deployment Summary
+        if: always()
+        run: |
+          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
+          ### 🚀 Hetzner Production Deployment (Manual Dispatch)
+
+          | Parameter | Value |
+          |---|---|
+          | **Host** | \`${{ secrets.SERVER_IP }}\` |
+          | **Apex Domain** | [${{ secrets.MMS_APP_DOMAIN }}](https://${{ secrets.MMS_APP_DOMAIN }}) |
+          | **Target Ref / SHA** | \`${{ env.DEPLOY_SHA }}\` |
+          | **Force pnpm Install** | \`${{ env.MMS_FORCE_PNPM_INSTALL }}\` |
+          | **Force Apache Re-install** | \`${{ env.MMS_FORCE_APACHE }}\` |
+          | **Status** | ${{ job.status == 'success' && '✅ Deployed & Healthy' || '❌ Failed / Rolled Back' }} |
+          EOF
+
+      - name: Cleanup SSH Credentials
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key

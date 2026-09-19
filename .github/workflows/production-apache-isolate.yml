@@ -8,6 +8,11 @@ on:
         required: true
         default: mmsv2.aabtaab.com
         type: string
+      foreign_domains:
+        description: Space-separated foreign hostnames to verify isolation against
+        required: false
+        default: 'aabtaab.com darulquran.pk'
+        type: string
 
 permissions:
   contents: read
@@ -17,11 +22,13 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  MMS_APP_DOMAIN: ${{ github.event.inputs.mms_app_domain || secrets.MMS_APP_DOMAIN }}
+  MMS_APP_DOMAIN: ${{ inputs.mms_app_domain || secrets.MMS_APP_DOMAIN }}
 
 jobs:
   isolate:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 15
     steps:
       - name: Validate configuration
         run: |
@@ -45,8 +52,16 @@ jobs:
             echo "::warning::MMS_APP_DOMAIN secret is not set — using workflow input only. Add the secret for deploy.yml too."
           fi
 
+      - name: Configure SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 22 -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
       - name: Apply Apache isolation on server
-        uses: appleboy/ssh-action@v1.2.5
         env:
           PLATFORM_APP_URL: ${{ secrets.PLATFORM_APP_URL }}
           PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
@@ -63,36 +78,63 @@ jobs:
           PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
           PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          host: ${{ secrets.SERVER_IP }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
-          command_timeout: 15m
-          envs: MMS_APP_DOMAIN,PLATFORM_APP_URL,PLATFORM_RESEND_API_KEY,PLATFORM_SMTP_HOST,PLATFORM_SMTP_PORT,PLATFORM_SMTP_SECURE,PLATFORM_SMTP_USER,PLATFORM_SMTP_PASS,PLATFORM_EMAIL_FROM,PLATFORM_EMAIL_FROM_NAME,PLATFORM_ALLOW_ENV_BOOTSTRAP,PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART,PLATFORM_ADMIN_EMAIL,PLATFORM_ADMIN_PASSWORD,PLATFORM_ADMIN_NAME,GITHUB_TOKEN
-          script: |
-            set -e
-            cd /var/www/mmsv2
-            export GIT_TERMINAL_PROMPT=0
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes \
+            -o ConnectTimeout=15 -o ServerAliveInterval=30 \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "set -e
+             export MMS_APP_DOMAIN=\"${MMS_APP_DOMAIN}\"
+             export PLATFORM_APP_URL=\"${PLATFORM_APP_URL}\"
+             export PLATFORM_RESEND_API_KEY=\"${PLATFORM_RESEND_API_KEY}\"
+             export PLATFORM_SMTP_HOST=\"${PLATFORM_SMTP_HOST}\"
+             export PLATFORM_SMTP_PORT=\"${PLATFORM_SMTP_PORT}\"
+             export PLATFORM_SMTP_SECURE=\"${PLATFORM_SMTP_SECURE}\"
+             export PLATFORM_SMTP_USER=\"${PLATFORM_SMTP_USER}\"
+             export PLATFORM_SMTP_PASS=\"${PLATFORM_SMTP_PASS}\"
+             export PLATFORM_EMAIL_FROM=\"${PLATFORM_EMAIL_FROM}\"
+             export PLATFORM_EMAIL_FROM_NAME=\"${PLATFORM_EMAIL_FROM_NAME}\"
+             export PLATFORM_ALLOW_ENV_BOOTSTRAP=\"${PLATFORM_ALLOW_ENV_BOOTSTRAP}\"
+             export PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART=\"${PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART}\"
+             export PLATFORM_ADMIN_EMAIL=\"${PLATFORM_ADMIN_EMAIL}\"
+             export PLATFORM_ADMIN_PASSWORD=\"${PLATFORM_ADMIN_PASSWORD}\"
+             export PLATFORM_ADMIN_NAME=\"${PLATFORM_ADMIN_NAME}\"
+             export GIT_TERMINAL_PROMPT=0
 
-            GIT_CMD="git"
-            if [ -n "${GITHUB_TOKEN:-}" ]; then
-              AUTH_B64="$(printf 'x-access-token:%s' "${GITHUB_TOKEN}" | base64 | tr -d '\n')"
-              GIT_CMD="git -c http.extraheader=\"AUTHORIZATION: basic ${AUTH_B64}\""
-            fi
+             cd /var/www/mmsv2
+             GIT_CMD='git'
+             if [ -n \"${GITHUB_TOKEN}\" ]; then
+               AUTH_B64=\"\$(printf 'x-access-token:%s' \"${GITHUB_TOKEN}\" | base64 | tr -d '\n')\"
+               GIT_CMD=\"git -c http.extraheader=\\\"AUTHORIZATION: basic \${AUTH_B64}\\\"\"
+             fi
 
-            eval "${GIT_CMD} fetch origin main 2>/dev/null" || git fetch origin main 2>/dev/null || true
-            git reset --hard origin/main
-            bash scripts/apply-production-host-isolation.sh apps/backend/.env
+             eval \"\${GIT_CMD} fetch origin main 2>/dev/null\" || git fetch origin main 2>/dev/null || true
+             git reset --hard origin/main
+             bash scripts/apply-production-host-isolation.sh apps/backend/.env
+            "
 
       - name: Verify MMS apex and foreign domains
+        env:
+          FOREIGN_DOMAINS: ${{ inputs.foreign_domains || 'aabtaab.com darulquran.pk' }}
         run: |
           set -euo pipefail
           BASE="https://${MMS_APP_DOMAIN}"
 
-          curl -fsS --connect-timeout 10 --max-time 20 "${BASE}/health" >/dev/null
-          curl -fsS --connect-timeout 10 --max-time 20 "${BASE}/" >/dev/null
-          echo "OK: ${BASE}/"
+          # Allow 3 seconds for Apache worker threads to settle post-reload
+          sleep 3
+
+          for i in 1 2 3 4 5; do
+            if curl -fsS --connect-timeout 5 --max-time 15 "${BASE}/health" >/dev/null \
+              && curl -fsS --connect-timeout 5 --max-time 15 "${BASE}/" >/dev/null; then
+              break
+            fi
+            echo "Waiting for Apache reload to serve traffic (attempt ${i}/5)..."
+            sleep 3
+            if [ "$i" -eq 5 ]; then
+              echo "ERROR: ${BASE} did not respond within 15s post-isolation reload"
+              exit 1
+            fi
+          done
+          echo "OK: ${BASE}/ responded successfully"
 
           SETUP_CODE="$(curl -s -o /dev/null -w '%{http_code}' "${BASE}/api/platform/auth/setup/status")"
           if [ "${SETUP_CODE}" = "403" ]; then
@@ -102,12 +144,13 @@ jobs:
           echo "Platform setup/status → HTTP ${SETUP_CODE}"
 
           # Verify HTTP/2 negotiation and edge headers
-          HTTP_VER="$(curl -s -I --http2 "${BASE}/health" | head -n 1)"
+          HTTP_VER="$(curl -s -I --http2 "${BASE}/health" | head -n 1 | tr -d '\r\n')"
           echo "Edge protocol: ${HTTP_VER}"
 
           # Verify pre-compression negotiation (Brotli/Gzip) and edge caching headers
           echo "Verifying Brotli/Gzip negotiation and Cache-Control headers..."
-          curl -sI -H "Accept-Encoding: br, gzip" "${BASE}/" | grep -iE "(content-encoding|cache-control|vary)" || true
+          COMPRESSION="$(curl -sI -H "Accept-Encoding: br, gzip" "${BASE}/" | grep -i "content-encoding" | head -n 1 | tr -d '\r\n' || echo "none")"
+          echo "Compression: ${COMPRESSION}"
 
           # Verify /ws and /api/ws endpoint presence and proxy pass routing
           WS_STATUS="$(curl -s -o /dev/null -w '%{http_code}' -H "Upgrade: websocket" -H "Connection: Upgrade" "${BASE}/ws" || true)"
@@ -115,7 +158,16 @@ jobs:
           API_WS_STATUS="$(curl -s -o /dev/null -w '%{http_code}' -H "Upgrade: websocket" -H "Connection: Upgrade" "${BASE}/api/ws" || true)"
           echo "/api/ws upgrade probe → HTTP ${API_WS_STATUS}"
 
-          for foreign in aabtaab.com darulquran.pk; do
+          # Export telemetry for step summary
+          {
+            echo "SETUP_CODE=${SETUP_CODE}"
+            echo "HTTP_VER=${HTTP_VER}"
+            echo "COMPRESSION=${COMPRESSION}"
+            echo "WS_STATUS=${WS_STATUS}"
+            echo "API_WS_STATUS=${API_WS_STATUS}"
+          } >> "$GITHUB_ENV"
+
+          for foreign in ${FOREIGN_DOMAINS}; do
             title="$(curl -sS --connect-timeout 10 --max-time 15 "https://${foreign}/" 2>/dev/null | grep -o '<title>[^<]*</title>' | head -1 || true)"
             if echo "${title}" | grep -qi 'Madrasa Management System'; then
               echo "ERROR: https://${foreign}/ still serves MMS — check Apache vhosts on server"
@@ -125,3 +177,26 @@ jobs:
           done
 
           echo "Host isolation verified."
+
+      - name: Publish Summary
+        if: always()
+        run: |
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ### 🛡️ Apache Host Isolation Run
+
+          | Check | Result |
+          |---|---|
+          | **Host** | \`${{ secrets.SERVER_IP }}\` |
+          | **Apex Domain** | [${{ env.MMS_APP_DOMAIN }}](https://${{ env.MMS_APP_DOMAIN }}) |
+          | **Platform Setup Probe** | HTTP \`${{ env.SETUP_CODE || 'N/A' }}\` |
+          | **Edge Protocol** | \`${{ env.HTTP_VER || 'N/A' }}\` |
+          | **Compression** | \`${{ env.COMPRESSION || 'N/A' }}\` |
+          | **WebSocket Upgrades** | \`/ws\` (\`${{ env.WS_STATUS || 'N/A' }}\`), \`/api/ws\` (\`${{ env.API_WS_STATUS || 'N/A' }}\`) |
+          | **Foreign Hostnames Tested** | \`${{ inputs.foreign_domains || 'aabtaab.com darulquran.pk' }}\` |
+          | **Isolation Status** | ${{ job.status == 'success' && '✅ Isolated & Verified' || '❌ Failed' }} |
+          EOF
+
+      - name: Cleanup SSH Credentials
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key
