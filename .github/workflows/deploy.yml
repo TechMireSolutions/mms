@@ -252,4 +252,4 @@ jobs:
       - name: Cleanup SSH Credentials
         if: always()
         run: |
-          rm -f ~/.ssh/deploy_key
+          shred -u ~/.ssh/deploy_key 2>/dev/null || rm -f ~/.ssh/deploy_key
