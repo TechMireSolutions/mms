@@ -1,6 +1,11 @@
-name: Deploy MMSv2 to Hetzner (Manual Dispatch)
+name: Deploy MMSv2 to Hetzner
 
 on:
+  # Deploy automatically after CI passes on main (avoids shipping broken builds).
+  workflow_run:
+    workflows: ["CI"]
+    types: [completed]
+    branches: [main]
   workflow_dispatch:
     inputs:
       target_sha:
@@ -18,6 +23,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 concurrency:
   group: mms-production-deploy
@@ -25,11 +31,14 @@ concurrency:
 
 jobs:
   deploy:
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-24.04
     environment: production
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
-      DEPLOY_SHA: ${{ inputs.target_sha != '' && inputs.target_sha || github.sha }}
+      DEPLOY_SHA: ${{ (github.event_name == 'workflow_dispatch' && inputs.target_sha != '') && inputs.target_sha || (github.event.workflow_run.head_sha || github.sha) }}
       MMS_FORCE_PNPM_INSTALL: ${{ inputs.force_pnpm_install == true && '1' || '0' }}
       MMS_FORCE_APACHE: ${{ inputs.force_apache == true && '1' || '0' }}
 
@@ -237,7 +246,7 @@ jobs:
         if: always()
         run: |
           cat << 'EOF' >> $GITHUB_STEP_SUMMARY
-          ### 🚀 Hetzner Production Deployment (Manual Dispatch)
+          ### 🚀 Hetzner Production Deployment
 
           | Parameter | Value |
           |---|---|
