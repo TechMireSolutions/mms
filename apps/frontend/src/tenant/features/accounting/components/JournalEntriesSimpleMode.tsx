@@ -4,9 +4,13 @@ import { SubTabBar } from "@/components/ui/SubTabBar";
 import { CashbookView } from "@/tenant/features/accounting/components/CashbookView";
 import { JournalQuickActionsPanel } from "@/tenant/features/accounting/components/JournalQuickActionsPanel";
 import { SimpleTransactionWizard } from "@/tenant/features/accounting/components/SimpleTransactionWizard";
+import { SpecializedEntryModal } from "@/tenant/features/accounting/components/SpecializedEntryModal";
 import type { QuickActionType } from "@/tenant/features/accounting/components/journalEntriesQuickActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
+
+/** Quick-action ids that open the dedicated cross-module entry modal instead of the generic wizard. */
+const SPECIALIZED_ENTRY_TYPES = new Set(["fee_collection", "salary"]);
 
 type JournalMode = "simple" | "advanced";
 type JournalSubTab = "transactions" | "cashbook";
@@ -59,6 +63,11 @@ export function JournalEntriesSimpleMode({
   onCloseSimpleModal,
 }: JournalEntriesSimpleModeProps) {
   const { t } = useTranslation();
+  const specializedType = simpleModal?.prefillType && SPECIALIZED_ENTRY_TYPES.has(simpleModal.prefillType.id)
+    ? simpleModal.prefillType.id === "fee_collection"
+      ? "fee" as const
+      : "salary" as const
+    : null;
 
   return (
     <section aria-label={t("accounting.journal.simpleAria")} className="space-y-5">
@@ -94,7 +103,7 @@ export function JournalEntriesSimpleMode({
 
       {canWrite && (
         <SimpleTransactionWizard
-          open={simpleModal !== null}
+          open={simpleModal !== null && specializedType === null}
           accounts={accounts}
           entries={entries}
           fiscalYears={fiscalYears}
@@ -104,6 +113,10 @@ export function JournalEntriesSimpleMode({
           onSave={onSave}
           onClose={onCloseSimpleModal}
         />
+      )}
+
+      {canWrite && specializedType !== null && (
+        <SpecializedEntryModal type={specializedType} accounts={accounts} onClose={onCloseSimpleModal} />
       )}
     </section>
   );

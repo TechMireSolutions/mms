@@ -1,4 +1,4 @@
-import { useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient, keepPreviousData } from '@tanstack/react-query';
 import { fetchAllAccountingAccounts, fetchAllAccountingEntries } from './accountingListFetch';
 import type { MutateOptions } from '@tanstack/react-query';
 import type {
@@ -9,8 +9,10 @@ import type {
   Account,
   JournalEntry,
   FiscalYear,
+  SpecializedEntryInput,
+  SpecializedEntryResult,
 } from '@mms/shared';
-import { ACCOUNTING_MODULE_MANIFEST } from '@mms/shared';
+import { ACCOUNTING_MODULE_MANIFEST, FINANCE_MODULE_MANIFEST } from '@mms/shared';
 import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient } from '@/lib/api';
@@ -273,6 +275,27 @@ export function useAccountingReportAggregates(
     },
     enabled,
     staleTime: 5 * 60 * 1000,
+  });
+}
+
+/**
+ * General Entries quick-action mutation (Fee, Salary) — bridges Finance and
+ * Accounting in one backend transaction, so both modules' cached data are
+ * invalidated on success.
+ */
+export function useProcessSpecializedEntryMutation() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: (input: SpecializedEntryInput) =>
+      apiJson<SpecializedEntryResult>(`${ACCOUNTING_MODULE_MANIFEST.restBasePath}/specialized-entries`, {
+        method: 'POST',
+        body: JSON.stringify(input),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: [ACCOUNTING_MODULE_MANIFEST.moduleId] });
+      void queryClient.invalidateQueries({ queryKey: [FINANCE_MODULE_MANIFEST.moduleId] });
+    },
   });
 }
 

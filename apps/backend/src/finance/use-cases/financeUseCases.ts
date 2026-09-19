@@ -21,6 +21,7 @@ import {
   type PaymentUpdate,
 } from '@mms/shared';
 import { allocateNextInvoiceNumber, replacePaymentAllocations } from '../../db/repositories/financeBillingRepository.js';
+import { createFinanceLifecycleOperations } from './financeRecordLifecycle.js';
 import { tryPostInvoiceJournal, tryPostPaymentJournal } from '../../accounting/ledgerPosting/ledgerPostingService.js';
 import { findEntryIdBySource } from '../../db/repositories/accountingRepository.js';
 import { loadFinanceModulePreferences } from '../../services/financePreferencesService.js';
@@ -97,6 +98,12 @@ const EMPTY_FINANCE_METRICS: FinanceCommandMetricsSnapshot = {
   outstandingPrevMonth: 0,
 };
 
+function requireRequestTenant(): string {
+  const tenant = getRequestTenant();
+  if (!tenant) throw new Error('Tenant context required');
+  return tenant;
+}
+
 /**
  * Finance use-cases — composition root binding a {@link FinanceRepository} to
  * every operation. Production uses the default Drizzle-backed `financeUseCases`;
@@ -127,6 +134,17 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
     schema: paymentRecordSchema,
     websocketCollection: 'finance_payments',
     idPrefix: 'pay',
+  });
+
+  /**
+   * Archive / restore carry ledger and invoice-balance consequences, so they
+   * are composed here rather than exposing the bare soft delete.
+   */
+  const lifecycle = createFinanceLifecycleOperations({
+    repo,
+    invoiceCrud,
+    paymentCrud,
+    requireTenant: requireRequestTenant,
   });
 
   return {
@@ -192,10 +210,10 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
         ...(lines ? { lines } : {}),
       });
     },
-    deleteInvoiceById: invoiceCrud.deleteById,
-    restoreInvoiceById: invoiceCrud.restoreById,
-    bulkSoftDeleteInvoices: invoiceCrud.bulkDeleteByIds,
-    bulkRestoreInvoices: invoiceCrud.bulkRestoreByIds,
+    deleteInvoiceById: lifecycle.deleteInvoiceById,
+    restoreInvoiceById: lifecycle.restoreInvoiceById,
+    bulkSoftDeleteInvoices: lifecycle.bulkSoftDeleteInvoices,
+    bulkRestoreInvoices: lifecycle.bulkRestoreInvoices,
 
     getInvoiceById: async (id: string, includeDeleted = false): Promise<Invoice | null> => {
       const tenant = getRequestTenant();
@@ -277,10 +295,10 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
         ...(allocations ? { allocations } : {}),
       });
     },
-    deletePaymentById: paymentCrud.deleteById,
-    restorePaymentById: paymentCrud.restoreById,
-    bulkSoftDeletePayments: paymentCrud.bulkDeleteByIds,
-    bulkRestorePayments: paymentCrud.bulkRestoreByIds,
+    deletePaymentById: lifecycle.deletePaymentById,
+    restorePaymentById: lifecycle.restorePaymentById,
+    bulkSoftDeletePayments: lifecycle.bulkSoftDeletePayments,
+    bulkRestorePayments: lifecycle.bulkRestorePayments,
 
     getPaymentById: async (id: string, includeDeleted = false): Promise<Payment | null> => {
       const tenant = getRequestTenant();
