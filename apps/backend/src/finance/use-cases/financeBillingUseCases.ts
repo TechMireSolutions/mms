@@ -8,9 +8,17 @@ import {
   listFeeStructures,
   saveFeeStructure,
 } from '../../db/repositories/financeBillingRepository.js';
+import { getOrSetMultiTier, invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 export async function loadFeeStructures(): Promise<FeeStructure[]> {
-  return listFeeStructures(requireTenant());
+  const tenant = requireTenant();
+  return getOrSetMultiTier(
+    tenant,
+    'finance',
+    'fee-structures',
+    () => listFeeStructures(tenant),
+    { ttlSeconds: 300 },
+  );
 }
 
 export async function upsertFeeStructure(input: FeeStructureInsert): Promise<FeeStructure> {
@@ -24,6 +32,11 @@ export async function upsertFeeStructure(input: FeeStructureInsert): Promise<Fee
     })),
   };
   await saveFeeStructure(tenant, record);
+  await invalidateMultiTierCache({
+    tenantId: tenant,
+    domain: 'finance',
+    key: 'fee-structures',
+  });
   const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'finance_fee_structures');
   return record;
@@ -32,6 +45,11 @@ export async function upsertFeeStructure(input: FeeStructureInsert): Promise<Fee
 export async function removeFeeStructure(id: string): Promise<void> {
   const tenant = requireTenant();
   await deleteFeeStructure(tenant, id);
+  await invalidateMultiTierCache({
+    tenantId: tenant,
+    domain: 'finance',
+    key: 'fee-structures',
+  });
   const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'finance_fee_structures');
 }

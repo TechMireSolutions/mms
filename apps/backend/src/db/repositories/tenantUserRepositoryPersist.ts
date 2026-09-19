@@ -10,6 +10,7 @@ import {
   type TenantUserRow,
 } from './tenantUserRepositoryHydrate.js';
 import { revokeAllUserSessions, revokeUserSessionKeys } from '../../services/session.service.js';
+import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 const TABLE_AUTH_KEYS = new Set([
   'id',
@@ -203,12 +204,14 @@ export async function upsertTenantUserRow(
     await withTenant(tenant, async (tx) => {
       await tx.update(tenantUsers).set(merged).where(tenantUserIdWhere(columns.id, tenant));
     });
+    await invalidateMultiTierCache({ tenantId: tenant, domain: 'users', key: columns.id });
     return;
   }
 
   await withTenant(tenant, async (tx) => {
     await tx.insert(tenantUsers).values(omitUndefinedColumns(columns) as typeof columns);
   });
+  await invalidateMultiTierCache({ tenantId: tenant, domain: 'users', key: columns.id });
 }
 
 /**
@@ -310,6 +313,7 @@ export async function upsertTenantUsersBatch(
         },
       });
   });
+  await invalidateMultiTierCache({ tenantId: tenant, domain: 'users' });
 }
 
 /**
@@ -342,6 +346,7 @@ export async function softDeleteTenantUserRow(
   });
   await revokeAllUserSessions(id);
   await revokeUserSessionKeys(id);
+  await invalidateMultiTierCache({ tenantId: tenant, domain: 'users', key: id });
   return true;
 }
 
@@ -364,6 +369,7 @@ export async function restoreTenantUserRow(
       })
       .where(tenantUserIdWhere(id, tenant));
   });
+  await invalidateMultiTierCache({ tenantId: tenant, domain: 'users', key: id });
   return true;
 }
 

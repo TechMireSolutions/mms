@@ -188,7 +188,11 @@ export function sessionRowToRecord(
     facultyName: f.facultyName || '',
     role: f.role || 'coordinator',
     status: (f.status === 'inactive' ? 'inactive' : 'active') as 'active' | 'inactive',
-    createdAt: f.createdAt ? f.createdAt.toISOString() : undefined,
+    createdAt: f.createdAt
+      ? f.createdAt instanceof Date
+        ? f.createdAt.toISOString()
+        : String(f.createdAt)
+      : undefined,
   }));
 
   const mappedClasses: Class[] = classRows.map((c) => {

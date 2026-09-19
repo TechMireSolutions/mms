@@ -1,6 +1,7 @@
 import { slugifyLookupLabel } from './slugifyLookupLabel.js';
 import { getRequestTenant } from './tenantContext.js';
 import { broadcastCollection } from './livePush.js';
+import { getOrSetMultiTier, invalidateMultiTierCache } from './cache/index.js';
 
 type StringLookupRow = { kind: string; label: string };
 
@@ -46,28 +47,44 @@ export function createModuleStringListLookupsService<
     const empty = emptyMap();
     if (!tenant) return empty;
 
-    const rows = await listByWorkspace(tenant);
-    const byKind = new Map<string, StringLookupRow[]>();
-    for (const row of rows) {
-      const list = byKind.get(row.kind) ?? [];
-      list.push(row);
-      byKind.set(row.kind, list);
-    }
+    return getOrSetMultiTier(
+      tenant,
+      'lookups',
+      `${broadcastKey}:map`,
+      async () => {
+        const rows = await listByWorkspace(tenant);
+        const byKind = new Map<string, StringLookupRow[]>();
+        for (const row of rows) {
+          const list = byKind.get(row.kind) ?? [];
+          list.push(row);
+          byKind.set(row.kind, list);
+        }
 
-    const result = { ...empty };
-    for (const kind of kinds) {
-      const kindRows = byKind.get(kind) ?? [];
-      if (kindRows.length === 0) continue;
-      result[kind] = rowsToStringItems(kindRows) as TMap[TKind];
-    }
-    return result;
+        const result = { ...empty };
+        for (const kind of kinds) {
+          const kindRows = byKind.get(kind) ?? [];
+          if (kindRows.length === 0) continue;
+          result[kind] = rowsToStringItems(kindRows) as TMap[TKind];
+        }
+        return result;
+      },
+      { ttlSeconds: 300 },
+    );
   }
 
   async function loadKind(kind: TKind, tenant = getRequestTenant()): Promise<string[]> {
     if (!tenant) return defaultItems(kind);
-    const rows = await listByKind(tenant, kind);
-    if (rows.length === 0) return defaultItems(kind);
-    return rowsToStringItems(rows);
+    return getOrSetMultiTier(
+      tenant,
+      'lookups',
+      `${broadcastKey}:${kind}`,
+      async () => {
+        const rows = await listByKind(tenant, kind);
+        if (rows.length === 0) return defaultItems(kind);
+        return rowsToStringItems(rows);
+      },
+      { ttlSeconds: 300 },
+    );
   }
 
   async function replaceKind(
@@ -103,6 +120,16 @@ export function createModuleStringListLookupsService<
     }
 
     await replaceForKind(tenant, kind, rowsToSave);
+    await invalidateMultiTierCache({
+      tenantId: tenant,
+      domain: 'lookups',
+      key: `${broadcastKey}:${kind}`,
+    });
+    await invalidateMultiTierCache({
+      tenantId: tenant,
+      domain: 'lookups',
+      key: `${broadcastKey}:map`,
+    });
     await broadcastCollection(broadcastKey);
     return labels;
   }

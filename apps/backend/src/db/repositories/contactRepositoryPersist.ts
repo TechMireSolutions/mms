@@ -31,6 +31,7 @@ import {
 } from './contactRepositoryHydrate.js';
 import { syncContactChildrenTx, bulkInsertContactChildrenTx } from './contactRepositoryPersistChildren.js';
 import { mapAuditToInsert } from './repositoryMappers.js';
+import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 type Transaction = TenantTransaction;
 
@@ -87,6 +88,7 @@ export async function saveContact(tenant: string, contact: Contact): Promise<voi
   await withTenant(subdomain, async (tx) => {
     await persistContactTx(tx, subdomain, contact);
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'contacts', key: String(contact.id) });
 }
 
 export async function bulkSaveContacts(tenant: string, records: Contact[]): Promise<void> {
@@ -125,6 +127,8 @@ export async function bulkSaveContacts(tenant: string, records: Contact[]): Prom
           deletedAt: sql`excluded.deleted_at`,
           deletedBy: sql`excluded.deleted_by`,
           deletionReason: sql`excluded.deletion_reason`,
+          restoredAt: sql`excluded.restored_at`,
+          restoredBy: sql`excluded.restored_by`,
           updatedAt: new Date(),
           updatedBy: sql`excluded.updated_by`,
         },
@@ -147,6 +151,7 @@ export async function bulkSaveContacts(tenant: string, records: Contact[]): Prom
 
     await bulkInsertContactChildrenTx(tx, subdomain, hydratedRecords);
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'contacts' });
 }
 
 export async function replaceContactsForWorkspace(tenant: string, records: Contact[]): Promise<void> {
@@ -175,6 +180,7 @@ export async function replaceContactsForWorkspace(tenant: string, records: Conta
 
     await bulkInsertContactChildrenTx(tx, subdomain, hydratedRecords);
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'contacts' });
 }
 
 export async function bulkSoftDeleteContactsSql(
@@ -187,7 +193,7 @@ export async function bulkSoftDeleteContactsSql(
   const uniqueIds = dedupeTrimmedIds(ids);
   if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
   const now = new Date();
-  return withTenant(subdomain, async (tx) => {
+  const res = await withTenant(subdomain, async (tx) => {
     const updated = await tx
       .update(contacts)
       .set({
@@ -210,6 +216,8 @@ export async function bulkSoftDeleteContactsSql(
       failed: uniqueIds.length - updated.length,
     };
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'contacts' });
+  return res;
 }
 
 export async function bulkRestoreContactsSql(
@@ -221,7 +229,7 @@ export async function bulkRestoreContactsSql(
   const uniqueIds = dedupeTrimmedIds(ids);
   if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
   const now = new Date();
-  return withTenant(subdomain, async (tx) => {
+  const res = await withTenant(subdomain, async (tx) => {
     const updated = await tx
       .update(contacts)
       .set({
@@ -246,6 +254,8 @@ export async function bulkRestoreContactsSql(
       failed: uniqueIds.length - updated.length,
     };
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'contacts' });
+  return res;
 }
 
 export const contactRepo = {

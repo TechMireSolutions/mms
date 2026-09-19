@@ -1,7 +1,8 @@
 import { and, asc, eq, getTableName } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { withTenant, withTenantRead } from '../tenant-context.js';
-import { redisGet, redisSet, redisDelPattern, redisKeys } from '../../lib/redis.js';
+import { redisDelPattern, redisKeys } from '../../lib/redis.js';
+import { getOrSetMultiTier, invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 type WorkspaceCol = PgColumn;
 
@@ -46,74 +47,64 @@ export function createModuleLookupsRepo(options: {
   async function listByWorkspace(workspaceSubdomain: string): Promise<ModuleLookupDbRow[]> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const key = allCacheKey(subdomain);
-    const cached = await redisGet(key);
-    if (cached) {
-      try {
-        return JSON.parse(cached) as ModuleLookupDbRow[];
-      } catch {
-        // Fall through on JSON parse error
-      }
-    }
-
-    const rows = await withTenantRead(subdomain, async (tx) => {
-      return tx
-        .select({
-          id: table.id,
-          workspaceSubdomain: table.workspaceSubdomain,
-          kind: table.kind,
-          label: table.label,
-          meta: table.meta,
-          sortOrder: table.sortOrder,
-          updatedAt: table.updatedAt,
-        })
-        .from(table)
-        .where(eq(table.workspaceSubdomain, subdomain))
-        .orderBy(asc(table.kind), asc(table.sortOrder));
-    });
-
-    if (rows) {
-      await redisSet(key, JSON.stringify(rows), SETUP_LOOKUPS_CACHE_TTL_SECONDS);
-    }
-    return rows as ModuleLookupDbRow[];
+    return getOrSetMultiTier(
+      subdomain,
+      tableName,
+      key,
+      async () => {
+        const rows = await withTenantRead(subdomain, async (tx) => {
+          return tx
+            .select({
+              id: table.id,
+              workspaceSubdomain: table.workspaceSubdomain,
+              kind: table.kind,
+              label: table.label,
+              meta: table.meta,
+              sortOrder: table.sortOrder,
+              updatedAt: table.updatedAt,
+            })
+            .from(table)
+            .where(eq(table.workspaceSubdomain, subdomain))
+            .orderBy(asc(table.kind), asc(table.sortOrder));
+        });
+        return rows as ModuleLookupDbRow[];
+      },
+      { ttlSeconds: SETUP_LOOKUPS_CACHE_TTL_SECONDS },
+    );
   }
 
   async function listByKind(workspaceSubdomain: string, kind: string): Promise<ModuleLookupDbRow[]> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const key = kindCacheKey(subdomain, kind);
-    const cached = await redisGet(key);
-    if (cached) {
-      try {
-        return JSON.parse(cached) as ModuleLookupDbRow[];
-      } catch {
-        // Fall through on JSON parse error
-      }
-    }
-
-    const rows = await withTenantRead(subdomain, async (tx) => {
-      return tx
-        .select({
-          id: table.id,
-          workspaceSubdomain: table.workspaceSubdomain,
-          kind: table.kind,
-          label: table.label,
-          meta: table.meta,
-          sortOrder: table.sortOrder,
-          updatedAt: table.updatedAt,
-        })
-        .from(table)
-        .where(
-          and(
-            eq(table.workspaceSubdomain, subdomain),
-            eq(table.kind, kind),
-          ),
-        )
-        .orderBy(asc(table.sortOrder));
-    });
-
-    if (rows) {
-      await redisSet(key, JSON.stringify(rows), SETUP_LOOKUPS_CACHE_TTL_SECONDS);
-    }
-    return rows as ModuleLookupDbRow[];
+    return getOrSetMultiTier(
+      subdomain,
+      tableName,
+      key,
+      async () => {
+        const rows = await withTenantRead(subdomain, async (tx) => {
+          return tx
+            .select({
+              id: table.id,
+              workspaceSubdomain: table.workspaceSubdomain,
+              kind: table.kind,
+              label: table.label,
+              meta: table.meta,
+              sortOrder: table.sortOrder,
+              updatedAt: table.updatedAt,
+            })
+            .from(table)
+            .where(
+              and(
+                eq(table.workspaceSubdomain, subdomain),
+                eq(table.kind, kind),
+              ),
+            )
+            .orderBy(asc(table.sortOrder));
+        });
+        return rows as ModuleLookupDbRow[];
+      },
+      { ttlSeconds: SETUP_LOOKUPS_CACHE_TTL_SECONDS },
+    );
   }
 
   async function replaceForKind(
@@ -145,6 +136,7 @@ export function createModuleLookupsRepo(options: {
         })) as never,
       );
     });
+    await invalidateMultiTierCache({ tenantId: subdomain, domain: tableName });
     await redisDelPattern(redisKeys.setupPattern(subdomain, tableName));
   }
 
@@ -173,6 +165,7 @@ export function createModuleLookupsRepo(options: {
         })) as never,
       );
     });
+    await invalidateMultiTierCache({ tenantId: subdomain, domain: tableName });
     await redisDelPattern(redisKeys.setupPattern(subdomain, tableName));
   }
 

@@ -10,7 +10,8 @@ import {
   upsertWorkspaceGlobalSettings as upsertWorkspaceGlobalSettingsRepo,
 } from '../db/repositories/workspaceRepository.js';
 import { saveObject } from '../db/database.js';
-import { redisGet, redisSet, redisDel, redisKeys } from '../lib/redis.js';
+import { redisDel, redisKeys } from '../lib/redis.js';
+import { getOrSetMultiTier, invalidateMultiTierCache } from '../lib/cache/index.js';
 
 const MASK_PREFIX = '****';
 const GLOBAL_SETTINGS_CACHE_TTL_SECONDS = 300;
@@ -19,7 +20,9 @@ const globalSettingsCacheKey = (t: string) => redisKeys.globalSettings(t);
 export async function invalidateGlobalSettingsCache(tenant: string): Promise<void> {
   const cleanTenant = tenant.trim().toLowerCase();
   if (!cleanTenant) return;
-  await redisDel(globalSettingsCacheKey(cleanTenant));
+  const key = globalSettingsCacheKey(cleanTenant);
+  await redisDel(key);
+  await invalidateMultiTierCache({ tenantId: cleanTenant, domain: 'global_settings', key });
 }
 
 /**
@@ -61,23 +64,20 @@ export async function loadGlobalSettings(subdomain?: string): Promise<GlobalSett
   }
   const cleanTenant = tenant.trim().toLowerCase();
   const key = globalSettingsCacheKey(cleanTenant);
-  const cached = await redisGet(key);
-  if (cached) {
-    try {
-      return JSON.parse(cached) as GlobalSettings;
-    } catch {
-      // Fall through
-    }
-  }
-
-  try {
-    const settings = await getWorkspaceGlobalSettings(cleanTenant);
-    const resolved = settings ?? mergeGlobalSettings(null);
-    await redisSet(key, JSON.stringify(resolved), GLOBAL_SETTINGS_CACHE_TTL_SECONDS);
-    return resolved;
-  } catch {
-    return mergeGlobalSettings(null);
-  }
+  return getOrSetMultiTier(
+    cleanTenant,
+    'global_settings',
+    key,
+    async () => {
+      try {
+        const settings = await getWorkspaceGlobalSettings(cleanTenant);
+        return settings ? mergeGlobalSettings(settings) : mergeGlobalSettings(null);
+      } catch {
+        return mergeGlobalSettings(null);
+      }
+    },
+    { ttlSeconds: GLOBAL_SETTINGS_CACHE_TTL_SECONDS },
+  );
 }
 
 /** Saves full global settings for the current request tenant (or specified subdomain). */

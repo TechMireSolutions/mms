@@ -3,6 +3,7 @@ import { type Session } from '@mms/shared';
 import { sessions } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { hydrateSessionsList, hydrateSessionsListSummary } from './sessionRepositoryHydrate.js';
+import { getPreparedSessionById } from '../preparedStatements.js';
 
 export const sessionSelectColumns = {
   id: sessions.id,
@@ -50,10 +51,23 @@ export async function findSessionById(tenant: string, id: string): Promise<Sessi
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     if (!tx || typeof (tx as any).select !== 'function') return null;
-    const rows = await tx
-      .select(sessionSelectColumns)
-      .from(sessions)
-      .where(and(eq(sessions.workspaceSubdomain, subdomain), eq(sessions.id, id)));
+    let rows: (typeof sessions.$inferSelect)[];
+    if (process.env.MMS_USE_PREPARED_STATEMENTS !== 'false' && typeof (tx as any).execute === 'function') {
+      try {
+        const stmt = getPreparedSessionById(tx);
+        rows = await stmt.execute({ subdomain, id });
+      } catch {
+        rows = await tx
+          .select(sessionSelectColumns)
+          .from(sessions)
+          .where(and(eq(sessions.workspaceSubdomain, subdomain), eq(sessions.id, id)));
+      }
+    } else {
+      rows = await tx
+        .select(sessionSelectColumns)
+        .from(sessions)
+        .where(and(eq(sessions.workspaceSubdomain, subdomain), eq(sessions.id, id)));
+    }
     const row = rows[0];
     if (!row) return null;
     const [result] = await hydrateSessionsList(tx, subdomain, rows);

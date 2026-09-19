@@ -9,7 +9,6 @@ import { formatTraceParent } from '../config/telemetry.js';
 import { getWorkspaceBySubdomain } from '../services/workspaceService.js';
 import { loadGlobalSettings } from '../services/globalSettingsService.js';
 import { sendForbidden, sendUnauthorized } from '../lib/httpErrors.js';
-import { redisSet, redisKeys } from '../lib/redis.js';
 import { checkTenantAuthPipelineBatch } from '../services/session.service.js';
 import { markRequestDiagnosticStage } from '../lib/requestDiagnostics.js';
 
@@ -63,7 +62,6 @@ export async function authenticateTenant(
     tenantBlocked,
     tokenRevoked,
     userSessionRevoked,
-    userActiveCached,
     globalSettingsCached,
     workspaceCached,
   } = await checkTenantAuthPipelineBatch({
@@ -102,39 +100,30 @@ export async function authenticateTenant(
   }
 
   if (user.id) {
-    const activeKey = redisKeys.userActive(tenant, String(user.id), user.role ?? 'user');
-    if (userActiveCached !== 'active') {
-      try {
-        const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepositoryHydrate.js');
-        // Session validation must be scoped to the request's workspace: an
-        // id-only lookup runs with RLS bypassed and could resolve another
-        // tenant's user.
-        const userRow = await findTenantUserRowById(tenant, String(user.id));
-        if (userRow?.deletedAt || (userRow as { deleted_at?: unknown })?.deleted_at) {
+    try {
+      const { getTenantRoleMatrix } = await import('../services/rbacService.js');
+      const matrix = await getTenantRoleMatrix(tenant);
+      const userStatus = matrix[String(user.id)];
+      if (!userStatus || userStatus.deletedAt) {
+        await sendUnauthorized(reply, 'Session revoked');
+        return;
+      }
+      if (user.role === 'teacher') {
+        const { teachersRepository } = await import('../faculty/repository/facultyRepositoryAdapter.js');
+        const teacherRow = await teachersRepository.findById(tenant, String(user.id));
+        if (teacherRow?.deletedAt || (teacherRow as { deleted_at?: unknown })?.deleted_at) {
           await sendUnauthorized(reply, 'Session revoked');
           return;
         }
-        if (user.role === 'teacher') {
-          const { teachersRepository } = await import('../faculty/repository/facultyRepositoryAdapter.js');
-          const teacherRow = await teachersRepository.findById(tenant, String(user.id));
-          if (teacherRow?.deletedAt || (teacherRow as { deleted_at?: unknown })?.deleted_at) {
-            await sendUnauthorized(reply, 'Session revoked');
-            return;
-          }
-        }
-        await redisSet(activeKey, 'active', 60);
-      } catch (error) {
-        // Tests run without a database and expect the request to proceed.
-        if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
-          // Fail closed: if we cannot confirm the account is still active we
-          // must not grant access (a DB outage previously bypassed the check).
-          request.log.error(
-            { err: error, tenant, userId: String(user.id) },
-            'Failed to verify account active state; denying request',
-          );
-          await sendUnauthorized(reply, 'Session validation failed');
-          return;
-        }
+      }
+    } catch (error) {
+      if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+        request.log.error(
+          { err: error, tenant, userId: String(user.id) },
+          'Failed to verify account active state; denying request',
+        );
+        await sendUnauthorized(reply, 'Session validation failed');
+        return;
       }
     }
   }

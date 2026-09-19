@@ -4,20 +4,6 @@ import {
   loadContactSummaryChildMaps,
 } from '../db/repositories/contactRepositoryHydrateChildren.js';
 
-function createMockTx(queue: unknown[][]) {
-  let index = 0;
-  const makeNode = (): any => ({
-    from: () => makeNode(),
-    where: () => makeNode(),
-    orderBy: () => makeNode(),
-    then: (resolve: (v: unknown) => void) => resolve(queue[index++] ?? []),
-  });
-
-  return {
-    select: vi.fn(() => makeNode()),
-  } as any;
-}
-
 describe('contactRepositoryHydrateChildren', () => {
   it('loadContactChildMaps groups all 12 child collections by contactId', async () => {
     const mockPhones = [
@@ -40,24 +26,33 @@ describe('contactRepositoryHydrateChildren', () => {
     const mockAttachments = [{ id: 'att1', contactId: 'c1', name: 'doc.pdf', url: 'https://example.com/doc.pdf' }];
     const mockBankDetails = [{ id: 'bd1', contactId: 'c1', bankName: 'Global Bank' }];
 
-    const tx = createMockTx([
-      mockPhones,
-      mockEmails,
-      mockAddresses,
-      mockTags,
-      mockSocials,
-      mockEducations,
-      mockExperiences,
-      mockSkills,
-      mockRelationships,
-      mockActivities,
-      mockAttachments,
-      mockBankDetails,
-    ]);
+
+    const tx = {
+      execute: vi.fn().mockResolvedValue({
+        rows: [{
+          contactId: 'c1',
+          phones: [mockPhones[0]],
+          emails: [mockEmails[0]],
+          addresses: [mockAddresses[0]],
+          tags: [mockTags[0]],
+          socials: [mockSocials[0]],
+          educations: [mockEducations[0]],
+          experiences: [mockExperiences[0]],
+          skills: [mockSkills[0]],
+          relationships: [mockRelationships[0]],
+          activities: [mockActivities[0]],
+          attachments: [mockAttachments[0]],
+          bankDetails: [mockBankDetails[0]],
+        }, {
+          contactId: 'c2',
+          phones: [mockPhones[1]],
+        }]
+      })
+    } as any;
 
     const result = await loadContactChildMaps(tx, 'test-subdomain', ['c1', 'c2']);
 
-    expect(tx.select).toHaveBeenCalledTimes(12);
+    expect(tx.execute).toHaveBeenCalledTimes(1);
     expect(result.phonesMap.get('c1')).toEqual([mockPhones[0]]);
     expect(result.phonesMap.get('c2')).toEqual([mockPhones[1]]);
     expect(result.emailsMap.get('c1')).toEqual([mockEmails[0]]);
@@ -81,18 +76,23 @@ describe('contactRepositoryHydrateChildren', () => {
     const mockSocials = [{ id: 's1', contactId: 'c1', platform: 'twitter' }];
     const mockRelationships = [{ id: 'r1', contactId: 'c1', relationship: 'Parent' }];
 
-    const tx = createMockTx([
-      mockPhones,
-      mockEmails,
-      mockAddresses,
-      mockTags,
-      mockSocials,
-      mockRelationships,
-    ]);
+    const tx = {
+      execute: vi.fn().mockResolvedValue({
+        rows: [{
+          contactId: 'c1',
+          phones: [mockPhones[0]],
+          emails: [mockEmails[0]],
+          addresses: [mockAddresses[0]],
+          tags: [mockTags[0]],
+          socials: [mockSocials[0]],
+          relationships: [mockRelationships[0]],
+        }]
+      })
+    } as any;
 
     const result = await loadContactSummaryChildMaps(tx, 'test-subdomain', ['c1']);
 
-    expect(tx.select).toHaveBeenCalledTimes(6);
+    expect(tx.execute).toHaveBeenCalledTimes(1);
     expect(result.phonesMap.get('c1')).toEqual([mockPhones[0]]);
     expect(result.emailsMap.get('c1')).toEqual([mockEmails[0]]);
     expect(result.addressesMap.get('c1')).toEqual([mockAddresses[0]]);

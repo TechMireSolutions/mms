@@ -157,7 +157,7 @@ describe('csvExportStreamFactory', () => {
     it('throws CsvExportLimitError when record count exceeds MODULE_CSV_EXPORT_MAX_RECORDS', async () => {
       async function* excessRecordsGen(): AsyncGenerator<string, { count: number; filename: string }, undefined> {
         yield 'chunk1';
-        return { count: 501, filename: 'large.csv' };
+        return { count: MODULE_CSV_EXPORT_MAX_RECORDS + 1, filename: 'large.csv' };
       }
 
       await expect(
@@ -167,7 +167,7 @@ describe('csvExportStreamFactory', () => {
   });
 
   it('exports MODULE_CSV_EXPORT_MAX_BYTES and MODULE_CSV_EXPORT_MAX_RECORDS constants', () => {
-    expect(MODULE_CSV_EXPORT_MAX_BYTES).toBe(25 * 1024 * 1024);
-    expect(MODULE_CSV_EXPORT_MAX_RECORDS).toBe(500);
+    expect(MODULE_CSV_EXPORT_MAX_BYTES).toBe(50 * 1024 * 1024);
+    expect(MODULE_CSV_EXPORT_MAX_RECORDS).toBe(5000);
   });
 });

@@ -4,6 +4,7 @@ import { usersRepository } from '../repository/usersRepositoryAdapter.js';
 import { getRequestTenant, requireTenant } from '../../lib/tenantContext.js';
 import { broadcastCollection } from '../../services/websocketService.js';
 import { getHydratedUsers, saveUsers } from '../../services/auth/userService.js';
+import { invalidateTenantRbac } from '../../services/rbacService.js';
 import { getRawUsers, type PersistedUser } from '../../services/auth/userServiceShared.js';
 import { deleteRefreshTokensForUser } from '../../services/auth/authArtifactService.js';
 import { sendTenantWelcomeEmail } from '../../services/auth/tenantPasswordOtpService.js';
@@ -169,6 +170,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     const users = await getRawUsers();
     users.push(userRecord);
     await saveUsers(users);
+    await invalidateTenantRbac(tenant);
     await broadcastCollection('users');
 
     await recordUserActivityLog(
@@ -230,6 +232,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     const ok = await repo.softDeleteTenantUserRow(tenant, id, deletedBy);
     if (ok) {
       await deleteRefreshTokensForUser(id);
+      await invalidateTenantRbac(tenant);
       await broadcastCollection('users');
 
       await recordUserActivityLog(
@@ -260,6 +263,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
 
     const ok = await repo.restoreTenantUserRow(tenant, id);
     if (ok) {
+      await invalidateTenantRbac(tenant);
       await broadcastCollection('users');
 
       await recordUserActivityLog(
@@ -372,6 +376,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       }
 
       await saveUsers(merged as unknown as Parameters<typeof saveUsers>[0]);
+      await invalidateTenantRbac(requireTenant());
       await broadcastCollection('users');
       return loadWorkspaceUsers();
     },
@@ -420,6 +425,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       }
 
       await saveUsers(rawUsers);
+      await invalidateTenantRbac(tenant);
       await broadcastCollection('users');
 
       await recordUserActivityLog(

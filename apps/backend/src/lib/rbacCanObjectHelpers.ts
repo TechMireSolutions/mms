@@ -1,5 +1,6 @@
 import type { User } from '@mms/shared';
 import { PLATFORM_SUPER_USERS_OBJECT_KEY, roleHasPermission } from '@mms/shared';
+import { LRUCache } from 'lru-cache';
 import {
   OBJECT_READ_PERMISSION,
   OBJECT_WRITE_PERMISSION,
@@ -7,11 +8,15 @@ import {
   isAllowedObjectKey,
 } from './rbacPermissionMaps.js';
 
-/**
- * Returns true if the user may read the given KV object.
- * Email integration settings are admin-only; other staff objects follow workspace roles.
- */
-export function canReadObject(user: User, key: string): boolean {
+const canReadObjectCache = new LRUCache<string, boolean>({ max: 2048 });
+const canWriteObjectCache = new LRUCache<string, boolean>({ max: 2048 });
+
+export function clearRbacObjectCache(): void {
+  canReadObjectCache.clear();
+  canWriteObjectCache.clear();
+}
+
+function computeCanReadObject(user: User, key: string): boolean {
   if (!user || !user.role) {
     return false;
   }
@@ -29,9 +34,23 @@ export function canReadObject(user: User, key: string): boolean {
 }
 
 /**
- * Returns true if the user may write the given KV object.
+ * Returns true if the user may read the given KV object.
+ * Email integration settings are admin-only; other staff objects follow workspace roles.
  */
-export function canWriteObject(user: User, key: string): boolean {
+export function canReadObject(user: User, key: string): boolean {
+  if (!user || !user.role) {
+    return false;
+  }
+  const cacheKey = `${user.role}:${key}`;
+  const cached = canReadObjectCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const result = computeCanReadObject(user, key);
+  canReadObjectCache.set(cacheKey, result);
+  return result;
+}
+
+function computeCanWriteObject(user: User, key: string): boolean {
   if (!user || !user.role) {
     return false;
   }
@@ -52,6 +71,22 @@ export function canWriteObject(user: User, key: string): boolean {
     return roleHasPermission(user.role, mapped);
   }
   return WRITE_ROLES.has(user.role);
+}
+
+/**
+ * Returns true if the user may write the given KV object.
+ */
+export function canWriteObject(user: User, key: string): boolean {
+  if (!user || !user.role) {
+    return false;
+  }
+  const cacheKey = `${user.role}:${key}`;
+  const cached = canWriteObjectCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const result = computeCanWriteObject(user, key);
+  canWriteObjectCache.set(cacheKey, result);
+  return result;
 }
 
 /** Bulk sync upload — same privilege as settings.global.write (admin today). */

@@ -102,7 +102,6 @@ export interface TenantAuthPipelineBatch {
   tenantBlocked: boolean;
   tokenRevoked: boolean;
   userSessionRevoked: boolean;
-  userActiveCached: string | null;
   globalSettingsCached: string | null;
   workspaceCached: string | null;
 }
@@ -163,14 +162,12 @@ export async function checkTenantAuthPipelineBatch(params: {
   const tenantKey = tenantClean ? `${TENANT_BLOCKED_PREFIX}${tenantClean}` : null;
   const jtiKey = params.jti ? `${REVOKED_TOKEN_PREFIX}${params.jti}` : null;
   const userKey = params.userId ? `${USER_REVOKED_AT_PREFIX}${params.userId}` : null;
-  const activeKey = tenantClean && params.userId ? redisKeys.userActive(tenantClean, params.userId, params.role ?? 'user') : null;
   const settingsKey = tenantClean ? redisKeys.globalSettings(tenantClean) : null;
   const workspaceKey = tenantClean ? redisKeys.workspace(tenantClean) : null;
 
   if (tenantKey) ops.push({ key: tenantKey, type: 'exists' });
   if (jtiKey) ops.push({ key: jtiKey, type: 'exists' });
   if (userKey) ops.push({ key: userKey, type: 'get' });
-  if (activeKey) ops.push({ key: activeKey, type: 'get' });
   if (settingsKey) ops.push({ key: settingsKey, type: 'get' });
   if (workspaceKey) ops.push({ key: workspaceKey, type: 'get' });
 
@@ -179,7 +176,6 @@ export async function checkTenantAuthPipelineBatch(params: {
   const tenantBlocked = tenantKey ? (results[i++] as boolean) : false;
   const tokenRevoked = jtiKey ? (results[i++] as boolean) : false;
   const userRevokedAtStr = userKey ? (results[i++] as string | null) : null;
-  const userActiveCached = activeKey ? (results[i++] as string | null) : null;
   const globalSettingsCached = settingsKey ? (results[i++] as string | null) : null;
   const workspaceCached = workspaceKey ? (results[i] as string | null) : null;
 
@@ -193,7 +189,6 @@ export async function checkTenantAuthPipelineBatch(params: {
     tenantBlocked,
     tokenRevoked,
     userSessionRevoked,
-    userActiveCached,
     globalSettingsCached,
     workspaceCached,
   };

@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq';
 import { initDb, closeDatabase } from '../db/database.js';
 import { workspaces } from '../db/schema.js';
-import { activeDb } from '../db/dbConnection.js';
+import { activeDb, initializeDatabaseConnection } from '../db/dbConnection.js';
 import { disconnectRedis } from '../lib/redis.js';
 import {
   QUEUE_PDF_RENDERING,
@@ -11,8 +11,14 @@ import {
   getBullMQConnectionOptions,
   closeAllQueues,
   handleDeadLetterJob,
+  decrementTenantInflightJobs,
   type EnqueuedJobData,
 } from './queues/index.js';
+import {
+  SANDBOXED_PDF_PROCESSOR_PATH,
+  SANDBOXED_EXPORT_PROCESSOR_PATH,
+  WORKER_FORK_OPTIONS,
+} from './queues/queueConfig.js';
 import { processBackgroundJob } from './processors/jobProcessor.js';
 import { registerDefaultBackgroundJobRunners } from '../services/backgroundJobRunnerService.js';
 import { logger } from '../lib/logger.js';
@@ -104,33 +110,67 @@ export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData>
   const connection = getBullMQConnectionOptions();
   const concurrency = QUEUE_SETTINGS[queueName]?.concurrency ?? 2;
 
-  const worker = new Worker<EnqueuedJobData>(
-    queueName,
-    async (job) => {
-      // Heap backpressure sentinel: check memory usage before running heavy background jobs
-      const mem = process.memoryUsage();
-      if (mem.heapUsed > 0.85 * mem.heapTotal && mem.heapUsed > 256 * 1024 * 1024) {
-        logger.warn(
-          { queue: queueName, jobId: job.id, heapUsed: mem.heapUsed, heapTotal: mem.heapTotal },
-          'Worker memory backpressure threshold exceeded; pausing briefly to allow GC',
-        );
-        await new Promise((resolve) => setTimeout(resolve, 500));
-      }
-      await processBackgroundJob(job);
-    },
-    {
-      connection,
-      concurrency,
-      lockDuration: 60000,
-    },
-  );
+  let worker: Worker<EnqueuedJobData>;
+
+  if (queueName === QUEUE_PDF_RENDERING) {
+    worker = new Worker<EnqueuedJobData>(
+      queueName,
+      SANDBOXED_PDF_PROCESSOR_PATH,
+      {
+        connection,
+        concurrency,
+        useWorkerThreads: false,
+        workerForkOptions: WORKER_FORK_OPTIONS,
+        lockDuration: 60000,
+      },
+    );
+  } else if (queueName === QUEUE_BULK_EXPORT) {
+    worker = new Worker<EnqueuedJobData>(
+      queueName,
+      SANDBOXED_EXPORT_PROCESSOR_PATH,
+      {
+        connection,
+        concurrency,
+        useWorkerThreads: false,
+        workerForkOptions: WORKER_FORK_OPTIONS,
+        lockDuration: 60000,
+      },
+    );
+  } else {
+    worker = new Worker<EnqueuedJobData>(
+      queueName,
+      async (job) => {
+        // Heap backpressure sentinel: check memory usage before running heavy background jobs
+        const mem = process.memoryUsage();
+        if (mem.heapUsed > 0.85 * mem.heapTotal && mem.heapUsed > 256 * 1024 * 1024) {
+          logger.warn(
+            { queue: queueName, jobId: job.id, heapUsed: mem.heapUsed, heapTotal: mem.heapTotal },
+            'Worker memory backpressure threshold exceeded; pausing briefly to allow GC',
+          );
+          await new Promise((resolve) => setTimeout(resolve, 500));
+        }
+        await processBackgroundJob(job);
+      },
+      {
+        connection,
+        concurrency,
+        lockDuration: 60000,
+      },
+    );
+  }
 
   worker.on('completed', (job) => {
     logger.info({ jobId: job.id, queue: queueName }, 'Job completed');
+    if (job?.data?.tenantId) {
+      void decrementTenantInflightJobs(job.data.tenantId).catch(() => {});
+    }
   });
 
   worker.on('failed', (job, err) => {
     logger.error({ jobId: job?.id, queue: queueName, err: err.message }, 'Job failed');
+    if (job?.data?.tenantId) {
+      void decrementTenantInflightJobs(job.data.tenantId).catch(() => {});
+    }
     if (job && job.attemptsMade >= (job.opts.attempts || 3)) {
       void handleDeadLetterJob(queueName, job.data, err.message).catch((deadLetterErr) => {
         logger.error({ jobId: job.id, err: deadLetterErr }, 'Dead-letter handling failed');
@@ -151,6 +191,7 @@ export async function startWorkerDaemon(): Promise<void> {
   // before the first Date/DB call (timestamptz round-trips otherwise shift by the
   // host's UTC offset, e.g. auth_artifacts / background job TTL checks).
   process.env.TZ = 'UTC';
+  process.env.MMS_PROCESS_ROLE = 'worker';
   if (process.env.NODE_ENV !== 'production') {
     try {
       process.loadEnvFile();
@@ -159,6 +200,8 @@ export async function startWorkerDaemon(): Promise<void> {
     }
   }
 
+  // Explicitly initialize dedicated worker connection pool (budgeted to max: 10)
+  initializeDatabaseConnection({ role: 'worker', max: 10 });
   await initDb();
   await cleanupOrphanedJobs();
 

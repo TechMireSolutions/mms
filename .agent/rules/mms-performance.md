@@ -28,6 +28,13 @@ Authoritative performance and resource constraints across **tenant workspaces an
   - Maintain and reuse the persistent connection pool (`PG_POOL_MAX`, default 20) with `withTenant`.
   - NEVER open ad-hoc, unpooled database connections (`new Pool()` or `new Client()` per request).
   - Use Node.js 24 Explicit Resource Management (`using` / `await using`) for automatic cleanup and checkout release back to the pool without boilerplate `finally` blocks.
+- **Compiled Prepared Statements on Hot Read Paths:**
+  - Hot read lookups by ID and workspace (`findTenantUserRowById`, `findContactById`, `findStudentById`, `findSessionById`) must compile Drizzle prepared statements (`db.select()...where(...).prepare(...)`) with parameter placeholders (`sql.placeholder('subdomain')`, `sql.placeholder('id')`).
+  - Compiled prepared statements are active by default (`MMS_USE_PREPARED_STATEMENTS !== 'false'`) when client execution is available, eliminating repeated SQL AST generation, parameter tokenization, and query plan re-compilation overhead in the PostgreSQL server.
+- **Correlated Multi-Collection SQL Aggregations:**
+  - When hydrating multi-collection child entities (e.g. contact child maps: phones, emails, addresses, tags, socials, educations, etc.), consolidate child queries into a single SQL statement using correlated subqueries with PostgreSQL `json_agg(json_build_object(...))` or `jsonb_agg`. This avoids running 6–12 parallel queries per entity batch and drastically slashes connection acquisition contention and socket roundtrip latency. The aggregated path is active by default (`MMS_DISABLE_AGGREGATED_CHILD_HYDRATION !== 'true'`) when `tx.execute` is available.
+- **Batch Size Guards on Child Entity Hydration:**
+  - List and child hydration layers (`contactRepositoryHydrateChildren.ts`, `sessionRepositoryHydrate.ts`) must enforce batch size ceilings (`BATCH_SIZE = 250`, `SESSION_HYDRATION_BATCH_SIZE = 250`). Query lists exceeding 250 IDs must be chunked sequentially into bounded slices to prevent oversized `IN (...)` predicate compilation degradation and process memory ballooning.
 - **Audit Hash Chain Sharding & Partition Detachment (`mms-audit-trail`):**
   - NEVER serialize system writes through a single global cryptographic hash chain. Shard hash chains per logical partition (tenant or aggregate domain) and roll up into periodic Merkle roots.
   - Archive hot audit partitions by detaching date partitions (`ALTER TABLE ... DETACH PARTITION`) instead of running `DELETE` — details `mms-data-layer.md` §5.
@@ -42,6 +49,19 @@ Authoritative performance and resource constraints across **tenant workspaces an
 
 ## 2. Server Compute & Memory Discipline
 
+- **BullMQ Sandboxed Subprocess Workers & CPU Sandboxing (`mms-background-jobs`):**
+  - CPU-intensive and memory-hungry workloads (PDF rendering via Typst, bulk data export via Excel/CSV, massive messaging campaigns) must NEVER execute inside the main Fastify event loop thread or within shared in-process worker threads.
+  - Offload heavy tasks to BullMQ sandboxed child processes (`useWorkerThreads: false`) isolated with `--max-old-space-size=512`, ensuring unhandled worker faults or memory leaks terminate only the child process and leave the parent API supervisor unharmed.
+  - Enforce a hard 60-second execution deadline (`JOB_EXECUTION_TIMEOUT_MS = 60_000`) with `AbortController` cancellation propagated to `executeJob` and background job runners.
+- **Multi-Tenant Fair-Share Queue Scheduling:**
+  - Background task queues must enforce dynamic tenant fair-share priority bands (Band 1: $\le 1$ inflight job, priority 1; Band 2: $2–5$ inflight jobs, priority 2; Band 3: $>5$ inflight jobs, priority 3).
+  - Track active inflight jobs per tenant in Redis (`mms:tenant:{tenantId}:inflight_jobs`) using atomic Redis operations (`redisIncr` / `redisDecr`). Any single tenant bursting high-volume background jobs is automatically de-prioritized to prevent starvation of smaller or interactive tenant requests.
+- **Partitioned Connection Pool Budgets:**
+  - Background workers and interactive HTTP API instances must run on partitioned database connection pools (`dbConnection.ts`).
+  - Background workers are constrained to a lean pool (`role: 'worker', max: 10`) to preserve the primary connection budget for interactive user-facing REST transactions (`role: 'http', max: 20–30`).
+- **Memory-Bounded Streaming Pipelines (<50 MB Peak Heap):**
+  - Bulk exports (CSV/JSON) must stream row-by-row through backpressure-regulated Node.js pipelines (`streamCsvExportFromGenerator`, `executeMemoryBoundedPipeline`) with strict 16 KB buffer windows (`highWaterMark: 16384`).
+  - Generators must pause when downstream sockets or file buffers fill up, guaranteeing that memory consumption during 50,000+ row exports strictly maintains a peak heap delta below 50 MB.
 - **Zero Memory Buffering for Large Datasets:**
   - NEVER buffer large datasets, bulk exports, or file uploads into process memory (`Buffer.concat`, `file.toBuffer()`, or loading 10,000 rows into memory arrays).
   - File uploads: Stream multipart files using Fastify `@fastify/multipart` stream chunks directly to disk/storage.
@@ -69,6 +89,13 @@ Authoritative performance and resource constraints across **tenant workspaces an
 ---
 
 ## 3. Caching Architecture (Redis & In-Memory)
+- **Multi-Tier Caching Architecture (L1 LRU + L2 Redis + Cross-Node Pub/Sub):**
+  - Frequently queried tenant configurations, module lookups, and RBAC permission matrices must implement a multi-tier caching hierarchy (`multiTierCache.ts`):
+    - **L1 In-Process LRU:** In-memory LRU (`lru-cache`, max 5,000 items, TTL 5m) with a hard 50 MB heap ceiling (`L1_MAX_HEAP_BYTES = 50 * 1024 * 1024`, `sizeCalculation`), eviction tracking, and zero I/O latency, strictly bounding heap consumption.
+    - **L2 Distributed Redis:** Centralized Redis cache serving as the distributed fallback layer before database evaluation.
+  - **Deterministic Cross-Node Invalidation:** When any tenant mutation occurs (`POST`/`PUT`/`PATCH`/`DELETE`), evict from local L1 and L2 Redis, then publish an invalidation event across the Redis channel `mms:cache-invalidation`. All worker and API nodes listening on the channel evict the matching tenant key or domain prefix from their local L1 caches immediately. Core entity repositories (`studentRepositoryPersist.ts`, `contactRepositoryPersist.ts`, `sessionRepositoryPersist.ts`, `financeInvoicesRepository.ts`, `tenantUserRepositoryPersist.ts`) as well as module setup lookups (`moduleSetupRepoLookups.ts`) and singleton configs (`moduleSetupRepoSingletonJson.ts`) are fully wired to `invalidateMultiTierCache`.
+  - **Cache Stampede Protection:** High-concurrency reads for cold or expired keys must coalesce in-flight promises (single-flight execution) so that simultaneous requests for the same cache key share a single database fetcher execution rather than hammering the database with identical queries.
+  - **Cache Metrics & Diagnostics:** In-process L1/L2 hits, misses, evictions, heap size, and calculated hit ratios are aggregated by `getMultiTierCacheMetrics()` and exposed via the `/health` diagnostic endpoint.
 - **Multi-Tier TTLs:** Cache read-heavy queries via Redis (`apps/backend/src/lib/redis.ts`) / LRU. Standard TTLs: `60s` for aggregate metrics/KPIs; `300s` for static config/lookups/branding. SWR on high-traffic read paths.
 - **Tenant Isolation:** Cache keys MUST isolate by tenant and context: `mms:{tenantId}:{module}:{resource}:{hash(queryParams)}`. Include role/permission scope when payload varies by viewer. Global keys for tenant data are strictly banned.
 - **Write Invalidation:** Every mutation (`POST`/`PUT`/`PATCH`/`DELETE`) must evict affected keys and broadcast real-time invalidation via `/api/ws` (`broadcastTenantUpdate`).

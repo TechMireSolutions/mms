@@ -1,5 +1,6 @@
 import type { User } from '@mms/shared';
 import { WORKSPACES_COLLECTION, roleHasPermission } from '@mms/shared';
+import { LRUCache } from 'lru-cache';
 import {
   COLLECTION_DELETE_PERMISSION,
   COLLECTION_READ_PERMISSION,
@@ -16,11 +17,17 @@ import {
   canWriteMessaging,
 } from './rbacCanModuleHelpers.js';
 
-/**
- * Returns true if the user may read the given collection.
- * Mapped collections use `@mms/shared` permissions; legacy collections allow staff write roles.
- */
-export function canReadCollection(user: User, collectionName: string): boolean {
+const canReadCollectionCache = new LRUCache<string, boolean>({ max: 2048 });
+const canWriteCollectionCache = new LRUCache<string, boolean>({ max: 2048 });
+const canDeleteCollectionCache = new LRUCache<string, boolean>({ max: 2048 });
+
+export function clearRbacCollectionCache(): void {
+  canReadCollectionCache.clear();
+  canWriteCollectionCache.clear();
+  canDeleteCollectionCache.clear();
+}
+
+function computeCanReadCollection(user: User, collectionName: string): boolean {
   if (!user || !user.role) {
     return false;
   }
@@ -80,10 +87,23 @@ export function canReadCollection(user: User, collectionName: string): boolean {
 }
 
 /**
- * Returns true if the user may write to the given collection.
- * The `users` collection is restricted to administrators only.
+ * Returns true if the user may read the given collection.
+ * Mapped collections use `@mms/shared` permissions; legacy collections allow staff write roles.
  */
-export function canWriteCollection(user: User, collectionName: string): boolean {
+export function canReadCollection(user: User, collectionName: string): boolean {
+  if (!user || !user.role) {
+    return false;
+  }
+  const cacheKey = `${user.role}:${collectionName}`;
+  const cached = canReadCollectionCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const result = computeCanReadCollection(user, collectionName);
+  canReadCollectionCache.set(cacheKey, result);
+  return result;
+}
+
+function computeCanWriteCollection(user: User, collectionName: string): boolean {
   if (!user || !user.role) {
     return false;
   }
@@ -143,10 +163,23 @@ export function canWriteCollection(user: User, collectionName: string): boolean 
 }
 
 /**
- * Returns true if the user may soft-delete / restore the given collection.
- * Falls back to write permission when no distinct delete mapping exists.
+ * Returns true if the user may write to the given collection.
+ * The `users` collection is restricted to administrators only.
  */
-export function canDeleteCollection(user: User, collectionName: string): boolean {
+export function canWriteCollection(user: User, collectionName: string): boolean {
+  if (!user || !user.role) {
+    return false;
+  }
+  const cacheKey = `${user.role}:${collectionName}`;
+  const cached = canWriteCollectionCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const result = computeCanWriteCollection(user, collectionName);
+  canWriteCollectionCache.set(cacheKey, result);
+  return result;
+}
+
+function computeCanDeleteCollection(user: User, collectionName: string): boolean {
   if (!user || !user.role) {
     return false;
   }
@@ -192,4 +225,21 @@ export function canDeleteCollection(user: User, collectionName: string): boolean
     return roleHasPermission(user.role, mapped);
   }
   return canWriteCollection(user, collectionName);
+}
+
+/**
+ * Returns true if the user may soft-delete / restore the given collection.
+ * Falls back to write permission when no distinct delete mapping exists.
+ */
+export function canDeleteCollection(user: User, collectionName: string): boolean {
+  if (!user || !user.role) {
+    return false;
+  }
+  const cacheKey = `${user.role}:${collectionName}`;
+  const cached = canDeleteCollectionCache.get(cacheKey);
+  if (cached !== undefined) return cached;
+
+  const result = computeCanDeleteCollection(user, collectionName);
+  canDeleteCollectionCache.set(cacheKey, result);
+  return result;
 }

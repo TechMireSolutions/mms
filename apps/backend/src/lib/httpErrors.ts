@@ -125,3 +125,9 @@ export class NotFoundError extends HttpDomainError {
     super(404, 'not_found', message);
   }
 }
+
+export class ServiceUnavailableError extends HttpDomainError {
+  constructor(message = 'Service unavailable') {
+    super(503, 'service_unavailable', message);
+  }
+}

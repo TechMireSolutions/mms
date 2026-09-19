@@ -17,6 +17,7 @@ import {
   stripClientSoftDeleteFields,
 } from './contactValidationUseCases.js';
 import { broadcastCollection } from '../../lib/livePush.js';
+import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 
@@ -75,6 +76,10 @@ export async function upsertContact(
     await invalidateDuplicateScanCache();
     return { contact: saved, created, restoredFromDelete: restoredFromDelete || undefined };
   });
+  const tenant = getRequestTenant();
+  if (tenant) {
+    await invalidateMultiTierCache({ tenantId: tenant, domain: 'contacts' });
+  }
   await broadcastCollection('contacts');
   return result;
 }
@@ -126,7 +131,13 @@ export async function updateContactById(
     await invalidateDuplicateScanCache();
     return next;
   });
-  if (saved) await broadcastCollection('contacts');
+  if (saved) {
+    const tenant = getRequestTenant();
+    if (tenant) {
+      await invalidateMultiTierCache({ tenantId: tenant, domain: 'contacts' });
+    }
+    await broadcastCollection('contacts');
+  }
   return saved;
 }
 
@@ -180,6 +191,10 @@ export async function mergeContactsById(
     await invalidateDuplicateScanCache();
     return next;
   });
+  const tenant = getRequestTenant();
+  if (tenant) {
+    await invalidateMultiTierCache({ tenantId: tenant, domain: 'contacts' });
+  }
   await broadcastCollection('contacts');
   return saved;
 }
@@ -192,6 +207,7 @@ export async function bulkSaveContacts(
   const tenant = getRequestTenant();
   if (!tenant || contacts.length === 0) return;
   await repo.bulkSave(tenant, contacts);
+  await invalidateMultiTierCache({ tenantId: tenant, domain: 'contacts' });
 }
 
 export async function bulkTagContacts(
@@ -245,6 +261,10 @@ export async function bulkTagContacts(
     return { updatedCount: toSave.length };
   });
   if (result.updatedCount > 0) {
+    const tenant = getRequestTenant();
+    if (tenant) {
+      await invalidateMultiTierCache({ tenantId: tenant, domain: 'contacts' });
+    }
     await broadcastCollection('contacts');
   }
   return result;

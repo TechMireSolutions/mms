@@ -1,5 +1,5 @@
-import { and, eq, inArray } from 'drizzle-orm';
-import {
+import { sql } from 'drizzle-orm';
+import type {
   contactTags,
   contactPhones,
   contactEmails,
@@ -42,16 +42,6 @@ export interface ContactChildMaps {
   activitiesMap: Map<string, ActivityRow[]>;
   attachmentsMap: Map<string, AttachmentRow[]>;
   bankDetailsMap: Map<string, BankDetailRow[]>;
-}
-
-function groupByContactId<T extends { contactId: string }>(rows: T[]): Map<string, T[]> {
-  const map = new Map<string, T[]>();
-  for (const row of rows) {
-    const list = map.get(row.contactId) ?? [];
-    list.push(row);
-    map.set(row.contactId, list);
-  }
-  return map;
 }
 
 export async function loadContactChildMaps(
@@ -111,285 +101,7 @@ export async function loadContactChildMaps(
     return combined;
   }
 
-  const [
-    phonesRows,
-    emailsRows,
-    addressesRows,
-    tagsRows,
-    socialsRows,
-    educationsRows,
-    experiencesRows,
-    skillsRows,
-    relationshipsRows,
-    activitiesRows,
-    attachmentsRows,
-    bankDetailsRows,
-  ] = await Promise.all([
-    tx
-      .select({
-        id: contactPhones.id,
-        contactId: contactPhones.contactId,
-        workspaceSubdomain: contactPhones.workspaceSubdomain,
-        number: contactPhones.number,
-        label: contactPhones.label,
-        countryCode: contactPhones.countryCode,
-        isPrimary: contactPhones.isPrimary,
-        whatsappStatus: contactPhones.whatsappStatus,
-        sortOrder: contactPhones.sortOrder,
-        createdAt: contactPhones.createdAt,
-      })
-      .from(contactPhones)
-      .where(
-        and(
-          eq(contactPhones.workspaceSubdomain, subdomain),
-          inArray(contactPhones.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactPhones.sortOrder),
-    tx
-      .select({
-        id: contactEmails.id,
-        contactId: contactEmails.contactId,
-        workspaceSubdomain: contactEmails.workspaceSubdomain,
-        address: contactEmails.address,
-        label: contactEmails.label,
-        isPrimary: contactEmails.isPrimary,
-        isVerified: contactEmails.isVerified,
-        sortOrder: contactEmails.sortOrder,
-        createdAt: contactEmails.createdAt,
-      })
-      .from(contactEmails)
-      .where(
-        and(
-          eq(contactEmails.workspaceSubdomain, subdomain),
-          inArray(contactEmails.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactEmails.sortOrder),
-    tx
-      .select({
-        id: contactAddresses.id,
-        contactId: contactAddresses.contactId,
-        workspaceSubdomain: contactAddresses.workspaceSubdomain,
-        label: contactAddresses.label,
-        line1: contactAddresses.line1,
-        city: contactAddresses.city,
-        state: contactAddresses.state,
-        country: contactAddresses.country,
-        isPrimary: contactAddresses.isPrimary,
-        sortOrder: contactAddresses.sortOrder,
-        createdAt: contactAddresses.createdAt,
-      })
-      .from(contactAddresses)
-      .where(
-        and(
-          eq(contactAddresses.workspaceSubdomain, subdomain),
-          inArray(contactAddresses.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactAddresses.sortOrder),
-    tx
-      .select({
-        id: contactTags.id,
-        contactId: contactTags.contactId,
-        workspaceSubdomain: contactTags.workspaceSubdomain,
-        name: contactTags.name,
-        createdAt: contactTags.createdAt,
-      })
-      .from(contactTags)
-      .where(
-        and(
-          eq(contactTags.workspaceSubdomain, subdomain),
-          inArray(contactTags.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactTags.createdAt),
-    tx
-      .select({
-        id: contactSocials.id,
-        contactId: contactSocials.contactId,
-        workspaceSubdomain: contactSocials.workspaceSubdomain,
-        platform: contactSocials.platform,
-        url: contactSocials.url,
-        sortOrder: contactSocials.sortOrder,
-        createdAt: contactSocials.createdAt,
-      })
-      .from(contactSocials)
-      .where(
-        and(
-          eq(contactSocials.workspaceSubdomain, subdomain),
-          inArray(contactSocials.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactSocials.sortOrder),
-    tx
-      .select({
-        id: contactEducations.id,
-        contactId: contactEducations.contactId,
-        workspaceSubdomain: contactEducations.workspaceSubdomain,
-        degree: contactEducations.degree,
-        institution: contactEducations.institution,
-        fieldOfStudy: contactEducations.fieldOfStudy,
-        year: contactEducations.year,
-        grade: contactEducations.grade,
-        label: contactEducations.label,
-        sortOrder: contactEducations.sortOrder,
-        createdAt: contactEducations.createdAt,
-      })
-      .from(contactEducations)
-      .where(
-        and(
-          eq(contactEducations.workspaceSubdomain, subdomain),
-          inArray(contactEducations.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactEducations.sortOrder),
-    tx
-      .select({
-        id: contactExperiences.id,
-        contactId: contactExperiences.contactId,
-        workspaceSubdomain: contactExperiences.workspaceSubdomain,
-        title: contactExperiences.title,
-        organization: contactExperiences.organization,
-        employmentType: contactExperiences.employmentType,
-        location: contactExperiences.location,
-        startDate: contactExperiences.startDate,
-        endDate: contactExperiences.endDate,
-        isCurrent: contactExperiences.isCurrent,
-        description: contactExperiences.description,
-        sortOrder: contactExperiences.sortOrder,
-        createdAt: contactExperiences.createdAt,
-      })
-      .from(contactExperiences)
-      .where(
-        and(
-          eq(contactExperiences.workspaceSubdomain, subdomain),
-          inArray(contactExperiences.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactExperiences.sortOrder),
-    tx
-      .select({
-        id: contactSkills.id,
-        contactId: contactSkills.contactId,
-        workspaceSubdomain: contactSkills.workspaceSubdomain,
-        name: contactSkills.name,
-        category: contactSkills.category,
-        proficiency: contactSkills.proficiency,
-        yearsOfExperience: contactSkills.yearsOfExperience,
-        isCertified: contactSkills.isCertified,
-        issuer: contactSkills.issuer,
-        description: contactSkills.description,
-        sortOrder: contactSkills.sortOrder,
-        createdAt: contactSkills.createdAt,
-      })
-      .from(contactSkills)
-      .where(
-        and(
-          eq(contactSkills.workspaceSubdomain, subdomain),
-          inArray(contactSkills.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactSkills.sortOrder),
-    tx
-      .select({
-        id: contactRelationships.id,
-        contactId: contactRelationships.contactId,
-        workspaceSubdomain: contactRelationships.workspaceSubdomain,
-        relatedContactId: contactRelationships.relatedContactId,
-        name: contactRelationships.name,
-        relationship: contactRelationships.relationship,
-        phone: contactRelationships.phone,
-        inferred: contactRelationships.inferred,
-        inferredFromContactId: contactRelationships.inferredFromContactId,
-        inferenceDepth: contactRelationships.inferenceDepth,
-        sortOrder: contactRelationships.sortOrder,
-        createdAt: contactRelationships.createdAt,
-      })
-      .from(contactRelationships)
-      .where(
-        and(
-          eq(contactRelationships.workspaceSubdomain, subdomain),
-          inArray(contactRelationships.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactRelationships.sortOrder),
-    tx
-      .select({
-        id: contactActivities.id,
-        contactId: contactActivities.contactId,
-        workspaceSubdomain: contactActivities.workspaceSubdomain,
-        type: contactActivities.type,
-        content: contactActivities.content,
-        date: contactActivities.date,
-        by: contactActivities.by,
-        sortOrder: contactActivities.sortOrder,
-        createdAt: contactActivities.createdAt,
-      })
-      .from(contactActivities)
-      .where(
-        and(
-          eq(contactActivities.workspaceSubdomain, subdomain),
-          inArray(contactActivities.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactActivities.sortOrder),
-    tx
-      .select({
-        id: contactAttachments.id,
-        contactId: contactAttachments.contactId,
-        workspaceSubdomain: contactAttachments.workspaceSubdomain,
-        name: contactAttachments.name,
-        type: contactAttachments.type,
-        size: contactAttachments.size,
-        url: contactAttachments.url,
-        date: contactAttachments.date,
-        sortOrder: contactAttachments.sortOrder,
-        createdAt: contactAttachments.createdAt,
-      })
-      .from(contactAttachments)
-      .where(
-        and(
-          eq(contactAttachments.workspaceSubdomain, subdomain),
-          inArray(contactAttachments.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactAttachments.sortOrder),
-    tx
-      .select({
-        id: contactBankDetails.id,
-        contactId: contactBankDetails.contactId,
-        workspaceSubdomain: contactBankDetails.workspaceSubdomain,
-        bankName: contactBankDetails.bankName,
-        accountTitle: contactBankDetails.accountTitle,
-        accountNumber: contactBankDetails.accountNumber,
-        sortOrder: contactBankDetails.sortOrder,
-        createdAt: contactBankDetails.createdAt,
-      })
-      .from(contactBankDetails)
-      .where(
-        and(
-          eq(contactBankDetails.workspaceSubdomain, subdomain),
-          inArray(contactBankDetails.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactBankDetails.sortOrder),
-  ]);
-
-  return {
-    phonesMap: groupByContactId(phonesRows),
-    emailsMap: groupByContactId(emailsRows),
-    addressesMap: groupByContactId(addressesRows),
-    tagsMap: groupByContactId(tagsRows),
-    socialsMap: groupByContactId(socialsRows),
-    educationsMap: groupByContactId(educationsRows),
-    experiencesMap: groupByContactId(experiencesRows),
-    skillsMap: groupByContactId(skillsRows),
-    relationshipsMap: groupByContactId(relationshipsRows),
-    activitiesMap: groupByContactId(activitiesRows),
-    attachmentsMap: groupByContactId(attachmentsRows),
-    bankDetailsMap: groupByContactId(bankDetailsRows),
-  };
+  return loadContactChildMapsAggregated(tx, subdomain, contactIds);
 }
 
 /**
@@ -447,133 +159,394 @@ export async function loadContactSummaryChildMaps(
     return combined;
   }
 
-  const [phonesRows, emailsRows, addressesRows, tagsRows, socialsRows, relationshipsRows] = await Promise.all([
-    tx
-      .select({
-        id: contactPhones.id,
-        contactId: contactPhones.contactId,
-        label: contactPhones.label,
-        number: contactPhones.number,
-        countryCode: contactPhones.countryCode,
-        isPrimary: contactPhones.isPrimary,
-        whatsappStatus: contactPhones.whatsappStatus,
-        sortOrder: contactPhones.sortOrder,
-      })
-      .from(contactPhones)
-      .where(
-        and(
-          eq(contactPhones.workspaceSubdomain, subdomain),
-          inArray(contactPhones.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactPhones.sortOrder),
-    tx
-      .select({
-        id: contactEmails.id,
-        contactId: contactEmails.contactId,
-        address: contactEmails.address,
-        label: contactEmails.label,
-        isPrimary: contactEmails.isPrimary,
-        isVerified: contactEmails.isVerified,
-        sortOrder: contactEmails.sortOrder,
-      })
-      .from(contactEmails)
-      .where(
-        and(
-          eq(contactEmails.workspaceSubdomain, subdomain),
-          inArray(contactEmails.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactEmails.sortOrder),
-    tx
-      .select({
-        id: contactAddresses.id,
-        contactId: contactAddresses.contactId,
-        label: contactAddresses.label,
-        line1: contactAddresses.line1,
-        city: contactAddresses.city,
-        state: contactAddresses.state,
-        country: contactAddresses.country,
-        isPrimary: contactAddresses.isPrimary,
-        sortOrder: contactAddresses.sortOrder,
-      })
-      .from(contactAddresses)
-      .where(
-        and(
-          eq(contactAddresses.workspaceSubdomain, subdomain),
-          inArray(contactAddresses.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactAddresses.sortOrder),
-    tx
-      .select({
-        id: contactTags.id,
-        contactId: contactTags.contactId,
-        name: contactTags.name,
-      })
-      .from(contactTags)
-      .where(
-        and(
-          eq(contactTags.workspaceSubdomain, subdomain),
-          inArray(contactTags.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactTags.createdAt),
-    tx
-      .select({
-        id: contactSocials.id,
-        contactId: contactSocials.contactId,
-        platform: contactSocials.platform,
-        url: contactSocials.url,
-        sortOrder: contactSocials.sortOrder,
-      })
-      .from(contactSocials)
-      .where(
-        and(
-          eq(contactSocials.workspaceSubdomain, subdomain),
-          inArray(contactSocials.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactSocials.sortOrder),
-    tx
-      .select({
-        id: contactRelationships.id,
-        contactId: contactRelationships.contactId,
-        workspaceSubdomain: contactRelationships.workspaceSubdomain,
-        relatedContactId: contactRelationships.relatedContactId,
-        name: contactRelationships.name,
-        relationship: contactRelationships.relationship,
-        phone: contactRelationships.phone,
-        inferred: contactRelationships.inferred,
-        inferredFromContactId: contactRelationships.inferredFromContactId,
-        inferenceDepth: contactRelationships.inferenceDepth,
-        sortOrder: contactRelationships.sortOrder,
-        createdAt: contactRelationships.createdAt,
-      })
-      .from(contactRelationships)
-      .where(
-        and(
-          eq(contactRelationships.workspaceSubdomain, subdomain),
-          inArray(contactRelationships.contactId, contactIds),
-        ),
-      )
-      .orderBy(contactRelationships.sortOrder),
-  ]);
+  return loadContactSummaryChildMapsAggregated(tx, subdomain, contactIds);
+}
+
+/**
+ * Consolidated $O(1)$ SQL query aggregating all 12 contact child collections via json_agg.
+ * Eliminates round-trips and connection concurrency load on hot read paths.
+ */
+export async function loadContactChildMapsAggregated(
+  tx: Transaction,
+  subdomain: string,
+  contactIds: string[],
+): Promise<ContactChildMaps> {
+  if (contactIds.length === 0) {
+    return {
+      phonesMap: new Map(),
+      emailsMap: new Map(),
+      addressesMap: new Map(),
+      tagsMap: new Map(),
+      socialsMap: new Map(),
+      educationsMap: new Map(),
+      experiencesMap: new Map(),
+      skillsMap: new Map(),
+      relationshipsMap: new Map(),
+      activitiesMap: new Map(),
+      attachmentsMap: new Map(),
+      bankDetailsMap: new Map(),
+    };
+  }
+
+  const result: ContactChildMaps = {
+    phonesMap: new Map(),
+    emailsMap: new Map(),
+    addressesMap: new Map(),
+    tagsMap: new Map(),
+    socialsMap: new Map(),
+    educationsMap: new Map(),
+    experiencesMap: new Map(),
+    skillsMap: new Map(),
+    relationshipsMap: new Map(),
+    activitiesMap: new Map(),
+    attachmentsMap: new Map(),
+    bankDetailsMap: new Map(),
+  };
+
+  const queryResult = await (tx as any).execute(sql`
+    SELECT
+      c.id AS "contactId",
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', p.id,
+          'contactId', p.contact_id,
+          'workspaceSubdomain', p.workspace_subdomain,
+          'number', p.number,
+          'label', p.label,
+          'countryCode', p.country_code,
+          'isPrimary', p.is_primary,
+          'whatsappStatus', p.whatsapp_status,
+          'sortOrder', p.sort_order,
+          'createdAt', p.created_at
+        ) ORDER BY p.sort_order)
+        FROM contact_phones p
+        WHERE p.contact_id = c.id AND p.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS phones,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', e.id,
+          'contactId', e.contact_id,
+          'workspaceSubdomain', e.workspace_subdomain,
+          'address', e.address,
+          'label', e.label,
+          'isPrimary', e.is_primary,
+          'isVerified', e.is_verified,
+          'sortOrder', e.sort_order,
+          'createdAt', e.created_at
+        ) ORDER BY e.sort_order)
+        FROM contact_emails e
+        WHERE e.contact_id = c.id AND e.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS emails,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', a.id,
+          'contactId', a.contact_id,
+          'workspaceSubdomain', a.workspace_subdomain,
+          'label', a.label,
+          'line1', a.line1,
+          'city', a.city,
+          'state', a.state,
+          'country', a.country,
+          'isPrimary', a.is_primary,
+          'sortOrder', a.sort_order,
+          'createdAt', a.created_at
+        ) ORDER BY a.sort_order)
+        FROM contact_addresses a
+        WHERE a.contact_id = c.id AND a.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS addresses,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', t.id,
+          'contactId', t.contact_id,
+          'workspaceSubdomain', t.workspace_subdomain,
+          'name', t.name,
+          'createdAt', t.created_at
+        ) ORDER BY t.created_at)
+        FROM contact_tags t
+        WHERE t.contact_id = c.id AND t.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS tags,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', s.id,
+          'contactId', s.contact_id,
+          'workspaceSubdomain', s.workspace_subdomain,
+          'platform', s.platform,
+          'url', s.url,
+          'sortOrder', s.sort_order,
+          'createdAt', s.created_at
+        ) ORDER BY s.sort_order)
+        FROM contact_socials s
+        WHERE s.contact_id = c.id AND s.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS socials,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', ed.id,
+          'contactId', ed.contact_id,
+          'workspaceSubdomain', ed.workspace_subdomain,
+          'institution', ed.institution,
+          'degree', ed.degree,
+          'year', ed.year,
+          'sortOrder', ed.sort_order,
+          'createdAt', ed.created_at
+        ) ORDER BY ed.sort_order)
+        FROM contact_educations ed
+        WHERE ed.contact_id = c.id AND ed.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS educations,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', ex.id,
+          'contactId', ex.contact_id,
+          'workspaceSubdomain', ex.workspace_subdomain,
+          'company', ex.company,
+          'role', ex.role,
+          'duration', ex.duration,
+          'sortOrder', ex.sort_order,
+          'createdAt', ex.created_at
+        ) ORDER BY ex.sort_order)
+        FROM contact_experiences ex
+        WHERE ex.contact_id = c.id AND ex.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS experiences,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', sk.id,
+          'contactId', sk.contact_id,
+          'workspaceSubdomain', sk.workspace_subdomain,
+          'name', sk.name,
+          'sortOrder', sk.sort_order,
+          'createdAt', sk.created_at
+        ) ORDER BY sk.sort_order)
+        FROM contact_skills sk
+        WHERE sk.contact_id = c.id AND sk.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS skills,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', r.id,
+          'contactId', r.contact_id,
+          'workspaceSubdomain', r.workspace_subdomain,
+          'relatedContactId', r.related_contact_id,
+          'name', r.name,
+          'relationship', r.relationship,
+          'phone', r.phone,
+          'inferred', r.inferred,
+          'inferredFromContactId', r.inferred_from_contact_id,
+          'inferenceDepth', r.inference_depth,
+          'sortOrder', r.sort_order,
+          'createdAt', r.created_at
+        ) ORDER BY r.sort_order)
+        FROM contact_relationships r
+        WHERE r.contact_id = c.id AND r.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS relationships,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', act.id,
+          'contactId', act.contact_id,
+          'workspaceSubdomain', act.workspace_subdomain,
+          'type', act.type,
+          'content', act.content,
+          'date', act.date,
+          'by', act.by,
+          'sortOrder', act.sort_order,
+          'createdAt', act.created_at
+        ) ORDER BY act.sort_order)
+        FROM contact_activities act
+        WHERE act.contact_id = c.id AND act.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS activities,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', att.id,
+          'contactId', att.contact_id,
+          'workspaceSubdomain', att.workspace_subdomain,
+          'name', att.name,
+          'type', att.type,
+          'size', att.size,
+          'url', att.url,
+          'date', att.date,
+          'sortOrder', att.sort_order,
+          'createdAt', att.created_at
+        ) ORDER BY att.sort_order)
+        FROM contact_attachments att
+        WHERE att.contact_id = c.id AND att.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS attachments,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', b.id,
+          'contactId', b.contact_id,
+          'workspaceSubdomain', b.workspace_subdomain,
+          'bankName', b.bank_name,
+          'accountTitle', b.account_title,
+          'accountNumber', b.account_number,
+          'sortOrder', b.sort_order,
+          'createdAt', b.created_at
+        ) ORDER BY b.sort_order)
+        FROM contact_bank_details b
+        WHERE b.contact_id = c.id AND b.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS "bankDetails"
+    FROM unnest(${contactIds}::text[]) AS c(id)
+  `);
+
+  const rows = Array.isArray(queryResult) ? queryResult : ((queryResult as any)?.rows ?? []);
+  for (const row of rows) {
+    const contactId = String(row.contactId);
+    if (row.phones && Array.isArray(row.phones)) result.phonesMap.set(contactId, row.phones);
+    if (row.emails && Array.isArray(row.emails)) result.emailsMap.set(contactId, row.emails);
+    if (row.addresses && Array.isArray(row.addresses)) result.addressesMap.set(contactId, row.addresses);
+    if (row.tags && Array.isArray(row.tags)) result.tagsMap.set(contactId, row.tags);
+    if (row.socials && Array.isArray(row.socials)) result.socialsMap.set(contactId, row.socials);
+    if (row.educations && Array.isArray(row.educations)) result.educationsMap.set(contactId, row.educations);
+    if (row.experiences && Array.isArray(row.experiences)) result.experiencesMap.set(contactId, row.experiences);
+    if (row.skills && Array.isArray(row.skills)) result.skillsMap.set(contactId, row.skills);
+    if (row.relationships && Array.isArray(row.relationships)) result.relationshipsMap.set(contactId, row.relationships);
+    if (row.activities && Array.isArray(row.activities)) result.activitiesMap.set(contactId, row.activities);
+    if (row.attachments && Array.isArray(row.attachments)) result.attachmentsMap.set(contactId, row.attachments);
+    if (row.bankDetails && Array.isArray(row.bankDetails)) result.bankDetailsMap.set(contactId, row.bankDetails);
+  }
+
+  return result;
+}
+
+/**
+ * Consolidated $O(1)$ SQL query aggregating summary child collections via json_agg.
+ */
+export async function loadContactSummaryChildMapsAggregated(
+  tx: Transaction,
+  subdomain: string,
+  contactIds: string[],
+): Promise<ContactChildMaps> {
+  if (contactIds.length === 0) {
+    return {
+      phonesMap: new Map(),
+      emailsMap: new Map(),
+      addressesMap: new Map(),
+      tagsMap: new Map(),
+      socialsMap: new Map(),
+      educationsMap: new Map(),
+      experiencesMap: new Map(),
+      skillsMap: new Map(),
+      relationshipsMap: new Map(),
+      activitiesMap: new Map(),
+      attachmentsMap: new Map(),
+      bankDetailsMap: new Map(),
+    };
+  }
 
   const emptyMap = new Map();
-  return {
-    phonesMap: groupByContactId(phonesRows as unknown as PhoneRow[]),
-    emailsMap: groupByContactId(emailsRows as unknown as EmailRow[]),
-    addressesMap: groupByContactId(addressesRows as unknown as AddressRow[]),
-    tagsMap: groupByContactId(tagsRows as unknown as TagRow[]),
-    socialsMap: groupByContactId(socialsRows as unknown as SocialRow[]),
+  const result: ContactChildMaps = {
+    phonesMap: new Map(),
+    emailsMap: new Map(),
+    addressesMap: new Map(),
+    tagsMap: new Map(),
+    socialsMap: new Map(),
     educationsMap: emptyMap,
     experiencesMap: emptyMap,
     skillsMap: emptyMap,
-    relationshipsMap: groupByContactId(relationshipsRows as unknown as RelationshipRow[]),
+    relationshipsMap: new Map(),
     activitiesMap: emptyMap,
     attachmentsMap: emptyMap,
     bankDetailsMap: emptyMap,
   };
+
+  const queryResult = await (tx as any).execute(sql`
+    SELECT
+      c.id AS "contactId",
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', p.id,
+          'contactId', p.contact_id,
+          'workspaceSubdomain', p.workspace_subdomain,
+          'number', p.number,
+          'label', p.label,
+          'countryCode', p.country_code,
+          'isPrimary', p.is_primary,
+          'whatsappStatus', p.whatsapp_status,
+          'sortOrder', p.sort_order
+        ) ORDER BY p.sort_order)
+        FROM contact_phones p
+        WHERE p.contact_id = c.id AND p.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS phones,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', e.id,
+          'contactId', e.contact_id,
+          'workspaceSubdomain', e.workspace_subdomain,
+          'address', e.address,
+          'label', e.label,
+          'isPrimary', e.is_primary,
+          'isVerified', e.is_verified,
+          'sortOrder', e.sort_order
+        ) ORDER BY e.sort_order)
+        FROM contact_emails e
+        WHERE e.contact_id = c.id AND e.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS emails,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', a.id,
+          'contactId', a.contact_id,
+          'workspaceSubdomain', a.workspace_subdomain,
+          'label', a.label,
+          'line1', a.line1,
+          'city', a.city,
+          'state', a.state,
+          'country', a.country,
+          'isPrimary', a.is_primary,
+          'sortOrder', a.sort_order
+        ) ORDER BY a.sort_order)
+        FROM contact_addresses a
+        WHERE a.contact_id = c.id AND a.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS addresses,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', t.id,
+          'contactId', t.contact_id,
+          'workspaceSubdomain', t.workspace_subdomain,
+          'name', t.name
+        ) ORDER BY t.created_at)
+        FROM contact_tags t
+        WHERE t.contact_id = c.id AND t.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS tags,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', s.id,
+          'contactId', s.contact_id,
+          'workspaceSubdomain', s.workspace_subdomain,
+          'platform', s.platform,
+          'url', s.url,
+          'sortOrder', s.sort_order
+        ) ORDER BY s.sort_order)
+        FROM contact_socials s
+        WHERE s.contact_id = c.id AND s.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS socials,
+      COALESCE((
+        SELECT json_agg(json_build_object(
+          'id', r.id,
+          'contactId', r.contact_id,
+          'workspaceSubdomain', r.workspace_subdomain,
+          'relatedContactId', r.related_contact_id,
+          'name', r.name,
+          'relationship', r.relationship,
+          'phone', r.phone,
+          'inferred', r.inferred,
+          'inferredFromContactId', r.inferred_from_contact_id,
+          'inferenceDepth', r.inference_depth,
+          'sortOrder', r.sort_order,
+          'createdAt', r.created_at
+        ) ORDER BY r.sort_order)
+        FROM contact_relationships r
+        WHERE r.contact_id = c.id AND r.workspace_subdomain = ${subdomain}
+      ), '[]'::json) AS relationships
+    FROM unnest(${contactIds}::text[]) AS c(id)
+  `);
+
+  const rows = Array.isArray(queryResult) ? queryResult : ((queryResult as any)?.rows ?? []);
+  for (const row of rows) {
+    const contactId = String(row.contactId);
+    if (row.phones && Array.isArray(row.phones)) result.phonesMap.set(contactId, row.phones);
+    if (row.emails && Array.isArray(row.emails)) result.emailsMap.set(contactId, row.emails);
+    if (row.addresses && Array.isArray(row.addresses)) result.addressesMap.set(contactId, row.addresses);
+    if (row.tags && Array.isArray(row.tags)) result.tagsMap.set(contactId, row.tags);
+    if (row.socials && Array.isArray(row.socials)) result.socialsMap.set(contactId, row.socials);
+    if (row.relationships && Array.isArray(row.relationships)) result.relationshipsMap.set(contactId, row.relationships);
+  }
+
+  return result;
 }
 

@@ -2,7 +2,8 @@ import { eq, inArray, getTableName } from 'drizzle-orm';
 import type { PgColumn, PgTable } from 'drizzle-orm/pg-core';
 import { getRootDb } from '../database.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
-import { redisGet, redisSet, redisDel, redisKeys } from '../../lib/redis.js';
+import { redisDel, redisKeys } from '../../lib/redis.js';
+import { getOrSetMultiTier, invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 type WorkspaceCol = PgColumn;
 type UpdatedAtCol = PgColumn;
@@ -30,34 +31,29 @@ export function createWorkspaceSingletonJsonRepo(options: {
   ): Promise<Record<string, unknown> | null> {
     const subdomain = workspaceSubdomain.trim().toLowerCase();
     const key = cacheKey(subdomain);
-    const cached = await redisGet(key);
-    if (cached) {
-      try {
-        return JSON.parse(cached) as Record<string, unknown>;
-      } catch {
-        // Fall through on JSON parse error
-      }
-    }
-
-    const result = await withTenantRead(subdomain, async (tx) => {
-      const rows = await tx
-        .select({
-          [jsonColumn]: table[jsonColumn],
-        })
-        .from(table)
-        .where(eq(table.workspaceSubdomain, subdomain))
-        .limit(1);
-      const row = rows[0] as Record<string, unknown> | undefined;
-      const value = row?.[jsonColumn];
-      return value && typeof value === 'object' && !Array.isArray(value)
-        ? (value as Record<string, unknown>)
-        : null;
-    });
-
-    if (result) {
-      await redisSet(key, JSON.stringify(result), SETUP_SINGLETON_CACHE_TTL_SECONDS);
-    }
-    return result;
+    return getOrSetMultiTier(
+      subdomain,
+      tableName,
+      key,
+      async () => {
+        const result = await withTenantRead(subdomain, async (tx) => {
+          const rows = await tx
+            .select({
+              [jsonColumn]: table[jsonColumn],
+            })
+            .from(table)
+            .where(eq(table.workspaceSubdomain, subdomain))
+            .limit(1);
+          const row = rows[0] as Record<string, unknown> | undefined;
+          const value = row?.[jsonColumn];
+          return value && typeof value === 'object' && !Array.isArray(value)
+            ? (value as Record<string, unknown>)
+            : null;
+        });
+        return result;
+      },
+      { ttlSeconds: SETUP_SINGLETON_CACHE_TTL_SECONDS },
+    );
   }
 
   async function getByWorkspaces(
@@ -114,7 +110,9 @@ export function createWorkspaceSingletonJsonRepo(options: {
           set: { [jsonColumn]: json, updatedAt: now } as never,
         });
     });
-    await redisDel(cacheKey(subdomain));
+    const key = cacheKey(subdomain);
+    await invalidateMultiTierCache({ tenantId: subdomain, domain: tableName, key });
+    await redisDel(key);
   }
 
   async function listAllByWorkspace(workspaceSubdomain: string) {
@@ -152,7 +150,9 @@ export function createWorkspaceSingletonJsonRepo(options: {
         updatedAt: now,
       } as never);
     });
-    await redisDel(cacheKey(subdomain));
+    const key = cacheKey(subdomain);
+    await invalidateMultiTierCache({ tenantId: subdomain, domain: tableName, key });
+    await redisDel(key);
   }
 
   return { getByWorkspace, getByWorkspaces, upsert, listAllByWorkspace, replaceForWorkspace };

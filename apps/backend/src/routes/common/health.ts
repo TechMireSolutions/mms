@@ -7,6 +7,7 @@ import {
 import { getPoolMetrics, pingDatabase } from '../../db/database.js';
 import { checkIsRedisConnected } from '../../lib/redis.js';
 import { isShuttingDown } from '../../lib/lifecycle.js';
+import { getMultiTierCacheMetrics } from '../../lib/cache/index.js';
 
 function safeGetPoolMetrics() {
   try {
@@ -38,6 +39,7 @@ export default async function healthRoutes(fastify: FastifyInstance): Promise<vo
         redis: {
           connected: checkIsRedisConnected(),
         },
+        cache: getMultiTierCacheMetrics(),
       };
     },
   );

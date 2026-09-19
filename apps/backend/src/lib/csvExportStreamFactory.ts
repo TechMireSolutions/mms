@@ -85,8 +85,12 @@ export async function* generateCsvStreamChunks<TRow, TCol extends { label: strin
 
 export function streamCsvExportFromGenerator(
   generator: AsyncGenerator<string, CsvExportMeta, undefined>,
+  options?: { highWaterMark?: number },
 ): Readable {
-  return Readable.from(generator);
+  return Readable.from(generator, {
+    highWaterMark: options?.highWaterMark ?? 16384,
+    objectMode: false,
+  });
 }
 
 /** Thrown when a buffered CSV export would exceed the memory-safe byte cap. */
@@ -98,9 +102,9 @@ export class CsvExportLimitError extends Error {
 }
 
 /** Memory-safe cap for buffered (non-streamed) CSV exports. */
-export const MODULE_CSV_EXPORT_MAX_BYTES = 25 * 1024 * 1024;
+export const MODULE_CSV_EXPORT_MAX_BYTES = 50 * 1024 * 1024; // 50MB
 /** Memory-safe record cap for buffered (non-streamed) CSV exports. */
-export const MODULE_CSV_EXPORT_MAX_RECORDS = 500;
+export const MODULE_CSV_EXPORT_MAX_RECORDS = 5000;
 
 export async function buildCsvExportFromGenerator(
   generator: AsyncGenerator<string, CsvExportMeta, undefined>,
