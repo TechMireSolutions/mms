@@ -173,6 +173,5 @@ export const NAV_ITEMS: NavItem[] = [
     icon: Settings,
     path: ROUTES.settings,
     moduleId: "settings",
-    requiredPermission: "configuration.view",
   },
 ];

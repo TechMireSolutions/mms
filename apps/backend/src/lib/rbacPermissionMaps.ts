@@ -105,6 +105,12 @@ export const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
   obligation_collections: OBLIGATIONS_MODULE_MANIFEST.permissions.delete,
 };
 
+// `global_settings`/`branding` keep entries here even though `dbObjectRoutes.ts` no
+// longer uses them as the outer read/write gate (any authenticated tenant user can
+// call those two keys now) — `canWriteObject(user, 'global_settings' | 'branding')`
+// is still called there to decide per-field visibility, and relies on these entries
+// resolving to `roleHasPermission(role, 'settings.global.write' | 'settings.branding.write')`
+// rather than falling through to `canWriteObject`'s unrelated `WRITE_ROLES` default.
 export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   global_settings: 'configuration.view',
   platform_settings: 'configuration.view',

@@ -1,12 +1,15 @@
 import React from 'react';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
+import { SettingsAdminOnlyNotice } from '@/tenant/features/settings/components/SettingsAdminOnlyNotice';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { LlmConfigListSection } from './LlmConfigListSection';
 import { LlmConfigModal } from './LlmConfigModal';
 import { LlmSandboxPanel } from './LlmSandboxPanel';
 import { useLlmSettingsController } from './useLlmSettingsController';
 
 export default function LlmSettings(): React.JSX.Element {
+  const { can } = usePermissions();
   const {
     t,
     isGlobalDirty,
@@ -17,6 +20,14 @@ export default function LlmSettings(): React.JSX.Element {
     sandboxProps,
     modalProps,
   } = useLlmSettingsController();
+
+  if (!can('settings.global.write')) {
+    return (
+      <SettingsPanel width="medium" introKey="settings.llmDesc">
+        <SettingsAdminOnlyNotice />
+      </SettingsPanel>
+    );
+  }
 
   return (
     <SettingsPanel

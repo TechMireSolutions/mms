@@ -27,7 +27,10 @@ describe('filterSidebarNavItems', () => {
     expect(paths).not.toContain(ROUTES.finance);
     expect(paths).not.toContain(ROUTES.accounting);
     expect(paths).not.toContain(ROUTES.users);
-    expect(paths).not.toContain(ROUTES.settings);
+    // Settings itself is visible to every role now — General/Theme are open to
+    // everyone; admin-only sections (Institution, AI, Modules, Backup, Notifications/
+    // Security) are gated inside the page per-section, not at the sidebar link.
+    expect(paths).toContain(ROUTES.settings);
   });
 
   it('applies the same restrictions to assistant teachers', () => {
@@ -42,7 +45,7 @@ describe('filterSidebarNavItems', () => {
     expect(paths).not.toContain(ROUTES.finance);
     expect(paths).not.toContain(ROUTES.accounting);
     expect(paths).not.toContain(ROUTES.users);
-    expect(paths).not.toContain(ROUTES.settings);
+    expect(paths).toContain(ROUTES.settings);
   });
 
   it('keeps permitted modules visible for administrators', () => {

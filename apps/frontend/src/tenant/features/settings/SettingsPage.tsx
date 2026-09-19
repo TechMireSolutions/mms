@@ -8,6 +8,7 @@ import { isSettingsSection, type SettingsSection } from '@/lib/config/routes';
 import { SETTINGS_NAV } from '@/lib/config/settingsNavConfig';
 import { SETTINGS_SECTION_COMPONENTS } from '@/lib/config/settingsSectionComponents';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { SettingsTabProvider } from '@/lib/contexts/SettingsTabContext';
 import { SettingsBrandingDraftProvider } from '@/lib/contexts/SettingsBrandingDraftContext';
 import { SettingsGlobalDraftProvider } from '@/lib/contexts/SettingsGlobalDraftContext';
@@ -29,6 +30,7 @@ function SettingsContent({ section }: { section: SettingsSection }): React.JSX.E
  */
 export default function Settings(): React.JSX.Element {
   const { t } = useTranslation();
+  const { can } = usePermissions();
   const [tab, setTab] = usePersistedTabState<SettingsSection>('mms-settings-tab', 'global');
 
   const handleTabChange = ((id: string) => {
@@ -37,7 +39,15 @@ export default function Settings(): React.JSX.Element {
       }
     });
 
-  const tabs: AccordionTabItem[] = SETTINGS_NAV.map((item) => ({
+  const visibleNav = SETTINGS_NAV.filter(
+    (item) => !item.requiredPermission || can(item.requiredPermission),
+  );
+  const visibleIds = new Set(visibleNav.map((item) => item.id));
+  // A persisted tab from a prior session/role (e.g. an admin-only section) that the
+  // current user can no longer see falls back to General rather than rendering nothing.
+  const effectiveTab: SettingsSection = visibleIds.has(tab) ? tab : 'global';
+
+  const tabs: AccordionTabItem[] = visibleNav.map((item) => ({
     id: item.id,
     label: t(item.labelKey),
     icon: item.icon,
@@ -59,7 +69,7 @@ export default function Settings(): React.JSX.Element {
           >
             <ResponsiveAccordionTabs
               tabs={tabs}
-              activeTab={tab}
+              activeTab={effectiveTab}
               onTabChange={handleTabChange}
               desktopLayout="sidebar"
               collapsible={false}
@@ -67,13 +77,13 @@ export default function Settings(): React.JSX.Element {
             >
               <AnimatePresence mode="wait">
                 <motion.div
-                  key={tab}
+                  key={effectiveTab}
                   initial={{ opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
                   transition={{ duration: 0.18 }}
                 >
-                  <SettingsContent section={tab} />
+                  <SettingsContent section={effectiveTab} />
                 </motion.div>
               </AnimatePresence>
             </ResponsiveAccordionTabs>

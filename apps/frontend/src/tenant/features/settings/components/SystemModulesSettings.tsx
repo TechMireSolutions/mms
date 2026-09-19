@@ -6,12 +6,15 @@ import { useLiveObject } from '@/hooks/useLiveObject';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import ModuleSettingsNavGrid from '@/tenant/features/settings/components/modules/ModuleSettingsNavGrid';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
+import { SettingsAdminOnlyNotice } from '@/tenant/features/settings/components/SettingsAdminOnlyNotice';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 
 /**
  * Enable/disable application modules. Layout mirrors app navigation (`SYSTEM_MODULE_NAV`).
  */
 export default function SystemModulesSettings(): React.JSX.Element {
   const { t } = useTranslation();
+  const { can } = usePermissions();
 
   const {
     data,
@@ -35,6 +38,14 @@ export default function SystemModulesSettings(): React.JSX.Element {
     upd('enabledModules', normalizeEnabledModules({ ...enabledModules, [moduleId]: enabled }));
     clearSaved();
   };
+
+  if (!can('settings.global.write')) {
+    return (
+      <SettingsPanel width="wide" introKey="settings.introModules">
+        <SettingsAdminOnlyNotice />
+      </SettingsPanel>
+    );
+  }
 
   return (
     <SettingsPanel

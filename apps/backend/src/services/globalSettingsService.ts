@@ -1,4 +1,6 @@
 import {
+  DEFAULT_GLOBAL_SETTINGS,
+  GLOBAL_SETTINGS_ADMIN_FIELD_KEYS,
   mergeGlobalSettings,
   parseSessionTimeoutMinutes,
   validatePasswordPolicy,
@@ -54,6 +56,36 @@ export function maskGlobalSettingsForClient(settings: GlobalSettings): GlobalSet
       apiKey: maskSecret(config.apiKey),
     })),
   };
+}
+
+/**
+ * Returns a copy of `settings` with every admin-only field (notifications, security,
+ * AI assistance, system modules) reset to its default — used when the caller lacks
+ * `settings.global.write` so a non-admin read never reveals those values.
+ */
+export function redactAdminOnlyGlobalSettings(settings: GlobalSettings): GlobalSettings {
+  const redacted = { ...settings };
+  for (const key of GLOBAL_SETTINGS_ADMIN_FIELD_KEYS) {
+    (redacted as GlobalSettings)[key] = DEFAULT_GLOBAL_SETTINGS[key] as never;
+  }
+  return redacted;
+}
+
+/**
+ * Returns a copy of `incoming` with every admin-only field forced back to `current`'s
+ * value — used when the caller lacks `settings.global.write` so a non-admin save can
+ * only ever change the public fields (Language & Region, Theme), regardless of what
+ * the request body contains.
+ */
+export function sanitizeGlobalSettingsWrite(
+  incoming: GlobalSettings,
+  current: GlobalSettings,
+): GlobalSettings {
+  const sanitized = { ...incoming };
+  for (const key of GLOBAL_SETTINGS_ADMIN_FIELD_KEYS) {
+    (sanitized as GlobalSettings)[key] = current[key] as never;
+  }
+  return sanitized;
 }
 
 /** Loads merged global settings for the current request tenant (or specified subdomain). */
