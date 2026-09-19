@@ -48,7 +48,7 @@ export function ModuleWorkTableHeader<
         {selection && (
           <TableHead
             className={cn(
-              "w-12 min-w-12 px-4 py-3 sticky start-0 z-20 border-e border-border/30 h-auto",
+              "w-12 min-w-12 px-4 py-3 sticky start-0 z-sticky border-e border-border/30 h-auto",
               WORK_STICKY_HEAD,
             )}
           >
@@ -69,9 +69,9 @@ export function ModuleWorkTableHeader<
           let stickyClass = "";
           if (col.id === stickyColumnId) {
             if (selection) {
-              stickyClass = cn("sticky start-12 z-20 border-e border-border/30", WORK_STICKY_HEAD);
+              stickyClass = cn("sticky start-12 z-sticky border-e border-border/30", WORK_STICKY_HEAD);
             } else {
-              stickyClass = cn("sticky start-0 z-20 border-e border-border/30", WORK_STICKY_HEAD);
+              stickyClass = cn("sticky start-0 z-sticky border-e border-border/30", WORK_STICKY_HEAD);
             }
           }
 

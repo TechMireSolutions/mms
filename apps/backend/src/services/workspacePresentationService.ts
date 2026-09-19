@@ -16,7 +16,10 @@ import {
   updateWorkspaceBrandingRow,
   upsertWorkspaceBranding as upsertWorkspaceBrandingRepo,
 } from '../db/repositories/workspaceRepository.js';
-import { getUserModulePreferencesByWorkspaces } from '../db/repositories/userModulePreferencesRepository.js';
+import {
+  getUserModulePreferencesByWorkspace,
+  getUserModulePreferencesByWorkspaces,
+} from '../db/repositories/userModulePreferencesRepository.js';
 import {
   normalizeSubdomainInput,
   invalidateWorkspaceCache,
@@ -91,6 +94,28 @@ export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> 
     };
   });
   return summaries.sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
+}
+
+/** Single workspace row for platform console (avoids scanning full workspace list). */
+export async function getPlatformWorkspaceSummary(
+  subdomain: string,
+): Promise<PlatformWorkspaceRow | null> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  const data = await getWorkspaceWithBranding(normalized);
+  if (!data) return null;
+  const rawPrefs = await getUserModulePreferencesByWorkspace(normalized);
+  const prefs = normalizeUserModulePreferences(rawPrefs);
+  const publicBranding = toPublicBranding(data.branding ? data.branding : mergeBrandingSettings(null));
+  const logoUrl = publicBranding.logoUrl?.trim();
+  return {
+    subdomain: data.workspace.subdomain,
+    madrasaName: publicBranding.madrasaName || data.workspace.madrasaName,
+    tagline: publicBranding.tagline || data.workspace.tagline,
+    logoUrl: logoUrl || undefined,
+    enabled: isWorkspaceEnabled(data.workspace),
+    createdAt: data.workspace.createdAt,
+    requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
+  };
 }
 
 /** Keeps the global workspace registry in sync with saved branding name/tagline. */

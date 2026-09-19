@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { AttendanceRecord } from '@mms/shared';
 import type { attendance } from '../schema.js';
 
-import { mapAuditTimestamps } from './repositoryMappers.js';
+import { mapAuditTimestamps, mapAuditToInsert } from './repositoryMappers.js';
 
 export type AttendanceRow = typeof attendance.$inferSelect;
 export type AttendanceInsert = typeof attendance.$inferInsert;
@@ -47,6 +47,8 @@ export function attendanceRecordToInsert(
         ? String(rawId)
         : idGenerator();
 
+  const audit = mapAuditToInsert(record);
+
   return {
     id: resolvedId,
     workspaceSubdomain: tenant.trim().toLowerCase(),
@@ -59,9 +61,10 @@ export function attendanceRecordToInsert(
     timeIn: String(record.timeIn || ''),
     timeOut: String(record.timeOut || ''),
     notes: String(record.notes || ''),
-    deletedAt: record.deletedAt ? new Date(record.deletedAt) : null,
-    deletedBy: record.deletedBy ?? null,
-    deletionReason: record.deletionReason ?? null,
-    updatedAt: new Date(),
+    deletedAt: audit.deletedAt,
+    deletedBy: audit.deletedBy,
+    deletionReason: audit.deletionReason,
+    updatedAt: audit.updatedAt,
+    ...(audit.createdAt ? { createdAt: audit.createdAt } : {}),
   };
 }

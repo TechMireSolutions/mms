@@ -1,7 +1,7 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type ObligationDistribution } from '@mms/shared';
 import { obligationDistributions } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 type ObligationDistributionRow = typeof obligationDistributions.$inferSelect;
 
@@ -17,7 +17,7 @@ export function obligationDistributionRowToRecord(row: ObligationDistributionRow
 
 export async function listObligationDistributionsByWorkspace(tenant: string): Promise<ObligationDistribution[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: obligationDistributions.id,
@@ -39,7 +39,7 @@ export async function findObligationDistributionById(tenant: string, id: string)
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: obligationDistributions.id,
@@ -63,7 +63,7 @@ export async function findObligationDistributionsByIds(tenant: string, ids: stri
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: obligationDistributions.id,
@@ -162,22 +162,45 @@ export async function replaceObligationDistributionsForWorkspace(
     if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
   }
   const uniqueRecords = Array.from(uniqueMap.values());
+  const keepIds = uniqueRecords.map((r) => r.id);
 
   await withTenant(subdomain, async (tx) => {
-    await tx.delete(obligationDistributions).where(eq(obligationDistributions.workspaceSubdomain, subdomain));
-    if (uniqueRecords.length > 0) {
-      await tx.insert(obligationDistributions).values(
-        uniqueRecords.map((record) => ({
-          id: record.id,
-          workspaceSubdomain: subdomain,
-          name: record.name,
-          percentage: String(record.percentage),
-          wakalaTypeId: record.wakala_type_id,
-          type: record.type,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })),
-      );
+    if (keepIds.length === 0) {
+      await tx.delete(obligationDistributions).where(eq(obligationDistributions.workspaceSubdomain, subdomain));
+    } else {
+      await tx
+        .delete(obligationDistributions)
+        .where(
+          and(
+            eq(obligationDistributions.workspaceSubdomain, subdomain),
+            notInArray(obligationDistributions.id, keepIds),
+          ),
+        );
+
+      await tx
+        .insert(obligationDistributions)
+        .values(
+          uniqueRecords.map((record) => ({
+            id: record.id,
+            workspaceSubdomain: subdomain,
+            name: record.name,
+            percentage: String(record.percentage),
+            wakalaTypeId: record.wakala_type_id,
+            type: record.type,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [obligationDistributions.workspaceSubdomain, obligationDistributions.id],
+          set: {
+            name: sql`excluded.name`,
+            percentage: sql`excluded.percentage`,
+            wakalaTypeId: sql`excluded.wakala_type_id`,
+            type: sql`excluded.type`,
+            updatedAt: new Date(),
+          },
+        });
     }
   });
 }

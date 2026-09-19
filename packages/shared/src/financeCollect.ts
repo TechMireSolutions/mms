@@ -67,9 +67,24 @@ export function invoiceOpenBalance(invoice: Pick<Invoice, 'status' | 'finalAmt' 
   return Math.max(0, invoice.finalAmt + late - credited - paid);
 }
 
-/** Unpaid invoices that are not already cancelled or paid. */
-export function canCancelInvoice(invoice: Pick<Invoice, 'status' | 'paidAmt'>): boolean {
-  return invoice.status !== 'cancelled' && invoice.status !== 'paid' && (invoice.paidAmt ?? 0) <= 0;
+/**
+ * Unpaid, uncredited invoices that are not already cancelled or paid.
+ *
+ * `creditedAmt` is part of the rule because a credit note posts its own
+ * Dr Income / Cr AR entry. Cancelling an invoice reverses only the invoice
+ * entry, so a partial credit left behind produced a credit AR balance and
+ * negative revenue (invoice 100, credit 30, cancel → AR −30, income −30) while
+ * every entry still balanced individually. Credit notes must be reversed first.
+ */
+export function canCancelInvoice(
+  invoice: Pick<Invoice, 'status' | 'paidAmt' | 'creditedAmt'>,
+): boolean {
+  return (
+    invoice.status !== 'cancelled'
+    && invoice.status !== 'paid'
+    && (invoice.paidAmt ?? 0) <= 0
+    && (invoice.creditedAmt ?? 0) <= 0
+  );
 }
 
 /** Credit notes may not exceed the current open balance. */

@@ -16,6 +16,7 @@ type ExportAuditScope = "all" | "filtered" | "selection";
 interface UseStudentsExportActionsOptions {
   tableColumns: StudentExportColumn[];
   canExport: boolean;
+  /** Debounced directory search — the same value the visible list was filtered by. */
   search: string;
   filterStatus: string[];
   filterGender: string;
@@ -23,6 +24,8 @@ interface UseStudentsExportActionsOptions {
   sortField: StudentsListContentSortField | null;
   sortDir: "asc" | "desc";
   viewingDeleted: boolean;
+  /** Whether any directory filter is applied — selects the audit scope. */
+  hasActiveFilters: boolean;
   selectedIds: string[];
   logExportAudit: {
     mutateAsync: (payload: {
@@ -43,23 +46,24 @@ export function useStudentsExportActions({
   sortField,
   sortDir,
   viewingDeleted,
+  hasActiveFilters,
   selectedIds,
   logExportAudit,
 }: UseStudentsExportActionsOptions) {
   const { t, handleError } = useStudentsCrudNotify();
 
-  const buildFilteredQuery = ((): StudentsListQuery => ({
-      search: search.trim() || undefined,
-      status: filterStatus.length > 0 ? filterStatus.join(",") : undefined,
-      gender: filterGender || undefined,
-      quickFilter: quickFilter === "all" ? undefined : quickFilter,
-      sortField: sortField ?? undefined,
-      sortDir: sortField ? sortDir : undefined,
-    }));
+  const buildFilteredQuery = (): StudentsListQuery => ({
+    search: search.trim() || undefined,
+    status: filterStatus.length > 0 ? filterStatus.join(",") : undefined,
+    gender: filterGender || undefined,
+    quickFilter: quickFilter === "all" ? undefined : quickFilter,
+    sortField: sortField ?? undefined,
+    sortDir: sortField ? sortDir : undefined,
+  });
 
-  const onError = ((err: unknown, scope: string) => {
-      handleError(err, scope, "students.exportFailed");
-    });
+  const onError = (err: unknown, scope: string) => {
+    handleError(err, scope, "students.exportFailed");
+  };
 
   return useModuleServerCsvExportActions<StudentExportColumn, StudentsListQuery>({
     canExport,
@@ -72,6 +76,7 @@ export function useStudentsExportActions({
     auditScope: "students.export_audit",
     filteredErrorScope: "students.server_export_csv",
     selectionErrorScope: "students.server_export_csv_selection",
+    hasActiveFilters,
     buildFilteredQuery,
     startExport: startServerStudentsCsvExport,
     logExportAudit,

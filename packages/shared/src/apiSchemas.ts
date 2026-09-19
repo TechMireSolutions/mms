@@ -12,6 +12,10 @@ export const baseListQueryFields = {
   sortField: z.string().optional(),
   sortDir: z.union([z.enum(['asc', 'desc']), z.literal('')]).optional(),
   includeDeleted: z.union([z.boolean(), z.enum(['true', 'false'])]).optional(),
+  /** Keyset pagination: fetch items after this primary key */
+  afterId: z.string().optional(),
+  /** Performance optimization: skip counting total rows when only iterating pages */
+  skipCount: z.union([z.boolean(), z.enum(['true', 'false'])]).optional(),
 };
 
 export const baseListQuerySchema = z.object(baseListQueryFields).passthrough();

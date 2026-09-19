@@ -1,6 +1,10 @@
 ---
 name: mms-shared-package
-description: Extends @mms/shared with types, settings defaults, module manifests, translation keys, messaging schemas, and pure utilities shared by frontend and backend. Use when adding shared types, formatDate, formatMoney, parsePhoneNumber, manifests, or moving duplicated logic to packages/shared.
+description: Extends @mms/shared with types, settings defaults, module manifests, translation keys, messaging schemas, and pure utilities shared by frontend and backend. Use when adding shared types, formatDate, formatMoney, parsePhoneNumber, manifests, or moving duplicated logic to packages/shared. Do NOT use for DOM/React-specific UI components (use mms-frontend) or Fastify backend-only services (use mms-backend-api).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # @mms/shared Package Workflow
@@ -51,6 +55,10 @@ packages/shared/src/
    - Predicate Helpers: Export `is[Entity]Deleted()` and `filterActive[Entities]()` in domain types.
    - List Scope Types: `SoftDeleteListFilter = 'active' | 'deleted' | 'all'`. Note: `'all'` bypasses soft-delete RLS and must NEVER be exposed to tenant-scoped list endpoints without explicit platform RBAC and tenant filtering.
    - Manifest Contract: Every `*ModuleManifest.ts` must declare `softDelete: { workExcludesDeleted, reportsIncludeDeleted, exportsIncludeDeleted, duplicatesIncludeDeleted, captureDeletionReason, retentionDays }`.
+6. **Canonical Calendar Date Validation (`isoDateSchema`)**:
+   - Use `isoDateSchema` (`packages/shared/src/isoDateSchema.ts`) for all calendar date attributes (`YYYY-MM-DD`). It enforces both strict regex shape and leap-year/calendar existence checks.
+   - For optional or clearable form dates, use `isoDateOrEmptySchema`.
+   - Chronological sorting: use `compareIsoDates(a, b)`.
 
 ## Do / Don't
 
@@ -58,6 +66,7 @@ packages/shared/src/
 |----|-------|
 | Named barrel exports | Subpath imports |
 | Shared Zod DTOs with `.strict()` used by FE + BE | Fork the same shape in both apps |
+| `isoDateSchema` / `isoDateOrEmptySchema` for date DTOs | Generic string dates (`z.string()`) without calendar validation |
 | Export explicit `Insert*Dto`, `Update*Dto`, `*ResponseDto` | Use untyped `any` or ad-hoc inline payload types |
 | `formatDate` / `formatMoney` / `parsePhoneNumber` / `normalizeToE164` | Ad-hoc `toLocale*` / currency prefixes |
 | `applyTitleCaseRecursive` for Latin/display names | Title-casing ar/ur/fa / non-Latin / free-form RTL prose — `mms-structure-naming.mdc` |
@@ -65,6 +74,8 @@ packages/shared/src/
 | Soft-delete strip helpers (`stripContactClientSoftDeleteFields`) | Accepting client `deletedAt`/`deletionReason` on write DTOs |
 | Bounded bulk schemas (`bulkIdsBodySchema` $\le 500$) | Unbounded array schemas in write DTOs |
 | Native Node built-ins first (`crypto.hash`, `URLPattern`, `node:fs/promises` `glob`) | Adding 3rd-party dependencies for built-in functionality |
+| Zero non-erasable TS syntax (use union types / `as const`) | Using `enum`, `namespace`, or parameter properties (`erasableSyntaxOnly`) |
+| Native non-mutating array methods (`toSorted`, `toReversed`, etc.) | Mutating arrays in place (`sort()`, `splice()`) |
 | Pure functions only | React, Fastify, DB, `localStorage`, DOM |
 
 ## Move logic from app
@@ -77,9 +88,20 @@ If used in 2+ modules OR FE+BE → extract pure helper → replace duplicates �
 - [ ] Named export from package root
 - [ ] JSDoc on public API
 - [ ] Unit test for non-trivial pure logic
+- [ ] No non-erasable TypeScript syntax (enum/namespace banned)
 - [ ] No React/Fastify/browser APIs
 - [ ] pnpm typecheck
 ```
+
+## Script
+
+`scripts/check-shared-exports.sh` enforces the leaf-package purity contract:
+
+```bash
+bash scripts/check-shared-exports.sh
+```
+
+Flags runtime imports (React, Fastify, Drizzle, pg, Redis, BullMQ, Pino) and environment-bound APIs (`window.*`, `document.*`, `localStorage`, `sessionStorage`, `node:` builtins). Anything it reports belongs in `apps/frontend` or `apps/backend`, not here.
 
 ## Done
 

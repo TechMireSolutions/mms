@@ -4,6 +4,7 @@ import type { ZodType } from 'zod';
 
 import type { User } from '@mms/shared';
 import {
+  countResponseSchema,
   entityResolveBodySchema,
   widgetAggregatesBodySchema,
   type widgetQuerySchema,
@@ -40,7 +41,11 @@ export function registerMetricsRoute(
     if (!canReadCollection(user, collection)) return sendForbidden(reply);
 
     const tenant = getRequestTenant()?.trim().toLowerCase();
-    const cacheKey = tenant ? redisKeys.metrics(tenant, collection) : null;
+    // Role is part of the key: metrics are RBAC-filtered per caller, so a
+    // shared tenant+collection key could serve one role's numbers to another.
+    const cacheKey = tenant
+      ? redisKeys.metrics(tenant, `${collection}:${user.role ?? 'user'}`)
+      : null;
     if (cacheKey) {
       const cached = await redisGet(cacheKey);
       if (cached) {
@@ -86,7 +91,7 @@ export function registerCountRoute(
     {
       schema: {
         response: {
-          200: z.object({ count: z.number() }),
+          200: countResponseSchema,
         },
       },
     },

@@ -899,6 +899,108 @@ describe('contacts REST routes', () => {
     await app.close();
   });
 
+  it('POST /api/contacts/import queues one job for the batch', async () => {
+    const app = await buildApp();
+    mockEnqueueBackgroundJob.mockClear();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/import',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: {
+        contacts: [
+          { firstName: 'Ali', lastName: 'Khan' },
+          { firstName: 'Sara', lastName: 'Ahmed' },
+        ],
+        label: 'vCard import',
+      },
+    });
+    expect(res.statusCode).toBe(202);
+    expect(mockEnqueueBackgroundJob).toHaveBeenCalledWith(
+      'demo',
+      expect.any(String),
+      expect.objectContaining({ moduleId: 'contacts', kind: 'import', label: 'vCard import' }),
+      expect.objectContaining({
+        contacts: [
+          { firstName: 'Ali', lastName: 'Khan' },
+          { firstName: 'Sara', lastName: 'Ahmed' },
+        ],
+        viewerRole: expect.any(String),
+      }),
+    );
+    expect(mockRecordAudit).toHaveBeenCalledWith(
+      expect.objectContaining({ action: 'contact.import.queue' }),
+    );
+    await app.close();
+  });
+
+  it('POST /api/contacts/import derives the viewer role from the session, not the body', async () => {
+    const app = await buildApp();
+    mockEnqueueBackgroundJob.mockClear();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/import',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: {
+        contacts: [{ firstName: 'Ali' }],
+        viewerRole: 'admin',
+      },
+    });
+    expect(res.statusCode).toBe(400);
+    expect(mockEnqueueBackgroundJob).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/contacts/import returns 403 without contacts.write', async () => {
+    const app = await buildApp();
+    mockEnqueueBackgroundJob.mockClear();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/import',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+      payload: { contacts: [{ firstName: 'Ali' }] },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(mockEnqueueBackgroundJob).not.toHaveBeenCalled();
+    await app.close();
+  });
+
+  it('POST /api/contacts/import rejects an empty or oversized batch', async () => {
+    const app = await buildApp();
+    const empty = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/import',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { contacts: [] },
+    });
+    expect(empty.statusCode).toBe(400);
+
+    const oversized = await app.inject({
+      method: 'POST',
+      url: '/api/contacts/import',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: {
+        contacts: Array.from({ length: 501 }, () => ({ firstName: 'Ali' })),
+      },
+    });
+    expect(oversized.statusCode).toBe(400);
+    await app.close();
+  });
+
   it('POST /api/contacts/identity-match returns scoped matches for readers', async () => {
     const app = await buildApp();
     const res = await app.inject({

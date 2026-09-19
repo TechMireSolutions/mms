@@ -4,6 +4,7 @@ import { contactRoutes } from './tenant/contacts.js';
 import dbRoutes from "./common/db.js";
 import emailRoutes from "./common/email.js";
 import healthRoutes from "./common/health.js";
+import metricsRoutes from "./common/metrics.js";
 import platformAuthRoutes from "./platform/platformAuth.js";
 import platformWorkspaceRoutes from "./platform/platformWorkspaces.js";
 import platformUsersRoutes from "./platform/platformUsers.js";
@@ -12,7 +13,7 @@ import platformAdminSystemRoutes from "./platform/platformAdminSystem.js";
 import platformSchemaRoutes from "./platform/platformSchemaRoutes.js";
 import publicRoutes from "./common/public.js";
 import studentsRoutes from "./tenant/students.js";
-import teachersRoutes from "./tenant/teachers.js";
+import facultyRoutes from "./tenant/faculty.js";
 import financeRoutes from "./tenant/finance.js";
 import enrollmentsRoutes from "./tenant/enrollments.js";
 import obligationsRoutes from "./tenant/obligations.js";
@@ -37,6 +38,7 @@ import auditRoutes from "./tenant/audit/auditRoutes.js";
 export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(openapiRoutes);
   await app.register(healthRoutes);
+  await app.register(metricsRoutes);
   await app.register(publicRoutes, { prefix: '/api/public' });
   await app.register(authRoutes, { prefix: '/api/auth' });
   await app.register(platformAuthRoutes, { prefix: '/api/platform/auth' });
@@ -51,7 +53,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(contactRoutes);
   await app.register(emailRoutes, { prefix: '/api/email' });
   await app.register(studentsRoutes);
-  await app.register(teachersRoutes);
+  await app.register(facultyRoutes);
   await app.register(financeRoutes);
   await app.register(enrollmentsRoutes);
   await app.register(obligationsRoutes);
@@ -68,5 +70,6 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(auditRoutes);
   await app.register(backgroundJobRoutes, { prefix: '/api/background-jobs' });
   await app.register(aiRoutes, { prefix: '/api/ai' });
+  await app.register(websocketRoutes);
   await app.register(websocketRoutes, { prefix: '/api' });
 }

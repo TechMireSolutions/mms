@@ -1,7 +1,7 @@
 import { z } from 'zod';
 import { contactRecordSchema } from '../contactsModuleManifest.js';
 import { contactIdentityMatchResultSchema } from '../contactIdentityMatch.js';
-import { baseListQuerySchema } from '../apiSchemas.js';
+import { baseListQuerySchema, includeDeletedQuerySchema } from '../apiSchemas.js';
 import { contactWireWriteSchema } from '../schemas/contacts.dto.js';
 import {
   contactListPageResponseSchema,
@@ -58,6 +58,7 @@ export const contactsCrudRoutes = {
     method: 'GET',
     path: '/api/contacts/:id',
     pathParams: z.object({ id: z.string() }),
+    query: includeDeletedQuerySchema.optional(),
     responses: {
       200: z.object({ contact: contactRecordSchema }),
       403: z.unknown(),

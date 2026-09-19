@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Module-embedded analytics, exports, report builder. Applies to tenant module reports and any platform analytics pages.
 ---
 
 # MMS Reports & Analytics

@@ -1,6 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { CheckCircle2, AlertCircle } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
 import {
   Table,
   TableCell,
@@ -9,7 +11,9 @@ import {
 } from "@/components/ui/table";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
-import { ACCOUNT_TYPES, computeTrialBalance, type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
+import { moneyToCents } from '@mms/shared';
+import { ACCOUNT_TYPES, type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
+import { useAccountingReportAggregates } from "@/tenant/features/accounting/hooks/useAccountingApi";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -19,23 +23,55 @@ import { TrialBalanceTypeGroup } from "./TrialBalanceTypeGroup";
 import { exportTrialBalanceCsv } from "./trialBalanceExport";
 
 interface TrialBalanceProps {
-  accounts: Account[];
-  entries: JournalEntry[];
+  /**
+   * Retained for call-site compatibility. The rows now come from the server's
+   * own trial balance, so the component no longer needs the client collections —
+   * and computing it here was the bug: it could only ever see the entries the
+   * page had loaded, so the totals (and the "Balanced" badge) described a slice
+   * of the ledger rather than the ledger.
+   */
+  accounts?: Account[];
+  entries?: JournalEntry[];
   fiscalYears?: FiscalYear[];
 }
 
-export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalanceProps) {
+export function TrialBalance({ fiscalYears }: TrialBalanceProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
-  const activeFiscalYear   = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active");
-  const [dateFrom, setDateFrom] = useState(activeFiscalYear?.startDate || "");
-  const [dateTo,   setDateTo]   = useState(activeFiscalYear?.endDate   || "");
+  const activeFiscalYear = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [hasUserSetRange, setHasUserSetRange] = useState(false);
 
-  const rows = (() => computeTrialBalance(accounts, entries, dateFrom || undefined, dateTo || undefined))();
+  /**
+   * A trial balance is a period statement, so the server's range rows are the
+   * right set (`report-aggregates.trialBalance`). The fiscal-year list resolves
+   * after first paint, so the default range is adopted once it lands; an explicit
+   * user range — including "All time" — always wins.
+   */
+  useEffect(() => {
+    if (hasUserSetRange || !activeFiscalYear) return;
+    const { startDate, endDate } = activeFiscalYear;
+    setDateFrom((prev) => (prev === startDate ? prev : startDate));
+    setDateTo((prev) => (prev === endDate ? prev : endDate));
+  }, [activeFiscalYear, hasUserSetRange]);
 
-  const grandDebit  = rows.reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalDebit,  0);
-  const grandCredit = rows.reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalCredit, 0);
-  const isBalanced  = Math.abs(grandDebit - grandCredit) < 0.01;
+  const aggregatesResult = useAccountingReportAggregates({
+    dateFrom: dateFrom || undefined,
+    dateTo: dateTo || undefined,
+  });
+
+  const rows = aggregatesResult.data?.trialBalance ?? [];
+  const isLoading = aggregatesResult.isLoading;
+  const isError = aggregatesResult.isError;
+
+  // Integer cents for exactness, and the totals must be non-zero for a balance
+  // to mean anything (an empty period trivially "balances").
+  const grandDebitCents = rows.reduce((sum, trialBalanceRow) => sum + moneyToCents(trialBalanceRow.totalDebit), 0);
+  const grandCreditCents = rows.reduce((sum, trialBalanceRow) => sum + moneyToCents(trialBalanceRow.totalCredit), 0);
+  const grandDebit = grandDebitCents / 100;
+  const grandCredit = grandCreditCents / 100;
+  const isBalanced = grandDebitCents === grandCreditCents && grandDebitCents > 0;
 
   const formatPositiveNumber = (amount: number) => amount > 0 ? formatCurrency(amount) : "—";
 
@@ -46,23 +82,43 @@ export function TrialBalance({ accounts, entries, fiscalYears }: TrialBalancePro
       <AccountingDateFilterBar
         dateFrom={dateFrom}
         dateTo={dateTo}
-        onDateFromChange={setDateFrom}
-        onDateToChange={setDateTo}
+        onDateFromChange={(value) => {
+          setHasUserSetRange(true);
+          setDateFrom(value);
+        }}
+        onDateToChange={(value) => {
+          setHasUserSetRange(true);
+          setDateTo(value);
+        }}
         activeFiscalYear={activeFiscalYear}
         onExportCSV={exportCSV}
         idPrefix="tb"
       />
 
-      <div className={cn("flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border", balanceToneClass(isBalanced))} role="status">
-        {isBalanced ? <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> : <AlertCircle className="w-5 h-5" aria-hidden="true" />}
-        {isBalanced
-          ? t("accounting.tb.balancedMessage", { total: formatCurrency(grandDebit) })
-          : t("accounting.tb.unbalancedMessage", { diff: formatCurrency(Math.abs(grandDebit - grandCredit)) })}
-      </div>
+      {isError && (
+        <ErrorState
+          title={t("accounting.loadFailed")}
+          description={t("accounting.loadFailedHint")}
+          onRetry={() => {
+            void aggregatesResult.refetch();
+          }}
+        />
+      )}
 
-      {rows.length === 0 ? (
+      {!isError && (
+        <div className={cn("flex items-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold border", balanceToneClass(isBalanced))} role="status">
+          {isBalanced ? <CheckCircle2 className="w-5 h-5" aria-hidden="true" /> : <AlertCircle className="w-5 h-5" aria-hidden="true" />}
+          {isBalanced
+            ? t("accounting.tb.balancedMessage", { total: formatCurrency(grandDebit) })
+            : t("accounting.tb.unbalancedMessage", { diff: formatCurrency(Math.abs(grandDebit - grandCredit)) })}
+        </div>
+      )}
+
+      {!isError && isLoading ? (
+        <Skeleton className="h-64 w-full rounded-2xl" />
+      ) : !isError && rows.length === 0 ? (
         <EmptyState variant="dashed" title={t("accounting.ledger.noPostedTransactionsPeriod")} compact />
-      ) : (
+      ) : isError ? null : (
         <>
           {ACCOUNT_TYPES.map((type) => (
             <TrialBalanceTypeGroup

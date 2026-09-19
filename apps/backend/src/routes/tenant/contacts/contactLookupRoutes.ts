@@ -4,6 +4,7 @@ import {
   contactLookupKindParamsSchema,
   contactLookupPutBodySchema,
   isContactLookupCountryKind,
+  type ContactLookupKind,
 } from '@mms/shared';
 import { registerModuleLookupRoutes } from '../../../lib/registerModuleLookupRoutes.js';
 import { replyValidationError } from '../../../lib/zodRequest.js';
@@ -17,20 +18,20 @@ import { auditContact } from './contactRouteHelpers.js';
 
 /** Contacts Setup lookup option lists (typed `contact_lookups`). */
 export const contactLookupRoutes: FastifyPluginAsync = async (fastify) => {
-  registerModuleLookupRoutes(fastify, {
+  registerModuleLookupRoutes<ContactLookupKind>(fastify, {
     canRead: canReadContacts,
     setupWritePermission: CONTACTS_MODULE_MANIFEST.permissions.setupWrite,
     kindParamsSchema: contactLookupKindParamsSchema,
     putBodySchema: contactLookupPutBodySchema,
     loadMap: loadContactLookupsMap,
-    replaceKind: (kind, items) => replaceContactLookupKind(kind as never, items as never) as Promise<unknown>,
+    replaceKind: (kind, items) => replaceContactLookupKind(kind, items),
     audit: (user, action, summary, entityId) =>
       auditContact(user, action, summary, entityId),
     auditAction: 'contact.lookups',
     loadError: 'Failed to load contact lookups',
     saveError: 'Failed to save contact lookups',
     handlePutKind: async ({ user, kind, items, reply }) => {
-      if (isContactLookupCountryKind(kind as never)) {
+      if (isContactLookupCountryKind(kind)) {
         const invalid = Array.isArray(items) && items.some((item) => typeof item === 'string');
         if (invalid) {
           return replyValidationError(reply, 'countryCodes items must be { country, code } objects');

@@ -20,7 +20,7 @@ import {
   type ExaminationsListPageResult,
 } from '@mms/shared';
 import { examResults, exams, examClasses } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { examRowToRecord } from './examinationRepository.js';
 
@@ -55,7 +55,7 @@ function buildExamsListConditions(subdomain: string, query: ExaminationsListQuer
 
 const EXAM_SORT_FIELDS = new Set(['name', 'subject', 'status', 'date', 'updatedAt']);
 
-function buildExamsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+function buildExamsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
   let column: SQL;
   if (field && EXAM_SORT_FIELDS.has(field)) {
@@ -91,7 +91,7 @@ export async function listExamsPage(
   query: ExaminationsListQuery & { afterId?: string; skipCount?: boolean },
 ): Promise<ExaminationsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage<ExamRow, ExamRow>(tx, exams, {
       conditions: buildExamsListConditions(subdomain, query),
       orderBy: buildExamsOrderBy(query.sortField, query.sortDir),
@@ -147,7 +147,7 @@ export async function aggregateExaminationsCommandMetrics(
   tenant: string,
 ): Promise<ExaminationsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const [examRow] = await tx
       .select({
         total: sql<number>`count(*)::int`,

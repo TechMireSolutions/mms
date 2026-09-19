@@ -7,12 +7,12 @@ import {
   resolveStudentFieldsMapForColumnSync,
 } from './studentFormCustomFields.js';
 import { syncStudentColumnRegistryWithFields } from './studentColumnRegistrySync.js';
-import { syncTeacherColumnRegistryWithFields } from './teacherColumnRegistrySync.js';
+import { syncTeacherColumnRegistryWithFields } from './facultyColumnRegistrySync.js';
 import {
   listEnabledCustomTeacherFormFields,
   resolveTeacherFieldsMapForColumnSync,
-} from './teacherFormCustomFields.js';
-import { resolveTeacherEnabledTabIds } from './teacherEnabledTabs.js';
+} from './facultyFormCustomFields.js';
+import { resolveTeacherEnabledTabIds } from './facultyEnabledTabs.js';
 import { resolveStudentEnabledTabIds } from './studentSetupConfigTypes.js';
 import {
   DEFAULT_STUDENT_COLUMN_REGISTRY,

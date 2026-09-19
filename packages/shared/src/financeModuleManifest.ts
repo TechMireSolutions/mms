@@ -1,11 +1,10 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
 import {
-  invoiceLineInsertSchema,
-  invoiceLineRecordSchema,
-  paymentAllocationInsertSchema,
-  paymentAllocationRecordSchema,
+  invoiceLineInsertSchema, invoiceLineRecordSchema,
+  paymentAllocationInsertSchema, paymentAllocationRecordSchema,
 } from './financeBilling.js';
+import { isoDateSchema } from './isoDateSchema.js';
 
 export const invoiceRecordSchema = z
   .object({
@@ -57,11 +56,8 @@ export const invoiceRecordInsertSchema = z
     discountValue: z.number().nonnegative().optional().default(0),
     discountAmt: z.number().nonnegative().optional().default(0),
     finalAmt: z.number().nonnegative().default(0),
-    status: z
-      .enum(['paid', 'pending', 'overdue', 'partial', 'cancelled'])
-      .optional()
-      .default('pending'),
-    dueDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Due date must be YYYY-MM-DD'),
+    status: z.enum(['paid', 'pending', 'overdue', 'partial', 'cancelled']).optional().default('pending'),
+    dueDate: isoDateSchema,
     paidDate: z.string().nullable().optional(),
     method: z.string().nullable().optional(),
     paidAmt: z.number().nonnegative().optional(),
@@ -94,10 +90,20 @@ export function filterActiveInvoices<T extends { deletedAt?: string | null }>(in
   return invoices.filter((i) => !isInvoiceDeleted(i));
 }
 
+/**
+ * Bulk status edits are limited to the open, ledger-neutral statuses.
+ *
+ * `paid` and `cancelled` are deliberately excluded: both change what the ledger
+ * should say (a payment posting, or an invoice reversal) and neither can be
+ * expressed by a bare status write. `paid` must go through payment recording and
+ * `cancelled` through the cancel-invoice action, which posts the reversal —
+ * allowing them here left invoices reading settled or cancelled while their
+ * Dr AR / Cr Income entry stayed on the books forever.
+ */
 export const invoicesBulkStatusSchema = z
   .object({
     ids: z.array(z.string().min(1)).min(1, 'At least one invoice ID is required'),
-    status: z.enum(['paid', 'pending', 'overdue', 'partial', 'cancelled']),
+    status: z.enum(['pending', 'overdue', 'partial']),
   })
   .strict();
 
@@ -144,7 +150,7 @@ export const paymentRecordInsertSchema = z
     studentId: z.string().nullable().optional(),
     studentName: z.string().nullable().optional(),
     amount: z.number().positive('Amount must be greater than 0'),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    date: isoDateSchema,
     method: z.string().optional().default('cash'),
     receivedByUserId: z.string().nullable().optional(),
     receivedBy: z.string().nullable().optional(),
@@ -181,7 +187,7 @@ export const FINANCE_MODULE_MANIFEST = {
   restBasePath: '/api/finance',
   analyticsCategory: 'financial',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['preferences'] as const,
+  setupSubTabs: ['preferences', 'templates'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,

@@ -29,4 +29,15 @@ describe('accountRecordSchema', () => {
 
     expect(result.success).toBe(false);
   });
+
+  it('accepts audit fields createdBy and updatedBy without strict violation', () => {
+    const result = accountRecordSchema.safeParse({
+      ...validAccount,
+      createdBy: 'user-123',
+      updatedBy: 'user-456',
+    });
+
+    expect(result.success).toBe(true);
+  });
 });
+

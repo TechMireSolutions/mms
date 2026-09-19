@@ -5,11 +5,11 @@ const META_BADGE_STYLES = {
   primary: 'border-primary/30 bg-primary/10 text-primary',
   muted: 'border-border bg-muted text-muted-foreground',
   warning:
-    'border-warning/40 bg-warning/10 text-warning dark:border-warning/40 dark:bg-warning/20 dark:text-warning',
+    'border-warning/40 bg-warning/10 text-warning dark:border-warning/40 dark:bg-warning/10 dark:text-warning',
   success:
-    'border-success/40 bg-success/10 text-success dark:border-success/40 dark:bg-success/20 dark:text-success',
+    'border-success/40 bg-success/10 text-success dark:border-success/40 dark:bg-success/10 dark:text-success',
   destructive:
-    'border-destructive/40 bg-destructive/10 text-destructive dark:border-destructive/40 dark:bg-destructive/20 dark:text-destructive',
+    'border-destructive/40 bg-destructive/10 text-destructive dark:border-destructive/40 dark:bg-destructive/10 dark:text-destructive',
 } as const;
 
 /** Compact status chip for settings section summaries. */

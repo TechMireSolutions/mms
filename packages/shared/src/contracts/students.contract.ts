@@ -11,6 +11,7 @@ import {
   studentsListQuerySchema,
   studentsNextGrNumberQuerySchema,
 } from '../studentsListQuery.js';
+import { includeDeletedQuerySchema } from '../apiSchemas.js';
 
 const c = initContract();
 
@@ -23,6 +24,7 @@ export const studentListPageResponseSchema = z.object({
   page: z.number(),
   limit: z.number(),
   hasMore: z.boolean(),
+  nextCursor: z.string().optional(),
 });
 
 /** `{ student }` envelope returned by get/create/update. */
@@ -84,6 +86,7 @@ export const studentContract = c.router({
   get: {
     method: 'GET',
     path: '/api/students/:id',
+    query: includeDeletedQuerySchema.optional(),
     responses: {
       200: z.object({ student: studentRecordSchema }),
       403: errorResponse,

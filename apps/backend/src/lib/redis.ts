@@ -26,14 +26,17 @@ export function getRedisClient(): Redis | null {
       maxRetriesPerRequest: 1,
       enableOfflineQueue: false,
       lazyConnect: true,
+      enableReadyCheck: true,
       connectTimeout: 5000,
       commandTimeout: 5000,
       keepAlive: 30000,
       disconnectTimeout: 2000,
       autoResendUnfulfilledCommands: false,
+      // Never give up: returning null permanently disables reconnection, so a
+      // brief Redis restart would freeze this process (cache + revocation
+      // checks) until it was restarted by hand.
       retryStrategy(times: number) {
-        if (times > 5) return null;
-        return Math.min(times * 150 + Math.floor(Math.random() * 75), 2000);
+        return Math.min(times * 150 + Math.floor(Math.random() * 75), 30_000);
       },
       reconnectOnError(err: Error) {
         return err.message.includes('READONLY');
@@ -63,6 +66,60 @@ export function getRedisClient(): Redis | null {
   }
 }
 
+let redisRateLimitInstance: Redis | null = null;
+let isRateLimitRedisConnected = false;
+
+export function checkIsRateLimitRedisConnected(): boolean {
+  return isRateLimitRedisConnected;
+}
+
+export function getRateLimitRedisClient(): Redis | null {
+  if (redisRateLimitInstance) return redisRateLimitInstance;
+
+  const redisUrl = process.env.REDIS_URL;
+  if (!redisUrl && (process.env.NODE_ENV === 'test' || process.env.VITEST)) {
+    return null;
+  }
+
+  try {
+    const url = redisUrl || 'redis://127.0.0.1:6379';
+    const client = new Redis(url, {
+      maxRetriesPerRequest: 1,
+      enableOfflineQueue: false,
+      lazyConnect: true,
+      enableReadyCheck: true,
+      connectTimeout: 5000,
+      commandTimeout: 5000,
+      keepAlive: 30000,
+      disconnectTimeout: 2000,
+      retryStrategy(times: number) {
+        return Math.min(times * 150 + Math.floor(Math.random() * 75), 30_000);
+      },
+    });
+
+    client.on('connect', () => {
+      isRateLimitRedisConnected = true;
+    });
+
+    client.on('error', (err: Error) => {
+      isRateLimitRedisConnected = false;
+      if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
+        logger.warn({ err: err.message }, 'Redis rate-limit connection warning');
+      }
+    });
+
+    client.connect().catch(() => {
+      isRateLimitRedisConnected = false;
+    });
+
+    redisRateLimitInstance = client;
+    return redisRateLimitInstance;
+  } catch {
+    isRateLimitRedisConnected = false;
+    return null;
+  }
+}
+
 let redisSubscriberInstance: Redis | null = null;
 
 export function getRedisSubscriberClient(): Redis | null {
@@ -79,14 +136,17 @@ export function getRedisSubscriberClient(): Redis | null {
       maxRetriesPerRequest: 1,
       enableOfflineQueue: false,
       lazyConnect: true,
+      enableReadyCheck: true,
       connectTimeout: 5000,
       commandTimeout: 5000,
       keepAlive: 30000,
       disconnectTimeout: 2000,
       autoResubscribe: true,
+      // Never give up: returning null permanently disables reconnection, so a
+      // brief Redis restart would freeze this process (cache + revocation
+      // checks) until it was restarted by hand.
       retryStrategy(times: number) {
-        if (times > 5) return null;
-        return Math.min(times * 150 + Math.floor(Math.random() * 75), 2000);
+        return Math.min(times * 150 + Math.floor(Math.random() * 75), 30_000);
       },
     });
 
@@ -174,20 +234,35 @@ export async function redisDelPattern(pattern: string): Promise<void> {
   const client = getRedisClient();
   if (client && isRedisConnected) {
     try {
-      const keys = await client.keys(pattern);
-      if (keys.length > 0) {
-        await client.del(...keys);
-      }
+      let cursor = '0';
+      do {
+        const [nextCursor, keys] = await client.scan(cursor, 'MATCH', pattern, 'COUNT', 200);
+        cursor = nextCursor;
+        if (keys.length > 0) {
+          await client.del(...keys);
+        }
+      } while (cursor !== '0');
     } catch {
       // Fallback to in-memory
     }
   }
 
-  const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
-  const regex = new RegExp(`^${escaped}$`);
-  for (const key of inMemoryStore.keys()) {
-    if (regex.test(key)) {
-      inMemoryStore.delete(key);
+  if (!pattern.includes('*')) {
+    inMemoryStore.delete(pattern);
+  } else if (pattern.endsWith('*') && !pattern.slice(0, -1).includes('*')) {
+    const prefix = pattern.slice(0, -1);
+    for (const key of inMemoryStore.keys()) {
+      if (key.startsWith(prefix)) {
+        inMemoryStore.delete(key);
+      }
+    }
+  } else {
+    const escaped = pattern.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '.*');
+    const regex = new RegExp(`^${escaped}$`);
+    for (const key of inMemoryStore.keys()) {
+      if (regex.test(key)) {
+        inMemoryStore.delete(key);
+      }
     }
   }
 }
@@ -291,8 +366,64 @@ export async function disconnectRedis(): Promise<void> {
     await safeQuit(redisSubscriberInstance);
     redisSubscriberInstance = null;
   }
+  if (redisRateLimitInstance) {
+    await safeQuit(redisRateLimitInstance);
+    redisRateLimitInstance = null;
+  }
   isRedisConnected = false;
+  isRateLimitRedisConnected = false;
   inMemoryStore.clear();
+}
+
+export interface BullMQConnectionOptions {
+  host: string;
+  port: number;
+  password?: string;
+  username?: string;
+  maxRetriesPerRequest: null;
+  enableReadyCheck: boolean;
+  connectTimeout: number;
+  keepAlive: number;
+  disconnectTimeout: number;
+  retryStrategy: (times: number) => number;
+}
+
+/**
+ * SSOT connection options for BullMQ queues and workers.
+ * Enforces `maxRetriesPerRequest: null` and aggressive reconnect backoff.
+ */
+export function getBullMQConnectionOptions(): BullMQConnectionOptions {
+  const redisUrl = process.env.REDIS_URL || 'redis://127.0.0.1:6379';
+  try {
+    const url = new URL(redisUrl);
+    return {
+      host: url.hostname || '127.0.0.1',
+      port: url.port ? Number.parseInt(url.port, 10) : 6379,
+      password: url.password || undefined,
+      username: url.username || undefined,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: true,
+      connectTimeout: 5000,
+      keepAlive: 30000,
+      disconnectTimeout: 2000,
+      retryStrategy(times: number) {
+        return Math.min(times * 150 + Math.floor(Math.random() * 50), 30_000);
+      },
+    };
+  } catch {
+    return {
+      host: '127.0.0.1',
+      port: 6379,
+      maxRetriesPerRequest: null,
+      enableReadyCheck: true,
+      connectTimeout: 5000,
+      keepAlive: 30000,
+      disconnectTimeout: 2000,
+      retryStrategy(times: number) {
+        return Math.min(times * 150 + Math.floor(Math.random() * 50), 30_000);
+      },
+    };
+  }
 }
 
 /**

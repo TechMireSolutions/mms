@@ -1,13 +1,18 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { enrollmentRecordSchema } from '../enrollmentsModuleManifest.js';
+import {
+  enrollmentRecordSchema,
+  enrollmentRecordInsertSchema,
+  enrollmentRecordUpdateSchema,
+} from '../enrollmentsModuleManifest.js';
 import { enrollmentsListQuerySchema } from '../enrollmentsListQuery.js';
 import { enrollmentsReportAggregatesSchema } from '../enrollmentsReportAggregates.js';
 import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
 import { bulkStringIdsBodySchema } from '../apiSchemas.js';
+import { widgetAggregatesBodySchema } from '../schemas/common.dto.js';
 
 const c = initContract();
-const errorResponse = z.unknown();
+const errorResponse = z.object({ type: z.string(), message: z.string() }).passthrough();
 
 /** Envelope for paginated enrollment list responses (`EnrollmentsListPageResult`). */
 export const enrollmentListPageResponseSchema = z.object({
@@ -62,14 +67,14 @@ export const enrollmentContract = c.router({
   create: {
     method: 'POST',
     path: '/api/enrollments',
-    body: z.object({}).passthrough(),
+    body: enrollmentRecordInsertSchema,
     responses: { 201: enrollmentRecordSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'Create an enrollment',
   },
   update: {
     method: 'PUT',
     path: '/api/enrollments/:id',
-    body: z.object({}).passthrough(),
+    body: enrollmentRecordUpdateSchema,
     responses: { 200: enrollmentRecordSchema, 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Update an enrollment',
   },
@@ -97,21 +102,21 @@ export const enrollmentContract = c.router({
   restore: {
     method: 'POST',
     path: '/api/enrollments/:id/restore',
-    body: z.object({}).passthrough(),
+    body: z.object({}).optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Restore an enrollment',
   },
   exportAudit: {
     method: 'POST',
     path: '/api/enrollments/export-audit',
-    body: z.object({}).passthrough(),
+    body: z.object({}).optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
     summary: 'Export audit log',
   },
   widgetAggregates: {
     method: 'POST',
     path: '/api/enrollments/widget-aggregates',
-    body: z.object({}).passthrough(),
+    body: widgetAggregatesBodySchema,
     responses: {
       200: z.object({ results: z.record(z.string(), enrollmentWidgetAggregateResultSchema) }),
       403: errorResponse,

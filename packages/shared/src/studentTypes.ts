@@ -1,3 +1,5 @@
+import type { SerializedEntityAuditFields } from './softDelete.js';
+
 /** Active enrollment status for a student profile. */
 export const STUDENT_STATUS_VALUES = ['active', 'inactive', 'suspended', 'graduated', 'transferred'] as const;
 export type StudentStatus = (typeof STUDENT_STATUS_VALUES)[number];
@@ -11,7 +13,7 @@ export function resolveStudentStatuses(statuses?: readonly string[] | null): rea
  * Student profile in the `students` collection.
  * Identity fields are hydrated from linked contacts — not persisted when contact ids are set.
  */
-export interface Student {
+export interface Student extends SerializedEntityAuditFields {
   id: string;
   contactId: string | number;
   /** Hydrated from student Contact. */
@@ -42,16 +44,6 @@ export interface Student {
   discountPct?: number;
   registrationType?: string;
   notes?: string;
-  deletedAt?: string;
-  deletedBy?: string;
-  deletionReason?: string;
-  restoredAt?: string;
-  restoredBy?: string;
-  deletedWithCascade?: boolean;
-  createdAt?: string;
-  updatedAt?: string;
-  createdBy?: string;
-  updatedBy?: string;
   [key: string]: unknown;
 }
 

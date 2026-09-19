@@ -6,6 +6,7 @@ import { broadcastCollection } from '../../services/websocketService.js';
 import { getHydratedUsers, saveUsers } from '../../services/auth/userService.js';
 import { getRawUsers, type PersistedUser } from '../../services/auth/userServiceShared.js';
 import { deleteRefreshTokensForUser } from '../../services/auth/authArtifactService.js';
+import { sendTenantWelcomeEmail } from '../../services/auth/tenantPasswordOtpService.js';
 import { hashPassword } from '../../services/auth/passwordService.js';
 import { assertPasswordMeetsPolicy } from '../../services/globalSettingsService.js';
 import { loadContactsByIds } from '../../services/contactService.js';
@@ -53,6 +54,9 @@ export type {
 };
 export { UserPasswordResetError, runPasswordResetStage, runPasswordResetAuxiliaryStep };
 
+/** Dev-only fallback when a route handler couldn't resolve a trusted request origin. */
+const DEFAULT_INVITE_ORIGIN = process.env.PLATFORM_APP_URL?.trim() || 'http://localhost:5173';
+
 /**
  * Users use-cases — composition root binding a {@link UsersRepository} to every
  * operation. Production uses the default Drizzle-backed `usersUseCases`; tests
@@ -92,7 +96,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     actorId: string,
     actorRole?: string,
     ip = '127.0.0.1',
-  ): Promise<WorkspaceUser> => {
+    origin?: string,
+  ): Promise<{ user: WorkspaceUser; inviteEmailSent?: boolean; inviteEmailError?: string }> => {
     const tenant = requireTenant();
 
     if (actorRole && !canAssignRole(actorRole, input.role)) {
@@ -133,6 +138,10 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       await assertPasswordMeetsPolicy(password);
       passwordHash = await hashPassword(password);
       mustChangePassword = forceReset !== false;
+    } else if (setupMethod === 'invite') {
+      // No password is collected from the admin — the account gets a random unusable
+      // hash and the new person sets their own via the welcome email's OTP flow.
+      passwordHash = await hashPassword(randomBytes(32).toString('hex'));
     }
 
     const userId = 'id' in input && input.id ? String(input.id) : randomBytes(8).toString('hex');
@@ -172,8 +181,30 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     );
 
     const reloaded = await loadWorkspaceUsers();
-    const created = reloaded.find((u) => String(u.id) === userId);
-    return created ?? normalizeWorkspaceUser(userRecord);
+    const created = reloaded.find((u) => String(u.id) === userId) ?? normalizeWorkspaceUser(userRecord);
+
+    let inviteEmailSent: boolean | undefined;
+    let inviteEmailError: string | undefined;
+    if (setupMethod === 'invite' && (input as { sendEmail?: boolean }).sendEmail !== false) {
+      // The user row above is already committed — a failure here (SMTP down, transient
+      // DB error) must degrade to `inviteEmailSent: false`, never fail the whole create.
+      try {
+        const dispatch = await sendTenantWelcomeEmail({
+          workspaceSubdomain: tenant,
+          email,
+          name: name || email,
+          origin: origin ?? DEFAULT_INVITE_ORIGIN,
+        });
+        inviteEmailSent = dispatch.sent;
+        inviteEmailError = dispatch.error;
+      } catch (inviteError: unknown) {
+        console.error(`[Invite] Failed to send welcome email for user ${userId}:`, inviteError);
+        inviteEmailSent = false;
+        inviteEmailError = inviteError instanceof Error ? inviteError.message : 'The invite email could not be sent.';
+      }
+    }
+
+    return { user: created, inviteEmailSent, inviteEmailError };
   };
 
   const deleteUserById = async (
@@ -186,29 +217,29 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       throw new HttpDomainError(400, 'self_delete', 'Cannot delete your own account');
     }
 
-    const existing = await repo.findTenantUserRowById(id);
+    // Fail closed: the tenant comes from the request and scopes both the lookup
+    // and the write, so a foreign id can never be addressed.
+    const tenant = requireTenant();
+    const existing = await repo.findTenantUserRowById(tenant, id);
     if (!existing || existing.deletedAt) return false;
 
     if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
       throw new HttpDomainError(403, 'forbidden_super_admin_deletion', 'Cannot delete a Super Admin user account');
     }
 
-    const ok = await repo.softDeleteTenantUserRow(id, deletedBy);
+    const ok = await repo.softDeleteTenantUserRow(tenant, id, deletedBy);
     if (ok) {
       await deleteRefreshTokensForUser(id);
       await broadcastCollection('users');
 
-      const tenant = getRequestTenant();
-      if (tenant) {
-        await recordUserActivityLog(
-          repo,
-          tenant,
-          deletedBy,
-          'delete',
-          `Deleted user ${existing.name || id}`,
-          ip,
-        );
-      }
+      await recordUserActivityLog(
+        repo,
+        tenant,
+        deletedBy,
+        'delete',
+        `Deleted user ${existing.name || id}`,
+        ip,
+      );
     }
     return ok;
   };
@@ -219,28 +250,26 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     actorId = 'system',
     ip = '127.0.0.1',
   ): Promise<boolean> => {
-    const existing = await repo.findTenantUserRowById(id);
+    const tenant = requireTenant();
+    const existing = await repo.findTenantUserRowById(tenant, id);
     if (!existing) return false;
 
     if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
       throw new HttpDomainError(403, 'forbidden_super_admin_mutation', 'Cannot restore a Super Admin user account');
     }
 
-    const ok = await repo.restoreTenantUserRow(id);
+    const ok = await repo.restoreTenantUserRow(tenant, id);
     if (ok) {
       await broadcastCollection('users');
 
-      const tenant = getRequestTenant();
-      if (tenant) {
-        await recordUserActivityLog(
-          repo,
-          tenant,
-          actorId,
-          'update',
-          `Restored user ${existing.name || id}`,
-          ip,
-        );
-      }
+      await recordUserActivityLog(
+        repo,
+        tenant,
+        actorId,
+        'update',
+        `Restored user ${existing.name || id}`,
+        ip,
+      );
     }
     return ok;
   };
@@ -255,7 +284,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       }
       const page = await repo.listTenantUsersPage(tenant, query);
       const ids = page.rows.map((row) => String(row.id));
-      const rows = ids.length > 0 ? await repo.listTenantUsersByIds(ids) : [];
+      const rows = ids.length > 0 ? await repo.listTenantUsersByIds(tenant, ids) : [];
       const byId = new Map(rows.map((row) => [String(row.id), row]));
       const ordered = ids.map((id) => byId.get(id)).filter(Boolean) as typeof rows;
       const users = await hydrateUserRows(ordered);
@@ -271,7 +300,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     loadUsersByIds: async (ids: string[], includeDeleted = false): Promise<WorkspaceUser[]> => {
       const uniqueIds = dedupeTrimmedIds(ids);
       if (uniqueIds.length === 0) return [];
-      const rows = await repo.listTenantUsersByIds(uniqueIds);
+      const tenant = requireTenant();
+      const rows = await repo.listTenantUsersByIds(tenant, uniqueIds);
       const filtered = includeDeleted ? rows : rows.filter((r) => !r.deletedAt);
       return hydrateUserRows(filtered);
     },
@@ -279,7 +309,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     loadUserById: async (id: string, includeDeleted = false): Promise<WorkspaceUser | null> => {
       const cleanId = id?.trim();
       if (!cleanId) return null;
-      const rows = await repo.listTenantUsersByIds([cleanId]);
+      const tenant = requireTenant();
+      const rows = await repo.listTenantUsersByIds(tenant, [cleanId]);
       const row = rows[0];
       if (!row) return null;
       if (!includeDeleted && row.deletedAt) return null;
@@ -356,7 +387,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     ): Promise<WorkspaceUser> => {
       const tenant = requireTenant();
 
-      const existingRow = await repo.findTenantUserRowById(id);
+      const existingRow = await repo.findTenantUserRowById(tenant, id);
       if (!existingRow || existingRow.deletedAt) {
         throw new HttpDomainError(404, 'not_found', 'User not found');
       }
@@ -410,7 +441,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       actorId: string,
       actorRole?: string,
       ip = '127.0.0.1',
-    ): Promise<WorkspaceUser> => {
+      origin?: string,
+    ): Promise<{ user: WorkspaceUser; inviteEmailSent?: boolean; inviteEmailError?: string }> => {
       return createWorkspaceUser(
         {
           ...input,
@@ -421,6 +453,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
         actorId,
         actorRole,
         ip,
+        origin,
       );
     },
 
@@ -429,14 +462,15 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     restoreUserById,
 
     verifyUserEmailById: async (id: string, actorRole?: string): Promise<boolean> => {
-      const existing = await repo.findTenantUserRowById(id);
+      const tenant = requireTenant();
+      const existing = await repo.findTenantUserRowById(tenant, id);
       if (!existing) return false;
 
       if (actorRole && !canManageTargetUser(actorRole, existing.role)) {
         throw new HttpDomainError(403, 'forbidden_super_admin_mutation', 'Cannot modify a Super Admin user account');
       }
 
-      const ok = await repo.verifyTenantUserEmailRow(id);
+      const ok = await repo.verifyTenantUserEmailRow(tenant, id);
       if (ok) await broadcastCollection('users');
       return ok;
     },

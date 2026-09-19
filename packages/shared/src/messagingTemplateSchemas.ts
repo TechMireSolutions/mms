@@ -16,6 +16,8 @@ export const messageTemplateSchema = z
   })
   .strict();
 
+export const messageTemplateListSchema = z.array(messageTemplateSchema);
+
 export * from './schemas/messagingTemplate.dto.js';
 
 

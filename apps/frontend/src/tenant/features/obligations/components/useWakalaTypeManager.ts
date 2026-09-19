@@ -42,9 +42,16 @@ export function useWakalaTypeManager({
   const totalPct = ((wakalaTypeId: string) =>
     getDistributions(wakalaTypeId).reduce((sum, distribution) => sum + parseFloat(String(distribution.percentage ?? 0)), 0));
 
+  const generateId = (prefix: string) => {
+    const uuid = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+      ? crypto.randomUUID()
+      : Math.random().toString(36).substring(2, 11);
+    return `${prefix}${uuid}`;
+  };
+
   const handleSaveWakala = async (form: Partial<WakalaType>) => {
     if (modal?.mode === "add") {
-      await onChangeWakala([...wakalaTypes, { ...form, id: `wt${crypto.randomUUID()}` } as WakalaType]);
+      await onChangeWakala([...wakalaTypes, { ...form, id: generateId("wt") } as WakalaType]);
     } else if (modal?.mode === "edit") {
       await onChangeWakala(wakalaTypes.map((wakalaType) => wakalaType.id === form.id ? (form as WakalaType) : wakalaType));
     }
@@ -68,7 +75,7 @@ export function useWakalaTypeManager({
       return;
     }
     if (modal?.distMode === "add") {
-      await onChangeDistributions([...distributions, { ...form, id: `od${crypto.randomUUID()}` } as ObligationDistribution]);
+      await onChangeDistributions([...distributions, { ...form, id: generateId("od") } as ObligationDistribution]);
     } else if (modal?.distMode === "edit") {
       await onChangeDistributions(distributions.map((distribution) => distribution.id === form.id ? (form as ObligationDistribution) : distribution));
     }

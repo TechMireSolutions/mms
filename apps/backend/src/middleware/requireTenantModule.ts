@@ -77,8 +77,13 @@ export function requireTenantModule(moduleId: string) {
           globalSettings = await getWorkspaceGlobalSettings(tenant);
           grantedModules = await getWorkspaceGrantedModulesRepo(tenant);
           setCachedModuleAccess(tenant, globalSettings, grantedModules);
-        } catch {
-          // When DB is uninitialized or in mocked unit tests, proceed with default enabled
+        } catch (error) {
+          // Tests run without a database and expect default-enabled behaviour.
+          if (process.env.NODE_ENV === 'test' || process.env.VITEST) return;
+          // Fail closed in real environments: a DB outage must not silently
+          // disable module gating.
+          logger.error({ err: error, moduleId }, 'Failed to load module access; denying request');
+          await sendForbidden(reply, 'Failed to verify module access');
           return;
         }
       }

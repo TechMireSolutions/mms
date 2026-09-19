@@ -1,13 +1,26 @@
 ---
 name: mms-a11y-smoke
-description: Runs axe smoke and shell a11y checks (FormModal focus-return, 375/768/1440) when changing AppLayout, FormModal, Table, or shared interactive primitives. Use for a11y verification, not for inventing UI tokens.
+description: Runs accessibility verification for MMS UI work — axe scans, focus-return checks, and touch-target floors on AppLayout, FormModal, Table, and interactive primitives. Use when a11y conformance must be PROVEN for a change (run the axe spec, triage serious/critical violations). Do NOT use for designing tokens or layout (use mms-ui-ux-design), building create/edit forms (use mms-form-architecture), or general component authoring (use mms-frontend).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
+compatibility: Requires Playwright browsers for the full axe mode; static mode is dependency-free.
+allowed-tools: Read Grep Glob Bash(bash scripts/smoke-a11y.sh) Bash(pnpm test:e2e)
 ---
 
 # MMS A11y Smoke Workflow
 
-**Rules (norms SSOT):** `mms-testing-observability.md` · `mms-ui-ux-design.md` §5/§7 · `mms-form-architecture.md` (focus-return) · `mms-completion-review.md`.
+**Rules (norms SSOT):** `mms-testing-observability.md` · `mms-ui-ux-design.md` §3/§4 · `mms-form-architecture.md` (focus-return) · `mms-completion-review.md`.
 
 Do **not** use to invent design tokens → `mms-ui-ux-design.md` rule. Do **not** use to build forms → `mms-form-architecture`. Full PR review → `mms-code-review`.
+
+## Anti-Patterns & Banned Operations
+
+- ❌ **NEVER omit accessible names**: Icon-only buttons must have `aria-label` or visually hidden label text.
+- ❌ **NEVER show spinner-only pending states**: Long-running lists must use `aria-busy="true"` and polite live regions.
+- ❌ **NEVER break keyboard focus trapping**: Modal dialogs and detail drawers must trap focus and return focus to the trigger on close.
+- ❌ **NEVER use sub-44px touch targets**: Interactive controls must be at least 44x44px (`min-h-11 min-w-11`) on mobile viewports.
 
 ## Workflow
 
@@ -15,11 +28,11 @@ Do **not** use to invent design tokens → `mms-ui-ux-design.md` rule. Do **not*
 2. Keyboard path + accessible name/label spot-check on new controls.
 3. FormModal/drawer: focus trap + **focus-return** to the opener on close.
 4. Run `@axe-core/playwright` (or equivalent) on shell + one Work directory at **375** and **1440**; fail on serious/critical.
-5. Work list pending: `aria-busy` / polite live region (not spinner-only) — `mms-ui-ux-design.md` §5.
+5. Work list pending: `aria-busy` / polite live region (not spinner-only) — `mms-ui-ux-design.md` §3.
 6. Touch targets ≥ 44px (`min-h-11` / `min-w-11`); no page horizontal overflow.
 7. Honor `prefers-reduced-motion`; semantic landmarks (`main`/`nav`/`section`) preserved.
 8. When FormModal chrome touched: spot-check `dvh`/`svh` + safe-area — `mms-form-architecture.md`.
-9. Responsive shell specs named in `mms-ui-ux-design.md` §7 when layout chrome changed.
+9. Responsive shell specs named in `mms-ui-ux-design.md` §4 when layout chrome changed.
 10. If out of scope, state skip reason in completion review.
 
 ## Checklist
@@ -32,6 +45,17 @@ Do **not** use to invent design tokens → `mms-ui-ux-design.md` rule. Do **not*
 - [ ] FormModal chrome: dvh/svh / safe-area when touched
 - [ ] 375 / 768 / 1440 spot-check when shell touched
 ```
+
+## Script
+
+`scripts/smoke-a11y.sh` — two modes:
+
+```bash
+bash scripts/smoke-a11y.sh          # static heuristics (advisory, exits 0; MMS_A11Y_STRICT=1 to fail)
+bash scripts/smoke-a11y.sh full     # real axe gate: Playwright tests/a11y-shell.spec.ts (exits non-zero on violations)
+```
+
+Run `full` for any change to `AppLayout`, `FormModal`, `Table`, or shared primitives; static mode is a quick nudge, not evidence.
 
 ## Done
 

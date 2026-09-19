@@ -88,20 +88,25 @@ export interface AppleContactsFileInputProps {
   fileRef: RefObject<HTMLInputElement | null>;
   onChange: (event: ChangeEvent<HTMLInputElement>) => void;
   t: TranslationFunction;
+  /** Distinct DOM id per host (panel vs import dialog) to avoid duplicate ids. */
+  inputId?: string;
+  accept?: string;
 }
 
 export function AppleContactsFileInput({
   fileRef,
   onChange,
   t,
+  inputId = "contacts-vcf-import-file-input",
+  accept = ".vcf,text/vcard,.csv,text/csv",
 }: AppleContactsFileInputProps): React.JSX.Element {
   return (
     <input
-      id="contacts-vcf-import-file-input"
+      id={inputId}
       name="contactsVcfFile"
       ref={fileRef}
       type="file"
-      accept=".vcf,text/vcard"
+      accept={accept}
       className="hidden"
       onChange={onChange}
       aria-label={t("contacts.sync.uploadVcf")}

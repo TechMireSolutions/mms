@@ -49,7 +49,7 @@ export default function WizardLayout({
     >
       <AuthPageBackdrop />
 
-      <header className="sticky top-0 z-50 flex h-14 items-center justify-between border-b border-border/40 bg-background/80 px-4 shadow-sm backdrop-blur-md sm:px-6">
+      <header className="sticky top-0 z-sticky flex h-14 items-center justify-between border-b border-border/40 bg-background/80 px-4 shadow-sm backdrop-blur-md sm:px-6">
         <div className="flex items-center gap-2.5">
           <PlatformLogoMark size="sm" />
           <span className="text-sm font-semibold uppercase tracking-wider text-foreground">
@@ -71,7 +71,7 @@ export default function WizardLayout({
       </header>
 
       <div
-        className="relative z-50 h-1 w-full bg-muted"
+        className="relative z-sticky h-1 w-full bg-muted"
         role="progressbar"
         aria-valuenow={currentStep}
         aria-valuemin={1}
@@ -86,7 +86,7 @@ export default function WizardLayout({
         />
       </div>
 
-      <main id="main-content" className="relative z-10 flex flex-1 flex-col items-center px-4 py-8 sm:px-6 sm:py-10">
+      <main id="main-content" className="relative z-elevated flex flex-1 flex-col items-center px-4 py-8 sm:px-6 sm:py-10">
         <nav aria-label={stepLabel} className="mb-8 flex items-center gap-0 sm:mb-10">
           {steps.map((step, index) => {
             const done = currentStep > step.id;

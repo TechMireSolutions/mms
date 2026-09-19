@@ -12,7 +12,7 @@ import { auditContact, sanitizeOneForUser } from './contactRouteHelpers.js';
 export const contactSoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
   registerResourceRoutes(fastify, {
     collection: 'contacts',
-    schema: contactRecordSchema as never,
+    schema: contactRecordSchema,
     nameSingular: 'contact',
     namePlural: 'contacts',
     customGetRoute: true,

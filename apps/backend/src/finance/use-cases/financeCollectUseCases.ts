@@ -36,34 +36,50 @@ import {
   tryPostCreditNoteJournal,
   tryPostInvoiceReversalJournal,
   tryPostLateFeeJournals,
+  tryPostLateFeeReversalJournal,
 } from '../../accounting/ledgerPosting/ledgerPostingService.js';
+import { withTenant } from '../../db/tenant-context.js';
 
 function domainError(message: string, statusCode: number, type: string): Error {
   return Object.assign(new Error(message), { statusCode, type });
 }
 
+/**
+ * Marks overdue invoices and optionally applies late fees.
+ *
+ * Runs inside one transaction: the status update, the late-fee write on each
+ * invoice and the matching journal postings must all land together. Without it,
+ * a failure part-way through the posting loop left invoices carrying
+ * `late_fee_amt` with no ledger entry — and because `canApplyLateFee` requires
+ * `lateFeeAmt <= 0`, every later run skipped them, so those fees could never be
+ * posted. The HTTP route happened to wrap this call in a transaction; the
+ * `finance:collect` background job did not.
+ */
 export async function collectOverdueInvoices(input: CollectInvoicesBody = {}): Promise<CollectInvoicesResult> {
   const tenant = requireTenant();
   const body = input;
-  const today = todayISO();
-  const prefs = await loadFinanceModulePreferences();
-  const lateFeePercent = Number.parseFloat(prefs?.lateFeePercent ?? DEFAULT_FINANCE_SETTINGS.lateFeePercent) || 0;
-  const markedOverdue = await markOverdueInvoices(tenant, today);
-  let lateFeesApplied = 0;
-  if (body.applyLateFee && lateFeePercent > 0) {
-    const open = await listOpenInvoicesForCollect(tenant);
-    const fees = open
-      .filter((invoice) => canApplyLateFee(invoice, lateFeePercent, today))
-      .map((invoice) => ({ invoice, amount: computeLateFee(invoice.finalAmt, lateFeePercent) }))
-      .filter((fee) => fee.amount > 0);
-    await applyLateFeeAmounts(tenant, fees.map((fee) => ({ invoiceId: fee.invoice.id, amount: fee.amount })));
-    await tryPostLateFeeJournals(tenant, fees);
-    lateFeesApplied = fees.length;
-  }
+  const result = await withTenant(tenant, async () => {
+    const today = todayISO();
+    const prefs = await loadFinanceModulePreferences();
+    const lateFeePercent = Number.parseFloat(prefs?.lateFeePercent ?? DEFAULT_FINANCE_SETTINGS.lateFeePercent) || 0;
+    const markedOverdue = await markOverdueInvoices(tenant, today);
+    let lateFeesApplied = 0;
+    if (body.applyLateFee && lateFeePercent > 0) {
+      const open = await listOpenInvoicesForCollect(tenant);
+      const fees = open
+        .filter((invoice) => canApplyLateFee(invoice, lateFeePercent, today))
+        .map((invoice) => ({ invoice, amount: computeLateFee(invoice.finalAmt, lateFeePercent) }))
+        .filter((fee) => fee.amount > 0);
+      await applyLateFeeAmounts(tenant, fees.map((fee) => ({ invoiceId: fee.invoice.id, amount: fee.amount })));
+      await tryPostLateFeeJournals(tenant, fees);
+      lateFeesApplied = fees.length;
+    }
+    return { markedOverdue, lateFeesApplied };
+  });
   const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'finance_invoices');
   broadcastTenantUpdate(tenant, 'collection', 'finance_metrics');
-  return { markedOverdue, lateFeesApplied };
+  return result;
 }
 
 export async function remindOpenInvoices(input: RemindInvoicesBody = {}): Promise<RemindInvoicesResult> {
@@ -116,40 +132,58 @@ export async function cancelInvoice(invoiceId: string): Promise<Invoice> {
   const invoice = await financeUseCases.getInvoiceById(invoiceId);
   if (!invoice || invoice.deletedAt) throw domainError('Invoice not found', 404, 'not_found');
   if (!canCancelInvoice(invoice)) {
-    throw domainError('Only unpaid invoices can be cancelled', 422, 'validation_error');
+    throw domainError(
+      (invoice.creditedAmt ?? 0) > 0
+        ? 'Reverse the credit notes on this invoice before cancelling it'
+        : 'Only unpaid invoices can be cancelled',
+      422,
+      'validation_error',
+    );
   }
   const cancelled = await financeUseCases.updateInvoiceById(invoiceId, { ...invoice, status: 'cancelled' });
   if (!cancelled) throw domainError('Invoice not found', 404, 'not_found');
   await tryPostInvoiceReversalJournal(tenant, cancelled);
+  // Late fees post under their own source key, so reversing the invoice entry
+  // alone left the fee on the books.
+  await tryPostLateFeeReversalJournal(tenant, cancelled);
   const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'finance_invoices');
   return cancelled;
 }
 
+/**
+ * Records a credit note, updates the invoice and posts the offsetting journal in
+ * one transaction. The credit-note id is generated fresh on every call, so a
+ * partial failure followed by a retry would otherwise record the same credit
+ * twice — double-counting the credit in both the subledger and the ledger.
+ */
 export async function createCreditNote(input: CreditNoteInsert): Promise<CreditNote> {
   const tenant = requireTenant();
   const parsed = input;
-  const invoice = await financeUseCases.getInvoiceById(parsed.invoiceId);
-  if (!invoice || invoice.deletedAt) throw domainError('Invoice not found', 404, 'not_found');
-  if (!canCreditInvoice(invoice, parsed.amount)) {
-    throw domainError('Credit exceeds the open balance', 422, 'validation_error');
-  }
-  const note: CreditNote = {
-    id: `cn-${randomUUID()}`,
-    invoiceId: invoice.id,
-    amount: parsed.amount,
-    reason: parsed.reason ?? '',
-    createdAt: new Date().toISOString(),
-  };
-  const creditedAmt = (invoice.creditedAmt ?? 0) + parsed.amount;
-  const remaining = invoiceOpenBalance({ ...invoice, creditedAmt });
-  await saveCreditNote(tenant, note);
-  await financeUseCases.updateInvoiceById(invoice.id, {
-    ...invoice,
-    creditedAmt,
-    status: remaining <= 0 ? 'paid' : invoice.status,
+  const note = await withTenant(tenant, async () => {
+    const invoice = await financeUseCases.getInvoiceById(parsed.invoiceId);
+    if (!invoice || invoice.deletedAt) throw domainError('Invoice not found', 404, 'not_found');
+    if (!canCreditInvoice(invoice, parsed.amount)) {
+      throw domainError('Credit exceeds the open balance', 422, 'validation_error');
+    }
+    const created: CreditNote = {
+      id: `cn-${randomUUID()}`,
+      invoiceId: invoice.id,
+      amount: parsed.amount,
+      reason: parsed.reason ?? '',
+      createdAt: new Date().toISOString(),
+    };
+    const creditedAmt = (invoice.creditedAmt ?? 0) + parsed.amount;
+    const remaining = invoiceOpenBalance({ ...invoice, creditedAmt });
+    await saveCreditNote(tenant, created);
+    await financeUseCases.updateInvoiceById(invoice.id, {
+      ...invoice,
+      creditedAmt,
+      status: remaining <= 0 ? 'paid' : invoice.status,
+    });
+    await tryPostCreditNoteJournal(tenant, invoice, created.id, parsed.amount);
+    return created;
   });
-  await tryPostCreditNoteJournal(tenant, invoice, note.id, parsed.amount);
   const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
   broadcastTenantUpdate(tenant, 'collection', 'finance_invoices');
   return note;

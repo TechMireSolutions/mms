@@ -70,7 +70,7 @@ export function BrandColorContrastMatrix({
                 'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-xs font-mono whitespace-nowrap shadow-2xs transition-all',
                 primaryBothPass
                   ? 'border-border/80 bg-card text-foreground'
-                  : 'border-warning/50 bg-warning/5 text-warning-foreground'
+                  : 'border-warning/50 bg-warning/5 text-warning'
               )}
               title={primaryBothPass ? t('theme.contrastBothPass') : t('theme.contrastBothFail')}
             >
@@ -109,7 +109,7 @@ export function BrandColorContrastMatrix({
                 'inline-flex items-center gap-1.5 h-8 px-2.5 rounded-lg border text-xs font-mono whitespace-nowrap shadow-2xs transition-all',
                 secondaryBothPass
                   ? 'border-border/80 bg-card text-foreground'
-                  : 'border-warning/50 bg-warning/5 text-warning-foreground'
+                  : 'border-warning/50 bg-warning/5 text-warning'
               )}
               title={secondaryBothPass ? t('theme.contrastBothPass') : t('theme.contrastBothFail')}
             >

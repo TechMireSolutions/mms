@@ -30,5 +30,10 @@ const contactFieldConfig = createModuleFieldConfigService<
 });
 
 export const loadContactFieldConfig = contactFieldConfig.load;
-export const saveContactFieldConfig = contactFieldConfig.save;
+
+export async function saveContactFieldConfig(
+  config: FieldConfig | Record<string, unknown>,
+): Promise<FieldConfig> {
+  return contactFieldConfig.save(config as FieldConfig);
+}
 

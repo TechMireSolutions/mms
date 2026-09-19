@@ -1,27 +1,27 @@
 ---
-trigger: always_on
+trigger: model_decision
+description: Known gaps between rules (target) and codebase (current) — do not opportunistically fix outside task scope
 ---
 
 # MMS Migration Status
 
-**Workflow skill:** `mms-migration-fixes` — prioritized gap list and recipes. Rules describe **target architecture**. Fix open gaps only when in task scope.
+**Workflow skill:** `mms-migration-fixes` — prioritized gap list and recipes. Rules describe **target architecture**. Fix open gaps only when in task scope. Historical closed milestones are recorded in `docs/migration-milestones.md`.
 
-## Open Gaps Register
+## Open Gaps Register (Active Debt)
+
+Only address these residual gaps when explicitly within task scope.
 
 | Area | Scope & Current Status | Target Standard |
 |---|---|---|
-| **Copy & a11y** | Residual hardcoded strings; niche a11y/RTL checks. | Full `t()` en/ar/ur/fa; WCAG 2.1 AA (`mms-settings-i18n.md`, `mms-ui-ux-design.md`). |
-| **RBAC** | Closed: `role ===` write gates replaced by `useModulePermissions`. | Contract `can()` via `useModulePermissions(manifest)` (`mms-auth-security.md`). |
-| **Setup & Prefs** | Closed: All module prefs/lookups migrated to typed tables. | Migrate remaining module prefs/lookups to typed tables (`mms-fields.md`, `mms-data-layer.md`). |
-| **Live Push & Aggregates** | Closed: Contacts/Students/Teachers/Sessions/Enrollments WS invalidate + SQL aggregates. Residual: other module emit/subscribe, comparison mode dumps. | WS `/api/ws` invalidate + SQL `GROUP BY` aggregates (`mms-core.md`, `mms-reports.md`). |
-| **PG Statement Budgets** | Closed: Route-level budgets on hot paths via `statementTimeoutMs`. | Route-level tighter budgets for hot paths (`mms-data-layer.md`). |
-| **Contacts Full Loads** | Closed: SQL metrics, candidate match, blocked duplicate scans. Residual: niche chart dumps. | SQL aggregates across all visualizers (`mms-data-layer.md`, `mms-reports.md`). |
-| **CSRF / Origin Gate** | Closed: `registerCsrfOriginGuard` enforces `Sec-Fetch-Site: same-origin|same-site|none`, origin validation, and `application/json` mutation media types. | Strict Origin / `Sec-Fetch-Site` header checks on all cookie writes (`mms-auth-security.md`). |
-| **SQL Pagination** | Closed: All paged lists migrated to server SQL `LIMIT`/`OFFSET`. | Server SQL `LIMIT`/`OFFSET` via `contactsListQuerySchema` (`mms-data-layer.md`). |
-| **Soft-Delete Indexes & Gaps** | Closed: Migration `0104` added Category B/C partial indexes across all entity tables, partial unique indexes (`WHERE deleted_at IS NULL`), `deleted_with_cascade` on enrollments, `forbid_hard_delete()` trigger, session revocation, and restore attribution. | Category B/C partial indexes, partial unique indexes (`WHERE deleted_at IS NULL`), atomic cascades (`mms-data-layer.md` §6). |
-| **Retention Hard-Purge** | Closed: Scheduled background worker (`purgeExpiredArchivedRecords`) in bounded chunks of 500 rows with lock-free `SKIP LOCKED` processing per manifest `retentionDays`. | Scheduled background worker (`purgeExpiredArchivedRecords`) in bounded chunks (`mms-data-layer.md` §6, `mms-background-jobs`). |
+| **Copy & a11y** | Residual hardcoded strings in secondary modules; niche RTL/contrast checks not yet covered by the a11y smoke spec. `pnpm run check:i18n` enforces key parity only. | Full `t()` en/ar/ur/fa; WCAG 2.2 AA (`mms-settings-i18n.md`, `mms-ui-ux-design.md`). |
+| **Live Push & Aggregates** | Closed for primary modules (Contacts/Students/Teachers/Sessions/Enrollments). Residual: secondary module WS emit/subscribe and comparison mode dumps. | WS `/api/ws` invalidate + SQL `GROUP BY` aggregates (`mms-core.md`, `mms-reports.md`). |
+| **Contacts Full Loads** | Closed for core SQL metrics, candidate match, duplicate scans. Residual: niche chart dumps. | SQL aggregates across all visualizers (`mms-data-layer.md`, `mms-reports.md`). |
+| **Tenant RLS Coverage** (found 2026-09-15, corrected 2026-09-15, **resolved 2026-09-18**) | **RESOLVED 2026-09-18** by migration `0116_force_rls_missing_tenant_tables.sql` (journal idx 116): all **17 real tables** now carry per-table `ENABLE ROW LEVEL SECURITY` + `FORCE ROW LEVEL SECURITY` + `tenant_isolation_policy`, the `0076_force_rls_all_tables.sql` pattern. Detection history: the original sweep reported **27** tenant tables without `ENABLE` — a false positive, as the 9 finance/accounting tables are covered by the dynamic `DO ... FOREACH ... ENABLE/FORCE ROW LEVEL SECURITY` block in `0093_finance_accounting_complete.sql`, which `check-migrations.sh` could not parse at the time (Pass 3 now parses dynamic DO-block DDL). The corrected count was **18**, of which `custom_tabs` (from `0000_init`) proved a second false positive — dropped by `0043_drop_custom_fields_and_tabs.sql`, so no live database has it; Pass 1b of `check-migrations.sh` now excludes tables dropped later in the migration set. The 17 real tables: 15 `FORCE`-only from `0082_new_modules.sql` (`inventory_items`, `inventory_sales`, `ecommerce_orders`, `ijara_orders`, `charity_fidya_records`, `orphan_profiles`, `fatwa_tickets`, `fundraising_campaigns`, `fundraising_coupons`, `esale_sawab_requests`, `workshop_events`, `workshop_participants`, `workshop_scores`, `competition_events`, `competition_participants`) plus `audit_trail_events` / `audit_verification_runs` from `0102_modern_audit_trail.sql` (neither statement). `FORCE` alone does **not** enable policies. Detect/re-verify with `bash .agent/skills/mms-schema-migrate/scripts/check-migrations.sh` (exits non-zero on missing `ENABLE`; `MMS_RLS_STRICT=1` also fails on missing `FORCE`). | Per-table `ENABLE` + `FORCE` + policy — **shipped 2026-09-18 in 0116** (`mms-data-layer.md` §1). Whether `audit_trail_events` should instead rely on revoked DML grants is a deliberate decision to record, not an omission. |
+| **Performance Optimization Architecture (B1–B15)** (shipped 2026-09-18) | **RESOLVED 2026-09-18**: Comprehensive full-stack performance audit and optimization blueprint implemented across monorepo. Keyset pagination (`afterId`, `skipCount`, `nextCursor`) and TanStack Query `infiniteQueryOptions` in Contacts & Students; non-blocking cursor Redis `SCAN` (`COUNT 200`) and prefix matching in cache fallback; compile-time fast JSON response schemas on hot routes; BullMQ worker concurrency tuned to 6 with heap backpressure sentinel (>85% total heap triggers GC delay); `0117_attendance_composite_active_idx.sql` migration; out-of-band concurrent BRIN, covering, and stats script (`perf_concurrent_indexes_and_stats.sql`); CSV streaming `skipCount` bypass; DOM virtualization (`@tanstack/react-virtual`) on large attendance rosters and message recipient chips; ETag payload limit elevated to 4MB. | End-to-end performance targets met (`mms-performance.md`, `mms-data-layer.md`). |
 
 ## Regressions: Do Not Reintroduce
+
+Authoritative regression invariants are enforced by `mms-completion-review.md` and their canonical owning rules:
 
 | Theme | Forbidden Regression | Canonical Owner |
 |---|---|---|
@@ -39,8 +39,8 @@ trigger: always_on
 | **Messaging** | Re-introducing `messages_u:` allowlist; FE page-walk for select-all/CSV; idempotency keys without body digests. | `mms-messaging.md` |
 | **Reports** | Full-collection dumps for KPIs when `/metrics` exists; widget state via `saveCollection`. | `mms-reports.md` |
 | **Security & RLS** | Secrets in unscoped `objects`; omitting `FORCE ROW LEVEL SECURITY` on tenant tables; unbounded backup KDF. | `mms-auth-security.md`, `mms-data-layer.md` |
-| **Layout & a11y** | Horizontal page overflow; touch targets < 44px (`min-h-11 min-w-11`); custom sub-tabs instead of `SubTabBar`. | `mms-ui-ux-design.md` §7 |
+| **Layout & a11y** | Horizontal page overflow; touch targets < 44px (`min-h-11 min-w-11`); custom sub-tabs instead of `SubTabBar`. | `mms-ui-ux-design.md` §4 |
 | **File Structure** | Files > 300 lines without concern split; renaming public barrels during refactors. | `mms-structure-naming.md` |
 | **Auth Artifacts** | Unindexed artifact scans instead of indexed lookup/scope keys. | `mms-ops-infrastructure.md`, `mms-data-layer.md` |
 | **Audit Trail & Immutability** | Bare `UPDATE`/`DELETE` on audit tables; deleting/re-hashing historical rows for erasure (instead of crypto-shredding or redact-and-append); ad-hoc uncanonical JSON; global un-sharded serial hash chains causing write contention; unmonitored verification gaps. | `mms-data-layer.md`, `mms-auth-security.md` |
-
+| **Performance Invariants** | Using blocking Redis `KEYS *`; unbuffered full heap allocations in worker jobs without backpressure; write-blocking index builds in migrations on large tables; unpaged client arrays rendered into DOM without virtualization (>30 items); omitting `nextCursor` / `skipCount` on heavy list paginations. | `mms-performance.md` |

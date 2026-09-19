@@ -29,12 +29,14 @@ export type RbacPermissionNavEntry = RbacPermissionNavModule | RbacPermissionNav
 export const RBAC_PERMISSION_NAV: readonly RbacPermissionNavEntry[] = [
   { type: 'module', rbacId: 'dashboard' },
   { type: 'module', rbacId: 'contacts' },
+  { type: 'module', rbacId: 'faculty' },
+  { type: 'module', rbacId: 'teachers' },
   { type: 'module', rbacId: 'messaging' },
   {
     type: 'group',
     groupId: 'academics',
     labelKey: 'nav.academics',
-    rbacIds: ['students', 'teachers', 'sessions', 'attendance', 'enrollments', 'hasanat', 'examinations', 'questionBank'],
+    rbacIds: ['students', 'sessions', 'attendance', 'enrollments', 'hasanat', 'examinations', 'questionBank'],
   },
   { type: 'module', rbacId: 'finance' },
   { type: 'module', rbacId: 'accounting' },

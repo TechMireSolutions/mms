@@ -6,6 +6,7 @@ import {
 } from '@mms/shared';
 import { getPoolMetrics, pingDatabase } from '../../db/database.js';
 import { checkIsRedisConnected } from '../../lib/redis.js';
+import { isShuttingDown } from '../../lib/lifecycle.js';
 
 function safeGetPoolMetrics() {
   try {
@@ -52,6 +53,18 @@ export default async function healthRoutes(fastify: FastifyInstance): Promise<vo
       },
     },
     async (_request, reply) => {
+      // Fail readiness FIRST during shutdown so the load balancer stops routing
+      // here while in-flight requests are still being drained. Skipping the
+      // database ping also keeps shutdown fast.
+      if (isShuttingDown()) {
+        return reply.status(503).send({
+          type: 'server_error',
+          status: 'not_ready',
+          database: 'draining',
+          redis: 'draining',
+        });
+      }
+
       const dbOk = await pingDatabase();
       const isRedisRequired = Boolean(
         process.env.REDIS_URL && process.env.NODE_ENV !== 'test' && !process.env.VITEST,

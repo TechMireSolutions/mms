@@ -1,7 +1,6 @@
 import crypto, { randomUUID } from 'node:crypto';
 import { setTimeout as sleep } from 'node:timers/promises';
 import type { FastifyPluginAsync } from 'fastify';
-import rateLimit from '@fastify/rate-limit';
 import type { Message, MessageLogCreateDto, User } from '@mms/shared';
 import {
   messagingLogsQuerySchema,
@@ -11,6 +10,7 @@ import {
 import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
 import { MESSAGING_LOG_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../../lib/rateLimitGuard.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { recordModernAuditEvent } from '../../../services/auditTrailService.js';
 import { logger } from '../../../lib/logger.js';
@@ -139,7 +139,7 @@ export const messagingLogRoutes: FastifyPluginAsync = async (fastify) => {
   });
 
   await fastify.register(async (scoped) => {
-    await scoped.register(rateLimit, MESSAGING_LOG_RATE_LIMIT);
+    scoped.addHook('preHandler', createStrictRateLimitGuard(scoped, MESSAGING_LOG_RATE_LIMIT));
 
     scoped.post('/logs', async (req, reply) => {
       const user = req.user as User;

@@ -46,51 +46,90 @@ vi.mock("@/tenant/features/contacts/components/ContactsWorkTier", () => ({
   ContactsWorkTier: () => <div data-testid="work-tier">Work Tier</div>,
 }));
 
+let lastHeaderProps: { isExporting: boolean; onImport?: () => void } | undefined;
+
+/** Accessor defeats TS control-flow narrowing of the module-level capture. */
+function getLastHeaderProps(): { isExporting: boolean; onImport?: () => void } | undefined {
+  return lastHeaderProps;
+}
+
 vi.mock("@/tenant/features/contacts/components/ContactsPageHeaderActions", () => ({
-  ContactsPageHeaderActions: () => <div data-testid="header-actions">Actions</div>,
+  ContactsPageHeaderActions: ({
+    isExporting,
+    onImport,
+  }: {
+    isExporting?: boolean;
+    onImport?: () => void;
+  }) => {
+    lastHeaderProps = { isExporting: Boolean(isExporting), onImport };
+    return (
+      <div data-testid="header-actions" data-exporting={String(Boolean(isExporting))}>
+        <button type="button" data-testid="header-import" onClick={onImport}>
+          import
+        </button>
+      </div>
+    );
+  },
 }));
+
+const baseProps: React.ComponentProps<typeof ContactsPageView> = {
+  t: ((key: string) => key) as never,
+  visibleTopTabs: [
+    { id: "work", label: "Work", description: "Directory", icon: Users },
+  ],
+  effectiveTab: "work",
+  setActiveTab: vi.fn(),
+  canExport: true,
+  canRead: true,
+  canWrite: true,
+  viewingDeleted: false,
+  openingDuplicates: false,
+  isExporting: false,
+  handleOpenDuplicates: vi.fn(),
+  handleExportCSV: vi.fn(),
+  handleOpenImport: vi.fn(),
+  handleNew: vi.fn(),
+  shownCount: 10,
+  pendingCount: 0,
+  conflictCount: 0,
+  flushing: false,
+  flush: vi.fn(),
+  openConflictReview: vi.fn(),
+  conflictPanelOpen: false,
+  setConflictPanelOpen: vi.fn(),
+  tabPanelProps: {
+    workTierProps: {} as never,
+    setupTierProps: {} as never,
+  },
+  overlayProps: {} as never,
+};
+
+function render(overrides: Partial<React.ComponentProps<typeof ContactsPageView>> = {}) {
+  return renderToStaticMarkup(<ContactsPageView {...baseProps} {...overrides} />);
+}
 
 describe("ContactsPageView Component", () => {
   it("renders presentational contacts page with header, tabs, and work tier", () => {
-    const html = renderToStaticMarkup(
-      <ContactsPageView
-        t={((key: string) => key) as never}
-        visibleTopTabs={[
-          {
-            id: "work",
-            label: "Work",
-            description: "Directory",
-            icon: Users,
-          },
-        ]}
-        effectiveTab="work"
-        setActiveTab={vi.fn()}
-        canExport={true}
-        canRead={true}
-        canWrite={true}
-        viewingDeleted={false}
-        openingDuplicates={false}
-        handleOpenDuplicates={vi.fn()}
-        handleExportCSV={vi.fn()}
-        handleNew={vi.fn()}
-        shownCount={10}
-        pendingCount={0}
-        conflictCount={0}
-        flushing={false}
-        flush={vi.fn()}
-        openConflictReview={vi.fn()}
-        conflictPanelOpen={false}
-        setConflictPanelOpen={vi.fn()}
-        tabPanelProps={{
-          workTierProps: {} as never,
-          setupTierProps: {} as never,
-        }}
-        overlayProps={{} as never}
-      />,
-    );
+    const html = render();
 
     expect(html).toContain("nav.contacts");
     expect(html).toContain("Work Tier");
     expect(html).toContain("Overlays");
+    expect(html).toContain('data-exporting="false"');
+  });
+
+  it("passes the in-flight export state to the header actions", () => {
+    expect(render({ isExporting: true })).toContain('data-exporting="true"');
+  });
+
+  it("wires the header import CTA to the import opener", () => {
+    const handleOpenImport = vi.fn();
+    const html = render({ handleOpenImport });
+    const headerProps = getLastHeaderProps();
+
+    expect(html).toContain('data-testid="header-import"');
+    expect(headerProps?.onImport).toBe(handleOpenImport);
+    headerProps?.onImport?.();
+    expect(handleOpenImport).toHaveBeenCalledTimes(1);
   });
 });

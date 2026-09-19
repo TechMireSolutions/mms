@@ -1,12 +1,13 @@
 ---
 trigger: model_decision
+description: Static FormModal architecture — shell chrome, Zod validation, React 19 defaults, decimal-as-string, collection-list save clears, RLS pointer, local multipart uploads. Applies to tenant and platform forms.
 ---
 
 # MMS Form Architecture
 
 **Workflow skill:** `mms-form-architecture`. Shell a11y/focus-return verify → `mms-a11y-smoke`.
 
-Simple static forms with design-system primitives — not dynamic layout engines. Responsive/a11y chrome around the dialog → `mms-ui-ux-design.md` §5/§7.
+Simple static forms with design-system primitives — not dynamic layout engines. Responsive/a11y chrome around the dialog → `mms-ui-ux-design.md` §3/§4.
 
 ## 1. FormModal shell & primitives
 
@@ -20,7 +21,7 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `TimePicker`, `DateTimePicker`, `EditableSelect`) — currency as `inputMode="decimal"` text (never `type="number"`), phone as `type="tel"` + E.164, date/datetime via the shared pickers.
 - **Stable Heights**: Tabbed forms use `<FormModal tall>` with a tall viewport height + `max-h-[43.75rem]` and scrollable body `flex-1 overflow-y-auto`. Prefer `dvh`/`svh` (+ `safe-area-inset` padding) over raw `vh` when touching FormModal chrome — iOS keyboard/browser chrome.
 - **Scroll Containment**: `useBodyScrollLock()` + `overscroll-contain` on scrollable modal boxes.
-- **Tabs / field grids:** layout follows the dialog `@container` (`@md:` / `@sm:`), not the viewport — `mms-ui-ux-design.md` §7.
+- **Tabs / field grids:** layout follows the dialog `@container` (`@md:` / `@sm:`), not the viewport — `mms-ui-ux-design.md` §4.
 - Long forms split major tasks into purposeful `FormModal` tabs; preserve form state across tab switches.
 - **Tabs:** one tab per persisted table when a record spans tables; workflow-only tabs OK when the saved payload stays explicit. Visible tabs follow Setup enablement SSOT — `mms-fields.md`.
 - **Enabled fields must render**: if validation can require a registry field, the form must show a control (and the drawer a read row). Ban hard-coded key allowlists.
@@ -35,9 +36,18 @@ Simple static forms with design-system primitives — not dynamic layout engines
 ## 2. State & React 19 defaults
 
 - Prefer simple controlled state (or RHF + zodResolver for complex multi-step forms). Same Zod schema as BE DTOs from `@mms/shared`.
-- **Ban** React 19 Server Actions / `useActionState` / native form `action=` posts for all MMS writes (tenant or platform) — cookie SPA + `apiClient` / Query mutations only (no RSC action posts against the Fastify API).
+- **RSC Server Actions Ban & Client Actions**: React Server Components (RSC) Server Actions (`"use server"`) and multi-page native HTML form `action=` POST submissions are strictly banned — MMS is a Vite Single Page Application communicating with Fastify REST via `apiClient`. TanStack Query mutations (`useMutation`) remain the primary server cache synchronizer; client-side `useActionState` or `useOptimistic` interacting with `apiClient` async handlers is permitted only where it streamlines local pending/optimistic state without bypassing Query cache invalidation.
 - Initialize fields to avoid uncontrolled→controlled warnings: strings `""`, numbers/dates `null`, lists `[]`.
-- Every control needs `name` + `id` (fallback `useId()`).
+- Every control needs `name` + `id` (mandatory `useId()` fallback paired with `<label htmlFor={id}>` for WCAG 2.2 AA accessibility).
+- **Mobile Keyboard Ergonomics & Autocomplete**: Form inputs must provide semantic `inputMode` and standard `autoComplete` hints to optimize mobile virtual keyboards:
+  - Currency/Money: `inputMode="decimal"`
+  - Phone: `type="tel"`, `inputMode="tel"`, `autoComplete="tel"`
+  - OTP / 2FA: `inputMode="numeric"`, `autoComplete="one-time-code"`
+  - Names: `autoComplete="given-name"` / `autoComplete="family-name"`
+  - Email: `type="email"`, `inputMode="email"`, `autoComplete="email"`, `autoCapitalize="none"`, `autoCorrect="off"`
+  - Navigation: Use `enterKeyHint="next"` on intermediate inputs and `enterKeyHint="done"` or `enterKeyHint="send"` on the form's final action input.
+  - **Pasteability Invariant (WCAG 2.2 Accessible Authentication 3.3.8)**: Never block copy-paste on OTP, 2FA, or password inputs (`onPaste` prevention is strictly banned).
+- Custom form controls use React 19 native `ref` as prop — `forwardRef` is banned in newly authored form primitives.
 - Phones: single `type="tel"` input; parse/normalize E.164 on blur/save via `parsePhoneNumber` + `normalizeToE164` from `@mms/shared`.
 
 ## 3. Collection list tabs (phones / emails / addresses / socials / relationships / custom_*)

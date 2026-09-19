@@ -38,6 +38,8 @@ export interface ModuleWorkBulkActionBarProps {
   exportAction?: {
     label: string;
     onClick: () => void | Promise<void>;
+    /** Export in flight — disables the CTA and shows a spinner. */
+    isPending?: boolean;
   };
   /** Module-specific middle actions (e.g. Students status). */
   extraActions?: ReactNode;
@@ -93,7 +95,11 @@ export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
             />
           )}
           {exportAction && (
-            <BulkSelectionExportAction label={exportAction.label} onClick={exportAction.onClick} />
+            <BulkSelectionExportAction
+              label={exportAction.label}
+              onClick={exportAction.onClick}
+              isPending={exportAction.isPending}
+            />
           )}
           {extraActions}
           {deleteAction && (

@@ -7,7 +7,7 @@ import {
   type ContactsListQuery,
 } from '@mms/shared';
 import { contacts, students, teachers, tenantUsers, contactEmails, contactAddresses } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import {
   hasEmailSql,
@@ -267,7 +267,7 @@ const CONTACT_LIST_COLUMNS = {
  */
 export async function listContactsPage(
   tenant: string,
-  query: ContactsListQuery & { afterId?: string },
+  query: ContactsListQuery & { afterId?: string; skipCount?: boolean },
 ): Promise<ContactsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
   const excludeIds = dedupeTrimmedIds(query.excludeIds ?? []);
@@ -282,7 +282,7 @@ export async function listContactsPage(
     return { contacts: [], total: 0, page, limit, hasMore: false };
   }
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, contacts, {
       conditions: buildListConditions(subdomain, query, excludeIds, includeIds),
       orderBy: buildOrderBy(query.sortField, query.sortDir),
@@ -290,6 +290,7 @@ export async function listContactsPage(
       page: query.page,
       limit: query.limit,
       afterId: query.afterId,
+      skipCount: query.skipCount,
       defaultPageSize: 50,
       rowMapper: (row) => row as typeof contacts.$inferSelect,
     });

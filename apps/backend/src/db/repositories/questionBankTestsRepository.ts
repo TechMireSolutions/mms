@@ -6,7 +6,7 @@ import {
   testSections,
   testSectionQuestions,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead, type TenantTransaction } from '../tenant-context.js';
 import { syncTestChildren, testRowToRecord } from './questionBankTestsSync.js';
 
 export { testRowToRecord } from './questionBankTestsSync.js';
@@ -18,7 +18,7 @@ export async function listTestsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: tests.id,
@@ -143,7 +143,7 @@ export async function findTestById(tenant: string, id: string): Promise<Question
   const cleanId = id?.trim();
   if (!cleanId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: tests.id,
@@ -252,7 +252,7 @@ export async function findTestsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly
@@ -428,7 +428,7 @@ export async function saveTest(tenant: string, record: QuestionBankTest): Promis
   });
 }
 
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+type Transaction = TenantTransaction;
 
 async function insertTestChildrenTx(
   tx: Transaction,

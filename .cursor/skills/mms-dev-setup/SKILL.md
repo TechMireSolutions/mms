@@ -1,9 +1,16 @@
 ---
 name: mms-dev-setup
-description: Sets up and runs the MMS monorepo (pnpm matching packageManager, Node per engines >=24.14, PostgreSQL, backend :3000, frontend :5173, typecheck, lint, tests). Use when installing dependencies, starting dev servers, fixing env issues, or onboarding to the project.
+description: Sets up and runs the MMS monorepo (pnpm matching packageManager, Node per engines >=24.14, PostgreSQL, backend :3000, frontend :5173, typecheck, lint, tests). Use when installing dependencies, starting dev servers, fixing env issues, or onboarding to the project. Do NOT use for production VPS deployments (use mms-ops-deploy) or production Linux compatibility audits (use mms-linux-compatibility).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
+compatibility: Requires Node >=24.14, pnpm 11.15.1, and a reachable PostgreSQL instance.
 ---
 
 # MMS Dev Setup
+
+**Rule (norms SSOT):** `mms-ops-infrastructure.mdc` · `mms-core.mdc` · `mms-api-interface.mdc` · `mms-completion-review.mdc`.
 
 ## Quick start
 
@@ -47,7 +54,7 @@ curl http://localhost:3000/ready    # 503 if PostgreSQL down
 
 ## Required env (backend)
 
-Create `apps/backend/.env` (never commit):
+Create `apps/backend/.env` (from `apps/backend/.env.example`, never commit):
 
 | Variable | Notes |
 |----------|-------|
@@ -65,7 +72,7 @@ Frontend uses Vite proxy `/api` → `:3000` with `credentials: 'include'` for co
 PostgreSQL is used as the relational database. Ensure a PostgreSQL instance is running and reachable via `DATABASE_URL`.
 
 - Empty DB seeds minimal defaults via `minimalSeeds.ts` (using `getMinimalCollectionsForSeed()` and `getMinimalObjects()`)
-- Legacy `seeds.json` is not used for automatic empty-DB seeding
+- Legacy seed dump (`seeds.ts` / `seeds.json`) is not used for automatic empty-DB seeding
 
 ## Drizzle migration gotcha
 
@@ -99,7 +106,7 @@ packages/shared/ @mms/shared
 
 ## Rules reference
 
-`.cursor/rules/mms-ops-infrastructure.mdc`, `mms-core.mdc`, `mms-api-interface.mdc`, `mms-completion-review.mdc`
+`.agent/rules/mms-ops-infrastructure.mdc`, `mms-core.mdc`, `mms-api-interface.mdc`, `mms-completion-review.mdc`
 
 ## Related skills
 

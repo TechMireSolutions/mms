@@ -7,36 +7,17 @@ cd "$ROOT_DIR"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 # shellcheck source=lib/curl-local-backend.sh
 source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
 
 ENV_FILE="${1:-apps/backend/.env}"
 BACKEND_PORT="$MMS_PROD_BACKEND_PORT"
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  # Strip carriage returns and leading/trailing whitespace
-  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-  echo "$value"
-}
-
-BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
+BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
 assert_production_backend_port "$BACKEND_PORT" "Backend PORT in ${ENV_FILE}" || exit 1
-APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '')"
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
 
 curl_ok() {
   local url="$1"
@@ -71,7 +52,7 @@ report_setup_status() {
 
 resolve_public_url() {
   local app_domain
-  app_domain="$(read_env_var MMS_APP_DOMAIN '')"
+  app_domain="${APP_DOMAIN:-$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")}"
   if [[ -n "$app_domain" ]]; then
     echo "https://${app_domain}"
   fi

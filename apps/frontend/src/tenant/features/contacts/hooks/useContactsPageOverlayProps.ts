@@ -31,6 +31,7 @@ export function useContactsPageOverlayProps({
     | "handleEdit"
     | "handleRestore"
     | "handleUpdateContact"
+    | "handleImport"
     | "confirmBulkDelete"
     | "confirmSingleDelete"
     | "confirmBulkRestore"
@@ -68,6 +69,9 @@ export function useContactsPageOverlayProps({
       showDuplicates: overlay.showDuplicates,
       onCloseDuplicates: () => overlay.setShowDuplicates(false),
       onMerge: actions.handleMerge,
+      importOpen: canWrite && overlay.importOpen,
+      onCloseImport: () => overlay.setImportOpen(false),
+      onImportContacts: actions.handleImport,
       messagingTarget: messaging.messagingTarget,
       onCloseComposer: messaging.closeComposer,
       viewContact: currentViewContact,

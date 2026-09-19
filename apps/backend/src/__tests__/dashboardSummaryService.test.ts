@@ -23,7 +23,8 @@ vi.mock('../db/tenant-context.js', () => ({
 vi.mock('../students/use-cases/studentUseCases.js', () => ({
   studentUseCases: { loadStudentsCommandMetrics: mocks.students },
 }));
-vi.mock('../teachers/use-cases/teacherUseCases.js', () => ({
+vi.mock('../faculty/use-cases/facultyUseCases.js', () => ({
+  facultyUseCases: { loadTeachersCommandMetrics: mocks.teachers },
   teacherUseCases: { loadTeachersCommandMetrics: mocks.teachers },
 }));
 vi.mock('../contacts/use-cases/contactUseCases.js', () => ({

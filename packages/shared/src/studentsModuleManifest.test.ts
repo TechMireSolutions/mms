@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   STUDENTS_MODULE_MANIFEST,
+  STUDENT_CARD_TEMPLATE_OBJECT_KEY,
   studentRecordSchema,
   studentListSchema,
 } from './studentsModuleManifest.js';
@@ -9,6 +10,7 @@ describe('STUDENTS_MODULE_MANIFEST', () => {
   it('exposes the module identity and REST base path', () => {
     expect(STUDENTS_MODULE_MANIFEST.moduleId).toBe('students');
     expect(STUDENTS_MODULE_MANIFEST.restBasePath).toBe('/api/students');
+    expect(STUDENT_CARD_TEMPLATE_OBJECT_KEY).toBe('mms_student_card_template');
   });
 
   it('defines the three tiers in order', () => {
@@ -35,8 +37,8 @@ describe('STUDENTS_MODULE_MANIFEST', () => {
     expect(STUDENTS_MODULE_MANIFEST.softDelete.workExcludesDeleted).toBe(true);
   });
 
-  it('orders Setup sub-tabs as preferences', () => {
-    expect(STUDENTS_MODULE_MANIFEST.setupSubTabs).toEqual(['preferences']);
+  it('orders Setup sub-tabs as preferences and card_template', () => {
+    expect(STUDENTS_MODULE_MANIFEST.setupSubTabs).toEqual(['preferences', 'card_template']);
   });
 });
 

@@ -24,9 +24,7 @@ import type { ContactsRepository } from '../repository/contactsRepository.js';
 import { contactsRepository } from '../repository/contactsRepositoryAdapter.js';
 import { ConflictError } from '../../lib/httpErrors.js';
 
-export function stripClientSoftDeleteFields(contact: Contact): Contact {
-  return stripContactClientSoftDeleteFields(contact);
-}
+export const stripClientSoftDeleteFields = stripContactClientSoftDeleteFields;
 
 export class ContactPermissionError extends Error {
   readonly code = 'forbidden' as const;

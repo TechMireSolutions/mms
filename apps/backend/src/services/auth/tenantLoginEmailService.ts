@@ -17,6 +17,7 @@ import {
 } from './userService.js';
 import { sendTenantEmail } from '../email/emailService.js';
 import { logger } from '../../lib/logger.js';
+import { isDevCredentialLoggingEnabled, maskEmail } from '../../lib/devLogging.js';
 
 const CHANGE_TTL_MS = 15 * 60 * 1000;
 
@@ -72,8 +73,14 @@ async function dispatchChangeCode(
     html: `<p>Your verification code is: <strong>${code}</strong></p><p>This code expires in 15 minutes.</p>`,
   });
   if (result.sent) return { sent: true };
-  if (process.env.NODE_ENV !== 'production') {
-    logger.info({ email, code }, 'Login email change code generated (dev)');
+  // Only ever hand back a live OTP under the explicit local-dev gate
+  // (development/test + MMS_LOG_DEV_CREDENTIALS=true). `!== 'production'` was
+  // too weak — a staging box with NODE_ENV unset would leak a usable code.
+  if (isDevCredentialLoggingEnabled()) {
+    logger.info(
+      { email: maskEmail(email), code },
+      'Login email change code generated (dev credential logging enabled)',
+    );
     return { sent: false, devCode: code };
   }
   throw new LoginEmailChangeError('email_send_failed', 'Failed to send verification email');

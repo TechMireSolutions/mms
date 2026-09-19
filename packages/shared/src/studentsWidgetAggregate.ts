@@ -1,31 +1,14 @@
 import { matchesWidgetFilter } from './utils.js';
+import type { WidgetQuery, WidgetAggregateResult, WidgetFilter } from './widgetAggregateTypes.js';
 
 export type StudentsWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
-type StudentsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
+export type StudentsWidgetFilterOperator = 'equals' | 'contains' | 'startsWith' | 'gt' | 'lt';
+export type StudentsWidgetFilter = WidgetFilter;
 
-interface StudentsWidgetFilter {
-  field: string;
-  operator?: StudentsWidgetFilterOperator;
-  value?: string;
-}
+export type StudentsWidgetQuery = WidgetQuery;
+export type StudentsWidgetAggregateResult = WidgetAggregateResult;
 
-export interface StudentsWidgetQuery {
-  id: string;
-  operation: StudentsWidgetOperation;
-  targetField?: string;
-  filterField?: string;
-  filterOperator?: StudentsWidgetFilterOperator;
-  filterValue?: string;
-  xAxisField?: string;
-  filters?: StudentsWidgetFilter[];
-  chartLimit?: number;
-}
 
-export interface StudentsWidgetAggregateResult {
-  value: number;
-  totalCount: number;
-  chartData: { name: string; value: number }[];
-}
 
 type StudentRow = Record<string, unknown>;
 

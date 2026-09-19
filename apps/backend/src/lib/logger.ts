@@ -1,4 +1,5 @@
 import { pino, type Logger } from 'pino';
+import { LOG_REDACTION_OPTIONS } from './logRedaction.js';
 
 /**
  * Shared structured logger for non-Fastify contexts (worker daemon, bootstrap,
@@ -14,5 +15,7 @@ export const logger: Logger = pino({
   base: {
     service: 'mms-backend',
   },
+  // Secrets must never reach durable log storage — see lib/logRedaction.ts.
+  redact: LOG_REDACTION_OPTIONS,
   // Keep the same pretty/JSON output as the Fastify logger (pino default).
 });

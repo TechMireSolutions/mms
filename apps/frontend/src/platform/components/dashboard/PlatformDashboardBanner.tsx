@@ -40,7 +40,7 @@ export function PlatformDashboardBanner({
       <div className="absolute -top-16 -end-16 w-56 h-56 bg-primary/10 rounded-full blur-3xl pointer-events-none group-hover/banner:bg-primary/20 transition-all duration-700" />
       <div className="absolute -bottom-16 -start-16 w-56 h-56 bg-secondary/10 rounded-full blur-3xl pointer-events-none group-hover/banner:bg-secondary/15 transition-all duration-700" />
 
-      <div className="relative z-10 space-y-4">
+      <div className="relative z-elevated space-y-4">
         <div className="flex flex-wrap items-center gap-2.5">
           <span
             className={cn(

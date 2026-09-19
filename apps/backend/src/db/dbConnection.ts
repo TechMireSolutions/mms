@@ -22,8 +22,8 @@ export function initializeDatabaseConnection(): void {
 
   const config = loadServerConfig();
   const poolConfig: pg.PoolConfig = {
-    max: config.pgPoolMax,
-    connectionTimeoutMillis: 10_000,
+    max: Math.min(Math.max(config.pgPoolMax, 20), 30),
+    connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 30_000,
     maxUses: 7_500,
     keepAlive: true,
@@ -38,6 +38,11 @@ export function initializeDatabaseConnection(): void {
   pool.on('error', (error) => {
     // Idle clients can be terminated during platform DB reset; log and continue.
     logger.error({ err: error }, 'Unexpected database pool client error');
+  });
+  pool.on('connect', (client) => {
+    client.on('error', (err) => {
+      logger.warn({ err }, 'Unexpected error on checked-out database client');
+    });
   });
 
   const hasDistinctReplica = Boolean(
@@ -56,6 +61,11 @@ export function initializeDatabaseConnection(): void {
   } else {
     readReplicaPool = pool;
   }
+  readReplicaPool.on('connect', (client) => {
+    client.on('error', (err) => {
+      logger.warn({ err }, 'Unexpected error on checked-out read-replica database client');
+    });
+  });
 
   rootDb = drizzle(pool, { schema });
   readReplicaDb = hasDistinctReplica ? drizzle(readReplicaPool, { schema }) : rootDb;

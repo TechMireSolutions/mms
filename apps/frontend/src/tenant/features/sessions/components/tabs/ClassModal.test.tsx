@@ -14,12 +14,16 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("@/tenant/hooks/collections/teachers", () => ({
-  useTeachersContractList: () => ({
-    data: { body: { teachers: [{ id: "t1", name: "Ustadh Ali", status: "active" }] } },
-  }),
-  useTeachersByIds: () => ({ data: [] }),
-}));
+vi.mock("@/tenant/hooks/collections/faculty", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/tenant/hooks/collections/faculty")>();
+  return {
+    ...actual,
+    useTeachersContractList: () => ({
+      data: { body: { teachers: [{ id: "t1", name: "Ustadh Ali", status: "active" }] } },
+    }),
+    useTeachersByIds: () => ({ data: [] }),
+  };
+});
 
 vi.mock("@/components/ui/FormModal", () => ({
   FormModal: ({
@@ -91,14 +95,26 @@ describe("ClassModal Component", () => {
           sessionClass={{
             id: "c1",
             name: "Hifz 1",
-            ageMin: 15,
-            ageMax: 10,
-            gender: "any",
+            minAge: 15,
+            maxAge: 10,
+            gender: "mixed",
             teacherId: "",
-            capacity: 20,
+            teacherName: "",
+            maxStudents: 20,
             enrolled: 0,
             room: "Room 101",
+            fees: [],
+            schedules: [],
+            budgets: [],
+            discounts: [],
+            timetables: [],
+            refreshments: [],
+            scholarships: [],
+            ageCalculationDate: "",
+            enrollmentDeadline: "",
+            status: "active",
           }}
+
           onClose={vi.fn()}
           onSave={onSave}
           saving={false}

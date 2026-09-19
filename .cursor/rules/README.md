@@ -4,17 +4,15 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 
 **Architecture rules:** `mms-module-architecture.mdc`, `mms-ops-infrastructure.mdc`, `mms-ui-ux-design.mdc`, `mms-data-layer.mdc`.
 
-## Always Applied (5)
+## Always Applied (3)
 
 | Rule | Purpose |
 |------|---------|
-| `antigravity-global.mdc` | Agent cognition, output economy, security, TS/git standards |
+| `mms-agent-universal.mdc` | Universal agent cognition, output economy, security, TS/git standards |
 | `mms-core.mdc` | Stack, boundaries, ownership matrix, edit discipline |
-| `mms-migration-status.mdc` | Do not reintroduce themes + short open-gaps summary (full gaps → `mms-migration-fixes` skill) |
 | `mms-completion-review.mdc` | Self-review after code edits — verify, fix bugs, then mark done |
-| `mms-performance.mdc` | Performance & resource efficiency (DB, streaming, Redis caching, bundle, virtualization) |
 
-## Scoped Rules (16)
+## Scoped Rules (18)
 
 ### Architecture & Platform Standards
 
@@ -24,6 +22,8 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-structure-naming.mdc` | Monorepo layout, colocation, **file-size bands (~300 hard / ~220 soft)**, Title Case on save, naming |
 | `mms-dependencies.mdc` | Latest stable Node, pnpm, and workspace dependency upgrades |
 | `mms-ops-infrastructure.mdc` | Local dev setup, environment variables, Docker backend ports, health endpoints, Linux compatibility, and CI orchestration |
+| `mms-performance.mdc` | Performance & resource efficiency (DB, streaming, Redis caching, bundle, virtualization) |
+| `mms-migration-status.mdc` | Residual open debt register (full gaps → `mms-migration-fixes` skill; closed milestones → `docs/migration-milestones.md`) |
 
 ### Backend, Data & Security
 
@@ -52,9 +52,66 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | `mms-reports.mdc` | Analytics implementation & exports, KPI SSOT, `ExportToolbar`, saved reports |
 | `mms-testing-observability.mdc` | Vitest, API tests, logging, ErrorBoundary, Sentry, request-id |
 
-## Ownership (see `mms-core.mdc`)
+## Ownership matrix (topic → owner rule → workflow skill)
 
-Single prose owner per topic. Duplicate essays elsewhere must be short pointers. Full matrix in always-on `mms-core.mdc` Standards index (soft-delete schema vs Work UX, write Zod, bulk PUT, `mutateAsync` split there).
+Single prose owner per topic. A duplicate essay elsewhere must be a short pointer —
+`mms-agent-universal.mdc` makes that a banned operation, and the skills/scripts
+in the enforcement registry below are how the norm is actually held.
+
+| Topic | Owner rule | Workflow skill |
+|---|---|---|
+| Agent cognition, output economy, TS/git discipline | `mms-agent-universal.mdc` | `antigravity-workspace` |
+| Stack, boundaries, layering, ownership | `mms-core.mdc` | `mms-dev-setup` |
+| Post-edit verification | `mms-completion-review.mdc` | `mms-code-review` |
+| Dependencies, engines, catalogs | `mms-dependencies.mdc` | `mms-dependency-upgrade` · `mms-vuln-response` |
+| File structure, naming, size bands | `mms-structure-naming.mdc` | `mms-frontend` · `mms-shared-package` |
+| DRY, extraction, `@mms/shared` boundaries | `mms-dry.mdc` | `mms-shared-package` |
+| Auth, sessions, CSRF, RBAC, tenant isolation | `mms-auth-security.mdc` | `mms-backend-security` |
+| REST contracts, errors, pagination, bulk PUT | `mms-api-interface.mdc` | `mms-backend-api` · `mms-frontend` |
+| PostgreSQL, Drizzle, RLS, migrations, Query policy | `mms-data-layer.mdc` | `mms-schema-migrate` · `mms-query-factories` · `mms-db-performance` |
+| Soft-delete lifecycle and index tiers | `mms-data-layer.mdc` §6 · `mms-module-architecture.mdc` | `mms-soft-delete` |
+| Audit trail, tamper evidence, retention | `mms-data-layer.mdc` §5 | `mms-audit-trail` |
+| Module pages, tiers, background jobs | `mms-module-architecture.mdc` | `mms-module-page` · `mms-background-jobs` · `mms-queue-ops` |
+| Work directory, drawer, trash UX | `mms-module-architecture.mdc` | `mms-module-work` |
+| Setup tier, preferences, sub-tabs | `mms-module-architecture.mdc` | `mms-module-setup` |
+| Field/tab registry and guards | `mms-fields.mdc` | `mms-fields-registry` |
+| Forms, FormModal, write schemas, uploads | `mms-form-architecture.mdc` | `mms-form-architecture` |
+| Hooks, page controllers, facades | `mms-hooks.mdc` | `mms-query-factories` · `mms-frontend` |
+| UI primitives, tokens, a11y, responsiveness | `mms-ui-ux-design.mdc` | `mms-ui-ux-design` · `mms-a11y-smoke` |
+| Settings, navigation, i18n keys | `mms-settings-i18n.mdc` | `mms-settings-i18n` · `mms-i18n-completeness` |
+| Reports, analytics, exports | `mms-reports.mdc` | `mms-reports-export` |
+| Messaging campaigns and logs | `mms-messaging.mdc` | `mms-messaging` |
+| Performance, caching, virtualization | `mms-performance.mdc` | `mms-db-performance` · `mms-frontend` |
+| Testing, logging, telemetry, resilience | `mms-testing-observability.mdc` | `mms-testing-e2e` · `mms-error-triage` |
+| Ops, ports, health, CI, deploy | `mms-ops-infrastructure.mdc` | `mms-ops-deploy` · `mms-incident-response` · `mms-linux-compatibility` |
+| Open migration debt | `mms-migration-status.mdc` | `mms-migration-fixes` · `mms-release-versioning` |
+
+## Enforcement registry (norm → how it is actually held)
+
+A norm is either **machine-enforced** or explicitly **advisory** (`mms-agent-universal.mdc`).
+Update this table in the same change that adds or removes a check.
+
+| Norm | Enforced by | Kind |
+|---|---|---|
+| Cross-feature import boundary | `mms-boundary/no-cross-feature-imports` (ESLint, error) | lint |
+| Physical directional CSS classes | `mms-bidi/no-physical-directional-classes` (ESLint, error) | lint |
+| Surface/token misuse | `no-restricted-syntax` selectors (ESLint, warn — advisory until promoted) | lint |
+| `any` in frontend source | `pnpm run check:code-norms` ratchet | ratchet |
+| Raw hex colours / file-size bands | `pnpm run check:code-norms` ratchet | ratchet |
+| Wildcard DB projections | `pnpm run check:db-projections` (CI) | ratchet |
+| Write-blocking index in a migration | `pnpm run check:migration-indexes` (CI) | ratchet |
+| Bundle budget | `pnpm run check:bundle` (CI, build-dist job) | ratchet |
+| i18n key parity across en/ar/ur/fa | `pnpm run check:i18n` (CI) | script |
+| Dependency advisories | `pnpm audit --audit-level=high` + dependency-review (CI) | CI |
+| Secrets in history | gitleaks (CI, full history) | CI |
+| Rule/skill/mirror integrity | `node scripts/verify-rules-integrity.mjs` + sync drift diff (CI) | CI |
+| `git push` / `drizzle-kit push` / destructive rm / .env reads | `.cursor/hooks/guard-shell.sh` (Claude + Cursor hooks) | hook |
+| Tenant RLS enablement per table | `mms-schema-migrate/scripts/check-migrations.sh` | skill script |
+| `@mms/shared` runtime purity | `mms-shared-package/scripts/check-shared-exports.sh` | skill script |
+| a11y serious/critical violations | `e2e/tests/a11y-shell.spec.ts` (CI e2e job) | test |
+| Coverage floors (FE 41/39, BE 45/27) | vitest thresholds in each workspace | test |
+| Tier structure, trunk tests, review criteria, UX polish | none — **advisory** (review discipline) | advisory |
+
 
 ## Tenant = Platform Parity Principle
 
@@ -80,7 +137,7 @@ The only *differences* are intentional domain split: `authenticatePlatform` vs `
 
 Rules = norms/SSOT. Skills = workflows/checklists that **point** at rules (do not re-author norms).
 
-Every rule starts with a **Workflow skill:** line; the full rule→skill map lives in always-on **`mms-core.mdc`** Standards index. Highlights:
+Every rule starts with a **Workflow skills:** line; the full topic→rule→skill map is the Ownership matrix above. Quick routing:
 
 | When working on… | Invoke skill |
 |------------------|--------------|
@@ -141,7 +198,8 @@ bash .agent/scripts/sync-all.sh
 
 | Removed | Merged into |
 |---------|-------------|
-| `mms-ai-editing.mdc` | `mms-core` + `antigravity-global` |
+| `antigravity-global.mdc` | Renamed & generalized to `mms-agent-universal.mdc` |
+| `mms-ai-editing.mdc` | `mms-core` + `mms-agent-universal` |
 | `mms-ops.mdc`, `mms-production-ports.mdc`, `mms-linux-compatibility.mdc`, `mms-ci.mdc`, `saas-architecture.mdc` | `mms-ops-infrastructure.mdc` |
 | `mms-ui-visual.mdc`, `mms-ui-rendering.mdc`, `mms-ui-tabs.mdc`, `mms-ui-forms.mdc`, `mms-a11y.mdc` | `mms-ui-ux-design.mdc` |
 | `mms-module-work.mdc`, `mms-module-setup.mdc`, `mms-module-isolation.mdc`, `mms-module-crosscutting.mdc`, `mms-background-jobs.mdc` | `mms-module-architecture.mdc` |
@@ -156,4 +214,4 @@ bash .agent/scripts/sync-all.sh
 
 ## Verify in Cursor
 
-**Settings → Rules** — five always-apply rules + 16 file-scoped rules when matching paths are open (**21 total**).
+**Settings → Rules** — three always-apply rules + 18 file-scoped rules when matching paths are open (**21 total**).

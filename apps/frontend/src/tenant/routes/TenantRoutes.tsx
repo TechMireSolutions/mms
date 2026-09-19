@@ -17,7 +17,7 @@ const PageNotFound = React.lazy(() => import("@/tenant/components/PageNotFound")
 const Dashboard = React.lazy(() => import("@/tenant/features/dashboard/DashboardPage"));
 const Contacts = React.lazy(() => import("@/tenant/features/contacts/ContactsPage"));
 const Students = React.lazy(() => import("@/tenant/features/students/StudentsPage"));
-const Teachers = React.lazy(() => import("@/tenant/features/teachers/TeachersPage"));
+const Faculty = React.lazy(() => import("@/tenant/features/faculty/FacultyPage"));
 const Enrollments = React.lazy(() => import("@/tenant/features/enrollments/EnrollmentsPage"));
 const Sessions = React.lazy(() => import("@/tenant/features/sessions/SessionsPage"));
 const Finance = React.lazy(() => import("@/tenant/features/finance/FinancePage"));
@@ -73,7 +73,7 @@ function TenantBootGate({ children }: { children: React.ReactNode }): React.JSX.
   if (workspaceLookupFailed) {
     return (
       <AuthPageFrame dir="ltr">
-        <div className="relative z-10 mx-auto w-full max-w-md">
+        <div className="relative z-elevated mx-auto w-full max-w-md">
           <ErrorState
             type="network"
             title={t("errors.boundary.title")}
@@ -123,7 +123,8 @@ function TenantRoutesInner(): React.JSX.Element {
             <Route path={ROUTES.contacts} element={<React.Suspense fallback={<RouteStatusFallback />}><Contacts /></React.Suspense>} />
             <Route path={ROUTES.messaging} element={<React.Suspense fallback={<RouteStatusFallback />}><Messaging /></React.Suspense>} />
             <Route path={ROUTES.students} element={<React.Suspense fallback={<RouteStatusFallback />}><Students /></React.Suspense>} />
-            <Route path={ROUTES.teachers} element={<React.Suspense fallback={<RouteStatusFallback />}><Teachers /></React.Suspense>} />
+            <Route path={ROUTES.faculty} element={<React.Suspense fallback={<RouteStatusFallback />}><Faculty /></React.Suspense>} />
+            <Route path={ROUTES.teachers} element={<Navigate to={ROUTES.faculty} replace />} />
             <Route path={ROUTES.enrollments} element={<React.Suspense fallback={<RouteStatusFallback />}><Enrollments /></React.Suspense>} />
             <Route path={ROUTES.sessions} element={<React.Suspense fallback={<RouteStatusFallback />}><Sessions /></React.Suspense>} />
             <Route path={ROUTES.attendance} element={<React.Suspense fallback={<RouteStatusFallback />}><Attendance /></React.Suspense>} />

@@ -31,8 +31,10 @@ export function ContactsPageView({
   canWrite,
   viewingDeleted,
   openingDuplicates,
+  isExporting,
   handleOpenDuplicates,
   handleExportCSV,
+  handleOpenImport,
   handleNew,
   shownCount,
   pendingCount,
@@ -59,8 +61,10 @@ export function ContactsPageView({
           canWrite={canWrite}
           viewingDeleted={viewingDeleted}
           openingDuplicates={openingDuplicates}
+          isExporting={isExporting}
           onOpenDuplicates={() => void handleOpenDuplicates()}
           onExport={handleExportCSV}
+          onImport={handleOpenImport}
           onAddContact={handleNew}
         />
       }

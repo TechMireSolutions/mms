@@ -10,27 +10,71 @@ export const accountingFinancialStatementItemSchema = z.object({
 
 export type AccountingFinancialStatementItem = z.infer<typeof accountingFinancialStatementItemSchema>;
 
+/** Per-account debit/credit totals with a normal-side `balance`. */
+export const accountingTrialBalanceRowSchema = z.object({
+  id: z.string(),
+  code: z.string(),
+  name: z.string(),
+  type: z.string(),
+  totalDebit: z.number(),
+  totalCredit: z.number(),
+  balance: z.number(),
+});
+
+export type AccountingTrialBalanceRow = z.infer<typeof accountingTrialBalanceRowSchema>;
+
+/**
+ * Indirect-method cash-flow adjustments, derived server-side from account
+ * classification (the configured AR account, plus payable/depreciation accounts
+ * identified by subtype or name) instead of hard-coded chart-of-accounts codes.
+ */
+export const accountingCashFlowAdjustmentsSchema = z.object({
+  depreciation: z.number().default(0),
+  receivables: z.number().default(0),
+  payables: z.number().default(0),
+});
+
+export type AccountingCashFlowAdjustments = z.infer<typeof accountingCashFlowAdjustmentsSchema>;
+
+/**
+ * Accounting report aggregates.
+ *
+ * Two different period semantics live on this object, and conflating them is a
+ * correctness bug rather than a style choice:
+ *
+ * - **Flow figures** (`revenue`, `expenses`, `netSurplus`, `cashInflow`,
+ *   `cashOutflow`, `netCashFlow`, `trialBalance`) cover the requested
+ *   `[dateFrom, dateTo]` window — they belong to the Income Statement.
+ * - **Stock figures** (`assets`, `liabilities`, `equity`,
+ *   `balanceSheetTrialBalance`) are cumulative through `dateTo`, ignoring
+ *   `dateFrom` — a Balance Sheet reports balances, so an asset acquired before
+ *   the window must still appear. Equity includes unclosed P&L as of `dateTo`.
+ */
 export const accountingReportAggregatesSchema = z.object({
   revenue: z.number().default(0),
   expenses: z.number().default(0),
   netSurplus: z.number().default(0),
+  /** Cumulative asset balances as of `dateTo`. */
   assets: z.number().default(0),
+  /** Cumulative liability balances as of `dateTo`. */
   liabilities: z.number().default(0),
+  /** Cumulative equity (incl. unclosed `netSurplus`) as of `dateTo`. */
   equity: z.number().default(0),
   cashInflow: z.number().default(0),
   cashOutflow: z.number().default(0),
+  /** Direct-method net movement on cash/bank accounts within the window. */
   netCashFlow: z.number().default(0),
-  trialBalance: z.array(
-    z.object({
-      id: z.string(),
-      code: z.string(),
-      name: z.string(),
-      type: z.string(),
-      totalDebit: z.number(),
-      totalCredit: z.number(),
-      balance: z.number(),
-    }),
-  ).default([]),
+  /** Indirect-method total: `netSurplus` plus `cashFlowAdjustments`. */
+  netCashFlowIndirect: z.number().default(0),
+  cashFlowAdjustments: accountingCashFlowAdjustmentsSchema.default({
+    depreciation: 0,
+    receivables: 0,
+    payables: 0,
+  }),
+  /** Range-based rows (Income Statement + exports). */
+  trialBalance: z.array(accountingTrialBalanceRowSchema).default([]),
+  /** Cumulative Asset/Liability/Equity rows as of `dateTo` (Balance Sheet). */
+  balanceSheetTrialBalance: z.array(accountingTrialBalanceRowSchema).default([]),
   comparison: z.object({
     revenue: z.object({
       a: z.number().default(0),
@@ -69,5 +113,8 @@ export const EMPTY_ACCOUNTING_REPORT_AGGREGATES: AccountingReportAggregates = {
   cashInflow: 0,
   cashOutflow: 0,
   netCashFlow: 0,
+  netCashFlowIndirect: 0,
+  cashFlowAdjustments: { depreciation: 0, receivables: 0, payables: 0 },
   trialBalance: [],
+  balanceSheetTrialBalance: [],
 };

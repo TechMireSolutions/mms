@@ -7,6 +7,7 @@ import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/acc
 import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
 import { JournalEntryForm } from "@/tenant/features/accounting/components/JournalEntryForm";
 import { JournalEntriesList } from "@/tenant/features/accounting/components/JournalEntriesList";
+import type { JournalEntriesListPaging } from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
 import { JournalEntriesListFilters, JournalEntriesAdvancedFilters } from "@/tenant/features/accounting/components/JournalEntriesListFilters";
 import { AccountingBulkActionBar } from "@/tenant/features/accounting/components/AccountingBulkActionBar";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
@@ -35,6 +36,8 @@ interface JournalEntriesAdvancedModeProps {
   tagFilter: string;
   dateFrom: string;
   dateTo: string;
+  /** Page/total/hasMore from the page that owns the server query. */
+  paging: JournalEntriesListPaging;
   showFilters: boolean;
   modal: JournalModalMode;
   selected: JournalEntry | null;
@@ -149,6 +152,7 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         onToggleSelectAll={props.onToggleSelectAll}
         getColumnWidth={props.getColumnWidth}
         onColumnResize={props.onColumnResize}
+        {...props.paging}
       />
 
       <AnimatePresence>

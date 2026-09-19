@@ -8,6 +8,7 @@ import {
 import {
   ContactsPageConfirmDialogs,
 } from "@/tenant/features/contacts/components/ContactsPageConfirmDialogs";
+import { ContactsImportDialog } from "@/tenant/features/contacts/components/ContactsImportDialog";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import React from "react";
 
@@ -29,6 +30,9 @@ export interface ContactsPageOverlaysProps {
   showDuplicates: boolean;
   onCloseDuplicates: () => void;
   onMerge: (keepId: string | number, deleteId: string | number, mergedData: Contact) => Promise<void>;
+  importOpen: boolean;
+  onCloseImport: () => void;
+  onImportContacts: (contacts: Contact[]) => void | Promise<void>;
   messagingTarget: { channel: "whatsapp" | "sms" | "email"; recipients: StandardMessagingRecipient[] } | null;
   onCloseComposer: () => void;
   viewContact: Contact | null;
@@ -66,6 +70,9 @@ export function ContactsPageOverlays({
   showDuplicates,
   onCloseDuplicates,
   onMerge,
+  importOpen,
+  onCloseImport,
+  onImportContacts,
   messagingTarget,
   onCloseComposer,
   viewContact,
@@ -126,6 +133,13 @@ export function ContactsPageOverlays({
           )}
         </AnimatePresence>
       </Suspense>
+
+      <ContactsImportDialog
+        open={importOpen}
+        onClose={onCloseImport}
+        onImport={onImportContacts}
+        canWrite={canWrite}
+      />
 
       <Suspense fallback={<ModuleDrawerLoadingSkeleton />}>
         <AnimatePresence>

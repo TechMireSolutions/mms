@@ -6,6 +6,7 @@ export const ROUTES = {
   home: "/",
   contacts: "/contacts",
   students: "/students",
+  faculty: "/faculty",
   teachers: "/teachers",
   enrollments: "/enrollments",
   sessions: "/sessions",
@@ -147,6 +148,7 @@ export const DEFAULT_AUTH_REDIRECT = ROUTES.home;
 export const TENANT_APP_PATHS: readonly string[] = [
   ROUTES.contacts,
   ROUTES.students,
+  ROUTES.faculty,
   ROUTES.teachers,
   ROUTES.enrollments,
   ROUTES.sessions,

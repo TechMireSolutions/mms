@@ -13,35 +13,16 @@ cd "$ROOT_DIR"
 
 # shellcheck source=../lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=../lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 
 ENV_FILE="${1:-apps/backend/.env}"
 TEMPLATE="$ROOT_DIR/scripts/apache/mmsv2-vhost.conf.template"
 # 000- prefix: load before Moodle/default SSL vhosts when SNI matching fails.
 TARGET="/etc/apache2/sites-available/000-mmsv2.conf"
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  # Strip carriage returns and leading/trailing whitespace
-  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-  echo "$value"
-}
-
-APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN "${MMS_APP_DOMAIN:-}")"
-BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN "${MMS_APP_DOMAIN:-}" "$ENV_FILE")"
+BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
 
 if [[ -z "$APP_DOMAIN" ]]; then
   echo -e "${RED}ERROR: MMS_APP_DOMAIN required${NC}"
@@ -106,7 +87,7 @@ run_priv a2dissite mmsv2.conf z-mmsv2.conf 2>/dev/null || true
 run_priv rm -f /etc/apache2/sites-enabled/mmsv2.conf /etc/apache2/sites-enabled/z-mmsv2.conf 2>/dev/null || true
 run_priv rm -f /etc/apache2/sites-enabled/000-mmsv2.conf 2>/dev/null || true
 run_priv a2ensite 000-mmsv2.conf 2>/dev/null || true
-run_priv a2enmod proxy proxy_http proxy_wstunnel headers ssl rewrite http2 2>/dev/null || true
+run_priv a2enmod proxy proxy_http proxy_wstunnel headers ssl rewrite http2 brotli deflate 2>/dev/null || true
 run_priv apache2ctl configtest
 
 if command -v systemctl >/dev/null 2>&1 && systemctl is-active --quiet apache2 2>/dev/null; then

@@ -8,7 +8,7 @@ import {
   type EnrollmentsListQuery,
 } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { enrollmentRowToRecord } from './enrollmentRepository.js';
 
@@ -22,7 +22,7 @@ const ENROLLMENT_SORT_FIELDS = new Set([
   'updatedAt',
 ]);
 
-function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
+function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | '' | undefined): SQL {
   const dir = sortDir === 'desc' ? 'desc' : 'asc';
   const field = sortField?.trim();
   if (!field || !ENROLLMENT_SORT_FIELDS.has(field)) {
@@ -134,7 +134,7 @@ export async function listEnrollmentsPage(
 ): Promise<EnrollmentsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, enrollments, {
       conditions: buildListConditions(subdomain, query),
       orderBy: buildOrderBy(query.sortField, query.sortDir),
@@ -195,7 +195,7 @@ export async function listEnrollmentsPage(
 
 export async function countEnrollmentsActive(tenant: string): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(enrollments)
@@ -211,7 +211,7 @@ export async function aggregateEnrollmentsCommandMetrics(
 ): Promise<EnrollmentsCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
   const days = Math.max(1, periodDays);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         total: sql<number>`count(*)::int`,

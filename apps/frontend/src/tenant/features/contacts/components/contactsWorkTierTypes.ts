@@ -44,6 +44,8 @@ export interface ContactsWorkTierProps {
   onSms: (targets: Contact[]) => void;
   onEmail: (targets: Contact[]) => void;
   onBulkExport: () => void | Promise<void>;
+  /** Server export in flight — disables the bulk export CTA and shows a spinner. */
+  isExporting: boolean;
   onRequestBulkDelete: () => void;
   onRequestBulkRestore: () => void;
   onBulkTag?: (tags: string[]) => Promise<void> | void;

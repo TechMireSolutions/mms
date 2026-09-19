@@ -25,6 +25,7 @@ import {
   TrendingUp,
   UserCog,
   BookOpen,
+  Scale,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -42,6 +43,7 @@ const MODULE_ICONS: Record<string, React.ElementType> = {
   questionBank: Library,
   finance: DollarSign,
   accounting: TrendingUp,
+  obligations: Scale,
   users: UserCog,
 };
 

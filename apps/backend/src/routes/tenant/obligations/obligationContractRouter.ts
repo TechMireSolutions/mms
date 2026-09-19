@@ -1,7 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { isQueryFlagTrue, type User } from '@mms/shared';
 import { obligationContract } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
+import { standardRequestValidationErrorHandler } from '../../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
@@ -67,7 +68,9 @@ export const obligationContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list distributions' } };
       }
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof obligationContract>);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: standardRequestValidationErrorHandler,
+  });
 };

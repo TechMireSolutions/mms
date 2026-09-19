@@ -18,6 +18,92 @@ import {
 } from './chartPalettes.js';
 
 describe('buildBrandingCssVariables', () => {
+  /**
+   * A semantic token is used in THREE roles, and the fill pairs asserted below
+   * only cover one of them:
+   *
+   *   1. fill      — `bg-primary` with `text-primary-foreground` on it;
+   *   2. text      — `text-primary` on `--card` / `--background`;
+   *   3. own tint  — `bg-primary/10 text-primary` (the chip/badge pattern).
+   *
+   * Role 3 is the binding one: a tint of the token lightens the surface the token
+   * is read against. The pipeline used to accept "bright fill + dark label", which
+   * satisfies role 1 and destroys roles 2 and 3 — the runtime palette handed out
+   * `--primary: #db9d00` (2.37:1 on white), which the axe gate then caught in the
+   * settings nav and the Work-directory count badge.
+   */
+  const TEXT_ROLE_TOKENS = [
+    'primary',
+    'destructive',
+    'success',
+    'warning',
+    'info',
+  ] as const;
+  const TEXT_ROLE_SURFACES = ['--card', '--background'] as const;
+
+  /** `bg-<token>/<alpha>` composited over `base`, i.e. what the eye sees. */
+  function tintOver(tintHex: string, baseHex: string, alpha: number): string {
+    const channel = (hex: string, i: number) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+    const rgb = [0, 1, 2].map((i) =>
+      Math.round(channel(tintHex, i) * alpha + channel(baseHex, i) * (1 - alpha)),
+    );
+    return `#${rgb.map((v) => v.toString(16).padStart(2, '0')).join('')}`;
+  }
+
+  it.each(['light', 'dark'] as const)(
+    'every curated preset satisfies all three token roles (%s mode)',
+    (mode) => {
+      // Strongest same-token tint behind same-token text at rest — light has
+      // `bg-primary/15 text-primary`, dark only ever uses `dark:bg-<role>/10`.
+      const maxTint = mode === 'light' ? 0.15 : 0.1;
+      const failures: string[] = [];
+
+      // The curated presets are all dark brand colours, so they never exercised
+      // the failure that actually shipped: a LIGHT brand colour on which dark text
+      // passes, so an "accept the first thing that passes" fill check keeps the
+      // bright fill and destroys the text role. The tenant in the axe run got
+      // `--primary: #db9d00` (2.37:1 on white) from exactly this shape.
+      const candidates: { id: string; primaryColor: string; secondaryColor: string }[] = [
+        ...BRANDING_THEME_PRESETS,
+        { id: 'light-amber-brand', primaryColor: '#d09611', secondaryColor: '#5d3614' },
+        { id: 'light-yellow-brand', primaryColor: '#facc15', secondaryColor: '#422006' },
+        { id: 'light-lime-brand', primaryColor: '#a3e635', secondaryColor: '#1a2e05' },
+      ];
+
+      for (const preset of candidates) {
+        const vars = buildBrandingCssVariables(preset.primaryColor, preset.secondaryColor, mode);
+
+        for (const token of TEXT_ROLE_TOKENS) {
+          const tokenHex = brandingTokenToHex(vars[`--${token}`] ?? '');
+          if (!tokenHex) {
+            failures.push(`${preset.id} ${mode} --${token} missing`);
+            continue;
+          }
+
+          for (const surface of TEXT_ROLE_SURFACES) {
+            const surfaceHex = brandingTokenToHex(vars[surface] ?? '');
+            const onSurface = getContrastRatio(tokenHex, surfaceHex);
+            if (!meetsWcagAaTextContrast(onSurface)) {
+              failures.push(
+                `${preset.id} ${mode} --${token} as text on ${surface} = ${onSurface?.toFixed(2)}:1`,
+              );
+            }
+
+            const tinted = tintOver(tokenHex, surfaceHex, maxTint);
+            const onTint = getContrastRatio(tokenHex, tinted);
+            if (!meetsWcagAaTextContrast(onTint)) {
+              failures.push(
+                `${preset.id} ${mode} --${token} on its own /${Math.round(maxTint * 100)} tint over ${surface} = ${onTint?.toFixed(2)}:1`,
+              );
+            }
+          }
+        }
+      }
+
+      expect(failures, failures.join('\n')).toEqual([]);
+    },
+  );
+
   it('includes semantic status tokens for tenant themes', () => {
     const vars = buildBrandingCssVariables('#047857', '#c2410c', 'light');
     expect(typeof vars['--success']).toBe('string');

@@ -1,23 +1,26 @@
 import type { FastifyInstance } from 'fastify';
-import type { ZodTypeAny } from 'zod';
+import type { ZodType } from 'zod';
+import type { z } from 'zod';
 import type { Permission, User } from '@mms/shared';
 import { roleHasPermission } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 
 export type RegisterModuleSetupConfigRoutesOptions<
-  TConfig = unknown,
-  TPrefs = unknown,
+  TConfigSchema extends ZodType<any> = ZodType<any>,
+  TPrefsSchema extends ZodType<any> = ZodType<any>,
+  TConfig = z.infer<TConfigSchema>,
+  TPrefs = z.infer<TPrefsSchema>,
 > = {
   canRead: (user: User) => boolean;
   setupWritePermission: Permission;
-  fieldConfigSchema: ZodTypeAny;
-  preferencesSchema: ZodTypeAny;
-  loadFieldConfig: () => Promise<unknown>;
+  fieldConfigSchema: TConfigSchema;
+  preferencesSchema: TPrefsSchema;
+  loadFieldConfig: () => Promise<TConfig | null | unknown>;
   saveFieldConfig: (body: TConfig) => Promise<unknown>;
-  loadPreferences: () => Promise<unknown>;
+  loadPreferences: () => Promise<TPrefs | null | unknown>;
   /** Normalize prefs for GET fallback and before save. */
-  normalizePreferences: (partial: unknown) => TPrefs;
+  normalizePreferences: (partial?: any) => TPrefs;
   savePreferences: (normalized: TPrefs) => Promise<unknown>;
   audit: (
     user: User,
@@ -39,11 +42,13 @@ export type RegisterModuleSetupConfigRoutesOptions<
  * Register GET/PUT `/field-config` + `/preferences` for module Setup.
  */
 export function registerModuleSetupConfigRoutes<
-  TConfig = unknown,
-  TPrefs = unknown,
+  TConfigSchema extends ZodType<any> = ZodType<any>,
+  TPrefsSchema extends ZodType<any> = ZodType<any>,
+  TConfig = z.infer<TConfigSchema>,
+  TPrefs = z.infer<TPrefsSchema>,
 >(
   fastify: FastifyInstance,
-  options: RegisterModuleSetupConfigRoutesOptions<TConfig, TPrefs>,
+  options: RegisterModuleSetupConfigRoutesOptions<TConfigSchema, TPrefsSchema, TConfig, TPrefs>,
 ): void {
   const canWriteSetup = (user: User) =>
     roleHasPermission(user.role, options.setupWritePermission);

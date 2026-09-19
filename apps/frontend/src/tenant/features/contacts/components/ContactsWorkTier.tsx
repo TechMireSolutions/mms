@@ -39,6 +39,7 @@ export const ContactsWorkTier = React.memo(function ContactsWorkTier({
   onSms,
   onEmail,
   onBulkExport,
+  isExporting,
   onRequestBulkDelete,
   onRequestBulkRestore,
   onBulkTag,
@@ -105,6 +106,7 @@ export const ContactsWorkTier = React.memo(function ContactsWorkTier({
         onSms={onSms}
         onEmail={onEmail}
         onBulkExport={onBulkExport}
+        isExporting={isExporting}
         onRequestBulkDelete={onRequestBulkDelete}
         onRequestBulkRestore={onRequestBulkRestore}
         onClearSelection={onClearSelection}

@@ -57,7 +57,7 @@ export async function saveUsers(next: PersistedUser[]): Promise<void> {
     }),
   );
   // Upsert-only: never wipe soft-deleted (or other) rows missing from the payload.
-  await upsertTenantUsersBatch(prepared as TenantUserRow[]);
+  await upsertTenantUsersBatch(subdomain, prepared as TenantUserRow[]);
 }
 
 export async function getWorkspaceUserRow(userId: string): Promise<PersistedUser | undefined> {
@@ -66,7 +66,7 @@ export async function getWorkspaceUserRow(userId: string): Promise<PersistedUser
 }
 
 export async function getLinkedContactId(userId: string): Promise<string | number | null> {
-  const user = await findTenantUserRowById(userId);
+  const user = await findTenantUserRowById(requireTenantSubdomain(), userId);
   const contactId = user?.contactId;
   if (contactId == null || contactId === '') return null;
   return contactId;

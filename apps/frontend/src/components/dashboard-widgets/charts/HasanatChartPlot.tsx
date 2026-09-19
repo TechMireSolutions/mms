@@ -27,7 +27,7 @@ export function HasanatChartPlot({ chartType, hasanatData, activeColors }: Hasan
 
   if (chartType === 'pie') {
     return (
-      <div className="flex-shrink-0" aria-hidden="true">
+      <div className="flex-shrink-0">
         <PieChart width={120} height={120}>
           <Pie data={hasanatData} cx="50%" cy="50%" innerRadius={36} outerRadius={54} paddingAngle={3} dataKey="value">
             {hasanatData.map((hasanatPoint, index) => (
@@ -42,7 +42,7 @@ export function HasanatChartPlot({ chartType, hasanatData, activeColors }: Hasan
 
   if (chartType === 'bar') {
     return (
-      <div className="flex-1 w-full" aria-hidden="true">
+      <div className="flex-1 w-full">
         <SafeResponsiveContainer height={120}>
           <BarChart data={hasanatData} margin={{ top: 4, right: 4, bottom: 0, left: -28 }}>
             <ChartGrid vertical={false} />
@@ -61,7 +61,7 @@ export function HasanatChartPlot({ chartType, hasanatData, activeColors }: Hasan
   }
 
   return (
-    <div className="flex-shrink-0 w-full sm:w-chart-thumb h-chart-xs" aria-hidden="true">
+    <div className="flex-shrink-0 w-full sm:w-chart-thumb h-chart-xs">
       <SafeResponsiveContainer height="100%">
         <RadarChart cx="50%" cy="50%" outerRadius="75%" data={hasanatData}>
           <ChartPolarGrid />

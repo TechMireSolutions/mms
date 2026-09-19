@@ -1,16 +1,21 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { baseListQuerySchema } from '../apiSchemas.js';
-import { attendanceBulkIdsSchema } from '../schemas/attendance.dto.js';
+import { baseListQuerySchema, softDeleteBodySchema } from '../apiSchemas.js';
+import { attendanceBulkIdsSchema, attendanceCreateSchema, attendanceUpdateSchema } from '../schemas/attendance.dto.js';
 import { attendanceRecordSchema, attendanceBulkSchema } from '../attendanceModuleManifest.js';
 import { attendanceLookupsMapSchema } from '../attendanceLookupTypes.js';
+import { widgetAggregatesBodySchema } from '../schemas/common.dto.js';
+import {
+  attendanceFieldConfigPutBodySchema,
+  attendancePreferencesPutBodySchema,
+} from '../attendanceSetupConfigTypes.js';
 import {
   attendanceReportAggregatesHttpQuerySchema,
   attendanceReportAggregatesSchema,
 } from '../attendanceReportAggregates.js';
 
 const c = initContract();
-const errorResponse = z.unknown();
+const errorResponse = z.object({ type: z.string(), message: z.string() }).passthrough();
 
 /** Normalized Attendance Setup preferences (`AttendanceModulePreferences`). */
 export const attendancePreferencesResponseSchema = z.object({
@@ -76,7 +81,7 @@ export const attendanceContract = c.router({
   create: {
     method: 'POST',
     path: '/api/attendance',
-    body: z.unknown(),
+    body: attendanceCreateSchema,
     responses: {
       200: attendanceRecordSchema,
       201: attendanceRecordSchema,
@@ -92,8 +97,8 @@ export const attendanceContract = c.router({
     body: attendanceBulkSchema,
     responses: {
       200: z.object({ records: z.array(attendanceRecordSchema) }),
-      403: z.unknown(),
-      500: z.unknown(),
+      403: errorResponse,
+      500: errorResponse,
     },
     summary: 'Bulk upsert attendance records',
   },
@@ -103,8 +108,8 @@ export const attendanceContract = c.router({
     body: attendanceBulkIdsSchema,
     responses: {
       200: bulkResultResponseSchema,
-      403: z.unknown(),
-      500: z.unknown(),
+      403: errorResponse,
+      500: errorResponse,
     },
     summary: 'Bulk soft-delete attendance records',
   },
@@ -114,54 +119,54 @@ export const attendanceContract = c.router({
     body: attendanceBulkIdsSchema,
     responses: {
       200: bulkResultResponseSchema,
-      403: z.unknown(),
-      500: z.unknown(),
+      403: errorResponse,
+      500: errorResponse,
     },
     summary: 'Bulk restore attendance records',
   },
   update: {
     method: 'PUT',
     path: '/api/attendance/:id',
-    body: z.unknown(),
+    body: attendanceUpdateSchema,
     responses: {
       200: z.object({ record: attendanceRecordSchema }),
-      400: z.unknown(),
-      403: z.unknown(),
-      404: z.unknown(),
-      500: z.unknown(),
+      400: errorResponse,
+      403: errorResponse,
+      404: errorResponse,
+      500: errorResponse,
     },
     summary: 'Update an attendance record by ID',
   },
   delete: {
     method: 'DELETE',
     path: '/api/attendance/:id',
-    body: z.unknown(),
+    body: softDeleteBodySchema.optional(),
     responses: {
       200: z.object({ success: z.literal(true) }),
-      400: z.unknown(),
-      403: z.unknown(),
-      404: z.unknown(),
-      500: z.unknown(),
+      400: errorResponse,
+      403: errorResponse,
+      404: errorResponse,
+      500: errorResponse,
     },
     summary: 'Soft delete an attendance record by ID',
   },
   restore: {
     method: 'POST',
     path: '/api/attendance/:id/restore',
-    body: z.unknown(),
+    body: z.object({}).optional(),
     responses: {
       200: z.object({ success: z.literal(true) }),
-      400: z.unknown(),
-      403: z.unknown(),
-      404: z.unknown(),
-      500: z.unknown(),
+      400: errorResponse,
+      403: errorResponse,
+      404: errorResponse,
+      500: errorResponse,
     },
     summary: 'Restore a soft-deleted attendance record by ID',
   },
   widgetAggregates: {
     method: 'POST',
     path: '/api/attendance/widget-aggregates',
-    body: z.object({ widgets: z.array(z.unknown()) }),
+    body: widgetAggregatesBodySchema,
     responses: {
       200: z.record(z.string(), widgetAggregateResultSchema),
       403: errorResponse,
@@ -190,7 +195,7 @@ export const attendanceContract = c.router({
   updateFieldConfig: {
     method: 'PUT',
     path: '/api/attendance/field-config',
-    body: z.unknown(),
+    body: attendanceFieldConfigPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), config: z.record(z.string(), z.unknown()) }), 403: errorResponse, 500: errorResponse },
     summary: 'Update field config',
   },
@@ -203,7 +208,7 @@ export const attendanceContract = c.router({
   updatePreferences: {
     method: 'PUT',
     path: '/api/attendance/preferences',
-    body: z.unknown(),
+    body: attendancePreferencesPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), preferences: attendancePreferencesResponseSchema }), 403: errorResponse, 500: errorResponse },
     summary: 'Update preferences',
   },

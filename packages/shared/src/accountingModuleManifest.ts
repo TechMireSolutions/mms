@@ -1,6 +1,7 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
-import { JOURNAL_SOURCE_TYPES } from './accountingLedgerInvariants.js';
+import { JOURNAL_SOURCE_TYPES, moneyAmountSchema } from './accountingLedgerInvariants.js';
+import { isoDateSchema } from './isoDateSchema.js';
 
 export const accountRecordSchema = z
   .object({
@@ -19,6 +20,8 @@ export const accountRecordSchema = z
     deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
   })
   .strict();
 
@@ -31,6 +34,8 @@ export const accountRecordInsertSchema = z
     subtype: z.string().optional().default(''),
     description: z.string().optional().default(''),
     isActive: z.boolean().optional().default(true),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
   })
   .strict();
 
@@ -45,8 +50,8 @@ export const journalLineRecordSchema = z
   .object({
     id: z.string(),
     account_id: z.string(),
-    debit: z.number().default(0),
-    credit: z.number().default(0),
+    debit: moneyAmountSchema.default(0),
+    credit: moneyAmountSchema.default(0),
     description: z.string().default(''),
   })
   .strict();
@@ -61,6 +66,8 @@ export const journalEntryRecordSchema = z
     description: z.string().default(''),
     status: z.enum(['posted', 'draft']).default('posted'),
     created_by: z.string().default(''),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
     tags: z.array(z.string()).default([]),
     attachments: z.array(z.string()).default([]),
     fiscal_year: z.string().default(''),
@@ -85,11 +92,13 @@ export const journalEntryRecordSchema = z
 export const journalEntryRecordInsertSchema = z
   .object({
     id: z.string().optional(),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    date: isoDateSchema,
     ref: z.string().optional().default(''),
     description: z.string().optional().default(''),
     status: z.enum(['posted', 'draft']).optional().default('posted'),
     created_by: z.string().optional().default(''),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
     tags: z.array(z.string()).optional().default([]),
     attachments: z.array(z.string()).optional().default([]),
     fiscal_year: z.string().optional().default(''),
@@ -124,6 +133,8 @@ export const fiscalYearRecordSchema = z
     deletionReason: z.string().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
   })
   .strict();
 
@@ -131,9 +142,11 @@ export const fiscalYearRecordInsertSchema = z
   .object({
     id: z.string().optional(),
     label: z.string().min(1, 'Label is required'),
-    startDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Start date must be YYYY-MM-DD'),
-    endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'End date must be YYYY-MM-DD'),
+    startDate: isoDateSchema,
+    endDate: isoDateSchema,
     status: z.enum(['active', 'closed', 'upcoming']).optional().default('upcoming'),
+    createdBy: z.string().nullable().optional(),
+    updatedBy: z.string().nullable().optional(),
   })
   .strict();
 
@@ -166,13 +179,13 @@ export const ACCOUNTING_MODULE_MANIFEST = {
     retentionDays: null,
   },
   permissions: {
-    read: 'finance.write',
-    write: 'finance.write',
-    delete: 'finance.write',
+    read: 'accounting.read',
+    write: 'accounting.write',
+    delete: 'accounting.delete',
     setupView: 'configuration.view',
     setupWrite: 'settings.global.write',
-    export: 'finance.write',
-    reports: 'finance.write',
+    export: 'accounting.read',
+    reports: 'accounting.read',
   } satisfies Record<string, Permission>,
   work: {
     directoryViews: ['overview', 'journal', 'ledger', 'trial', 'coa'] as const,

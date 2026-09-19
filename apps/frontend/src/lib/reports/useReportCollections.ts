@@ -8,6 +8,7 @@ import {
   FINANCE_MODULE_MANIFEST,
 } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
 import type { Invoice } from '@/lib/data/financeData';
 import type { Denomination, Distribution } from '@/lib/data/hasanatData';
@@ -52,6 +53,8 @@ export function useWidgetCollections(options?: {
 }): ReportCollectionsSnapshot {
   const enabled = options?.enabled ?? true;
   const { isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canReadHasanat = can('hasanat.read');
   const queryEnabled = isAuthenticated && enabled;
   const required = options?.requiredCollections
     ? new Set(options.requiredCollections)
@@ -68,10 +71,10 @@ export function useWidgetCollections(options?: {
   const financeInvoices = useFinanceInvoicesPaginated({ page: 1, limit: FINANCE_MODULE_MANIFEST.maxPageSize }, { enabled: needs('finance_invoices') }).data?.invoices ?? [];
   const attendanceRecords = useAttendanceRecordsCollection({ enabled: needs('attendance_records') });
   const hasanatDistributions = useHasanatDistributionsCollection({
-    enabled: needs('hasanat_distributions'),
+    enabled: needs('hasanat_distributions') && canReadHasanat,
   });
   const hasanatDenoms = useHasanatDenomsCollection({
-    enabled: needs('hasanat_distributions'),
+    enabled: needs('hasanat_distributions') && canReadHasanat,
   });
   const questions = useQuestionBankQuestionsCollection({ enabled: needs('questions') });
   const tests = useQuestionBankTestsCollection({ enabled: needs('tests') });

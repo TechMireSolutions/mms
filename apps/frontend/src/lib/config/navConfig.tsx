@@ -72,6 +72,13 @@ export const NAV_ITEMS: NavItem[] = [
     requiredPermission: CONTACTS_MODULE_MANIFEST.permissions.read,
   },
   {
+    labelKey: "nav.faculty",
+    icon: School,
+    path: ROUTES.faculty,
+    moduleId: "teachers",
+    requiredPermission: TEACHERS_MODULE_MANIFEST.permissions.read,
+  },
+  {
     labelKey: "nav.messaging",
     icon: MessageSquare,
     path: ROUTES.messaging,
@@ -82,13 +89,6 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: "nav.academics",
     icon: BookOpen,
     subItems: [
-      {
-        labelKey: "nav.teachers",
-        icon: School,
-        path: ROUTES.teachers,
-        moduleId: "teachers",
-        requiredPermission: TEACHERS_MODULE_MANIFEST.permissions.read,
-      },
       {
         labelKey: "nav.students",
         icon: GraduationCap,
@@ -158,7 +158,7 @@ export const NAV_ITEMS: NavItem[] = [
     labelKey: "nav.obligations",
     icon: Scale,
     path: ROUTES.obligations,
-    moduleId: "finance",
+    moduleId: "obligations",
     requiredPermission: OBLIGATIONS_MODULE_MANIFEST.permissions.read,
   },
   {

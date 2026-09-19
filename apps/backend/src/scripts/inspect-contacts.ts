@@ -1,7 +1,9 @@
-process.loadEnvFile('.env');
+import { loadBackendEnv } from '../config/loadEnv.js';
 import { initDb } from '../db/database.js';
 import { getDb } from '../db/dbClient.js';
 import { contacts } from '../db/schema.js';
+
+loadBackendEnv();
 
 async function main() {
   await initDb();

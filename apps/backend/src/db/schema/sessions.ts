@@ -4,22 +4,19 @@ import { workspaces } from "./platform.js";
 import { softDeleteColumns } from "./softDeleteSchema.js";
 
 /**
- * Sessions entity rows.
- * Soft-delete metadata columns (`deleted_by` / `deletion_reason`) for Work Trash UX — Drizzle `0027`.
+ * Academic Sessions entity rows (Model 6).
  */
 export const sessions = pgTable('sessions', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   name: varchar('name', { length: 255 }).notNull(),
-  type: varchar('type', { length: 100 }).notNull(),
-  status: varchar('status', { length: 50 }).notNull(),
-  startDate: varchar('start_date', { length: 30 }).notNull(),
-  endDate: varchar('end_date', { length: 30 }).notNull(),
+  type: varchar('type', { length: 100 }).notNull().default('academic'),
+  status: varchar('status', { length: 50 }).notNull().default('active'),
+  startDate: varchar('start_date', { length: 30 }).notNull().default(''),
+  endDate: varchar('end_date', { length: 30 }).notNull().default(''),
   baseFee: numeric('base_fee', { precision: 12, scale: 2 }).notNull().default('0'),
   currency: varchar('currency', { length: 20 }).notNull().default('PKR'),
   description: text('description'),
-  budgetTotalRevenue: numeric('budget_total_revenue', { precision: 12, scale: 2 }).notNull().default('0'),
-  budgetCollected: numeric('budget_collected', { precision: 12, scale: 2 }).notNull().default('0'),
   ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -38,19 +35,47 @@ export const sessions = pgTable('sessions', {
     .where(sql`${table.deletedAt} is not null`),
 ]);
 
+/**
+ * Session Management / Faculty assigned to session (Model 6).
+ */
+export const sessionFaculty = pgTable('session_faculty', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  sessionId: text('session_id').notNull(),
+  facultyId: varchar('faculty_id', { length: 64 }).notNull(),
+  facultyName: varchar('faculty_name', { length: 255 }).notNull().default(''),
+  role: varchar('role', { length: 100 }).notNull().default('coordinator'),
+  status: varchar('status', { length: 50 }).notNull().default('active'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.sessionId, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.sessionId],
+    foreignColumns: [sessions.workspaceSubdomain, sessions.id],
+  }).onDelete('cascade'),
+  index('session_faculty_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
+  index('session_faculty_workspace_faculty_idx').on(table.workspaceSubdomain, table.facultyId),
+]);
+
+/**
+ * Session Classes (Model 6).
+ */
 export const sessionClasses = pgTable('session_classes', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   sessionId: text('session_id').notNull(),
   name: varchar('name', { length: 255 }).notNull(),
-  ageMin: integer('age_min').notNull().default(1),
-  ageMax: integer('age_max').notNull().default(120),
-  gender: varchar('gender', { length: 20 }).notNull().default('any'),
-  teacherId: varchar('teacher_id', { length: 64 }).notNull(),
-  teacherName: varchar('teacher_name', { length: 255 }),
-  capacity: integer('capacity').notNull().default(30),
+  gender: varchar('gender', { length: 20 }).notNull().default('mixed'),
+  ageCalculationDate: varchar('age_calc_date', { length: 30 }).notNull().default(''),
+  ageMin: integer('age_min').notNull().default(4),
+  ageMax: integer('age_max').notNull().default(25),
+  capacity: integer('capacity').notNull().default(30), // Max Student Count
   enrolled: integer('enrolled').notNull().default(0),
-  room: varchar('room', { length: 100 }),
+  enrollmentDeadline: varchar('enrollment_deadline', { length: 35 }).notNull().default(''),
+  status: varchar('status', { length: 50 }).notNull().default('active'),
+  teacherId: varchar('teacher_id', { length: 64 }).notNull().default(''),
+  teacherName: varchar('teacher_name', { length: 255 }).default(''),
+  room: varchar('room', { length: 100 }).default(''),
   sortOrder: integer('sort_order').notNull().default(0),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
@@ -68,130 +93,166 @@ export const sessionClasses = pgTable('session_classes', {
   ),
 ]);
 
-export const sessionTimetable = pgTable('session_timetable', {
+/**
+ * Session Class Fees (Model 6).
+ */
+export const sessionClassFees = pgTable('session_class_fees', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  sessionId: text('session_id').notNull(),
-  day: varchar('day', { length: 10 }).notNull(),
-  activity: varchar('activity', { length: 255 }).notNull(),
+  sessionClassId: text('session_class_id').notNull(),
+  feeType: varchar('fee_type', { length: 100 }).notNull(),
+  amount: numeric('amount', { precision: 12, scale: 2 }).notNull().default('0'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.sessionClassId, table.id] }),
+  index('session_class_fees_workspace_class_idx').on(table.workspaceSubdomain, table.sessionClassId),
+]);
+
+/**
+ * Session Class Schedules (Model 6).
+ */
+export const sessionClassSchedules = pgTable('session_class_schedules', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  sessionClassId: text('session_class_id').notNull(),
+  scheduleType: varchar('schedule_type', { length: 100 }).notNull(),
+  startDate: varchar('start_date', { length: 30 }).notNull(),
+  endDate: varchar('end_date', { length: 30 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.sessionClassId, table.id] }),
+  index('session_class_schedules_workspace_class_idx').on(table.workspaceSubdomain, table.sessionClassId),
+]);
+
+/**
+ * Session Class Budgets (Model 6: Income, Expense).
+ */
+export const sessionClassBudgets = pgTable('session_class_budgets', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  sessionClassId: text('session_class_id').notNull(),
+  budgetType: varchar('budget_type', { length: 20 }).notNull(), // 'income' | 'expense'
+  detail: text('detail').notNull(),
+  amount: numeric('amount', { precision: 12, scale: 2 }).notNull().default('0'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.sessionClassId, table.id] }),
+  index('session_class_budgets_workspace_class_idx').on(table.workspaceSubdomain, table.sessionClassId),
+]);
+
+/**
+ * Session Class Discounts (Model 6).
+ */
+export const sessionClassDiscounts = pgTable('session_class_discounts', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  sessionClassId: text('session_class_id').notNull(),
+  discountType: varchar('discount_type', { length: 100 }).notNull(),
+  percentage: numeric('percentage', { precision: 5, scale: 2 }).notNull().default('0'),
+  startDate: varchar('start_date', { length: 30 }),
+  endDate: varchar('end_date', { length: 30 }),
+  eligibilityCriteria: jsonb('eligibility_criteria').$type<Record<string, unknown>>().notNull().default({}),
+  status: varchar('status', { length: 50 }).notNull().default('active'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.sessionClassId, table.id] }),
+  index('session_class_discounts_workspace_class_idx').on(table.workspaceSubdomain, table.sessionClassId),
+]);
+
+/**
+ * Session Class Timetables (Model 6).
+ */
+export const sessionClassTimetables = pgTable('session_class_timetables', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  sessionClassId: text('session_class_id').notNull(),
+  date: varchar('date', { length: 30 }).notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.sessionClassId, table.id] }),
+  index('session_class_timetables_workspace_class_idx').on(table.workspaceSubdomain, table.sessionClassId),
+]);
+
+/**
+ * Session Class Timetable Periods (Model 6).
+ */
+export const sessionClassTimetablePeriods = pgTable('session_class_timetable_periods', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  timetableId: text('timetable_id').notNull(),
   startTime: varchar('start_time', { length: 20 }).notNull(),
   endTime: varchar('end_time', { length: 20 }).notNull(),
-  location: varchar('location', { length: 255 }).notNull(),
-  type: varchar('type', { length: 50 }).notNull(),
-  sortOrder: integer('sort_order').notNull().default(0),
+  subject: varchar('subject', { length: 150 }).notNull(),
+  teacherId: varchar('teacher_id', { length: 64 }).default(''),
+  teacherName: varchar('teacher_name', { length: 255 }).default(''),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.sessionId, table.id] }),
-  foreignKey({
-    columns: [table.workspaceSubdomain, table.sessionId],
-    foreignColumns: [sessions.workspaceSubdomain, sessions.id],
-  }).onDelete('cascade'),
-  index('session_timetable_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
+  primaryKey({ columns: [table.workspaceSubdomain, table.timetableId, table.id] }),
+  index('session_class_timetable_periods_workspace_timetable_idx').on(table.workspaceSubdomain, table.timetableId),
 ]);
 
-export const sessionDiscounts = pgTable('session_discounts', {
+/**
+ * Session Class Refreshments (Model 6).
+ */
+export const sessionClassRefreshments = pgTable('session_class_refreshments', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  sessionId: text('session_id').notNull(),
-  name: varchar('name', { length: 255 }).notNull(),
-  type: varchar('type', { length: 20 }).notNull(),
-  value: numeric('value', { precision: 10, scale: 2 }).notNull().default('0'),
-  conditions: text('conditions').notNull().default(''),
-  active: boolean('active').notNull().default(true),
-  sortOrder: integer('sort_order').notNull().default(0),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.sessionId, table.id] }),
-  foreignKey({
-    columns: [table.workspaceSubdomain, table.sessionId],
-    foreignColumns: [sessions.workspaceSubdomain, sessions.id],
-  }).onDelete('cascade'),
-  index('session_discounts_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
-]);
-
-export const sessionBudgetExpenses = pgTable('session_budget_expenses', {
-  id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  sessionId: text('session_id').notNull(),
-  category: varchar('category', { length: 100 }).notNull(),
-  amount: numeric('amount', { precision: 12, scale: 2 }).notNull().default('0'),
-  date: varchar('date', { length: 30 }).notNull(),
-  note: text('note'),
-  sortOrder: integer('sort_order').notNull().default(0),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.sessionId, table.id] }),
-  foreignKey({
-    columns: [table.workspaceSubdomain, table.sessionId],
-    foreignColumns: [sessions.workspaceSubdomain, sessions.id],
-  }).onDelete('cascade'),
-  index('session_budget_expenses_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
-]);
-
-export const sessionBudgetIncomes = pgTable('session_budget_incomes', {
-  id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  sessionId: text('session_id').notNull(),
-  category: varchar('category', { length: 100 }).notNull(),
-  amount: numeric('amount', { precision: 12, scale: 2 }).notNull().default('0'),
-  date: varchar('date', { length: 30 }).notNull(),
-  note: text('note'),
-  sortOrder: integer('sort_order').notNull().default(0),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.sessionId, table.id] }),
-  foreignKey({
-    columns: [table.workspaceSubdomain, table.sessionId],
-    foreignColumns: [sessions.workspaceSubdomain, sessions.id],
-  }).onDelete('cascade'),
-  index('session_budget_incomes_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
-]);
-
-export const sessionEvents = pgTable('session_events', {
-  id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  sessionId: text('session_id').notNull(),
-  title: varchar('title', { length: 255 }).notNull(),
-  date: varchar('date', { length: 30 }).notNull(),
-  time: varchar('time', { length: 30 }).notNull(),
-  location: varchar('location', { length: 255 }).notNull(),
-  description: text('description'),
-  type: varchar('type', { length: 50 }).notNull(),
-  sortOrder: integer('sort_order').notNull().default(0),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-}, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.sessionId, table.id] }),
-  foreignKey({
-    columns: [table.workspaceSubdomain, table.sessionId],
-    foreignColumns: [sessions.workspaceSubdomain, sessions.id],
-  }).onDelete('cascade'),
-  index('session_events_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
-]);
-
-export const sessionTabarruk = pgTable('session_tabarruk', {
-  id: text('id').notNull(),
-  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  sessionId: text('session_id').notNull(),
+  sessionClassId: text('session_class_id').notNull(),
+  date: varchar('date', { length: 35 }).notNull(),
   item: varchar('item', { length: 255 }).notNull(),
-  quantity: varchar('quantity', { length: 100 }).notNull(),
-  occasion: varchar('occasion', { length: 255 }).notNull(),
-  date: varchar('date', { length: 30 }).notNull(),
-  note: text('note'),
-  sortOrder: integer('sort_order').notNull().default(0),
+  quantity: integer('quantity').notNull().default(1),
+  pricePerUnit: numeric('price_per_unit', { precision: 12, scale: 2 }).notNull().default('0'),
+  paidAmount: numeric('paid_amount', { precision: 12, scale: 2 }).notNull().default('0'),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
-  primaryKey({ columns: [table.workspaceSubdomain, table.sessionId, table.id] }),
-  foreignKey({
-    columns: [table.workspaceSubdomain, table.sessionId],
-    foreignColumns: [sessions.workspaceSubdomain, sessions.id],
-  }).onDelete('cascade'),
-  index('session_tabarruk_workspace_session_idx').on(table.workspaceSubdomain, table.sessionId),
+  primaryKey({ columns: [table.workspaceSubdomain, table.sessionClassId, table.id] }),
+  index('session_class_refreshments_workspace_class_idx').on(table.workspaceSubdomain, table.sessionClassId),
 ]);
 
+/**
+ * Scholarship Eligibility criteria profiles (Model 6).
+ */
+export const scholarshipEligibilities = pgTable('scholarship_eligibilities', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  orphan: boolean('orphan').notNull().default(false),
+  job: boolean('job').notNull().default(false),
+  business: boolean('business').notNull().default(false),
+  property: boolean('property').notNull().default(false),
+  familyMembers: integer('family_members').notNull().default(1),
+  onJobMembers: integer('on_job_members').notNull().default(0),
+  schoolGoingSiblings: integer('school_going_siblings').notNull().default(0),
+  residence: varchar('residence', { length: 100 }).notNull().default('rental'),
+  notes: text('notes'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  index('scholarship_eligibilities_workspace_idx').on(table.workspaceSubdomain),
+]);
+
+/**
+ * Session Class Scholarships (Model 6).
+ */
+export const sessionClassScholarships = pgTable('session_class_scholarships', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  sessionClassId: text('session_class_id').notNull(),
+  scholarshipEligibilityId: text('scholarship_eligibility_id'),
+  percentage: numeric('percentage', { precision: 5, scale: 2 }).notNull().default('0'),
+  expiryDate: varchar('expiry_date', { length: 30 }).default(''),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.sessionClassId, table.id] }),
+  index('session_class_scholarships_workspace_class_idx').on(table.workspaceSubdomain, table.sessionClassId),
+]);
+
+/**
+ * Lookups & Setup Tables
+ */
 export const sessionLookups = pgTable('session_lookups', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  kind: text('kind').notNull(), // 'statuses' | 'types'
+  kind: text('kind').notNull(),
   label: text('label').notNull(),
   meta: jsonb('meta').$type<Record<string, unknown> | null>(),
   sortOrder: integer('sort_order').notNull().default(0),
@@ -206,7 +267,6 @@ export const sessionLookups = pgTable('session_lookups', {
   index('session_lookups_workspace_kind_idx').on(table.workspaceSubdomain, table.kind),
 ]);
 
-/** Sessions Setup field registry (was document-store `sessions_settings` fields slice). */
 export const sessionFieldConfigs = pgTable('session_field_configs', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   config: jsonb('config').$type<Record<string, unknown>>().notNull(),
@@ -215,7 +275,6 @@ export const sessionFieldConfigs = pgTable('session_field_configs', {
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
 
-/** Sessions Setup preferences (was document-store `sessions_settings` prefs slice). */
 export const sessionModulePreferences = pgTable('session_module_preferences', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   preferences: jsonb('preferences').$type<Record<string, unknown>>().notNull(),
@@ -224,27 +283,33 @@ export const sessionModulePreferences = pgTable('session_module_preferences', {
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
 
-/** Per-user Sessions Work column layout (was document-store `session_user_column_preferences`). */
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
-
 export type SessionRow = typeof sessions.$inferSelect;
 export type InsertSessionRow = typeof sessions.$inferInsert;
+export type SessionFacultyRow = typeof sessionFaculty.$inferSelect;
+export type InsertSessionFacultyRow = typeof sessionFaculty.$inferInsert;
 export type SessionClassRow = typeof sessionClasses.$inferSelect;
 export type InsertSessionClassRow = typeof sessionClasses.$inferInsert;
-export type SessionTimetableRow = typeof sessionTimetable.$inferSelect;
-export type InsertSessionTimetableRow = typeof sessionTimetable.$inferInsert;
-export type SessionDiscountRow = typeof sessionDiscounts.$inferSelect;
-export type InsertSessionDiscountRow = typeof sessionDiscounts.$inferInsert;
-export type SessionBudgetExpenseRow = typeof sessionBudgetExpenses.$inferSelect;
-export type InsertSessionBudgetExpenseRow = typeof sessionBudgetExpenses.$inferInsert;
-export type SessionBudgetIncomeRow = typeof sessionBudgetIncomes.$inferSelect;
-export type InsertSessionBudgetIncomeRow = typeof sessionBudgetIncomes.$inferInsert;
-export type SessionEventRow = typeof sessionEvents.$inferSelect;
-export type InsertSessionEventRow = typeof sessionEvents.$inferInsert;
-export type SessionTabarrukRow = typeof sessionTabarruk.$inferSelect;
-export type InsertSessionTabarrukRow = typeof sessionTabarruk.$inferInsert;
+export type SessionClassFeeRow = typeof sessionClassFees.$inferSelect;
+export type InsertSessionClassFeeRow = typeof sessionClassFees.$inferInsert;
+export type SessionClassScheduleRow = typeof sessionClassSchedules.$inferSelect;
+export type InsertSessionClassScheduleRow = typeof sessionClassSchedules.$inferInsert;
+export type SessionClassBudgetRow = typeof sessionClassBudgets.$inferSelect;
+export type InsertSessionClassBudgetRow = typeof sessionClassBudgets.$inferInsert;
+export type SessionClassDiscountRow = typeof sessionClassDiscounts.$inferSelect;
+export type InsertSessionClassDiscountRow = typeof sessionClassDiscounts.$inferInsert;
+export type SessionClassTimetableRow = typeof sessionClassTimetables.$inferSelect;
+export type InsertSessionClassTimetableRow = typeof sessionClassTimetables.$inferInsert;
+export type SessionClassTimetablePeriodRow = typeof sessionClassTimetablePeriods.$inferSelect;
+export type InsertSessionClassTimetablePeriodRow = typeof sessionClassTimetablePeriods.$inferInsert;
+export type SessionClassRefreshmentRow = typeof sessionClassRefreshments.$inferSelect;
+export type InsertSessionClassRefreshmentRow = typeof sessionClassRefreshments.$inferInsert;
+export type ScholarshipEligibilityRow = typeof scholarshipEligibilities.$inferSelect;
+export type InsertScholarshipEligibilityRow = typeof scholarshipEligibilities.$inferInsert;
+export type SessionClassScholarshipRow = typeof sessionClassScholarships.$inferSelect;
+export type InsertSessionClassScholarshipRow = typeof sessionClassScholarships.$inferInsert;
 export type SessionLookupsRow = typeof sessionLookups.$inferSelect;
 export type InsertSessionLookupsRow = typeof sessionLookups.$inferInsert;
 export type SessionFieldConfigsRow = typeof sessionFieldConfigs.$inferSelect;

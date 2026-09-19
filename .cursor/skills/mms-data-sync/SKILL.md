@@ -1,9 +1,15 @@
 ---
 name: mms-data-sync
-description: Legacy/hybrid localStorage and /api/db document-store sync (db.ts, useLiveCollection, objects/collections). Use when fixing legacy persistence or /api/db — not for new REST Query hooks (use mms-query-factories) or backup wipe-restore UI (use mms-backup-restore).
+description: Governs legacy localStorage and /api/db document-store persistence (db.ts, useLiveCollection, objects/collections) for non-migrated entities. Use when modifying legacy storage keys, local drafts, or document sync endpoints. Do NOT use for server-authoritative REST entities (use mms-query-factories), full workspace encrypted backups (use mms-backup-restore), or database DDL migrations (use mms-schema-migrate).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Data Sync Workflow
+
+**Rule (norms SSOT):** `mms-data-layer.mdc` · `mms-core.mdc` · `mms-migration-status.mdc`.
 
 **Legacy / hybrid only.** New REST entity work → skill **`mms-query-factories`** (+ `mms-data-layer.mdc`). Backup wipe-restore UI → **`mms-backup-restore`**. Maintain existing non-migrated keys only — **do not** add new entity collections / new `useLiveCollection` for REST-migrated modules.
 

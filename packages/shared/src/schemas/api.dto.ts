@@ -65,11 +65,13 @@ export const linkedContactIdsQuerySchema = z.object({
 
 export type LinkedContactIdsQuery = z.infer<typeof linkedContactIdsQuerySchema>;
 
+import type { SoftDeleteListFilter } from '../softDelete.js';
+
 /** Authoritative repository list and pagination options */
 export interface RepositoryListOptions {
   limit?: number;
   offset?: number;
-  deleted?: 'active' | 'deleted' | 'all';
+  deleted?: SoftDeleteListFilter;
   includeDeleted?: boolean;
   search?: string;
   sortField?: string;

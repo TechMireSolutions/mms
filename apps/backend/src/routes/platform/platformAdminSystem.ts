@@ -1,5 +1,4 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import rateLimit from '@fastify/rate-limit';
 import {
   type MigrateAndRestartAccepted,
   migrateAndRestartSchema,
@@ -14,6 +13,7 @@ import {
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 import { sendInvalidCurrentPassword } from '../../lib/httpErrors.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../lib/rateLimitGuard.js';
 import {
   insertPlatformActivityLog,
   listPlatformActivityLogs,
@@ -38,13 +38,15 @@ export default async function platformAdminSystemRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
 
-  await fastify.register(async function platformMigrateRestartRateLimited(inner) {
-    await inner.register(rateLimit, AUTH_RATE_LIMIT);
-
+  await fastify.register(async function platformAdminSystemRoutesScoped(inner) {
+    // Apply the strict limit only to the destructive migrate-and-restart route.
+    // Read endpoints (activity-logs / telemetry / activity-trend) are polled by
+    // the platform dashboard and must stay on the global limiter.
     inner.post(
       '/migrate-and-restart',
       {
         preHandler: [
+          createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT),
           authenticatePlatform,
           requirePlatformPermission('system'),
           requirePlatformSuperUser(),

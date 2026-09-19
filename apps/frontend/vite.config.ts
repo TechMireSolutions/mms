@@ -1,10 +1,17 @@
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { constants } from 'node:zlib';
 import react from '@vitejs/plugin-react';
 import { defineConfig, type PluginOption } from 'vite';
 import { visualizer } from 'rollup-plugin-visualizer';
+import { compression } from 'vite-plugin-compression2';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const rootDir = path.dirname(fileURLToPath(import.meta.url));
+
+// Backend origin the dev proxy forwards `/api`, `/health`, `/uploads` to.
+// Override with MMS_BACKEND_PROXY when the backend runs on a non-default port.
+const backendProxyTarget = process.env.MMS_BACKEND_PROXY ?? 'http://127.0.0.1:3000';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -18,7 +25,7 @@ export default defineConfig({
     allowedHosts: true,
     proxy: {
       '/api': {
-        target: 'http://127.0.0.1:3000',
+        target: backendProxyTarget,
         changeOrigin: true,
         ws: true,
         timeout: 600_000,
@@ -39,11 +46,11 @@ export default defineConfig({
         },
       },
       '/health': {
-        target: 'http://127.0.0.1:3000',
+        target: backendProxyTarget,
         changeOrigin: true,
       },
       '/uploads': {
-        target: 'http://127.0.0.1:3000',
+        target: backendProxyTarget,
         changeOrigin: true,
       },
     },
@@ -87,6 +94,12 @@ export default defineConfig({
             if (id.includes('/@tanstack/react-query/')) {
               return 'vendor-query';
             }
+            if (id.includes('/@tanstack/react-virtual/')) {
+              return 'vendor-virtual';
+            }
+            if (id.includes('/react-easy-crop/')) {
+              return 'vendor-crop';
+            }
             if (
               id.includes('/recharts/') ||
               id.includes('/victory-vendor/') ||
@@ -95,14 +108,8 @@ export default defineConfig({
             ) {
               return 'vendor-charts';
             }
-            if (
-              id.includes('/mermaid/') ||
-              id.includes('/@mermaid-js/') ||
-              id.includes('/cytoscape') ||
-              id.includes('/dagre')
-            ) {
-              return 'vendor-diagrams';
-            }
+
+
             if (
               id.includes('/@radix-ui/') ||
               id.includes('/@floating-ui/') ||
@@ -171,6 +178,16 @@ export default defineConfig({
               priority: 45,
             },
             {
+              name: 'vendor-virtual',
+              test: /node_modules[\\/]@tanstack[\\/]react-virtual[\\/]/,
+              priority: 44,
+            },
+            {
+              name: 'vendor-crop',
+              test: /node_modules[\\/]react-easy-crop[\\/]/,
+              priority: 42,
+            },
+            {
               name: 'vendor-ui',
               test: /node_modules[\\/](?:@radix-ui|@floating-ui|react-remove-scroll|aria-hidden|lucide-react|clsx|tailwind-merge|class-variance-authority)[\\/]/,
               priority: 40,
@@ -185,11 +202,8 @@ export default defineConfig({
               test: /node_modules[\\/](?:recharts|victory-vendor|d3-|react-redux|@reduxjs[\\/]toolkit)[\\/]/,
               priority: 30,
             },
-            {
-              name: 'vendor-diagrams',
-              test: /node_modules[\\/](?:mermaid|@mermaid-js|cytoscape|dagre)[\\/]/,
-              priority: 25,
-            },
+
+
             {
               name: 'vendor-validation',
               test: /node_modules[\\/](?:zod|@ts-rest)[\\/]/,
@@ -222,6 +236,26 @@ export default defineConfig({
   },
   plugins: [
     react(),
+    compression({
+      algorithm: 'brotliCompress',
+      threshold: 1024,
+      deleteOriginalAssets: false,
+      include: /\.(js|mjs|cjs|css|svg|json|webmanifest)$/i,
+      compressionOptions: {
+        params: {
+          [constants.BROTLI_PARAM_QUALITY]: 11,
+        },
+      },
+    }),
+    compression({
+      algorithm: 'gzip',
+      threshold: 1024,
+      deleteOriginalAssets: false,
+      include: /\.(js|mjs|cjs|css|svg|json|webmanifest)$/i,
+      compressionOptions: {
+        level: 9,
+      },
+    }),
     visualizer({
       filename: path.resolve(rootDir, 'dist/stats.html'),
       title: 'MMS Frontend Bundle Analysis',
@@ -229,5 +263,63 @@ export default defineConfig({
       brotliSize: true,
       open: false,
     }) as PluginOption,
+    VitePWA({
+      registerType: 'autoUpdate',
+      injectRegister: 'auto',
+      manifest: false,
+      workbox: {
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
+        globIgnores: ['**/stats.html', '**/*.map'],
+        cleanupOutdatedCaches: true,
+        navigateFallback: '/index.html',
+        navigateFallbackDenylist: [/^\/api\//, /^\/uploads\//, /^\/health/],
+        runtimeCaching: [
+          {
+            urlPattern: ({ url, request }) =>
+              url.pathname.startsWith('/api/') ||
+              url.pathname.startsWith('/uploads/') ||
+              url.pathname.startsWith('/health') ||
+              request.method !== 'GET',
+            handler: 'NetworkOnly',
+          },
+          {
+            urlPattern: ({ url, request }) =>
+              request.method === 'GET' &&
+              (url.pathname.startsWith('/assets/') ||
+                /\.(?:js|css|woff2|woff|ttf|png|jpg|jpeg|svg|ico)$/i.test(url.pathname)),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'mms-static-assets',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 30 * 24 * 60 * 60, // 30 days
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+          {
+            urlPattern: ({ url, request }) =>
+              request.method === 'GET' &&
+              (url.pathname === '/' ||
+                url.pathname.endsWith('.html') ||
+                url.pathname.endsWith('.webmanifest') ||
+                url.pathname.endsWith('manifest.json')),
+            handler: 'StaleWhileRevalidate',
+            options: {
+              cacheName: 'mms-html-manifest',
+              expiration: {
+                maxEntries: 10,
+                maxAgeSeconds: 24 * 60 * 60, // 24 hours
+              },
+              cacheableResponse: {
+                statuses: [0, 200],
+              },
+            },
+          },
+        ],
+      },
+    }),
   ],
 });

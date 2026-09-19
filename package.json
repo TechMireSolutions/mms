@@ -14,10 +14,16 @@
     "test:coverage": "turbo run test:coverage",
     "lint": "turbo run lint",
     "test:e2e": "pnpm --filter e2e-tests exec playwright test",
-    "check:i18n": "pnpm --filter mms-backend exec tsx ../../scripts/i18n/check-translations.ts"
+    "check:i18n": "pnpm --filter mms-backend exec tsx ../../scripts/i18n/check-translations.ts",
+    "verify:rules": "node scripts/verify-rules-integrity.mjs",
+    "check:bundle": "node scripts/check-bundle-budget.mjs",
+    "check:migration-indexes": "node scripts/check-migration-indexes.mjs",
+    "check:db-projections": "node scripts/check-db-projections.mjs",
+    "check:code-norms": "node scripts/check-code-norms.mjs",
+    "sync:skills-index": "node scripts/sync-skill-index.mjs"
   },
   "devDependencies": {
-    "turbo": "^2.10.9",
+    "turbo": "^2.10.13",
     "typescript": "~7.0.2",
     "typescript-v6": "npm:typescript@~6.0.3"
   }

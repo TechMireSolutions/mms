@@ -9,7 +9,6 @@ import {
   loadContactsByIdsForTenant,
   loadContactsPageForTenant,
 } from '../../services/contactService.js';
-import { z } from 'zod';
 import {
   dedupeTrimmedIds,
   type MessageTemplate,
@@ -21,8 +20,8 @@ import {
   type ContactsListPageResult,
   type StandardMessagingRecipient,
   MESSAGING_RECIPIENTS_MATCH_LIMIT,
-  messageTemplateSchema,
-  messageRecordSchema,
+  messageTemplateListSchema,
+  messageLogListSchema,
   filterActiveContacts,
   toMessagingRecipient,
   getDisplayName,
@@ -34,8 +33,8 @@ import type {
   MessageLogsPageResult,
 } from '../../db/repositories/messagingRepository.js';
 
-const templateListSchema = z.array(messageTemplateSchema);
-const logListSchema = z.array(messageRecordSchema);
+const templateListSchema = messageTemplateListSchema;
+const logListSchema = messageLogListSchema;
 const MATCH_PAGE_SIZE = 500;
 
 /**

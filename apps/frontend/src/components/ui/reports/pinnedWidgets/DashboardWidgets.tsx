@@ -13,7 +13,7 @@ import { WidgetDrilldownModal } from '@/components/ui/reports/pinnedWidgets/Cust
 import { reportClientError } from '@/lib/clientErrorReporting';
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
-import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/teachers';
+import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/faculty';
 import { useSessionsWidgetAggregates } from '@/tenant/hooks/collections/sessions';
 import { useEnrollmentsWidgetAggregates } from '@/tenant/hooks/collections/enrollments';
 import { applyContactsWidgetWorkDrillDown } from '@/lib/contacts/contactsWidgetWorkDrillDown';

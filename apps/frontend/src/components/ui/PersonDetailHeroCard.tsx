@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react';
 import { UserAvatar } from '@/components/ui/UserAvatar';
+import { BiDiText } from '@/components/ui/BiDiText';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
 import type { CardAccentColor } from '@/lib/semanticTone';
@@ -46,9 +47,13 @@ export function PersonDetailHeroCard({
         className="w-16 h-16 rounded-2xl text-2xl font-bold flex-shrink-0 shadow-xs"
       />
       <div className="flex-1 min-w-0">
-        <h3 className="text-base font-bold text-foreground truncate leading-tight" title={displayName}>
+        <BiDiText
+          as="h3"
+          className="text-base font-bold text-foreground truncate leading-tight"
+          titleFromContent
+        >
           {displayName}
-        </h3>
+        </BiDiText>
         {children ? <div className="flex flex-wrap gap-1.5 mt-2 items-center">{children}</div> : null}
       </div>
     </Card>

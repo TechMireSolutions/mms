@@ -1,4 +1,5 @@
 import { PassThrough } from 'node:stream';
+import { buildTenantExportFilename } from '@mms/shared';
 import { saveExportArtifact, saveStreamedExportArtifact } from '../services/exportArtifactService.js';
 import { registerBackgroundJobRunner } from '../services/backgroundJobWorkerService.js';
 import { uploadStreamToStorage, resolveTenantExportKey } from '../config/storage.js';
@@ -50,7 +51,8 @@ async function streamCsvToStorage(
   options: RegisterModuleCsvExportJobRunnerOptions,
 ): Promise<{ filename: string; count: number }> {
   const passThrough = new PassThrough();
-  const fallbackFilename = exportPayload.filename?.trim() || 'export.csv';
+  const rawFallback = exportPayload.filename?.trim() || 'export.csv';
+  const fallbackFilename = buildTenantExportFilename(ctx.tenant, rawFallback);
   const filename = fallbackFilename.toLowerCase().endsWith('.csv')
     ? fallbackFilename
     : `${fallbackFilename}.csv`;
@@ -61,7 +63,7 @@ async function streamCsvToStorage(
     (exportPayload.query ?? {}) as Record<string, unknown>,
     {
       columns: exportPayload.columns,
-      filename: exportPayload.filename,
+      filename,
       viewerRole: exportPayload.viewerRole,
       allowDeleted: exportPayload.allowDeleted === true,
     },
@@ -112,11 +114,13 @@ export function registerModuleCsvExportJobRunner(
       const result = await streamCsvToStorage(ctx, exportPayload, options);
       count = result.count;
     } else {
+      const rawFallback = exportPayload.filename?.trim() || 'export.csv';
+      const targetFilename = buildTenantExportFilename(ctx.tenant, rawFallback);
       const result = await options.buildExport(
         (exportPayload.query ?? {}) as Record<string, unknown>,
         {
           columns: exportPayload.columns,
-          filename: exportPayload.filename,
+          filename: targetFilename,
           viewerRole: exportPayload.viewerRole,
           allowDeleted: exportPayload.allowDeleted === true,
         },

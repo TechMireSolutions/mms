@@ -1,7 +1,7 @@
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type ExamResult } from '@mms/shared';
 import { examResults, examClasses, exams } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 type ResultRow = Pick<typeof examResults.$inferSelect, 'id' | 'examId' | 'studentId' | 'marksObtained'>;
 
@@ -21,7 +21,7 @@ export async function listExamResultsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: examResults.id,
@@ -41,7 +41,7 @@ export async function findExamResultById(tenant: string, id: string): Promise<Ex
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: examResults.id,
@@ -65,7 +65,7 @@ export async function findExamResultsByIds(tenant: string, ids: string[]): Promi
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: examResults.id,

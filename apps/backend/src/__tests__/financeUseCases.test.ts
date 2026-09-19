@@ -80,11 +80,11 @@ describe('finance use-cases (DI with fake repository)', () => {
     const useCases = createFinanceUseCases(repo);
 
     const result = await runWithTenant('demo', () =>
-      useCases.bulkUpdateInvoicesStatus(['inv-1', 'inv-2'], 'paid'),
+      useCases.bulkUpdateInvoicesStatus(['inv-1', 'inv-2'], 'overdue'),
     );
 
     expect(result).toEqual({ succeeded: 2, failed: 0 });
-    expect(repo.bulkUpdateInvoicesStatus).toHaveBeenCalledWith('demo', ['inv-1', 'inv-2'], 'paid');
+    expect(repo.bulkUpdateInvoicesStatus).toHaveBeenCalledWith('demo', ['inv-1', 'inv-2'], 'overdue');
   });
 
   it('loadFinanceCommandMetrics delegates to the injected repository', async () => {

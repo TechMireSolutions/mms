@@ -63,6 +63,12 @@ export interface AuthContextType {
   checkAppState: (signal?: AbortSignal) => Promise<void>;
   onboard: (onboardingPayload: OnboardPayload) => Promise<OnboardResult>;
   exchangeHandoff: (code: string) => Promise<void>;
+  /** Step 1 — request a one-time code (forgot-password or first-time activation). */
+  requestPasswordOtp: (email: string) => Promise<void>;
+  /** Step 2 — verify the code before showing the new-password fields. */
+  verifyPasswordOtp: (email: string, code: string) => Promise<void>;
+  /** Step 3 — set the password with the verified code, and sign the user in. */
+  resetPasswordWithOtp: (email: string, code: string, password: string) => Promise<void>;
 }
 
 export interface LoginApiResponse {

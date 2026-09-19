@@ -30,6 +30,7 @@ export const contactListPageResponseSchema = z.object({
   page: z.number(),
   limit: z.number(),
   hasMore: z.boolean(),
+  nextCursor: z.string().optional(),
 });
 
 /** `{ success: true, contact }` envelope returned by create/update/merge/restore. */

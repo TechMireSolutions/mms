@@ -126,3 +126,7 @@ export function useTenant(): TenantContextValue {
   }
   return tenantContext;
 }
+
+export function useOptionalTenant(): TenantContextValue | undefined {
+  return useContext(TenantContext);
+}

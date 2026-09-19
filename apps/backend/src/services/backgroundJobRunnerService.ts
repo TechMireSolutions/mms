@@ -1,12 +1,12 @@
-import { CONTACTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, SESSIONS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST, TEACHERS_MODULE_MANIFEST, USERS_MODULE_MANIFEST } from '@mms/shared';
-import type { ContactExportColumn, EnrollmentExportColumn, MessagingCsvExportQueryDto, SessionExportColumn, StudentExportColumn, TeacherExportColumn } from '@mms/shared';
+import { buildTenantExportFilename, CONTACTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, SESSIONS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST, TEACHERS_MODULE_MANIFEST, USERS_MODULE_MANIFEST } from '@mms/shared';
+import type { ContactExportColumn, ContactsImportJobPayload, EnrollmentExportColumn, MessagingCsvExportQueryDto, SessionExportColumn, StudentExportColumn, TeacherExportColumn } from '@mms/shared';
 import type { ContactsExportQueryInput } from './contactsExportService.js';
 import { buildContactsCsvExport, generateContactsCsvStreamChunks } from './contactsExportService.js';
 import { buildContactsVcfExport } from './contactsVcfExportService.js';
 import type { StudentsExportQueryInput } from './studentsExportService.js';
 import { buildStudentsCsvExport, generateStudentsCsvStreamChunks } from './studentsExportService.js';
-import type { TeachersExportQueryInput } from './teachersExportService.js';
-import { buildTeachersCsvExport, generateTeachersCsvStreamChunks } from './teachersExportService.js';
+import type { FacultyExportQueryInput as TeachersExportQueryInput } from './facultyExportService.js';
+import { buildFacultyCsvExport as buildTeachersCsvExport, generateFacultyCsvStreamChunks as generateTeachersCsvStreamChunks } from './facultyExportService.js';
 import type { SessionsExportQueryInput } from './sessionsExportService.js';
 import { buildSessionsCsvExport, generateSessionsCsvStreamChunks } from './sessionsExportService.js';
 import type { EnrollmentsExportQueryInput } from './enrollmentsExportService.js';
@@ -19,6 +19,10 @@ const MAX_EXCEL_PAYLOAD_ENTRIES = 50_000;
 import { buildMessagingCsvExport, generateMessagingCsvStreamChunks } from './messagingExportService.js';
 import { saveExportArtifact, saveStreamedExportArtifact } from './exportArtifactService.js';
 import { runContactsDuplicateScan } from './contactDuplicateScanService.js';
+import {
+  buildContactsImportJobLabel,
+  runContactsImportJob,
+} from '../contacts/use-cases/contactImportJobUseCases.js';
 import { registerBackgroundJobRunner } from './backgroundJobWorkerService.js';
 import { registerModuleCsvExportJobRunner } from '../lib/registerModuleCsvExportJobRunner.js';
 
@@ -108,8 +112,12 @@ export function registerDefaultBackgroundJobRunners(): void {
   registerBackgroundJobRunner(`${contactsModuleId}:export-vcf`, async (payload, ctx) => {
     const exportPayload = payload as ContactsVcfExportJobPayload;
     await ctx.updateProgress(0, 1);
+    const targetFilename = buildTenantExportFilename(
+      ctx.tenant,
+      exportPayload.filename?.trim() || 'contacts.vcf',
+    );
     const { vcf, filename, count } = await buildContactsVcfExport({
-      filename: exportPayload.filename,
+      filename: targetFilename,
       onProgress: (processed, total) => ctx.updateProgress(processed, Math.max(total, 1)),
     });
     await saveExportArtifact(ctx.userId, ctx.jobId, vcf, filename);
@@ -127,6 +135,20 @@ export function registerDefaultBackgroundJobRunners(): void {
     await ctx.complete({
       label: `Found ${result.pairCount} duplicate pairs`,
       progress: { current: result.pairCount, total: Math.max(result.pairCount, 1) },
+    });
+  });
+
+  registerBackgroundJobRunner(`${contactsModuleId}:import`, async (payload, ctx) => {
+    const result = await runContactsImportJob(payload as ContactsImportJobPayload, {
+      tenant: ctx.tenant,
+      userId: ctx.userId,
+      jobId: ctx.jobId,
+      updateProgress: (current, total) => ctx.updateProgress(current, total),
+    });
+    await ctx.complete({
+      label: buildContactsImportJobLabel(result),
+      // `current` = imported, `total` = received, so the client can derive the failure count.
+      progress: { current: result.imported, total: Math.max(result.total, 1) },
     });
   });
 

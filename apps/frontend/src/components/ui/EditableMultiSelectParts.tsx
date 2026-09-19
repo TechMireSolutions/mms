@@ -1,5 +1,6 @@
 import React from "react";
 import { Check, Search, X } from "lucide-react";
+import { useVirtualizer } from "@tanstack/react-virtual";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,7 +17,7 @@ interface EditableMultiSelectChipRowProps {
   onRemoveValue: (valToRemove: string, event: React.MouseEvent) => void;
 }
 
-export function EditableMultiSelectChipRow({
+export const EditableMultiSelectChipRow = React.memo(function EditableMultiSelectChipRow({
   values,
   placeholder,
   t,
@@ -50,7 +51,7 @@ export function EditableMultiSelectChipRow({
       ))}
     </>
   );
-}
+});
 
 interface EditableMultiSelectSearchBarProps {
   searchQuery: string;
@@ -59,7 +60,7 @@ interface EditableMultiSelectSearchBarProps {
   t: TranslationFunction;
 }
 
-export function EditableMultiSelectSearchBar({
+export const EditableMultiSelectSearchBar = React.memo(function EditableMultiSelectSearchBar({
   searchQuery,
   onSearchChange,
   onClearSearch,
@@ -87,7 +88,7 @@ export function EditableMultiSelectSearchBar({
       )}
     </div>
   );
-}
+});
 
 interface EditableMultiSelectOptionListProps {
   resolvedId: string;
@@ -102,7 +103,79 @@ interface EditableMultiSelectOptionListProps {
   onRemoveOption: (option: string, event: React.MouseEvent) => void;
 }
 
-export function EditableMultiSelectOptionList({
+interface EditableMultiSelectOptionItemProps {
+  option: string;
+  index: number;
+  resolvedId: string;
+  isSelected: boolean;
+  isHighlighted: boolean;
+  canRemoveOptions: boolean;
+  t: TranslationFunction;
+  onHoverOption?: (index: number) => void;
+  onToggleOption: (option: string) => void;
+  onRemoveOption: (option: string, event: React.MouseEvent) => void;
+}
+
+const EditableMultiSelectOptionItem = React.memo(function EditableMultiSelectOptionItem({
+  option,
+  index,
+  resolvedId,
+  isSelected,
+  isHighlighted,
+  canRemoveOptions,
+  t,
+  onHoverOption,
+  onToggleOption,
+  onRemoveOption,
+}: EditableMultiSelectOptionItemProps): React.JSX.Element {
+  return (
+    <div
+      id={`${resolvedId}-opt-${index}`}
+      role="option"
+      aria-selected={isSelected}
+      onMouseEnter={() => onHoverOption?.(index)}
+      onClick={() => onToggleOption(option)}
+      className={cn(
+        "flex min-h-9 items-center justify-between gap-2 px-3 py-1.5 text-sm cursor-pointer transition-colors select-none",
+        isSelected
+          ? isHighlighted
+            ? "bg-primary/15 text-primary font-medium"
+            : "bg-primary/10 text-primary font-medium"
+          : isHighlighted
+            ? "bg-muted/80 text-foreground"
+            : "text-foreground hover:bg-muted/60",
+      )}
+    >
+      <span className="truncate flex-1">{formatContactOptionLabel(option, t) || option}</span>
+      <div className="flex items-center gap-1.5 flex-shrink-0">
+        <div
+          className={cn(
+            "w-4 h-4 rounded border flex items-center justify-center transition-colors",
+            isSelected
+              ? "bg-primary border-primary text-primary-foreground"
+              : "border-muted-foreground/40 bg-background",
+          )}
+        >
+          {isSelected && <Check strokeWidth={2.5} className="w-3 h-3" />}
+        </div>
+        {canRemoveOptions && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            onClick={(event) => onRemoveOption(option, event)}
+            className={cn("relative h-7 w-7 rounded transition-colors after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']", REMOVE_BTN)}
+            aria-label={t("contacts.form.removeOption", { option })}
+          >
+            <X className="w-3.5 h-3.5" aria-hidden />
+          </Button>
+        )}
+      </div>
+    </div>
+  );
+});
+
+export const EditableMultiSelectOptionList = React.memo(function EditableMultiSelectOptionList({
   resolvedId,
   listboxId,
   filteredOptions,
@@ -114,8 +187,27 @@ export function EditableMultiSelectOptionList({
   onToggleOption,
   onRemoveOption,
 }: EditableMultiSelectOptionListProps): React.JSX.Element {
+  const parentRef = React.useRef<HTMLDivElement | null>(null);
+  const isVirtualized = filteredOptions.length > 50;
+
+  const rowVirtualizer = useVirtualizer({
+    count: filteredOptions.length,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 36,
+    overscan: 6,
+    enabled: isVirtualized,
+  });
+
+  // Scroll active item into view when navigating via keyboard
+  React.useEffect(() => {
+    if (isVirtualized && highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
+      rowVirtualizer.scrollToIndex(highlightedIndex, { align: 'auto' });
+    }
+  }, [highlightedIndex, isVirtualized, filteredOptions.length, rowVirtualizer]);
+
   return (
     <div
+      ref={parentRef}
       id={listboxId}
       role="listbox"
       aria-multiselectable="true"
@@ -123,58 +215,70 @@ export function EditableMultiSelectOptionList({
     >
       {filteredOptions.length === 0 ? (
         <div className="px-3 py-3 text-xs text-muted-foreground text-center">{t("common.none")}</div>
+      ) : isVirtualized ? (
+        <div
+          style={{
+            height: `${rowVirtualizer.getTotalSize()}px`,
+            width: "100%",
+            position: "relative",
+          }}
+        >
+          {rowVirtualizer.getVirtualItems().map((virtualRow) => {
+            const option = filteredOptions[virtualRow.index];
+            const isSelected = isOptionSelected(values, option);
+            const isHighlighted = virtualRow.index === highlightedIndex;
+
+            return (
+              <div
+                key={virtualRow.key}
+                data-index={virtualRow.index}
+                ref={rowVirtualizer.measureElement}
+                style={{
+                  position: "absolute",
+                  top: 0,
+                  left: 0,
+                  width: "100%",
+                  transform: `translateY(${virtualRow.start}px)`,
+                }}
+              >
+                <EditableMultiSelectOptionItem
+                  option={option}
+                  index={virtualRow.index}
+                  resolvedId={resolvedId}
+                  isSelected={isSelected}
+                  isHighlighted={isHighlighted}
+                  canRemoveOptions={canRemoveOptions}
+                  t={t}
+                  onHoverOption={onHoverOption}
+                  onToggleOption={onToggleOption}
+                  onRemoveOption={onRemoveOption}
+                />
+              </div>
+            );
+          })}
+        </div>
       ) : (
         filteredOptions.map((option, index) => {
           const isSelected = isOptionSelected(values, option);
           const isHighlighted = index === highlightedIndex;
           return (
-            <div
+            <EditableMultiSelectOptionItem
               key={option}
-              id={`${resolvedId}-opt-${index}`}
-              role="option"
-              aria-selected={isSelected}
-              onMouseEnter={() => onHoverOption?.(index)}
-              onClick={() => onToggleOption(option)}
-              className={cn(
-                "flex min-h-9 items-center justify-between gap-2 px-3 py-1.5 text-sm cursor-pointer transition-colors select-none",
-                isSelected
-                  ? isHighlighted
-                    ? "bg-primary/20 text-primary font-medium"
-                    : "bg-primary/10 text-primary font-medium"
-                  : isHighlighted
-                    ? "bg-muted/80 text-foreground"
-                    : "text-foreground hover:bg-muted/60",
-              )}
-            >
-              <span className="truncate flex-1">{formatContactOptionLabel(option, t) || option}</span>
-              <div className="flex items-center gap-1.5 flex-shrink-0">
-                <div
-                  className={cn(
-                    "w-4 h-4 rounded border flex items-center justify-center transition-colors",
-                    isSelected
-                      ? "bg-primary border-primary text-primary-foreground"
-                      : "border-muted-foreground/40 bg-background",
-                  )}
-                >
-                  {isSelected && <Check strokeWidth={2.5} className="w-3 h-3" />}
-                </div>
-                {canRemoveOptions && (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={(event) => onRemoveOption(option, event)}
-                    className={cn("relative h-7 w-7 rounded transition-colors after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']", REMOVE_BTN)}
-                    aria-label={t("contacts.form.removeOption", { option })}
-                  >
-                    <X className="w-3.5 h-3.5" aria-hidden />
-                  </Button>
-                )}
-              </div>
-            </div>
+              option={option}
+              index={index}
+              resolvedId={resolvedId}
+              isSelected={isSelected}
+              isHighlighted={isHighlighted}
+              canRemoveOptions={canRemoveOptions}
+              t={t}
+              onHoverOption={onHoverOption}
+              onToggleOption={onToggleOption}
+              onRemoveOption={onRemoveOption}
+            />
           );
         })
       )}
     </div>
   );
-}
+});
+

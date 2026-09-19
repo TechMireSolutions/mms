@@ -55,6 +55,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
       )}
     >
       <div
+        data-overlay-backdrop
         className={cn(
           "fixed inset-0",
           OVERLAY_BACKDROP,

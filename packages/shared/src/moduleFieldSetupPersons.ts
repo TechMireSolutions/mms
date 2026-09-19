@@ -212,7 +212,7 @@ export const INITIAL_TEACHERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
       type: "select",
       enabled: true,
       order: 1,
-      required: true,
+      required: false,
       description: "Teaching specialization (options from teacher specialization lookups).",
       descriptionKey: "teachers.fields.specializationDesc",
     },
@@ -241,12 +241,23 @@ export const INITIAL_TEACHERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
       descriptionKey: "teachers.fields.employeeIdDesc",
     },
     {
+      key: "designation",
+      label: "Designation / Role",
+      labelKey: "teachers.field.designation",
+      type: "select",
+      enabled: true,
+      order: 1,
+      required: false,
+      description: "Faculty role or academic designation.",
+      descriptionKey: "teachers.fields.designationDesc",
+    },
+    {
       key: "status",
       label: "Status",
       labelKey: "teachers.field.status",
       type: "select",
       enabled: true,
-      order: 1,
+      order: 2,
       required: true,
       description: "Employment status for this teacher (options from teacher status lookups).",
       descriptionKey: "teachers.fields.statusDesc",
@@ -257,7 +268,7 @@ export const INITIAL_TEACHERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
       labelKey: "teachers.field.joinDate",
       type: "date",
       enabled: true,
-      order: 2,
+      order: 3,
       required: true,
       description: "Date the teacher joined the madrasa.",
       descriptionKey: "teachers.fields.joinDateDesc",
@@ -268,7 +279,7 @@ export const INITIAL_TEACHERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
       labelKey: "teachers.field.notes",
       type: "textarea",
       enabled: true,
-      order: 3,
+      order: 4,
       required: false,
       description: "Internal notes for this teacher record.",
       descriptionKey: "teachers.fields.notesDesc",
@@ -296,7 +307,7 @@ export {
   TEACHER_COLUMN_FIELD_MAPPING,
   TEACHER_WORK_COLUMN_KEYS,
   type TeacherWorkColumnKey,
-} from './teacherDirectoryColumns.js';
+} from './facultyDirectoryColumns.js';
 
 // ─── Default Users Field Setup Constants ───────────────────────────────────────
 

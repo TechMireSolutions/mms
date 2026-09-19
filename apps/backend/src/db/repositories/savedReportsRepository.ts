@@ -37,27 +37,38 @@ const SAVED_REPORT_SELECT_FIELDS = {
   createdAt: savedReports.createdAt,
 };
 
-type SavedReportRow = {
-  id: string;
-  name: string;
-  category: string;
-  filters: Record<string, unknown>;
-  lastRunAt: Date;
-  createdBy: string;
-  createdByName: string;
-  createdAt: Date;
-};
+type SavedReportRow = Pick<
+  typeof savedReports.$inferSelect,
+  'id' | 'name' | 'category' | 'filters' | 'lastRunAt' | 'createdBy' | 'createdByName' | 'createdAt'
+>;
 
 function toGenericSavedReport(row: SavedReportRow): GenericSavedReport {
+  const lastRunIso = row.lastRunAt instanceof Date
+    ? row.lastRunAt.toISOString()
+    : row.lastRunAt
+      ? String(row.lastRunAt)
+      : row.createdAt instanceof Date
+        ? row.createdAt.toISOString()
+        : new Date().toISOString();
+
+  const createdAtIso = row.createdAt instanceof Date
+    ? row.createdAt.toISOString()
+    : row.createdAt
+      ? String(row.createdAt)
+      : new Date().toISOString();
+
   return {
     id: row.id,
     name: row.name,
     category: row.category as GenericSavedReport['category'],
-    filters: row.filters,
-    lastRun: row.lastRunAt.toISOString(),
+    filters:
+      row.filters && typeof row.filters === 'object' && !Array.isArray(row.filters)
+        ? (row.filters as Record<string, unknown>)
+        : {},
+    lastRun: lastRunIso,
     createdBy: row.createdBy,
-    createdByName: row.createdByName,
-    createdAt: row.createdAt.toISOString(),
+    createdByName: row.createdByName ?? '',
+    createdAt: createdAtIso,
   };
 }
 

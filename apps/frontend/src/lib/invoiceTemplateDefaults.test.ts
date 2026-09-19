@@ -28,6 +28,6 @@ describe('getDefaultTemplate', () => {
     expect(template.pageSize).toBe('A6');
     expect(template.elements).toEqual([{ id: 'el1' }]);
     expect(mockedBranding).toHaveBeenCalled();
-    expect(mockedElements).toHaveBeenCalledWith({ primary: '#123456' });
+    expect(mockedElements).toHaveBeenCalledWith({ primary: '#123456' }, undefined);
   });
 });

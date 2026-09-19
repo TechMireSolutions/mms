@@ -48,9 +48,24 @@ export const SearchBar = (forwardRef<HTMLInputElement, SearchBarProps>(function 
 
     useImperativeHandle(forwardedRef, () => inputRef.current as HTMLInputElement);
 
+    const [localValue, setLocalValue] = React.useState(value);
+
+    React.useEffect(() => {
+      setLocalValue(value);
+    }, [value]);
+
     const handleClear = (): void => {
+      setLocalValue("");
       onChange("");
       inputRef.current?.focus();
+    };
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>): void => {
+      const nextVal = e.target.value;
+      setLocalValue(nextVal);
+      React.startTransition(() => {
+        onChange(nextVal);
+      });
     };
 
     return (
@@ -74,11 +89,11 @@ export const SearchBar = (forwardRef<HTMLInputElement, SearchBarProps>(function 
           autoCapitalize="none"
           id={resolvedId}
           name={resolvedName}
-          value={value}
-          onChange={(event) => onChange(event.target.value)}
+          value={localValue}
+          onChange={handleChange}
           onKeyDown={(event) => {
-            if (event.key === "Escape" && value && !disabled) {
-              onChange("");
+            if (event.key === "Escape" && localValue && !disabled) {
+              handleClear();
               event.stopPropagation();
             }
           }}
@@ -95,7 +110,7 @@ export const SearchBar = (forwardRef<HTMLInputElement, SearchBarProps>(function 
             inputClassName,
           )}
         />
-        {value && !disabled && (
+        {localValue && !disabled && (
           <Button
             type="button"
             variant="ghost"

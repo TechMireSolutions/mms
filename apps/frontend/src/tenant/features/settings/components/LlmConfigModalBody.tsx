@@ -173,7 +173,7 @@ export function LlmConfigModalBody({
               'mt-3 rounded-xl border p-4 text-xs',
               modalTestResult.success
                 ? 'border-success/20 bg-success/5 text-success'
-                : 'border-destructive/20 bg-destructive/5 text-destructive-foreground',
+                : 'border-destructive/20 bg-destructive/5 text-destructive',
             )}
           >
             <p className="mb-1 font-semibold">{modalTestResult.success ? t('settings.llmTestSuccess') : t('settings.llmTestFailed')}</p>

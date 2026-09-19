@@ -1,5 +1,6 @@
 import { getDenominationPoints } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useHasanatDistributionsCollection, useHasanatDenomsCollection } from '@/tenant/hooks/collections/hasanat';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { useBrandedDashboardChartColors } from '@/components/dashboard-widgets/useBrandedDashboardChartColors';
@@ -12,9 +13,11 @@ export interface HasanatPoint {
 
 export function useHasanatChartData() {
   const { t } = useTranslation();
+  const { can } = usePermissions();
+  const canRead = can('hasanat.read');
   const { hasanat: HASANAT_THEMES } = useBrandedDashboardChartColors();
-  const distributions = useHasanatDistributionsCollection();
-  const denominations = useHasanatDenomsCollection();
+  const distributions = useHasanatDistributionsCollection({ enabled: canRead });
+  const denominations = useHasanatDenomsCollection({ enabled: canRead });
   const {
     hasanatChartType: chartType,
     hasanatChartColor: colorTheme,

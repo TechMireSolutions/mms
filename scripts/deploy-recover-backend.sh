@@ -7,6 +7,8 @@ cd "$ROOT_DIR"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 # shellcheck source=lib/curl-local-backend.sh
 source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
 
@@ -15,27 +17,8 @@ BACKEND_PORT="$MMS_PROD_BACKEND_PORT"
 DIST_ENTRY="apps/backend/dist/index.js"
 ECOSYSTEM="$ROOT_DIR/ecosystem.config.cjs"
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  echo "$value"
-}
-
-BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
-APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '')"
+BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
 assert_production_backend_port "$BACKEND_PORT" "Backend recovery PORT" || exit 1
 
 curl_health() {

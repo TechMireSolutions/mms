@@ -17,6 +17,12 @@ export {
   useFinanceMetrics,
 } from "@/tenant/features/finance/hooks/useFinanceMetrics";
 export { invalidateFinanceQueries } from '@/tenant/features/finance/hooks/invalidateFinanceQueries';
+export {
+  useComposedFinanceSettings,
+  useFinancePreferencesMutation,
+  useFinancePreferencesQuery,
+  FINANCE_PREFERENCES_QUERY_KEY,
+} from '@/tenant/features/finance/hooks/useFinanceSetupConfig';
 // Phase 7: contract-driven tsrClient hooks & query factories
 export {
   financeInvoicesListQueryOptions,

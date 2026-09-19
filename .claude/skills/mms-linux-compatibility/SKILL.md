@@ -1,11 +1,22 @@
 ---
 name: mms-linux-compatibility
-description: Checks and enforces Linux/Ubuntu VPS compatibility — case-sensitive imports, LF line endings, permissions, PM2. Use when preparing deploy, fixing VPS path/casing issues, or reviewing shell scripts for CRLF.
+description: Audits the repository for Linux/Ubuntu VPS portability — CRLF line endings, case-sensitive imports, execute bits, and path casing. Use when preparing a deploy or chasing an error that only reproduces on the server. Do NOT use for local workstation setup (use mms-dev-setup) or for Apache/domain routing and PM2 topology (use mms-ops-deploy).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # Linux VPS Compatibility Verification Workflow
 
-**Rules / deploy:** `mms-ops-infrastructure.md` · skill **`mms-ops-deploy`**. This skill is the pre-deploy casing/LF/permissions/PM2 checklist only.
+**Rule (norms SSOT):** `mms-ops-infrastructure.md` · `mms-completion-review.md`.
+
+## Anti-Patterns & Banned Operations
+
+- ❌ **NEVER commit CRLF line endings**: All `.sh`, `.json`, `.ts`, and config files must use LF line endings.
+- ❌ **NEVER use case-mismatched imports**: Linux paths are strictly case-sensitive. Imports like `'./user'` for `'./User.js'` break in CI/VPS.
+- ❌ **NEVER leave scripts non-executable**: Ensure all deployment and migration helper scripts have `chmod +x`.
+- ❌ **NEVER run processes as root**: Fastify process on Ubuntu VPS runs under `deploy-user` with scoped write permissions.
 
 Follow this workflow to verify that code and scripts are compatible with a Linux environment before deploying them to the Ubuntu VPS.
 
@@ -57,3 +68,13 @@ To manage application processes securely and ensure they survive reboots:
   pm2 logs mmsv2-backend --lines 50
   pm2 status
   ```
+
+## Script
+
+`scripts/check-linux-compat.sh` audits CRLF line endings and missing execute bits across `scripts/`, `.agent/`, `apps/*/src`, `.github/workflows`, and `e2e/`:
+
+```bash
+bash scripts/check-linux-compat.sh
+```
+
+Run it before any deploy; it exits non-zero on the first class of failure it finds.

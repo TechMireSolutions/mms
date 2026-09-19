@@ -32,6 +32,9 @@ export function TableCellLink({
     <Button
       type="button"
       variant="ghost"
+      // Entity names are operator-entered, so their base direction must come from
+      // the content itself rather than from the UI language.
+      dir="auto"
       className={cn(
         "h-auto px-0 py-0",
         tap && "min-h-11",

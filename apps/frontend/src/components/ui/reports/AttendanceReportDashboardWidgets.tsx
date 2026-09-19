@@ -1,7 +1,17 @@
-import { AttendanceChart } from "@/components/dashboard-widgets/charts/AttendanceChart";
-import TodayAttendanceWidget from "@/components/dashboard-widgets/TodayAttendanceWidget";
+import React, { Suspense } from "react";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/useTranslation";
+
+const AttendanceChart = React.lazy(() =>
+  import("@/components/dashboard-widgets/charts/AttendanceChart").then((m) => ({
+    default: m.AttendanceChart,
+  })),
+);
+
+const TodayAttendanceWidget = React.lazy(
+  () => import("@/components/dashboard-widgets/TodayAttendanceWidget"),
+);
 
 export function AttendanceReportDashboardWidgets(): React.JSX.Element {
   const { t } = useTranslation();
@@ -13,8 +23,12 @@ export function AttendanceReportDashboardWidgets(): React.JSX.Element {
         <SectionLabel as="p" weight="bold" tracking="wider" className="mt-0.5">{t("attendance.report.dashboardWidgetsSubtitle")}</SectionLabel>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <AttendanceChart />
-        <TodayAttendanceWidget />
+        <Suspense fallback={<Skeleton className="h-64 rounded-3xl w-full" />}>
+          <AttendanceChart />
+        </Suspense>
+        <Suspense fallback={<Skeleton className="h-64 rounded-3xl w-full" />}>
+          <TodayAttendanceWidget />
+        </Suspense>
       </div>
     </div>
   );

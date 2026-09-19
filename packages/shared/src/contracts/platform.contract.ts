@@ -1,7 +1,6 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import {
-  platformAdminPermissionsSchema,
   platformSetupRegisterBodySchema,
   platformPasswordForgotBodySchema,
   platformPasswordResetBodySchema,
@@ -17,6 +16,13 @@ import {
   platformAdminDisabledBodySchema,
   platformDeleteAdminBodySchema,
   platformActivityLogsQuerySchema,
+  platformUserDtoSchema as platformUserSchema,
+  platformUserProfileDtoSchema as platformUserProfileSchema,
+  platformSetupStatusDtoSchema as platformSetupStatusSchema,
+  platformSettingsDtoSchema as platformSettingsSchema,
+  platformWorkspaceRowDtoSchema as platformWorkspaceRowSchema,
+  platformActivityLogDtoSchema as platformActivityLogSchema,
+  platformErrorDtoSchema as platformErrorSchema,
 } from '../schemas/platform.dto.js';
 import {
   platformSettingsUpdateSchema,
@@ -25,71 +31,11 @@ import {
 
 const c = initContract();
 
-// ---------------------------------------------------------------------------
-// Response DTOs (SSOT mirrors of the backend platform route payloads).
-// ---------------------------------------------------------------------------
-
-const platformUserSchema = z.object({
-  id: z.string(),
-  email: z.string(),
-  name: z.string(),
-  role: z.enum(['super_user', 'admin']),
-  permissions: platformAdminPermissionsSchema,
-});
-
-const platformUserProfileSchema = platformUserSchema.extend({
-  createdAt: z.string().optional(),
-  emailVerifiedAt: z.string().optional(),
-  disabledAt: z.string().nullable().optional(),
-});
-
-const platformSetupStatusSchema = z.object({
-  needsSetup: z.boolean(),
-  smtpConfigured: z.boolean(),
-});
-
-const platformSettingsSchema = z.object({
-  id: z.string(),
-  syncTlsOnCreate: z.boolean(),
-  tlsExtraSans: z.string().optional(),
-  certbotEmail: z.string(),
-  updatedAt: z.string().optional(),
-}).passthrough();
-
-const platformWorkspaceRowSchema = z.object({
-  subdomain: z.string(),
-  madrasaName: z.string().optional(),
-  name: z.string().optional(),
-  tagline: z.string().optional(),
-  logoUrl: z.string().optional(),
-  enabled: z.boolean(),
-  createdAt: z.string(),
-  requireEmailVerification: z.boolean().optional(),
-}).passthrough();
-
-const platformActivityLogSchema = z.object({
-  id: z.string(),
-  userId: z.string().nullable(),
-  userEmail: z.string(),
-  action: z.string(),
-  targetResource: z.string().nullable(),
-  targetId: z.string().nullable(),
-  ipAddress: z.string().nullable(),
-  metadataMessage: z.string().nullable(),
-  createdAt: z.string(),
-});
-
 const migrateAndRestartAcceptedSchema = z.object({
   success: z.literal(true),
   accepted: z.literal(true),
   message: z.string(),
   delayMs: z.number(),
-});
-
-/** Generic platform error body: `{ type, message }`. */
-const platformErrorSchema = z.object({
-  type: z.string(),
-  message: z.string(),
 });
 
 // Workspaces

@@ -24,7 +24,7 @@ describe('BullMQ Queue Architecture (Phase 5)', () => {
       priority: 2,
     });
     expect(QUEUE_SETTINGS[QUEUE_MESSAGING_BROADCAST]).toEqual({
-      concurrency: 10,
+      concurrency: 6,
       priority: 3,
     });
   });
@@ -97,5 +97,28 @@ describe('BullMQ Queue Architecture (Phase 5)', () => {
 
     await closeAllQueues();
     logSpy.mockRestore();
+  });
+
+  it('returns false when queue dispatch fails or times out', async () => {
+    const queue = getQueue(QUEUE_BULK_EXPORT);
+    vi.spyOn(queue, 'add').mockRejectedValueOnce(new Error('Redis connection refused'));
+    const warnSpy = vi.spyOn(logger, 'warn').mockImplementation((() => {}) as any);
+
+    const { dispatchJobToQueue } = await import('../worker/queues/index.js');
+    const result = await dispatchJobToQueue('alpha', 'user-1', {
+      id: 'job-err-1',
+      moduleId: 'contacts',
+      kind: 'export',
+      label: 'Export Contacts',
+      status: 'pending',
+      createdAt: new Date().toISOString(),
+    }, {});
+
+    expect(result).toBe(false);
+    expect(warnSpy).toHaveBeenCalledWith(
+      expect.objectContaining({ jobId: 'job-err-1', queue: QUEUE_BULK_EXPORT }),
+      'Failed to enqueue job',
+    );
+    warnSpy.mockRestore();
   });
 });

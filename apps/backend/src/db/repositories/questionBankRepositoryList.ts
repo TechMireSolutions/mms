@@ -26,7 +26,7 @@ import {
   questionCitations,
   tests,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { questionRowToRecord } from './questionBankRepository.js';
 
@@ -73,7 +73,7 @@ const QUESTION_SORT_FIELDS = new Set([
   'createdAt',
 ]);
 
-function buildQuestionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+function buildQuestionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
   let column: SQL;
   if (field && QUESTION_SORT_FIELDS.has(field)) {
@@ -111,7 +111,7 @@ export async function listQuestionsPage(
 ): Promise<QuestionBankListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, questions, {
       conditions: buildQuestionsListConditions(subdomain, query),
       orderBy: buildQuestionsOrderBy(query.sortField, query.sortDir),
@@ -253,7 +253,7 @@ export async function aggregateQuestionBankCommandMetrics(
   tenant: string,
 ): Promise<QuestionBankCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const activeQuestions = and(
       eq(questions.workspaceSubdomain, subdomain),
       isNull(questions.deletedAt),

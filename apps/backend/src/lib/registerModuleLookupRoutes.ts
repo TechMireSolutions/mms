@@ -5,13 +5,13 @@ import { roleHasPermission } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
 
-export type RegisterModuleLookupRoutesOptions = {
+export type RegisterModuleLookupRoutesOptions<TKind extends string = string, TItems = any> = {
   canRead: (user: User) => boolean;
   setupWritePermission: Permission;
   kindParamsSchema: ZodTypeAny;
   putBodySchema: ZodTypeAny;
   loadMap: () => Promise<unknown>;
-  replaceKind: (kind: string, items: unknown) => Promise<unknown>;
+  replaceKind: (kind: TKind, items: TItems) => Promise<unknown>;
   audit: (
     user: User,
     action: string,
@@ -27,8 +27,8 @@ export type RegisterModuleLookupRoutesOptions = {
    */
   handlePutKind?: (input: {
     user: User;
-    kind: string;
-    items: unknown;
+    kind: TKind;
+    items: TItems;
     reply: import('fastify').FastifyReply;
   }) => Promise<import('fastify').FastifyReply | null | undefined>;
 };
@@ -36,9 +36,9 @@ export type RegisterModuleLookupRoutesOptions = {
 /**
  * Register GET `/lookups` + PUT `/lookups/:kind` for module Setup.
  */
-export function registerModuleLookupRoutes(
+export function registerModuleLookupRoutes<TKind extends string = string, TItems = any>(
   fastify: FastifyInstance,
-  options: RegisterModuleLookupRoutesOptions,
+  options: RegisterModuleLookupRoutesOptions<TKind, TItems>,
 ): void {
   fastify.get('/lookups', async (request, reply) => {
     const user = request.user as User;
@@ -63,8 +63,8 @@ export function registerModuleLookupRoutes(
     const body = parseRequest(options.putBodySchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
 
-    const kind = String((params.data as { kind: string }).kind);
-    const items = (body.data as { items: unknown }).items;
+    const kind = String((params.data as { kind: string }).kind) as TKind;
+    const items = (body.data as { items: unknown }).items as TItems;
 
     if (options.handlePutKind) {
       const early = await options.handlePutKind({ user, kind, items, reply });

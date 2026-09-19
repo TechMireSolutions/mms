@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Local dev setup, environment variables, Docker, backend ports, health endpoints, Linux compatibility, and CI expectations.
 ---
 
 # MMS Operations & Infrastructure
@@ -9,18 +10,20 @@ trigger: model_decision
 Canonical operational and deployment standards for the Madrasa Management System (MMS) monorepo.
 
 ## 1. Prerequisites & Environment Setup
-- **Node.js**: Match root `package.json` `engines.node` exactly in CI/Docker (Node >= 24) — do not restate pin numbers here; bumps → **`mms-dependencies.md`** / skill `mms-dependency-upgrade`.
+- **Node.js**: Match root `package.json` `engines.node` exactly in CI/Docker (Node >= 24.14.0) — bumps → **`mms-dependencies.md`** / skill `mms-dependency-upgrade`.
   - **Native Configuration**: Use `--env-file=.env` flag or `process.loadEnvFile()` natively. The `dotenv` package is banned.
-  - **TypeScript Script Execution**: Use `--experimental-strip-types` for development scripts and lightweight CLI tools to execute `.ts` files directly without an upfront compile step.
-- **pnpm**: Match root `packageManager` via Corepack (`corepack enable`). Docker/CI must use that exact pnpm version.
+  - **TypeScript Script Execution**: Use `--experimental-strip-types` for development scripts and lightweight CLI tools to execute `.ts` files directly without an upfront compile step (standard in TypeScript 7.0 / Node 24).
+- **pnpm**: Match root `packageManager` via Corepack (`pnpm@11.15.1`, `corepack enable`). Docker/CI must use that exact pnpm version.
+- **Turborepo**: Turbo v2 (`^2.10.9`) orchestrates workspace caching and concurrent pipelines.
+- **Database**: PostgreSQL 16 for primary data layer and CI integration services.
 
 ### Workspace Commands (from repo root)
 ```bash
 pnpm install          # Install all dependencies across workspaces
 pnpm dev              # Start frontend + backend concurrently via Turbo
 pnpm build            # Build shared package and applications
-pnpm typecheck        # Run typechecking across the entire monorepo
-pnpm test             # Run Vitest / node:test suites for all workspaces
+pnpm typecheck        # Run typechecking across the entire monorepo (TypeScript 7.0)
+pnpm test             # Run Vitest 4 suites for all workspaces (root turbo task)
 ```
 
 ### Local Dev Helper Scripts
@@ -47,6 +50,12 @@ pnpm test             # Run Vitest / node:test suites for all workspaces
 - Local tenant subdomains (e.g. `dar-ul-quran.localhost:5173`) are proxied through Vite's dev server configuration.
 - The dev server configuration maps requests to the backend (`127.0.0.1:3000`) while preserving host headers via proxy rules (forwarding through the `X-Forwarded-Host` header). `AsyncLocalStorage` (backed by Node 24 `AsyncContextFrame`) parses this header to resolve tenant contexts in dev mode.
 
+### Edge Reverse Proxy & Transport Architecture
+- **Apache Origin Termination:** Apache reverse proxy terminates TLS with HTTP/2 (`Protocols h2 http/1.1`), TLS 1.3 ciphers, ALPN negotiation, `KeepAlive On`, `KeepAliveTimeout 30`, `MaxKeepAliveRequests 1000`, and `ProxyTimeout 60`.
+- **Edge Compression:** Terminates Brotli and gzip compression at Apache for compressible MIME types (`text/*`, `application/json`, `application/javascript`, `image/svg+xml`), injecting `X-Edge-Compression "brotli,gzip"` and `X-No-Compression "1"` upstream to prevent double compression.
+- **WebSocket Gateway:** Routes `/ws` and `/api/ws` with `mod_proxy_wstunnel` (`timeout=60`, `keepalive=On`, `flushpackets=on`, `SetEnv proxy-sendchunked 1`) matching origin 30s ping / 10s pong heartbeat windows.
+- **Fastify Socket Tuning:** Node.js HTTP server synchronizes socket timeouts (`keepAliveTimeout` 30s, `headersTimeout` 35s, `requestTimeout` 120s) and enables TCP Keep-Alive (`socket.setKeepAlive(true, 10000)`).
+
 ### Environment Schema
 | Variable | App | Purpose / Requirements |
 |----------|-----|------------------------|
@@ -63,16 +72,7 @@ pnpm test             # Run Vitest / node:test suites for all workspaces
 
 **Client bundle hygiene:** Only `VITE_*` (and Vite-injected `import.meta.env`) may ship in the frontend bundle. **Ban** leaking `JWT_SECRET`, `DATABASE_URL`, or other server secrets into FE code / Vite `define` — bumps/env layout → `mms-dependencies.md` when touching tooling.
 
-### Graceful Process Lifecycle
-Catch termination signals and drain connections cleanly:
-```ts
-const shutdown = async () => {
-  server.close(() => process.exit(0));
-  setTimeout(() => process.exit(1), 10000).unref();
-};
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
-```
+- **Graceful Shutdown:** Catch `SIGTERM`/`SIGINT`, flip `/ready` to 503, wait `SHUTDOWN_DRAIN_DELAY_MS` to drain ingress traffic, call `server.close()`, pause BullMQ workers, close DB pools, and unref a fallback timeout (drain delay + 10s) before forced exit — details §4 Health Checks.
 
 ### Data wipe / purge (do not invent new wipe APIs)
 - **Tenant workspace delete**: `deleteWorkspace` → `purgeTenantDataBySubdomain` then remove workspace row (platform workspaces API).
@@ -108,7 +108,7 @@ The GitHub Actions workflow (`.github/workflows/ci.yml`) runs a parallelized Dir
 `deploy.yml` triggers on CI success for `main` (`workflow_run`) or manual dispatch: downloads the CI artifact (or builds on dispatch), SCPs to the VPS, runs `scripts/deploy-on-server.sh` pinned to `DEPLOY_SHA` (= CI `head_sha`). Schema DDL runs on backend startup via `initDb` / Drizzle migrate — no separate deploy migrate step. Rollback: `bash scripts/deploy-rollback.sh` (uses `.deploy-releases/`).
 
 CI Node/pnpm images must match root `engines` / `packageManager` exactly — upgrade workflow → **`mms-dependencies.md`**. Never commit `.env` or secrets in artifacts.
-Run responsive Playwright specs as **separate** CI steps (no bare `--` before the path) — `mms-testing-observability.md` / `mms-ui-ux-design.md` §7.
+Run responsive Playwright specs as **separate** CI steps (no bare `--` before the path) — `mms-testing-observability.md` / `mms-ui-ux-design.md` §4.
 Retain Playwright **trace/video on failure** for responsive (and a11y smoke) specs as CI artifacts — do not discard failure diagnostics.
 Supply-chain: Dependabot/Renovate + dependency-review → **`mms-dependencies.md`**.
 
@@ -116,17 +116,37 @@ Supply-chain: Dependabot/Renovate + dependency-review → **`mms-dependencies.md
 Treat `turbo.json` inputs/outputs as sensitive — change only with intentional cache invalidation.
 
 ### Health Checks (SSOT)
+- **Graceful Shutdown (two-phase)**: On SIGTERM/SIGINT the process flips `/ready` to 503 and WAITS `SHUTDOWN_DRAIN_DELAY_MS` (default 5s) BEFORE closing the socket, so whatever routes traffic can take the instance out of rotation while in-flight requests still complete (`lib/lifecycle.ts`). `/health` (liveness) keeps returning 200 while draining — a liveness failure would trigger a restart. Size the drain against the ROUTER's health-check interval, not docker-compose's healthcheck (that only reports container state). Behind Apache + a single pm2 instance nothing re-checks, so `SHUTDOWN_DRAIN_DELAY_MS=0` is appropriate there. The force-exit ceiling is derived from the drain delay plus 10s — keep it that way, or adding a drain wait makes shutdown MORE likely to be force-killed, not less.
+- **Reverse-Proxy Keep-Alive Alignment & Connection Pooling (502 Bad Gateway Prevention)**: Fastify's `keepAliveTimeout` (72,000ms / 72s or coordinated with Apache `KeepAliveTimeout`) and `headersTimeout` (strictly exceeding `keepAliveTimeout`) prevent race conditions where Node closes an idle connection right as the proxy dispatches a request. Upstream proxy directives (`ProxyPass`, `<Proxy>`) must enforce `keepalive=On`, persistent connection pooling, connection reutilization, and eliminate buffering latency on real-time SSE/WebSocket streams.
+- **Apache Edge Compression & Dedicated WebSocket Reverse Proxy Architecture**:
+  - Edge compression: Apache coordinates `mod_brotli` (levels 4-5) and `mod_deflate` (level 6) on uncompressed text, HTML, and JSON responses, stamping `X-Edge-Compression` and forwarding `X-No-Compression: 1` upstream. Upstream Fastify detects these headers and suppresses secondary `@fastify/compress` encoding. Pre-compressed static bundle files (`.br`, `.gz`) and media formats bypass runtime edge filters.
+  - Dedicated `/ws` and `/api/ws` WebSocket proxy: Apache directives explicitly map both `/ws` and `/api/ws` via `mod_proxy_wstunnel` to `ws://127.0.0.1:5002` with `keepalive=On`, `retry=0`, `timeout=60`, `flushpackets=on`, and streaming buffering disabled (`SetEnv no-brotli 1`, `SetEnv no-gzip 1`, `SetEnv proxy-nokeepalive 0`) to eliminate handshake drops and connection truncations during active tenant push events.
+- **HTTP/2, ALPN & TLS Session Resumption**: Reverse proxies must advertise HTTP/2 ALPN negotiation (`Protocols h2 http/1.1`) and enable TLS session resumption tickets (`SSLSessionTickets on`) to achieve zero-RTT TLS handshakes. Upstream proxying forwards to Fastify over persistent keep-alive connections.
+- **TCP Fast Open (TFO)**: Ubuntu host sysctl must enable TCP Fast Open (`net.ipv4.tcp_fastopen = 3`) to allow data transmission during initial SYN handshakes for repeat clients.
+- **Operational Metrics**: `GET /metrics` (Prometheus text format) is off unless `METRICS_ENABLED=true`, and requires `Authorization: Bearer $METRICS_TOKEN` when that is set — the payload reveals pool sizes and the full route inventory. HTTP metrics label on the ROUTE PATTERN and status CLASS only; labelling the raw URL would mint a time series per id (`lib/metrics.ts`).
 - **Liveness**: `GET /health` → 200 (server up; unauthenticated; used by `AuthContext.checkAppState()`).
 - **Readiness**: `GET /ready` → 200 on DB ping, `503` if PostgreSQL is down.
 - PM2 deployments must curl `/ready` post-restart.
 
 ### Deploy Guidelines
 - Merge configs using `scripts/merge-backend-env.sh` (always sets `PORT=5002`).
-- Configure Apache upstreams via `scripts/fix-apache-upstream.sh` to forward to `:5002` (skipped when Apache fingerprint unchanged unless `MMS_FORCE_APACHE=1`).
+- Configure Apache upstreams via `scripts/fix-apache-upstream.sh` to forward to `:5002` with connection pooling and keepalive enabled (skipped when Apache fingerprint unchanged unless `MMS_FORCE_APACHE=1`).
 - Skip prod `pnpm install` when `pnpm-lock.yaml` hash matches `.deploy-lock-hash` unless `MMS_FORCE_PNPM_INSTALL=1`.
 - Run health checks locally on the production host using `curl http://127.0.0.1:5002/health`.
 
 ---
+
+## 6. Environment Variables & Secret Lifecycle
+
+Configuration drift between local, CI, and the VPS is a leading cause of "works locally" incidents. Every variable has one owner (the env file for its process) and one documented shape.
+
+1. **Document the shape, never the secret:** adding an environment variable requires updating `apps/backend/.env.example` (or the frontend equivalent) in the same change, with a comment stating purpose, required/optional, and a safe placeholder. Real `.env` files are never committed (`mms-agent-universal.md`; gitleaks scans full history).
+2. **Only `VITE_*` reaches the browser.** Anything bundled is public: never put `JWT_SECRET`, `DATABASE_URL`, `REDIS_URL`, provider keys, or `MMS_*` server flags in a `VITE_*` name — the frontend bundle is readable by every tenant user.
+3. **Fail closed on missing security-critical config:** startup must refuse to boot (or the feature must stay disabled) when a required secret is absent. A defaulted `JWT_SECRET`, an empty `METRICS_TOKEN`, or a wildcard CORS fallback is a vulnerability, not a convenience.
+4. **Environment identity is exact:** `NODE_ENV` must be exactly `production` in production — do not test for its absence, and never enable developer affordances (verbose credential logging, dev-only providers, open CORS) behind anything other than an explicit opt-in flag with a name that says so.
+5. **Rotation is scheduled work, not incident work:** rotating a secret means updating the VPS env (`scripts/merge-backend-env.sh` deliberately, then reload), confirming the app reconnects, and revoking the old value at the provider. Record the rotation date next to the variable in the env example.
+6. **Per-environment values, one code path:** staging/production differ by values, never by branches. If behaviour must differ, gate it on an explicit flag (`METRICS_ENABLED`, `MMS_EXPOSE_OPENAPI`) that defaults to the safe state.
+7. **Never echo secrets:** not into logs, error payloads, health output, CI logs, or an agent transcript. The `/metrics` and health endpoints are token-gated for this reason.
 
 ## 5. Audit Operations, Statement Auditing & Storage Tiering
 - **Database Statement Auditing (`pgAudit`)**: Install `pgaudit` extension on the PostgreSQL host (`postgresql-16-pgaudit`), configure `shared_preload_libraries = 'pgaudit'` in `postgresql.conf`, and enable statement auditing (`pgaudit.log = 'write, ddl, role'`). Essential for capturing out-of-band direct database console access, DBA queries, and schema DDL that bypass the Fastify application layer.

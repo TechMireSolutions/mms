@@ -35,7 +35,7 @@ export function WidgetBuilderIconPicker({
   });
 
   return (
-    <div className="space-y-2 pt-3 border-t border-border/45 relative z-10">
+    <div className="space-y-2 pt-3 border-t border-border/45 relative z-elevated">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
         <SectionLabel as="label" weight="bold" tracking="wider" className="block">
           {t("reports.widgets.builder.iconSelector")}

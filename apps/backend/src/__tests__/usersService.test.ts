@@ -51,6 +51,21 @@ vi.mock('../db/tenant-context.js', () => ({
   ),
 }));
 
+/**
+ * Installs a tenant-aware stand-in for `findTenantUserRowById`.
+ *
+ * The real repository scopes the lookup to the caller's workspace in SQL (see
+ * tenantUserRepositoryHydrate.ts), so a row is only visible inside its own
+ * workspace. Tests must mirror that, otherwise a cross-tenant case would
+ * spuriously "pass" against a repository that returns anything.
+ */
+async function mockUserRowForTenant(row: Record<string, unknown>): Promise<void> {
+  const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepository.js');
+  vi.mocked(findTenantUserRowById).mockImplementation(async (tenant: string, id: string) =>
+    String(row.id) === id && row.workspaceSubdomain === tenant ? (row as never) : null,
+  );
+}
+
 describe('usersService activity log upsert', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -78,12 +93,12 @@ describe('usersService activity log upsert', () => {
 
   it('verifies user email and broadcasts collection update', async () => {
     const { verifyUserEmailById } = await import('../services/usersService.js');
-    const { findTenantUserRowById, verifyTenantUserEmailRow } = await import(
+    const { verifyTenantUserEmailRow } = await import(
       '../db/repositories/tenantUserRepository.js'
     );
     const { broadcastCollection } = await import('../services/websocketService.js');
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-123',
       workspaceSubdomain: 'demo',
       passwordHash: 'hash',
@@ -93,17 +108,16 @@ describe('usersService activity log upsert', () => {
       deletedAt: null,
     });
 
-    const result = await verifyUserEmailById('u-123');
+    const result = await runWithTenant('demo', () => verifyUserEmailById('u-123'));
 
     expect(result).toBe(true);
-    expect(verifyTenantUserEmailRow).toHaveBeenCalledWith('u-123');
+    expect(verifyTenantUserEmailRow).toHaveBeenCalledWith('demo', 'u-123');
     expect(broadcastCollection).toHaveBeenCalledWith('users');
   });
 
   it('resets a user password, forces a change, and revokes every session', async () => {
     const { resetUserPasswordById } = await import('../services/usersService.js');
     const {
-      findTenantUserRowById,
       resetTenantUserPasswordRow,
     } = await import('../db/repositories/tenantUserRepository.js');
     const { assertPasswordMeetsPolicy } = await import('../services/globalSettingsService.js');
@@ -111,7 +125,7 @@ describe('usersService activity log upsert', () => {
     const { revokeAllUserSessions } = await import('../services/session.service.js');
     const { broadcastCollection } = await import('../services/websocketService.js');
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-123',
       workspaceSubdomain: 'demo',
       passwordHash: 'old-hash',
@@ -128,7 +142,7 @@ describe('usersService activity log upsert', () => {
 
     expect(result).toBe(true);
     expect(assertPasswordMeetsPolicy).toHaveBeenCalledWith('TemporaryPass1!');
-    const passwordHash = vi.mocked(resetTenantUserPasswordRow).mock.calls[0]?.[1];
+    const passwordHash = vi.mocked(resetTenantUserPasswordRow).mock.calls[0]?.[2];
     expect(typeof passwordHash).toBe('string');
     expect(passwordHash).not.toBe('old-hash');
     expect(passwordHash!.length).toBeGreaterThan(20);
@@ -140,13 +154,13 @@ describe('usersService activity log upsert', () => {
 
   it('does not report a completed password reset as failed when activity logging fails', async () => {
     const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { findTenantUserRowById, resetTenantUserPasswordRow } = await import(
+    const { resetTenantUserPasswordRow } = await import(
       '../db/repositories/tenantUserRepository.js'
     );
     const auxiliaryError = new Error('activity log unavailable');
     const onAuxiliaryError = vi.fn();
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-123',
       workspaceSubdomain: 'demo',
       passwordHash: 'old-hash',
@@ -175,12 +189,12 @@ describe('usersService activity log upsert', () => {
 
   it('labels refresh-token revocation failures separately from credential updates', async () => {
     const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { findTenantUserRowById, resetTenantUserPasswordRow } = await import(
+    const { resetTenantUserPasswordRow } = await import(
       '../db/repositories/tenantUserRepository.js'
     );
     const { deleteRefreshTokensForUser } = await import('../services/auth/authArtifactService.js');
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-123',
       workspaceSubdomain: 'demo',
       passwordHash: 'old-hash',
@@ -206,11 +220,11 @@ describe('usersService activity log upsert', () => {
 
   it('labels credential update failures for server diagnostics', async () => {
     const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { findTenantUserRowById, resetTenantUserPasswordRow } = await import(
+    const { resetTenantUserPasswordRow } = await import(
       '../db/repositories/tenantUserRepository.js'
     );
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-123',
       workspaceSubdomain: 'demo',
       passwordHash: 'old-hash',
@@ -235,12 +249,12 @@ describe('usersService activity log upsert', () => {
 
   it('labels Redis session revocation failures for server diagnostics', async () => {
     const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { findTenantUserRowById, resetTenantUserPasswordRow } = await import(
+    const { resetTenantUserPasswordRow } = await import(
       '../db/repositories/tenantUserRepository.js'
     );
     const { revokeAllUserSessions } = await import('../services/session.service.js');
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-123',
       workspaceSubdomain: 'demo',
       passwordHash: 'old-hash',
@@ -266,11 +280,11 @@ describe('usersService activity log upsert', () => {
 
   it('does not reset a user belonging to another tenant', async () => {
     const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { findTenantUserRowById, resetTenantUserPasswordRow } = await import(
+    const { resetTenantUserPasswordRow } = await import(
       '../db/repositories/tenantUserRepository.js'
     );
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-other',
       workspaceSubdomain: 'other',
       passwordHash: 'old-hash',
@@ -290,9 +304,8 @@ describe('usersService activity log upsert', () => {
 
   it('rejects password reset of a super_admin user by a regular admin', async () => {
     const { resetUserPasswordById } = await import('../services/usersService.js');
-    const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepository.js');
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-super',
       workspaceSubdomain: 'demo',
       passwordHash: 'old-hash',
@@ -314,11 +327,10 @@ describe('usersService activity log upsert', () => {
   it('allows password reset of a super_admin user by another super_admin', async () => {
     const { resetUserPasswordById } = await import('../services/usersService.js');
     const {
-      findTenantUserRowById,
       resetTenantUserPasswordRow,
     } = await import('../db/repositories/tenantUserRepository.js');
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-super',
       workspaceSubdomain: 'demo',
       passwordHash: 'old-hash',
@@ -337,9 +349,8 @@ describe('usersService activity log upsert', () => {
 
   it('rejects deleting a super_admin user by a regular admin', async () => {
     const { deleteUserById } = await import('../services/usersService.js');
-    const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepository.js');
 
-    vi.mocked(findTenantUserRowById).mockResolvedValue({
+    await mockUserRowForTenant({
       id: 'u-super',
       workspaceSubdomain: 'demo',
       passwordHash: 'old-hash',
@@ -349,9 +360,9 @@ describe('usersService activity log upsert', () => {
       deletedAt: null,
     });
 
-    await expect(deleteUserById('u-super', 'u-admin', 'admin')).rejects.toThrow(
-      'Cannot delete a Super Admin user account',
-    );
+    await expect(
+      runWithTenant('demo', () => deleteUserById('u-super', 'u-admin', 'admin')),
+    ).rejects.toThrow('Cannot delete a Super Admin user account');
   });
 
   it('rejects assigning super_admin role by a regular admin in upsertWorkspaceUsers', async () => {

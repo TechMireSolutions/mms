@@ -96,7 +96,9 @@ const studentsDuplicateCheckBodyBaseSchema = z.object({
   grNumber: z.string().max(64).optional(),
 }).strict();
 
-export const studentsDuplicateCheckBodySchema = z.preprocess((raw) => {
+export type StudentsDuplicateCheckBody = z.infer<typeof studentsDuplicateCheckBodyBaseSchema>;
+
+export const studentsDuplicateCheckBodySchema: z.ZodType<StudentsDuplicateCheckBody> = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   return deepSanitizeStrings(raw);
 }, studentsDuplicateCheckBodyBaseSchema);

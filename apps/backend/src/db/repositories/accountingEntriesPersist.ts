@@ -13,10 +13,10 @@ import {
   accountingOpeningBalances,
   accountingPostingRules,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, type TenantTransaction } from '../tenant-context.js';
 
 async function syncEntryChildren(
-  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
+  tx: TenantTransaction,
   subdomain: string,
   entry: JournalEntry,
 ): Promise<void> {
@@ -97,7 +97,15 @@ export async function saveEntry(tenant: string, record: JournalEntry): Promise<v
   });
 }
 
-/** Maps a JournalEntry to the accountingEntries insert/upsert value shape. */
+/**
+ * Maps a JournalEntry to the accountingEntries insert/upsert value shape.
+ *
+ * The soft-delete columns ARE part of the insert values: a fresh row may
+ * legitimately arrive already trashed (backup restore via
+ * {@link replaceEntriesForWorkspace}, and the create path never sets them), and
+ * the trash/restore paths own the transitions. They are removed from the UPDATE
+ * sets instead — see {@link entryUpdateSetValues}.
+ */
 function entryInsertValues(subdomain: string, record: JournalEntry): typeof accountingEntries.$inferInsert {
   return {
     id: record.id,
@@ -121,8 +129,25 @@ function entryInsertValues(subdomain: string, record: JournalEntry): typeof acco
   };
 }
 
+/**
+ * SET values for the single-record upsert.
+ *
+ * Trash/restore own the soft-delete columns, so they are dropped here. A whole
+ * journal list save re-sends `deletedAt: null` for every active row it holds, and
+ * writing that through meant a save in one session silently un-deleted a row
+ * another session had trashed (or re-deleted a restored one). Soft-delete state
+ * now changes only through {@link bulkSoftDeleteEntries} /
+ * {@link bulkRestoreEntries}.
+ */
 function entryUpdateSetValues(record: JournalEntry) {
-  const { id: _id, workspaceSubdomain: _subdomain, ...setFields } = entryInsertValues('', record);
+  const {
+    id: _id,
+    workspaceSubdomain: _subdomain,
+    deletedAt: _deletedAt,
+    deletedBy: _deletedBy,
+    deletionReason: _deletionReason,
+    ...setFields
+  } = entryInsertValues('', record);
   return setFields;
 }
 
@@ -141,6 +166,9 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
   await withTenant(subdomain, async (tx) => {
     // Single batched upsert of all entries (keeps rows not in the batch, updates
     // matching rows — semantically identical to the previous per-record upsert).
+    // The soft-delete columns are deliberately absent from this SET list: a bulk
+    // list save re-sends `deletedAt: null` for every active row it holds, which
+    // used to un-delete rows another session had trashed. Trash/restore own them.
     await tx
       .insert(accountingEntries)
       .values(uniqueRecords.map((record) => entryInsertValues(subdomain, record)))
@@ -159,9 +187,6 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
           transactionType: sql.raw('excluded.transaction_type'),
           reversedRef: sql.raw('excluded.reversed_ref'),
           simpleMode: sql.raw('excluded.simple_mode'),
-          deletedAt: sql.raw('excluded.deleted_at'),
-          deletedBy: sql.raw('excluded.deleted_by'),
-          deletionReason: sql.raw('excluded.deletion_reason'),
           updatedAt: sql.raw('excluded.updated_at'),
         },
       });

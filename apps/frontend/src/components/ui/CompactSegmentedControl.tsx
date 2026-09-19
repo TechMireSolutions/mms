@@ -81,7 +81,7 @@ export function CompactSegmentedControl<T extends string>({
               "min-h-11 h-auto rounded-lg text-xs font-bold uppercase tracking-wider shadow-none transition-all",
               tone === "outline" ? "border px-2" : "px-3",
               fill && "flex-1",
-              animated && "relative z-10",
+              animated && "relative z-elevated",
               isSelected
                 ? animated
                   ? "text-foreground"
@@ -92,7 +92,7 @@ export function CompactSegmentedControl<T extends string>({
             {isSelected && animated && (
               <motion.div
                 layoutId={`${highlightId}-highlight`}
-                className="absolute inset-0 bg-card rounded-lg shadow-xs border border-border/40 -z-10"
+                className="absolute inset-0 bg-card rounded-lg shadow-xs border border-border/40 -z-elevated"
                 transition={{ type: "spring", stiffness: 380, damping: 30 }}
               />
             )}

@@ -34,6 +34,8 @@ export { invalidateStudentsQueries } from '@/tenant/features/students/hooks/inva
 // Phase 7: contract-driven tsrClient hooks & query factories
 export {
   studentsListQueryOptions,
+  studentsInfiniteQueryOptions,
+  useStudentsInfiniteList,
   useStudentsContractList,
   useStudentsContractCreate,
   useStudentsContractUpdate,

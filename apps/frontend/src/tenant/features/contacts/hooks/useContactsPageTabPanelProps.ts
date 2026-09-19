@@ -32,6 +32,7 @@ export function useContactsPageTabPanelProps({
   commonDirectoryProps,
   tableProps,
   handleBulkExport,
+  isExporting,
 }: {
   effectiveTab: string;
   directory: Directory;
@@ -52,6 +53,7 @@ export function useContactsPageTabPanelProps({
   commonDirectoryProps: ComponentProps<typeof ContactsListCards>;
   tableProps: ComponentProps<typeof ContactsListDesktopTable>;
   handleBulkExport: () => void | Promise<void>;
+  isExporting: boolean;
 }) {
   const {
     search,
@@ -129,6 +131,7 @@ export function useContactsPageTabPanelProps({
         onSms: messaging.handleSms,
         onEmail: messaging.handleEmail,
         onBulkExport: handleBulkExport,
+        isExporting,
         onRequestBulkDelete: actions.requestBulkDelete,
         onRequestBulkRestore: actions.requestBulkRestore,
         onBulkTag: actions.handleBulkTag,
@@ -181,6 +184,7 @@ export function useContactsPageTabPanelProps({
       messaging.handleSms,
       messaging.handleEmail,
       handleBulkExport,
+      isExporting,
       actions.requestBulkDelete,
       actions.requestBulkRestore,
       actions.handleBulkTag,

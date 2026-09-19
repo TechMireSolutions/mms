@@ -3,12 +3,18 @@ import { FINANCE_MODULE_MANIFEST } from "@mms/shared";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
+import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
+import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 
 const FinanceSettings = lazy(
   () => import("@/tenant/features/finance/components/FinanceSettings"),
+);
+
+const FinanceTemplateEditor = lazy(
+  () => import("@/tenant/features/finance/components/FinanceTemplateEditor"),
 );
 
 export interface FinanceSetupTierProps {
@@ -22,15 +28,38 @@ export const FinanceSetupTier = (function FinanceSetupTier({
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(FINANCE_MODULE_MANIFEST);
 
+  const subTabs = useModuleSetupSubTabs({
+    initialKey: "preferences",
+    isDirty: () => false,
+    onDiscard: () => {},
+    onChange: () => {},
+  });
+
+  const tabs = [
+    { key: "preferences", label: t("finance.setup.preferences") },
+    { key: "templates", label: t("finance.setup.templates") },
+  ];
+
   return (
     <ModuleTierMotion tier="setup">
       <ErrorBoundary>
         <div className="space-y-4">
+          <SubTabBar
+            tabs={tabs}
+            value={subTabs.sub}
+            onChange={subTabs.handleSubTabChange}
+          />
+
           {!canEditSetup ? (
             <SetupReadOnlyMessage title={t("finance.setup.readOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
-              <FinanceSettings onPrefsDirtyChange={onPrefsDirtyChange} />
+              {subTabs.sub === "preferences" && (
+                <FinanceSettings onPrefsDirtyChange={onPrefsDirtyChange} />
+              )}
+              {subTabs.sub === "templates" && (
+                <FinanceTemplateEditor />
+              )}
             </Suspense>
           )}
         </div>

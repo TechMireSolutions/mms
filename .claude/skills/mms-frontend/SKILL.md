@@ -1,6 +1,10 @@
 ---
 name: mms-frontend
-description: Builds or modifies the MMS React frontend — apiClient, routing, providers, TanStack Query vs useLiveCollection, Vitest, Playwright, and module file structure. Use when editing apps/frontend, Vite config, frontend hooks, pages, components, or frontend tests.
+description: Builds or modifies the MMS React frontend — apiClient, routing, providers, TanStack Query vs useLiveCollection, Vitest, Playwright, and module file structure. Use when editing apps/frontend, Vite config, frontend hooks, pages, components, or frontend tests. Do NOT use for backend Fastify APIs (use mms-backend-api), shared DTO schemas (use mms-shared-package), or production server configuration (use mms-ops-deploy).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Frontend Workflow

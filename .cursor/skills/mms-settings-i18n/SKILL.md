@@ -1,44 +1,54 @@
 ---
 name: mms-settings-i18n
-description: Governs application-wide settings panels (/settings), settings preview states, sidebar navigation registries, and localization/i18n standards (en/ar/ur/fa). Use when adding or modifying settings, sidebar navigation items, custom localizations, translation files, or RTL/LTR layout mirroring.
+description: Governs application-wide settings panels (/settings), settings preview states, sidebar navigation registries, and localization/i18n standards (en/ar/ur/fa). Use when adding or modifying settings, sidebar navigation items, custom localizations, translation files, or RTL/LTR layout mirroring. Do NOT use for per-module setup preferences (use mms-module-setup), full encrypted backup/restore (use mms-backup-restore), or generic BiDi UI tokens (use mms-ui-ux-design).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Settings, Navigation & Internationalization
 
-**Rule (norms SSOT):** `mms-settings-i18n.mdc` — do not re-author policy here.
+**Rule (norms SSOT):** `mms-settings-i18n.mdc` · `mms-ui-ux-design.mdc` · `mms-core.mdc`.
+**Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
-Related: `mms-ui-ux-design.mdc` (RTL/a11y), `mms-fields.mdc` (labelKey). Backup wipe-restore workflow → skill **`mms-backup-restore`**.
+## Anti-Patterns & Banned Operations
 
-## Workflow
+- ❌ **NEVER use fallback strings in `t()`**: Strict ban on `t('key') || 'English Default'`. Register the key in `appTranslationsEn.ts` first.
+- ❌ **NEVER use physical directional CSS**: Ban `pl-`, `pr-`, `ml-`, `mr-`, `left-`, `right-`. Use logical CSS (`ps-`, `pe-`, `ms-`, `me-`, `start-`, `end-`).
+- ❌ **NEVER add RTL locale packs for platform apex**: Platform administration is strictly English/LTR.
+- ❌ **NEVER put module-specific preferences under `/settings`**: Module preferences belong under their respective module Setup tier (`mms-module-setup`).
 
-1. App-wide settings only on `/settings` via `SettingsTabContext` + `SETTINGS_SECTIONS` (`global`, `modules`, `branding`, `theme`, `backup`, `llm`). Module prefs → module Setup → Preferences.
-2. Sidebar/nav from `NAV_ITEMS` / `SYSTEM_MODULE_NAV` in `navConfig.tsx` — Academics grouped; no ad-hoc sidebar links.
-3. Drafts via `useSettingsDraft` / `useBrandingDraft` / `useThemeSettingsDraft`; `onPreview(draft)`; `revertSettingsPreviews()` on leave.
-4. New copy: key in `appTranslationsEn.ts` → ar → ur → fa overrides; render with `t('key')` only (no English `||` fallbacks).
-5. Dates/money: `formatDate` / `formatMoney` (+ currency hooks) — never raw locale string math.
-6. **Platform apex**: English/LTR always — do not create platform locale packs. Platform UI still uses `t()` but all translations resolve to English (no ar/ur/fa overrides for platform). Unknown-tenant hard-redirect enforced via `TenantBootGate`.
-7. Backup UI: two-step + password step-up + validate-before-wipe — details in **`mms-backup-restore`**; copy via `backup.*` keys.
+## Canonical Localization & Directional Pattern
 
-## Checklist
+```tsx
+import { useTranslation } from '@/lib/i18n';
+
+export function NavigationItem({ labelKey, icon: Icon, href }: { labelKey: string; icon: any; href: string }) {
+  const { t, isRtl } = useTranslation();
+
+  return (
+    <a
+      href={href}
+      className="flex items-center gap-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
+    >
+      <Icon className="h-5 w-5 shrink-0 text-slate-500" />
+      <span className="truncate">{t(labelKey)}</span>
+      {/* Logical margin spacing automatically mirrors in RTL */}
+      <span className="ms-auto text-xs text-slate-400">
+        {isRtl ? '←' : '→'}
+      </span>
+    </a>
+  );
+}
+```
+
+## Verification Checklist
 
 ```
-- [ ] No module prefs on /settings
-- [ ] Nav from registries only
-- [ ] Draft + preview; revert on leave
-- [ ] t() keys in en (+ ar/ur/fa as needed); labelKey on registries
-- [ ] Logical CSS / useTranslation dir for RTL
-- [ ] formatDate / formatMoney only
-- [ ] Platform English lock + tenant-not-found redirect intact
-- [ ] Backup changes follow mms-backup-restore
+- [ ] New keys registered in appTranslationsEn.ts and synced to ar/ur/fa
+- [ ] Zero t('key') || 'English' fallback idioms
+- [ ] Pure logical CSS properties (ps-, pe-, ms-, me-, start-, end-)
+- [ ] Date and currency formatted via formatDate and formatMoney
+- [ ] Run: pnpm typecheck && cd apps/frontend && pnpm lint
 ```
-
-## Do Not
-
-- Hardcode UI strings or directional `left`/`ml-*`
-- Open `/settings` on a missing tenant host
-- Dual-write backup from browser cache alone
-- Add ar/ur/fa locale packs for platform views — platform is English-only
-
-## Done
-
-`mms-completion-review.mdc` — typecheck + FE lint when UI touched.

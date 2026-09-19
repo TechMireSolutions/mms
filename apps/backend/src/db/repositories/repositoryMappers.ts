@@ -1,36 +1,21 @@
+import type { SerializedEntityAuditFields, SoftDeleteFields } from '@mms/shared';
+
 /**
  * Standard audit columns selected from Drizzle tables containing
  * timestamp mode: 'date' and softDeleteColumns mixin.
  */
-export interface DrizzleAuditSelectRow {
+export interface DrizzleAuditSelectRow extends SoftDeleteFields {
   createdAt?: Date | string | null;
   updatedAt?: Date | string | null;
-  deletedAt?: Date | string | null;
-  deletedBy?: string | null;
-  deletionReason?: string | null;
-  restoredAt?: Date | string | null;
-  restoredBy?: string | null;
-  deletedWithCascade?: boolean | null;
   createdBy?: string | null;
   updatedBy?: string | null;
 }
 
 export type DbAuditRow = DrizzleAuditSelectRow;
 
-export interface ContractAuditFields {
-  createdAt?: string;
-  updatedAt?: string;
-  deletedAt?: string;
-  deletedBy?: string;
-  deletionReason?: string;
-  restoredAt?: string;
-  restoredBy?: string;
-  deletedWithCascade?: boolean;
-  createdBy?: string;
-  updatedBy?: string;
-}
+export type ContractAuditFields = SerializedEntityAuditFields;
 
-function toIsoString(val: Date | string | null | undefined): string | undefined {
+export function toIsoString(val: Date | string | null | undefined): string | undefined {
   if (!val) return undefined;
   if (val instanceof Date) return val.toISOString();
   return String(val);
@@ -69,6 +54,19 @@ export function nullsToUndefined<T extends Record<string, unknown>>(row: T): Nul
   return result as NullToUndefined<T>;
 }
 
+/**
+ * Safely parses Drizzle SQL numeric columns (returned as strings) to numbers.
+ * Returns undefined if null, undefined, or empty/whitespace string.
+ */
+export function parseNumericColumn(val: string | number | null | undefined): number | undefined {
+  if (val == null) return undefined;
+  if (typeof val === 'number') return Number.isFinite(val) ? val : undefined;
+  const trimmed = val.trim();
+  if (trimmed === '') return undefined;
+  const num = Number(trimmed);
+  return Number.isFinite(num) ? num : undefined;
+}
+
 export interface DrizzleAuditInsertFields {
   createdAt?: Date;
   updatedAt: Date;
@@ -82,15 +80,9 @@ export interface DrizzleAuditInsertFields {
   updatedBy?: string | null;
 }
 
-export interface ContractAuditInput {
+export interface ContractAuditInput extends SoftDeleteFields {
   createdAt?: string | Date | null;
   updatedAt?: string | Date | null;
-  deletedAt?: string | Date | null;
-  deletedBy?: string | null;
-  deletionReason?: string | null;
-  restoredAt?: string | Date | null;
-  restoredBy?: string | null;
-  deletedWithCascade?: boolean | null;
   createdBy?: string | null;
   updatedBy?: string | null;
 }

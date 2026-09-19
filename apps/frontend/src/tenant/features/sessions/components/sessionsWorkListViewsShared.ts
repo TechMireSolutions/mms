@@ -21,7 +21,8 @@ export interface SessionsWorkViewProps {
 }
 
 export function getSessionEnrollmentTotals(sessionItem: Session) {
-  const totalEnrolled = sessionItem.classes?.reduce((sum, sessionClass) => sum + sessionClass.enrolled, 0) ?? 0;
-  const totalCapacity = sessionItem.classes?.reduce((sum, sessionClass) => sum + sessionClass.capacity, 0) ?? 0;
+  const totalEnrolled = sessionItem.classes?.reduce((sum, sessionClass) => sum + (sessionClass.enrolled ?? 0), 0) ?? 0;
+  const totalCapacity = sessionItem.classes?.reduce((sum, sessionClass) => sum + (sessionClass.maxStudents ?? 0), 0) ?? 0;
   return { totalEnrolled, totalCapacity };
 }
+

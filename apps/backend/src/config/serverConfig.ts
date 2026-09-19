@@ -20,6 +20,12 @@ export interface ServerConfig {
   pgStatementTimeoutMs: number;
   /** Tenant-bound SET LOCAL idle_in_transaction_session_timeout (ms). Capped by statement timeout. */
   pgIdleInTxTimeoutMs: number;
+  /** Node.js HTTP server socket keep-alive timeout (ms). Defaults to 30s to coordinate with Apache. */
+  keepAliveTimeoutMs: number;
+  /** Node.js HTTP server headers timeout (ms). Must exceed keepAliveTimeoutMs. */
+  headersTimeoutMs: number;
+  /** TCP Keep-Alive initial delay (ms) on accepted client sockets. */
+  tcpKeepAliveInitialDelayMs: number;
 }
 
 const VALID_LOG_LEVELS = new Set<LogLevel>(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']);
@@ -42,7 +48,27 @@ function validatePostgresUrl(url: string, envVarName: string): void {
   }
 }
 
+/**
+ * Memoized server config.
+ *
+ * `loadServerConfig()` is called on every tenant transaction
+ * (`applyTenantTransactionGuards`), so building it fresh meant re-reading and
+ * re-validating the whole environment on the hottest path in the system. The
+ * config is immutable after boot, so compute it once.
+ *
+ * Test-only env mutations must call {@link resetServerConfigCacheForTesting}.
+ */
+let cachedServerConfig: ServerConfig | null = null;
+
+export function resetServerConfigCacheForTesting(): void {
+  cachedServerConfig = null;
+}
+
 export function loadServerConfig(): ServerConfig {
+  return (cachedServerConfig ??= buildServerConfig());
+}
+
+function buildServerConfig(): ServerConfig {
   const isProd = process.env.NODE_ENV === 'production';
   const isTest = process.env.NODE_ENV === 'test' || process.env.VITEST === 'true';
 
@@ -104,7 +130,7 @@ export function loadServerConfig(): ServerConfig {
   }
   const trustedProxies = trustProxyValue && trustProxyValue !== 'false'
     ? trustProxyValue.split(',').map((entry) => entry.trim()).filter(Boolean)
-    : [];
+    : (isProd && trustProxyValue === undefined ? ['127.0.0.1', '::1'] : []);
 
   const rawLogLevel = process.env.LOG_LEVEL as LogLevel | undefined;
   const logLevel: LogLevel = rawLogLevel && VALID_LOG_LEVELS.has(rawLogLevel)
@@ -131,11 +157,18 @@ export function loadServerConfig(): ServerConfig {
     readReplicaDatabaseUrl,
     trustProxy: trustedProxies.length > 0 ? trustedProxies : false,
     logLevel,
-    allowedOrigin: process.env.ALLOWED_ORIGIN || 'http://localhost:5173',
+    // In production never silently fall back to a localhost origin: prefer the
+    // configured app domain so CORS is scoped to the real site.
+    allowedOrigin:
+      process.env.ALLOWED_ORIGIN
+      || (isProd && appDomain ? `https://${appDomain}` : 'http://localhost:5173'),
     bodyLimit: parsePositiveInt(process.env.REQUEST_BODY_LIMIT_BYTES, 1024 * 1024, 1024, 50 * 1024 * 1024),
     requestTimeoutMs,
     pgPoolMax: parsePositiveInt(process.env.PG_POOL_MAX, 20, 1, 100),
     pgStatementTimeoutMs,
     pgIdleInTxTimeoutMs,
+    keepAliveTimeoutMs: parsePositiveInt(process.env.KEEP_ALIVE_TIMEOUT_MS, 30_000, 1_000, 300_000),
+    headersTimeoutMs: parsePositiveInt(process.env.HEADERS_TIMEOUT_MS, 35_000, 1_000, 300_000),
+    tcpKeepAliveInitialDelayMs: parsePositiveInt(process.env.TCP_KEEP_ALIVE_DELAY_MS, 10_000, 1_000, 60_000),
   };
 }

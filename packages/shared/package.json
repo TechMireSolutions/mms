@@ -39,7 +39,7 @@
     }
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "typecheck": "tsc --noEmit",
     "lint": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint . --quiet",
     "test": "vitest run",
@@ -53,10 +53,10 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "eslint": "^10.8.1",
-    "globals": "^17.11.0",
+    "eslint": "^10.10.0",
+    "globals": "^17.12.0",
     "typescript": "~7.0.2",
-    "typescript-eslint": "^8.67.0",
-    "vitest": "^4.1.10"
+    "typescript-eslint": "^8.70.0",
+    "vitest": "^5.0.1"
   }
 }

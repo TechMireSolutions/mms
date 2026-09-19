@@ -41,6 +41,9 @@ export const studentListSchema = z.array(studentCoreSchema).transform((list) =>
 export type StudentRecord = z.infer<typeof studentCoreSchema>;
 
 
+/** Tenant-scoped object key for the student ID card template. */
+export const STUDENT_CARD_TEMPLATE_OBJECT_KEY = 'mms_student_card_template';
+
 /** Students module manifest — SSOT for tiers, permissions, Work, soft-delete, export. */
 export const STUDENTS_MODULE_MANIFEST = {
   moduleId: 'students',
@@ -67,7 +70,7 @@ export const STUDENTS_MODULE_MANIFEST = {
     directoryViews: ['table', 'cards'] as const,
     bulkActions: ['whatsapp', 'sms', 'email', 'export', 'delete', 'status'] as const,
   },
-  setupSubTabs: ['preferences'] as const,
+  setupSubTabs: ['preferences', 'card_template'] as const,
   defaultExportFilename: 'students.csv',
   searchableFieldKeys: ['name', 'grNumber', 'studentId', 'cnic', 'fatherName', 'guardianName'] as const,
   softDelete: {
@@ -78,8 +81,7 @@ export const STUDENTS_MODULE_MANIFEST = {
     captureDeletionReason: true,
     retentionDays: null,
   },
-  /** Rows above this count use chunked / page-walk export with progress. */
-  exportInlineMaxRows: 500,
+  /** Server CSV export page-walk size (rows per streamed chunk). */
   exportChunkSize: 100,
   /** Default Work directory page size when using server pagination. */
   defaultPageSize: 50,

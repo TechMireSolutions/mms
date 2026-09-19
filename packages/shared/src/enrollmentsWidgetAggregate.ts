@@ -1,23 +1,12 @@
 import { matchesWidgetFilter } from './utils.js';
+import type { WidgetQuery, WidgetAggregateResult } from './widgetAggregateTypes.js';
 
 export type EnrollmentsWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
-export type EnrollmentsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
+export type EnrollmentsWidgetFilterOperator = 'equals' | 'contains' | 'startsWith' | 'gt' | 'lt';
 
-export interface EnrollmentsWidgetQuery {
-  id: string;
-  operation: EnrollmentsWidgetOperation;
-  targetField?: string;
-  filterField?: string;
-  filterOperator?: EnrollmentsWidgetFilterOperator;
-  filterValue?: string;
-  xAxisField?: string;
-}
+export type EnrollmentsWidgetQuery = WidgetQuery;
+export type EnrollmentsWidgetAggregateResult = WidgetAggregateResult;
 
-export interface EnrollmentsWidgetAggregateResult {
-  value: number;
-  totalCount: number;
-  chartData: { name: string; value: number }[];
-}
 
 type EnrollmentRow = Record<string, unknown>;
 

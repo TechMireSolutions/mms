@@ -13,7 +13,7 @@ export async function getQuestionBankFieldConfig(
 
 export async function updateQuestionBankFieldConfig(
   workspaceSubdomain: string,
-  config: Partial<QuestionBankSettings>
+  config: Partial<QuestionBankSettings> | Record<string, unknown>
 ): Promise<void> {
-  await replaceQuestionBankFieldConfigsForWorkspace(workspaceSubdomain, config);
+  await replaceQuestionBankFieldConfigsForWorkspace(workspaceSubdomain, config as Partial<QuestionBankSettings>);
 }

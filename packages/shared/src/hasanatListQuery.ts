@@ -8,7 +8,7 @@ export interface HasanatListQuery {
   /** Comma-separated distribution statuses (`active|redeemed|returned`). */
   status?: string;
   sortField?: string;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: 'asc' | 'desc' | '';
   includeDeleted?: boolean;
 }
 

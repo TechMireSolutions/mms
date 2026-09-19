@@ -29,6 +29,18 @@ import {
   type LongLivedTenantTransaction,
 } from '../../../db/dbConnection.js';
 import { streamSyncSnapshot, streamBackupSnapshot } from '../../../db/streamingSnapshotProducer.js';
+import { createStreamAdmissionControl } from '../../../lib/streamAdmissionControl.js';
+
+/**
+ * Admission control for snapshot/backup streams — see
+ * `lib/streamAdmissionControl.ts` for the rationale and the 503 contract.
+ */
+const snapshotAdmission = createStreamAdmissionControl({
+  limit: 3,
+  retryAfterSeconds: 30,
+  unavailableMessage:
+    'Too many snapshot downloads are in progress. Please retry shortly.',
+});
 
 /**
  * Drives a streaming snapshot generator against a long-lived tenant transaction,
@@ -39,6 +51,7 @@ async function* streamSnapshotRoute(
   txn: LongLivedTenantTransaction,
   tenant: string | null,
   stream: (txn: LongLivedTenantTransaction, tenant: string | null) => AsyncGenerator<string>,
+  releaseSlot?: () => void,
 ): AsyncGenerator<string> {
   let completed = false;
   try {
@@ -51,6 +64,9 @@ async function* streamSnapshotRoute(
     } else {
       await txn.rollback().catch(() => undefined);
     }
+    // Runs on clean completion AND on early close (client disconnect), so the
+    // stream budget can never leak.
+    releaseSlot?.();
   }
 }
 
@@ -62,13 +78,18 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
       return sendForbidden(reply, 'Only administrators can download a database snapshot');
     }
     const tenant = getRequestTenant();
+    const releaseSlot = snapshotAdmission.acquire(reply);
+    if (!releaseSlot) return;
     let txn: LongLivedTenantTransaction | null = null;
     try {
       txn = await beginLongLivedTenantTransaction(tenant);
       enterActiveTransaction(txn.tx);
       reply.header('Content-Type', 'application/json; charset=utf-8');
-      return reply.send(Readable.from(streamSnapshotRoute(txn, tenant, streamSyncSnapshot)));
+      return reply.send(
+        Readable.from(streamSnapshotRoute(txn, tenant, streamSyncSnapshot, releaseSlot)),
+      );
     } catch (error: unknown) {
+      releaseSlot();
       clearActiveTransaction();
       if (txn) await txn.rollback().catch(() => undefined);
       return sendDatabaseError(reply, 'Failed to retrieve database snapshot', error);
@@ -81,13 +102,18 @@ export const dbSyncRoutes: FastifyPluginAsync = async (fastify) => {
       return sendForbidden(reply, 'Only administrators can download a workspace backup');
     }
     const tenant = getRequestTenant();
+    const releaseSlot = snapshotAdmission.acquire(reply);
+    if (!releaseSlot) return;
     let txn: LongLivedTenantTransaction | null = null;
     try {
       txn = await beginLongLivedTenantTransaction(tenant);
       enterActiveTransaction(txn.tx);
       reply.header('Content-Type', 'application/json; charset=utf-8');
-      return reply.send(Readable.from(streamSnapshotRoute(txn, tenant, streamBackupSnapshot)));
+      return reply.send(
+        Readable.from(streamSnapshotRoute(txn, tenant, streamBackupSnapshot, releaseSlot)),
+      );
     } catch (error: unknown) {
+      releaseSlot();
       clearActiveTransaction();
       if (txn) await txn.rollback().catch(() => undefined);
       return sendDatabaseError(reply, 'Failed to build workspace backup snapshot', error);

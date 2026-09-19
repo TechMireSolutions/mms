@@ -6,11 +6,11 @@ import {
 } from '@mms/shared';
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { contacts } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead, type TenantTransaction } from '../tenant-context.js';
 import { loadContactChildMaps, loadContactSummaryChildMaps } from './contactRepositoryHydrateChildren.js';
 import { contactRowToRecord } from './contactRepositoryMappers.js';
 
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+type Transaction = TenantTransaction;
 type ContactRow = typeof contacts.$inferSelect;
 
 export function hydrateContact(contact: Contact): Contact {
@@ -83,7 +83,7 @@ export async function listContactsByWorkspace(
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(contacts, subdomain, deletedFilter);
 
     const rows = await tx
@@ -128,7 +128,7 @@ export async function countContactsByWorkspace(
 ): Promise<number> {
   const subdomain = tenant.trim().toLowerCase();
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(contacts, subdomain, deletedFilter);
 
     const rows = await tx
@@ -141,7 +141,7 @@ export async function countContactsByWorkspace(
 
 export async function findContactById(tenant: string, id: string): Promise<Contact | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: contacts.id,
@@ -182,7 +182,7 @@ export async function findContactById(tenant: string, id: string): Promise<Conta
 export async function findContactsByIds(tenant: string, ids: string[]): Promise<Contact[]> {
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: contacts.id,

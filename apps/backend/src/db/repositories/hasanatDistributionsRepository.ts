@@ -2,7 +2,8 @@ import { and, eq, inArray, isNull, isNotNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Distribution, type RepositoryListOptions } from '@mms/shared';
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { hasanatDistributions } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type DistRow = typeof hasanatDistributions.$inferSelect;
 export function distributionRowToRecord(row: DistRow): Distribution {
@@ -18,15 +19,13 @@ export function distributionRowToRecord(row: DistRow): Distribution {
     reason: row.reason,
     issuedDate: row.issuedDate,
     status: row.status as Distribution['status'],
+    ...mapAuditTimestamps(row),
   };
 
   if (row.recipientStudentId) dist.recipientStudentId = row.recipientStudentId;
   if (row.recipientTeacherId) dist.recipientTeacherId = row.recipientTeacherId;
   if (row.issuedByUserId) dist.issuedByUserId = row.issuedByUserId;
   if (row.issuedBy) dist.issuedBy = row.issuedBy;
-  if (row.deletedAt) dist.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) dist.deletedBy = row.deletedBy;
-  if (row.deletionReason) dist.deletionReason = row.deletionReason;
 
   return dist;
 }
@@ -41,7 +40,7 @@ export async function listDistributionsByWorkspace(
   const limit = Math.min(Math.max(options?.limit ?? 1000, 1), 10000);
   const offset = Math.max(options?.offset ?? 0, 0);
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(hasanatDistributions, subdomain, deletedFilter);
     const rows = await tx
       .select({
@@ -82,7 +81,7 @@ export async function findDistributionById(tenant: string, id: string): Promise<
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatDistributions.id,
@@ -131,7 +130,7 @@ export async function findDistributionsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly

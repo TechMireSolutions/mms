@@ -10,9 +10,10 @@ import type { RbacModuleDef } from './userEntityTypes.js';
 export const RBAC_MODULE_IDS = [
   'dashboard',
   'contacts',
+  'faculty',
+  'teachers',
   'messaging',
   'students',
-  'teachers',
   'sessions',
   'attendance',
   'enrollments',
@@ -31,9 +32,10 @@ export type RbacModuleId = (typeof RBAC_MODULE_IDS)[number];
 export const RBAC_MODULE_REGISTRY: readonly RbacModuleDef[] = [
   { id: 'dashboard', labelKey: 'nav.dashboard' },
   { id: 'contacts', labelKey: 'nav.contacts' },
+  { id: 'faculty', labelKey: 'nav.faculty' },
+  { id: 'teachers', labelKey: 'nav.teachers' },
   { id: 'messaging', labelKey: 'nav.messaging' },
   { id: 'students', labelKey: 'nav.students' },
-  { id: 'teachers', labelKey: 'nav.teachers' },
   { id: 'sessions', labelKey: 'nav.sessions' },
   { id: 'attendance', labelKey: 'nav.attendance' },
   { id: 'enrollments', labelKey: 'nav.enrollments' },
@@ -67,9 +69,9 @@ export function isValidRbacModuleId(id: unknown): id is RbacModuleId {
  * (e.g. RBAC `enrollments` ↔ system module `enrollment`.)
  */
 export const RBAC_SYSTEM_MODULE_ID: Readonly<Record<string, string>> = Object.freeze({
+  faculty: 'teachers',
   enrollments: 'enrollment',
   examinations: 'examination',
-  obligations: 'finance',
 });
 
 /** Resolves the system-modules settings key for an RBAC permission row. */

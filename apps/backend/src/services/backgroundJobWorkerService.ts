@@ -1,4 +1,5 @@
 import { and, eq } from 'drizzle-orm';
+import { logger } from '../lib/logger.js';
 
 export class QueueUnavailableError extends Error {
   constructor(message = 'Failed to enqueue background job. The task queue service may be unavailable.') {
@@ -7,7 +8,7 @@ export class QueueUnavailableError extends Error {
   }
 }
 import type { BackgroundJobRecord } from '@mms/shared';
-import { runWithTenant, getRequestTenant } from '../lib/tenantContext.js';
+import { runWithTenant } from '../lib/tenantContext.js';
 import { withTenant } from '../db/tenant-context.js';
 import { backgroundJobs } from '../db/schema.js';
 import {
@@ -39,7 +40,7 @@ export function registerBackgroundJobRunner(key: string, runner: BackgroundJobRu
 
 async function patchJob(
   tenantId: string,
-  userId: string,
+  _userId: string,
   jobId: string,
   patch: Partial<BackgroundJobRecord>,
 ): Promise<BackgroundJobRecord> {
@@ -75,7 +76,6 @@ async function patchJob(
       .set(updateValues)
       .where(and(
         eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
         eq(backgroundJobs.id, jobId),
       ))
       .returning();
@@ -158,6 +158,16 @@ export async function executeJob(
     return;
   }
 
+  // Heartbeat: refresh updated_at while the runner is in flight so the startup
+  // orphan-cleanup on other replicas can tell a live long-running job from one
+  // whose worker actually died.
+  const heartbeat = setInterval(() => {
+    void patchJob(tenant, userId, jobId, {}).catch(() => {
+      // A failed heartbeat must never fail the job itself.
+    });
+  }, 60_000);
+  heartbeat.unref?.();
+
   try {
     await runWithTenant(tenant, async () => {
       await runner(payload, runContext);
@@ -169,6 +179,8 @@ export async function executeJob(
     // fires on the final attempt. Without this, BullMQ records the job as
     // "completed" even though the DB row says "failed", so retries never run.
     throw error;
+  } finally {
+    clearInterval(heartbeat);
   }
 }
 
@@ -220,77 +232,23 @@ export async function enqueueBackgroundJob(
   const enqueued = await dispatchJobToQueue(tenant, userId, pendingJob, payload);
   
   if (!enqueued) {
-    const errorMsg = 'Failed to enqueue background job. The task queue service may be unavailable.';
-    await patchJob(tenant, userId, job.id, { 
-      status: 'failed', 
-      error: errorMsg 
+    logger.warn(
+      { jobId: job.id, moduleId: job.moduleId, kind: job.kind },
+      'Queue service unavailable (Redis unreachable or timed out); falling back to in-process background job execution',
+    );
+    setImmediate(() => {
+      executeJob(tenant, userId, pendingJob.id, pendingJob.moduleId, pendingJob.kind, payload).catch((err) => {
+        logger.error({ jobId: job.id, err }, 'In-process fallback background job execution failed');
+      });
     });
-    throw new QueueUnavailableError(errorMsg);
+    return pendingJob;
   }
 
   return job;
 }
 
-export async function getUserBackgroundJob(
-  userId: string,
-  jobId: string,
-  explicitTenantId?: string,
-): Promise<BackgroundJobRecord | null> {
-  const tenantId = explicitTenantId ?? getRequestTenant();
-  if (!tenantId) return null;
+export {
+  getUserBackgroundJob,
+  getUserBackgroundJobPayload,
+} from './backgroundJobService.js';
 
-  return withTenant(tenantId, async (tx) => {
-    const rows = await tx
-      .select({
-        id: backgroundJobs.id,
-        tenantId: backgroundJobs.tenantId,
-        userId: backgroundJobs.userId,
-        moduleId: backgroundJobs.moduleId,
-        kind: backgroundJobs.kind,
-        status: backgroundJobs.status,
-        label: backgroundJobs.label,
-        payload: backgroundJobs.payload,
-        progressCurrent: backgroundJobs.progressCurrent,
-        progressTotal: backgroundJobs.progressTotal,
-        artifactId: backgroundJobs.artifactId,
-        hasDownload: backgroundJobs.hasDownload,
-        error: backgroundJobs.error,
-        completedAt: backgroundJobs.completedAt,
-        createdAt: backgroundJobs.createdAt,
-        updatedAt: backgroundJobs.updatedAt,
-      })
-      .from(backgroundJobs)
-      .where(and(
-        eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
-        eq(backgroundJobs.id, jobId)
-      ))
-      .limit(1);
-
-    const row = rows[0];
-    return row ? rowToJobRecord(row) : null;
-  });
-}
-
-/** Returns the stored enqueue payload for an existing user job (idempotency body binding). */
-export async function getUserBackgroundJobPayload(
-  userId: string,
-  jobId: string,
-  explicitTenantId?: string,
-): Promise<Record<string, unknown> | null> {
-  const tenantId = explicitTenantId ?? getRequestTenant();
-  if (!tenantId) return null;
-
-  return withTenant(tenantId, async (tx) => {
-    const rows = await tx.select({ payload: backgroundJobs.payload })
-      .from(backgroundJobs)
-      .where(and(
-        eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.userId, userId),
-        eq(backgroundJobs.id, jobId),
-      ))
-      .limit(1);
-
-    return rows[0]?.payload ?? null;
-  });
-}

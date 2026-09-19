@@ -1,9 +1,11 @@
-process.loadEnvFile('.env');
+import { loadBackendEnv } from '../config/loadEnv.js';
 import { initDb } from '../db/database.js';
 import { getDb } from '../db/dbClient.js';
 import { workspaces } from '../db/schema.js';
 import { bulkSaveContacts } from '../db/repositories/contactRepository.js';
 import { stripContactRetiredClassificationFields, type Contact } from '@mms/shared';
+
+loadBackendEnv();
 
 const DUMMY_CONTACTS: Omit<Contact, 'id'>[] = [
   {

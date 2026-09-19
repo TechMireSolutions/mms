@@ -21,7 +21,7 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     snapshotFnName: 'listStudentsByWorkspace',
   },
   teachers: {
-    importPath: './repositories/teacherRepository.js',
+    importPath: './repositories/facultyRepository.js',
     fnName: 'replaceTeachersForWorkspace',
     snapshotFnName: 'listTeachersByWorkspace',
   },
@@ -68,19 +68,19 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
   },
   teacher_lookups: {
     priority: 32,
-    importPath: './repositories/teacherLookupsRepository.js',
+    importPath: './repositories/facultyLookupsRepository.js',
     fnName: 'replaceTeacherLookupsForWorkspace',
     snapshotFnName: 'listAllTeacherLookupsByWorkspace',
   },
   teacher_field_configs: {
     priority: 33,
-    importPath: './repositories/teacherFieldConfigRepository.js',
+    importPath: './repositories/facultyFieldConfigRepository.js',
     fnName: 'replaceTeacherFieldConfigsForWorkspace',
     snapshotFnName: 'listAllTeacherFieldConfigsByWorkspace',
   },
   teacher_module_preferences: {
     priority: 34,
-    importPath: './repositories/teacherModulePreferencesRepository.js',
+    importPath: './repositories/facultyModulePreferencesRepository.js',
     fnName: 'replaceTeacherModulePreferencesForWorkspace',
     snapshotFnName: 'listAllTeacherModulePreferencesByWorkspace',
   },

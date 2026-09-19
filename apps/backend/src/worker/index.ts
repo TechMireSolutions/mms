@@ -1,8 +1,6 @@
 import { Worker } from 'bullmq';
 import { initDb, closeDatabase } from '../db/database.js';
-import { and, eq, lt } from 'drizzle-orm';
-import { withTenant } from '../db/tenant-context.js';
-import { backgroundJobs, workspaces } from '../db/schema.js';
+import { workspaces } from '../db/schema.js';
 import { activeDb } from '../db/dbConnection.js';
 import { disconnectRedis } from '../lib/redis.js';
 import {
@@ -21,53 +19,10 @@ import { logger } from '../lib/logger.js';
 import { defaultSearchAdapter } from './adapters/searchIndexAdapter.js';
 import { purgeExpiredArchivedRecords } from './purgeArchivedRecordsJob.js';
 import { startOutboxCdcListener, type OutboxCdcHandle } from './outboxCdcListener.js';
+import { LEADER_LOCK_RETENTION_PURGE, tryAcquireLeaderLease } from '../lib/leaderElection.js';
+import { cleanupOrphanedJobs } from './workerOrphanCleanup.js';
 
-/** A 'pending' job older than this is assumed to have never been dispatched. */
-const STALE_PENDING_MS = 10 * 60 * 1000;
-
-export async function cleanupOrphanedJobs(): Promise<void> {
-  try {
-    await withTenant(null, async (tx) => {
-      // Jobs that were running when the worker restarted are orphaned.
-      const running = await tx.update(backgroundJobs)
-        .set({
-          status: 'failed',
-          error: 'Worker process restarted while job was running',
-          completedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(eq(backgroundJobs.status, 'running'))
-        .returning({ id: backgroundJobs.id });
-
-      if (running.length > 0) {
-        logger.info({ count: running.length }, 'Cleaned up orphaned running jobs');
-      }
-
-      // Jobs stuck in 'pending' for a long time were likely inserted but never
-      // dispatched (crash between DB insert and queue.add). Fail them so they
-      // do not sit forever.
-      const stalePendingCutoff = new Date(Date.now() - STALE_PENDING_MS);
-      const pending = await tx.update(backgroundJobs)
-        .set({
-          status: 'failed',
-          error: 'Job was never dispatched to the queue',
-          completedAt: new Date(),
-          updatedAt: new Date(),
-        })
-        .where(and(
-          eq(backgroundJobs.status, 'pending'),
-          lt(backgroundJobs.createdAt, stalePendingCutoff),
-        ))
-        .returning({ id: backgroundJobs.id });
-
-      if (pending.length > 0) {
-        logger.info({ count: pending.length }, 'Cleaned up stale pending jobs');
-      }
-    });
-  } catch (error) {
-    logger.error({ err: error }, 'Failed to cleanup orphaned jobs');
-  }
-}
+export { cleanupOrphanedJobs };
 
 let isRunning = true;
 const activeWorkers: Worker<EnqueuedJobData>[] = [];
@@ -123,13 +78,24 @@ export function scheduleNextDailyPurge(dbClient = activeDb(), targetUtcHour = 2)
   logger.info({ delayMs, targetUtcHour }, '[RetentionPurge] Scheduled next daily purge run');
 
   purgeSchedulerTimer = setTimeout(() => {
-    void runRetentionPurgeCycle(dbClient)
-      .catch((err) => {
+    void (async () => {
+      // Single-leader election: with more than one worker replica, only one
+      // should run the retention purge for a given day.
+      const lease = await tryAcquireLeaderLease(LEADER_LOCK_RETENTION_PURGE);
+      if (!lease) {
+        logger.info('[RetentionPurge] Another replica holds the purge lease; skipping this run');
+        return;
+      }
+      try {
+        await runRetentionPurgeCycle(dbClient);
+      } catch (err) {
         logger.error({ err }, '[RetentionPurge] Error during scheduled purge run');
-      })
-      .finally(() => {
-        scheduleNextDailyPurge(dbClient, targetUtcHour);
-      });
+      } finally {
+        await lease.release();
+      }
+    })().finally(() => {
+      scheduleNextDailyPurge(dbClient, targetUtcHour);
+    });
   }, delayMs);
   purgeSchedulerTimer.unref?.();
 }
@@ -141,6 +107,15 @@ export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData>
   const worker = new Worker<EnqueuedJobData>(
     queueName,
     async (job) => {
+      // Heap backpressure sentinel: check memory usage before running heavy background jobs
+      const mem = process.memoryUsage();
+      if (mem.heapUsed > 0.85 * mem.heapTotal && mem.heapUsed > 256 * 1024 * 1024) {
+        logger.warn(
+          { queue: queueName, jobId: job.id, heapUsed: mem.heapUsed, heapTotal: mem.heapTotal },
+          'Worker memory backpressure threshold exceeded; pausing briefly to allow GC',
+        );
+        await new Promise((resolve) => setTimeout(resolve, 500));
+      }
       await processBackgroundJob(job);
     },
     {
@@ -172,6 +147,10 @@ export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData>
 
 export async function startWorkerDaemon(): Promise<void> {
   logger.info('Initializing Worker Daemon...');
+  // Force UTC regardless of host timezone — see loadEnv.ts for why this must run
+  // before the first Date/DB call (timestamptz round-trips otherwise shift by the
+  // host's UTC offset, e.g. auth_artifacts / background job TTL checks).
+  process.env.TZ = 'UTC';
   if (process.env.NODE_ENV !== 'production') {
     try {
       process.loadEnvFile();
@@ -262,7 +241,11 @@ export async function startWorkerDaemon(): Promise<void> {
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
   process.on('SIGINT', () => void shutdown('SIGINT'));
   process.on('unhandledRejection', (reason) => {
-    logger.error({ reason }, 'Unhandled rejection');
+    // Treat like an uncaught exception: an unknown rejected promise can leave
+    // locks / DB rows in an inconsistent state, so shut down cleanly rather
+    // than continuing in an undefined state.
+    logger.fatal({ reason }, 'Unhandled rejection');
+    void shutdown('unhandledRejection');
   });
   process.on('uncaughtException', (error) => {
     logger.fatal({ err: error }, 'Uncaught exception');

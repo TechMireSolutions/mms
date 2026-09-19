@@ -150,7 +150,7 @@ export function QuestionForm({
       footerStart={footerStart}
     >
       <div className="space-y-5 pb-6">
-        <div className="relative z-30">
+        <div className="relative z-raised">
           <QuestionFormClassificationSection
             questionDraft={questionDraft}
             errors={errors}
@@ -159,10 +159,10 @@ export function QuestionForm({
             onCreateCategory={handleCreateCategory}
           />
         </div>
-        <div className="relative z-20">
+        <div className="relative z-sticky">
           <QuestionFormContentSection questionDraft={questionDraft} errors={errors} updateDraft={updateDraft} />
         </div>
-        <div className="relative z-10">
+        <div className="relative z-elevated">
           <QuestionFormSourcesSection
             questionDraft={questionDraft}
             updateDraft={updateDraft}

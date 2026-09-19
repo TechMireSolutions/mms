@@ -38,6 +38,9 @@ export function getQueue(queueName: string): Queue<EnqueuedJobData> {
         priority: QUEUE_SETTINGS[queueName]?.priority ?? 2,
       },
     });
+    queue.on('error', (err) => {
+      logger.warn({ queue: queueName, err }, 'BullMQ queue connection error');
+    });
     queues.set(queueName, queue);
   }
   return queue;
@@ -102,11 +105,13 @@ export async function dispatchJobToQueue(
       jobId: job.id,
       priority: QUEUE_SETTINGS[queueName]?.priority ?? 2,
     });
+    // Guard against unhandled rejections if timeoutPromise wins the race
+    addPromise.catch(() => {});
     
     // Fail fast if Redis is unreachable to prevent API request hanging
     let timeoutId: NodeJS.Timeout;
     const timeoutPromise = new Promise<never>((_, reject) => {
-      timeoutId = setTimeout(() => reject(new Error('BullMQ queue.add timeout (Redis unreachable)')), 3000);
+      timeoutId = setTimeout(() => reject(new Error('BullMQ queue.add timeout (Redis unreachable)')), 6000);
     });
     
     try {
@@ -116,7 +121,8 @@ export async function dispatchJobToQueue(
       clearTimeout(timeoutId!);
     }
   } catch (error) {
-    logger.warn({ jobId: job.id, queue: queueName, err: error }, 'Failed to enqueue job');
+    const errorMsg = error instanceof Error ? error.message : String(error);
+    logger.warn({ jobId: job.id, queue: queueName, err: errorMsg }, 'Failed to enqueue job');
     return false;
   }
 }

@@ -89,6 +89,7 @@ const baseProps = {
   onSms: vi.fn(),
   onEmail: vi.fn(),
   onBulkExport: vi.fn(),
+  isExporting: false,
   onRequestBulkDelete: vi.fn(),
   onRequestBulkRestore: vi.fn(),
   onBulkTag: vi.fn(),

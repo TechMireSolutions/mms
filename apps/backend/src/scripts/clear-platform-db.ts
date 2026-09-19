@@ -1,6 +1,8 @@
-process.loadEnvFile('.env');
+import { loadBackendEnv } from '../config/loadEnv.js';
 import pg from 'pg';
 import { initDb } from '../db/database.js';
+
+loadBackendEnv();
 
 async function main() {
   const client = new pg.Client({ connectionString: process.env.DATABASE_URL });

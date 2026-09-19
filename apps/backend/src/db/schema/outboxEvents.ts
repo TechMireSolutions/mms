@@ -6,6 +6,7 @@ import {
   jsonb,
   bigint,
   varchar,
+  integer,
 } from 'drizzle-orm/pg-core';
 import { desc, sql } from 'drizzle-orm';
 import { workspaces } from './platform.js';
@@ -42,6 +43,9 @@ export const outboxEvents = pgTable(
      */
     payload: jsonb('payload').$type<Record<string, unknown>>().notNull(),
     processedAt: timestamp('processed_at', { withTimezone: true, mode: 'date' }),
+    /** Consecutive processing failures — poison events stop being retried past the cap. */
+    attempts: integer('attempts').notNull().default(0),
+    lastError: text('last_error'),
     createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' })
       .notNull()
       .default(sql`clock_timestamp()`),

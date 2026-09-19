@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Account } from '@mms/shared';
 import { accountingAccounts, accountingEntries, accountingJournalLines } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { ValidationError } from '../../lib/httpErrors.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
@@ -26,7 +26,7 @@ export async function listAccountsByWorkspace(
   options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean },
 ): Promise<Account[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const filter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
     const conditions = buildTenantSoftDeleteConditions(accountingAccounts, subdomain, filter);
 
@@ -59,7 +59,7 @@ export async function findAccountById(tenant: string, id: string): Promise<Accou
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: accountingAccounts.id,
@@ -95,7 +95,7 @@ export async function findAccountsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const filter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
     const conditions = [
       ...buildTenantSoftDeleteConditions(accountingAccounts, subdomain, filter),
@@ -333,7 +333,7 @@ export async function countActiveJournalLinesForAccount(
   const subdomain = tenant.trim().toLowerCase();
   const cleanAccountId = accountId?.trim();
   if (!cleanAccountId) return 0;
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(accountingJournalLines)
@@ -349,6 +349,10 @@ export async function countActiveJournalLinesForAccount(
           eq(accountingJournalLines.workspaceSubdomain, subdomain),
           eq(accountingJournalLines.accountId, cleanAccountId),
           isNull(accountingEntries.deletedAt),
+          // Posted only: drafts are not in the ledger, so an account referenced
+          // solely by an unbalanced draft must stay archivable. Drafts that
+          // reference an archived account are rejected when they are posted.
+          eq(accountingEntries.status, 'posted'),
         ),
       );
     return Number(result[0]?.count ?? 0);
@@ -363,7 +367,7 @@ export async function countActiveJournalLinesForAccounts(
   const cleanIds = dedupeTrimmedIds(accountIds);
   const map = new Map<string, number>();
   if (cleanIds.length === 0) return map;
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         accountId: accountingJournalLines.accountId,
@@ -382,6 +386,8 @@ export async function countActiveJournalLinesForAccounts(
           eq(accountingJournalLines.workspaceSubdomain, subdomain),
           inArray(accountingJournalLines.accountId, cleanIds),
           isNull(accountingEntries.deletedAt),
+          // Posted only — see countActiveJournalLinesForAccount.
+          eq(accountingEntries.status, 'posted'),
         ),
       )
       .groupBy(accountingJournalLines.accountId);

@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import AuthLayout from '@/tenant/components/AuthLayout';
 import EntryPageHead, { formatEntryTitle } from '@/components/entry/EntryPageHead';
 import { AuthEmailField } from '@/components/entry/AuthEmailField';
-import { AuthPasswordField } from '@/components/entry/AuthPasswordField';
+import { AuthForgotPasswordLink, AuthPasswordField } from '@/components/entry/AuthPasswordField';
 import { AuthSubmitButton } from '@/components/entry/AuthFormControls';
 import { AuthStatusBanner } from '@/components/entry/AuthStatusBanner';
 import {
@@ -161,6 +161,11 @@ export default function Login(): React.ReactElement {
                 setFieldErrors((prev) => ({ ...prev, password: undefined }));
                 setFormError('');
               }}
+            />
+
+            <AuthForgotPasswordLink
+              to={`${ROUTES.forgotPassword}?activate=1`}
+              label={t('auth.activateAccount')}
             />
 
             <label htmlFor={rememberFieldId} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-0.5 py-1">

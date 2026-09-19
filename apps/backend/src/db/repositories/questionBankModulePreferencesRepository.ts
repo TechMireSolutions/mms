@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead, withGlobalTenant } from '../tenant-context.js';
 import { questionBankModulePreferences } from '../schema.js';
 import type { QuestionBankModulePreferences } from '@mms/shared';
 
@@ -28,7 +28,7 @@ export async function replaceQuestionBankModulePreferencesForWorkspace(
 export async function getQuestionBankModulePreferencesForWorkspace(
   workspaceSubdomain: string
 ): Promise<Partial<QuestionBankModulePreferences> | null> {
-  return await withTenant(workspaceSubdomain, async (tx) => {
+  return await withTenantRead(workspaceSubdomain, async (tx) => {
     const [row] = await tx
       .select({ preferences: questionBankModulePreferences.preferences })
       .from(questionBankModulePreferences)
@@ -45,7 +45,7 @@ export async function getQuestionBankModulePreferencesForWorkspace(
 export async function listAllQuestionBankModulePreferencesByWorkspace(): Promise<
   Record<string, Partial<QuestionBankModulePreferences>>
 > {
-  return await withTenant(null, async (tx) => {
+  return await withGlobalTenant(async (tx) => {
     const rows = await tx
       .select({
         workspaceSubdomain: questionBankModulePreferences.workspaceSubdomain,

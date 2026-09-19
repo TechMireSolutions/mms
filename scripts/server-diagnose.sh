@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 # Quick production diagnostics — run on the Hetzner host over SSH.
+# Usage: bash scripts/server-diagnose.sh [apps/backend/.env]
 set -uo pipefail
 
 ROOT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -7,6 +8,8 @@ cd "$ROOT_DIR"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 # shellcheck source=lib/curl-local-backend.sh
 source "$ROOT_DIR/scripts/lib/curl-local-backend.sh"
 
@@ -14,27 +17,8 @@ ENV_FILE="${1:-apps/backend/.env}"
 BACKEND_PORT="$MMS_PROD_BACKEND_PORT"
 FRONTEND_PORT="$MMS_PROD_FRONTEND_PORT"
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  echo "$value"
-}
-
-BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
-FRONTEND_PORT="$(read_env_var FRONTEND_PORT "$MMS_PROD_FRONTEND_PORT")"
+BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
+FRONTEND_PORT="$(read_env_var FRONTEND_PORT "$MMS_PROD_FRONTEND_PORT" "$ENV_FILE")"
 if ! assert_production_backend_port "$BACKEND_PORT" "Backend PORT in ${ENV_FILE}"; then
   echo "Fix: bash scripts/merge-backend-env.sh ${ENV_FILE}"
 fi
@@ -43,9 +27,11 @@ echo "══ MMS server diagnose ══"
 echo "Root: ${ROOT_DIR}"
 echo "Node: $(node -v 2>/dev/null || echo 'missing')"
 echo "pnpm: $(pnpm -v 2>/dev/null || echo 'missing')"
-APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '')"
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
 echo "MMS_APP_DOMAIN: ${APP_DOMAIN:-<NOT SET — tenant subdomains will not work>}"
 echo "PORT: ${BACKEND_PORT}"
+DEPLOYED_SHA="$(cat "${ROOT_DIR}/.deploy-current-sha" 2>/dev/null || echo 'unknown')"
+echo "Deployed SHA: ${DEPLOYED_SHA}"
 echo ""
 
 echo "── PM2 ──"
@@ -77,6 +63,19 @@ echo ""
 if [[ -n "$APP_DOMAIN" ]] && [[ -f "$ROOT_DIR/scripts/verify-tenant-hosts.sh" ]]; then
   echo "── Tenant subdomain checks ──"
   bash "$ROOT_DIR/scripts/verify-tenant-hosts.sh" "" "$ENV_FILE" || true
+  echo ""
+fi
+
+DATABASE_URL="$(read_env_var DATABASE_URL '' "$ENV_FILE")"
+if [[ -n "$DATABASE_URL" ]] && command -v psql &>/dev/null; then
+  echo "── Workspace module grants (DB) ──"
+  psql "$DATABASE_URL" -v ON_ERROR_STOP=0 -c \
+    "SELECT subdomain, granted_modules, enabled_modules FROM workspaces ORDER BY subdomain;" \
+    2>/dev/null | head -50 || echo "psql query failed"
+  echo ""
+else
+  echo "── Workspace module grants ──"
+  echo "skipped (no DATABASE_URL or psql)"
   echo ""
 fi
 

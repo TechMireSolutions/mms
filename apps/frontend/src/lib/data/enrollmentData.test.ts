@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { calculateAgeFromDob, suggestClass, runFullEligibility, calcFee } from './enrollmentData';
-import type { Session, Discount } from './sessionsData';
+import type { Session } from './sessionsData';
+
 import type { Student } from './studentsData';
 
 describe('enrollmentData dynamic calculations', () => {
@@ -107,7 +108,7 @@ describe('enrollmentData dynamic calculations', () => {
         gender: 'Male',
       } as unknown as Student;
 
-      const genderCheck = runFullEligibility(student, session, targetClass, []).find(
+      const genderCheck = runFullEligibility(student, session, targetClass as any, []).find(
         (check) => check.id === 'gender',
       );
 
@@ -116,7 +117,8 @@ describe('enrollmentData dynamic calculations', () => {
   });
 
   describe('calcFee', () => {
-    const sessionDiscounts: Discount[] = [
+    const sessionDiscounts: any[] = [
+
       {
         id: 'early_bird',
         name: 'Early Bird',

@@ -14,11 +14,13 @@ import type {
   ContactUniqueLookupValues,
 } from '../../db/repositories/contactRepository.js';
 
+import type { SoftDeleteListFilter } from '../../services/genericRelationalService.js';
+
 /** Duplicate-scan key shape — re-exported from the module interface so use cases never import the db layer. */
 export type { ContactDuplicateCandidateKeys, ContactUniqueLookupValues };
 
 /** Soft-delete visibility filter shared by list/count repository reads. */
-export type ContactDeletedFilter = 'active' | 'deleted' | 'all';
+export type ContactDeletedFilter = SoftDeleteListFilter;
 
 export interface ListContactsOptions {
   deleted?: ContactDeletedFilter;
@@ -44,7 +46,10 @@ export interface ContactsReportAnalyticsOptions {
  */
 export interface ContactsRepository {
   countByWorkspace(tenant: string, options?: ListContactsOptions): Promise<number>;
-  listPage(tenant: string, query: ContactsListQuery): Promise<ContactsListPageResult>;
+  listPage(
+    tenant: string,
+    query: ContactsListQuery & { afterId?: string; skipCount?: boolean },
+  ): Promise<ContactsListPageResult & { nextCursor?: string }>;
   findById(tenant: string, id: string): Promise<Contact | null>;
   findByIds(tenant: string, ids: string[]): Promise<Contact[]>;
   save(tenant: string, contact: Contact): Promise<void>;

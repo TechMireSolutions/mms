@@ -20,7 +20,7 @@ import {
   type HasanatDistributionsListPageResult,
 } from '@mms/shared';
 import { hasanatBatches, hasanatDenoms, hasanatDistributions } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { distributionRowToRecord } from './hasanatRepository.js';
 
@@ -66,7 +66,7 @@ const DISTRIBUTION_SORT_FIELDS = new Set([
   'updatedAt',
 ]);
 
-function buildDistributionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+function buildDistributionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
   let column: SQL;
   if (field && DISTRIBUTION_SORT_FIELDS.has(field)) {
@@ -105,7 +105,7 @@ export async function listDistributionsPage(
   query: HasanatListQuery & { afterId?: string; skipCount?: boolean },
 ): Promise<HasanatDistributionsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage<DistributionRow, Distribution>(tx, hasanatDistributions, {
       conditions: buildDistributionsListConditions(subdomain, query),
       orderBy: buildDistributionsOrderBy(query.sortField, query.sortDir),
@@ -155,7 +155,7 @@ export async function aggregateHasanatCommandMetrics(
   const lastWeekStartStr = localDateStr(lastWeekStart);
   const lastWeekEndStr = localDateStr(lastWeekEnd);
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     // Batches (no soft-delete): stock totals.
     const [batchRow] = await tx
       .select({

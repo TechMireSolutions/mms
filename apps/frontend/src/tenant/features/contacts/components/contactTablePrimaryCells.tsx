@@ -42,7 +42,7 @@ export function renderContactNameCell({
     <TableCell
       key="name"
       className={cn(
-        "px-4 py-3 sticky start-12 z-10 transition-colors border-e border-border/30",
+        "px-4 py-3 sticky start-12 z-elevated transition-colors border-e border-border/30",
         workTableStickyCellBg(isSelected),
       )}
       style={widthStyle}

@@ -1,23 +1,12 @@
 import { matchesWidgetFilter } from './utils.js';
+import type { WidgetQuery, WidgetAggregateResult } from './widgetAggregateTypes.js';
 
 export type SessionsWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
-export type SessionsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt';
+export type SessionsWidgetFilterOperator = 'equals' | 'contains' | 'startsWith' | 'gt' | 'lt';
 
-export interface SessionsWidgetQuery {
-  id: string;
-  operation: SessionsWidgetOperation;
-  targetField?: string;
-  filterField?: string;
-  filterOperator?: SessionsWidgetFilterOperator;
-  filterValue?: string;
-  xAxisField?: string;
-}
+export type SessionsWidgetQuery = WidgetQuery;
+export type SessionsWidgetAggregateResult = WidgetAggregateResult;
 
-export interface SessionsWidgetAggregateResult {
-  value: number;
-  totalCount: number;
-  chartData: { name: string; value: number }[];
-}
 
 type SessionRow = Record<string, unknown>;
 

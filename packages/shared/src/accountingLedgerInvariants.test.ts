@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  findFiscalYearForDate,
   isFiscalYearClosed,
   isJournalEntryBalanced,
   isJournalLineSingleSided,
   isJournalSourceType,
+  moneyAmountSchema,
   moneyToCents,
   resolveFiscalYearRef,
+  signedMoneyAmountSchema,
 } from './accountingLedgerInvariants.js';
 
 describe('accountingLedgerInvariants', () => {
@@ -59,5 +62,34 @@ describe('accountingLedgerInvariants', () => {
   it('narrows journal source types', () => {
     expect(isJournalSourceType('payment')).toBe(true);
     expect(isJournalSourceType('wire')).toBe(false);
+  });
+
+  it('resolves a fiscal year by the date its range contains, inclusive of both ends', () => {
+    const years = [
+      { id: 'fy-1', label: '2025-2026', status: 'closed', startDate: '2025-07-01', endDate: '2026-06-30' },
+      { id: 'fy-2', label: '2026-2027', status: 'active', startDate: '2026-07-01', endDate: '2027-06-30' },
+    ];
+    expect(findFiscalYearForDate(years, '2025-07-01')?.id).toBe('fy-1');
+    expect(findFiscalYearForDate(years, '2026-06-30')?.id).toBe('fy-1');
+    expect(findFiscalYearForDate(years, '2026-07-01')?.id).toBe('fy-2');
+    expect(findFiscalYearForDate(years, '2027-06-30')?.id).toBe('fy-2');
+    // Outside every configured year, or absent, stays unresolved so a workspace
+    // with no fiscal years configured remains postable.
+    expect(findFiscalYearForDate(years, '2020-01-01')).toBeNull();
+    expect(findFiscalYearForDate(years, '2030-01-01')).toBeNull();
+    expect(findFiscalYearForDate(years, '')).toBeNull();
+    expect(findFiscalYearForDate(years, undefined)).toBeNull();
+    expect(findFiscalYearForDate([], '2026-08-01')).toBeNull();
+  });
+
+  it('rejects money with more than two decimal places or negative values', () => {
+    expect(moneyAmountSchema.safeParse(10.25).success).toBe(true);
+    expect(moneyAmountSchema.safeParse(0).success).toBe(true);
+    expect(moneyAmountSchema.safeParse(10.005).success).toBe(false);
+    expect(moneyAmountSchema.safeParse(-1).success).toBe(false);
+    expect(moneyAmountSchema.safeParse(Number.POSITIVE_INFINITY).success).toBe(false);
+
+    expect(signedMoneyAmountSchema.safeParse(-10.5).success).toBe(true);
+    expect(signedMoneyAmountSchema.safeParse(10.005).success).toBe(false);
   });
 });

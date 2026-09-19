@@ -1,14 +1,15 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { baseListQuerySchema } from '../apiSchemas.js';
-import { sessionCreateBodySchema, sessionsBulkIdsSchema } from '../schemas/sessions.dto.js';
-
+import { softDeleteBodySchema, includeDeletedQuerySchema } from '../apiSchemas.js';
+import { sessionCreateBodySchema, sessionUpdateBodySchema, sessionsBulkIdsSchema } from '../schemas/sessions.dto.js';
+import { widgetAggregatesBodySchema } from '../schemas/common.dto.js';
 import { sessionsBulkStatusSchema } from '../sessionsModuleManifest.js';
 import { sessionsReportAggregatesSchema } from '../sessionsReportAggregates.js';
 import { SessionSchema } from '../sessionTypes.js';
+import { sessionsListQuerySchema } from '../sessionsListQuery.js';
 
 const c = initContract();
-const errorResponse = z.unknown();
+const errorResponse = z.object({ type: z.string(), message: z.string() }).passthrough();
 
 /** Envelope for paginated session list responses (`SessionsListPageResult`). */
 export const sessionListPageResponseSchema = z.object({
@@ -44,7 +45,7 @@ export const sessionContract = c.router({
   list: {
     method: 'GET',
     path: '/api/sessions',
-    query: baseListQuerySchema,
+    query: sessionsListQuerySchema,
     responses: { 200: sessionListPageResponseSchema, 400: errorResponse, 403: errorResponse, 500: errorResponse },
     summary: 'List sessions',
   },
@@ -96,38 +97,46 @@ export const sessionContract = c.router({
     },
     summary: 'Bulk restore sessions',
   },
+  get: {
+    method: 'GET',
+    path: '/api/sessions/:id',
+    pathParams: z.object({ id: z.string() }),
+    query: includeDeletedQuerySchema.optional(),
+    responses: { 200: z.object({ session: SessionSchema }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    summary: 'Get a single session',
+  },
   update: {
     method: 'PUT',
     path: '/api/sessions/:id',
-    body: z.object({}).passthrough(),
+    body: sessionUpdateBodySchema,
     responses: { 200: z.object({ session: SessionSchema }), 400: z.unknown(), 403: z.unknown(), 404: z.unknown(), 500: z.unknown() },
     summary: 'Update session',
   },
   delete: {
     method: 'DELETE',
     path: '/api/sessions/:id',
-    body: z.object({}).passthrough().optional(),
+    body: softDeleteBodySchema.optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 400: z.unknown(), 403: z.unknown(), 404: z.unknown(), 500: z.unknown() },
     summary: 'Delete session',
   },
   restore: {
     method: 'POST',
     path: '/api/sessions/:id/restore',
-    body: z.object({}).passthrough(),
+    body: z.object({}).optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 400: z.unknown(), 403: z.unknown(), 404: z.unknown(), 500: z.unknown() },
     summary: 'Restore session',
   },
   exportAudit: {
     method: 'POST',
     path: '/api/sessions/export-audit',
-    body: z.object({}).passthrough(),
+    body: z.object({}).optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 400: z.unknown(), 403: z.unknown(), 404: z.unknown(), 500: z.unknown() },
     summary: 'Export audit',
   },
   widgetAggregates: {
     method: 'POST',
     path: '/api/sessions/widget-aggregates',
-    body: z.object({}).passthrough(),
+    body: widgetAggregatesBodySchema,
     responses: {
       200: z.object({
         results: z.record(z.string(), z.object({
@@ -159,7 +168,7 @@ export const sessionContract = c.router({
   updateFieldConfig: {
     method: 'PUT',
     path: '/api/sessions/field-config',
-    body: z.unknown(),
+    body: z.record(z.string(), z.unknown()),
     responses: { 200: z.object({ success: z.literal(true), config: z.record(z.string(), z.unknown()) }), 403: errorResponse, 500: errorResponse },
     summary: 'Update field config',
   },
@@ -172,7 +181,7 @@ export const sessionContract = c.router({
   updatePreferences: {
     method: 'PUT',
     path: '/api/sessions/preferences',
-    body: z.unknown(),
+    body: z.record(z.string(), z.unknown()),
     responses: { 200: z.object({ success: z.literal(true), preferences: sessionPreferencesResponseSchema }), 403: errorResponse, 500: errorResponse },
     summary: 'Update preferences',
   },
@@ -185,7 +194,8 @@ export const sessionContract = c.router({
   getLookupKind: {
     method: 'GET',
     path: '/api/sessions/lookups/:kind',
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
+    pathParams: z.object({ kind: z.string() }),
+    responses: { 200: z.array(z.string()), 403: errorResponse, 500: errorResponse },
     summary: 'Get a specific lookup kind',
   },
 });

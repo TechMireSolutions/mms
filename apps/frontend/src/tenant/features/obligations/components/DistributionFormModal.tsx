@@ -11,7 +11,7 @@ import { type DistributionType } from "@/tenant/features/obligations/components/
 interface DistributionFormModalProps {
   title: string;
   initial: Partial<ObligationDistribution>;
-  onSave: (form: Partial<ObligationDistribution>) => void;
+  onSave: (form: Partial<ObligationDistribution>) => Promise<unknown> | void;
   onClose: () => void;
 }
 
@@ -19,6 +19,8 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
   const { t } = useTranslation();
   const [form, setForm] = useState({ ...initial });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [saving, setSaving] = useState(false);
+  const [submitError, setSubmitError] = useState("");
 
   const validate = (): Record<string, string> => {
     const nextErrors: Record<string, string> = {};
@@ -29,14 +31,27 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
     return nextErrors;
   };
 
-  const handleSave = (): void => {
+  const handleSave = async (): Promise<void> => {
     const validationErrors = validate();
     if (Object.keys(validationErrors).length) {
       setErrors(validationErrors);
       return;
     }
-    onSave({ ...form, percentage: Number(form.percentage) });
+    setSubmitError("");
+    setSaving(true);
+    try {
+      await onSave({ ...form, percentage: Number(form.percentage) });
+    } catch (err: unknown) {
+      setSubmitError(err instanceof Error ? err.message : t("obligations.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
   };
+
+  const errorMessages = [
+    ...Object.values(errors),
+    ...(submitError ? [submitError] : []),
+  ];
 
   return (
     <FormModal
@@ -46,7 +61,9 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={handleSave}
-      error={Object.values(errors)}
+      saving={saving}
+      saveDisabled={saving}
+      error={errorMessages.length > 0 ? errorMessages : undefined}
     >
       <div className="space-y-4">
         <div>

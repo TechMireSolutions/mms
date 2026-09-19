@@ -1,11 +1,16 @@
 ---
 name: mms-module-setup
-description: Implements or modifies module Setup tier per mms-module-architecture.md — Preferences, defaults, setup audit, prefs cascade. Use when editing module settings and preferences.
+description: Implements or modifies the module Setup tier per mms-module-architecture.md — the Preferences/setup shell, sub-tab registration, setup audit, and preference cascading. Use when configuring module settings, setup sub-tabs, or module preferences. Do NOT use for the field registry and Setup → Fields field definitions (use mms-fields-registry), global workspace settings under /settings (use mms-settings-i18n), or Work tier tables/drawers (use mms-module-work).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Module Setup Workflow
 
-**Source:** Rules: `mms-module-architecture.md`, `mms-settings-i18n.md`, `mms-performance.md` §3 (300s TTL for static configs/lookups, invalidation on mutations).
+**Rule (norms SSOT):** `mms-module-architecture.md` · `mms-settings-i18n.md` (TTL/invalidation for static config reads).
+**Ownership:** this skill owns the **Setup tier shell, sub-tabs and Preferences**. Field definitions, field types, delete guards and the Setup → Fields panel belong to **`mms-fields-registry`**.
 
 ## When to use
 
@@ -13,35 +18,35 @@ description: Implements or modifies module Setup tier per mms-module-architectur
 - Module-specific Setup sub-tabs (e.g. Contacts Sync, Messaging Templates)
 - Setup audit, config cascade
 
-For full module page shell, use skill **`mms-module-page`**.
+For the full module page shell, use skill **`mms-module-page`**.
 
 ## Setup tier structure
 
 ```
 Setup (tier id: setup)
 ├── Preferences  ← Module Preferences
-└── {contract.setupSubTabs extras}
+└── {manifest.setupSubTabs extras}   ← e.g. Fields, Sync
 ```
 
-Register sub-tab ids in `{Module}ModuleManifest.setupSubTabs`. Default is `['preferences']`.
+Register sub-tab ids in `{Module}ModuleManifest.setupSubTabs`. Default is `['preferences']`; contacts adds `sync` (`DEFAULT_SETTINGS_SUB_TABS` in `packages/shared/src/contactTabRegistry.ts`).
 
-Gate edits with `canEditSetup`: show settings even when view-only; use a read-only message (or view-only panels) instead of silently omitting Setup. Prefer `saveSettingsAsync` / awaited mutations for Preferences saves.
+The tier is a **shell**: `SubTabBar` + `useModuleSetupSubTabs` (`apps/frontend/src/lib/setup/useModuleSetupSubTabs.ts`) owns sub-tab state, the fields/prefs/sync dirty-guard, and the discard confirmation; each panel is lazily rendered inside a `Suspense`.
 
+Gate edits with `canEditSetup` — render settings read-only (`SetupReadOnlyMessage`) instead of omitting Setup. Panels that mutate other domains gate on their own permission (Contacts Sync uses `contacts.write`, **not** `canEditSetup`). Prefer awaited mutations for Preferences saves.
 
-## Contacts reference map
+## Contacts reference map (verified)
 
 | Requirement | Component / file |
 |-------------|------------------|
-| Setup Audit | `logSetupAudit` → `POST /api/contacts/setup-audit` |
-| Fields UI | `ContactsSettingsPanel.tsx` (mode `fields`) |
-| Field delete guard | `getContactFieldRemovalIssues()` in `@mms/shared` |
-| Preferences UI | `ContactsSettingsPanel.tsx` (mode `preferences`) |
-| Countries & dial codes | `ContactsCountryCodesSection.tsx` → `updateCountryCodes` / `PUT /api/contacts/lookups/countryCodes` |
-| Option lists (gender/labels/…) | `useContactStandardConfig` (via `createStandardModuleConfigHook`) + `EditableSelect` `onUpdateOptions` → `/api/contacts/lookups/:kind` |
-| Default Preferences | `preferencesStorage.ts` + `PUT /api/contacts/preferences` |
-| Sync settings extra tab | `ContactSyncPanel.tsx` |
+| Setup tier shell | `ContactsSetupTier.tsx` → `SubTabBar` + `useModuleSetupSubTabs` + lazy panels |
+| Preferences UI | `ContactsSetupPanel.tsx` → `ContactsPreferencesSection.tsx`, state in `hooks/useContactsSetupPanelState.ts` |
+| Sync sub-tab | `ContactSyncPanel.tsx` (gated on `canWrite`, never `canEditSetup`) |
+| Setup audit | `logSetupAudit` → `POST /api/contacts/setup-audit` |
+| Option lists (gender/labels/…) | `EditableSelect` `onUpdateOptions` → `PUT /api/contacts/lookups/:kind` |
+| Countries & dial codes | `PUT /api/contacts/lookups/countryCodes` (lookups API) |
 | Config DB store | typed `contact_field_configs` / `contact_module_preferences` / `contact_user_column_prefs` REST; lookups via `/api/contacts/lookups` |
-| Config hook | `createStandardModuleConfigHook` → `useContactStandardConfig` (`lib/contacts/useContactStandardConfig.ts`), surfaced via `ContactConfigProvider` in `TenantScopedProviders` (tenant host only) |
+| Config hook | `createStandardModuleConfigHook` → `useStandardModuleConfig`; Contacts surfaces it through `ContactConfigProvider` in `TenantScopedProviders` (tenant host only) |
+| Field definitions, delete guards | skill **`mms-fields-registry`** (`getContactFieldRemovalIssues()` in `@mms/shared`) |
 
 ## Workflow: add Setup Fields capability
 

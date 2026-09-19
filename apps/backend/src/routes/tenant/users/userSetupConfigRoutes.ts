@@ -4,7 +4,6 @@ import {
   userFieldConfigPutBodySchema,
   userPreferencesPutBodySchema,
   normalizeUserModulePreferences,
-  type UsersSettings,
 } from '@mms/shared';
 import { registerModuleSetupConfigRoutes } from '../../../lib/registerModuleSetupConfigRoutes.js';
 import { canReadCollection } from '../../../services/rbacService.js';
@@ -26,13 +25,10 @@ export const userSetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
     fieldConfigSchema: userFieldConfigPutBodySchema,
     preferencesSchema: userPreferencesPutBodySchema,
     loadFieldConfig: loadUserFieldConfig,
-    saveFieldConfig: (body) =>
-      saveUserFieldConfig(body as unknown as UsersSettings),
+    saveFieldConfig: (body) => saveUserFieldConfig(body),
     loadPreferences: loadUserModulePreferences,
-    normalizePreferences: (partial) =>
-      normalizeUserModulePreferences(partial as never),
-    savePreferences: (normalized) =>
-      saveUserModulePreferences(normalized as never),
+    normalizePreferences: normalizeUserModulePreferences,
+    savePreferences: saveUserModulePreferences,
     audit: auditUser,
     fieldConfigAuditAction: 'user.field-config',
     fieldConfigAuditSummary: 'Updated user field configuration',

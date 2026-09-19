@@ -15,12 +15,71 @@ import {
   type FinanceReportComparisonQuery,
   type Invoice,
   type InvoiceCreateInput,
+  type InvoiceUpdate,
   type Payment,
   type PaymentCreateInput,
+  type PaymentUpdate,
 } from '@mms/shared';
 import { allocateNextInvoiceNumber, replacePaymentAllocations } from '../../db/repositories/financeBillingRepository.js';
 import { tryPostInvoiceJournal, tryPostPaymentJournal } from '../../accounting/ledgerPosting/ledgerPostingService.js';
+import { findEntryIdBySource } from '../../db/repositories/accountingRepository.js';
 import { loadFinanceModulePreferences } from '../../services/financePreferencesService.js';
+
+/**
+ * Money fields whose change would invalidate an invoice's already-posted ledger
+ * entry: `finalAmt`/`discountAmt` drive the Dr AR / Cr Income posting, and
+ * `lateFeeAmt` / `paidAmt` each have their own posting. Line edits are covered
+ * transitively because they recompute the totals.
+ */
+const LEDGER_SENSITIVE_INVOICE_AMOUNTS = [
+  'finalAmt',
+  'discountAmt',
+  'lateFeeAmt',
+  'paidAmt',
+] as const satisfies readonly (keyof Invoice)[];
+
+/** Invoice statuses that imply a ledger posting and may not be set by a bulk write. */
+const LEDGER_AFFECTING_INVOICE_STATUSES = new Set(['cancelled', 'paid']);
+
+/**
+ * An invoice that already has a ledger entry may not have its amounts edited in
+ * place.
+ *
+ * Nothing re-posted the difference, so a corrected amount left the ledger
+ * mirroring the original figure forever — the receivable and revenue silently
+ * disagreed with the invoice document, with no error and no repost path. Once
+ * posting is configured, the accounting remedy is a credit note or an adjusting
+ * entry. Workspaces with no posting rules are unaffected because no entry exists.
+ *
+ * Only values that actually differ are rejected, so a client that sends the whole
+ * invoice back on an unrelated edit is not blocked.
+ */
+async function assertInvoiceAmountsEditable(
+  tenant: string,
+  invoiceId: string,
+  incoming: Partial<Invoice>,
+): Promise<void> {
+  const touched = LEDGER_SENSITIVE_INVOICE_AMOUNTS.filter((field) => incoming[field] !== undefined);
+  if (touched.length === 0) return;
+
+  const existing = await financeRepository.findInvoiceById(tenant, invoiceId);
+  if (!existing) return;
+
+  const changed = touched.filter(
+    (field) => Number(incoming[field] ?? 0) !== Number(existing[field] ?? 0),
+  );
+  if (changed.length === 0) return;
+
+  const ledgerEntryId = await findEntryIdBySource(tenant, 'invoice', invoiceId);
+  if (!ledgerEntryId) return;
+
+  throw Object.assign(
+    new Error(
+      `This invoice is posted to the ledger — reverse it with a credit note or adjusting entry instead of editing ${changed.join(', ')}`,
+    ),
+    { statusCode: 422, type: 'validation_error' },
+  );
+}
 
 const EMPTY_FINANCE_METRICS: FinanceCommandMetricsSnapshot = {
   totalInvoices: 0,
@@ -108,7 +167,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       await tryPostInvoiceJournal(tenant, created);
       return created;
     },
-    updateInvoiceById: async (id: string, record: Invoice): Promise<Invoice | null> => {
+    updateInvoiceById: async (id: string, record: InvoiceUpdate): Promise<Invoice | null> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       if (record.studentId) {
@@ -120,7 +179,18 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
           throw err;
         }
       }
-      return invoiceCrud.updateById(id, record);
+      const { lines: rawLines, ...rest } = record;
+      const lines = rawLines
+        ? (rawLines.map((line, index) => ({
+            ...line,
+            id: line.id ?? `il-${index + 1}`,
+          })) as Invoice['lines'])
+        : undefined;
+      await assertInvoiceAmountsEditable(tenant, id, rest);
+      return invoiceCrud.updateById(id, {
+        ...rest,
+        ...(lines ? { lines } : {}),
+      });
     },
     deleteInvoiceById: invoiceCrud.deleteById,
     restoreInvoiceById: invoiceCrud.restoreById,
@@ -154,6 +224,21 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       const cleanIds = dedupeTrimmedIds(ids);
       if (!tenant) return { succeeded: 0, failed: cleanIds.length };
       if (cleanIds.length === 0) return { succeeded: 0, failed: 0 };
+      // Defence in depth: `invoicesBulkStatusSchema` already narrows the enum, but
+      // this use case is directly callable and a bare status write posts nothing
+      // to the ledger. Cancelling here left the Dr AR / Cr Income entry on the
+      // books forever while the invoice read 'cancelled'; marking 'paid' marked
+      // an invoice settled with no payment posting.
+      if (LEDGER_AFFECTING_INVOICE_STATUSES.has(status)) {
+        throw Object.assign(
+          new Error(
+            status === 'cancelled'
+              ? 'Cancel invoices through the cancel-invoice action so the ledger reversal is posted'
+              : 'Record a payment to mark invoices paid — a bulk status write posts nothing to the ledger',
+          ),
+          { statusCode: 422, type: 'validation_error' },
+        );
+      }
       const result = await repo.bulkUpdateInvoicesStatus(tenant, cleanIds, status);
       const { broadcastTenantUpdate } = await import('../../services/websocketService.js');
       broadcastTenantUpdate(tenant, 'collection', 'finance_invoices');
@@ -177,7 +262,21 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
 
     // --- Payments ---
     loadPayments: paymentCrud.loadAll,
-    updatePaymentById: paymentCrud.updateById,
+    updatePaymentById: async (id: string, record: PaymentUpdate): Promise<Payment | null> => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      const { allocations: rawAllocations, ...rest } = record;
+      const allocations = rawAllocations
+        ? (rawAllocations.map((alloc, index) => ({
+            ...alloc,
+            id: alloc.id ?? `pa-${index + 1}`,
+          })) as Payment['allocations'])
+        : undefined;
+      return paymentCrud.updateById(id, {
+        ...rest,
+        ...(allocations ? { allocations } : {}),
+      });
+    },
     deletePaymentById: paymentCrud.deleteById,
     restorePaymentById: paymentCrud.restoreById,
     bulkSoftDeletePayments: paymentCrud.bulkDeleteByIds,

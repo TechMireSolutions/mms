@@ -106,13 +106,16 @@ export async function authenticateTenant(
     if (userActiveCached !== 'active') {
       try {
         const { findTenantUserRowById } = await import('../db/repositories/tenantUserRepositoryHydrate.js');
-        const userRow = await findTenantUserRowById(String(user.id));
+        // Session validation must be scoped to the request's workspace: an
+        // id-only lookup runs with RLS bypassed and could resolve another
+        // tenant's user.
+        const userRow = await findTenantUserRowById(tenant, String(user.id));
         if (userRow?.deletedAt || (userRow as { deleted_at?: unknown })?.deleted_at) {
           await sendUnauthorized(reply, 'Session revoked');
           return;
         }
         if (user.role === 'teacher') {
-          const { teachersRepository } = await import('../teachers/repository/teachersRepositoryAdapter.js');
+          const { teachersRepository } = await import('../faculty/repository/facultyRepositoryAdapter.js');
           const teacherRow = await teachersRepository.findById(tenant, String(user.id));
           if (teacherRow?.deletedAt || (teacherRow as { deleted_at?: unknown })?.deleted_at) {
             await sendUnauthorized(reply, 'Session revoked');
@@ -120,8 +123,18 @@ export async function authenticateTenant(
           }
         }
         await redisSet(activeKey, 'active', 60);
-      } catch {
-        // Fall through for tests without DB context
+      } catch (error) {
+        // Tests run without a database and expect the request to proceed.
+        if (process.env.NODE_ENV !== 'test' && !process.env.VITEST) {
+          // Fail closed: if we cannot confirm the account is still active we
+          // must not grant access (a DB outage previously bypassed the check).
+          request.log.error(
+            { err: error, tenant, userId: String(user.id) },
+            'Failed to verify account active state; denying request',
+          );
+          await sendUnauthorized(reply, 'Session validation failed');
+          return;
+        }
       }
     }
   }

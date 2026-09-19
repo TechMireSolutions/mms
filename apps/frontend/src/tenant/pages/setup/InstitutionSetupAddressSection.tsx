@@ -41,7 +41,7 @@ export function InstitutionSetupAddressSection({
             className={FORM_INPUT}
             value={data.addressLine1 || ''}
             onChange={(e) => updateField('addressLine1', e.target.value)}
-            placeholder="e.g. 123 Education Way"
+            placeholder={t("branding.addressLine1Placeholder")}
             aria-invalid={Boolean(errors.addressLine1)}
           />
           {errors.addressLine1 && (
@@ -56,7 +56,7 @@ export function InstitutionSetupAddressSection({
             className={FORM_INPUT}
             value={data.addressLine2 || ''}
             onChange={(e) => updateField('addressLine2', e.target.value)}
-            placeholder="Suite, building, floor (optional)"
+            placeholder={t("branding.addressLine2Placeholder")}
           />
         </div>
 
@@ -70,7 +70,7 @@ export function InstitutionSetupAddressSection({
               className={FORM_INPUT}
               value={data.city || ''}
               onChange={(e) => updateField('city', e.target.value)}
-              placeholder="City / Town"
+              placeholder={t("branding.cityPlaceholder")}
               aria-invalid={Boolean(errors.city)}
             />
             {errors.city && (
@@ -85,7 +85,7 @@ export function InstitutionSetupAddressSection({
               className={FORM_INPUT}
               value={data.region || ''}
               onChange={(e) => updateField('region', e.target.value)}
-              placeholder="State / Province / County"
+              placeholder={t("branding.regionPlaceholder")}
             />
           </div>
 
@@ -98,7 +98,7 @@ export function InstitutionSetupAddressSection({
               className={FORM_INPUT}
               value={data.postalCode || ''}
               onChange={(e) => updateField('postalCode', e.target.value)}
-              placeholder="Postal / Zip code"
+              placeholder={t("branding.postalCodePlaceholder")}
               aria-invalid={Boolean(errors.postalCode)}
             />
             {errors.postalCode && (

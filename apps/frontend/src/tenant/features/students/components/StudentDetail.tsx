@@ -1,4 +1,5 @@
 import React from "react";
+import { useNavigate } from "react-router-dom";
 import { GraduationCap, IdCard } from "lucide-react";
 import type { Student } from "@mms/shared";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
@@ -63,12 +64,13 @@ export const StudentDetail = (function StudentDetail({
   } = useStudentDetailModel(student);
 
   const isArchived = Boolean(student.deletedAt);
+  const navigate = useNavigate();
 
   const handleNavigateToContact = (contactId: string | number) => {
     if (onViewContact) {
       onViewContact(contactId);
     } else {
-      window.location.assign("/contacts");
+      navigate(`/contacts?id=${encodeURIComponent(String(contactId))}`);
     }
   };
 

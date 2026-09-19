@@ -19,6 +19,8 @@ ENV_FILE="${1:-apps/backend/.env}"
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 
 log_info "══ MMS host isolation (MMS only on MMS_APP_DOMAIN) ══"
 
@@ -26,42 +28,34 @@ if [ -f scripts/merge-backend-env.sh ]; then
   bash scripts/merge-backend-env.sh "$ENV_FILE"
 fi
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  echo "$value"
-}
-
-APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN "${MMS_APP_DOMAIN:-}")"
+APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN "${MMS_APP_DOMAIN:-}" "$ENV_FILE")"
 if [[ -z "$APP_DOMAIN" ]]; then
   log_err "MMS_APP_DOMAIN must be set (e.g. mmsv2.aabtaab.com)"
   exit 1
 fi
 log_info "MMS_APP_DOMAIN=${APP_DOMAIN}"
 
-bash scripts/apache/isolate-mms-vhost.sh "$ENV_FILE"
-export MMS_REQUIRE_WILDCARD_TLS=1
-bash scripts/apache/install-mms-vhost.sh "$ENV_FILE"
-sudo bash scripts/fix-apache-upstream.sh "$ENV_FILE"
+TRUST_PROXY_VAL="$(read_env_var TRUST_PROXY "" "$ENV_FILE")"
+if [[ -z "$TRUST_PROXY_VAL" ]]; then
+  echo 'TRUST_PROXY="127.0.0.1,::1"' >> "$ENV_FILE"
+  log_info "Configured default TRUST_PROXY=\"127.0.0.1,::1\" in $ENV_FILE"
+fi
 
-export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
+bash scripts/apache/isolate-mms-vhost.sh "$ENV_FILE"
+# Honour caller override (e.g. MMS_REQUIRE_WILDCARD_TLS=0 via GH secret) — default 1.
+export MMS_REQUIRE_WILDCARD_TLS="${MMS_REQUIRE_WILDCARD_TLS:-1}"
+bash scripts/apache/install-mms-vhost.sh "$ENV_FILE"
+bash scripts/fix-apache-upstream.sh "$ENV_FILE"
+
+export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
 export NODE_ENV=production
 assert_production_backend_port "$PORT" "Backend PORT" || exit 1
 
-pm2 restart mmsv2-backend --update-env 2>/dev/null || bash scripts/deploy-recover-backend.sh "$ENV_FILE"
+if [ -f scripts/deploy-recover-backend.sh ]; then
+  bash scripts/deploy-recover-backend.sh "$ENV_FILE"
+else
+  pm2 restart mmsv2-backend --update-env 2>/dev/null || true
+fi
 bash scripts/deploy-verify.sh "$ENV_FILE"
 pm2 save 2>/dev/null || true
 

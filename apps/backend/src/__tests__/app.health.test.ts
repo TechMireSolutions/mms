@@ -46,7 +46,34 @@ describe("health routes", () => {
     await app.close();
   });
 
-  it("GET /api/openapi.json returns generated OpenAPI schema", async () => {
+  /**
+   * Guards the OpenAPI document's STRUCTURE.
+   *
+   * KNOWN LIMITATION (verified, tracked here so it is not forgotten):
+   * the generated document lists paths, operations and parameter NAMES, but
+   * every `schema` is empty `{}` — no types, no enums, no defaults. It is not
+   * usable for client generation.
+   *
+   * Cause: this workspace is on Zod 4 (`catalog: zod ^4.4.3`), while
+   * `@ts-rest/open-api` — including its newest prereleases — declares
+   * `peerDependencies: { zod: '^3.22.3' }` and delegates introspection to
+   * `@anatine/zod-openapi@1.x`, which only understands the Zod 3 schema API.
+   * Replacing it with the Zod-4-native `@asteasolutions/zod-to-openapi` was
+   * prototyped and works for bodies/responses, but parameter metadata could not
+   * be attached: the schemas built by `@mms/shared` do not receive
+   * `extendZodWithOpenApi`'s prototype patch (`schema.openapi` is undefined even
+   * though `z.string().openapi` is a function in the same process), so
+   * `registerPath` throws "Missing parameter data".
+   *
+   * Do not "fix" this by overriding `ts-deepmerge` to >=8 either: that breaks
+   * generation outright (v8's CJS build no longer exports `.default()`, which
+   * `@anatine/zod-openapi` calls). The ts-deepmerge advisory is therefore a
+   * documented exception — see the `overrides` block in pnpm-workspace.yaml.
+   *
+   * When the parameter-metadata issue is resolved, tighten this test to assert
+   * real schemas (e.g. that a query parameter's schema has a `type`).
+   */
+  it("GET /api/openapi.json returns a structurally valid OpenAPI document", async () => {
     const app = await buildApp();
     const res = await app.inject({ method: "GET", url: "/api/openapi.json" });
     expect(res.statusCode).toBe(200);
@@ -56,6 +83,12 @@ describe("health routes", () => {
     expect(json.info.title).toBe('MMS API');
     expect(typeof json.paths).toBe('object');
     expect(Object.keys(json.paths).length).toBeGreaterThan(0);
+    // Paths carry operations and named parameters (types are the known gap above).
+    const students = json.paths['/api/students']?.get;
+    expect(students).toBeDefined();
+    expect(Array.isArray(students.parameters)).toBe(true);
+    expect(students.parameters.length).toBeGreaterThan(0);
+    expect(students.parameters[0].name).toBe('page');
     await app.close();
   });
 });

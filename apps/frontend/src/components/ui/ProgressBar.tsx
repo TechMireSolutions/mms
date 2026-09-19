@@ -23,6 +23,7 @@ export interface ProgressBarProps extends HTMLAttributes<HTMLDivElement> {
   transition?: Transition;
   /** Track overrides (e.g. `w-16`, `bg-border`, `shadow-inner`). */
   trackClassName?: string;
+  'data-testid'?: string;
 }
 
 /**
@@ -45,15 +46,24 @@ export function ProgressBar({
   ...props
 }: ProgressBarProps): React.JSX.Element {
   const pct = Math.min(100, Math.max(0, value));
-  return (
-    <div
-      role="progressbar"
-      aria-valuenow={Math.round(pct)}
-      aria-valuemin={0}
-      aria-valuemax={100}
-      className={cn("flex items-center gap-2", className)}
-      {...props}
-    >
+
+  /**
+   * `aria-hidden` means "expose nothing to assistive tech" — which is
+   * incompatible with `role="progressbar"` + `aria-valuenow`, because a widget
+   * role declares the exact opposite. Eight call sites pass `aria-hidden="true"`
+   * (attendance, accounting, sessions, profile, question-bank, dashboard charts)
+   * to mark a bar as decorative; spreading it onto the widget produced an
+   * `aria-hidden-focus` violation on every one of them, and silently hid the
+   * progress value.
+   *
+   * Handled here, in the SSOT component, so callers keep their intent ("this bar
+   * is decorative") without each having to remember the ARIA rule.
+   */
+  const isDecorative = props['aria-hidden'] === true || props['aria-hidden'] === 'true';
+
+  // Single source of the visual chrome, shared by both branches below.
+  const bar = (
+    <>
       <div
         className={cn(
           "overflow-hidden rounded-full bg-muted flex-1",
@@ -77,6 +87,28 @@ export function ProgressBar({
         )}
       </div>
       {label != null && <span className={cn("text-xs font-bold", labelClassName)}>{label}</span>}
+    </>
+  );
+
+  // Decorative: no widget role, so the two ARIA contracts cannot contradict.
+  if (isDecorative) {
+    return (
+      <div className={cn("flex items-center gap-2", className)} {...props}>
+        {bar}
+      </div>
+    );
+  }
+
+  return (
+    <div
+      role="progressbar"
+      aria-valuenow={Math.round(pct)}
+      aria-valuemin={0}
+      aria-valuemax={100}
+      className={cn("flex items-center gap-2", className)}
+      {...props}
+    >
+      {bar}
     </div>
   );
 }

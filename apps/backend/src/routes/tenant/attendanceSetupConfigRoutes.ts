@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { AttendanceSettings } from '@mms/shared';
 import {
   ATTENDANCE_MODULE_MANIFEST,
   attendanceFieldConfigPutBodySchema,
@@ -28,12 +27,12 @@ export const attendanceSetupConfigRoutes: FastifyPluginAsync = async (fastify) =
     
     fieldConfigSchema: attendanceFieldConfigPutBodySchema,
     loadFieldConfig: getAttendanceFieldConfigService,
-    saveFieldConfig: (body) => updateAttendanceFieldConfigService(body as AttendanceSettings),
+    saveFieldConfig: (body) => updateAttendanceFieldConfigService(body),
     
     preferencesSchema: attendancePreferencesPutBodySchema,
     loadPreferences: getAttendancePreferencesService,
     normalizePreferences: normalizeAttendanceModulePreferences,
-    savePreferences: (normalized) => updateAttendancePreferencesService(normalized as never),
+    savePreferences: (normalized) => updateAttendancePreferencesService(normalized),
     
     audit: auditAttendance,
     fieldConfigAuditAction: 'UPDATE_ATTENDANCE_CONFIG',

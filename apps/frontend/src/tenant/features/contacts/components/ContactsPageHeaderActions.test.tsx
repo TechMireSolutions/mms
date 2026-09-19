@@ -4,8 +4,29 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ContactsPageHeaderActions } from "./ContactsPageHeaderActions";
 
 vi.mock("@/components/ui/ActionButton", () => ({
-  ActionButton: ({ children }: { children: React.ReactNode }) => (
-    <button data-testid="action-button">{children}</button>
+  ActionButton: ({
+    children,
+    icon: Icon,
+    loading,
+    disabled,
+    onClick,
+  }: {
+    children: React.ReactNode;
+    icon?: React.ComponentType | null;
+    loading?: boolean;
+    disabled?: boolean;
+    onClick?: () => void;
+  }) => (
+    <button
+      type="button"
+      data-testid="action-button"
+      data-loading={String(Boolean(loading))}
+      disabled={Boolean(loading) || Boolean(disabled)}
+      onClick={onClick}
+    >
+      {Icon ? <Icon /> : null}
+      {children}
+    </button>
   ),
 }));
 
@@ -15,23 +36,56 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+function render(overrides: Partial<React.ComponentProps<typeof ContactsPageHeaderActions>> = {}) {
+  return renderToStaticMarkup(
+    <ContactsPageHeaderActions
+      canExport={true}
+      canRead={true}
+      canWrite={true}
+      viewingDeleted={false}
+      openingDuplicates={false}
+      onOpenDuplicates={vi.fn()}
+      onExport={vi.fn()}
+      onImport={vi.fn()}
+      onAddContact={vi.fn()}
+      {...overrides}
+    />,
+  );
+}
+
 describe("ContactsPageHeaderActions Component", () => {
-  it("renders duplicates, export, and add contact action buttons", () => {
-    const html = renderToStaticMarkup(
-      <ContactsPageHeaderActions
-        canExport={true}
-        canRead={true}
-        canWrite={true}
-        viewingDeleted={false}
-        openingDuplicates={false}
-        onOpenDuplicates={vi.fn()}
-        onExport={vi.fn()}
-        onAddContact={vi.fn()}
-      />,
-    );
+  it("renders duplicates, export, import, and add contact action buttons", () => {
+    const html = render();
 
     expect(html).toContain("contacts.duplicates");
     expect(html).toContain("common.export");
+    expect(html).toContain("contacts.import");
     expect(html).toContain("contacts.addContact");
+  });
+
+  it("hides export, import, and write CTAs while browsing trash", () => {
+    const html = render({ viewingDeleted: true });
+
+    expect(html).not.toContain("common.export");
+    expect(html).not.toContain("contacts.import");
+    expect(html).not.toContain("contacts.addContact");
+  });
+
+  it("hides export without the export permission", () => {
+    expect(render({ canExport: false })).not.toContain("common.export");
+  });
+
+  it("hides import without write permission", () => {
+    const html = render({ canWrite: false });
+
+    expect(html).not.toContain("contacts.import");
+    expect(html).not.toContain("contacts.addContact");
+  });
+
+  it("marks the export CTA busy and disabled while a server export is in flight", () => {
+    const html = render({ isExporting: true });
+
+    expect(html).toContain('data-loading="true"');
+    expect(html).toContain("disabled");
   });
 });

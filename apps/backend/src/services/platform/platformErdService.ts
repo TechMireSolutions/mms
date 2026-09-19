@@ -16,7 +16,7 @@ import * as systemSchema from '../../db/schema/system.js';
 import * as auditTrailSchema from '../../db/schema/auditTrail.js';
 import * as contactsSchema from '../../db/schema/contacts.js';
 import * as studentsSchema from '../../db/schema/students.js';
-import * as teachersSchema from '../../db/schema/teachers.js';
+import * as teachersSchema from '../../db/schema/faculty.js';
 import * as sessionsSchema from '../../db/schema/sessions.js';
 import * as attendanceSchema from '../../db/schema/attendance.js';
 import * as enrollmentsSchema from '../../db/schema/enrollments.js';

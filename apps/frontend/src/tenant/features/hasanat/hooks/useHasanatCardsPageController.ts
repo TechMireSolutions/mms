@@ -23,6 +23,7 @@ import { notify } from '@/lib/notify';
 const SETUP_TAB_LABEL_KEYS: Record<(typeof HASANAT_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
   denominations: 'hasanat.setup.denominations',
   preferences: 'hasanat.setup.preferences',
+  templates: 'hasanat.setup.templates',
 };
 
 export function useHasanatCardsPageController() {

@@ -194,16 +194,37 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
     await test.step('1. Platform admin signs in to apex console', async () => {
       await page.goto('/platform/login');
       await page.waitForLoadState('domcontentloaded');
-      const retryBtn = page.getByRole('button', { name: /Try again/i });
-      if (await retryBtn.isVisible({ timeout: 1500 }).catch(() => false)) {
-        await retryBtn.click();
-      }
+
+      const setupEmailInput = page.locator('#platform-setup-email');
       const platformEmailInput = page.locator('#platform-email');
-      await expect(platformEmailInput).toBeVisible({ timeout: 30_000 });
-      await platformEmailInput.fill(e2ePlatformEmail);
-      await page.locator('#platform-password').fill(e2ePlatformPassword);
-      await page.locator('button[type="submit"]').click();
-      await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });
+      const retryBtn = page.getByRole('button', { name: /Try again/i });
+
+      await expect.poll(async () => {
+        if (await retryBtn.isVisible().catch(() => false)) {
+          await retryBtn.click().catch(() => {});
+        }
+        if (await platformLanding.first().isVisible().catch(() => false)) return true;
+        if (await setupEmailInput.isVisible().catch(() => false)) return true;
+        if (await platformEmailInput.isVisible().catch(() => false)) return true;
+        return false;
+      }, { timeout: 45_000, intervals: [500, 1000, 2000] }).toBe(true);
+
+      if (await platformLanding.first().isVisible().catch(() => false)) {
+        return;
+      }
+
+      if (await setupEmailInput.isVisible().catch(() => false)) {
+        await page.locator('#platform-setup-name').fill('Platform Admin');
+        await setupEmailInput.fill(e2ePlatformEmail);
+        await page.locator('#platform-setup-password').fill(e2ePlatformPassword);
+        await page.locator('button[type="submit"]').click();
+      } else if (await platformEmailInput.isVisible().catch(() => false)) {
+        await platformEmailInput.fill(e2ePlatformEmail);
+        await page.locator('#platform-password').fill(e2ePlatformPassword);
+        await page.locator('button[type="submit"]').click();
+      }
+
+      await expect(platformLanding.first()).toBeVisible({ timeout: 45_000 });
     });
 
     // ------------------------------------------------------------------
@@ -285,20 +306,19 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
       //    goto, read before any later navigation can discard the body).
       // ----------------------------------------------------------------
       await test.step('6. Verify WorkspaceDisabledScreen and API 403 protection', async () => {
-        const workspaceLookup = page.waitForResponse(
-          (resp) =>
-            resp.request().method() === 'GET' &&
-            resp.url().includes(`/api/workspace/by-subdomain/${subdomain}`),
-          { timeout: 30_000 },
+        // Direct API check: workspace is disabled
+        const lookupResponse = await page.request.get(
+          `${tenantOrigin}/api/workspace/by-subdomain/${subdomain}`,
         );
-        await page.goto(`${tenantOrigin}/login`);
-        const lookupResponse = await workspaceLookup;
+        expect(lookupResponse.status()).toBe(200);
         const lookupBody = (await lookupResponse.json()) as {
           workspace?: { enabled?: boolean; subdomain?: string };
         };
         expect(lookupBody.workspace?.subdomain).toBe(subdomain);
         expect(lookupBody.workspace?.enabled).toBe(false);
 
+        // UI check: tenant host renders WorkspaceDisabledScreen
+        await page.goto(`${tenantOrigin}/login`);
         await expect(
           page.getByRole('heading', { name: /Madrasa Temporarily Unavailable/i }),
         ).toBeVisible({ timeout: 20_000 });
@@ -364,10 +384,19 @@ async function openWorkspaceCard(page: Page, workspaceSubdomain: string) {
   await expect(viewModeGroup).toBeVisible({ timeout: 20_000 });
   await viewModeGroup.getByRole('button', { name: 'Cards view' }).click();
 
+  // Force a fresh server fetch so the newly-created workspace is guaranteed to
+  // appear (guards against stale TanStack Query cache on first attempt and stale
+  // IDB-hydrated cache on retry).
+  const refreshBtn = page.getByRole('button', { name: /Refresh/i });
+  await expect(refreshBtn).toBeVisible({ timeout: 10_000 });
+  await refreshBtn.click();
+
   const searchInput = page.getByPlaceholder('Search');
   await expect(searchInput).toBeVisible({ timeout: 20_000 });
   await searchInput.fill(workspaceSubdomain);
 
+  // Wait for the workspace card to appear — useDeferredValue settles within
+  // one additional render after the search value commits to the URL params.
   const workspaceToggle = page.locator(`[id="toggle-${workspaceSubdomain}"]`);
   await expect(workspaceToggle).toBeVisible({ timeout: 20_000 });
   return workspaceToggle;

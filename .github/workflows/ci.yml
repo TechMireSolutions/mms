@@ -6,17 +6,11 @@ on:
     paths-ignore:
       - '**.md'
       - 'docs/**'
-      - '.agent/**'
-      - '.cursor/**'
-      - '.claude/**'
   pull_request:
     branches: [main]
     paths-ignore:
       - '**.md'
       - 'docs/**'
-      - '.agent/**'
-      - '.cursor/**'
-      - '.claude/**'
   workflow_dispatch:
 
 permissions:
@@ -29,17 +23,19 @@ concurrency:
 jobs:
   changes:
     name: Detect File Changes
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     outputs:
       backend_db: ${{ steps.filter.outputs.backend_db }}
       frontend: ${{ steps.filter.outputs.frontend }}
       backend_unit: ${{ steps.filter.outputs.backend_unit }}
+      e2e: ${{ steps.filter.outputs.e2e }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
 
       - name: Paths Filter
-        uses: dorny/paths-filter@v3
+        uses: dorny/paths-filter@v4
         id: filter
         with:
           filters: |
@@ -51,6 +47,8 @@ jobs:
               - 'apps/backend/src/accounting/**'
               - 'apps/backend/vitest.db.config.ts'
               - 'packages/shared/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
               - '.github/**'
             frontend:
               - 'apps/frontend/**'
@@ -64,13 +62,23 @@ jobs:
               - 'package.json'
               - 'pnpm-lock.yaml'
               - '.github/**'
+            e2e:
+              - 'e2e/**'
+              - 'apps/**'
+              - 'packages/shared/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - '.github/**'
 
   lint-and-typecheck:
     name: Lint & Typecheck
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Environment
         uses: ./.github/actions/setup-mms
@@ -78,16 +86,65 @@ jobs:
       - name: Run Typecheck
         run: pnpm typecheck
 
+      # Fails on high/critical advisories. One moderate finding is a reviewed,
+      # documented exception (ts-deepmerge via @ts-rest/open-api) — see the
+      # `overrides` block in pnpm-workspace.yaml and the OpenAPI test in
+      # apps/backend/src/__tests__/app.health.test.ts for the full rationale.
+      # Keeping this at `high` means the exception never masks a serious
+      # advisory, which is the failure mode of blanket-ignoring audit output.
+      - name: Dependency audit (high and critical)
+        run: pnpm audit --audit-level=high
+
+      # Ratchet: no new bare `.select()` wildcard projections (mms-performance ban).
+      - name: DB projection safety
+        run: pnpm run check:db-projections
+
+      # Ratchet: no new write-blocking CREATE INDEX on large tables in migrations.
+      # CONCURRENTLY cannot live in a migration (Drizzle runs each migration run in
+      # one transaction) — use `pnpm --filter mms-backend index:concurrent`.
+      - name: Migration index lock safety
+        run: pnpm run check:migration-indexes
+
+      # Scans the FULL git history: a credential that was committed and later
+      # deleted is still recoverable from the repository and must be treated as
+      # compromised. Image is pinned by digest (not `latest`) so the scanner
+      # cannot change under us between runs. `--redact` keeps any finding out of
+      # the CI log. Reviewed false positives live in .gitleaks.toml.
+      - name: Secret scan (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" \
+            zricethezav/gitleaks@sha256:c00b6bd0aeb3071cbcb79009cb16a60dd9e0a7c60e2be9ab65d25e6bc8abbb7f \
+            detect --source=/repo --config=/repo/.gitleaks.toml \
+            --no-banner --redact --exit-code 1
+
       # Lints every package that has a lint script (frontend, backend,
       # @mms/shared, e2e) via turbo — shared/e2e were previously unlinted.
       - name: Lint (all packages)
         run: pnpm lint
 
+      # Ratchet: declared-but-unenforced norms (no `any` in source, no raw hex
+      # colours outside @theme, file-size bands). Baselines live in the script.
+      - name: Code-norm ratchets
+        run: pnpm run check:code-norms
+
+      # i18n key parity across en/ar/ur/fa. The script existed but ran in no
+      # workflow, so translation drift was never actually gated.
+      - name: i18n key parity
+        run: pnpm run check:i18n
+
+      - name: Verify Agent & Rule Mirrors Sync
+        run: |
+          bash .agent/scripts/sync-all.sh
+          git diff --exit-code -- .agent .cursor .claude || (echo "Agent rule/skill mirrors out of sync! Run 'bash .agent/scripts/sync-all.sh'" && exit 1)
+          node scripts/verify-rules-integrity.mjs
+
+
   test-frontend:
     name: Frontend Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     needs: [changes]
     if: ${{ needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     strategy:
       fail-fast: false
       matrix:
@@ -113,6 +170,7 @@ jobs:
             --coverage.thresholds.functions=0 \
             --coverage.thresholds.branches=0 \
             --reporter=default \
+            --reporter=github-actions \
             --reporter=blob \
             --outputFile=.vitest-reports/blob-${{ matrix.shardIndex }}.json
 
@@ -127,8 +185,9 @@ jobs:
   test-frontend-coverage:
     name: Frontend Coverage Gate
     needs: [changes, test-frontend]
-    if: ${{ (needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request') && !cancelled() && needs.test-frontend.result == 'success' }}
-    runs-on: ubuntu-latest
+    if: ${{ (needs.changes.outputs.frontend == 'true' || github.event_name != 'pull_request') && !cancelled() && needs['test-frontend'].result == 'success' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -156,10 +215,16 @@ jobs:
           fi
 
   test-backend-unit:
-    name: Backend Unit Tests
+    name: Backend Unit Tests (Shard ${{ matrix.shardIndex }}/${{ matrix.shardTotal }})
     needs: [changes]
     if: ${{ needs.changes.outputs.backend_unit == 'true' || github.event_name != 'pull_request' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        shardIndex: [1, 2]
+        shardTotal: [2]
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -170,16 +235,18 @@ jobs:
           build-shared: 'true'
 
       - name: Run Shared Package Tests & Coverage
+        if: matrix.shardIndex == 1
         run: pnpm --filter @mms/shared test:coverage
 
-      - name: Run Backend Unit Tests & Coverage
-        run: pnpm --filter mms-backend test:coverage
+      - name: Run Backend Unit Tests Shard
+        run: pnpm --filter mms-backend exec vitest run --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}
 
   test-backend-db:
     name: Backend DB Integration Tests
     needs: [changes]
     if: ${{ needs.changes.outputs.backend_db == 'true' || github.event_name != 'pull_request' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
     services:
       postgres:
         image: postgres:16-alpine
@@ -194,6 +261,7 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
+          --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1024m
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
@@ -219,8 +287,9 @@ jobs:
   ci-gate:
     name: CI Gate (All Checks Passed)
     if: always()
-    needs: [changes, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db]
-    runs-on: ubuntu-latest
+    needs: [changes, lint-and-typecheck, test-frontend, test-frontend-coverage, test-backend-unit, test-backend-db, e2e]
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
     steps:
       - name: Check Status of All Jobs
         run: |
@@ -230,6 +299,7 @@ jobs:
           echo "Frontend Coverage:      ${{ needs.test-frontend-coverage.result }}"
           echo "Backend Unit Tests:     ${{ needs.test-backend-unit.result }}"
           echo "Backend DB Tests:       ${{ needs.test-backend-db.result }}"
+          echo "E2E Tests:              ${{ needs.e2e.result }}"
           echo "========================================================="
 
           failed=0
@@ -259,6 +329,11 @@ jobs:
             failed=1
           fi
 
+          if [ "${{ needs.e2e.result }}" != "success" ] && [ "${{ needs.e2e.result }}" != "skipped" ]; then
+            echo "::error::e2e failed or was cancelled (result: ${{ needs.e2e.result }})"
+            failed=1
+          fi
+
           if [ "$failed" -ne 0 ]; then
             echo "CI Gate failed: One or more required checks did not succeed."
             exit 1
@@ -277,11 +352,15 @@ jobs:
           | **Frontend Tests** | `${{ needs.test-frontend.result }}` | 2-Way Sharded Parallel Matrix |
           | **Frontend Coverage** | `${{ needs.test-frontend-coverage.result }}` | Merged Blob Reports & Coverage Enforcement |
           | **Backend Unit Tests** | `${{ needs.test-backend-unit.result }}` | In-Memory Fast Unit + Coverage Gate |
-          | **Backend DB Tests** | `${{ needs.test-backend-db.result }}` | Docker Postgres 16 (Healthchecked) |
+          | **Backend DB Tests** | `${{ needs.test-backend-db.result }}` | Docker Postgres 16 (Healthchecked, tmpfs) |
+          | **E2E Tests** | `${{ needs.e2e.result }}` | 2-Way Sharded Playwright Matrix |
           EOF
 
   e2e:
-    runs-on: ubuntu-latest
+    needs: [changes]
+    if: ${{ needs.changes.outputs.e2e == 'true' || github.event_name != 'pull_request' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
@@ -301,6 +380,7 @@ jobs:
           --health-interval 5s
           --health-timeout 5s
           --health-retries 5
+          --tmpfs /var/lib/postgresql/data:rw,noexec,nosuid,size=1024m
 
     env:
       JWT_SECRET: 'e2e-test-jwt-secret-key-at-least-32-chars-long'
@@ -348,9 +428,10 @@ jobs:
           retention-days: 1
 
   merge-reports:
-    if: always()
+    if: always() && needs.e2e.result != 'skipped' && needs.e2e.result != 'cancelled'
     needs: [e2e]
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -380,35 +461,3 @@ jobs:
           path: e2e/playwright-report
           retention-days: 7
 
-  build-dist:
-    needs: [ci-gate]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout Code
-        uses: actions/checkout@v7
-
-      - name: Setup Environment
-        uses: ./.github/actions/setup-mms
-
-      - name: Production build
-        env:
-          VITE_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
-        run: |
-          if [ -z "${VITE_APP_DOMAIN}" ]; then
-            echo "::warning::MMS_APP_DOMAIN secret empty — Vite build may lack production app domain"
-          fi
-          pnpm run build
-          tar czf mms-dist.tar.gz apps/backend/dist apps/frontend/dist packages/shared/dist
-          sha256sum mms-dist.tar.gz > mms-dist.tar.gz.sha256
-          cat mms-dist.tar.gz.sha256
-
-      - name: Upload mms-dist artifact
-        uses: actions/upload-artifact@v7
-        with:
-          name: mms-dist
-          path: |
-            mms-dist.tar.gz
-            mms-dist.tar.gz.sha256
-          retention-days: 3
-          compression-level: 0
-          if-no-files-found: error

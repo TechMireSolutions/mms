@@ -4,7 +4,7 @@ import type {
   AccountingFiscalYearsListPageResult,
 } from '@mms/shared';
 import { accountingAccounts, accountingFiscalYears } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import {
   accountRowToRecord,
@@ -23,7 +23,7 @@ export async function listAccountsPage(
 ): Promise<AccountingAccountsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, accountingAccounts, {
       columns: {
         id: accountingAccounts.id,
@@ -66,7 +66,7 @@ export async function listFiscalYearsPage(
 ): Promise<AccountingFiscalYearsListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await runListPage(tx, accountingFiscalYears, {
       columns: {
         id: accountingFiscalYears.id,

@@ -8,6 +8,9 @@ import {
   getRequiredDashboardCollections,
   getActiveCustomCardIds,
   getPinnedDashboardWidgetCount,
+  isDashboardWidgetPermitted,
+  isDashboardWidgetAllowed,
+  getDashboardWidgetRequiredPermission,
 } from '@/lib/dashboardCollections';
 
 const cardWidget = (overrides: Record<string, unknown> = {}): any => ({
@@ -44,6 +47,31 @@ describe('isDashboardWidgetModuleEnabled', () => {
 
   it('returns true for unknown collections', () => {
     expect(isDashboardWidgetModuleEnabled(cardWidget({ collection: 'unknown' }), {})).toBe(true);
+  });
+
+  it('handles hasanat-distribution widgetType', () => {
+    const widget = { id: 'def-hasanat-distribution', widgetType: 'hasanat-distribution', collection: 'hasanat_distributions' };
+    expect(isDashboardWidgetModuleEnabled(widget as never, {})).toBe(true);
+    expect(isDashboardWidgetModuleEnabled(widget as never, { hasanat: false })).toBe(false);
+  });
+});
+
+describe('isDashboardWidgetPermitted & isDashboardWidgetAllowed', () => {
+  it('resolves required permission for hasanat-distribution widget', () => {
+    const widget = { id: 'def-hasanat-distribution', widgetType: 'hasanat-distribution', collection: 'hasanat_distributions' };
+    expect(getDashboardWidgetRequiredPermission(widget as never)).toBe('hasanat.read');
+    expect(isDashboardWidgetPermitted(widget as never, (perm) => perm === 'hasanat.read')).toBe(true);
+    expect(isDashboardWidgetPermitted(widget as never, () => false)).toBe(false);
+  });
+
+  it('evaluates isDashboardWidgetAllowed with both module enablement and permissions', () => {
+    const widget = { id: 'def-hasanat-distribution', widgetType: 'hasanat-distribution', collection: 'hasanat_distributions' };
+    // Allowed when module enabled and permitted
+    expect(isDashboardWidgetAllowed(widget as never, {}, (perm) => perm === 'hasanat.read')).toBe(true);
+    // Disallowed when module disabled
+    expect(isDashboardWidgetAllowed(widget as never, { hasanat: false }, (perm) => perm === 'hasanat.read')).toBe(false);
+    // Disallowed when permission lacking
+    expect(isDashboardWidgetAllowed(widget as never, {}, () => false)).toBe(false);
   });
 });
 
@@ -91,6 +119,21 @@ describe('getRequiredDashboardCollections', () => {
     expect(required.has('students')).toBe(true);
     expect(required.has('teachers')).toBe(false);
   });
+
+  it('filters out disabled or unpermitted widgets', () => {
+    const widgets = [
+      cardWidget({ id: 'a', collection: 'students', role: 'admin' }),
+      cardWidget({ id: 'def-hasanat-distribution', widgetType: 'hasanat-distribution', collection: 'hasanat_distributions', isPinnedToDashboard: true }),
+    ];
+    // With hasanat disabled
+    const reqWithoutHasanat = getRequiredDashboardCollections(widgets as never, 'admin', { hasanat: false }, () => true);
+    expect(reqWithoutHasanat.has('students')).toBe(true);
+    expect(reqWithoutHasanat.has('hasanat_distributions')).toBe(false);
+
+    // With hasanat permission denied
+    const reqDeniedPerm = getRequiredDashboardCollections(widgets as never, 'admin', {}, (perm) => perm !== 'hasanat.read');
+    expect(reqDeniedPerm.has('hasanat_distributions')).toBe(false);
+  });
 });
 
 describe('getActiveCustomCardIds', () => {
@@ -112,5 +155,15 @@ describe('getPinnedDashboardWidgetCount', () => {
       { isPinnedToDashboard: false, widgetType: 'chart' },
     ];
     expect(getPinnedDashboardWidgetCount(widgets as never)).toBe(1);
+  });
+
+  it('filters out disabled or unpermitted pinned widgets', () => {
+    const widgets = [
+      { id: 'def-hasanat-distribution', isPinnedToDashboard: true, widgetType: 'hasanat-distribution', collection: 'hasanat_distributions' },
+      { id: 'w2', isPinnedToDashboard: true, widgetType: 'chart', collection: 'students' },
+    ];
+    expect(getPinnedDashboardWidgetCount(widgets as never, { hasanat: false })).toBe(1);
+    expect(getPinnedDashboardWidgetCount(widgets as never, {}, (perm) => perm !== 'hasanat.read')).toBe(1);
+    expect(getPinnedDashboardWidgetCount(widgets as never, {}, () => true)).toBe(2);
   });
 });

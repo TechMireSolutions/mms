@@ -20,7 +20,11 @@ interface JournalEntriesSimpleModeProps {
   accounts: Account[];
   fiscalYears: FiscalYear[];
   canWrite: boolean;
-  simpleModal: { prefillType: QuickActionType | null } | null;
+  simpleModal: {
+    prefillType: QuickActionType | null;
+    initialAmount?: string;
+    initialDescription?: string;
+  } | null;
   nlInput: string;
   nlSuggestion: QuickActionType | null;
   onModeChange: (mode: JournalMode) => void;
@@ -95,6 +99,8 @@ export function JournalEntriesSimpleMode({
           entries={entries}
           fiscalYears={fiscalYears}
           prefillType={simpleModal?.prefillType}
+          prefillAmount={simpleModal?.initialAmount}
+          prefillDescription={simpleModal?.initialDescription}
           onSave={onSave}
           onClose={onCloseSimpleModal}
         />

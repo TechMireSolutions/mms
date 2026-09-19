@@ -11,6 +11,7 @@ import type {
 import { HASANAT_MODULE_MANIFEST, normalizeHasanatReportComparisonQuery } from '@mms/shared';
 import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { tsrClient } from '@/lib/api';
 
 export function hasanatCommandMetricsQueryOptions() {
@@ -39,10 +40,12 @@ export const HASANAT_API = HASANAT_MODULE_MANIFEST.restBasePath;
 
 export function useHasanatDenoms(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canRead = can('hasanat.read');
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.hasanat.listDenoms.useQuery({
     queryKey: HASANAT_DENOMS_QUERY_KEY,
-    enabled: isAuthenticated && (options?.enabled ?? true),
+    enabled: isAuthenticated && canRead && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
@@ -60,10 +63,12 @@ export function useHasanatDenomsCollection(options?: { enabled?: boolean }): Den
 
 export function useHasanatBatches(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canRead = can('hasanat.read');
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.hasanat.listBatches.useQuery({
     queryKey: HASANAT_BATCHES_QUERY_KEY,
-    enabled: isAuthenticated && (options?.enabled ?? true),
+    enabled: isAuthenticated && canRead && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
@@ -81,12 +86,14 @@ export function useHasanatBatchesCollection(options?: { enabled?: boolean }): St
 
 export function useHasanatDistributions(options?: { enabled?: boolean; includeDeleted?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canRead = can('hasanat.read');
   const includeDeleted = options?.includeDeleted ?? false;
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.hasanat.listDistributions.useQuery({
     queryKey: [...HASANAT_DISTRIBUTIONS_QUERY_KEY, { includeDeleted }],
     queryData: { query: { includeDeleted: includeDeleted ? 'true' : 'false' } },
-    enabled: isAuthenticated && (options?.enabled ?? true),
+    enabled: isAuthenticated && canRead && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
@@ -111,6 +118,8 @@ export function useHasanatReportAggregates(
   options?: { enabled?: boolean; comparison?: HasanatReportComparisonQuery },
 ) {
   const { isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canRead = can('hasanat.read');
   const enabled = options?.enabled ?? true;
   const comparison = normalizeHasanatReportComparisonQuery(options?.comparison);
   
@@ -126,17 +135,19 @@ export function useHasanatReportAggregates(
         rangeBTo: comparison?.rangeBTo,
       },
     },
-    enabled: isAuthenticated && enabled,
+    enabled: isAuthenticated && canRead && enabled,
     staleTime: 30_000,
   });
 }
 
 export function useHasanatRedemptions(options?: { enabled?: boolean }) {
   const { isAuthenticated } = useAuth();
+  const { can } = usePermissions();
+  const canRead = can('hasanat.read');
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return tsrClient.hasanat.listRedemptions.useQuery({
     queryKey: HASANAT_REDEMPTIONS_QUERY_KEY,
-    enabled: isAuthenticated && (options?.enabled ?? true),
+    enabled: isAuthenticated && canRead && (options?.enabled ?? true),
     staleTime: 30_000,
   });
 }
@@ -150,10 +161,12 @@ export function useHasanatRedemptionsCollection(options?: { enabled?: boolean })
 }
 
 export function useHasanatMetrics(options?: { enabled?: boolean }) {
+  const { can } = usePermissions();
+  const canRead = can('hasanat.read');
   return useServerMetrics<HasanatCommandMetricsSnapshot>({
     moduleId: HASANAT_MODULE_MANIFEST.moduleId,
     apiPath: HASANAT_MODULE_MANIFEST.restBasePath,
-    enabled: options?.enabled,
+    enabled: canRead && (options?.enabled ?? true),
   });
 }
 

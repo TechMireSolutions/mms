@@ -1,31 +1,13 @@
+import type { WidgetQuery, WidgetAggregateResult, WidgetFilter } from './widgetAggregateTypes.js';
+
 export type ContactsWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
-type ContactsWidgetFilterOperator = 'equals' | 'contains' | 'gt' | 'lt' | 'startsWith';
+export type ContactsWidgetFilterOperator = 'equals' | 'contains' | 'startsWith' | 'gt' | 'lt';
+export type ContactsWidgetFilter = WidgetFilter;
 
-interface ContactsWidgetFilter {
-  field: string;
-  operator?: ContactsWidgetFilterOperator;
-  value: string;
-}
+export type ContactsWidgetQuery = WidgetQuery;
+export type ContactsWidgetAggregateResult = WidgetAggregateResult;
 
-export interface ContactsWidgetQuery {
-  id: string;
-  operation: ContactsWidgetOperation;
-  targetField?: string;
-  filterField?: string;
-  filterOperator?: ContactsWidgetFilterOperator;
-  filterValue?: string;
-  xAxisField?: string;
-  /** Extra AND filters (visualizer multi-rule). */
-  filters?: ContactsWidgetFilter[];
-  /** Chart GROUP BY series cap (default 8). */
-  chartLimit?: number;
-}
 
-export interface ContactsWidgetAggregateResult {
-  value: number;
-  totalCount: number;
-  chartData: { name: string; value: number }[];
-}
 
 export function contactsWidgetQueryFromWidget(widget: {
   id: string;

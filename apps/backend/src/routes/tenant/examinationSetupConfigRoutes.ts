@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { ExaminationsSettings } from '@mms/shared';
 import {
   EXAMINATIONS_MODULE_MANIFEST,
   examinationsFieldConfigPutBodySchema,
@@ -28,12 +27,12 @@ export const examinationSetupConfigRoutes: FastifyPluginAsync = async (fastify) 
     
     fieldConfigSchema: examinationsFieldConfigPutBodySchema,
     loadFieldConfig: getExaminationFieldConfigService,
-    saveFieldConfig: (body) => updateExaminationFieldConfigService(body as ExaminationsSettings),
+    saveFieldConfig: (body) => updateExaminationFieldConfigService(body),
     
     preferencesSchema: examinationsPreferencesPutBodySchema,
     loadPreferences: getExaminationPreferencesService,
     normalizePreferences: normalizeExaminationsModulePreferences,
-    savePreferences: (normalized) => updateExaminationPreferencesService(normalized as never),
+    savePreferences: (normalized) => updateExaminationPreferencesService(normalized),
     
     audit: auditExaminations,
     fieldConfigAuditAction: 'UPDATE_EXAMINATIONS_CONFIG',

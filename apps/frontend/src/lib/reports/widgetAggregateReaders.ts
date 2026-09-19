@@ -10,7 +10,7 @@ import {
 import {
   TEACHERS_METRICS_QUERY_KEY,
   TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-} from "@/tenant/hooks/collections/teachers";
+} from "@/tenant/hooks/collections/faculty";
 import {
   SESSIONS_METRICS_QUERY_KEY,
   SESSIONS_WIDGET_AGGREGATES_QUERY_KEY,

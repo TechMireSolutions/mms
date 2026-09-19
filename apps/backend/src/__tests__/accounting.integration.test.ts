@@ -1,7 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildApp } from '../app.js';
 import { accountantToken, guardianToken } from './helpers/tokens.js';
-import type { Account, JournalEntry, FiscalYear } from '@mms/shared';
+import { accountingContract, type Account, type JournalEntry, type FiscalYear } from '@mms/shared';
 
 /** Returns an ISO date string for N days before today (time-independent). */
 function daysAgo(n: number): string {
@@ -53,6 +53,8 @@ const mockBulkSoftDeleteJournalEntries = vi.fn();
 const mockBulkRestoreJournalEntries = vi.fn();
 const mockLoadAccountingCommandMetrics = vi.fn();
 const mockLoadAccountingReportAggregates = vi.fn();
+const mockDeleteAccountById = vi.fn();
+const mockBulkSoftDeleteAccounts = vi.fn();
 
 vi.mock('../accounting/use-cases/accountingUseCases.js', () => ({
   accountingUseCases: {
@@ -73,9 +75,9 @@ vi.mock('../accounting/use-cases/accountingUseCases.js', () => ({
     loadAccountingReportAggregates: (...args: unknown[]) => mockLoadAccountingReportAggregates(...args),
     createJournalEntry: vi.fn(),
     updateJournalEntryById: vi.fn(),
-    deleteAccountById: vi.fn(),
+    deleteAccountById: (...args: unknown[]) => mockDeleteAccountById(...args),
     restoreAccountById: vi.fn(),
-    bulkSoftDeleteAccounts: vi.fn(),
+    bulkSoftDeleteAccounts: (...args: unknown[]) => mockBulkSoftDeleteAccounts(...args),
     bulkRestoreAccounts: vi.fn(),
     replaceAccounts: vi.fn(),
     replaceEntries: vi.fn(),
@@ -451,6 +453,119 @@ describe('accounting REST routes', () => {
     });
     expect(res.statusCode).toBe(403);
     expect(mockLoadAccountingReportAggregates).not.toHaveBeenCalled();
+    await app.close();
+  });
+});
+
+/**
+ * Contract ↔ router drift gate.
+ *
+ * `accountingContract` declares the whole Accounting API surface and the frontend
+ * is typed from it, but `accountingContractRouter` implements only the three list
+ * operations — the remaining paths are served by the shared CRUD/setup route
+ * factories. Because the router is cast through `as unknown as
+ * RouterImplementation<...>`, TypeScript cannot see that gap, and an operation
+ * added to the contract without a matching route would silently 404 in production.
+ * This test makes that failure loud. It is also what caught the `replace*`
+ * operations being advertised while the served handler was an additive upsert.
+ */
+describe('accounting contract ↔ registered routes', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+  });
+
+  it('registers every operation declared in accountingContract', async () => {
+    const app = await buildApp();
+    const operations = Object.entries(
+      accountingContract as unknown as Record<string, { method: string; path: string }>,
+    );
+    expect(operations.length).toBeGreaterThan(0);
+
+    const missing = operations
+      .filter(([, operation]) => !app.hasRoute({ method: operation.method as never, url: operation.path }))
+      .map(([name, operation]) => `${name}: ${operation.method} ${operation.path}`);
+
+    expect(missing).toEqual([]);
+    await app.close();
+  });
+});
+
+/**
+ * The chart-of-accounts archive guard ("Cannot archive account with active
+ * ledger entries") existed on the use case but was reachable from no HTTP route,
+ * so the UI's only delete was an unguarded `isActive: false` bulk write.
+ */
+describe('account archive routes', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+    mockDeleteAccountById.mockReset();
+    mockBulkSoftDeleteAccounts.mockReset();
+  });
+
+  it('DELETE /api/accounting/accounts/:id requires auth', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/accounting/accounts/acc-1',
+      headers: { host: 'demo.localhost' },
+    });
+    expect(res.statusCode).toBe(401);
+    await app.close();
+  });
+
+  it('DELETE /api/accounting/accounts/:id archives through the guarded use case', async () => {
+    mockDeleteAccountById.mockResolvedValue(true);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/accounting/accounts/acc-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+      payload: { deletionReason: 'no longer used' },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body)).toEqual({ success: true, archived: true });
+    expect(mockDeleteAccountById).toHaveBeenCalledWith('acc-1', expect.any(String), 'no longer used');
+    await app.close();
+  });
+
+  it('DELETE /api/accounting/accounts/:id surfaces the ledger guard as 400', async () => {
+    mockDeleteAccountById.mockRejectedValue(
+      Object.assign(new Error('Cannot archive account with active ledger entries'), { statusCode: 400 }),
+    );
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'DELETE',
+      url: '/api/accounting/accounts/acc-1',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+    });
+
+    expect(res.statusCode).toBe(400);
+    expect(res.body).toContain('active ledger entries');
+    await app.close();
+  });
+
+  it('POST /api/accounting/accounts/bulk-delete reports partial archives', async () => {
+    mockBulkSoftDeleteAccounts.mockResolvedValue({ succeeded: 1, failed: 1 });
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/accounting/accounts/bulk-delete',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${accountantToken(app)}`,
+      },
+      payload: { ids: ['acc-1', 'acc-2'] },
+    });
+
+    expect(res.statusCode).toBe(200);
+    expect(JSON.parse(res.body)).toMatchObject({ success: true, succeeded: 1, failed: 1 });
     await app.close();
   });
 });

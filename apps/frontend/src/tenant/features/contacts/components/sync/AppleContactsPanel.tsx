@@ -60,9 +60,16 @@ export function AppleContactsPanel({
           />
         )}
 
+        {apple.fileError && (
+          <p role="alert" className="text-xs text-destructive bg-destructive/10 border border-destructive/20 rounded-lg p-2.5">
+            {apple.fileError}
+          </p>
+        )}
+
         {canWrite && apple.previewList.length > 0 && (
           <AppleContactsPreviewList
             previewList={apple.previewList}
+            fileName={apple.fileName}
             importing={apple.importing}
             onClear={apple.clearPreview}
             onImport={() => void apple.handleImport()}

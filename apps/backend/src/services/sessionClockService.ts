@@ -70,8 +70,14 @@ export async function touchSession(
 ): Promise<void> {
   if (!scope) return;
   const now = Date.now();
+  // Never throttle longer than half the idle window: with a 1-minute idle policy
+  // the fixed 60s throttle could drop an activity just after the window while
+  // the stored timestamp was already past `idleMs`, expiring an active session.
+  const effectiveThrottleMs = idleMs > 0
+    ? Math.min(TOUCH_THROTTLE_MS, Math.floor(idleMs / 2))
+    : 0;
   const last = touchThrottle.get(scope);
-  if (!force && last !== undefined && now - last < TOUCH_THROTTLE_MS) return;
+  if (!force && effectiveThrottleMs > 0 && last !== undefined && now - last < effectiveThrottleMs) return;
   setTouchThrottle(scope, now);
 
   const existing = await readClock(scope);

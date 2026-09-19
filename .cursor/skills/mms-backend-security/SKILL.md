@@ -1,11 +1,17 @@
 ---
 name: mms-backend-security
-description: Hardens MMS backend auth, tenant isolation, RBAC, cookies, CSRF/Origin, rate limits, and auth artifacts. Use when reviewing security, fixing auth bypass, adding protected routes, auditing Fastify middleware, cookies, CORS, CSRF, Origin checks, Helmet/headers, or session/OTP flows.
+description: Finds and fixes MMS backend auth weaknesses — tenant isolation, RBAC gaps, cookie/CSRF/Origin handling, rate limits, and session flows. Use when hardening or auditing a security mechanism (correctness of the control itself). Do NOT use for general route implementation (use mms-backend-api), for reviewing an unrelated change set (use mms-code-review), or for encrypted backup crypto (use mms-backup-restore).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Backend Security Workflow
 
 **Rule (norms SSOT):** `mms-auth-security.mdc` · `mms-data-layer.mdc` §5–§6. Also `mms-performance.mdc` §3 (Cache Namespacing & Tenant Isolation). Modern Audit Trail & Tamper-Evidence → **`mms-audit-trail`**. Soft-Delete System → **`mms-soft-delete`**. Route/service wiring → **`mms-backend-api`**.
+
+Consolidated route-audit checklist (merges the tenant-isolation and per-PR audits): **`references/route-audit-checklist.md`**.
 
 ## When to use
 
@@ -93,24 +99,9 @@ Security Invariants:
 - Constant-time string/hash comparisons (`crypto.timingSafeEqual` from `node:crypto`) for passwords, tokens, and OTP codes to eliminate side-channel timing attacks.
 - One-shot hashing with `crypto.hash()` from `node:crypto` (no verbose `createHash().update().digest()` chains).
 - Rate limiting: on `429`, emit `Retry-After` header — `mms-auth-security.mdc`.
-- **Soft-Delete Session Invalidation ("Not deleted until sessions die")**: Soft-deleting user or teacher accounts (`tenant_users`, `teachers`) must immediately revoke all active JWTs, refresh tokens, and Redis sessions. Authentication resolvers (`authenticateTenant`, `/me`, OAuth, credentials login) must verify `deleted_at IS NULL` to prevent zombie sessions and silent account resurrection (`docs/soft-delete.md` §1.2).
-- **Soft-Delete & Trash RBAC Gating**: `DELETE /:id`, `POST /:id/restore`, `POST /bulk-delete`, `POST /bulk-restore`, and reading `includeDeleted=true` (list and single `GET /:id?includeDeleted=true`) require delete permissions (`canDeleteCollection(user, collection)`). Non-delete users must never be permitted to inspect archived rows.
-- **Hard-Delete Defense-in-Depth**: Physical row deletion is blocked by PostgreSQL `forbid_hard_delete()` trigger. Privilege escalation via `SET LOCAL app.allow_hard_purge = 'true'` is strictly restricted to authorized background retention workers (`purgeExpiredArchivedRecords`) and platform workspace teardown (`purgeTenantDataBySubdomain`).
-- **GDPR Article 17 Dual-Track Erasure**: Soft-delete is for operational recovery, not GDPR Article 17 compliance. Erasure requires cryptographic shredding (destroying KMS envelope keys for encrypted data) paired with in-place pseudonymization/scrubbing of plain PII attributes while preserving PK continuity.
-- **Modern Audit Trails & Immutability (`mms-audit-trail`)**: 5-dimension RFC 8785 canonical JSON payloads in transactional outboxes; sharded cryptographic hash chains with Merkle tree rollups; `INSERT`-only DB privileges (`REVOKE UPDATE, DELETE`); right-to-erasure via crypto-shredding or redact-and-append without historical row destruction; direct audit log read access is MFA-enforced with JIT break-glass expiration; access to audit logs is itself an auditable event.
-- **Trace Context Correlation**: W3C `traceparent` header extracted and propagated into `AsyncLocalStorage` and audit records as `correlation_id`.
-- **Statement-Level Auditing (`pgAudit`)**: Pair application row-level audit with database-native `pgAudit` to track ad-hoc console sessions, superusers, and DDL migrations.
-
-## Tenant isolation checklist
-
-- [ ] Tenant from host header — not from client JSON body on protected routes
-- [ ] Cookie CSRF / Origin check on state-changing cookie-auth routes
-- [ ] Storage keys `t:{subdomain}:{logicalKey}` on server (`database.ts` + `tenantContext.ts`)
-- [ ] JWT subdomain matches resolved tenant
-- [ ] Apex routes do not expose other tenants' data
-- [ ] Tests use `host: '{subdomain}.localhost'` in `inject()`
-- [ ] Typed REST routes use repositories + `withTenantTransaction` / SET LOCAL RLS (not `dbSyncService`); `dbSyncService` only for `/api/db` JSON documents
-- [ ] Redis cache keys strictly isolate by tenant and context (`mms:{tenantId}:{module}:{resource}:{hash(queryParams)}`) with viewer role scope when permissions alter payload (`mms-performance.mdc`)
+- **Soft-Delete Session & RBAC Invariants**: Revoke JWT/Redis sessions on soft-delete; gate trash routes and `includeDeleted=true` on `canDeleteCollection`. Hard delete blocked via PostgreSQL trigger — **`mms-soft-delete`**.
+- **Audit Trails & Tamper-Evidence**: RFC 8785 canonical JSON outbox payloads, sharded hash chains, `INSERT`-only DB privileges, MFA on audit reads — **`mms-audit-trail`**.
+- **Reference Specification**: `.agent/skills/mms-backend-security/references/auth-rbac-matrix.md`.
 
 ## Secrets & logging
 
@@ -132,19 +123,6 @@ Encrypted workspace backups (`.mmsbak`): bound PBKDF2 iterations (`BACKUP_KDF_MI
 ```bash
 cd apps/backend && pnpm test
 ```
-
-## Route audit checklist (new PR)
-
-1. Is the route tenant-scoped? → `authenticateTenant` (+ `bindRequestUserId`)
-2. Is the route platform apex? → `requireMainDomain` + `authenticatePlatform` (+ `requireSuperUser` / `requirePlatformPermission` as needed)
-3. Is it a mutation **or** sensitive read? → `rbacService` / `canReadCollection` / `requireAdmin` (tenant) or `platformUserCan` (platform)
-4. Is body validated? → Zod via `parseRequest` before service layer (write schema strips soft-delete when applicable)
-5. Never trust body `workspaceSubdomain` / authz `userId` — session only
-6. Does it touch auth or messaging send? → rate limit preserved
-7. Prod cookies `Secure`; prefer Helmet/secure headers when touching `app.ts`
-8. Integration test with wrong-subdomain host returns `403`? (platform routes: tenant host must `403`)
-9. New secret store? → FORCE-RLS table + exclude from backup snapshots
-10. New tenant table? → composite PK `(workspace_subdomain, id)` + `FORCE RLS` + tenant-scoping policy
 
 ## Rules
 

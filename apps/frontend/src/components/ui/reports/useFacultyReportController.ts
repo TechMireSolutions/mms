@@ -11,17 +11,17 @@ import {
   useTeachersByIds,
   useTeachersMetrics,
   useTeachersContractList,
-} from '@/tenant/hooks/collections/teachers';
-import { teacherStatusBadgeConfig } from '@/lib/teachers/teacherStatusUi';
+} from '@/tenant/hooks/collections/faculty';
+import { teacherStatusBadgeConfig } from '@/lib/faculty/facultyStatusUi';
 import { collectTeacherIdsFromSessions } from '@/lib/registryResolve';
-import { teacherNameById } from '@/lib/teachers/teacherAssignment';
+import { teacherNameById } from '@/lib/faculty/facultyAssignment';
 import {
   applyTeachersReportDrillDown,
   buildTeacherReportMetricItems,
-} from './teacherReportMetrics';
-import { resolveTeacherReportExportRows } from './teacherReportExport';
+} from './facultyReportMetrics';
+import { resolveTeacherReportExportRows } from './facultyReportExport';
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
-import { type FacultyWorkloadItem, mapTeacherRow, type ReportTeacher, type TeacherReportProps, type TeacherReportSubTab } from './teacherReportTypes';
+import { type FacultyWorkloadItem, mapTeacherRow, type ReportTeacher, type TeacherReportProps, type TeacherReportSubTab } from './facultyReportTypes';
 import type { SubTab as UINavTab } from '@/components/ui/SubTabBar';
 
 /** Controller for Faculty Reports tier — Query + filters; presentational shell stays thin. */

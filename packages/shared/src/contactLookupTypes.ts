@@ -63,7 +63,7 @@ export function isContactLookupKind(value: string): value is ContactLookupKind {
   return CONTACT_LOOKUP_KINDS_SET.has(value);
 }
 
-export function isContactLookupCountryKind(kind: ContactLookupKind): boolean {
+export function isContactLookupCountryKind(kind: string): boolean {
   return kind === 'countryCodes';
 }
 

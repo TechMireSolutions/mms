@@ -146,7 +146,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
                         <div>
                           <p className="text-sm font-medium">{notification.title}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground">{notification.desc}</p>
-                          <p className="mt-1 text-xs text-muted-foreground/60">{notification.time}</p>
+                          <p className="mt-1 text-xs text-muted-foreground">{notification.time}</p>
                         </div>
                       </div>
                     </div>

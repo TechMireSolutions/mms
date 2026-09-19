@@ -56,7 +56,7 @@ export function AccountProfileContactTab({
             icon={ShieldCheck}
             title={t("account.unlinkedTitle")}
             description={t("account.noContact")}
-            className="items-start text-warning-foreground"
+            className="items-start"
           />
         ) : (
           <form

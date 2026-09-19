@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Frontend hooks — Query, page controllers / action handlers, Work layout, live data, branding, settings. Applies to tenant and platform hooks.
 ---
 
 # MMS Hooks
@@ -10,12 +11,13 @@ Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), o
 
 ## 1. Server State (TanStack Query)
 
-**Policy owner:** `mms-data-layer.md` §3 · factories → skill **`mms-query-factories`**. This section is recipes only (facades, call-site toast, live-collection ban).
+**Policy owner:** `mms-data-layer.md` §4 · factories → skill **`mms-query-factories`**. This section is recipes only (facades, call-site toast, live-collection ban).
 
 - Wrap colocated `queryOptions` / `mutationOptions`; toast via `notify.*` + `t()` at call site after `mutateAsync` — no global `MutationCache` toast bus.
 - Prefer the shared query factories in `apps/frontend/src/lib/query/` before hand-rolling CRUD factories per module: `createModuleQueryInvalidator` (mutation invalidation wiring), `createModuleSetupConfigApi` (setup REST query/mutation factory), `createModuleSetupConfigHooks`, `createModuleLookupsHooks`. Thin module facades wrap these (`@/tenant/hooks/collections/*`). Note: mutation flows are typed through the per-module `*TsrHooks` files — do not invent a generic CRUD-mutation factory here.
 - Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY`.
 - Form close after success → **`mms-module-architecture.md` §7**.
+- **React 19 `useOptimistic` & Server State Partitioning**: TanStack Query (`useMutation` / `mutationOptions`) is the authoritative coordinator for network persistence, retries, and cache invalidation. React 19's native `useOptimistic` is sanctioned for transient micro-interaction UI state (e.g. instant item dismissal, status switch toggles) inside pending `startTransition` blocks, automatically rolling back on mutation rejection without manual rollback boilerplate.
 
 ### 1.1 Cross-Module Collection Facades
 
@@ -49,7 +51,7 @@ Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / brandi
 
 ## 5. Module Config (Standard Hook)
 
-Module configuration should build on the shared `createStandardModuleConfigHook` (`hooks/createStandardModuleConfigHook.ts`) — used by Teachers / Students / Sessions / Users / Enrollments via `useStandardModuleConfig` (`hooks/useStandardModuleConfig.ts`). Contacts is the richer reference: `useContactStandardConfig` (`lib/contacts/useContactStandardConfig.ts`) calls the same hook with optional params for lookups, column-layout, relationship mirrors, and custom-tab sync, surfaced through `ContactConfigContext` (`lib/contexts/ContactConfigContext.tsx` + `lib/contacts/*` slices: `useContactConfigPrefs`, `useContactsConfigEnhance`). Mount the provider once via `TenantScopedProviders` (tenant host only) — never nest on child pages. Extend the hook (optional params) instead of forking a bespoke provider per module.
+Module configuration should build on the shared `createStandardModuleConfigHook` (`hooks/createStandardModuleConfigHook.ts`) — used by Teachers / Students / Sessions / Users / Enrollments via `useStandardModuleConfig` (`hooks/useStandardModuleConfig.ts`). Contacts is the richer reference: `useContactConfigProviderValue` (`apps/frontend/src/lib/contacts/useContactConfigProviderValue.ts`) supplies the optional params for lookups, column-layout, relationship mirrors, and custom-tab sync, surfaced through `ContactConfigContext` (`ContactConfigProvider` / `useContactConfig` / `useContactColumns` in `apps/frontend/src/lib/contexts/ContactConfigContext.tsx`). Mount the provider once via `TenantScopedProviders` (tenant host only) — never nest on child pages. Extend the hook (optional params) instead of forking a bespoke provider per module.
 
 ## 6. RBAC & Viewer Permissions
 

@@ -8,25 +8,8 @@ cd "$ROOT_DIR"
 ENV_FILE="${1:-apps/backend/.env}"
 # shellcheck source=../lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
-
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  echo "$value"
-}
+# shellcheck source=../lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"
 if [ -s "$NVM_DIR/nvm.sh" ]; then

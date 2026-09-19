@@ -86,6 +86,8 @@ const dataMigrationsToRun = [
   { id: '082', load: async () => (await import('./migrations/082_migrate_email_integration_to_table.js')).runMigration082 },
   { id: '083', load: async () => (await import('./migrations/083_clear_legacy_email_integration_objects.js')).runMigration083 },
   { id: '084', load: async () => (await import('./migrations/084_sync_platform_superuser_to_tenants.js')).runMigration084 },
+  { id: '085', load: async () => (await import('./migrations/085_grant_obligations_to_existing_workspaces.js')).runMigration085 },
+  { id: '086', load: async () => (await import('./migrations/086_backfill_system_modules_access.js')).runMigration086 },
 ];
 
 /** Resolve Drizzle SQL migrations folder (src in node --strip-types, dist in production). */
@@ -138,6 +140,17 @@ export function initDb(options?: { force?: boolean }): Promise<void> {
   initDbPromise = (async () => {
     try {
       await applyDrizzleMigrations();
+
+      // Keep the rolling monthly audit partitions ahead of the clock so the
+      // DEFAULT partition stays empty and retention can still detach by month.
+      const { ensureAuditTrailPartitions } = await import(
+        '../services/auditPartitionService.js'
+      );
+      await ensureAuditTrailPartitions().catch((error: unknown) => {
+        // Never block boot on partition provisioning: writes still land in the
+        // DEFAULT partition, so this degrades retention rather than availability.
+        logger.error({ err: error }, 'Audit partition provisioning failed at boot');
+      });
 
       await runDataMigrations();
       await purgeExpiredAuthArtifacts();

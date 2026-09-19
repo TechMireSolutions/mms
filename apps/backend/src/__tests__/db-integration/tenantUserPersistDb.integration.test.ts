@@ -117,7 +117,7 @@ describe('upsertTenantUsersBatch batched upsert parity', () => {
       },
     ];
 
-    await upsertTenantUsersBatch(batch);
+    await upsertTenantUsersBatch(TEST_SUBDOMAIN, batch);
 
     const verifyTx = await beginLongLivedTenantTransaction(null);
     try {

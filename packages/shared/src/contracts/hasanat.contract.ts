@@ -1,6 +1,11 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema, bulkStringIdsBodySchema, softDeleteBodySchema } from '../apiSchemas.js';
+import { widgetAggregatesBodySchema } from '../schemas/common.dto.js';
+import {
+  hasanatFieldConfigPutBodySchema,
+  hasanatPreferencesPutBodySchema,
+} from '../hasanatSetupConfigTypes.js';
 import {
   denomRecordSchema,
   batchRecordSchema,
@@ -15,7 +20,7 @@ import { hasanatReportAggregatesSchema } from '../hasanatReportAggregates.js';
 import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
 
 const c = initContract();
-const errorResponse = z.unknown();
+const errorResponse = z.object({ type: z.string(), message: z.string() }).passthrough();
 const ok = z.unknown();
 
 /** `{ success: true, succeeded, failed }` bulk-operation envelope. */
@@ -158,14 +163,14 @@ export const hasanatContract = c.router({
   restoreDistribution: {
     method: 'POST',
     path: '/api/hasanat/distributions/:id/restore',
-    body: z.object({}).passthrough(),
+    body: z.object({}).optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: ok, 404: ok, 500: ok },
     summary: 'Restore distribution',
   },
   widgetAggregates: {
     method: 'POST',
     path: '/api/hasanat/widget-aggregates',
-    body: z.object({ widgets: z.array(z.unknown()) }),
+    body: widgetAggregatesBodySchema,
     responses: {
       200: z.record(z.string(), hasanatWidgetAggregateResultSchema),
       403: errorResponse,
@@ -183,7 +188,7 @@ export const hasanatContract = c.router({
   updateFieldConfig: {
     method: 'PUT',
     path: '/api/hasanat/field-config',
-    body: z.unknown(),
+    body: hasanatFieldConfigPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), config: z.record(z.string(), z.unknown()) }), 403: errorResponse, 500: errorResponse },
     summary: 'Update field config',
   },
@@ -196,7 +201,7 @@ export const hasanatContract = c.router({
   updatePreferences: {
     method: 'PUT',
     path: '/api/hasanat/preferences',
-    body: z.unknown(),
+    body: hasanatPreferencesPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), preferences: hasanatPreferencesResponseSchema }), 403: errorResponse, 500: errorResponse },
     summary: 'Update preferences',
   },

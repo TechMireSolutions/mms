@@ -1,6 +1,10 @@
 ---
 name: mms-messaging
-description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, and /api/messaging REST. Use when modifying MessagingPage, MessageComposer, messaging templates/campaigns/logs, MessagingVariableTokensBar, or backend messaging routes/repositories.
+description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, and /api/messaging REST. Use when modifying MessagingPage, MessageComposer, messaging templates/campaigns/logs, MessagingVariableTokensBar, or backend messaging routes/repositories. Do NOT use for transactional audit events (use mms-audit-trail) or email background queuing (use mms-background-jobs).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Messaging Workflow
@@ -45,6 +49,17 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 - [ ] BE: authenticateTenant + RLS; no client authz userId
 ```
 
+## Script
+
+`scripts/verify-template-tokens.mjs` validates every `{token}` in a template against the canonical token set in `packages/shared/src/messagingSchemas.ts`:
+
+```bash
+node scripts/verify-template-tokens.mjs --text 'Salaam {student_name}, {bogus_token} due'
+node scripts/verify-template-tokens.mjs --file path/to/template.txt
+```
+
+Unknown tokens exit non-zero — the backend rejects them at send time, so catch them at authoring time.
+
 ## Done
 
-`pnpm typecheck` · FE lint · messaging tests if touched — `mms-completion-review.md`.
+`pnpm typecheck` · FE lint · `apps/backend/src/__tests__/messaging.integration.test.ts` when the REST surface changed — `mms-completion-review.md`.

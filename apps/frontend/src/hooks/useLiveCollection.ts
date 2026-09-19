@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useOptionalAuth } from "@/lib/contexts/AuthContext";
 import { getCollection, hasCollectionInCache, saveCollectionCacheOnly } from "@/lib/db";
 import { apiFetch } from "@/lib/apiClient";
 import { reportClientError } from "@/lib/clientErrorReporting";
@@ -35,6 +36,10 @@ export function useLiveCollection<T = unknown>(
     enabled ? getCollection<T>(dbKey, defaultDataRef.current) : (EMPTY_ARRAY as T[]),
   );
 
+  // Real auth state from the provider (null outside an AuthProvider, e.g. in
+  // tests), replacing the previous `localStorage['mms_user']` probe.
+  const isAuthenticated = Boolean(useOptionalAuth()?.isAuthenticated);
+
   useEffect(() => {
     if (!enabled) {
       setData(EMPTY_ARRAY as T[]);
@@ -43,8 +48,10 @@ export function useLiveCollection<T = unknown>(
 
     handleUpdate();
 
-    const isAuth = typeof window !== "undefined" && localStorage.getItem("mms_user") !== null;
-    if (isAuth && serverSync && !hasCollectionInCache(dbKey)) {
+    // Auth state comes from the auth context, not from probing the cached
+    // `mms_user` localStorage key: a stale key outliving the session used to
+    // trigger requests that would only fail with 401.
+    if (isAuthenticated && serverSync && !hasCollectionInCache(dbKey)) {
       apiFetch(`/api/db/collections/${dbKey}`)
         .then(async (res) => {
           if (res.ok) {
@@ -63,7 +70,7 @@ export function useLiveCollection<T = unknown>(
       window.removeEventListener("local-database-update", handleUpdate);
       window.removeEventListener("storage", handleUpdate);
     };
-  }, [dbKey, enabled, serverSync, handleUpdate]);
+  }, [dbKey, enabled, serverSync, isAuthenticated, handleUpdate]);
 
   if (!enabled) return EMPTY_ARRAY as T[];
   return data;

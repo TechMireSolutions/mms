@@ -8,9 +8,10 @@ import { exchangeAuthHandoff } from '../../../services/auth/authHandoffService.j
 import { patchUserUiStateBodySchema } from '@mms/shared';
 import { getUserUiState, patchUserUiState } from '../../../services/auth/userUiStateService.js';
 import { getRequestTenant, runWithTenant } from '../../../lib/tenantContext.js';
-import { clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from '../../../services/auth/authCookieService.js';
+import { ACCESS_COOKIE, clearAuthCookies, REFRESH_COOKIE, setAuthCookies } from '../../../services/auth/authCookieService.js';
 import { authenticateTenant } from '../../../middleware/authenticate.js';
-import { deleteAuthArtifact } from '../../../services/auth/authArtifactService.js';
+import { consumeAuthArtifact } from '../../../services/auth/authArtifactService.js';
+import { revokeAllUserSessions, revokeToken } from '../../../services/session.service.js';
 import { getJwtExpiresIn, loadGlobalSettings } from '../../../services/globalSettingsService.js';
 import { tenantSessionScope, touchSession } from '../../../services/sessionClockService.js';
 import { enforceTenantSessionClock, SESSION_EXPIRY_RESPONSE } from '../../../services/sessionGuardService.js';
@@ -22,10 +23,46 @@ import { handoffBodySchema } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendForbidden, sendUnauthorized } from '../../../lib/httpErrors.js';
 import { getWorkspaceInstitutionSetupStatus } from '../../../services/workspaceService.js';
+import { AUTH_RATE_LIMIT } from '../../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../../lib/rateLimitGuard.js';
 
 /** Session lifecycle, UI state, refresh, onboarding status, and handoff routes. */
 export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
-  fastify.post('/logout', async (_request, reply) => {
+  // Brute-force / abuse ceiling for the unauthenticated session endpoints.
+  // (`/me` and `/me/ui-state` are intentionally excluded — the SPA calls them
+  // on every load and they must not share the 10/min auth budget.)
+  const authLimit = createStrictRateLimitGuard(fastify, AUTH_RATE_LIMIT);
+
+  fastify.post('/logout', { preHandler: authLimit }, async (request, reply) => {
+    // Server-side revocation, not just cookie clearing: otherwise a stolen
+    // access/refresh token keeps working after the user signs out.
+    const subdomain = getRequestTenant();
+    const refreshToken = request.cookies?.[REFRESH_COOKIE];
+    let userId: string | undefined;
+
+    if (refreshToken && subdomain) {
+      try {
+        const validated = await validateRefreshToken(refreshToken, subdomain);
+        if (validated) {
+          userId = validated.payload.userId;
+          await consumeAuthArtifact(validated.artifactId, 'refresh_token');
+        }
+      } catch {
+        // Best effort — logout must still clear cookies on failure.
+      }
+    }
+
+    const accessToken = request.cookies?.[ACCESS_COOKIE];
+    if (accessToken) {
+      try {
+        const decoded = fastify.jwt.decode(accessToken) as { jti?: string; id?: string | number } | null;
+        if (decoded?.jti) await revokeToken(decoded.jti);
+        if (!userId && decoded?.id !== undefined) userId = String(decoded.id);
+      } catch {
+        // Best effort — an unverifiable token cannot be revoked by jti.
+      }
+    }
+
     clearAuthCookies(reply);
     return reply.send({ success: true });
   });
@@ -38,14 +75,19 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
     if (user.id) {
       try {
         const { findTenantUserRowById } = await import('../../../db/repositories/tenantUserRepositoryHydrate.js');
-        const userRow = await findTenantUserRowById(String(user.id));
+        // Scope the session check to the caller's workspace — an id-only lookup
+        // runs with RLS bypassed and could resolve another tenant's user.
+        const sessionTenant = getRequestTenant() ?? user.workspaceSubdomain;
+        const userRow = sessionTenant
+          ? await findTenantUserRowById(sessionTenant, String(user.id))
+          : null;
         if (userRow?.deletedAt) {
           return sendUnauthorized(reply, 'Session revoked');
         }
         if (user.role === 'teacher') {
           const tenant = getRequestTenant() ?? user.workspaceSubdomain;
           if (tenant) {
-            const { teachersRepository } = await import('../../../teachers/repository/teachersRepositoryAdapter.js');
+            const { teachersRepository } = await import('../../../faculty/repository/facultyRepositoryAdapter.js');
             const teacherRow = await teachersRepository.findById(tenant, String(user.id));
             if (teacherRow?.deletedAt) {
               return sendUnauthorized(reply, 'Session revoked');
@@ -94,7 +136,7 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
     return reply.send({ state: newState });
   });
 
-  fastify.post('/refresh', async (request, reply) => {
+  fastify.post('/refresh', { preHandler: authLimit }, async (request, reply) => {
     const refreshToken = request.cookies?.[REFRESH_COOKIE];
     if (!refreshToken) {
       return sendUnauthorized(reply, 'Refresh token missing');
@@ -111,7 +153,15 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
       return sendUnauthorized(reply, 'Invalid refresh token');
     }
 
-    await deleteAuthArtifact(validated.artifactId);
+    // Atomic consume: only one concurrent refresh can claim this artifact.
+    // A failed claim means the token was already used — treat it as reuse and
+    // revoke every session for the user (stolen-token response).
+    const claimed = await consumeAuthArtifact(validated.artifactId, 'refresh_token');
+    if (!claimed) {
+      await revokeAllUserSessions(validated.payload.userId);
+      clearAuthCookies(reply);
+      return sendUnauthorized(reply, 'Invalid refresh token');
+    }
 
     const user = await runWithTenant(subdomain, () =>
       getPublicUserById(validated.payload.userId),
@@ -171,12 +221,12 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
     },
   );
 
-  fastify.get('/onboarding-status', async (_request, reply) => {
+  fastify.get('/onboarding-status', { preHandler: authLimit }, async (_request, reply) => {
     const available = await isOnboardingAvailable();
     return reply.send({ available });
   });
 
-  fastify.post('/handoff', async (request, reply) => {
+  fastify.post('/handoff', { preHandler: authLimit }, async (request, reply) => {
     const parsed = parseRequest(handoffBodySchema, request.body ?? {});
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     const { code } = parsed.data;

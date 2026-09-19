@@ -1,5 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { withTenant } from '../../../db/tenant-context.js';
+import { getRequestTenant } from '../../../lib/tenantContext.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../../services/rbacService.js';
 import {
   STUDENTS_MODULE_MANIFEST,
@@ -9,9 +10,8 @@ import {
   type Student,
   studentContract,
 } from '@mms/shared';
-import { validateStudentDynamic } from '../../../services/studentValidationService.js';
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { replyValidationError } from '../../../lib/zodRequest.js';
 import { StudentPermissionError } from '../../../students/use-cases/studentNormalizeUseCases.js';
@@ -34,6 +34,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+      const skipCount = isQueryFlagTrue(query?.skipCount);
 
       if (includeDeleted && !canDeleteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
@@ -42,7 +43,8 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const result = await withTenant(String(request.tenant?.id), () => studentUseCases.loadStudentsPage({
         ...query,
         includeDeleted,
-      } as Parameters<typeof studentUseCases.loadStudentsPage>[0]), { readOnly: true });
+        skipCount,
+      }), { readOnly: true });
 
       return {
         status: 200 as const,
@@ -61,7 +63,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
 
       try {
-        const includeDeleted = isQueryFlagTrue((query as { includeDeleted?: unknown })?.includeDeleted);
+        const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
         if (includeDeleted && !canDeleteCollection(user, 'students')) {
           return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted students requires delete permissions' } };
         }
@@ -82,22 +84,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
 
-      const lang = (request.headers['accept-language'] as string) || 'en';
       const tenant = request.tenant?.id;
-
-      if (tenant) {
-        try {
-          await validateStudentDynamic(tenant, body, lang);
-        } catch (error) {
-          return {
-            status: 400 as const,
-            body: {
-              type: 'validation_error',
-              message: error instanceof Error ? error.message : String(error),
-            },
-          };
-        }
-      }
 
       try {
         const result = await withTenant(String(tenant), () => studentUseCases.createStudent(
@@ -142,21 +129,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
 
-      const lang = (request.headers['accept-language'] as string) || 'en';
       const tenant = request.tenant?.id;
-      if (tenant) {
-        try {
-          await validateStudentDynamic(tenant, body, lang);
-        } catch (error) {
-          return {
-            status: 400 as const,
-            body: {
-              type: 'validation_error',
-              message: error instanceof Error ? error.message : String(error),
-            },
-          };
-        }
-      }
 
       try {
         const updated = await withTenant(String(tenant), () => studentUseCases.updateStudentById(id, {
@@ -266,9 +239,13 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (!canWriteCollection(user, 'students')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
+      const tenantId = request.tenant?.id || getRequestTenant();
+      if (!tenantId) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'This endpoint requires a tenant subdomain' } };
+      }
       try {
-        const result = await withTenant(String(request.tenant?.id), () =>
-          studentUseCases.checkStudentRegistrationDuplicate(body as Parameters<typeof studentUseCases.checkStudentRegistrationDuplicate>[0]), { readOnly: false });
+        const result = await withTenant(tenantId, () =>
+          studentUseCases.checkStudentRegistrationDuplicate(body, tenantId), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
         request.log.error(error, 'Failed to check student duplicate');
@@ -289,7 +266,7 @@ export const studentCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate GR numbers' } };
       }
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof studentContract>);
 
   await fastify.register(s.plugin(router), {
     requestValidationErrorHandler: (err, _request, reply) => {

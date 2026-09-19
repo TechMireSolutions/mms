@@ -1,0 +1,70 @@
+---
+name: mms-agent-standards
+description: Authors and verifies the MMS agent-standards corpus itself — rules, skills, workflows, commands, hooks, and the mirrors across Cursor, Antigravity, and Claude Code. Use when adding or editing a rule or skill, when a skill is not firing, or when the standards verifier fails. Do NOT use for reviewing application code (use mms-code-review) or for local environment problems (use mms-dev-setup).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
+allowed-tools: Read Grep Glob Write Edit Bash(node scripts/verify-rules-integrity.mjs) Bash(bash .agent/scripts/sync-all.sh)
+---
+
+# MMS Agent Standards
+
+**Rules (norms SSOT):** `mms-agent-universal.mdc` (enforcement principle, tool neutrality) · `mms-core.mdc` (ownership matrix) · `.cursor/rules/README.md` (topic → owner rule → skill).
+
+## Canonical sources vs generated mirrors
+
+| Artifact | Edit here | Generated |
+|---|---|---|
+| Rules | `.cursor/rules/*.mdc` | `.agent/rules/*.md`, `.claude/rules/*.md` |
+| Skills | `.agent/skills/*/SKILL.md` | `.cursor/skills/`, `.claude/skills/` |
+| Workflows | `.agent/workflows/*.md` | `.claude/docs/workflows/` |
+| Commands | `.cursor/commands/`, `.claude/commands/` | — (thin wrappers over the workflow) |
+| Shared guide | `AGENTS.md` | `CLAUDE.md` imports it |
+
+Editing a mirror is always a bug: `sync-all.sh` overwrites it and CI fails the drift check.
+
+## Authoring a rule
+
+1. **Find the owner first.** Run the matrix in `.cursor/rules/README.md`. If a topic already has an owner, extend that rule instead of creating a second home — duplicate essays are the corpus's main decay mode.
+2. **Frontmatter is the only tool-specific part:** Cursor `globs` + `alwaysApply`, Antigravity `trigger: always_on | model_decision`, Claude `paths:` (or none when always-on). Bodies must stay byte-identical; the sync script rewrites rule-name references (`.mdc` → `.md`) but never `.cursor/...` paths.
+3. **Scope the globs.** They must match real files — any glob matching zero files fails the verifier. Never write `apps/**` style catch-alls: a rule that matches everything is an always-on rule with extra steps.
+4. **Budget the always-on set.** `mms-agent-universal`, `mms-core`, `mms-completion-review` load on every task; a new always-on rule needs a strong justification, and a scoped rule's content should shrink the always-on set rather than grow it.
+5. **Every norm is machine-enforced or labelled advisory.** Land the lint rule, ratchet script, CI step, hook, or test in the same change, or say explicitly why it can only be reviewed by eye.
+
+## Authoring a skill
+
+1. **Frontmatter:** `name` (must equal the folder, ≤64 chars), `description` (≤1024 chars) with *what it does* + **"Use when…"** + **"Do NOT use for… (use X)"**. The negative boundary is enforced by the verifier and is what stops the wrong skill firing.
+2. **Triggers collide easily.** `mms-a11y-smoke` must fire on "prove a11y", not on all UI work; `mms-code-review` needs the diff; `mms-backend-security` needs the mechanism. If two skills could fire on the same sentence, sharpen both descriptions.
+3. **Body:** rule pointer, when-to-use, the procedure, a verification step, related skills. Keep `SKILL.md` under ~200 lines and push detail to `references/` — the whole file is loaded when the skill activates.
+4. **Code samples must compile.** Every `@/...` import is resolved case-sensitively by the verifier (`Skeleton` vs `skeleton` breaks the Linux deploy). `examples/` and `references/` are validated too: paths, filenames, and alias imports.
+5. **Scripts must be reachable.** A `scripts/*` file that `SKILL.md` never references is dead weight and fails the verifier; scripts must be executable, must exit non-zero on real problems, and must not swallow failures with `|| true`.
+
+## Indexes that must stay in sync
+
+Adding or renaming a skill touches four indexes; keep them honest with one command:
+
+```bash
+node scripts/sync-skill-index.mjs   # writes .agent/skills-manifest.json, the skills README table, AGENTS.md count
+```
+
+The verifier fails if the manifest, the README index count, or the AGENTS.md skill count disagree with disk — so run this before `verify-rules-integrity.mjs`.
+
+## Verification loop
+
+```bash
+node scripts/verify-rules-integrity.mjs        # the gate CI runs
+bash .agent/scripts/sync-all.sh                # regenerate mirrors
+bash .agent/scripts/sync-all.sh --dry-run      # preview (prune is destructive)
+git diff --exit-code -- .agent .cursor .claude # exactly what CI checks
+```
+
+The verifier covers: skill inventory vs manifest, AGENTS.md count, the `@AGENTS.md` import in CLAUDE.md, always-on parity, skill frontmatter limits, the negative trigger boundary, rule citations (`§N` must resolve, including numbered list items like `§6.9`), backticked and bare filenames, example imports, script reachability and execute bits, and Cursor globs matching real files.
+
+## Checking whether a skill actually fires
+
+A skill nobody invokes is invisible cost: all 30 descriptions load on every turn. Probes worth using: `/skill-doctor` for per-skill context cost and invocation counts, and the `InstructionsLoaded` hook to log which rule files loaded. If a skill never fires on the prompts it is meant for, the fix is the **description**, not the body.
+
+## Related skills
+
+`antigravity-workspace` (orientation + sync policy), `mms-code-review` (using the standards), `mms-docs-auditor` agent (drift hunting).

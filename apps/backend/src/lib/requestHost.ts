@@ -28,3 +28,28 @@ export function requestHostname(request: { hostname: string; headers: Record<str
   }
   return headerHost(request.hostname);
 }
+
+function headerValue(value: unknown): string | undefined {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const trimmed = typeof raw === 'string' ? raw.trim() : '';
+  return trimmed || undefined;
+}
+
+/**
+ * Best-effort trusted origin (scheme + host + port) for building links back into the
+ * app (e.g. emailed invite links) — the CSRF/origin guard already validates this exact
+ * header on mutation requests, so it is safe to trust here. Falls back to the Referer's
+ * origin, then `undefined` if neither is present.
+ */
+export function resolveRequestOrigin(request: { headers: Record<string, unknown> }): string | undefined {
+  const origin = headerValue(request.headers.origin);
+  if (origin) return origin;
+
+  const referer = headerValue(request.headers.referer);
+  if (!referer) return undefined;
+  try {
+    return new URL(referer).origin;
+  } catch {
+    return undefined;
+  }
+}

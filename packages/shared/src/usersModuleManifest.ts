@@ -43,18 +43,53 @@ export const inviteWorkspaceUserSchema = z.object({
 /** Values accepted by the workspace user invite form. */
 export type InviteWorkspaceUserInput = z.infer<typeof inviteWorkspaceUserSchema>;
 
-/** Shared form contract for creating a workspace user. */
-export const createWorkspaceUserSchema = z.object({
-  contactId: userFormContactIdSchema,
-  role: z.string().min(1, 'users.errorRoleRequired'),
-  status: userStatusSchema,
-  temporaryRole: z.boolean().optional(),
-  roleExpiry: z.string().optional(),
-  setupMethod: z.enum(['invite', 'password']),
-  password: z.string().optional(),
-  forceReset: z.boolean().optional(),
-  twoFactorEnabled: z.boolean(),
-});
+/** How long a tenant "set your password" OTP code stays valid. */
+export const TENANT_PASSWORD_OTP_TTL_MINUTES = 10;
+
+/** Step 1 — request a one-time code (used for both forgot-password and first-time activation). */
+export const requestTenantPasswordResetSchema = z
+  .object({
+    email: z.string().trim().min(1, 'auth.emailRequired'),
+  })
+  .strict();
+
+export type RequestTenantPasswordResetInput = z.infer<typeof requestTenantPasswordResetSchema>;
+
+/** Step 2 — verify the emailed code before showing the new-password fields. */
+export const verifyTenantPasswordResetSchema = z
+  .object({
+    email: z.string().trim().min(1, 'auth.emailRequired'),
+    code: z.string().min(1, 'auth.otpIncomplete'),
+  })
+  .strict();
+
+export type VerifyTenantPasswordResetInput = z.infer<typeof verifyTenantPasswordResetSchema>;
+
+/** Step 3 — re-submit the code with the chosen password to actually set it. */
+export const resetTenantPasswordSchema = z
+  .object({
+    email: z.string().trim().min(1, 'auth.emailRequired'),
+    code: z.string().min(1, 'auth.otpIncomplete'),
+    password: z.string().min(1, 'users.resetPasswordRequired'),
+  })
+  .strict();
+
+export type ResetTenantPasswordInput = z.infer<typeof resetTenantPasswordSchema>;
+
+/** Shared form contract for creating a workspace user. Passthrough preserves Setup custom fields. */
+export const createWorkspaceUserSchema = z
+  .object({
+    contactId: userFormContactIdSchema,
+    role: z.string().min(1, 'users.errorRoleRequired'),
+    status: userStatusSchema,
+    temporaryRole: z.boolean().optional(),
+    roleExpiry: z.string().optional(),
+    setupMethod: z.enum(['invite', 'password']),
+    password: z.string().optional(),
+    forceReset: z.boolean().optional(),
+    twoFactorEnabled: z.boolean(),
+  })
+  .passthrough();
 
 /** Values accepted by the workspace user create form. */
 export type CreateWorkspaceUserInput = z.infer<typeof createWorkspaceUserSchema>;

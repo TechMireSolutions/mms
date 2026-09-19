@@ -15,6 +15,8 @@ export type ExcludedPlaceholders =
   | "count, select, one {reminder"
   | "count, select, one {student"
   | "count, select, one {card"
+  | "elements selected"
+  | "count, select, one {element selected"
   | "count, select, one {Month";
 
 /** Extracts all dynamic placeholder names (wrapped in curly braces) from a string literal type. */

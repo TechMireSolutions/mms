@@ -225,6 +225,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
           className="md:hidden fixed inset-0 z-sidebar-mobile flex"
         >
           <div
+            data-overlay-backdrop
             className={cn("fixed inset-0", OVERLAY_BACKDROP, "transition-opacity duration-300")}
             onClick={() => {
               if (Date.now() - openedAt > 300) {
@@ -238,7 +239,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
             role="dialog"
             aria-modal="true"
             aria-label={t('nav.openMenu')}
-            className="relative w-sidebar-mobile max-w-sheet bg-sidebar h-full shadow-2xl flex flex-col z-10 border-e border-sidebar-border"
+            className="relative w-sidebar-mobile max-w-sheet bg-sidebar h-full shadow-2xl flex flex-col z-elevated border-e border-sidebar-border"
           >
             {sidebarContent(true)}
           </div>

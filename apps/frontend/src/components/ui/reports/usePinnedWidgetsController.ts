@@ -9,7 +9,7 @@ import { useWidgetCollections } from "@/lib/reports/useReportCollections";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { useContactsWidgetAggregates } from "@/tenant/hooks/collections/contacts";
 import { useStudentsWidgetAggregates } from "@/tenant/hooks/collections/students";
-import { useTeachersWidgetAggregates } from "@/tenant/hooks/collections/teachers";
+import { useTeachersWidgetAggregates } from "@/tenant/hooks/collections/faculty";
 import { useSessionsWidgetAggregates } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsWidgetAggregates } from "@/tenant/hooks/collections/enrollments";
 import { notify } from "@/lib/notify";

@@ -4,7 +4,7 @@ paths:
   - "packages/shared/**"
   - "apps/frontend/src/hooks/**"
   - "apps/frontend/src/tenant/hooks/**"
-  - "apps/frontend/src/tenant/features/**"
+  - "apps/frontend/src/lib/**"
   - "apps/backend/src/services/**"
   - "apps/backend/src/contacts/**"
   - "apps/backend/src/lib/**"
@@ -70,7 +70,7 @@ apps/backend/src/*       Fastify routes, services, Drizzle schema/queries.
 ---
 
 ## 4. Quality Bar & Code Cleanup
-- **Strict Typing**: Strict TypeScript mode is mandatory. Use `unknown` and type narrowing. The use of `any` is forbidden.
+- **Strict Typing**: Strict TypeScript mode is mandatory. Use `unknown` and type narrowing. `any` is banned in new and touched code (`@typescript-eslint/no-explicit-any`); existing annotations are a ratchet tracked by `pnpm run check:code-norms`, not a licence to add more.
 - **JSDoc**: Required on **public exports** in `packages/shared` only. Omit elsewhere; do not add narrating comments to application code.
 - **Unit Testing**: All non-trivial pure logic helper utilities added to `@mms/shared` must include unit tests.
 - **Dead Code**: Actively prune unused imports, dead variables, and legacy shims within your change boundary.

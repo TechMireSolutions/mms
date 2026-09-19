@@ -17,7 +17,9 @@ vi.mock('../db/repositories/tenantUserRepository.js', () => ({
   findTenantUserRowById: (...args: unknown[]) => mockFindTenantUserById(...args),
   replaceTenantUsersForWorkspace: (...args: unknown[]) => mockReplaceTenantUsers(...args),
   upsertTenantUserRow: (...args: unknown[]) => mockUpsertTenantUserRow(...args),
-  upsertTenantUsersBatch: vi.fn(async (users: unknown[]) => {
+  // The real signature is (workspaceSubdomain, users); the workspace is
+  // authoritative and is asserted via the per-row payload's workspaceSubdomain.
+  upsertTenantUsersBatch: vi.fn(async (_workspaceSubdomain: string, users: unknown[]) => {
     for (const u of users) {
       await mockUpsertTenantUserRow(u);
     }

@@ -1,5 +1,6 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
+import { isoDateSchema } from './isoDateSchema.js';
 
 export const denomRecordSchema = z
   .object({
@@ -54,7 +55,7 @@ export const batchRecordInsertSchema = z
     denominationName: z.string().optional().default(''),
     quantity: z.number().positive('Quantity must be greater than 0'),
     remaining: z.number().nonnegative().optional(),
-    addedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    addedDate: isoDateSchema,
     addedByUserId: z.string().nullable().optional(),
     addedBy: z.string().nullable().optional(),
     note: z.string().optional().default(''),
@@ -106,7 +107,7 @@ export const distributionRecordInsertSchema = z
     recipientClass: z.string().optional().default(''),
     quantity: z.number().positive().default(1),
     reason: z.string().optional().default(''),
-    issuedDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Issued date must be YYYY-MM-DD'),
+    issuedDate: isoDateSchema,
     issuedByUserId: z.string().nullable().optional(),
     issuedBy: z.string().nullable().optional(),
     status: z.enum(['active', 'redeemed', 'returned']).optional().default('active'),
@@ -150,7 +151,7 @@ export const redemptionRecordInsertSchema = z
     studentName: z.string().optional().default(''),
     reward: z.string().min(1, 'Reward is required'),
     pointsUsed: z.number().nonnegative().default(0),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    date: isoDateSchema,
     approvedByUserId: z.string().nullable().optional(),
     approvedBy: z.string().nullable().optional(),
   })
@@ -174,7 +175,7 @@ export const HASANAT_MODULE_MANIFEST = {
   restBasePath: '/api/hasanat',
   analyticsCategory: 'hasanat',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['denominations', 'preferences'] as const,
+  setupSubTabs: ['denominations', 'preferences', 'templates'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,

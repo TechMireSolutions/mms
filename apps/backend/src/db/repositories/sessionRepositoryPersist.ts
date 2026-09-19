@@ -1,40 +1,38 @@
-import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, eq } from 'drizzle-orm';
 import { type Session } from '@mms/shared';
-import {
-  sessions,
-  enrollments,
-  sessionClasses,
-  sessionTimetable,
-  sessionDiscounts,
-  sessionBudgetExpenses,
-  sessionBudgetIncomes,
-  sessionEvents,
-  sessionTabarruk,
-} from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { randomUUID } from 'node:crypto';
+import { sessions, sessionFaculty } from '../schema.js';
+import { withTenant, type TenantTransaction } from '../tenant-context.js';
 import { mapAuditToInsert } from './repositoryMappers.js';
+import { persistSessionClassesTx } from './sessionRepositoryPersistClasses.js';
 
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+export {
+  softDeleteSessionWithCascade,
+  restoreSessionWithCascade,
+  hardDeleteSession,
+  bulkDeleteSessions,
+  bulkRestoreSessions,
+  bulkSoftDeleteSessionsWithCascade,
+  bulkRestoreSessionsWithCascade,
+} from './sessionRepositoryCascade.js';
+
+type Transaction = TenantTransaction;
 
 export function sessionWriteValues(
   subdomain: string,
   record: Session,
 ): typeof sessions.$inferInsert {
-  const totalRevenue = record.budget?.totalRevenue ?? 0;
-  const collected = record.budget?.collected ?? 0;
   return {
     id: String(record.id),
     workspaceSubdomain: subdomain,
     name: record.name,
-    type: record.type,
-    status: record.status,
-    startDate: record.startDate,
-    endDate: record.endDate,
+    type: record.type || 'academic',
+    status: record.status || 'active',
+    startDate: record.startDate || '',
+    endDate: record.endDate || '',
     baseFee: String(record.baseFee ?? 0),
     currency: record.currency ?? 'PKR',
     description: record.description ?? null,
-    budgetTotalRevenue: String(totalRevenue),
-    budgetCollected: String(collected),
     ...mapAuditToInsert(record),
   };
 }
@@ -54,6 +52,7 @@ async function persistSessionTx(
 ): Promise<void> {
   const sessionId = String(record.id);
 
+  // 1. Upsert session row
   await tx
     .insert(sessions)
     .values(sessionWriteValues(subdomain, record))
@@ -62,142 +61,27 @@ async function persistSessionTx(
       set: sessionUpdateSetValues(subdomain, record),
     });
 
+  // 2. Persist Session Faculty
   await tx
-    .delete(sessionClasses)
-    .where(and(eq(sessionClasses.workspaceSubdomain, subdomain), eq(sessionClasses.sessionId, sessionId)));
-  if (record.classes && record.classes.length > 0) {
-    await tx.insert(sessionClasses).values(
-      record.classes.map((c, idx) => ({
-        id: c.id || `cls-${idx + 1}`,
+    .delete(sessionFaculty)
+    .where(and(eq(sessionFaculty.workspaceSubdomain, subdomain), eq(sessionFaculty.sessionId, sessionId)));
+
+  if (record.faculty && record.faculty.length > 0) {
+    await tx.insert(sessionFaculty).values(
+      record.faculty.map((f) => ({
+        id: f.id || randomUUID(),
         workspaceSubdomain: subdomain,
         sessionId,
-        name: c.name,
-        ageMin: c.ageMin ?? 1,
-        ageMax: c.ageMax ?? 120,
-        gender: c.gender ?? 'any',
-        teacherId: c.teacherId,
-        teacherName: c.teacherName ?? null,
-        capacity: c.capacity ?? 30,
-        enrolled: c.enrolled ?? 0,
-        room: c.room ?? null,
-        sortOrder: idx,
+        facultyId: f.facultyId,
+        facultyName: f.facultyName || '',
+        role: f.role || 'coordinator',
+        status: f.status || 'active',
       })),
     );
   }
 
-  await tx
-    .delete(sessionTimetable)
-    .where(and(eq(sessionTimetable.workspaceSubdomain, subdomain), eq(sessionTimetable.sessionId, sessionId)));
-  if (record.timetable && record.timetable.length > 0) {
-    await tx.insert(sessionTimetable).values(
-      record.timetable.map((t, idx) => ({
-        id: t.id || `tt-${idx + 1}`,
-        workspaceSubdomain: subdomain,
-        sessionId,
-        day: t.day,
-        activity: t.activity,
-        startTime: t.startTime,
-        endTime: t.endTime,
-        location: t.location,
-        type: t.type,
-        sortOrder: idx,
-      })),
-    );
-  }
-
-  await tx
-    .delete(sessionDiscounts)
-    .where(and(eq(sessionDiscounts.workspaceSubdomain, subdomain), eq(sessionDiscounts.sessionId, sessionId)));
-  if (record.discounts && record.discounts.length > 0) {
-    await tx.insert(sessionDiscounts).values(
-      record.discounts.map((d, idx) => ({
-        id: d.id || `disc-${idx + 1}`,
-        workspaceSubdomain: subdomain,
-        sessionId,
-        name: d.name,
-        type: d.type,
-        value: String(d.value ?? 0),
-        conditions: d.conditions ?? '',
-        active: d.active ?? true,
-        sortOrder: idx,
-      })),
-    );
-  }
-
-  await tx
-    .delete(sessionBudgetExpenses)
-    .where(and(eq(sessionBudgetExpenses.workspaceSubdomain, subdomain), eq(sessionBudgetExpenses.sessionId, sessionId)));
-  if (record.budget?.expenses && record.budget.expenses.length > 0) {
-    await tx.insert(sessionBudgetExpenses).values(
-      record.budget.expenses.map((e, idx) => ({
-        id: e.id || `exp-${idx + 1}`,
-        workspaceSubdomain: subdomain,
-        sessionId,
-        category: e.category,
-        amount: String(e.amount ?? 0),
-        date: e.date,
-        note: e.note ?? null,
-        sortOrder: idx,
-      })),
-    );
-  }
-
-  await tx
-    .delete(sessionBudgetIncomes)
-    .where(and(eq(sessionBudgetIncomes.workspaceSubdomain, subdomain), eq(sessionBudgetIncomes.sessionId, sessionId)));
-  if (record.budget?.incomes && record.budget.incomes.length > 0) {
-    await tx.insert(sessionBudgetIncomes).values(
-      record.budget.incomes.map((i, idx) => ({
-        id: i.id || `inc-${idx + 1}`,
-        workspaceSubdomain: subdomain,
-        sessionId,
-        category: i.category,
-        amount: String(i.amount ?? 0),
-        date: i.date,
-        note: i.note ?? null,
-        sortOrder: idx,
-      })),
-    );
-  }
-
-  await tx
-    .delete(sessionEvents)
-    .where(and(eq(sessionEvents.workspaceSubdomain, subdomain), eq(sessionEvents.sessionId, sessionId)));
-  if (record.events && record.events.length > 0) {
-    await tx.insert(sessionEvents).values(
-      record.events.map((ev, idx) => ({
-        id: ev.id || `ev-${idx + 1}`,
-        workspaceSubdomain: subdomain,
-        sessionId,
-        title: ev.title,
-        date: ev.date,
-        time: ev.time,
-        location: ev.location,
-        description: ev.description ?? null,
-        type: ev.type,
-        sortOrder: idx,
-      })),
-    );
-  }
-
-  await tx
-    .delete(sessionTabarruk)
-    .where(and(eq(sessionTabarruk.workspaceSubdomain, subdomain), eq(sessionTabarruk.sessionId, sessionId)));
-  if (record.tabarruk && record.tabarruk.length > 0) {
-    await tx.insert(sessionTabarruk).values(
-      record.tabarruk.map((tab, idx) => ({
-        id: tab.id || `tab-${idx + 1}`,
-        workspaceSubdomain: subdomain,
-        sessionId,
-        item: tab.item,
-        quantity: tab.quantity,
-        occasion: tab.occasion,
-        date: tab.date,
-        note: tab.note ?? null,
-        sortOrder: idx,
-      })),
-    );
-  }
+  // 3. Clear existing classes and insert new classes
+  await persistSessionClassesTx(tx, subdomain, sessionId, record.classes);
 }
 
 export async function saveSession(tenant: string, record: Session): Promise<void> {
@@ -207,182 +91,13 @@ export async function saveSession(tenant: string, record: Session): Promise<void
   });
 }
 
-async function insertSessionChildrenTx(
-  tx: Transaction,
-  subdomain: string,
-  records: Session[],
-): Promise<void> {
-  const allClasses = records.flatMap((record) => {
-    const sessionId = String(record.id);
-    return (record.classes ?? []).map((c, idx) => ({
-      id: c.id || `cls-${idx + 1}`,
-      workspaceSubdomain: subdomain,
-      sessionId,
-      name: c.name,
-      ageMin: c.ageMin ?? 1,
-      ageMax: c.ageMax ?? 120,
-      gender: c.gender ?? 'any',
-      teacherId: c.teacherId,
-      teacherName: c.teacherName ?? null,
-      capacity: c.capacity ?? 30,
-      enrolled: c.enrolled ?? 0,
-      room: c.room ?? null,
-      sortOrder: idx,
-    }));
-  });
-  if (allClasses.length > 0) {
-    await tx.insert(sessionClasses).values(allClasses);
-  }
-
-  const allTimetable = records.flatMap((record) => {
-    const sessionId = String(record.id);
-    return (record.timetable ?? []).map((t, idx) => ({
-      id: t.id || `tt-${idx + 1}`,
-      workspaceSubdomain: subdomain,
-      sessionId,
-      day: t.day,
-      activity: t.activity,
-      startTime: t.startTime,
-      endTime: t.endTime,
-      location: t.location,
-      type: t.type,
-      sortOrder: idx,
-    }));
-  });
-  if (allTimetable.length > 0) {
-    await tx.insert(sessionTimetable).values(allTimetable);
-  }
-
-  const allDiscounts = records.flatMap((record) => {
-    const sessionId = String(record.id);
-    return (record.discounts ?? []).map((d, idx) => ({
-      id: d.id || `disc-${idx + 1}`,
-      workspaceSubdomain: subdomain,
-      sessionId,
-      name: d.name,
-      type: d.type,
-      value: String(d.value ?? 0),
-      conditions: d.conditions ?? '',
-      active: d.active ?? true,
-      sortOrder: idx,
-    }));
-  });
-  if (allDiscounts.length > 0) {
-    await tx.insert(sessionDiscounts).values(allDiscounts);
-  }
-
-  const allExpenses = records.flatMap((record) => {
-    const sessionId = String(record.id);
-    return (record.budget?.expenses ?? []).map((e, idx) => ({
-      id: e.id || `exp-${idx + 1}`,
-      workspaceSubdomain: subdomain,
-      sessionId,
-      category: e.category,
-      amount: String(e.amount ?? 0),
-      date: e.date,
-      note: e.note ?? null,
-      sortOrder: idx,
-    }));
-  });
-  if (allExpenses.length > 0) {
-    await tx.insert(sessionBudgetExpenses).values(allExpenses);
-  }
-
-  const allIncomes = records.flatMap((record) => {
-    const sessionId = String(record.id);
-    return (record.budget?.incomes ?? []).map((i, idx) => ({
-      id: i.id || `inc-${idx + 1}`,
-      workspaceSubdomain: subdomain,
-      sessionId,
-      category: i.category,
-      amount: String(i.amount ?? 0),
-      date: i.date,
-      note: i.note ?? null,
-      sortOrder: idx,
-    }));
-  });
-  if (allIncomes.length > 0) {
-    await tx.insert(sessionBudgetIncomes).values(allIncomes);
-  }
-
-  const allEvents = records.flatMap((record) => {
-    const sessionId = String(record.id);
-    return (record.events ?? []).map((ev, idx) => ({
-      id: ev.id || `ev-${idx + 1}`,
-      workspaceSubdomain: subdomain,
-      sessionId,
-      title: ev.title,
-      date: ev.date,
-      time: ev.time,
-      location: ev.location,
-      description: ev.description ?? null,
-      type: ev.type,
-      sortOrder: idx,
-    }));
-  });
-  if (allEvents.length > 0) {
-    await tx.insert(sessionEvents).values(allEvents);
-  }
-
-  const allTabarruk = records.flatMap((record) => {
-    const sessionId = String(record.id);
-    return (record.tabarruk ?? []).map((tab, idx) => ({
-      id: tab.id || `tab-${idx + 1}`,
-      workspaceSubdomain: subdomain,
-      sessionId,
-      item: tab.item,
-      quantity: tab.quantity,
-      occasion: tab.occasion,
-      date: tab.date,
-      note: tab.note ?? null,
-      sortOrder: idx,
-    }));
-  });
-  if (allTabarruk.length > 0) {
-    await tx.insert(sessionTabarruk).values(allTabarruk);
-  }
-}
-
 export async function bulkSaveSessions(tenant: string, records: Session[]): Promise<void> {
   if (records.length === 0) return;
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    const sessionIds = records.map((r) => String(r.id));
-
-    await tx
-      .insert(sessions)
-      .values(records.map((record) => sessionWriteValues(subdomain, record)))
-      .onConflictDoUpdate({
-        target: [sessions.workspaceSubdomain, sessions.id],
-        set: {
-          name: sql`excluded.name`,
-          type: sql`excluded.type`,
-          status: sql`excluded.status`,
-          startDate: sql`excluded.start_date`,
-          endDate: sql`excluded.end_date`,
-          baseFee: sql`excluded.base_fee`,
-          currency: sql`excluded.currency`,
-          description: sql`excluded.description`,
-          budgetTotalRevenue: sql`excluded.budget_total_revenue`,
-          budgetCollected: sql`excluded.budget_collected`,
-          deletedAt: sql`excluded.deleted_at`,
-          deletedBy: sql`excluded.deleted_by`,
-          deletionReason: sql`excluded.deletion_reason`,
-          updatedAt: new Date(),
-        },
-      });
-
-    await Promise.all([
-      tx.delete(sessionClasses).where(and(eq(sessionClasses.workspaceSubdomain, subdomain), inArray(sessionClasses.sessionId, sessionIds))),
-      tx.delete(sessionTimetable).where(and(eq(sessionTimetable.workspaceSubdomain, subdomain), inArray(sessionTimetable.sessionId, sessionIds))),
-      tx.delete(sessionDiscounts).where(and(eq(sessionDiscounts.workspaceSubdomain, subdomain), inArray(sessionDiscounts.sessionId, sessionIds))),
-      tx.delete(sessionBudgetExpenses).where(and(eq(sessionBudgetExpenses.workspaceSubdomain, subdomain), inArray(sessionBudgetExpenses.sessionId, sessionIds))),
-      tx.delete(sessionBudgetIncomes).where(and(eq(sessionBudgetIncomes.workspaceSubdomain, subdomain), inArray(sessionBudgetIncomes.sessionId, sessionIds))),
-      tx.delete(sessionEvents).where(and(eq(sessionEvents.workspaceSubdomain, subdomain), inArray(sessionEvents.sessionId, sessionIds))),
-      tx.delete(sessionTabarruk).where(and(eq(sessionTabarruk.workspaceSubdomain, subdomain), inArray(sessionTabarruk.sessionId, sessionIds))),
-    ]);
-
-    await insertSessionChildrenTx(tx, subdomain, records);
+    for (const record of records) {
+      await persistSessionTx(tx, subdomain, record);
+    }
   });
 }
 
@@ -390,252 +105,11 @@ export async function replaceSessionsForWorkspace(tenant: string, records: Sessi
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
     await tx.delete(sessions).where(eq(sessions.workspaceSubdomain, subdomain));
-    if (records.length === 0) return;
-
-    await tx.insert(sessions).values(
-      records.map((record) => sessionWriteValues(subdomain, record)),
-    );
-
-    await insertSessionChildrenTx(tx, subdomain, records);
-  });
-}
-
-export async function softDeleteSessionWithCascade(
-  tenant: string,
-  sessionId: string,
-  deletedBy?: string,
-  deletionReason?: string,
-): Promise<boolean> {
-  const subdomain = tenant.trim().toLowerCase();
-  const now = new Date();
-  return withTenant(subdomain, async (tx) => {
-    // Lock parent session row to prevent race conditions during cascade
-    await tx
-      .select({ id: sessions.id })
-      .from(sessions)
-      .where(
-        and(
-          eq(sessions.workspaceSubdomain, subdomain),
-          eq(sessions.id, sessionId),
-          isNull(sessions.deletedAt),
-        ),
-      )
-      .for('update');
-
-    const sessionRes = await tx
-      .update(sessions)
-      .set({
-        deletedAt: now,
-        deletedBy: deletedBy || null,
-        deletionReason: deletionReason || null,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(sessions.workspaceSubdomain, subdomain),
-          eq(sessions.id, sessionId),
-          isNull(sessions.deletedAt),
-        ),
-      )
-      .returning({ id: sessions.id });
-
-    if (sessionRes.length === 0) {
-      return false;
+    for (const record of records) {
+      await persistSessionTx(tx, subdomain, record);
     }
-
-    await tx
-      .update(enrollments)
-      .set({
-        deletedAt: now,
-        deletedBy: deletedBy || null,
-        deletedWithCascade: true,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(enrollments.workspaceSubdomain, subdomain),
-          eq(enrollments.sessionId, sessionId),
-          isNull(enrollments.deletedAt),
-        ),
-      );
-
-    return true;
   });
 }
 
-export async function restoreSessionWithCascade(
-  tenant: string,
-  sessionId: string,
-  userId?: string,
-): Promise<boolean> {
-  const subdomain = tenant.trim().toLowerCase();
-  const now = new Date();
-  return withTenant(subdomain, async (tx) => {
-    const sessionRes = await tx
-      .update(sessions)
-      .set({
-        deletedAt: null,
-        deletedBy: null,
-        deletionReason: null,
-        restoredAt: now,
-        restoredBy: userId ?? null,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(sessions.workspaceSubdomain, subdomain),
-          eq(sessions.id, sessionId),
-          isNotNull(sessions.deletedAt),
-        ),
-      )
-      .returning({ id: sessions.id });
 
-    if (sessionRes.length === 0) {
-      return false;
-    }
 
-    await tx
-      .update(enrollments)
-      .set({
-        deletedAt: null,
-        deletedBy: null,
-        deletedWithCascade: false,
-        restoredAt: now,
-        restoredBy: userId ?? null,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(enrollments.workspaceSubdomain, subdomain),
-          eq(enrollments.sessionId, sessionId),
-          eq(enrollments.deletedWithCascade, true),
-        ),
-      );
-
-    return true;
-  });
-}
-
-export async function bulkSoftDeleteSessionsWithCascade(
-  tenant: string,
-  sessionIds: string[],
-  deletedBy?: string,
-  deletionReason?: string,
-): Promise<{ succeeded: number; failed: number }> {
-  const subdomain = tenant.trim().toLowerCase();
-  if (sessionIds.length === 0) return { succeeded: 0, failed: 0 };
-  const now = new Date();
-
-  return withTenant(subdomain, async (tx) => {
-    // Lock parent session rows to prevent race conditions during cascade
-    await tx
-      .select({ id: sessions.id })
-      .from(sessions)
-      .where(
-        and(
-          eq(sessions.workspaceSubdomain, subdomain),
-          inArray(sessions.id, sessionIds),
-          isNull(sessions.deletedAt),
-        ),
-      )
-      .for('update');
-
-    const updated = await tx
-      .update(sessions)
-      .set({
-        deletedAt: now,
-        deletedBy: deletedBy || null,
-        deletionReason: deletionReason || null,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(sessions.workspaceSubdomain, subdomain),
-          inArray(sessions.id, sessionIds),
-          isNull(sessions.deletedAt),
-        ),
-      )
-      .returning({ id: sessions.id });
-
-    const succeededIds = updated.map((r) => r.id);
-    if (succeededIds.length > 0) {
-      await tx
-        .update(enrollments)
-        .set({
-          deletedAt: now,
-          deletedBy: deletedBy || null,
-          deletedWithCascade: true,
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(enrollments.workspaceSubdomain, subdomain),
-            inArray(enrollments.sessionId, succeededIds),
-            isNull(enrollments.deletedAt),
-          ),
-        );
-    }
-
-    return {
-      succeeded: succeededIds.length,
-      failed: sessionIds.length - succeededIds.length,
-    };
-  });
-}
-
-export async function bulkRestoreSessionsWithCascade(
-  tenant: string,
-  sessionIds: string[],
-  userId?: string,
-): Promise<{ succeeded: number; failed: number }> {
-  const subdomain = tenant.trim().toLowerCase();
-  if (sessionIds.length === 0) return { succeeded: 0, failed: 0 };
-  const now = new Date();
-
-  return withTenant(subdomain, async (tx) => {
-    const updated = await tx
-      .update(sessions)
-      .set({
-        deletedAt: null,
-        deletedBy: null,
-        deletionReason: null,
-        restoredAt: now,
-        restoredBy: userId ?? null,
-        updatedAt: now,
-      })
-      .where(
-        and(
-          eq(sessions.workspaceSubdomain, subdomain),
-          inArray(sessions.id, sessionIds),
-          isNotNull(sessions.deletedAt),
-        ),
-      )
-      .returning({ id: sessions.id });
-
-    const succeededIds = updated.map((r) => r.id);
-    if (succeededIds.length > 0) {
-      await tx
-        .update(enrollments)
-        .set({
-          deletedAt: null,
-          deletedBy: null,
-          deletedWithCascade: false,
-          restoredAt: now,
-          restoredBy: userId ?? null,
-          updatedAt: now,
-        })
-        .where(
-          and(
-            eq(enrollments.workspaceSubdomain, subdomain),
-            inArray(enrollments.sessionId, succeededIds),
-            eq(enrollments.deletedWithCascade, true),
-          ),
-        );
-    }
-
-    return {
-      succeeded: succeededIds.length,
-      failed: sessionIds.length - succeededIds.length,
-    };
-  });
-}

@@ -15,6 +15,7 @@ vi.mock('../contacts/use-cases/contactConfigService.js', () => ({
 }));
 
 import { buildContactsCsvExport } from '../services/contactsExportService.js';
+import { runWithTenant } from '../lib/tenantContext.js';
 
 function fakeContact(id: string, overrides: Partial<Contact> = {}): Contact {
   return {
@@ -36,7 +37,7 @@ describe('contactsExportService', () => {
 
   it('builds a CSV with default columns when none are passed', async () => {
     mockLoadContactsPage.mockResolvedValueOnce({
-      contacts: [fakeContact('c1', { name: 'Aisha Khan' })],
+      contacts: [fakeContact('c1', { firstName: 'Aisha', lastName: 'Khan', name: 'Aisha Khan' })],
       total: 1,
       page: 1,
       limit: 100,
@@ -50,8 +51,8 @@ describe('contactsExportService', () => {
 
     expect(result.filename).toBe('contacts.csv');
     expect(result.count).toBe(1);
-    expect(result.csv).toContain('"Name","Phone","Email","Gender","City"');
-    expect(result.csv).toContain('Aisha Khan');
+    expect(result.csv).toContain('"First Name","Last Name"');
+    expect(result.csv).toContain('Aisha');
     // Sanitization skipped when no field config exists.
     expect(mockLoadContactsPage).toHaveBeenCalledWith(
       expect.objectContaining({ search: 'aisha', page: 1, limit: 100 }),
@@ -182,7 +183,7 @@ describe('contactsExportService', () => {
     } as unknown as FieldConfig;
     mockLoadContactFieldConfig.mockResolvedValue(fieldConfig);
     mockLoadContactsPage.mockResolvedValueOnce({
-      contacts: [fakeContact('c1', { name: 'Aisha Khan' })],
+      contacts: [fakeContact('c1', { firstName: 'Aisha', lastName: 'Khan', name: 'Aisha Khan' })],
       total: 1,
       page: 1,
       limit: 100,
@@ -192,7 +193,23 @@ describe('contactsExportService', () => {
     const result = await buildContactsCsvExport({}, { viewerRole: 'teacher' });
 
     expect(result.count).toBe(1);
-    expect(result.csv).toContain('Aisha Khan');
+    expect(result.csv).toContain('Aisha');
     expect(mockLoadContactFieldConfig).toHaveBeenCalled();
+  });
+
+  it('prepends active tenant name to export filename', async () => {
+    mockLoadContactsPage.mockResolvedValueOnce({
+      contacts: [],
+      total: 0,
+      page: 1,
+      limit: 100,
+      hasMore: false,
+    });
+
+    const result = await runWithTenant('al-huda', () =>
+      buildContactsCsvExport({}, { viewerRole: 'teacher' }),
+    );
+
+    expect(result.filename).toBe('al-huda_contacts.csv');
   });
 });

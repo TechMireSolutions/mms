@@ -72,7 +72,7 @@ describe('finance API & bulk invoice status write integration tests', () => {
       method: 'POST',
       url: '/api/finance/invoices/bulk-status',
       headers: { host: 'demo.localhost' },
-      payload: { ids: ['inv-1'], status: 'paid' },
+      payload: { ids: ['inv-1'], status: 'overdue' },
     });
 
     expect(response.statusCode).toBe(401);
@@ -88,7 +88,7 @@ describe('finance API & bulk invoice status write integration tests', () => {
         host: 'demo.localhost',
         authorization: `Bearer ${token}`,
       },
-      payload: { ids: ['inv-1'], status: 'paid' },
+      payload: { ids: ['inv-1'], status: 'overdue' },
     });
 
     expect(response.statusCode).toBe(403);
@@ -104,7 +104,7 @@ describe('finance API & bulk invoice status write integration tests', () => {
         host: 'demo.localhost',
         authorization: `Bearer ${token}`,
       },
-      payload: { ids: [], status: 'paid' },
+      payload: { ids: [], status: 'overdue' },
     });
 
     expect(response.statusCode).toBe(400);
@@ -138,13 +138,30 @@ describe('finance API & bulk invoice status write integration tests', () => {
         host: 'demo.localhost',
         authorization: `Bearer ${token}`,
       },
-      payload: { ids: ['inv-1', 'inv-2'], status: 'paid' },
+      payload: { ids: ['inv-1', 'inv-2'], status: 'overdue' },
     });
 
     expect(response.statusCode).toBe(200);
     const body = JSON.parse(response.body);
     expect(body).toEqual({ success: true, succeeded: 2, failed: 0 });
-    expect(mockBulkUpdateInvoicesStatus).toHaveBeenCalledWith(['inv-1', 'inv-2'], 'paid');
+    expect(mockBulkUpdateInvoicesStatus).toHaveBeenCalledWith(['inv-1', 'inv-2'], 'overdue');
+  });
+
+  it('POST /api/finance/invoices/bulk-status refuses ledger-affecting statuses', async () => {
+    const app = await buildApp();
+    const token = adminToken(app);
+    for (const status of ['cancelled', 'paid']) {
+      const response = await app.inject({
+        method: 'POST',
+        url: '/api/finance/invoices/bulk-status',
+        headers: { host: 'demo.localhost', authorization: `Bearer ${token}` },
+        payload: { ids: ['inv-1'], status },
+      });
+      // A bare status write posts nothing to the ledger, so both were rejected at
+      // the schema rather than silently desynchronising the subledger.
+      expect(response.statusCode).toBe(400);
+    }
+    expect(mockBulkUpdateInvoicesStatus).not.toHaveBeenCalled();
   });
 
   it('POST /api/finance/invoices/bulk-status handles partial success', async () => {

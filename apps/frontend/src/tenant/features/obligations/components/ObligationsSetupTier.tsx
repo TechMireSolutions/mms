@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useMemo } from "react";
 import type {
   ObligationDistribution,
   ObligationType,
@@ -35,6 +35,13 @@ const WakalaTypeManager = lazy(
     ).then((m) => ({ default: m.WakalaTypeManager })),
 );
 
+const InvoiceTemplateEditor = lazy(
+  () =>
+    import(
+      "@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor"
+    ).then((m) => ({ default: m.InvoiceTemplateEditor })),
+);
+
 export interface SetupTab {
   id: string;
   label: string;
@@ -57,8 +64,8 @@ export interface ObligationsSetupTierProps {
   onChangeDistributions: (distributions: ObligationDistribution[]) => Promise<void>;
 }
 
-export const ObligationsSetupTier = (function ObligationsSetupTier({
-  tabs,
+export function ObligationsSetupTier({
+  tabs = [],
   activeTab,
   canEditSetup,
   obligationTypes,
@@ -82,12 +89,17 @@ export const ObligationsSetupTier = (function ObligationsSetupTier({
     onChange: onTabChange,
   });
 
+  const subTabBarItems = useMemo(
+    () => tabs.map((tab) => ({ key: tab.id, label: tab.label })),
+    [tabs]
+  );
+
   return (
     <ModuleTierMotion tier="setup">
       <ErrorBoundary>
         <div className="space-y-4">
           <SubTabBar
-            tabs={tabs.map((tab) => ({ key: tab.id, label: tab.label }))}
+            tabs={subTabBarItems}
             value={subTabs.sub}
             onChange={subTabs.handleSubTabChange}
           />
@@ -123,12 +135,22 @@ export const ObligationsSetupTier = (function ObligationsSetupTier({
                   onChangeDistributions={onChangeDistributions}
                 />
               )}
+
+              {subTabs.sub === "invoice_template" && (
+                <InvoiceTemplateEditor 
+                  fullscreen={false} 
+                  obligationTypes={obligationTypes}
+                  reps={reps}
+                  mujtahids={mujtahids}
+                  onClose={() => subTabs.handleSubTabChange("types")} 
+                />
+              )}
             </Suspense>
           )}
         </div>
       </ErrorBoundary>
     </ModuleTierMotion>
   );
-});
+}
 
 export default ObligationsSetupTier;

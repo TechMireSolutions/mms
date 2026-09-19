@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Field/tab registry, system vs custom fields, Setup Fields wiring — applies to tenant and platform
 ---
 
 # MMS Fields & Registry Specification

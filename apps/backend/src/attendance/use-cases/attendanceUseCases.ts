@@ -13,6 +13,8 @@ import {
   normalizeAttendanceReportComparisonQuery,
   type AttendanceCommandMetricsSnapshot,
   type AttendanceRecord,
+  type AttendanceRecordInsert,
+  type AttendanceRecordUpdate,
   type AttendanceReportAggregatesQuery,
   type AttendanceListQuery,
 } from '@mms/shared';
@@ -128,20 +130,20 @@ export function createAttendanceUseCases(
 
   return {
     loadAttendanceRecords: crud.loadAll,
-    createAttendanceRecord: async (record: AttendanceRecord): Promise<AttendanceRecord> => {
+    createAttendanceRecord: async (record: AttendanceRecordInsert | AttendanceRecord): Promise<AttendanceRecord> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       await validateActiveForeignKeys(tenant, record);
-      return crud.create(record);
+      return crud.create(record as AttendanceRecord);
     },
     updateAttendanceRecordById: async (
       id: string,
-      record: AttendanceRecord,
+      record: AttendanceRecordUpdate | Partial<AttendanceRecord>,
     ): Promise<AttendanceRecord | null> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       await validateActiveForeignKeys(tenant, record);
-      return crud.updateById(id, record);
+      return crud.updateById(id, record as AttendanceRecord);
     },
     deleteAttendanceRecordById: crud.deleteById,
     restoreAttendanceRecordById: crud.restoreById,
@@ -152,7 +154,7 @@ export function createAttendanceUseCases(
     replaceAttendanceRecords: bulkService.replace,
 
     /** Upserts only the supplied attendance records without removing unrelated rows. */
-    upsertAttendanceRecords: async (records: AttendanceRecord[]): Promise<AttendanceRecord[]> => {
+    upsertAttendanceRecords: async (records: (AttendanceRecordInsert | AttendanceRecord)[]): Promise<AttendanceRecord[]> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       const parsed = attendanceListSchema.parse(records);

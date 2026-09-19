@@ -12,9 +12,29 @@
   --font-arabic: var(--font-arabic, "Readex Pro", "Noto Sans Arabic", "Amiri", sans-serif);
   --font-urdu: var(--font-urdu, "Noto Nastaliq Urdu", "Amiri", serif);
   --font-persian: var(--font-persian, "Vazirmatn", "Noto Sans Arabic", sans-serif);
-  --font-size-3xs: 0.6875rem;
-  --font-size-2xs: 0.625rem;
-  --font-size-4xs: 0.5625rem;
+  /*
+   * Sub-xs type scale with a legibility floor.
+   *
+   * NAMESPACE: these MUST be `--text-*`. Tailwind v4's font-size namespace is
+   * `--text-*`; there is no `--font-size-*` namespace, so the three tokens used to
+   * be inert — `text-2xs` / `text-3xs` / `text-4xs` generated no CSS at all and
+   * their 217 call sites silently inherited whatever size was around them. The
+   * declared values below are therefore new *behaviour*, not just new numbers:
+   * micro-labels will now actually render at 10/11/12px.
+   *
+   * Sizes: the floor is 10px and the two workhorse steps land on 11px/12px (2xs
+   * previously declared 10px and 4xs 9px, both below a comfortable reading size —
+   * and much worse in Arabic/Urdu/Persian, where 10px Nastaliq is unreadable).
+   * `2xs` intentionally coincides with `text-xs` at 12px: that is the smallest size
+   * we are willing to ship for real content, so the steps converge there.
+   * Explicit line-heights keep the density these micro-labels were designed for.
+   */
+  --text-4xs: 0.625rem;
+  --text-4xs--line-height: 0.875rem;
+  --text-3xs: 0.6875rem;
+  --text-3xs--line-height: 0.9375rem;
+  --text-2xs: 0.75rem;
+  --text-2xs--line-height: 1rem;
 
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
@@ -187,8 +207,23 @@
   --scale-tap: 0.98;
   --scale-tap-subtle: 0.99;
   --scale-tap-micro: 0.995;
+  /*
+   * Stacking order. Use these `z-*` utilities rather than raw numbers so the
+   * order is reviewable in one place. Two notes on the current shape:
+   *
+   *  - `--z-index-dropdown` and `--z-index-popover` are intentionally equal:
+   *    both are transient floating layers, and a popover opened from inside a
+   *    dropdown must not be forced under it. Ordering between them is resolved
+   *    by DOM order, which is what Radix expects.
+   *  - `--z-index-sidebar`/`--z-index-header` share 40 by design (the sidebar
+   *    and top bar are the same layer conceptually; they never overlap).
+   *
+   * `z-raised` fills the gap at 30 that previously had no token, which is why a
+   * raw `z-30` had crept in.
+   */
   --z-index-elevated: 10;
   --z-index-sticky: 20;
+  --z-index-raised: 30;
   --z-index-sidebar: 40;
   --z-index-header: 40;
   --z-index-modal: 50;
@@ -246,33 +281,63 @@
 :root {
   color-scheme: light;
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif;
-  --font-display: 'Amiri', 'Scheherazade New', 'Traditional Arabic', serif;
+  /* Latin display default. Amiri is only fetched for ar/ur (see lib/localeFonts.ts),
+     so naming it here made English/Persian fall back to a generic serif. */
+  --font-display: 'Inter', system-ui, sans-serif;
 
+  /*
+   * WCAG AA CONTRAST CONTRACT — do not lighten these without re-checking.
+   *
+   * Each semantic token below serves THREE roles, and the value has to satisfy all
+   * of them against a light surface:
+   *   1. a solid fill — `bg-primary` with `text-primary-foreground` on it;
+   *   2. text/icons — `text-primary` on `--card` / `--background`;
+   *   3. text/icons on its OWN low tint — `bg-primary/10 text-primary`, which is the
+   *      standard chip/badge pattern (188 usages).
+   *
+   * (1) and (2) impose the same luminance constraint (the token must be dark
+   * enough that white passes on it AND that it passes on white). (3) is the
+   * strictest of the three, because a tint of the token lightens the surface it is
+   * being read against; the values below are therefore solved against a `/15`
+   * tint, not merely against white.
+   *
+   * All three roles verified >= 4.5:1 with the repo's own `getContrastRatio()`
+   * (`packages/shared/src/brandingColorContrast.ts`). `--ring` needs only 3:1
+   * (WCAG 1.4.11 non-text contrast) and shares `--primary`.
+   *
+   * They land near Tailwind's 700 step rather than 500/600 deliberately:
+   * `amber-600` (3.19:1), `emerald-600` (3.77:1) and `orange-600` (3.56:1) all
+   * fail AA with white text, and all fail as text on their own tints.
+   *
+   * Enforced by `apps/frontend/src/__tests__/designTokens.contrast.test.ts`.
+   * Tints stronger than `/15` (e.g. a resting `bg-primary/20`) must use
+   * `-foreground` or a lighter tint, because no single hue satisfies every step.
+   */
   --background: 40 30% 97%;
   --foreground: 28 50% 12%;
   --card: 0 0% 100%;
   --card-foreground: 28 50% 12%;
   --popover: 0 0% 100%;
   --popover-foreground: 28 50% 12%;
-  --primary: 42 85% 44%;
+  --primary: 42 85% 27%;
   --primary-foreground: 0 0% 100%;
   --secondary: 28 65% 22%;
   --secondary-foreground: 40 30% 97%;
   --muted: 40 20% 93%;
-  --muted-foreground: 28 20% 45%;
+  --muted-foreground: 28 20% 41%;
   --accent: 42 60% 90%;
   --accent-foreground: 28 50% 12%;
-  --destructive: 0 84.2% 60.2%;
+  --destructive: 0 84% 40%;
   --destructive-foreground: 0 0% 98%;
-  --success: 142 71% 36%;
+  --success: 142 71% 26%;
   --success-foreground: 0 0% 100%;
-  --warning: 32 95% 44%;
+  --warning: 32 95% 30%;
   --warning-foreground: 0 0% 100%;
-  --info: 217 91% 52%;
+  --info: 217 91% 40%;
   --info-foreground: 0 0% 100%;
   --border: 40 20% 88%;
   --input: 40 20% 88%;
-  --ring: 42 85% 44%;
+  --ring: 42 85% 27%;
   --chart-1: 42 88% 46%;
   --chart-2: 158 72% 38%;
   --chart-3: 217 91% 54%;
@@ -313,14 +378,14 @@
   --muted-foreground: 40 15% 60%;
   --accent: 32 20% 16%;
   --accent-foreground: 40 25% 92%;
-  --destructive: 0 62.8% 30.6%;
-  --destructive-foreground: 0 0% 98%;
+  --destructive: 0 72% 66%;
+  --destructive-foreground: 0 72% 12%;
   --success: 158 65% 42%;
-  --success-foreground: 0 0% 100%;
+  --success-foreground: 158 65% 12%;
   --warning: 32 80% 46%;
-  --warning-foreground: 0 0% 100%;
-  --info: 217 80% 54%;
-  --info-foreground: 0 0% 100%;
+  --warning-foreground: 32 80% 12%;
+  --info: 217 85% 66%;
+  --info-foreground: 217 85% 12%;
   --border: 32 20% 18%;
   --input: 32 20% 18%;
   --ring: 42 90% 50%;
@@ -391,7 +456,9 @@
 
   :lang(ur),
   [lang="ur"] {
-    line-height: 1.8;
+    /* Nastaliq stacks letterforms vertically and has deep descenders; the
+       mms-ui-ux-design contract requires the looser 2.2 leading. */
+    line-height: 2.2;
   }
 
   :lang(ar),
@@ -399,6 +466,13 @@
   :lang(fa),
   [lang="fa"] {
     line-height: 1.55;
+  }
+
+  /* Amiri is fetched only for ar/ur (lib/localeFonts.ts) — scope it to the
+     locales that actually load it instead of applying a serif globally. */
+  [lang="ar"],
+  [lang="ur"] {
+    --font-display: 'Amiri', 'Scheherazade New', 'Traditional Arabic', serif;
   }
 
   ::selection {
@@ -561,6 +635,25 @@
     radial-gradient(hsl(var(--accent-foreground) / 0.04) 1.25px, transparent 1.25px);
 }
 
+/*
+ * Print stylesheet.
+ *
+ * Everything hidden here is hidden for a REASON and by explicit opt-in — never
+ * by incidental utility class. An earlier version of this rule hid `.shadow-sm`
+ * and `.shadow-xl`, which made printed ID cards invisible: `.id-card-preview`
+ * carries `shadow-sm` (StudentIdCardModal.tsx / TeacherIdCardModal.tsx), so the
+ * whole card was `display:none` and the page came out blank. It also hid
+ * `[role="group"]`, which Radix uses for legitimate content (checkbox/radio
+ * groups, select groups). Do not re-add blanket selectors.
+ *
+ * Chrome that must not print is opted out with `.print-hidden`, `print:hidden`,
+ * or a `[data-print-hide]` attribute — see the overlay backdrop below.
+ *
+ * `button`/`input`/`select` stay hidden here: that is what suppresses action
+ * chrome in the twelve in-document `window.print()` flows, and none of them
+ * print real form controls. It is the incidental-utility selectors that were
+ * wrong, not the element ones.
+ */
 @media print {
   aside,
   header,
@@ -571,14 +664,31 @@
   select,
   .print-hidden,
   .print\:hidden,
-  .border-b.border-border,
+  [data-print-hide],
   [role="tablist"],
   [role="toolbar"],
-  [role="search"],
-  [role="group"],
-  .shadow-sm,
-  .shadow-xl {
+  [role="search"] {
     display: none !important;
+  }
+
+  /* Radix portals overlays to <body>, OUTSIDE the app tree, so the rules above
+     never reach them. The backdrop is a full-viewport `bg-sidebar/90` scrim and
+     `print-color-adjust: exact` (below) would force it to print as a solid dark
+     page over any modal-hosted document (ID cards, receipts, templates). */
+  [data-overlay-backdrop] {
+    display: none !important;
+  }
+
+  /* Modal panels are fixed + viewport-clamped for on-screen use; unclamp them so
+     the full document prints instead of just the visible scroll area. */
+  [data-print-unclamp] {
+    position: static !important;
+    max-height: none !important;
+    height: auto !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+    backdrop-filter: none !important;
+    background: white !important;
   }
 
   body,

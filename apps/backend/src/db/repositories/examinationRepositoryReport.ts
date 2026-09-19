@@ -11,7 +11,7 @@ import {
   type ExaminationsReportComparisonSession,
 } from '@mms/shared';
 import { getQueryRows } from '../documentStoreKeys.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 
 function activeExamWhere(subdomain: string, alias = 'e'): ReturnType<typeof sql> {
   return sql`
@@ -28,7 +28,7 @@ export async function loadExaminationsReportAggregatesSql(
   const subdomain = tenant.trim().toLowerCase();
   if (!subdomain) return { ...EMPTY_EXAMINATIONS_REPORT_AGGREGATES };
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const aggregates: ExaminationsReportAggregates = { ...EMPTY_EXAMINATIONS_REPORT_AGGREGATES };
     if (!examinationsReportComparisonQueryActive(comparisonQuery) || !comparisonQuery) {
       return aggregates;

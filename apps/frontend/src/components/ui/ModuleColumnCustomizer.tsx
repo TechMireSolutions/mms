@@ -208,7 +208,7 @@ export const ModuleColumnCustomizer = (function ModuleColumnCustomizer({
                 type="button"
                 onClick={() => setSearchQuery('')}
                 className="absolute end-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground p-0.5"
-                aria-label="Clear search"
+                aria-label={t("common.clearSearch")}
               >
                 <X className="w-3 h-3" />
               </button>

@@ -15,6 +15,12 @@ export {
   useAttendanceMetrics,
 } from '@/tenant/features/attendance/hooks/useAttendance';
 export { invalidateAttendanceQueries } from '@/tenant/features/attendance/hooks/invalidateAttendanceQueries';
+export {
+  useComposedAttendanceSettings,
+  useAttendancePreferencesMutation,
+  useAttendancePreferencesQuery,
+  ATTENDANCE_PREFERENCES_QUERY_KEY,
+} from '@/tenant/features/attendance/hooks/useAttendanceSetupConfig';
 // Phase 7: contract-driven tsrClient hooks & query factories
 export {
   attendanceListQueryOptions,

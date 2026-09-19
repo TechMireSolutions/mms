@@ -1,11 +1,11 @@
 import { randomUUID } from 'node:crypto';
-import { dedupeTrimmedIds } from '@mms/shared';
-import { eq, isNull, isNotNull, type SQL } from 'drizzle-orm';
+import { dedupeTrimmedIds, type SoftDeleteFields, type SoftDeleteListFilter } from '@mms/shared';
+import { eq, isNull, isNotNull, type Column, type SQL } from 'drizzle-orm';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { ConflictError, NotFoundError } from '../lib/httpErrors.js';
 import type { ZodType } from 'zod';
 
-export type SoftDeleteListFilter = 'active' | 'deleted' | 'all';
+export type { SoftDeleteListFilter };
 
 export interface ListByWorkspaceOptions {
   deleted?: SoftDeleteListFilter;
@@ -13,8 +13,8 @@ export interface ListByWorkspaceOptions {
 }
 
 export interface TenantSoftDeleteTable {
-  workspaceSubdomain: any;
-  deletedAt: any;
+  workspaceSubdomain: Column;
+  deletedAt: Column;
 }
 
 /**
@@ -53,14 +53,6 @@ export function filterInMemorySoftDeleted<T extends { deletedAt?: string | Date 
     return records.filter((r) => !r.deletedAt);
   }
   return records;
-}
-
-interface SoftDeleteFields {
-  deletedAt?: string | Date | null;
-  deletedBy?: string | null;
-  deletionReason?: string | null;
-  restoredAt?: string | Date | null;
-  restoredBy?: string | null;
 }
 
 export interface GenericServiceOptions<T> {
@@ -143,7 +135,7 @@ export function createGenericRelationalService<
     return normalized;
   }
 
-  async function updateById(id: string, record: T): Promise<T | null> {
+  async function updateById(id: string, record: Partial<T>): Promise<T | null> {
     const tenant = getRequestTenant();
     if (!tenant) return null;
     const existing = await repo.findById(tenant, id);

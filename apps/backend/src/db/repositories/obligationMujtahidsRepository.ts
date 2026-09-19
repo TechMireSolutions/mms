@@ -1,7 +1,7 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Mujtahid, type MujtahidRep } from '@mms/shared';
 import { mujtahids, mujtahidReps } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 type MujtahidRow = typeof mujtahids.$inferSelect;
 
@@ -14,7 +14,7 @@ export function mujtahidRowToRecord(row: MujtahidRow): Mujtahid {
 
 export async function listMujtahidsByWorkspace(tenant: string): Promise<Mujtahid[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahids.id,
@@ -33,7 +33,7 @@ export async function findMujtahidById(tenant: string, id: string): Promise<Mujt
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahids.id,
@@ -54,7 +54,7 @@ export async function findMujtahidsByIds(tenant: string, ids: string[]): Promise
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahids.id,
@@ -132,19 +132,34 @@ export async function replaceMujtahidsForWorkspace(tenant: string, records: Mujt
     if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
   }
   const uniqueRecords = Array.from(uniqueMap.values());
+  const keepIds = uniqueRecords.map((r) => r.id);
 
   await withTenant(subdomain, async (tx) => {
-    await tx.delete(mujtahids).where(eq(mujtahids.workspaceSubdomain, subdomain));
-    if (uniqueRecords.length > 0) {
-      await tx.insert(mujtahids).values(
-        uniqueRecords.map((record) => ({
-          id: record.id,
-          workspaceSubdomain: subdomain,
-          name: record.name,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })),
-      );
+    if (keepIds.length === 0) {
+      await tx.delete(mujtahids).where(eq(mujtahids.workspaceSubdomain, subdomain));
+    } else {
+      await tx
+        .delete(mujtahids)
+        .where(and(eq(mujtahids.workspaceSubdomain, subdomain), notInArray(mujtahids.id, keepIds)));
+
+      await tx
+        .insert(mujtahids)
+        .values(
+          uniqueRecords.map((record) => ({
+            id: record.id,
+            workspaceSubdomain: subdomain,
+            name: record.name,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [mujtahids.workspaceSubdomain, mujtahids.id],
+          set: {
+            name: sql`excluded.name`,
+            updatedAt: new Date(),
+          },
+        });
     }
   });
 }
@@ -161,7 +176,7 @@ export function mujtahidRepRowToRecord(row: MujtahidRepRow): MujtahidRep {
 
 export async function listMujtahidRepsByWorkspace(tenant: string): Promise<MujtahidRep[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahidReps.id,
@@ -181,7 +196,7 @@ export async function findMujtahidRepById(tenant: string, id: string): Promise<M
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahidReps.id,
@@ -203,7 +218,7 @@ export async function findMujtahidRepsByIds(tenant: string, ids: string[]): Prom
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: mujtahidReps.id,
@@ -286,20 +301,36 @@ export async function replaceMujtahidRepsForWorkspace(tenant: string, records: M
     if (cleanId) uniqueMap.set(cleanId, { ...r, id: cleanId });
   }
   const uniqueRecords = Array.from(uniqueMap.values());
+  const keepIds = uniqueRecords.map((r) => r.id);
 
   await withTenant(subdomain, async (tx) => {
-    await tx.delete(mujtahidReps).where(eq(mujtahidReps.workspaceSubdomain, subdomain));
-    if (uniqueRecords.length > 0) {
-      await tx.insert(mujtahidReps).values(
-        uniqueRecords.map((record) => ({
-          id: record.id,
-          workspaceSubdomain: subdomain,
-          name: record.name,
-          mujtahidId: record.mujtahid_id,
-          createdAt: new Date(),
-          updatedAt: new Date(),
-        })),
-      );
+    if (keepIds.length === 0) {
+      await tx.delete(mujtahidReps).where(eq(mujtahidReps.workspaceSubdomain, subdomain));
+    } else {
+      await tx
+        .delete(mujtahidReps)
+        .where(and(eq(mujtahidReps.workspaceSubdomain, subdomain), notInArray(mujtahidReps.id, keepIds)));
+
+      await tx
+        .insert(mujtahidReps)
+        .values(
+          uniqueRecords.map((record) => ({
+            id: record.id,
+            workspaceSubdomain: subdomain,
+            name: record.name,
+            mujtahidId: record.mujtahid_id,
+            createdAt: new Date(),
+            updatedAt: new Date(),
+          })),
+        )
+        .onConflictDoUpdate({
+          target: [mujtahidReps.workspaceSubdomain, mujtahidReps.id],
+          set: {
+            name: sql`excluded.name`,
+            mujtahidId: sql`excluded.mujtahid_id`,
+            updatedAt: new Date(),
+          },
+        });
     }
   });
 }

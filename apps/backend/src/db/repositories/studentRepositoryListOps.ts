@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Student } from '@mms/shared';
 import { students } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { hydrateStudentsList } from './studentRepository.js';
 
 /** Active students missing typed `gr_number` (null or blank). */
@@ -9,7 +9,7 @@ export async function listActiveStudentsMissingGrNumber(
   workspaceSubdomain: string,
 ): Promise<Student[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: students.id,

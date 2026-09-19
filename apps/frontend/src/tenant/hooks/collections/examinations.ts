@@ -11,6 +11,12 @@ export {
   useExaminationsMetrics,
   useExaminationsMutations,
 } from "@/tenant/features/examinations/hooks/useExaminationsApi";
+export {
+  useComposedExaminationsSettings,
+  useExaminationPreferencesMutation,
+  useExaminationPreferencesQuery,
+  EXAMINATIONS_PREFERENCES_QUERY_KEY,
+} from '@/tenant/features/examinations/hooks/useExaminationSetupConfig';
 export { invalidateExaminationsQueries } from '@/tenant/features/examinations/hooks/invalidateExaminationsQueries';
 // Phase 7: contract-driven tsrClient hooks & query factories
 export {

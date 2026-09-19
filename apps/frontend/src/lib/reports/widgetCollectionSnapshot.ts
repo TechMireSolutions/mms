@@ -14,7 +14,7 @@ import type { CustomWidget } from "./pinnedWidgetTypes";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
 import type { Student } from "@/lib/data/studentsData";
-import type { Teacher } from "@/lib/data/teachersData";
+import type { Teacher } from "@/lib/data/facultyData";
 import type { Session } from "@/lib/data/sessionsData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";

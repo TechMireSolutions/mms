@@ -11,12 +11,36 @@ import {
   getLanguageDirection,
   isRtlLanguage,
   applyDocumentLanguage,
+  APP_TRANSLATIONS_EN,
   type AppTranslationKey,
   type TranslationArgs,
   type AppLanguageCode,
 } from '@mms/shared';
 import { ensureLocaleFontsLoaded } from '@/lib/localeFonts';
 import { reportClientError } from '@/lib/clientErrorReporting';
+
+/**
+ * Keys already reported as missing, so a key rendered in a loop warns once
+ * rather than on every render.
+ */
+const reportedMissingKeys = new Set<string>();
+
+/**
+ * Dev-only guard against a key that exists in the type union but not in the
+ * English pack at runtime — `translateApp` silently falls back to returning the
+ * raw key, which ships as literal `students.idCard.title` text in the UI.
+ * Warning here rather than in `@mms/shared` keeps it out of the backend build
+ * and lets us rely on Vite's `import.meta.env.DEV`.
+ */
+function warnIfKeyMissingAtRuntime(key: string): void {
+  if (!import.meta.env.DEV) return;
+  if (key in APP_TRANSLATIONS_EN) return;
+  if (reportedMissingKeys.has(key)) return;
+  reportedMissingKeys.add(key);
+  console.warn(
+    `[i18n] Missing translation key "${key}" — add it to APP_TRANSLATIONS_EN (packages/shared/src/appTranslationsEn.ts).`,
+  );
+}
 
 export type TranslationFunction = <K extends AppTranslationKey>(
   key: K,
@@ -151,6 +175,7 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   }, [activeLanguage]);
 
   const t = (<K extends AppTranslationKey>(key: K, ...args: TranslationArgs<K>) => {
+      warnIfKeyMissingAtRuntime(key);
       return translateAppParams(key, activeLanguage, ...args);
     });
 

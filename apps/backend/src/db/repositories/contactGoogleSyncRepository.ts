@@ -1,6 +1,6 @@
 import { and, eq } from 'drizzle-orm';
 import { contactGoogleSyncCredentials } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { encryptSecretAtRest, decryptSecretAtRest } from '../../lib/cryptoAtRest.js';
 
 export interface ContactGoogleSyncCredentialRecord {
@@ -30,7 +30,7 @@ export async function findContactGoogleSyncCredentials(
   userId: string,
 ): Promise<ContactGoogleSyncCredentialRecord> {
   const tenant = workspaceSubdomain.trim().toLowerCase();
-  return withTenant(tenant, async (tx) => {
+  return withTenantRead(tenant, async (tx) => {
     const rows = await tx
       .select({
         workspaceSubdomain: contactGoogleSyncCredentials.workspaceSubdomain,

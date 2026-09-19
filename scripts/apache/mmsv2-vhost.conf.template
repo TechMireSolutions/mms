@@ -16,12 +16,20 @@
     ServerAlias *.@@MMS_APP_DOMAIN@@
 
     Protocols h2 http/1.1
+    H2Direct on
+    H2ModernTLSOnly on
+    H2Push off
 
     SSLEngine on
     # Example certbot paths — update if your host uses different files:
     # SSLCertificateFile /etc/letsencrypt/live/@@MMS_APP_DOMAIN@@/fullchain.pem
     # SSLCertificateKeyFile /etc/letsencrypt/live/@@MMS_APP_DOMAIN@@/privkey.pem
     Include /etc/letsencrypt/options-ssl-apache.conf
+    SSLProtocol -all +TLSv1.2 +TLSv1.3
+    SSLCipherSuite ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:ECDHE-ECDSA-AES256-GCM-SHA384:ECDHE-RSA-AES256-GCM-SHA384:ECDHE-ECDSA-CHACHA20-POLY1305:ECDHE-RSA-CHACHA20-POLY1305:DHE-RSA-AES128-GCM-SHA256:DHE-RSA-AES256-GCM-SHA384
+    SSLHonorCipherOrder off
+    SSLSessionTickets On
+    SSLSessionCacheTimeout 86400
 
     # Security headers (mms-auth-security.md — terminate TLS here, not in Node)
     Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains"
@@ -29,6 +37,25 @@
     Header always set X-Frame-Options "SAMEORIGIN"
     Header always set Referrer-Policy "strict-origin-when-cross-origin"
     Header always set Permissions-Policy "camera=(), microphone=(), geolocation=()"
+
+    # HTTP Connection & TLS Tuning (mms-ops-infrastructure.md / mms-performance.md)
+    KeepAlive On
+    MaxKeepAliveRequests 1000
+    KeepAliveTimeout 30
+
+    # Terminate Brotli and Gzip compression at Apache edge for compressible MIME types
+    <IfModule mod_brotli.c>
+        AddOutputFilterByType BROTLI_COMPRESS text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json application/xml image/svg+xml
+        BrotliCompressionQuality 5
+    </IfModule>
+    <IfModule mod_deflate.c>
+        AddOutputFilterByType DEFLATE text/html text/plain text/xml text/css text/javascript application/javascript application/x-javascript application/json application/xml image/svg+xml
+        DeflateCompressionLevel 6
+    </IfModule>
+
+    # Inform upstream Fastify that edge handles compression (prevent double-compression)
+    RequestHeader set X-Edge-Compression "brotli,gzip"
+    RequestHeader set X-No-Compression "1"
 
     # Request limits (50MB multipart uploads for avatars/attachments/backups)
     LimitRequestBody 52428800
@@ -38,11 +65,38 @@
     RequestHeader set X-Forwarded-Proto "https"
     RequestHeader set X-Forwarded-Port "443"
 
+    # WebSocket Gateway: dedicated /ws and /api/ws reverse proxy with 60s timeout & zero buffering
+    ProxyTimeout 60
+    ProxyPass /ws ws://127.0.0.1:@@BACKEND_PORT@@/ws retry=0 timeout=60 keepalive=On flushpackets=on
+    ProxyPassReverse /ws ws://127.0.0.1:@@BACKEND_PORT@@/ws
+    ProxyPass /api/ws ws://127.0.0.1:@@BACKEND_PORT@@/api/ws retry=0 timeout=60 keepalive=On flushpackets=on
+    ProxyPassReverse /api/ws ws://127.0.0.1:@@BACKEND_PORT@@/api/ws
+
     RewriteEngine On
     RewriteCond %{HTTP:Upgrade} =websocket [NC]
+    RewriteCond %{HTTP:Connection} Upgrade [NC]
     RewriteRule ^/(.*) ws://127.0.0.1:@@BACKEND_PORT@@/$1 [P,L]
 
-    ProxyPass / http://127.0.0.1:@@BACKEND_PORT@@/ retry=0 timeout=120
+    # Persistent connection pool & zero-buffering flushpackets for SSE/live-push
+    <Proxy "http://127.0.0.1:@@BACKEND_PORT@@/">
+        ProxySet keepalive=On
+        ProxySet retry=0
+        ProxySet timeout=120
+        ProxySet connectiontimeout=10
+        ProxySet ttl=30
+        ProxySet flushpackets=auto
+        ProxySet disablereuse=Off
+    </Proxy>
+
+    # Disable proxy buffering and compression for real-time Server-Sent Events & WebSocket
+    <LocationMatch "^/(api/(events|live|stream|ws)|ws)">
+        SetEnv no-brotli 1
+        SetEnv no-gzip 1
+        SetEnv proxy-nokeepalive 0
+        SetEnv proxy-sendchunked 1
+    </LocationMatch>
+
+    ProxyPass / http://127.0.0.1:@@BACKEND_PORT@@/ retry=0 timeout=120 keepalive=On ttl=30 flushpackets=auto disablereuse=Off
     ProxyPassReverse / http://127.0.0.1:@@BACKEND_PORT@@/
 
     ErrorLog ${APACHE_LOG_DIR}/mmsv2-error.log

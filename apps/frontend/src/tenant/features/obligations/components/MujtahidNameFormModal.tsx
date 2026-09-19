@@ -8,7 +8,7 @@ import type { Mujtahid, MujtahidRep } from "@/tenant/features/obligations/compon
 export interface NameFormModalProps {
   title: string;
   initial: Partial<Mujtahid> | Partial<MujtahidRep>;
-  onSave: (form: Partial<Mujtahid> | Partial<MujtahidRep>) => void;
+  onSave: (form: Partial<Mujtahid> | Partial<MujtahidRep>) => Promise<unknown> | void;
   onClose: () => void;
   label: string;
 }
@@ -17,13 +17,22 @@ export function NameFormModal({ initial, onSave, onClose, label, title }: NameFo
   const { t } = useTranslation();
   const [form, setForm] = useState({ ...initial });
   const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
 
-  const handleSave = (): void => {
+  const handleSave = async (): Promise<void> => {
     if (!form.name || !form.name.trim()) {
       setError(t("obligations.mujtahids.nameRequired"));
       return;
     }
-    onSave(form);
+    setError("");
+    setSaving(true);
+    try {
+      await onSave({ ...form, name: form.name.trim() });
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : t("obligations.saveFailed"));
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -34,6 +43,8 @@ export function NameFormModal({ initial, onSave, onClose, label, title }: NameFo
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={handleSave}
+      saving={saving}
+      saveDisabled={saving}
       error={error || undefined}
     >
       <Field id="name-form-input" label={label} required error={error || undefined}>
@@ -45,6 +56,7 @@ export function NameFormModal({ initial, onSave, onClose, label, title }: NameFo
             if (error) setError("");
             setForm({ ...form, name: event.target.value });
           }}
+          disabled={saving}
           aria-invalid={!!error}
           required
         />

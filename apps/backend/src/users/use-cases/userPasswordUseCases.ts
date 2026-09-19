@@ -89,12 +89,12 @@ export async function executeUserPasswordReset(
     throw new HttpDomainError(400, 'tenant_context_required', 'Tenant context required');
   }
 
-  const existing = await runPasswordResetStage('load_user', () => repo.findTenantUserRowById(id));
-  if (
-    !existing ||
-    existing.deletedAt ||
-    String(existing.workspaceSubdomain).trim().toLowerCase() !== tenant
-  ) {
+  // Tenant-scoped lookup: the workspace predicate is enforced in SQL, so a
+  // foreign user id can never resolve here.
+  const existing = await runPasswordResetStage('load_user', () =>
+    repo.findTenantUserRowById(tenant, id),
+  );
+  if (!existing || existing.deletedAt) {
     return false;
   }
 
@@ -111,7 +111,7 @@ export async function executeUserPasswordReset(
   const updated = await runPasswordResetStage('credential_transaction', () =>
     withTenant(tenant, async () => {
       const passwordUpdated = await runPasswordResetStage('credential_update', () =>
-        repo.resetTenantUserPasswordRow(id, passwordHash),
+        repo.resetTenantUserPasswordRow(tenant, id, passwordHash),
       );
       if (!passwordUpdated) return false;
 

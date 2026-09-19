@@ -1,10 +1,12 @@
 import React, { useRef } from "react";
-import { Printer, X, ReceiptText } from "lucide-react";
+import { Printer, X, ReceiptText, FileCode2, CloudUpload } from "lucide-react";
 import type { Invoice } from "@/lib/data/financeData";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { formatDate, getCollectedAmountForInvoice, getOutstandingAmountForInvoice } from "@mms/shared";
+import { mapToTypstFeeReceipt, mapToZohoInvoice } from "@/components/ui/template-editor/templatePayloadMappers";
+import { notify } from "@/lib/notify";
 import { cn } from "@/lib/utils";
 
 export interface InvoiceReceiptModalProps {
@@ -151,15 +153,81 @@ export const InvoiceReceiptModal = (function InvoiceReceiptModal({
     win.close();
   };
 
+  const handleExportTypst = () => {
+    const inv = invoices[0];
+    if (!inv) return;
+    const collected = getCollectedAmountForInvoice(inv);
+    const outstanding = getOutstandingAmountForInvoice(inv);
+    const payload = mapToTypstFeeReceipt({
+      institution: madrasaName,
+      receiptNo: inv.id,
+      date: inv.paidDate ?? inv.dueDate,
+      studentName: inv.studentName,
+      rollNo: inv.studentId,
+      className: `${inv.class} · ${inv.session}`,
+      feeItems: [
+        {
+          description: "Tuition Fee",
+          amount: String(inv.finalAmt),
+          paid: String(collected),
+        },
+      ],
+      totalAmount: String(inv.finalAmt),
+      paidAmount: String(collected),
+      balance: String(outstanding),
+      paymentMethod: inv.method ?? "Cash",
+      transactionRef: inv.id,
+    });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `typst-fee-receipt-${inv.id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    notify.success("Typst fee-receipt payload exported");
+  };
+
+  const handleExportZoho = () => {
+    const inv = invoices[0];
+    if (!inv) return;
+    const outstanding = getOutstandingAmountForInvoice(inv);
+    const payload = mapToZohoInvoice({
+      invoice_number: inv.id,
+      date: inv.paidDate ?? inv.dueDate,
+      due_date: inv.dueDate,
+      customer_name: inv.studentName,
+      customer_id: inv.studentId,
+      line_items: [
+        {
+          name: "Tuition Fee",
+          rate: inv.finalAmt,
+          quantity: 1,
+          item_total: inv.finalAmt,
+        },
+      ],
+      total: inv.finalAmt,
+      balance: outstanding,
+    });
+    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `zoho-invoice-${inv.id}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    notify.success("Zoho invoice payload exported");
+  };
+
   return (
     <div
-      className="fixed inset-0 z-50 flex flex-col bg-background/95 backdrop-blur-sm overflow-y-auto"
+      className="fixed inset-0 z-modal flex flex-col bg-background/95 backdrop-blur-sm overflow-y-auto"
       role="dialog"
       aria-modal="true"
       aria-label={t("finance.receipt.title")}
     >
       {/* Toolbar */}
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-background/90 backdrop-blur px-4 py-3 print:hidden">
+      <div className="sticky top-0 z-elevated flex items-center justify-between border-b border-border bg-background/90 backdrop-blur px-4 py-3 print:hidden">
         <div className="flex items-center gap-2">
           <ReceiptText className="w-4 h-4 text-primary" aria-hidden />
           <span className="text-sm font-semibold text-foreground">
@@ -170,6 +238,14 @@ export const InvoiceReceiptModal = (function InvoiceReceiptModal({
           <span className="text-xs text-muted-foreground">({invoices.length})</span>
         </div>
         <div className="flex items-center gap-2">
+          <Button size="sm" variant="outline" onClick={handleExportTypst} className="gap-1.5" title="Export Typst Compiler JSON">
+            <FileCode2 className="w-3.5 h-3.5 text-sky-600" aria-hidden />
+            <span>Typst</span>
+          </Button>
+          <Button size="sm" variant="outline" onClick={handleExportZoho} className="gap-1.5" title="Export Zoho Invoice JSON">
+            <CloudUpload className="w-3.5 h-3.5 text-amber-600" aria-hidden />
+            <span>Zoho</span>
+          </Button>
           <Button size="sm" onClick={handlePrint} className="gap-1.5">
             <Printer className="w-3.5 h-3.5" aria-hidden />
             {t("finance.printReceipt")}

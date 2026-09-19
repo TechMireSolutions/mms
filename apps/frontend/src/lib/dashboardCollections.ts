@@ -5,8 +5,10 @@ import { isSeededDashboardWidget, DASHBOARD_WIDGET_REGISTRY } from '@/lib/dashbo
 import {
   type DashboardTrendMetric,
   type DashboardMetricTrends,
+  type Permission,
   SESSIONS_MODULE_MANIFEST,
   ATTENDANCE_MODULE_MANIFEST,
+  ENROLLMENTS_MODULE_MANIFEST,
   HASANAT_MODULE_MANIFEST,
   FINANCE_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
@@ -67,14 +69,82 @@ export function filterDashboardCardWidgets(
 }
 
 /**
+ * Resolves the required read permission for a dashboard widget or card.
+ */
+export function getDashboardWidgetRequiredPermission(
+  widget: Pick<CustomWidget, 'id' | 'collection' | 'category' | 'widgetType'>,
+): Permission | undefined {
+  if (widget.widgetType === 'hasanat-distribution') {
+    return HASANAT_MODULE_MANIFEST.permissions.read;
+  }
+  if (widget.widgetType === 'revenue-expenses') {
+    return ACCOUNTING_MODULE_MANIFEST.permissions.read;
+  }
+
+  const collection = widget.collection;
+  if (collection === 'finance_invoices') {
+    if (
+      DASHBOARD_ACCOUNTING_WIDGET_IDS.has(widget.id) ||
+      widget.category === ACCOUNTING_MODULE_MANIFEST.moduleId
+    ) {
+      return ACCOUNTING_MODULE_MANIFEST.permissions.read;
+    }
+    return FINANCE_MODULE_MANIFEST.permissions.read;
+  }
+
+  switch (collection) {
+    case 'hasanat_distributions':
+      return HASANAT_MODULE_MANIFEST.permissions.read;
+    case 'attendance_records':
+      return ATTENDANCE_MODULE_MANIFEST.permissions.read;
+    case 'sessions':
+      return SESSIONS_MODULE_MANIFEST.permissions.read;
+    case 'enrollments':
+      return ENROLLMENTS_MODULE_MANIFEST.permissions.read;
+    case 'students':
+      return STUDENTS_MODULE_MANIFEST.permissions.read;
+    case 'teachers':
+      return TEACHERS_MODULE_MANIFEST.permissions.read;
+    case 'contacts':
+      return CONTACTS_MODULE_MANIFEST.permissions.read;
+    case 'questions':
+    case 'tests':
+    case 'assessment_results':
+      return QUESTION_BANK_MODULE_MANIFEST.permissions.read;
+    default:
+      return undefined;
+  }
+}
+
+/**
+ * Checks whether the current user has the necessary read permission to view a widget.
+ */
+export function isDashboardWidgetPermitted(
+  widget: Pick<CustomWidget, 'id' | 'collection' | 'category' | 'widgetType'>,
+  can: (permission: Permission) => boolean,
+): boolean {
+  const permission = getDashboardWidgetRequiredPermission(widget);
+  if (!permission) return true;
+  return can(permission);
+}
+
+/**
  * Whether a dashboard card/widget should show given enabledModules.
  * Accounting-tagged finance cards require the accounting module.
  */
 export function isDashboardWidgetModuleEnabled(
-  widget: Pick<CustomWidget, 'id' | 'collection' | 'category'>,
+  widget: Pick<CustomWidget, 'id' | 'collection' | 'category' | 'widgetType'>,
   enabledModules: Record<string, boolean | undefined>,
 ): boolean {
   const isModuleEnabled = (moduleId: string) => enabledModules[moduleId] !== false;
+
+  if (widget.widgetType === 'hasanat-distribution') {
+    return isModuleEnabled(HASANAT_MODULE_MANIFEST.moduleId);
+  }
+  if (widget.widgetType === 'revenue-expenses') {
+    return isModuleEnabled(ACCOUNTING_MODULE_MANIFEST.moduleId);
+  }
+
   const collection = widget.collection;
 
   if (collection === 'finance_invoices') {
@@ -90,6 +160,23 @@ export function isDashboardWidgetModuleEnabled(
   const moduleId = DASHBOARD_COLLECTION_MODULE_ID[collection];
   if (!moduleId) return true;
   return isModuleEnabled(moduleId);
+}
+
+/**
+ * Checks whether a widget is allowed (both module is enabled and user is permitted).
+ */
+export function isDashboardWidgetAllowed(
+  widget: Pick<CustomWidget, 'id' | 'collection' | 'category' | 'widgetType'>,
+  enabledModules: Record<string, boolean | undefined>,
+  can?: (permission: Permission) => boolean,
+): boolean {
+  if (!isDashboardWidgetModuleEnabled(widget, enabledModules)) {
+    return false;
+  }
+  if (can && !isDashboardWidgetPermitted(widget, can)) {
+    return false;
+  }
+  return true;
 }
 
 /** Explicit trend source for seeded metric cards — sourced from
@@ -140,10 +227,19 @@ export function filterDashboardWidgetsByCollection(
 export function getRequiredDashboardCollections(
   widgets: CustomWidget[],
   dashboardRole: DashboardRole,
+  enabledModules?: Record<string, boolean | undefined>,
+  can?: (permission: Permission) => boolean,
 ): Set<ReportCollection> {
   const required = new Set<ReportCollection>();
 
   for (const widget of widgets) {
+    if (enabledModules && !isDashboardWidgetModuleEnabled(widget, enabledModules)) {
+      continue;
+    }
+    if (can && !isDashboardWidgetPermitted(widget, can)) {
+      continue;
+    }
+
     const isActive = isWidgetActiveForDashboard(widget, dashboardRole);
     const isPinnedWidget = Boolean(widget.isPinnedToDashboard);
 
@@ -170,7 +266,16 @@ export function getActiveCustomCardIds(
 }
 
 /** Count of widgets pinned to the dashboard layout. */
-export function getPinnedDashboardWidgetCount(widgets: CustomWidget[]): number {
-  return widgets.filter((widget) => widget.isPinnedToDashboard && widget.widgetType !== 'card').length;
+export function getPinnedDashboardWidgetCount(
+  widgets: CustomWidget[],
+  enabledModules?: Record<string, boolean | undefined>,
+  can?: (permission: Permission) => boolean,
+): number {
+  return widgets.filter((widget) => {
+    if (!widget.isPinnedToDashboard || widget.widgetType === 'card') return false;
+    if (enabledModules && !isDashboardWidgetModuleEnabled(widget, enabledModules)) return false;
+    if (can && !isDashboardWidgetPermitted(widget, can)) return false;
+    return true;
+  }).length;
 }
 

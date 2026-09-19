@@ -4,7 +4,7 @@ import type {
   SessionsWidgetQuery,
 } from '@mms/shared';
 import { sessions } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 
 function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(sessions.workspaceSubdomain, subdomain), isNull(sessions.deletedAt))!;
@@ -74,7 +74,7 @@ export async function aggregateSessionsWidgetQueries(
   const results: Record<string, SessionsWidgetAggregateResult> = {};
   if (queries.length === 0) return results;
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const totalRows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(sessions)

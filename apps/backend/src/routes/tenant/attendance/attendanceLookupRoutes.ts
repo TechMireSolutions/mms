@@ -3,6 +3,7 @@ import {
   ATTENDANCE_MODULE_MANIFEST,
   attendanceLookupKindParamsSchema,
   attendanceLookupPutBodySchema,
+  type AttendanceLookupKind,
 } from '@mms/shared';
 import { registerModuleLookupRoutes } from '../../../lib/registerModuleLookupRoutes.js';
 import { canReadCollection } from '../../../services/rbacService.js';
@@ -15,14 +16,13 @@ import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditH
 const auditAttendance = createCollectionAuditHelper('attendance_records');
 
 export const attendanceLookupRoutes: FastifyPluginAsync = async (fastify) => {
-  registerModuleLookupRoutes(fastify, {
+  registerModuleLookupRoutes<AttendanceLookupKind>(fastify, {
     canRead: (user) => canReadCollection(user, 'attendance_records'),
     setupWritePermission: ATTENDANCE_MODULE_MANIFEST.permissions.setupWrite,
     kindParamsSchema: attendanceLookupKindParamsSchema,
     putBodySchema: attendanceLookupPutBodySchema,
     loadMap: loadAttendanceLookupsMap,
-    replaceKind: (kind, items) =>
-      replaceAttendanceLookupKind(kind as never, items as never) as Promise<unknown>,
+    replaceKind: (kind, items) => replaceAttendanceLookupKind(kind, items),
     audit: auditAttendance,
     auditAction: 'UPDATE_ATTENDANCE_LOOKUPS',
     loadError: 'Failed to load attendance lookups',

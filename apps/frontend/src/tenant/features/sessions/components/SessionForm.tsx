@@ -98,7 +98,7 @@ export const SessionForm = (function SessionForm({
         setSaving(true);
         try {
           const payload: Session = {
-            id: session?.id || `ses${crypto.randomUUID()}`,
+            id: session?.id || crypto.randomUUID(),
             name: toTitleCase(sessionDraft.name || ''),
             type: sessionDraft.type || defaultType,
             status: (sessionDraft.status as Session['status']) || 'active',
@@ -107,12 +107,8 @@ export const SessionForm = (function SessionForm({
             baseFee: Number(sessionDraft.baseFee || 0),
             currency: sessionDraft.currency || defaultCurrency,
             description: sessionDraft.description || '',
-            classes: sessionDraft.classes || [],
-            timetable: sessionDraft.timetable || [],
-            discounts: sessionDraft.discounts || [],
-            budget: sessionDraft.budget || { totalRevenue: 0, collected: 0, expenses: [], incomes: [] },
-            events: sessionDraft.events || [],
-            tabarruk: sessionDraft.tabarruk || [],
+            faculty: sessionDraft.faculty || session?.faculty || [],
+            classes: sessionDraft.classes || session?.classes || [],
           };
 
           const parsed = SessionSchema.safeParse(payload);

@@ -85,15 +85,17 @@ export function useContactsPageController() {
     crud,
   });
 
-  const { handleExportCSV, handleBulkExport } = useContactsExportActions({
+  const { handleExportCSV, handleBulkExport, isExporting } = useContactsExportActions({
     tableColumns,
     canExport,
-    search: directory.search,
+    // Debounced: the export must cover exactly what the visible list was filtered by.
+    search: directory.debouncedSearch,
     filterGender: directory.filterGender,
     sortField: directory.sortField,
     sortDir: directory.sortDir,
     quickFilter: directory.quickFilter,
     viewingDeleted: directory.viewingDeleted,
+    hasActiveFilters: directory.hasActiveFilters,
     selected: directory.selected,
     logExportAudit,
     handleError,
@@ -104,6 +106,12 @@ export function useContactsPageController() {
     selected: directory.selected,
     workContacts: directory.workContacts,
   });
+
+  /** Import writes contacts; a reader without `contacts.write` must not open the dialog. */
+  const handleOpenImport = useCallback(() => {
+    if (!canWrite) return;
+    overlay.setImportOpen(true);
+  }, [canWrite, overlay.setImportOpen]);
 
   useContactsKeyboardShortcuts({
     selectedCount: directory.selected.length,
@@ -145,6 +153,7 @@ export function useContactsPageController() {
     commonDirectoryProps,
     tableProps,
     handleBulkExport,
+    isExporting,
   });
 
   const overlayProps = useContactsPageOverlayProps({
@@ -168,8 +177,10 @@ export function useContactsPageController() {
     canWrite,
     viewingDeleted,
     openingDuplicates: overlay.openingDuplicates,
+    isExporting,
     handleOpenDuplicates: actions.handleOpenDuplicates,
     handleExportCSV,
+    handleOpenImport,
     handleNew: actions.handleCreateContact,
     shownCount: directory.shownCount,
     pendingCount,

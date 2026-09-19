@@ -1,9 +1,11 @@
-import { eq, ilike, or, isNull, isNotNull, type SQL, desc, asc } from 'drizzle-orm';
+import { eq, ilike, or, isNull, isNotNull, exists, type SQL, desc, asc, sql } from 'drizzle-orm';
 import { isQueryFlagTrue, type AccountingListQuery } from '@mms/shared';
 import {
   accountingAccounts,
   accountingEntries,
   accountingFiscalYears,
+  accountingEntryTags,
+  accountingJournalLines,
 } from '../schema.js';
 
 export function buildAccountListConditions(subdomain: string, query: AccountingListQuery): SQL[] {
@@ -29,6 +31,14 @@ export function buildAccountListConditions(subdomain: string, query: AccountingL
     );
   }
 
+  // Declared on AccountingListQuery and offered by the COA type filter, but never
+  // applied — so choosing a type changed the query key and refetched an
+  // identical, unfiltered page.
+  const accountType = query.accountType?.trim();
+  if (accountType) {
+    conditions.push(eq(accountingAccounts.type, accountType));
+  }
+
   return conditions;
 }
 
@@ -50,6 +60,54 @@ export function buildEntryListConditions(subdomain: string, query: AccountingLis
         ilike(accountingEntries.ref, searchPattern),
         ilike(accountingEntries.description, searchPattern),
         ilike(accountingEntries.fiscalYear, searchPattern),
+      ) as SQL,
+    );
+  }
+
+  // The Journal tab has always offered a status filter and a date range, and
+  // AccountingListQuery declares both, but neither reached the query: the
+  // controls refetched an identical, unfiltered page.
+  const status = query.status?.trim();
+  if (status) {
+    conditions.push(eq(accountingEntries.status, status));
+  }
+
+  const dateFrom = query.dateFrom?.trim();
+  if (dateFrom) {
+    conditions.push(sql`${accountingEntries.date} >= ${dateFrom}`);
+  }
+
+  const dateTo = query.dateTo?.trim();
+  if (dateTo) {
+    conditions.push(sql`${accountingEntries.date} <= ${dateTo}`);
+  }
+
+  // Entries carrying a line on the given account — what the General Ledger needs
+  // in order to show one account's movement rather than whatever page happened
+  // to be loaded.
+  const accountId = query.accountId?.trim();
+  if (accountId) {
+    conditions.push(
+      exists(
+        sql`(select 1 from ${accountingJournalLines}
+             where ${accountingJournalLines.workspaceSubdomain} = ${accountingEntries.workspaceSubdomain}
+               and ${accountingJournalLines.entryId} = ${accountingEntries.id}
+               and ${accountingJournalLines.accountId} = ${accountId})`,
+      ) as SQL,
+    );
+  }
+
+  // Entries carrying the given tag. The tag filter used to be browser-only, so
+  // once the list pages on the server it would have narrowed each page on its own
+  // and reported "no results" for pages that simply did not hold the tag.
+  const tag = query.tag?.trim();
+  if (tag) {
+    conditions.push(
+      exists(
+        sql`(select 1 from ${accountingEntryTags}
+             where ${accountingEntryTags.workspaceSubdomain} = ${accountingEntries.workspaceSubdomain}
+               and ${accountingEntryTags.entryId} = ${accountingEntries.id}
+               and ${accountingEntryTags.tag} = ${tag})`,
       ) as SQL,
     );
   }
@@ -80,7 +138,7 @@ export function buildFiscalYearListConditions(subdomain: string, query: Accounti
   return conditions;
 }
 
-export function buildAccountOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+export function buildAccountOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
   let column: SQL;
   switch (field) {
@@ -105,7 +163,7 @@ export function buildAccountOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
 
-export function buildEntryOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+export function buildEntryOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
   let column: SQL;
   switch (field) {
@@ -128,10 +186,16 @@ export function buildEntryOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'):
     default:
       column = accountingEntries.createdAt as unknown as SQL;
   }
-  return sortDir === 'asc' ? asc(column) : desc(column);
+  // `id` breaks ties so the order is total. Offset paging needs that: with a
+  // non-unique sort key (a date is shared by every entry booked that day) two
+  // requests can order the tied rows differently, showing a row on two pages
+  // while skipping another entirely.
+  return sortDir === 'asc'
+    ? sql`${asc(column)}, ${asc(accountingEntries.id)}`
+    : sql`${desc(column)}, ${desc(accountingEntries.id)}`;
 }
 
-export function buildFiscalYearOrderBy(sortField?: string, sortDir?: 'asc' | 'desc'): SQL {
+export function buildFiscalYearOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
   let column: SQL;
   switch (field) {

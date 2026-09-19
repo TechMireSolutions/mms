@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { isQueryFlagTrue, type Contact, type User, contactsContract } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { getLinkedContactId } from '../../../services/auth/userService.js';
 import { contactUseCases } from '../../../contacts/use-cases/contactUseCases.js';
@@ -42,12 +42,14 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       if (includeDeleted && !canDeleteCollection(user, 'contacts')) {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
+      const skipCount = isQueryFlagTrue(query?.skipCount);
       try {
         const effectiveQuery = {
           page: 1,
           limit: 25,
           ...query,
           includeDeleted,
+          skipCount,
         };
         const result = await contactUseCases.loadContactsPage(effectiveQuery);
         const contacts = result.contacts;
@@ -90,7 +92,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const lang = ((request.headers?.['accept-language'] as string | undefined) || 'en');
       
       try {
-        const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(body as unknown as Contact, { user, language: lang });
+        const { contact, created, restoredFromDelete } = await contactUseCases.upsertContact(body as Contact, { user, language: lang });
         if (restoredFromDelete) {
           await auditContact(user, 'contact.restore', `Restored contact ${String(contact.id)} via upsert`, String(contact.id));
         } else {
@@ -114,7 +116,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
       const lang = ((request.headers?.['accept-language'] as string | undefined) || 'en');
       
       try {
-        const updatePayload = { ...(body && typeof body === 'object' ? body : {}), id } as unknown as Contact;
+        const updatePayload = { ...(body && typeof body === 'object' ? body : {}), id } as Contact;
         const updated = await contactUseCases.updateContactById(id, updatePayload, { language: lang, applyRelationshipInference: canWriteContacts(user) });
         if (!updated) return { status: 404 as const, body: { type: 'not_found', message: 'Contact not found' } };
         await auditContact(user, 'contact.update', `Updated contact ${id}`, id);
@@ -159,7 +161,7 @@ export const contactCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load contact report analytics' } };
       }
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof contactsContract>);
 
   await fastify.register(s.plugin(router), {
     requestValidationErrorHandler: (err, _request, reply) => {

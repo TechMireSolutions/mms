@@ -26,18 +26,22 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
   };
 });
 
-const mockListSavedReports = vi.fn();
-const mockCreateSavedReport = vi.fn();
-const mockDeleteSavedReport = vi.fn();
-const mockRunSavedReport = vi.fn();
+const mockListSavedReportsByOwner = vi.fn();
+const mockCreateSavedReportForOwner = vi.fn();
+const mockDeleteSavedReportByOwner = vi.fn();
+const mockTouchSavedReportRunByOwner = vi.fn();
 const mockRecordAudit = vi.fn();
 
-vi.mock('../services/savedReportsService.js', () => ({
-  listSavedReports: (...args: unknown[]) => mockListSavedReports(...args),
-  createSavedReport: (...args: unknown[]) => mockCreateSavedReport(...args),
-  deleteSavedReport: (...args: unknown[]) => mockDeleteSavedReport(...args),
-  runSavedReport: (...args: unknown[]) => mockRunSavedReport(...args),
-}));
+vi.mock('../db/repositories/savedReportsRepository.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../db/repositories/savedReportsRepository.js')>();
+  return {
+    ...actual,
+    listSavedReportsByOwner: (...args: unknown[]) => mockListSavedReportsByOwner(...args),
+    createSavedReportForOwner: (...args: unknown[]) => mockCreateSavedReportForOwner(...args),
+    deleteSavedReportByOwner: (...args: unknown[]) => mockDeleteSavedReportByOwner(...args),
+    touchSavedReportRunByOwner: (...args: unknown[]) => mockTouchSavedReportRunByOwner(...args),
+  };
+});
 
 vi.mock('../services/auditTrailService.js', () => ({
   recordModernAuditEvent: (first: unknown, second?: unknown) => {
@@ -83,10 +87,10 @@ describe('generic saved-reports REST routes', () => {
   beforeEach(() => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    mockListSavedReports.mockReset().mockResolvedValue([REPORT]);
-    mockCreateSavedReport.mockReset().mockResolvedValue(REPORT);
-    mockDeleteSavedReport.mockReset().mockResolvedValue(true);
-    mockRunSavedReport.mockReset().mockResolvedValue(REPORT);
+    mockListSavedReportsByOwner.mockReset().mockResolvedValue([REPORT]);
+    mockCreateSavedReportForOwner.mockReset().mockResolvedValue(REPORT);
+    mockDeleteSavedReportByOwner.mockReset().mockResolvedValue(true);
+    mockTouchSavedReportRunByOwner.mockReset().mockResolvedValue(REPORT);
     mockRecordAudit.mockReset().mockResolvedValue(undefined);
   });
 
@@ -103,7 +107,7 @@ describe('generic saved-reports REST routes', () => {
     expect(response.statusCode).toBe(401);
   });
 
-  it('allows listing personal reports with category reports permission', async () => {
+  it('allows listing personal reports with category module read permission', async () => {
     const response = await app.inject({
       method: 'GET',
       url: '/api/saved-reports?category=students',
@@ -114,7 +118,7 @@ describe('generic saved-reports REST routes', () => {
     });
     expect(response.statusCode).toBe(200);
     expect(response.json()).toEqual({ reports: [REPORT] });
-    expect(mockListSavedReports).toHaveBeenCalledWith('students', 'u-admin');
+    expect(mockListSavedReportsByOwner).toHaveBeenCalledWith('demo', 'students', 'u-admin');
   });
 
   it('creates a report with the authenticated owner identity', async () => {
@@ -132,7 +136,7 @@ describe('generic saved-reports REST routes', () => {
       },
     });
     expect(response.statusCode).toBe(201);
-    expect(mockCreateSavedReport).toHaveBeenCalledWith({
+    expect(mockCreateSavedReportForOwner).toHaveBeenCalledWith('demo', {
       name: 'Active students',
       category: 'students',
       filters: { status: 'active' },
@@ -141,7 +145,7 @@ describe('generic saved-reports REST routes', () => {
     });
     expect(mockRecordAudit).toHaveBeenCalledWith(expect.objectContaining({
       userId: 'u-admin',
-      action: 'saved_report.create',
+      action: 'students.saved_report.create',
       entityId: REPORT.id,
     }));
   });
@@ -157,7 +161,7 @@ describe('generic saved-reports REST routes', () => {
       headers,
     });
     expect(runResponse.statusCode).toBe(200);
-    expect(mockRunSavedReport).toHaveBeenCalledWith('report-1', 'students', 'u-admin');
+    expect(mockTouchSavedReportRunByOwner).toHaveBeenCalledWith('demo', 'report-1', 'students', 'u-admin');
 
     const deleteResponse = await app.inject({
       method: 'DELETE',
@@ -166,14 +170,14 @@ describe('generic saved-reports REST routes', () => {
     });
     expect(deleteResponse.statusCode).toBe(200);
     expect(deleteResponse.json()).toEqual({ success: true });
-    expect(mockDeleteSavedReport).toHaveBeenCalledWith('report-1', 'students', 'u-admin');
+    expect(mockDeleteSavedReportByOwner).toHaveBeenCalledWith('demo', 'report-1', 'students', 'u-admin');
     expect(mockRecordAudit).toHaveBeenCalledTimes(2);
   });
 
-  it('denies a category when the role lacks its reports permission', async () => {
+  it('denies a category when the role lacks its module read permission', async () => {
     const response = await app.inject({
       method: 'GET',
-      url: '/api/saved-reports?category=faculty',
+      url: '/api/saved-reports?category=finance',
       headers: {
         host: 'demo.localhost',
         authorization: bearerAuth(assistantTeacherToken(app, {
@@ -183,12 +187,13 @@ describe('generic saved-reports REST routes', () => {
       },
     });
     expect(response.statusCode).toBe(403);
-    expect(mockListSavedReports).not.toHaveBeenCalled();
+    expect(response.json()).toEqual({ type: 'forbidden', message: 'Insufficient permissions' });
+    expect(mockListSavedReportsByOwner).not.toHaveBeenCalled();
   });
 
   it('returns the same stable 404 for missing or cross-user run and delete', async () => {
-    mockRunSavedReport.mockResolvedValueOnce(null);
-    mockDeleteSavedReport.mockResolvedValueOnce(false);
+    mockTouchSavedReportRunByOwner.mockResolvedValueOnce(null);
+    mockDeleteSavedReportByOwner.mockResolvedValueOnce(false);
     const headers = {
       host: 'demo.localhost',
       authorization: bearerAuth(adminToken(app, { email: 'admin@demo.test', name: 'Admin User' })),

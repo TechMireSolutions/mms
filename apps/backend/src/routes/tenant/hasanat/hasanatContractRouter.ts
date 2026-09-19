@@ -1,7 +1,8 @@
 import type { FastifyPluginAsync } from 'fastify';
-import { isQueryFlagTrue, type User, type WidgetQuery } from '@mms/shared';
+import { isQueryFlagTrue, type User } from '@mms/shared';
 import { hasanatContract } from '@mms/shared';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
+import { standardRequestValidationErrorHandler } from '../../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { canReadCollection, canWriteCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import { withTenant } from '../../../db/tenant-context.js';
@@ -21,7 +22,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => hasanatUseCases.loadDistributionsPage({ ...query, includeDeleted } as Parameters<typeof hasanatUseCases.loadDistributionsPage>[0]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => hasanatUseCases.loadDistributionsPage({ ...query, includeDeleted }), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list distributions' } };
@@ -51,7 +52,7 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const distribution = await withTenant(
           String(request.tenant?.id),
-          () => hasanatUseCases.updateDistributionById(id, body as Parameters<typeof hasanatUseCases.updateDistributionById>[1]),
+          () => hasanatUseCases.updateDistributionById(id, body),
           { readOnly: false },
         );
         if (!distribution) {
@@ -134,13 +135,15 @@ export const hasanatContractRouter: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => hasanatUseCases.loadHasanatWidgetAggregates(body.widgets as WidgetQuery[]), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => hasanatUseCases.loadHasanatWidgetAggregates(body.widgets), { readOnly: true });
         return { status: 200 as const, body: result };
       } catch (error) {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load widget aggregates' } };
       }
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof hasanatContract>);
 
-  await fastify.register(s.plugin(router));
+  await fastify.register(s.plugin(router), {
+    requestValidationErrorHandler: standardRequestValidationErrorHandler,
+  });
 };

@@ -1,5 +1,4 @@
 import type { FastifyPluginAsync } from 'fastify';
-import type { AccountingSettings } from '@mms/shared';
 import {
   ACCOUNTING_MODULE_MANIFEST,
   accountingFieldConfigPutBodySchema,
@@ -28,12 +27,12 @@ export const accountingSetupConfigRoutes: FastifyPluginAsync = async (fastify) =
     
     fieldConfigSchema: accountingFieldConfigPutBodySchema,
     loadFieldConfig: getAccountingFieldConfigService,
-    saveFieldConfig: (body) => updateAccountingFieldConfigService(body as AccountingSettings),
+    saveFieldConfig: (body) => updateAccountingFieldConfigService(body),
     
     preferencesSchema: accountingPreferencesPutBodySchema,
     loadPreferences: getAccountingPreferencesService,
     normalizePreferences: normalizeAccountingModulePreferences,
-    savePreferences: (normalized) => updateAccountingPreferencesService(normalized as never),
+    savePreferences: (normalized) => updateAccountingPreferencesService(normalized),
     
     audit: auditAccounting,
     fieldConfigAuditAction: 'UPDATE_ACCOUNTING_CONFIG',

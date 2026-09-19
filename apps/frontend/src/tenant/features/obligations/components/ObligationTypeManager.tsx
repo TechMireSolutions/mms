@@ -45,7 +45,10 @@ export function ObligationTypeManager({ types, onChange }: ObligationTypeManager
 
   const handleSave = async (form: Partial<ObligationType>) => {
     if (modal?.mode === "add") {
-      await onChange([...types, { ...form, id: `ot${crypto.randomUUID()}`, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as ObligationType]);
+      const uuid = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
+        ? crypto.randomUUID()
+        : Math.random().toString(36).substring(2, 11);
+      await onChange([...types, { ...form, id: `ot${uuid}`, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as ObligationType]);
     } else if (modal?.mode === "edit") {
       await onChange(types.map((obligationType) => obligationType.id === form.id ? { ...obligationType, ...form, updated_at: new Date().toISOString() } : obligationType));
     }

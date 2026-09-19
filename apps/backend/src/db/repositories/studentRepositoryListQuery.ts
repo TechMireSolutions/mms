@@ -5,7 +5,7 @@ import {
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
   type StudentsListQuery,
 } from '@mms/shared';
-import { students, studentEnrolledSessions, contacts, sessions, sessionClasses } from '../schema.js';
+import { students, studentEnrolledSessions, contacts, sessions, sessionClasses, contactPhones, contactEmails } from '../schema.js';
 
 export const STUDENT_SORT_FIELDS = new Set([
   'name',
@@ -36,7 +36,7 @@ export function linkedContactGenderExpr(): SQL {
 /** DOB from linked contact (Contacts SSOT). */
 export function linkedContactDobExpr(): SQL {
   return sql`NULLIF(trim(COALESCE((
-    SELECT c.dob
+    SELECT c.dob::text
     FROM ${contacts} c
     WHERE c.workspace_subdomain = ${students.workspaceSubdomain}
       AND c.id = ${students.contactId}
@@ -80,12 +80,24 @@ function buildSearchSql(search: string): SQL | null {
           OR lower(COALESCE(c.first_name, '')) LIKE ${pattern}
           OR lower(COALESCE(c.last_name, '')) LIKE ${pattern}
           OR COALESCE(c.cnic, '') LIKE ${pattern}
+          OR EXISTS (
+            SELECT 1 FROM ${contactPhones} cp
+            WHERE cp.workspace_subdomain = c.workspace_subdomain
+              AND cp.contact_id = c.id
+              AND lower(cp.number) LIKE ${pattern}
+          )
+          OR EXISTS (
+            SELECT 1 FROM ${contactEmails} ce
+            WHERE ce.workspace_subdomain = c.workspace_subdomain
+              AND ce.contact_id = c.id
+              AND lower(ce.address) LIKE ${pattern}
+          )
         )
     )
   )`;
 }
 
-export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
+export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | '' | undefined): SQL {
   const dir = sortDir === 'desc' ? 'desc' : 'asc';
   const field = sortField?.trim();
   if (!field || !STUDENT_SORT_FIELDS.has(field)) {

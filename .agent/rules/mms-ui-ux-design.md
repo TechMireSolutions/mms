@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Consolidated UI component primitives, design tokens, navigation tabs, notifications, accessibility (RTL / WCAG), and mobile-first responsiveness (§7). FormModal norms → mms-form-architecture.
 ---
 
 # MMS UI, UX & Design System
@@ -40,21 +41,50 @@ Raw HTML controls (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, c
 - **Touch Target Dimensions:** All interactive triggers, form inputs, buttons, and action icons must satisfy the `44×44px` touch floor via `min-h-11 min-w-11` (never `min-h-[44px]`).
 - **Z-Index Layering Hierarchy:** Always use semantic z-index tokens (`z-modal: 50`, `z-modal-priority: 60`, `z-popover: 70`, `z-toast: 100`) rather than arbitrary `z-[100]`.
 - **Surface Tokens (`formStyles.ts`):** `WORK_SURFACE` / `WORK_SURFACE_INNER` for directory/detail/report panels; `FORM_CARD` / `FORM_INPUT_BUILDER` for forms; `bg-sidebar/90` for overlay backdrops.
+- **Modern CSS Primitives & Subgrid:** Multi-section forms (`FormModal`) and directory card metadata grids should leverage CSS Subgrid (`grid-template-rows: subgrid` / `grid-template-columns: subgrid`) to ensure seamless alignment across nested child components.
+- **Native Color Mixing:** Prefer CSS `color-mix(in srgb, var(--primary) 20%, transparent)` for surface tints, hover overlays, and accent backgrounds rather than fragile opacity class chains.
 - **Rule of Three (Layout Sizes):** When a layout size appears ≥ 3 times, promote to `@theme` (`h-chart-sm|md|lg`, `max-w-toast`, `max-w-filter-sm`, `z-modal`, `z-toast`).
 - **Notifications:** All user feedback via `notify.success()`, `notify.error()`, `notify.warning()` from `lib/notify.ts` with `t()` localized copy.
 
-## 3. Accessibility (WCAG 2.1 AA) & RTL Standards
+## 3. Accessibility (WCAG 2.2 AA) & RTL Standards
 
 | Concern | Standard |
 |---|---|
-| **Focus & Keyboard** | Radix UI focus traps, `focus-visible:ring-2 focus-visible:ring-ring`, focus-return on modal/drawer close. |
+| **Focus & Keyboard** | Radix UI focus traps, `focus-visible:ring-2 focus-visible:ring-ring`, focus-return on modal/drawer close. Apply `scroll-margin-top` / `scroll-padding` (WCAG 2.2 Focus Appearance 2.4.11) so sticky headers, toolbars, or floating bulk action bars never occlude focused interactive controls. |
 | **A11y Labels & IDs** | `aria-label` on icon buttons; `htmlFor`/`id` on inputs (auto `useId()`); `aria-busy="true"` + `aria-live="polite"` on loading lists. |
-| **Color Contrast** | WCAG 2.1 AA text contrast (≥ 4.5:1 normal, ≥ 3:1 large); always pair status colors with text labels (`StatusBadge` + `t()`). |
+| **Color Contrast** | WCAG 2.2 AA text contrast (≥ 4.5:1 normal, ≥ 3:1 large); always pair status colors with text labels (`StatusBadge` + `t()`). |
 | **Reduced Motion** | Honor `prefers-reduced-motion` on Framer Motion transitions. |
+| **React 19 Primitives** | Use native `ref` as prop on all custom UI primitives — `forwardRef` is deprecated and banned in newly authored components. |
 | **RTL Layout** | CSS logical properties only (`text-start`, `ms-*`, `ps-*`, `border-s-*`, `inset-inline-start`). Flip directional arrows (`rtl:rotate-180`), preserve brand icons. |
-| **Semantics** | Use semantic landmarks (`<main>`, `<nav>`, `<section>`, `<header>`, `<footer>`). |
+| **Semantics** | Use semantic landmarks (`<main>`, `<nav>`, `<header>`, `<section>`, `<footer>`). |
+| **Cognitive Ergonomics (WCAG 2.2)** | **Redundant Entry (3.3.7):** Avoid asking users to re-enter information previously entered in the same session; auto-prefill known contact/student data. **Accessible Authentication (3.3.8):** Never block paste on OTP/2FA or password inputs (`onPaste` prevention strictly forbidden). |
 
-## 4. §7 Mobile-First Responsiveness & Breakpoints
+### BiDi Directional Class Replacement Matrix
+Physical direction classes are strictly forbidden across both tenant and platform code:
+
+| Banned Physical Class | Mandatory BiDi Logical Replacement | Purpose |
+|---|---|---|
+| `ml-*`, `mr-*` | `ms-*`, `me-*` | Margin inline start / end |
+| `pl-*`, `pr-*` | `ps-*`, `pe-*` | Padding inline start / end |
+| `left-*`, `right-*` | `start-*`, `end-*` / `inset-inline-start`, `inset-inline-end` | Absolute / relative offsets |
+| `text-left`, `text-right` | `text-start`, `text-end` | Text alignment |
+| `border-l-*`, `border-r-*` | `border-s-*`, `border-e-*` | Border inline start / end |
+| `rounded-l-*`, `rounded-r-*` | `rounded-s-*`, `rounded-e-*` | Border corner rounding |
+
+
+## 5. Data Tables, Live Regions & Contrast Modes
+
+Accessibility work that stops at labels and touch targets still fails real assistive-technology users on the surfaces MMS uses most: dense tables and long-running background work.
+
+1. **Tables carry structure, not just visuals:** every data table uses real `<table>` semantics with `<th scope="col">` (or `scope="row"` for row headers) and a `<caption>` (visually hidden is fine) naming the dataset. Styling a grid of `<div>`s into a table is banned.
+2. **Sortable columns announce state:** the sorted column sets `aria-sort="ascending|descending|none"` on its header, and the control that changes sorting is a real button inside the header cell with an accessible name ("Sort by Name").
+3. **Async work speaks:** background job progress (`BackgroundJobsTray`), save confirmations, and filter-result counts expose a polite live region (`aria-live="polite"` / `role="status"`), and busy containers set `aria-busy`. A spinner with no announcement is silent to a screen reader.
+4. **State changes after an action are announced:** restore-from-trash, bulk delete counts, and inline validation must move focus or announce the change — otherwise the user cannot tell whether the action happened.
+5. **Honour user contrast preferences:** support `prefers-contrast` and `forced-colors` (Windows high contrast) — decorative shadows/gradients must not carry meaning, focus indicators must remain visible, and status must never be encoded by colour alone (pair it with an icon or text).
+6. **Focus order follows visual order** in RTL: verify tab order after the direction flips, and never rely on DOM order alone to convey sequence.
+7. **Automated checks are a floor, not proof:** the axe smoke (`e2e/tests/a11y-shell.spec.ts`, skill `mms-a11y-smoke`) catches serious/critical violations only; announcements, focus movement, and table semantics need the manual checklist above.
+
+## 4. Mobile-First Responsiveness & Breakpoints
 
 | Breakpoint | Range | Prefix | Shell Layout Standards |
 |---|---|---|---|

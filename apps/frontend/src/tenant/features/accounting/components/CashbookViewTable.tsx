@@ -1,5 +1,5 @@
 import { formatDate } from "@mms/shared";
-import { TrendingUp, TrendingDown, ArrowUpDown } from "lucide-react";
+import { TrendingUp, TrendingDown, ArrowUpDown, AlertTriangle } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { StatusBadge } from "@/components/ui/StatusBadge";
@@ -41,6 +41,13 @@ export function CashbookViewTable({ rows, totalIn, totalOut, formatCurrency }: C
         in: { label: row.flowLabel, cls: FLOW_TONE.in.badge },
         out: { label: row.flowLabel, cls: FLOW_TONE.out.badge },
         transfer: { label: row.flowLabel, cls: SEMANTIC_BADGE.infoStrong },
+        // A posted entry with no cash/bank line cannot be reported as money in
+        // or out; the row says "Unclassified" instead of showing "—" in both
+        // money columns with no explanation.
+        unclassified: {
+          label: row.flowLabel || t("accounting.cashbook.unclassified"),
+          cls: SEMANTIC_BADGE.warningStrong,
+        },
       }}
     />
   );
@@ -48,6 +55,7 @@ export function CashbookViewTable({ rows, totalIn, totalOut, formatCurrency }: C
   const flowIcon = (flowType: CashbookRow["flowType"]) => {
     if (flowType === "in") return <TrendingUp className="w-3.5 h-3.5 text-success shrink-0" aria-hidden="true" />;
     if (flowType === "out") return <TrendingDown className="w-3.5 h-3.5 text-destructive shrink-0" aria-hidden="true" />;
+    if (flowType === "unclassified") return <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" aria-hidden="true" />;
     return <ArrowUpDown className="w-3.5 h-3.5 text-info shrink-0" aria-hidden="true" />;
   };
 

@@ -22,6 +22,12 @@ export {
   setUserFieldConfigMemory,
   setUserPreferencesMemory,
 } from '@/tenant/features/users/hooks/userSetupConfigApi';
+export {
+  useComposedUsersSettings,
+  useUserPreferencesMutation,
+  useUserPreferencesQuery,
+  USERS_PREFERENCES_QUERY_KEY,
+} from '@/tenant/features/users/hooks/useUserSetupConfig';
 export { invalidateUsersQueries } from '@/tenant/features/users/hooks/invalidateUsersQueries';
 // Phase 7: contract-driven tsrClient hooks & query factories
 export {

@@ -36,8 +36,8 @@ const hasanatFieldConfig = createModuleFieldConfigService<
 export const getHasanatFieldConfigService = hasanatFieldConfig.load;
 
 export async function updateHasanatFieldConfigService(
-  config: HasanatSettings,
+  config: HasanatSettings | Record<string, unknown>,
 ): Promise<HasanatSettings> {
-  return hasanatFieldConfig.save(config);
+  return hasanatFieldConfig.save(config as HasanatSettings);
 }
 

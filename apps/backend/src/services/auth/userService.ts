@@ -10,6 +10,7 @@ export {
   getTenantUserProfile,
   createUser,
   validateCredentials,
+  findUserByLoginEmailAndWorkspace,
 } from './userServiceAuth.js';
 export {
   verifyUserPassword,

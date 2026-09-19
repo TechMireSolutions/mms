@@ -14,6 +14,6 @@ export {
   normalizeStoredTeacher,
   hydrateTeacherFromContact,
   hydrateTeacherListFromContacts,
-} from './teacherUtils.js';
+} from './facultyUtils.js';
 export type { Student } from './studentTypes.js';
-export type { Teacher } from './teacherTypes.js';
+export type { Teacher } from './facultyTypes.js';

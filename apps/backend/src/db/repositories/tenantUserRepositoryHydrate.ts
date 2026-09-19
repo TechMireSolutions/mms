@@ -1,11 +1,13 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type StoredTenantUser } from '@mms/shared';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead, withGlobalTenant } from '../tenant-context.js';
 import { tenantUsers } from '../schema.js';
+import { mapAuditTimestamps, toIsoString } from './repositoryMappers.js';
 
 export type TenantUserRow = StoredTenantUser & Record<string, unknown>;
 
 export function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUserRow {
+  const audit = mapAuditTimestamps(row);
   const base: TenantUserRow = {
     id: row.id,
     workspaceSubdomain: row.workspaceSubdomain,
@@ -15,14 +17,14 @@ export function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUse
     passwordHash: row.passwordHash,
     name: row.name,
     role: row.role,
-    createdAt: row.createdAt.toISOString(),
+    createdAt: audit.createdAt ?? (row.createdAt instanceof Date ? row.createdAt.toISOString() : String(row.createdAt)),
     mustChangePassword: row.mustChangePassword,
-    deletedAt: row.deletedAt?.toISOString() ?? null,
-    deletedBy: row.deletedBy ?? null,
+    deletedAt: audit.deletedAt ?? null,
+    deletedBy: audit.deletedBy ?? null,
   };
 
   if (row.contactId) base.contactId = row.contactId;
-  if (row.emailVerifiedAt) base.emailVerifiedAt = row.emailVerifiedAt.toISOString();
+  if (row.emailVerifiedAt) base.emailVerifiedAt = toIsoString(row.emailVerifiedAt);
   if (row.pendingLoginEmail) base.pendingLoginEmail = row.pendingLoginEmail;
 
   if (row.profileJson) {
@@ -34,32 +36,71 @@ export function rowToTenantUser(row: typeof tenantUsers.$inferSelect): TenantUse
   return base;
 }
 
-export async function listTenantUsersByIds(ids: string[]): Promise<TenantUserRow[]> {
+/** Shared projection for tenant-user reads (kept in one place to avoid drift). */
+const tenantUserColumns = {
+  id: tenantUsers.id,
+  workspaceSubdomain: tenantUsers.workspaceSubdomain,
+  loginEmail: tenantUsers.loginEmail,
+  passwordHash: tenantUsers.passwordHash,
+  name: tenantUsers.name,
+  role: tenantUsers.role,
+  contactId: tenantUsers.contactId,
+  emailVerifiedAt: tenantUsers.emailVerifiedAt,
+  pendingLoginEmail: tenantUsers.pendingLoginEmail,
+  mustChangePassword: tenantUsers.mustChangePassword,
+  createdAt: tenantUsers.createdAt,
+  updatedAt: tenantUsers.updatedAt,
+  deletedAt: tenantUsers.deletedAt,
+  deletedBy: tenantUsers.deletedBy,
+  deletionReason: tenantUsers.deletionReason,
+  restoredAt: tenantUsers.restoredAt,
+  restoredBy: tenantUsers.restoredBy,
+  deletedWithCascade: tenantUsers.deletedWithCascade,
+  profileJson: tenantUsers.profileJson,
+} as const;
+
+/**
+ * Loads tenant users by id **within one workspace**.
+ *
+ * The workspace predicate is mandatory. `tenant_users` carries a row-level
+ * security policy that permits every row whenever `app.rls_bypass = 'on'`, and
+ * that flag is set for any transaction opened without a tenant — so an
+ * id-only lookup is NOT implicitly tenant-safe and must not be relied upon.
+ * @see withTenant in ../tenant-context.ts
+ */
+export async function listTenantUsersByIds(
+  workspaceSubdomain: string,
+  ids: string[],
+): Promise<TenantUserRow[]> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  if (!subdomain) return [];
   const uniqueIds = dedupeTrimmedIds(ids);
   if (uniqueIds.length === 0) return [];
-  return withTenant(null, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select({
-        id: tenantUsers.id,
-        workspaceSubdomain: tenantUsers.workspaceSubdomain,
-        loginEmail: tenantUsers.loginEmail,
-        passwordHash: tenantUsers.passwordHash,
-        name: tenantUsers.name,
-        role: tenantUsers.role,
-        contactId: tenantUsers.contactId,
-        emailVerifiedAt: tenantUsers.emailVerifiedAt,
-        pendingLoginEmail: tenantUsers.pendingLoginEmail,
-        mustChangePassword: tenantUsers.mustChangePassword,
-        createdAt: tenantUsers.createdAt,
-        updatedAt: tenantUsers.updatedAt,
-        deletedAt: tenantUsers.deletedAt,
-        deletedBy: tenantUsers.deletedBy,
-        deletionReason: tenantUsers.deletionReason,
-        restoredAt: tenantUsers.restoredAt,
-        restoredBy: tenantUsers.restoredBy,
-        deletedWithCascade: tenantUsers.deletedWithCascade,
-        profileJson: tenantUsers.profileJson,
-      })
+      .select(tenantUserColumns)
+      .from(tenantUsers)
+      .where(
+        and(
+          eq(tenantUsers.workspaceSubdomain, subdomain),
+          inArray(tenantUsers.id, uniqueIds),
+        ),
+      );
+    return rows.map(rowToTenantUser);
+  });
+}
+
+/**
+ * Platform/global variant of {@link listTenantUsersByIds}: intentionally reads
+ * across every workspace. Only call from platform-admin routes, migrations, or
+ * backup/restore paths — never from a tenant-scoped route.
+ */
+export async function listTenantUsersByIdsGlobal(ids: string[]): Promise<TenantUserRow[]> {
+  const uniqueIds = dedupeTrimmedIds(ids);
+  if (uniqueIds.length === 0) return [];
+  return withGlobalTenant(async (tx) => {
+    const rows = await tx
+      .select(tenantUserColumns)
       .from(tenantUsers)
       .where(inArray(tenantUsers.id, uniqueIds));
     return rows.map(rowToTenantUser);
@@ -68,7 +109,7 @@ export async function listTenantUsersByIds(ids: string[]): Promise<TenantUserRow
 
 export async function countTenantUsersByWorkspace(workspaceSubdomain: string): Promise<number> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({ count: sql<string>`count(*)` })
       .from(tenantUsers)
@@ -85,29 +126,9 @@ export async function listTenantUsersByWorkspace(
   const includeDeleted = options?.includeDeleted === true;
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select({
-        id: tenantUsers.id,
-        workspaceSubdomain: tenantUsers.workspaceSubdomain,
-        loginEmail: tenantUsers.loginEmail,
-        passwordHash: tenantUsers.passwordHash,
-        name: tenantUsers.name,
-        role: tenantUsers.role,
-        contactId: tenantUsers.contactId,
-        emailVerifiedAt: tenantUsers.emailVerifiedAt,
-        pendingLoginEmail: tenantUsers.pendingLoginEmail,
-        mustChangePassword: tenantUsers.mustChangePassword,
-        createdAt: tenantUsers.createdAt,
-        updatedAt: tenantUsers.updatedAt,
-        deletedAt: tenantUsers.deletedAt,
-        deletedBy: tenantUsers.deletedBy,
-        deletionReason: tenantUsers.deletionReason,
-        restoredAt: tenantUsers.restoredAt,
-        restoredBy: tenantUsers.restoredBy,
-        deletedWithCascade: tenantUsers.deletedWithCascade,
-        profileJson: tenantUsers.profileJson,
-      })
+      .select(tenantUserColumns)
       .from(tenantUsers)
       .where(
         includeDeleted
@@ -125,61 +146,54 @@ export async function listAllTenantUsersByWorkspace(
   workspaceSubdomain: string,
 ): Promise<TenantUserRow[]> {
   const subdomain = workspaceSubdomain.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select({
-        id: tenantUsers.id,
-        workspaceSubdomain: tenantUsers.workspaceSubdomain,
-        loginEmail: tenantUsers.loginEmail,
-        passwordHash: tenantUsers.passwordHash,
-        name: tenantUsers.name,
-        role: tenantUsers.role,
-        contactId: tenantUsers.contactId,
-        emailVerifiedAt: tenantUsers.emailVerifiedAt,
-        pendingLoginEmail: tenantUsers.pendingLoginEmail,
-        mustChangePassword: tenantUsers.mustChangePassword,
-        createdAt: tenantUsers.createdAt,
-        updatedAt: tenantUsers.updatedAt,
-        deletedAt: tenantUsers.deletedAt,
-        deletedBy: tenantUsers.deletedBy,
-        deletionReason: tenantUsers.deletionReason,
-        restoredAt: tenantUsers.restoredAt,
-        restoredBy: tenantUsers.restoredBy,
-        deletedWithCascade: tenantUsers.deletedWithCascade,
-        profileJson: tenantUsers.profileJson,
-      })
+      .select(tenantUserColumns)
       .from(tenantUsers)
       .where(eq(tenantUsers.workspaceSubdomain, subdomain));
     return rows.map(rowToTenantUser);
   });
 }
 
-export async function findTenantUserRowById(id: string): Promise<TenantUserRow | null> {
+/**
+ * Loads a single tenant user by id **within one workspace**.
+ *
+ * The workspace predicate is mandatory — see {@link listTenantUsersByIds} for
+ * why an id-only lookup is not tenant-safe.
+ */
+export async function findTenantUserRowById(
+  workspaceSubdomain: string,
+  id: string,
+): Promise<TenantUserRow | null> {
+  const subdomain = workspaceSubdomain.trim().toLowerCase();
+  const cleanId = id?.trim();
+  if (!subdomain || !cleanId) return null;
+  return withTenantRead(subdomain, async (tx) => {
+    const rows = await tx
+      .select(tenantUserColumns)
+      .from(tenantUsers)
+      .where(
+        and(
+          eq(tenantUsers.workspaceSubdomain, subdomain),
+          eq(tenantUsers.id, cleanId),
+        ),
+      );
+    const row = rows[0];
+    return row ? rowToTenantUser(row) : null;
+  });
+}
+
+/**
+ * Platform/global variant of {@link findTenantUserRowById}: intentionally
+ * resolves a user regardless of workspace. Only call from platform-admin
+ * routes, auth bootstrap, or migrations — never from a tenant-scoped route.
+ */
+export async function findTenantUserRowByIdGlobal(id: string): Promise<TenantUserRow | null> {
   const cleanId = id?.trim();
   if (!cleanId) return null;
-  return withTenant(null, async (tx) => {
+  return withGlobalTenant(async (tx) => {
     const rows = await tx
-      .select({
-        id: tenantUsers.id,
-        workspaceSubdomain: tenantUsers.workspaceSubdomain,
-        loginEmail: tenantUsers.loginEmail,
-        passwordHash: tenantUsers.passwordHash,
-        name: tenantUsers.name,
-        role: tenantUsers.role,
-        contactId: tenantUsers.contactId,
-        emailVerifiedAt: tenantUsers.emailVerifiedAt,
-        pendingLoginEmail: tenantUsers.pendingLoginEmail,
-        mustChangePassword: tenantUsers.mustChangePassword,
-        createdAt: tenantUsers.createdAt,
-        updatedAt: tenantUsers.updatedAt,
-        deletedAt: tenantUsers.deletedAt,
-        deletedBy: tenantUsers.deletedBy,
-        deletionReason: tenantUsers.deletionReason,
-        restoredAt: tenantUsers.restoredAt,
-        restoredBy: tenantUsers.restoredBy,
-        deletedWithCascade: tenantUsers.deletedWithCascade,
-        profileJson: tenantUsers.profileJson,
-      })
+      .select(tenantUserColumns)
       .from(tenantUsers)
       .where(eq(tenantUsers.id, cleanId));
     const row = rows[0];

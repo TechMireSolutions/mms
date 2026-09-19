@@ -5,7 +5,7 @@ import {
   contactPhones,
   contactEmails,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { activeWorkspaceWhere } from './contactRepositoryAggregateHelpers.js';
 import {
   cnicComparisonKeySql,
@@ -91,7 +91,7 @@ export async function findContactDuplicateCandidateIds(
     whereParts.push(notInArray(contacts.id, excluded));
   }
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({ id: contacts.id })
       .from(contacts)
@@ -114,7 +114,7 @@ export async function findContactDuplicateBlockedIds(
   const subdomain = tenant.trim().toLowerCase();
   const prefixRegex = buildNamePrefixRegex(namePrefixes);
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const result = await tx.execute(sql`
       WITH keyed AS (
         SELECT p.contact_id AS id,

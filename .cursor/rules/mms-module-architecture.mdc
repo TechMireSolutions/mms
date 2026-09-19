@@ -35,7 +35,7 @@ Every standard module page (e.g., `ContactsPage.tsx`, `StudentsPage.tsx`) must i
 - **Pagination & Virtualization**: Cards and table share the same server page API — ban `maxPageSize` dumps / “switch to list” truncation. Always virtualize DOM rows when rendered items > 30 using `@tanstack/react-virtual` (`mms-performance.mdc`). Full policy → **`mms-data-layer.mdc`** (HTTP contract `mms-api-interface.mdc` §6).
 - **Metrics**: Command-centre KPIs come from server `/metrics` (or manifest-defined endpoints), not client reduce of full lists.
 - **Column layout SSOT**: Use `useModuleColumnLayout` (Contacts: `useContactColumnLayout` via `ContactConfigContext`) for visibility **and** width. Persist via module `PUT …/column-preferences` **and** device `localStorage` (`mms_{moduleId}_columns_{userId}`). On load, merge with `mergeModuleColumnPreferences` — **local width wins** on this PC; never let a server payload without `width` wipe resized columns. Resize UI: `ResizableTableHead` → `setColumnWidth`; debounce server PUT; save local immediately. Pass `isColumnVisible` into table/cards (optional `ALWAYS_COLUMN_VISIBLE`); ban parent `visibleColumns` / `show*` boolean object fans — `mms-ui-ux-design.mdc` · `mms-dry.mdc`.
-- **Detail Drawer**: Selecting an entity row opens an in-place detail drawer (`DetailDrawerShell`) respecting the module's tab/field order, read/write permissions, and **all enabled registry/custom fields** (no hard-coded key allowlists that drop Setup fields). In trash / `deletedAt`: `WarningCallout` archive banner + Restore (`canDelete`); hide Edit and Call/WA/SMS/Email and create-style CTAs (gold refs: Contacts / Students / Teachers detail drawers). Header Edit and icon actions need `min-h-11` / `min-w-11` — `mms-ui-ux-design.mdc` §7.
+- **Detail Drawer**: Selecting an entity row opens an in-place detail drawer (`DetailDrawerShell`) respecting the module's tab/field order, read/write permissions, and **all enabled registry/custom fields** (no hard-coded key allowlists that drop Setup fields). In trash / `deletedAt`: `WarningCallout` archive banner + Restore (`canDelete`); hide Edit and Call/WA/SMS/Email and create-style CTAs (gold refs: Contacts / Students / Teachers detail drawers). Header Edit and icon actions need `min-h-11` / `min-w-11` — `mms-ui-ux-design.mdc` §4.
 - **Bulk Actions**: Use shared `BulkSelectionBar` (`@/components/ui/BulkSelectionBar`; `floating` \| `inline`) with `BulkSelectionActions` children (`BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` / messaging trio) — do not invent parallel selection chrome. Mount the bar on the list/parent when records are selected; do **not** put trash/restore beside Filters/Add in Work toolbars. Enforce backend permission checks, calculate partial failures, and audit all bulk updates/deletions.
 
 ---
@@ -50,24 +50,20 @@ Every standard module page (e.g., `ContactsPage.tsx`, `StudentsPage.tsx`) must i
 Operations that exceed direct interaction limits or process massive records must run as background jobs:
 - **Eligible Actions**: Large CSV data exports/imports, bulk messaging queues, database deduplication scans, and long report generations.
 - **User UX**: Staged tasks must update in the global `BackgroundJobsTray`. Show status (`running | completed | failed`), progress percentage, error counts, and download links.
-- **Backend Isolation**: Run background tasks in isolated workers (`worker.ts` / `jobRunnerProcess.ts`). Enforce RBAC at enqueue **and** execute. Bind jobs to tenant + user; use an idempotency key when retries are expected (`mms-api-interface.mdc` §6).
-- **Claim semantics**: Workers claim the next pending job with `FOR UPDATE SKIP LOCKED` (see `worker.ts`) so concurrent workers do not double-run the same row.
-- **Multi-instance**: Current runner is in-process — do **not** pretend a Redis/durable queue exists. Multi-instance deploy needs a durable shared queue before scaling workers horizontally. Workflow → skill **`mms-background-jobs`**.
+- **Backend Isolation**: Background work runs in the BullMQ worker process (`apps/backend/src/worker/index.ts`), never in the request path. Enforce RBAC at enqueue **and** at execution. Bind jobs to tenant + user; use an idempotency key when retries are expected (`mms-api-interface.mdc` §6). Queue mechanics, connection config, retry/backoff and dead-letter policy → **`mms-data-layer.mdc` §2** · operational triage → skill **`mms-queue-ops`**.
+- **Claim semantics**: BullMQ owns claim/visibility per job; the archived-record purge and the outbox CDC drain additionally claim rows with `FOR UPDATE SKIP LOCKED` so concurrent workers never double-run a row (`apps/backend/src/worker/purgeArchivedRecordsJob.ts`, `apps/backend/src/worker/processors/outboxCdcProcessor.ts`).
+- **Scaling**: The worker is a separate process (docker-compose `worker` service; PM2 `mmsv2-worker`) and job state lives in Redis — horizontal scaling is safe. Never move job execution back into the API process. Workflow → skill **`mms-background-jobs`** · queue operations → skill **`mms-queue-ops`**.
+- **Job contract**: every job type declares (a) an idempotency key so a redelivery cannot double-apply, (b) bounded retry with backoff and a terminal failure state the UI can show, (c) a tenant + user binding resolved at *execution* time (never trusted from the payload alone), and (d) a documented concurrency/priority class so a bulk import cannot starve PDF rendering or messaging. A retry must never re-send a user-visible message or re-charge a payment — those jobs are one-shot and require an explicit operator replay.
 
 ---
 
 ## 6. Security Boundaries & Isolation
 - **RLS**: Transaction-scoped SET LOCAL — **`mms-data-layer.mdc`** (do not restate recipes here).
 - **RBAC**: Apply `can('module.action')` checks globally. Omit forbidden actions from the DOM (never disabled placeholders).
-- **Soft Deletion Architecture (Work UX & API Lifecycle)**: Prefer soft-delete over hard `DELETE`. API/FE camelCase `deletedAt` / `deletedBy`; SQL `deleted_at` / `deleted_by` (typed columns mandatory). Schema strip / partial indexes / RLS / triggers → `mms-data-layer.mdc` §6 · complete operational checklist → skill **`mms-soft-delete`**.
-  - **Module Manifest Contract**: Declare `softDelete` block in `@mms/shared` manifests (`workExcludesDeleted`, `reportsIncludeDeleted`, `exportsIncludeDeleted`, `duplicatesIncludeDeleted`, `captureDeletionReason`, `retentionDays`). When `captureDeletionReason: false`, suppress deletion reason prompts in UI.
-  - **Single-Record Read Semantics**: `GET /:id` returns `404 Not Found` for archived records on standard active browses. Trash inspection via `GET /:id?includeDeleted=true` requires `canDeleteCollection(user, collection)` and sets `app.include_deleted = 'true'`.
-  - **Atomic Conditional Latch**: Soft-delete updates must use atomic conditional clauses (`UPDATE table SET deleted_at = NOW(), ... WHERE id = :id AND deleted_at IS NULL RETURNING id`) to prevent TOCTOU concurrent delete races.
-  - **Batched Bulk Operations**: `bulkDeleteFn` and `bulkRestoreFn` must execute a single batched SQL `UPDATE ... WHERE id IN (...) AND deleted_at IS NULL` — per-row iteration loops are strictly banned (`mms-performance.mdc` §1).
-  - **Uniqueness-on-Restore & Error 23505 Trap**: Handlers restoring records with unique fields (`email`, `phone`, `employee_id`) must pre-check active conflicts and trap PostgreSQL error `23505` (`unique_violation`), mapping to `409 Conflict`.
-  - **Outbox CDC & Cache Eviction**: Emit `entity.soft_deleted` and `entity.restored` transactional outbox events with monotonic versioning (`version: Date.now()`) to drive Meilisearch tombstone eviction and Redis cache clearing. External consumers must drop stale/out-of-order events.
-  - **Forensic Content Snapshotting**: Capture full snapshots of text/note content in audit event payloads upon archival to ensure survival after hard purges.
-  - **Frontend UX Standard**:
+- **Soft Deletion Architecture (Work UX & API Lifecycle)**: Prefer soft-delete over hard `DELETE`. Schema strip / partial indexes / triggers / RLS / CDC outbox / atomic latches → **`mms-data-layer.mdc` §6** · operational checklist → skill **`mms-soft-delete`**.
+  - **Module Manifest Contract**: Declare `softDelete` block in `@mms/shared` manifests (`workExcludesDeleted`, `reportsIncludeDeleted`, `exportsIncludeDeleted`, `duplicatesIncludeDeleted`, `captureDeletionReason`, `retentionDays`). Suppress reason prompts when `captureDeletionReason: false`.
+  - **Single-Record Read Semantics**: `GET /:id` returns `404 Not Found` for archived records on standard active browses; `?includeDeleted=true` requires `canDeleteCollection`.
+  - **Frontend Work UX Standard**:
     - **URL State Synchronization**: Synchronize `viewingDeleted` with URL search params (`?view=trash` via `useSearchParams`).
     - **Filter State Preservation**: Toggling `ModuleTrashToggle` must preserve active search terms and faceted filter selections.
     - **Controls & CTAs**: Mount `ModuleTrashToggle` in `ModuleWorkToolbar` (not in filter dropdowns). Hide Add/Create CTA and export buttons when `viewingDeleted = true`. Guard `Cmd/Ctrl+N` to check `!viewingDeleted && canWrite`.
@@ -75,16 +71,14 @@ Operations that exceed direct interaction limits or process massive records must
     - **Detail Drawer Precedence**: When an archived record drawer is opened, render `ArchivedBanner` (`WarningCallout` tone="warning"). Hide Edit, Call, SMS, WhatsApp, and Email buttons. Drawer takes precedence over bulk selections, and restore acts strictly on the drawer entity.
     - **Optimistic Undo Toast**: Single-record deletions trigger an instant TanStack Query cache hide with a 5–10s Undo toast triggering `POST /:id/restore`.
     - **Retention Expiry Countdown**: Display countdown badges in trash views and drawers (`Purges in N days` / `Archived indefinitely`).
-  - **Referential Integrity Contract**: Modules define either Restrict Guard (`activeEntriesCount > 0` → 409 Conflict) or Programmatic Atomic Cascade (`deleted_with_cascade = true`). When cascading, lock parent row (`FOR UPDATE`) to prevent child insertion races (`docs/soft-delete.md` §2.2 & §4.6).
-  - **Active Foreign Key Guarding**: Reject writes attempting to assign foreign keys pointing to soft-deleted entities (`deleted_at IS NOT NULL`), preventing ghost relationships (`docs/soft-delete.md` §1.8).
   - **Documented variants**: Messaging admin clear soft-archives logs (not a row trash browser); Question Bank tests/papers and assessment_results remain upsert-only by design.
-  - **When adding REST CRUD**: Ship `DELETE` soft-delete + `POST :id/restore`, list `includeDeleted`, and Work trash UI (or document intentional hard-delete / variant in manifest `softDelete`).
+  - **When adding REST CRUD**: Ship `DELETE` soft-delete + `POST :id/restore`, list `includeDeleted`, and Work trash UI (or document intentional variant in manifest).
 
 ---
 
 ## 7. Gold-standard parity (REST tenant modules and platform pages)
 
-Align new or refactored modules with **Contacts, Students, and Teachers** as the gold-standard bar for person-directory Work/Setup (shared `Module*` / `createModule*` / `registerModule*` factories; module config via `createStandardModuleConfigHook` + `useStandardModuleConfig` — `mms-hooks.mdc`). **Users / Sessions** Work REST and typed Setup REST are closed; residual document-store Setup is other modules per `mms-migration-status.mdc` P3. Checklist:
+Align new or refactored modules with **Contacts, Students, and Teachers** as the gold-standard bar for person-directory Work/Setup (shared `Module*` / `createModule*` / `registerModule*` factories; module config via `createStandardModuleConfigHook` + `useStandardModuleConfig` — `mms-hooks.mdc`). **Users / Sessions** Work REST and typed Setup REST are closed; all module prefs/lookups are migrated to typed tables (`mms-migration-status.mdc`). Checklist:
 
 | Requirement | Standard |
 |-------------|----------|

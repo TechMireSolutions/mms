@@ -58,7 +58,7 @@ export function WelcomeBanner({
       <div className="absolute -top-24 -end-16 w-80 h-80 rounded-full bg-secondary/15 blur-3xl opacity-70 pointer-events-none print:hidden" aria-hidden="true" />
       <div className="absolute -bottom-20 -start-16 w-72 h-72 rounded-full bg-warning/10 blur-3xl opacity-50 pointer-events-none print:hidden" aria-hidden="true" />
 
-      <div className="relative z-10 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+      <div className="relative z-elevated flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
         <div>
           <div className="flex items-center gap-2 mb-2">
             <Sparkles className="w-3.5 h-3.5 text-warning animate-pulse print:hidden" aria-hidden="true" />

@@ -15,7 +15,7 @@ import {
   financeInvoices,
   financePaymentAllocations,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 function feeStructureFromRows(
   structure: typeof financeFeeStructures.$inferSelect,
@@ -67,7 +67,7 @@ export function paymentAllocationRowToRecord(
 
 export async function listFeeStructures(tenant: string): Promise<FeeStructure[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const [structures, items] = await Promise.all([
       tx
         .select({
@@ -159,7 +159,7 @@ export async function deleteFeeStructure(tenant: string, id: string): Promise<vo
 
 export async function listInvoiceLines(tenant: string, invoiceId: string): Promise<InvoiceLine[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: financeInvoiceLines.id,

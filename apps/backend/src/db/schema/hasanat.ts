@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, index, integer, boolean, jsonb, primaryKey, v
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { students } from "./students.js";
-import { teachers } from "./teachers.js";
+import { teachers } from "./faculty.js";
 import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const hasanatDenoms = pgTable('hasanat_denoms', {

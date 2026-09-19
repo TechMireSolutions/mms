@@ -13,9 +13,9 @@ import {
   contactAttachments,
   contactBankDetails,
 } from '../schema.js';
-import { type withTenant } from '../tenant-context.js';
+import { type TenantTransaction } from '../tenant-context.js';
 
-type Transaction = Parameters<Parameters<typeof withTenant>[1]>[0];
+type Transaction = TenantTransaction;
 type PhoneRow = typeof contactPhones.$inferSelect;
 type EmailRow = typeof contactEmails.$inferSelect;
 type AddressRow = typeof contactAddresses.$inferSelect;

@@ -56,8 +56,10 @@ export function createStudentsUseCases(repo: StudentsRepository = studentsReposi
       regDate: string,
       settings: Parameters<typeof operation.computeNextGrNumberForDate>[1],
     ) => operation.computeNextGrNumberForDate(regDate, settings, repo),
-    checkStudentRegistrationDuplicate: (input: Parameters<typeof operation.checkStudentRegistrationDuplicate>[0]) =>
-      operation.checkStudentRegistrationDuplicate(input, repo),
+    checkStudentRegistrationDuplicate: (
+      input: Parameters<typeof operation.checkStudentRegistrationDuplicate>[0],
+      tenantOverride?: string,
+    ) => operation.checkStudentRegistrationDuplicate(input, repo, tenantOverride),
     migrateStudentsMissingGrNumbers: () => operation.migrateStudentsMissingGrNumbers(repo),
     sanitizeStudentForViewer: (student: import('@mms/shared').Student, viewerRole: string) =>
       sanitize.sanitizeStudentForViewer(student, viewerRole),

@@ -114,23 +114,23 @@ export function invoiceTotalsFromLines(lines: readonly Pick<InvoiceLine, 'quanti
   return { baseFee, discountAmt, finalAmt: Math.max(0, baseFee - discountAmt) };
 }
 
-const INVOICE_NUMBER_RE = /^(INV|inv)-(\d{4})-(\d+)$/;
-
 /** `INV-2026-0001` from a calendar year and 1-based sequence. */
 export function formatInvoiceNumber(year: number, sequence: number, prefix = INVOICE_NUMBER_PREFIX): string {
   return `${prefix}-${year}-${String(sequence).padStart(4, '0')}`;
 }
 
-/** Next sequence for `INV-{year}-NNNN` among existing display numbers. */
+/** Next sequence for `{prefix}-{year}-NNNN` among existing display numbers. */
 export function nextInvoiceSequence(existingNumbers: readonly string[], year: number, prefix = INVOICE_NUMBER_PREFIX): number {
   const head = `${prefix}-${year}-`.toUpperCase();
   let max = 0;
   for (const raw of existingNumbers) {
     const value = raw.trim().toUpperCase();
     if (!value.startsWith(head)) continue;
-    const parsed = INVOICE_NUMBER_RE.exec(value);
-    if (!parsed) continue;
-    const seq = Number.parseInt(parsed[3] ?? '0', 10);
+    // Parse the sequence straight after `<PREFIX>-<YEAR>-`. The previous
+    // hardcoded `/^(INV|inv)-\d{4}-\d+$/` regex rejected any user-configured
+    // prefix, so the sequence always restarted at 1 and the next invoice
+    // collided on the unique (workspace, invoice_number) index.
+    const seq = Number.parseInt(value.slice(head.length), 10);
     if (Number.isFinite(seq) && seq > max) max = seq;
   }
   return max + 1;

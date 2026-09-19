@@ -13,6 +13,15 @@ export function resolveBackendRoot(): string {
  * `apps/backend/.env` loads last with override so deploy secrets win.
  */
 export function loadBackendEnv(): void {
+  // Force UTC regardless of the host machine's local timezone. Without this, on a
+  // non-UTC host, drizzle-orm's `timestamp({ withTimezone: true, mode: 'date' })`
+  // columns read back shifted by the host's UTC offset (Node's Intl/Date timezone
+  // resolution, not Postgres — the DB session and stored values are correct UTC
+  // throughout). That silently breaks any code comparing a read-back `expiresAt`
+  // against `Date.now()` (e.g. `auth_artifacts` TTL checks), making valid,
+  // unexpired rows look already-expired. Must run before the first Date/DB call.
+  process.env.TZ = 'UTC';
+
   const backendRoot = resolveBackendRoot();
   const repoRoot = resolve(backendRoot, '..', '..');
   const backendEnvPath = join(backendRoot, '.env');

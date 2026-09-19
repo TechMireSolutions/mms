@@ -1,4 +1,4 @@
-import React, { useState, useEffect, lazy, Suspense } from "react";
+import React, { useState, useEffect, useCallback, useMemo, lazy, Suspense } from "react";
 import {
   type ObligationCollection, type ObligationType, type MujtahidRep, type Mujtahid
 } from '@/lib/data/obligationsData';
@@ -15,6 +15,7 @@ import { ObligationsBulkActionBar } from "@/tenant/features/obligations/componen
 import { useObligationSelection } from "@/tenant/features/obligations/hooks/useObligationSelection";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
+const InvoiceTemplateEditor = lazy(() => import("@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor").then((module) => ({ default: module.InvoiceTemplateEditor })));
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
@@ -69,60 +70,88 @@ export function ObligationCollectionsList({
   const [search, setSearch] = useState("");
   const [typeFilter, setTypeFilter] = useState("all");
   const [printCollection, setPrintCollection] = useState<ObligationCollection | null>(null);
+  const [editorCollection, setEditorCollection] = useState<ObligationCollection | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
   const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   const debouncedSearch = useDebounce(search, 300);
-  const senderIds = (() => collections.map((collection) => collection.sender_id))();
-  const contacts = useMergedObligationContacts(senderIds);
+  const contactIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const collection of collections) {
+      if (collection.sender_id) ids.add(collection.sender_id);
+      if (collection.reference_id) ids.add(collection.reference_id);
+    }
+    return Array.from(ids);
+  }, [collections]);
+  const contacts = useMergedObligationContacts(contactIds);
 
-  const contactsMap = (() => {
+  const contactsMap = useMemo(() => {
     const map = new Map<string, (typeof contacts)[number]>();
     for (const c of contacts) {
       if (c?.id != null) map.set(String(c.id), c);
     }
     return map;
-  })();
-  const repsMap = (() => {
+  }, [contacts]);
+
+  const repsMap = useMemo(() => {
     const map = new Map<string, (typeof reps)[number]>();
     for (const r of reps) {
       if (r?.id != null) map.set(String(r.id), r);
     }
     return map;
-  })();
-  const mujtahidsMap = (() => {
+  }, [reps]);
+
+  const mujtahidsMap = useMemo(() => {
     const map = new Map<string, (typeof mujtahids)[number]>();
     for (const m of mujtahids) {
       if (m?.id != null) map.set(String(m.id), m);
     }
     return map;
-  })();
-  const obTypesMap = (() => {
+  }, [mujtahids]);
+
+  const obTypesMap = useMemo(() => {
     const map = new Map<string, (typeof obligationTypes)[number]>();
     for (const o of obligationTypes) {
       if (o?.id != null) map.set(String(o.id), o);
     }
     return map;
-  })();
+  }, [obligationTypes]);
 
-  const getContact = (contactId?: string | number | null) => (contactId != null ? contactsMap.get(String(contactId)) : undefined);
-  const getRep = (repId: string) => repsMap.get(repId);
-  const getMujtahid = (repId: string) => {
+  const getContact = useCallback(
+    (contactId?: string | number | null) => (contactId != null ? contactsMap.get(String(contactId)) : undefined),
+    [contactsMap],
+  );
+  const getRep = useCallback((repId: string) => repsMap.get(repId), [repsMap]);
+  const getMujtahid = useCallback((repId: string) => {
     const rep = getRep(repId);
     return rep ? mujtahidsMap.get(rep.mujtahid_id) : null;
-  };
-  const getObType = (obligationTypeId: string) => obTypesMap.get(obligationTypeId);
+  }, [getRep, mujtahidsMap]);
+  const getObType = useCallback((obligationTypeId: string) => obTypesMap.get(obligationTypeId), [obTypesMap]);
 
-  const filtered = (() => collections.filter((collection) => {
-    if (typeFilter !== "all" && collection.obligation_type_id !== typeFilter) return false;
-    if (debouncedSearch) {
-      const searchQuery = debouncedSearch.toLowerCase();
-      const sender = getContact(collection.sender_id)?.name?.toLowerCase() || "";
-      const receipt = collection.receipt_no.toLowerCase();
-      if (!sender.includes(searchQuery) && !receipt.includes(searchQuery)) return false;
-    }
-    return true;
-  }))();
+  const filtered = useMemo(() => {
+    const query = debouncedSearch.trim().toLowerCase();
+    return collections.filter((collection) => {
+      if (typeFilter !== "all" && collection.obligation_type_id !== typeFilter) return false;
+      if (query) {
+        const receipt = collection.receipt_no.toLowerCase();
+        const senderContact = getContact(collection.sender_id);
+        const refContact = getContact(collection.reference_id);
+        const senderName = senderContact?.name?.toLowerCase() || "";
+        const senderPhone = senderContact?.phone?.toLowerCase() || "";
+        const refName = refContact?.name?.toLowerCase() || "";
+        if (
+          !receipt.includes(query) &&
+          !senderName.includes(query) &&
+          !senderPhone.includes(query) &&
+          !refName.includes(query)
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [collections, typeFilter, debouncedSearch, getContact]);
 
   useEffect(() => {
     onFilteredCountChange?.(filtered.length);
@@ -130,14 +159,13 @@ export function ObligationCollectionsList({
 
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
-  const paymentModeConfig = (() => ({
+  const paymentModeConfig = useMemo(() => ({
     Cash: { label: t("obligations.paymentMode.cash"), cls: SEMANTIC_BADGE.warning },
     Online: { label: t("obligations.paymentMode.online"), cls: SEMANTIC_BADGE.info },
-  }))() as Record<string, StatusBadgeConfigItem>;
+  }), [t]) as Record<string, StatusBadgeConfigItem>;
 
   const {
     selectedIds,
-    setSelectedIds,
     allVisibleSelected,
     someVisibleSelected,
     toggleSelectAll,
@@ -149,17 +177,23 @@ export function ObligationCollectionsList({
     clearSelection();
   }, [showDeleted, clearSelection]);
 
-  const confirmRowTrash = (): void => {
+  const confirmRowTrash = async (): Promise<void> => {
     if (!pendingTrashId) return;
-    void onDelete?.(pendingTrashId);
-    setPendingTrashId(null);
+    try {
+      await onDelete?.(pendingTrashId);
+    } finally {
+      setPendingTrashId(null);
+    }
   };
 
-  const confirmBulkTrash = (): void => {
-    if (showDeleted) void onBulkRestore?.(selectedIds);
-    else void onBulkDelete?.(selectedIds);
-    setSelectedIds([]);
-    setConfirmBulkOpen(false);
+  const confirmBulkTrash = async (): Promise<void> => {
+    try {
+      if (showDeleted) await onBulkRestore?.(selectedIds);
+      else await onBulkDelete?.(selectedIds);
+    } finally {
+      clearSelection();
+      setConfirmBulkOpen(false);
+    }
   };
 
   const canBulkTrash = canDelete && Boolean(showDeleted ? onBulkRestore : onBulkDelete);
@@ -187,7 +221,7 @@ export function ObligationCollectionsList({
           canDelete={canDelete}
           onRequestBulkDelete={() => setConfirmBulkOpen(true)}
           onRequestBulkRestore={() => setConfirmBulkOpen(true)}
-          onClearSelection={() => setSelectedIds([])}
+          onClearSelection={clearSelection}
         />
       )}
 
@@ -230,6 +264,29 @@ export function ObligationCollectionsList({
             reps={reps}
             mujtahids={mujtahids}
             onClose={() => setPrintCollection(null)}
+            onOpenEditor={() => {
+              setEditorCollection(printCollection);
+              setPrintCollection(null);
+              setShowEditor(true);
+            }}
+          />
+        </Suspense>
+      )}
+
+      {showEditor && (
+        <Suspense fallback={null}>
+          <InvoiceTemplateEditor
+            collection={editorCollection}
+            obligationTypes={obligationTypes}
+            reps={reps}
+            mujtahids={mujtahids}
+            onClose={() => {
+              setShowEditor(false);
+              if (editorCollection) {
+                setPrintCollection(editorCollection);
+              }
+              setEditorCollection(null);
+            }}
           />
         </Suspense>
       )}

@@ -1,4 +1,4 @@
-import React, { useId, useState } from "react";
+import React, { useId, useState, useDeferredValue, useMemo, useCallback } from "react";
 import { ChevronDown, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -49,6 +49,7 @@ export function EditableMultiSelect({
   const { t } = useTranslation();
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const deferredSearchQuery = useDeferredValue(searchQuery);
   const [newTagValue, setNewTagValue] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
@@ -61,25 +62,25 @@ export function EditableMultiSelect({
   const triggerRef = React.useRef<HTMLButtonElement>(null);
   const canRemoveOptions = Boolean(onUpdateOptions);
 
-  const toggleOption = (option: string): void => {
+  const toggleOption = useCallback((option: string): void => {
     onChange(toggleSelectedValue(values, option));
-  };
+  }, [onChange, values]);
 
-  const removeValue = (valToRemove: string, event: React.MouseEvent): void => {
+  const removeValue = useCallback((valToRemove: string, event: React.MouseEvent): void => {
     event.stopPropagation();
     onChange(removeSelectedValue(values, valToRemove));
     triggerRef.current?.focus();
-  };
+  }, [onChange, values]);
 
-  const handleRemoveOption = (option: string, event: React.MouseEvent): void => {
+  const handleRemoveOption = useCallback((option: string, event: React.MouseEvent): void => {
     if (!onUpdateOptions) return;
     event.stopPropagation();
     const { nextOptions, nextValues } = removeOptionFromCatalog(options, values, option);
     onUpdateOptions(nextOptions);
     onChange(nextValues);
-  };
+  }, [onChange, onUpdateOptions, options, values]);
 
-  const handleAdd = (valueToAdd?: string): void => {
+  const handleAdd = useCallback((valueToAdd?: string): void => {
     const rawText = (valueToAdd ?? newTagValue).trim();
     if (!rawText) return;
 
@@ -95,9 +96,12 @@ export function EditableMultiSelect({
     }
     onChange(nextValues);
     setNewTagValue("");
-  };
+  }, [canRemoveOptions, newTagValue, onChange, onUpdateOptions, options, values]);
 
-  const filteredOptions = filterOptionsByQuery(options, searchQuery);
+  const filteredOptions = useMemo(
+    () => filterOptionsByQuery(options, deferredSearchQuery),
+    [options, deferredSearchQuery],
+  );
 
   return (
     <Popover

@@ -12,7 +12,8 @@ export const whatsappStatusOptionalSchema = z
     z.null(),
   ])
   .optional()
-  .transform((val) => (val && val !== 'unknown' && val !== 'Unknown' ? (val as (typeof WHATSAPP_STATUS_VALUES)[number]) : undefined));
+  .transform((val) => (val && val !== 'unknown' && val !== 'Unknown' ? (val as (typeof WHATSAPP_STATUS_VALUES)[number]) : undefined))
+  .optional();
 
 export const phoneNumberSchema = z
   .object({

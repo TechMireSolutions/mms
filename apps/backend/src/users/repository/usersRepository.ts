@@ -21,12 +21,21 @@ export interface UsersRepository {
     tenant: string,
     periodDays?: number,
   ): Promise<UsersCommandMetricsSnapshot>;
-  listTenantUsersByIds(ids: string[]): Promise<TenantUserRow[]>;
-  findTenantUserRowById(id: string): Promise<TenantUserRow | null>;
-  softDeleteTenantUserRow(id: string, deletedBy: string): Promise<boolean>;
-  restoreTenantUserRow(id: string): Promise<boolean>;
-  verifyTenantUserEmailRow(id: string): Promise<boolean>;
-  resetTenantUserPasswordRow(id: string, passwordHash: string): Promise<boolean>;
+  /**
+   * Tenant-scoped lookups. The workspace is the first argument and is
+   * mandatory — `tenant_users` rows are isolated by RLS, and an id-only read
+   * runs with RLS bypassed, so it must never be used from a tenant route.
+   */
+  listTenantUsersByIds(tenant: string, ids: string[]): Promise<TenantUserRow[]>;
+  findTenantUserRowById(tenant: string, id: string): Promise<TenantUserRow | null>;
+  softDeleteTenantUserRow(tenant: string, id: string, deletedBy: string): Promise<boolean>;
+  restoreTenantUserRow(tenant: string, id: string): Promise<boolean>;
+  verifyTenantUserEmailRow(tenant: string, id: string): Promise<boolean>;
+  resetTenantUserPasswordRow(
+    tenant: string,
+    id: string,
+    passwordHash: string,
+  ): Promise<boolean>;
 
   // Activity logs
   listActivityLogsByWorkspace(tenant: string): Promise<ActivityLog[]>;

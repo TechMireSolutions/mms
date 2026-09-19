@@ -8,65 +8,91 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-// Stub window.matchMedia for happy-dom
-if (typeof window !== 'undefined' && !window.matchMedia) {
-  Object.defineProperty(window, 'matchMedia', {
-    writable: true,
-    value: (query: string) => ({
-      matches: false,
-      media: query,
-      onchange: null,
-      addListener: () => {},
-      removeListener: () => {},
-      addEventListener: () => {},
-      removeEventListener: () => {},
-      dispatchEvent: () => false,
-    }),
+// Responsive & Media Query APIs
+if (typeof window !== 'undefined') {
+  // Prevent happy-dom from making live outbound HTTP requests for external stylesheets (e.g. Google Fonts)
+  const happyDomSettings = (window as unknown as { happyDOM?: { settings?: Record<string, unknown> } })?.happyDOM?.settings;
+  if (happyDomSettings) {
+    happyDomSettings.disableCSSFileLoading = true;
+    happyDomSettings.handleDisabledFileLoadingAsSuccess = true;
+  }
+
+  if (!window.matchMedia) {
+    const matchMediaStub = (query: string): MediaQueryList =>
+      ({
+        matches: false,
+        media: query,
+        onchange: null,
+        addListener: () => {},
+        removeListener: () => {},
+        addEventListener: () => {},
+        removeEventListener: () => {},
+        dispatchEvent: () => false,
+      }) as unknown as MediaQueryList;
+
+    Object.defineProperty(window, 'matchMedia', {
+      writable: true,
+      configurable: true,
+      value: matchMediaStub,
+    });
+    globalThis.matchMedia ??= matchMediaStub;
+  }
+
+  // Window Opener for OAuth Popup Flows
+  let currentOpener: Window | null = null;
+  Object.defineProperty(window, 'opener', {
+    get: () => currentOpener,
+    set: (val: Window | null) => {
+      currentOpener = val;
+    },
+    configurable: true,
+    enumerable: true,
   });
 }
 
-// Stub ResizeObserver for happy-dom
-if (typeof window !== 'undefined' && !window.ResizeObserver) {
-  class ResizeObserverStub {
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-  }
-  window.ResizeObserver = ResizeObserverStub;
+// Observers (ResizeObserver & IntersectionObserver)
+class ResizeObserverStub {
+  observe() {}
+  unobserve() {}
+  disconnect() {}
 }
-
-// Stub IntersectionObserver for happy-dom
-if (typeof window !== 'undefined' && !window.IntersectionObserver) {
-  class IntersectionObserverStub {
-    readonly root: Element | Document | null = null;
-    readonly rootMargin: string = '';
-    readonly thresholds: ReadonlyArray<number> = [];
-    observe() {}
-    unobserve() {}
-    disconnect() {}
-    takeRecords() {
-      return [];
-    }
-  }
-  window.IntersectionObserver = IntersectionObserverStub as unknown as typeof IntersectionObserver;
-}
-
-// Stub scrolling APIs (scrollIntoView, scrollTo, scrollBy)
+globalThis.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
 if (typeof window !== 'undefined') {
-  if (!window.scrollTo) {
-    window.scrollTo = () => {};
+  window.ResizeObserver ??= ResizeObserverStub as unknown as typeof ResizeObserver;
+}
+
+class IntersectionObserverStub {
+  readonly root: Element | Document | null = null;
+  readonly rootMargin: string = '';
+  readonly thresholds: ReadonlyArray<number> = [];
+  observe() {}
+  unobserve() {}
+  disconnect() {}
+  takeRecords() {
+    return [];
   }
-  if (!window.scrollBy) {
-    window.scrollBy = () => {};
-  }
-  if (typeof Element !== 'undefined' && !Element.prototype.scrollIntoView) {
-    Element.prototype.scrollIntoView = () => {};
+}
+globalThis.IntersectionObserver ??= IntersectionObserverStub as unknown as typeof IntersectionObserver;
+if (typeof window !== 'undefined') {
+  window.IntersectionObserver ??= IntersectionObserverStub as unknown as typeof IntersectionObserver;
+}
+
+// Scrolling APIs (Window & Element targets)
+if (typeof window !== 'undefined') {
+  window.scrollTo ??= () => {};
+  window.scrollBy ??= () => {};
+  window.scroll ??= () => {};
+
+  if (typeof Element !== 'undefined') {
+    Element.prototype.scrollIntoView ??= () => {};
+    Element.prototype.scrollTo ??= () => {};
+    Element.prototype.scrollBy ??= () => {};
   }
 }
 
-// Stub HTMLCanvasElement.prototype.getContext for 2D graphics
-if (typeof HTMLCanvasElement !== 'undefined' && !HTMLCanvasElement.prototype.getContext) {
-  HTMLCanvasElement.prototype.getContext = (() => ({
+// Canvas 2D & Export APIs
+if (typeof HTMLCanvasElement !== 'undefined') {
+  HTMLCanvasElement.prototype.getContext ??= (() => ({
     fillRect: () => {},
     clearRect: () => {},
     getImageData: (x: number, y: number, w: number, h: number) => ({
@@ -97,11 +123,45 @@ if (typeof HTMLCanvasElement !== 'undefined' && !HTMLCanvasElement.prototype.get
     rect: () => {},
     clip: () => {},
   })) as unknown as typeof HTMLCanvasElement.prototype.getContext;
+
+  HTMLCanvasElement.prototype.toDataURL ??= () => 'data:image/png;base64,';
+  HTMLCanvasElement.prototype.toBlob ??= (cb) => {
+    cb?.(new Blob([], { type: 'image/png' }));
+  };
 }
 
-// Global teardown: clear document body and residual Radix portals after each test
+// Object URL Lifecycle (Downloads & Previews)
+if (typeof URL !== 'undefined') {
+  URL.createObjectURL ??= () => 'blob:mock-url';
+  URL.revokeObjectURL ??= () => {};
+}
+
+// Suppress unhandled rejections from happy-dom Web Animations API when animations are canceled
+if (typeof window !== 'undefined') {
+  if (typeof window.Animation !== 'undefined') {
+    const originalCancel = window.Animation.prototype.cancel;
+    window.Animation.prototype.cancel = function (this: Animation) {
+      this.finished?.catch(() => {});
+      return originalCancel.call(this);
+    };
+  }
+  if (typeof Element !== 'undefined' && Element.prototype.animate) {
+    const originalAnimate = Element.prototype.animate;
+    Element.prototype.animate = function (this: Element, ...args: Parameters<Element['animate']>) {
+      const animation = originalAnimate.apply(this, args);
+      animation.finished?.catch(() => {});
+      return animation;
+    };
+  }
+}
+
+// Global teardown: clear document nodes and residual test storage
 afterEach(() => {
   if (typeof document !== 'undefined') {
     document.body.innerHTML = '';
+    document.head.innerHTML = '';
+  }
+  if (typeof sessionStorage !== 'undefined') {
+    sessionStorage.clear();
   }
 });

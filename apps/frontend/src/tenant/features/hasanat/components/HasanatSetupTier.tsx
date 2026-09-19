@@ -20,6 +20,10 @@ const HasanatSettings = lazy(
   () => import("@/tenant/features/hasanat/components/HasanatSettings"),
 );
 
+const HasanatTemplateEditor = lazy(
+  () => import("@/tenant/features/hasanat/components/HasanatTemplateEditor"),
+);
+
 export interface SetupTab {
   id: string;
   label: string;
@@ -92,6 +96,9 @@ export const HasanatSetupTier = (function HasanatSetupTier({
               )}
               {subTabs.sub === "preferences" && (
                 <HasanatSettings onPrefsDirtyChange={handlePrefsDirtyChange} />
+              )}
+              {subTabs.sub === "templates" && (
+                <HasanatTemplateEditor />
               )}
             </Suspense>
           )}

@@ -1,8 +1,10 @@
-process.loadEnvFile('.env');
+import { loadBackendEnv } from '../config/loadEnv.js';
 import { initDb } from '../db/database.js';
 import { getDb } from '../db/dbClient.js';
 import { sessions, sessionClasses, enrollments, students, contacts } from '../db/schema.js';
 import { eq } from 'drizzle-orm';
+
+loadBackendEnv();
 
 async function main() {
   const subdomain = process.argv[2];

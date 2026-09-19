@@ -101,11 +101,7 @@ export async function bootstrapAuthenticatedTenant(
     await setupEmailInput.fill(platformEmail);
     await page.fill('#platform-setup-password', platformPassword);
     await page.click('button[type="submit"]');
-  }
-
-  await platformLanding.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
-
-  if (await signInEmailInput.isVisible()) {
+  } else if (await signInEmailInput.isVisible()) {
     await signInEmailInput.fill(platformEmail);
     await page.fill('#platform-password', platformPassword);
     await page.click('button[type="submit"]');
@@ -133,7 +129,8 @@ export async function bootstrapAuthenticatedTenant(
   const createWorkspaceResponse = page
     .waitForResponse(
       (res) =>
-        res.url().includes('/api/platform/workspaces') && res.request().method() === 'POST',
+        (res.url().includes('/api/auth/onboard') || res.url().includes('/api/platform/workspaces')) &&
+        res.request().method() === 'POST',
       { timeout: 30_000 },
     )
     .catch(() => null);

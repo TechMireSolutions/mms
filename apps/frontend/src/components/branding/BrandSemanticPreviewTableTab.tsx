@@ -15,6 +15,8 @@ export function BrandSemanticPreviewTableTab({ activeOnPrimaryBg }: BrandSemanti
         <input
           type="text"
           readOnly
+          tabIndex={-1}
+          aria-hidden
           placeholder={t("theme.previewSearchPlaceholder")}
           className="h-11 min-h-11 w-full rounded-lg border border-input bg-background ps-9 pe-3 text-xs shadow-xs focus:outline-none"
           style={{ borderColor: activeOnPrimaryBg }}

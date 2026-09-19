@@ -171,7 +171,7 @@ export function SettingsCallout({
       className={cn(
         'rounded-lg border px-3 py-2.5 text-xs leading-relaxed',
         variant === 'warning'
-          ? 'border-warning/30 bg-warning/10 text-warning dark:border-warning/30 dark:bg-warning/20 dark:text-warning'
+          ? 'border-warning/30 bg-warning/10 text-warning dark:border-warning/30 dark:bg-warning/10 dark:text-warning'
           : `${WORK_SURFACE_INNER} text-muted-foreground`,
       )}
     >

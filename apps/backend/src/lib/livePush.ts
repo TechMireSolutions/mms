@@ -3,17 +3,30 @@ import { logger } from './logger.js';
 import { redisDel, redisDelPattern, redisKeys } from './redis.js';
 import {
   type MinimalWebSocket,
+  type MinimalSseResponse,
+  type ActiveSseConnection,
+  WS_TELEMETRY_BUFFERED_LIMIT,
   MAX_WS_BUFFERED_AMOUNT,
+  SSE_STREAM_HEADERS,
   getTenantConnections,
+  getTenantSseConnections,
   registerConnection,
+  registerSseConnection,
   closeAllConnections,
   getActiveConnectionsCount,
 } from './livePushConnections.js';
 
 export {
   type MinimalWebSocket,
+  type MinimalSseResponse,
+  type ActiveSseConnection,
+  WS_TELEMETRY_BUFFERED_LIMIT,
   MAX_WS_BUFFERED_AMOUNT,
+  SSE_STREAM_HEADERS,
+  getTenantConnections,
+  getTenantSseConnections,
   registerConnection,
+  registerSseConnection,
   closeAllConnections,
   getActiveConnectionsCount,
 };
@@ -50,22 +63,19 @@ export function configureRedisPubSub(
     const subscribeChannels = (): void => {
       if (subscribed || !redisSubscriber) return;
       subscribed = true;
-      redisSubscriber.subscribe(WS_INVALIDATION_CHANNEL).catch((err) => {
+      redisSubscriber.subscribe(WS_INVALIDATION_CHANNEL, JOB_EVENT_CHANNEL).catch((err) => {
         subscribed = false; // allow a later retry (e.g. on `ready`)
         if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
-          logger.warn({ err }, 'Failed to subscribe to mms:ws-invalidation');
-        }
-      });
-      redisSubscriber.subscribe(JOB_EVENT_CHANNEL).catch((err) => {
-        subscribed = false; // allow a later retry (e.g. on `ready`)
-        if (!process.env.VITEST && process.env.NODE_ENV !== 'test') {
-          logger.warn({ err }, 'Failed to subscribe to mms:job-event');
+          logger.warn({ err }, 'Failed to subscribe to Redis PubSub channels');
         }
       });
     };
 
     subscriber.on('ready', subscribeChannels);
-    subscribeChannels();
+    const status = (subscriber as { status?: string }).status;
+    if (status === undefined || status === 'ready') {
+      subscribeChannels();
+    }
 
     redisSubscriber.on('message', (channel: string, message: string) => {
       try {
@@ -74,7 +84,7 @@ export function configureRedisPubSub(
           if (subdomain && type && key) {
             broadcastLocalTenantUpdate(subdomain, type, key);
           }
-        } else if (channel === 'mms:job-event') {
+        } else if (channel === JOB_EVENT_CHANNEL) {
           const jobEvent = JSON.parse(message);
           if (jobEvent && jobEvent.tenantId) {
             broadcastLocalJobEvent(jobEvent);
@@ -97,7 +107,8 @@ export function broadcastLocalTenantUpdate(
 ): void {
   const normSubdomain = subdomain.trim().toLowerCase();
   const tenantSet = getTenantConnections(normSubdomain);
-  if (!tenantSet || tenantSet.size === 0) return;
+  const sseSet = getTenantSseConnections(normSubdomain);
+  if ((!tenantSet || tenantSet.size === 0) && (!sseSet || sseSet.size === 0)) return;
 
   const message = JSON.stringify({
     event: 'database-update',
@@ -106,23 +117,42 @@ export function broadcastLocalTenantUpdate(
   });
 
   let sentCount = 0;
-  for (const connection of tenantSet) {
-    try {
-      if (
-        typeof connection.socket.bufferedAmount === 'number' &&
-        connection.socket.bufferedAmount > MAX_WS_BUFFERED_AMOUNT
-      ) {
-        logger.warn(
-          { userId: connection.userId, subdomain: normSubdomain, bufferedAmount: connection.socket.bufferedAmount },
-          'WS socket buffer backlog exceeded threshold; terminating stalled connection',
-        );
-        connection.socket.terminate();
-        continue;
+  if (tenantSet) {
+    for (const connection of tenantSet) {
+      try {
+        const buffered = typeof connection.socket.bufferedAmount === 'number' ? connection.socket.bufferedAmount : 0;
+        if (buffered > MAX_WS_BUFFERED_AMOUNT) {
+          logger.warn(
+            { userId: connection.userId, subdomain: normSubdomain, bufferedAmount: buffered },
+            'WS socket buffer backlog exceeded hard ceiling; terminating stalled connection',
+          );
+          connection.socket.terminate();
+          continue;
+        }
+        if (buffered > WS_TELEMETRY_BUFFERED_LIMIT) {
+          logger.warn(
+            { userId: connection.userId, subdomain: normSubdomain, bufferedAmount: buffered },
+            'WS socket buffer exceeded 64KB: dropping telemetry update under backpressure',
+          );
+          continue;
+        }
+        connection.socket.send(message);
+        sentCount++;
+      } catch (err) {
+        logger.error({ userId: connection.userId, subdomain: normSubdomain, err }, 'Failed to send update to user');
       }
-      connection.socket.send(message);
-      sentCount++;
-    } catch (err) {
-      logger.error({ userId: connection.userId, subdomain: normSubdomain, err }, 'Failed to send update to user');
+    }
+  }
+
+  if (sseSet) {
+    const ssePayload = `event: database-update\ndata: ${message}\n\n`;
+    for (const connection of sseSet) {
+      try {
+        connection.response.write(ssePayload);
+        sentCount++;
+      } catch (err) {
+        logger.error({ userId: connection.userId, subdomain: normSubdomain, err }, 'Failed to send SSE update to user');
+      }
     }
   }
 
@@ -143,11 +173,27 @@ export function broadcastTenantUpdate(
   // Always emit locally on current node
   broadcastLocalTenantUpdate(subdomain, type, key);
 
-  // Invalidate Redis domain metrics and dashboard cache for this tenant/collection
+  // Invalidate Redis domain metrics, dashboard, setup, and workspace caches
   const cleanTenant = subdomain?.trim().toLowerCase();
-  if (cleanTenant && type === 'collection') {
-    void redisDel(redisKeys.metrics(cleanTenant, key));
-    void redisDelPattern(redisKeys.dashboardSummaryPattern(cleanTenant));
+  if (cleanTenant) {
+    if (type === 'collection') {
+      void redisDel(redisKeys.metrics(cleanTenant, key));
+      void redisDelPattern(redisKeys.dashboardSummaryPattern(cleanTenant));
+      void redisDelPattern(redisKeys.setupPattern(cleanTenant, key));
+    } else if (type === 'object') {
+      if (
+        key === 'workspace' ||
+        key === 'branding' ||
+        key === 'settings' ||
+        key === 'global_settings' ||
+        key === 'fields' ||
+        key === 'schema'
+      ) {
+        void redisDel(redisKeys.workspace(cleanTenant));
+        void redisDel(redisKeys.globalSettings(cleanTenant));
+        void redisDelPattern(redisKeys.setupPattern(cleanTenant, '*'));
+      }
+    }
   }
 
   // If Redis Pub/Sub is configured, publish to cluster
@@ -176,29 +222,64 @@ export function broadcastLocalJobEvent(jobEvent: {
 }): void {
   const normSubdomain = jobEvent.tenantId.trim().toLowerCase();
   const tenantSet = getTenantConnections(normSubdomain);
-  if (!tenantSet || tenantSet.size === 0) return;
+  const sseSet = getTenantSseConnections(normSubdomain);
+  if ((!tenantSet || tenantSet.size === 0) && (!sseSet || sseSet.size === 0)) return;
 
-  const message = JSON.stringify(jobEvent);
+  // Sanitize job event payload for multi-tenant egress boundary
+  const sanitizedEvent = {
+    event: String(jobEvent.event),
+    tenantId: normSubdomain,
+    ...(jobEvent.userId ? { userId: String(jobEvent.userId) } : {}),
+    jobId: String(jobEvent.jobId),
+    ...(jobEvent.moduleId ? { moduleId: String(jobEvent.moduleId) } : {}),
+    ...(jobEvent.kind ? { kind: String(jobEvent.kind) } : {}),
+    ...(jobEvent.progress ? { progress: jobEvent.progress } : {}),
+    ...(jobEvent.label ? { label: String(jobEvent.label) } : {}),
+    ...(jobEvent.hasDownload !== undefined ? { hasDownload: Boolean(jobEvent.hasDownload) } : {}),
+    ...(jobEvent.error ? { error: String(jobEvent.error) } : {}),
+  };
+  const message = JSON.stringify(sanitizedEvent);
 
   let sentCount = 0;
-  for (const connection of tenantSet) {
-    if (!jobEvent.userId || connection.userId === jobEvent.userId) {
-      try {
-        if (
-          typeof connection.socket.bufferedAmount === 'number' &&
-          connection.socket.bufferedAmount > MAX_WS_BUFFERED_AMOUNT
-        ) {
-          logger.warn(
-            { userId: connection.userId, jobId: jobEvent.jobId, bufferedAmount: connection.socket.bufferedAmount },
-            'WS socket buffer backlog exceeded threshold; terminating stalled connection',
-          );
-          connection.socket.terminate();
-          continue;
+  if (tenantSet) {
+    for (const connection of tenantSet) {
+      if (!jobEvent.userId || connection.userId === jobEvent.userId) {
+        try {
+          const buffered = typeof connection.socket.bufferedAmount === 'number' ? connection.socket.bufferedAmount : 0;
+          if (buffered > MAX_WS_BUFFERED_AMOUNT) {
+            logger.warn(
+              { userId: connection.userId, jobId: jobEvent.jobId, bufferedAmount: buffered },
+              'WS socket buffer backlog exceeded hard ceiling; terminating stalled connection',
+            );
+            connection.socket.terminate();
+            continue;
+          }
+          if (buffered > WS_TELEMETRY_BUFFERED_LIMIT && jobEvent.event === 'progress') {
+            logger.warn(
+              { userId: connection.userId, jobId: jobEvent.jobId, bufferedAmount: buffered },
+              'WS socket buffer > 64KB: coalescing intermediate progress frame under backpressure',
+            );
+            continue;
+          }
+          connection.socket.send(message);
+          sentCount++;
+        } catch (err) {
+          logger.error({ userId: connection.userId, err }, 'Failed to send job event to user');
         }
-        connection.socket.send(message);
-        sentCount++;
-      } catch (err) {
-        logger.error({ userId: connection.userId, err }, 'Failed to send job event to user');
+      }
+    }
+  }
+
+  if (sseSet) {
+    const ssePayload = `event: job-event\ndata: ${message}\n\n`;
+    for (const connection of sseSet) {
+      if (!jobEvent.userId || connection.userId === jobEvent.userId) {
+        try {
+          connection.response.write(ssePayload);
+          sentCount++;
+        } catch (err) {
+          logger.error({ userId: connection.userId, err }, 'Failed to send SSE job event to user');
+        }
       }
     }
   }

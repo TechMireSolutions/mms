@@ -3,6 +3,7 @@ import { createReversalEntry, type JournalEntry } from '@/lib/data/accountingDat
 import { runGridCsvExportJob } from '@/lib/backgroundJobs/runGridCsvExportJob';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { getJournalEntryLineTotals } from '@/tenant/features/accounting/components/journalEntriesListShared';
+import type { QuickActionType } from '@/tenant/features/accounting/components/journalEntriesQuickActions';
 
 export interface JournalEntryActionDeps {
   entries: JournalEntry[];
@@ -15,21 +16,23 @@ export interface JournalEntryActionDeps {
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
   setModal: (modal: 'new' | 'edit' | 'view' | null) => void;
   setSelected: (entry: JournalEntry | null) => void;
-  setSimpleModal: (modal: { prefillType: import('@/tenant/features/accounting/components/journalEntriesQuickActions').QuickActionType | null } | null) => void;
+  setSimpleModal: (modal: { prefillType: QuickActionType | null; initialAmount?: string; initialDescription?: string } | null) => void;
   setSelectedIds: (ids: string[] | ((prev: string[]) => string[])) => void;
 }
 
 export function createJournalSaveHandler(deps: Pick<JournalEntryActionDeps, 'onChange' | 'setModal' | 'setSelected' | 'setSimpleModal'>) {
-  return async (entry: JournalEntry) => {
+  return async (entry: JournalEntry, stayOpen = false) => {
     await deps.onChange((prev) => {
       if (prev.find((journalEntry) => journalEntry.id === entry.id)) {
         return prev.map((journalEntry) => (journalEntry.id === entry.id ? entry : journalEntry));
       }
       return [...prev, entry];
     });
-    deps.setModal(null);
-    deps.setSelected(null);
-    deps.setSimpleModal(null);
+    if (!stayOpen) {
+      deps.setModal(null);
+      deps.setSelected(null);
+      deps.setSimpleModal(null);
+    }
   };
 }
 
@@ -43,13 +46,24 @@ export function createJournalPostHandler(deps: Pick<JournalEntryActionDeps, 'onC
   };
 }
 
-/** Mutation-only reversal helper — confirmation moves to the parent dialog. */
-export function reverseJournalEntry(
+/**
+ * Append the correcting entry for `entry` and resolve with it.
+ *
+ * Resolving with the created reversal (instead of `void`) lets the caller name
+ * the new reference in a toast — the reversal is posted immediately, so the
+ * user must be told which entry just moved the ledger. Failures propagate to the
+ * caller's error handling (the ts-rest result object, not an `Error`).
+ */
+export async function reverseJournalEntry(
   entry: JournalEntry,
   entries: JournalEntry[],
   onChange: JournalEntryActionDeps['onChange'],
-): Promise<void> {
-  return Promise.resolve(onChange((prev) => [...prev, createReversalEntry(entry, prev)]));
+): Promise<JournalEntry> {
+  const reversal = createReversalEntry(entry, entries);
+  await onChange((prev) =>
+    prev.some((candidate) => candidate.id === reversal.id) ? prev : [...prev, reversal],
+  );
+  return reversal;
 }
 
 export function exportJournalEntriesCsv(
@@ -57,6 +71,8 @@ export function exportJournalEntriesCsv(
   t: TranslationFunction,
 ): void {
   const rows = filtered.map((journalEntry) => {
+    // Cent-exact totals (see getJournalEntryLineTotals): the CSV must carry
+    // valid money such as 0.3, never a float artefact 0.30000000000000004.
     const { totalDebit, totalCredit } = getJournalEntryLineTotals(journalEntry);
     return {
       ref: journalEntry.ref,

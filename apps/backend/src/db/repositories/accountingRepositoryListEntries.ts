@@ -9,7 +9,7 @@ import {
   accountingEntryTags,
   accountingEntryAttachments,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 import { entryRowToRecord, type JournalLineRow } from './accountingRepository.js';
 import { buildEntryListConditions, buildEntryOrderBy } from './accountingRepositoryListQuery.js';
 
@@ -23,7 +23,7 @@ export async function listEntriesPage(
   const isCursorPaging = Boolean(query.afterId?.trim());
   const offset = isCursorPaging ? 0 : (page - 1) * limit;
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const baseConditions = buildEntryListConditions(subdomain, query);
     const baseWhereClause = and(...baseConditions);
     const conditions = [...baseConditions];

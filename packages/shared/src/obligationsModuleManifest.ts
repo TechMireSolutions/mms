@@ -210,7 +210,7 @@ export const OBLIGATIONS_MODULE_MANIFEST = {
   restBasePath: '/api/obligations',
   analyticsCategory: 'obligations',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['types', 'mujtahids', 'wakala'] as const,
+  setupSubTabs: ['types', 'mujtahids', 'wakala', 'invoice_template'] as const,
   softDelete: {
     workExcludesDeleted: true,
     reportsIncludeDeleted: false,

@@ -17,7 +17,7 @@ export interface EnrollmentsListQuery {
   sessionId?: string;
   classId?: string;
   sortField?: string;
-  sortDir?: 'asc' | 'desc';
+  sortDir?: 'asc' | 'desc' | '';
   includeDeleted?: boolean;
 }
 

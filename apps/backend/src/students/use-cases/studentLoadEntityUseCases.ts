@@ -20,9 +20,9 @@ export async function countStudents(
 }
 
 export async function loadStudentsPage(
-  query: StudentsListQuery,
+  query: StudentsListQuery & { afterId?: string; skipCount?: boolean },
   repo: StudentsRepository = studentsRepository,
-): Promise<StudentsListPageResult> {
+): Promise<StudentsListPageResult & { nextCursor?: string }> {
   const tenant = getRequestTenant();
   if (!tenant) {
     return { students: [], total: 0, page: query.page ?? 1, limit: query.limit ?? 50, hasMore: false };

@@ -6,7 +6,7 @@ import {
 import { ReportChartCard } from "@/components/ui/reports/ReportChartCard";
 import { ChartGrid, chartAxisTick } from "@/components/ui/ChartGrid";
 import { ChartTooltip, ChartTooltipRow } from "@/components/ui/ChartTooltip";
-import type { FacultyWorkloadItem } from "@/components/ui/reports/teacherReportTypes";
+import type { FacultyWorkloadItem } from "@/components/ui/reports/facultyReportTypes";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 function FacultyWorkloadTooltip({ active = false, payload = [], label }: Partial<TooltipContentProps>) {

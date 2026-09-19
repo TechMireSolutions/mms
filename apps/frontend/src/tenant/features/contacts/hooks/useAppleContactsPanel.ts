@@ -4,9 +4,12 @@ import {
   type ChangeEvent,
   type RefObject,
 } from "react";
-import { type Contact, parseVCard } from "@mms/shared";
+import { type Contact, buildTenantExportFilename, parseContactsCsv, parseVCard } from "@mms/shared";
+import { useOptionalTenant } from "@/lib/contexts/TenantContext";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n";
+import { getApiValidationMessage } from "@/lib/apiValidationMessage";
+import { reportClientError } from "@/lib/clientErrorReporting";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
@@ -22,7 +25,10 @@ export function useAppleContactsPanel({
   onImport,
   canWrite,
 }: {
-  onImport: (contacts: Contact[]) => void | Promise<void>;
+  onImport: (
+    contacts: Contact[],
+    options?: { onProgress?: (progress: { imported: number; total: number }) => void },
+  ) => void | Promise<void>;
   canWrite: boolean;
 }) {
   const { t } = useTranslation();
@@ -33,28 +39,61 @@ export function useAppleContactsPanel({
   const { data: metrics } = useContactsMetrics({ enabled: true });
   const exportCount = metrics?.total ?? 0;
   const [previewList, setPreviewList] = useState<Contact[]>([]);
-  const importing = matchContactIdentity.isPending;
+  const [fileName, setFileName] = useState<string | null>(null);
+  const [fileError, setFileError] = useState<string | null>(null);
+  const [isWriting, setIsWriting] = useState(false);
+  const [importProgress, setImportProgress] = useState<{ imported: number; total: number } | null>(
+    null,
+  );
+  /**
+   * Busy flag for the whole import, not just the identity match: the queued batch job keeps
+   * running after the match resolves, and the CTA must stay disabled until it finishes or a
+   * second click re-imports the same list.
+   */
+  const importing = matchContactIdentity.isPending || isWriting;
   const [exporting, setExporting] = useState(false);
   const [result, setResult] = useState<{ imported: number; skipped: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const processFile = ((file: File): void => {
-      const reader = new FileReader();
-      reader.onload = (readerEvent) => {
-        if (readerEvent.target && typeof readerEvent.target.result === "string") {
-          setPreviewList(
-            parseVCard(readerEvent.target.result, {
-              mobileLabel,
-              personalLabel,
-              defaultPhoneCountryCode,
-            }),
-          );
-          setResult(null);
+  const processFile = (file: File): void => {
+    setFileName(file.name);
+    setFileError(null);
+    const reader = new FileReader();
+    reader.onload = (readerEvent) => {
+      if (readerEvent.target && typeof readerEvent.target.result === "string") {
+        const text = readerEvent.target.result;
+        const isCsv = file.name.toLowerCase().endsWith(".csv") || file.type === "text/csv";
+        let parsed: Contact[] = [];
+        if (isCsv) {
+          const { contacts, errors } = parseContactsCsv(text, {
+            defaultPhoneLabel: mobileLabel,
+            defaultEmailLabel: personalLabel,
+          });
+          parsed = contacts;
+          if (contacts.length === 0) {
+            const reason = errors[0] || t("contacts.sync.emptyOrInvalidFile", { filename: file.name });
+            setFileError(reason);
+            notify.error(reason);
+          }
+        } else {
+          parsed = parseVCard(text, {
+            mobileLabel,
+            personalLabel,
+            defaultPhoneCountryCode,
+          });
+          if (parsed.length === 0) {
+            const reason = t("contacts.sync.emptyOrInvalidFile", { filename: file.name });
+            setFileError(reason);
+            notify.error(reason);
+          }
         }
-      };
-      reader.readAsText(file);
-    });
+        setPreviewList(parsed);
+        setResult(null);
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const handleFile = (event: ChangeEvent<HTMLInputElement>): void => {
     const file = event.target.files?.[0];
@@ -70,23 +109,42 @@ export function useAppleContactsPanel({
   };
 
   const handleImport = async (): Promise<void> => {
-    if (!canWrite) return;
+    if (!canWrite || importing) return;
+    setIsWriting(true);
+    setImportProgress({ imported: 0, total: previewList.length });
     try {
       const candidates = buildAppleImportIdentityCandidates(previewList, defaultPhoneCountryCode);
       const existing = await matchContactIdentity.mutateAsync(candidates);
       const fresh = filterAppleImportFreshContacts(previewList, existing);
-      await onImport(fresh);
+      await onImport(fresh, { onProgress: setImportProgress });
       setResult({ imported: fresh.length, skipped: previewList.length - fresh.length });
       setPreviewList([]);
-    } catch {
-      notify.error(t("contacts.saveFailed"));
+    } catch (err) {
+      // Surface the API/validation detail (e.g. a duplicate phone) instead of a bare failure toast.
+      const validationMessage = getApiValidationMessage(err);
+      notify.error(
+        t("contacts.saveFailed"),
+        validationMessage ? { description: validationMessage } : undefined,
+      );
+      reportClientError(err, { scope: "contacts.import_identity_match" });
+    } finally {
+      setIsWriting(false);
+      setImportProgress(null);
     }
   };
+
+  const optionalTenant = useOptionalTenant();
+  const effectiveTenantName =
+    optionalTenant?.workspace?.madrasaName ??
+    optionalTenant?.publicBranding?.madrasaName ??
+    optionalTenant?.subdomain ??
+    null;
 
   const handleExport = async (): Promise<void> => {
     setExporting(true);
     try {
-      const filename = t("contacts.sync.vcfFileName");
+      const baseFilename = t("contacts.sync.vcfFileName");
+      const filename = buildTenantExportFilename(effectiveTenantName, baseFilename);
       const job = await startServerContactsVcfExport({
         filename,
         label: t("contacts.jobs.exportLabelServer"),
@@ -103,10 +161,16 @@ export function useAppleContactsPanel({
     }
   };
 
-  const clearPreview = (): void => setPreviewList([]);
+  const clearPreview = (): void => {
+    setPreviewList([]);
+    setFileName(null);
+    setFileError(null);
+  };
 
   const chooseDifferentFile = (): void => {
     setPreviewList([]);
+    setFileName(null);
+    setFileError(null);
     fileRef.current?.click();
   };
 
@@ -116,7 +180,10 @@ export function useAppleContactsPanel({
 
   return {
     previewList,
+    fileName,
+    fileError,
     importing,
+    importProgress,
     exporting,
     exportCount,
     result,

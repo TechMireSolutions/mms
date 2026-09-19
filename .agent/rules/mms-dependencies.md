@@ -1,5 +1,6 @@
 ---
 trigger: model_decision
+description: Keep Node, pnpm, and all workspace dependencies on latest stable versions
 ---
 
 # Dependencies & Tech Stack
@@ -10,11 +11,53 @@ Stay current. MMS targets **latest stable** releases across the monorepo — not
 
 ## 1. Baseline (root `package.json`)
 
-| Tool | Policy |
-|------|--------|
-| **Node** | Latest LTS or current stable (`engines.node`) — upgrade Homebrew/nvm when behind |
-| **pnpm** | Match root `packageManager` — `corepack enable` |
-| **Turbo** | Latest compatible major at root |
+| Tool | Target Version | Policy |
+|------|----------------|--------|
+| **Node.js** | `>=24.14.0` | Node 24 LTS runtime (`engines.node`) — native built-ins, type-stripping, and standard WHATWG APIs |
+| **pnpm** | `11.15.1` | Match root `packageManager` exactly (`pnpm@11.15.1`) via Corepack (`corepack enable`) |
+| **Turbo** | `^2.10.9` | Turborepo v2 monorepo orchestration |
+| **TypeScript** | `~7.0.2` | TypeScript 7.0 standard (with `typescript-v6` npm alias for legacy tooling compatibility) |
+
+### Workspace Tech Stack & Dependency Matrix
+
+| Layer | Primary Packages & Catalogs | Version Standard |
+|---|---|---|
+| **Catalog (`pnpm-workspace.yaml`)** | `react`, `react-dom` | `^19.2.8` (React 19) |
+| | `react-router-dom` | `^7.18.3` (React Router 7) |
+| | `vite` | `^8.3.0` (Vite 8) |
+| | `fastify` | `^5.12.1` (Fastify 5) |
+| | `pino` | `^10.3.1` (Pino 10) |
+| | `drizzle-orm` | `^0.45.2` (Drizzle ORM 0.45) |
+| | `zod` | `^4.4.3` (Zod 4) |
+| | `@tanstack/react-query` | `^5.101.4` (TanStack Query v5) |
+| | `@ts-rest/react-query` | `3.52.1` |
+| **Frontend (`apps/frontend`)** | `@ts-rest/core` | `^3.52.1` (contract-driven API client) |
+| | `tailwindcss`, `@tailwindcss/postcss` | `^4.3.3` (Tailwind CSS v4) |
+| | `@radix-ui/react-*` | Latest Radix UI primitives |
+| | `@tanstack/react-virtual` | `^3.14.9` (TanStack Virtual v3) |
+| | `zustand` | `^5.0.15` (Zustand 5 client stores) |
+| | `framer-motion` | `^13.1.0` (Framer Motion 13) |
+| | `lucide-react` | `^1.44.0` (Lucide React) |
+| | `recharts` | `^3.10.1` (Recharts 3) |
+| | `react-hook-form`, `@hookform/resolvers` | `^7.87.0`, `^5.7.1` |
+| | `react-day-picker` | `^10.0.1` (React Day Picker 10) |
+| | `@sentry/react` | `^10.70.0` (Sentry 10 telemetry) |
+| | `vitest`, `happy-dom`, `@vitest/coverage-v8` | `^4.1.11`, `^20.11.2` (Vitest 4 unit/hook runner) |
+| | `eslint`, `typescript-eslint` | `^10.10.0`, `^8.70.0` |
+| | `xlsx` | `0.20.3` (SheetJS official CDN pinned tarball) |
+| | `jspdf`, `jspdf-autotable`, `html2canvas` | `^4.2.1`, `^5.0.8`, `^1.4.1` (PDF exports) |
+| **Backend (`apps/backend`)** | `@fastify/*` (`cookie`, `cors`, `helmet`, `jwt`, `multipart`, `rate-limit`, `websocket`, `compress`, `static`) | Fastify 5 plugin ecosystem |
+| | `@ts-rest/fastify`, `@ts-rest/open-api` | `^3.52.1` (type-safe contract routers) |
+| | `fastify-type-provider-zod` | `^7.0.0` |
+| | `pg`, `@types/pg` | `^8.23.0`, `^8.23.1` (PostgreSQL 16 driver) |
+| | `drizzle-kit` | `^0.31.10` (migration generator) |
+| | `bullmq`, `ioredis` | `^6.3.4`, `^6.0.0` (BullMQ 6 worker queues & Redis 6) |
+| | `@aws-sdk/client-s3`, `@aws-sdk/lib-storage` | `^3.1115.0` (S3 storage) |
+| | `exceljs`, `nodemailer`, `ws` | `^4.4.0`, `^9.1.1`, `^8.21.3` |
+| | `tsx` | `^4.23.13` (development runner) |
+| **Shared (`packages/shared`)** | `@ts-rest/core`, `zod` | Shared DTOs and type-safe API contracts |
+| **E2E Tests (`e2e`)** | `@playwright/test` | `^1.62.1` (Playwright 1.62) |
+| | `@axe-core/playwright`, `axe-core` | `^4.13.0` (automated accessibility auditing) |
 
 Stack majors are not frozen — upgrade React, Vite, Fastify, Drizzle, Tailwind, etc. when newer stable releases ship (`mms-core.md` lists current stack; this rule owns **version freshness**).
 
@@ -46,7 +89,7 @@ Developing with Node.js 24 leverages native runtime capabilities to eliminate th
 | **Resource Cleanup** | `using` / `await using` (Explicit Resource Management) | Manual `try/finally` connection cleanup boilerplate |
 | **Request Tracking** | `AsyncLocalStorage` via `AsyncContextFrame` | Manual trace parameter drilling |
 | **Structured Logging** | Pino / stdout JSON logging for container/orchestrator shipping | In-process direct-to-file log writers |
-| **Native Testing** | `node:test` + `node:assert/strict` (auto-awaits subtests) | `jest`, `mocha` |
+| **Test Runner** | `vitest` (workspace standard everywhere) | `jest`, `mocha` |
 | **TS Execution** | `--experimental-strip-types` for scripts/CLIs | Unnecessary upfront build steps for simple TS scripts |
 | **Security Controls** | `--permission` model (`--allow-fs-read`, etc.) | Unrestricted process execution in hardened environments |
 | **Process Lifecycle** | Catch `SIGTERM`/`SIGINT`, clean drain, unref fallback timeout | Ungraced process kills or hanging connection pools |
@@ -57,7 +100,7 @@ Developing with Node.js 24 leverages native runtime capabilities to eliminate th
 |----|-------|
 | Exact `packageManager` + `engines` at root | Arbitrary `^` downgrades to avoid upgrading |
 | Workspace protocol for `@mms/shared` | Duplicate shared code to dodge a major bump |
-| pnpm `catalog:` / `catalogs` for React, Vite, Fastify, Drizzle, Zod, TanStack Query (apps cannot drift majors) | Divergent majors across apps/packages |
+| pnpm `catalog:` for React, React Router, Vite, Fastify, Pino, Drizzle, Zod, TanStack Query, and `@ts-rest/react-query` (apps cannot drift majors) | Divergent majors across apps/packages |
 | Read upstream migration guides for majors | Silence type errors with `any` or `@ts-ignore` |
 | Patch/minor bumps freely within semver | Leave known CVEs unpatched |
 | Align CI/Docker Node with `engines.node` (Node >= 24) | Mismatched CI images |
@@ -81,9 +124,15 @@ Developing with Node.js 24 leverages native runtime capabilities to eliminate th
 
 Enable Dependabot (or Renovate) + GitHub `dependency-review` on PRs for high/critical advisories; keep `pnpm audit` in upgrade PRs. Prefer `onlyBuiltDependencies` (pnpm) so only reviewed packages may run install scripts — do not silently enable every postinstall. Do not require SBOM/provenance until an ops task adds them — `mms-ops-infrastructure.md`.
 
-## 8. TypeScript Strictness (Dedicated PR)
+## 8. TypeScript Strictness & Type Stripping (Dedicated PR)
 
-Target: `noUncheckedIndexedAccess`; prefer `import type` / `verbatimModuleSyntax` (and `erasableSyntaxOnly` when on TS 5.8+). `exactOptionalPropertyTypes` is opt-in only — high churn; do not enable mid-feature. Strict mode + ban `any` already always-on (`antigravity-global.md`).
+Target: `noUncheckedIndexedAccess`; prefer `import type` / `verbatimModuleSyntax` and `erasableSyntaxOnly` (TS 5.8+ / TS 7.0+). Root workspace compiler is TypeScript 7.0 (`~7.0.2` with `typescript-v6` compatibility alias). `exactOptionalPropertyTypes` is opt-in only — high churn; do not enable mid-feature. Strict mode + ban `any` already always-on (`mms-agent-universal.md`).
+
+- **Node 24 `--experimental-strip-types` Standard**: Ensure all TypeScript code is compatible with native type-stripping runtimes:
+  - ❌ Banned: `enum` — use string literal unions (`type Status = 'active' | 'archived'`) or `as const` object maps.
+  - ❌ Banned: `namespace` / `module` declarations.
+  - ❌ Banned: Constructor parameter properties (`constructor(public name: string)`).
+  - ✅ Required: Explicit field declarations on classes and standard JS idioms so `.ts` files can execute directly without compilation steps.
 
 ## 9. React Compiler (When Enabling)
 

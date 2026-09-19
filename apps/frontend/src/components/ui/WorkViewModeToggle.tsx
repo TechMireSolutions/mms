@@ -54,7 +54,7 @@ export const WorkViewModeToggle = (function WorkViewModeToggle({
             aria-label={label}
             aria-pressed={isSelected}
             className={cn(
-              "relative h-9 px-2.5 rounded-lg text-xs font-semibold transition-colors touch-manipulation z-10",
+              "relative h-9 px-2.5 rounded-lg text-xs font-semibold transition-colors touch-manipulation z-elevated",
               isSelected
                 ? "text-primary-foreground"
                 : "text-muted-foreground hover:text-foreground hover:bg-muted/40",
@@ -63,7 +63,7 @@ export const WorkViewModeToggle = (function WorkViewModeToggle({
             {isSelected && (
               <motion.div
                 layoutId="workViewModeActivePill"
-                className="absolute inset-0 rounded-lg bg-primary shadow-xs -z-10"
+                className="absolute inset-0 rounded-lg bg-primary shadow-xs -z-elevated"
                 transition={{ type: "spring", stiffness: 500, damping: 35 }}
               />
             )}

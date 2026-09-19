@@ -1,7 +1,7 @@
 import { and, eq, isNull, sql, type SQL } from 'drizzle-orm';
 import type { WidgetAggregateResult, WidgetQuery } from '@mms/shared';
 import { exams } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 
 function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(exams.workspaceSubdomain, subdomain), isNull(exams.deletedAt))!;
@@ -57,7 +57,7 @@ export async function aggregateExaminationsWidgetQueries(
   const results: Record<string, WidgetAggregateResult> = {};
   if (queries.length === 0) return results;
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const totalRows = await tx
       .select({ count: sql<number>`count(*)::int` })
       .from(exams)

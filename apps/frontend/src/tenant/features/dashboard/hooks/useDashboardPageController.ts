@@ -1,7 +1,10 @@
 import { useState, useCallback } from 'react';
 import { DASHBOARD_MODULE_MANIFEST } from '@mms/shared';
 import { resolveDashboardRole } from '@/lib/dashboardRole';
-import { getActiveCustomCardIds, getPinnedDashboardWidgetCount } from '@/lib/dashboardCollections';
+import {
+  getActiveCustomCardIds,
+  isDashboardWidgetAllowed,
+} from '@/lib/dashboardCollections';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { useDashboardData } from '@/tenant/features/dashboard/hooks/useDashboardData';
@@ -44,7 +47,7 @@ export function useDashboardPageController() {
 
   const canCustomize = can(DASHBOARD_MODULE_MANIFEST.permissions.customize);
 
-  const dashboardData = useDashboardData(customWidgets, dashboardRole);
+  const dashboardData = useDashboardData(customWidgets, dashboardRole, enabledModules, can);
   const {
     financeMetrics,
     attendanceMetrics,
@@ -119,7 +122,14 @@ export function useDashboardPageController() {
 
   const selectedDashboardCardCount = visibleDashboardMetricCards.length;
 
-  const pinnedDashboardWidgetCount = (() => getPinnedDashboardWidgetCount(customWidgets))();
+  const visiblePinnedWidgets = customWidgets.filter(
+    (widget) =>
+      widget.isPinnedToDashboard &&
+      widget.widgetType !== 'card' &&
+      isDashboardWidgetAllowed(widget, enabledModules, can),
+  );
+
+  const pinnedDashboardWidgetCount = visiblePinnedWidgets.length;
 
   const notifications = (() =>
       buildDashboardNotifications(
@@ -176,6 +186,7 @@ export function useDashboardPageController() {
     dashboardMetricCards,
     selectedDashboardCardCount,
     visibleDashboardMetricCards,
+    visiblePinnedWidgets,
     pinnedDashboardWidgetCount,
     notifications,
     activeSessionsCount: sessionsMetrics?.active ?? 0,

@@ -8,8 +8,18 @@ import { closeAllQueues } from './worker/queues/index.js';
 import { disconnectRedis } from './lib/redis.js';
 import { closeAllConnections } from './lib/livePush.js';
 import { logger } from './lib/logger.js';
+import {
+  markShuttingDown,
+  SHUTDOWN_DRAIN_DELAY_MS,
+  waitForDrain,
+} from './lib/lifecycle.js';
 
-const FORCE_SHUTDOWN_TIMEOUT_MS = 10_000;
+/**
+ * Hard ceiling for the whole shutdown sequence. Must cover the drain wait PLUS
+ * time to close connections and the pool, otherwise adding a drain delay would
+ * make graceful shutdown more likely to be force-killed, not less.
+ */
+const FORCE_SHUTDOWN_TIMEOUT_MS = SHUTDOWN_DRAIN_DELAY_MS + 10_000;
 
 /**
  * Boots the Fastify server by building the app and listening on the configured port.
@@ -43,7 +53,7 @@ async function startServer(): Promise<void> {
     process.removeAllListeners('SIGTERM');
     process.removeAllListeners('SIGINT');
 
-    app.log.info({ signal }, 'shutting down');
+    app.log.info({ signal, drainDelayMs: SHUTDOWN_DRAIN_DELAY_MS }, 'shutting down');
 
     const forceExitTimer = setTimeout(() => {
       app.log.fatal('Graceful shutdown timed out; forcing exit');
@@ -52,6 +62,13 @@ async function startServer(): Promise<void> {
     forceExitTimer.unref?.();
 
     try {
+      // Phase 1: flip /ready to 503 and stay listening while the load balancer
+      // takes this instance out of rotation. Closing first would drop requests
+      // the balancer is still routing here (see lib/lifecycle.ts).
+      markShuttingDown();
+      await waitForDrain();
+
+      // Phase 2: stop accepting new connections and drain in-flight requests.
       await app.close();
       process.exit(0);
     } catch (error) {

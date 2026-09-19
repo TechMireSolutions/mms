@@ -6,7 +6,7 @@ import {
   hasanatDistributions,
   hasanatRedemptions,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 type RedempRow = typeof hasanatRedemptions.$inferSelect;
 function redemptionRowToRecord(row: RedempRow): Redemption {
@@ -29,7 +29,7 @@ export async function listRedemptionsByWorkspace(tenant: string, options?: { lim
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 1000, 1), 10000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatRedemptions.id,
@@ -56,7 +56,7 @@ export async function findRedemptionById(tenant: string, id: string): Promise<Re
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatRedemptions.id,
@@ -88,7 +88,7 @@ export async function findRedemptionsByIds(tenant: string, ids: string[]): Promi
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: hasanatRedemptions.id,

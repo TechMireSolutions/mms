@@ -1,47 +1,27 @@
-# MMS — Claude Code
+@AGENTS.md
 
-Madrasa Management System monorepo. Full agent guide: [AGENTS.md](AGENTS.md).
+# MMS — Claude Code notes
 
-## Quick commands
+Everything above this line is the shared cross-tool guide, imported from `AGENTS.md`.
+Only Claude-Code-specific behaviour is documented below — do not duplicate project
+conventions here, and never add a second copy of the skill list or the always-on set:
+`CLAUDE.md` has no `paths:` frontmatter, so all of it loads in every session.
 
-```bash
-pnpm install && pnpm typecheck
-pnpm install && ./restart_servers.sh   # local dev (screen)
-bash .agent/skills/mms-dev-setup/scripts/verify-env.sh
-```
+## How this repo's standards load in Claude Code
 
-## Where standards live
+| Layer | Location | When it loads |
+|---|---|---|
+| Shared guide | `AGENTS.md` (imported above) | every session |
+| Always-on rules | `.claude/rules/{mms-agent-universal,mms-core,mms-completion-review}.md` | every session (no `paths:`) |
+| Scoped rules | `.claude/rules/*.md` with `paths:` | when Claude reads a matching file |
+| Skills | `.claude/skills/*/SKILL.md` | when the description matches the task; read `SKILL.md` plus its `references/`/`scripts/` |
+| Subagents | `.claude/agents/*.md` | `mms-reviewer`, `mms-explorer`, `mms-test-triage`, `mms-docs-auditor` — use them for context isolation on large read-heavy tasks |
+| Commands | `.claude/commands/*.md` | `/dev-setup`, `/feature-module`, `/code-review`, `/dry`, `/run-tests`, `/fix-migration-debt` |
 
-| Tool | Rules | Skills |
-|------|-------|--------|
-| **Claude Code** (this) | `.claude/rules/*.md` | `.claude/skills/*/SKILL.md` |
-| **Cursor** | `.cursor/rules/*.mdc` | `.cursor/skills/` |
-| **Antigravity** | `.agent/rules/*.md` | `.agent/skills/` |
+## Claude-specific mechanics worth knowing
 
-**Canonical edit flow:** change `.cursor/rules/*.mdc` or `.agent/skills/*/SKILL.md`, then:
-
-```bash
-bash .agent/scripts/sync-all.sh
-```
-
-## Always-on rules (no `paths` — load every session)
-
-`antigravity-global`, `mms-core`, `mms-migration-status`, `mms-completion-review`, `mms-performance`
-
-Scoped rules load when Claude reads matching paths (see each file's `paths:` frontmatter). Each rule has a **Workflow skill:** line; full rule→skill map in `mms-core` Standards index.
-
-## Skills (28)
-
-Start with **`mms-dev-setup`** for install/run, **`mms-frontend`** / **`mms-query-factories`** for React/Query work, **`mms-module-page`** for new modules.
-
-Index: [.claude/skills/README.md](.claude/skills/README.md) · Workflows (reference): [.claude/docs/workflows/](.claude/docs/workflows/)
-
-## Layout
-
-```
-apps/frontend/     React 19 + Vite 8
-apps/backend/      Fastify 5 + PostgreSQL
-packages/shared/   @mms/shared
-```
-
-Rule index: [.cursor/rules/README.md](.cursor/rules/README.md)
+- `.claude/rules/`, `.claude/skills/`, and `.claude/docs/workflows/` are **generated** from `.cursor/rules/` and `.agent/skills/`. Edit the canonical source and run `bash .agent/scripts/sync-all.sh`; a hand edit here is overwritten and CI will fail the drift check.
+- `bash .agent/scripts/sync-all.sh --dry-run` previews which mirror files would change (the prune step deletes mirror-only files).
+- Permissions and hooks are committed in `.claude/settings.json` (`deny` rules apply immediately; `allow` rules wait for workspace trust). Personal overrides belong in the gitignored `.claude/settings.local.json`.
+- The guards are hooks, not prose: `git push`, `drizzle-kit push`, destructive `rm`, and reads of real `.env` files are blocked by `.cursor/hooks/guard-shell.sh` (shared with Cursor).
+- Verify the standards corpus with `node scripts/verify-rules-integrity.mjs` after any rule/skill change; it is the same gate CI runs.

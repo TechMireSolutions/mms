@@ -19,6 +19,35 @@ services:
     image: postgres:16-alpine
     container_name: mms-postgres
     restart: unless-stopped
+    # Connection budget (keep in sync with app PG_POOL_MAX):
+    #   backend pool 20 + worker pool 20 + migration/bootstrap clients ≈ 45
+    #   Postgres reserves a few for superuser_reserved_connections, so 200
+    #   leaves comfortable headroom for admin sessions and future scale-out.
+    #   If you raise PG_POOL_MAX or add backend replicas, raise this too.
+    command:
+      - postgres
+      - -c
+      - max_connections=200
+      - -c
+      - shared_buffers=512MB
+      - -c
+      - effective_cache_size=1536MB
+      - -c
+      - work_mem=16MB
+      - -c
+      - maintenance_work_mem=256MB
+      - -c
+      - random_page_cost=1.1
+      - -c
+      - effective_io_concurrency=200
+      - -c
+      - wal_compression=on
+      - -c
+      - track_io_timing=on
+      # Server-side counterpart to the app's 200ms transaction threshold, for
+      # query-level investigation.
+      - -c
+      - log_min_duration_statement=500
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-postgres}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
@@ -67,6 +96,9 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mms}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       JWT_SECRET: ${JWT_SECRET:?generate one with openssl rand -hex 32}
+      # Per-process pool. backend + worker each open their own pool, so the
+      # combined ceiling is 2 x PG_POOL_MAX against Postgres max_connections.
+      PG_POOL_MAX: ${PG_POOL_MAX:-20}
     depends_on:
       postgres:
         condition: service_healthy
@@ -91,6 +123,7 @@ services:
       DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB:-mms}
       REDIS_URL: redis://:${REDIS_PASSWORD}@redis:6379
       JWT_SECRET: ${JWT_SECRET:?generate one with openssl rand -hex 32}
+      PG_POOL_MAX: ${PG_POOL_MAX:-20}
     depends_on:
       postgres:
         condition: service_healthy

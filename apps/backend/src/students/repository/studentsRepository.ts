@@ -8,14 +8,10 @@ import type {
   StudentsListQuery,
   StudentsWidgetAggregateResult,
   StudentsWidgetQuery,
+  RepositoryListOptions,
 } from '@mms/shared';
 
-/** Soft-delete visibility filter shared by list/count repository reads. */
-type StudentDeletedFilter = 'active' | 'deleted' | 'all';
-
-interface ListStudentsOptions {
-  deleted?: StudentDeletedFilter;
-}
+export type ListStudentsOptions = RepositoryListOptions;
 
 /** GR sequence count + conflict probe inputs mirror the typed Drizzle queries. */
 interface StudentGrSequenceInput {
@@ -34,7 +30,10 @@ interface StudentGrSequenceInput {
  */
 export interface StudentsRepository {
   countByWorkspace(tenant: string, options?: ListStudentsOptions): Promise<number>;
-  listPage(tenant: string, query: StudentsListQuery): Promise<StudentsListPageResult>;
+  listPage(
+    tenant: string,
+    query: StudentsListQuery & { afterId?: string; skipCount?: boolean },
+  ): Promise<StudentsListPageResult & { nextCursor?: string }>;
   findById(tenant: string, id: string): Promise<Student | null>;
   findByIds(tenant: string, ids: string[]): Promise<Student[]>;
   save(tenant: string, student: Student | StudentRecord): Promise<void>;

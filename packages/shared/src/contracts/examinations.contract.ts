@@ -1,12 +1,22 @@
 import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
-import { baseListQuerySchema } from '../apiSchemas.js';
-import { examRecordSchema, examResultRecordSchema } from '../examinationsModuleManifest.js';
+import { baseListQuerySchema, softDeleteBodySchema } from '../apiSchemas.js';
+import {
+  examRecordSchema,
+  examResultRecordSchema,
+  examListSchema,
+  examResultListSchema,
+} from '../examinationsModuleManifest.js';
 import { examinationsReportAggregatesSchema } from '../examinationsReportAggregates.js';
 import { reportComparisonQuerySchema } from '../reportComparisonQuery.js';
+import { widgetAggregatesBodySchema } from '../schemas/common.dto.js';
+import {
+  examinationsFieldConfigPutBodySchema,
+  examinationsPreferencesPutBodySchema,
+} from '../examinationsSetupConfigTypes.js';
 
 const c = initContract();
-const errorResponse = z.unknown();
+const errorResponse = z.object({ type: z.string(), message: z.string() }).passthrough();
 const ok = z.unknown();
 const bulkIds = z.object({ ids: z.array(z.string()), deletionReason: z.string().optional() });
 
@@ -87,35 +97,35 @@ export const examinationContract = c.router({
   bulkUpdateExams: {
     method: 'PUT',
     path: '/api/examinations/exams/bulk',
-    body: ok,
+    body: examListSchema,
     responses: { 200: z.object({ exams: z.array(examRecordSchema) }), 403: ok, 500: ok },
     summary: 'Bulk upsert exams',
   },
   bulkUpdateResults: {
     method: 'PUT',
     path: '/api/examinations/results/bulk',
-    body: ok,
+    body: examResultListSchema,
     responses: { 200: z.object({ results: z.array(examResultRecordSchema) }), 403: ok, 500: ok },
     summary: 'Bulk upsert exam results',
   },
   deleteExam: {
     method: 'DELETE',
     path: '/api/examinations/exams/:id',
-    body: ok,
+    body: softDeleteBodySchema.optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: ok, 500: ok },
     summary: 'Soft delete an exam',
   },
   restoreExam: {
     method: 'POST',
     path: '/api/examinations/exams/:id/restore',
-    body: ok,
+    body: z.object({}).optional(),
     responses: { 200: z.object({ success: z.literal(true) }), 403: ok, 500: ok },
     summary: 'Restore a soft deleted exam',
   },
   widgetAggregates: {
     method: 'POST',
     path: '/api/examinations/widget-aggregates',
-    body: z.object({ widgets: z.array(z.unknown()) }),
+    body: widgetAggregatesBodySchema,
     responses: {
       200: z.record(z.string(), examinationsWidgetAggregateResultSchema),
       403: errorResponse,
@@ -140,7 +150,7 @@ export const examinationContract = c.router({
   updateFieldConfig: {
     method: 'PUT',
     path: '/api/examinations/field-config',
-    body: z.unknown(),
+    body: examinationsFieldConfigPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), config: z.record(z.string(), z.unknown()) }), 403: errorResponse, 500: errorResponse },
     summary: 'Update field config',
   },
@@ -153,7 +163,7 @@ export const examinationContract = c.router({
   updatePreferences: {
     method: 'PUT',
     path: '/api/examinations/preferences',
-    body: z.unknown(),
+    body: examinationsPreferencesPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), preferences: examinationsPreferencesResponseSchema }), 403: errorResponse, 500: errorResponse },
     summary: 'Update preferences',
   },

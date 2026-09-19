@@ -122,11 +122,14 @@ export function useContactsPageWriteActions({
   );
 
   const handleImport = useCallback(
-    async (list: Contact[]): Promise<void> => {
+    async (
+      list: Contact[],
+      options?: { onProgress?: (progress: { imported: number; total: number }) => void },
+    ): Promise<void> => {
       if (!canWrite) {
         throw new Error(t("contacts.form.writeDenied"));
       }
-      await importContacts(list);
+      await importContacts(list, options);
     },
     [canWrite, t, importContacts],
   );

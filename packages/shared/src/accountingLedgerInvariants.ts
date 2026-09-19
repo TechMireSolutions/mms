@@ -1,4 +1,8 @@
-/** How a journal entry was created — used for idempotent finance posting. */
+import { z } from 'zod';
+
+/**
+ * How a journal entry was created — used for idempotent finance posting.
+ */
 export const JOURNAL_SOURCE_TYPES = [
   'manual',
   'invoice',
@@ -29,6 +33,25 @@ export interface FiscalYearRef {
 export function moneyToCents(amount: number): number {
   return Math.round(amount * 100);
 }
+
+const hasAtMostTwoDecimals = (value: number): boolean =>
+  Math.abs(value - Math.round(value * 100) / 100) < 1e-9;
+
+/**
+ * Non-negative money with at most two decimal places, so ledger arithmetic can
+ * round-trip through integer cents without silent precision loss.
+ */
+export const moneyAmountSchema = z
+  .number()
+  .finite()
+  .nonnegative()
+  .refine(hasAtMostTwoDecimals, { message: 'accounting.validation.moneyTwoDecimals' });
+
+/** Signed money with at most two decimal places (bank statement lines). */
+export const signedMoneyAmountSchema = z
+  .number()
+  .finite()
+  .refine(hasAtMostTwoDecimals, { message: 'accounting.validation.moneyTwoDecimals' });
 
 /**
  * A journal line is single-sided when at most one of debit/credit is positive
@@ -70,4 +93,31 @@ export function resolveFiscalYearRef(
 
 export function isFiscalYearClosed(year: FiscalYearRef | null | undefined): boolean {
   return year?.status === 'closed';
+}
+
+/** A fiscal year that also carries the date range used for date-based resolution. */
+export interface FiscalYearRange extends FiscalYearRef {
+  startDate: string;
+  endDate: string;
+}
+
+/**
+ * The fiscal year whose `[startDate, endDate]` range contains `date`.
+ *
+ * Closed-period enforcement must key off the entry DATE, not only off the
+ * declared `fiscal_year` / `fiscal_year_id` label: reports filter by date, so an
+ * entry dated inside a closed period contaminates that period's figures no
+ * matter which year it claims to belong to.
+ *
+ * Returns null for a missing/malformed date or a date that falls outside every
+ * configured year (a workspace with no fiscal years configured must stay
+ * postable, so callers treat null as "unregulated" rather than "reject").
+ */
+export function findFiscalYearForDate<T extends FiscalYearRange>(
+  years: readonly T[],
+  date: string | undefined | null,
+): T | null {
+  const needle = date?.trim() ?? '';
+  if (!needle) return null;
+  return years.find((year) => year.startDate <= needle && needle <= year.endDate) ?? null;
 }

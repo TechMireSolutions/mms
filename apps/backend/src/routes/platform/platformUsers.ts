@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions, FastifyReply, FastifyRequest } from 'fastify';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import { platformAdminsContract } from '@mms/shared';
-import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import {
   authenticatePlatform,
   requirePlatformPermission,
@@ -22,6 +22,7 @@ import { hashPassword } from '../../services/auth/passwordService.js';
 import { replyValidationError } from '../../lib/zodRequest.js';
 import { insertPlatformActivityLog } from '../../db/repositories/platformActivityLogsRepository.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
+import { createStrictRateLimitGuard } from '../../lib/rateLimitGuard.js';
 
 const s = initServer();
 
@@ -29,13 +30,13 @@ export default async function platformUsersRoutes(
   fastify: FastifyInstance,
   _options: FastifyPluginOptions,
 ): Promise<void> {
-  const authRateLimit = fastify.rateLimit(AUTH_RATE_LIMIT);
+  const authRateLimit = createStrictRateLimitGuard(fastify, AUTH_RATE_LIMIT);
 
   fastify.addHook('preHandler', authenticatePlatform);
   fastify.addHook('preHandler', requirePlatformPermission('admins'));
 
   const router = s.router(platformAdminsContract, {
-    listAdmins: async (): Promise<unknown> => {
+    listAdmins: async (): Promise<ContractRouteResponse<typeof platformAdminsContract['listAdmins']>> => {
       const storedUsers = await listPlatformUsers();
       const users = storedUsers.map(toPlatformUserProfile);
       return { status: 200 as const, body: { users } };
@@ -48,7 +49,7 @@ export default async function platformUsersRoutes(
       handler: async ({
         body,
         request,
-      }: ContractRouteArgs<typeof platformAdminsContract['createAdmin']>): Promise<unknown> => {
+      }: ContractRouteArgs<typeof platformAdminsContract['createAdmin']>): Promise<ContractRouteResponse<typeof platformAdminsContract['createAdmin']>> => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
         const { name, email, password, permissions } = body;
 
@@ -83,7 +84,7 @@ export default async function platformUsersRoutes(
         params,
         body,
         request,
-      }: ContractRouteArgs<typeof platformAdminsContract['updateAdminPermissions']>): Promise<unknown> => {
+      }: ContractRouteArgs<typeof platformAdminsContract['updateAdminPermissions']>): Promise<ContractRouteResponse<typeof platformAdminsContract['updateAdminPermissions']>> => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
 
         // Prevent an admin from escalating their own permissions.
@@ -113,7 +114,7 @@ export default async function platformUsersRoutes(
     verifyAdminEmail: async ({
       params,
       request,
-    }: ContractRouteArgs<typeof platformAdminsContract['verifyAdminEmail']>): Promise<unknown> => {
+    }: ContractRouteArgs<typeof platformAdminsContract['verifyAdminEmail']>): Promise<ContractRouteResponse<typeof platformAdminsContract['verifyAdminEmail']>> => {
       const { platformUser } = request as PlatformAuthenticatedRequest;
       const user = await verifyPlatformUserEmail(params.adminId);
 
@@ -133,14 +134,14 @@ export default async function platformUsersRoutes(
     setAdminDisabled: {
       hooks: {
         preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
-          await authRateLimit.call(fastify, request, reply);
+          await authRateLimit(request, reply);
         },
       },
       handler: async ({
         params,
         body,
         request,
-      }: ContractRouteArgs<typeof platformAdminsContract['setAdminDisabled']>): Promise<unknown> => {
+      }: ContractRouteArgs<typeof platformAdminsContract['setAdminDisabled']>): Promise<ContractRouteResponse<typeof platformAdminsContract['setAdminDisabled']>> => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
 
         if (params.adminId === platformUser.id) {
@@ -177,14 +178,14 @@ export default async function platformUsersRoutes(
     deleteAdmin: {
       hooks: {
         preHandler: async (request: FastifyRequest, reply: FastifyReply) => {
-          await authRateLimit.call(fastify, request, reply);
+          await authRateLimit(request, reply);
         },
       },
       handler: async ({
         params,
         body,
         request,
-      }: ContractRouteArgs<typeof platformAdminsContract['deleteAdmin']>): Promise<unknown> => {
+      }: ContractRouteArgs<typeof platformAdminsContract['deleteAdmin']>): Promise<ContractRouteResponse<typeof platformAdminsContract['deleteAdmin']>> => {
         const { platformUser } = request as PlatformAuthenticatedRequest;
 
         if (params.adminId === platformUser.id) {
@@ -216,7 +217,7 @@ export default async function platformUsersRoutes(
         return { status: 200 as const, body: { deleted: true as const, id: params.adminId } };
       },
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof platformAdminsContract>);
 
   await fastify.register(s.plugin(router), {
     requestValidationErrorHandler: (err, _request, reply) => {

@@ -6,6 +6,10 @@ import { AccountingDashboard } from "@/tenant/features/accounting/components/Acc
 import { ChartOfAccounts } from "@/tenant/features/accounting/components/ChartOfAccounts";
 import { GeneralLedger } from "@/tenant/features/accounting/components/GeneralLedger";
 import { JournalEntries } from "@/tenant/features/accounting/components/JournalEntries";
+import type {
+  JournalEntriesListPaging,
+  JournalEntryFilterState,
+} from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
 import { TrialBalance } from "@/tenant/features/accounting/components/TrialBalance";
 import type { Account, AccountingSettings, FiscalYear, JournalEntry } from "@mms/shared";
 
@@ -35,8 +39,20 @@ interface AccountingWorkTierProps {
   createAccountRequestKey?: number;
   accounts: Account[];
   entries: JournalEntry[];
+  /**
+   * The complete journal, used by the whole-ledger views (Overview, General
+   * Ledger, Trial Balance). `entries` is a single page and would silently
+   * understate every aggregate; it stays the source for the paginated Journal
+   * list and for saves, so a save never re-uploads the entire journal.
+   */
+  aggregateEntries: JournalEntry[];
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];
+  /** Journal filter values, owned by the page that issues the server query. */
+  journalFilters: JournalEntryFilterState;
+  onJournalFiltersChange: (patch: Partial<JournalEntryFilterState>) => void;
+  /** Pager state for the server-driven journal page. */
+  journalPaging: JournalEntriesListPaging;
   onSubTabChange: (tab: string) => void;
   onShowDeletedChange: () => void;
   onRetry: () => void;
@@ -65,8 +81,12 @@ export function AccountingWorkTier({
   createAccountRequestKey,
   accounts,
   entries,
+  aggregateEntries,
   settings,
   fiscalYears,
+  journalFilters,
+  onJournalFiltersChange,
+  journalPaging,
   onSubTabChange,
   onShowDeletedChange,
   onRetry,
@@ -102,7 +122,7 @@ export function AccountingWorkTier({
       )}
 
       {!listLoadFailed && activeSubTab === "overview" && (
-        <AccountingDashboard accounts={accounts} entries={entries} settings={settings} fiscalYears={fiscalYears} />
+        <AccountingDashboard accounts={accounts} entries={aggregateEntries} settings={settings} fiscalYears={fiscalYears} />
       )}
 
       {!listLoadFailed && activeSubTab === "journal" && (
@@ -122,16 +142,19 @@ export function AccountingWorkTier({
           onRestore={onRestoreEntry}
           onBulkDelete={onBulkDeleteEntries}
           onBulkRestore={onBulkRestoreEntries}
+          filters={journalFilters}
+          onFiltersChange={onJournalFiltersChange}
+          paging={journalPaging}
           {...journalColumnProps}
         />
       )}
 
       {!listLoadFailed && activeSubTab === "ledger" && (
-        <GeneralLedger accounts={accounts} entries={entries} />
+        <GeneralLedger accounts={accounts} entries={aggregateEntries} />
       )}
 
       {!listLoadFailed && activeSubTab === "trial" && (
-        <TrialBalance accounts={accounts} entries={entries} fiscalYears={fiscalYears} />
+        <TrialBalance accounts={accounts} entries={aggregateEntries} fiscalYears={fiscalYears} />
       )}
 
       {!listLoadFailed && activeSubTab === "coa" && (

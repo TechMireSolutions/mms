@@ -1,6 +1,10 @@
 ---
 name: mms-fields-registry
-description: Adds or changes field/tab registries, module Setup Fields UI, and field configuration per mms-fields.mdc. Use when working with custom fields, system tabs, field types, column registries, field delete guards, or useSortedFields.
+description: Adds or changes field/tab registries, module Setup Fields UI, and field configuration per mms-fields.mdc. Use when working with custom fields, system tabs, field types, column registries, field delete guards, or useSortedFields. Do NOT use for core entity Drizzle database migrations (use mms-schema-migrate) or generic form modal layouts (use mms-form-architecture).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Field & Tab Registry
@@ -63,20 +67,24 @@ Before merging any new/changed field, complete all layers:
 
 See `mms-fields.mdc` and `mms-data-layer.mdc`.
 
-## Module field settings
+## Module field settings & column layout
 
-Pattern: `{Module}SettingsPanel` + `CustomFieldsBuilder` + `ContactDraggableFieldList` / `DraggableFieldList`
+Pattern: `{Module}SettingsPanel` + column registry `{ key, label, enabled, order, sortable, width }`.
+Canonical layout hook: `useModuleColumnLayout` (`apps/frontend/src/hooks/useModuleColumnLayout.ts`).
 
 Storage: Contacts → `/api/contacts/field-config`. Other modules → `{module}_field_config` or contract `configObjectKey` via `saveObject` until migrated.
 
 ## Rendering
 
 ```ts
-const fields = useSortedFields(registry, tabKey);
-// Map to FormPrimitives — enabled only, in order
+const { orderedColumns, isColumnVisible, updateColumnWidth } = useModuleColumnLayout({
+  columns: registryColumns,
+  defaultColumns: DEFAULT_COLUMNS,
+  storageKey: 'module_columns',
+});
 ```
 
-Tables: column registry `{ key, label, enabled, order, sortable, width }`.
+Tables: column registry `{ key, label, enabled, order, sortable, width }`. Pass `isColumnVisible` into table and card views.
 
 **Form + drawer parity:** every enabled registry/custom field that validation can require must render a control (form) and a read row (drawer). Ban hard-coded key switches that `return null` for unknown Setup fields.
 
@@ -85,10 +93,6 @@ Tables: column registry `{ key, label, enabled, order, sortable, width }`.
 - Prefer `resolveContactEnabledTabIds` — when `formTabs` exist they win; do not blind-union `DEFAULT_ENABLED_TABS`.
 - Locked tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic`) + `useModuleSettingsEditor({ lockedEnabledTabs })` on save/sync.
 - Fields Save: dirty-gated; sync `columnRegistry` via `syncContactColumnRegistryWithFields` on Fields save.
-
-## One DraggableFieldList
-
-Canonical: `apps/frontend/src/components/ui/DraggableFieldList.tsx`. Contacts: `ContactDraggableFieldList.tsx`. Do not add a third variant.
 
 ## Rules
 

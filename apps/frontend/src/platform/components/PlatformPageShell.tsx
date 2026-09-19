@@ -4,6 +4,7 @@ import { PlatformSidebarProvider, usePlatformSidebar } from '@/platform/lib/Plat
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut';
 import { AppFooter } from '@/components/ui/AppFooter';
+import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
 import { cn } from '@/lib/utils';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
 import { PlatformSidebar } from '@/platform/components/PlatformSidebar';
@@ -32,19 +33,13 @@ function PlatformShellFrame({
   lang: string;
   children: React.ReactNode;
 }): React.JSX.Element {
-  const { t } = useTranslation();
   return (
     <div
       dir={dir}
       lang={lang}
       className="box-border flex min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern selection:bg-primary/10 selection:text-primary"
     >
-      <a
-        href="#main-content"
-        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:start-3 focus:z-toast focus:px-4 focus:py-2 focus:bg-primary focus:text-primary-foreground focus:rounded-xl focus:shadow-xl focus:outline-none text-xs font-bold"
-      >
-        {t('common.skipToContent')}
-      </a>
+      <SkipToContentLink />
       {children}
     </div>
   );

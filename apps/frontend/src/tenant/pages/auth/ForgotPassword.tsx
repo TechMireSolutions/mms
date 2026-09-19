@@ -1,33 +1,64 @@
-import React, { useId, useState } from "react";
-import { Mail } from "lucide-react";
+import React, { useEffect, useId, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import AuthLayout from "@/tenant/components/AuthLayout";
 import {
   AuthBackLink,
-  AuthCheckEmailSuccess,
   AuthEmailField,
-  AuthMutedPanel,
+  AuthPasswordField,
+  AuthResendCodeControl,
+  AuthStatusBanner,
   AuthSubmitButton,
   EntryPageHead,
   focusAuthField,
   formatEntryTitle,
   validateAuthEmail,
 } from "@/components/entry";
+import { createEmptyOtp, isOtpComplete, OtpInput } from "@/components/ui/OtpInput";
+import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { ROUTES } from '@/lib/config/routes';
 import { useTranslation } from "@/hooks/useTranslation";
+import { useAuth } from "@/lib/contexts/AuthContext";
+import { isApiError } from "@/lib/apiClient";
+import { notify } from "@/lib/notify";
+
+type View = "email" | "otp" | "reset";
+type Flow = "reset" | "activate";
 
 /**
- * Forgot password reset request form for tenant sign-in entry.
+ * Tenant "set your password" flow — one OTP mechanism (request code → verify →
+ * set password) shared by forgot-password and a new user's first activation.
+ * A welcome/activation email links here with `?activate=1` (no secret token);
+ * `flow` only changes the copy, the backend calls are identical either way.
  */
 export default function ForgotPassword(): React.JSX.Element {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { requestPasswordOtp, verifyPasswordOtp, resetPasswordWithOtp } = useAuth();
   const formId = useId();
   const emailFieldId = `${formId}-email`;
-  const [email, setEmail] = useState("");
-  const [loading, setLoading] = useState(false);
-  const [sent, setSent] = useState(false);
-  const [error, setError] = useState("");
+  const passwordFieldId = `${formId}-password`;
+  const confirmFieldId = `${formId}-confirm`;
 
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+  const [view, setView] = useState<View>("email");
+  const [flow, setFlow] = useState<Flow>("reset");
+  const [email, setEmail] = useState("");
+  const [code, setCode] = useState(createEmptyOtp);
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [resendCycle, setResendCycle] = useState(0);
+
+  const resendCountdown = useResendCountdown(view === "otp", 60, resendCycle);
+
+  useEffect(() => {
+    if (!searchParams.get("activate")) return;
+    setFlow("activate");
+    setSearchParams({}, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  const handleRequestCode = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
     const emailError = validateAuthEmail(email, t);
     if (emailError) {
@@ -36,52 +67,95 @@ export default function ForgotPassword(): React.JSX.Element {
       return;
     }
     setLoading(true);
-    // Tenant password-reset API is not shipped yet — acknowledge without leaking account existence.
-    await new Promise((resolveDelay) => setTimeout(resolveDelay, 800));
-    setLoading(false);
-    setSent(true);
+    setError("");
+    try {
+      await requestPasswordOtp(email.trim());
+      setView("otp");
+    } catch (requestError: unknown) {
+      setError(isApiError(requestError) ? requestError.message : t("errors.module.description"));
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const pageTitle = formatEntryTitle(
-    sent ? t("auth.forgotCheckEmail") : t("auth.forgotTitle"),
-    t("entry.productName"),
-  );
+  const handleResend = async (): Promise<void> => {
+    setLoading(true);
+    try {
+      await requestPasswordOtp(email.trim());
+      setResendCycle((cycle) => cycle + 1);
+      setError("");
+      setCode(createEmptyOtp());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyCode = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+    if (!isOtpComplete(code)) {
+      setError(t("auth.otpIncomplete"));
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await verifyPasswordOtp(email.trim(), code.join(""));
+      setView("reset");
+    } catch {
+      setError(t("auth.otpInvalid"));
+      setCode(createEmptyOtp());
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSetPassword = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
+    event.preventDefault();
+    if (password !== confirmPassword) {
+      setError(t("auth.forgotPasswordMismatch"));
+      return;
+    }
+    setLoading(true);
+    setError("");
+    try {
+      await resetPasswordWithOtp(email.trim(), code.join(""), password);
+      notify.success(t("auth.passwordSetSuccess"));
+      navigate(ROUTES.home, { replace: true });
+    } catch (resetError: unknown) {
+      setError(isApiError(resetError) ? resetError.message : t("errors.module.description"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const title =
+    view === "otp"
+      ? t("auth.forgotEnterCodeTitle")
+      : view === "reset"
+        ? flow === "activate"
+          ? t("auth.forgotActivatePasswordTitle")
+          : t("auth.forgotNewPasswordTitle")
+        : flow === "activate"
+          ? t("auth.forgotActivateTitle")
+          : t("auth.forgotTitle");
+
+  const subtitle =
+    view === "email"
+      ? flow === "activate"
+        ? t("auth.forgotActivateSubtitle")
+        : t("auth.forgotSubtitle")
+      : view === "otp"
+        ? t("auth.codeSentTo") + " " + email
+        : undefined;
 
   return (
     <>
-      <EntryPageHead title={pageTitle} description={t("entry.meta.tenantForgot")} />
-      <AuthLayout
-        title={sent ? t("auth.forgotCheckEmail") : t("auth.forgotTitle")}
-        subtitle={
-          sent
-            ? t("auth.forgotSentTo", { email: email.trim() })
-            : t("auth.forgotSubtitle")
-        }
-      >
-        {sent ? (
-          <AuthCheckEmailSuccess
-            secondaryLabel={t("auth.tryDifferentEmail")}
-            onSecondary={() => {
-              setSent(false);
-              setEmail("");
-              setError("");
-            }}
-            footer={<AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />}
-          >
-            <AuthMutedPanel>
-              <div className="flex items-start gap-3">
-                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-primary" aria-hidden />
-                <div>
-                  <p className="text-sm font-medium text-foreground">{t("auth.resetLinkSent")}</p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                    {t("auth.resetLinkExpiry", { email: email.trim() })}
-                  </p>
-                </div>
-              </div>
-            </AuthMutedPanel>
-          </AuthCheckEmailSuccess>
-        ) : (
-          <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4" noValidate aria-busy={loading}>
+      <EntryPageHead title={formatEntryTitle(title, t("entry.productName"))} description={t("entry.meta.tenantForgot")} />
+      <AuthLayout title={title} subtitle={subtitle}>
+        {error && <AuthStatusBanner message={error} />}
+
+        {view === "email" && (
+          <form onSubmit={(event) => void handleRequestCode(event)} className="mt-4 space-y-4" noValidate aria-busy={loading}>
             <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
               <AuthEmailField
                 id={emailFieldId}
@@ -89,20 +163,73 @@ export default function ForgotPassword(): React.JSX.Element {
                 value={email}
                 autoFocus
                 placeholder={t("auth.emailPlaceholder")}
-                error={error || undefined}
                 onChange={(value) => {
                   setEmail(value);
                   setError("");
                 }}
               />
+              <AuthSubmitButton busy={loading} busyLabel={t("auth.sendingResetLink")} label={t("auth.sendCode")} />
+              <AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />
+            </fieldset>
+          </form>
+        )}
 
+        {view === "otp" && (
+          <form onSubmit={(event) => void handleVerifyCode(event)} className="mt-4 space-y-4" noValidate aria-busy={loading}>
+            <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
+              <OtpInput
+                value={code}
+                onChange={(next) => {
+                  setCode(next);
+                  if (error) setError("");
+                }}
+                ariaLabel={title}
+                disabled={loading}
+                hasError={Boolean(error)}
+              />
               <AuthSubmitButton
                 busy={loading}
-                busyLabel={t("auth.sendingResetLink")}
-                label={t("auth.sendResetLink")}
+                busyLabel={t("auth.verifying")}
+                label={t("auth.verifySignIn")}
+                disabled={!isOtpComplete(code)}
+                showArrow={false}
               />
-
+              <AuthResendCodeControl
+                countdown={resendCountdown}
+                onResend={() => void handleResend()}
+                disabled={loading}
+                countdownLabel={t("auth.resendCountdown", { seconds: resendCountdown })}
+                resendLabel={t("auth.resendCode")}
+              />
               <AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />
+            </fieldset>
+          </form>
+        )}
+
+        {view === "reset" && (
+          <form onSubmit={(event) => void handleSetPassword(event)} className="mt-4 space-y-4" noValidate aria-busy={loading}>
+            <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
+              <AuthPasswordField
+                id={passwordFieldId}
+                label={t("auth.password")}
+                value={password}
+                autoComplete="new-password"
+                onChange={(value) => {
+                  setPassword(value);
+                  setError("");
+                }}
+              />
+              <AuthPasswordField
+                id={confirmFieldId}
+                label={t("auth.forgotConfirmPasswordLabel")}
+                value={confirmPassword}
+                autoComplete="new-password"
+                onChange={(value) => {
+                  setConfirmPassword(value);
+                  setError("");
+                }}
+              />
+              <AuthSubmitButton busy={loading} busyLabel={t("auth.settingPassword")} label={t("auth.setPassword")} />
             </fieldset>
           </form>
         )}

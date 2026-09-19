@@ -2,7 +2,9 @@ import type { Contact, AppTranslationKey } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { notify } from "@/lib/notify";
 import { reportClientError } from "@/lib/clientErrorReporting";
-import { useContactMutations } from "@/tenant/features/contacts/hooks/useContacts";
+import { useContactMutations, useInvalidateContactsQueries } from "@/tenant/features/contacts/hooks/useContactMutations";
+import { startServerContactsImport } from "@/lib/backgroundJobs/startServerContactsImport";
+import { chunkContactsForImport } from "@/lib/contacts/contactsImportBatching";
 
 type NotifyBulkResult = (
   succeeded: number,
@@ -38,6 +40,7 @@ export function useContactsCrudWriteActions({
     mergeContacts: mergeContactsMutation,
     bulkTagContacts: bulkTagMutation,
   } = useContactMutations();
+  const invalidateContacts = useInvalidateContactsQueries();
 
   const saveContact = (async (contact: Contact, isNew: boolean): Promise<Contact> => {
       try {
@@ -70,17 +73,38 @@ export function useContactsCrudWriteActions({
       }
     });
 
-  const importContacts = (async (list: Contact[]): Promise<void> => {
+  const importContacts = (async (
+    list: Contact[],
+    options?: { onProgress?: (progress: { imported: number; total: number }) => void },
+  ): Promise<void> => {
+      if (list.length === 0) return;
       let succeeded = 0;
       let failed = 0;
-      for (const contact of list) {
-        try {
-          await upsertContact.mutateAsync(contact);
-          succeeded += 1;
-        } catch (err) {
-          failed += 1;
-          reportClientError(err, { scope: "contacts.import_contact_item" });
+      try {
+        // One queued job per batch instead of one REST write per contact. A batch is capped
+        // server-side (`CONTACTS_IMPORT_MAX_BATCH`), so larger vCards are chunked here.
+        for (const batch of chunkContactsForImport(list)) {
+          const alreadyDone = succeeded + failed;
+          const job = await startServerContactsImport({
+            contacts: batch,
+            label: t("contacts.jobs.importLabelServer"),
+            // Overall counts across batches: the job reports its own batch progress.
+            onProgress: (jobState) =>
+              options?.onProgress?.({
+                imported: alreadyDone + (jobState.progress?.current ?? 0),
+                total: list.length,
+              }),
+          });
+          const imported = job.progress?.current ?? batch.length;
+          succeeded += imported;
+          failed += Math.max(batch.length - imported, 0);
+          options?.onProgress?.({ imported: succeeded + failed, total: list.length });
         }
+      } catch (err) {
+        failed += list.length - succeeded;
+        reportClientError(err, { scope: "contacts.import_job" });
+      } finally {
+        if (succeeded > 0) invalidateContacts();
       }
       notifyBulkResult(succeeded, failed, "contacts.importSuccessOne", "contacts.importSuccess");
     });

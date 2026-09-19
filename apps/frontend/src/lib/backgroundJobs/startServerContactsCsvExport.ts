@@ -7,6 +7,7 @@ export async function startServerContactsCsvExport(options: {
   filename: string;
   label: string;
   ids?: Array<string | number>;
+  idempotencyKey?: string;
 }): Promise<BackgroundJobRecord> {
   return startServerModuleCsvExport({
     path: '/api/contacts/export/csv',
@@ -15,7 +16,8 @@ export async function startServerContactsCsvExport(options: {
       columns: options.columns,
       filename: options.filename,
       label: options.label,
-      ids: options.ids,
+      ids: options.ids && options.ids.length > 0 ? options.ids : undefined,
+      idempotencyKey: options.idempotencyKey,
     },
   });
 }

@@ -57,6 +57,10 @@ vi.mock('../services/workspaceService.js', () => ({
     if (ws) ws.enabled = enabled;
     return ws ?? null;
   }),
+  getPlatformWorkspaceSummary: vi.fn().mockImplementation(async (subdomain: string) => {
+    const ws = mockWorkspaces.find((w) => w.subdomain === subdomain);
+    return ws ?? null;
+  }),
   getWorkspaceGrantedModules: vi.fn().mockResolvedValue([]),
   updateWorkspaceModules: vi.fn().mockResolvedValue([]),
   deleteWorkspace: vi.fn().mockResolvedValue(true),

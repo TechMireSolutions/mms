@@ -1,5 +1,6 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
+import { isoDateSchema } from './isoDateSchema.js';
 
 export const ATTENDANCE_RECORD_STATUSES = ['present', 'absent', 'late', 'excused'] as const;
 export type AttendanceRecordStatus = (typeof ATTENDANCE_RECORD_STATUSES)[number];
@@ -34,7 +35,7 @@ export const attendanceRecordInsertSchema = z
   .object({
     id: z.string().optional(),
     classId: z.string().min(1, 'Class / Session is required'),
-    date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+    date: isoDateSchema,
     studentId: z.string().min(1, 'Student is required'),
     studentName: z.string().optional().default(''),
     rollNo: z.string().optional().default(''),
@@ -63,8 +64,8 @@ export const attendanceLeaveSchema = z
   .object({
     id: z.string(),
     studentId: z.string().min(1),
-    fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    fromDate: isoDateSchema,
+    toDate: isoDateSchema,
     reason: z.string().min(1),
     status: z.enum(ATTENDANCE_LEAVE_STATUSES).default('pending'),
     approvedBy: z.string().nullable().optional(),
@@ -79,8 +80,8 @@ export const attendanceLeaveInsertSchema = z
   .object({
     id: z.string().optional(),
     studentId: z.string().min(1, 'Student is required'),
-    fromDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'From date must be YYYY-MM-DD'),
-    toDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'To date must be YYYY-MM-DD'),
+    fromDate: isoDateSchema,
+    toDate: isoDateSchema,
     reason: z.string().min(1, 'Reason is required'),
     notes: z.string().optional().default(''),
   })

@@ -17,6 +17,8 @@ cd "$ROOT_DIR" || { echo "FATAL: cannot cd to ${ROOT_DIR}"; exit 1; }
 
 # shellcheck source=lib/deploy-ports.sh
 source "$ROOT_DIR/scripts/lib/deploy-ports.sh"
+# shellcheck source=lib/read-env.sh
+source "$ROOT_DIR/scripts/lib/read-env.sh"
 
 export GIT_TERMINAL_PROMPT=0
 GIT_CMD="git"
@@ -143,28 +145,7 @@ else
   echo "Skipping pnpm install — pnpm-lock.yaml unchanged (${CURRENT_LOCK_HASH:0:12}…)"
 fi
 
-read_env_var() {
-  local key="$1"
-  local default="${2:-}"
-  if [[ ! -f "$ENV_FILE" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local line
-  line="$(grep -E "^${key}=" "$ENV_FILE" 2>/dev/null | tail -1 || true)"
-  if [[ -z "$line" ]]; then
-    echo "$default"
-    return 0
-  fi
-  local value="${line#*=}"
-  value="${value%\"}"
-  value="${value#\"}"
-  # Strip carriage returns and leading/trailing whitespace
-  value="$(echo -n "$value" | tr -d '\r' | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')"
-  echo "$value"
-}
-
-export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT")"
+export PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
 export NODE_ENV=production
 assert_production_backend_port "$PORT" "Deploy PORT" || exit 1
 
@@ -172,12 +153,35 @@ mkdir -p "$ROOT_DIR/.logs"
 # Legacy vite-preview PM2 app — SPA is served by Fastify from apps/frontend/dist.
 pm2 delete mmsv2-frontend 2>/dev/null || true
 
+# Apply schema DDL + data migrations BEFORE swapping the backend over.
+#
+# initDb() still runs them on startup as a safety net, but doing it here means a
+# failing or slow migration fails the deploy while the previous release is still
+# serving, instead of taking the API down mid-restart. The runner is idempotent
+# (Drizzle tracks applied DDL; data migrations are guarded by an advisory lock
+# and a `data_migrations` ledger), so re-running it on boot is harmless.
+if [ -f "$ROOT_DIR/apps/backend/dist/scripts/migrateDb.js" ]; then
+  echo "Applying database migrations (pre-restart)..."
+  if ! (cd "$ROOT_DIR/apps/backend" && node dist/scripts/migrateDb.js); then
+    echo "ERROR: database migration failed — leaving the running release in place"
+    exit 1
+  fi
+  echo "Migrations applied."
+else
+  echo "Notice: dist/scripts/migrateDb.js not found — migrations will run on backend startup."
+fi
+
 if [ -f "$ROOT_DIR/ecosystem.config.cjs" ]; then
-  pm2 startOrReload "$ROOT_DIR/ecosystem.config.cjs" --only mmsv2-backend --update-env \
-    || pm2 restart mmsv2-backend --update-env 2>/dev/null || true
+  pm2 startOrReload "$ROOT_DIR/ecosystem.config.cjs" --update-env \
+    || {
+      pm2 restart mmsv2-backend --update-env 2>/dev/null || true
+      pm2 restart mmsv2-worker --update-env 2>/dev/null || true
+    }
 else
   pm2 restart mmsv2-backend --update-env 2>/dev/null || pm2 restart mmsv2-backend 2>/dev/null || true
+  pm2 restart mmsv2-worker --update-env 2>/dev/null || true
 fi
+pm2 save 2>/dev/null || true
 
 DEPLOY_OK=true
 
@@ -189,9 +193,9 @@ if [ -f scripts/deploy-recover-backend.sh ]; then
   }
 fi
 
-# Schema DDL + data migrations run on backend startup (initDb / drizzle migrate) — no separate deploy migrate step.
+# Migrations were applied above; initDb() re-checks on startup and is idempotent.
 
-APP_DOMAIN_FOR_FP="$(read_env_var MMS_APP_DOMAIN '')"
+APP_DOMAIN_FOR_FP="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
 if [[ -z "$APP_DOMAIN_FOR_FP" && -n "${MMS_APP_DOMAIN:-}" ]]; then
   APP_DOMAIN_FOR_FP="${MMS_APP_DOMAIN}"
 fi

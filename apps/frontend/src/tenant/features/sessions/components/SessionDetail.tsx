@@ -5,8 +5,7 @@
 import React, { useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
-  GraduationCap, Clock, Tag, DollarSign,
-  Calendar, Gift,
+  GraduationCap, Wallet, UserCheck,
 } from "lucide-react";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 import {
@@ -31,31 +30,23 @@ import { useSessionConfig } from "@/hooks/useStandardModuleConfig";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 
 import { ClassesTab } from "@/tenant/features/sessions/components/tabs/ClassesTab";
-import { TimetableTab } from "@/tenant/features/sessions/components/tabs/TimetableTab";
-import { DiscountsTab } from "@/tenant/features/sessions/components/tabs/DiscountsTab";
+import { FacultyManagementTab } from "@/tenant/features/sessions/components/tabs/FacultyManagementTab";
 import { BudgetTab } from "@/tenant/features/sessions/components/tabs/BudgetTab";
-import { EventsTab } from "@/tenant/features/sessions/components/tabs/EventsTab";
-import { TabarrukTab } from "@/tenant/features/sessions/components/tabs/TabarrukTab";
 
-const TAB_KEYS = ["classes", "timetable", "discounts", "budget", "events", "tabarruk"] as const;
+const TAB_KEYS = ["classes", "faculty", "budget"] as const;
 
 const TAB_ICONS = {
   classes: GraduationCap,
-  timetable: Clock,
-  discounts: Tag,
-  budget: DollarSign,
-  events: Calendar,
-  tabarruk: Gift,
+  faculty: UserCheck,
+  budget: Wallet,
 } as const;
 
 const TAB_COMPONENTS: Record<string, React.ElementType> = {
   classes: ClassesTab,
-  timetable: TimetableTab,
-  discounts: DiscountsTab,
+  faculty: FacultyManagementTab,
   budget: BudgetTab,
-  events: EventsTab,
-  tabarruk: TabarrukTab,
 };
+
 
 export interface SessionDetailProps {
   session: Session;
@@ -105,9 +96,10 @@ export const SessionDetail = (function SessionDetail({
       const tabs: readonly SubTab[] = (() =>
           TAB_KEYS.map((key) => ({
             key,
-            label: t(`sessions.detail.tab.${key}` as AppTranslationKey),
+            label: key === 'faculty' ? 'Faculty Management' : t(`sessions.detail.tab.${key}` as AppTranslationKey),
             icon: TAB_ICONS[key],
           })))();
+
 
       const formatSessionDate = (date?: string | null) => formatDate(date, true);
 

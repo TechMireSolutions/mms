@@ -26,6 +26,11 @@ export interface ContactLike {
   phones?: { number?: string; isPrimary?: boolean }[];
   emails?: { address?: string; isPrimary?: boolean }[];
   addresses?: { city?: string; state?: string; country?: string; line1?: string; isPrimary?: boolean }[];
+  education?: Array<{ degree?: string; fieldOfStudy?: string; institution?: string }>;
+  skills?: Array<{ name?: string }>;
+  qualification?: string;
+  specialization?: string;
+  [key: string]: unknown;
 }
 
 function nonEmpty(value: unknown): string {

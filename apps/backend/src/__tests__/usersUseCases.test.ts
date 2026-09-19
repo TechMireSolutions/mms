@@ -71,10 +71,10 @@ describe('users use-cases (DI with fake repository)', () => {
     const repo = createFakeRepo();
     const useCases = createUsersUseCases(repo);
 
-    expect(await useCases.loadUserById('')).toBeNull();
-    expect(await useCases.loadUserById('   ')).toBeNull();
-    expect(await useCases.loadUserById('usr_missing')).toBeNull();
-    expect(repo.listTenantUsersByIds).toHaveBeenCalledWith(['usr_missing']);
+    expect(await runWithTenant('demo', () => useCases.loadUserById(''))).toBeNull();
+    expect(await runWithTenant('demo', () => useCases.loadUserById('   '))).toBeNull();
+    expect(await runWithTenant('demo', () => useCases.loadUserById('usr_missing'))).toBeNull();
+    expect(repo.listTenantUsersByIds).toHaveBeenCalledWith('demo', ['usr_missing']);
   });
 
   it('loadUserById filters soft-deleted user unless includeDeleted is true', async () => {
@@ -95,10 +95,10 @@ describe('users use-cases (DI with fake repository)', () => {
     (repo.listTenantUsersByIds as ReturnType<typeof vi.fn>).mockResolvedValue([fakeRow]);
     const useCases = createUsersUseCases(repo);
 
-    const activeOnly = await useCases.loadUserById('usr_1');
+    const activeOnly = await runWithTenant('demo', () => useCases.loadUserById('usr_1'));
     expect(activeOnly).toBeNull();
 
-    const withDeleted = await useCases.loadUserById('usr_1', true);
+    const withDeleted = await runWithTenant('demo', () => useCases.loadUserById('usr_1', true));
     expect(withDeleted).not.toBeNull();
     expect(withDeleted?.id).toBe('usr_1');
   });
@@ -134,16 +134,20 @@ describe('users use-cases (DI with fake repository)', () => {
     (repo.listTenantUsersByIds as ReturnType<typeof vi.fn>).mockResolvedValue([rowActive, rowDeleted]);
     const useCases = createUsersUseCases(repo);
 
-    const empty = await useCases.loadUsersByIds([' ', '']);
+    const empty = await runWithTenant('demo', () => useCases.loadUsersByIds([' ', '']));
     expect(empty).toEqual([]);
     expect(repo.listTenantUsersByIds).not.toHaveBeenCalled();
 
-    const activeList = await useCases.loadUsersByIds(['usr_1 ', 'usr_2', 'usr_1']);
-    expect(repo.listTenantUsersByIds).toHaveBeenCalledWith(['usr_1', 'usr_2']);
+    const activeList = await runWithTenant('demo', () =>
+      useCases.loadUsersByIds(['usr_1 ', 'usr_2', 'usr_1']),
+    );
+    expect(repo.listTenantUsersByIds).toHaveBeenCalledWith('demo', ['usr_1', 'usr_2']);
     expect(activeList).toHaveLength(1);
     expect(activeList[0]?.id).toBe('usr_1');
 
-    const allList = await useCases.loadUsersByIds(['usr_1', 'usr_2'], true);
+    const allList = await runWithTenant('demo', () =>
+      useCases.loadUsersByIds(['usr_1', 'usr_2'], true),
+    );
     expect(allList).toHaveLength(2);
   });
 

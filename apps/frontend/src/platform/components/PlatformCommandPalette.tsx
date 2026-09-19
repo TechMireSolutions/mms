@@ -96,6 +96,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
   return (
     <AnimatePresence>
       <div
+        data-overlay-backdrop
         className={cn("fixed inset-0 z-modal flex items-start justify-center pt-16 px-4", OVERLAY_BACKDROP)}
         onClick={onClose}
         role="dialog"

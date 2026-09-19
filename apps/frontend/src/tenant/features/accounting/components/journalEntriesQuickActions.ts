@@ -74,7 +74,10 @@ const OTHER_EXPENSE: QuickActionType = {
   icon: TrendingUp,
   debitAcc: "a5700",
   creditAcc: "a1000",
-  tag: "Capital",
+  // Was "Capital", which is an owner contribution (money IN): the quick-action
+  // panel classified by tag, so a posted expense rendered as a green inflow with
+  // the wrong tone while the money-in/money-out tag sets overlapped.
+  tag: "Expense",
   descriptionKey: "accounting.journal.dashboard.desc.otherExpense",
   groupKey: "accounting.journal.dashboard.group.moneyOut",
   color: "red",
@@ -87,6 +90,67 @@ export const QUICK_ACTIONS: QuickAction[] = [
   { labelKey: "accounting.journal.dashboard.action.payUtility", icon: Zap, type: UTILITIES_PAYMENT },
   { labelKey: "accounting.journal.dashboard.action.addExpense", icon: TrendingUp, type: OTHER_EXPENSE },
 ];
+
+/** Cash-flow direction of a quick action, taken from its own group. */
+export type QuickActionDirection = "in" | "out";
+
+const MONEY_IN_GROUP = "accounting.journal.dashboard.group.moneyIn";
+
+/**
+ * Cash-flow direction per quick action, derived from the action definitions
+ * above rather than a second hand-maintained list — a drift between the two was
+ * what let "Other expense" carry the money-in tag `Capital`.
+ */
+export const QUICK_ACTION_DIRECTIONS: Record<string, QuickActionDirection> = {
+  ...Object.fromEntries(
+    QUICK_ACTIONS.map((quickAction) => [
+      quickAction.type.id,
+      quickAction.type.groupKey === MONEY_IN_GROUP ? "in" : "out",
+    ]),
+  ),
+  rent_income: "in",
+  other_income: "in",
+  supplies: "out",
+  rent_payment: "out",
+};
+
+/** Tags of the money-in quick actions; disjoint from {@link MONEY_OUT_ACTION_TAGS} by construction. */
+export const MONEY_IN_ACTION_TAGS: ReadonlySet<string> = new Set([
+  ...QUICK_ACTIONS.filter((quickAction) => quickAction.type.groupKey === MONEY_IN_GROUP).map(
+    (quickAction) => quickAction.type.tag,
+  ),
+  "Income",
+]);
+
+/** Tags of the money-out quick actions, excluding any tag claimed by money-in. */
+export const MONEY_OUT_ACTION_TAGS: ReadonlySet<string> = new Set([
+  ...QUICK_ACTIONS.filter(
+    (quickAction) =>
+      quickAction.type.groupKey !== MONEY_IN_GROUP && !MONEY_IN_ACTION_TAGS.has(quickAction.type.tag),
+  ).map((quickAction) => quickAction.type.tag),
+  "Rent",
+]);
+
+/**
+ * Direction implied by an entry's own tags / transaction type, or `null` when the
+ * entry carries no cash-flow signal.
+ */
+export function resolveEntryDirection(
+  entry: { tags?: string[] | null; transaction_type?: string | null },
+): QuickActionDirection | null {
+  const transactionDirection = entry.transaction_type
+    ? QUICK_ACTION_DIRECTIONS[entry.transaction_type] ?? null
+    : null;
+  const tags = entry.tags ?? [];
+  const tagDirection: QuickActionDirection | null = tags.some((tag) => MONEY_IN_ACTION_TAGS.has(tag))
+    ? "in"
+    : tags.some((tag) => MONEY_OUT_ACTION_TAGS.has(tag))
+      ? "out"
+      : null;
+  if (transactionDirection === "out") return "out";
+  if (transactionDirection === "in") return tagDirection === "out" ? "out" : "in";
+  return tagDirection;
+}
 
 export function parseNaturalLanguage(text: string): QuickActionType | null {
   const normalizedText = text.toLowerCase();
@@ -107,6 +171,17 @@ export function parseNaturalLanguage(text: string): QuickActionType | null {
     normalizedText.includes("purchase")
   ) {
     return OTHER_EXPENSE;
+  }
+  return null;
+}
+
+export function extractAmountFromNaturalLanguage(text: string): string | null {
+  const tokens = text.split(/\s+/);
+  for (const token of tokens) {
+    const cleaned = token.replace(/^[$€£Rs.\s]+/, "").replace(/,/g, "");
+    if (/^\d+(?:\.\d{1,2})?$/.test(cleaned) && Number(cleaned) > 0) {
+      return cleaned;
+    }
   }
   return null;
 }

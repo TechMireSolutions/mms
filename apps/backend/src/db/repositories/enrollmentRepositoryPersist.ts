@@ -1,7 +1,7 @@
 import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { dedupeTrimmedIds, type Enrollment, type EnrollmentTimelineItem } from '@mms/shared';
 import { enrollments, enrollmentTimelineEvents } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, type TenantTransaction } from '../tenant-context.js';
 import { mapAuditToInsert } from './repositoryMappers.js';
 
 type EnrollmentInsert = typeof enrollments.$inferInsert;
@@ -32,7 +32,7 @@ function recordToInsert(tenant: string, record: Enrollment): EnrollmentInsert {
 }
 
 async function writeTimelineEvents(
-  tx: Parameters<Parameters<typeof withTenant>[1]>[0],
+  tx: TenantTransaction,
   subdomain: string,
   enrollmentId: string,
   timeline: EnrollmentTimelineItem[] | undefined,

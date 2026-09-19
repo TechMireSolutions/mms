@@ -115,6 +115,10 @@ export interface ContactsListQuery {
    * Prefer over a large `excludeIds` query string.
    */
   excludeLinkedModules?: Array<'students' | 'teachers'>;
+  /** Keyset pagination: fetch items after this primary key */
+  afterId?: string;
+  /** Performance optimization: skip counting total rows when only iterating pages */
+  skipCount?: boolean;
 }
 
 export interface ContactsListPageResult {
@@ -123,6 +127,7 @@ export interface ContactsListPageResult {
   page: number;
   limit: number;
   hasMore: boolean;
+  nextCursor?: string;
 }
 
 function matchesContactsQuickFilter(

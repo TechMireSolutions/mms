@@ -4,10 +4,11 @@ import {
   buildTenantSoftDeleteConditions,
   createGenericRelationalService,
   filterInMemorySoftDeleted,
+  type TenantSoftDeleteTable,
 } from '../services/genericRelationalService.js';
 import { ConflictError, NotFoundError, ValidationError } from '../lib/httpErrors.js';
 import { restoreContactById, bulkRestoreContacts } from '../contacts/use-cases/contactSoftDeleteUseCases.js';
-import { restoreTeacherById, bulkRestoreTeachers } from '../teachers/use-cases/teacherSoftDeleteUseCases.js';
+import { restoreTeacherById, bulkRestoreTeachers } from '../faculty/use-cases/facultySoftDeleteUseCases.js';
 import { restoreStudentById, bulkRestoreStudents } from '../students/use-cases/studentSoftDeleteUseCases.js';
 import { StudentRestoreConflictError } from '../students/use-cases/studentNormalizeUseCases.js';
 import { createEnrollmentsUseCases } from '../enrollments/use-cases/enrollmentsUseCases.js';
@@ -15,7 +16,7 @@ import { createFinanceUseCases } from '../finance/use-cases/financeUseCases.js';
 import { createAttendanceUseCases } from '../attendance/use-cases/attendanceUseCases.js';
 import { createSessionsUseCases } from '../sessions/use-cases/sessionsUseCases.js';
 import type { ContactsRepository } from '../contacts/repository/contactsRepository.js';
-import type { TeachersRepository } from '../teachers/repository/teachersRepository.js';
+import type { FacultyRepository as TeachersRepository } from '../faculty/repository/facultyRepository.js';
 import type { StudentsRepository } from '../students/repository/studentsRepository.js';
 import type { EnrollmentsRepository } from '../enrollments/repository/enrollmentsRepository.js';
 import { runWithTenant } from '../lib/tenantContext.js';
@@ -428,6 +429,13 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
       let enrollmentsRestored = false;
 
       const fakeTx = {
+        select: vi.fn(() => ({
+          from: vi.fn(() => ({
+            where: vi.fn(() => ({
+              for: vi.fn().mockResolvedValue([{ id: 'sess-1' }]),
+            })),
+          })),
+        })),
         update: vi.fn(() => {
           return {
             set: vi.fn((data: any) => ({
@@ -697,7 +705,7 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
     const fakeTable = {
       workspaceSubdomain: 'subdomain_col',
       deletedAt: 'deleted_at_col',
-    };
+    } as unknown as TenantSoftDeleteTable;
 
     it('constructs Category B partial index predicate for active records', () => {
       const conditions = buildTenantSoftDeleteConditions(fakeTable, 'Demo', 'active');
@@ -907,7 +915,7 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
           })),
         })),
       };
-      vi.mocked(withTenant).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
+      vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
 
       const { findInvoicesByIds } = await import('../db/repositories/financeInvoicesRepository.js');
       await findInvoicesByIds('demo', ['inv-1']);
@@ -925,7 +933,7 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
           })),
         })),
       };
-      vi.mocked(withTenant).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
+      vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
 
       const { findPaymentsByIds } = await import('../db/repositories/financePaymentsRepository.js');
       await findPaymentsByIds('demo', ['pay-1']);
@@ -943,7 +951,7 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
           })),
         })),
       };
-      vi.mocked(withTenant).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
+      vi.mocked(withTenantRead).mockImplementation(async (_subdomain, cb) => cb(fakeTx as any));
 
       const { findEnrollmentsByIds } = await import('../db/repositories/enrollmentRepositoryHydrate.js');
       await findEnrollmentsByIds('demo', ['enr-1']);

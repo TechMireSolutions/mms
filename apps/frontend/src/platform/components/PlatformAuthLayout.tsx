@@ -47,10 +47,10 @@ export default function PlatformAuthLayout({
 
   return (
     <AuthPageFrame dir={dir}>
-      <div className="absolute top-4 end-4 z-20">
+      <div className="absolute top-4 end-4 z-sticky">
         <PlatformLanguagePicker compact />
       </div>
-      <div className="relative z-10 w-full max-w-md text-start">
+      <div className="relative z-elevated w-full max-w-md text-start">
         {/* Backdrop Glow */}
         <div className="absolute -inset-4 bg-gradient-to-tr from-primary/25 via-primary/10 to-transparent rounded-3xl blur-2xl opacity-75 pointer-events-none" />
 

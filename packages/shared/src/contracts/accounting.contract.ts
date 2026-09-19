@@ -2,6 +2,10 @@ import { initContract } from '@ts-rest/core';
 import { z } from 'zod';
 import { baseListQuerySchema } from '../apiSchemas.js';
 import {
+  accountingAccountsListQuerySchema,
+  accountingEntriesListQuerySchema,
+} from '../accountingListQuery.js';
+import {
   accountRecordSchema,
   journalEntryRecordSchema,
   fiscalYearRecordSchema,
@@ -10,9 +14,13 @@ import {
   accountingReportAggregatesSchema,
   accountingReportQuerySchema,
 } from '../accountingReportAggregates.js';
+import {
+  accountingFieldConfigPutBodySchema,
+  accountingPreferencesPutBodySchema,
+} from '../accountingSetupConfigTypes.js';
 
 const c = initContract();
-const errorResponse = z.unknown();
+const errorResponse = z.object({ type: z.string(), message: z.string() }).passthrough();
 const ok = z.unknown();
 
 /** Envelope for paginated chart-of-accounts responses. */
@@ -66,11 +74,19 @@ export const accountingPreferencesResponseSchema = z.object({
   defaultViewLayout: z.string().optional(),
 });
 
+/**
+ * These three operations are served by the shared CRUD bulk route
+ * (`registerIncludableBulkRoutes` → `PUT {path}/bulk`), whose handler is
+ * **additive upsert**, not a destructive replace: rows missing from the payload
+ * are left untouched, and removals must go through the explicit
+ * delete/bulk-delete operations. They were previously named `replace*`, which
+ * contradicted the handler they actually resolve to.
+ */
 export const accountingContract = c.router({
   listAccounts: {
     method: 'GET',
     path: '/api/accounting/accounts',
-    query: baseListQuerySchema,
+    query: accountingAccountsListQuerySchema,
     responses: {
       200: z.union([
         z.object({ accounts: z.array(accountRecordSchema) }),
@@ -84,7 +100,7 @@ export const accountingContract = c.router({
   listEntries: {
     method: 'GET',
     path: '/api/accounting/entries',
-    query: baseListQuerySchema,
+    query: accountingEntriesListQuerySchema,
     responses: {
       200: z.union([
         z.object({ entries: z.array(journalEntryRecordSchema) }),
@@ -109,26 +125,26 @@ export const accountingContract = c.router({
     },
     summary: 'List fiscal years',
   },
-  replaceAccounts: {
+  upsertAccounts: {
     method: 'PUT',
     path: '/api/accounting/accounts/bulk',
     body: ok,
     responses: { 200: z.object({ accounts: z.array(accountRecordSchema) }), 403: ok, 500: ok },
-    summary: 'Replace all accounts',
+    summary: 'Bulk upsert accounts (additive; removals use the delete routes)',
   },
-  replaceEntries: {
+  upsertEntries: {
     method: 'PUT',
     path: '/api/accounting/entries/bulk',
     body: ok,
     responses: { 200: z.object({ entries: z.array(journalEntryRecordSchema) }), 403: ok, 500: ok },
-    summary: 'Replace all entries',
+    summary: 'Bulk upsert journal entries (additive; posted entries are immutable)',
   },
-  replaceFiscalYears: {
+  upsertFiscalYears: {
     method: 'PUT',
     path: '/api/accounting/fiscal-years/bulk',
     body: ok,
     responses: { 200: z.object({ fiscalYears: z.array(fiscalYearRecordSchema) }), 403: ok, 500: ok },
-    summary: 'Replace all fiscal years',
+    summary: 'Bulk upsert fiscal years (additive; closed periods are locked)',
   },
   deleteEntry: {
     method: 'DELETE',
@@ -168,7 +184,7 @@ export const accountingContract = c.router({
   updateFieldConfig: {
     method: 'PUT',
     path: '/api/accounting/field-config',
-    body: z.unknown(),
+    body: accountingFieldConfigPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), config: z.record(z.string(), z.unknown()) }), 403: errorResponse, 500: errorResponse },
     summary: 'Update field config',
   },
@@ -181,21 +197,9 @@ export const accountingContract = c.router({
   updatePreferences: {
     method: 'PUT',
     path: '/api/accounting/preferences',
-    body: z.unknown(),
+    body: accountingPreferencesPutBodySchema,
     responses: { 200: z.object({ success: z.literal(true), preferences: accountingPreferencesResponseSchema }), 403: errorResponse, 500: errorResponse },
     summary: 'Update preferences',
-  },
-  getLookups: {
-    method: 'GET',
-    path: '/api/accounting/lookups',
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
-    summary: 'Get all lookups',
-  },
-  getLookupKind: {
-    method: 'GET',
-    path: '/api/accounting/lookups/:kind',
-    responses: { 200: z.unknown(), 403: errorResponse, 500: errorResponse },
-    summary: 'Get a specific lookup kind',
   },
   getReportAggregates: {
     method: 'GET',

@@ -1,82 +1,110 @@
 ---
 name: mms-module-page
-description: Creates or modifies MMS module pages per mms-module-architecture.md — Work, Reports, Setup tiers, module manifest, PageHeader command centre, and settings panels. Use when adding a module, three-tier page, or aligning an existing module to universal architecture.
+description: Creates or modifies MMS module pages per mms-module-architecture.md — Work, Reports, Setup tiers, module manifest, ModulePageShell command centre, and settings panels. Use when adding a module, three-tier page, or aligning an existing module to universal architecture. Do NOT use for isolated form modals (use mms-form-architecture), Work directory tables/drawers (use mms-module-work), or custom field definitions (use mms-fields-registry).
+license: Proprietary
+metadata:
+  owner: mms-platform
+  last-verified: 2026-09-15
 ---
 
 # MMS Module Page Pattern
 
-**Rules (norms SSOT):** `mms-module-architecture.md` · `mms-performance.md` — this skill is workflow + checklist only.
+**Rule (norms SSOT):** `mms-module-architecture.md` · `mms-ui-ux-design.md` §4 · `mms-hooks.md` · `mms-performance.md`.
+**Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
-## Section map
+Gold-standard reference implementation: `apps/frontend/src/tenant/features/accounting/AccountingPage.tsx` (Work | Reports | Setup with sub-tabs, trash mode, and persisted tier state).
 
-| Section | Topic | Skill / rule |
-|---------|--------|--------------|
-| §1 | Manifests | `mms-module-architecture.md` |
-| §2 | Three-tier shell norms | `mms-module-architecture.md` · chrome (`PageHeader` / `ResponsiveAccordionTabs`) → `mms-ui-ux-design.md` |
-| §3 | Work directory | skill **`mms-module-work`** |
-| §4 | Setup / fields | skill **`mms-module-setup`**, `mms-fields.md` |
-| §5 | Background jobs | skill **`mms-background-jobs`** |
-| §6 | Soft-delete Work UX + RBAC omit | skill **`mms-soft-delete`** · `mms-module-architecture.md` (+ sessions/RBAC middleware → `mms-auth-security.md`) |
-| §7 | Gold-standard parity | checklist below |
-| Reports | Analytics / export | skill **`mms-reports-export`** |
+## Anti-Patterns & Banned Operations
 
-Modules live under `apps/frontend/src/tenant/features/{module}/` (tenant) or `apps/frontend/src/platform/features/{module}/` (platform). Both use identical three-tier structures.
+- ❌ **NEVER deviate from 3 tiers**: Top-level module navigation is strictly limited to Work, Reports, and Setup.
+- ❌ **NEVER place the header inside a tab panel**: the `ModulePageShell` header stays anchored above the tier switcher on every tier.
+- ❌ **NEVER omit lazy tier loading**: each non-Work tier is a `React.lazy()` chunk rendered inside `Suspense` (`ModuleTierMotion` → `ErrorBoundary` → `Suspense`).
+- ❌ **NEVER hardcode tier IDs**: always `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`, and drive visibility from `useModulePermissions(MODULE_MANIFEST)`.
+- ❌ **NEVER keep tier state in `useState`**: use `usePersistedTabState` so a refresh/reload keeps the user on the same tier.
+- ❌ **NEVER hand-roll the header/tab shell**: `ModulePageShell` (→ `ModuleScaffold`) already owns SEO metadata, `PageHeader`, the metrics strip, and `ResponsiveAccordionTabs`.
 
-## Workflow
+## Canonical 3-Tier Scaffold Template
 
-1. Add `packages/shared/src/{module}ModuleManifest.ts` (`moduleId`, tiers, permissions, `work.directoryViews`, `setupSubTabs`, `softDelete`).
-2. Person-directory Work: `directoryViews: ['table','cards']` (never `list`). Domain modules keep their own sub-modes — `mms-module-work`.
-3. Scaffold `{Module}Page.tsx` + `use{Module}PageController` under `tenant/features/{module}/` or `platform/features/{module}/`.
-4. Wire nav: `navConfig.tsx` + `SYSTEM_MODULES` / `SYSTEM_MODULE_NAV` (tenant) or platform routing.
-5. Shell: `PageHeader` (always visible) + `ResponsiveAccordionTabs` + `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`.
-6. Work → skill **`mms-module-work`**. Reports → **`mms-reports-export`**. Setup → **`mms-module-setup`**.
-7. Data: REST Query-first via **`mms-query-factories`** — no new `useLiveCollection` for REST entities.
-8. Gates: `useModulePermissions(manifest)`; omit forbidden CTAs; BE `rbacService` still required.
+```tsx
+import React, { Suspense } from 'react';
+import { useTranslation } from '@/hooks/useTranslation';
+import { usePersistedTabState } from '@/hooks/usePersistedTabState';
+import { useTrashMode } from '@/hooks/useTrashMode';
+import { useModulePermissions } from '@/tenant/hooks/usePermissions';
+import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
+import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
+import { ENTITY_MODULE_MANIFEST } from '@mms/shared';
+import { EntityCommandMetrics } from './components/EntityCommandMetrics';
 
-Reference: Contacts (full), Students/Teachers (soft-delete Work). Before building: read Contacts/Students page + manifest + rule §7.
+// One lazy chunk per non-Work tier (named exports → default mapping).
+const EntityWorkTier = React.lazy(() =>
+  import('./components/EntityWorkTier').then((m) => ({ default: m.EntityWorkTier })),
+);
+const EntityReportsTier = React.lazy(() =>
+  import('./components/EntityReportsTier').then((m) => ({ default: m.EntityReportsTier })),
+);
+const EntitySetupTier = React.lazy(() =>
+  import('./components/EntitySetupTier').then((m) => ({ default: m.EntitySetupTier })),
+);
 
-## Gold-standard checklist (§7)
+export default function EntityPage() {
+  const { t } = useTranslation();
+  const { canWrite, canDelete, canReports: canViewReports, canViewSetup } =
+    useModulePermissions(ENTITY_MODULE_MANIFEST);
+
+  // Returns ModuleTierTab[] — the tab list, NOT the active-tab state.
+  const tierTabs = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const [activeTab, setActiveTab] = usePersistedTabState<string>('entity_active_tab', 'work');
+  const [showDeleted, setShowDeleted] = useTrashMode();
+
+  return (
+    <ModulePageShell
+      seoTitle={`MMS - ${t('nav.entities')}`}
+      seoDescription={t('page.entities.subtitle')}
+      headerTitle={t('nav.entities')}
+      headerSubtitle={t('page.entities.subtitle')}
+      metricsStrip={<EntityCommandMetrics />}
+      tabs={tierTabs}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      panelIdPrefix="entity-tier"
+    >
+      <ErrorBoundary>
+        <ModuleTierMotion tier={activeTab} className="space-y-4">
+          <Suspense fallback={<RouteStatusFallback />}>
+            {activeTab === 'work' && (
+              <EntityWorkTier
+                canWrite={canWrite}
+                canDelete={canDelete}
+                showDeleted={showDeleted}
+                onShowDeletedChange={() => setShowDeleted((prev) => !prev)}
+              />
+            )}
+            {activeTab === 'reports' && <EntityReportsTier />}
+            {activeTab === 'setup' && <EntitySetupTier />}
+          </Suspense>
+        </ModuleTierMotion>
+      </ErrorBoundary>
+    </ModulePageShell>
+  );
+}
+```
+
+Route registration is lazy at the router level too — add the page to `apps/frontend/src/components/routing/HostRoutes.tsx` (tenant) or the equivalent platform routing module. Do not invent an `AppRoutes`/`PlatformRoutes` module; the repo has a single host-aware router.
+
+## Gold-Standard Parity Checklist (§7)
 
 ```
-- [ ] Bulk PUT upsert-only (never replaceForWorkspace wipe on API write paths)
-- [ ] Soft-delete + Work trash UI (or documented manifest variant) — skill **`mms-soft-delete`**
-- [ ] mutateAsync + await form/setup saves; close only after success
-- [ ] setupSubTabs + canEditSetup + saveSettingsAsync
-- [ ] ErrorState + retry + hint on list query failure
-- [ ] Cmd/Ctrl+N create when canWrite and not in trash
-- [ ] Person-directory: directoryViews ['table','cards']; cards share server page API
-- [ ] Work directory virtualization via @tanstack/react-virtual for lists/tables > 30 items
-- [ ] Route lazy loaded with Suspense in AppRoutes.tsx / PlatformRoutes.tsx
-- [ ] useModulePermissions(manifest); omit forbidden CTAs
-- [ ] i18n via t() (en/ar/ur/fa)
+- [ ] Module manifest registered in @mms/shared and passed to useModulePermissions
+- [ ] ModulePageShell header command centre stays visible across all tiers
+- [ ] Tier list from useFilteredModuleTierTabs, active tier from usePersistedTabState
+- [ ] Reports/Setup tiers lazy-loaded behind Suspense + ErrorBoundary + ModuleTierMotion
+- [ ] Work directory virtualizes > 30 rows (@tanstack/react-virtual)
+- [ ] ErrorState carries a retry action and loadFailedHint on fetch error
+- [ ] Trash mode (?view=trash) via useTrashMode, with restore + bulk restore wired
+- [ ] i18n keys added to en/ar/ur/fa (pnpm run check:i18n)
+- [ ] Verify: pnpm typecheck && pnpm --filter mms-frontend lint
 ```
-
-## New module checklist
-
-```
-- [ ] {Module}ModuleManifest in @mms/shared
-- [ ] Page under tenant/features/{module}/ — lazy route wired
-- [ ] Nav: navConfig + SYSTEM_MODULES / SYSTEM_MODULE_NAV
-- [ ] PageHeader command centre (metrics/create/export) — not tier-gated
-- [ ] useFilteredModuleTierTabs (work | reports | setup)
-- [ ] Work / Reports / Setup via sibling skills
-- [ ] FormModal for create/edit — mms-form-architecture
-- [ ] ErrorBoundary on Work + Reports; Query-first data
-- [ ] No nested ContactConfigProvider; no raw fetch('/api/...')
-```
-
-## Do not
-
-- Fourth top-level tier; gate PageHeader CTAs on `activeTab`
-- Mount module Setup under `/settings`
-- Dual-write Query + `saveCollection`; wipe via bulk PUT `replaceForWorkspace`
-- Close forms after fire-and-forget `mutate()`
-- Reference removed `globlestructure.md` / `globle.md`
-
-## Related skills
-
-`mms-module-work`, `mms-soft-delete`, `mms-module-setup`, `mms-background-jobs`, `mms-reports-export`, `mms-query-factories`, `mms-form-architecture`, `mms-fields-registry`, `mms-messaging`
-
-## Done
-
-`mms-completion-review.md` — typecheck + FE lint; new modules need §7 checklist green.

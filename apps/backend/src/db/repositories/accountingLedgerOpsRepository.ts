@@ -12,11 +12,11 @@ import {
   accountingOpeningBalances,
   accountingPostingRules,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 
 export async function getPostingRules(tenant: string): Promise<PostingRules> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         arAccountId: accountingPostingRules.arAccountId,
@@ -68,7 +68,7 @@ export async function savePostingRules(tenant: string, rules: PostingRules): Pro
 
 export async function listOpeningBalances(tenant: string, fiscalYearId: string): Promise<OpeningBalance[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: accountingOpeningBalances.id,
@@ -125,7 +125,7 @@ export async function replaceOpeningBalances(
 
 export async function listBankStatements(tenant: string): Promise<BankStatement[]> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const [statements, lines] = await Promise.all([
       tx
         .select({

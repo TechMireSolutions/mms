@@ -3,6 +3,11 @@ import type { FastifyInstance, FastifyRequest } from 'fastify';
 import helmet from '@fastify/helmet';
 import rateLimit from '@fastify/rate-limit';
 import type { ServerConfig } from '../config/serverConfig.js';
+import { GLOBAL_RATE_LIMIT, generateCompositeRateLimitKey } from '../lib/rateLimitConfig.js';
+import {
+  checkIsRateLimitRedisConnected,
+  getRateLimitRedisClient,
+} from '../lib/redis.js';
 
 /**
  * Per-request CSP nonce store. The nonce is generated in `onRequest` and
@@ -26,9 +31,16 @@ const nonceStore = new WeakMap<FastifyRequest, string>();
  *  - `frame-ancestors 'none'` and `object-src 'none'` block framing and plugins.
  */
 function buildCspDirectives(isProd?: boolean, nonce?: string) {
+  const scriptSources = ["'self'"];
+  if (nonce) {
+    scriptSources.push(`'nonce-${nonce}'`);
+  }
+  // Allow the theme bootstrap script even if older index.html is cached in user browsers
+  scriptSources.push("'sha256-gk4Z7QZVEdEVHj4eZeOlFNEC2ZefOM9Ohn11Fh6G3Vo='");
+
   return {
     'default-src': ["'self'"],
-    'script-src': nonce ? ["'self'", `'nonce-${nonce}'`] : ["'self'"],
+    'script-src': scriptSources,
     'script-src-attr': ["'none'"],
     'style-src': ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
     'img-src': ["'self'", 'data:', 'blob:'],
@@ -57,6 +69,24 @@ function injectNonce(html: string, nonce: string): string {
     if (/\snonce=/.test(attrs)) return match;
     return `<script${attrs} nonce="${nonce}">`;
   });
+}
+
+/**
+ * Determines if a request URL should bypass the global API rate limiter.
+ * Probe endpoints (/health, /ready, /metrics) and non-API paths (SPA document
+ * routes, built static assets under /assets/, site manifests, icons, and static uploads)
+ * are exempt so that client asset loading never fails with HTTP 429.
+ */
+export function isRateLimitExempt(rawUrl: string): boolean {
+  const path = (rawUrl.split('?')[0] ?? '').toLowerCase().replace(/\/+/g, '/');
+  if (path === '/health' || path === '/ready' || path === '/metrics') {
+    return true;
+  }
+  // All backend REST APIs are mounted under /api — non-API requests are client SPA & static assets
+  if (!path.startsWith('/api')) {
+    return true;
+  }
+  return false;
 }
 
 export async function registerSecurityPlugins(
@@ -97,6 +127,11 @@ export async function registerSecurityPlugins(
       return payload;
     }
 
+    const encoding = String(reply.getHeader('content-encoding') ?? '');
+    if (encoding && encoding !== 'identity') {
+      return payload;
+    }
+
     if (typeof payload === 'string') {
       return injectNonce(payload, nonce);
     }
@@ -113,9 +148,33 @@ export async function registerSecurityPlugins(
     return payload;
   });
 
-  // Keep the limiter independent of Redis so auth routes remain protected during outages.
+  // Store selection.
+  //
+  // Default is the in-process store: at a single backend instance it is an
+  // accurate ceiling, and it keeps auth routes protected when Redis is down
+  // (the previous deliberate choice). Redis only makes the limit a *shared*
+  // ceiling once more than one backend process serves traffic, so it is an
+  // explicit opt-in — set RATE_LIMIT_REDIS_STORE=true when scaling out.
+  const redisStoreRequested =
+    process.env.RATE_LIMIT_REDIS_STORE === 'true' || (isProd && Boolean(process.env.REDIS_URL));
+  const redisClient = redisStoreRequested ? getRateLimitRedisClient() : null;
+
+  if (redisStoreRequested && (!redisClient || !checkIsRateLimitRedisConnected())) {
+    app.log.warn(
+      'Redis rate-limit store requested but Redis is unavailable — falling back to the ' +
+        'in-process rate-limit store (limits are per-process until Redis recovers).',
+    );
+  }
+
   await app.register(rateLimit, {
-    global: false,
+    global: true,
+    max: GLOBAL_RATE_LIMIT.max,
+    timeWindow: GLOBAL_RATE_LIMIT.timeWindow,
+    keyGenerator: (request) => generateCompositeRateLimitKey(request),
+    errorResponseBuilder: GLOBAL_RATE_LIMIT.errorResponseBuilder,
+    // Health/readiness probes, static assets, and SPA document routes must never be throttled.
+    allowList: (request) => isRateLimitExempt(request.url),
+    ...(redisClient && checkIsRateLimitRedisConnected() ? { redis: redisClient } : {}),
     addHeadersOnExceeding: {
       'x-ratelimit-limit': true,
       'x-ratelimit-remaining': true,

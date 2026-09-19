@@ -6,13 +6,15 @@ import {
   accountingEntryTags,
   accountingEntryAttachments,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
+import { mapAuditTimestamps } from './repositoryMappers.js';
 
 type EntryRow = typeof accountingEntries.$inferSelect;
 
-export type JournalLineRow = {
-  id: string;
-  accountId: string;
+export type JournalLineRow = Pick<
+  typeof accountingJournalLines.$inferSelect,
+  'id' | 'accountId'
+> & {
   debit?: string | number | null;
   credit?: string | number | null;
   description?: string | null;
@@ -42,8 +44,7 @@ export function entryRowToRecord(
     })),
     tags,
     attachments,
-    createdAt: row.createdAt.toISOString(),
-    updatedAt: row.updatedAt.toISOString(),
+    ...mapAuditTimestamps(row),
   };
 
   if (row.fiscalYearId) entry.fiscal_year_id = row.fiscalYearId;
@@ -51,9 +52,6 @@ export function entryRowToRecord(
   if (row.sourceId) entry.source_id = row.sourceId;
   if (row.transactionType) entry.transaction_type = row.transactionType;
   if (row.reversedRef) entry.reversed_ref = row.reversedRef;
-  if (row.deletedAt) entry.deletedAt = row.deletedAt.toISOString();
-  if (row.deletedBy) entry.deletedBy = row.deletedBy;
-  if (row.deletionReason) entry.deletionReason = row.deletionReason;
 
   return entry;
 }
@@ -65,7 +63,7 @@ export async function listEntriesByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly
@@ -190,7 +188,7 @@ export async function findEntryById(tenant: string, id: string): Promise<Journal
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: accountingEntries.id,
@@ -282,7 +280,7 @@ export async function findEntriesByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const isDeletedOnly = options?.deleted === 'deleted';
     const isAll = options?.deleted === 'all';
     const deletedCond = isDeletedOnly
@@ -410,7 +408,7 @@ export async function findEntryIdBySource(
   sourceId: string,
 ): Promise<string | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({ id: accountingEntries.id })
       .from(accountingEntries)

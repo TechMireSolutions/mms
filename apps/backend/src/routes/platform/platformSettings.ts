@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
-import { initServer } from '@ts-rest/fastify';
+import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import { platformSettingsContract } from '@mms/shared';
-import type { ContractRouteArgs } from '../../lib/contractRouterTypes.js';
+import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import {
   authenticatePlatform,
   requirePlatformPermission,
@@ -24,7 +24,7 @@ export default async function platformSettingsRoutes(
   fastify.addHook('preHandler', requirePlatformPermission('settings'));
 
   const router = s.router(platformSettingsContract, {
-    getSettings: async (): Promise<unknown> => {
+    getSettings: async (): Promise<ContractRouteResponse<typeof platformSettingsContract['getSettings']>> => {
       const settings = getPlatformSettings();
       return { status: 200 as const, body: { settings } };
     },
@@ -32,7 +32,7 @@ export default async function platformSettingsRoutes(
     updateSettings: async ({
       body,
       request,
-    }: ContractRouteArgs<typeof platformSettingsContract['updateSettings']>): Promise<unknown> => {
+    }: ContractRouteArgs<typeof platformSettingsContract['updateSettings']>): Promise<ContractRouteResponse<typeof platformSettingsContract['updateSettings']>> => {
       const settings = await updatePlatformSettings(body);
       const { platformUser } = request as PlatformAuthenticatedRequest;
       await insertPlatformActivityLog({
@@ -45,7 +45,7 @@ export default async function platformSettingsRoutes(
 
       return { status: 200 as const, body: { settings, success: true as const } };
     },
-  } as unknown as Parameters<typeof s.router>[1]);
+  } as unknown as RouterImplementation<typeof platformSettingsContract>);
 
   await fastify.register(s.plugin(router), {
     requestValidationErrorHandler: (err, _request, reply) => {

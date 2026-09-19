@@ -1,0 +1,182 @@
+name: Renew TLS Certificate
+
+on:
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry-run only — show cert status, no changes'
+        type: boolean
+        default: false
+      tenant_subdomain:
+        description: 'Tenant subdomain prefix for wildcard verification probe'
+        required: false
+        default: 'dq'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: mms-production-tls-renew
+  cancel-in-progress: false
+
+# Required GitHub Secrets (Settings → Secrets → Actions):
+#   SERVER_IP, SERVER_USER, SSH_PRIVATE_KEY, MMS_APP_DOMAIN
+#   NAMECOM_USERNAME   — your Name.com account username
+#   NAMECOM_API_TOKEN  — Name.com API token (account → API tokens)
+#
+# Name.com API token: https://www.name.com/account/settings/api
+
+jobs:
+  issue-wildcard-cert:
+    name: Issue wildcard cert via acme.sh + Name.com DNS-01
+    runs-on: ubuntu-24.04
+    environment: production
+    timeout-minutes: 25
+
+    steps:
+      - name: Validate configuration & secrets
+        env:
+          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+        run: |
+          set -euo pipefail
+          missing=""
+          [ -z "${{ secrets.SERVER_IP }}" ] && missing="${missing} SERVER_IP"
+          [ -z "${{ secrets.SERVER_USER }}" ] && missing="${missing} SERVER_USER"
+          [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ] && missing="${missing} SSH_PRIVATE_KEY"
+          [ -z "${MMS_APP_DOMAIN}" ] && missing="${missing} MMS_APP_DOMAIN"
+          if [ "${DRY_RUN}" != "true" ]; then
+            [ -z "${{ secrets.NAMECOM_USERNAME }}" ] && missing="${missing} NAMECOM_USERNAME"
+            [ -z "${{ secrets.NAMECOM_API_TOKEN }}" ] && missing="${missing} NAMECOM_API_TOKEN"
+          fi
+          if [ -n "${missing}" ]; then
+            echo "ERROR: Missing required GitHub Actions secrets:${missing}"
+            echo "Add them under Settings → Secrets and variables → Actions"
+            exit 1
+          fi
+          echo "Configuration validated for domain: ${MMS_APP_DOMAIN} (dry_run: ${DRY_RUN})"
+
+      - name: Configure SSH Key
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p 22 -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
+          chmod 644 ~/.ssh/known_hosts
+
+      - name: Issue *.MMS_APP_DOMAIN wildcard cert via SSH
+        env:
+          MMS_APP_DOMAIN: ${{ secrets.MMS_APP_DOMAIN }}
+          NAMECOM_USERNAME: ${{ secrets.NAMECOM_USERNAME }}
+          NAMECOM_API_TOKEN: ${{ secrets.NAMECOM_API_TOKEN }}
+          DRY_RUN: ${{ inputs.dry_run }}
+          TENANT_SUBDOMAIN: ${{ inputs.tenant_subdomain || 'dq' }}
+        run: |
+          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes \
+            -o ConnectTimeout=15 -o ServerAliveInterval=30 \
+            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
+            "set -euo pipefail
+             export MMS_APP_DOMAIN=\"${MMS_APP_DOMAIN}\"
+             export NAMECOM_USERNAME=\"${NAMECOM_USERNAME}\"
+             export NAMECOM_API_TOKEN=\"${NAMECOM_API_TOKEN}\"
+             export DRY_RUN=\"${DRY_RUN}\"
+             export TENANT_SUBDOMAIN=\"${TENANT_SUBDOMAIN}\"
+
+             echo \"=== Cert status for \${MMS_APP_DOMAIN} ===\"
+             sudo certbot certificates 2>&1 | \
+               awk \"/Certificate Name: \${MMS_APP_DOMAIN}/{f=1} f{print; if(/Private Key Path/)f=0}\" || true
+
+             if [ \"\${DRY_RUN}\" = \"true\" ]; then
+               echo 'DRY RUN — exiting without changes.'
+               exit 0
+             fi
+
+             # Install acme.sh if not present
+             if ! command -v /root/.acme.sh/acme.sh &>/dev/null \
+                 && ! command -v ~/.acme.sh/acme.sh &>/dev/null; then
+               echo '=== Installing acme.sh ==='
+               curl -fsSL https://get.acme.sh | sh -s -- --email \"admin@\${MMS_APP_DOMAIN}\"
+             fi
+             ACME=\"\${HOME}/.acme.sh/acme.sh\"
+
+             # Issue wildcard cert via Name.com DNS-01 with 60s propagation sleep
+             echo \"=== Issuing wildcard cert: \${MMS_APP_DOMAIN} + *.\${MMS_APP_DOMAIN} ===\"
+             Namecom_Username=\"\${NAMECOM_USERNAME}\" \
+             Namecom_Token=\"\${NAMECOM_API_TOKEN}\" \
+             \"\${ACME}\" --issue \
+               --dns dns_namecom \
+               -d \"\${MMS_APP_DOMAIN}\" \
+               -d \"*.\${MMS_APP_DOMAIN}\" \
+               --dnssleep 60 \
+               --force
+
+             # Install cert into the path Apache vhost expects
+             CERT_DIR=\"/etc/letsencrypt/live/\${MMS_APP_DOMAIN}\"
+             sudo mkdir -p \"\${CERT_DIR}\"
+             \"\${ACME}\" --install-cert \
+               -d \"\${MMS_APP_DOMAIN}\" \
+               --cert-file      \"\${CERT_DIR}/cert.pem\" \
+               --key-file       \"\${CERT_DIR}/privkey.pem\" \
+               --fullchain-file \"\${CERT_DIR}/fullchain.pem\" \
+               --ca-file        \"\${CERT_DIR}/chain.pem\" \
+               --reloadcmd      'sudo systemctl reload apache2'
+
+             echo '=== New expiry ==='
+             echo | openssl s_client \
+               -servername \"\${MMS_APP_DOMAIN}\" \
+               -connect \"\${MMS_APP_DOMAIN}:443\" 2>/dev/null \
+               | openssl x509 -noout -dates 2>/dev/null | grep notAfter || echo 'unknown'
+
+             # Health check: apex + tenant subdomain
+             echo '=== Health checks ==='
+             sleep 3
+             curl -fsS --max-time 15 \"https://\${MMS_APP_DOMAIN}/health\" && echo 'Apex OK'
+             TENANT_HOST=\"\${TENANT_SUBDOMAIN}.\${MMS_APP_DOMAIN}\"
+             if dig +short \"\${TENANT_HOST}\" | grep -q .; then
+               curl -fsS --max-time 10 \"https://\${TENANT_HOST}/health\" && echo \"Tenant \${TENANT_HOST} wildcard OK\"
+             fi
+
+             # Set up acme.sh cron for automatic renewal
+             \"\${ACME}\" --install-cronjob || true
+             echo ''
+             echo 'Wildcard cert installed. Auto-renewal cron set by acme.sh.'
+             echo \"Both \${MMS_APP_DOMAIN} and *.\${MMS_APP_DOMAIN} are covered.\"
+
+             # Clean up old abandoned certs that break certbot runs
+             echo '=== Removing abandoned NXDOMAIN certs ==='
+             for DEAD in grav.aabtaab.com grave.darulquran.pk; do
+               if sudo certbot certificates 2>&1 | grep -q \"Certificate Name: \${DEAD}\"; then
+                 echo \"Deleting: \${DEAD}\"
+                 sudo certbot delete --cert-name \"\${DEAD}\" --non-interactive || true
+               fi
+             done
+            "
+
+      - name: Probe certificate expiry from runner
+        if: success()
+        run: |
+          EXPIRY=$(echo | openssl s_client -servername "${{ secrets.MMS_APP_DOMAIN }}" -connect "${{ secrets.MMS_APP_DOMAIN }}:443" 2>/dev/null | openssl x509 -noout -dates 2>/dev/null | grep notAfter | cut -d= -f2 || echo "Unknown")
+          echo "CERT_EXPIRY=${EXPIRY}" >> "$GITHUB_ENV"
+
+      - name: Publish Certificate Summary
+        if: always()
+        run: |
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ### 🔒 TLS Certificate Renewal Summary
+
+          | Parameter | Value |
+          |---|---|
+          | **Host** | \`${{ secrets.SERVER_IP }}\` |
+          | **Domain** | [${{ secrets.MMS_APP_DOMAIN }}](https://${{ secrets.MMS_APP_DOMAIN }}) & \`*.${{ secrets.MMS_APP_DOMAIN }}\` |
+          | **Tenant Probe Host** | \`${{ inputs.tenant_subdomain || 'dq' }}.${{ secrets.MMS_APP_DOMAIN }}\` |
+          | **Certificate Expiration** | \`${{ env.CERT_EXPIRY || 'N/A' }}\` |
+          | **Dry Run Mode** | \`${{ inputs.dry_run }}\` |
+          | **Status** | ${{ job.status == 'success' && '✅ Completed & Verified' || '❌ Failed' }} |
+          EOF
+
+      - name: Cleanup SSH Credentials
+        if: always()
+        run: |
+          rm -f ~/.ssh/deploy_key

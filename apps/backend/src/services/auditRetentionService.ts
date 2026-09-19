@@ -27,17 +27,20 @@ export async function evaluateAuditRetentionPolicy(
   const floorDays = AUDIT_RETENTION_FLOORS[regime];
   const cutoffDate = new Date(asOfDate.getTime() - floorDays * 24 * 60 * 60 * 1000);
 
+  // Retention runs from when the key was SHREDDED (`destroyed_at`), not when it
+  // was created: a key created years ago but shredded yesterday must still be
+  // held for the full retention floor.
+  const eligibleWhere = and(
+    eq(cryptoShreddingKeys.status, 'SHREDDED'),
+    lte(cryptoShreddingKeys.destroyedAt, cutoffDate),
+  );
+
   let count: number;
   if (executor) {
     const result = await executor
       .select({ count: sql<number>`cast(count(*) as int)` })
       .from(cryptoShreddingKeys)
-      .where(
-        and(
-          eq(cryptoShreddingKeys.status, 'SHREDDED'),
-          lte(cryptoShreddingKeys.createdAt, cutoffDate),
-        ),
-      );
+      .where(eligibleWhere);
     count = result[0]?.count ?? 0;
   } else {
     try {
@@ -45,12 +48,7 @@ export async function evaluateAuditRetentionPolicy(
       const result = await db
         .select({ count: sql<number>`cast(count(*) as int)` })
         .from(cryptoShreddingKeys)
-        .where(
-          and(
-            eq(cryptoShreddingKeys.status, 'SHREDDED'),
-            lte(cryptoShreddingKeys.createdAt, cutoffDate),
-          ),
-        );
+        .where(eligibleWhere);
       count = result[0]?.count ?? 0;
     } catch {
       count = 0;
@@ -93,9 +91,10 @@ export async function purgeExpiredCryptoShreddingKeys(
   try {
     db = executor ?? activeDb();
   } catch {
+    // Report zero, not the eligible count — nothing was deleted.
     return {
       regime: options.regime,
-      purgedCount: evaluation.activeShreddedKeysEligibleForPurge,
+      purgedCount: 0,
       dryRun: false,
     };
   }
@@ -105,13 +104,13 @@ export async function purgeExpiredCryptoShreddingKeys(
     .where(
       and(
         eq(cryptoShreddingKeys.status, 'SHREDDED'),
-        lte(cryptoShreddingKeys.createdAt, evaluation.cutoffDate),
+        lte(cryptoShreddingKeys.destroyedAt, evaluation.cutoffDate),
       ),
     );
 
   const count = typeof result === 'object' && result !== null && 'rowCount' in result
     ? Number((result as { rowCount?: number }).rowCount ?? 0)
-    : evaluation.activeShreddedKeysEligibleForPurge;
+    : 0;
 
   logger.info(
     { regime: options.regime, purgedCount: count, cutoffDate: evaluation.cutoffDate },

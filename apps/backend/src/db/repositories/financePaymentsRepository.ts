@@ -8,7 +8,7 @@ import {
   financePaymentAllocations,
   financePayments,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
 
@@ -43,7 +43,7 @@ export async function listPaymentsByWorkspace(
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
   const deletedFilter = options?.deleted ?? (options?.includeDeleted ? 'all' : 'active');
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = buildTenantSoftDeleteConditions(financePayments, subdomain, deletedFilter);
     const rows = await tx
       .select({
@@ -79,7 +79,7 @@ export async function findPaymentById(tenant: string, id: string): Promise<Payme
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: financePayments.id,
@@ -118,7 +118,7 @@ export async function findPaymentsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = [
       eq(financePayments.workspaceSubdomain, subdomain),
       inArray(financePayments.id, cleanIds),

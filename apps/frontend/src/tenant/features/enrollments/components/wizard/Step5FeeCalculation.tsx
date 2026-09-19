@@ -21,7 +21,8 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
   const baseFee = session?.baseFee || 0;
 
   const fee = (() => {
-    return calcFee(baseFee, student || {}, [], session?.discounts || []);
+    return calcFee(baseFee, student || {}, [], (session as any)?.discounts || []);
+
   })() as CalculatedFee;
 
   // Notify parent
@@ -87,22 +88,33 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
       )}
 
       {/* Available discounts */}
-      {session?.discounts && session.discounts.filter((discount) => discount.active).length > 0 && (
-        <div className="space-y-2">
-          <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("enrollments.wizard.step5AvailableDiscounts")}</h4>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="list">
-            {session.discounts.filter((discount) => discount.active).map((discount) => (
-              <div key={discount.id} className={`p-3 rounded-xl border ${discount.name === displayFee.label ? "border-primary bg-primary/5" : "border-border bg-card"}`} role="listitem">
-                <div className="flex min-w-0 items-center justify-between gap-2">
-                  <p className="min-w-0 truncate text-xs font-bold text-foreground">{discount.name}</p>
-                  <span className="shrink-0 text-xs font-bold text-primary">{t("enrollments.wizard.step5PercentOff", { pct: discount.value })}</span>
+      {(() => {
+        const availableDiscounts = (session?.classes || []).flatMap((c) =>
+          (c.discounts || []).filter((d) => d.status === 'active').map((d) => ({
+            id: d.id,
+            name: d.discountType,
+            value: d.percentage,
+            className: c.name,
+          })),
+        );
+        if (availableDiscounts.length === 0) return null;
+        return (
+          <div className="space-y-2">
+            <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("enrollments.wizard.step5AvailableDiscounts")}</h4>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2" role="list">
+              {availableDiscounts.map((discount) => (
+                <div key={discount.id} className={`p-3 rounded-xl border ${discount.name === displayFee.label ? "border-primary bg-primary/5" : "border-border bg-card"}`} role="listitem">
+                  <div className="flex min-w-0 items-center justify-between gap-2">
+                    <p className="min-w-0 truncate text-xs font-bold text-foreground">{discount.name} ({discount.className})</p>
+                    <span className="shrink-0 text-xs font-bold text-primary">{t("enrollments.wizard.step5PercentOff", { pct: discount.value })}</span>
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mt-0.5">{discount.conditions}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        );
+      })()}
+
     </section>
   );
 }

@@ -13,6 +13,7 @@ import {
   getAuthArtifact,
   putAuthArtifact,
 } from '../auth/authArtifactService.js';
+import { isDevCredentialLoggingEnabled } from '../../lib/devLogging.js';
 import {
   generateOtpCode,
   hashOtpCode,
@@ -27,8 +28,6 @@ import {
   updatePlatformUserPassword,
 } from './platformUserService.js';
 import {
-  enforcePlatformEmail,
-  enforcePlatformPassword,
   buildDevForgotResult,
 } from './platformValidationService.js';
 
@@ -64,7 +63,7 @@ async function dispatchResetCode(email: string, code: string, resetId: string): 
 
 function assertResetEmailDeliverable(dispatch: { sent: boolean; devCode?: string }): void {
   if (dispatch.sent) return;
-  if (process.env.NODE_ENV !== 'production' && dispatch.devCode) return;
+  if (isDevCredentialLoggingEnabled() && dispatch.devCode) return;
   throw new PlatformError(
     'email_send_failed',
     'Failed to send password reset email. Configure PLATFORM_RESEND_API_KEY or PLATFORM_SMTP_* and PLATFORM_EMAIL_FROM.',
@@ -82,7 +81,6 @@ function assertPlatformSmtpReady(): void {
 
 /** Always returns accepted for unknown emails — does not reveal whether the email is registered. */
 export async function requestPlatformPasswordReset(emailInput: string): Promise<PlatformPasswordForgotResult> {
-  enforcePlatformEmail(emailInput);
   assertPlatformSmtpReady();
 
   const email = normalizePlatformEmail(emailInput);
@@ -148,8 +146,6 @@ export async function completePlatformPasswordReset(
   code: string,
   password: string,
 ): Promise<StoredPlatformUser> {
-  enforcePlatformPassword(password);
-
   const entry = await getAuthArtifact<PlatformPasswordResetPayload>(resetId, 'platform_password_reset');
   if (!entry) {
     throw new PlatformError('invalid_reset', 'Password reset session expired or not found');

@@ -5,7 +5,7 @@ import {
   obligationTypes,
   mujtahidReps,
 } from '../schema.js';
-import { withTenant } from '../tenant-context.js';
+import { withTenantRead } from '../tenant-context.js';
 
 export type ObligationsReportQuery = {
   dateFrom?: string;
@@ -21,7 +21,7 @@ export async function aggregateObligationsReport(
 ): Promise<ObligationsReportAggregates> {
   const subdomain = tenant.trim().toLowerCase();
 
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const cleanTypeId = query.typeId?.trim();
     const cleanRepId = query.repId?.trim();
     const cleanDateFrom = query.dateFrom?.trim();

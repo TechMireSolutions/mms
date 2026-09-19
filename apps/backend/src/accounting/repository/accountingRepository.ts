@@ -9,6 +9,7 @@ import type {
   AccountingCommandMetricsSnapshot,
   AccountingReportAggregates,
   AccountingReportQuery,
+  LedgerPostingAccounts,
 } from '@mms/shared';
 
 /**
@@ -99,6 +100,17 @@ export interface AccountingRepository {
   ): Promise<AccountingCommandMetricsSnapshot>;
   aggregateAccountingReport(
     tenant: string,
-    query?: AccountingReportQuery,
+    query?: AccountingReportRequest,
   ): Promise<AccountingReportAggregates>;
+}
+
+/**
+ * Report request extended with the resolved posting rules.
+ *
+ * The HTTP query schema deliberately does not accept posting rules — callers may
+ * not choose which accounts count as cash or receivables — so the server
+ * resolves them from configuration and threads them through here.
+ */
+export interface AccountingReportRequest extends AccountingReportQuery {
+  postingRules?: Partial<LedgerPostingAccounts>;
 }

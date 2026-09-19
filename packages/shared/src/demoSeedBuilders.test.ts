@@ -8,7 +8,7 @@ import {
   DEMO_TEACHER_CONTACTS,
   DEMO_TEACHERS,
   DEMO_TEACHER_COUNT,
-} from './demoTeachers.js';
+} from './demoFaculty.js';
 
 describe('demoSeedBuilders', () => {
   it('ships at least 100 students and 30 teachers with linked contacts', () => {

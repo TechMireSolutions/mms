@@ -3,7 +3,7 @@ import { and, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 
 import { attendance, attendanceLeaves } from '../schema.js';
 import { dedupeTrimmedIds, type AttendanceRecord } from '@mms/shared';
-import { withTenant } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import {
   attendanceRowToRecord as rowToRecord,
   attendanceRecordToInsert as recordToInsert,
@@ -16,7 +16,7 @@ export async function listAttendanceRecordsByWorkspace(
   const subdomain = tenant.trim().toLowerCase();
   const limit = Math.min(Math.max(options?.limit ?? 500, 1), 5000);
   const offset = Math.max(options?.offset ?? 0, 0);
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const conditions = [eq(attendance.workspaceSubdomain, subdomain)];
     if (!options?.includeDeleted) {
       conditions.push(isNull(attendance.deletedAt));
@@ -55,7 +55,7 @@ export async function findAttendanceRecordById(
   const trimmedId = id?.trim();
   if (!trimmedId) return null;
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: attendance.id,
@@ -95,7 +95,7 @@ export async function findAttendanceRecordsByIds(
   const cleanIds = dedupeTrimmedIds(ids);
   if (cleanIds.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
       .select({
         id: attendance.id,

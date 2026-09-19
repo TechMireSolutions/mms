@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import type { FiscalYear } from "@mms/shared";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { ReportDataGridContainer } from "@/tenant/components/moduleReports";
@@ -45,8 +45,31 @@ export function FinancialReports(): React.JSX.Element {
   ];
   const [view, setView] = useState<ViewType>("income");
   const activeFiscalYear = fiscalYears.find((fy) => fy.status === "active");
-  const [dateFrom, setDateFrom] = useState(activeFiscalYear?.startDate || "");
-  const [dateTo, setDateTo] = useState(activeFiscalYear?.endDate || "");
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [hasUserSetRange, setHasUserSetRange] = useState(false);
+
+  /**
+   * The fiscal-year query resolves after first paint, so the state initialiser
+   * can never see the active fiscal year. Adopt its range once the data lands.
+   * An explicit user range — including clearing to "All time" — always wins.
+   */
+  useEffect(() => {
+    if (hasUserSetRange || !activeFiscalYear) return;
+    const { startDate, endDate } = activeFiscalYear;
+    setDateFrom((prev) => (prev === startDate ? prev : startDate));
+    setDateTo((prev) => (prev === endDate ? prev : endDate));
+  }, [activeFiscalYear, hasUserSetRange]);
+
+  const handleDateFromChange = useCallback((value: string) => {
+    setHasUserSetRange(true);
+    setDateFrom(value);
+  }, []);
+
+  const handleDateToChange = useCallback((value: string) => {
+    setHasUserSetRange(true);
+    setDateTo(value);
+  }, []);
 
   const aggregatesResult = useAccountingReportAggregates({
     dateFrom: dateFrom || undefined,
@@ -64,12 +87,15 @@ export function FinancialReports(): React.JSX.Element {
     liabilities,
     equity,
     netCashFlow,
+    netCashFlowIndirect,
     cashInflow,
     cashOutflow,
     tb,
+    balanceSheetTb,
+    cashFlowAdjustments,
   } = (() => {
     const agg = aggregatesResult.data;
-    if (agg && agg.trialBalance) {
+    if (agg) {
       return {
         revenue: agg.revenue,
         expenses: agg.expenses,
@@ -78,9 +104,12 @@ export function FinancialReports(): React.JSX.Element {
         liabilities: agg.liabilities,
         equity: agg.equity,
         netCashFlow: agg.netCashFlow,
+        netCashFlowIndirect: agg.netCashFlowIndirect,
         cashInflow: agg.cashInflow,
         cashOutflow: agg.cashOutflow,
         tb: agg.trialBalance,
+        balanceSheetTb: agg.balanceSheetTrialBalance,
+        cashFlowAdjustments: agg.cashFlowAdjustments,
       };
     }
     return {
@@ -91,37 +120,41 @@ export function FinancialReports(): React.JSX.Element {
       liabilities: 0,
       equity: 0,
       netCashFlow: 0,
+      netCashFlowIndirect: 0,
       cashInflow: 0,
       cashOutflow: 0,
       tb: [] as TrialBalanceRow[],
+      balanceSheetTb: [] as TrialBalanceRow[],
+      cashFlowAdjustments: { depreciation: 0, receivables: 0, payables: 0 },
     };
   })();
 
+  // Income Statement rows are range-based; Balance Sheet rows are cumulative as of `dateTo`.
   const getRowsByAccountType = (type: string) => tb.filter((trialBalanceRow) => trialBalanceRow.type === type);
+  const getBalanceSheetRowsByAccountType = (type: string) =>
+    balanceSheetTb.filter((trialBalanceRow) => trialBalanceRow.type === type);
 
-  const equityRows = getRowsByAccountType("Equity");
-  const equityTotal = equityRows.reduce((sum, trialBalanceRow) => sum + (trialBalanceRow.totalCredit - trialBalanceRow.totalDebit), 0) + netSurplus;
-  const depreciationAdjustment = tb
-    .filter((trialBalanceRow) => trialBalanceRow.name === "Depreciation Expense")
-    .reduce((sum, trialBalanceRow) => sum + trialBalanceRow.totalDebit - trialBalanceRow.totalCredit, 0);
-  const receivablesChange = -(tb.find((trialBalanceRow) => trialBalanceRow.code === "1100")?.balance || 0);
-  const payablesRow = tb.find((trialBalanceRow) => trialBalanceRow.code === "2000");
-  const payablesChange = payablesRow ? payablesRow.totalCredit - payablesRow.totalDebit : 0;
+  // Indirect-method adjustments are computed server-side — never re-derived from CoA codes here.
+  const depreciationAdjustment = cashFlowAdjustments.depreciation;
+  const receivablesChange = cashFlowAdjustments.receivables;
+  const payablesChange = cashFlowAdjustments.payables;
 
   const exportColumns = getFinancialReportExportColumns(t);
 
   const exportRows = buildFinancialReportExportRows({
     view,
     tb,
+    balanceSheetTb,
     revenue,
     expenses,
     netSurplus,
     assets,
     liabilities,
-    equityTotal,
+    equity,
     depreciationAdjustment,
     receivablesChange,
     payablesChange,
+    netCashFlowIndirect,
     netCashFlow,
     cashInflow,
     cashOutflow,
@@ -158,8 +191,8 @@ export function FinancialReports(): React.JSX.Element {
       <AccountingDateFilterBar
         dateFrom={dateFrom}
         dateTo={dateTo}
-        onDateFromChange={setDateFrom}
-        onDateToChange={setDateTo}
+        onDateFromChange={handleDateFromChange}
+        onDateToChange={handleDateToChange}
         activeFiscalYear={activeFiscalYear}
         idPrefix="report"
         variant="bordered"
@@ -192,13 +225,12 @@ export function FinancialReports(): React.JSX.Element {
 
           {view === "balance" && (
             <BalanceSheetPanel
-              assetRows={getRowsByAccountType("Asset")}
-              liabilityRows={getRowsByAccountType("Liability")}
-              equityRows={equityRows}
+              assetRows={getBalanceSheetRowsByAccountType("Asset")}
+              liabilityRows={getBalanceSheetRowsByAccountType("Liability")}
+              equityRows={getBalanceSheetRowsByAccountType("Equity")}
               assets={assets}
               liabilities={liabilities}
               equity={equity}
-              equityTotal={equityTotal}
             />
           )}
 
@@ -208,6 +240,7 @@ export function FinancialReports(): React.JSX.Element {
               depreciationAdjustment={depreciationAdjustment}
               receivablesChange={receivablesChange}
               payablesChange={payablesChange}
+              netCashFlowIndirect={netCashFlowIndirect}
               netCashFlow={netCashFlow}
               cashInflow={cashInflow}
               cashOutflow={cashOutflow}

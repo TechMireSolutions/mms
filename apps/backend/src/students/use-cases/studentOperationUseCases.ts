@@ -27,15 +27,32 @@ export async function computeNextGrNumberForDate(
   const digits = settings.grNumberDigits || 4;
   const parsedYear = regDate ? new Date(regDate).getFullYear() : NaN;
   const year = Number.isFinite(parsedYear) ? parsedYear : new Date().getFullYear();
-  const seqStr = String(count + 1).padStart(digits, '0');
-  return template.replace('{seq}', seqStr).replace('{year}', String(year));
+
+  let candidateSeq = count + 1;
+  let candidateGr = template
+    .replace('{seq}', String(candidateSeq).padStart(digits, '0'))
+    .replace('{year}', String(year));
+
+  let attempts = 0;
+  while (attempts < 100) {
+    const conflict = await repo.findRegistrationConflict(tenant, { grNumber: candidateGr });
+    if (conflict !== 'grNumber') break;
+    candidateSeq += 1;
+    candidateGr = template
+      .replace('{seq}', String(candidateSeq).padStart(digits, '0'))
+      .replace('{year}', String(year));
+    attempts += 1;
+  }
+
+  return candidateGr;
 }
 
 export async function checkStudentRegistrationDuplicate(
   input: StudentDuplicateCheckInput,
   repo: StudentsRepository = studentsRepository,
+  tenantOverride?: string,
 ): Promise<{ reason: 'contact' | 'email' | 'nameDob' | 'grNumber' | null }> {
-  const tenant = getRequestTenant();
+  const tenant = tenantOverride || getRequestTenant();
   if (!tenant) return { reason: null };
   const reason = await repo.findRegistrationConflict(tenant, input);
   return { reason };

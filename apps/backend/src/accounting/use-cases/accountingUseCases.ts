@@ -9,6 +9,7 @@ import {
 import {
   EMPTY_ACCOUNTING_REPORT_AGGREGATES,
   dedupeTrimmedIds,
+  moneyToCents,
   type Account,
   type JournalEntry,
   type FiscalYear,
@@ -22,7 +23,12 @@ import {
   journalEntryRecordSchema,
   accountRecordSchema,
 } from '@mms/shared';
-import { prepareJournalEntryForPersist } from './accountingLedgerGuards.js';
+import { prepareJournalEntryForPersist, assertJournalEntryPeriodOpen } from './accountingLedgerGuards.js';
+import { getPostingRules } from '../../db/repositories/accountingLedgerOpsRepository.js';
+import { withTenant } from '../../db/tenant-context.js';
+import { ConflictError } from '../../lib/httpErrors.js';
+import { isUniqueViolation } from '../../lib/pgErrors.js';
+import { randomUUID } from 'node:crypto';
 
 const EMPTY_ACCOUNTING_METRICS: AccountingCommandMetricsSnapshot = {
   totalEntries: 0,
@@ -38,6 +44,42 @@ const EMPTY_ACCOUNTING_METRICS: AccountingCommandMetricsSnapshot = {
   assets: 0,
   liabilities: 0,
 };
+
+function normalizeLines(lines: JournalEntry['lines']): string {
+  return (lines ?? [])
+    .map((line) =>
+      [line.account_id, moneyToCents(line.debit), moneyToCents(line.credit), line.description ?? ''].join('|'),
+    )
+    .sort()
+    .join(';');
+}
+
+function normalizeList(values: readonly string[] | undefined): string {
+  return [...(values ?? [])].sort().join('|');
+}
+
+/**
+ * True when a posted entry's financial content differs from what is stored.
+ * Identity/audit fields (ids, created_by, timestamps) are intentionally ignored.
+ */
+function journalEntryContentChanged(incoming: JournalEntry, stored: JournalEntry): boolean {
+  return (
+    incoming.date !== stored.date ||
+    (incoming.ref ?? '') !== (stored.ref ?? '') ||
+    (incoming.description ?? '') !== (stored.description ?? '') ||
+    incoming.status !== stored.status ||
+    (incoming.fiscal_year ?? '') !== (stored.fiscal_year ?? '') ||
+    (incoming.fiscal_year_id ?? '') !== (stored.fiscal_year_id ?? '') ||
+    (incoming.source_type ?? '') !== (stored.source_type ?? '') ||
+    (incoming.source_id ?? '') !== (stored.source_id ?? '') ||
+    (incoming.transaction_type ?? '') !== (stored.transaction_type ?? '') ||
+    (incoming.reversed_ref ?? '') !== (stored.reversed_ref ?? '') ||
+    Boolean(incoming.simple_mode) !== Boolean(stored.simple_mode) ||
+    normalizeLines(incoming.lines) !== normalizeLines(stored.lines) ||
+    normalizeList(incoming.tags) !== normalizeList(stored.tags) ||
+    normalizeList(incoming.attachments) !== normalizeList(stored.attachments)
+  );
+}
 
 export interface AccountingUseCasesDependencies {
   countActiveJournalLinesForAccount?: (tenant: string, accountId: string) => Promise<number>;
@@ -97,6 +139,163 @@ export function createAccountingUseCases(
     websocketCollection: 'accounting_accounts',
     idPrefix: 'acc',
   });
+
+  /**
+   * Loads the stored rows for `entries` in one query so the mutability check and
+   * the write can share a single transaction. Reading posted ids in a separate
+   * transaction left a window where a concurrent writer could post an entry
+   * between the check and the write.
+   */
+  const loadStoredEntriesByIds = async (
+    entries: readonly JournalEntry[],
+  ): Promise<Map<string, JournalEntry>> => {
+    const tenant = getRequestTenant();
+    if (!tenant) return new Map();
+    const ids = dedupeTrimmedIds(entries.map((entry) => entry.id));
+    if (ids.length === 0) return new Map();
+    const stored = await repo.findEntriesByIds(tenant, ids);
+    return new Map(stored.map((entry) => [entry.id, entry]));
+  };
+
+  /**
+   * `source_type` / `source_id` are the idempotency keys the finance module uses
+   * to post at most once per invoice, payment or credit note. They are
+   * server-owned: a client able to set them could pre-claim a source and
+   * silently suppress the real system posting, or forge a reversal/closing
+   * marker. Existing rows keep their stored keys; new rows written through a
+   * client route are always `manual`.
+   */
+  const withServerOwnedSourceKeys = (
+    entry: JournalEntry,
+    stored: JournalEntry | undefined,
+  ): JournalEntry => ({
+    ...entry,
+    source_type: stored ? stored.source_type : 'manual',
+    source_id: stored ? stored.source_id : undefined,
+  });
+
+  /**
+   * Append-only immutability: posted journal entries may not be edited in
+   * place — corrections must be posted as reversals/adjustments. Unchanged
+   * posted rows are tolerated because the Work directory saves the whole
+   * collection back through the bulk upsert route.
+   */
+  const assertEntriesMutable = (
+    entries: readonly JournalEntry[],
+    storedById: ReadonlyMap<string, JournalEntry>,
+  ): void => {
+    for (const incoming of entries) {
+      const existing = storedById.get(incoming.id);
+      if (!existing || existing.status !== 'posted') continue;
+      if (journalEntryContentChanged(incoming, existing)) {
+        throw Object.assign(
+          new Error('Posted journal entries are immutable — reverse them instead of editing'),
+          { statusCode: 422, type: 'validation_error' },
+        );
+      }
+    }
+  };
+
+  /**
+   * Active foreign-key guard: a journal line may not reference an unknown,
+   * archived or deactivated account.
+   *
+   * The table's FK only enforces existence, archiving is a soft delete (the row
+   * survives), and the chart-of-accounts UI's only "delete" action sets
+   * `isActive: false`. So both flags have to be honoured here or the client and
+   * the server disagree about what removal means: the picker hides an account
+   * while invoice posting, imports and the API keep writing to it.
+   */
+  const assertEntryAccountsWritable = async (
+    tenant: string,
+    entries: readonly JournalEntry[],
+  ): Promise<void> => {
+    const accountIds = dedupeTrimmedIds(
+      entries.flatMap((entry) => (entry.lines ?? []).map((line) => line.account_id)),
+    );
+    if (accountIds.length === 0) return;
+    const accounts = await repo.findAccountsByIds(tenant, accountIds);
+    const byId = new Map(accounts.map((account) => [account.id, account]));
+    const blocked = accountIds.filter((id) => {
+      const account = byId.get(id);
+      return !account || account.isActive === false;
+    });
+    if (blocked.length > 0) {
+      throw Object.assign(
+        new Error(
+          `Journal lines reference unknown, archived or deactivated accounts: ${blocked.join(', ')}`,
+        ),
+        { statusCode: 422, type: 'validation_error' },
+      );
+    }
+  };
+
+  /**
+   * Period lock plus account guard, applied to **new-or-changed** entries only.
+   *
+   * Unchanged rows are re-sent by whole-collection Work-tier saves and must stay
+   * writable even once their fiscal year has closed or one of their accounts has
+   * been archived — otherwise any workspace that closes a year could no longer
+   * save its journal at all.
+   */
+  const assertEntriesWritable = async (
+    tenant: string,
+    entries: readonly JournalEntry[],
+    storedById: ReadonlyMap<string, JournalEntry>,
+    fiscalYears: readonly FiscalYear[],
+  ): Promise<void> => {
+    const targets = entries.filter((entry) => {
+      const existing = storedById.get(entry.id);
+      return !existing || journalEntryContentChanged(entry, existing);
+    });
+    if (targets.length === 0) return;
+    for (const entry of targets) assertJournalEntryPeriodOpen(entry, fiscalYears);
+    await assertEntryAccountsWritable(tenant, targets);
+  };
+
+  /**
+   * Fiscal years may not be reopened, rewritten once closed, or closed by hand.
+   *
+   * `status === 'closed'` is the single switch the whole period lock keys off,
+   * so writing it through the generic bulk collection route would let any user
+   * with accounting write access undo an immutable period. Closing must go
+   * through `closeFiscalYear`, which also posts the closing entry and requires a
+   * retained-earnings account.
+   */
+  const assertFiscalYearWritesAllowed = async (incoming: readonly FiscalYear[]): Promise<void> => {
+    const tenant = getRequestTenant();
+    if (!tenant || incoming.length === 0) return;
+    const stored = await repo.findFiscalYearsByIds(
+      tenant,
+      dedupeTrimmedIds(incoming.map((year) => year.id)),
+    );
+    const storedById = new Map(stored.map((year) => [year.id, year]));
+    for (const year of incoming) {
+      const existing = storedById.get(year.id);
+      const isClosed = year.status === 'closed';
+      if (existing?.status === 'closed') {
+        if (!isClosed) {
+          throw Object.assign(
+            new Error('A closed fiscal year cannot be reopened — post an adjustment instead'),
+            { statusCode: 422, type: 'validation_error' },
+          );
+        }
+        if (existing.startDate !== year.startDate || existing.endDate !== year.endDate) {
+          throw Object.assign(
+            new Error('A closed fiscal year cannot have its date range changed'),
+            { statusCode: 422, type: 'validation_error' },
+          );
+        }
+        continue;
+      }
+      if (isClosed) {
+        throw Object.assign(
+          new Error('Fiscal years must be closed through the close-fiscal-year action'),
+          { statusCode: 422, type: 'validation_error' },
+        );
+      }
+    }
+  };
 
   const deleteJournalEntryById = async (
     id: string,
@@ -182,21 +381,89 @@ export function createAccountingUseCases(
 
     upsertAccounts: (accounts: Account[]) =>
       upsertWithBroadcast(accountListSchema, accounts, repo.bulkSaveAccounts, 'accounting_accounts'),
+    /**
+     * Runs the immutability, period and account guards and the write inside one
+     * transaction. The route that serves this (`PUT {path}/bulk`) opens no
+     * transaction of its own, so guard-then-write in separate transactions left
+     * a window for a concurrent writer to post an entry between the two.
+     */
     upsertEntries: async (entries: JournalEntry[]) => {
-      const fiscalYears = await fiscalYearService.load();
-      const prepared = entries.map((entry) => prepareJournalEntryForPersist(entry, fiscalYears));
-      return upsertWithBroadcast(journalEntryListSchema, prepared, repo.bulkSaveEntries, 'accounting_entries');
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      return withTenant(tenant, async () => {
+        const parsed = journalEntryListSchema.parse(entries);
+        const fiscalYears = await fiscalYearService.load();
+        const storedById = await loadStoredEntriesByIds(parsed);
+        const sanitized = parsed.map((entry) =>
+          withServerOwnedSourceKeys(entry, storedById.get(entry.id)),
+        );
+        assertEntriesMutable(sanitized, storedById);
+        await assertEntriesWritable(tenant, sanitized, storedById, fiscalYears);
+        const prepared = sanitized.map((entry) => prepareJournalEntryForPersist(entry, fiscalYears));
+        try {
+          return await upsertWithBroadcast(
+            journalEntryListSchema,
+            prepared,
+            repo.bulkSaveEntries,
+            'accounting_entries',
+            { skipValidation: true },
+          );
+        } catch (error) {
+          // The partial unique index accounting_entries_workspace_source_uidx
+          // backs the finance module's post-at-most-once source keys. A client
+          // write conflicting with an existing (source_type, source_id) is a
+          // conflict to report, not a server fault — map it instead of letting
+          // the raw Postgres error escape as a 500.
+          if (isUniqueViolation(error)) {
+            throw new ConflictError(
+              'A journal entry already exists for this source (conflicting source_type/source_id)',
+            );
+          }
+          throw error;
+        }
+      });
     },
-    upsertFiscalYears: (fiscalYears: FiscalYear[]) =>
-      upsertWithBroadcast(fiscalYearListSchema, fiscalYears, repo.bulkSaveFiscalYears, 'accounting_fiscal_years'),
+    upsertFiscalYears: async (fiscalYears: FiscalYear[]) => {
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      return withTenant(tenant, async () => {
+        await assertFiscalYearWritesAllowed(fiscalYears);
+        return upsertWithBroadcast(
+          fiscalYearListSchema,
+          fiscalYears,
+          repo.bulkSaveFiscalYears,
+          'accounting_fiscal_years',
+        );
+      });
+    },
 
     createJournalEntry: async (record: JournalEntry) => {
-      const fiscalYears = await fiscalYearService.load();
-      return entryCrud.create(prepareJournalEntryForPersist(record, fiscalYears));
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      return withTenant(tenant, async () => {
+        const fiscalYears = await fiscalYearService.load();
+        const sanitized = withServerOwnedSourceKeys(
+          { ...record, id: record.id || `je-${randomUUID()}` },
+          undefined,
+        );
+        assertJournalEntryPeriodOpen(sanitized, fiscalYears);
+        await assertEntryAccountsWritable(tenant, [sanitized]);
+        return entryCrud.create(prepareJournalEntryForPersist(sanitized, fiscalYears));
+      });
     },
     updateJournalEntryById: async (id: string, record: JournalEntry) => {
-      const fiscalYears = await fiscalYearService.load();
-      return entryCrud.updateById(id, prepareJournalEntryForPersist(record, fiscalYears));
+      const tenant = getRequestTenant();
+      if (!tenant) throw new Error('Tenant context required');
+      return withTenant(tenant, async () => {
+        const fiscalYears = await fiscalYearService.load();
+        const existing = await repo.findEntryById(tenant, id);
+        const sanitized = withServerOwnedSourceKeys({ ...record, id }, existing ?? undefined);
+        const storedById = new Map(existing ? [[existing.id, existing]] : []);
+        assertEntriesMutable([sanitized], storedById);
+        assertJournalEntryPeriodOpen(sanitized, fiscalYears);
+        await assertEntryAccountsWritable(tenant, [sanitized]);
+        return entryCrud.updateById(id, prepareJournalEntryForPersist(sanitized, fiscalYears));
+      });
     },
     restoreJournalEntryById: entryCrud.restoreById,
     bulkRestoreJournalEntries: entryCrud.bulkRestoreByIds,
@@ -320,7 +587,15 @@ export function createAccountingUseCases(
     ): Promise<AccountingReportAggregates> => {
       const tenant = getRequestTenant();
       if (!tenant) return EMPTY_ACCOUNTING_REPORT_AGGREGATES;
-      return repo.aggregateAccountingReport(tenant, query);
+      // The report classifies cash / receivables / payables. The configured
+      // posting rules are authoritative for those, so resolve them here instead
+      // of letting the SQL layer guess from account codes and names.
+      const postingRules = await getPostingRules(tenant);
+      const { arAccountId, cashAccountId, incomeAccountId, discountAccountId } = postingRules ?? {};
+      return repo.aggregateAccountingReport(tenant, {
+        ...query,
+        postingRules: { arAccountId, cashAccountId, incomeAccountId, discountAccountId },
+      });
     },
   };
 }
