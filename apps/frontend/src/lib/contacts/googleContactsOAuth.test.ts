@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   clearGoogleContactsOAuthUrlParams,
   readGoogleContactsOAuthCodeFromUrl,
@@ -75,6 +75,10 @@ describe("stash/take/shouldOpen", () => {
 });
 
 describe("relayGoogleContactsOAuthPopup", () => {
+  afterEach(() => {
+    window.opener = null;
+  });
+
   it("relays the code to the opener and closes the window", () => {
     const postMessage = vi.fn();
     const close = vi.fn();

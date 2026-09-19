@@ -29,6 +29,7 @@ jobs:
       backend_db: ${{ steps.filter.outputs.backend_db }}
       frontend: ${{ steps.filter.outputs.frontend }}
       backend_unit: ${{ steps.filter.outputs.backend_unit }}
+      e2e: ${{ steps.filter.outputs.e2e }}
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
@@ -46,6 +47,8 @@ jobs:
               - 'apps/backend/src/accounting/**'
               - 'apps/backend/vitest.db.config.ts'
               - 'packages/shared/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
               - '.github/**'
             frontend:
               - 'apps/frontend/**'
@@ -59,6 +62,13 @@ jobs:
               - 'package.json'
               - 'pnpm-lock.yaml'
               - '.github/**'
+            e2e:
+              - 'e2e/**'
+              - 'apps/**'
+              - 'packages/shared/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - '.github/**'
 
   lint-and-typecheck:
     name: Lint & Typecheck
@@ -67,6 +77,8 @@ jobs:
     steps:
       - name: Checkout Code
         uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: Setup Environment
         uses: ./.github/actions/setup-mms
@@ -158,6 +170,7 @@ jobs:
             --coverage.thresholds.functions=0 \
             --coverage.thresholds.branches=0 \
             --reporter=default \
+            --reporter=github-actions \
             --reporter=blob \
             --outputFile=.vitest-reports/blob-${{ matrix.shardIndex }}.json
 
@@ -344,6 +357,8 @@ jobs:
           EOF
 
   e2e:
+    needs: [changes]
+    if: ${{ needs.changes.outputs.e2e == 'true' || github.event_name != 'pull_request' }}
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     strategy:
@@ -413,7 +428,7 @@ jobs:
           retention-days: 1
 
   merge-reports:
-    if: always()
+    if: always() && needs.e2e.result != 'skipped' && needs.e2e.result != 'cancelled'
     needs: [e2e]
     runs-on: ubuntu-24.04
     timeout-minutes: 10
@@ -701,5 +716,5 @@ jobs:
       - name: Cleanup SSH Credentials
         if: always()
         run: |
-          rm -f ~/.ssh/deploy_key
+          shred -u ~/.ssh/deploy_key 2>/dev/null || rm -f ~/.ssh/deploy_key
 
