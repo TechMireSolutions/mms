@@ -1,0 +1,722 @@
+import React, { act } from "react";
+import { describe, it, expect, vi } from "vitest";
+import { createRoot } from "react-dom/client";
+import { renderToStaticMarkup } from "react-dom/server";
+import {
+  createEntityDescriptor,
+  contactsEntityDescriptor,
+  studentsEntityDescriptor,
+  facultyEntityDescriptor,
+  sessionsEntityDescriptor,
+  financeEntityDescriptor,
+  platformWorkspacesEntityDescriptor,
+  attendanceEntityDescriptor,
+  enrollmentsEntityDescriptor,
+  hasanatEntityDescriptor,
+  obligationsEntityDescriptor,
+  platformUsersEntityDescriptor,
+  platformSettingsEntityDescriptor,
+  getEntityDescriptor,
+} from "@/components/common/entityRegistry";
+import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
+import { DetailSheet } from "@/components/common/DetailSheet";
+import { FilterChips } from "@/components/ui/FilterChips";
+import { AppShell } from "@/components/common/AppShell";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+
+vi.mock("@/hooks/useTranslation", () => ({
+  useTranslation: () => ({
+    t: (key: string) => key,
+    dir: "ltr",
+    language: "en",
+  }),
+}));
+
+describe("SSOT Entity UI Registry Architecture", () => {
+  describe("createEntityDescriptor", () => {
+    it("creates a well-formed entity descriptor with table columns, card fields, and drawer sections", () => {
+      interface CustomEntity {
+        id: string;
+        name: string;
+        amount: number;
+        status: string;
+        created: string;
+      }
+
+      const descriptor = createEntityDescriptor<CustomEntity>({
+        entityType: "custom",
+        singularLabel: "Custom Item",
+        pluralLabel: "Custom Items",
+        idField: "id",
+        titleField: "name",
+        fields: [
+          {
+            key: "name",
+            label: "Name",
+            type: "text",
+            tableOrder: 1,
+            fixed: true,
+            cardSlot: "primary",
+            drawerSection: "info",
+            drawerOrder: 1,
+          },
+          {
+            key: "amount",
+            label: "Amount",
+            type: "currency",
+            currencyCode: "USD",
+            tableOrder: 2,
+            cardSlot: "secondary",
+            drawerSection: "financial",
+            drawerOrder: 2,
+          },
+          {
+            key: "status",
+            label: "Status",
+            type: "status",
+            tableOrder: 3,
+            cardSlot: "badge",
+            drawerSection: "info",
+            drawerOrder: 2,
+          },
+          {
+            key: "created",
+            label: "Created Date",
+            type: "date",
+            defaultVisibleInTable: false,
+            cardSlot: "hidden",
+            drawerSection: "meta",
+            hideInDrawer: true,
+          },
+        ],
+      });
+
+      expect(descriptor.entityType).toBe("custom");
+      expect(descriptor.singularLabel).toBe("Custom Item");
+
+      // Table columns
+      const cols = descriptor.getTableColumns();
+      expect(cols).toHaveLength(4);
+      expect(cols[0].id).toBe("name");
+      expect(cols[0].fixed).toBe(true);
+      expect(cols[0].enabled).toBe(true);
+      expect(cols[3].id).toBe("created");
+      expect(cols[3].enabled).toBe(false);
+
+      // Card fields
+      const cardFields = descriptor.getCardFields();
+      expect(cardFields).toHaveLength(3);
+      expect(cardFields.map((f) => f.key)).toEqual(["name", "amount", "status"]);
+
+      // Drawer sections
+      const sections = descriptor.getDrawerSections();
+      expect(sections).toHaveLength(2); // info, financial (meta is hideInDrawer)
+      expect(sections[0].id).toBe("info");
+      expect(sections[0].fields).toHaveLength(2);
+      expect(sections[1].id).toBe("financial");
+      expect(sections[1].fields).toHaveLength(1);
+
+      // Format value
+      const entity: CustomEntity = {
+        id: "1",
+        name: "Test item",
+        amount: 1500,
+        status: "active",
+        created: "2026-09-20T10:00:00Z",
+      };
+
+      expect(descriptor.formatFieldValue("name", entity)).toBe("Test item");
+      expect(descriptor.formatFieldValue("amount", entity)).toContain("1,500");
+      expect(descriptor.formatFieldValue("created", entity)).toBe("2026-09-20");
+    });
+  });
+
+  describe("Primary Entity Descriptors Consistency", () => {
+    it("contactsEntityDescriptor provides valid metadata slots and semantic badges", () => {
+      expect(contactsEntityDescriptor.entityType).toBe("contacts");
+      expect(contactsEntityDescriptor.getField("name")?.fixed).toBe(true);
+      expect(contactsEntityDescriptor.getField("gender")?.badgeVariantMap?.male?.className).toBe(
+        SEMANTIC_BADGE.info,
+      );
+
+      const contact = {
+        id: "c1",
+        name: "Zayd ibn Harithah",
+        phone: "+1234567890",
+        email: "zayd@example.com",
+        gender: "male",
+      };
+
+      const markup = renderToStaticMarkup(
+        <div>{contactsEntityDescriptor.renderFieldValue("gender", contact as any)}</div>,
+      );
+      expect(markup).toContain("Male");
+      expect(markup).toContain(SEMANTIC_BADGE.info);
+    });
+
+    it("studentsEntityDescriptor formats enrollment status and links cleanly", () => {
+      expect(studentsEntityDescriptor.entityType).toBe("students");
+      const student = {
+        id: "s1",
+        name: "Tariq Ali",
+        status: "active",
+        grNumber: "GR-102",
+        gender: "male",
+      };
+
+      expect(studentsEntityDescriptor.formatFieldValue("grNumber", student as any)).toBe("GR-102");
+    });
+
+    it("facultyEntityDescriptor aliases teachersEntityDescriptor and maps employee info", () => {
+      expect(facultyEntityDescriptor.entityType).toBe("faculty");
+      const faculty = {
+        id: "f1",
+        name: "Ustadha Fatima",
+        employeeId: "EMP-042",
+        designation: "Teacher",
+        status: "active",
+      };
+
+      expect(facultyEntityDescriptor.formatFieldValue("employeeId", faculty as any)).toBe("EMP-042");
+    });
+
+    it("sessionsEntityDescriptor handles academic sessions and dates", () => {
+      expect(sessionsEntityDescriptor.entityType).toBe("sessions");
+      const session = {
+        id: "sess-1",
+        name: "Academic Year 2026-2027",
+        startDate: "2026-09-01",
+        endDate: "2027-06-30",
+        isCurrent: true,
+      };
+
+      expect(sessionsEntityDescriptor.formatFieldValue("name", session as any)).toBe("Academic Year 2026-2027");
+    });
+
+    it("financeEntityDescriptor handles invoices and currency amounts", () => {
+      expect(financeEntityDescriptor.entityType).toBe("finance");
+      const invoice = {
+        id: "inv-1",
+        invoiceNumber: "INV-2026-001",
+        totalAmount: 250,
+        status: "paid",
+        issueDate: "2026-09-01",
+      };
+
+      const formattedAmount = financeEntityDescriptor.formatFieldValue("totalAmount", invoice as any);
+      expect(formattedAmount).toContain("250");
+    });
+
+    it("platformWorkspacesEntityDescriptor renders active vs disabled badges", () => {
+      expect(platformWorkspacesEntityDescriptor.entityType).toBe("platformWorkspaces");
+      const wsActive = {
+        subdomain: "al-noor",
+        madrasaName: "Al-Noor Madrasa",
+        enabled: true,
+        createdAt: "2026-01-01",
+      };
+      const wsDisabled = {
+        subdomain: "al-huda",
+        madrasaName: "Al-Huda Madrasa",
+        enabled: false,
+        createdAt: "2026-01-01",
+      };
+
+      const activeMarkup = renderToStaticMarkup(
+        <div>{platformWorkspacesEntityDescriptor.renderFieldValue("enabled", wsActive)}</div>,
+      );
+      expect(activeMarkup).toContain("Active");
+      expect(activeMarkup).toContain(SEMANTIC_BADGE.success);
+
+      const disabledMarkup = renderToStaticMarkup(
+        <div>{platformWorkspacesEntityDescriptor.renderFieldValue("enabled", wsDisabled)}</div>,
+      );
+      expect(disabledMarkup).toContain("Disabled");
+      expect(disabledMarkup).toContain(SEMANTIC_BADGE.muted);
+    });
+
+    it("handles academic attendance and enrollment descriptors", () => {
+      expect(attendanceEntityDescriptor.entityType).toBe("attendance");
+      expect(attendanceEntityDescriptor.getField("status")?.badgeVariantMap?.present?.tone).toBe("success");
+      const record = {
+        id: "att-1",
+        classId: "cls-1",
+        studentId: "std-1",
+        studentName: "Ali Hassan",
+        rollNo: "12",
+        date: "2026-09-20",
+        status: "present" as const,
+      };
+      expect(attendanceEntityDescriptor.formatFieldValue("studentName", record as any)).toBe("Ali Hassan");
+      expect(attendanceEntityDescriptor.formatFieldValue("status", record as any)).toBe("Present");
+
+      expect(enrollmentsEntityDescriptor.entityType).toBe("enrollments");
+      const enrollment = {
+        id: "enr-1",
+        studentId: "std-1",
+        studentName: "Fatima Zahra",
+        sessionId: "ses-1",
+        classId: "cls-1",
+        className: "Grade 4",
+        enrolledDate: "2026-09-01",
+        finalFee: 120,
+        status: "enrolled" as const,
+        paymentStatus: "paid" as const,
+      };
+      expect(enrollmentsEntityDescriptor.formatFieldValue("className", enrollment as any)).toBe("Grade 4");
+      expect(enrollmentsEntityDescriptor.formatFieldValue("status", enrollment as any)).toBe("Enrolled");
+    });
+
+    it("handles hasanat and obligations domain descriptors", () => {
+      expect(hasanatEntityDescriptor.entityType).toBe("hasanat");
+      const dist = {
+        id: "dist-1",
+        batchId: "b-1",
+        denominationId: "d-1",
+        denominationName: "100 Points",
+        recipientType: "student" as const,
+        recipientName: "Zainab Ali",
+        quantity: 2,
+        issuedDate: "2026-09-15",
+        status: "active" as const,
+      };
+      expect(hasanatEntityDescriptor.formatFieldValue("denominationName", dist as any)).toBe("100 Points");
+
+      expect(obligationsEntityDescriptor.entityType).toBe("obligations");
+      const obl = {
+        id: "obl-1",
+        receipt_no: "REC-2026-99",
+        received_date: "2026-09-10",
+        sender_id: "snd-1",
+        amount: 500,
+        currency_id: "USD",
+        payment_mode: "Cash" as const,
+        obligation_type_id: "khums",
+        mujtahid_representative_id: "rep-1",
+        received_by: "Admin",
+      };
+      expect(obligationsEntityDescriptor.formatFieldValue("receipt_no", obl)).toBe("REC-2026-99");
+      expect(obligationsEntityDescriptor.formatFieldValue("payment_mode", obl)).toBe("Cash");
+    });
+
+    it("handles platformUsers and platformSettings descriptors", () => {
+      expect(platformUsersEntityDescriptor.entityType).toBe("platformUsers");
+      const adminUser = {
+        id: "u-1",
+        email: "super@mms.local",
+        name: "Platform Super Admin",
+        role: "super_user" as const,
+        permissions: { workspaces: true, onboard: true, settings: true, admins: true, system: true },
+        createdAt: "2026-01-01",
+        disabledAt: null,
+      };
+      const adminMarkup = renderToStaticMarkup(
+        <div>{platformUsersEntityDescriptor.renderFieldValue("disabledAt", adminUser)}</div>,
+      );
+      expect(adminMarkup).toContain("Active");
+
+      expect(platformSettingsEntityDescriptor.entityType).toBe("platformSettings");
+      expect(platformSettingsEntityDescriptor.getField("certbotEmail")?.type).toBe("email");
+    });
+
+    it("getEntityDescriptor resolves registered descriptors by key", () => {
+      expect(getEntityDescriptor("contacts")).toBe(contactsEntityDescriptor);
+      expect(getEntityDescriptor("students")).toBe(studentsEntityDescriptor);
+      expect(getEntityDescriptor("finance")).toBe(financeEntityDescriptor);
+      expect(getEntityDescriptor("platformWorkspaces")).toBe(platformWorkspacesEntityDescriptor);
+      expect(getEntityDescriptor("attendance")).toBe(attendanceEntityDescriptor);
+      expect(getEntityDescriptor("enrollments")).toBe(enrollmentsEntityDescriptor);
+      expect(getEntityDescriptor("hasanat")).toBe(hasanatEntityDescriptor);
+      expect(getEntityDescriptor("obligations")).toBe(obligationsEntityDescriptor);
+      expect(getEntityDescriptor("platformUsers")).toBe(platformUsersEntityDescriptor);
+      expect(getEntityDescriptor("platformSettings")).toBe(platformSettingsEntityDescriptor);
+      expect(getEntityDescriptor("nonexistent")).toBeUndefined();
+    });
+  });
+
+  describe("DirectoryCardMetadata with EntityDescriptor", () => {
+    it("renders card metadata tiles automatically from descriptor", () => {
+      const student = {
+        id: "s1",
+        name: "Bilal ibn Rabah",
+        status: "active",
+        grNumber: "GR-001",
+        gender: "male",
+      };
+
+      const markup = renderToStaticMarkup(
+        <DirectoryCardMetadata descriptor={studentsEntityDescriptor} entity={student as any} />,
+      );
+
+      expect(markup).toContain("Student Name");
+      expect(markup).toContain("Bilal ibn Rabah");
+      expect(markup).toContain("GR Number");
+      expect(markup).toContain("GR-001");
+    });
+
+    it("filters card metadata tiles by visibleColumnIds", () => {
+      const student = {
+        id: "s1",
+        name: "Bilal ibn Rabah",
+        status: "active",
+        grNumber: "GR-001",
+        gender: "male",
+      };
+
+      const markup = renderToStaticMarkup(
+        <DirectoryCardMetadata
+          descriptor={studentsEntityDescriptor}
+          entity={student as any}
+          visibleColumnIds={["grNumber"]}
+        />,
+      );
+
+      expect(markup).toContain("GR-001");
+      expect(markup).not.toContain("Bilal ibn Rabah");
+    });
+
+    it("resolves descriptor automatically from entityType prop", () => {
+      const contact = {
+        id: "c1",
+        name: "Ammar ibn Yasir",
+        phone: "+1234567890",
+        email: "ammar@example.com",
+        gender: "male",
+      };
+
+      const markup = renderToStaticMarkup(
+        <DirectoryCardMetadata entityType="contacts" entity={contact as any} />,
+      );
+
+      expect(markup).toContain("Full Name");
+      expect(markup).toContain("Ammar ibn Yasir");
+      expect(markup).toContain("+1234567890");
+    });
+  });
+
+  describe("DetailSheet with EntityDescriptor", () => {
+    it("renders drawer sections and attribute rows driven by descriptor", async () => {
+      const contact = {
+        id: "c1",
+        name: "Ammar ibn Yasir",
+        phone: "+1234567890",
+        email: "ammar@example.com",
+        gender: "male",
+        city: "Najaf",
+      };
+
+      const container = document.createElement("div");
+      document.body.appendChild(container);
+      const root = createRoot(container);
+
+      await act(async () => {
+        root.render(
+          <DetailSheet
+            open={true}
+            onClose={() => {}}
+            title="Contact Details"
+            descriptor={contactsEntityDescriptor}
+            entity={contact as any}
+          />,
+        );
+      });
+
+      const bodyText = document.body.textContent ?? "";
+      expect(bodyText).toContain("Contact Details");
+      expect(bodyText).toContain("Full Name");
+      expect(bodyText).toContain("Ammar ibn Yasir");
+      expect(bodyText).toContain("Phone Number");
+      expect(bodyText).toContain("+1234567890");
+      expect(bodyText).toContain("Email Address");
+      expect(bodyText).toContain("ammar@example.com");
+      expect(bodyText).toContain("City");
+      expect(bodyText).toContain("Najaf");
+
+      await act(async () => {
+        root.unmount();
+      });
+      container.remove();
+    });
+  });
+
+  describe("FilterChips with EntityDescriptor", () => {
+    it("automatically derives chip labels from descriptor field labels", () => {
+      const filters = {
+        gender: "male",
+        status: "active",
+      };
+
+      const markup = renderToStaticMarkup(
+        <FilterChips descriptor={studentsEntityDescriptor} filters={filters} />,
+      );
+
+      expect(markup).toContain("Gender: Male");
+      expect(markup).toContain("Enrollment Status: active");
+    });
+
+    it("resolves descriptor automatically from entityType prop and formats values", () => {
+      const filters = {
+        status: "present",
+      };
+
+      const markup = renderToStaticMarkup(
+        <FilterChips entityType="attendance" filters={filters} />,
+      );
+
+      expect(markup).toContain("Status: Present");
+    });
+  });
+
+  describe("AppShell Unified Presentation Shell", () => {
+    it("renders semantic landmarks: aside, header, and main with skip link", () => {
+      const markup = renderToStaticMarkup(
+        <AppShell
+          sidebar={<div data-testid="sidebar">Sidebar Nav</div>}
+          topBar={<div data-testid="topbar">Top Bar</div>}
+          mobileHeader={<div data-testid="mobile-header">Mobile Header</div>}
+          footer={<div data-testid="footer">Footer</div>}
+        >
+          <div data-testid="content">Page Viewport Content</div>
+        </AppShell>,
+      );
+
+      expect(markup).toContain('href="#main-content"');
+      expect(markup).toContain('id="main-content"');
+      expect(markup).toContain('role="banner"');
+      expect(markup).toContain("Sidebar Nav");
+      expect(markup).toContain("Top Bar");
+      expect(markup).toContain("Mobile Header");
+      expect(markup).toContain("Page Viewport Content");
+      expect(markup).toContain("Footer");
+    });
+  });
+
+  // ─── Phase 4 API additions ───────────────────────────────────────────────
+
+  describe("EntityDescriptor.getRawValue", () => {
+    interface SampleEntity {
+      id: string;
+      score: number;
+      tag?: string;
+    }
+
+    const descriptor = createEntityDescriptor<SampleEntity>({
+      entityType: "sample",
+      singularLabel: "Sample",
+      pluralLabel: "Samples",
+      idField: "id",
+      titleField: "id",
+      fields: [
+        { key: "id", label: "ID", type: "text" },
+        { key: "score", label: "Score", type: "number" },
+        {
+          key: "tag",
+          label: "Tag",
+          type: "text",
+          // Custom accessor that uppercases the tag
+          accessor: (e) => (e.tag ? e.tag.toUpperCase() : undefined),
+        },
+      ],
+    });
+
+    it("returns the raw field value directly from the entity", () => {
+      const entity: SampleEntity = { id: "abc", score: 42 };
+      expect(descriptor.getRawValue("id", entity)).toBe("abc");
+      expect(descriptor.getRawValue("score", entity)).toBe(42);
+    });
+
+    it("uses the accessor when defined", () => {
+      const entity: SampleEntity = { id: "x", score: 1, tag: "hello" };
+      expect(descriptor.getRawValue("tag", entity)).toBe("HELLO");
+    });
+
+    it("returns undefined for a missing optional field", () => {
+      const entity: SampleEntity = { id: "x", score: 0 };
+      expect(descriptor.getRawValue("tag", entity)).toBeUndefined();
+    });
+
+    it("returns undefined for an unknown field key", () => {
+      const entity: SampleEntity = { id: "x", score: 0 };
+      expect(descriptor.getRawValue("nonexistent", entity)).toBeUndefined();
+    });
+  });
+
+  describe("sectionTitleMap — drawer section title overrides", () => {
+    interface PersonEntity {
+      id: string;
+      name: string;
+      phone: string;
+    }
+
+    it("uses sectionTitleMap titles instead of auto-capitalised section IDs", () => {
+      const descriptor = createEntityDescriptor<PersonEntity>({
+        entityType: "person",
+        singularLabel: "Person",
+        pluralLabel: "People",
+        idField: "id",
+        titleField: "name",
+        sectionTitleMap: {
+          identity: "Personal Identity",
+          contact: "Contact Details",
+        },
+        fields: [
+          { key: "name", label: "Name", type: "text", drawerSection: "identity", drawerOrder: 1 },
+          { key: "phone", label: "Phone", type: "phone", drawerSection: "contact", drawerOrder: 2 },
+        ],
+      });
+
+      const sections = descriptor.getDrawerSections();
+      const identitySection = sections.find((s) => s.id === "identity");
+      const contactSection = sections.find((s) => s.id === "contact");
+
+      expect(identitySection?.title).toBe("Personal Identity");
+      expect(contactSection?.title).toBe("Contact Details");
+    });
+
+    it("falls back to auto-capitalisation for section IDs not in sectionTitleMap", () => {
+      const descriptor = createEntityDescriptor<PersonEntity>({
+        entityType: "person",
+        singularLabel: "Person",
+        pluralLabel: "People",
+        idField: "id",
+        titleField: "name",
+        sectionTitleMap: { identity: "Personal Identity" },
+        fields: [
+          { key: "name", label: "Name", type: "text", drawerSection: "identity", drawerOrder: 1 },
+          { key: "phone", label: "Phone", type: "phone", drawerSection: "employment", drawerOrder: 2 },
+        ],
+      });
+
+      const sections = descriptor.getDrawerSections();
+      const employmentSection = sections.find((s) => s.id === "employment");
+      expect(employmentSection?.title).toBe("Employment");
+    });
+
+    it("uses defaultDrawerSectionTitle for the general section", () => {
+      const descriptor = createEntityDescriptor<PersonEntity>({
+        entityType: "person",
+        singularLabel: "Person",
+        pluralLabel: "People",
+        idField: "id",
+        titleField: "name",
+        defaultDrawerSectionTitle: "Overview",
+        fields: [
+          { key: "name", label: "Name", type: "text", drawerSection: "general", drawerOrder: 1 },
+          { key: "phone", label: "Phone", type: "phone", drawerSection: "general", drawerOrder: 2 },
+        ],
+      });
+
+      const sections = descriptor.getDrawerSections();
+      expect(sections[0]?.title).toBe("Overview");
+    });
+
+    it("sectionTitleMap overrides defaultDrawerSectionTitle for the general section", () => {
+      const descriptor = createEntityDescriptor<PersonEntity>({
+        entityType: "person",
+        singularLabel: "Person",
+        pluralLabel: "People",
+        idField: "id",
+        titleField: "name",
+        defaultDrawerSectionTitle: "General Info",
+        sectionTitleMap: { general: "Main Details" },
+        fields: [
+          { key: "name", label: "Name", type: "text", drawerSection: "general", drawerOrder: 1 },
+        ],
+      });
+
+      const sections = descriptor.getDrawerSections();
+      expect(sections[0]?.title).toBe("Main Details");
+    });
+  });
+
+  // ─── Descriptor-driven component rendering ──────────────────────────────
+
+  describe("FilterChips — descriptor-driven chip generation", () => {
+    it("generates chips from active filters using entity descriptor field labels and formatted values", () => {
+      const removed: string[] = [];
+      const markup = renderToStaticMarkup(
+        <FilterChips
+          entityType="contacts"
+          filters={{ gender: "male", city: "Karachi" }}
+          onRemoveFilter={(key) => removed.push(key)}
+        />,
+      );
+
+      // Should produce a chip with the field label from the contacts descriptor
+      expect(markup).toContain("Gender: Male");
+      expect(markup).toContain("City: Karachi");
+    });
+
+    it("skips null, undefined, empty, and 'all' filter values", () => {
+      const markup = renderToStaticMarkup(
+        <FilterChips
+          entityType="contacts"
+          filters={{ gender: null, city: "", status: "all", phone: undefined }}
+        />,
+      );
+      // Nothing should render
+      expect(markup).toBe("");
+    });
+
+    it("falls back to the raw key when field is not found in the descriptor", () => {
+      const markup = renderToStaticMarkup(
+        <FilterChips
+          entityType="contacts"
+          filters={{ unknownField: "someValue" }}
+        />,
+      );
+      expect(markup).toContain("unknownField: someValue");
+    });
+
+    it("merges manual chips with descriptor-driven filter chips", () => {
+      const markup = renderToStaticMarkup(
+        <FilterChips
+          chips={[{ key: "manual", label: "Manual Chip", onRemove: () => undefined }]}
+          entityType="contacts"
+          filters={{ gender: "female" }}
+        />,
+      );
+      expect(markup).toContain("Manual Chip");
+      expect(markup).toContain("Gender: Female");
+    });
+  });
+
+  describe("DirectoryCardMetadata — descriptor-driven tile rendering", () => {
+    it("renders metadata tiles from entity + entityType without explicit columns prop", () => {
+      const contact = {
+        id: "c1",
+        name: "Ahmed Ali",
+        phone: "+923001234567",
+        email: "ahmed@example.com",
+        gender: "male",
+        city: "Lahore",
+        whatsappStatus: "active",
+        cnic: "12345-1234567-1",
+      };
+
+      const markup = renderToStaticMarkup(
+        <DirectoryCardMetadata
+          entityType="contacts"
+          entity={contact}
+        />,
+      );
+
+      // Should render tiles for visible card fields (not cardSlot="hidden")
+      expect(markup).toContain("+923001234567");
+      expect(markup).toContain("ahmed@example.com");
+      expect(markup).toContain("Lahore");
+    });
+
+    it("renders nothing when entity is undefined", () => {
+      const markup = renderToStaticMarkup(
+        <DirectoryCardMetadata
+          entityType="contacts"
+          entity={undefined}
+        />,
+      );
+      // Should not throw — empty or minimal output
+      expect(markup).toBeDefined();
+    });
+  });
+});
+

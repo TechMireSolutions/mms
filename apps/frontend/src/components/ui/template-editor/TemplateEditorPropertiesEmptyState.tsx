@@ -25,7 +25,7 @@ export function TemplateEditorPropertiesEmptyState<TPayload = Record<string, unk
           <Layers className="w-6 h-6" aria-hidden="true" />
         </div>
         <p className="text-xs font-semibold text-foreground m-0">{t('templateEditor.emptyHint')}</p>
-        <p className="text-3xs text-muted-foreground mt-1.5 max-w-[190px] leading-relaxed m-0">
+        <p className="text-3xs text-muted-foreground mt-1.5 max-w-48 leading-relaxed m-0">
           {t('templateEditor.emptyHintDetail')}
         </p>
       </div>

@@ -127,7 +127,7 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
       tabIndex={0}
       aria-label={t("templateEditor.canvasViewport")}
       onPointerDown={onPointerDownViewport}
-      className={`flex-1 bg-muted/30 overflow-auto p-6 flex flex-col items-center justify-start relative min-h-[300px] select-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary print:p-0 print:m-0 print:bg-white print:overflow-visible ${
+      className={`flex-1 bg-muted/30 overflow-auto p-6 flex flex-col items-center justify-start relative min-h-80 select-none focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary print:p-0 print:m-0 print:bg-white print:overflow-visible ${
         isSpacePressed ? (isPanning ? "cursor-grabbing" : "cursor-grab") : ""
       }`}
     >

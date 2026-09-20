@@ -92,7 +92,7 @@ export function ClassDetailFeesTab({
       <div className="rounded-xl border border-border/70 bg-card p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Tag className="h-4 w-4 text-emerald-600" />
+            <Tag className="h-4 w-4 text-success" />
             <h4 className="text-sm font-semibold text-foreground">{t('sessions.classes.detail.discounts.title')}</h4>
           </div>
           <Button size="sm" variant="outline" onClick={onAddDiscount} className="h-8 gap-1 text-xs">

@@ -143,7 +143,7 @@ export function FacultyUserAccountSection({
         {userAccountDraft.enabled ? (
           <div className="space-y-4 pt-2 border-t border-border/50">
             {!primaryEmail ? (
-              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20 text-amber-600 dark:text-amber-400 text-xs font-medium">
+              <div className="flex items-center gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20 text-warning text-xs font-medium">
                 <AlertCircle className="w-4 h-4 flex-shrink-0" />
                 <span>{t("teachers.form.noEmailWarning")}</span>
               </div>

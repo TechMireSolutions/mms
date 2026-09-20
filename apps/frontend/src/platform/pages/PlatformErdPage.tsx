@@ -1,7 +1,6 @@
 import React from 'react';
 import { Waypoints } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { PlatformPageShell } from '@/platform/components/PlatformPageShell';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { PageHeader } from '@/components/ui/PageHeader';
@@ -13,7 +12,7 @@ export default function PlatformErdPage(): React.JSX.Element {
   const reducedMotion = useReducedMotion();
 
   return (
-    <PlatformPageShell width="7xl">
+    <>
       <motion.div
         variants={containerVariants}
         initial={reducedMotion ? false : 'hidden'}
@@ -32,6 +31,6 @@ export default function PlatformErdPage(): React.JSX.Element {
           <ErdExplorer />
         </motion.div>
       </motion.div>
-    </PlatformPageShell>
+    </>
   );
 }

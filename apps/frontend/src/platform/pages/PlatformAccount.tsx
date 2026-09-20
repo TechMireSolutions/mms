@@ -2,7 +2,6 @@ import React from "react";
 import { useSearchParams } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, Shield } from "lucide-react";
-import { PlatformPageShell } from "@/platform/components/PlatformPageShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformProfile } from "@/platform/hooks/usePlatformProfile";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -45,7 +44,7 @@ export default function PlatformAccount(): React.JSX.Element {
   ];
 
   return (
-    <PlatformPageShell width="7xl">
+    <>
       <div className="space-y-8 text-start">
         <PageHeader
           icon={User}
@@ -111,6 +110,6 @@ export default function PlatformAccount(): React.JSX.Element {
           </div>
         )}
       </div>
-    </PlatformPageShell>
+    </>
   );
 }

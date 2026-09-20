@@ -1,10 +1,10 @@
 import React, { useState, useEffect, Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { ModuleScaffoldSkeleton } from "@/components/common/ModuleScaffold";
+import { AppShell } from "@/components/common/AppShell";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { AppFooter } from "@/components/ui/AppFooter";
-import { SkipToContentLink } from "@/components/ui/SkipToContentLink";
 import Sidebar from "@/tenant/components/layout/Sidebar";
 import TopBar from "@/tenant/components/layout/TopBar";
 import TopBarActions from "@/tenant/components/layout/TopBarActions";
@@ -17,7 +17,6 @@ import { getInitials } from "@mms/shared";
 import { useSessionTimeout } from "@/tenant/hooks/useSessionTimeout";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
-import { cn } from "@/lib/utils";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
 import { useInitializeUiState } from "@/tenant/hooks/useInitializeUiState";
 
@@ -43,92 +42,76 @@ export default function AppLayout(): React.JSX.Element {
   }, [branding.logoUrl]);
 
   return (
-    <div className="box-border min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern">
-      <SkipToContentLink />
-
-      {/* Desktop Sidebar */}
-      <div className="hidden lg:block">
+    <AppShell
+      sidebar={
         <Sidebar
           collapsed={sidebarCollapsed}
           onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
         />
-      </div>
-
-      {/* Mobile Sidebar */}
-      <MobileSidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
-
-      {/* Top Bar */}
-      <div className="hidden lg:block">
+      }
+      mobileSidebar={
+        <MobileSidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      }
+      topBar={
         <TopBar
           sidebarCollapsed={sidebarCollapsed}
           onOpenCommandPalette={() => setCommandPaletteOpen(true)}
         />
-      </div>
-
-      {/* Mobile Header */}
-      <div className="sticky top-0 z-sticky flex h-14 w-full items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md lg:hidden">
-        <Button
-          type="button"
-          variant="ghost"
-          size="icon"
-          aria-label={t("nav.openMenu")}
-          onClick={(event) => {
-            event.stopPropagation();
-            setMobileOpen(true);
-          }}
-          className="shrink-0 rounded-lg transition-colors hover:bg-muted"
-        >
-          <Menu className="h-5 w-5 text-foreground" />
-        </Button>
-        <div className="flex min-w-0 flex-1 items-center gap-2">
-          {branding.logoUrl && !logoError ? (
-            <img
-              src={branding.logoUrl}
-              alt="Logo"
-              className={`h-7 w-7 max-w-full shrink-0 rounded-md ${LOGO_IMAGE}`}
-              width={28}
-              height={28}
-              onError={() => setLogoError(true)}
-            />
-          ) : (
-            <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
-              <span className="font-display text-sm font-bold text-primary">
-                {branding.madrasaName ? getInitials(branding.madrasaName, 1) : "م"}
-              </span>
-            </div>
-          )}
-          <span className="min-w-0 truncate text-sm font-semibold">
-            {branding.madrasaName || t("entry.productName")}
-          </span>
+      }
+      mobileHeader={
+        <div className="flex h-14 w-full items-center gap-3 border-b border-border bg-card/80 px-4 backdrop-blur-md">
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon"
+            aria-label={t("nav.openMenu")}
+            onClick={(event) => {
+              event.stopPropagation();
+              setMobileOpen(true);
+            }}
+            className="shrink-0 rounded-lg transition-colors hover:bg-muted"
+          >
+            <Menu className="h-5 w-5 text-foreground" />
+          </Button>
+          <div className="flex min-w-0 flex-1 items-center gap-2">
+            {branding.logoUrl && !logoError ? (
+              <img
+                src={branding.logoUrl}
+                alt="Logo"
+                className={`h-7 w-7 max-w-full shrink-0 rounded-md ${LOGO_IMAGE}`}
+                width={28}
+                height={28}
+                onError={() => setLogoError(true)}
+              />
+            ) : (
+              <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-primary/10">
+                <span className="font-display text-sm font-bold text-primary">
+                  {branding.madrasaName ? getInitials(branding.madrasaName, 1) : "م"}
+                </span>
+              </div>
+            )}
+            <span className="min-w-0 truncate text-sm font-semibold">
+              {branding.madrasaName || t("entry.productName")}
+            </span>
+          </div>
+          <TopBarActions compact onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
         </div>
-        <TopBarActions compact onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
-      </div>
-
-      {/* Command Palette Modal */}
-      {commandPaletteOpen ? (
-        <Suspense fallback={null}>
-          <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
-        </Suspense>
-      ) : null}
-
-      {/* Session Timeout Modal */}
-      {sessionTimeoutModal}
-
-      {/* Main Content */}
-      <main
-        id="main-content"
-        className={cn(
-          "flex min-h-screen min-w-0 max-w-full flex-col pt-14 transition-all duration-300 lg:pt-16",
-          sidebarCollapsed ? "lg:ps-sidebar-collapsed" : "lg:ps-sidebar",
-        )}
-      >
-        <div className="min-w-0 max-w-full flex-grow p-4 md:p-6 lg:p-8">
-          <Suspense fallback={<ModuleScaffoldSkeleton />}>
-            <Outlet />
+      }
+      commandPalette={
+        commandPaletteOpen ? (
+          <Suspense fallback={null}>
+            <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
           </Suspense>
-        </div>
-        <AppFooter text={branding.footerText || undefined} name={branding.madrasaName || undefined} />
-      </main>
-    </div>
+        ) : null
+      }
+      extraModals={sessionTimeoutModal}
+      sidebarCollapsed={sidebarCollapsed}
+      footer={<AppFooter text={branding.footerText || undefined} name={branding.madrasaName || undefined} />}
+    >
+      <Suspense fallback={<ModuleScaffoldSkeleton />}>
+        <Outlet />
+      </Suspense>
+    </AppShell>
   );
 }
+

@@ -144,7 +144,7 @@ export function TemplateEditorPropertiesPanel<TPayload = Record<string, unknown>
           <span className="text-2xs font-bold uppercase tracking-wider bg-primary/10 text-primary px-2 py-0.5 rounded-full">
             {selectedElement.type}
           </span>
-          <span className="text-xs font-semibold text-foreground truncate max-w-[120px]">
+          <span className="text-xs font-semibold text-foreground truncate max-w-32">
             {selectedElement.label || t('templateEditor.element')}
           </span>
         </div>

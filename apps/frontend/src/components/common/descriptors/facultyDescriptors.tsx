@@ -1,0 +1,82 @@
+import type { Faculty } from "@mms/shared";
+import type { EntityDescriptor } from "@/types/entityRegistry";
+import { createEntityDescriptor } from "../entityDescriptorFactory";
+
+export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDescriptor<Faculty>({
+  entityType: "faculty",
+  singularLabel: "Faculty Member",
+  pluralLabel: "Faculty",
+  idField: "id",
+  titleField: "name",
+  fields: [
+    {
+      key: "name",
+      label: "Teacher Name",
+      type: "text",
+      sortable: true,
+      defaultVisibleInTable: true,
+      tableOrder: 10,
+      fixed: true,
+      cardSlot: "primary",
+      drawerSection: "identity",
+      drawerOrder: 10,
+    },
+    {
+      key: "employeeId",
+      label: "Employee ID",
+      type: "text",
+      sortable: true,
+      defaultVisibleInTable: true,
+      tableOrder: 20,
+      cardSlot: "secondary",
+      drawerSection: "employment",
+      drawerOrder: 20,
+    },
+    {
+      key: "designation",
+      label: "Designation",
+      type: "text",
+      sortable: true,
+      defaultVisibleInTable: true,
+      tableOrder: 30,
+      cardSlot: "meta",
+      drawerSection: "employment",
+      drawerOrder: 30,
+    },
+    {
+      key: "department",
+      label: "Department",
+      type: "text",
+      sortable: true,
+      defaultVisibleInTable: true,
+      tableOrder: 40,
+      cardSlot: "meta",
+      drawerSection: "employment",
+      drawerOrder: 40,
+    },
+    {
+      key: "status",
+      label: "Status",
+      type: "status",
+      sortable: true,
+      defaultVisibleInTable: true,
+      tableOrder: 50,
+      cardSlot: "badge",
+      drawerSection: "employment",
+      drawerOrder: 50,
+    },
+    {
+      key: "phone",
+      label: "Phone",
+      type: "phone",
+      sortable: false,
+      defaultVisibleInTable: true,
+      tableOrder: 60,
+      cardSlot: "meta",
+      drawerSection: "contact",
+      drawerOrder: 60,
+    },
+  ],
+});
+
+export const teachersEntityDescriptor = facultyEntityDescriptor;

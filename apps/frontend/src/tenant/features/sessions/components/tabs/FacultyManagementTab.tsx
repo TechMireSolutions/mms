@@ -194,7 +194,7 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
                     </span>
                     <span className="flex items-center gap-1">
                       {item.status === 'active' ? (
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        <CheckCircle2 className="h-3 w-3 text-success" />
                       ) : (
                         <XCircle className="h-3 w-3 text-muted-foreground" />
                       )}

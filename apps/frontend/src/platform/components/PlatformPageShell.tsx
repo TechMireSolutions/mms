@@ -1,14 +1,16 @@
-import React from 'react';
+import React, { Suspense } from 'react';
+import { Outlet } from 'react-router-dom';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
+import { ModuleScaffoldSkeleton } from '@/components/common/ModuleScaffold';
 import { PlatformSidebarProvider, usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut';
 import { AppFooter } from '@/components/ui/AppFooter';
 import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
-import { cn } from '@/lib/utils';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
 import { PlatformSidebar } from '@/platform/components/PlatformSidebar';
 import { PlatformCommandPalette } from '@/platform/components/PlatformCommandPalette';
+import { AppShell } from '@/components/common/AppShell';
 
 const MAX_W: Record<NonNullable<PlatformPageShellProps['width']>, string> = {
   md: 'max-w-md',
@@ -18,7 +20,7 @@ const MAX_W: Record<NonNullable<PlatformPageShellProps['width']>, string> = {
 };
 
 interface PlatformPageShellProps {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   /** Max content width — default `lg` for console-style pages. */
   width?: 'md' | 'lg' | 'xl' | '7xl';
 }
@@ -55,31 +57,40 @@ function PlatformAuthenticatedShell({
   maxClass: string;
   footer: React.ReactNode;
 }): React.JSX.Element {
-  const { t, dir, language } = useTranslation();
-  const { commandPaletteOpen, setCommandPaletteOpen } = usePlatformSidebar();
+  const { dir, language } = useTranslation();
+  const { commandPaletteOpen, setCommandPaletteOpen, collapsed } = usePlatformSidebar();
 
   useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
 
   return (
-    <PlatformShellFrame dir={dir} lang={language}>
-      <PlatformSidebar />
-      <div className="flex flex-1 flex-col min-w-0 min-h-screen">
-        <PlatformPageShellHeader
-          onOpenSearch={() => setCommandPaletteOpen(true)}
-          searchOpen={commandPaletteOpen}
-        />
-        <main id="main-content" className="flex-1 p-4 md:p-6 lg:p-8">
-          <div className={cn('box-border mx-auto w-full min-w-0', maxClass)}>
-            {children}
-          </div>
-        </main>
-        {footer}
-      </div>
-      <PlatformCommandPalette
-        open={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-      />
-    </PlatformShellFrame>
+    <div dir={dir} lang={language}>
+      <AppShell
+        sidebar={<PlatformSidebar />}
+        topBar={
+          <PlatformPageShellHeader
+            onOpenSearch={() => setCommandPaletteOpen(true)}
+            searchOpen={commandPaletteOpen}
+          />
+        }
+        mobileHeader={
+          <PlatformPageShellHeader
+            onOpenSearch={() => setCommandPaletteOpen(true)}
+            searchOpen={commandPaletteOpen}
+          />
+        }
+        commandPalette={
+          <PlatformCommandPalette
+            open={commandPaletteOpen}
+            onClose={() => setCommandPaletteOpen(false)}
+          />
+        }
+        sidebarCollapsed={collapsed}
+        maxWidthClass={maxClass}
+        footer={footer}
+      >
+        {children}
+      </AppShell>
+    </div>
   );
 }
 
@@ -98,7 +109,11 @@ export function PlatformPageShell({
     return (
       <PlatformSidebarProvider>
         <PlatformAuthenticatedShell maxClass={maxClass} footer={footer}>
-          {children}
+          {children || (
+            <Suspense fallback={<ModuleScaffoldSkeleton />}>
+              <Outlet />
+            </Suspense>
+          )}
         </PlatformAuthenticatedShell>
       </PlatformSidebarProvider>
     );
@@ -108,7 +123,11 @@ export function PlatformPageShell({
   return (
     <PlatformSidebarProvider>
       <UnauthenticatedShell dir={dir} lang={language} maxClass={maxClass} footer={footer}>
-        {children}
+        {children || (
+          <Suspense fallback={<ModuleScaffoldSkeleton />}>
+            <Outlet />
+          </Suspense>
+        )}
       </UnauthenticatedShell>
     </PlatformSidebarProvider>
   );
@@ -132,25 +151,31 @@ function UnauthenticatedShell({
   useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
 
   return (
-    <div
-      dir={dir}
-      lang={lang}
-      className="box-border flex min-h-screen w-full max-w-full overflow-x-hidden flex-col bg-background islamic-pattern selection:bg-primary/10 selection:text-primary"
-    >
-      <PlatformPageShellHeader
-        onOpenSearch={() => setCommandPaletteOpen(true)}
-        searchOpen={commandPaletteOpen}
-      />
-      <main id="main-content" className="flex w-full flex-1 flex-col justify-center pt-20 pb-8 md:py-8">
-        <div className={cn('box-border mx-auto w-full min-w-0 px-4 sm:px-6', maxClass)}>
-          {children}
-        </div>
-      </main>
-      {footer}
-      <PlatformCommandPalette
-        open={commandPaletteOpen}
-        onClose={() => setCommandPaletteOpen(false)}
-      />
+    <div dir={dir} lang={lang}>
+      <AppShell
+        topBar={
+          <PlatformPageShellHeader
+            onOpenSearch={() => setCommandPaletteOpen(true)}
+            searchOpen={commandPaletteOpen}
+          />
+        }
+        mobileHeader={
+          <PlatformPageShellHeader
+            onOpenSearch={() => setCommandPaletteOpen(true)}
+            searchOpen={commandPaletteOpen}
+          />
+        }
+        commandPalette={
+          <PlatformCommandPalette
+            open={commandPaletteOpen}
+            onClose={() => setCommandPaletteOpen(false)}
+          />
+        }
+        maxWidthClass={maxClass}
+        footer={footer}
+      >
+        {children}
+      </AppShell>
     </div>
   );
 }

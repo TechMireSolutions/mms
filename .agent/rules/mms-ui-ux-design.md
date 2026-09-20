@@ -20,7 +20,8 @@ Raw HTML controls (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, c
 | `FormSelect` / `EditableSelect` | `@/components/ui/FormSelect`, `FormPrimitives` | Accessible dropdown selectors; no raw `<select>`. |
 | `Textarea` / `Checkbox` / `Switch` | `@/components/ui/*` | Standard form primitives; never raw checkboxes/switches. |
 | `FormModal` / `Modal` | `@/components/ui/FormModal` | Dialogs with focus trap, container queries (`@container`), scroll lock, `dvh`/`svh` tall sizing. |
-| `DetailDrawerShell` | `@/components/ui/DetailDrawerShell` | Entity profile drawer. In trash: `WarningCallout` + Restore action; hide Edit/messaging. |
+| `AppShell` | `@/components/common/AppShell` | Universal outer application frame unifying skip link, desktop/mobile navigation drawers, top header bar, and main content landmark across tenant and platform domains. |
+| `DetailSheet` / `DetailDrawerShell` | `@/components/common/DetailSheet`, `@/components/ui/DetailDrawerShell` | Entity profile drawer with integrated archive banner, BiDi slide-over, and declarative SSOT entity descriptor attribute rendering. In trash: `WarningCallout` + Restore action; hide Edit/messaging. |
 | `Table` | `@/components/ui/table` | shadcn table primitives with auto `overflow-x-auto`. Mandate `@tanstack/react-virtual` virtualization when rendered rows > 30 (`mms-performance.md`). |
 | `StatCard` / `ModuleCommandMetricsGrid`| `@/components/ui/*` | Single metric tiles (`StatCard`); command-centre/report KPI strips (`ModuleCommandMetricsGrid`). |
 | `EmptyState` / `ErrorState` | `@/components/ui/*` | Directory empties (`title` required, `variant="dashed"`, `compact`); errors with retry + hint description. |
@@ -103,3 +104,14 @@ Accessibility work that stops at labels and touch targets still fails real assis
 - **List & Table Virtualization:** All directories, tables, and feeds rendering more than 30 concurrent items MUST use virtual scrolling via `@tanstack/react-virtual` (reference: `ContactsListDesktopTable.tsx`) to keep DOM nodes bounded — `mms-performance.md`.
 - **Container Queries:** FormModal tabs and inner grids follow dialog `@container` (`@md:`, `@sm:`), not viewport.
 - **Unknown Hosts:** Hard redirect unknown tenant subdomains to apex `/tenant-not-found?subdomain=…` (`mms-settings-i18n.md`).
+
+## 6. Single Source of Truth (SSOT) Entity UI Registry
+
+All primary entities (contacts, students, faculty, sessions, finance, platform workspaces) provide a declarative entity descriptor via `createEntityDescriptor<T>()` (`@/components/common/entityRegistry`, `@/types/entityRegistry`).
+- **Unified Schema:** Field definitions specify `key`, `label`, `type` (`text`, `badge`, `currency`, `date`, `status`, `link`, etc.), `tableOrder`, `cardSlot`, and `drawerSection`.
+- **Automatic Derivations:**
+  - Table columns and visibility defaults (`getTableColumns()`) feeding `ModuleColumnCustomizer`.
+  - Directory card metadata grid tiles (`getCardFields()`) feeding `DirectoryCardMetadata`.
+  - Filter chips labels and formatting (`formatFieldValue()`) feeding `FilterChips`.
+  - Drawer attribute inspection sections and rows (`getDrawerSections()`) feeding `DetailSheet`.
+- **Zero Forking:** Directory cards, filter chips, and drawer viewers consume registered entity descriptors rather than repeating ad-hoc column lists, card field arrays, and drawer layouts.

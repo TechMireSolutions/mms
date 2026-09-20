@@ -41,7 +41,7 @@ export function TemplateEditorPresetsControl<TPayload = Record<string, unknown>>
           { value: "", label: t("templateEditor.presets") },
           ...presets.map((p) => ({ value: p.key, label: p.label })),
         ]}
-        className={`h-11 text-xs py-0 min-w-[130px] ${
+        className={`h-11 text-xs py-0 min-w-32 ${
           activePresetKey ? "border-primary/50 text-primary" : ""
         }`}
       />

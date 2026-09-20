@@ -4,6 +4,8 @@ import { X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import type { EntityDescriptor } from "@/types/entityRegistry";
+import { getEntityDescriptor } from "@/components/common/entityRegistry";
 
 export interface FilterChip {
   key: string;
@@ -11,25 +13,61 @@ export interface FilterChip {
   onRemove: () => void;
 }
 
-interface FilterChipsProps {
+export interface FilterChipsProps<T = any> {
   chips?: FilterChip[];
+  /** Optional SSOT descriptor-driven active filters */
+  filters?: Record<string, unknown>;
+  entityType?: string;
+  descriptor?: EntityDescriptor<T>;
+  onRemoveFilter?: (fieldKey: string) => void;
   onClearAll?: () => void;
   className?: string;
 }
 
 /**
  * FilterChips — shows active filter pills with clear actions.
- *
- * @param {FilterChipsProps} props - The component props.
- * @returns {React.ReactElement | null} The rendered filter chips or null.
+ * Supports both manual chip arrays and declarative entity descriptor-driven active filter state.
  */
-export function FilterChips({
+export function FilterChips<T = any>({
   chips = [],
+  filters,
+  entityType,
+  descriptor,
+  onRemoveFilter,
   onClearAll,
   className,
-}: FilterChipsProps): React.ReactElement | null {
+}: FilterChipsProps<T>): React.ReactElement | null {
   const { t } = useTranslation();
-  if (chips.length === 0) return null;
+
+  const effectiveDescriptor = (descriptor ?? (entityType ? getEntityDescriptor(entityType) : undefined)) as
+    | EntityDescriptor<unknown>
+    | undefined;
+
+  const effectiveChips = React.useMemo(() => {
+    const list = [...chips];
+    if (filters && effectiveDescriptor) {
+      for (const [key, value] of Object.entries(filters)) {
+        if (value === undefined || value === null || value === "" || value === "all") continue;
+        const field = effectiveDescriptor.getField(key);
+        const fieldLabel = field?.label ?? key;
+        let valueLabel: string;
+        try {
+          const formatted = effectiveDescriptor.formatFieldValue(key, { [key]: value });
+          valueLabel = formatted && formatted !== "—" ? formatted : String(value);
+        } catch {
+          valueLabel = typeof value === "boolean" ? (value ? "Yes" : "No") : String(value);
+        }
+        list.push({
+          key,
+          label: `${fieldLabel}: ${valueLabel}`,
+          onRemove: () => onRemoveFilter?.(key),
+        });
+      }
+    }
+    return list;
+  }, [chips, filters, effectiveDescriptor, onRemoveFilter]);
+
+  if (effectiveChips.length === 0) return null;
 
   return (
     <AnimatePresence>
@@ -39,7 +77,7 @@ export function FilterChips({
         exit={{ opacity: 0, height: 0 }}
         className={cn("flex items-center gap-2 flex-wrap", className)}
       >
-        {chips.map((chip) => (
+        {effectiveChips.map((chip) => (
           <button
             key={chip.key}
             type="button"
@@ -52,7 +90,7 @@ export function FilterChips({
             <X className="w-3 h-3" aria-hidden="true" />
           </button>
         ))}
-        {chips.length > 1 && onClearAll && (
+        {effectiveChips.length > 1 && onClearAll && (
           <Button
             type="button"
             variant="ghost"

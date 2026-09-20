@@ -3,6 +3,7 @@ import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import type { ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import type { EntityDescriptor } from "@/types/entityRegistry";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
@@ -68,7 +69,9 @@ export interface WorkTaskToolbarProps {
   };
 
   columnCustomizer?: {
-    registry: ModuleColumnRegistryEntry[];
+    registry?: ModuleColumnRegistryEntry[];
+    entityType?: string;
+    descriptor?: EntityDescriptor<unknown>;
     onUpdate: (layout: ModuleColumnRegistryEntry[]) => void;
     onReset?: () => void;
     labels?: Partial<ModuleColumnCustomizerLabels>;

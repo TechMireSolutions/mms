@@ -35,7 +35,7 @@ export function TemplateEditorPageControls({
           value: key,
           label: info.label,
         }))}
-        className="h-8 text-xs font-medium py-0 min-w-[130px] border-0 bg-transparent shadow-none"
+        className="h-8 text-xs font-medium py-0 min-w-32 border-0 bg-transparent shadow-none"
       />
 
       <Button

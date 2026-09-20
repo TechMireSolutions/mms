@@ -40,7 +40,7 @@ export function ClassDetailBudgetTab({
       <div className="rounded-xl border border-border/70 bg-card p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Wallet className="h-4 w-4 text-emerald-600" />
+            <Wallet className="h-4 w-4 text-success" />
             <h4 className="text-sm font-semibold text-foreground">{t('sessions.classes.detail.budget.title')}</h4>
           </div>
           <Button size="sm" variant="outline" onClick={onAddBudget} className="h-8 gap-1 text-xs">
@@ -101,7 +101,7 @@ export function ClassDetailBudgetTab({
       <div className="rounded-xl border border-border/70 bg-card p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Coffee className="h-4 w-4 text-amber-600" />
+            <Coffee className="h-4 w-4 text-warning" />
             <h4 className="text-sm font-semibold text-foreground">{t('sessions.classes.detail.refreshments.title')}</h4>
           </div>
           <Button size="sm" variant="outline" onClick={onAddRefreshment} className="h-8 gap-1 text-xs">

@@ -7,6 +7,7 @@ import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import type { EntityDescriptor } from "@/types/entityRegistry";
 import { cn } from "@/lib/utils";
 
 export interface ModuleWorkToolbarProps {
@@ -27,16 +28,16 @@ export interface ModuleWorkToolbarProps {
   onClearFilters?: () => void;
   clearFiltersLabel?: string;
   filterChips?: React.ReactNode;
-  
-  primaryAction?: React.ReactNode;
 
-  // 4. Standard Toggles
+  // 4. Action Bars & Triggers
+  primaryAction?: React.ReactNode;
+  
   trashToggle?: {
     canViewDeleted: boolean;
     viewingDeleted: boolean;
-    onToggle: (v: boolean) => void;
-    activeLabel: string;
-    deletedLabel: string;
+    onToggle: (viewing: boolean) => void;
+    activeLabel?: string;
+    deletedLabel?: string;
   };
   
   viewModeToggle?: {
@@ -45,7 +46,9 @@ export interface ModuleWorkToolbarProps {
   };
   
   columnCustomizer?: {
-    registry: ModuleColumnRegistryEntry[];
+    registry?: ModuleColumnRegistryEntry[];
+    entityType?: string;
+    descriptor?: EntityDescriptor<unknown>;
     onUpdate: (layout: ModuleColumnRegistryEntry[]) => void;
     onReset?: () => void;
     labels?: Partial<ModuleColumnCustomizerLabels>;
@@ -83,7 +86,11 @@ export const ModuleWorkToolbar = (function ModuleWorkToolbar({
     showChildren || filterButton || (hasActiveFilters && onClearFilters) || (!trashToggle?.viewingDeleted && primaryAction) || trashToggle?.canViewDeleted,
   );
   const hasLayoutControls = Boolean(
-    viewModeToggle || (columnCustomizer && columnCustomizer.registry?.length),
+    viewModeToggle ||
+      (columnCustomizer &&
+        (Boolean(columnCustomizer.registry?.length) ||
+          Boolean(columnCustomizer.entityType) ||
+          Boolean(columnCustomizer.descriptor))),
   );
 
   return (
@@ -165,9 +172,11 @@ export const ModuleWorkToolbar = (function ModuleWorkToolbar({
                 />
               )}
 
-              {columnCustomizer && columnCustomizer.registry && (
+              {columnCustomizer && (columnCustomizer.registry || columnCustomizer.entityType || columnCustomizer.descriptor) && (
                 <ModuleColumnCustomizer
                   columnRegistry={columnCustomizer.registry}
+                  entityType={columnCustomizer.entityType}
+                  descriptor={columnCustomizer.descriptor}
                   updateUserColumnLayout={columnCustomizer.onUpdate}
                   onResetLayout={columnCustomizer.onReset}
                   labels={columnCustomizer.labels}

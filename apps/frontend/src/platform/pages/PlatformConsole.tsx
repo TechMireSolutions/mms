@@ -2,7 +2,6 @@ import React, { Suspense, lazy } from "react";
 import { useLocation, useSearchParams, Link } from "react-router-dom";
 import { User, LayoutDashboard, Building2, BarChart3, Settings, Server, Activity, Plus, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PlatformPageShell } from "@/platform/components/PlatformPageShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { PageHeader } from "@/components/ui/PageHeader";
@@ -109,7 +108,7 @@ export default function PlatformConsole(): React.JSX.Element {
   }[activeTab];
 
   return (
-    <PlatformPageShell width="7xl">
+    <>
       <motion.div
         variants={containerVariants}
         initial={reducedMotion ? false : "hidden"}
@@ -167,6 +166,6 @@ export default function PlatformConsole(): React.JSX.Element {
           </motion.div>
         )}
       </motion.div>
-    </PlatformPageShell>
+    </>
   );
 }
