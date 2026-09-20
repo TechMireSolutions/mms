@@ -1294,6 +1294,8 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "common.yes": "نعم",
   "contacts.actionViewShort": "عرض",
   "contacts.addContact": "إضافة جهة اتصال",
+  "contacts.entity.singular": "جهة اتصال",
+  "contacts.entity.plural": "جهات الاتصال",
   "contacts.allGenders": "كل الأجناس",
   "contacts.allLifecycleStages": "جميع المراحل",
   "contacts.avatarAlt": "الصورة الرمزية",

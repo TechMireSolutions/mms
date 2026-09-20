@@ -20,6 +20,7 @@ import {
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useContactEntityDescriptor } from "@/tenant/features/contacts/hooks/useContactEntityDescriptor";
 
 export interface ContactCardItemProps {
   contact: Contact;
@@ -69,6 +70,7 @@ export const ContactCardItem = React.memo(function ContactCardItem({
 }: ContactCardItemProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
+  const contactDescriptor = useContactEntityDescriptor();
   const { phone, countryCode, phoneDisplay } = resolveContactPhoneDisplay(
     contact,
     prefs,
@@ -125,6 +127,8 @@ export const ContactCardItem = React.memo(function ContactCardItem({
         otherColumns={otherColumns}
         isColumnVisible={columnVisibleFn}
         t={t}
+        descriptor={contactDescriptor}
+        entity={contact}
       />
 
       <ContactCardDeletedBanner contact={contact} />

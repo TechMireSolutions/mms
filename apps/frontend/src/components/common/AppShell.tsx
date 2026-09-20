@@ -2,7 +2,18 @@ import React from "react";
 import { SkipToContentLink } from "@/components/ui/SkipToContentLink";
 import { cn } from "@/lib/utils";
 
+export interface NavigationAdapter {
+  sidebar?: React.ReactNode;
+  mobileSidebar?: React.ReactNode;
+  topBar?: React.ReactNode;
+  mobileHeader?: React.ReactNode;
+  commandPalette?: React.ReactNode;
+  extraModals?: React.ReactNode;
+  footer?: React.ReactNode;
+}
+
 export interface AppShellProps {
+  adapter?: NavigationAdapter;
   sidebar?: React.ReactNode;
   mobileSidebar?: React.ReactNode;
   topBar?: React.ReactNode;
@@ -14,6 +25,10 @@ export interface AppShellProps {
   contentPadding?: boolean;
   maxWidthClass?: string;
   className?: string;
+  /** BiDi direction — forwarded to the outermost shell div. Defaults to undefined (browser/inherited). */
+  dir?: "ltr" | "rtl";
+  /** BCP 47 language tag — forwarded to the outermost shell div for screen-reader announcements. */
+  lang?: string;
   children: React.ReactNode;
 }
 
@@ -24,21 +39,36 @@ export interface AppShellProps {
  * header bars, footer, and main content landmark across both tenant and platform domains.
  */
 export function AppShell({
-  sidebar,
-  mobileSidebar,
-  topBar,
-  mobileHeader,
-  commandPalette,
-  extraModals,
-  footer,
+  adapter,
+  sidebar: propSidebar,
+  mobileSidebar: propMobileSidebar,
+  topBar: propTopBar,
+  mobileHeader: propMobileHeader,
+  commandPalette: propCommandPalette,
+  extraModals: propExtraModals,
+  footer: propFooter,
   sidebarCollapsed = false,
   contentPadding = true,
   maxWidthClass,
   className,
+  dir,
+  lang,
   children,
 }: AppShellProps): React.JSX.Element {
+  const sidebar = adapter?.sidebar ?? propSidebar;
+  const mobileSidebar = adapter?.mobileSidebar ?? propMobileSidebar;
+  const topBar = adapter?.topBar ?? propTopBar;
+  const mobileHeader = adapter?.mobileHeader ?? propMobileHeader;
+  const commandPalette = adapter?.commandPalette ?? propCommandPalette;
+  const extraModals = adapter?.extraModals ?? propExtraModals;
+  const footer = adapter?.footer ?? propFooter;
+
   return (
-    <div className="box-border min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern selection:bg-primary/10 selection:text-primary">
+    <div
+      dir={dir}
+      lang={lang}
+      className="box-border min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern selection:bg-primary/10 selection:text-primary"
+    >
       <SkipToContentLink />
 
       {/* Desktop Navigation Sidebar */}

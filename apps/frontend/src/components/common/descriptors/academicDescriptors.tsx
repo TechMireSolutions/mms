@@ -14,6 +14,7 @@ export const attendanceEntityDescriptor: EntityDescriptor<AttendanceRecord> =
       {
         key: "studentName",
         label: "Student",
+        labelKey: "attendance.columns.student",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -26,6 +27,7 @@ export const attendanceEntityDescriptor: EntityDescriptor<AttendanceRecord> =
       {
         key: "rollNo",
         label: "Roll Number",
+        labelKey: "attendance.columns.rollNo",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -37,6 +39,7 @@ export const attendanceEntityDescriptor: EntityDescriptor<AttendanceRecord> =
       {
         key: "status",
         label: "Status",
+        labelKey: "attendance.columns.status",
         type: "status",
         sortable: true,
         defaultVisibleInTable: true,
@@ -54,6 +57,7 @@ export const attendanceEntityDescriptor: EntityDescriptor<AttendanceRecord> =
       {
         key: "date",
         label: "Date",
+        labelKey: "attendance.columns.date",
         type: "date",
         sortable: true,
         defaultVisibleInTable: true,
@@ -65,6 +69,7 @@ export const attendanceEntityDescriptor: EntityDescriptor<AttendanceRecord> =
       {
         key: "timeIn",
         label: "Time In",
+        labelKey: "attendance.columns.timeIn",
         type: "text",
         sortable: false,
         defaultVisibleInTable: true,
@@ -76,6 +81,7 @@ export const attendanceEntityDescriptor: EntityDescriptor<AttendanceRecord> =
       {
         key: "timeOut",
         label: "Time Out",
+        labelKey: "attendance.columns.timeOut",
         type: "text",
         sortable: false,
         defaultVisibleInTable: false,
@@ -87,6 +93,7 @@ export const attendanceEntityDescriptor: EntityDescriptor<AttendanceRecord> =
       {
         key: "notes",
         label: "Notes",
+        labelKey: "attendance.columns.notes",
         type: "text",
         sortable: false,
         defaultVisibleInTable: false,
@@ -109,6 +116,7 @@ export const enrollmentsEntityDescriptor: EntityDescriptor<Enrollment> =
       {
         key: "studentName",
         label: "Student Name",
+        labelKey: "enrollments.columns.student",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -121,6 +129,7 @@ export const enrollmentsEntityDescriptor: EntityDescriptor<Enrollment> =
       {
         key: "className",
         label: "Class",
+        labelKey: "enrollments.columns.class",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -132,6 +141,7 @@ export const enrollmentsEntityDescriptor: EntityDescriptor<Enrollment> =
       {
         key: "sessionName",
         label: "Session",
+        labelKey: "enrollments.columns.session",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -143,6 +153,7 @@ export const enrollmentsEntityDescriptor: EntityDescriptor<Enrollment> =
       {
         key: "status",
         label: "Status",
+        labelKey: "enrollments.columns.status",
         type: "status",
         sortable: true,
         defaultVisibleInTable: true,
@@ -161,6 +172,7 @@ export const enrollmentsEntityDescriptor: EntityDescriptor<Enrollment> =
       {
         key: "paymentStatus",
         label: "Payment Status",
+        labelKey: "enrollments.columns.payment",
         type: "badge",
         sortable: true,
         defaultVisibleInTable: true,
@@ -177,6 +189,7 @@ export const enrollmentsEntityDescriptor: EntityDescriptor<Enrollment> =
       {
         key: "finalFee",
         label: "Fee",
+        labelKey: "enrollments.columns.finalFee",
         type: "currency",
         sortable: true,
         defaultVisibleInTable: true,
@@ -188,6 +201,7 @@ export const enrollmentsEntityDescriptor: EntityDescriptor<Enrollment> =
       {
         key: "enrolledDate",
         label: "Enrolled Date",
+        labelKey: "enrollments.columns.enrolledDate",
         type: "date",
         sortable: true,
         defaultVisibleInTable: false,
@@ -209,6 +223,7 @@ export const sessionsEntityDescriptor: EntityDescriptor<Session> = createEntityD
     {
       key: "name",
       label: "Session Name",
+      labelKey: "sessions.columns.name",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -221,6 +236,7 @@ export const sessionsEntityDescriptor: EntityDescriptor<Session> = createEntityD
     {
       key: "code",
       label: "Session Code",
+      labelKey: "sessions.columns.code",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -232,6 +248,7 @@ export const sessionsEntityDescriptor: EntityDescriptor<Session> = createEntityD
     {
       key: "status",
       label: "Status",
+      labelKey: "sessions.columns.status",
       type: "status",
       sortable: true,
       defaultVisibleInTable: true,
@@ -243,6 +260,7 @@ export const sessionsEntityDescriptor: EntityDescriptor<Session> = createEntityD
     {
       key: "startDate",
       label: "Start Date",
+      labelKey: "sessions.columns.startDate",
       type: "date",
       sortable: true,
       defaultVisibleInTable: true,
@@ -254,6 +272,7 @@ export const sessionsEntityDescriptor: EntityDescriptor<Session> = createEntityD
     {
       key: "endDate",
       label: "End Date",
+      labelKey: "sessions.columns.endDate",
       type: "date",
       sortable: true,
       defaultVisibleInTable: true,

@@ -4,6 +4,25 @@ import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
 import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import type { EntityDescriptor } from "@/types/entityRegistry";
 import { getEntityDescriptor } from "@/components/common/entityRegistry";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+
+/** Resolve a descriptor field label — labelKey via i18n wins over the legacy hardcoded label. Falls back to field.label if unmapped or raw key returned. */
+export function resolveFieldLabel(
+  field: { label: string; labelKey?: string },
+  t: TranslationFunction | ((key: string) => string),
+): string {
+  if (!field.labelKey) return field.label;
+  const translated = (t as (k: string) => string)(field.labelKey);
+  return translated && translated !== field.labelKey ? translated : field.label;
+}
+
+export interface DirectoryCardMetadataExtraColumns<TColumn extends { label: string }> {
+  columns: TColumn[];
+  keyFor: (col: TColumn) => string;
+  labelFor: (col: TColumn) => string;
+  renderValue: (col: TColumn) => ReactNode | null;
+}
 
 export interface DirectoryCardMetadataProps<
   TColumn extends { label: string } = { label: string },
@@ -24,6 +43,10 @@ export interface DirectoryCardMetadataProps<
   entity?: TEntity;
   /** Optional filter to only show tiles for columns enabled in user's layout */
   visibleColumnIds?: string[];
+  /** Optional predicate to filter visible columns/fields */
+  isColumnVisible?: (key: string) => boolean;
+  /** Optional legacy extra columns to merge with descriptor-driven tiles (deduped by key). */
+  extraColumns?: DirectoryCardMetadataExtraColumns<TColumn>;
 }
 
 /**
@@ -44,27 +67,49 @@ export const DirectoryCardMetadata = React.memo(function DirectoryCardMetadata<
   descriptor,
   entity,
   visibleColumnIds,
+  isColumnVisible,
+  extraColumns,
 }: DirectoryCardMetadataProps<TColumn, TEntity>): React.JSX.Element | null {
+  const { t } = useTranslation();
   const effectiveDescriptor = (descriptor ?? (entityType ? getEntityDescriptor<TEntity>(entityType) : undefined)) as EntityDescriptor<TEntity> | undefined;
 
   if (effectiveDescriptor && entity) {
     const cardFields = effectiveDescriptor.getCardFields().filter((field) => {
+      if (isColumnVisible && !isColumnVisible(field.key)) return false;
       if (!visibleColumnIds || visibleColumnIds.length === 0) return true;
       return visibleColumnIds.includes(field.key);
     });
 
-    const tiles = cardFields.map((field) => {
+    const tiles: React.JSX.Element[] = [];
+    for (const field of cardFields) {
       const value = effectiveDescriptor.renderFieldValue(field.key, entity);
-      if (value === null || value === undefined) return null;
-      return (
-        <DirectoryCardMetaTile key={field.key} label={field.label}>
-          {value}
-        </DirectoryCardMetaTile>
-      );
-    });
+      if (value !== null && value !== undefined) {
+        tiles.push(
+          <DirectoryCardMetaTile key={field.key} label={resolveFieldLabel(field, t)}>
+            {value}
+          </DirectoryCardMetaTile>,
+        );
+      }
+    }
 
-    const hasTiles = tiles.some((tile) => tile !== null);
-    if (!hasTiles) return null;
+    if (extraColumns) {
+      const renderedKeys = new Set(cardFields.map((field) => field.key));
+      for (const col of extraColumns.columns) {
+        const colKey = extraColumns.keyFor(col);
+        if (renderedKeys.has(colKey)) continue;
+        if (isColumnVisible && !isColumnVisible(colKey)) continue;
+        const value = extraColumns.renderValue(col);
+        if (value === null || value === undefined) continue;
+        renderedKeys.add(colKey);
+        tiles.push(
+          <DirectoryCardMetaTile key={colKey} label={extraColumns.labelFor(col)}>
+            {value}
+          </DirectoryCardMetaTile>,
+        );
+      }
+    }
+
+    if (tiles.length === 0) return null;
 
     return <DirectoryCardMetaGrid>{tiles}</DirectoryCardMetaGrid>;
   }

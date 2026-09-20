@@ -11,6 +11,7 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { ContactArchivedBanner } from "@/tenant/features/contacts/components/ContactArchivedBanner";
 import { ContactMetadataCell } from "@/tenant/features/contacts/components/ContactMetadataCell";
 import { hasContactCardColumnData } from "@/tenant/features/contacts/components/contactCardColumnData";
+import type { EntityDescriptor } from "@/types/entityRegistry";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 
 export interface ContactCardMetadataGridProps {
@@ -21,6 +22,8 @@ export interface ContactCardMetadataGridProps {
   otherColumns: ContactsColumnConfig[];
   isColumnVisible: (key: string) => boolean;
   t: TranslationFunction;
+  descriptor?: EntityDescriptor<Contact>;
+  entity?: Contact;
 }
 
 export function ContactCardMetadataGrid({
@@ -31,8 +34,10 @@ export function ContactCardMetadataGrid({
   otherColumns,
   isColumnVisible,
   t,
+  descriptor,
+  entity,
 }: ContactCardMetadataGridProps): React.JSX.Element | null {
-  if (otherColumns.length === 0) {
+  if (otherColumns.length === 0 && !descriptor) {
     return null;
   }
 
@@ -40,37 +45,50 @@ export function ContactCardMetadataGrid({
     isRelationshipContactColumnKey(col.id) && isColumnVisible(col.id),
   );
 
+  const extraColumns =
+    otherColumns.length > 0
+      ? {
+          columns: otherColumns,
+          keyFor: (col: ContactsColumnConfig) => col.id,
+          labelFor: (col: ContactsColumnConfig) =>
+            col.id === "socials_platform" || col.id === "socials_url"
+              ? t("contacts.detail.socials")
+              : isRelationshipWorkColumnKey(col.id)
+                ? t("contacts.form.tabRelationship")
+                : col.label,
+          renderValue: (col: ContactsColumnConfig) => {
+            if (col.id === "socials_url" && isColumnVisible("socials_platform")) {
+              return null;
+            }
+            if (isRelationshipTypeColumnKey(col.id) && hasVisibleRelationshipContact) {
+              return null;
+            }
+            if (!hasContactCardColumnData(contact, col.id)) return null;
+
+            return (
+              <ContactMetadataCell
+                colId={col.id}
+                contact={contact}
+                prefs={prefs}
+                allContacts={allContacts}
+                contactsMap={contactsMap}
+                variant="card"
+              />
+            );
+          },
+        }
+      : undefined;
+
   return (
     <DirectoryCardMetadata
-      columns={otherColumns}
-      keyFor={(col) => col.id}
-      labelFor={(col) =>
-        col.id === "socials_platform" || col.id === "socials_url"
-          ? t("contacts.detail.socials")
-          : isRelationshipWorkColumnKey(col.id)
-            ? t("contacts.form.tabRelationship")
-            : col.label
-      }
-      renderValue={(col) => {
-        if (col.id === "socials_url" && isColumnVisible("socials_platform")) {
-          return null;
-        }
-        if (isRelationshipTypeColumnKey(col.id) && hasVisibleRelationshipContact) {
-          return null;
-        }
-        if (!hasContactCardColumnData(contact, col.id)) return null;
-
-        return (
-          <ContactMetadataCell
-            colId={col.id}
-            contact={contact}
-            prefs={prefs}
-            allContacts={allContacts}
-            contactsMap={contactsMap}
-            variant="card"
-          />
-        );
-      }}
+      descriptor={descriptor}
+      entity={entity ?? contact}
+      isColumnVisible={isColumnVisible}
+      extraColumns={extraColumns}
+      columns={extraColumns?.columns}
+      keyFor={extraColumns?.keyFor}
+      labelFor={extraColumns?.labelFor}
+      renderValue={extraColumns?.renderValue}
     />
   );
 }

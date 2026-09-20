@@ -12,6 +12,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "name",
       label: "Teacher Name",
+      labelKey: "teachers.columns.name",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -24,6 +25,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "employeeId",
       label: "Employee ID",
+      labelKey: "teachers.columns.employeeId",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -35,6 +37,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "designation",
       label: "Designation",
+      labelKey: "teachers.columns.designation",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -46,6 +49,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "department",
       label: "Department",
+      labelKey: "teachers.columns.department",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -57,6 +61,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "status",
       label: "Status",
+      labelKey: "teachers.columns.status",
       type: "status",
       sortable: true,
       defaultVisibleInTable: true,
@@ -68,6 +73,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "phone",
       label: "Phone",
+      labelKey: "teachers.columns.phone",
       type: "phone",
       sortable: false,
       defaultVisibleInTable: true,
@@ -79,4 +85,11 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
   ],
 });
 
-export const teachersEntityDescriptor = facultyEntityDescriptor;
+export const teachersEntityDescriptor: EntityDescriptor<Faculty> = createEntityDescriptor<Faculty>({
+  entityType: "teachers",
+  singularLabel: "Teacher",
+  pluralLabel: "Teachers",
+  idField: "id",
+  titleField: "name",
+  fields: facultyEntityDescriptor.fields,
+});

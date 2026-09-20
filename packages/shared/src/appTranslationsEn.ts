@@ -1292,6 +1292,8 @@ export const APP_TRANSLATIONS_EN = {
   "common.yes": "Yes",
   "contacts.actionViewShort": "View",
   "contacts.addContact": "Add Contact",
+  "contacts.entity.singular": "Contact",
+  "contacts.entity.plural": "Contacts",
   "contacts.allGenders": "All genders",
   "contacts.allLifecycleStages": "All stages",
   "contacts.avatarAlt": "Avatar",

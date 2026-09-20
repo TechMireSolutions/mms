@@ -1,4 +1,3 @@
-import React from "react";
 import type { PlatformWorkspaceRow, PlatformUserProfile, PlatformSettings } from "@mms/shared";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import type { EntityDescriptor } from "@/types/entityRegistry";
@@ -38,6 +37,7 @@ export const platformWorkspacesEntityDescriptor: EntityDescriptor<PlatformWorksp
       {
         key: "enabled",
         label: "Active Status",
+        labelKey: "platform.descriptor.workspace.enabled",
         type: "badge",
         sortable: true,
         defaultVisibleInTable: true,
@@ -45,15 +45,11 @@ export const platformWorkspacesEntityDescriptor: EntityDescriptor<PlatformWorksp
         cardSlot: "badge",
         drawerSection: "status",
         drawerOrder: 30,
-        renderValue: (ws) => (
-          <span
-            className={`inline-flex items-center gap-1 font-bold rounded-md border text-xs px-2 py-0.5 ${
-              ws.enabled ? SEMANTIC_BADGE.success : SEMANTIC_BADGE.muted
-            }`}
-          >
-            {ws.enabled ? "Active" : "Disabled"}
-          </span>
-        ),
+        badgeVariantMap: {
+          true: { label: "Active", tone: "success", className: SEMANTIC_BADGE.success },
+          false: { label: "Disabled", tone: "muted", className: SEMANTIC_BADGE.muted },
+        },
+        accessor: (ws) => String(ws.enabled),
       },
       {
         key: "createdAt",
@@ -118,6 +114,7 @@ export const platformUsersEntityDescriptor: EntityDescriptor<PlatformUserProfile
       {
         key: "disabledAt",
         label: "Status",
+        labelKey: "platform.descriptor.user.status",
         type: "badge",
         sortable: true,
         defaultVisibleInTable: true,
@@ -125,15 +122,11 @@ export const platformUsersEntityDescriptor: EntityDescriptor<PlatformUserProfile
         cardSlot: "badge",
         drawerSection: "access",
         drawerOrder: 40,
-        renderValue: (u) => (
-          <span
-            className={`inline-flex items-center gap-1 font-bold rounded-md border text-xs px-2 py-0.5 ${
-              u.disabledAt ? SEMANTIC_BADGE.destructive : SEMANTIC_BADGE.success
-            }`}
-          >
-            {u.disabledAt ? "Disabled" : "Active"}
-          </span>
-        ),
+        badgeVariantMap: {
+          active: { label: "Active", tone: "success", className: SEMANTIC_BADGE.success },
+          disabled: { label: "Disabled", tone: "destructive", className: SEMANTIC_BADGE.destructive },
+        },
+        accessor: (u) => (u.disabledAt ? "disabled" : "active"),
       },
       {
         key: "createdAt",

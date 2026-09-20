@@ -1298,6 +1298,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "common.yes": "بله",
   "contacts.actionViewShort": "مشاهده",
   "contacts.addContact": "افزودن مخاطب",
+  "contacts.entity.singular": "مخاطب",
+  "contacts.entity.plural": "مخاطبین",
   "contacts.allGenders": "همه جنسیت‌ها",
   "contacts.allLifecycleStages": "همه مراحل",
   "contacts.avatarAlt": "تصویر پروفایل",

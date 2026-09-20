@@ -23,6 +23,7 @@ import {
   platformWorkspacesEntityDescriptor,
   platformUsersEntityDescriptor,
   platformSettingsEntityDescriptor,
+  questionBankEntityDescriptor,
 } from "./descriptors";
 
 export type {
@@ -52,6 +53,7 @@ export {
   platformWorkspacesEntityDescriptor,
   platformUsersEntityDescriptor,
   platformSettingsEntityDescriptor,
+  questionBankEntityDescriptor,
 };
 
 export const ENTITY_REGISTRY: Record<string, EntityDescriptor<unknown>> = {
@@ -68,6 +70,7 @@ export const ENTITY_REGISTRY: Record<string, EntityDescriptor<unknown>> = {
   platformWorkspaces: platformWorkspacesEntityDescriptor as unknown as EntityDescriptor<unknown>,
   platformUsers: platformUsersEntityDescriptor as unknown as EntityDescriptor<unknown>,
   platformSettings: platformSettingsEntityDescriptor as unknown as EntityDescriptor<unknown>,
+  questionBank: questionBankEntityDescriptor as unknown as EntityDescriptor<unknown>,
 };
 
 /**

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { EntityDescriptor } from "@/types/entityRegistry";
 import { getEntityDescriptor } from "@/components/common/entityRegistry";
+import { resolveFieldLabel } from "@/components/ui/DirectoryCardMetadata";
 
 export interface FilterChip {
   key: string;
@@ -49,7 +50,7 @@ export function FilterChips<T = any>({
       for (const [key, value] of Object.entries(filters)) {
         if (value === undefined || value === null || value === "" || value === "all") continue;
         const field = effectiveDescriptor.getField(key);
-        const fieldLabel = field?.label ?? key;
+        const fieldLabel = field ? resolveFieldLabel(field, t) : key;
         let valueLabel: string;
         try {
           const formatted = effectiveDescriptor.formatFieldValue(key, { [key]: value });

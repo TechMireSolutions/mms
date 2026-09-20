@@ -6,7 +6,6 @@ import { PlatformSidebarProvider, usePlatformSidebar } from '@/platform/lib/Plat
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut';
 import { AppFooter } from '@/components/ui/AppFooter';
-import { SkipToContentLink } from '@/components/ui/SkipToContentLink';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
 import { PlatformSidebar } from '@/platform/components/PlatformSidebar';
 import { PlatformCommandPalette } from '@/platform/components/PlatformCommandPalette';
@@ -25,28 +24,6 @@ interface PlatformPageShellProps {
   width?: 'md' | 'lg' | 'xl' | '7xl';
 }
 
-/** Shared skip-link wrapper, used by both auth and app branches. */
-function PlatformShellFrame({
-  dir,
-  lang,
-  children,
-}: {
-  dir: string;
-  lang: string;
-  children: React.ReactNode;
-}): React.JSX.Element {
-  return (
-    <div
-      dir={dir}
-      lang={lang}
-      className="box-border flex min-h-screen w-full max-w-full overflow-x-hidden bg-background islamic-pattern selection:bg-primary/10 selection:text-primary"
-    >
-      <SkipToContentLink />
-      {children}
-    </div>
-  );
-}
-
 /** Inner component that reads command palette state from sidebar context. */
 function PlatformAuthenticatedShell({
   children,
@@ -63,34 +40,34 @@ function PlatformAuthenticatedShell({
   useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
 
   return (
-    <div dir={dir} lang={language}>
-      <AppShell
-        sidebar={<PlatformSidebar />}
-        topBar={
-          <PlatformPageShellHeader
-            onOpenSearch={() => setCommandPaletteOpen(true)}
-            searchOpen={commandPaletteOpen}
-          />
-        }
-        mobileHeader={
-          <PlatformPageShellHeader
-            onOpenSearch={() => setCommandPaletteOpen(true)}
-            searchOpen={commandPaletteOpen}
-          />
-        }
-        commandPalette={
-          <PlatformCommandPalette
-            open={commandPaletteOpen}
-            onClose={() => setCommandPaletteOpen(false)}
-          />
-        }
-        sidebarCollapsed={collapsed}
-        maxWidthClass={maxClass}
-        footer={footer}
-      >
-        {children}
-      </AppShell>
-    </div>
+    <AppShell
+      dir={dir as "ltr" | "rtl"}
+      lang={language}
+      sidebar={<PlatformSidebar />}
+      topBar={
+        <PlatformPageShellHeader
+          onOpenSearch={() => setCommandPaletteOpen(true)}
+          searchOpen={commandPaletteOpen}
+        />
+      }
+      mobileHeader={
+        <PlatformPageShellHeader
+          onOpenSearch={() => setCommandPaletteOpen(true)}
+          searchOpen={commandPaletteOpen}
+        />
+      }
+      commandPalette={
+        <PlatformCommandPalette
+          open={commandPaletteOpen}
+          onClose={() => setCommandPaletteOpen(false)}
+        />
+      }
+      sidebarCollapsed={collapsed}
+      maxWidthClass={maxClass}
+      footer={footer}
+    >
+      {children}
+    </AppShell>
   );
 }
 
@@ -151,32 +128,32 @@ function UnauthenticatedShell({
   useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
 
   return (
-    <div dir={dir} lang={lang}>
-      <AppShell
-        topBar={
-          <PlatformPageShellHeader
-            onOpenSearch={() => setCommandPaletteOpen(true)}
-            searchOpen={commandPaletteOpen}
-          />
-        }
-        mobileHeader={
-          <PlatformPageShellHeader
-            onOpenSearch={() => setCommandPaletteOpen(true)}
-            searchOpen={commandPaletteOpen}
-          />
-        }
-        commandPalette={
-          <PlatformCommandPalette
-            open={commandPaletteOpen}
-            onClose={() => setCommandPaletteOpen(false)}
-          />
-        }
-        maxWidthClass={maxClass}
-        footer={footer}
-      >
-        {children}
-      </AppShell>
-    </div>
+    <AppShell
+      dir={dir as "ltr" | "rtl"}
+      lang={lang}
+      topBar={
+        <PlatformPageShellHeader
+          onOpenSearch={() => setCommandPaletteOpen(true)}
+          searchOpen={commandPaletteOpen}
+        />
+      }
+      mobileHeader={
+        <PlatformPageShellHeader
+          onOpenSearch={() => setCommandPaletteOpen(true)}
+          searchOpen={commandPaletteOpen}
+        />
+      }
+      commandPalette={
+        <PlatformCommandPalette
+          open={commandPaletteOpen}
+          onClose={() => setCommandPaletteOpen(false)}
+        />
+      }
+      maxWidthClass={maxClass}
+      footer={footer}
+    >
+      {children}
+    </AppShell>
   );
 }
 

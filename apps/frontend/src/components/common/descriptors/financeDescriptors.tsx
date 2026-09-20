@@ -12,6 +12,7 @@ export const financeEntityDescriptor: EntityDescriptor<Invoice> = createEntityDe
     {
       key: "invoiceNumber",
       label: "Invoice #",
+      labelKey: "finance.columns.invoice",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -24,6 +25,7 @@ export const financeEntityDescriptor: EntityDescriptor<Invoice> = createEntityDe
     {
       key: "totalAmount",
       label: "Total Amount",
+      labelKey: "finance.columns.amount",
       type: "currency",
       sortable: true,
       defaultVisibleInTable: true,
@@ -35,6 +37,7 @@ export const financeEntityDescriptor: EntityDescriptor<Invoice> = createEntityDe
     {
       key: "status",
       label: "Payment Status",
+      labelKey: "finance.columns.status",
       type: "status",
       sortable: true,
       defaultVisibleInTable: true,
@@ -46,6 +49,7 @@ export const financeEntityDescriptor: EntityDescriptor<Invoice> = createEntityDe
     {
       key: "issueDate",
       label: "Issue Date",
+      labelKey: "finance.columns.paymentDate",
       type: "date",
       sortable: true,
       defaultVisibleInTable: true,
@@ -57,6 +61,7 @@ export const financeEntityDescriptor: EntityDescriptor<Invoice> = createEntityDe
     {
       key: "dueDate",
       label: "Due Date",
+      labelKey: "finance.columns.dueDate",
       type: "date",
       sortable: true,
       defaultVisibleInTable: true,

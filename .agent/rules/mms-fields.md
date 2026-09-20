@@ -52,3 +52,10 @@ Governs column layouts, field schemas, and Setup Fields configuration across the
 - Every system / core field that validation can require must have a control (form) and a read row (detail drawer).
 - Ban hard-coded `switch (field.key)` / allowlists that `return null` for unknown keys for active fields.
 
+## 7. Entity Presentation Descriptor Adapter
+
+- For entities configured via runtime `FieldConfig` (custom fields, tab enablement, permissions), bridge `@mms/shared` `FieldConfig` into `EntityDescriptor<T>` via `createEntityDescriptorFromFieldConfig` (`@/components/common/entityDescriptorFromFieldConfig`).
+- The adapter preserves dynamic field ordering, drawer sections (`group` → `drawerSection`), visibility rules, and resolves localized labels via injected `resolveLabel` or `labelKey`.
+- Card metadata components (`DirectoryCardMetadata`) support **merge mode** (`extraColumns`), letting descriptor-driven tiles compose seamlessly with bespoke module chrome without duplicate key emissions.
+
+

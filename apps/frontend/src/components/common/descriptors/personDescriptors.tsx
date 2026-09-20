@@ -13,6 +13,7 @@ export const contactsEntityDescriptor: EntityDescriptor<Contact> = createEntityD
     {
       key: "name",
       label: "Full Name",
+      labelKey: "contacts.columns.name",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -25,6 +26,7 @@ export const contactsEntityDescriptor: EntityDescriptor<Contact> = createEntityD
     {
       key: "phone",
       label: "Phone Number",
+      labelKey: "contacts.columns.phone",
       type: "phone",
       sortable: false,
       defaultVisibleInTable: true,
@@ -36,6 +38,7 @@ export const contactsEntityDescriptor: EntityDescriptor<Contact> = createEntityD
     {
       key: "email",
       label: "Email Address",
+      labelKey: "contacts.columns.email",
       type: "email",
       sortable: false,
       defaultVisibleInTable: true,
@@ -47,6 +50,7 @@ export const contactsEntityDescriptor: EntityDescriptor<Contact> = createEntityD
     {
       key: "gender",
       label: "Gender",
+      labelKey: "contacts.columns.gender",
       type: "badge",
       sortable: true,
       defaultVisibleInTable: true,
@@ -62,6 +66,7 @@ export const contactsEntityDescriptor: EntityDescriptor<Contact> = createEntityD
     {
       key: "whatsappStatus",
       label: "WhatsApp Status",
+      labelKey: "contacts.columns.whatsappStatus",
       type: "status",
       sortable: false,
       defaultVisibleInTable: false,
@@ -73,6 +78,7 @@ export const contactsEntityDescriptor: EntityDescriptor<Contact> = createEntityD
     {
       key: "cnic",
       label: "National ID / CNIC",
+      labelKey: "contacts.columns.cnic",
       type: "text",
       sortable: false,
       defaultVisibleInTable: false,
@@ -84,6 +90,7 @@ export const contactsEntityDescriptor: EntityDescriptor<Contact> = createEntityD
     {
       key: "city",
       label: "City",
+      labelKey: "contacts.columns.city",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -105,6 +112,7 @@ export const studentsEntityDescriptor: EntityDescriptor<Student> = createEntityD
     {
       key: "name",
       label: "Student Name",
+      labelKey: "students.columns.name",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -117,6 +125,7 @@ export const studentsEntityDescriptor: EntityDescriptor<Student> = createEntityD
     {
       key: "grNumber",
       label: "GR Number",
+      labelKey: "students.columns.grNumber",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -128,6 +137,7 @@ export const studentsEntityDescriptor: EntityDescriptor<Student> = createEntityD
     {
       key: "status",
       label: "Enrollment Status",
+      labelKey: "students.columns.status",
       type: "status",
       sortable: true,
       defaultVisibleInTable: true,
@@ -139,6 +149,7 @@ export const studentsEntityDescriptor: EntityDescriptor<Student> = createEntityD
     {
       key: "gender",
       label: "Gender",
+      labelKey: "students.columns.gender",
       type: "badge",
       sortable: true,
       defaultVisibleInTable: true,
@@ -154,6 +165,7 @@ export const studentsEntityDescriptor: EntityDescriptor<Student> = createEntityD
     {
       key: "fatherName",
       label: "Father Name",
+      labelKey: "students.columns.fatherName",
       type: "text",
       sortable: false,
       defaultVisibleInTable: true,
@@ -165,6 +177,7 @@ export const studentsEntityDescriptor: EntityDescriptor<Student> = createEntityD
     {
       key: "phone",
       label: "Phone",
+      labelKey: "students.columns.phone",
       type: "phone",
       sortable: false,
       defaultVisibleInTable: true,
@@ -176,6 +189,7 @@ export const studentsEntityDescriptor: EntityDescriptor<Student> = createEntityD
     {
       key: "enrollmentDate",
       label: "Enrollment Date",
+      labelKey: "students.columns.registeredDate",
       type: "date",
       sortable: true,
       defaultVisibleInTable: false,

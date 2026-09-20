@@ -1,21 +1,10 @@
 import { DEFAULT_BRANDING_SETTINGS } from '@mms/shared';
 import { getBrandingChartPalette } from '@/lib/brandingChartPalette';
 import { getScopedBrandingSettings } from '@/lib/settingsPreviewStore';
+import { PRINT_COLORS, PRINT_NEUTRAL_PALETTE } from '@/lib/printTemplateStyles';
 
 /** Neutral print-canvas colours (not institution-specific). */
-export const PRINT_NEUTRAL = {
-  text: '#222222',
-  muted: '#888888',
-  caption: '#6b7280',
-  subcaption: '#9ca3af',
-  body: '#4b5563',
-  emphasis: '#374151',
-  label: '#555555',
-  labelLight: '#777777',
-  border: '#e5e7eb',
-  placeholder: '#cccccc',
-  paper: '#ffffff',
-} as const;
+export const PRINT_NEUTRAL = PRINT_NEUTRAL_PALETTE;
 
 export interface PrintBrandingTokens {
   primary: string;
@@ -53,7 +42,7 @@ export function getPrintBrandingTokens(): PrintBrandingTokens {
     primary,
     secondary,
     destructive: palette.charts[0],
-    onPrimary: '#ffffff',
+    onPrimary: PRINT_COLORS.white,
     logoPlaceholderBg: hexWithAlpha(primary, 0.06),
     logoPlaceholderBorder: hexWithAlpha(primary, 0.2),
     fieldPlaceholderBg: hexWithAlpha(primary, 0.04),

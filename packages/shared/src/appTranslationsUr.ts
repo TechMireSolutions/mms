@@ -1294,6 +1294,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "common.yes": "ہاں",
   "contacts.actionViewShort": "دیکھیں",
   "contacts.addContact": "رابطہ شامل کریں",
+  "contacts.entity.singular": "رابطہ",
+  "contacts.entity.plural": "رابطے",
   "contacts.allGenders": "تمام جنسیں",
   "contacts.allLifecycleStages": "تمام مراحل",
   "contacts.avatarAlt": "اوتار",

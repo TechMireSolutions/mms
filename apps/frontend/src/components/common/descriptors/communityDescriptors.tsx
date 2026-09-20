@@ -14,6 +14,7 @@ export const hasanatEntityDescriptor: EntityDescriptor<Distribution> =
       {
         key: "recipientName",
         label: "Recipient",
+        labelKey: "hasanat.columns.distribution.recipient",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -26,6 +27,7 @@ export const hasanatEntityDescriptor: EntityDescriptor<Distribution> =
       {
         key: "denominationName",
         label: "Denomination",
+        labelKey: "hasanat.columns.distribution.card",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -37,6 +39,7 @@ export const hasanatEntityDescriptor: EntityDescriptor<Distribution> =
       {
         key: "quantity",
         label: "Quantity",
+        labelKey: "hasanat.columns.distribution.quantity",
         type: "number",
         sortable: true,
         defaultVisibleInTable: true,
@@ -48,6 +51,7 @@ export const hasanatEntityDescriptor: EntityDescriptor<Distribution> =
       {
         key: "status",
         label: "Status",
+        labelKey: "hasanat.columns.distribution.status",
         type: "status",
         sortable: true,
         defaultVisibleInTable: true,
@@ -64,6 +68,7 @@ export const hasanatEntityDescriptor: EntityDescriptor<Distribution> =
       {
         key: "issuedDate",
         label: "Issued Date",
+        labelKey: "hasanat.columns.distribution.issuedDate",
         type: "date",
         sortable: true,
         defaultVisibleInTable: true,
@@ -75,6 +80,7 @@ export const hasanatEntityDescriptor: EntityDescriptor<Distribution> =
       {
         key: "recipientType",
         label: "Recipient Type",
+        labelKey: "hasanat.columns.distribution.recipientClass",
         type: "badge",
         sortable: false,
         defaultVisibleInTable: false,
@@ -101,6 +107,7 @@ export const obligationsEntityDescriptor: EntityDescriptor<ObligationCollection>
       {
         key: "receipt_no",
         label: "Receipt #",
+        labelKey: "obligations.columns.receiptNo",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -113,6 +120,7 @@ export const obligationsEntityDescriptor: EntityDescriptor<ObligationCollection>
       {
         key: "amount",
         label: "Amount",
+        labelKey: "obligations.columns.amount",
         type: "currency",
         sortable: true,
         defaultVisibleInTable: true,
@@ -124,6 +132,7 @@ export const obligationsEntityDescriptor: EntityDescriptor<ObligationCollection>
       {
         key: "payment_mode",
         label: "Payment Mode",
+        labelKey: "obligations.columns.paymentMode",
         type: "badge",
         sortable: true,
         defaultVisibleInTable: true,
@@ -139,6 +148,7 @@ export const obligationsEntityDescriptor: EntityDescriptor<ObligationCollection>
       {
         key: "received_date",
         label: "Received Date",
+        labelKey: "obligations.columns.receivedDate",
         type: "date",
         sortable: true,
         defaultVisibleInTable: true,
@@ -150,6 +160,7 @@ export const obligationsEntityDescriptor: EntityDescriptor<ObligationCollection>
       {
         key: "received_by",
         label: "Received By",
+        labelKey: "obligations.columns.repMujtahid",
         type: "text",
         sortable: false,
         defaultVisibleInTable: true,
