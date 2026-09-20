@@ -124,3 +124,32 @@ Per-module legacy arrays deleted as each lands: `useContactDetailFields.ts`, `st
 ## 10. Output format per sub-project
 
 Each sub-project's implementation plan delivers: (1) the step-by-step plan, (2) full file modifications with complete contents/diffs, (3) test-runner logs showing green runs, (4) rule-sync verification log (E only, but B/A/C/D note rule-touching changes for E).
+
+---
+
+## Revision 1 (2026-09-20, post-baseline)
+
+### Baseline adoption
+
+A 51-file uncommitted implementation of this program was discovered in the working tree and adopted as the committed baseline (`8e52ae27`), including: the FE entity descriptor registry (types/factory/13 descriptors/tests), unified `AppShell` mounted by both tenant and platform shells with route-level platform layouts, descriptor-aware `FilterChips`/`DirectoryCardMetadata`/`ModuleColumnCustomizer`/`ModuleWorkToolbar`/`DetailSheet`, token fixes in the two worst palette files, and rule edits across all three mirrors. Repairs landed with it: `PlatformPageShell` import restoration in `ApexRoutes`, and `coreDescriptors.tsx` split (400 ln → five per-domain files) to hold the 300-ln ceiling ratchet. Verified green: typecheck, eslint, 637 test files / 2,189 tests, all four `check:code-norms` ratchets.
+
+### Sub-project B redefined (user-approved evolution)
+
+Evidence from the contacts module showed the static descriptor registry is **strictly poorer** than the existing registry-driven renderers (runtime `FieldConfig` with custom fields, `canViewContactField` permissions, tab guards, i18n via `resolveRegistryLabel`, nested-collection presence logic in `contactCardColumnData.ts`). Wiring modules to static descriptors would create two competing sources of field truth — the opposite of SSOT.
+
+B therefore proceeds as: **evolve the descriptor layer into a FieldConfig-backed adapter**.
+
+- B-1: Adapter `createEntityDescriptorFromFieldConfig` mapping shared `FieldDefinition` records → descriptor fields (type mapping, enabled filtering, group→drawerSection, order mapping), with i18n injected via `resolveLabel` (never hardcoded English labels).
+- B-2: i18n `labelKey` resolution in descriptor consumers (`DirectoryCardMetadata`, `FilterChips`).
+- B-3: Invariant tests — badge classNames ⊆ `SEMANTIC_BADGE` SSOT values; unique keys/orders; adapter parity (covers all enabled registry fields).
+- B-4: `DirectoryCardMetadata` merge mode — descriptor-driven tiles compose *with* bespoke module chrome (not replace it).
+- B-5: Contacts pilot wiring (Work-tier card metadata), then a review gate before further module rollouts.
+- B-6 (follow-up plans): students/faculty/sessions/finance rollouts; missing entities (examinations, messaging, question-bank, accounting, tenant users) via the adapter; deletions of superseded per-module arrays only where the adapter genuinely replaces them. Drawer migration is limited to simple attribute rows; bespoke rich sections (contacts' 20 detail sections) stay.
+
+### Sub-project A remaining scope (reduced)
+
+AppShell exists and both trees mount it. Remaining: navigation parity audit (collapse, mobile drawer, palette, breadcrumbs) and deprecation of any duplicated shell chrome; e2e shell specs must stay green.
+
+### Sub-projects C/D/E (unchanged in intent)
+
+C: platform content migration onto shared primitives. D: print-CSS quarantine + overlay a11y hardening + residual token spots (e.g. sessions palette classes). E: rule sync (B's adapter pattern documented in `mms-fields.md`/`mms-dry.md`).
