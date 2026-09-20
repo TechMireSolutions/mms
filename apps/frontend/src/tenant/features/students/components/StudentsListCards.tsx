@@ -11,6 +11,7 @@ import { StudentArchivedBanner } from "@/tenant/features/students/components/Stu
 import { StudentCardActions } from "@/tenant/features/students/components/StudentCardActions";
 import { StudentCardHeader } from "@/tenant/features/students/components/StudentCardHeader";
 import { StudentCardMetadata } from "@/tenant/features/students/components/StudentCardMetadata";
+import { useStudentEntityDescriptor } from "@/tenant/features/students/hooks/useStudentEntityDescriptor";
 import type { StudentsListCardsProps } from "@/tenant/features/students/components/studentsListTypes";
 
 export type { StudentsListCardsProps };
@@ -38,6 +39,7 @@ export function StudentsListCards({
 }: StudentsListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
+  const descriptor = useStudentEntityDescriptor();
   const pageCountLabel = formatDirectoryPageCountLabel(paginatedStudents.length, t, {
     singular: "students.form.student",
     plural: "students.table.students",
@@ -115,6 +117,7 @@ export function StudentsListCards({
               statusBadgeConfig={statusBadgeConfig}
               isColumnVisible={isColumnVisible}
               columnRegistry={columnRegistry}
+              descriptor={descriptor}
             />
 
             <StudentArchivedBanner student={studentCard} />

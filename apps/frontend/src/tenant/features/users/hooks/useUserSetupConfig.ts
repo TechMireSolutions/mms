@@ -27,8 +27,11 @@ const setupConfigHooks = createModuleSetupConfigHooks<UserModulePreferences>({
 export const useUserPreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useUserPreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
+import { useMemo } from 'react';
+
 /** Composed UsersSettings from preferences queries. */
 export function useComposedUsersSettings(): UsersSettings {
   const prefsQuery = useUserPreferencesQuery();
-  return (prefsQuery.data ?? normalizeUserModulePreferences(null)) as unknown as UsersSettings;
+  const fallback = useMemo(() => normalizeUserModulePreferences(null), []);
+  return (prefsQuery.data ?? fallback) as unknown as UsersSettings;
 }

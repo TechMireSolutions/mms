@@ -23,6 +23,9 @@ type ContactConfigProviderInput = Partial<ContactConfigExtras> & {
   requiredTabs?: string[];
 };
 
+const EMPTY_ARRAY: never[] = [];
+const EMPTY_OBJECT: Record<string, never> = {};
+
 /**
  * Builds ContactConfig context value.
  * Relationship-type options are derived from the fixed system pair catalog
@@ -38,19 +41,19 @@ export function useContactConfigProviderValue(
     updateConfigAsync = async () => {},
     updatePrefs = () => {},
     updatePrefsAsync = async () => {},
-    genders = [],
-    socialPlatforms = [],
-    phoneLabels = [],
-    emailLabels = [],
-    addressLabels = [],
-    countryCodes = [],
-    countryCodesMap = {},
-    educationDegrees = [],
-    employmentTypes = [],
-    skillCategories = [],
-    skillProficiencies = [],
-    bankNames = [],
-    tags = [],
+    genders = EMPTY_ARRAY,
+    socialPlatforms = EMPTY_ARRAY,
+    phoneLabels = EMPTY_ARRAY,
+    emailLabels = EMPTY_ARRAY,
+    addressLabels = EMPTY_ARRAY,
+    countryCodes = EMPTY_ARRAY,
+    countryCodesMap = EMPTY_OBJECT,
+    educationDegrees = EMPTY_ARRAY,
+    employmentTypes = EMPTY_ARRAY,
+    skillCategories = EMPTY_ARRAY,
+    skillProficiencies = EMPTY_ARRAY,
+    bankNames = EMPTY_ARRAY,
+    tags = EMPTY_ARRAY,
     lookupsLoading = false,
     lookupsError = null,
     updateGenders = () => {},
@@ -66,45 +69,43 @@ export function useContactConfigProviderValue(
     updateBankNames = () => {},
     updateTags = () => {},
     updateCountryCodes = () => {},
-    systemSortOptions = [],
-    fields = {},
-    formTabs = [],
-    enabledTabs = [],
+    systemSortOptions = EMPTY_ARRAY,
+    fields = EMPTY_OBJECT,
+    formTabs = EMPTY_ARRAY,
+    enabledTabs = EMPTY_ARRAY,
     requiredTabs = ["basic"],
   } = config || {};
 
-  const resolvedFields = (() => {
+  const resolvedFields = React.useMemo(() => {
     if (!fields || Object.keys(fields).length === 0) {
       return INITIAL_FIELD_SEED;
     }
     return fields;
-  })();
+  }, [fields]);
 
-  const prefs = (() => normalizeContactPreferences(rawPrefs))();
+  const prefs = React.useMemo(() => normalizeContactPreferences(rawPrefs), [rawPrefs]);
 
   const prefKey = `${CONTACTS_MODULE_MANIFEST.moduleId}.table.columns`;
   const [userOverlayRaw, setUserOverlayRaw] = useUiPreference<ColumnRegistryEntry[] | null>(prefKey, null);
 
-  const columnRegistry = (() => {
+  const columnRegistry = React.useMemo(() => {
     if (userOverlayRaw && userOverlayRaw.length > 0) {
       return userOverlayRaw;
     }
     return config?.columnRegistry?.length ? config.columnRegistry : DEFAULT_COLUMN_REGISTRY;
-  })();
+  }, [userOverlayRaw, config?.columnRegistry]);
 
-  const syncedColumnRegistry = (() => {
+  const syncedColumnRegistry = React.useMemo(() => {
     return syncContactColumnRegistryWithFields(
       columnRegistry,
       resolvedFields,
       enabledTabs.length > 0 ? enabledTabs : DEFAULT_FORM_TABS.filter(t => t.enabled).map(t => t.key)
     );
-  })();
+  }, [columnRegistry, resolvedFields, enabledTabs]);
 
   const updateUserColumnLayout = React.useCallback((layout: ColumnRegistryEntry[]) => {
     setUserOverlayRaw(layout);
   }, [setUserOverlayRaw]);
-
-
 
   const getColumnWidth = React.useCallback((key: string) => {
     return syncedColumnRegistry.find((c) => c.key === key)?.width;
@@ -120,16 +121,16 @@ export function useContactConfigProviderValue(
     return syncedColumnRegistry.find((c) => c.key === key)?.enabled ?? false;
   }, [syncedColumnRegistry]);
 
-  const availableColumns = (() => {
+  const availableColumns = React.useMemo(() => {
     return syncedColumnRegistry.map((entry) => ({
       id: entry.key,
       label: entry.label,
       sortField: entry.sortField,
       width: entry.width,
     }));
-  })();
+  }, [syncedColumnRegistry]);
 
-  const visibleColumns = (() => {
+  const visibleColumns = React.useMemo(() => {
     return syncedColumnRegistry
       .filter((entry) => entry.enabled)
       .map((entry) => ({
@@ -138,19 +139,19 @@ export function useContactConfigProviderValue(
         sortField: entry.sortField,
         width: entry.width,
       }));
-  })();
+  }, [syncedColumnRegistry]);
 
-  const defaultPhoneCountryCode = (() => getFallbackCountryCode(prefs, countryCodesMap, countryCodes))();
+  const defaultPhoneCountryCode = React.useMemo(() => getFallbackCountryCode(prefs, countryCodesMap, countryCodes), [prefs, countryCodesMap, countryCodes]);
 
   /** Form Relationship-type dropdown — fixed system catalog (Parent/Child, …). */
-  const resolvedRelationships = (() => {
+  const resolvedRelationships = React.useMemo(() => {
     const derived = deriveRelationshipOptionsFromPairs(
       resolveRelationshipPairs(prefs?.relationshipPairs),
     );
     return applyRelationshipOptionOrder(derived, prefs?.relationshipOptionOrder);
-  })();
+  }, [prefs?.relationshipPairs, prefs?.relationshipOptionOrder]);
 
-  return (() => ({
+  return React.useMemo(() => ({
       formTabsReady: true,
       enabledTabIds: resolveContactEnabledTabIds({ formTabs, enabledTabs }, "admin"),
       requiredTabIds: new Set(requiredTabs),
@@ -211,5 +212,8 @@ export function useContactConfigProviderValue(
       getColumnWidth,
       setColumnWidth,
       systemSortOptions,
-    }))();
+    }), [
+      enabledTabs, requiredTabs, resolvedFields, formTabs, prefs, updateConfig, updateConfigAsync, updatePrefs, updatePrefsAsync, genders, socialPlatforms, resolvedRelationships, phoneLabels, emailLabels, addressLabels, countryCodes, countryCodesMap, educationDegrees, employmentTypes, skillCategories, skillProficiencies, bankNames, tags, lookupsLoading, lookupsError, defaultPhoneCountryCode, syncedColumnRegistry, availableColumns, visibleColumns, updateGenders, updateSocialPlatforms, updateRelationships, updatePhoneLabels, updateEmailLabels, updateAddressLabels, updateEducationDegrees, updateEmploymentTypes, updateSkillCategories, updateSkillProficiencies, updateBankNames, updateTags, updateCountryCodes, updateUserColumnLayout, isColumnVisible, getColumnWidth, setColumnWidth, systemSortOptions
+    ]);
 }
+

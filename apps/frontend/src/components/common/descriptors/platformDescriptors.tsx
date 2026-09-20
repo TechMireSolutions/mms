@@ -14,6 +14,7 @@ export const platformWorkspacesEntityDescriptor: EntityDescriptor<PlatformWorksp
       {
         key: "madrasaName",
         label: "Madrasa Name",
+        labelKey: "platform.descriptor.workspace.madrasaName",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -26,6 +27,7 @@ export const platformWorkspacesEntityDescriptor: EntityDescriptor<PlatformWorksp
       {
         key: "subdomain",
         label: "Subdomain",
+        labelKey: "platform.descriptor.workspace.subdomain",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -54,6 +56,7 @@ export const platformWorkspacesEntityDescriptor: EntityDescriptor<PlatformWorksp
       {
         key: "createdAt",
         label: "Created Date",
+        labelKey: "platform.descriptor.workspace.createdAt",
         type: "date",
         sortable: true,
         defaultVisibleInTable: true,
@@ -61,6 +64,18 @@ export const platformWorkspacesEntityDescriptor: EntityDescriptor<PlatformWorksp
         cardSlot: "meta",
         drawerSection: "general",
         drawerOrder: 40,
+      },
+      {
+        key: "requireEmailVerification",
+        label: "Email Verification",
+        labelKey: "platform.descriptor.workspace.requireEmailVerification",
+        type: "boolean",
+        sortable: false,
+        defaultVisibleInTable: true,
+        tableOrder: 50,
+        cardSlot: "secondary",
+        drawerSection: "status",
+        drawerOrder: 50,
       },
     ],
   });
@@ -76,6 +91,7 @@ export const platformUsersEntityDescriptor: EntityDescriptor<PlatformUserProfile
       {
         key: "name",
         label: "Name",
+        labelKey: "platform.descriptor.user.name",
         type: "text",
         sortable: true,
         defaultVisibleInTable: true,
@@ -88,6 +104,7 @@ export const platformUsersEntityDescriptor: EntityDescriptor<PlatformUserProfile
       {
         key: "email",
         label: "Email",
+        labelKey: "platform.descriptor.user.email",
         type: "email",
         sortable: true,
         defaultVisibleInTable: true,
@@ -99,6 +116,7 @@ export const platformUsersEntityDescriptor: EntityDescriptor<PlatformUserProfile
       {
         key: "role",
         label: "Role",
+        labelKey: "platform.descriptor.user.role",
         type: "badge",
         sortable: true,
         defaultVisibleInTable: true,
@@ -131,6 +149,7 @@ export const platformUsersEntityDescriptor: EntityDescriptor<PlatformUserProfile
       {
         key: "createdAt",
         label: "Created At",
+        labelKey: "platform.descriptor.user.createdAt",
         type: "date",
         sortable: true,
         defaultVisibleInTable: true,
@@ -153,6 +172,7 @@ export const platformSettingsEntityDescriptor: EntityDescriptor<PlatformSettings
       {
         key: "certbotEmail",
         label: "Certbot Email",
+        labelKey: "platform.descriptor.settings.certbotEmail",
         type: "email",
         defaultVisibleInTable: true,
         tableOrder: 10,
@@ -164,6 +184,7 @@ export const platformSettingsEntityDescriptor: EntityDescriptor<PlatformSettings
       {
         key: "syncTlsOnCreate",
         label: "Auto Sync TLS",
+        labelKey: "platform.descriptor.settings.syncTlsOnCreate",
         type: "boolean",
         defaultVisibleInTable: true,
         tableOrder: 20,
@@ -174,6 +195,7 @@ export const platformSettingsEntityDescriptor: EntityDescriptor<PlatformSettings
       {
         key: "tlsExtraSans",
         label: "Extra SANs",
+        labelKey: "platform.descriptor.settings.tlsExtraSans",
         type: "text",
         defaultVisibleInTable: true,
         tableOrder: 30,

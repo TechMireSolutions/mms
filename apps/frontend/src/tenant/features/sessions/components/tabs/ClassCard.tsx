@@ -84,7 +84,7 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
             {(sessionClass.timetables?.[0]?.periods?.length ?? 0)} Periods
           </span>
           {sessionClass.scholarships && sessionClass.scholarships.length > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-purple-500/10 text-purple-600 px-2 py-0.5 text-[11px] font-medium">
+            <span className="inline-flex items-center gap-1 rounded-md bg-secondary/10 text-secondary px-2 py-0.5 text-[11px] font-medium">
               Scholarship: {sessionClass.scholarships[0]?.percentage}%
             </span>
           )}

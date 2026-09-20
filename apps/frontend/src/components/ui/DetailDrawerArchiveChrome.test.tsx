@@ -51,7 +51,7 @@ describe("DetailDrawerArchiveChrome retention utilities", () => {
           retentionDays={null}
         />,
       );
-      expect(html).toContain("Archived indefinitely");
+      expect(html).toContain("common.archivedIndefinitely");
     });
 
     it("renders warning tone with emoji when <= 7 days remain", () => {
@@ -62,7 +62,7 @@ describe("DetailDrawerArchiveChrome retention utilities", () => {
           retentionDays={8}
         />,
       );
-      expect(html).toContain("⚠️ Purges in 3 days");
+      expect(html).toContain("⚠️ common.purgesInDays");
       expect(html).toContain("text-destructive");
     });
 
@@ -74,7 +74,7 @@ describe("DetailDrawerArchiveChrome retention utilities", () => {
           retentionDays={30}
         />,
       );
-      expect(html).toContain("Purges in 29 days");
+      expect(html).toContain("common.purgesInDays");
       expect(html).not.toContain("⚠️");
     });
   });
@@ -89,7 +89,7 @@ describe("DetailDrawerArchiveChrome retention utilities", () => {
         />,
       );
       expect(html).toContain("Archived Record");
-      expect(html).toContain("⚠️ Purges in 3 days");
+      expect(html).toContain("⚠️ common.purgesInDays");
     });
 
     it("appends 'Archived indefinitely' when retentionDays is null", () => {
@@ -101,7 +101,7 @@ describe("DetailDrawerArchiveChrome retention utilities", () => {
         />,
       );
       expect(html).toContain("Archived Record");
-      expect(html).toContain("Archived indefinitely");
+      expect(html).toContain("common.archivedIndefinitely");
     });
   });
 
@@ -117,7 +117,7 @@ describe("DetailDrawerArchiveChrome retention utilities", () => {
         />,
       );
       expect(html).toContain("Duplicate record");
-      expect(html).toContain("Purges in 29 days");
+      expect(html).toContain("common.purgesInDays");
     });
   });
 });

@@ -1,6 +1,7 @@
 import React from "react";
 import { SkipToContentLink } from "@/components/ui/SkipToContentLink";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface NavigationAdapter {
   sidebar?: React.ReactNode;
@@ -63,6 +64,8 @@ export function AppShell({
   const extraModals = adapter?.extraModals ?? propExtraModals;
   const footer = adapter?.footer ?? propFooter;
 
+  const { t } = useTranslation();
+
   return (
     <div
       dir={dir}
@@ -74,8 +77,8 @@ export function AppShell({
       {/* Desktop Navigation Sidebar */}
       {sidebar ? (
         <aside
-          aria-label="Desktop Navigation"
-          className="hidden lg:block z-fixed"
+          aria-label={t("nav.desktopNavigation")}
+          className="hidden lg:block fixed inset-y-0 start-0 z-fixed"
         >
           {sidebar}
         </aside>
@@ -86,7 +89,7 @@ export function AppShell({
 
       {/* Desktop Top Header Bar */}
       {topBar ? (
-        <header role="banner" className="hidden lg:block">
+        <header role="banner" className="hidden lg:block fixed top-0 inset-x-0 z-sticky">
           {topBar}
         </header>
       ) : null}

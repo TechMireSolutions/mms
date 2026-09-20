@@ -24,7 +24,7 @@ const mockRel: StudentRelationshipCardData = {
   relationship: "father",
   relationshipLabel: "Father",
   badgeCode: "FAT",
-  badgeTone: "bg-blue-100 text-blue-800",
+  badgeTone: "bg-info/10 text-info",
   phones: [{ number: "+1 555-0199", isPrimary: true, label: "Mobile" }],
   emails: [{ address: "ibrahim@example.com", isPrimary: true, label: "Personal" }],
   cnic: "42101-1234567-1",

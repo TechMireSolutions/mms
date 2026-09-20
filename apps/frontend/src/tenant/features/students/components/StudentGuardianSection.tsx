@@ -37,6 +37,8 @@ export function StudentGuardianSection({
   const { canWrite: canWriteContacts } = useModulePermissions(CONTACTS_MODULE_MANIFEST);
   const [editContactOpen, setEditContactOpen] = useState(false);
 
+  const canOpenContactEditor = Boolean(linkedContact?.id) && canWriteContacts;
+
   const showRelationships = isFieldEnabled("contactRelationships");
   const links = listStudentContactRelationships(linkedContact ?? null);
   const relatedIds = links.map((link) => link.contactId).filter(Boolean) as string[];
@@ -48,7 +50,6 @@ export function StudentGuardianSection({
   }
 
   const hasAnyLink = links.length > 0;
-  const canOpenContactEditor = Boolean(linkedContact?.id) && canWriteContacts;
 
   return (
     <div className="space-y-6" id={`sf-${formInstanceId}-guardians`} tabIndex={-1}>

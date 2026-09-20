@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { useContactMutations } from "@/tenant/hooks/collections/contacts";
@@ -31,7 +31,11 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const lookupMutation = useStudentLookupMutation();
 
   const formInstanceId = String(student?.id ?? "new");
-  const fields = (() => (settings.fields || {}) as Record<string, FieldDefinition[]>)();
+  const settingsFields = settings.fields;
+  const fields = useMemo(
+    () => (settingsFields || {}) as Record<string, FieldDefinition[]>,
+    [settingsFields]
+  );
 
   const [saving, setSaving] = useState(false);
   const [validationErrors, setValidationErrors] = useState<import("@mms/shared").ValidationError[]>([]);
@@ -61,13 +65,37 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     await lookupMutation.mutateAsync({ kind: "statuses", items: nextStatuses });
   };
 
+  const prevStudentId = useRef(student?.id);
+  const prevFieldsStr = useRef(JSON.stringify(fields));
+
   useEffect(() => {
-    const nextDraft = getInitialStudentDraft({ student, fields });
-    setStudentDraft(nextDraft);
-    setBaselineSnapshot(studentDraftSnapshot(nextDraft));
-    setValidationErrors([]);
-    grManuallyEdited.current = false;
+    const studentChanged = student?.id !== prevStudentId.current;
+    const currentFieldsStr = JSON.stringify(fields);
+    const fieldsChanged = currentFieldsStr !== prevFieldsStr.current;
+    
+    if (!studentChanged && !fieldsChanged) {
+      return;
+    }
+    
+    prevStudentId.current = student?.id;
+    prevFieldsStr.current = currentFieldsStr;
+
+    if (studentChanged) {
+      const nextDraft = getInitialStudentDraft({ student, fields });
+      setStudentDraft(nextDraft);
+      setBaselineSnapshot(studentDraftSnapshot(nextDraft));
+      setValidationErrors([]);
+      grManuallyEdited.current = false;
+    } else if (fieldsChanged) {
+      setStudentDraft((prev) => {
+        const nextDraft = getInitialStudentDraft({ student, fields });
+        const nextMerged = { ...nextDraft, ...prev };
+        return nextMerged;
+      });
+    }
   }, [student, fields]);
+
+
 
   const updateDraft = (patch: Partial<Student>) => {
     setStudentDraft((prev) => ({ ...prev, ...patch }));
@@ -105,6 +133,7 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   useEffect(() => {
     if (!isStudentCreate(student) || !autoGenerateId || !nextGrNumber) return;
     if (grManuallyEdited.current) return;
+    
     setStudentDraft((prev) => {
       if (prev.grNumber) return prev;
       const nextDraft = { ...prev, grNumber: nextGrNumber };

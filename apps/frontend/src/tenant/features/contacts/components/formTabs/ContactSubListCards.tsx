@@ -105,6 +105,8 @@ export interface ContactSubListShellProps {
   onEnsureRow: () => void;
   /** When false, hide add/ensure (e.g. all Setup fields for the tab are disabled). */
   allowAdd?: boolean;
+  /** Pass a stable unique key for the list to reset the initialization guard if the list changes. */
+  listKey?: string;
   children: ReactNode;
 }
 
@@ -117,12 +119,18 @@ export function ContactSubListShell({
   onAdd,
   onEnsureRow,
   allowAdd = true,
+  listKey = "default",
   children,
 }: ContactSubListShellProps): React.JSX.Element {
+  const initializedRef = React.useRef<Record<string, boolean>>({});
+
   useEffect(() => {
     if (!allowAdd || !isEmpty) return;
+    if (initializedRef.current[listKey]) return;
+    
+    initializedRef.current[listKey] = true;
     onEnsureRow();
-  }, [allowAdd, isEmpty, onEnsureRow]);
+  }, [allowAdd, isEmpty, onEnsureRow, listKey]);
 
   return (
     <div className="space-y-3 text-start">

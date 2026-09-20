@@ -11,6 +11,7 @@ import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { DetailAttributeRow, type DetailAttributeRowVariant } from "@/components/ui/DetailAttributeRow";
 import type { EntityDescriptor } from "@/types/entityRegistry";
 import { getEntityDescriptor } from "@/components/common/entityRegistry";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export type { DetailDrawerSize };
 
@@ -50,9 +51,9 @@ export function DetailSheet<T = unknown>({
   children,
   ...props
 }: DetailSheetProps<T>): React.JSX.Element | null {
-  const effectiveDescriptor = (descriptor ?? (entityType ? getEntityDescriptor<T>(entityType) : undefined)) as
-    | EntityDescriptor<T>
-    | undefined;
+  const effectiveDescriptor = (descriptor ?? (entityType ? (getEntityDescriptor(entityType) as EntityDescriptor<T> | undefined) : undefined));
+
+  const { t } = useTranslation();
 
   return (
     <DetailDrawerShell {...props}>
@@ -60,9 +61,9 @@ export function DetailSheet<T = unknown>({
         <div className="mb-4 space-y-2">
           <DetailDrawerArchivedBanner
             deletedAt={archiveState.deletedAt}
-            title={archiveState.recordTitle ? `Archived: ${archiveState.recordTitle}` : undefined}
+            title={archiveState.recordTitle ? t("common.archiveTitle", { title: archiveState.recordTitle }) : undefined}
             description={
-              archiveState.deletedBy ? `Archived by ${archiveState.deletedBy}` : undefined
+              archiveState.deletedBy ? t("common.archiveBy", { name: archiveState.deletedBy }) : undefined
             }
           />
           {archiveState.canRestore && archiveState.onRestore ? (
@@ -74,7 +75,7 @@ export function DetailSheet<T = unknown>({
               className="w-full gap-1.5"
             >
               <RotateCcw className="w-3.5 h-3.5" />
-              {archiveState.restoreLabel ?? "Restore"}
+              {archiveState.restoreLabel ?? t("common.restore")}
             </Button>
           ) : null}
         </div>

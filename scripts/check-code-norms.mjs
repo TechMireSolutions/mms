@@ -23,9 +23,9 @@ const ROOT = process.cwd();
 
 /** Baselines measured when the ratchet landed; only lower them. */
 const BASELINE = {
-  anyAnnotations: 91,
+  anyAnnotations: 88,
   hexColourFiles: 36,
-  filesOverHardLimit: 80,
+  filesOverHardLimit: 79,
 };
 
 const SCAN_DIRS = ['apps/frontend/src', 'apps/backend/src', 'packages/shared/src'];

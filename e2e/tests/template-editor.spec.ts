@@ -54,11 +54,11 @@ async function openInvoiceTemplateEditor(page: Page) {
   await page.waitForLoadState('domcontentloaded');
   await waitForAppShellReady(page);
 
-  const setupTab = page.getByRole('tab', { name: /^Setup$/i });
+  const setupTab = page.getByRole('tab', { name: /Setup/i });
   if (await setupTab.count()) {
     await setupTab.first().click();
   } else {
-    await page.getByRole('button', { name: /^Setup$/i }).first().click();
+    await page.getByRole('button', { name: /Setup/i }).first().click();
   }
   await waitForToastsToClear(page);
 

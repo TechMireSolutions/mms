@@ -18,3 +18,5 @@ export function usePlatformWorkspaceDescriptor(): EntityDescriptor<PlatformWorks
     (key, fallback) => t(key as Parameters<typeof t>[0]) || fallback,
   );
 }
+
+export const usePlatformWorkspacesEntityDescriptor = usePlatformWorkspaceDescriptor;

@@ -27,8 +27,11 @@ const setupConfigHooks = createModuleSetupConfigHooks<FinanceModulePreferences>(
 export const useFinancePreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useFinancePreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
+import { useMemo } from 'react';
+
 /** Composed FinanceSettings from preferences queries. */
 export function useComposedFinanceSettings(): FinanceSettings {
   const prefsQuery = useFinancePreferencesQuery();
-  return (prefsQuery.data ?? normalizeFinanceModulePreferences(null)) as unknown as FinanceSettings;
+  const fallback = useMemo(() => normalizeFinanceModulePreferences(null), []);
+  return (prefsQuery.data ?? fallback) as unknown as FinanceSettings;
 }

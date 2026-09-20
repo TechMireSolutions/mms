@@ -12,6 +12,7 @@ import { TeacherCardHeader } from "@/tenant/features/faculty/components/FacultyC
 import { TeacherCardMetadata } from "@/tenant/features/faculty/components/FacultyCardMetadata";
 import { resolveTeacherCardFaceVisibility } from "@/tenant/features/faculty/components/facultyCardFaceVisibility";
 import { teacherRowIdentity } from "@/tenant/features/faculty/components/facultyFieldDisplay";
+import { useFacultyEntityDescriptor } from "@/tenant/features/faculty/hooks/useFacultyEntityDescriptor";
 import type { TeacherListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
 
 export type TeacherListCardsProps = Omit<
@@ -52,6 +53,7 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
   } = props;
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
+  const descriptor = useFacultyEntityDescriptor();
   const faceVisible = resolveTeacherCardFaceVisibility(columnRegistry, isColumnVisible);
   const pageCountLabel = formatDirectoryPageCountLabel(teachers.length, t, {
     singular: "teachers.form.teacher",
@@ -114,6 +116,7 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
               columnRegistry={columnRegistry}
               customFieldsById={customFieldsById}
               statusConfig={statusConfig}
+              descriptor={descriptor}
             />
             <TeacherArchivedBanner teacher={teacher} />
             <TeacherCardActions

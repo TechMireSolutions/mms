@@ -115,3 +115,11 @@ All primary entities (contacts, students, faculty, sessions, finance, platform w
   - Filter chips labels and formatting (`formatFieldValue()`) feeding `FilterChips`.
   - Drawer attribute inspection sections and rows (`getDrawerSections()`) feeding `DetailSheet`.
 - **Zero Forking:** Directory cards, filter chips, and drawer viewers consume registered entity descriptors rather than repeating ad-hoc column lists, card field arrays, and drawer layouts.
+
+## 7. i18n-Resolved Descriptor Hook Pattern
+
+To ensure all table columns, filter chips, card metadata, and drawer attributes render localized text rather than raw translation keys, every module provides a dedicated `use{Entity}EntityDescriptor()` hook (e.g. `useStudentEntityDescriptor`, `useFacultyEntityDescriptor`, `usePlatformUserDescriptor`).
+
+- **Colocation:** The hook lives adjacent to feature hooks in `tenant/features/{module}/hooks/` or `platform/hooks/`.
+- **Implementation:** The hook invokes `useStaticEntityDescriptor(staticDescriptor, (key, fallback) => t(key) || fallback)` to produce an active, locale-resolved `EntityDescriptor<T>`.
+- **Consumer Wiring:** Directory views (`ModuleWorkDirectoryShell`, `ModuleWorkTableHeader`, `DirectoryCardMetadata`, `DetailSheet`) consume the hook result rather than referencing the static descriptor directly or doing manual inline translation mappings.

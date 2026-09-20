@@ -59,10 +59,10 @@ async function fillContactGender(dialog: Locator, page: Page, gender: string): P
 /** Adds and fills phone number on a contact FormModal */
 async function fillContactPhone(dialog: Locator, phone: string): Promise<void> {
   await dialog.getByRole('tab', { name: 'Phones' }).click();
-  const phoneInput = dialog.locator('[id$="-phone-number-0"]');
+  const phoneInput = dialog.locator('[id$="-phone-number-0"]').first();
   const isInputVisible = await phoneInput.isVisible({ timeout: 2000 }).catch(() => false);
   if (!isInputVisible) {
-    const addPhoneBtn = dialog.getByRole('button', { name: /Add phone number|Add/i });
+    const addPhoneBtn = dialog.getByRole('button', { name: 'Add Phone Number' }).first();
     if (await addPhoneBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await addPhoneBtn.click();
     }
@@ -75,11 +75,14 @@ async function fillContactPhone(dialog: Locator, phone: string): Promise<void> {
 /** Adds and fills email address on a contact FormModal */
 async function fillContactEmail(dialog: Locator, email: string): Promise<void> {
   await dialog.getByRole('tab', { name: 'Emails' }).click();
-  const addEmailBtn = dialog.getByRole('button', { name: /Add (Email|email)/i }).first();
-  if (await addEmailBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await addEmailBtn.click();
+  const emailInput = dialog.locator('[id$="-email-address-0"]').first();
+  const isInputVisible = await emailInput.isVisible({ timeout: 2000 }).catch(() => false);
+  if (!isInputVisible) {
+    const addEmailBtn = dialog.getByRole('button', { name: 'Add Email Address' }).first();
+    if (await addEmailBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await addEmailBtn.click();
+    }
   }
-  const emailInput = dialog.locator('[id$="-email-address-0"]');
   await expect(emailInput).toBeVisible({ timeout: 5000 });
   await emailInput.fill(email);
   await emailInput.dispatchEvent('change');
@@ -175,12 +178,12 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
     await studentContactSearch.fill('Jane Doe');
     const janeOption = page.getByRole('option', { name: /Jane Doe/ }).first();
     await expect(janeOption).toBeVisible({ timeout: 15_000 });
-    await janeOption.click({ force: true });
+    await janeOption.click();
 
     const editRelationshipsCta = registerDialog.getByRole('button', { name: /Edit contact relationships/i });
     // Wait for the linked contact to load before the guardian section renders the button.
     // The button depends on linkedContact?.id being truthy (fetched via useContactById after contact selection).
-    await expect(editRelationshipsCta).toBeVisible({ timeout: 45_000 });
+    await expect(editRelationshipsCta).toBeVisible({ timeout: 15_000 });
     await editRelationshipsCta.click();
 
     const editJaneDialog = page.getByRole('dialog', { name: /Edit Contact/i });

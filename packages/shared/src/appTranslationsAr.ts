@@ -7435,4 +7435,17 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "network.offlineBanner": "أنت غير متصل حالياً. يتم العمل من الذاكرة المؤقتة المحلية.",
   "network.reconnectingBanner": "جارٍ إعادة الاتصال بالشبكة ومزامنة البيانات...",
   "network.onlineRestored": "تمت استعادة الاتصال. تمت مزامنة الحالة.",
-};
+  "common.archiveBy": "Archived by {name}",
+  "common.archiveTitle": "Archived: {title}",
+  "common.archiveDesc": "This record has been archived and will be permanently deleted after {days} days.",
+  "common.archiveDescNoRetention": "This record has been archived and will be permanently deleted at the next system purge.",
+  "common.archived": "Archived",
+  "common.archivedOn": "Archived on {date}",
+  "common.purgesInDays": "Purges in {count} days",
+  "common.purgesInOneDay": "Purges in 1 day",
+  "common.permanentlyDelete": "Permanently Delete",
+  "nav.desktopNavigation": "Desktop Navigation",
+  "nav.mobileNavigation": "Mobile Navigation",
+  "nav.accountMenu": "Account Menu",
+  "common.archivedIndefinitely": "Archived Indefinitely"
+} as const;

@@ -1,6 +1,7 @@
 import React, { type ReactNode } from "react";
 import { formatMoney } from "@mms/shared";
 import { StatusBadge } from "@/components/ui/StatusBadge";
+import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import type {
   FieldDefinition,
   EntityDrawerSection,
@@ -136,6 +137,14 @@ export function createEntityDescriptor<T>(
       const strVal = String(rawValue);
       const customConfig = field.badgeVariantMap?.[strVal];
       if (customConfig?.className) {
+        if (
+          process.env.NODE_ENV === "development" &&
+          !(Object.values(SEMANTIC_BADGE) as readonly string[]).includes(customConfig.className)
+        ) {
+          console.warn(
+            `[entityDescriptorFactory] Badge className for field '${fieldKey}' value '${strVal}' does not match any SEMANTIC_BADGE token.`,
+          );
+        }
         return (
           <span
             aria-label={aria}

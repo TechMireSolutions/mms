@@ -7,12 +7,14 @@ import { cn } from "@/lib/utils"
 /**
  * DropdownMenuItem component with type annotations.
  */
-const DropdownMenuItem = React.forwardRef<
-  React.ElementRef<typeof DropdownMenuPrimitive.Item>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Item> & {
-    inset?: boolean
-  }
->(({ className, inset, ...props }, ref) => (
+const DropdownMenuItem = ({
+  ref,
+  className,
+  inset,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Item> & {
+  inset?: boolean
+}) => (
   <DropdownMenuPrimitive.Item
     ref={ref}
     className={cn(
@@ -22,16 +24,20 @@ const DropdownMenuItem = React.forwardRef<
     )}
     {...props}
   />
-))
+)
 DropdownMenuItem.displayName = DropdownMenuPrimitive.Item.displayName
 
 /**
  * DropdownMenuCheckboxItem — stays open after toggle so multi-select filters work.
  */
-const DropdownMenuCheckboxItem = React.forwardRef<
-  React.ElementRef<typeof DropdownMenuPrimitive.CheckboxItem>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.CheckboxItem>
->(({ className, children, checked, onSelect, ...props }, ref) => (
+const DropdownMenuCheckboxItem = ({
+  ref,
+  className,
+  children,
+  checked,
+  onSelect,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.CheckboxItem>) => (
   <DropdownMenuPrimitive.CheckboxItem
     ref={ref}
     className={cn(
@@ -52,17 +58,19 @@ const DropdownMenuCheckboxItem = React.forwardRef<
     </span>
     {children}
   </DropdownMenuPrimitive.CheckboxItem>
-))
+)
 DropdownMenuCheckboxItem.displayName =
   DropdownMenuPrimitive.CheckboxItem.displayName
 
 /**
  * DropdownMenuRadioItem component with type annotations.
  */
-const DropdownMenuRadioItem = React.forwardRef<
-  React.ElementRef<typeof DropdownMenuPrimitive.RadioItem>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.RadioItem>
->(({ className, children, ...props }, ref) => (
+const DropdownMenuRadioItem = ({
+  ref,
+  className,
+  children,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.RadioItem>) => (
   <DropdownMenuPrimitive.RadioItem
     ref={ref}
     className={cn(
@@ -78,18 +86,20 @@ const DropdownMenuRadioItem = React.forwardRef<
     </span>
     {children}
   </DropdownMenuPrimitive.RadioItem>
-))
+)
 DropdownMenuRadioItem.displayName = DropdownMenuPrimitive.RadioItem.displayName
 
 /**
  * DropdownMenuLabel component with type annotations.
  */
-const DropdownMenuLabel = React.forwardRef<
-  React.ElementRef<typeof DropdownMenuPrimitive.Label>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Label> & {
-    inset?: boolean
-  }
->(({ className, inset, ...props }, ref) => (
+const DropdownMenuLabel = ({
+  ref,
+  className,
+  inset,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Label> & {
+  inset?: boolean
+}) => (
   <DropdownMenuPrimitive.Label
     ref={ref}
     className={cn(
@@ -99,22 +109,23 @@ const DropdownMenuLabel = React.forwardRef<
     )}
     {...props}
   />
-))
+)
 DropdownMenuLabel.displayName = DropdownMenuPrimitive.Label.displayName
 
 /**
  * DropdownMenuSeparator component with type annotations.
  */
-const DropdownMenuSeparator = React.forwardRef<
-  React.ElementRef<typeof DropdownMenuPrimitive.Separator>,
-  React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Separator>
->(({ className, ...props }, ref) => (
+const DropdownMenuSeparator = ({
+  ref,
+  className,
+  ...props
+}: React.ComponentProps<typeof DropdownMenuPrimitive.Separator>) => (
   <DropdownMenuPrimitive.Separator
     ref={ref}
     className={cn("-mx-1 my-1 h-px bg-muted", className)}
     {...props}
   />
-))
+)
 DropdownMenuSeparator.displayName = DropdownMenuPrimitive.Separator.displayName
 
 /**
@@ -132,7 +143,6 @@ const DropdownMenuShortcut = ({
   )
 }
 DropdownMenuShortcut.displayName = "DropdownMenuShortcut"
-
 
 export {
   DropdownMenuItem,

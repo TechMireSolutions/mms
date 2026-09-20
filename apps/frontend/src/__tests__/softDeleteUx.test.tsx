@@ -445,7 +445,7 @@ describe("Soft-Delete UX Architecture Integration", () => {
             retentionDays={8}
           />,
         );
-        expect(warningHtml).toContain("⚠️ Purges in 5 days");
+        expect(warningHtml).toContain("⚠️ common.purgesInDays");
         expect(warningHtml).toContain("text-destructive");
 
 
@@ -455,7 +455,7 @@ describe("Soft-Delete UX Architecture Integration", () => {
             retentionDays={null}
           />,
         );
-        expect(indefiniteHtml).toContain("Archived indefinitely");
+        expect(indefiniteHtml).toContain("common.archivedIndefinitely");
       } finally {
         vi.useRealTimers();
       }
@@ -473,8 +473,8 @@ describe("Soft-Delete UX Architecture Integration", () => {
             retentionDays={8}
           />,
         );
-        expect(bannerHtml).toContain("Archived Session");
-        expect(bannerHtml).toContain("Term ended • ⚠️ Purges in 5 days");
+        expect(bannerHtml).toContain("Term ended");
+        expect(bannerHtml).toContain("⚠️ common.purgesInDays");
       } finally {
         vi.useRealTimers();
       }
@@ -542,7 +542,7 @@ describe("Soft-Delete UX Architecture Integration", () => {
         deletionReason: "Relocated overseas",
       };
       const html = renderToStaticMarkup(<ContactArchivedBanner contact={archivedContact} />);
-      expect(html).toContain("Archived");
+      expect(html).toContain("contacts.detail.archivedBanner");
       expect(html).toContain("Relocated overseas");
       expect(html).toContain('role="status"');
     });
@@ -575,7 +575,7 @@ describe("Soft-Delete UX Architecture Integration", () => {
         } as unknown as Student;
         const html = renderToStaticMarkup(<StudentArchivedBanner student={student} />);
         expect(html).toContain("Graduated");
-        expect(html).toContain("⚠️ Purges in 5 days");
+        expect(html).toContain("⚠️ common.purgesInDays");
       } finally {
         vi.useRealTimers();
       }
@@ -608,7 +608,7 @@ describe("Soft-Delete UX Architecture Integration", () => {
         } as unknown as Teacher;
         const html = renderToStaticMarkup(<TeacherArchivedBanner teacher={teacher} />);
         expect(html).toContain("Contract ended");
-        expect(html).toContain("Purges in 21 days");
+        expect(html).toContain("common.purgesInDays");
       } finally {
         vi.useRealTimers();
       }
@@ -641,7 +641,7 @@ describe("Soft-Delete UX Architecture Integration", () => {
       } as unknown as Session;
       const html = renderToStaticMarkup(<SessionArchivedBanner session={session} />);
       expect(html).toContain("Course merged");
-      expect(html).toContain("Archived indefinitely");
+      expect(html).toContain("common.archivedIndefinitely");
       expect(html).toContain('role="status"');
     });
 

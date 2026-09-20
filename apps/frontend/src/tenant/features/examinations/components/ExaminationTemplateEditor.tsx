@@ -33,21 +33,29 @@ export const EXAMINATION_AVAILABLE_FIELDS: TemplateFieldDefinition<TypstReportCa
   { field: "institution", label: "Institution Name", sampleValue: "Madrasa Management System" },
 ];
 
+// Print template design tokens — quarantined per lib/printTemplateStyles.ts
+const PRINT_EXAM_SLATE_DARK = "#0f172a";
+const PRINT_EXAM_SLATE = "#334155";
+const PRINT_EXAM_SLATE_MUTED = "#64748b";
+const PRINT_EXAM_SKY_DEEP = "#0369a1";
+const PRINT_EXAM_AMBER_DEEP = "#b45309";
+const PRINT_EXAM_EMERALD_DEEP = "#047857";
+
 export const DEFAULT_EXAMINATION_TEMPLATE: DocumentTemplate<TypstReportCardPayload> = {
   pageSize: "A4",
   orientation: "portrait",
   elements: [
     { id: "e_inst", type: "field", field: "institution", label: "Madrasa Management System", x: 40, y: 40, w: 714, h: 32, style: { fontSize: 20, fontWeight: "bold", textAlign: "center" } },
-    { id: "e_title", type: "static", label: "بطاقة تقييم الأداء والدرجات | Report Card", x: 40, y: 78, w: 714, h: 22, style: { fontSize: 13, textAlign: "center", color: "#334155" } },
-    { id: "e_term", type: "field", field: "term", label: "العام الدراسي: 1447 - نهاية الفصل الدراسي", x: 40, y: 104, w: 714, h: 18, style: { fontSize: 10, textAlign: "center", color: "#64748b" } },
-    { id: "e_div1", type: "divider", label: "", x: 40, y: 130, w: 714, h: 1, style: { color: "#0f172a" } },
+    { id: "e_title", type: "static", label: "بطاقة تقييم الأداء والدرجات | Report Card", x: 40, y: 78, w: 714, h: 22, style: { fontSize: 13, textAlign: "center", color: PRINT_EXAM_SLATE } },
+    { id: "e_term", type: "field", field: "term", label: "العام الدراسي: 1447 - نهاية الفصل الدراسي", x: 40, y: 104, w: 714, h: 18, style: { fontSize: 10, textAlign: "center", color: PRINT_EXAM_SLATE_MUTED } },
+    { id: "e_div1", type: "divider", label: "", x: 40, y: 130, w: 714, h: 1, style: { color: PRINT_EXAM_SLATE_DARK } },
     { id: "e_stud", type: "field", field: "studentName", label: "الطالب: Fatima Al-Zahra", x: 40, y: 146, w: 320, h: 20, style: { fontSize: 11, fontWeight: "bold" } },
     { id: "e_roll", type: "field", field: "rollNumber", label: "رقم القيد: EX-1092", x: 420, y: 146, w: 334, h: 20, style: { fontSize: 11, textAlign: "right" } },
     { id: "e_class", type: "field", field: "className", label: "الصف: Advanced Tajweed", x: 40, y: 172, w: 320, h: 20, style: { fontSize: 11 } },
     { id: "e_att", type: "field", field: "attendance", label: "نسبة الحضور: 98%", x: 420, y: 172, w: 334, h: 20, style: { fontSize: 11, textAlign: "right" } },
-    { id: "e_grd", type: "field", field: "grade", label: "التقدير العام: ممتاز (Excellent)", x: 40, y: 220, w: 320, h: 24, style: { fontSize: 13, fontWeight: "bold", color: "#0369a1" } },
+    { id: "e_grd", type: "field", field: "grade", label: "التقدير العام: ممتاز (Excellent)", x: 40, y: 220, w: 320, h: 24, style: { fontSize: 13, fontWeight: "bold", color: PRINT_EXAM_SKY_DEEP } },
     { id: "e_pct", type: "field", field: "percentage", label: "النسبة: 95%", x: 420, y: 220, w: 334, h: 24, style: { fontSize: 13, fontWeight: "bold", textAlign: "right" } },
-    { id: "e_rem", type: "field", field: "remarks", label: "ملاحظات: مستوى ممتاز وتقدم ملحوظ", x: 40, y: 260, w: 714, h: 40, style: { fontSize: 11, color: "#334155" } },
+    { id: "e_rem", type: "field", field: "remarks", label: "ملاحظات: مستوى ممتاز وتقدم ملحوظ", x: 40, y: 260, w: 714, h: 40, style: { fontSize: 11, color: PRINT_EXAM_SLATE } },
     { id: "e_qr", type: "qrcode", label: "QR Verification", x: 674, y: 320, w: 80, h: 80 },
   ],
 };
@@ -68,10 +76,10 @@ export const EXAMINATION_PRESETS: DocumentTemplatePreset<TypstReportCardPayload>
       orientation: "landscape",
       elements: [
         { id: "c_inst", type: "field", field: "institution", label: "Madrasa Management System", x: 60, y: 50, w: 1003, h: 36, style: { fontSize: 24, fontWeight: "bold", textAlign: "center" } },
-        { id: "c_title", type: "static", label: "شهادة تقدير وتفوق | Certificate of Excellence", x: 60, y: 95, w: 1003, h: 28, style: { fontSize: 16, textAlign: "center", color: "#b45309" } },
-        { id: "c_stud", type: "field", field: "studentName", label: "Fatima Al-Zahra", x: 60, y: 160, w: 1003, h: 36, style: { fontSize: 22, fontWeight: "bold", textAlign: "center", color: "#0f172a" } },
+        { id: "c_title", type: "static", label: "شهادة تقدير وتفوق | Certificate of Excellence", x: 60, y: 95, w: 1003, h: 28, style: { fontSize: 16, textAlign: "center", color: PRINT_EXAM_AMBER_DEEP } },
+        { id: "c_stud", type: "field", field: "studentName", label: "Fatima Al-Zahra", x: 60, y: 160, w: 1003, h: 36, style: { fontSize: 22, fontWeight: "bold", textAlign: "center", color: PRINT_EXAM_SLATE_DARK } },
         { id: "c_rem", type: "field", field: "remarks", label: "For exceptional performance and dedication", x: 60, y: 210, w: 1003, h: 24, style: { fontSize: 13, textAlign: "center" } },
-        { id: "c_grd", type: "field", field: "grade", label: "Grade: ممتاز (Excellent)", x: 60, y: 250, w: 1003, h: 24, style: { fontSize: 14, fontWeight: "bold", textAlign: "center", color: "#047857" } },
+        { id: "c_grd", type: "field", field: "grade", label: "Grade: ممتاز (Excellent)", x: 60, y: 250, w: 1003, h: 24, style: { fontSize: 14, fontWeight: "bold", textAlign: "center", color: PRINT_EXAM_EMERALD_DEEP } },
       ],
     },
   },

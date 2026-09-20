@@ -71,7 +71,7 @@ export const DirectoryCardMetadata = React.memo(function DirectoryCardMetadata<
   extraColumns,
 }: DirectoryCardMetadataProps<TColumn, TEntity>): React.JSX.Element | null {
   const { t } = useTranslation();
-  const effectiveDescriptor = (descriptor ?? (entityType ? getEntityDescriptor<TEntity>(entityType) : undefined)) as EntityDescriptor<TEntity> | undefined;
+  const effectiveDescriptor = (descriptor ?? (entityType ? (getEntityDescriptor(entityType) as EntityDescriptor<TEntity> | undefined) : undefined));
 
   if (effectiveDescriptor && entity) {
     const cardFields = effectiveDescriptor.getCardFields().filter((field) => {

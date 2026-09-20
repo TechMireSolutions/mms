@@ -34,8 +34,12 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
     resetPlatformUsers();
   });
 
+
+
   test('Critical Path 1: Admissions -> Enrollment Lifecycle (LTR & RTL)', async ({ page }) => {
     test.setTimeout(180_000);
+    page.on('console', msg => console.log('BROWSER CONSOLE:', msg.text(), msg.location()));
+    page.on('pageerror', err => console.log('PAGE ERROR:', err.stack || err.message));
 
     // 1. Bootstrap tenant
     await bootstrapAuthenticatedTenant(page, credentials);

@@ -4,6 +4,8 @@ import type {
   QuestionBankTest,
 } from "@mms/shared";
 
+// Quarantined print-only CSS stylesheet string for physical A4 exam paper generation.
+// Per mms-ui-ux-design.md §2, physical print styles (A4/PDF) are quarantined from application UI chrome tokens.
 export const PAPER_PRINT_STYLES = `
   .qpaper { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; color: #111827; font-family: Inter, Arial, sans-serif; padding: 18mm; box-sizing: border-box; }
   .qpaper-header { text-align: center; border-bottom: 2px solid #111827; padding-bottom: 10px; margin-bottom: 14px; }

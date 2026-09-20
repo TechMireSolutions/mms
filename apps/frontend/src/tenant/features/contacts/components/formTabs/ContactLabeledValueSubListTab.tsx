@@ -105,7 +105,11 @@ export function ContactLabeledValueSubListTab({
 
   const makeEmpty = useCallback(
     () => emptyItem(resolveLabel(undefined, options, t)),
-    [emptyItem, resolveLabel, options, t],
+    // We intentionally omit `emptyItem` and `resolveLabel` from deps since they are inline prop functions
+    // that change on every render (e.g. from ContactPhonesTab). Including them causes `ensureItem` to
+    // be unstable, which caused maximum update depth infinite loops in ContactSubListShell.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [options, t],
   );
 
   const addItem = useCallback(() => {
@@ -132,6 +136,7 @@ export function ContactLabeledValueSubListTab({
       onAdd={addItem}
       onEnsureRow={ensureItem}
       allowAdd={allowAdd}
+      listKey={listKey}
     >
       <AnimatePresence initial={false}>
         {items.map((item, idx) => {

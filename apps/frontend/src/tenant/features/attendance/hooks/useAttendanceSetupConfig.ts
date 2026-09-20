@@ -27,8 +27,11 @@ const setupConfigHooks = createModuleSetupConfigHooks<AttendanceModulePreference
 export const useAttendancePreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useAttendancePreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
+import { useMemo } from 'react';
+
 /** Composed AttendanceSettings from preferences queries. */
 export function useComposedAttendanceSettings(): AttendanceSettings {
   const prefsQuery = useAttendancePreferencesQuery();
-  return (prefsQuery.data ?? normalizeAttendanceModulePreferences(null)) as unknown as AttendanceSettings;
+  const fallback = useMemo(() => normalizeAttendanceModulePreferences(null), []);
+  return (prefsQuery.data ?? fallback) as unknown as AttendanceSettings;
 }

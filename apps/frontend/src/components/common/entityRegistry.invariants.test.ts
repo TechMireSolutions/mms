@@ -5,6 +5,26 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 const ALLOWED_BADGE_CLASSES = new Set<string>(Object.values(SEMANTIC_BADGE));
 
 describe("entity registry invariants", () => {
+  it("contains all 14 domain entity registrations", () => {
+    const expectedEntities = [
+      "contacts",
+      "students",
+      "teachers",
+      "faculty",
+      "sessions",
+      "finance",
+      "attendance",
+      "enrollments",
+      "hasanat",
+      "obligations",
+      "platformWorkspaces",
+      "platformUsers",
+      "platformSettings",
+      "questionBank",
+    ];
+    expect(Object.keys(ENTITY_REGISTRY).sort()).toEqual(expectedEntities.sort());
+  });
+
   it("registers every entity under its own entityType", () => {
     for (const [registryKey, descriptor] of Object.entries(ENTITY_REGISTRY)) {
       expect(descriptor.entityType).toBe(registryKey);
@@ -17,6 +37,26 @@ describe("entity registry invariants", () => {
       expect(new Set(keys).size, `${descriptor.entityType} duplicate field keys`).toBe(keys.length);
       const orders = descriptor.getTableColumns().map((column) => column.order);
       expect(new Set(orders).size, `${descriptor.entityType} duplicate table orders`).toBe(orders.length);
+    }
+  });
+
+  it("every descriptor has at least 1 fixed table column", () => {
+    for (const descriptor of Object.values(ENTITY_REGISTRY)) {
+      const fixedColumns = descriptor.getTableColumns().filter((col) => col.fixed);
+      expect(
+        fixedColumns.length,
+        `${descriptor.entityType} must define at least 1 fixed column for table freeze pin`,
+      ).toBeGreaterThanOrEqual(1);
+    }
+  });
+
+  it("every field has a non-empty key, label, and type", () => {
+    for (const descriptor of Object.values(ENTITY_REGISTRY)) {
+      for (const field of descriptor.fields) {
+        expect(field.key.trim().length, `${descriptor.entityType} field key is empty`).toBeGreaterThan(0);
+        expect(field.label.trim().length, `${descriptor.entityType}.${field.key} label is empty`).toBeGreaterThan(0);
+        expect(field.type.trim().length, `${descriptor.entityType}.${field.key} type is empty`).toBeGreaterThan(0);
+      }
     }
   });
 
@@ -35,9 +75,11 @@ describe("entity registry invariants", () => {
     }
   });
 
-  it("drawer sections never render empty", () => {
+  it("all drawer sections have non-empty ids, titles, and fields", () => {
     for (const descriptor of Object.values(ENTITY_REGISTRY)) {
       for (const section of descriptor.getDrawerSections()) {
+        expect(section.id.trim().length, `${descriptor.entityType} section id is empty`).toBeGreaterThan(0);
+        expect(section.title.trim().length, `${descriptor.entityType} section title is empty`).toBeGreaterThan(0);
         expect(section.fields.length, `${descriptor.entityType} section ${section.id} is empty`).toBeGreaterThan(0);
       }
     }

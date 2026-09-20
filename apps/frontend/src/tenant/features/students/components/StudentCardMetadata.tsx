@@ -1,6 +1,7 @@
 import type { ModuleColumnRegistryEntry, Student } from "@mms/shared";
 import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import type { EntityDescriptor } from "@/types/entityRegistry";
 import { useTranslation } from "@/hooks/useTranslation";
 import { getStudentVisibleWorkColumns } from "@/tenant/features/students/components/studentsListVisibleColumns";
 import { renderStudentWorkColumnValue } from "@/tenant/features/students/components/studentWorkColumnCell";
@@ -10,6 +11,8 @@ export interface StudentCardMetadataProps {
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
   isColumnVisible: (key: string) => boolean;
   columnRegistry: ModuleColumnRegistryEntry[];
+  /** Optional entity descriptor — when provided, descriptor-driven fields supplement legacy column tiles. */
+  descriptor?: EntityDescriptor<Student>;
 }
 
 const getColumnKey = (col: { key: string }) => col.key;
@@ -21,6 +24,7 @@ export function StudentCardMetadata({
   statusBadgeConfig,
   isColumnVisible,
   columnRegistry,
+  descriptor,
 }: StudentCardMetadataProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
@@ -28,22 +32,35 @@ export function StudentCardMetadata({
     excludeFace: true,
   });
 
-  if (metaColumns.length === 0) {
+  if (metaColumns.length === 0 && !descriptor) {
     return null;
   }
 
+  const extraColumns =
+    metaColumns.length > 0
+      ? {
+          columns: metaColumns,
+          keyFor: getColumnKey,
+          labelFor: getColumnLabel,
+          renderValue: (col: ModuleColumnRegistryEntry) =>
+            renderStudentWorkColumnValue(student, col.key, {
+              t,
+              statusBadgeConfig,
+              emptyFallback: null,
+            }),
+        }
+      : undefined;
+
   return (
     <DirectoryCardMetadata
-      columns={metaColumns}
-      keyFor={getColumnKey}
-      labelFor={getColumnLabel}
-      renderValue={(col) =>
-        renderStudentWorkColumnValue(student, col.key, {
-          t,
-          statusBadgeConfig,
-          emptyFallback: null,
-        })
-      }
+      descriptor={descriptor}
+      entity={student}
+      isColumnVisible={isColumnVisible}
+      extraColumns={extraColumns}
+      columns={extraColumns?.columns}
+      keyFor={extraColumns?.keyFor}
+      labelFor={extraColumns?.labelFor}
+      renderValue={extraColumns?.renderValue}
     />
   );
 }

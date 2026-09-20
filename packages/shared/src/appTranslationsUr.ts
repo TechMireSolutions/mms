@@ -7435,4 +7435,17 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "network.offlineBanner": "آپ اس وقت آف لائن ہیں۔ مقامی کیشے سے کام جاری ہے۔",
   "network.reconnectingBanner": "نیٹ ورک سے دوبارہ رابطہ اور ڈیٹا ہم آہنگ کیا جا رہا ہے...",
   "network.onlineRestored": "کنکشن بحال ہو گیا۔ حالت ہم آہنگ ہو گئی۔",
-};
+  "common.archiveBy": "Archived by {name}",
+  "common.archiveTitle": "Archived: {title}",
+  "common.archiveDesc": "This record has been archived and will be permanently deleted after {days} days.",
+  "common.archiveDescNoRetention": "This record has been archived and will be permanently deleted at the next system purge.",
+  "common.archived": "Archived",
+  "common.archivedOn": "Archived on {date}",
+  "common.purgesInDays": "Purges in {count} days",
+  "common.purgesInOneDay": "Purges in 1 day",
+  "common.permanentlyDelete": "Permanently Delete",
+  "nav.desktopNavigation": "Desktop Navigation",
+  "nav.mobileNavigation": "Mobile Navigation",
+  "nav.accountMenu": "Account Menu",
+  "common.archivedIndefinitely": "Archived Indefinitely"
+} as const;

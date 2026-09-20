@@ -26,6 +26,23 @@ import {
   questionBankEntityDescriptor,
 } from "./descriptors";
 
+export type EntityRegistryMap = {
+  contacts: typeof contactsEntityDescriptor;
+  students: typeof studentsEntityDescriptor;
+  teachers: typeof teachersEntityDescriptor;
+  faculty: typeof facultyEntityDescriptor;
+  sessions: typeof sessionsEntityDescriptor;
+  finance: typeof financeEntityDescriptor;
+  attendance: typeof attendanceEntityDescriptor;
+  enrollments: typeof enrollmentsEntityDescriptor;
+  hasanat: typeof hasanatEntityDescriptor;
+  obligations: typeof obligationsEntityDescriptor;
+  platformWorkspaces: typeof platformWorkspacesEntityDescriptor;
+  platformUsers: typeof platformUsersEntityDescriptor;
+  platformSettings: typeof platformSettingsEntityDescriptor;
+  questionBank: typeof questionBankEntityDescriptor;
+};
+
 export type {
   FieldValueType,
   BadgeTone,
@@ -56,28 +73,34 @@ export {
   questionBankEntityDescriptor,
 };
 
-export const ENTITY_REGISTRY: Record<string, EntityDescriptor<unknown>> = {
-  contacts: contactsEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  students: studentsEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  teachers: teachersEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  faculty: facultyEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  sessions: sessionsEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  finance: financeEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  attendance: attendanceEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  enrollments: enrollmentsEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  hasanat: hasanatEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  obligations: obligationsEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  platformWorkspaces: platformWorkspacesEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  platformUsers: platformUsersEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  platformSettings: platformSettingsEntityDescriptor as unknown as EntityDescriptor<unknown>,
-  questionBank: questionBankEntityDescriptor as unknown as EntityDescriptor<unknown>,
-};
+export const ENTITY_REGISTRY = {
+  contacts: contactsEntityDescriptor,
+  students: studentsEntityDescriptor,
+  teachers: teachersEntityDescriptor,
+  faculty: facultyEntityDescriptor,
+  sessions: sessionsEntityDescriptor,
+  finance: financeEntityDescriptor,
+  attendance: attendanceEntityDescriptor,
+  enrollments: enrollmentsEntityDescriptor,
+  hasanat: hasanatEntityDescriptor,
+  obligations: obligationsEntityDescriptor,
+  platformWorkspaces: platformWorkspacesEntityDescriptor,
+  platformUsers: platformUsersEntityDescriptor,
+  platformSettings: platformSettingsEntityDescriptor,
+  questionBank: questionBankEntityDescriptor,
+} satisfies EntityRegistryMap;
 
 /**
  * Global accessor for entity descriptors by domain entity key.
  */
-export function getEntityDescriptor<T = unknown>(
+export function getEntityDescriptor<K extends keyof EntityRegistryMap>(
+  entityType: K,
+): EntityRegistryMap[K];
+export function getEntityDescriptor(
   entityType: string,
-): EntityDescriptor<T> | undefined {
-  return ENTITY_REGISTRY[entityType] as EntityDescriptor<T> | undefined;
+): EntityDescriptor<unknown> | undefined;
+export function getEntityDescriptor(
+  entityType: string,
+): EntityDescriptor<unknown> | undefined {
+  return ENTITY_REGISTRY[entityType as keyof EntityRegistryMap] as EntityDescriptor<unknown> | undefined;
 }

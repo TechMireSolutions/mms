@@ -18,7 +18,7 @@ describe("GuardianContactCard Component", () => {
       <GuardianContactCard
         label="Father"
         badgeCode="FAT"
-        badgeTone="bg-blue-100 text-blue-800"
+        badgeTone="bg-info/10 text-info"
         name="Ibrahim Harith"
         phone="+1 555-0100"
         onWhatsApp={vi.fn()}

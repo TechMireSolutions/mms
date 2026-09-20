@@ -4,6 +4,7 @@ import { formatDate } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { formatEntityStamp } from "@/lib/formatEntityStamp";
+import { useTranslation } from "@/hooks/useTranslation";
 
 export interface DetailDrawerArchivedBannerProps {
   deletedAt: unknown;
@@ -35,6 +36,7 @@ export function calculateRemainingRetentionDays(
     }
   }
   if (retentionDays == null || Number.isNaN(Number(retentionDays))) return null;
+  
   const stamp = formatEntityStamp(deletedAt);
   if (!stamp) return null;
   const deletedTime = new Date(stamp).getTime();
@@ -58,6 +60,7 @@ export function RetentionCountdownBadge({
   purgeAfter,
   className = "",
 }: RetentionCountdownBadgeProps): React.JSX.Element | null {
+  const { t } = useTranslation();
   const stamp = formatEntityStamp(deletedAt);
   if (!stamp) return null;
 
@@ -68,7 +71,7 @@ export function RetentionCountdownBadge({
       <span
         className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground ${className}`}
       >
-        Archived indefinitely
+        {t("common.archivedIndefinitely")}
       </span>
     );
   }
@@ -83,7 +86,8 @@ export function RetentionCountdownBadge({
           : "bg-muted text-muted-foreground"
       } ${className}`}
     >
-      {isWarning ? "⚠️ " : ""}Purges in {remaining} {remaining === 1 ? "day" : "days"}
+      {isWarning ? "⚠️ " : ""}
+      {remaining === 1 ? t("common.purgesInOneDay") : t("common.purgesInDays", { count: remaining })}
     </span>
   );
 }
@@ -97,20 +101,21 @@ export function DetailDrawerArchivedBanner({
   description,
   retentionDays,
 }: DetailDrawerArchivedBannerProps): React.JSX.Element | null {
+  const { t } = useTranslation();
   const stamp = formatEntityStamp(deletedAt);
   if (!stamp) return null;
 
   const formatted = formatDate(stamp);
-  let resolvedDescription = description ?? (describe ? describe(formatted) : (!title ? `Archived on ${formatted}` : undefined));
+  let resolvedDescription = description ?? (describe ? describe(formatted) : (!title ? t("common.archivedOn", { date: formatted }) : undefined));
 
   if (retentionDays !== undefined || purgeAfter !== undefined) {
     const remaining = calculateRemainingRetentionDays(deletedAt, retentionDays, purgeAfter);
     const retentionNote =
       remaining === null
-        ? "Archived indefinitely"
+        ? t("common.archivedIndefinitely")
         : remaining <= 7
-        ? `⚠️ Purges in ${remaining} ${remaining === 1 ? "day" : "days"}`
-        : `Purges in ${remaining} days`;
+        ? `⚠️ ${remaining === 1 ? t("common.purgesInOneDay") : t("common.purgesInDays", { count: remaining })}`
+        : remaining === 1 ? t("common.purgesInOneDay") : t("common.purgesInDays", { count: remaining });
     resolvedDescription = resolvedDescription
       ? `${resolvedDescription} • ${retentionNote}`
       : retentionNote;

@@ -76,6 +76,10 @@ export function ContactPickerMenu({
             variant="ghost"
             role="option"
             aria-selected={false}
+            onPointerDown={(e) => {
+              e.preventDefault();
+              onSelect(contact);
+            }}
             onClick={() => {
               onSelect(contact);
             }}

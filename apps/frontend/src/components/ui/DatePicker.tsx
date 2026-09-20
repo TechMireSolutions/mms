@@ -28,32 +28,31 @@ export interface DatePickerProps {
   "aria-label"?: string
   "aria-invalid"?: boolean
   "aria-describedby"?: string
+  ref?: React.Ref<HTMLInputElement>
 }
 
-export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(function DatePicker(
-  {
-    value,
-    onChange,
-    onBlur,
-    placeholder,
-    className,
-    disabled,
-    min,
-    max,
-    id,
-    name,
-    required,
-    autoComplete,
-    mode = "date",
-    yearOnly,
-    minYear,
-    maxYear,
-    "aria-label": ariaLabel,
-    "aria-invalid": ariaInvalid,
-    "aria-describedby": ariaDescribedBy,
-  },
+export function DatePicker({
   ref,
-) {
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  className,
+  disabled,
+  min,
+  max,
+  id,
+  name,
+  required,
+  autoComplete,
+  mode = "date",
+  yearOnly,
+  minYear,
+  maxYear,
+  "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
+}: DatePickerProps) {
   const { t } = useTranslation()
   const rootRef = React.useRef<HTMLDivElement>(null)
   const {
@@ -267,5 +266,5 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(fu
       />
     </div>
   )
-})
+}
 DatePicker.displayName = "DatePicker"

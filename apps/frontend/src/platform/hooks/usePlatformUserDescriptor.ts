@@ -15,3 +15,5 @@ export function usePlatformUserDescriptor(): EntityDescriptor<PlatformUserProfil
     (key, fallback) => t(key as Parameters<typeof t>[0]) || fallback,
   );
 }
+
+export const usePlatformUsersEntityDescriptor = usePlatformUserDescriptor;

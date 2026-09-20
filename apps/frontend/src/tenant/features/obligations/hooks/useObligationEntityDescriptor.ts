@@ -15,3 +15,5 @@ export function useObligationEntityDescriptor(): EntityDescriptor<ObligationColl
     (key, fallback) => t(key as Parameters<typeof t>[0]) || fallback,
   );
 }
+
+export const useObligationsEntityDescriptor = useObligationEntityDescriptor;

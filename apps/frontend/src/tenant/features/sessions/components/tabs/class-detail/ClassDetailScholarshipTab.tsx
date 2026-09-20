@@ -2,6 +2,7 @@ import React from 'react';
 import { Award, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
+import { Checkbox } from '@/components/ui/checkbox';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SessionClassScholarship } from '@/lib/data/sessionsData';
@@ -26,7 +27,7 @@ export function ClassDetailScholarshipTab({
     <div className="space-y-6">
       <div className="rounded-xl border border-border/70 bg-card p-4 space-y-4">
         <div className="flex items-center gap-2">
-          <Award className="h-4 w-4 text-purple-600" />
+          <Award className="h-4 w-4 text-secondary" />
           <h4 className="text-sm font-semibold text-foreground">{t('sessions.classes.detail.scholarship.rateTitle')}</h4>
         </div>
 
@@ -74,11 +75,10 @@ export function ClassDetailScholarshipTab({
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <label className="flex items-center gap-3 rounded-lg border border-border/60 p-3 hover:bg-muted/30 cursor-pointer">
-            <input
-              type="checkbox"
+            <Checkbox
               checked={Boolean(eligibility?.orphan)}
-              onChange={(e) => onUpdateEligibility({ orphan: e.target.checked })}
-              className="h-4 w-4 rounded border-border text-primary"
+              onCheckedChange={(checked) => onUpdateEligibility({ orphan: checked === true })}
+              className="h-4 w-4"
             />
             <div>
               <p className="text-xs font-medium text-foreground">{t('sessions.classes.detail.scholarship.orphan')}</p>
