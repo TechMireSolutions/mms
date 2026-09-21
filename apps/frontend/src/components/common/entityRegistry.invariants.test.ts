@@ -5,7 +5,7 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 const ALLOWED_BADGE_CLASSES = new Set<string>(Object.values(SEMANTIC_BADGE));
 
 describe("entity registry invariants", () => {
-  it("contains all 14 domain entity registrations", () => {
+  it("contains all 15 domain entity registrations", () => {
     const expectedEntities = [
       "contacts",
       "students",
@@ -21,6 +21,7 @@ describe("entity registry invariants", () => {
       "platformUsers",
       "platformSettings",
       "questionBank",
+      "users",
     ];
     expect(Object.keys(ENTITY_REGISTRY).sort()).toEqual(expectedEntities.sort());
   });

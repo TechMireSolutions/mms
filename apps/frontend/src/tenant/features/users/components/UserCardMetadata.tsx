@@ -2,6 +2,7 @@ import type { SystemUser } from "@mms/shared";
 import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
 import { useTranslation } from "@/hooks/useTranslation";
 import { renderUserWorkColumnValue } from "@/tenant/features/users/components/userWorkColumnCell";
+import { useUsersEntityDescriptor } from "@/tenant/features/users/hooks/useUsersEntityDescriptor";
 
 export interface UserCardMetadataProps {
   user: SystemUser;
@@ -9,36 +10,33 @@ export interface UserCardMetadataProps {
   isColumnVisible?: (key: string) => boolean;
 }
 
-type UserMetaColumn = {
-  key: "role" | "status" | "lastLogin" | "created" | "twoFactor";
-  label: "users.colRole" | "users.colStatus" | "users.colLastLogin" | "users.colCreated" | "users.col2fa";
-};
-
-const USER_META_COLUMNS: UserMetaColumn[] = [
-  { key: "role", label: "users.colRole" },
-  { key: "status", label: "users.colStatus" },
-  { key: "lastLogin", label: "users.colLastLogin" },
-  { key: "created", label: "users.colCreated" },
-  { key: "twoFactor", label: "users.col2fa" },
-];
-
-/** Users domain metadata tiles — Contacts card metadata chrome. */
+/**
+ * Users domain metadata tiles — Contacts card metadata chrome.
+ *
+ * Field identity, labels, visibility, and display order come from the SSOT
+ * `usersEntityDescriptor` (i18n-resolved via `useUsersEntityDescriptor`).
+ * Values stay with `renderUserWorkColumnValue` because role/status/2FA badge
+ * labels require runtime translation and workspace roles.
+ */
 export function UserCardMetadata({
   user,
   formatLoginDate,
   isColumnVisible,
 }: UserCardMetadataProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  const descriptor = useUsersEntityDescriptor();
   const visible = isColumnVisible ?? (() => true);
-  const metaColumns = USER_META_COLUMNS.filter((col) => visible(col.key));
+  const metaColumns = descriptor
+    .getCardFields()
+    .filter((field) => visible(field.key));
 
   return (
     <DirectoryCardMetadata
       columns={metaColumns}
-      keyFor={(col) => col.key}
-      labelFor={(col) => t(col.label)}
-      renderValue={(col) =>
-        renderUserWorkColumnValue(user, col.key, {
+      keyFor={(field) => field.key}
+      labelFor={(field) => field.label}
+      renderValue={(field) =>
+        renderUserWorkColumnValue(user, field.key, {
           t,
           formatLoginDate,
         })

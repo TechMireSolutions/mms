@@ -5,3 +5,4 @@ export * from "./communityDescriptors";
 export * from "./financeDescriptors";
 export * from "./platformDescriptors";
 export * from "./questionBankDescriptors";
+export * from "./userDescriptors";
