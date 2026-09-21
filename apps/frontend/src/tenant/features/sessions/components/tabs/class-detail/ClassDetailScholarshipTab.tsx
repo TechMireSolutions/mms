@@ -82,7 +82,7 @@ export function ClassDetailScholarshipTab({
             />
             <div>
               <p className="text-xs font-medium text-foreground">{t('sessions.classes.detail.scholarship.orphan')}</p>
-              <p className="text-[11px] text-muted-foreground">{t('sessions.classes.detail.scholarship.orphanHint')}</p>
+              <p className="text-3xs text-muted-foreground">{t('sessions.classes.detail.scholarship.orphanHint')}</p>
             </div>
           </label>
 

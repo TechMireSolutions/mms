@@ -175,7 +175,7 @@ export function WorkTaskToolbar({
                       <Badge
                         variant="secondary"
                         className={cn(
-                          "h-5 min-w-5 px-1 text-[10px] font-normal leading-none",
+                          "h-5 min-w-5 px-1 text-4xs font-normal leading-none",
                           option.badgeCls,
                         )}
                       >

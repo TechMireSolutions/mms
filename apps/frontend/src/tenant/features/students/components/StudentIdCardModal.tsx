@@ -62,7 +62,7 @@ export function StudentIdCardModal({
   };
 
   const cutGuideClass = showCutGuides
-    ? "ring-1 ring-dashed ring-slate-400/60 print:ring-1 print:ring-dashed print:ring-black/50"
+    ? "ring-1 ring-dashed ring-muted-foreground/60 print:ring-1 print:ring-dashed print:ring-black/50"
     : "";
 
   return (
@@ -202,7 +202,7 @@ export function StudentIdCardModal({
                         madrasaName={madrasaName}
                         className={cutGuideClass}
                       />
-                      <span className="absolute top-1.5 end-2 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60 print:hidden">
+                      <span className="absolute top-1.5 end-2 text-4xs font-bold uppercase tracking-wider text-muted-foreground/60 print:hidden">
                         {t("students.idCard.frontSide") || "Front"}
                       </span>
                     </div>
@@ -220,7 +220,7 @@ export function StudentIdCardModal({
                         madrasaName={madrasaName}
                         className={cutGuideClass}
                       />
-                      <span className="absolute top-1.5 end-2 text-[9px] font-bold uppercase tracking-wider text-muted-foreground/60 print:hidden">
+                      <span className="absolute top-1.5 end-2 text-4xs font-bold uppercase tracking-wider text-muted-foreground/60 print:hidden">
                         {t("students.idCard.backSide") || "Back"}
                       </span>
                     </div>

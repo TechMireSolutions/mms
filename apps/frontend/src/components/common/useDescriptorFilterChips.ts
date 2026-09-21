@@ -54,6 +54,7 @@ export function useDescriptorFilterChips<TEntity>(
 
 /** Fields eligible for chip generation: badge/status types with a badgeVariantMap. */
 function isFilterableField<T>(field: FieldDefinition<T>): boolean {
+  if (field.filterable !== undefined) return field.filterable;
   return (
     (field.type === "badge" || field.type === "status") &&
     field.badgeVariantMap !== undefined

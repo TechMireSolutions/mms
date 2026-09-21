@@ -38,6 +38,8 @@ export interface FieldDefinition<T> {
   type: FieldValueType;
   icon?: LucideIcon;
   sortable?: boolean;
+  filterable?: boolean;
+  filterPreset?: boolean;
   defaultVisibleInTable?: boolean;
   tableOrder?: number;
   fixed?: boolean;

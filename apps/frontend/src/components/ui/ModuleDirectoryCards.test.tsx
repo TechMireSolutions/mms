@@ -21,7 +21,7 @@ describe("ModuleDirectoryCards Component", () => {
 
     expect(html).toContain("Item 0");
     expect(html).toContain("Item 9");
-    expect(html).not.toContain("max-h-[75vh]");
+    expect(html).not.toContain("max-h-drawer");
   });
 
   it("handles high-volume items (> 50) using virtualized windowing container", () => {
@@ -39,7 +39,7 @@ describe("ModuleDirectoryCards Component", () => {
       />
     );
 
-    expect(html).toContain("max-h-[75vh]");
+    expect(html).toContain("max-h-drawer");
   });
 
   it("renders select-all bar when onSelectAll is provided and items exist", () => {

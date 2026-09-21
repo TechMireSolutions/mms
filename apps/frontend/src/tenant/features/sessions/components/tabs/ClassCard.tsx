@@ -75,16 +75,16 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
 
         {/* Model 6 badges strip */}
         <div className="mb-3 flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-3xs font-medium text-muted-foreground">
             <DollarSign className="h-3 w-3" />
             {feeCount > 0 ? `${feeCount} Fees` : 'No Fees set'}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-[11px] font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-3xs font-medium text-muted-foreground">
             <Clock className="h-3 w-3" />
             {(sessionClass.timetables?.[0]?.periods?.length ?? 0)} Periods
           </span>
           {sessionClass.scholarships && sessionClass.scholarships.length > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-secondary/10 text-secondary px-2 py-0.5 text-[11px] font-medium">
+            <span className="inline-flex items-center gap-1 rounded-md bg-secondary/10 text-secondary px-2 py-0.5 text-3xs font-medium">
               Scholarship: {sessionClass.scholarships[0]?.percentage}%
             </span>
           )}
