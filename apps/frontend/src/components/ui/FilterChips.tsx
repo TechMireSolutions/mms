@@ -14,7 +14,7 @@ export interface FilterChip {
   onRemove: () => void;
 }
 
-export interface FilterChipsProps<T = any> {
+export interface FilterChipsProps<T = unknown> {
   chips?: FilterChip[];
   /** Optional SSOT descriptor-driven active filters */
   filters?: Record<string, unknown>;
@@ -29,7 +29,7 @@ export interface FilterChipsProps<T = any> {
  * FilterChips — shows active filter pills with clear actions.
  * Supports both manual chip arrays and declarative entity descriptor-driven active filter state.
  */
-export function FilterChips<T = any>({
+export function FilterChips<T = unknown>({
   chips = [],
   filters,
   entityType,

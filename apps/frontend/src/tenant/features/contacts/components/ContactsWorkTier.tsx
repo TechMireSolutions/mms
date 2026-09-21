@@ -6,7 +6,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import ContactsListFilters from "@/tenant/features/contacts/components/ContactsListFilters";
 import { ContactsBulkActionBar } from "@/tenant/features/contacts/components/ContactsBulkActionBar";
 import { ContactsList } from "@/tenant/features/contacts/components/ContactsList";
-import { buildContactsWorkFilterChips } from "@/tenant/features/contacts/components/buildContactsWorkFilterChips";
+import { useContactEntityDescriptor } from "@/tenant/features/contacts/hooks/useContactEntityDescriptor";
+import { useDescriptorFilterChips } from "@/components/common/useDescriptorFilterChips";
 import type { ContactsWorkTierProps } from "@/tenant/features/contacts/components/contactsWorkTierTypes";
 
 export const ContactsWorkTier = React.memo(function ContactsWorkTier({
@@ -56,17 +57,17 @@ export const ContactsWorkTier = React.memo(function ContactsWorkTier({
   onPageChange,
 }: ContactsWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
-  const filterChips = useMemo(
-    () =>
-      buildContactsWorkFilterChips({
-        filterGender,
-        quickFilter,
-        onGenderChange,
-        onQuickFilterChange,
-        t,
-      }),
-    [filterGender, quickFilter, onGenderChange, onQuickFilterChange, t],
-  );
+  const descriptor = useContactEntityDescriptor();
+  
+  const activeFilters = useMemo(() => ({
+    gender: filterGender || undefined,
+    quickFilter: quickFilter !== "all" ? quickFilter : undefined,
+  }), [filterGender, quickFilter]);
+
+  const filterChips = useDescriptorFilterChips(descriptor, activeFilters, (key) => {
+    if (key === "gender") onGenderChange("");
+    if (key === "quickFilter") onQuickFilterChange("all");
+  });
 
   return (
     <ModuleTierMotion tier="work" className="space-y-4" aria-busy={isWorkFetching}>

@@ -25,6 +25,8 @@ import {
   platformSettingsEntityDescriptor,
   questionBankEntityDescriptor,
   usersEntityDescriptor,
+  examinationsEntityDescriptor,
+  messagingEntityDescriptor,
 } from "./descriptors";
 
 export type EntityRegistryMap = {
@@ -43,6 +45,8 @@ export type EntityRegistryMap = {
   platformSettings: typeof platformSettingsEntityDescriptor;
   questionBank: typeof questionBankEntityDescriptor;
   users: typeof usersEntityDescriptor;
+  examinations: typeof examinationsEntityDescriptor;
+  messaging: typeof messagingEntityDescriptor;
 };
 
 export type {
@@ -74,6 +78,8 @@ export {
   platformSettingsEntityDescriptor,
   questionBankEntityDescriptor,
   usersEntityDescriptor,
+  examinationsEntityDescriptor,
+  messagingEntityDescriptor,
 };
 
 export const ENTITY_REGISTRY = {
@@ -92,6 +98,8 @@ export const ENTITY_REGISTRY = {
   platformSettings: platformSettingsEntityDescriptor,
   questionBank: questionBankEntityDescriptor,
   users: usersEntityDescriptor,
+  examinations: examinationsEntityDescriptor,
+  messaging: messagingEntityDescriptor,
 } satisfies EntityRegistryMap;
 
 /**

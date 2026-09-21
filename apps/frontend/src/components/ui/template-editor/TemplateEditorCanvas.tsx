@@ -195,7 +195,7 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
                 }}
               />
               <div
-                className="absolute inset-[24px] pointer-events-none border border-dashed border-info/35 rounded-xs"
+                className="absolute inset-6 pointer-events-none border border-dashed border-info/35 rounded-xs"
                 title={t("templateEditor.safeMargins")}
               />
             </div>

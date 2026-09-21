@@ -43,6 +43,10 @@
   --radius-2xl: calc(var(--radius) * 2);
   --radius-3xl: calc(var(--radius) * 2.5);
 
+  /** Template editor element palette side-stripe accent width.
+   *  Used via Tailwind's arbitrary-property syntax: border-s-[--palette-stripe-width]. */
+  --palette-stripe-width: 3px;
+
   --color-background: hsl(var(--background));
   --color-foreground: hsl(var(--foreground));
   --color-card: hsl(var(--card));

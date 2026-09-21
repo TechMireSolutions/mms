@@ -16,6 +16,8 @@ import {
   obligationsEntityDescriptor,
   platformUsersEntityDescriptor,
   platformSettingsEntityDescriptor,
+  examinationsEntityDescriptor,
+  messagingEntityDescriptor,
   getEntityDescriptor,
 } from "@/components/common/entityRegistry";
 import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
@@ -128,6 +130,158 @@ describe("SSOT Entity UI Registry Architecture", () => {
       expect(descriptor.formatFieldValue("name", entity)).toBe("Test item");
       expect(descriptor.formatFieldValue("amount", entity)).toContain("1,500");
       expect(descriptor.formatFieldValue("created", entity)).toBe("2026-09-20");
+    });
+
+    it("renders phone and email fields as accessible interactive links", () => {
+      interface CommEntity {
+        id: string;
+        phone: string;
+        email: string;
+      }
+
+      const descriptor = createEntityDescriptor<CommEntity>({
+        entityType: "comm",
+        singularLabel: "Comm",
+        pluralLabel: "Comms",
+        idField: "id",
+        titleField: "phone",
+        fields: [
+          {
+            key: "phone",
+            label: "Phone",
+            type: "phone",
+            ariaLabel: (val) => `Call ${val}`,
+          },
+          {
+            key: "email",
+            label: "Email",
+            type: "email",
+            ariaLabel: "Send message",
+          },
+        ],
+      });
+
+      const entity: CommEntity = {
+        id: "comm-1",
+        phone: "+923001234567",
+        email: "test@example.com",
+      };
+
+      const phoneMarkup = renderToStaticMarkup(
+        <div>{descriptor.renderFieldValue("phone", entity)}</div>,
+      );
+      expect(phoneMarkup).toContain('href="tel:+923001234567"');
+      expect(phoneMarkup).toContain('aria-label="Call +923001234567"');
+      expect(phoneMarkup).toContain("+923001234567");
+
+      const emailMarkup = renderToStaticMarkup(
+        <div>{descriptor.renderFieldValue("email", entity)}</div>,
+      );
+      expect(emailMarkup).toContain('href="mailto:test@example.com"');
+      expect(emailMarkup).toContain('aria-label="Send message"');
+      expect(emailMarkup).toContain("test@example.com");
+    });
+
+    it("handles badge with custom className vs StatusBadge fallback and empty values", () => {
+      interface StatusEntity {
+        id: string;
+        customStatus: string;
+        rawStatus: string;
+        emptyField?: string | null;
+      }
+
+      const descriptor = createEntityDescriptor<StatusEntity>({
+        entityType: "status-test",
+        singularLabel: "Status Test",
+        pluralLabel: "Status Tests",
+        idField: "id",
+        titleField: "customStatus",
+        fields: [
+          {
+            key: "customStatus",
+            label: "Custom",
+            type: "badge",
+            badgeVariantMap: {
+              vip: { label: "VIP Member", className: SEMANTIC_BADGE.success },
+            },
+          },
+          {
+            key: "rawStatus",
+            label: "Raw",
+            type: "status",
+          },
+          {
+            key: "emptyField",
+            label: "Empty",
+            type: "text",
+          },
+        ],
+      });
+
+      const entity: StatusEntity = {
+        id: "st-1",
+        customStatus: "vip",
+        rawStatus: "active",
+        emptyField: null,
+      };
+
+      // Custom badge variant with SEMANTIC_BADGE class
+      const customMarkup = renderToStaticMarkup(
+        <div>{descriptor.renderFieldValue("customStatus", entity)}</div>,
+      );
+      expect(customMarkup).toContain("VIP Member");
+      expect(customMarkup).toContain(SEMANTIC_BADGE.success);
+
+      // Raw status fallback to StatusBadge component
+      const rawMarkup = renderToStaticMarkup(
+        <div>{descriptor.renderFieldValue("rawStatus", entity)}</div>,
+      );
+      expect(rawMarkup).toContain("active");
+
+      // Empty field renders em-dash with text-muted-foreground
+      const emptyMarkup = renderToStaticMarkup(
+        <div>{descriptor.renderFieldValue("emptyField", entity)}</div>,
+      );
+      expect(emptyMarkup).toContain("text-muted-foreground");
+      expect(emptyMarkup).toContain("—");
+    });
+
+    it("applies sectionTitleMap and defaultDrawerSectionTitle overrides", () => {
+      interface SectionEntity {
+        id: string;
+        f1: string;
+        f2: string;
+        f3: string;
+      }
+
+      const descriptor = createEntityDescriptor<SectionEntity>({
+        entityType: "section-test",
+        singularLabel: "Section Test",
+        pluralLabel: "Section Tests",
+        idField: "id",
+        titleField: "f1",
+        defaultDrawerSectionTitle: "Primary Overview",
+        sectionTitleMap: {
+          customSec: "Specialized Information",
+        },
+        fields: [
+          { key: "f1", label: "F1", type: "text", drawerSection: "general" },
+          { key: "f2", label: "F2", type: "text", drawerSection: "customSec" },
+          { key: "f3", label: "F3", type: "text", drawerSection: "unmappedSec" },
+        ],
+      });
+
+      const sections = descriptor.getDrawerSections();
+      expect(sections).toHaveLength(3);
+
+      const general = sections.find((s) => s.id === "general");
+      expect(general?.title).toBe("Primary Overview");
+
+      const custom = sections.find((s) => s.id === "customSec");
+      expect(custom?.title).toBe("Specialized Information");
+
+      const unmapped = sections.find((s) => s.id === "unmappedSec");
+      expect(unmapped?.title).toBe("UnmappedSec");
     });
   });
 
@@ -718,5 +872,68 @@ describe("SSOT Entity UI Registry Architecture", () => {
       expect(markup).toBeDefined();
     });
   });
+
+  describe("examinationsEntityDescriptor", () => {
+    it("renders examination attributes, badges, and drawer sections", () => {
+      const exam = {
+        id: "exam-1",
+        name: "Midterm Examination 2026",
+        subject: "Islamic Jurisprudence",
+        totalMarks: 100,
+        passingMarks: 50,
+        date: "2026-10-15",
+        duration: 90,
+        classIds: [],
+        status: "scheduled" as const,
+        description: "Comprehensive midterm examination",
+      };
+
+      expect(examinationsEntityDescriptor.entityType).toBe("examinations");
+      expect(examinationsEntityDescriptor.titleField).toBe("name");
+      expect(examinationsEntityDescriptor.formatFieldValue("name", exam)).toBe("Midterm Examination 2026");
+      expect(examinationsEntityDescriptor.formatFieldValue("subject", exam)).toBe("Islamic Jurisprudence");
+      expect(examinationsEntityDescriptor.formatFieldValue("totalMarks", exam)).toBe("100");
+
+      const badgeNode = examinationsEntityDescriptor.renderFieldValue("status", exam);
+      const badgeMarkup = renderToStaticMarkup(<div>{badgeNode}</div>);
+      expect(badgeMarkup).toContain("Scheduled");
+
+      const sections = examinationsEntityDescriptor.getDrawerSections();
+      expect(sections.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+
+  describe("messagingEntityDescriptor", () => {
+    it("renders message attributes, channel badges, and status variants", () => {
+      const message = {
+        id: "msg-101",
+        userId: "user-1",
+        contactId: "contact-1",
+        channel: "whatsapp" as const,
+        body: "Assalamu Alaikum, fee reminder for October.",
+        sentAt: "2026-10-01T10:00:00Z",
+        status: "delivered" as const,
+        category: "financial" as const,
+      };
+
+      expect(messagingEntityDescriptor.entityType).toBe("messaging");
+      expect(messagingEntityDescriptor.titleField).toBe("body");
+      expect(messagingEntityDescriptor.formatFieldValue("body", message)).toBe(
+        "Assalamu Alaikum, fee reminder for October.",
+      );
+
+      const channelNode = messagingEntityDescriptor.renderFieldValue("channel", message);
+      const channelMarkup = renderToStaticMarkup(<div>{channelNode}</div>);
+      expect(channelMarkup).toContain("WhatsApp");
+
+      const statusNode = messagingEntityDescriptor.renderFieldValue("status", message);
+      const statusMarkup = renderToStaticMarkup(<div>{statusNode}</div>);
+      expect(statusMarkup).toContain("Delivered");
+
+      const sections = messagingEntityDescriptor.getDrawerSections();
+      expect(sections.length).toBeGreaterThanOrEqual(2);
+    });
+  });
 });
+
 

@@ -19,6 +19,16 @@ export interface ModuleScaffoldProps {
   onTabChange?: (tabId: string) => void;
   panelIdPrefix?: string;
   className?: string;
+  /**
+   * Drawer/sheet outlet — rendered outside the main content flow so slide-over
+   * panels do not affect document flow or ARIA tree of the content region.
+   */
+  drawerOutlet?: React.ReactNode;
+  /**
+   * When `true`, sets `aria-busy="true"` on the content wrapper to signal to
+   * assistive technology that content is loading.
+   */
+  isBusy?: boolean;
   children: React.ReactNode;
 }
 
@@ -40,11 +50,16 @@ export function ModuleScaffold({
   onTabChange,
   panelIdPrefix = "module-tab",
   className,
+  drawerOutlet,
+  isBusy,
   children,
 }: ModuleScaffoldProps): React.JSX.Element {
   return (
     <ErrorBoundary>
-      <div className={cn("box-border mx-auto w-full min-w-0 max-w-7xl space-y-5", className)}>
+      <div
+        className={cn("box-border mx-auto w-full min-w-0 max-w-7xl space-y-5", className)}
+        aria-busy={isBusy === true ? "true" : undefined}
+      >
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
         {headerTitle ? (
@@ -69,6 +84,8 @@ export function ModuleScaffold({
           children
         )}
       </div>
+      {/* Drawer outlet — outside content flow so slide-over panels do not affect layout */}
+      {drawerOutlet}
     </ErrorBoundary>
   );
 }

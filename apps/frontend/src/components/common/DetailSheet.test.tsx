@@ -12,8 +12,9 @@
  * unit tests (co-located with the hook); these tests focus on the public surface
  * of DetailSheet and its contract with EntityDescriptor<T>.
  */
-import React from "react";
-import { describe, it, expect } from "vitest";
+import React, { act } from "react";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { createRoot } from "react-dom/client";
 import { DetailSheet } from "@/components/common/DetailSheet";
 import { createEntityDescriptor } from "@/components/common/entityDescriptorFactory";
 import type { EntityDescriptor } from "@/types/entityRegistry";
@@ -200,3 +201,142 @@ describe("DetailSheet — entityType registry lookup (G6)", () => {
     ).not.toThrow();
   });
 });
+
+describe("DetailSheet — DOM & ARIA live contract", () => {
+  let container: HTMLDivElement;
+
+  beforeEach(() => {
+    container = document.createElement("div");
+    document.body.appendChild(container);
+  });
+
+  afterEach(() => {
+    container.remove();
+    document.body.innerHTML = "";
+  });
+
+  it("renders role='dialog' and aria-modal='true' on the dialog aside landmark in DOM", async () => {
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <DetailSheet
+          open={true}
+          onClose={() => {}}
+          title="Student Profile"
+          ariaLabel="Student profile details dialog"
+        >
+          <div>Profile content</div>
+        </DetailSheet>,
+      );
+    });
+
+    const dialog = document.querySelector('[role="dialog"]');
+    expect(dialog).not.toBeNull();
+    expect(dialog?.getAttribute("aria-modal")).toBe("true");
+    expect(dialog?.getAttribute("aria-label")).toBe("Student profile details dialog");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("triggers onClose when Escape key is pressed", async () => {
+    const onClose = vi.fn();
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <DetailSheet
+          open={true}
+          onClose={onClose}
+          title="Dismissible Drawer"
+        >
+          <div>Body</div>
+        </DetailSheet>,
+      );
+    });
+
+    await act(async () => {
+      window.dispatchEvent(new KeyboardEvent("keydown", { key: "Escape" }));
+    });
+
+    expect(onClose).toHaveBeenCalled();
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("renders archive banner and invokes onRestore when restore button is clicked", async () => {
+    const onRestore = vi.fn();
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <DetailSheet
+          open={true}
+          onClose={() => {}}
+          title="Archived Item"
+          archiveState={{
+            isDeleted: true,
+            deletedAt: "2026-09-01T12:00:00Z",
+            deletedBy: "Admin User",
+            canRestore: true,
+            onRestore,
+            recordTitle: "Archived Record",
+            restoreLabel: "Restore This Record",
+          }}
+        >
+          <div>Body</div>
+        </DetailSheet>,
+      );
+    });
+
+    expect(document.body.textContent).toContain("Restore This Record");
+
+    const restoreButton = Array.from(document.querySelectorAll("button")).find((btn) =>
+      btn.textContent?.includes("Restore This Record"),
+    );
+    expect(restoreButton).toBeDefined();
+
+    await act(async () => {
+      restoreButton?.click();
+    });
+
+    expect(onRestore).toHaveBeenCalled();
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+
+  it("renders descriptor sections and attribute rows into the live DOM", async () => {
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <DetailSheet<SampleEntity>
+          open={true}
+          onClose={() => {}}
+          title="Sample Details"
+          descriptor={sampleDescriptor}
+          entity={sampleEntity}
+        >
+          <div>Additional slot</div>
+        </DetailSheet>,
+      );
+    });
+
+    const bodyText = document.body.textContent ?? "";
+    expect(bodyText).toContain("Full Name");
+    expect(bodyText).toContain("Ahmad Ali");
+    expect(bodyText).toContain("Status");
+    expect(bodyText).toContain("statusBadge.active");
+    expect(bodyText).toContain("Additional slot");
+
+    await act(async () => {
+      root.unmount();
+    });
+  });
+});
+

@@ -25,9 +25,12 @@ export default tseslint.config(
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["eslint-rules/**/*.cjs"],
+    files: ["eslint-rules/**/*.cjs", "scripts/**/*.{js,cjs,mjs}"],
     languageOptions: {
       globals: globals.node,
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
   {
