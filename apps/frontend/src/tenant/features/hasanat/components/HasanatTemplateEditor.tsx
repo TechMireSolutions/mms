@@ -13,6 +13,12 @@ import type {
   TemplateFieldDefinition,
 } from "@mms/shared";
 import { notify } from "@/lib/notify";
+import {
+  PRINT_EMERALD,
+  PRINT_EMERALD_LIGHT,
+  PRINT_EMERALD_DEEP,
+  PRINT_SLATE_MUTED,
+} from "@/lib/printTemplateStyles";
 
 export interface HasanatPayload {
   receiptNo: string;
@@ -42,11 +48,12 @@ export const HASANAT_AVAILABLE_FIELDS: TemplateFieldDefinition<HasanatPayload>[]
   { field: "institution", label: "Institution Name", sampleValue: "Madrasa Management System" },
 ];
 
-// Print template design tokens — quarantined per lib/printTemplateStyles.ts
-const PRINT_HASANAT_EMERALD = "#059669";
-const PRINT_HASANAT_EMERALD_LIGHT = "#10b981";
-const PRINT_HASANAT_EMERALD_DEEP = "#047857";
-const PRINT_HASANAT_MUTED_SLATE = "#64748b";
+// Print tokens imported from lib/printTemplateStyles.ts SSOT.
+// Aliases preserve local readability without re-declaring hex literals.
+const PRINT_HASANAT_EMERALD = PRINT_EMERALD;
+const PRINT_HASANAT_EMERALD_LIGHT = PRINT_EMERALD_LIGHT;
+const PRINT_HASANAT_EMERALD_DEEP = PRINT_EMERALD_DEEP;
+const PRINT_HASANAT_MUTED_SLATE = PRINT_SLATE_MUTED;
 
 export const DEFAULT_HASANAT_TEMPLATE: DocumentTemplate<HasanatPayload> = {
   pageSize: "A6",

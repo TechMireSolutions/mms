@@ -16,6 +16,12 @@ import {
 } from "@mms/shared";
 import { mapToTypstFeeReceipt, mapToZohoInvoice } from "@/components/ui/template-editor/templatePayloadMappers";
 import { notify } from "@/lib/notify";
+import {
+  PRINT_BLUE_DEEP,
+  PRINT_BLUE_DIVIDER,
+  PRINT_RED_DANGER,
+  PRINT_GREEN_SUCCESS,
+} from "@/lib/printTemplateStyles";
 
 export const FINANCE_TEMPLATE_STORAGE_KEY = "mms_finance_invoice_template";
 
@@ -38,16 +44,16 @@ export const DEFAULT_FINANCE_TEMPLATE: DocumentTemplate<TypstFeeReceiptPayload> 
   orientation: "landscape",
   elements: [
     { id: "f_inst", type: "field", field: "institution", label: "Madrasa Management System", x: 28, y: 24, w: 320, h: 24, style: { fontSize: 16, fontWeight: "bold" } },
-    { id: "f_title", type: "static", label: "سند قبض رسوم دراسية | Fee Payment Receipt", x: 28, y: 52, w: 300, h: 18, style: { fontSize: 11, color: "#0369a1" } },
-    { id: "f_div1", type: "divider", label: "", x: 28, y: 76, w: 738, h: 1, style: { color: "#0284c7" } },
-    { id: "f_rec", type: "field", field: "receiptNo", label: "REC-2026-0001", x: 580, y: 24, w: 186, h: 20, style: { fontSize: 12, fontWeight: "bold", color: "#dc2626", textAlign: "right" } },
+    { id: "f_title", type: "static", label: "سند قبض رسوم دراسية | Fee Payment Receipt", x: 28, y: 52, w: 300, h: 18, style: { fontSize: 11, color: PRINT_BLUE_DEEP } },
+    { id: "f_div1", type: "divider", label: "", x: 28, y: 76, w: 738, h: 1, style: { color: PRINT_BLUE_DIVIDER } },
+    { id: "f_rec", type: "field", field: "receiptNo", label: "REC-2026-0001", x: 580, y: 24, w: 186, h: 20, style: { fontSize: 12, fontWeight: "bold", color: PRINT_RED_DANGER, textAlign: "right" } },
     { id: "f_date", type: "field", field: "date", label: "Date: 2026-09-12", x: 580, y: 48, w: 186, h: 18, style: { fontSize: 10, textAlign: "right" } },
     { id: "f_stud", type: "field", field: "studentName", label: "Ali Muhammad", x: 28, y: 92, w: 220, h: 18, style: { fontSize: 11 } },
     { id: "f_roll", type: "field", field: "rollNo", label: "Roll: R-1042", x: 260, y: 92, w: 180, h: 18, style: { fontSize: 11 } },
     { id: "f_class", type: "field", field: "className", label: "Class: Hifz 2", x: 460, y: 92, w: 180, h: 18, style: { fontSize: 11 } },
     { id: "f_tot", type: "field", field: "totalAmount", label: "Total: 500.00", x: 540, y: 160, w: 180, h: 20, style: { fontSize: 13, fontWeight: "bold" } },
-    { id: "f_paid", type: "field", field: "paidAmount", label: "Paid: 350.00", x: 540, y: 185, w: 180, h: 20, style: { fontSize: 13, fontWeight: "bold", color: "#16a34a" } },
-    { id: "f_bal", type: "field", field: "balance", label: "Balance: 150.00", x: 540, y: 210, w: 180, h: 20, style: { fontSize: 13, fontWeight: "bold", color: "#dc2626" } },
+    { id: "f_paid", type: "field", field: "paidAmount", label: "Paid: 350.00", x: 540, y: 185, w: 180, h: 20, style: { fontSize: 13, fontWeight: "bold", color: PRINT_GREEN_SUCCESS } },
+    { id: "f_bal", type: "field", field: "balance", label: "Balance: 150.00", x: 540, y: 210, w: 180, h: 20, style: { fontSize: 13, fontWeight: "bold", color: PRINT_RED_DANGER } },
     { id: "f_qr", type: "qrcode", label: "QR Code", x: 28, y: 150, w: 80, h: 80 },
   ],
 };

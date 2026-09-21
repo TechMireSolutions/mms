@@ -3,6 +3,7 @@ import { createRoot } from "react-dom/client";
 import { describe, it, expect, vi } from "vitest";
 import { useDescriptorFilterChips } from "./useDescriptorFilterChips";
 import type { EntityDescriptor, FieldDefinition } from "@/types/entityRegistry";
+import { ENTITY_REGISTRY } from "@/components/common/entityRegistry";
 
 const MOCK_FIELDS: FieldDefinition<Record<string, unknown>>[] = [
   {
@@ -157,5 +158,52 @@ describe("useDescriptorFilterChips", () => {
     );
     expect(getResult()).toHaveLength(0);
     cleanup();
+  });
+
+  describe("questionBank entity descriptor integration (G5)", () => {
+    it("generates chips for badge-typed fields in the registered questionBank descriptor", () => {
+      const descriptor = ENTITY_REGISTRY["questionBank"];
+      expect(descriptor, "questionBank must be registered in ENTITY_REGISTRY").toBeDefined();
+
+      // Identify the first badge/status field with a badgeVariantMap so we can activate a filter.
+      const badgeField = descriptor.fields.find(
+        (f) =>
+          (f.type === "badge" || f.type === "status") &&
+          f.badgeVariantMap &&
+          Object.keys(f.badgeVariantMap).length > 0,
+      );
+      expect(badgeField, "questionBank descriptor must have at least one badge/status field").toBeDefined();
+
+      const firstVariant = Object.keys(badgeField!.badgeVariantMap!)[0]!;
+      const activeFilters: Record<string, string> = { [badgeField!.key]: firstVariant };
+
+      const { getResult, cleanup } = renderHookInDom(() =>
+        useDescriptorFilterChips(
+          descriptor,
+          activeFilters,
+          vi.fn(),
+        ),
+      );
+
+      const chips = getResult();
+      expect(chips.length).toBeGreaterThanOrEqual(1);
+      expect(chips.some((c) => c.key === badgeField!.key)).toBe(true);
+      cleanup();
+    });
+
+    it("generates no chips for questionBank when no filters are active", () => {
+      const descriptor = ENTITY_REGISTRY["questionBank"];
+      expect(descriptor).toBeDefined();
+
+      const { getResult, cleanup } = renderHookInDom(() =>
+        useDescriptorFilterChips(
+          descriptor,
+          {},
+          vi.fn(),
+        ),
+      );
+      expect(getResult()).toHaveLength(0);
+      cleanup();
+    });
   });
 });

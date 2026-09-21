@@ -105,3 +105,8 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - Soft-delete only via dedicated DELETE/restore routes — never from the create/edit form body.
 - File uploads: authenticated multipart to `/api/uploads/image` or `/api/uploads/attachment` (local disk under `/uploads/…`); resolve returned URLs via `resolveApiUrl` — no S3/presign in tree.
 - Local `/uploads/*`: require auth (or signed short-TTL) to read; on write enforce **magic-byte sniff** + MIME allowlist + **size** caps and **dimension/page** caps for images/PDFs (mitigate decompression bombs) — pointer `mms-auth-security.md`. Do not invent public long-lived CDN URLs.
+
+## 7. FormModal vs DetailSheet Boundary
+
+- **FormModal owns write mutations**: create, edit, builder workflows, and data modifications with shared Zod validation.
+- **DetailSheet owns read-only inspection**: entity attribute viewing, soft-delete archive state, quick contact actions, and audit metadata. DetailSheet consumes declarative `EntityDescriptor<T>` registries (`@/components/common/entityRegistry`, `mms-ui-ux-design.md` §6) rather than embedding form controls or duplicating field layouts. Do not put edit forms inside DetailSheet.

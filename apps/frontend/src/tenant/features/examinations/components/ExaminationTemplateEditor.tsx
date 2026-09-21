@@ -15,6 +15,14 @@ import {
 } from "@mms/shared";
 import { mapToTypstReportCard } from "@/components/ui/template-editor/templatePayloadMappers";
 import { notify } from "@/lib/notify";
+import {
+  PRINT_SLATE_DARK,
+  PRINT_SLATE_MEDIUM,
+  PRINT_SLATE_MUTED,
+  PRINT_BLUE_DEEP,
+  PRINT_AMBER_DEEP,
+  PRINT_EMERALD_DEEP,
+} from "@/lib/printTemplateStyles";
 
 export const EXAMINATION_TEMPLATE_STORAGE_KEY = "mms_examination_report_template";
 
@@ -33,13 +41,13 @@ export const EXAMINATION_AVAILABLE_FIELDS: TemplateFieldDefinition<TypstReportCa
   { field: "institution", label: "Institution Name", sampleValue: "Madrasa Management System" },
 ];
 
-// Print template design tokens — quarantined per lib/printTemplateStyles.ts
-const PRINT_EXAM_SLATE_DARK = "#0f172a";
-const PRINT_EXAM_SLATE = "#334155";
-const PRINT_EXAM_SLATE_MUTED = "#64748b";
-const PRINT_EXAM_SKY_DEEP = "#0369a1";
-const PRINT_EXAM_AMBER_DEEP = "#b45309";
-const PRINT_EXAM_EMERALD_DEEP = "#047857";
+// Print tokens imported from lib/printTemplateStyles.ts SSOT.
+const PRINT_EXAM_SLATE_DARK = PRINT_SLATE_DARK;
+const PRINT_EXAM_SLATE = PRINT_SLATE_MEDIUM;
+const PRINT_EXAM_SLATE_MUTED = PRINT_SLATE_MUTED;
+const PRINT_EXAM_SKY_DEEP = PRINT_BLUE_DEEP;
+const PRINT_EXAM_AMBER_DEEP = PRINT_AMBER_DEEP;
+const PRINT_EXAM_EMERALD_DEEP = PRINT_EMERALD_DEEP;
 
 export const DEFAULT_EXAMINATION_TEMPLATE: DocumentTemplate<TypstReportCardPayload> = {
   pageSize: "A4",

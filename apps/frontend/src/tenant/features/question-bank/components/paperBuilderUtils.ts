@@ -3,34 +3,42 @@ import type {
   QuestionBankQuestion as Question,
   QuestionBankTest,
 } from "@mms/shared";
+import {
+  PRINT_COLORS,
+  PRINT_SECTION_NOTE,
+  PRINT_RULE,
+  PRINT_BORDER,
+  PRINT_LABEL,
+} from "@/lib/printTemplateStyles";
 
 // Quarantined print-only CSS stylesheet string for physical A4 exam paper generation.
-// Per mms-ui-ux-design.md §2, physical print styles (A4/PDF) are quarantined from application UI chrome tokens.
+// Per mms-ui-ux-design.mdc §2, physical print styles (A4/PDF) are quarantined from application UI chrome tokens.
+// Hex values sourced from lib/printTemplateStyles.ts SSOT — do not re-declare inline.
 export const PAPER_PRINT_STYLES = `
-  .qpaper { width: 210mm; min-height: 297mm; margin: 0 auto; background: #fff; color: #111827; font-family: Inter, Arial, sans-serif; padding: 18mm; box-sizing: border-box; }
-  .qpaper-header { text-align: center; border-bottom: 2px solid #111827; padding-bottom: 10px; margin-bottom: 14px; }
+  .qpaper { width: 210mm; min-height: 297mm; margin: 0 auto; background: ${PRINT_COLORS.white}; color: ${PRINT_COLORS.black}; font-family: Inter, Arial, sans-serif; padding: 18mm; box-sizing: border-box; }
+  .qpaper-header { text-align: center; border-bottom: 2px solid ${PRINT_COLORS.black}; padding-bottom: 10px; margin-bottom: 14px; }
   .qpaper-title { margin: 0; font-size: 22px; font-weight: 800; letter-spacing: 0; }
-  .qpaper-subtitle { margin: 6px 0 0; font-size: 12px; color: #374151; }
+  .qpaper-subtitle { margin: 6px 0 0; font-size: 12px; color: ${PRINT_COLORS.darkGray}; }
   .qpaper-meta { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin: 12px 0 14px; font-size: 11px; }
-  .qpaper-meta-cell { border: 1px solid #d1d5db; padding: 7px 8px; min-height: 30px; }
-  .qpaper-meta-label { display: block; color: #6b7280; font-size: 9px; text-transform: uppercase; margin-bottom: 2px; }
-  .qpaper-instructions { border: 1px solid #d1d5db; padding: 8px 10px; margin-bottom: 14px; font-size: 11px; line-height: 1.45; }
+  .qpaper-meta-cell { border: 1px solid ${PRINT_BORDER}; padding: 7px 8px; min-height: 30px; }
+  .qpaper-meta-label { display: block; color: ${PRINT_LABEL}; font-size: 9px; text-transform: uppercase; margin-bottom: 2px; }
+  .qpaper-instructions { border: 1px solid ${PRINT_BORDER}; padding: 8px 10px; margin-bottom: 14px; font-size: 11px; line-height: 1.45; }
   .qpaper-section { break-inside: avoid; page-break-inside: avoid; margin: 16px 0 10px; }
-  .qpaper-section-title { border-bottom: 1px solid #9ca3af; font-size: 13px; font-weight: 800; margin: 0 0 6px; padding-bottom: 4px; }
-  .qpaper-section-note { color: #4b5563; font-size: 11px; line-height: 1.45; margin: 0 0 10px; }
+  .qpaper-section-title { border-bottom: 1px solid ${PRINT_RULE}; font-size: 13px; font-weight: 800; margin: 0 0 6px; padding-bottom: 4px; }
+  .qpaper-section-note { color: ${PRINT_SECTION_NOTE}; font-size: 11px; line-height: 1.45; margin: 0 0 10px; }
   .qpaper-question { break-inside: avoid; page-break-inside: avoid; margin-bottom: 15px; }
   .qpaper-question-text { display: flex; gap: 8px; font-size: 13px; font-weight: 700; line-height: 1.5; margin-bottom: 8px; }
   .qpaper-question-number { min-width: 24px; font-weight: 800; }
   .qpaper-options { display: grid; grid-template-columns: 1fr 1fr; gap: 7px 12px; margin-inline-start: 32px; font-size: 12px; }
   .qpaper-option { display: flex; gap: 6px; align-items: flex-start; }
   .qpaper-lines { margin-inline-start: 32px; padding-top: 4px; }
-  .qpaper-line { border-bottom: 1px solid #9ca3af; height: 20px; margin-bottom: 8px; }
+  .qpaper-line { border-bottom: 1px solid ${PRINT_RULE}; height: 20px; margin-bottom: 8px; }
   .qpaper-matching { margin-inline-start: 32px; width: calc(100% - 32px); border-collapse: collapse; font-size: 12px; }
-  .qpaper-matching td { border: 1px solid #d1d5db; padding: 7px 8px; vertical-align: top; }
-  .qpaper-footer { margin-top: 18px; display: flex; justify-content: space-between; color: #6b7280; font-size: 10px; }
+  .qpaper-matching td { border: 1px solid ${PRINT_BORDER}; padding: 7px 8px; vertical-align: top; }
+  .qpaper-footer { margin-top: 18px; display: flex; justify-content: space-between; color: ${PRINT_LABEL}; font-size: 10px; }
   @page { size: A4; margin: 0; }
   @media print {
-    html, body { background: #fff; margin: 0; }
+    html, body { background: ${PRINT_COLORS.white}; margin: 0; }
     .qpaper { width: 210mm; min-height: 297mm; margin: 0; box-shadow: none; }
   }
 `;
