@@ -56,7 +56,7 @@ export function WorkspaceCardsView({
               </div>
 
               {workspace.createdAt ? (
-                <div className="flex items-center gap-1.5 text-2xs font-semibold text-muted-foreground/70">
+                <div className="flex items-center gap-1.5 text-2xs font-semibold text-muted-foreground">
                   <Calendar className="w-3.5 h-3.5 shrink-0 opacity-75" aria-hidden />
                   <span>
                     {t('platform.sort.createdAt')}: {formatDate(workspace.createdAt)}

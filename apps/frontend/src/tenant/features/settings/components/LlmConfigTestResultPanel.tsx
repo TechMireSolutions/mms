@@ -46,19 +46,19 @@ export function LlmConfigTestResultPanel({
             {testResult.success && testResult.metrics && (
               <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 border-t border-success/10 pt-3 text-xs font-semibold text-success/80">
                 <div>
-                  <span className="block font-normal text-muted-foreground/85">{t('settings.llmLatency')}</span>
+                  <span className="block font-normal text-muted-foreground">{t('settings.llmLatency')}</span>
                   <span>{testResult.metrics.latencyMs} ms</span>
                 </div>
                 <div>
-                  <span className="block font-normal text-muted-foreground/85">{t('settings.llmWordCount')}</span>
+                  <span className="block font-normal text-muted-foreground">{t('settings.llmWordCount')}</span>
                   <span>{testResult.metrics.wordCount} {t('settings.llmUnitWords')}</span>
                 </div>
                 <div>
-                  <span className="block font-normal text-muted-foreground/85">{t('settings.llmCharCount')}</span>
+                  <span className="block font-normal text-muted-foreground">{t('settings.llmCharCount')}</span>
                   <span>{testResult.metrics.characterCount} {t('settings.llmUnitChars')}</span>
                 </div>
                 <div>
-                  <span className="block font-normal text-muted-foreground/85">{t('settings.llmSpeed')}</span>
+                  <span className="block font-normal text-muted-foreground">{t('settings.llmSpeed')}</span>
                   <span>{formatLlmSpeed(testResult.metrics.wordCount, testResult.metrics.latencyMs)}</span>
                 </div>
               </div>

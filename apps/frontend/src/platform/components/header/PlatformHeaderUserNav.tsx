@@ -145,7 +145,7 @@ export function PlatformHeaderUserNav({
                         <div className="min-w-0 flex-1">
                           <p className="text-sm font-bold text-foreground truncate">{notification.title}</p>
                           <p className="mt-0.5 text-xs text-muted-foreground leading-relaxed">{notification.desc}</p>
-                          <p className="mt-1 text-2xs font-mono text-muted-foreground/70">{notification.time}</p>
+                          <p className="mt-1 text-2xs font-mono text-muted-foreground">{notification.time}</p>
                         </div>
                       </div>
                     </button>

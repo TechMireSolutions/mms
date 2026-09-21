@@ -88,7 +88,7 @@ export function ContactBasicMetaFields({
             placeholder={t("contacts.form.cnicPlaceholder")}
           />
           {Boolean(contactDraft.cnic) && (
-            <p className="mt-1 text-2xs text-muted-foreground/80 flex items-center justify-between">
+            <p className="mt-1 text-2xs text-muted-foreground flex items-center justify-between">
               <span>{t("contacts.form.cnicFormatHint")}</span>
               <span
                 className={cn(

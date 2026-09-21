@@ -72,7 +72,7 @@ export function MessagingTemplateActionButtons({
           </Button>
         </>
       ) : (
-        <span className="rounded border border-border/30 bg-muted/65 px-1.5 py-0.5 font-mono text-xs italic uppercase text-muted-foreground/60">
+        <span className="rounded border border-border/30 bg-muted/65 px-1.5 py-0.5 font-mono text-xs italic uppercase text-muted-foreground">
           {t("messaging.tagSystem")}
         </span>
       )}

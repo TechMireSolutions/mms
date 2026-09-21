@@ -86,7 +86,7 @@ export function StudentDetailSessionsSection({
               <h5 className="text-xs font-bold text-foreground ms-1">{session.name}</h5>
               {session.classes && session.classes.length > 0 ? (
                 <div className="text-xs text-muted-foreground space-y-1 bg-muted/40 p-2 rounded-lg ms-1">
-                  <SectionLabel as="p" weight="bold" tracking="wider" toneClassName="text-muted-foreground/60">
+                  <SectionLabel as="p" weight="bold" tracking="wider">
                     {t("students.detail.classAssignments")}
                   </SectionLabel>
                   {session.classes.map((sessionClass) => (

@@ -79,7 +79,7 @@ const BackupImportSection = (function BackupImportSection({
           {dragActive ? t('backup.dropzoneActive') : t('backup.dropzone')}
         </span>
         <span className="mt-1 text-xs text-muted-foreground text-center px-4">{t('backup.dropzoneHint')}</span>
-        <span className="mt-1.5 text-3xs font-medium text-muted-foreground/90 bg-muted/60 border border-border/50 px-2 py-0.5 rounded">
+        <span className="mt-1.5 text-3xs font-medium text-muted-foreground bg-muted/60 border border-border/50 px-2 py-0.5 rounded">
           {t('backup.uploadLimitHint', { limit: uploadLimitLabel })}
         </span>
 

@@ -188,7 +188,7 @@ export const DetailDrawerShell = (function DetailDrawerShell({
                       {badge}
                     </div>
                     {subtitle && (
-                      <span className="text-3xs text-muted-foreground/80 uppercase tracking-wider font-bold block truncate mt-0.5">
+                      <span className="text-3xs text-muted-foreground uppercase tracking-wider font-bold block truncate mt-0.5">
                         {subtitle}
                       </span>
                     )}

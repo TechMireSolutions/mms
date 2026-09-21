@@ -67,7 +67,7 @@ export function ContactMetadataCell({
   })();
 
   const renderDash = (): React.ReactNode => (
-    <span className="text-muted-foreground/40">{t("contacts.table.emptyDash")}</span>
+    <span className="text-muted-foreground">{t("contacts.table.emptyDash")}</span>
   );
 
   const renderJoinedList = (items: (string | undefined | null)[], showTitle = false): React.ReactNode => {

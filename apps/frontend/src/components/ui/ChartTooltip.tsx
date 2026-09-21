@@ -72,7 +72,7 @@ export function ChartTooltipRow({
       dotSize="sm"
       dotStyle={color != null ? { background: color } : undefined}
       label={name}
-      labelClassName={cn("text-muted-foreground/85", nameClassName)}
+      labelClassName={cn("text-muted-foreground", nameClassName)}
       value={value}
       valueClassName={valueClassName}
     />

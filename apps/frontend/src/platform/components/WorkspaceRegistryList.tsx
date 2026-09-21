@@ -64,7 +64,7 @@ export default function WorkspaceRegistryList({
 
   return (
     <div className="w-full space-y-3">
-      <SectionLabel as="p" weight="semibold" toneClassName="text-muted-foreground/80" className="text-center">
+      <SectionLabel as="p" weight="semibold" className="text-center">
         {t(headingKey)}
       </SectionLabel>
       <motion.ul
@@ -86,7 +86,7 @@ export default function WorkspaceRegistryList({
           ))}
         </AnimatePresence>
       </motion.ul>
-      <p className="flex items-center justify-center gap-1.5 pt-1 text-center text-xs font-medium text-muted-foreground/70">
+      <p className="flex items-center justify-center gap-1.5 pt-1 text-center text-xs font-medium text-muted-foreground">
         <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         {t("apex.opensSignInHint")}
       </p>
@@ -130,11 +130,11 @@ const RegistryWorkspaceRow = (function RegistryWorkspaceRow({
             <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">
               {workspace.madrasaName}
             </p>
-            <p className="break-all font-mono text-xs text-muted-foreground opacity-85">
+            <p className="break-all font-mono text-xs text-muted-foreground">
               {workspace.subdomain}.{appDomain}
             </p>
             {workspace.tagline ? (
-              <p className="truncate text-xs font-medium text-muted-foreground/75">
+              <p className="truncate text-xs font-medium text-muted-foreground">
                 {workspace.tagline}
               </p>
             ) : null}

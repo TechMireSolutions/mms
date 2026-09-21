@@ -137,10 +137,10 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground truncate m-0">{session.name}</p>
-                <p className="text-xs text-muted-foreground/80 mt-0.5 m-0 font-medium">{session.teacher}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 m-0 font-medium">{session.teacher}</p>
               </div>
 
-              <div className="hidden sm:flex items-center gap-3.5 text-xs text-muted-foreground/75 flex-shrink-0 font-semibold select-none">
+              <div className="hidden sm:flex items-center gap-3.5 text-xs text-muted-foreground flex-shrink-0 font-semibold select-none">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                   <span className="sr-only">{t("dashboard.widgets.roomLabel")}</span> {session.room}

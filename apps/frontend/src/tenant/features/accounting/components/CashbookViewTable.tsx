@@ -78,13 +78,13 @@ export function CashbookViewTable({ rows, totalIn, totalOut, formatCurrency }: C
             <StatGrid>
               <StatRow
                 label={t("accounting.cashbook.moneyIn")}
-                value={row.flowType === "in" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground/30 font-normal">—</span>}
+                value={row.flowType === "in" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground font-normal">—</span>}
                 dtClassName="text-success"
                 ddClassName="font-mono font-bold text-success"
               />
               <StatRow
                 label={t("accounting.cashbook.moneyOut")}
-                value={row.flowType === "out" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground/30 font-normal">—</span>}
+                value={row.flowType === "out" ? formatCurrency(row.flowAmount) : <span className="text-muted-foreground font-normal">—</span>}
                 dtClassName="text-destructive"
                 ddClassName="font-mono font-bold text-destructive"
               />
@@ -138,12 +138,12 @@ export function CashbookViewTable({ rows, totalIn, totalOut, formatCurrency }: C
                 <TableCell className="px-3 py-2.5 text-end">
                   {row.flowType === "in" ? (
                     <span className="font-mono font-bold text-success">{formatCurrency(row.flowAmount)}</span>
-                  ) : <span className="text-muted-foreground/30">—</span>}
+                  ) : <span className="text-muted-foreground">—</span>}
                 </TableCell>
                 <TableCell className="px-3 py-2.5 text-end">
                   {row.flowType === "out" ? (
                     <span className="font-mono font-bold text-destructive">{formatCurrency(row.flowAmount)}</span>
-                  ) : <span className="text-muted-foreground/30">—</span>}
+                  ) : <span className="text-muted-foreground">—</span>}
                 </TableCell>
               </TableRow>
             ))}

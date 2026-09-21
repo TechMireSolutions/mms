@@ -150,7 +150,7 @@ export function NotificationsPanel({ items }: NotificationsPanelProps): React.JS
                         </Badge>
                       )}
                     </div>
-                    <p className="text-sm text-muted-foreground/90 mt-0.5 m-0 leading-normal">{notif.desc}</p>
+                    <p className="text-sm text-muted-foreground mt-0.5 m-0 leading-normal">{notif.desc}</p>
                     <p className="text-xs text-muted-foreground mt-1 m-0 font-medium">{notif.time}</p>
                   </div>
                   <Button

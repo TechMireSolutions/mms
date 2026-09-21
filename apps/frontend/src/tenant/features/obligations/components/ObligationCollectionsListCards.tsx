@@ -111,7 +111,7 @@ export function ObligationCollectionsListCards(props: ObligationCollectionListCa
                   value={
                     <>
                       <span>{rep?.name || "—"}</span>
-                      {mujtahid && <span className="block text-xs text-muted-foreground/70">{mujtahid.name}</span>}
+                      {mujtahid && <span className="block text-xs text-muted-foreground">{mujtahid.name}</span>}
                     </>
                   }
                 />

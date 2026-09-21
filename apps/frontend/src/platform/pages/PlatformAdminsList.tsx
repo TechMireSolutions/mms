@@ -190,7 +190,7 @@ export function PlatformAdminsList({
                           <span dir="ltr">{admin.email}</span>
                         </div>
                         {admin.createdAt ? (
-                          <p className="text-2xs text-muted-foreground/60 font-semibold mt-1">
+                          <p className="text-2xs text-muted-foreground font-semibold mt-1">
                             {t('platform.profileMemberSince')}: {formatDate(admin.createdAt)}
                           </p>
                         ) : null}
@@ -238,7 +238,7 @@ export function PlatformAdminsList({
                 </div>
                 <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40 mt-3" onClick={(e) => e.stopPropagation()}>
                   {admin.createdAt ? (
-                    <p className="text-xs text-muted-foreground/60 font-semibold">
+                    <p className="text-xs text-muted-foreground font-semibold">
                       {t('platform.profileMemberSince')}: {formatDate(admin.createdAt)}
                     </p>
                   ) : (

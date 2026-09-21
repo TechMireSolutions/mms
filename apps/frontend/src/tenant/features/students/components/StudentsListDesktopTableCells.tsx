@@ -84,17 +84,17 @@ export function renderStudentsListDesktopTableCell({
             </div>
             {fatherName ? (
               <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5" title={fatherName}>
-                <span className="text-muted-foreground/70">{fatherLabel}:</span> {fatherName}
+                <span>{fatherLabel}:</span> {fatherName}
               </p>
             ) : null}
             {motherName ? (
               <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5" title={motherName}>
-                <span className="text-muted-foreground/70">{motherLabel}:</span> {motherName}
+                <span>{motherLabel}:</span> {motherName}
               </p>
             ) : null}
             {!fatherName && !motherName && guardianName ? (
               <p className="text-xs text-muted-foreground truncate leading-tight mt-0.5" title={guardianName}>
-                <span className="text-muted-foreground/70">{guardianLabel}:</span> {guardianName}
+                <span>{guardianLabel}:</span> {guardianName}
               </p>
             ) : null}
             {viewingDeleted && studentRow.deletionReason ? (
@@ -116,7 +116,7 @@ export function renderStudentsListDesktopTableCell({
       return studentRow.gender ? (
         <PersonIdentityMeta gender={studentRow.gender} size="sm" pill />
       ) : (
-        <span className="text-sm text-muted-foreground/40">{emptyDash}</span>
+        <span className="text-sm text-muted-foreground">{emptyDash}</span>
       );
     case "phone": {
       const phone = studentRow.phone?.trim() || null;
@@ -176,7 +176,7 @@ export function renderStudentsListDesktopTableCell({
       return renderStudentWorkColumnValue(studentRow, col.key, {
         t,
         statusBadgeConfig,
-        emptyFallback: <span className="text-sm text-muted-foreground/40">{emptyDash}</span>,
+        emptyFallback: <span className="text-sm text-muted-foreground">{emptyDash}</span>,
       });
   }
 }

@@ -40,17 +40,17 @@ export function StudentCardHeader({
     <div className="text-xs text-muted-foreground mt-0.5 space-y-0.5">
       {fatherName ? (
         <p className="truncate" title={fatherName}>
-          <span className="text-muted-foreground/70">{t("students.detail.father")}:</span> {fatherName}
+          <span>{t("students.detail.father")}:</span> {fatherName}
         </p>
       ) : null}
       {motherName ? (
         <p className="truncate" title={motherName}>
-          <span className="text-muted-foreground/70">{t("students.detail.mother")}:</span> {motherName}
+          <span>{t("students.detail.mother")}:</span> {motherName}
         </p>
       ) : null}
       {!fatherName && !motherName && guardianName ? (
         <p className="truncate" title={guardianName}>
-          <span className="text-muted-foreground/70">{t("students.idCard.guardian")}:</span> {guardianName}
+          <span>{t("students.idCard.guardian")}:</span> {guardianName}
         </p>
       ) : null}
     </div>

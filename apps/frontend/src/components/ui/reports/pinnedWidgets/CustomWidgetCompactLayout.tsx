@@ -68,7 +68,7 @@ export function CustomWidgetCompactLayout({
         <span className="text-base font-black tracking-tight font-mono my-auto max-w-full truncate text-foreground">
           {computedCard.value}
         </span>
-        <SectionLabel toneClassName="text-muted-foreground/60" className="mb-0.5">
+        <SectionLabel className="mb-0.5">
           {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
         </SectionLabel>
       </motion.button>
@@ -183,7 +183,7 @@ function CompactMetricButton({
           {body}
         </span>
       )}
-      <SectionLabel toneClassName={alertScheme ? "text-foreground/80" : "text-muted-foreground/60"} className="mb-0.5">
+      <SectionLabel tone={alertScheme ? "foreground" : "muted"} className="mb-0.5">
         {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
       </SectionLabel>
     </motion.button>

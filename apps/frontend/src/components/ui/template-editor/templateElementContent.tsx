@@ -243,7 +243,7 @@ export function TemplateElementContent({
   const isEmptyBoundField = el.type === "field" && content === "";
   if (isEmptyBoundField && mode === "edit") {
     return (
-      <span className="w-full truncate italic text-muted-foreground/70">
+      <span className="w-full truncate italic text-muted-foreground">
         {`{${el.field}}`}
       </span>
     );

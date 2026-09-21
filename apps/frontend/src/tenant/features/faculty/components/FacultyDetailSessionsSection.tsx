@@ -121,7 +121,7 @@ export function TeacherDetailSessionsSection({
                       <Users className="w-3.5 h-3.5 text-primary/70" aria-hidden />
                       <span>{t("teachers.detail.enrolledCount", { count: item.enrolled })}</span>
                       {item.capacity ? (
-                        <span className="text-muted-foreground/60">
+                        <span className="text-muted-foreground">
                           ({t("teachers.detail.capacity", { capacity: item.capacity })})
                         </span>
                       ) : null}

@@ -130,7 +130,7 @@ export const ContactLinkAction = (function ContactLinkAction({
     >
       {displayText}
       {label ? (
-        <span className="ms-1.5 text-xs text-muted-foreground/70 font-normal">({label})</span>
+        <span className="ms-1.5 text-xs font-normal">({label})</span>
       ) : null}
     </span>
   );
