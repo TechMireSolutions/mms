@@ -97,7 +97,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={reducedMotion ? undefined : { opacity: 0, scale: 0.96, y: -8 }}
           transition={{ duration: 0.15 }}
-          className="relative w-full max-w-xl overflow-hidden rounded-xl border border-border bg-card shadow-surface-lg surface-glass"
+          className="relative w-full max-w-xl overflow-hidden rounded-xl surface-overlay"
           onClick={(e) => e.stopPropagation()}
         >
           <div className="flex items-center gap-3 border-b border-border px-4 py-3">

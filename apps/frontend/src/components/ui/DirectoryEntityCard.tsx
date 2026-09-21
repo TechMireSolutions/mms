@@ -7,8 +7,8 @@ import { cn } from "@/lib/utils";
 import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 export const directoryEntityCardVariants = {
-  hidden: { opacity: 0, y: 12 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: "easeOut" as const } },
+  hidden: { opacity: 0, y: 8 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" as const } },
 };
 
 export const directoryEntityCardVariantsReduced = {
@@ -36,19 +36,13 @@ export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
     <motion.div
       layout={!reducedMotion}
       variants={reducedMotion ? directoryEntityCardVariantsReduced : directoryEntityCardVariants}
-      whileHover={
-        reducedMotion
-          ? undefined
-          : { y: -4, scale: 1.01, transition: { duration: 0.2 } }
-      }
       className={cn(
         FORM_CARD,
         "p-4 space-y-4 shadow-xs [contain-intrinsic-size:180px] [content-visibility:auto]",
         accentClassName && CARD_STRIPE_INSET,
-        reducedMotion ? "hover:shadow-none" : "hover:shadow-md",
         isSelected
-          ? "border-primary/50 bg-primary/5 shadow-xs shadow-primary/5"
-          : "border-border/50 hover:border-primary/35",
+          ? "border-primary/50 bg-primary/5 shadow-xs"
+          : "border-foreground/10 hover:border-foreground/20",
         className,
       )}
       style={{
@@ -63,7 +57,7 @@ export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
           className={cn(
             CARD_STRIPE_BASE,
             accentClassName,
-            reducedMotion ? "" : "transition-colors duration-300",
+            reducedMotion ? "" : "transition-colors duration-150 ease-out",
           )}
         />
       ) : null}

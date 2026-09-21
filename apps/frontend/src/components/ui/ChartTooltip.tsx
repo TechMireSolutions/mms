@@ -38,7 +38,7 @@ export function ChartTooltip({
   return (
     <div
       className={cn(
-        "surface-glass rounded-xl px-3.5 py-2.5 shadow-lg text-xs text-start select-none",
+        "surface-overlay rounded-xl px-3.5 py-2.5 text-xs text-start select-none",
         className,
       )}
       style={style}

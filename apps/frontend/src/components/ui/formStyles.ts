@@ -29,7 +29,7 @@ export const FORM_INPUT_COMPACT =
   'w-full rounded-lg border border-border bg-background px-2 py-2 min-h-11 text-xs text-foreground placeholder:text-muted-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/20 focus-visible:border-primary/40 touch-manipulation';
 
 /** Compact builder panels (widget builder, analytics config). */
-export const FORM_INPUT_BUILDER = `${FORM_INPUT_COMPACT} bg-card/40 backdrop-blur-md font-semibold`;
+export const FORM_INPUT_BUILDER = `${FORM_INPUT_COMPACT} bg-card font-semibold`;
 
 /** OTP digit cell (2FA, platform verify). */
 export const FORM_OTP_DIGIT =
@@ -39,23 +39,23 @@ export const FORM_OTP_DIGIT =
 export const FORM_CHECKBOX =
   "peer relative h-4 w-4 shrink-0 cursor-pointer rounded-sm border border-primary shadow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary disabled:cursor-not-allowed disabled:opacity-50 data-[state=checked]:bg-primary data-[state=checked]:text-primary-foreground after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']";
 
-/** Unified form card container style — matching the centralized Card component. */
+/** Unified form card container style — matching the centralized Card component (Calm surface-raised). */
 export const FORM_CARD =
-  'relative overflow-hidden group group/card rounded-2xl border border-border/80 bg-card/45 backdrop-blur-sm shadow-sm hover:shadow-md transition-all duration-300';
+  'relative overflow-hidden group group/card rounded-2xl border border-foreground/10 bg-card text-card-foreground shadow-xs transition-colors duration-150 ease-out';
 
-/** Work directory / settings glass panel (toolbar, list shell, settings sections). */
+/** Work directory / settings panel (toolbar, list shell, settings sections — Calm surface-raised). */
 export const WORK_SURFACE =
-  'rounded-2xl border border-border/50 bg-card/40 backdrop-blur-xl shadow-sm';
+  'rounded-2xl border border-foreground/10 bg-card shadow-xs';
 
-/** Inner detail surfaces (attribute rows, notes panels) — slightly denser glass. */
+/** Inner detail surfaces (attribute rows, notes panels — Calm subtle inner surface). */
 export const WORK_SURFACE_INNER =
-  'rounded-2xl border border-border/80 bg-card/45 backdrop-blur-xs shadow-sm';
+  'rounded-xl border border-foreground/8 bg-muted/30';
 
 /** Standardized overlay backdrop for all modals, dialogs, and drawers. */
-export const OVERLAY_BACKDROP = 'bg-sidebar/90 backdrop-blur-sm';
+export const OVERLAY_BACKDROP = 'bg-background/80 backdrop-blur-xs';
 
 /** Sticky Work directory table header cells (checkbox / frozen name cols). */
-export const WORK_STICKY_HEAD = 'bg-muted/95 backdrop-blur-md';
+export const WORK_STICKY_HEAD = 'bg-card/95 border-b border-border/80';
 
 /** Work toolbar filter / trash / clear trigger base. */
 export const WORK_TOOLBAR_TRIGGER =
@@ -86,4 +86,4 @@ export const FORM_SELECT_MINI =
   'min-h-11 h-11 px-3 py-2 rounded text-xs font-bold bg-card border border-border text-foreground focus:outline-none cursor-pointer w-auto gap-1 shadow-none touch-manipulation';
 
 /** Shared SectionCard className for module Setup settings panels. */
-export const SETUP_SECTION_CARD_CLASS = 'shadow-sm hover:shadow-md border-border/80' as const;
+export const SETUP_SECTION_CARD_CLASS = 'shadow-xs border-foreground/10' as const;

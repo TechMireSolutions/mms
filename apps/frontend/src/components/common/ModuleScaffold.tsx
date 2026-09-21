@@ -57,7 +57,7 @@ export function ModuleScaffold({
   return (
     <ErrorBoundary>
       <div
-        className={cn("box-border mx-auto w-full min-w-0 max-w-7xl space-y-5", className)}
+        className={cn("box-border mx-auto w-full min-w-0 max-w-7xl space-y-8 sm:space-y-10", className)}
         aria-busy={isBusy === true ? "true" : undefined}
       >
         <title>{seoTitle}</title>
@@ -112,7 +112,7 @@ export function ModuleScaffoldSkeleton({
 }: ModuleScaffoldSkeletonProps = {}): React.JSX.Element {
   return (
     <div
-      className={cn("box-border mx-auto w-full min-w-0 max-w-7xl space-y-5 animate-pulse", className)}
+      className={cn("box-border mx-auto w-full min-w-0 max-w-7xl space-y-8 sm:space-y-10 animate-pulse", className)}
       role="status"
       aria-live="polite"
       aria-busy="true"

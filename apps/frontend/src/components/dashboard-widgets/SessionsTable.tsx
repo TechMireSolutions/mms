@@ -111,8 +111,8 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
               key={session.id}
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: sessionIndex * 0.05, duration: 0.3, ease: "easeOut" }}
-              className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/30 transition-colors"
+              transition={{ delay: sessionIndex * 0.03, duration: 0.15, ease: "easeOut" }}
+              className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/30 transition-colors duration-150 ease-out"
             >
               <div className="w-24 flex-shrink-0 text-start">
                 <p className="text-sm font-bold text-foreground m-0 tabular-nums">{session.time}</p>
@@ -124,10 +124,10 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
                     as="span"
                     pill
                     tone="success"
-                    className="gap-1.5 font-black uppercase tracking-wider select-none animate-pulse"
+                    className="gap-1.5 font-black uppercase tracking-wider select-none"
                     aria-label={t("dashboard.widgets.sessionLiveAria")}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-ping shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
                     <span>{t("dashboard.widgets.live")}</span>
                   </Badge>
                 ) : (

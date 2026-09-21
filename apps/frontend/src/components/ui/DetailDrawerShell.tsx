@@ -144,7 +144,7 @@ export const DetailDrawerShell = (function DetailDrawerShell({
               willChange: "transform, opacity",
             }}
             className={cn(
-              "relative z-elevated flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card/95 text-start shadow-drawer backdrop-blur-2xl border-t sm:border-t-0 sm:border-s border-border/50 max-h-drawer sm:max-h-full rounded-t-3xl sm:rounded-none",
+              "relative z-elevated flex h-full w-full min-w-0 max-w-full flex-col overscroll-contain bg-card text-start shadow-drawer border-t sm:border-t-0 sm:border-s border-foreground/12 max-h-drawer sm:max-h-full rounded-t-3xl sm:rounded-none",
               SIZE_MAP[size],
               className
             )}

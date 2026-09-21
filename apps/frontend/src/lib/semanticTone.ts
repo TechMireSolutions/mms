@@ -1,7 +1,7 @@
 /** Semantic Tailwind tone classes — prefer these over raw palette utilities. */
 
 export const SURFACE = {
-  glass: 'border border-border/60 bg-card/80 backdrop-blur-xl',
+  glass: 'border border-foreground/12 bg-card shadow-surface-lg',
   card: 'rounded-xl border border-border bg-card shadow-surface',
   elevated: 'rounded-xl border border-border bg-card shadow-surface-lg',
   mutedHeader: 'border-b border-border bg-muted/20',
@@ -19,7 +19,7 @@ export const WIZARD_SELECTION_DOT = 'bg-primary-foreground';
 
 /** Frosted chip on primary gradient banners */
 export const BANNER_FROST_CHIP =
-  'bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/15';
+  'bg-primary-foreground/10 border border-primary-foreground/15';
 
 export const SEMANTIC_BADGE = {
   primary: 'bg-primary/10 text-primary border-primary/20',

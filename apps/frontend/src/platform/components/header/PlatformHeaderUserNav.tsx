@@ -100,7 +100,7 @@ export function PlatformHeaderUserNav({
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent align="end" className="w-popover-menu max-w-full p-0 rounded-2xl shadow-xl border-border/60 text-start">
+        <PopoverContent align="end" className="w-popover-menu max-w-full p-0 rounded-2xl surface-overlay text-start">
           {popoverOpen && (
             <>
               <div className="border-b border-border px-4 py-3">
@@ -214,7 +214,7 @@ export function PlatformHeaderUserNav({
             ) : null}
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-60 p-1.5 rounded-2xl shadow-xl border-border/60 text-start">
+        <DropdownMenuContent align="end" className="w-60 p-1.5 rounded-2xl surface-overlay text-start">
           <DropdownMenuLabel className="p-2">
             <div className="flex flex-col text-start">
               <p className="text-sm font-black text-foreground">{platformUser?.name}</p>

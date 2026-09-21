@@ -20,12 +20,12 @@ export const bulkSelectionRestoreClassName =
 
 const PLACEMENT: Record<BulkSelectionPlacement, string> = {
   floating:
-    "fixed inset-x-4 bottom-4 z-header max-w-full sm:inset-x-auto sm:end-6 sm:bottom-6 bg-card/95 border border-primary/20 backdrop-blur-xl shadow-2xl rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary",
+    "fixed inset-x-4 bottom-4 z-header max-w-full sm:inset-x-auto sm:end-6 sm:bottom-6 surface-overlay rounded-2xl p-3 flex flex-wrap items-center gap-3 border-s-4 border-s-primary",
   inline: "flex flex-wrap items-center justify-between gap-3 px-4 py-3 rounded-xl max-w-full",
 };
 
 const INLINE_TONE: Record<BulkSelectionTone, string> = {
-  glass: "bg-card/90 border border-primary/20 shadow-md backdrop-blur-md",
+  glass: "surface-raised border-primary/20",
   tint: "border border-primary/20 bg-primary/5 gap-2 py-2.5",
   plain: "border border-border bg-card",
 };
@@ -65,6 +65,7 @@ export const BulkSelectionBar = React.memo(function BulkSelectionBar({
           initial={{ opacity: 0, y: enterY }}
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: enterY }}
+          transition={{ duration: 0.15, ease: "easeOut" }}
           className={cn(
             placement === "floating"
               ? PLACEMENT.floating

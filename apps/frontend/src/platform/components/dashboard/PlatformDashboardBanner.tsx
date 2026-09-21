@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Sparkles, Radio, Building2, ArrowUpRight, Globe } from "lucide-react";
+import { Radio, Building2, ArrowUpRight, Globe } from "lucide-react";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -35,11 +35,8 @@ export function PlatformDashboardBanner({
   return (
     <motion.div
       variants={reducedMotion ? undefined : itemVariants}
-      className={cn(WORK_SURFACE, "p-6 sm:p-8 relative overflow-hidden group/banner rounded-3xl border border-border/60 bg-gradient-to-br from-card via-card/90 to-card/70 backdrop-blur-md shadow-sm")}
+      className={cn(WORK_SURFACE, "p-6 sm:p-8 relative overflow-hidden")}
     >
-      <div className="absolute -top-16 -end-16 w-56 h-56 bg-primary/10 rounded-full blur-3xl pointer-events-none group-hover/banner:bg-primary/20 transition-all duration-700" />
-      <div className="absolute -bottom-16 -start-16 w-56 h-56 bg-secondary/10 rounded-full blur-3xl pointer-events-none group-hover/banner:bg-secondary/15 transition-all duration-700" />
-
       <div className="relative z-elevated space-y-4">
         <div className="flex flex-wrap items-center gap-2.5">
           <span
@@ -48,7 +45,6 @@ export function PlatformDashboardBanner({
               "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-2xs border border-primary/20",
             )}
           >
-            <Sparkles className="w-3.5 h-3.5 text-primary" aria-hidden />
             {t("platform.consoleTitle")}
           </span>
           <span
@@ -57,11 +53,11 @@ export function PlatformDashboardBanner({
               "px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-2xs border border-success/20",
             )}
           >
-            <span className="w-2 h-2 rounded-full bg-success animate-pulse" />
+            <span className="w-2 h-2 rounded-full bg-success" />
             {t("platform.statusOperational")}
           </span>
           <span className="text-xs font-mono text-muted-foreground ms-auto hidden sm:inline-flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/60">
-            <Radio className="w-3 h-3 text-success animate-ping" /> {t('platform.banner.realtimePulse')}
+            <Radio className="w-3 h-3 text-success" /> {t('platform.banner.realtimePulse')}
           </span>
         </div>
 

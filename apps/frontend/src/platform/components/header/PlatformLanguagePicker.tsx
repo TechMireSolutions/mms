@@ -40,7 +40,7 @@ export function PlatformLanguagePicker({ compact = false }: { compact?: boolean 
           )}
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-48 p-1.5 rounded-2xl shadow-xl border-border/60">
+      <DropdownMenuContent align="end" className="w-48 p-1.5 rounded-2xl surface-overlay">
         <DropdownMenuLabel className="text-2xs font-bold text-muted-foreground uppercase tracking-wider px-2 py-1">
           {t('global.language')}
         </DropdownMenuLabel>

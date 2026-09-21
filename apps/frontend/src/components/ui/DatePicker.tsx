@@ -144,7 +144,7 @@ export function DatePicker({
           <CalendarIcon className="h-4 w-4 transition-colors opacity-80" />
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto p-0 border border-border/80 shadow-xl bg-background/95 backdrop-blur-xl rounded-2xl overflow-hidden"
+          className="w-auto p-0 surface-overlay rounded-2xl overflow-hidden"
           align="start"
           onInteractOutside={keepOpenForChrome}
           onFocusOutside={keepOpenForChrome}

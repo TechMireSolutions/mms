@@ -154,7 +154,7 @@ export function EditableMultiSelect({
         align="start"
         sideOffset={6}
         collisionPadding={8}
-        className="p-0 w-[var(--radix-popover-trigger-width)] min-w-64 max-h-80 flex flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-xl divide-y divide-border/60"
+        className="p-0 w-[var(--radix-popover-trigger-width)] min-w-64 max-h-80 flex flex-col overflow-hidden rounded-xl surface-overlay divide-y divide-border/60"
         onKeyDown={(event) => {
           if (event.key === "ArrowDown") {
             event.preventDefault();

@@ -139,7 +139,7 @@ export function ExportToolbar({
 
       <div className="flex items-center gap-2 flex-wrap">
         {showPdfSettings && (
-          <div className="absolute end-0 bottom-full mb-2 bg-card border border-border rounded-xl p-3 shadow-xl z-popover flex flex-col gap-3 min-w-popover-md max-w-full">
+          <div className="absolute end-0 bottom-full mb-2 surface-overlay rounded-xl p-3 z-popover flex flex-col gap-3 min-w-popover-md max-w-full">
             <div className="space-y-1.5">
               <SectionLabel as="label" htmlFor="export-orientation" weight="bold">{t('reports.export.orientation')}</SectionLabel>
               <CompactSegmentedControl

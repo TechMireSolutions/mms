@@ -5,20 +5,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 
 export function AuthPageBackdrop(): React.JSX.Element {
   return (
-    <>
-      <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-primary/5 via-background to-background"
-        aria-hidden
-      />
-      <div
-        className="auth-orb-primary"
-        aria-hidden
-      />
-      <div
-        className="auth-orb-secondary"
-        aria-hidden
-      />
-    </>
+    <div
+      className="pointer-events-none absolute inset-0 bg-background"
+      aria-hidden
+    />
   );
 }
 
@@ -43,8 +33,7 @@ export function AuthCardShell({
         className,
       )}
     >
-      <div className="relative overflow-hidden rounded-2xl border border-border/60 bg-card/85 shadow-surface-lg backdrop-blur-xl">
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" aria-hidden />
+      <div className="relative overflow-hidden rounded-2xl border border-foreground/12 bg-card shadow-surface-lg">
         <div className="border-b border-border/50 bg-muted/10 px-6 py-6 text-center sm:px-8">
           {header}
         </div>

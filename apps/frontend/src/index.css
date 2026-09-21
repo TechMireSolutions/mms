@@ -94,30 +94,47 @@
   --color-oklch-surface-card: var(--oklch-surface-card, oklch(1 0 0));
   --color-oklch-border: var(--oklch-border, oklch(0.9 0.02 75));
 
+  --color-surface-base: hsl(var(--surface-base));
+  --color-surface-raised: hsl(var(--surface-raised));
+  --color-surface-overlay: hsl(var(--surface-overlay));
+
+  /* 8pt grid macro-spacing scale (32px-64px) to reduce visual density */
+  --spacing-macro-sm: 2rem;
+  --spacing-macro-md: 2.5rem;
+  --spacing-macro-lg: 3rem;
+  --spacing-macro-xl: 4rem;
+  --spacing-container-gap: 2rem;
+  --spacing-section-gap: 2.5rem;
+
+  /* Functional transitions (150-200ms ease-out) */
+  --duration-fast: 150ms;
+  --duration-normal: 200ms;
+  --ease-calm: cubic-bezier(0.16, 1, 0.3, 1);
+
   --shadow-surface:
     0 1px 2px 0 hsl(var(--foreground) / 0.04),
-    0 4px 16px -4px hsl(var(--foreground) / 0.08);
+    0 2px 6px -1px hsl(var(--foreground) / 0.04);
   --shadow-surface-lg:
-    0 4px 6px -2px hsl(var(--foreground) / 0.06),
-    0 12px 32px -8px hsl(var(--foreground) / 0.12);
+    0 4px 12px -2px hsl(var(--foreground) / 0.06),
+    0 2px 4px -1px hsl(var(--foreground) / 0.03);
   --shadow-drawer:
-    0 8px 40px -4px hsl(var(--foreground) / 0.12);
+    0 8px 24px -4px hsl(var(--foreground) / 0.08);
   --shadow-glow-destructive:
-    0 0 15px hsl(var(--destructive) / 0.15);
+    0 0 0 1px hsl(var(--destructive) / 0.25);
   --shadow-glow-destructive-sm:
-    0 0 8px hsl(var(--destructive) / 0.4);
+    0 0 0 1px hsl(var(--destructive) / 0.35);
   --shadow-glow-warning:
-    0 0 15px hsl(var(--warning) / 0.15);
+    0 0 0 1px hsl(var(--warning) / 0.25);
   --shadow-glow-warning-sm:
-    0 0 8px hsl(var(--warning) / 0.4);
+    0 0 0 1px hsl(var(--warning) / 0.35);
   --shadow-glow-primary:
-    0 0 15px hsl(var(--primary) / 0.15);
+    0 0 0 1px hsl(var(--primary) / 0.25);
   --shadow-glow-success:
-    0 0 15px hsl(var(--success) / 0.15);
+    0 0 0 1px hsl(var(--success) / 0.25);
   --shadow-glow-success-sm:
-    0 0 8px hsl(var(--success) / 0.4);
+    0 0 0 1px hsl(var(--success) / 0.35);
   --shadow-glow-info:
-    0 0 15px hsl(var(--info) / 0.15);
+    0 0 0 1px hsl(var(--info) / 0.25);
 
   /* Repeated layout sizes (Rule of Three) */
   --spacing-sidebar: 16.25rem;
@@ -317,7 +334,11 @@
    * Tints stronger than `/15` (e.g. a resting `bg-primary/20`) must use
    * `-foreground` or a lighter tint, because no single hue satisfies every step.
    */
-  --background: 40 30% 97%;
+  --surface-base: 40 10% 98%;
+  --surface-raised: 0 0% 100%;
+  --surface-overlay: 0 0% 100%;
+
+  --background: 40 10% 98%;
   --foreground: 28 50% 12%;
   --card: 0 0% 100%;
   --card-foreground: 28 50% 12%;
@@ -326,10 +347,10 @@
   --primary: 42 85% 27%;
   --primary-foreground: 0 0% 100%;
   --secondary: 28 65% 22%;
-  --secondary-foreground: 40 30% 97%;
-  --muted: 40 20% 93%;
-  --muted-foreground: 28 20% 41%;
-  --accent: 42 60% 90%;
+  --secondary-foreground: 40 10% 98%;
+  --muted: 40 8% 94%;
+  --muted-foreground: 28 15% 40%;
+  --accent: 40 8% 94%;
   --accent-foreground: 28 50% 12%;
   --destructive: 0 84% 40%;
   --destructive-foreground: 0 0% 98%;
@@ -339,8 +360,8 @@
   --warning-foreground: 0 0% 100%;
   --info: 217 91% 40%;
   --info-foreground: 0 0% 100%;
-  --border: 40 20% 88%;
-  --input: 40 20% 88%;
+  --border: 40 8% 88%;
+  --input: 40 8% 88%;
   --ring: 42 85% 27%;
   --chart-1: 42 88% 46%;
   --chart-2: 158 72% 38%;
@@ -368,19 +389,23 @@
 
 .dark {
   color-scheme: dark;
-  --background: 32 35% 7%;
+  --surface-base: 32 10% 7%;
+  --surface-raised: 32 8% 11%;
+  --surface-overlay: 32 8% 13%;
+
+  --background: 32 10% 7%;
   --foreground: 40 25% 92%;
-  --card: 32 28% 11%;
+  --card: 32 8% 11%;
   --card-foreground: 40 25% 92%;
-  --popover: 32 28% 11%;
+  --popover: 32 8% 11%;
   --popover-foreground: 40 25% 92%;
   --primary: 42 90% 50%;
   --primary-foreground: 28 65% 10%;
   --secondary: 38 55% 65%;
-  --secondary-foreground: 32 35% 7%;
-  --muted: 32 20% 15%;
+  --secondary-foreground: 32 10% 7%;
+  --muted: 32 8% 15%;
   --muted-foreground: 40 15% 60%;
-  --accent: 32 20% 16%;
+  --accent: 32 8% 16%;
   --accent-foreground: 40 25% 92%;
   --destructive: 0 72% 66%;
   --destructive-foreground: 0 72% 12%;
@@ -390,8 +415,8 @@
   --warning-foreground: 32 80% 12%;
   --info: 217 85% 66%;
   --info-foreground: 217 85% 12%;
-  --border: 32 20% 18%;
-  --input: 32 20% 18%;
+  --border: 32 8% 18%;
+  --input: 32 8% 18%;
   --ring: 42 90% 50%;
   --chart-1: 42 90% 50%;
   --chart-2: 158 65% 45%;
@@ -526,11 +551,31 @@
   font-family: var(--font-persian);
 }
 
+@utility surface-base {
+  background-color: hsl(var(--surface-base));
+  border-width: 1px;
+  border-color: hsl(var(--foreground) / 0.08);
+}
+
+@utility surface-raised {
+  background-color: hsl(var(--surface-raised));
+  border-width: 1px;
+  border-color: hsl(var(--foreground) / 0.10);
+  box-shadow: 0 1px 2px 0 hsl(var(--foreground) / 0.04);
+}
+
+@utility surface-overlay {
+  background-color: hsl(var(--surface-overlay));
+  border-width: 1px;
+  border-color: hsl(var(--foreground) / 0.12);
+  box-shadow: 0 6px 20px -4px hsl(var(--foreground) / 0.08);
+}
+
 @utility surface-glass {
   border-width: 1px;
-  border-color: hsl(var(--border) / 0.6);
-  background-color: hsl(var(--card) / 0.8);
-  backdrop-filter: blur(24px);
+  border-color: hsl(var(--foreground) / 0.12);
+  background-color: hsl(var(--surface-overlay));
+  box-shadow: 0 6px 20px -4px hsl(var(--foreground) / 0.08);
 }
 
 @utility surface-elevated {
@@ -538,38 +583,21 @@
 }
 
 @utility interactive-scale {
-  transition: transform 0.2s ease;
+  transition: transform var(--duration-fast, 150ms) ease-out;
   &:hover {
-    transform: scale(1.02);
+    transform: scale(1.005);
   }
   &:active {
-    transform: scale(0.98);
+    transform: scale(0.995);
   }
 }
 
 @utility auth-orb-primary {
-  position: absolute;
-  top: 18%;
-  inset-inline-start: 50%;
-  height: 18rem;
-  width: 18rem;
-  transform: translateX(-50%);
-  border-radius: 9999px;
-  background-color: hsl(var(--primary) / 0.08);
-  filter: blur(48px);
-  pointer-events: none;
+  display: none;
 }
 
 @utility auth-orb-secondary {
-  position: absolute;
-  bottom: 8%;
-  inset-inline-end: 8%;
-  height: 14rem;
-  width: 14rem;
-  border-radius: 9999px;
-  background-color: hsl(var(--secondary) / 0.06);
-  filter: blur(48px);
-  pointer-events: none;
+  display: none;
 }
 
 @utility grid-autofit-sm {
@@ -627,16 +655,14 @@
 
 .islamic-pattern {
   background-image:
-    radial-gradient(hsl(var(--primary) / 0.08) 1.25px, transparent 1.25px),
-    radial-gradient(hsl(var(--secondary) / 0.05) 1.25px, transparent 1.25px);
-  background-size: 28px 28px, 42px 42px;
-  background-position: 0 0, 14px 14px;
+    radial-gradient(hsl(var(--foreground) / 0.02) 1px, transparent 1px);
+  background-size: 32px 32px;
+  background-position: 0 0;
 }
 
 .dark .islamic-pattern {
   background-image:
-    radial-gradient(hsl(var(--primary) / 0.12) 1.25px, transparent 1.25px),
-    radial-gradient(hsl(var(--accent-foreground) / 0.04) 1.25px, transparent 1.25px);
+    radial-gradient(hsl(var(--foreground) / 0.03) 1px, transparent 1px);
 }
 
 /*
