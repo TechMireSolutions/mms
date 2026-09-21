@@ -28,6 +28,7 @@ export const SEMANTIC_BADGE = {
   successStrong: 'bg-success/15 text-success border-success/30',
   destructive: 'bg-destructive/10 text-destructive border-destructive/20',
   destructiveStrong: 'bg-destructive/15 text-destructive border-destructive/30',
+  destructiveSolid: 'bg-destructive text-destructive-foreground border-destructive',
   warning: 'bg-warning/10 text-warning border-warning/20',
   warningStrong: 'bg-warning/15 text-warning border-warning/30',
   info: 'bg-info/10 text-info border-info/20',

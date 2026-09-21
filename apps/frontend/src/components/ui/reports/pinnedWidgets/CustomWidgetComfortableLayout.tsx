@@ -109,7 +109,7 @@ export function CustomWidgetComfortableLayout({
           <SectionLabel tone="foreground" className="block truncate leading-none">
             {resolveWidgetTitle(widget, t)}
           </SectionLabel>
-          <p className={cn("truncate text-xs font-bold uppercase tracking-wider", alertScheme ? "text-foreground/90" : "text-muted-foreground")}>
+          <p className={cn("truncate text-xs font-bold uppercase tracking-wider", alertScheme ? "text-foreground" : "text-muted-foreground")}>
             {getWidgetSubtitle(widget, resolvedWidgetType, t)}
           </p>
         </div>
@@ -118,7 +118,7 @@ export function CustomWidgetComfortableLayout({
           <StatusBadge
             status="alert"
             size="sm"
-            config={{ alert: { label: t("reports.widgets.alertLevel"), cls: `${SEMANTIC_BADGE.destructive} animate-pulse` } }}
+            config={{ alert: { label: t("reports.widgets.alertLevel"), cls: SEMANTIC_BADGE.destructiveSolid } }}
           />
         )}
       </div>
@@ -136,7 +136,7 @@ export function CustomWidgetComfortableLayout({
                 {formattedValue}
                 <ArrowUpRight className="h-3.5 w-3.5 text-muted-foreground/35 transition-all group-hover/kpi:translate-x-0.5 group-hover/kpi:-translate-y-0.5 group-hover/kpi:text-primary rtl:-scale-x-100 rtl:group-hover/kpi:-translate-x-0.5" />
               </h4>
-              <p className={cn("text-xs font-bold uppercase tracking-wider mt-1", alertScheme ? "text-foreground/90" : "text-muted-foreground")}>
+              <p className={cn("text-xs font-bold uppercase tracking-wider mt-1", alertScheme ? "text-foreground" : "text-muted-foreground")}>
                 {t("reports.widgets.clickToViewRecords")}
               </p>
             </span>
@@ -156,7 +156,7 @@ export function CustomWidgetComfortableLayout({
                   {t("reports.widgets.progression")}
                   <ArrowRight className="h-3.5 w-3.5 text-muted-foreground/40 transition-transform group-hover/prog:translate-x-0.5 rtl:rotate-180 rtl:group-hover/prog:-translate-x-0.5" />
                 </h4>
-                <p className={cn("text-xs font-semibold mt-1", alertScheme ? "text-foreground/90" : "text-muted-foreground")}>
+                <p className={cn("text-xs font-semibold mt-1", alertScheme ? "text-foreground" : "text-muted-foreground")}>
                   {t("reports.widgets.progressionDesc")}
                 </p>
               </span>
@@ -171,7 +171,7 @@ export function CustomWidgetComfortableLayout({
               <span className={`text-base font-black uppercase tracking-wider ${isSwitchOn ? "text-primary" : "text-muted-foreground"}`}>
                 {switchLabel}
               </span>
-              <p className={cn("text-xs font-semibold mt-1", alertScheme ? "text-foreground/90" : "text-muted-foreground")}>
+              <p className={cn("text-xs font-semibold mt-1", alertScheme ? "text-foreground" : "text-muted-foreground")}>
                 {t("reports.widgets.clickToToggle")}
               </p>
             </div>

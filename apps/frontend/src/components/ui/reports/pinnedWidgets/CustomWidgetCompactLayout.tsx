@@ -168,12 +168,12 @@ function CompactMetricButton({
       onClick={() => onMetricClick(widget)}
       className={`size-widget-compact ${isProgress ? "p-1.5" : "p-2"} text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
         alertScheme
-          ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse`
+          ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow}`
           : `${WORK_SURFACE} hover:border-primary/20 hover:shadow-md`
       }`}
       type="button"
     >
-      <span className={cn("text-xs font-black uppercase tracking-wider line-clamp-1 w-full mt-0.5", alertScheme ? "text-foreground/90" : "text-muted-foreground")}>
+      <span className={cn("text-xs font-black uppercase tracking-wider line-clamp-1 w-full mt-0.5", alertScheme ? "text-foreground" : "text-muted-foreground")}>
         {resolveWidgetTitle(widget, t)}
       </span>
       {isProgress ? (
