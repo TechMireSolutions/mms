@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import { isComposedWidgetType } from "@/components/dashboard-widgets/registry";
 import { Switch } from "@/components/ui/switch";
@@ -172,7 +173,7 @@ function CompactMetricButton({
       }`}
       type="button"
     >
-      <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
+      <span className={cn("text-xs font-black uppercase tracking-wider line-clamp-1 w-full mt-0.5", alertScheme ? "text-foreground/90" : "text-muted-foreground")}>
         {resolveWidgetTitle(widget, t)}
       </span>
       {isProgress ? (
@@ -182,7 +183,7 @@ function CompactMetricButton({
           {body}
         </span>
       )}
-      <SectionLabel toneClassName="text-muted-foreground/60" className="mb-0.5">
+      <SectionLabel toneClassName={alertScheme ? "text-foreground/80" : "text-muted-foreground/60"} className="mb-0.5">
         {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
       </SectionLabel>
     </motion.button>

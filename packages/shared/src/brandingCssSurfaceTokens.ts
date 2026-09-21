@@ -20,8 +20,8 @@ function buildLightModeSurfaceTokens(
   const mutedForeground = pickAccessibleTextToken(
     surfaceHue,
     10,
-    [muted, background],
-    descendingLightness(45, 32),
+    [muted, background, { h: surfaceHue, s: 15, l: 91 }],
+    descendingLightness(37, 30),
   );
   const sidebarForeground = pickAccessibleTextToken(
     accentHue,
