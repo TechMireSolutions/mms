@@ -8,7 +8,7 @@ import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { SubTabBar, type SubTab } from "@/components/ui/SubTabBar";
 import { CardSkeleton } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModuleScaffold } from "@/components/common/ModuleScaffold";
 
 import { containerVariants, itemVariants as cardVariants } from "@/platform/lib/animations";
 import { PlatformProfileCard } from "./account/PlatformProfileCard";
@@ -44,14 +44,15 @@ export default function PlatformAccount(): React.JSX.Element {
   ];
 
   return (
-    <>
-      <div className="space-y-8 text-start">
-        <PageHeader
-          icon={User}
-          title={t("platform.profileTitle")}
-          subtitle={t("platform.profileSubtitle")}
-        />
-
+    <ModuleScaffold
+      seoTitle={`${t("platform.profileTitle")} | ${t("platform.consoleTitle")}`}
+      seoDescription={t("platform.profileSubtitle")}
+      headerIcon={User}
+      headerTitle={t("platform.profileTitle")}
+      headerSubtitle={t("platform.profileSubtitle")}
+      className="text-start"
+    >
+      <div className="space-y-8">
         {loadingProfile ? (
           <CardSkeleton count={2} className="grid-cols-1 lg:grid-cols-3" />
         ) : profileError || !profile ? (
@@ -110,6 +111,6 @@ export default function PlatformAccount(): React.JSX.Element {
           </div>
         )}
       </div>
-    </>
+    </ModuleScaffold>
   );
 }

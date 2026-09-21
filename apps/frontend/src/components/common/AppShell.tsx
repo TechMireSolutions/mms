@@ -11,6 +11,7 @@ export interface NavigationAdapter {
   commandPalette?: React.ReactNode;
   extraModals?: React.ReactNode;
   footer?: React.ReactNode;
+  notifications?: React.ReactNode;
 }
 
 export interface AppShellProps {
@@ -22,6 +23,7 @@ export interface AppShellProps {
   commandPalette?: React.ReactNode;
   extraModals?: React.ReactNode;
   footer?: React.ReactNode;
+  notifications?: React.ReactNode;
   sidebarCollapsed?: boolean;
   contentPadding?: boolean;
   maxWidthClass?: string;
@@ -48,6 +50,7 @@ export function AppShell({
   commandPalette: propCommandPalette,
   extraModals: propExtraModals,
   footer: propFooter,
+  notifications: propNotifications,
   sidebarCollapsed = false,
   contentPadding = true,
   maxWidthClass,
@@ -63,6 +66,7 @@ export function AppShell({
   const commandPalette = adapter?.commandPalette ?? propCommandPalette;
   const extraModals = adapter?.extraModals ?? propExtraModals;
   const footer = adapter?.footer ?? propFooter;
+  const notifications = adapter?.notifications ?? propNotifications;
 
   const { t } = useTranslation();
 
@@ -106,6 +110,9 @@ export function AppShell({
 
       {/* Context-Specific Modals (e.g., Session Timeout) */}
       {extraModals}
+
+      {/* Global Notifications Center */}
+      {notifications}
 
       {/* Main Content Area */}
       <main
