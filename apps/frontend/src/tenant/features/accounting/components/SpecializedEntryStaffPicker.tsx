@@ -1,7 +1,7 @@
 import React, { useDeferredValue, useMemo, useState } from "react";
 import { SearchSelectPicker } from "@/components/ui/SearchSelectPicker";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useTeachersContractList } from "@/tenant/hooks/collections/faculty";
+import { useFacultyContractList } from "@/tenant/hooks/collections/faculty";
 
 export function SpecializedEntryStaffPicker({
   staffId,
@@ -13,21 +13,26 @@ export function SpecializedEntryStaffPicker({
   const { t } = useTranslation();
   const [search, setSearch] = useState("");
   const deferredSearch = useDeferredValue(search);
-  const list = useTeachersContractList({ page: 1, limit: 100, search: deferredSearch || undefined }, true);
+  const list = useFacultyContractList({ page: 1, limit: 100, search: deferredSearch || undefined }, true);
 
   const staff = useMemo(() => {
     const body = list.data?.status === 200 ? list.data.body : undefined;
-    if (!body || typeof body !== "object" || !("teachers" in body) || !Array.isArray(body.teachers)) {
+    if (!body || typeof body !== "object") {
       return [];
     }
-    return body.teachers
-      .map((teacher: { id?: string; name?: string; employeeId?: string }) => ({
-        id: String(teacher.id ?? ""),
-        label: teacher.employeeId
-          ? `${teacher.name ?? teacher.id} (${teacher.employeeId})`
-          : String(teacher.name ?? teacher.id ?? ""),
+    const rawList = ("faculty" in body && Array.isArray(body.faculty))
+      ? body.faculty
+      : ("teachers" in body && Array.isArray(body.teachers))
+      ? body.teachers
+      : [];
+    return rawList
+      .map((member: { id?: string; name?: string; employeeId?: string }) => ({
+        id: String(member.id ?? ""),
+        label: member.employeeId
+          ? `${member.name ?? member.id} (${member.employeeId})`
+          : String(member.name ?? member.id ?? ""),
       }))
-      .filter((teacher: { id: string }) => teacher.id);
+      .filter((member: { id: string }) => member.id);
   }, [list.data]);
 
   return (

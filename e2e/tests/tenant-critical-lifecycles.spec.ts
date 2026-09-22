@@ -55,7 +55,7 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
     await expect(page.locator('h1').first()).toBeVisible();
     await registerStudentJaneDoe(page);
 
-    await page.goto(`${credentials.tenantOrigin}/teachers`);
+    await page.goto(`${credentials.tenantOrigin}/faculty`);
     await expect(page.locator('h1').first()).toBeVisible();
     await createTeacherFromContact(page);
 

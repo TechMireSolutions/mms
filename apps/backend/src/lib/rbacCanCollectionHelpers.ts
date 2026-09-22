@@ -42,9 +42,9 @@ function computeCanReadCollection(user: User, collectionName: string): boolean {
     const mapped = COLLECTION_READ_PERMISSION.students;
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
-  // Typed teachers table is REST-only (not document-store allowlisted).
-  if (collectionName === 'teachers') {
-    const mapped = COLLECTION_READ_PERMISSION.teachers;
+  // Typed teachers/faculty table is REST-only (not document-store allowlisted).
+  if (collectionName === 'teachers' || collectionName === 'faculty') {
+    const mapped = COLLECTION_READ_PERMISSION[collectionName];
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
   // Typed sessions table is REST-only (not document-store allowlisted).
@@ -118,9 +118,9 @@ function computeCanWriteCollection(user: User, collectionName: string): boolean 
     const mapped = COLLECTION_WRITE_PERMISSION.students;
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
-  // Typed teachers table is REST-only (not document-store allowlisted).
-  if (collectionName === 'teachers') {
-    const mapped = COLLECTION_WRITE_PERMISSION.teachers;
+  // Typed teachers/faculty table is REST-only (not document-store allowlisted).
+  if (collectionName === 'teachers' || collectionName === 'faculty') {
+    const mapped = COLLECTION_WRITE_PERMISSION[collectionName];
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
   // Typed sessions table is REST-only (not document-store allowlisted).
@@ -191,9 +191,9 @@ function computeCanDeleteCollection(user: User, collectionName: string): boolean
     const mapped = COLLECTION_DELETE_PERMISSION.students;
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
-  // Typed teachers table is REST-only (not document-store allowlisted).
-  if (collectionName === 'teachers') {
-    const mapped = COLLECTION_DELETE_PERMISSION.teachers;
+  // Typed teachers/faculty table is REST-only (not document-store allowlisted).
+  if (collectionName === 'teachers' || collectionName === 'faculty') {
+    const mapped = COLLECTION_DELETE_PERMISSION[collectionName];
     return mapped ? roleHasPermission(user.role, mapped) : false;
   }
   // Typed sessions table is REST-only (not document-store allowlisted).

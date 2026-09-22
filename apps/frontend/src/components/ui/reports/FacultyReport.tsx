@@ -120,7 +120,7 @@ const FacultyReport = (function FacultyReport({ filters }: TeacherReportProps): 
         </div>
       )}
 
-      <PinnedWidgets category="teachers" />
+      <PinnedWidgets category="faculty" />
     </div>
   );
 });

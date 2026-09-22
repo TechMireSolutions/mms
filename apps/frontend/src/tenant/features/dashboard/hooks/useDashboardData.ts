@@ -85,7 +85,9 @@ export function useDashboardData(
     isModuleEnabled('students') &&
     hasPermission('students.read');
   const shouldLoadTeachers =
-    requiredDashboardCollections.has('teachers') && isModuleEnabled('teachers') && hasPermission('teachers.read');
+    (requiredDashboardCollections.has('teachers') || requiredDashboardCollections.has('faculty')) &&
+    (isModuleEnabled('faculty') || isModuleEnabled('teachers')) &&
+    (hasPermission('faculty.read') || hasPermission('teachers.read'));
   // Role shell needs: teacher banner (sessions), admin/accountant notifications (finance + attendance).
   const shouldLoadSessions =
     (requiredDashboardCollections.has('sessions') || isDashboardTeacher(dashboardRole)) &&
@@ -124,7 +126,10 @@ export function useDashboardData(
   const collectionWidgets = {
     contacts: filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole).filter(needsWidgetAggregate),
     students: filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole).filter(needsWidgetAggregate),
-    teachers: filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole).filter(needsWidgetAggregate),
+    teachers: [
+      ...filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole),
+      ...filterDashboardWidgetsByCollection(widgets, 'faculty', dashboardRole),
+    ].filter(needsWidgetAggregate),
     sessions: filterDashboardWidgetsByCollection(widgets, 'sessions', dashboardRole).filter(needsWidgetAggregate),
   };
 

@@ -31,6 +31,19 @@ export const METADATA_FIELDS = {
       { value: "age", label: "Age" }
     ]
   },
+  faculty: {
+    name: "Faculty",
+    dbKey: "faculty",
+    defaultData: [] as Teacher[],
+    fields: [
+      { value: "status", label: "Status (active/inactive/on_leave)" },
+      { value: "gender", label: "Gender (male/female)" },
+      { value: "specialization", label: "Specialization" },
+      { value: "qualification", label: "Qualification" },
+      { value: "joinDate", label: "Join Date" },
+    ],
+    numericFields: [],
+  },
   teachers: {
     name: "Teachers",
     dbKey: "teachers",

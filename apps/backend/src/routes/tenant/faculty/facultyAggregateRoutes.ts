@@ -14,45 +14,46 @@ import { auditFaculty, sanitizeFacultyForUser } from './facultyRouteHelpers.js';
 /** Count, metrics, resolve, widget aggregates, and inline restore routes. */
 export const facultyAggregateRoutes: FastifyPluginAsync = async (sub) => {
   registerCountRoute(sub, {
-    collection: 'teachers',
+    collection: 'faculty',
     loadCountFn: () => facultyUseCases.countTeachers(),
-    errorMessagePrefix: 'teachers',
+    errorMessagePrefix: 'faculty',
   });
 
   registerMetricsRoute(sub, {
-    collection: 'teachers',
+    collection: 'faculty',
     loadMetricsFn: () => facultyUseCases.loadTeachersCommandMetrics(),
-    errorMessagePrefix: 'teacher',
+    errorMessagePrefix: 'faculty',
   });
 
   registerWidgetAggregatesRoute(sub, {
-    collection: 'teachers',
+    collection: 'faculty',
     loadAggregatesFn: (queries) => facultyUseCases.loadTeachersWidgetAggregates(queries),
-    errorMessagePrefix: 'teacher',
+    errorMessagePrefix: 'faculty',
   });
 
   registerResolveRoute(sub, {
-    collection: 'teachers',
+    collection: 'faculty',
     loadByIdsFn: async (ids, request) => {
       const teachers = await facultyUseCases.loadTeachersByIds(ids);
       return sanitizeFacultyForUser(teachers, request.user as User);
     },
-    responseKey: 'teachers',
-    errorMessagePrefix: 'teachers',
+    responseKey: 'faculty',
+    aliases: ['teachers'],
+    errorMessagePrefix: 'faculty',
   });
 
   registerLinkedContactIdsRoute(sub, {
-    collection: 'teachers',
+    collection: 'faculty',
     loadLinkedContactIdsFn: (excludeId) => facultyUseCases.loadTeacherLinkedContactIds(excludeId),
-    errorMessagePrefix: 'teachers',
+    errorMessagePrefix: 'faculty',
   });
 
   registerSingleRestoreRoute(sub, {
-    collection: 'teachers',
-    nameSingular: 'teacher',
+    collection: 'faculty',
+    nameSingular: 'faculty',
     restoreFn: (id, userId) => facultyUseCases.restoreTeacherById(id, userId),
     onAfterRestore: async (user, id) => {
-      await auditFaculty(user, 'teacher.restore', `Restored teacher ${id}`, id);
+      await auditFaculty(user, 'faculty.restore', `Restored faculty member ${id}`, id);
     },
   });
 };

@@ -113,6 +113,7 @@ export interface ResolveRouteOptions {
   collection: string;
   loadByIdsFn: (ids: string[], request: FastifyRequest) => Promise<unknown[]>;
   responseKey: string;
+  aliases?: string[];
   errorMessagePrefix: string;
 }
 
@@ -123,7 +124,7 @@ export function registerResolveRoute(
   fastify: FastifyInstance,
   options: ResolveRouteOptions,
 ): void {
-  const { path = '/resolve', collection, loadByIdsFn, responseKey, errorMessagePrefix } = options;
+  const { path = '/resolve', collection, loadByIdsFn, responseKey, aliases, errorMessagePrefix } = options;
 
   fastify.post(path, async (request, reply) => {
     const user = request.user as User;
@@ -132,7 +133,13 @@ export function registerResolveRoute(
     if (!parsed.ok) return replyValidationError(reply, parsed.message);
     try {
       const items = await loadByIdsFn(parsed.data.ids, request);
-      return reply.send({ [responseKey]: items });
+      const responsePayload: Record<string, unknown> = { [responseKey]: items };
+      if (aliases) {
+        for (const alias of aliases) {
+          responsePayload[alias] = items;
+        }
+      }
+      return reply.send(responsePayload);
     } catch {
       return sendDatabaseError(reply, `Failed to resolve ${errorMessagePrefix}`);
     }

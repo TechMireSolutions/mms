@@ -286,3 +286,5 @@ export type FacultyModulePreferences = TeacherModulePreferences;
 export const FACULTY_MODULE_PREFERENCE_KEYS = PREF_KEYS;
 export const normalizeFacultyModulePreferences = normalizeTeacherModulePreferences;
 export const mergeFacultyFormTabsFromApi = mergeTeachersFormTabsFromApi;
+export const composeFacultySettings = composeTeachersSettings;
+export const splitFacultySettingsBlob = splitTeachersSettingsBlob;

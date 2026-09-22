@@ -11,7 +11,12 @@ function canShowNavItem(
   enabledModules: Record<string, boolean>,
   can: (permission: Permission) => boolean,
 ): boolean {
-  const moduleEnabled = !item.moduleId || enabledModules[item.moduleId] !== false;
+  const isFacultyOrTeachers = item.moduleId === 'faculty' || item.moduleId === 'teachers';
+  const moduleEnabled = !item.moduleId
+    ? true
+    : isFacultyOrTeachers
+      ? (enabledModules.faculty ?? enabledModules.teachers) !== false
+      : enabledModules[item.moduleId] !== false;
   const permissionGranted = !item.requiredPermission || can(item.requiredPermission);
   return moduleEnabled && permissionGranted;
 }

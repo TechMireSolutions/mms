@@ -15,6 +15,7 @@ import {
   SESSIONS_MODULE_MANIFEST,
   STUDENT_CARD_TEMPLATE_OBJECT_KEY,
   STUDENTS_MODULE_MANIFEST,
+  FACULTY_MODULE_MANIFEST,
   TEACHERS_MODULE_MANIFEST,
   USERS_MODULE_MANIFEST,
   type Permission,
@@ -24,6 +25,7 @@ export const WRITE_ROLES = new Set(['admin', 'accountant', 'teacher', 'assistant
 export const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
   contacts: CONTACTS_MODULE_MANIFEST.permissions.read,
   students: STUDENTS_MODULE_MANIFEST.permissions.read,
+  faculty: FACULTY_MODULE_MANIFEST.permissions.read,
   teachers: TEACHERS_MODULE_MANIFEST.permissions.read,
   sessions: SESSIONS_MODULE_MANIFEST.permissions.read,
   enrollments: ENROLLMENTS_MODULE_MANIFEST.permissions.read,
@@ -61,6 +63,7 @@ export const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
 export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
   contacts: CONTACTS_MODULE_MANIFEST.permissions.write,
   students: STUDENTS_MODULE_MANIFEST.permissions.write,
+  faculty: FACULTY_MODULE_MANIFEST.permissions.write,
   teachers: TEACHERS_MODULE_MANIFEST.permissions.write,
   sessions: SESSIONS_MODULE_MANIFEST.permissions.write,
   enrollments: ENROLLMENTS_MODULE_MANIFEST.permissions.write,
@@ -99,6 +102,7 @@ export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
 export const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
   contacts: CONTACTS_MODULE_MANIFEST.permissions.delete,
   students: STUDENTS_MODULE_MANIFEST.permissions.delete,
+  faculty: FACULTY_MODULE_MANIFEST.permissions.delete,
   teachers: TEACHERS_MODULE_MANIFEST.permissions.delete,
   attendance: ATTENDANCE_MODULE_MANIFEST.permissions.delete,
   attendance_records: ATTENDANCE_MODULE_MANIFEST.permissions.delete,

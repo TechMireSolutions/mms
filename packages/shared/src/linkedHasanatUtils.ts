@@ -9,6 +9,7 @@ export interface HasanatDistributionLike extends Record<string, unknown> {
   id?: string | number;
   recipientType?: string;
   recipientStudentId?: string;
+  recipientFacultyId?: string;
   recipientTeacherId?: string;
   recipientName?: string;
 }
@@ -28,6 +29,9 @@ export function normalizeHasanatDistribution<T extends HasanatDistributionLike>(
   if (!row || typeof row !== "object") return row;
   if (row.recipientStudentId) {
     return normalizeIdLinkedName(row, 'recipientStudentId', 'recipientName');
+  }
+  if (row.recipientFacultyId) {
+    return normalizeIdLinkedName(row, 'recipientFacultyId', 'recipientName');
   }
   if (row.recipientTeacherId) {
     return normalizeIdLinkedName(row, 'recipientTeacherId', 'recipientName');
@@ -50,9 +54,10 @@ export function hydrateHasanatDistribution<T extends HasanatDistributionLike>(
       recipientName: resolved,
     };
   }
-  if (row.recipientTeacherId) {
+  const facultyId = row.recipientFacultyId || row.recipientTeacherId;
+  if (facultyId) {
     const current = row.recipientName;
-    const resolved = resolveEntityName(row.recipientTeacherId, teachers) || current;
+    const resolved = resolveEntityName(facultyId, teachers) || current;
     if (resolved === current) return row;
     return {
       ...row,

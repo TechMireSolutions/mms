@@ -32,7 +32,7 @@ MMS enforces **soft-delete** (marking rows archived in-place) over physical `DEL
 
 | Bucket | Mechanism | Target Entities | Rationale |
 |---|---|---|---|
-| **1. Soft-Delete** | `UPDATE SET deleted_at = NOW()` | `contacts`, `students`, `teachers`, `invoices` | High referential weight; user self-service restoration. |
+| **1. Soft-Delete** | `UPDATE SET deleted_at = NOW()` | `contacts`, `students`, `faculty`, `invoices` | High referential weight; user self-service restoration. |
 | **2. Ephemeral Hard-Delete** | Physical SQL `DELETE` | `question_bank_tests`, draft form steps, join edges | Scratchpad data without independent lifecycle. |
 | **3. Sweeper TTL Purge** | Background worker (`lte(purge_after, NOW())`) | `message_logs`, temp upload artifacts, session tokens | Time-bounded operational data purged after retention window. |
 | **4. Append-Only Immutable** | `DELETE`/`UPDATE` blocked at DB layer | `audit_trail_events`, `accounting_entries` | Regulatory source of truth; tamper-evident hash chains. |
@@ -78,7 +78,7 @@ export const softDeleteColumns = {
 1. **Delete Route (`DELETE /:id`):**
    - Verify caller has `delete` permission via `can(user, 'delete', resource)`.
    - Check restrict guards (e.g. `activeEntriesCount > 0` → 409 Conflict).
-   - If soft-deleting an account (`tenant_users`, `teachers`), immediately invalidate sessions and Redis tokens.
+   - If soft-deleting an account (`tenant_users`, `faculty`), immediately invalidate sessions and Redis tokens.
    - Execute soft-delete update inside `withTenant(async (tx) => { ... })`:
      ```ts
      await tx.update(students)

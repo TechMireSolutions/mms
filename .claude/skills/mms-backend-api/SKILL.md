@@ -53,7 +53,7 @@ Never query `pg` from handlers. Prefer repositories / `withTenant`. Use **`dbSyn
 | Side effects (WA, email) | Dedicated route + service |
 | **New domain module** | REST plugin + Zod + Query on FE |
 
-Shipped REST: students, contacts, teachers, finance, enrollments, obligations, accounting, hasanat, examinations, question-bank, users, attendance, sessions, messaging (`routes/tenant/`). After REST migration, remove entity from `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`.
+Shipped REST: students, contacts, faculty, finance, enrollments, obligations, accounting, hasanat, examinations, question-bank, users, attendance, sessions, messaging (`routes/tenant/`). After REST migration, remove entity from `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`.
 
 ## Soft Delete on REST Resources (`mms-soft-delete`)
 

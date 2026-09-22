@@ -2,6 +2,7 @@ import type { AppTranslationKey } from "@mms/shared";
 
 export type ReportCollection =
   | "students"
+  | "faculty"
   | "teachers"
   | "sessions"
   | "enrollments"
@@ -37,6 +38,7 @@ export interface CustomCard {
 
 export const COLLECTION_OPTIONS = [
   { value: "students", label: "Students" },
+  { value: "faculty", label: "Faculty" },
   { value: "teachers", label: "Teachers" },
   { value: "sessions", label: "Sessions" },
   { value: "enrollments", label: "Enrollments" },

@@ -65,13 +65,13 @@ vi.mock('../services/facultyValidationService.js', () => ({
   validateFacultyDynamic: vi.fn().mockResolvedValue(undefined),
 }));
 
-describe('teachers write contact-profile SSOT', () => {
+describe('faculty write contact-profile SSOT', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     vi.clearAllMocks();
   });
 
-  it('POST /api/teachers strips contact profile dual-write keys before create', async () => {
+  it('POST /api/faculty strips contact profile dual-write keys before create', async () => {
     mockCreateTeacher.mockImplementation(async (teacher: Record<string, unknown>) => ({
       record: teacher,
       restored: false,
@@ -79,7 +79,7 @@ describe('teachers write contact-profile SSOT', () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers',
+      url: '/api/faculty',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -97,7 +97,7 @@ describe('teachers write contact-profile SSOT', () => {
       },
     });
     expect(res.statusCode).toBe(201);
-    expect(res.json()).toMatchObject({ success: true, teacher: { contactId: 'c-300' } });
+    expect(res.json()).toMatchObject({ success: true, faculty: { contactId: 'c-300' } });
     expect(mockCreateTeacher).toHaveBeenCalled();
     const created = mockCreateTeacher.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(created.contactId).toBe('c-300');
@@ -110,7 +110,7 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('POST /api/teachers returns 200 when the create restored an archived teacher', async () => {
+  it('POST /api/faculty returns 200 when the create restored an archived faculty member', async () => {
     mockCreateTeacher.mockImplementation(async (teacher: Record<string, unknown>) => ({
       record: { ...teacher, id: 't-archived' },
       restored: true,
@@ -118,7 +118,7 @@ describe('teachers write contact-profile SSOT', () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers',
+      url: '/api/faculty',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -131,20 +131,20 @@ describe('teachers write contact-profile SSOT', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    const body = res.json() as { success: boolean; teacher?: { id?: string } };
+    const body = res.json() as { success: boolean; faculty?: { id?: string } };
     expect(body.success).toBe(true);
-    expect(body.teacher?.id).toBe('t-archived');
+    expect(body.faculty?.id).toBe('t-archived');
     await app.close();
   });
 
-  it('PUT /api/teachers/:id strips contact profile keys on update', async () => {
+  it('PUT /api/faculty/:id strips contact profile keys on update', async () => {
     mockUpdateTeacherById.mockImplementation(
       async (_id: string, teacher: Record<string, unknown>) => teacher,
     );
     const app = await buildApp();
     const res = await app.inject({
       method: 'PUT',
-      url: '/api/teachers/t1',
+      url: '/api/faculty/t1',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -167,11 +167,11 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('POST /api/teachers rejects empty-string contactId', async () => {
+  it('POST /api/faculty rejects empty-string contactId', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers',
+      url: '/api/faculty',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -189,12 +189,12 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/duplicate-check returns the conflict reason for writers', async () => {
+  it('POST /api/faculty/duplicate-check returns the conflict reason for writers', async () => {
     mockCheckTeacherRegistrationDuplicate.mockResolvedValue({ reason: 'employeeId' });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/duplicate-check',
+      url: '/api/faculty/duplicate-check',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -211,11 +211,11 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/duplicate-check rejects non-writers', async () => {
+  it('POST /api/faculty/duplicate-check rejects non-writers', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/duplicate-check',
+      url: '/api/faculty/duplicate-check',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${viewerToken(app)}`,
@@ -228,12 +228,12 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/migrate-employee-ids backfills for setup writers', async () => {
+  it('POST /api/faculty/migrate-employee-ids backfills for setup writers', async () => {
     mockMigrateTeachersMissingEmployeeIds.mockResolvedValue({ updated: 3 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/migrate-employee-ids',
+      url: '/api/faculty/migrate-employee-ids',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -247,11 +247,11 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/migrate-employee-ids rejects non-setup-writers', async () => {
+  it('POST /api/faculty/migrate-employee-ids rejects non-setup-writers', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/migrate-employee-ids',
+      url: '/api/faculty/migrate-employee-ids',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${viewerToken(app)}`,
@@ -264,7 +264,7 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('GET /api/teachers forwards gender and quickFilter to the list page', async () => {
+  it('GET /api/faculty forwards gender and quickFilter to the list page', async () => {
     mockLoadTeachersPage.mockResolvedValue({
       teachers: [{ id: 't1', specialization: 'Hifz', status: 'active' }],
       total: 1,
@@ -275,15 +275,15 @@ describe('teachers write contact-profile SSOT', () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
-      url: '/api/teachers?page=1&gender=male&quickFilter=active&specialization=Hifz',
+      url: '/api/faculty?page=1&gender=male&quickFilter=active&specialization=Hifz',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
       },
     });
     expect(res.statusCode).toBe(200);
-    const body = res.json() as { teachers: unknown[]; total: number };
-    expect(body.teachers).toHaveLength(1);
+    const body = res.json() as { faculty?: unknown[]; teachers?: unknown[]; total: number };
+    expect(body.faculty ?? body.teachers).toHaveLength(1);
     expect(body.total).toBe(1);
     const query = mockLoadTeachersPage.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(query.gender).toBe('male');
@@ -292,12 +292,12 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/bulk-specialization updates specialization for writers', async () => {
+  it('POST /api/faculty/bulk-specialization updates specialization for writers', async () => {
     mockBulkUpdateTeacherSpecialization.mockResolvedValueOnce({ succeeded: 2, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/bulk-specialization',
+      url: '/api/faculty/bulk-specialization',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -314,11 +314,11 @@ describe('teachers write contact-profile SSOT', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/bulk-specialization rejects non-writers', async () => {
+  it('POST /api/faculty/bulk-specialization rejects non-writers', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/bulk-specialization',
+      url: '/api/faculty/bulk-specialization',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${viewerToken(app)}`,

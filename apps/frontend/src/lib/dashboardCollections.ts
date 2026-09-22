@@ -12,6 +12,7 @@ import {
   HASANAT_MODULE_MANIFEST,
   FINANCE_MODULE_MANIFEST,
   STUDENTS_MODULE_MANIFEST,
+  FACULTY_MODULE_MANIFEST,
   TEACHERS_MODULE_MANIFEST,
   CONTACTS_MODULE_MANIFEST,
   QUESTION_BANK_MODULE_MANIFEST,
@@ -32,6 +33,7 @@ export const DASHBOARD_COLLECTION_MODULE_ID: Partial<Record<ReportCollection, st
   hasanat_distributions: HASANAT_MODULE_MANIFEST.moduleId,
   finance_invoices: FINANCE_MODULE_MANIFEST.moduleId,
   students: STUDENTS_MODULE_MANIFEST.moduleId,
+  faculty: FACULTY_MODULE_MANIFEST.moduleId,
   teachers: TEACHERS_MODULE_MANIFEST.moduleId,
   contacts: CONTACTS_MODULE_MANIFEST.moduleId,
   questions: QUESTION_BANK_MODULE_MANIFEST.moduleId,
@@ -103,8 +105,9 @@ export function getDashboardWidgetRequiredPermission(
       return ENROLLMENTS_MODULE_MANIFEST.permissions.read;
     case 'students':
       return STUDENTS_MODULE_MANIFEST.permissions.read;
+    case 'faculty':
     case 'teachers':
-      return TEACHERS_MODULE_MANIFEST.permissions.read;
+      return FACULTY_MODULE_MANIFEST.permissions.read;
     case 'contacts':
       return CONTACTS_MODULE_MANIFEST.permissions.read;
     case 'questions':

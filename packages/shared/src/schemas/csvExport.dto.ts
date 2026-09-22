@@ -77,6 +77,7 @@ import { usersListQuerySchema } from '../usersListQuery.js';
 export const contactsCsvExportBodySchema = csvExportBodySchema(contactsListQuerySchema);
 export const studentsCsvExportBodySchema = csvExportBodySchema(studentsListQuerySchema);
 export const teachersCsvExportBodySchema = csvExportBodySchema(teachersListQuerySchema);
+export const facultyCsvExportBodySchema = teachersCsvExportBodySchema;
 export const sessionsCsvExportBodySchema = csvExportBodySchema(sessionsListQuerySchema);
 export const enrollmentsCsvExportBodySchema = csvExportBodySchema(enrollmentsListQuerySchema);
 export const usersCsvExportBodySchema = csvExportBodySchema(usersListQuerySchema);

@@ -1,9 +1,9 @@
 import type { FastifyPluginAsync } from 'fastify';
 import {
-  TEACHERS_MODULE_MANIFEST,
-  teacherFieldConfigPutBodySchema,
-  teacherPreferencesPutBodySchema,
-  normalizeTeacherModulePreferences,
+  FACULTY_MODULE_MANIFEST,
+  facultyFieldConfigPutBodySchema,
+  facultyPreferencesPutBodySchema,
+  normalizeFacultyModulePreferences,
   type User,
 } from '@mms/shared';
 import { registerModuleSetupConfigRoutes } from '../../../lib/registerModuleSetupConfigRoutes.js';
@@ -24,20 +24,20 @@ import { auditFaculty } from './facultyRouteHelpers.js';
 /** Faculty Setup field-config + preferences (typed FORCE-RLS tables). */
 export const facultySetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
   registerModuleSetupConfigRoutes(fastify, {
-    canRead: (user) => canReadCollection(user, 'teachers'),
-    setupWritePermission: TEACHERS_MODULE_MANIFEST.permissions.setupWrite,
-    fieldConfigSchema: teacherFieldConfigPutBodySchema,
-    preferencesSchema: teacherPreferencesPutBodySchema,
+    canRead: (user) => canReadCollection(user, 'faculty'),
+    setupWritePermission: FACULTY_MODULE_MANIFEST.permissions.setupWrite,
+    fieldConfigSchema: facultyFieldConfigPutBodySchema,
+    preferencesSchema: facultyPreferencesPutBodySchema,
     loadFieldConfig: loadFacultyFieldConfig,
     saveFieldConfig: (body) => saveFacultyFieldConfig(body),
     loadPreferences: loadFacultyModulePreferences,
-    normalizePreferences: normalizeTeacherModulePreferences,
+    normalizePreferences: normalizeFacultyModulePreferences,
     savePreferences: saveFacultyModulePreferences,
     audit: auditFaculty,
-    fieldConfigAuditAction: 'teacher.field-config',
-    fieldConfigAuditSummary: 'Updated teacher field configuration',
-    preferencesAuditAction: 'teacher.preferences',
-    preferencesAuditSummary: 'Updated teacher module preferences',
+    fieldConfigAuditAction: 'faculty.field-config',
+    fieldConfigAuditSummary: 'Updated faculty field configuration',
+    preferencesAuditAction: 'faculty.preferences',
+    preferencesAuditSummary: 'Updated faculty module preferences',
     loadFieldConfigError: 'Failed to load faculty field config',
     saveFieldConfigError: 'Failed to save faculty field config',
     loadPreferencesError: 'Failed to load faculty preferences',
@@ -46,7 +46,7 @@ export const facultySetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
 
   fastify.get('/setup/next-employee-id', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadCollection(user, 'teachers')) return sendForbidden(reply);
+    if (!canReadCollection(user, 'faculty')) return sendForbidden(reply);
     const tenant = getRequestTenant() ?? user.workspaceSubdomain;
     if (!tenant) return sendDatabaseError(reply, 'Tenant context required', new Error('Missing tenant'));
     try {

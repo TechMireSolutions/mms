@@ -61,7 +61,9 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
   const listLoading = rosterQuery.isLoading;
   const listRefetch = rosterQuery.refetch;
 
-  const teachers = (() => ((rosterQuery.data?.body?.teachers ?? []) as unknown as Teacher[]).map(mapTeacherRow))() as ReportTeacher[];
+  const rawList = (rosterQuery.data?.body as { faculty?: unknown[]; teachers?: unknown[] } | undefined);
+  const list = rawList?.faculty ?? rawList?.teachers ?? [];
+  const teachers = (() => (list as unknown as Teacher[]).map(mapTeacherRow))() as ReportTeacher[];
 
   const listTotal = rosterQuery.data?.body?.total ?? 0;
   const listHasMore = Boolean(rosterQuery.data?.body?.hasMore);

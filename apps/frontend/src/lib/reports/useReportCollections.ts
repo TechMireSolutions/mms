@@ -29,6 +29,7 @@ import type { ReportCollection } from '@/lib/reports/reportMetadata';
 
 export type ReportCollectionsSnapshot = {
   students: Student[];
+  faculty: Teacher[];
   teachers: Teacher[];
   sessions: Session[];
   enrollments: Enrollment[];
@@ -84,6 +85,7 @@ export function useWidgetCollections(options?: {
 
   return {
     students,
+    faculty: teachers,
     teachers,
     sessions,
     enrollments,
@@ -146,6 +148,7 @@ export function useReportCollectionRows(
     case 'students':
       rows = students as unknown as Record<string, unknown>[];
       break;
+    case 'faculty':
     case 'teachers':
       rows = teachers as unknown as Record<string, unknown>[];
       break;

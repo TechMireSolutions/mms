@@ -41,12 +41,12 @@ describe('sessionLifecycleNavigation', () => {
         return new Response(JSON.stringify({ students: [] }), { status: 200 });
       }
 
-      if (url.includes('/api/teachers')) {
+      if (url.includes('/api/faculty') || url.includes('/api/teachers')) {
         teachersCalls++;
         if (teachersCalls === 1) {
           return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
         }
-        return new Response(JSON.stringify({ teachers: [] }), { status: 200 });
+        return new Response(JSON.stringify({ faculty: [], teachers: [] }), { status: 200 });
       }
 
       if (url.includes('/api/contacts')) {
@@ -63,7 +63,7 @@ describe('sessionLifecycleNavigation', () => {
     // Fire 3 simultaneous requests that encounter 401
     const [res1, res2, res3] = await Promise.all([
       apiFetch('/api/students'),
-      apiFetch('/api/teachers'),
+      apiFetch('/api/faculty'),
       apiFetch('/api/contacts'),
     ]);
 
@@ -230,8 +230,8 @@ describe('sessionLifecycleNavigation', () => {
     // User navigates away from Students -> abort Students query
     studentsCtrl.abort();
 
-    // Module 3: Teachers starts fetching and user remains here
-    const pTeachers = apiFetch('/api/teachers', { signal: teachersCtrl.signal });
+    // Module 3: Faculty starts fetching and user remains here
+    const pTeachers = apiFetch('/api/faculty', { signal: teachersCtrl.signal });
 
     // Settle all queries: aborted queries reject or complete cleanly, active query resolves 200
     const [resContacts, resStudents, resTeachers] = await Promise.allSettled([

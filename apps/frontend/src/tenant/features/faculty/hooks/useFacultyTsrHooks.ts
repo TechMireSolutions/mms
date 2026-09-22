@@ -1,13 +1,13 @@
 /**
  * Contract-driven query/mutation hooks for the Faculty module.
  */
-import { apiContract, tsr, tsrClient } from '@/lib/api';
+import { apiContract, tsr } from '@/lib/api';
 import { queryOptions, useQueryClient } from '@tanstack/react-query';
 import { FACULTY_QUERY_KEY } from '@/tenant/features/faculty/hooks/facultyQueryKeys';
 import { invalidateFacultyQueries } from '@/tenant/features/faculty/hooks/invalidateFacultyQueries';
 
-const facultyClient = tsr.faculty ?? tsrClient.teachers;
-const facultyApi = apiContract.faculty ?? apiContract.teachers;
+const facultyClient = tsr.faculty;
+const facultyApi = apiContract.faculty;
 
 export function facultyListQueryOptions(query: Record<string, unknown> = {}) {
   return queryOptions({
@@ -97,7 +97,7 @@ export const useTeachersContractDuplicateCheck = useFacultyContractDuplicateChec
 export function useFacultyContractNextEmployeeId(query: { prefix?: string }, enabled = true) {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.nextEmployeeId.useQuery({
-    queryKey: [FACULTY_QUERY_KEY, 'next-employee-id', query],
+    queryKey: [...FACULTY_QUERY_KEY, 'next-employee-id', query],
     queryData: { query },
     enabled,
     staleTime: 0,

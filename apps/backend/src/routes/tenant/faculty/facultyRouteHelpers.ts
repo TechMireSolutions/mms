@@ -2,8 +2,8 @@ import type { Teacher, User } from '@mms/shared';
 import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
 import { facultyUseCases } from '../../../faculty/use-cases/facultyUseCases.js';
 
-/** Thin Faculty/Teachers audit helper — same shape as Contacts `auditContact`. */
-export const auditFaculty = createCollectionAuditHelper('teachers');
+/** Thin Faculty audit helper — same shape as Contacts `auditContact`. */
+export const auditFaculty = createCollectionAuditHelper('faculty');
 export const auditTeacher = auditFaculty;
 
 /** Strips faculty properties the viewer role cannot read (field-config + viewer role). */

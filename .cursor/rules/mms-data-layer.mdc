@@ -91,7 +91,7 @@ When generating code for any feature or entity, provide:
 
 - **Legacy Settings Only:** `db.ts` is restricted strictly to non-migrated settings/singletons (`branding`, `global_settings`).
 - **Event Bus:** Local settings updates dispatch `window.dispatchEvent(new Event('local-database-update'))`.
-- **REST Entities Ban:** Contacts, Students, Teachers, Sessions, Users, Enrollments, Finance, Accounting use Query/REST — never `getCollection` or `saveCollection`.
+- **REST Entities Ban:** Contacts, Students, Faculty, Sessions, Users, Enrollments, Finance, Accounting use Query/REST — never `getCollection` or `saveCollection`.
 
 ---
 
@@ -137,7 +137,7 @@ Operational workflows, verification checklists, and anomaly baselines → skill 
 Operational workflows, complete code snippets, and UI interaction standards → skill **`mms-soft-delete`** and `docs/soft-delete.md`.
 
 1. **Architectural Deletion Taxonomy:**
-   - **Bucket 1 (Soft-Delete):** Primary business entities (`contacts`, `students`, `teachers`, `sessions`, `enrollments`, `finance_invoices`, `accounting_accounts`). User self-service restore, historical reporting continuity.
+   - **Bucket 1 (Soft-Delete):** Primary business entities (`contacts`, `students`, `faculty`, `sessions`, `enrollments`, `finance_invoices`, `accounting_accounts`). User self-service restore, historical reporting continuity.
    - **Bucket 2 (Ephemeral Hard-Delete):** Scratchpad data without independent lifecycle (`question_bank_tests`, join edges, drafts).
    - **Bucket 3 (Sweeper TTL Purge):** Scheduled background worker (`message_logs`, upload artifacts, idempotency keys, sessions).
    - **Bucket 4 (Append-Only Immutable):** Physical delete/update forbidden at DB layer (`audit_trail_events`, `accounting_entries`).

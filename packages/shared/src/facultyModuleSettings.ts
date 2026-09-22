@@ -170,3 +170,4 @@ export function getSortedTeacherFields(
 
 export const DEFAULT_FACULTY_SETTINGS = DEFAULT_TEACHERS_SETTINGS;
 export type FacultySettings = TeachersSettings;
+export const getSortedFacultyFields = getSortedTeacherFields;

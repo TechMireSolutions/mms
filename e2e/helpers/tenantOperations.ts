@@ -309,7 +309,7 @@ export function seedTestClassAndEnrollment(subdomain: string): void {
 export async function createTeacherFromContact(page: Page): Promise<void> {
   await test.step('Create Teacher record from John Doe contact', async () => {
     await ensureWorkTierActive(page);
-    await page.getByRole('button', { name: 'Add Teacher' }).first().click();
+    await page.getByRole('button', { name: /Add (Teacher|Faculty)/i }).first().click();
     const teacherDialog = page.getByRole('dialog');
     await expect(teacherDialog).toBeVisible({ timeout: 15_000 });
 
@@ -321,12 +321,12 @@ export async function createTeacherFromContact(page: Page): Promise<void> {
 
     await waitForToastOverlayToClear(page, 'before creating teacher');
 
-    const saveBtn = teacherDialog.locator('button').filter({ hasText: /^Add Teacher$/i }).last();
+    const saveBtn = teacherDialog.locator('button').filter({ hasText: /^Add (Teacher|Faculty)$/i }).last();
     await expect(saveBtn).toBeEnabled({ timeout: 15_000 });
 
     const teacherCreate = page.waitForResponse(
       (response) =>
-        response.url().includes('/api/teachers') &&
+        (response.url().includes('/api/faculty') || response.url().includes('/api/teachers')) &&
         response.request().method() === 'POST' &&
         !response.url().includes('/bulk'),
       { timeout: 30_000 },
@@ -345,7 +345,7 @@ export async function createTeacherFromContact(page: Page): Promise<void> {
     }
     await expect(teacherDialog).toBeHidden({ timeout: 20_000 });
     await expect(
-      page.locator('table:visible tbody tr, [data-testid="teacher-card"]').filter({ hasText: 'John Doe' }).first(),
+      page.locator('table:visible tbody tr, [data-testid="teacher-card"], [data-testid="faculty-card"]').filter({ hasText: 'John Doe' }).first(),
     ).toBeVisible({ timeout: 20_000 });
   });
 }

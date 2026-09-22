@@ -19,7 +19,7 @@ export default async function facultyRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
-  fastify.addHook('preHandler', requireTenantModule('teachers'));
+  fastify.addHook('preHandler', requireTenantModule('faculty'));
 
   // Canonical /api/faculty & /api/tenant/faculty
   await fastify.register(facultySetupConfigRoutes, { prefix: '/api/faculty' });
@@ -32,18 +32,6 @@ export default async function facultyRoutes(
   await fastify.register(facultySoftDeleteRoutes, { prefix: '/api/tenant/faculty' });
   await fastify.register(facultyAggregateRoutes, { prefix: '/api/faculty' });
   await fastify.register(facultyAggregateRoutes, { prefix: '/api/tenant/faculty' });
-
-  // Backward-compatible /api/teachers & /api/tenant/teachers
-  await fastify.register(facultySetupConfigRoutes, { prefix: '/api/teachers' });
-  await fastify.register(facultySetupConfigRoutes, { prefix: '/api/tenant/teachers' });
-  await fastify.register(facultyLookupRoutes, { prefix: '/api/teachers' });
-  await fastify.register(facultyLookupRoutes, { prefix: '/api/tenant/teachers' });
-  await fastify.register(facultyExportRoutes, { prefix: '/api/teachers' });
-  await fastify.register(facultyExportRoutes, { prefix: '/api/tenant/teachers' });
-  await fastify.register(facultySoftDeleteRoutes, { prefix: '/api/teachers' });
-  await fastify.register(facultySoftDeleteRoutes, { prefix: '/api/tenant/teachers' });
-  await fastify.register(facultyAggregateRoutes, { prefix: '/api/teachers' });
-  await fastify.register(facultyAggregateRoutes, { prefix: '/api/tenant/teachers' });
 
   await fastify.register(facultyCrudRoutes);
 }

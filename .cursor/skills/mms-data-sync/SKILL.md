@@ -45,10 +45,10 @@ import {
   useContactsMetrics,
 } from '@/tenant/hooks/collections/contacts';
 import {
-  useTeachersPaginated,
-  useTeacherMutations,
-  useTeachersByIds,
-} from '@/tenant/hooks/collections/teachers';
+  useFacultyContractList,
+  useFacultyMutations,
+  useFacultyByIds,
+} from '@/tenant/hooks/collections/faculty';
 ```
 
 `local-database-update` event — dispatched by saves; `useLiveCollection` subscribes. Do not duplicate listeners.
@@ -58,7 +58,7 @@ import {
 | Pattern | Use when |
 |---------|----------|
 | `useLiveCollection` + `saveCollection` | Legacy module CRUD via `/api/db/collections/*` |
-| TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, `/api/teachers`, workspace) |
+| TanStack Query + `apiJson` | Dedicated REST (`/api/students`, `/api/contacts`, `/api/faculty`, workspace) |
 | Paginated Work + resolve | `useStudentsPaginated`, `useContactsPaginated`, `useXxxByIds` — no full-list fetch |
 | Metrics / aggregates | KPI, dashboard, reports — `use*Metrics` from `@/tenant/hooks/collections/*`, widget-aggregates; ban full-list reduce for KPI values already on `/metrics` |
 | Column preferences | Contacts: localStorage + `PUT /api/contacts/column-preferences` (typed `contact_user_column_prefs`); merge with `mergeModuleColumnPreferences` (local width wins). Other modules may still use object maps. |
@@ -85,7 +85,7 @@ import {
 | GET/POST | `/api/db/objects/:key` | POST → `canWriteObject`; server-only keys blocked; obsolete keys must leave `ALLOWED_OBJECTS` after typed-table migrations |
 | POST | `/api/db/reset` | Admin — tenant-scoped minimal reseed |
 
-**Shipped REST:** `GET/POST/PUT/DELETE /api/students`, `/api/contacts`, `/api/teachers`, … — Contacts entity is **not** in `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`.
+**Shipped REST:** `GET/POST/PUT/DELETE /api/students`, `/api/contacts`, `/api/faculty`, … — Contacts entity is **not** in `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS`.
 
 **Do not** store long-lived OAuth secrets in `objects` — use FORCE-RLS tenant tables (`mms-data-layer.mdc`). Admin backup snapshots must not include credential tables (`relationalReplaceMapping`); strip `SERVER_ONLY_OBJECT_KEYS` on restore. Envelope helpers SSOT in `@mms/shared` (`buildWorkspaceBackupEnvelope`, `remapBackupKeysToPrefix`, `validateWorkspaceBackupJson`). After server restore: clear local collection cache by prefix — do not dump full relational snapshot into localStorage.
 

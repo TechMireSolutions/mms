@@ -45,6 +45,7 @@ export function getWidgetCollections(): ReportCollectionsSnapshot {
 
   return {
     students,
+    faculty: teachers,
     teachers,
     sessions,
     enrollments,

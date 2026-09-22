@@ -39,7 +39,7 @@ Governs user authentication, sessions, tenant isolation, role-based authorizatio
 ### Platform session revoke & soft-disable
 - **`sessionVersion`**: Compare JWT claim to `platform_users.session_version`. Mismatch → `401` `{ type: 'session_revoked' }`. Bump on password change/reset and admin **disable** (re-issue cookie after self password change). Re-enable does **not** bump.
 - **Soft-disable**: `platform_users.disabled_at` (API `disabledAt`). Non-null → login (after password verifies) and middleware `401` `{ type: 'account_disabled' }`. Super-users cannot be disabled/deleted; cannot disable/delete self; destructive admin ops require current-password re-auth (`sendInvalidCurrentPassword`).
-- **Soft-Delete Session Invalidation ("Not deleted until sessions die"):** When a user or staff account (`tenant_users`, `teachers`) is soft-deleted, all active sessions and refresh tokens must be revoked immediately in Redis/auth stores. All authentication resolvers (`authenticateTenant`, `/me`, credentials login, OAuth) must explicitly verify `deleted_at IS NULL` to prevent zombie sessions and silent account resurrection (`mms-soft-delete`).
+- **Soft-Delete Session Invalidation ("Not deleted until sessions die"):** When a user or staff account (`tenant_users`, `faculty`) is soft-deleted, all active sessions and refresh tokens must be revoked immediately in Redis/auth stores. All authentication resolvers (`authenticateTenant`, `/me`, credentials login, OAuth) must explicitly verify `deleted_at IS NULL` to prevent zombie sessions and silent account resurrection (`mms-soft-delete`).
 - Missing/invalid JWT → default `auth_required` (`sendUnauthorized`).
 
 ### Platform error SSOT

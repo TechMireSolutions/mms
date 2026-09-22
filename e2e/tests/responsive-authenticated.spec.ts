@@ -43,8 +43,8 @@ const MODULE_ROUTES = [
     ready: 'button:has-text("New session"), [role="tab"], #main-content',
   },
   {
-    path: '/teachers',
-    ready: 'button:has-text("Add Teacher"), [role="tab"], #main-content',
+    path: '/faculty',
+    ready: 'button:has-text("Add Faculty"), button:has-text("Add Teacher"), [role="tab"], #main-content',
   },
   {
     path: '/settings',

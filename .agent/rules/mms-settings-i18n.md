@@ -35,7 +35,7 @@ Governs application-wide configuration tabs, live settings preview states, sideb
 
 ## 2. Systems Modules Navigation Registry
 - **Sidebar Integration**: The sidebar layout retrieves navigation links from `NAV_ITEMS` in `navConfig.tsx`.
-- **Academics Grouping**: Academics submenu `moduleIds`: `students`, `teachers`, `sessions`, `attendance`, `enrollment`, `hasanat`, `examination`, `questionBank` (match `SYSTEM_MODULE_NAV` / `NAV_ITEMS[].moduleId` — not path plurals or manifest `moduleId` plurals).
+- **Academics Grouping**: Academics submenu `moduleIds`: `students`, `faculty`, `sessions`, `attendance`, `enrollment`, `hasanat`, `examination`, `questionBank` (match `SYSTEM_MODULE_NAV` / `NAV_ITEMS[].moduleId` — not path plurals or manifest `moduleId` plurals).
 - **Registry & Defaults**: Toggles reside in `SystemModulesSettings` which maps the `SYSTEM_MODULE_NAV` configuration. Standalone modules render in pairs, and the Academics group displays as a bordered panel with a `BookOpen` icon.
 
 ---
