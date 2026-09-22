@@ -88,7 +88,7 @@ export async function loadSessionsReportAggregatesSql(
       SELECT
         (s.id || '-' || c.id) AS id,
         (s.name || ' – ' || c.name) AS name,
-        COALESCE(NULLIF(trim(c.teacher_name), ''), '') AS teacher,
+        COALESCE(NULLIF(trim(c.faculty_name), ''), '') AS teacher,
         CASE
           WHEN tt.id IS NOT NULL
             THEN tt.start_time || ' - ' || tt.end_time

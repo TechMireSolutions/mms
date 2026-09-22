@@ -43,7 +43,7 @@ export const ERD_DOMAIN_ATTENDANCE: ErdDomain = {
         { name: 'session_id', type: 'text', kind: 'pk' },
         { name: 'id', type: 'text', kind: 'pk' },
         { name: 'name', type: 'varchar(255)', kind: 'column' },
-        { name: 'teacher_id', type: 'varchar(64)', kind: 'column' },
+        { name: 'faculty_id', type: 'varchar(64)', kind: 'column' },
       ],
     },
     {
@@ -113,7 +113,7 @@ export const ERD_DOMAIN_SESSIONS: ErdDomain = {
         { name: 'session_id', type: 'text', kind: 'pk' },
         { name: 'id', type: 'text', kind: 'pk' },
         { name: 'name', type: 'varchar(255)', kind: 'column' },
-        { name: 'teacher_id', type: 'varchar(64)', kind: 'column' },
+        { name: 'faculty_id', type: 'varchar(64)', kind: 'column' },
       ],
     },
     {
