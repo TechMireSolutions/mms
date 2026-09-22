@@ -47,12 +47,9 @@ const TENANT_SESSION_EXCLUDED_PATHS: Set<string> = new Set([
   AUTH_PATHS.twoFactorVerify,
   AUTH_PATHS.twoFactorResend,
   AUTH_PATHS.onboardingStatus,
-  // Auth-check endpoint: a 401 here means "not logged in", not a mid-session expiry.
-  // Attempting a refresh is circular — the refresh interceptor is for protected resources
-  // that unexpectedly lose their session, not for the initial auth-determination call.
-  // Session-expiry types (session_idle_expired / session_absolute_expired) are handled
-  // separately in isAuthenticationRequired() and still fire notifySessionExpired.
-  AUTH_PATHS.me,
+  // `/me` intentionally participates in refresh. This lets bootstrap recover an
+  // existing refresh-cookie session even when the short-lived access cookie or
+  // the non-authoritative local user cache is absent.
 ]);
 
 

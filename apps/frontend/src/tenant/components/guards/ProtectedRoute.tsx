@@ -19,6 +19,7 @@ export default function ProtectedRoute(): React.JSX.Element {
   const { isAuthenticated, user } = useAuth();
   const settings = useGlobalSettings();
   const location = useLocation();
+  const returnTo = `${location.pathname}${location.search}${location.hash}`;
   const canCompleteInstitutionSetup = roleHasPermission(
     user?.role,
     'settings.branding.write',
@@ -29,13 +30,13 @@ export default function ProtectedRoute(): React.JSX.Element {
 
   if (!isAuthenticated) {
     if (is2FAPending()) {
-      return <Navigate to={ROUTES.twoFactor} replace state={{ from: location.pathname }} />;
+      return <Navigate to={ROUTES.twoFactor} replace state={{ from: returnTo }} />;
     }
     return (
       <Navigate
         to={ROUTES.login}
         replace
-        state={{ from: location.pathname !== ROUTES.login ? location.pathname : DEFAULT_AUTH_REDIRECT }}
+        state={{ from: location.pathname !== ROUTES.login ? returnTo : DEFAULT_AUTH_REDIRECT }}
       />
     );
   }
@@ -45,7 +46,7 @@ export default function ProtectedRoute(): React.JSX.Element {
       <Navigate
         to={ROUTES.twoFactor}
         replace
-        state={{ from: location.pathname }}
+        state={{ from: returnTo }}
       />
     );
   }

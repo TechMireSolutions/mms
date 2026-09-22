@@ -272,6 +272,7 @@ export * from './financeModuleManifest.js';
 export * from './financeModuleSettings.js';
 export * from './financeReportAggregates.js';
 export * from './financeSetupConfigTypes.js';
+export * from './facultyDesignationTypes.js';
 export * from './obligationsModuleManifest.js';
 export * from './obligationsReportAggregates.js';
 

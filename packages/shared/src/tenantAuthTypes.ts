@@ -79,7 +79,7 @@ export const TENANT_AUTH_ERROR_TYPES = [
   'workspace_disabled',
   'email_not_verified',
   'validation_error',
+  'rate_limit_exceeded',
 ] as const;
 
 export type TenantAuthErrorType = (typeof TENANT_AUTH_ERROR_TYPES)[number];
-

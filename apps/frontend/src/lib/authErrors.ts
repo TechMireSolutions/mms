@@ -8,6 +8,13 @@ import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 export interface AuthError {
   type: TenantAuthErrorType;
   message: string;
+  retryAfterSeconds?: number;
+}
+
+function parseRetryAfterSeconds(header: string | null): number | undefined {
+  if (!header) return undefined;
+  const seconds = Number.parseInt(header, 10);
+  return Number.isFinite(seconds) && seconds >= 0 ? seconds : undefined;
 }
 
 export function isAuthErrorType(value: unknown): value is TenantAuthErrorType {
@@ -17,9 +24,11 @@ export function isAuthErrorType(value: unknown): value is TenantAuthErrorType {
 export async function parseAuthError(response: Response): Promise<AuthError> {
   try {
     const data = await response.json() as { type?: unknown; message?: unknown };
+    const retryAfterSeconds = parseRetryAfterSeconds(response.headers.get('retry-after'));
     return {
       type: isAuthErrorType(data.type) ? data.type : 'invalid_credentials',
       message: typeof data.message === 'string' && data.message.trim() ? data.message : 'Login failed',
+      ...(retryAfterSeconds !== undefined ? { retryAfterSeconds } : {}),
     };
   } catch {
     return {
@@ -43,6 +52,8 @@ function mapTenantAuthErrorType(
       return fallbackMessage || t('errors.state.permission');
     case 'connection_error':
       return t('errors.state.network');
+    case 'rate_limit_exceeded':
+      return t('errors.rate_limit_exceeded');
     default:
       return fallbackMessage || t('auth.invalidCredentials');
   }
@@ -62,7 +73,10 @@ export function getAuthErrorMessage(
       : undefined;
 
   if (authErr) {
-    return mapTenantAuthErrorType(authErr.type, authErr.message, t);
+    const message = mapTenantAuthErrorType(authErr.type, authErr.message, t);
+    return authErr.type === 'rate_limit_exceeded' && authErr.retryAfterSeconds !== undefined
+      ? `${message} ${t('errors.retryAfterSeconds', { seconds: String(authErr.retryAfterSeconds) })}`
+      : message;
   }
 
   if (error instanceof ApiError) {
@@ -82,4 +96,3 @@ export function getAuthErrorMessage(
   }
   return t('auth.invalidCredentials');
 }
-

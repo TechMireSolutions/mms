@@ -31,11 +31,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [initialUser] = useState<User | null>(() => (typeof window !== 'undefined' ? getPersistedAuthUser() : null));
   const [user, setUser] = useState<User | null>(initialUser);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(Boolean(initialUser));
-  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(false);
+  // The HttpOnly cookie session is authoritative. A cached user may avoid a
+  // visual identity flash, but it must never grant authenticated UI access.
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
   const [isLoadingPublicSettings] = useState<boolean>(false);
   const [authError, setAuthError] = useState<AuthError | null>(null);
-  const [authChecked, setAuthChecked] = useState<boolean>(true);
+  const [authChecked, setAuthChecked] = useState<boolean>(false);
   const [appPublicSettings] = useState<unknown | null>(null);
 
   const userRef = useRef<User | null>(initialUser);
@@ -61,17 +63,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    if (!getPersistedAuthUser() && !userRef.current) {
-      setUser(null);
-      setIsAuthenticated(false);
-      setAuthChecked(true);
-      setIsLoadingAuth(false);
-      return;
-    }
-
-    if (!userRef.current) {
-      setIsLoadingAuth(true);
-    }
+    setIsLoadingAuth(true);
+    setAuthChecked(false);
     setAuthError(null);
 
     try {
@@ -249,9 +242,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   useEffect(() => {
     const controller = new AbortController();
 
-    if (getPersistedAuthUser()) {
-      void checkUserAuth(controller.signal);
-    }
+    void checkUserAuth(controller.signal);
 
     const handleStorage = (event: StorageEvent) => {
       if (event.key === AUTH_USER_STORAGE_KEY) {

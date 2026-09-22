@@ -1,7 +1,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 
 const { mockUseAuth, mockUseInstitutionSetupStatus } = vi.hoisted(() => ({
   mockUseAuth: vi.fn(),
@@ -26,6 +26,11 @@ vi.mock('@/lib/twoFactor', () => ({
 }));
 
 import ProtectedRoute from './ProtectedRoute';
+
+function LoginDestination(): React.JSX.Element {
+  const location = useLocation();
+  return <div>{(location.state as { from?: string } | null)?.from}</div>;
+}
 
 describe('ProtectedRoute institution setup gate', () => {
   let container: HTMLDivElement;
@@ -87,5 +92,25 @@ describe('ProtectedRoute institution setup gate', () => {
 
     expect(container.textContent).toContain('Institution setup page');
     expect(container.textContent).not.toContain('Dashboard page');
+  });
+
+  it('preserves query parameters and fragments when redirecting a guest to sign in', async () => {
+    mockUseAuth.mockReturnValue({ isAuthenticated: false, user: null });
+    mockUseInstitutionSetupStatus.mockReturnValue({ data: undefined, isLoading: false, isError: false });
+
+    await act(async () => {
+      root.render(
+        <MemoryRouter initialEntries={['/dashboard?period=2026#summary']}>
+          <Routes>
+            <Route element={<ProtectedRoute />}>
+              <Route path="/dashboard" element={<div>Dashboard page</div>} />
+            </Route>
+            <Route path="/login" element={<LoginDestination />} />
+          </Routes>
+        </MemoryRouter>,
+      );
+    });
+
+    expect(container.textContent).toContain('/dashboard?period=2026#summary');
   });
 });

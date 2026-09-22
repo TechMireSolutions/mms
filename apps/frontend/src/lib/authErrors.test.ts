@@ -26,6 +26,20 @@ describe('authErrors', () => {
     expect(isAuthErrorType('connection_error')).toBe(true);
     expect(isAuthErrorType('auth_required')).toBe(true);
     expect(isAuthErrorType('user_not_registered')).toBe(true);
+    expect(isAuthErrorType('rate_limit_exceeded')).toBe(true);
+  });
+
+  it('preserves rate-limit retry timing', async () => {
+    const response = new Response(
+      JSON.stringify({ type: 'rate_limit_exceeded', message: 'Too many requests' }),
+      { status: 429, headers: { 'Retry-After': '12' } },
+    );
+
+    await expect(parseAuthError(response)).resolves.toEqual({
+      type: 'rate_limit_exceeded',
+      message: 'Too many requests',
+      retryAfterSeconds: 12,
+    });
   });
 
   it('falls back to invalid credentials for unknown JSON auth errors', async () => {
@@ -77,6 +91,17 @@ describe('authErrors', () => {
         message: 'Failed to fetch',
       });
       expect(getAuthErrorMessage(err, mockT as any)).toBe('[translated:errors.state.network]');
+    });
+
+    it('translates rate limiting and includes the retry delay', () => {
+      const err = new AuthFailureError({
+        type: 'rate_limit_exceeded',
+        message: 'Too many requests',
+        retryAfterSeconds: 12,
+      });
+      expect(getAuthErrorMessage(err, mockT as any)).toBe(
+        '[translated:errors.rate_limit_exceeded] [translated:errors.retryAfterSeconds]',
+      );
     });
 
     it('preserves custom workspace_disabled message when provided', () => {

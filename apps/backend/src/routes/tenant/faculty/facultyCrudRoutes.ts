@@ -20,6 +20,12 @@ import {
   handleNextEmployeeId,
   handleMigrateEmployeeIds,
 } from './facultyRouteHelpers.js';
+import {
+  handleListDesignations,
+  handleListDesignationHistory,
+  handleSaveDesignation,
+  handleSaveDesignationAssignment,
+} from './facultyDesignationRouteHandlers.js';
 
 const s = initServer();
 
@@ -259,6 +265,10 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
     duplicateCheck: handleDuplicateCheck,
     nextEmployeeId: handleNextEmployeeId,
     migrateEmployeeIds: handleMigrateEmployeeIds,
+    listDesignations: handleListDesignations,
+    saveDesignation: handleSaveDesignation,
+    listDesignationHistory: handleListDesignationHistory,
+    saveDesignationAssignment: handleSaveDesignationAssignment,
   } as unknown as RouterImplementation<typeof facultyContract>);
 
   await fastify.register(s.plugin(router), {
