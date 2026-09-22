@@ -55,7 +55,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
 
   const sessionClasses = allClasses.filter((sessionClass) =>
     (!filters.sessionId || sessionClass.sessionId === filters.sessionId)
-    && (!filters.teacherId || sessionClass.teacherId === filters.teacherId),
+    && (!filters.teacherId || (sessionClass.facultyId || sessionClass.teacherId) === filters.teacherId),
   );
 
   const setRelationFilter = (key: 'sessionId' | 'teacherId', value: string): void => {
@@ -63,7 +63,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
     const selectedClassRemainsAvailable = allClasses.some((sessionClass) =>
       sessionClass.id === filters.classId
       && (!nextFilters.sessionId || sessionClass.sessionId === nextFilters.sessionId)
-      && (!nextFilters.teacherId || sessionClass.teacherId === nextFilters.teacherId),
+      && (!nextFilters.teacherId || (sessionClass.facultyId || sessionClass.teacherId) === nextFilters.teacherId),
     );
     onChange({
       ...nextFilters,

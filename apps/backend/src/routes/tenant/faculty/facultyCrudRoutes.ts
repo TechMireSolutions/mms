@@ -36,7 +36,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted faculty requires delete permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => facultyUseCases.loadTeachersPage({ ...query, includeDeleted, skipCount }), { readOnly: true });
+        const result = await withTenant(String(request.tenant?.id), () => facultyUseCases.loadFacultyPage({ ...query, includeDeleted, skipCount }), { readOnly: true });
         const sanitized = await sanitizeFacultyForUser(result.teachers, user);
         return {
           status: 200 as const,
@@ -61,7 +61,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted faculty requires delete permissions' } };
       }
       try {
-        const item = await withTenant(String(request.tenant?.id), () => facultyUseCases.loadTeacherById(id, includeDeleted), { readOnly: true });
+        const item = await withTenant(String(request.tenant?.id), () => facultyUseCases.loadFacultyById(id, includeDeleted), { readOnly: true });
         if (!item || (!includeDeleted && (item as { deletedAt?: unknown }).deletedAt != null)) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Faculty member not found' } };
         }
@@ -99,7 +99,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const result = await withTenant(
           String(tenant),
-          () => facultyUseCases.createTeacher(body, {
+          () => facultyUseCases.createFaculty(body, {
             canRestore: canDeleteCollection(user, 'faculty'),
           }),
           { readOnly: false },
@@ -145,7 +145,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       try {
         const updated = await withTenant(
           String(tenant),
-          () => facultyUseCases.updateTeacherById(id, body),
+          () => facultyUseCases.updateFacultyById(id, body),
           { readOnly: false },
         );
         if (!updated) {
@@ -169,7 +169,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       try {
         const reason = body?.deletionReason;
-        const deleted = await withTenant(String(request.tenant?.id), () => facultyUseCases.deleteTeacherById(id, String(user.id), reason), { readOnly: false });
+        const deleted = await withTenant(String(request.tenant?.id), () => facultyUseCases.deleteFacultyById(id, String(user.id), reason), { readOnly: false });
         if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Faculty member not found' } };
         const reasonNote = reason?.trim() ? ` — ${reason.trim()}` : '';
         await auditFaculty(user, 'faculty.soft_delete', `Soft-deleted faculty member ${id}${reasonNote}`, id);
@@ -186,7 +186,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.bulkUpdateTeacherStatus(
+          facultyUseCases.bulkUpdateFacultyStatus(
             body.ids.map(String),
             body.status,
           ), { readOnly: false });
@@ -208,7 +208,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.bulkUpdateTeacherSpecialization(
+          facultyUseCases.bulkUpdateFacultySpecialization(
             body.ids.map(String),
             body.specialization,
           ), { readOnly: false });
@@ -230,7 +230,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.checkTeacherRegistrationDuplicate(body), { readOnly: false });
+          facultyUseCases.checkFacultyRegistrationDuplicate(body), { readOnly: false });
         return { status: 200 as const, body: result };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to check duplicate' } };
@@ -244,7 +244,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       try {
         const employeeId = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.computeNextTeacherEmployeeIdForSettings({
+          facultyUseCases.computeNextFacultyEmployeeIdForSettings({
             idPrefix: query.prefix,
             idTemplate: query.template,
             idDigits: query.digits,
@@ -264,7 +264,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       try {
         const result = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.migrateTeachersMissingEmployeeIds(), { readOnly: false });
+          facultyUseCases.migrateFacultyMissingEmployeeIds(), { readOnly: false });
         return { status: 200 as const, body: { success: true as const, ...result } };
       } catch {
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate employee IDs' } };

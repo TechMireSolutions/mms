@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import {
-  TEACHERS_MODULE_MANIFEST,
+  FACULTY_MODULE_MANIFEST,
   type Teacher,
   type TeachersQuickFilter,
 } from '@mms/shared';
@@ -8,9 +8,9 @@ import { BookOpen, Layers, Users } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import {
-  useTeachersByIds,
-  useTeachersMetrics,
-  useTeachersContractList,
+  useFacultyByIds,
+  useFacultyMetrics,
+  useFacultyContractList,
 } from '@/tenant/hooks/collections/faculty';
 import { teacherStatusBadgeConfig } from '@/lib/faculty/facultyStatusUi';
 import { collectTeacherIdsFromSessions } from '@/lib/registryResolve';
@@ -31,8 +31,8 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
   const statusBadgeConfig = (() => teacherStatusBadgeConfig(t))();
 
   const REPORT_TABS = (() => [
-      { key: 'roster', label: t('teachers.report.rosterTab') },
-      { key: 'workload', label: t('teachers.report.workloadTab') },
+      { key: 'roster', label: t('faculty.report.rosterTab') },
+      { key: 'workload', label: t('faculty.report.workloadTab') },
     ])() as readonly UINavTab<TeacherReportSubTab>[];
 
   const [listPage, setListPage] = useState(1);
@@ -48,11 +48,11 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
     setListPage(1);
   }, [filters.student, filters.status, reportStatusFilter]);
 
-  const { data: metrics, isLoading: metricsLoading } = useTeachersMetrics();
+  const { data: metrics, isLoading: metricsLoading } = useFacultyMetrics();
 
-  const rosterQuery = useTeachersContractList({
+  const rosterQuery = useFacultyContractList({
     page: listPage,
-    limit: TEACHERS_MODULE_MANIFEST.defaultPageSize,
+    limit: FACULTY_MODULE_MANIFEST.defaultPageSize,
     search: searchParam,
     status: statusParam,
   }, activeSubTab === 'roster');
@@ -70,7 +70,7 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
 
   const sessions = useSessionsCollection();
   const teacherIds = (() => collectTeacherIdsFromSessions(sessions))();
-  const { data: workloadTeachers = [] } = useTeachersByIds(teacherIds);
+  const { data: workloadTeachers = [] } = useFacultyByIds(teacherIds);
 
   const filteredSessions = (() => {
     if (!sessionFilter && !classFilter) return sessions;
@@ -87,7 +87,7 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
   const resolveClassTeacher = useCallback(
     (teacherId: string, teacherName: string): string => {
       const fromRegistry = teacherNameById(workloadTeachers, teacherId);
-      return fromRegistry || teacherName || t('teachers.report.unassigned');
+      return fromRegistry || teacherName || t('faculty.report.unassigned');
     },
     [workloadTeachers, t],
   );
@@ -96,7 +96,10 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
     const workloadByTeacherName: Record<string, { classes: Set<string>; sessions: Set<string>; students: number }> = {};
     filteredSessions.forEach((session) => {
       (session.classes || []).forEach((sessionClass) => {
-        const teacherName = resolveClassTeacher(sessionClass.teacherId, sessionClass.teacherName ?? '');
+        const teacherName = resolveClassTeacher(
+          sessionClass.facultyId || sessionClass.teacherId,
+          (sessionClass.facultyName || sessionClass.teacherName) ?? '',
+        );
         if (!workloadByTeacherName[teacherName]) {
           workloadByTeacherName[teacherName] = { classes: new Set(), sessions: new Set(), students: 0 };
         }
@@ -131,20 +134,20 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
   };
 
   const rosterExportColumns = (() => [
-      { header: t('teachers.report.colName'), key: 'name' },
-      { header: t('teachers.report.colEmployeeId'), key: 'employeeId' },
-      { header: t('teachers.report.colSpecialization'), key: 'specialization' },
-      { header: t('teachers.report.colStatus'), key: 'status' },
-      { header: t('teachers.report.colQualification'), key: 'qualification' },
-      { header: t('teachers.report.colJoinDate'), key: 'joinDate' },
-      { header: t('teachers.report.colGender'), key: 'gender' },
+      { header: t('faculty.report.colName'), key: 'name' },
+      { header: t('faculty.report.colEmployeeId'), key: 'employeeId' },
+      { header: t('faculty.report.colSpecialization'), key: 'specialization' },
+      { header: t('faculty.report.colStatus'), key: 'status' },
+      { header: t('faculty.report.colQualification'), key: 'qualification' },
+      { header: t('faculty.report.colJoinDate'), key: 'joinDate' },
+      { header: t('faculty.report.colGender'), key: 'gender' },
     ])() as ExportColumn[];
 
   const workloadExportColumns = (() => [
-      { header: t('teachers.report.colFaculty'), key: 'faculty' },
-      { header: t('teachers.report.colClasses'), key: 'classes' },
-      { header: t('teachers.report.colSessions'), key: 'sessions' },
-      { header: t('teachers.report.colStudents'), key: 'totalStudents' },
+      { header: t('faculty.report.colFaculty'), key: 'faculty' },
+      { header: t('faculty.report.colClasses'), key: 'classes' },
+      { header: t('faculty.report.colSessions'), key: 'sessions' },
+      { header: t('faculty.report.colStudents'), key: 'totalStudents' },
     ])() as ExportColumn[];
 
   const resolveRosterExportRows = (): Promise<Record<string, unknown>[]> =>
@@ -163,9 +166,9 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
         onStatusFilterChange: setReportStatusFilter,
         onDrillDown: drillDownToWork,
       }),
-      { icon: Users, label: t('teachers.report.totalStudents'), value: totalStudents, accent: 'info' },
-      { icon: Layers, label: t('teachers.report.totalClasses'), value: totalClasses, accent: 'secondary' },
-      { icon: BookOpen, label: t('teachers.report.avgStudentsFaculty'), value: avgStudents, accent: 'success' },
+      { icon: Users, label: t('faculty.report.totalStudents'), value: totalStudents, accent: 'info' },
+      { icon: Layers, label: t('faculty.report.totalClasses'), value: totalClasses, accent: 'secondary' },
+      { icon: BookOpen, label: t('faculty.report.avgStudentsFaculty'), value: avgStudents, accent: 'success' },
     ])();
 
   return {

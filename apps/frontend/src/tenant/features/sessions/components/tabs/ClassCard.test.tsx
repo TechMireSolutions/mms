@@ -23,6 +23,8 @@ const mockClass: Class = {
   minAge: 6,
   maxAge: 10,
   gender: "mixed",
+  facultyId: "t-1",
+  facultyName: "Sheikh Ahmad",
   teacherId: "t-1",
   teacherName: "Sheikh Ahmad",
   fees: [],

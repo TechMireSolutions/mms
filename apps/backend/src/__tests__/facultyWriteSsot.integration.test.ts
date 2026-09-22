@@ -41,15 +41,25 @@ vi.mock('../faculty/use-cases/facultyUseCases.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../faculty/use-cases/facultyUseCases.js')>();
   const mocked = {
     ...actual.facultyUseCases,
+    createFaculty: (...args: unknown[]) => mockCreateTeacher(...args),
     createTeacher: (...args: unknown[]) => mockCreateTeacher(...args),
+    updateFacultyById: (...args: unknown[]) => mockUpdateTeacherById(...args),
     updateTeacherById: (...args: unknown[]) => mockUpdateTeacherById(...args),
+    checkFacultyRegistrationDuplicate: (...args: unknown[]) =>
+      mockCheckTeacherRegistrationDuplicate(...args),
     checkTeacherRegistrationDuplicate: (...args: unknown[]) =>
       mockCheckTeacherRegistrationDuplicate(...args),
+    migrateFacultyMissingEmployeeIds: (...args: unknown[]) =>
+      mockMigrateTeachersMissingEmployeeIds(...args),
     migrateTeachersMissingEmployeeIds: (...args: unknown[]) =>
       mockMigrateTeachersMissingEmployeeIds(...args),
+    loadFacultyPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
     loadTeachersPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
+    bulkUpdateFacultySpecialization: (...args: unknown[]) =>
+      mockBulkUpdateTeacherSpecialization(...args),
     bulkUpdateTeacherSpecialization: (...args: unknown[]) =>
       mockBulkUpdateTeacherSpecialization(...args),
+    sanitizeFacultyForViewer: async (faculty: unknown) => faculty,
     sanitizeTeacherForViewer: async (teacher: unknown) => teacher,
     sanitizeTeachersForViewer: async (teachers: unknown) => teachers,
   };

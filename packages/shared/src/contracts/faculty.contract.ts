@@ -6,9 +6,12 @@ import {
   facultyBulkSpecializationSchema,
   facultyNextEmployeeIdQuerySchema,
 } from '../facultyModuleManifest.js';
-import { teachersListQuerySchema } from '../facultyListQuery.js';
-import { teacherLookupsMapSchema } from '../facultyLookupTypes.js';
-import { teacherWriteSchema, teachersDuplicateCheckBodySchema } from '../schemas/faculty.dto.js';
+import { facultyListQuerySchema } from '../facultyListQuery.js';
+import { facultyLookupsMapSchema } from '../facultyLookupTypes.js';
+import {
+  facultyWriteSchema,
+  facultyDuplicateCheckBodySchema,
+} from '../schemas/faculty.dto.js';
 
 const c = initContract();
 const errorResponse = z.unknown();
@@ -56,7 +59,7 @@ export const facultyContract = c.router({
   list: {
     method: 'GET',
     path: '/api/faculty',
-    query: teachersListQuerySchema,
+    query: facultyListQuerySchema,
     responses: { 200: facultyListPageResponseSchema, 403: errorResponse, 500: errorResponse },
     summary: 'List faculty members',
   },
@@ -70,14 +73,14 @@ export const facultyContract = c.router({
   create: {
     method: 'POST',
     path: '/api/faculty',
-    body: teacherWriteSchema,
+    body: facultyWriteSchema,
     responses: { 200: facultyWrappedResponseSchema, 201: facultyWrappedResponseSchema, 403: errorResponse, 400: errorResponse, 500: errorResponse },
     summary: 'Create a faculty member',
   },
   update: {
     method: 'PUT',
     path: '/api/faculty/:id',
-    body: teacherWriteSchema,
+    body: facultyWriteSchema,
     responses: { 200: facultyWrappedResponseSchema, 403: errorResponse, 404: errorResponse, 400: errorResponse, 500: errorResponse },
     summary: 'Update a faculty member',
   },
@@ -105,7 +108,7 @@ export const facultyContract = c.router({
   duplicateCheck: {
     method: 'POST',
     path: '/api/faculty/duplicate-check',
-    body: teachersDuplicateCheckBodySchema,
+    body: facultyDuplicateCheckBodySchema,
     responses: {
       200: z.object({ reason: z.enum(['contact', 'employeeId']).nullable() }),
       400: errorResponse,
@@ -218,7 +221,7 @@ export const facultyContract = c.router({
   getLookups: {
     method: 'GET',
     path: '/api/faculty/lookups',
-    responses: { 200: z.object({ lookups: teacherLookupsMapSchema }), 403: errorResponse, 500: errorResponse },
+    responses: { 200: z.object({ lookups: facultyLookupsMapSchema }), 403: errorResponse, 500: errorResponse },
     summary: 'Get all lookups',
   },
   getLookupKind: {

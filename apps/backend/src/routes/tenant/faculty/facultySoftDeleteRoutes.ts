@@ -10,8 +10,8 @@ export const facultySoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     collection: 'faculty',
     errorMessagePrefix: 'faculty',
     bulkBodySchema: facultyBulkIdsSchema,
-    bulkDeleteFn: (ids, user, reason) => facultyUseCases.bulkSoftDeleteTeachers(ids, user, reason),
-    bulkRestoreFn: (ids, userId) => facultyUseCases.bulkRestoreTeachers(ids, userId),
+    bulkDeleteFn: (ids, user, reason) => facultyUseCases.bulkSoftDeleteFaculty(ids, user, reason),
+    bulkRestoreFn: (ids, userId) => facultyUseCases.bulkRestoreFaculty(ids, userId),
     onAfterBulkDelete: async (user, result, deletionReason) => {
       const reasonNote = deletionReason?.trim() ? ` — ${deletionReason.trim()}` : '';
       await auditFaculty(

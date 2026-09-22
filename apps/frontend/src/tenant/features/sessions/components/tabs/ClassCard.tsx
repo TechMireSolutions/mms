@@ -31,7 +31,7 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
   const enrolledCount = sessionClass.enrolled ?? 0;
   const capacityPercent = Math.round((enrolledCount / Math.max(1, maxCapacity)) * 100);
   const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
-  const teacherLabel = teacherNameById(teachers, sessionClass.teacherId) || sessionClass.teacherName || t("sessions.classes.unassigned");
+  const teacherLabel = teacherNameById(teachers, sessionClass.facultyId || sessionClass.teacherId) || sessionClass.facultyName || sessionClass.teacherName || t("sessions.classes.unassigned");
   const genderConfig: Record<string, StatusBadgeConfigItem> = genderStatusBadgeConfig(t, { includeAny: true });
 
   const minAge = sessionClass.minAge ?? (typeof rawClass.ageMin === "number" ? rawClass.ageMin : 5);

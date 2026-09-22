@@ -15,27 +15,27 @@ import { auditFaculty, sanitizeFacultyForUser } from './facultyRouteHelpers.js';
 export const facultyAggregateRoutes: FastifyPluginAsync = async (sub) => {
   registerCountRoute(sub, {
     collection: 'faculty',
-    loadCountFn: () => facultyUseCases.countTeachers(),
+    loadCountFn: () => facultyUseCases.countFaculty(),
     errorMessagePrefix: 'faculty',
   });
 
   registerMetricsRoute(sub, {
     collection: 'faculty',
-    loadMetricsFn: () => facultyUseCases.loadTeachersCommandMetrics(),
+    loadMetricsFn: () => facultyUseCases.loadFacultyCommandMetrics(),
     errorMessagePrefix: 'faculty',
   });
 
   registerWidgetAggregatesRoute(sub, {
     collection: 'faculty',
-    loadAggregatesFn: (queries) => facultyUseCases.loadTeachersWidgetAggregates(queries),
+    loadAggregatesFn: (queries) => facultyUseCases.loadFacultyWidgetAggregates(queries),
     errorMessagePrefix: 'faculty',
   });
 
   registerResolveRoute(sub, {
     collection: 'faculty',
     loadByIdsFn: async (ids, request) => {
-      const teachers = await facultyUseCases.loadTeachersByIds(ids);
-      return sanitizeFacultyForUser(teachers, request.user as User);
+      const faculty = await facultyUseCases.loadFacultyByIds(ids);
+      return sanitizeFacultyForUser(faculty, request.user as User);
     },
     responseKey: 'faculty',
     aliases: ['teachers'],
@@ -44,14 +44,14 @@ export const facultyAggregateRoutes: FastifyPluginAsync = async (sub) => {
 
   registerLinkedContactIdsRoute(sub, {
     collection: 'faculty',
-    loadLinkedContactIdsFn: (excludeId) => facultyUseCases.loadTeacherLinkedContactIds(excludeId),
+    loadLinkedContactIdsFn: (excludeId) => facultyUseCases.loadFacultyLinkedContactIds(excludeId),
     errorMessagePrefix: 'faculty',
   });
 
   registerSingleRestoreRoute(sub, {
     collection: 'faculty',
     nameSingular: 'faculty',
-    restoreFn: (id, userId) => facultyUseCases.restoreTeacherById(id, userId),
+    restoreFn: (id, userId) => facultyUseCases.restoreFacultyById(id, userId),
     onAfterRestore: async (user, id) => {
       await auditFaculty(user, 'faculty.restore', `Restored faculty member ${id}`, id);
     },

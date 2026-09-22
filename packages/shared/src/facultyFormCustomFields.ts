@@ -114,5 +114,11 @@ export function findTeacherTabField(
 }
 
 
+export const listFacultySystemFormFieldKeys = listTeacherSystemFormFieldKeys;
+export const cloneFacultyFieldSeed = cloneTeacherFieldSeed;
+export const resolveFacultyFieldsMapForColumnSync = resolveTeacherFieldsMapForColumnSync;
 export const listEnabledCustomFacultyFormFields = listEnabledCustomTeacherFormFields;
+export const isFacultySystemFormField = isTeacherSystemFormField;
 export const findFacultyFieldInMap = findTeacherFieldInMap;
+export const findFacultyFieldLocation = findTeacherFieldLocation;
+export const findFacultyTabField = findTeacherTabField;

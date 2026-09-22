@@ -161,145 +161,154 @@ export const CONTACT_CARD_FACE_COLUMN_IDS = new Set([
   "isSyed",
 ]);
 
-// ─── Default Teachers Field Setup Constants ────────────────────────────────────
+// ─── Default Faculty Field Setup Constants ────────────────────────────────────
 
 /** Form tabs Setup cannot disable; the form always treats them as on. */
-export const TEACHER_LOCKED_ENABLED_TABS = ["basic"] as const;
+export const FACULTY_LOCKED_ENABLED_TABS = ["basic"] as const;
 
-/** True when `tabKey` is a locked always-on Teachers form tab. */
-export function isTeacherLockedEnabledTab(tabKey: string): boolean {
+/** True when `tabKey` is a locked always-on Faculty form tab. */
+export function isFacultyLockedEnabledTab(tabKey: string): boolean {
   const key = tabKey.toLowerCase();
-  return TEACHER_LOCKED_ENABLED_TABS.some((locked) => locked === key);
+  return FACULTY_LOCKED_ENABLED_TABS.some((locked) => locked === key);
 }
 
-export const TEACHERS_TAB_REGISTRY: TabDefinition[] = [
-  { key: "basic", label: "Profile", labelKey: "teachers.form.tab.basic", enabled: true, order: 0, isSystem: true },
-  { key: "employment", label: "Employment Details", labelKey: "teachers.form.tab.employment", enabled: true, order: 1, isSystem: true },
+export const FACULTY_TAB_REGISTRY: TabDefinition[] = [
+  { key: "basic", label: "Profile", labelKey: "faculty.form.tab.basic", enabled: true, order: 0, isSystem: true },
+  { key: "employment", label: "Employment Details", labelKey: "faculty.form.tab.employment", enabled: true, order: 1, isSystem: true },
 ];
 
-const TEACHER_SEED_FORM_TAB_KEYS = new Set(
-  TEACHERS_TAB_REGISTRY.map((tab) => tab.key.toLowerCase()),
+const FACULTY_SEED_FORM_TAB_KEYS = new Set(
+  FACULTY_TAB_REGISTRY.map((tab) => tab.key.toLowerCase()),
 );
 
-/** True when `tabKey` is a seeded Teachers form tab (not a tenant custom tab). */
-export function isTeacherSeedFormTab(tabKey: string): boolean {
-  return TEACHER_SEED_FORM_TAB_KEYS.has(tabKey.toLowerCase());
+/** True when `tabKey` is a seeded Faculty form tab (not a tenant custom tab). */
+export function isFacultySeedFormTab(tabKey: string): boolean {
+  return FACULTY_SEED_FORM_TAB_KEYS.has(tabKey.toLowerCase());
 }
 
-/** Seeded Teachers form tab definition when `tabKey` matches the registry. */
-export function getTeacherSeedFormTab(tabKey: string): TabDefinition | undefined {
+/** Seeded Faculty form tab definition when `tabKey` matches the registry. */
+export function getFacultySeedFormTab(tabKey: string): TabDefinition | undefined {
   const key = tabKey.toLowerCase();
-  return TEACHERS_TAB_REGISTRY.find((tab) => tab.key.toLowerCase() === key);
+  return FACULTY_TAB_REGISTRY.find((tab) => tab.key.toLowerCase() === key);
 }
 
-export const INITIAL_TEACHERS_FIELD_SEED: Record<string, FieldDefinition[]> = {
+export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
   basic: [
     {
       key: "contactId",
       label: "Contact",
-      labelKey: "teachers.field.contact",
+      labelKey: "faculty.field.contact",
       type: "text",
       enabled: true,
       order: 0,
       required: true,
-      description: "Contact picker — links the canonical person record for this teacher.",
-      descriptionKey: "teachers.fields.contactIdDesc",
+      description: "Contact picker — links the canonical person record for this faculty member.",
+      descriptionKey: "faculty.fields.contactIdDesc",
     },
     {
       key: "specialization",
       label: "Specialization",
-      labelKey: "teachers.field.specialization",
+      labelKey: "faculty.field.specialization",
       type: "select",
       enabled: true,
       order: 1,
       required: false,
-      description: "Teaching specialization (options from teacher specialization lookups).",
-      descriptionKey: "teachers.fields.specializationDesc",
+      description: "Teaching or academic specialization (options from faculty specialization lookups).",
+      descriptionKey: "faculty.fields.specializationDesc",
     },
     {
       key: "qualification",
       label: "Qualification",
-      labelKey: "teachers.field.qualification",
+      labelKey: "faculty.field.qualification",
       type: "text",
       enabled: true,
       order: 2,
       required: false,
-      description: "Highest academic or teaching qualification.",
-      descriptionKey: "teachers.fields.qualificationDesc",
+      description: "Highest academic or professional qualification.",
+      descriptionKey: "faculty.fields.qualificationDesc",
     },
   ],
   employment: [
     {
       key: "employeeId",
       label: "Employee ID",
-      labelKey: "teachers.field.employeeId",
+      labelKey: "faculty.field.employeeId",
       type: "text",
       enabled: true,
       order: 0,
       required: true,
       description: "Staff employee ID — auto-assigned from Setup Preferences when enabled.",
-      descriptionKey: "teachers.fields.employeeIdDesc",
+      descriptionKey: "faculty.fields.employeeIdDesc",
     },
     {
       key: "designation",
       label: "Designation / Role",
-      labelKey: "teachers.field.designation",
+      labelKey: "faculty.field.designation",
       type: "select",
       enabled: true,
       order: 1,
       required: false,
       description: "Faculty role or academic designation.",
-      descriptionKey: "teachers.fields.designationDesc",
+      descriptionKey: "faculty.fields.designationDesc",
     },
     {
       key: "status",
       label: "Status",
-      labelKey: "teachers.field.status",
+      labelKey: "faculty.field.status",
       type: "select",
       enabled: true,
       order: 2,
       required: true,
-      description: "Employment status for this teacher (options from teacher status lookups).",
-      descriptionKey: "teachers.fields.statusDesc",
+      description: "Employment status for this faculty member (options from faculty status lookups).",
+      descriptionKey: "faculty.fields.statusDesc",
     },
     {
       key: "joinDate",
       label: "Joining Date",
-      labelKey: "teachers.field.joinDate",
+      labelKey: "faculty.field.joinDate",
       type: "date",
       enabled: true,
       order: 3,
       required: true,
-      description: "Date the teacher joined the madrasa.",
-      descriptionKey: "teachers.fields.joinDateDesc",
+      description: "Date the faculty member joined the madrasa.",
+      descriptionKey: "faculty.fields.joinDateDesc",
     },
     {
       key: "notes",
       label: "Notes",
-      labelKey: "teachers.field.notes",
+      labelKey: "faculty.field.notes",
       type: "textarea",
       enabled: true,
       order: 4,
       required: false,
-      description: "Internal notes for this teacher record.",
-      descriptionKey: "teachers.fields.notesDesc",
+      description: "Internal notes for this faculty record.",
+      descriptionKey: "faculty.fields.notesDesc",
     },
   ],
 };
 
-const TEACHER_SEED_FIELDS_BY_KEY = new Map<string, FieldDefinition>();
-for (const tabFields of Object.values(INITIAL_TEACHERS_FIELD_SEED)) {
+const FACULTY_SEED_FIELDS_BY_KEY = new Map<string, FieldDefinition>();
+for (const tabFields of Object.values(INITIAL_FACULTY_FIELD_SEED)) {
   for (const field of tabFields) {
-    if (!TEACHER_SEED_FIELDS_BY_KEY.has(field.key)) {
-      TEACHER_SEED_FIELDS_BY_KEY.set(field.key, field);
+    if (!FACULTY_SEED_FIELDS_BY_KEY.has(field.key)) {
+      FACULTY_SEED_FIELDS_BY_KEY.set(field.key, field);
     }
   }
 }
 
-/** Seeded teacher form field by key (across all seed tabs), or `undefined`. */
-export function findTeacherSeedField(fieldKey: string): FieldDefinition | undefined {
-  return TEACHER_SEED_FIELDS_BY_KEY.get(fieldKey);
+/** Seeded faculty form field by key (across all seed tabs), or `undefined`. */
+export function findFacultySeedField(fieldKey: string): FieldDefinition | undefined {
+  return FACULTY_SEED_FIELDS_BY_KEY.get(fieldKey);
 }
+
+/* Backward compatibility aliases */
+export const TEACHER_LOCKED_ENABLED_TABS = FACULTY_LOCKED_ENABLED_TABS;
+export const isTeacherLockedEnabledTab = isFacultyLockedEnabledTab;
+export const TEACHERS_TAB_REGISTRY = FACULTY_TAB_REGISTRY;
+export const isTeacherSeedFormTab = isFacultySeedFormTab;
+export const getTeacherSeedFormTab = getFacultySeedFormTab;
+export const INITIAL_TEACHERS_FIELD_SEED = INITIAL_FACULTY_FIELD_SEED;
+export const findTeacherSeedField = findFacultySeedField;
 
 export {
   DEFAULT_TEACHER_COLUMN_REGISTRY,

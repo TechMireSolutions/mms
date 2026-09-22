@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { resolveTeacherFieldLabel } from "./FacultyFormSectionShared";
+import { resolveFacultyFieldLabel, resolveTeacherFieldLabel } from "./FacultyFormSectionShared";
 
-describe("TeacherFormSectionShared", () => {
-  it("resolves teacher field label from custom/tab fields or seed fields", () => {
+describe("FacultyFormSectionShared", () => {
+  it("resolves faculty field label from custom/tab fields or seed fields", () => {
     const fields = {
       employment: [
         {
@@ -17,11 +17,11 @@ describe("TeacherFormSectionShared", () => {
     const t = (key: string) => key;
 
     expect(
-      resolveTeacherFieldLabel(fields, "employment", "specialization", t as never),
+      resolveFacultyFieldLabel(fields, "employment", "specialization", t as never),
     ).toBe("Specialization");
 
     expect(
       resolveTeacherFieldLabel(fields, "employment", "employeeId", t as never),
-    ).toBe("teachers.field.employeeId");
+    ).toBe("faculty.field.employeeId");
   });
 });

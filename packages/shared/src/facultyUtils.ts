@@ -1,4 +1,4 @@
-import type { Teacher } from './facultyTypes.js';
+import type { FacultyMember, Teacher } from './facultyTypes.js';
 import type { ContactLike } from './contactLinkPolicy.js';
 import {
   CONTACT_PROFILE_FIELDS,
@@ -21,27 +21,27 @@ export {
   filterActiveFaculty,
 } from './facultySoftDelete.js';
 
-import { stripTeacherClientSoftDeleteFields } from './facultySoftDelete.js';
+import { stripFacultyClientSoftDeleteFields } from './facultySoftDelete.js';
 
 /**
  * Soft-delete + Contacts profile dual-write strip shared by wire preprocess and dynamic Zod.
- * Does not mutate empty `contactId` (see {@link normalizeStoredTeacher}).
+ * Does not mutate empty `contactId` (see {@link normalizeStoredFaculty}).
  */
-export function stripTeacherWriteNoise(
+export function stripFacultyWriteNoise(
   record: Record<string, unknown>,
 ): Record<string, unknown> {
-  const next = stripTeacherClientSoftDeleteFields({ ...record }) as Record<string, unknown>;
-  // Avatar lives on the canonical Contact — never dual-write it onto a teacher row.
+  const next = stripFacultyClientSoftDeleteFields({ ...record }) as Record<string, unknown>;
+  // Avatar lives on the canonical Contact — never dual-write it onto a faculty row.
   delete next.avatar;
   return stripRecordFields(next, CONTACT_PROFILE_FIELDS);
 }
 
 /**
- * Strips contact-owned profile fields and client soft-delete metadata before persisting a teacher row.
+ * Strips contact-owned profile fields and client soft-delete metadata before persisting a faculty row.
  * Profile keys are always removed (contacts are SSOT) — including when `contactId` is empty/absent.
  */
-export function normalizeStoredTeacher<T extends Record<string, unknown>>(record: T): T {
-  const next = stripTeacherWriteNoise(record as Record<string, unknown>);
+export function normalizeStoredFaculty<T extends Record<string, unknown>>(record: T): T {
+  const next = stripFacultyWriteNoise(record as Record<string, unknown>);
   const contactId = next.contactId;
   if (contactId === '' || contactId == null) {
     delete next.contactId;
@@ -98,14 +98,14 @@ export function getContactSpecialization(contact?: ContactLike | null): string {
 }
 
 /** Resolves display fields (including the canonical avatar, qualification, and specialization) from the linked contact record. */
-export function hydrateTeacherFromContact<T extends Teacher>(
-  teacher: T,
+export function hydrateFacultyFromContact<T extends FacultyMember>(
+  facultyMember: T,
   contacts: ContactLike[] | Map<string, ContactLike>,
 ): T {
   const contactLookup = contacts instanceof Map
     ? contacts
     : (Array.isArray(contacts) && contacts.length > 8 ? createContactLookupMap(contacts) : contacts);
-  const hydrated = hydrateContactProfile(teacher as Record<string, unknown>, contactLookup, 'contactId') as T;
+  const hydrated = hydrateContactProfile(facultyMember as Record<string, unknown>, contactLookup, 'contactId') as T;
   const contactId = String(hydrated.contactId ?? '');
   if (contactId) {
     const contact = lookupContact(contactLookup, contactId);
@@ -126,44 +126,60 @@ export function hydrateTeacherFromContact<T extends Teacher>(
   return hydrated;
 }
 
-/** Formats a teacher's display name, appending the employee ID when available. */
-export function formatTeacherDisplayName(
-  teacher?: (Partial<Teacher> & {
+/** Formats a faculty member's display name, appending the employee ID when available. */
+export function formatFacultyDisplayName(
+  facultyMember?: (Partial<FacultyMember> & {
     firstName?: string;
     lastName?: string;
     contact?: { firstName?: string; lastName?: string } | null;
   }) | null,
 ): string {
-  if (!teacher) return '';
-  const firstName = teacher.firstName || teacher.contact?.firstName || '';
-  const lastName = teacher.lastName || teacher.contact?.lastName || '';
-  const name = (teacher.name || [firstName, lastName].filter(Boolean).join(' ')).trim();
+  if (!facultyMember) return '';
+  const firstName = facultyMember.firstName || facultyMember.contact?.firstName || '';
+  const lastName = facultyMember.lastName || facultyMember.contact?.lastName || '';
+  const name = (facultyMember.name || [firstName, lastName].filter(Boolean).join(' ')).trim();
   if (name) {
-    return teacher.employeeId ? `${name} (${teacher.employeeId})` : name;
+    return facultyMember.employeeId ? `${name} (${facultyMember.employeeId})` : name;
   }
-  if (teacher.employeeId) {
-    return `Teacher (${teacher.employeeId})`;
+  if (facultyMember.employeeId) {
+    return `Faculty (${facultyMember.employeeId})`;
   }
-  return teacher.id ? `Teacher #${String(teacher.id).slice(0, 8)}` : '';
+  return facultyMember.id ? `Faculty #${String(facultyMember.id).slice(0, 8)}` : '';
 }
 
-/** Batch hydrates teachers from contacts with O(1) indexed lookup. */
-export function hydrateTeacherListFromContacts<T extends Teacher>(
-  teachers: T[],
+/** Batch hydrates faculty members from contacts with O(1) indexed lookup. */
+export function hydrateFacultyListFromContacts<T extends FacultyMember>(
+  facultyList: T[],
   contacts: ContactLike[] | Map<string, ContactLike>,
 ): T[] {
-  if (!Array.isArray(teachers) || teachers.length === 0) return [];
+  if (!Array.isArray(facultyList) || facultyList.length === 0) return [];
   const contactLookup = contacts instanceof Map
     ? contacts
     : createContactLookupMap(contacts);
-  return teachers.map((teacher) => hydrateTeacherFromContact(teacher, contactLookup));
+  return facultyList.map((facultyMember) => hydrateFacultyFromContact(facultyMember, contactLookup));
 }
-
 
 export const getFacultyQualification = getContactQualification;
 export const getFacultySpecialization = getContactSpecialization;
-export const stripFacultyWriteNoise = stripTeacherWriteNoise;
-export const normalizeStoredFaculty = normalizeStoredTeacher;
-export const hydrateFacultyFromContact = hydrateTeacherFromContact;
-export const formatFacultyDisplayName = formatTeacherDisplayName;
-export const hydrateFacultyListFromContacts = hydrateTeacherListFromContacts;
+
+/* ========================================================================= */
+/*                    BACKWARD COMPATIBILITY ALIASES                        */
+/* ========================================================================= */
+
+export const stripTeacherWriteNoise = stripFacultyWriteNoise;
+export const normalizeStoredTeacher = normalizeStoredFaculty;
+export const hydrateTeacherFromContact = hydrateFacultyFromContact as <T extends Teacher>(
+  teacher: T,
+  contacts: ContactLike[] | Map<string, ContactLike>,
+) => T;
+export const formatTeacherDisplayName = formatFacultyDisplayName as (
+  teacher?: (Partial<Teacher> & {
+    firstName?: string;
+    lastName?: string;
+    contact?: { firstName?: string; lastName?: string } | null;
+  }) | null,
+) => string;
+export const hydrateTeacherListFromContacts = hydrateFacultyListFromContacts as <T extends Teacher>(
+  teachers: T[],
+  contacts: ContactLike[] | Map<string, ContactLike>,
+) => T[];

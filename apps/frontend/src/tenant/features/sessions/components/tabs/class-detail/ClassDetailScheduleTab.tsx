@@ -145,9 +145,12 @@ export function ClassDetailScheduleTab({
                     const found = allTeachers.find(
                       (teacher) => formatTeacherDisplayName(teacher) === val || (teacher.name || '').trim() === val,
                     );
+                    const id = found?.id ? String(found.id) : (period.facultyId || period.teacherId);
                     onUpdatePeriod(period.id, {
+                      facultyName: val,
+                      facultyId: id,
                       teacherName: val,
-                      teacherId: found?.id ? String(found.id) : period.teacherId,
+                      teacherId: id,
                     });
                   }}
                   options={[

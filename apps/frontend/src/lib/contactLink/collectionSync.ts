@@ -11,7 +11,7 @@ import {
   hydrateSessionsCollection,
   hydrateStudentListFromContacts,
   hydrateStudentLinkedRows,
-  hydrateTeacherListFromContacts,
+  hydrateFacultyListFromContacts,
   hydrateUserActorField,
   hydrateWorkspaceUserProfileList,
   normalizeActivityLog,
@@ -22,7 +22,7 @@ import {
   normalizeSessionClasses,
   normalizeSessionsCollection,
   normalizeStoredStudent,
-  normalizeStoredTeacher,
+  normalizeStoredFaculty,
   normalizeStudentLinkedRows,
   normalizeUserActorField,
   stripWorkspaceUserProfileFields,
@@ -62,7 +62,7 @@ export function normalizeCollectionRows(key: string, rows: Row[]): Row[] {
       return rows.map((row) => normalizeStoredStudent(row));
     case 'faculty':
     case 'teachers':
-      return rows.map((row) => normalizeStoredTeacher(row));
+      return rows.map((row) => normalizeStoredFaculty(row));
     case 'enrollments':
     case 'attendance_records':
     case 'finance_invoices':
@@ -124,7 +124,7 @@ export function hydrateCollectionRows(
       return hydrateStudentListFromContacts(rows as never, context.contacts) as Row[];
     case 'faculty':
     case 'teachers':
-      return hydrateTeacherListFromContacts(rows as never, context.contacts) as Row[];
+      return hydrateFacultyListFromContacts(rows as never, context.contacts) as Row[];
     case 'enrollments':
     case 'attendance_records':
     case 'finance_invoices':

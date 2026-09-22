@@ -841,6 +841,13 @@
       "when": 1789900000000,
       "tag": "0119_faculty_domain_migration_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1790000000000,
+      "tag": "0120_session_classes_faculty_columns",
+      "breakpoints": true
     }
   ]
 }

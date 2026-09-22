@@ -39,14 +39,14 @@ function buildAttendanceListConditions(subdomain: string, query: AttendanceListQ
     conditions.push(eq(attendance.classId, query.classId.trim()));
   }
   const sessionId = query.sessionId?.trim();
-  const teacherId = query.teacherId?.trim();
-  if (sessionId && teacherId) {
+  const facultyId = (query.facultyId || query.teacherId)?.trim();
+  if (sessionId && facultyId) {
     conditions.push(sql`EXISTS (
       SELECT 1 FROM ${sessionClasses} sc
       WHERE sc.workspace_subdomain = ${attendance.workspaceSubdomain}
         AND sc.id = ${attendance.classId}
         AND sc.session_id = ${sessionId}
-        AND sc.teacher_id = ${teacherId}
+        AND sc.faculty_id = ${facultyId}
     )`);
   } else if (sessionId) {
     conditions.push(sql`EXISTS (
@@ -55,12 +55,12 @@ function buildAttendanceListConditions(subdomain: string, query: AttendanceListQ
         AND sc.id = ${attendance.classId}
         AND sc.session_id = ${sessionId}
     )`);
-  } else if (teacherId) {
+  } else if (facultyId) {
     conditions.push(sql`EXISTS (
       SELECT 1 FROM ${sessionClasses} sc
       WHERE sc.workspace_subdomain = ${attendance.workspaceSubdomain}
         AND sc.id = ${attendance.classId}
-        AND sc.teacher_id = ${teacherId}
+        AND sc.faculty_id = ${facultyId}
     )`);
   }
   if (query.date?.trim()) {
@@ -146,8 +146,9 @@ export async function listAttendancePage(
     if (query.sessionId?.trim()) {
       classJoinConditions.push(eq(sessionClasses.sessionId, query.sessionId.trim()));
     }
-    if (query.teacherId?.trim()) {
-      classJoinConditions.push(eq(sessionClasses.teacherId, query.teacherId.trim()));
+    const facultyFilterId = (query.facultyId || query.teacherId)?.trim();
+    if (facultyFilterId) {
+      classJoinConditions.push(eq(sessionClasses.facultyId, facultyFilterId));
     }
 
     const orderBy = isCursorPaging
@@ -175,7 +176,7 @@ export async function listAttendancePage(
         },
         sessionId: sessionClasses.sessionId,
         sessionName: sessions.name,
-        teacherId: sessionClasses.teacherId,
+        facultyId: sessionClasses.facultyId,
       })
       .from(attendance)
       .leftJoin(sessionClasses, and(...classJoinConditions))
@@ -192,7 +193,8 @@ export async function listAttendancePage(
       const rec = rowToRecord(r.attendance as AttendanceRow);
       rec.sessionId = r.sessionId ?? '';
       rec.sessionName = r.sessionName ?? '';
-      rec.teacherId = r.teacherId ?? '';
+      rec.facultyId = r.facultyId ?? '';
+      rec.teacherId = r.facultyId ?? '';
       return rec;
     });
 
