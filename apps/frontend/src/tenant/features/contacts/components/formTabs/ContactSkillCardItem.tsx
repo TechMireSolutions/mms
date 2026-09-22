@@ -223,3 +223,8 @@ export function ContactSkillCardItem({
     </ListFieldCard>
   );
 }
+
+/** Canonical alias aligning with ContactAddressEntryCard, ContactEducationEntryCard, ContactExperienceEntryCard. */
+export type ContactSkillEntryCardProps = ContactSkillCardItemProps;
+export const ContactSkillEntryCard = ContactSkillCardItem;
+

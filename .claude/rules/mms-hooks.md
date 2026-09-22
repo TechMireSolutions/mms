@@ -94,6 +94,7 @@ Return a flat object the shell destructures; keep public page/component export p
 | Contacts column prefs | `useContactColumnLayout` via `ContactConfigContext` |
 | Command / dashboard metrics | `use*Metrics` from `@/tenant/hooks/collections/*` — ban client-reduce of full lists for KPI values |
 | Trash toggle & bulk actions | `ModuleTrashToggle` in toolbar; `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` via `ModuleWorkBulkActionBar` (`mms-soft-delete`) |
+| `useWorkCardAction` | Work card selection, keyboard navigation (`Space`/`Enter`), and detail view/edit dispatch — used by `DirectoryCard` and domain list cards |
 
 ## 10. New Hooks Checklist
 

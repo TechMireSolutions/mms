@@ -31,7 +31,7 @@ export function GuardianContactCard({
 
   return (
     <div className={cn("p-3 flex flex-wrap items-center justify-between gap-2 transition-colors hover:bg-muted/30")}>
-      <div className="flex min-w-0 items-center gap-3 text-start ms-1">
+      <div className="flex min-w-0 items-center gap-3 text-start">
         <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center text-xs font-bold shrink-0", badgeTone)}>
           {badgeCode}
         </div>

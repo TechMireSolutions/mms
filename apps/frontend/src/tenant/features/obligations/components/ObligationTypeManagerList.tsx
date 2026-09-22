@@ -11,8 +11,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import { StatGrid, StatRow } from "@/components/ui/StatGrid";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { useTranslation } from "@/hooks/useTranslation";
 
 interface ObligationTypeManagerListProps {
@@ -21,6 +26,82 @@ interface ObligationTypeManagerListProps {
   quantityConfig: Record<string, StatusBadgeConfigItem>;
   onEdit: (obligationType: ObligationType) => void;
   onDelete: (obligationTypeId: string) => void;
+}
+
+interface ObligationTypeCardProps {
+  obligationType: ObligationType;
+  quantityConfig: Record<string, StatusBadgeConfigItem>;
+  designatedConfig: Record<string, StatusBadgeConfigItem>;
+  onEdit: (obligationType: ObligationType) => void;
+  onDelete: (obligationTypeId: string) => void;
+}
+
+function ObligationTypeCard({
+  obligationType,
+  quantityConfig,
+  designatedConfig,
+  onEdit,
+  onDelete,
+}: ObligationTypeCardProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const { cardProps, onEdit: handleEdit } = useWorkCardAction({
+    entity: obligationType,
+    selectedIds: [],
+    canSelect: false,
+    onEdit,
+  });
+
+  return (
+    <DirectoryEntityCard
+      className="space-y-3 p-4"
+      {...cardProps}
+    >
+      <DirectoryCardHeader
+        id={obligationType.id}
+        displayName={obligationType.name}
+        isSelected={false}
+        onSelect={() => {}}
+        selectAriaLabel=""
+        showSelect={false}
+        onView={handleEdit}
+        viewAriaLabel={t("obligations.types.editAria", { name: obligationType.name })}
+      />
+      <DirectoryCardMetaGrid className="pt-2 border-t border-border/40 ms-0">
+        <DirectoryCardMetaTile label={t("obligations.types.colQuantity")}>
+          <StatusBadge status={obligationType.quantity_based ? "yes" : "no"} config={quantityConfig} size="sm" />
+        </DirectoryCardMetaTile>
+        <DirectoryCardMetaTile label={t("obligations.types.colDesignated")}>
+          <StatusBadge status={obligationType.designated_for} config={designatedConfig} size="sm" />
+        </DirectoryCardMetaTile>
+      </DirectoryCardMetaGrid>
+      <DirectoryCardFooterActions
+        actions={
+          <>
+            <Button
+              type="button"
+              aria-label={t("obligations.types.editAria", { name: obligationType.name })}
+              onClick={handleEdit}
+              variant="ghost"
+              size="icon"
+              className="min-h-11 min-w-11 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors"
+            >
+              <Pencil className="w-4 h-4" aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              aria-label={t("obligations.types.deleteAria", { name: obligationType.name })}
+              onClick={() => onDelete(obligationType.id)}
+              variant="ghost"
+              size="icon"
+              className="min-h-11 min-w-11 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors"
+            >
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+            </Button>
+          </>
+        }
+      />
+    </DirectoryEntityCard>
+  );
 }
 
 export function ObligationTypeManagerList({
@@ -56,25 +137,14 @@ export function ObligationTypeManagerList({
       ) : (
         <div className="space-y-3 p-3 md:hidden">
           {types.map((obligationType) => (
-            <article
+            <ObligationTypeCard
               key={obligationType.id}
-              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
-            >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{obligationType.name}</p>
-                {renderActions(obligationType)}
-              </div>
-              <StatGrid columns="sm2">
-                <StatRow
-                  label={t("obligations.types.colQuantity")}
-                  value={<StatusBadge status={obligationType.quantity_based ? "yes" : "no"} config={quantityConfig} size="sm" />}
-                />
-                <StatRow
-                  label={t("obligations.types.colDesignated")}
-                  value={<StatusBadge status={obligationType.designated_for} config={designatedConfig} size="sm" />}
-                />
-              </StatGrid>
-            </article>
+              obligationType={obligationType}
+              quantityConfig={quantityConfig}
+              designatedConfig={designatedConfig}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           ))}
         </div>
       )}

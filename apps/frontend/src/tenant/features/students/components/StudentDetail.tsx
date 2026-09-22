@@ -10,7 +10,7 @@ import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
 import { StudentDetailContactSection } from "@/tenant/features/students/components/StudentDetailContactSection";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
-import { StudentDetailHero } from "@/tenant/features/students/components/StudentDetailHero";
+import { StudentDetailHeroCard } from "@/tenant/features/students/components/StudentDetailHeroCard";
 import { StudentDetailNotesSection } from "@/tenant/features/students/components/StudentDetailNotesSection";
 import { StudentDetailQuickActions } from "@/tenant/features/students/components/StudentDetailQuickActions";
 import { StudentDetailRelationsSection } from "@/tenant/features/students/components/StudentDetailRelationsSection";
@@ -129,7 +129,7 @@ export const StudentDetail = (function StudentDetail({
       headerExtra={headerExtraNode}
       footer={footerNode}
     >
-      <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />
+      <StudentDetailHeroCard student={student} statusBadgeConfig={statusBadgeConfig} />
 
       {!isArchived && canWriteMessaging && (
         <StudentDetailQuickActions

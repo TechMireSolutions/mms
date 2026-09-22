@@ -102,3 +102,8 @@ export function ContactCardDeletedBanner({
 }: ContactCardDeletedBannerProps): React.JSX.Element | null {
   return <ContactArchivedBanner contact={contact} />;
 }
+
+/** Canonical alias aligning with FacultyCardMetadata, StudentCardMetadata, and UserCardMetadata. */
+export type ContactCardMetadataProps = ContactCardMetadataGridProps;
+export const ContactCardMetadata = ContactCardMetadataGrid;
+

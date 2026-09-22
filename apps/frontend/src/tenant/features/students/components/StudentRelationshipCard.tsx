@@ -125,7 +125,7 @@ export function StudentRelationshipCard({
               className={cn(
                 MESSAGING_ICON_BTN,
                 MESSAGING_ICON_BTN_TONES.link,
-                "w-8 h-8 rounded-lg shadow-none",
+                "flex items-center justify-center shadow-none",
               )}
               title={t("contacts.detail.viewContact", { name })}
               aria-label={t("contacts.detail.viewContact", { name })}
@@ -137,7 +137,7 @@ export function StudentRelationshipCard({
       </div>
 
       {phones.length > 0 && (
-        <div className="space-y-1.5 ps-1">
+        <div className="space-y-1.5">
           {phones.map((phone, idx) => (
             <div
               key={`phone-${phone.number}-${idx}`}
@@ -174,7 +174,7 @@ export function StudentRelationshipCard({
       )}
 
       {emails.length > 0 && (
-        <div className="space-y-1.5 ps-1">
+        <div className="space-y-1.5">
           {emails.map((email, idx) => (
             <div
               key={`email-${email.address}-${idx}`}
@@ -204,7 +204,7 @@ export function StudentRelationshipCard({
       )}
 
       {(cnic || notes) && (
-        <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-muted-foreground ps-1">
+        <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-muted-foreground">
           {cnic && (
             <div className="flex items-center gap-1.5">
               <IdCard className="w-3.5 h-3.5" aria-hidden />

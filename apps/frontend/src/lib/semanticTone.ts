@@ -58,6 +58,8 @@ export const SEMANTIC_BG = {
   warningSolid: 'bg-warning',
   info: 'bg-info/10',
   infoSolid: 'bg-info',
+  secondary: 'bg-secondary/10',
+  secondarySolid: 'bg-secondary',
   muted: 'bg-muted/10',
   mutedSolid: 'bg-muted',
 } as const;
@@ -293,6 +295,3 @@ export const BALANCE_TONE = {
 export function balanceToneClass(isBalanced: boolean): string {
   return isBalanced ? BALANCE_TONE.balanced : BALANCE_TONE.unbalanced;
 }
-
-
-

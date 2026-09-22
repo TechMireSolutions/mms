@@ -10,7 +10,7 @@ import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useFacultyConfig } from "@/hooks/useStandardModuleConfig";
 import { FacultyArchivedBanner } from "@/tenant/features/faculty/components/FacultyArchivedBanner";
 import { FacultyDetailFieldsSection } from "@/tenant/features/faculty/components/FacultyDetailFieldsSection";
-import { FacultyDetailHero } from "@/tenant/features/faculty/components/FacultyDetailHero";
+import { FacultyDetailHeroCard } from "@/tenant/features/faculty/components/FacultyDetailHeroCard";
 import { FacultyDetailNotesSection } from "@/tenant/features/faculty/components/FacultyDetailNotesSection";
 import { FacultyDetailQuickActions } from "@/tenant/features/faculty/components/FacultyDetailQuickActions";
 import { FacultyDetailSessionsSection } from "@/tenant/features/faculty/components/FacultyDetailSessionsSection";
@@ -125,7 +125,7 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
       headerExtra={headerExtraNode}
       footer={footerNode}
     >
-      <FacultyDetailHero
+      <FacultyDetailHeroCard
         teacher={effectiveTeacher}
         displayName={displayName}
         avatar={linkedContact?.avatar ?? effectiveTeacher.avatar}

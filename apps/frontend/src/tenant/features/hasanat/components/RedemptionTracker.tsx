@@ -18,9 +18,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import { StatGrid, StatRow } from "@/components/ui/StatGrid";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { RedeemModal } from "@/tenant/features/hasanat/components/RedeemModal";
+import type { HTMLMotionProps } from "framer-motion";
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
@@ -33,6 +38,69 @@ export interface RedemptionTrackerProps {
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
+}
+
+interface RedemptionCardProps {
+  redemption: Redemption;
+  columnVisible: (key: string) => boolean;
+  motionProps?: HTMLMotionProps<"div">;
+}
+
+function RedemptionCard({
+  redemption,
+  columnVisible,
+  motionProps,
+}: RedemptionCardProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const { cardProps } = useWorkCardAction({
+    entity: redemption,
+    selectedIds: [],
+    canSelect: false,
+  });
+
+  const subtitle = columnVisible("pointsUsed") ? (
+    <div className="flex shrink-0 items-center gap-1 mt-0.5">
+      <Star className="w-3.5 h-3.5 text-warning" aria-hidden="true" />
+      <span className="text-xs font-bold text-warning">
+        {t("hasanat.form.pointsShort", { points: redemption.pointsUsed })}
+      </span>
+    </div>
+  ) : undefined;
+
+  return (
+    <DirectoryEntityCard
+      className="space-y-3 p-4"
+      {...cardProps}
+      {...motionProps}
+    >
+      <DirectoryCardHeader
+        id={redemption.id}
+        displayName={redemption.studentName || "—"}
+        subtitle={subtitle}
+        isSelected={false}
+        onSelect={() => {}}
+        selectAriaLabel=""
+        showSelect={false}
+      />
+      <DirectoryCardMetaGrid className="pt-2 border-t border-border/40 ms-0">
+        {columnVisible("reward") && (
+          <DirectoryCardMetaTile label={t("hasanat.columns.redemption.reward")}>
+            <span className="break-words">{redemption.reward}</span>
+          </DirectoryCardMetaTile>
+        )}
+        {columnVisible("date") && (
+          <DirectoryCardMetaTile label={t("hasanat.columns.redemption.date")}>
+            <span className="font-mono">{formatDate(redemption.date)}</span>
+          </DirectoryCardMetaTile>
+        )}
+        {columnVisible("approvedBy") && (
+          <DirectoryCardMetaTile label={t("hasanat.columns.redemption.approvedBy")}>
+            <span className="break-words">{redemption.approvedBy || "—"}</span>
+          </DirectoryCardMetaTile>
+        )}
+      </DirectoryCardMetaGrid>
+    </DirectoryEntityCard>
+  );
 }
 
 export function RedemptionTracker({
@@ -107,46 +175,12 @@ export function RedemptionTracker({
         <div className={WORK_SURFACE}>
           <div className="space-y-3 p-3 md:hidden">
             {redemptions.map((redemption, index) => (
-              <motion.article
+              <RedemptionCard
                 key={redemption.id}
-                {...rowMotion(index * 0.04)}
-                className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
-              >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  {columnVisible("student") && (
-                    <h4 className="min-w-0 truncate text-sm font-semibold text-foreground">{redemption.studentName || "—"}</h4>
-                  )}
-                  {columnVisible("pointsUsed") && (
-                    <div className="flex shrink-0 items-center gap-1">
-                      <Star className="w-3 h-3 text-warning" aria-hidden="true" />
-                      <span className="text-sm font-bold text-warning">{redemption.pointsUsed}</span>
-                    </div>
-                  )}
-                </div>
-                <StatGrid columns="sm2">
-                  {columnVisible("reward") && (
-                    <StatRow
-                      label={t("hasanat.columns.redemption.reward")}
-                      value={redemption.reward}
-                      ddClassName="break-words"
-                    />
-                  )}
-                  {columnVisible("date") && (
-                    <StatRow
-                      label={t("hasanat.columns.redemption.date")}
-                      value={formatDate(redemption.date)}
-                      ddClassName="text-muted-foreground"
-                    />
-                  )}
-                  {columnVisible("approvedBy") && (
-                    <StatRow
-                      label={t("hasanat.columns.redemption.approvedBy")}
-                      value={redemption.approvedBy || "—"}
-                      ddClassName="break-words text-muted-foreground"
-                    />
-                  )}
-                </StatGrid>
-              </motion.article>
+                redemption={redemption}
+                columnVisible={columnVisible}
+                motionProps={rowMotion(index * 0.04)}
+              />
             ))}
           </div>
           <div className="hidden md:block">

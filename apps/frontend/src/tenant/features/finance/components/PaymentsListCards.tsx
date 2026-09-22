@@ -1,17 +1,19 @@
 import type React from 'react';
+import { RotateCcw, Trash2 } from 'lucide-react';
 import { formatDate } from '@mms/shared';
+import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useWorkCardAction } from '@/hooks/useWorkCardAction';
+import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
+import { DirectoryCardFooterActions } from '@/components/ui/DirectoryCardFooterActions';
+import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
+import { DirectoryCardMetaGrid } from '@/components/ui/DirectoryCardMetaGrid';
+import { DirectoryCardMetaTile } from '@/components/ui/DirectoryCardMetaTile';
 import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
-import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
-import { DirectoryCardMetadata } from '@/components/ui/DirectoryCardMetadata';
-import { DirectoryCardFooter } from '@/components/ui/DirectoryCardFooter';
-import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
-import { RotateCcw, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import type { Payment } from '@/lib/data/financeData';
-import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from '@/components/ui/directoryCardChrome';
 
 export interface PaymentsListCardsProps {
   payments: Payment[];
@@ -26,6 +28,110 @@ export interface PaymentsListCardsProps {
   onRestore?: (paymentId: string) => void;
   onToggleSelectAll?: (checked: boolean) => void;
   allSelected?: boolean;
+}
+
+function PaymentCard({
+  payment,
+  isColumnVisible,
+  canDelete,
+  showDeleted,
+  methodConfig,
+  formatCurrency,
+  selectedIds,
+  onTogglePayment,
+  onRequestDelete,
+  onRestore,
+  reducedMotion,
+}: {
+  payment: Payment;
+  isColumnVisible: (key: string) => boolean;
+  canDelete: boolean;
+  showDeleted: boolean;
+  methodConfig: Record<string, StatusBadgeConfigItem>;
+  formatCurrency: (amount: number) => string;
+  selectedIds: string[];
+  onTogglePayment: (id: string, checked: boolean) => void;
+  onRequestDelete: (id: string) => void;
+  onRestore?: (id: string) => void;
+  reducedMotion: boolean;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+  const { isSelected, onSelect, cardProps } = useWorkCardAction({
+    entity: payment,
+    selectedIds,
+    onToggleSelected: onTogglePayment,
+    canSelect: canDelete,
+  });
+
+  const trailingActions = canDelete ? (
+    <Button
+      type="button"
+      variant="ghost"
+      size="icon"
+      className={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+      onClick={() => (showDeleted ? onRestore?.(payment.id) : onRequestDelete(payment.id))}
+      aria-label={showDeleted ? t('finance.trash.restore') : t('common.delete')}
+    >
+      {showDeleted
+        ? <RotateCcw className="h-4 w-4 text-muted-foreground" />
+        : <Trash2 className="h-4 w-4 text-destructive" />}
+    </Button>
+  ) : null;
+
+  return (
+    <DirectoryEntityCard
+      key={payment.id}
+      isSelected={isSelected}
+      reducedMotion={reducedMotion}
+      {...cardProps}
+    >
+      <DirectoryCardHeader
+        id={payment.id}
+        displayName={payment.studentName || t("finance.payments")}
+        isSelected={isSelected}
+        showSelect={canDelete}
+        onSelect={onSelect}
+        selectAriaLabel={t("finance.trash.selectPayment", { id: payment.id })}
+        reducedMotion={reducedMotion}
+        subtitle={
+          isColumnVisible("invoice") && payment.invoiceId
+            ? <p className="font-mono text-xs text-muted-foreground truncate">{payment.invoiceId}</p>
+            : undefined
+        }
+      />
+
+      <DirectoryCardMetaGrid>
+        {isColumnVisible("amount") && (
+          <DirectoryCardMetaTile label={t('finance.columns.amount')}>
+            <span className="font-bold text-success">{formatCurrency(payment.amount)}</span>
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("date") && (
+          <DirectoryCardMetaTile label={t('finance.columns.paymentDate')}>
+            {formatDate(payment.date)}
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("method") && (
+          <DirectoryCardMetaTile label={t('finance.columns.method')}>
+            <StatusBadge status={payment.method} config={methodConfig} size="sm" />
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("receivedBy") && (
+          <DirectoryCardMetaTile label={t('finance.columns.receivedBy')}>
+            {payment.receivedBy || '—'}
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("note") && (
+          <DirectoryCardMetaTile label={t('finance.columns.note')}>
+            {payment.note || '—'}
+          </DirectoryCardMetaTile>
+        )}
+      </DirectoryCardMetaGrid>
+
+      {/* Footer rendered unconditionally — preserves border-divider chrome when canDelete=false. */}
+      <DirectoryCardFooterActions actions={trailingActions} />
+    </DirectoryEntityCard>
+  );
 }
 
 export function PaymentsListCards({
@@ -44,7 +150,7 @@ export function PaymentsListCards({
 }: PaymentsListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const selectedSet = new Set(selectedIds);
+  const someSelected = selectedIds.length > 0 && selectedIds.length < payments.length;
 
   return (
     <ModuleDirectoryCards
@@ -52,71 +158,27 @@ export function PaymentsListCards({
       selectedIds={selectedIds}
       onSelectAll={canDelete && onToggleSelectAll ? () => onToggleSelectAll(!allSelected) : undefined}
       allSelected={allSelected}
-      someSelected={selectedIds.length > 0 && selectedIds.length < payments.length}
+      someSelected={someSelected}
       selectAllLabel={t("finance.table.selectAll")}
       deselectAllLabel={t("common.deselect")}
       selectedCountLabel={t("finance.trash.selected", { count: selectedIds.length })}
       checkboxIdPrefix="finance-payments"
-      renderItem={(payment) => {
-        const isSelected = selectedSet.has(payment.id);
-        
-        const metadataColumns = [];
-        if (isColumnVisible("amount")) metadataColumns.push({ key: "amount", label: t('finance.columns.amount') });
-        if (isColumnVisible("date")) metadataColumns.push({ key: "date", label: t('finance.columns.paymentDate') });
-        if (isColumnVisible("method")) metadataColumns.push({ key: "method", label: t('finance.columns.method') });
-        if (isColumnVisible("receivedBy")) metadataColumns.push({ key: "receivedBy", label: t('finance.columns.receivedBy') });
-        if (isColumnVisible("note")) metadataColumns.push({ key: "note", label: t('finance.columns.note') });
-
-        return (
-          <DirectoryEntityCard key={payment.id} isSelected={isSelected} reducedMotion={reducedMotion}>
-            <DirectoryCardHeader
-              id={payment.id}
-              displayName={payment.studentName || t("finance.payments")}
-              isSelected={isSelected}
-              showSelect={canDelete}
-              onSelect={() => onTogglePayment(payment.id, !isSelected)}
-              selectAriaLabel={t("finance.trash.selectPayment", { id: payment.id })}
-              reducedMotion={reducedMotion}
-              subtitle={
-                isColumnVisible("invoice") && payment.invoiceId 
-                  ? <p className="font-mono text-xs text-muted-foreground truncate">{payment.invoiceId}</p>
-                  : undefined
-              }
-            />
-
-            <DirectoryCardMetadata
-              columns={metadataColumns}
-              keyFor={(col) => col.key}
-              labelFor={(col) => col.label}
-              renderValue={(col) => {
-                if (col.key === "amount") return <span className="font-bold text-success">{formatCurrency(payment.amount)}</span>;
-                if (col.key === "date") return formatDate(payment.date);
-                if (col.key === "method") return <StatusBadge status={payment.method} config={methodConfig} size="sm" />;
-                if (col.key === "receivedBy") return payment.receivedBy || '—';
-                if (col.key === "note") return payment.note || '—';
-                return null;
-              }}
-            />
-
-            {canDelete && (
-              <DirectoryCardFooter
-                trailing={
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    className={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
-                    onClick={() => showDeleted ? onRestore?.(payment.id) : onRequestDelete(payment.id)}
-                    aria-label={showDeleted ? t('finance.trash.restore') : t('common.delete')}
-                  >
-                    {showDeleted ? <RotateCcw className="h-4 w-4 text-muted-foreground" /> : <Trash2 className="h-4 w-4 text-destructive/70" />}
-                  </Button>
-                }
-              />
-            )}
-          </DirectoryEntityCard>
-        );
-      }}
+      renderItem={(payment) => (
+        <PaymentCard
+          key={payment.id}
+          payment={payment}
+          isColumnVisible={isColumnVisible}
+          canDelete={canDelete}
+          showDeleted={showDeleted}
+          methodConfig={methodConfig}
+          formatCurrency={formatCurrency}
+          selectedIds={selectedIds}
+          onTogglePayment={onTogglePayment}
+          onRequestDelete={onRequestDelete}
+          onRestore={onRestore}
+          reducedMotion={reducedMotion}
+        />
+      )}
     />
   );
 }

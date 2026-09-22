@@ -23,7 +23,9 @@ Raw HTML controls (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, c
 | `AppShell` | `@/components/common/AppShell` | Universal outer application frame unifying skip link, desktop/mobile navigation drawers, top header bar, and main content landmark across tenant and platform domains. |
 | `DetailSheet` / `DetailDrawerShell` | `@/components/common/DetailSheet`, `@/components/ui/DetailDrawerShell` | Entity profile drawer with integrated archive banner, BiDi slide-over, and declarative SSOT entity descriptor attribute rendering. In trash: `WarningCallout` + Restore action; hide Edit/messaging. |
 | `Table` | `@/components/ui/table` | shadcn table primitives with auto `overflow-x-auto`. Mandate `@tanstack/react-virtual` virtualization when rendered rows > 30 (`mms-performance.md`). |
-| `StatCard` / `ModuleCommandMetricsGrid`| `@/components/ui/*` | Single metric tiles (`StatCard`); command-centre/report KPI strips (`ModuleCommandMetricsGrid`). |
+| `DirectoryCard` / `DirectoryEntityCard` | `@/components/ui/DirectoryCard`, `@/components/ui/DirectoryEntityCard` | Directory card primitives for mobile/tablet card views (`DirectoryEntityCard` outer container; `DirectoryCard` compound slot wrapper with header/meta/pills/actions/footer); mandatory CSS containment (`contain: content`, `content-visibility: auto`). |
+| `DirectoryCardFooterActions` | `@/components/ui/DirectoryCardFooterActions` | Standardized card bottom-action cluster pairing View CTA (`contacts.actionViewShort`) + overflow `ModuleRowActionsMenu` (`DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS`, 44×44px touch targets). |
+| `StatCard` / `ModuleCommandMetricsGrid`| `@/components/ui/*` | Single metric tiles (`StatCard`); command-centre/report KPI strips (`ModuleCommandMetricsGrid`). Enforces `statCardAccent.ts` tokens (`SEMANTIC_BG`, `SEMANTIC_TEXT`), `SectionLabel`, `trendTextClass()`, and `useReducedMotion()`. |
 | `EmptyState` / `ErrorState` | `@/components/ui/*` | Directory empties (`title` required, `variant="dashed"`, `compact`); errors with retry + hint description. |
 | `FieldErrorMessage` | `@/components/ui/FormField` | Inline field/panel errors (`FORM_ERROR` + AlertCircle); no forked error text lines. |
 | `WarningCallout` | `@/components/ui/WarningCallout` | Drawer archived state & setup warnings; no ad-hoc amber callouts. |
@@ -42,6 +44,7 @@ Raw HTML controls (`<button>`, `<input>`, `<select>`, `<textarea>`, `<table>`, c
 - **Touch Target Dimensions:** All interactive triggers, form inputs, buttons, and action icons must satisfy the `44×44px` touch floor via `min-h-11 min-w-11` (never `min-h-[44px]`).
 - **Z-Index Layering Hierarchy:** Always use semantic z-index tokens (`z-modal: 50`, `z-modal-priority: 60`, `z-popover: 70`, `z-toast: 100`) rather than arbitrary `z-[100]`.
 - **Surface Tokens (`formStyles.ts`):** `WORK_SURFACE` / `WORK_SURFACE_INNER` for directory/detail/report panels; `FORM_CARD` / `FORM_INPUT_BUILDER` for forms; `bg-sidebar/90` for overlay backdrops.
+- **Card Insets & Spacing Hygiene:** Never apply ad-hoc child-level inline offsets (`ms-0.5`, `ms-1`, `ps-1`, `ms-2`) to card elements, headers, metadata tiles, or icon containers. Alignment is governed strictly by outer card primitives (`DirectoryEntityCard`, `StatCard`, `SectionCard`) via `CARD_STRIPE_INSET` and standard padding (`p-4` / `px-5 py-4`). Child row spacing must rely on standard flex/grid gap tokens (`gap-2`, `gap-3`). Motion animations must honor `useReducedMotion()`.
 - **Modern CSS Primitives & Subgrid:** Multi-section forms (`FormModal`) and directory card metadata grids should leverage CSS Subgrid (`grid-template-rows: subgrid` / `grid-template-columns: subgrid`) to ensure seamless alignment across nested child components.
 - **Native Color Mixing:** Prefer CSS `color-mix(in srgb, var(--primary) 20%, transparent)` for surface tints, hover overlays, and accent backgrounds rather than fragile opacity class chains.
 - **Rule of Three (Layout Sizes):** When a layout size appears ≥ 3 times, promote to `@theme` (`h-chart-sm|md|lg`, `max-w-toast`, `max-w-filter-sm`, `z-modal`, `z-toast`).
@@ -114,7 +117,7 @@ All primary entities (contacts, students, faculty, sessions, finance, platform w
   - Directory card metadata grid tiles (`getCardFields()`) feeding `DirectoryCardMetadata`.
   - Filter chips labels and formatting (`formatFieldValue()`) feeding `FilterChips`.
   - Drawer attribute inspection sections and rows (`getDrawerSections()`) feeding `DetailSheet`.
-- **Zero Forking:** Directory cards, filter chips, and drawer viewers consume registered entity descriptors rather than repeating ad-hoc column lists, card field arrays, and drawer layouts.
+- **Zero Forking:** Directory cards (`DirectoryCard` / `DirectoryEntityCard`), filter chips, and drawer viewers consume registered entity descriptors rather than repeating ad-hoc column lists, card field arrays, and drawer layouts.
 
 ## 7. i18n-Resolved Descriptor Hook Pattern
 

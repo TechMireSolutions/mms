@@ -14,7 +14,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { WORK_SURFACE, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
+import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
 import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 
 export interface ActivityLogsListProps {
@@ -80,9 +81,9 @@ export function ActivityLogsList({
       <div className={WORK_SURFACE}>
         <div className="space-y-3 p-3 md:hidden">
           {paginated.map((log) => (
-            <article
+            <DirectoryEntityCard
               key={log.id}
-              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
+              className="space-y-3 p-4"
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -103,7 +104,7 @@ export function ActivityLogsList({
                   ddClassName="font-mono text-xs text-muted-foreground"
                 />
               </StatGrid>
-            </article>
+            </DirectoryEntityCard>
           ))}
         </div>
         <div className="hidden md:block">

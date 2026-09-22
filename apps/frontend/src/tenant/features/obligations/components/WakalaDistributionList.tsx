@@ -11,7 +11,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -34,9 +35,9 @@ export function WakalaDistributionList({
     <div className={WORK_SURFACE}>
       <div className="space-y-3 p-3 md:hidden">
         {distributions.map((distribution) => (
-          <article
+          <DirectoryEntityCard
             key={distribution.id}
-            className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
+            className="space-y-3 p-4"
           >
             <div className="flex min-w-0 items-start justify-between gap-3">
               <p className="text-sm font-medium text-foreground">{distribution.name}</p>
@@ -44,14 +45,14 @@ export function WakalaDistributionList({
                 <Button type="button" aria-label={t("obligations.wakala.distEditAria", { name: distribution.name })} onClick={() => onEdit(distribution)}
                   variant="outline"
                   size="icon"
-                  className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
-                  <Pencil className="w-3 h-3" aria-hidden="true" />
+                  className="min-h-11 min-w-11 rounded-lg border-info/30 bg-info/5 text-info hover:text-info hover:bg-info/15 hover:border-info/40 shadow-none transition-colors">
+                  <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
                 <Button type="button" aria-label={t("obligations.wakala.distDeleteAria", { name: distribution.name })} onClick={() => onDelete(distribution.id)}
                   variant="outline"
                   size="icon"
-                  className="h-7 w-7 min-h-7 min-w-7 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
-                  <Trash2 className="w-3 h-3" aria-hidden="true" />
+                  className="min-h-11 min-w-11 rounded-lg border-destructive/30 bg-destructive/5 text-destructive hover:text-destructive hover:bg-destructive/15 hover:border-destructive/40 shadow-none transition-colors">
+                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
                 </Button>
               </div>
             </div>
@@ -66,7 +67,7 @@ export function WakalaDistributionList({
                 ddClassName="font-mono text-xs font-semibold"
               />
             </StatGrid>
-          </article>
+          </DirectoryEntityCard>
         ))}
       </div>
       <div className="hidden md:block">

@@ -1,6 +1,5 @@
 import type { SystemUser } from "@mms/shared";
-import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
-import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { UsersRowActions } from "@/tenant/features/users/components/UsersRowActions";
 
@@ -31,27 +30,23 @@ export function UserCardActions({
   const { t } = useTranslation();
 
   return (
-    <DirectoryCardFooter
-      trailing={
-        <>
-          <DirectoryCardViewButton
-            label={t("users.actionViewShort")}
-            ariaLabel={t("users.actionView", { name: user.name })}
-            onClick={() => onView(user)}
-          />
-          <UsersRowActions
-            user={user}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            showDeleted={showDeleted}
-            hideViewItem
-            onView={onView}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onRestore={onRestore}
-            onResetPassword={onResetPassword}
-          />
-        </>
+    <DirectoryCardFooterActions
+      onView={() => onView(user)}
+      viewLabel={t("users.actionViewShort")}
+      viewAriaLabel={t("users.actionView", { name: user.name })}
+      overflowActions={
+        <UsersRowActions
+          user={user}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          showDeleted={showDeleted}
+          hideViewItem
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onResetPassword={onResetPassword}
+        />
       }
     />
   );

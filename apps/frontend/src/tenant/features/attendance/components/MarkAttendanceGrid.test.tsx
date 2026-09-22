@@ -46,5 +46,20 @@ describe("MarkAttendanceGrid Component", () => {
     expect(html).toContain("Bilal Ahmad");
     expect(html).toContain("GR-001");
     expect(html).toContain("control-status");
+    expect(html).toContain("Status");
+  });
+
+  it("renders empty state when rows is empty", () => {
+    const html = renderToStaticMarkup(
+      <MarkAttendanceGrid
+        rows={[]}
+        orderedFields={[{ id: "status", label: "Status", type: "select" } as any]}
+        statuses={mockStatuses}
+        isFieldEnabled={() => true}
+        onFieldChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("attendance.mark.noStudents");
   });
 });

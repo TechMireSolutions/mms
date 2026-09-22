@@ -3,7 +3,9 @@ import { Eye, EyeOff, Pencil } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { cn } from "@/lib/utils";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { TableCell, TableRow } from "@/components/ui/table";
@@ -28,9 +30,9 @@ function AccountRowActions({ account, onEdit, onDelete, onReactivate }: AccountR
         size="icon"
         aria-label={t("accounting.coa.editAria", { name: account.name })}
         onClick={() => onEdit(account)}
-        className="text-muted-foreground hover:text-foreground"
+        className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:text-foreground"
       >
-        <Pencil className="h-3.5 w-3.5" aria-hidden="true" />
+        <Pencil className="h-4 w-4" aria-hidden="true" />
       </Button>
       {account.isActive === false ? (
         <Button
@@ -39,9 +41,9 @@ function AccountRowActions({ account, onEdit, onDelete, onReactivate }: AccountR
           size="icon"
           aria-label={t("accounting.coa.reactivateAria", { name: account.name })}
           onClick={() => onReactivate(account.id)}
-          className="text-muted-foreground hover:text-success"
+          className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:text-success"
         >
-          <Eye className="h-3.5 w-3.5" aria-hidden="true" />
+          <Eye className="h-4 w-4" aria-hidden="true" />
         </Button>
       ) : (
         <Button
@@ -50,9 +52,9 @@ function AccountRowActions({ account, onEdit, onDelete, onReactivate }: AccountR
           size="icon"
           aria-label={t("accounting.coa.deactivateAria", { name: account.name })}
           onClick={() => onDelete(account.id)}
-          className="text-muted-foreground hover:text-destructive"
+          className="min-h-11 min-w-11 rounded-lg text-muted-foreground hover:text-destructive"
         >
-          <EyeOff className="h-3.5 w-3.5" aria-hidden="true" />
+          <EyeOff className="h-4 w-4" aria-hidden="true" />
         </Button>
       )}
     </>
@@ -81,7 +83,7 @@ export function AccountMobileCard({
   const { t } = useTranslation();
 
   return (
-    <article className={`${WORK_SURFACE_INNER} space-y-3 p-3 ${account.isActive === false ? "opacity-50" : ""}`}>
+    <DirectoryEntityCard className={cn("space-y-3 p-4", account.isActive === false && "opacity-50")}>
       <div className="flex min-w-0 items-start justify-between gap-3">
         <div className="min-w-0 flex-1">
           {isColumnVisible("code") && <p className="m-0 font-mono text-xs font-bold text-muted-foreground">{account.code}</p>}
@@ -113,11 +115,13 @@ export function AccountMobileCard({
         )}
       </StatGrid>
       {canWrite && (
-        <div className="flex items-center justify-end gap-1 border-t border-border pt-2">
-          <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} />
-        </div>
+        <DirectoryCardFooterActions
+          actions={
+            <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} />
+          }
+        />
       )}
-    </article>
+    </DirectoryEntityCard>
   );
 }
 

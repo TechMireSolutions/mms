@@ -6,7 +6,10 @@ import { ProgressBar } from "@/components/ui/ProgressBar";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Class } from "@/lib/data/sessionsData";
 import { genderStatusBadgeConfig } from "@/lib/genderStatusBadge";
@@ -23,21 +26,32 @@ interface ClassCardProps {
 
 export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWrite }: ClassCardProps) {
   const { t } = useTranslation();
-  const maxCapacity = sessionClass.maxStudents ?? (sessionClass as any).capacity ?? 30;
+  const rawClass = sessionClass as unknown as Record<string, unknown>;
+  const maxCapacity = sessionClass.maxStudents ?? (typeof rawClass.capacity === "number" ? rawClass.capacity : 30);
   const enrolledCount = sessionClass.enrolled ?? 0;
   const capacityPercent = Math.round((enrolledCount / Math.max(1, maxCapacity)) * 100);
   const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
   const teacherLabel = teacherNameById(teachers, sessionClass.teacherId) || sessionClass.teacherName || t("sessions.classes.unassigned");
   const genderConfig: Record<string, StatusBadgeConfigItem> = genderStatusBadgeConfig(t, { includeAny: true });
 
-  const minAge = sessionClass.minAge ?? (sessionClass as any).ageMin ?? 5;
-  const maxAge = sessionClass.maxAge ?? (sessionClass as any).ageMax ?? 18;
+  const minAge = sessionClass.minAge ?? (typeof rawClass.ageMin === "number" ? rawClass.ageMin : 5);
+  const maxAge = sessionClass.maxAge ?? (typeof rawClass.ageMax === "number" ? rawClass.ageMax : 18);
 
   const feeCount = sessionClass.fees?.length ?? 0;
   const scheduleCount = sessionClass.schedules?.length ?? 0;
 
+  const { onView: handleView, cardProps } = useWorkCardAction({
+    entity: sessionClass,
+    selectedIds: [],
+    canSelect: false,
+    onView: canWrite ? () => onEdit(sessionClass) : undefined,
+  });
+
   return (
-    <DirectoryEntityCard className="group p-4 flex flex-col justify-between cursor-pointer hover:border-primary/50 transition-all" onClick={() => onEdit(sessionClass)}>
+    <DirectoryEntityCard
+      className="group p-4 flex flex-col justify-between hover:border-primary/50 transition-all"
+      {...cardProps}
+    >
       <div>
         <DirectoryCardHeader
           id={sessionClass.id}
@@ -51,20 +65,20 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
           onSelect={() => {}}
           selectAriaLabel=""
           showSelect={false}
+          onView={canWrite ? handleView : undefined}
+          viewAriaLabel={t("sessions.classes.editNamed", { name: sessionClass.name })}
         />
 
-        <div className="mb-3 mt-4 grid grid-cols-1 gap-2 sm:grid-cols-2">
-          <div className="rounded-lg bg-muted/40 px-3 py-2">
-            <p className="m-0 text-xs font-medium text-muted-foreground">{t("sessions.classes.ageRange")}</p>
-            <p className="m-0 text-sm font-semibold text-foreground">
+        <DirectoryCardMetaGrid className="mb-3 mt-4">
+          <DirectoryCardMetaTile label={t("sessions.classes.ageRange")}>
+            <span className="font-semibold text-foreground">
               {t("sessions.classes.ageYears", { min: minAge, max: maxAge })}
-            </p>
-          </div>
-          <div className="rounded-lg bg-muted/40 px-3 py-2">
-            <p className="m-0 text-xs font-medium text-muted-foreground">{t("sessions.classes.form.gender")}</p>
+            </span>
+          </DirectoryCardMetaTile>
+          <DirectoryCardMetaTile label={t("sessions.classes.form.gender")}>
             <StatusBadge status={sessionClass.gender || "mixed"} config={genderConfig} size="sm" />
-          </div>
-        </div>
+          </DirectoryCardMetaTile>
+        </DirectoryCardMetaGrid>
 
         <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="h-3.5 w-3.5" aria-hidden="true" />
@@ -73,31 +87,26 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
           </span>
         </div>
 
-        {/* Model 6 badges strip */}
+        {/* Badges strip */}
         <div className="mb-3 flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-3xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             <DollarSign className="h-3 w-3" />
             {feeCount > 0 ? `${feeCount} Fees` : 'No Fees set'}
           </span>
-          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-3xs font-medium text-muted-foreground">
+          <span className="inline-flex items-center gap-1 rounded-md bg-muted px-2 py-0.5 text-xs font-medium text-muted-foreground">
             <Clock className="h-3 w-3" />
             {(sessionClass.timetables?.[0]?.periods?.length ?? 0)} Periods
           </span>
           {sessionClass.scholarships && sessionClass.scholarships.length > 0 && (
-            <span className="inline-flex items-center gap-1 rounded-md bg-secondary/10 text-secondary px-2 py-0.5 text-3xs font-medium">
+            <span className="inline-flex items-center gap-1 rounded-md bg-secondary/10 text-secondary px-2 py-0.5 text-xs font-medium">
               Scholarship: {sessionClass.scholarships[0]?.percentage}%
             </span>
           )}
         </div>
 
         {/*
-          The capacity figures must reach assistive tech as TEXT. This block used to
-          hide them with `aria-hidden` and compensate with an `aria-label` on the
-          wrapper — but that wrapper is a role-less `<div>`, and naming is not
-          exposed for the generic role, so the compensation did not land and the
-          class capacity was silent. Announcing the visible text is the reliable
-          fix; the bar below stays `aria-hidden` so the same number is not
-          announced twice.
+          The capacity figures must reach assistive tech as TEXT. Announcing the visible text
+          is the reliable fix; the bar below stays aria-hidden so the same number is not announced twice.
         */}
         <div>
           <div className="mb-1 flex items-center justify-between">
@@ -115,52 +124,56 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
         </div>
       </div>
 
-      {canWrite && (
-        <DirectoryCardFooter
-          trailing={
-            <div onClick={(e) => e.stopPropagation()}>
+      <DirectoryCardFooterActions
+        actions={
+          canWrite ? (
+            <div className="flex shrink-0 items-center gap-1">
               <Button
+                type="button"
                 variant="ghost"
                 size="icon"
                 aria-label={t("sessions.classes.messageWhatsApp", { name: sessionClass.name })}
                 onClick={() => onMessage?.("whatsapp", sessionClass)}
-                className="h-8 w-8 rounded-lg text-success transition-colors hover:bg-muted hover:text-success"
+                className="min-h-11 min-w-11 rounded-lg text-success transition-colors hover:bg-muted hover:text-success"
                 title={t("sessions.classes.messageWhatsApp", { name: sessionClass.name })}
               >
                 <MessageCircle className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Button
+                type="button"
                 variant="ghost"
                 size="icon"
                 aria-label={t("sessions.classes.messageSms", { name: sessionClass.name })}
                 onClick={() => onMessage?.("sms", sessionClass)}
-                className="h-8 w-8 rounded-lg text-info transition-colors hover:bg-muted hover:text-info"
+                className="min-h-11 min-w-11 rounded-lg text-info transition-colors hover:bg-muted hover:text-info"
                 title={t("sessions.classes.messageSms", { name: sessionClass.name })}
               >
                 <MessageSquare className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Button
+                type="button"
                 variant="ghost"
                 size="icon"
                 aria-label={t("sessions.classes.editNamed", { name: sessionClass.name })}
                 onClick={() => onEdit(sessionClass)}
-                className="h-8 w-8 rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+                className="min-h-11 min-w-11 rounded-lg text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
               >
                 <Edit2 className="h-4 w-4" aria-hidden="true" />
               </Button>
               <Button
+                type="button"
                 variant="ghost"
                 size="icon"
                 aria-label={t("sessions.classes.deleteNamed", { name: sessionClass.name })}
                 onClick={() => onDelete(sessionClass.id)}
-                className="h-8 w-8 rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
+                className="min-h-11 min-w-11 rounded-lg text-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive"
               >
                 <Trash2 className="h-4 w-4" aria-hidden="true" />
               </Button>
             </div>
-          }
-        />
-      )}
+          ) : null
+        }
+      />
     </DirectoryEntityCard>
   );
 }

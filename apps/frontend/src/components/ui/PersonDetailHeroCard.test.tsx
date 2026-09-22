@@ -36,15 +36,30 @@ describe("PersonDetailHeroCard Component", () => {
     expect(html).toContain("badge-gr");
   });
 
-  it("applies custom className", () => {
+  it("applies custom className and CARD_STRIPE_INSET", () => {
     const html = renderToStaticMarkup(
       <PersonDetailHeroCard
         id="usr-3"
         displayName="Test User"
+        accentColor="primary"
         className="custom-hero-class"
       />,
     );
 
     expect(html).toContain("custom-hero-class");
+    expect(html).toContain("ps-5");
+  });
+
+  it("omits CARD_STRIPE_INSET when accentColor={false}", () => {
+    const html = renderToStaticMarkup(
+      <PersonDetailHeroCard
+        id="usr-4"
+        displayName="Plain User"
+        accentColor={false}
+      />,
+    );
+
+    expect(html).not.toContain("ps-5");
+    expect(html).not.toContain("sm:ps-6");
   });
 });

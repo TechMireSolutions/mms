@@ -65,7 +65,7 @@ export const DirectoryCardHeader = (function DirectoryCardHeader({
   );
 
   return (
-    <div className={cn("flex gap-3 items-start ms-1", className)}>
+    <div className={cn("flex gap-3 items-start", className)}>
       {showSelect ? (
         <div className="flex min-h-11 min-w-11 flex-shrink-0 items-center justify-center">
           <Checkbox

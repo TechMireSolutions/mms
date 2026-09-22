@@ -27,7 +27,7 @@ import {
   type WorkspaceSortField,
 } from '@/platform/components/platformWorkspaceListData';
 import { WorkspaceTableView } from '@/platform/components/workspace/WorkspaceTableView';
-import { WorkspaceCardsView } from '@/platform/components/workspace/WorkspaceCardsView';
+import { WorkspaceListCards } from '@/platform/components/workspace/WorkspaceListCards';
 import { useWorkspaceDeleteState } from '@/platform/components/workspace/useWorkspaceDeleteState';
 
 /**
@@ -246,7 +246,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             onOpenDelete={handleOpenDelete}
           />
         ) : (
-          <WorkspaceCardsView
+          <WorkspaceListCards
             workspaces={sortedItems}
             appDomain={appDomain}
             togglePending={togglePending}

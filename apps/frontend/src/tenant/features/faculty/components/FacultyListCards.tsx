@@ -1,5 +1,4 @@
-import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
-import { DirectoryCardInfoPills } from "@/components/ui/DirectoryCardInfoPills";
+import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
 import { getGenderAccentBarClass } from "@/lib/directoryCardAccent";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
@@ -14,6 +13,7 @@ import { resolveTeacherCardFaceVisibility } from "@/tenant/features/faculty/comp
 import { teacherRowIdentity } from "@/tenant/features/faculty/components/facultyFieldDisplay";
 import { useFacultyEntityDescriptor } from "@/tenant/features/faculty/hooks/useFacultyEntityDescriptor";
 import type { TeacherListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
+import type { Teacher } from "@mms/shared";
 
 export type TeacherListCardsProps = Omit<
   TeacherListContentProps,
@@ -27,6 +27,129 @@ export type TeacherListCardsProps = Omit<
   | "onClearFilters"
   | "onShowActive"
 >;
+
+interface TeacherCardProps {
+  teacher: Teacher;
+  selectedIds: string[];
+  showDeleted: boolean;
+  canWrite: boolean;
+  canDelete: boolean;
+  isColumnVisible: (key: string) => boolean;
+  columnRegistry: TeacherListCardsProps["columnRegistry"];
+  customFieldsById: TeacherListCardsProps["customFieldsById"];
+  statusConfig: TeacherListCardsProps["statusConfig"];
+  descriptor: ReturnType<typeof useFacultyEntityDescriptor>;
+  reducedMotion: boolean;
+  onSelectOne: (id: string) => void;
+  onView: (teacher: Teacher) => void;
+  onEdit: (teacher: Teacher) => void;
+  onRequestDelete: (id: string) => void;
+  onRestore?: (id: string) => void;
+  onSms?: (teachers: Teacher[]) => void;
+  onWhatsApp?: (teachers: Teacher[]) => void;
+  onEmail?: (teachers: Teacher[]) => void;
+}
+
+function TeacherCard({
+  teacher,
+  selectedIds,
+  showDeleted,
+  canWrite,
+  canDelete,
+  isColumnVisible,
+  columnRegistry,
+  customFieldsById,
+  statusConfig,
+  descriptor,
+  reducedMotion,
+  onSelectOne,
+  onView,
+  onEdit,
+  onRequestDelete,
+  onRestore,
+  onSms,
+  onWhatsApp,
+  onEmail,
+}: TeacherCardProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const teacherIdStr = String(teacher.id);
+  const selectedSet = new Set(selectedIds);
+  const isSelected = selectedSet.has(teacherIdStr);
+  const { displayName } = teacherRowIdentity(teacher, selectedSet, t);
+  const { phone, email } = resolveTeacherPrimaryChannels(teacher);
+  const faceVisible = resolveTeacherCardFaceVisibility(columnRegistry, isColumnVisible);
+
+  return (
+    <DirectoryCard
+      entity={teacher}
+      selectedIds={selectedIds}
+      canSelect={canDelete}
+      onToggleSelected={() => onSelectOne(teacherIdStr)}
+      onView={onView}
+      onEdit={onEdit}
+      reducedMotion={reducedMotion}
+      accentClassName={
+        isColumnVisible("gender")
+          ? getGenderAccentBarClass(isSelected, teacher.gender)
+          : undefined
+      }
+      header={{
+        displayName,
+      }}
+      headerSlot={
+        <TeacherCardHeader
+          teacher={teacher}
+          teacherId={teacherIdStr}
+          isSelected={isSelected}
+          displayName={displayName}
+          isColumnVisible={faceVisible}
+          onSelectOne={() => onSelectOne(teacherIdStr)}
+          onView={onView}
+          reducedMotion={reducedMotion}
+        />
+      }
+      infoPills={{
+        phone,
+        phoneDisplay: phone,
+        email,
+        showPhone: faceVisible("phone"),
+        showEmail: faceVisible("email"),
+        showArchived: showDeleted,
+        onWhatsApp: onWhatsApp ? () => onWhatsApp([teacher]) : undefined,
+        onSms: onSms ? () => onSms([teacher]) : undefined,
+        onEmail: onEmail ? () => onEmail([teacher]) : undefined,
+      }}
+      metadataSlot={
+        <TeacherCardMetadata
+          teacher={teacher}
+          isColumnVisible={isColumnVisible}
+          columnRegistry={columnRegistry}
+          customFieldsById={customFieldsById}
+          statusConfig={statusConfig}
+          descriptor={descriptor}
+        />
+      }
+      banner={<TeacherArchivedBanner teacher={teacher} />}
+      footer={
+        <TeacherCardActions
+          teacher={teacher}
+          teacherId={teacherIdStr}
+          displayName={displayName}
+          showDeleted={showDeleted}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          onView={onView}
+          onEdit={onEdit}
+          onRequestDelete={onRequestDelete}
+          onRestore={onRestore}
+          onSms={onSms}
+          onWhatsApp={onWhatsApp}
+          onEmail={onEmail}
+        />
+      }
+    />
+  );
+}
 
 export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Element {
   const {
@@ -54,12 +177,10 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const descriptor = useFacultyEntityDescriptor();
-  const faceVisible = resolveTeacherCardFaceVisibility(columnRegistry, isColumnVisible);
   const pageCountLabel = formatDirectoryPageCountLabel(teachers.length, t, {
     singular: "teachers.form.teacher",
     plural: "teachers.table.teachers",
   });
-  const selectedSet = new Set(selectedIds);
 
   return (
     <ModuleDirectoryCards
@@ -73,70 +194,30 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
       selectedCountLabel={t("teachers.selectedCount", { count: selectedIds.length })}
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="teachers-cards"
-      renderItem={(teacher) => {
-        const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedSet, t);
-        const { phone, email } = resolveTeacherPrimaryChannels(teacher);
-
-        return (
-          <DirectoryEntityCard
-            key={teacherIdStr}
-            isSelected={isSelected}
-            reducedMotion={reducedMotion}
-            accentClassName={
-              isColumnVisible("gender")
-                ? getGenderAccentBarClass(isSelected, teacher.gender)
-                : undefined
-            }
-          >
-            <TeacherCardHeader
-              teacher={teacher}
-              teacherId={teacherIdStr}
-              isSelected={isSelected}
-              displayName={displayName}
-              isColumnVisible={faceVisible}
-              onSelectOne={onSelectOne}
-              onView={onView}
-              reducedMotion={reducedMotion}
-            />
-            <DirectoryCardInfoPills
-              phone={phone}
-              phoneDisplay={phone}
-              email={email}
-              displayName={displayName}
-              showPhone={faceVisible("phone")}
-              showEmail={faceVisible("email")}
-              showArchived={showDeleted}
-              onWhatsApp={onWhatsApp ? () => onWhatsApp([teacher]) : undefined}
-              onSms={onSms ? () => onSms([teacher]) : undefined}
-              onEmail={onEmail ? () => onEmail([teacher]) : undefined}
-            />
-            <TeacherCardMetadata
-              teacher={teacher}
-              isColumnVisible={isColumnVisible}
-              columnRegistry={columnRegistry}
-              customFieldsById={customFieldsById}
-              statusConfig={statusConfig}
-              descriptor={descriptor}
-            />
-            <TeacherArchivedBanner teacher={teacher} />
-            <TeacherCardActions
-              teacher={teacher}
-              teacherId={teacherIdStr}
-              displayName={displayName}
-              showDeleted={showDeleted}
-              canWrite={canWrite}
-              canDelete={canDelete}
-              onView={onView}
-              onEdit={onEdit}
-              onRequestDelete={onRequestDelete}
-              onRestore={onRestore}
-              onSms={onSms}
-              onWhatsApp={onWhatsApp}
-              onEmail={onEmail}
-            />
-          </DirectoryEntityCard>
-        );
-      }}
+      renderItem={(teacher) => (
+        <TeacherCard
+          key={teacher.id}
+          teacher={teacher}
+          selectedIds={selectedIds}
+          showDeleted={showDeleted}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          isColumnVisible={isColumnVisible}
+          columnRegistry={columnRegistry}
+          customFieldsById={customFieldsById}
+          statusConfig={statusConfig}
+          descriptor={descriptor}
+          reducedMotion={reducedMotion}
+          onSelectOne={onSelectOne}
+          onView={onView}
+          onEdit={onEdit}
+          onRequestDelete={onRequestDelete}
+          onRestore={onRestore}
+          onSms={onSms}
+          onWhatsApp={onWhatsApp}
+          onEmail={onEmail}
+        />
+      )}
     />
   );
 }

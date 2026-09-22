@@ -7,6 +7,7 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { FORM_CARD } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 export interface ListFieldCardProps {
   id: string;
@@ -35,15 +36,16 @@ export function ListFieldCard({
   removeLabel,
   children,
 }: ListFieldCardProps): React.JSX.Element {
+  const reducedMotion = useReducedMotion();
   const hasHeaderContent = Boolean(Icon || label || typeSelect || headerExtras);
 
   return (
     <motion.div
       key={id}
-      initial={{ opacity: 0, y: 10 }}
+      initial={reducedMotion ? false : { opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ duration: 0.15 }}
+      exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
+      transition={reducedMotion ? { duration: 0 } : { duration: 0.15 }}
       style={{ zIndex: 100 - index }}
       className={cn(FORM_CARD, "p-4.5 space-y-4", CARD_STRIPE_INSET)}
     >

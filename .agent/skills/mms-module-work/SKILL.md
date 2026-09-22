@@ -38,6 +38,7 @@ metadata:
    - **Optimistic Undo Toast**: Single-record deletions trigger an instant TanStack Query cache hide with a 5–10s Undo toast triggering `POST /:id/restore` without forcing navigation to trash.
    - **Retention Expiry Countdown**: Render countdown badge in trash directory and drawer (`⚠️ Purges in N days` if $\le 7$ days, or `Archived indefinitely` if null).
 9. §7: `ErrorState`+retry+hint on list `isError`; directory empties via `ModuleWorkDirectoryEmpty` (`title` via `t()`; `compact` when dense; Clear Filters / Show Active CTAs — Teachers uses `teachers.noTeachersMatchFilters` / `teachers.noDeletedTeachers` / `teachers.tryAdjustingFilters` / `teachers.clickAddTeacher` / `teachers.emptyDirectoryReadOnly` / `teachers.clearFilters`); Cmd/Ctrl+N when `canWrite` && !trash; await `mutateAsync` before close; bulk selection via floating/inline `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` / Messaging) on list/parent (not toolbar-inline trash); column gates via `isColumnVisible` into table/cards.
+10b. **Directory Card Primitives & `useWorkCardAction` (mandatory for all Work card `renderItem`)**: Standardize card rendering on `<DirectoryCard>` / `<DirectoryEntityCard>` and bottom action clusters on `<DirectoryCardFooterActions>` (pairing View button with `contacts.actionViewShort` + overflow `ModuleRowActionsMenu`, enforcing 44×44px touch targets). Every domain Work card that has per-card selection, view, or keyboard handling MUST use `useWorkCardAction<TEntity>` (from `@/hooks/useWorkCardAction`) inside an extracted card sub-component. This hook derives `isSelected`, stabilises `onSelect`/`onView`/`onEdit`/`onKeyDown(Space/Enter)`, and supplies standardized `cardProps`. Selection state authority remains in `useWorkDirectoryController`. Attach `cardProps` to the `DirectoryEntityCard` (or pass `actionState={actionState}` into `DirectoryCard`).
 10. **Column layout**: `useModuleColumnLayout` — merge/local-width rules in rule §3 (do not restate). Pass `isColumnVisible` through content — ban `visibleColumns` boolean object fans.
 11. **Mandatory Work table & list virtualization**: always virtualize DOM rows when rendered items > 30 using `@tanstack/react-virtual` (following `ContactsListDesktopTable.tsx`) — ban unvirtualized rendering of long collections — `mms-performance.md`.
 12. Command/report KPI **StatCard strips** → `ModuleCommandMetricsGrid` when adding metrics — `mms-ui-ux-design.md`.
@@ -69,6 +70,10 @@ metadata:
 - [ ] Column widths persist — local + `/column-preferences`; merge preserves device widths
 - [ ] Copy via t(); no raw fetch('/api/...')
 - [ ] Mandatory virtualization: `@tanstack/react-virtual` for tables/lists/cards > 30 items (`mms-performance.md`); card rows `< md` and/or `overflow-x-auto` tables; touch ≥ 44px (`mms-ui-ux-design.md` §4)
+- [ ] Work cards: standardize on `DirectoryCard` / `DirectoryEntityCard` + `DirectoryCardFooterActions`; each renderItem extracts a card sub-component calling `useWorkCardAction` — no inline `isSelected` derivation or `onKeyDown` in closures
+- [ ] Work card metadata uses `DirectoryCardMetaGrid` + `DirectoryCardMetaTile` (not `StatGrid`/`StatRow`)
+- [ ] `DirectoryCardFooter` / `DirectoryCardFooterActions` rendered unconditionally (with `contacts.actionViewShort` and min 44×44px touch floor)
+- [ ] Card spacing consistency: zero child-level `ms-1`, `ps-1`, or `ms-0.5` offsets; rely on `DirectoryEntityCard` container insets (`CARD_STRIPE_INSET`) and flex/grid gaps
 ```
 
 ## Do Not
@@ -83,6 +88,11 @@ metadata:
 - Show Add/Create or Export CTAs when browsing trash mode.
 - Dual CSS breakpoint render + separate viewMode override for the same directory.
 - Overwrite local column widths with server prefs that omit `width`.
+- Inline per-card selection toggles, `isSelected` derivation, or `onKeyDown` handlers directly in `renderItem` closures — always extract a card sub-component and use `useWorkCardAction`.
+- Ad-hoc card chrome bypassing `DirectoryCard` / `DirectoryEntityCard` or omitting `DirectoryCardFooterActions`.
+- Use `StatGrid`/`StatRow` (`<dl>/<dt>/<dd>`) for Work card metadata — use `DirectoryCardMetaGrid` + `DirectoryCardMetaTile` instead.
+- Omit `DirectoryCardFooter` conditionally for permission reasons — render it unconditionally (empty trailing is fine) to preserve the border-divider chrome.
+- Inject child-level micro-margins (`ms-1`, `ps-1`, `ms-0.5`) inside card rows or metadata grids — let the card container (`CARD_STRIPE_INSET`) and gap tokens control alignment.
 
 ## Done
 

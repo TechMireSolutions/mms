@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { GripVertical, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 /** Props for the report builder selected-field row. */
 export interface DraggableFieldProps {
@@ -35,13 +36,15 @@ export function DraggableField({
   isLast,
 }: DraggableFieldProps): JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
+
   return (
     <motion.div
-      layout
-      initial={{ opacity: 0, y: -4 }}
+      layout={!reducedMotion}
+      initial={reducedMotion ? false : { opacity: 0, y: -4 }}
       animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, scale: 0.95 }}
-      transition={{ type: "spring", stiffness: 500, damping: 30 }}
+      exit={reducedMotion ? { opacity: 0 } : { opacity: 0, scale: 0.95 }}
+      transition={reducedMotion ? { duration: 0 } : { type: "spring", stiffness: 500, damping: 30 }}
       className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl border border-border bg-card/60 backdrop-blur-md hover:bg-card/90 transition-colors group shadow-sm"
     >
       <div className="flex items-center gap-2.5 min-w-0">

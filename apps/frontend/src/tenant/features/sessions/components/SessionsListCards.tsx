@@ -41,8 +41,6 @@ export function SessionsListCards({
     plural: "sessions.table.sessions",
   });
 
-  const selectedSet = new Set(selectedIds);
-
   return (
     <ModuleDirectoryCards
       items={sessions}
@@ -55,28 +53,25 @@ export function SessionsListCards({
       selectedCountLabel={t("sessions.selectedCount", { count: selectedIds.length })}
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="sessions-select-cards"
-      renderItem={(sessionItem) => {
-        const isSelected = selectedSet.has(sessionItem.id);
-        return (
-          <SessionCard
-            key={sessionItem.id}
-            session={sessionItem}
-            isSelected={isSelected}
-            canSelectSessions={canSelectSessions}
-            showDeleted={showDeleted}
-            canDelete={canDelete}
-            isColumnVisible={isColumnVisible}
-            columnRegistry={columnRegistry}
-            statusConfig={statusConfig}
-            typeConfig={typeConfig}
-            onView={onOpenDetail}
-            onToggleSelectedSession={onToggleSelectedSession}
-            onRequestDelete={onRequestDelete}
-            onRestore={onRestore}
-            reducedMotion={reducedMotion}
-          />
-        );
-      }}
+      renderItem={(sessionItem) => (
+        <SessionCard
+          key={sessionItem.id}
+          session={sessionItem}
+          selectedIds={selectedIds}
+          canSelectSessions={canSelectSessions}
+          showDeleted={showDeleted}
+          canDelete={canDelete}
+          isColumnVisible={isColumnVisible}
+          columnRegistry={columnRegistry}
+          statusConfig={statusConfig}
+          typeConfig={typeConfig}
+          onView={onOpenDetail}
+          onToggleSelectedSession={onToggleSelectedSession}
+          onRequestDelete={onRequestDelete}
+          onRestore={onRestore}
+          reducedMotion={reducedMotion}
+        />
+      )}
     />
   );
 }

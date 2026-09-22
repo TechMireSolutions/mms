@@ -15,7 +15,9 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { MessagingTemplateActionButtons } from "./MessagingTemplateActionButtons";
 
@@ -84,7 +86,10 @@ export const MessagingTemplateList = (function MessagingTemplateList({
         {/* Mobile cards */}
         <div className="space-y-3 p-3 md:hidden">
           {templates.map((template) => (
-            <article key={template.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
+            <DirectoryEntityCard
+              key={template.id}
+              className="space-y-3 p-4"
+            >
               <div className="flex min-w-0 items-start justify-between gap-3">
                 <div className="min-w-0">
                   <h4 className="truncate text-sm font-semibold text-foreground">
@@ -98,21 +103,23 @@ export const MessagingTemplateList = (function MessagingTemplateList({
                 </div>
                 <StatusBadge status={template.category || "general"} config={categoryBadgeConfig} size="sm" />
               </div>
-              <div>
+              <div className="rounded-lg bg-muted/40 p-2.5">
                 <p className="text-xs font-semibold text-muted-foreground">{t("messaging.templateCopy")}</p>
-                <p className="text-xs text-muted-foreground">{template.body}</p>
+                <p className="text-xs text-foreground mt-0.5 whitespace-pre-wrap">{template.body}</p>
               </div>
-              <div className="flex flex-wrap items-center">
-                <MessagingTemplateActionButtons
-                  template={template}
-                  canWrite={canWrite}
-                  onCopy={onCopy}
-                  onDuplicate={onDuplicate}
-                  onEdit={onEdit}
-                  onDeleteRequest={onDeleteRequest}
-                />
-              </div>
-            </article>
+              <DirectoryCardFooterActions
+                actions={
+                  <MessagingTemplateActionButtons
+                    template={template}
+                    canWrite={canWrite}
+                    onCopy={onCopy}
+                    onDuplicate={onDuplicate}
+                    onEdit={onEdit}
+                    onDeleteRequest={onDeleteRequest}
+                  />
+                }
+              />
+            </DirectoryEntityCard>
           ))}
           {templates.length === 0 && <EmptyState title={t("messaging.noTemplates")} compact />}
         </div>

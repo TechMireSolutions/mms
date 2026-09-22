@@ -1,7 +1,6 @@
 import type { Contact } from "@mms/shared";
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
-import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { ContactsRowActions } from "@/tenant/features/contacts/components/ContactsRowActions";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -38,30 +37,26 @@ export function ContactCardActions({
   const { t } = useTranslation();
 
   return (
-    <DirectoryCardFooter
-      trailing={
-        <>
-          <DirectoryCardViewButton
-            label={t("contacts.actionViewShort")}
-            ariaLabel={`${t("contacts.table.viewProfile")} - ${displayName}`}
-            onClick={() => onView?.(contact)}
-          />
-          <ContactsRowActions
-            contact={contact}
-            onView={onView}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onRestore={onRestore}
-            onWhatsApp={onWhatsApp}
-            onSms={onSms}
-            onEmail={onEmail}
-            showArchived={showArchived}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            hideViewItem={Boolean(onView)}
-            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
-          />
-        </>
+    <DirectoryCardFooterActions
+      onView={onView ? () => onView(contact) : undefined}
+      viewLabel={t("contacts.actionViewShort")}
+      viewAriaLabel={`${t("contacts.table.viewProfile")} - ${displayName}`}
+      overflowActions={
+        <ContactsRowActions
+          contact={contact}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onWhatsApp={onWhatsApp}
+          onSms={onSms}
+          onEmail={onEmail}
+          showArchived={showArchived}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          hideViewItem={Boolean(onView)}
+          triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+        />
       }
     />
   );

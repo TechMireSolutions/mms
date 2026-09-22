@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import type { CategorizedKPIItem } from './kpiSummaryTypes';
 
 const COLOR = {
@@ -56,6 +57,7 @@ interface KPICardsGridProps {
 
 export function KPICardsGrid({ cards, onAddCustom }: KPICardsGridProps): JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   return (
     <div className="grid grid-cols-2 gap-3 font-sans sm:grid-cols-4 lg:grid-cols-8">
       {cards.map((kpi, index) => {
@@ -65,9 +67,9 @@ export function KPICardsGrid({ cards, onAddCustom }: KPICardsGridProps): JSX.Ele
         return (
           <motion.article
             key={kpi.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.04 }}
+            transition={reducedMotion ? { duration: 0 } : { delay: index * 0.04 }}
             className="group flex min-h-card-sm flex-col justify-between rounded-2xl border border-border bg-card/60 p-3.5 text-start shadow-sm backdrop-blur-md transition-all hover:border-primary/20 hover:shadow-md"
           >
             <header className="flex select-none items-center justify-between gap-1.5">

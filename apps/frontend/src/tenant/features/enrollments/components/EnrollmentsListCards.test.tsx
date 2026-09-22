@@ -74,5 +74,37 @@ describe("EnrollmentsListCards Component", () => {
 
     expect(html).toContain("Ali Hassan");
     expect(html).toContain("enrollments.actions.viewShort");
+    expect(html).toContain('role="article"');
+    expect(html).toContain('tabindex="0"');
+    expect(html).toContain('aria-selected="false"');
+  });
+
+  it("renders selected card when id is in selectedIds", () => {
+    const html = renderToStaticMarkup(
+      <EnrollmentsListCards
+        viewMode="cards"
+        enrollments={mockEnrollments}
+        students={[]}
+        isColumnVisible={() => true}
+        columnRegistry={[]}
+        canSelectEnrollments={true}
+        selectedIds={["enr-1"]}
+        allVisibleSelected={true}
+        someVisibleSelected={false}
+        canWrite={true}
+        canDelete={true}
+        showDeleted={false}
+        statusConfig={{}}
+        paymentConfig={{}}
+        formatCurrency={(val) => `$${val}`}
+        onView={vi.fn()}
+        onCancel={vi.fn()}
+        onToggleSelectAll={vi.fn()}
+        onToggleSelectedEnrollment={vi.fn()}
+        openComposer={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('aria-selected="true"');
   });
 });

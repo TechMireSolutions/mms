@@ -7,6 +7,7 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { formatDate, type AppTranslationKey, type GenericSavedReport } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { SAVED_REPORT_CATEGORY_BADGE_CLS } from "./savedReportsConstants";
 
@@ -21,11 +22,12 @@ interface SavedReportCardProps {
 export function SavedReportCard({ report, onRun, onDelete }: SavedReportCardProps): React.JSX.Element {
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
+  const reducedMotion = useReducedMotion();
 
   return (
     <MotionCard
-      layout
-      whileHover={{ y: -4, scale: 1.015 }}
+      layout={!reducedMotion}
+      whileHover={reducedMotion ? undefined : { y: -4, scale: 1.015 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
       className="flex flex-col gap-3 text-start group cursor-pointer hover:shadow-surface-lg p-5"
     >
@@ -63,20 +65,22 @@ export function SavedReportCard({ report, onRun, onDelete }: SavedReportCardProp
             variant="ghost"
             size="sm"
             onClick={() => void onRun(report)}
-            className="px-2 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 gap-1 cursor-pointer"
+            className="min-h-11 px-3 text-xs font-medium text-primary hover:text-primary hover:bg-primary/10 gap-1.5 cursor-pointer"
             type="button"
+            aria-label={`${t("reports.saved.run")}: ${report.name}`}
           >
-            <Play className="w-3 h-3" /> {t("reports.saved.run")}
+            <Play className="w-3.5 h-3.5" aria-hidden /> {t("reports.saved.run")}
           </Button>
         )}
         <Button
           variant="ghost"
           size="sm"
           onClick={() => void onDelete(report.id)}
-          className="px-2 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1 ms-auto cursor-pointer"
+          className="min-h-11 px-3 text-xs font-medium text-muted-foreground hover:text-destructive hover:bg-destructive/10 gap-1.5 ms-auto cursor-pointer"
           type="button"
+          aria-label={`${t("reports.saved.delete")}: ${report.name}`}
         >
-          <Trash2 className="w-3 h-3" /> {t("reports.saved.delete")}
+          <Trash2 className="w-3.5 h-3.5" aria-hidden /> {t("reports.saved.delete")}
         </Button>
       </div>
     </MotionCard>

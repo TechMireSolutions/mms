@@ -78,7 +78,6 @@ export function PaymentLogHeader({
 
   return (
     <CardTitleBar
-      inset
       icon={<CreditCard className="h-4 w-4 text-muted-foreground" />}
       title={t("finance.paymentLog")}
       actions={

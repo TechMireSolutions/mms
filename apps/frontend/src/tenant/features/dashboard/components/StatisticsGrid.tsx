@@ -4,6 +4,7 @@ import { Trash2, Plus, Pencil } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { StatCardBody } from "@/components/ui/StatCardBody";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { resolveCardVisuals } from "@/lib/dashboardWidgetColors";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import type { StatItem } from "@/lib/dashboardWidgets";
@@ -37,6 +38,7 @@ export function StatisticsGrid({
   onResetCards,
 }: StatisticsGridProps): React.JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   const customCardSet = (() => new Set(customCardIds))();
 
   if (isLoading) {
@@ -89,12 +91,18 @@ export function StatisticsGrid({
         const hasPositiveTrend = statItem.trend >= 0;
         const isCustomCard = customCardSet.has(statItem.id);
 
+        const motionProps = reducedMotion
+          ? { initial: false, animate: { opacity: 1, y: 0 } }
+          : {
+              initial: { opacity: 0, y: 16 },
+              animate: { opacity: 1, y: 0 },
+              transition: { delay: statIndex * 0.05, duration: 0.35, ease: "easeOut" as const },
+            };
+
         return (
           <MotionWidgetCard
             key={statItem.id}
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: statIndex * 0.05, duration: 0.35, ease: "easeOut" }}
+            {...motionProps}
             accentColor={accent}
             className="p-4.5 md:p-5 px-5.5 flex flex-col justify-between"
           >

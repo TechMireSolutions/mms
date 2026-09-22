@@ -1,10 +1,8 @@
-import type { Student } from "@mms/shared";
+import type { Student, toMessagingRecipient } from "@mms/shared";
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
-import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentsRowActions } from "@/tenant/features/students/components/StudentsRowActions";
-import type { StudentsListContentMessagingRecipient } from "@/tenant/features/students/components/studentsListTypes";
 
 export interface StudentCardActionsProps {
   student: Student;
@@ -16,15 +14,15 @@ export interface StudentCardActionsProps {
   canWriteMessaging?: boolean;
   onViewStudent: (student: Student) => void;
   onEdit: (student: Student) => void;
-  onDelete: (id: string, deletionReason?: string) => void;
+  onDelete: (id: string) => void;
   onRestore?: (id: string) => void;
   onOpenComposer?: (
-    mode: "whatsapp" | "sms" | "email",
-    recipients: StudentsListContentMessagingRecipient[],
+    channel: "sms" | "whatsapp" | "email",
+    recipients: ReturnType<typeof toMessagingRecipient>[],
   ) => void;
 }
 
-/** Contacts-shaped card footer: face messaging + View + overflow menu. */
+/** Contacts-shaped card footer: View + remaining icon actions. */
 export function StudentCardActions({
   student,
   studentId,
@@ -42,32 +40,28 @@ export function StudentCardActions({
   const { t } = useTranslation();
 
   return (
-    <DirectoryCardFooter
-      trailing={
-        <>
-          <DirectoryCardViewButton
-            label={t("students.actionViewShort")}
-            ariaLabel={`${t("students.list.viewProfile")} - ${displayName}`}
-            onClick={() => onViewStudent(student)}
-          />
-          <StudentsRowActions
-            student={student}
-            studentId={studentId}
-            viewingDeleted={viewingDeleted}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            includeMessaging={Boolean(onOpenComposer) && canWriteMessaging && !viewingDeleted}
-            hideViewItem
-            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
-            contentClassName="w-40"
-            iconClassName="w-3.5 h-3.5"
-            onViewStudent={onViewStudent}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onRestore={onRestore}
-            onOpenComposer={onOpenComposer}
-          />
-        </>
+    <DirectoryCardFooterActions
+      onView={() => onViewStudent(student)}
+      viewLabel={t("students.actionViewShort")}
+      viewAriaLabel={`${t("students.list.viewProfile")} - ${displayName}`}
+      overflowActions={
+        <StudentsRowActions
+          student={student}
+          studentId={studentId}
+          viewingDeleted={viewingDeleted}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          includeMessaging={Boolean(onOpenComposer) && canWriteMessaging && !viewingDeleted}
+          hideViewItem
+          triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+          contentClassName="w-40"
+          iconClassName="w-3.5 h-3.5"
+          onViewStudent={onViewStudent}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onOpenComposer={onOpenComposer}
+        />
       }
     />
   );
