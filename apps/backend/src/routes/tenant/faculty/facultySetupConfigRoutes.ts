@@ -18,7 +18,7 @@ import {
   loadFacultyModulePreferences,
   saveFacultyModulePreferences,
 } from '../../../faculty/use-cases/facultyPreferencesService.js';
-import { previewNextEmployeeId } from '../../../faculty/use-cases/teacherEmployeeIdService.js';
+import { previewNextEmployeeId } from '../../../faculty/use-cases/facultyEmployeeIdService.js';
 import { auditFaculty } from './facultyRouteHelpers.js';
 
 /** Faculty Setup field-config + preferences (typed FORCE-RLS tables). */

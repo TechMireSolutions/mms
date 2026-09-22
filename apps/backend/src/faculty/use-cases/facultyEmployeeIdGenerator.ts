@@ -3,15 +3,15 @@ import {
   formatDeterministicEmployeeId,
   DEFAULT_TEACHERS_SETTINGS,
 } from '@mms/shared';
-import { teacherSetupConfig } from '../../db/schema/faculty.js';
+import { facultySetupConfig } from '../../db/schema/faculty.js';
 import { withTenant, type TenantTransaction } from '../../db/tenant-context.js';
-import type { NextEmployeeIdResult } from './teacherEmployeeIdService.js';
+import type { NextEmployeeIdResult } from './facultyEmployeeIdService.js';
 
 /**
- * Atomically generates the next employee ID using SELECT ... FOR UPDATE on teacher_setup_config.
+ * Atomically generates the next faculty employee ID using SELECT ... FOR UPDATE on faculty_setup_config.
  * Handles annual rollover: when the year changes, sequence resets to 1.
  */
-export async function generateNextEmployeeId(
+export async function generateNextFacultyEmployeeId(
   tenant: string,
   txClient?: TenantTransaction,
 ): Promise<NextEmployeeIdResult> {
@@ -42,13 +42,13 @@ export async function generateNextEmployeeId(
     // Lock existing row or insert default
     let [row] = await tx
       .select()
-      .from(teacherSetupConfig)
-      .where(eq(teacherSetupConfig.workspaceSubdomain, subdomain))
+      .from(facultySetupConfig)
+      .where(eq(facultySetupConfig.workspaceSubdomain, subdomain))
       .for('update');
 
     if (!row) {
       await tx
-        .insert(teacherSetupConfig)
+        .insert(facultySetupConfig)
         .values({
           workspaceSubdomain: subdomain,
           prefix: DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix,
@@ -63,8 +63,8 @@ export async function generateNextEmployeeId(
 
       [row] = await tx
         .select()
-        .from(teacherSetupConfig)
-        .where(eq(teacherSetupConfig.workspaceSubdomain, subdomain))
+        .from(facultySetupConfig)
+        .where(eq(facultySetupConfig.workspaceSubdomain, subdomain))
         .for('update');
     }
 
@@ -88,13 +88,13 @@ export async function generateNextEmployeeId(
     }
 
     await tx
-      .update(teacherSetupConfig)
+      .update(facultySetupConfig)
       .set({
         currentSequence: nextSeq,
         lastYear: yearToSave,
         updatedAt: new Date(),
       })
-      .where(eq(teacherSetupConfig.workspaceSubdomain, subdomain));
+      .where(eq(facultySetupConfig.workspaceSubdomain, subdomain));
 
     const employeeId = formatDeterministicEmployeeId(
       nextSeq,
@@ -119,3 +119,6 @@ export async function generateNextEmployeeId(
   }
   return await withTenant(subdomain, executeAtomicIncrement);
 }
+
+export const generateNextEmployeeId = generateNextFacultyEmployeeId;
+export const generateNextTeacherEmployeeId = generateNextFacultyEmployeeId;

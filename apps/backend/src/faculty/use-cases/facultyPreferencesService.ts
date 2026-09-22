@@ -9,9 +9,9 @@ import {
 import { createModulePreferencesService } from '../../lib/createModulePreferencesService.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import {
-  getTeacherSetupConfig,
-  updateTeacherSetupConfig,
-} from './teacherEmployeeIdService.js';
+  getFacultySetupConfig,
+  updateFacultySetupConfig,
+} from './facultyEmployeeIdService.js';
 
 const service = createModulePreferencesService<TeacherModulePreferences>({
   broadcastKey: 'teachers',
@@ -25,7 +25,7 @@ export const loadFacultyModulePreferences = async () => {
   const tenant = getRequestTenant();
   if (tenant) {
     try {
-      const config = await getTeacherSetupConfig(tenant);
+      const config = await getFacultySetupConfig(tenant);
       return {
         ...prefs,
         employeeIdPrefix: config.prefix,
@@ -48,7 +48,7 @@ export const saveFacultyModulePreferences = async (preferences: TeacherModulePre
   const tenant = getRequestTenant();
   if (tenant) {
     try {
-      await updateTeacherSetupConfig(tenant, preferences);
+      await updateFacultySetupConfig(tenant, preferences);
     } catch {
       // Best-effort sync to dedicated sequence table
     }

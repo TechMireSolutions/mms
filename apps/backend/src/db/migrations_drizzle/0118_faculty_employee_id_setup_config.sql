@@ -1,7 +1,7 @@
 -- MMS Forward-only Migration: 0118_faculty_employee_id_setup_config.sql
--- Table teacher_setup_config for deterministic, concurrency-safe employee ID generation.
+-- Table faculty_setup_config for deterministic, concurrency-safe employee ID generation.
 
-CREATE TABLE IF NOT EXISTS "teacher_setup_config" (
+CREATE TABLE IF NOT EXISTS "faculty_setup_config" (
 	"workspace_subdomain" text NOT NULL,
 	"prefix" varchar(20) DEFAULT 'FAC' NOT NULL,
 	"year_format" varchar(10) DEFAULT 'YYYY' NOT NULL,
@@ -10,18 +10,18 @@ CREATE TABLE IF NOT EXISTS "teacher_setup_config" (
 	"current_sequence" integer DEFAULT 0 NOT NULL,
 	"last_year" integer DEFAULT 2026 NOT NULL,
 	"updated_at" timestamp with time zone DEFAULT now() NOT NULL,
-	CONSTRAINT "teacher_setup_config_workspace_subdomain_pk" PRIMARY KEY("workspace_subdomain")
+	CONSTRAINT "faculty_setup_config_workspace_subdomain_pk" PRIMARY KEY("workspace_subdomain")
 );
 --> statement-breakpoint
-ALTER TABLE "teacher_setup_config" ADD CONSTRAINT "teacher_setup_config_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;
+ALTER TABLE "faculty_setup_config" ADD CONSTRAINT "faculty_setup_config_workspace_subdomain_workspaces_subdomain_fk" FOREIGN KEY ("workspace_subdomain") REFERENCES "public"."workspaces"("subdomain") ON DELETE cascade ON UPDATE no action;
 --> statement-breakpoint
-ALTER TABLE "teacher_setup_config" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE "faculty_setup_config" ENABLE ROW LEVEL SECURITY;
 --> statement-breakpoint
-ALTER TABLE "teacher_setup_config" FORCE ROW LEVEL SECURITY;
+ALTER TABLE "faculty_setup_config" FORCE ROW LEVEL SECURITY;
 --> statement-breakpoint
-DROP POLICY IF EXISTS tenant_isolation_policy ON "teacher_setup_config";
+DROP POLICY IF EXISTS tenant_isolation_policy ON "faculty_setup_config";
 --> statement-breakpoint
-CREATE POLICY tenant_isolation_policy ON "teacher_setup_config" FOR ALL USING (
+CREATE POLICY tenant_isolation_policy ON "faculty_setup_config" FOR ALL USING (
   current_setting('app.rls_bypass', true) = 'on'
   OR workspace_subdomain = NULLIF(current_setting('app.current_tenant', true), '')
 ) WITH CHECK (
@@ -29,4 +29,4 @@ CREATE POLICY tenant_isolation_policy ON "teacher_setup_config" FOR ALL USING (
   OR workspace_subdomain = NULLIF(current_setting('app.current_tenant', true), '')
 );
 --> statement-breakpoint
-CREATE OR REPLACE VIEW faculty_setup_config AS SELECT * FROM teacher_setup_config;
+CREATE OR REPLACE VIEW teacher_setup_config AS SELECT * FROM faculty_setup_config;

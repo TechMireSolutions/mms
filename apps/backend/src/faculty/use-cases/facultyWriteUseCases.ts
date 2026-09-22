@@ -6,7 +6,7 @@ import type { FacultyRepository as TeachersRepository } from '../repository/facu
 import { facultyRepository as teachersRepository } from '../repository/facultyRepositoryAdapter.js';
 import { mergeTeacherPatch, prepareTeacherRecord } from './facultyNormalizeUseCases.js';
 import { ensureFacultyDesignationLookup } from './facultyLookupsService.js';
-import { generateNextEmployeeId } from './teacherEmployeeIdService.js';
+import { generateNextEmployeeId } from './facultyEmployeeIdService.js';
 
 export interface CreateTeacherResult {
   record: TeacherRecord;

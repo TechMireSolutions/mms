@@ -118,9 +118,9 @@ export const facultyModulePreferences = pgTable('faculty_module_preferences', {
 ]);
 
 /**
- * Teacher Setup Config — deterministic dynamic Employee ID generation engine state.
+ * Faculty Setup Config — deterministic dynamic Employee ID generation engine state.
  */
-export const teacherSetupConfig = pgTable('teacher_setup_config', {
+export const facultySetupConfig = pgTable('faculty_setup_config', {
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
   prefix: varchar('prefix', { length: 20 }).notNull().default('FAC'),
   yearFormat: varchar('year_format', { length: 10 }).notNull().default('YYYY'),
@@ -133,7 +133,7 @@ export const teacherSetupConfig = pgTable('teacher_setup_config', {
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
 
-export const facultySetupConfig = teacherSetupConfig;
+export const teacherSetupConfig = facultySetupConfig;
 
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
@@ -147,10 +147,10 @@ export type FacultyFieldConfigsRow = typeof facultyFieldConfigs.$inferSelect;
 export type InsertFacultyFieldConfigsRow = typeof facultyFieldConfigs.$inferInsert;
 export type FacultyModulePreferencesRow = typeof facultyModulePreferences.$inferSelect;
 export type InsertFacultyModulePreferencesRow = typeof facultyModulePreferences.$inferInsert;
-export type TeacherSetupConfigRow = typeof teacherSetupConfig.$inferSelect;
-export type InsertTeacherSetupConfigRow = typeof teacherSetupConfig.$inferInsert;
-export type FacultySetupConfigRow = TeacherSetupConfigRow;
-export type InsertFacultySetupConfigRow = InsertTeacherSetupConfigRow;
+export type FacultySetupConfigRow = typeof facultySetupConfig.$inferSelect;
+export type InsertFacultySetupConfigRow = typeof facultySetupConfig.$inferInsert;
+export type TeacherSetupConfigRow = FacultySetupConfigRow;
+export type InsertTeacherSetupConfigRow = InsertFacultySetupConfigRow;
 
 /* ========================================================================= */
 /*                    BACKWARD COMPATIBILITY ALIASES                        */

@@ -1,14 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { formatDeterministicEmployeeId } from '@mms/shared';
 import {
+  getFacultySetupConfig,
+  updateFacultySetupConfig,
+  previewNextFacultyEmployeeId,
+  generateNextFacultyEmployeeId,
   getTeacherSetupConfig,
   updateTeacherSetupConfig,
   previewNextEmployeeId,
   generateNextEmployeeId,
-} from '../faculty/use-cases/teacherEmployeeIdService.js';
-import type { TeacherSetupConfigRow } from '../db/schema/faculty.js';
+} from '../faculty/use-cases/facultyEmployeeIdService.js';
+import type { FacultySetupConfigRow } from '../db/schema/faculty.js';
 
-describe('teacherEmployeeIdService - formatDeterministicEmployeeId', () => {
+describe('facultyEmployeeIdService - formatDeterministicEmployeeId', () => {
   it('formats deterministic employee ID with default options', () => {
     const id = formatDeterministicEmployeeId(1, {}, new Date(2025, 0, 15));
     expect(id).toBe('FAC20250001');
@@ -68,11 +72,11 @@ describe('teacherEmployeeIdService - formatDeterministicEmployeeId', () => {
   });
 });
 
-describe('teacherEmployeeIdService - DB operations and rollover logic', () => {
+describe('facultyEmployeeIdService - DB operations and rollover logic', () => {
   const currentYear = new Date().getFullYear();
 
   it('returns default fallback config when no DB connection or table row exists', async () => {
-    const config = await getTeacherSetupConfig('demo');
+    const config = await getFacultySetupConfig('demo');
     expect(config.workspaceSubdomain).toBe('demo');
     expect(config.prefix).toBe('FAC');
     expect(config.yearFormat).toBe('YYYY');
@@ -82,14 +86,14 @@ describe('teacherEmployeeIdService - DB operations and rollover logic', () => {
   });
 
   it('previews next employee ID without incrementing state', async () => {
-    const preview = await previewNextEmployeeId('demo');
+    const preview = await previewNextFacultyEmployeeId('demo');
     expect(preview.nextEmployeeId).toContain('FAC');
     expect(preview.config.prefix).toBe('FAC');
     expect(preview.config.sequenceDigits).toBe(4);
   });
 
   it('atomically increments sequence within the same calendar year', async () => {
-    let storedConfig: TeacherSetupConfigRow = {
+    let storedConfig: FacultySetupConfigRow = {
       workspaceSubdomain: 'demo',
       prefix: 'FAC',
       yearFormat: 'YYYY',
@@ -109,7 +113,7 @@ describe('teacherEmployeeIdService - DB operations and rollover logic', () => {
         }),
       }),
       update: () => ({
-        set: (patch: Partial<TeacherSetupConfigRow>) => ({
+        set: (patch: Partial<FacultySetupConfigRow>) => ({
           where: () => {
             storedConfig = { ...storedConfig, ...patch };
             return [storedConfig];
@@ -123,7 +127,7 @@ describe('teacherEmployeeIdService - DB operations and rollover logic', () => {
       }),
     };
 
-    const result = await generateNextEmployeeId('demo', mockTx as never);
+    const result = await generateNextFacultyEmployeeId('demo', mockTx as never);
 
     expect(result.sequence).toBe(100);
     expect(result.year).toBe(currentYear);
@@ -135,7 +139,7 @@ describe('teacherEmployeeIdService - DB operations and rollover logic', () => {
 
   it('handles annual rollover: resets sequence to 1 when year transitions', async () => {
     const previousYear = currentYear - 1;
-    let storedConfig: TeacherSetupConfigRow = {
+    let storedConfig: FacultySetupConfigRow = {
       workspaceSubdomain: 'demo',
       prefix: 'FAC',
       yearFormat: 'YYYY',
@@ -155,7 +159,7 @@ describe('teacherEmployeeIdService - DB operations and rollover logic', () => {
         }),
       }),
       update: () => ({
-        set: (patch: Partial<TeacherSetupConfigRow>) => ({
+        set: (patch: Partial<FacultySetupConfigRow>) => ({
           where: () => {
             storedConfig = { ...storedConfig, ...patch };
             return [storedConfig];
@@ -169,7 +173,7 @@ describe('teacherEmployeeIdService - DB operations and rollover logic', () => {
       }),
     };
 
-    const result = await generateNextEmployeeId('demo', mockTx as never);
+    const result = await generateNextFacultyEmployeeId('demo', mockTx as never);
 
     // Sequence must reset to 1 on year transition (FAC20240999 -> FAC20250001)
     expect(result.sequence).toBe(1);
@@ -180,8 +184,8 @@ describe('teacherEmployeeIdService - DB operations and rollover logic', () => {
     expect(storedConfig.lastYear).toBe(currentYear);
   });
 
-  it('updates teacher setup config correctly with fallback', async () => {
-    const updated = await updateTeacherSetupConfig('demo', {
+  it('updates faculty setup config correctly with fallback', async () => {
+    const updated = await updateFacultySetupConfig('demo', {
       employeeIdPrefix: 'USTADH',
       employeeIdYearFormat: 'YY',
       employeeIdSequenceDigits: 3,
@@ -192,5 +196,15 @@ describe('teacherEmployeeIdService - DB operations and rollover logic', () => {
     expect(updated.yearFormat).toBe('YY');
     expect(updated.sequenceDigits).toBe(3);
     expect(updated.delimiter).toBe('-');
+  });
+
+  it('supports legacy teacher alias functions for backward compatibility', async () => {
+    const config = await getTeacherSetupConfig('demo');
+    expect(config.prefix).toBe('FAC');
+    const preview = await previewNextEmployeeId('demo');
+    expect(preview.config.prefix).toBe('FAC');
+    const updated = await updateTeacherSetupConfig('demo', { employeeIdPrefix: 'TEACH' });
+    expect(updated.prefix).toBe('TEACH');
+    expect(typeof generateNextEmployeeId).toBe('function');
   });
 });
