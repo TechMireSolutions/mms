@@ -1,4 +1,3 @@
-import { withTenant } from '../../../db/tenant-context.js';
 import { canWriteCollection, canReadCollection } from '../../../services/rbacService.js';
 import type { User, facultyContract } from '@mms/shared';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
@@ -17,11 +16,7 @@ export async function handleListDesignations({
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
   try {
-    const designations = await withTenant(
-      String(request.tenant?.id),
-      () => listFacultyDesignations(String(request.tenant?.id)),
-      { readOnly: true },
-    );
+    const designations = await listFacultyDesignations(String(request.tenant?.id));
     return { status: 200 as const, body: { designations } };
   } catch {
     return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list Faculty designations' } };
@@ -38,11 +33,7 @@ export async function handleSaveDesignation({
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
   try {
-    const designation = await withTenant(
-      String(request.tenant?.id),
-      () => saveFacultyDesignation(String(request.tenant?.id), { ...body, id }),
-      { readOnly: false },
-    );
+    const designation = await saveFacultyDesignation(String(request.tenant?.id), { ...body, id });
     return { status: 200 as const, body: { designation } };
   } catch (error) {
     return {
@@ -61,11 +52,7 @@ export async function handleListDesignationHistory({
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
   try {
-    const assignments = await withTenant(
-      String(request.tenant?.id),
-      () => listFacultyDesignationAssignments(String(request.tenant?.id), facultyId),
-      { readOnly: true },
-    );
+    const assignments = await listFacultyDesignationAssignments(String(request.tenant?.id), facultyId);
     return { status: 200 as const, body: { assignments } };
   } catch {
     return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load designation history' } };
@@ -82,10 +69,9 @@ export async function handleSaveDesignationAssignment({
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
   try {
-    const assignment = await withTenant(
+    const assignment = await saveFacultyDesignationAssignment(
       String(request.tenant?.id),
-      () => saveFacultyDesignationAssignment(String(request.tenant?.id), { ...body, id: assignmentId, facultyId }),
-      { readOnly: false },
+      { ...body, id: assignmentId, facultyId },
     );
     return { status: 200 as const, body: { assignment } };
   } catch (error: unknown) {
