@@ -45,7 +45,7 @@ describe("renderTeacherWorkColumnValue", () => {
     expect(result).toBe("Alimiyyah");
   });
 
-  it("renders designation with semantic styling", () => {
+  it("renders designation with semantic badge styling", () => {
     const teacherWithDesignation: Teacher = {
       ...mockTeacher,
       designation: "Head of Quranic Studies",
@@ -54,7 +54,22 @@ describe("renderTeacherWorkColumnValue", () => {
     const html = renderToStaticMarkup(<div>{result}</div>);
 
     expect(html).toContain("Head of Quranic Studies");
-    expect(html).toContain("text-sm font-medium text-foreground");
+    expect(html).toContain("bg-primary/10 text-primary");
+  });
+
+  it("renders reportingFacultyName and subordinateCount", () => {
+    const facultyWithHierarchy: Teacher = {
+      ...mockTeacher,
+      reportingFacultyName: "Dean Ahmad",
+      subordinateCount: 3,
+    };
+    const supervisorResult = renderTeacherWorkColumnValue(facultyWithHierarchy, "reportingFacultyName", baseOptions);
+    const supervisorHtml = renderToStaticMarkup(<div>{supervisorResult}</div>);
+    expect(supervisorHtml).toContain("Dean Ahmad");
+
+    const subResult = renderTeacherWorkColumnValue(facultyWithHierarchy, "subordinateCount", baseOptions);
+    const subHtml = renderToStaticMarkup(<div>{subResult}</div>);
+    expect(subHtml).toContain("3");
   });
 
   it("returns emptyFallback for empty values", () => {

@@ -8,7 +8,7 @@ import {
   ERD_DOMAIN_MESSAGING,
   ERD_DOMAIN_WORKSHOPS,
 } from './erdDomainsOps.js';
-import { ERD_DOMAIN_CONTACTS, ERD_DOMAIN_STUDENTS, ERD_DOMAIN_TEACHERS } from './erdDomainsPeople.js';
+import { ERD_DOMAIN_CONTACTS, ERD_DOMAIN_STUDENTS, ERD_DOMAIN_FACULTY } from './erdDomainsPeople.js';
 import { ERD_DOMAIN_PLATFORM, ERD_DOMAIN_SYSTEM } from './erdDomainsPlatform.js';
 import type { ErdDomain, ErdDomainId } from './erdCatalogTypes.js';
 
@@ -41,6 +41,7 @@ export const ERD_DOMAINS: readonly ErdDomain[] = [
   ERD_DOMAIN_CONTACTS,
   ERD_DOMAIN_ENROLLMENTS,
   ERD_DOMAIN_EXAMINATIONS,
+  ERD_DOMAIN_FACULTY,
   ERD_DOMAIN_FINANCE,
   ERD_DOMAIN_HASANAT,
   ERD_DOMAIN_INVENTORY,
@@ -51,19 +52,19 @@ export const ERD_DOMAINS: readonly ErdDomain[] = [
   ERD_DOMAIN_SESSIONS,
   ERD_DOMAIN_STUDENTS,
   ERD_DOMAIN_SYSTEM,
-  ERD_DOMAIN_TEACHERS,
   ERD_DOMAIN_WORKSHOPS,
 ];
 
-const ERD_DOMAIN_BY_ID = new Map<ErdDomainId, ErdDomain>(
+const ERD_DOMAIN_BY_ID = new Map<string, ErdDomain>(
   ERD_DOMAINS.map((domain) => [domain.id, domain]),
 );
+ERD_DOMAIN_BY_ID.set('teachers', ERD_DOMAIN_FACULTY);
 
 /** Look up a domain ERD by id. */
-export function getErdDomain(id: ErdDomainId): ErdDomain {
+export function getErdDomain(id: ErdDomainId | string): ErdDomain {
   const domain = ERD_DOMAIN_BY_ID.get(id);
   if (!domain) {
-    throw new Error(`Unknown ERD domain: ${id}`);
+    throw new Error(`Unknown ERD domain id: ${id}`);
   }
   return domain;
 }

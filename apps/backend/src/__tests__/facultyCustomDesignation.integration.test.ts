@@ -169,6 +169,7 @@ describe('facultyCustomDesignation - Case-insensitive lookup and persistence', (
       name: 'Sheikh Khalid',
       status: 'active',
       designation: 'Instructor',
+      hierarchyRank: 4,
       createdAt: '2025-01-01T00:00:00Z',
       updatedAt: '2025-01-01T00:00:00Z',
     };

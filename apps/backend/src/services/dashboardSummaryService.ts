@@ -1,5 +1,6 @@
 import type {
   StudentsCommandMetricsSnapshot,
+  FacultyCommandMetricsSnapshot,
   TeachersCommandMetricsSnapshot,
   ContactsCommandMetricsSnapshot,
   SessionsCommandMetricsSnapshot,
@@ -13,7 +14,7 @@ import { getRequestTenant } from '../lib/tenantContext.js';
 import { withTenant } from '../db/tenant-context.js';
 import { redisGet, redisSet, redisKeys } from '../lib/redis.js';
 import { studentUseCases } from '../students/use-cases/studentUseCases.js';
-import { teacherUseCases } from '../faculty/use-cases/facultyUseCases.js';
+import { facultyUseCases } from '../faculty/use-cases/facultyUseCases.js';
 import { contactUseCases } from '../contacts/use-cases/contactUseCases.js';
 import { loadSessionsCommandMetrics } from './sessionService.js';
 import { aggregateAttendanceCommandMetrics } from '../db/repositories/attendanceRepositoryList.js';
@@ -24,6 +25,7 @@ import { loadQuestionBankCommandMetrics } from './questionBankMetricsService.js'
 
 export interface DashboardSummaryResponse {
   students?: StudentsCommandMetricsSnapshot;
+  faculty?: FacultyCommandMetricsSnapshot;
   teachers?: TeachersCommandMetricsSnapshot;
   contacts?: ContactsCommandMetricsSnapshot;
   sessions?: SessionsCommandMetricsSnapshot;
@@ -68,7 +70,7 @@ export async function loadDashboardSummary(
     async () => {
       const [
         students,
-        teachers,
+        facultyData,
         contacts,
         sessions,
         attendance,
@@ -78,7 +80,7 @@ export async function loadDashboardSummary(
         accounting,
       ] = await Promise.all([
         studentUseCases.loadStudentsCommandMetrics(),
-        teacherUseCases.loadTeachersCommandMetrics(),
+        facultyUseCases.loadFacultyCommandMetrics(),
         contactUseCases.loadContactsCommandMetrics(),
         loadSessionsCommandMetrics(),
         aggregateAttendanceCommandMetrics(cleanTenant, { selectedDate: date }),
@@ -90,7 +92,8 @@ export async function loadDashboardSummary(
 
       return {
         students,
-        teachers,
+        faculty: facultyData,
+        teachers: facultyData,
         contacts,
         sessions,
         attendance,

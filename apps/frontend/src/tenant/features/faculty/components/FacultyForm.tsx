@@ -57,6 +57,8 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     handleDuplicateDialogOpenChange,
     confirmDuplicateSave,
     duplicateErrorKeys,
+    supervisorCandidates,
+    hierarchyRankPresets,
   } = useTeacherFormController({ teacher, onClose, onSave });
 
   return (
@@ -115,6 +117,8 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
           getFieldError={getFieldError}
           onDraftChange={updateDraft}
           linkedContact={linkedContact}
+          supervisorCandidates={supervisorCandidates}
+          hierarchyRankPresets={hierarchyRankPresets}
         />
       </FormModal>
       <ConfirmAlertDialog

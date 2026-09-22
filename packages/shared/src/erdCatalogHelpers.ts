@@ -11,7 +11,7 @@ const DOMAIN_ID_SET = new Set<string>(ERD_DOMAIN_IDS);
 
 /** True when `value` is a registered ERD domain id. */
 export function isErdDomainId(value: string): value is ErdDomainId {
-  return DOMAIN_ID_SET.has(value);
+  return DOMAIN_ID_SET.has(value) || value === 'teachers';
 }
 
 /** Tables one hop from `tableName` (inclusive), plus edges that stay inside that set. */

@@ -2,8 +2,6 @@ import type { FastifyPluginAsync } from 'fastify';
 import { withTenant } from '../../../db/tenant-context.js';
 import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../../services/rbacService.js';
 import {
-  FACULTY_MODULE_MANIFEST,
-  roleHasPermission,
   isQueryFlagTrue,
   type Teacher,
   type User,
@@ -18,6 +16,9 @@ import {
   auditFaculty,
   sanitizeOneFacultyForUser,
   sanitizeFacultyForUser,
+  handleDuplicateCheck,
+  handleNextEmployeeId,
+  handleMigrateEmployeeIds,
 } from './facultyRouteHelpers.js';
 
 const s = initServer();
@@ -117,6 +118,9 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
             };
       } catch (error: unknown) {
         request.log.error({ err: error }, 'Failed to create faculty member');
+        if ((error as { statusCode?: number }).statusCode === 400) {
+          return { status: 400 as const, body: { type: 'validation_error', message: error instanceof Error ? error.message : 'Invalid request' } };
+        }
         if ((error as { statusCode?: number }).statusCode === 403) {
           return { status: 403 as const, body: { type: 'forbidden', message: error instanceof Error ? error.message : 'Forbidden' } };
         }
@@ -157,7 +161,11 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
           status: 200 as const,
           body: { success: true as const, faculty: sanitized, teacher: sanitized },
         };
-      } catch {
+      } catch (error: unknown) {
+        request.log.error({ err: error }, 'Failed to update faculty member');
+        if ((error as { statusCode?: number }).statusCode === 400) {
+          return { status: 400 as const, body: { type: 'validation_error', message: error instanceof Error ? error.message : 'Invalid request' } };
+        }
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update faculty member' } };
       }
     },
@@ -169,13 +177,38 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
       try {
         const reason = body?.deletionReason;
-        const deleted = await withTenant(String(request.tenant?.id), () => facultyUseCases.deleteFacultyById(id, String(user.id), reason), { readOnly: false });
+        const reassignSubordinatesTo = body?.reassignSubordinatesTo;
+        const deleted = await withTenant(
+          String(request.tenant?.id),
+          () => reassignSubordinatesTo
+            ? facultyUseCases.deleteFacultyById(id, String(user.id), reason, reassignSubordinatesTo)
+            : facultyUseCases.deleteFacultyById(id, String(user.id), reason),
+          { readOnly: false },
+        );
         if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Faculty member not found' } };
         const reasonNote = reason?.trim() ? ` — ${reason.trim()}` : '';
         await auditFaculty(user, 'faculty.soft_delete', `Soft-deleted faculty member ${id}${reasonNote}`, id);
         return { status: 200 as const, body: { success: true as const } };
-      } catch {
+      } catch (error: unknown) {
+        request.log.error({ err: error }, 'Failed to delete faculty member');
+        if ((error as { statusCode?: number }).statusCode === 409) {
+          return { status: 409 as const, body: { type: 'conflict', message: error instanceof Error ? error.message : 'Subordinate reassignment required' } };
+        }
         return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete faculty member' } };
+      }
+    },
+
+    hierarchyTree: async ({ request }: ContractRouteArgs<typeof facultyContract['hierarchyTree']>): Promise<ContractRouteResponse<typeof facultyContract['hierarchyTree']>> => {
+      const user = request.user as User;
+      if (!canReadCollection(user, 'faculty')) {
+        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+      }
+      try {
+        const result = await withTenant(String(request.tenant?.id), () => facultyUseCases.loadFacultyHierarchyTree(), { readOnly: true });
+        return { status: 200 as const, body: result };
+      } catch (error: unknown) {
+        request.log.error({ err: error }, 'Failed to load faculty hierarchy tree');
+        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load faculty hierarchy tree' } };
       }
     },
 
@@ -223,53 +256,9 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
       }
     },
 
-    duplicateCheck: async ({ body, request }: ContractRouteArgs<typeof facultyContract['duplicateCheck']>): Promise<ContractRouteResponse<typeof facultyContract['duplicateCheck']>> => {
-      const user = request.user as User;
-      if (!canWriteCollection(user, 'faculty')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const result = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.checkFacultyRegistrationDuplicate(body), { readOnly: false });
-        return { status: 200 as const, body: result };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to check duplicate' } };
-      }
-    },
-
-    nextEmployeeId: async ({ query, request }: ContractRouteArgs<typeof facultyContract['nextEmployeeId']>): Promise<ContractRouteResponse<typeof facultyContract['nextEmployeeId']>> => {
-      const user = request.user as User;
-      if (!canReadCollection(user, 'faculty')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const employeeId = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.computeNextFacultyEmployeeIdForSettings({
-            idPrefix: query.prefix,
-            idTemplate: query.template,
-            idDigits: query.digits,
-            idStartSeq: query.startSeq,
-            idRestartAnnually: query.restartAnnually,
-          }), { readOnly: true });
-        return { status: 200 as const, body: { employeeId } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to compute next employee ID' } };
-      }
-    },
-
-    migrateEmployeeIds: async ({ request }: ContractRouteArgs<typeof facultyContract['migrateEmployeeIds']>): Promise<ContractRouteResponse<typeof facultyContract['migrateEmployeeIds']>> => {
-      const user = request.user as User;
-      if (!roleHasPermission(user.role, FACULTY_MODULE_MANIFEST.permissions.setupWrite)) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const result = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.migrateFacultyMissingEmployeeIds(), { readOnly: false });
-        return { status: 200 as const, body: { success: true as const, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate employee IDs' } };
-      }
-    },
+    duplicateCheck: handleDuplicateCheck,
+    nextEmployeeId: handleNextEmployeeId,
+    migrateEmployeeIds: handleMigrateEmployeeIds,
   } as unknown as RouterImplementation<typeof facultyContract>);
 
   await fastify.register(s.plugin(router), {

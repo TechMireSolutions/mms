@@ -6,7 +6,7 @@ import {
 import { teachers } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
-import { teacherRowToRecord } from './facultyRepository.js';
+import { teacherRowToRecord, countSubordinatesBatch } from './facultyRepository.js';
 import { buildListConditions, buildOrderBy } from './facultyRepositoryListQuerySql.js';
 
 const TEACHER_LIST_COLUMNS = {
@@ -19,6 +19,8 @@ const TEACHER_LIST_COLUMNS = {
   specialization: teachers.specialization,
   department: teachers.department,
   designation: teachers.designation,
+  reportingFacultyId: teachers.reportingFacultyId,
+  hierarchyRank: teachers.hierarchyRank,
   qualification: teachers.qualification,
   joinDate: teachers.joinDate,
   deletedAt: teachers.deletedAt,
@@ -54,8 +56,15 @@ export async function listTeachersPage(
       rowMapper: (row) => teacherRowToRecord(row as typeof teachers.$inferSelect),
     });
 
+    const itemIds = result.items.map((t) => String(t.id));
+    const subCounts = await countSubordinatesBatch(subdomain, itemIds);
+    const enriched = result.items.map((t) => ({
+      ...t,
+      subordinateCount: subCounts[String(t.id)] ?? 0,
+    }));
+
     return {
-      teachers: result.items,
+      teachers: enriched,
       total: result.total,
       page: result.page,
       limit: result.limit,

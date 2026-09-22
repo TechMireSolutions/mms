@@ -1,4 +1,10 @@
-import type { Contact, FieldDefinition, Teacher } from "@mms/shared";
+import type {
+  Contact,
+  FieldDefinition,
+  Teacher,
+  Faculty,
+  FacultyHierarchyPreset,
+} from "@mms/shared";
 import {
   TeacherContactSection,
   TeacherEmploymentSection,
@@ -35,6 +41,8 @@ export interface TeacherFormTabContentProps {
   linkedContact?: Contact | null;
   userAccountDraft?: FacultyUserAccountDraft;
   onUserAccountDraftChange?: (draft: FacultyUserAccountDraft) => void;
+  supervisorCandidates?: Faculty[];
+  hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
 }
 
 const DEFAULT_USER_ACCOUNT_DRAFT: FacultyUserAccountDraft = {
@@ -65,6 +73,8 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
   linkedContact,
   userAccountDraft = DEFAULT_USER_ACCOUNT_DRAFT,
   onUserAccountDraftChange = () => {},
+  supervisorCandidates,
+  hierarchyRankPresets,
 }: TeacherFormTabContentProps): React.JSX.Element {
   return (
     <div className="space-y-6 pb-6">
@@ -97,6 +107,8 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
+        supervisorCandidates={supervisorCandidates}
+        hierarchyRankPresets={hierarchyRankPresets}
       />
       <TeacherNotesSection
         notes={teacherDraft.notes}

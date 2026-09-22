@@ -103,4 +103,40 @@ describe("TeacherFormSections Components", () => {
     expect(empHtml).toContain('aria-describedby="employeeId-error"');
     expect(empHtml).toContain("border-destructive");
   });
+
+  it("renders hierarchy rank presets and supervisor picker in TeacherEmploymentSection", () => {
+    const html = renderToStaticMarkup(
+      <TeacherEmploymentSection
+        autoGenerateId={false}
+        errors={{}}
+        fields={{}}
+        idPrefix="FAC-"
+        statusOptions={[{ value: "active", label: "Active" }]}
+        teacherDraft={{
+          employeeId: "FAC-001",
+          status: "active",
+          hierarchyRank: 3,
+          reportingFacultyId: "fac-sup-1",
+        }}
+        supervisorCandidates={[
+          {
+            id: "fac-sup-1",
+            contactId: "cnt-sup-1",
+            name: "Dean Ahmad",
+            hierarchyRank: 1,
+            designation: "Dean",
+            status: "active",
+          } as any,
+        ]}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('id="hierarchyRank"');
+    expect(html).toContain('id="reportingFacultyId"');
+    expect(html).toContain("Dean Ahmad");
+    expect(html).toContain("Rank 1");
+  });
 });

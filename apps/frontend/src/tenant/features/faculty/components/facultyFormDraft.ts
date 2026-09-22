@@ -1,5 +1,14 @@
-import { resolveTeacherStatus, type Teacher, todayISO } from "@mms/shared";
+import { resolveTeacherStatus, type Teacher, type FacultyMember, todayISO } from "@mms/shared";
 import { createModuleFormDraft } from "@/lib/forms/createModuleFormDraft";
+
+export interface FacultyFormControllerOptions {
+  faculty?: FacultyMember;
+  teacher?: Teacher;
+  onClose: () => void;
+  onSave: (faculty: FacultyMember) => void | Promise<void>;
+}
+export type UseTeacherFormControllerOptions = FacultyFormControllerOptions;
+export type UseFacultyFormControllerOptions = FacultyFormControllerOptions;
 
 /** Hydrated / archive chrome — not edited on the Teachers form. */
 const TEACHER_FORM_VOLATILE_KEYS = [
@@ -23,6 +32,8 @@ const { getInitialDraft, draftSnapshot } = createModuleFormDraft<Teacher>({
     specialization: teacher?.specialization ?? (defaultSpecialization as string),
     designation: teacher?.designation ?? "",
     department: teacher?.department ?? "",
+    reportingFacultyId: teacher?.reportingFacultyId ?? null,
+    hierarchyRank: teacher?.hierarchyRank ?? 4,
     status: resolveTeacherStatus(teacher?.status),
     joinDate: teacher?.joinDate ?? todayISO(),
     qualification: teacher?.qualification ?? "",
@@ -71,4 +82,24 @@ export function extractEmployeeId(value: unknown): string {
     }
   }
   return "";
+}
+
+export const DEFAULT_USER_ACCOUNT_DRAFT = {
+  enabled: false,
+  role: "teacher" as const,
+  setupMethod: "password" as const,
+  password: "",
+  forceReset: true,
+};
+
+export function filterSupervisorCandidates(
+  allFaculty: import("@mms/shared").Faculty[],
+  currentId: string | null,
+  currentRank: number,
+): import("@mms/shared").Faculty[] {
+  return allFaculty.filter((f) => {
+    if (currentId && String(f.id) === currentId) return false;
+    const rank = typeof f.hierarchyRank === "number" ? f.hierarchyRank : 4;
+    return rank < currentRank;
+  });
 }

@@ -136,10 +136,30 @@ export const ERD_DOMAIN_SESSIONS: ErdDomain = {
         { name: 'value', type: 'numeric(10,2)', kind: 'column' },
       ],
     },
+    {
+      name: 'session_faculty',
+      columns: [
+        { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
+        { name: 'session_id', type: 'text', kind: 'pk' },
+        { name: 'id', type: 'text', kind: 'pk' },
+        { name: 'faculty_id', type: 'varchar(64)', kind: 'column' },
+        { name: 'faculty_name', type: 'varchar(255)', kind: 'column' },
+        { name: 'role', type: 'varchar(100)', kind: 'column' },
+        { name: 'status', type: 'varchar(50)', kind: 'column' },
+      ],
+    },
   ],
   relationships: [
     {
       fromTable: 'session_classes',
+      fromColumn: 'session_id',
+      toTable: 'sessions',
+      toColumn: 'id',
+      cardinality: 'N:1',
+      onDelete: 'cascade',
+    },
+    {
+      fromTable: 'session_faculty',
       fromColumn: 'session_id',
       toTable: 'sessions',
       toColumn: 'id',

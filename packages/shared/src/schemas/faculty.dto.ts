@@ -33,6 +33,10 @@ export const FACULTY_WRITE_SYSTEM_KEYS: readonly string[] = (() => {
     keys.add(key);
   }
   keys.add('customDesignation');
+  keys.add('reportingFacultyId');
+  keys.add('hierarchyRank');
+  keys.add('reportingFacultyName');
+  keys.add('subordinateCount');
   return [...keys].sort((left, right) => left.localeCompare(right));
 })();
 
@@ -75,6 +79,10 @@ export function buildDynamicFacultySchema(
     department: z.string().nullish(),
     designation: z.string().nullish(),
     customDesignation: z.string().trim().optional(),
+    reportingFacultyId: z.string().nullable().nullish(),
+    hierarchyRank: z.coerce.number().int().min(1).max(99).nullish(),
+    reportingFacultyName: z.string().nullish(),
+    subordinateCount: z.coerce.number().int().min(0).nullish(),
     status: z.string().max(FACULTY_STATUS_WRITE_MAX).nullish(),
     joinDate: z.string().nullish(),
     qualification: z.string().nullish(),

@@ -848,6 +848,13 @@
       "when": 1790000000000,
       "tag": "0120_session_classes_faculty_columns",
       "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1790100000000,
+      "tag": "0121_faculty_hierarchy_and_task_management",
+      "breakpoints": true
     }
   ]
 }

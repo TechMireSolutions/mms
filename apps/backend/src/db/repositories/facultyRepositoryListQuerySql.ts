@@ -138,6 +138,18 @@ export function buildListConditions(subdomain: string, query: TeachersListQuery 
     conditions.push(sql`${specializationExpr()} = ${query.specialization.trim()}`);
   }
 
+  if ((query as { department?: string }).department?.trim()) {
+    conditions.push(sql`lower(trim(COALESCE(${teachers.department}, ''))) = lower(trim(${(query as { department?: string }).department!.trim()}))`);
+  }
+
+  if ((query as { designation?: string }).designation?.trim()) {
+    conditions.push(sql`lower(trim(COALESCE(${teachers.designation}, ''))) = lower(trim(${(query as { designation?: string }).designation!.trim()}))`);
+  }
+
+  if ((query as { reportingFacultyId?: string }).reportingFacultyId?.trim()) {
+    conditions.push(eq(teachers.reportingFacultyId, (query as { reportingFacultyId?: string }).reportingFacultyId!.trim()));
+  }
+
   if (query.gender?.trim()) {
     const genderFilter = query.gender.trim().toLowerCase();
     conditions.push(sql`${linkedContactGenderExpr()} = ${genderFilter}`);

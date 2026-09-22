@@ -40,8 +40,9 @@ export function createFacultyUseCases(repo: FacultyRepository = facultyRepositor
   ) => write.createTeacher(record, repo, options);
   const updateTeacherById = (id: string, record: Parameters<typeof write.updateTeacherById>[1]) =>
     write.updateTeacherById(id, record, repo);
-  const softDeleteTeacherById = (id: string, deletedBy: string, deletionReason?: string) =>
-    softDelete.softDeleteTeacherById(id, deletedBy, deletionReason, repo);
+  const loadFacultyHierarchyTree = () => load.loadHierarchyTree(repo);
+  const softDeleteTeacherById = (id: string, deletedBy: string, deletionReason?: string, reassignSubordinatesTo?: string) =>
+    softDelete.softDeleteTeacherById(id, deletedBy, deletionReason, repo, reassignSubordinatesTo);
   const bulkSoftDeleteTeachers = (ids: string[], deletedBy: string, deletionReason?: string) =>
     softDelete.bulkSoftDeleteTeachers(ids, deletedBy, deletionReason, repo);
   const restoreTeacherById = (id: string, userId?: string) =>
@@ -74,6 +75,7 @@ export function createFacultyUseCases(repo: FacultyRepository = facultyRepositor
     loadFacultyLinkedContactIds: loadTeacherLinkedContactIds,
     loadFacultyCommandMetrics: loadTeachersCommandMetrics,
     loadFacultyWidgetAggregates: loadTeachersWidgetAggregates,
+    loadFacultyHierarchyTree,
     createFaculty: createTeacher,
     updateFacultyById: updateTeacherById,
     softDeleteFacultyById: softDeleteTeacherById,

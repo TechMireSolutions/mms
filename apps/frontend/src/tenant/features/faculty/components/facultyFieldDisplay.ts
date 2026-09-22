@@ -125,6 +125,15 @@ export function resolveTeacherFieldDisplayText(
   if (fieldKey === "designation") {
     return teacher.designation || missing();
   }
+  if (fieldKey === "reportingFacultyId" || fieldKey === "reportingFacultyName") {
+    return teacher.reportingFacultyName || missing();
+  }
+  if (fieldKey === "hierarchyRank") {
+    return teacher.hierarchyRank != null ? String(teacher.hierarchyRank) : missing();
+  }
+  if (fieldKey === "subordinateCount") {
+    return teacher.subordinateCount != null ? String(teacher.subordinateCount) : missing();
+  }
   if (fieldKey === "notes") {
     return teacher.notes || missing();
   }

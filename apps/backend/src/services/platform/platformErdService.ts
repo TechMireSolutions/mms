@@ -16,7 +16,7 @@ import * as systemSchema from '../../db/schema/system.js';
 import * as auditTrailSchema from '../../db/schema/auditTrail.js';
 import * as contactsSchema from '../../db/schema/contacts.js';
 import * as studentsSchema from '../../db/schema/students.js';
-import * as teachersSchema from '../../db/schema/faculty.js';
+import * as facultySchema from '../../db/schema/faculty.js';
 import * as sessionsSchema from '../../db/schema/sessions.js';
 import * as attendanceSchema from '../../db/schema/attendance.js';
 import * as enrollmentsSchema from '../../db/schema/enrollments.js';
@@ -72,6 +72,11 @@ const DOMAIN_REGISTRY: readonly DomainConfig[] = [
     modules: [examinationExamSchema],
   },
   {
+    id: 'faculty',
+    labelKey: 'nav.faculty',
+    modules: [facultySchema],
+  },
+  {
     id: 'finance',
     labelKey: 'nav.finance',
     modules: [financeSchema, financeBillingSchema, financeCollectSchema],
@@ -120,11 +125,6 @@ const DOMAIN_REGISTRY: readonly DomainConfig[] = [
     id: 'system',
     labelKey: 'platform.erdDomainSystem',
     modules: [systemSchema, auditTrailSchema],
-  },
-  {
-    id: 'teachers',
-    labelKey: 'nav.teachers',
-    modules: [teachersSchema],
   },
   {
     id: 'workshops',

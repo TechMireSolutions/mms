@@ -104,6 +104,37 @@ function createFakeRepo() {
       listActiveMissingEmployeeId: vi.fn(async () => []),
       findRegistrationConflict: vi.fn(async () => null),
       bulkUpdateStatusSql: vi.fn(async () => 0),
+      countSubordinates: vi.fn(async (_tenant: string, id: string) => {
+        return [...store.values()].filter(
+          (s) => (s as { reportingFacultyId?: string }).reportingFacultyId === id && !s.deletedAt,
+        ).length;
+      }),
+      countSubordinatesBatch: vi.fn(async (_tenant: string, ids: string[]) => {
+        const counts = new Map<string, number>();
+        ids.forEach((id) => counts.set(id, 0));
+        [...store.values()].forEach((s) => {
+          const sup = (s as { reportingFacultyId?: string }).reportingFacultyId;
+          if (sup && counts.has(sup) && !s.deletedAt) {
+            counts.set(sup, (counts.get(sup) ?? 0) + 1);
+          }
+        });
+        return counts;
+      }),
+      findSubordinates: vi.fn(async (_tenant: string, id: string) => {
+        return [...store.values()].filter(
+          (s) => (s as { reportingFacultyId?: string }).reportingFacultyId === id && !s.deletedAt,
+        );
+      }),
+      reassignSubordinates: vi.fn(async (_tenant: string, oldSupervisorId: string, newSupervisorId: string | null) => {
+        let count = 0;
+        [...store.values()].forEach((s) => {
+          if ((s as { reportingFacultyId?: string }).reportingFacultyId === oldSupervisorId && !s.deletedAt) {
+            (s as { reportingFacultyId?: string | null }).reportingFacultyId = newSupervisorId;
+            count++;
+          }
+        });
+        return count;
+      }),
     } as unknown as TeachersRepository,
   };
 }
@@ -144,8 +175,8 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(typeof record.id).toBe('string');
     expect(String(record.id).length).toBeGreaterThan(0);
     expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ specialization: 'Qaidah' }));
-    expect(mockBroadcastCollection).toHaveBeenCalledTimes(1);
     expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
   it('createTeacher strips contact-owned profile keys (Contacts SSOT)', async () => {
@@ -275,7 +306,8 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(store.get('a')?.deletedBy).toBe('u-admin');
     expect(store.get('a')?.deletionReason).toBe('Left faculty');
     expect(repo.bulkSave).toHaveBeenCalledWith('demo', [expect.objectContaining({ id: 'a' })]);
-    expect(mockBroadcastCollection).toHaveBeenCalledTimes(1);
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
   it('restoreTeacherById clears soft-delete fields and bumps updatedAt', async () => {
@@ -316,7 +348,8 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(store.get('a')?.deletedAt).toBeUndefined();
     expect(store.get('a')?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(repo.bulkSave).toHaveBeenCalledWith('demo', [expect.objectContaining({ id: 'a' })]);
-    expect(mockBroadcastCollection).toHaveBeenCalledTimes(1);
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
   it('bulkRestoreTeachers deduplicates input IDs and handles whitespace', async () => {

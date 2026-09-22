@@ -18,6 +18,8 @@ export interface TeacherExportColumn {
   label: string;
 }
 
+export type FacultyExportColumn = TeacherExportColumn;
+
 export { DEFAULT_TEACHER_EXPORT_COLUMNS };
 
 /** CSV identity columns always exported regardless of Setup field registry. */

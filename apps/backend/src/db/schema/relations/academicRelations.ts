@@ -127,10 +127,16 @@ export const facultyRelations = relations(faculty, ({ one, many }) => ({
     fields: [faculty.workspaceSubdomain, faculty.userId],
     references: [tenantUsers.workspaceSubdomain, tenantUsers.id],
   }),
+  supervisor: one(faculty, {
+    fields: [faculty.workspaceSubdomain, faculty.reportingFacultyId],
+    references: [faculty.workspaceSubdomain, faculty.id],
+    relationName: 'faculty_reporting',
+  }),
+  subordinates: many(faculty, {
+    relationName: 'faculty_reporting',
+  }),
   hasanatDistributions: many(hasanatDistributions),
 }));
-
-export const teachersRelations = facultyRelations;
 
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({
   workspace: one(workspaces, {

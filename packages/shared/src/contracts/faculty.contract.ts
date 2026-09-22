@@ -87,9 +87,24 @@ export const facultyContract = c.router({
   delete: {
     method: 'DELETE',
     path: '/api/faculty/:id',
-    body: z.object({ deletionReason: z.string().optional() }).optional(),
-    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 500: errorResponse },
+    body: z.object({
+      deletionReason: z.string().optional(),
+      reassignSubordinatesTo: z.string().optional(),
+    }).optional(),
+    responses: { 200: z.object({ success: z.literal(true) }), 403: errorResponse, 404: errorResponse, 409: errorResponse, 500: errorResponse },
     summary: 'Soft delete a faculty member',
+  },
+  hierarchyTree: {
+    method: 'GET',
+    path: '/api/faculty/hierarchy-tree',
+    responses: {
+      200: z.object({
+        nodes: z.array(z.record(z.string(), z.unknown())),
+      }),
+      403: errorResponse,
+      500: errorResponse,
+    },
+    summary: 'Get organizational faculty hierarchy tree',
   },
   bulkStatus: {
     method: 'POST',

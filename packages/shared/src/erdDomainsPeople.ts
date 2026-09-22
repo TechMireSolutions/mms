@@ -384,19 +384,25 @@ export const ERD_DOMAIN_STUDENTS: ErdDomain = {
   ],
 };
 
-/** Staff rows linked to contacts and tenant users (Drizzle `teachers.ts`). */
-export const ERD_DOMAIN_TEACHERS: ErdDomain = {
-  id: 'teachers',
-  labelKey: 'nav.teachers',
+/** Staff rows linked to contacts, tenant users, and supervisory hierarchy (Drizzle `faculty.ts`). */
+export const ERD_DOMAIN_FACULTY: ErdDomain = {
+  id: 'faculty',
+  labelKey: 'nav.faculty',
   tables: [
     {
-      name: 'teachers',
+      name: 'faculty',
       columns: [
         { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
         { name: 'id', type: 'text', kind: 'pk' },
         { name: 'contact_id', type: 'text', kind: 'fk' },
         { name: 'user_id', type: 'text', kind: 'fk' },
         { name: 'employee_id', type: 'varchar(100)', kind: 'column' },
+        { name: 'reporting_faculty_id', type: 'text', kind: 'fk' },
+        { name: 'hierarchy_rank', type: 'integer', kind: 'column' },
+        { name: 'department', type: 'varchar(150)', kind: 'column' },
+        { name: 'designation', type: 'varchar(150)', kind: 'column' },
+        { name: 'specialization', type: 'varchar(150)', kind: 'column' },
+        { name: 'status', type: 'varchar(50)', kind: 'column' },
       ],
     },
     {
@@ -416,7 +422,7 @@ export const ERD_DOMAIN_TEACHERS: ErdDomain = {
       ],
     },
     {
-      name: 'teacher_lookups',
+      name: 'faculty_lookups',
       columns: [
         { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
         { name: 'id', type: 'text', kind: 'pk' },
@@ -425,23 +431,31 @@ export const ERD_DOMAIN_TEACHERS: ErdDomain = {
       ],
     },
     {
-      name: 'teacher_field_configs',
+      name: 'faculty_field_configs',
       columns: [
         { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
         { name: 'config', type: 'jsonb', kind: 'column' },
       ],
     },
     {
-      name: 'teacher_module_preferences',
+      name: 'faculty_module_preferences',
       columns: [
         { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
         { name: 'preferences', type: 'jsonb', kind: 'column' },
       ],
     },
+    {
+      name: 'faculty_setup_config',
+      columns: [
+        { name: 'workspace_subdomain', type: 'text', kind: 'pk' },
+        { name: 'prefix', type: 'varchar(20)', kind: 'column' },
+        { name: 'current_sequence', type: 'integer', kind: 'column' },
+      ],
+    },
   ],
   relationships: [
     {
-      fromTable: 'teachers',
+      fromTable: 'faculty',
       fromColumn: 'contact_id',
       toTable: 'contacts',
       toColumn: 'id',
@@ -449,12 +463,22 @@ export const ERD_DOMAIN_TEACHERS: ErdDomain = {
       onDelete: 'set null',
     },
     {
-      fromTable: 'teachers',
+      fromTable: 'faculty',
       fromColumn: 'user_id',
       toTable: 'tenant_users',
       toColumn: 'id',
       cardinality: '1:1',
       onDelete: 'set null',
     },
+    {
+      fromTable: 'faculty',
+      fromColumn: 'reporting_faculty_id',
+      toTable: 'faculty',
+      toColumn: 'id',
+      cardinality: 'N:1',
+      onDelete: 'set null',
+    },
   ],
 };
+
+export const ERD_DOMAIN_TEACHERS: ErdDomain = ERD_DOMAIN_FACULTY;

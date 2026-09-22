@@ -17,6 +17,8 @@ export const faculty = pgTable('faculty', {
   specialization: varchar('specialization', { length: 150 }),
   department: varchar('department', { length: 150 }),
   designation: varchar('designation', { length: 150 }),
+  reportingFacultyId: text('reporting_faculty_id'),
+  hierarchyRank: integer('hierarchy_rank').notNull().default(10),
   qualification: varchar('qualification', { length: 255 }),
   joinDate: varchar('join_date', { length: 35 }),
   notes: text('notes'),
@@ -67,6 +69,15 @@ export const faculty = pgTable('faculty', {
   index('faculty_workspace_contact_active_idx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),
+  index('faculty_workspace_reporting_faculty_idx')
+    .on(table.workspaceSubdomain, table.reportingFacultyId)
+    .where(sql`${table.deletedAt} is null`),
+  index('faculty_workspace_hierarchy_rank_idx')
+    .on(table.workspaceSubdomain, table.hierarchyRank)
+    .where(sql`${table.deletedAt} is null`),
+  index('faculty_workspace_status_rank_idx')
+    .on(table.workspaceSubdomain, table.status, table.hierarchyRank)
+    .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_user_idx').on(table.workspaceSubdomain, table.userId),
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
@@ -75,6 +86,10 @@ export const faculty = pgTable('faculty', {
   foreignKey({
     columns: [table.workspaceSubdomain, table.userId],
     foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],
+  }).onDelete('set null'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.reportingFacultyId],
+    foreignColumns: [table.workspaceSubdomain, table.id],
   }).onDelete('set null'),
 ]);
 

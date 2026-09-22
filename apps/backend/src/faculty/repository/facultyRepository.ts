@@ -54,6 +54,14 @@ export interface FacultyRepository {
   ): Promise<TeacherDuplicateReason | null>;
   bulkUpdateStatusSql(tenant: string, ids: string[], status: string): Promise<number>;
   bulkUpdateSpecializationSql(tenant: string, ids: string[], specialization: string): Promise<number>;
+  countSubordinates(tenant: string, supervisorId: string): Promise<number>;
+  countSubordinatesBatch(tenant: string, supervisorIds: string[]): Promise<Record<string, number>>;
+  findSubordinates(tenant: string, supervisorId: string): Promise<Teacher[]>;
+  reassignSubordinates(
+    tenant: string,
+    oldSupervisorId: string,
+    newSupervisorId: string | null,
+  ): Promise<number>;
 }
 
 export type TeachersRepository = FacultyRepository;

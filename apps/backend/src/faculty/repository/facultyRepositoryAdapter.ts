@@ -4,6 +4,10 @@ import {
   findTeacherById,
   findTeachersByIds,
   saveTeacher,
+  countSubordinates,
+  countSubordinatesBatch,
+  findSubordinates,
+  reassignSubordinates,
 } from '../../db/repositories/facultyRepository.js';
 import {
   aggregateTeachersCommandMetrics,
@@ -47,6 +51,11 @@ function createFacultyRepository(): FacultyRepository {
     bulkUpdateStatusSql: (tenant, ids, status) => bulkUpdateTeachersStatusSql(tenant, ids, status),
     bulkUpdateSpecializationSql: (tenant, ids, specialization) =>
       bulkUpdateTeachersSpecializationSql(tenant, ids, specialization),
+    countSubordinates: (tenant, supervisorId) => countSubordinates(tenant, supervisorId),
+    countSubordinatesBatch: (tenant, supervisorIds) => countSubordinatesBatch(tenant, supervisorIds),
+    findSubordinates: (tenant, supervisorId) => findSubordinates(tenant, supervisorId),
+    reassignSubordinates: (tenant, oldSupervisorId, newSupervisorId) =>
+      reassignSubordinates(tenant, oldSupervisorId, newSupervisorId),
   };
 }
 

@@ -9,37 +9,36 @@ import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { teacherStatusOptions } from "@/lib/faculty/facultyStatusUi";
 import { useTeacherStatusConfig, useTeacherLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
 import {
-  type FacultyMember,
+  type Faculty,
   type Teacher,
   DEFAULT_TEACHERS_SETTINGS,
+  FACULTY_HIERARCHY_RANK_PRESETS,
   type TeacherDuplicateReason,
   getContactQualification,
   getContactSpecialization,
   resolveTeacherEnabledTabIds,
   resolveTeacherFieldsMapForColumnSync,
 } from "@mms/shared";
-import { extractEmployeeId, getInitialTeacherDraft, teacherDraftSnapshot } from "@/tenant/features/faculty/components/facultyFormDraft";
+import { useFacultyContractList } from "@/tenant/features/faculty/hooks/useFacultyTsrHooks";
+import {
+  DEFAULT_USER_ACCOUNT_DRAFT,
+  extractEmployeeId,
+  filterSupervisorCandidates,
+  getInitialTeacherDraft,
+  teacherDraftSnapshot,
+  type FacultyFormControllerOptions,
+  type UseTeacherFormControllerOptions,
+  type UseFacultyFormControllerOptions,
+} from "@/tenant/features/faculty/components/facultyFormDraft";
 import { confirmPendingTeacherSave, runTeacherSaveFlow } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/faculty/components/facultyFormValidation";
 import type { TeacherStatusOption } from '@/tenant/features/faculty/components/FacultyFormSections';
 import type { FacultyUserAccountDraft } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 
-export interface FacultyFormControllerOptions {
-  faculty?: FacultyMember;
-  teacher?: Teacher;
-  onClose: () => void;
-  onSave: (faculty: FacultyMember) => void | Promise<void>;
-}
-
-export type UseTeacherFormControllerOptions = FacultyFormControllerOptions;
-export type UseFacultyFormControllerOptions = FacultyFormControllerOptions;
-
-const DEFAULT_USER_ACCOUNT_DRAFT: FacultyUserAccountDraft = {
-  enabled: false,
-  role: "teacher",
-  setupMethod: "password",
-  password: "",
-  forceReset: true,
+export type {
+  FacultyFormControllerOptions,
+  UseTeacherFormControllerOptions,
+  UseFacultyFormControllerOptions,
 };
 
 export function useTeacherFormController({
@@ -66,18 +65,12 @@ export function useTeacherFormController({
     await mutateLookup({ kind: "designations", items: next });
   };
 
-  const defaultSpecialization =
-    settings.defaultSpecialization
-    || specializationOptions[0]
-    || DEFAULT_TEACHERS_SETTINGS.defaultSpecialization;
+  const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_TEACHERS_SETTINGS.defaultSpecialization;
   const idPrefix = settings.idPrefix || DEFAULT_TEACHERS_SETTINGS.idPrefix;
   const autoGenerateId = settings.autoGenerateId !== false;
   const requireContactLink = settings.requireContactLink !== false;
-
-  const fieldsMap = (() => resolveTeacherFieldsMapForColumnSync(settings.fields))();
-
-  const statusOptions = (() => teacherStatusOptions(t, statusValues))() as TeacherStatusOption[];
-
+  const fieldsMap = resolveTeacherFieldsMapForColumnSync(settings.fields);
+  const statusOptions = teacherStatusOptions(t, statusValues) as TeacherStatusOption[];
   const statusConfig = useTeacherStatusConfig();
 
   const [saving, setSaving] = useState(false);
@@ -191,6 +184,16 @@ export function useTeacherFormController({
     ) ?? null;
   }, [existingUsers, teacherDraft.contactId, teacherDraft.userId]);
 
+  const facultyListQuery = useFacultyContractList({ limit: 100 });
+  const allFaculty = ((facultyListQuery.data as { faculty?: Faculty[] })?.faculty ?? []) as Faculty[];
+
+  const currentRank = typeof teacherDraft.hierarchyRank === "number" ? teacherDraft.hierarchyRank : 4;
+  const currentId = teacher?.id ? String(teacher.id) : null;
+  const supervisorCandidates = useMemo(
+    () => filterSupervisorCandidates(allFaculty, currentId, currentRank),
+    [allFaculty, currentId, currentRank],
+  );
+
   const clearDuplicatePrompt = () => {
     setDuplicateConfirmOpen(false);
     setTypedDuplicateReason(null);
@@ -287,6 +290,8 @@ export function useTeacherFormController({
     handleDuplicateDialogOpenChange,
     confirmDuplicateSave,
     duplicateErrorKeys: DUPLICATE_ERROR_KEYS,
+    supervisorCandidates,
+    hierarchyRankPresets: FACULTY_HIERARCHY_RANK_PRESETS,
   };
 }
 

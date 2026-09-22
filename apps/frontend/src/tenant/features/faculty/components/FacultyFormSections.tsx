@@ -15,7 +15,10 @@ import {
   resolveTeacherStatus,
   type FieldDefinition,
   type Teacher,
+  type Faculty,
+  type FacultyHierarchyPreset,
 } from "@mms/shared";
+import { FacultyHierarchyFormFields } from "@/tenant/features/faculty/components/FacultyHierarchyFormFields";
 import { resolveTeacherFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
 import { extractEmployeeId } from "@/tenant/features/faculty/components/facultyFormDraft";
 
@@ -68,6 +71,8 @@ export interface TeacherEmploymentSectionProps extends TeacherSectionBaseProps {
   designationOptions?: string[];
   onUpdateDesignations?: (options: string[]) => void;
   teacher?: Teacher;
+  supervisorCandidates?: Faculty[];
+  hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
 }
 
 export function TeacherEmploymentSection({
@@ -86,13 +91,28 @@ export function TeacherEmploymentSection({
   isFieldEnabled,
   isFieldRequired,
   onDraftChange,
+  supervisorCandidates,
+  hierarchyRankPresets,
 }: TeacherEmploymentSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const showEmployeeId = isFieldEnabled("employeeId");
   const showDesignation = isFieldEnabled("designation");
+  const showDepartment = isFieldEnabled("department");
+  const showHierarchyRank = isFieldEnabled("hierarchyRank");
+  const showSupervisor = isFieldEnabled("reportingFacultyId");
   const showStatus = isFieldEnabled("status");
   const showJoinDate = isFieldEnabled("joinDate");
-  if (!showEmployeeId && !showDesignation && !showStatus && !showJoinDate) return null;
+  if (
+    !showEmployeeId &&
+    !showDesignation &&
+    !showDepartment &&
+    !showHierarchyRank &&
+    !showSupervisor &&
+    !showStatus &&
+    !showJoinDate
+  ) {
+    return null;
+  }
 
   const employeeIdLabel = resolveTeacherFieldLabel(fields, "employment", "employeeId", t);
   const designationLabel = resolveTeacherFieldLabel(fields, "employment", "designation", t);
@@ -195,6 +215,16 @@ export function TeacherEmploymentSection({
               )}
             </div>
           )}
+
+          <FacultyHierarchyFormFields
+            teacherDraft={teacherDraft}
+            errors={errors}
+            isFieldEnabled={isFieldEnabled}
+            isFieldRequired={isFieldRequired}
+            onDraftChange={onDraftChange}
+            supervisorCandidates={supervisorCandidates}
+            hierarchyRankPresets={hierarchyRankPresets}
+          />
 
           {showStatus && (
             <Field label={statusLabel} id="status" required={isFieldRequired("status")}>

@@ -9,6 +9,7 @@ export type TeacherInsert = typeof teachers.$inferInsert;
 
 export function teacherWriteValues(subdomain: string, teacher: Teacher): TeacherInsert {
   const audit = mapAuditToInsert(teacher);
+  const t = teacher as Teacher & { reportingFacultyId?: string | null; hierarchyRank?: number };
   return {
     id: String(teacher.id),
     workspaceSubdomain: subdomain,
@@ -19,6 +20,8 @@ export function teacherWriteValues(subdomain: string, teacher: Teacher): Teacher
     specialization: teacher.specialization ?? null,
     department: teacher.department ?? null,
     designation: teacher.designation ?? null,
+    reportingFacultyId: t.reportingFacultyId ?? null,
+    hierarchyRank: typeof t.hierarchyRank === 'number' ? t.hierarchyRank : 10,
     qualification: teacher.qualification ?? null,
     joinDate: teacher.joinDate ?? null,
     notes: teacher.notes ?? null,
@@ -37,6 +40,8 @@ export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
     specialization: row.specialization ?? undefined,
     department: row.department ?? undefined,
     designation: row.designation ?? undefined,
+    reportingFacultyId: row.reportingFacultyId ?? null,
+    hierarchyRank: row.hierarchyRank ?? 10,
     qualification: row.qualification ?? undefined,
     joinDate: row.joinDate ?? undefined,
     notes: row.notes ?? undefined,
@@ -93,6 +98,8 @@ export async function listTeachersByWorkspace(
         specialization: teachers.specialization,
         department: teachers.department,
         designation: teachers.designation,
+        reportingFacultyId: teachers.reportingFacultyId,
+        hierarchyRank: teachers.hierarchyRank,
         qualification: teachers.qualification,
         joinDate: teachers.joinDate,
         notes: teachers.notes,
@@ -133,6 +140,8 @@ export async function findTeacherById(tenant: string, id: string): Promise<Teach
         specialization: teachers.specialization,
         department: teachers.department,
         designation: teachers.designation,
+        reportingFacultyId: teachers.reportingFacultyId,
+        hierarchyRank: teachers.hierarchyRank,
         qualification: teachers.qualification,
         joinDate: teachers.joinDate,
         notes: teachers.notes,
@@ -172,6 +181,8 @@ export async function findTeachersByIds(tenant: string, ids: string[]): Promise<
         specialization: teachers.specialization,
         department: teachers.department,
         designation: teachers.designation,
+        reportingFacultyId: teachers.reportingFacultyId,
+        hierarchyRank: teachers.hierarchyRank,
         qualification: teachers.qualification,
         joinDate: teachers.joinDate,
         notes: teachers.notes,
@@ -216,6 +227,8 @@ export async function bulkSaveTeachers(tenant: string, items: Teacher[]): Promis
           specialization: sql`excluded.specialization`,
           department: sql`excluded.department`,
           designation: sql`excluded.designation`,
+          reportingFacultyId: sql`excluded.reporting_faculty_id`,
+          hierarchyRank: sql`excluded.hierarchy_rank`,
           qualification: sql`excluded.qualification`,
           joinDate: sql`excluded.join_date`,
           notes: sql`excluded.notes`,
@@ -261,6 +274,14 @@ export async function countTeachersByWorkspace(
 }
 
 
+export {
+  countSubordinates,
+  countSubordinatesBatch,
+  findSubordinates,
+  reassignSubordinates,
+} from './facultyRepositorySubordinates.js';
+
+
 export type FacultyInsert = TeacherInsert;
 export const facultyWriteValues = teacherWriteValues;
 export const facultyRowToRecord = teacherRowToRecord;
@@ -275,3 +296,4 @@ export const saveFaculty = saveTeacher;
 export const bulkSaveFaculty = bulkSaveTeachers;
 export const replaceFacultyForWorkspace = replaceTeachersForWorkspace;
 export const countFacultyByWorkspace = countTeachersByWorkspace;
+

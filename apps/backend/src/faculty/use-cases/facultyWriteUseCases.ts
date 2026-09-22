@@ -24,14 +24,75 @@ export class TeacherPermissionError extends Error {
   }
 }
 
+export class HierarchyValidationError extends Error {
+  readonly statusCode = 400;
+  readonly type = 'validation_error';
+  constructor(message = 'Supervisor must hold a higher seniority rank (lower hierarchy rank) than the subordinate') {
+    super(message);
+    this.name = 'HierarchyValidationError';
+  }
+}
+
+export class HierarchyCycleError extends Error {
+  readonly statusCode = 400;
+  readonly type = 'validation_error';
+  constructor(message = 'Circular reporting hierarchy detected. A faculty member cannot report to their subordinate or themselves.') {
+    super(message);
+    this.name = 'HierarchyCycleError';
+  }
+}
+
+export async function validateReportingHierarchy(
+  tenant: string,
+  facultyId: string | undefined,
+  hierarchyRank: number,
+  reportingFacultyId: string | null | undefined,
+  repo: TeachersRepository,
+): Promise<void> {
+  if (!reportingFacultyId || !reportingFacultyId.trim()) return;
+  const supervisorId = reportingFacultyId.trim();
+
+  if (facultyId && supervisorId === String(facultyId).trim()) {
+    throw new HierarchyCycleError('A faculty member cannot report to themselves');
+  }
+
+  const supervisor = await repo.findById(tenant, supervisorId);
+  if (!supervisor || (supervisor as { deletedAt?: string | null }).deletedAt) {
+    throw new HierarchyValidationError('Specified reporting supervisor does not exist or has been deleted');
+  }
+
+  const supervisorRank = (supervisor as { hierarchyRank?: number }).hierarchyRank ?? 10;
+  if (supervisorRank >= hierarchyRank) {
+    throw new HierarchyValidationError(
+      `Supervisor (rank ${supervisorRank}) must have a higher authority level (lower rank number) than the subordinate (rank ${hierarchyRank})`,
+    );
+  }
+
+  if (facultyId) {
+    const visited = new Set<string>([facultyId]);
+    let currentSupervisorId: string | null = supervisorId;
+    let depth = 0;
+    while (currentSupervisorId && depth < 50) {
+      if (visited.has(currentSupervisorId)) {
+        throw new HierarchyCycleError('Circular reporting hierarchy detected in the supervisory chain');
+      }
+      visited.add(currentSupervisorId);
+      const parent = await repo.findById(tenant, currentSupervisorId);
+      if (!parent) break;
+      currentSupervisorId = (parent as { reportingFacultyId?: string | null }).reportingFacultyId ?? null;
+      depth += 1;
+    }
+  }
+}
+
 export interface CreateTeacherOptions {
   /** False when the caller lacks `teachers.delete`; blocks implicit restore. */
   canRestore?: boolean;
 }
 
 /**
- * Creates a teacher. When the incoming record carries a `contactId` that matches a
- * soft-deleted teacher (re-registration), the archived row is restored in place —
+ * Creates a faculty member. When the incoming record carries a `contactId` that matches a
+ * soft-deleted faculty (re-registration), the archived row is restored in place —
  * its id/createdAt are preserved, deletion markers cleared, and incoming fields
  * overlaid (Contacts/Students restore-on-create parity).
  */
@@ -61,13 +122,25 @@ export async function createTeacher(
       normalized.employeeId = generated.employeeId;
     }
 
+    const targetRank = typeof (normalized as { hierarchyRank?: number }).hierarchyRank === 'number'
+      ? (normalized as { hierarchyRank?: number }).hierarchyRank!
+      : 10;
+    const targetSupervisor = (normalized as { reportingFacultyId?: string | null }).reportingFacultyId
+      ? String((normalized as { reportingFacultyId?: string | null }).reportingFacultyId).trim()
+      : null;
+    await validateReportingHierarchy(
+      tenant,
+      normalized.id != null ? String(normalized.id) : undefined,
+      targetRank,
+      targetSupervisor,
+      repo,
+    );
+
     const contactId = normalized.contactId != null ? String(normalized.contactId).trim() : '';
 
     if (contactId) {
       const archived = await repo.findSoftDeletedByContactId(tenant, contactId);
       if (archived) {
-        // Restore-on-create is effectively an un-delete; require delete permission
-        // (Contacts/Students already enforce this).
         if (options.canRestore === false) {
           throw new TeacherPermissionError();
         }
@@ -84,6 +157,7 @@ export async function createTeacher(
     await repo.save(tenant, normalized);
     return { record: normalized, restored: false };
   });
+  await broadcastCollection('faculty');
   await broadcastCollection('teachers');
   return result;
 }
@@ -113,10 +187,35 @@ export async function updateTeacherById(
       ...mergeTeacherPatch(existing, record),
       id,
     });
+
+    const targetRank = typeof (normalized as { hierarchyRank?: number }).hierarchyRank === 'number'
+      ? (normalized as { hierarchyRank?: number }).hierarchyRank!
+      : 10;
+    const targetSupervisor = (normalized as { reportingFacultyId?: string | null }).reportingFacultyId
+      ? String((normalized as { reportingFacultyId?: string | null }).reportingFacultyId).trim()
+      : null;
+    await validateReportingHierarchy(tenant, id, targetRank, targetSupervisor, repo);
+
+    // Validate that new hierarchyRank does not invert authority over existing direct subordinates
+    const directSubordinates = repo.findSubordinates
+      ? await repo.findSubordinates(tenant, id)
+      : [];
+    for (const sub of directSubordinates) {
+      const subRank = (sub as { hierarchyRank?: number }).hierarchyRank ?? 10;
+      if (subRank <= targetRank) {
+        throw new HierarchyValidationError(
+          `Cannot set hierarchy rank to ${targetRank}: faculty has a subordinate (${sub.id}) with rank ${subRank}. Subordinates must have lower authority than their supervisor.`,
+        );
+      }
+    }
+
     await repo.save(tenant, normalized);
     return normalized;
   });
-  if (saved) await broadcastCollection('teachers');
+  if (saved) {
+    await broadcastCollection('faculty');
+    await broadcastCollection('teachers');
+  }
   return saved;
 }
 

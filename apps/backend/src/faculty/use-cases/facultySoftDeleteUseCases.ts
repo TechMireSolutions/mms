@@ -49,7 +49,10 @@ export async function restoreTeacherById(
     }
     return next;
   });
-  if (restored) await broadcastCollection('teachers');
+  if (restored) {
+    await broadcastCollection('faculty');
+    await broadcastCollection('teachers');
+  }
   return restored;
 }
 
@@ -97,8 +100,18 @@ export async function bulkRestoreTeachers(
     }
     return { succeeded, failed };
   });
-  if (result.succeeded > 0) await broadcastCollection('teachers');
+  if (result.succeeded > 0) {
+    await broadcastCollection('faculty');
+    await broadcastCollection('teachers');
+  }
   return result;
+}
+
+export class SubordinateReassignmentError extends ConflictError {
+  constructor(message = 'Cannot delete faculty member with active subordinates. Please reassign subordinates before deletion.') {
+    super(message);
+    this.name = 'SubordinateReassignmentError';
+  }
 }
 
 export async function softDeleteTeacherById(
@@ -106,7 +119,32 @@ export async function softDeleteTeacherById(
   deletedBy: string,
   deletionReason?: string,
   repo: TeachersRepository = teachersRepository,
+  reassignSubordinatesTo?: string,
 ): Promise<boolean> {
+  const tenant = getRequestTenant();
+  if (tenant) {
+    const subordinateCount = repo.countSubordinates
+      ? await repo.countSubordinates(tenant, id)
+      : 0;
+    if (subordinateCount > 0) {
+      if (reassignSubordinatesTo && reassignSubordinatesTo.trim()) {
+        const targetId = reassignSubordinatesTo.trim();
+        if (targetId === id) {
+          throw new ConflictError('Cannot reassign subordinates to the faculty member being deleted');
+        }
+        const targetSupervisor = await repo.findById(tenant, targetId);
+        if (!targetSupervisor || targetSupervisor.deletedAt) {
+          throw new ConflictError('Target supervisor for reassignment does not exist or has been deleted');
+        }
+        await repo.reassignSubordinates(tenant, id, targetId);
+      } else {
+        throw new SubordinateReassignmentError(
+          `Cannot delete faculty member with ${subordinateCount} active subordinate(s). Please reassign subordinates before deletion.`,
+        );
+      }
+    }
+  }
+
   const result = await bulkSoftDeleteTeachers([id], deletedBy, deletionReason, repo);
   return result.succeeded === 1;
 }
@@ -180,7 +218,10 @@ export async function bulkSoftDeleteTeachers(
     }
     return { succeeded, failed };
   });
-  if (result.succeeded > 0) await broadcastCollection('teachers');
+  if (result.succeeded > 0) {
+    await broadcastCollection('faculty');
+    await broadcastCollection('teachers');
+  }
   return result;
 }
 
