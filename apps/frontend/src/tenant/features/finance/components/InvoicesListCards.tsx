@@ -19,6 +19,13 @@ export type InvoicesListCardsProps = Omit<
   "visibleColCount" | "getColumnWidth" | "onColumnResize"
 >;
 
+const getInvoiceAccentClass = (status: string): string => {
+  if (status === "paid") return "bg-success/60 group-hover:bg-success";
+  if (status === "overdue") return "bg-destructive/60 group-hover:bg-destructive";
+  if (status === "partially_paid") return "bg-warning/60 group-hover:bg-warning";
+  return "bg-primary/50 group-hover:bg-primary";
+};
+
 function InvoiceCard({
   invoice,
   props,
@@ -65,6 +72,7 @@ function InvoiceCard({
       key={invoice.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
+      accentClassName={getInvoiceAccentClass(invoice.status)}
       {...cardProps}
     >
       <DirectoryCardHeader

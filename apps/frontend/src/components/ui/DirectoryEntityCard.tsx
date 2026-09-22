@@ -19,7 +19,7 @@ export const directoryEntityCardVariantsReduced = {
 export interface DirectoryEntityCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
   isSelected?: boolean;
   reducedMotion?: boolean;
-  accentClassName?: string;
+  accentClassName?: string | false | null;
   children: ReactNode;
 }
 
@@ -32,6 +32,11 @@ export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
   children,
   ...motionProps
 }: DirectoryEntityCardProps): React.JSX.Element {
+  const effectiveAccent =
+    accentClassName === false || accentClassName === null
+      ? null
+      : (accentClassName || "bg-primary/50 group-hover:bg-primary");
+
   return (
     <motion.div
       layout={!reducedMotion}
@@ -39,7 +44,7 @@ export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
       className={cn(
         FORM_CARD,
         "p-4 space-y-4 shadow-xs [contain-intrinsic-size:180px] [content-visibility:auto]",
-        accentClassName && CARD_STRIPE_INSET,
+        effectiveAccent && CARD_STRIPE_INSET,
         isSelected
           ? "border-primary/50 bg-primary/5 shadow-xs"
           : "border-foreground/10 hover:border-foreground/20",
@@ -51,12 +56,12 @@ export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
       }}
       {...motionProps}
     >
-      {accentClassName ? (
+      {effectiveAccent ? (
         <div
           aria-hidden="true"
           className={cn(
             CARD_STRIPE_BASE,
-            accentClassName,
+            effectiveAccent,
             reducedMotion ? "" : "transition-colors duration-150 ease-out",
           )}
         />

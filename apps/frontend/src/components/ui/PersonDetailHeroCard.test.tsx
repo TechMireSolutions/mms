@@ -34,6 +34,7 @@ describe("PersonDetailHeroCard Component", () => {
     expect(html).toContain("Ali Raza");
     expect(html).toContain("badge-active");
     expect(html).toContain("badge-gr");
+    expect(html).toContain("bg-info/45");
   });
 
   it("applies custom className and CARD_STRIPE_INSET", () => {

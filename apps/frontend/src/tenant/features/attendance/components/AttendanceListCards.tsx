@@ -34,6 +34,14 @@ export interface AttendanceListCardsProps {
 
 export type AttendanceRecordsMobileListProps = AttendanceListCardsProps;
 
+const getAttendanceAccentClass = (status?: string): string => {
+  if (status === 'present') return 'bg-success/60 group-hover:bg-success';
+  if (status === 'absent') return 'bg-destructive/60 group-hover:bg-destructive';
+  if (status === 'late') return 'bg-warning/60 group-hover:bg-warning';
+  if (status === 'excused') return 'bg-info/60 group-hover:bg-info';
+  return 'bg-primary/50 group-hover:bg-primary';
+};
+
 function AttendanceCard({
   attendanceRecord,
   isColumnVisible,
@@ -73,6 +81,7 @@ function AttendanceCard({
       key={attendanceRecord.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
+      accentClassName={getAttendanceAccentClass(attendanceRecord.status)}
       {...cardProps}
     >
       <DirectoryCardHeader

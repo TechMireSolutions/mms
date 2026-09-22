@@ -17,8 +17,7 @@ import {
   TableCell,
   TableRow,
 } from '@/components/ui/table';
-import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
-import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
+import { PlatformAdminsListCards } from '@/platform/components/admin/PlatformAdminsListCards';
 import { PlatformAdminStatusBadges, PlatformAdminPermissionsBadges } from '@/platform/components/admin/PlatformAdminBadges';
 import { PlatformAdminActionButtons } from '@/platform/components/admin/PlatformAdminActionButtons';
 import { DetailSheet } from '@/components/common/DetailSheet';
@@ -26,7 +25,6 @@ import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
 import { useVerifyPlatformAdminEmail } from '@/platform/hooks/usePlatformAdmins';
 import { formatDate } from '@mms/shared';
 import { usePlatformUserDescriptor } from '@/platform/hooks/usePlatformUserDescriptor';
-import { DirectoryCardMetadata } from '@/components/ui/DirectoryCardMetadata';
 
 interface PlatformAdminsListProps {
   admins: PlatformUserProfile[] | undefined;
@@ -218,44 +216,16 @@ export function PlatformAdminsList({
             </Table>
           </div>
         ) : (
-          <DirectoryCardsGrid>
-            {filteredItems.map((admin) => (
-              <DirectoryEntityCard
-                key={admin.id}
-                accentClassName={admin.role === 'super_user' ? 'bg-primary/80' : undefined}
-                className="flex flex-col justify-between cursor-pointer"
-                onClick={() => setInspectAdmin(admin)}
-              >
-                <div className="space-y-3">
-                  <div className="flex min-w-0 items-center justify-between gap-3">
-                    <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">{admin.name}</p>
-                    <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
-                      <PlatformAdminStatusBadges admin={admin} />
-                    </div>
-                  </div>
-                  <DirectoryCardMetadata descriptor={descriptor} entity={admin} visibleColumnIds={['email']} />
-                  <PlatformAdminPermissionsBadges admin={admin} />
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-border/40 mt-3" onClick={(e) => e.stopPropagation()}>
-                  {admin.createdAt ? (
-                    <p className="text-xs text-muted-foreground font-semibold">
-                      {t('platform.profileMemberSince')}: {formatDate(admin.createdAt)}
-                    </p>
-                  ) : (
-                    <span />
-                  )}
-                  <PlatformAdminActionButtons
-                    admin={admin}
-                    onEditAccess={(a) => setEditingAdmin(a)}
-                    onToggleStatus={(a, mode) => openDanger(a, mode)}
-                    onDelete={(a) => openDanger(a, 'delete')}
-                    verifyPending={verifyEmailMutation.isPending}
-                    onVerifyEmail={(adminId) => verifyEmailMutation.mutate(adminId)}
-                  />
-                </div>
-              </DirectoryEntityCard>
-            ))}
-          </DirectoryCardsGrid>
+          <PlatformAdminsListCards
+            admins={filteredItems}
+            descriptor={descriptor}
+            onInspect={setInspectAdmin}
+            onEditAccess={(a) => setEditingAdmin(a)}
+            onToggleStatus={(a, mode) => openDanger(a, mode)}
+            onDelete={(a) => openDanger(a, 'delete')}
+            verifyPending={verifyEmailMutation.isPending}
+            onVerifyEmail={(adminId) => verifyEmailMutation.mutate(adminId)}
+          />
         )}
       </ModuleWorkListStateShell>
 

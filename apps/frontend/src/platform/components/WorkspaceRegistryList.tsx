@@ -13,6 +13,8 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { containerVariants, cardVariants } from "@/platform/lib/animations";
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 type WorkspaceLinkDestination = typeof ROUTES.login | typeof ROUTES.forgotPassword;
 
@@ -115,9 +117,19 @@ const RegistryWorkspaceRow = (function RegistryWorkspaceRow({
     <motion.li variants={reducedMotion ? undefined : cardVariants} layout={!reducedMotion}>
       <a
         href={targetUrl}
-        className="group block w-full cursor-pointer rounded-2xl border border-border/50 bg-card/70 p-4 text-start shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        className={cn(
+          "relative overflow-hidden group/card block w-full cursor-pointer rounded-2xl border border-border/50 bg-card/70 p-4 text-start shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+          CARD_STRIPE_INSET,
+        )}
         aria-label={actionLabel}
       >
+        <div
+          aria-hidden="true"
+          className={cn(
+            CARD_STRIPE_BASE,
+            "bg-primary/50 group-hover/card:bg-primary transition-colors duration-150 ease-out",
+          )}
+        />
         <div className="flex items-center gap-3.5">
           <div className="relative transition-transform duration-300 group-hover:scale-105">
             <WorkspaceLogo

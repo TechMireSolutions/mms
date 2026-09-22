@@ -31,7 +31,7 @@ export interface DirectoryCardProps<
   onToggleSelected?: (id: TEntity["id"], checked: boolean) => void;
   onView?: (entity: TEntity) => void;
   onEdit?: (entity: TEntity) => void;
-  accentClassName?: string;
+  accentClassName?: string | false | null;
   className?: string;
   reducedMotion?: boolean;
   actionState?: UseWorkCardActionReturn<TEntity>;

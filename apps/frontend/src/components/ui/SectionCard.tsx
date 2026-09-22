@@ -13,7 +13,7 @@ export interface SectionCardProps {
   padding?: boolean | string;
   className?: string;
   children: React.ReactNode;
-  accentColor?: CardAccentColor | string;
+  accentColor?: CardAccentColor | string | false | null;
   headingLevel?: 2 | 3;
   headingId?: string;
 }
@@ -29,14 +29,15 @@ export const SectionCard = React.forwardRef<HTMLDivElement, SectionCardProps>(
       padding = true,
       className,
       children,
-      accentColor,
+      accentColor = "primary",
       headingLevel = 3,
       headingId,
     },
     ref,
   ): React.JSX.Element => {
     const hasHeader = Boolean(title || Icon || actions);
-    const accentConfig = resolveAccent(accentColor);
+    const hasStripe = Boolean(accentColor && accentColor !== "none");
+    const accentConfig = resolveAccent(hasStripe ? (accentColor as CardAccentColor) : undefined);
     const paddingClass =
       typeof padding === "string" ? padding : padding ? "px-5 py-4" : undefined;
 
@@ -49,7 +50,7 @@ export const SectionCard = React.forwardRef<HTMLDivElement, SectionCardProps>(
             actions={actions}
             headingLevel={headingLevel}
             headingId={headingId}
-            inset={Boolean(accentColor)}
+            inset={hasStripe}
             className="rounded-t-2xl"
             icon={
               Icon && (
@@ -65,7 +66,7 @@ export const SectionCard = React.forwardRef<HTMLDivElement, SectionCardProps>(
             }
           />
         )}
-        <div className={cn(paddingClass, accentColor && CARD_STRIPE_INSET)}>
+        <div className={cn(paddingClass, hasStripe && CARD_STRIPE_INSET)}>
           {children}
         </div>
       </Card>

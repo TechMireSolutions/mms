@@ -64,6 +64,7 @@ function JournalEntryCard({
       key={entry.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
+      accentClassName={entry.reversed_ref ? "bg-warning/60 group-hover:bg-warning" : "bg-primary/50 group-hover:bg-primary"}
       {...cardProps}
     >
       <DirectoryCardHeader

@@ -83,6 +83,7 @@ function PaymentCard({
       key={payment.id}
       isSelected={isSelected}
       reducedMotion={reducedMotion}
+      accentClassName="bg-success/60 group-hover:bg-success"
       {...cardProps}
     >
       <DirectoryCardHeader

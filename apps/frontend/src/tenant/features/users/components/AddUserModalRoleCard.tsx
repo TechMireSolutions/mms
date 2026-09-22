@@ -14,6 +14,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { cn } from "@/lib/utils";
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 interface RoleCardProps {
   role: WorkspaceRole;
@@ -43,12 +44,21 @@ export function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Eleme
       onClick={() => onSelect(role.id)}
       onKeyDown={handleKeyDown}
       className={cn(
-        "rounded-xl border-2 transition-all cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+        "relative overflow-hidden group/card rounded-xl border-2 transition-all cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+        CARD_STRIPE_INSET,
         selected
           ? "border-primary bg-primary/5 shadow-xs"
           : "border-border bg-card hover:border-primary/40 hover:bg-muted/20"
       )}
     >
+      <div
+        aria-hidden="true"
+        className={cn(
+          CARD_STRIPE_BASE,
+          selected ? "bg-primary" : "bg-primary/30 group-hover/card:bg-primary/50",
+          "transition-colors duration-150 ease-out"
+        )}
+      />
       <div className="p-3 flex items-start gap-3">
         <div
           className={cn(

@@ -111,4 +111,43 @@ describe("DirectoryCard", () => {
     expect(html).toContain("Archived Record");
     expect(html).toContain("More Options");
   });
+
+  it("renders start-edge colored line and inset by default", () => {
+    const html = renderToStaticMarkup(
+      <DirectoryCard
+        entity={mockEntity}
+        header={{ displayName: mockEntity.name }}
+      />
+    );
+
+    expect(html).toContain("w-1.5");
+    expect(html).toContain("bg-primary/50");
+    expect(html).toContain("ps-5 sm:ps-6");
+  });
+
+  it("renders custom accent stripe class when provided", () => {
+    const html = renderToStaticMarkup(
+      <DirectoryCard
+        entity={mockEntity}
+        header={{ displayName: mockEntity.name }}
+        accentClassName="bg-success/70"
+      />
+    );
+
+    expect(html).toContain("bg-success/70");
+    expect(html).toContain("ps-5 sm:ps-6");
+  });
+
+  it("omits accent stripe when accentClassName is false", () => {
+    const html = renderToStaticMarkup(
+      <DirectoryCard
+        entity={mockEntity}
+        header={{ displayName: mockEntity.name }}
+        accentClassName={false}
+      />
+    );
+
+    expect(html).not.toContain("bg-primary/50");
+    expect(html).not.toContain("ps-5 sm:ps-6");
+  });
 });

@@ -2,6 +2,7 @@ import React from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FieldErrorMessage } from "@/components/ui/FormField";
 import { cn } from "@/lib/utils";
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 export interface FormCheckboxCardProps {
   id: string;
@@ -39,7 +40,8 @@ export function FormCheckboxCard({
       <label
         htmlFor={id}
         className={cn(
-          "flex min-h-11 items-center gap-3 rounded-xl border p-3 transition-all select-none",
+          "relative overflow-hidden group/card flex min-h-11 items-center gap-3 rounded-xl border p-3 transition-all select-none",
+          CARD_STRIPE_INSET,
           disabled ? "cursor-not-allowed opacity-60 bg-muted/20 border-border/50" : "cursor-pointer",
           checked
             ? "bg-primary/10 border-primary/40 text-primary font-bold shadow-xs"
@@ -48,6 +50,14 @@ export function FormCheckboxCard({
           labelClassName,
         )}
       >
+        <div
+          aria-hidden="true"
+          className={cn(
+            CARD_STRIPE_BASE,
+            checked ? "bg-primary" : "bg-primary/30 group-hover/card:bg-primary/50",
+            "transition-colors duration-150 ease-out",
+          )}
+        />
         <Checkbox
           id={id}
           name={name || id}
