@@ -3,6 +3,9 @@ import { initDb, closeDatabase } from '../db/database.js';
 import { workspaces } from '../db/schema.js';
 import { activeDb, initializeDatabaseConnection } from '../db/dbConnection.js';
 import { disconnectRedis } from '../lib/redis.js';
+import { loadBackendEnv } from '../config/loadEnv.js';
+
+loadBackendEnv();
 import {
   QUEUE_PDF_RENDERING,
   QUEUE_BULK_EXPORT,
@@ -187,18 +190,8 @@ export function createWorkerForQueue(queueName: string): Worker<EnqueuedJobData>
 
 export async function startWorkerDaemon(): Promise<void> {
   logger.info('Initializing Worker Daemon...');
-  // Force UTC regardless of host timezone — see loadEnv.ts for why this must run
-  // before the first Date/DB call (timestamptz round-trips otherwise shift by the
-  // host's UTC offset, e.g. auth_artifacts / background job TTL checks).
   process.env.TZ = 'UTC';
   process.env.MMS_PROCESS_ROLE = 'worker';
-  if (process.env.NODE_ENV !== 'production') {
-    try {
-      process.loadEnvFile();
-    } catch {
-      // ignore missing .env file
-    }
-  }
 
   // Explicitly initialize dedicated worker connection pool (budgeted to max: 10)
   initializeDatabaseConnection({ role: 'worker', max: 10 });
@@ -211,9 +204,13 @@ export async function startWorkerDaemon(): Promise<void> {
   // Instantiate workers for all 3 queues
   const queueNames = [QUEUE_PDF_RENDERING, QUEUE_BULK_EXPORT, QUEUE_MESSAGING_BROADCAST];
   for (const queueName of queueNames) {
-    const worker = createWorkerForQueue(queueName);
-    activeWorkers.push(worker);
-    logger.info({ queue: queueName, concurrency: QUEUE_SETTINGS[queueName]?.concurrency }, 'Started worker');
+    try {
+      const worker = createWorkerForQueue(queueName);
+      activeWorkers.push(worker);
+      logger.info({ queue: queueName, concurrency: QUEUE_SETTINGS[queueName]?.concurrency }, 'Started worker');
+    } catch (err) {
+      logger.error({ queue: queueName, err }, 'Failed to start worker');
+    }
   }
 
   logger.info('All workers started and listening.');
@@ -241,19 +238,14 @@ export async function startWorkerDaemon(): Promise<void> {
     forceExitTimer.unref?.();
 
     try {
-      // Stop CDC listener first so it doesn't process mid-shutdown
       if (cdcListenerHandle !== null) {
         await cdcListenerHandle.stop();
         cdcListenerHandle = null;
       }
-
-      // Stop retention purge scheduler
       if (purgeSchedulerTimer !== null) {
         clearTimeout(purgeSchedulerTimer);
         purgeSchedulerTimer = null;
       }
-
-      // Close all workers
       for (const worker of activeWorkers) {
         try {
           await worker.close();
@@ -261,32 +253,20 @@ export async function startWorkerDaemon(): Promise<void> {
           logger.error({ err }, 'Error closing worker');
         }
       }
-
-      // Close queue clients
       await closeAllQueues();
-
-      // Release DB pool and Redis connections so the process can exit cleanly.
       await disconnectRedis();
       await closeDatabase();
-
       logger.info('Gracefully shut down.');
-      if (process.env.NODE_ENV !== 'test') {
-        process.exit(0);
-      }
+      if (process.env.NODE_ENV !== 'test') process.exit(0);
     } catch (err) {
       logger.error({ err }, 'Shutdown failed');
-      if (process.env.NODE_ENV !== 'test') {
-        process.exit(1);
-      }
+      if (process.env.NODE_ENV !== 'test') process.exit(1);
     }
   };
 
   process.on('SIGTERM', () => void shutdown('SIGTERM'));
   process.on('SIGINT', () => void shutdown('SIGINT'));
   process.on('unhandledRejection', (reason) => {
-    // Treat like an uncaught exception: an unknown rejected promise can leave
-    // locks / DB rows in an inconsistent state, so shut down cleanly rather
-    // than continuing in an undefined state.
     logger.fatal({ reason }, 'Unhandled rejection');
     void shutdown('unhandledRejection');
   });

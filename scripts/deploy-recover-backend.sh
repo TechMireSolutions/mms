@@ -37,10 +37,13 @@ if curl_health && curl_ready; then
 fi
 
 echo "Waiting for backend after pm2 restart..."
-for _ in $(seq 1 15); do
+for i in $(seq 1 60); do
   if curl_health && curl_ready; then
-    echo "Backend health+ready OK on port ${BACKEND_PORT}"
+    echo "Backend health+ready OK on port ${BACKEND_PORT} ($(( i * 2 ))s)"
     exit 0
+  fi
+  if (( i % 5 == 0 )); then
+    echo "Waiting for backend on port ${BACKEND_PORT}... ($(( i * 2 ))s elapsed)"
   fi
   sleep 2
 done
@@ -69,11 +72,14 @@ else
     -e "NODE_ENV=production"
 fi
 
-for _ in $(seq 1 30); do
+for i in $(seq 1 60); do
   if curl_health && curl_ready; then
-    echo "Backend recovered — health+ready OK on port ${BACKEND_PORT}"
+    echo "Backend recovered — health+ready OK on port ${BACKEND_PORT} ($(( i * 2 ))s)"
     pm2 save 2>/dev/null || true
     exit 0
+  fi
+  if (( i % 5 == 0 )); then
+    echo "Waiting for recovered backend on port ${BACKEND_PORT}... ($(( i * 2 ))s elapsed)"
   fi
   sleep 2
 done

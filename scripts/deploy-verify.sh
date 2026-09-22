@@ -61,9 +61,16 @@ resolve_public_url() {
 LOCAL_BASE="http://127.0.0.1:${BACKEND_PORT}"
 LOCAL_OK=false
 
-if curl_local_backend_ok "${LOCAL_BASE}/health" "$APP_DOMAIN"; then
-  echo "Backend health OK (port ${BACKEND_PORT})"
-  LOCAL_OK=true
+for i in $(seq 1 15); do
+  if curl_local_backend_ok "${LOCAL_BASE}/health" "$APP_DOMAIN"; then
+    echo "Backend health OK (port ${BACKEND_PORT})"
+    LOCAL_OK=true
+    break
+  fi
+  sleep 2
+done
+
+if [[ "$LOCAL_OK" == true ]]; then
   if curl_local_backend_ok "${LOCAL_BASE}/ready" "$APP_DOMAIN"; then
     echo "Backend ready (database connected)"
   else
@@ -139,5 +146,5 @@ else
 fi
 
 pm2 logs mmsv2-backend --lines 30 --nostream 2>/dev/null || true
-pm2 logs mmsv2-frontend --lines 20 --nostream 2>/dev/null || true
+pm2 logs mmsv2-worker --lines 20 --nostream 2>/dev/null || true
 exit 1
