@@ -39,9 +39,18 @@ export async function generateNextFacultyEmployeeId(
       };
     }
 
+    const configProjection = {
+      prefix: facultySetupConfig.prefix,
+      yearFormat: facultySetupConfig.yearFormat,
+      sequenceDigits: facultySetupConfig.sequenceDigits,
+      delimiter: facultySetupConfig.delimiter,
+      currentSequence: facultySetupConfig.currentSequence,
+      lastYear: facultySetupConfig.lastYear,
+    };
+
     // Lock existing row or insert default
     let [row] = await tx
-      .select()
+      .select(configProjection)
       .from(facultySetupConfig)
       .where(eq(facultySetupConfig.workspaceSubdomain, subdomain))
       .for('update');
@@ -62,7 +71,7 @@ export async function generateNextFacultyEmployeeId(
         .onConflictDoNothing();
 
       [row] = await tx
-        .select()
+        .select(configProjection)
         .from(facultySetupConfig)
         .where(eq(facultySetupConfig.workspaceSubdomain, subdomain))
         .for('update');

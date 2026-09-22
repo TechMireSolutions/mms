@@ -48,7 +48,16 @@ export async function getFacultySetupConfig(tenant: string): Promise<FacultySetu
     }
 
     const [row] = await tx
-      .select()
+      .select({
+        workspaceSubdomain: facultySetupConfig.workspaceSubdomain,
+        prefix: facultySetupConfig.prefix,
+        yearFormat: facultySetupConfig.yearFormat,
+        sequenceDigits: facultySetupConfig.sequenceDigits,
+        delimiter: facultySetupConfig.delimiter,
+        currentSequence: facultySetupConfig.currentSequence,
+        lastYear: facultySetupConfig.lastYear,
+        updatedAt: facultySetupConfig.updatedAt,
+      })
       .from(facultySetupConfig)
       .where(eq(facultySetupConfig.workspaceSubdomain, subdomain));
 
@@ -80,7 +89,14 @@ export async function updateFacultySetupConfig(
     }
 
     const [existing] = await tx
-      .select()
+      .select({
+        prefix: facultySetupConfig.prefix,
+        yearFormat: facultySetupConfig.yearFormat,
+        sequenceDigits: facultySetupConfig.sequenceDigits,
+        delimiter: facultySetupConfig.delimiter,
+        currentSequence: facultySetupConfig.currentSequence,
+        lastYear: facultySetupConfig.lastYear,
+      })
       .from(facultySetupConfig)
       .where(eq(facultySetupConfig.workspaceSubdomain, subdomain))
       .for('update');
@@ -174,7 +190,14 @@ export async function previewNextFacultyEmployeeId(tenant: string): Promise<Empl
     }
 
     const [row] = await tx
-      .select()
+      .select({
+        prefix: facultySetupConfig.prefix,
+        yearFormat: facultySetupConfig.yearFormat,
+        sequenceDigits: facultySetupConfig.sequenceDigits,
+        delimiter: facultySetupConfig.delimiter,
+        currentSequence: facultySetupConfig.currentSequence,
+        lastYear: facultySetupConfig.lastYear,
+      })
       .from(facultySetupConfig)
       .where(eq(facultySetupConfig.workspaceSubdomain, subdomain));
 
