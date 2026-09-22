@@ -35,10 +35,14 @@ vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
 }));
 
-vi.mock('../services/auth/passwordService.js', () => ({
-  hashPassword: (...args: unknown[]) => mockHashPassword(...args),
-  verifyPassword: (...args: unknown[]) => mockVerifyPassword(...args),
-}));
+vi.mock('../services/auth/passwordService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/auth/passwordService.js')>();
+  return {
+    ...actual,
+    hashPassword: (...args: unknown[]) => mockHashPassword(...args),
+    verifyPassword: (...args: unknown[]) => mockVerifyPassword(...args),
+  };
+});
 
 vi.mock('../services/contactService.js', () => ({
   loadContactsByIds: vi.fn().mockResolvedValue([]),

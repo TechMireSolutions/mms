@@ -12,6 +12,10 @@ export interface UseSignInCredentialsFormOptions {
   initialEmail?: string;
   /** Translation function. */
   t: TranslationFunction;
+  /** Optional explicit email input ID (defaults to `${useId()}-email`). */
+  emailFieldId?: string;
+  /** Optional explicit password input ID (defaults to `${useId()}-password`). */
+  passwordFieldId?: string;
 }
 
 export interface UseSignInCredentialsFormReturn {
@@ -40,10 +44,12 @@ export interface UseSignInCredentialsFormReturn {
 export function useSignInCredentialsForm({
   initialEmail = "",
   t,
+  emailFieldId: customEmailFieldId,
+  passwordFieldId: customPasswordFieldId,
 }: UseSignInCredentialsFormOptions): UseSignInCredentialsFormReturn {
   const formId = useId();
-  const emailFieldId = `${formId}-email`;
-  const passwordFieldId = `${formId}-password`;
+  const emailFieldId = customEmailFieldId ?? `${formId}-email`;
+  const passwordFieldId = customPasswordFieldId ?? `${formId}-password`;
 
   const [email, setEmail] = useState<string>(initialEmail);
   const [password, setPassword] = useState<string>("");

@@ -82,7 +82,11 @@ export default function PlatformSignIn(): React.JSX.Element {
     onEmailChange,
     onPasswordChange,
     validate,
-  } = useSignInCredentialsForm({ t });
+  } = useSignInCredentialsForm({
+    t,
+    emailFieldId: "platform-email",
+    passwordFieldId: "platform-password",
+  });
 
   const resendCountdown = useResendCountdown(step === "twoFactor", 30, resendCycle);
   const isComplete = isOtpComplete(code);
