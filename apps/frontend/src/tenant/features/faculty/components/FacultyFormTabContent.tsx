@@ -4,6 +4,7 @@ import type {
   Teacher,
   Faculty,
   FacultyHierarchyPreset,
+  FacultyDesignationDefinition,
 } from "@mms/shared";
 import {
   TeacherContactSection,
@@ -26,8 +27,7 @@ export interface TeacherFormTabContentProps {
   defaultSpecialization: string;
   linkedTeacherContactIds: Array<string | number>;
   specializationOptions: string[];
-  designationOptions?: string[];
-  onUpdateDesignations?: (options: string[]) => void;
+  designationOptions?: FacultyDesignationDefinition[];
   autoGenerateId: boolean;
   idPrefix: string;
   nextEmployeeId?: string;
@@ -60,7 +60,6 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
   linkedTeacherContactIds,
   specializationOptions,
   designationOptions,
-  onUpdateDesignations,
   autoGenerateId,
   idPrefix,
   nextEmployeeId,
@@ -103,7 +102,6 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
         isFetchingNextEmployeeId={isFetchingNextEmployeeId}
         statusOptions={statusOptions}
         designationOptions={designationOptions}
-        onUpdateDesignations={onUpdateDesignations}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
@@ -132,4 +130,3 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
 
 export type FacultyFormTabContentProps = TeacherFormTabContentProps;
 export const FacultyFormTabContent = TeacherFormTabContent;
-

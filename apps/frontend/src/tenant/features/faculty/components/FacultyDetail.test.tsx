@@ -52,6 +52,10 @@ vi.mock("@/components/ui/DetailDrawerShell", () => ({
   ),
 }));
 
+vi.mock("@/tenant/features/faculty/components/FacultyDesignationHistory", () => ({
+  FacultyDesignationHistory: () => <div>faculty.designations.history</div>,
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string | number>) => {
@@ -90,5 +94,6 @@ describe("TeacherDetail Component", () => {
     expect(html).toContain("ID: EMP-77");
     expect(html).toContain("Senior instructor note");
     expect(html).toContain("teachers.detail.printIdCard");
+    expect(html).toContain("faculty.designations.history");
   });
 });

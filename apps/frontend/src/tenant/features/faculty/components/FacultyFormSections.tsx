@@ -2,10 +2,9 @@ import type React from "react";
 import { Briefcase, Hash, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { EditableSelect } from "@/components/ui/EditableSelect";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_INPUT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
+import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -17,6 +16,7 @@ import {
   type Teacher,
   type Faculty,
   type FacultyHierarchyPreset,
+  type FacultyDesignationDefinition,
 } from "@mms/shared";
 import { FacultyHierarchyFormFields } from "@/tenant/features/faculty/components/FacultyHierarchyFormFields";
 import { resolveTeacherFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
@@ -68,8 +68,7 @@ export interface TeacherEmploymentSectionProps extends TeacherSectionBaseProps {
   onRegenerateEmployeeId?: () => void;
   isFetchingNextEmployeeId?: boolean;
   statusOptions: TeacherStatusOption[];
-  designationOptions?: string[];
-  onUpdateDesignations?: (options: string[]) => void;
+  designationOptions?: FacultyDesignationDefinition[];
   teacher?: Teacher;
   supervisorCandidates?: Faculty[];
   hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
@@ -84,7 +83,6 @@ export function TeacherEmploymentSection({
   nextEmployeeId,
   onRegenerateEmployeeId,
   isFetchingNextEmployeeId,
-  onUpdateDesignations,
   statusOptions,
   teacher,
   teacherDraft,
@@ -160,59 +158,30 @@ export function TeacherEmploymentSection({
 
           {showDesignation && (
             <div className="space-y-3">
-              <Field label={designationLabel} id="designation" required={isFieldRequired("designation")} error={errors.designation}>
-                {onUpdateDesignations ? (
-                  <EditableSelect
-                    id="designation"
-                    name="designation"
-                    options={designationOptions || []}
-                    value={teacherDraft.designation || ""}
-                    onChange={(val) => {
-                      if (val.toLowerCase() === "other") {
-                        onDraftChange({ designation: val, customDesignation: "" });
-                      } else {
-                        onDraftChange({ designation: val, customDesignation: undefined });
-                      }
-                    }}
-                    onUpdateOptions={onUpdateDesignations}
-                    placeholder={t("teachers.form.selectDesignation")}
-                    addPlaceholder={t("teachers.form.addDesignation")}
-                    className={cn("w-full", errors.designation && FORM_INPUT_ERROR)}
-                  />
-                ) : (
-                  <FormSelect
-                    id="designation"
-                    name="designation"
-                    value={teacherDraft.designation || ""}
-                    onChange={(val) => {
-                      if (val.toLowerCase() === "other") {
-                        onDraftChange({ designation: val, customDesignation: "" });
-                      } else {
-                        onDraftChange({ designation: val, customDesignation: undefined });
-                      }
-                    }}
-                    options={designationOptions || []}
-                  />
-                )}
+              <Field label={designationLabel} id="designationId" required error={errors.designationId}>
+                <FormSelect
+                  id="designationId"
+                  name="designationId"
+                  value={teacherDraft.designationId || ""}
+                  disabled={Boolean(teacher?.id)}
+                  onChange={(value) => {
+                    const definition = designationOptions?.find((item) => item.id === value);
+                    onDraftChange({
+                      designationId: value,
+                      designation: definition?.name ?? "",
+                      hierarchyRank: definition?.hierarchyRank,
+                      designationAssignableRoles: definition?.assignableRoles ?? [],
+                    });
+                  }}
+                  options={(designationOptions ?? []).filter((item) => item.isActive || item.id === teacherDraft.designationId).map((item) => ({ value: item.id, label: item.name }))}
+                />
+                {teacher?.id ? <p className="mt-1 text-xs text-muted-foreground">{t('faculty.designations.manageInHistory')}</p> : null}
               </Field>
-
-              {(teacherDraft.designation?.toLowerCase() === "other" || teacherDraft.customDesignation !== undefined) && (
-                <Field
-                  label={t("teachers.form.customDesignation") || "Custom Designation"}
-                  id="customDesignation"
-                  required
-                  error={errors.customDesignation}
-                >
-                  <Input
-                    id="customDesignation"
-                    name="customDesignation"
-                    value={teacherDraft.customDesignation ?? ""}
-                    onChange={(e) => onDraftChange({ customDesignation: e.target.value })}
-                    placeholder={t("teachers.form.customDesignationPlaceholder") || "Enter custom designation"}
-                    className={cn(FORM_INPUT, errors.customDesignation && FORM_INPUT_ERROR)}
-                  />
+              {!teacher?.id ? (
+                <Field label={t('faculty.designations.startsOn')} id="designationStartsOn" required error={errors.designationStartsOn}>
+                  <Input id="designationStartsOn" type="date" value={teacherDraft.designationStartsOn ?? ""} onChange={(event) => onDraftChange({ designationStartsOn: event.target.value })} />
                 </Field>
-              )}
+              ) : null}
             </div>
           )}
 

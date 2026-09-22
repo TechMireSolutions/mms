@@ -14,6 +14,7 @@ import { FacultyDetailHeroCard } from "@/tenant/features/faculty/components/Facu
 import { FacultyDetailNotesSection } from "@/tenant/features/faculty/components/FacultyDetailNotesSection";
 import { FacultyDetailQuickActions } from "@/tenant/features/faculty/components/FacultyDetailQuickActions";
 import { FacultyDetailSessionsSection } from "@/tenant/features/faculty/components/FacultyDetailSessionsSection";
+import { FacultyDesignationHistory } from "@/tenant/features/faculty/components/FacultyDesignationHistory";
 import {
   resolveTeacherDisplayName,
 } from "@/tenant/features/faculty/components/facultyFieldDisplay";
@@ -160,6 +161,8 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
         error={sessionsError}
       />
 
+      {!isArchived ? <FacultyDesignationHistory faculty={effectiveTeacher} canEdit={Boolean(onEdit)} /> : null}
+
       {teacher.notes && isFieldEnabled("notes") && (
         <FacultyDetailNotesSection notes={teacher.notes} />
       )}
@@ -171,5 +174,4 @@ export const TeacherDetail = FacultyDetail;
 export const FacultyDrawer = FacultyDetail;
 export const TeacherDrawer = FacultyDetail;
 export default FacultyDetail;
-
 

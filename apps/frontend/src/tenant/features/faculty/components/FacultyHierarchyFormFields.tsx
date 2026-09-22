@@ -9,7 +9,6 @@ import {
   type Teacher,
   type Faculty,
   type FacultyHierarchyPreset,
-  FACULTY_HIERARCHY_RANK_PRESETS,
 } from "@mms/shared";
 
 export interface FacultyHierarchyFormFieldsProps {
@@ -29,11 +28,9 @@ export function FacultyHierarchyFormFields({
   isFieldRequired,
   onDraftChange,
   supervisorCandidates,
-  hierarchyRankPresets,
 }: FacultyHierarchyFormFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
   const showDepartment = isFieldEnabled("department");
-  const showHierarchyRank = isFieldEnabled("hierarchyRank");
   const showSupervisor = isFieldEnabled("reportingFacultyId");
 
   return (
@@ -52,32 +49,6 @@ export function FacultyHierarchyFormFields({
             onChange={(e) => onDraftChange({ department: e.target.value })}
             placeholder={t("teachers.form.departmentPlaceholder")}
             className={cn(FORM_INPUT, errors.department && FORM_INPUT_ERROR)}
-          />
-        </Field>
-      )}
-
-      {showHierarchyRank && (
-        <Field
-          label={t("teachers.form.hierarchyRank")}
-          id="hierarchyRank"
-          required={isFieldRequired("hierarchyRank")}
-          error={errors.hierarchyRank}
-        >
-          <FormSelect
-            id="hierarchyRank"
-            name="hierarchyRank"
-            value={String(teacherDraft.hierarchyRank ?? 4)}
-            onChange={(val) => {
-              const rankNum = Number(val) || 4;
-              onDraftChange({
-                hierarchyRank: rankNum,
-                ...(rankNum === 1 ? { reportingFacultyId: null } : {}),
-              });
-            }}
-            options={(hierarchyRankPresets || FACULTY_HIERARCHY_RANK_PRESETS).map((p) => ({
-              value: String(p.rank),
-              label: `Rank ${p.rank} — ${p.label}`,
-            }))}
           />
         </Field>
       )}

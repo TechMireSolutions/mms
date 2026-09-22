@@ -104,7 +104,7 @@ describe("TeacherFormSections Components", () => {
     expect(empHtml).toContain("border-destructive");
   });
 
-  it("renders hierarchy rank presets and supervisor picker in TeacherEmploymentSection", () => {
+  it("derives hierarchy rank from a dynamic designation and renders the supervisor picker", () => {
     const html = renderToStaticMarkup(
       <TeacherEmploymentSection
         autoGenerateId={false}
@@ -116,6 +116,8 @@ describe("TeacherFormSections Components", () => {
           employeeId: "FAC-001",
           status: "active",
           hierarchyRank: 3,
+          designationId: "senior-faculty",
+          designationStartsOn: "2026-01-01",
           reportingFacultyId: "fac-sup-1",
         }}
         supervisorCandidates={[
@@ -128,13 +130,22 @@ describe("TeacherFormSections Components", () => {
             status: "active",
           } as any,
         ]}
+        designationOptions={[{
+          id: "senior-faculty",
+          code: "SENIOR",
+          name: "Senior Faculty",
+          hierarchyRank: 3,
+          isActive: true,
+          assignableRoles: ["teacher"],
+        }]}
         isFieldEnabled={() => true}
         isFieldRequired={() => false}
         onDraftChange={vi.fn()}
       />,
     );
 
-    expect(html).toContain('id="hierarchyRank"');
+    expect(html).toContain('id="designationId"');
+    expect(html).not.toContain('id="hierarchyRank"');
     expect(html).toContain('id="reportingFacultyId"');
     expect(html).toContain("Dean Ahmad");
     expect(html).toContain("Rank 1");

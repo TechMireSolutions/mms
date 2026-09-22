@@ -96,6 +96,11 @@ export interface FacultyHierarchyNode {
   employeeId?: string;
   department?: string;
   designation?: string;
+  /** Server-projected designation effective today. */
+  designationId?: string;
+  designationStartsOn?: string;
+  designationEndsOn?: string | null;
+  designationAssignableRoles?: string[];
   hierarchyRank: number;
   status: string;
   avatar?: string | null;
@@ -123,6 +128,11 @@ export interface FacultyMember {
   specialization?: string;
   department?: string;
   designation?: string;
+  /** Server-projected designation effective today; writes select a definition by id. */
+  designationId?: string;
+  designationStartsOn?: string;
+  designationEndsOn?: string | null;
+  designationAssignableRoles?: string[];
   customDesignation?: string;
   reportingFacultyId?: string | null;
   /** Numeric hierarchy rank (1 is highest authority, e.g. Dean; higher numbers denote subordinate tiers). */

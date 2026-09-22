@@ -3,11 +3,11 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { useUsersContractList, invalidateUsersQueries } from "@/tenant/hooks/collections/users";
-import { useFacultyLookupMutation } from "@/tenant/features/faculty/hooks/useFacultyLookups";
 import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/tenant/features/faculty/hooks/useFaculty";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { teacherStatusOptions } from "@/lib/faculty/facultyStatusUi";
 import { useTeacherStatusConfig, useTeacherLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
+import { useFacultyDesignations } from "@/tenant/features/faculty/hooks/useFacultyDesignations";
 import {
   type Faculty,
   type Teacher,
@@ -57,13 +57,8 @@ export function useTeacherFormController({
   const {
     statusOptions: statusValues,
     specializationOptions,
-    designationOptions,
   } = useTeacherLookupOptions();
-
-  const { mutateAsync: mutateLookup } = useFacultyLookupMutation();
-  const handleUpdateDesignations = async (next: string[]) => {
-    await mutateLookup({ kind: "designations", items: next });
-  };
+  const designationDefinitions = useFacultyDesignations();
 
   const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_TEACHERS_SETTINGS.defaultSpecialization;
   const idPrefix = settings.idPrefix || DEFAULT_TEACHERS_SETTINGS.idPrefix;
@@ -260,8 +255,7 @@ export function useTeacherFormController({
     isDirty,
     defaultSpecialization,
     specializationOptions,
-    designationOptions,
-    handleUpdateDesignations,
+    designationOptions: designationDefinitions.data ?? [],
     statusOptions,
     statusConfig,
     autoGenerateId,

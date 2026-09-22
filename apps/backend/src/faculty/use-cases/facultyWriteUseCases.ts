@@ -7,6 +7,7 @@ import { facultyRepository as teachersRepository } from '../repository/facultyRe
 import { mergeTeacherPatch, prepareTeacherRecord } from './facultyNormalizeUseCases.js';
 import { ensureFacultyDesignationLookup } from './facultyLookupsService.js';
 import { generateNextEmployeeId } from './facultyEmployeeIdService.js';
+import { saveFacultyDesignationAssignment } from '../../db/repositories/facultyDesignationRepository.js';
 
 export interface CreateTeacherResult {
   record: TeacherRecord;
@@ -155,6 +156,22 @@ export async function createTeacher(
     }
 
     await repo.save(tenant, normalized);
+    const designationId = typeof rawRecord.designationId === 'string' ? rawRecord.designationId.trim() : '';
+    const designationStartsOn = typeof rawRecord.designationStartsOn === 'string'
+      ? rawRecord.designationStartsOn
+      : typeof normalized.joinDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(normalized.joinDate)
+        ? normalized.joinDate
+        : new Date().toISOString().slice(0, 10);
+    if (designationId) {
+      await saveFacultyDesignationAssignment(tenant, {
+        id: `fda-${String(normalized.id)}`,
+        facultyId: String(normalized.id),
+        designationId,
+        startsOn: designationStartsOn,
+        endsOn: null,
+        notes: null,
+      });
+    }
     return { record: normalized, restored: false };
   });
   await broadcastCollection('faculty');
@@ -224,4 +241,3 @@ export type CreateFacultyOptions = CreateTeacherOptions;
 export const FacultyPermissionError = TeacherPermissionError;
 export const createFaculty = createTeacher;
 export const updateFacultyById = updateTeacherById;
-

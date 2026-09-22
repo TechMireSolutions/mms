@@ -173,6 +173,17 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
     return false;
   }
 
+  const allowedDesignationRoles = input.teacherDraft.designationAssignableRoles;
+  if (
+    input.userAccountDraft?.enabled
+    && allowedDesignationRoles?.length
+    && !allowedDesignationRoles.includes(input.userAccountDraft.role)
+  ) {
+    input.setErrors({ 'user.role': input.t('faculty.designations.roleNotAllowed') });
+    notify.error(input.t('faculty.designations.roleNotAllowed'));
+    return false;
+  }
+
   if (input.userAccountDraft?.enabled && !input.linkedUser) {
     const primaryEmail = input.linkedContact ? getPrimaryEmail(input.linkedContact) : null;
     if (!primaryEmail) {

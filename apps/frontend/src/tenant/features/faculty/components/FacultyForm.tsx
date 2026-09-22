@@ -31,7 +31,6 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     defaultSpecialization,
     specializationOptions,
     designationOptions,
-    handleUpdateDesignations,
     statusOptions,
     statusConfig,
     autoGenerateId,
@@ -103,7 +102,6 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
           linkedTeacherContactIds={linkedTeacherContactIds}
           specializationOptions={specializationOptions}
           designationOptions={designationOptions}
-          onUpdateDesignations={handleUpdateDesignations}
           userAccountDraft={userAccountDraft}
           onUserAccountDraftChange={setUserAccountDraft}
           autoGenerateId={autoGenerateId}
@@ -142,4 +140,3 @@ export {
   FacultyForm as FacultyFormModal,
 };
 export default FacultyForm;
-

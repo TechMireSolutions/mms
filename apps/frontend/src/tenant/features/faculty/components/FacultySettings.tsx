@@ -7,6 +7,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { useTeachersSetupPanelState } from "@/tenant/features/faculty/hooks/useFacultySetupPanelState";
 import { TeachersPreferencesSection } from "@/tenant/features/faculty/components/FacultyPreferencesSection";
+import { FacultyDesignationsSetupSection } from "@/tenant/features/faculty/components/FacultyDesignationsSetupSection";
 
 export interface TeachersSettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -49,6 +50,8 @@ export const TeachersSettings = (function TeachersSettings({
           specializationOptions={specializationOptions}
         />
       </SectionCard>
+
+      <FacultyDesignationsSetupSection />
 
       <ModuleSetupSaveFooter
         dirty={isPrefsDirty}

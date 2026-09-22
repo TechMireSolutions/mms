@@ -166,6 +166,19 @@ export async function findTeacherById(tenant: string, id: string): Promise<Teach
   });
 }
 
+/** Finds the active faculty record linked to a contact, if one exists. */
+export async function findTeacherByContactId(tenant: string, contactId: string): Promise<Teacher | null> {
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantRead(subdomain, async (tx) => {
+    const rows = await tx.select().from(teachers).where(and(
+      eq(teachers.workspaceSubdomain, subdomain),
+      eq(teachers.contactId, contactId),
+      sql`${teachers.deletedAt} is null`,
+    )).limit(1);
+    return rows[0] ? teacherRowToRecord(rows[0]) : null;
+  });
+}
+
 export async function findTeachersByIds(tenant: string, ids: string[]): Promise<Teacher[]> {
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
@@ -296,4 +309,3 @@ export const saveFaculty = saveTeacher;
 export const bulkSaveFaculty = bulkSaveTeachers;
 export const replaceFacultyForWorkspace = replaceTeachersForWorkspace;
 export const countFacultyByWorkspace = countTeachersByWorkspace;
-

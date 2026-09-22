@@ -59,11 +59,14 @@ export function FacultyUserAccountSection({
   }, [existingUsers, teacherDraft.contactId, teacherDraft.userId]);
 
   const roleOptions = useMemo(() => {
-    return workspaceRoles.map((role) => ({
+    const allowedRoles = teacherDraft.designationAssignableRoles;
+    return workspaceRoles
+      .filter((role) => !allowedRoles?.length || allowedRoles.includes(role.id))
+      .map((role) => ({
       value: role.id,
       label: `${workspaceRoleLabel(role, t)}${!role.isSystem ? ` (${t("contacts.form.tabCustom")})` : ""}`,
     }));
-  }, [workspaceRoles, t]);
+  }, [workspaceRoles, teacherDraft.designationAssignableRoles, t]);
 
   const selectedRoleObj = useMemo(() => {
     const roleId = linkedUser ? (userAccountDraft.role || linkedUser.role) : userAccountDraft.role;

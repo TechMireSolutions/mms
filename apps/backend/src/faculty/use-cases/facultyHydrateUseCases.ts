@@ -3,8 +3,10 @@ import {
   hydrateFacultyFromContact,
   type Contact,
   type Faculty,
+  type FacultyDesignationAssignment,
 } from '@mms/shared';
 import { loadContactsByIdsForTenant } from '../../services/contactService.js';
+import { listCurrentFacultyDesignationAssignments } from '../../db/repositories/facultyDesignationRepository.js';
 
 /**
  * Single-pass hydrate: loads the linked contacts through the contacts composition
@@ -53,8 +55,27 @@ export async function hydrateFacultyFromContacts(
     }
   }
 
+  let currentDesignations = new Map<string, FacultyDesignationAssignment>();
+  try {
+    currentDesignations = await listCurrentFacultyDesignationAssignments(
+      tenant,
+      rows.map((row) => String(row.id)),
+    );
+  } catch {
+    // Legacy databases may be read during the expand phase before migration.
+  }
+
   return rows.map((row) => {
     const hydrated = hydrateFacultyFromContact(row, contactMap as never);
+    const currentDesignation = currentDesignations.get(String(row.id));
+    if (currentDesignation) {
+      hydrated.designation = currentDesignation.designationName;
+      hydrated.designationId = currentDesignation.designationId;
+      hydrated.designationStartsOn = currentDesignation.startsOn;
+      hydrated.designationEndsOn = currentDesignation.endsOn ?? null;
+      hydrated.designationAssignableRoles = currentDesignation.assignableRoles ?? [];
+      hydrated.hierarchyRank = currentDesignation.hierarchyRank ?? hydrated.hierarchyRank;
+    }
     if (hydrated.reportingFacultyId && supervisorNameMap.has(String(hydrated.reportingFacultyId))) {
       hydrated.reportingFacultyName = supervisorNameMap.get(String(hydrated.reportingFacultyId));
     }
@@ -63,4 +84,3 @@ export async function hydrateFacultyFromContacts(
 }
 
 export const hydrateTeachersFromContacts = hydrateFacultyFromContacts;
-

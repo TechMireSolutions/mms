@@ -2,7 +2,7 @@ import { relations } from "drizzle-orm";
 import { workspaces } from "../platform.js";
 import { contacts, tenantUsers } from "../contacts.js";
 import { students, studentEnrolledSessions } from "../students.js";
-import { faculty } from "../faculty.js";
+import { faculty, facultyDesignationAssignments, facultyDesignationRoles, facultyDesignations } from "../faculty.js";
 import {
   sessions,
   sessionFaculty,
@@ -105,6 +105,34 @@ export const studentsRelations = relations(students, ({ one, many }) => ({
   invoices: many(financeInvoices),
   examResults: many(examResults),
   hasanatDistributions: many(hasanatDistributions),
+  designationAssignments: many(facultyDesignationAssignments),
+}));
+
+export const facultyDesignationsRelations = relations(facultyDesignations, ({ one, many }) => ({
+  workspace: one(workspaces, {
+    fields: [facultyDesignations.workspaceSubdomain],
+    references: [workspaces.subdomain],
+  }),
+  roles: many(facultyDesignationRoles),
+  assignments: many(facultyDesignationAssignments),
+}));
+
+export const facultyDesignationRolesRelations = relations(facultyDesignationRoles, ({ one }) => ({
+  designation: one(facultyDesignations, {
+    fields: [facultyDesignationRoles.workspaceSubdomain, facultyDesignationRoles.designationId],
+    references: [facultyDesignations.workspaceSubdomain, facultyDesignations.id],
+  }),
+}));
+
+export const facultyDesignationAssignmentsRelations = relations(facultyDesignationAssignments, ({ one }) => ({
+  faculty: one(faculty, {
+    fields: [facultyDesignationAssignments.workspaceSubdomain, facultyDesignationAssignments.facultyId],
+    references: [faculty.workspaceSubdomain, faculty.id],
+  }),
+  designation: one(facultyDesignations, {
+    fields: [facultyDesignationAssignments.workspaceSubdomain, facultyDesignationAssignments.designationId],
+    references: [facultyDesignations.workspaceSubdomain, facultyDesignations.id],
+  }),
 }));
 
 export const studentEnrolledSessionsRelations = relations(studentEnrolledSessions, ({ one }) => ({
