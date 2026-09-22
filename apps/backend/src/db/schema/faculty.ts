@@ -117,6 +117,24 @@ export const facultyModulePreferences = pgTable('faculty_module_preferences', {
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
 
+/**
+ * Teacher Setup Config — deterministic dynamic Employee ID generation engine state.
+ */
+export const teacherSetupConfig = pgTable('teacher_setup_config', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  prefix: varchar('prefix', { length: 20 }).notNull().default('FAC'),
+  yearFormat: varchar('year_format', { length: 10 }).notNull().default('YYYY'),
+  sequenceDigits: integer('sequence_digits').notNull().default(4),
+  delimiter: varchar('delimiter', { length: 5 }).notNull().default(''),
+  currentSequence: integer('current_sequence').notNull().default(0),
+  lastYear: integer('last_year').notNull().default(2026),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
+export const facultySetupConfig = teacherSetupConfig;
+
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -129,6 +147,10 @@ export type FacultyFieldConfigsRow = typeof facultyFieldConfigs.$inferSelect;
 export type InsertFacultyFieldConfigsRow = typeof facultyFieldConfigs.$inferInsert;
 export type FacultyModulePreferencesRow = typeof facultyModulePreferences.$inferSelect;
 export type InsertFacultyModulePreferencesRow = typeof facultyModulePreferences.$inferInsert;
+export type TeacherSetupConfigRow = typeof teacherSetupConfig.$inferSelect;
+export type InsertTeacherSetupConfigRow = typeof teacherSetupConfig.$inferInsert;
+export type FacultySetupConfigRow = TeacherSetupConfigRow;
+export type InsertFacultySetupConfigRow = InsertTeacherSetupConfigRow;
 
 /* ========================================================================= */
 /*                    BACKWARD COMPATIBILITY ALIASES                        */
@@ -147,3 +169,4 @@ export type TeacherFieldConfigsRow = FacultyFieldConfigsRow;
 export type InsertTeacherFieldConfigsRow = InsertFacultyFieldConfigsRow;
 export type TeacherModulePreferencesRow = FacultyModulePreferencesRow;
 export type InsertTeacherModulePreferencesRow = InsertFacultyModulePreferencesRow;
+

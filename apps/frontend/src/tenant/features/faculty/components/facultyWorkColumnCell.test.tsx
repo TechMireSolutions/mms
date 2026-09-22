@@ -45,13 +45,26 @@ describe("renderTeacherWorkColumnValue", () => {
     expect(result).toBe("Alimiyyah");
   });
 
+  it("renders designation with semantic styling", () => {
+    const teacherWithDesignation: Teacher = {
+      ...mockTeacher,
+      designation: "Head of Quranic Studies",
+    };
+    const result = renderTeacherWorkColumnValue(teacherWithDesignation, "designation", baseOptions);
+    const html = renderToStaticMarkup(<div>{result}</div>);
+
+    expect(html).toContain("Head of Quranic Studies");
+    expect(html).toContain("text-sm font-medium text-foreground");
+  });
+
   it("returns emptyFallback for empty values", () => {
     const emptyTeacher: Teacher = {
       ...mockTeacher,
       specialization: undefined,
+      designation: undefined,
       notes: undefined,
     };
-    const result = renderTeacherWorkColumnValue(emptyTeacher, "specialization", baseOptions);
+    const result = renderTeacherWorkColumnValue(emptyTeacher, "designation", baseOptions);
 
     expect(result).toBe("—");
   });

@@ -827,6 +827,13 @@
       "when": 1789760592000,
       "tag": "0117_attendance_composite_active_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1789800000000,
+      "tag": "0118_faculty_employee_id_setup_config",
+      "breakpoints": true
     }
   ]
 }

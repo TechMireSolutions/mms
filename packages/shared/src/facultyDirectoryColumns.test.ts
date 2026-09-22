@@ -42,6 +42,7 @@ describe('TEACHER_DIRECTORY_COLUMN_SURFACES', () => {
     expect(DEFAULT_TEACHER_EXPORT_COLUMNS.map((col) => col.id)).toEqual([
       'name',
       'employeeId',
+      'designation',
       'specialization',
       'status',
       'qualification',
@@ -55,6 +56,7 @@ describe('TEACHER_DIRECTORY_COLUMN_SURFACES', () => {
   it('resolves a column label key from the surface table', () => {
     expect(teacherColumnLabelKey('name')).toBe('teachers.field.name');
     expect(teacherColumnLabelKey('employeeId')).toBe('teachers.field.employeeId');
+    expect(teacherColumnLabelKey('designation')).toBe('teachers.field.designation');
     expect(teacherColumnLabelKey('status')).toBe('teachers.field.status');
   });
 
@@ -70,10 +72,11 @@ describe('teacherFieldLabelKey / teacherWorkColumnLabelsFrom', () => {
     expect(teacherFieldLabelKey('notes')).toBe('teachers.field.notes');
   });
 
-  it('builds the 5-key Work labels map via the resolver', () => {
+  it('builds the 6-key Work labels map via the resolver', () => {
     const labels = teacherWorkColumnLabelsFrom((key) => `LABEL:${key}`);
     expect(labels).toEqual({
       name: 'LABEL:name',
+      designation: 'LABEL:designation',
       specialization: 'LABEL:specialization',
       qualification: 'LABEL:qualification',
       joinDate: 'LABEL:joinDate',

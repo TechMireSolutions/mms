@@ -54,6 +54,7 @@ function buildSearchSql(search: string): SQL | null {
   const pattern = `%${normalized}%`;
   return sql`(
     lower(COALESCE(${teachers.employeeId}, '')) LIKE ${pattern}
+    OR lower(COALESCE(${teachers.designation}, '')) LIKE ${pattern}
     OR lower(COALESCE(${teachers.specialization}, '')) LIKE ${pattern}
     OR lower(COALESCE(${teachers.qualification}, '')) LIKE ${pattern}
     OR EXISTS (
@@ -93,9 +94,19 @@ export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'de
     const empSort = employeeIdExpr();
     return dir === 'desc' ? sql`${empSort} desc nulls last` : sql`${empSort} asc nulls last`;
   }
+  if (field === 'designation') {
+    return dir === 'desc'
+      ? sql`lower(COALESCE(${teachers.designation}, '')) desc nulls last`
+      : sql`lower(COALESCE(${teachers.designation}, '')) asc nulls last`;
+  }
   if (field === 'specialization') {
     const specSort = specializationExpr();
     return dir === 'desc' ? sql`${specSort} desc nulls last` : sql`${specSort} asc nulls last`;
+  }
+  if (field === 'qualification') {
+    return dir === 'desc'
+      ? sql`lower(COALESCE(${teachers.qualification}, '')) desc nulls last`
+      : sql`lower(COALESCE(${teachers.qualification}, '')) asc nulls last`;
   }
   if (field === 'joinDate') {
     return dir === 'desc'

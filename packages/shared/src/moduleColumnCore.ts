@@ -221,6 +221,7 @@ export function getVisibleWorkColumns(
 
 export interface TeacherWorkColumnLabels {
   name: string;
+  designation: string;
   specialization: string;
   qualification: string;
   joinDate: string;
@@ -242,6 +243,7 @@ export function buildTeacherWorkColumnRegistry(
 
   const labelByKey: Record<string, string> = {
     name: labels.name,
+    designation: labels.designation,
     specialization: labels.specialization,
     qualification: labels.qualification,
     joinDate: labels.joinDate,

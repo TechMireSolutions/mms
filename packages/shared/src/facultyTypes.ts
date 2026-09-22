@@ -92,6 +92,7 @@ export interface FacultyMember {
   specialization?: string;
   department?: string;
   designation?: string;
+  customDesignation?: string;
   status: string;
   joinDate?: string;
   /** Hydrated from the linked Contact's education degrees — canonical data lives on Contact. */

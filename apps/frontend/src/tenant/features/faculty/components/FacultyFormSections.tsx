@@ -1,23 +1,18 @@
 import type React from "react";
-import { Briefcase, GraduationCap, Hash, Mail, Phone, RotateCw, School, User } from "lucide-react";
+import { Briefcase, Hash, RotateCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import ContactPicker from "@/components/contactLink/ContactPicker";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { EditableSelect } from "@/components/ui/EditableSelect";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
+import { Input } from "@/components/ui/input";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import {
-  getContactQualification,
-  getContactSpecialization,
-  getPrimaryEmail,
-  getPrimaryPhone,
   resolveTeacherStatus,
-  type Contact,
   type FieldDefinition,
   type Teacher,
 } from "@mms/shared";
@@ -38,98 +33,15 @@ export interface TeacherStatusOption {
   label: string;
 }
 
-export interface TeacherContactSectionProps {
-  teacherDraft: Partial<Teacher>;
-  linkedContact?: Contact | null;
-  linkedTeacherContactIds: Array<string | number>;
-  errors: Record<string, string>;
-  fields: Record<string, FieldDefinition[]>;
-  isFieldEnabled: (fieldId: string) => boolean;
-  isFieldRequired: (fieldId: string) => boolean;
-  onDraftChange: (patch: Partial<Teacher>) => void;
-}
+import {
+  TeacherContactSection,
+  type TeacherContactSectionProps,
+} from "@/tenant/features/faculty/components/FacultyFormContactSection";
 
-export function TeacherContactSection({
-  teacherDraft,
-  linkedContact,
-  linkedTeacherContactIds,
-  errors,
-  fields,
-  isFieldEnabled,
-  isFieldRequired,
-  onDraftChange,
-}: TeacherContactSectionProps): React.JSX.Element | null {
-  const { t } = useTranslation();
-  const showContact = isFieldEnabled("contactId");
-  if (!showContact) return null;
-
-  const contactLabel = resolveTeacherFieldLabel(fields, "basic", "contactId", t);
-  const primaryPhone = linkedContact ? getPrimaryPhone(linkedContact) : null;
-  const primaryEmail = linkedContact ? getPrimaryEmail(linkedContact) : null;
-  const contactQualification = linkedContact ? getContactQualification(linkedContact) : "";
-  const contactSpecialization = linkedContact ? getContactSpecialization(linkedContact) : "";
-  const hasProfilePills =
-    Boolean(teacherDraft.contactId) &&
-    (Boolean(primaryPhone) ||
-      Boolean(primaryEmail) ||
-      Boolean(contactQualification) ||
-      Boolean(contactSpecialization));
-
-  return (
-    <SectionCard title={contactLabel} icon={User} accentColor="primary" className="z-sticky">
-      <div className="space-y-3">
-        <ContactPicker
-          label={contactLabel}
-          value={teacherDraft.contactId ? String(teacherDraft.contactId) : null}
-          onChange={(contactId) => onDraftChange({ contactId: contactId ? String(contactId) : "" })}
-          excludeIds={linkedTeacherContactIds.map(String)}
-          searchPlaceholder={t("teachers.form.searchContact")}
-          emptyTitle={t("teachers.form.noContacts")}
-          emptyHint={t("teachers.form.noContactsHint")}
-          required={isFieldRequired("contactId")}
-          error={!!errors.contactId}
-          errorMessage={errors.contactId}
-        />
-        {hasProfilePills && (
-          <div className="flex flex-wrap items-center gap-2 pt-3 border-t border-border/40">
-            {primaryPhone && (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 text-xs text-muted-foreground font-medium">
-                <Phone className="w-3.5 h-3.5 text-primary" aria-hidden />
-                <span>{primaryPhone}</span>
-              </div>
-            )}
-            {primaryEmail && (
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 text-xs text-muted-foreground font-medium">
-                <Mail className="w-3.5 h-3.5 text-primary" aria-hidden />
-                <span>{primaryEmail}</span>
-              </div>
-            )}
-            {contactQualification && (
-              <div
-                data-testid="teacher-contact-qualification-pill"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 text-xs text-muted-foreground font-medium"
-                title={t("teachers.field.qualification")}
-              >
-                <GraduationCap className="w-3.5 h-3.5 text-primary" aria-hidden />
-                <span>{contactQualification}</span>
-              </div>
-            )}
-            {contactSpecialization && (
-              <div
-                data-testid="teacher-contact-specialization-pill"
-                className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 text-xs text-muted-foreground font-medium"
-                title={t("teachers.field.specialization")}
-              >
-                <School className="w-3.5 h-3.5 text-primary" aria-hidden />
-                <span>{contactSpecialization}</span>
-              </div>
-            )}
-          </div>
-        )}
-      </div>
-    </SectionCard>
-  );
-}
+export {
+  TeacherContactSection,
+  type TeacherContactSectionProps,
+};
 
 /**
  * @deprecated Qualification and specialization are derived directly from the linked contact's profile.
@@ -227,29 +139,61 @@ export function TeacherEmploymentSection({
           )}
 
           {showDesignation && (
-            <Field label={designationLabel} id="designation" required={isFieldRequired("designation")} error={errors.designation}>
-              {onUpdateDesignations ? (
-                <EditableSelect
-                  id="designation"
-                  name="designation"
-                  options={designationOptions || []}
-                  value={teacherDraft.designation || ""}
-                  onChange={(val) => onDraftChange({ designation: val })}
-                  onUpdateOptions={onUpdateDesignations}
-                  placeholder={t("teachers.form.selectDesignation")}
-                  addPlaceholder={t("teachers.form.addDesignation")}
-                  className={cn("w-full", errors.designation && FORM_INPUT_ERROR)}
-                />
-              ) : (
-                <FormSelect
-                  id="designation"
-                  name="designation"
-                  value={teacherDraft.designation || ""}
-                  onChange={(val) => onDraftChange({ designation: val })}
-                  options={designationOptions || []}
-                />
+            <div className="space-y-3">
+              <Field label={designationLabel} id="designation" required={isFieldRequired("designation")} error={errors.designation}>
+                {onUpdateDesignations ? (
+                  <EditableSelect
+                    id="designation"
+                    name="designation"
+                    options={designationOptions || []}
+                    value={teacherDraft.designation || ""}
+                    onChange={(val) => {
+                      if (val.toLowerCase() === "other") {
+                        onDraftChange({ designation: val, customDesignation: "" });
+                      } else {
+                        onDraftChange({ designation: val, customDesignation: undefined });
+                      }
+                    }}
+                    onUpdateOptions={onUpdateDesignations}
+                    placeholder={t("teachers.form.selectDesignation")}
+                    addPlaceholder={t("teachers.form.addDesignation")}
+                    className={cn("w-full", errors.designation && FORM_INPUT_ERROR)}
+                  />
+                ) : (
+                  <FormSelect
+                    id="designation"
+                    name="designation"
+                    value={teacherDraft.designation || ""}
+                    onChange={(val) => {
+                      if (val.toLowerCase() === "other") {
+                        onDraftChange({ designation: val, customDesignation: "" });
+                      } else {
+                        onDraftChange({ designation: val, customDesignation: undefined });
+                      }
+                    }}
+                    options={designationOptions || []}
+                  />
+                )}
+              </Field>
+
+              {(teacherDraft.designation?.toLowerCase() === "other" || teacherDraft.customDesignation !== undefined) && (
+                <Field
+                  label={t("teachers.form.customDesignation") || "Custom Designation"}
+                  id="customDesignation"
+                  required
+                  error={errors.customDesignation}
+                >
+                  <Input
+                    id="customDesignation"
+                    name="customDesignation"
+                    value={teacherDraft.customDesignation ?? ""}
+                    onChange={(e) => onDraftChange({ customDesignation: e.target.value })}
+                    placeholder={t("teachers.form.customDesignationPlaceholder") || "Enter custom designation"}
+                    className={cn(FORM_INPUT, errors.customDesignation && FORM_INPUT_ERROR)}
+                  />
+                </Field>
               )}
-            </Field>
+            </div>
           )}
 
           {showStatus && (

@@ -23,6 +23,7 @@ export const facultyCoreSchema = z.object({
   specialization: z.string().optional(),
   department: z.string().optional(),
   designation: z.string().optional(),
+  customDesignation: z.string().trim().optional(),
   status: z.string().min(1).max(FACULTY_STATUS_WRITE_MAX).optional(),
   joinDate: z.string().optional(),
   qualification: z.string().optional(),

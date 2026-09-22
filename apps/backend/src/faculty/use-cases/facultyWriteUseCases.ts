@@ -5,6 +5,8 @@ import { broadcastCollection } from '../../lib/livePush.js';
 import type { FacultyRepository as TeachersRepository } from '../repository/facultyRepository.js';
 import { facultyRepository as teachersRepository } from '../repository/facultyRepositoryAdapter.js';
 import { mergeTeacherPatch, prepareTeacherRecord } from './facultyNormalizeUseCases.js';
+import { ensureFacultyDesignationLookup } from './facultyLookupsService.js';
+import { generateNextEmployeeId } from './teacherEmployeeIdService.js';
 
 export interface CreateTeacherResult {
   record: TeacherRecord;
@@ -41,7 +43,24 @@ export async function createTeacher(
   const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) throw new Error('Tenant context required');
+
+    const rawRecord = record as Record<string, unknown>;
+    const customDes = typeof rawRecord.customDesignation === 'string' && rawRecord.customDesignation.trim()
+      ? rawRecord.customDesignation.trim()
+      : typeof rawRecord.designation === 'string' && rawRecord.designation.trim()
+        ? rawRecord.designation.trim()
+        : '';
+    if (customDes) {
+      await ensureFacultyDesignationLookup(tenant, customDes);
+    }
+
     const normalized = prepareTeacherRecord(record);
+
+    if (!normalized.employeeId || !normalized.employeeId.trim()) {
+      const generated = await generateNextEmployeeId(tenant);
+      normalized.employeeId = generated.employeeId;
+    }
+
     const contactId = normalized.contactId != null ? String(normalized.contactId).trim() : '';
 
     if (contactId) {
@@ -79,6 +98,17 @@ export async function updateTeacherById(
     if (!tenant) return null;
     const existing = await repo.findById(tenant, id);
     if (!existing || existing.deletedAt) return null;
+
+    const rawRecord = record as Record<string, unknown>;
+    const customDes = typeof rawRecord.customDesignation === 'string' && rawRecord.customDesignation.trim()
+      ? rawRecord.customDesignation.trim()
+      : typeof rawRecord.designation === 'string' && rawRecord.designation.trim()
+        ? rawRecord.designation.trim()
+        : '';
+    if (customDes) {
+      await ensureFacultyDesignationLookup(tenant, customDes);
+    }
+
     const normalized = prepareTeacherRecord({
       ...mergeTeacherPatch(existing, record),
       id,

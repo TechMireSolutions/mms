@@ -8,7 +8,7 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatTeacherEmployeeId, type TeachersSettings } from "@mms/shared";
+import { formatDeterministicEmployeeId, type TeachersSettings } from "@mms/shared";
 
 export interface TeachersPreferencesSectionProps {
   settingsDraft: TeachersSettings;
@@ -33,9 +33,22 @@ export function TeachersPreferencesSection({
   const { t } = useTranslation();
 
   const livePreview = useMemo(() => {
-    return formatTeacherEmployeeId(
-      settingsDraft.idStartSeq || 1,
-      settingsDraft,
+    const prefix = settingsDraft.employeeIdPrefix ?? settingsDraft.idPrefix ?? "FAC";
+    const yearFormat = (settingsDraft.employeeIdYearFormat ?? "YYYY") as "YYYY" | "YY";
+    const sequenceDigits = settingsDraft.employeeIdSequenceDigits ?? settingsDraft.idDigits ?? 4;
+    const delimiter = settingsDraft.employeeIdDelimiter ?? "";
+    const seq = (settingsDraft.employeeIdCurrentSequence && settingsDraft.employeeIdCurrentSequence > 0)
+      ? settingsDraft.employeeIdCurrentSequence + 1
+      : (settingsDraft.idStartSeq || 1);
+
+    return formatDeterministicEmployeeId(
+      seq,
+      {
+        prefix,
+        yearFormat,
+        sequenceDigits,
+        delimiter,
+      },
     );
   }, [settingsDraft]);
 
@@ -68,16 +81,117 @@ export function TeachersPreferencesSection({
                 {t("teachers.settings.preview")}
               </span>
             </div>
-            <Badge
-              variant="default"
-              className="font-mono text-sm px-3 py-1 font-semibold tracking-wider bg-primary text-primary-foreground shadow-xs"
+            <div className="flex items-center gap-2">
+              <Badge
+                variant="default"
+                className="font-mono text-sm px-3 py-1 font-semibold tracking-wider bg-primary text-primary-foreground shadow-xs"
+              >
+                {livePreview}
+              </Badge>
+            </div>
+          </div>
+
+          {/* Engine Parameters: Prefix, Year Format, Sequence Digits, Delimiter Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+            <Field
+              label={t("teachers.settings.idPrefix")}
+              hint={t("teachers.settings.idPrefixHint")}
+              id="teacher-idPrefix"
             >
-              {livePreview}
-            </Badge>
+              <Input
+                id="teacher-idPrefix"
+                name="teacher-idPrefix"
+                className={FORM_INPUT}
+                value={settingsDraft.employeeIdPrefix ?? settingsDraft.idPrefix ?? ""}
+                onChange={(event) => {
+                  const val = event.target.value;
+                  upd("employeeIdPrefix", val);
+                  upd("idPrefix", val);
+                }}
+                placeholder="FAC"
+              />
+            </Field>
+
+            <Field
+              label={t("teachers.settings.yearFormat") || "Year Format"}
+              hint={t("teachers.settings.yearFormatHint") || "Four-digit (YYYY) or two-digit (YY)"}
+              id="teacher-employeeIdYearFormat"
+            >
+              <FormSelect
+                id="teacher-employeeIdYearFormat"
+                name="teacher-employeeIdYearFormat"
+                value={settingsDraft.employeeIdYearFormat ?? "YYYY"}
+                onChange={(val) => upd("employeeIdYearFormat", val as "YYYY" | "YY")}
+                options={[
+                  { value: "YYYY", label: "YYYY (e.g. 2026)" },
+                  { value: "YY", label: "YY (e.g. 26)" },
+                ]}
+              />
+            </Field>
+
+            <Field
+              label={t("teachers.settings.idDigits")}
+              hint={t("teachers.settings.idDigitsHint")}
+              id="teacher-idDigits"
+            >
+              <Input
+                id="teacher-idDigits"
+                name="teacher-idDigits"
+                type="number"
+                min="2"
+                max="8"
+                className={FORM_INPUT}
+                value={settingsDraft.employeeIdSequenceDigits ?? settingsDraft.idDigits ?? 4}
+                onChange={(event) => {
+                  const val = Number(event.target.value);
+                  upd("employeeIdSequenceDigits", val);
+                  upd("idDigits", val);
+                }}
+              />
+            </Field>
+
+            <Field
+              label={t("teachers.settings.delimiter") || "Delimiter"}
+              hint={t("teachers.settings.delimiterHint") || "Optional separator (e.g. - or /)"}
+              id="teacher-employeeIdDelimiter"
+            >
+              <Input
+                id="teacher-employeeIdDelimiter"
+                name="teacher-employeeIdDelimiter"
+                className={FORM_INPUT}
+                value={settingsDraft.employeeIdDelimiter ?? ""}
+                onChange={(event) => upd("employeeIdDelimiter", event.target.value)}
+                placeholder="e.g. - or leave empty"
+              />
+            </Field>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <Field
+              label={t("teachers.settings.idStartSeq")}
+              hint={t("teachers.settings.idStartSeqHint")}
+              id="teacher-idStartSeq"
+            >
+              <Input
+                id="teacher-idStartSeq"
+                name="teacher-idStartSeq"
+                type="number"
+                min="1"
+                className={FORM_INPUT}
+                value={settingsDraft.idStartSeq ?? 1}
+                onChange={(event) => upd("idStartSeq", Number(event.target.value))}
+              />
+            </Field>
+
+            <div className="flex items-center text-xs text-muted-foreground p-3 rounded-md bg-muted/40 border border-border/40">
+              <span>
+                Sequence State: {settingsDraft.employeeIdCurrentSequence ?? 0} &middot; Rollover Year: {settingsDraft.employeeIdLastYear ?? new Date().getFullYear()}
+              </span>
+            </div>
           </div>
 
           {/* Template Input with Quick Token Badges */}
-          <div>
+          <div className="pt-2 border-t border-border/40">
             <Field
               label={t("teachers.settings.idTemplate")}
               hint={t("teachers.settings.idTemplateHint")}
@@ -108,57 +222,6 @@ export function TeachersPreferencesSection({
                 </button>
               ))}
             </div>
-          </div>
-
-          {/* Prefix, Digits, Start Sequence Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <Field
-              label={t("teachers.settings.idPrefix")}
-              hint={t("teachers.settings.idPrefixHint")}
-              id="teacher-idPrefix"
-            >
-              <Input
-                id="teacher-idPrefix"
-                name="teacher-idPrefix"
-                className={FORM_INPUT}
-                value={settingsDraft.idPrefix || ""}
-                onChange={(event) => upd("idPrefix", event.target.value)}
-                placeholder="TCH"
-              />
-            </Field>
-
-            <Field
-              label={t("teachers.settings.idDigits")}
-              hint={t("teachers.settings.idDigitsHint")}
-              id="teacher-idDigits"
-            >
-              <Input
-                id="teacher-idDigits"
-                name="teacher-idDigits"
-                type="number"
-                min="1"
-                max="8"
-                className={FORM_INPUT}
-                value={settingsDraft.idDigits ?? 4}
-                onChange={(event) => upd("idDigits", Number(event.target.value))}
-              />
-            </Field>
-
-            <Field
-              label={t("teachers.settings.idStartSeq")}
-              hint={t("teachers.settings.idStartSeqHint")}
-              id="teacher-idStartSeq"
-            >
-              <Input
-                id="teacher-idStartSeq"
-                name="teacher-idStartSeq"
-                type="number"
-                min="1"
-                className={FORM_INPUT}
-                value={settingsDraft.idStartSeq ?? 1}
-                onChange={(event) => upd("idStartSeq", Number(event.target.value))}
-              />
-            </Field>
           </div>
 
           <ToggleRow

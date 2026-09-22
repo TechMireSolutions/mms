@@ -39,9 +39,14 @@ export function mergeTeacherPatch(
  * contact-owned profile keys. Accepts pre-validated TeacherRecord.
  */
 export function prepareTeacherRecord(record: TeacherRecord | Record<string, unknown>): TeacherRecord {
+  const raw: Record<string, unknown> = { ...record };
+  if ('customDesignation' in raw && typeof raw.customDesignation === 'string' && raw.customDesignation.trim()) {
+    raw.designation = raw.customDesignation.trim();
+  }
+  delete raw.customDesignation;
   const withId = {
-    ...record,
-    id: resolveTeacherRowId(record.id),
+    ...raw,
+    id: resolveTeacherRowId(raw.id),
   };
   return normalizeStoredTeacher(stripTeacherClientSoftDeleteFields(withId) as TeacherRecord);
 }

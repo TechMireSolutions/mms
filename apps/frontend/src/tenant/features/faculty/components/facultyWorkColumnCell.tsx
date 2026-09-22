@@ -28,6 +28,18 @@ export function renderTeacherWorkColumnValue(
       />
     );
   }
+  if (columnKey === "designation") {
+    const value = resolveTeacherFieldDisplayText(teacher, columnKey, {
+      t,
+      notSpecifiedFallback: false,
+    });
+    if (value === undefined || value === "") return emptyFallback;
+    return (
+      <span className="text-sm font-medium text-foreground truncate block">
+        {value}
+      </span>
+    );
+  }
   const customFieldId = customFieldKeyFromColumnKey(columnKey);
   const customFieldLabel =
     customFieldId !== null ? customFieldsById?.get(customFieldId)?.label : undefined;

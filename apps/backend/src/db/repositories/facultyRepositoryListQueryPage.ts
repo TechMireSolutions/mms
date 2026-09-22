@@ -17,6 +17,8 @@ const TEACHER_LIST_COLUMNS = {
   employeeId: teachers.employeeId,
   status: teachers.status,
   specialization: teachers.specialization,
+  department: teachers.department,
+  designation: teachers.designation,
   qualification: teachers.qualification,
   joinDate: teachers.joinDate,
   deletedAt: teachers.deletedAt,

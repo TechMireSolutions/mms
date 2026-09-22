@@ -32,6 +32,7 @@ export const FACULTY_WRITE_SYSTEM_KEYS: readonly string[] = (() => {
   for (const key of listTeacherSystemFormFieldKeys()) {
     keys.add(key);
   }
+  keys.add('customDesignation');
   return [...keys].sort((left, right) => left.localeCompare(right));
 })();
 
@@ -73,6 +74,7 @@ export function buildDynamicFacultySchema(
     specialization: z.string().nullish(),
     department: z.string().nullish(),
     designation: z.string().nullish(),
+    customDesignation: z.string().trim().optional(),
     status: z.string().max(FACULTY_STATUS_WRITE_MAX).nullish(),
     joinDate: z.string().nullish(),
     qualification: z.string().nullish(),

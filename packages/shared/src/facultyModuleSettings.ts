@@ -42,6 +42,12 @@ export interface TeachersSettings {
   idDigits?: number;
   idStartSeq?: number;
   idRestartAnnually?: boolean;
+  employeeIdPrefix?: string;
+  employeeIdYearFormat?: 'YYYY' | 'YY';
+  employeeIdSequenceDigits?: number;
+  employeeIdDelimiter?: string;
+  employeeIdLastYear?: number;
+  employeeIdCurrentSequence?: number;
   fields?: Record<string, unknown>;
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -73,11 +79,17 @@ function teacherFieldDefFromDefinition(field: FieldDefinition, isCustom: boolean
 
 /** Authoritative default values for TeachersSettings (tabbed Fields SSOT). */
 export const DEFAULT_TEACHERS_SETTINGS: TeachersSettings = {
-  idPrefix: "TCH",
+  idPrefix: "FAC",
   idTemplate: "{PREFIX}-{SEQ}",
   idDigits: 4,
   idStartSeq: 1,
   idRestartAnnually: false,
+  employeeIdPrefix: "FAC",
+  employeeIdYearFormat: "YYYY",
+  employeeIdSequenceDigits: 4,
+  employeeIdDelimiter: "",
+  employeeIdCurrentSequence: 0,
+  employeeIdLastYear: 2026,
   autoGenerateId: true,
   requireContactLink: true,
   defaultSpecialization: DEFAULT_TEACHER_SPECIALIZATION,
