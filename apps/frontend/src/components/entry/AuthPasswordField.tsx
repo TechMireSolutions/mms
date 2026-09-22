@@ -30,6 +30,7 @@ export function AuthPasswordField({
   onChange,
   error,
   disabled,
+  autoFocus,
   autoComplete = "current-password",
   placeholder,
   required = true,
@@ -44,6 +45,7 @@ export function AuthPasswordField({
   onChange: (value: string) => void;
   error?: string;
   disabled?: boolean;
+  autoFocus?: boolean;
   autoComplete?: string;
   placeholder?: string;
   required?: boolean;
@@ -64,6 +66,7 @@ export function AuthPasswordField({
         autoComplete={autoComplete}
         required={required}
         disabled={disabled}
+        autoFocus={autoFocus}
         value={value}
         placeholder={placeholder}
         onChange={(event) => onChange(event.target.value)}

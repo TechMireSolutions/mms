@@ -46,6 +46,9 @@ export type InviteWorkspaceUserInput = z.infer<typeof inviteWorkspaceUserSchema>
 /** How long a tenant "set your password" OTP code stays valid. */
 export const TENANT_PASSWORD_OTP_TTL_MINUTES = 10;
 
+/** Max failed OTP verifies per tenant password-reset/activation artifact before it is invalidated. */
+export const TENANT_OTP_MAX_ATTEMPTS = 5;
+
 /** Step 1 — request a one-time code (used for both forgot-password and first-time activation). */
 export const requestTenantPasswordResetSchema = z
   .object({

@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
 import type { PlatformUser, PlatformUserProfile } from '@mms/shared';
-import { verifyPassword } from '../auth/passwordService.js';
+import { verifyPassword, DUMMY_PASSWORD_HASH } from '../auth/passwordService.js';
 import { clearAuthCookies } from '../auth/authCookieService.js';
 import {
   findPlatformUserByEmail,
@@ -63,12 +63,12 @@ export async function loginPlatformUser(
   reply: FastifyReply,
 ): Promise<PlatformLoginResult> {
   const stored = await findPlatformUserByEmail(email);
-  if (!stored) {
-    return { ok: false, type: 'invalid_credentials' };
-  }
 
-  const passwordOk = await verifyPassword(password, stored.passwordHash);
-  if (!passwordOk) {
+  const passwordOk = stored
+    ? await verifyPassword(password, stored.passwordHash)
+    : await verifyPassword(password, DUMMY_PASSWORD_HASH).then(() => false);
+
+  if (!stored || !passwordOk) {
     return { ok: false, type: 'invalid_credentials' };
   }
 

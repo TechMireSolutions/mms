@@ -5,6 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useIdleTimer } from "@/hooks/useIdleTimer";
 import { SessionTimeoutModal } from "@/components/session/SessionTimeoutModal";
 import { apiJson } from "@/lib/apiClient";
+import { PLATFORM_AUTH_PATHS } from "@/lib/apiClientHelpers";
 
 interface PlatformSessionTimeoutOptions {
   enabled: boolean;
@@ -35,7 +36,7 @@ export function usePlatformSessionTimeout({
       return;
     }
     let active = true;
-    apiJson<SessionTimeoutPolicy>("/api/platform/auth/session/policy")
+    apiJson<SessionTimeoutPolicy>(PLATFORM_AUTH_PATHS.sessionPolicy)
       .then((p) => {
         if (active) setPolicy(p);
       })

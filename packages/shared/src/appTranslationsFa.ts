@@ -950,6 +950,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "auth.handoffFailed": "اتصال خودکار به سیستم ناموفق بود",
   "auth.handoffProcessing": "در حال تکمیل فرآیند ورود…",
   "auth.hidePassword": "پنهان کردن رمز عبور",
+  "auth.emailNotVerified": "لطفاً قبل از ورود، ایمیل خود را تأیید کنید",
   "auth.invalidCredentials": "اطلاعات ورود نادرست است",
   "auth.loadingWorkspace": "در حال بارگذاری فضای کار…",
   "auth.maskedEmailFallback": "ایمیل شما",

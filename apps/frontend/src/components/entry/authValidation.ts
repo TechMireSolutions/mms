@@ -1,6 +1,5 @@
-import { isValidEmail, type AppTranslationKey } from "@mms/shared";
-
-type AuthTranslate = (key: AppTranslationKey) => string;
+import { isValidEmail } from "@mms/shared";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export interface SignInFieldErrors {
   email?: string;
@@ -8,7 +7,7 @@ export interface SignInFieldErrors {
 }
 
 /** Shared email validation for sign-in and forgot-password forms. */
-export function validateAuthEmail(email: string, t: AuthTranslate): string | undefined {
+export function validateAuthEmail(email: string, t: TranslationFunction): string | undefined {
   const trimmed = email.trim();
   if (!trimmed) return t("auth.emailRequired");
   if (!isValidEmail(trimmed)) return t("auth.emailInvalid");
@@ -19,7 +18,7 @@ export function validateAuthEmail(email: string, t: AuthTranslate): string | und
 export function validateSignInCredentials(
   email: string,
   password: string,
-  t: AuthTranslate,
+  t: TranslationFunction,
 ): SignInFieldErrors {
   const errors: SignInFieldErrors = {};
   const emailError = validateAuthEmail(email, t);

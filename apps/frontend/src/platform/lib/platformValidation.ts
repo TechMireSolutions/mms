@@ -42,7 +42,7 @@ export function getPlatformPasswordError(password: string, t: TranslateFn): stri
 export function getPlatformPasswordMatchError(
   password: string,
   confirmPassword: string,
-  t: TranslateFn
+  t: TranslateFn,
 ): string | null {
   const key = validatePlatformPasswordMatch(password, confirmPassword);
   return key ? t(key) : null;
@@ -55,7 +55,7 @@ export function getPlatformRegisterError(
   name: string,
   email: string,
   password: string,
-  t: TranslateFn
+  t: TranslateFn,
 ): string | null {
   const nameError = getPlatformNameError(name, t);
   if (nameError) return nameError;
@@ -68,5 +68,3 @@ export function getPlatformRegisterError(
 
   return null;
 }
-
-

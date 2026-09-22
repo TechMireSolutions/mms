@@ -56,8 +56,9 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
         {showToggle ? (
           <button
             type="button"
+            disabled={disabled}
             onClick={() => setShowPassword((prev) => !prev)}
-            className="absolute end-0.5 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1"
+            className="absolute end-0.5 top-1/2 flex min-h-11 min-w-11 -translate-y-1/2 cursor-pointer items-center justify-center rounded-lg text-muted-foreground transition-colors hover:bg-muted/60 hover:text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 disabled:pointer-events-none disabled:opacity-50"
             aria-label={showPassword ? t('auth.hidePassword') : t('auth.showPassword')}
             aria-pressed={showPassword}
           >

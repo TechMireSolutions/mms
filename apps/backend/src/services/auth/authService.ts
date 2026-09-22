@@ -126,6 +126,7 @@ export async function completeTwoFactorLogin(
   const { verifyTwoFactorChallenge } = await import('./twoFactorService.js');
   const user = await verifyTwoFactorChallenge(challengeId, code);
   if (!user) return null;
+  await assertWorkspaceActive(user.workspaceSubdomain);
   return establishSession(user, jwtSigner, reply, true);
 }
 

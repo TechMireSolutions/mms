@@ -1,12 +1,21 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { DEFAULT_GLOBAL_SETTINGS, getPasswordPolicyHintKey, validatePasswordPolicy } from "@mms/shared";
+import {
+  DEFAULT_GLOBAL_SETTINGS,
+  getPasswordPolicyHintKey,
+  validatePasswordPolicy,
+} from "@mms/shared";
 import AuthLayout from "@/tenant/components/AuthLayout";
-import EntryPageHead, { formatEntryTitle } from "@/components/entry/EntryPageHead";
-import { AuthPasswordField } from "@/components/entry/AuthPasswordField";
-import { AuthSubmitButton } from "@/components/entry/AuthFormControls";
-import { AuthStatusBanner } from "@/components/entry/AuthStatusBanner";
+import {
+  AuthPasswordField,
+  AuthStatusBanner,
+  AuthSubmitButton,
+  EntryPageHead,
+  formatEntryTitle,
+} from "@/components/entry";
+import { PasswordStrengthMeter } from "@/components/ui/PasswordStrengthMeter";
 import { useAuth } from "@/lib/contexts/AuthContext";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { ROUTES } from "@/lib/config/routes";
 import { useTranslation } from "@/hooks/useTranslation";
 import { apiContract } from "@/lib/api";
@@ -20,7 +29,10 @@ const PASSWORD_HINT_ID = "force-password-policy-hint";
 export default function ForcePasswordChange(): React.ReactElement {
   const { t } = useTranslation();
   const { logout } = useAuth();
+  const settings = useGlobalSettings();
   const navigate = useNavigate();
+
+  const activePolicy = settings.passwordPolicy ?? DEFAULT_GLOBAL_SETTINGS.passwordPolicy;
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -40,7 +52,7 @@ export default function ForcePasswordChange(): React.ReactElement {
       setError(t("account.passwordMismatch"));
       return;
     }
-    const policy = validatePasswordPolicy(newPassword, DEFAULT_GLOBAL_SETTINGS.passwordPolicy);
+    const policy = validatePasswordPolicy(newPassword, activePolicy);
     if (!policy.valid) {
       setError(policy.errorKey ? t(policy.errorKey) : policy.message);
       return;
@@ -85,7 +97,7 @@ export default function ForcePasswordChange(): React.ReactElement {
               onChange={setCurrentPassword}
             />
 
-            <div className="space-y-1.5">
+            <div className="space-y-2">
               <AuthPasswordField
                 id={NEW_PASSWORD_ID}
                 label={t("account.newPassword")}
@@ -94,8 +106,9 @@ export default function ForcePasswordChange(): React.ReactElement {
                 onChange={setNewPassword}
                 describedBy={PASSWORD_HINT_ID}
               />
+              <PasswordStrengthMeter password={newPassword} />
               <p id={PASSWORD_HINT_ID} className="text-xs leading-relaxed text-muted-foreground">
-                {t(getPasswordPolicyHintKey(DEFAULT_GLOBAL_SETTINGS.passwordPolicy))}
+                {t(getPasswordPolicyHintKey(activePolicy))}
               </p>
             </div>
 

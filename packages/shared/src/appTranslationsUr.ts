@@ -946,6 +946,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "auth.handoffFailed": "سائن ان ہینڈ آف ناکام",
   "auth.handoffProcessing": "سائن ان مکمل ہو رہا ہے…",
   "auth.hidePassword": "پاس ورڈ چھپائیں",
+  "auth.emailNotVerified": "سائن ان کرنے سے پہلے براہ کرم اپنے ای میل کی تصدیق کریں",
   "auth.invalidCredentials": "غلط اسناد",
   "auth.loadingWorkspace": "ورک اسپیس لوڈ ہو رہی ہے…",
   "auth.maskedEmailFallback": "آپ کی ای میل",

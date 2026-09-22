@@ -8,6 +8,7 @@ import { normalizeWorkspaceUser } from '@mms/shared';
 
 const mockNavigate = vi.fn();
 const mockVerify2FA = vi.fn();
+const mockResend2FA = vi.fn(async () => mockResendSuccess);
 let mockIsAuthenticated = false;
 let mockUser: any = null;
 let mockPendingChallengeId: string | null = 'challenge-123';
@@ -26,6 +27,7 @@ vi.mock('@/lib/contexts/AuthContext', () => ({
     isAuthenticated: mockIsAuthenticated,
     user: mockUser,
     verify2FA: mockVerify2FA,
+    resend2FA: mockResend2FA,
   }),
 }));
 
@@ -228,6 +230,7 @@ describe('TwoFactorAuth', () => {
       resendBtn?.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     });
 
+    expect(mockResend2FA).toHaveBeenCalledWith('challenge-123');
     expect(container.querySelector('[data-testid="auth-layout"]')).not.toBeNull();
 
     act(() => {

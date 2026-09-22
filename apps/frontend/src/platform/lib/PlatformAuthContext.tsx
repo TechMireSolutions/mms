@@ -1,7 +1,9 @@
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
-import type { PlatformUserProfile } from '@mms/shared';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import type { PlatformLoginResponse, PlatformUserProfile } from '@mms/shared';
 import { normalizePlatformAdminPermissions } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
+import { PLATFORM_AUTH_PATHS } from '@/lib/apiClientHelpers';
+import { clearPersistedAuthUser } from '@/lib/contexts/authContextHelpers';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { usePlatformSessionTimeout } from '@/platform/hooks/usePlatformSessionTimeout';
 
@@ -77,7 +79,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     // Logged-out probe returns 200 { user: null } (not 401) to avoid DevTools noise.
     try {
       const platformSession = await apiJson<{ user: PlatformUserProfile | null }>(
-        '/api/platform/auth/me',
+        PLATFORM_AUTH_PATHS.me,
       );
       if (platformSession.user) {
         setPlatformUser(normalizeSessionUser(platformSession.user));
@@ -99,11 +101,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     async (email: string, password: string): Promise<PlatformLoginOutcome> => {
       setIsPlatformLoginSubmitting(true);
       try {
-        const res = await apiJson<{
-          user: PlatformUserProfile;
-          requires2FA?: boolean;
-          challengeId?: string;
-        }>('/api/platform/auth/login', {
+        const res = await apiJson<PlatformLoginResponse>(PLATFORM_AUTH_PATHS.login, {
           method: 'POST',
           body: JSON.stringify({ email, password }),
         });
@@ -113,7 +111,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
           return { requires2FA: true, challengeId: res.challengeId };
         }
 
-        localStorage.removeItem('mms_user');
+        clearPersistedAuthUser();
         setPlatformUser(normalizeSessionUser(res.user));
         setIsPlatformAuthenticated(true);
         setPlatformAuthChecked(true);
@@ -133,13 +131,13 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setIsPlatformLoginSubmitting(true);
     try {
       const res = await apiJson<{ user: PlatformUserProfile }>(
-        '/api/platform/auth/2fa/verify',
+        PLATFORM_AUTH_PATHS.twoFactorVerify,
         {
           method: 'POST',
           body: JSON.stringify({ challengeId, code }),
         },
       );
-      localStorage.removeItem('mms_user');
+      clearPersistedAuthUser();
       setPlatformUser(normalizeSessionUser(res.user));
       setIsPlatformAuthenticated(true);
       setPlatformAuthChecked(true);
@@ -153,7 +151,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const platformResend2FA = useCallback(async (challengeId: string): Promise<{ success: boolean }> => {
-    const res = await apiJson<{ success: boolean }>('/api/platform/auth/2fa/resend', {
+    const res = await apiJson<{ success: boolean }>(PLATFORM_AUTH_PATHS.twoFactorResend, {
       method: 'POST',
       body: JSON.stringify({ challengeId }),
     });
@@ -165,7 +163,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     if (!isPlatformAuthenticated) return;
     setIsExtendingPlatformSession(true);
     try {
-      await apiFetch('/api/platform/auth/session/extend', { method: 'POST' });
+      await apiFetch(PLATFORM_AUTH_PATHS.sessionExtend, { method: 'POST' });
     } finally {
       setIsExtendingPlatformSession(false);
     }
@@ -173,11 +171,11 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
   const platformLogout = useCallback(async (): Promise<void> => {
     try {
-      await apiFetch('/api/platform/auth/logout', { method: 'POST' });
+      await apiFetch(PLATFORM_AUTH_PATHS.logout, { method: 'POST' });
     } catch {
       /* clear client session even if logout request fails */
     } finally {
-      localStorage.removeItem('mms_user');
+      clearPersistedAuthUser();
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);
       setPlatformAuthChecked(true);
@@ -188,7 +186,8 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     void checkPlatformAuth();
   }, [checkPlatformAuth]);
 
-  const value = (() => ({
+  const value = useMemo(
+    () => ({
       platformUser,
       isPlatformAuthenticated,
       isCheckingPlatformAuth,
@@ -201,11 +200,26 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
       isExtendingPlatformSession,
       platformLogout,
       checkPlatformAuth,
-    }))();
+    }),
+    [
+      platformUser,
+      isPlatformAuthenticated,
+      isCheckingPlatformAuth,
+      isPlatformLoginSubmitting,
+      platformAuthChecked,
+      platformLogin,
+      platformVerify2FA,
+      platformResend2FA,
+      extendPlatformSession,
+      isExtendingPlatformSession,
+      platformLogout,
+      checkPlatformAuth,
+    ],
+  );
 
-  const handleTimeoutLogout = (() => {
+  const handleTimeoutLogout = useCallback(() => {
     void platformLogout();
-  });
+  }, [platformLogout]);
 
   return (
     <PlatformAuthContext.Provider value={value}>

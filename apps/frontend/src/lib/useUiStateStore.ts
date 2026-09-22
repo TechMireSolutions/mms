@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import type { UserUiState } from '@mms/shared';
 import { apiJson } from './apiClient.js';
+import { AUTH_PATHS } from './apiClientHelpers.js';
 import { reportClientError } from './clientErrorReporting.js';
 
 interface UiStateStore {
@@ -45,7 +46,7 @@ export const useUiStateStore = create<UiStateStore>((set, get) => ({
       }
       
       try {
-        await apiJson('/api/auth/me/ui-state', { 
+        await apiJson(AUTH_PATHS.uiState, { 
           method: 'PATCH',
           body: JSON.stringify({ state: updatesToSend }) 
         });

@@ -2,6 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { PlatformUserProfile } from '@mms/shared';
 import { apiContract } from '@/lib/api';
 import { apiJson } from '@/lib/apiClient';
+import { PLATFORM_AUTH_PATHS } from '@/lib/apiClientHelpers';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
@@ -36,7 +37,7 @@ export function usePlatformProfile(options?: { enabled?: boolean }) {
   const query = useQuery({
     queryKey: PLATFORM_PROFILE_QUERY_KEY,
     queryFn: async ({ signal }) => {
-      const res = await apiJson<{ user: PlatformUserProfile }>('/api/platform/auth/me', {
+      const res = await apiJson<{ user: PlatformUserProfile }>(PLATFORM_AUTH_PATHS.me, {
         signal,
       });
       return res.user;

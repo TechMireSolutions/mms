@@ -5,10 +5,49 @@ import {
   requestLoginEmailChangeBodySchema,
   confirmLoginEmailChangeBodySchema,
 } from '../schemas/profile.dto.js';
+import {
+  loginBodySchema,
+  challengeCodeBodySchema,
+  challengeIdBodySchema,
+  tenantLoginResponseSchema,
+  tenantAuthErrorSchema,
+} from '../schemas/auth.dto.js';
 
 const c = initContract();
 
 export const authContract = c.router({
+  login: {
+    method: 'POST',
+    path: '/api/auth/login',
+    body: loginBodySchema,
+    responses: {
+      200: tenantLoginResponseSchema,
+      400: tenantAuthErrorSchema,
+      401: tenantAuthErrorSchema,
+      403: tenantAuthErrorSchema,
+    },
+    summary: 'Tenant user login',
+  },
+  verifyTwoFactor: {
+    method: 'POST',
+    path: '/api/auth/2fa/verify',
+    body: challengeCodeBodySchema,
+    responses: {
+      200: tenantLoginResponseSchema,
+      401: tenantAuthErrorSchema,
+    },
+    summary: 'Verify tenant two-factor authentication challenge',
+  },
+  resendTwoFactor: {
+    method: 'POST',
+    path: '/api/auth/2fa/resend',
+    body: challengeIdBodySchema,
+    responses: {
+      200: z.object({ success: z.boolean() }),
+      404: tenantAuthErrorSchema,
+    },
+    summary: 'Resend tenant two-factor challenge',
+  },
   institutionSetupStatus: {
     method: 'GET',
     path: '/api/auth/institution-setup-status',

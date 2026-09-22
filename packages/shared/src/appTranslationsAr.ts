@@ -946,6 +946,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "auth.handoffFailed": "فشل تسجيل الدخول عبر الرابط",
   "auth.handoffProcessing": "جارٍ إكمال تسجيل الدخول…",
   "auth.hidePassword": "إخفاء كلمة المرور",
+  "auth.emailNotVerified": "يرجى التحقق من بريدك الإلكتروني قبل تسجيل الدخول",
   "auth.invalidCredentials": "بيانات اعتماد غير صحيحة",
   "auth.loadingWorkspace": "جارٍ تحميل مساحة العمل…",
   "auth.maskedEmailFallback": "بريدك الإلكتروني",

@@ -944,6 +944,7 @@ export const APP_TRANSLATIONS_EN = {
   "auth.handoffFailed": "Sign-in handoff failed",
   "auth.handoffProcessing": "Completing sign-in…",
   "auth.hidePassword": "Hide Password",
+  "auth.emailNotVerified": "Please verify your email before signing in",
   "auth.invalidCredentials": "Invalid credentials",
   "auth.loadingWorkspace": "Loading workspace…",
   "auth.maskedEmailFallback": "your email",

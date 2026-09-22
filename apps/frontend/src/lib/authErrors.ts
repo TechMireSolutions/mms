@@ -1,25 +1,17 @@
+import {
+  TENANT_AUTH_ERROR_TYPES,
+  type TenantAuthErrorType,
+} from '@mms/shared';
+import { ApiError } from '@/lib/apiClient';
+import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
+
 export interface AuthError {
-  type:
-    | 'invalid_credentials'
-    | 'auth_required'
-    | 'connection_error'
-    | 'user_not_registered'
-    | 'workspace_disabled'
-    | 'email_not_verified'
-    | 'validation_error';
+  type: TenantAuthErrorType;
   message: string;
 }
 
-export function isAuthErrorType(value: unknown): value is AuthError['type'] {
-  return (
-    value === 'invalid_credentials' ||
-    value === 'auth_required' ||
-    value === 'connection_error' ||
-    value === 'user_not_registered' ||
-    value === 'workspace_disabled' ||
-    value === 'email_not_verified' ||
-    value === 'validation_error'
-  );
+export function isAuthErrorType(value: unknown): value is TenantAuthErrorType {
+  return typeof value === 'string' && (TENANT_AUTH_ERROR_TYPES as readonly string[]).includes(value);
 }
 
 export async function parseAuthError(response: Response): Promise<AuthError> {
@@ -36,3 +28,58 @@ export async function parseAuthError(response: Response): Promise<AuthError> {
     };
   }
 }
+
+function mapTenantAuthErrorType(
+  type: TenantAuthErrorType,
+  fallbackMessage: string,
+  t: TranslationFunction,
+): string {
+  switch (type) {
+    case 'invalid_credentials':
+      return t('auth.invalidCredentials');
+    case 'email_not_verified':
+      return t('auth.emailNotVerified');
+    case 'workspace_disabled':
+      return fallbackMessage || t('errors.state.permission');
+    case 'connection_error':
+      return t('errors.state.network');
+    default:
+      return fallbackMessage || t('auth.invalidCredentials');
+  }
+}
+
+/**
+ * Maps tenant auth failures to localized copy, preventing raw backend English
+ * strings from leaking into non-English locales (Arabic, Urdu, Persian).
+ */
+export function getAuthErrorMessage(
+  error: unknown,
+  t: TranslationFunction,
+): string {
+  const authErr =
+    error && typeof error === 'object' && 'authError' in error
+      ? (error as { authError: AuthError }).authError
+      : undefined;
+
+  if (authErr) {
+    return mapTenantAuthErrorType(authErr.type, authErr.message, t);
+  }
+
+  if (error instanceof ApiError) {
+    if (isAuthErrorType(error.type)) {
+      return mapTenantAuthErrorType(error.type, error.message, t);
+    }
+    if (error.status === 401) {
+      return t('auth.invalidCredentials');
+    }
+    if (error.status === 403) {
+      return error.message || t('errors.state.permission');
+    }
+  }
+
+  if (error instanceof Error) {
+    return error.message;
+  }
+  return t('auth.invalidCredentials');
+}
+

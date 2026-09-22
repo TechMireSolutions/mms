@@ -1,23 +1,20 @@
 import React, { useState } from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
 import AuthLayout from '@/tenant/components/AuthLayout';
 import EntryPageHead, { formatEntryTitle } from '@/components/entry/EntryPageHead';
 import { AuthEmailField } from '@/components/entry/AuthEmailField';
-import { AuthForgotPasswordLink, AuthPasswordField } from '@/components/entry/AuthPasswordField';
+import { AuthPasswordField } from '@/components/entry/AuthPasswordField';
 import { AuthSubmitButton } from '@/components/entry/AuthFormControls';
 import { AuthStatusBanner } from '@/components/entry/AuthStatusBanner';
-import {
-  firstSignInErrorFieldId,
-  focusAuthField,
-  validateSignInCredentials,
-  type SignInFieldErrors,
-} from '@/components/entry/authValidation';
+import { useSignInCredentialsForm } from '@/components/entry/useSignInCredentialsForm';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { DEFAULT_AUTH_REDIRECT, ROUTES } from '@/lib/config/routes';
 import { apexUrl } from '@/lib/config/tenantConfig';
 import { clear2FAState, is2FAVerified, mark2FAVerified } from '@/lib/twoFactor';
 import { requiresTwoFactor } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
+import { getAuthErrorMessage } from '@/lib/authErrors';
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   persistRememberedLoginEmail,
@@ -27,35 +24,44 @@ import {
 
 export default function Login(): React.ReactElement {
   const { login, isAuthenticated, exchangeHandoff, user } = useAuth();
+  const settings = useGlobalSettings();
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const formId = React.useId();
-  const emailFieldId = `${formId}-email`;
-  const passwordFieldId = `${formId}-password`;
-  const rememberFieldId = `${formId}-remember`;
 
   const redirectTo = (location.state as { from?: string } | null)?.from ?? DEFAULT_AUTH_REDIRECT;
 
-  const [email, setEmail] = useState<string>(readRememberedLoginEmail);
-  const [password, setPassword] = useState<string>('');
+  const {
+    formId,
+    emailFieldId,
+    passwordFieldId,
+    email,
+    password,
+    fieldErrors,
+    error: formError,
+    setError: setFormError,
+    hasEmail: hasRememberedEmail,
+    onEmailChange,
+    onPasswordChange,
+    validate,
+  } = useSignInCredentialsForm({
+    initialEmail: readRememberedLoginEmail(),
+    t,
+  });
+
+  const rememberFieldId = `${formId}-remember`;
   const [rememberMe, setRememberMe] = useState<boolean>(readRememberMeEnabled);
   const [loading, setLoading] = useState<boolean>(false);
   const [handoffProcessing, setHandoffProcessing] = useState<boolean>(false);
-  const [fieldErrors, setFieldErrors] = useState<SignInFieldErrors>({});
-  const [formError, setFormError] = useState<string>('');
 
   React.useEffect(() => {
     if (!isAuthenticated) return;
-    void import('@/lib/db').then(({ getGlobalSettings }) => {
-      const settings = getGlobalSettings();
-      const needs2FA = requiresTwoFactor(settings, user) && !is2FAVerified();
-      if (!needs2FA) {
-        const dest = user?.mustChangePassword ? ROUTES.forcePasswordChange : redirectTo;
-        navigate(dest, { replace: true });
-      }
-    });
-  }, [isAuthenticated, user, navigate, redirectTo]);
+    const needs2FA = requiresTwoFactor(settings, user) && !is2FAVerified();
+    if (!needs2FA) {
+      const dest = user?.mustChangePassword ? ROUTES.forcePasswordChange : redirectTo;
+      navigate(dest, { replace: true });
+    }
+  }, [isAuthenticated, user, settings, navigate, redirectTo]);
 
   React.useEffect(() => {
     const handoff = new URLSearchParams(location.search).get('handoff');
@@ -64,24 +70,15 @@ export default function Login(): React.ReactElement {
     setHandoffProcessing(true);
     setFormError('');
     void exchangeHandoff(handoff)
-      .then(() => navigate(redirectTo, { replace: true }))
       .catch((err: unknown) => {
-        setFormError(err instanceof Error ? err.message : t('auth.handoffFailed'));
+        setFormError(getAuthErrorMessage(err, t));
       })
       .finally(() => setHandoffProcessing(false));
-  }, [location.search, exchangeHandoff, isAuthenticated, navigate, redirectTo, t]);
+  }, [location.search, exchangeHandoff, isAuthenticated, setFormError, t]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>): Promise<void> => {
     event.preventDefault();
-    setFormError('');
-    const errs = validateSignInCredentials(email, password, t);
-    if (Object.keys(errs).length) {
-      setFieldErrors(errs);
-      const focusId = firstSignInErrorFieldId(errs, emailFieldId, passwordFieldId);
-      if (focusId) focusAuthField(focusId);
-      return;
-    }
-    setFieldErrors({});
+    if (!validate()) return;
     setLoading(true);
     const trimmedEmail = email.trim();
     try {
@@ -96,7 +93,7 @@ export default function Login(): React.ReactElement {
       const dest = loggedInUser.mustChangePassword ? ROUTES.forcePasswordChange : redirectTo;
       navigate(dest, { replace: true });
     } catch (err: unknown) {
-      setFormError(err instanceof Error ? err.message : t('auth.invalidCredentials'));
+      setFormError(getAuthErrorMessage(err, t));
     } finally {
       setLoading(false);
     }
@@ -112,15 +109,25 @@ export default function Login(): React.ReactElement {
         title={t('auth.signInTitle')}
         subtitle={t('auth.signInSubtitle')}
         footer={
-          <p className="text-xs text-muted-foreground">
-            {t('auth.notYourMadrasa')}{' '}
-            <a
-              href={apexUrl(ROUTES.home)}
-              className="inline-flex min-h-11 items-center font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-            >
-              {t('auth.viewAllMadrasaLinks')}
-            </a>
-          </p>
+          <div className="space-y-2 text-xs text-muted-foreground">
+            <div>
+              <Link
+                to={`${ROUTES.forgotPassword}?activate=1`}
+                className="inline-flex min-h-11 items-center font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+              >
+                {t('auth.activateAccount')}
+              </Link>
+            </div>
+            <div>
+              {t('auth.notYourMadrasa')}{' '}
+              <a
+                href={apexUrl(ROUTES.home)}
+                className="inline-flex min-h-11 items-center font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+              >
+                {t('auth.viewAllMadrasaLinks')}
+              </a>
+            </div>
+          </div>
         }
       >
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-4" noValidate aria-busy={isBusy}>
@@ -133,55 +140,53 @@ export default function Login(): React.ReactElement {
           ) : null}
 
           <fieldset disabled={isBusy} className="m-0 min-w-0 space-y-4 border-0 p-0">
+            <legend className="sr-only">{t('auth.signInTitle')}</legend>
             <AuthEmailField
               id={emailFieldId}
               label={t('auth.emailAddress')}
               value={email}
-              autoFocus
+              autoFocus={!hasRememberedEmail}
               disabled={isBusy}
               placeholder={t('auth.emailPlaceholder')}
               error={fieldErrors.email}
-              onChange={(value) => {
-                setEmail(value);
-                setFieldErrors((prev) => ({ ...prev, email: undefined }));
-                setFormError('');
-              }}
+              onChange={onEmailChange}
             />
 
             <AuthPasswordField
               id={passwordFieldId}
               label={t('auth.password')}
               value={password}
+              autoFocus={hasRememberedEmail}
+              disabled={isBusy}
               placeholder={t('auth.passwordPlaceholder')}
               error={fieldErrors.password}
-              forgotPasswordTo={ROUTES.forgotPassword}
-              forgotPasswordLabel={t('auth.forgotPassword')}
-              onChange={(value) => {
-                setPassword(value);
-                setFieldErrors((prev) => ({ ...prev, password: undefined }));
-                setFormError('');
-              }}
+              onChange={onPasswordChange}
             />
 
-            <AuthForgotPasswordLink
-              to={`${ROUTES.forgotPassword}?activate=1`}
-              label={t('auth.activateAccount')}
-            />
+            <div className="flex items-center justify-between gap-3 pt-0.5">
+              <label htmlFor={rememberFieldId} className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg">
+                <Checkbox
+                  id={rememberFieldId}
+                  checked={rememberMe}
+                  disabled={isBusy}
+                  onCheckedChange={(checked) => {
+                    const shouldRememberEmail = checked === true;
+                    setRememberMe(shouldRememberEmail);
+                    if (!shouldRememberEmail) {
+                      persistRememberedLoginEmail('', false);
+                    }
+                  }}
+                />
+                <span className="text-sm text-muted-foreground">{t('auth.rememberMe')}</span>
+              </label>
 
-            <label htmlFor={rememberFieldId} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-lg px-0.5 py-1">
-              <Checkbox
-                id={rememberFieldId}
-                checked={rememberMe}
-                onCheckedChange={(checked) => {
-                  const shouldRememberEmail = checked === true;
-                  setRememberMe(shouldRememberEmail);
-                  if (!shouldRememberEmail) {
-                    persistRememberedLoginEmail('', false);
-                  }
-                }}
-              />
-              <span className="text-sm text-muted-foreground">{t('auth.rememberMe')}</span>
-            </label>
+              <Link
+                to={ROUTES.forgotPassword}
+                className="inline-flex min-h-11 items-center rounded-md px-1 text-xs font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
+              >
+                {t('auth.forgotPassword')}
+              </Link>
+            </div>
 
             <AuthSubmitButton
               busy={loading}
