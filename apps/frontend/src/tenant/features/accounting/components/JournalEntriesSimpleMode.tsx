@@ -39,6 +39,7 @@ interface JournalEntriesSimpleModeProps {
   onExportCsv: () => void;
   onSave: (entry: JournalEntry) => void | Promise<void>;
   onCloseSimpleModal: () => void;
+  pageScopeLabel: string;
 }
 
 export function JournalEntriesSimpleMode({
@@ -61,6 +62,7 @@ export function JournalEntriesSimpleMode({
   onExportCsv,
   onSave,
   onCloseSimpleModal,
+  pageScopeLabel,
 }: JournalEntriesSimpleModeProps) {
   const { t } = useTranslation();
   const specializedType = simpleModal?.prefillType && SPECIALIZED_ENTRY_TYPES.has(simpleModal.prefillType.id)
@@ -87,7 +89,7 @@ export function JournalEntriesSimpleMode({
       />
 
       {tab === "cashbook" ? (
-        <CashbookView entries={entries} accounts={accounts} />
+        <CashbookView entries={entries} accounts={accounts} pageScopeLabel={pageScopeLabel} />
       ) : (
         <JournalQuickActionsPanel
           entries={entries}
@@ -98,6 +100,7 @@ export function JournalEntriesSimpleMode({
           onNlChange={onNlChange}
           onOpenPrefill={onOpenPrefill}
           onExportCsv={onExportCsv}
+          pageScopeLabel={pageScopeLabel}
         />
       )}
 

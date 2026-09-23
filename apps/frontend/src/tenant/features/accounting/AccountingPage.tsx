@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { usePersistedTabState } from "@/hooks/usePersistedTabState";
-import { useModuleShortcuts } from "@/hooks/useModuleShortcuts";
+import { useAccountingPageShortcuts } from "@/tenant/features/accounting/hooks/useAccountingPageShortcuts";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTrashMode } from "@/hooks/useTrashMode";
 import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
@@ -150,16 +150,13 @@ export default function Accounting() {
     setCreateJournalRequestKey((key) => key + 1);
   };
 
-  useModuleShortcuts({
-    searchInputId: "accounting-search-input",
-    selectedCount: 0,
-    hasActiveFilters: false,
-    clearFilters: () => {},
-    clearSelection: () => {},
+  const { handleShortcutStateChange } = useAccountingPageShortcuts({
+    activeTab,
+    activeSubTab,
     canWrite,
     showDeleted,
-    onCreate: openJournalCreate,
-    enabled: activeTab === "work",
+    openJournalCreate,
+    journalList,
   });
 
   const activeFiscalYear = fiscalYears.find((fiscalYear) => fiscalYear.status === "active");
@@ -242,6 +239,7 @@ export default function Accounting() {
               onAccountsChange={setAccounts}
               onEntriesChange={setEntries}
               onFilteredCountChange={setFilteredCount}
+              onShortcutStateChange={handleShortcutStateChange}
               onDeleteEntry={handleDeleteEntry}
               onRestoreEntry={handleRestoreEntry}
               onBulkDeleteEntries={handleBulkDeleteEntries}

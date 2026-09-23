@@ -104,18 +104,39 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
           {monthlyData.length === 0 ? (
             <EmptyState title={t('accounting.dashboard.noPostedData')} compact icon={null} className="h-48" />
           ) : (
-            <div aria-hidden="true">
-              <SafeResponsiveContainer height={200}>
-                <BarChart data={monthlyData} barGap={4}>
-                  <ChartGrid />
-                  <XAxis dataKey="month" tick={chartAxisTick(11)} />
-                  <YAxis tick={chartAxisTick(11)} tickFormatter={(tickValue) => tickValue === 0 ? formatCurrency(0) : (tickValue >= 1000 || tickValue <= -1000) ? `${formatCurrency(Math.round(tickValue / 1000))}k` : formatCurrency(tickValue)} />
-                  <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? formatCurrency(Number(tooltipValue)) : ''} />
-                  <Bar dataKey="revenue" name={t('accounting.dashboard.revenue')} fill={primary} radius={[4, 4, 0, 0]} />
-                  <Bar dataKey="expenses" name={t('accounting.dashboard.expenses')} fill={secondary} radius={[4, 4, 0, 0]} />
-                </BarChart>
-              </SafeResponsiveContainer>
-            </div>
+            <>
+              <div aria-hidden="true">
+                <SafeResponsiveContainer height={200}>
+                  <BarChart data={monthlyData} barGap={4}>
+                    <ChartGrid />
+                    <XAxis dataKey="month" tick={chartAxisTick(11)} />
+                    <YAxis tick={chartAxisTick(11)} tickFormatter={(tickValue) => tickValue === 0 ? formatCurrency(0) : (tickValue >= 1000 || tickValue <= -1000) ? `${formatCurrency(Math.round(tickValue / 1000))}k` : formatCurrency(tickValue)} />
+                    <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? formatCurrency(Number(tooltipValue)) : ''} />
+                    <Bar dataKey="revenue" name={t('accounting.dashboard.revenue')} fill={primary} radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="expenses" name={t('accounting.dashboard.expenses')} fill={secondary} radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </SafeResponsiveContainer>
+              </div>
+              <table className="sr-only">
+                <caption>{t('accounting.dashboard.revenueVsExpensesTable')}</caption>
+                <thead>
+                  <tr>
+                    <th scope="col">{t('accounting.columns.journal.date')}</th>
+                    <th scope="col">{t('accounting.dashboard.revenue')}</th>
+                    <th scope="col">{t('accounting.dashboard.expenses')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {monthlyData.map((month) => (
+                    <tr key={month.month}>
+                      <th scope="row">{month.month}</th>
+                      <td>{formatCurrency(month.revenue)}</td>
+                      <td>{formatCurrency(month.expenses)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </>
           )}
         </Card>
 

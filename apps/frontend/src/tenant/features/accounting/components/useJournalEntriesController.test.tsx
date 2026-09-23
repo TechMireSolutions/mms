@@ -152,16 +152,25 @@ describe("useJournalEntriesController", () => {
   });
 
   it("toggles and clears entry selection", async () => {
+    const onShortcutStateChange = vi.fn();
     await act(async () => {
-      root.render(<Probe props={defaultProps} />);
+      root.render(<Probe props={{ ...defaultProps, onShortcutStateChange }} />);
     });
 
     expect(latest?.selectedIds).toHaveLength(0);
+    expect(onShortcutStateChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      mode: "simple",
+      selectedCount: 0,
+      clearSelection: expect.any(Function),
+    }));
 
     await act(async () => {
       latest?.toggleSelectedEntry("entry-1", true);
     });
     expect(latest?.selectedIds).toContain("entry-1");
+    expect(onShortcutStateChange).toHaveBeenLastCalledWith(expect.objectContaining({
+      selectedCount: 1,
+    }));
 
     await act(async () => {
       latest?.clearSelection();

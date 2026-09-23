@@ -167,7 +167,7 @@ export function JournalEntriesListFilters({
           onClick={onExportCsv}
           className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold text-muted-foreground"
         >
-          <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
+          <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.exportCurrentPage")}
         </Button> : null}
       </WorkTaskToolbar>
     </>

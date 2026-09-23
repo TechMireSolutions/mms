@@ -4,6 +4,8 @@ import { useModuleCreateHotkey } from "@/hooks/useModuleCreateHotkey";
 export interface UseModuleWorkKeyboardShortcutsOptions {
   /** Stable DOM id of the Work SearchBar input. */
   searchInputId: string;
+  /** Whether the current Work surface renders the search input. */
+  searchEnabled?: boolean;
   selectedCount?: number;
   hasActiveFilters?: boolean;
   clearFilters?: () => void;
@@ -22,6 +24,7 @@ export interface UseModuleWorkKeyboardShortcutsOptions {
  */
 export function useModuleWorkKeyboardShortcuts({
   searchInputId,
+  searchEnabled = true,
   selectedCount = 0,
   hasActiveFilters = false,
   clearFilters,
@@ -50,6 +53,7 @@ export function useModuleWorkKeyboardShortcuts({
         (document.activeElement as HTMLElement)?.isContentEditable;
 
       if (
+        searchEnabled &&
         (event.key === "/" ||
           (event.key?.toLowerCase() === "k" && (event.metaKey || event.ctrlKey))) &&
         !isInputActive
@@ -69,5 +73,5 @@ export function useModuleWorkKeyboardShortcuts({
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [enabled, searchInputId, selectedCount, hasActiveFilters, clearFilters, clearSelection]);
+  }, [enabled, searchEnabled, searchInputId, selectedCount, hasActiveFilters, clearFilters, clearSelection]);
 }

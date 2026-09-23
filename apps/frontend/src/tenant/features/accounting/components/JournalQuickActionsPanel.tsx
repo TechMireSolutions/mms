@@ -30,6 +30,7 @@ interface JournalQuickActionsPanelProps {
   onNlChange: (inputValue: string) => void;
   onOpenPrefill: (prefillType: QuickActionType | null) => void;
   onExportCsv: () => void;
+  pageScopeLabel: string;
 }
 
 export function JournalQuickActionsPanel({
@@ -41,6 +42,7 @@ export function JournalQuickActionsPanel({
   onNlChange,
   onOpenPrefill,
   onExportCsv,
+  pageScopeLabel,
 }: JournalQuickActionsPanelProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
@@ -131,10 +133,11 @@ export function JournalQuickActionsPanel({
           title={<span className="min-w-0 text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("accounting.journal.dashboard.recentTransactions")}</span>}
           actions={
             <Button type="button" variant="link" size="sm" onClick={onExportCsv} className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors min-h-11 px-2 self-start sm:self-auto">
-              <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
+              <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.exportCurrentPage")}
             </Button>
           }
         />
+        <p className="mb-2 mt-0 text-xs text-muted-foreground" role="status">{pageScopeLabel}</p>
 
         {entries.length === 0 ? (
           <EmptyState

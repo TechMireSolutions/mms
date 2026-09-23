@@ -57,6 +57,7 @@ export function JournalEntries(props: JournalEntriesWithQueryProps) {
         onExportCsv={controller.exportCSV}
         onSave={controller.handleSave}
         onCloseSimpleModal={() => controller.setSimpleModal(null)}
+        pageScopeLabel={controller.pageScopeLabel}
       />
     );
   }
@@ -131,6 +132,7 @@ export function JournalEntries(props: JournalEntriesWithQueryProps) {
       onPendingReverseEntryChange={controller.setPendingReverseEntry}
       getColumnWidth={getColumnWidth}
       onColumnResize={onColumnResize}
+      pageScopeLabel={controller.pageScopeLabel}
     />
   );
 }

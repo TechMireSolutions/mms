@@ -8,6 +8,11 @@ export interface JournalEntriesProps {
   fiscalYears: FiscalYear[];
   onChange: (entries: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
+  onShortcutStateChange?: (state: {
+    mode: 'simple' | 'advanced';
+    selectedCount: number;
+    clearSelection: () => void;
+  }) => void;
   canWrite?: boolean;
   canDelete?: boolean;
   showDeleted?: boolean;

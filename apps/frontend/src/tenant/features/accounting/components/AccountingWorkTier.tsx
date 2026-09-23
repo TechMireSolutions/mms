@@ -59,6 +59,7 @@ interface AccountingWorkTierProps {
   onAccountsChange: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void>;
   onEntriesChange: (updater: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => Promise<void>;
   onFilteredCountChange: (count: number) => void;
+  onShortcutStateChange?: React.ComponentProps<typeof JournalEntries>["onShortcutStateChange"];
   onDeleteEntry: (id: string) => Promise<void>;
   onRestoreEntry: (id: string) => Promise<void>;
   onBulkDeleteEntries: (ids: string[]) => Promise<void>;
@@ -93,6 +94,7 @@ export function AccountingWorkTier({
   onAccountsChange,
   onEntriesChange,
   onFilteredCountChange,
+  onShortcutStateChange,
   onDeleteEntry,
   onRestoreEntry,
   onBulkDeleteEntries,
@@ -133,6 +135,7 @@ export function AccountingWorkTier({
           fiscalYears={fiscalYears}
           onChange={onEntriesChange}
           onFilteredCountChange={onFilteredCountChange}
+          onShortcutStateChange={onShortcutStateChange}
           canWrite={canWrite}
           canDelete={canDelete}
           showDeleted={showDeleted}

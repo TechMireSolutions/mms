@@ -78,6 +78,7 @@ interface JournalEntriesAdvancedModeProps {
   onPendingReverseEntryChange: (entry: JournalEntry | null) => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
+  pageScopeLabel: string;
 }
 
 export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProps) {
@@ -132,6 +133,8 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
           }}
         />
       )}
+
+      <p className="m-0 text-xs text-muted-foreground" role="status">{props.pageScopeLabel}</p>
 
       <JournalEntriesList
         viewMode={viewMode}

@@ -86,8 +86,8 @@ export function exportJournalEntriesCsv(
   });
   runGridCsvExportJob({
     moduleId: 'accounting',
-    label: t('accounting.journal.exportLabel'),
-    filename: 'journal_entries.csv',
+    label: t('accounting.journal.exportCurrentPageLabel'),
+    filename: 'journal_entries_current_page.csv',
     columns: [
       { header: t('accounting.columns.journal.ref'), key: 'ref' },
       { header: t('accounting.columns.journal.date'), key: 'date' },

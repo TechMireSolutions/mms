@@ -37,6 +37,7 @@ export function useJournalEntriesController({
   fiscalYears: _fiscalYears,
   onChange,
   onFilteredCountChange,
+  onShortcutStateChange,
   canWrite = true,
   canDelete = true,
   showDeleted = false,
@@ -119,6 +120,14 @@ export function useJournalEntriesController({
     toggleSelectedEntry,
     clearSelection,
   } = useJournalEntrySelection(filtered);
+
+  useEffect(() => {
+    onShortcutStateChange?.({
+      mode,
+      selectedCount: selectedIds.length,
+      clearSelection,
+    });
+  }, [clearSelection, mode, onShortcutStateChange, selectedIds.length]);
 
   const wasShowDeletedRef = useRef(showDeleted);
   useEffect(() => {
@@ -241,6 +250,10 @@ export function useJournalEntriesController({
     renderEntryActions,
     renderEntryActionsCards,
     formatAmount: (amount: number) => formatJournalAmount(amount, formatCurrency),
+    pageScopeLabel: t('accounting.journal.pageScope', {
+      count: entries.length,
+      total: paging.total,
+    }),
     requestRowTrash,
     confirmRowTrash,
     requestBulkTrash,
