@@ -81,4 +81,26 @@ describe("ObligationTypeManagerList", () => {
 
     expect(onEdit).toHaveBeenCalledWith(mockTypes[0]);
   });
+
+  it("renders desktop table view when viewMode is table", async () => {
+    const container = document.createElement("div");
+    const root = createRoot(container);
+
+    await act(async () => {
+      root.render(
+        <ObligationTypeManagerList
+          types={mockTypes}
+          designatedConfig={designatedConfig}
+          quantityConfig={quantityConfig}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+          viewMode="table"
+        />,
+      );
+    });
+
+    expect(container.querySelector("table")).toBeDefined();
+    expect(container.textContent).toContain("Khums Sahm-e-Imam");
+    expect(container.textContent).toContain("obligations.types.colName");
+  });
 });

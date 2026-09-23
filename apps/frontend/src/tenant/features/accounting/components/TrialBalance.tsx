@@ -19,6 +19,7 @@ import { AccountingDateFilterBar } from "./AccountingDateFilterBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { balanceToneClass } from "@/lib/semanticTone";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { TrialBalanceTypeGroup } from "./TrialBalanceTypeGroup";
 import { exportTrialBalanceCsv } from "./trialBalanceExport";
 
@@ -38,6 +39,7 @@ interface TrialBalanceProps {
 export function TrialBalance({ fiscalYears }: TrialBalanceProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
+  const { viewMode } = useWorkDirectoryViewMode();
   const activeFiscalYear = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
@@ -130,39 +132,40 @@ export function TrialBalance({ fiscalYears }: TrialBalanceProps) {
           ))}
 
           <div className="rounded-xl border-2 border-foreground/20 overflow-hidden bg-muted/30">
-            <div className="space-y-3 p-3 md:hidden">
-              <article className={WORK_SURFACE_INNER}>
-                <p className="text-sm font-bold uppercase tracking-wide text-foreground m-0 mb-2">{t("accounting.tb.grandTotal")}</p>
-                <StatGrid>
-                  <StatRow
-                    label={t("accounting.columns.journal.debit")}
-                    value={formatCurrency(grandDebit)}
-                    ddClassName="font-mono font-bold text-info text-base"
-                  />
-                  <StatRow
-                    label={t("accounting.columns.journal.credit")}
-                    value={formatCurrency(grandCredit)}
-                    ddClassName="font-mono font-bold text-success text-base"
-                  />
-                </StatGrid>
-              </article>
-            </div>
-            <div className="hidden md:block">
-            <Table>
-              <caption className="sr-only">{t("accounting.tb.grandTotalCaption")}</caption>
-              <TableFooter>
-                <TableRow>
-                  <TableCell colSpan={3} className="px-3 py-2.5 text-sm font-bold text-foreground uppercase tracking-wide">{t("accounting.tb.grandTotal")}</TableCell>
-                  <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-info text-base">
-                    {formatCurrency(grandDebit)}
-                  </TableCell>
-                  <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-base">
-                    {formatCurrency(grandCredit)}
-                  </TableCell>
-                </TableRow>
-              </TableFooter>
-            </Table>
-            </div>
+            {viewMode === "cards" ? (
+              <div className="p-3">
+                <article className={WORK_SURFACE_INNER}>
+                  <p className="text-sm font-bold uppercase tracking-wide text-foreground m-0 mb-2">{t("accounting.tb.grandTotal")}</p>
+                  <StatGrid>
+                    <StatRow
+                      label={t("accounting.columns.journal.debit")}
+                      value={formatCurrency(grandDebit)}
+                      ddClassName="font-mono font-bold text-info text-base"
+                    />
+                    <StatRow
+                      label={t("accounting.columns.journal.credit")}
+                      value={formatCurrency(grandCredit)}
+                      ddClassName="font-mono font-bold text-success text-base"
+                    />
+                  </StatGrid>
+                </article>
+              </div>
+            ) : (
+              <Table>
+                <caption className="sr-only">{t("accounting.tb.grandTotalCaption")}</caption>
+                <TableFooter>
+                  <TableRow>
+                    <TableCell colSpan={3} className="px-3 py-2.5 text-sm font-bold text-foreground uppercase tracking-wide">{t("accounting.tb.grandTotal")}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-info text-base">
+                      {formatCurrency(grandDebit)}
+                    </TableCell>
+                    <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-base">
+                      {formatCurrency(grandCredit)}
+                    </TableCell>
+                  </TableRow>
+                </TableFooter>
+              </Table>
+            )}
           </div>
         </>
       )}

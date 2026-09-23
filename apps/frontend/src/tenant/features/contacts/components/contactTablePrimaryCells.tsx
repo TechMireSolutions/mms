@@ -12,10 +12,8 @@ import {
 import { ContactIdentityMeta } from "@/tenant/features/contacts/components/ContactIdentityMeta";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { ContactPhoneAction, ContactEmailAction } from "@/components/ui/ContactAction";
-import { TableCell } from "@/components/ui/table";
-import { cn } from "@/lib/utils";
+
 import type { useTranslation } from "@/hooks/useTranslation";
-import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 
 export type ContactCellTranslate = ReturnType<typeof useTranslation>["t"];
 
@@ -32,22 +30,13 @@ export interface RenderContactNameCellParams {
 export function renderContactNameCell({
   contact,
   displayName,
-  widthStyle,
   showArchived,
   isSelected,
   t,
   onView,
 }: RenderContactNameCellParams): React.JSX.Element {
   return (
-    <TableCell
-      key="name"
-      className={cn(
-        "px-4 py-3 sticky start-12 z-elevated transition-colors border-e border-border/30",
-        workTableStickyCellBg(isSelected),
-      )}
-      style={widthStyle}
-    >
-      <div className="flex min-w-0 items-center gap-3">
+    <div className="flex min-w-0 items-center gap-3">
         <UserAvatar
           id={contact.id}
           name={displayName}
@@ -74,7 +63,6 @@ export function renderContactNameCell({
           )}
         </div>
       </div>
-    </TableCell>
   );
 }
 
@@ -102,16 +90,11 @@ export function renderContactPhoneCell({
   const emptyDash = <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>;
 
   if (allPhones.length === 0) {
-    return (
-      <TableCell key="phone" className="px-4 py-3" style={widthStyle}>
-        {emptyDash}
-      </TableCell>
-    );
+    return <>{emptyDash}</>;
   }
 
   return (
-    <TableCell key="phone" className="px-4 py-3" style={widthStyle}>
-      <div className="space-y-2 min-w-0">
+    <div className="space-y-2 min-w-0">
         {allPhones.map((p, idx) => (
           <ContactPhoneAction
             key={`phone-${p.phone}-${idx}`}
@@ -131,8 +114,7 @@ export function renderContactPhoneCell({
             onWhatsApp={onWhatsApp ? () => onWhatsApp([contact]) : undefined}
           />
         ))}
-      </div>
-    </TableCell>
+    </div>
   );
 }
 
@@ -152,16 +134,11 @@ export function renderContactEmailCell({
   const emptyDash = <span className="text-sm text-muted-foreground">{t("contacts.table.emptyDash")}</span>;
 
   if (allEmails.length === 0) {
-    return (
-      <TableCell key="email" className="px-4 py-3" style={widthStyle}>
-        {emptyDash}
-      </TableCell>
-    );
+    return <>{emptyDash}</>;
   }
 
   return (
-    <TableCell key="email" className="px-4 py-3" style={widthStyle}>
-      <div className="space-y-2 min-w-0">
+    <div className="space-y-2 min-w-0">
         {allEmails.map((e, idx) => (
           <ContactEmailAction
             key={`email-${e.email}-${idx}`}
@@ -176,7 +153,6 @@ export function renderContactEmailCell({
             }}
           />
         ))}
-      </div>
-    </TableCell>
+    </div>
   );
 }

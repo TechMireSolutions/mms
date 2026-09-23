@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { EnrollmentsReportAggregates } from "@mms/shared";
 import { EMPTY_ENROLLMENTS_REPORT_AGGREGATES } from "@mms/shared";
 import { ReportFilterBanner } from "@/components/ui/reports/ReportFilterBanner";
@@ -38,6 +39,7 @@ export function EnrollmentReports({
   filters,
 }: EnrollmentReportsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { viewMode } = useWorkDirectoryViewMode();
   const { formatCurrency } = useFinanceCurrency();
 
   const { bySession } = aggregates;
@@ -84,7 +86,7 @@ export function EnrollmentReports({
         rows={exportRows}
         moduleId="enrollments"
       >
-        <div className="hidden md:block">
+        {viewMode === "table" ? (
           <Table className="table-fixed">
             <TableHeader>
               <TableRow className="border-b border-border/60 hover:bg-muted/30">
@@ -115,30 +117,31 @@ export function EnrollmentReports({
               )}
             </TableBody>
           </Table>
-        </div>
-        <div className="divide-y divide-border/50 md:hidden" role="list">
-          {bySession.length === 0 ? (
-            <div className="py-6 text-center text-sm text-muted-foreground">
-              {t("enrollments.reports.noData")}
-            </div>
-          ) : (
-            bySession.map((sessionStats) => (
-              <div
-                key={`${sessionStats.sessionId}:${sessionStats.name}`}
-                className="flex min-w-0 items-center justify-between gap-3 px-4 py-3"
-                role="listitem"
-              >
-                <div className="min-w-0">
-                  <p className="truncate text-sm font-semibold text-foreground">{sessionStats.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {t("enrollments.reports.enrollmentCount", { count: sessionStats.count })}
-                  </p>
-                </div>
-                <p className="shrink-0 text-sm font-bold text-primary">{formatCurrency(sessionStats.revenue)}</p>
+        ) : (
+          <div className="divide-y divide-border/50" role="list">
+            {bySession.length === 0 ? (
+              <div className="py-6 text-center text-sm text-muted-foreground">
+                {t("enrollments.reports.noData")}
               </div>
-            ))
-          )}
-        </div>
+            ) : (
+              bySession.map((sessionStats) => (
+                <div
+                  key={`${sessionStats.sessionId}:${sessionStats.name}`}
+                  className="flex min-w-0 items-center justify-between gap-3 px-4 py-3"
+                  role="listitem"
+                >
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-semibold text-foreground">{sessionStats.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {t("enrollments.reports.enrollmentCount", { count: sessionStats.count })}
+                    </p>
+                  </div>
+                  <p className="shrink-0 text-sm font-bold text-primary">{formatCurrency(sessionStats.revenue)}</p>
+                </div>
+              ))
+            )}
+          </div>
+        )}
       </ReportDataGridContainer>
 
       <PinnedWidgets category="enrollments" />

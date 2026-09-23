@@ -38,7 +38,7 @@ export function JournalEntryLinesEditorMobile({
   const accountMap = new Map(accounts.map((account) => [account.id, account]));
 
   return (
-    <div className="space-y-3 p-3 md:hidden">
+    <div className="space-y-3 p-3">
       {lines.map((line, lineIndex) => {
         const account = accountMap.get(line.account_id);
         return (

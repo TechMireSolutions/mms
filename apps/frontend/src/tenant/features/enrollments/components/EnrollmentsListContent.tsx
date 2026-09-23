@@ -1,5 +1,4 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
@@ -24,16 +23,12 @@ export function EnrollmentsListContent(props: EnrollmentListContentProps): React
           description={showDeleted ? t("enrollments.empty.trashSubtitle") : t("enrollments.empty.description")}
           compact
         />
+      ) : props.viewMode === "cards" ? (
+        <EnrollmentsListCards {...props} />
       ) : (
-        <Card accentColor="primary" className="p-0 overflow-hidden">
-          {props.viewMode === "cards" ? (
-            <EnrollmentsListCards {...props} />
-          ) : (
-            <div className={cn(WORK_SURFACE, "overflow-hidden")}>
-              <EnrollmentsListDesktopTable {...props} />
-            </div>
-          )}
-        </Card>
+        <div className={cn(WORK_SURFACE, "overflow-hidden")}>
+          <EnrollmentsListDesktopTable {...props} />
+        </div>
       )}
 
       <ListPagination

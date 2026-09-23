@@ -1,15 +1,12 @@
-import { useRef } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { AnimatePresence } from "framer-motion";
+import { useMemo } from "react";
+import type { Student } from "@mms/shared";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
-import {
-  Table,
-  TableBody,
-} from "@/components/ui/table";
-import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
+import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work/WorkBatchTable";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
-import { StudentsListDesktopTableRow } from "@/tenant/features/students/components/StudentsListDesktopTableRow";
+import { StudentsRowActions } from "@/tenant/features/students/components/StudentsRowActions";
+import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
+import { renderStudentsListDesktopTableCell } from "@/tenant/features/students/components/StudentsListDesktopTableCells";
 import type {
   StudentsListContentSortField,
   StudentsListContentTableProps,
@@ -48,7 +45,7 @@ export type StudentsListDesktopTableProps = Pick<
 
 export function StudentsListDesktopTable({
   paginatedStudents,
-  sessions,
+  sessions: _sessions,
   selectedIds,
   allSelected,
   someSelected,
@@ -73,7 +70,6 @@ export function StudentsListDesktopTable({
   onColumnResize,
 }: StudentsListDesktopTableProps): React.JSX.Element {
   const { t } = useTranslation();
-  const parentRef = useRef<HTMLDivElement>(null);
   const visibleColumns = getStudentVisibleWorkColumns(columnRegistry, isColumnVisible);
   const handleSort = (field: string) => onSort(field as StudentsListContentSortField);
 
@@ -81,119 +77,92 @@ export function StudentsListDesktopTable({
     singular: "students.form.student",
     plural: "students.table.students",
   });
-  const selectedSet = new Set(selectedIds);
-  const isVirtualized = paginatedStudents.length > 30;
+  
+  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
 
-  const rowVirtualizer = useVirtualizer({
-    count: paginatedStudents.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 52,
-    overscan: 10,
-    enabled: isVirtualized,
-  });
+  const batchColumns = useMemo<WorkBatchTableColumn<Student>[]>(() => {
+    return visibleColumns.map((col) => ({
+      id: col.key,
+      label: col.label,
+      sortField: col.key,
+      width: getColumnWidth?.(col.key) ?? col.width,
+      render: (studentRow) => {
+        return renderStudentsListDesktopTableCell({
+          studentRow,
+          col,
+          studentIdStr: String(studentRow.id),
+          displayName: studentRow.name || "",
+          emptyDash: t("students.table.emptyDash"),
+          statusBadgeConfig,
+          isColumnVisible,
+          onViewStudent,
+          viewingDeleted,
+          canWriteMessaging: !!canWriteMessaging && !viewingDeleted,
+          onOpenComposer,
+          t,
+        });
+      },
+    }));
+  }, [
+    visibleColumns,
+    getColumnWidth,
+    statusBadgeConfig,
+    isColumnVisible,
+    onViewStudent,
+    viewingDeleted,
+    canWriteMessaging,
+    onOpenComposer,
+    t,
+  ]);
 
   return (
     <>
-      <div
-        ref={parentRef}
-        className={isVirtualized ? "w-full overflow-x-auto max-h-150 overflow-y-auto" : "w-full overflow-x-auto"}
-      >
-        <Table className="table-fixed">
-          <ModuleWorkTableHeader
-            columns={visibleColumns.map(col => ({ id: col.key, label: col.label }))}
-            sortField={sortField ?? undefined}
-            sortDir={sortDir}
-            onSort={handleSort}
-            getColumnWidth={(key) => getColumnWidth?.(key) ?? visibleColumns.find(c => c.key === key)?.width}
-            setColumnWidth={onColumnResize ?? (() => {})}
-            selection={{
-              allSelected,
-              someSelected,
-              onSelectAll,
-              ariaLabel: allSelected ? t("common.deselect") : t("students.table.selectAll")
-            }}
-            actionsLabel={t("students.table.actions")}
-            stickyColumnId="name"
+      <WorkBatchTable
+        data={paginatedStudents}
+        columns={batchColumns}
+        selection={{
+          selectedIds: selectedSet,
+          onSelectOne: (id) => onSelectOne(id),
+          onSelectAll,
+          allSelected,
+          someSelected,
+          selectAllAriaLabel: allSelected ? t("common.deselect") : t("students.table.selectAll"),
+          selectRowAriaLabel: (student) => t("students.table.selectStudent", { name: student.name ?? "Student" }),
+        }}
+        sort={{
+          field: sortField ?? undefined,
+          dir: sortDir,
+          onSort: handleSort,
+        }}
+        columnResize={{
+          getColumnWidth,
+          onColumnResize,
+        }}
+        actionsLabel={t("students.table.actions")}
+        renderRowActions={(studentRow) => (
+          <StudentsRowActions
+            student={studentRow}
+            studentId={String(studentRow.id)}
+            viewingDeleted={viewingDeleted}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            includeMessaging={canWriteMessaging && !viewingDeleted}
+            triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+            contentClassName="w-44"
+            iconClassName="w-4 h-4"
+            onViewStudent={onViewStudent}
+            onEdit={onEdit}
+            onDelete={onDelete}
+            onRestore={onRestore}
+            onOpenComposer={onOpenComposer}
           />
-          <TableBody className="divide-y divide-border/50">
-            {isVirtualized ? (
-              <>
-                {rowVirtualizer.getVirtualItems().length > 0 && (
-                  <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }}>
-                    <td colSpan={visibleColumns.length + 2} />
-                  </tr>
-                )}
-                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const studentRow = paginatedStudents[virtualRow.index];
-                  return (
-                    <StudentsListDesktopTableRow
-                      key={String(studentRow.id)}
-                      studentRow={studentRow}
-                      rowIndex={virtualRow.index}
-                      sessions={sessions}
-                      selectedIds={selectedSet}
-                      viewingDeleted={viewingDeleted}
-                      canWrite={canWrite}
-                      canDelete={canDelete}
-                      canWriteMessaging={canWriteMessaging}
-                      statusBadgeConfig={statusBadgeConfig}
-                      isColumnVisible={isColumnVisible}
-                      visibleColumns={visibleColumns}
-                      onSelectOne={onSelectOne}
-                      onViewStudent={onViewStudent}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onRestore={onRestore}
-                      onOpenComposer={onOpenComposer}
-                    />
-                  );
-                })}
-                {rowVirtualizer.getVirtualItems().length > 0 && (
-                  <tr
-                    style={{
-                      height: `${
-                        rowVirtualizer.getTotalSize() -
-                        rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end
-                      }px`,
-                    }}
-                  >
-                    <td colSpan={visibleColumns.length + 2} />
-                  </tr>
-                )}
-              </>
-            ) : (
-              <AnimatePresence>
-                {paginatedStudents.map((studentRow, rowIndex) => (
-                  <StudentsListDesktopTableRow
-                    key={String(studentRow.id)}
-                    studentRow={studentRow}
-                    rowIndex={rowIndex}
-                    sessions={sessions}
-                    selectedIds={selectedSet}
-                    viewingDeleted={viewingDeleted}
-                    canWrite={canWrite}
-                    canDelete={canDelete}
-                    canWriteMessaging={canWriteMessaging}
-                    statusBadgeConfig={statusBadgeConfig}
-                    isColumnVisible={isColumnVisible}
-                    visibleColumns={visibleColumns}
-                    onSelectOne={onSelectOne}
-                    onViewStudent={onViewStudent}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onRestore={onRestore}
-                    onOpenComposer={onOpenComposer}
-                  />
-                ))}
-              </AnimatePresence>
-            )}
-          </TableBody>
-        </Table>
-      </div>
+        )}
+        stickyColumnId="name"
+      />
 
       <ModuleTableFooterCount
-        selectedCount={selectedIds.length}
-        selectedCountLabel={t("students.selectedCount", { count: selectedIds.length })}
+        selectedCount={selectedSet.size}
+        selectedCountLabel={t("students.selectedCount", { count: selectedSet.size })}
         pageCountLabel={pageCountLabel}
       />
     </>

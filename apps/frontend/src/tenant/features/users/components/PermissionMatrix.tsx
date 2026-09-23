@@ -10,6 +10,7 @@ import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { PermissionMatrixToolbar } from '@/tenant/features/users/components/PermissionMatrixToolbar';
 import { PermissionMatrixMobileList } from '@/tenant/features/users/components/PermissionMatrixMobileList';
 import { PermissionMatrixDesktopTable } from '@/tenant/features/users/components/PermissionMatrixDesktopTable';
@@ -21,6 +22,7 @@ interface PermissionMatrixProps {
   onToggle: (moduleId: string, action: PermissionAction) => void;
   onSelectAll: (moduleId: string) => void;
   onClearAll: (moduleId: string) => void;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 export function PermissionMatrix({
@@ -30,8 +32,11 @@ export function PermissionMatrix({
   onToggle,
   onSelectAll,
   onClearAll,
+  viewMode: propViewMode,
 }: PermissionMatrixProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
   const [searchQuery, setSearchQuery] = useState('');
   const deferredSearch = useDeferredValue(searchQuery);
 
@@ -108,22 +113,21 @@ export function PermissionMatrix({
             compact
           />
         </div>
+      ) : viewMode === 'cards' ? (
+        <PermissionMatrixMobileList groups={groups} {...matrixActions} />
       ) : (
-        <>
-          <PermissionMatrixMobileList groups={groups} {...matrixActions} />
-          <PermissionMatrixDesktopTable
-            groups={groups}
-            filteredModules={filteredModules}
-            perms={perms}
-            readOnly={readOnly}
-            allModulesChecked={allModulesChecked}
-            colSpan={colSpan}
-            onToggle={onToggle}
-            onSelectAll={onSelectAll}
-            onClearAll={onClearAll}
-            onToggleGlobalAll={handleToggleGlobalAll}
-          />
-        </>
+        <PermissionMatrixDesktopTable
+          groups={groups}
+          filteredModules={filteredModules}
+          perms={perms}
+          readOnly={readOnly}
+          allModulesChecked={allModulesChecked}
+          colSpan={colSpan}
+          onToggle={onToggle}
+          onSelectAll={onSelectAll}
+          onClearAll={onClearAll}
+          onToggleGlobalAll={handleToggleGlobalAll}
+        />
       )}
     </div>
   );

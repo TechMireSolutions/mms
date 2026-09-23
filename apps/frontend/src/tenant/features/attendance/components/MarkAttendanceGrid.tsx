@@ -20,6 +20,7 @@ import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { getAttendanceStatusInfo, type AttendanceStatus } from "@/lib/data/attendanceData";
 import { MarkAttendanceFieldControl } from "@/tenant/features/attendance/components/MarkAttendanceFieldControl";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { cn } from "@/lib/utils";
 import type { ModuleFieldDef } from "@mms/shared";
 import type { AttendanceRow } from "@/tenant/features/attendance/components/markAttendanceTypes";
@@ -30,6 +31,7 @@ export interface MarkAttendanceGridProps {
   statuses: AttendanceStatus[];
   isFieldEnabled: (fieldId: string) => boolean;
   onFieldChange: (studentId: string, key: string, value: unknown) => void;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 function MarkAttendanceStudentCard({
@@ -89,8 +91,11 @@ export function MarkAttendanceGrid({
   statuses,
   isFieldEnabled,
   onFieldChange,
+  viewMode: propViewMode,
 }: MarkAttendanceGridProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
   const rowMotion = useListRowMotion({ layout: true });
   const enabledFields = orderedFields.filter((field) => isFieldEnabled(field.id));
 
@@ -103,7 +108,7 @@ export function MarkAttendanceGrid({
     getScrollElement: () => desktopParentRef.current,
     estimateSize: () => 48,
     overscan: 5,
-    enabled: isVirtualized,
+    enabled: isVirtualized && viewMode === "table",
   });
 
   const mobileVirtualizer = useVirtualizer({
@@ -111,66 +116,68 @@ export function MarkAttendanceGrid({
     getScrollElement: () => mobileParentRef.current,
     estimateSize: () => 140,
     overscan: 3,
-    enabled: isVirtualized,
+    enabled: isVirtualized && viewMode === "cards",
   });
 
   return (
     <Card accentColor="primary" className="p-0 overflow-hidden">
-      <div
-        ref={mobileParentRef}
-        className={isVirtualized ? "space-y-3 p-3 md:hidden max-h-160 overflow-y-auto" : "space-y-3 p-3 md:hidden"}
-      >
-        {rows.length === 0 ? (
-          <EmptyState title={t("attendance.mark.noStudents")} compact />
-        ) : isVirtualized ? (
-          <div style={{ height: `${mobileVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
-            {mobileVirtualizer.getVirtualItems().map((virtualRow) => {
-              const row = rows[virtualRow.index];
+      {viewMode === "cards" ? (
+        <div
+          ref={mobileParentRef}
+          className={isVirtualized ? "space-y-3 p-3 max-h-160 overflow-y-auto" : "space-y-3 p-3"}
+        >
+          {rows.length === 0 ? (
+            <EmptyState title={t("attendance.mark.noStudents")} compact />
+          ) : isVirtualized ? (
+            <div style={{ height: `${mobileVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
+              {mobileVirtualizer.getVirtualItems().map((virtualRow) => {
+                const row = rows[virtualRow.index];
+                const statusInfo = getAttendanceStatusInfo(row.status, statuses);
+                return (
+                  <div
+                    key={row.studentId}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    className="pb-3"
+                  >
+                    <MarkAttendanceStudentCard
+                      row={row}
+                      statusInfo={statusInfo}
+                      enabledFields={enabledFields}
+                      onFieldChange={onFieldChange}
+                      motionProps={rowMotion()}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            rows.map((row) => {
               const statusInfo = getAttendanceStatusInfo(row.status, statuses);
               return (
-                <div
+                <MarkAttendanceStudentCard
                   key={row.studentId}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                  className="pb-3"
-                >
-                  <MarkAttendanceStudentCard
-                    row={row}
-                    statusInfo={statusInfo}
-                    enabledFields={enabledFields}
-                    onFieldChange={onFieldChange}
-                    motionProps={rowMotion()}
-                  />
-                </div>
+                  row={row}
+                  statusInfo={statusInfo}
+                  enabledFields={enabledFields}
+                  onFieldChange={onFieldChange}
+                  motionProps={rowMotion()}
+                />
               );
-            })}
-          </div>
-        ) : (
-          rows.map((row) => {
-            const statusInfo = getAttendanceStatusInfo(row.status, statuses);
-            return (
-              <MarkAttendanceStudentCard
-                key={row.studentId}
-                row={row}
-                statusInfo={statusInfo}
-                enabledFields={enabledFields}
-                onFieldChange={onFieldChange}
-                motionProps={rowMotion()}
-              />
-            );
-          })
-        )}
-      </div>
-      <div
-        ref={desktopParentRef}
-        className={isVirtualized ? "hidden md:block max-h-160 overflow-y-auto" : "hidden md:block"}
-      >
-        <Table>
+            })
+          )}
+        </div>
+      ) : (
+        <div
+          ref={desktopParentRef}
+          className={isVirtualized ? "max-h-160 overflow-y-auto" : ""}
+        >
+          <Table>
           <TableHeader className={`bg-muted/60 border-b border-border ${isVirtualized ? "sticky top-0 z-10 backdrop-blur-sm" : ""}`}>
             <TableRow>
               <TableHead className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase w-8">#</TableHead>
@@ -245,6 +252,7 @@ export function MarkAttendanceGrid({
           </TableBody>
         </Table>
       </div>
+      )}
     </Card>
   );
 }

@@ -1,6 +1,6 @@
 import React, { type JSX, type ReactNode } from "react";
 import { Trash2 } from "lucide-react";
-import { BulkSelectionBar } from "@/components/ui/BulkSelectionBar";
+import { BulkActionDock } from "@/components/common/BulkActionDock";
 import {
   BulkSelectionClearAction,
   BulkSelectionDeleteAction,
@@ -72,13 +72,15 @@ export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
     ))();
 
   return (
-    <BulkSelectionBar
+    <BulkActionDock
       placement="inline"
       tone="glass"
       selectedCount={selectedCount}
       countLabel={countLabel}
       leading={leading}
       trailing={trailingNode}
+      onClearSelection={onClearSelection}
+      enableEscapeKey={true}
     >
       {isViewingDeleted ? (
         canDelete && (
@@ -114,6 +116,6 @@ export const ModuleWorkBulkActionBar = (function ModuleWorkBulkActionBar({
           )}
         </>
       )}
-    </BulkSelectionBar>
+    </BulkActionDock>
   );
 });

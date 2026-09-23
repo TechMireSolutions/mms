@@ -140,7 +140,7 @@ export function QuestionsListDesktopTable({
   }, [categoryMap, config, difficultyConfig, isColumnVisible, t, typeConfig]);
 
   return (
-    <div className={`${WORK_SURFACE} hidden md:block`}>
+    <div className={WORK_SURFACE}>
       <WorkBatchTable
         data={questions}
         columns={columns}

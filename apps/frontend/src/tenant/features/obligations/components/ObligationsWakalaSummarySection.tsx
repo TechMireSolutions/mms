@@ -1,3 +1,5 @@
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
@@ -13,6 +15,7 @@ import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { ObligationDistribution } from "@/lib/data/obligationsData";
 import { AlertCircle, Layers } from "lucide-react";
 
@@ -35,6 +38,7 @@ interface ObligationsWakalaSummarySectionProps {
   totalAmount: number;
   activeCurrencyCode: string;
   formatCurrency: (amount: number | string | null | undefined) => string;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 export function ObligationsWakalaSummarySection({
@@ -42,8 +46,11 @@ export function ObligationsWakalaSummarySection({
   totalAmount,
   activeCurrencyCode,
   formatCurrency,
+  viewMode: propViewMode,
 }: ObligationsWakalaSummarySectionProps) {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
 
   return (
     <section aria-label={t("obligations.summary.wakala.aria")}>
@@ -78,58 +85,59 @@ export function ObligationsWakalaSummarySection({
         <EmptyState variant="dashed" title={t("obligations.summary.emptyFiltered")} compact role="alert" />
       ) : (
         <div className={WORK_SURFACE}>
-          <div className="space-y-3 p-3 md:hidden">
-            {wakalaSummary.map((wakalaSummaryItem) => (
-              <article key={wakalaSummaryItem.key} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
-                <div>
-                  <h4 className="text-sm font-semibold text-foreground m-0">{wakalaSummaryItem.repName}</h4>
-                  {!wakalaSummaryItem.hasWakala && (
-                    <span className="inline-flex items-center gap-1 text-xs text-warning font-bold mt-0.5" aria-label={t("obligations.summary.wakala.noConfigAria")}>
-                      <AlertCircle className="w-3 h-3" aria-hidden="true" /> {t("obligations.summary.wakala.noConfig")}
-                    </span>
-                  )}
-                </div>
-                <StatGrid>
-                  <StatRow
-                    label={t("obligations.summary.wakala.colMujtahid")}
-                    value={wakalaSummaryItem.mujtahidName}
-                    ddClassName="text-xs text-muted-foreground"
-                  />
-                  <StatRow
-                    label={t("obligations.summary.wakala.colObligation")}
-                    value={<Badge pill tone="primary" className="px-2 font-bold">{wakalaSummaryItem.obligationType}</Badge>}
-                  />
-                  <StatRow
-                    label={t("obligations.summary.wakala.colCollections")}
-                    value={wakalaSummaryItem.count}
-                    ddClassName="text-sm font-semibold"
-                  />
-                  <StatRow
-                    label={t("obligations.summary.wakala.colTotalAmountShort")}
-                    value={formatCurrency(wakalaSummaryItem.total)}
-                    ddClassName="font-mono font-bold text-success text-sm"
-                  />
-                </StatGrid>
-                {wakalaSummaryItem.distributions.length > 0 && (
+          {viewMode === "cards" ? (
+            <DirectoryCardsGrid className="p-3">
+              {wakalaSummary.map((wakalaSummaryItem) => (
+                <DirectoryEntityCard key={wakalaSummaryItem.key} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
                   <div>
-                    <p className="text-xs font-semibold text-muted-foreground mb-1">{t("obligations.summary.wakala.colDistributions")}</p>
-                    <div className="flex flex-wrap gap-1">
-                      {wakalaSummaryItem.distributions.map((distribution) => (
-                        <span key={distribution.id} className={`text-xs font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${distribution.type === "Liability" ? "bg-destructive/10 border-destructive/30 text-destructive" : "bg-success/10 border-success/30 text-success"}`}>
-                          {distribution.name} {distribution.percentage}%
-                        </span>
-                      ))}
-                    </div>
+                    <h4 className="text-sm font-semibold text-foreground m-0">{wakalaSummaryItem.repName}</h4>
+                    {!wakalaSummaryItem.hasWakala && (
+                      <span className="inline-flex items-center gap-1 text-xs text-warning font-bold mt-0.5" aria-label={t("obligations.summary.wakala.noConfigAria")}>
+                        <AlertCircle className="w-3 h-3" aria-hidden="true" /> {t("obligations.summary.wakala.noConfig")}
+                      </span>
+                    )}
                   </div>
-                )}
+                  <StatGrid>
+                    <StatRow
+                      label={t("obligations.summary.wakala.colMujtahid")}
+                      value={wakalaSummaryItem.mujtahidName}
+                      ddClassName="text-xs text-muted-foreground"
+                    />
+                    <StatRow
+                      label={t("obligations.summary.wakala.colObligation")}
+                      value={<Badge pill tone="primary" className="px-2 font-bold">{wakalaSummaryItem.obligationType}</Badge>}
+                    />
+                    <StatRow
+                      label={t("obligations.summary.wakala.colCollections")}
+                      value={wakalaSummaryItem.count}
+                      ddClassName="text-sm font-semibold"
+                    />
+                    <StatRow
+                      label={t("obligations.summary.wakala.colTotalAmountShort")}
+                      value={formatCurrency(wakalaSummaryItem.total)}
+                      ddClassName="font-mono font-bold text-success text-sm"
+                    />
+                  </StatGrid>
+                  {wakalaSummaryItem.distributions.length > 0 && (
+                    <div>
+                      <p className="text-xs font-semibold text-muted-foreground mb-1">{t("obligations.summary.wakala.colDistributions")}</p>
+                      <div className="flex flex-wrap gap-1">
+                        {wakalaSummaryItem.distributions.map((distribution) => (
+                          <span key={distribution.id} className={`text-xs font-bold px-1.5 py-0.5 rounded border whitespace-nowrap ${distribution.type === "Liability" ? "bg-destructive/10 border-destructive/30 text-destructive" : "bg-success/10 border-success/30 text-success"}`}>
+                            {distribution.name} {distribution.percentage}%
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </DirectoryEntityCard>
+              ))}
+              <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 col-span-full">
+                <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</p>
+                <p className="font-mono font-bold text-success text-sm m-0">{formatCurrency(totalAmount)}</p>
               </article>
-            ))}
-            <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</p>
-              <p className="font-mono font-bold text-success text-sm m-0">{formatCurrency(totalAmount)}</p>
-            </article>
-          </div>
-          <div className="hidden md:block">
+            </DirectoryCardsGrid>
+          ) : (
             <Table>
               <caption className="sr-only">{t("obligations.summary.wakala.title")}</caption>
               <TableHeader>
@@ -181,7 +189,7 @@ export function ObligationsWakalaSummarySection({
                 </TableRow>
               </TableFooter>
             </Table>
-          </div>
+          )}
         </div>
       )}
     </section>

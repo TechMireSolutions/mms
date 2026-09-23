@@ -12,6 +12,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
@@ -19,6 +20,7 @@ import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 interface ObligationTypeManagerListProps {
   types: ObligationType[];
@@ -26,6 +28,7 @@ interface ObligationTypeManagerListProps {
   quantityConfig: Record<string, StatusBadgeConfigItem>;
   onEdit: (obligationType: ObligationType) => void;
   onDelete: (obligationTypeId: string) => void;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 interface ObligationTypeCardProps {
@@ -110,21 +113,24 @@ export function ObligationTypeManagerList({
   quantityConfig,
   onEdit,
   onDelete,
+  viewMode: propViewMode,
 }: ObligationTypeManagerListProps) {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
 
   const renderActions = (obligationType: ObligationType) => (
     <div className="flex shrink-0 items-center gap-1">
       <Button type="button" aria-label={t("obligations.types.editAria", { name: obligationType.name })} onClick={() => onEdit(obligationType)}
         variant="ghost"
         size="icon"
-        className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+        className="min-h-11 min-w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
         <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
       </Button>
       <Button type="button" aria-label={t("obligations.types.deleteAria", { name: obligationType.name })} onClick={() => onDelete(obligationType.id)}
         variant="ghost"
         size="icon"
-        className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+        className="min-h-11 min-w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
       </Button>
     </div>
@@ -133,9 +139,9 @@ export function ObligationTypeManagerList({
   return (
     <section aria-label={t("obligations.types")} className={WORK_SURFACE}>
       {types.length === 0 ? (
-        <EmptyState title={t("obligations.types.empty")} compact className="md:hidden" />
-      ) : (
-        <div className="space-y-3 p-3 md:hidden">
+        <EmptyState title={t("obligations.types.empty")} compact className="p-4" />
+      ) : viewMode === "cards" ? (
+        <DirectoryCardsGrid className="p-3">
           {types.map((obligationType) => (
             <ObligationTypeCard
               key={obligationType.id}
@@ -146,9 +152,8 @@ export function ObligationTypeManagerList({
               onDelete={onDelete}
             />
           ))}
-        </div>
-      )}
-      <div className="hidden md:block">
+        </DirectoryCardsGrid>
+      ) : (
         <Table>
           <caption className="sr-only">{t("obligations.types")}</caption>
           <TableHeader>
@@ -160,9 +165,6 @@ export function ObligationTypeManagerList({
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/50">
-            {types.length === 0 && (
-              <TableRow><TableCell colSpan={4} className="py-4"><EmptyState title={t("obligations.types.empty")} compact /></TableCell></TableRow>
-            )}
             {types.map((obligationType) => (
               <TableRow key={obligationType.id} className="hover:bg-muted/20 transition-colors">
                 <TableCell className="px-3 py-2.5 font-semibold text-foreground">{obligationType.name}</TableCell>
@@ -177,7 +179,7 @@ export function ObligationTypeManagerList({
             ))}
           </TableBody>
         </Table>
-      </div>
+      )}
     </section>
   );
 }

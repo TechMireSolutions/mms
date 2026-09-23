@@ -2,7 +2,7 @@ import React from 'react';
 import { Send } from 'lucide-react';
 import type { Distribution } from '@/lib/data/hasanatData';
 import { useTranslation } from '@/hooks/useTranslation';
-import { DetailDrawerShell } from '@/components/ui/DetailDrawerShell';
+import { DetailSheet } from '@/components/common/DetailSheet';
 import { DetailDrawerArchivedBanner, DetailDrawerRestoreOrEditAction } from '@/components/ui/DetailDrawerArchiveChrome';
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 import { Card } from '@/components/ui/card';
@@ -27,7 +27,7 @@ export const DistributionDetail = (function DistributionDetail({
   const isArchived = !!distribution.deletedAt;
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       open
       onClose={onClose}
       title={t('hasanat.detail.title')}
@@ -83,6 +83,6 @@ export const DistributionDetail = (function DistributionDetail({
           </Card>
         </section>
       </div>
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 });

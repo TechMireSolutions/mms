@@ -62,4 +62,37 @@ describe("MarkAttendanceGrid Component", () => {
 
     expect(html).toContain("attendance.mark.noStudents");
   });
+
+  it("renders cards mode explicitly without table elements", () => {
+    const html = renderToStaticMarkup(
+      <MarkAttendanceGrid
+        rows={[mockRow]}
+        orderedFields={[{ id: "status", label: "Status", type: "select" } as any]}
+        statuses={mockStatuses}
+        isFieldEnabled={() => true}
+        onFieldChange={vi.fn()}
+        viewMode="cards"
+      />,
+    );
+
+    expect(html).toContain("Bilal Ahmad");
+    expect(html).not.toContain("<table");
+  });
+
+  it("renders table mode explicitly without card grid", () => {
+    const html = renderToStaticMarkup(
+      <MarkAttendanceGrid
+        rows={[mockRow]}
+        orderedFields={[{ id: "status", label: "Status", type: "select" } as any]}
+        statuses={mockStatuses}
+        isFieldEnabled={() => true}
+        onFieldChange={vi.fn()}
+        viewMode="table"
+      />,
+    );
+
+    expect(html).toContain("Bilal Ahmad");
+    expect(html).toContain("<table");
+  });
 });
+

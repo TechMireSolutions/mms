@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, IdCard } from "lucide-react";
 import type { Student } from "@mms/shared";
-import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { DetailSheet } from "@/components/common/DetailSheet";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { Button } from "@/components/ui/button";
@@ -113,7 +113,7 @@ export const StudentDetail = (function StudentDetail({
     ))();
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       onClose={onClose}
       title={t("students.detail.title")}
       subtitle={
@@ -185,7 +185,7 @@ export const StudentDetail = (function StudentDetail({
         loading={sessionsLoading}
         error={sessionsError}
       />
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 });
 

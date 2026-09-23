@@ -16,9 +16,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { MessagingTemplateActionButtons } from "./MessagingTemplateActionButtons";
 
 export interface MessagingTemplateListProps {
@@ -36,6 +38,7 @@ export interface MessagingTemplateListProps {
   onDuplicate: (template: MessageTemplate) => void;
   onEdit: (template: MessageTemplate) => void;
   onDeleteRequest: (id: string) => void;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 export const MessagingTemplateList = (function MessagingTemplateList({
@@ -53,8 +56,11 @@ export const MessagingTemplateList = (function MessagingTemplateList({
   onDuplicate,
   onEdit,
   onDeleteRequest,
+  viewMode: propViewMode,
 }: MessagingTemplateListProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
 
   return (
     <div className={`${WORK_SURFACE} space-y-4 p-4 md:col-span-2`}>
@@ -83,49 +89,47 @@ export const MessagingTemplateList = (function MessagingTemplateList({
       </div>
 
       <div className="rounded-lg border border-border/50">
-        {/* Mobile cards */}
-        <div className="space-y-3 p-3 md:hidden">
-          {templates.map((template) => (
-            <DirectoryEntityCard
-              key={template.id}
-              className="space-y-3 p-4"
-            >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h4 className="truncate text-sm font-semibold text-foreground">
-                    {template.labelKey ? t(template.labelKey as Parameters<typeof t>[0]) : template.label}
-                  </h4>
-                  {template.channel && template.channel !== "all" && (
-                    <div className="mt-1">
-                      <ChannelBadge channel={template.channel} className="text-xs" />
-                    </div>
-                  )}
+        {viewMode === "cards" ? (
+          <DirectoryCardsGrid className="p-3">
+            {templates.map((template) => (
+              <DirectoryEntityCard
+                key={template.id}
+                className="space-y-3 p-4"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h4 className="truncate text-sm font-semibold text-foreground">
+                      {template.labelKey ? t(template.labelKey as Parameters<typeof t>[0]) : template.label}
+                    </h4>
+                    {template.channel && template.channel !== "all" && (
+                      <div className="mt-1">
+                        <ChannelBadge channel={template.channel} className="text-xs" />
+                      </div>
+                    )}
+                  </div>
+                  <StatusBadge status={template.category || "general"} config={categoryBadgeConfig} size="sm" />
                 </div>
-                <StatusBadge status={template.category || "general"} config={categoryBadgeConfig} size="sm" />
-              </div>
-              <div className="rounded-lg bg-muted/40 p-2.5">
-                <p className="text-xs font-semibold text-muted-foreground">{t("messaging.templateCopy")}</p>
-                <p className="text-xs text-foreground mt-0.5 whitespace-pre-wrap">{template.body}</p>
-              </div>
-              <DirectoryCardFooterActions
-                actions={
-                  <MessagingTemplateActionButtons
-                    template={template}
-                    canWrite={canWrite}
-                    onCopy={onCopy}
-                    onDuplicate={onDuplicate}
-                    onEdit={onEdit}
-                    onDeleteRequest={onDeleteRequest}
-                  />
-                }
-              />
-            </DirectoryEntityCard>
-          ))}
-          {templates.length === 0 && <EmptyState title={t("messaging.noTemplates")} compact />}
-        </div>
-
-        {/* Desktop table */}
-        <div className="hidden md:block">
+                <div className="rounded-lg bg-muted/40 p-2.5">
+                  <p className="text-xs font-semibold text-muted-foreground">{t("messaging.templateCopy")}</p>
+                  <p className="text-xs text-foreground mt-0.5 whitespace-pre-wrap">{template.body}</p>
+                </div>
+                <DirectoryCardFooterActions
+                  actions={
+                    <MessagingTemplateActionButtons
+                      template={template}
+                      canWrite={canWrite}
+                      onCopy={onCopy}
+                      onDuplicate={onDuplicate}
+                      onEdit={onEdit}
+                      onDeleteRequest={onDeleteRequest}
+                    />
+                  }
+                />
+              </DirectoryEntityCard>
+            ))}
+            {templates.length === 0 && <EmptyState title={t("messaging.noTemplates")} compact />}
+          </DirectoryCardsGrid>
+        ) : (
           <Table className="table-fixed text-start text-xs">
             <TableHeader className="bg-muted/40 font-semibold uppercase tracking-wider text-muted-foreground">
               <TableRow className="border-b border-border/60">
@@ -185,7 +189,7 @@ export const MessagingTemplateList = (function MessagingTemplateList({
               )}
             </TableBody>
           </Table>
-        </div>
+        )}
       </div>
     </div>
   );

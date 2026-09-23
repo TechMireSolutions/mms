@@ -92,4 +92,37 @@ describe("EnrollmentsListContent Component", () => {
 
     expect(html).toContain("List Table");
   });
+
+  it("renders cards when viewMode is cards", () => {
+    const html = renderToStaticMarkup(
+      <EnrollmentsListContent
+        viewMode="cards"
+        enrollments={[{ id: "enr-1" } as any]}
+        filteredCount={1}
+        page={1}
+        pageSize={25}
+        students={[]}
+        isColumnVisible={() => true}
+        columnRegistry={[]}
+        canSelectEnrollments={true}
+        selectedIds={[]}
+        allVisibleSelected={false}
+        someVisibleSelected={false}
+        canWrite={true}
+        canDelete={true}
+        showDeleted={false}
+        statusConfig={{}}
+        paymentConfig={{}}
+        formatCurrency={(val) => `$${val}`}
+        onPageChange={vi.fn()}
+        onView={vi.fn()}
+        onCancel={vi.fn()}
+        onToggleSelectAll={vi.fn()}
+        onToggleSelectedEnrollment={vi.fn()}
+        openComposer={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("List Cards");
+  });
 });

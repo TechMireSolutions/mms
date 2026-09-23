@@ -41,7 +41,7 @@ describe("RedemptionTracker", () => {
   };
 
   it("renders mobile card with student name, reward, and points", () => {
-    const html = renderToStaticMarkup(<RedemptionTracker {...baseProps} />);
+    const html = renderToStaticMarkup(<RedemptionTracker {...baseProps} viewMode="cards" />);
 
     expect(html).toContain("Fatima Zahra");
     expect(html).toContain("Islamic Storybook");
@@ -50,10 +50,18 @@ describe("RedemptionTracker", () => {
   });
 
   it("renders metadata tiles for reward, date, and approver", () => {
-    const html = renderToStaticMarkup(<RedemptionTracker {...baseProps} />);
+    const html = renderToStaticMarkup(<RedemptionTracker {...baseProps} viewMode="cards" />);
 
     expect(html).toContain("hasanat.columns.redemption.reward");
     expect(html).toContain("hasanat.columns.redemption.date");
     expect(html).toContain("hasanat.columns.redemption.approvedBy");
+  });
+
+  it("renders desktop table when viewMode is table", () => {
+    const html = renderToStaticMarkup(<RedemptionTracker {...baseProps} viewMode="table" />);
+
+    expect(html).toContain("Fatima Zahra");
+    expect(html).toContain("Islamic Storybook");
+    expect(html).toContain("Ustadha Maryam");
   });
 });

@@ -19,10 +19,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
 import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { RedeemModal } from "@/tenant/features/hasanat/components/RedeemModal";
 import type { HTMLMotionProps } from "framer-motion";
@@ -38,6 +41,8 @@ export interface RedemptionTrackerProps {
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
+  viewMode?: WorkDirectoryViewMode;
+  onViewModeChange?: (mode: WorkDirectoryViewMode) => void;
 }
 
 interface RedemptionCardProps {
@@ -112,12 +117,17 @@ export function RedemptionTracker({
   getColumnWidth,
   onColumnResize,
   columnCustomizer,
+  viewMode: propViewMode,
+  onViewModeChange: propOnViewModeChange,
 }: RedemptionTrackerProps) {
   const { t } = useTranslation();
   const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
   const redemptions = useHasanatRedemptionsCollection();
   const { replaceRedemptions } = useHasanatMutations();
   const [showModal, setShowModal] = useState(false);
+  const directoryViewMode = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? directoryViewMode.viewMode;
+  const setViewMode = propOnViewModeChange ?? directoryViewMode.setViewMode;
 
   useEffect(() => {
     onFilteredCountChange?.(redemptions.length);
@@ -145,6 +155,10 @@ export function RedemptionTracker({
         title={t("hasanat.redemptionsSummary", { count: redemptions.length, points: formatNumber(totalPoints) })}
         actions={
           <>
+            <WorkViewModeToggle
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+            />
             {columnCustomizer && (
               <ModuleColumnCustomizer
                 columnRegistry={columnCustomizer.columnRegistry}
@@ -156,7 +170,7 @@ export function RedemptionTracker({
               <Button
                 type="button"
                 onClick={() => setShowModal(true)}
-                className="flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
+                className="flex items-center gap-1.5 min-h-11 px-3.5 py-2 rounded-lg bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.recordRedemption")}
               </Button>
@@ -171,78 +185,77 @@ export function RedemptionTracker({
           icon={Gift}
           title={t("hasanat.empty.redemptions")}
         />
+      ) : viewMode === "cards" ? (
+        <DirectoryCardsGrid>
+          {redemptions.map((redemption, index) => (
+            <RedemptionCard
+              key={redemption.id}
+              redemption={redemption}
+              columnVisible={columnVisible}
+              motionProps={rowMotion(index * 0.04)}
+            />
+          ))}
+        </DirectoryCardsGrid>
       ) : (
         <div className={WORK_SURFACE}>
-          <div className="space-y-3 p-3 md:hidden">
-            {redemptions.map((redemption, index) => (
-              <RedemptionCard
-                key={redemption.id}
-                redemption={redemption}
-                columnVisible={columnVisible}
-                motionProps={rowMotion(index * 0.04)}
-              />
-            ))}
-          </div>
-          <div className="hidden md:block">
-            <Table className="table-fixed">
-              <caption className="sr-only">{t("hasanat.tabs.redemptions")}</caption>
-              <TableHeader>
-                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+          <Table className="table-fixed">
+            <caption className="sr-only">{t("hasanat.tabs.redemptions")}</caption>
+            <TableHeader>
+              <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
+                {columnVisible("student") && (
+                  <ModuleTableHeaderCell columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5">
+                    {t("hasanat.columns.redemption.student")}
+                  </ModuleTableHeaderCell>
+                )}
+                {columnVisible("reward") && (
+                  <ModuleTableHeaderCell columnKey="reward" width={getColumnWidth?.("reward")} onResize={onColumnResize} className="px-3 py-2.5">
+                    {t("hasanat.columns.redemption.reward")}
+                  </ModuleTableHeaderCell>
+                )}
+                {columnVisible("pointsUsed") && (
+                  <ModuleTableHeaderCell columnKey="pointsUsed" width={getColumnWidth?.("pointsUsed")} onResize={onColumnResize} className="px-3 py-2.5">
+                    {t("hasanat.columns.redemption.pointsUsed")}
+                  </ModuleTableHeaderCell>
+                )}
+                {columnVisible("date") && (
+                  <ModuleTableHeaderCell columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5">
+                    {t("hasanat.columns.redemption.date")}
+                  </ModuleTableHeaderCell>
+                )}
+                {columnVisible("approvedBy") && (
+                  <ModuleTableHeaderCell columnKey="approvedBy" width={getColumnWidth?.("approvedBy")} onResize={onColumnResize} className="px-3 py-2.5">
+                    {t("hasanat.columns.redemption.approvedBy")}
+                  </ModuleTableHeaderCell>
+                )}
+              </TableRow>
+            </TableHeader>
+            <TableBody className="divide-y divide-border/50">
+              {redemptions.map((redemption, index) => (
+                <motion.tr key={redemption.id} {...rowMotion(index * 0.04)} className="hover:bg-muted/20 transition-colors">
                   {columnVisible("student") && (
-                    <ModuleTableHeaderCell columnKey="student" width={getColumnWidth?.("student")} onResize={onColumnResize} className="px-3 py-2.5">
-                      {t("hasanat.columns.redemption.student")}
-                    </ModuleTableHeaderCell>
+                    <TableCell className="px-3 py-2.5 text-sm font-semibold text-foreground whitespace-nowrap">{redemption.studentName || "—"}</TableCell>
                   )}
                   {columnVisible("reward") && (
-                    <ModuleTableHeaderCell columnKey="reward" width={getColumnWidth?.("reward")} onResize={onColumnResize} className="px-3 py-2.5">
-                      {t("hasanat.columns.redemption.reward")}
-                    </ModuleTableHeaderCell>
+                    <TableCell className="px-3 py-2.5 text-sm text-foreground">{redemption.reward}</TableCell>
                   )}
                   {columnVisible("pointsUsed") && (
-                    <ModuleTableHeaderCell columnKey="pointsUsed" width={getColumnWidth?.("pointsUsed")} onResize={onColumnResize} className="px-3 py-2.5">
-                      {t("hasanat.columns.redemption.pointsUsed")}
-                    </ModuleTableHeaderCell>
+                    <TableCell className="px-3 py-2.5">
+                      <div className="flex items-center gap-1">
+                        <Star className="w-3 h-3 text-warning" aria-hidden="true" />
+                        <span className="text-sm font-bold text-warning">{redemption.pointsUsed}</span>
+                      </div>
+                    </TableCell>
                   )}
                   {columnVisible("date") && (
-                    <ModuleTableHeaderCell columnKey="date" width={getColumnWidth?.("date")} onResize={onColumnResize} className="px-3 py-2.5">
-                      {t("hasanat.columns.redemption.date")}
-                    </ModuleTableHeaderCell>
+                    <TableCell className="px-3 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{formatDate(redemption.date)}</TableCell>
                   )}
                   {columnVisible("approvedBy") && (
-                    <ModuleTableHeaderCell columnKey="approvedBy" width={getColumnWidth?.("approvedBy")} onResize={onColumnResize} className="px-3 py-2.5">
-                      {t("hasanat.columns.redemption.approvedBy")}
-                    </ModuleTableHeaderCell>
+                    <TableCell className="px-3 py-2.5 text-sm text-muted-foreground">{redemption.approvedBy || "—"}</TableCell>
                   )}
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/50">
-                {redemptions.map((redemption, index) => (
-                  <motion.tr key={redemption.id} {...rowMotion(index * 0.04)} className="hover:bg-muted/20 transition-colors">
-                    {columnVisible("student") && (
-                      <TableCell className="px-3 py-2.5 text-sm font-semibold text-foreground whitespace-nowrap">{redemption.studentName || "—"}</TableCell>
-                    )}
-                    {columnVisible("reward") && (
-                      <TableCell className="px-3 py-2.5 text-sm text-foreground">{redemption.reward}</TableCell>
-                    )}
-                    {columnVisible("pointsUsed") && (
-                      <TableCell className="px-3 py-2.5">
-                        <div className="flex items-center gap-1">
-                          <Star className="w-3 h-3 text-warning" aria-hidden="true" />
-                          <span className="text-sm font-bold text-warning">{redemption.pointsUsed}</span>
-                        </div>
-                      </TableCell>
-                    )}
-                    {columnVisible("date") && (
-                      <TableCell className="px-3 py-2.5 text-sm text-muted-foreground whitespace-nowrap">{formatDate(redemption.date)}</TableCell>
-                    )}
-                    {columnVisible("approvedBy") && (
-                      <TableCell className="px-3 py-2.5 text-sm text-muted-foreground">{redemption.approvedBy || "—"}</TableCell>
-                    )}
-                  </motion.tr>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                </motion.tr>
+              ))}
+            </TableBody>
+          </Table>
         </div>
       )}
 

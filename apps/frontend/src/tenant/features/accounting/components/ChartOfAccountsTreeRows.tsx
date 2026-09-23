@@ -9,18 +9,18 @@ import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
 import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import { cn } from "@/lib/utils";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { TableCell, TableRow } from "@/components/ui/table";
+
 import { useTranslation } from "@/hooks/useTranslation";
 import { ACCOUNT_TYPE_META, type Account } from "@/lib/data/accountingData";
 
-interface AccountRowActionsProps {
+export interface AccountRowActionsProps {
   account: Account;
   onEdit: (account: Account) => void;
   onDelete: (id: string) => void;
   onReactivate: (id: string) => void;
 }
 
-function AccountRowActions({ account, onEdit, onDelete, onReactivate }: AccountRowActionsProps): React.JSX.Element {
+export function AccountRowActions({ account, onEdit, onDelete, onReactivate }: AccountRowActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -118,42 +118,3 @@ export function AccountMobileCard({
   );
 }
 
-export function AccountTableRow({
-  account,
-  balanceConfig,
-  canWrite,
-  isColumnVisible,
-  onEdit,
-  onDelete,
-  onReactivate,
-}: AccountRecordProps): React.JSX.Element {
-  const { t } = useTranslation();
-
-  return (
-    <TableRow className={`transition-colors hover:bg-muted/20 ${account.isActive === false ? "opacity-50" : ""}`}>
-      {isColumnVisible("code") && <TableCell className="px-4 py-2.5 font-mono text-xs font-bold text-muted-foreground">{account.code}</TableCell>}
-      {isColumnVisible("name") && (
-        <TableCell className="px-4 py-2.5">
-          <span className="font-semibold text-foreground">{account.name}</span>
-          {account.isActive === false && <Badge as="span" pill tone="muted" className="ms-2 px-1.5">{t("accounting.coa.inactive")}</Badge>}
-        </TableCell>
-      )}
-      {isColumnVisible("subtype") && <TableCell className="hidden px-4 py-2.5 text-xs text-muted-foreground md:table-cell">{account.subtype || "—"}</TableCell>}
-      {isColumnVisible("description") && <TableCell className="hidden max-w-cell-trunc truncate px-4 py-2.5 text-xs text-muted-foreground lg:table-cell">{account.description || "—"}</TableCell>}
-      {isColumnVisible("normalBalance") && (
-        <TableCell className="px-4 py-2.5">
-          <StatusBadge
-            status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
-            config={balanceConfig}
-            size="sm"
-          />
-        </TableCell>
-      )}
-      <TableCell className="px-4 py-2.5 text-end">
-        <div className="flex items-center justify-end gap-1">
-          {canWrite && <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} />}
-        </div>
-      </TableCell>
-    </TableRow>
-  );
-}

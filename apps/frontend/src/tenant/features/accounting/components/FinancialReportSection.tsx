@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 import {
   Table,
   TableBody,
@@ -7,11 +6,14 @@ import {
   TableFooter,
   TableRow,
 } from "@/components/ui/table";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { ProgressBar } from "@/components/ui/ProgressBar";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 export interface ReportRow {
   id: string;
@@ -30,6 +32,7 @@ interface ReportSectionProps {
   total: number;
   debitNormal: boolean;
   color?: string;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 export function ReportSection({
@@ -39,9 +42,12 @@ export function ReportSection({
   total,
   debitNormal,
   color,
+  viewMode: propViewMode,
 }: ReportSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
   const maxAmount = Math.max(
     ...rows.map((reportRow) => {
       const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
@@ -55,42 +61,40 @@ export function ReportSection({
       <header className={`px-4 py-2.5 border-b border-border ${color || "bg-muted/60"}`}>
         <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{title}</SectionLabel>
       </header>
-      <div className="space-y-3 p-3 md:hidden">
-        {rows.map((reportRow, index) => {
-          const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
-          const percentage = (Math.abs(rowAmount) / maxAmount) * 100;
-          return (
-            <motion.article
-              key={reportRow.id}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: index * 0.03 }}
-              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
-            >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <h4 className="truncate text-sm font-medium text-foreground">{reportRow.name}</h4>
-                  <p className="text-xs text-muted-foreground font-mono m-0">
-                    {reportRow.code} · {reportRow.subtype || reportRow.type}
-                  </p>
+      {viewMode === "cards" ? (
+        <DirectoryCardsGrid className="p-3">
+          {rows.map((reportRow, index) => {
+            const rowAmount = debitNormal ? reportRow.totalDebit - reportRow.totalCredit : reportRow.totalCredit - reportRow.totalDebit;
+            const percentage = (Math.abs(rowAmount) / maxAmount) * 100;
+            return (
+              <DirectoryEntityCard
+                key={reportRow.id}
+                className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <h4 className="truncate text-sm font-medium text-foreground">{reportRow.name}</h4>
+                    <p className="text-xs text-muted-foreground font-mono m-0">
+                      {reportRow.code} · {reportRow.subtype || reportRow.type}
+                    </p>
+                  </div>
+                  <span className="shrink-0 font-mono font-semibold text-foreground">{formatCurrency(Math.abs(rowAmount))}</span>
                 </div>
-                <span className="shrink-0 font-mono font-semibold text-foreground">{formatCurrency(Math.abs(rowAmount))}</span>
-              </div>
-              <ProgressBar
-                value={percentage}
-                size="sm"
-                fillClassName="bg-primary/40"
-                aria-hidden="true"
-              />
-            </motion.article>
-          );
-        })}
-        <article className="flex items-center justify-between rounded-xl border border-border bg-muted/30 p-3">
-          <span className="font-bold text-foreground">{totalLabel}</span>
-          <span className="font-mono font-bold text-foreground text-base">{formatCurrency(total)}</span>
-        </article>
-      </div>
-      <div className="hidden md:block">
+                <ProgressBar
+                  value={percentage}
+                  size="sm"
+                  fillClassName="bg-primary/40"
+                  aria-hidden="true"
+                />
+              </DirectoryEntityCard>
+            );
+          })}
+          <article className="flex items-center justify-between rounded-xl border border-border bg-muted/30 p-3 col-span-full">
+            <span className="font-bold text-foreground">{totalLabel}</span>
+            <span className="font-mono font-bold text-foreground text-base">{formatCurrency(total)}</span>
+          </article>
+        </DirectoryCardsGrid>
+      ) : (
         <Table>
           <caption className="sr-only">{t("accounting.reports.sectionDataCaption", { title })}</caption>
           <TableBody className="divide-y divide-border/50">
@@ -127,7 +131,7 @@ export function ReportSection({
             </TableRow>
           </TableFooter>
         </Table>
-      </div>
+      )}
     </section>
   );
 }

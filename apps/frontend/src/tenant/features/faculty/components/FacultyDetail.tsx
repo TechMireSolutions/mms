@@ -1,7 +1,7 @@
 import React from "react";
 import { IdCard, School } from "lucide-react";
 import { hydrateTeacherFromContact, type FacultyMember, type Teacher } from "@mms/shared";
-import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { DetailSheet } from "@/components/common/DetailSheet";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { Button } from "@/components/ui/button";
@@ -108,7 +108,7 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
     ))();
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       onClose={onClose}
       title={t("teachers.detail.title")}
       subtitle={
@@ -166,7 +166,7 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
       {teacher.notes && isFieldEnabled("notes") && (
         <FacultyDetailNotesSection notes={teacher.notes} />
       )}
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 });
 

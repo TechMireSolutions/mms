@@ -2,7 +2,7 @@ import React from 'react';
 import { Banknote } from 'lucide-react';
 import type { Payment } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { DetailDrawerShell } from '@/components/ui/DetailDrawerShell';
+import { DetailSheet } from '@/components/common/DetailSheet';
 import { DetailDrawerArchivedBanner, DetailDrawerRestoreOrEditAction } from '@/components/ui/DetailDrawerArchiveChrome';
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 import { Card } from '@/components/ui/card';
@@ -27,7 +27,7 @@ export const PaymentDetail = (function PaymentDetail({
   const isArchived = !!payment.deletedAt;
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       open
       onClose={onClose}
       title={t('finance.payments.detail.title')}
@@ -83,6 +83,6 @@ export const PaymentDetail = (function PaymentDetail({
           </Card>
         </section>
       </div>
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 });

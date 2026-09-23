@@ -16,6 +16,7 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 
 interface ChartOfAccountsProps {
   accounts: Account[];
@@ -26,6 +27,7 @@ interface ChartOfAccountsProps {
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
   columnCustomizer?: ModuleColumnCustomizerProps;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 /**
@@ -45,6 +47,7 @@ export function ChartOfAccounts({
   getColumnWidth,
   onColumnResize,
   columnCustomizer,
+  viewMode,
 }: ChartOfAccountsProps) {
   const { t } = useTranslation();
   const [search,      setSearch]     = useState("");
@@ -153,6 +156,7 @@ export function ChartOfAccounts({
         onEdit={(account) => setModal({ ...account })}
         onDelete={(id) => setPendingDeactivate(accounts.find((account) => account.id === id) ?? null)}
         onReactivate={handleReactivate}
+        viewMode={viewMode}
       />}
 
       <p className="text-xs text-muted-foreground" aria-live="polite">{t("accounting.coa.accountsShown", { count: filtered.length })}</p>

@@ -1,6 +1,9 @@
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { getInitials } from "@mms/shared";
 import { Users } from "lucide-react";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
@@ -33,6 +36,7 @@ interface ObligationsRepDuesSectionProps {
   activeCurrencyCode: string;
   formatCurrency: (amount: number | string | null | undefined) => string;
   formatValueOnly: (amount: number | string | null | undefined) => string;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 export function ObligationsRepDuesSection({
@@ -41,8 +45,11 @@ export function ObligationsRepDuesSection({
   activeCurrencyCode,
   formatCurrency,
   formatValueOnly,
+  viewMode: propViewMode,
 }: ObligationsRepDuesSectionProps) {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
   const totalDue = repSummary.reduce((sum, representativeSummary) => sum + representativeSummary.due, 0);
 
   return (
@@ -79,66 +86,67 @@ export function ObligationsRepDuesSection({
         <EmptyState variant="dashed" title={t("obligations.summary.emptyFiltered")} compact role="alert" />
       ) : (
         <div className={WORK_SURFACE}>
-          <div className="space-y-3 p-3 md:hidden">
-            {repSummary.map((representativeSummary) => (
-              <article key={representativeSummary.key} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
-                    <span className="text-xs font-bold text-primary">{getInitials(representativeSummary.repName)}</span>
+          {viewMode === "cards" ? (
+            <DirectoryCardsGrid className="p-3">
+              {repSummary.map((representativeSummary) => (
+                <DirectoryEntityCard key={representativeSummary.key} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0" aria-hidden="true">
+                      <span className="text-xs font-bold text-primary">{getInitials(representativeSummary.repName)}</span>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-foreground text-sm m-0">{representativeSummary.repName}</h4>
+                      <p className="text-xs text-muted-foreground m-0">{representativeSummary.mujtahidName}</p>
+                    </div>
                   </div>
                   <div>
-                    <h4 className="font-semibold text-foreground text-sm m-0">{representativeSummary.repName}</h4>
-                    <p className="text-xs text-muted-foreground m-0">{representativeSummary.mujtahidName}</p>
+                    <p className="text-xs font-semibold text-muted-foreground mb-1">{t("obligations.summary.rep.colByType")}</p>
+                    <div className="flex flex-wrap gap-1">
+                      {Object.entries(representativeSummary.byType).map(([name, amount]) => (
+                        <span key={name} className="text-xs font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-foreground whitespace-nowrap">
+                          {name}: {formatValueOnly(amount)}
+                        </span>
+                      ))}
+                    </div>
                   </div>
-                </div>
-                <div>
-                  <p className="text-xs font-semibold text-muted-foreground mb-1">{t("obligations.summary.rep.colByType")}</p>
-                  <div className="flex flex-wrap gap-1">
-                    {Object.entries(representativeSummary.byType).map(([name, amount]) => (
-                      <span key={name} className="text-xs font-medium px-1.5 py-0.5 rounded bg-muted border border-border text-foreground whitespace-nowrap">
-                        {name}: {formatValueOnly(amount)}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-                <StatGrid columns="sm3">
-                  <StatRow
-                    label={t("obligations.summary.rep.colCollections")}
-                    value={representativeSummary.count}
-                    ddClassName="text-sm font-semibold"
-                  />
+                  <StatGrid columns="sm3">
+                    <StatRow
+                      label={t("obligations.summary.rep.colCollections")}
+                      value={representativeSummary.count}
+                      ddClassName="text-sm font-semibold"
+                    />
+                    <StatRow
+                      label={t("obligations.summary.rep.colTotalCollectedShort")}
+                      value={formatCurrency(representativeSummary.total)}
+                      ddClassName="font-mono font-bold text-sm"
+                    />
+                    <StatRow
+                      label={t("obligations.summary.rep.colDueToRepShort")}
+                      value={formatCurrency(representativeSummary.due)}
+                      dtClassName="text-destructive"
+                      ddClassName="font-mono font-bold text-destructive text-sm"
+                    />
+                  </StatGrid>
+                </DirectoryEntityCard>
+              ))}
+              <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3 col-span-full">
+                <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("obligations.summary.rep.repCount", { count: repSummary.length })}</p>
+                <StatGrid>
                   <StatRow
                     label={t("obligations.summary.rep.colTotalCollectedShort")}
-                    value={formatCurrency(representativeSummary.total)}
-                    ddClassName="font-mono font-bold text-sm"
+                    value={formatCurrency(totalAmount)}
+                    ddClassName="font-mono font-bold text-xs"
                   />
                   <StatRow
                     label={t("obligations.summary.rep.colDueToRepShort")}
-                    value={formatCurrency(representativeSummary.due)}
+                    value={formatCurrency(totalDue)}
                     dtClassName="text-destructive"
-                    ddClassName="font-mono font-bold text-destructive text-sm"
+                    ddClassName="font-mono font-bold text-destructive text-xs"
                   />
                 </StatGrid>
               </article>
-            ))}
-            <article className="space-y-2 rounded-xl border border-border bg-muted/30 p-3">
-              <p className="text-xs font-bold text-muted-foreground uppercase m-0">{t("obligations.summary.rep.repCount", { count: repSummary.length })}</p>
-              <StatGrid>
-                <StatRow
-                  label={t("obligations.summary.rep.colTotalCollectedShort")}
-                  value={formatCurrency(totalAmount)}
-                  ddClassName="font-mono font-bold text-xs"
-                />
-                <StatRow
-                  label={t("obligations.summary.rep.colDueToRepShort")}
-                  value={formatCurrency(totalDue)}
-                  dtClassName="text-destructive"
-                  ddClassName="font-mono font-bold text-destructive text-xs"
-                />
-              </StatGrid>
-            </article>
-          </div>
-          <div className="hidden md:block">
+            </DirectoryCardsGrid>
+          ) : (
             <Table>
               <caption className="sr-only">{t("obligations.summary.rep.title")}</caption>
               <TableHeader>
@@ -188,7 +196,7 @@ export function ObligationsRepDuesSection({
                 </TableRow>
               </TableFooter>
             </Table>
-          </div>
+          )}
         </div>
       )}
     </section>

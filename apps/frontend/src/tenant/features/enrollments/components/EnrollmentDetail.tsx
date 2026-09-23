@@ -2,7 +2,7 @@ import React from "react";
 import {
   User, BookOpen, Layers, DollarSign, Clock, ArrowRight, CircleDollarSign,
 } from "lucide-react";
-import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { DetailSheet } from "@/components/common/DetailSheet";
 import { type Enrollment } from '@/lib/data/enrollmentData';
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { Button } from "@/components/ui/button";
@@ -96,7 +96,7 @@ export const EnrollmentDetail = (function EnrollmentDetail({
   ) : undefined;
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       open={Boolean(enrollment)}
       onClose={onClose}
       title={student?.name || enrollment.studentName}
@@ -235,6 +235,6 @@ export const EnrollmentDetail = (function EnrollmentDetail({
           <p className="text-xs text-muted-foreground px-1 mt-3" role="note">{enrollment.notes}</p>
         )}
       </div>
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 });
