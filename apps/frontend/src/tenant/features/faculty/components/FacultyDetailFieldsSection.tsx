@@ -1,11 +1,12 @@
 import React from "react";
-import { Mail, Phone, School } from "lucide-react";
+import { Award, Mail, Phone, School } from "lucide-react";
 import {
   teacherFieldLabelKey,
   type Contact,
   type Teacher,
   type TeachersSettings,
 } from "@mms/shared";
+import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { ContactPhoneAction, ContactEmailAction } from "@/components/ui/ContactAction";
@@ -57,14 +58,36 @@ export function TeacherDetailFieldsSection({
       customFieldType: field.type,
       isCustom: field.isCustom,
     });
+    // For the designation field, also surface the assignable roles of the current designation.
+    const assignableRoles: string[] =
+      field.key === 'designation'
+        ? ((teacher as Record<string, unknown>).designationAssignableRoles as string[] | undefined) ?? []
+        : [];
     return (
-      <TeacherDetailAttributeRow
-        key={field.key}
-        variant="inset"
-        icon={icon}
-        label={label}
-        value={displayValue || emptyDash}
-      />
+      <React.Fragment key={field.key}>
+        <TeacherDetailAttributeRow
+          variant="inset"
+          icon={icon}
+          label={label}
+          value={displayValue || emptyDash}
+        />
+        {assignableRoles.length > 0 && (
+          <TeacherDetailAttributeRow
+            variant="inset"
+            icon={Award}
+            label={t('faculty.designations.roles')}
+            value={
+              <div className="flex flex-wrap gap-1">
+                {assignableRoles.map((role) => (
+                  <Badge key={role} variant="outline" className="text-xs font-normal">
+                    {role}
+                  </Badge>
+                ))}
+              </div>
+            }
+          />
+        )}
+      </React.Fragment>
     );
   };
 

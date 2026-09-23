@@ -18,48 +18,21 @@ import {
   facultyDesignationSchema,
   facultyDesignationWriteSchema,
 } from '../facultyDesignationTypes.js';
+import {
+  facultyBulkResultResponseSchema,
+  facultyListPageResponseSchema,
+  facultyPreferencesResponseSchema,
+  facultyWidgetAggregateResultSchema,
+  facultyWrappedResponseSchema,
+} from './faculty.contract.schemas.js';
+
+export {
+  facultyListPageResponseSchema,
+  facultyPreferencesResponseSchema,
+};
 
 const c = initContract();
 const errorResponse = z.unknown();
-
-const facultyWidgetAggregateResultSchema = z.object({
-  value: z.number(),
-  totalCount: z.number(),
-  chartData: z.array(z.object({ name: z.string(), value: z.number() })),
-});
-
-/** Envelope for paginated faculty list responses (`FacultyListPageResult`). */
-export const facultyListPageResponseSchema = z.object({
-  faculty: z.array(facultyRecordSchema).optional(),
-  teachers: z.array(facultyRecordSchema).optional(),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  hasMore: z.boolean(),
-});
-
-/** `{ success: true, faculty, teacher }` envelope returned by create/update. */
-const facultyWrappedResponseSchema = z.object({
-  success: z.literal(true),
-  faculty: facultyRecordSchema.optional(),
-  facultyMember: facultyRecordSchema.optional(),
-  teacher: facultyRecordSchema.optional(),
-});
-
-/** `{ success: true, succeeded, failed }` bulk-operation envelope. */
-const facultyBulkResultResponseSchema = z.object({
-  success: z.literal(true),
-  succeeded: z.number(),
-  failed: z.number(),
-});
-
-/** Normalized Faculty Setup employee-ID / contact-link prefs (`FacultyModulePreferences`). */
-export const facultyPreferencesResponseSchema = z.object({
-  idPrefix: z.string(),
-  autoGenerateId: z.boolean(),
-  requireContactLink: z.boolean(),
-  defaultSpecialization: z.string(),
-});
 
 export const facultyContract = c.router({
   list: {
@@ -238,6 +211,19 @@ export const facultyContract = c.router({
     body: facultyDesignationAssignmentWriteSchema,
     responses: { 200: z.object({ assignment: facultyDesignationAssignmentSchema }), 400: errorResponse, 403: errorResponse, 409: errorResponse },
     summary: 'Create or update a dated Faculty designation assignment',
+  },
+  deleteDesignationAssignment: {
+    method: 'DELETE',
+    path: '/api/faculty/:facultyId/designation-history/:assignmentId',
+    body: z.object({}).optional(),
+    responses: {
+      200: z.object({ success: z.literal(true) }),
+      403: errorResponse,
+      404: errorResponse,
+      409: errorResponse,
+      500: errorResponse,
+    },
+    summary: 'Delete a dated Faculty designation assignment (forbidden when it is the sole assignment for the member)',
   },
 
   getFieldConfig: {

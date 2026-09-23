@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Award, Plus } from 'lucide-react';
 import type { FacultyDesignationDefinition } from '@mms/shared';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/FormPrimitives';
 import { FORM_INPUT } from '@/components/ui/formStyles';
@@ -96,14 +97,44 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
         </div>
         <div className="divide-y divide-border rounded-md border">
           {(query.data ?? []).map((designation) => (
-            <button key={designation.id} type="button" className="flex min-h-11 w-full items-center justify-between gap-3 px-3 py-2 text-start hover:bg-muted/50" onClick={() => edit(designation)}>
-              <span>
-                <span className="block font-medium">{designation.name}</span>
-                <span className="block text-xs text-muted-foreground">{designation.code} · {t('faculty.form.hierarchyRank')} {designation.hierarchyRank}</span>
+            <button
+              key={designation.id}
+              type="button"
+              className={`flex min-h-11 w-full items-start justify-between gap-3 px-3 py-2.5 text-start hover:bg-muted/50 ${
+                designation.isActive ? '' : 'opacity-60'
+              }`}
+              onClick={() => edit(designation)}
+            >
+              <span className="min-w-0">
+                <span className="flex flex-wrap items-center gap-1.5">
+                  <span className="font-medium">{designation.name}</span>
+                  {!designation.isActive && (
+                    <Badge variant="outline" className="text-xs font-normal line-through">
+                      {t('faculty.status.inactive')}
+                    </Badge>
+                  )}
+                </span>
+                <span className="block text-xs text-muted-foreground">
+                  {designation.code} · {t('faculty.form.hierarchyRank')} {designation.hierarchyRank}
+                </span>
+                {designation.assignableRoles.length > 0 && (
+                  <span className="mt-1 flex flex-wrap gap-1">
+                    {designation.assignableRoles.map((role) => (
+                      <Badge key={role} variant="secondary" className="text-xs font-normal">
+                        {role}
+                      </Badge>
+                    ))}
+                  </span>
+                )}
               </span>
-              <span className="text-xs text-muted-foreground">{designation.assignableRoles.join(', ') || t('common.none')}</span>
             </button>
           ))}
+          {!query.isPending && !query.data?.length && (
+            <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+              <Award className="size-8 text-muted-foreground/40" aria-hidden />
+              <p className="text-sm text-muted-foreground">{t('faculty.designations.setupHint')}</p>
+            </div>
+          )}
         </div>
       </div>
     </SectionCard>

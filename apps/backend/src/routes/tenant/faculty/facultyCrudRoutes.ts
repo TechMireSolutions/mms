@@ -25,6 +25,7 @@ import {
   handleListDesignationHistory,
   handleSaveDesignation,
   handleSaveDesignationAssignment,
+  handleDeleteDesignationAssignment,
 } from './facultyDesignationRouteHandlers.js';
 
 const s = initServer();
@@ -269,6 +270,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
     saveDesignation: handleSaveDesignation,
     listDesignationHistory: handleListDesignationHistory,
     saveDesignationAssignment: handleSaveDesignationAssignment,
+    deleteDesignationAssignment: handleDeleteDesignationAssignment,
   } as unknown as RouterImplementation<typeof facultyContract>);
 
   await fastify.register(s.plugin(router), {

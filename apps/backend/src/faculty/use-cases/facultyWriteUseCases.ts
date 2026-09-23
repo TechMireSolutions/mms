@@ -151,6 +151,25 @@ export async function createTeacher(
           id: archived.id,
         });
         await repo.save(tenant, merged);
+        // Apply designation assignment for restored members if provided.
+        const restoredDesignationId = typeof rawRecord.designationId === 'string' ? rawRecord.designationId.trim() : '';
+        const restoredStartsOn = typeof rawRecord.designationStartsOn === 'string'
+          ? rawRecord.designationStartsOn
+          : new Date().toISOString().slice(0, 10);
+        if (restoredDesignationId) {
+          try {
+            await saveFacultyDesignationAssignment(tenant, {
+              id: `fda-${String(merged.id)}`,
+              facultyId: String(merged.id),
+              designationId: restoredDesignationId,
+              startsOn: restoredStartsOn,
+              endsOn: null,
+              notes: null,
+            });
+          } catch {
+            // Non-fatal: overlap with existing assignment (e.g. already had one) — skip silently.
+          }
+        }
         return { record: merged, restored: true };
       }
     }

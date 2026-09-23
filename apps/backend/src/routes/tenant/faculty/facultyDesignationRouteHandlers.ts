@@ -6,6 +6,7 @@ import {
   listFacultyDesignations,
   saveFacultyDesignation,
   saveFacultyDesignationAssignment,
+  deleteFacultyDesignationAssignment,
 } from '../../../db/repositories/facultyDesignationRepository.js';
 
 export async function handleListDesignations({
@@ -82,5 +83,31 @@ export async function handleSaveDesignationAssignment({
       status: 400 as const,
       body: { type: 'validation_error', message: error instanceof Error ? error.message : 'Invalid designation assignment' },
     };
+  }
+}
+
+export async function handleDeleteDesignationAssignment({
+  params: { facultyId, assignmentId },
+  request,
+}: ContractRouteArgs<typeof facultyContract['deleteDesignationAssignment']>): Promise<ContractRouteResponse<typeof facultyContract['deleteDesignationAssignment']>> {
+  const user = request.user as User;
+  if (!canWriteCollection(user, 'faculty')) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+  }
+  try {
+    await deleteFacultyDesignationAssignment(String(request.tenant?.id), facultyId, assignmentId);
+    return { status: 200 as const, body: { success: true as const } };
+  } catch (error: unknown) {
+    const statusCode = (error as { statusCode?: number }).statusCode;
+    if (statusCode === 404) {
+      return { status: 404 as const, body: { type: 'not_found', message: 'Designation assignment not found' } };
+    }
+    if (statusCode === 409) {
+      return {
+        status: 409 as const,
+        body: { type: 'conflict', message: error instanceof Error ? error.message : 'Cannot delete this assignment' },
+      };
+    }
+    return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete designation assignment' } };
   }
 }

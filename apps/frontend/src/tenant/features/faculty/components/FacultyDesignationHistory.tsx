@@ -1,126 +1,255 @@
 import { useState } from 'react';
-import { Award, Plus } from 'lucide-react';
-import type { FacultyMember } from '@mms/shared';
-import { Badge } from '@/components/ui/badge';
+import { Award, Plus, RefreshCw } from 'lucide-react';
+import type { FacultyDesignationAssignment, FacultyMember } from '@mms/shared';
 import { Card } from '@/components/ui/card';
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 import { Button } from '@/components/ui/button';
-import { FormSelect } from '@/components/ui/FormSelect';
-import { Input } from '@/components/ui/input';
-import { Field } from '@/components/ui/FormPrimitives';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import {
   useFacultyDesignationHistory,
   useFacultyDesignations,
   useSaveFacultyDesignationAssignment,
+  useDeleteFacultyDesignationAssignment,
+  useTransitionFacultyDesignation,
 } from '../hooks/useFacultyDesignations';
+import {
+  FacultyDesignationFormCard,
+  type DesignationAssignmentFormState,
+  type DesignationHistoryMode,
+} from './FacultyDesignationFormCard';
+import { FacultyDesignationHistoryItem } from './FacultyDesignationHistoryItem';
 
-/** Read-only temporal designation history; writes are managed from Faculty Setup. */
-export function FacultyDesignationHistory({ faculty, canEdit = false }: { faculty: FacultyMember; canEdit?: boolean }): React.JSX.Element {
+const EMPTY_FORM: DesignationAssignmentFormState = {
+  id: '',
+  designationId: '',
+  startsOn: new Date().toISOString().slice(0, 10),
+  endsOn: '',
+  notes: '',
+};
+
+/** Fully dynamic designation history with transition, edit, add, and delete flows. */
+export function FacultyDesignationHistory({
+  faculty,
+  canEdit = false,
+}: {
+  faculty: FacultyMember;
+  canEdit?: boolean;
+}): React.JSX.Element {
   const { t } = useTranslation();
   const history = useFacultyDesignationHistory(String(faculty.id));
   const definitions = useFacultyDesignations();
   const save = useSaveFacultyDesignationAssignment();
+  const deleteMutation = useDeleteFacultyDesignationAssignment();
+  const transition = useTransitionFacultyDesignation();
+
+  const [mode, setMode] = useState<DesignationHistoryMode>('idle');
+  const [form, setForm] = useState<DesignationAssignmentFormState>(EMPTY_FORM);
+
   const today = new Date().toISOString().slice(0, 10);
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [designationId, setDesignationId] = useState('');
-  const [startsOn, setStartsOn] = useState(today);
-  const [endsOn, setEndsOn] = useState('');
-  const [notes, setNotes] = useState('');
+  const allAssignments = history.data ?? [];
+  const currentAssignment: FacultyDesignationAssignment | null =
+    allAssignments.find(
+      (a) => a.startsOn <= today && (!a.endsOn || a.endsOn >= today),
+    ) ?? null;
+
+  const activeDefinitionOptions = (definitions.data ?? [])
+    .filter((d) => d.isActive || d.id === form.designationId)
+    .map((d) => ({ value: d.id, label: d.name }));
 
   const reset = () => {
-    setEditingId(null);
-    setDesignationId('');
-    setStartsOn(today);
-    setEndsOn('');
-    setNotes('');
+    setMode('idle');
+    setForm(EMPTY_FORM);
   };
 
-  const submit = async () => {
-    if (!designationId || !startsOn) return;
+  const openEdit = (assignment: FacultyDesignationAssignment) => {
+    setMode('edit');
+    setForm({
+      id: assignment.id,
+      designationId: assignment.designationId,
+      startsOn: assignment.startsOn,
+      endsOn: assignment.endsOn ?? '',
+      notes: assignment.notes ?? '',
+    });
+  };
+
+  const patchForm = (patch: Partial<DesignationAssignmentFormState>) =>
+    setForm((prev) => ({ ...prev, ...patch }));
+
+  const handleTransitionSubmit = async () => {
+    if (!form.designationId || !form.startsOn) return;
+    try {
+      await transition.mutateAsync({
+        facultyId: String(faculty.id),
+        currentAssignment,
+        newDesignationId: form.designationId,
+        transitionDate: form.startsOn,
+        notes: form.notes.trim() || null,
+      });
+      notify.success(t('faculty.designations.transitionSaved'));
+      reset();
+    } catch (error) {
+      notify.error(
+        error instanceof Error ? error.message : t('faculty.designations.assignmentFailed'),
+      );
+    }
+  };
+
+  const handleEditSubmit = async () => {
+    if (!form.designationId || !form.startsOn || !form.id) return;
     try {
       await save.mutateAsync({
-        id: editingId ?? crypto.randomUUID(),
+        id: form.id,
         facultyId: String(faculty.id),
-        designationId,
-        startsOn,
-        endsOn: endsOn || null,
-        notes: notes.trim() || null,
+        designationId: form.designationId,
+        startsOn: form.startsOn,
+        endsOn: form.endsOn || null,
+        notes: form.notes.trim() || null,
       });
       notify.success(t('faculty.designations.assignmentSaved'));
       reset();
     } catch (error) {
-      notify.error(error instanceof Error ? error.message : t('faculty.designations.assignmentFailed'));
+      notify.error(
+        error instanceof Error ? error.message : t('faculty.designations.assignmentFailed'),
+      );
     }
   };
 
-  const edit = (assignment: NonNullable<typeof history.data>[number]) => {
-    setEditingId(assignment.id);
-    setDesignationId(assignment.designationId);
-    setStartsOn(assignment.startsOn);
-    setEndsOn(assignment.endsOn ?? '');
-    setNotes(assignment.notes ?? '');
+  const handleAddSubmit = async () => {
+    if (!form.designationId || !form.startsOn) return;
+    try {
+      await save.mutateAsync({
+        id: crypto.randomUUID(),
+        facultyId: String(faculty.id),
+        designationId: form.designationId,
+        startsOn: form.startsOn,
+        endsOn: form.endsOn || null,
+        notes: form.notes.trim() || null,
+      });
+      notify.success(t('faculty.designations.assignmentSaved'));
+      reset();
+    } catch (error) {
+      notify.error(
+        error instanceof Error ? error.message : t('faculty.designations.assignmentFailed'),
+      );
+    }
   };
 
-  const options = (definitions.data ?? [])
-    .filter((definition) => definition.isActive || definition.id === designationId)
-    .map((definition) => ({ value: definition.id, label: definition.name }));
+  const handleDelete = async (assignment: FacultyDesignationAssignment) => {
+    try {
+      await deleteMutation.mutateAsync({
+        facultyId: String(faculty.id),
+        assignmentId: assignment.id,
+      });
+      notify.success(t('faculty.designations.assignmentDeleted'));
+      if (mode === 'edit' && form.id === assignment.id) reset();
+    } catch (error) {
+      notify.error(
+        error instanceof Error ? error.message : t('faculty.designations.assignmentFailed'),
+      );
+    }
+  };
+
+  const isBusy = save.isPending || deleteMutation.isPending || transition.isPending;
+  const canDeleteAny = allAssignments.length > 1;
+
+  const handleSubmit =
+    mode === 'transition'
+      ? () => void handleTransitionSubmit()
+      : mode === 'edit'
+        ? () => void handleEditSubmit()
+        : () => void handleAddSubmit();
+
+  const minTransitionDate = (() => {
+    if (!currentAssignment) return undefined;
+    const d = new Date(`${currentAssignment.startsOn}T00:00:00Z`);
+    d.setUTCDate(d.getUTCDate() + 1);
+    return d.toISOString().slice(0, 10);
+  })();
 
   return (
     <div className="space-y-2">
-      <DetailSectionTitle>{t('faculty.designations.history')}</DetailSectionTitle>
-      {canEdit ? (
-        <Card className="space-y-3 p-4">
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field id="faculty-designation-id" label={t('faculty.designations.name')} required>
-              <FormSelect id="faculty-designation-id" value={designationId} onChange={setDesignationId} options={options} />
-            </Field>
-            <Field id="faculty-designation-start" label={t('faculty.designations.startsOn')} required>
-              <Input id="faculty-designation-start" type="date" value={startsOn} onChange={(event) => setStartsOn(event.target.value)} />
-            </Field>
-            <Field id="faculty-designation-end" label={t('faculty.designations.endsOn')}>
-              <Input id="faculty-designation-end" type="date" value={endsOn} min={startsOn} onChange={(event) => setEndsOn(event.target.value)} />
-            </Field>
-            <Field id="faculty-designation-notes" label={t('faculty.designations.notes')}>
-              <Input id="faculty-designation-notes" value={notes} onChange={(event) => setNotes(event.target.value)} />
-            </Field>
-          </div>
-          <div className="flex justify-end gap-2">
-            {editingId ? <Button type="button" variant="outline" onClick={reset}>{t('common.cancel')}</Button> : null}
-            <Button type="button" onClick={() => void submit()} disabled={!designationId || !startsOn || save.isPending}>
-              <Plus className="size-4" aria-hidden />
-              {t('common.save')}
+      <div className="flex items-center justify-between">
+        <DetailSectionTitle>{t('faculty.designations.history')}</DetailSectionTitle>
+        {canEdit && mode === 'idle' && (
+          <div className="flex gap-1.5">
+            {currentAssignment && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 gap-1.5 text-xs"
+                onClick={() => { setMode('transition'); setForm({ ...EMPTY_FORM, startsOn: today }); }}
+              >
+                <RefreshCw className="size-3" aria-hidden />
+                {t('faculty.designations.transition')}
+              </Button>
+            )}
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1.5 text-xs"
+              onClick={() => { setMode('add'); setForm({ ...EMPTY_FORM, startsOn: today }); }}
+            >
+              <Plus className="size-3" aria-hidden />
+              {t('common.add')}
             </Button>
           </div>
-        </Card>
-      ) : null}
+        )}
+      </div>
+
+      {canEdit && mode !== 'idle' && (
+        <FacultyDesignationFormCard
+          mode={mode}
+          form={form}
+          activeDefinitionOptions={activeDefinitionOptions}
+          minTransitionDate={minTransitionDate}
+          isBusy={isBusy}
+          onPatchForm={patchForm}
+          onSubmit={handleSubmit}
+          onCancel={reset}
+        />
+      )}
+
       <Card className="divide-y divide-border/50 p-0">
-        {(history.data ?? []).map((assignment) => {
-          const current = assignment.startsOn <= today && (!assignment.endsOn || assignment.endsOn >= today);
+        {allAssignments.map((assignment) => {
+          const isCurrent =
+            assignment.startsOn <= today && (!assignment.endsOn || assignment.endsOn >= today);
+          const isEditing = mode === 'edit' && form.id === assignment.id;
+
           return (
-            <button key={assignment.id} type="button" disabled={!canEdit} onClick={() => canEdit && edit(assignment)} className="flex min-h-11 w-full items-start gap-3 px-4 py-3 text-start disabled:cursor-default">
-              <Award className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
-              <div className="min-w-0 flex-1">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="font-medium text-foreground">{assignment.designationName}</span>
-                  {current && <Badge variant="secondary">{t('faculty.designations.current')}</Badge>}
-                </div>
-                <p className="text-sm text-muted-foreground">
-                  {assignment.startsOn} – {assignment.endsOn ?? t('faculty.designations.present')}
-                </p>
-                {assignment.assignableRoles?.length ? (
-                  <p className="text-xs text-muted-foreground">
-                    {t('faculty.designations.roles')}: {assignment.assignableRoles.join(', ')}
-                  </p>
-                ) : null}
-              </div>
-            </button>
+            <FacultyDesignationHistoryItem
+              key={assignment.id}
+              assignment={assignment}
+              isCurrent={isCurrent}
+              isEditing={isEditing}
+              canEdit={canEdit}
+              canDeleteAny={canDeleteAny}
+              isDeletePending={deleteMutation.isPending}
+              onToggleEdit={() => (isEditing ? reset() : openEdit(assignment))}
+              onDelete={() => void handleDelete(assignment)}
+            />
           );
         })}
-        {!history.isPending && !history.data?.length ? (
-          <p className="px-4 py-3 text-sm text-muted-foreground">{t('faculty.designations.noHistory')}</p>
-        ) : null}
+
+        {!history.isPending && allAssignments.length === 0 && (
+          <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
+            <Award className="size-8 text-muted-foreground/40" aria-hidden />
+            <p className="text-sm text-muted-foreground">{t('faculty.designations.noHistory')}</p>
+            {canEdit && mode === 'idle' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => { setMode('add'); setForm({ ...EMPTY_FORM, startsOn: today }); }}
+              >
+                <Plus className="size-3.5" aria-hidden />
+                {t('faculty.designations.addFirst')}
+              </Button>
+            )}
+          </div>
+        )}
       </Card>
     </div>
   );

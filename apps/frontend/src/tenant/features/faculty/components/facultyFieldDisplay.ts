@@ -123,7 +123,10 @@ export function resolveTeacherFieldDisplayText(
     return teacher.department || missing();
   }
   if (fieldKey === "designation") {
-    return teacher.designation || missing();
+    // Prefer the server-projected current designation name (from assignment join),
+    // falling back to the legacy static designation string.
+    const dynamic = (teacher as Record<string, unknown>).designationName;
+    return (typeof dynamic === 'string' && dynamic) ? dynamic : teacher.designation || missing();
   }
   if (fieldKey === "reportingFacultyId" || fieldKey === "reportingFacultyName") {
     return teacher.reportingFacultyName || missing();
