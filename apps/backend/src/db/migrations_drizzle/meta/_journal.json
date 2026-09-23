@@ -876,6 +876,20 @@
       "when": 1790400000000,
       "tag": "0124_faculty_schema_improvements",
       "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1790500000000,
+      "tag": "0125_accounting_posting_periods",
+      "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1790600000000,
+      "tag": "0126_faculty_custom_data",
+      "breakpoints": true
     }
   ]
 }

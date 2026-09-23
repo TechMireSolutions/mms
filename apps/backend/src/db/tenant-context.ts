@@ -99,16 +99,19 @@ export async function withTenant<T>(
     try {
       return await callback(active as unknown as TenantTransaction);
     } finally {
-      const previousBypass = previous?.bypass;
-      const previousTenant = previous?.tenant;
-      if (previousBypass === 'on') {
-        // Outer scope was global (RLS bypassed) — restore that.
-        await applyTenantTransactionGuards(active as unknown as AppDb, '');
-      } else if (typeof previousTenant === 'string' && previousTenant) {
-        await applyTenantTransactionGuards(active as unknown as AppDb, previousTenant);
+      try {
+        const previousBypass = previous?.bypass;
+        const previousTenant = previous?.tenant;
+        if (previousBypass === 'on') {
+          // Outer scope was global (RLS bypassed) — restore that.
+          await applyTenantTransactionGuards(active as unknown as AppDb, '');
+        } else if (typeof previousTenant === 'string' && previousTenant) {
+          await applyTenantTransactionGuards(active as unknown as AppDb, previousTenant);
+        }
+      } catch {
+        // If the transaction was aborted due to an error in `callback`,
+        // restoring guards will fail with 25P02. Suppress so the real error propagates.
       }
-      // If neither was set the outer transaction had no guards of its own;
-      // leaving the nested context in place is the safe choice.
     }
   }
 
