@@ -74,9 +74,10 @@ const AUDIT_ROUTES = [
  * while the tenant had no rows and no drawer ever opened.
  */
 async function auditOverlay(page: Page, context: string, kind: 'dialog' | 'drawer'): Promise<boolean> {
+  const mainDialogTrigger = page.locator('#main-content button[aria-haspopup="dialog"]').first();
   const trigger =
     kind === 'dialog'
-      ? page.locator('button[aria-haspopup="dialog"]').first()
+      ? ((await mainDialogTrigger.count()) > 0 ? mainDialogTrigger : page.locator('button[aria-haspopup="dialog"]').first())
       : page.locator('table tbody tr').first().getByRole('button').first();
 
   if ((await trigger.count()) === 0) {

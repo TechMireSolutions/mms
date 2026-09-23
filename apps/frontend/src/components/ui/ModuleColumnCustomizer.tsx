@@ -195,7 +195,7 @@ export const ModuleColumnCustomizer = (function ModuleColumnCustomizer({
             <h4 className="min-w-0 text-xs font-bold text-foreground uppercase tracking-wide">
               {resolvedLabels.title}
             </h4>
-            <span className="text-3xs text-muted-foreground font-medium">
+            <span className="text-3xs text-foreground/75 font-medium">
               ({resolvedLabels.visibleCount ? resolvedLabels.visibleCount(registry.length - hiddenCount, registry.length) : `${registry.length - hiddenCount}/${registry.length}`})
             </span>
           </div>
@@ -205,7 +205,7 @@ export const ModuleColumnCustomizer = (function ModuleColumnCustomizer({
               variant="ghost"
               size="sm"
               onClick={onResetLayout}
-              className="px-2 text-3xs text-muted-foreground hover:text-foreground hover:bg-muted flex items-center gap-1"
+              className="px-2 text-3xs text-foreground/80 hover:text-foreground hover:bg-muted flex items-center gap-1"
               title={resolvedLabels.reset}
             >
               <RotateCcw className="w-3 h-3" />
