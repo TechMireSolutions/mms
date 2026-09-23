@@ -43,8 +43,12 @@ export function getRedisClient(): Redis | null {
       },
     });
 
-    client.on('connect', () => {
+    client.on('ready', () => {
       isRedisConnected = true;
+    });
+
+    client.on('close', () => {
+      isRedisConnected = false;
     });
 
     client.on('error', (err: Error) => {
@@ -97,8 +101,12 @@ export function getRateLimitRedisClient(): Redis | null {
       },
     });
 
-    client.on('connect', () => {
+    client.on('ready', () => {
       isRateLimitRedisConnected = true;
+    });
+
+    client.on('close', () => {
+      isRateLimitRedisConnected = false;
     });
 
     client.on('error', (err: Error) => {

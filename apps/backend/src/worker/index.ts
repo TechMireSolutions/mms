@@ -281,9 +281,17 @@ export {
   purgeExpiredArchivedRecords,
 };
 
-if (process.env.NODE_ENV !== 'test' && import.meta.url === `file://${process.argv[1]}`) {
+const isWorkerMain =
+  process.env.NODE_ENV !== 'test' &&
+  !process.env.VITEST &&
+  (Boolean(process.env.pm_id || process.env.pm_exec_path) ||
+    import.meta.url === `file://${process.argv[1]}` ||
+    Boolean(process.argv[1]?.endsWith('worker/index.js') || process.argv[1]?.endsWith('worker/index.ts')));
+
+if (isWorkerMain) {
   startWorkerDaemon().catch((error) => {
     logger.fatal({ err: error }, 'Fatal startup error');
     process.exit(1);
   });
 }
+

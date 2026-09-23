@@ -12,11 +12,24 @@ set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 cd "$ROOT"
 
+MIGRATE_ONLY=false
+for arg in "$@"; do
+  if [ "$arg" = "--migrate-only" ]; then
+    MIGRATE_ONLY=true
+  fi
+done
+
 echo "[admin-migrate-and-reload] Applying migrations via mms-backend db:migrate..."
 pnpm --filter mms-backend db:migrate
+
+if [ "$MIGRATE_ONLY" = true ]; then
+  echo "[admin-migrate-and-reload] Migrations applied (--migrate-only specified; skipping PM2 reload)."
+  exit 0
+fi
 
 ECOSYSTEM="${ROOT}/ecosystem.config.cjs"
 echo "[admin-migrate-and-reload] Reloading PM2 app mmsv2-backend..."
 pm2 reload "$ECOSYSTEM" --only mmsv2-backend --update-env
 
 echo "[admin-migrate-and-reload] Done. Verify: curl -fsS http://127.0.0.1:5002/ready"
+

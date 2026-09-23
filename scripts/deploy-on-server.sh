@@ -261,7 +261,11 @@ fi
 
 # Local health gate. Public apex verify is owned by deploy.yml (set MMS_DEPLOY_SKIP_PUBLIC_VERIFY=1).
 if [ -f scripts/deploy-verify.sh ]; then
-  bash scripts/deploy-verify.sh "$ENV_FILE" || DEPLOY_OK=false
+  if bash scripts/deploy-verify.sh "$ENV_FILE"; then
+    DEPLOY_OK=true
+  else
+    DEPLOY_OK=false
+  fi
 fi
 
 pm2 save 2>/dev/null || true
