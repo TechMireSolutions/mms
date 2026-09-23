@@ -3442,6 +3442,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "faculty.designations.setupTitle": "سمت‌های اعضای هیئت علمی",
   "faculty.designations.setupHint": "سمت‌ها، رتبه اختیارات و نقش‌های قابل تخصیص هر سمت را تعریف کنید.",
   "faculty.designations.name": "نام سمت",
+  "faculty.designations.selectPlaceholder": "انتخاب عنوان شغلی...",
   "faculty.designations.code": "کد سمت",
   "faculty.designations.rolesHint": "کلیدهای نقش با ویرگول جدا شوند",
   "faculty.designations.active": "قابل تخصیص",

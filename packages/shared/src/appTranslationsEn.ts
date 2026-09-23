@@ -3436,6 +3436,7 @@ export const APP_TRANSLATIONS_EN = {
   "faculty.designations.setupTitle": "Faculty designations",
   "faculty.designations.setupHint": "Define designations, authority rank, and the roles each designation may hold.",
   "faculty.designations.name": "Designation name",
+  "faculty.designations.selectPlaceholder": "Select designation...",
   "faculty.designations.code": "Designation code",
   "faculty.designations.rolesHint": "Comma-separated role keys",
   "faculty.designations.active": "Available for assignment",

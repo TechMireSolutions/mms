@@ -16,12 +16,23 @@ const TEACHER_FORM_VOLATILE_KEYS = [
   "name",
   "phone",
   "email",
+  "gender",
   "avatar",
+  "contact",
+  "subordinates",
+  "subordinateCount",
+  "reportingFacultyName",
+  "designationEndsOn",
   "deletedAt",
   "deletedBy",
   "deletionReason",
+  "restoredAt",
+  "restoredBy",
+  "deletedWithCascade",
   "createdAt",
   "updatedAt",
+  "createdBy",
+  "updatedBy",
 ];
 
 const { getInitialDraft, draftSnapshot } = createModuleFormDraft<Teacher>({

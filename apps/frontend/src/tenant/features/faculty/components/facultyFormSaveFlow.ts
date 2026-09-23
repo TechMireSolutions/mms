@@ -49,11 +49,21 @@ export interface TeacherSaveFlowInput {
 }
 
 /** Focus the first invalid teacher form field with smooth auto-scroll. */
-function focusTeacherValidationField(formInstanceId: string, fieldId: string): void {
+export function focusTeacherValidationField(formInstanceId: string, fieldId: string): void {
+  const fieldAliases: Record<string, string[]> = {
+    joinDate: ["teacher-join-date", "joinDate"],
+    designation: ["designationId", "designation"],
+    "user.role": ["faculty-user-role", "linked-user-role"],
+    "user.password": ["faculty-user-password"],
+    "user.email": ["contactId"],
+  };
+
+  const aliases = fieldAliases[fieldId] ?? [];
   const candidates = [
     `tf-${formInstanceId}-${fieldId}`,
     fieldId,
     fieldId === "contactId" ? "contactId" : "",
+    ...aliases,
   ].filter(Boolean);
 
   scrollAndFocusFirstError(candidates, { behavior: "smooth", block: "center" });
@@ -70,12 +80,18 @@ function buildTeacherSavePayload(input: {
   const rawNextEmployeeId = extractEmployeeId(input.nextEmployeeId);
   const resolvedEmployeeId = rawEmployeeId || (input.autoGenerateId && !input.teacher?.id ? rawNextEmployeeId : undefined);
 
-  return {
+  const payload: Record<string, unknown> = {
     ...input.teacherDraft,
     employeeId: resolvedEmployeeId,
     contactId: String(input.teacherDraft.contactId || ""),
     ...(input.teacher?.id != null ? { id: input.teacher.id } : {}),
   };
+
+  delete payload.designationAssignableRoles;
+  delete payload.designationEndsOn;
+  delete payload.contact;
+  delete payload.subordinates;
+  return payload;
 }
 
 function notifyTeacherSaveFailed(t: TranslationFunction, err: unknown, scope: string): void {
@@ -307,6 +323,7 @@ export async function confirmPendingTeacherSave(input: {
       onUserInvalidate: input.onUserInvalidate,
     });
     if (!userOk) {
+      input.setDuplicateConfirmOpen(false);
       input.setSaving(false);
       return;
     }
@@ -316,6 +333,7 @@ export async function confirmPendingTeacherSave(input: {
     input.setDuplicateConfirmOpen(false);
     input.onClose();
   } catch (err: unknown) {
+    input.setDuplicateConfirmOpen(false);
     notifyTeacherSaveFailed(input.t, err, "teachers.form_save_confirm");
   } finally {
     input.setSaving(false);

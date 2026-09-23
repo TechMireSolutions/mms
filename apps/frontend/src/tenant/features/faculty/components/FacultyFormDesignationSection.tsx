@@ -47,12 +47,13 @@ export function FacultyFormDesignationSection({
             label={t("faculty.field.designation")}
             id="designationId"
             required={isFieldRequired("designation")}
-            error={errors.designationId}
+            error={errors.designationId || errors.designation}
           >
             <FormSelect
               id="designationId"
               name="designationId"
               value={teacherDraft.designationId || ""}
+              placeholder={t("faculty.designations.selectPlaceholder")}
               disabled={Boolean(teacher?.id)}
               onChange={(value) => {
                 const definition = designationOptions?.find((item) => item.id === value);
@@ -61,6 +62,7 @@ export function FacultyFormDesignationSection({
                   designation: definition?.name ?? "",
                   hierarchyRank: definition?.hierarchyRank,
                   designationAssignableRoles: definition?.assignableRoles ?? [],
+                  ...(definition?.hierarchyRank === 1 ? { reportingFacultyId: null } : {}),
                 });
               }}
               options={(designationOptions ?? [])
@@ -70,6 +72,10 @@ export function FacultyFormDesignationSection({
             {teacher?.id ? (
               <p className="mt-1 text-xs text-muted-foreground">
                 {t("faculty.designations.manageInHistory")}
+              </p>
+            ) : !teacherDraft.designationId && teacherDraft.designation ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("faculty.designations.current")}: {teacherDraft.designation}
               </p>
             ) : null}
           </Field>

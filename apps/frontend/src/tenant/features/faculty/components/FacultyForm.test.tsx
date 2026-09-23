@@ -131,4 +131,22 @@ describe("TeacherForm Component", () => {
     expect(html).toContain('data-tab-key="contact"');
     expect(html).not.toContain('data-tab-key="contact" data-badge');
   });
+
+  it("maps user.* and designation errors to their respective tabs", () => {
+    mockControllerState = {
+      errors: {
+        "user.password": "Password too short",
+        "user.role": "Invalid role",
+        designation: "Designation required",
+      },
+      isFieldEnabled: () => true,
+    };
+
+    const html = renderToStaticMarkup(
+      <FacultyForm onClose={vi.fn()} onSave={vi.fn()} />,
+    );
+
+    expect(html).toContain('data-tab-key="account" data-badge="2"');
+    expect(html).toContain('data-tab-key="designation" data-badge="1"');
+  });
 });

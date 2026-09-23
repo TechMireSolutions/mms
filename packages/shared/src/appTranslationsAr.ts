@@ -3438,6 +3438,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "faculty.designations.setupTitle": "مسميات أعضاء هيئة التدريس",
   "faculty.designations.setupHint": "حدد المسميات والرتبة الإدارية والأدوار التي يمكن لكل مسمى شغلها.",
   "faculty.designations.name": "اسم المسمى",
+  "faculty.designations.selectPlaceholder": "حدد المسمى الوظيفي...",
   "faculty.designations.code": "رمز المسمى",
   "faculty.designations.rolesHint": "مفاتيح الأدوار مفصولة بفواصل",
   "faculty.designations.active": "متاح للتعيين",

@@ -55,6 +55,8 @@ export function TeacherContactSection({
     <SectionCard title={contactLabel} icon={User} accentColor="primary" className="z-sticky">
       <div className="space-y-3">
         <ContactPicker
+          id="contactId"
+          name="contactId"
           label={contactLabel}
           value={teacherDraft.contactId ? String(teacherDraft.contactId) : null}
           onChange={(contactId) => onDraftChange({ contactId: contactId ? String(contactId) : "" })}

@@ -15,6 +15,7 @@ import type { FacultyMember, Teacher } from "@mms/shared";
 import { TeacherFormTabContent } from "@/tenant/features/faculty/components/FacultyFormTabContent";
 import { useTeacherFormController } from "@/tenant/features/faculty/components/useFacultyFormController";
 import { TeacherFormFooter } from "@/tenant/features/faculty/components/FacultyFormFooter";
+import { focusTeacherValidationField } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
 
 export type FacultyFormTabKey =
   | "contact"
@@ -32,11 +33,17 @@ export const FACULTY_FIELD_TAB_MAP: Record<string, FacultyFormTabKey> = {
   specialization: "employment",
   qualification: "employment",
   joinDate: "employment",
+  designation: "designation",
+  customDesignation: "designation",
   designationId: "designation",
   designationStartsOn: "designation",
   reportingFacultyId: "hierarchy",
   hierarchyRank: "hierarchy",
   notes: "notes",
+  "user.role": "account",
+  "user.email": "account",
+  "user.password": "account",
+  "user.create": "account",
   userPassword: "account",
   userEmail: "account",
   userRole: "account",
@@ -178,23 +185,27 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
   useEffect(() => {
     const errorKeys = Object.keys(errors).filter((key) => Boolean(errors[key]));
     if (errorKeys.length === 0) return;
-    const currentTabHasError = Boolean(tabErrors[activeTab] && tabErrors[activeTab] > 0);
-    if (!currentTabHasError) {
-      const firstInvalidTab = visibleTabs.find((vt) => Boolean(tabErrors[vt.key] && tabErrors[vt.key] > 0));
-      if (firstInvalidTab) {
-        setActiveTab(firstInvalidTab.key);
-      }
+    const firstInvalidTab = visibleTabs.find((vt) => Boolean(tabErrors[vt.key] && tabErrors[vt.key] > 0));
+    if (firstInvalidTab && firstInvalidTab.key !== activeTab) {
+      setActiveTab(firstInvalidTab.key);
     }
   }, [errors, tabErrors, activeTab, visibleTabs]);
 
+  useEffect(() => {
+    const errorKeys = Object.keys(errors).filter((key) => Boolean(errors[key]));
+    if (errorKeys.length === 0) return;
+    const fieldForActiveTab = errorKeys.find(
+      (key) => (FACULTY_FIELD_TAB_MAP[key] || "employment") === activeTab,
+    );
+    if (!fieldForActiveTab) return;
+    const timer = setTimeout(() => {
+      focusTeacherValidationField(formInstanceId, fieldForActiveTab);
+    }, 60);
+    return () => clearTimeout(timer);
+  }, [activeTab, errors, formInstanceId]);
+
   const onSaveWithTabFocus = async (options?: { keepOpen?: boolean }): Promise<void> => {
-    const success = await handleSave(options);
-    if (!success) {
-      const firstInvalidTab = visibleTabs.find((vt) => Boolean(tabErrors[vt.key] && tabErrors[vt.key] > 0));
-      if (firstInvalidTab) {
-        setActiveTab(firstInvalidTab.key);
-      }
-    }
+    await handleSave(options);
   };
 
   return (

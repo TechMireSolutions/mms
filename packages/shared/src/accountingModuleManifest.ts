@@ -123,8 +123,8 @@ export const fiscalYearRecordSchema = z
   .object({
     id: z.string(),
     label: z.string(),
-    startDate: z.string(),
-    endDate: z.string(),
+    startDate: isoDateSchema,
+    endDate: isoDateSchema,
     status: z.enum(['active', 'closed', 'upcoming']).default('upcoming'),
     closedAt: z.string().nullable().optional(),
     closedBy: z.string().nullable().optional(),
@@ -136,9 +136,10 @@ export const fiscalYearRecordSchema = z
     createdBy: z.string().nullable().optional(),
     updatedBy: z.string().nullable().optional(),
   })
-  .strict();
+  .strict()
+  .refine((year) => year.startDate <= year.endDate, { path: ['endDate'], message: 'End date must be on or after start date' });
 
-export const fiscalYearRecordInsertSchema = z
+const fiscalYearRecordInsertBaseSchema = z
   .object({
     id: z.string().optional(),
     label: z.string().min(1, 'Label is required'),
@@ -150,7 +151,16 @@ export const fiscalYearRecordInsertSchema = z
   })
   .strict();
 
-export const fiscalYearRecordUpdateSchema = fiscalYearRecordInsertSchema.partial().strict();
+export const fiscalYearRecordInsertSchema = fiscalYearRecordInsertBaseSchema
+  .refine((year) => year.startDate <= year.endDate, { path: ['endDate'], message: 'End date must be on or after start date' });
+
+export const fiscalYearRecordUpdateSchema = fiscalYearRecordInsertBaseSchema
+  .partial()
+  .strict()
+  .refine((year) => !year.startDate || !year.endDate || year.startDate <= year.endDate, {
+    path: ['endDate'],
+    message: 'End date must be on or after start date',
+  });
 
 export type FiscalYear = z.infer<typeof fiscalYearRecordSchema>;
 export type FiscalYearInsert = z.infer<typeof fiscalYearRecordInsertSchema>;

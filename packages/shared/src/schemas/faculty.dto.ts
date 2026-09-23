@@ -81,7 +81,7 @@ export function buildDynamicFacultySchema(
     department: z.string().nullish(),
     designation: z.string().nullish(),
     designationId: z.string().nullish(),
-    designationStartsOn: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullish(),
+    designationStartsOn: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')]).nullish().transform((v) => (v === '' ? undefined : v)),
     customDesignation: z.string().trim().optional(),
     reportingFacultyId: z.string().nullable().nullish(),
     hierarchyRank: z.coerce.number().int().min(1).max(99).nullish(),

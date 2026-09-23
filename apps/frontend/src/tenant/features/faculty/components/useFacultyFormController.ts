@@ -34,12 +34,9 @@ import { confirmPendingTeacherSave, runTeacherSaveFlow } from "@/tenant/features
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/faculty/components/facultyFormValidation";
 import type { TeacherStatusOption } from '@/tenant/features/faculty/components/FacultyFormSections';
 import type { FacultyUserAccountDraft } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
+import { useFacultyHierarchyFormSync } from "@/tenant/features/faculty/components/useFacultyFormSync";
 
-export type {
-  FacultyFormControllerOptions,
-  UseTeacherFormControllerOptions,
-  UseFacultyFormControllerOptions,
-};
+export type { FacultyFormControllerOptions, UseTeacherFormControllerOptions, UseFacultyFormControllerOptions };
 
 export function useTeacherFormController({
   teacher: teacherProp,
@@ -188,6 +185,14 @@ export function useTeacherFormController({
     () => filterSupervisorCandidates(allFaculty, currentId, currentRank),
     [allFaculty, currentId, currentRank],
   );
+
+  useFacultyHierarchyFormSync({
+    teacherDraft,
+    setTeacherDraft,
+    userAccountDraft,
+    setUserAccountDraft,
+    supervisorCandidates,
+  });
 
   const clearDuplicatePrompt = () => {
     setDuplicateConfirmOpen(false);

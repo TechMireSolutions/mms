@@ -60,6 +60,21 @@ describe("TeacherFormFooter Component", () => {
     expect(html).toContain("teachers.form.contactRequired");
   });
 
+  it("does not render contact required banner when teacherDraft has contactId pending contact hydration", () => {
+    const html = renderToStaticMarkup(
+      <TeacherFormFooter
+        linkedContact={null}
+        teacherDraft={{ contactId: "cnt-123" }}
+        requireContactLink={true}
+        statusConfig={mockStatusConfig}
+        t={mockT}
+      />,
+    );
+
+    expect(html).not.toContain("teachers.form.contactRequired");
+    expect(html).toBe("");
+  });
+
   it("returns null when no contact and link not required", () => {
     const html = renderToStaticMarkup(
       <TeacherFormFooter

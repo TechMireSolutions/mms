@@ -41,7 +41,7 @@ export function TeacherFormFooter({
     );
   }
 
-  if (requireContactLink) {
+  if (requireContactLink && !teacherDraft.contactId) {
     return (
       <RequiredBanner message={t("teachers.form.contactRequired")} />
     );

@@ -204,6 +204,9 @@ export function FacultyUserAccountSection({
                 >
                   <PasswordInput
                     id="faculty-user-password"
+                    name="password"
+                    autoComplete="new-password"
+                    minPasswordLength={8}
                     value={userAccountDraft.password || ""}
                     onChange={(e) =>
                       onUserAccountDraftChange({ ...userAccountDraft, password: e.target.value })

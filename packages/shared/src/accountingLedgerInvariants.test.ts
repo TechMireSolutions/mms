@@ -82,6 +82,13 @@ describe('accountingLedgerInvariants', () => {
     expect(findFiscalYearForDate([], '2026-08-01')).toBeNull();
   });
 
+  it('requires fiscal-year dates to use real ISO calendar dates', async () => {
+    const { fiscalYearRecordSchema } = await import('./accountingModuleManifest.js');
+    expect(fiscalYearRecordSchema.safeParse({ id: 'fy', label: '2026-2027', startDate: '2026-07-01', endDate: '2027-06-30', status: 'active' }).success).toBe(true);
+    expect(fiscalYearRecordSchema.safeParse({ id: 'fy', label: 'bad', startDate: '01/07/2026', endDate: '2027-06-30', status: 'active' }).success).toBe(false);
+    expect(fiscalYearRecordSchema.safeParse({ id: 'fy', label: 'bad', startDate: '2026-02-30', endDate: '2027-06-30', status: 'active' }).success).toBe(false);
+  });
+
   it('rejects money with more than two decimal places or negative values', () => {
     expect(moneyAmountSchema.safeParse(10.25).success).toBe(true);
     expect(moneyAmountSchema.safeParse(0).success).toBe(true);

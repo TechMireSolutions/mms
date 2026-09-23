@@ -33,6 +33,10 @@ export function stripFacultyWriteNoise(
   const next = stripFacultyClientSoftDeleteFields({ ...record }) as Record<string, unknown>;
   // Avatar lives on the canonical Contact — never dual-write it onto a faculty row.
   delete next.avatar;
+  delete next.contact;
+  delete next.designationAssignableRoles;
+  delete next.designationEndsOn;
+  delete next.subordinates;
   return stripRecordFields(next, CONTACT_PROFILE_FIELDS);
 }
 

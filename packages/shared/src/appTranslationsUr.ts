@@ -3438,6 +3438,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "faculty.designations.setupTitle": "فیکلٹی عہدے",
   "faculty.designations.setupHint": "عہدے، اختیاراتی درجہ، اور ہر عہدے کے قابل تفویض کردار متعین کریں۔",
   "faculty.designations.name": "عہدے کا نام",
+  "faculty.designations.selectPlaceholder": "عہدہ منتخب کریں...",
   "faculty.designations.code": "عہدے کا کوڈ",
   "faculty.designations.rolesHint": "کوما سے جدا کردار کیز",
   "faculty.designations.active": "تفویض کے لیے دستیاب",

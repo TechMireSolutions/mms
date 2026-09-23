@@ -57,13 +57,25 @@ export function useFacultyPageActions({
         body: facultyToSave as unknown as FacultyRecord,
       });
       notify.success(t("teachers.toast.updated"));
-      return res.body as unknown as Faculty;
+      const raw = res.body as unknown;
+      if (raw && typeof raw === "object") {
+        const envelope = raw as Record<string, unknown>;
+        const entity = envelope.faculty ?? envelope.teacher ?? envelope.facultyMember ?? envelope;
+        return entity as Faculty;
+      }
+      return raw as Faculty;
     } else {
       const res = await createFaculty.mutateAsync({
-        body: facultyToSave as unknown as FacultyRecord
+        body: facultyToSave as unknown as FacultyRecord,
       });
       notify.success(t("teachers.toast.created"));
-      return res.body as unknown as Faculty;
+      const raw = res.body as unknown;
+      if (raw && typeof raw === "object") {
+        const envelope = raw as Record<string, unknown>;
+        const entity = envelope.faculty ?? envelope.teacher ?? envelope.facultyMember ?? envelope;
+        return entity as Faculty;
+      }
+      return raw as Faculty;
     }
   };
 
