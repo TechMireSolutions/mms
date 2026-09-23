@@ -154,19 +154,21 @@ export function JournalEntriesListFilters({
           type="button"
           variant={showFilters ? "secondary" : "outline"}
           aria-pressed={showFilters}
+          aria-expanded={showFilters}
+          aria-controls="accounting-journal-date-filters"
           onClick={() => onShowFiltersChange(!showFilters)}
           className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold"
         >
-          {t("accounting.journal.dashboard.filters")}
+          {t("accounting.journal.dashboard.dateRange")}
         </Button>
-        <Button
+        {!showDeleted ? <Button
           type="button"
           variant="outline"
           onClick={onExportCsv}
           className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold text-muted-foreground"
         >
           <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
-        </Button>
+        </Button> : null}
       </WorkTaskToolbar>
     </>
   );
@@ -190,7 +192,7 @@ export function JournalEntriesAdvancedFilters({
   const { t } = useTranslation();
 
   return (
-    <div className={cn(WORK_SURFACE, "flex flex-wrap items-end gap-3 p-3")}>
+    <div id="accounting-journal-date-filters" className={cn(WORK_SURFACE, "flex flex-wrap items-end gap-3 p-3")}>
       <DateRangeFilterBar
         idPrefix="filter"
         dateFrom={dateFrom}
@@ -206,7 +208,7 @@ export function JournalEntriesAdvancedFilters({
         variant="ghost"
         size="sm"
         onClick={onClear}
-        className="text-xs font-semibold text-muted-foreground hover:text-foreground px-2"
+        className="min-h-11 px-3 text-xs font-semibold text-muted-foreground hover:text-foreground"
       >
         {t("accounting.journal.dashboard.clear")}
       </Button>

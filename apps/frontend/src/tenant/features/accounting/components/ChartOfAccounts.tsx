@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useDeferredValue } from "react";
+import { Landmark } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
 import { ACCOUNT_TYPE_META, type Account, type AccountType } from '@/lib/data/accountingData';
 import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
@@ -9,6 +10,9 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { type AppTranslationKey } from "@mms/shared";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/button";
+import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
@@ -48,6 +52,7 @@ export function ChartOfAccounts({
   const [typeFilter,  setTypeFilter] = useState<AccountType | "all">("all");
   const [showInactive, setShowInactive] = useState(false);
   const [modal,       setModal]      = useState<Partial<Account> | null>(null);
+  const [pendingDeactivate, setPendingDeactivate] = useState<Account | null>(null);
   const balanceConfig = (() => ({
     debit: { label: t("accounting.ledger.dr"), cls: SEMANTIC_BADGE.infoStrong },
     credit: { label: t("accounting.ledger.cr"), cls: SEMANTIC_BADGE.successStrong },
@@ -76,8 +81,8 @@ export function ChartOfAccounts({
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm(t("accounting.coa.deactivateConfirm"))) return;
     await onChange((prev) => prev.map((account) => account.id === id ? { ...account, isActive: false } : account));
+    setPendingDeactivate(null);
   };
 
   const handleReactivate = async (id: string) => {
@@ -127,7 +132,17 @@ export function ChartOfAccounts({
         columnCustomizer={columnCustomizer}
       />
 
-      <ChartOfAccountsListDesktopTable
+      {filtered.length === 0 ? <EmptyState
+        variant="dashed"
+        icon={Landmark}
+        title={t("accounting.coa.noAccountsMatch")}
+        description={t("accounting.coa.noAccountsHint")}
+        action={(search || typeFilter !== "all" || showInactive) ? (
+          <Button type="button" variant="outline" className="min-h-11" onClick={() => { setSearch(""); setTypeFilter("all"); setShowInactive(false); }}>
+            {t("common.clearFilters")}
+          </Button>
+        ) : undefined}
+      /> : <ChartOfAccountsListDesktopTable
         accounts={accounts}
         filteredAccounts={filtered}
         balanceConfig={balanceConfig}
@@ -136,9 +151,9 @@ export function ChartOfAccounts({
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
         onEdit={(account) => setModal({ ...account })}
-        onDelete={handleDelete}
+        onDelete={(id) => setPendingDeactivate(accounts.find((account) => account.id === id) ?? null)}
         onReactivate={handleReactivate}
-      />
+      />}
 
       <p className="text-xs text-muted-foreground" aria-live="polite">{t("accounting.coa.accountsShown", { count: filtered.length })}</p>
 
@@ -147,6 +162,15 @@ export function ChartOfAccounts({
           <AccountModal initial={modal as Account} onSave={handleSave} onClose={() => setModal(null)} existingCodes={existingCodes} />
         )}
       </AnimatePresence>
+      <ConfirmAlertDialog
+        open={pendingDeactivate !== null}
+        onOpenChange={(open) => { if (!open) setPendingDeactivate(null); }}
+        title={t("accounting.coa.deactivate")}
+        description={t("accounting.coa.deactivateConfirm")}
+        confirmLabel={t("accounting.coa.deactivate")}
+        cancelLabel={t("common.cancel")}
+        onConfirm={() => pendingDeactivate ? handleDelete(pendingDeactivate.id) : undefined}
+      />
     </section>
   );
 }

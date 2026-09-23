@@ -5,8 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import { cn } from "@/lib/utils";
-import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { TableCell, TableRow } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -102,25 +103,17 @@ export function AccountMobileCard({
           />
         )}
       </div>
-      <StatGrid columns="sm2">
+      <DirectoryCardMetaGrid>
         {isColumnVisible("subtype") && (
-          <StatRow label={t("accounting.columns.account.subtype")} value={account.subtype || "—"} />
+          <DirectoryCardMetaTile label={t("accounting.columns.account.subtype")}>{account.subtype || "—"}</DirectoryCardMetaTile>
         )}
         {isColumnVisible("description") && (
-          <StatRow
-            label={t("accounting.columns.account.description")}
-            value={account.description || "—"}
-            ddClassName="break-words"
-          />
+          <DirectoryCardMetaTile label={t("accounting.columns.account.description")} className="break-words">{account.description || "—"}</DirectoryCardMetaTile>
         )}
-      </StatGrid>
-      {canWrite && (
-        <DirectoryCardFooterActions
-          actions={
-            <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} />
-          }
-        />
-      )}
+      </DirectoryCardMetaGrid>
+      <DirectoryCardFooterActions
+        actions={canWrite ? <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} /> : undefined}
+      />
     </DirectoryEntityCard>
   );
 }

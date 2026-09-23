@@ -152,6 +152,18 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         onToggleSelectAll={props.onToggleSelectAll}
         getColumnWidth={props.getColumnWidth}
         onColumnResize={props.onColumnResize}
+        showDeleted={props.showDeleted}
+        hasActiveFilters={props.search.trim().length > 0 || props.statusFilter !== "all" || props.tagFilter !== "all" || Boolean(props.dateFrom || props.dateTo)}
+        onClearFilters={() => {
+          props.onSearchChange("");
+          props.onStatusFilterChange("all");
+          props.onTagFilterChange("all");
+          props.onDateFromChange("");
+          props.onDateToChange("");
+        }}
+        onShowActive={props.onToggleDeleted}
+        onCreate={props.onOpenNew}
+        canWrite={props.canWrite}
         {...props.paging}
       />
 

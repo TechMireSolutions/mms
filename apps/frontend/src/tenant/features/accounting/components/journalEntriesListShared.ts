@@ -29,6 +29,12 @@ export interface JournalEntriesListProps {
   onToggleSelectAll: (checked: boolean) => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
+  showDeleted?: boolean;
+  hasActiveFilters?: boolean;
+  onClearFilters?: () => void;
+  onShowActive?: () => void;
+  onCreate?: () => void;
+  canWrite?: boolean;
 }
 
 /**

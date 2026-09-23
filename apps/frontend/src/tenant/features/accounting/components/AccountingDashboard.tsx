@@ -11,7 +11,7 @@ import { ChartGrid, chartAxisTick } from '@/components/ui/ChartGrid';
 import type { Account, JournalEntry, AccountingSettings, FiscalYear } from '@/lib/data/accountingData';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useAccountingCurrency } from '@/hooks/useCurrency';
-import { StatCard } from '@/components/ui/StatCard';
+import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
 import { ProgressBar } from '@/components/ui/ProgressBar';
 import { Card } from '@/components/ui/card';
 import { EmptyState } from '@/components/ui/EmptyState';
@@ -82,21 +82,16 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
 
   return (
     <section aria-label={t('accounting.dashboard.aria')} className="space-y-5">
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label={t('accounting.dashboard.totalRevenue')} value={formatCurrency(revenue)} icon={TrendingUp} accent="success" delayIndex={0} />
-        <StatCard label={t('accounting.dashboard.totalExpenses')} value={formatCurrency(expenses)} icon={TrendingDown} accent="destructive" delayIndex={1} />
-        <StatCard label={t('accounting.dashboard.netSurplus')} value={formatCurrency(Math.abs(netSurplus))}
-          sub={netSurplus < 0 ? t('accounting.dashboard.deficit') : t('accounting.dashboard.surplus')} icon={DollarSign}
-          accent={netSurplus >= 0 ? 'primary' : 'destructive'} delayIndex={2} />
-        <StatCard label={t('accounting.dashboard.totalAssets')} value={formatCurrency(assets)} icon={Scale} accent="info" delayIndex={3} />
-      </div>
-
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard label={t('accounting.dashboard.totalLiabilities')} value={formatCurrency(liabilities)} icon={Scale} accent="muted" delayIndex={4} />
-        <StatCard label={t('accounting.dashboard.netCashFlow')} value={formatCurrency(Math.abs(netCashFlow))} sub={netCashFlow >= 0 ? t('accounting.dashboard.positive') : t('accounting.dashboard.negative')} icon={TrendingUp} accent="primary" delayIndex={5} />
-        <StatCard label={t('accounting.dashboard.postedEntries')} value={postedCount} icon={CheckCircle2} accent="success" delayIndex={6} />
-        <StatCard label={t('accounting.dashboard.pendingDrafts')} value={draftCount} icon={Clock} accent={draftCount > 0 ? 'warning' : 'muted'} delayIndex={7} />
-      </div>
+      <ModuleCommandMetricsGrid items={[
+        { key: 'revenue', label: t('accounting.dashboard.totalRevenue'), value: formatCurrency(revenue), icon: TrendingUp, accent: 'success' },
+        { key: 'expenses', label: t('accounting.dashboard.totalExpenses'), value: formatCurrency(expenses), icon: TrendingDown, accent: 'destructive' },
+        { key: 'surplus', label: t('accounting.dashboard.netSurplus'), value: formatCurrency(Math.abs(netSurplus)), sub: netSurplus < 0 ? t('accounting.dashboard.deficit') : t('accounting.dashboard.surplus'), icon: DollarSign, accent: netSurplus >= 0 ? 'primary' : 'destructive' },
+        { key: 'assets', label: t('accounting.dashboard.totalAssets'), value: formatCurrency(assets), icon: Scale, accent: 'info' },
+        { key: 'liabilities', label: t('accounting.dashboard.totalLiabilities'), value: formatCurrency(liabilities), icon: Scale, accent: 'muted' },
+        { key: 'cash-flow', label: t('accounting.dashboard.netCashFlow'), value: formatCurrency(Math.abs(netCashFlow)), sub: netCashFlow >= 0 ? t('accounting.dashboard.positive') : t('accounting.dashboard.negative'), icon: TrendingUp, accent: 'primary' },
+        { key: 'posted', label: t('accounting.dashboard.postedEntries'), value: postedCount, icon: CheckCircle2, accent: 'success' },
+        { key: 'drafts', label: t('accounting.dashboard.pendingDrafts'), value: draftCount, icon: Clock, accent: draftCount > 0 ? 'warning' : 'muted' },
+      ]} />
 
       <motion.div
         initial={{ opacity: 0, y: 14 }}
@@ -203,7 +198,9 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         <Card accentColor="warning" className={cn("p-5", CARD_STRIPE_INSET)}>
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.recentEntries')}</h3>
           <div className="space-y-2">
-            {recentEntries.map((journalEntry) => {
+            {recentEntries.length === 0 ? (
+              <EmptyState title={t('accounting.dashboard.noPostedData')} description={t('accounting.journal.dashboard.noEntriesHint')} compact variant="dashed" />
+            ) : recentEntries.map((journalEntry) => {
               const totalDebit = journalEntry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
               return (
                 <article key={journalEntry.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
