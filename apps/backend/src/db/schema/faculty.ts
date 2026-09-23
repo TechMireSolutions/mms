@@ -22,6 +22,7 @@ export const faculty = pgTable('faculty', {
   qualification: varchar('qualification', { length: 255 }),
   joinDate: date('join_date', { mode: 'string' }),
   notes: text('notes'),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull().default({}),
   ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),

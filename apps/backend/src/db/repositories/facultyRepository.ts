@@ -10,6 +10,16 @@ export type TeacherInsert = typeof teachers.$inferInsert;
 export function teacherWriteValues(subdomain: string, teacher: Teacher): TeacherInsert {
   const audit = mapAuditToInsert(teacher);
   const t = teacher as Teacher & { reportingFacultyId?: string | null; hierarchyRank?: number };
+  const knownKeys = new Set([
+    'id', 'contactId', 'userId', 'employeeId', 'status', 'specialization', 'department',
+    'designation', 'designationId', 'designationStartsOn', 'designationEndsOn',
+    'designationAssignableRoles', 'customDesignation', 'reportingFacultyId',
+    'reportingFacultyName', 'subordinateCount', 'subordinates', 'hierarchyRank',
+    'qualification', 'joinDate', 'notes', 'name', 'phone', 'email', 'gender', 'avatar',
+    'contact', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'deletedAt',
+    'deletedBy', 'deletionReason', 'restoredAt', 'restoredBy', 'deletedWithCascade',
+  ]);
+  const customData = Object.fromEntries(Object.entries(teacher as unknown as Record<string, unknown>).filter(([key]) => !knownKeys.has(key)));
   return {
     id: String(teacher.id),
     workspaceSubdomain: subdomain,
@@ -25,6 +35,7 @@ export function teacherWriteValues(subdomain: string, teacher: Teacher): Teacher
     qualification: teacher.qualification ?? null,
     joinDate: teacher.joinDate ?? null,
     notes: teacher.notes ?? null,
+    customData,
     ...audit,
     createdAt: audit.createdAt ?? new Date(),
   } satisfies TeacherInsert;
@@ -32,6 +43,7 @@ export function teacherWriteValues(subdomain: string, teacher: Teacher): Teacher
 
 export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
   return {
+    ...(row.customData ?? {}),
     id: row.id,
     contactId: row.contactId ?? '',
     userId: row.userId ?? null,
@@ -103,6 +115,7 @@ export async function listTeachersByWorkspace(
         qualification: teachers.qualification,
         joinDate: teachers.joinDate,
         notes: teachers.notes,
+        customData: teachers.customData,
         deletedAt: teachers.deletedAt,
         deletedBy: teachers.deletedBy,
         deletionReason: teachers.deletionReason,
@@ -145,6 +158,7 @@ export async function findTeacherById(tenant: string, id: string): Promise<Teach
         qualification: teachers.qualification,
         joinDate: teachers.joinDate,
         notes: teachers.notes,
+        customData: teachers.customData,
         deletedAt: teachers.deletedAt,
         deletedBy: teachers.deletedBy,
         deletionReason: teachers.deletionReason,
@@ -199,6 +213,7 @@ export async function findTeachersByIds(tenant: string, ids: string[]): Promise<
         qualification: teachers.qualification,
         joinDate: teachers.joinDate,
         notes: teachers.notes,
+        customData: teachers.customData,
         deletedAt: teachers.deletedAt,
         deletedBy: teachers.deletedBy,
         deletionReason: teachers.deletionReason,
@@ -245,6 +260,7 @@ export async function bulkSaveTeachers(tenant: string, items: Teacher[]): Promis
           qualification: sql`excluded.qualification`,
           joinDate: sql`excluded.join_date`,
           notes: sql`excluded.notes`,
+          customData: sql`excluded.custom_data`,
           deletedAt: sql`excluded.deleted_at`,
           deletedBy: sql`excluded.deleted_by`,
           deletionReason: sql`excluded.deletion_reason`,

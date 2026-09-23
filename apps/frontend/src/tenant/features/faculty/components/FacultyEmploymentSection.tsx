@@ -101,7 +101,7 @@ export function TeacherEmploymentSection({
       <SectionCard title={t("teachers.form.sectionEmployment")} icon={Briefcase} accentColor="primary">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {showEmployeeId && (
-            <Field label={employeeIdLabel} id="employeeId" required error={errors.employeeId}>
+            <Field label={employeeIdLabel} id="employeeId" required={isFieldRequired("employeeId")} error={errors.employeeId}>
               <div className="flex items-center gap-2">
                 <div className="flex-1">
                   <LeadingIconInput
@@ -122,7 +122,7 @@ export function TeacherEmploymentSection({
                     type="button"
                     variant="outline"
                     size="icon"
-                    className="shrink-0 h-9 w-9 border-border/70 hover:bg-muted"
+                    className="min-h-11 min-w-11 shrink-0 border-border/70 hover:bg-muted"
                     onClick={onRegenerateEmployeeId}
                     disabled={isFetchingNextEmployeeId}
                     title={t("teachers.form.regenerateId")}

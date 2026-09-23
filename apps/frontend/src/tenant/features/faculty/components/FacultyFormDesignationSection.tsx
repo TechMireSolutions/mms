@@ -1,5 +1,5 @@
 import type React from "react";
-import { Award, Shield } from "lucide-react";
+import { Award, Shield, Info } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
@@ -34,6 +34,7 @@ export function FacultyFormDesignationSection({
     (item) => item.id === teacherDraft.designationId,
   );
   const assignableRoles = currentDefinition?.assignableRoles ?? teacherDraft.designationAssignableRoles ?? [];
+  const activeOptions = (designationOptions ?? []).filter((item) => item.isActive || item.id === teacherDraft.designationId);
 
   return (
     <div className="space-y-4 text-start">
@@ -65,10 +66,15 @@ export function FacultyFormDesignationSection({
                   ...(definition?.hierarchyRank === 1 ? { reportingFacultyId: null } : {}),
                 });
               }}
-              options={(designationOptions ?? [])
-                .filter((item) => item.isActive || item.id === teacherDraft.designationId)
+              options={activeOptions
                 .map((item) => ({ value: item.id, label: item.name }))}
             />
+            {activeOptions.length === 0 ? (
+              <p role="status" className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Info className="size-3.5 shrink-0" aria-hidden />
+                {t("faculty.designations.empty")}
+              </p>
+            ) : null}
             {teacher?.id ? (
               <p className="mt-1 text-xs text-muted-foreground">
                 {t("faculty.designations.manageInHistory")}
@@ -96,7 +102,7 @@ export function FacultyFormDesignationSection({
             </Field>
           )}
 
-          {assignableRoles.length > 0 && (
+          {currentDefinition ? (
             <div className="md:col-span-2 space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-3">
               <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
                 <Shield className="size-3.5 text-primary" aria-hidden />
@@ -108,9 +114,12 @@ export function FacultyFormDesignationSection({
                     {role}
                   </Badge>
                 ))}
+                {assignableRoles.length === 0 ? (
+                  <span className="text-xs text-muted-foreground">{t("faculty.designations.noAssignableRoles")}</span>
+                ) : null}
               </div>
             </div>
-          )}
+          ) : null}
         </div>
       </SectionCard>
     </div>

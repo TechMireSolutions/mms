@@ -19,6 +19,7 @@ import {
   type FacultyUserAccountDraft,
 } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 import React from "react";
+import { FacultyCustomFieldsSection } from "./FacultyCustomFieldsSection";
 
 export interface TeacherFormTabContentProps {
   formInstanceId: string;
@@ -120,6 +121,7 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
           hideDesignation
           hideHierarchy
         />
+        <FacultyCustomFieldsSection fields={fields} draft={teacherDraft} errors={errors} onDraftChange={onDraftChange} />
       </div>
     );
   }
@@ -179,6 +181,7 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
           isFieldEnabled={isFieldEnabled}
           isFieldRequired={isFieldRequired}
           onDraftChange={onDraftChange}
+          error={errors.notes}
         />
       </div>
     );
@@ -224,6 +227,7 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
+        error={errors.notes}
       />
 
       {/* System Login Account & Dynamic RBAC Role */}

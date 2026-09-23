@@ -1,5 +1,5 @@
 import type React from "react";
-import { Network } from "lucide-react";
+import { Network, BadgeCheck } from "lucide-react";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -45,29 +45,20 @@ export function FacultyFormHierarchySection({
       >
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {showHierarchyRank && (
-            <Field
-              label={t("teachers.form.hierarchyRank")}
-              id="hierarchyRank"
-              required={isFieldRequired("hierarchyRank")}
-              error={errors.hierarchyRank}
-            >
-              <FormSelect
-                id="hierarchyRank"
-                name="hierarchyRank"
-                value={teacherDraft.hierarchyRank ? String(teacherDraft.hierarchyRank) : "4"}
-                onChange={(val) => {
-                  const rank = Number(val) || 4;
-                  onDraftChange({
-                    hierarchyRank: rank,
-                    ...(rank === 1 ? { reportingFacultyId: null } : {}),
-                  });
-                }}
-                options={hierarchyRankPresets.map((preset) => ({
-                  value: String(preset.rank),
-                  label: `${preset.label} (Rank ${preset.rank})`,
-                }))}
-              />
-            </Field>
+            <div className="rounded-xl border border-border/60 bg-muted/30 p-3" id="hierarchyRank">
+              <div className="flex items-center gap-2">
+                <BadgeCheck className="size-4 shrink-0 text-primary" aria-hidden />
+                <div>
+                  <p className="text-sm font-medium text-foreground">{t("teachers.form.hierarchyRank")}</p>
+                  <p className="text-xs text-muted-foreground">
+                    {hierarchyRankPresets.find((preset) => preset.rank === (teacherDraft.hierarchyRank ?? 4))?.label ?? t("common.notSpecified")}
+                    {` · ${t("teachers.form.rankValue", { rank: teacherDraft.hierarchyRank ?? 4 })}`}
+                  </p>
+                </div>
+              </div>
+              <p className="mt-2 text-xs text-muted-foreground">{t("faculty.designations.rankDerivedHint")}</p>
+              {errors.hierarchyRank ? <p className="mt-1 text-xs text-destructive">{errors.hierarchyRank}</p> : null}
+            </div>
           )}
 
           {showSupervisor && (

@@ -61,12 +61,12 @@ export function FacultyUserAccountSection({
   const roleOptions = useMemo(() => {
     const allowedRoles = teacherDraft.designationAssignableRoles;
     return workspaceRoles
-      .filter((role) => !allowedRoles?.length || allowedRoles.includes(role.id))
+      .filter((role) => !teacherDraft.designationId || (allowedRoles ?? []).includes(role.id))
       .map((role) => ({
       value: role.id,
       label: `${workspaceRoleLabel(role, t)}${!role.isSystem ? ` (${t("contacts.form.tabCustom")})` : ""}`,
     }));
-  }, [workspaceRoles, teacherDraft.designationAssignableRoles, t]);
+  }, [workspaceRoles, teacherDraft.designationAssignableRoles, teacherDraft.designationId, t]);
 
   const selectedRoleObj = useMemo(() => {
     const roleId = linkedUser ? (userAccountDraft.role || linkedUser.role) : userAccountDraft.role;
@@ -104,6 +104,7 @@ export function FacultyUserAccountSection({
               onChange={(role) => onUserAccountDraftChange({ ...userAccountDraft, enabled: true, role })}
               options={roleOptions}
             />
+            {roleOptions.length === 0 ? <p className="mt-1 text-xs text-destructive">{t("faculty.designations.noAssignableRoles")}</p> : null}
             {selectedRoleObj && workspaceRoleDescription(selectedRoleObj, t) ? (
               <p className="text-xs text-muted-foreground mt-1">{workspaceRoleDescription(selectedRoleObj, t)}</p>
             ) : null}
@@ -165,6 +166,7 @@ export function FacultyUserAccountSection({
                 onChange={(role) => onUserAccountDraftChange({ ...userAccountDraft, role })}
                 options={roleOptions}
               />
+              {roleOptions.length === 0 ? <p className="mt-1 text-xs text-destructive">{t("faculty.designations.noAssignableRoles")}</p> : null}
               {selectedRoleObj ? (
                 <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
                   <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />

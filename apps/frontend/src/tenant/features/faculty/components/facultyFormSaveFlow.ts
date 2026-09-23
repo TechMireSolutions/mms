@@ -192,8 +192,8 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
   const allowedDesignationRoles = input.teacherDraft.designationAssignableRoles;
   if (
     input.userAccountDraft?.enabled
-    && allowedDesignationRoles?.length
-    && !allowedDesignationRoles.includes(input.userAccountDraft.role)
+    && input.teacherDraft.designationId
+    && !(allowedDesignationRoles ?? []).includes(input.userAccountDraft.role)
   ) {
     input.setErrors({ 'user.role': input.t('faculty.designations.roleNotAllowed') });
     notify.error(input.t('faculty.designations.roleNotAllowed'));

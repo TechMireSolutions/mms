@@ -68,6 +68,7 @@ export async function findSubordinates(tenant: string, supervisorId: string): Pr
         qualification: teachers.qualification,
         joinDate: teachers.joinDate,
         notes: teachers.notes,
+        customData: teachers.customData,
         deletedAt: teachers.deletedAt,
         deletedBy: teachers.deletedBy,
         deletionReason: teachers.deletionReason,

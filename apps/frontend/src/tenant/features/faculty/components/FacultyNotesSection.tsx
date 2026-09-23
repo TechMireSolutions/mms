@@ -15,6 +15,7 @@ export interface TeacherNotesSectionProps {
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
   onDraftChange: (patch: Partial<Teacher>) => void;
+  error?: string;
 }
 
 export function TeacherNotesSection({
@@ -23,6 +24,7 @@ export function TeacherNotesSection({
   isFieldEnabled,
   isFieldRequired,
   onDraftChange,
+  error,
 }: TeacherNotesSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
@@ -41,7 +43,7 @@ export function TeacherNotesSection({
         icon={FileText}
         accentColor="emerald"
       >
-        <Field label={notesLabel} id="notes" required={notesRequired}>
+        <Field label={notesLabel} id="notes" required={notesRequired} error={error}>
           <Textarea
             id="notes"
             name="notes"
@@ -50,6 +52,7 @@ export function TeacherNotesSection({
             onChange={(event) => onDraftChange({ notes: event.target.value })}
             placeholder={t("teachers.form.notesPlaceholder")}
             className={cn(FORM_TEXTAREA, "min-h-30")}
+            aria-invalid={Boolean(error)}
           />
         </Field>
       </SectionCard>
@@ -59,4 +62,3 @@ export function TeacherNotesSection({
 
 export type FacultyNotesSectionProps = TeacherNotesSectionProps;
 export const FacultyNotesSection = TeacherNotesSection;
-
