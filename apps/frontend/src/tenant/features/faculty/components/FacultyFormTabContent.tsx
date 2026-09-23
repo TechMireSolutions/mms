@@ -11,6 +11,8 @@ import {
   TeacherEmploymentSection,
   type TeacherStatusOption,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
+import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
+import { FacultyFormHierarchySection } from "@/tenant/features/faculty/components/FacultyFormHierarchySection";
 import { TeacherNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
 import {
   FacultyUserAccountSection,
@@ -20,6 +22,7 @@ import React from "react";
 
 export interface TeacherFormTabContentProps {
   formInstanceId: string;
+  activeTab?: string;
   teacher?: Teacher;
   teacherDraft: Partial<Teacher>;
   errors: Record<string, string>;
@@ -52,6 +55,7 @@ const DEFAULT_USER_ACCOUNT_DRAFT: FacultyUserAccountDraft = {
 };
 
 export const TeacherFormTabContent = (function TeacherFormTabContent({
+  activeTab,
   teacher,
   teacherDraft,
   errors,
@@ -75,6 +79,110 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
   supervisorCandidates,
   hierarchyRankPresets,
 }: TeacherFormTabContentProps): React.JSX.Element {
+  if (activeTab === "contact") {
+    return (
+      <div className="space-y-6 pb-6">
+        <TeacherContactSection
+          teacherDraft={teacherDraft}
+          linkedContact={linkedContact}
+          linkedTeacherContactIds={linkedTeacherContactIds}
+          errors={errors}
+          fields={fields}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          onDraftChange={onDraftChange}
+        />
+      </div>
+    );
+  }
+
+  if (activeTab === "employment") {
+    return (
+      <div className="space-y-6 pb-6">
+        <TeacherEmploymentSection
+          teacher={teacher}
+          teacherDraft={teacherDraft}
+          errors={errors}
+          fields={fields}
+          autoGenerateId={autoGenerateId}
+          idPrefix={idPrefix}
+          nextEmployeeId={nextEmployeeId}
+          onRegenerateEmployeeId={onRegenerateEmployeeId}
+          isFetchingNextEmployeeId={isFetchingNextEmployeeId}
+          statusOptions={statusOptions}
+          designationOptions={designationOptions}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          onDraftChange={onDraftChange}
+          supervisorCandidates={supervisorCandidates}
+          hierarchyRankPresets={hierarchyRankPresets}
+          hideDesignation
+          hideHierarchy
+        />
+      </div>
+    );
+  }
+
+  if (activeTab === "designation") {
+    return (
+      <div className="space-y-6 pb-6">
+        <FacultyFormDesignationSection
+          teacher={teacher}
+          teacherDraft={teacherDraft}
+          errors={errors}
+          designationOptions={designationOptions}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          onDraftChange={onDraftChange}
+        />
+      </div>
+    );
+  }
+
+  if (activeTab === "hierarchy") {
+    return (
+      <div className="space-y-6 pb-6">
+        <FacultyFormHierarchySection
+          teacherDraft={teacherDraft}
+          errors={errors}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          onDraftChange={onDraftChange}
+          supervisorCandidates={supervisorCandidates}
+          hierarchyRankPresets={hierarchyRankPresets}
+        />
+      </div>
+    );
+  }
+
+  if (activeTab === "account") {
+    return (
+      <div className="space-y-6 pb-6">
+        <FacultyUserAccountSection
+          teacherDraft={teacherDraft}
+          linkedContact={linkedContact}
+          userAccountDraft={userAccountDraft}
+          onUserAccountDraftChange={onUserAccountDraftChange}
+          errors={errors}
+        />
+      </div>
+    );
+  }
+
+  if (activeTab === "notes") {
+    return (
+      <div className="space-y-6 pb-6">
+        <TeacherNotesSection
+          notes={teacherDraft.notes}
+          fields={fields}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          onDraftChange={onDraftChange}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6 pb-6">
       {/* Top Section: Contact Association */}

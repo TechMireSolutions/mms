@@ -855,6 +855,27 @@
       "when": 1790100000000,
       "tag": "0121_faculty_hierarchy_and_task_management",
       "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1790200000000,
+      "tag": "0122_drop_teachers_compatibility_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 123,
+      "version": "7",
+      "when": 1790300000000,
+      "tag": "0123_faculty_temporal_designations",
+      "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1790400000000,
+      "tag": "0124_faculty_schema_improvements",
+      "breakpoints": true
     }
   ]
 }

@@ -20,7 +20,7 @@ export const faculty = pgTable('faculty', {
   reportingFacultyId: text('reporting_faculty_id'),
   hierarchyRank: integer('hierarchy_rank').notNull().default(10),
   qualification: varchar('qualification', { length: 255 }),
-  joinDate: varchar('join_date', { length: 35 }),
+  joinDate: date('join_date', { mode: 'string' }),
   notes: text('notes'),
   ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -30,7 +30,6 @@ export const faculty = pgTable('faculty', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('faculty_workspace_status_idx').on(table.workspaceSubdomain, table.status),
-  index('faculty_workspace_employee_id_idx').on(table.workspaceSubdomain, table.employeeId),
   index('faculty_workspace_specialization_idx').on(table.workspaceSubdomain, table.specialization),
   index('faculty_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('faculty_workspace_active_idx')
@@ -79,6 +78,8 @@ export const faculty = pgTable('faculty', {
     .on(table.workspaceSubdomain, table.status, table.hierarchyRank)
     .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_user_idx').on(table.workspaceSubdomain, table.userId),
+  check('faculty_no_self_reporting_check', sql`${table.reportingFacultyId} is null or ${table.reportingFacultyId} <> ${table.id}`),
+  check('faculty_hierarchy_rank_positive_check', sql`${table.hierarchyRank} > 0`),
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],

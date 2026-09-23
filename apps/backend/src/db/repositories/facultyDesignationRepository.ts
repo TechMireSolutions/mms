@@ -11,6 +11,7 @@ import {
   facultyDesignations,
 } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
+import { syncFacultyCurrentDesignation } from './facultyDesignationSync.js';
 
 function iso(value: Date): string {
   return value.toISOString();
@@ -223,6 +224,7 @@ export async function saveFacultyDesignationAssignment(
         updatedAt: new Date(),
       },
     });
+    await syncFacultyCurrentDesignation(tx, workspaceSubdomain, input.facultyId);
   });
   const saved = (await listFacultyDesignationAssignments(workspaceSubdomain, input.facultyId))
     .find((assignment) => assignment.id === input.id);
@@ -275,5 +277,6 @@ export async function deleteFacultyDesignationAssignment(
       eq(facultyDesignationAssignments.workspaceSubdomain, workspaceSubdomain),
       eq(facultyDesignationAssignments.id, assignmentId),
     ));
+    await syncFacultyCurrentDesignation(tx, workspaceSubdomain, facultyId);
   });
 }

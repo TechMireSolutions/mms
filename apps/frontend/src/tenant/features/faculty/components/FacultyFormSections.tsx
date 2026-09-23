@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { SectionCard } from "@/components/ui/SectionCard";
@@ -72,6 +72,8 @@ export interface TeacherEmploymentSectionProps extends TeacherSectionBaseProps {
   teacher?: Teacher;
   supervisorCandidates?: Faculty[];
   hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
+  hideDesignation?: boolean;
+  hideHierarchy?: boolean;
 }
 
 export function TeacherEmploymentSection({
@@ -91,13 +93,15 @@ export function TeacherEmploymentSection({
   onDraftChange,
   supervisorCandidates,
   hierarchyRankPresets,
+  hideDesignation = false,
+  hideHierarchy = false,
 }: TeacherEmploymentSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const showEmployeeId = isFieldEnabled("employeeId");
-  const showDesignation = isFieldEnabled("designation");
+  const showDesignation = !hideDesignation && isFieldEnabled("designation");
   const showDepartment = isFieldEnabled("department");
-  const showHierarchyRank = isFieldEnabled("hierarchyRank");
-  const showSupervisor = isFieldEnabled("reportingFacultyId");
+  const showHierarchyRank = !hideHierarchy && isFieldEnabled("hierarchyRank");
+  const showSupervisor = !hideHierarchy && isFieldEnabled("reportingFacultyId");
   const showStatus = isFieldEnabled("status");
   const showJoinDate = isFieldEnabled("joinDate");
   if (
@@ -114,6 +118,7 @@ export function TeacherEmploymentSection({
 
   const employeeIdLabel = resolveTeacherFieldLabel(fields, "employment", "employeeId", t);
   const designationLabel = resolveTeacherFieldLabel(fields, "employment", "designation", t);
+  const departmentLabel = resolveTeacherFieldLabel(fields, "employment", "department", t);
   const statusLabel = resolveTeacherFieldLabel(fields, "employment", "status", t);
   const joinDateLabel = resolveTeacherFieldLabel(fields, "employment", "joinDate", t);
 
@@ -185,15 +190,33 @@ export function TeacherEmploymentSection({
             </div>
           )}
 
-          <FacultyHierarchyFormFields
-            teacherDraft={teacherDraft}
-            errors={errors}
-            isFieldEnabled={isFieldEnabled}
-            isFieldRequired={isFieldRequired}
-            onDraftChange={onDraftChange}
-            supervisorCandidates={supervisorCandidates}
-            hierarchyRankPresets={hierarchyRankPresets}
-          />
+          {!hideHierarchy ? (
+            <FacultyHierarchyFormFields
+              teacherDraft={teacherDraft}
+              errors={errors}
+              isFieldEnabled={isFieldEnabled}
+              isFieldRequired={isFieldRequired}
+              onDraftChange={onDraftChange}
+              supervisorCandidates={supervisorCandidates}
+              hierarchyRankPresets={hierarchyRankPresets}
+            />
+          ) : showDepartment ? (
+            <Field
+              label={departmentLabel}
+              id="department"
+              required={isFieldRequired("department")}
+              error={errors.department}
+            >
+              <Input
+                id="department"
+                name="department"
+                value={teacherDraft.department ?? ""}
+                onChange={(e) => onDraftChange({ department: e.target.value })}
+                placeholder={t("teachers.form.departmentPlaceholder")}
+                className={cn(FORM_INPUT, errors.department && FORM_INPUT_ERROR)}
+              />
+            </Field>
+          ) : null}
 
           {showStatus && (
             <Field label={statusLabel} id="status" required={isFieldRequired("status")}>

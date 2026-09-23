@@ -105,7 +105,6 @@ export const studentsRelations = relations(students, ({ one, many }) => ({
   invoices: many(financeInvoices),
   examResults: many(examResults),
   hasanatDistributions: many(hasanatDistributions),
-  designationAssignments: many(facultyDesignationAssignments),
 }));
 
 export const facultyDesignationsRelations = relations(facultyDesignations, ({ one, many }) => ({
@@ -164,6 +163,7 @@ export const facultyRelations = relations(faculty, ({ one, many }) => ({
     relationName: 'faculty_reporting',
   }),
   hasanatDistributions: many(hasanatDistributions),
+  designationAssignments: many(facultyDesignationAssignments),
 }));
 
 export const sessionsRelations = relations(sessions, ({ one, many }) => ({

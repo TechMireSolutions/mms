@@ -83,11 +83,7 @@ export async function aggregateTeachersCommandMetrics(
 ): Promise<TeachersCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
-    const joinDateRaw = sql`NULLIF(trim(COALESCE(
-      ${teachers.joinDate},
-      to_char(${teachers.createdAt}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
-      ''
-    )), '')`;
+    const joinDateExpr = sql`COALESCE(${teachers.joinDate}, (${teachers.createdAt})::date)`;
     const status = teacherStatusExpr();
     const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } =
       resolveTeacherStatusRoles();
@@ -100,10 +96,7 @@ export async function aggregateTeachersCommandMetrics(
         onLeave: sql<number>`count(*) FILTER (WHERE ${status} = ${onLeaveStatus})::int`,
         other: sql<number>`count(*) FILTER (WHERE ${status} IS NOT NULL AND ${status} <> '' AND ${status} NOT IN (${activeStatus}, ${inactiveStatus}, ${onLeaveStatus}))::int`,
         newThisPeriod: sql<number>`count(*) FILTER (WHERE
-          ${joinDateRaw} IS NOT NULL
-          AND ${joinDateRaw} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND (${joinDateRaw})::timestamptz
-            >= (NOW() - (${periodDays} * INTERVAL '1 day'))
+          ${joinDateExpr} >= (CURRENT_DATE - (${periodDays} * INTERVAL '1 day'))::date
         )::int`,
       })
       .from(teachers)
