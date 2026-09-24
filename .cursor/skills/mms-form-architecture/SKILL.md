@@ -16,6 +16,8 @@ metadata:
 
 - ❌ **NEVER use Server Actions or `useActionState`**: All MMS writes run via client-side `apiClient` / `apiContract` with cookie authentication.
 - ❌ **NEVER use `forwardRef` in newly authored components**: React 19 supports `ref` directly as a component prop.
+- ❌ **NEVER block paste on inputs**: Banning paste on password, OTP, or 2FA fields is strictly forbidden (WCAG 2.2 3.3.8).
+- ❌ **NEVER display premature validation errors**: Avoid showing red errors on clean, untouched fields while the user types; validate on blur or submit attempt.
 - ❌ **NEVER accept client soft-delete fields**: Strip `deletedAt`, `deletedBy`, `deletionReason` on create/update schemas.
 - ❌ **NEVER assign soft-deleted foreign keys**: Enforce active foreign key guarding (`deleted_at IS NULL`).
 - ❌ **NEVER buffer uploads into memory**: Stream files directly using Fastify `@fastify/multipart`.
@@ -89,6 +91,11 @@ export function EntityFormModal({ isOpen, onClose, onSubmit, initialData }: Enti
 
 ```
 - [ ] FormModal with React 19 ref-as-prop and useId() accessibility pairs
+- [ ] Virtual keyboard hints provided (inputMode, enterKeyHint, autoComplete)
+- [ ] Paste strictly enabled on all fields including OTP/passwords (WCAG 2.2 3.3.8)
+- [ ] Non-punitive validation UX (validate on blur or submit attempt; text-wrap: pretty)
+- [ ] Touch targets meet 44×44px floor (min-h-11 min-w-11)
+- [ ] Dialog layout uses @container queries and CSS Subgrid
 - [ ] No Server Actions or form action= posts
 - [ ] Shared Zod write schema validates inputs strictly (.strict())
 - [ ] Dates validated with isoDateSchema / isoDateOrEmptySchema

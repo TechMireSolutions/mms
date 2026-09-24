@@ -107,6 +107,10 @@ Enforce logical CSS properties across all shared UI primitives. **The physical�
 
 The enforcement is mechanical: `mms-bidi/no-physical-directional-classes` (ESLint, error level) inspects JSX `className` in `.tsx` files. Class tokens held in `.ts` files (e.g. `formStyles.ts`) are outside its reach — check those by eye.
 
+## 4. Modern 2026 UI/UX Reference
+
+For deep-dive implementation details on modern 2026 capabilities (Top-layer `@starting-style`, CSS Anchor positioning, CSS Subgrid, CSS Container Queries, and WCAG 2.2 AA criteria), consult `.agent/skills/mms-ui-ux-design/references/modern-ui-ux-2026.md`.
+
 ## Checklist
 
 ```
@@ -114,6 +118,13 @@ The enforcement is mechanical: `mms-bidi/no-physical-directional-classes` (ESLin
 - [ ] No physical spacing classes are used (e.g., used `ps-` instead of `pl-`)
 - [ ] No physical positioning classes are used (e.g., used `inset-inline-start-` instead of `left-`)
 - [ ] Typography follows language-aware overrides (Geist vs Readex Pro vs Noto Nastaliq Urdu)
+- [ ] Headings use `text-wrap: balance` and body/alerts use `text-wrap: pretty`
+- [ ] Mixed-script user content uses `dir="auto"` or `unicode-bidi: plaintext`
+- [ ] Card and dialog sub-layouts use `@container` queries and CSS Subgrid
+- [ ] Interactive touch targets meet the 44×44px floor (`min-h-11 min-w-11`)
+- [ ] Sticky headers/docks apply `scroll-padding` to prevent obscuring focused elements (WCAG 2.2 2.4.11)
+- [ ] Dragging interactions provide keyboard-accessible single-pointer alternatives (WCAG 2.2 2.5.7)
+- [ ] Auth and input fields strictly preserve pasteability (WCAG 2.2 3.3.8)
 - [ ] E2E tests include testing the UI on both LTR (English) and RTL (Urdu/Arabic) modes
 - [ ] Tables, lists, and card feeds > 30 items use `@tanstack/react-virtual` virtualization — `mms-performance.md`
 - [ ] Images and charts have explicit width/height dimensions for CLS = 0 — `mms-performance.md`

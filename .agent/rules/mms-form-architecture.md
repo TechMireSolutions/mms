@@ -19,9 +19,9 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - Inline field/panel errors → `FieldErrorMessage` + `FORM_ERROR` (do not fork `text-xs text-destructive` lines). Auth entry fields may apply `FORM_ERROR` class directly.
 - Form cards → `FORM_CARD`; dense builder inputs → `FORM_INPUT_BUILDER` — do not invent parallel glass stacks in features.
 - Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `TimePicker`, `DateTimePicker`, `EditableSelect`) — currency as `inputMode="decimal"` text (never `type="number"`), phone as `type="tel"` + E.164, date/datetime via the shared pickers.
-- **Stable Heights**: Tabbed forms use `<FormModal tall>` with a tall viewport height + `max-h-[43.75rem]` and scrollable body `flex-1 overflow-y-auto`. Prefer `dvh`/`svh` (+ `safe-area-inset` padding) over raw `vh` when touching FormModal chrome — iOS keyboard/browser chrome.
+- **Stable Heights & Top-Layer Transitions**: Tabbed forms use `<FormModal tall>` with a tall viewport height + `max-h-[43.75rem]` and scrollable body `flex-1 overflow-y-auto`. Prefer `dvh`/`svh` (+ `safe-area-inset` padding) over raw `vh` when touching FormModal chrome — iOS keyboard/browser chrome. Support smooth top-layer transitions via `@starting-style` and `transition-behavior: allow-discrete`.
 - **Scroll Containment**: `useBodyScrollLock()` + `overscroll-contain` on scrollable modal boxes.
-- **Tabs / field grids:** layout follows the dialog `@container` (`@md:` / `@sm:`), not the viewport — `mms-ui-ux-design.md` §4.
+- **Tabs, Field Grids & Subgrid:** Layout follows the dialog `@container` (`@md:` / `@sm:` / `cqi`), not the viewport — `mms-ui-ux-design.md` §4. Multi-column form sections leverage CSS Subgrid (`grid-template-rows: subgrid` / `grid-template-columns: subgrid`) for aligned label-input pairings across rows.
 - Long forms split major tasks into purposeful `FormModal` tabs; preserve form state across tab switches.
 - **Tabs:** one tab per persisted table when a record spans tables; workflow-only tabs OK when the saved payload stays explicit. Visible tabs follow Setup enablement SSOT — `mms-fields.md`.
 - **Enabled fields must render**: if validation can require a registry field, the form must show a control (and the drawer a read row). Ban hard-coded key allowlists.
@@ -39,7 +39,7 @@ Simple static forms with design-system primitives — not dynamic layout engines
 - **RSC Server Actions Ban & Client Actions**: React Server Components (RSC) Server Actions (`"use server"`) and multi-page native HTML form `action=` POST submissions are strictly banned — MMS is a Vite Single Page Application communicating with Fastify REST via `apiClient`. TanStack Query mutations (`useMutation`) remain the primary server cache synchronizer; client-side `useActionState` or `useOptimistic` interacting with `apiClient` async handlers is permitted only where it streamlines local pending/optimistic state without bypassing Query cache invalidation.
 - Initialize fields to avoid uncontrolled→controlled warnings: strings `""`, numbers/dates `null`, lists `[]`.
 - Every control needs `name` + `id` (mandatory `useId()` fallback paired with `<label htmlFor={id}>` for WCAG 2.2 AA accessibility).
-- **Mobile Keyboard Ergonomics & Autocomplete**: Form inputs must provide semantic `inputMode` and standard `autoComplete` hints to optimize mobile virtual keyboards:
+- **Mobile Keyboard Ergonomics & Autocomplete (2026)**: Form inputs must provide semantic `inputMode` and standard `autoComplete` hints to optimize mobile virtual keyboards:
   - Currency/Money: `inputMode="decimal"`
   - Phone: `type="tel"`, `inputMode="tel"`, `autoComplete="tel"`
   - OTP / 2FA: `inputMode="numeric"`, `autoComplete="one-time-code"`
@@ -78,8 +78,10 @@ Simple static forms with design-system primitives — not dynamic layout engines
 
 ## 5. RTL & errors
 
-- Logical Tailwind (`start-0`, `border-e`, `ms-auto`) for RTL.
-- Inline validation; multi-tab forms auto-focus the first invalid tab.
+- Logical Tailwind (`start-0`, `border-e`, `ms-auto`) for RTL layouts.
+- **Non-Punitive Validation UX**: Do not render validation errors while a user is typing in a clean, untouched field. Show inline field errors on field blur (`onBlur`), or across all fields upon the first submit attempt (`isSubmitted`).
+- **Typography & Error Wrap**: Error messages and helper descriptions use `text-wrap: pretty` to avoid single-word typographic orphans.
+- Multi-tab forms auto-focus the first invalid tab and move focus to the first invalid field upon validation failure.
 - User-facing validation copy via `t()` / `TranslatedFormMessage` — ban hardcoded English fallbacks.
 
 ## 6. Security pointers

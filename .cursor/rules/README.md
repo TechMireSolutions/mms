@@ -37,7 +37,7 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 
 | Rule | Focus / Topic |
 |------|---------------|
-| `mms-ui-ux-design.mdc` | UI primitives, design tokens, tabs, notifications, a11y (RTL / WCAG), and **§7 responsiveness** (FormModal chrome → `mms-form-architecture.mdc`) |
+| `mms-ui-ux-design.mdc` | UI primitives, design tokens, tabs, notifications, a11y (RTL / WCAG), and **§4 responsiveness** (FormModal chrome → `mms-form-architecture.mdc`) |
 | `mms-module-architecture.mdc` | Universal module manifest schemas, three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
 | `mms-form-architecture.mdc` | Static FormModal forms, write Zod `.strict()`, React 19 defaults, decimal-as-string, local multipart uploads |
 | `mms-hooks.mdc` | Custom React hooks (Query recipes, page controllers / action handlers, Work layout) |
