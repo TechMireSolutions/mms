@@ -119,7 +119,7 @@ export function StepReview({
       <dl className="rounded-2xl border border-border overflow-hidden m-0">
         {rows.map((row, index) => (
           <div
-            key={index}
+            key={row.label}
             className={`flex items-start gap-4 px-4 py-3 ${index < rows.length - 1 ? "border-b border-border" : ""}`}
           >
             <dt className={cn(FORM_LABEL, "mb-0 w-32 shrink-0 pt-0.5")}>{row.label}</dt>
@@ -129,9 +129,9 @@ export function StepReview({
                 type="button"
                 onClick={onEditDetails}
                 aria-label={`${t("common.edit")} ${row.label}`}
-                className="shrink-0 text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded p-0.5"
+                className="shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg -my-1"
               >
-                <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
+                <Pencil className="w-4 h-4" aria-hidden="true" />
               </button>
             )}
           </div>
@@ -141,22 +141,22 @@ export function StepReview({
       {/* R1: Status banner prominently outside the data table */}
       {amount === null ? (
         <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3" role="alert">
-          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" aria-hidden="true" />
+          <AlertTriangle className="w-4 h-4 text-destructive shrink-0" aria-hidden="true" />
           <span className="text-sm font-semibold text-destructive">{t("accounting.journal.dashboard.wizard.errorAmountInvalid")}</span>
         </div>
       ) : !debitAccount || !creditAccount ? (
         <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3" role="alert">
-          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" aria-hidden="true" />
+          <AlertTriangle className="w-4 h-4 text-destructive shrink-0" aria-hidden="true" />
           <span className="text-sm font-semibold text-destructive">{t("accounting.journal.dashboard.wizard.errorSource")}</span>
         </div>
       ) : debitAccount.id === creditAccount.id ? (
         <div className="flex items-center gap-2 rounded-xl border border-destructive/30 bg-destructive/10 px-4 py-3" role="alert">
-          <AlertTriangle className="w-4 h-4 text-destructive flex-shrink-0" aria-hidden="true" />
+          <AlertTriangle className="w-4 h-4 text-destructive shrink-0" aria-hidden="true" />
           <span className="text-sm font-semibold text-destructive">{t("accounting.journal.dashboard.wizard.errorSameAccount")}</span>
         </div>
       ) : (
         <div className="flex items-center gap-2 rounded-xl border border-success/30 bg-success/10 px-4 py-3">
-          <CheckCircle2 className="w-4 h-4 text-success flex-shrink-0" aria-hidden="true" />
+          <CheckCircle2 className="w-4 h-4 text-success shrink-0" aria-hidden="true" />
           <span className="text-sm font-semibold text-success">{t("accounting.journal.dashboard.wizard.postMessage")}</span>
         </div>
       )}

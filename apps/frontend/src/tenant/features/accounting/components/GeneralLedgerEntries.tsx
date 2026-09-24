@@ -1,15 +1,8 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { formatDate } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableFooter,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TableCell, TableFooter, TableRow } from "@/components/ui/table";
+import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work/WorkBatchTable";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
@@ -31,6 +24,8 @@ interface GeneralLedgerEntriesProps {
   viewMode?: WorkDirectoryViewMode;
 }
 
+type GeneralLedgerRowItem = GeneralLedgerLineWithRunning & { id: string };
+
 export function GeneralLedgerEntries({
   activeAccount,
   linesWithRunning,
@@ -45,6 +40,72 @@ export function GeneralLedgerEntries({
   const { formatCurrency } = useAccountingCurrency();
   const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
   const viewMode = propViewMode ?? hookViewMode;
+
+  const rows = useMemo<GeneralLedgerRowItem[]>(
+    () => linesWithRunning.map((line, index) => ({ ...line, id: `${line.ref}-${index}` })),
+    [linesWithRunning],
+  );
+
+  const columns = useMemo<WorkBatchTableColumn<GeneralLedgerRowItem>[]>(
+    () => [
+      {
+        id: "date",
+        label: t("accounting.ledger.columns.date"),
+        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap",
+        render: (line) => formatDate(line.date),
+      },
+      {
+        id: "ref",
+        label: t("accounting.ledger.columns.ref"),
+        cellClassName: "px-3 py-2.5 font-mono text-xs font-bold text-primary",
+        render: (line) => line.ref,
+      },
+      {
+        id: "description",
+        label: t("accounting.ledger.columns.description"),
+        cellClassName: "px-3 py-2.5 text-foreground max-w-cell-md truncate",
+        render: (line) => line.description,
+      },
+      {
+        id: "lineNote",
+        label: t("accounting.ledger.columns.lineNote"),
+        headerClassName: "hidden lg:table-cell",
+        cellClassName: "px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell",
+        render: (line) => line.lineDesc || "—",
+      },
+      {
+        id: "debit",
+        label: t("accounting.ledger.columns.debit"),
+        headerClassName: "text-end",
+        cellClassName: "px-3 py-2.5 text-end font-mono text-xs font-semibold text-info",
+        render: (line) => (line.debit > 0 ? formatCurrency(line.debit) : "—"),
+      },
+      {
+        id: "credit",
+        label: t("accounting.ledger.columns.credit"),
+        headerClassName: "text-end",
+        cellClassName: "px-3 py-2.5 text-end font-mono text-xs font-semibold text-success",
+        render: (line) => (line.credit > 0 ? formatCurrency(line.credit) : "—"),
+      },
+      {
+        id: "balance",
+        label: t("accounting.ledger.columns.balance"),
+        headerClassName: "text-end",
+        cellClassName: "px-3 py-2.5 text-end font-mono text-xs font-semibold",
+        render: (line) => (
+          <>
+            <span className={line.running >= 0 ? "text-foreground" : "text-destructive"}>
+              {formatCurrency(Math.abs(line.running))}
+            </span>
+            <span className="text-xs text-muted-foreground ms-1">
+              {line.running >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
+            </span>
+          </>
+        ),
+      },
+    ],
+    [formatCurrency, t],
+  );
 
   if (linesWithRunning.length === 0) {
     return (
@@ -62,7 +123,7 @@ export function GeneralLedgerEntries({
         <DirectoryCardsGrid className="p-3">
           {linesWithRunning.map((line, index) => (
             <DirectoryEntityCard
-              key={index}
+              key={`${line.ref}-${index}`}
               className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
             >
               <div className="flex min-w-0 items-start justify-between gap-3">
@@ -120,56 +181,35 @@ export function GeneralLedgerEntries({
     );
   }
 
+  const tableFooter = (
+    <TableFooter className="border-t-2 border-border bg-muted/30">
+      <TableRow className="hover:bg-transparent">
+        <TableCell colSpan={3} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">
+          {t("accounting.ledger.closingBalance")}
+        </TableCell>
+        <TableCell className="hidden lg:table-cell" />
+        <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-info">
+          {formatCurrency(totalDebit)}
+        </TableCell>
+        <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success">
+          {formatCurrency(totalCredit)}
+        </TableCell>
+        <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-foreground">
+          {formatCurrency(Math.abs(balance))} {balance >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
+        </TableCell>
+      </TableRow>
+    </TableFooter>
+  );
+
   return (
     <div className={WORK_SURFACE}>
-      <Table>
-        <caption className="sr-only">{t("accounting.ledger.entriesCaption", { name: activeAccount.name })}</caption>
-        <TableHeader>
-          <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-            <ModuleTableHeaderCell columnKey="date" className="px-3 py-2.5">{t("accounting.ledger.columns.date")}</ModuleTableHeaderCell>
-            <ModuleTableHeaderCell columnKey="ref" className="px-3 py-2.5">{t("accounting.ledger.columns.ref")}</ModuleTableHeaderCell>
-            <ModuleTableHeaderCell columnKey="description" className="px-3 py-2.5">{t("accounting.ledger.columns.description")}</ModuleTableHeaderCell>
-            <ModuleTableHeaderCell columnKey="lineNote" className="px-3 py-2.5 hidden lg:table-cell">{t("accounting.ledger.columns.lineNote")}</ModuleTableHeaderCell>
-            <ModuleTableHeaderCell columnKey="debit" className="px-3 py-2.5 text-end">{t("accounting.ledger.columns.debit")}</ModuleTableHeaderCell>
-            <ModuleTableHeaderCell columnKey="credit" className="px-3 py-2.5 text-end">{t("accounting.ledger.columns.credit")}</ModuleTableHeaderCell>
-            <ModuleTableHeaderCell columnKey="balance" className="px-3 py-2.5 text-end">{t("accounting.ledger.columns.balance")}</ModuleTableHeaderCell>
-          </TableRow>
-        </TableHeader>
-        <TableBody className="divide-y divide-border/50">
-          {linesWithRunning.map((line, index) => (
-            <TableRow key={index} className="hover:bg-muted/20 transition-colors">
-              <TableCell className="px-3 py-2.5 text-xs text-muted-foreground whitespace-nowrap">
-                {formatDate(line.date)}
-              </TableCell>
-              <TableCell className="px-3 py-2.5 font-mono text-xs font-bold text-primary">{line.ref}</TableCell>
-              <TableCell className="px-3 py-2.5 text-foreground max-w-cell-md truncate">{line.description}</TableCell>
-              <TableCell className="px-3 py-2.5 text-xs text-muted-foreground hidden lg:table-cell">{line.lineDesc || "—"}</TableCell>
-              <TableCell className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-info">
-                {line.debit > 0 ? formatCurrency(line.debit) : "—"}
-              </TableCell>
-              <TableCell className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-success">
-                {line.credit > 0 ? formatCurrency(line.credit) : "—"}
-              </TableCell>
-              <TableCell className="px-3 py-2.5 text-end font-mono text-xs font-semibold">
-                <span className={line.running >= 0 ? "text-foreground" : "text-destructive"}>
-                  {formatCurrency(Math.abs(line.running))}
-                </span>
-                <span className="text-xs text-muted-foreground ms-1">{line.running >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}</span>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-        <TableFooter>
-          <TableRow>
-            <TableCell colSpan={4} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">{t("accounting.ledger.closingBalance")}</TableCell>
-            <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</TableCell>
-            <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</TableCell>
-            <TableCell className="px-3 py-2.5 text-end font-mono font-bold">
-              {formatCurrency(Math.abs(balance))} {balance >= 0 ? t("accounting.ledger.dr") : t("accounting.ledger.cr")}
-            </TableCell>
-          </TableRow>
-        </TableFooter>
-      </Table>
+      <WorkBatchTable
+        data={rows}
+        columns={columns}
+        caption={t("accounting.ledger.entriesCaption", { name: activeAccount.name })}
+        bordered={false}
+        tableFooter={tableFooter}
+      />
     </div>
   );
 }

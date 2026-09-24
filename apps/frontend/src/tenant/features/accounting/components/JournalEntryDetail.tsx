@@ -10,6 +10,7 @@ import { SEMANTIC_BADGE, balanceToneClass } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
+import { DetailDrawerArchivedBanner } from "@/components/ui/DetailDrawerArchiveChrome";
 import { JournalEntryDetailLines } from "@/tenant/features/accounting/components/JournalEntryDetailLines";
 import { Card } from "@/components/ui/card";
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
@@ -21,14 +22,25 @@ interface JournalEntryDetailProps {
   onClose: () => void;
   onEdit?: () => void;
   onReverse?: () => void;
+  onRestore?: () => void | Promise<void>;
+  canRestore?: boolean;
 }
 
 /**
  * Journal entry detail slide-over.
  */
-export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse }: JournalEntryDetailProps) {
+export function JournalEntryDetail({
+  entry,
+  accounts,
+  onClose,
+  onEdit,
+  onReverse,
+  onRestore,
+  canRestore = true,
+}: JournalEntryDetailProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
+  const isArchived = Boolean(entry.deletedAt);
   const journalStatusConfig: Record<string, StatusBadgeConfigItem> = {
     posted: { label: t("accounting.journal.status.posted"), cls: SEMANTIC_BADGE.successStrong },
     draft: { label: t("accounting.journal.status.draft"), cls: SEMANTIC_BADGE.warningStrong },
@@ -66,24 +78,43 @@ export function JournalEntryDetail({ entry, accounts, onClose, onEdit, onReverse
       icon={Tag}
       className="max-w-2xl"
       headerExtra={
-        <div className="flex items-center gap-2 flex-wrap mt-1">
-          <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
-          {entry.reversed_ref && (
-            <Badge pill tone="warning" className="px-2 font-semibold border-warning/30">
-              ↩ {t("accounting.journal.detail.reversalOf", { ref: entry.reversed_ref })}
-            </Badge>
+        <div className="flex flex-col gap-2 mt-1">
+          <div className="flex items-center gap-2 flex-wrap">
+            <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
+            {entry.reversed_ref && (
+              <Badge pill tone="warning" className="px-2 font-semibold border-warning/30">
+                ↩ {t("accounting.journal.detail.reversalOf", { ref: entry.reversed_ref })}
+              </Badge>
+            )}
+          </div>
+          {isArchived && (
+            <DetailDrawerArchivedBanner deletedAt={entry.deletedAt} />
           )}
         </div>
       }
       headerActions={
         <div className="flex items-center gap-2">
-          {entry.status === "draft" && onEdit && (
-            <Button type="button" variant="outline" size="sm" onClick={onEdit} className="flex items-center gap-1 text-xs font-semibold">
+          {isArchived && canRestore && onRestore && (
+            <Button
+              type="button"
+              variant="outline"
+              size="sm"
+              onClick={async () => {
+                await onRestore();
+                onClose();
+              }}
+              className="flex min-h-11 items-center gap-1.5 px-3 text-xs font-semibold"
+            >
+              <RotateCcw className="w-3.5 h-3.5" aria-hidden="true" /> {t("common.restore")}
+            </Button>
+          )}
+          {!isArchived && entry.status === "draft" && onEdit && (
+            <Button type="button" variant="outline" size="sm" onClick={onEdit} className="flex min-h-11 items-center gap-1.5 px-3 text-xs font-semibold">
               <Pencil className="w-3 h-3" aria-hidden="true" /> {t("accounting.journal.detail.edit")}
             </Button>
           )}
-          {entry.status === "posted" && onReverse && (
-            <Button type="button" variant="outline" size="sm" onClick={onReverse} className="flex items-center gap-1 text-xs font-semibold border-warning/30 text-warning hover:bg-warning/10 hover:text-warning">
+          {!isArchived && entry.status === "posted" && onReverse && (
+            <Button type="button" variant="outline" size="sm" onClick={onReverse} className="flex min-h-11 items-center gap-1.5 px-3 text-xs font-semibold border-warning/30 text-warning hover:bg-warning/10 hover:text-warning">
               <RotateCcw className="w-3 h-3" aria-hidden="true" /> {t("accounting.journal.detail.reverse")}
             </Button>
           )}

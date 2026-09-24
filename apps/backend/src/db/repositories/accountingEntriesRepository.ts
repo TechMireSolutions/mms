@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, isNull } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, ne, desc, like } from 'drizzle-orm';
 import { dedupeTrimmedIds, type JournalEntry } from '@mms/shared';
 import {
   accountingEntries,
@@ -424,3 +424,173 @@ export async function findEntryIdBySource(
     return rows[0]?.id ?? null;
   });
 }
+
+export async function findEntryByRef(
+  tenant: string,
+  ref: string,
+  options?: { excludeId?: string },
+): Promise<JournalEntry | null> {
+  const trimmedRef = ref?.trim();
+  if (!trimmedRef) return null;
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantRead(subdomain, async (tx) => {
+    const conditions = [
+      eq(accountingEntries.workspaceSubdomain, subdomain),
+      eq(accountingEntries.ref, trimmedRef),
+      isNull(accountingEntries.deletedAt),
+    ];
+    if (options?.excludeId?.trim()) {
+      conditions.push(ne(accountingEntries.id, options.excludeId.trim()));
+    }
+    const rows = await tx
+      .select({
+        id: accountingEntries.id,
+        workspaceSubdomain: accountingEntries.workspaceSubdomain,
+        date: accountingEntries.date,
+        ref: accountingEntries.ref,
+        description: accountingEntries.description,
+        status: accountingEntries.status,
+        createdBy: accountingEntries.createdBy,
+        fiscalYear: accountingEntries.fiscalYear,
+        fiscalYearId: accountingEntries.fiscalYearId,
+        sourceType: accountingEntries.sourceType,
+        sourceId: accountingEntries.sourceId,
+        transactionType: accountingEntries.transactionType,
+        reversedRef: accountingEntries.reversedRef,
+        simpleMode: accountingEntries.simpleMode,
+        deletedAt: accountingEntries.deletedAt,
+        deletedBy: accountingEntries.deletedBy,
+        deletionReason: accountingEntries.deletionReason,
+        restoredAt: accountingEntries.restoredAt,
+        restoredBy: accountingEntries.restoredBy,
+        deletedWithCascade: accountingEntries.deletedWithCascade,
+        createdAt: accountingEntries.createdAt,
+        updatedAt: accountingEntries.updatedAt,
+      })
+      .from(accountingEntries)
+      .where(and(...conditions))
+      .limit(1);
+
+    const row = rows[0];
+    if (!row) return null;
+
+    const [lines, tags, attachments] = await Promise.all([
+      tx
+        .select({
+          id: accountingJournalLines.id,
+          entryId: accountingJournalLines.entryId,
+          accountId: accountingJournalLines.accountId,
+          debit: accountingJournalLines.debit,
+          credit: accountingJournalLines.credit,
+          description: accountingJournalLines.description,
+        })
+        .from(accountingJournalLines)
+        .where(
+          and(
+            eq(accountingJournalLines.workspaceSubdomain, subdomain),
+            eq(accountingJournalLines.entryId, row.id),
+          ),
+        ),
+      tx
+        .select({
+          entryId: accountingEntryTags.entryId,
+          tag: accountingEntryTags.tag,
+        })
+        .from(accountingEntryTags)
+        .where(
+          and(
+            eq(accountingEntryTags.workspaceSubdomain, subdomain),
+            eq(accountingEntryTags.entryId, row.id),
+          ),
+        ),
+      tx
+        .select({
+          entryId: accountingEntryAttachments.entryId,
+          url: accountingEntryAttachments.url,
+        })
+        .from(accountingEntryAttachments)
+        .where(
+          and(
+            eq(accountingEntryAttachments.workspaceSubdomain, subdomain),
+            eq(accountingEntryAttachments.entryId, row.id),
+          ),
+        ),
+    ]);
+
+    return entryRowToRecord(
+      row,
+      lines,
+      tags.map((t) => t.tag),
+      attachments.map((a) => a.url),
+    );
+  });
+}
+
+export async function findActiveEntryRefs(
+  tenant: string,
+  refs: readonly string[],
+): Promise<Map<string, string>> {
+  const cleanRefs = refs.map((r) => r?.trim()).filter((r): r is string => Boolean(r));
+  const resultMap = new Map<string, string>();
+  if (cleanRefs.length === 0) return resultMap;
+
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantRead(subdomain, async (tx) => {
+    const rows = await tx
+      .select({ id: accountingEntries.id, ref: accountingEntries.ref })
+      .from(accountingEntries)
+      .where(
+        and(
+          eq(accountingEntries.workspaceSubdomain, subdomain),
+          inArray(accountingEntries.ref, cleanRefs),
+          isNull(accountingEntries.deletedAt),
+        ),
+      );
+
+    for (const row of rows) {
+      resultMap.set(row.ref, row.id);
+    }
+    return resultMap;
+  });
+}
+
+export async function allocateNextJournalRef(
+  tenant: string,
+  prefix = 'JE',
+): Promise<string> {
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantRead(subdomain, async (tx) => {
+    const rows = await tx
+      .select({ ref: accountingEntries.ref })
+      .from(accountingEntries)
+      .where(
+        and(
+          eq(accountingEntries.workspaceSubdomain, subdomain),
+          like(accountingEntries.ref, `${prefix}-%`),
+        ),
+      )
+      .orderBy(desc(accountingEntries.ref))
+      .limit(100);
+
+    let maxNum = 0;
+    const existingSet = new Set<string>();
+    for (const r of rows) {
+      if (r.ref) {
+        existingSet.add(r.ref.trim().toLowerCase());
+        const match = r.ref.slice(prefix.length + 1);
+        const parsed = parseInt(match, 10);
+        if (!Number.isNaN(parsed) && parsed > maxNum) {
+          maxNum = parsed;
+        }
+      }
+    }
+    let attempt = maxNum + 1;
+    let candidate = `${prefix}-${attempt.toString().padStart(4, '0')}`;
+    while (existingSet.has(candidate.toLowerCase())) {
+      attempt += 1;
+      candidate = `${prefix}-${attempt.toString().padStart(4, '0')}`;
+    }
+    return candidate;
+  });
+}
+

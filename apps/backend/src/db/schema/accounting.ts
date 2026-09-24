@@ -99,6 +99,9 @@ export const accountingEntries = pgTable('accounting_entries', {
   uniqueIndex('accounting_entries_workspace_source_uidx')
     .on(table.workspaceSubdomain, table.sourceType, table.sourceId)
     .where(sql`${table.sourceType} is not null and ${table.sourceId} is not null and ${table.deletedAt} is null`),
+  uniqueIndex('accounting_entries_workspace_ref_active_uidx')
+    .on(table.workspaceSubdomain, table.ref)
+    .where(sql`${table.deletedAt} is null and ${table.ref} is not null and ${table.ref} <> ''`),
   foreignKey({
     columns: [table.workspaceSubdomain, table.fiscalYearId],
     foreignColumns: [accountingFiscalYears.workspaceSubdomain, accountingFiscalYears.id],

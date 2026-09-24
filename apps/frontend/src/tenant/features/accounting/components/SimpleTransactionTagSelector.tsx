@@ -56,7 +56,7 @@ export function SimpleTransactionTagSelector({
             variant={tags.includes(typeTag) ? "default" : "outline"}
             onClick={() => toggleTag(typeTag)}
             aria-pressed={tags.includes(typeTag)}
-            className="min-h-9 px-2.5 py-1 rounded-full text-xs font-semibold"
+            className="min-h-11 px-3 py-1 rounded-full text-xs font-semibold"
           >
             {typeTag}
           </Button>
@@ -68,7 +68,7 @@ export function SimpleTransactionTagSelector({
             variant={tags.includes(tag) ? "default" : "outline"}
             onClick={() => toggleTag(tag)}
             aria-pressed={tags.includes(tag)}
-            className="min-h-9 px-2.5 py-1 rounded-full text-xs font-semibold"
+            className="min-h-11 px-3 py-1 rounded-full text-xs font-semibold"
           >
             {tag}
           </Button>
@@ -77,16 +77,16 @@ export function SimpleTransactionTagSelector({
           <Badge
             key={tag}
             variant="secondary"
-            className="inline-flex items-center gap-1 min-h-9 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/25"
+            className="inline-flex items-center gap-1.5 min-h-11 px-3 py-1 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/25"
           >
             <span>{tag}</span>
             <button
               type="button"
               onClick={() => toggleTag(tag)}
               aria-label={`${t("common.delete")} ${tag}`}
-              className="hover:text-destructive transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+              className="hover:text-destructive transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm p-1 inline-flex items-center justify-center -me-1"
             >
-              <X className="w-3 h-3" aria-hidden="true" />
+              <X className="w-3.5 h-3.5" aria-hidden="true" />
             </button>
           </Badge>
         ))}
@@ -105,7 +105,7 @@ export function SimpleTransactionTagSelector({
           placeholder={t("contacts.form.typeTagPlaceholder")}
           aria-label={t("contacts.form.typeTagPlaceholder")}
           autoComplete="off"
-          className="max-w-xs text-xs h-8"
+          className="max-w-xs text-xs min-h-11"
         />
         <Button
           type="button"
@@ -113,7 +113,7 @@ export function SimpleTransactionTagSelector({
           size="sm"
           onClick={handleAddCustomTag}
           disabled={!customTagInput.trim()}
-          className="h-8 gap-1 text-xs font-semibold"
+          className="min-h-11 gap-1 text-xs font-semibold"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" />
           {t("common.add")}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { generateJERef, type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
+import { generateJERef, isJournalRefUnique, type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
 import { hasFieldValue } from "@/lib/formCompleteness";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -142,6 +142,10 @@ function parseLineAmount(val: string | number | null | undefined): number {
     const validationErrors: Record<string, string> = {};
     if (!form.date) validationErrors.date = t("accounting.journal.form.errorDate");
     if (!form.description.trim()) validationErrors.description = t("accounting.journal.form.errorNarration");
+    const trimmedRef = form.ref?.trim();
+    if (trimmedRef && !isJournalRefUnique(trimmedRef, entries, form.id)) {
+      validationErrors.ref = t("accounting.journal.form.errorRefDuplicate");
+    }
     const filledLines = form.lines.filter((journalLine) => journalLine.account_id);
     if (filledLines.length < 2) validationErrors.lines = t("accounting.journal.form.errorLines");
     /**
@@ -163,6 +167,10 @@ function parseLineAmount(val: string | number | null | undefined): number {
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     const trimmedRef = form.ref?.trim();
     const journalReference = trimmedRef || (isEdit ? form.ref : generateJERef(entries));
+    if (!isJournalRefUnique(journalReference, entries, form.id)) {
+      setErrors({ ref: t("accounting.journal.form.errorRefDuplicate") });
+      return;
+    }
     const candidate = {
       ...form,
       id: isEdit ? form.id : `je${crypto.randomUUID()}`,

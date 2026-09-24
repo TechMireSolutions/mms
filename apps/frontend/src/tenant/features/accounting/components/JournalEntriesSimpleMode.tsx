@@ -21,6 +21,7 @@ interface JournalEntriesSimpleModeProps {
   modeTabs: Array<{ key: JournalMode; label: string }>;
   journalSubTabs: Array<{ key: JournalSubTab; label: string }>;
   entries: JournalEntry[];
+  allEntries?: JournalEntry[];
   accounts: Account[];
   fiscalYears: FiscalYear[];
   canWrite: boolean;
@@ -48,6 +49,7 @@ export function JournalEntriesSimpleMode({
   modeTabs,
   journalSubTabs,
   entries,
+  allEntries,
   accounts,
   fiscalYears,
   canWrite,
@@ -108,7 +110,7 @@ export function JournalEntriesSimpleMode({
         <SimpleTransactionWizard
           open={simpleModal !== null && specializedType === null}
           accounts={accounts}
-          entries={entries}
+          entries={(allEntries && allEntries.length > 0) ? allEntries : entries}
           fiscalYears={fiscalYears}
           prefillType={simpleModal?.prefillType}
           prefillAmount={simpleModal?.initialAmount}

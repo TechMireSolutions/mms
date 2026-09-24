@@ -57,6 +57,9 @@ export interface AccountingRepository {
     options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean; limit?: number; offset?: number },
   ): Promise<JournalEntry[]>;
   findEntryById(tenant: string, id: string): Promise<JournalEntry | null>;
+  findEntryByRef?(tenant: string, ref: string, options?: { excludeId?: string }): Promise<JournalEntry | null>;
+  findActiveEntryRefs?(tenant: string, refs: readonly string[]): Promise<Map<string, string>>;
+  allocateNextJournalRef?(tenant: string, prefix?: string): Promise<string>;
   findEntriesByIds(
     tenant: string,
     ids: string[],

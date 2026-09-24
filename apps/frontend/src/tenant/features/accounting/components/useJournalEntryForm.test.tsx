@@ -34,10 +34,13 @@ type FormController = ReturnType<typeof useJournalEntryForm>;
 function TestHarness(props: {
   onSave: (entry: JournalEntry) => void | Promise<void>;
   onController: (controller: FormController) => void;
+  entries?: JournalEntry[];
+  initial?: JournalEntry | null;
 }) {
   const controller = useJournalEntryForm({
     accounts,
-    entries: [],
+    entries: props.entries ?? [],
+    initial: props.initial ?? null,
     fiscalYears: [],
     onSave: props.onSave,
   });
@@ -216,5 +219,90 @@ describe("useJournalEntryForm validation", () => {
     const saved = onSave.mock.calls[0]![0] as JournalEntry;
     expect(saved.lines[0]!.debit).toBe(1500);
     expect(saved.lines[1]!.credit).toBe(1500);
+  });
+
+  it("rejects duplicate reference when another entry already uses it", async () => {
+    const existingEntry: JournalEntry = {
+      id: "je-existing",
+      ref: "JE-0001",
+      date: "2026-03-01",
+      description: "Existing entry",
+      status: "posted",
+      created_by: "system",
+      fiscal_year: "FY 2026",
+      tags: [],
+      attachments: [],
+      lines: [
+        { id: "l1", account_id: "a-cash", debit: 50, credit: 0, description: "" },
+        { id: "l2", account_id: "a-income", debit: 0, credit: 50, description: "" },
+      ],
+    };
+
+    const onSave = vi.fn();
+    await act(async () => {
+      root.render(
+        <TestHarness
+          entries={[existingEntry]}
+          onSave={onSave}
+          onController={(c) => {
+            controller = c;
+          }}
+        />,
+      );
+    });
+    await fillEntry("50", "50");
+
+    await act(async () => {
+      controller!.setForm((current) => ({
+        ...current,
+        ref: "JE-0001",
+      }));
+    });
+
+    await act(async () => {
+      await controller!.saveEntry("draft");
+    });
+
+    expect(controller!.errors.ref).toBe("accounting.journal.form.errorRefDuplicate");
+    expect(onSave).not.toHaveBeenCalled();
+  });
+
+  it("allows keeping the same reference when editing an existing entry", async () => {
+    const existingEntry: JournalEntry = {
+      id: "je-existing",
+      ref: "JE-0001",
+      date: "2026-03-01",
+      description: "Existing entry",
+      status: "draft",
+      created_by: "system",
+      fiscal_year: "FY 2026",
+      tags: [],
+      attachments: [],
+      lines: [
+        { id: "l1", account_id: "a-cash", debit: 50, credit: 0, description: "" },
+        { id: "l2", account_id: "a-income", debit: 0, credit: 50, description: "" },
+      ],
+    };
+
+    const onSave = vi.fn();
+    await act(async () => {
+      root.render(
+        <TestHarness
+          entries={[existingEntry]}
+          initial={existingEntry}
+          onSave={onSave}
+          onController={(c) => {
+            controller = c;
+          }}
+        />,
+      );
+    });
+
+    await act(async () => {
+      await controller!.saveEntry("draft");
+    });
+
+    expect(controller!.errors.ref).toBeUndefined();
+    expect(onSave).toHaveBeenCalledTimes(1);
   });
 });

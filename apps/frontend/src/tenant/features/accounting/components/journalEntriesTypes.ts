@@ -3,6 +3,7 @@ import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCu
 
 export interface JournalEntriesProps {
   entries: JournalEntry[];
+  allEntries?: JournalEntry[];
   accounts: Account[];
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];

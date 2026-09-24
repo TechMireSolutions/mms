@@ -130,6 +130,7 @@ export function AccountingWorkTier({
       {!listLoadFailed && activeSubTab === "journal" && (
         <JournalEntries
           entries={entries}
+          allEntries={aggregateEntries.length > 0 ? aggregateEntries : undefined}
           accounts={accounts}
           settings={settings}
           fiscalYears={fiscalYears}

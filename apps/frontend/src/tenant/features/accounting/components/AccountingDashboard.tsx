@@ -94,7 +94,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card accentColor="primary" className={cn("lg:col-span-2 p-5", CARD_STRIPE_INSET)}>
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.revenueVsExpenses')}</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t('accounting.dashboard.revenueVsExpenses')}</h3>
           {monthlyData.length === 0 ? (
             <EmptyState title={t('accounting.dashboard.noPostedData')} compact icon={null} className="h-48" />
           ) : (
@@ -135,7 +135,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         </Card>
 
         <Card accentColor="info" className={cn("p-5", CARD_STRIPE_INSET)}>
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.expenseBreakdown')}</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t('accounting.dashboard.expenseBreakdown')}</h3>
           {expenseBreakdown.length === 0 ? (
             <EmptyState title={t('accounting.dashboard.noExpenseData')} compact icon={null} className="h-48" />
           ) : (
@@ -169,7 +169,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card accentColor="primary" className={cn("p-5", CARD_STRIPE_INSET)}>
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.balanceSheetSnapshot')}</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t('accounting.dashboard.balanceSheetSnapshot')}</h3>
           <div className="space-y-3">
             {bsData.map((balanceSheetItem) => {
               const max = Math.max(...bsData.map((snapshotItem) => snapshotItem.value), 1);
@@ -206,7 +206,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         </Card>
 
         <Card accentColor="warning" className={cn("p-5", CARD_STRIPE_INSET)}>
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.recentEntries')}</h3>
+          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t('accounting.dashboard.recentEntries')}</h3>
           <div className="space-y-2">
             {recentEntries.length === 0 ? (
               <EmptyState title={t('accounting.dashboard.noPostedData')} description={t('accounting.journal.dashboard.noEntriesHint')} compact variant="dashed" />
@@ -214,7 +214,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
               const totalDebit = journalEntry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
               return (
                 <article key={journalEntry.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 ${journalEntry.status === 'posted' ? 'bg-success/15' : 'bg-warning/15'}`} aria-hidden="true">
+                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${journalEntry.status === 'posted' ? 'bg-success/15' : 'bg-warning/15'}`} aria-hidden="true">
                     {journalEntry.status === 'posted'
                       ? <CheckCircle2 className="w-3.5 h-3.5 text-success" />
                       : <Clock className="w-3.5 h-3.5 text-warning" />
@@ -224,7 +224,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
                     <p className="text-xs font-bold text-primary font-mono m-0">{journalEntry.ref}</p>
                     <p className="text-xs text-foreground truncate m-0">{journalEntry.description}</p>
                   </div>
-                  <div className="text-end flex-shrink-0">
+                  <div className="text-end shrink-0">
                     <p className="text-xs font-mono font-bold text-foreground m-0">{formatCurrency(totalDebit)}</p>
                     <p className="text-xs text-muted-foreground m-0">{formatDate(journalEntry.date)}</p>
                   </div>

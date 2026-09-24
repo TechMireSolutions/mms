@@ -130,7 +130,7 @@ function JournalEntryCard({
       </DirectoryCardMetaGrid>
       <DirectoryCardFooterActions
         onView={handleView}
-        viewLabel={t("accounting.table.view")}
+        viewLabel={t("contacts.actionViewShort")}
         viewAriaLabel={t("accounting.journal.actions.viewEntry", { ref: entry.ref })}
         overflowActions={renderEntryActionsCards(entry)}
       />
