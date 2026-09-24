@@ -271,6 +271,11 @@ export function createAccountingUseCases(
     );
     const storedById = new Map(stored.map((year) => [year.id, year]));
     for (const year of incoming) {
+      if (year.deletedAt || year.deletedBy || year.deletionReason) {
+        throw Object.assign(new Error('Fiscal year lifecycle fields cannot be changed through bulk saves'), {
+          statusCode: 422, type: 'validation_error',
+        });
+      }
       const existing = storedById.get(year.id);
       const isClosed = year.status === 'closed';
       if (existing?.status === 'closed') {
@@ -392,6 +397,7 @@ export function createAccountingUseCases(
       if (!tenant) throw new Error('Tenant context required');
       return withTenant(tenant, async () => {
         const parsed = journalEntryListSchema.parse(entries);
+        await repo.lockJournalEntries(tenant, parsed.map((entry) => entry.id));
         const fiscalYears = await fiscalYearService.load();
         const storedById = await loadStoredEntriesByIds(parsed);
         const sanitized = parsed.map((entry) =>
@@ -441,20 +447,31 @@ export function createAccountingUseCases(
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       return withTenant(tenant, async () => {
+        const id = record.id?.trim() || `je-${randomUUID()}`;
+        await repo.lockJournalEntries(tenant, [id]);
         const fiscalYears = await fiscalYearService.load();
+        const existing = await repo.findEntryById(tenant, id);
         const sanitized = withServerOwnedSourceKeys(
-          { ...record, id: record.id || `je-${randomUUID()}` },
-          undefined,
+          { ...record, id },
+          existing ?? undefined,
         );
+        const prepared = prepareJournalEntryForPersist(sanitized, fiscalYears);
+        if (existing) {
+          if (existing.deletedAt || journalEntryContentChanged(prepared, existing)) {
+            throw new ConflictError('A different journal entry already exists with this ID');
+          }
+          return existing;
+        }
         assertJournalEntryPeriodOpen(sanitized, fiscalYears);
         await assertEntryAccountsWritable(tenant, [sanitized]);
-        return entryCrud.create(prepareJournalEntryForPersist(sanitized, fiscalYears));
+        return entryCrud.create(prepared);
       });
     },
     updateJournalEntryById: async (id: string, record: JournalEntry) => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       return withTenant(tenant, async () => {
+        await repo.lockJournalEntries(tenant, [id]);
         const fiscalYears = await fiscalYearService.load();
         const existing = await repo.findEntryById(tenant, id);
         const sanitized = withServerOwnedSourceKeys({ ...record, id }, existing ?? undefined);

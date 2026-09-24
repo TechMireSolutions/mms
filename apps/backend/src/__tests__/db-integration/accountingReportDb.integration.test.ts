@@ -8,6 +8,7 @@ import {
   pingDatabase,
   closeDatabase,
   beginLongLivedTenantTransaction,
+  withActiveTransaction,
 } from '../../db/dbConnection.js';
 import {
   workspaces,
@@ -149,6 +150,39 @@ afterAll(async () => {
 const WINDOW = { dateFrom: '2026-01-01', dateTo: '2026-12-31' };
 
 describe.skipIf(!process.env.DATABASE_URL && false)('aggregateAccountingReport (real Postgres)', () => {
+  it('keeps income and cash-flow figures after closing while the trial balance includes the close', async () => {
+    expect(dbAvailable, 'PostgreSQL is required for the closing-report regression').toBe(true);
+    const tx = await beginLongLivedTenantTransaction(TEST_SUBDOMAIN);
+    try {
+      await tx.tx.insert(accountingEntries).values({
+        id: 'e-closing', workspaceSubdomain: TEST_SUBDOMAIN, date: '2026-12-31',
+        ref: 'closing', description: 'Close year', status: 'posted', sourceType: 'closing',
+      });
+      await tx.tx.insert(accountingJournalLines).values([
+        { id: 'close-revenue', accountId: 'acc-fees', debit: '1500', credit: '0' },
+        { id: 'close-salaries', accountId: 'acc-salaries', debit: '0', credit: '500' },
+        { id: 'close-depreciation', accountId: 'acc-dep', debit: '0', credit: '100' },
+        { id: 'close-equity', accountId: 'acc-capital', debit: '0', credit: '900' },
+      ].map((line) => ({ ...line, workspaceSubdomain: TEST_SUBDOMAIN, entryId: 'e-closing' })));
+      await withActiveTransaction(tx.tx, async () => {
+        for (const query of [WINDOW, {}]) {
+          const report = await aggregateAccountingReport(TEST_SUBDOMAIN, query);
+          expect(report.revenue).toBe(1500);
+          expect(report.expenses).toBe(600);
+          expect(report.netSurplus).toBe(900);
+          expect(report.netCashFlowIndirect).toBe(300);
+          expect(report.netCashFlow).toBe(300);
+          expect(report.trialBalance.find((row) => row.id === 'acc-fees')?.balance).toBe(0);
+          expect(report.incomeStatementTrialBalance?.find((row) => row.id === 'acc-fees')?.balance).toBe(1500);
+          expect(report.equity).toBe(10900);
+          expect(report.balanceSheetTrialBalance.find((row) => row.id === 'acc-capital')?.balance).toBe(10900);
+          expect(report.assets).toBe(report.liabilities + report.equity);
+        }
+      });
+    } finally {
+      await tx.rollback();
+    }
+  });
   it('reports range flows and cumulative stock figures side by side', async () => {
     if (!dbAvailable) return;
 

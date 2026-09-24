@@ -1,4 +1,5 @@
 import type { AccountingRepository } from './accountingRepository.js';
+import { lockJournalEntries } from '../../db/repositories/accountingEntryLocks.js';
 import {
   listAccountsByWorkspace,
   findAccountById,
@@ -36,6 +37,7 @@ import { aggregateAccountingReport } from '../../db/repositories/accountingRepos
  * existing concrete repository functions (no SQL rewrite in this pass).
  */
 export const accountingRepository: AccountingRepository = {
+  lockJournalEntries,
   listAccountsByWorkspace,
   findAccountById,
   findAccountsByIds,

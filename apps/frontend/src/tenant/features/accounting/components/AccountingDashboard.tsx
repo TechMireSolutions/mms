@@ -67,7 +67,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
    * Top expense accounts from the server's own trial balance rather than a
    * client re-derivation over the loaded journal.
    */
-  const expenseBreakdown = (serverAggregates?.trialBalance ?? [])
+  const expenseBreakdown = (serverAggregates?.incomeStatementTrialBalance ?? serverAggregates?.trialBalance ?? [])
     .filter((row) => row.type === 'Expense' && row.totalDebit > 0)
     .map((row) => ({ name: row.name, value: row.totalDebit - row.totalCredit }))
     .sort((first, second) => second.value - first.value)

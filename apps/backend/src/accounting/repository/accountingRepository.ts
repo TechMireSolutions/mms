@@ -51,6 +51,7 @@ export interface AccountingRepository {
   ): Promise<{ succeeded: number; failed: number }>;
 
   // Journal entries
+  lockJournalEntries(tenant: string, ids: string[]): Promise<void>;
   listEntriesByWorkspace(
     tenant: string,
     options?: { deleted?: 'active' | 'deleted' | 'all'; includeDeleted?: boolean; limit?: number; offset?: number },

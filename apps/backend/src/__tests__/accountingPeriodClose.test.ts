@@ -17,6 +17,8 @@ const mockReportRepo = vi.hoisted(() => ({
 const mockPrefs = vi.hoisted(() => ({
   getAccountingPreferencesService: vi.fn(),
 }));
+const mockAccounts = vi.hoisted(() => ({ findAccountById: vi.fn() }));
+vi.mock('../db/repositories/accountingAccountsRepository.js', () => mockAccounts);
 
 vi.mock('../db/repositories/accountingRepository.js', () => mockAccountingRepo);
 vi.mock('../db/repositories/accountingFiscalYearsRepository.js', () => mockFiscalYearsRepo);
@@ -28,6 +30,7 @@ import { closeFiscalYearForTenant } from '../accounting/use-cases/accountingPeri
 describe('accountingPeriodClose', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    mockAccounts.findAccountById.mockResolvedValue({ id: 'acc-re', type: 'Equity', isActive: true });
   });
 
   it('throws 404 if fiscal year is not found', async () => {
@@ -88,5 +91,23 @@ describe('accountingPeriodClose', () => {
       id: 'fy-1',
       status: 'closed',
     }));
+  });
+
+  it.each([
+    null,
+    { type: 'Asset', isActive: true },
+    { type: 'Expense', isActive: true },
+    { type: 'Equity', isActive: false },
+    { type: 'Equity', isActive: true, deletedAt: '2026-01-01T00:00:00Z' },
+  ])('rejects an unavailable or non-equity retained earnings account: %j', async (account) => {
+    mockFiscalYearsRepo.listFiscalYearsByWorkspace.mockResolvedValue([
+      { id: 'fy-1', status: 'active', startDate: '2025-01-01', endDate: '2025-12-31' },
+    ]);
+    mockAccounts.findAccountById.mockResolvedValue(account);
+    await expect(closeFiscalYearForTenant('t-1', 'fy-1', 'admin', 'acc-invalid'))
+      .rejects.toThrow('active Equity account');
+    expect(mockAccounts.findAccountById).toHaveBeenCalledWith('t-1', 'acc-invalid');
+    expect(mockAccountingRepo.saveEntry).not.toHaveBeenCalled();
+    expect(mockFiscalYearsRepo.saveFiscalYear).not.toHaveBeenCalled();
   });
 });

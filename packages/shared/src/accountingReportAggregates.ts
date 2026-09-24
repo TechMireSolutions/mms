@@ -43,8 +43,8 @@ export type AccountingCashFlowAdjustments = z.infer<typeof accountingCashFlowAdj
  * correctness bug rather than a style choice:
  *
  * - **Flow figures** (`revenue`, `expenses`, `netSurplus`, `cashInflow`,
- *   `cashOutflow`, `netCashFlow`, `trialBalance`) cover the requested
- *   `[dateFrom, dateTo]` window — they belong to the Income Statement.
+ *   `cashOutflow`, `netCashFlow`, `incomeStatementTrialBalance`) cover the requested
+ *   `[dateFrom, dateTo]` window, excluding closing journals.
  * - **Stock figures** (`assets`, `liabilities`, `equity`,
  *   `balanceSheetTrialBalance`) are cumulative through `dateTo`, ignoring
  *   `dateFrom` — a Balance Sheet reports balances, so an asset acquired before
@@ -71,8 +71,10 @@ export const accountingReportAggregatesSchema = z.object({
     receivables: 0,
     payables: 0,
   }),
-  /** Range-based rows (Income Statement + exports). */
+  /** Range-based ledger rows, including closing journals (Trial Balance). */
   trialBalance: z.array(accountingTrialBalanceRowSchema).default([]),
+  /** Range-based rows excluding closing journals (Income Statement + exports). */
+  incomeStatementTrialBalance: z.array(accountingTrialBalanceRowSchema).optional(),
   /** Cumulative Asset/Liability/Equity rows as of `dateTo` (Balance Sheet). */
   balanceSheetTrialBalance: z.array(accountingTrialBalanceRowSchema).default([]),
   comparison: z.object({

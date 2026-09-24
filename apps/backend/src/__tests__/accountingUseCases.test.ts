@@ -5,6 +5,7 @@ import { runWithTenant } from '../lib/tenantContext.js';
 
 function createFakeRepo(): AccountingRepository {
   return {
+    lockJournalEntries: vi.fn().mockResolvedValue(undefined),
     listAccountsByWorkspace: vi.fn().mockResolvedValue([]),
     findAccountById: vi.fn().mockResolvedValue(null),
     findAccountsByIds: vi.fn().mockResolvedValue([]),
@@ -353,6 +354,58 @@ describe('accounting write guards', () => {
         ]),
       ),
     ).rejects.toThrow(/closed fiscal year/);
+    expect(repo.bulkSaveEntries).not.toHaveBeenCalled();
+  });
+
+  it.each(['deletedAt', 'deletedBy', 'deletionReason'] as const)(
+    'rejects fiscal-year lifecycle changes through bulk saves: %s', async (field) => {
+      const repo = createFakeRepo();
+      vi.mocked(repo.findFiscalYearsByIds).mockResolvedValue([closedYear]);
+      const useCases = createAccountingUseCases(repo);
+      await expect(runWithTenant('demo', () => useCases.upsertFiscalYears([
+        { ...closedYear, [field]: '2026-01-01T00:00:00Z' },
+      ]))).rejects.toThrow('lifecycle fields');
+      expect(repo.bulkSaveFiscalYears).not.toHaveBeenCalled();
+    },
+  );
+
+  it('returns an unchanged create replay without rewriting a posted journal', async () => {
+    const repo = createFakeRepo();
+    const stored = { ...postedEntry(), source_type: 'manual' as const };
+    vi.mocked(repo.findEntryById).mockResolvedValue(stored);
+    const useCases = createAccountingUseCases(repo);
+    const result = await runWithTenant('demo', () => useCases.createJournalEntry(stored));
+    expect(result).toEqual(stored);
+    expect(repo.saveEntry).not.toHaveBeenCalled();
+    expect(repo.lockJournalEntries).toHaveBeenCalledWith('demo', [stored.id]);
+  });
+
+  it('rejects a salary create replay that changes the selected payment account', async () => {
+    const repo = createFakeRepo();
+    const stored = { ...postedEntry(), source_type: 'manual' as const, transaction_type: 'salary' };
+    vi.mocked(repo.findEntryById).mockResolvedValue(stored);
+    const useCases = createAccountingUseCases(repo);
+    const changed = {
+      ...stored,
+      lines: stored.lines.map((line) => ({ ...line, account_id: 'different-account' })),
+    };
+    await expect(runWithTenant('demo', () => useCases.createJournalEntry(changed)))
+      .rejects.toMatchObject({ statusCode: 409 });
+    expect(repo.saveEntry).not.toHaveBeenCalled();
+  });
+
+  it('checks mutability after acquiring the journal lock', async () => {
+    const repo = createFakeRepo();
+    const posted = { ...postedEntry(), source_type: 'manual' as const };
+    vi.mocked(repo.findEntriesByIds).mockResolvedValue([{ ...posted, status: 'draft' }]);
+    vi.mocked(repo.lockJournalEntries).mockImplementation(async () => {
+      // The competing writer committed a posting before this lock was granted.
+      vi.mocked(repo.findEntriesByIds).mockResolvedValue([posted]);
+    });
+    const useCases = createAccountingUseCases(repo);
+    await expect(runWithTenant('demo', () => useCases.upsertEntries([
+      { ...posted, status: 'draft', description: 'stale draft save' },
+    ]))).rejects.toThrow('immutable');
     expect(repo.bulkSaveEntries).not.toHaveBeenCalled();
   });
 

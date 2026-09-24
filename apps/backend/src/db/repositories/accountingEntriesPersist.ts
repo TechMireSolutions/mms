@@ -14,6 +14,7 @@ import {
   accountingPostingRules,
 } from '../schema.js';
 import { withTenant, type TenantTransaction } from '../tenant-context.js';
+import { lockJournalEntries } from './accountingEntryLocks.js';
 
 async function syncEntryChildren(
   tx: TenantTransaction,
@@ -85,6 +86,7 @@ async function syncEntryChildren(
 export async function saveEntry(tenant: string, record: JournalEntry): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
+    await lockJournalEntries(subdomain, [record.id]);
     await tx
       .insert(accountingEntries)
       .values(entryInsertValues(subdomain, record))
@@ -164,6 +166,7 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
   const entryIds = uniqueRecords.map((r) => r.id);
 
   await withTenant(subdomain, async (tx) => {
+    await lockJournalEntries(subdomain, entryIds);
     // Single batched upsert of all entries (keeps rows not in the batch, updates
     // matching rows — semantically identical to the previous per-record upsert).
     // The soft-delete columns are deliberately absent from this SET list: a bulk
