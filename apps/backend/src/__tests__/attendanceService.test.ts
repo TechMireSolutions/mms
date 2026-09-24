@@ -28,6 +28,8 @@ vi.mock('../db/repositories/studentRepository.js', () => ({
 vi.mock('../db/repositories/sessionRepositoryHydrate.js', () => ({
   findSessionsByIds: vi.fn().mockResolvedValue([{ id: 'class-a', deletedAt: null }]),
   findSessionById: vi.fn().mockResolvedValue({ id: 'class-a', deletedAt: null }),
+  findClassesOrSessionsByIds: vi.fn().mockResolvedValue([{ id: 'class-a', deletedAt: null }]),
+  findClassOrSessionById: vi.fn().mockResolvedValue({ id: 'class-a', deletedAt: null }),
 }));
 
 describe('attendanceService bulk upsert', () => {

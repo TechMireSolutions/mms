@@ -113,9 +113,11 @@ export function createAttendanceUseCases(
     }
     const sessionIds = dedupeTrimmedIds(records.map((r) => r.classId).filter(Boolean));
     if (sessionIds.length > 0) {
+      const sessionHydrate = await import('../../db/repositories/sessionRepositoryHydrate.js');
       const getSessions =
         deps?.findSessionsByIds ??
-        (await import('../../db/repositories/sessionRepositoryHydrate.js')).findClassesOrSessionsByIds;
+        sessionHydrate.findClassesOrSessionsByIds ??
+        sessionHydrate.findSessionsByIds;
       const sessions = await getSessions(tenant, sessionIds);
       const activeSessionIds = new Set(sessions.filter((s) => !s.deletedAt).map((s) => s.id));
       for (const sessionId of sessionIds) {
