@@ -99,7 +99,12 @@ describe('accounting concurrent writes (Postgres)', () => {
 
   it('serializes creation of the same new ID and rejects changed content', async () => {
     const useCases = createAccountingUseCases();
-    const first = { ...draft, id: 'concurrent-create', status: 'posted' as const };
+    const first = {
+      ...draft,
+      id: 'concurrent-create',
+      ref: 'concurrent-create-ref',
+      status: 'posted' as const,
+    };
     const results = await runWithTenant(tenant, () => Promise.allSettled([
       useCases.createJournalEntry(first),
       useCases.createJournalEntry({ ...first, description: 'Different salary note' }),
