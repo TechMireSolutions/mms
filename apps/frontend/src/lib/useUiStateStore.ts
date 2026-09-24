@@ -1,8 +1,8 @@
 import { create } from 'zustand';
 import type { UserUiState } from '@mms/shared';
-import { apiJson } from './apiClient.js';
-import { AUTH_PATHS } from './apiClientHelpers.js';
-import { reportClientError } from './clientErrorReporting.js';
+import { apiJson } from '@/lib/apiClient';
+import { AUTH_PATHS } from '@/lib/apiClientHelpers';
+import { reportClientError } from '@/lib/clientErrorReporting';
 
 interface UiStateStore {
   state: UserUiState;

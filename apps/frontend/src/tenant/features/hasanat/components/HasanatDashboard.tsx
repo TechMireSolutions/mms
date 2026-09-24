@@ -2,7 +2,6 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { ProgressBar } from "@/components/ui/ProgressBar";
-import { motion } from "framer-motion";
 import { Star, Package, Gift, RotateCcw, TrendingUp, Layers } from "lucide-react";
 import { PieChart, Pie, Cell, Tooltip } from "recharts";
 import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
@@ -107,12 +106,7 @@ export function HasanatDashboard({
       </section>
 
       {/* Charts row */}
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* Distribution donut */}
         <Card accentColor="primary" className="p-5 shadow-sm hover:shadow-md border-border/80">
           <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t("hasanat.dashboard.cardDistribution")}</h3>
@@ -168,14 +162,10 @@ export function HasanatDashboard({
             })}
           </div>
         </Card>
-      </motion.div>
+      </div>
 
       {/* Usage meter */}
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.4 }}
-      >
+      <div>
         <Card accentColor="success" className="p-5 shadow-sm hover:shadow-md border-border/80">
           <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
             <h3 className="m-0 min-w-0 truncate text-sm font-bold text-foreground">{t("hasanat.dashboard.overallStockUsage")}</h3>
@@ -199,7 +189,7 @@ export function HasanatDashboard({
             </span>
           </div>
         </Card>
-      </motion.div>
+      </div>
     </div>
   );
 }

@@ -68,27 +68,15 @@ export async function loadDashboardSummary(
   const result = await withTenant(
     cleanTenant,
     async () => {
-      const [
-        students,
-        facultyData,
-        contacts,
-        sessions,
-        attendance,
-        finance,
-        hasanat,
-        questionBank,
-        accounting,
-      ] = await Promise.all([
-        studentUseCases.loadStudentsCommandMetrics(),
-        facultyUseCases.loadFacultyCommandMetrics(),
-        contactUseCases.loadContactsCommandMetrics(),
-        loadSessionsCommandMetrics(),
-        aggregateAttendanceCommandMetrics(cleanTenant, { selectedDate: date }),
-        loadFinanceCommandMetrics(),
-        loadHasanatCommandMetrics(),
-        loadQuestionBankCommandMetrics(),
-        loadAccountingCommandMetrics(),
-      ]);
+      const students = await studentUseCases.loadStudentsCommandMetrics();
+      const facultyData = await facultyUseCases.loadFacultyCommandMetrics();
+      const contacts = await contactUseCases.loadContactsCommandMetrics();
+      const sessions = await loadSessionsCommandMetrics();
+      const attendance = await aggregateAttendanceCommandMetrics(cleanTenant, { selectedDate: date });
+      const finance = await loadFinanceCommandMetrics();
+      const hasanat = await loadHasanatCommandMetrics();
+      const questionBank = await loadQuestionBankCommandMetrics();
+      const accounting = await loadAccountingCommandMetrics();
 
       return {
         students,

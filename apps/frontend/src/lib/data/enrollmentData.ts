@@ -102,8 +102,8 @@ export function runFullEligibility(
   } else {
     const age = calculateAgeFromDob(student.dob);
     const bounds = targetClass as ClassAgeBounds | null;
-    const minAge = bounds ? (bounds.minAge ?? bounds.ageMin ?? 5) : 5;
-    const maxAge = bounds ? (bounds.maxAge ?? bounds.ageMax ?? 25) : 25;
+    const minAge = bounds && (bounds.minAge != null && bounds.minAge > 0) ? bounds.minAge : (bounds?.ageMin ?? 0);
+    const maxAge = bounds && (bounds.maxAge != null && bounds.maxAge > 0) ? bounds.maxAge : (bounds?.ageMax || 25);
     if (age < minAge || age > maxAge) {
       checks.push({ id: "age", label: "Age Eligibility", status: "fail", detail: `Student is ${age} yrs old. Class requires age ${minAge}–${maxAge}.` });
     } else {

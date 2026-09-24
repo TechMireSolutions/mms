@@ -1,5 +1,4 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 import { formatDate } from '@mms/shared';
 import { useBrandPalette } from '@/lib/contexts/BrandingPaletteContext';
 import {
@@ -93,12 +92,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
         { key: 'drafts', label: t('accounting.dashboard.pendingDrafts'), value: draftCount, icon: Clock, accent: draftCount > 0 ? 'warning' : 'muted' },
       ]} />
 
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.3, duration: 0.4 }}
-        className="grid grid-cols-1 lg:grid-cols-3 gap-4"
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <Card accentColor="primary" className={cn("lg:col-span-2 p-5", CARD_STRIPE_INSET)}>
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.revenueVsExpenses')}</h3>
           {monthlyData.length === 0 ? (
@@ -171,14 +165,9 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
             </>
           )}
         </Card>
-      </motion.div>
+      </div>
 
-      <motion.div
-        initial={{ opacity: 0, y: 14 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.4, duration: 0.4 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-4"
-      >
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         <Card accentColor="primary" className={cn("p-5", CARD_STRIPE_INSET)}>
           <h3 className="text-sm font-bold text-foreground mb-4 m-0 ms-1">{t('accounting.dashboard.balanceSheetSnapshot')}</h3>
           <div className="space-y-3">
@@ -244,7 +233,7 @@ export function AccountingDashboard({ accounts, entries, settings: _settings, fi
             })}
           </div>
         </Card>
-      </motion.div>
+      </div>
     </section>
   );
 }

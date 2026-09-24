@@ -83,7 +83,10 @@ export async function aggregateTeachersCommandMetrics(
 ): Promise<TeachersCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
-    const joinDateExpr = sql`COALESCE(${teachers.joinDate}, (${teachers.createdAt})::date)`;
+    const joinDateExpr = sql`COALESCE(
+      CASE WHEN ${teachers.joinDate}::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN (${teachers.joinDate})::date ELSE NULL END,
+      (${teachers.createdAt})::date
+    )`;
     const status = teacherStatusExpr();
     const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } =
       resolveTeacherStatusRoles();

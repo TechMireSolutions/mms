@@ -49,7 +49,12 @@ export function TemplateEditorKeyboardHints({
       className="hidden sm:flex flex-shrink-0 h-7 border-t border-border/70 bg-card/95 backdrop-blur-xs px-3 items-center justify-between gap-3 select-none overflow-hidden print:hidden"
     >
       {/* The fade-out mask follows the writing direction, not the physical right edge. */}
-      <div className="flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5 w-full [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] rtl:[mask-image:linear-gradient(to_left,black_calc(100%-24px),transparent)]">
+      <div
+        tabIndex={0}
+        role="region"
+        aria-label={t("templateEditor.shortcuts")}
+        className="flex items-center gap-3 overflow-x-auto no-scrollbar py-0.5 w-full focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring [mask-image:linear-gradient(to_right,black_calc(100%-24px),transparent)] rtl:[mask-image:linear-gradient(to_left,black_calc(100%-24px),transparent)]"
+      >
         <div className="flex items-center gap-1.5 font-semibold text-muted-foreground shrink-0 text-3xs uppercase tracking-wider">
           <Keyboard className="w-3.5 h-3.5 text-primary/80" aria-hidden="true" />
           <span>{t("templateEditor.shortcuts")}:</span>

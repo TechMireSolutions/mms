@@ -27,6 +27,7 @@ import {
   reorderDashboardWidgets,
 } from '../../lib/dashboardWidgetsService.js';
 import { loadDashboardSummary } from '../../services/dashboardSummaryService.js';
+import { logger } from '../../lib/logger.js';
 
 const auditDashboard = createCollectionAuditHelper('dashboard');
 const s = initServer();
@@ -181,14 +182,19 @@ const dashboardRouter = s.router(dashboardContract, {
     }
   },
 
-  getSummary: async ({ query }: ContractRouteArgs<typeof dashboardContract['getSummary']>): Promise<ContractRouteResponse<typeof dashboardContract['getSummary']>> =>
-    handleDashboardRead(
-      async () => {
-        const summary = await loadDashboardSummary(query?.date, query?.role);
-        return { summary: summary as Record<string, unknown> };
-      },
-      'Failed to load dashboard summary',
-    ),
+  getSummary: async ({ query }: ContractRouteArgs<typeof dashboardContract['getSummary']>): Promise<ContractRouteResponse<typeof dashboardContract['getSummary']>> => {
+    try {
+      requireTenant();
+      const summary = await loadDashboardSummary(query?.date, query?.role);
+      return { status: 200 as const, body: { summary: summary as Record<string, unknown> } };
+    } catch (err) {
+      logger.error({ err }, 'Failed to load dashboard summary');
+      return {
+        status: 500 as const,
+        body: { type: 'database_error', message: 'Failed to load dashboard summary' },
+      };
+    }
+  },
 } as unknown as RouterImplementation<typeof dashboardContract>);
 
 /**

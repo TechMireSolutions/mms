@@ -22,6 +22,8 @@ export {
   findSessionById,
   findSessionsByIds,
   findSessionsSummaryByIds,
+  findClassesOrSessionsByIds,
+  findClassOrSessionById,
 } from './sessionRepositoryQueries.js';
 
 type Transaction = TenantTransaction;

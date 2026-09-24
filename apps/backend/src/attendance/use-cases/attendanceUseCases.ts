@@ -85,7 +85,7 @@ export function createAttendanceUseCases(
     if (record.classId) {
       const getSession =
         deps?.findSessionById ??
-        (await import('../../db/repositories/sessionRepositoryHydrate.js')).findSessionById;
+        (await import('../../db/repositories/sessionRepositoryHydrate.js')).findClassOrSessionById;
       const session = await getSession(tenant, record.classId);
       if (!session || session.deletedAt) {
         const err = new Error('Referenced session is archived or does not exist');
@@ -115,7 +115,7 @@ export function createAttendanceUseCases(
     if (sessionIds.length > 0) {
       const getSessions =
         deps?.findSessionsByIds ??
-        (await import('../../db/repositories/sessionRepositoryHydrate.js')).findSessionsByIds;
+        (await import('../../db/repositories/sessionRepositoryHydrate.js')).findClassesOrSessionsByIds;
       const sessions = await getSessions(tenant, sessionIds);
       const activeSessionIds = new Set(sessions.filter((s) => !s.deletedAt).map((s) => s.id));
       for (const sessionId of sessionIds) {

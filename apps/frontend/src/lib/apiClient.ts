@@ -181,14 +181,23 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
   const response = await executeFetchWithTimeout(path, requestInit);
 
   if (isTenantSessionRequest(path) && await isAuthenticationRequired(response)) {
+    const buildRetryRequestInit = (): RequestInit => {
+      const retryHeaders = new Headers(headers);
+      if (CSRF_METHODS.has(method as 'POST' | 'PUT' | 'PATCH' | 'DELETE')) {
+        const newCsrf = getCsrfCookieValue();
+        if (newCsrf) retryHeaders.set('X-CSRF-Token', newCsrf);
+      }
+      return { ...requestInit, headers: retryHeaders };
+    };
+
     // If a refresh succeeded moments ago, retry immediately without re-refreshing.
     if (Date.now() - lastRefreshedAt < REFRESH_GRACE_PERIOD_MS) {
       throwIfAborted(requestInit.signal);
-      return executeFetchWithTimeout(path, requestInit);
+      return executeFetchWithTimeout(path, buildRetryRequestInit());
     }
     if (await refreshSession()) {
       throwIfAborted(requestInit.signal);
-      return executeFetchWithTimeout(path, requestInit);
+      return executeFetchWithTimeout(path, buildRetryRequestInit());
     }
   }
 
