@@ -19,6 +19,9 @@ ECOSYSTEM="$ROOT_DIR/ecosystem.config.cjs"
 
 BACKEND_PORT="$(read_env_var PORT "$MMS_PROD_BACKEND_PORT" "$ENV_FILE")"
 APP_DOMAIN="$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")"
+if [[ -z "$APP_DOMAIN" && -n "${MMS_APP_DOMAIN:-}" ]]; then
+  APP_DOMAIN="${MMS_APP_DOMAIN}"
+fi
 assert_production_backend_port "$BACKEND_PORT" "Backend recovery PORT" || exit 1
 
 curl_health() {
@@ -37,7 +40,7 @@ if curl_health && curl_ready; then
 fi
 
 echo "Waiting for backend after pm2 restart..."
-for i in $(seq 1 60); do
+for i in $(seq 1 90); do
   if curl_health && curl_ready; then
     echo "Backend health+ready OK on port ${BACKEND_PORT} ($(( i * 2 ))s)"
     exit 0
@@ -72,7 +75,7 @@ else
     -e "NODE_ENV=production"
 fi
 
-for i in $(seq 1 60); do
+for i in $(seq 1 90); do
   if curl_health && curl_ready; then
     echo "Backend recovered — health+ready OK on port ${BACKEND_PORT} ($(( i * 2 ))s)"
     pm2 save 2>/dev/null || true

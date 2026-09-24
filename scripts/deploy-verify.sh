@@ -53,6 +53,9 @@ report_setup_status() {
 resolve_public_url() {
   local app_domain
   app_domain="${APP_DOMAIN:-$(read_env_var MMS_APP_DOMAIN '' "$ENV_FILE")}"
+  if [[ -z "$app_domain" && -n "${MMS_APP_DOMAIN:-}" ]]; then
+    app_domain="${MMS_APP_DOMAIN}"
+  fi
   if [[ -n "$app_domain" ]]; then
     echo "https://${app_domain}"
   fi
@@ -61,7 +64,7 @@ resolve_public_url() {
 LOCAL_BASE="http://127.0.0.1:${BACKEND_PORT}"
 LOCAL_OK=false
 
-for i in $(seq 1 15); do
+for i in $(seq 1 30); do
   if curl_local_backend_ok "${LOCAL_BASE}/health" "$APP_DOMAIN"; then
     echo "Backend health OK (port ${BACKEND_PORT})"
     LOCAL_OK=true
