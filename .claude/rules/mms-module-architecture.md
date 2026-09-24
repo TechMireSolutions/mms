@@ -23,53 +23,57 @@ paths:
 
 ## 1. Monorepo Manifests & Domain Modeling
 
-- Register a single manifest in `packages/shared/src` (e.g. `CONTACTS_MODULE_MANIFEST`). Defines `moduleId`, entity types, collection/REST keys, default filters, searchable/filterable fields, and soft-delete/restore policies.
-- UI controls, list columns, layout hooks, and export services import directly from manifest constants. Ban hardcoded entity configurations.
+- **Single Manifest SSOT:** Declare a single manifest in `packages/shared/src/*ModuleManifest.ts` defining `moduleId`, entity types, collection/REST keys, default filters, searchable/filterable fields, `setupSubTabs`, and `softDelete` policies.
+- **Zero Hardcoding:** UI controls, column registries, query keys, layout hooks, and export services import directly from manifest constants; hardcoded entity configurations are strictly banned.
 
 ## 2. Three-Tier Page Shell & Layout
 
-- Standard module pages instantiate `PageHeader` and `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`:
-  1. **Work (Operational Directory)**: Daily record editing, search, filters, views (`table` | `cards`), detail drawers, bulk actions. No charts or KPI dashboards.
-  2. **Reports (Analytics)**: Summary KPI card strip, Recharts modules, and visual query builders.
-  3. **Setup (Configuration)**: Restricted via `useModulePermissions(manifest)` → `canViewSetup`/`canEditSetup`. Houses Fields customizers and Preferences. Forbidden tiers are omitted.
+- **Page Shell Structure:** Standard module pages render `PageHeader` command centre and `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`:
+  1. **Work (Operational Directory):** Daily records, search, filters, views (`table` | `cards`), detail drawers, bulk actions. Banned: charts and KPI dashboards.
+  2. **Reports (Analytics):** KPI summary cards, Recharts visualizations, and visual query builders.
+  3. **Setup (Configuration):** Gated via `useModulePermissions(manifest)` (`canViewSetup`/`canEditSetup`). Houses Fields customizer and Preferences. Unauthorized tiers are omitted from DOM.
 
 ## 3. Work Directory & Detail Drawer
 
-- **Filters UI SSOT**: Single Filters dropdown owns Work dimensions (presets, status, sort). Ban duplicate chip bars for identical options (`ContactsFilterMenuButton` gold standard). `FilterChips` only for active removable selections.
-- **Directory View Mode SSOT**: Single `viewMode` (`table` | `cards`) via `useWorkDirectoryViewMode`. Manifest `directoryViews: ['table','cards']` (never `list` for person directories). Default cards `< md`, table `md+`. Ban dual-rendering with CSS display utilities.
-- **Pagination & Virtualization**: Cards and table share identical server pagination. Virtualize DOM rows via `@tanstack/react-virtual` when rendered items > 30 (`mms-performance.md`). Command KPIs load via server `/metrics`, never client reduce of full lists.
-- **Column Layout SSOT**: `useModuleColumnLayout` manages visibility and width. Persist via PUT `/column-preferences` and `localStorage` (`mms_{moduleId}_columns_{userId}`). Local widths take precedence; debounce server PUTs. Pass `isColumnVisible` into table/cards; ban boolean flag bags (`show*`).
-- **Detail Drawer**: `DetailDrawerShell` renders entity fields in tab/field registry order with all enabled custom fields. In trash mode, show `WarningCallout` banner + Restore; hide Edit and communication CTAs. Header action buttons enforce `min-h-11`/`min-w-11`.
-- **Selection SSOT**: Selection state is owned by the page controller via shared `useWorkSelection`; list-local selection state is banned. Directory rows, select-all controls, bulk bars, and keyboard shortcuts bind to controller selection.
-- **Bulk Actions**: Two-layer bulk chrome — presentational `ModuleWorkBulkActionBar` dock with manifest/i18n adapter `ModuleUniversalBulkActionBar`. Mount floating or inline. Escape key clears selection. Never place bulk actions inline with toolbar filters.
+- **Filters UI SSOT:** Single Filters dropdown owns Work dimensions (presets, status, sort). Duplicate preset pill bars are banned (`ContactsFilterMenuButton` gold standard). `FilterChips` render active removable selections only.
+- **Directory View Mode SSOT:** Single `viewMode` (`table` | `cards`) via `useWorkDirectoryViewMode`. Person directories mandate `directoryViews: ['table','cards']` (never `list`). Default cards `< md`, table `md+`. Dual-rendering via CSS display utilities is strictly banned.
+- **Pagination & Virtualization:** Cards and table share identical server pagination. Virtualize DOM rows via `@tanstack/react-virtual` when rendered items > 30 (`mms-performance.md`). Command KPIs load via `/metrics` endpoint; never compute via client reduction.
+- **Column Layout SSOT:** `useModuleColumnLayout` manages visibility and width. Persist via PUT `/column-preferences` and `localStorage` (`mms_{moduleId}_columns_{userId}`). Local device widths take precedence; debounce server updates. Pass `isColumnVisible` into table/cards; boolean flag bags (`show*`) are banned.
+- **Detail Drawer:** `DetailDrawerShell` renders entity fields in tab/field registry order with enabled custom fields. In trash mode: display `WarningCallout` archive banner + Restore; hide Edit and communication CTAs. Touch targets enforce `min-h-11 min-w-11`.
+- **Selection SSOT:** Selection state is owned by the page controller via shared `useWorkSelection`; list-local selection state is strictly banned. Directory rows, select-all controls, bulk bars, and shortcuts bind to controller selection.
+- **Two-Layer Bulk Chrome:** Presentational `ModuleWorkBulkActionBar` dock with manifest/i18n adapter `ModuleUniversalBulkActionBar`. Mount floating or inline. Escape key clears selection. Never place bulk actions inline with toolbar filters.
 
 ## 4. Setup & Module Preferences
 
-- Draft preferences in local editor state; persist on explicit Save when dirty. Do not mount Save button enabled by default. Gate with `canEditSetup`.
+- **Dirty-Gated Persistence:** Draft preferences in local editor state; persist only on explicit Save when dirty. Do not mount Save button enabled by default.
+- **Access Control:** Gate editing and Save mutations with `canEditSetup`; render read-only fallback when view-only.
 
 ## 5. Background Jobs & Processing
 
-- Offload long tasks (large CSV import/export, bulk messaging, dedup scans, complex reports) to BullMQ worker process (`apps/backend/src/worker/index.ts`). Never run in the API request path.
-- Updates stream via global `BackgroundJobsTray` (`running | completed | failed`, progress percentage, error counts, download links).
-- Worker jobs require: (a) idempotency key, (b) bounded retry with backoff, (c) execution-time tenant/user verification, and (d) concurrency isolation. Re-sending user messages or charging payments on automatic retry is strictly banned.
+- **BullMQ Sandboxed Processing:** Long tasks (CSV import/export, bulk messaging, dedup scans, complex reports) offload to BullMQ worker process (`apps/backend/src/worker/index.ts`). Never run in the API request path.
+- **Live Progress Tray:** Stream execution status via global `BackgroundJobsTray` (`running | completed | failed`, percentage progress, error counts, download artifacts).
+- **Worker Job Contracts:** Jobs require idempotency keys, bounded retries with exponential backoff, execution-time tenant/user verification, and concurrency isolation. Auto-retrying message broadcasts or charging payments is strictly banned.
 
-## 6. Security Boundaries & Isolation
+## 6. Security Boundaries & Soft-Delete Standards
 
-- **RLS & RBAC**: Enforce transaction-scoped RLS (`SET LOCAL`) and `can('module.action')`. Omit unauthorized actions from DOM.
-- **Soft Deletion & Work Trash Standard**:
-  - Manifest contract: declare `softDelete` configuration (`workExcludesDeleted`, `reportsIncludeDeleted`, `captureDeletionReason`, `retentionDays`).
-  - Active browses return `404` for archived entities. Synchronize trash mode via URL param `?view=trash` (`ModuleTrashToggle` in toolbar).
-  - Toggling trash preserves search and faceted filters. In trash: hide Create/Add, bulk delete, and communication CTAs; show Restore.
-  - Non-financial single-record deletions trigger optimistic cache hide + 5–10s Undo toast calling `POST /:id/restore`.
-  - Trap PostgreSQL 23505 unique constraint conflicts upon restore. Emit outbox CDC events (`entity.soft_deleted`, `entity.restored`).
+- **RLS & RBAC:** Enforce transaction-scoped RLS (`SET LOCAL app.current_tenant`) and `can('module.action')`. Omit unauthorized actions from DOM.
+- **Manifest Soft-Delete Contract:** Declare `softDelete` configuration (`workExcludesDeleted`, `reportsIncludeDeleted`, `captureDeletionReason`, `retentionDays`).
+- **Work Trash UX:** Archived records return 404 on active lookups. Synchronize trash mode via URL param `?view=trash` (`ModuleTrashToggle` in toolbar). Preserve active search and faceted filters. In trash: hide Create/Add, bulk delete, and communication CTAs; display Restore.
+- **Optimistic Recovery:** Single-record deletions trigger optimistic cache hide + 5–10s Undo toast calling `POST /:id/restore`. Trap PostgreSQL 23505 unique constraint conflicts upon restore. Emit outbox CDC events (`entity.soft_deleted`, `entity.restored`).
 
 ## 7. Gold-standard parity (REST tenant modules and platform pages)
 
 Align modules with **Contacts, Students, and Faculty** person-directory standard:
-- **Bulk PUT**: Upsert only — HTTP contract `mms-api-interface.md` §5 (never wipe missing records).
-- **Soft-delete**: `DELETE` + `POST /:id/restore` (+ batched bulk SQL); URL `?view=trash`; `ModuleTrashToggle` in toolbar; filter state preserved; drawer `WarningCallout` archive banner + Restore; hide create/actions in trash; `Cmd/Ctrl+N` guard; 23505 conflict trap on restore; 5–10s optimistic Undo toast; outbox CDC logging (`mms-data-layer.md` §6).
-- **Mutations**: `mutateAsync` + await form `onSave`; close modals only after mutation resolution.
-- **Setup**: Manifest `setupSubTabs` (`preferences` default); `canEditSetup` gates writes; read-only fallback when view-only; Preferences Save dirty-gated.
-- **Work UX**: `ErrorState` with retry + hint description (`loadFailedHint`); `EmptyState` (`title` required, `compact` when dense); `Cmd/Ctrl+N` create shortcut (`!viewingDeleted && canWrite`); Filters menu SSOT; controller-owned selection via `useWorkSelection`; two-layer bulk-bar chrome; `isColumnVisible` gates; single resolved `viewMode` (`table` | `cards`); desktop tables use `WorkBatchTable`; cards use `DirectoryCard`/`DirectoryEntityCard` + `useWorkCardAction`; identical server pagination; row virtualization over 30 items; `useModuleColumnLayout` column width/visibility persistence.
-- **Manifest**: Import constants (`setupSubTabs`, `softDelete`, `work.bulkActions`, permissions). Person directories enforce `directoryViews: ['table','cards']`.
-- **i18n / RBAC**: All copy via `t()`; `useModulePermissions(manifest)` gates CTAs. Intersect persisted tier/sub-tab selections with active permissions before rendering content.
+- **Bulk PUT:** Upsert only per `mms-api-interface.md` §5; never wipe missing records.
+- **Soft-Delete Lifecycle:** `DELETE` + `POST /:id/restore` (batched bulk SQL); URL `?view=trash`; `ModuleTrashToggle` in toolbar; filter state preserved; drawer `WarningCallout` archive banner + Restore; hide create/actions in trash; `Cmd/Ctrl+N` guard; 23505 conflict trap on restore; 5–10s optimistic Undo toast; outbox CDC logging (`mms-data-layer.md` §6).
+- **Mutations:** Await `mutateAsync` on form `onSave`; close modals only after mutation resolution.
+- **Setup Tier:** Manifest `setupSubTabs` (`preferences` default); `canEditSetup` gates writes; read-only fallback when view-only; Preferences Save dirty-gated.
+- **Work UX:** `ErrorState` with retry + `loadFailedHint`; `EmptyState` (`title` required, `compact` when dense); `Cmd/Ctrl+N` shortcut (`!viewingDeleted && canWrite`); Filters menu SSOT; controller-owned selection via `useWorkSelection`; two-layer bulk-bar chrome; `isColumnVisible` gates; single resolved `viewMode` (`table` | `cards`); desktop tables use `WorkBatchTable`; cards use `DirectoryCard`/`DirectoryEntityCard` + `useWorkCardAction`; identical server pagination; row virtualization over 30 items; `useModuleColumnLayout` column width/visibility persistence.
+- **Manifest Constants:** Import `setupSubTabs`, `softDelete`, `work.bulkActions`, and permissions from manifest. Person directories mandate `directoryViews: ['table','cards']`.
+- **i18n & RBAC:** All user-facing copy via `t()`; `useModulePermissions(manifest)` gates CTAs. Intersect persisted tier/sub-tab selections with active permissions before rendering.
+
+## 8. Workflow & Output Speed Rules
+
+- **Zero Output Bloat:** Emit surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational greetings, polite preambles, and post-code summaries.
+- **Work Directory Standards:** Enforce controller-owned selection (`useWorkSelection`), unified bulk bar (`ModuleUniversalBulkActionBar`), and single resolved `viewMode`. CI enforces zero regressions via `pnpm run check:work-directory`.
+- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards/rules are altered, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

@@ -51,11 +51,11 @@ metadata:
 
 ## Script
 
-`scripts/verify-template-tokens.mjs` validates every `{token}` in a template against the canonical token set in `packages/shared/src/messagingSchemas.ts`:
+`.agent/skills/mms-messaging/scripts/verify-template-tokens.mjs` validates every `{token}` in a template against the canonical token set in `packages/shared/src/messagingSchemas.ts`:
 
 ```bash
-node scripts/verify-template-tokens.mjs --text 'Salaam {student_name}, {bogus_token} due'
-node scripts/verify-template-tokens.mjs --file path/to/template.txt
+node .agent/skills/mms-messaging/scripts/verify-template-tokens.mjs --text 'Salaam {student_name}, {bogus_token} due'
+node .agent/skills/mms-messaging/scripts/verify-template-tokens.mjs --file path/to/template.txt
 ```
 
 Unknown tokens exit non-zero — the backend rejects them at send time, so catch them at authoring time.

@@ -10,7 +10,7 @@ compatibility: Requires a reachable Redis instance and the worker process for li
 
 # MMS Queue Ops
 
-**Rules (norms SSOT):** `mms-data-layer.mdc` (queue mechanics, Redis, connections) · `mms-module-architecture.mdc` §5 (job UX contract, worker isolation) · `mms-background-jobs.mdc` (authoring).
+**Rules (norms SSOT):** `mms-data-layer.mdc` (queue mechanics, Redis, connections) · `mms-module-architecture.mdc` §5 (job UX contract, worker isolation). Job authoring workflow → `mms-background-jobs`.
 
 ## Financial replay decisions
 

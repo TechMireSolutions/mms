@@ -9,7 +9,7 @@ metadata:
 
 # MMS Module Work Workflow
 
-**Rules (norms SSOT):** `mms-module-architecture.mdc` §2–§3, §6–§7 · `mms-soft-delete` · `mms-ui-ux-design.mdc` · `mms-performance.mdc`.
+**Rules (norms SSOT):** `mms-module-architecture.mdc` §2–§3, §6–§7 · `mms-data-layer.mdc` §6 · `mms-ui-ux-design.mdc` · `mms-performance.mdc`. Soft-delete workflow → `mms-soft-delete`.
 
 ## 1. Work Architecture & Command Center
 

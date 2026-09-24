@@ -9,7 +9,7 @@ metadata:
 
 # MMS Error Triage
 
-**Rules (norms SSOT):** `mms-testing-observability.mdc` §3–§4 (telemetry fields, correlation, ErrorBoundary) · `mms-api-interface.mdc` (error envelope and echo headers) · `mms-audit-trail.mdc` (immutable event rows).
+**Rules (norms SSOT):** `mms-testing-observability.mdc` §3–§4 (telemetry fields, correlation, ErrorBoundary) · `mms-api-interface.mdc` (error envelope and echo headers) · `mms-data-layer.mdc` §5 (immutable audit event rows). Audit trail workflow → `mms-audit-trail`.
 
 ## The correlation chain
 
@@ -49,4 +49,4 @@ If the report indicates cross-tenant data exposure, credential leakage, or destr
 
 ## Related skills
 
-`mms-incident-response` (outage/rollback), `mms-db-performance`, `mms-queue-ops`, `mms-testing-observability.mdc` (telemetry norms), `mms-backend-security` (if exposure is suspected).
+`mms-incident-response` (outage/rollback), `mms-db-performance`, `mms-queue-ops`, `mms-testing-e2e`, `mms-backend-security` (if exposure is suspected).

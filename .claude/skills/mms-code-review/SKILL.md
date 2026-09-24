@@ -84,10 +84,10 @@ E2E when touching auth/routing/onboard: `pnpm test:e2e` (critical path: `e2e/tes
 
 ## Script
 
-`scripts/pre-pr-review.sh` runs the deterministic gate set before you review by hand:
+`.agent/skills/mms-code-review/scripts/pre-pr-review.sh` runs the deterministic gate set before you review by hand:
 
 ```bash
-bash scripts/pre-pr-review.sh
+bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh
 ```
 
 It runs the standards verifier, the migration-index and DB-projection ratchets, `pnpm typecheck` and `pnpm lint`. It does **not** run tests, e2e, or gitleaks — add `pnpm test` / `pnpm test:e2e` for the areas you touched, and remember CI scans the full git history for secrets.

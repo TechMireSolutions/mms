@@ -10,9 +10,9 @@ description: Known gaps between rules (target) and codebase (current) — do not
 ## 1. Open Gaps Register (Active Debt)
 
 Only address these residual gaps when explicitly within task scope:
-- **Copy & a11y**: Residual hardcoded strings in secondary modules; niche RTL/contrast checks. Target: full `t()` en/ar/ur/fa + WCAG 2.2 AA (`mms-settings-i18n.md`, `mms-ui-ux-design.md`).
-- **Live Push & Aggregates**: Secondary module WS emit/subscribe and comparison mode dumps. Target: WS `/api/ws` invalidate + SQL `GROUP BY` aggregates (`mms-core.md`, `mms-reports.md`).
-- **Contacts Full Loads**: Niche chart dumps. Target: SQL aggregates across all visualizers (`mms-data-layer.md`, `mms-reports.md`).
+- **Copy & a11y:** Residual hardcoded strings in secondary modules; niche RTL/contrast checks. Target: full `t()` en/ar/ur/fa + WCAG 2.2 AA (`mms-settings-i18n.md`, `mms-ui-ux-design.md`).
+- **Live Push & Aggregates:** Secondary module WS emit/subscribe and comparison mode dumps. Target: WS `/api/ws` invalidate + SQL `GROUP BY` aggregates (`mms-core.md`, `mms-reports.md`).
+- **Contacts Full Loads:** Niche chart dumps. Target: SQL aggregates across all visualizers (`mms-data-layer.md`, `mms-reports.md`).
 
 ## 2. Forbidden Regressions (Canonical Owners)
 
@@ -34,3 +34,8 @@ Only address these residual gaps when explicitly within task scope:
 - **File Structure** (`mms-structure-naming.md` §3): Files > 200 lines without concern split; renaming public barrels during refactors.
 - **Audit Trail** (`mms-data-layer.md`, `mms-auth-security.md`): Bare `UPDATE`/`DELETE` on audit tables; deleting/re-hashing historical rows; uncanonical JSON; un-sharded hash chains.
 - **Performance** (`mms-performance.md`): Blocking Redis `KEYS *`; unbuffered heap allocations in worker jobs; write-blocking index builds; unvirtualized client lists > 30 items.
+
+## 3. Workflow & Output Speed Rules
+
+- **Zero Output Bloat:** Emit surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational greetings, polite preambles, and post-code summaries.
+- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards/rules are altered, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

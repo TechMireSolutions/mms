@@ -44,11 +44,11 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 
 ## Script
 
-`scripts/audit-deps.sh` — engines, catalog references, and advisories:
+`.agent/skills/mms-dependency-upgrade/scripts/audit-deps.sh` — engines, catalog references, and advisories:
 
 ```bash
-bash scripts/audit-deps.sh                  # full audit (fails on high/critical advisories)
-MMS_SKIP_AUDIT=1 bash scripts/audit-deps.sh # offline: engines + catalog references only
+bash .agent/skills/mms-dependency-upgrade/scripts/audit-deps.sh                  # full audit (fails on high/critical advisories)
+MMS_SKIP_AUDIT=1 bash .agent/skills/mms-dependency-upgrade/scripts/audit-deps.sh # offline: engines + catalog references only
 ```
 
 A non-zero exit is actionable: fix the version, or add a reviewed exception **with a reachability analysis** to the `overrides` block in `pnpm-workspace.yaml` (the ts-deepmerge entry is the pattern to copy).
