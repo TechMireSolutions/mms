@@ -184,7 +184,8 @@ export function JournalEntryLinesEditor({
                 </TableBody>
                 <TableFooter className="border-t-2 border-border bg-muted/30">
                   <TableRow className="hover:bg-transparent">
-                    <TableCell colSpan={2} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.form.totals")}</TableCell>
+                    <TableCell className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.form.totals")}</TableCell>
+                    <TableCell className="hidden md:table-cell" />
                     <TableCell className="px-3 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</TableCell>
                     <TableCell className="px-3 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</TableCell>
                     <TableCell />

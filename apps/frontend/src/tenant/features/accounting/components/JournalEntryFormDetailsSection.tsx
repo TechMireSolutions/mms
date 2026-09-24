@@ -36,6 +36,8 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
               value={form.date}
               onChange={(dateValue) => setForm({ ...form, date: dateValue })}
               required
+              aria-invalid={!!errors.date}
+              aria-describedby={errors.date ? "je-date-error" : undefined}
             />
             <FieldErrorMessage id="je-date-error" message={errors.date} />
           </div>

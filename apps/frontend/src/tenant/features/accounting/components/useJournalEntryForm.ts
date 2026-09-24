@@ -196,7 +196,9 @@ function parseLineAmount(val: string | number | null | undefined): number {
     }
   };
 
-  const sortedAccounts = [...accounts].filter((account) => account.isActive !== false).sort((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code));
+  const sortedAccounts = accounts
+    .filter((account) => account.isActive !== false)
+    .toSorted((firstAccount, secondAccount) => firstAccount.code.localeCompare(secondAccount.code));
 
   const flattenedAccountOptions = sortedAccounts.map((account) => ({
     value: account.id,
