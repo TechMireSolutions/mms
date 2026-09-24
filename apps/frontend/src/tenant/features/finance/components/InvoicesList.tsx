@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -7,7 +7,6 @@ import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import type { Invoice } from "@/lib/data/financeData";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { useInvoiceSelection } from "@/tenant/features/finance/hooks/useInvoiceSelection";
 import { FinanceBulkActionBar } from "@/tenant/features/finance/components/FinanceBulkActionBar";
 import { InvoicesListContent } from "@/tenant/features/finance/components/InvoicesListContent";
 import { InvoicesListFilters } from "@/tenant/features/finance/components/InvoicesListFilters";
@@ -34,7 +33,10 @@ export interface InvoicesListProps {
   onBulkStatusChange?: (ids: string[], status: string) => void;
   onBulkPrintReceipts?: (invoices: Invoice[]) => void;
   isBulkStatusPending?: boolean;
-  selectionResetKey?: string;
+  selectedIds?: string[];
+  onToggleSelectedInvoice?: (id: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean, visibleIds: string[]) => void;
+  onClearSelection?: () => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -57,7 +59,10 @@ export function InvoicesList({
   onBulkStatusChange,
   onBulkPrintReceipts,
   isBulkStatusPending = false,
-  selectionResetKey,
+  selectedIds = [],
+  onToggleSelectedInvoice,
+  onToggleSelectAll,
+  onClearSelection,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -87,17 +92,9 @@ export function InvoicesList({
     });
   })();
 
-  const {
-    selectedIds,
-    setSelectedIds,
-    allVisibleSelected,
-    someVisibleSelected,
-    toggleSelectAll,
-    toggleSelectedInvoice,
-    clearSelection,
-  } = useInvoiceSelection(filtered);
-
-  useEffect(() => setSelectedIds([]), [selectionResetKey, showDeleted, setSelectedIds]);
+  const selectedSet = new Set(selectedIds);
+  const allVisibleSelected = filtered.length > 0 && filtered.every((inv) => selectedSet.has(inv.id));
+  const someVisibleSelected = selectedSet.size > 0 && filtered.some((inv) => selectedSet.has(inv.id));
 
   const statusConfig = (() => ({
     paid: { label: t("finance.invoiceStatus.paid"), cls: SEMANTIC_BADGE.success },
@@ -115,12 +112,6 @@ export function InvoicesList({
   const toggleStatus = (status: string) => setFilterStatus((currentStatuses) => currentStatuses.includes(status)
     ? currentStatuses.filter((selectedStatus) => selectedStatus !== status)
     : [...currentStatuses, status]);
-
-  const toggleSelected = (id: string, checked: boolean) => {
-    setSelectedIds((ids) => (checked
-      ? ids.includes(id) ? ids : [...ids, id]
-      : ids.filter((selectedId) => selectedId !== id)));
-  };
 
   return (
     <section aria-label={t("finance.invoices")} className="space-y-4">
@@ -145,7 +136,7 @@ export function InvoicesList({
           canDelete={canDelete}
           onRequestBulkDelete={() => setConfirmBulkOpen(true)}
           onRequestBulkRestore={() => setConfirmBulkOpen(true)}
-          onClearSelection={clearSelection}
+          onClearSelection={onClearSelection ?? (() => {})}
           onBulkStatusChange={onBulkStatusChange ? (status) => onBulkStatusChange(selectedIds, status) : undefined}
           onBulkPrintReceipts={
             onBulkPrintReceipts
@@ -178,8 +169,8 @@ export function InvoicesList({
         formatCurrency={formatCurrency}
         getColumnWidth={getColumnWidth}
         onColumnResize={onColumnResize}
-        onToggleSelectAll={toggleSelectAll}
-        onToggleSelectedInvoice={toggleSelected}
+        onToggleSelectAll={(checked) => onToggleSelectAll?.(checked, filtered.map((inv) => inv.id))}
+        onToggleSelectedInvoice={(id, checked) => onToggleSelectedInvoice?.(id, checked)}
         onView={onView}
         onRecord={onRecord}
         onRequestDelete={onDelete ? setPendingDeleteId : undefined}
@@ -211,7 +202,7 @@ export function InvoicesList({
         onConfirmBulkTrash={() => {
           if (showDeleted) onBulkRestore?.(selectedIds);
           else onBulkDelete?.(selectedIds);
-          clearSelection();
+          onClearSelection?.();
           setConfirmBulkOpen(false);
         }}
         labels={{

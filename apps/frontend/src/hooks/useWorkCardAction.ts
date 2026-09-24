@@ -63,7 +63,7 @@ export interface UseWorkCardActionReturn<TEntity extends WorkCardEntity> {
  * Derives `isSelected`, stabilises selection/action handlers, provides a
  * unified keyboard handler, and derives status metadata — keeping renderItem
  * closures free of interaction logic. Selection state authority remains in
- * `useWorkDirectoryController`.
+ * the module's controller-owned selection (`useWorkSelection`).
  */
 export function useWorkCardAction<TEntity extends WorkCardEntity>({
   entity,

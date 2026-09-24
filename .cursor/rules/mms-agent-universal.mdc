@@ -7,63 +7,38 @@ alwaysApply: true
 
 **Workflow skills:** orientation / sync → `antigravity-workspace` · PR/self-review index → `mms-code-review`. Ownership matrix → `.cursor/rules/README.md`.
 
-## Cognition
+## 1. Cognition & Behaviour
 
-- **Plan:** Output a concise `<plan>` before structural or multi-file changes.
-- **Check:** Search the workspace (especially `@mms/shared`) before writing new logic — extraction thresholds `mms-dry.mdc` · skill `mms-shared-package`.
-- **Type-check:** Verify types against schemas and `@mms/shared` before emitting code.
-- **Docs & research:** Prefer documentation MCPs (e.g. Context7) or scoped official docs over broad web searches for external libraries/SDKs. Query targeted concepts; do not use for local repository business logic.
-- **Review:** On code edits, run completion review per `mms-completion-review.mdc` — skill `mms-code-review`; fix all bugs in scope before marking done.
+- **Plan**: Emit concise `<plan>` before structural/multi-file edits. Search `@mms/shared` before authoring new logic (`mms-dry.mdc`).
+- **Type-Check**: Validate types against schemas before code generation. Use Context7/official docs over broad web searches for external libraries.
+- **Focus & Style**: Edit in-scope files only. Terse, functional, idiomatic code with zero boilerplate or narrating comments.
+- **Surgical Edits**: Targeted patches with minimal context; never rewrite whole files unless creating new files.
+- **Rendering Hygiene**: Memoize non-trivial operations and stabilize callbacks passed to memoized children; avoid premature memoization (`mms-performance.mdc`).
 
-## Behaviour
+## 2. Communication & Output Economy
 
-- **Focus:** Edit in-scope files only. Ask before deletions or large removals.
-- **Style:** Terse, functional, idiomatic code. Zero boilerplate or narrating comments.
-- **Precision:** Prefer targeted patches — altered functions/blocks, not whole files unless requested.
-- **Assumptions:** Assume standard library and framework knowledge. Use semantic identifiers — `mms-structure-naming.mdc`.
-- **Rendering hygiene:** Memoize non-trivial work and stabilize callback references passed to memoized children; avoid premature memoization — norms `mms-performance.mdc`.
+- **Chat**: Clear, structured prose; explain non-obvious trade-offs.
+- **Code Output**: Lead directly with code; 1-line rationale only if needed. Zero conversational preambles, pleasantries, or postambles. Never restate user prompts.
+- **Artifacts & Logs**: Provide direct clickable file links with 1-line context; never echo artifact contents in chat. Limit tool inspections (<150 lines) and shell output (`git log -n 5`, `head -n 50`, `--silent`).
+- **Tests & JSDoc**: Unit test `@mms/shared` pure helpers (`mms-testing-observability.mdc`). JSDoc on public exports in `packages/shared` only; omit elsewhere.
 
-## Communication (two modes)
+## 3. Security, State & Standards
 
-| Mode | Rule |
-|------|------|
-| **Chat with user** | Clear structured prose; explain trade-offs when non-obvious |
-| **Code output** | Lead with the change; one-line rationale only if needed |
+- **Zero-Trust DTOs**: Validate via `@mms/shared` Zod + Fastify `parseRequest` (`mms-api-interface.mdc`, `mms-core.mdc`). Unidirectional state flow (`mms-data-layer.mdc` §4).
+- **Concurrency & Signals**: Pass `AbortSignal` into `apiFetch` and `queryFn`; combine via `AbortSignal.any()`. Clear timers and observers.
+- **TypeScript**: Strict mode. Use `unknown` + narrowing (never `any`, never `as unknown as T`). Native immutability: use `toSorted()`, `toReversed()`, `toSpliced()`, `Object.groupBy()`. Zero non-erasable syntax (`enum`, `namespace`).
+- **Node.js 24**: Native built-ins (`node:` imports, `new URL()`, `using` / `await using`) — details `mms-dependencies.mdc`.
+- **A11y & UI**: Semantic HTML5, Tailwind utilities, semantic landmarks (`<main>`, `<nav>`, `<header>`), minimum 44×44px touch targets (`mms-ui-ux-design.mdc` §3).
+- **Git Boundaries**: Conventional Commits. Protected `main` branch. **NEVER run `git add`, `git commit`, or `git push` (or any equivalent) unless the user explicitly says "commit" in that exact message. Never push to GitHub under any circumstance — the user handles all pushes themselves. Do not stage or commit as a "convenience" after edits. The user owns all git operations.**
+- **Shell Commands**: Pass explicit working directory or use single-shot `cd <dir> && <cmd>`. Never leave shell in an un-reset directory.
+- **Enforcement Principle**: A norm is either machine-enforced (lint rule, ratchet script, CI check, hook, test) or explicitly labelled advisory. Land the check with the norm. Tool-neutral rule bodies mirrored across `.cursor`, `.agent`, `.claude`.
 
-Zero conversational preambles, pleasantries, or postambles. Never restate user prompts. Do not echo file contents already in context.
+## 4. Anti-Patterns & Banned Operations
 
-## Output economy
-
-- **Edits:** Targeted patches with minimal anchor context — never rewrite a whole file to change a few lines. Output only modified functions/classes; never include unchanged code blocks or placeholder fillers.
-- **Artifacts:** Never echo or summarize artifact contents in chat responses; provide a direct clickable link with 1-line context only.
-- **Tool output limiting:** Inspect only necessary code blocks (<150 lines); scope searches with specific globs/regex to prevent broad output dumps; limit shell command output via flags (`git log -n 5`, `head -n 50`, `--silent`).
-- **Tests:** Follow `mms-completion-review.mdc`. Pure `@mms/shared` helpers need unit tests — `mms-testing-observability.mdc`. UI unit tests only when explicitly requested.
-- **JSDoc:** Required on **public exports** in `packages/shared` only. Omit elsewhere.
-
-## Security & state
-
-- **Validation:** Zero-trust DTOs via `@mms/shared` Zod + backend `parseRequest` — `mms-api-interface.mdc`, `mms-core.mdc`.
-- **State:** Prefer unidirectional flow; pure helpers for transforms — Query policy `mms-data-layer.mdc` §4.
-- **Concurrency & Cancellation:** Pass `AbortSignal` into `apiFetch` / Query `queryFn`; combine signals via `AbortSignal.any()`; clear timers/observers — `mms-data-layer.mdc`, `mms-api-interface.mdc`.
-- **Resilience:** Error boundaries on heavy sections and lazy routes — `mms-testing-observability.mdc` §4.
-- **Secrets / XSS:** Never log tokens/PII; no unsanitized `dangerouslySetInnerHTML`; sanitize and encode all dynamic export contents — `mms-auth-security.mdc`.
-
-## Standards
-
-- **TypeScript:** Strict mode. Use `unknown` + narrowing — never `any`. Double assertions (`as unknown as T`) to bypass validation are forbidden; validate via Zod or type predicates (`is`). Prefer `import type` and `satisfies`. Zero non-erasable syntax (`enum`, `namespace`, constructor parameter properties) — details `mms-dependencies.mdc`.
-- **Node.js 24 runtime** (`node:` imports, WHATWG `new URL()`, native built-ins, `using` / `await using`) — details `mms-dependencies.mdc`; do not restate here.
-- **Native immutability:** Never mutate array state in place (`sort()`, `reverse()`, `splice()`). Use `toSorted()`, `toReversed()`, `toSpliced()`, `with()`, `Object.groupBy()`.
-- **Errors:** Handle explicitly; zero silent empty `catch` blocks; map user-facing messages to localized translation keys via `t()`.
-- **HTML/CSS & A11y:** Semantic HTML5 and Tailwind utility classes (`mms-ui-ux-design.mdc`). Accessible interactive controls, semantic landmarks (`<main>`, `<nav>`, `<header>`, `<section>`), minimum 44×44px touch targets — `mms-ui-ux-design.mdc` §3.
-- **Git:** Conventional Commits (`type(scope): description` using `feat`, `fix`, `chore`, `refactor`, `perf`, `test`, `docs`). Short-lived feature branches (`feat/*`, `fix/*`); protected `main` (no direct commits; merge via PR). Pre-commit local verification (`pnpm typecheck`, tests, lint). **NEVER run `git add`, `git commit`, or `git push` (or any equivalent) unless the user explicitly says "commit" in that exact message. Never push to GitHub under any circumstance — the user handles all pushes themselves. Do not stage or commit as a "convenience" after edits. The user owns all git operations.**
-- **Shell commands:** Never leave the session in a changed directory — pass an explicit working directory when the tool accepts one, or use a single-shot `cd <dir> && <cmd>`. Never emit unpaged, unbounded output (`git log -n 5`, `head -n 50`).
-- **Rules maintenance:** After editing standards run `bash .agent/scripts/sync-all.sh`, then `node scripts/verify-rules-integrity.mjs` (CI fails on drift). The canonical always-on set is the rules whose `.cursor/rules/*.mdc` frontmatter says `alwaysApply: true`; `skills-manifest.json`, `AGENTS.md`, and `CLAUDE.md` must all agree — the verifier enforces this.
-- **Enforcement principle:** A norm is either **machine-enforced** (lint rule, ratchet script, CI check, hook, test) or explicitly labelled **advisory**. When a rule is added, land its check in the same change or say why it cannot have one; prefer a code-level fix over a new paragraph of prose.
-- **Tool neutrality:** Rule bodies are mirrored into three tools. Describe outcomes and commands, never one client's internal tool names or parameter syntax — tool-specific mechanics belong in that tool's frontmatter.
-
-## Anti-Patterns & Banned Operations
-
-- ❌ **NEVER bypass validation with type casting:** no `as unknown as T` or `any` to force type agreement.
-- ❌ **NEVER delete files without confirmation:** request explicit user approval before removing files.
-- ❌ **NEVER invent new dependencies:** check Node 24 built-ins, `@mms/shared`, and `pnpm-workspace.yaml` first.
-- ❌ **NEVER restate an owned norm:** when another rule owns the topic, link to it instead of copying it — `rules/README.md` lists the owner per topic.
+- ❌ **NEVER modify protected zones without explicit logged authorization**: DB migrations, auth middleware/services (`apps/backend/src/middleware/authenticate*.ts`, `apps/backend/src/services/auth/`), CI/CD workflows, Dockerfiles, and root configs (`tsconfig.json`, `tailwind.config.js`, `vite.config.ts`).
+- ❌ **NEVER exceed 200 lines in source files (`.ts`, `.tsx`, `.js`)**: Hard cap; decompose into dedicated sub-components, hooks, or services (`mms-structure-naming.mdc` §3).
+- ❌ **NEVER couple presentation with data orchestration**: UI components render state only; fetching and state logic belong in hooks/services.
+- ❌ **NEVER bypass validation with type casting**: No `as unknown as T`, `any`, or untyped dictionaries.
+- ❌ **NEVER delete files without confirmation**: Request explicit user approval before removing files.
+- ❌ **NEVER invent new dependencies**: Check Node 24 built-ins, `@mms/shared`, and `pnpm-workspace.yaml` first.
+- ❌ **NEVER restate an owned norm**: Link to owning rule in `.cursor/rules/README.md`.

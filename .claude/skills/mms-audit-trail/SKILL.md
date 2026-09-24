@@ -4,7 +4,7 @@ description: Implements or audits the database audit trail — RFC 8785 canonica
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Modern Audit Trail Workflow
@@ -14,6 +14,12 @@ metadata:
 Enterprise guidelines for immutable, tamper-evident, privacy-compliant database audit trails across tenant workspaces and platform apex.
 
 ---
+
+## Accounting evidence (advisory)
+
+Read [ledger controls](../mms-finance-accounting/references/ledger-controls.md) for atomic business/audit evidence and [policy applicability](../mms-finance-accounting/references/policies-2026.md) for retention and erasure. Capture source event, original/correction links, operation identity, accounting date versus recording time, actor/approver, and policy version where supported. A hash chain proves neither authorization nor correct accounting, and it is not a substitute for the financial ledger.
+
+Inspect actual triggers, privileges, outbox capture and verification jobs before claiming any control below is deployed. Archive timing, key scope, and retention are policy-dependent recommendations rather than universal legal requirements.
 
 ## When to use
 
@@ -44,30 +50,28 @@ Every audit event must capture five dimensions stored deterministically using **
 MMS uses an **Application-Level Outbox** pattern:
 1. Always write audit events in the **exact same database transaction** as the primary business entity mutation (`withTenant(async (tx) => { ... })`).
 2. If the transaction rolls back, no orphan audit rows exist; if it commits, the audit event is atomically persisted.
-3. For soft-delete operations, emit `entity.soft_deleted` and `entity.restored` with monotonic versioning (`Date.now()`) to trigger external search index eviction and cache invalidation.
+3. For soft-delete operations, use the existing outbox events `entity.soft_deleted` and `entity.restored`. Advisory: use a persisted sequence/version for ordering; `Date.now()` can collide or move backwards across workers and is not a monotonic business version.
 
 ---
 
 ## 3. Cryptographic Integrity & Hash Chains
 
-### Chain Formula
-```
-hash_current = SHA-256(hash_previous + canonical_json(payload) + transaction_timestamp)
-```
-- For complete TypeScript RFC 8785 canonical JSON serializer and Merkle tree calculations, see [`references/canonical-merkle.ts`](references/canonical-merkle.ts).
+### Chain verification
+Use the deployed canonicalization, framing, algorithm version, shard identity and sequence when verifying a chain. Do not replace it with an ambiguous string-concatenation formula. Advisory: independently retained checkpoints and verification evidence strengthen tamper detection; a database administrator able to rewrite a whole unanchored chain remains a threat.
+- For implementation pointers and compatibility cautions (not a replacement crypto implementation), see [`references/canonical-merkle.ts`](references/canonical-merkle.ts).
 - For monthly range-partitioned DDL and append-only database triggers, see [`references/audit-partitions.sql`](references/audit-partitions.sql).
 
 ---
 
 ## 4. Right to Erasure (Crypto-Shredding)
 
-Under GDPR Article 17, personal data must be erasable without breaking the tamper-evident hash chain:
-1. Store sensitive PII encrypted with a tenant- or subject-specific symmetric key (`crypto_shredding_keys`).
-2. To satisfy an erasure request:
-   - Destroy the decryption key (`DELETE FROM crypto_shredding_keys WHERE subject_id = :id`).
-   - The encrypted ciphertext in historical `old_state`/`new_state` becomes irrecoverably unreadable (cryptographic shredding).
-   - The SHA-256 hash chain remains continuous and mathematically valid.
-   - Insert an audit event with `action_type = 'REDACT'` recording the erasure request.
+The right to erasure has exceptions, including applicable legal retention obligations; it is not an instruction to erase financial evidence automatically. See the official ICO source in [policy applicability](../mms-finance-accounting/references/policies-2026.md).
+
+Advisory procedure when erasure is applicable and authorized:
+1. Establish the subject, retained-record obligations, legal holds, key dependencies, backups and authorized decision.
+2. Prefer data minimization at capture. If crypto-shredding is supported, verify that the key is isolated to the intended subject/data; destroying a shared tenant key can erase unrelated required records.
+3. Verify recoverability across key replicas/backups and ciphertext copies. Do not promise irreversible anonymization from deleting one key row.
+4. Preserve immutable ciphertext/hash evidence according to the deployed chain protocol; append a redaction event without rewriting historical hashes. Verify the remaining chain and record the decision without reintroducing erased PII.
 
 ---
 
@@ -75,7 +79,7 @@ Under GDPR Article 17, personal data must be erasable without breaking the tampe
 
 1. **Partitioning:** Range-partition `audit_trail_events` by month (`transaction_timestamp`).
 2. **Immutability:** Apply `trg_audit_trail_immutable` `BEFORE UPDATE OR DELETE` to guarantee append-only persistence.
-3. **WORM Archival:** Cold partitions (>12 months) are compressed and offloaded to immutable object storage.
+3. **WORM Archival (advisory):** Choose archival timing, immutability settings and retention from the applicable policy; twelve months is not a universal requirement. Test retrieval and verification before detaching partitions.
 
 ---
 
@@ -83,10 +87,10 @@ Under GDPR Article 17, personal data must be erasable without breaking the tampe
 
 ```bash
 # Verify TypeScript type correctness across audit services
-pnpm --filter @mms/backend typecheck
+pnpm --filter mms-backend typecheck
 
 # Run backend inject tests for audit and entity mutations
-pnpm --filter @mms/backend test:inject
+pnpm --filter mms-backend test
 ```
 
 - [ ] All audit events are written within the same transaction as entity changes.

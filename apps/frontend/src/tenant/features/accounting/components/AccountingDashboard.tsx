@@ -1,25 +1,11 @@
 import React from 'react';
-import { formatDate } from '@mms/shared';
-import { useBrandPalette } from '@/lib/contexts/BrandingPaletteContext';
-import {
-  TrendingUp, TrendingDown, Scale, DollarSign, AlertCircle, CheckCircle2, Clock,
-} from 'lucide-react';
-import { BarChart, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell } from 'recharts';
-import { SafeResponsiveContainer } from '@/components/ui/SafeResponsiveContainer';
-import { ChartGrid, chartAxisTick } from '@/components/ui/ChartGrid';
 import type { Account, JournalEntry, AccountingSettings, FiscalYear } from '@/lib/data/accountingData';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useAccountingCurrency } from '@/hooks/useCurrency';
 import { ModuleCommandMetricsGrid } from '@/components/ui/ModuleCommandMetricsGrid';
-import { ProgressBar } from '@/components/ui/ProgressBar';
-import { Card } from '@/components/ui/card';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { CARD_STRIPE_INSET } from '@/lib/semanticTone';
-import { cn } from '@/lib/utils';
-import { useAccountingDashboardModel } from '@/tenant/features/accounting/components/useAccountingDashboardModel';
-import { useAccountingMetrics, useAccountingReportAggregates } from '@/tenant/features/accounting/hooks/useAccountingApi';
+import { useAccountingDashboardView } from './useAccountingDashboardView';
+import { AccountingDashboardCharts } from './AccountingDashboardCharts';
+import { AccountingDashboardSnapshots } from './AccountingDashboardSnapshots';
 
-interface AccountingDashboardProps {
+export interface AccountingDashboardProps {
   accounts: Account[];
   entries: JournalEntry[];
   settings: AccountingSettings;
@@ -28,212 +14,49 @@ interface AccountingDashboardProps {
 
 /**
  * Accounting Dashboard — P&L StatCards prefer server `/metrics`; charts use journal collections.
+ * Decoupled into presentational modules and custom view hook per ADR-001 & ADR-002 (<200 LOC).
  */
-export function AccountingDashboard({ accounts, entries, settings: _settings, fiscalYears: _fiscalYears }: AccountingDashboardProps) {
-  const { t } = useTranslation();
-  const { formatCurrency } = useAccountingCurrency();
-  const { primary, secondary, charts } = useBrandPalette();
-  const pieColors = (() => [...charts])();
-  const { data: serverMetrics } = useAccountingMetrics();
-  /**
-   * Net cash flow must come from actual movements on cash/bank accounts. The
-   * client model derived it as `assets - liabilities`, which is not a cash-flow
-   * figure at all (a building purchase reads as positive cash flow).
-   */
-  const { data: serverAggregates } = useAccountingReportAggregates();
-
+export function AccountingDashboard({
+  accounts,
+  entries,
+  settings: _settings,
+  fiscalYears: _fiscalYears,
+}: AccountingDashboardProps) {
   const {
-    revenue: modelRevenue,
-    expenses: modelExpenses,
-    netSurplus: modelSurplus,
-    assets: modelAssets,
-    liabilities: modelLiabilities,
-    equity,
-    postedEntries,
-    draftEntries,
+    t,
+    formatCurrency,
+    primary,
+    secondary,
+    pieColors,
+    metricItems,
     monthlyData,
+    expenseBreakdown,
+    bsData,
+    isBalanced,
+    balanceDifference,
     recentEntries,
-  } = useAccountingDashboardModel(accounts, entries);
-
-  const revenue = serverMetrics?.revenue ?? modelRevenue;
-  const expenses = serverMetrics?.expenses ?? modelExpenses;
-  const netSurplus = serverMetrics?.surplus ?? modelSurplus;
-  const assets = serverMetrics?.assets ?? modelAssets;
-  const liabilities = serverMetrics?.liabilities ?? modelLiabilities;
-  const postedCount = serverMetrics?.posted ?? postedEntries.length;
-  const draftCount = serverMetrics?.draft ?? draftEntries.length;
-  const netCashFlow = serverAggregates?.netCashFlow ?? 0;
-  /**
-   * Top expense accounts from the server's own trial balance rather than a
-   * client re-derivation over the loaded journal.
-   */
-  const expenseBreakdown = (serverAggregates?.incomeStatementTrialBalance ?? serverAggregates?.trialBalance ?? [])
-    .filter((row) => row.type === 'Expense' && row.totalDebit > 0)
-    .map((row) => ({ name: row.name, value: row.totalDebit - row.totalCredit }))
-    .sort((first, second) => second.value - first.value)
-    .slice(0, 5);
-
-  const bsData = [
-    { id: 'Assets', name: t('accounting.dashboard.assets'), value: Math.max(0, assets) },
-    { id: 'Liabilities', name: t('accounting.dashboard.liabilities'), value: Math.max(0, liabilities) },
-    { id: 'Equity', name: t('accounting.dashboard.equity'), value: Math.max(0, equity) },
-  ];
+  } = useAccountingDashboardView(accounts, entries);
 
   return (
     <section aria-label={t('accounting.dashboard.aria')} className="space-y-5">
-      <ModuleCommandMetricsGrid items={[
-        { key: 'revenue', label: t('accounting.dashboard.totalRevenue'), value: formatCurrency(revenue), icon: TrendingUp, accent: 'success' },
-        { key: 'expenses', label: t('accounting.dashboard.totalExpenses'), value: formatCurrency(expenses), icon: TrendingDown, accent: 'destructive' },
-        { key: 'surplus', label: t('accounting.dashboard.netSurplus'), value: formatCurrency(Math.abs(netSurplus)), sub: netSurplus < 0 ? t('accounting.dashboard.deficit') : t('accounting.dashboard.surplus'), icon: DollarSign, accent: netSurplus >= 0 ? 'primary' : 'destructive' },
-        { key: 'assets', label: t('accounting.dashboard.totalAssets'), value: formatCurrency(assets), icon: Scale, accent: 'info' },
-        { key: 'liabilities', label: t('accounting.dashboard.totalLiabilities'), value: formatCurrency(liabilities), icon: Scale, accent: 'muted' },
-        { key: 'cash-flow', label: t('accounting.dashboard.netCashFlow'), value: formatCurrency(Math.abs(netCashFlow)), sub: netCashFlow >= 0 ? t('accounting.dashboard.positive') : t('accounting.dashboard.negative'), icon: TrendingUp, accent: 'primary' },
-        { key: 'posted', label: t('accounting.dashboard.postedEntries'), value: postedCount, icon: CheckCircle2, accent: 'success' },
-        { key: 'drafts', label: t('accounting.dashboard.pendingDrafts'), value: draftCount, icon: Clock, accent: draftCount > 0 ? 'warning' : 'muted' },
-      ]} />
+      <ModuleCommandMetricsGrid items={metricItems} />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <Card accentColor="primary" className={cn("lg:col-span-2 p-5", CARD_STRIPE_INSET)}>
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t('accounting.dashboard.revenueVsExpenses')}</h3>
-          {monthlyData.length === 0 ? (
-            <EmptyState title={t('accounting.dashboard.noPostedData')} compact icon={null} className="h-48" />
-          ) : (
-            <>
-              <div aria-hidden="true">
-                <SafeResponsiveContainer height={200}>
-                  <BarChart data={monthlyData} barGap={4}>
-                    <ChartGrid />
-                    <XAxis dataKey="month" tick={chartAxisTick(11)} />
-                    <YAxis tick={chartAxisTick(11)} tickFormatter={(tickValue) => tickValue === 0 ? formatCurrency(0) : (tickValue >= 1000 || tickValue <= -1000) ? `${formatCurrency(Math.round(tickValue / 1000))}k` : formatCurrency(tickValue)} />
-                    <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? formatCurrency(Number(tooltipValue)) : ''} />
-                    <Bar dataKey="revenue" name={t('accounting.dashboard.revenue')} fill={primary} radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="expenses" name={t('accounting.dashboard.expenses')} fill={secondary} radius={[4, 4, 0, 0]} />
-                  </BarChart>
-                </SafeResponsiveContainer>
-              </div>
-              <table className="sr-only">
-                <caption>{t('accounting.dashboard.revenueVsExpensesTable')}</caption>
-                <thead>
-                  <tr>
-                    <th scope="col">{t('accounting.columns.journal.date')}</th>
-                    <th scope="col">{t('accounting.dashboard.revenue')}</th>
-                    <th scope="col">{t('accounting.dashboard.expenses')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthlyData.map((month) => (
-                    <tr key={month.month}>
-                      <th scope="row">{month.month}</th>
-                      <td>{formatCurrency(month.revenue)}</td>
-                      <td>{formatCurrency(month.expenses)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </>
-          )}
-        </Card>
+      <AccountingDashboardCharts
+        monthlyData={monthlyData}
+        expenseBreakdown={expenseBreakdown}
+        primary={primary}
+        secondary={secondary}
+        pieColors={pieColors}
+        formatCurrency={formatCurrency}
+      />
 
-        <Card accentColor="info" className={cn("p-5", CARD_STRIPE_INSET)}>
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t('accounting.dashboard.expenseBreakdown')}</h3>
-          {expenseBreakdown.length === 0 ? (
-            <EmptyState title={t('accounting.dashboard.noExpenseData')} compact icon={null} className="h-48" />
-          ) : (
-            <>
-              <div aria-hidden="true">
-                <SafeResponsiveContainer height={150}>
-                  <PieChart>
-                    <Pie data={expenseBreakdown} cx="50%" cy="50%" innerRadius={40} outerRadius={65}
-                      dataKey="value" paddingAngle={2}>
-                      {expenseBreakdown.map((_, index) => (
-                        <Cell key={index} fill={pieColors[index % pieColors.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip formatter={(tooltipValue) => tooltipValue !== undefined ? formatCurrency(Number(tooltipValue)) : ''} />
-                  </PieChart>
-                </SafeResponsiveContainer>
-              </div>
-              <div className="space-y-1 mt-2">
-                {expenseBreakdown.map((expenseItem, index) => (
-                  <div key={index} className="flex min-w-0 items-center gap-2 text-xs" aria-label={`${expenseItem.name}: ${formatCurrency(expenseItem.value)}`}>
-                    <span className="h-2.5 w-2.5 shrink-0 rounded-full" style={{ background: pieColors[index % pieColors.length] }} aria-hidden="true" />
-                    <span className="min-w-0 flex-1 truncate text-muted-foreground">{expenseItem.name}</span>
-                    <span className="shrink-0 font-mono font-semibold text-foreground">{formatCurrency(expenseItem.value)}</span>
-                  </div>
-                ))}
-              </div>
-            </>
-          )}
-        </Card>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card accentColor="primary" className={cn("p-5", CARD_STRIPE_INSET)}>
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t('accounting.dashboard.balanceSheetSnapshot')}</h3>
-          <div className="space-y-3">
-            {bsData.map((balanceSheetItem) => {
-              const max = Math.max(...bsData.map((snapshotItem) => snapshotItem.value), 1);
-              const percentage = (balanceSheetItem.value / max) * 100;
-              const colors: Record<string, string> = { Assets: 'bg-info', Liabilities: 'bg-destructive', Equity: 'bg-primary' };
-              return (
-                <div key={balanceSheetItem.id} aria-label={`${balanceSheetItem.name}: ${formatCurrency(balanceSheetItem.value)}`}>
-                  <div className="flex justify-between text-xs mb-1">
-                    <span className="font-semibold text-foreground">{balanceSheetItem.name}</span>
-                    <span className="font-mono font-bold text-foreground">{formatCurrency(balanceSheetItem.value)}</span>
-                  </div>
-                  <ProgressBar
-                    value={percentage}
-                    size="md"
-                    fillClassName={colors[balanceSheetItem.id]}
-                    aria-hidden="true"
-                  />
-                </div>
-              );
-            })}
-          </div>
-          {/*
-            The message text uses the high-contrast foreground token rather than a
-            semantic colour: `--success`/`--destructive` are branding-overridable, and
-            a lighter brand green measured 3.84:1 as small text on its own 10% tint.
-            The status colour is carried by the tint and the (non-text) icon instead.
-          */}
-          <div className={`mt-4 flex items-center gap-2 text-xs font-semibold px-3 py-2 rounded-lg text-foreground border ${Math.abs(assets - (liabilities + equity)) < 1 ? 'border-success bg-background shadow-sm' : 'border-destructive bg-background shadow-sm'}`}>
-            {Math.abs(assets - (liabilities + equity)) < 1
-              ? <><CheckCircle2 className="w-3.5 h-3.5 text-success" aria-hidden="true" /> {t('accounting.dashboard.balanceSheetBalanced')}</>
-              : <><AlertCircle className="w-3.5 h-3.5 text-destructive" aria-hidden="true" /> {t('accounting.dashboard.difference', { amount: formatCurrency(Math.abs(assets - (liabilities + equity))) })}</>
-            }
-          </div>
-        </Card>
-
-        <Card accentColor="warning" className={cn("p-5", CARD_STRIPE_INSET)}>
-          <h3 className="text-sm font-bold text-foreground mb-4 m-0">{t('accounting.dashboard.recentEntries')}</h3>
-          <div className="space-y-2">
-            {recentEntries.length === 0 ? (
-              <EmptyState title={t('accounting.dashboard.noPostedData')} description={t('accounting.journal.dashboard.noEntriesHint')} compact variant="dashed" />
-            ) : recentEntries.map((journalEntry) => {
-              const totalDebit = journalEntry.lines.reduce((sum, journalLine) => sum + journalLine.debit, 0);
-              return (
-                <article key={journalEntry.id} className="flex items-center gap-3 p-2.5 rounded-lg hover:bg-muted/30 transition-colors">
-                  <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 ${journalEntry.status === 'posted' ? 'bg-success/15' : 'bg-warning/15'}`} aria-hidden="true">
-                    {journalEntry.status === 'posted'
-                      ? <CheckCircle2 className="w-3.5 h-3.5 text-success" />
-                      : <Clock className="w-3.5 h-3.5 text-warning" />
-                    }
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-bold text-primary font-mono m-0">{journalEntry.ref}</p>
-                    <p className="text-xs text-foreground truncate m-0">{journalEntry.description}</p>
-                  </div>
-                  <div className="text-end shrink-0">
-                    <p className="text-xs font-mono font-bold text-foreground m-0">{formatCurrency(totalDebit)}</p>
-                    <p className="text-xs text-muted-foreground m-0">{formatDate(journalEntry.date)}</p>
-                  </div>
-                </article>
-              );
-            })}
-          </div>
-        </Card>
-      </div>
+      <AccountingDashboardSnapshots
+        bsData={bsData}
+        isBalanced={isBalanced}
+        balanceDifference={balanceDifference}
+        recentEntries={recentEntries}
+        formatCurrency={formatCurrency}
+      />
     </section>
   );
 }

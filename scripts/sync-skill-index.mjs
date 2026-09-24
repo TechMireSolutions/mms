@@ -30,7 +30,7 @@ const readFrontmatter = (skill) => {
 
 /** "Use when <clause>." → short index label. */
 const useWhenLabel = (description) => {
-  const m = description.match(/Use when ([^.]*)\./i);
+  const m = description.match(/Use when (.*?)(?:\.\s+Do NOT|\.$)/i);
   if (!m) return description.slice(0, 80);
   return m[1].charAt(0).toUpperCase() + m[1].slice(1);
 };

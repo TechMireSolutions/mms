@@ -7,55 +7,43 @@ description: Field/tab registry, system vs custom fields, Setup Fields wiring �
 
 **Workflow skills:** registry/types → `mms-fields-registry` · Setup Fields/Preferences UI → `mms-module-setup` · FormModal binding → `mms-form-architecture` · Schema migrations → `mms-schema-migrate` · Backend API → `mms-backend-api`.
 
-Governs column layouts, field schemas, and Setup Fields configuration across the monorepo.
+## 1. System vs Custom Fields
 
-## 1. System vs custom fields
+- **System fields**: Typed in `@mms/shared` + concrete Drizzle columns (core domain attributes in dedicated columns).
+- **Custom fields & tabs**: Typed in `@mms/shared` + concrete relational tables / typed columns. Dynamic form compilers and untyped JSONB/EAV blobs are strictly banned.
+- Tenant-created custom collections persist via dedicated child/junction tables (addresses, phones, emails). Blank rows strip on save via `cleanContactDraft`; empty arrays are authoritative (`mms-form-architecture.md` §3).
+- Column visibility and width preferences follow `mms-module-architecture.md` §3 (local width takes precedence; clamp with `clampModuleColumnWidth`).
 
-| Kind | Where | Notes |
-|------|-------|--------|
-| **System fields** | Typed in `@mms/shared` + Drizzle columns | Core domain attributes in dedicated, typed columns |
-| **Custom fields & tabs** | Typed in `@mms/shared` + concrete relational tables / typed columns | Registry-configured and strictly typed — zero untyped JSONB/EAV blobs |
+## 2. New / Changed Field Checklist
 
-- Free-form dynamic form compilers / visual schema generators and generic EAV key/value stores are **banned** — forms are strictly registry- and shared-schema-driven with concrete typed persistence.
-- Tenant-created custom collections persist via **dedicated child/junction tables** (e.g. contact addresses, phones, emails). Blank rows strip on save via `cleanContactDraft`; emptied arrays must persist — `mms-form-architecture.md` §3.
-- Column visibility **and width** prefs → **`mms-module-architecture.md` §3** (local width wins; clamp with `clampModuleColumnWidth`).
-
-## 2. New / changed field checklist
-
-1. **Shared** — type + Zod in `@mms/shared` (`FIELD_TYPES_META`, `createFormCustomFieldHelpers`, field config schemas) with `.strict()`
-2. **Drizzle** — dedicated typed column or relational child table + forward-only migration generated via `drizzle-kit generate` (`mms-schema-migrate`)
-3. **REST** — `parseRequest` Zod on BE routes; field values via shared Zod builders driven by registry type — no ad-hoc `typeof` switches in handlers
-4. **UI** — bind via registry / form draft; `labelKey` only (no hardcoded labels)
-5. **Removal** — call `getFieldRemovalIssues()` / `get*FieldRemovalIssues()` before delete to check dependency conflicts (`createFieldRemovalIssuesChecker` in `@mms/shared`)
-6. **Validation** — entity save routes validate via shared Zod schemas (`safeParse`) — client validation is UX only
-7. **Soft-Delete Aware Uniqueness** — recyclable unique fields (`email`, `phone`, `employee_id`, `student_id`, slug) MUST use partial unique indexes `WHERE deleted_at IS NULL`; standard `UNIQUE` constraints and `UNIQUE NULLS NOT DISTINCT` are strictly forbidden on soft-deletable tables (`docs/soft-delete.md` §2.4 · `mms-soft-delete`)
+1. **Shared**: Strict type and Zod schema in `@mms/shared` (`FIELD_TYPES_META`, `createFormCustomFieldHelpers`, field configs).
+2. **Drizzle**: Dedicated typed column or relational table + forward-only migration via `drizzle-kit generate` (`mms-schema-migrate`).
+3. **REST**: `parseRequest` Zod on backend routes; builders driven by registry types (no ad-hoc `typeof` switches).
+4. **UI**: Bind via registry/form draft; `labelKey` only (no hardcoded labels).
+5. **Removal**: Call `getFieldRemovalIssues()` before delete to check dependency conflicts.
+6. **Validation**: Save routes validate via shared Zod schemas (`safeParse`); client validation is UX-only.
+7. **Soft-Delete Uniqueness**: Recyclable unique fields (`email`, `phone`, `student_id`) require partial unique indexes `WHERE deleted_at IS NULL` (`mms-soft-delete`).
 
 ## 3. Localization
 
-- Prefer `labelKey: AppTranslationKey` resolved with `t(labelKey)`.
-- **Ban** English string fallbacks in form components (`t(key) || 'Label'`).
+- Field definitions require `labelKey: AppTranslationKey` resolved via `t(labelKey)`. English string fallbacks (`t(key) || 'Label'`) are strictly banned.
 
-## 4. Tab enablement SSOT (Contacts reference)
+## 4. Tab Enablement SSOT (Contacts Reference)
 
-- When `formTabs` exist, their `enabled` flags are authoritative for the form, drawer, export, and BE dynamic validation.
-- Use `resolveContactEnabledTabIds` from `@mms/shared` — do **not** blind-union `DEFAULT_ENABLED_TABS` onto active `formTabs` (that made Setup toggles cosmetic).
-- Locked always-on tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic` only). Pass a **stable** `readonly` array/const for `lockedEnabledTabs` (module-level or memoized) — never inline `[...CONST]` / new array literals each render (unstable identity → infinite rehydrate). Retired seed `custom` is not locked — omit unless field-config still has fields under `tabId: "custom"`.
-- `DEFAULT_ENABLED_TABS` is the **fallback seed** when `formTabs` are absent — not a permanent override.
+- Active `formTabs.enabled` flags are authoritative for forms, drawers, exports, and backend dynamic validation.
+- Resolve tab IDs via `resolveContactEnabledTabIds` from `@mms/shared` (never blind-union `DEFAULT_ENABLED_TABS`).
+- `CONTACT_LOCKED_ENABLED_TABS` (`basic` only) must be passed as a stable, memoized reference to prevent infinite re-renders.
 
 ## 5. Contact-Linked Module Identity (Students & Faculty)
 
-- Identity fields (student/faculty contact link, gender, DOB, relationships) are **validation/display** registry config — person data SSOT remains Contacts.
-- Do not treat enabling those fields as permission to dual-write profile keys onto `students` or `faculty` domain rows when `contactId` is set — strip/hydrate rules → `mms-data-layer.md` / `mms-form-architecture.md`.
+- Identity fields (contact link, gender, DOB, relationships) are validation/display registry configs; Contacts remains the person data SSOT.
+- Dual-writing person profile keys onto `students` or `faculty` tables when `contactId` is set is strictly banned (`mms-data-layer.md`).
 
 ## 6. Form & Drawer Render Parity
 
-- Every system / core field that validation can require must have a control (form) and a read row (detail drawer).
-- Ban hard-coded `switch (field.key)` / allowlists that `return null` for unknown keys for active fields.
+- Every active system or core field that validation can require must have a form control and a read row in the detail drawer. Ban hardcoded allowlists that return null for active fields.
 
 ## 7. Entity Presentation Descriptor Adapter
 
-- For entities configured via runtime `FieldConfig` (custom fields, tab enablement, permissions), bridge `@mms/shared` `FieldConfig` into `EntityDescriptor<T>` via `createEntityDescriptorFromFieldConfig` (`@/components/common/entityDescriptorFromFieldConfig`).
-- The adapter preserves dynamic field ordering, drawer sections (`group` → `drawerSection`), visibility rules, and resolves localized labels via injected `resolveLabel` or `labelKey`.
-- Card metadata components (`DirectoryCardMetadata`) support **merge mode** (`extraColumns`), letting descriptor-driven tiles compose seamlessly with bespoke module chrome without duplicate key emissions.
-
-
+- Bridge runtime `FieldConfig` into `EntityDescriptor<T>` via `createEntityDescriptorFromFieldConfig` (`@/components/common/entityDescriptorFromFieldConfig`).
+- Preserves dynamic field ordering, drawer grouping, and visibility rules. Card metadata components support merge mode (`extraColumns`) to compose descriptor tiles with custom chrome.

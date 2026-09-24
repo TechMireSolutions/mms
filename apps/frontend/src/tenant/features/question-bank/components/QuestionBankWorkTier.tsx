@@ -37,6 +37,10 @@ interface QuestionBankWorkTierProps {
   onBulkRestore: (ids: string[]) => Promise<void>;
   onFilteredCountChange: (count: number) => void;
   onCreatePaper: () => void;
+  selectedIds?: string[];
+  onToggleSelectedQuestion?: (id: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean, visibleIds: string[]) => void;
+  onClearSelection?: () => void;
   onRowClick?: (id: string) => void;
 }
 
@@ -63,6 +67,10 @@ export function QuestionBankWorkTier({
   onBulkRestore,
   onFilteredCountChange,
   onCreatePaper,
+  selectedIds,
+  onToggleSelectedQuestion,
+  onToggleSelectAll,
+  onClearSelection,
   onRowClick,
 }: QuestionBankWorkTierProps) {
   const { t } = useTranslation();
@@ -104,6 +112,10 @@ export function QuestionBankWorkTier({
           onBulkDelete={onBulkDelete}
           onBulkRestore={onBulkRestore}
           onFilteredCountChange={onFilteredCountChange}
+          selectedIds={selectedIds}
+          onToggleSelectedQuestion={onToggleSelectedQuestion}
+          onToggleSelectAll={onToggleSelectAll}
+          onClearSelection={onClearSelection}
           isColumnVisible={columnLayout.isColumnVisible}
           getColumnWidth={columnLayout.getColumnWidth}
           onColumnResize={columnLayout.setColumnWidth}

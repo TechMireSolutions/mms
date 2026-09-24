@@ -7,92 +7,61 @@ description: Static FormModal architecture — shell chrome, Zod validation, Rea
 
 **Workflow skill:** `mms-form-architecture`. Shell a11y/focus-return verify → `mms-a11y-smoke`.
 
-Simple static forms with design-system primitives — not dynamic layout engines. Responsive/a11y chrome around the dialog → `mms-ui-ux-design.md` §3/§4.
+Simple static forms with design-system primitives — not dynamic layout engines. Responsive/a11y chrome → `mms-ui-ux-design.md` §3/§4.
 
 ## 1. FormModal shell & primitives
 
-- Use `FormModal` for create/edit/builders; raw `Modal` only for confirm/preview.
-- Shell owns header, icon, subtitle, tabs, progress, focus trap, sizing, and mobile behavior.
-- **Focus return**: On close, restore focus to the control that opened the dialog/drawer when practical.
-- Layout repeatable entity forms using full-width single column flows (`COLLECTION_BODY`) inside `space-y-3` containers.
-- Form inputs share `min-h-11` via `FORM_INPUT` in `formStyles.ts` SSOT — no ad-hoc input chrome.
-- Inline field/panel errors → `FieldErrorMessage` + `FORM_ERROR` (do not fork `text-xs text-destructive` lines). Auth entry fields may apply `FORM_ERROR` class directly.
-- Form cards → `FORM_CARD`; dense builder inputs → `FORM_INPUT_BUILDER` — do not invent parallel glass stacks in features.
-- Inputs via central primitives (`Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `TimePicker`, `DateTimePicker`, `EditableSelect`) — currency as `inputMode="decimal"` text (never `type="number"`), phone as `type="tel"` + E.164, date/datetime via the shared pickers.
-- **Stable Heights & Top-Layer Transitions**: Tabbed forms use `<FormModal tall>` with a tall viewport height + `max-h-[43.75rem]` and scrollable body `flex-1 overflow-y-auto`. Prefer `dvh`/`svh` (+ `safe-area-inset` padding) over raw `vh` when touching FormModal chrome — iOS keyboard/browser chrome. Support smooth top-layer transitions via `@starting-style` and `transition-behavior: allow-discrete`.
-- **Scroll Containment**: `useBodyScrollLock()` + `overscroll-contain` on scrollable modal boxes.
-- **Tabs, Field Grids & Subgrid:** Layout follows the dialog `@container` (`@md:` / `@sm:` / `cqi`), not the viewport — `mms-ui-ux-design.md` §4. Multi-column form sections leverage CSS Subgrid (`grid-template-rows: subgrid` / `grid-template-columns: subgrid`) for aligned label-input pairings across rows.
-- Long forms split major tasks into purposeful `FormModal` tabs; preserve form state across tab switches.
-- **Tabs:** one tab per persisted table when a record spans tables; workflow-only tabs OK when the saved payload stays explicit. Visible tabs follow Setup enablement SSOT — `mms-fields.md`.
-- **Enabled fields must render**: if validation can require a registry field, the form must show a control (and the drawer a read row). Ban hard-coded key allowlists.
-- Ban dynamic form compilers / visual schema generators on the FE — forms are static and registry-driven with shared Zod validation from `@mms/shared`.
-- Option lists: tenant ContactConfig / module registries — not hardcoded `@mms/shared` `DEFAULT_*` as live form options.
-- Stacked pickers need descending `z-index` so overlays are not clipped.
-- Dates: `<DatePicker>` / `RegistryDateField` only — never raw `<input type="date">`. Calendar is **Gregorian** only; Hijri/lunar helpers are display-only.
-- Times: `<TimePicker>` only — never raw `<input type="time">`.
-- Datetimes: `<DateTimePicker>` only (DatePicker + TimePicker) — never `datetime-local`.
-- Gate create/edit entry and save CTAs with `canWrite` — do not toast success / close when the mutation never ran.
+- Use `FormModal` for create/edit/builders; raw `Modal` only for confirm/preview. Shell owns header, icon, subtitle, tabs, progress, focus trap, and sizing. Restore focus to opening trigger on close.
+- Layout repeatable entity forms with full-width single column flows (`COLLECTION_BODY`) inside `space-y-3`.
+- Shared inputs use `min-h-11` via `FORM_INPUT` in `formStyles.ts`. Form cards use `FORM_CARD`; builder inputs use `FORM_INPUT_BUILDER`. Inline errors use `FieldErrorMessage` + `FORM_ERROR`.
+- Input primitives: `Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `TimePicker`, `DateTimePicker`, `EditableSelect`. Currency: text `inputMode="decimal"` (never `type="number"`). Phone: `type="tel"` + E.164. Calendar is Gregorian only; Hijri/lunar display-only.
+- Tabbed forms use `<FormModal tall>` (`max-h-[43.75rem]` + `flex-1 overflow-y-auto`). Use `dvh`/`svh` (+ safe area) over `vh`. `useBodyScrollLock()` + `overscroll-contain` on scrollable modal boxes.
+- Container queries (`@container`) drive responsive form layouts. Multi-column form sections leverage CSS Subgrid for aligned label-input pairings.
+- One tab per persisted table when records span tables. Preserve form state across tab switches. Enabled registry fields must render (ban hard-coded allowlists). Ban client-side dynamic form compilers.
+- Gate create/edit entry and save CTAs with `canWrite`. Stacked pickers need descending `z-index`.
 
 ## 2. State & React 19 defaults
 
-- Prefer simple controlled state (or RHF + zodResolver for complex multi-step forms). Same Zod schema as BE DTOs from `@mms/shared`.
-- **RSC Server Actions Ban & Client Actions**: React Server Components (RSC) Server Actions (`"use server"`) and multi-page native HTML form `action=` POST submissions are strictly banned — MMS is a Vite Single Page Application communicating with Fastify REST via `apiClient`. TanStack Query mutations (`useMutation`) remain the primary server cache synchronizer; client-side `useActionState` or `useOptimistic` interacting with `apiClient` async handlers is permitted only where it streamlines local pending/optimistic state without bypassing Query cache invalidation.
-- Initialize fields to avoid uncontrolled→controlled warnings: strings `""`, numbers/dates `null`, lists `[]`.
-- Every control needs `name` + `id` (mandatory `useId()` fallback paired with `<label htmlFor={id}>` for WCAG 2.2 AA accessibility).
-- **Mobile Keyboard Ergonomics & Autocomplete (2026)**: Form inputs must provide semantic `inputMode` and standard `autoComplete` hints to optimize mobile virtual keyboards:
-  - Currency/Money: `inputMode="decimal"`
-  - Phone: `type="tel"`, `inputMode="tel"`, `autoComplete="tel"`
-  - OTP / 2FA: `inputMode="numeric"`, `autoComplete="one-time-code"`
-  - Names: `autoComplete="given-name"` / `autoComplete="family-name"`
-  - Email: `type="email"`, `inputMode="email"`, `autoComplete="email"`, `autoCapitalize="none"`, `autoCorrect="off"`
-  - Navigation: Use `enterKeyHint="next"` on intermediate inputs and `enterKeyHint="done"` or `enterKeyHint="send"` on the form's final action input.
-  - **Pasteability Invariant (WCAG 2.2 Accessible Authentication 3.3.8)**: Never block copy-paste on OTP, 2FA, or password inputs (`onPaste` prevention is strictly banned).
-- Custom form controls use React 19 native `ref` as prop — `forwardRef` is banned in newly authored form primitives.
-- Phones: single `type="tel"` input; parse/normalize E.164 on blur/save via `parsePhoneNumber` + `normalizeToE164` from `@mms/shared`.
+- Controlled state (or RHF + zodResolver for complex multi-step forms) validated against `@mms/shared` Zod schemas.
+- **RSC Actions Ban**: RSC `"use server"` actions and native `action=` POST submissions are banned. Vite SPA communicates with Fastify REST via `apiClient` and TanStack Query mutations (`useMutation`).
+- Initialize fields to prevent uncontrolled→controlled warnings (`""` for strings, `[]` for arrays). Every control requires `name` + `id` (`useId()` fallback + `<label htmlFor={id}>`).
+- Semantic mobile hints: Currency (`inputMode="decimal"`), Phone (`type="tel"`, `inputMode="tel"`, `autoComplete="tel"`), OTP (`inputMode="numeric"`, `autoComplete="one-time-code"`), Email (`type="email"`, `autoCapitalize="none"`), Names (`given-name`/`family-name`), and `enterKeyHint` (`next`/`done`).
+- **WCAG 2.2 AA**: Never block copy-paste on OTP, 2FA, or password fields (`onPaste` prevention strictly banned).
+- React 19 native `ref` prop on custom controls (`forwardRef` is banned). Phones parse/normalize to E.164 on blur/save via `parsePhoneNumber` + `normalizeToE164`.
 
 ## 3. Collection list tabs (phones / emails / addresses / socials / relationships / custom_*)
 
-- Pre-populate one empty row for UX; strip blank rows before save via `cleanContactDraft` (includes blank tenant `custom_*` tab rows).
-- **Empty array is authoritative** — `phones: []` / `emails: []` / … means “clear all”, not “omit”.
-- On edit save, merge with `mergeContactEditSavePayload` (or equivalent): draft collections + `syncContactScalarFields` must win over spreading the existing contact first.
-- When `relationshipContacts` is emptied, also clear legacy `relationships: []` on the save payload.
-- Form open (`normalizeContactForEdit`): hydrate from legacy scalars only when the source **omitted** the collection array — never rebuild rows from scalars when the array is explicitly `[]`.
-- Offline sync field picks (`mergeContactForSync`): apply `Array.isArray(source.phones|emails|addresses)` including empty arrays; clear matching scalars.
-- Backend prepare must call `syncContactScalarFields` after phone normalize — `mms-data-layer.md`.
+- Pre-populate one empty row; strip blanks before save via `cleanContactDraft`. Empty array is authoritative (`[]` means "clear all", not "omit").
+- On edit save, merge via `mergeContactEditSavePayload`: draft collections + `syncContactScalarFields` win over spreading existing contact. Clear legacy `relationships: []` when `relationshipContacts` is emptied.
+- Normalization on edit open (`normalizeContactForEdit`): hydrate from legacy scalars only if array omitted; never rebuild from scalars when array is `[]`.
+- Offline sync (`mergeContactForSync`): apply `Array.isArray(source.field)` including empty arrays; clear matching scalars. Backend prepare calls `syncContactScalarFields` after phone normalize.
 
-## 3b. Contact-linked module writes (Students & Faculty)
+### 3.1 Contact-linked module writes (Students & Faculty)
 
-- When the row has `contactId`, prepare/normalize must strip `CONTACT_PROFILE_FIELDS` and guardian triad dual-write keys (`normalizeStoredStudent` → `normalizeContactLinkedRecord`) — do not persist person profile on the module domain table.
-- Edit forms may show hydrated contact fields for UX; the save payload still links by id — Contacts owns mutations to person data.
-- Soft-delete / module-only fields (status, GR, custom Setup fields) stay on the student row in dedicated typed columns.
+- When `contactId` exists, strip `CONTACT_PROFILE_FIELDS` and guardian triad dual-writes (`normalizeContactLinkedRecord`). Do not duplicate person profile on module domain table.
+- Edit forms may show hydrated contact fields; save payload links by ID (Contacts owns person data). Soft-delete and module fields (status, GR) remain on student row.
 
 ## 4. Write vs read Zod schemas
 
-- Prefer a **write** schema for POST/PUT that omits/strips server-owned fields such as soft-delete metadata (`deletedAt`, `deletedBy`, `deletionReason`). Soft delete and restore operations are strictly performed via dedicated `DELETE /:id`, `POST /:id/restore`, `POST /bulk-delete`, and `POST /bulk-restore` endpoints (workflow skill **`mms-soft-delete`**) — forms never accept or mutate lifecycle delete metadata directly.
-- Prefer Zod `.strict()` on write DTOs (or explicit `.strip()` with documented exceptions) — unknown keys must not persist. Write-vs-read schema split and soft-delete strip on create/update bodies live here; HTTP/parseRequest wiring → `mms-api-interface.md`.
-- Use `z.preprocess` / `stripContactClientSoftDeleteFields` so `.passthrough()` cannot reintroduce stripped keys. Unit tests in `@mms/shared` must assert that write schemas drop `deletionReason`, `deletedAt`, and `deletedBy`.
-- **Active Foreign Key Guarding**: Write forms and validators assigning foreign keys (`contactId`, `sessionId`, `facultyId`, `accountId`) must verify that referenced entities are active (`deleted_at IS NULL`), rejecting assignments to soft-deleted entities to prevent ghost/dangling references (`mms-data-layer.md` §6).
-- Map Zod issues via shared `mapZodFormErrors` — prefer a shared Zod `errorMap` / issue-code → `t()` mapping in `@mms/shared` (also used by `parseRequest` messages); ban per-form string switches on `ZodIssue.code`.
-- Money/decimals as **strings** through input + validation — no IEEE 754 float math. Currency type: `z.string().regex(/^\d+(\.\d{1,2})?$/)`. Phones: `z.string().regex(/^\+[1-9]\d{1,14}$/)` (E.164). Date: `YYYY-MM-DD`. Datetime: `z.string().datetime({ offset: true })`.
-- **Loaded edit records**: Avoid flash of empty defaults — hydrate from Query (`placeholderData` / settled data) or a Suspense boundary; never optimistic-empty overwrite of a server row.
+- Write schemas (POST/PUT) omit server-owned fields (`deletedAt`, `deletedBy`, `deletionReason`). Soft-delete/restore exclusively via dedicated endpoints (`mms-soft-delete`).
+- Enforce Zod `.strict()` (or explicit `.strip()`) on write DTOs. Unit tests in `@mms/shared` must verify write schemas drop lifecycle delete keys.
+- **Active Foreign Key Guarding**: Validators and forms assigning foreign keys (`contactId`, `sessionId`, `facultyId`) must verify referenced entities are active (`deleted_at IS NULL`) to prevent dangling references (`mms-data-layer.md` §6).
+- Map Zod issues via shared `mapZodFormErrors` / `errorMap` in `@mms/shared` to `t()` keys. Ban per-form issue switches.
+- Money/decimals stored and validated as strings (no float math). E.164 phones: `/^\+[1-9]\d{1,14}$/`. Date: `YYYY-MM-DD`. Datetime: ISO 8601 with offset.
+- Prevent flash of empty defaults on edit: hydrate from TanStack Query `placeholderData`/settled data or Suspense.
 
 ## 5. RTL & errors
 
-- Logical Tailwind (`start-0`, `border-e`, `ms-auto`) for RTL layouts.
-- **Non-Punitive Validation UX**: Do not render validation errors while a user is typing in a clean, untouched field. Show inline field errors on field blur (`onBlur`), or across all fields upon the first submit attempt (`isSubmitted`).
-- **Typography & Error Wrap**: Error messages and helper descriptions use `text-wrap: pretty` to avoid single-word typographic orphans.
-- Multi-tab forms auto-focus the first invalid tab and move focus to the first invalid field upon validation failure.
-- User-facing validation copy via `t()` / `TranslatedFormMessage` — ban hardcoded English fallbacks.
+- Use logical Tailwind (`start-0`, `border-e`, `ms-auto`).
+- Non-punitive validation: show inline errors on `onBlur` or post-submission (`isSubmitted`), not during initial keystrokes. Use `:user-invalid`/`:user-valid` styling.
+- Error messages and descriptions use `text-wrap: pretty`. Multi-tab forms auto-focus the first invalid tab and field on submit failure. All user-facing error copy via `t()`.
 
 ## 6. Security pointers
 
-- Tenant writes: transaction-scoped RLS — `mms-data-layer.md`.
-- Platform writes: `authenticatePlatform` + `platformUserCan` capability checks — platform tables are not tenant-scoped (no RLS needed), but all mutations must still go through `authenticatePlatform` with explicit capability gates — `mms-auth-security.md`.
-- Soft-delete only via dedicated DELETE/restore routes — never from the create/edit form body.
-- File uploads: authenticated multipart to `/api/uploads/image` or `/api/uploads/attachment` (local disk under `/uploads/…`); resolve returned URLs via `resolveApiUrl` — no S3/presign in tree.
-- Local `/uploads/*`: require auth (or signed short-TTL) to read; on write enforce **magic-byte sniff** + MIME allowlist + **size** caps and **dimension/page** caps for images/PDFs (mitigate decompression bombs) — pointer `mms-auth-security.md`. Do not invent public long-lived CDN URLs.
+- Tenant writes: transaction-scoped RLS (`mms-data-layer.md`). Platform writes: `authenticatePlatform` + `platformUserCan` capability checks (`mms-auth-security.md`).
+- File uploads: authenticated multipart to `/api/uploads/image` or `/attachment` (local disk storage resolved via `resolveApiUrl`). Enforce magic-byte sniff, MIME allowlist, and size/dimension limits (`mms-auth-security.md`).
 
 ## 7. FormModal vs DetailSheet Boundary
 
 - **FormModal owns write mutations**: create, edit, builder workflows, and data modifications with shared Zod validation.
-- **DetailSheet owns read-only inspection**: entity attribute viewing, soft-delete archive state, quick contact actions, and audit metadata. DetailSheet consumes declarative `EntityDescriptor<T>` registries (`@/components/common/entityRegistry`, `mms-ui-ux-design.md` §6) rather than embedding form controls or duplicating field layouts. Do not put edit forms inside DetailSheet.
+- **DetailSheet owns read-only inspection**: attribute inspection, soft-delete archive banners, contact quick-actions, and audit metadata via `EntityDescriptor<T>` registries (`mms-ui-ux-design.md` §6). Never embed edit forms in DetailSheet.

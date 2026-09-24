@@ -4,7 +4,7 @@ description: Runs accessibility verification for MMS UI work — axe scans, focu
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 compatibility: Requires Playwright browsers for the full axe mode; static mode is dependency-free.
 allowed-tools: Read Grep Glob Bash(bash .agent/skills/mms-a11y-smoke/scripts/smoke-a11y.sh) Bash(pnpm test:e2e)
 ---
@@ -20,7 +20,7 @@ Do **not** use to invent design tokens → `mms-ui-ux-design.mdc` rule. Do **not
 - ❌ **NEVER omit accessible names**: Icon-only buttons must have `aria-label` or visually hidden label text.
 - ❌ **NEVER show spinner-only pending states**: Long-running lists must use `aria-busy="true"` and polite live regions (`aria-live="polite"`).
 - ❌ **NEVER break keyboard focus trapping**: Modal dialogs and detail drawers must trap focus and return focus to the trigger on close.
-- ❌ **NEVER use sub-44px touch targets**: Interactive controls must be at least 44x44px (`min-h-11 min-w-11`) on mobile viewports (WCAG 2.2 2.5.8).
+- ❌ **NEVER use sub-44px touch targets**: Interactive controls must be at least 44x44px (`min-h-11 min-w-11`) on mobile viewports (MMS design policy; WCAG 2.2 AA 2.5.8 specifies 24×24 CSS pixels with exceptions).
 - ❌ **NEVER block copy-paste on inputs**: Banning paste on password, OTP, or 2FA fields is forbidden (WCAG 2.2 3.3.8).
 - ❌ **NEVER obscure focused controls with sticky bars**: Scrollable containers with floating/sticky headers or action docks must declare `scroll-padding` (WCAG 2.2 2.4.11).
 - ❌ **NEVER provide drag-only operations**: Column customizers and layout reorderers must provide single-pointer keyboard alternatives (WCAG 2.2 2.5.7).
@@ -42,7 +42,7 @@ Do **not** use to invent design tokens → `mms-ui-ux-design.mdc` rule. Do **not
 ## Checklist
 
 ```
-- [ ] axe serious/critical clean (or filed)
+- [ ] axe serious/critical clean; report a failing scan explicitly even when an issue is filed
 - [ ] Focus-return on FormModal/drawer
 - [ ] Labels / aria-label on icon-only controls
 - [ ] Work list pending: aria-busy / polite live region
@@ -68,3 +68,5 @@ Run `full` for any change to `AppLayout`, `FormModal`, `Table`, or shared primit
 ## Done
 
 Completion-review a11y row satisfied — `mms-completion-review.mdc`.
+
+Advisory: automated axe results are partial evidence. Verify 320 CSS-pixel reflow/zoom, keyboard-only use, dialog nesting, focus return when the opener disappears, reduced motion, forced colors and announcements in a real browser. Focus Appearance is WCAG 2.4.13 (AAA), not 2.4.11 (AA Focus Not Obscured). See the [verified UI reference](../mms-ui-ux-design/references/modern-ui-ux-2026.md).

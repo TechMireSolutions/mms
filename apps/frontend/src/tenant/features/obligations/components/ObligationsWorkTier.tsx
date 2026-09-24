@@ -27,6 +27,10 @@ interface ObligationsWorkTierProps {
   onBulkRestore: (ids: string[]) => Promise<void>;
   onRetry: () => void;
   onMessage: (channel: "sms" | "whatsapp" | "email", collections: ObligationCollection[]) => void;
+  selectedIds?: string[];
+  onToggleSelectedCollection?: (id: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean, visibleIds: string[]) => void;
+  onClearSelection?: () => void;
 }
 
 export function ObligationsWorkTier({
@@ -50,6 +54,10 @@ export function ObligationsWorkTier({
   onBulkRestore,
   onRetry,
   onMessage,
+  selectedIds,
+  onToggleSelectedCollection,
+  onToggleSelectAll,
+  onClearSelection,
 }: ObligationsWorkTierProps) {
   const { t } = useTranslation();
 
@@ -82,6 +90,10 @@ export function ObligationsWorkTier({
           onRestore={onRestore}
           onBulkDelete={onBulkDelete}
           onBulkRestore={onBulkRestore}
+          selectedIds={selectedIds}
+          onToggleSelectedCollection={onToggleSelectedCollection}
+          onToggleSelectAll={onToggleSelectAll}
+          onClearSelection={onClearSelection}
           isColumnVisible={columnLayout.isColumnVisible}
           getColumnWidth={columnLayout.getColumnWidth}
           onColumnResize={columnLayout.setColumnWidth}

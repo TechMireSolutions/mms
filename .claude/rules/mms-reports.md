@@ -16,81 +16,58 @@ paths:
 
 # MMS Reports & Analytics
 
-**Workflow skills:** charts/exports/KPIs → `mms-reports-export` · mega export job tray → `mms-background-jobs`. Query-first policy → `mms-data-layer.md` · skill `mms-query-factories`.
+**Workflow skills:** charts/exports/KPIs → `mms-reports-export` · mega export job tray → `mms-background-jobs`. Query policy → `mms-data-layer.md` · skill `mms-query-factories`.
 
-**Placement & per-module categories** → `mms-module-architecture.md`. This file covers report **implementation** only.
+## 1. Data Layer (Query-First)
 
-## 1. Data Layer (Query-first)
-
-- Prefer TanStack Query / server aggregates / module `/metrics` for REST-migrated modules.
-- `getCollection` / `useLiveCollection` only for legacy non-migrated report sources — never as the primary path for REST entities.
-- Dashboard widgets / builders / drilldown: `useWidgetCollections({ requiredCollections })` from `@/lib/reports/useReportCollections` — fetch only collections the pinned set needs.
-- Chart visualizer: `useReportCollectionRows(collectionKey)` — do not call `getCollection(activeMeta.dbKey)` for REST report collections. **Contacts** visualizer uses SQL `GROUP BY` via `POST /api/contacts/widget-aggregates` (no capped page dump).
-- Widget field toggles / Hasanat drilldown deletes: REST via `persistWidgetRecordToggle` / `persistWidgetHasanatDistributionDelete` — ban `saveCollection` for REST-authoritative keys.
-- Sync helper `getWidgetCollections()` is Query-cache read-only (no localStorage invent) — prefer the hooks in React trees.
-- No stale snapshot caches unless the user explicitly exports.
-- Hydrate cross-module ids via batch `/resolve` — ban N+1 client loops.
+- Use TanStack Query, server aggregates, or module `/metrics` for REST entities. `useLiveCollection` / `getCollection` are restricted to legacy non-migrated entities.
+- Widgets/builders/drilldown: `useWidgetCollections({ requiredCollections })` — fetch only pinned collections.
+- Chart visualizer: `useReportCollectionRows(collectionKey)`. Contacts visualizer uses SQL `GROUP BY` via `POST /api/contacts/widget-aggregates` (ban capped dumps).
+- Widget toggles / Hasanat drilldown deletes: persist via REST helpers (`persistWidgetRecordToggle`), not `saveCollection`.
+- Hydrate cross-module IDs via batch `/resolve` endpoints (ban N+1 client loops). No stale snapshot caches unless explicitly exported.
 
 ## 2. Definitions & Builders
 
-- Shared metadata/utils: `@/lib/reports/*` (feature paths may re-export)
-- `CustomReportBuilder` / `DynamicCardBuilder` — ad-hoc columns + aggregates (Sum, Avg, Count)
-- Preview cap: 20 rows before full run
-- Column picker keys must match field registry keys where applicable
-- Module report category must be module-specific — never `category="academic"` on module reports
+- Shared metadata/utilities in `@/lib/reports/*`.
+- `CustomReportBuilder` / `DynamicCardBuilder`: ad-hoc columns + aggregates (Sum, Avg, Count). Cap live preview at 20 rows.
+- Column picker keys match field registry keys. Module report category must be module-specific (never generic `"academic"`).
 
 ## 3. Export Architecture (ExportToolbar)
 
-| Format | Implementation |
-|--------|----------------|
-| Print | CSS `@media print` — hide chrome |
-| Excel | `xlsx` via dynamic `import()` |
-| PDF | `jspdf` + `jspdf-autotable` — auto page size/orientation |
-
-Use shared `ExportToolbar` / `ExportToolbarCompact` (`@/components/ui/ExportToolbar*`, `exportToolbarUtils.ts`) — not a deleted `ReportExportBar`. Charts: `lazy` + `SafeResponsiveContainer`. Escape formula-prefix cells (`=`, `+`, `-`, `@`) in CSV/Excel.
-Exports above interactive size → **background job + tray download** (`mms-module-architecture.md` §5) — ban main-thread mega xlsx/PDF in the Reports tab.
+- Formats: Print (CSS `@media print`), Excel (`xlsx` dynamic `import()`), PDF (`jspdf` + `jspdf-autotable`).
+- Use shared `ExportToolbar` / `ExportToolbarCompact` (`exportToolbarUtils.ts`). Charts use `lazy` + `SafeResponsiveContainer`.
+- Escape untrusted cells with formula prefixes (`=`, `+`, `-`, `@`) in CSV/Excel; preserve negative numbers.
+- Exports exceeding interactive thresholds offload to BullMQ worker + download tray (`mms-module-architecture.md` §5).
 
 ## 4. Visualizations & Chart Rules
 
-Recharts + semantic colours (`StatusBadge` / design tokens). Export/print labels via `t()` — `mms-settings-i18n.md`.
+- Recharts + semantic design tokens (`StatusBadge`). Export/print labels via `t()`. Ban simulated workload hours (`hours += 2`); use actual class counts.
 
 ## 5. Dashboard & KPI SSOT
 
-`PinnedWidgets` / dashboard cards — config via `kpi_custom_widgets` (`DASHBOARD_WIDGETS_KEY`) and typed `saved_reports` where applicable; not hardcoded in `DashboardPage.tsx`.
-
-| Surface | Data source |
-|---------|-------------|
-| Home seeded KPI cards + report standard KPIs | Category-gated `use*Metrics` / widget-aggregates — not full collection dumps |
-| Pinned widgets / builder / drilldown | `useWidgetCollections({ requiredCollections })` — Query facades only |
-| Dynamic chart visualizer | `useReportCollectionRows` (active key + denoms when Hasanat); Contacts → `/widget-aggregates` SQL series |
-| Niche charts + date-scoped financial statements | Prefer `/metrics` / server aggregates; row-level Query reduce OK when aggregates unavailable — never localStorage-primary for REST entities |
-
-Ban fake faculty workload hours (`hours += 2`); use real class counts.
+- Pinned widgets/cards configure via `kpi_custom_widgets` (`DASHBOARD_WIDGETS_KEY`) and typed `saved_reports`.
+- Data sources:
+  - Seeded KPIs: Category-gated `use*Metrics` / widget-aggregates.
+  - Pinned widgets / builders: `useWidgetCollections` Query facades.
+  - Dynamic charts: `useReportCollectionRows` (Contacts uses `/widget-aggregates` SQL series).
+  - Financial statements: `/metrics` / server aggregates; row-level Query reduce permitted when server aggregates unavailable.
 
 ## 6. Module-Aware Filters
 
-Hide irrelevant filters per module context — do not show finance filters on attendance reports.
+- Context-sensitive filters only (hide finance filters on attendance reports).
 
 ## 7. Permissions, Export Policy & Drill-Down
 
-Exports must respect active filters, search, field visibility, soft-deletion policy, and `can()` — same boundary as Work (`mms-module-architecture.md` §6–§7). Reports and exports must strictly adhere to the module manifest `softDelete` configuration: `reportsIncludeDeleted: false` displays only active rows in analytical dashboards, while `exportsIncludeDeleted: false` hides export CTAs in trash mode and excludes archived rows from CSV/PDF/Excel exports (`docs/soft-delete.md` §5 & §7.6 · `mms-soft-delete`). Audit large/sensitive exports (target — `mms-auth-security.md`).
-
-### Drill-Down (target)
-Chart segment / summary row → Work directory with equivalent filters (URL/search params when practical), preserving RBAC.
+- Respect active filters, search, field visibility, soft-delete policies, and `can()`. Adhere to manifest `softDelete`: `reportsIncludeDeleted: false` displays only active rows; `exportsIncludeDeleted: false` hides export CTAs in trash.
+- Chart segment / summary row drill-down links to Work directory with equivalent URL filter params, preserving RBAC.
 
 ## 8. Saved Reports
 
-Save **report logic** (filters, columns, aggregates), not a data snapshot. Re-run against current authorised data. If a saved field/tab is archived, show an explicit error — do not fail silently.
-
-| Pattern | Storage | API |
-|---------|---------|-----|
-| Generic modules | Typed `saved_reports` + FORCE RLS | `/api/saved-reports?category=` (`GENERIC_SAVED_REPORT_CATEGORIES`) |
-| Contacts (share scopes) | Same table, `category: 'contacts'`; share fields inside `filters` JSONB | `/api/contacts/saved-reports` — **not** generic category enum; **not** `objects` key `contacts_saved_reports` |
-
-Do not add `'contacts'` to the generic saved-reports public category enum without also implementing share-aware list/delete semantics.
+- Persist report logic (filters, columns, aggregates), not static data snapshots. Error explicitly if saved fields/tabs are archived.
+- Generic modules: typed `saved_reports` + FORCE RLS via `/api/saved-reports?category=`.
+- Contacts: `category: 'contacts'` with share scopes inside `filters` JSONB via `/api/contacts/saved-reports` (not generic category enum; not `objects` store).
 
 ## 9. Audit Trail & Compliance Reporting
-- **Statutory Compliance Reporting**: Automate compliance report generation for statutory regimes (HIPAA 6-year retention, SOX 7-year retention, PCI-DSS 1-year tokenized records, GDPR / enacted regional privacy laws).
-- **Tamper-Evident Compliance Exports**: When exporting audit trail or compliance data (`POST /api/audit/export`), embed cryptographic chain hashes, published Merkle root proofs, and verification signatures directly into the export artifact metadata (JSON/PDF).
-- **Auditing the Auditor**: Access to audit logs and compliance reports is itself an auditable event. All view sessions, search queries, filter evaluations, and export operations targeting audit data must emit an immutable audit event (`action_type: 'VIEW'`, `table_name: 'audit_trail_events'`).
 
+- Compliance exports (`POST /api/audit/export`) embed cryptographic chain hashes, Merkle roots, and verification signatures in metadata.
+- Audit data access is auditable: view sessions, searches, and exports targeting audit records emit immutable audit events (`action_type: 'VIEW'`).

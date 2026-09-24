@@ -4,13 +4,19 @@ description: Implements TanStack Query v5 queryOptions/mutationOptions factories
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Query Factories Workflow
 
 **Rule (norms SSOT):** `mms-hooks.md` · `mms-data-layer.md` §3 · `mms-api-interface.md` · `mms-performance.md` §5.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
+
+## Financial mutation review
+
+Advisory checklist: read [ledger controls](../mms-finance-accounting/references/ledger-controls.md) for money, posting, reconciliation, and close actions. Preserve the operation identity across retries; changing economic content requires a new operation or a conflict. A disabled submit button is not idempotency.
+
+Under the existing no-optimistic-money rule, await persisted success, retain form input on conflict/failure, and invalidate affected finance/accounting lists, balances, reports, and setup state. A cancelled request or network timeout does not establish that the server rolled back; resolve uncertain outcomes before retrying external payments.
 
 ## Anti-Patterns & Banned Operations
 
@@ -23,36 +29,10 @@ metadata:
 
 1. **Verify REST Authority**: Confirm entity is server-authoritative REST. Never add `useLiveCollection` for REST entities.
 2. **Tuple Query Keys**: Define query key constants and tuple factories in `features/{module}/hooks/{module}QueryKeys.ts`.
-3. **Query Options Factory**: Colocate `queryOptions` with AbortSignal forwarding:
-   ```ts
-   export function entityListQueryOptions(query: Record<string, unknown> = {}) {
-     return queryOptions({
-       queryKey: [...ENTITY_QUERY_KEY, 'list', query] as const,
-       queryFn: async ({ signal }) => {
-         const res = await apiContract.entities.list({ query, signal, fetchOptions: { signal } });
-         if (res.status !== 200) throw new Error('Failed to fetch entities');
-         return res.body;
-       },
-       placeholderData: (prev) => prev,
-       staleTime: 15_000,
-     });
-   }
-   ```
-4. **Invalidator Helper**: Create colocated `invalidate{Module}Queries(queryClient)` invalidating list, metrics, and lookups.
-5. **Mutation Hook**: Return mutation wrapping `useMutation` with target invalidation:
-   ```ts
-   export function useEntityCreateMutation() {
-     const qc = useQueryClient();
-     return useMutation({
-       mutationFn: async (payload: InsertEntityDto) => {
-         const res = await apiContract.entities.create({ body: payload });
-         if (res.status !== 201) throw new Error('Create failed');
-         return res.body;
-       },
-       onSuccess: () => invalidateEntityQueries(qc),
-     });
-   }
-   ```
+3. **Query options:** inspect `apps/frontend/src/tenant/features/contacts/hooks/contactsListQueryBuilders.ts` and `apps/frontend/src/lib/query/` for real contract shapes and signal forwarding. Reuse the declared ts-rest client or `apiJson`/`apiFetch`; no exported `apiClient.get/post` object exists.
+4. **Invalidation:** await/return the shared invalidator so mutation completion has deliberate freshness semantics. If accepting caller callbacks, compose them explicitly; a trailing options spread must not replace mandatory invalidation.
+5. **Mutation:** derive the write type from the shared contract, gate reads by session/capability, and expose pending, failure and success states. Keep cancellation distinct from server rollback.
+
 6. **Cross-Feature Facade**: Re-export query options, hooks, and types in `@/tenant/hooks/collections/{module}.ts`.
 
 ## Verification Checklist
@@ -60,8 +40,10 @@ metadata:
 ```
 - [ ] queryOptions/mutationOptions colocated with tuple keys
 - [ ] AbortSignal forwarded to apiContract/fetchOptions
-- [ ] placeholderData: (prev) => prev used on paginated queries
+- [ ] Previous-page placeholders limited to the same authorized dataset; expose stale/pending state and guard actions
 - [ ] No manual useEffect fetch calls
 - [ ] Re-exported through @/tenant/hooks/collections/{module}.ts
 - [ ] Run: pnpm typecheck
 ```
+
+Advisory cache review: inspect both in-memory Query state and IndexedDB persistence during logout, account switch and permission revocation. Auth-gating a query does not erase existing data. Include every response-shaping filter in keys; preserve existing scope conventions and test isolation before extending persistence. See the [frontend review](../mms-frontend/references/frontend-review.md).

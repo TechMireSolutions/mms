@@ -3,7 +3,7 @@ import { CreditCard } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { ModuleStandardBulkActionBar } from "@/components/ui/ModuleStandardBulkActionBar";
+import { ModuleUniversalBulkActionBar } from "@/components/ui/ModuleUniversalBulkActionBar";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -49,9 +49,9 @@ export function PaymentSelectionBar({
   onClearSelection,
 }: PaymentSelectionBarProps): React.JSX.Element {
   return (
-    <ModuleStandardBulkActionBar
+    <ModuleUniversalBulkActionBar
       selectedCount={selectedCount}
-      showDeleted={showDeleted}
+      viewingDeleted={showDeleted}
       canDelete={true}
       onRequestBulkDelete={onOpenBulkConfirm}
       onRequestBulkRestore={onOpenBulkConfirm}

@@ -1,0 +1,45 @@
+# MMS Cursor Agent Rules & Architecture Standards
+
+Root architectural guardrails for Cursor, Antigravity, and Claude Code agents operating in the MMS monorepo.
+Canonical rule definitions reside in `.cursor/rules/*.mdc` and are mirrored across `.agent/rules/` and `.claude/rules/`.
+
+## 1. Operating Philosophy & Minimal Diff
+- Always output targeted diffs or minimal surgical edits. Never emit full-file rewrites unless explicitly commanded.
+- Implement the exact minimal code required to satisfy the requirement.
+- Halt and ask the user if an instruction introduces architectural ambiguity or breaking changes.
+
+## 2. File Size & Modular Structure (200-Line Hard Cap)
+- **Strict Constraint:** No single source file (`.ts`, `.tsx`, `.js`) may exceed 200 lines of code.
+- **Proactive Refactoring:** When any file approaches or exceeds 200 LOC, proactively decompose logic into dedicated sub-components, custom hooks, use-case interactors, or utility services before introducing new features.
+- **Layer Decoupling:** UI components must exclusively handle presentation and render state. Move all data fetching, state orchestration, side effects, and validations into separate hooks, services, or repository adapters.
+
+## 3. Type Safety & Runtime Contracts
+- **Zero Tolerance for Untyped Code:** Forbid `any`, untyped object literals/dictionaries, and `unknown` without explicit narrowing type guards.
+- **Runtime Validation:** Validate all API boundaries, external payloads, and database inputs/outputs using strict Zod schemas matching `@mms/shared`.
+
+## 4. Protected Zones & Guardrails
+DO NOT modify the following core infrastructure zones without explicit, logged user authorization:
+- Database migrations (`apps/backend/src/db/migrations_drizzle/`, `migrations/`)
+- Authentication middleware and session infrastructure (`apps/backend/src/middleware/authenticate*.ts`, `apps/backend/src/services/auth/`)
+- CI/CD pipelines, Dockerfiles, and deployment configs (`.github/workflows/`, `Dockerfile*`)
+- Global build configs (`tsconfig.json`, `tailwind.config.js`, `vite.config.ts`)
+- Dependency additions (do not add third-party packages without explicit permission; inspect existing packages first)
+
+## 5. Living Documentation & Rule Mirroring
+- Record all architectural conventions and decision updates in `DECISIONS.md`.
+- Keep interface lists, schemas, and directory patterns synchronized in `SYSTEM_ARCHITECTURE.md`.
+- Rule edits must be made in canonical `.cursor/rules/*.mdc` and mirrored using `bash .agent/scripts/sync-all.sh`.
+- Validate standards integrity with `node scripts/verify-rules-integrity.mjs`.
+
+## 6. Proactive Tooling & Dependency Research
+- Inspect verified, actively maintained community packages and modern Web APIs before writing boilerplate.
+- Use documentation MCPs (e.g., Context7) and official docs for library contracts.
+
+## 7. Core Engineering Principles
+- **DRY & SSOT:** Eliminate duplicate logic and schemas. `@mms/shared` is the single source of truth for shared DTOs and pure utilities.
+- **Semantic Design Tokens:** Use semantic tokens from Tailwind and theme configs (`primary`, `secondary`, `destructive`, `success`, `muted`, `accent`) rather than raw hex codes or arbitrary pixel spacing. Support BiDi RTL out of the box.
+
+## 8. Maximize Automated Test Coverage & Verification Gate
+- Maintain rigorous coverage: unit, component interaction, and route integration tests.
+- Cover nominal, boundary, and error failure modes.
+- Mandatory verification: `pnpm typecheck` and `pnpm test` (or `vitest run`). Never report a task complete with unresolved regressions or failing tests.

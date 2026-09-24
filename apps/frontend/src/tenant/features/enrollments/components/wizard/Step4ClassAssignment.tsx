@@ -92,12 +92,13 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
         {classes.map((sessionClass) => {
           const selected   = value?.id === sessionClass.id;
           const isSuggested = suggestedClass?.id === sessionClass.id;
-          const maxCapacity = sessionClass.maxStudents ?? (sessionClass as any).capacity ?? 30;
+          const legacyClass = sessionClass as Class & { capacity?: number; ageMin?: number; ageMax?: number };
+          const maxCapacity = sessionClass.maxStudents || legacyClass.capacity || 30;
           const enrolled = sessionClass.enrolled ?? 0;
           const spotsLeft = maxCapacity - enrolled;
           const full = spotsLeft <= 0;
-          const minAge = sessionClass.minAge ?? (sessionClass as any).ageMin ?? 5;
-          const maxAge = sessionClass.maxAge ?? (sessionClass as any).ageMax ?? 18;
+          const minAge = sessionClass.minAge || legacyClass.ageMin || 5;
+          const maxAge = sessionClass.maxAge || legacyClass.ageMax || 18;
 
           return (
             <Button

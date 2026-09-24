@@ -127,6 +127,11 @@ jobs:
       - name: Code-norm ratchets
         run: pnpm run check:code-norms
 
+      # Ratchet: Work Directory convergence (selection SSOT, unified bulk chrome,
+      # zero dual-render, zero shortcut stubs).
+      - name: Work Directory convergence
+        run: pnpm run check:work-directory
+
       # i18n key parity across en/ar/ur/fa. The script existed but ran in no
       # workflow, so translation drift was never actually gated.
       - name: i18n key parity

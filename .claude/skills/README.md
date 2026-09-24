@@ -39,7 +39,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-queue-ops](mms-queue-ops/SKILL.md) | A background export/import, PDF render, messaging broadcast, or settings job never completes, or when the worker process is unhealthy |
 | [mms-release-versioning](mms-release-versioning/SKILL.md) | Cutting a release, tagging a deploy, recording a closed migration milestone, or marking work complete in the debt register |
 | [mms-reports-export](mms-reports-export/SKILL.md) | Editing Reports tabs, KPIs, ExportToolbar, drill-down, saved reports, or dashboard widgets |
-| [mms-schema-migrate](mms-schema-migrate/SKILL.md) | Changing schema |
+| [mms-schema-migrate](mms-schema-migrate/SKILL.md) | Changing schema.ts, writing SQL migrations, or reviewing DDL PRs |
 | [mms-settings-i18n](mms-settings-i18n/SKILL.md) | Adding or modifying settings, sidebar navigation items, custom localizations, translation files, or RTL/LTR layout mirroring |
 | [mms-shared-package](mms-shared-package/SKILL.md) | Adding shared types, formatDate, formatMoney, parsePhoneNumber, manifests, or moving duplicated logic to packages/shared |
 | [mms-soft-delete](mms-soft-delete/SKILL.md) | Adding or changing soft-delete, trash directories, restore handlers, DDL migrations, or auditing deletion lifecycles |

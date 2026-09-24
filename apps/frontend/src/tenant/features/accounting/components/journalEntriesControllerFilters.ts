@@ -31,7 +31,7 @@ export const EMPTY_JOURNAL_ENTRY_FILTERS: JournalEntryFilterState = {
  */
 export const JOURNAL_PAGE_SIZE = 100;
 
-/** Matches the repo's directory controllers (`useWorkDirectoryController`). */
+/** Mirrors the repo's directory controllers (contacts/students pattern). */
 const SEARCH_DEBOUNCE_MS = 250;
 
 /** Pager contract, shared by the list that renders it and the page that fetches. */

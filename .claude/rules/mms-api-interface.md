@@ -15,110 +15,53 @@ paths:
 
 **Workflow skills:** FE shell/`apiClient` → `mms-frontend` · Fastify routes/`inject()` → `mms-backend-api` · CSRF/cookies → `mms-backend-security`.
 
-Governs the communications contract between the React SPA frontend and the Fastify backend — routing layers, payload schemas, fetch clients. This applies **equally to both tenant and platform** boundaries. Sessions/middleware recipes → `mms-auth-security.md`. Query policy → `mms-data-layer.md`.
-
----
-
 ## 1. Client-Server Communication Flow
-All frontend requests to backend resources (tenant or platform) must use `apiClient` (`apiFetch` / `apiJson`) or type-safe `@ts-rest` contract hooks (`initTsrReactQuery` / `tsr` in `apps/frontend/src/lib/api.ts` bound to `@mms/shared` contracts and transporting through `apiFetch`).
-- **Native Networking**: Use native global `fetch()`, `FormData`, and global `WebSocket`. Banned third-party packages: `axios`, `node-fetch`, and `ws` for standard client communication.
-- **Credentials**: Always `credentials: 'include'`. Cookie names, refresh rules, JWT trust → **`mms-auth-security.md`**.
-- **AbortSignal**: Pass Query/`fetch` `signal` into `apiFetch` / `apiJson` — required for cancellation (`mms-data-layer.md`). Support composite signals via `AbortSignal.any([userSignal, AbortSignal.timeout(ms)])` for bounded client fetches.
-- **URL Pattern Matching**: Leverage the globally available `URLPattern` API and WHATWG `new URL()` for pattern matching and URL parsing rather than custom regex or `path-to-regexp` / `url.parse()`.
-- **REST Trajectory & Contracts**: New features must implement resource-specific endpoints (e.g. `GET /api/students`) or declared `@ts-rest` contracts instead of the generic collections sync API. Contracts live in `packages/shared/src/contracts/*` using `@ts-rest/core`, executed on the backend via `@ts-rest/fastify` and on the frontend via `@ts-rest/react-query`.
-- **Data Types & Validation SSOT**: DTOs via `@mms/shared` only. Zod 4 schemas (`parseRequest` / `@ts-rest` contracts) are the write boundary — do **not** enable parallel Fastify Ajv/JSON-Schema body validation for the same DTO.
-- **Write DTOs / write-vs-read**: Prefer shared write schemas — norms → **`mms-form-architecture.md`** (`.strict()`, soft-delete strip).
-- **Response shapes**: Derive serializers / type guards from the same `@mms/shared` Zod — still ban hand-forked Fastify JSON Schema DTOs.
-- **Destructive merges**: Atomic server transaction (`POST …/merge`) — ban FE-only dual delete+upsert.
-- **429 handling**: Honor `Retry-After` and IETF draft headers (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset`) — `mms-auth-security.md`.
-- **End-to-End Distributed Tracing (W3C Trace Context)**: The frontend `apiClient` must generate (or pass through) a compliant W3C `traceparent` (version 00) header on all outbound requests. Fastify middleware extracts and binds `traceparent` into `AsyncLocalStorage` (`tenantStorage` on Node 24 `AsyncContextFrame`), propagating it across all asynchronous DB queries, outbox audit records (as `correlation_id`), and outbound HTTP calls. Fastify responses must echo both `traceparent` and `x-request-id` headers, guaranteeing 1:1 trace correlation between client-side UI error toasts and server telemetry. Banned: generating ad-hoc random UUIDs that break correlation with external APM / distributed tracing stacks.
 
----
+- **Sanctioned Clients:** All frontend API calls must use `apiClient` (`apiFetch` / `apiJson`) or `@ts-rest/react-query` contracts (`initTsrReactQuery`). Banned: `axios`, `node-fetch`, and `ws` for standard client communication.
+- **Credentials & Cancellation:** Always `credentials: 'include'`. Pass Query `signal` to `apiFetch`; composite signals via `AbortSignal.any([signal, AbortSignal.timeout(ms)])`. Fastify route handlers propagate `request.raw.signal` to abort downstream DB queries on client disconnect.
+- **Contract Boundary (SSOT):** DTOs defined in `packages/shared/src/contracts/*` using Zod 4 (`parseRequest` / `@ts-rest`). Never enable parallel Fastify JSON-Schema validation.
+- **W3C Distributed Tracing:** Frontend generates W3C `traceparent` (v00); Fastify extracts into `AsyncLocalStorage` (`tenantStorage` via `AsyncContextFrame`) and echoes `traceparent` + `x-request-id` in responses.
 
 ## 2. Fastify Router & Layering
-Backend route handlers must remain lean, delegating operations to the service layer:
-```
-request → route barrel / contract router (routes/**) → service handler (services/*.ts) → database model (db/*)
-```
-For refactored/growing modules (Contacts is the reference) the delegation path is:
-```
-request → route barrel / @ts-rest contract router (routes/**) → use cases ({module}/use-cases/**) → repository interface ({module}/repository/**) → Drizzle adapter (db/**)
-```
-- **Controller Rules**: Route files must never import raw Drizzle pg pool drivers. Validate bodies with Zod 4 via `parseRequest` or `@ts-rest` contract schemas.
-- **Use-case layer**: Domain orchestration lives in `{module}/use-cases/**` — pure functions/factories that receive the module repository interface as a DI parameter. Import the module **composition root** (e.g. `contactUseCases`) at call sites; route handlers must not reach past it into the DB.
-- **Repository interface = sole storage gateway**: A single repository interface (Contacts: `ContactsRepository`) declares every storage operation; a Drizzle adapter (`{module}/repository/*Adapter.ts`) is the only concrete implementation. Use-case functions take the interface (testable with fakes), never raw `db` / `pg`. Keep stable re-export shims at legacy `services/*.ts` paths for backward compatibility.
-- **Plugin & Contract encapsulation**: Register domain routes as Fastify plugins (`FastifyPluginAsync`) or `@ts-rest/fastify` router instances (`initServer().router(contract, ...)` with `s.registerRouter`) with stable public registration paths; prefer thin barrels + colocated `*Routes.ts` or `*ContractRouter.ts` — `mms-structure-naming.md`.
-- **Boot Guards**: Fail fast if `DATABASE_URL` or `JWT_SECRET` is missing.
-- **Request budgets & Streaming**: Wire Fastify from `serverConfig` — `bodyLimit` (`REQUEST_BODY_LIMIT_BYTES`) and `requestTimeout` (`REQUEST_TIMEOUT_MS`). Oversized sync/upload routes may raise `bodyLimit` explicitly; do not leave unbounded bodies. NEVER buffer large file uploads or datasets into memory (`Buffer.concat` ban); stream multipart files via `@fastify/multipart` directly to storage and stream export responses via `node:stream` — `mms-performance.md`.
-- **Outbound HTTP**: Backend fetches to external providers must use `AbortSignal.timeout(...)` (see `outboundUrl.ts`) — do not hang the event loop on provider stalls. FE Query cancellation stays `mms-data-layer.md`.
 
-## 3. Auth middleware (pointer)
+- **Clean Architecture Hierarchy:** Route/Contract router (`routes/**`) → Use Case (`{module}/use-cases/**`, pure DI) → Repository Interface (`{module}/repository/**`) → Drizzle Adapter. Controllers never import raw DB pools.
+- **Streaming & Request Budgets:** Enforce `bodyLimit` and `requestTimeout`. Never buffer large uploads or datasets into memory (`Buffer.concat` ban); stream uploads via `@fastify/multipart` and exports via `node:stream` (`mms-performance.md`).
+- **Outbound HTTP:** External backend fetches must use `AbortSignal.timeout(ms)`.
 
-Apply `authenticateTenant` / `authenticatePlatform` / subdomain resolution as specified in **`mms-auth-security.md`**. Do not call raw `jwtVerify()` in handlers. Platform namespaces and destructive reset → auth + `mms-ops-infrastructure.md`.
+## 3. Auth Middleware & Isolation
 
----
+- Enforce `authenticateTenant` / `authenticatePlatform`. Raw `jwtVerify()` in route handlers is strictly banned (`mms-auth-security.md`).
 
 ## 4. API Error Payloads & Status Codes
-API errors must resolve to a uniform JSON payload format:
-```json
-{ "type": "validation_error", "message": "Development debug details", "details": {} }
-```
-- **HTTP Status Codes**:
-  - `200 OK`: Successful read/update.
-  - `201 Created`: Successful resource creation (POST).
-  - `204 No Content`: Successful deletion / action with empty body.
-  - `400 Bad Request`: Generic malformed request or syntax error.
-  - `401 Unauthorized`: Unauthenticated (`auth_required`, `session_revoked`, `account_disabled`).
-  - `403 Forbidden`: Authenticated user lacks permission (`forbidden`).
-  - `404 Not Found`: Resource does not exist (`not_found`).
-  - `408 Request Timeout`: Transaction / request exceeded budget (`timeout`, `syncTimeout`).
-  - `409 Conflict`: Concurrency conflict, idempotency mismatch, or composite key collision (`conflict`).
-  - `422 Unprocessable Entity`: Zod schema validation failure (`validation_error`).
-  - `429 Too Many Requests`: Rate limit reached (`rate_limit_exceeded`).
-  - `500 Internal Server Error`: Unhandled backend exception (`server_error`).
-  - `503 Service Unavailable`: Database or critical subsystem down (`service_unavailable`).
-- **Error Classifications**: Standard types include `auth_required`, `invalid_credentials`, `forbidden`, `two_factor_required`, `not_found`, `validation_error`, `conflict`, `rate_limit_exceeded`, and `server_error`. Platform clients: map against the full `@mms/shared` `PLATFORM_API_ERROR_TYPES` set — never invent ad-hoc platform `type` strings.
-- **Mask exceptions**: Never leak database exceptions, SQL failures, or raw Node stack traces to the client in production responses.
-- **Client Handling**: Tenant UI maps `type` via `t('errors.{type}')`. Platform UI maps via `mapPlatformAuthError` / `getPlatformErrorMessage` (`platformAuthErrors.ts` → `platform.*` keys).
 
----
+- **Uniform Error Envelope:** `{ "type": string, "message": string, "details": object }`.
+- **Standard Classifications:** `auth_required` (401), `forbidden` (403), `not_found` (404), `timeout` (408), `conflict` (409), `validation_error` (422), `rate_limit_exceeded` (429), `server_error` (500). Platform routes map against `@mms/shared` `PLATFORM_API_ERROR_TYPES`.
+- **Exception Masking:** Never leak raw database errors, SQL syntax, or stack traces in production responses. Tenant UI maps `type` via `t('errors.{type}')`.
 
-## 5. Bulk PUT / collection replace semantics
-Workspace bulk write endpoints (`PUT` that accept an array / `{ items }` payload) must **upsert** rows by composite tenant key (`bulkSave` + `conflictTarget`, or merge-by-id helpers).
-- **Allowed**: Insert new ids; update existing ids; leave rows absent from the payload untouched.
-- **Bulk id lists**: Prefer shared `bulkIdsBodySchema` / `bulkStringIdsBodySchema` (`.max(500)`) for bulk-delete / bulk-restore — do not fork unbounded id arrays per module.
-- **Contacts list/filter query**: Shared `contactsListQuerySchema` (SQL `listPage` pagination) — do not fork Messaging “select all with email” flags per route.
-- **Forbidden on API bulk write paths**: `replaceForWorkspace` (or any wipe that deletes rows missing from the client payload). Keep replace helpers only for migrations, intentional admin clears, backup restore, or documented one-shot archives.
-- Frontend mutations: await success before closing forms — **`mms-module-architecture.md` §7**.
+## 5. Bulk PUT & Collection Semantics
 
-## 6. Pagination, idempotency & concurrency
-- **HTTP contract**: clients **should send** `page` and `limit` (shared `baseListQuerySchema`, default 25, hard cap 100); omit may default safely. SQL page rules, cards/table parity, and `loadAllFn` ban → **`mms-data-layer.md`**.
-- **Target**: tighten schemas to required `page` (+ `limit`) when clients are all migrated — do not claim Zod already requires them.
-- **HTTP Caching Headers**: Emit `ETag` and `Cache-Control: private, no-cache` (or immutable TTL headers) on idempotent GET responses. Return `304 Not Modified` on `If-None-Match` match — `mms-performance.md`.
-- **Idempotency Standard**: State-changing POSTs (campaign sends, batch operations, imports, payment processing) MUST accept an `Idempotency-Key` header. The backend binds the key to a SHA-256 digest of the canonical body (`crypto.hash('sha256', canonicalBody)`) persisted in Redis with a 24-hour TTL (`SET key digest NX EX 86400`). Identical replays return the cached completion; mismatched payloads with the same key MUST reject with `409 Conflict` (`type: 'conflict'`).
-- **Optimistic concurrency**: Contested single-row PUTs should prefer `updated_at` / version checks → `409 conflict`, or document intentional last-write-wins. Write DTO fields → `mms-form-architecture.md`.
-- Production error `message` fields must stay non-sensitive; keep verbose debug messages for development only.
+- **Upsert Semantics:** Workspace bulk writes (`PUT` with arrays) must upsert by composite tenant key (`bulkSave` + `conflictTarget`); never wipe rows missing from the client payload (`replaceForWorkspace` banned on API paths).
+- **ID Lists:** Use shared `bulkIdsBodySchema` (`.max(500)`). Await mutation resolution before closing modals.
 
----
+## 6. Pagination, Idempotency & Concurrency
 
-## 8. Versioning, Deprecation & Contract Change Discipline
-
-There is no `/v2` URL scheme in MMS: the SPA and the API ship together, so the contract is versioned by *compatibility*, not by path. That makes breaking a shipped client a self-inflicted outage (a stale browser tab, a cached bundle, or an older mobile-ish client).
-
-1. **Additive by default:** new optional response fields and new optional request fields are safe. Removing a field, renaming one, changing its type, or tightening validation (new `.strict()` key, new `.min()`) is **breaking** — treat it as a migration, not a tweak.
-2. **Contract changes land with the DTO:** the Zod schema in `@mms/shared`, the Fastify handler, and the frontend consumer change in one commit. A response field added server-side but absent from the shared Response DTO is drift, not a feature.
-3. **Deprecate in place, visibly:** mark the field/endpoint in the shared schema with a comment naming the replacement, keep returning it until consumers are gone, and only then remove it — in a later release, with a changelog entry (skill `mms-release-versioning`).
-4. **Never repurpose a field.** If the meaning changes, add a new field and stop writing the old one; readers must not have to guess which semantic a payload carries.
-5. **Error envelope is part of the contract:** `{ type, message }` shapes and status codes (`400/401/403/404/409/429/5xx`) are consumed by the client's error mapping — changing a status code is a breaking change even when the body is unchanged.
-6. **Query-parameter flags parse strictly:** booleans arrive as strings and must go through the shared flag helper (`isQueryFlagTrue` pattern) so `?includeDeleted=1` and `?includeDeleted=true` behave identically and unknown values fail loudly.
-7. **OpenAPI is a developer aid, not a compat guarantee:** the spec is generated and exposure is gated by `MMS_EXPOSE_OPENAPI`; do not rely on it to detect consumer breakage.
+- **Pagination:** Clients send `page` and `limit` (default 25, max 100 via `baseListQuerySchema`). Unbounded dumps (`loadAllFn`) banned.
+- **HTTP Caching:** Emit weak `ETag` and `Cache-Control: private, no-cache` on idempotent GETs; return `304 Not Modified` on `If-None-Match`.
+- **Idempotency Standard:** State-changing POSTs accept `Idempotency-Key` bound to SHA-256 canonical body digest in Redis (24h TTL). Replays return `Idempotency-Replay: true`; payload mismatches reject with `409 Conflict`.
+- **Optimistic Concurrency:** Contested single-row updates verify `updated_at` / version checks or return `409 Conflict`.
 
 ## 7. Soft-Delete & Restore REST Contracts
-Standardizes lifecycle deletion endpoints per `docs/soft-delete.md` · skill **`mms-soft-delete`**:
-- **Standard Endpoints**: `DELETE /:id` (soft-delete), `POST /:id/restore` (restore), `POST /bulk-delete` (bulk soft-delete), `POST /bulk-restore` (bulk restore), and `GET /?includeDeleted=true` (trash list).
-- **Single-Record Read Semantics (`GET /:id`)**: Standard reads append `isNull(table.deletedAt)` and return `404 Not Found` for archived rows. Detail inspection with `?includeDeleted=true` requires `canDeleteCollection(user, collection)` and sets `SET LOCAL app.include_deleted = 'true'`.
-- **Query Parsing**: All `includeDeleted` query flags must be parsed using `isQueryFlagTrue(query.includeDeleted)` from `@mms/shared` — ban inline boolean coercion ternaries.
-- **Write DTO Lifecycle Protection**: Create and Update write schemas strip or reject client soft-delete fields (`deletedAt`, `deletedBy`, `deletionReason`) to prevent lifecycle mutation via forms.
-- **Database & Outbox Invariants**: Atomic conditional latches, error 23505 traps, batched bulk SQL, active FK guards, and CDC tombstones → **`mms-data-layer.md` §6**.
 
+- **Endpoints:** `DELETE /:id` (soft-delete), `POST /:id/restore` (restore), `POST /bulk-delete`, `POST /bulk-restore`, `GET /?includeDeleted=true` (trash list).
+- **Read Semantics:** Standard reads append `isNull(table.deletedAt)`. Detail reads with `?includeDeleted=true` require `canDeleteCollection`.
+- **Query Parsing & Protection:** Parse `includeDeleted` with `isQueryFlagTrue()`. Write schemas must strip or reject client soft-delete fields.
 
+## 8. Versioning, Deprecation & Contract Discipline
+
+- **Additive by Default:** No `/v2` URL prefixes. Contract changes must be additive and land in the same commit across `@mms/shared`, Fastify, and React.
+- **Deprecation:** Mark deprecated fields in `@mms/shared` before removal in a later release. Never repurpose existing field names.
+
+## 9. Workflow & Output Speed Rules
+
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler and post-code recaps.
+- **Verification Gates:** Verify with `pnpm typecheck` and scoped tests before marking tasks done. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

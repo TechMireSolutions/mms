@@ -4,13 +4,19 @@ description: Implements or audits workspace encrypted backup/export and wipe-res
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Backup & Restore Workflow
 
 **Rule (norms SSOT):** `mms-settings-i18n.md` · `mms-data-layer.md` §6 · `mms-auth-security.md`.
 **Workflows:** `/code-review` · **Manifest:** `.agent/skills-manifest.json`
+
+## Accounting restore acceptance
+
+Advisory: apply [closing and reporting](../mms-finance-accounting/references/closing-reporting.md) to validate complete journal headers/lines, exact control totals, account/fiscal references, source uniqueness, opening/closing identity, posted/closed state, and attachment provenance before and after restore.
+
+A backup restore is not a mechanism for editing posted journals or reopening periods. Preserve source IDs so workers/provider events do not post twice after recovery. Keep audit history and retention/legal-hold decisions distinct from ordinary data replacement. An encrypted envelope proves neither a balanced ledger nor restoration completeness; verify both in an isolated restore test.
 
 ## Anti-Patterns & Banned Operations
 

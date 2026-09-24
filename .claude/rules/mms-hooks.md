@@ -15,95 +15,48 @@ paths:
 
 **Workflow skills:** Query `queryOptions` / optimistic policy → `mms-query-factories` · page controllers / FE shell → `mms-frontend` · Work layout → `mms-module-work`.
 
-Colocate in `apps/frontend/src/hooks/`, `tenant/hooks/` (shared tenant hooks), or `tenant/features/{module}/hooks/`. Pure logic used in 2+ modules → `@mms/shared`, keep the hook as a thin wrapper. Exhaustive hook catalogs go stale — follow patterns below; discover hooks via feature folders / `@/tenant/hooks/collections/*`.
-
 ## 1. Server State (TanStack Query)
 
-**Policy owner:** `mms-data-layer.md` §4 · factories → skill **`mms-query-factories`**. This section is recipes only (facades, call-site toast, live-collection ban).
-
-- Wrap colocated `queryOptions` / `mutationOptions`; toast via `notify.*` + `t()` at call site after `mutateAsync` — no global `MutationCache` toast bus.
-- Prefer the shared query factories in `apps/frontend/src/lib/query/` before hand-rolling CRUD factories per module: `createModuleQueryInvalidator` (mutation invalidation wiring), `createModuleSetupConfigApi` (setup REST query/mutation factory), `createModuleSetupConfigHooks`, `createModuleLookupsHooks`. Thin module facades wrap these (`@/tenant/hooks/collections/*`). Note: mutation flows are typed through the per-module `*TsrHooks` files — do not invent a generic CRUD-mutation factory here.
-- Contacts mutations also invalidate `MESSAGING_CONTACTS_RESOLVE_QUERY_KEY`.
-- Form close after success → **`mms-module-architecture.md` §7**.
-- **React 19 `useOptimistic` & Server State Partitioning**: TanStack Query (`useMutation` / `mutationOptions`) is the authoritative coordinator for network persistence, retries, and cache invalidation. React 19's native `useOptimistic` is sanctioned for transient micro-interaction UI state (e.g. instant item dismissal, status switch toggles) inside pending `startTransition` blocks, automatically rolling back on mutation rejection without manual rollback boilerplate.
-
-### 1.1 Cross-Module Collection Facades
-
-Hook **implementations** stay in `tenant/features/{module}/hooks/`. Cross-feature and shared UI **must** import from:
-
-`@/tenant/hooks/collections/{contacts|students|faculty|sessions|enrollments|users|finance|accounting|hasanat|examinations|questionBank|attendance|messaging}`
-
-Same-feature files may keep direct feature-hook imports. Shared person UI: `ContactPicker` / `ContactCreateModal` under `@/components/contactLink/`.
-
-**Platform:** Platform cross-feature hooks colocate in `@/platform/hooks/` and follow the same facade pattern — implementations in `platform/pages/{page}/hooks/` or `platform/hooks/` for shared platform concerns. Platform hooks must not import tenant collection facades (and vice versa).
+- **Query Factories & Toast:** Wrap colocated `queryOptions` / `mutationOptions` factories (`@/lib/query/*`). Toast via `notify.*` + `t()` at call site after `mutateAsync`; ban global `MutationCache` toast buses.
+- **Cross-Module Facades:** Hook implementations stay in `tenant/features/{module}/hooks/`. Cross-feature imports must use `@/tenant/hooks/collections/{module}` facades. Platform hooks colocate in `@/platform/hooks/` and must not cross tenant boundaries.
 
 ## 2. Legacy Data Layer (`useLiveCollection` Ban)
 
-Legacy localStorage reactive reads only. **Hard ban** on new use for REST-migrated entities. Contacts entity rows are REST-only (not in FE `BUSINESS_COLLECTIONS`). Contacts Setup config (field-config, preferences, lookups) uses Query via `@/tenant/hooks/collections/contacts` (`useContactFieldConfigQuery`, `useContactPreferencesQuery`, `useContactLookupsQuery`) — **never** `getObject` / `getCollection` for those keys.
+- **Hard Ban on REST Entities:** `useLiveCollection` and `getCollection` are strictly banned for REST-migrated entities (Contacts, Students, Faculty, Finance, etc.). Restricted solely to non-migrated settings singletons (`branding`, `global_settings`).
 
-```ts
-// ✅ Legacy keys not yet on Query as primary
-const legacyRows = useLiveCollection('some_legacy_key');
+## 3. Lookups, Settings & Module Config
 
-// ❌ Contacts is REST-only — never seed entity rows from getCollection('contacts')
-const [items] = useState(() => getCollection('contacts', CONTACTS));
-```
+- **Lookups:** Use feature hooks (`useObligationLookups`, `useWorkspaceRoles`). Form fields consume `useSortedFields(registry, tabKey?)` rather than hardcoded lists.
+- **Settings & Branding:** Use `useGlobalSettings`, `useBranding`, and draft hooks (`useSettingsDraft`) (`mms-settings-i18n.md`).
+- **Standard Module Config:** Modules build on `useStandardModuleConfig` (`createStandardModuleConfigHook`). Contacts uses `useContactConfigProviderValue` mounted once via `ContactConfigContext`.
 
-## 3. Domain Lookups & Config
+## 4. RBAC & Viewer Permissions
 
-Prefer feature hooks (`useObligationLookups`, `useQuestionBankConfig`, `useWorkspaceRoles`, …). `useSortedFields(registry, tabKey?)` for registry-driven forms — not hardcoded field lists.
+- Use `useModulePermissions(manifest)` / `can()` for module action gates. Introducing new `role ===` write gates on tenant modules is strictly banned.
 
-## 4. Settings & Branding
+## 5. UI Shell & Modals
 
-Use `useGlobalSettings`, `useBranding`, draft hooks (`useSettingsDraft` / branding / theme), and public branding queries as documented in `mms-settings-i18n.md`. One-shot outside React: `getGlobalSettings()`, `getBrandingSettings()`.
+- Sanctioned shell hooks: `useFilteredModuleTierTabs`, `useConfigSubTabs`, `useTranslation`, `useSessionTimeout`, `useDebounce`, `useMediaQuery`. Use `useBodyScrollLock`; never set `document.body.style.overflow` manually.
 
-## 5. Module Config (Standard Hook)
+## 6. Page & Panel Controllers
 
-Module configuration should build on the shared `createStandardModuleConfigHook` (`hooks/createStandardModuleConfigHook.ts`) — used by Faculty / Students / Sessions / Users / Enrollments via `useStandardModuleConfig` (`hooks/useStandardModuleConfig.ts`). Contacts is the richer reference: `useContactConfigProviderValue` (`apps/frontend/src/lib/contacts/useContactConfigProviderValue.ts`) supplies the optional params for lookups, column-layout, relationship mirrors, and custom-tab sync, surfaced through `ContactConfigContext` (`ContactConfigProvider` / `useContactConfig` / `useContactColumns` in `apps/frontend/src/lib/contexts/ContactConfigContext.tsx`). Mount the provider once via `TenantScopedProviders` (tenant host only) — never nest on child pages. Extend the hook (optional params) instead of forking a bespoke provider per module.
+- **Decomposition:** Keep JSX shells thin. Decompose into `use{Module}PageController` (state, tabs, permissions), `use{Thing}Draft` (form state), and `use{Thing}Actions` (save, bulk, restore handlers).
+- **Soft-Delete URL Sync:** Synchronize `viewingDeleted` with URL via `useTrashMode` (`?view=trash`). Toggling trash must **preserve** active search and filter state (`mms-soft-delete`).
+- **Single Soft-Delete Optimistic Pattern:** Eligible non-financial single deletions trigger instant Query cache hide + 5–10s Undo toast that executes `POST /:id/restore` on click without view change.
+- **Memoization:** Memoize non-trivial calculations (`useMemo`) and callbacks (`useCallback`) passed to children to prevent render cascades (`mms-performance.md`).
 
-## 6. RBAC & Viewer Permissions
+## 7. Work Directory Layout
 
-- Prefer `useModulePermissions(manifest)` / `can()` over `role ===` for module write gates.
-- Do **not** add new tenant-module write gates via `role ===`. Residual non-gate uses (platform `super_user`, chat `msg.role`, metrics counting, teacher→staff alias) are fine.
+- Directory view mode: `useWorkDirectoryViewMode` (`table` | `cards`).
+- Layout & metrics: `useModuleColumnLayout` for column widths/visibility; `use*Metrics` for command-centre KPIs (ban client-reducing full lists for KPI cards).
 
-## 7. UI Shell & Modals
+## 8. New Hooks Checklist
 
-`useFilteredModuleTierTabs` (prefer over bare `useModuleTierTabs`), `useConfigSubTabs` / `usePersistedTabState`, `useTranslation`, `useBodyScrollLock` (never set `document.body.style.overflow` manually), `useSessionTimeout`, `useDebounce`, `useMediaQuery`.
+- Pass `signal` to `apiFetch`; set `enabled: isAuthenticated` (or `isPlatformAuthenticated`).
+- Zero ad-hoc polling loops (use WebSockets or documented `refetchInterval`).
+- Strict 200-line hard cap per hook file.
 
-## 8. Page & Panel Controllers
+## 9. Workflow & Output Speed Rules
 
-Large feature pages and settings panels should keep JSX thin:
-
-| Pattern | Name | Owns |
-|---------|------|------|
-| Page orchestrator | `use{Module}PageController` | Tabs, permissions wiring, list/trash state (`viewingDeleted` synced with URL search params `?view=trash`), command-centre handlers |
-| Panel / form state | `use{Thing}State` / `use{Thing}Draft` | Local draft + derived options |
-| Action clusters | `use{Thing}Actions` / `*ActionHandlers` | Save, restore, bulk, decrypt, optimistic soft-delete with 5–10s Undo toast — called from the orchestrator |
-
-- **Soft-Delete State & URL Synchronization (`docs/soft-delete.md` §7.1 & §7.10):** Synchronize `viewingDeleted` with URL search params via the shared `useTrashMode` hook (`@/hooks/useTrashMode` wrapping `useSearchParams` with `?view=trash`). TanStack Query hooks map `viewingDeleted` to `includeDeleted`. Toggling `ModuleTrashToggle` must **preserve** active search query and faceted filter selections — never reset filters on toggle.
-- **Single Soft-Delete Optimistic Pattern (`docs/soft-delete.md` §7.8):** Row action triggers an instant TanStack Query cache hide, displaying a toast with an `[Undo]` button lasting 5–10 seconds that executes `POST /:id/restore` on click without navigating to the trash view.
-
-Return a flat object the shell destructures; keep public page/component export paths unchanged (`mms-structure-naming.md`). Memoize non-trivial calculations (`useMemo`) and callback/object references passed to child components or effects (`useCallback`) to prevent render churn; avoid premature memoization on trivial primitive operations (`mms-performance.md`). Prefer React 19 `useEffectEvent` / `startTransition` / `useDeferredValue` when the repo pattern fits (e.g. event handlers that read latest props without re-subscribing effects).
-
-## 9. Work Directory Layout
-
-| Hook / component | Use |
-|------------------|-----|
-| `useWorkDirectoryViewMode` + `WorkViewModeToggle` | Single resolved `viewMode` (`table` \| `cards`) — `mms-module-architecture.md` §3 |
-| `useModuleColumnLayout` | Column visibility **and** width — merge rules **`mms-module-architecture.md` §3** |
-| Contacts column prefs | `useContactColumnLayout` via `ContactConfigContext` |
-| Command / dashboard metrics | `use*Metrics` from `@/tenant/hooks/collections/*` — ban client-reduce of full lists for KPI values |
-| Trash toggle & bulk actions | `ModuleTrashToggle` in toolbar; `BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` via `ModuleWorkBulkActionBar` (`mms-soft-delete`) |
-| `useWorkCardAction` | Work card selection, keyboard navigation (`Space`/`Enter`), and detail view/edit dispatch — used by `DirectoryCard` and domain list cards |
-
-## 10. New Hooks Checklist
-
-- [ ] No ad-hoc polling loops — events, TanStack Query (incl. documented `refetchInterval`), or job-progress polls — `mms-core.md`
-- [ ] Internal API via `apiClient`
-- [ ] Export query keys when using Query; pass `signal`
-- [ ] `enabled: isAuthenticated` (tenant) / `enabled: isPlatformAuthenticated` (platform) for REST queries
-- [ ] Trash mode (`?view=trash`) synchronized with URL search params; search/filter state preserved across toggle (`mms-soft-delete`)
-- [ ] Single soft-delete mutation uses optimistic cache hide + 5–10s Undo toast hook pattern
-- [ ] No new `useLiveCollection` for REST-migrated entities
-- [ ] Controllers stay under soft ~220 lines when split — extract action/presentational siblings rather than growing one mega-hook
-- [ ] Test pure wrappers where ROI is high (`mms-testing-observability.md`)
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler and post-code recaps.
+- **Verification Gates:** Verify with `pnpm typecheck` and scoped tests before marking tasks done. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

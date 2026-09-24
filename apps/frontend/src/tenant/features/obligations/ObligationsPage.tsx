@@ -1,7 +1,8 @@
 import React, { Suspense, lazy } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import { Scale } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
+import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 import { ObligationsModalLayer } from '@/tenant/features/obligations/components/ObligationsModalLayer';
@@ -52,12 +53,8 @@ export default function Obligations() {
         panelIdPrefix="obligations-tab"
       >
         <AnimatePresence mode="wait">
-          <motion.div
-            key={c.effectiveTab + '-' + (c.effectiveTab === 'setup' ? c.effectiveConfigTab : String(c.showDeleted))}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.18 }}
+          <ModuleTierMotion
+            tier={c.effectiveTab + '-' + (c.effectiveTab === 'setup' ? c.effectiveConfigTab : String(c.showDeleted))}
             className="space-y-4"
           >
             {c.effectiveTab === 'reports' && (
@@ -88,6 +85,10 @@ export default function Obligations() {
                 onBulkRestore={c.handleBulkRestore}
                 onRetry={c.refetchCollections}
                 onMessage={c.handleMessageCollections}
+                selectedIds={c.collectionSelection.selectedIds}
+                onToggleSelectedCollection={c.collectionSelection.toggleSelected}
+                onToggleSelectAll={c.collectionSelection.toggleSelectAll}
+                onClearSelection={c.collectionSelection.clearSelection}
               />
             )}
 
@@ -111,7 +112,7 @@ export default function Obligations() {
                 />
               </Suspense>
             )}
-          </motion.div>
+          </ModuleTierMotion>
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 

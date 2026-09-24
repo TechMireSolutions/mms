@@ -24,6 +24,7 @@ import {
   NotifiedObligationsMutationError,
 } from '@/tenant/features/obligations/hooks/useObligationsApi';
 import { useObligationColumnLayout } from '@/tenant/features/obligations/hooks/useObligationColumnLayout';
+import { useWorkSelection } from '@/hooks/useWorkSelection';
 import { useObligationsTrashActions } from '@/tenant/features/obligations/hooks/useObligationsTrashActions';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 import { notify } from '@/lib/notify';
@@ -52,6 +53,12 @@ export function useObligationsPageController() {
   const [activeTab, setActiveTab] = usePersistedTabState<string>('obligations_active_tab', 'work');
   const [activeConfigTab, setActiveConfigTab] = useState('types');
   const [showDeleted, setShowDeleted] = useTrashMode();
+
+  const collectionSelection = useWorkSelection<string>();
+  const { clearSelection: clearCollectionSelection } = collectionSelection;
+  useEffect(() => {
+    clearCollectionSelection();
+  }, [showDeleted, clearCollectionSelection]);
 
   const obligationTypes = useObligationsTypesCollection();
   const mujtahids = useObligationsMujtahidsCollection();
@@ -117,10 +124,10 @@ export function useObligationsPageController() {
 
   useModuleShortcuts({
     searchInputId: 'obligations-search-input',
-    selectedCount: 0,
+    selectedCount: collectionSelection.selectedIds.length,
     hasActiveFilters: false,
     clearFilters: () => {},
-    clearSelection: () => {},
+    clearSelection: collectionSelection.clearSelection,
     canWrite,
     showDeleted,
     onCreate: () => {
@@ -145,13 +152,28 @@ export function useObligationsPageController() {
     }
   };
 
-  const { handleDelete, handleRestore, handleBulkDelete, handleBulkRestore } = useObligationsTrashActions({
+  const {
+    handleDelete,
+    handleRestore,
+    handleBulkDelete: rawBulkDelete,
+    handleBulkRestore: rawBulkRestore,
+  } = useObligationsTrashActions({
     t,
     deleteCollection,
     restoreCollection,
     bulkDeleteCollections,
     bulkRestoreCollections,
   });
+
+  const handleBulkDelete = async (ids: string[]) => {
+    await rawBulkDelete(ids);
+    clearCollectionSelection();
+  };
+
+  const handleBulkRestore = async (ids: string[]) => {
+    await rawBulkRestore(ids);
+    clearCollectionSelection();
+  };
 
   const runSetupSave = async (save: () => Promise<unknown>): Promise<void> => {
     try {
@@ -212,6 +234,7 @@ export function useObligationsPageController() {
     replaceWakala,
     replaceDistributions,
     setActiveConfigTab,
+    collectionSelection,
     refetchCollections: () => { void collectionsResult.refetch(); },
   };
 }

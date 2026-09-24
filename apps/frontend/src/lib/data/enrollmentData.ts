@@ -118,7 +118,8 @@ export function runFullEligibility(
   }
 
   if (targetClass) {
-    const maxCapacity = (targetClass as any).maxStudents ?? (targetClass as any).capacity ?? 30;
+    const legacyClass = targetClass as Class & { capacity?: number };
+    const maxCapacity = targetClass.maxStudents || legacyClass.capacity || 30;
     const enrolled = targetClass.enrolled ?? 0;
     const spotsLeft = maxCapacity - enrolled;
     if (spotsLeft <= 0) {
@@ -149,11 +150,19 @@ export function runFullEligibility(
   return checks;
 }
 
+export interface SessionDiscountItem {
+  id?: string;
+  name?: string;
+  value?: number;
+  percentage?: number;
+  type?: string;
+}
+
 export function calcFee(
   baseFee: number,
   student: Partial<Student>,
   _students: Student[],
-  sessionDiscounts: any[] = []
+  sessionDiscounts: SessionDiscountItem[] = []
 ): CalculatedFee {
 
   const discountType = student.discountType || "none";
@@ -161,12 +170,12 @@ export function calcFee(
   let label = "No Discount";
 
   const matchedSessionDiscount = sessionDiscounts.find(
-    (d) => d.id === discountType || d.name.toLowerCase() === discountType.toLowerCase()
+    (d) => d.id === discountType || (d.name && d.name.toLowerCase() === discountType.toLowerCase())
   );
 
   if (matchedSessionDiscount) {
-    label = matchedSessionDiscount.name;
-    pct = matchedSessionDiscount.value;
+    label = matchedSessionDiscount.name ?? discountType;
+    pct = matchedSessionDiscount.value ?? matchedSessionDiscount.percentage ?? 0;
   } else if (discountType === "sibling") {
     label = "Sibling Discount";
     if (pct === 0) pct = 10;

@@ -4,7 +4,7 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Module Page Pattern
@@ -23,75 +23,11 @@ Gold-standard reference implementation: `apps/frontend/src/tenant/features/accou
 - ❌ **NEVER keep tier state in `useState`**: use `usePersistedTabState` so a refresh/reload keeps the user on the same tier.
 - ❌ **NEVER hand-roll the header/tab shell**: `ModulePageShell` (→ `ModuleScaffold`) already owns SEO metadata, `PageHeader`, the metrics strip, and `ResponsiveAccordionTabs`.
 
-## Canonical 3-Tier Scaffold Template
+## Three-tier scaffold workflow
 
-```tsx
-import React, { Suspense } from 'react';
-import { useTranslation } from '@/hooks/useTranslation';
-import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import { useTrashMode } from '@/hooks/useTrashMode';
-import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
-import { ModulePageShell } from '@/components/ui/ModulePageShell';
-import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
-import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
-import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
-import { ENTITY_MODULE_MANIFEST } from '@mms/shared';
-import { EntityCommandMetrics } from './components/EntityCommandMetrics';
+Use `apps/frontend/src/tenant/features/contacts/ContactsPage.tsx` and the module's real manifest as references. `examples/TemplateModulePage.tsx` points to the actual shell contracts instead of exporting fictional manifest symbols.
 
-// One lazy chunk per non-Work tier (named exports → default mapping).
-const EntityWorkTier = React.lazy(() =>
-  import('./components/EntityWorkTier').then((m) => ({ default: m.EntityWorkTier })),
-);
-const EntityReportsTier = React.lazy(() =>
-  import('./components/EntityReportsTier').then((m) => ({ default: m.EntityReportsTier })),
-);
-const EntitySetupTier = React.lazy(() =>
-  import('./components/EntitySetupTier').then((m) => ({ default: m.EntitySetupTier })),
-);
-
-export default function EntityPage() {
-  const { t } = useTranslation();
-  const { canWrite, canDelete, canReports: canViewReports, canViewSetup } =
-    useModulePermissions(ENTITY_MODULE_MANIFEST);
-
-  // Returns ModuleTierTab[] — the tab list, NOT the active-tab state.
-  const tierTabs = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const [activeTab, setActiveTab] = usePersistedTabState<string>('entity_active_tab', 'work');
-  const [showDeleted, setShowDeleted] = useTrashMode();
-
-  return (
-    <ModulePageShell
-      seoTitle={`MMS - ${t('nav.entities')}`}
-      seoDescription={t('page.entities.subtitle')}
-      headerTitle={t('nav.entities')}
-      headerSubtitle={t('page.entities.subtitle')}
-      metricsStrip={<EntityCommandMetrics />}
-      tabs={tierTabs}
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      panelIdPrefix="entity-tier"
-    >
-      <ErrorBoundary>
-        <ModuleTierMotion tier={activeTab} className="space-y-4">
-          <Suspense fallback={<RouteStatusFallback />}>
-            {activeTab === 'work' && (
-              <EntityWorkTier
-                canWrite={canWrite}
-                canDelete={canDelete}
-                showDeleted={showDeleted}
-                onShowDeletedChange={() => setShowDeleted((prev) => !prev)}
-              />
-            )}
-            {activeTab === 'reports' && <EntityReportsTier />}
-            {activeTab === 'setup' && <EntitySetupTier />}
-          </Suspense>
-        </ModuleTierMotion>
-      </ErrorBoundary>
-    </ModulePageShell>
-  );
-}
-```
+Advisory review: derive allowed tabs with `useFilteredModuleTierTabs`, intersect persisted selection with those tabs before rendering, and gate Reports/Setup content and queries on the corresponding capability. Apply a safe fallback if permission changed or a tab was removed. A hidden tab label alone does not protect its panel. Preserve the module's existing lazy tier boundaries, header actions and metrics permissions.
 
 Route registration is lazy at the router level too — add the page to `apps/frontend/src/components/routing/HostRoutes.tsx` (tenant) or the equivalent platform routing module. Do not invent an `AppRoutes`/`PlatformRoutes` module; the repo has a single host-aware router.
 

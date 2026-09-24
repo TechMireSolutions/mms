@@ -28,17 +28,6 @@ export {
   type WorkQueueItemStatus,
 } from "./WorkQueue";
 
-export {
-  ModuleWorkDirectoryShell,
-  type ModuleWorkDirectoryShellProps,
-  type ModuleWorkDirectoryShellConfirmDialogsProps,
-} from "@/components/ui/ModuleWorkDirectoryShell";
-
-export {
-  useWorkDirectoryController,
-  type UseWorkDirectoryControllerOptions,
-  type PendingDeleteState,
-} from "@/hooks/useWorkDirectoryController";
 
 export {
   DetailSheet,

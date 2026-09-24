@@ -42,6 +42,10 @@ interface HasanatWorkTierProps {
   onBulkRestore: (ids: string[]) => Promise<void>;
   onMessage: (channel: "sms" | "whatsapp" | "email", distributions: Distribution[]) => void;
   onRowClick?: (distribution: Distribution) => void;
+  selectedIds?: string[];
+  onToggleSelectedDistribution?: (id: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean, visibleIds: string[]) => void;
+  onClearSelection?: () => void;
 }
 
 export function HasanatWorkTier({
@@ -71,6 +75,10 @@ export function HasanatWorkTier({
   onBulkRestore,
   onMessage,
   onRowClick,
+  selectedIds,
+  onToggleSelectedDistribution,
+  onToggleSelectAll,
+  onClearSelection,
 }: HasanatWorkTierProps) {
   const { t } = useTranslation();
 
@@ -116,6 +124,10 @@ export function HasanatWorkTier({
               onRowClick={onRowClick}
               onBulkDelete={onBulkDelete}
               onBulkRestore={onBulkRestore}
+              selectedIds={selectedIds}
+              onToggleSelectedDistribution={onToggleSelectedDistribution}
+              onToggleSelectAll={onToggleSelectAll}
+              onClearSelection={onClearSelection}
               isColumnVisible={distributionColumnLayout.isColumnVisible}
               getColumnWidth={distributionColumnLayout.getColumnWidth}
               onColumnResize={distributionColumnLayout.setColumnWidth}

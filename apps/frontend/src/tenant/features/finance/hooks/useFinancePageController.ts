@@ -19,6 +19,7 @@ import { useFinancePaymentColumnLayout } from "@/tenant/features/finance/hooks/u
 import { notify } from "@/lib/notify";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useFinanceCollectMutations } from "@/tenant/features/finance/hooks/useFinanceCollect";
+import { useWorkSelection } from "@/hooks/useWorkSelection";
 
 export function useFinancePageController() {
   const { t } = useTranslation();
@@ -64,6 +65,16 @@ export function useFinancePageController() {
   const invoiceColumnLayout = useFinanceInvoiceColumnLayout();
   const paymentColumnLayout = useFinancePaymentColumnLayout();
 
+  const invoiceSelection = useWorkSelection<string>();
+  const paymentSelection = useWorkSelection<string>();
+
+  const { clearSelection: clearInvoiceSelection } = invoiceSelection;
+  const { clearSelection: clearPaymentSelection } = paymentSelection;
+  useEffect(() => {
+    clearInvoiceSelection();
+    clearPaymentSelection();
+  }, [activeSubTab, showDeleted, clearInvoiceSelection, clearPaymentSelection]);
+
   useModuleShortcuts({
     enabled: activeTab === "work",
     canWrite,
@@ -74,10 +85,13 @@ export function useFinancePageController() {
       setCreatingInvoice(true);
     },
     searchInputId: "finance-search-input",
+    selectedCount: invoiceSelection.selectedIds.length + paymentSelection.selectedIds.length,
     clearSelection: () => {
       setViewInvoice(null);
       setRecordInvoice(null);
       setCreatingInvoice(false);
+      clearInvoiceSelection();
+      clearPaymentSelection();
     },
   });
 
@@ -118,6 +132,7 @@ export function useFinancePageController() {
   const handleBulkResult = (
     result: { succeeded: number; failed: number },
     successKey: "finance.trash.deleted" | "finance.trash.restored",
+    scope?: "invoices" | "payments",
   ): void => {
     if (result.failed > 0) {
       notify.error(t("finance.trash.bulkPartial", { succeeded: result.succeeded, failed: result.failed }));
@@ -132,6 +147,14 @@ export function useFinancePageController() {
       );
     } else {
       notify.success(t(successKey));
+    }
+    if (scope === "invoices") {
+      clearInvoiceSelection();
+    } else if (scope === "payments") {
+      clearPaymentSelection();
+    } else {
+      clearInvoiceSelection();
+      clearPaymentSelection();
     }
   };
 
@@ -245,6 +268,8 @@ export function useFinancePageController() {
     bulkRestorePayments,
     bulkUpdateInvoiceStatus,
     handleBulkStatusChange,
+    invoiceSelection,
+    paymentSelection,
   };
 }
 

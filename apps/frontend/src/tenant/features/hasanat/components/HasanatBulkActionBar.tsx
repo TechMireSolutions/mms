@@ -1,7 +1,7 @@
 import type { ReactElement } from 'react';
 import { HandCoins } from 'lucide-react';
 import { HASANAT_MODULE_MANIFEST } from '@mms/shared';
-import { ModuleStandardBulkActionBar } from '@/components/ui/ModuleStandardBulkActionBar';
+import { ModuleUniversalBulkActionBar } from '@/components/ui/ModuleUniversalBulkActionBar';
 
 export interface HasanatBulkActionBarProps {
   selectedCount: number;
@@ -13,7 +13,7 @@ export interface HasanatBulkActionBarProps {
   bulkActions?: readonly string[];
 }
 
-/** Hasanat Work bulk bar — thin adapter delegating to shared ModuleStandardBulkActionBar. */
+/** Hasanat Work bulk bar — thin adapter delegating to shared ModuleUniversalBulkActionBar. */
 export function HasanatBulkActionBar({
   selectedCount,
   showDeleted,
@@ -24,9 +24,9 @@ export function HasanatBulkActionBar({
   bulkActions = HASANAT_MODULE_MANIFEST.work.bulkActions,
 }: HasanatBulkActionBarProps): ReactElement {
   return (
-    <ModuleStandardBulkActionBar
+    <ModuleUniversalBulkActionBar
       selectedCount={selectedCount}
-      showDeleted={showDeleted}
+      viewingDeleted={showDeleted}
       canDelete={canDelete}
       onRequestBulkDelete={onRequestBulkDelete}
       onRequestBulkRestore={onRequestBulkRestore}

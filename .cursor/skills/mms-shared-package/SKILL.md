@@ -4,105 +4,35 @@ description: Extends @mms/shared with types, settings defaults, module manifests
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # @mms/shared Package Workflow
 
-**Rules (norms SSOT):** `mms-dry.mdc` · `mms-performance.mdc` §4 (Client Bundle & Modular Utilities) · formatters / `t()` keys → `mms-settings-i18n.mdc`. Pure helpers only — no React/Fastify/DB/DOM.
+**Rules (norms SSOT):** `mms-dry.mdc` · `mms-performance.mdc` §4 · `mms-settings-i18n.mdc` · `mms-structure-naming.mdc`.
 
-## Structure (typical)
+## 1. Architectural Boundaries & Purity
 
-```
-packages/shared/src/
-  index.ts                 # Named barrel only — no subpath imports in apps
-  *Types.ts / *Schemas.ts  # Domain models + Zod schemas
-  constants/               # Metadata registries and defaults
-  createFormCustomFieldHelpers.ts # System-vs-custom field partitioning factory
-  *ModuleManifest.ts       # Module contracts / permissions metadata
-  appTranslations*.ts      # en (SSOT keys) + ar/ur/fa
-  messagingSchemas.ts
-  brandingTheme.ts / logoBrandColors.ts
-  utils.ts                 # formatDate, formatMoney, parsePhoneNumber, …
-```
+- **Leaf-Package Purity**: Pure TypeScript only. Zero React, DOM (`window`, `document`), Fastify, Drizzle, DB, or Node.js built-ins (`node:*`).
+- **Single Barrel Export**: Named exports only via `packages/shared/src/index.ts`. No subpath imports (`@mms/shared/*` is forbidden).
+- **Erasable Syntax Only**: Union types and `as const` objects only. Zero `enum` or `namespace`. Use native immutable array methods (`toSorted()`, `toReversed()`).
 
-## Add export
+## 2. Shared Contracts & DTOs
 
-1. Add to the right module (or new file) + export from `index.ts`
-2. JSDoc on **public** exports only
-3. Unit test for non-trivial pure helpers
-4. `pnpm typecheck` from repo root
-5. Import: `import { X } from '@mms/shared'`
+- **Strict Validation**: All write Zod schemas must enforce `.strict()` to reject unknown keys. Sanitize strings against Unicode RTL spoofing (`safeString`).
+- **Explicit Inferred DTOs**: Always export paired types: `Insert[Entity]Dto`, `Update[Entity]Dto`, and `[Entity]ResponseDto`.
+- **Date Standards**: Use `isoDateSchema` (`YYYY-MM-DD` regex + calendar existence check) or `isoDateOrEmptySchema`. Compare with `compareIsoDates()`.
+- **Soft-Delete Contracts**: Use `softDeleteBodySchema`, `bulkIdsBodySchema` (max 500 IDs, `.strict()`), and `isQueryFlagTrue()` for `includeDeleted` query flags. Strip server-owned audit fields from writes via helpers.
+- **Manifest Contracts**: Modules define `*ModuleManifest.ts` declaring permissions, routes, and `softDelete` configuration.
 
-## Shared Contract Standards (`packages/shared/src/...`)
+## 3. Workflow & Verification
 
-1. **Deterministic Contract Typing**: Route definitions, parameters, write payloads, and response envelopes must be strictly derived from `@ts-rest` contracts.
-2. **Strict Validation & Sanitization**: Define write schemas using Zod with `.strict()` enforcement to reject unknown keys. Use a `safeString` Zod transform to prevent Unicode Directional Spoofing (e.g., Right-to-Left Override attacks `U+202E`).
-3. **DTO Type Exports**: Export explicit Insert, Update, and Response DTO types inferred from the Zod schemas:
-   ```ts
-   export const insertEntitySchema = z.object({ ... }).strict();
-   export type InsertEntityDto = z.infer<typeof insertEntitySchema>;
-   export const updateEntitySchema = insertEntitySchema.partial().strict();
-   export type UpdateEntityDto = z.infer<typeof updateEntitySchema>;
-   export const entityResponseSchema = z.object({ ... }).strict();
-   export type EntityResponseDto = z.infer<typeof entityResponseSchema>;
-   ```
-4. **1:1 Alignment**: Ensure Zod schemas align 1:1 with Drizzle PostgreSQL table definitions.
-5. **Soft-Delete Contracts & Helpers (`docs/soft-delete.md` §3)**:
-   - Request DTOs: `softDeleteBodySchema` (optional `deletionReason` max 500, deep sanitized, `.strict()`), `bulkIdsBodySchema` (1–500 IDs, optional `deletionReason`, `.strict()`), `bulkStringIdsBodySchema`.
-   - Write Schemas: Must strip or omit server-owned fields (`deletedAt`, `deletedBy`, `deletionReason`) via `.strict()` and helpers like `stripContactClientSoftDeleteFields`.
-   - Canonical Query Flag Parsing: Use `isQueryFlagTrue(value)` for all `includeDeleted` URL query param parsing — never inline ternaries.
-   - Predicate Helpers: Export `is[Entity]Deleted()` and `filterActive[Entities]()` in domain types.
-   - List Scope Types: `SoftDeleteListFilter = 'active' | 'deleted' | 'all'`. Note: `'all'` bypasses soft-delete RLS and must NEVER be exposed to tenant-scoped list endpoints without explicit platform RBAC and tenant filtering.
-   - Manifest Contract: Every `*ModuleManifest.ts` must declare `softDelete: { workExcludesDeleted, reportsIncludeDeleted, exportsIncludeDeleted, duplicatesIncludeDeleted, captureDeletionReason, retentionDays }`.
-6. **Canonical Calendar Date Validation (`isoDateSchema`)**:
-   - Use `isoDateSchema` (`packages/shared/src/isoDateSchema.ts`) for all calendar date attributes (`YYYY-MM-DD`). It enforces both strict regex shape and leap-year/calendar existence checks.
-   - For optional or clearable form dates, use `isoDateOrEmptySchema`.
-   - Chronological sorting: use `compareIsoDates(a, b)`.
-
-## Do / Don't
-
-| Do | Don't |
-|----|-------|
-| Named barrel exports | Subpath imports |
-| Shared Zod DTOs with `.strict()` used by FE + BE | Fork the same shape in both apps |
-| `isoDateSchema` / `isoDateOrEmptySchema` for date DTOs | Generic string dates (`z.string()`) without calendar validation |
-| Export explicit `Insert*Dto`, `Update*Dto`, `*ResponseDto` | Use untyped `any` or ad-hoc inline payload types |
-| `formatDate` / `formatMoney` / `parsePhoneNumber` / `normalizeToE164` | Ad-hoc `toLocale*` / currency prefixes |
-| `applyTitleCaseRecursive` for Latin/display names | Title-casing ar/ur/fa / non-Latin / free-form RTL prose — `mms-structure-naming.mdc` |
-| `isQueryFlagTrue` for parsing `includeDeleted` query flags | Inline boolean coercion ternaries (`query.includeDeleted === 'true'`) |
-| Soft-delete strip helpers (`stripContactClientSoftDeleteFields`) | Accepting client `deletedAt`/`deletionReason` on write DTOs |
-| Bounded bulk schemas (`bulkIdsBodySchema` $\le 500$) | Unbounded array schemas in write DTOs |
-| Native Node built-ins first (`crypto.hash`, `URLPattern`, `node:fs/promises` `glob`) | Adding 3rd-party dependencies for built-in functionality |
-| Zero non-erasable TS syntax (use union types / `as const`) | Using `enum`, `namespace`, or parameter properties (`erasableSyntaxOnly`) |
-| Native non-mutating array methods (`toSorted`, `toReversed`, etc.) | Mutating arrays in place (`sort()`, `splice()`) |
-| Pure functions only | React, Fastify, DB, `localStorage`, DOM |
-
-## Move logic from app
-
-If used in 2+ modules OR FE+BE → extract pure helper → replace duplicates → delete shims.
-
-## Checklist
-
-```
-- [ ] Named export from package root
-- [ ] JSDoc on public API
-- [ ] Unit test for non-trivial pure logic
-- [ ] No non-erasable TypeScript syntax (enum/namespace banned)
-- [ ] No React/Fastify/browser APIs
-- [ ] pnpm typecheck
-```
-
-## Script
-
-`scripts/check-shared-exports.sh` enforces the leaf-package purity contract:
+1. Place domain models in `packages/shared/src/*Types.ts` or `*Schemas.ts`.
+2. Add pure utilities to `utils.ts` (e.g., `formatDate`, `formatMoney`, `parsePhoneNumber`).
+3. Export from `index.ts` with JSDoc on public symbols.
+4. Verify leaf-package purity and typing:
 
 ```bash
 bash scripts/check-shared-exports.sh
+pnpm typecheck
 ```
-
-Flags runtime imports (React, Fastify, Drizzle, pg, Redis, BullMQ, Pino) and environment-bound APIs (`window.*`, `document.*`, `localStorage`, `sessionStorage`, `node:` builtins). Anything it reports belongs in `apps/frontend` or `apps/backend`, not here.
-
-## Done
-
-`mms-completion-review.mdc` · Rules: `mms-dry.mdc`, `mms-settings-i18n.mdc`, `mms-structure-naming.mdc` (Title Case scope).

@@ -7,140 +7,50 @@ description: Keep Node, pnpm, and all workspace dependencies on latest stable ve
 
 **Workflow skill:** `mms-dependency-upgrade` (catalogs, Dependabot, audits, React Compiler). Day-to-day install/run → `mms-dev-setup`.
 
-Stay current. MMS targets **latest stable** releases across the monorepo — not “good enough” pins.
+## 1. Baseline & Workspace Catalogs
 
-## 1. Baseline (root `package.json`)
-
-| Tool | Target Version | Policy |
-|------|----------------|--------|
-| **Node.js** | `>=24.14.0` | Node 24 LTS runtime (`engines.node`) — native built-ins, type-stripping, and standard WHATWG APIs |
-| **pnpm** | `11.15.1` | Match root `packageManager` exactly (`pnpm@11.15.1`) via Corepack (`corepack enable`) |
-| **Turbo** | `^2.10.9` | Turborepo v2 monorepo orchestration |
-| **TypeScript** | `~7.0.2` | TypeScript 7.0 standard (with `typescript-v6` npm alias for legacy tooling compatibility) |
-
-### Workspace Tech Stack & Dependency Matrix
-
-| Layer | Primary Packages & Catalogs | Version Standard |
-|---|---|---|
-| **Catalog (`pnpm-workspace.yaml`)** | `react`, `react-dom` | `^19.2.8` (React 19) |
-| | `react-router-dom` | `^7.18.3` (React Router 7) |
-| | `vite` | `^8.3.0` (Vite 8) |
-| | `fastify` | `^5.12.1` (Fastify 5) |
-| | `pino` | `^10.3.1` (Pino 10) |
-| | `drizzle-orm` | `^0.45.2` (Drizzle ORM 0.45) |
-| | `zod` | `^4.4.3` (Zod 4) |
-| | `@tanstack/react-query` | `^5.101.4` (TanStack Query v5) |
-| | `@ts-rest/react-query` | `3.52.1` |
-| **Frontend (`apps/frontend`)** | `@ts-rest/core` | `^3.52.1` (contract-driven API client) |
-| | `tailwindcss`, `@tailwindcss/postcss` | `^4.3.3` (Tailwind CSS v4) |
-| | `@radix-ui/react-*` | Latest Radix UI primitives |
-| | `@tanstack/react-virtual` | `^3.14.9` (TanStack Virtual v3) |
-| | `zustand` | `^5.0.15` (Zustand 5 client stores) |
-| | `framer-motion` | `^13.1.0` (Framer Motion 13) |
-| | `lucide-react` | `^1.44.0` (Lucide React) |
-| | `recharts` | `^3.10.1` (Recharts 3) |
-| | `react-hook-form`, `@hookform/resolvers` | `^7.87.0`, `^5.7.1` |
-| | `react-day-picker` | `^10.0.1` (React Day Picker 10) |
-| | `@sentry/react` | `^10.70.0` (Sentry 10 telemetry) |
-| | `vitest`, `happy-dom`, `@vitest/coverage-v8` | `^4.1.11`, `^20.11.2` (Vitest 4 unit/hook runner) |
-| | `eslint`, `typescript-eslint` | `^10.10.0`, `^8.70.0` |
-| | `xlsx` | `0.20.3` (SheetJS official CDN pinned tarball) |
-| | `jspdf`, `jspdf-autotable`, `html2canvas` | `^4.2.1`, `^5.0.8`, `^1.4.1` (PDF exports) |
-| **Backend (`apps/backend`)** | `@fastify/*` (`cookie`, `cors`, `helmet`, `jwt`, `multipart`, `rate-limit`, `websocket`, `compress`, `static`) | Fastify 5 plugin ecosystem |
-| | `@ts-rest/fastify`, `@ts-rest/open-api` | `^3.52.1` (type-safe contract routers) |
-| | `fastify-type-provider-zod` | `^7.0.0` |
-| | `pg`, `@types/pg` | `^8.23.0`, `^8.23.1` (PostgreSQL 16 driver) |
-| | `drizzle-kit` | `^0.31.10` (migration generator) |
-| | `bullmq`, `ioredis` | `^6.3.4`, `^6.0.0` (BullMQ 6 worker queues & Redis 6) |
-| | `@aws-sdk/client-s3`, `@aws-sdk/lib-storage` | `^3.1115.0` (S3 storage) |
-| | `exceljs`, `nodemailer`, `ws` | `^4.4.0`, `^9.1.1`, `^8.21.3` |
-| | `tsx` | `^4.23.13` (development runner) |
-| **Shared (`packages/shared`)** | `@ts-rest/core`, `zod` | Shared DTOs and type-safe API contracts |
-| **E2E Tests (`e2e`)** | `@playwright/test` | `^1.62.1` (Playwright 1.62) |
-| | `@axe-core/playwright`, `axe-core` | `^4.13.0` (automated accessibility auditing) |
-
-Stack majors are not frozen — upgrade React, Vite, Fastify, Drizzle, Tailwind, etc. when newer stable releases ship (`mms-core.md` lists current stack; this rule owns **version freshness**).
+- **Runtimes & Tooling:** Node.js `>=24.14.0` (LTS `engines.node`), Corepack `pnpm@11.15.1`, Turborepo `^2.10.9`, TypeScript `~7.0.2` (with `typescript-v6` compatibility alias).
+- **Catalogs (`pnpm-workspace.yaml`):** React/React-DOM `^19.2.8`, React Router `^7.18.3`, Vite `^8.3.0`, Fastify `^5.12.1`, Pino `^10.3.1`, Drizzle ORM `^0.45.2`, Zod `^4.4.3`, TanStack Query `^5.101.4`, `@ts-rest/react-query` `3.52.1`. Apps cannot drift majors.
+- **E2E & Shared:** Playwright `^1.62.1`, axe-core `^4.13.0`, `@ts-rest/core`. Workspace protocol (`workspace:*`) mandatory for `@mms/shared`.
 
 ## 2. Upgrade Workflow
 
-Full checklist → skill **`mms-dependency-upgrade`**. Run only on **dedicated upgrade PRs** — not mid-feature.
-
-1. `pnpm outdated -r` at repo root
-2. Bump stale workspace deps (direct + transitive risk review)
-3. `pnpm install && pnpm typecheck && pnpm test`
-4. Per-app lint if FE/BE touched: `cd apps/frontend && pnpm lint` · `cd apps/backend && pnpm lint`
-5. `pnpm audit` (or OSV review) — fix/document high+ findings; do not leave known CVEs silent
-6. Fix breaking API changes in the same change — no deferred “follow-up” pins
-
-Prefer **one coherent upgrade PR** over scattered partial bumps. Extra caution for native/binary deps when present (CI may still set `PUPPETEER_SKIP_DOWNLOAD`; WhatsApp helper is not a Puppeteer workspace package).
+- **Dedicated PRs Only:** Never bump dependencies mid-feature.
+- **Procedure:** `pnpm outdated -r` → bump stale deps → `pnpm install && pnpm typecheck && pnpm test` → app lints (`cd apps/frontend && pnpm lint`, `cd apps/backend && pnpm lint`) → `pnpm audit` (fix high+ CVEs) → resolve breaking API changes in the same PR.
 
 ## 3. Node 24 Native Built-Ins & Banned Dependencies
 
-Developing with Node.js 24 leverages native runtime capabilities to eliminate third-party dependencies, streamline async workflows, and improve runtime security:
+- **Configuration:** Use native `--env-file=.env` or `process.loadEnvFile()`. Banned: `dotenv`.
+- **Networking:** Use native global `fetch()`, `FormData`, and global `WebSocket`. Banned: `axios`, `node-fetch`.
+- **Filesystem:** Use `import { glob } from 'node:fs/promises'`. Banned: `glob`, `fast-glob`.
+- **Crypto & Hashing:** Use `crypto.hash()` from `node:crypto`. Banned: verbose `createHash().update().digest()` chains.
+- **URLs & Routing:** Use `URLPattern` and WHATWG `new URL()`. Banned: `path-to-regexp`, legacy `url.parse()`.
+- **Core Imports:** Mandatory `node:` prefix (`node:fs/promises`, `node:crypto`, `node:path`). Banned: unprefixed core imports.
+- **Resource Management:** Use `using` / `await using` for cleanup. Banned: manual `try/finally` connection boilerplate.
+- **Request Tracing:** Use `AsyncLocalStorage` via `AsyncContextFrame`. Banned: manual trace context parameter drilling.
+- **Testing & Execution:** Use `vitest` everywhere. Banned: `jest`, `mocha`. Use `--experimental-strip-types` for CLI scripts.
+- **Pathing & Encodings:** Use `import.meta.dirname`, `Uint8Array.prototype.toBase64()`, and `Uint8Array.fromHex()`. Banned: `fileURLToPath` boilerplate and bespoke base64/hex encoders.
 
-| Area | Native Standard (Enforced) | Banned / Deprecated Package / Pattern |
-|---|---|---|
-| **Configuration** | `--env-file=.env` flag or `process.loadEnvFile()` | `dotenv` |
-| **Networking** | Native global `fetch()`, `FormData`, global `WebSocket` | `axios`, `node-fetch`, `ws` (for standard client communication) |
-| **Filesystem Globbing** | `import { glob } from 'node:fs/promises'` | `glob`, `fast-glob` |
-| **Hashing** | `crypto.hash()` from `node:crypto` | Verbose `createHash().update().digest()` chains |
-| **URL Matching** | Globally available `URLPattern` API and WHATWG `new URL()` | `path-to-regexp`, legacy `url.parse()` |
-| **Core Imports** | `node:` protocol prefix (`node:fs`, `node:crypto`, `node:path`) | Unprefixed core imports (`fs`, `crypto`, `path`) |
-| **Resource Cleanup** | `using` / `await using` (Explicit Resource Management) | Manual `try/finally` connection cleanup boilerplate |
-| **Request Tracking** | `AsyncLocalStorage` via `AsyncContextFrame` | Manual trace parameter drilling |
-| **Structured Logging** | Pino / stdout JSON logging for container/orchestrator shipping | In-process direct-to-file log writers |
-| **Test Runner** | `vitest` (workspace standard everywhere) | `jest`, `mocha` |
-| **TS Execution** | `--experimental-strip-types` for scripts/CLIs | Unnecessary upfront build steps for simple TS scripts |
-| **Security Controls** | `--permission` model (`--allow-fs-read`, etc.) | Unrestricted process execution in hardened environments |
-| **Process Lifecycle** | Catch `SIGTERM`/`SIGINT`, clean drain, unref fallback timeout | Ungraced process kills or hanging connection pools |
+## 4. Pinning & Supply Chain Rules
 
-## 4. Pinning Rules
+- **Strict Semver:** Match exact `packageManager` and `engines` across CI/Docker.
+- **Script Containment:** Enforce `pnpm.onlyBuiltDependencies` allowlist for native/postinstall scripts. Arbitrary unreviewed postinstalls are banned.
+- **Automated Audits:** Enable Dependabot/Renovate + GitHub `dependency-review` on PRs. Do not leave known high+ CVEs unpatched.
 
-| Do | Don't |
-|----|-------|
-| Exact `packageManager` + `engines` at root | Arbitrary `^` downgrades to avoid upgrading |
-| Workspace protocol for `@mms/shared` | Duplicate shared code to dodge a major bump |
-| pnpm `catalog:` for React, React Router, Vite, Fastify, Pino, Drizzle, Zod, TanStack Query, and `@ts-rest/react-query` (apps cannot drift majors) | Divergent majors across apps/packages |
-| Read upstream migration guides for majors | Silence type errors with `any` or `@ts-ignore` |
-| Patch/minor bumps freely within semver | Leave known CVEs unpatched |
-| Align CI/Docker Node with `engines.node` (Node >= 24) | Mismatched CI images |
-| Leverage Node 24 native built-ins (`fetch`, `glob`, `crypto.hash`, etc.) | Reintroduce banned packages (`dotenv`, `axios`, `glob`, `ws`, etc.) |
-| `pnpm.onlyBuiltDependencies` (or equivalent) allowlist for native/postinstall scripts | Running arbitrary package `postinstall` / build scripts unreviewed |
+## 5. TypeScript Strictness & Erasable Syntax
 
-## 5. Scope
-
-- **Root:** `package.json`, `pnpm-workspace.yaml`, `pnpm-lock.yaml`
-- **Apps:** `apps/frontend/package.json`, `apps/backend/package.json`
-- **Packages:** `packages/shared/package.json`
-- **CI/Docker:** align Node/pnpm images with root engines
-
-## 6. After Upgrade
-
-- Remove deprecated API usage — do not wrap obsolete calls indefinitely
-- Update skills/rules if commands or ports change (`mms-ops-infrastructure.md`, `mms-dev-setup`)
-- Do **not** commit or push unless the user asks
-
-## 7. Supply Chain (CI)
-
-Enable Dependabot (or Renovate) + GitHub `dependency-review` on PRs for high/critical advisories; keep `pnpm audit` in upgrade PRs. Prefer `onlyBuiltDependencies` (pnpm) so only reviewed packages may run install scripts — do not silently enable every postinstall. Do not require SBOM/provenance until an ops task adds them — `mms-ops-infrastructure.md`.
-
-## 8. TypeScript Strictness & Type Stripping (Dedicated PR)
-
-Target: `noUncheckedIndexedAccess`; prefer `import type` / `verbatimModuleSyntax` and `erasableSyntaxOnly` (TS 5.8+ / TS 7.0+). Root workspace compiler is TypeScript 7.0 (`~7.0.2` with `typescript-v6` compatibility alias). `exactOptionalPropertyTypes` is opt-in only — high churn; do not enable mid-feature. Strict mode + ban `any` already always-on (`mms-agent-universal.md`).
-
-- **Node 24 `--experimental-strip-types` Standard**: Ensure all TypeScript code is compatible with native type-stripping runtimes:
-  - ❌ Banned: `enum` — use string literal unions (`type Status = 'active' | 'archived'`) or `as const` object maps.
+- **Type Stripping Invariants (`--experimental-strip-types`):**
+  - ❌ Banned: `enum` — use string literal unions (`type Status = 'active' | 'archived'`) or `as const` maps.
   - ❌ Banned: `namespace` / `module` declarations.
   - ❌ Banned: Constructor parameter properties (`constructor(public name: string)`).
-  - ✅ Required: Explicit field declarations on classes and standard JS idioms so `.ts` files can execute directly without compilation steps.
+  - ✅ Required: Explicit class property declarations, `import type`, `verbatimModuleSyntax`, and `erasableSyntaxOnly`.
 
-## 9. React Compiler (When Enabling)
+## 6. React Compiler (When Enabling)
 
-React Compiler is **not** enabled today — memoize non-trivial calculations and object dependencies explicitly per `mms-performance.md`, while avoiding premature memoization on simple primitives.
+- Add plugin strictly to `apps/frontend/vite.config.ts` (never root).
+- Verify with `pnpm typecheck`, `pnpm test`, and FE lint before removing working manual memoization.
 
-When enabling in a dedicated PR:
-1. Add the official Babel/Vite plugin **only in `apps/frontend` Vite config** (not root); keep React major current.
-2. Keep `eslint-plugin-react-hooks`; add `eslint-plugin-react-compiler` diagnostics in the same PR.
-3. Run `pnpm typecheck && pnpm test` + FE lint; fix Compiler diagnostics (impure renders, hidden mutations).
-4. Prefer deleting ad-hoc memo wrappers that the Compiler covers — do not enable Compiler with memo wrappers left in place.
-5. Update `mms-core.md` stack note / this checklist if the enablement path changes.
+## 7. Workflow & Output Speed Rules
+
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler and post-code recaps.
+- **Verification Gates:** Verify with `pnpm typecheck` and scoped tests before marking tasks done. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

@@ -4,13 +4,19 @@ description: Governs application-wide settings panels (/settings), settings prev
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Settings, Navigation & Internationalization
 
 **Rule (norms SSOT):** `mms-settings-i18n.md` · `mms-ui-ux-design.md` · `mms-core.md`.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
+
+## Accounting localization
+
+Advisory: use [exact-money guidance](../mms-finance-accounting/references/ledger-controls.md). Locale controls presentation, not functional currency, fiscal dates, or stored scale. Preserve ISO accounting dates and stable source/account IDs; parse localized input through an explicit validated boundary.
+
+Check debit/credit signs, negative amounts, separators, currency codes, and mixed RTL identifiers in forms, charts, and PDF/CSV/XLSX output. Formatting must not revalue historical amounts or convert missing data into zero. Translate statement labels according to the selected framework, not by assuming every nonprofit uses company terminology.
 
 ## Anti-Patterns & Banned Operations
 
@@ -19,29 +25,11 @@ metadata:
 - ❌ **NEVER add RTL locale packs for platform apex**: Platform administration is strictly English/LTR.
 - ❌ **NEVER put module-specific preferences under `/settings`**: Module preferences belong under their respective module Setup tier (`mms-module-setup`).
 
-## Canonical Localization & Directional Pattern
+## Localization and navigation workflow
 
-```tsx
-import { useTranslation } from '@/lib/i18n';
+Use `useTranslation` from `@/hooks/useTranslation`, with `AppTranslationKey` for application-owned labels. Keep user-authored field labels as data. Internal navigation uses the existing React Router/shared navigation component; avoid a raw anchor that reloads the SPA. Use semantic tokens, typed icons and logical spacing.
 
-export function NavigationItem({ labelKey, icon: Icon, href }: { labelKey: string; icon: any; href: string }) {
-  const { t, isRtl } = useTranslation();
-
-  return (
-    <a
-      href={href}
-      className="flex items-center gap-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors hover:bg-slate-100 dark:hover:bg-slate-800"
-    >
-      <Icon className="h-5 w-5 shrink-0 text-slate-500" />
-      <span className="truncate">{t(labelKey)}</span>
-      {/* Logical margin spacing automatically mirrors in RTL */}
-      <span className="ms-auto text-xs text-slate-400">
-        {isRtl ? '←' : '→'}
-      </span>
-    </a>
-  );
-}
-```
+Advisory: test locale changes while dialogs and queries are active; interpolation, errors and accessible names must update too. Preserve LTR formatting for phone/identifier strings inside RTL text with appropriate isolation. Do not replace theme/font tokens with a copied palette.
 
 ## Verification Checklist
 
