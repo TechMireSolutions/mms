@@ -8,13 +8,13 @@
 
 The originating brief assumed tenant listing pages were legacy and fragmented (ad-hoc `<table>` markup, custom list views, manual pagination, disconnected selection). A full audit found the reality is different: **all nine modules already render `ModulePageShell` (→ `ModuleScaffold`)** with the 3-tier Work/Reports/Setup structure, `DetailSheet` drawers, and dual-view table/cards directories. Contacts is the documented gold standard (`.agent/skills/mms-module-work/SKILL.md`), and the rules (`mms-module-architecture.mdc` §3/§7, `mms-ui-ux-design.mdc` §6) already mandate dual-view and column-customizer wiring.
 
-The real fragmentation, which this spec addresses:
+The real fragmentation, which this spec addresses. **Update after detailed extraction:** commit `cfa35a11` ("standardize entity listing pages on canonical Work tier primitives") landed part of this work between the audit and planning — the notes below reflect verified current code.
 
-1. **Selection SSOT is split.** Five modules (contacts, students, faculty, sessions, enrollments) own selection in the page controller. Four (finance, hasanat, obligations, question-bank) bury selection inside list components (`useInvoiceSelection`, `useDistributionSelection`, `useObligationSelection`, `useQuestionBankSelection`) and expose `selectedCount: 0` / no-op `clearSelection` stubs at page level. Finance works around this with a `selectionResetKey` prop drilled into lists.
+1. **Selection SSOT is split.** Five modules (contacts, students, faculty, sessions, enrollments) own selection in the page controller. Four (finance, hasanat, obligations, question-bank) bury selection inside list components and leave the controller without it: finance's controller has no selection state at all (lists own `useInvoiceSelection` / raw `useState`, worked around with a drilled `selectionResetKey` prop); hasanat, obligations, and question-bank pass literal `selectedCount: 0` / `clearSelection: () => {}` stubs into `useModuleShortcuts` in their controllers.
 2. **Three competing bulk-bar bases.** `ModuleWorkBulkActionBar` (contacts only), `ModuleUniversalBulkActionBar` (students, faculty, sessions, finance, enrollments), `ModuleStandardBulkActionBar` (hasanat, obligations, question-bank).
-3. **Hand-rolled desktop `<table>` markup** in several `*ListDesktopTable.tsx` files instead of the shared `WorkBatchTable` (`apps/frontend/src/components/common/work/WorkBatchTable.tsx`). Obligations and question-bank are confirmed; the exact list is finalized during the pilot.
+3. **Desktop tables are already converged** (`cfa35a11`): every module's `*ListDesktopTable.tsx` composes `WorkBatchTable` (`apps/frontend/src/components/common/work/WorkBatchTable.tsx`). Remaining work is conformance-checking plus deleting the now-dead `QuestionBankTableHeader.tsx` / `QuestionBankTableRow.tsx` (zero importers).
 4. **Dead SSOT code.** `useWorkDirectoryController` (`apps/frontend/src/hooks/useWorkDirectoryController.ts`), `ModuleWorkDirectoryShell` (`apps/frontend/src/components/ui/ModuleWorkDirectoryShell.tsx`), and `BulkActionDock` as a direct consumer target are used by zero of the nine modules (tests and one accounting hook only).
-5. **Students lacks the `ModuleColumnCustomizer` UI** — `useStudentColumnLayout` exists and feeds the table, but no customizer is wired into the toolbar.
+5. **Enrollments lacks the customizer reset** — students is fully wired end-to-end (controller → `StudentsWorkTier` → `StudentsListFilters` → `WorkTaskToolbar`, including a working `onReset`); the actual gap is `EnrollmentsPage.tsx` not passing `onResetLayout` into its `columnCustomizer` slot, leaving the reset button disabled.
 6. **Rule enforcement gap.** The norms exist, but `.cursor/rules/README.md`'s enforcement registry lists tier/UX norms as "advisory — none".
 7. **Test asymmetry.** Contacts (67 test files), students (55), faculty (48), enrollments (32) are deeply covered; sessions (7), question-bank (9), finance (10), hasanat (10), obligations (13) are thin with no page-level tests.
 
@@ -23,16 +23,19 @@ The real fragmentation, which this spec addresses:
 - **Scope:** convergence pass on the real gaps only. No cosmetic rewrites of already-standard pages. (User-approved over full-brief rewrite, plan-only, and rules-first options.)
 - **Selection architecture:** the contacts pattern — selection owned by the page controller, threaded down to table, cards, select-all bar, and bulk bar — is the single standard. The unused `useWorkDirectoryController` / `ModuleWorkDirectoryShell` stack is retired (folded in only where it is genuinely a base layer; verified during implementation). (User-approved over adopting the unused controller everywhere, and over minimal-fix.)
 - **Execution strategy:** shared base → finance pilot → rollout → rules/tests. (User-approved over horizontal gap-by-gap and vertical module-by-module.)
+- **Bulk-bar end state (revised after extraction, user-approved):** two layers — `ModuleWorkBulkActionBar` as the purely presentational dock, plus ONE i18n/manifest adapter (`ModuleUniversalBulkActionBar` absorbing Standard's surface). Only `ModuleStandardBulkActionBar` is deleted. (Supersedes the original "absorb everything into the base, delete both adapters" decision, which would have duplicated i18n/gating logic across 12+ wrappers.)
 
 ## 3. Design — shared convergence base
 
 ### 3a. Bulk-bar unification
 
-`ModuleWorkBulkActionBar` (`apps/frontend/src/components/ui/ModuleWorkBulkActionBar.tsx`) becomes the single bulk-bar primitive. It already handles trash-mode restore/delete switching, messaging channel slots, export, extra actions, and Escape-to-clear.
+**Decision (revised after extraction, user-approved): two layers, one adapter.** Both `ModuleUniversalBulkActionBar` and `ModuleStandardBulkActionBar` are already thin adapters *over* `ModuleWorkBulkActionBar`, and Universal carries shared logic worth keeping (i18n label derivation, manifest `bulkActions` gating, permission gates, generic `messagingTargets<T>` dispatch, status-action slot). Deleting both would push that logic into 12+ wrappers — a DRY regression. The end state:
 
-- Diff `ModuleUniversalBulkActionBar` and `ModuleStandardBulkActionBar` props against it; add missing capabilities to `ModuleWorkBulkActionBar` as new **optional** props only (no breaking API change).
-- Re-point the eight non-contacts module wrappers (`StudentsBulkActionBar`, `FinanceBulkActionBar`, etc.) to compose `ModuleWorkBulkActionBar`. Wrappers remain — they own module labels and permission gating — but shrink to pure label/slot adapters.
-- Delete `ModuleUniversalBulkActionBar` and `ModuleStandardBulkActionBar` once zero imports remain (no deprecated-alias period). Delete `ModuleWorkDirectoryShell`; migrate or drop its test-only usages.
+- **`ModuleWorkBulkActionBar`** (`apps/frontend/src/components/ui/ModuleWorkBulkActionBar.tsx`) stays the purely presentational dock (trash-mode restore/delete switching, messaging/export/extra slots, Escape-to-clear via `BulkActionDock`). No i18n or manifest coupling added.
+- **`ModuleUniversalBulkActionBar` becomes the single adapter**: absorb Standard's `exportAction` pass-through and reconcile the two conflicting i18n key conventions (`{ns}.selectedCount`/`{ns}.bulkRestore` vs `{ns}.trash.selected`/`{ns}.trash.restore`) via i18next array-key fallback, so no locale-file churn is required.
+- Re-point the six Standard-base wrappers (accounting, obligations, attendance, hasanat, question-bank, examinations — including the four out-of-scope modules, whose wrappers change mechanically) to the unified adapter. Delete `ModuleStandardBulkActionBar` once zero imports remain.
+- Module wrappers (`StudentsBulkActionBar`, `FinanceBulkActionBar`, …) remain — they own module manifests, permission gating, and module-specific slots.
+- Delete `ModuleWorkDirectoryShell` and `useWorkDirectoryController` (zero feature importers; only the `components/common/work` barrel and their own tests reference them) plus their barrel exports and rule/doc mentions.
 
 ### 3b. Selection lifting (finance, hasanat, obligations, question-bank)
 
@@ -43,42 +46,40 @@ The real fragmentation, which this spec addresses:
 
 ### 3c. Desktop table conformance
 
-Each `*ListDesktopTable.tsx` is audited against the `WorkBatchTable` contract: `selection` prop shape, `sort`, `columnResize` via `useModuleColumnLayout` (`getColumnWidth`/`setColumnWidth`), virtualization above 30 rows, `ModuleTableFooterCount`. Modules already on `WorkBatchTable` get a conformance check only; hand-rolled ones (obligations, question-bank at minimum) become thin adapters in the `ContactsListDesktopTable.tsx` style (column config → `WorkBatchTableColumn<T>`, cell render delegation).
+All `*ListDesktopTable.tsx` already compose `WorkBatchTable` (`cfa35a11`). This phase is a **conformance check only** against the contract: `selection` prop shape, `sort`, `columnResize` via `useModuleColumnLayout` (`getColumnWidth`/`setColumnWidth`), auto-virtualization above 30 rows, `ModuleTableFooterCount`. Deviations get fixed in place; dead `QuestionBankTableHeader.tsx` / `QuestionBankTableRow.tsx` are deleted.
 
-### 3d. Students column customizer
+### 3d. Enrollments customizer reset
 
-Wire `ModuleColumnCustomizer` into the students Work toolbar using the existing `useStudentColumnLayout` registry (`registry`/`onUpdate`/`onReset` slots of `ModuleWorkToolbar`). UI wiring plus tests only — the layout hook already exists.
+Pass `onResetLayout: columnLayout.resetColumnLayout` into the `columnCustomizer` slot in `EnrollmentsPage.tsx` (the layout hook already exposes `resetColumnLayout`; only the wiring is missing). Students is already fully wired — no work needed there.
 
 ## 4. Rollout plan
 
 | Phase | Target | Work items |
 |---|---|---|
-| 0 | Shared base | Bulk-bar capability diff + unification; selection-lift pattern established; dead-code inventory confirmed |
-| 1 | **finance** (pilot) | Selection lift × 2 sub-lists (invoices/payments), remove `selectionResetKey`, bulk-bar re-point, `WorkBatchTable` conformance, page-level test |
-| 2 | **hasanat** | Selection lift (`useDistributionSelection` → controller), bulk-bar re-point, table conformance, page-level test |
-| 3 | **obligations** | Selection lift, bulk-bar re-point, migrate hand-rolled `<table>` → `WorkBatchTable`, replace raw `motion.div` with `ModuleTierMotion`, page-level test |
-| 4 | **question-bank** | Selection lift, bulk-bar re-point, migrate `QuestionBankTableHeader/Row` → `WorkBatchTable`, page-level test |
-| 5 | **students** | `ModuleColumnCustomizer` toolbar wiring + test |
-| 6 | Conformance sweep | contacts, faculty, sessions, enrollments: checklist verification (controller selection, unified bulk bar, `WorkBatchTable`, customizer wired); fix deviations only; page-level tests for sessions (and any of the five lacking one) |
+| 0 | Shared base | Merge Standard adapter into Universal (single i18n/manifest adapter over the presentational `ModuleWorkBulkActionBar`); re-point 6 Standard wrappers; retire `ModuleStandardBulkActionBar`, `ModuleWorkDirectoryShell`, `useWorkDirectoryController` |
+| 1 | **finance** (pilot) | Selection lift × 2 sub-lists (invoices/payments) into `useFinancePageController`, remove `selectionResetKey` + `useInvoiceSelection`, wire `useModuleShortcuts`, thread props, page-level test |
+| 2 | **hasanat** | Selection lift (`useDistributionSelection` → `useHasanatCardsPageController`), real shortcut values, thread through `DistributionsList`, page-level test |
+| 3 | **obligations** | Selection lift (`useObligationSelection` → controller, migrate its test), real shortcut values, swap raw `motion.div` → `ModuleTierMotion` in `ObligationsPage.tsx`, page-level test |
+| 4 | **question-bank** | Selection lift (`useQuestionBankSelection` → controller), real shortcut values, delete dead `QuestionBankTableHeader/Row`, page-level test |
+| 5 | **enrollments** | Wire `onResetLayout` into the `columnCustomizer` slot + test |
+| 6 | Conformance sweep | contacts, faculty, sessions, enrollments (+ the four lifted modules): checklist verification (controller selection, single bulk-bar adapter, `WorkBatchTable` contract, customizer wired incl. reset); fix deviations only; page-level test for sessions |
 | 7 | Rules & enforcement | See §5 |
-| 8 | Retire dead code | Delete the two old bulk-bar bases, `ModuleWorkDirectoryShell`, and (if fully unused after the pass) `useWorkDirectoryController` |
 
-Each phase is independently reviewable and revertible, and ends with the regression gates in §6c.
+(Phases 0–5 each end with the regression gates in §6c. Former "retire dead code" phase folded into Phase 0 — the dead-code inventory is confirmed: zero feature importers for all three retiring artifacts.)
 
 ## 5. Rules & enforcement
 
 Canonical edits only (mirrors regenerate via sync script):
 
-- `.cursor/rules/mms-module-architecture.mdc` — §3/§7: name controller-owned selection as the standard (list-local selection state banned); `ModuleWorkBulkActionBar` as the single bulk-bar base; `WorkBatchTable` as the mandatory desktop table.
-- `.cursor/rules/mms-dry.mdc` — add anti-patterns: per-module bulk-bar bases; duplicated per-list selection hooks.
-- `.cursor/rules/README.md` — update ownership matrix rows and the enforcement registry (the new check below converts "advisory — none" to enforced).
-- `.agent/skills/mms-module-work/SKILL.md` — update the Work checklist to match.
-- **New ratchet:** `scripts/check-work-directory.mjs` (styled on existing `scripts/check-*.mjs` gates), failing CI on:
-  1. imports of `ModuleUniversalBulkActionBar` / `ModuleStandardBulkActionBar`;
-  2. imports of `useWorkDirectoryController` / `ModuleWorkDirectoryShell` in feature code;
+- `.cursor/rules/mms-module-architecture.mdc` — §3/§7: name controller-owned selection as the standard (list-local selection state banned); the two-layer bulk-bar structure (`ModuleWorkBulkActionBar` presentational dock + single i18n/manifest adapter) as the standard; `WorkBatchTable` as the mandatory desktop table.
+- `.cursor/rules/mms-dry.mdc` — add anti-patterns: per-module bulk-bar adapter forks; duplicated per-list selection hooks.
+- `.cursor/rules/README.md` — update ownership matrix rows and the enforcement registry (new rows inserted **before** the final `advisory` row; the registry header requires same-change updates).
+- `.agent/skills/mms-module-work/SKILL.md` — update the Work checklist (and its "Do Not" section) to match.
+- **New ratchet:** `scripts/check-work-directory.mjs` (styled on `scripts/check-code-norms.mjs`), wired as `pnpm run check:work-directory` in root `package.json` and as a step in the `lint-and-typecheck` job of `.github/workflows/ci.yml` (after "Code-norm ratchets", matching the existing comment style). Fails CI on:
+  1. imports of `ModuleStandardBulkActionBar` (retired adapter);
+  2. imports of `useWorkDirectoryController` / `ModuleWorkDirectoryShell` in feature code (belt-and-braces after deletion);
   3. CSS dual-render (`md:hidden` / `md:block` sibling branches in `*List.tsx` files);
-  4. `selectedCount: 0` stubs in page controllers.
-  Registered in the `lint-and-typecheck` job of `.github/workflows/ci.yml`.
+  4. `selectedCount: 0` stubs passed to `useModuleShortcuts` in page controllers.
 
 After edits: `bash .agent/scripts/sync-all.sh` then `node scripts/verify-rules-integrity.mjs`. Mirrors (`.agent/rules/`, `.claude/rules/`, `.cursor/skills/`, `.claude/skills/`) are never hand-edited.
 
@@ -86,7 +87,7 @@ After edits: `bash .agent/scripts/sync-all.sh` then `node scripts/verify-rules-i
 
 ### 6a. New page-level integration tests
 
-Vitest + React Testing Library, following `ContactsPage.test.tsx` / `EnrollmentsPage.test.tsx` conventions, for the modules lacking page tests: **finance, hasanat, obligations, question-bank, sessions** (plus students customizer coverage). Each covers:
+Vitest + React Testing Library (happy-dom, setup at `apps/frontend/src/test/setup.ts`), following existing conventions: page-level smoke tests mock the controller hook and stub the view (`ContactsPage.test.tsx` pattern); view-mode-dependent tests mock `@/hooks/useWorkDirectoryViewMode` (pattern in `EnrollmentsList.test.tsx:12-17`). New coverage for the modules lacking page tests: **finance, hasanat, obligations, question-bank, sessions** (plus enrollments customizer-reset coverage). Each covers:
 
 - Shell: `ModulePageShell` renders; Work tier default; trash toggle switches bulk-bar restore/delete modes.
 - Dual view: cards default below `md`, table at `md+` (mocked `useMediaQuery`); `WorkViewModeToggle` switches; exactly one of table/cards in the DOM (no CSS dual-render).
@@ -102,11 +103,11 @@ The four list-local selection hook tests move to controller level. Finance selec
 ### 6c. Regression gates (per phase)
 
 ```bash
-pnpm --filter @mms/frontend typecheck
-pnpm --filter @mms/frontend test          # full suite at minimum at phase end
-pnpm lint
+pnpm --dir apps/frontend typecheck        # tsc -p ./tsconfig.json
+pnpm --dir apps/frontend test             # vitest run (full suite at minimum at phase end)
+pnpm --dir apps/frontend lint             # eslint . --quiet
 node scripts/verify-rules-integrity.mjs   # after the rules phase
-node scripts/check-work-directory.mjs     # once it lands
+pnpm run check:work-directory             # once it lands
 ```
 
 If the full frontend suite is too slow per phase, affected-module tests run per phase and the full suite at the end — reported explicitly, never claimed otherwise.
