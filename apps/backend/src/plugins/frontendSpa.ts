@@ -26,7 +26,7 @@ export async function registerFrontendSpa(
   await app.register(fastifyStatic, {
     root: distRoot,
     prefix: '/',
-    wildcard: false,
+    wildcard: true,
     decorateReply: true,
     preCompressed: false,
     setHeaders(res, path) {

@@ -93,6 +93,7 @@ if [ -f "$TARBALL" ]; then
   fi
 
   echo "Extracting production dist..."
+  rm -rf "${ROOT_DIR}/apps/frontend/dist" "${ROOT_DIR}/apps/backend/dist"
   tar xzf "$TARBALL" -C "$ROOT_DIR"
   if [ $? -ne 0 ]; then
     echo "FATAL: tar extract failed"
