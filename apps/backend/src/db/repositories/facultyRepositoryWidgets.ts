@@ -1,30 +1,30 @@
 import { and, sql } from 'drizzle-orm';
 import type {
-  TeachersWidgetAggregateResult,
-  TeachersWidgetQuery,
+  FacultyWidgetAggregateResult,
+  FacultyWidgetQuery,
 } from '@mms/shared';
-import { teachers } from '../schema.js';
+import { faculty } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import {
   activeWorkspaceWhere,
   resolveChartLimit,
-  resolveTeacherFieldExpr,
+  resolveFacultyFieldExpr,
   widgetFilterSql,
 } from './facultyRepositoryWidgetFilters.js';
 
-/** SQL widget aggregates for teachers (Students parity — no full-collection dump). */
-export async function aggregateTeachersWidgetQueries(
+/** SQL widget aggregates for faculty (Students parity — no full-collection dump). */
+export async function aggregateFacultyWidgetQueries(
   tenant: string,
-  queries: TeachersWidgetQuery[],
-): Promise<Record<string, TeachersWidgetAggregateResult>> {
+  queries: FacultyWidgetQuery[],
+): Promise<Record<string, FacultyWidgetAggregateResult>> {
   const subdomain = tenant.trim().toLowerCase();
-  const results: Record<string, TeachersWidgetAggregateResult> = {};
+  const results: Record<string, FacultyWidgetAggregateResult> = {};
   if (queries.length === 0) return results;
 
   return withTenantRead(subdomain, async (tx) => {
     const totalRows = await tx
       .select({ count: sql<number>`count(*)::int` })
-      .from(teachers)
+      .from(faculty)
       .where(activeWorkspaceWhere(subdomain));
     const totalCount = Number(totalRows[0]?.count ?? 0);
 
@@ -40,7 +40,7 @@ export async function aggregateTeachersWidgetQueries(
         if (query.operation === 'count' || query.operation === 'percentage') {
           const countRows = await tx
             .select({ count: sql<number>`count(*)::int` })
-            .from(teachers)
+            .from(faculty)
             .where(whereClause);
           const filteredCount = Number(countRows[0]?.count ?? 0);
           value =
@@ -52,13 +52,13 @@ export async function aggregateTeachersWidgetQueries(
         } else if (query.operation === 'sum' || query.operation === 'avg') {
           const target = query.targetField?.trim() || '';
           if (target) {
-            const targetExpr = resolveTeacherFieldExpr(target);
+            const targetExpr = resolveFacultyFieldExpr(target);
             const aggRows = await tx
               .select({
                 sum: sql<number>`coalesce(sum(NULLIF(trim(${targetExpr}::text), '')::numeric), 0)`,
                 count: sql<number>`count(*) FILTER (WHERE NULLIF(trim(${targetExpr}::text), '') IS NOT NULL)::int`,
               })
-              .from(teachers)
+              .from(faculty)
               .where(whereClause);
             const sum = Number(aggRows[0]?.sum ?? 0);
             const count = Number(aggRows[0]?.count ?? 0);
@@ -67,11 +67,9 @@ export async function aggregateTeachersWidgetQueries(
         }
 
         const xAxis = query.xAxisField?.trim() || 'status';
-        const xAxisExpr = resolveTeacherFieldExpr(xAxis);
+        const xAxisExpr = resolveFacultyFieldExpr(xAxis);
         const groupExpr = sql<string>`COALESCE(NULLIF(trim(${xAxisExpr}::text), ''), 'Unknown')`;
 
-        // For sum/avg with a target the count-based chart is discarded by the
-        // numeric chart, so only run the count chart for the other operations.
         const target =
           (query.operation === 'sum' || query.operation === 'avg')
             ? (query.targetField?.trim() || '')
@@ -79,14 +77,14 @@ export async function aggregateTeachersWidgetQueries(
 
         let chartData: { name: string; value: number }[];
         if (target) {
-          const targetExpr = resolveTeacherFieldExpr(target);
+          const targetExpr = resolveFacultyFieldExpr(target);
           const numericChart = await tx
             .select({
               name: groupExpr,
               sum: sql<number>`coalesce(sum(NULLIF(trim(${targetExpr}::text), '')::numeric), 0)`,
               count: sql<number>`count(*) FILTER (WHERE NULLIF(trim(${targetExpr}::text), '') IS NOT NULL)::int`,
             })
-            .from(teachers)
+            .from(faculty)
             .where(whereClause)
             .groupBy(groupExpr)
             .limit(chartLimit);
@@ -107,7 +105,7 @@ export async function aggregateTeachersWidgetQueries(
               name: groupExpr,
               value: sql<number>`count(*)::int`,
             })
-            .from(teachers)
+            .from(faculty)
             .where(whereClause)
             .groupBy(groupExpr)
             .orderBy(sql`count(*) desc`)
@@ -129,6 +127,3 @@ export async function aggregateTeachersWidgetQueries(
     return results;
   });
 }
-
-
-export const aggregateFacultyWidgetQueries = aggregateTeachersWidgetQueries;

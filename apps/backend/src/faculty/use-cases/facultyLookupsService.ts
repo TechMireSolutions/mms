@@ -1,43 +1,41 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq, getTableName } from 'drizzle-orm';
 import {
-  TEACHER_LOOKUP_KINDS,
-  defaultTeacherLookupItems,
-  emptyTeacherLookupsMap,
-  type TeacherLookupKind,
-  type TeacherLookupsMap,
+  FACULTY_LOOKUP_KINDS,
+  defaultFacultyLookupItems,
+  emptyFacultyLookupsMap,
+  type FacultyLookupKind,
+  type FacultyLookupsMap,
 } from '@mms/shared';
 import { createModuleStringListLookupsService } from '../../lib/createModuleStringListLookupsService.js';
 import {
-  listTeacherLookupsByKind,
-  listTeacherLookupsByWorkspace,
-  replaceTeacherLookupsForKind,
+  listFacultyLookupsByKind,
+  listFacultyLookupsByWorkspace,
+  replaceFacultyLookupsForKind,
 } from '../../db/repositories/facultyLookupsRepository.js';
-import { teacherLookups } from '../../db/schema.js';
+import { facultyLookups } from '../../db/schema.js';
 import { withTenant, type TenantTransaction } from '../../db/tenant-context.js';
 import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 const stringListLookups = createModuleStringListLookupsService<
-  TeacherLookupKind,
-  TeacherLookupsMap
+  FacultyLookupKind,
+  FacultyLookupsMap
 >({
-  kinds: TEACHER_LOOKUP_KINDS,
-  emptyMap: emptyTeacherLookupsMap,
-  defaultItems: defaultTeacherLookupItems,
-  listByWorkspace: listTeacherLookupsByWorkspace,
-  listByKind: listTeacherLookupsByKind,
-  replaceForKind: replaceTeacherLookupsForKind,
-  broadcastKey: 'teachers',
+  kinds: FACULTY_LOOKUP_KINDS,
+  emptyMap: emptyFacultyLookupsMap,
+  defaultItems: defaultFacultyLookupItems,
+  listByWorkspace: listFacultyLookupsByWorkspace,
+  listByKind: listFacultyLookupsByKind,
+  replaceForKind: replaceFacultyLookupsForKind,
+  broadcastKey: 'faculty',
 });
 
 export const loadFacultyLookupsMap = stringListLookups.loadMap;
-export const loadTeacherLookupsMap = loadFacultyLookupsMap;
 
 export const replaceFacultyLookupKind = stringListLookups.replaceKind;
-export const replaceTeacherLookupKind = replaceFacultyLookupKind;
 
 /**
- * Ensures a custom designation is persisted in teacher_lookups under kind 'designations'
+ * Ensures a custom designation is persisted in faculty_lookups under kind 'designations'
  * with case-insensitive matching (LOWER(TRIM(value))).
  */
 export async function ensureFacultyDesignationLookup(
@@ -52,15 +50,15 @@ export async function ensureFacultyDesignationLookup(
     if (!client || typeof client.select !== 'function') return;
     const existing = await client
       .select({
-        id: teacherLookups.id,
-        label: teacherLookups.label,
-        sortOrder: teacherLookups.sortOrder,
+        id: facultyLookups.id,
+        label: facultyLookups.label,
+        sortOrder: facultyLookups.sortOrder,
       })
-      .from(teacherLookups)
+      .from(facultyLookups)
       .where(
         and(
-          eq(teacherLookups.workspaceSubdomain, tenant),
-          eq(teacherLookups.kind, 'designations'),
+          eq(facultyLookups.workspaceSubdomain, tenant),
+          eq(facultyLookups.kind, 'designations'),
         ),
       );
 
@@ -68,7 +66,7 @@ export async function ensureFacultyDesignationLookup(
     const found = existing.some((r) => r.label.trim().toLowerCase() === lower);
     if (!found) {
       const maxSort = existing.reduce((max, r) => Math.max(max, r.sortOrder ?? 0), -1);
-      await client.insert(teacherLookups).values({
+      await client.insert(facultyLookups).values({
         id: `des-${randomUUID()}`,
         workspaceSubdomain: tenant,
         kind: 'designations',
@@ -76,7 +74,7 @@ export async function ensureFacultyDesignationLookup(
         sortOrder: maxSort + 1,
         meta: null,
       });
-      const tableName = getTableName(teacherLookups);
+      const tableName = getTableName(facultyLookups);
       await invalidateMultiTierCache({
         tenantId: tenant,
         domain: tableName,
@@ -90,6 +88,3 @@ export async function ensureFacultyDesignationLookup(
     await withTenant(tenant, performUpsert);
   }
 }
-
-export const ensureTeacherDesignationLookup = ensureFacultyDesignationLookup;
-

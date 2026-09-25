@@ -67,7 +67,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] List supports `includeDeleted`; Work default excludes deleted; BE SQL-filters `deleted_at` via dynamic AST (no parameterized booleans)
 - [ ] Relational child queries in `with: { ... }` explicitly filter `where: (c, { isNull }) => isNull(c.deletedAt)`
 - [ ] Partial unique indexes (`WHERE deleted_at IS NULL`) used for recyclable keys (email, phone, employee_id) — assess actual NULL semantics; financial source identities may need lifetime uniqueness (advisory)
-- [ ] Session invalidation on user/teacher soft delete + auth resolvers gate on `deleted_at IS NULL`
+- [ ] Session invalidation on user/faculty soft delete + auth resolvers gate on `deleted_at IS NULL`
 - [ ] Active foreign key guarding: write schemas reject references to soft-deleted records
 - [ ] Create/update write schemas strip client soft-delete fields
 - [ ] FE trash UI: URL param sync (`?view=trash`), filter state preserved on toggle, eligible non-financial optimistic 5–10s Undo toast, drawer `ArchivedBanner` (`WarningCallout`) with single restore

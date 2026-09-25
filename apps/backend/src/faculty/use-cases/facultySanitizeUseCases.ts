@@ -1,13 +1,13 @@
 import {
-  sanitizeTeacherForViewer as sanitizeTeacherRecord,
-  sanitizeTeachersForViewer as sanitizeTeacherRecords,
+  sanitizeFacultyForViewer as sanitizeFacultyRecord,
+  sanitizeFacultyListForViewer as sanitizeFacultyRecords,
   type FieldDefinition,
-  type Teacher,
-  type TeachersSettings,
+  type Faculty,
+  type FacultySettings,
 } from '@mms/shared';
-import { loadTeacherFieldConfig } from './facultyConfigService.js';
+import { loadFacultyFieldConfig } from './facultyConfigService.js';
 
-function settingsSnapshot(settings: TeachersSettings | null) {
+function settingsSnapshot(settings: FacultySettings | null) {
   if (!settings) return null;
   const fields =
     settings.fields && typeof settings.fields === 'object' && !Array.isArray(settings.fields)
@@ -20,21 +20,21 @@ function settingsSnapshot(settings: TeachersSettings | null) {
   };
 }
 
-/** Strips teacher properties the viewer role cannot read (field-config + viewer role). */
-export async function sanitizeTeacherForViewer(
-  teacher: Teacher,
+/** Strips faculty properties the viewer role cannot read (field-config + viewer role). */
+export async function sanitizeFacultyForViewer(
+  member: Faculty,
   viewerRole: string,
-): Promise<Teacher> {
-  const config = settingsSnapshot(await loadTeacherFieldConfig());
-  if (!config) return teacher;
-  return sanitizeTeacherRecord(teacher, viewerRole, config);
+): Promise<Faculty> {
+  const config = settingsSnapshot(await loadFacultyFieldConfig());
+  if (!config) return member;
+  return sanitizeFacultyRecord(member, viewerRole, config);
 }
 
-export async function sanitizeTeachersForViewer(
-  teachers: Teacher[],
+export async function sanitizeFacultyListForViewer(
+  members: Faculty[],
   viewerRole: string,
-): Promise<Teacher[]> {
-  const config = settingsSnapshot(await loadTeacherFieldConfig());
-  if (!config) return teachers;
-  return sanitizeTeacherRecords(teachers, viewerRole, config);
+): Promise<Faculty[]> {
+  const config = settingsSnapshot(await loadFacultyFieldConfig());
+  if (!config) return members;
+  return sanitizeFacultyRecords(members, viewerRole, config);
 }

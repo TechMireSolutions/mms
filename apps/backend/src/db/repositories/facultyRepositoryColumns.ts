@@ -1,41 +1,41 @@
-import { teachers } from '../schema.js';
+import { faculty } from '../schema.js';
 import type { AppDb } from '../tenant-context.js';
-import type { Teacher } from '@mms/shared';
+import type { FacultyMember } from '@mms/shared';
 import { mapAuditTimestamps, mapAuditToInsert } from './repositoryMappers.js';
 
-export type TeacherInsert = typeof teachers.$inferInsert;
+export type FacultyInsert = typeof faculty.$inferInsert;
 
-export const TEACHER_PROJECTION_COLUMNS = {
-  id: teachers.id,
-  workspaceSubdomain: teachers.workspaceSubdomain,
-  contactId: teachers.contactId,
-  userId: teachers.userId,
-  employeeId: teachers.employeeId,
-  status: teachers.status,
-  specialization: teachers.specialization,
-  department: teachers.department,
-  designation: teachers.designation,
-  reportingFacultyId: teachers.reportingFacultyId,
-  hierarchyRank: teachers.hierarchyRank,
-  qualification: teachers.qualification,
-  joinDate: teachers.joinDate,
-  notes: teachers.notes,
-  customData: teachers.customData,
-  deletedAt: teachers.deletedAt,
-  deletedBy: teachers.deletedBy,
-  deletionReason: teachers.deletionReason,
-  restoredAt: teachers.restoredAt,
-  restoredBy: teachers.restoredBy,
-  deletedWithCascade: teachers.deletedWithCascade,
-  createdAt: teachers.createdAt,
-  updatedAt: teachers.updatedAt,
-  createdBy: teachers.createdBy,
-  updatedBy: teachers.updatedBy,
+export const FACULTY_PROJECTION_COLUMNS = {
+  id: faculty.id,
+  workspaceSubdomain: faculty.workspaceSubdomain,
+  contactId: faculty.contactId,
+  userId: faculty.userId,
+  employeeId: faculty.employeeId,
+  status: faculty.status,
+  specialization: faculty.specialization,
+  department: faculty.department,
+  designation: faculty.designation,
+  reportingFacultyId: faculty.reportingFacultyId,
+  hierarchyRank: faculty.hierarchyRank,
+  qualification: faculty.qualification,
+  joinDate: faculty.joinDate,
+  notes: faculty.notes,
+  customData: faculty.customData,
+  deletedAt: faculty.deletedAt,
+  deletedBy: faculty.deletedBy,
+  deletionReason: faculty.deletionReason,
+  restoredAt: faculty.restoredAt,
+  restoredBy: faculty.restoredBy,
+  deletedWithCascade: faculty.deletedWithCascade,
+  createdAt: faculty.createdAt,
+  updatedAt: faculty.updatedAt,
+  createdBy: faculty.createdBy,
+  updatedBy: faculty.updatedBy,
 } as const;
 
-export function teacherWriteValues(subdomain: string, teacher: Teacher): TeacherInsert {
-  const audit = mapAuditToInsert(teacher);
-  const t = teacher as Teacher & { reportingFacultyId?: string | null; hierarchyRank?: number };
+export function facultyWriteValues(subdomain: string, facultyMember: FacultyMember): FacultyInsert {
+  const audit = mapAuditToInsert(facultyMember);
+  const f = facultyMember as FacultyMember & { reportingFacultyId?: string | null; hierarchyRank?: number };
   const knownKeys = new Set([
     'id', 'contactId', 'userId', 'employeeId', 'status', 'specialization', 'department',
     'designation', 'designationId', 'designationStartsOn', 'designationEndsOn',
@@ -46,30 +46,30 @@ export function teacherWriteValues(subdomain: string, teacher: Teacher): Teacher
     'deletedBy', 'deletionReason', 'restoredAt', 'restoredBy', 'deletedWithCascade',
   ]);
   const customData = Object.fromEntries(
-    Object.entries(teacher as Record<string, unknown>).filter(([key]) => !knownKeys.has(key)),
+    Object.entries(facultyMember as Record<string, unknown>).filter(([key]) => !knownKeys.has(key)),
   );
   return {
-    id: String(teacher.id),
+    id: String(facultyMember.id),
     workspaceSubdomain: subdomain,
-    contactId: teacher.contactId ? String(teacher.contactId) : null,
-    userId: teacher.userId ? String(teacher.userId) : null,
-    employeeId: teacher.employeeId ?? null,
-    status: teacher.status ?? 'active',
-    specialization: teacher.specialization ?? null,
-    department: teacher.department ?? null,
-    designation: teacher.designation ?? null,
-    reportingFacultyId: t.reportingFacultyId ?? null,
-    hierarchyRank: typeof t.hierarchyRank === 'number' ? t.hierarchyRank : 10,
-    qualification: teacher.qualification ?? null,
-    joinDate: teacher.joinDate ?? null,
-    notes: teacher.notes ?? null,
+    contactId: facultyMember.contactId ? String(facultyMember.contactId) : null,
+    userId: facultyMember.userId ? String(facultyMember.userId) : null,
+    employeeId: facultyMember.employeeId ?? null,
+    status: facultyMember.status ?? 'active',
+    specialization: facultyMember.specialization ?? null,
+    department: facultyMember.department ?? null,
+    designation: facultyMember.designation ?? null,
+    reportingFacultyId: f.reportingFacultyId ?? null,
+    hierarchyRank: typeof f.hierarchyRank === 'number' ? f.hierarchyRank : 10,
+    qualification: facultyMember.qualification ?? null,
+    joinDate: facultyMember.joinDate ?? null,
+    notes: facultyMember.notes ?? null,
     customData,
     ...audit,
     createdAt: audit.createdAt ?? new Date(),
-  } satisfies TeacherInsert;
+  } satisfies FacultyInsert;
 }
 
-export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
+export function facultyRowToRecord(row: typeof faculty.$inferSelect): FacultyMember {
   return {
     ...(row.customData ?? {}),
     id: row.id,
@@ -86,32 +86,32 @@ export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
     joinDate: row.joinDate ?? undefined,
     notes: row.notes ?? undefined,
     ...mapAuditTimestamps(row),
-  } satisfies Teacher;
+  } satisfies FacultyMember;
 }
 
-export async function hydrateTeachersList(
+export async function hydrateFacultyList(
   _tx: AppDb,
   _subdomain: string,
-  rows: (typeof teachers.$inferSelect)[],
-): Promise<Teacher[]> {
-  return rows.map(teacherRowToRecord);
+  rows: (typeof faculty.$inferSelect)[],
+): Promise<FacultyMember[]> {
+  return rows.map(facultyRowToRecord);
 }
 
-export function teacherUpdateSetValues(subdomain: string, teacher: Teacher) {
-  const { id: _id, workspaceSubdomain: _subdomain, createdAt: _createdAt, createdBy: _createdBy, ...setFields } = teacherWriteValues(subdomain, teacher);
+export function facultyUpdateSetValues(subdomain: string, facultyMember: FacultyMember) {
+  const { id: _id, workspaceSubdomain: _subdomain, createdAt: _createdAt, createdBy: _createdBy, ...setFields } = facultyWriteValues(subdomain, facultyMember);
   return setFields;
 }
 
-export async function persistTeacherTx(
+export async function persistFacultyTx(
   tx: AppDb,
   subdomain: string,
-  teacher: Teacher,
+  facultyMember: FacultyMember,
 ): Promise<void> {
   await tx
-    .insert(teachers)
-    .values(teacherWriteValues(subdomain, teacher))
+    .insert(faculty)
+    .values(facultyWriteValues(subdomain, facultyMember))
     .onConflictDoUpdate({
-      target: [teachers.workspaceSubdomain, teachers.id],
-      set: teacherUpdateSetValues(subdomain, teacher),
+      target: [faculty.workspaceSubdomain, faculty.id],
+      set: facultyUpdateSetValues(subdomain, facultyMember),
     });
 }

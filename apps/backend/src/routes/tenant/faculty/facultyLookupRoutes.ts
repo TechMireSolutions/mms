@@ -28,5 +28,3 @@ export const facultyLookupRoutes: FastifyPluginAsync = async (fastify) => {
     saveError: 'Failed to save faculty lookups',
   });
 };
-
-export const teacherLookupRoutes = facultyLookupRoutes;

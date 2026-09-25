@@ -1,4 +1,4 @@
-import type { FacultyRepository as TeachersRepository } from '../repository/facultyRepository.js';
+import type { FacultyRepository } from '../repository/facultyRepository.js';
 
 export class HierarchyValidationError extends Error {
   readonly statusCode = 400;
@@ -23,7 +23,7 @@ export async function validateReportingHierarchy(
   facultyId: string | undefined,
   hierarchyRank: number,
   reportingFacultyId: string | null | undefined,
-  repo: TeachersRepository,
+  repo: FacultyRepository,
 ): Promise<void> {
   if (!reportingFacultyId || !reportingFacultyId.trim()) return;
   const supervisorId = reportingFacultyId.trim();

@@ -2,24 +2,24 @@ import { eq, isNotNull, isNull, sql, type SQL } from 'drizzle-orm';
 import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
-  DEFAULT_TEACHER_STATUS,
-  TEACHER_SORT_FIELD_SET,
-  teachersQuickFilterStatusValue,
-  type TeachersListQuery,
+  DEFAULT_FACULTY_STATUS,
+  FACULTY_SORT_FIELD_SET,
+  facultyQuickFilterStatusValue,
+  type FacultyListQuery,
 } from '@mms/shared';
-import { teachers, contacts } from '../schema.js';
+import { faculty, contacts } from '../schema.js';
 
-/** Shared status expression for Teachers list filters + metrics. */
-export function teacherStatusExpr(): SQL {
-  return sql`lower(trim(COALESCE(${teachers.status}, ${DEFAULT_TEACHER_STATUS})))`;
+/** Shared status expression for Faculty list filters + metrics. */
+export function facultyStatusExpr(): SQL {
+  return sql`lower(trim(COALESCE(${faculty.status}, ${DEFAULT_FACULTY_STATUS})))`;
 }
 
 function specializationExpr(): SQL {
-  return sql`trim(COALESCE(${teachers.specialization}, ''))`;
+  return sql`trim(COALESCE(${faculty.specialization}, ''))`;
 }
 
 export function employeeIdExpr(): SQL {
-  return sql`lower(trim(COALESCE(${teachers.employeeId}, '')))`;
+  return sql`lower(trim(COALESCE(${faculty.employeeId}, '')))`;
 }
 
 /** Display name from linked contact for Work sort (Contacts SSOT). */
@@ -31,8 +31,8 @@ function linkedContactNameSortExpr(): SQL {
       ''
     )
     FROM ${contacts} c
-    WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain}
-      AND c.id = ${teachers.contactId}
+    WHERE c.workspace_subdomain = ${faculty.workspaceSubdomain}
+      AND c.id = ${faculty.contactId}
     LIMIT 1
   ), '')))`;
 }
@@ -42,8 +42,8 @@ function linkedContactGenderExpr(): SQL {
   return sql`lower(trim(COALESCE((
     SELECT c.gender
     FROM ${contacts} c
-    WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain}
-      AND c.id = ${teachers.contactId}
+    WHERE c.workspace_subdomain = ${faculty.workspaceSubdomain}
+      AND c.id = ${faculty.contactId}
     LIMIT 1
   ), '')))`;
 }
@@ -53,14 +53,14 @@ function buildSearchSql(search: string): SQL | null {
   if (!normalized) return null;
   const pattern = `%${normalized}%`;
   return sql`(
-    lower(COALESCE(${teachers.employeeId}, '')) LIKE ${pattern}
-    OR lower(COALESCE(${teachers.designation}, '')) LIKE ${pattern}
-    OR lower(COALESCE(${teachers.specialization}, '')) LIKE ${pattern}
-    OR lower(COALESCE(${teachers.qualification}, '')) LIKE ${pattern}
+    lower(COALESCE(${faculty.employeeId}, '')) LIKE ${pattern}
+    OR lower(COALESCE(${faculty.designation}, '')) LIKE ${pattern}
+    OR lower(COALESCE(${faculty.specialization}, '')) LIKE ${pattern}
+    OR lower(COALESCE(${faculty.qualification}, '')) LIKE ${pattern}
     OR EXISTS (
       SELECT 1 FROM ${contacts} c
-      WHERE c.workspace_subdomain = ${teachers.workspaceSubdomain}
-        AND c.id = ${teachers.contactId}
+      WHERE c.workspace_subdomain = ${faculty.workspaceSubdomain}
+        AND c.id = ${faculty.contactId}
         AND (
           lower(COALESCE(c.name, '')) LIKE ${pattern}
           OR lower(concat_ws(' ', c.first_name, c.last_name)) LIKE ${pattern}
@@ -74,20 +74,20 @@ function buildSearchSql(search: string): SQL | null {
 export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | undefined): SQL {
   const dir = sortDir === 'desc' ? 'desc' : 'asc';
   const field = sortField?.trim();
-  if (!field || !TEACHER_SORT_FIELD_SET.has(field)) {
-    return sql`${teachers.id} asc`;
+  if (!field || !FACULTY_SORT_FIELD_SET.has(field)) {
+    return sql`${faculty.id} asc`;
   }
   if (field === 'updatedAt') {
     return dir === 'desc'
-      ? sql`${teachers.updatedAt} desc nulls last`
-      : sql`${teachers.updatedAt} asc nulls last`;
+      ? sql`${faculty.updatedAt} desc nulls last`
+      : sql`${faculty.updatedAt} asc nulls last`;
   }
   if (field === 'name') {
     const nameSort = linkedContactNameSortExpr();
     return dir === 'desc' ? sql`${nameSort} desc nulls last` : sql`${nameSort} asc nulls last`;
   }
   if (field === 'status') {
-    const statusSort = teacherStatusExpr();
+    const statusSort = facultyStatusExpr();
     return dir === 'desc' ? sql`${statusSort} desc nulls last` : sql`${statusSort} asc nulls last`;
   }
   if (field === 'employeeId') {
@@ -96,8 +96,8 @@ export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'de
   }
   if (field === 'designation') {
     return dir === 'desc'
-      ? sql`lower(COALESCE(${teachers.designation}, '')) desc nulls last`
-      : sql`lower(COALESCE(${teachers.designation}, '')) asc nulls last`;
+      ? sql`lower(COALESCE(${faculty.designation}, '')) desc nulls last`
+      : sql`lower(COALESCE(${faculty.designation}, '')) asc nulls last`;
   }
   if (field === 'specialization') {
     const specSort = specializationExpr();
@@ -105,30 +105,30 @@ export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'de
   }
   if (field === 'qualification') {
     return dir === 'desc'
-      ? sql`lower(COALESCE(${teachers.qualification}, '')) desc nulls last`
-      : sql`lower(COALESCE(${teachers.qualification}, '')) asc nulls last`;
+      ? sql`lower(COALESCE(${faculty.qualification}, '')) desc nulls last`
+      : sql`lower(COALESCE(${faculty.qualification}, '')) asc nulls last`;
   }
   if (field === 'joinDate') {
     return dir === 'desc'
-      ? sql`${teachers.joinDate} desc nulls last`
-      : sql`${teachers.joinDate} asc nulls last`;
+      ? sql`${faculty.joinDate} desc nulls last`
+      : sql`${faculty.joinDate} asc nulls last`;
   }
-  return sql`${teachers.id} asc`;
+  return sql`${faculty.id} asc`;
 }
 
-export function buildListConditions(subdomain: string, query: TeachersListQuery & { includeDeleted?: boolean }): SQL[] {
-  const conditions: SQL[] = [eq(teachers.workspaceSubdomain, subdomain)];
+export function buildListConditions(subdomain: string, query: FacultyListQuery & { includeDeleted?: boolean }): SQL[] {
+  const conditions: SQL[] = [eq(faculty.workspaceSubdomain, subdomain)];
 
   if (isQueryFlagTrue(query.includeDeleted)) {
-    conditions.push(isNotNull(teachers.deletedAt));
+    conditions.push(isNotNull(faculty.deletedAt));
   } else {
-    conditions.push(isNull(teachers.deletedAt));
+    conditions.push(isNull(faculty.deletedAt));
   }
 
   const rawStatuses = dedupeTrimmedIds(query.status);
   if (rawStatuses.length > 0) {
     const statuses = rawStatuses.map((status) => status.toLowerCase());
-    conditions.push(sql`${teacherStatusExpr()} IN (${sql.join(
+    conditions.push(sql`${facultyStatusExpr()} IN (${sql.join(
       statuses.map((status) => sql`${status}`),
       sql`, `,
     )})`);
@@ -139,15 +139,15 @@ export function buildListConditions(subdomain: string, query: TeachersListQuery 
   }
 
   if ((query as { department?: string }).department?.trim()) {
-    conditions.push(sql`lower(trim(COALESCE(${teachers.department}, ''))) = lower(trim(${(query as { department?: string }).department!.trim()}))`);
+    conditions.push(sql`lower(trim(COALESCE(${faculty.department}, ''))) = lower(trim(${(query as { department?: string }).department!.trim()}))`);
   }
 
   if ((query as { designation?: string }).designation?.trim()) {
-    conditions.push(sql`lower(trim(COALESCE(${teachers.designation}, ''))) = lower(trim(${(query as { designation?: string }).designation!.trim()}))`);
+    conditions.push(sql`lower(trim(COALESCE(${faculty.designation}, ''))) = lower(trim(${(query as { designation?: string }).designation!.trim()}))`);
   }
 
   if ((query as { reportingFacultyId?: string }).reportingFacultyId?.trim()) {
-    conditions.push(eq(teachers.reportingFacultyId, (query as { reportingFacultyId?: string }).reportingFacultyId!.trim()));
+    conditions.push(eq(faculty.reportingFacultyId, (query as { reportingFacultyId?: string }).reportingFacultyId!.trim()));
   }
 
   if (query.gender?.trim()) {
@@ -158,10 +158,10 @@ export function buildListConditions(subdomain: string, query: TeachersListQuery 
   const quickFilter = query.quickFilter;
   if (quickFilter && quickFilter !== 'all') {
     if (quickFilter === 'missingEmployeeId') {
-      conditions.push(sql`NULLIF(trim(COALESCE(${teachers.employeeId}, '')), '') IS NULL`);
+      conditions.push(sql`NULLIF(trim(COALESCE(${faculty.employeeId}, '')), '') IS NULL`);
     } else {
-      const statusValue = teachersQuickFilterStatusValue(quickFilter);
-      if (statusValue) conditions.push(sql`${teacherStatusExpr()} = ${statusValue}`);
+      const statusValue = facultyQuickFilterStatusValue(quickFilter);
+      if (statusValue) conditions.push(sql`${facultyStatusExpr()} = ${statusValue}`);
     }
   }
 
@@ -173,3 +173,4 @@ export function buildListConditions(subdomain: string, query: TeachersListQuery 
 
   return conditions;
 }
+

@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import {
   formatDeterministicEmployeeId,
-  DEFAULT_TEACHERS_SETTINGS,
+  DEFAULT_FACULTY_SETTINGS,
 } from '@mms/shared';
 import { facultySetupConfig } from '../../db/schema/faculty.js';
 import { withTenant, type TenantTransaction } from '../../db/tenant-context.js';
@@ -25,7 +25,7 @@ export async function generateNextFacultyEmployeeId(
       const employeeId = formatDeterministicEmployeeId(
         1,
         {
-          prefix: DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix,
+          prefix: DEFAULT_FACULTY_SETTINGS.employeeIdPrefix,
           yearFormat: 'YYYY',
           sequenceDigits: 4,
           delimiter: '',
@@ -60,10 +60,10 @@ export async function generateNextFacultyEmployeeId(
         .insert(facultySetupConfig)
         .values({
           workspaceSubdomain: subdomain,
-          prefix: DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix,
-          yearFormat: DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat,
-          sequenceDigits: DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits,
-          delimiter: DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter,
+          prefix: DEFAULT_FACULTY_SETTINGS.employeeIdPrefix,
+          yearFormat: DEFAULT_FACULTY_SETTINGS.employeeIdYearFormat,
+          sequenceDigits: DEFAULT_FACULTY_SETTINGS.employeeIdSequenceDigits,
+          delimiter: DEFAULT_FACULTY_SETTINGS.employeeIdDelimiter,
           currentSequence: 0,
           lastYear: currentYear,
           updatedAt: new Date(),
@@ -77,10 +77,10 @@ export async function generateNextFacultyEmployeeId(
         .for('update');
     }
 
-    const prefix = row?.prefix ?? DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix;
-    const yearFormat = (row?.yearFormat ?? DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat) as 'YYYY' | 'YY' | 'NONE';
-    const sequenceDigits = row?.sequenceDigits ?? DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits;
-    const delimiter = row?.delimiter ?? DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter;
+    const prefix = row?.prefix ?? DEFAULT_FACULTY_SETTINGS.employeeIdPrefix;
+    const yearFormat = (row?.yearFormat ?? DEFAULT_FACULTY_SETTINGS.employeeIdYearFormat) as 'YYYY' | 'YY' | 'NONE';
+    const sequenceDigits = row?.sequenceDigits ?? DEFAULT_FACULTY_SETTINGS.employeeIdSequenceDigits;
+    const delimiter = row?.delimiter ?? DEFAULT_FACULTY_SETTINGS.employeeIdDelimiter;
     const lastYear = row?.lastYear ?? currentYear;
     const currentSequence = row?.currentSequence ?? 0;
 
@@ -130,4 +130,3 @@ export async function generateNextFacultyEmployeeId(
 }
 
 export const generateNextEmployeeId = generateNextFacultyEmployeeId;
-export const generateNextTeacherEmployeeId = generateNextFacultyEmployeeId;

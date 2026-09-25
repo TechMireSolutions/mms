@@ -117,5 +117,5 @@ export async function sanitizeOneForUser(contact: Contact, user: User): Promise<
   return sanitizeContactForViewer(contact, user.role, options);
 }
 
-/** Contacts audit helper — shared factory, same shape as Teachers/Students. */
+/** Contacts audit helper — shared factory, same shape as Faculty/Students. */
 export const auditContact = createCollectionAuditHelper('contacts');

@@ -42,31 +42,20 @@ vi.mock('../faculty/use-cases/facultyUseCases.js', async (importOriginal) => {
   const mocked = {
     ...actual.facultyUseCases,
     createFaculty: (...args: unknown[]) => mockCreateTeacher(...args),
-    createTeacher: (...args: unknown[]) => mockCreateTeacher(...args),
     updateFacultyById: (...args: unknown[]) => mockUpdateTeacherById(...args),
-    updateTeacherById: (...args: unknown[]) => mockUpdateTeacherById(...args),
     checkFacultyRegistrationDuplicate: (...args: unknown[]) =>
-      mockCheckTeacherRegistrationDuplicate(...args),
-    checkTeacherRegistrationDuplicate: (...args: unknown[]) =>
       mockCheckTeacherRegistrationDuplicate(...args),
     migrateFacultyMissingEmployeeIds: (...args: unknown[]) =>
       mockMigrateTeachersMissingEmployeeIds(...args),
-    migrateTeachersMissingEmployeeIds: (...args: unknown[]) =>
-      mockMigrateTeachersMissingEmployeeIds(...args),
     loadFacultyPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
-    loadTeachersPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
     bulkUpdateFacultySpecialization: (...args: unknown[]) =>
       mockBulkUpdateTeacherSpecialization(...args),
-    bulkUpdateTeacherSpecialization: (...args: unknown[]) =>
-      mockBulkUpdateTeacherSpecialization(...args),
     sanitizeFacultyForViewer: async (faculty: unknown) => faculty,
-    sanitizeTeacherForViewer: async (teacher: unknown) => teacher,
-    sanitizeTeachersForViewer: async (teachers: unknown) => teachers,
+    sanitizeFacultyListForViewer: async (facultyList: unknown) => facultyList,
   };
   return {
     ...actual,
     facultyUseCases: mocked,
-    teacherUseCases: mocked,
   };
 });
 
@@ -276,7 +265,7 @@ describe('faculty write contact-profile SSOT', () => {
 
   it('GET /api/faculty forwards gender and quickFilter to the list page', async () => {
     mockLoadTeachersPage.mockResolvedValue({
-      teachers: [{ id: 't1', specialization: 'Hifz', status: 'active' }],
+      faculty: [{ id: 't1', specialization: 'Hifz', status: 'active' }],
       total: 1,
       page: 1,
       limit: 50,
@@ -292,8 +281,8 @@ describe('faculty write contact-profile SSOT', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    const body = res.json() as { faculty?: unknown[]; teachers?: unknown[]; total: number };
-    expect(body.faculty ?? body.teachers).toHaveLength(1);
+    const body = res.json() as { faculty?: unknown[]; total: number };
+    expect(body.faculty).toHaveLength(1);
     expect(body.total).toBe(1);
     const query = mockLoadTeachersPage.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(query.gender).toBe('male');

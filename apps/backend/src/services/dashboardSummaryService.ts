@@ -1,7 +1,6 @@
 import type {
   StudentsCommandMetricsSnapshot,
   FacultyCommandMetricsSnapshot,
-  TeachersCommandMetricsSnapshot,
   ContactsCommandMetricsSnapshot,
   SessionsCommandMetricsSnapshot,
   AttendanceCommandMetricsSnapshot,
@@ -26,7 +25,6 @@ import { loadQuestionBankCommandMetrics } from './questionBankMetricsService.js'
 export interface DashboardSummaryResponse {
   students?: StudentsCommandMetricsSnapshot;
   faculty?: FacultyCommandMetricsSnapshot;
-  teachers?: TeachersCommandMetricsSnapshot;
   contacts?: ContactsCommandMetricsSnapshot;
   sessions?: SessionsCommandMetricsSnapshot;
   attendance?: AttendanceCommandMetricsSnapshot;
@@ -81,7 +79,6 @@ export async function loadDashboardSummary(
       return {
         students,
         faculty: facultyData,
-        teachers: facultyData,
         contacts,
         sessions,
         attendance,

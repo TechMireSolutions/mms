@@ -1,19 +1,19 @@
-import { dedupeTrimmedIds, type Teacher } from '@mms/shared';
+import { dedupeTrimmedIds, type Faculty } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
 import { broadcastCollection } from '../../lib/livePush.js';
-import type { FacultyRepository as TeachersRepository } from '../repository/facultyRepository.js';
-import { facultyRepository as teachersRepository } from '../repository/facultyRepositoryAdapter.js';
+import type { FacultyRepository } from '../repository/facultyRepository.js';
+import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
 import { ConflictError } from '../../lib/httpErrors.js';
 import { isUniqueViolation } from '../../lib/pgErrors.js';
 import { buildRestoredRecord, nowIso } from '../../lib/softDeleteHelpers.js';
 import { emitOutboxEvent } from '../../services/outboxEventService.js';
 
-export async function restoreTeacherById(
+export async function restoreFacultyById(
   id: string,
   userId?: string,
-  repo: TeachersRepository = teachersRepository,
-): Promise<Teacher | null> {
+  repo: FacultyRepository = facultyRepository,
+): Promise<Faculty | null> {
   const restored = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) return null;
@@ -27,7 +27,7 @@ export async function restoreTeacherById(
         employeeId: existing.employeeId,
       });
       if (conflict === 'employeeId') {
-        throw new ConflictError(`Employee ID ${existing.employeeId} is already in use by another active teacher`);
+        throw new ConflictError(`Employee ID ${existing.employeeId} is already in use by another active faculty`);
       }
     }
 
@@ -36,7 +36,7 @@ export async function restoreTeacherById(
       await repo.save(tenant, next);
     } catch (err: unknown) {
       if (isUniqueViolation(err) || (typeof err === 'object' && err !== null && 'code' in err && (err as { code: unknown }).code === '23505')) {
-        throw new ConflictError('Cannot restore teacher: active record with this unique identifier already exists');
+        throw new ConflictError('Cannot restore faculty: active record with this unique identifier already exists');
       }
       throw err;
     }
@@ -56,15 +56,14 @@ export async function restoreTeacherById(
 
   if (restored) {
     await broadcastCollection('faculty');
-    await broadcastCollection('teachers');
   }
   return restored;
 }
 
-export async function bulkRestoreTeachers(
+export async function bulkRestoreFaculty(
   ids: string[],
   userId?: string,
-  repo: TeachersRepository = teachersRepository,
+  repo: FacultyRepository = facultyRepository,
 ): Promise<{ succeeded: number; failed: number }> {
   const uniqueIds = dedupeTrimmedIds(ids);
   if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
@@ -73,10 +72,10 @@ export async function bulkRestoreTeachers(
     if (!tenant) return { succeeded: 0, failed: uniqueIds.length };
     let succeeded = 0;
     let failed = 0;
-    const toSave: Teacher[] = [];
+    const toSave: Faculty[] = [];
 
-    const existingTeachers = await repo.findByIds(tenant, uniqueIds);
-    const existingMap = new Map(existingTeachers.map((t) => [String(t.id), t]));
+    const existingMembers = await repo.findByIds(tenant, uniqueIds);
+    const existingMap = new Map(existingMembers.map((m) => [String(m.id), m]));
 
     for (const id of uniqueIds) {
       const existing = existingMap.get(id);
@@ -93,17 +92,17 @@ export async function bulkRestoreTeachers(
         await repo.bulkSave(tenant, toSave);
       } catch (err: unknown) {
         if (isUniqueViolation(err) || (typeof err === 'object' && err !== null && 'code' in err && (err as { code: unknown }).code === '23505')) {
-          throw new ConflictError('Cannot restore teacher: active record with this unique identifier already exists');
+          throw new ConflictError('Cannot restore faculty: active record with this unique identifier already exists');
         }
         throw err;
       }
 
-      for (const t of toSave) {
+      for (const m of toSave) {
         await emitOutboxEvent('entity.restored', {
           entityType: 'faculty',
-          entityId: String(t.id),
+          entityId: String(m.id),
           tenantId: tenant,
-          restoredAt: t.restoredAt ?? nowIso(),
+          restoredAt: m.restoredAt ?? nowIso(),
           restoredBy: userId ?? 'unknown',
           version: Date.now(),
         });
@@ -114,7 +113,6 @@ export async function bulkRestoreTeachers(
 
   if (result.succeeded > 0) {
     await broadcastCollection('faculty');
-    await broadcastCollection('teachers');
   }
   return result;
 }

@@ -3,13 +3,13 @@ import {
   tenantCollectionKey,
   WORKSPACES_COLLECTION,
   type Workspace,
-  type Teacher,
+  type Faculty,
 } from '@mms/shared';
 import {
   getCollectionByStorageName,
   listCollectionStorageNames,
 } from '../database.js';
-import { bulkSaveTeachers } from '../repositories/facultyRepository.js';
+import { bulkSaveFaculty } from '../repositories/facultyRepository.js';
 
 async function discoverTenantSubdomains(): Promise<Set<string>> {
   const subdomains = new Set<string>();
@@ -37,8 +37,8 @@ export async function runMigration023(): Promise<void> {
     const legacyTeachers = await getCollectionByStorageName(teachersKey);
     if (!Array.isArray(legacyTeachers) || legacyTeachers.length === 0) continue;
 
-    const teachersList = legacyTeachers as Teacher[];
-    await bulkSaveTeachers(subdomain, teachersList);
+    const teachersList = legacyTeachers as unknown as Faculty[];
+    await bulkSaveFaculty(subdomain, teachersList);
     changed = true;
     console.log(
       `[Migration 023] Imported ${teachersList.length} teacher(s) for "${subdomain}" into teachers table.`,

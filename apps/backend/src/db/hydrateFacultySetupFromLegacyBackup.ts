@@ -23,17 +23,6 @@ export const FACULTY_LEGACY_SETUP_OBJECT_KEYS = [
   TEACHERS_COLUMN_PREFS_OBJECT_KEY,
 ] as const;
 
-export const TEACHERS_LEGACY_SETUP_OBJECT_KEYS = FACULTY_LEGACY_SETUP_OBJECT_KEYS;
-
-const FACULTY_HYDRATE_CONFIG: LegacySetupHydrateConfig = {
-  settingsObjectKey: TEACHERS_SETTINGS_OBJECT_KEY,
-  columnPreferencesObjectKey: TEACHERS_COLUMN_PREFS_OBJECT_KEY,
-  fieldConfigCollection: 'faculty_field_configs',
-  modulePrefsCollection: 'faculty_module_preferences',
-  columnPrefsCollection: 'faculty_user_column_prefs',
-  splitSettingsBlob: splitFacultySettingsBlob || splitTeachersSettingsBlob,
-};
-
 /**
  * When a full backup only carries legacy `faculty_settings` / `teachers_settings` objects,
  * populate typed Setup collection arrays so restore does not wipe FORCE-RLS tables empty.
@@ -42,7 +31,21 @@ export function hydrateFacultySetupCollectionsFromLegacyObjects(
   collections: Record<string, unknown[]>,
   objects: Record<string, unknown> | undefined,
 ): Record<string, unknown[]> {
-  const result = hydrateModuleSetupCollectionsFromLegacyObjects(collections, objects, FACULTY_HYDRATE_CONFIG);
+  const hasModernSettings = Boolean(objects && objects[FACULTY_SETTINGS_OBJECT_KEY]);
+  const hasModernColumnPrefs = Boolean(objects && objects[FACULTY_COLUMN_PREFS_OBJECT_KEY]);
+
+  const config: LegacySetupHydrateConfig = {
+    settingsObjectKey: hasModernSettings ? FACULTY_SETTINGS_OBJECT_KEY : TEACHERS_SETTINGS_OBJECT_KEY,
+    columnPreferencesObjectKey: hasModernColumnPrefs
+      ? FACULTY_COLUMN_PREFS_OBJECT_KEY
+      : TEACHERS_COLUMN_PREFS_OBJECT_KEY,
+    fieldConfigCollection: 'faculty_field_configs',
+    modulePrefsCollection: 'faculty_module_preferences',
+    columnPrefsCollection: 'faculty_user_column_prefs',
+    splitSettingsBlob: splitFacultySettingsBlob || splitTeachersSettingsBlob,
+  };
+
+  const result = hydrateModuleSetupCollectionsFromLegacyObjects(collections, objects, config);
   const next = { ...result };
   if (next.faculty_field_configs && !next.teacher_field_configs) {
     next.teacher_field_configs = next.faculty_field_configs;
@@ -55,5 +58,3 @@ export function hydrateFacultySetupCollectionsFromLegacyObjects(
   }
   return next;
 }
-
-export const hydrateTeachersSetupCollectionsFromLegacyObjects = hydrateFacultySetupCollectionsFromLegacyObjects;

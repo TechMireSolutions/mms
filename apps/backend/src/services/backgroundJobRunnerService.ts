@@ -1,12 +1,12 @@
-import { buildTenantExportFilename, CONTACTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, SESSIONS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST, FACULTY_MODULE_MANIFEST, TEACHERS_MODULE_MANIFEST, USERS_MODULE_MANIFEST } from '@mms/shared';
-import type { ContactExportColumn, ContactsImportJobPayload, EnrollmentExportColumn, MessagingCsvExportQueryDto, SessionExportColumn, StudentExportColumn, FacultyExportColumn, TeacherExportColumn } from '@mms/shared';
+import { buildTenantExportFilename, CONTACTS_MODULE_MANIFEST, ENROLLMENTS_MODULE_MANIFEST, MESSAGING_MODULE_MANIFEST, SESSIONS_MODULE_MANIFEST, STUDENTS_MODULE_MANIFEST, FACULTY_MODULE_MANIFEST, USERS_MODULE_MANIFEST } from '@mms/shared';
+import type { ContactExportColumn, ContactsImportJobPayload, EnrollmentExportColumn, MessagingCsvExportQueryDto, SessionExportColumn, StudentExportColumn, FacultyExportColumn } from '@mms/shared';
 import type { ContactsExportQueryInput } from './contactsExportService.js';
 import { buildContactsCsvExport, generateContactsCsvStreamChunks } from './contactsExportService.js';
 import { buildContactsVcfExport } from './contactsVcfExportService.js';
 import type { StudentsExportQueryInput } from './studentsExportService.js';
 import { buildStudentsCsvExport, generateStudentsCsvStreamChunks } from './studentsExportService.js';
-import type { FacultyExportQueryInput, FacultyExportQueryInput as TeachersExportQueryInput } from './facultyExportService.js';
-import { buildFacultyCsvExport, generateFacultyCsvStreamChunks, buildFacultyCsvExport as buildTeachersCsvExport, generateFacultyCsvStreamChunks as generateTeachersCsvStreamChunks } from './facultyExportService.js';
+import type { FacultyExportQueryInput } from './facultyExportService.js';
+import { buildFacultyCsvExport, generateFacultyCsvStreamChunks } from './facultyExportService.js';
 import type { SessionsExportQueryInput } from './sessionsExportService.js';
 import { buildSessionsCsvExport, generateSessionsCsvStreamChunks } from './sessionsExportService.js';
 import type { EnrollmentsExportQueryInput } from './enrollmentsExportService.js';
@@ -68,8 +68,6 @@ export interface FacultyExportJobPayload {
   allowDeleted?: boolean;
 }
 
-export type TeachersExportJobPayload = FacultyExportJobPayload;
-
 export interface EnrollmentsExportJobPayload {
   query?: EnrollmentsExportQueryInput;
   columns?: EnrollmentExportColumn[];
@@ -90,7 +88,6 @@ export function registerDefaultBackgroundJobRunners(): void {
   const messagingModuleId = MESSAGING_MODULE_MANIFEST.moduleId;
   const studentsModuleId = STUDENTS_MODULE_MANIFEST.moduleId;
   const facultyModuleId = FACULTY_MODULE_MANIFEST.moduleId;
-  const teachersModuleId = TEACHERS_MODULE_MANIFEST.moduleId;
   const sessionsModuleId = SESSIONS_MODULE_MANIFEST.moduleId;
 
   registerModuleCsvExportJobRunner({
@@ -206,25 +203,6 @@ export function registerDefaultBackgroundJobRunners(): void {
     generateStreamChunks: (query, options) =>
       generateFacultyCsvStreamChunks(query as FacultyExportQueryInput, {
         columns: options.columns as FacultyExportColumn[] | undefined,
-        filename: options.filename,
-        viewerRole: options.viewerRole,
-        allowDeleted: options.allowDeleted === true,
-      }),
-  });
-
-  registerModuleCsvExportJobRunner({
-    moduleId: teachersModuleId,
-    entityNounPlural: 'teachers',
-    buildExport: (query, options) =>
-      buildTeachersCsvExport(query as TeachersExportQueryInput, {
-        columns: options.columns as TeacherExportColumn[] | undefined,
-        filename: options.filename,
-        viewerRole: options.viewerRole,
-        allowDeleted: options.allowDeleted,
-      }),
-    generateStreamChunks: (query, options) =>
-      generateTeachersCsvStreamChunks(query as TeachersExportQueryInput, {
-        columns: options.columns as TeacherExportColumn[] | undefined,
         filename: options.filename,
         viewerRole: options.viewerRole,
         allowDeleted: options.allowDeleted === true,

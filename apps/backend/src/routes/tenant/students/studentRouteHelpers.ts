@@ -2,7 +2,7 @@ import type { Student, User } from '@mms/shared';
 import { createCollectionAuditHelper } from '../../../lib/createCollectionAuditHelper.js';
 import { studentUseCases } from '../../../students/use-cases/studentUseCases.js';
 
-/** Thin Students audit helper — shared factory, same shape as Contacts/Teachers. */
+/** Thin Students audit helper — shared factory, same shape as Contacts/Faculty. */
 export const auditStudent = createCollectionAuditHelper('students');
 
 /** Strips student properties the viewer role cannot read (field-config + viewer role). */

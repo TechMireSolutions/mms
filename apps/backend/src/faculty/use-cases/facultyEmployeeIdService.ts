@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import {
-  DEFAULT_TEACHERS_SETTINGS,
-  type TeacherEmployeeIdSettings,
+  DEFAULT_FACULTY_SETTINGS,
+  type FacultyEmployeeIdSettings,
 } from '@mms/shared';
 import { facultySetupConfig, type FacultySetupConfigRow } from '../../db/schema/faculty.js';
 import { withTenant, withTenantRead } from '../../db/tenant-context.js';
@@ -20,12 +20,12 @@ export async function getFacultySetupConfig(tenant: string): Promise<FacultySetu
     const currentYear = new Date().getFullYear();
     const fallbackRow: FacultySetupConfigRow = {
       workspaceSubdomain: subdomain,
-      prefix: DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix ?? 'FAC',
-      yearFormat: DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat ?? 'YYYY',
-      sequenceDigits: DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits ?? 4,
-      delimiter: DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter ?? '',
-      currentSequence: DEFAULT_TEACHERS_SETTINGS.employeeIdCurrentSequence ?? 0,
-      lastYear: DEFAULT_TEACHERS_SETTINGS.employeeIdLastYear ?? currentYear,
+      prefix: DEFAULT_FACULTY_SETTINGS.employeeIdPrefix ?? 'FAC',
+      yearFormat: DEFAULT_FACULTY_SETTINGS.employeeIdYearFormat ?? 'YYYY',
+      sequenceDigits: DEFAULT_FACULTY_SETTINGS.employeeIdSequenceDigits ?? 4,
+      delimiter: DEFAULT_FACULTY_SETTINGS.employeeIdDelimiter ?? '',
+      currentSequence: DEFAULT_FACULTY_SETTINGS.employeeIdCurrentSequence ?? 0,
+      lastYear: DEFAULT_FACULTY_SETTINGS.employeeIdLastYear ?? currentYear,
       updatedAt: new Date(),
     };
 
@@ -56,7 +56,7 @@ export async function getFacultySetupConfig(tenant: string): Promise<FacultySetu
  */
 export async function updateFacultySetupConfig(
   tenant: string,
-  patch: Partial<TeacherEmployeeIdSettings>,
+  patch: Partial<FacultyEmployeeIdSettings>,
 ): Promise<FacultySetupConfigRow> {
   const subdomain = tenant.trim().toLowerCase();
   return await withTenant(subdomain, async (tx) => {
@@ -64,11 +64,11 @@ export async function updateFacultySetupConfig(
     if (!tx || typeof tx.select !== 'function') {
       return {
         workspaceSubdomain: subdomain,
-        prefix: patch.employeeIdPrefix ?? DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix ?? 'FAC',
-        yearFormat: patch.employeeIdYearFormat ?? DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat ?? 'YYYY',
-        sequenceDigits: patch.employeeIdSequenceDigits ?? DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits ?? 4,
-        delimiter: patch.employeeIdDelimiter ?? DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter ?? '',
-        currentSequence: patch.employeeIdCurrentSequence ?? DEFAULT_TEACHERS_SETTINGS.employeeIdCurrentSequence ?? 0,
+        prefix: patch.employeeIdPrefix ?? DEFAULT_FACULTY_SETTINGS.employeeIdPrefix ?? 'FAC',
+        yearFormat: patch.employeeIdYearFormat ?? DEFAULT_FACULTY_SETTINGS.employeeIdYearFormat ?? 'YYYY',
+        sequenceDigits: patch.employeeIdSequenceDigits ?? DEFAULT_FACULTY_SETTINGS.employeeIdSequenceDigits ?? 4,
+        delimiter: patch.employeeIdDelimiter ?? DEFAULT_FACULTY_SETTINGS.employeeIdDelimiter ?? '',
+        currentSequence: patch.employeeIdCurrentSequence ?? DEFAULT_FACULTY_SETTINGS.employeeIdCurrentSequence ?? 0,
         lastYear: patch.employeeIdLastYear ?? currentYear,
         updatedAt: new Date(),
       };
@@ -89,23 +89,23 @@ export async function updateFacultySetupConfig(
 
     const prefix = patch.employeeIdPrefix !== undefined
       ? patch.employeeIdPrefix.trim()
-      : (existing?.prefix ?? DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix);
+      : (existing?.prefix ?? DEFAULT_FACULTY_SETTINGS.employeeIdPrefix);
 
     const yearFormat = patch.employeeIdYearFormat !== undefined
       ? patch.employeeIdYearFormat
-      : (existing?.yearFormat ?? DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat);
+      : (existing?.yearFormat ?? DEFAULT_FACULTY_SETTINGS.employeeIdYearFormat);
 
     const sequenceDigits = patch.employeeIdSequenceDigits !== undefined
       ? Number(patch.employeeIdSequenceDigits)
-      : (existing?.sequenceDigits ?? DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits);
+      : (existing?.sequenceDigits ?? DEFAULT_FACULTY_SETTINGS.employeeIdSequenceDigits);
 
     const delimiter = patch.employeeIdDelimiter !== undefined
       ? patch.employeeIdDelimiter
-      : (existing?.delimiter ?? DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter);
+      : (existing?.delimiter ?? DEFAULT_FACULTY_SETTINGS.employeeIdDelimiter);
 
     const currentSequence = patch.employeeIdCurrentSequence !== undefined
       ? Number(patch.employeeIdCurrentSequence)
-      : (existing?.currentSequence ?? DEFAULT_TEACHERS_SETTINGS.employeeIdCurrentSequence);
+      : (existing?.currentSequence ?? DEFAULT_FACULTY_SETTINGS.employeeIdCurrentSequence);
 
     const lastYear = patch.employeeIdLastYear !== undefined
       ? Number(patch.employeeIdLastYear)
@@ -151,8 +151,5 @@ export {
 export {
   generateNextFacultyEmployeeId,
   generateNextEmployeeId,
-  generateNextTeacherEmployeeId,
 } from './facultyEmployeeIdGenerator.js';
 
-export const getTeacherSetupConfig = getFacultySetupConfig;
-export const updateTeacherSetupConfig = updateFacultySetupConfig;

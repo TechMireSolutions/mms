@@ -1,11 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Teacher, TeachersListQuery } from '@mms/shared';
-import type { TeachersRepository } from '../faculty/repository/facultyRepository.js';
+import type { Faculty, FacultyListQuery } from '@mms/shared';
+import type { FacultyRepository } from '../faculty/repository/facultyRepository.js';
 
 const mockGetRequestTenant = vi.fn();
 const mockBroadcastCollection = vi.fn();
-const mockLoadTeacherFieldConfig = vi.fn();
-const mockLoadTeacherModulePreferences = vi.fn();
+const mockLoadFacultyFieldConfig = vi.fn();
+const mockLoadFacultyModulePreferences = vi.fn();
 
 vi.mock('../lib/tenantContext.js', () => ({
   getRequestTenant: () => mockGetRequestTenant(),
@@ -21,30 +21,28 @@ vi.mock('../lib/livePush.js', () => ({
 }));
 
 vi.mock('../faculty/use-cases/facultyHydrateUseCases.js', () => ({
-  hydrateTeachersFromContacts: async (_tenant: unknown, rows: unknown) => rows,
+  hydrateFacultyFromContacts: async (_tenant: unknown, rows: unknown) => rows,
 }));
 
 vi.mock('../faculty/use-cases/facultyConfigService.js', () => ({
-  loadTeacherFieldConfig: (...args: unknown[]) => mockLoadTeacherFieldConfig(...args),
-  loadFacultyFieldConfig: (...args: unknown[]) => mockLoadTeacherFieldConfig(...args),
+  loadFacultyFieldConfig: (...args: unknown[]) => mockLoadFacultyFieldConfig(...args),
 }));
 
 vi.mock('../faculty/use-cases/facultyPreferencesService.js', () => ({
-  loadTeacherModulePreferences: (...args: unknown[]) => mockLoadTeacherModulePreferences(...args),
-  loadFacultyModulePreferences: (...args: unknown[]) => mockLoadTeacherModulePreferences(...args),
+  loadFacultyModulePreferences: (...args: unknown[]) => mockLoadFacultyModulePreferences(...args),
 }));
 
 vi.mock('../services/outboxEventService.js', () => ({
   emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
 }));
 
-import { createTeachersUseCases } from '../faculty/use-cases/facultyUseCases.js';
+import { createFacultyUseCases } from '../faculty/use-cases/facultyUseCases.js';
 
-function fakeTeacher(id: string, overrides: Partial<Teacher> = {}): Teacher {
+function fakeFaculty(id: string, overrides: Partial<Faculty> = {}): Faculty {
   return {
     id,
     contactId: `c-${id}`,
-    name: `Teacher ${id}`,
+    name: `Faculty ${id}`,
     status: 'active',
     ...overrides,
   };
@@ -52,7 +50,7 @@ function fakeTeacher(id: string, overrides: Partial<Teacher> = {}): Teacher {
 
 /** In-memory fake repository — the DI seam the use cases are designed against. */
 function createFakeRepo() {
-  const store = new Map<string, Teacher>();
+  const store = new Map<string, Faculty>();
   return {
     store,
     repo: {
@@ -62,7 +60,7 @@ function createFakeRepo() {
           options?.includeDeleted ? true : s.deletedAt === undefined,
         ).length;
       }),
-      listPage: vi.fn(async (tenant: string, query: TeachersListQuery) => {
+      listPage: vi.fn(async (tenant: string, query: FacultyListQuery) => {
         void tenant;
         const rows = query.includeDeleted
           ? [...store.values()].filter((s) => s.deletedAt !== undefined)
@@ -71,7 +69,7 @@ function createFakeRepo() {
         const limit = query.limit ?? 50;
         const start = (page - 1) * limit;
         return {
-          teachers: rows.slice(start, start + limit),
+          faculty: rows.slice(start, start + limit),
           total: rows.length,
           page,
           limit,
@@ -84,17 +82,18 @@ function createFakeRepo() {
       }),
       findByIds: vi.fn(async (tenant: string, ids: string[]) => {
         void tenant;
-        return ids.map((id) => store.get(id)).filter((s): s is Teacher => Boolean(s));
+        return ids.map((id) => store.get(id)).filter((s): s is Faculty => Boolean(s));
       }),
       findSoftDeletedByContactId: vi.fn(async () => null),
-      save: vi.fn(async (tenant: string, teacher: Teacher) => {
+      save: vi.fn(async (tenant: string, faculty: Faculty) => {
         void tenant;
-        store.set(String(teacher.id), teacher);
+        store.set(String(faculty.id), faculty);
       }),
-      bulkSave: vi.fn(async (tenant: string, teachers: Teacher[]) => {
+      bulkSave: vi.fn(async (tenant: string, facultyList: Faculty[]) => {
         void tenant;
-        teachers.forEach((teacher) => store.set(String(teacher.id), teacher));
-      }),      aggregateCommandMetrics: vi.fn(async () => ({
+        facultyList.forEach((f) => store.set(String(f.id), f));
+      }),
+      aggregateCommandMetrics: vi.fn(async () => ({
         total: 0,
         active: 0,
         inactive: 0,
@@ -139,37 +138,37 @@ function createFakeRepo() {
         });
         return count;
       }),
-    } as unknown as TeachersRepository,
+    } as unknown as FacultyRepository,
   };
 }
 
-describe('createTeachersUseCases (DI composition root)', () => {
+describe('createFacultyUseCases (DI composition root)', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mockGetRequestTenant.mockReturnValue('demo');
     mockBroadcastCollection.mockResolvedValue(undefined);
-    mockLoadTeacherFieldConfig.mockResolvedValue(null);
-    mockLoadTeacherModulePreferences.mockResolvedValue({});
+    mockLoadFacultyFieldConfig.mockResolvedValue(null);
+    mockLoadFacultyModulePreferences.mockResolvedValue({});
   });
 
-  it('loadTeachersPage returns paged rows from the injected repo', async () => {
+  it('loadFacultyPage returns paged rows from the injected repo', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a'));
-    store.set('b', fakeTeacher('b'));
-    store.set('c', fakeTeacher('c'));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a'));
+    store.set('b', fakeFaculty('b'));
+    store.set('c', fakeFaculty('c'));
+    const useCases = createFacultyUseCases(repo);
 
-    const page = await useCases.loadTeachersPage({ page: 2, limit: 2 });
-    expect(page.teachers.map((t) => t.id)).toEqual(['c']);
+    const page = await useCases.loadFacultyPage({ page: 2, limit: 2 });
+    expect(page.faculty.map((t) => t.id)).toEqual(['c']);
     expect(page.total).toBe(3);
     expect(page.hasMore).toBe(false);
   });
 
-  it('createTeacher saves a normalized record through the injected repo and broadcasts once', async () => {
+  it('createFaculty saves a normalized record through the injected repo and broadcasts once', async () => {
     const { repo } = createFakeRepo();
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const { record, restored } = await useCases.createTeacher({
+    const { record, restored } = await useCases.createFaculty({
       contactId: 'c-new',
       status: 'active',
       specialization: 'Qaidah',
@@ -179,15 +178,14 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(typeof record.id).toBe('string');
     expect(String(record.id).length).toBeGreaterThan(0);
     expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ specialization: 'Qaidah' }));
-    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
     expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
-  it('createTeacher strips contact-owned profile keys (Contacts SSOT)', async () => {
+  it('createFaculty strips contact-owned profile keys (Contacts SSOT)', async () => {
     const { repo } = createFakeRepo();
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const { record } = await useCases.createTeacher({
+    const { record } = await useCases.createFaculty({
       contactId: 'c-new',
       status: 'active',
       name: 'Should Strip',
@@ -204,18 +202,18 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(repo.save).toHaveBeenCalledWith('demo', expect.not.objectContaining({ name: 'Should Strip' }));
   });
 
-  it('createTeacher restores an archived row with the same contactId and preserves its id', async () => {
+  it('createFaculty restores an archived row with the same contactId and preserves its id', async () => {
     const { repo, store } = createFakeRepo();
-    const archived = fakeTeacher('archived', {
+    const archived = fakeFaculty('archived', {
       deletedAt: '2026-07-27T00:00:00.000Z',
       deletedBy: 'u-admin',
       specialization: 'Hifz',
     });
     store.set('archived', archived);
     vi.mocked(repo.findSoftDeletedByContactId).mockResolvedValue(archived);
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const { record, restored } = await useCases.createTeacher({
+    const { record, restored } = await useCases.createFaculty({
       contactId: 'c-archived',
       status: 'active',
       specialization: 'Tajweed',
@@ -228,22 +226,22 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ id: 'archived' }));
   });
 
-  it('updateTeacherById returns null for a missing or soft-deleted id', async () => {
+  it('updateFacultyById returns null for a missing or soft-deleted id', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('gone', fakeTeacher('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
-    const useCases = createTeachersUseCases(repo);
+    store.set('gone', fakeFaculty('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createFacultyUseCases(repo);
 
-    expect(await useCases.updateTeacherById('missing', { id: 'missing', contactId: 'c-x' })).toBeNull();
-    expect(await useCases.updateTeacherById('gone', { id: 'gone', contactId: 'c-gone' })).toBeNull();
+    expect(await useCases.updateFacultyById('missing', { id: 'missing', contactId: 'c-x' })).toBeNull();
+    expect(await useCases.updateFacultyById('gone', { id: 'gone', contactId: 'c-gone' })).toBeNull();
     expect(repo.save).not.toHaveBeenCalled();
   });
 
-  it('updateTeacherById saves the merged record for an active row', async () => {
+  it('updateFacultyById saves the merged record for an active row', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a'));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a'));
+    const useCases = createFacultyUseCases(repo);
 
-    const updated = await useCases.updateTeacherById('a', {
+    const updated = await useCases.updateFacultyById('a', {
       id: 'a',
       contactId: 'c-a',
       qualification: 'MA',
@@ -252,19 +250,19 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(updated?.id).toBe('a');
     expect(updated?.deletedAt).toBeUndefined();
     expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ id: 'a', qualification: 'MA' }));
-    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
-  it('updateTeacherById preserves existing fields when patch omits them', async () => {
+  it('updateFacultyById preserves existing fields when patch omits them', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a', {
+    store.set('a', fakeFaculty('a', {
       specialization: 'Tajweed',
       qualification: 'MA',
       employeeId: 'EMP-01',
     }));
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const updated = await useCases.updateTeacherById('a', {
+    const updated = await useCases.updateFacultyById('a', {
       id: 'a',
       contactId: undefined,
       status: 'on_leave',
@@ -283,14 +281,14 @@ describe('createTeachersUseCases (DI composition root)', () => {
     }));
   });
 
-  it('softDeleteTeacherById marks only active rows and records who deleted them', async () => {
+  it('softDeleteFacultyById marks only active rows and records who deleted them', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a'));
-    store.set('gone', fakeTeacher('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a'));
+    store.set('gone', fakeFaculty('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createFacultyUseCases(repo);
 
-    expect(await useCases.softDeleteTeacherById('a', 'u-admin', 'Left faculty')).toBe(true);
-    expect(await useCases.softDeleteTeacherById('gone', 'u-admin')).toBe(false);
+    expect(await useCases.softDeleteFacultyById('a', 'u-admin', 'Left faculty')).toBe(true);
+    expect(await useCases.softDeleteFacultyById('gone', 'u-admin')).toBe(false);
 
     const saved = store.get('a');
     expect(saved?.deletedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
@@ -298,28 +296,27 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(saved?.deletionReason).toBe('Left faculty');
   });
 
-  it('bulkSoftDeleteTeachers splits succeeded/failed rows and broadcasts once', async () => {
+  it('bulkSoftDeleteFaculty splits succeeded/failed rows and broadcasts once', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a'));
-    store.set('gone', fakeTeacher('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a'));
+    store.set('gone', fakeFaculty('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createFacultyUseCases(repo);
 
-    const result = await useCases.bulkSoftDeleteTeachers(['a', 'gone'], 'u-admin', '  Left faculty  ');
+    const result = await useCases.bulkSoftDeleteFaculty(['a', 'gone'], 'u-admin', '  Left faculty  ');
 
     expect(result).toEqual({ succeeded: 1, failed: 1 });
     expect(store.get('a')?.deletedBy).toBe('u-admin');
     expect(store.get('a')?.deletionReason).toBe('Left faculty');
     expect(repo.bulkSave).toHaveBeenCalledWith('demo', [expect.objectContaining({ id: 'a' })]);
-    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
     expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
-  it('restoreTeacherById clears soft-delete fields and bumps updatedAt', async () => {
+  it('restoreFacultyById clears soft-delete fields and bumps updatedAt', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a', { deletedAt: '2026-07-27T00:00:00.000Z', deletedBy: 'u-admin' }));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a', { deletedAt: '2026-07-27T00:00:00.000Z', deletedBy: 'u-admin' }));
+    const useCases = createFacultyUseCases(repo);
 
-    const restored = await useCases.restoreTeacherById('a');
+    const restored = await useCases.restoreFacultyById('a');
 
     expect(restored?.deletedAt).toBeUndefined();
     expect(restored?.deletedBy).toBeUndefined();
@@ -329,75 +326,74 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(store.get('a')?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
   });
 
-  it('restoreTeacherById returns an active record unchanged without saving', async () => {
+  it('restoreFacultyById returns an active record unchanged without saving', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a'));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a'));
+    const useCases = createFacultyUseCases(repo);
 
-    const restored = await useCases.restoreTeacherById('a');
+    const restored = await useCases.restoreFacultyById('a');
 
     expect(restored?.id).toBe('a');
     expect(repo.save).not.toHaveBeenCalled();
   });
 
-  it('bulkRestoreTeachers restores deleted rows and reports active rows as failed', async () => {
+  it('bulkRestoreFaculty restores deleted rows and reports active rows as failed', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a', { deletedAt: '2026-07-27T00:00:00.000Z', deletedBy: 'u-admin' }));
-    store.set('active', fakeTeacher('active'));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a', { deletedAt: '2026-07-27T00:00:00.000Z', deletedBy: 'u-admin' }));
+    store.set('active', fakeFaculty('active'));
+    const useCases = createFacultyUseCases(repo);
 
-    const result = await useCases.bulkRestoreTeachers(['a', 'active']);
+    const result = await useCases.bulkRestoreFaculty(['a', 'active']);
 
     expect(result).toEqual({ succeeded: 1, failed: 1 });
     expect(store.get('a')?.deletedAt).toBeUndefined();
     expect(store.get('a')?.updatedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
     expect(repo.bulkSave).toHaveBeenCalledWith('demo', [expect.objectContaining({ id: 'a' })]);
-    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
     expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
-  it('bulkRestoreTeachers deduplicates input IDs and handles whitespace', async () => {
+  it('bulkRestoreFaculty deduplicates input IDs and handles whitespace', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a', { deletedAt: '2026-07-27T00:00:00.000Z' }));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createFacultyUseCases(repo);
 
-    const result = await useCases.bulkRestoreTeachers(['a', ' a ', 'a']);
+    const result = await useCases.bulkRestoreFaculty(['a', ' a ', 'a']);
 
     expect(result).toEqual({ succeeded: 1, failed: 0 });
     expect(repo.bulkSave).toHaveBeenCalledWith('demo', [expect.objectContaining({ id: 'a' })]);
   });
 
-  it('countTeachers counts only active rows via the injected repo', async () => {
+  it('countFaculty counts only active rows via the injected repo', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a'));
-    store.set('b', fakeTeacher('b'));
-    store.set('gone', fakeTeacher('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a'));
+    store.set('b', fakeFaculty('b'));
+    store.set('gone', fakeFaculty('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createFacultyUseCases(repo);
 
-    expect(await useCases.countTeachers()).toBe(2);
+    expect(await useCases.countFaculty()).toBe(2);
     expect(repo.countByWorkspace).toHaveBeenCalledWith('demo', { includeDeleted: undefined });
   });
 
-  it('countTeachers includes deleted rows when includeDeleted is set', async () => {
+  it('countFaculty includes deleted rows when includeDeleted is set', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a'));
-    store.set('gone', fakeTeacher('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a'));
+    store.set('gone', fakeFaculty('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createFacultyUseCases(repo);
 
-    expect(await useCases.countTeachers({ includeDeleted: true })).toBe(2);
+    expect(await useCases.countFaculty({ includeDeleted: true })).toBe(2);
     expect(repo.countByWorkspace).toHaveBeenCalledWith('demo', { includeDeleted: true });
   });
 
-  it('loadTeacherById hides deleted rows unless includeDeleted is set', async () => {
+  it('loadFacultyById hides deleted rows unless includeDeleted is set', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a', { deletedAt: '2026-07-27T00:00:00.000Z' }));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createFacultyUseCases(repo);
 
-    expect(await useCases.loadTeacherById('a')).toBeNull();
-    expect((await useCases.loadTeacherById('a', true))?.id).toBe('a');
+    expect(await useCases.loadFacultyById('a')).toBeNull();
+    expect((await useCases.loadFacultyById('a', true))?.id).toBe('a');
   });
 
-  it('loadTeachersCommandMetrics delegates to the injected repo', async () => {
+  it('loadFacultyCommandMetrics delegates to the injected repo', async () => {
     const { repo } = createFakeRepo();
     vi.mocked(repo.aggregateCommandMetrics).mockResolvedValue({
       total: 5,
@@ -407,41 +403,41 @@ describe('createTeachersUseCases (DI composition root)', () => {
       other: 0,
       newThisPeriod: 2,
     });
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const metrics = await useCases.loadTeachersCommandMetrics();
+    const metrics = await useCases.loadFacultyCommandMetrics();
 
     expect(metrics.total).toBe(5);
     expect(repo.aggregateCommandMetrics).toHaveBeenCalledWith('demo');
   });
 
-  it('loadTeachersWidgetAggregates passes queries to the injected repo', async () => {
+  it('loadFacultyWidgetAggregates passes queries to the injected repo', async () => {
     const { repo } = createFakeRepo();
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    await useCases.loadTeachersWidgetAggregates([{ id: 'w1', operation: 'count' }]);
+    await useCases.loadFacultyWidgetAggregates([{ id: 'w1', operation: 'count' }]);
 
     expect(repo.aggregateWidgetQueries).toHaveBeenCalledWith('demo', [{ id: 'w1', operation: 'count' }]);
   });
 
-  it('bulkUpdateTeacherStatus delegates to the SQL bulk update and broadcasts', async () => {
+  it('bulkUpdateFacultyStatus delegates to the SQL bulk update and broadcasts', async () => {
     const { repo } = createFakeRepo();
     vi.mocked(repo.bulkUpdateStatusSql).mockResolvedValue(2);
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const result = await useCases.bulkUpdateTeacherStatus(['t-1', 't-2'], 'inactive');
+    const result = await useCases.bulkUpdateFacultyStatus(['t-1', 't-2'], 'inactive');
 
     expect(result).toEqual({ succeeded: 2, failed: 0 });
     expect(repo.bulkUpdateStatusSql).toHaveBeenCalledWith('demo', ['t-1', 't-2'], 'inactive');
-    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
-  it('computeNextTeacherEmployeeIdForSettings formats the next employee id from the injected repo', async () => {
+  it('computeNextFacultyEmployeeIdForSettings formats the next employee id from the injected repo', async () => {
     const { repo } = createFakeRepo();
     vi.mocked(repo.countNextEmployeeId).mockResolvedValue(5);
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const employeeId = await useCases.computeNextTeacherEmployeeIdForSettings({
+    const employeeId = await useCases.computeNextFacultyEmployeeIdForSettings({
       idPrefix: 'T',
     });
 
@@ -449,16 +445,16 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(repo.countNextEmployeeId).toHaveBeenCalledWith('demo', expect.objectContaining({ prefix: 'T' }));
   });
 
-  it('computeNextTeacherEmployeeIdForSettings supports dynamic templates and skips collisions', async () => {
+  it('computeNextFacultyEmployeeIdForSettings supports dynamic templates and skips collisions', async () => {
     const { repo } = createFakeRepo();
     vi.mocked(repo.countNextEmployeeId).mockResolvedValue(10);
     vi.mocked(repo.findRegistrationConflict).mockImplementation(async (_tenant, input) => {
       if (input.employeeId === 'EMP-0011') return 'employeeId';
       return null;
     });
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const employeeId = await useCases.computeNextTeacherEmployeeIdForSettings({
+    const employeeId = await useCases.computeNextFacultyEmployeeIdForSettings({
       idPrefix: 'EMP',
       idTemplate: '{PREFIX}-{SEQ}',
     });
@@ -466,130 +462,128 @@ describe('createTeachersUseCases (DI composition root)', () => {
     expect(employeeId).toBe('EMP-0012');
   });
 
-  it('loadTeachersByIds returns matched rows from the injected repo', async () => {
+  it('loadFacultyByIds returns matched rows from the injected repo', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a'));
-    store.set('b', fakeTeacher('b'));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a'));
+    store.set('b', fakeFaculty('b'));
+    const useCases = createFacultyUseCases(repo);
 
-    const rows = await useCases.loadTeachersByIds(['a', 'missing', 'b']);
+    const rows = await useCases.loadFacultyByIds(['a', 'missing', 'b']);
 
     expect(rows.map((t) => t.id)).toEqual(['a', 'b']);
     expect(repo.findByIds).toHaveBeenCalledWith('demo', ['a', 'missing', 'b']);
   });
 
-  it('loadTeachersByIds filters out soft-deleted teachers', async () => {
+  it('loadFacultyByIds filters out soft-deleted faculty', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('a', fakeTeacher('a'));
-    store.set('gone', fakeTeacher('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
-    const useCases = createTeachersUseCases(repo);
+    store.set('a', fakeFaculty('a'));
+    store.set('gone', fakeFaculty('gone', { deletedAt: '2026-07-27T00:00:00.000Z' }));
+    const useCases = createFacultyUseCases(repo);
 
-    const rows = await useCases.loadTeachersByIds(['a', 'gone']);
+    const rows = await useCases.loadFacultyByIds(['a', 'gone']);
 
     expect(rows.map((t) => t.id)).toEqual(['a']);
   });
 
-  it('loadTeachersByIds returns an empty array for empty input without hitting the repo', async () => {
+  it('loadFacultyByIds returns an empty array for empty input without hitting the repo', async () => {
     const { repo } = createFakeRepo();
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    expect(await useCases.loadTeachersByIds([])).toEqual([]);
+    expect(await useCases.loadFacultyByIds([])).toEqual([]);
     expect(repo.findByIds).not.toHaveBeenCalled();
   });
 
-  it('loadTeacherLinkedContactIds delegates to the injected repo', async () => {
+  it('loadFacultyLinkedContactIds delegates to the injected repo', async () => {
     const { repo } = createFakeRepo();
     vi.mocked(repo.listLinkedContactIds).mockResolvedValue(['c-1', 'c-2']);
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const ids = await useCases.loadTeacherLinkedContactIds('t-exclude');
+    const ids = await useCases.loadFacultyLinkedContactIds('t-exclude');
 
     expect(ids).toEqual(['c-1', 'c-2']);
     expect(repo.listLinkedContactIds).toHaveBeenCalledWith('demo', 't-exclude');
   });
 
-
-
-  it('checkTeacherRegistrationDuplicate returns the conflict reason from the repo', async () => {
+  it('checkFacultyRegistrationDuplicate returns the conflict reason from the repo', async () => {
     const { repo } = createFakeRepo();
     vi.mocked(repo.findRegistrationConflict).mockResolvedValue('employeeId');
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const result = await useCases.checkTeacherRegistrationDuplicate({ employeeId: 'T-0001' });
+    const result = await useCases.checkFacultyRegistrationDuplicate({ employeeId: 'T-0001' });
 
     expect(result).toEqual({ reason: 'employeeId' });
     expect(repo.findRegistrationConflict).toHaveBeenCalledWith('demo', { employeeId: 'T-0001' });
   });
 
-  it('checkTeacherRegistrationDuplicate returns no conflict when the repo finds none', async () => {
+  it('checkFacultyRegistrationDuplicate returns no conflict when the repo finds none', async () => {
     const { repo } = createFakeRepo();
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const result = await useCases.checkTeacherRegistrationDuplicate({ contactId: 'c-new' });
+    const result = await useCases.checkFacultyRegistrationDuplicate({ contactId: 'c-new' });
 
     expect(result).toEqual({ reason: null });
     expect(repo.findRegistrationConflict).toHaveBeenCalledWith('demo', { contactId: 'c-new' });
   });
 
-  it('migrateTeachersMissingEmployeeIds backfills monotonic employee ids and broadcasts once', async () => {
+  it('migrateFacultyMissingEmployeeIds backfills monotonic employee ids and broadcasts once', async () => {
     const { repo, store } = createFakeRepo();
-    store.set('m1', fakeTeacher('m1'));
-    store.set('m2', fakeTeacher('m2'));
+    store.set('m1', fakeFaculty('m1'));
+    store.set('m2', fakeFaculty('m2'));
     vi.mocked(repo.listActiveMissingEmployeeId).mockResolvedValue([
-      fakeTeacher('m1'),
-      fakeTeacher('m2'),
+      fakeFaculty('m1'),
+      fakeFaculty('m2'),
     ]);
     const countNextEmployeeIdMock = vi.mocked(repo.countNextEmployeeId);
     countNextEmployeeIdMock.mockImplementation(async () => {
       // countNextEmployeeId is called once per persisted row; return a growing count.
       return countNextEmployeeIdMock.mock.calls.length - 1;
     });
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const result = await useCases.migrateTeachersMissingEmployeeIds();
+    const result = await useCases.migrateFacultyMissingEmployeeIds();
 
     expect(result).toEqual({ updated: 2 });
     expect(typeof store.get('m1')?.employeeId).toBe('string');
     expect(typeof store.get('m2')?.employeeId).toBe('string');
     expect(store.get('m2')?.employeeId).not.toBe(store.get('m1')?.employeeId);
-    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
+    expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
-  it('migrateTeachersMissingEmployeeIds is a no-op when no rows are missing', async () => {
+  it('migrateFacultyMissingEmployeeIds is a no-op when no rows are missing', async () => {
     const { repo } = createFakeRepo();
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const result = await useCases.migrateTeachersMissingEmployeeIds();
+    const result = await useCases.migrateFacultyMissingEmployeeIds();
 
     expect(result).toEqual({ updated: 0 });
     expect(repo.countNextEmployeeId).not.toHaveBeenCalled();
     expect(mockBroadcastCollection).not.toHaveBeenCalled();
   });
 
-  it('migrateTeachersMissingEmployeeIds returns early without a tenant', async () => {
+  it('migrateFacultyMissingEmployeeIds returns early without a tenant', async () => {
     const { repo } = createFakeRepo();
     mockGetRequestTenant.mockReturnValue(null);
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const result = await useCases.migrateTeachersMissingEmployeeIds();
+    const result = await useCases.migrateFacultyMissingEmployeeIds();
 
     expect(result).toEqual({ updated: 0 });
     expect(repo.listActiveMissingEmployeeId).not.toHaveBeenCalled();
     expect(mockBroadcastCollection).not.toHaveBeenCalled();
   });
 
-  it('sanitizeTeacherForViewer passes the record through when no field config is registered', async () => {
+  it('sanitizeFacultyForViewer passes the record through when no field config is registered', async () => {
     const { repo } = createFakeRepo();
-    mockLoadTeacherFieldConfig.mockResolvedValue(null);
-    const useCases = createTeachersUseCases(repo);
+    mockLoadFacultyFieldConfig.mockResolvedValue(null);
+    const useCases = createFacultyUseCases(repo);
 
-    const teacher = fakeTeacher('a', { phone: '+923001234567' });
-    expect(await useCases.sanitizeTeacherForViewer(teacher, 'teacher')).toEqual(teacher);
+    const faculty = fakeFaculty('a', { phone: '+923001234567' });
+    expect(await useCases.sanitizeFacultyForViewer(faculty, 'faculty')).toEqual(faculty);
   });
 
-  it('sanitizeTeacherForViewer hides disabled fields per the field config', async () => {
+  it('sanitizeFacultyForViewer hides disabled fields per the field config', async () => {
     const { repo } = createFakeRepo();
-    mockLoadTeacherFieldConfig.mockResolvedValue({
+    mockLoadFacultyFieldConfig.mockResolvedValue({
       fields: {
         employment: [
           { key: 'qualification', label: 'Qualification', type: 'text', enabled: false, order: 0 },
@@ -598,18 +592,18 @@ describe('createTeachersUseCases (DI composition root)', () => {
       },
       formTabs: [{ key: 'employment', label: 'Employment', enabled: true, order: 0 }],
     });
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
-    const teacher = fakeTeacher('a', { qualification: 'MA', specialization: 'Qaidah' });
-    const sanitized = await useCases.sanitizeTeacherForViewer(teacher, 'teacher');
+    const faculty = fakeFaculty('a', { qualification: 'MA', specialization: 'Qaidah' });
+    const sanitized = await useCases.sanitizeFacultyForViewer(faculty, 'faculty');
 
     expect(sanitized.qualification).toBeUndefined();
     expect(sanitized.specialization).toBe('Qaidah');
   });
 
-  it('sanitizeTeachersForViewer strips disabled fields from every row', async () => {
+  it('sanitizeFacultyListForViewer strips disabled fields from every row', async () => {
     const { repo } = createFakeRepo();
-    mockLoadTeacherFieldConfig.mockResolvedValue({
+    mockLoadFacultyFieldConfig.mockResolvedValue({
       fields: {
         employment: [
           { key: 'qualification', label: 'Qualification', type: 'text', enabled: false, order: 0 },
@@ -617,13 +611,13 @@ describe('createTeachersUseCases (DI composition root)', () => {
       },
       formTabs: [{ key: 'employment', label: 'Employment', enabled: true, order: 0 }],
     });
-    const useCases = createTeachersUseCases(repo);
+    const useCases = createFacultyUseCases(repo);
 
     const rows = [
-      fakeTeacher('a', { qualification: 'MA' }),
-      fakeTeacher('b', { qualification: 'BA' }),
+      fakeFaculty('a', { qualification: 'MA' }),
+      fakeFaculty('b', { qualification: 'BA' }),
     ];
-    const sanitized = await useCases.sanitizeTeachersForViewer(rows, 'teacher');
+    const sanitized = await useCases.sanitizeFacultyListForViewer(rows, 'faculty');
 
     expect(sanitized.every((t) => t.qualification === undefined)).toBe(true);
   });

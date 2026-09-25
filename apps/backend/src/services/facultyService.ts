@@ -7,7 +7,6 @@
 import { facultyUseCases } from '../faculty/use-cases/facultyUseCases.js';
 
 export const {
-  // Canonical Faculty exports
   createFaculty,
   updateFacultyById,
   deleteFacultyById,
@@ -30,28 +29,6 @@ export const {
   checkFacultyRegistrationDuplicate,
   sanitizeFacultyForViewer,
   sanitizeFacultyListForViewer,
-
-  // Backward compatibility alias exports
-  createTeacher,
-  updateTeacherById,
-  deleteTeacherById,
-  restoreTeacherById,
-  bulkSoftDeleteTeachers,
-  bulkRestoreTeachers,
-  bulkUpdateTeacherStatus,
-  bulkUpdateTeacherSpecialization,
-  loadTeacherById,
-  loadTeachersByIds,
-  loadTeachersWidgetAggregates,
-  loadTeachersPage,
-  countTeachers,
-  loadTeachersCommandMetrics,
-  loadTeacherLinkedContactIds,
-  computeNextTeacherEmployeeIdForSettings,
-  migrateTeachersMissingEmployeeIds,
-  checkTeacherRegistrationDuplicate,
-  sanitizeTeacherForViewer,
-  sanitizeTeachersForViewer,
 } = facultyUseCases;
 
-export { facultyUseCases, facultyUseCases as teacherUseCases };
+export { facultyUseCases };

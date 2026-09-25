@@ -5,8 +5,6 @@ import {
   updateFacultySetupConfig,
   previewNextFacultyEmployeeId,
   generateNextFacultyEmployeeId,
-  getTeacherSetupConfig,
-  updateTeacherSetupConfig,
   previewNextEmployeeId,
   generateNextEmployeeId,
 } from '../faculty/use-cases/facultyEmployeeIdService.js';
@@ -198,13 +196,13 @@ describe('facultyEmployeeIdService - DB operations and rollover logic', () => {
     expect(updated.delimiter).toBe('-');
   });
 
-  it('supports legacy teacher alias functions for backward compatibility', async () => {
-    const config = await getTeacherSetupConfig('demo');
+  it('supports preview and configuration retrieval for faculty setup config', async () => {
+    const config = await getFacultySetupConfig('demo');
     expect(config.prefix).toBe('FAC');
     const preview = await previewNextEmployeeId('demo');
     expect(preview.config.prefix).toBe('FAC');
-    const updated = await updateTeacherSetupConfig('demo', { employeeIdPrefix: 'TEACH' });
-    expect(updated.prefix).toBe('TEACH');
+    const updated = await updateFacultySetupConfig('demo', { employeeIdPrefix: 'PROF' });
+    expect(updated.prefix).toBe('PROF');
     expect(typeof generateNextEmployeeId).toBe('function');
   });
 });

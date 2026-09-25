@@ -3,7 +3,7 @@ import { withTenant } from '../../../db/tenant-context.js';
 import { canDeleteCollection, canReadCollection } from '../../../services/rbacService.js';
 import {
   isQueryFlagTrue,
-  type Teacher,
+  type Faculty,
   type User,
   facultyContract,
 } from '@mms/shared';
@@ -54,14 +54,18 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 403 as const, body: { type: 'forbidden', message: 'Viewing deleted faculty requires delete permissions' } };
       }
       try {
-        const result = await withTenant(String(request.tenant?.id), () => facultyUseCases.loadFacultyPage({ ...query, includeDeleted, skipCount }), { readOnly: true });
-        const sanitized = await sanitizeFacultyForUser(result.teachers, user);
+        const result = await withTenant(
+          String(request.tenant?.id),
+          () => facultyUseCases.loadFacultyPage({ ...query, includeDeleted, skipCount }),
+          { readOnly: true },
+        );
+        const sourceList = (result.faculty ?? []) as Faculty[];
+        const sanitized = await sanitizeFacultyForUser(sourceList, user);
         return {
           status: 200 as const,
           body: {
             ...result,
             faculty: sanitized,
-            teachers: sanitized,
           },
         };
       } catch {
@@ -83,13 +87,12 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
         if (!item || (!includeDeleted && (item as { deletedAt?: unknown }).deletedAt != null)) {
           return { status: 404 as const, body: { type: 'not_found', message: 'Faculty member not found' } };
         }
-        const sanitized = await sanitizeOneFacultyForUser(item as Teacher, user);
+        const sanitized = await sanitizeOneFacultyForUser(item as Faculty, user);
         return {
           status: 200 as const,
           body: {
             faculty: sanitized,
             facultyMember: sanitized,
-            teacher: sanitized,
           },
         };
       } catch {
@@ -139,5 +142,3 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
     },
   });
 };
-
-export const teacherCrudRoutes = facultyCrudRoutes;

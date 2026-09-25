@@ -11,7 +11,7 @@ import {
 } from './contactRepositorySql.js';
 import {
   existsActiveStudentLinkSql,
-  existsActiveTeacherLinkSql,
+  existsActiveFacultyLinkSql,
   existsActiveStaffLinkSql,
 } from './contactRepositoryList.js';
 import {
@@ -124,20 +124,20 @@ export function buildListConditions(
   const linkFilter = query.moduleLinkFilter;
   if (linkFilter === 'students') {
     conditions.push(existsActiveStudentLinkSql(subdomain));
-  } else if (linkFilter === 'teachers') {
-    conditions.push(existsActiveTeacherLinkSql(subdomain));
+  } else if (linkFilter === 'faculty' || linkFilter === 'teachers') {
+    conditions.push(existsActiveFacultyLinkSql(subdomain));
   } else if (linkFilter === 'staff') {
     conditions.push(existsActiveStaffLinkSql(subdomain));
   } else if (linkFilter === 'unlinked') {
     conditions.push(sql`NOT ${existsActiveStudentLinkSql(subdomain)}`);
-    conditions.push(sql`NOT ${existsActiveTeacherLinkSql(subdomain)}`);
+    conditions.push(sql`NOT ${existsActiveFacultyLinkSql(subdomain)}`);
   }
 
   if (query.excludeLinkedModules?.includes('students')) {
     conditions.push(sql`NOT ${existsActiveStudentLinkSql(subdomain)}`);
   }
-  if (query.excludeLinkedModules?.includes('teachers')) {
-    conditions.push(sql`NOT ${existsActiveTeacherLinkSql(subdomain)}`);
+  if (query.excludeLinkedModules?.includes('faculty') || query.excludeLinkedModules?.includes('teachers')) {
+    conditions.push(sql`NOT ${existsActiveFacultyLinkSql(subdomain)}`);
   }
 
   const search = query.search?.trim();

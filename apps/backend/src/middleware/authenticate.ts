@@ -108,10 +108,10 @@ export async function authenticateTenant(
         await sendUnauthorized(reply, 'Session revoked');
         return;
       }
-      if (user.role === 'teacher') {
-        const { teachersRepository } = await import('../faculty/repository/facultyRepositoryAdapter.js');
-        const teacherRow = await teachersRepository.findById(tenant, String(user.id));
-        if (teacherRow?.deletedAt || (teacherRow as { deleted_at?: unknown })?.deleted_at) {
+      if (user.role === 'faculty' || user.role === 'teacher') {
+        const { facultyRepository } = await import('../faculty/repository/facultyRepositoryAdapter.js');
+        const facultyRow = await facultyRepository.findById(tenant, String(user.id));
+        if (facultyRow?.deletedAt || (facultyRow as { deleted_at?: unknown })?.deleted_at) {
           await sendUnauthorized(reply, 'Session revoked');
           return;
         }

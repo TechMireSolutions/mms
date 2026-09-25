@@ -1,16 +1,16 @@
-import { dedupeTrimmedIds, type Teacher } from '@mms/shared';
+import { dedupeTrimmedIds, type Faculty } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
 import { broadcastCollection } from '../../lib/livePush.js';
-import type { FacultyRepository as TeachersRepository } from '../repository/facultyRepository.js';
-import { facultyRepository as teachersRepository } from '../repository/facultyRepositoryAdapter.js';
+import type { FacultyRepository } from '../repository/facultyRepository.js';
+import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
 import { ConflictError } from '../../lib/httpErrors.js';
 import { nowIso } from '../../lib/softDeleteHelpers.js';
 import { emitOutboxEvent } from '../../services/outboxEventService.js';
 import { revokeFacultySessions } from './facultySoftDeleteSessions.js';
-import { restoreTeacherById, bulkRestoreTeachers } from './facultyRestoreUseCases.js';
+import { restoreFacultyById, bulkRestoreFaculty } from './facultyRestoreUseCases.js';
 
-export { restoreTeacherById, bulkRestoreTeachers };
+export { restoreFacultyById, bulkRestoreFaculty };
 
 export class SubordinateReassignmentError extends ConflictError {
   constructor(message = 'Cannot delete faculty member with active subordinates. Please reassign subordinates before deletion.') {
@@ -23,7 +23,7 @@ async function guardSubordinatesOnDelete(
   tenant: string,
   id: string,
   reassignSubordinatesTo: string | undefined,
-  repo: TeachersRepository,
+  repo: FacultyRepository,
 ): Promise<void> {
   const subordinateCount = repo.countSubordinates ? await repo.countSubordinates(tenant, id) : 0;
   if (subordinateCount === 0) return;
@@ -45,30 +45,25 @@ async function guardSubordinatesOnDelete(
   }
 }
 
-export async function softDeleteTeacherById(
+export async function softDeleteFacultyById(
   id: string,
   deletedBy: string,
   deletionReason?: string,
-  repo: TeachersRepository = teachersRepository,
+  repo: FacultyRepository = facultyRepository,
   reassignSubordinatesTo?: string,
 ): Promise<boolean> {
   const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) return { succeeded: 0, failed: 1 };
 
-    // C-2 fix: guard runs inside the transaction so subordinate counts and
-    // reassignment are atomic with the soft-delete write.
     await guardSubordinatesOnDelete(tenant, id, reassignSubordinatesTo, repo);
 
-    const uniqueIds = [id];
     const now = nowIso();
     const trimmedReason = deletionReason?.trim();
-    const toSave: Teacher[] = [];
+    const toSave: Faculty[] = [];
 
-    const existingTeachers = await repo.findByIds(tenant, uniqueIds);
-    const existingMap = new Map(existingTeachers.map((t) => [String(t.id), t]));
-
-    const existing = existingMap.get(id);
+    const existingFaculty = await repo.findByIds(tenant, [id]);
+    const existing = existingFaculty[0];
     if (existing && !existing.deletedAt) {
       toSave.push({
         ...existing,
@@ -80,16 +75,16 @@ export async function softDeleteTeacherById(
 
     if (toSave.length > 0) {
       await repo.bulkSave(tenant, toSave);
-      for (const t of toSave) {
+      for (const f of toSave) {
         await emitOutboxEvent('entity.soft_deleted', {
           entityType: 'faculty',
-          entityId: String(t.id),
+          entityId: String(f.id),
           tenantId: tenant,
-          deletedAt: t.deletedAt ?? now,
+          deletedAt: f.deletedAt ?? now,
           deletedBy,
-          deletionReason: t.deletionReason,
+          deletionReason: f.deletionReason,
           version: Date.now(),
-          snapshot: t,
+          snapshot: f,
         });
       }
       await revokeFacultySessions(tenant, toSave);
@@ -100,16 +95,15 @@ export async function softDeleteTeacherById(
 
   if (result.succeeded > 0) {
     await broadcastCollection('faculty');
-    await broadcastCollection('teachers');
   }
   return result.succeeded === 1;
 }
 
-export async function bulkSoftDeleteTeachers(
+export async function bulkSoftDeleteFaculty(
   ids: string[],
   deletedBy: string,
   deletionReason?: string,
-  repo: TeachersRepository = teachersRepository,
+  repo: FacultyRepository = facultyRepository,
 ): Promise<{ succeeded: number; failed: number }> {
   const uniqueIds = dedupeTrimmedIds(ids);
   if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
@@ -118,8 +112,6 @@ export async function bulkSoftDeleteTeachers(
   const result = await runInTransaction(async () => {
     if (!tenant) return { succeeded: 0, failed: uniqueIds.length };
 
-    // m-1 fix: subordinate check moved inside the transaction so the count and
-    // soft-delete write are atomic — closing the TOCTOU window.
     if (repo.countSubordinatesBatch) {
       const subCounts = await repo.countSubordinatesBatch(tenant, uniqueIds);
       const getCount = (id: string): number => {
@@ -146,10 +138,10 @@ export async function bulkSoftDeleteTeachers(
     let failed = 0;
     const now = nowIso();
     const trimmedReason = deletionReason?.trim();
-    const toSave: Teacher[] = [];
+    const toSave: Faculty[] = [];
 
-    const existingTeachers = await repo.findByIds(tenant, uniqueIds);
-    const existingMap = new Map(existingTeachers.map((t) => [String(t.id), t]));
+    const existingFaculty = await repo.findByIds(tenant, uniqueIds);
+    const existingMap = new Map(existingFaculty.map((f) => [String(f.id), f]));
 
     for (const id of uniqueIds) {
       const existing = existingMap.get(id);
@@ -168,16 +160,16 @@ export async function bulkSoftDeleteTeachers(
 
     if (toSave.length > 0) {
       await repo.bulkSave(tenant, toSave);
-      for (const t of toSave) {
+      for (const f of toSave) {
         await emitOutboxEvent('entity.soft_deleted', {
           entityType: 'faculty',
-          entityId: String(t.id),
+          entityId: String(f.id),
           tenantId: tenant,
-          deletedAt: t.deletedAt ?? now,
+          deletedAt: f.deletedAt ?? now,
           deletedBy,
-          deletionReason: t.deletionReason,
+          deletionReason: f.deletionReason,
           version: Date.now(),
-          snapshot: t,
+          snapshot: f,
         });
       }
       await revokeFacultySessions(tenant, toSave);
@@ -187,13 +179,6 @@ export async function bulkSoftDeleteTeachers(
 
   if (result.succeeded > 0) {
     await broadcastCollection('faculty');
-    await broadcastCollection('teachers');
   }
   return result;
 }
-
-
-export const restoreFacultyById = restoreTeacherById;
-export const bulkRestoreFaculty = bulkRestoreTeachers;
-export const softDeleteFacultyById = softDeleteTeacherById;
-export const bulkSoftDeleteFaculty = bulkSoftDeleteTeachers;

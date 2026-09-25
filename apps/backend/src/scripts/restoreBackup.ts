@@ -17,7 +17,7 @@ import {
   contactAddresses,
   contactRelationships,
   students,
-  teachers,
+  faculty,
   tenantUsers,
   workspaces,
 } from '../db/schema.js';
@@ -96,7 +96,7 @@ async function runRestore() {
   const restoredAddresses = await db.select({ id: contactAddresses.id }).from(contactAddresses).where(eq(contactAddresses.workspaceSubdomain, subdomain));
   const restoredRels = await db.select({ id: contactRelationships.id }).from(contactRelationships).where(eq(contactRelationships.workspaceSubdomain, subdomain));
   const restoredStudents = await db.select({ id: students.id }).from(students).where(eq(students.workspaceSubdomain, subdomain));
-  const restoredTeachers = await db.select({ id: teachers.id }).from(teachers).where(eq(teachers.workspaceSubdomain, subdomain));
+  const restoredFaculty = await db.select({ id: faculty.id }).from(faculty).where(eq(faculty.workspaceSubdomain, subdomain));
   const restoredUsers = await db
     .select({
       id: tenantUsers.id,
@@ -108,11 +108,11 @@ async function runRestore() {
 
   const { listContactsByWorkspace } = await import('../db/repositories/contactRepository.js');
   const { listStudentsByWorkspace } = await import('../db/repositories/studentRepository.js');
-  const { listTeachersByWorkspace } = await import('../db/repositories/facultyRepository.js');
+  const { listFacultyByWorkspace } = await import('../db/repositories/facultyRepository.js');
 
   const hydratedContacts = await listContactsByWorkspace(subdomain);
   const hydratedStudents = await listStudentsByWorkspace(subdomain);
-  const hydratedTeachers = await listTeachersByWorkspace(subdomain);
+  const hydratedFaculty = await listFacultyByWorkspace(subdomain);
 
   console.log(`\n================ RESTORE SUMMARY (${subdomain}) ================`);
   console.log(`Contacts in DB: ${restoredContacts.length} (Hydrated: ${hydratedContacts.length})`);
@@ -132,8 +132,8 @@ async function runRestore() {
     console.log(`  [${i + 1}] GR: ${s.grNumber} | Contact: ${contactObj?.name || s.contactId} | Status: ${s.status} (ID: ${s.id})`);
   });
 
-  console.log(`\nTeachers in DB: ${restoredTeachers.length} (Hydrated: ${hydratedTeachers.length})`);
-  hydratedTeachers.forEach((t, i) => {
+  console.log(`\nFaculty in DB: ${restoredFaculty.length} (Hydrated: ${hydratedFaculty.length})`);
+  hydratedFaculty.forEach((t, i) => {
     const contactObj = t.contact as { name?: string } | undefined;
     console.log(`  [${i + 1}] Employee ID: ${t.employeeId} | Contact: ${contactObj?.name || t.contactId} | Status: ${t.status} (ID: ${t.id})`);
   });

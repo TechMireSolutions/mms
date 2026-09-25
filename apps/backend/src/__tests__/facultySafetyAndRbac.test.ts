@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Teacher, User } from '@mms/shared';
-import { createTeachersUseCases } from '../faculty/use-cases/facultyUseCases.js';
+import type { Faculty, User } from '@mms/shared';
+import { createFacultyUseCases } from '../faculty/use-cases/facultyUseCases.js';
 import { SubordinateReassignmentError } from '../faculty/use-cases/facultySoftDeleteUseCases.js';
 import { handleSaveDesignation } from '../routes/tenant/faculty/facultyDesignationRouteHandlers.js';
 import {
-  resolveTeacherFieldExpr,
+  resolveFacultyFieldExpr,
   singleFilterSql,
 } from '../db/repositories/facultyRepositoryWidgetFilters.js';
 
@@ -43,14 +43,14 @@ vi.mock('../db/repositories/facultyDesignationRepository.js', () => ({
 }));
 
 describe('Faculty Bulk Soft-Delete Hierarchy Protection', () => {
-  function makeTeacher(id: string, reportingFacultyId?: string): Teacher {
-    return { id, contactId: `c-${id}`, name: `Teacher ${id}`, status: 'active', reportingFacultyId };
+  function makeFaculty(id: string, reportingFacultyId?: string): Faculty {
+    return { id, contactId: `c-${id}`, name: `Faculty ${id}`, status: 'active', reportingFacultyId };
   }
 
-  function createFakeSubordinateRepo(store: Map<string, Teacher>) {
+  function createFakeSubordinateRepo(store: Map<string, Faculty>) {
     return {
       findByIds: vi.fn(async (_t: string, ids: string[]) =>
-        ids.map((id) => store.get(id)).filter((t): t is Teacher => Boolean(t)),
+        ids.map((id) => store.get(id)).filter((t): t is Faculty => Boolean(t)),
       ),
       countSubordinatesBatch: vi.fn(async (_t: string, ids: string[]) => {
         const counts: Record<string, number> = {};
@@ -62,39 +62,38 @@ describe('Faculty Bulk Soft-Delete Hierarchy Protection', () => {
       findSubordinates: vi.fn(async (_t: string, id: string) =>
         [...store.values()].filter((t) => t.reportingFacultyId === id && !t.deletedAt),
       ),
-      bulkSave: vi.fn(async (_t: string, teachers: Teacher[]) => {
-        teachers.forEach((t) => store.set(t.id, t));
+      bulkSave: vi.fn(async (_t: string, facultyList: Faculty[]) => {
+        facultyList.forEach((t) => store.set(t.id, t));
       }),
     };
   }
 
   it('rejects bulk soft-delete if supervisor has active subordinates outside the deletion list', async () => {
-    const store = new Map<string, Teacher>([
-      ['sup', makeTeacher('sup')],
-      ['sub-1', makeTeacher('sub-1', 'sup')],
+    const store = new Map<string, Faculty>([
+      ['sup', makeFaculty('sup')],
+      ['sub-1', makeFaculty('sub-1', 'sup')],
     ]);
     const fakeRepo = createFakeSubordinateRepo(store);
-    const useCases = createTeachersUseCases(fakeRepo as never);
+    const useCases = createFacultyUseCases(fakeRepo as never);
     await expect(
-      useCases.bulkSoftDeleteTeachers(['sup'], 'admin', 'Testing deletion'),
+      useCases.bulkSoftDeleteFaculty(['sup'], 'admin', 'Testing deletion'),
     ).rejects.toThrow(SubordinateReassignmentError);
     expect(fakeRepo.bulkSave).not.toHaveBeenCalled();
   });
 
   it('allows bulk soft-delete when supervisor and all active subordinates are in the same batch', async () => {
-    const store = new Map<string, Teacher>([
-      ['sup', makeTeacher('sup')],
-      ['sub-1', makeTeacher('sub-1', 'sup')],
-      ['sub-2', makeTeacher('sub-2', 'sup')],
+    const store = new Map<string, Faculty>([
+      ['sup', makeFaculty('sup')],
+      ['sub-1', makeFaculty('sub-1', 'sup')],
+      ['sub-2', makeFaculty('sub-2', 'sup')],
     ]);
     const fakeRepo = createFakeSubordinateRepo(store);
-    const useCases = createTeachersUseCases(fakeRepo as never);
-    const result = await useCases.bulkSoftDeleteTeachers(['sup', 'sub-1', 'sub-2'], 'admin', 'Dept closure');
+    const useCases = createFacultyUseCases(fakeRepo as never);
+    const result = await useCases.bulkSoftDeleteFaculty(['sup', 'sub-1', 'sub-2'], 'admin', 'Dept closure');
 
     expect(result).toEqual({ succeeded: 3, failed: 0 });
     expect(fakeRepo.bulkSave).toHaveBeenCalledTimes(1);
     expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
-    expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
   });
 });
 
@@ -186,10 +185,10 @@ describe('Faculty Designation RBAC and Outbox Audit', () => {
 
 describe('Faculty Widget Query SQL Field Expressions', () => {
   it('resolves expressions for faculty hierarchy and department fields', () => {
-    expect(resolveTeacherFieldExpr('department')).toBeDefined();
-    expect(resolveTeacherFieldExpr('designation')).toBeDefined();
-    expect(resolveTeacherFieldExpr('hierarchyRank')).toBeDefined();
-    expect(resolveTeacherFieldExpr('reportingFacultyId')).toBeDefined();
+    expect(resolveFacultyFieldExpr('department')).toBeDefined();
+    expect(resolveFacultyFieldExpr('designation')).toBeDefined();
+    expect(resolveFacultyFieldExpr('hierarchyRank')).toBeDefined();
+    expect(resolveFacultyFieldExpr('reportingFacultyId')).toBeDefined();
     expect(singleFilterSql('department', 'equals', 'Islamic Studies')).not.toBeNull();
   });
 });

@@ -70,18 +70,18 @@ export async function runMigration054(): Promise<void> {
 
     const inserted = await withGlobalTenant(async (tx) => {
       const existing = await tx
-        .select({ id: schema.teacherLookups.id })
-        .from(schema.teacherLookups)
+        .select({ id: schema.facultyLookups.id })
+        .from(schema.facultyLookups)
         .where(
           and(
-            eq(schema.teacherLookups.workspaceSubdomain, tenant),
-            eq(schema.teacherLookups.kind, kind),
+            eq(schema.facultyLookups.workspaceSubdomain, tenant),
+            eq(schema.facultyLookups.kind, kind),
           ),
         )
         .limit(1);
       if (existing.length > 0) return 0;
 
-      await tx.insert(schema.teacherLookups).values(values);
+      await tx.insert(schema.facultyLookups).values(values);
       return values.length;
     });
 

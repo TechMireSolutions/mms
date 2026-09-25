@@ -1,21 +1,21 @@
-import type { TeacherRecord } from '@mms/shared';
+import type { FacultyRecord } from '@mms/shared';
 import { saveFacultyDesignationAssignment } from '../../db/repositories/facultyDesignationRepository.js';
-import { prepareTeacherRecord } from './facultyNormalizeUseCases.js';
+import { prepareFacultyRecord } from './facultyNormalizeUseCases.js';
 
 /**
- * M-4: Extracted from `createTeacher` — handles the implicit restore path when
+ * Handles the implicit restore path when
  * an incoming `contactId` matches a soft-deleted faculty row.
  *
  * Returns the merged + persisted record (already saved via `repo.save`).
  */
 export async function handleImplicitRestore(
   tenant: string,
-  archived: TeacherRecord,
-  normalized: TeacherRecord,
+  archived: FacultyRecord,
+  normalized: FacultyRecord,
   rawRecord: Record<string, unknown>,
-  save: (tenant: string, record: TeacherRecord) => Promise<void>,
-): Promise<TeacherRecord> {
-  const merged = prepareTeacherRecord({
+  save: (tenant: string, record: FacultyRecord) => Promise<void>,
+): Promise<FacultyRecord> {
+  const merged = prepareFacultyRecord({
     ...archived,
     ...normalized,
     id: archived.id,
@@ -44,12 +44,12 @@ export async function handleImplicitRestore(
 }
 
 /**
- * M-4: Extracted from `createTeacher` — saves the initial designation assignment
+ * Saves the initial designation assignment
  * after a fresh faculty record has been persisted.
  */
 export async function saveDesignationOnCreate(
   tenant: string,
-  normalized: TeacherRecord,
+  normalized: FacultyRecord,
   rawRecord: Record<string, unknown>,
 ): Promise<void> {
   const designationId = typeof rawRecord.designationId === 'string' ? rawRecord.designationId.trim() : '';

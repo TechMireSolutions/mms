@@ -57,5 +57,3 @@ export const facultySetupConfigRoutes: FastifyPluginAsync = async (fastify) => {
     }
   });
 };
-
-export const teacherSetupConfigRoutes = facultySetupConfigRoutes;

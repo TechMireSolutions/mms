@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { TeacherRecord } from '@mms/shared';
+import type { FacultyRecord } from '@mms/shared';
 
 const mockGetRequestTenant = vi.fn();
 const mockBroadcastCollection = vi.fn();
@@ -23,8 +23,8 @@ vi.mock('../lib/cache/index.js', () => ({
 }));
 
 import { ensureFacultyDesignationLookup } from '../faculty/use-cases/facultyLookupsService.js';
-import { createTeacher, updateTeacherById } from '../faculty/use-cases/facultyWriteUseCases.js';
-import { prepareTeacherRecord } from '../faculty/use-cases/facultyNormalizeUseCases.js';
+import { createFaculty, updateFacultyById } from '../faculty/use-cases/facultyWriteUseCases.js';
+import { prepareFacultyRecord } from '../faculty/use-cases/facultyNormalizeUseCases.js';
 
 interface MockLookupRow {
   id: string;
@@ -123,30 +123,30 @@ describe('facultyCustomDesignation - Case-insensitive lookup and persistence', (
     });
   });
 
-  it('prepareTeacherRecord maps customDesignation to designation and deletes customDesignation', () => {
+  it('prepareFacultyRecord maps customDesignation to designation and deletes customDesignation', () => {
     const input = {
       name: 'Dr. Ahmad',
       contactId: 'c-100',
       customDesignation: 'Visiting Scholar',
     };
 
-    const prepared = prepareTeacherRecord(input as never);
+    const prepared = prepareFacultyRecord(input as never);
 
     expect(prepared.designation).toBe('Visiting Scholar');
     expect((prepared as Record<string, unknown>).customDesignation).toBeUndefined();
   });
 
-  it('createTeacher normalizes custom designation and persists to repository', async () => {
-    const store = new Map<string, TeacherRecord>();
+  it('createFaculty normalizes custom designation and persists to repository', async () => {
+    const store = new Map<string, FacultyRecord>();
     const fakeRepo = {
       findSoftDeletedByContactId: vi.fn().mockResolvedValue(null),
-      save: vi.fn(async (_tenant: string, record: TeacherRecord) => {
+      save: vi.fn(async (_tenant: string, record: FacultyRecord) => {
         store.set(String(record.id), record);
       }),
       findById: vi.fn(async (_tenant: string, id: string) => store.get(id) ?? null),
     };
 
-    const result = await createTeacher(
+    const result = await createFaculty(
       {
         contactId: 'c-200',
         name: 'Ustadh Bilal',
@@ -162,8 +162,8 @@ describe('facultyCustomDesignation - Case-insensitive lookup and persistence', (
     expect(fakeRepo.save).toHaveBeenCalled();
   });
 
-  it('updateTeacherById handles custom designation and updates repository', async () => {
-    const existingTeacher: TeacherRecord = {
+  it('updateFacultyById handles custom designation and updates repository', async () => {
+    const existingFaculty: FacultyRecord = {
       id: 'tch-1',
       contactId: 'c-300',
       name: 'Sheikh Khalid',
@@ -174,15 +174,15 @@ describe('facultyCustomDesignation - Case-insensitive lookup and persistence', (
       updatedAt: '2025-01-01T00:00:00Z',
     };
 
-    const store = new Map<string, TeacherRecord>([['tch-1', existingTeacher]]);
+    const store = new Map<string, FacultyRecord>([['tch-1', existingFaculty]]);
     const fakeRepo = {
       findById: vi.fn(async (_tenant: string, id: string) => store.get(id) ?? null),
-      save: vi.fn(async (_tenant: string, record: TeacherRecord) => {
+      save: vi.fn(async (_tenant: string, record: FacultyRecord) => {
         store.set(String(record.id), record);
       }),
     };
 
-    const updated = await updateTeacherById(
+    const updated = await updateFacultyById(
       'tch-1',
       {
         customDesignation: 'Principal Researcher',

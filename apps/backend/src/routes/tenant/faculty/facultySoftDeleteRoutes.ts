@@ -29,5 +29,3 @@ export const facultySoftDeleteRoutes: FastifyPluginAsync = async (fastify) => {
     },
   });
 };
-
-export const teacherSoftDeleteRoutes = facultySoftDeleteRoutes;

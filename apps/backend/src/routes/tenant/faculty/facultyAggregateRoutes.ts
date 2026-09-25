@@ -38,7 +38,6 @@ export const facultyAggregateRoutes: FastifyPluginAsync = async (sub) => {
       return sanitizeFacultyForUser(faculty, request.user as User);
     },
     responseKey: 'faculty',
-    aliases: ['teachers'],
     errorMessagePrefix: 'faculty',
   });
 
@@ -57,5 +56,3 @@ export const facultyAggregateRoutes: FastifyPluginAsync = async (sub) => {
     },
   });
 };
-
-export const teacherAggregateRoutes = facultyAggregateRoutes;

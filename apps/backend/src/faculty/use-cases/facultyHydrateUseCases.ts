@@ -39,8 +39,8 @@ export async function hydrateFacultyFromContacts(
   let supervisorNameMap = new Map<string, string>();
   if (supervisorIds.size > 0) {
     try {
-      const { findTeachersByIds } = await import('../../db/repositories/facultyRepository.js');
-      const supervisors = await findTeachersByIds(tenant, [...supervisorIds]);
+      const { findFacultyByIds } = await import('../../db/repositories/facultyRepository.js');
+      const supervisors = await findFacultyByIds(tenant, [...supervisorIds]);
       const supContactIds = supervisors.map((s) => s.contactId).filter(Boolean);
       if (supContactIds.length > 0) {
         const supContacts = (await loadContactsByIdsForTenant(tenant, supContactIds as string[])) as Contact[];
@@ -82,5 +82,3 @@ export async function hydrateFacultyFromContacts(
     return hydrated;
   });
 }
-
-export const hydrateTeachersFromContacts = hydrateFacultyFromContacts;

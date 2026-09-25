@@ -47,5 +47,3 @@ export async function validateFacultyDynamic(
 
   validateOrThrow(schema, facultyRecord);
 }
-
-export const validateTeacherDynamic = validateFacultyDynamic;

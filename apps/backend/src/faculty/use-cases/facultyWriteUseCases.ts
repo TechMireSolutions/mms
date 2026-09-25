@@ -1,12 +1,12 @@
-import type { TeacherRecord, TeacherWrite } from '@mms/shared';
+import type { FacultyRecord, FacultyWrite } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
 import { broadcastCollection } from '../../lib/livePush.js';
-import type { FacultyRepository as TeachersRepository } from '../repository/facultyRepository.js';
-import { facultyRepository as teachersRepository } from '../repository/facultyRepositoryAdapter.js';
-import { mergeTeacherPatch, prepareTeacherRecord } from './facultyNormalizeUseCases.js';
+import type { FacultyRepository } from '../repository/facultyRepository.js';
+import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
+import { mergeFacultyPatch, prepareFacultyRecord } from './facultyNormalizeUseCases.js';
 import { ensureFacultyDesignationLookup } from './facultyLookupsService.js';
-import { generateNextEmployeeId } from './facultyEmployeeIdService.js';
+import { generateNextFacultyEmployeeId } from './facultyEmployeeIdService.js';
 import {
   HierarchyValidationError,
   HierarchyCycleError,
@@ -16,24 +16,24 @@ import { handleImplicitRestore, saveDesignationOnCreate } from './facultyWriteHe
 
 export { HierarchyValidationError, HierarchyCycleError, validateReportingHierarchy };
 
-export interface CreateTeacherResult {
-  record: TeacherRecord;
-  /** True when an archived teacher with the same contactId was restored instead of inserting. */
+export interface CreateFacultyResult {
+  record: FacultyRecord;
+  /** True when an archived faculty member with the same contactId was restored instead of inserting. */
   restored: boolean;
 }
 
-/** Thrown when a create would un-delete an archived teacher without delete permission. */
-export class TeacherPermissionError extends Error {
+/** Thrown when a create would un-delete an archived faculty member without delete permission. */
+export class FacultyPermissionError extends Error {
   readonly statusCode = 403;
   readonly type = 'forbidden';
-  constructor(message = 'Restoring an archived teacher requires delete permission') {
+  constructor(message = 'Restoring an archived faculty member requires delete permission') {
     super(message);
-    this.name = 'TeacherPermissionError';
+    this.name = 'FacultyPermissionError';
   }
 }
 
-export interface CreateTeacherOptions {
-  /** False when the caller lacks `teachers.delete`; blocks implicit restore. */
+export interface CreateFacultyOptions {
+  /** False when the caller lacks `faculty.delete`; blocks implicit restore. */
   canRestore?: boolean;
 }
 
@@ -41,11 +41,11 @@ export interface CreateTeacherOptions {
  * Creates a faculty member. When the incoming record carries a `contactId` that matches a
  * soft-deleted faculty (re-registration), the archived row is restored in place.
  */
-export async function createTeacher(
-  record: TeacherRecord | TeacherWrite | Record<string, unknown>,
-  repo: TeachersRepository = teachersRepository,
-  options: CreateTeacherOptions = {},
-): Promise<CreateTeacherResult> {
+export async function createFaculty(
+  record: FacultyRecord | FacultyWrite | Record<string, unknown>,
+  repo: FacultyRepository = facultyRepository,
+  options: CreateFacultyOptions = {},
+): Promise<CreateFacultyResult> {
   const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) throw new Error('Tenant context required');
@@ -55,10 +55,10 @@ export async function createTeacher(
       (typeof rawRecord.designation === 'string' ? rawRecord.designation.trim() : '');
     if (customDes) await ensureFacultyDesignationLookup(tenant, customDes);
 
-    const normalized = prepareTeacherRecord(record);
+    const normalized = prepareFacultyRecord(record);
 
     if (!normalized.employeeId || !normalized.employeeId.trim()) {
-      const generated = await generateNextEmployeeId(tenant);
+      const generated = await generateNextFacultyEmployeeId(tenant);
       normalized.employeeId = generated.employeeId;
     }
 
@@ -74,8 +74,8 @@ export async function createTeacher(
     if (contactId) {
       const archived = await repo.findSoftDeletedByContactId(tenant, contactId);
       if (archived) {
-        if (options.canRestore === false) throw new TeacherPermissionError();
-        const merged = await handleImplicitRestore(tenant, archived as TeacherRecord, normalized, rawRecord, repo.save.bind(repo));
+        if (options.canRestore === false) throw new FacultyPermissionError();
+        const merged = await handleImplicitRestore(tenant, archived as FacultyRecord, normalized, rawRecord, repo.save.bind(repo));
         return { record: merged, restored: true };
       }
     }
@@ -85,15 +85,14 @@ export async function createTeacher(
     return { record: normalized, restored: false };
   });
   await broadcastCollection('faculty');
-  await broadcastCollection('teachers');
   return result;
 }
 
-export async function updateTeacherById(
+export async function updateFacultyById(
   id: string,
-  record: TeacherRecord | TeacherWrite | Record<string, unknown>,
-  repo: TeachersRepository = teachersRepository,
-): Promise<TeacherRecord | null> {
+  record: FacultyRecord | FacultyWrite | Record<string, unknown>,
+  repo: FacultyRepository = facultyRepository,
+): Promise<FacultyRecord | null> {
   const saved = await runInTransaction(async () => {
     const tenant = getRequestTenant();
     if (!tenant) return null;
@@ -105,8 +104,8 @@ export async function updateTeacherById(
       (typeof rawRecord.designation === 'string' ? rawRecord.designation.trim() : '');
     if (customDes) await ensureFacultyDesignationLookup(tenant, customDes);
 
-    const normalized = prepareTeacherRecord({
-      ...mergeTeacherPatch(existing, record),
+    const normalized = prepareFacultyRecord({
+      ...mergeFacultyPatch(existing, record),
       id,
     });
 
@@ -133,13 +132,6 @@ export async function updateTeacherById(
   });
   if (saved) {
     await broadcastCollection('faculty');
-    await broadcastCollection('teachers');
   }
   return saved;
 }
-
-export type CreateFacultyResult = CreateTeacherResult;
-export type CreateFacultyOptions = CreateTeacherOptions;
-export const FacultyPermissionError = TeacherPermissionError;
-export const createFaculty = createTeacher;
-export const updateFacultyById = updateTeacherById;

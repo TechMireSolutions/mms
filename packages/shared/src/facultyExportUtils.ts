@@ -145,3 +145,5 @@ export function buildTeachersExportRows(
 }
 
 export const buildFacultyExportRows = buildTeachersExportRows;
+export const filterFacultyExportColumnsForViewer = filterTeacherExportColumnsForViewer;
+

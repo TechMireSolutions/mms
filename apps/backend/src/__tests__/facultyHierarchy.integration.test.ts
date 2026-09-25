@@ -8,7 +8,7 @@ import {
 } from '../faculty/use-cases/facultyWriteUseCases.js';
 import { SubordinateReassignmentError } from '../faculty/use-cases/facultySoftDeleteUseCases.js';
 import type { Faculty } from '@mms/shared';
-import type { TeachersRepository } from '../faculty/repository/facultyRepository.js';
+import type { FacultyRepository } from '../faculty/repository/facultyRepository.js';
 
 vi.mock('../db/database.js', () => ({
   initDb: vi.fn().mockResolvedValue(undefined),
@@ -30,6 +30,7 @@ vi.mock('../lib/livePush.js', () => ({
 }));
 
 vi.mock('../faculty/use-cases/facultyHydrateUseCases.js', () => ({
+  hydrateFacultyFromContacts: async (_tenant: unknown, rows: unknown) => rows,
   hydrateTeachersFromContacts: async (_tenant: unknown, rows: unknown) => rows,
 }));
 
@@ -79,7 +80,7 @@ vi.mock('../faculty/use-cases/facultyUseCases.js', async (importOriginal) => {
 describe('Faculty Hierarchy and Task Management Domain Logic', () => {
   function createMockFacultyRepo(seedFaculty: Faculty[]) {
     const store = new Map<string, Faculty>(seedFaculty.map((f) => [String(f.id), { ...f }]));
-    const repo: Partial<TeachersRepository> = {
+    const repo: Partial<FacultyRepository> = {
       findById: vi.fn(async (_tenant: string, id: string) => store.get(id) ?? null),
       findByIds: vi.fn(async (_tenant: string, ids: string[]) =>
         ids.map((id) => store.get(id)).filter((f): f is Faculty => Boolean(f)),
@@ -113,7 +114,7 @@ describe('Faculty Hierarchy and Task Management Domain Logic', () => {
         }
       }),
       listPage: vi.fn(async () => ({
-        teachers: [...store.values()].filter((f) => !f.deletedAt),
+        faculty: [...store.values()].filter((f) => !f.deletedAt),
         total: store.size,
         page: 1,
         limit: 100,
@@ -132,7 +133,7 @@ describe('Faculty Hierarchy and Task Management Domain Logic', () => {
         return ancestors;
       }),
     };
-    return { repo: repo as TeachersRepository, store };
+    return { repo: repo as FacultyRepository, store };
   }
 
   it('rejects supervisor assignment if supervisor has lower or equal authority rank', async () => {

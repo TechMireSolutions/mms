@@ -1,8 +1,8 @@
 import {
-  composeTeachersSettings,
-  stripTeacherFieldConfigForPersist,
+  composeFacultySettings,
+  stripFacultyFieldConfigForPersist,
   type FieldDefinition,
-  type TeachersSettings,
+  type FacultySettings,
   type TabDefinition,
 } from '@mms/shared';
 import {
@@ -10,44 +10,41 @@ import {
   requireFieldConfigTenant,
 } from '../../lib/createModuleFieldConfigService.js';
 import {
-  getTeacherFieldConfigByWorkspace,
-  upsertTeacherFieldConfig,
+  getFacultyFieldConfigByWorkspace,
+  upsertFacultyFieldConfig,
 } from '../../db/repositories/facultyFieldConfigRepository.js';
-import { getTeacherModulePreferencesByWorkspace } from '../../db/repositories/facultyModulePreferencesRepository.js';
+import { getFacultyModulePreferencesByWorkspace } from '../../db/repositories/facultyModulePreferencesRepository.js';
 
 const facultyFieldConfig = createModuleFieldConfigService<
   Record<string, unknown>,
-  TeachersSettings,
+  FacultySettings,
   TabDefinition,
   Record<string, FieldDefinition[]> | undefined,
-  ReturnType<typeof stripTeacherFieldConfigForPersist>
+  ReturnType<typeof stripFacultyFieldConfigForPersist>
 >({
-  broadcastKey: 'teachers',
-  getByWorkspace: getTeacherFieldConfigByWorkspace,
-  upsert: upsertTeacherFieldConfig,
+  broadcastKey: 'faculty',
+  getByWorkspace: getFacultyFieldConfigByWorkspace,
+  upsert: upsertFacultyFieldConfig,
   toDocument: async (raw, tenant) => {
-    const prefs = await getTeacherModulePreferencesByWorkspace(tenant);
-    return composeTeachersSettings(raw, prefs);
+    const prefs = await getFacultyModulePreferencesByWorkspace(tenant);
+    return composeFacultySettings(raw, prefs);
   },
-  stripForPersist: stripTeacherFieldConfigForPersist,
+  stripForPersist: stripFacultyFieldConfigForPersist,
   reloadFailedMessage: 'Failed to reload faculty field config after save',
 });
 
 export const loadFacultyFieldConfig = facultyFieldConfig.load;
-export const loadTeacherFieldConfig = loadFacultyFieldConfig;
 
 export async function saveFacultyFieldConfig(
-  config: TeachersSettings | Record<string, unknown>,
-): Promise<TeachersSettings> {
-  return facultyFieldConfig.save(config as TeachersSettings);
+  config: FacultySettings | Record<string, unknown>,
+): Promise<FacultySettings> {
+  return facultyFieldConfig.save(config as FacultySettings);
 }
-export const saveTeacherFieldConfig = saveFacultyFieldConfig;
 
-/** Full TeachersSettings for validation / employee ID (field-config + preferences + tabs). */
-export async function loadFacultySettingsCombined(): Promise<TeachersSettings> {
+/** Full FacultySettings for validation / employee ID (field-config + preferences + tabs). */
+export async function loadFacultySettingsCombined(): Promise<FacultySettings> {
   const tenant = requireFieldConfigTenant();
-  const field = await getTeacherFieldConfigByWorkspace(tenant);
-  const prefs = await getTeacherModulePreferencesByWorkspace(tenant);
-  return composeTeachersSettings(field, prefs);
+  const field = await getFacultyFieldConfigByWorkspace(tenant);
+  const prefs = await getFacultyModulePreferencesByWorkspace(tenant);
+  return composeFacultySettings(field, prefs);
 }
-export const loadTeachersSettingsCombined = loadFacultySettingsCombined;

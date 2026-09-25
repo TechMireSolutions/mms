@@ -1,34 +1,34 @@
 import { describe, expect, it } from 'vitest';
 import {
-  mergeTeacherPatch,
-  prepareTeacherRecord,
-  resolveTeacherRowId,
+  mergeFacultyPatch,
+  prepareFacultyRecord,
+  resolveFacultyRowId,
 } from '../faculty/use-cases/facultyNormalizeUseCases.js';
 
-describe('teacherNormalizeUseCases', () => {
-  describe('resolveTeacherRowId', () => {
+describe('facultyNormalizeUseCases', () => {
+  describe('resolveFacultyRowId', () => {
     it('passes through a supplied id', () => {
-      expect(resolveTeacherRowId('t1')).toBe('t1');
-      expect(resolveTeacherRowId(42)).toBe('42');
+      expect(resolveFacultyRowId('t1')).toBe('t1');
+      expect(resolveFacultyRowId(42)).toBe('42');
     });
 
-    it('generates a tch-<uuid> prefixed id when absent', () => {
-      const id = resolveTeacherRowId(undefined);
-      expect(id).toMatch(/^tch-[0-9a-f-]{36}$/);
+    it('generates a fac-<uuid> prefixed id when absent', () => {
+      const id = resolveFacultyRowId(undefined);
+      expect(id).toMatch(/^fac-[0-9a-f-]{36}$/);
     });
 
     it('generates a fresh id each call', () => {
-      expect(resolveTeacherRowId(undefined)).not.toBe(resolveTeacherRowId(undefined));
+      expect(resolveFacultyRowId(undefined)).not.toBe(resolveFacultyRowId(undefined));
     });
 
-    it('generates a tch-<uuid> prefixed id when id is empty, blank string, or null', () => {
-      expect(resolveTeacherRowId('')).toMatch(/^tch-[0-9a-f-]{36}$/);
-      expect(resolveTeacherRowId('   ')).toMatch(/^tch-[0-9a-f-]{36}$/);
-      expect(resolveTeacherRowId(null)).toMatch(/^tch-[0-9a-f-]{36}$/);
+    it('generates a fac-<uuid> prefixed id when id is empty, blank string, or null', () => {
+      expect(resolveFacultyRowId('')).toMatch(/^fac-[0-9a-f-]{36}$/);
+      expect(resolveFacultyRowId('   ')).toMatch(/^fac-[0-9a-f-]{36}$/);
+      expect(resolveFacultyRowId(null)).toMatch(/^fac-[0-9a-f-]{36}$/);
     });
   });
 
-  describe('mergeTeacherPatch', () => {
+  describe('mergeFacultyPatch', () => {
     it('merges defined patch fields onto existing and preserves omitted fields', () => {
       const existing = {
         id: 't-1',
@@ -41,7 +41,7 @@ describe('teacherNormalizeUseCases', () => {
         status: 'on_leave',
         notes: 'Medical leave',
       };
-      const merged = mergeTeacherPatch(existing, patch);
+      const merged = mergeFacultyPatch(existing, patch);
       expect(merged).toEqual({
         id: 't-1',
         contactId: 'c-10',
@@ -53,20 +53,20 @@ describe('teacherNormalizeUseCases', () => {
     });
   });
 
-  describe('prepareTeacherRecord', () => {
+  describe('prepareFacultyRecord', () => {
     it('parses a minimal record and assigns a generated id', () => {
-      const parsed = prepareTeacherRecord({ status: 'active' });
+      const parsed = prepareFacultyRecord({ status: 'active' });
       expect(parsed.status).toBe('active');
-      expect(parsed.id).toMatch(/^tch-[0-9a-f-]{36}$/);
+      expect(parsed.id).toMatch(/^fac-[0-9a-f-]{36}$/);
     });
 
     it('keeps an explicit id', () => {
-      const parsed = prepareTeacherRecord({ id: 't-9', status: 'active' });
+      const parsed = prepareFacultyRecord({ id: 't-9', status: 'active' });
       expect(parsed.id).toBe('t-9');
     });
 
     it('strips client soft-delete metadata', () => {
-      const parsed = prepareTeacherRecord({
+      const parsed = prepareFacultyRecord({
         status: 'active',
         deleted: true,
         deletedAt: '2026-01-01T00:00:00.000Z',
@@ -80,7 +80,7 @@ describe('teacherNormalizeUseCases', () => {
     });
 
     it('strips contact-owned profile keys (SSOT on contacts)', () => {
-      const parsed = prepareTeacherRecord({
+      const parsed = prepareFacultyRecord({
         status: 'active',
         contactId: 'c-1',
         name: 'Ustadh',
@@ -97,7 +97,7 @@ describe('teacherNormalizeUseCases', () => {
     });
 
     it('drops an absent contactId but keeps employee-only fields', () => {
-      const parsed = prepareTeacherRecord({ employeeId: 'T-1', status: 'active' });
+      const parsed = prepareFacultyRecord({ employeeId: 'T-1', status: 'active' });
       expect(parsed).not.toHaveProperty('contactId');
       expect(parsed.employeeId).toBe('T-1');
     });

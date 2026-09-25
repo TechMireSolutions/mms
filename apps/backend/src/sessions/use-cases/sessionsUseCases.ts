@@ -20,7 +20,7 @@ import {
 } from '@mms/shared';
 
 export interface SessionsUseCasesDependencies {
-  findTeachersByIds?: (
+  findFacultyByIds?: (
     tenant: string,
     ids: string[],
   ) => Promise<Array<{ id: string | number; deletedAt?: unknown }>>;
@@ -47,24 +47,24 @@ export function createSessionsUseCases(
     normalizeFn: normalizeStoredSession as (record: SessionRecord) => SessionRecord,
   });
 
-  const validateActiveTeacherForeignKeys = async (
+  const validateActiveFacultyForeignKeys = async (
     tenant: string,
     record: Partial<SessionRecord>,
   ) => {
-    const teacherIds = dedupeTrimmedIds(
-      (record.classes ?? []).map((c) => c.teacherId).filter(Boolean),
+    const facultyIds = dedupeTrimmedIds(
+      (record.classes ?? []).map((c) => (c as { facultyId?: string }).facultyId || c.teacherId).filter(Boolean),
     );
-    if (teacherIds.length > 0) {
-      const getTeachers =
-        deps?.findTeachersByIds ??
-        (await import('../../db/repositories/facultyRepository.js')).findTeachersByIds;
-      const teachers = await getTeachers(tenant, teacherIds);
-      const activeTeacherIds = new Set(
-        teachers.filter((t) => !t.deletedAt).map((t) => String(t.id)),
+    if (facultyIds.length > 0) {
+      const getFaculty =
+        deps?.findFacultyByIds ??
+        (await import('../../db/repositories/facultyRepository.js')).findFacultyByIds;
+      const facultyList = await getFaculty(tenant, facultyIds);
+      const activeFacultyIds = new Set(
+        facultyList.filter((f) => !f.deletedAt).map((f) => String(f.id)),
       );
-      for (const teacherId of teacherIds) {
-        if (!activeTeacherIds.has(teacherId)) {
-          const err = new Error('Referenced teacher is archived or does not exist');
+      for (const facultyId of facultyIds) {
+        if (!activeFacultyIds.has(facultyId)) {
+          const err = new Error('Referenced faculty is archived or does not exist');
           (err as Error & { statusCode: number }).statusCode = 400;
           throw err;
         }
@@ -78,7 +78,7 @@ export function createSessionsUseCases(
     createSession: async (record: SessionCreateBody | SessionRecord): Promise<SessionRecord> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
-      await validateActiveTeacherForeignKeys(tenant, record);
+      await validateActiveFacultyForeignKeys(tenant, record);
       return crud.create(record as SessionRecord);
     },
     updateSessionById: async (
@@ -87,7 +87,7 @@ export function createSessionsUseCases(
     ): Promise<SessionRecord | null> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
-      await validateActiveTeacherForeignKeys(tenant, record);
+      await validateActiveFacultyForeignKeys(tenant, record);
       return crud.updateById(id, record as SessionRecord);
     },
     deleteSessionById: async (

@@ -109,12 +109,12 @@ export interface ContactsListQuery {
    * SQL-only: EXISTS / NOT EXISTS against module link tables (no id materialization).
    * Prefer over large `includeIds` / `excludeIds` for messaging role scopes.
    */
-  moduleLinkFilter?: 'students' | 'teachers' | 'staff' | 'unlinked';
+  moduleLinkFilter?: 'students' | 'faculty' | 'teachers' | 'staff' | 'unlinked';
   /**
    * SQL-only: omit contacts linked to these modules (NOT EXISTS per module).
    * Prefer over a large `excludeIds` query string.
    */
-  excludeLinkedModules?: Array<'students' | 'teachers'>;
+  excludeLinkedModules?: Array<'students' | 'faculty' | 'teachers'>;
   /** Keyset pagination: fetch items after this primary key */
   afterId?: string;
   /** Performance optimization: skip counting total rows when only iterating pages */

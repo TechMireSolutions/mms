@@ -12,7 +12,7 @@ import { hashPassword } from '../../services/auth/passwordService.js';
 import { assertPasswordMeetsPolicy } from '../../services/globalSettingsService.js';
 import { loadContactsByIds } from '../../services/contactService.js';
 import { HttpDomainError } from '../../lib/httpErrors.js';
-import { findTeacherByContactId } from '../../db/repositories/facultyRepository.js';
+import { findFacultyByContactId } from '../../db/repositories/facultyRepository.js';
 import { findCurrentFacultyDesignationAssignment } from '../../db/repositories/facultyDesignationRepository.js';
 import {
   type WorkspaceUser,
@@ -96,7 +96,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
 
   const assertFacultyRoleAllowed = async (tenant: string, contactId: string | undefined, role: string | undefined): Promise<void> => {
     if (!contactId || !role) return;
-    const faculty = await findTeacherByContactId(tenant, contactId);
+    const faculty = await findFacultyByContactId(tenant, contactId);
     if (!faculty) return;
     const designation = await findCurrentFacultyDesignationAssignment(tenant, String(faculty.id));
     if (!designation) {

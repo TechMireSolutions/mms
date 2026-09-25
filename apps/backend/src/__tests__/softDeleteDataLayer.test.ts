@@ -8,7 +8,7 @@ import {
 } from '../services/genericRelationalService.js';
 import { ConflictError, NotFoundError, ValidationError } from '../lib/httpErrors.js';
 import { restoreContactById, bulkRestoreContacts } from '../contacts/use-cases/contactSoftDeleteUseCases.js';
-import { restoreTeacherById, bulkRestoreTeachers } from '../faculty/use-cases/facultySoftDeleteUseCases.js';
+import { restoreFacultyById, bulkRestoreFaculty } from '../faculty/use-cases/facultySoftDeleteUseCases.js';
 import { restoreStudentById, bulkRestoreStudents } from '../students/use-cases/studentSoftDeleteUseCases.js';
 import { StudentRestoreConflictError } from '../students/use-cases/studentNormalizeUseCases.js';
 import { createEnrollmentsUseCases } from '../enrollments/use-cases/enrollmentsUseCases.js';
@@ -16,7 +16,7 @@ import { createFinanceUseCases } from '../finance/use-cases/financeUseCases.js';
 import { createAttendanceUseCases } from '../attendance/use-cases/attendanceUseCases.js';
 import { createSessionsUseCases } from '../sessions/use-cases/sessionsUseCases.js';
 import type { ContactsRepository } from '../contacts/repository/contactsRepository.js';
-import type { FacultyRepository as TeachersRepository } from '../faculty/repository/facultyRepository.js';
+import type { FacultyRepository } from '../faculty/repository/facultyRepository.js';
 import type { StudentsRepository } from '../students/repository/studentsRepository.js';
 import type { EnrollmentsRepository } from '../enrollments/repository/enrollmentsRepository.js';
 import { runWithTenant } from '../lib/tenantContext.js';
@@ -791,8 +791,8 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
     });
   });
 
-  describe('8. Teacher Uniqueness-on-Restore & 23505 Trap (restoreTeacherById)', () => {
-    it('throws ConflictError (409) when an active teacher already owns the same employeeId', async () => {
+  describe('8. Faculty Uniqueness-on-Restore & 23505 Trap (restoreFacultyById)', () => {
+    it('throws ConflictError (409) when an active faculty member already owns the same employeeId', async () => {
       const fakeRepo = {
         findById: vi.fn().mockResolvedValue({
           id: 't-archived',
@@ -801,15 +801,15 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
         }),
         findRegistrationConflict: vi.fn().mockResolvedValue('employeeId'),
         save: vi.fn().mockResolvedValue(undefined),
-      } as unknown as TeachersRepository;
+      } as unknown as FacultyRepository;
 
       await expect(
-        runWithTenant('demo', () => restoreTeacherById('t-archived', 'u-admin', fakeRepo)),
+        runWithTenant('demo', () => restoreFacultyById('t-archived', 'u-admin', fakeRepo)),
       ).rejects.toThrow(ConflictError);
 
       await expect(
-        runWithTenant('demo', () => restoreTeacherById('t-archived', 'u-admin', fakeRepo)),
-      ).rejects.toThrow('Employee ID EMP-001 is already in use by another active teacher');
+        runWithTenant('demo', () => restoreFacultyById('t-archived', 'u-admin', fakeRepo)),
+      ).rejects.toThrow('Employee ID EMP-001 is already in use by another active faculty');
     });
 
     it('traps PostgreSQL 23505 unique violation error during save and throws ConflictError (409)', async () => {
@@ -822,15 +822,15 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
         }),
         findRegistrationConflict: vi.fn().mockResolvedValue(null),
         save: vi.fn().mockRejectedValue(pgError),
-      } as unknown as TeachersRepository;
+      } as unknown as FacultyRepository;
 
       await expect(
-        runWithTenant('demo', () => restoreTeacherById('t-archived', 'u-admin', fakeRepo)),
+        runWithTenant('demo', () => restoreFacultyById('t-archived', 'u-admin', fakeRepo)),
       ).rejects.toThrow(ConflictError);
 
       await expect(
-        runWithTenant('demo', () => restoreTeacherById('t-archived', 'u-admin', fakeRepo)),
-      ).rejects.toThrow('Cannot restore teacher: active record with this unique identifier already exists');
+        runWithTenant('demo', () => restoreFacultyById('t-archived', 'u-admin', fakeRepo)),
+      ).rejects.toThrow('Cannot restore faculty: active record with this unique identifier already exists');
     });
 
     it('traps PostgreSQL 23505 unique violation error during bulkSave and throws ConflictError (409)', async () => {
@@ -844,15 +844,15 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
           },
         ]),
         bulkSave: vi.fn().mockRejectedValue(pgError),
-      } as unknown as TeachersRepository;
+      } as unknown as FacultyRepository;
 
       await expect(
-        runWithTenant('demo', () => bulkRestoreTeachers(['t-archived'], 'u-admin', fakeRepo)),
+        runWithTenant('demo', () => bulkRestoreFaculty(['t-archived'], 'u-admin', fakeRepo)),
       ).rejects.toThrow(ConflictError);
 
       await expect(
-        runWithTenant('demo', () => bulkRestoreTeachers(['t-archived'], 'u-admin', fakeRepo)),
-      ).rejects.toThrow('Cannot restore teacher: active record with this unique identifier already exists');
+        runWithTenant('demo', () => bulkRestoreFaculty(['t-archived'], 'u-admin', fakeRepo)),
+      ).rejects.toThrow('Cannot restore faculty: active record with this unique identifier already exists');
     });
   });
 
@@ -1082,11 +1082,11 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
       ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('student is archived or does not exist') });
     });
 
-    it('createSession throws 400 when class teacher is archived or does not exist', async () => {
+    it('createSession throws 400 when class faculty is archived or does not exist', async () => {
       const cases = createSessionsUseCases(
         {} as any,
         {
-          findTeachersByIds: vi.fn().mockResolvedValue([
+          findFacultyByIds: vi.fn().mockResolvedValue([
             { id: 'teach-archived', deletedAt: '2026-01-01' },
           ]),
         },
@@ -1098,17 +1098,17 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
             name: 'Morning Session',
             startDate: '2026-09-01',
             endDate: '2027-06-01',
-            classes: [{ id: 'cls-1', name: 'Class A', teacherId: 'teach-archived' }],
+            classes: [{ id: 'cls-1', name: 'Class A', facultyId: 'teach-archived' }],
           } as any),
         ),
-      ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('teacher is archived or does not exist') });
+      ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('faculty is archived or does not exist') });
     });
 
-    it('updateSessionById throws 400 when class teacher does not exist', async () => {
+    it('updateSessionById throws 400 when class faculty does not exist', async () => {
       const cases = createSessionsUseCases(
         {} as any,
         {
-          findTeachersByIds: vi.fn().mockResolvedValue([]),
+          findFacultyByIds: vi.fn().mockResolvedValue([]),
         },
       );
       await expect(
@@ -1116,10 +1116,10 @@ describe('Soft-Delete Data Layer & Relational Guardrails', () => {
           cases.updateSessionById('sess-1', {
             id: 'sess-1',
             name: 'Updated Session',
-            classes: [{ id: 'cls-1', name: 'Class A', teacherId: 'teach-nonexistent' }],
+            classes: [{ id: 'cls-1', name: 'Class A', facultyId: 'teach-nonexistent' }],
           } as any),
         ),
-      ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('teacher is archived or does not exist') });
+      ).rejects.toMatchObject({ statusCode: 400, message: expect.stringContaining('faculty is archived or does not exist') });
     });
   });
 });

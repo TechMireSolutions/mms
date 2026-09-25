@@ -1,12 +1,12 @@
 import { sql, type SQL } from 'drizzle-orm';
 import { dedupeTrimmedIds, type ContactsListPageResult, type ContactsListQuery } from '@mms/shared';
-import { contacts, students, teachers, tenantUsers } from '../schema.js';
+import { contacts, students, faculty, tenantUsers } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { hydrateContactsSummaryList } from './contactRepositoryCore.js';
 import { buildListConditions, buildOrderBy } from './contactRepositoryListFilter.js';
 
-export const TEACHER_USER_ROLES_SQL = sql`('teacher', 'assistant_teacher')`;
+export const FACULTY_USER_ROLES_SQL = sql`('faculty', 'teacher', 'assistant_teacher')`;
 
 export function existsActiveStudentLinkSql(subdomain: string): SQL {
   return sql`EXISTS (
@@ -17,12 +17,12 @@ export function existsActiveStudentLinkSql(subdomain: string): SQL {
   )`;
 }
 
-export function existsActiveTeacherLinkSql(subdomain: string): SQL {
+export function existsActiveFacultyLinkSql(subdomain: string): SQL {
   return sql`EXISTS (
-    SELECT 1 FROM ${teachers}
-    WHERE ${teachers.workspaceSubdomain} = ${subdomain}
-      AND ${teachers.deletedAt} IS NULL
-      AND NULLIF(trim(${teachers.contactId}), '') = ${contacts.id}
+    SELECT 1 FROM ${faculty}
+    WHERE ${faculty.workspaceSubdomain} = ${subdomain}
+      AND ${faculty.deletedAt} IS NULL
+      AND NULLIF(trim(${faculty.contactId}), '') = ${contacts.id}
   )`;
 }
 
@@ -32,7 +32,7 @@ export function existsActiveStaffLinkSql(subdomain: string): SQL {
     WHERE ${tenantUsers.workspaceSubdomain} = ${subdomain}
       AND ${tenantUsers.deletedAt} IS NULL
       AND NULLIF(trim(${tenantUsers.contactId}), '') = ${contacts.id}
-      AND lower(${tenantUsers.role}) NOT IN ${TEACHER_USER_ROLES_SQL}
+      AND lower(${tenantUsers.role}) NOT IN ${FACULTY_USER_ROLES_SQL}
   )`;
 }
 

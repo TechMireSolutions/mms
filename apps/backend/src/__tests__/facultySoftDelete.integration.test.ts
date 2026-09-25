@@ -43,27 +43,18 @@ vi.mock('../faculty/use-cases/facultyUseCases.js', async (importOriginal) => {
   const mocked = {
     ...actual.facultyUseCases,
     loadFacultyPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
-    loadTeachersPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
     deleteFacultyById: (...args: unknown[]) => mockDeleteTeacherById(...args),
-    deleteTeacherById: (...args: unknown[]) => mockDeleteTeacherById(...args),
     softDeleteFacultyById: (...args: unknown[]) => mockDeleteTeacherById(...args),
-    softDeleteTeacherById: (...args: unknown[]) => mockDeleteTeacherById(...args),
     restoreFacultyById: (...args: unknown[]) => mockRestoreTeacherById(...args),
-    restoreTeacherById: (...args: unknown[]) => mockRestoreTeacherById(...args),
     bulkSoftDeleteFaculty: (...args: unknown[]) => mockBulkSoftDeleteTeachers(...args),
-    bulkSoftDeleteTeachers: (...args: unknown[]) => mockBulkSoftDeleteTeachers(...args),
     bulkRestoreFaculty: (...args: unknown[]) => mockBulkRestoreTeachers(...args),
-    bulkRestoreTeachers: (...args: unknown[]) => mockBulkRestoreTeachers(...args),
     bulkUpdateFacultyStatus: (...args: unknown[]) => mockBulkUpdateTeacherStatus(...args),
-    bulkUpdateTeacherStatus: (...args: unknown[]) => mockBulkUpdateTeacherStatus(...args),
     sanitizeFacultyForViewer: async (faculty: unknown) => faculty,
-    sanitizeTeacherForViewer: async (teacher: unknown) => teacher,
-    sanitizeTeachersForViewer: async (teachers: unknown) => teachers,
+    sanitizeFacultyListForViewer: async (facultyList: unknown) => facultyList,
   };
   return {
     ...actual,
     facultyUseCases: mocked,
-    teacherUseCases: mocked,
   };
 });
 

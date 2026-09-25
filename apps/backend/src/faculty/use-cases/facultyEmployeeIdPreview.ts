@@ -1,7 +1,7 @@
 import { eq } from 'drizzle-orm';
 import {
   formatDeterministicEmployeeId,
-  DEFAULT_TEACHERS_SETTINGS,
+  DEFAULT_FACULTY_SETTINGS,
 } from '@mms/shared';
 import { facultySetupConfig } from '../../db/schema/faculty.js';
 import { withTenantRead } from '../../db/tenant-context.js';
@@ -33,11 +33,11 @@ export async function previewNextFacultyEmployeeId(tenant: string): Promise<Empl
     const currentYear = new Date().getFullYear();
     if (!tx || typeof tx.select !== 'function') {
       const config = {
-        prefix: DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix ?? 'FAC',
-        yearFormat: (DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat ?? 'YYYY') as 'YYYY' | 'YY' | 'NONE',
-        sequenceDigits: DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits ?? 4,
-        delimiter: DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter ?? '',
-        currentSequence: DEFAULT_TEACHERS_SETTINGS.employeeIdCurrentSequence ?? 0,
+        prefix: DEFAULT_FACULTY_SETTINGS.employeeIdPrefix ?? 'FAC',
+        yearFormat: (DEFAULT_FACULTY_SETTINGS.employeeIdYearFormat ?? 'YYYY') as 'YYYY' | 'YY' | 'NONE',
+        sequenceDigits: DEFAULT_FACULTY_SETTINGS.employeeIdSequenceDigits ?? 4,
+        delimiter: DEFAULT_FACULTY_SETTINGS.employeeIdDelimiter ?? '',
+        currentSequence: DEFAULT_FACULTY_SETTINGS.employeeIdCurrentSequence ?? 0,
         lastYear: currentYear,
       };
       const nextEmployeeId = formatDeterministicEmployeeId(
@@ -69,11 +69,11 @@ export async function previewNextFacultyEmployeeId(tenant: string): Promise<Empl
       .where(eq(facultySetupConfig.workspaceSubdomain, subdomain));
 
     const config = {
-      prefix: row?.prefix ?? DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix,
-      yearFormat: (row?.yearFormat ?? DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat) as 'YYYY' | 'YY' | 'NONE',
-      sequenceDigits: row?.sequenceDigits ?? DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits,
-      delimiter: row?.delimiter ?? DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter,
-      currentSequence: row?.currentSequence ?? DEFAULT_TEACHERS_SETTINGS.employeeIdCurrentSequence,
+      prefix: row?.prefix ?? DEFAULT_FACULTY_SETTINGS.employeeIdPrefix,
+      yearFormat: (row?.yearFormat ?? DEFAULT_FACULTY_SETTINGS.employeeIdYearFormat) as 'YYYY' | 'YY' | 'NONE',
+      sequenceDigits: row?.sequenceDigits ?? DEFAULT_FACULTY_SETTINGS.employeeIdSequenceDigits,
+      delimiter: row?.delimiter ?? DEFAULT_FACULTY_SETTINGS.employeeIdDelimiter,
+      currentSequence: row?.currentSequence ?? DEFAULT_FACULTY_SETTINGS.employeeIdCurrentSequence,
       lastYear: row?.lastYear ?? currentYear,
     };
 

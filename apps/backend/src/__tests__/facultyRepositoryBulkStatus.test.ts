@@ -7,10 +7,10 @@ vi.mock('../db/tenant-context.js', () => ({
 }));
 
 vi.mock('../db/repositories/facultyRepository.js', () => ({
-  teacherRowToRecord: (row: unknown) => row,
+  facultyRowToRecord: (row: unknown) => row,
 }));
 
-describe('bulkUpdateTeachersStatusSql', () => {
+describe('bulkUpdateFacultyStatusSql', () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -25,10 +25,10 @@ describe('bulkUpdateTeachersStatusSql', () => {
         fn({ update }),
     );
 
-    const { bulkUpdateTeachersStatusSql } = await import(
+    const { bulkUpdateFacultyStatusSql } = await import(
       '../db/repositories/facultyRepositoryList.js'
     );
-    const succeeded = await bulkUpdateTeachersStatusSql('Demo', ['t-1', 't-2', 't-1'], 'inactive');
+    const succeeded = await bulkUpdateFacultyStatusSql('Demo', ['t-1', 't-2', 't-1'], 'inactive');
 
     expect(mockWithTenantTransaction).toHaveBeenCalledWith('demo', expect.any(Function));
     expect(update).toHaveBeenCalledTimes(1);
@@ -42,10 +42,10 @@ describe('bulkUpdateTeachersStatusSql', () => {
   });
 
   it('returns 0 when ids are empty', async () => {
-    const { bulkUpdateTeachersStatusSql } = await import(
+    const { bulkUpdateFacultyStatusSql } = await import(
       '../db/repositories/facultyRepositoryList.js'
     );
-    const succeeded = await bulkUpdateTeachersStatusSql('demo', ['  ', ''], 'active');
+    const succeeded = await bulkUpdateFacultyStatusSql('demo', ['  ', ''], 'active');
     expect(succeeded).toBe(0);
     expect(mockWithTenantTransaction).not.toHaveBeenCalled();
   });

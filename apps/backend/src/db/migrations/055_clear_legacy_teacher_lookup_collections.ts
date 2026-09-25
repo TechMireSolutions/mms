@@ -22,12 +22,12 @@ async function tenantHasTypedLookupKind(
 ): Promise<boolean> {
   return withGlobalTenant(async (tx) => {
     const [row] = await tx
-      .select({ id: schema.teacherLookups.id })
-      .from(schema.teacherLookups)
+      .select({ id: schema.facultyLookups.id })
+      .from(schema.facultyLookups)
       .where(
         and(
-          eq(schema.teacherLookups.workspaceSubdomain, tenant),
-          eq(schema.teacherLookups.kind, kind),
+          eq(schema.facultyLookups.workspaceSubdomain, tenant),
+          eq(schema.facultyLookups.kind, kind),
         ),
       )
       .limit(1);

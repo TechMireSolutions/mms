@@ -1,5 +1,5 @@
 import {
-  type Teacher,
+  type Faculty,
   type User,
   FACULTY_MODULE_MANIFEST,
   roleHasPermission,
@@ -13,18 +13,15 @@ import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/cont
 
 /** Thin Faculty audit helper — same shape as Contacts `auditContact`. */
 export const auditFaculty = createCollectionAuditHelper('faculty');
-export const auditTeacher = auditFaculty;
 
 /** Strips faculty properties the viewer role cannot read (field-config + viewer role). */
-export async function sanitizeFacultyForUser(facultyList: Teacher[], user: User): Promise<Teacher[]> {
-  return facultyUseCases.sanitizeTeachersForViewer(facultyList, user.role);
+export async function sanitizeFacultyForUser(facultyList: Faculty[], user: User): Promise<Faculty[]> {
+  return facultyUseCases.sanitizeFacultyListForViewer(facultyList, user.role);
 }
-export const sanitizeTeachersForUser = sanitizeFacultyForUser;
 
-export async function sanitizeOneFacultyForUser(facultyMember: Teacher, user: User): Promise<Teacher> {
-  return facultyUseCases.sanitizeTeacherForViewer(facultyMember, user.role);
+export async function sanitizeOneFacultyForUser(facultyMember: Faculty, user: User): Promise<Faculty> {
+  return facultyUseCases.sanitizeFacultyForViewer(facultyMember, user.role);
 }
-export const sanitizeOneTeacherForUser = sanitizeOneFacultyForUser;
 
 export async function handleDuplicateCheck({
   body,

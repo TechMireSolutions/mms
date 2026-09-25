@@ -1,17 +1,10 @@
 import { withTenant } from '../../../db/tenant-context.js';
 import { canDeleteCollection, canWriteCollection } from '../../../services/rbacService.js';
-import type {
-  Teacher,
-  User,
-  facultyContract,
-} from '@mms/shared';
+import type { Faculty, User, facultyContract } from '@mms/shared';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { facultyUseCases } from '../../../faculty/use-cases/facultyUseCases.js';
 import { validateFacultyDynamic } from '../../../services/facultyValidationService.js';
-import {
-  auditFaculty,
-  sanitizeOneFacultyForUser,
-} from './facultyRouteHelpers.js';
+import { auditFaculty, sanitizeOneFacultyForUser } from './facultyRouteHelpers.js';
 
 export async function handleCreateFaculty({
   body,
@@ -43,15 +36,15 @@ export async function handleCreateFaculty({
       { readOnly: false },
     );
     await auditFaculty(user, 'faculty.create', `Created faculty member ${result.record.id}`, String(result.record.id));
-    const sanitized = await sanitizeOneFacultyForUser(result.record as Teacher, user);
+    const sanitized = await sanitizeOneFacultyForUser(result.record as Faculty, user);
     return result.restored
       ? {
           status: 200 as const,
-          body: { success: true as const, faculty: sanitized, teacher: sanitized },
+          body: { success: true as const, faculty: sanitized, facultyMember: sanitized },
         }
       : {
           status: 201 as const,
-          body: { success: true as const, faculty: sanitized, teacher: sanitized },
+          body: { success: true as const, faculty: sanitized, facultyMember: sanitized },
         };
   } catch (error: unknown) {
     request.log.error({ err: error }, 'Failed to create faculty member');
@@ -98,10 +91,10 @@ export async function handleUpdateFaculty({
       return { status: 404 as const, body: { type: 'not_found', message: 'Faculty member not found' } };
     }
     await auditFaculty(user, 'faculty.update', `Updated faculty member ${id}`, id);
-    const sanitized = await sanitizeOneFacultyForUser(updated as Teacher, user);
+    const sanitized = await sanitizeOneFacultyForUser(updated as Faculty, user);
     return {
       status: 200 as const,
-      body: { success: true as const, faculty: sanitized, teacher: sanitized },
+      body: { success: true as const, faculty: sanitized, facultyMember: sanitized },
     };
   } catch (error: unknown) {
     request.log.error({ err: error }, 'Failed to update faculty member');

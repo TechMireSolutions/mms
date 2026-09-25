@@ -41,7 +41,6 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
   bankDetails: many(contactBankDetails),
   students: many(students),
   faculty: many(faculty),
-  teachers: many(faculty),
   tenantUsers: many(tenantUsers),
   messageLogs: many(messageLogs),
 }));
@@ -140,7 +139,6 @@ export const tenantUsersRelations = relations(tenantUsers, ({ one, many }) => ({
     references: [contacts.workspaceSubdomain, contacts.id],
   }),
   faculty: many(faculty),
-  teachers: many(faculty),
   backgroundJobs: many(backgroundJobs),
   userActivityLogs: many(userActivityLogs),
   auditTrailEvents: many(auditTrailEvents),

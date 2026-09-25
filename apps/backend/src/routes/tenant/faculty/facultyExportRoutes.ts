@@ -30,5 +30,3 @@ export const facultyExportRoutes: FastifyPluginAsync = async (fastify) => {
     bodySchema: facultySetupAuditSchema,
   });
 };
-
-export const teacherExportRoutes = facultyExportRoutes;

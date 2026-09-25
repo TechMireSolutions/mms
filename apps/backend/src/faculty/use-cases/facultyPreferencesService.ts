@@ -1,10 +1,10 @@
 import {
-  normalizeTeacherModulePreferences,
-  type TeacherModulePreferences,
+  normalizeFacultyModulePreferences,
+  type FacultyModulePreferences,
 } from '@mms/shared';
 import {
-  getTeacherModulePreferencesByWorkspace,
-  upsertTeacherModulePreferences,
+  getFacultyModulePreferencesByWorkspace,
+  upsertFacultyModulePreferences,
 } from '../../db/repositories/facultyModulePreferencesRepository.js';
 import { createModulePreferencesService } from '../../lib/createModulePreferencesService.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
@@ -13,15 +13,16 @@ import {
   updateFacultySetupConfig,
 } from './facultyEmployeeIdService.js';
 
-const service = createModulePreferencesService<TeacherModulePreferences>({
-  broadcastKey: 'teachers',
-  getByWorkspace: getTeacherModulePreferencesByWorkspace,
-  upsert: upsertTeacherModulePreferences,
-  normalize: normalizeTeacherModulePreferences,
+const service = createModulePreferencesService<FacultyModulePreferences>({
+  broadcastKey: 'faculty',
+  getByWorkspace: getFacultyModulePreferencesByWorkspace,
+  upsert: upsertFacultyModulePreferences,
+  normalize: normalizeFacultyModulePreferences,
 });
 
-export const loadFacultyModulePreferences = async () => {
-  const prefs = await service.load();
+export const loadFacultyModulePreferences = async (): Promise<FacultyModulePreferences> => {
+  const loaded = await service.load();
+  const prefs = loaded ?? normalizeFacultyModulePreferences(null);
   const tenant = getRequestTenant();
   if (tenant) {
     try {
@@ -29,7 +30,7 @@ export const loadFacultyModulePreferences = async () => {
       return {
         ...prefs,
         employeeIdPrefix: config.prefix,
-        employeeIdYearFormat: config.yearFormat as 'YYYY' | 'YY' | 'NONE',
+        employeeIdYearFormat: config.yearFormat === 'YY' ? 'YY' : 'YYYY',
         employeeIdSequenceDigits: config.sequenceDigits,
         employeeIdDelimiter: config.delimiter,
         employeeIdLastYear: config.lastYear,
@@ -41,9 +42,10 @@ export const loadFacultyModulePreferences = async () => {
   }
   return prefs;
 };
-export const loadTeacherModulePreferences = loadFacultyModulePreferences;
 
-export const saveFacultyModulePreferences = async (preferences: TeacherModulePreferences) => {
+export const saveFacultyModulePreferences = async (
+  preferences: FacultyModulePreferences,
+): Promise<FacultyModulePreferences> => {
   const result = await service.save(preferences);
   const tenant = getRequestTenant();
   if (tenant) {
@@ -55,5 +57,3 @@ export const saveFacultyModulePreferences = async (preferences: TeacherModulePre
   }
   return result;
 };
-export const saveTeacherModulePreferences = saveFacultyModulePreferences;
-

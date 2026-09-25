@@ -288,3 +288,6 @@ export const normalizeFacultyModulePreferences = normalizeTeacherModulePreferenc
 export const mergeFacultyFormTabsFromApi = mergeTeachersFormTabsFromApi;
 export const composeFacultySettings = composeTeachersSettings;
 export const splitFacultySettingsBlob = splitTeachersSettingsBlob;
+export const stripFacultyFieldConfigForPersist = stripTeacherFieldConfigForPersist;
+export const normalizeFacultySettings = normalizeTeachersSettings;
+

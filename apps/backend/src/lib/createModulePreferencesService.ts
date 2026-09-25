@@ -4,7 +4,7 @@ import { broadcastCollection } from './livePush.js';
 
 /**
  * Shared module-preferences load/save: tenant → load → normalize → upsert → broadcast.
- * Teachers/Students (and future person modules) use this as their thin adapter.
+ * Faculty/Students (and future person modules) use this as their thin adapter.
  */
 export function createModulePreferencesService<TPreferences>({
   broadcastKey,
