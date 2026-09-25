@@ -44,7 +44,7 @@ export function formatTeacherCustomFieldValue(
   field: TeacherCustomFieldDisplay,
   t: TranslationFunction,
 ): string | undefined {
-  const fieldValue = (teacher as unknown as Record<string, unknown>)[field.id];
+  const fieldValue = (teacher as Record<string, unknown>)[field.id];
   return formatTeacherFieldCellValue(fieldValue, {
     fieldType: field.type,
     booleanLabels: { yes: t("common.yes"), no: t("common.no") },

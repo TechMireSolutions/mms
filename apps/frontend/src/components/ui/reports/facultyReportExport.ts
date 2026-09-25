@@ -9,6 +9,6 @@ export async function resolveTeacherReportExportRows(input: {
   quickFilter?: TeachersQuickFilter;
   gender?: string;
 }): Promise<Record<string, unknown>[]> {
-  const source = (await fetchAllTeachersForQuery(input)) as unknown as Teacher[];
-  return source.map((teacher) => mapTeacherRow(teacher) as unknown as Record<string, unknown>);
+  const source = (await fetchAllTeachersForQuery(input)) as Teacher[];
+  return source.map((teacher) => ({ ...mapTeacherRow(teacher) }));
 }

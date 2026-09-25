@@ -36,10 +36,10 @@ export async function handleDuplicateCheck({
   }
   try {
     const result = await withTenant(String(request.tenant?.id), () =>
-      facultyUseCases.checkFacultyRegistrationDuplicate(body), { readOnly: false });
+      facultyUseCases.checkFacultyRegistrationDuplicate(body), { readOnly: true });
     return { status: 200 as const, body: result };
   } catch {
-    return { status: 500 as const, body: { type: 'database_error', message: 'Failed to check duplicate' } };
+    return { status: 500 as const, body: { type: 'server_error', message: 'Failed to check duplicate' } };
   }
 }
 
@@ -62,7 +62,7 @@ export async function handleNextEmployeeId({
       }), { readOnly: true });
     return { status: 200 as const, body: { employeeId } };
   } catch {
-    return { status: 500 as const, body: { type: 'database_error', message: 'Failed to compute next employee ID' } };
+    return { status: 500 as const, body: { type: 'server_error', message: 'Failed to compute next employee ID' } };
   }
 }
 
@@ -70,7 +70,7 @@ export async function handleMigrateEmployeeIds({
   request,
 }: ContractRouteArgs<typeof facultyContract['migrateEmployeeIds']>): Promise<ContractRouteResponse<typeof facultyContract['migrateEmployeeIds']>> {
   const user = request.user as User;
-  if (!roleHasPermission(user.role, FACULTY_MODULE_MANIFEST.permissions.setupWrite)) {
+  if (!canWriteCollection(user, 'faculty') || !roleHasPermission(user.role, FACULTY_MODULE_MANIFEST.permissions.setupWrite)) {
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
   try {
@@ -78,6 +78,6 @@ export async function handleMigrateEmployeeIds({
       facultyUseCases.migrateFacultyMissingEmployeeIds(), { readOnly: false });
     return { status: 200 as const, body: { success: true as const, ...result } };
   } catch {
-    return { status: 500 as const, body: { type: 'database_error', message: 'Failed to migrate employee IDs' } };
+    return { status: 500 as const, body: { type: 'server_error', message: 'Failed to migrate employee IDs' } };
   }
 }

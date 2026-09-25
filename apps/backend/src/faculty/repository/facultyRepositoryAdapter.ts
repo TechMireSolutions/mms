@@ -8,6 +8,7 @@ import {
   countSubordinatesBatch,
   findSubordinates,
   reassignSubordinates,
+  findAncestorChain,
 } from '../../db/repositories/facultyRepository.js';
 import {
   aggregateTeachersCommandMetrics,
@@ -54,8 +55,9 @@ function createFacultyRepository(): FacultyRepository {
     countSubordinates: (tenant, supervisorId) => countSubordinates(tenant, supervisorId),
     countSubordinatesBatch: (tenant, supervisorIds) => countSubordinatesBatch(tenant, supervisorIds),
     findSubordinates: (tenant, supervisorId) => findSubordinates(tenant, supervisorId),
-    reassignSubordinates: (tenant, oldSupervisorId, newSupervisorId) =>
-      reassignSubordinates(tenant, oldSupervisorId, newSupervisorId),
+    reassignSubordinates: (tenant, oldSupervisorId, newSupervisorId, txClient) =>
+      reassignSubordinates(tenant, oldSupervisorId, newSupervisorId, txClient),
+    findAncestorChain: (tenant, facultyId, maxDepth) => findAncestorChain(tenant, facultyId, maxDepth),
   };
 }
 

@@ -5,11 +5,9 @@ import {
   type FacultyDuplicateReason,
   type FacultyRecord,
   type FacultyCommandMetricsSnapshot,
-  facultyWidgetQueryFromWidget,
   type TeacherDuplicateCheckInput,
   type TeacherDuplicateReason,
   type TeachersCommandMetricsSnapshot,
-  teachersWidgetQueryFromWidget,
 } from '@mms/shared';
 import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -19,7 +17,6 @@ import { useQuery } from '@tanstack/react-query';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
 import {
   FACULTY_QUERY_KEY,
-  FACULTY_WIDGET_AGGREGATES_QUERY_KEY,
   type FacultyNextEmployeeIdParams,
   type FacultyWidgetAggregateWidgetInput,
   type TeacherNextEmployeeIdParams,
@@ -109,8 +106,11 @@ export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
   
   const query = useQuery({
     queryKey: [...FACULTY_QUERY_KEY, 'resolve', normalized.join(',')] as const,
-    queryFn: async () => {
-      const res = await apiContract.faculty.resolve({ body: { ids: normalized } });
+    queryFn: async ({ signal }) => {
+      const res = await apiContract.faculty.resolve({
+        body: { ids: normalized },
+        fetchOptions: { signal },
+      });
       const body = res.body as { faculty?: Faculty[]; teachers?: Faculty[] } | null;
       return body?.faculty ?? body?.teachers;
     },
@@ -170,47 +170,10 @@ export function useFacultyMetrics(options?: { enabled?: boolean }) {
 }
 export const useTeachersMetrics = useFacultyMetrics;
 
-const toWidgetQuery = facultyWidgetQueryFromWidget || teachersWidgetQueryFromWidget;
-
-export function useFacultyWidgetAggregates(
-  widgets: FacultyWidgetAggregateWidgetInput[],
-  options?: { enabled?: boolean },
-) {
-  const { isAuthenticated } = useAuth();
-  const enabled = options?.enabled ?? true;
-
-  const queries = (() =>
-      widgets
-        .filter((widget) => widget.collection === 'teachers' || widget.collection === 'faculty')
-        .map((widget) => toWidgetQuery(widget)))();
-
-  const querySignature = (() => {
-    return JSON.stringify(
-      [...queries]
-        .sort((a, b) => a.id.localeCompare(b.id))
-        .map((query) => ({
-          id: query.id,
-          target: query.targetField,
-          filter: query.filterValue,
-          filterOperator: query.filterOperator,
-          xAxis: query.xAxisField,
-        })),
-    );
-  })();
-
-  const query = useQuery({
-    queryKey: [...FACULTY_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async () => {
-      const res = await apiContract.faculty.widgetAggregates({ body: { widgets: queries } });
-      return (res.body as { results?: Record<string, { value?: number; totalCount?: number; chartData?: Array<{ name: string; value: number }> }> } | null)?.results ?? {};
-    },
-    enabled: isAuthenticated && enabled && queries.length > 0,
-    staleTime: 30_000,
-  });
-  
-  return { ...query, data: query.data ?? {} };
-}
-export const useTeachersWidgetAggregates = useFacultyWidgetAggregates;
+export {
+  useFacultyWidgetAggregates,
+  useTeachersWidgetAggregates,
+} from '@/tenant/features/faculty/hooks/useFacultyWidgetAggregates';
 
 /** One-shot employee-id backfill for active faculty missing one (Setup writers). */
 export async function migrateFacultyEmployeeIds(): Promise<{ updated: number }> {

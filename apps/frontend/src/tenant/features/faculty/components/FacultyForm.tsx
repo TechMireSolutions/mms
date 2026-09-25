@@ -1,54 +1,17 @@
-import React, { useState, useEffect, useMemo } from "react";
-import {
-  Award,
-  Briefcase,
-  FileText,
-  KeyRound,
-  Network,
-  School,
-  User,
-  type LucideIcon,
-} from "lucide-react";
+import React from "react";
+import { School } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import type { FacultyMember, Teacher } from "@mms/shared";
 import { TeacherFormTabContent } from "@/tenant/features/faculty/components/FacultyFormTabContent";
 import { useTeacherFormController } from "@/tenant/features/faculty/components/useFacultyFormController";
 import { TeacherFormFooter } from "@/tenant/features/faculty/components/FacultyFormFooter";
-import { focusTeacherValidationField } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
+import {
+  useFacultyFormTabs,
+  type FacultyFormTabKey,
+} from "@/tenant/features/faculty/components/facultyFormTabs";
 
-export type FacultyFormTabKey =
-  | "contact"
-  | "employment"
-  | "designation"
-  | "hierarchy"
-  | "account"
-  | "notes";
-
-export const FACULTY_FIELD_TAB_MAP: Record<string, FacultyFormTabKey> = {
-  contactId: "contact",
-  employeeId: "employment",
-  status: "employment",
-  department: "employment",
-  specialization: "employment",
-  qualification: "employment",
-  joinDate: "employment",
-  designation: "designation",
-  customDesignation: "designation",
-  designationId: "designation",
-  designationStartsOn: "designation",
-  reportingFacultyId: "hierarchy",
-  hierarchyRank: "hierarchy",
-  notes: "notes",
-  "user.role": "account",
-  "user.email": "account",
-  "user.password": "account",
-  "user.create": "account",
-  userPassword: "account",
-  userEmail: "account",
-  userRole: "account",
-  userId: "account",
-};
+export type { FacultyFormTabKey };
 
 export interface FacultyFormProps {
   faculty?: FacultyMember;
@@ -81,6 +44,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     fieldsMap,
     linkedContact,
     linkedTeacherContactIds,
+    linkedUser,
     userAccountDraft,
     setUserAccountDraft,
     idPrefix,
@@ -103,106 +67,12 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     hierarchyRankPresets,
   } = useTeacherFormController({ teacher, onClose, onSave });
 
-  const [activeTab, setActiveTab] = useState<FacultyFormTabKey>("contact");
-
-  const tabErrors = useMemo(() => {
-    const counts: Record<string, number> = {};
-    for (const [fieldId, errorMsg] of Object.entries(errors)) {
-      if (!errorMsg) continue;
-      const tabKey = FACULTY_FIELD_TAB_MAP[fieldId] || "employment";
-      counts[tabKey] = (counts[tabKey] || 0) + 1;
-    }
-    return counts;
-  }, [errors]);
-
-  const visibleTabs = useMemo(() => {
-    const list: Array<{
-      key: FacultyFormTabKey;
-      icon: LucideIcon;
-      label: string;
-      badge?: number;
-      tone?: "destructive";
-    }> = [
-      {
-        key: "contact",
-        icon: User,
-        label: t("faculty.form.tab.contact"),
-      },
-      {
-        key: "employment",
-        icon: Briefcase,
-        label: t("faculty.form.tab.employment"),
-      },
-    ];
-
-    if (isFieldEnabled("designation")) {
-      list.push({
-        key: "designation",
-        icon: Award,
-        label: t("faculty.form.tab.designation"),
-      });
-    }
-
-    if (isFieldEnabled("reportingFacultyId") || isFieldEnabled("hierarchyRank")) {
-      list.push({
-        key: "hierarchy",
-        icon: Network,
-        label: t("faculty.form.tab.hierarchy"),
-      });
-    }
-
-    list.push({
-      key: "account",
-      icon: KeyRound,
-      label: t("faculty.form.tab.account"),
-    });
-
-    if (isFieldEnabled("notes")) {
-      list.push({
-        key: "notes",
-        icon: FileText,
-        label: t("faculty.form.tab.notes"),
-      });
-    }
-
-    return list.map((item) => {
-      const errCount = tabErrors[item.key];
-      const hasErrors = Boolean(errCount && errCount > 0);
-      return {
-        ...item,
-        badge: hasErrors ? errCount : undefined,
-        tone: hasErrors ? ("destructive" as const) : undefined,
-      };
-    });
-  }, [isFieldEnabled, t, tabErrors]);
-
-  useEffect(() => {
-    if (!visibleTabs.some((tabItem) => tabItem.key === activeTab)) {
-      setActiveTab("contact");
-    }
-  }, [visibleTabs, activeTab]);
-
-  useEffect(() => {
-    const errorKeys = Object.keys(errors).filter((key) => Boolean(errors[key]));
-    if (errorKeys.length === 0) return;
-    const firstInvalidTab = visibleTabs.find((vt) => Boolean(tabErrors[vt.key] && tabErrors[vt.key] > 0));
-    if (firstInvalidTab && firstInvalidTab.key !== activeTab) {
-      setActiveTab(firstInvalidTab.key);
-    }
-  }, [errors, tabErrors, activeTab, visibleTabs]);
-
-  useEffect(() => {
-    const errorKeys = Object.keys(errors).filter((key) => Boolean(errors[key]));
-    if (errorKeys.length === 0) return;
-    const fieldForActiveTab = errorKeys.find(
-      (key) => (FACULTY_FIELD_TAB_MAP[key] || "employment") === activeTab,
-    );
-    if (!fieldForActiveTab) return;
-    const timer = setTimeout(() => {
-      focusTeacherValidationField(formInstanceId, fieldForActiveTab);
-    }, 60);
-    return () => clearTimeout(timer);
-  }, [activeTab, errors, formInstanceId]);
+  const { activeTab, setActiveTab, visibleTabs } = useFacultyFormTabs({
+    isFieldEnabled,
+    errors,
+    t,
+    formInstanceId,
+  });
 
   const onSaveWithTabFocus = async (options?: { keepOpen?: boolean }): Promise<void> => {
     await handleSave(options);
@@ -267,6 +137,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
           getFieldError={getFieldError}
           onDraftChange={updateDraft}
           linkedContact={linkedContact}
+          linkedUser={linkedUser}
           supervisorCandidates={supervisorCandidates}
           hierarchyRankPresets={hierarchyRankPresets}
         />

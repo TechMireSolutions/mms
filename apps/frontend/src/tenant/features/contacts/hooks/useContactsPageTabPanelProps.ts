@@ -7,6 +7,7 @@ import type { useContactsPageActions } from "@/tenant/features/contacts/hooks/us
 import type { useContactsPageOverlayState } from "@/tenant/features/contacts/hooks/useContactsPageOverlayState";
 import type { useContactsSelectionTargets } from "@/tenant/features/contacts/hooks/useContactsSelectionTargets";
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/contactTableTypes";
+import { buildContactsWorkTierProps } from "@/tenant/features/contacts/hooks/contactsWorkTierPropsBuilder";
 
 type Directory = ReturnType<typeof useContactsDirectory>;
 type Overlay = ReturnType<typeof useContactsPageOverlayState>;
@@ -55,32 +56,7 @@ export function useContactsPageTabPanelProps({
   handleBulkExport: () => void | Promise<void>;
   isExporting: boolean;
 }) {
-  const {
-    search,
-    setSearch,
-    filterGender,
-    setFilterGender,
-    quickFilter,
-    setQuickFilter,
-    sortField,
-    sortDir,
-    handleSort,
-    hasActiveFilters,
-    activeFilterCount,
-    clearFilters,
-    setViewingDeleted,
-    selected,
-    setSelected,
-    shownCount,
-    isWorkError,
-    isWorkLoading,
-    isWorkFetching,
-    refetchWork,
-    workContacts,
-    useServerWork,
-    workPageData,
-    setListPage,
-  } = directory;
+  const { setViewingDeleted, setSelected, refetchWork } = directory;
 
   const handleShowDeletedChange = useCallback(
     (next: boolean) => {
@@ -98,110 +74,60 @@ export function useContactsPageTabPanelProps({
     void refetchWork();
   }, [refetchWork]);
 
-  return useMemo(
-    () => ({
-      workTierProps: {
+  const workTierProps = useMemo(
+    () =>
+      buildContactsWorkTierProps({
         effectiveTab,
-        search,
-        onSearchChange: setSearch,
-        filterGender,
-        onGenderChange: setFilterGender,
-        quickFilter,
-        onQuickFilterChange: setQuickFilter,
-        sortField,
-        sortDir,
-        onSort: handleSort,
-        hasActiveFilters,
-        activeFilterCount,
-        onClearFilters: clearFilters,
-        viewingDeleted,
-        onShowDeletedChange: handleShowDeletedChange,
-        canViewDeleted: canDelete,
-        viewMode: overlay.viewMode,
-        onViewModeChange: overlay.setViewMode,
-        shownCount,
-        selected,
-        onClearSelection: handleClearSelection,
+        directory,
+        overlay,
+        messaging,
+        actions,
         selectedTargets,
+        viewingDeleted,
         bulkActions,
-        canWriteMessaging: messaging.canWriteMessaging,
         canExport,
+        canWrite,
         canDelete,
-        onWhatsApp: messaging.handleWhatsApp,
-        onSms: messaging.handleSms,
-        onEmail: messaging.handleEmail,
-        onBulkExport: handleBulkExport,
-        isExporting,
-        onRequestBulkDelete: actions.requestBulkDelete,
-        onRequestBulkRestore: actions.requestBulkRestore,
-        onBulkTag: actions.handleBulkTag,
-        isWorkError,
-        isWorkLoading,
-        isWorkFetching,
-        onRetryWork: handleRetryWork,
-        workContacts,
         tableColumns,
         commonDirectoryProps,
         tableProps,
-        useServerWork,
-        workPageData,
-        onPageChange: setListPage,
-        canWrite,
-      },
-      setupTierProps: {
-        canWrite,
-        canEditSetup,
-        onImport: actions.handleImport,
-      },
-    }),
+        handleBulkExport,
+        isExporting,
+        handleShowDeletedChange,
+        handleClearSelection,
+        handleRetryWork,
+      }),
     [
       effectiveTab,
-      search,
-      setSearch,
-      filterGender,
-      setFilterGender,
-      quickFilter,
-      setQuickFilter,
-      sortField,
-      sortDir,
-      handleSort,
-      hasActiveFilters,
-      activeFilterCount,
-      clearFilters,
-      viewingDeleted,
-      handleShowDeletedChange,
-      canDelete,
-      overlay.viewMode,
-      overlay.setViewMode,
-      shownCount,
-      selected,
-      handleClearSelection,
+      directory,
+      overlay,
+      messaging,
+      actions,
       selectedTargets,
+      viewingDeleted,
       bulkActions,
-      messaging.canWriteMessaging,
       canExport,
-      messaging.handleWhatsApp,
-      messaging.handleSms,
-      messaging.handleEmail,
-      handleBulkExport,
-      isExporting,
-      actions.requestBulkDelete,
-      actions.requestBulkRestore,
-      actions.handleBulkTag,
-      actions.handleImport,
-      isWorkError,
-      isWorkLoading,
-      isWorkFetching,
-      handleRetryWork,
-      workContacts,
+      canWrite,
+      canDelete,
       tableColumns,
       commonDirectoryProps,
       tableProps,
-      useServerWork,
-      workPageData,
-      setListPage,
-      canWrite,
-      canEditSetup,
+      handleBulkExport,
+      isExporting,
+      handleShowDeletedChange,
+      handleClearSelection,
+      handleRetryWork,
     ],
   );
+
+  const setupTierProps = useMemo(
+    () => ({
+      canWrite,
+      canEditSetup,
+      onImport: actions.handleImport,
+    }),
+    [canWrite, canEditSetup, actions.handleImport],
+  );
+
+  return { workTierProps, setupTierProps };
 }

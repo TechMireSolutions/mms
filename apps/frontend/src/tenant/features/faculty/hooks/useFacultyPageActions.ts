@@ -54,7 +54,7 @@ export function useFacultyPageActions({
     if (effectiveEditTarget) {
       const res = await updateFaculty.mutateAsync({
         params: { id: String(facultyToSave.id) },
-        body: facultyToSave as unknown as FacultyRecord,
+        body: facultyToSave as FacultyRecord,
       });
       notify.success(t("teachers.toast.updated"));
       const raw = res.body as unknown;
@@ -66,7 +66,7 @@ export function useFacultyPageActions({
       return raw as Faculty;
     } else {
       const res = await createFaculty.mutateAsync({
-        body: facultyToSave as unknown as FacultyRecord,
+        body: facultyToSave as FacultyRecord,
       });
       notify.success(t("teachers.toast.created"));
       const raw = res.body as unknown;

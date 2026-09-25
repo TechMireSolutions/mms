@@ -46,3 +46,44 @@ describe('mapTeacherRow', () => {
     expect(row.joinDate).toBe('—');
   });
 });
+
+describe('computeFacultyWorkload and summarizeFacultyWorkload', () => {
+  it('aggregates workload across classes and sessions and sorts descending by totalStudents', async () => {
+    const { computeFacultyWorkload, summarizeFacultyWorkload } = await import('./facultyReportMetrics');
+    const sessions = [
+      {
+        id: 's1',
+        classes: [
+          { id: 'c1', enrolled: 15, facultyId: 'f1', facultyName: 'Sheikh Ali' },
+          { id: 'c2', enrolled: 10, facultyId: 'f2', facultyName: 'Sheikh Bilal' },
+        ],
+      },
+      {
+        id: 's2',
+        classes: [
+          { id: 'c3', enrolled: 20, facultyId: 'f1', facultyName: 'Sheikh Ali' },
+        ],
+      },
+    ];
+
+    const workload = computeFacultyWorkload(
+      sessions,
+      (_id, name) => name || 'Unassigned',
+    );
+
+    expect(workload).toHaveLength(2);
+    expect(workload[0].faculty).toBe('Sheikh Ali');
+    expect(workload[0].totalStudents).toBe(35);
+    expect(workload[0].classes).toBe(2);
+    expect(workload[0].sessions).toBe(2);
+
+    expect(workload[1].faculty).toBe('Sheikh Bilal');
+    expect(workload[1].totalStudents).toBe(10);
+
+    const summary = summarizeFacultyWorkload(workload);
+    expect(summary.totalFaculty).toBe(2);
+    expect(summary.totalStudents).toBe(45);
+    expect(summary.totalClasses).toBe(3);
+    expect(summary.avgStudents).toBe('22.5');
+  });
+});

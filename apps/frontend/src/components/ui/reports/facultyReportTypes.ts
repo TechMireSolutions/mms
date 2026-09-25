@@ -3,7 +3,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
 export type TeacherReportSubTab = "roster" | "workload";
 
-export interface ReportTeacher {
+export interface ReportTeacher extends Record<string, unknown> {
   id: string;
   name: string;
   employeeId: string;
@@ -14,7 +14,7 @@ export interface ReportTeacher {
   gender: string;
 }
 
-export interface FacultyWorkloadItem {
+export interface FacultyWorkloadItem extends Record<string, unknown> {
   faculty: string;
   classes: number;
   sessions: number;

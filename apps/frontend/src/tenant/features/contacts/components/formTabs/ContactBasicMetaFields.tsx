@@ -33,9 +33,11 @@ export function ContactBasicMetaFields({
   const dobError = getFieldError("dob");
   const tagError = getFieldError("tag");
 
+  const draftTags = contactDraft.tags;
+  const draftTag = contactDraft.tag;
   const currentTags = useMemo(
-    () => getContactTags(contactDraft),
-    [contactDraft.tags, contactDraft.tag],
+    () => getContactTags({ tags: draftTags, tag: draftTag }),
+    [draftTags, draftTag],
   );
 
   return (

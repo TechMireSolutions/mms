@@ -1,21 +1,20 @@
 import React, { type ReactNode } from "react";
-import { Phone, MessageCircle, MessageSquare } from "lucide-react";
+import { Phone } from "lucide-react";
 import {
   sanitizePhoneForSms,
   sanitizePhoneForTel,
   sanitizePhoneForWhatsApp,
   formatPhoneWithCountryCode,
   parsePhoneNumber,
+  APP_TRANSLATIONS_EN,
+  type AppTranslationKey,
 } from "@mms/shared";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import { MESSAGING_ICON_BTN_TONES } from "@/components/ui/messagingActionStyles";
 import { cn } from "@/lib/utils";
-import {
-  ActionCopyButton,
-  ActionIconButton,
-  type ContactActionVariant,
-} from "./contactActionShared";
+import { useTranslation } from "@/hooks/useTranslation";
+import { type ContactActionVariant } from "./contactActionShared";
+import { ContactPhoneActionButtons } from "./ContactPhoneActionButtons";
 
 export interface ContactPhoneActionProps {
   /** Raw phone number or E.164 phone string */
@@ -82,6 +81,7 @@ export const ContactPhoneAction = (function ContactPhoneAction({
   actionsClassName,
   labels,
 }: ContactPhoneActionProps): React.JSX.Element | null {
+  const { t } = useTranslation();
   const rawPhone = (phone || "").trim();
 
   if (!rawPhone) {
@@ -104,56 +104,38 @@ export const ContactPhoneAction = (function ContactPhoneAction({
   const canCopy = showCopy && Boolean(formattedPhone);
 
   const targetName = name ? ` (${name})` : "";
-  const callLabel = labels?.call ? `${labels.call}${targetName}` : `Call ${formattedPhone}${targetName}`;
-  const smsLabel = labels?.sms ? `${labels.sms}${targetName}` : `SMS ${formattedPhone}${targetName}`;
-  const waLabel = labels?.whatsapp ? `${labels.whatsapp}${targetName}` : `WhatsApp ${formattedPhone}${targetName}`;
+  const resolveVerb = (k: AppTranslationKey, fallback: string) => {
+    const val = t(k);
+    return val && val !== k ? val : (APP_TRANSLATIONS_EN[k] ?? fallback);
+  };
+  const callLabel = labels?.call ? `${labels.call}${targetName}` : `${resolveVerb("contacts.detail.call", "Call")} ${formattedPhone}${targetName}`;
+  const smsLabel = labels?.sms ? `${labels.sms}${targetName}` : `${resolveVerb("contacts.sms", "SMS")} ${formattedPhone}${targetName}`;
+  const waLabel = labels?.whatsapp ? `${labels.whatsapp}${targetName}` : `${resolveVerb("contacts.whatsapp", "WhatsApp")} ${formattedPhone}${targetName}`;
+  const effectiveLabels = {
+    copy: labels?.copy ?? resolveVerb("contacts.table.copy", "Copy"),
+    copied: labels?.copied ?? resolveVerb("contacts.table.copied", "Copied!"),
+  };
 
   const actionsNode = (
-    <div
-      className={cn("flex items-center gap-1", actionsClassName)}
-      onClick={(e) => e.stopPropagation()}
-    >
-      {canCall ? (
-        <ActionIconButton
-          icon={Phone}
-          label={callLabel}
-          tooltipText={callLabel}
-          href={onCall ? undefined : telHref}
-          toneClass={MESSAGING_ICON_BTN_TONES.call}
-          onClick={onCall}
-        />
-      ) : null}
-      {canWa ? (
-        <ActionIconButton
-          icon={MessageCircle}
-          label={waLabel}
-          tooltipText={waLabel}
-          href={onWhatsApp ? undefined : waHref}
-          target="_blank"
-          rel="noopener noreferrer"
-          toneClass={MESSAGING_ICON_BTN_TONES.whatsapp}
-          onClick={onWhatsApp}
-        />
-      ) : null}
-      {canSms ? (
-        <ActionIconButton
-          icon={MessageSquare}
-          label={smsLabel}
-          tooltipText={smsLabel}
-          href={onSms ? undefined : smsHref}
-          toneClass={MESSAGING_ICON_BTN_TONES.sms}
-          onClick={onSms}
-        />
-      ) : null}
-      {canCopy ? (
-        <ActionCopyButton
-          text={formattedPhone}
-          copyToastMessage={copyToast}
-          tooltipCopyText={labels?.copy}
-          tooltipCopiedText={labels?.copied}
-        />
-      ) : null}
-    </div>
+    <ContactPhoneActionButtons
+      canCall={Boolean(canCall)}
+      canWa={Boolean(canWa)}
+      canSms={Boolean(canSms)}
+      canCopy={Boolean(canCopy)}
+      callLabel={callLabel}
+      waLabel={waLabel}
+      smsLabel={smsLabel}
+      telHref={telHref}
+      waHref={waHref}
+      smsHref={smsHref}
+      onCall={onCall}
+      onWhatsApp={onWhatsApp}
+      onSms={onSms}
+      formattedPhone={formattedPhone}
+      copyToast={copyToast}
+      labels={effectiveLabels}
+      actionsClassName={actionsClassName}
+    />
   );
 
   if (variant === "actions-only") {

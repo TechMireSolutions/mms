@@ -144,7 +144,8 @@ export function resolveAllContactEmails(
 
   if (Array.isArray(contact.emails) && contact.emails.length > 0) {
     for (const e of contact.emails) {
-      const addr = (e.address || (e as unknown as Record<string, unknown>).email || "").toString().trim();
+      const legacyEmail = "email" in e && typeof e.email === "string" ? e.email : "";
+      const addr = (e.address || legacyEmail || "").toString().trim();
       if (!addr || seen.has(addr.toLowerCase())) continue;
       seen.add(addr.toLowerCase());
       result.push({

@@ -1,6 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import { withTenant } from '../../../db/tenant-context.js';
-import { canDeleteCollection, canWriteCollection, canReadCollection } from '../../../services/rbacService.js';
+import { canDeleteCollection, canReadCollection } from '../../../services/rbacService.js';
 import {
   isQueryFlagTrue,
   type Teacher,
@@ -11,9 +11,7 @@ import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
 import { replyValidationError } from '../../../lib/zodRequest.js';
 import { facultyUseCases } from '../../../faculty/use-cases/facultyUseCases.js';
-import { validateFacultyDynamic } from '../../../services/facultyValidationService.js';
 import {
-  auditFaculty,
   sanitizeOneFacultyForUser,
   sanitizeFacultyForUser,
   handleDuplicateCheck,
@@ -27,11 +25,23 @@ import {
   handleSaveDesignationAssignment,
   handleDeleteDesignationAssignment,
 } from './facultyDesignationRouteHandlers.js';
+import {
+  handleCreateFaculty,
+  handleUpdateFaculty,
+  handleDeleteFaculty,
+  handleBulkStatus,
+  handleBulkSpecialization,
+} from './facultyMutationRouteHandlers.js';
+import { authenticateTenant } from '../../../middleware/authenticate.js';
 
 const s = initServer();
 
 /** Main faculty CRUD — @ts-rest contract router. */
 export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
+  // M-1 fix: explicit guard in case @ts-rest s.plugin() creates an encapsulated scope
+  // that would bypass the parent preHandler hooks.
+  fastify.addHook('preHandler', authenticateTenant);
+
   const router = s.router(facultyContract, {
     list: async ({ query, request }: ContractRouteArgs<typeof facultyContract['list']>): Promise<ContractRouteResponse<typeof facultyContract['list']>> => {
       const user = request.user as User;
@@ -55,7 +65,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
           },
         };
       } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list faculty' } };
+        return { status: 500 as const, body: { type: 'server_error', message: 'Failed to list faculty' } };
       }
     },
 
@@ -83,127 +93,13 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
           },
         };
       } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load faculty member' } };
+        return { status: 500 as const, body: { type: 'server_error', message: 'Failed to load faculty member' } };
       }
     },
 
-    create: async ({ body, request }: ContractRouteArgs<typeof facultyContract['create']>): Promise<ContractRouteResponse<typeof facultyContract['create']>> => {
-      const user = request.user as User;
-      if (!canWriteCollection(user, 'faculty')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      const lang = (request.headers['accept-language'] as string) || 'en';
-      const tenant = request.tenant?.id;
-      if (tenant) {
-        try {
-          await validateFacultyDynamic(tenant, body as Record<string, unknown>, lang);
-        } catch (error) {
-          return {
-            status: 400 as const,
-            body: { type: 'validation_error', message: error instanceof Error ? error.message : String(error) },
-          };
-        }
-      }
-      try {
-        const result = await withTenant(
-          String(tenant),
-          () => facultyUseCases.createFaculty(body, {
-            canRestore: canDeleteCollection(user, 'faculty'),
-          }),
-          { readOnly: false },
-        );
-        await auditFaculty(user, 'faculty.create', `Created faculty member ${result.record.id}`, String(result.record.id));
-        const sanitized = await sanitizeOneFacultyForUser(result.record as Teacher, user);
-        return result.restored
-          ? {
-              status: 200 as const,
-              body: { success: true as const, faculty: sanitized, teacher: sanitized },
-            }
-          : {
-              status: 201 as const,
-              body: { success: true as const, faculty: sanitized, teacher: sanitized },
-            };
-      } catch (error: unknown) {
-        request.log.error({ err: error }, 'Failed to create faculty member');
-        if ((error as { statusCode?: number }).statusCode === 400) {
-          return { status: 400 as const, body: { type: 'validation_error', message: error instanceof Error ? error.message : 'Invalid request' } };
-        }
-        if ((error as { statusCode?: number }).statusCode === 403) {
-          return { status: 403 as const, body: { type: 'forbidden', message: error instanceof Error ? error.message : 'Forbidden' } };
-        }
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to create faculty member' } };
-      }
-    },
-
-    update: async ({ params: { id }, body, request }: ContractRouteArgs<typeof facultyContract['update']>): Promise<ContractRouteResponse<typeof facultyContract['update']>> => {
-      const user = request.user as User;
-      if (!canWriteCollection(user, 'faculty')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      const payload = { ...(body as Record<string, unknown>), id };
-      const lang = (request.headers['accept-language'] as string) || 'en';
-      const tenant = request.tenant?.id;
-      if (tenant) {
-        try {
-          await validateFacultyDynamic(tenant, payload, lang);
-        } catch (error) {
-          return {
-            status: 400 as const,
-            body: { type: 'validation_error', message: error instanceof Error ? error.message : String(error) },
-          };
-        }
-      }
-      try {
-        const updated = await withTenant(
-          String(tenant),
-          () => facultyUseCases.updateFacultyById(id, body),
-          { readOnly: false },
-        );
-        if (!updated) {
-          return { status: 404 as const, body: { type: 'not_found', message: 'Faculty member not found' } };
-        }
-        await auditFaculty(user, 'faculty.update', `Updated faculty member ${id}`, id);
-        const sanitized = await sanitizeOneFacultyForUser(updated as Teacher, user);
-        return {
-          status: 200 as const,
-          body: { success: true as const, faculty: sanitized, teacher: sanitized },
-        };
-      } catch (error: unknown) {
-        request.log.error({ err: error }, 'Failed to update faculty member');
-        if ((error as { statusCode?: number }).statusCode === 400) {
-          return { status: 400 as const, body: { type: 'validation_error', message: error instanceof Error ? error.message : 'Invalid request' } };
-        }
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to update faculty member' } };
-      }
-    },
-
-    delete: async ({ params: { id }, body, request }: ContractRouteArgs<typeof facultyContract['delete']>): Promise<ContractRouteResponse<typeof facultyContract['delete']>> => {
-      const user = request.user as User;
-      if (!canDeleteCollection(user, 'faculty')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const reason = body?.deletionReason;
-        const reassignSubordinatesTo = body?.reassignSubordinatesTo;
-        const deleted = await withTenant(
-          String(request.tenant?.id),
-          () => reassignSubordinatesTo
-            ? facultyUseCases.deleteFacultyById(id, String(user.id), reason, reassignSubordinatesTo)
-            : facultyUseCases.deleteFacultyById(id, String(user.id), reason),
-          { readOnly: false },
-        );
-        if (!deleted) return { status: 404 as const, body: { type: 'not_found', message: 'Faculty member not found' } };
-        const reasonNote = reason?.trim() ? ` — ${reason.trim()}` : '';
-        await auditFaculty(user, 'faculty.soft_delete', `Soft-deleted faculty member ${id}${reasonNote}`, id);
-        return { status: 200 as const, body: { success: true as const } };
-      } catch (error: unknown) {
-        request.log.error({ err: error }, 'Failed to delete faculty member');
-        if ((error as { statusCode?: number }).statusCode === 409) {
-          return { status: 409 as const, body: { type: 'conflict', message: error instanceof Error ? error.message : 'Subordinate reassignment required' } };
-        }
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete faculty member' } };
-      }
-    },
+    create: handleCreateFaculty,
+    update: handleUpdateFaculty,
+    delete: handleDeleteFaculty,
 
     hierarchyTree: async ({ request }: ContractRouteArgs<typeof facultyContract['hierarchyTree']>): Promise<ContractRouteResponse<typeof facultyContract['hierarchyTree']>> => {
       const user = request.user as User;
@@ -215,53 +111,15 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
         return { status: 200 as const, body: result };
       } catch (error: unknown) {
         request.log.error({ err: error }, 'Failed to load faculty hierarchy tree');
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load faculty hierarchy tree' } };
+        if ((error as { statusCode?: number }).statusCode === 400) {
+          return { status: 400 as const, body: { type: 'validation_error', message: error instanceof Error ? error.message : 'Invalid request' } };
+        }
+        return { status: 500 as const, body: { type: 'server_error', message: 'Failed to load faculty hierarchy tree' } };
       }
     },
 
-    bulkStatus: async ({ body, request }: ContractRouteArgs<typeof facultyContract['bulkStatus']>): Promise<ContractRouteResponse<typeof facultyContract['bulkStatus']>> => {
-      const user = request.user as User;
-      if (!canWriteCollection(user, 'faculty')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const result = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.bulkUpdateFacultyStatus(
-            body.ids.map(String),
-            body.status,
-          ), { readOnly: false });
-        await auditFaculty(
-          user,
-          'faculty.bulk_status',
-          `Updated status to ${body.status} for ${result.succeeded} faculty member(s); ${result.failed} failed`,
-        );
-        return { status: 200 as const, body: { success: true as const, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update faculty status' } };
-      }
-    },
-
-    bulkSpecialization: async ({ body, request }: ContractRouteArgs<typeof facultyContract['bulkSpecialization']>): Promise<ContractRouteResponse<typeof facultyContract['bulkSpecialization']>> => {
-      const user = request.user as User;
-      if (!canWriteCollection(user, 'faculty')) {
-        return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-      }
-      try {
-        const result = await withTenant(String(request.tenant?.id), () =>
-          facultyUseCases.bulkUpdateFacultySpecialization(
-            body.ids.map(String),
-            body.specialization,
-          ), { readOnly: false });
-        await auditFaculty(
-          user,
-          'faculty.bulk_specialization',
-          `Updated specialization to ${body.specialization} for ${result.succeeded} faculty member(s); ${result.failed} failed`,
-        );
-        return { status: 200 as const, body: { success: true as const, ...result } };
-      } catch {
-        return { status: 500 as const, body: { type: 'database_error', message: 'Failed to bulk update faculty specialization' } };
-      }
-    },
+    bulkStatus: handleBulkStatus,
+    bulkSpecialization: handleBulkSpecialization,
 
     duplicateCheck: handleDuplicateCheck,
     nextEmployeeId: handleNextEmployeeId,

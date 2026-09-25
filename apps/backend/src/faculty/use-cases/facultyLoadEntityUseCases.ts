@@ -7,6 +7,7 @@ import { getRequestTenant } from '../../lib/tenantContext.js';
 import type { TeachersRepository } from '../repository/facultyRepository.js';
 import { teachersRepository } from '../repository/facultyRepositoryAdapter.js';
 import { hydrateTeachersFromContacts } from './facultyHydrateUseCases.js';
+import { ValidationError } from '../../lib/httpErrors.js';
 
 /** Teacher count via SQL — avoids loading every row (active by default). */
 export async function countTeachers(
@@ -79,6 +80,12 @@ export async function loadHierarchyTree(
   if (!tenant) return { nodes: [] };
 
   const pageResult = await repo.listPage(tenant, { limit: 1000 });
+  if (pageResult.total > 1000) {
+    throw new ValidationError(
+      `Faculty hierarchy tree is limited to 1000 members but this workspace has ${pageResult.total}. ` +
+      `Use the paginated faculty list endpoint instead.`,
+    );
+  }
   const hydrated = await hydrateTeachersFromContacts(tenant, pageResult.teachers);
 
   const nodeMap = new Map<string, import('@mms/shared').FacultyHierarchyNode>();

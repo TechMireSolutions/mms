@@ -44,7 +44,11 @@ export function ContactRelationshipTab({
   removeSubListItem,
 }: ContactRelationshipTabProps): React.JSX.Element {
   const { t } = useTranslation();
-  const links = contactDraft.relationshipContacts || [];
+  const relationshipContacts = contactDraft.relationshipContacts;
+  const links = useMemo(
+    () => relationshipContacts ?? [],
+    [relationshipContacts],
+  );
   const showLinkedContact = isFieldEnabled("relationship", "contactId");
   const showRelationshipType = isFieldEnabled("relationship", "relationship");
   const allowAdd = resolveSubListAllowAdd([showLinkedContact, showRelationshipType]);

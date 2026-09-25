@@ -36,7 +36,6 @@ import {
 import { useSessionLookupsQuery } from '@/tenant/features/sessions/hooks/useSessionLookups';
 import { useAttendanceLookupsQuery } from '@/tenant/features/attendance/hooks/useAttendanceLookups';
 import { useStudentLookupsQuery } from '@/tenant/features/students/hooks/useStudentLookups';
-import { useTeacherLookupsQuery } from '@/tenant/features/faculty/hooks/useFacultyLookups';
 import {
   useComposedUsersSettings,
   useUserPreferencesMutation,
@@ -44,6 +43,7 @@ import {
 import {
   useComposedFacultySettings,
   useFacultyPreferencesMutation,
+  useTeacherLookupsQuery,
 } from '@/tenant/hooks/collections/faculty';
 import {
   useComposedStudentsSettings,

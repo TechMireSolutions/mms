@@ -47,10 +47,11 @@ export function ContactEducationEntryCard({
   onRemoveEducation,
 }: ContactEducationEntryCardProps): React.JSX.Element {
   const { t } = useTranslation();
-  const institutionError = getListItemError("education", "institution", idx);
-  const fieldOfStudyError = getListItemError("education", "fieldOfStudy", idx);
-  const yearError = getListItemError("education", "year", idx);
-  const gradeError = getListItemError("education", "grade", idx);
+  const getErr = (field: string) => getListItemError("education", field, idx);
+  const institutionError = getErr("institution");
+  const fieldOfStudyError = getErr("fieldOfStudy");
+  const yearError = getErr("year");
+  const gradeError = getErr("grade");
 
   return (
     <ListFieldCard

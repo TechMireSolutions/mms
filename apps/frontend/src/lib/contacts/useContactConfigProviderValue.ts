@@ -3,20 +3,15 @@ import {
   applyRelationshipOptionOrder,
   deriveRelationshipOptionsFromPairs,
   resolveRelationshipPairs,
-  DEFAULT_COLUMN_REGISTRY,
-  DEFAULT_FORM_TABS,
   normalizeContactPreferences,
   INITIAL_FIELD_SEED,
-  syncContactColumnRegistryWithFields,
   resolveContactEnabledTabIds,
-  CONTACTS_MODULE_MANIFEST,
-  type ColumnRegistryEntry,
   type FieldDefinition,
 } from "@mms/shared";
 import type { ContactConfigContextType } from "@/lib/contacts/contactConfigContextTypes";
 import type { ContactConfigExtras } from "@/lib/contacts/useContactConfigTypes";
 import { getFallbackCountryCode } from "@/lib/contacts/contactI18n";
-import { useUiPreference } from "@/lib/useUiStateStore";
+import { useContactConfigColumnLayout } from "@/lib/contacts/useContactConfigColumnLayout";
 
 type ContactConfigProviderInput = Partial<ContactConfigExtras> & {
   enabledTabs?: string[];
@@ -85,63 +80,24 @@ export function useContactConfigProviderValue(
 
   const prefs = React.useMemo(() => normalizeContactPreferences(rawPrefs), [rawPrefs]);
 
-  const prefKey = `${CONTACTS_MODULE_MANIFEST.moduleId}.table.columns`;
-  const [userOverlayRaw, setUserOverlayRaw] = useUiPreference<ColumnRegistryEntry[] | null>(prefKey, null);
+  const {
+    syncedColumnRegistry,
+    availableColumns,
+    visibleColumns,
+    updateUserColumnLayout,
+    getColumnWidth,
+    setColumnWidth,
+    isColumnVisible,
+  } = useContactConfigColumnLayout({
+    baseColumnRegistry: config?.columnRegistry,
+    resolvedFields,
+    enabledTabs,
+  });
 
-  const columnRegistry = React.useMemo(() => {
-    if (userOverlayRaw && userOverlayRaw.length > 0) {
-      return userOverlayRaw;
-    }
-    return config?.columnRegistry?.length ? config.columnRegistry : DEFAULT_COLUMN_REGISTRY;
-  }, [userOverlayRaw, config?.columnRegistry]);
-
-  const syncedColumnRegistry = React.useMemo(() => {
-    return syncContactColumnRegistryWithFields(
-      columnRegistry,
-      resolvedFields,
-      enabledTabs.length > 0 ? enabledTabs : DEFAULT_FORM_TABS.filter(t => t.enabled).map(t => t.key)
-    );
-  }, [columnRegistry, resolvedFields, enabledTabs]);
-
-  const updateUserColumnLayout = React.useCallback((layout: ColumnRegistryEntry[]) => {
-    setUserOverlayRaw(layout);
-  }, [setUserOverlayRaw]);
-
-  const getColumnWidth = React.useCallback((key: string) => {
-    return syncedColumnRegistry.find((c) => c.key === key)?.width;
-  }, [syncedColumnRegistry]);
-
-  const setColumnWidth = React.useCallback((key: string, width: number) => {
-    setUserOverlayRaw(
-      columnRegistry.map((c: ColumnRegistryEntry) => (c.key === key ? { ...c, width } : c)),
-    );
-  }, [columnRegistry, setUserOverlayRaw]);
-
-  const isColumnVisible = React.useCallback((key: string) => {
-    return syncedColumnRegistry.find((c) => c.key === key)?.enabled ?? false;
-  }, [syncedColumnRegistry]);
-
-  const availableColumns = React.useMemo(() => {
-    return syncedColumnRegistry.map((entry) => ({
-      id: entry.key,
-      label: entry.label,
-      sortField: entry.sortField,
-      width: entry.width,
-    }));
-  }, [syncedColumnRegistry]);
-
-  const visibleColumns = React.useMemo(() => {
-    return syncedColumnRegistry
-      .filter((entry) => entry.enabled)
-      .map((entry) => ({
-        id: entry.key,
-        label: entry.label,
-        sortField: entry.sortField,
-        width: entry.width,
-      }));
-  }, [syncedColumnRegistry]);
-
-  const defaultPhoneCountryCode = React.useMemo(() => getFallbackCountryCode(prefs, countryCodesMap, countryCodes), [prefs, countryCodesMap, countryCodes]);
+  const defaultPhoneCountryCode = React.useMemo(
+    () => getFallbackCountryCode(prefs, countryCodesMap, countryCodes),
+    [prefs, countryCodesMap, countryCodes],
+  );
 
   /** Form Relationship-type dropdown — fixed system catalog (Parent/Child, …). */
   const resolvedRelationships = React.useMemo(() => {

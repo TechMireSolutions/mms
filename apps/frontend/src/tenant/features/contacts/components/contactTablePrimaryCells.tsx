@@ -31,7 +31,7 @@ export function renderContactNameCell({
   contact,
   displayName,
   showArchived,
-  isSelected,
+  isSelected: _isSelected,
   t,
   onView,
 }: RenderContactNameCellParams): React.JSX.Element {
@@ -81,7 +81,7 @@ export function renderContactPhoneCell({
   prefs,
   countryCodesMap,
   countryCodes,
-  widthStyle,
+  widthStyle: _widthStyle,
   t,
   onWhatsApp,
 }: RenderContactPhoneCellParams): React.JSX.Element {
@@ -126,7 +126,7 @@ export interface RenderContactEmailCellParams {
 
 export function renderContactEmailCell({
   contact,
-  widthStyle,
+  widthStyle: _widthStyle,
   t,
 }: RenderContactEmailCellParams): React.JSX.Element {
   const allEmails = resolveAllContactEmails(contact);

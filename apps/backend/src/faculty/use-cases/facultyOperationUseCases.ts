@@ -36,6 +36,7 @@ export async function bulkUpdateTeacherStatus(
 
   const succeeded = await repo.bulkUpdateStatusSql(tenant, uniqueIds, status);
   if (succeeded > 0) {
+    await broadcastCollection('faculty');
     await broadcastCollection('teachers');
   }
   return { succeeded, failed: uniqueIds.length - succeeded };
@@ -54,6 +55,7 @@ export async function bulkUpdateTeacherSpecialization(
 
   const succeeded = await repo.bulkUpdateSpecializationSql(tenant, uniqueIds, specialization);
   if (succeeded > 0) {
+    await broadcastCollection('faculty');
     await broadcastCollection('teachers');
   }
   return { succeeded, failed: uniqueIds.length - succeeded };
@@ -112,12 +114,18 @@ export async function computeNextTeacherEmployeeIdForSettings(
 
   if (tenant) {
     let attempts = 0;
-    while (attempts < 100) {
+    while (attempts < 10) {
       const conflict = await repo.findRegistrationConflict(tenant, { employeeId: candidateId });
       if (conflict !== 'employeeId') break;
       candidateSeq += 1;
       candidateId = formatTeacherEmployeeId(candidateSeq, settings, now);
       attempts += 1;
+    }
+    if (attempts === 10) {
+      throw new Error(
+        `Cannot generate a unique employee ID after 10 attempts. ` +
+        `Check the prefix ("${settings.idPrefix}") and starting sequence configuration.`,
+      );
     }
   }
 
@@ -146,6 +154,7 @@ export async function migrateTeachersMissingEmployeeIds(
     updated += 1;
   }
 
+  await broadcastCollection('faculty');
   await broadcastCollection('teachers');
   return { updated };
 }

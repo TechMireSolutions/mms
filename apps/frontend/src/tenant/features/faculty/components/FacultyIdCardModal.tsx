@@ -156,7 +156,7 @@ export function TeacherIdCardModal({
                 {/* Footer */}
                 <div className="flex items-center justify-between border-t border-border/40 pt-2 mt-3 text-4xs text-muted-foreground">
                   <div className="flex items-center gap-1 font-mono tracking-widest text-4xs uppercase">
-                    <span>ID: {String(teacher.id).slice(0, 10)}</span>
+                    <span>{t("teachers.idCard.idLabel")}: {String(teacher.id).slice(0, 10)}</span>
                   </div>
                   <div>
                     <span>{t("teachers.idCard.issueDate")}: {formatDate(new Date())}</span>

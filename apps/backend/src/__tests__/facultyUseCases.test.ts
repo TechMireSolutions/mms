@@ -34,6 +34,10 @@ vi.mock('../faculty/use-cases/facultyPreferencesService.js', () => ({
   loadFacultyModulePreferences: (...args: unknown[]) => mockLoadTeacherModulePreferences(...args),
 }));
 
+vi.mock('../services/outboxEventService.js', () => ({
+  emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
 import { createTeachersUseCases } from '../faculty/use-cases/facultyUseCases.js';
 
 function fakeTeacher(id: string, overrides: Partial<Teacher> = {}): Teacher {

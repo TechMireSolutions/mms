@@ -9,6 +9,7 @@ import type {
   TeachersWidgetAggregateResult,
   TeachersWidgetQuery,
 } from '@mms/shared';
+import type { TenantTransaction } from '../../db/tenant-context.js';
 
 /**
  * Sole gateway to faculty storage.
@@ -61,7 +62,10 @@ export interface FacultyRepository {
     tenant: string,
     oldSupervisorId: string,
     newSupervisorId: string | null,
+    txClient?: TenantTransaction,
   ): Promise<number>;
+  /** M-1: single CTE query replacing O(depth) sequential findById calls in cycle-detection. */
+  findAncestorChain(tenant: string, facultyId: string, maxDepth?: number): Promise<string[]>;
 }
 
 export type TeachersRepository = FacultyRepository;

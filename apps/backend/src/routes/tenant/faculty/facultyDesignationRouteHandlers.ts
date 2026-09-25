@@ -1,6 +1,12 @@
 import { canWriteCollection, canReadCollection } from '../../../services/rbacService.js';
-import type { User, facultyContract } from '@mms/shared';
+import {
+  type User,
+  FACULTY_MODULE_MANIFEST,
+  roleHasPermission,
+  type facultyContract,
+} from '@mms/shared';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/contractRouterTypes.js';
+import { withTenant } from '../../../db/tenant-context.js';
 import {
   listFacultyDesignationAssignments,
   listFacultyDesignations,
@@ -8,6 +14,7 @@ import {
   saveFacultyDesignationAssignment,
   deleteFacultyDesignationAssignment,
 } from '../../../db/repositories/facultyDesignationRepository.js';
+import { auditFaculty } from './facultyRouteHelpers.js';
 
 export async function handleListDesignations({
   request,
@@ -16,11 +23,15 @@ export async function handleListDesignations({
   if (!canReadCollection(user, 'faculty')) {
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
+  const tenantId = request.tenant?.id;
+  if (!tenantId) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
+  }
   try {
-    const designations = await listFacultyDesignations(String(request.tenant?.id));
+    const designations = await listFacultyDesignations(String(tenantId));
     return { status: 200 as const, body: { designations } };
   } catch {
-    return { status: 500 as const, body: { type: 'database_error', message: 'Failed to list Faculty designations' } };
+    return { status: 500 as const, body: { type: 'server_error', message: 'Failed to list Faculty designations' } };
   }
 }
 
@@ -30,11 +41,25 @@ export async function handleSaveDesignation({
   request,
 }: ContractRouteArgs<typeof facultyContract['saveDesignation']>): Promise<ContractRouteResponse<typeof facultyContract['saveDesignation']>> {
   const user = request.user as User;
-  if (!canWriteCollection(user, 'faculty')) {
+  if (!canWriteCollection(user, 'faculty') || !roleHasPermission(user.role, FACULTY_MODULE_MANIFEST.permissions.setupWrite)) {
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
+  const tenantId = request.tenant?.id;
+  if (!tenantId) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
+  }
   try {
-    const designation = await saveFacultyDesignation(String(request.tenant?.id), { ...body, id });
+    const designation = await withTenant(
+      String(tenantId),
+      () => saveFacultyDesignation(String(tenantId), { ...body, id }),
+      { readOnly: false },
+    );
+    await auditFaculty(
+      user,
+      'faculty.designation.save',
+      `Saved faculty designation ${designation.name} (${designation.code})`,
+      designation.id,
+    );
     return { status: 200 as const, body: { designation } };
   } catch (error) {
     return {
@@ -52,11 +77,15 @@ export async function handleListDesignationHistory({
   if (!canReadCollection(user, 'faculty')) {
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
+  const tenantId = request.tenant?.id;
+  if (!tenantId) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
+  }
   try {
-    const assignments = await listFacultyDesignationAssignments(String(request.tenant?.id), facultyId);
+    const assignments = await listFacultyDesignationAssignments(String(tenantId), facultyId);
     return { status: 200 as const, body: { assignments } };
   } catch {
-    return { status: 500 as const, body: { type: 'database_error', message: 'Failed to load designation history' } };
+    return { status: 500 as const, body: { type: 'server_error', message: 'Failed to load designation history' } };
   }
 }
 
@@ -69,10 +98,24 @@ export async function handleSaveDesignationAssignment({
   if (!canWriteCollection(user, 'faculty')) {
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
+  const tenantId = request.tenant?.id;
+  if (!tenantId) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
+  }
   try {
-    const assignment = await saveFacultyDesignationAssignment(
-      String(request.tenant?.id),
-      { ...body, id: assignmentId, facultyId },
+    const assignment = await withTenant(
+      String(tenantId),
+      () => saveFacultyDesignationAssignment(
+        String(tenantId),
+        { ...body, id: assignmentId, facultyId },
+      ),
+      { readOnly: false },
+    );
+    await auditFaculty(
+      user,
+      'faculty.designation_assignment.save',
+      `Assigned designation ${assignment.designationName} to faculty member ${facultyId}`,
+      assignment.id,
     );
     return { status: 200 as const, body: { assignment } };
   } catch (error: unknown) {
@@ -94,8 +137,18 @@ export async function handleDeleteDesignationAssignment({
   if (!canWriteCollection(user, 'faculty')) {
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
+  const tenantId = request.tenant?.id;
+  if (!tenantId) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
+  }
   try {
-    await deleteFacultyDesignationAssignment(String(request.tenant?.id), facultyId, assignmentId);
+    await deleteFacultyDesignationAssignment(String(tenantId), facultyId, assignmentId);
+    await auditFaculty(
+      user,
+      'faculty.designation_assignment.delete',
+      `Deleted designation assignment ${assignmentId} for faculty member ${facultyId}`,
+      assignmentId,
+    );
     return { status: 200 as const, body: { success: true as const } };
   } catch (error: unknown) {
     const statusCode = (error as { statusCode?: number }).statusCode;
@@ -108,6 +161,6 @@ export async function handleDeleteDesignationAssignment({
         body: { type: 'conflict', message: error instanceof Error ? error.message : 'Cannot delete this assignment' },
       };
     }
-    return { status: 500 as const, body: { type: 'database_error', message: 'Failed to delete designation assignment' } };
+    return { status: 500 as const, body: { type: 'server_error', message: 'Failed to delete designation assignment' } };
   }
 }

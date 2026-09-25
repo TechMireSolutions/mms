@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Copy, Check, type LucideIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import {
   MESSAGING_ICON_BTN,
@@ -35,7 +36,7 @@ export const ActionIconButton = (function ActionIconButton({
 }: ActionIconButtonProps): React.JSX.Element {
   const commonClasses = cn(
     MESSAGING_ICON_BTN,
-    "h-7 w-7 min-h-7 min-w-7 sm:min-h-7 sm:min-w-7 rounded-lg inline-flex items-center justify-center p-0 shrink-0 select-none text-xs",
+    "relative h-7 w-7 min-h-7 min-w-7 sm:min-h-7 sm:min-w-7 rounded-lg inline-flex items-center justify-center p-0 shrink-0 select-none text-xs before:absolute before:-inset-2 before:content-['']",
     toneClass,
     className,
   );
@@ -48,11 +49,10 @@ export const ActionIconButton = (function ActionIconButton({
   );
 
   const element = href ? (
-    <a
-      href={href}
-      target={target}
-      rel={rel}
-      aria-label={label}
+    <Button
+      asChild
+      variant="ghost"
+      className={commonClasses}
       onClick={(e) => {
         e.stopPropagation();
         if (onClick) {
@@ -60,13 +60,20 @@ export const ActionIconButton = (function ActionIconButton({
           onClick(e);
         }
       }}
-      className={commonClasses}
     >
-      {content}
-    </a>
+      <a
+        href={href}
+        target={target}
+        rel={rel}
+        aria-label={label}
+      >
+        {content}
+      </a>
+    </Button>
   ) : (
-    <button
+    <Button
       type="button"
+      variant="ghost"
       aria-label={label}
       onClick={(e) => {
         e.stopPropagation();
@@ -75,7 +82,7 @@ export const ActionIconButton = (function ActionIconButton({
       className={commonClasses}
     >
       {content}
-    </button>
+    </Button>
   );
 
   return (

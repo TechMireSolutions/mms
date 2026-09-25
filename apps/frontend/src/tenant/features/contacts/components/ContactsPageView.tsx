@@ -75,9 +75,6 @@ export function ContactsPageView({
           conflictCount={conflictCount}
           flushing={flushing}
           onFlushPending={() => void flush()}
-          onOpenDuplicates={
-            canRead && !viewingDeleted ? () => void handleOpenDuplicates() : undefined
-          }
           onReviewConflicts={openConflictReview}
         />
       }

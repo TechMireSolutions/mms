@@ -1,6 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useMemo, useState } from "react";
 import type { Contact } from "@mms/shared";
-import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import {
   buildInitialContactDraft,
   contactDraftSnapshot,
@@ -8,8 +7,9 @@ import {
 import { useContactFormSubLists } from "@/tenant/features/contacts/hooks/useContactFormSubLists";
 import { useContactFormSave } from "@/tenant/features/contacts/hooks/useContactFormSave";
 import { useContactFormDraftHelpers } from "@/tenant/features/contacts/hooks/useContactFormDraftHelpers";
-import { useContactFormDraftOptions } from "@/tenant/features/contacts/hooks/useContactFormDraftOptions";
 import { useContactDuplicateCheck } from "@/tenant/features/contacts/hooks/useContactDuplicateCheck";
+import { useContactDraftReset } from "@/tenant/features/contacts/hooks/useContactDraftReset";
+import { useContactFormLookups } from "@/tenant/features/contacts/hooks/useContactFormLookups";
 
 export function useContactFormDraft({
   open,
@@ -33,63 +33,17 @@ export function useContactFormDraft({
   onValidationTab: (tabId: string, fieldId?: string, index?: number) => void;
 }) {
   const {
-    phoneLabels,
-    emailLabels,
-    addressLabels,
-    socialPlatforms,
-    relationships: relationshipOptions,
-    genders,
-    countryCodes,
-    educationDegrees,
-    employmentTypes,
-    skillCategories,
-    skillProficiencies,
-    tags,
-    lookupsLoading,
-    lookupsError,
-    defaultPhoneCountryCode,
-    updateGenders,
-    updatePhoneLabels,
-    updateEmailLabels,
-    updateAddressLabels,
-    updateSocialPlatforms,
-    updateRelationships,
-    updateEducationDegrees,
-    updateEmploymentTypes,
-    updateSkillCategories,
-    updateSkillProficiencies,
-    updateTags,
-    updateCountryCodes,
-    fields,
-    isTabFieldEnabled,
-    isTabFieldRequired,
-  } = useContactConfig();
-
-  const [instanceSuffix] = useState(() => Math.random().toString(36).substring(2, 8));
-  const formInstanceId = `${contact?.id ?? "new"}-${instanceSuffix}`;
-  const defaultCountryCode = defaultPhoneCountryCode;
-
-  const {
+    config,
+    defaultCountryCode,
     optionDefaults,
     countryCodeOptions,
     countryOptions,
     updateCountryOptions,
     updateDialCodeOptions,
-  } = useContactFormDraftOptions({
-    phoneLabels,
-    emailLabels,
-    addressLabels,
-    socialPlatforms,
-    relationshipOptions,
-    educationDegrees,
-    employmentTypes,
-    skillCategories,
-    skillProficiencies,
-    defaultCountryCode,
-    countryCodes,
-    defaultCountry,
-    updateCountryCodes,
-  });
+  } = useContactFormLookups(defaultCountry);
+
+  const [instanceSuffix] = useState(() => Math.random().toString(36).substring(2, 8));
+  const formInstanceId = `${contact?.id ?? "new"}-${instanceSuffix}`;
 
   const [contactDraft, setContactDraft] = useState<Partial<Contact>>(() =>
     buildInitialContactDraft({
@@ -99,8 +53,8 @@ export function useContactFormDraft({
       defaultProvince,
       defaultCountry,
       optionDefaults,
-      socialPlatforms,
-      relationshipOptions,
+      socialPlatforms: config.socialPlatforms,
+      relationshipOptions: config.relationships,
     }),
   );
   const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
@@ -143,55 +97,26 @@ export function useContactFormDraft({
     validationErrors,
     contactDraft,
     setContactDraft,
-    isTabFieldEnabled,
-    isTabFieldRequired,
+    isTabFieldEnabled: config.isTabFieldEnabled,
+    isTabFieldRequired: config.isTabFieldRequired,
   });
 
-  useEffect(() => {
-    if (!open) return;
-    const nextDraft = buildInitialContactDraft({
-      contact,
-      initialDraft,
-      defaultCity,
-      defaultProvince,
-      defaultCountry,
-      optionDefaults,
-      socialPlatforms,
-      relationshipOptions,
-    });
-    setContactDraft(nextDraft);
-    setBaselineSnapshot(contactDraftSnapshot(nextDraft));
-    setValidationErrors([]);
-    // Intentional dep-array: only reset when the modal opens or the contact identity changes.
-    // Including `contact` object would re-fire on every server sync and lose in-progress edits.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, contact?.id]);
-
-  // If the form opened before lookups resolved, the draft was built with empty
-  // option defaults. Rebuild it once lookups finish loading — but only if the
-  // user hasn't started editing, so we never clobber in-progress changes.
-  const prevLookupsLoading = useRef(lookupsLoading);
-  useEffect(() => {
-    if (!open) return;
-    const justFinishedLoading = prevLookupsLoading.current && !lookupsLoading;
-    prevLookupsLoading.current = lookupsLoading;
-    if (!justFinishedLoading) return;
-    if (isDirty) return;
-    const nextDraft = buildInitialContactDraft({
-      contact,
-      initialDraft,
-      defaultCity,
-      defaultProvince,
-      defaultCountry,
-      optionDefaults,
-      socialPlatforms,
-      relationshipOptions,
-    });
-    setContactDraft(nextDraft);
-    setBaselineSnapshot(contactDraftSnapshot(nextDraft));
-    setValidationErrors([]);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, lookupsLoading]);
+  useContactDraftReset({
+    open,
+    contact,
+    initialDraft,
+    defaultCity,
+    defaultProvince,
+    defaultCountry,
+    optionDefaults,
+    socialPlatforms: config.socialPlatforms,
+    relationshipOptions: config.relationships,
+    lookupsLoading: config.lookupsLoading,
+    isDirty,
+    setContactDraft,
+    setBaselineSnapshot,
+    setValidationErrors,
+  });
 
   const duplicateCount = useContactDuplicateCheck({
     open,
@@ -213,30 +138,30 @@ export function useContactFormDraft({
     setCropSrc,
     contactDraft,
     collectionCounts,
-    phoneLabels,
-    emailLabels,
-    addressLabels,
-    socialPlatforms,
-    relationshipOptions,
-    genders,
-    educationDegrees,
-    employmentTypes,
-    skillCategories,
-    skillProficiencies,
-    tags,
-    lookupsLoading,
-    lookupsError,
-    updateGenders,
-    updatePhoneLabels,
-    updateEmailLabels,
-    updateAddressLabels,
-    updateSocialPlatforms,
-    updateRelationships,
-    updateEducationDegrees,
-    updateEmploymentTypes,
-    updateSkillCategories,
-    updateSkillProficiencies,
-    updateTags,
+    phoneLabels: config.phoneLabels,
+    emailLabels: config.emailLabels,
+    addressLabels: config.addressLabels,
+    socialPlatforms: config.socialPlatforms,
+    relationshipOptions: config.relationships,
+    genders: config.genders,
+    educationDegrees: config.educationDegrees,
+    employmentTypes: config.employmentTypes,
+    skillCategories: config.skillCategories,
+    skillProficiencies: config.skillProficiencies,
+    tags: config.tags,
+    lookupsLoading: config.lookupsLoading,
+    lookupsError: config.lookupsError,
+    updateGenders: config.updateGenders,
+    updatePhoneLabels: config.updatePhoneLabels,
+    updateEmailLabels: config.updateEmailLabels,
+    updateAddressLabels: config.updateAddressLabels,
+    updateSocialPlatforms: config.updateSocialPlatforms,
+    updateRelationships: config.updateRelationships,
+    updateEducationDegrees: config.updateEducationDegrees,
+    updateEmploymentTypes: config.updateEmploymentTypes,
+    updateSkillCategories: config.updateSkillCategories,
+    updateSkillProficiencies: config.updateSkillProficiencies,
+    updateTags: config.updateTags,
     getLocalId,
     isFieldEnabled,
     isFieldRequired,
@@ -252,7 +177,6 @@ export function useContactFormDraft({
     setPrimarySubListItem,
     handleSave,
     validationErrors,
-    fields,
+    fields: config.fields,
   };
 }
-

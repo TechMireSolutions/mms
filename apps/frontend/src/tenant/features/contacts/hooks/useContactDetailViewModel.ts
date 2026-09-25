@@ -50,7 +50,6 @@ export function useContactDetailViewModel({
       label: tab.labelKey ? t(tab.labelKey) : tab.label,
       icon: ICON_MAP[tab.icon || tab.key] || LayoutDashboard,
     }));
-  // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [t]);
 
   const [activeTab, setActiveTab] = useState<string>(() => detailTabs[0]?.key || "");

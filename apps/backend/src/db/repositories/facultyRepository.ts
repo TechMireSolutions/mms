@@ -1,92 +1,27 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { type Teacher, type RepositoryListOptions } from '@mms/shared';
 import { teachers } from '../schema.js';
-import { withTenant, withTenantRead, type AppDb } from '../tenant-context.js';
+import { withTenant, withTenantRead } from '../tenant-context.js';
 import { buildTenantSoftDeleteConditions } from '../../services/genericRelationalService.js';
-import { mapAuditTimestamps, mapAuditToInsert } from './repositoryMappers.js';
+import {
+  type TeacherInsert,
+  TEACHER_PROJECTION_COLUMNS,
+  teacherWriteValues,
+  teacherRowToRecord,
+  hydrateTeachersList,
+  teacherUpdateSetValues,
+  persistTeacherTx,
+} from './facultyRepositoryColumns.js';
 
-export type TeacherInsert = typeof teachers.$inferInsert;
-
-export function teacherWriteValues(subdomain: string, teacher: Teacher): TeacherInsert {
-  const audit = mapAuditToInsert(teacher);
-  const t = teacher as Teacher & { reportingFacultyId?: string | null; hierarchyRank?: number };
-  const knownKeys = new Set([
-    'id', 'contactId', 'userId', 'employeeId', 'status', 'specialization', 'department',
-    'designation', 'designationId', 'designationStartsOn', 'designationEndsOn',
-    'designationAssignableRoles', 'customDesignation', 'reportingFacultyId',
-    'reportingFacultyName', 'subordinateCount', 'subordinates', 'hierarchyRank',
-    'qualification', 'joinDate', 'notes', 'name', 'phone', 'email', 'gender', 'avatar',
-    'contact', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy', 'deletedAt',
-    'deletedBy', 'deletionReason', 'restoredAt', 'restoredBy', 'deletedWithCascade',
-  ]);
-  const customData = Object.fromEntries(Object.entries(teacher as unknown as Record<string, unknown>).filter(([key]) => !knownKeys.has(key)));
-  return {
-    id: String(teacher.id),
-    workspaceSubdomain: subdomain,
-    contactId: teacher.contactId ? String(teacher.contactId) : null,
-    userId: teacher.userId ? String(teacher.userId) : null,
-    employeeId: teacher.employeeId ?? null,
-    status: teacher.status ?? 'active',
-    specialization: teacher.specialization ?? null,
-    department: teacher.department ?? null,
-    designation: teacher.designation ?? null,
-    reportingFacultyId: t.reportingFacultyId ?? null,
-    hierarchyRank: typeof t.hierarchyRank === 'number' ? t.hierarchyRank : 10,
-    qualification: teacher.qualification ?? null,
-    joinDate: teacher.joinDate ?? null,
-    notes: teacher.notes ?? null,
-    customData,
-    ...audit,
-    createdAt: audit.createdAt ?? new Date(),
-  } satisfies TeacherInsert;
-}
-
-export function teacherRowToRecord(row: typeof teachers.$inferSelect): Teacher {
-  return {
-    ...(row.customData ?? {}),
-    id: row.id,
-    contactId: row.contactId ?? '',
-    userId: row.userId ?? null,
-    status: row.status ?? 'active',
-    employeeId: row.employeeId ?? undefined,
-    specialization: row.specialization ?? undefined,
-    department: row.department ?? undefined,
-    designation: row.designation ?? undefined,
-    reportingFacultyId: row.reportingFacultyId ?? null,
-    hierarchyRank: row.hierarchyRank ?? 10,
-    qualification: row.qualification ?? undefined,
-    joinDate: row.joinDate ?? undefined,
-    notes: row.notes ?? undefined,
-    ...mapAuditTimestamps(row),
-  } satisfies Teacher;
-}
-
-export async function hydrateTeachersList(
-  _tx: AppDb,
-  _subdomain: string,
-  rows: (typeof teachers.$inferSelect)[],
-): Promise<Teacher[]> {
-  return rows.map(teacherRowToRecord);
-}
-
-export function teacherUpdateSetValues(subdomain: string, teacher: Teacher) {
-  const { id: _id, workspaceSubdomain: _subdomain, createdAt: _createdAt, createdBy: _createdBy, ...setFields } = teacherWriteValues(subdomain, teacher);
-  return setFields;
-}
-
-export async function persistTeacherTx(
-  tx: AppDb,
-  subdomain: string,
-  teacher: Teacher,
-): Promise<void> {
-  await tx
-    .insert(teachers)
-    .values(teacherWriteValues(subdomain, teacher))
-    .onConflictDoUpdate({
-      target: [teachers.workspaceSubdomain, teachers.id],
-      set: teacherUpdateSetValues(subdomain, teacher),
-    });
-}
+export {
+  type TeacherInsert,
+  TEACHER_PROJECTION_COLUMNS,
+  teacherWriteValues,
+  teacherRowToRecord,
+  hydrateTeachersList,
+  teacherUpdateSetValues,
+  persistTeacherTx,
+};
 
 export type ListTeachersOptions = RepositoryListOptions;
 
@@ -100,33 +35,7 @@ export async function listTeachersByWorkspace(
     const conditions = buildTenantSoftDeleteConditions(teachers, subdomain, deletedFilter);
 
     const baseQuery = tx
-      .select({
-        id: teachers.id,
-        workspaceSubdomain: teachers.workspaceSubdomain,
-        contactId: teachers.contactId,
-        userId: teachers.userId,
-        employeeId: teachers.employeeId,
-        status: teachers.status,
-        specialization: teachers.specialization,
-        department: teachers.department,
-        designation: teachers.designation,
-        reportingFacultyId: teachers.reportingFacultyId,
-        hierarchyRank: teachers.hierarchyRank,
-        qualification: teachers.qualification,
-        joinDate: teachers.joinDate,
-        notes: teachers.notes,
-        customData: teachers.customData,
-        deletedAt: teachers.deletedAt,
-        deletedBy: teachers.deletedBy,
-        deletionReason: teachers.deletionReason,
-        restoredAt: teachers.restoredAt,
-        restoredBy: teachers.restoredBy,
-        deletedWithCascade: teachers.deletedWithCascade,
-        createdAt: teachers.createdAt,
-        updatedAt: teachers.updatedAt,
-        createdBy: teachers.createdBy,
-        updatedBy: teachers.updatedBy,
-      })
+      .select(TEACHER_PROJECTION_COLUMNS)
       .from(teachers)
       .where(and(...conditions))
       .orderBy(teachers.id);
@@ -143,33 +52,7 @@ export async function findTeacherById(tenant: string, id: string): Promise<Teach
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select({
-        id: teachers.id,
-        workspaceSubdomain: teachers.workspaceSubdomain,
-        contactId: teachers.contactId,
-        userId: teachers.userId,
-        employeeId: teachers.employeeId,
-        status: teachers.status,
-        specialization: teachers.specialization,
-        department: teachers.department,
-        designation: teachers.designation,
-        reportingFacultyId: teachers.reportingFacultyId,
-        hierarchyRank: teachers.hierarchyRank,
-        qualification: teachers.qualification,
-        joinDate: teachers.joinDate,
-        notes: teachers.notes,
-        customData: teachers.customData,
-        deletedAt: teachers.deletedAt,
-        deletedBy: teachers.deletedBy,
-        deletionReason: teachers.deletionReason,
-        restoredAt: teachers.restoredAt,
-        restoredBy: teachers.restoredBy,
-        deletedWithCascade: teachers.deletedWithCascade,
-        createdAt: teachers.createdAt,
-        updatedAt: teachers.updatedAt,
-        createdBy: teachers.createdBy,
-        updatedBy: teachers.updatedBy,
-      })
+      .select(TEACHER_PROJECTION_COLUMNS)
       .from(teachers)
       .where(and(eq(teachers.workspaceSubdomain, subdomain), eq(teachers.id, id)))
       .limit(1);
@@ -184,11 +67,15 @@ export async function findTeacherById(tenant: string, id: string): Promise<Teach
 export async function findTeacherByContactId(tenant: string, contactId: string): Promise<Teacher | null> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
-    const rows = await tx.select().from(teachers).where(and(
-      eq(teachers.workspaceSubdomain, subdomain),
-      eq(teachers.contactId, contactId),
-      sql`${teachers.deletedAt} is null`,
-    )).limit(1);
+    const rows = await tx
+      .select(TEACHER_PROJECTION_COLUMNS)
+      .from(teachers)
+      .where(and(
+        eq(teachers.workspaceSubdomain, subdomain),
+        eq(teachers.contactId, contactId),
+        isNull(teachers.deletedAt),
+      ))
+      .limit(1);
     return rows[0] ? teacherRowToRecord(rows[0]) : null;
   });
 }
@@ -198,33 +85,7 @@ export async function findTeachersByIds(tenant: string, ids: string[]): Promise<
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select({
-        id: teachers.id,
-        workspaceSubdomain: teachers.workspaceSubdomain,
-        contactId: teachers.contactId,
-        userId: teachers.userId,
-        employeeId: teachers.employeeId,
-        status: teachers.status,
-        specialization: teachers.specialization,
-        department: teachers.department,
-        designation: teachers.designation,
-        reportingFacultyId: teachers.reportingFacultyId,
-        hierarchyRank: teachers.hierarchyRank,
-        qualification: teachers.qualification,
-        joinDate: teachers.joinDate,
-        notes: teachers.notes,
-        customData: teachers.customData,
-        deletedAt: teachers.deletedAt,
-        deletedBy: teachers.deletedBy,
-        deletionReason: teachers.deletionReason,
-        restoredAt: teachers.restoredAt,
-        restoredBy: teachers.restoredBy,
-        deletedWithCascade: teachers.deletedWithCascade,
-        createdAt: teachers.createdAt,
-        updatedAt: teachers.updatedAt,
-        createdBy: teachers.createdBy,
-        updatedBy: teachers.updatedBy,
-      })
+      .select(TEACHER_PROJECTION_COLUMNS)
       .from(teachers)
       .where(and(eq(teachers.workspaceSubdomain, subdomain), inArray(teachers.id, ids)));
     return hydrateTeachersList(tx, subdomain, rows);
@@ -273,6 +134,10 @@ export async function bulkSaveTeachers(tenant: string, items: Teacher[]): Promis
   });
 }
 
+/**
+ * @internal — NOT for API paths. Wipe-and-reinsert semantics violate `mms-api-interface.md §5`.
+ * Use `bulkSaveTeachers` (upsert) for all API-triggered mutations.
+ */
 export async function replaceTeachersForWorkspace(tenant: string, items: Teacher[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
@@ -302,14 +167,13 @@ export async function countTeachersByWorkspace(
   });
 }
 
-
 export {
   countSubordinates,
   countSubordinatesBatch,
   findSubordinates,
   reassignSubordinates,
+  findAncestorChain,
 } from './facultyRepositorySubordinates.js';
-
 
 export type FacultyInsert = TeacherInsert;
 export const facultyWriteValues = teacherWriteValues;

@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, sql } from 'drizzle-orm';
 import {
   hydrateContactRelationshipFields,
   type Contact,
@@ -9,7 +9,7 @@ import { contacts } from '../schema.js';
 import { withTenantRead, type TenantTransaction } from '../tenant-context.js';
 import { loadContactChildMaps, loadContactSummaryChildMaps } from './contactRepositoryHydrateChildren.js';
 import { contactRowToRecord } from './contactRepositoryMappers.js';
-import { getPreparedContactById } from '../preparedStatements.js';
+
 
 type Transaction = TenantTransaction;
 type ContactRow = typeof contacts.$inferSelect;
@@ -88,32 +88,7 @@ export async function listContactsByWorkspace(
     const conditions = buildTenantSoftDeleteConditions(contacts, subdomain, deletedFilter);
 
     const rows = await tx
-      .select({
-        id: contacts.id,
-        workspaceSubdomain: contacts.workspaceSubdomain,
-        firstName: contacts.firstName,
-        lastName: contacts.lastName,
-        name: contacts.name,
-        gender: contacts.gender,
-        dob: contacts.dob,
-        cnic: contacts.cnic,
-        isSyed: contacts.isSyed,
-        avatar: contacts.avatar,
-        notes: contacts.notes,
-        whatsappStatus: contacts.whatsappStatus,
-        lastCheckedAt: contacts.lastCheckedAt,
-        aiSummary: contacts.aiSummary,
-        deletedAt: contacts.deletedAt,
-        deletedBy: contacts.deletedBy,
-        deletionReason: contacts.deletionReason,
-        restoredAt: contacts.restoredAt,
-        restoredBy: contacts.restoredBy,
-        deletedWithCascade: contacts.deletedWithCascade,
-        createdAt: contacts.createdAt,
-        updatedAt: contacts.updatedAt,
-        createdBy: contacts.createdBy,
-        updatedBy: contacts.updatedBy,
-      })
+      .select(contactSelectColumns)
       .from(contacts)
       .where(and(...conditions))
       .orderBy(contacts.name, contacts.id)
@@ -140,118 +115,8 @@ export async function countContactsByWorkspace(
   });
 }
 
-export async function findContactById(tenant: string, id: string): Promise<Contact | null> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenantRead(subdomain, async (tx) => {
-    let rows: ContactRow[];
-    if (process.env.MMS_USE_PREPARED_STATEMENTS !== 'false' && typeof (tx as any).execute === 'function') {
-      try {
-        const stmt = getPreparedContactById(tx);
-        rows = await stmt.execute({ subdomain, id });
-      } catch {
-        rows = await tx
-          .select({
-            id: contacts.id,
-            workspaceSubdomain: contacts.workspaceSubdomain,
-            firstName: contacts.firstName,
-            lastName: contacts.lastName,
-            name: contacts.name,
-            gender: contacts.gender,
-            dob: contacts.dob,
-            cnic: contacts.cnic,
-            isSyed: contacts.isSyed,
-            avatar: contacts.avatar,
-            notes: contacts.notes,
-            whatsappStatus: contacts.whatsappStatus,
-            lastCheckedAt: contacts.lastCheckedAt,
-            aiSummary: contacts.aiSummary,
-            deletedAt: contacts.deletedAt,
-            deletedBy: contacts.deletedBy,
-            deletionReason: contacts.deletionReason,
-            restoredAt: contacts.restoredAt,
-            restoredBy: contacts.restoredBy,
-            deletedWithCascade: contacts.deletedWithCascade,
-            createdAt: contacts.createdAt,
-            updatedAt: contacts.updatedAt,
-            createdBy: contacts.createdBy,
-            updatedBy: contacts.updatedBy,
-          })
-          .from(contacts)
-          .where(and(eq(contacts.workspaceSubdomain, subdomain), eq(contacts.id, id)))
-          .limit(1);
-      }
-    } else {
-      rows = await tx
-        .select({
-          id: contacts.id,
-          workspaceSubdomain: contacts.workspaceSubdomain,
-          firstName: contacts.firstName,
-          lastName: contacts.lastName,
-          name: contacts.name,
-          gender: contacts.gender,
-          dob: contacts.dob,
-          cnic: contacts.cnic,
-          isSyed: contacts.isSyed,
-          avatar: contacts.avatar,
-          notes: contacts.notes,
-          whatsappStatus: contacts.whatsappStatus,
-          lastCheckedAt: contacts.lastCheckedAt,
-          aiSummary: contacts.aiSummary,
-          deletedAt: contacts.deletedAt,
-          deletedBy: contacts.deletedBy,
-          deletionReason: contacts.deletionReason,
-          restoredAt: contacts.restoredAt,
-          restoredBy: contacts.restoredBy,
-          deletedWithCascade: contacts.deletedWithCascade,
-          createdAt: contacts.createdAt,
-          updatedAt: contacts.updatedAt,
-          createdBy: contacts.createdBy,
-          updatedBy: contacts.updatedBy,
-        })
-        .from(contacts)
-        .where(and(eq(contacts.workspaceSubdomain, subdomain), eq(contacts.id, id)))
-        .limit(1);
-    }
-    const row = rows[0];
-    if (!row) return null;
-    const [result] = await hydrateContactsList(tx, subdomain, [row]);
-    return result ?? null;
-  });
-}
+import { contactSelectColumns } from './contactRepositoryColumns.js';
+import { findContactById, findContactsByIds } from './contactRepositoryFind.js';
 
-export async function findContactsByIds(tenant: string, ids: string[]): Promise<Contact[]> {
-  if (ids.length === 0) return [];
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenantRead(subdomain, async (tx) => {
-    const rows = await tx
-      .select({
-        id: contacts.id,
-        workspaceSubdomain: contacts.workspaceSubdomain,
-        firstName: contacts.firstName,
-        lastName: contacts.lastName,
-        name: contacts.name,
-        gender: contacts.gender,
-        dob: contacts.dob,
-        cnic: contacts.cnic,
-        isSyed: contacts.isSyed,
-        avatar: contacts.avatar,
-        notes: contacts.notes,
-        whatsappStatus: contacts.whatsappStatus,
-        lastCheckedAt: contacts.lastCheckedAt,
-        aiSummary: contacts.aiSummary,
-        deletedAt: contacts.deletedAt,
-        deletedBy: contacts.deletedBy,
-        deletionReason: contacts.deletionReason,
-        restoredAt: contacts.restoredAt,
-        restoredBy: contacts.restoredBy,
-        deletedWithCascade: contacts.deletedWithCascade,
-        createdAt: contacts.createdAt,
-        updatedAt: contacts.updatedAt,
-        createdBy: contacts.createdBy,
-        updatedBy: contacts.updatedBy,
-      })
-      .from(contacts)
-      .where(and(eq(contacts.workspaceSubdomain, subdomain), inArray(contacts.id, ids)));
-    return hydrateContactsList(tx, subdomain, rows);
-  });
-}
+export { findContactById, findContactsByIds };
+

@@ -1,15 +1,10 @@
 import type React from "react";
-import { Briefcase, Hash, RotateCw } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Briefcase } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_INPUT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
-import { Input } from "@/components/ui/input";
-import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
-import { cn } from "@/lib/utils";
 import {
   resolveTeacherStatus,
   type FieldDefinition,
@@ -20,7 +15,9 @@ import {
 } from "@mms/shared";
 import { FacultyHierarchyFormFields } from "@/tenant/features/faculty/components/FacultyHierarchyFormFields";
 import { resolveTeacherFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
-import { extractEmployeeId } from "@/tenant/features/faculty/components/facultyFormDraft";
+import { FacultyEmploymentDesignationFields } from "@/tenant/features/faculty/components/FacultyEmploymentDesignationFields";
+import { FacultyEmploymentAcademicFields } from "@/tenant/features/faculty/components/FacultyEmploymentAcademicFields";
+import { FacultyEmploymentEmployeeIdField } from "@/tenant/features/faculty/components/FacultyEmploymentEmployeeIdField";
 
 export interface TeacherSectionBaseProps {
   teacherDraft: Partial<Teacher>;
@@ -31,10 +28,7 @@ export interface TeacherSectionBaseProps {
   isFieldRequired: (fieldId: string) => boolean;
 }
 
-export interface TeacherStatusOption {
-  value: string;
-  label: string;
-}
+export interface TeacherStatusOption { value: string; label: string; }
 
 export interface TeacherEmploymentSectionProps extends TeacherSectionBaseProps {
   autoGenerateId: boolean;
@@ -79,173 +73,61 @@ export function TeacherEmploymentSection({
   const showDepartment = isFieldEnabled("department");
   const showSpecialization = isFieldEnabled("specialization");
   const showQualification = isFieldEnabled("qualification");
-  const showHierarchyRank = !hideHierarchy && isFieldEnabled("hierarchyRank");
-  const showSupervisor = !hideHierarchy && isFieldEnabled("reportingFacultyId");
   const showStatus = isFieldEnabled("status");
   const showJoinDate = isFieldEnabled("joinDate");
-  const hasVisibleFields =
-    showEmployeeId || showDesignation || showDepartment || showSpecialization ||
-    showQualification || showHierarchyRank || showSupervisor || showStatus || showJoinDate;
+  const hasVisibleFields = showEmployeeId || showDesignation || showDepartment ||
+    showSpecialization || showQualification || showStatus || showJoinDate ||
+    (!hideHierarchy && (isFieldEnabled("hierarchyRank") || isFieldEnabled("reportingFacultyId")));
   if (!hasVisibleFields) return null;
 
-  const employeeIdLabel = resolveTeacherFieldLabel(fields, "employment", "employeeId", t);
-  const designationLabel = resolveTeacherFieldLabel(fields, "employment", "designation", t);
-  const departmentLabel = resolveTeacherFieldLabel(fields, "employment", "department", t);
-  const specializationLabel = resolveTeacherFieldLabel(fields, "employment", "specialization", t);
-  const qualificationLabel = resolveTeacherFieldLabel(fields, "employment", "qualification", t);
-  const statusLabel = resolveTeacherFieldLabel(fields, "employment", "status", t);
-  const joinDateLabel = resolveTeacherFieldLabel(fields, "employment", "joinDate", t);
+  const lbl = (field: string) => resolveTeacherFieldLabel(fields, "employment", field, t);
 
   return (
     <div className="space-y-4 text-start">
       <SectionCard title={t("teachers.form.sectionEmployment")} icon={Briefcase} accentColor="primary">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {showEmployeeId && (
-            <Field label={employeeIdLabel} id="employeeId" required={isFieldRequired("employeeId")} error={errors.employeeId}>
-              <div className="flex items-center gap-2">
-                <div className="flex-1">
-                  <LeadingIconInput
-                    id="employeeId"
-                    name="employeeId"
-                    icon={Hash}
-                    value={extractEmployeeId(teacherDraft.employeeId)}
-                    onChange={(event) => onDraftChange({ employeeId: event.target.value })}
-                    placeholder={t("teachers.form.employeeIdPlaceholder", { prefix: idPrefix })}
-                    disabled={autoGenerateId && !teacher?.id && Boolean(nextEmployeeId)}
-                    aria-invalid={Boolean(errors.employeeId)}
-                    aria-describedby={errors.employeeId ? "employeeId-error" : undefined}
-                    className={errors.employeeId ? FORM_INPUT_ERROR : undefined}
-                  />
-                </div>
-                {!teacher?.id && onRegenerateEmployeeId && (
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    className="min-h-11 min-w-11 shrink-0 border-border/70 hover:bg-muted"
-                    onClick={onRegenerateEmployeeId}
-                    disabled={isFetchingNextEmployeeId}
-                    title={t("teachers.form.regenerateId")}
-                    aria-label={t("teachers.form.regenerateId")}
-                  >
-                    <RotateCw className={cn("h-4 w-4 text-muted-foreground", isFetchingNextEmployeeId && "animate-spin text-primary")} />
-                  </Button>
-                )}
-              </div>
-            </Field>
+            <FacultyEmploymentEmployeeIdField
+              label={lbl("employeeId")}
+              required={isFieldRequired("employeeId")}
+              error={errors.employeeId}
+              employeeId={teacherDraft.employeeId}
+              idPrefix={idPrefix}
+              autoGenerateId={autoGenerateId}
+              isExistingFaculty={Boolean(teacher?.id)}
+              hasNextEmployeeId={Boolean(nextEmployeeId)}
+              isFetchingNextEmployeeId={isFetchingNextEmployeeId}
+              onDraftChange={onDraftChange}
+              onRegenerateEmployeeId={onRegenerateEmployeeId}
+              t={t}
+            />
           )}
 
           {showDesignation && (
-            <div className="space-y-3">
-              <Field
-                label={designationLabel}
-                id="designationId"
-                required={isFieldRequired("designation")}
-                error={errors.designationId || errors.designation}
-              >
-                <FormSelect
-                  id="designationId"
-                  name="designationId"
-                  value={teacherDraft.designationId || ""}
-                  placeholder={t("faculty.designations.selectPlaceholder")}
-                  disabled={Boolean(teacher?.id)}
-                  onChange={(value) => {
-                    const definition = designationOptions?.find((item) => item.id === value);
-                    onDraftChange({
-                      designationId: value,
-                      designation: definition?.name ?? "",
-                      hierarchyRank: definition?.hierarchyRank,
-                      designationAssignableRoles: definition?.assignableRoles ?? [],
-                      ...(definition?.hierarchyRank === 1 ? { reportingFacultyId: null } : {}),
-                    });
-                  }}
-                  options={(designationOptions ?? []).filter((item) => item.isActive || item.id === teacherDraft.designationId).map((item) => ({ value: item.id, label: item.name }))}
-                />
-                {teacher?.id ? (
-                  <p className="mt-1 text-xs text-muted-foreground">{t('faculty.designations.manageInHistory')}</p>
-                ) : !teacherDraft.designationId && teacherDraft.designation ? (
-                  <p className="mt-1 text-xs text-muted-foreground">
-                    {t("faculty.designations.current")}: {teacherDraft.designation}
-                  </p>
-                ) : null}
-              </Field>
-              {!teacher?.id ? (
-                <Field label={t('faculty.designations.startsOn')} id="designationStartsOn" required error={errors.designationStartsOn}>
-                  <DatePicker
-                    id="designationStartsOn"
-                    name="designationStartsOn"
-                    value={teacherDraft.designationStartsOn || undefined}
-                    onChange={(dateStr) => onDraftChange({ designationStartsOn: dateStr })}
-                  />
-                </Field>
-              ) : null}
-            </div>
+            <FacultyEmploymentDesignationFields
+              teacher={teacher}
+              teacherDraft={teacherDraft}
+              errors={errors}
+              designationOptions={designationOptions}
+              designationLabel={lbl("designation")}
+              isFieldRequired={isFieldRequired}
+              onDraftChange={onDraftChange}
+            />
           )}
 
-          {showDepartment && (
-            <Field
-              label={departmentLabel}
-              id="department"
-              required={isFieldRequired("department")}
-              error={errors.department}
-            >
-              <Input
-                id="department"
-                name="department"
-                value={teacherDraft.department ?? ""}
-                onChange={(e) => onDraftChange({ department: e.target.value })}
-                placeholder={t("teachers.form.departmentPlaceholder")}
-                className={cn(FORM_INPUT, errors.department && FORM_INPUT_ERROR)}
-              />
-            </Field>
-          )}
-
-          {showSpecialization && (
-            <Field
-              label={specializationLabel}
-              id="specialization"
-              required={isFieldRequired("specialization")}
-              error={errors.specialization}
-            >
-              {specializationOptions && specializationOptions.length > 0 ? (
-                <FormSelect
-                  id="specialization"
-                  name="specialization"
-                  value={teacherDraft.specialization ?? ""}
-                  placeholder={specializationLabel}
-                  onChange={(val) => onDraftChange({ specialization: val })}
-                  options={specializationOptions.map((opt) => ({ value: opt, label: opt }))}
-                />
-              ) : (
-                <Input
-                  id="specialization"
-                  name="specialization"
-                  value={teacherDraft.specialization ?? ""}
-                  onChange={(e) => onDraftChange({ specialization: e.target.value })}
-                  placeholder={specializationLabel}
-                  className={cn(FORM_INPUT, errors.specialization && FORM_INPUT_ERROR)}
-                />
-              )}
-            </Field>
-          )}
-
-          {showQualification && (
-            <Field
-              label={qualificationLabel}
-              id="qualification"
-              required={isFieldRequired("qualification")}
-              error={errors.qualification}
-            >
-              <Input
-                id="qualification"
-                name="qualification"
-                value={teacherDraft.qualification ?? ""}
-                onChange={(e) => onDraftChange({ qualification: e.target.value })}
-                placeholder={t("teachers.form.qualificationPlaceholder")}
-                className={cn(FORM_INPUT, errors.qualification && FORM_INPUT_ERROR)}
-              />
-            </Field>
-          )}
+          <FacultyEmploymentAcademicFields
+            teacherDraft={teacherDraft}
+            errors={errors}
+            departmentLabel={lbl("department")}
+            specializationLabel={lbl("specialization")}
+            qualificationLabel={lbl("qualification")}
+            showDepartment={showDepartment}
+            showSpecialization={showSpecialization}
+            showQualification={showQualification}
+            isFieldRequired={isFieldRequired}
+            onDraftChange={onDraftChange}
+            specializationOptions={specializationOptions}
+          />
 
           {!hideHierarchy && (
             <FacultyHierarchyFormFields
@@ -260,7 +142,7 @@ export function TeacherEmploymentSection({
           )}
 
           {showStatus && (
-            <Field label={statusLabel} id="status" required={isFieldRequired("status")}>
+            <Field label={lbl("status")} id="status" required={isFieldRequired("status")}>
               <FormSelect
                 id="status"
                 name="status"
@@ -273,7 +155,7 @@ export function TeacherEmploymentSection({
 
           {showJoinDate && (
             <div className="md:col-span-2">
-              <Field label={joinDateLabel} id="teacher-join-date" required={isFieldRequired("joinDate")} error={errors.joinDate}>
+              <Field label={lbl("joinDate")} id="teacher-join-date" required={isFieldRequired("joinDate")} error={errors.joinDate}>
                 <DatePicker
                   id="teacher-join-date"
                   name="joinDate"
@@ -288,7 +170,6 @@ export function TeacherEmploymentSection({
     </div>
   );
 }
-
 export type FacultySectionBaseProps = TeacherSectionBaseProps;
 export type FacultyStatusOption = TeacherStatusOption;
 export type FacultyEmploymentSectionProps = TeacherEmploymentSectionProps;

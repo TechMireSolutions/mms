@@ -33,6 +33,10 @@ vi.mock('../faculty/use-cases/facultyHydrateUseCases.js', () => ({
   hydrateTeachersFromContacts: async (_tenant: unknown, rows: unknown) => rows,
 }));
 
+vi.mock('../services/outboxEventService.js', () => ({
+  emitOutboxEvent: vi.fn().mockResolvedValue(undefined),
+}));
+
 vi.mock('../services/auth/authArtifactService.js', () => ({
   purgeExpiredAuthArtifacts: vi.fn().mockResolvedValue(undefined),
   putAuthArtifact: vi.fn(),
@@ -116,6 +120,17 @@ describe('Faculty Hierarchy and Task Management Domain Logic', () => {
         hasMore: false,
       })),
       findSoftDeletedByContactId: vi.fn(async () => null),
+      findAncestorChain: vi.fn(async (_tenant: string, facultyId: string, maxDepth = 50) => {
+        const ancestors: string[] = [];
+        let curr = store.get(facultyId);
+        let depth = 0;
+        while (curr?.reportingFacultyId && depth < maxDepth) {
+          ancestors.push(curr.reportingFacultyId);
+          curr = store.get(curr.reportingFacultyId);
+          depth++;
+        }
+        return ancestors;
+      }),
     };
     return { repo: repo as TeachersRepository, store };
   }

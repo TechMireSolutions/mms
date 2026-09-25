@@ -1,14 +1,11 @@
 import React, { useCallback, type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import { AnimatePresence } from "framer-motion";
-import type { AppTranslationKey, Contact } from "@mms/shared";
-import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
-import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
+import type { AppTranslationKey } from "@mms/shared";
+import { ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListKey, ContactSubListTabBaseProps } from "./types";
-import { cn } from "@/lib/utils";
-import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
+import { ContactLabeledValueItemCard } from "./ContactLabeledValueItemCard";
 
 export type ListItem = Record<string, unknown>;
 export type TranslateFn = (key: AppTranslationKey) => string;
@@ -113,11 +110,11 @@ export function ContactLabeledValueSubListTab({
   );
 
   const addItem = useCallback(() => {
-    addSubListItem(listKey, makeEmpty() as unknown as NonNullable<Contact[typeof listKey]>[number]);
+    addSubListItem(listKey, makeEmpty());
   }, [addSubListItem, listKey, makeEmpty]);
 
   const ensureItem = useCallback(() => {
-    ensureSubListItem(listKey, makeEmpty() as unknown as NonNullable<Contact[typeof listKey]>[number]);
+    ensureSubListItem(listKey, makeEmpty());
   }, [ensureSubListItem, listKey, makeEmpty]);
 
   const removeItem = useCallback((idx: number) => removeSubListItem(listKey, idx), [removeSubListItem, listKey]);
@@ -139,92 +136,44 @@ export function ContactLabeledValueSubListTab({
       listKey={listKey}
     >
       <AnimatePresence initial={false}>
-        {items.map((item, idx) => {
-          const valueError = getListItemError(listKey, valueFieldKey, idx);
-          const labelValue = resolveLabel(item[labelFieldKey], options, t);
-          const rawValue = item[valueFieldKey];
-          const stringValue = typeof rawValue === "string" ? rawValue : "";
-          const fieldCtx: ContactLabeledValueFieldContext = {
-            item,
-            index: idx,
-            updateItem,
-          };
-          const valueInput = (
-            <LeadingIconInput
-              icon={Icon}
-              type={valueInputType}
-              id={`${valueInputIdPrefix}-${idx}`}
-              name={`${valueInputIdPrefix}-${idx}`}
-              value={stringValue}
-              autoComplete={autoComplete}
-              inputMode={inputMode}
-              autoCapitalize={autoCapitalize}
-              spellCheck={spellCheck}
-              enterKeyHint={enterKeyHint}
-              aria-invalid={Boolean(valueError)}
-              aria-describedby={valueError ? `${valueInputIdPrefix}-${idx}-error` : undefined}
-              onChange={(e) => {
-                const value = e.target.value;
-                if (onValueChange) {
-                  onValueChange({ ...fieldCtx, value });
-                  return;
-                }
-                updateItem(idx, { [valueFieldKey]: value });
-              }}
-              onBlur={onValueBlur ? () => onValueBlur(idx) : undefined}
-              placeholder={valuePlaceholder}
-              wrapperClassName="flex-1 min-w-0"
-              className={cn(valueError && FORM_INPUT_ERROR)}
-            />
-          );
-          return (
-            <ListFieldCard
-              key={getLocalId(listKey, idx)}
-              id={getLocalId(listKey, idx)}
-              index={idx}
-              icon={Icon}
-              accentClass={accentClass}
-              iconClass={iconClass}
-              label={`${t("contacts.form.type")}:`}
-              typeSelect={
-                showLabel ? (
-                  <EditableSelect
-                    options={options}
-                    value={labelValue}
-                    onChange={(val) => updateItem(idx, { [labelFieldKey]: val })}
-                    onUpdateOptions={onUpdateOptions}
-                    className="w-36 @sm:w-48 min-w-0"
-                    id={`${labelSelectIdPrefix}-${idx}`}
-                    name={`${labelSelectIdPrefix}-${idx}`}
-                  />
-                ) : undefined
-              }
-              headerExtras={headerExtras ? headerExtras(fieldCtx) : undefined}
-              onRemove={() => removeItem(idx)}
-              removeLabel={removeLabel(idx + 1)}
-            >
-              <div className="space-y-3">
-                {showValue ? (
-                  <Field
-                    label={valueLabel || valuePlaceholder}
-                    required={isFieldRequired(listKey, valueFieldKey)}
-                    error={valueError}
-                    id={`${valueInputIdPrefix}-${idx}`}
-                  >
-                    {valueLeadingAddon ? (
-                      <div className="flex w-full items-center gap-2">
-                        {valueLeadingAddon(fieldCtx)}
-                        {valueInput}
-                      </div>
-                    ) : (
-                      valueInput
-                    )}
-                  </Field>
-                ) : null}
-              </div>
-            </ListFieldCard>
-          );
-        })}
+        {items.map((item, idx) => (
+          <ContactLabeledValueItemCard
+            key={getLocalId(listKey, idx)}
+            item={item}
+            idx={idx}
+            listKey={listKey}
+            labelFieldKey={labelFieldKey}
+            valueFieldKey={valueFieldKey}
+            valueLabel={valueLabel}
+            options={options}
+            onUpdateOptions={onUpdateOptions}
+            resolveLabel={resolveLabel}
+            icon={Icon}
+            accentClass={accentClass}
+            iconClass={iconClass}
+            removeLabel={removeLabel}
+            valuePlaceholder={valuePlaceholder}
+            valueInputType={valueInputType}
+            valueInputIdPrefix={valueInputIdPrefix}
+            labelSelectIdPrefix={labelSelectIdPrefix}
+            autoComplete={autoComplete}
+            inputMode={inputMode}
+            autoCapitalize={autoCapitalize}
+            spellCheck={spellCheck}
+            enterKeyHint={enterKeyHint}
+            valueLeadingAddon={valueLeadingAddon}
+            headerExtras={headerExtras}
+            onValueChange={onValueChange}
+            onValueBlur={onValueBlur}
+            getListItemError={getListItemError}
+            isFieldEnabled={isFieldEnabled}
+            isFieldRequired={isFieldRequired}
+            getLocalId={getLocalId}
+            updateItem={updateItem}
+            removeItem={removeItem}
+            t={t}
+          />
+        ))}
       </AnimatePresence>
     </ContactSubListShell>
   );

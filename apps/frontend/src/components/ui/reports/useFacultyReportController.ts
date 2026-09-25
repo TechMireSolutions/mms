@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FACULTY_MODULE_MANIFEST,
   type Teacher,
@@ -18,10 +18,12 @@ import { teacherNameById } from '@/lib/faculty/facultyAssignment';
 import {
   applyTeachersReportDrillDown,
   buildTeacherReportMetricItems,
+  computeFacultyWorkload,
+  summarizeFacultyWorkload,
 } from './facultyReportMetrics';
 import { resolveTeacherReportExportRows } from './facultyReportExport';
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
-import { type FacultyWorkloadItem, mapTeacherRow, type ReportTeacher, type TeacherReportProps, type TeacherReportSubTab } from './facultyReportTypes';
+import { mapTeacherRow, type TeacherReportProps, type TeacherReportSubTab } from './facultyReportTypes';
 import type { SubTab as UINavTab } from '@/components/ui/SubTabBar';
 
 /** Controller for Faculty Reports tier — Query + filters; presentational shell stays thin. */
@@ -61,9 +63,9 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
   const listLoading = rosterQuery.isLoading;
   const listRefetch = rosterQuery.refetch;
 
-  const rawList = (rosterQuery.data?.body as { faculty?: unknown[]; teachers?: unknown[] } | undefined);
+  const rawList = (rosterQuery.data?.body as { faculty?: Teacher[]; teachers?: Teacher[] } | undefined);
   const list = rawList?.faculty ?? rawList?.teachers ?? [];
-  const teachers = (() => (list as unknown as Teacher[]).map(mapTeacherRow))() as ReportTeacher[];
+  const teachers = list.map(mapTeacherRow);
 
   const listTotal = rosterQuery.data?.body?.total ?? 0;
   const listHasMore = Boolean(rosterQuery.data?.body?.hasMore);
@@ -92,37 +94,12 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
     [workloadTeachers, t],
   );
 
-  const facultyWorkload = (() => {
-    const workloadByTeacherName: Record<string, { classes: Set<string>; sessions: Set<string>; students: number }> = {};
-    filteredSessions.forEach((session) => {
-      (session.classes || []).forEach((sessionClass) => {
-        const teacherName = resolveClassTeacher(
-          sessionClass.facultyId || sessionClass.teacherId,
-          (sessionClass.facultyName || sessionClass.teacherName) ?? '',
-        );
-        if (!workloadByTeacherName[teacherName]) {
-          workloadByTeacherName[teacherName] = { classes: new Set(), sessions: new Set(), students: 0 };
-        }
-        workloadByTeacherName[teacherName].classes.add(sessionClass.id);
-        workloadByTeacherName[teacherName].sessions.add(session.id);
-        workloadByTeacherName[teacherName].students += sessionClass.enrolled;
-      });
-    });
+  const facultyWorkload = useMemo(
+    () => computeFacultyWorkload(filteredSessions, resolveClassTeacher),
+    [filteredSessions, resolveClassTeacher],
+  );
 
-    return Object.entries(workloadByTeacherName)
-      .map(([faculty, workload]) => ({
-        faculty,
-        classes: workload.classes.size,
-        sessions: workload.sessions.size,
-        totalStudents: workload.students,
-      }))
-      .sort((firstFaculty, secondFaculty) => secondFaculty.totalStudents - firstFaculty.totalStudents);
-  })() as FacultyWorkloadItem[];
-
-  const totalFaculty = facultyWorkload.length;
-  const totalStudents = facultyWorkload.reduce((total, faculty) => total + faculty.totalStudents, 0);
-  const totalClasses = facultyWorkload.reduce((total, faculty) => total + faculty.classes, 0);
-  const avgStudents = totalFaculty ? (totalStudents / totalFaculty).toFixed(1) : 0;
+  const { totalStudents, totalClasses, avgStudents } = summarizeFacultyWorkload(facultyWorkload);
 
   const filteredFacultyWorkload = (() =>
       selectedFaculty

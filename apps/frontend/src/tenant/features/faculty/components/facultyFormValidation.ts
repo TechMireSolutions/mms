@@ -9,6 +9,28 @@ import {
   type ValidationError,
 } from "@mms/shared";
 import { checkTeacherRegistrationDuplicate } from "@/tenant/features/faculty/hooks/useFaculty";
+import { scrollAndFocusFirstError } from "@/lib/forms/formAutoScroll";
+
+/** Focus the first invalid teacher form field with smooth auto-scroll. */
+export function focusTeacherValidationField(formInstanceId: string, fieldId: string): void {
+  const fieldAliases: Record<string, string[]> = {
+    joinDate: ["teacher-join-date", "joinDate"],
+    designation: ["designationId", "designation"],
+    "user.role": ["faculty-user-role", "linked-user-role"],
+    "user.password": ["faculty-user-password"],
+    "user.email": ["contactId"],
+  };
+
+  const aliases = fieldAliases[fieldId] ?? [];
+  const candidates = [
+    `tf-${formInstanceId}-${fieldId}`,
+    fieldId,
+    fieldId === "contactId" ? "contactId" : "",
+    ...aliases,
+  ].filter(Boolean);
+
+  scrollAndFocusFirstError(candidates, { behavior: "smooth", block: "center" });
+}
 
 export const DUPLICATE_ERROR_KEYS: Record<TeacherDuplicateReason, AppTranslationKey> = {
   contact: "teachers.form.contactAlreadyTeacher",

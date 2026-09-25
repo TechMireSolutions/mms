@@ -1,5 +1,5 @@
 import { useCallback, type Dispatch, type SetStateAction } from "react";
-import { ensureSinglePrimaryFlag, type Contact, type PhoneNumber } from "@mms/shared";
+import { ensureSinglePrimaryFlag, type Contact } from "@mms/shared";
 import type {
   AddSubListItem,
   ContactSubListKey,
@@ -54,15 +54,15 @@ export function useContactFormSubLists(
         const nextList = currentList.map((item, i) => {
           if (i !== idx) return item;
           if (fieldKey === "phones" && "number" in patch) {
-            const phone = item as unknown as PhoneNumber;
-            const prevDigits = (phone.number || "").replace(/\D/g, "");
+            const prevNumber = typeof item.number === "string" ? item.number : "";
+            const prevDigits = prevNumber.replace(/\D/g, "");
             const nextDigits = String(patch.number ?? "").replace(/\D/g, "");
             // Only clear the WhatsApp status when the number actually changed;
             // editing a label or a no-op reformat must not drop it.
             if (prevDigits === nextDigits) {
-              return { ...phone, ...patch };
+              return { ...item, ...patch };
             }
-            const { whatsappStatus: _cleared, ...rest } = phone;
+            const { whatsappStatus: _cleared, ...rest } = item;
             void _cleared;
             return { ...rest, ...patch };
           }

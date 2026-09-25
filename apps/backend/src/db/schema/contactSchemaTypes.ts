@@ -3,6 +3,8 @@ import {
   type contactPhones,
   type contactEmails,
   type contactAddresses,
+} from "./contactCoreTables.js";
+import {
   type contactSocials,
   type contactEducations,
   type contactExperiences,
@@ -11,7 +13,8 @@ import {
   type contactRelationships,
   type contactActivities,
   type contactAttachments,
-} from "./contactTables.js";
+  type contactBankDetails,
+} from "./contactProfileTables.js";
 import {
   type tenantUsers,
   type contactGoogleSyncCredentials,
@@ -45,6 +48,8 @@ export type ContactActivityRow = typeof contactActivities.$inferSelect;
 export type InsertContactActivityRow = typeof contactActivities.$inferInsert;
 export type ContactAttachmentRow = typeof contactAttachments.$inferSelect;
 export type InsertContactAttachmentRow = typeof contactAttachments.$inferInsert;
+export type ContactBankDetailRow = typeof contactBankDetails.$inferSelect;
+export type InsertContactBankDetailRow = typeof contactBankDetails.$inferInsert;
 export type TenantUserRow = typeof tenantUsers.$inferSelect;
 export type InsertTenantUserRow = typeof tenantUsers.$inferInsert;
 export type ContactGoogleSyncCredentialRow = typeof contactGoogleSyncCredentials.$inferSelect;

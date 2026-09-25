@@ -1,15 +1,7 @@
-import type {
-  Contact,
-  FieldDefinition,
-  Teacher,
-  Faculty,
-  FacultyHierarchyPreset,
-  FacultyDesignationDefinition,
-} from "@mms/shared";
+import type React from "react";
 import {
   TeacherContactSection,
   TeacherEmploymentSection,
-  type TeacherStatusOption,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
 import { FacultyFormHierarchySection } from "@/tenant/features/faculty/components/FacultyFormHierarchySection";
@@ -18,36 +10,14 @@ import {
   FacultyUserAccountSection,
   type FacultyUserAccountDraft,
 } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
-import React from "react";
 import { FacultyCustomFieldsSection } from "./FacultyCustomFieldsSection";
+import { FacultyFormAllSections } from "./FacultyFormAllSections";
+import {
+  type TeacherFormTabContentProps,
+  type FacultyFormTabContentProps,
+} from "./facultyFormTabs";
 
-export interface TeacherFormTabContentProps {
-  formInstanceId: string;
-  activeTab?: string;
-  teacher?: Teacher;
-  teacherDraft: Partial<Teacher>;
-  errors: Record<string, string>;
-  fields: Record<string, FieldDefinition[]>;
-  defaultSpecialization: string;
-  linkedTeacherContactIds: Array<string | number>;
-  specializationOptions: string[];
-  designationOptions?: FacultyDesignationDefinition[];
-  autoGenerateId: boolean;
-  idPrefix: string;
-  nextEmployeeId?: string;
-  onRegenerateEmployeeId?: () => void;
-  isFetchingNextEmployeeId?: boolean;
-  statusOptions: TeacherStatusOption[];
-  isFieldEnabled: (fieldId: string) => boolean;
-  isFieldRequired: (fieldId: string) => boolean;
-  getFieldError: (fieldId: string) => string | undefined;
-  onDraftChange: (patch: Partial<Teacher>) => void;
-  linkedContact?: Contact | null;
-  userAccountDraft?: FacultyUserAccountDraft;
-  onUserAccountDraftChange?: (draft: FacultyUserAccountDraft) => void;
-  supervisorCandidates?: Faculty[];
-  hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
-}
+export type { TeacherFormTabContentProps, FacultyFormTabContentProps };
 
 const DEFAULT_USER_ACCOUNT_DRAFT: FacultyUserAccountDraft = {
   enabled: false,
@@ -55,51 +25,51 @@ const DEFAULT_USER_ACCOUNT_DRAFT: FacultyUserAccountDraft = {
   setupMethod: "password",
 };
 
-export const TeacherFormTabContent = (function TeacherFormTabContent({
-  activeTab,
-  teacher,
-  teacherDraft,
-  errors,
-  fields,
-  defaultSpecialization,
-  linkedTeacherContactIds,
-  specializationOptions,
-  designationOptions,
-  autoGenerateId,
-  idPrefix,
-  nextEmployeeId,
-  onRegenerateEmployeeId,
-  isFetchingNextEmployeeId,
-  statusOptions,
-  isFieldEnabled,
-  isFieldRequired,
-  onDraftChange,
-  linkedContact,
-  userAccountDraft = DEFAULT_USER_ACCOUNT_DRAFT,
-  onUserAccountDraftChange = () => {},
-  supervisorCandidates,
-  hierarchyRankPresets,
-}: TeacherFormTabContentProps): React.JSX.Element {
-  if (activeTab === "contact") {
-    return (
-      <div className="space-y-6 pb-6">
-        <TeacherContactSection
-          teacherDraft={teacherDraft}
-          linkedContact={linkedContact}
-          linkedTeacherContactIds={linkedTeacherContactIds}
-          errors={errors}
-          fields={fields}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-        />
-      </div>
-    );
-  }
+export const TeacherFormTabContent = (function TeacherFormTabContent(props: TeacherFormTabContentProps): React.JSX.Element {
+  const {
+    activeTab,
+    teacher,
+    teacherDraft,
+    errors,
+    fields,
+    linkedTeacherContactIds,
+    specializationOptions,
+    designationOptions,
+    autoGenerateId,
+    idPrefix,
+    nextEmployeeId,
+    onRegenerateEmployeeId,
+    isFetchingNextEmployeeId,
+    statusOptions,
+    isFieldEnabled,
+    isFieldRequired,
+    onDraftChange,
+    linkedContact,
+    linkedUser,
+    userAccountDraft = DEFAULT_USER_ACCOUNT_DRAFT,
+    onUserAccountDraftChange = () => {},
+    supervisorCandidates,
+    hierarchyRankPresets,
+  } = props;
 
-  if (activeTab === "employment") {
-    return (
-      <div className="space-y-6 pb-6">
+  let tabBody: React.JSX.Element | null = null;
+
+  if (activeTab === "contact") {
+    tabBody = (
+      <TeacherContactSection
+        teacherDraft={teacherDraft}
+        linkedContact={linkedContact}
+        linkedTeacherContactIds={linkedTeacherContactIds}
+        errors={errors}
+        fields={fields}
+        isFieldEnabled={isFieldEnabled}
+        isFieldRequired={isFieldRequired}
+        onDraftChange={onDraftChange}
+      />
+    );
+  } else if (activeTab === "employment") {
+    tabBody = (
+      <>
         <TeacherEmploymentSection
           teacher={teacher}
           teacherDraft={teacherDraft}
@@ -122,105 +92,45 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
           hideHierarchy
         />
         <FacultyCustomFieldsSection fields={fields} draft={teacherDraft} errors={errors} onDraftChange={onDraftChange} />
-      </div>
+      </>
     );
-  }
-
-  if (activeTab === "designation") {
-    return (
-      <div className="space-y-6 pb-6">
-        <FacultyFormDesignationSection
-          teacher={teacher}
-          teacherDraft={teacherDraft}
-          errors={errors}
-          designationOptions={designationOptions}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-        />
-      </div>
-    );
-  }
-
-  if (activeTab === "hierarchy") {
-    return (
-      <div className="space-y-6 pb-6">
-        <FacultyFormHierarchySection
-          teacherDraft={teacherDraft}
-          errors={errors}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-          supervisorCandidates={supervisorCandidates}
-          hierarchyRankPresets={hierarchyRankPresets}
-        />
-      </div>
-    );
-  }
-
-  if (activeTab === "account") {
-    return (
-      <div className="space-y-6 pb-6">
-        <FacultyUserAccountSection
-          teacherDraft={teacherDraft}
-          linkedContact={linkedContact}
-          userAccountDraft={userAccountDraft}
-          onUserAccountDraftChange={onUserAccountDraftChange}
-          errors={errors}
-        />
-      </div>
-    );
-  }
-
-  if (activeTab === "notes") {
-    return (
-      <div className="space-y-6 pb-6">
-        <TeacherNotesSection
-          notes={teacherDraft.notes}
-          fields={fields}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-          error={errors.notes}
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-6 pb-6">
-      {/* Top Section: Contact Association */}
-      <TeacherContactSection
+  } else if (activeTab === "designation") {
+    tabBody = (
+      <FacultyFormDesignationSection
+        teacher={teacher}
         teacherDraft={teacherDraft}
-        linkedContact={linkedContact}
-        linkedTeacherContactIds={linkedTeacherContactIds}
         errors={errors}
-        fields={fields}
+        designationOptions={designationOptions}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
       />
-
-      {/* Entity Details */}
-      <TeacherEmploymentSection
-        teacher={teacher}
+    );
+  } else if (activeTab === "hierarchy") {
+    tabBody = (
+      <FacultyFormHierarchySection
         teacherDraft={teacherDraft}
         errors={errors}
-        fields={fields}
-        autoGenerateId={autoGenerateId}
-        idPrefix={idPrefix}
-        nextEmployeeId={nextEmployeeId}
-        onRegenerateEmployeeId={onRegenerateEmployeeId}
-        isFetchingNextEmployeeId={isFetchingNextEmployeeId}
-        statusOptions={statusOptions}
-        specializationOptions={specializationOptions}
-        designationOptions={designationOptions}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
         supervisorCandidates={supervisorCandidates}
         hierarchyRankPresets={hierarchyRankPresets}
       />
+    );
+  } else if (activeTab === "account") {
+    tabBody = (
+      <FacultyUserAccountSection
+        teacherDraft={teacherDraft}
+        linkedContact={linkedContact}
+        linkedUser={linkedUser}
+        userAccountDraft={userAccountDraft}
+        onUserAccountDraftChange={onUserAccountDraftChange}
+        errors={errors}
+      />
+    );
+  } else if (activeTab === "notes") {
+    tabBody = (
       <TeacherNotesSection
         notes={teacherDraft.notes}
         fields={fields}
@@ -229,18 +139,39 @@ export const TeacherFormTabContent = (function TeacherFormTabContent({
         onDraftChange={onDraftChange}
         error={errors.notes}
       />
+    );
+  }
 
-      {/* System Login Account & Dynamic RBAC Role */}
-      <FacultyUserAccountSection
-        teacherDraft={teacherDraft}
-        linkedContact={linkedContact}
-        userAccountDraft={userAccountDraft}
-        onUserAccountDraftChange={onUserAccountDraftChange}
-        errors={errors}
-      />
-    </div>
+  if (tabBody) {
+    return <div className="space-y-6 pb-6">{tabBody}</div>;
+  }
+
+  return (
+    <FacultyFormAllSections
+      teacher={teacher}
+      teacherDraft={teacherDraft}
+      errors={errors}
+      fields={fields}
+      linkedTeacherContactIds={linkedTeacherContactIds}
+      specializationOptions={specializationOptions}
+      designationOptions={designationOptions}
+      autoGenerateId={autoGenerateId}
+      idPrefix={idPrefix}
+      nextEmployeeId={nextEmployeeId}
+      onRegenerateEmployeeId={onRegenerateEmployeeId}
+      isFetchingNextEmployeeId={isFetchingNextEmployeeId}
+      statusOptions={statusOptions}
+      isFieldEnabled={isFieldEnabled}
+      isFieldRequired={isFieldRequired}
+      onDraftChange={onDraftChange}
+      linkedContact={linkedContact}
+      linkedUser={linkedUser}
+      userAccountDraft={userAccountDraft}
+      onUserAccountDraftChange={onUserAccountDraftChange}
+      supervisorCandidates={supervisorCandidates}
+      hierarchyRankPresets={hierarchyRankPresets}
+    />
   );
 });
 
-export type FacultyFormTabContentProps = TeacherFormTabContentProps;
 export const FacultyFormTabContent = TeacherFormTabContent;

@@ -25,10 +25,10 @@ export function useTeachersSetupSaveActions({
   const { logSetupAudit } = useTeacherMutations();
 
   const isPrefsDirty = (() => {
-    const draft = settingsDraft as unknown as Record<string, unknown>;
-    const savedSettings = settings as unknown as Record<string, unknown>;
     return TEACHER_MODULE_PREFERENCE_KEYS.some(
-      (key) => JSON.stringify(draft[key]) !== JSON.stringify(savedSettings[key]),
+      (key) =>
+        JSON.stringify(settingsDraft[key as keyof TeachersSettings]) !==
+        JSON.stringify(settings[key as keyof TeachersSettings]),
     );
   })();
 

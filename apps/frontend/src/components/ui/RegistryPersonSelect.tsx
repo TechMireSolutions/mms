@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useStudentsContractList } from '@/tenant/features/students/hooks/useStudentsTsrHooks';
-import { useFacultyContractList } from '@/tenant/features/faculty/hooks/useFacultyTsrHooks';
+import { useStudentsContractList } from '@/tenant/hooks/collections/students';
+import { useFacultyContractList } from '@/tenant/hooks/collections/faculty';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { SearchBar } from '@/components/ui/SearchBar';

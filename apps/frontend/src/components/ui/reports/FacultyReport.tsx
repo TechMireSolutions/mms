@@ -71,7 +71,7 @@ const FacultyReport = (function FacultyReport({ filters }: TeacherReportProps): 
         <ReportDataGridContainer
           title={report.t('teachers.report.rosterTab')}
           columns={report.rosterExportColumns}
-          rows={report.teachers as unknown as Record<string, unknown>[]}
+          rows={report.teachers}
           resolveRows={report.resolveRosterExportRows}
           moduleId="teachers"
           page={report.listPage}
@@ -104,7 +104,7 @@ const FacultyReport = (function FacultyReport({ filters }: TeacherReportProps): 
           <ReportDataGridContainer
             title={report.t('teachers.report.workloadTab')}
             columns={report.workloadExportColumns}
-            rows={report.filteredFacultyWorkload as unknown as Record<string, unknown>[]}
+            rows={report.filteredFacultyWorkload}
             moduleId="teachers"
           >
             <FacultyReportTables

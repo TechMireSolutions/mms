@@ -3,6 +3,7 @@ import type { Teacher } from '@mms/shared';
 import { teachers } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { teacherRowToRecord } from './facultyRepository.js';
+import { TEACHER_PROJECTION_COLUMNS } from './facultyRepositoryColumns.js';
 import { employeeIdExpr } from './facultyRepositoryListQuerySql.js';
 
 export async function countTeachersActive(
@@ -72,33 +73,7 @@ export async function listActiveTeachersMissingEmployeeId(
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select({
-        id: teachers.id,
-        workspaceSubdomain: teachers.workspaceSubdomain,
-        contactId: teachers.contactId,
-        userId: teachers.userId,
-        employeeId: teachers.employeeId,
-        status: teachers.status,
-        specialization: teachers.specialization,
-        department: teachers.department,
-        designation: teachers.designation,
-        qualification: teachers.qualification,
-        joinDate: teachers.joinDate,
-        notes: teachers.notes,
-        customData: teachers.customData,
-        reportingFacultyId: teachers.reportingFacultyId,
-        hierarchyRank: teachers.hierarchyRank,
-        deletedAt: teachers.deletedAt,
-        deletedBy: teachers.deletedBy,
-        deletionReason: teachers.deletionReason,
-        restoredAt: teachers.restoredAt,
-        restoredBy: teachers.restoredBy,
-        deletedWithCascade: teachers.deletedWithCascade,
-        createdAt: teachers.createdAt,
-        updatedAt: teachers.updatedAt,
-        createdBy: teachers.createdBy,
-        updatedBy: teachers.updatedBy,
-      })
+      .select(TEACHER_PROJECTION_COLUMNS)
       .from(teachers)
       .where(
         and(
@@ -152,39 +127,13 @@ export async function findSoftDeletedTeacherByContactIdSql(
   if (!trimmedContactId) return null;
   return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select({
-        id: teachers.id,
-        workspaceSubdomain: teachers.workspaceSubdomain,
-        contactId: teachers.contactId,
-        userId: teachers.userId,
-        employeeId: teachers.employeeId,
-        status: teachers.status,
-        specialization: teachers.specialization,
-        department: teachers.department,
-        designation: teachers.designation,
-        qualification: teachers.qualification,
-        joinDate: teachers.joinDate,
-        notes: teachers.notes,
-        customData: teachers.customData,
-        reportingFacultyId: teachers.reportingFacultyId,
-        hierarchyRank: teachers.hierarchyRank,
-        deletedAt: teachers.deletedAt,
-        deletedBy: teachers.deletedBy,
-        deletionReason: teachers.deletionReason,
-        restoredAt: teachers.restoredAt,
-        restoredBy: teachers.restoredBy,
-        deletedWithCascade: teachers.deletedWithCascade,
-        createdAt: teachers.createdAt,
-        updatedAt: teachers.updatedAt,
-        createdBy: teachers.createdBy,
-        updatedBy: teachers.updatedBy,
-      })
+      .select(TEACHER_PROJECTION_COLUMNS)
       .from(teachers)
       .where(
         and(
           eq(teachers.workspaceSubdomain, subdomain),
           eq(teachers.contactId, trimmedContactId),
-          sql`${teachers.deletedAt} is not null`,
+          isNotNull(teachers.deletedAt),
         ),
       )
       .limit(1);
