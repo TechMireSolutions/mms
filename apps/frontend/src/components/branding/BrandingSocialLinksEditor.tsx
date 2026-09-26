@@ -40,7 +40,7 @@ export function SocialLinksEditor({ links, onChange }: SocialLinksEditorProps): 
         {linkEntries.map((link, index) => (
           <div
             key={`${link.platform}-${index}`}
-            className="grid grid-cols-1 gap-3 rounded-lg border border-border bg-muted/20 p-3 sm:grid-row-action-3"
+            className="grid grid-cols-1 gap-3 rounded-lg border border-border bg-muted/20 p-3"
           >
             <div className="space-y-1.5">
               <Label htmlFor={`social-platform-${index}`}>{t('branding.socialPlatform')}</Label>
@@ -54,18 +54,18 @@ export function SocialLinksEditor({ links, onChange }: SocialLinksEditorProps): 
                 }))}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor={`social-url-${index}`}>{t('branding.socialUrl')}</Label>
-              <Input
-                id={`social-url-${index}`}
-                type="text"
-                inputMode={link.platform === 'WhatsApp' ? 'tel' : 'url'}
-                value={link.url}
-                placeholder={BRANDING_SOCIAL_PLACEHOLDERS[link.platform] ?? 'https://'}
-                onChange={(event) => updateLink(index, { url: event.target.value })}
-              />
-            </div>
-            <div className="flex items-end">
+            <div className="flex items-end gap-2">
+              <div className="min-w-0 flex-1 space-y-1.5">
+                <Label htmlFor={`social-url-${index}`}>{t('branding.socialUrl')}</Label>
+                <Input
+                  id={`social-url-${index}`}
+                  type="text"
+                  inputMode={link.platform === 'WhatsApp' ? 'tel' : 'url'}
+                  value={link.url}
+                  placeholder={BRANDING_SOCIAL_PLACEHOLDERS[link.platform] ?? 'https://'}
+                  onChange={(event) => updateLink(index, { url: event.target.value })}
+                />
+              </div>
               <Button
                 type="button"
                 variant="ghost"

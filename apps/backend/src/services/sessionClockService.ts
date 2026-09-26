@@ -62,6 +62,25 @@ export function platformSessionScope(userId: string): string {
   return `plat:${userId}`;
 }
 
+/**
+ * Resets the session clock completely (both last-activity and session-start) to `now`.
+ * Must be called upon new session creation (login, password reset, 2FA verify) so stale
+ * clock records from prior sessions do not spuriously expire the new session.
+ */
+export async function resetSessionClock(scope: string, idleMs: number): Promise<void> {
+  if (!scope) return;
+  const now = Date.now();
+  touchThrottle.delete(scope);
+  setTouchThrottle(scope, now);
+
+  const record: SessionClockRecord = {
+    a: now,
+    s: now,
+  };
+  const ttlSeconds = Math.max(SESSION_CLOCK_TTL_SECONDS, Math.ceil(idleMs / 1000));
+  await redisSet(activityKey(scope), JSON.stringify(record), ttlSeconds);
+}
+
 /** Records `now` as the last-activity time, preserving the session start. */
 export async function touchSession(
   scope: string,

@@ -4,6 +4,7 @@ import {
   isSessionAbsoluteExpired,
   isSessionIdleExpired,
   platformSessionScope,
+  resetSessionClock,
   revokeSession,
   sessionLastActivityMs,
   sessionStartedAtMs,
@@ -27,6 +28,18 @@ describe('sessionClockService', () => {
     const last = await sessionLastActivityMs('tn:t:u1');
     expect(last).toBeTypeOf('number');
     expect(last as number).toBeGreaterThan(Date.now() - 5000);
+  });
+
+  it('resets stale clock on resetSessionClock', async () => {
+    // Simulate an old touch from 1 hour ago
+    await touchSession('plat:p1', 60_000, true);
+    expect(await isSessionIdleExpired('plat:p1', 0)).toBe(true);
+
+    // Reset session clock on new login
+    await resetSessionClock('plat:p1', 60_000);
+    expect(await isSessionIdleExpired('plat:p1', 60_000)).toBe(false);
+    const started = await sessionStartedAtMs('plat:p1');
+    expect(started).toBeGreaterThan(Date.now() - 5000);
   });
 
   it('does not report idle-expired shortly after touch', async () => {

@@ -612,10 +612,6 @@
   grid-template-columns: repeat(auto-fill, minmax(2.75rem, 1fr));
 }
 
-@utility grid-row-action-3 {
-  grid-template-columns: minmax(0, 10rem) 1fr auto;
-}
-
 @utility grid-row-code-3 {
   grid-template-columns: 1fr 8rem auto;
 }
