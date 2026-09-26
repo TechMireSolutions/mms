@@ -16,7 +16,7 @@
     "db:reset": "tsx src/scripts/resetDb.ts",
     "db:migrate": "node dist/scripts/migrateDb.js 2>/dev/null || tsx src/scripts/migrateDb.ts",
     "typecheck": "tsc --noEmit",
-    "lint": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint src --quiet",
+    "lint": "node -r ../../scripts/eslint-ts-compat.cjs node_modules/eslint/bin/eslint.js src --quiet",
     "test": "vitest run",
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage",

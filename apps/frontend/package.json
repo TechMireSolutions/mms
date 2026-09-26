@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "lint": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint . --quiet",
-    "lint:fix": "NODE_OPTIONS='-r ../../scripts/eslint-ts-compat.cjs' eslint . --fix",
+    "lint": "node -r ../../scripts/eslint-ts-compat.cjs node_modules/eslint/bin/eslint.js . --quiet",
+    "lint:fix": "node -r ../../scripts/eslint-ts-compat.cjs node_modules/eslint/bin/eslint.js . --fix",
     "typecheck": "tsc -p ./tsconfig.json",
     "test": "vitest run",
     "test:run": "vitest run",
