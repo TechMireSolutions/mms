@@ -18,7 +18,7 @@ import { SubTabBar } from '@/components/ui/SubTabBar';
 import { exportActivityLogsCsv } from './activity-logs/exportActivityLogsCsv';
 import { useActivityLogsFilter, type LogTimeframe } from './activity-logs/useActivityLogsFilter';
 import type { LogCategory } from './activity-logs/activityLogMeta';
-import { ActivityLogRow } from './activity-logs/ActivityLogRow';
+import { PlatformActivityLogsTimeline } from './activity-logs/PlatformActivityLogsTimeline';
 import { ActivityLogInspectModal } from './activity-logs/ActivityLogInspectModal';
 import type { PlatformActivityLogItem } from '@/platform/hooks/usePlatformActivityLogs';
 
@@ -143,11 +143,7 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
             compact
           />
         ) : (
-          <div className="relative border-s-2 border-border/60 ms-4 ps-6 space-y-4 pt-2">
-            {items.map((log) => (
-              <ActivityLogRow key={log.id} log={log} onInspect={setInspectLog} />
-            ))}
-          </div>
+          <PlatformActivityLogsTimeline logs={items} onInspect={setInspectLog} />
         )}
       </WidgetCard>
 

@@ -1,6 +1,9 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { Download } from 'lucide-react';
+import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { Button } from '@/components/ui/button';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { containerVariantsConsole, itemVariants } from '@/platform/lib/animations';
@@ -8,8 +11,10 @@ import { PlatformReportsMetrics } from './reports/PlatformReportsMetrics';
 import { PlatformReportsGrowthChart } from './reports/PlatformReportsGrowthChart';
 import { PlatformReportsPieCharts } from './reports/PlatformReportsPieCharts';
 import { PlatformReportsOperatorCard } from './reports/PlatformReportsOperatorCard';
+import { exportPlatformReportsCsv } from './reports/exportPlatformReportsCsv';
 
 export function PlatformReports(): React.JSX.Element {
+  const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const { platformUser, isSuperUser, canWorkspaces, canOnboard, canSettings, canAdmins, canSystem } =
     usePlatformPermissions();
@@ -31,6 +36,35 @@ export function PlatformReports(): React.JSX.Element {
       animate="show"
       className="space-y-6 text-start"
     >
+      <motion.div
+        variants={reducedMotion ? undefined : itemVariants}
+        className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4"
+      >
+        <div>
+          <h2 className="text-lg font-bold text-foreground">{t('module.reports')}</h2>
+          <p className="text-xs text-muted-foreground">{t('platform.reports.growthTrendSub')}</p>
+        </div>
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={() =>
+            exportPlatformReportsCsv(workspaces, {
+              totalWorkspaces,
+              activeWorkspaces,
+              disabledWorkspaces,
+              activeRate,
+              verifyRequiredCount,
+              verifyOptionalCount,
+            })
+          }
+          disabled={!metricsReady || totalWorkspaces === 0}
+          className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 shrink-0 cursor-pointer"
+          title={t('platform.reports.exportCsv')}
+        >
+          <Download className="w-3.5 h-3.5" aria-hidden />
+          {t('platform.reports.exportCsv')}
+        </Button>
+      </motion.div>
       <motion.div variants={reducedMotion ? undefined : itemVariants}>
         <PlatformReportsMetrics
           totalWorkspaces={totalWorkspaces}

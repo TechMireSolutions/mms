@@ -42,6 +42,11 @@ export function PlatformDashboardCharts({
     },
   ];
 
+  const isAwaitingTrend =
+    !activityTrend ||
+    activityTrend.length === 0 ||
+    activityTrend.every((d) => (d.ops ?? 0) === 0);
+
   const trendData = activityTrend && activityTrend.length > 0
     ? activityTrend
     : [
@@ -102,9 +107,16 @@ export function PlatformDashboardCharts({
         </div>
 
         <div className="h-64 w-full flex flex-col justify-between p-3 rounded-xl bg-muted/20 border border-border/40">
-          <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
-            <Activity className="w-3.5 h-3.5 text-success" /> {t('platform.charts.activityTrend')}
-          </p>
+          <div className="flex items-center justify-between gap-2 mb-2">
+            <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
+              <Activity className="w-3.5 h-3.5 text-success" /> {t('platform.charts.activityTrend')}
+            </p>
+            {isAwaitingTrend && (
+              <span className="inline-flex items-center gap-1 rounded-full bg-muted/60 border border-border/40 px-2 py-0.5 text-3xs font-semibold text-muted-foreground">
+                {t('platform.charts.awaitingTrend')}
+              </span>
+            )}
+          </div>
           <div className="h-52 w-full">
             <SafeResponsiveContainer width="100%" height="100%">
               <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>

@@ -34,10 +34,16 @@ export interface PlatformActivityTrendResponse {
 export const PLATFORM_TELEMETRY_QUERY_KEY = ['platform', 'telemetry'] as const;
 export const PLATFORM_ACTIVITY_TREND_QUERY_KEY = ['platform', 'activity-trend'] as const;
 
-export function usePlatformTelemetry(): {
+export interface UsePlatformTelemetryOptions {
+  refetchInterval?: number | false;
+}
+
+export function usePlatformTelemetry(options?: UsePlatformTelemetryOptions): {
   data: PlatformTelemetryData | undefined;
   isLoading: boolean;
   isError: boolean;
+  isFetching: boolean;
+  dataUpdatedAt: number;
   refetch: () => Promise<unknown>;
 } {
   const { isPlatformAuthenticated, canSystem } = usePlatformPermissions();
@@ -50,7 +56,7 @@ export function usePlatformTelemetry(): {
       });
     },
     enabled: isPlatformAuthenticated && canSystem,
-    refetchInterval: 30_000,
+    refetchInterval: options?.refetchInterval !== undefined ? options.refetchInterval : 30_000,
     staleTime: 15_000,
   });
 
@@ -58,6 +64,8 @@ export function usePlatformTelemetry(): {
     data: query.data,
     isLoading: query.isLoading,
     isError: query.isError,
+    isFetching: query.isFetching,
+    dataUpdatedAt: query.dataUpdatedAt,
     refetch: query.refetch,
   };
 }

@@ -11,6 +11,7 @@ import {
 } from '@/components/ui/table';
 import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
 import { Switch } from '@/components/ui/switch';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { WorkspaceIdentityCell } from '@/platform/components/workspace/WorkspaceIdentityCell';
 import { WorkspaceStatusBadge } from '@/platform/components/workspace/WorkspaceStatusBadge';
@@ -34,6 +35,9 @@ export interface WorkspaceTableViewProps {
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
   onOpenResetPassword?: (workspace: PlatformWorkspaceRowData) => void;
   onOpenCreateAdmin?: (workspace: PlatformWorkspaceRowData) => void;
+  selectedSubdomains?: ReadonlySet<string>;
+  onToggleSelect?: (subdomain: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export function WorkspaceTableView({
@@ -52,6 +56,9 @@ export function WorkspaceTableView({
   onOpenDelete,
   onOpenResetPassword,
   onOpenCreateAdmin,
+  selectedSubdomains,
+  onToggleSelect,
+  onToggleSelectAll,
 }: WorkspaceTableViewProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -86,6 +93,14 @@ export function WorkspaceTableView({
             onSort={(k) => onToggleSort(k as WorkspaceSortField)}
             getColumnWidth={() => undefined}
             setColumnWidth={() => {}}
+            selection={
+              onToggleSelectAll && selectedSubdomains ? {
+                allSelected: workspaces.length > 0 && workspaces.every((w) => selectedSubdomains.has(w.subdomain)),
+                someSelected: workspaces.some((w) => selectedSubdomains.has(w.subdomain)) && !workspaces.every((w) => selectedSubdomains.has(w.subdomain)),
+                onSelectAll: onToggleSelectAll,
+                ariaLabel: t('platform.workspaces.selectAll'),
+              } : undefined
+            }
             actionsLabel={t('common.actions')}
             actionsClassName="w-56 min-w-56 text-end px-4 py-3"
             stickyColumnId="madrasaName"
@@ -102,6 +117,15 @@ export function WorkspaceTableView({
                     isDeleting && 'opacity-40 pointer-events-none',
                   )}
                 >
+                  {onToggleSelect && selectedSubdomains && (
+                    <TableCell className="w-12 min-w-12 px-4 py-3 align-middle">
+                      <Checkbox
+                        checked={selectedSubdomains.has(workspace.subdomain)}
+                        onCheckedChange={() => onToggleSelect(workspace.subdomain)}
+                        aria-label={t('platform.workspaces.selectItem', { name: workspace.madrasaName })}
+                      />
+                    </TableCell>
+                  )}
                   <TableCell className="px-4 py-3 align-middle min-w-72">
                     <WorkspaceIdentityCell workspace={workspace} appDomain={appDomain} />
                   </TableCell>

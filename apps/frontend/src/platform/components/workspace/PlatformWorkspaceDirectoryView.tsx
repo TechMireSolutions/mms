@@ -22,6 +22,9 @@ export interface PlatformWorkspaceDirectoryViewProps {
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
   onOpenResetPassword: (workspace: PlatformWorkspaceRowData) => void;
   onOpenCreateAdmin: (workspace: PlatformWorkspaceRowData) => void;
+  selectedSubdomains?: ReadonlySet<string>;
+  onToggleSelect?: (subdomain: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export function PlatformWorkspaceDirectoryView({
@@ -41,6 +44,9 @@ export function PlatformWorkspaceDirectoryView({
   onOpenDelete,
   onOpenResetPassword,
   onOpenCreateAdmin,
+  selectedSubdomains,
+  onToggleSelect,
+  onToggleSelectAll,
 }: PlatformWorkspaceDirectoryViewProps): React.JSX.Element {
   if (viewMode === 'table') {
     return (
@@ -60,6 +66,9 @@ export function PlatformWorkspaceDirectoryView({
         onOpenDelete={onOpenDelete}
         onOpenResetPassword={onOpenResetPassword}
         onOpenCreateAdmin={onOpenCreateAdmin}
+        selectedSubdomains={selectedSubdomains}
+        onToggleSelect={onToggleSelect}
+        onToggleSelectAll={onToggleSelectAll}
       />
     );
   }
@@ -77,6 +86,8 @@ export function PlatformWorkspaceDirectoryView({
       onOpenDelete={onOpenDelete}
       onOpenResetPassword={onOpenResetPassword}
       onOpenCreateAdmin={onOpenCreateAdmin}
+      selectedSubdomains={selectedSubdomains}
+      onToggleSelect={onToggleSelect}
     />
   );
 }

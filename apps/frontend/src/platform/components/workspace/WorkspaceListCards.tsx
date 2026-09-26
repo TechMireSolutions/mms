@@ -9,6 +9,7 @@ import { DirectoryCard } from '@/components/ui/DirectoryCard';
 import { WorkspaceIdentityCell } from '@/platform/components/workspace/WorkspaceIdentityCell';
 import { WorkspaceStatusBadge } from '@/platform/components/workspace/WorkspaceStatusBadge';
 import { WorkspaceRowActions } from '@/platform/components/workspace/WorkspaceRowActions';
+import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 
 export interface WorkspaceListCardsProps {
@@ -23,6 +24,8 @@ export interface WorkspaceListCardsProps {
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
   onOpenResetPassword?: (workspace: PlatformWorkspaceRowData) => void;
   onOpenCreateAdmin?: (workspace: PlatformWorkspaceRowData) => void;
+  selectedSubdomains?: ReadonlySet<string>;
+  onToggleSelect?: (subdomain: string) => void;
 }
 
 /** Directory list cards view for platform workspaces, aligning with tenant [Entity]ListCards. */
@@ -38,6 +41,8 @@ export function WorkspaceListCards({
   onOpenDelete,
   onOpenResetPassword,
   onOpenCreateAdmin,
+  selectedSubdomains,
+  onToggleSelect,
 }: WorkspaceListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -59,7 +64,17 @@ export function WorkspaceListCards({
             )}
             headerSlot={
               <div className="flex items-start justify-between gap-3">
-                <WorkspaceIdentityCell workspace={workspace} appDomain={appDomain} />
+                <div className="flex items-start gap-2.5 min-w-0">
+                  {onToggleSelect && selectedSubdomains && (
+                    <Checkbox
+                      checked={selectedSubdomains.has(workspace.subdomain)}
+                      onCheckedChange={() => onToggleSelect(workspace.subdomain)}
+                      aria-label={t('platform.workspaces.selectItem', { name: workspace.madrasaName })}
+                      className="mt-1 shrink-0"
+                    />
+                  )}
+                  <WorkspaceIdentityCell workspace={workspace} appDomain={appDomain} />
+                </div>
                 <WorkspaceStatusBadge enabled={workspace.enabled} />
               </div>
             }

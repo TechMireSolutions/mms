@@ -9,12 +9,14 @@ import { apiFetch } from "@/lib/apiClient";
 import { formatDateTime } from "@/lib/utils";
 import { containerVariantsConsole as containerVariants, itemVariants as cardVariants } from "@/platform/lib/animations";
 import { PlatformMigrateRestartCard } from "@/platform/pages/account/PlatformMigrateRestartCard";
+import { PlatformLatencySparkline } from "@/platform/components/system/PlatformLatencySparkline";
 
 export function PlatformSystemMaintenance(): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const [probing, setProbing] = useState(false);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
+  const [latencyHistory, setLatencyHistory] = useState<number[]>([]);
   const [lastChecked, setLastChecked] = useState<string | null>(null);
 
   const runHealthProbe = useCallback(async () => {
@@ -25,6 +27,7 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
       const elapsed = Math.round(performance.now() - start);
       if (res.ok) {
         setLatencyMs(elapsed);
+        setLatencyHistory((prev) => [...prev.slice(-7), elapsed]);
       } else {
         setLatencyMs(null);
       }
@@ -39,6 +42,11 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
   useEffect(() => {
     void runHealthProbe();
   }, [runHealthProbe]);
+
+  const avgLatency =
+    latencyHistory.length > 0
+      ? Math.round(latencyHistory.reduce((a, b) => a + b, 0) / latencyHistory.length)
+      : null;
 
   return (
     <motion.div
@@ -77,7 +85,13 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
           variant="compact"
           label={t("platform.maintenance.ping")}
           value={latencyMs !== null ? `${latencyMs} ms` : "Probing..."}
-          sub={lastChecked ? `Checked: ${lastChecked}` : t("platform.statusOperational")}
+          sub={
+            avgLatency !== null
+              ? `${t("platform.maintenance.avgLatency")}: ${avgLatency} ms`
+              : lastChecked
+                ? `Checked: ${lastChecked}`
+                : t("platform.statusOperational")
+          }
           icon={Zap}
           accent={latencyMs !== null && latencyMs < 200 ? "success" : "primary"}
         />
@@ -92,7 +106,12 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
             <span className="text-muted-foreground">{t("platform.maintenance.systemsReady")}</span>
           </div>
 
-          <div className="flex items-center gap-2 font-mono text-3xs text-muted-foreground shrink-0">
+          <div className="flex items-center gap-2 font-mono text-3xs text-muted-foreground shrink-0 flex-wrap">
+            <PlatformLatencySparkline
+              history={latencyHistory}
+              currentLatency={latencyMs}
+              avgLatency={avgLatency}
+            />
             <span className="bg-card px-2 py-0.5 rounded border border-border/50 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-success" />
               {t("platform.maintenance.dbConnsHealthy")}

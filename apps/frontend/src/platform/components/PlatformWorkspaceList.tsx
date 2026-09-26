@@ -1,12 +1,9 @@
 import React, { useDeferredValue, useMemo } from 'react';
 import { Globe } from 'lucide-react';
+import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { getAppDomain } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
-import {
-  usePlatformWorkspaces,
-  useSetWorkspaceEmailVerification,
-  useSetWorkspaceEnabled,
-} from '@/platform/hooks/usePlatformWorkspaces';
+import { usePlatformWorkspaces, useSetWorkspaceEmailVerification, useSetWorkspaceEnabled } from '@/platform/hooks/usePlatformWorkspaces';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePlatformWorkspaceDescriptor } from '@/platform/hooks/usePlatformWorkspaceDescriptor';
 import { Button } from '@/components/ui/button';
@@ -15,18 +12,15 @@ import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShe
 import { PlatformWorkspaceDialogs } from '@/platform/components/workspace/PlatformWorkspaceDialogs';
 import { PlatformWorkspaceToolbar } from '@/platform/components/workspace/PlatformWorkspaceToolbar';
 import { usePlatformWorkspaceUrlState } from '@/platform/components/workspace/usePlatformWorkspaceUrlState';
-import {
-  downloadWorkspacesCsv,
-  filterWorkspaces,
-  sortWorkspaces,
-} from '@/platform/components/platformWorkspaceListData';
+import { downloadWorkspacesCsv, filterWorkspaces, sortWorkspaces } from '@/platform/components/platformWorkspaceListData';
 import { PlatformWorkspaceDirectoryView } from '@/platform/components/workspace/PlatformWorkspaceDirectoryView';
 import { useWorkspaceDeleteState } from '@/platform/components/workspace/useWorkspaceDeleteState';
 import { usePlatformWorkspaceModalState } from '@/platform/components/workspace/usePlatformWorkspaceModalState';
+import { usePlatformWorkspaceSelection } from '@/platform/components/workspace/usePlatformWorkspaceSelection';
+import { PlatformWorkspaceBulkDock } from '@/platform/components/workspace/PlatformWorkspaceBulkDock';
 
 /**
- * Super-user workspace list with enable/disable and delete controls.
- * View state lives in the URL params; row data transforms live in `platformWorkspaceListData`.
+ * Super-user workspace list with enable/disable, delete controls, and bulk selection.
  */
 export default function PlatformWorkspaceList(): React.JSX.Element {
   const { t } = useTranslation();
@@ -36,20 +30,12 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const setEmailVerification = useSetWorkspaceEmailVerification();
 
   const {
-    search,
-    statusFilter,
-    sortField,
-    sortDirection,
-    setSearch,
-    setStatusFilter,
-    toggleSort,
-    isFiltered,
-    handleClearFilters,
+    search, statusFilter, sortField, sortDirection,
+    setSearch, setStatusFilter, toggleSort, isFiltered, handleClearFilters,
   } = usePlatformWorkspaceUrlState();
 
   const descriptor = usePlatformWorkspaceDescriptor();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
-
   const deleteState = useWorkspaceDeleteState();
   const modalState = usePlatformWorkspaceModalState();
 
@@ -61,6 +47,8 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
     [items, deferredSearch, statusFilter, sortField, sortDirection],
   );
 
+  const selection = usePlatformWorkspaceSelection(sortedItems);
+
   const { totalCount, activeCount, inactiveCount } = useMemo(() => {
     let active = 0;
     let inactive = 0;
@@ -71,14 +59,24 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
     return { totalCount: items.length, activeCount: active, inactiveCount: inactive };
   }, [items]);
 
-
-
   const handleToggleEnabled = (subdomain: string, enabled: boolean): void => {
     setEnabled.mutate({ subdomain, enabled });
   };
 
   const handleToggleEmailVerification = (subdomain: string, requireEmailVerification: boolean): void => {
     setEmailVerification.mutate({ subdomain, requireEmailVerification });
+  };
+
+  const handleBulkEnable = (selected: PlatformWorkspaceRowData[]): void => {
+    for (const item of selected) {
+      if (!item.enabled) setEnabled.mutate({ subdomain: item.subdomain, enabled: true });
+    }
+  };
+
+  const handleBulkDisable = (selected: PlatformWorkspaceRowData[]): void => {
+    for (const item of selected) {
+      if (item.enabled) setEnabled.mutate({ subdomain: item.subdomain, enabled: false });
+    }
   };
 
   const togglePending = setEnabled.isPending || setEmailVerification.isPending;
@@ -126,11 +124,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
           <div className="bg-card border border-border/40 rounded-xl p-6">
             <EmptyState
               icon={Globe}
-              title={
-                isFiltered
-                  ? t('platform.noSearchResults')
-                  : t('apex.noMadrasasYet')
-              }
+              title={isFiltered ? t('platform.noSearchResults') : t('apex.noMadrasasYet')}
               action={
                 isFiltered ? (
                   <Button
@@ -163,6 +157,9 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             onOpenDelete={deleteState.handleOpenDelete}
             onOpenResetPassword={modalState.handleOpenResetPassword}
             onOpenCreateAdmin={modalState.handleOpenCreateAdmin}
+            selectedSubdomains={selection.selectedSubdomains}
+            onToggleSelect={selection.toggleSelect}
+            onToggleSelectAll={() => selection.toggleSelectAll(sortedItems)}
           />
         )}
       </ModuleWorkListStateShell>
@@ -171,6 +168,15 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         appDomain={appDomain}
         deleteState={deleteState}
         modalState={modalState}
+      />
+
+      <PlatformWorkspaceBulkDock
+        selectedCount={selection.selectedCount}
+        selectedWorkspaces={selection.selectedWorkspaces}
+        onClearSelection={selection.clearSelection}
+        onBulkEnable={handleBulkEnable}
+        onBulkDisable={handleBulkDisable}
+        busy={togglePending}
       />
     </div>
   );
