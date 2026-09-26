@@ -206,6 +206,7 @@ export default function Accounting() {
           {activeTab === "work" && (
             <AccountingWorkTier
               accounts={accounts}
+              accountsLoaded={accountsResult.isSuccess}
               entries={journalEntries}
               aggregateEntries={aggregateEntries}
               fiscalYears={fiscalYears}

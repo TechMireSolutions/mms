@@ -38,6 +38,7 @@ interface AccountingWorkTierProps {
   createJournalRequestKey?: number;
   createAccountRequestKey?: number;
   accounts: Account[];
+  accountsLoaded?: boolean;
   entries: JournalEntry[];
   /**
    * The complete journal, used by the whole-ledger views (Overview, General
@@ -81,6 +82,7 @@ export function AccountingWorkTier({
   createJournalRequestKey,
   createAccountRequestKey,
   accounts,
+  accountsLoaded,
   entries,
   aggregateEntries,
   settings,
@@ -164,6 +166,7 @@ export function AccountingWorkTier({
       {!listLoadFailed && activeSubTab === "coa" && (
         <ChartOfAccounts
           accounts={accounts}
+          accountsLoaded={accountsLoaded}
           onChange={onAccountsChange}
           onFilteredCountChange={onFilteredCountChange}
           canWrite={canWrite}
