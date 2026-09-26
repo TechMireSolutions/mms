@@ -9,6 +9,7 @@ import {
   useSetWorkspaceEmailVerification,
   useSetWorkspaceEnabled,
   useResetWorkspaceAdminPassword,
+  useCreateWorkspaceAdmin,
 } from '@/platform/hooks/usePlatformWorkspaces';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePlatformWorkspaceDescriptor } from '@/platform/hooks/usePlatformWorkspaceDescriptor';
@@ -20,6 +21,7 @@ import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShe
 import { PlatformWorkspaceDeleteDialog } from '@/platform/components/PlatformWorkspaceDeleteDialog';
 import { PlatformWorkspaceModulesDialog } from '@/platform/components/PlatformWorkspaceModulesDialog';
 import { PlatformWorkspaceResetPasswordDialog } from '@/platform/components/PlatformWorkspaceResetPasswordDialog';
+import { PlatformWorkspaceCreateAdminDialog } from '@/platform/components/PlatformWorkspaceCreateAdminDialog';
 import { PlatformWorkspaceSortMenu } from '@/platform/components/PlatformWorkspaceSortMenu';
 import {
   downloadWorkspacesCsv,
@@ -84,6 +86,11 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const [targetResetWorkspace, setTargetResetWorkspace] = useState<PlatformWorkspaceRowData | null>(null);
   const resetAdminPasswordMutation = useResetWorkspaceAdminPassword();
 
+  // Create admin modal state
+  const [createAdminOpen, setCreateAdminOpen] = useState(false);
+  const [targetCreateWorkspace, setTargetCreateWorkspace] = useState<PlatformWorkspaceRowData | null>(null);
+  const createAdminMutation = useCreateWorkspaceAdmin();
+
   const items = workspaces ?? [];
   const deferredSearch = useDeferredValue(search);
 
@@ -119,6 +126,11 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const handleOpenResetPassword = (workspace: PlatformWorkspaceRowData): void => {
     setTargetResetWorkspace(workspace);
     setResetPasswordOpen(true);
+  };
+
+  const handleOpenCreateAdmin = (workspace: PlatformWorkspaceRowData): void => {
+    setTargetCreateWorkspace(workspace);
+    setCreateAdminOpen(true);
   };
 
   const handleToggleEnabled = (subdomain: string, enabled: boolean): void => {
@@ -257,6 +269,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             onOpenModules={handleOpenModules}
             onOpenDelete={handleOpenDelete}
             onOpenResetPassword={handleOpenResetPassword}
+            onOpenCreateAdmin={handleOpenCreateAdmin}
           />
         ) : (
           <WorkspaceListCards
@@ -270,6 +283,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             onOpenModules={handleOpenModules}
             onOpenDelete={handleOpenDelete}
             onOpenResetPassword={handleOpenResetPassword}
+            onOpenCreateAdmin={handleOpenCreateAdmin}
           />
         )}
       </ModuleWorkListStateShell>
@@ -307,6 +321,19 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
           onConfirm={async (subdomain, newPassword) => {
             const res = await resetAdminPasswordMutation.mutateAsync({ subdomain, newPassword });
             return { newPassword: res.newPassword, adminEmail: res.adminEmail };
+          }}
+        />
+      ) : null}
+
+      {targetCreateWorkspace ? (
+        <PlatformWorkspaceCreateAdminDialog
+          open={createAdminOpen}
+          onOpenChange={setCreateAdminOpen}
+          workspace={targetCreateWorkspace}
+          createPending={createAdminMutation.isPending}
+          onConfirm={async (subdomain, data) => {
+            const res = await createAdminMutation.mutateAsync({ subdomain, ...data });
+            return { initialPassword: res.initialPassword, adminEmail: res.adminEmail, name: res.name };
           }}
         />
       ) : null}

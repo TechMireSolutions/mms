@@ -9,6 +9,8 @@ import {
   useDeleteWorkspace,
   useWorkspaceModules,
   useUpdateWorkspaceModules,
+  useResetWorkspaceAdminPassword,
+  useCreateWorkspaceAdmin,
 } from './usePlatformWorkspaces';
 
 describe('usePlatformWorkspaces', () => {
@@ -20,6 +22,8 @@ describe('usePlatformWorkspaces', () => {
     expect(typeof useDeleteWorkspace).toBe('function');
     expect(typeof useWorkspaceModules).toBe('function');
     expect(typeof useUpdateWorkspaceModules).toBe('function');
+    expect(typeof useResetWorkspaceAdminPassword).toBe('function');
+    expect(typeof useCreateWorkspaceAdmin).toBe('function');
   });
 
   it('safely updates ts-rest query cache objects without throwing TypeError on old.map', () => {

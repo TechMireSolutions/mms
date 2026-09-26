@@ -33,6 +33,7 @@ export interface WorkspaceTableViewProps {
   onOpenModules: (workspace: PlatformWorkspaceRowData) => void;
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
   onOpenResetPassword?: (workspace: PlatformWorkspaceRowData) => void;
+  onOpenCreateAdmin?: (workspace: PlatformWorkspaceRowData) => void;
 }
 
 export function WorkspaceTableView({
@@ -50,6 +51,7 @@ export function WorkspaceTableView({
   onOpenModules,
   onOpenDelete,
   onOpenResetPassword,
+  onOpenCreateAdmin,
 }: WorkspaceTableViewProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -61,17 +63,21 @@ export function WorkspaceTableView({
             columns={descriptor.getTableColumns().map((col) => {
               const f = descriptor.getField(col.id);
               const labelKey = f?.labelKey as AppTranslationKey | undefined;
+              const translated = labelKey ? t(labelKey) : undefined;
+              const label = (translated && translated !== labelKey) ? translated : (col.label || f?.label || col.id);
               return {
                 id: col.id,
-                label: (labelKey ? t(labelKey) : undefined) || col.label,
+                label,
                 sortField: col.id,
                 headerClassName:
                   col.id === 'madrasaName'
-                    ? 'min-w-56'
-                    : col.id === 'status' || col.id === 'enabled'
-                    ? 'w-40'
+                    ? 'min-w-72 flex-1'
+                    : col.id === 'enabled'
+                    ? 'w-44 min-w-44'
                     : col.id === 'requireEmailVerification'
-                    ? 'w-44'
+                    ? 'w-60 min-w-60'
+                    : col.id === 'createdAt'
+                    ? 'w-40 min-w-40'
                     : 'w-36',
               };
             })}
@@ -81,6 +87,8 @@ export function WorkspaceTableView({
             getColumnWidth={() => undefined}
             setColumnWidth={() => {}}
             actionsLabel={t('common.actions')}
+            actionsClassName="w-56 min-w-56 text-end px-4 py-3"
+            stickyColumnId="madrasaName"
           />
           <TableBody className="divide-y divide-border/50">
             {workspaces.map((workspace) => {
@@ -94,10 +102,10 @@ export function WorkspaceTableView({
                     isDeleting && 'opacity-40 pointer-events-none',
                   )}
                 >
-                  <TableCell className="px-4 py-3 align-middle">
+                  <TableCell className="px-4 py-3 align-middle min-w-72">
                     <WorkspaceIdentityCell workspace={workspace} appDomain={appDomain} />
                   </TableCell>
-                  <TableCell className="px-4 py-3 align-middle">
+                  <TableCell className="px-4 py-3 align-middle w-44 min-w-44">
                     <div className="flex items-center gap-2.5">
                       <Switch
                         id={`table-toggle-${workspace.subdomain}`}
@@ -109,7 +117,7 @@ export function WorkspaceTableView({
                       <WorkspaceStatusBadge enabled={workspace.enabled} />
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 py-3 align-middle">
+                  <TableCell className="px-4 py-3 align-middle w-60 min-w-60">
                     <div className="flex items-center gap-2.5">
                       <Switch
                         id={`table-verify-${workspace.subdomain}`}
@@ -130,10 +138,10 @@ export function WorkspaceTableView({
                       </Label>
                     </div>
                   </TableCell>
-                  <TableCell className="px-4 py-3 align-middle text-xs font-medium text-muted-foreground whitespace-nowrap">
+                  <TableCell className="px-4 py-3 align-middle text-xs font-medium text-muted-foreground whitespace-nowrap w-40 min-w-40">
                     {formatDate(workspace.createdAt)}
                   </TableCell>
-                  <TableCell className="px-4 py-3 align-middle text-end">
+                  <TableCell className="px-4 py-3 align-middle text-end w-56 min-w-56">
                     <WorkspaceRowActions
                       subdomain={workspace.subdomain}
                       enabled={workspace.enabled}
@@ -147,6 +155,7 @@ export function WorkspaceTableView({
                       onOpenModules={() => onOpenModules(workspace)}
                       onOpenDelete={() => onOpenDelete(workspace)}
                       onOpenResetPassword={onOpenResetPassword ? () => onOpenResetPassword(workspace) : undefined}
+                      onOpenCreateAdmin={onOpenCreateAdmin ? () => onOpenCreateAdmin(workspace) : undefined}
                     />
                   </TableCell>
                 </TableRow>

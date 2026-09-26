@@ -158,6 +158,31 @@ export const platformWorkspacesRoutes = {
     },
     summary: 'Reset workspace admin user password from platform console',
   },
+  createWorkspaceAdminUser: {
+    method: 'POST',
+    path: '/api/platform/workspaces/:subdomain/admin-users',
+    pathParams: z.object({ subdomain: z.string() }),
+    body: z.object({
+      name: z.string().min(1),
+      email: z.string().email(),
+      password: z.string().min(8).optional(),
+    }),
+    responses: {
+      200: z.object({
+        success: z.literal(true),
+        subdomain: z.string(),
+        adminEmail: z.string(),
+        name: z.string(),
+        initialPassword: z.string(),
+      }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+      409: platformErrorSchema,
+    },
+    summary: 'Create workspace admin user from platform console',
+  },
 } as const;
 
 export const platformWorkspacesContract = c.router(platformWorkspacesRoutes);

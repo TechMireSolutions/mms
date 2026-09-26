@@ -93,7 +93,17 @@ export function AppShell({
 
       {/* Desktop Top Header Bar */}
       {topBar ? (
-        <header role="banner" className="hidden lg:block fixed top-0 inset-x-0 z-sticky">
+        <header
+          role="banner"
+          className={cn(
+            "hidden lg:block fixed top-0 end-0 z-sticky transition-[start,left,right] duration-300",
+            sidebar
+              ? sidebarCollapsed
+                ? "start-sidebar-collapsed"
+                : "start-sidebar"
+              : "start-0",
+          )}
+        >
           {topBar}
         </header>
       ) : null}

@@ -52,7 +52,7 @@ export function PlatformPageShellHeader({
 
   return (
     <div className="sticky top-0 z-header w-full border-b border-border bg-card/80 backdrop-blur-xl transition-all duration-300">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <div className="w-full px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
         {/* Left Side Controls */}
         <div className="flex items-center gap-3">
           {/* Mobile Hamburger Button */}

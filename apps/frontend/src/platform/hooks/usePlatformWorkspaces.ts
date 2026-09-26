@@ -315,3 +315,43 @@ export function useResetWorkspaceAdminPassword() {
     },
   });
 }
+
+export function useCreateWorkspaceAdmin() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation<
+    { success: true; subdomain: string; adminEmail: string; name: string; initialPassword: string },
+    Error,
+    { subdomain: string; name: string; email: string; password?: string }
+  >({
+    mutationFn: async ({ subdomain, name, email, password }) => {
+      const res = await apiContract.platform.createWorkspaceAdminUser({
+        params: { subdomain },
+        body: { name, email, password },
+      });
+      if (res.status >= 400) {
+        const errorBody = res.body as { message?: string; type?: string } | undefined;
+        throw new ApiError(
+          res.status,
+          errorBody?.message || t('platform.loadFailed'),
+          errorBody?.type,
+        );
+      }
+      return res.body as {
+        success: true;
+        subdomain: string;
+        adminEmail: string;
+        name: string;
+        initialPassword: string;
+      };
+    },
+    onSuccess: (res) => {
+      notify.success('Admin user created successfully', { description: `${res.name} <${res.adminEmail}>` });
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
+    },
+    onError: (error) => {
+      notify.error(getPlatformErrorMessage(error, t, undefined, 'platform.loadFailed'));
+    },
+  });
+}

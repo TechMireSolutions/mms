@@ -217,6 +217,58 @@ export async function resetWorkspaceAdminPassword(
   };
 }
 
+/** Create a new admin user for a tenant workspace from platform console. */
+export async function createWorkspaceAdminUser(
+  subdomain: string,
+  input: { name: string; email: string; password?: string },
+): Promise<{ success: true; subdomain: string; adminEmail: string; name: string; initialPassword: string } | { success: false; error: 'WORKSPACE_NOT_FOUND' | 'USER_ALREADY_EXISTS' }> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  const data = await getWorkspaceWithBranding(normalized);
+  if (!data) return { success: false, error: 'WORKSPACE_NOT_FOUND' };
+
+  const db = getDb();
+  const emailClean = input.email.trim().toLowerCase();
+
+  const existing = await db
+    .select({ id: tenantUsers.id })
+    .from(tenantUsers)
+    .where(
+      and(
+        eq(tenantUsers.workspaceSubdomain, normalized),
+        eq(tenantUsers.loginEmail, emailClean),
+        isNull(tenantUsers.deletedAt),
+      ),
+    );
+
+  if (existing.length > 0) {
+    return { success: false, error: 'USER_ALREADY_EXISTS' };
+  }
+
+  const initialPassword = input.password?.trim() || `Mms#${Math.random().toString(36).substring(2, 8)}${Date.now().toString(36).substring(4)}`;
+  const passwordHash = await hashPassword(initialPassword);
+
+  const userId = `usr_${Math.random().toString(36).substring(2, 11)}`;
+  await db.insert(tenantUsers).values({
+    id: userId,
+    workspaceSubdomain: normalized,
+    loginEmail: emailClean,
+    passwordHash,
+    name: input.name.trim(),
+    role: 'admin',
+    mustChangePassword: true,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+
+  return {
+    success: true,
+    subdomain: normalized,
+    adminEmail: emailClean,
+    name: input.name.trim(),
+    initialPassword,
+  };
+}
+
 /** Single workspace row for platform console (avoids scanning full workspace list). */
 export async function getPlatformWorkspaceSummary(
   subdomain: string,

@@ -13,6 +13,7 @@ import {
   listPlatformWorkspaces,
   getPlatformWorkspaceSummary,
   resetWorkspaceAdminPassword,
+  createWorkspaceAdminUser,
   setWorkspaceEmailVerification,
   setWorkspaceEnabled,
   updateWorkspaceModules,
@@ -198,6 +199,42 @@ export default async function platformWorkspaceRoutes(
           subdomain: result.subdomain,
           adminEmail: result.adminEmail,
           newPassword: result.newPassword,
+        },
+      };
+    },
+
+    createWorkspaceAdminUser: async ({
+      params,
+      body,
+      request,
+    }: ContractRouteArgs<typeof platformWorkspacesContract['createWorkspaceAdminUser']>): Promise<ContractRouteResponse<typeof platformWorkspacesContract['createWorkspaceAdminUser']>> => {
+      const { platformUser } = request as PlatformAuthenticatedRequest;
+      const result = await createWorkspaceAdminUser(params.subdomain, body);
+      if (!result.success) {
+        if (result.error === 'WORKSPACE_NOT_FOUND') {
+          return { status: 404 as const, body: { type: 'not_found', message: 'Workspace not found' } };
+        }
+        return { status: 409 as const, body: { type: 'conflict', message: 'An admin user with this email already exists in this workspace.' } };
+      }
+
+      await insertPlatformActivityLog({
+        userId: platformUser.id,
+        userEmail: platformUser.email,
+        action: 'create_workspace_admin_user',
+        targetResource: 'workspace',
+        targetId: params.subdomain,
+        metadataMessage: `Created admin user ${result.name} (${result.adminEmail})`,
+        ipAddress: request.ip,
+      });
+
+      return {
+        status: 200 as const,
+        body: {
+          success: true as const,
+          subdomain: result.subdomain,
+          adminEmail: result.adminEmail,
+          name: result.name,
+          initialPassword: result.initialPassword,
         },
       };
     },
