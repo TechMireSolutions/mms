@@ -10,7 +10,7 @@ describe('loadBackendEnv', () => {
   });
 
   it('resolveBackendRoot points at apps/backend', () => {
-    expect(resolveBackendRoot()).toMatch(/apps\/backend$/);
+    expect(resolveBackendRoot()).toMatch(/apps[\\/]backend$/);
   });
 
   it('forces the process timezone to UTC regardless of the host', () => {

@@ -1,3 +1,4 @@
+import { join, resolve } from 'node:path';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const execFileMock = vi.fn();
@@ -63,12 +64,12 @@ describe('platformAdminService', () => {
     expect(bin).toBe('pm2');
     expect(args).toEqual([
       'reload',
-      '/repo/ecosystem.config.cjs',
+      join(resolve('/repo'), 'ecosystem.config.cjs'),
       '--only',
       'mmsv2-backend',
       '--update-env',
     ]);
-    expect(opts.cwd).toBe('/repo');
+    expect(opts.cwd).toBe(resolve('/repo'));
   });
 
   it('scheduleMigrateAndRestart rejects a second concurrent schedule', async () => {

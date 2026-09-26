@@ -7,6 +7,7 @@ import {
 } from '../services/backupAssetService.js';
 import type { TenantDatabaseSnapshot } from '@mms/shared';
 import * as fsPromises from 'node:fs/promises';
+import { join } from 'node:path';
 
 vi.mock('../config/uploadConfig.js', () => ({
   resolveUploadsRoot: vi.fn(() => '/mock/uploads'),
@@ -79,7 +80,7 @@ describe('backupAssetService', () => {
   describe('resolveSafeUploadDiskPath', () => {
     it('resolves valid upload sub-paths under uploads root', () => {
       const resolved = resolveSafeUploadDiskPath('/uploads/branding/logo.webp');
-      expect(resolved).toBe('/mock/uploads/branding/logo.webp');
+      expect(resolved).toBe(join('/mock/uploads', 'branding', 'logo.webp'));
     });
 
     it('blocks directory traversal attempts', () => {
@@ -157,9 +158,9 @@ describe('backupAssetService', () => {
 
       await restoreTenantAssets(assets);
 
-      expect(fsPromises.mkdir).toHaveBeenCalledWith('/mock/uploads/branding', { recursive: true });
+      expect(fsPromises.mkdir).toHaveBeenCalledWith(join('/mock/uploads', 'branding'), { recursive: true });
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
-        '/mock/uploads/branding/restored-logo.webp',
+        join('/mock/uploads', 'branding', 'restored-logo.webp'),
         testBuffer,
       );
     });
@@ -176,7 +177,7 @@ describe('backupAssetService', () => {
       await restoreTenantAssets(assets);
 
       expect(fsPromises.writeFile).toHaveBeenCalledWith(
-        '/mock/uploads/avatars/user.webp',
+        join('/mock/uploads', 'avatars', 'user.webp'),
         testBuffer,
       );
     });

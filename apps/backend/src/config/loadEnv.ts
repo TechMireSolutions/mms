@@ -52,5 +52,7 @@ export function loadBackendEnv(): void {
 
   if (process.env.NODE_ENV === 'test') {
     process.env.MMS_APP_DOMAIN = 'mms.local';
+    // Parallel test files must not share a developer's real Redis cache.
+    delete process.env.REDIS_URL;
   }
 }
