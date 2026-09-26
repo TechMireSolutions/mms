@@ -897,6 +897,13 @@
       "when": 1790700000000,
       "tag": "0127_accounting_entries_ref_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 128,
+      "version": "7",
+      "when": 1790800000000,
+      "tag": "0128_accounting_voucher_counters",
+      "breakpoints": true
     }
   ]
 }

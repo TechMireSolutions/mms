@@ -15,6 +15,7 @@ import {
   accountingBankStatementLines,
   accountingBankReconciliations,
 } from "../accountingLedgerOps.js";
+import { accountingVoucherCounters, accountingVoucherNumbering } from "../accountingVoucherNumbering.js";
 
 export const accountingAccountsRelations = relations(accountingAccounts, ({ one, many }) => ({
   workspace: one(workspaces, {
@@ -126,5 +127,19 @@ export const accountingBankReconciliationsRelations = relations(accountingBankRe
   entry: one(accountingEntries, {
     fields: [accountingBankReconciliations.workspaceSubdomain, accountingBankReconciliations.journalEntryId],
     references: [accountingEntries.workspaceSubdomain, accountingEntries.id],
+  }),
+}));
+
+export const accountingVoucherNumberingRelations = relations(accountingVoucherNumbering, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [accountingVoucherNumbering.workspaceSubdomain],
+    references: [workspaces.subdomain],
+  }),
+}));
+
+export const accountingVoucherCountersRelations = relations(accountingVoucherCounters, ({ one }) => ({
+  workspace: one(workspaces, {
+    fields: [accountingVoucherCounters.workspaceSubdomain],
+    references: [workspaces.subdomain],
   }),
 }));

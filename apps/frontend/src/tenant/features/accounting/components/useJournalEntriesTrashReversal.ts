@@ -4,6 +4,7 @@ import { hasReversalEntry, type JournalEntry } from "@/lib/data/accountingData";
 import { notify } from "@/lib/notify";
 import { getApiValidationMessage } from "@/lib/apiValidationMessage";
 import { reverseJournalEntry } from "./journalEntriesControllerActions";
+import type { JournalEntriesChange } from "./journalEntriesTypes";
 
 export interface UseJournalEntriesTrashReversalOptions {
   entries: JournalEntry[];
@@ -14,7 +15,7 @@ export interface UseJournalEntriesTrashReversalOptions {
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
-  onChange?: (entries: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => void | Promise<void>;
+  onChange?: JournalEntriesChange;
   t: (key: AppTranslationKey, args?: Record<string, string | number>) => string;
 }
 

@@ -140,29 +140,6 @@ export function studentSettingsToSequenceConfig(settings: {
   };
 }
 
-/** Adapts Accounting settings to a standard SequenceNumberingConfig. */
-export function accountingSettingsToSequenceConfig(settings: {
-  journalAutoGenerateRef?: boolean;
-  journalRefPrefix?: string;
-  journalRefYearFormat?: SequenceYearFormat;
-  journalRefSequenceDigits?: number;
-  journalRefDelimiter?: string;
-  journalRefStartingSequence?: number;
-  journalRefRolloverPolicy?: SequenceRolloverPolicy;
-  journalRefCurrentSequence?: number;
-}): SequenceNumberingConfig {
-  return {
-    autoGenerate: settings.journalAutoGenerateRef !== false,
-    prefix: settings.journalRefPrefix ?? "JE",
-    yearFormat: settings.journalRefYearFormat ?? "NONE",
-    sequenceDigits: settings.journalRefSequenceDigits ?? 4,
-    delimiter: settings.journalRefDelimiter ?? "-",
-    startingSequence: settings.journalRefStartingSequence ?? 1,
-    rolloverPolicy: settings.journalRefRolloverPolicy ?? "annual_fiscal",
-    currentSequence: settings.journalRefCurrentSequence ?? 0,
-  };
-}
-
 /** Adapts Finance settings to a standard SequenceNumberingConfig. */
 export function financeSettingsToSequenceConfig(settings: {
   autoGenerateInvoice?: boolean;

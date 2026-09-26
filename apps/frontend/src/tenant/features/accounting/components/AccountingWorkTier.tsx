@@ -12,6 +12,7 @@ import type {
 } from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
 import { TrialBalance } from "@/tenant/features/accounting/components/TrialBalance";
 import type { Account, AccountingSettings, FiscalYear, JournalEntry } from "@mms/shared";
+import type { JournalEntriesChange } from "./journalEntriesTypes";
 
 type AccountingSubTab = {
   id: string;
@@ -57,7 +58,7 @@ interface AccountingWorkTierProps {
   onShowDeletedChange: () => void;
   onRetry: () => void;
   onAccountsChange: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void>;
-  onEntriesChange: (updater: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => Promise<void>;
+  onEntriesChange: JournalEntriesChange;
   onFilteredCountChange: (count: number) => void;
   onShortcutStateChange?: React.ComponentProps<typeof JournalEntries>["onShortcutStateChange"];
   onDeleteEntry: (id: string) => Promise<void>;

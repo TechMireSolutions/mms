@@ -1,5 +1,6 @@
 import type { AccountingRepository } from './accountingRepository.js';
 import { lockJournalEntries } from '../../db/repositories/accountingEntryLocks.js';
+import { allocateVoucherNumbers } from '../../db/repositories/accountingVoucherRepository.js';
 import {
   listAccountsByWorkspace,
   findAccountById,
@@ -11,7 +12,6 @@ import {
   findEntryById,
   findEntryByRef,
   findActiveEntryRefs,
-  allocateNextJournalRef,
   findEntriesByIds,
   saveEntry,
   bulkSaveEntries,
@@ -52,7 +52,7 @@ export const accountingRepository: AccountingRepository = {
   findEntryById,
   findEntryByRef,
   findActiveEntryRefs,
-  allocateNextJournalRef,
+  allocateVoucherNumbers,
   findEntriesByIds,
   saveEntry,
   bulkSaveEntries,

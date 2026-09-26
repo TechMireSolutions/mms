@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { generateJERef, isJournalRefUnique, type Account, type FiscalYear, type JournalEntry, type AccountingSettings } from "@/lib/data/accountingData";
+import { isJournalRefUnique, type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { isJournalEntryBalanced, journalEntryRecordSchema, todayISO, type AppTranslationKey } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import {
@@ -12,6 +12,7 @@ import {
   type WizardFormState,
 } from "./simpleTransactionWizardTypes";
 import { parseMoneyInput } from "./simpleTransactionMoney";
+import type { JournalEntrySave } from "./journalEntriesTypes";
 
 export const LAST_TYPE_SESSION_KEY = "mms-wizard-last-type-id";
 
@@ -20,11 +21,10 @@ export interface UseSimpleTransactionWizardParams {
   accounts: Account[];
   entries: JournalEntry[];
   fiscalYears: FiscalYear[];
-  onSave: (entry: JournalEntry, stayOpen?: boolean) => void | Promise<void>;
+  onSave: JournalEntrySave;
   prefillType?: QuickActionType | null;
   prefillAmount?: string;
   prefillDescription?: string;
-  settings?: Partial<AccountingSettings>;
 }
 
 export function useSimpleTransactionWizard({
@@ -36,7 +36,6 @@ export function useSimpleTransactionWizard({
   prefillType,
   prefillAmount,
   prefillDescription,
-  settings,
 }: UseSimpleTransactionWizardParams) {
   const { t } = useTranslation();
   const activeFiscalYearLabel = (fiscalYears || []).find((fiscalYear) => fiscalYear.status === "active")?.label || "";
@@ -195,13 +194,12 @@ export function useSimpleTransactionWizard({
     if (!selectedType) { notify.error(t("accounting.journal.dashboard.wizard.errorSource")); return; }
     setSubmittingStatus(recordAnother ? "posted_and_new" : status);
     try {
-      const generatedReference = generateJERef(entries, settings, form.date);
-      const candidateRef = userRef || generatedReference;
       const description = form.description.trim() || t(selectedType.labelKey);
       const candidateTags = form.tags && form.tags.length > 0 ? form.tags : (selectedType.tag ? [selectedType.tag] : []);
       const candidate: JournalEntry = {
         id: `je${crypto.randomUUID()}`,
-        ref: candidateRef,
+        // Blank → the server assigns the next voucher number on save.
+        ref: userRef,
         date: form.date,
         description,
         status,
@@ -223,9 +221,9 @@ export function useSimpleTransactionWizard({
         notify.error(t("common.formPleaseFixErrors"));
         return;
       }
-      await onSave(parsedEntry.data, recordAnother);
+      const saved = await onSave(parsedEntry.data, recordAnother);
       if (recordAnother) {
-        notify.success(`${candidate.ref}: ${t("accounting.journal.dashboard.wizard.postMessage")}`);
+        notify.success(`${saved?.ref || candidate.ref}: ${t("accounting.journal.dashboard.wizard.postMessage")}`);
         setForm((prev) => ({
           ...prev,
           amount: "",

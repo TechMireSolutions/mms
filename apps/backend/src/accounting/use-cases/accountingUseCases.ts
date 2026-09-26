@@ -29,6 +29,7 @@ import { withTenant } from '../../db/tenant-context.js';
 import { ConflictError } from '../../lib/httpErrors.js';
 import { isUniqueViolation } from '../../lib/pgErrors.js';
 import { randomUUID } from 'node:crypto';
+import { assignVoucherRefs } from './journalVoucherRefs.js';
 
 const EMPTY_ACCOUNTING_METRICS: AccountingCommandMetricsSnapshot = {
   totalEntries: 0,
@@ -414,48 +415,14 @@ export function createAccountingUseCases(
         const fiscalYears = await fiscalYearService.load();
         const storedById = await loadStoredEntriesByIds(parsed);
 
-        // 1. Intra-batch duplicate ref check
-        const seenRefs = new Set<string>();
-        for (const entry of parsed) {
-          const ref = entry.ref?.trim();
-          if (ref) {
-            if (seenRefs.has(ref)) {
-              throw new ConflictError(`Duplicate reference "${ref}" within the same batch`);
-            }
-            seenRefs.add(ref);
-          }
-        }
+        const entriesWithRef = await assignVoucherRefs(
+          repo,
+          tenant,
+          parsed,
+          new Map([...storedById].map(([id, stored]) => [id, stored.ref])),
+        );
 
-        // 2. Allocate next unique ref if missing or blank
-        const entriesWithRef: JournalEntry[] = [];
-        for (const entry of parsed) {
-          let ref = entry.ref?.trim();
-          if (!ref) {
-            let candidate = repo.allocateNextJournalRef
-              ? await repo.allocateNextJournalRef(tenant)
-              : `JE-${randomUUID().slice(0, 8)}`;
-            if (seenRefs.has(candidate)) {
-              const match = candidate.match(/^(.*)-(\d+)$/);
-              if (match) {
-                const prefix = match[1];
-                let num = parseInt(match[2], 10);
-                while (seenRefs.has(candidate)) {
-                  num += 1;
-                  candidate = `${prefix}-${num.toString().padStart(4, '0')}`;
-                }
-              } else {
-                while (seenRefs.has(candidate)) {
-                  candidate = `JE-${randomUUID().slice(0, 8)}`;
-                }
-              }
-            }
-            ref = candidate;
-            seenRefs.add(ref);
-          }
-          entriesWithRef.push({ ...entry, ref });
-        }
-
-        // 3. DB duplicate check for incoming refs against existing entries
+        // DB duplicate check for incoming refs against existing entries
         if (repo.findActiveEntryRefs) {
           const incomingRefs = entriesWithRef.map((e) => e.ref.trim()).filter(Boolean);
           const activeRefs = await repo.findActiveEntryRefs(tenant, incomingRefs);
@@ -512,17 +479,19 @@ export function createAccountingUseCases(
         const fiscalYears = await fiscalYearService.load();
         const existing = await repo.findEntryById(tenant, id);
 
-        let ref = record.ref?.trim();
-        if (!ref) {
-          ref = repo.allocateNextJournalRef
-            ? await repo.allocateNextJournalRef(tenant)
-            : `JE-${randomUUID().slice(0, 8)}`;
-        } else if (repo.findEntryByRef) {
-          const conflicting = await repo.findEntryByRef(tenant, ref, { excludeId: id });
+        const typedRef = record.ref?.trim();
+        if (typedRef && repo.findEntryByRef) {
+          const conflicting = await repo.findEntryByRef(tenant, typedRef, { excludeId: id });
           if (conflicting) {
-            throw new ConflictError(`A journal entry with reference "${ref}" already exists`);
+            throw new ConflictError(`A journal entry with reference "${typedRef}" already exists`);
           }
         }
+        const [{ ref }] = await assignVoucherRefs(
+          repo,
+          tenant,
+          [record],
+          new Map(existing ? [[id, existing.ref]] : []),
+        );
 
         const sanitized = withServerOwnedSourceKeys(
           { ...record, id, ref },

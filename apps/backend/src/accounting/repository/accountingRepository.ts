@@ -59,7 +59,11 @@ export interface AccountingRepository {
   findEntryById(tenant: string, id: string): Promise<JournalEntry | null>;
   findEntryByRef?(tenant: string, ref: string, options?: { excludeId?: string }): Promise<JournalEntry | null>;
   findActiveEntryRefs?(tenant: string, refs: readonly string[]): Promise<Map<string, string>>;
-  allocateNextJournalRef?(tenant: string, prefix?: string): Promise<string>;
+  /** Issues voucher numbers inside the caller's write transaction; `null` when auto-numbering is off. */
+  allocateVoucherNumbers?(
+    tenant: string,
+    options: { date?: string; count?: number; reserved?: ReadonlySet<string> },
+  ): Promise<string[] | null>;
   findEntriesByIds(
     tenant: string,
     ids: string[],

@@ -9,7 +9,7 @@ export interface JournalEntryActionDeps {
   entries: JournalEntry[];
   showDeleted: boolean;
   t: TranslationFunction;
-  onChange: (updater: (prev: JournalEntry[]) => JournalEntry[]) => void | Promise<void>;
+  onChange: (updater: (prev: JournalEntry[]) => JournalEntry[]) => void | JournalEntry[] | Promise<void | JournalEntry[]>;
   onDelete?: (id: string) => void | Promise<void>;
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
@@ -21,8 +21,8 @@ export interface JournalEntryActionDeps {
 }
 
 export function createJournalSaveHandler(deps: Pick<JournalEntryActionDeps, 'onChange' | 'setModal' | 'setSelected' | 'setSimpleModal'>) {
-  return async (entry: JournalEntry, stayOpen = false) => {
-    await deps.onChange((prev) => {
+  return async (entry: JournalEntry, stayOpen = false): Promise<JournalEntry> => {
+    const saved = await deps.onChange((prev) => {
       if (prev.find((journalEntry) => journalEntry.id === entry.id)) {
         return prev.map((journalEntry) => (journalEntry.id === entry.id ? entry : journalEntry));
       }
@@ -33,6 +33,7 @@ export function createJournalSaveHandler(deps: Pick<JournalEntryActionDeps, 'onC
       deps.setSelected(null);
       deps.setSimpleModal(null);
     }
+    return saved?.find((savedEntry) => savedEntry.id === entry.id) ?? entry;
   };
 }
 

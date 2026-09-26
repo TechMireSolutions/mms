@@ -17,6 +17,7 @@ import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMe
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { tsrClient } from '@/lib/api';
 import { apiJson } from '@/lib/apiClient';
+import { VOUCHER_NUMBERING_QUERY_KEY } from './useVoucherNumbering';
 
 export const ACCOUNTING_METRICS_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'metrics'] as const;
 export const ACCOUNTING_REPORT_AGGREGATES_QUERY_KEY = [ACCOUNTING_MODULE_MANIFEST.moduleId, 'report-aggregates'] as const;
@@ -172,6 +173,7 @@ export function useAccountingMutations() {
     // Ledger writes change the report figures too; without this the Reports tier
     // kept serving pre-posting numbers for its 5-minute staleTime window.
     void queryClient.invalidateQueries({ queryKey: ACCOUNTING_REPORT_AGGREGATES_QUERY_KEY });
+    void queryClient.invalidateQueries({ queryKey: VOUCHER_NUMBERING_QUERY_KEY });
   };
 
   // @ts-expect-error - TS union discrimination limit with ts-rest

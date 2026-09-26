@@ -11,6 +11,7 @@ import type { JournalEntriesListPaging } from "@/tenant/features/accounting/comp
 import { JournalEntriesListFilters, JournalEntriesAdvancedFilters } from "@/tenant/features/accounting/components/JournalEntriesListFilters";
 import { AccountingBulkActionBar } from "@/tenant/features/accounting/components/AccountingBulkActionBar";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
+import type { JournalEntrySave } from "./journalEntriesTypes";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
@@ -65,7 +66,7 @@ interface JournalEntriesAdvancedModeProps {
   onToggleSelectedEntry: (id: string, checked: boolean) => void;
   onToggleSelectAll: (checked: boolean) => void;
   onClearSelection: () => void;
-  onSave: (entry: JournalEntry) => void | Promise<void>;
+  onSave: JournalEntrySave;
   onCloseModal: () => void;
   onEditSelected: () => void;
   onViewEntry: (entry: JournalEntry) => void;

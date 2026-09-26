@@ -1,7 +1,7 @@
 import { useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
-import type { Account, AppTranslationKey, FiscalYear, JournalEntry } from "@mms/shared";
+import { journalEntryListSchema, type Account, type AppTranslationKey, type FiscalYear, type JournalEntry } from "@mms/shared";
 import { useAccountingMutations } from "@/tenant/features/accounting/hooks/useAccountingApi";
 import { NotifiedMutationError } from "@/lib/notifiedMutationError";
 import { getApiValidationMessage } from "@/lib/apiValidationMessage";
@@ -67,10 +67,17 @@ export function useAccountingPageActions({
     }
   });
 
-  const setEntries = (async (updater: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => {
+  /** Resolves with the server's copy so callers can show server-assigned voucher numbers. */
+  const setEntries = (async (updater: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])): Promise<JournalEntry[]> => {
     const nextJournalEntries = typeof updater === "function" ? updater(journalEntries) : updater;
     try {
-      await upsertEntries.mutateAsync(nextJournalEntries);
+      const result: unknown = await upsertEntries.mutateAsync(nextJournalEntries);
+      const saved = journalEntryListSchema.safeParse(
+        result && typeof result === "object" && "body" in result && result.body && typeof result.body === "object" && "entries" in result.body
+          ? result.body.entries
+          : undefined,
+      );
+      return saved.success ? saved.data : nextJournalEntries;
     } catch (error: unknown) {
       notifySaveFailure(error);
       throw error;
