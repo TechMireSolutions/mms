@@ -16,7 +16,7 @@ allowed-tools: Read Grep Glob Bash(bash .agent/scripts/sync-all.sh) Bash(node sc
 
 - ❌ **NEVER edit rules/skills without running sync**: Running `bash .agent/scripts/sync-all.sh` is mandatory to keep Cursor, Claude, and Antigravity aligned.
 - ❌ **NEVER run `cd` in tool commands**: Specify absolute execution `Cwd` or pass paths directly to scripts.
-- ❌ **NEVER commit or push to remotes**: Commits require explicit user instruction; remote pushes are exclusively performed by the user.
+- ❌ **NEVER commit or push without instruction**: Commits require the user to say "commit"; pushes require the user to say "push".
 - ❌ **NEVER rewrite full files**: Use targeted `replace_file_content` patches with minimal anchor context.
 
 ## Directory layout

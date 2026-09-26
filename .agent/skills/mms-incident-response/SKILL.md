@@ -10,7 +10,7 @@ compatibility: Requires SSH access to the Hetzner VPS with PM2 and Apache; do no
 
 # MMS Incident Response
 
-**Rules (norms SSOT):** `mms-ops-infrastructure.md` (ports 5002/3000, health endpoints, PM2/Apache topology, CI deploy flow) · `mms-agent-universal.md` (never push; the user owns git operations).
+**Rules (norms SSOT):** `mms-ops-infrastructure.md` (ports 5002/3000, health endpoints, PM2/Apache topology, CI deploy flow) · `mms-agent-universal.md` (say "commit" / "push" explicitly).
 
 ## First 5 minutes — stabilise before diagnosing
 
@@ -53,7 +53,7 @@ Notes that matter: the rollback restores a dist tarball and reloads PM2 — it d
 
 ## Hard rules
 
-- Never `git push`, force-push, or rewrite history during an incident; the user owns git operations.
+- Never force-push or rewrite history during an incident; `git push` only if the user says "push".
 - Never run `drizzle-kit push`, drop tables, or "clean up" rows that are evidence (`mms-agent-universal.md`, `mms-schema-migrate`).
 - Never disable a security control (rate limits, CORS/Origin checks, RLS) to make the site come back — that converts an outage into a breach.
 - Never claim recovery from `pm2 status` alone; verify from the public URL.

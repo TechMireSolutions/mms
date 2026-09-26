@@ -23,5 +23,5 @@ conventions here, and never add a second copy of the skill list or the always-on
 - `.claude/rules/`, `.claude/skills/`, and `.claude/docs/workflows/` are **generated** from `.cursor/rules/` and `.agent/skills/`. Edit the canonical source and run `bash .agent/scripts/sync-all.sh`; a hand edit here is overwritten and CI will fail the drift check.
 - `bash .agent/scripts/sync-all.sh --dry-run` previews which mirror files would change (the prune step deletes mirror-only files).
 - Permissions and hooks are committed in `.claude/settings.json` (`deny` rules apply immediately; `allow` rules wait for workspace trust). Personal overrides belong in the gitignored `.claude/settings.local.json`.
-- The guards are hooks, not prose: `git push`, `drizzle-kit push`, destructive `rm`, and reads of real `.env` files are blocked by `.cursor/hooks/guard-shell.sh` (shared with Cursor).
+- The guards are hooks, not prose: `drizzle-kit push`, destructive `rm`, and reads of real `.env` files are blocked by `.cursor/hooks/guard-shell.sh` (shared with Cursor).
 - Verify the standards corpus with `node scripts/verify-rules-integrity.mjs` after any rule/skill change; it is the same gate CI runs.

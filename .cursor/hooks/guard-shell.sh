@@ -37,11 +37,6 @@ block() {
   exit 2
 }
 
-# The user handles every push (mms-agent-universal.md: Git).
-case "$command" in
-  *"git push"*) block "git push is always performed by the user, never by an agent." ;;
-esac
-
 # Destructive filesystem operations outside the workspace.
 case "$command" in
   *"rm -rf /"*|*"rm -rf ~"*|*"rm -rf \$HOME"*) block "destructive rm of a root/home path." ;;

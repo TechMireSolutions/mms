@@ -105,7 +105,7 @@ Update this table in the same change that adds or removes a check.
 | Dependency advisories | `pnpm audit --audit-level=high` + dependency-review (CI) | CI |
 | Secrets in history | gitleaks (CI, full history) | CI |
 | Rule/skill/mirror integrity | `node scripts/verify-rules-integrity.mjs` + sync drift diff (CI) | CI |
-| `git push` / `drizzle-kit push` / destructive rm / .env reads | `.cursor/hooks/guard-shell.sh` (Claude + Cursor hooks) | hook |
+| `drizzle-kit push` / destructive rm / .env reads | `.cursor/hooks/guard-shell.sh` (Claude + Cursor hooks) | hook |
 | Tenant RLS enablement per table | `mms-schema-migrate/scripts/check-migrations.sh` | skill script |
 | `@mms/shared` runtime purity | `mms-shared-package/scripts/check-shared-exports.sh` | skill script |
 | a11y serious/critical violations | `e2e/tests/a11y-shell.spec.ts` (CI e2e job) | test |
