@@ -159,6 +159,10 @@ describe('ledgerPostingService', () => {
   });
 
   it('skips posting entirely when a source already has an entry (idempotency)', async () => {
+    mockLedgerOpsRepo.getPostingRules.mockResolvedValue({
+      cashAccountId: 'acc-cash',
+      arAccountId: 'acc-ar',
+    });
     mockAccountingRepo.findEntryIdBySource.mockResolvedValue('je-existing');
 
     await tryPostPaymentJournal('tenant-1', { id: 'pmt-1', date: '2026-06-05', amount: 500 } as any);

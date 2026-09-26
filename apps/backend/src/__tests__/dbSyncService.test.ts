@@ -75,6 +75,11 @@ describe('dbSyncService collection persistence', () => {
     dbListTenantObjectLogicalKeys.mockResolvedValue([]);
     dbListTenantCollectionLogicalKeys.mockResolvedValue([]);
     clearTenantBackgroundJobs.mockResolvedValue(0);
+    // Tests below override these; reset so no test depends on run order.
+    getRequestTenant.mockReset();
+    dbSaveCollection.mockReset();
+    acquireTenantRestoreLock.mockReset().mockResolvedValue(true);
+    listAllTenantUsersByWorkspace.mockReset().mockResolvedValue([]);
   });
 
   it('persistCollection writes JSON only without relational replace', async () => {
