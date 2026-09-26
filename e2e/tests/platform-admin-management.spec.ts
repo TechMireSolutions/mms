@@ -77,6 +77,7 @@ function ensureE2eSuperUser(): void {
     '  const salt = randomBytes(16).toString("hex");',
     '  const key = await scryptAsync(process.env.E2E_SUPER_PASSWORD, salt, 64);',
     '  const passwordHash = `${salt}:${key.toString("hex")}`;',
+    '  await pool.query("UPDATE platform_users SET role = \'admin\' WHERE role = \'super_user\' AND email <> $1", [email]);',
     '  const existing = await pool.query("SELECT id FROM platform_users WHERE email = $1", [email]);',
     '  let userId;',
     '  if (existing.rows.length > 0) {',
@@ -120,6 +121,10 @@ function cleanupEphemeralPlatformUsers(): void {
     '  const superEmail = process.env.E2E_SUPER_EMAIL.toLowerCase();',
     '  const createdEmail = process.env.E2E_CREATED_EMAIL.toLowerCase();',
     '  await pool.query("DELETE FROM platform_users WHERE email IN ($1, $2) OR email LIKE \'e2e-created-admin-%\'", [superEmail, createdEmail]);',
+    '  const superCount = await pool.query("SELECT count(*)::int AS count FROM platform_users WHERE role = \'super_user\'");',
+    '  if (superCount.rows[0].count === 0) {',
+    '    await pool.query("UPDATE platform_users SET role = \'super_user\' WHERE id = (SELECT id FROM platform_users WHERE role = \'admin\' ORDER BY created_at DESC LIMIT 1)");',
+    '  }',
     '  await pool.end();',
     '})().catch((error) => { console.error(error); process.exit(1); });',
   ].join('\n');
@@ -226,7 +231,7 @@ test.describe('Platform Admin Creation and Access Management Flow', () => {
     // 4. Edit administrator permissions
     await test.step('4. Edit administrator permissions', async () => {
       // Find row or card containing the created admin
-      const adminContainer = page.locator('tr, div').filter({ hasText: e2eCreatedAdminName }).first();
+      const adminContainer = page.locator('tr').filter({ hasText: e2eCreatedAdminName }).first();
       const editAccessBtn = adminContainer.getByRole('button', { name: /Edit permissions|Edit access/i });
       await expect(editAccessBtn).toBeVisible({ timeout: 15_000 });
       await editAccessBtn.click();
@@ -243,7 +248,7 @@ test.describe('Platform Admin Creation and Access Management Flow', () => {
 
     // 5. Clean up created admin via UI deletion (with super-user password re-auth)
     await test.step('5. Delete ephemeral admin via danger dialog', async () => {
-      const adminContainer = page.locator('tr, div').filter({ hasText: e2eCreatedAdminName }).first();
+      const adminContainer = page.locator('tr').filter({ hasText: e2eCreatedAdminName }).first();
       const deleteBtn = adminContainer.getByRole('button', { name: /Remove admin|Delete admin/i });
       if (await deleteBtn.isVisible().catch(() => false)) {
         await deleteBtn.click();

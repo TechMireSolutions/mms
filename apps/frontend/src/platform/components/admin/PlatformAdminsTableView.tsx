@@ -53,8 +53,17 @@ export function PlatformAdminsTableView({
             {admins.map((admin) => (
               <TableRow
                 key={admin.id}
-                className="group hover:bg-muted/30 transition-colors cursor-pointer"
+                tabIndex={0}
+                role="button"
+                aria-label={`${t('common.details')}: ${admin.name}`}
+                className="group hover:bg-muted/30 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset"
                 onClick={() => onInspect(admin)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    onInspect(admin);
+                  }
+                }}
               >
                 <TableCell className="px-4 py-3 align-top">
                   <div className="space-y-1">
@@ -76,7 +85,11 @@ export function PlatformAdminsTableView({
                 <TableCell className="px-4 py-3 align-top">
                   <PlatformAdminPermissionsBadges admin={admin} />
                 </TableCell>
-                <TableCell className="px-4 py-3 align-top text-end" onClick={(e) => e.stopPropagation()}>
+                <TableCell
+                  className="px-4 py-3 align-top text-end"
+                  onClick={(e) => e.stopPropagation()}
+                  onKeyDown={(e) => e.stopPropagation()}
+                >
                   <PlatformAdminActionButtons
                     admin={admin}
                     onEditAccess={onEditAccess}

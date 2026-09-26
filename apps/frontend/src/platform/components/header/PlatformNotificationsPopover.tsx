@@ -73,9 +73,10 @@ export function PlatformNotificationsPopover({
                 />
               ) : (
                 notifications.map((notification) => (
-                  <button
+                  <Button
                     key={notification.id}
                     type="button"
+                    variant="ghost"
                     onClick={() => {
                       setPopoverOpen(false);
                       if (notification.href) {
@@ -84,7 +85,7 @@ export function PlatformNotificationsPopover({
                         navigate(ROUTES.platformReports);
                       }
                     }}
-                    className="w-full min-h-11 text-start border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/60 transition-colors bg-primary/5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus:bg-muted/80 block"
+                    className="w-full min-h-11 h-auto text-start justify-start border-b border-border/50 px-4 py-3 rounded-none last:border-0 hover:bg-muted/60 transition-colors bg-primary/5 cursor-pointer focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset block whitespace-normal"
                   >
                     <div className="flex items-start gap-3">
                       <div
@@ -99,7 +100,7 @@ export function PlatformNotificationsPopover({
                         <p className="mt-1 text-2xs font-mono text-muted-foreground">{notification.time}</p>
                       </div>
                     </div>
-                  </button>
+                  </Button>
                 ))
               )}
             </div>

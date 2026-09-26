@@ -84,9 +84,10 @@ export function PlatformHeaderUserNav({
           <Button
             type="button"
             variant="ghost"
+            aria-label={platformUser?.name ?? t('platform.operatorRole')}
             className={cn(
-              'flex items-center gap-2.5 p-1 rounded-xl hover:bg-muted transition-colors text-start',
-              compact && 'p-1',
+              'flex items-center gap-2.5 rounded-xl hover:bg-muted transition-colors text-start min-h-11',
+              compact ? 'h-11 w-11 min-w-11 p-0 justify-center' : 'px-2.5 py-1',
             )}
           >
             <UserAvatar

@@ -175,6 +175,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       }
       const created = await invoiceCrud.create({
         ...record,
+        studentId: students[0]?.id ?? record.studentId,
         familyContactId: record.familyContactId ?? resolveFamilyContactId(students[0]),
         invoiceNumber: record.invoiceNumber || (await allocateNextInvoiceNumber(tenant, year, prefix)),
         ...(totals
@@ -188,6 +189,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
     updateInvoiceById: async (id: string, record: InvoiceUpdate): Promise<Invoice | null> => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
+      let resolvedStudentId = record.studentId;
       if (record.studentId) {
         const { findStudentsByIds } = await import('../../db/repositories/studentRepository.js');
         const students = await findStudentsByIds(tenant, [record.studentId]);
@@ -196,6 +198,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
           (err as Error & { statusCode: number }).statusCode = 400;
           throw err;
         }
+        resolvedStudentId = students[0].id;
       }
       const { lines: rawLines, ...rest } = record;
       const lines = rawLines
@@ -207,6 +210,7 @@ export function createFinanceUseCases(repo: FinanceRepository = financeRepositor
       await assertInvoiceAmountsEditable(tenant, id, rest);
       return invoiceCrud.updateById(id, {
         ...rest,
+        ...(resolvedStudentId ? { studentId: resolvedStudentId } : {}),
         ...(lines ? { lines } : {}),
       });
     },

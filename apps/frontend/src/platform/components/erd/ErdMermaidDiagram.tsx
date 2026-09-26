@@ -49,6 +49,18 @@ export function ErdMermaidDiagram({ domain }: ErdMermaidDiagramProps): React.JSX
   }, [isFullscreen]);
 
   useEffect(() => {
+    if (typeof MutationObserver === 'undefined') return;
+    const observer = new MutationObserver(() => {
+      setRetryTick((tick) => tick + 1);
+    });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ['class', 'data-theme'],
+    });
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
     const controller = new AbortController();
     setStatus('pending');
     setSvg('');

@@ -37,7 +37,7 @@ export function PlatformSidebarNav({
   reducedMotion,
   closeMobileSidebar,
 }: PlatformSidebarNavProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
   const location = useLocation();
 
   return (
@@ -85,7 +85,7 @@ export function PlatformSidebarNav({
                   <Tooltip key={item.id}>
                     <TooltipTrigger asChild>{linkNode}</TooltipTrigger>
                     <TooltipContent
-                      side="right"
+                      side={dir === 'rtl' ? 'left' : 'right'}
                       sideOffset={12}
                       className="font-semibold text-xs bg-sidebar-accent text-sidebar-accent-foreground border border-sidebar-border shadow-md"
                     >

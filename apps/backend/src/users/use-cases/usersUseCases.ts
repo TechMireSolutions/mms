@@ -13,7 +13,10 @@ import { assertPasswordMeetsPolicy } from '../../services/globalSettingsService.
 import { loadContactsByIds } from '../../services/contactService.js';
 import { HttpDomainError } from '../../lib/httpErrors.js';
 import { findFacultyByContactId } from '../../db/repositories/facultyRepository.js';
-import { findCurrentFacultyDesignationAssignment } from '../../db/repositories/facultyDesignationRepository.js';
+import {
+  findCurrentFacultyDesignationAssignment,
+  listFacultyDesignations,
+} from '../../db/repositories/facultyDesignationRepository.js';
 import {
   type WorkspaceUser,
   type Contact,
@@ -98,6 +101,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     if (!contactId || !role) return;
     const faculty = await findFacultyByContactId(tenant, contactId);
     if (!faculty) return;
+    const definitions = await listFacultyDesignations(tenant);
+    if (!definitions.some((d) => d.isActive)) return;
     const designation = await findCurrentFacultyDesignationAssignment(tenant, String(faculty.id));
     if (!designation) {
       throw new HttpDomainError(400, 'faculty_designation_required', 'Assign an active faculty designation before creating a user account');

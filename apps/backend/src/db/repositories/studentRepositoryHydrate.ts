@@ -1,4 +1,4 @@
-import { and, eq, inArray, sql } from 'drizzle-orm';
+import { and, eq, inArray, or, sql } from 'drizzle-orm';
 import { type Student, type RepositoryListOptions } from '@mms/shared';
 import { students } from '../schema.js';
 import { withTenantRead, type AppDb } from '../tenant-context.js';
@@ -223,7 +223,16 @@ export async function findStudentsByIds(tenant: string, ids: string[]): Promise<
         updatedBy: students.updatedBy,
       })
       .from(students)
-      .where(and(eq(students.workspaceSubdomain, subdomain), inArray(students.id, ids)));
+      .where(
+        and(
+          eq(students.workspaceSubdomain, subdomain),
+          or(
+            inArray(students.id, ids),
+            inArray(students.studentId, ids),
+            inArray(students.grNumber, ids),
+          ),
+        ),
+      );
     return hydrateStudentsList(tx, subdomain, rows);
   });
 }

@@ -120,4 +120,19 @@ describe('PlatformAdminsList', () => {
 
     expect(html).toContain('Failed to load operators');
   });
+
+  it('renders table rows with keyboard accessibility attributes', () => {
+    const html = renderToStaticMarkup(
+      <PlatformAdminsList
+        admins={mockAdmins}
+        loading={false}
+        fetchError={false}
+        onRetry={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('role="button"');
+    expect(html).toContain('tabindex="0"');
+    expect(html).toContain('Super Admin');
+  });
 });

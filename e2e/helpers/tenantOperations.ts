@@ -8,8 +8,13 @@ const __dirname = path.dirname(__filename);
 const backendDir = path.resolve(__dirname, '../../apps/backend');
 
 export async function ensureWorkTierActive(page: Page): Promise<void> {
-  const workTab = page.getByRole('tab', { name: 'Work', exact: true }).first();
-  if (await workTab.isVisible({ timeout: 2000 }).catch(() => false)) {
+  const workTab = page
+    .getByRole('tab', { name: 'Work', exact: true })
+    .or(page.getByRole('button', { name: 'Work', exact: true }))
+    .first();
+  await expect(workTab).toBeVisible({ timeout: 15_000 });
+  const isSelected = await workTab.getAttribute('aria-selected');
+  if (isSelected !== 'true') {
     await workTab.click();
     await page.waitForLoadState('domcontentloaded');
   }
@@ -735,7 +740,7 @@ export async function createAccountsAndJournalEntry(page: Page): Promise<void> {
       timeout: 15_000,
     });
 
-    await page.getByRole('region', { name: 'Advanced Journal Entries' }).getByRole('button', { name: 'New Entry' }).click();
+    await page.getByRole('region', { name: 'Advanced Journal Entries' }).getByRole('button', { name: 'New Entry' }).first().click();
     const entryDialog = page.getByRole('dialog', { name: 'New Journal Entry' });
     await expect(entryDialog).toBeVisible();
     await entryDialog.locator('#journal-entry-description').fill('E2E fee collection journal');
