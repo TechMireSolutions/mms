@@ -1,8 +1,8 @@
 import React, { useId } from 'react';
 import type { LucideIcon } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/hooks/useTranslation';
-import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { cn } from '@/lib/utils';
 
 export interface PlatformPermissionCheckboxItemProps {
@@ -48,14 +48,15 @@ export function PlatformPermissionCheckboxItem({
         <div className="flex items-center gap-2">
           <Icon className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
           <span className="text-xs font-bold text-foreground">{label}</span>
-          <span
-            className={cn(
-              'ms-auto text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider',
-              checked ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground',
-            )}
+          <Badge
+            as="span"
+            tone={checked ? 'success' : 'muted'}
+            size="sm"
+            pill
+            className="ms-auto uppercase tracking-wider text-2xs font-bold"
           >
             {checked ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
-          </span>
+          </Badge>
         </div>
         <p className="text-3xs font-medium text-muted-foreground leading-relaxed">
           {description}

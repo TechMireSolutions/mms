@@ -2,6 +2,7 @@ import React from 'react';
 import { ShieldCheck } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { OtpInput } from '@/components/ui/OtpInput';
+import { FieldErrorMessage } from '@/components/ui/FormField';
 import { AuthSubmitButton, AuthResendCodeControl, AuthBackLink } from '@/components/entry/AuthFormControls';
 import { AuthStatusBanner } from '@/components/entry/AuthStatusBanner';
 import { PlatformAuthForm } from '@/platform/pages/auth/steps/PlatformAuthForm';
@@ -55,9 +56,7 @@ export function PlatformTwoFactorStep({
         />
 
         {codeError ? (
-          <p className="text-center text-xs text-destructive" role="alert">
-            {codeError}
-          </p>
+          <FieldErrorMessage message={codeError} className="justify-center text-center" />
         ) : null}
 
         <AuthSubmitButton

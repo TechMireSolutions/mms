@@ -1,12 +1,12 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, ChevronRight } from 'lucide-react';
-import { cva } from 'class-variance-authority';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
 import { usePlatformHealth } from '@/platform/hooks/usePlatformHealth';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { ROUTES, isNavPathActive } from '@/lib/config/routes';
 import { PLATFORM_NAV_ITEMS } from '@/platform/lib/platformNav';
 import { PlatformHeaderBrand } from '@/platform/components/header/PlatformHeaderBrand';
@@ -16,31 +16,6 @@ export interface PlatformPageShellHeaderProps {
   onOpenSearch?: () => void;
   searchOpen?: boolean;
 }
-
-const healthBadge = cva(
-  'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs sm:text-xs font-semibold hover:opacity-85 transition-opacity cursor-pointer border',
-  {
-    variants: {
-      status: {
-        operational: 'bg-success/10 text-success border-success/20',
-        degraded: 'bg-warning/10 text-warning border-warning/20',
-        unknown: 'bg-muted text-muted-foreground border-border/40',
-      },
-    },
-    defaultVariants: { status: 'unknown' },
-  },
-);
-
-const healthDot = cva('w-2 h-2 rounded-full', {
-  variants: {
-    status: {
-      operational: 'bg-success animate-pulse',
-      degraded: 'bg-warning animate-pulse',
-      unknown: 'bg-muted-foreground',
-    },
-  },
-  defaultVariants: { status: 'unknown' },
-});
 
 type HealthStatus = 'operational' | 'degraded' | 'unknown';
 
@@ -108,12 +83,21 @@ export function PlatformPageShellHeader({
           {/* Health Status Badge */}
           <Link
             to={ROUTES.platformSystem}
-            className={healthBadge({ status })}
+            className="hidden sm:inline-flex cursor-pointer"
             title={t('platform.systemMaintenance')}
             aria-label={`${t('platform.systemMaintenance')}: ${healthLabel}`}
           >
-            <span className={healthDot({ status })} />
-            {healthLabel}
+            <Badge
+              as="span"
+              tone={status === 'operational' ? 'success' : status === 'degraded' ? 'warning' : 'muted'}
+              pill
+              dot
+              pulse={status !== 'unknown'}
+              size="sm"
+              className="hover:opacity-85 transition-opacity cursor-pointer"
+            >
+              {healthLabel}
+            </Badge>
           </Link>
         </div>
 

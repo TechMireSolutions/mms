@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { SYSTEM_MODULES } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Modal } from '@/components/ui/Modal';
-import { ActionButton } from '@/components/ui/ActionButton';
+import { FormModal } from '@/components/ui/FormModal';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import { PlatformModuleSelectCard } from '@/platform/components/workspace/PlatformModuleSelectCard';
 import { PlatformModulePresetsBar } from '@/platform/components/workspace/PlatformModulePresetsBar';
@@ -55,7 +54,7 @@ export function PlatformWorkspaceModulesDialog({
   open,
   onOpenChange,
 }: PlatformWorkspaceModulesDialogProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir, language } = useTranslation();
   const { data: currentModules, isLoading } = useWorkspaceModules(workspace.subdomain, open);
   const { mutateAsync: updateModules, isPending } = useUpdateWorkspaceModules();
 
@@ -107,30 +106,20 @@ export function PlatformWorkspaceModulesDialog({
   const selectedModuleSet = new Set(selectedModules);
 
   return (
-    <Modal
+    <FormModal
       open={open}
       onClose={() => onOpenChange(false)}
       title={t('platform.modulesTitle')}
       subtitle={`${workspace.madrasaName} (${workspace.subdomain})`}
-      footer={
-        <>
-          <ActionButton
-            variant="secondary"
-            onClick={() => onOpenChange(false)}
-            disabled={isPending}
-          >
-            {t('common.cancel')}
-          </ActionButton>
-          <ActionButton
-            variant="primary"
-            onClick={handleSave}
-            loading={isPending}
-            disabled={isPending || isLoading}
-          >
-            {t('common.save')}
-          </ActionButton>
-        </>
-      }
+      icon={LayoutDashboard}
+      size="xl"
+      cancelLabel={t('common.cancel')}
+      saveLabel={t('common.save')}
+      onSave={handleSave}
+      saving={isPending}
+      saveDisabled={isPending || isLoading}
+      dir={dir}
+      lang={language}
     >
       <div className="flex-1 overflow-y-auto px-1 py-2 text-start space-y-5">
         <PlatformModulePresetsBar onApplyPreset={applyPreset} disabled={isPending} />
@@ -165,6 +154,6 @@ export function PlatformWorkspaceModulesDialog({
           </div>
         )}
       </div>
-    </Modal>
+    </FormModal>
   );
 }

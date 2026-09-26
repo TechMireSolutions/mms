@@ -3,7 +3,7 @@ import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shar
 import { UserPlus, RefreshCw, User, Mail } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { Input } from '@/components/ui/input';
-import { Field } from '@/components/ui/FormField';
+import { Field, FieldErrorMessage } from '@/components/ui/FormField';
 import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -178,7 +178,7 @@ export function PlatformWorkspaceCreateAdminDialog({
               </div>
             </Field>
 
-            {error ? <p className="text-xs font-medium text-destructive">{error}</p> : null}
+            {error ? <FieldErrorMessage message={error} /> : null}
           </div>
         </div>
       )}

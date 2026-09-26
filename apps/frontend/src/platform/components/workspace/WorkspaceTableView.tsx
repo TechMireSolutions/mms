@@ -10,8 +10,8 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
+import { ModuleTableSelectionCell } from '@/components/ui/ModuleTableSelectionCell';
 import { Switch } from '@/components/ui/switch';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
 import { WorkspaceIdentityCell } from '@/platform/components/workspace/WorkspaceIdentityCell';
 import { WorkspaceStatusBadge } from '@/platform/components/workspace/WorkspaceStatusBadge';
@@ -118,13 +118,12 @@ export function WorkspaceTableView({
                   )}
                 >
                   {onToggleSelect && selectedSubdomains && (
-                    <TableCell className="w-12 min-w-12 px-4 py-3 align-middle">
-                      <Checkbox
-                        checked={selectedSubdomains.has(workspace.subdomain)}
-                        onCheckedChange={() => onToggleSelect(workspace.subdomain)}
-                        aria-label={t('platform.workspaces.selectItem', { name: workspace.madrasaName })}
-                      />
-                    </TableCell>
+                    <ModuleTableSelectionCell
+                      checked={selectedSubdomains.has(workspace.subdomain)}
+                      onCheckedChange={() => onToggleSelect(workspace.subdomain)}
+                      ariaLabel={t('platform.workspaces.selectItem', { name: workspace.madrasaName })}
+                      sticky={false}
+                    />
                   )}
                   <TableCell className="px-4 py-3 align-middle min-w-72">
                     <WorkspaceIdentityCell workspace={workspace} appDomain={appDomain} />

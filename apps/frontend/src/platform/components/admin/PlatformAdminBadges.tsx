@@ -2,7 +2,7 @@ import React from 'react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
-import type { PlatformUserProfile } from '@mms/shared';
+import type { AppTranslationKey, PlatformUserProfile } from '@mms/shared';
 
 export interface PlatformAdminStatusBadgesProps {
   admin: PlatformUserProfile;
@@ -45,6 +45,14 @@ export interface PlatformAdminPermissionsBadgesProps {
   admin: PlatformUserProfile;
 }
 
+const PERMISSION_CONFIG: { key: keyof NonNullable<PlatformUserProfile['permissions']>; labelKey: AppTranslationKey }[] = [
+  { key: 'workspaces', labelKey: 'platform.permWorkspaces' },
+  { key: 'onboard', labelKey: 'platform.permOnboard' },
+  { key: 'settings', labelKey: 'platform.permSettings' },
+  { key: 'admins', labelKey: 'platform.permAdmins' },
+  { key: 'system', labelKey: 'platform.permSystem' },
+];
+
 export function PlatformAdminPermissionsBadges({ admin }: PlatformAdminPermissionsBadgesProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -53,75 +61,27 @@ export function PlatformAdminPermissionsBadges({ admin }: PlatformAdminPermissio
   }
 
   const perms = admin.permissions;
-  const hasAny =
-    perms?.workspaces || perms?.onboard || perms?.settings || perms?.admins || perms?.system;
+  const activePerms = PERMISSION_CONFIG.filter(({ key }) => perms?.[key]);
 
-  if (!hasAny) {
+  if (activePerms.length === 0) {
     return <span className="text-xs text-muted-foreground">{t('platform.adminNoCapabilities')}</span>;
   }
 
   return (
     <div className="flex flex-wrap gap-1.5">
-      {perms?.workspaces ? (
+      {activePerms.map(({ key, labelKey }) => (
         <StatusBadge
-          status="workspaces"
+          key={key}
+          status={key}
           config={{
-            workspaces: {
-              label: t('platform.permWorkspaces'),
+            [key]: {
+              label: t(labelKey),
               cls: SEMANTIC_BADGE.primary,
             },
           }}
           size="sm"
         />
-      ) : null}
-      {perms?.onboard ? (
-        <StatusBadge
-          status="onboard"
-          config={{
-            onboard: {
-              label: t('platform.permOnboard'),
-              cls: SEMANTIC_BADGE.primary,
-            },
-          }}
-          size="sm"
-        />
-      ) : null}
-      {perms?.settings ? (
-        <StatusBadge
-          status="settings"
-          config={{
-            settings: {
-              label: t('platform.permSettings'),
-              cls: SEMANTIC_BADGE.primary,
-            },
-          }}
-          size="sm"
-        />
-      ) : null}
-      {perms?.admins ? (
-        <StatusBadge
-          status="admins"
-          config={{
-            admins: {
-              label: t('platform.permAdmins'),
-              cls: SEMANTIC_BADGE.primary,
-            },
-          }}
-          size="sm"
-        />
-      ) : null}
-      {perms?.system ? (
-        <StatusBadge
-          status="system"
-          config={{
-            system: {
-              label: t('platform.permSystem'),
-              cls: SEMANTIC_BADGE.primary,
-            },
-          }}
-          size="sm"
-        />
-      ) : null}
+      ))}
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import React from 'react';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from '@/lib/semanticTone';
@@ -71,9 +72,9 @@ export function PlatformModuleSelectCard({
             {module.label}
           </span>
           {module.required ? (
-            <span className="ms-auto text-3xs font-semibold text-muted-foreground">
+            <Badge as="span" tone="muted" size="sm" pill className="ms-auto font-semibold">
               {t('platform.moduleRequired')}
-            </span>
+            </Badge>
           ) : null}
         </div>
         <p className="text-3xs text-muted-foreground leading-relaxed">

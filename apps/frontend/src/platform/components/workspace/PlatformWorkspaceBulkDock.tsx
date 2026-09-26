@@ -1,8 +1,8 @@
 import React from 'react';
-import { Download, CheckCircle2, Ban } from 'lucide-react';
+import { CheckCircle2, Ban } from 'lucide-react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { BulkActionDock } from '@/components/common/BulkActionDock';
+import { BulkActionDock, BulkSelectionExportAction } from '@/components/common/BulkActionDock';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { downloadWorkspacesCsv } from '@/platform/components/platformWorkspaceListData';
 
@@ -38,14 +38,10 @@ export function PlatformWorkspaceBulkDock({
       className="z-elevated"
     >
       <div className="flex items-center gap-2">
-        <ActionButton
-          variant="secondary"
-          size="sm"
-          icon={Download}
+        <BulkSelectionExportAction
+          label={t('platform.workspaces.exportSelected')}
           onClick={() => downloadWorkspacesCsv(selectedWorkspaces)}
-        >
-          {t('platform.workspaces.exportSelected')}
-        </ActionButton>
+        />
 
         <ActionButton
           variant="secondary"
