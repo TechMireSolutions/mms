@@ -1,23 +1,24 @@
 import { useState, useEffect } from "react";
-import { generateJERef, isJournalRefUnique, type Account, type JournalEntry, type FiscalYear, type AccountingSettings } from '@/lib/data/accountingData';
+import { isJournalRefUnique, type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
 import { hasFieldValue } from "@/lib/formCompleteness";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { isJournalEntryBalanced, journalEntryRecordSchema, moneyToCents, todayISO } from "@mms/shared";
+import { notify } from "@/lib/notify";
 import type { DraftForm, DraftLine } from "./journalEntryFormTypes";
+import type { JournalEntrySave } from "./journalEntriesTypes";
 
 const EMPTY_LINE = (): DraftLine => ({ id: `l-${crypto.randomUUID()}`, account_id: "", debit: "", credit: "", description: "" });
 
 interface UseJournalEntryFormOptions {
   accounts: Account[];
   entries: JournalEntry[];
-  onSave: (entry: JournalEntry) => void | Promise<void>;
+  onSave: JournalEntrySave;
   initial?: JournalEntry | null;
   fiscalYears: FiscalYear[];
-  settings?: Partial<AccountingSettings>;
 }
 
-export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears, settings }: UseJournalEntryFormOptions) {
+export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears }: UseJournalEntryFormOptions) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isEdit = !!initial?.id;
@@ -167,7 +168,8 @@ function parseLineAmount(val: string | number | null | undefined): number {
     const validationErrors = validate(targetStatus);
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     const trimmedRef = form.ref?.trim();
-    const journalReference = trimmedRef || (isEdit ? form.ref : generateJERef(entries, settings, form.date));
+    // Blank on create → the server assigns the next voucher number on save.
+    const journalReference = trimmedRef || (isEdit ? form.ref : "");
     if (!isJournalRefUnique(journalReference, entries, form.id)) {
       setErrors({ ref: t("accounting.journal.form.errorRefDuplicate") });
       return;
@@ -191,7 +193,8 @@ function parseLineAmount(val: string | number | null | undefined): number {
     }
     setSubmitting(true);
     try {
-      await onSave(parsed.data);
+      const saved = await onSave(parsed.data);
+      if (!isEdit && saved?.ref) notify.success(t("accounting.journal.form.voucherAssigned", { number: saved.ref }));
     } finally {
       setSubmitting(false);
     }

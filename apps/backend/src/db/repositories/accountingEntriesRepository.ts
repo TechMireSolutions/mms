@@ -1,4 +1,4 @@
-import { and, eq, inArray, isNotNull, isNull, ne, desc, like } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, isNull, ne } from 'drizzle-orm';
 import { dedupeTrimmedIds, type JournalEntry } from '@mms/shared';
 import {
   accountingEntries,
@@ -553,44 +553,3 @@ export async function findActiveEntryRefs(
     return resultMap;
   });
 }
-
-export async function allocateNextJournalRef(
-  tenant: string,
-  prefix = 'JE',
-): Promise<string> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenantRead(subdomain, async (tx) => {
-    const rows = await tx
-      .select({ ref: accountingEntries.ref })
-      .from(accountingEntries)
-      .where(
-        and(
-          eq(accountingEntries.workspaceSubdomain, subdomain),
-          like(accountingEntries.ref, `${prefix}-%`),
-        ),
-      )
-      .orderBy(desc(accountingEntries.ref))
-      .limit(100);
-
-    let maxNum = 0;
-    const existingSet = new Set<string>();
-    for (const r of rows) {
-      if (r.ref) {
-        existingSet.add(r.ref.trim().toLowerCase());
-        const match = r.ref.slice(prefix.length + 1);
-        const parsed = parseInt(match, 10);
-        if (!Number.isNaN(parsed) && parsed > maxNum) {
-          maxNum = parsed;
-        }
-      }
-    }
-    let attempt = maxNum + 1;
-    let candidate = `${prefix}-${attempt.toString().padStart(4, '0')}`;
-    while (existingSet.has(candidate.toLowerCase())) {
-      attempt += 1;
-      candidate = `${prefix}-${attempt.toString().padStart(4, '0')}`;
-    }
-    return candidate;
-  });
-}
-

@@ -24,7 +24,6 @@ import {
   type FiscalYear,
   type AccountingSettings,
   DEFAULT_ACCOUNTING_SETTINGS as DEFAULT_SETTINGS,
-  formatDeterministicSequence,
   moneyToCents,
   todayISO,
 } from "@mms/shared";
@@ -165,48 +164,6 @@ export function isJournalRefUnique(
     (e) => !e.deletedAt && e.ref?.trim().toLowerCase() === clean.toLowerCase() && (!currentId || e.id !== currentId),
   );
 }
-
-export function generateJERef(
-  entries: JournalEntry[],
-  settings?: Partial<AccountingSettings>,
-  dateInput?: Date | string
-): string {
-  const prefix = settings?.journalRefPrefix ?? "JE";
-  const delimiter = settings?.journalRefDelimiter ?? "-";
-  const digits = settings?.journalRefSequenceDigits ?? 4;
-  const yearFormat = settings?.journalRefYearFormat ?? "NONE";
-  const startSeq = settings?.journalRefStartingSequence ?? 1;
-
-  const config = {
-    prefix,
-    delimiter,
-    sequenceDigits: digits,
-    yearFormat,
-  };
-
-  const searchPrefix = prefix ? `${prefix}${delimiter}` : "";
-  let maxId = startSeq - 1;
-  entries.forEach((entry) => {
-    if (entry.deletedAt || !entry.ref) return;
-    const ref = entry.ref.trim();
-    if (searchPrefix && ref.startsWith(searchPrefix)) {
-      const numPart = parseInt(ref.slice(searchPrefix.length), 10);
-      if (!Number.isNaN(numPart) && numPart > maxId) maxId = numPart;
-    }
-  });
-
-  let attempt = Math.max(startSeq, maxId + 1);
-  let candidate = formatDeterministicSequence(attempt, config, dateInput);
-  const existingRefs = new Set(
-    entries.filter((e) => !e.deletedAt).map((e) => e.ref?.trim().toLowerCase()),
-  );
-  while (existingRefs.has(candidate.toLowerCase())) {
-    attempt += 1;
-    candidate = formatDeterministicSequence(attempt, config, dateInput);
-  }
-  return candidate;
-}
-
 
 export function computeTrialBalance(
   accounts: Account[],

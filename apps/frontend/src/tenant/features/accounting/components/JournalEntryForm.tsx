@@ -1,6 +1,6 @@
 import React from "react";
 import { BookOpen } from "lucide-react";
-import { type Account, type JournalEntry, type FiscalYear, type AccountingSettings } from '@/lib/data/accountingData';
+import { type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
 import { FormModal } from "@/components/ui/FormModal";
 import { Button } from "@/components/ui/button";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
@@ -10,18 +10,18 @@ import {
 } from "./JournalEntryFormDetailsSection";
 import { JournalEntryFormTagsSection } from "./JournalEntryFormTagsSection";
 import { useJournalEntryForm } from "./useJournalEntryForm";
+import type { JournalEntrySave } from "./journalEntriesTypes";
 
 interface JournalEntryFormProps {
   accounts: Account[];
   entries: JournalEntry[];
-  onSave: (entry: JournalEntry) => void | Promise<void>;
+  onSave: JournalEntrySave;
   onClose: () => void;
   initial?: JournalEntry | null;
   fiscalYears: FiscalYear[];
-  settings?: Partial<AccountingSettings>;
 }
 
-export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears, settings }: JournalEntryFormProps) {
+export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears }: JournalEntryFormProps) {
   const { formatCurrency } = useAccountingCurrency();
   const {
     t,
@@ -42,7 +42,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
     saveEntry,
     flattenedAccountOptions,
     errorMessages,
-  } = useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears, settings });
+  } = useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears });
 
   return (
     <FormModal

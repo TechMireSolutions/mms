@@ -251,6 +251,7 @@ export * from './sessionsWidgetAggregate.js';
 // ---------------------------------------------------------------------------
 export * from './accountingLedgerInvariants.js';
 export * from './accountingLedgerOps.js';
+export * from './accountingVoucherNumbering.js';
 export * from './accountingLedgerPosting.js';
 export * from './accountingListQuery.js';
 export * from './accountingModuleManifest.js';

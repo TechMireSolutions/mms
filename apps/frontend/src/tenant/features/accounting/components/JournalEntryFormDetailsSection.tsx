@@ -9,6 +9,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { FormSelect } from "@/components/ui/FormSelect";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { DraftForm } from "./journalEntryFormTypes";
+import { NextVoucherNumberHint } from "./NextVoucherNumberHint";
 
 interface JournalEntryFormDetailsSectionProps {
   t: TranslationFunction;
@@ -76,9 +77,10 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
               onChange={(event) => setForm({ ...form, ref: event.target.value })}
               placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
               aria-invalid={!!errors.ref}
-              aria-describedby={errors.ref ? "je-ref-error" : undefined}
+              aria-describedby={errors.ref ? "je-ref-error" : form.ref?.trim() ? undefined : "je-ref-next"}
             />
             <FieldErrorMessage id="je-ref-error" message={errors.ref} />
+            {!form.ref?.trim() && <NextVoucherNumberHint id="je-ref-next" date={form.date} />}
           </div>
           <div className="sm:col-span-3">
             <label htmlFor="journal-entry-description" className={FORM_LABEL}>{t("accounting.journal.form.narrationLabel")}</label>

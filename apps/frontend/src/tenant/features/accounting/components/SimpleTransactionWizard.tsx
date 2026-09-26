@@ -2,13 +2,14 @@ import { AnimatePresence, motion } from "framer-motion";
 import { FormModal } from "@/components/ui/FormModal";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
-import { type Account, type FiscalYear, type JournalEntry, type AccountingSettings } from "@/lib/data/accountingData";
+import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { SimpleTransactionWizardFooter } from "./SimpleTransactionWizardFooter";
 import { SimpleTransactionWizardSteps } from "./SimpleTransactionWizardSteps";
 import { StepTransactionForm } from "./SimpleTransactionStepForm";
 import { StepReview } from "./SimpleTransactionStepReview";
 import { StepTypeSelection } from "./SimpleTransactionStepTypeSelection";
 import { type QuickActionType } from "./simpleTransactionWizardTypes";
+import type { JournalEntrySave } from "./journalEntriesTypes";
 import { useSimpleTransactionWizard } from "./useSimpleTransactionWizard";
 
 interface SimpleTransactionWizardProps {
@@ -16,12 +17,11 @@ interface SimpleTransactionWizardProps {
   accounts: Account[];
   entries: JournalEntry[];
   fiscalYears: FiscalYear[];
-  onSave: (entry: JournalEntry, stayOpen?: boolean) => void | Promise<void>;
+  onSave: JournalEntrySave;
   onClose: () => void;
   prefillType?: QuickActionType | null;
   prefillAmount?: string;
   prefillDescription?: string;
-  settings?: Partial<AccountingSettings>;
 }
 
 export function SimpleTransactionWizard({
@@ -34,7 +34,6 @@ export function SimpleTransactionWizard({
   prefillType,
   prefillAmount,
   prefillDescription,
-  settings,
 }: SimpleTransactionWizardProps) {
   const { t } = useTranslation();
   const { formatCurrency, activeCurrency } = useAccountingCurrency();
@@ -64,7 +63,6 @@ export function SimpleTransactionWizard({
     prefillType,
     prefillAmount,
     prefillDescription,
-    settings,
   });
 
   return (

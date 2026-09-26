@@ -4,7 +4,6 @@ import {
   buildSequenceFormulaTemplate,
   facultySettingsToSequenceConfig,
   studentSettingsToSequenceConfig,
-  accountingSettingsToSequenceConfig,
   financeSettingsToSequenceConfig,
 } from "./sequenceNumberingUtils.js";
 
@@ -109,17 +108,6 @@ describe("sequenceNumberingUtils", () => {
       expect(config.sequenceDigits).toBe(5);
       expect(config.yearFormat).toBe("NONE");
       expect(config.rolloverPolicy).toBe("never");
-    });
-
-    it("adapts accounting settings accurately", () => {
-      const config = accountingSettingsToSequenceConfig({
-        journalRefPrefix: "JV",
-        journalRefSequenceDigits: 5,
-      });
-      expect(config.prefix).toBe("JV");
-      expect(config.sequenceDigits).toBe(5);
-      expect(config.yearFormat).toBe("NONE");
-      expect(config.delimiter).toBe("-");
     });
 
     it("adapts finance settings accurately", () => {

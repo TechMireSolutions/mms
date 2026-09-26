@@ -8,6 +8,7 @@ import { SpecializedEntryModal } from "@/tenant/features/accounting/components/S
 import type { QuickActionType } from "@/tenant/features/accounting/components/journalEntriesQuickActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
+import type { JournalEntrySave } from "./journalEntriesTypes";
 
 /** Quick-action ids that open the dedicated cross-module entry modal instead of the generic wizard. */
 const SPECIALIZED_ENTRY_TYPES = new Set(["fee_collection", "salary"]);
@@ -38,7 +39,7 @@ interface JournalEntriesSimpleModeProps {
   onNlChange: (inputValue: string) => void;
   onOpenPrefill: (prefillType: QuickActionType | null) => void;
   onExportCsv: () => void;
-  onSave: (entry: JournalEntry) => void | Promise<void>;
+  onSave: JournalEntrySave;
   onCloseSimpleModal: () => void;
   pageScopeLabel: string;
 }

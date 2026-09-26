@@ -5,6 +5,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
+import { NextVoucherNumberHint } from "./NextVoucherNumberHint";
 import { useTranslation } from "@/hooks/useTranslation";
 import { isJournalRefUnique, type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import {
@@ -209,14 +210,16 @@ export function StepTransactionForm({
             }}
             placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
             aria-invalid={isDuplicateRef}
-            aria-describedby={isDuplicateRef ? `${prefix}-ref-error` : undefined}
+            aria-describedby={isDuplicateRef ? `${prefix}-ref-error` : form.ref.trim() ? undefined : `${prefix}-ref-next`}
           />
           {isDuplicateRef ? (
             <p id={`${prefix}-ref-error`} className="text-xs text-destructive mt-1" role="alert">
               {t("accounting.journal.dashboard.wizard.errorRefDuplicate")}
             </p>
-          ) : (
+          ) : form.ref.trim() ? (
             <p className="text-xs text-muted-foreground mt-1">{t("accounting.journal.dashboard.wizard.optional")}</p>
+          ) : (
+            <NextVoucherNumberHint id={`${prefix}-ref-next`} date={form.date} />
           )}
         </div>
 

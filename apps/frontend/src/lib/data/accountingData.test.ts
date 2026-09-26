@@ -7,7 +7,6 @@ import {
   computeTrialBalance,
   createReversalEntry,
   hasReversalEntry,
-  generateJERef,
   isJournalRefUnique,
   type Account,
   type JournalEntry,
@@ -157,48 +156,6 @@ describe('accountingData reference utilities', () => {
         createEntry('je-1', 'JE-0001', { deletedAt: '2026-03-01T00:00:00.000Z' }),
       ];
       expect(isJournalRefUnique('JE-0001', entries)).toBe(true);
-    });
-  });
-
-  describe('generateJERef', () => {
-    it('generates JE-0001 when there are no entries', () => {
-      expect(generateJERef([])).toBe('JE-0001');
-    });
-
-    it('increments from highest existing JE number', () => {
-      const entries = [
-        createEntry('je-1', 'JE-0001'),
-        createEntry('je-2', 'JE-0005'),
-        createEntry('je-3', 'JE-0002'),
-      ];
-      expect(generateJERef(entries)).toBe('JE-0006');
-    });
-
-    it('skips any existing references in case of out-of-order collision', () => {
-      const entries = [
-        createEntry('je-1', 'JE-0001'),
-        createEntry('je-2', 'JE-0002'),
-      ];
-      expect(generateJERef(entries)).toBe('JE-0003');
-    });
-
-    it('ignores soft-deleted entries when finding highest numeric sequence', () => {
-      const entries = [
-        createEntry('je-1', 'JE-0001'),
-        createEntry('je-2', 'JE-0050', { deletedAt: '2026-03-01T00:00:00.000Z' }),
-      ];
-      expect(generateJERef(entries)).toBe('JE-0002');
-    });
-
-    it('generates custom formatted sequence with tenant settings', () => {
-      const customSettings = {
-        journalRefPrefix: 'JV',
-        journalRefDelimiter: '/',
-        journalRefSequenceDigits: 5,
-        journalRefStartingSequence: 100,
-        journalRefYearFormat: 'NONE' as const,
-      };
-      expect(generateJERef([], customSettings)).toBe('JV/00100');
     });
   });
 });

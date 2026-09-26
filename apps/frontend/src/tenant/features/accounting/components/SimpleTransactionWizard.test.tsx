@@ -2,6 +2,7 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi, type Mock } from "vitest";
 import { journalEntryRecordSchema, type JournalEntry } from "@mms/shared";
+import type { JournalEntrySave } from "./journalEntriesTypes";
 import { SimpleTransactionWizard } from "./SimpleTransactionWizard";
 import { StepReview } from "./SimpleTransactionStepReview";
 import { TRANSACTION_GROUPS } from "./simpleTransactionWizardTypes";
@@ -11,6 +12,10 @@ declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
+
+vi.mock("@/tenant/features/accounting/hooks/useVoucherNumbering", () => ({
+  useVoucherNumbering: () => ({ data: { autoGenerate: true, nextVoucherNumber: "JE-0001" } }),
+}));
 
 vi.mock("framer-motion", () => ({
   motion: { div: ({ children, ...props }: any) => <div {...props}>{children}</div> },
@@ -90,7 +95,7 @@ function findButton(container: HTMLElement, textFragment: string): HTMLButtonEle
 describe("SimpleTransactionWizard", () => {
   let container: HTMLDivElement;
   let root: Root;
-  let onSave: Mock<(entry: JournalEntry, stayOpen?: boolean) => void | Promise<void>>;
+  let onSave: Mock<JournalEntrySave>;
   let onClose: Mock<() => void>;
 
   beforeEach(() => {
@@ -394,6 +399,23 @@ describe("SimpleTransactionWizard", () => {
     // Wizard navigated back to step 2 with amount cleared
     expect(amountInput().value).toBe("");
     expect(notify.success).toHaveBeenCalled();
+  });
+
+  it("leaves a blank reference for the server and announces the voucher number it assigned", async () => {
+    onSave.mockImplementationOnce(async (entry: JournalEntry) => ({ ...entry, ref: "JE-0042" }));
+    await renderWizard(true, feeCollection);
+    await act(async () => {
+      setInputValue(amountInput(), "150.00");
+    });
+    await act(async () => {
+      findButton(container, "accounting.journal.dashboard.wizard.next").click();
+    });
+    await act(async () => {
+      findButton(container, "accounting.journal.dashboard.wizard.postAndNew").click();
+    });
+
+    expect(onSave.mock.calls[0]![0].ref).toBe("");
+    expect(notify.success).toHaveBeenCalledWith(expect.stringContaining("JE-0042"));
   });
 
   it("navigates from step 3 back to step 2 when edit button is clicked on review step", async () => {

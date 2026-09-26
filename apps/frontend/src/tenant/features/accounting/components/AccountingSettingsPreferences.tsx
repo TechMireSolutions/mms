@@ -67,11 +67,7 @@ export function AccountingSettingsPreferences({
         upd={upd}
       />
 
-      <AccountingSettingsNumberingSection
-        settingsDraft={settingsDraft}
-        upd={upd}
-      />
-
+      <AccountingSettingsNumberingSection canEdit={canEditSetup} />
       <AccountingSettingsPostingSection accounts={accounts} />
       <AccountingSettingsOpeningSection
         accounts={accounts}

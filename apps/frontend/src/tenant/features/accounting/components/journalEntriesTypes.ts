@@ -1,13 +1,21 @@
 import type { Account, AccountingSettings, FiscalYear, JournalEntry } from '@/lib/data/accountingData';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 
+/** Resolves with the entries as the server saved them (server-assigned voucher refs included). */
+export type JournalEntriesChange = (
+  entries: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[]),
+) => void | JournalEntry[] | Promise<void | JournalEntry[]>;
+
+/** Resolves with the saved entry when the caller can report its voucher number. */
+export type JournalEntrySave = (entry: JournalEntry, stayOpen?: boolean) => void | JournalEntry | Promise<void | JournalEntry>;
+
 export interface JournalEntriesProps {
   entries: JournalEntry[];
   allEntries?: JournalEntry[];
   accounts: Account[];
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];
-  onChange: (entries: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => void | Promise<void>;
+  onChange: JournalEntriesChange;
   onFilteredCountChange?: (count: number) => void;
   onShortcutStateChange?: (state: {
     mode: 'simple' | 'advanced';

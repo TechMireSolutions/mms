@@ -60,6 +60,7 @@ export function invalidateModuleQueries(queryClient: QueryClient, key: string): 
     case 'accounting_accounts':
     case 'accounting_fiscal_years':
     case 'accounting_posting_rules':
+    case 'accounting_voucher_numbering':
     case 'accounting_opening_balances':
     case 'accounting_bank_statements':
     case 'accounting_bank_reconciliations': return invalidateAccountingQueries(queryClient);
