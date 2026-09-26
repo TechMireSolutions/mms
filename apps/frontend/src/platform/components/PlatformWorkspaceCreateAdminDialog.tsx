@@ -1,11 +1,12 @@
-import React, { useState } from 'react';
+import React, { useId, useState } from 'react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
-import { UserPlus, RefreshCw, User, Mail } from 'lucide-react';
+import { UserPlus, User, Mail } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { Input } from '@/components/ui/input';
 import { Field, FieldErrorMessage } from '@/components/ui/FormField';
 import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
-import { ActionButton } from '@/components/ui/ActionButton';
+import { WorkspaceSummary } from '@/platform/components/workspace/WorkspaceSummary';
+import { WorkspacePasswordField } from '@/platform/components/workspace/WorkspacePasswordField';
+import { WorkspaceAdminDialogFooter } from '@/platform/components/workspace/WorkspaceAdminDialogFooter';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CreateAdminResultCard } from '@/platform/components/workspace/CreateAdminResultCard';
 
@@ -28,6 +29,8 @@ export function PlatformWorkspaceCreateAdminDialog({
   onConfirm,
 }: PlatformWorkspaceCreateAdminDialogProps): React.JSX.Element | null {
   const { t } = useTranslation();
+  const nameId = useId();
+  const emailId = useId();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,15 +38,6 @@ export function PlatformWorkspaceCreateAdminDialog({
   const [error, setError] = useState('');
 
   if (!workspace) return null;
-
-  const generateRandomPassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
-    let res = 'Mms#';
-    for (let i = 0; i < 8; i++) {
-      res += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setPassword(res);
-  };
 
   const handleCreate = async () => {
     if (!name.trim()) {
@@ -72,6 +66,7 @@ export function PlatformWorkspaceCreateAdminDialog({
   };
 
   const handleClose = () => {
+    if (createPending) return;
     setName('');
     setEmail('');
     setPassword('');
@@ -84,25 +79,15 @@ export function PlatformWorkspaceCreateAdminDialog({
     <Modal
       open={open}
       onClose={handleClose}
+      dismissible={!createPending}
       title={t('platform.createAdminUser')}
       subtitle={t('platform.createAdminSubtitle', { name: workspace.madrasaName, subdomain: workspace.subdomain })}
       icon={UserPlus}
       size="md"
       footer={
-        result ? (
-          <ActionButton variant="primary" onClick={handleClose}>
-            {t('common.close')}
-          </ActionButton>
-        ) : (
-          <div className="flex items-center justify-end gap-2.5 w-full">
-            <ActionButton variant="secondary" onClick={handleClose} disabled={createPending}>
-              {t('common.cancel')}
-            </ActionButton>
-            <ActionButton variant="primary" onClick={handleCreate} loading={createPending}>
-              {t('platform.createAdminBtn')}
-            </ActionButton>
-          </div>
-        )
+        <WorkspaceAdminDialogFooter complete={Boolean(result)} pending={createPending}
+          confirmLabel={t('platform.createAdminBtn')}
+          onClose={handleClose} onConfirm={handleCreate} />
       }
     >
       {result ? (
@@ -113,23 +98,14 @@ export function PlatformWorkspaceCreateAdminDialog({
         />
       ) : (
         <div className="space-y-4 py-2">
-          <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-1 text-xs">
-            <div>
-              <span className="text-muted-foreground">{t('platform.descriptor.workspace.madrasaName')}:</span>{' '}
-              <strong className="text-foreground">{workspace.madrasaName}</strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground">{t('platform.descriptor.workspace.subdomain')}:</span>{' '}
-              <strong className="text-foreground">{workspace.subdomain}</strong>
-            </div>
-          </div>
+          <WorkspaceSummary workspace={workspace} />
 
           <div className="space-y-3">
             <Field label={t('platform.adminNameLabel')} required error={!name.trim() && error ? error : undefined}>
               <LeadingIconInput
                 icon={User}
                 type="text"
-                id="admin-name"
+                id={nameId}
                 placeholder={t('platform.adminNamePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
@@ -142,7 +118,7 @@ export function PlatformWorkspaceCreateAdminDialog({
               <LeadingIconInput
                 icon={Mail}
                 type="email"
-                id="admin-email"
+                id={emailId}
                 placeholder={t('platform.adminEmailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -151,32 +127,11 @@ export function PlatformWorkspaceCreateAdminDialog({
               />
             </Field>
 
-            <Field label={t('platform.initialPasswordLabel')}>
-              <div className="flex items-center gap-2">
-                <Input
-                  id="admin-password"
-                  type="text"
-                  placeholder={t('platform.initialPasswordPlaceholder')}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="font-mono text-sm h-11 flex-1"
-                  disabled={createPending}
-                />
-                <ActionButton
-                  type="button"
-                  variant="secondary"
-                  size="sm"
-                  icon={RefreshCw}
-                  onClick={generateRandomPassword}
-                  disabled={createPending}
-                  className="shrink-0 cursor-pointer font-semibold"
-                  title={t('platform.autoGenerateTitle')}
-                  aria-label={t('platform.autoGenerateTitle')}
-                >
-                  {t('platform.autoGenerateBtn')}
-                </ActionButton>
-              </div>
-            </Field>
+            <WorkspacePasswordField
+              label={t('platform.initialPasswordLabel')}
+              placeholder={t('platform.initialPasswordPlaceholder')}
+              value={password} onChange={setPassword} pending={createPending}
+            />
 
             {error ? <FieldErrorMessage message={error} /> : null}
           </div>

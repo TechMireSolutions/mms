@@ -1,10 +1,7 @@
 import React from 'react';
-import { BarChart3, Lock } from 'lucide-react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
-import { SafeResponsiveContainer } from '@/components/ui/SafeResponsiveContainer';
 import { useTranslation } from '@/hooks/useTranslation';
-import { WidgetCard } from '@/components/ui/WidgetCard';
-import { WidgetCardHeader } from '@/components/ui/WidgetCardHeader';
+import { ReportChartCard } from '@/components/ui/reports/ReportChartCard';
 
 const CHART_TOOLTIP_STYLE = {
   backgroundColor: 'hsl(var(--card))',
@@ -45,53 +42,44 @@ export function PlatformReportsPieCharts({
   ];
 
   const renderPie = (data: typeof statusChartData, keyPrefix: string) => (
-    <SafeResponsiveContainer width="100%" height="100%">
-      <PieChart>
-        <Pie
-          data={data}
-          dataKey="value"
-          nameKey="name"
-          cx="50%"
-          cy="45%"
-          outerRadius={75}
-          innerRadius={45}
-          paddingAngle={4}
-        >
-          {data.map((entry, index) => (
-            <Cell key={`cell-${keyPrefix}-${index}`} fill={entry.color} />
-          ))}
-        </Pie>
-        <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
-        <Legend verticalAlign="bottom" height={36} formatter={LEGEND_FORMATTER} />
-      </PieChart>
-    </SafeResponsiveContainer>
+    <PieChart>
+      <Pie
+        data={data}
+        dataKey="value"
+        nameKey="name"
+        cx="50%"
+        cy="45%"
+        outerRadius={75}
+        innerRadius={45}
+        paddingAngle={4}
+      >
+        {data.map((entry, index) => (
+          <Cell key={`cell-${keyPrefix}-${index}`} fill={entry.color} />
+        ))}
+      </Pie>
+      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+      <Legend verticalAlign="bottom" height={36} formatter={LEGEND_FORMATTER} />
+    </PieChart>
   );
 
   const emptyNode = <p className="text-xs text-muted-foreground">{t('apex.noMadrasasYet')}</p>;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-      <WidgetCard className="p-6 space-y-4">
-        <WidgetCardHeader
-          icon={<BarChart3 className="w-4 h-4 text-primary" />}
-          title={t('platform.workspaceDistribution')}
-          subtitle={t('platform.visualizerSubtitle')}
-        />
-        <div className="h-64 w-full flex flex-col items-center justify-center">
-          {totalWorkspaces === 0 ? emptyNode : renderPie(statusChartData, 'status')}
-        </div>
-      </WidgetCard>
-
-      <WidgetCard className="p-6 space-y-4">
-        <WidgetCardHeader
-          icon={<Lock className="w-4 h-4 text-primary" />}
-          title={t('platform.reports.emailVerificationBreakdown')}
-          subtitle={t('platform.reports.emailVerificationBreakdownSub')}
-        />
-        <div className="h-64 w-full flex flex-col items-center justify-center">
-          {totalWorkspaces === 0 ? emptyNode : renderPie(verificationChartData, 'verify')}
-        </div>
-      </WidgetCard>
+      <ReportChartCard
+        title={t('platform.workspaceDistribution')}
+        subtitle={t('platform.visualizerSubtitle')}
+        heightClass="h-64" empty={totalWorkspaces === 0} emptyNode={emptyNode}
+      >
+        {renderPie(statusChartData, 'status')}
+      </ReportChartCard>
+      <ReportChartCard
+        title={t('platform.reports.emailVerificationBreakdown')}
+        subtitle={t('platform.reports.emailVerificationBreakdownSub')}
+        heightClass="h-64" empty={totalWorkspaces === 0} emptyNode={emptyNode}
+      >
+        {renderPie(verificationChartData, 'verify')}
+      </ReportChartCard>
     </div>
   );
 }

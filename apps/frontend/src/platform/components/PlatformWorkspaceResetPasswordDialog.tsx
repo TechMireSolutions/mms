@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
-import { KeyRound, RefreshCw, Check } from 'lucide-react';
+import { KeyRound } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { Input } from '@/components/ui/input';
-import { Field } from '@/components/ui/FormField';
-import { ActionButton } from '@/components/ui/ActionButton';
-import { CopyBtn } from '@/components/ui/CopyBtn';
+import { CredentialsResultCard } from '@/components/ui/CredentialsResultCard';
 import { useTranslation } from '@/hooks/useTranslation';
+import { WorkspaceSummary } from '@/platform/components/workspace/WorkspaceSummary';
+import { WorkspacePasswordField } from '@/platform/components/workspace/WorkspacePasswordField';
+import { WorkspaceAdminDialogFooter } from '@/platform/components/workspace/WorkspaceAdminDialogFooter';
 
 interface PlatformWorkspaceResetPasswordDialogProps {
   open: boolean;
@@ -30,15 +30,6 @@ export function PlatformWorkspaceResetPasswordDialog({
 
   if (!workspace) return null;
 
-  const generateRandomPassword = () => {
-    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%';
-    let res = 'Mms#';
-    for (let i = 0; i < 8; i++) {
-      res += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setPassword(res);
-  };
-
   const handleReset = async () => {
     if (password && password.length < 8) {
       setError(t('platform.validationPasswordLength'));
@@ -54,6 +45,7 @@ export function PlatformWorkspaceResetPasswordDialog({
   };
 
   const handleClose = () => {
+    if (resetPending) return;
     setPassword('');
     setResult(null);
     setError('');
@@ -64,99 +56,35 @@ export function PlatformWorkspaceResetPasswordDialog({
     <Modal
       open={open}
       onClose={handleClose}
+      dismissible={!resetPending}
       title={t('platform.resetPasswordTitle')}
       subtitle={t('platform.createAdminSubtitle', { name: workspace.madrasaName, subdomain: workspace.subdomain })}
       icon={KeyRound}
       size="md"
       footer={
-        result ? (
-          <ActionButton variant="primary" onClick={handleClose}>
-            {t('common.close')}
-          </ActionButton>
-        ) : (
-          <div className="flex items-center justify-end gap-2.5 w-full">
-            <ActionButton variant="secondary" onClick={handleClose} disabled={resetPending}>
-              {t('common.cancel')}
-            </ActionButton>
-            <ActionButton variant="primary" onClick={handleReset} loading={resetPending}>
-              {t('platform.resetPasswordBtn')}
-            </ActionButton>
-          </div>
-        )
+        <WorkspaceAdminDialogFooter complete={Boolean(result)} pending={resetPending}
+          confirmLabel={t('platform.resetPasswordBtn')}
+          onClose={handleClose} onConfirm={handleReset} />
       }
     >
       {result ? (
-        <div className="space-y-4 py-2 animate-in fade-in-50 duration-200">
-          <div className="rounded-xl border border-success/30 bg-success/10 p-4 space-y-3">
-            <div className="flex items-center gap-2 text-success font-bold text-sm">
-              <Check className="w-4 h-4" />
-              {t('platform.resetPasswordSuccess')}
-            </div>
-
-            <div className="space-y-2 text-xs text-foreground">
-              <div>
-                <span className="text-muted-foreground">{t('platform.adminEmailValue')}</span>{' '}
-                <span className="font-semibold text-foreground">{result.adminEmail}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2 pt-1">
-                <div className="min-w-0">
-                  <span className="text-muted-foreground block text-2xs mb-0.5">{t('platform.newPasswordValue')}</span>
-                  <code className="font-mono font-bold bg-background px-2.5 py-1 rounded-md border border-border text-sm text-primary inline-block">
-                    {result.newPassword}
-                  </code>
-                </div>
-                <CopyBtn text={result.newPassword} label={t('contacts.table.copy')} className="min-h-11 h-11 px-3 text-xs" showToast />
-              </div>
-            </div>
-          </div>
-
-          <p className="text-xs text-muted-foreground leading-relaxed">
-            {t('platform.sharePasswordHint')}
-          </p>
-        </div>
+        <CredentialsResultCard
+          title={t('platform.resetPasswordSuccess')}
+          fields={[{ label: t('platform.adminEmailValue'), value: result.adminEmail }]}
+          passwordLabel={t('platform.newPasswordValue')}
+          password={result.newPassword} copyText={result.newPassword}
+          copyLabel={t('contacts.table.copy')} hint={t('platform.sharePasswordHint')}
+        />
       ) : (
         <div className="space-y-4 py-2">
-          <div className="rounded-xl border border-border/60 bg-muted/30 p-3 space-y-1 text-xs">
-            <div>
-              <span className="text-muted-foreground">{t('platform.descriptor.workspace.madrasaName')}:</span>{' '}
-              <strong className="text-foreground">{workspace.madrasaName}</strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground">{t('platform.descriptor.workspace.subdomain')}:</span>{' '}
-              <strong className="text-foreground">{workspace.subdomain}</strong>
-            </div>
-            <div>
-              <span className="text-muted-foreground">{t('platform.adminEmailLabel')}:</span>{' '}
-              <strong className="text-foreground">{workspace.adminEmail || '—'}</strong>
-            </div>
-          </div>
+          <WorkspaceSummary workspace={workspace} showAdminEmail />
 
-          <Field label={t('platform.newPasswordLabel')} error={error || undefined}>
-            <div className="flex items-center gap-2">
-              <Input
-                id="new-admin-password"
-                type="text"
-                placeholder={t('platform.newPasswordPlaceholder')}
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="font-mono text-sm h-11"
-                disabled={resetPending}
-              />
-              <ActionButton
-                type="button"
-                variant="secondary"
-                size="sm"
-                icon={RefreshCw}
-                onClick={generateRandomPassword}
-                disabled={resetPending}
-                className="shrink-0 cursor-pointer font-semibold"
-                title={t('platform.autoGenerateTitle')}
-                aria-label={t('platform.autoGenerateTitle')}
-              >
-                {t('platform.autoGenerateBtn')}
-              </ActionButton>
-            </div>
-          </Field>
+          <WorkspacePasswordField
+            label={t('platform.newPasswordLabel')}
+            placeholder={t('platform.newPasswordPlaceholder')}
+            value={password} onChange={setPassword} pending={resetPending}
+            error={error || undefined}
+          />
         </div>
       )}
     </Modal>
