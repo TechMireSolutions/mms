@@ -1,7 +1,6 @@
 import type { ReactNode } from "react";
 import { AnimatePresence } from "framer-motion";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
@@ -10,6 +9,7 @@ import { JournalEntriesList } from "@/tenant/features/accounting/components/Jour
 import type { JournalEntriesListPaging } from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
 import { JournalEntriesListFilters, JournalEntriesAdvancedFilters } from "@/tenant/features/accounting/components/JournalEntriesListFilters";
 import { AccountingBulkActionBar } from "@/tenant/features/accounting/components/AccountingBulkActionBar";
+import { JournalReverseDialog } from "@/tenant/features/accounting/components/JournalReverseDialog";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import type { JournalEntrySave } from "./journalEntriesTypes";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -71,7 +71,7 @@ interface JournalEntriesAdvancedModeProps {
   onEditSelected: () => void;
   onViewEntry: (entry: JournalEntry) => void;
   onRequestReverse: (entry: JournalEntry) => void;
-  onConfirmReverse: () => void;
+  onConfirmReverse: (date: string) => void | Promise<void>;
   pendingTrashId: string | null;
   confirmBulkOpen: boolean;
   pendingReverseEntry: JournalEntry | null;
@@ -216,15 +216,12 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
       />
 
       {props.pendingReverseEntry && (
-        <ConfirmAlertDialog
-          open={props.pendingReverseEntry !== null}
+        <JournalReverseDialog
+          key={props.pendingReverseEntry.id}
+          entry={props.pendingReverseEntry}
           onOpenChange={(open) => {
             if (!open) props.onPendingReverseEntryChange(null);
           }}
-          title={t("accounting.journal.actions.reverse")}
-          description={t("accounting.journal.alerts.reverseConfirm", { ref: props.pendingReverseEntry.ref })}
-          confirmLabel={t("accounting.journal.actions.reverse")}
-          cancelLabel={t("common.cancel")}
           onConfirm={props.onConfirmReverse}
         />
       )}
