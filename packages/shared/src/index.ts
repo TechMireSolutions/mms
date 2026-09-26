@@ -349,3 +349,5 @@ export * from './widgetAggregateTypes.js';
 export * from './types/moduleManifest.js';
 export * from './documentTemplateTypes.js';
 export * from './isoDateSchema.js';
+export * from './sequenceNumberingTypes.js';
+export * from './sequenceNumberingUtils.js';

@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { generateJERef, isJournalRefUnique, type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
+import { generateJERef, isJournalRefUnique, type Account, type JournalEntry, type FiscalYear, type AccountingSettings } from '@/lib/data/accountingData';
 import { hasFieldValue } from "@/lib/formCompleteness";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
@@ -14,9 +14,10 @@ interface UseJournalEntryFormOptions {
   onSave: (entry: JournalEntry) => void | Promise<void>;
   initial?: JournalEntry | null;
   fiscalYears: FiscalYear[];
+  settings?: Partial<AccountingSettings>;
 }
 
-export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears }: UseJournalEntryFormOptions) {
+export function useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears, settings }: UseJournalEntryFormOptions) {
   const { t } = useTranslation();
   const { user } = useAuth();
   const isEdit = !!initial?.id;
@@ -166,7 +167,7 @@ function parseLineAmount(val: string | number | null | undefined): number {
     const validationErrors = validate(targetStatus);
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     const trimmedRef = form.ref?.trim();
-    const journalReference = trimmedRef || (isEdit ? form.ref : generateJERef(entries));
+    const journalReference = trimmedRef || (isEdit ? form.ref : generateJERef(entries, settings, form.date));
     if (!isJournalRefUnique(journalReference, entries, form.id)) {
       setErrors({ ref: t("accounting.journal.form.errorRefDuplicate") });
       return;

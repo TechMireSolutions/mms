@@ -189,5 +189,17 @@ describe('accountingData reference utilities', () => {
       ];
       expect(generateJERef(entries)).toBe('JE-0002');
     });
+
+    it('generates custom formatted sequence with tenant settings', () => {
+      const customSettings = {
+        journalRefPrefix: 'JV',
+        journalRefDelimiter: '/',
+        journalRefSequenceDigits: 5,
+        journalRefStartingSequence: 100,
+        journalRefYearFormat: 'NONE' as const,
+      };
+      expect(generateJERef([], customSettings)).toBe('JV/00100');
+    });
   });
 });
+

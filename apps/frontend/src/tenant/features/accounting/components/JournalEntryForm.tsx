@@ -1,6 +1,6 @@
 import React from "react";
 import { BookOpen } from "lucide-react";
-import { type Account, type JournalEntry, type FiscalYear } from '@/lib/data/accountingData';
+import { type Account, type JournalEntry, type FiscalYear, type AccountingSettings } from '@/lib/data/accountingData';
 import { FormModal } from "@/components/ui/FormModal";
 import { Button } from "@/components/ui/button";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
@@ -18,9 +18,10 @@ interface JournalEntryFormProps {
   onClose: () => void;
   initial?: JournalEntry | null;
   fiscalYears: FiscalYear[];
+  settings?: Partial<AccountingSettings>;
 }
 
-export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears }: JournalEntryFormProps) {
+export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears, settings }: JournalEntryFormProps) {
   const { formatCurrency } = useAccountingCurrency();
   const {
     t,
@@ -41,7 +42,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
     saveEntry,
     flattenedAccountOptions,
     errorMessages,
-  } = useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears });
+  } = useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears, settings });
 
   return (
     <FormModal

@@ -1,14 +1,12 @@
-import React, { useMemo } from "react";
-import { Hash } from "lucide-react";
-import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
-import { Input } from "@/components/ui/input";
-import { ToggleRow } from "@/components/ui/ToggleRow";
-import { Field } from "@/components/ui/FormPrimitives";
-import { SectionCard } from "@/components/ui/SectionCard";
+import React, { useMemo, useCallback } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatDeterministicEmployeeId, type TeachersSettings } from "@mms/shared";
-import { FacultyIdLivePreview } from "./FacultyIdLivePreview";
-import { FacultyIdParametersGrid } from "./FacultyIdParametersGrid";
+import {
+  facultySettingsToSequenceConfig,
+  buildSequenceFormulaTemplate,
+  type TeachersSettings,
+  type SequenceNumberingConfig,
+} from "@mms/shared";
+import { SequenceNumberingCard } from "@/components/ui/sequence-numbering";
 
 export interface FacultyIdSettingsCardProps {
   settingsDraft: TeachersSettings;
@@ -20,111 +18,47 @@ export function FacultyIdSettingsCard({
   upd,
 }: FacultyIdSettingsCardProps): React.JSX.Element {
   const { t } = useTranslation();
-  const currentYear = new Date().getFullYear();
 
-  const prefix = settingsDraft.employeeIdPrefix ?? settingsDraft.idPrefix ?? "FAC";
-  const yearFormat = (settingsDraft.employeeIdYearFormat ?? "YYYY") as "YYYY" | "YY";
-  const sequenceDigits = settingsDraft.employeeIdSequenceDigits ?? settingsDraft.idDigits ?? 4;
-  const delimiter = settingsDraft.employeeIdDelimiter ?? "";
-  const currentSeq = settingsDraft.employeeIdCurrentSequence ?? 0;
-  const lastYear = settingsDraft.employeeIdLastYear ?? currentYear;
+  const config = useMemo(
+    () => facultySettingsToSequenceConfig(settingsDraft),
+    [settingsDraft]
+  );
 
-  const livePreview = useMemo(() => {
-    const seq = currentSeq > 0 ? currentSeq + 1 : (settingsDraft.idStartSeq || 1);
-    return formatDeterministicEmployeeId(seq, {
-      prefix,
-      yearFormat,
-      sequenceDigits,
-      delimiter,
-    });
-  }, [currentSeq, settingsDraft.idStartSeq, prefix, yearFormat, sequenceDigits, delimiter]);
-
-  const formulaTemplate = useMemo(() => {
-    return `{PREFIX}${delimiter}{${yearFormat}}${delimiter}{SEQ}`;
-  }, [delimiter, yearFormat]);
+  const handleChange = useCallback(
+    (next: SequenceNumberingConfig) => {
+      upd("autoGenerateId", next.autoGenerate);
+      upd("employeeIdPrefix", next.prefix);
+      upd("idPrefix", next.prefix);
+      upd("employeeIdYearFormat", next.yearFormat as "YYYY" | "YY");
+      upd("employeeIdSequenceDigits", next.sequenceDigits);
+      upd("idDigits", next.sequenceDigits);
+      upd("employeeIdDelimiter", next.delimiter);
+      upd("idStartSeq", next.startingSequence);
+      upd("idRestartAnnually", next.rolloverPolicy !== "never");
+      upd("idTemplate", buildSequenceFormulaTemplate(next));
+    },
+    [upd]
+  );
 
   return (
-    <SectionCard
-      title={t("faculty.settings.idSectionTitle") || t("teachers.settings.idSectionTitle")}
-      icon={Hash}
-      accentColor="primary"
-      className={SETUP_SECTION_CARD_CLASS}
-    >
-      <div className="space-y-4">
-        {/* Master Auto-generation switch */}
-        <ToggleRow
-          label={t("faculty.settings.autoGenerateId") || t("teachers.settings.autoGenerateId")}
-          value={settingsDraft.autoGenerateId}
-          onChange={(value) => upd("autoGenerateId", value)}
-        />
-
-        {settingsDraft.autoGenerateId !== false && (
-          <>
-            {/* Live Preview Card */}
-            <FacultyIdLivePreview
-              livePreview={livePreview}
-              formulaTemplate={formulaTemplate}
-              previewLabel={t("faculty.settings.preview") || t("teachers.settings.preview")}
-              templateLabel={t("faculty.settings.idTemplate") || t("teachers.settings.idTemplate")}
-            />
-
-            {/* Core Parameters Grid: Prefix, Year Format, Sequence Digits, Delimiter */}
-            <FacultyIdParametersGrid
-              prefix={prefix}
-              yearFormat={yearFormat}
-              sequenceDigits={sequenceDigits}
-              delimiter={delimiter}
-              currentYear={currentYear}
-              upd={upd}
-            />
-
-            {/* Starting Sequence & Live Telemetry Box */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-              <Field
-                label={t("faculty.settings.idStartSeq") || t("teachers.settings.idStartSeq")}
-                hint={t("faculty.settings.idStartSeqHint") || t("teachers.settings.idStartSeqHint")}
-                id="faculty-idStartSeq"
-              >
-                <Input
-                  id="faculty-idStartSeq"
-                  name="faculty-idStartSeq"
-                  type="number"
-                  min="1"
-                  className={FORM_INPUT}
-                  value={settingsDraft.idStartSeq ?? 1}
-                  onChange={(event) => upd("idStartSeq", Math.max(1, Number(event.target.value) || 1))}
-                />
-              </Field>
-
-              <div className="flex flex-col justify-center p-3 rounded-lg border border-border/60 bg-muted/25 space-y-1">
-                <span className="text-xs font-medium text-foreground">
-                  {t("faculty.settings.sequenceTelemetry") || t("teachers.settings.sequenceTelemetry")}
-                </span>
-                <div className="flex flex-wrap items-center gap-2 pt-0.5">
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium bg-background border border-border/80">
-                    <span className="text-muted-foreground">{t("faculty.settings.currentCounter") || t("teachers.settings.currentCounter")}</span>
-                    <span className="font-mono font-semibold text-foreground">{currentSeq}</span>
-                  </span>
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium bg-background border border-border/80">
-                    <span className="text-muted-foreground">{t("faculty.settings.rolloverYear") || t("teachers.settings.rolloverYear")}</span>
-                    <span className="font-mono font-semibold text-foreground">{lastYear}</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            {/* Annual Rollover Toggle */}
-            <div className="pt-2 border-t border-border/40">
-              <ToggleRow
-                label={t("faculty.settings.idRestartAnnually") || t("teachers.settings.idRestartAnnually")}
-                description={t("faculty.settings.idRestartAnnuallyDesc") || t("teachers.settings.idRestartAnnuallyDesc")}
-                value={settingsDraft.idRestartAnnually ?? true}
-                onChange={(value) => upd("idRestartAnnually", value)}
-              />
-            </div>
-          </>
-        )}
-      </div>
-    </SectionCard>
+    <SequenceNumberingCard
+      title={t("faculty.settings.idSectionTitle") || t("teachers.settings.idSectionTitle") || "Employee ID Configuration"}
+      entityLabel="Employee ID"
+      config={config}
+      onChange={handleChange}
+      defaultPrefixPlaceholder="FAC"
+      autoGenerateLabel={t("faculty.settings.autoGenerateId") || t("teachers.settings.autoGenerateId")}
+      previewLabel={t("faculty.settings.preview") || t("teachers.settings.preview")}
+      templateLabel={t("faculty.settings.idTemplate") || t("teachers.settings.idTemplate")}
+      prefixLabel={t("faculty.settings.idPrefix") || t("teachers.settings.idPrefix")}
+      prefixHint={t("faculty.settings.idPrefixHint") || t("teachers.settings.idPrefixHint")}
+      digitsLabel={t("faculty.settings.idDigits") || t("teachers.settings.idDigits")}
+      digitsHint={t("faculty.settings.idDigitsHint") || t("teachers.settings.idDigitsHint")}
+      startSeqLabel={t("faculty.settings.idStartSeq") || t("teachers.settings.idStartSeq")}
+      startSeqHint={t("faculty.settings.idStartSeqHint") || t("teachers.settings.idStartSeqHint")}
+      telemetryLabel={t("faculty.settings.sequenceTelemetry") || t("teachers.settings.sequenceTelemetry")}
+      restartLabel={t("faculty.settings.idRestartAnnually") || t("teachers.settings.idRestartAnnually")}
+      restartDesc={t("faculty.settings.idRestartAnnuallyDesc") || t("teachers.settings.idRestartAnnuallyDesc")}
+    />
   );
 }
