@@ -1,6 +1,6 @@
-# MMS Agent Rules
+# MMS Claude Rules
 
-Project rules for the Madrasa Management System. Antigravity loads `.md` files from this directory (synced from Cursor `.mdc`).
+Project rules for the Madrasa Management System. Claude Code loads `.md` files from this directory (synced from Cursor `.mdc`).
 
 **Architecture rules:** `mms-module-architecture.md`, `mms-ops-infrastructure.md`, `mms-ui-ux-design.md`, `mms-data-layer.md`.
 
