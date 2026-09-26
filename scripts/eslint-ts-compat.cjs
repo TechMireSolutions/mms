@@ -5,7 +5,7 @@
 // understand the classic tsc parser (TS 5.x/6.x line). ESLint would otherwise
 // parse every file with TS 7 and either fail or silently diverge.
 //
-// HOW IT WORKS: this module is preloaded via NODE_OPTIONS=-r (see the app
+// HOW IT WORKS: this module is preloaded via `node -r` (see the app
 // `lint` scripts) and aliases `require('typescript')` to `typescript-v6`
 // (npm:typescript@~6.0.3, pinned in the root package.json) FOR THE LINT
 // PROCESS ONLY. Normal builds/typecheck keep using TS 7.
