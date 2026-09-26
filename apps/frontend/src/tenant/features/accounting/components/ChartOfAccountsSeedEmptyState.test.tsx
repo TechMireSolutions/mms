@@ -74,13 +74,32 @@ describe("ChartOfAccountsSeedEmptyState", () => {
     await click(confirm);
   }
 
-  it("seeds only after confirmation and reports success", async () => {
-    mocks.seedMutateAsync.mockResolvedValue({ success: true, count: 61 });
+  it("seeds only after confirmation and reports the settings it filled", async () => {
+    mocks.seedMutateAsync.mockResolvedValue({
+      success: true,
+      count: 61,
+      defaultsApplied: { retainedEarnings: true, cashAccount: true },
+    });
     render(true);
 
     await confirmSeed();
 
     expect(mocks.seedMutateAsync).toHaveBeenCalledTimes(1);
+    expect(mocks.notifySuccess).toHaveBeenCalledWith("accounting.coa.seed.success", {
+      description: "accounting.coa.seed.successCount accounting.coa.seed.retainedEarningsSet accounting.coa.seed.cashAccountSet",
+    });
+  });
+
+  it("omits settings that were already configured", async () => {
+    mocks.seedMutateAsync.mockResolvedValue({
+      success: true,
+      count: 61,
+      defaultsApplied: { retainedEarnings: false, cashAccount: false },
+    });
+    render(true);
+
+    await confirmSeed();
+
     expect(mocks.notifySuccess).toHaveBeenCalledWith("accounting.coa.seed.success", {
       description: "accounting.coa.seed.successCount",
     });

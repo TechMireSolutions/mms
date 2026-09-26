@@ -16,6 +16,10 @@ export const DEFAULT_CHART_SECTIONS = [
   { from: 90000, to: 99999, label: 'Tax & Exceptional', type: 'Expense' },
 ] as const satisfies ReadonlyArray<{ from: number; to: number; label: string; type: AccountInsert['type'] }>;
 
+/** Seeded accounts used to fill workspace settings that are still unset when the chart is seeded. */
+export const DEFAULT_CHART_RETAINED_EARNINGS_CODE = '33000';
+export const DEFAULT_CHART_CASH_ACCOUNT_CODE = '10300';
+
 type Row = readonly [code: string, name: string, description?: string];
 
 const group = (

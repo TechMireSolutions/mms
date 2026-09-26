@@ -106,6 +106,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "accounting.coa.seed.confirmDescription": "اس سے بنیادی کاروباری اکاؤنٹنگ کے لیے درکار معیاری اکاؤنٹس بن جائیں گے۔ موجودہ اکاؤنٹس میں کوئی تبدیلی نہیں ہوگی۔",
   "accounting.coa.seed.success": "چارٹ آف اکاؤنٹس کامیابی سے بن گیا۔",
   "accounting.coa.seed.successCount": "{count} اکاؤنٹس بنائے گئے۔",
+  "accounting.coa.seed.retainedEarningsSet": "برقرار منافع کا اکاؤنٹ {account} مقرر کر دیا گیا۔",
+  "accounting.coa.seed.cashAccountSet": "نقد پوسٹنگ اکاؤنٹ {account} مقرر کر دیا گیا۔",
   "accounting.coa.seed.alreadyExists": "اس ورک اسپیس کے لیے چارٹ آف اکاؤنٹس پہلے سے موجود ہے، اس لیے ڈیفالٹ اکاؤنٹس شامل نہیں کیے گئے۔",
   "accounting.coa.seed.failed": "چارٹ آف اکاؤنٹس نہیں بن سکا۔ کوئی اکاؤنٹ نہیں بنایا گیا — براہ کرم دوبارہ کوشش کریں۔",
   "accounting.coa.showInactive": "غیر فعال دکھائیں",

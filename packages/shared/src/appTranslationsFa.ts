@@ -110,6 +110,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "accounting.coa.seed.confirmDescription": "این کار حساب‌های استاندارد لازم برای حسابداری پایه کسب‌وکار را ایجاد می‌کند. حساب‌های موجود تغییر نخواهند کرد.",
   "accounting.coa.seed.success": "جدول حساب‌ها با موفقیت ایجاد شد.",
   "accounting.coa.seed.successCount": "{count} حساب ایجاد شد.",
+  "accounting.coa.seed.retainedEarningsSet": "حساب سود انباشته روی {account} تنظیم شد.",
+  "accounting.coa.seed.cashAccountSet": "حساب ثبت نقدی روی {account} تنظیم شد.",
   "accounting.coa.seed.alreadyExists": "برای این فضای کاری از قبل جدول حساب‌ها وجود دارد، بنابراین حساب‌های پیش‌فرض اضافه نشدند.",
   "accounting.coa.seed.failed": "ایجاد جدول حساب‌ها ممکن نشد. هیچ حسابی ایجاد نشد — لطفاً دوباره تلاش کنید.",
   "accounting.coa.showInactive": "نمایش غیرفعال‌ها",

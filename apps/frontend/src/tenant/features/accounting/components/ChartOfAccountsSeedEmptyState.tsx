@@ -1,5 +1,10 @@
 import React, { useState } from "react";
 import { Landmark } from "lucide-react";
+import {
+  DEFAULT_CHART_CASH_ACCOUNT_CODE,
+  DEFAULT_CHART_OF_ACCOUNTS,
+  DEFAULT_CHART_RETAINED_EARNINGS_CODE,
+} from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/button";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
@@ -8,6 +13,9 @@ import { isApiError } from "@/lib/apiClient";
 import { notifyApiFailure } from "@/lib/apiErrorNotify";
 import { notify } from "@/lib/notify";
 import { useSeedDefaultChart } from "@/tenant/features/accounting/hooks/useSeedDefaultChart";
+
+const seededAccountLabel = (code: string): string =>
+  `${code} ${DEFAULT_CHART_OF_ACCOUNTS.find((account) => account.code === code)?.name ?? ""}`.trim();
 
 interface ChartOfAccountsSeedEmptyStateProps {
   canWrite: boolean;
@@ -23,9 +31,16 @@ export function ChartOfAccountsSeedEmptyState({ canWrite, onAddAccount }: ChartO
   const handleConfirm = async (): Promise<void> => {
     try {
       const result = await seed.mutateAsync();
-      notify.success(t("accounting.coa.seed.success"), {
-        description: t("accounting.coa.seed.successCount", { count: result.count }),
-      });
+      const details = [
+        t("accounting.coa.seed.successCount", { count: result.count }),
+        result.defaultsApplied?.retainedEarnings
+          ? t("accounting.coa.seed.retainedEarningsSet", { account: seededAccountLabel(DEFAULT_CHART_RETAINED_EARNINGS_CODE) })
+          : null,
+        result.defaultsApplied?.cashAccount
+          ? t("accounting.coa.seed.cashAccountSet", { account: seededAccountLabel(DEFAULT_CHART_CASH_ACCOUNT_CODE) })
+          : null,
+      ].filter((line): line is string => line !== null);
+      notify.success(t("accounting.coa.seed.success"), { description: details.join(" ") });
     } catch (error) {
       if (isApiError(error) && error.status === 409) notify.error(t("accounting.coa.seed.alreadyExists"));
       else notifyApiFailure(error, t, "accounting.coa.seed.failed");

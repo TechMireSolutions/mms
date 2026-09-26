@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { DEFAULT_CHART_OF_ACCOUNTS, DEFAULT_CHART_SECTIONS } from './accountingDefaultChart.js';
+import {
+  DEFAULT_CHART_CASH_ACCOUNT_CODE,
+  DEFAULT_CHART_OF_ACCOUNTS,
+  DEFAULT_CHART_RETAINED_EARNINGS_CODE,
+  DEFAULT_CHART_SECTIONS,
+} from './accountingDefaultChart.js';
 import { accountRecordInsertSchema } from './accountingModuleManifest.js';
 
 describe('DEFAULT_CHART_OF_ACCOUNTS', () => {
@@ -35,5 +40,11 @@ describe('DEFAULT_CHART_OF_ACCOUNTS', () => {
     for (const account of DEFAULT_CHART_OF_ACCOUNTS) {
       expect(accountRecordInsertSchema.safeParse(account).success, account.code).toBe(true);
     }
+  });
+
+  it('names default-setting accounts that exist with the required types', () => {
+    const byCode = new Map(DEFAULT_CHART_OF_ACCOUNTS.map((account) => [account.code, account]));
+    expect(byCode.get(DEFAULT_CHART_RETAINED_EARNINGS_CODE)?.type).toBe('Equity');
+    expect(byCode.get(DEFAULT_CHART_CASH_ACCOUNT_CODE)?.type).toBe('Asset');
   });
 });

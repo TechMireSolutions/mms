@@ -12,6 +12,7 @@ import { apiJson } from "@/lib/apiClient";
 import { invalidateAccountingQueries } from "@/tenant/features/accounting/hooks/invalidateAccountingQueries";
 
 const RULES_KEY = ["accounting", "posting-rules"] as const;
+export { RULES_KEY as ACCOUNTING_POSTING_RULES_QUERY_KEY };
 const OPENING_KEY = ["accounting", "opening-balances"] as const;
 const BANK_KEY = ["accounting", "bank-statements"] as const;
 

@@ -609,13 +609,13 @@ describe('default chart of accounts seed route', () => {
   });
 
   it('seeds for an accountant and returns the created count', async () => {
-    mockSeedDefaultChart.mockResolvedValue({ count: 61 });
+    mockSeedDefaultChart.mockResolvedValue({ count: 61, defaultsApplied: { retainedEarnings: true, cashAccount: false } });
     const app = await buildApp();
     const token = accountantToken(app);
     await app.close();
     const res = await seed(`Bearer ${token}`);
     expect(res.statusCode).toBe(201);
-    expect(res.json()).toEqual({ success: true, count: 61 });
+    expect(res.json()).toEqual({ success: true, count: 61, defaultsApplied: { retainedEarnings: true, cashAccount: false } });
   });
 
   it('returns 409 when a chart already exists', async () => {

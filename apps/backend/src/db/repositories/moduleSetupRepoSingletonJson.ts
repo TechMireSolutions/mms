@@ -155,5 +155,13 @@ export function createWorkspaceSingletonJsonRepo(options: {
     await redisDel(key);
   }
 
-  return { getByWorkspace, getByWorkspaces, upsert, listAllByWorkspace, replaceForWorkspace };
+  /** Drops the cached row — for callers that write it inside their own transaction. */
+  async function evictCache(workspaceSubdomain: string): Promise<void> {
+    const subdomain = workspaceSubdomain.trim().toLowerCase();
+    const key = cacheKey(subdomain);
+    await invalidateMultiTierCache({ tenantId: subdomain, domain: tableName, key });
+    await redisDel(key);
+  }
+
+  return { getByWorkspace, getByWorkspaces, upsert, evictCache, listAllByWorkspace, replaceForWorkspace };
 }

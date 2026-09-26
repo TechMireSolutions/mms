@@ -106,6 +106,8 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "accounting.coa.seed.confirmDescription": "سيؤدي هذا إلى إنشاء الحسابات القياسية المطلوبة للمحاسبة الأساسية للأعمال. لن يتم تعديل الحسابات الحالية.",
   "accounting.coa.seed.success": "تم إنشاء دليل الحسابات بنجاح.",
   "accounting.coa.seed.successCount": "تم إنشاء {count} حسابًا.",
+  "accounting.coa.seed.retainedEarningsSet": "تم تعيين حساب الأرباح المحتجزة إلى {account}.",
+  "accounting.coa.seed.cashAccountSet": "تم تعيين حساب الترحيل النقدي إلى {account}.",
   "accounting.coa.seed.alreadyExists": "يوجد دليل حسابات بالفعل لمساحة العمل هذه، لذلك لم تتم إضافة الحسابات الافتراضية.",
   "accounting.coa.seed.failed": "تعذر إنشاء دليل الحسابات. لم يتم إنشاء أي حسابات — يرجى المحاولة مرة أخرى.",
   "accounting.coa.showInactive": "عرض الحسابات غير النشطة",

@@ -104,6 +104,8 @@ export const APP_TRANSLATIONS_EN = {
   "accounting.coa.seed.confirmDescription": "This will create the standard accounts required for basic business accounting. Existing accounts will not be modified.",
   "accounting.coa.seed.success": "Chart of Accounts seeded successfully.",
   "accounting.coa.seed.successCount": "{count} accounts created.",
+  "accounting.coa.seed.retainedEarningsSet": "Retained earnings account set to {account}.",
+  "accounting.coa.seed.cashAccountSet": "Cash posting account set to {account}.",
   "accounting.coa.seed.alreadyExists": "A Chart of Accounts already exists for this workspace, so the default accounts were not added.",
   "accounting.coa.seed.failed": "Could not seed the Chart of Accounts. No accounts were created — please try again.",
   "accounting.coa.showInactive": "Show Inactive",
