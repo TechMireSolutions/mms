@@ -14,6 +14,8 @@ import {
   createPlatformTwoFactorChallenge,
   isPlatformTwoFactorRequired,
 } from './platformTwoFactorService.js';
+import { platformSessionScope, resetSessionClock } from '../sessionClockService.js';
+import { platformSessionPolicy } from '../sessionPolicyService.js';
 
 const PLATFORM_ACCESS_TTL = '8h';
 
@@ -34,12 +36,12 @@ export type PlatformLoginResult =
   | { ok: true; user: PlatformUserProfile; requires2FA?: boolean; challengeId?: string }
   | { ok: false; type: PlatformLoginFailure };
 
-export function issuePlatformSession(
+export async function issuePlatformSession(
   user: PlatformUser,
   jwtSigner: JWT,
   reply: FastifyReply,
   sessionVersion = 0,
-): PlatformUser {
+): Promise<PlatformUser> {
   clearAuthCookies(reply);
 
   // Minimal claims only — role/permissions reload from DB on each authenticatePlatform.
@@ -53,6 +55,10 @@ export function issuePlatformSession(
     { expiresIn: PLATFORM_ACCESS_TTL },
   );
   setPlatformAccessCookie(reply, accessToken);
+
+  const { idleMs } = platformSessionPolicy();
+  await resetSessionClock(platformSessionScope(user.id), idleMs);
+
   return user;
 }
 
@@ -87,7 +93,7 @@ export async function loginPlatformUser(
     return { ok: true, user: toPlatformUserProfile(stored), requires2FA: true, challengeId };
   }
 
-  issuePlatformSession(toPublicPlatformUser(stored), jwtSigner, reply, stored.sessionVersion);
+  await issuePlatformSession(toPublicPlatformUser(stored), jwtSigner, reply, stored.sessionVersion);
   return { ok: true, user: toPlatformUserProfile(stored) };
 }
 

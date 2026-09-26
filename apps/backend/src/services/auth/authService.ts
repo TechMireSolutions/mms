@@ -58,6 +58,10 @@ export interface OnboardResult extends AuthResult {
   workspace: Workspace;
 }
 
+import { parseSessionTimeoutMinutes } from '@mms/shared';
+import { resetSessionClock, tenantSessionScope } from '../sessionClockService.js';
+import { tenantSessionPolicy } from '../sessionPolicyService.js';
+
 export async function establishSession(
   user: PublicUser,
   jwtSigner: JWT,
@@ -73,6 +77,12 @@ export async function establishSession(
   const refreshToken = await issueRefreshToken(user);
   clearPlatformAccessCookie(reply);
   setAuthCookies(reply, accessToken, refreshToken);
+
+  const scope = tenantSessionScope(user.workspaceSubdomain, String(user.id));
+  const settings = await loadGlobalSettings(user.workspaceSubdomain);
+  const sessionPolicy = tenantSessionPolicy(parseSessionTimeoutMinutes(settings.sessionTimeout));
+  await resetSessionClock(scope, sessionPolicy.idleMs);
+
   return { user };
 }
 

@@ -70,7 +70,7 @@ export default async function platformAuthRoutes(
       if (!parsed.ok) return replyValidationError(reply, parsed.message);
 
       const stored = await startPlatformSetup(parsed.data);
-      const user = issuePlatformSession(
+      const user = await issuePlatformSession(
         toPublicPlatformUser(stored),
         fastify.jwt,
         reply,
@@ -97,7 +97,7 @@ export default async function platformAuthRoutes(
       const { resetId, code, password } = parsed.data;
 
       const stored = await completePlatformPasswordReset(resetId, code, password);
-      const user = issuePlatformSession(
+      const user = await issuePlatformSession(
         toPublicPlatformUser(stored),
         fastify.jwt,
         reply,
@@ -165,7 +165,7 @@ export default async function platformAuthRoutes(
           message: 'Invalid or expired verification code',
         });
       }
-      const user = issuePlatformSession(
+      const user = await issuePlatformSession(
         toPublicPlatformUser(stored),
         fastify.jwt,
         reply,
@@ -245,7 +245,7 @@ export default async function platformAuthRoutes(
       const { platformUser } = request as PlatformAuthenticatedRequest;
       const profile = await updatePlatformUserProfile(platformUser.id, parsed.data.name);
       const stored = await getStoredPlatformUserById(profile.id);
-      issuePlatformSession(
+      await issuePlatformSession(
         {
           id: profile.id,
           email: profile.email,
@@ -276,7 +276,7 @@ export default async function platformAuthRoutes(
           parsed.data.currentPassword,
           parsed.data.newPassword,
         );
-        issuePlatformSession(
+        await issuePlatformSession(
           toPublicPlatformUser(stored),
           fastify.jwt,
           reply,
