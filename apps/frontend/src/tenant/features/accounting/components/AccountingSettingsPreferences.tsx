@@ -3,6 +3,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { AccountingSettingsCurrencySection } from "./AccountingSettingsCurrencySection";
 import { AccountingSettingsFiscalYearsSection } from "./AccountingSettingsFiscalYearsSection";
 import { AccountingSettingsRulesSection } from "./AccountingSettingsRulesSection";
+import { AccountingSettingsNumberingSection } from "./AccountingSettingsNumberingSection";
 import { AccountingSettingsPostingSection } from "./AccountingSettingsPostingSection";
 import { AccountingSettingsOpeningSection } from "./AccountingSettingsOpeningSection";
 import { AccountingSettingsBankRecSection } from "./AccountingSettingsBankRecSection";
@@ -62,6 +63,11 @@ export function AccountingSettingsPreferences({
 
       <AccountingSettingsRulesSection
         accounts={accounts}
+        settingsDraft={settingsDraft}
+        upd={upd}
+      />
+
+      <AccountingSettingsNumberingSection
         settingsDraft={settingsDraft}
         upd={upd}
       />

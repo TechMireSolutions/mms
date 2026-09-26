@@ -114,7 +114,7 @@ export const InvoiceForm = (function InvoiceForm({
         setSubmitting(true);
         try {
           await onSave({
-            id: nextInvoiceId(settings.invoicePrefix.trim() || "INV"),
+            id: nextInvoiceId(settings),
             studentId: draft.studentId.trim(),
             studentName: draft.studentName.trim(),
             class: draft.class.trim(),

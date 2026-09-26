@@ -1,4 +1,5 @@
 import type { TabDefinition, ColumnRegistryEntry } from "./contactTypes.js";
+import type { SequenceYearFormat } from "./sequenceNumberingTypes.js";
 
 // ─── Students Module Settings ─────────────────────────────────────────────────
 
@@ -24,6 +25,16 @@ export interface StudentsSettings {
   grNumberDigits: number;
   /** Whether sequence restarts from 1 at the beginning of each year. */
   grNumberRestartAnnually: boolean;
+  /** Fine-grained prefix for GR numbers (e.g. 'GR'). */
+  grNumberPrefix?: string;
+  /** Year format token (YYYY, YY, or NONE). */
+  grNumberYearFormat?: SequenceYearFormat;
+  /** Delimiter separator (e.g. '', '-', '/'). */
+  grNumberDelimiter?: string;
+  /** Initial starting sequence number. */
+  grNumberStartSeq?: number;
+  /** Current counter telemetry. */
+  grNumberCurrentSeq?: number;
   /** Field level customization visibility/requirement toggles */
   fields?: Record<string, unknown>;
   /** User defined dynamic custom fields */

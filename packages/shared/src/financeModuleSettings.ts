@@ -1,6 +1,7 @@
 import type { TabDefinition } from "./contactTypes.js";
 import type { ModuleFieldDef } from "./moduleFieldSchema.js";
 import { INITIAL_FINANCE_FIELD_SEED } from "./moduleFieldSetupFinance.js";
+import type { SequenceYearFormat, SequenceRolloverPolicy } from "./sequenceNumberingTypes.js";
 
 // ─── Finance Module Settings ──────────────────────────────────────────────────
 
@@ -12,6 +13,12 @@ export interface FinanceSettings {
   taxRate: string;
   paymentMethods: string[];
   autoGenerateInvoice: boolean;
+  invoiceYearFormat?: SequenceYearFormat;
+  invoiceSequenceDigits?: number;
+  invoiceDelimiter?: string;
+  invoiceStartingSequence?: number;
+  invoiceRolloverPolicy?: SequenceRolloverPolicy;
+  invoiceCurrentSequence?: number;
   sendInvoiceEmail: boolean;
   allowPartialPayment: boolean;
   requireApproval: boolean;

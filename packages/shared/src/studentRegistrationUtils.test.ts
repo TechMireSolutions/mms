@@ -30,7 +30,18 @@ describe('computeNextGrNumber', () => {
     );
     expect(gr).toBe('0001-2026');
   });
+
+  it('supports short year {yy} and prefix in template', () => {
+    const custom = {
+      grNumberTemplate: 'GR{yy}{seq}',
+      grNumberDigits: 3,
+      grNumberRestartAnnually: true,
+    };
+    const gr = computeNextGrNumber([], custom, '2026-05-10');
+    expect(gr).toBe('GR26001');
+  });
 });
+
 
 describe('findStudentRegistrationConflict', () => {
   const roster = [

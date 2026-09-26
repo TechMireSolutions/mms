@@ -53,8 +53,14 @@ export function computeNextGrNumber(
   }
 
   const seqStr = String(nextSeq).padStart(digits, '0');
-  return template.replace('{seq}', seqStr).replace('{year}', String(year));
+  const fullYear = String(year);
+  const shortYear = fullYear.slice(-2);
+  return template
+    .replace(/\{seq\}/gi, seqStr)
+    .replace(/\{year\}|\{yyyy\}/gi, fullYear)
+    .replace(/\{yy\}/gi, shortYear);
 }
+
 
 /** Client-side duplicate guard before save (server authoritative on POST). */
 export function findStudentRegistrationConflict(

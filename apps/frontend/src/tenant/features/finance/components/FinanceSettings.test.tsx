@@ -75,6 +75,12 @@ vi.mock("./FinancePreferencesSection", () => ({
   ),
 }));
 
+vi.mock("./FinanceInvoiceNumberingSection", () => ({
+  FinanceInvoiceNumberingSection: () => (
+    <div data-testid="finance-invoice-numbering-section">Invoice Numbering Section</div>
+  ),
+}));
+
 vi.mock("./FinanceFeeStructuresSection", () => ({
   FinanceFeeStructuresSection: () => (
     <div data-testid="finance-fee-structures-section">Fee Structures</div>
@@ -90,6 +96,7 @@ describe("FinanceSettings Component", () => {
     const html = renderToStaticMarkup(<FinanceSettings />);
     expect(html).toContain("finance.settings.title");
     expect(html).toContain("Finance Preferences Section");
+    expect(html).toContain("Invoice Numbering Section");
     expect(html).toContain("Save Footer");
   });
 });

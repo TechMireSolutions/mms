@@ -11,7 +11,7 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("StudentsPreferencesSection Component", () => {
-  it("renders student preferences section with template, digits, and toggle rows", () => {
+  it("renders student GR number sequence configuration with live preview", () => {
     const html = renderToStaticMarkup(
       <StudentsPreferencesSection
         settingsDraft={DEFAULT_STUDENTS_SETTINGS}
@@ -20,9 +20,9 @@ describe("StudentsPreferencesSection Component", () => {
     );
 
     expect(html).toContain("students.settings.grSectionTitle");
-    expect(html).toContain("students.settings.grTemplate");
-    expect(html).toContain("students.settings.grDigits");
-    expect(html).toContain("students.settings.restartAnnually");
-    expect(html).toContain("students.settings.autoGenerateId");
+    expect(html).toContain("Auto-generate Student GR Numbers");
+    expect(html).toContain("Live Preview");
+    expect(html).toContain("Starting Sequence");
+    expect(html).toContain("Sequence Digits");
   });
 });

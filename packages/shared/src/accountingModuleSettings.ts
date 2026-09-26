@@ -1,6 +1,7 @@
 import type { TabDefinition } from "./contactTypes.js";
 import type { ModuleFieldDef } from "./moduleFieldSchema.js";
 import { INITIAL_ACCOUNTING_FIELD_SEED } from "./moduleFieldSetupFinance.js";
+import type { SequenceYearFormat, SequenceRolloverPolicy } from "./sequenceNumberingTypes.js";
 
 // ─── Accounting Settings ─────────────────────────────────────────────────────
 
@@ -18,6 +19,14 @@ export interface AccountingSettings {
   retainedEarningsAccount: string;
   organizationName?: string;
   defaultViewLayout?: string;
+  journalAutoGenerateRef?: boolean;
+  journalRefPrefix?: string;
+  journalRefYearFormat?: SequenceYearFormat;
+  journalRefSequenceDigits?: number;
+  journalRefDelimiter?: string;
+  journalRefStartingSequence?: number;
+  journalRefRolloverPolicy?: SequenceRolloverPolicy;
+  journalRefCurrentSequence?: number;
   fields?: Record<string, unknown>;
   customFields?: [];
   fieldOrder?: string[];

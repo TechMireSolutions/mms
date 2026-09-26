@@ -1,4 +1,9 @@
-import { todayISO } from "@mms/shared";
+import {
+  todayISO,
+  financeSettingsToSequenceConfig,
+  formatDeterministicSequence,
+  type FinanceSettings,
+} from "@mms/shared";
 
 export interface InvoiceDraft {
   studentId: string;
@@ -12,9 +17,16 @@ export interface InvoiceDraft {
   feeStructureId: string;
 }
 
-export function nextInvoiceId(prefix: string): string {
+export function nextInvoiceId(
+  prefixOrSettings: string | Partial<FinanceSettings>,
+  currentSeq: number = 1
+): string {
+  if (typeof prefixOrSettings === "object" && prefixOrSettings !== null) {
+    const config = financeSettingsToSequenceConfig(prefixOrSettings);
+    return formatDeterministicSequence(currentSeq, config);
+  }
   const stamp = new Date().toISOString().replace(/[-:TZ.]/g, "").slice(0, 14);
-  return `${prefix}-${stamp}`;
+  return `${prefixOrSettings || "INV"}-${stamp}`;
 }
 
 export function createInitialDraft(dueDays: string): InvoiceDraft {
