@@ -5,13 +5,16 @@
  * Checks staged files against sensitive file patterns and token heuristics.
  * If `gitleaks` is installed locally, invokes `gitleaks protect --staged`.
  */
-import { execSync } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
+
+// Large merges stage far more than the 1 MiB default buffer.
+const git = (...args) => execFileSync('git', args, { encoding: 'utf8', maxBuffer: 1 << 30 });
 
 // 1. Get list of staged files
 let stagedFiles = [];
 try {
-  const output = execSync('git diff --cached --name-only', { encoding: 'utf8' }).trim();
+  const output = git('diff', '--cached', '--name-only').trim();
   if (output) {
     stagedFiles = output.split('\n').filter(Boolean);
   }
@@ -50,7 +53,7 @@ for (const file of stagedFiles) {
 // 3. If gitleaks is available, delegate deep scanning to gitleaks
 let hasGitleaks = false;
 try {
-  execSync('which gitleaks', { stdio: 'ignore' });
+  execFileSync('gitleaks', ['version'], { stdio: 'ignore' });
   hasGitleaks = true;
 } catch {
   hasGitleaks = false;
@@ -58,14 +61,14 @@ try {
 
 if (hasGitleaks) {
   try {
-    execSync('gitleaks protect --staged --no-banner', { stdio: 'inherit' });
+    execFileSync('gitleaks', ['protect', '--staged', '--no-banner'], { stdio: 'inherit' });
   } catch {
     violations.push('gitleaks detected sensitive credentials in staged diff.');
   }
 } else {
   // 4. Fallback heuristic scan on staged diff
   try {
-    const diff = execSync('git diff --cached', { encoding: 'utf8' });
+    const diff = git('diff', '--cached');
     const SECRET_PATTERNS = [
       { name: 'Private Key Block', regex: /-----BEGIN [A-Z ]*PRIVATE KEY-----/ },
       { name: 'AWS Access Key ID', regex: /\b(AKIA|ABIA|ACCA|ASIA)[0-9A-Z]{16}\b/ },
@@ -80,7 +83,7 @@ if (hasGitleaks) {
       }
     }
   } catch (err) {
-    console.error('Warning: could not inspect staged diff:', err.message);
+    violations.push(`Could not inspect staged diff (${err.message}); refusing to pass unscanned changes.`);
   }
 }
 
