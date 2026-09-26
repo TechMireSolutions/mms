@@ -22,7 +22,7 @@
     "check:code-norms": "node scripts/check-code-norms.mjs",
     "check:secrets": "node scripts/check-staged-secrets.mjs",
     "sync:skills-index": "node scripts/sync-skill-index.mjs",
-    "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
+    "prepare": "node -e \"require('child_process').execSync('git config core.hooksPath .githooks', {stdio:'inherit'})\""
   },
   "devDependencies": {
     "turbo": "^2.10.13",
