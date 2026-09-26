@@ -5,6 +5,11 @@ import type {
   WakalaType,
   ObligationDistribution,
   ObligationCollection,
+  ObligationsSettings,
+} from '@mms/shared';
+import {
+  formatDeterministicSequence,
+  obligationsSettingsToSequenceConfig,
 } from '@mms/shared';
 
 export type {
@@ -21,10 +26,27 @@ export const DESIGNATED_FOR_OPTIONS = ["Syed", "Non-Syed", "Both", "None"] as co
 export const DISTRIBUTION_TYPES = ["Liability", "Income"] as const;
 export const PAYMENT_MODES = ["Cash", "Online"] as const;
 
-export function generateReceiptNo(existingCollections: ObligationCollection[]): string {
-  const receiptNumbers = existingCollections
-    .map((collection) => parseInt(collection.receipt_no.replace("OBL-", ""), 10))
+export function generateReceiptNo(
+  existingCollections: ObligationCollection[],
+  settings?: Partial<ObligationsSettings>,
+  referenceDate?: Date | string,
+): string {
+  const config = obligationsSettingsToSequenceConfig(settings);
+  if (!config.autoGenerate) {
+    return "";
+  }
+
+  const numbers = existingCollections
+    .map((collection) => {
+      if (!collection.receipt_no) return NaN;
+      const match = collection.receipt_no.match(/(\d+)$/);
+      return match ? parseInt(match[1], 10) : NaN;
+    })
     .filter((receiptNumber) => !isNaN(receiptNumber));
-  const nextReceiptNumber = receiptNumbers.length > 0 ? Math.max(...receiptNumbers) + 1 : 1;
-  return "OBL-" + String(nextReceiptNumber).padStart(5, "0");
+
+  const maxExisting = numbers.length > 0 ? Math.max(...numbers) : 0;
+  const starting = config.startingSequence || 1;
+  const nextSeq = Math.max(maxExisting + 1, starting);
+
+  return formatDeterministicSequence(nextSeq, config, referenceDate);
 }

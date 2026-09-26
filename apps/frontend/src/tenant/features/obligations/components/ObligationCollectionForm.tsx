@@ -13,6 +13,7 @@ import {
   ObligationCollectionFormFields,
   type ObligationCollectionFormState,
 } from "@/tenant/features/obligations/components/ObligationCollectionFormFields";
+import { useObligationsSettings } from "@/tenant/features/obligations/hooks/useObligationsSettings";
 
 const EMPTY: ObligationCollectionFormState = {
   receipt_no: "",
@@ -40,9 +41,10 @@ export interface ObligationCollectionFormProps {
 export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
+  const { settings } = useObligationsSettings();
   const [form, setForm] = useState<ObligationCollectionFormState>({ 
     ...EMPTY, 
-    receipt_no: generateReceiptNo(existingCollections),
+    receipt_no: generateReceiptNo(existingCollections, settings),
     received_by: authUser?.id || "",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ObligationCollectionFormState, AppTranslationKey>>>({});

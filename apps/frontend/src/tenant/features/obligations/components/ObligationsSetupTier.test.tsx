@@ -83,6 +83,11 @@ vi.mock("@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor"
   ),
 }));
 
+vi.mock("@/tenant/features/obligations/components/ObligationsReceiptNumberingSection", () => ({
+  default: () => <div data-testid="obligations-receipt-numbering-section">Receipt Numbering Section</div>,
+  ObligationsReceiptNumberingSection: () => <div data-testid="obligations-receipt-numbering-section">Receipt Numbering Section</div>,
+}));
+
 describe("ObligationsSetupTier Component", () => {
   beforeAll(async () => {
     await new Promise((resolve) => setTimeout(resolve, 20));
@@ -125,6 +130,17 @@ describe("ObligationsSetupTier Component", () => {
     expect(html).toContain('data-types-count="1"');
     expect(html).toContain('data-mujtahids-count="1"');
     expect(html).toContain('data-reps-count="1"');
+  });
+
+  it("renders receipt numbering section when activeTab is numbering", () => {
+    const html = renderToStaticMarkup(
+      <ObligationsSetupTier
+        {...defaultProps}
+        tabs={[...defaultProps.tabs, { id: "numbering", label: "Receipt Numbering" }]}
+        activeTab="numbering"
+      />,
+    );
+    expect(html).toContain("obligations-receipt-numbering-section");
   });
 
   it("renders read-only message when canEditSetup is false", () => {

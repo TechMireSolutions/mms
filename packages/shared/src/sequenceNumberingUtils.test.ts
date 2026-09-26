@@ -5,6 +5,7 @@ import {
   facultySettingsToSequenceConfig,
   studentSettingsToSequenceConfig,
   financeSettingsToSequenceConfig,
+  obligationsSettingsToSequenceConfig,
 } from "./sequenceNumberingUtils.js";
 
 
@@ -122,6 +123,21 @@ describe("sequenceNumberingUtils", () => {
       expect(config.sequenceDigits).toBe(6);
       expect(config.delimiter).toBe("/");
       expect(config.yearFormat).toBe("YY");
+      expect(config.rolloverPolicy).toBe("annual_calendar");
+    });
+
+    it("adapts obligations settings accurately", () => {
+      const config = obligationsSettingsToSequenceConfig({
+        autoGenerateReceipt: true,
+        receiptPrefix: "REC",
+        receiptSequenceDigits: 5,
+        receiptDelimiter: "-",
+        receiptYearFormat: "YYYY",
+      });
+      expect(config.prefix).toBe("REC");
+      expect(config.sequenceDigits).toBe(5);
+      expect(config.delimiter).toBe("-");
+      expect(config.yearFormat).toBe("YYYY");
       expect(config.rolloverPolicy).toBe("annual_calendar");
     });
   });

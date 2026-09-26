@@ -4497,6 +4497,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "obligations.saveFailed": "ذخیره سوابق تعهدات ناموفق بود",
   "obligations.searchPlaceholder": "جستجوی رسید یا پرداخت‌کننده…",
   "obligations.setup.tabs.invoiceTemplate": "الگوی فاکتور",
+  "obligations.setup.tabs.numbering": "شماره‌گذاری رسید",
   "obligations.setup.readOnly": "می‌توانید تنظیمات تعهدات را ببینید، اما اجازه ویرایش آن را ندارید.",
   "obligations.summary": "خلاصه وضعیت",
   "obligations.summary.charts.aria": "نمودارها",

@@ -33,6 +33,7 @@ const SETUP_TAB_LABEL_KEYS: Record<(typeof OBLIGATIONS_MODULE_MANIFEST.setupSubT
   types: 'obligations.types',
   mujtahids: 'obligations.mujtahids',
   wakala: 'obligations.wakala',
+  numbering: 'obligations.setup.tabs.numbering',
   invoice_template: 'obligations.setup.tabs.invoiceTemplate',
 };
 

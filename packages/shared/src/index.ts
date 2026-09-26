@@ -352,4 +352,6 @@ export * from './types/moduleManifest.js';
 export * from './documentTemplateTypes.js';
 export * from './isoDateSchema.js';
 export * from './sequenceNumberingTypes.js';
+export * from './sequenceNumberingAdapters.js';
 export * from './sequenceNumberingUtils.js';
+export * from './obligationsModuleSettings.js';

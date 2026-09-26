@@ -42,6 +42,13 @@ const InvoiceTemplateEditor = lazy(
     ).then((m) => ({ default: m.InvoiceTemplateEditor })),
 );
 
+const ObligationsReceiptNumberingSection = lazy(
+  () =>
+    import(
+      "@/tenant/features/obligations/components/ObligationsReceiptNumberingSection"
+    ).then((m) => ({ default: m.ObligationsReceiptNumberingSection })),
+);
+
 export interface SetupTab {
   id: string;
   label: string;
@@ -134,6 +141,10 @@ export function ObligationsSetupTier({
                   onChangeWakala={onChangeWakala}
                   onChangeDistributions={onChangeDistributions}
                 />
+              )}
+
+              {subTabs.sub === "numbering" && (
+                <ObligationsReceiptNumberingSection />
               )}
 
               {subTabs.sub === "invoice_template" && (

@@ -43,3 +43,8 @@ export {
   useObligationsContractBulkDeleteCollections,
   useObligationsContractBulkRestoreCollections,
 } from '@/tenant/features/obligations/hooks/useObligationsTsrHooks';
+export {
+  useObligationsSettings,
+  loadObligationsSettings,
+  saveObligationsSettings,
+} from '@/tenant/features/obligations/hooks/useObligationsSettings';

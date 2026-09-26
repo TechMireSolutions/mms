@@ -4487,6 +4487,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "obligations.saveFailed": "فشل حفظ سجلات الالتزامات",
   "obligations.searchPlaceholder": "ابحث عن إيصال أو مرسل…",
   "obligations.setup.tabs.invoiceTemplate": "قالب الفاتورة",
+  "obligations.setup.tabs.numbering": "ترقيم الإيصالات",
   "obligations.setup.readOnly": "يمكنك عرض إعدادات الالتزامات، لكن ليس لديك صلاحية تعديلها.",
   "obligations.summary": "الملخص",
   "obligations.summary.charts.aria": "الرسوم البيانية",
