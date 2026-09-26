@@ -1,5 +1,5 @@
 import React from 'react';
-import { Blocks, ExternalLink, KeyRound, Trash2 } from 'lucide-react';
+import { Blocks, ExternalLink, KeyRound, Trash2, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -18,6 +18,7 @@ interface WorkspaceRowActionsProps {
   onOpenModules: () => void;
   onOpenDelete: () => void;
   onOpenResetPassword?: () => void;
+  onOpenCreateAdmin?: () => void;
 }
 
 export function WorkspaceRowActions({
@@ -33,6 +34,7 @@ export function WorkspaceRowActions({
   onOpenModules,
   onOpenDelete,
   onOpenResetPassword,
+  onOpenCreateAdmin,
 }: WorkspaceRowActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -66,6 +68,20 @@ export function WorkspaceRowActions({
       >
         <Blocks className="w-4 h-4" aria-hidden />
       </Button>
+
+      {onOpenCreateAdmin ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={busy}
+          onClick={onOpenCreateAdmin}
+          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 rounded-xl transition-all cursor-pointer"
+          title={`Create Admin User (${subdomain})`}
+          aria-label={`Create Admin User (${subdomain})`}
+        >
+          <UserPlus className="w-4 h-4" aria-hidden />
+        </Button>
+      ) : null}
 
       {onOpenResetPassword ? (
         <Button

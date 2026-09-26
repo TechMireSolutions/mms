@@ -23,6 +23,7 @@ export interface ModuleWorkTableHeaderProps<
   };
   
   actionsLabel?: string;
+  actionsClassName?: string;
   
   // Optional name property to make it sticky beside the checkbox.
   // Defaults to "name" as the identifier for the sticky column if any.
@@ -40,6 +41,7 @@ export function ModuleWorkTableHeader<
   setColumnWidth,
   selection,
   actionsLabel,
+  actionsClassName = "w-56 min-w-56 text-end",
   stickyColumnId = "name",
 }: ModuleWorkTableHeaderProps<TCol>): JSX.Element {
   return (
@@ -95,8 +97,8 @@ export function ModuleWorkTableHeader<
         })}
         
         {actionsLabel && (
-          <TableHead className="px-4 py-3 w-16 h-auto">
-            <span className="sr-only">{actionsLabel}</span>
+          <TableHead className={cn("px-4 py-3 h-auto", actionsClassName)}>
+            <span>{actionsLabel}</span>
           </TableHead>
         )}
       </TableRow>

@@ -477,7 +477,9 @@ for (const skill of diskSkills) {
   const scriptsDir = path.join(skillDir, 'scripts');
   if (isDir(scriptsDir)) {
     for (const scriptFile of fs.readdirSync(scriptsDir)) {
+      if (scriptFile === '__pycache__' || scriptFile.startsWith('.')) continue;
       const scriptPath = path.join(scriptsDir, scriptFile);
+      if (isDir(scriptPath)) continue;
       if (!isExecutable(scriptPath)) {
         fail(`Skill ${skill}: script '${scriptFile}' is not executable`);
       }
@@ -517,7 +519,7 @@ for (const file of ruleFiles) {
   // Any skill or rule named in a rule should exist. Unknown mms-* tokens are
   // warnings only: some are legitimate code/package identifiers, but a stale
   // router target must still be visible.
-  for (const m of raw.matchAll(/`?(mms-[a-z0-9-]+|antigravity-workspace)`?/g)) {
+  for (const m of raw.matchAll(/`?(mms-[a-z0-9-]+|antigravity-workspace|ui-ux-pro-max)`?/g)) {
     const token = m[1];
     if (knownSkillNames.has(token) || knownRuleNames.has(token) || KNOWN_MMS_TOKENS.has(token)) continue;
     warn(`In ${file}: unrecognised mms-* token '${token}' (stale router target or real identifier?)`);

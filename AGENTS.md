@@ -56,7 +56,7 @@ Start here in Antigravity: **skill `antigravity-workspace`**.
 
 **Rule → skill map:** every rule carries a **Workflow skills:** line, and the full ownership matrix lives in [.cursor/rules/README.md](.cursor/rules/README.md) (that file is the single owner of the topic→rule→skill index — do not restate it here).
 
-## Skills (38)
+## Skills (39)
 
 | Skill | Purpose |
 |-------|---------|
@@ -98,6 +98,7 @@ Start here in Antigravity: **skill `antigravity-workspace`**.
 | `mms-settings-i18n` | Settings + i18n (en/ar/ur/fa) |
 | `mms-i18n-completeness` | Key parity across en/ar/ur/fa |
 | `mms-ui-ux-design` | Design tokens, BiDi / RTL layout, Master Module Scaffold |
+| `ui-ux-pro-max` | Design intelligence (styles, palettes, typography, UX, charts) |
 
 Index: [.agent/skills/README.md](.agent/skills/README.md)
 

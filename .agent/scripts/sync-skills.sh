@@ -60,14 +60,14 @@ for (const entry of fs.readdirSync(src, { withFileTypes: true })) {
       console.log(`synced skill ${name}`);
     }
 
-    const subdirs = ["scripts", "references", "examples"];
+    const subdirs = ["scripts", "references", "examples", "data"];
     for (const sub of subdirs) {
       const subDir = path.join(srcDir, sub);
       if (fs.existsSync(subDir) && fs.statSync(subDir).isDirectory()) {
         const destSubDir = path.join(destDir, sub);
-        if (!DRY) fs.mkdirSync(destSubDir, { recursive: true });
-        for (const file of fs.readdirSync(subDir)) {
-          if (!DRY) fs.copyFileSync(path.join(subDir, file), path.join(destSubDir, file));
+        if (!DRY) {
+          fs.mkdirSync(destSubDir, { recursive: true });
+          fs.cpSync(subDir, destSubDir, { recursive: true });
         }
         console.log(`synced ${sub} ${name}`);
       }

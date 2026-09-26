@@ -15,7 +15,10 @@ export function usePlatformWorkspaceDescriptor(): EntityDescriptor<PlatformWorks
   const { t } = useTranslation();
   return useStaticEntityDescriptor(
     platformWorkspacesEntityDescriptor,
-    (key, fallback) => t(key as Parameters<typeof t>[0]) || fallback,
+    (key, fallback) => {
+      const res = t(key as Parameters<typeof t>[0]);
+      return res && res !== key ? res : fallback;
+    },
   );
 }
 

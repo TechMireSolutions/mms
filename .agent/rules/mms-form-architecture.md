@@ -5,7 +5,7 @@ description: Static FormModal architecture — shell chrome, Zod validation, Rea
 
 # MMS Form Architecture
 
-**Workflow skills:** form authoring → `mms-form-architecture` · shell a11y & focus-return → `mms-a11y-smoke`.
+**Workflow skills:** form authoring → `mms-form-architecture` · form UX guidelines → `ui-ux-pro-max` · shell a11y & focus-return → `mms-a11y-smoke`.
 
 ## 1. FormModal Shell & Primitives
 
@@ -43,6 +43,7 @@ description: Static FormModal architecture — shell chrome, Zod validation, Rea
 
 - **Logical CSS:** Use logical Tailwind (`start-0`, `border-e`, `ms-auto`, `ps-4`).
 - **Non-Punitive Validation:** Trigger inline errors on `onBlur` or post-submit (`isSubmitted`), not during keystrokes. Use `:user-invalid`/`:user-valid`. Error copy uses `text-wrap: pretty`. Auto-focus first invalid tab and field on submit failure.
+- **Form UX Intelligence:** Query UI/UX Pro Max form guidelines (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "form validation error" --domain ux`, skill `ui-ux-pro-max`) for accessible error summaries, visible focus rings (`focus-visible:ring-2`), and resilient label wrapping.
 
 ## 6. Security & Upload Boundaries
 

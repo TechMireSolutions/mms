@@ -19,7 +19,7 @@ paths:
 
 # MMS Universal Module Architecture
 
-**Workflow skills:** new page → `mms-module-page` · Work/trash → `mms-module-work` · Setup → `mms-module-setup` · jobs → `mms-background-jobs` · Reports → `mms-reports-export`.
+**Workflow skills:** new page → `mms-module-page` · Work/trash → `mms-module-work` · Setup → `mms-module-setup` · jobs → `mms-background-jobs` · Reports → `mms-reports-export` · design intelligence → `ui-ux-pro-max`.
 
 ## 1. Monorepo Manifests & Domain Modeling
 
@@ -68,7 +68,7 @@ Align modules with **Contacts, Students, and Faculty** person-directory standard
 - **Soft-Delete Lifecycle:** `DELETE` + `POST /:id/restore` (batched bulk SQL); URL `?view=trash`; `ModuleTrashToggle` in toolbar; filter state preserved; drawer `WarningCallout` archive banner + Restore; hide create/actions in trash; `Cmd/Ctrl+N` guard; 23505 conflict trap on restore; 5–10s optimistic Undo toast; outbox CDC logging (`mms-data-layer.md` §6).
 - **Mutations:** Await `mutateAsync` on form `onSave`; close modals only after mutation resolution.
 - **Setup Tier:** Manifest `setupSubTabs` (`preferences` default); `canEditSetup` gates writes; read-only fallback when view-only; Preferences Save dirty-gated.
-- **Work UX:** `ErrorState` with retry + `loadFailedHint`; `EmptyState` (`title` required, `compact` when dense); `Cmd/Ctrl+N` shortcut (`!viewingDeleted && canWrite`); Filters menu SSOT; controller-owned selection via `useWorkSelection`; two-layer bulk-bar chrome; `isColumnVisible` gates; single resolved `viewMode` (`table` | `cards`); desktop tables use `WorkBatchTable`; cards use `DirectoryCard`/`DirectoryEntityCard` + `useWorkCardAction`; identical server pagination; row virtualization over 30 items; `useModuleColumnLayout` column width/visibility persistence.
+- **Work UX:** `ErrorState` with retry + `loadFailedHint`; `EmptyState` (`title` required, `compact` when dense); `Cmd/Ctrl+N` shortcut (`!viewingDeleted && canWrite`); Filters menu SSOT; controller-owned selection via `useWorkSelection`; two-layer bulk-bar chrome; `isColumnVisible` gates; single resolved `viewMode` (`table` | `cards`); desktop tables use `WorkBatchTable`; cards use `DirectoryCard`/`DirectoryEntityCard` + `useWorkCardAction`; identical server pagination; row virtualization over 30 items; `useModuleColumnLayout` column width/visibility persistence; UI/UX Pro Max design intelligence alignment (`mms-ui-ux-design.md` §8) for semantic HSL token mapping, resilient text layout (`text-wrap: balance`), and state preservation.
 - **Manifest Constants:** Import `setupSubTabs`, `softDelete`, `work.bulkActions`, and permissions from manifest. Person directories mandate `directoryViews: ['table','cards']`.
 - **i18n & RBAC:** All user-facing copy via `t()`; `useModulePermissions(manifest)` gates CTAs. Intersect persisted tier/sub-tab selections with active permissions before rendering.
 

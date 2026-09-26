@@ -6,7 +6,7 @@ alwaysApply: false
 
 # MMS UI, UX & Design System
 
-**Workflow skills:** primitives/shells → `mms-frontend` · axe/§4 verify → `mms-a11y-smoke` · FormModal norms → `mms-form-architecture`.
+**Workflow skills:** design intelligence → `ui-ux-pro-max` · primitives/shells → `mms-frontend` · axe/§4 verify → `mms-a11y-smoke` · FormModal norms → `mms-form-architecture`.
 
 ## 1. Central Primitives Enforcement
 
@@ -57,7 +57,19 @@ alwaysApply: false
 - **Colocation & Resolution:** Every module provides a localized `use{Entity}EntityDescriptor()` hook invoking `useStaticEntityDescriptor` with an application translation key resolver.
 - **Consumer Wiring:** Directory views (`ModuleWorkDirectoryShell`, `ModuleWorkTableHeader`, `DirectoryCardMetadata`, `DetailSheet`) consume the resolved hook result, never raw descriptor constants or inline translation maps.
 
-## 8. Workflow & Output Speed Rules
+## 8. UI/UX Pro Max Design Intelligence System
+
+- **Design System Generation**: For all new modules, page redesigns, and complex UI components, consult the UI/UX Pro Max engine (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<product/feature>" --design-system -p "MMS"`, skill `ui-ux-pro-max`).
+- **Styles & Palettes**: Leverage the 79 UI styles (50 active; Bento Grid, Minimalist, Clean Corporate) and 192 color palettes. Map recommended colors to MMS semantic HSL tokens in `index.css` (`hsl(var(--primary))`, `hsl(var(--secondary))`, `hsl(var(--card))`, `hsl(var(--muted))`, `hsl(var(--border))`, `hsl(var(--destructive))`). Raw hex literals and arbitrary Tailwind brackets (`bg-[#4F46E5]`, `bg-gray-100`) are banned.
+- **Resilient Text & Compact UI**:
+  - Headings use `text-wrap: balance` as a progressive enhancement; layouts must reflow cleanly without broken labels or orphan lines across widths, fonts, and locales.
+  - Essential text must reflow without clipping at narrow widths, browser zoom, and text scaling (`mms-ui-ux-design.mdc` §4).
+  - Chip and tag collections must wrap or use an operable `+n` disclosure. Compact labels should remain whole; unavoidable truncation requires an accessible full-value path for keyboard, pointer, and touch users.
+  - Badges must never rely on color alone; always pair with localized text via `t()`.
+  - Micro-interactions follow platform-appropriate timing (150–300ms ease-out). Rapid interrupted interactions must cancel animations cleanly while ensuring final semantic state, focus, and content remain valid. `prefers-reduced-motion` must be strictly respected.
+- **Chart & Analytics Recommendations**: Query `--domain chart` for KPI grids, trend lines, and distribution visualizations (`mms-reports.mdc`).
+
+## 9. Workflow & Output Speed Rules
 
 - **Zero Output Bloat:** Emit surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational greetings and post-code summaries.
 - **Verification Gates:** Verify interactive controls with axe smoke (`e2e/tests/a11y-shell.spec.ts`, skill `mms-a11y-smoke`) for zero serious/critical violations. Spot-check 375 / 768 / 1024px viewports and RTL (`dir="rtl"`).

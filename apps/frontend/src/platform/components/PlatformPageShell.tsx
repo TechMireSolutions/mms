@@ -15,7 +15,7 @@ const MAX_W: Record<NonNullable<PlatformPageShellProps['width']>, string> = {
   md: 'max-w-md',
   lg: 'max-w-lg',
   xl: 'max-w-xl',
-  '7xl': 'max-w-7xl',
+  '7xl': 'w-full max-w-full',
 };
 
 interface PlatformPageShellProps {
@@ -78,7 +78,7 @@ export function PlatformPageShell({
 }: PlatformPageShellProps): React.JSX.Element {
   const { dir, language } = useTranslation();
   const { isPlatformAuthenticated } = usePlatformAuth();
-  const maxClass = MAX_W[width] ?? 'max-w-7xl';
+  const maxClass = MAX_W[width] ?? 'w-full max-w-full';
 
   const footer = <AppFooter className="mt-auto" />;
 

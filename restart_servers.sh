@@ -337,7 +337,7 @@ launch_detached() {
   local launcher_pid prev_dir="$PWD" cmd_quoted="" arg
   for arg in "$@"; do cmd_quoted+="$(printf '%q' "$arg") "; done
   cd "$workdir" || die "Cannot cd to $workdir"
-  nohup bash -lc "cd $(printf '%q' "$workdir") && exec $cmd_quoted" >>"$logfile" 2>&1 </dev/null &
+  nohup setsid bash -c "cd $(printf '%q' "$workdir") && exec $cmd_quoted" >>"$logfile" 2>&1 </dev/null &
   launcher_pid=$!
   echo "$launcher_pid" >"$pidfile"
   disown -h "$launcher_pid" 2>/dev/null || true

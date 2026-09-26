@@ -35,8 +35,9 @@ Audit the diff against the core MMS invariants:
   - TanStack Query v5 is used for data fetching (no new `useLiveCollection` for REST entities).
   - Cross-feature imports are banned (e.g. importing `@/tenant/features/A` from `B`). Shared logic must reside in `@mms/shared` or `@/tenant/hooks/collections/*` facades.
   - Code splits properly at the ~300-line soft ceiling via stable barrels (`mms-structure-naming.md`).
-- [ ] **UI & i18n Parity (`mms-ui-ux-design.md`, `mms-settings-i18n.md`)**:
-  - Semantic HTML (`<main>`, `<nav>`, `<section>`), minimum 44x44px touch targets.
+- [ ] **UI & i18n Parity (`mms-ui-ux-design.md`, `mms-settings-i18n.md`, `ui-ux-pro-max`)**:
+  - Semantic HTML (`<main>`, `<nav>`, `<section>`), minimum 44x44px touch targets, BiDi logical classes (`ps-*`, `pe-*`, `start-*`, `end-*`).
+  - UI/UX Pro Max design intelligence alignment (`mms-ui-ux-design.md` §8): semantic HSL color mapping, resilient text layout (`text-wrap: balance`), compact labels/inputs, micro-interaction state preservation.
   - No hardcoded English strings. All text uses `t()` with keys in `appTranslationsEn.ts` (and ar/ur/fa packs).
   - `ErrorState` implementations include descriptive hints (e.g., `loadFailedHint`), not just titles.
 - [ ] **Data Standards & DRY (`mms-dry.md`)**:

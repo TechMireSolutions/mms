@@ -4,12 +4,12 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-09-26
 ---
 
 # MMS Module Page Pattern
 
-**Rule (norms SSOT):** `mms-module-architecture.mdc` · `mms-ui-ux-design.mdc` §4 · `mms-hooks.mdc` · `mms-performance.mdc`.
+**Rule (norms SSOT):** `mms-module-architecture.mdc` · `mms-ui-ux-design.mdc` §4, §8 · `mms-hooks.mdc` · `mms-performance.mdc`.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
 Gold-standard reference implementation: `apps/frontend/src/tenant/features/accounting/AccountingPage.tsx` (Work | Reports | Setup with sub-tabs, trash mode, and persisted tier state).

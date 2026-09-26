@@ -4,12 +4,12 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-09-26
 ---
 
 # MMS Form Architecture Skill
 
-**Rule (norms SSOT):** `mms-form-architecture.mdc` · `mms-core.mdc` · `mms-ui-ux-design.mdc` §4 · `mms-performance.mdc` §2.
+**Rule (norms SSOT):** `mms-form-architecture.mdc` · `mms-core.mdc` · `mms-ui-ux-design.mdc` §4, §8 · `mms-performance.mdc` §2.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
 ## Accounting forms
@@ -39,6 +39,16 @@ Advisory implementation checklist:
 4. Use shared controls with names, labels, stable IDs, `aria-invalid` and connected error descriptions. For number/date inputs normalize null domain values to empty strings.
 5. Keep focus on the invalid field (activate its tab first), guard accidental closure while saving, and return focus on close. Verify these behaviors; passing a prop is not proof.
 
+## UI/UX Pro Max Form Intelligence
+
+Advisory: query UI/UX Pro Max before authoring complex forms to align with proven UX guidelines:
+```bash
+python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<form-topic>" --domain ux
+```
+- **Error Recovery & Prevention**: Validate on blur or submit attempt; highlight invalid fields with clear, actionable copy without punitively clearing valid entries.
+- **Input Sizing & Affordances**: Pair form controls with `inputMode`, `enterKeyHint`, and semantic `autoComplete` attributes.
+- **Label & Helper Hierarchy**: Form labels are compact, non-duplicative, and paired with `useId()` and `aria-describedby` helper texts.
+
 ## Verification Checklist
 
 ```
@@ -46,6 +56,7 @@ Advisory implementation checklist:
 - [ ] Virtual keyboard hints provided (inputMode, enterKeyHint, autoComplete)
 - [ ] Paste strictly enabled on all fields including OTP/passwords (WCAG 2.2 3.3.8)
 - [ ] Non-punitive validation UX (validate on blur or submit attempt; text-wrap: pretty)
+- [ ] Form UX guidelines verified (python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<topic>" --domain ux)
 - [ ] Touch targets meet 44×44px floor (min-h-11 min-w-11)
 - [ ] Dialog layout works at narrow widths; container queries/subgrid only when useful (advisory)
 - [ ] No Server Actions or form action= posts

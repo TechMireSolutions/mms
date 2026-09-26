@@ -84,6 +84,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Directory empties use `EmptyState` (`title` required; `compact` when dense); column gates use `isColumnVisible` (not `show*` fans)
 - [ ] Cmd/Ctrl+N create when `canWrite` (or `platformUserCan`) and not in trash
 - [ ] Prefer shared Work chrome (`EmptyState` / `FieldErrorMessage` / `WarningCallout` / `BulkSelectionBar` / `WORK_SURFACE` / `FORM_CARD` / `ModuleCommandMetricsGrid` for KPI strips; person-module chrome: `LeadingIconInput`, `DetailSectionTitle`, `FormFooterChip`, `ModuleFilterDropdown`, `DrawerSyncStatusFooter`; `h-chart-*` / `z-modal*` / `max-w-toast` over ad-hoc sizes) — `mms-ui-ux-design.md`
+- [ ] UI/UX Pro Max design intelligence alignment (`mms-ui-ux-design.md` §8): semantic HSL token mapping, resilient text layout (`text-wrap: balance`), compact density, state preservation
 
 ### Messaging (when touched)
 - [ ] Composer uses `MessagingRecipient` — not contacts schemas

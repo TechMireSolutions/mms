@@ -38,6 +38,7 @@ export {
   listPlatformWorkspaces,
   getPlatformWorkspaceSummary,
   resetWorkspaceAdminPassword,
+  createWorkspaceAdminUser,
   syncWorkspaceFromBranding,
   upsertWorkspaceBranding,
 } from './workspacePresentationService.js';

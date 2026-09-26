@@ -8,7 +8,7 @@ This workflow guides the end-to-end implementation of a new or extended MMS feat
 
 ## Phase 1: Context & Manifest Definition
 
-- [ ] **Load core skills**: Invoke `mms-module-page`, `mms-module-work`, and `mms-module-setup`. Add `mms-backend-api` if building new REST endpoints, and `mms-fields-registry` if the module uses custom fields.
+- [ ] **Load core skills**: Invoke `mms-module-page`, `mms-module-work`, and `mms-module-setup`. Invoke `ui-ux-pro-max` for design system and style intelligence. Add `mms-backend-api` if building new REST endpoints, and `mms-fields-registry` if the module uses custom fields.
 - [ ] **Review architecture rules**: Read `rules/mms-module-architecture.md`, `rules/mms-api-interface.md`, `rules/mms-data-layer.md`, `rules/mms-ui-ux-design.md`, `rules/mms-settings-i18n.md`, and `rules/mms-fields.md`.
 - [ ] **Define the Manifest**: In `packages/shared`, define `{module}ModuleManifest`. Explicitly declare the `tiers` (Work, Reports, Setup), `setupSubTabs`, `softDelete` behavior, and required permissions.
 - [ ] **Define DTOs**: Create `.strict()` Zod schemas in `@mms/shared` for validation. Never fork schemas between frontend and backend.
@@ -35,6 +35,7 @@ This workflow guides the end-to-end implementation of a new or extended MMS feat
   - Implement robust `ErrorState` components with `loadFailedHint`.
   - Support keyboard shortcuts like `Cmd/Ctrl+N` for quick creation.
   - Ensure setup tabs enforce `canEditSetup` permission gates.
+- [ ] **UI/UX Design Intelligence (`ui-ux-pro-max`)**: Consult `ui-ux-pro-max` design intelligence (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<product/feature>" --design-system -p "MMS"`) for module visual styles, color palettes (mapped to `index.css` HSL tokens), resilient text reflow, and chart recommendations (`mms-ui-ux-design.md` §8).
 - [ ] **UI Tokens & BiDi**: Ensure layout is accessible (44x44px touch minimums, semantic landmarks) and uses RTL-safe BiDi design tokens (`mms-ui-ux-design.md`).
 - [ ] **Register Navigation**: Add the module to `navConfig` and `SYSTEM_MODULES`.
 - [ ] **Add Translations**: Define all UI strings as i18n keys and add them to `en`, `ar`, `ur`, and `fa` translation files (`mms-settings-i18n.md`). Hardcoded strings are banned.

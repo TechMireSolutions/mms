@@ -106,7 +106,7 @@ for dir in "$ROOT/.agent/skills"/*/; do
     [[ "$DRY_RUN" == "1" ]] || cp "$dir/SKILL.md" "$ROOT/.claude/skills/$name/SKILL.md"
     echo "synced skill $name"
   fi
-  for sub in scripts references examples; do
+  for sub in scripts references examples data; do
     if [[ -d "$dir/$sub" ]]; then
       [[ "$DRY_RUN" == "1" ]] || mkdir -p "$ROOT/.claude/skills/$name/$sub"
       [[ "$DRY_RUN" == "1" ]] || cp -R "$dir/$sub/." "$ROOT/.claude/skills/$name/$sub/"
