@@ -3,7 +3,7 @@ import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shar
 import WorkspaceLogo from '@/platform/components/WorkspaceLogo';
 import { tenantUrl } from '@/lib/config/tenantConfig';
 import { CopyBtn } from '@/components/ui/CopyBtn';
-import { ExternalLink } from 'lucide-react';
+import { ExternalLink, Mail } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface WorkspaceIdentityCellProps {
@@ -63,6 +63,12 @@ export function WorkspaceIdentityCell({
             showToast
           />
         </div>
+        {workspace.adminEmail ? (
+          <div className="text-2xs font-semibold text-muted-foreground flex items-center gap-1">
+            <Mail className="w-3 h-3 text-primary/70 shrink-0" aria-hidden />
+            <span className="truncate" title={`Admin: ${workspace.adminEmail}`}>{workspace.adminEmail}</span>
+          </div>
+        ) : null}
       </div>
     </div>
   );

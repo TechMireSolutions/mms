@@ -12,6 +12,7 @@ import {
   getWorkspaceGrantedModules,
   listPlatformWorkspaces,
   getPlatformWorkspaceSummary,
+  resetWorkspaceAdminPassword,
   setWorkspaceEmailVerification,
   setWorkspaceEnabled,
   updateWorkspaceModules,
@@ -167,6 +168,38 @@ export default async function platformWorkspaceRoutes(
       });
 
       return { status: 200 as const, body: { success: true as const } };
+    },
+
+    resetWorkspaceAdminPassword: async ({
+      params,
+      body,
+      request,
+    }: ContractRouteArgs<typeof platformWorkspacesContract['resetWorkspaceAdminPassword']>): Promise<ContractRouteResponse<typeof platformWorkspacesContract['resetWorkspaceAdminPassword']>> => {
+      const { platformUser } = request as PlatformAuthenticatedRequest;
+      const result = await resetWorkspaceAdminPassword(params.subdomain, body.newPassword);
+      if (!result) {
+        return { status: 404 as const, body: { type: 'not_found', message: 'Workspace not found' } };
+      }
+
+      await insertPlatformActivityLog({
+        userId: platformUser.id,
+        userEmail: platformUser.email,
+        action: 'reset_workspace_admin_password',
+        targetResource: 'workspace',
+        targetId: params.subdomain,
+        metadataMessage: `Reset password for admin email ${result.adminEmail}`,
+        ipAddress: request.ip,
+      });
+
+      return {
+        status: 200 as const,
+        body: {
+          success: true as const,
+          subdomain: result.subdomain,
+          adminEmail: result.adminEmail,
+          newPassword: result.newPassword,
+        },
+      };
     },
 
     deleteWorkspace: {

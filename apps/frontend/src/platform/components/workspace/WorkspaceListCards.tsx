@@ -21,6 +21,7 @@ export interface WorkspaceListCardsProps {
   onToggleEmailVerification: (subdomain: string, required: boolean) => void;
   onOpenModules: (workspace: PlatformWorkspaceRowData) => void;
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
+  onOpenResetPassword?: (workspace: PlatformWorkspaceRowData) => void;
 }
 
 /** Directory list cards view for platform workspaces, aligning with tenant [Entity]ListCards. */
@@ -34,6 +35,7 @@ export function WorkspaceListCards({
   onToggleEmailVerification,
   onOpenModules,
   onOpenDelete,
+  onOpenResetPassword,
 }: WorkspaceListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -82,6 +84,7 @@ export function WorkspaceListCards({
                   onToggleEmailVerification={(req) => onToggleEmailVerification(workspace.subdomain, req)}
                   onOpenModules={() => onOpenModules(workspace)}
                   onOpenDelete={() => onOpenDelete(workspace)}
+                  onOpenResetPassword={onOpenResetPassword ? () => onOpenResetPassword(workspace) : undefined}
                 />
               </div>
             }

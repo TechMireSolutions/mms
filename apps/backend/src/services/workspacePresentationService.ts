@@ -10,6 +10,10 @@ import {
   isWorkspaceEnabled,
   toPublicBranding,
 } from '@mms/shared';
+import { and, eq, inArray, isNull } from 'drizzle-orm';
+import { getDb } from '../db/database.js';
+import { tenantUsers } from '../db/schema.js';
+import { hashPassword } from './auth/passwordService.js';
 import {
   getWorkspaceBranding,
   getWorkspaceWithBranding,
@@ -73,17 +77,56 @@ export async function listPublicWorkspaces(): Promise<PublicWorkspaceSummary[]> 
     .sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
 }
 
+/** Fetch map of primary admin emails by workspace subdomain. */
+export async function getWorkspaceAdminEmailsMap(subdomains: string[]): Promise<Map<string, string>> {
+  if (subdomains.length === 0) return new Map();
+  const db = getDb();
+  const cleanSubdomains = subdomains.map((s) => s.toLowerCase());
+  const rows = await db
+    .select({
+      subdomain: tenantUsers.workspaceSubdomain,
+      email: tenantUsers.loginEmail,
+      role: tenantUsers.role,
+      createdAt: tenantUsers.createdAt,
+    })
+    .from(tenantUsers)
+    .where(
+      and(
+        inArray(tenantUsers.workspaceSubdomain, cleanSubdomains),
+        isNull(tenantUsers.deletedAt),
+      ),
+    );
+
+  rows.sort((a: { role?: string; createdAt?: Date | null }, b: { role?: string; createdAt?: Date | null }) => {
+    const aIsAdmin = a.role === 'admin' || a.role === 'super_user' ? 0 : 1;
+    const bIsAdmin = b.role === 'admin' || b.role === 'super_user' ? 0 : 1;
+    if (aIsAdmin !== bIsAdmin) return aIsAdmin - bIsAdmin;
+    return (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0);
+  });
+
+  const map = new Map<string, string>();
+  for (const row of rows) {
+    const key = row.subdomain.toLowerCase();
+    if (!map.has(key)) {
+      map.set(key, row.email);
+    }
+  }
+  return map;
+}
+
 /** All workspaces for platform super-user console (includes disabled). */
 export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> {
   const rows = await listWorkspaceRowsWithBranding();
   const subdomains = rows.map(({ workspace }) => workspace.subdomain);
   const prefsBySubdomain = await getUserModulePreferencesByWorkspaces(subdomains);
+  const adminEmailsBySubdomain = await getWorkspaceAdminEmailsMap(subdomains);
 
   const summaries = rows.map(({ workspace, branding }) => {
     const publicBranding = toPublicBranding(branding);
     const rawPrefs = prefsBySubdomain.get(workspace.subdomain.toLowerCase()) ?? null;
     const prefs = normalizeUserModulePreferences(rawPrefs);
     const logoUrl = publicBranding.logoUrl?.trim();
+    const adminEmail = adminEmailsBySubdomain.get(workspace.subdomain.toLowerCase()) || (branding?.email ? branding.email : undefined);
     return {
       subdomain: workspace.subdomain,
       madrasaName: publicBranding.madrasaName || workspace.madrasaName,
@@ -92,9 +135,81 @@ export async function listPlatformWorkspaces(): Promise<PlatformWorkspaceRow[]> 
       enabled: isWorkspaceEnabled(workspace),
       createdAt: workspace.createdAt,
       requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
+      adminEmail,
     };
   });
   return summaries.sort((a, b) => a.madrasaName.localeCompare(b.madrasaName));
+}
+
+/** Reset admin password for a tenant workspace. */
+export async function resetWorkspaceAdminPassword(
+  subdomain: string,
+  newPasswordInput?: string,
+): Promise<{ success: true; subdomain: string; adminEmail: string; newPassword: string } | null> {
+  const normalized = normalizeSubdomainInput(subdomain);
+  const data = await getWorkspaceWithBranding(normalized);
+  if (!data) return null;
+
+  const db = getDb();
+  const users = await db
+    .select()
+    .from(tenantUsers)
+    .where(
+      and(
+        eq(tenantUsers.workspaceSubdomain, normalized),
+        isNull(tenantUsers.deletedAt),
+      ),
+    );
+
+  users.sort((a: { role?: string; createdAt?: Date | null }, b: { role?: string; createdAt?: Date | null }) => {
+    const aIsAdmin = a.role === 'admin' || a.role === 'super_user' ? 0 : 1;
+    const bIsAdmin = b.role === 'admin' || b.role === 'super_user' ? 0 : 1;
+    if (aIsAdmin !== bIsAdmin) return aIsAdmin - bIsAdmin;
+    return (a.createdAt?.getTime() ?? 0) - (b.createdAt?.getTime() ?? 0);
+  });
+
+  const targetUser = users[0];
+  const fallbackEmail = data.branding?.email?.trim() || `admin@${normalized}.local`;
+
+  const newPassword = newPasswordInput?.trim() || `Mms#${Math.random().toString(36).substring(2, 8)}${Date.now().toString(36).substring(4)}`;
+  const passwordHash = await hashPassword(newPassword);
+
+  if (!targetUser) {
+    const userId = `usr_${Math.random().toString(36).substring(2, 11)}`;
+    await db.insert(tenantUsers).values({
+      id: userId,
+      workspaceSubdomain: normalized,
+      loginEmail: fallbackEmail,
+      passwordHash,
+      name: 'Admin',
+      role: 'admin',
+      mustChangePassword: true,
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    });
+    return {
+      success: true,
+      subdomain: normalized,
+      adminEmail: fallbackEmail,
+      newPassword,
+    };
+  }
+
+  await db
+    .update(tenantUsers)
+    .set({
+      passwordHash,
+      mustChangePassword: true,
+      updatedAt: new Date(),
+    })
+    .where(eq(tenantUsers.id, targetUser.id));
+
+  return {
+    success: true,
+    subdomain: normalized,
+    adminEmail: targetUser.loginEmail,
+    newPassword,
+  };
 }
 
 /** Single workspace row for platform console (avoids scanning full workspace list). */
@@ -108,6 +223,8 @@ export async function getPlatformWorkspaceSummary(
   const prefs = normalizeUserModulePreferences(rawPrefs);
   const publicBranding = toPublicBranding(data.branding ? data.branding : mergeBrandingSettings(null));
   const logoUrl = publicBranding.logoUrl?.trim();
+  const adminEmailsMap = await getWorkspaceAdminEmailsMap([normalized]);
+  const adminEmail = adminEmailsMap.get(normalized.toLowerCase()) || (data.branding?.email ? data.branding.email : undefined);
   return {
     subdomain: data.workspace.subdomain,
     madrasaName: publicBranding.madrasaName || data.workspace.madrasaName,
@@ -116,6 +233,7 @@ export async function getPlatformWorkspaceSummary(
     enabled: isWorkspaceEnabled(data.workspace),
     createdAt: data.workspace.createdAt,
     requireEmailVerification: prefs.requireEmailVerification ?? DEFAULT_USERS_SETTINGS.requireEmailVerification,
+    adminEmail,
   };
 }
 

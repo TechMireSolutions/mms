@@ -1,5 +1,5 @@
 import React from 'react';
-import { Blocks, ExternalLink, Trash2 } from 'lucide-react';
+import { Blocks, ExternalLink, KeyRound, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -17,6 +17,7 @@ interface WorkspaceRowActionsProps {
   onToggleEmailVerification?: (requireEmailVerification: boolean) => void;
   onOpenModules: () => void;
   onOpenDelete: () => void;
+  onOpenResetPassword?: () => void;
 }
 
 export function WorkspaceRowActions({
@@ -31,6 +32,7 @@ export function WorkspaceRowActions({
   onToggleEmailVerification,
   onOpenModules,
   onOpenDelete,
+  onOpenResetPassword,
 }: WorkspaceRowActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -64,6 +66,20 @@ export function WorkspaceRowActions({
       >
         <Blocks className="w-4 h-4" aria-hidden />
       </Button>
+
+      {onOpenResetPassword ? (
+        <Button
+          variant="ghost"
+          size="icon"
+          disabled={busy}
+          onClick={onOpenResetPassword}
+          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 rounded-xl transition-all cursor-pointer"
+          title={`Reset Admin Password (${subdomain})`}
+          aria-label={`Reset Admin Password (${subdomain})`}
+        >
+          <KeyRound className="w-4 h-4" aria-hidden />
+        </Button>
+      ) : null}
 
       <Button
         variant="ghost"

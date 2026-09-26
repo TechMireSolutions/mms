@@ -52,7 +52,7 @@ export function useObligationsPageController() {
       label: t(SETUP_TAB_LABEL_KEYS[id]),
     })))();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('obligations_active_tab', 'work');
-  const [activeConfigTab, setActiveConfigTab] = useState('types');
+  const [activeConfigTab, setActiveConfigTab] = useState('wakala');
   const [showDeleted, setShowDeleted] = useTrashMode();
 
   const collectionSelection = useWorkSelection<string>();
@@ -189,7 +189,7 @@ export function useObligationsPageController() {
     activeTab,
     PAGE_TABS.map((tab) => tab.id),
   );
-  const effectiveConfigTab = CONFIG_SUB_TABS.find((tab) => tab.id === activeConfigTab) ? activeConfigTab : 'types';
+  const effectiveConfigTab = CONFIG_SUB_TABS.find((tab) => tab.id === activeConfigTab) ? activeConfigTab : 'wakala';
   const listLoadFailed = collectionsResult.isError;
 
   return {

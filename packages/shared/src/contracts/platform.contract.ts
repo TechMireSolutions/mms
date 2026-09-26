@@ -137,6 +137,27 @@ export const platformWorkspacesRoutes = {
     },
     summary: 'Manually verify tenant user email from platform apex',
   },
+  resetWorkspaceAdminPassword: {
+    method: 'POST',
+    path: '/api/platform/workspaces/:subdomain/reset-admin-password',
+    pathParams: z.object({ subdomain: z.string() }),
+    body: z.object({
+      newPassword: z.string().min(8).optional(),
+    }),
+    responses: {
+      200: z.object({
+        success: z.literal(true),
+        subdomain: z.string(),
+        adminEmail: z.string(),
+        newPassword: z.string(),
+      }),
+      400: platformErrorSchema,
+      401: platformErrorSchema,
+      403: platformErrorSchema,
+      404: platformErrorSchema,
+    },
+    summary: 'Reset workspace admin user password from platform console',
+  },
 } as const;
 
 export const platformWorkspacesContract = c.router(platformWorkspacesRoutes);

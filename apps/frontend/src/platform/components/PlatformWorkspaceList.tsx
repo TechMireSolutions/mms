@@ -8,6 +8,7 @@ import {
   usePlatformWorkspaces,
   useSetWorkspaceEmailVerification,
   useSetWorkspaceEnabled,
+  useResetWorkspaceAdminPassword,
 } from '@/platform/hooks/usePlatformWorkspaces';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePlatformWorkspaceDescriptor } from '@/platform/hooks/usePlatformWorkspaceDescriptor';
@@ -18,6 +19,7 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
 import { PlatformWorkspaceDeleteDialog } from '@/platform/components/PlatformWorkspaceDeleteDialog';
 import { PlatformWorkspaceModulesDialog } from '@/platform/components/PlatformWorkspaceModulesDialog';
+import { PlatformWorkspaceResetPasswordDialog } from '@/platform/components/PlatformWorkspaceResetPasswordDialog';
 import { PlatformWorkspaceSortMenu } from '@/platform/components/PlatformWorkspaceSortMenu';
 import {
   downloadWorkspacesCsv,
@@ -77,6 +79,11 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const [modulesOpen, setModulesOpen] = useState(false);
   const [targetModulesWorkspace, setTargetModulesWorkspace] = useState<PlatformWorkspaceRowData | null>(null);
 
+  // Reset password modal state
+  const [resetPasswordOpen, setResetPasswordOpen] = useState(false);
+  const [targetResetWorkspace, setTargetResetWorkspace] = useState<PlatformWorkspaceRowData | null>(null);
+  const resetAdminPasswordMutation = useResetWorkspaceAdminPassword();
+
   const items = workspaces ?? [];
   const deferredSearch = useDeferredValue(search);
 
@@ -107,6 +114,11 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   const handleOpenModules = (workspace: PlatformWorkspaceRowData): void => {
     setTargetModulesWorkspace(workspace);
     setModulesOpen(true);
+  };
+
+  const handleOpenResetPassword = (workspace: PlatformWorkspaceRowData): void => {
+    setTargetResetWorkspace(workspace);
+    setResetPasswordOpen(true);
   };
 
   const handleToggleEnabled = (subdomain: string, enabled: boolean): void => {
@@ -244,6 +256,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             onToggleEmailVerification={handleToggleEmailVerification}
             onOpenModules={handleOpenModules}
             onOpenDelete={handleOpenDelete}
+            onOpenResetPassword={handleOpenResetPassword}
           />
         ) : (
           <WorkspaceListCards
@@ -256,6 +269,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             onToggleEmailVerification={handleToggleEmailVerification}
             onOpenModules={handleOpenModules}
             onOpenDelete={handleOpenDelete}
+            onOpenResetPassword={handleOpenResetPassword}
           />
         )}
       </ModuleWorkListStateShell>
@@ -281,6 +295,19 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
           workspace={targetModulesWorkspace}
           open={modulesOpen}
           onOpenChange={setModulesOpen}
+        />
+      ) : null}
+
+      {targetResetWorkspace ? (
+        <PlatformWorkspaceResetPasswordDialog
+          open={resetPasswordOpen}
+          onOpenChange={setResetPasswordOpen}
+          workspace={targetResetWorkspace}
+          resetPending={resetAdminPasswordMutation.isPending}
+          onConfirm={async (subdomain, newPassword) => {
+            const res = await resetAdminPasswordMutation.mutateAsync({ subdomain, newPassword });
+            return { newPassword: res.newPassword, adminEmail: res.adminEmail };
+          }}
         />
       ) : null}
     </div>

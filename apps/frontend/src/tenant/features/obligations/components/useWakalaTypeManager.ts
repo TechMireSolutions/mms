@@ -49,11 +49,23 @@ export function useWakalaTypeManager({
     return `${prefix}${uuid}`;
   };
 
-  const handleSaveWakala = async (form: Partial<WakalaType>) => {
+  const handleSaveWakala = async (form: Partial<WakalaType>, initialDistributions?: Partial<ObligationDistribution>[]) => {
+    let wakalaId = form.id;
     if (modal?.mode === "add") {
-      await onChangeWakala([...wakalaTypes, { ...form, id: generateId("wt") } as WakalaType]);
+      wakalaId = generateId("wt");
+      await onChangeWakala([...wakalaTypes, { ...form, id: wakalaId } as WakalaType]);
     } else if (modal?.mode === "edit") {
       await onChangeWakala(wakalaTypes.map((wakalaType) => wakalaType.id === form.id ? (form as WakalaType) : wakalaType));
+    }
+    if (initialDistributions && initialDistributions.length > 0 && wakalaId) {
+      const distsToAdd = initialDistributions.map((d) => ({
+        name: d.name || "",
+        percentage: Number(d.percentage || 0),
+        type: d.type || "Income",
+        id: generateId("od"),
+        wakala_type_id: wakalaId,
+      })) as ObligationDistribution[];
+      await onChangeDistributions([...distributions, ...distsToAdd]);
     }
     setModal(null);
   };

@@ -32,6 +32,7 @@ export interface WorkspaceTableViewProps {
   onToggleEmailVerification: (subdomain: string, required: boolean) => void;
   onOpenModules: (workspace: PlatformWorkspaceRowData) => void;
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
+  onOpenResetPassword?: (workspace: PlatformWorkspaceRowData) => void;
 }
 
 export function WorkspaceTableView({
@@ -48,6 +49,7 @@ export function WorkspaceTableView({
   onToggleEmailVerification,
   onOpenModules,
   onOpenDelete,
+  onOpenResetPassword,
 }: WorkspaceTableViewProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -144,6 +146,7 @@ export function WorkspaceTableView({
                       onToggleEmailVerification={(req) => onToggleEmailVerification(workspace.subdomain, req)}
                       onOpenModules={() => onOpenModules(workspace)}
                       onOpenDelete={() => onOpenDelete(workspace)}
+                      onOpenResetPassword={onOpenResetPassword ? () => onOpenResetPassword(workspace) : undefined}
                     />
                   </TableCell>
                 </TableRow>

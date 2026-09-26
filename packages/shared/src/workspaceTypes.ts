@@ -28,6 +28,7 @@ export interface PlatformWorkspaceRow extends PublicWorkspaceSummary {
   enabled: boolean;
   createdAt: string;
   requireEmailVerification?: boolean;
+  adminEmail?: string;
 }
 
 /** Response body for `GET /api/workspace/registry` (apex only). */

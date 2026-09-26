@@ -16,8 +16,11 @@ export function WakalaTypeManager(props: WakalaTypeManagerProps) {
   const {
     wakalaTypes,
     obligationTypes,
-    reps,
     mujtahids,
+    reps,
+    onChangeMujtahids,
+    onChangeReps,
+    onChangeTypes,
   } = props;
   const {
     t,
@@ -97,6 +100,9 @@ export function WakalaTypeManager(props: WakalaTypeManagerProps) {
           obligationTypes={obligationTypes}
           onSave={handleSaveWakala}
           onClose={() => setModal(null)}
+          onChangeMujtahids={onChangeMujtahids}
+          onChangeReps={onChangeReps}
+          onChangeTypes={onChangeTypes}
         />
       ) : null}
 

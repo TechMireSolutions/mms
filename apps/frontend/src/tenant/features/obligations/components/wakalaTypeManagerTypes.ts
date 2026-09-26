@@ -10,4 +10,7 @@ export interface WakalaTypeManagerProps {
   mujtahids: Mujtahid[];
   onChangeWakala: (wt: WakalaType[]) => void | Promise<void>;
   onChangeDistributions: (dists: ObligationDistribution[]) => void | Promise<void>;
+  onChangeMujtahids?: (mujtahids: Mujtahid[]) => void | Promise<void>;
+  onChangeReps?: (reps: MujtahidRep[]) => void | Promise<void>;
+  onChangeTypes?: (types: ObligationType[]) => void | Promise<void>;
 }

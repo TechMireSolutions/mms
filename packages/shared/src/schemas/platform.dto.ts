@@ -289,6 +289,7 @@ export const platformWorkspaceRowDtoSchema = z.object({
   enabled: z.boolean(),
   createdAt: z.string(),
   requireEmailVerification: z.boolean().optional(),
+  adminEmail: z.string().optional(),
 });
 
 export type PlatformWorkspaceRowDto = z.infer<typeof platformWorkspaceRowDtoSchema>;

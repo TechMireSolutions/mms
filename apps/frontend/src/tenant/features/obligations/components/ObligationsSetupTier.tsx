@@ -140,6 +140,9 @@ export function ObligationsSetupTier({
                   mujtahids={mujtahids}
                   onChangeWakala={onChangeWakala}
                   onChangeDistributions={onChangeDistributions}
+                  onChangeMujtahids={onChangeMujtahids}
+                  onChangeReps={onChangeReps}
+                  onChangeTypes={onChangeTypes}
                 />
               )}
 

@@ -101,13 +101,15 @@ export function WakalaTypeCard({
             onDelete={onDeleteDistribution}
           />
         )}
-        <div className="px-4 py-2 border-t border-border">
-          <Button type="button" onClick={onAddDistribution}
-            variant="ghost"
-            className="flex items-center gap-1 min-h-11 h-auto px-1 text-xs font-semibold text-primary hover:text-primary/80 hover:bg-transparent shadow-none transition-colors">
-            <Plus className="w-3 h-3" aria-hidden="true" /> {t("obligations.wakala.addDistribution")}
-          </Button>
-        </div>
+        {!isComplete && (
+          <div className="px-4 py-2 border-t border-border">
+            <Button type="button" onClick={onAddDistribution}
+              variant="ghost"
+              className="flex items-center gap-1 min-h-11 h-auto px-1 text-xs font-semibold text-primary hover:text-primary/80 hover:bg-transparent shadow-none transition-colors">
+              <Plus className="w-3 h-3" aria-hidden="true" /> {t("obligations.wakala.addDistribution")}
+            </Button>
+          </div>
+        )}
       </div>
     </Card>
   );

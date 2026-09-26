@@ -281,3 +281,37 @@ export function useSetWorkspaceEmailVerification() {
     },
   });
 }
+
+export function useResetWorkspaceAdminPassword() {
+  const queryClient = useQueryClient();
+  const { t } = useTranslation();
+
+  return useMutation<
+    { success: true; subdomain: string; adminEmail: string; newPassword: string },
+    Error,
+    { subdomain: string; newPassword?: string }
+  >({
+    mutationFn: async ({ subdomain, newPassword }) => {
+      const res = await apiContract.platform.resetWorkspaceAdminPassword({
+        params: { subdomain },
+        body: { newPassword },
+      });
+      if (res.status >= 400) {
+        const errorBody = res.body as { message?: string; type?: string } | undefined;
+        throw new ApiError(
+          res.status,
+          errorBody?.message || t('platform.loadFailed'),
+          errorBody?.type,
+        );
+      }
+      return res.body as { success: true; subdomain: string; adminEmail: string; newPassword: string };
+    },
+    onSuccess: (res) => {
+      notify.success('Admin password reset successfully', { description: `${res.adminEmail} (${res.subdomain})` });
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
+    },
+    onError: (error) => {
+      notify.error(getPlatformErrorMessage(error, t, undefined, 'platform.loadFailed'));
+    },
+  });
+}

@@ -37,6 +37,7 @@ export {
   listPublicWorkspaces,
   listPlatformWorkspaces,
   getPlatformWorkspaceSummary,
+  resetWorkspaceAdminPassword,
   syncWorkspaceFromBranding,
   upsertWorkspaceBranding,
 } from './workspacePresentationService.js';
