@@ -39,7 +39,7 @@ export function PlatformReportsGrowthChart({ workspaces }: PlatformReportsGrowth
 
   const growthTrendData = (() => {
     if (!filteredWorkspaces.length) return [];
-    const sorted = [...filteredWorkspaces].sort(
+    const sorted = filteredWorkspaces.toSorted(
       (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
     );
     const monthMap = new Map<string, number>();
@@ -60,22 +60,22 @@ export function PlatformReportsGrowthChart({ workspaces }: PlatformReportsGrowth
 
   return (
     <WidgetCard className="p-6 space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <WidgetCardHeader
-          icon={<TrendingUp className="w-5 h-5 text-primary" />}
-          title={t('platform.reports.growthTrend')}
-          subtitle={t('platform.reports.growthTrendSub')}
-        />
-        <SubTabBar
-          tabs={[
-            { key: 'all', label: t('platform.reports.timeframeAll') },
-            { key: '90d', label: t('platform.reports.timeframe90d') },
-            { key: '30d', label: t('platform.reports.timeframe30d') },
-          ]}
-          value={timeframe}
-          onChange={(k) => setTimeframe(k as Timeframe)}
-        />
-      </div>
+      <WidgetCardHeader
+        icon={<TrendingUp className="w-5 h-5 text-primary" />}
+        title={t('platform.reports.growthTrend')}
+        subtitle={t('platform.reports.growthTrendSub')}
+        actions={
+          <SubTabBar
+            tabs={[
+              { key: 'all', label: t('platform.reports.timeframeAll') },
+              { key: '90d', label: t('platform.reports.timeframe90d') },
+              { key: '30d', label: t('platform.reports.timeframe30d') },
+            ]}
+            value={timeframe}
+            onChange={(k) => setTimeframe(k as Timeframe)}
+          />
+        }
+      />
 
       <div className="h-64 w-full pt-4">
         {growthTrendData.length === 0 ? (

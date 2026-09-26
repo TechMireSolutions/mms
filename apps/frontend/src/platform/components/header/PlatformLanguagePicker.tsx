@@ -51,7 +51,7 @@ export function PlatformLanguagePicker({ compact = false }: { compact?: boolean 
             dir={lang.direction}
             onClick={() => setPlatformLanguage(lang.code as AppLanguageCode)}
             className={cn(
-              'rounded-xl text-xs gap-2.5 min-h-10 cursor-pointer justify-between',
+              'rounded-xl text-xs gap-2.5 min-h-11 cursor-pointer justify-between',
               platformLanguage === lang.code && 'bg-primary/10 text-primary font-bold',
             )}
           >

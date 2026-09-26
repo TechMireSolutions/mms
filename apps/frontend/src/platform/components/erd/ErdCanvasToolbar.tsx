@@ -10,7 +10,6 @@ import {
   Download,
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Button } from '@/components/ui/button';
 import { ActionButton } from '@/components/ui/ActionButton';
 
 export interface ErdCanvasToolbarProps {
@@ -47,57 +46,50 @@ export function ErdCanvasToolbar({
       aria-label={t('platform.erdDiagram')}
       className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-3"
     >
-      {/* Zoom controls — icon-only square buttons, stay as Button */}
+      {/* Zoom controls */}
       <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl border border-border/50">
-        <Button
-          type="button"
+        <ActionButton
           variant="ghost"
           size="sm"
+          icon={ZoomOut}
           onClick={onZoomOut}
           disabled={zoom <= 0.5}
-          className="min-h-11 min-w-11 h-11 w-11 p-0 rounded-lg hover:bg-muted cursor-pointer"
+          className="min-w-11 p-0 rounded-lg hover:bg-muted"
           title={t('platform.erdZoomOut')}
           aria-label={t('platform.erdZoomOut')}
-        >
-          <ZoomOut className="w-4 h-4 text-foreground" aria-hidden />
-        </Button>
+        />
 
-        <Button
-          type="button"
+        <ActionButton
           variant="ghost"
           size="sm"
           onClick={onResetZoom}
-          className="min-h-11 px-2.5 text-xs font-mono font-bold text-foreground hover:bg-muted/80 rounded-lg transition-colors cursor-pointer"
+          className="px-2.5 text-xs font-mono font-bold text-foreground hover:bg-muted/80 rounded-lg transition-colors"
           title={t('platform.erdResetZoom')}
           aria-label={t('platform.erdResetZoom')}
         >
           {zoomPercent}%
-        </Button>
+        </ActionButton>
 
-        <Button
-          type="button"
+        <ActionButton
           variant="ghost"
           size="sm"
+          icon={ZoomIn}
           onClick={onZoomIn}
           disabled={zoom >= 2.0}
-          className="min-h-11 min-w-11 h-11 w-11 p-0 rounded-lg hover:bg-muted cursor-pointer"
+          className="min-w-11 p-0 rounded-lg hover:bg-muted"
           title={t('platform.erdZoomIn')}
           aria-label={t('platform.erdZoomIn')}
-        >
-          <ZoomIn className="w-4 h-4 text-foreground" aria-hidden />
-        </Button>
+        />
 
-        <Button
-          type="button"
+        <ActionButton
           variant="ghost"
           size="sm"
+          icon={RotateCcw}
           onClick={onResetZoom}
-          className="min-h-11 min-w-11 h-11 w-11 p-0 rounded-lg hover:bg-muted cursor-pointer"
+          className="min-w-11 p-0 rounded-lg hover:bg-muted text-muted-foreground"
           title={t('platform.erdResetZoom')}
           aria-label={t('platform.erdResetZoom')}
-        >
-          <RotateCcw className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
-        </Button>
+        />
       </div>
 
       {/* Action buttons */}

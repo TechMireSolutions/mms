@@ -52,7 +52,7 @@ export function PlatformDashboardBanner({
 
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-1">
           <div>
-            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground tracking-tight">
+            <h1 className="font-display text-2xl sm:text-3xl font-black text-foreground tracking-tight text-balance">
               {t("platform.welcomeBack", {
                 name: platformUser?.name ?? t("platform.operatorRole"),
               })}
@@ -86,7 +86,7 @@ export function PlatformDashboardBanner({
                 <Link to={ROUTES.onboarding}>
                   <Building2 className="w-4 h-4" aria-hidden />
                   {t("auth.createMadrasa")}
-                  <ArrowUpRight className="w-3.5 h-3.5 opacity-80" />
+                  <ArrowUpRight className="w-3.5 h-3.5 opacity-80 rtl:-scale-x-100" />
                 </Link>
               </Button>
             )}

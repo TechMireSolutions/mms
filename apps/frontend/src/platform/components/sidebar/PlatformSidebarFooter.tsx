@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight, LogOut, ShieldAlert } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { UserAvatar } from '@/components/ui/UserAvatar';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { cn } from '@/lib/utils';
 import { ROUTES } from '@/lib/config/routes';
@@ -63,38 +63,32 @@ export function PlatformSidebarFooter({
       )}
 
       <div className="flex items-center gap-1">
-        <Button
+        <ActionButton
           type="button"
           variant="ghost"
+          icon={LogOut}
           onClick={onSignOutClick}
           className={cn(
-            'flex min-h-11 flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sidebar-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive cursor-pointer',
+            'flex min-h-11 flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sidebar-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive cursor-pointer shadow-none',
             !isMobile && collapsed && 'justify-center px-0 min-w-11',
           )}
           title={t('platform.signOut')}
           aria-label={t('platform.signOut')}
         >
-          <LogOut className="h-4 w-4 shrink-0" />
           {(isMobile || !collapsed) && <span className="text-xs font-medium truncate">{t('platform.signOut')}</span>}
-        </Button>
+        </ActionButton>
 
         {!isMobile && (
-          <Button
+          <ActionButton
             type="button"
             variant="ghost"
-            size="icon"
+            icon={collapsed ? ChevronRight : ChevronLeft}
             onClick={onToggleCollapsed}
-            className="h-11 w-11 shrink-0 rounded-lg text-sidebar-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors cursor-pointer"
+            className="h-11 w-11 min-w-11 shrink-0 rounded-lg p-0 text-sidebar-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors cursor-pointer shadow-none [&_svg]:rtl:rotate-180"
             title={collapsed ? t('nav.expand') : t('nav.collapse')}
             aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
             aria-expanded={!collapsed}
-          >
-            {collapsed ? (
-              <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-            ) : (
-              <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
-            )}
-          </Button>
+          />
         )}
       </div>
     </div>

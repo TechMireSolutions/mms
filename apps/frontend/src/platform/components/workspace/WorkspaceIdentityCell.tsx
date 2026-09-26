@@ -30,7 +30,7 @@ export function WorkspaceIdentityCell({
       </div>
       <div className="min-w-0 flex-1 space-y-1">
         <div className="flex items-center gap-2">
-          <h3 className="text-sm font-bold tracking-tight text-foreground truncate group-hover:text-primary transition-colors">
+          <h3 className="text-sm font-bold tracking-tight text-foreground truncate group-hover:text-primary transition-colors text-balance">
             {workspace.madrasaName}
           </h3>
           <a

@@ -88,7 +88,7 @@ export function PlatformAdminsList({
   return (
     <div className="lg:col-span-2 space-y-4 text-start">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-        <h2 className={DETAIL_SECTION_TITLE}>
+        <h2 className={`${DETAIL_SECTION_TITLE} text-balance`}>
           {t('platform.manageAdmins')} ({rawItems.length})
         </h2>
         <SubTabBar

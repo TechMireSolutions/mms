@@ -17,7 +17,7 @@ export function ErdRelationshipList({ relationships }: ErdRelationshipListProps)
 
   return (
     <section className={cnSurface()} aria-labelledby="erd-relationships-heading">
-      <h3 id="erd-relationships-heading" className="text-sm font-semibold text-foreground">
+      <h3 id="erd-relationships-heading" className="text-sm font-semibold text-foreground text-balance">
         {t('platform.erdRelationships')}
       </h3>
       <ul className="mt-3 space-y-2">

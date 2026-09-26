@@ -124,14 +124,14 @@ export function PlatformHeaderUserNav({
             </div>
           </DropdownMenuLabel>
           <DropdownMenuSeparator className="my-1" />
-          <DropdownMenuItem asChild className="rounded-xl font-bold text-xs gap-2 min-h-10 cursor-pointer">
+          <DropdownMenuItem asChild className="rounded-xl font-bold text-xs gap-2 min-h-11 cursor-pointer">
             <Link to={ROUTES.platformAccount}>
               <User className="h-4 w-4 text-warning" aria-hidden />
               {t('platform.myAccount')}
             </Link>
           </DropdownMenuItem>
           {canAdmins && (
-            <DropdownMenuItem asChild className="rounded-xl font-bold text-xs gap-2 min-h-10 cursor-pointer">
+            <DropdownMenuItem asChild className="rounded-xl font-bold text-xs gap-2 min-h-11 cursor-pointer">
               <Link to={ROUTES.platformAdmins}>
                 <Users className="h-4 w-4 text-success" aria-hidden />
                 {t('platform.adminsTitle')}
@@ -140,7 +140,7 @@ export function PlatformHeaderUserNav({
           )}
           <DropdownMenuSeparator className="my-1" />
           <DropdownMenuItem
-            className="rounded-xl font-bold text-xs gap-2 min-h-10 text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+            className="rounded-xl font-bold text-xs gap-2 min-h-11 text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
             onClick={() => {
               void platformLogout();
             }}

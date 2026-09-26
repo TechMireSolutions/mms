@@ -1,7 +1,7 @@
 import React from 'react';
 import { ArrowUpDown, ArrowUp, ArrowDown } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -35,14 +35,14 @@ export function PlatformWorkspaceSortMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="outline"
+        <ActionButton
+          variant="secondary"
           size="sm"
-          className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer select-none"
+          icon={ArrowUpDown}
+          className="rounded-xl border-border/80 hover:bg-muted/80 select-none cursor-pointer"
         >
-          <ArrowUpDown className="w-3.5 h-3.5" aria-hidden />
           {t('platform.sort.sortBy')}
-        </Button>
+        </ActionButton>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="w-52 p-1.5 rounded-xl shadow-md">
         {SORT_MENU_ITEMS.map((item) => {

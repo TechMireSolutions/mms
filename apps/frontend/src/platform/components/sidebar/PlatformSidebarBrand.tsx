@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { ShieldAlert, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { ROUTES } from '@/lib/config/routes';
 
 export interface PlatformSidebarBrandProps {
@@ -61,16 +61,15 @@ export function PlatformSidebarBrand({
       </Link>
 
       {isMobile && (
-        <Button
+        <ActionButton
           type="button"
           variant="ghost"
-          size="icon"
+          size="sm"
+          icon={X}
           onClick={onCloseMobile}
-          className="h-11 w-11 min-h-11 min-w-11 text-sidebar-muted-foreground hover:text-sidebar-foreground shrink-0 rounded-lg cursor-pointer"
+          className="min-w-11 text-sidebar-muted-foreground hover:text-sidebar-foreground shrink-0 rounded-lg"
           aria-label={t('nav.closeSidebar')}
-        >
-          <X className="w-4 h-4" />
-        </Button>
+        />
       )}
     </div>
   );

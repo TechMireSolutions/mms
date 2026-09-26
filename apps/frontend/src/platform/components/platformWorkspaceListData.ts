@@ -32,7 +32,7 @@ export function sortWorkspaces(
   sortField: WorkspaceSortField,
   sortDirection: WorkspaceSortDirection,
 ): PlatformWorkspaceRowData[] {
-  return [...items].sort((a, b) => {
+  return items.toSorted((a, b) => {
     let comparison = 0;
     if (sortField === 'name') {
       comparison = a.madrasaName.localeCompare(b.madrasaName);

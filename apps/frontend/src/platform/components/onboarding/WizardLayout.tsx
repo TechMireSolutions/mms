@@ -103,7 +103,7 @@ export default function WizardLayout({
           aria-labelledby="wizard-step-title"
         >
           <header className="border-b border-border/50 bg-muted/10 px-6 py-5 sm:px-8">
-            <h1 id="wizard-step-title" className="m-0 text-lg font-bold tracking-tight text-foreground sm:text-xl">
+            <h1 id="wizard-step-title" className="m-0 text-lg font-bold tracking-tight text-foreground sm:text-xl text-balance">
               {title}
             </h1>
             {subtitle ? (

@@ -56,7 +56,7 @@ export function PlatformNotificationsPopover({
           <>
             <div className="border-b border-border px-4 py-3">
               <div className="flex items-center justify-between">
-                <h3 className="text-sm font-black text-foreground">{t('platform.notificationsTitle')}</h3>
+                <h3 className="text-sm font-black text-foreground text-balance">{t('platform.notificationsTitle')}</h3>
                 {unreadCount > 0 && (
                   <Badge tone="primary" size="sm" className="font-bold">
                     {t('platform.notificationsNewBadge', { count: String(unreadCount) })}
@@ -84,7 +84,7 @@ export function PlatformNotificationsPopover({
                         navigate(ROUTES.platformReports);
                       }
                     }}
-                    className="w-full text-start border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/60 transition-colors bg-primary/5 cursor-pointer focus:outline-none focus:bg-muted/80 block"
+                    className="w-full min-h-11 text-start border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/60 transition-colors bg-primary/5 cursor-pointer focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset focus:bg-muted/80 block"
                   >
                     <div className="flex items-start gap-3">
                       <div

@@ -145,7 +145,7 @@ export function ErdMermaidDiagram({ domain }: ErdMermaidDiagramProps): React.JSX
       ) : null}
 
       {status === 'ready' ? (
-        <div className="overflow-auto flex-1 min-h-[320px] rounded-xl border border-border/30 bg-muted/10 p-4">
+        <div className="overflow-auto flex-1 min-h-80 rounded-xl border border-border/30 bg-muted/10 p-4">
           <div
             style={{
               transform: `scale(${zoom})`,

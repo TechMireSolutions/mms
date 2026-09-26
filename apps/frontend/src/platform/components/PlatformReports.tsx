@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ActionButton } from '@/components/ui/ActionButton';
+import { ExportToolbar, type ExportColumn } from '@/components/ui/ExportToolbar';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { containerVariantsConsole, itemVariants } from '@/platform/lib/animations';
@@ -12,6 +13,15 @@ import { PlatformReportsGrowthChart } from './reports/PlatformReportsGrowthChart
 import { PlatformReportsPieCharts } from './reports/PlatformReportsPieCharts';
 import { PlatformReportsOperatorCard } from './reports/PlatformReportsOperatorCard';
 import { exportPlatformReportsCsv } from './reports/exportPlatformReportsCsv';
+
+const EXPORT_COLUMNS: ExportColumn[] = [
+  { header: 'Subdomain', key: 'subdomain' },
+  { header: 'Madrasa Name', key: 'madrasaName' },
+  { header: 'Status', key: 'status' },
+  { header: 'Email Verification', key: 'verification' },
+  { header: 'Admin Email', key: 'adminEmail' },
+  { header: 'Created At', key: 'createdAt' },
+];
 
 export function PlatformReports(): React.JSX.Element {
   const { t } = useTranslation();
@@ -29,6 +39,19 @@ export function PlatformReports(): React.JSX.Element {
   const activeRate = totalWorkspaces > 0 ? Math.round((activeWorkspaces / totalWorkspaces) * 100) : 0;
   const metricsReady = !workspacesLoading && !workspacesError && workspaces !== undefined;
 
+  const exportRows = useMemo(
+    () =>
+      workspaces?.map((w) => ({
+        subdomain: w.subdomain,
+        madrasaName: w.madrasaName,
+        status: w.enabled ? 'Active' : 'Disabled',
+        verification: w.requireEmailVerification ? 'Required' : 'Optional',
+        adminEmail: w.adminEmail || '—',
+        createdAt: w.createdAt ? new Date(w.createdAt).toLocaleDateString() : '—',
+      })) ?? [],
+    [workspaces],
+  );
+
   return (
     <motion.div
       variants={reducedMotion ? undefined : containerVariantsConsole}
@@ -41,27 +64,38 @@ export function PlatformReports(): React.JSX.Element {
         className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-border/40 pb-4"
       >
         <div>
-          <h2 className="text-lg font-bold text-foreground">{t('module.reports')}</h2>
+          <h2 className="text-lg font-bold text-foreground text-balance">{t('module.reports')}</h2>
           <p className="text-xs text-muted-foreground">{t('platform.reports.growthTrendSub')}</p>
         </div>
-        <ActionButton
-          variant="secondary"
-          icon={Download}
-          onClick={() =>
-            exportPlatformReportsCsv(workspaces, {
-              totalWorkspaces,
-              activeWorkspaces,
-              disabledWorkspaces,
-              activeRate,
-              verifyRequiredCount,
-              verifyOptionalCount,
-            })
-          }
-          disabled={!metricsReady || totalWorkspaces === 0}
-          title={t('platform.reports.exportCsv')}
-        >
-          {t('platform.reports.exportCsv')}
-        </ActionButton>
+        <div className="flex flex-wrap items-center gap-2">
+          <ExportToolbar
+            title={t('module.reports')}
+            filename="platform_analytics"
+            moduleId="platform"
+            columns={EXPORT_COLUMNS}
+            rows={exportRows}
+            variant="compact"
+          />
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            icon={Download}
+            onClick={() =>
+              exportPlatformReportsCsv(workspaces, {
+                totalWorkspaces,
+                activeWorkspaces,
+                disabledWorkspaces,
+                activeRate,
+                verifyRequiredCount,
+                verifyOptionalCount,
+              })
+            }
+            disabled={!metricsReady || totalWorkspaces === 0}
+            title={t('platform.reports.exportCsv')}
+          >
+            {t('platform.reports.exportCsv')}
+          </ActionButton>
+        </div>
       </motion.div>
       <motion.div variants={reducedMotion ? undefined : itemVariants}>
         <PlatformReportsMetrics
