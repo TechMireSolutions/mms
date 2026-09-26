@@ -1,65 +1,67 @@
 import { z } from 'zod';
 import { GENDERS } from './contactPreferenceConstants.js';
 import {
-  resolveTeacherDesignations,
-  resolveTeacherSpecializations,
-  resolveTeacherStatuses,
+  resolveFacultyDesignations,
+  resolveFacultySpecializations,
+  resolveFacultyStatuses,
 } from './facultyTypes.js';
 
-/** Teachers Setup option-list kinds migrated off document-store collections. */
-export const TEACHER_LOOKUP_KINDS = ['statuses', 'specializations', 'genderFilters', 'designations'] as const;
+/** Faculty Setup option-list kinds migrated off document-store collections. */
+export const FACULTY_LOOKUP_KINDS = ['statuses', 'specializations', 'genderFilters', 'designations'] as const;
 
-export type TeacherLookupKind = (typeof TEACHER_LOOKUP_KINDS)[number];
+export type FacultyLookupKind = (typeof FACULTY_LOOKUP_KINDS)[number];
 
 /** Legacy document-store collection key → typed lookup kind. */
-export const TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS = {
+export const FACULTY_LOOKUP_LEGACY_COLLECTION_KEYS = {
+  facultyStatuses: 'statuses',
+  facultySpecializations: 'specializations',
   teacherStatuses: 'statuses',
   teacherSpecializations: 'specializations',
-} as const satisfies Record<string, TeacherLookupKind>;
+} as const satisfies Record<string, FacultyLookupKind>;
 
-export type TeacherLookupLegacyCollectionKey = keyof typeof TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS;
+export type FacultyLookupLegacyCollectionKey = keyof typeof FACULTY_LOOKUP_LEGACY_COLLECTION_KEYS;
 
-export const teacherLookupKindSchema = z.enum(TEACHER_LOOKUP_KINDS);
+export const facultyLookupKindSchema = z.enum(FACULTY_LOOKUP_KINDS);
 
-import { teacherLookupStringItemsSchema } from './schemas/facultyLookup.dto.js';
+import { facultyLookupStringItemsSchema } from './schemas/facultyLookup.dto.js';
 
-export const teacherLookupsMapSchema = z.object({
-  statuses: teacherLookupStringItemsSchema,
-  specializations: teacherLookupStringItemsSchema,
-  genderFilters: teacherLookupStringItemsSchema,
-  designations: teacherLookupStringItemsSchema.default([]),
+export const facultyLookupsMapSchema = z.object({
+  statuses: facultyLookupStringItemsSchema,
+  specializations: facultyLookupStringItemsSchema,
+  genderFilters: facultyLookupStringItemsSchema,
+  designations: facultyLookupStringItemsSchema.default([]),
 });
 
-export type TeacherLookupsMap = z.infer<typeof teacherLookupsMapSchema>;
+export type FacultyLookupsMap = z.infer<typeof facultyLookupsMapSchema>;
 
-export const teacherLookupKindParamsSchema = z.object({
-  kind: teacherLookupKindSchema,
+export const facultyLookupKindParamsSchema = z.object({
+  kind: facultyLookupKindSchema,
 });
 
 export * from './schemas/facultyLookup.dto.js';
 
-const TEACHER_LOOKUP_KINDS_SET = new Set<string>(TEACHER_LOOKUP_KINDS);
+const FACULTY_LOOKUP_KINDS_SET = new Set<string>(FACULTY_LOOKUP_KINDS);
 
-export function isTeacherLookupKind(value: string): value is TeacherLookupKind {
-  return TEACHER_LOOKUP_KINDS_SET.has(value);
+export function isFacultyLookupKind(value: string): value is FacultyLookupKind {
+  return FACULTY_LOOKUP_KINDS_SET.has(value);
 }
 
-export function isTeacherLookupLegacyCollectionKey(
+export function isFacultyLookupLegacyCollectionKey(
   value: string,
-): value is TeacherLookupLegacyCollectionKey {
-  return Object.prototype.hasOwnProperty.call(TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS, value);
+): value is FacultyLookupLegacyCollectionKey {
+  return Object.prototype.hasOwnProperty.call(FACULTY_LOOKUP_LEGACY_COLLECTION_KEYS, value);
 }
 
-export function defaultTeacherLookupItems(kind: TeacherLookupKind): string[] {
+export function defaultFacultyLookupItems(kind: FacultyLookupKind): string[] {
   switch (kind) {
     case 'statuses':
-      return [...resolveTeacherStatuses()];
+      return [...resolveFacultyStatuses()];
     case 'specializations':
-      return [...resolveTeacherSpecializations()];
+      return [...resolveFacultySpecializations()];
     case 'genderFilters':
       return [...GENDERS];
     case 'designations':
-      return [...resolveTeacherDesignations()];
+      return [...resolveFacultyDesignations()];
     default: {
       const _exhaustive: never = kind;
       return _exhaustive;
@@ -67,22 +69,29 @@ export function defaultTeacherLookupItems(kind: TeacherLookupKind): string[] {
   }
 }
 
-export function emptyTeacherLookupsMap(): TeacherLookupsMap {
+export function emptyFacultyLookupsMap(): FacultyLookupsMap {
   return {
-    statuses: defaultTeacherLookupItems('statuses'),
-    specializations: defaultTeacherLookupItems('specializations'),
-    genderFilters: defaultTeacherLookupItems('genderFilters'),
-    designations: defaultTeacherLookupItems('designations'),
+    statuses: defaultFacultyLookupItems('statuses'),
+    specializations: defaultFacultyLookupItems('specializations'),
+    genderFilters: defaultFacultyLookupItems('genderFilters'),
+    designations: defaultFacultyLookupItems('designations'),
   };
 }
 
-export const FACULTY_LOOKUP_KINDS = TEACHER_LOOKUP_KINDS;
-export type FacultyLookupKind = TeacherLookupKind;
-export const facultyLookupKindSchema = teacherLookupKindSchema;
-export const facultyLookupsMapSchema = teacherLookupsMapSchema;
-export type FacultyLookupsMap = TeacherLookupsMap;
-export const facultyLookupKindParamsSchema = teacherLookupKindParamsSchema;
-export const isFacultyLookupKind = isTeacherLookupKind;
-export const emptyFacultyLookupsMap = emptyTeacherLookupsMap;
-export const defaultFacultyLookupItems = defaultTeacherLookupItems;
+/* ========================================================================= */
+/*                    BACKWARD COMPATIBILITY ALIASES                        */
+/* ========================================================================= */
+
+export const TEACHER_LOOKUP_KINDS = FACULTY_LOOKUP_KINDS;
+export type TeacherLookupKind = FacultyLookupKind;
+export const TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS = FACULTY_LOOKUP_LEGACY_COLLECTION_KEYS;
+export type TeacherLookupLegacyCollectionKey = FacultyLookupLegacyCollectionKey;
+export const teacherLookupKindSchema = facultyLookupKindSchema;
+export const teacherLookupsMapSchema = facultyLookupsMapSchema;
+export type TeacherLookupsMap = FacultyLookupsMap;
+export const teacherLookupKindParamsSchema = facultyLookupKindParamsSchema;
+export const isTeacherLookupKind = isFacultyLookupKind;
+export const isTeacherLookupLegacyCollectionKey = isFacultyLookupLegacyCollectionKey;
+export const defaultTeacherLookupItems = defaultFacultyLookupItems;
+export const emptyTeacherLookupsMap = emptyFacultyLookupsMap;
 

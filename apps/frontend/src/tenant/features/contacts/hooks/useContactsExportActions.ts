@@ -38,7 +38,7 @@ interface UseContactsExportActionsOptions {
 }
 
 export function useContactsExportActions({
-  tableColumns,
+  tableColumns: _tableColumns,
   canExport,
   search,
   filterGender,

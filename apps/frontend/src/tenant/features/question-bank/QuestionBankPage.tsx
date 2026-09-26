@@ -95,6 +95,10 @@ export default function QuestionBankPage(): JSX.Element {
                 onBulkRestore={c.handleBulkRestore}
                 onFilteredCountChange={c.setFilteredCount}
                 onCreatePaper={c.openCreatePaper}
+                selectedIds={c.questionSelection.selectedIds}
+                onToggleSelectedQuestion={c.questionSelection.toggleSelected}
+                onToggleSelectAll={c.questionSelection.toggleSelectAll}
+                onClearSelection={c.questionSelection.clearSelection}
                 onRowClick={(id) => {
                   const q = c.questions.find(q => q.id === id);
                   if (q) c.setActiveQuestion(q);

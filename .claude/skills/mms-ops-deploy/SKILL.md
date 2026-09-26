@@ -4,140 +4,60 @@ description: Operates the MMS production deployment on Hetzner — Apache vhost 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 compatibility: Requires SSH access to the Hetzner VPS and PM2/Apache on the server; never run against production without an explicit instruction.
 ---
 
 # MMS Ops & Production Deploy
 
-**Rule (norms SSOT):** `mms-ops-infrastructure.md` · `mms-auth-security.md` · `mms-completion-review.md`.
+**Rules (norms SSOT):** `mms-ops-infrastructure.md` · `mms-auth-security.md` · `mms-completion-review.md`.
 
-## Anti-Patterns & Banned Operations
+Operational procedure for deploying, configuring, and verifying the production MMS environment on Hetzner VPS.
 
-- ❌ **NEVER run backend on ports 3000/3001 in production**: Production backend MUST bind to `127.0.0.1:5002` behind Apache reverse proxy.
-- ❌ **NEVER edit code directly on production host**: Deploy via GitHub Actions artifacts and `deploy-on-server.sh`.
-- ❌ **NEVER proxy unrelated vhosts to MMS**: Keep Apache vhost isolation strict via `apply-production-host-isolation.sh`.
-- ❌ **NEVER run `drizzle-kit push` against production database**: Apply schema changes forward-only via migration scripts.
+## 1. Critical Invariants
 
-## Domains
+- **Production Port 5002**: Production Fastify binds strictly to `127.0.0.1:5002` behind Apache reverse proxy. Ports 3000/3001 are forbidden on production.
+- **Automated Deployments**: Deploy exclusively via GitHub Actions artifacts (`deploy.yml` → `deploy-on-server.sh`). Never edit code directly on production hosts.
+- **Strict Apache Vhost Isolation**: Foreign domains must never proxy to MMS (`apply-production-host-isolation.sh`).
+- **Database Safety**: Schema migrations run forward-only on server boot (`initDb`). `drizzle-kit push` is strictly banned in production.
+- **Do Not Set MMS_API_URL**: Platform serves unified apex + tenant routes from `https://${MMS_APP_DOMAIN}`. Deploy scripts strip legacy `MMS_API_URL`.
 
-| Host | Role |
-|------|------|
-| `MMS_APP_DOMAIN` (e.g. `mmsv2.aabtaab.com`) | Platform apex — onboarding, platform auth |
-| `{slug}.MMS_APP_DOMAIN` | Tenant madrasa workspaces |
-| Other vhosts (`aabtaab.com`, etc.) | **Must not** proxy to MMS |
+## 2. Domain & Subdomain Architecture
 
-Set full hostname in GitHub secret **`MMS_APP_DOMAIN`** — not the root domain alone.
+- **Platform Apex**: `MMS_APP_DOMAIN` (e.g. `mmsv2.example.com`) for platform auth and onboarding.
+- **Tenant Subdomains**: `{slug}.MMS_APP_DOMAIN` for individual madrasa workspaces.
+- **Subdomain Triad**:
+  1. DNS: `A`/`CNAME` record for apex and `*.MMS_APP_DOMAIN` pointing to server IP.
+  2. TLS: Wildcard SSL certificate covering `*.MMS_APP_DOMAIN` (DNS-01 challenge via certbot).
+  3. Apache: `mmsv2.conf` with `ServerAlias *.MMS_APP_DOMAIN` proxying to `http://127.0.0.1:5002`.
 
-**Tenant subdomains need three layers:**
-
-| Layer | Requirement |
-|-------|-------------|
-| DNS | `A` or `CNAME` for apex **and** `*.MMS_APP_DOMAIN` → server IP |
-| TLS | Wildcard cert covering `*.MMS_APP_DOMAIN` (HTTP-01 certbot cannot issue wildcards — use DNS challenge) |
-| Apache | `mmsv2.conf` with `ServerAlias *.MMS_APP_DOMAIN` → `:5002` |
-
-Symptom → likely cause:
-
-| Symptom | Fix |
-|---------|-----|
-| Browser “can’t find server” / NXDOMAIN | Add `*.your-platform.example.com` DNS |
-| SSL certificate error on `{slug}.…` | Issue wildcard cert (DNS challenge) |
-| Wrong site or 404 on subdomain | Re-run `apply-production-host-isolation.sh` |
-| Page loads but “Workspace not found” | Madrasa not in DB — check registry; slug must match |
-| Tenant login 403 | Open tenant URL on `{slug}.MMS_APP_DOMAIN`, not apex |
-
-## Ports (`mms-production-ports`)
-
-| Context | Port |
-|---------|------|
-| Production backend | **5002** (Apache → `127.0.0.1:5002`) |
-| Local dev backend | 3000 |
-| Forbidden on prod | 3000, 3001 |
-
-## Server scripts (`/var/www/mmsv2`)
+## 3. Server Execution Commands (`/var/www/mmsv2`)
 
 ```bash
+# Environment & Host Configuration
 bash scripts/merge-backend-env.sh apps/backend/.env
 bash scripts/apply-production-host-isolation.sh apps/backend/.env
-bash scripts/deploy-on-server.sh          # expects DEPLOY_SHA + /tmp/mms-dist.tar.gz
+
+# Deployment & Rollback
+bash scripts/deploy-on-server.sh          # Expects DEPLOY_SHA + /tmp/mms-dist.tar.gz
 bash scripts/deploy-rollback.sh [sha|list]
+
+# Diagnostics & Tenant Verification
 bash scripts/server-diagnose.sh apps/backend/.env
-bash scripts/verify-tenant-hosts.sh [subdomain] apps/backend/.env
-bash scripts/check-workspace.sh <subdomain> apps/backend/.env
+bash scripts/verify-tenant-hosts.sh <subdomain> apps/backend/.env
 ```
 
-**First-time VPS:** `sudo bash scripts/production/bootstrap-ubuntu-vps.sh` (Node **24**, pnpm **11.15.1** — match `engines` / `packageManager`)  
-**PM2 boot persistence:** `bash scripts/production/setup-pm2-startup.sh`  
-**DB backups:** `bash scripts/production/backup-postgres.sh` (cron daily)
+## 4. Production Health Verification
 
-Process manager: `ecosystem.config.cjs` — single `mmsv2-backend` (SPA served by Fastify; no separate frontend PM2). Ensure PM2 process passes `--permission` flags (`--allow-fs-read`, etc.) if enabling the Node 24 permission model. Fastify must listen for `SIGTERM`/`SIGINT` to gracefully shutdown before PM2 forceful exit.  
-`scripts/deploy-recover-frontend.sh` is **legacy** (vite preview) — do not use in normal deploys.
-
-**Schema migrations:** run on backend startup (`initDb` / Drizzle) — not a separate deploy step.
-
-Apache-only fix:
+Run post-deployment verification checks against apex and tenant endpoints:
 
 ```bash
-bash scripts/apache/isolate-mms-vhost.sh apps/backend/.env
-bash scripts/apache/install-mms-vhost.sh apps/backend/.env
-sudo bash scripts/fix-apache-upstream.sh apps/backend/.env
-# Or force on next deploy: MMS_FORCE_APACHE=1
-```
-
-## GitHub Actions
-
-| Workflow | Purpose |
-|----------|---------|
-| `ci.yml` | Parallel typecheck/lint ∥ unit ∥ e2e; on main push also `build-dist` → `mms-dist` artifact |
-| `deploy.yml` | Download CI artifact (or build on `workflow_dispatch`) → SCP → `deploy-on-server.sh` at `DEPLOY_SHA` |
-| `production-apache-isolate.yml` | manual — strip MMS from foreign vhosts |
-
-Required secrets: `SERVER_IP`, `SERVER_USER`, `SSH_PRIVATE_KEY`, `MMS_APP_DOMAIN`.
-
-**Do not set `MMS_API_URL`.** The platform is served at `https://${MMS_APP_DOMAIN}` (apex + `*.${MMS_APP_DOMAIN}` tenants). A legacy `MMS_API_URL` secret (e.g. `mmsv2-api.…`) caused deploy health checks to fail; deploy scripts strip it from server `.env` on merge.
-
-### Deploy optimisations (server)
-
-| Flag / file | Behaviour |
-|-------------|-----------|
-| `DEPLOY_SHA` | Detached checkout of CI-validated commit |
-| `.deploy-lock-hash` | Skip `pnpm install --prod` when lockfile unchanged (`MMS_FORCE_PNPM_INSTALL=1` to force) |
-| `.deploy-apache-fingerprint` | Skip Apache isolate/install/fix when unchanged (`MMS_FORCE_APACHE=1` to force) |
-| `.deploy-releases/` | Last N tarballs for `deploy-rollback.sh` |
-| `MMS_DEPLOY_SKIP_PUBLIC_VERIFY=1` | Server verify stays local; public gate in `deploy.yml` |
-
-## Verify production
-
-```bash
+# Apex Health Checks
 curl -fsS "https://${MMS_APP_DOMAIN}/health"
 curl -fsS "https://${MMS_APP_DOMAIN}/ready"
 curl -fsS "https://${MMS_APP_DOMAIN}/api/public/deployment-config"
-curl -fsS "https://${MMS_APP_DOMAIN}/api/platform/auth/setup/status"  # not 403
-# Verify HTTP/2 and Brotli pre-compression on edge
-curl -s -I --http2 -H "Accept-Encoding: br" "https://${MMS_APP_DOMAIN}/" | grep -iE 'HTTP/|content-encoding|cache-control'
-bash scripts/verify-tenant-hosts.sh dar-ul-quran apps/backend/.env   # on server
-curl -fsS "https://dar-ul-quran.${MMS_APP_DOMAIN}/health"            # replace slug
+curl -fsS "https://${MMS_APP_DOMAIN}/api/platform/auth/setup/status"
+
+# Tenant Health Check
+curl -fsS "https://<tenant-slug>.${MMS_APP_DOMAIN}/health"
 ```
-
-## Audit Trail Operations (pgAudit & WORM Storage)
-
-- **PostgreSQL Statement Auditing (`pgAudit`)**:
-  ```bash
-  sudo apt-get install -y postgresql-16-pgaudit
-  # Add to /etc/postgresql/16/main/postgresql.conf:
-  # shared_preload_libraries = 'pgaudit'
-  # pgaudit.log = 'write, ddl, role'
-  sudo systemctl restart postgresql
-  ```
-- **Scheduled Verification Timer**: Register daily/hourly cron job to trigger `runAuditVerificationJob`.
-- **WORM Object Storage for Cold Tier (91+ days)**: Configure S3 Object Lock or MinIO bucket in Compliance mode with retention locks (HIPAA 6y, SOX 7y, PCI-DSS 1y) to store columnar Parquet archives alongside their Merkle roots.
-
-## Rules
-
-`mms-ops-infrastructure.md`, `mms-auth-security.md`, `mms-data-layer.md` (Cursor mirrors use `.mdc` — sync docs only; agent canon is `.md`)
-
-## Related skills
-
-`mms-dev-setup`, `mms-backend-api`, `mms-backend-security`, `mms-audit-trail`
-

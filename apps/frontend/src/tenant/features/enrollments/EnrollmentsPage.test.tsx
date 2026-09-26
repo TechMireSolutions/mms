@@ -48,6 +48,7 @@ vi.mock("@/tenant/features/enrollments/hooks/useEnrollmentsPageState", () => ({
       setColumnWidth: vi.fn(),
       columnRegistry: [],
       updateUserColumnLayout: vi.fn(),
+      resetColumnLayout: vi.fn(),
       customizerLabels: {},
     },
     selection: {
@@ -111,8 +112,12 @@ vi.mock("./components/EnrollmentsPageHeaderActions", () => ({
   EnrollmentsPageHeaderActions: () => <div data-testid="header-actions">Header Actions</div>,
 }));
 
+let capturedWorkTierProps: any = null;
 vi.mock("./components/EnrollmentsWorkTier", () => ({
-  EnrollmentsWorkTier: () => <div data-testid="work-tier">Work Tier</div>,
+  EnrollmentsWorkTier: (props: any) => {
+    capturedWorkTierProps = props;
+    return <div data-testid="work-tier">Work Tier</div>;
+  },
 }));
 
 vi.mock("./components/EnrollmentsReportsTier", () => ({
@@ -135,5 +140,11 @@ describe("EnrollmentsPage Component", () => {
     expect(html).toContain("Command Metrics");
     expect(html).toContain("Work Tier");
     expect(html).toContain("Modal Layer");
+  });
+
+  it("wires resetColumnLayout to columnCustomizer.onResetLayout", () => {
+    renderToStaticMarkup(<EnrollmentsPage />);
+    expect(capturedWorkTierProps?.columnProps?.columnCustomizer?.onResetLayout).toBeDefined();
+    expect(typeof capturedWorkTierProps?.columnProps?.columnCustomizer?.onResetLayout).toBe("function");
   });
 });

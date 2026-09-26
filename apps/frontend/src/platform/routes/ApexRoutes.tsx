@@ -3,6 +3,7 @@ import { Route, Routes } from 'react-router-dom';
 import { ROUTES, TENANT_APP_PATHS } from '@/lib/config/routes';
 import PlatformBootGate, { PlatformFallbackRoute } from '@/platform/components/PlatformBootGate';
 import { PlatformFirstRunGate } from '@/platform/components/PlatformFirstRunGate';
+import { PlatformPageShell } from '@/platform/components/PlatformPageShell';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
 
 const ApexHome = React.lazy(() => import('@/platform/pages/ApexHome'));
@@ -50,21 +51,27 @@ export default function ApexRoutes(): React.JSX.Element {
 
       {/* Protected platform routes — BootGate sends unauthenticated users to `/platform/login` */}
       <Route element={<PlatformBootGate requireAuth />}>
-        <Route path={ROUTES.platformAccount} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformAccount /></React.Suspense>} />
-        <Route path={ROUTES.platformDashboard} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
-        <Route path={ROUTES.platformWorkspaces} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
-        <Route path={ROUTES.platformReports} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+        <Route element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PlatformPageShell width="7xl" /></React.Suspense>}>
+          <Route path={ROUTES.platformAccount} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformAccount /></React.Suspense>} />
+          <Route path={ROUTES.platformDashboard} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+          <Route path={ROUTES.platformWorkspaces} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+          <Route path={ROUTES.platformReports} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+        </Route>
       </Route>
       <Route element={<PlatformBootGate requireAuth requirePermission="onboard" />}>
         <Route path={ROUTES.onboarding} element={<React.Suspense fallback={<RouteStatusFallback />}><OnboardingWizard /></React.Suspense>} />
       </Route>
       <Route element={<PlatformBootGate requireAuth requirePermission="admins" />}>
-        <Route path={ROUTES.platformAdmins} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformAdmins /></React.Suspense>} />
+        <Route element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PlatformPageShell width="7xl" /></React.Suspense>}>
+          <Route path={ROUTES.platformAdmins} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformAdmins /></React.Suspense>} />
+        </Route>
       </Route>
       <Route element={<PlatformBootGate requireAuth requirePermission="system" />}>
-        <Route path={ROUTES.platformActivityLogs} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
-        <Route path={ROUTES.platformSystem} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
-        <Route path={ROUTES.platformErd} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformErdPage /></React.Suspense>} />
+        <Route element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PlatformPageShell width="7xl" /></React.Suspense>}>
+          <Route path={ROUTES.platformActivityLogs} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+          <Route path={ROUTES.platformSystem} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+          <Route path={ROUTES.platformErd} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformErdPage /></React.Suspense>} />
+        </Route>
       </Route>
 
       <Route path="*" element={<PlatformFallbackRoute />} />

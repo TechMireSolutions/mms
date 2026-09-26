@@ -5,6 +5,7 @@ import { sessions, sessionFaculty } from '../schema.js';
 import { withTenant, type TenantTransaction } from '../tenant-context.js';
 import { mapAuditToInsert } from './repositoryMappers.js';
 import { persistSessionClassesTx } from './sessionRepositoryPersistClasses.js';
+import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 export {
   softDeleteSessionWithCascade,
@@ -89,6 +90,7 @@ export async function saveSession(tenant: string, record: Session): Promise<void
   await withTenant(subdomain, async (tx) => {
     await persistSessionTx(tx, subdomain, record);
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'sessions', key: String(record.id) });
 }
 
 export async function bulkSaveSessions(tenant: string, records: Session[]): Promise<void> {
@@ -99,6 +101,7 @@ export async function bulkSaveSessions(tenant: string, records: Session[]): Prom
       await persistSessionTx(tx, subdomain, record);
     }
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'sessions' });
 }
 
 export async function replaceSessionsForWorkspace(tenant: string, records: Session[]): Promise<void> {
@@ -109,6 +112,7 @@ export async function replaceSessionsForWorkspace(tenant: string, records: Sessi
       await persistSessionTx(tx, subdomain, record);
     }
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'sessions' });
 }
 
 

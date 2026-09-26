@@ -11,9 +11,13 @@ export function buildFacultyWorkFilterChips(input: {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
+  filterDepartment?: string;
+  filterDesignation?: string;
   onToggleStatus: (status: string) => void;
   onSpecializationChange: (value: string) => void;
   onGenderChange: (value: string) => void;
+  onDepartmentChange?: (value: string) => void;
+  onDesignationChange?: (value: string) => void;
   t: TranslationFunction;
 }): FacultyWorkFilterChip[] {
   return buildWorkFilterChips({
@@ -28,6 +32,24 @@ export function buildFacultyWorkFilterChips(input: {
               key: "specialization",
               label: input.filterSpecialization,
               onRemove: () => input.onSpecializationChange(""),
+            },
+          ]
+        : []),
+      ...(input.filterDepartment && input.onDepartmentChange
+        ? [
+            {
+              key: "department",
+              label: input.filterDepartment,
+              onRemove: () => input.onDepartmentChange?.(""),
+            },
+          ]
+        : []),
+      ...(input.filterDesignation && input.onDesignationChange
+        ? [
+            {
+              key: "designation",
+              label: input.filterDesignation,
+              onRemove: () => input.onDesignationChange?.(""),
             },
           ]
         : []),

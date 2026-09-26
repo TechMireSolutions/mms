@@ -1,23 +1,25 @@
 import React, { useEffect } from "react";
 import { School } from "lucide-react";
-import { useTeacherLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
+import { useFacultyLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
-import { useTeachersSetupPanelState } from "@/tenant/features/faculty/hooks/useFacultySetupPanelState";
-import { TeachersPreferencesSection } from "@/tenant/features/faculty/components/FacultyPreferencesSection";
+import { useFacultySetupPanelState } from "@/tenant/features/faculty/hooks/useFacultySetupPanelState";
+import { FacultyPreferencesSection } from "@/tenant/features/faculty/components/FacultyPreferencesSection";
+import { FacultyDesignationsSetupSection } from "@/tenant/features/faculty/components/FacultyDesignationsSetupSection";
 
-export interface TeachersSettingsProps {
+export interface FacultySettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
+export type TeachersSettingsProps = FacultySettingsProps;
 
-export const TeachersSettings = (function TeachersSettings({
+export const FacultySettings = (function FacultySettings({
   onPrefsDirtyChange,
-}: TeachersSettingsProps = {}): React.JSX.Element {
+}: FacultySettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();
-  const { specializationOptions } = useTeacherLookupOptions();
+  const { specializationOptions } = useFacultyLookupOptions();
   const {
     settingsDraft,
     saved,
@@ -25,30 +27,32 @@ export const TeachersSettings = (function TeachersSettings({
     isPrefsDirty,
     upd,
     handleSave,
-  } = useTeachersSetupPanelState();
+  } = useFacultySetupPanelState();
 
   useEffect(() => {
     onPrefsDirtyChange?.(isPrefsDirty);
   }, [isPrefsDirty, onPrefsDirtyChange]);
 
   const unsavedWarning = isPrefsDirty
-    ? t("teachers.setup.unsavedPreferencesWarning")
+    ? (t("faculty.setup.unsavedPreferencesWarning") || t("teachers.setup.unsavedPreferencesWarning"))
     : undefined;
 
   return (
     <div className="space-y-6 max-w-3xl text-start">
       <SectionCard
-        title={t("teachers.settings.title")}
+        title={t("faculty.settings.title") || t("teachers.settings.title")}
         icon={School}
         accentColor="primary"
         className={SETUP_SECTION_CARD_CLASS}
       >
-        <TeachersPreferencesSection
+        <FacultyPreferencesSection
           settingsDraft={settingsDraft}
           upd={upd}
           specializationOptions={specializationOptions}
         />
       </SectionCard>
+
+      <FacultyDesignationsSetupSection />
 
       <ModuleSetupSaveFooter
         dirty={isPrefsDirty}
@@ -63,7 +67,6 @@ export const TeachersSettings = (function TeachersSettings({
   );
 });
 
-export const FacultySettings = TeachersSettings;
-export type FacultySettingsProps = TeachersSettingsProps;
+export const TeachersSettings = FacultySettings;
+export default FacultySettings;
 
-export default TeachersSettings;

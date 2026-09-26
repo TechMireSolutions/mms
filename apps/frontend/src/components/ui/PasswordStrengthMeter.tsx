@@ -79,7 +79,7 @@ export function PasswordStrengthMeter({
               key={item.label}
               className={cn(
                 'flex items-center gap-1.5 text-3xs transition-colors',
-                item.pass ? 'text-success font-semibold' : 'text-muted-foreground/75',
+                item.pass ? 'text-success font-semibold' : 'text-muted-foreground',
               )}
             >
               <span>{item.pass ? '✓' : '○'}</span>

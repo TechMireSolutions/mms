@@ -1,10 +1,12 @@
-import type { FastifyInstance } from 'fastify';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import type { ZodType } from 'zod';
 import type { z } from 'zod';
 import type { Permission, User } from '@mms/shared';
 import { roleHasPermission } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from './httpErrors.js';
 import { parseRequest, replyValidationError } from './zodRequest.js';
+import { getRequestTenant } from './tenantContext.js';
+import { getOrSetMultiTier, invalidateMultiTierCache } from './cache/index.js';
 
 export type RegisterModuleSetupConfigRoutesOptions<
   TConfigSchema extends ZodType<any> = ZodType<any>,
@@ -12,6 +14,7 @@ export type RegisterModuleSetupConfigRoutesOptions<
   TConfig = z.infer<TConfigSchema>,
   TPrefs = z.infer<TPrefsSchema>,
 > = {
+  domain?: string;
   canRead: (user: User) => boolean;
   setupWritePermission: Permission;
   fieldConfigSchema: TConfigSchema;
@@ -39,7 +42,7 @@ export type RegisterModuleSetupConfigRoutesOptions<
 };
 
 /**
- * Register GET/PUT `/field-config` + `/preferences` for module Setup.
+ * Register GET/PUT `/field-config` + `/preferences` for module Setup with multi-tier L1/L2 caching.
  */
 export function registerModuleSetupConfigRoutes<
   TConfigSchema extends ZodType<any> = ZodType<any>,
@@ -53,10 +56,23 @@ export function registerModuleSetupConfigRoutes<
   const canWriteSetup = (user: User) =>
     roleHasPermission(user.role, options.setupWritePermission);
 
-  fastify.get('/field-config', async (request, reply) => {
+  const domain = options.domain ?? options.fieldConfigAuditAction.split('.')[0] ?? 'setup';
+
+  const handleGetFieldConfig = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as User;
     if (!options.canRead(user)) return sendForbidden(reply);
+    const tenant = getRequestTenant() ?? user.workspaceSubdomain;
     try {
+      if (tenant) {
+        const config = await getOrSetMultiTier(
+          tenant,
+          `setup:${domain}`,
+          'field-config',
+          async () => options.loadFieldConfig(),
+          { ttlSeconds: 600 },
+        );
+        return reply.send({ config });
+      }
       const config = await options.loadFieldConfig();
       return reply.send({ config });
     } catch (error: unknown) {
@@ -66,15 +82,25 @@ export function registerModuleSetupConfigRoutes<
         error,
       );
     }
-  });
+  };
+  fastify.get('/field-config', handleGetFieldConfig);
+  fastify.get('/config/fields', handleGetFieldConfig);
 
-  fastify.put('/field-config', async (request, reply) => {
+  const handlePutFieldConfig = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as User;
     if (!canWriteSetup(user)) return sendForbidden(reply);
     const body = parseRequest(options.fieldConfigSchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
+    const tenant = getRequestTenant() ?? user.workspaceSubdomain;
     try {
       const saved = await options.saveFieldConfig(body.data as TConfig);
+      if (tenant) {
+        await invalidateMultiTierCache({
+          tenantId: tenant,
+          domain: `setup:${domain}`,
+          key: 'field-config',
+        });
+      }
       try {
         await options.audit(
           user,
@@ -93,12 +119,30 @@ export function registerModuleSetupConfigRoutes<
         error,
       );
     }
-  });
+  };
+  fastify.put('/field-config', handlePutFieldConfig);
+  fastify.put('/config/fields', handlePutFieldConfig);
 
-  fastify.get('/preferences', async (request, reply) => {
+  const handleGetPreferences = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as User;
     if (!options.canRead(user)) return sendForbidden(reply);
+    const tenant = getRequestTenant() ?? user.workspaceSubdomain;
     try {
+      if (tenant) {
+        const preferences = await getOrSetMultiTier(
+          tenant,
+          `setup:${domain}`,
+          'preferences',
+          async () => {
+            const loaded = await options.loadPreferences();
+            return loaded ?? options.normalizePreferences(null);
+          },
+          { ttlSeconds: 600 },
+        );
+        return reply.send({
+          preferences: preferences ?? options.normalizePreferences(null),
+        });
+      }
       const preferences = await options.loadPreferences();
       return reply.send({
         preferences: preferences ?? options.normalizePreferences(null),
@@ -110,17 +154,27 @@ export function registerModuleSetupConfigRoutes<
         error,
       );
     }
-  });
+  };
+  fastify.get('/preferences', handleGetPreferences);
+  fastify.get('/config/preferences', handleGetPreferences);
 
-  fastify.put('/preferences', async (request, reply) => {
+  const handlePutPreferences = async (request: FastifyRequest, reply: FastifyReply) => {
     const user = request.user as User;
     if (!canWriteSetup(user)) return sendForbidden(reply);
     const body = parseRequest(options.preferencesSchema, request.body);
     if (!body.ok) return replyValidationError(reply, body.message);
+    const tenant = getRequestTenant() ?? user.workspaceSubdomain;
     try {
       const saved = await options.savePreferences(
         options.normalizePreferences(body.data),
       );
+      if (tenant) {
+        await invalidateMultiTierCache({
+          tenantId: tenant,
+          domain: `setup:${domain}`,
+          key: 'preferences',
+        });
+      }
       try {
         await options.audit(
           user,
@@ -139,6 +193,8 @@ export function registerModuleSetupConfigRoutes<
         error,
       );
     }
-  });
+  };
+  fastify.put('/preferences', handlePutPreferences);
+  fastify.put('/config/preferences', handlePutPreferences);
 }
 

@@ -69,13 +69,13 @@ export default function BackupHistorySection({
                 <div className="min-w-0 flex-1">
                   <div className="flex items-center gap-2">
                     <p className="text-sm font-bold text-foreground truncate">{backup.name}</p>
-                    <Badge variant="outline" className="font-mono text-3xs py-0 px-1.5 font-semibold text-muted-foreground/80">
+                    <Badge variant="outline" className="font-mono text-3xs py-0 px-1.5 font-semibold text-muted-foreground">
                       {backup.size}
                     </Badge>
                   </div>
                   
                   {backup.keyCount != null ? (
-                    <p className="mt-1 text-xs text-muted-foreground/90 leading-normal">
+                    <p className="mt-1 text-xs text-muted-foreground leading-normal">
                       {t('backup.exportStats', {
                         collections: backup.collectionCount ?? 0,
                         objects: backup.objectCount ?? 0,
@@ -93,7 +93,7 @@ export default function BackupHistorySection({
                 </div>
 
                 <div className="flex items-center gap-4 shrink-0">
-                  <span className="text-xs font-medium text-muted-foreground/70">{formatDateTime(backup.date)}</span>
+                  <span className="text-xs font-medium text-muted-foreground">{formatDateTime(backup.date)}</span>
                   
                   <div className="flex items-center gap-2">
                     <Button

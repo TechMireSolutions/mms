@@ -10,8 +10,8 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-describe("TeachersPreferencesSection Component", () => {
-  it("renders teacher preferences section with idPrefix, autoGenerateId, and specialization select", () => {
+describe("FacultyPreferencesSection Component", () => {
+  it("renders faculty preferences section with idPrefix, autoGenerateId, and specialization select", () => {
     const html = renderToStaticMarkup(
       <TeachersPreferencesSection
         settingsDraft={DEFAULT_TEACHERS_SETTINGS}
@@ -20,14 +20,14 @@ describe("TeachersPreferencesSection Component", () => {
       />,
     );
 
-    expect(html).toContain("teachers.settings.idSectionTitle");
-    expect(html).toContain("teachers.settings.idTemplate");
-    expect(html).toContain("teachers.settings.idDigits");
-    expect(html).toContain("teachers.settings.idStartSeq");
-    expect(html).toContain("teachers.settings.idPrefix");
-    expect(html).toContain("teachers.settings.autoGenerateId");
-    expect(html).toContain("teachers.settings.requireContactLink");
-    expect(html).toContain("teachers.settings.defaultSpecialization");
-    expect(html).toContain("teachers.settings.preview");
+    expect(html).toContain("faculty.settings.idSectionTitle");
+    expect(html).toContain("faculty.settings.idTemplate");
+    expect(html).toContain("faculty.settings.idDigits");
+    expect(html).toContain("faculty.settings.idStartSeq");
+    expect(html).toContain("faculty.settings.idPrefix");
+    expect(html).toContain("faculty.settings.autoGenerateId");
+    expect(html).toContain("faculty.settings.requireContactLink");
+    expect(html).toContain("faculty.settings.defaultSpecialization");
+    expect(html).toContain("faculty.settings.preview");
   });
 });

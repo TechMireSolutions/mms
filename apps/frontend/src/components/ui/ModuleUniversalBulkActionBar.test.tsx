@@ -7,6 +7,7 @@ import { ModuleUniversalBulkActionBar } from "./ModuleUniversalBulkActionBar";
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string | number>) => {
+      if (key === "hasanat.selectedCount" || key === "hasanat.bulkRestore") return "";
       if (params?.count != null) return `${key}:${params.count}`;
       return key;
     },
@@ -74,5 +75,38 @@ describe("ModuleUniversalBulkActionBar", () => {
     );
     expect(html).toContain("students.selectedCount:2");
     expect(html).toContain("students.bulkRestore");
+  });
+
+  it("falls back to trash-scoped i18n keys when primary keys are missing", () => {
+    const html = renderToStaticMarkup(
+      <ModuleUniversalBulkActionBar
+        selectedCount={5}
+        viewingDeleted={false}
+        canDelete={true}
+        leadingIcon={GraduationCap}
+        i18nNamespace="hasanat"
+        onClearSelection={vi.fn()}
+        onRequestBulkDelete={vi.fn()}
+        onRequestBulkRestore={vi.fn()}
+      />,
+    );
+    expect(html).toContain("hasanat.trash.selected:5");
+  });
+
+  it("renders exportAction pass-through with its explicit label", () => {
+    const html = renderToStaticMarkup(
+      <ModuleUniversalBulkActionBar
+        selectedCount={3}
+        viewingDeleted={false}
+        canDelete={true}
+        leadingIcon={GraduationCap}
+        i18nNamespace="students"
+        onClearSelection={vi.fn()}
+        onRequestBulkDelete={vi.fn()}
+        onRequestBulkRestore={vi.fn()}
+        exportAction={{ label: "Export CSV", onClick: vi.fn() }}
+      />,
+    );
+    expect(html).toContain("Export CSV");
   });
 });

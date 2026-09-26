@@ -1,7 +1,7 @@
 import React from "react";
 import { IdCard, School } from "lucide-react";
 import { hydrateTeacherFromContact, type FacultyMember, type Teacher } from "@mms/shared";
-import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { DetailSheet } from "@/components/common/DetailSheet";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { Button } from "@/components/ui/button";
@@ -10,10 +10,11 @@ import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useFacultyConfig } from "@/hooks/useStandardModuleConfig";
 import { FacultyArchivedBanner } from "@/tenant/features/faculty/components/FacultyArchivedBanner";
 import { FacultyDetailFieldsSection } from "@/tenant/features/faculty/components/FacultyDetailFieldsSection";
-import { FacultyDetailHero } from "@/tenant/features/faculty/components/FacultyDetailHero";
+import { FacultyDetailHeroCard } from "@/tenant/features/faculty/components/FacultyDetailHeroCard";
 import { FacultyDetailNotesSection } from "@/tenant/features/faculty/components/FacultyDetailNotesSection";
 import { FacultyDetailQuickActions } from "@/tenant/features/faculty/components/FacultyDetailQuickActions";
 import { FacultyDetailSessionsSection } from "@/tenant/features/faculty/components/FacultyDetailSessionsSection";
+import { FacultyDesignationHistory } from "@/tenant/features/faculty/components/FacultyDesignationHistory";
 import {
   resolveTeacherDisplayName,
 } from "@/tenant/features/faculty/components/facultyFieldDisplay";
@@ -77,19 +78,19 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
             size="sm"
             onClick={() => onPrintIdCard(teacher)}
             className="min-h-11 px-3 gap-1.5 font-medium text-xs border-border/60 hover:bg-muted/80"
-            title={t("teachers.detail.printIdCard")}
-            aria-label={t("teachers.detail.printIdCard")}
+            title={t("faculty.detail.printIdCard") || t("teachers.detail.printIdCard")}
+            aria-label={t("faculty.detail.printIdCard") || t("teachers.detail.printIdCard")}
           >
             <IdCard className="w-3.5 h-3.5" aria-hidden />
-            <span className="hidden sm:inline">{t("teachers.detail.printIdCard")}</span>
+            <span className="hidden sm:inline">{t("faculty.detail.printIdCard") || t("teachers.detail.printIdCard")}</span>
           </Button>
         )}
         <DetailDrawerRestoreOrEditAction
           isArchived={isArchived}
           canRestore={canDelete}
           canEdit={Boolean(onEdit)}
-          restoreLabel={t("teachers.restore")}
-          editLabel={t("teachers.detail.editTitle")}
+          restoreLabel={t("faculty.restore") || t("teachers.restore")}
+          editLabel={t("faculty.detail.editTitle") || t("teachers.detail.editTitle")}
           onRestore={onRestore ? () => onRestore(String(teacher.id)) : undefined}
           onEdit={onEdit ? () => onEdit(teacher) : undefined}
         />
@@ -102,30 +103,27 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
       <DrawerUpdatedStamp
         updatedAt={teacher.updatedAt}
         createdAt={teacher.createdAt}
-        label={t("teachers.detail.updatedLabel")}
+        label={t("faculty.detail.updatedLabel") || t("teachers.detail.updatedLabel")}
       />
     ))();
 
+  const resolvedSubtitle = isArchived
+    ? (t("faculty.detail.archivedSubtitle") || t("teachers.detail.archivedSubtitle"))
+    : (t("faculty.detail.employeeSubtitle", { id: teacher.employeeId || t("common.notSpecified") }) ||
+       t("teachers.detail.employeeSubtitle", { id: teacher.employeeId || t("common.notSpecified") }));
+
   return (
-    <DetailDrawerShell
+    <DetailSheet
       onClose={onClose}
-      title={t("teachers.detail.title")}
-      subtitle={
-        isArchived
-          ? t("teachers.detail.archivedSubtitle")
-          : t("teachers.detail.employeeSubtitle", {
-              id: teacher.employeeId || t("common.notSpecified"),
-            })
-      }
+      title={t("faculty.detail.title") || t("teachers.detail.title")}
+      subtitle={resolvedSubtitle}
       icon={School}
-      ariaLabel={t("teachers.detail.ariaLabel", {
-        name: displayName,
-      })}
+      ariaLabel={t("faculty.detail.ariaLabel", { name: displayName }) || t("teachers.detail.ariaLabel", { name: displayName })}
       headerActions={headerActionsNode}
       headerExtra={headerExtraNode}
       footer={footerNode}
     >
-      <FacultyDetailHero
+      <FacultyDetailHeroCard
         teacher={effectiveTeacher}
         displayName={displayName}
         avatar={linkedContact?.avatar ?? effectiveTeacher.avatar}
@@ -160,10 +158,12 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
         error={sessionsError}
       />
 
+      {!isArchived ? <FacultyDesignationHistory faculty={effectiveTeacher} canEdit={Boolean(onEdit)} /> : null}
+
       {teacher.notes && isFieldEnabled("notes") && (
         <FacultyDetailNotesSection notes={teacher.notes} />
       )}
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 });
 
@@ -171,5 +171,4 @@ export const TeacherDetail = FacultyDetail;
 export const FacultyDrawer = FacultyDetail;
 export const TeacherDrawer = FacultyDetail;
 export default FacultyDetail;
-
 

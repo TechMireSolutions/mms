@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export interface JournalEntryDetailLinesProps {
@@ -21,6 +22,7 @@ export interface JournalEntryDetailLinesProps {
   totalCredit: number;
   formatCurrency: (value: number) => string;
   t: TranslationFunction;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 export function JournalEntryDetailLines({
@@ -31,10 +33,15 @@ export function JournalEntryDetailLines({
   totalCredit,
   formatCurrency,
   t,
+  viewMode: propViewMode,
 }: JournalEntryDetailLinesProps) {
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
+
   return (
     <div className={WORK_SURFACE}>
-      <div className="space-y-3 p-3 md:hidden">
+      {viewMode === "cards" ? (
+        <div className="space-y-3 p-3">
         {entry.lines.map((line) => {
           const account = getAccount(line.account_id);
           return (
@@ -85,8 +92,9 @@ export function JournalEntryDetailLines({
           </StatGrid>
         </article>
       </div>
-      <div className="hidden md:block">
-        <Table>
+      ) : (
+        <div>
+          <Table>
           <caption className="sr-only">{t("accounting.journal.detail.account")}</caption>
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
@@ -130,6 +138,7 @@ export function JournalEntryDetailLines({
           </TableFooter>
         </Table>
       </div>
+      )}
     </div>
   );
 }

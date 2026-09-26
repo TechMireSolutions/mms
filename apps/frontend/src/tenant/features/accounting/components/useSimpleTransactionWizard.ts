@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { generateJERef, type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
+import { generateJERef, isJournalRefUnique, type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { isJournalEntryBalanced, journalEntryRecordSchema, todayISO, type AppTranslationKey } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import {
@@ -167,24 +167,39 @@ export function useSimpleTransactionWizard({
     if (advance) setStep(2);
   };
 
+  const isDuplicateRef = useMemo(() => {
+    const trimmed = form.ref ? form.ref.trim() : "";
+    if (!trimmed || !entries) return false;
+    return !isJournalRefUnique(trimmed, entries);
+  }, [form.ref, entries]);
+
   const canProceed = () => {
-    if (step === 2) return parsedAmount !== null && parsedAmount > 0;
+    if (step === 2) {
+      if (isDuplicateRef) return false;
+      return parsedAmount !== null && parsedAmount > 0;
+    }
     return true;
   };
 
   const handleSave = async (status: "draft" | "posted", recordAnother = false) => {
     if (isSubmitting) return;
+    const userRef = form.ref ? form.ref.trim() : "";
+    if (userRef && !isJournalRefUnique(userRef, entries)) {
+      notify.error(t("accounting.journal.dashboard.wizard.errorRefDuplicate"));
+      return;
+    }
     const validation = validateWizardForm(form, accounts);
     if (!validation.ok) { notify.error(t(validation.errorKey)); return; }
     if (!selectedType) { notify.error(t("accounting.journal.dashboard.wizard.errorSource")); return; }
     setSubmittingStatus(recordAnother ? "posted_and_new" : status);
     try {
       const generatedReference = generateJERef(entries);
+      const candidateRef = userRef || generatedReference;
       const description = form.description.trim() || t(selectedType.labelKey);
       const candidateTags = form.tags && form.tags.length > 0 ? form.tags : (selectedType.tag ? [selectedType.tag] : []);
       const candidate: JournalEntry = {
         id: `je${crypto.randomUUID()}`,
-        ref: form.ref ? `${form.ref}` : generatedReference,
+        ref: candidateRef,
         date: form.date,
         description,
         status,
@@ -235,6 +250,7 @@ export function useSimpleTransactionWizard({
     setAmountTouched,
     submittingStatus,
     isSubmitting,
+    isDuplicateRef,
     form,
     setForm,
     stepSubtitle,

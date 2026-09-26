@@ -32,3 +32,8 @@ export {
   firstSignInErrorFieldId,
   type SignInFieldErrors,
 } from "@/components/entry/authValidation";
+export {
+  useSignInCredentialsForm,
+  type UseSignInCredentialsFormOptions,
+  type UseSignInCredentialsFormReturn,
+} from "@/components/entry/useSignInCredentialsForm";

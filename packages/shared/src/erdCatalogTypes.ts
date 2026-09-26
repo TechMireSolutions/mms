@@ -8,6 +8,7 @@ export const ERD_DOMAIN_IDS = [
   'contacts',
   'enrollments',
   'examinations',
+  'faculty',
   'finance',
   'hasanat',
   'inventory',
@@ -18,7 +19,6 @@ export const ERD_DOMAIN_IDS = [
   'sessions',
   'students',
   'system',
-  'teachers',
   'workshops',
 ] as const;
 

@@ -1,5 +1,6 @@
 import {
   closeDatabase,
+  getActivePoolRole,
   getPool,
   getPoolMetrics,
   getReadReplicaDb,
@@ -8,6 +9,8 @@ import {
   pingDatabase,
   runInReadSnapshotTransaction,
   runInTransaction,
+  type DatabaseConnectionOptions,
+  type DatabasePoolRole,
   type DbClient,
   type PoolMetrics,
 } from './dbConnection.js';
@@ -29,6 +32,7 @@ export async function getDatabaseHealth(): Promise<DatabaseHealth> {
 
 export {
   closeDatabase,
+  getActivePoolRole,
   getDb,
   getPool,
   getPoolMetrics,
@@ -39,6 +43,8 @@ export {
   runInReadSnapshotTransaction,
   runInTransaction,
   setDb,
+  type DatabaseConnectionOptions,
+  type DatabasePoolRole,
   type DbClient,
   type PoolMetrics,
 };

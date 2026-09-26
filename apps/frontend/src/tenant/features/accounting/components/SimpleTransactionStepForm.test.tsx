@@ -3,7 +3,7 @@ import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { StepTransactionForm } from "./SimpleTransactionStepForm";
 import type { WizardFormState } from "./simpleTransactionWizardTypes";
-import type { Account } from "@/lib/data/accountingData";
+import type { Account, JournalEntry } from "@/lib/data/accountingData";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
@@ -392,5 +392,47 @@ describe("StepTransactionForm", () => {
       chip500?.click();
     });
     expect(setForm).toHaveBeenCalled();
+  });
+
+  it("displays duplicate reference warning when entered ref collides with an existing entry", async () => {
+    const existingEntry: JournalEntry = {
+      id: "je-1",
+      ref: "JE-0001",
+      date: "2026-09-01",
+      description: "Existing entry",
+      status: "posted",
+      created_by: "system",
+      fiscal_year: "2026",
+      tags: [],
+      attachments: [],
+      lines: [],
+    };
+    const formState: WizardFormState = {
+      date: "2026-09-01",
+      amount: "100",
+      description: "Sample",
+      debitAcc: "a1000",
+      creditAcc: "a4000",
+      ref: "JE-0001",
+      receipt: "",
+      fiscal_year: "2026",
+    };
+
+    await act(async () => {
+      root.render(
+        <StepTransactionForm
+          type={mockActionType}
+          form={formState}
+          setForm={vi.fn()}
+          accounts={mockAccounts}
+          entries={[existingEntry]}
+          currencySymbol="$"
+        />,
+      );
+    });
+
+    const errorEl = container.querySelector("#wizard-ref-error");
+    expect(errorEl).not.toBeNull();
+    expect(errorEl?.textContent).toContain("accounting.journal.dashboard.wizard.errorRefDuplicate");
   });
 });

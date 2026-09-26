@@ -39,6 +39,6 @@ describe("TeachersListRowActions Component", () => {
       />,
     );
 
-    expect(html).toContain("teachers.table.actions");
+    expect(html).toContain("faculty.table.actions");
   });
 });

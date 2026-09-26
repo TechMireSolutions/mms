@@ -25,9 +25,12 @@ export default tseslint.config(
   pluginJs.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    files: ["eslint-rules/**/*.cjs"],
+    files: ["eslint-rules/**/*.cjs", "scripts/**/*.{js,cjs,mjs}"],
     languageOptions: {
       globals: globals.node,
+    },
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
   {
@@ -112,6 +115,10 @@ export default tseslint.config(
         {
           selector: "Literal[value=/\\bmin-h-\\[44px\\]/]",
           message: "Use min-h-11 for 44px touch floor target.",
+        },
+        {
+          selector: "Literal[value=/\\b[hw]-\\[\\d+px\\]/]",
+          message: "Use semantic width/height tokens or spacing scale instead of arbitrary pixel values.",
         },
       ],
     },

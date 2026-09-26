@@ -55,7 +55,7 @@ export function CustomReportBuilderPreviewVisualizer({
                         value={
                           cellValue !== undefined && cellValue !== null
                             ? String(cellValue)
-                            : <span className="text-muted-foreground/30 text-xs italic">—</span>
+                            : <span className="text-muted-foreground text-xs italic">—</span>
                         }
                         ddClassName="font-semibold"
                       />
@@ -87,7 +87,7 @@ export function CustomReportBuilderPreviewVisualizer({
                         <TableCell key={selectedField} className="px-4 py-3 text-foreground font-semibold whitespace-nowrap group-hover:text-primary transition-colors">
                           {cellValue !== undefined && cellValue !== null
                             ? String(cellValue)
-                            : <span className="text-muted-foreground/30 text-xs italic">—</span>
+                            : <span className="text-muted-foreground text-xs italic">—</span>
                           }
                         </TableCell>
                       );

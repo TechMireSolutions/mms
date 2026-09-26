@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-describe('Teachers contact / employee-id SQL SSOT', () => {
+describe('Faculty contact / employee-id SQL SSOT', () => {
   it('list repo exposes linked-contact and next-employee-id SQL helpers', () => {
     const listBarrelSrc = readFileSync(
       join(here, '../db/repositories/facultyRepositoryList.ts'),
@@ -15,18 +15,18 @@ describe('Teachers contact / employee-id SQL SSOT', () => {
       join(here, '../db/repositories/facultyRepositoryListQuerySql.ts'),
       'utf8',
     );
-    expect(listBarrelSrc).toContain('listTeacherLinkedContactIdsSql');
-    expect(listBarrelSrc).toContain('countTeachersForNextEmployeeId');
-    expect(listQuerySqlSrc).toContain('teachers.contactId');
+    expect(listBarrelSrc).toContain('listFacultyLinkedContactIdsSql');
+    expect(listBarrelSrc).toContain('countFacultyForNextEmployeeId');
+    expect(listQuerySqlSrc).toContain('faculty.contactId');
   });
 
-  it('contacts list teacher link filter uses typed contact_id', () => {
+  it('contacts list faculty link filter uses typed contact_id', () => {
     const contactListSrc = readFileSync(
       join(here, '../db/repositories/contactRepositoryList.ts'),
       'utf8',
     );
-    expect(contactListSrc).toContain('existsActiveTeacherLinkSql');
-    expect(contactListSrc).toContain('teachers.contactId');
-    expect(contactListSrc).not.toContain("teachers.customData}->>'contactId'");
+    expect(contactListSrc).toContain('existsActiveFacultyLinkSql');
+    expect(contactListSrc).toContain('faculty.contactId');
+    expect(contactListSrc).not.toContain("faculty.customData}->>'contactId'");
   });
 });

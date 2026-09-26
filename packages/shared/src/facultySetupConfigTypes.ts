@@ -28,6 +28,12 @@ export const teacherPreferencesPutBodySchema = z
     idDigits: z.number().optional(),
     idStartSeq: z.number().optional(),
     idRestartAnnually: z.boolean().optional(),
+    employeeIdPrefix: z.string().optional(),
+    employeeIdYearFormat: z.enum(['YYYY', 'YY']).optional(),
+    employeeIdSequenceDigits: z.number().int().min(2).max(8).optional(),
+    employeeIdDelimiter: z.string().optional(),
+    employeeIdLastYear: z.number().optional(),
+    employeeIdCurrentSequence: z.number().optional(),
     autoGenerateId: z.boolean().optional(),
     requireContactLink: z.boolean().optional(),
     defaultSpecialization: z.string().optional(),
@@ -41,6 +47,12 @@ export type TeacherModulePreferences = Pick<
   | 'idDigits'
   | 'idStartSeq'
   | 'idRestartAnnually'
+  | 'employeeIdPrefix'
+  | 'employeeIdYearFormat'
+  | 'employeeIdSequenceDigits'
+  | 'employeeIdDelimiter'
+  | 'employeeIdLastYear'
+  | 'employeeIdCurrentSequence'
   | 'autoGenerateId'
   | 'requireContactLink'
   | 'defaultSpecialization'
@@ -52,6 +64,12 @@ const PREF_KEYS = [
   'idDigits',
   'idStartSeq',
   'idRestartAnnually',
+  'employeeIdPrefix',
+  'employeeIdYearFormat',
+  'employeeIdSequenceDigits',
+  'employeeIdDelimiter',
+  'employeeIdLastYear',
+  'employeeIdCurrentSequence',
   'autoGenerateId',
   'requireContactLink',
   'defaultSpecialization',
@@ -67,28 +85,51 @@ export function normalizeTeacherModulePreferences(
     idDigits: DEFAULT_TEACHERS_SETTINGS.idDigits ?? 4,
     idStartSeq: DEFAULT_TEACHERS_SETTINGS.idStartSeq ?? 1,
     idRestartAnnually: DEFAULT_TEACHERS_SETTINGS.idRestartAnnually ?? false,
+    employeeIdPrefix: DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix ?? 'FAC',
+    employeeIdYearFormat: DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat ?? 'YYYY',
+    employeeIdSequenceDigits: DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits ?? 4,
+    employeeIdDelimiter: DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter ?? '',
+    employeeIdLastYear: DEFAULT_TEACHERS_SETTINGS.employeeIdLastYear,
+    employeeIdCurrentSequence: DEFAULT_TEACHERS_SETTINGS.employeeIdCurrentSequence ?? 0,
     autoGenerateId: DEFAULT_TEACHERS_SETTINGS.autoGenerateId,
     requireContactLink: DEFAULT_TEACHERS_SETTINGS.requireContactLink,
     defaultSpecialization: DEFAULT_TEACHERS_SETTINGS.defaultSpecialization,
   };
   if (!partial || typeof partial !== 'object') return { ...defaults };
 
-  const parsedDigits = Number(partial.idDigits);
+  const rawPrefix = partial.employeeIdPrefix ?? partial.idPrefix;
+  const effectivePrefix =
+    typeof rawPrefix === 'string' && rawPrefix.trim()
+      ? rawPrefix.trim()
+      : defaults.idPrefix;
+
+  const parsedDigits = Number(partial.employeeIdSequenceDigits ?? partial.idDigits);
+  const effectiveDigits =
+    Number.isFinite(parsedDigits) && parsedDigits >= 1 && parsedDigits <= 8
+      ? Math.floor(parsedDigits)
+      : defaults.idDigits;
+
   const parsedStartSeq = Number(partial.idStartSeq);
+  const parsedCurrentSeq = Number(partial.employeeIdCurrentSequence);
+  const parsedLastYear = Number(partial.employeeIdLastYear);
+
+  const rawYearFormat = String(partial.employeeIdYearFormat ?? '').toUpperCase();
+  const effectiveYearFormat = rawYearFormat === 'YY' ? 'YY' : 'YYYY';
+
+  const effectiveDelimiter =
+    typeof partial.employeeIdDelimiter === 'string'
+      ? partial.employeeIdDelimiter
+      : defaults.employeeIdDelimiter;
 
   return {
-    idPrefix:
-      typeof partial.idPrefix === 'string' && partial.idPrefix.trim()
-        ? partial.idPrefix.trim()
-        : defaults.idPrefix,
+    idPrefix: effectivePrefix,
+    employeeIdPrefix: effectivePrefix,
     idTemplate:
       typeof partial.idTemplate === 'string' && partial.idTemplate.trim()
         ? partial.idTemplate.trim()
         : defaults.idTemplate,
-    idDigits:
-      Number.isFinite(parsedDigits) && parsedDigits >= 1 && parsedDigits <= 8
-        ? Math.floor(parsedDigits)
-        : defaults.idDigits,
+    idDigits: effectiveDigits,
+    employeeIdSequenceDigits: effectiveDigits,
     idStartSeq:
       Number.isFinite(parsedStartSeq) && parsedStartSeq >= 1
         ? Math.floor(parsedStartSeq)
@@ -97,6 +138,13 @@ export function normalizeTeacherModulePreferences(
       typeof partial.idRestartAnnually === 'boolean'
         ? partial.idRestartAnnually
         : defaults.idRestartAnnually,
+    employeeIdYearFormat: effectiveYearFormat,
+    employeeIdDelimiter: effectiveDelimiter,
+    employeeIdLastYear: Number.isFinite(parsedLastYear) ? Math.floor(parsedLastYear) : defaults.employeeIdLastYear,
+    employeeIdCurrentSequence:
+      Number.isFinite(parsedCurrentSeq) && parsedCurrentSeq >= 0
+        ? Math.floor(parsedCurrentSeq)
+        : defaults.employeeIdCurrentSequence,
     autoGenerateId:
       typeof partial.autoGenerateId === 'boolean'
         ? partial.autoGenerateId
@@ -238,3 +286,8 @@ export type FacultyModulePreferences = TeacherModulePreferences;
 export const FACULTY_MODULE_PREFERENCE_KEYS = PREF_KEYS;
 export const normalizeFacultyModulePreferences = normalizeTeacherModulePreferences;
 export const mergeFacultyFormTabsFromApi = mergeTeachersFormTabsFromApi;
+export const composeFacultySettings = composeTeachersSettings;
+export const splitFacultySettingsBlob = splitTeachersSettingsBlob;
+export const stripFacultyFieldConfigForPersist = stripTeacherFieldConfigForPersist;
+export const normalizeFacultySettings = normalizeTeachersSettings;
+

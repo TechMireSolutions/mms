@@ -4,100 +4,40 @@ description: Adds or changes field/tab registries, module Setup Fields UI, and f
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Field & Tab Registry
 
-**Rule (norms SSOT):** `mms-fields.mdc`. Also `mms-module-architecture.mdc` §4. Full Setup workflow → skill **`mms-module-setup`**. FormModal / Zod forms → **`mms-form-architecture`**.
+**Rules (norms SSOT):** `mms-fields.mdc` · `mms-module-architecture.mdc` §4 · `mms-data-layer.mdc`.
 
-## Schemas (`@mms/shared/contactTypes.ts`)
+## 1. Field & Tab Contracts
 
-**Field:** `{ key, label, labelKey?, type, enabled, order, options, permissions, defaultValue, required?, unique? }`
+- **Field Schema**: `{ key, label, labelKey?, type, enabled, order, options, permissions, defaultValue, required?, unique? }`.
+- **Tab Schema**: `{ key, label, labelKey?, icon, enabled, order, permissions, description, color, isSystem }`.
+- **Metadata Rule**: `isSystem` is informative metadata only; never branch core rendering or domain behaviour on it.
 
-**Tab:** `{ key, label, labelKey?, icon, enabled, order, permissions, description, color, isSystem }`
+## 2. Field Persistence Gate
 
-`isSystem` = metadata only. Never branch behaviour on it.
+Every new or modified field must complete the full architectural pipeline:
+`@shared type → DEFAULT_* + merge → typed REST read → typed REST write → UI binding → seeds (if default)`
+- **Lookups**: Typed lookup endpoints (e.g., `/api/contacts/lookups`) — never `saveCollection`.
+- **Registry Configs**: Typed `{module}_field_configs` endpoints — never `saveObject`.
+- **Custom Tabs**: Typed `/api/custom-tabs` — avoid dual-writing tab definitions into field configs.
 
-## Fields & Tabs Checklist
+## 3. Delete Guards & Dependencies
 
-| Requirement | Action |
-|---|--------|
-| Seed fields | Block permanent delete on initial system fields |
-| Custom fields | Validate label, type, tab, visibility, permissions, validation |
-| Cascading rules | Hide/disable in forms, drawers, reports, exports, filters, search, mobile |
-| Tab mapping | Ensure one tab per field; support reordering without data loss |
-| Required fields | Enforce in validation and scroll to/focus tab on error |
-| Unique fields | Back with partial unique index (`WHERE deleted_at IS NULL`) — never standard `UNIQUE` or `UNIQUE NULLS NOT DISTINCT` (`mms-soft-delete`) |
-| Deletions | Check dependencies using `getContactFieldRemovalIssues()` or equivalent before deleting |
-## Add a field type
+- **Dependency Pre-Check**: Before deleting a field or tab, check dependencies using `getContactFieldRemovalIssues()` or module equivalent.
+- **Safety Blocks**: Prohibit deleting initial seed fields, active column registry keys, or fields actively referenced in duplicate detection or contact records.
 
-1. Extend schema in `packages/shared/src/contactTypes.ts`
-2. Handle render case in `FormPrimitives.tsx` (contacts) or module equivalent
-3. Wire **persistence** — registry save + value on entity save (see Field persistence gate below)
-4. `pnpm typecheck` at root
+## 4. UI Layout & Parity
 
-## Field delete guard
+- **Layout Hook**: Manage column visibility and width persistence using `useModuleColumnLayout`. Pass `isColumnVisible` down to table and card views.
+- **Form & Drawer Parity**: Every enabled field in the registry must render a valid control in the FormModal and a corresponding read row in the detail drawer. Never drop unknown fields silently.
 
-**Contacts:** `packages/shared/src/contactFieldDependencies.ts`
+## 5. Verification
 
-```typescript
-getContactFieldRemovalIssues({ fieldKey, columnRegistry, prefs, contacts })
+```bash
+pnpm typecheck
+cd apps/frontend && pnpm lint
 ```
-
-Checks: seed field, enabled column, duplicate-detection prefs, contact data count. Extend for reports/filters/templates in other modules.
-
-## Field persistence gate (create & review)
-
-Before merging any new/changed field, complete all layers:
-
-```
-@shared type → DEFAULT_* + merge → read (typed REST / Query) → write (typed REST) → UI binding → seeds (if default)
-```
-
-| Storage | Write path |
-|---------|------------|
-| Settings singleton | `getBrandingSettings` / `await saveBrandingSettings`, etc. |
-| Lookup option list | Contacts: `/api/contacts/lookups` (typed `contact_lookups`) — **never** `saveCollection` for genders/labels/`countryCodes` |
-| REST entity row (Contacts, Students, …) | Query mutations → `/api/{resource}` — **never** `saveCollection('contacts')` |
-| Registry definition | Typed `{module}_field_configs` + REST endpoints (Contacts, Students, Teachers, Sessions, Users) — **never** `saveObject` |
-| Custom Tabs | Typed `custom_tabs` + `/api/custom-tabs` — do not dual-write `formTabs` into field-config |
-
-**Reviewer test:** grep the field key — must appear in type, merge, form, and save. Block if only in `useState`.
-
-See `mms-fields.mdc` and `mms-data-layer.mdc`.
-
-## Module field settings & column layout
-
-Pattern: `{Module}SettingsPanel` + column registry `{ key, label, enabled, order, sortable, width }`.
-Canonical layout hook: `useModuleColumnLayout` (`apps/frontend/src/hooks/useModuleColumnLayout.ts`).
-
-Storage: Contacts → `/api/contacts/field-config`. Other modules → `{module}_field_config` or contract `configObjectKey` via `saveObject` until migrated.
-
-## Rendering
-
-```ts
-const { orderedColumns, isColumnVisible, updateColumnWidth } = useModuleColumnLayout({
-  columns: registryColumns,
-  defaultColumns: DEFAULT_COLUMNS,
-  storageKey: 'module_columns',
-});
-```
-
-Tables: column registry `{ key, label, enabled, order, sortable, width }`. Pass `isColumnVisible` into table and card views.
-
-**Form + drawer parity:** every enabled registry/custom field that validation can require must render a control (form) and a read row (drawer). Ban hard-coded key switches that `return null` for unknown Setup fields.
-
-## Tab enablement SSOT (Contacts)
-
-- Prefer `resolveContactEnabledTabIds` — when `formTabs` exist they win; do not blind-union `DEFAULT_ENABLED_TABS`.
-- Locked tabs: `CONTACT_LOCKED_ENABLED_TABS` (`basic`) + `useModuleSettingsEditor({ lockedEnabledTabs })` on save/sync.
-- Fields Save: dirty-gated; sync `columnRegistry` via `syncContactColumnRegistryWithFields` on Fields save.
-
-## Rules
-
-`mms-fields.mdc`, `mms-module-architecture.mdc`, `mms-ui-ux-design.mdc`
-
-## Related skills
-
-`mms-module-setup`, `mms-form-architecture`, `mms-module-page`

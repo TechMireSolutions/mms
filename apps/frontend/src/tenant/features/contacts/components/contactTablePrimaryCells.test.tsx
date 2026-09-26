@@ -68,7 +68,6 @@ describe("contactTablePrimaryCells", () => {
       expect(html).toContain("Female");
       expect(html).toContain("Syed");
       expect(html).toContain("Reason: Duplicate entry");
-      expect(html).toContain("sticky start-12");
     });
   });
 

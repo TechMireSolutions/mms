@@ -1,8 +1,10 @@
-import { pgTable, text, timestamp, uniqueIndex, index, integer, jsonb, primaryKey, foreignKey, varchar } from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, uniqueIndex, index, integer, jsonb, primaryKey, foreignKey, varchar, date, check } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { contacts, tenantUsers } from "./contacts.js";
 import { softDeleteColumns } from "./softDeleteSchema.js";
+
+export * from "./facultyDesignationTables.js";
 
 /**
  * Faculty entity rows — normalized 3NF relational columns.
@@ -17,9 +19,12 @@ export const faculty = pgTable('faculty', {
   specialization: varchar('specialization', { length: 150 }),
   department: varchar('department', { length: 150 }),
   designation: varchar('designation', { length: 150 }),
+  reportingFacultyId: text('reporting_faculty_id'),
+  hierarchyRank: integer('hierarchy_rank').notNull().default(10),
   qualification: varchar('qualification', { length: 255 }),
-  joinDate: varchar('join_date', { length: 35 }),
+  joinDate: date('join_date', { mode: 'string' }),
   notes: text('notes'),
+  customData: jsonb('custom_data').$type<Record<string, unknown>>().notNull().default({}),
   ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -28,7 +33,6 @@ export const faculty = pgTable('faculty', {
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
   index('faculty_workspace_status_idx').on(table.workspaceSubdomain, table.status),
-  index('faculty_workspace_employee_id_idx').on(table.workspaceSubdomain, table.employeeId),
   index('faculty_workspace_specialization_idx').on(table.workspaceSubdomain, table.specialization),
   index('faculty_workspace_deleted_idx').on(table.workspaceSubdomain, table.deletedAt),
   index('faculty_workspace_active_idx')
@@ -67,7 +71,18 @@ export const faculty = pgTable('faculty', {
   index('faculty_workspace_contact_active_idx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),
+  index('faculty_workspace_reporting_faculty_idx')
+    .on(table.workspaceSubdomain, table.reportingFacultyId)
+    .where(sql`${table.deletedAt} is null`),
+  index('faculty_workspace_hierarchy_rank_idx')
+    .on(table.workspaceSubdomain, table.hierarchyRank)
+    .where(sql`${table.deletedAt} is null`),
+  index('faculty_workspace_status_rank_idx')
+    .on(table.workspaceSubdomain, table.status, table.hierarchyRank)
+    .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_user_idx').on(table.workspaceSubdomain, table.userId),
+  check('faculty_no_self_reporting_check', sql`${table.reportingFacultyId} is null or ${table.reportingFacultyId} <> ${table.id}`),
+  check('faculty_hierarchy_rank_positive_check', sql`${table.hierarchyRank} > 0`),
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
@@ -75,6 +90,10 @@ export const faculty = pgTable('faculty', {
   foreignKey({
     columns: [table.workspaceSubdomain, table.userId],
     foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],
+  }).onDelete('set null'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.reportingFacultyId],
+    foreignColumns: [table.workspaceSubdomain, table.id],
   }).onDelete('set null'),
 ]);
 
@@ -117,6 +136,22 @@ export const facultyModulePreferences = pgTable('faculty_module_preferences', {
   primaryKey({ columns: [table.workspaceSubdomain] }),
 ]);
 
+/**
+ * Faculty Setup Config — deterministic dynamic Employee ID generation engine state.
+ */
+export const facultySetupConfig = pgTable('faculty_setup_config', {
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  prefix: varchar('prefix', { length: 20 }).notNull().default('FAC'),
+  yearFormat: varchar('year_format', { length: 10 }).notNull().default('YYYY'),
+  sequenceDigits: integer('sequence_digits').notNull().default(4),
+  delimiter: varchar('delimiter', { length: 5 }).notNull().default(''),
+  currentSequence: integer('current_sequence').notNull().default(0),
+  lastYear: integer('last_year').notNull().default(2026),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain] }),
+]);
+
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -129,21 +164,10 @@ export type FacultyFieldConfigsRow = typeof facultyFieldConfigs.$inferSelect;
 export type InsertFacultyFieldConfigsRow = typeof facultyFieldConfigs.$inferInsert;
 export type FacultyModulePreferencesRow = typeof facultyModulePreferences.$inferSelect;
 export type InsertFacultyModulePreferencesRow = typeof facultyModulePreferences.$inferInsert;
+export type FacultySetupConfigRow = typeof facultySetupConfig.$inferSelect;
+export type InsertFacultySetupConfigRow = typeof facultySetupConfig.$inferInsert;
 
-/* ========================================================================= */
-/*                    BACKWARD COMPATIBILITY ALIASES                        */
-/* ========================================================================= */
+export type Faculty = FacultyRow;
+export type NewFaculty = InsertFacultyRow;
+export type FacultyWithContact = FacultyRow & { contact?: unknown };
 
-export const teachers = faculty;
-export const teacherLookups = facultyLookups;
-export const teacherFieldConfigs = facultyFieldConfigs;
-export const teacherModulePreferences = facultyModulePreferences;
-
-export type TeacherRow = FacultyRow;
-export type InsertTeacherRow = InsertFacultyRow;
-export type TeacherLookupsRow = FacultyLookupsRow;
-export type InsertTeacherLookupsRow = InsertFacultyLookupsRow;
-export type TeacherFieldConfigsRow = FacultyFieldConfigsRow;
-export type InsertTeacherFieldConfigsRow = InsertFacultyFieldConfigsRow;
-export type TeacherModulePreferencesRow = FacultyModulePreferencesRow;
-export type InsertTeacherModulePreferencesRow = InsertFacultyModulePreferencesRow;

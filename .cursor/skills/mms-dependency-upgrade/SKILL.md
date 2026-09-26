@@ -4,7 +4,7 @@ description: Upgrades MMS workspace dependencies with pnpm catalogs, Dependabot/
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Dependency Upgrade Workflow
@@ -22,7 +22,7 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 5. Read upstream major migration guides before landing breaking API changes.
 6. `pnpm typecheck && pnpm test` + FE/BE lint when those apps changed.
 7. **Tree-Shaking & Bundle Review**: Verify tree-shaking compatibility before introducing any new dependency. Ban monolithic utility libraries (`lodash`, `moment`, `ramda`) in favor of native JS and `@mms/shared`. Ban CommonJS-only packages that break Vite tree-shaking (`mms-performance.mdc`).
-8. **React Compiler** (only if enabling): Babel/Vite plugin in `apps/frontend` Vite config only → add `eslint-plugin-react-compiler` → delete redundant `useMemo`/`useCallback`/`React.memo` in **both tenant and platform** code → update stack note in `mms-core.mdc` / this rule.
+8. **React Compiler** (only if enabling): follow the current official integration for the selected Vite/React versions; configure frontend only and preserve existing Hooks lint. Advisory: adopt incrementally; retain manual memoization until identity/dependency semantics and behavior are verified. Update the stack note once enabled.
 9. Keep GitHub `dependency-review` green on the PR.
 10. Do not enable `exactOptionalPropertyTypes` mid-feature — dedicated TS-strictness PR only (`mms-dependencies.mdc`).
 
@@ -35,7 +35,7 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 - [ ] audit clean or justified
 - [ ] onlyBuiltDependencies / install-script allowlist reviewed when adding native deps
 - [ ] typecheck + test + lint green
-- [ ] Compiler not half-enabled (plugin + eslint + memo cleanup together)
+- [ ] Compiler integration and lint verified; no blanket memoization removal
 - [ ] Banned Node 24 dependencies (dotenv, axios, node-fetch, ws, glob, fast-glob, path-to-regexp) are not reintroduced
 - [ ] Tree-shaking verified; no banned monolithic libraries (lodash, moment, ramda) or CJS-only packages added
 - [ ] Zero non-erasable TypeScript syntax (enum, namespace, parameter properties) for Node 24 --experimental-strip-types
@@ -44,11 +44,11 @@ Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use fo
 
 ## Script
 
-`scripts/audit-deps.sh` — engines, catalog references, and advisories:
+`.agent/skills/mms-dependency-upgrade/scripts/audit-deps.sh` — engines, catalog references, and advisories:
 
 ```bash
-bash scripts/audit-deps.sh                  # full audit (fails on high/critical advisories)
-MMS_SKIP_AUDIT=1 bash scripts/audit-deps.sh # offline: engines + catalog references only
+bash .agent/skills/mms-dependency-upgrade/scripts/audit-deps.sh                  # full audit (fails on high/critical advisories)
+MMS_SKIP_AUDIT=1 bash .agent/skills/mms-dependency-upgrade/scripts/audit-deps.sh # offline: engines + catalog references only
 ```
 
 A non-zero exit is actionable: fix the version, or add a reviewed exception **with a reachability analysis** to the `overrides` block in `pnpm-workspace.yaml` (the ts-deepmerge entry is the pattern to copy).

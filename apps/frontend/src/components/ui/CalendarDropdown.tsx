@@ -47,7 +47,7 @@ export function CalendarDropdown({
         <SelectValue />
       </SelectTrigger>
       <SelectContent
-        className="max-h-56 rounded-xl border border-border/80 shadow-2xl bg-background/95 backdrop-blur-xl p-1"
+        className="max-h-56 rounded-xl surface-overlay p-1"
         position="popper"
       >
         {options?.map((option) => (

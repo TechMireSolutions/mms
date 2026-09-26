@@ -6,8 +6,9 @@ import { Card } from "@/components/ui/card";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { formatNumber } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { resolveAccent, type AccentColor } from "@/components/ui/statCardAccent";
-import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { CARD_STRIPE_INSET, trendTextClass } from "@/lib/semanticTone";
 
 export interface StatCardProps {
   label: string;
@@ -28,8 +29,8 @@ const StatCardTrend = (function StatCardTrend({ trend }: { trend: number }) {
   return (
     <span
       className={cn(
-        "flex items-center gap-0.5 text-xs font-bold ms-2 shrink-0 select-none",
-        trend >= 0 ? "text-success" : "text-destructive"
+        "flex items-center gap-0.5 text-xs font-bold shrink-0 select-none",
+        trendTextClass(trend)
       )}
       aria-label={trend >= 0 ? t("ui.statCard.positiveTrend") : t("ui.statCard.negativeTrend")}
     >
@@ -63,14 +64,21 @@ export const StatCard = (function StatCard({
   const resolvedAccentColor = accent as React.ComponentProps<typeof Card>["accentColor"];
   const formattedValue = typeof value === "number" ? formatNumber(value) : value;
 
+  const reducedMotion = useReducedMotion();
+  const motionProps = reducedMotion
+    ? { initial: false, animate: { opacity: 1, y: 0 } }
+    : {
+        initial: { opacity: 0, y: isCompact ? 10 : 12 },
+        animate: { opacity: 1, y: 0 },
+        transition: { delay: delayIndex * 0.04, duration: 0.3, ease: "easeOut" as const },
+      };
+
   if (isCompact) {
     return (
       <Comp
         {...buttonProps}
+        {...motionProps}
         onClick={onClick}
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: delayIndex * 0.04, duration: 0.3, ease: "easeOut" }}
         className={cn("w-full text-start", onClick && "cursor-pointer")}
       >
         <Card
@@ -85,14 +93,14 @@ export const StatCard = (function StatCard({
         >
           <div className="flex items-center gap-3 min-w-0">
             {Icon && (
-              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
+              <div className={cn("w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
                 <Icon className={cn("w-4 h-4", theme.iconText)} />
               </div>
             )}
             <div className="min-w-0">
-              <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wide truncate">
+              <SectionLabel as="p" weight="semibold" tracking="wide" className="truncate">
                 {label}
-              </p>
+              </SectionLabel>
               <p className="text-lg font-bold text-foreground leading-tight tabular-nums">
                 {formattedValue}
               </p>
@@ -112,10 +120,8 @@ export const StatCard = (function StatCard({
   return (
     <Comp
       {...buttonProps}
+      {...motionProps}
       onClick={onClick}
-      initial={{ opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ delay: delayIndex * 0.04, duration: 0.3, ease: "easeOut" }}
       className={cn("w-full text-start", onClick && "cursor-pointer")}
     >
       <Card
@@ -130,12 +136,12 @@ export const StatCard = (function StatCard({
       >
         <div className="flex items-center gap-3.5 min-w-0">
           {Icon && (
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 ms-0.5 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
+            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
               <Icon className={cn("w-5 h-5", theme.iconText)} />
             </div>
           )}
           <div className="min-w-0">
-            <SectionLabel className="block leading-none mb-1.5">
+            <SectionLabel as="p" className="block leading-none mb-1.5 truncate">
               {label}
             </SectionLabel>
             <p className="text-lg font-black text-foreground leading-none tracking-tight tabular-nums">

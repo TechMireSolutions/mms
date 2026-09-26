@@ -100,4 +100,56 @@ describe("ModuleScaffold", () => {
     expect(html).toContain('role="status"');
     expect(html).not.toContain("w-44"); // title skeleton omitted
   });
+
+  it("applies aria-busy='true' on wrapper when isBusy=true and omits when false/undefined", () => {
+    const busyHtml = renderToStaticMarkup(
+      <TestWrapper>
+        <ModuleScaffold
+          seoTitle="Busy Test | MMS"
+          seoDescription="Testing busy state"
+          isBusy={true}
+        >
+          <div>Body</div>
+        </ModuleScaffold>
+      </TestWrapper>
+    );
+    expect(busyHtml).toContain('aria-busy="true"');
+
+    const idleHtml = renderToStaticMarkup(
+      <TestWrapper>
+        <ModuleScaffold
+          seoTitle="Idle Test | MMS"
+          seoDescription="Testing idle state"
+          isBusy={false}
+        >
+          <div>Body</div>
+        </ModuleScaffold>
+      </TestWrapper>
+    );
+    expect(idleHtml).not.toContain('aria-busy="true"');
+  });
+
+  it("renders drawerOutlet outside the main content flow", () => {
+    const html = renderToStaticMarkup(
+      <TestWrapper>
+        <ModuleScaffold
+          seoTitle="Drawer Outlet Test | MMS"
+          seoDescription="Testing drawer outlet placement"
+          drawerOutlet={<div id="test-drawer-portal">Slide-over Portal Content</div>}
+        >
+          <div id="test-main-body">Main Grid Content</div>
+        </ModuleScaffold>
+      </TestWrapper>
+    );
+
+    expect(html).toContain("test-drawer-portal");
+    expect(html).toContain("Slide-over Portal Content");
+    expect(html).toContain("test-main-body");
+
+    // Verify drawerOutlet appears after the main content wrapper closes
+    const mainBodyIndex = html.indexOf("test-main-body");
+    const drawerPortalIndex = html.indexOf("test-drawer-portal");
+    expect(drawerPortalIndex).toBeGreaterThan(mainBodyIndex);
+  });
 });
+

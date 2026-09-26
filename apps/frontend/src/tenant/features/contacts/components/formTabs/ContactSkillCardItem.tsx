@@ -1,7 +1,6 @@
 import type React from "react";
-import { Tag, Clock, Building2 } from "lucide-react";
-import { Textarea } from "@/components/ui/textarea";
-import { EditableSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
+import { Tag } from "lucide-react";
+import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
 import { cn } from "@/lib/utils";
@@ -9,6 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactSkill } from "@mms/shared";
 import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
+import { ContactSkillDetailsSection } from "./ContactSkillDetailsSection";
 
 export interface ContactSkillCardItemProps {
   skill: ContactSkill;
@@ -133,93 +133,27 @@ export function ContactSkillCardItem({
           ) : null}
         </div>
 
-        {/* Row 2: Experience (Years) & Issued By / Sanad Source */}
-        <div className="grid grid-cols-1 gap-3 @sm:grid-cols-2">
-          {showYears ? (
-            <Field
-              label={t("contacts.fields.skillYears")}
-              required={isFieldRequired("skills", "yearsOfExperience")}
-              error={yearsError}
-              id={`cf-${formInstanceId}-skill-years-${idx}`}
-            >
-              <LeadingIconInput
-                icon={Clock}
-                id={`cf-${formInstanceId}-skill-years-${idx}`}
-                name={`cf-${formInstanceId}-skill-years-${idx}`}
-                inputMode="numeric"
-                spellCheck={false}
-                enterKeyHint="next"
-                aria-invalid={Boolean(yearsError)}
-                value={skill.yearsOfExperience || ""}
-                required={isFieldRequired("skills", "yearsOfExperience")}
-                onChange={(e) => updateSkill(idx, { yearsOfExperience: e.target.value })}
-                placeholder={t("contacts.form.skillYearsPlaceholder")}
-                className={cn(yearsError && FORM_INPUT_ERROR)}
-              />
-            </Field>
-          ) : null}
-
-          {showIssuer ? (
-            <Field
-              label={t("contacts.fields.skillIssuer")}
-              required={isFieldRequired("skills", "issuer")}
-              error={issuerError}
-              id={`cf-${formInstanceId}-skill-issuer-${idx}`}
-            >
-              <LeadingIconInput
-                icon={Building2}
-                id={`cf-${formInstanceId}-skill-issuer-${idx}`}
-                name={`cf-${formInstanceId}-skill-issuer-${idx}`}
-                autoCapitalize="words"
-                enterKeyHint="next"
-                aria-invalid={Boolean(issuerError)}
-                value={skill.issuer || ""}
-                required={isFieldRequired("skills", "issuer")}
-                onChange={(e) => updateSkill(idx, { issuer: e.target.value })}
-                placeholder={t("contacts.form.skillIssuerPlaceholder")}
-                className={cn(issuerError && FORM_INPUT_ERROR)}
-              />
-            </Field>
-          ) : null}
-        </div>
-
-        {/* Inline Checkbox: Certified / Ijazah Holder */}
-        {showIsCertified ? (
-          <FormCheckboxCard
-            id={`cf-${formInstanceId}-skill-certified-${idx}`}
-            name={`cf-${formInstanceId}-skill-certified-${idx}`}
-            checked={Boolean(skill.isCertified)}
-            onCheckedChange={(checked) =>
-              updateSkill(idx, {
-                isCertified: checked,
-              })
-            }
-            label={t("contacts.fields.skillIsCertified")}
-            error={certifiedError}
-          />
-        ) : null}
-
-        {/* Row 4: Notes / Specialization */}
-        {showDescription ? (
-          <Field
-            label={t("contacts.fields.skillDescription")}
-            required={isFieldRequired("skills", "description")}
-            error={descriptionError}
-            id={`cf-${formInstanceId}-skill-desc-${idx}`}
-          >
-            <Textarea
-              id={`cf-${formInstanceId}-skill-desc-${idx}`}
-              name={`cf-${formInstanceId}-skill-desc-${idx}`}
-              rows={2}
-              value={skill.description || ""}
-              required={isFieldRequired("skills", "description")}
-              onChange={(e) => updateSkill(idx, { description: e.target.value })}
-              placeholder={t("contacts.form.skillDescriptionPlaceholder")}
-              className={cn("text-xs resize-y min-h-16", descriptionError && FORM_INPUT_ERROR)}
-            />
-          </Field>
-        ) : null}
+        <ContactSkillDetailsSection
+          skill={skill}
+          idx={idx}
+          formInstanceId={formInstanceId}
+          showYears={showYears}
+          showIsCertified={showIsCertified}
+          showIssuer={showIssuer}
+          showDescription={showDescription}
+          isFieldRequired={isFieldRequired}
+          yearsError={yearsError}
+          certifiedError={certifiedError}
+          issuerError={issuerError}
+          descriptionError={descriptionError}
+          updateSkill={updateSkill}
+          t={t}
+        />
       </div>
     </ListFieldCard>
   );
 }
+
+/** Canonical alias aligning with ContactAddressEntryCard, ContactEducationEntryCard, ContactExperienceEntryCard. */
+export type ContactSkillEntryCardProps = ContactSkillCardItemProps;
+export const ContactSkillEntryCard = ContactSkillCardItem;

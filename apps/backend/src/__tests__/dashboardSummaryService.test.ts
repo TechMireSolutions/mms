@@ -4,7 +4,7 @@ const mocks = vi.hoisted(() => ({
   getRequestTenant: vi.fn(),
   withTenant: vi.fn(),
   students: vi.fn(),
-  teachers: vi.fn(),
+  faculty: vi.fn(),
   contacts: vi.fn(),
   sessions: vi.fn(),
   attendance: vi.fn(),
@@ -24,8 +24,9 @@ vi.mock('../students/use-cases/studentUseCases.js', () => ({
   studentUseCases: { loadStudentsCommandMetrics: mocks.students },
 }));
 vi.mock('../faculty/use-cases/facultyUseCases.js', () => ({
-  facultyUseCases: { loadTeachersCommandMetrics: mocks.teachers },
-  teacherUseCases: { loadTeachersCommandMetrics: mocks.teachers },
+  facultyUseCases: {
+    loadFacultyCommandMetrics: mocks.faculty,
+  },
 }));
 vi.mock('../contacts/use-cases/contactUseCases.js', () => ({
   contactUseCases: { loadContactsCommandMetrics: mocks.contacts },
@@ -61,7 +62,7 @@ describe('loadDashboardSummary', () => {
       async (_tenant: string, action: () => Promise<unknown>) => action(),
     );
     mocks.students.mockResolvedValue({ total: 1441 });
-    mocks.teachers.mockResolvedValue({ total: 60 });
+    mocks.faculty.mockResolvedValue({ total: 60 });
     mocks.contacts.mockResolvedValue({ total: 1543 });
     mocks.sessions.mockResolvedValue({ total: 8 });
     mocks.attendance.mockResolvedValue({ selectedDatePresentRate: 95 });
@@ -75,7 +76,7 @@ describe('loadDashboardSummary', () => {
     const summary = await loadDashboardSummary('2026-08-31', 'admin');
 
     expect(summary.students).toEqual({ total: 1441 });
-    expect(summary.teachers).toEqual({ total: 60 });
+    expect(summary.faculty).toEqual({ total: 60 });
     expect(summary.contacts).toEqual({ total: 1543 });
     expect(mocks.attendance).toHaveBeenCalledWith('darulquran', {
       selectedDate: '2026-08-31',

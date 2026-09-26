@@ -1,12 +1,18 @@
-/** Teachers list query SQL + page runner + ops — stable barrel. */
-export { teacherStatusExpr } from './facultyRepositoryListQuerySql.js';
-export { listTeachersPage } from './facultyRepositoryListQueryPage.js';
+/** Faculty list query SQL + page runner + ops — stable barrel. */
 export {
-  countTeachersActive,
-  countTeachersForNextEmployeeId,
+  facultyStatusExpr,
+} from './facultyRepositoryListQuerySql.js';
+
+export {
+  listFacultyPage,
+} from './facultyRepositoryListQueryPage.js';
+
+export {
+  countFacultyActive,
+  countFacultyForNextEmployeeId,
   type NextEmployeeIdCountOptions,
-  listActiveTeachersMissingEmployeeId,
-  listTeacherLinkedContactIdsSql,
-  findSoftDeletedTeacherByContactIdSql,
-  findTeacherRegistrationConflictSql,
+  listActiveFacultyMissingEmployeeId,
+  listFacultyLinkedContactIdsSql,
+  findSoftDeletedFacultyByContactIdSql,
+  findFacultyRegistrationConflictSql,
 } from './facultyRepositoryListQueryOps.js';

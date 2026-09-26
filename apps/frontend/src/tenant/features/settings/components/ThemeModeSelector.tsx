@@ -1,3 +1,13 @@
+/**
+ * ThemeModeSelector — Theme setting page display-mode picker.
+ *
+ * Token-exemption notice:
+ * The mini-window preview divs intentionally use raw Tailwind palette classes
+ * (zinc-*, white, amber-500, sky-400) to visually represent how the UI looks in
+ * light / dark / system mode regardless of the currently active brand token set.
+ * Replacing them with semantic tokens (bg-surface, text-foreground) would make
+ * all three swatches look identical — defeating their purpose.
+ */
 import React from 'react';
 import { Monitor, Moon, Sun } from 'lucide-react';
 import { THEME_MODE_OPTIONS, type ThemeMode } from '@mms/shared';

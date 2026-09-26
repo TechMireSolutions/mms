@@ -20,9 +20,10 @@
     "check:migration-indexes": "node scripts/check-migration-indexes.mjs",
     "check:db-projections": "node scripts/check-db-projections.mjs",
     "check:code-norms": "node scripts/check-code-norms.mjs",
+    "check:work-directory": "node scripts/check-work-directory.mjs",
     "check:secrets": "node scripts/check-staged-secrets.mjs",
     "sync:skills-index": "node scripts/sync-skill-index.mjs",
-    "prepare": "node -e \"require('child_process').execSync('git config core.hooksPath .githooks', {stdio:'inherit'})\""
+    "prepare": "node -e \"try{require('node:child_process').execSync('git config core.hooksPath .githooks',{stdio:'ignore'})}catch{}\""
   },
   "devDependencies": {
     "turbo": "^2.10.13",

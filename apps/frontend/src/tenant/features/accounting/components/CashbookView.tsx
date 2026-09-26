@@ -23,9 +23,10 @@ interface CashbookViewProps {
    * it. It is always treated as cash even if its code/name look nothing like it.
    */
   configuredCashAccountId?: string | null;
+  pageScopeLabel?: string;
 }
 
-export function CashbookView({ entries, accounts, configuredCashAccountId }: CashbookViewProps) {
+export function CashbookView({ entries, accounts, configuredCashAccountId, pageScopeLabel }: CashbookViewProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
   const [search, setSearch] = useState("");
@@ -57,6 +58,9 @@ export function CashbookView({ entries, accounts, configuredCashAccountId }: Cas
 
   return (
     <div className="space-y-4">
+      {pageScopeLabel && (
+        <p className="m-0 text-xs text-muted-foreground" role="status">{pageScopeLabel}</p>
+      )}
       <section aria-label={t("accounting.cashbook.summaryAria")}>
         <ModuleCommandMetricsGrid
           items={[

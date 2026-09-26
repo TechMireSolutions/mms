@@ -30,3 +30,10 @@ export async function verifyPassword(password: string, storedHash: string): Prom
   if (derivedKey.length !== hashBuffer.length) return false;
   return timingSafeEqual(derivedKey, hashBuffer);
 }
+
+/**
+ * Fixed-format "salt:hash" used to burn a scrypt verification when the account
+ * does not exist, so login timing does not reveal which emails are registered.
+ * 16-byte hex salt + 64-byte (128 hex chars) scrypt output — matches hashPassword output shape.
+ */
+export const DUMMY_PASSWORD_HASH = `${'0'.repeat(32)}:${'0'.repeat(128)}`;

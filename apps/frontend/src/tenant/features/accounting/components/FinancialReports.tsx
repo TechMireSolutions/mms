@@ -107,7 +107,7 @@ export function FinancialReports(): React.JSX.Element {
         netCashFlowIndirect: agg.netCashFlowIndirect,
         cashInflow: agg.cashInflow,
         cashOutflow: agg.cashOutflow,
-        tb: agg.trialBalance,
+        tb: agg.incomeStatementTrialBalance ?? agg.trialBalance,
         balanceSheetTb: agg.balanceSheetTrialBalance,
         cashFlowAdjustments: agg.cashFlowAdjustments,
       };

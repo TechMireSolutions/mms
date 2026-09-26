@@ -5,6 +5,7 @@ import { useTrashMode } from '@/hooks/useTrashMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
+import { useWorkSelection } from '@/hooks/useWorkSelection';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { ClipboardList, FileText } from 'lucide-react';
 import {
@@ -54,6 +55,7 @@ export function useQuestionBankPageController() {
   const [paperBuilderOpen, setPaperBuilderOpen] = useState(false);
   const [paperBuilderTab, setPaperBuilderTab] = useState<PaperBuilderTab>('details');
   const columnLayout = useQuestionBankColumnLayout();
+  const questionSelection = useWorkSelection<string>();
 
   const {
     replaceQuestions,
@@ -67,14 +69,36 @@ export function useQuestionBankPageController() {
   const {
     handleDeleteQuestion,
     handleRestoreQuestion,
-    handleBulkDelete,
-    handleBulkRestore,
+    handleBulkDelete: rawBulkDelete,
+    handleBulkRestore: rawBulkRestore,
   } = useQuestionBankTrashActions({
     deleteQuestion,
     restoreQuestion,
     bulkDeleteQuestions,
     bulkRestoreQuestions,
   });
+
+  const { clearSelection: clearQuestionSelection } = questionSelection;
+
+  const handleBulkDelete = useCallback(
+    async (ids: string[]) => {
+      await rawBulkDelete(ids);
+      clearQuestionSelection();
+    },
+    [rawBulkDelete, clearQuestionSelection],
+  );
+
+  const handleBulkRestore = useCallback(
+    async (ids: string[]) => {
+      await rawBulkRestore(ids);
+      clearQuestionSelection();
+    },
+    [rawBulkRestore, clearQuestionSelection],
+  );
+
+  useEffect(() => {
+    clearQuestionSelection();
+  }, [showDeleted, clearQuestionSelection]);
 
   const setQuestions = useCallback(
     async (updater: typeof questions | ((prev: typeof questions) => typeof questions)) => {
@@ -139,10 +163,10 @@ export function useQuestionBankPageController() {
 
   useModuleShortcuts({
     searchInputId: 'question-bank-search-input',
-    selectedCount: 0,
+    selectedCount: questionSelection.selectedIds.length,
     hasActiveFilters: false,
     clearFilters: () => {},
-    clearSelection: () => {},
+    clearSelection: questionSelection.clearSelection,
     canWrite,
     showDeleted,
     onCreate: openAddQuestion,
@@ -180,6 +204,7 @@ export function useQuestionBankPageController() {
     questionBankResults,
     questionBankConfig,
     listLoadFailed,
+    questionSelection,
     setActiveSubTab,
     openAddQuestion,
     openCreatePaper,

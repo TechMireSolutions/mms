@@ -8,6 +8,11 @@ import { formatDate, getCollectedAmountForInvoice, getOutstandingAmountForInvoic
 import { mapToTypstFeeReceipt, mapToZohoInvoice } from "@/components/ui/template-editor/templatePayloadMappers";
 import { notify } from "@/lib/notify";
 import { cn } from "@/lib/utils";
+import {
+  buildPrintBodyStyle,
+  PRINT_NEUTRAL_PALETTE,
+  PRINT_COLORS,
+} from "@/lib/printTemplateStyles";
 
 export interface InvoiceReceiptModalProps {
   invoices: Invoice[];
@@ -128,19 +133,18 @@ export const InvoiceReceiptModal = (function InvoiceReceiptModal({
         <head>
           <title>${t("finance.receipt.title")}</title>
           <style>
-            * { box-sizing: border-box; margin: 0; padding: 0; }
-            body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; color: #111; background: #fff; padding: 20px; }
-            .receipt-voucher { border: 1px solid #e5e7eb; border-radius: 12px; padding: 24px; margin-bottom: 20px; page-break-after: always; }
-            .receipt-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid #e5e7eb; padding-bottom: 16px; margin-bottom: 16px; }
+            ${buildPrintBodyStyle()}
+            .receipt-voucher { border: 1px solid ${PRINT_COLORS.borderLight}; border-radius: 12px; padding: 24px; margin-bottom: 20px; page-break-after: always; }
+            .receipt-header { display: flex; justify-content: space-between; align-items: flex-start; border-bottom: 1px solid ${PRINT_COLORS.borderLight}; padding-bottom: 16px; margin-bottom: 16px; }
             .receipt-meta { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; font-size: 13px; margin-bottom: 12px; }
-            .receipt-section { border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
-            .receipt-row { display: flex; justify-content: space-between; padding: 8px 16px; font-size: 13px; border-bottom: 1px solid #f3f4f6; }
+            .receipt-section { border: 1px solid ${PRINT_COLORS.borderLight}; border-radius: 8px; overflow: hidden; margin-bottom: 12px; }
+            .receipt-row { display: flex; justify-content: space-between; padding: 8px 16px; font-size: 13px; border-bottom: 1px solid ${PRINT_COLORS.borderLighter}; }
             .receipt-row:last-child { border-bottom: none; }
-            .highlight { background: #f0f9ff; font-weight: 700; }
-            .sig-block { border-bottom: 1px dashed #9ca3af; height: 40px; margin-bottom: 6px; }
-            .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; margin-top: 16px; }
-            .label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
-            .muted { color: #6b7280; }
+            .highlight { background: ${PRINT_COLORS.highlightBg}; font-weight: 700; }
+            .sig-block { border-bottom: 1px dashed ${PRINT_COLORS.ruleGray}; height: 40px; margin-bottom: 6px; }
+            .sig-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; border-top: 1px solid ${PRINT_COLORS.borderLight}; padding-top: 16px; margin-top: 16px; }
+            .label { font-size: 11px; color: ${PRINT_NEUTRAL_PALETTE.caption}; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+            .muted { color: ${PRINT_NEUTRAL_PALETTE.caption}; }
             .bold { font-weight: 700; }
           </style>
         </head>
@@ -239,11 +243,11 @@ export const InvoiceReceiptModal = (function InvoiceReceiptModal({
         </div>
         <div className="flex items-center gap-2">
           <Button size="sm" variant="outline" onClick={handleExportTypst} className="gap-1.5" title="Export Typst Compiler JSON">
-            <FileCode2 className="w-3.5 h-3.5 text-sky-600" aria-hidden />
+            <FileCode2 className="w-3.5 h-3.5 text-info" aria-hidden />
             <span>Typst</span>
           </Button>
           <Button size="sm" variant="outline" onClick={handleExportZoho} className="gap-1.5" title="Export Zoho Invoice JSON">
-            <CloudUpload className="w-3.5 h-3.5 text-amber-600" aria-hidden />
+            <CloudUpload className="w-3.5 h-3.5 text-warning" aria-hidden />
             <span>Zoho</span>
           </Button>
           <Button size="sm" onClick={handlePrint} className="gap-1.5">

@@ -13,7 +13,7 @@ per-finding remedies and the review criteria.
 | ESLint error | Fix in the changed files |
 | Failing test | Fix or revert — never ship a broken test |
 | Weak assertion | Replace `toBeTruthy()` / `toBeFalsy()` / generic `toBeDefined()` with a strict type check, a format regex (`/^\d{4}-\d{2}-\d{2}T/`), or a DOM instance assertion (`mms-testing-observability.md` §1) |
-| DB skip latch (`isDbAvailable`) | Replace with an in-memory repository mock fixture (`vi.hoisted()`) — `mms-testing-observability.md` §1 |
+| DB skip latch (`isDbAvailable`) | Use mocks for ordinary route tests; use the explicit PostgreSQL suite for database invariants and report unavailable infrastructure as blocked, never passed — `mms-testing-observability.md` §1 |
 | Unspied error logs in tests | Spy on `console.error` / `console.warn` in negative tests so output stays clean |
 | Hardcoded copy | Add `t()` keys and update all four locale packs — `mms-settings-i18n.md` (ban `t(key) \|\| 'English'`) |
 | Work `ErrorState` title-only | Add the hint description (`loadFailedHint` pattern) — `mms-module-architecture.md` §7 |
@@ -22,7 +22,7 @@ per-finding remedies and the review criteria.
 | Bulk PUT dropped rows | Upsert/merge without deleting absent rows — `mms-api-interface.md` §5 |
 | Form closed before the mutation resolved | Await `mutateAsync` before closing the dialog or clearing state — `mms-form-architecture.md` |
 | Direct SQL `DELETE` on a tenant entity | Route through soft-delete or check `app.allow_hard_purge` — `mms-data-layer.md` §6 |
-| Unique constraint on a soft-deletable column | Use a partial unique index `WHERE deleted_at IS NULL` — `mms-data-layer.md` §6 |
+| Unique constraint on a recyclable soft-deletable key | Use a partial unique index `WHERE deleted_at IS NULL` — `mms-data-layer.md` §6 |
 | Cross-feature import added | Route through the `@/tenant/hooks/collections/*` facade or extract to `components/ui` / `lib/` / `@mms/shared` — the boundary lint fails otherwise (`mms-dry.md`) |
 | Banned Node-24 package introduced | Replace with the native built-in (`fetch`, `glob`, `crypto.hash`, `URLPattern`, `--env-file`) — `mms-dependencies.md` |
 | Non-erasable TS syntax (`enum`, `namespace`, parameter properties) | Replace with union types / const objects — `mms-dependencies.md` |

@@ -3,6 +3,9 @@ import { motion } from 'framer-motion';
 import { Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET, CARD_STRIPE_COLORS, type CardAccentColor } from '@/lib/semanticTone';
+import { cn } from '@/lib/utils';
 import type { CategorizedKPIItem } from './kpiSummaryTypes';
 
 const COLOR = {
@@ -56,6 +59,7 @@ interface KPICardsGridProps {
 
 export function KPICardsGrid({ cards, onAddCustom }: KPICardsGridProps): JSX.Element {
   const { t } = useTranslation();
+  const reducedMotion = useReducedMotion();
   return (
     <div className="grid grid-cols-2 gap-3 font-sans sm:grid-cols-4 lg:grid-cols-8">
       {cards.map((kpi, index) => {
@@ -65,11 +69,22 @@ export function KPICardsGrid({ cards, onAddCustom }: KPICardsGridProps): JSX.Ele
         return (
           <motion.article
             key={kpi.id}
-            initial={{ opacity: 0, y: 10 }}
+            initial={reducedMotion ? false : { opacity: 0, y: 10 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: index * 0.04 }}
-            className="group flex min-h-card-sm flex-col justify-between rounded-2xl border border-border bg-card/60 p-3.5 text-start shadow-sm backdrop-blur-md transition-all hover:border-primary/20 hover:shadow-md"
+            transition={reducedMotion ? { duration: 0 } : { delay: index * 0.04 }}
+            className={cn(
+              "group relative overflow-hidden flex min-h-card-sm flex-col justify-between rounded-2xl border border-border bg-card/60 p-3.5 text-start shadow-sm backdrop-blur-md transition-all hover:border-primary/20 hover:shadow-md",
+              CARD_STRIPE_INSET,
+            )}
           >
+            <div
+              aria-hidden="true"
+              className={cn(
+                CARD_STRIPE_BASE,
+                CARD_STRIPE_COLORS[kpi.color as CardAccentColor] ?? CARD_STRIPE_COLORS.primary,
+                "transition-colors duration-150 ease-out",
+              )}
+            />
             <header className="flex select-none items-center justify-between gap-1.5">
               <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-xl transition-transform group-hover:scale-115 ${kpiColor.bg}`}>
                 <Icon className={`h-4 w-4 ${kpiColor.text}`} aria-hidden="true" />

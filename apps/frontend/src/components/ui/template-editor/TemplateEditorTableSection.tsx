@@ -119,7 +119,7 @@ export function TemplateEditorTableSection<TFieldKey extends string = string>({
               </div>
 
               <div className="flex flex-wrap items-end gap-1 pt-1 border-t border-border/40">
-                <div className="flex-1 min-w-[72px] space-y-1">
+                <div className="flex-1 min-w-18 space-y-1">
                   <label htmlFor={widthId} className="text-3xs font-bold uppercase text-muted-foreground tracking-wide">
                     {t('templateEditor.width')}
                   </label>

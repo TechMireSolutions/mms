@@ -24,7 +24,7 @@ describe('teacherUtils', () => {
     });
 
     it('falls back to employee ID only', () => {
-      expect(formatTeacherDisplayName({ employeeId: 'EMP-09' })).toBe('Teacher (EMP-09)');
+      expect(formatTeacherDisplayName({ employeeId: 'EMP-09' })).toBe('Faculty (EMP-09)');
     });
 
     it('returns an empty string for nullish teachers', () => {

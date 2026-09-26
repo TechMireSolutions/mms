@@ -108,7 +108,7 @@ export default function DateFormatSelect({
                   <span className="min-w-0 flex-1">
                     <span className="block font-mono text-xs font-semibold">{dateFormatOption.pattern}</span>
                     <span className="block text-muted-foreground text-start text-xs">{dateFormatOption.sample}</span>
-                    <span className="block text-start text-3xs text-muted-foreground/80">
+                    <span className="block text-start text-3xs text-muted-foreground">
                       {t(dateFormatOption.hintKey as AppTranslationKey)}
                     </span>
                   </span>

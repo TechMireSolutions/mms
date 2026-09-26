@@ -3,7 +3,8 @@ import { UserAvatar } from '@/components/ui/UserAvatar';
 import { BiDiText } from '@/components/ui/BiDiText';
 import { Card } from '@/components/ui/card';
 import { cn } from '@/lib/utils';
-import type { CardAccentColor } from '@/lib/semanticTone';
+import { CARD_STRIPE_INSET, type CardAccentColor } from '@/lib/semanticTone';
+import { getGenderCardAccent } from '@/lib/genderUi';
 
 export interface PersonDetailHeroCardProps {
   id: string | number;
@@ -31,11 +32,15 @@ export function PersonDetailHeroCard({
   className,
   children,
 }: PersonDetailHeroCardProps): React.JSX.Element {
+  const resolvedAccent = accentColor ?? (gender ? getGenderCardAccent(gender) : "primary");
+  const hasStripe = resolvedAccent !== false && resolvedAccent !== "none";
+
   return (
     <Card
-      accentColor={accentColor}
+      accentColor={resolvedAccent}
       className={cn(
         "flex items-center gap-4 p-4 bg-gradient-to-br from-card via-card to-muted/40 shadow-xs",
+        hasStripe && CARD_STRIPE_INSET,
         className,
       )}
     >

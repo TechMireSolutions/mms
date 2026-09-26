@@ -2,7 +2,7 @@ import { ModuleSoftDeleteConfirmDialogs } from "@/components/ui/ModuleSoftDelete
 import { useTranslation } from "@/hooks/useTranslation";
 import type { TeachersDeleteTarget } from "@/tenant/features/faculty/hooks/useFacultyPageOverlayState";
 
-export interface TeachersPageConfirmDialogsProps {
+export interface FacultyPageConfirmDialogsProps {
   bulkDeleteOpen: boolean;
   onBulkDeleteOpenChange: (open: boolean) => void;
   selectedCount: number;
@@ -14,9 +14,10 @@ export interface TeachersPageConfirmDialogsProps {
   onBulkRestoreOpenChange: (open: boolean) => void;
   onConfirmBulkRestore: () => void | Promise<void>;
 }
+export type TeachersPageConfirmDialogsProps = FacultyPageConfirmDialogsProps;
 
-/** Delete/restore confirm dialogs for Teachers page (Contacts-shaped thin adapter). */
-export function TeachersPageConfirmDialogs({
+/** Delete/restore confirm dialogs for Faculty page (Contacts-shaped thin adapter). */
+export function FacultyPageConfirmDialogs({
   bulkDeleteOpen,
   onBulkDeleteOpenChange,
   selectedCount,
@@ -27,7 +28,7 @@ export function TeachersPageConfirmDialogs({
   bulkRestoreOpen,
   onBulkRestoreOpenChange,
   onConfirmBulkRestore,
-}: TeachersPageConfirmDialogsProps): React.JSX.Element {
+}: FacultyPageConfirmDialogsProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -38,21 +39,21 @@ export function TeachersPageConfirmDialogs({
       onBulkDeleteOpenChange={onBulkDeleteOpenChange}
       bulkRestoreOpen={bulkRestoreOpen}
       onBulkRestoreOpenChange={onBulkRestoreOpenChange}
-      singleDeleteTitle={t("teachers.confirmDeleteTitle")}
+      singleDeleteTitle={t("faculty.confirmDeleteTitle") || t("teachers.confirmDeleteTitle")}
       singleDeleteDescription={
         deleteTarget?.name
-          ? t("teachers.deleteConfirmDescriptionNamed", { name: deleteTarget.name })
-          : t("teachers.confirmDeleteDescription")
+          ? (t("faculty.deleteConfirmDescriptionNamed", { name: deleteTarget.name }) || t("teachers.deleteConfirmDescriptionNamed", { name: deleteTarget.name }))
+          : (t("faculty.confirmDeleteDescription") || t("teachers.confirmDeleteDescription"))
       }
-      bulkDeleteTitle={t("teachers.bulkDelete")}
-      bulkDeleteDescription={t("teachers.bulkDeleteConfirm", { count: selectedCount })}
-      bulkRestoreTitle={t("teachers.bulkRestore")}
-      bulkRestoreDescription={t("teachers.bulkRestoreConfirm", { count: selectedCount })}
+      bulkDeleteTitle={t("faculty.bulkDelete") || t("teachers.bulkDelete")}
+      bulkDeleteDescription={t("faculty.bulkDeleteConfirm", { count: selectedCount }) || t("teachers.bulkDeleteConfirm", { count: selectedCount })}
+      bulkRestoreTitle={t("faculty.bulkRestore") || t("teachers.bulkRestore")}
+      bulkRestoreDescription={t("faculty.bulkRestoreConfirm", { count: selectedCount }) || t("teachers.bulkRestoreConfirm", { count: selectedCount })}
       deleteConfirmLabel={t("common.delete")}
-      restoreConfirmLabel={t("teachers.restore")}
+      restoreConfirmLabel={t("faculty.restore") || t("teachers.restore")}
       cancelLabel={t("common.cancel")}
-      deletionReasonLabel={t("teachers.deletionReasonLabel")}
-      deletionReasonPlaceholder={t("teachers.deletionReasonPlaceholder")}
+      deletionReasonLabel={t("faculty.deletionReasonLabel") || t("teachers.deletionReasonLabel")}
+      deletionReasonPlaceholder={t("faculty.deletionReasonPlaceholder") || t("teachers.deletionReasonPlaceholder")}
       onConfirmSingleDelete={onConfirmSingleDelete}
       onConfirmBulkDelete={onConfirmBulkDelete}
       onConfirmBulkRestore={onConfirmBulkRestore}
@@ -60,6 +61,6 @@ export function TeachersPageConfirmDialogs({
   );
 }
 
-export type FacultyPageConfirmDialogsProps = TeachersPageConfirmDialogsProps;
-export const FacultyPageConfirmDialogs = TeachersPageConfirmDialogs;
+export const TeachersPageConfirmDialogs = FacultyPageConfirmDialogs;
+
 

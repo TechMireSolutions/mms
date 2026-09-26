@@ -1,4 +1,5 @@
 import { apiJson } from '@/lib/apiClient';
+import { AUTH_PATHS } from '@/lib/apiClientHelpers';
 
 const CHALLENGE_KEY = 'mms_2fa_challenge';
 const VERIFIED_KEY = 'mms_2fa_verified';
@@ -29,22 +30,9 @@ export function is2FAPending(): boolean {
   return Boolean(getPendingChallengeId()) && !is2FAVerified();
 }
 
-export async function verify2FACode(challengeId: string, code: string): Promise<boolean> {
-  try {
-    await apiJson<{ user: unknown }>('/api/auth/2fa/verify', {
-      method: 'POST',
-      body: JSON.stringify({ challengeId, code }),
-    });
-    mark2FAVerified();
-    return true;
-  } catch {
-    return false;
-  }
-}
-
 export async function resend2FACode(challengeId: string): Promise<boolean> {
   try {
-    await apiJson('/api/auth/2fa/resend', {
+    await apiJson(AUTH_PATHS.twoFactorResend, {
       method: 'POST',
       body: JSON.stringify({ challengeId }),
     });

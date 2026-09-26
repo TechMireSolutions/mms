@@ -20,6 +20,7 @@ describe('getSolidBgClass', () => {
   it('returns the solid variant for a known tone', () => {
     expect(getSolidBgClass('success')).toBe(SEMANTIC_BG.successSolid);
     expect(getSolidBgClass('destructive')).toBe(SEMANTIC_BG.destructiveSolid);
+    expect(getSolidBgClass('secondary')).toBe(SEMANTIC_BG.secondarySolid);
   });
 
   it('falls back to primarySolid for unknown tones', () => {

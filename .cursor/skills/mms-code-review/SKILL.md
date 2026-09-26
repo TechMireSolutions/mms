@@ -4,7 +4,7 @@ description: Reviews a concrete change set (PR or local diff) against MMS rules 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 allowed-tools: Read Grep Glob Bash(pnpm typecheck) Bash(pnpm lint) Bash(pnpm test) Bash(bash scripts/pre-pr-review.sh)
 ---
 
@@ -17,6 +17,12 @@ Agent self-review after edits → also follow always-on `mms-completion-review.m
 **When X → skill Y (deep dive, not this index):** FormModal / Zod forms → **`mms-form-architecture`** · Query factories → **`mms-query-factories`** · axe / focus-return → **`mms-a11y-smoke`** · deps bumps → **`mms-dependency-upgrade`** · DDL → **`mms-schema-migrate`** · CSRF/cookies → **`mms-backend-security`** · backup wipe → **`mms-backup-restore`** · Soft-delete → **`mms-soft-delete`**.
 
 The full pre-merge checklist (12 subsections, per-surface items) is a lookup, not a narrative: **`references/checklist.md`**. Work it top-to-bottom for the surfaces the diff actually touches — shared/lib, hooks/Query, forms, Work tier, setup, backend, DB/RLS, security, i18n/a11y, tests, performance, rules/mirrors.
+
+## Accounting change review
+
+For financial changes, use [accounting verification](../mms-finance-accounting/references/verification.md) and its case-level evidence rather than treating a green typecheck or balanced totals as sufficient. Advisory focus: all write paths, changed-payload retries, close/post races, classification/cutoff, and report consumers including independent dashboard KPIs.
+
+Separate demonstrated controls from capability gaps and framework-dependent policy. Independent ledger review is called for by the existing completion-review reference; do not claim a statutory audit or universal compliance from a code review.
 
 ## Modern practices (pointers only)
 
@@ -78,10 +84,10 @@ E2E when touching auth/routing/onboard: `pnpm test:e2e` (critical path: `e2e/tes
 
 ## Script
 
-`scripts/pre-pr-review.sh` runs the deterministic gate set before you review by hand:
+`.agent/skills/mms-code-review/scripts/pre-pr-review.sh` runs the deterministic gate set before you review by hand:
 
 ```bash
-bash scripts/pre-pr-review.sh
+bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh
 ```
 
 It runs the standards verifier, the migration-index and DB-projection ratchets, `pnpm typecheck` and `pnpm lint`. It does **not** run tests, e2e, or gitleaks — add `pnpm test` / `pnpm test:e2e` for the areas you touched, and remember CI scans the full git history for secrets.

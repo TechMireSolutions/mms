@@ -20,6 +20,8 @@ import {
 import type { ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkCardAction } from "@/hooks/useWorkCardAction";
+import { useContactEntityDescriptor } from "@/tenant/features/contacts/hooks/useContactEntityDescriptor";
 
 export interface ContactCardItemProps {
   contact: Contact;
@@ -69,6 +71,16 @@ export const ContactCardItem = React.memo(function ContactCardItem({
 }: ContactCardItemProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
+  const contactDescriptor = useContactEntityDescriptor();
+
+  const { isSelected: derivedSelected, onSelect: handleSelect, onView: handleView, cardProps } = useWorkCardAction<Contact>({
+    entity: contact,
+    selectedIds: isSelected ? [contact.id] : [],
+    onToggleSelected: () => onSelect(contact.id),
+    onView,
+    canSelect: true,
+  });
+
   const { phone, countryCode, phoneDisplay } = resolveContactPhoneDisplay(
     contact,
     prefs,
@@ -82,20 +94,21 @@ export const ContactCardItem = React.memo(function ContactCardItem({
 
   return (
     <DirectoryEntityCard
-      isSelected={isSelected}
+      isSelected={derivedSelected}
       reducedMotion={reducedMotion}
       accentClassName={
         showGenderAccent
-          ? getGenderAccentBarClass(isSelected, contact.gender)
+          ? getGenderAccentBarClass(derivedSelected, contact.gender)
           : undefined
       }
+      {...cardProps}
     >
       <ContactCardHeader
         contact={contact}
-        isSelected={isSelected}
+        isSelected={derivedSelected}
         displayName={displayName}
-        onSelect={onSelect}
-        onView={onView}
+        onSelect={handleSelect}
+        onView={handleView}
         isColumnVisible={isColumnVisible}
         reducedMotion={reducedMotion}
       />
@@ -125,6 +138,8 @@ export const ContactCardItem = React.memo(function ContactCardItem({
         otherColumns={otherColumns}
         isColumnVisible={columnVisibleFn}
         t={t}
+        descriptor={contactDescriptor}
+        entity={contact}
       />
 
       <ContactCardDeletedBanner contact={contact} />
@@ -135,7 +150,7 @@ export const ContactCardItem = React.memo(function ContactCardItem({
         showArchived={showArchived}
         canWrite={canWrite}
         canDelete={canDelete}
-        onView={onView}
+        onView={handleView}
         onEdit={onEdit}
         onDelete={onDelete}
         onRestore={onRestore}

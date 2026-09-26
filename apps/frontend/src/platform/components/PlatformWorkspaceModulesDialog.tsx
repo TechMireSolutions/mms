@@ -4,8 +4,8 @@ import { SYSTEM_MODULES } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
 import { CardSkeleton } from '@/components/ui/LoadingState';
+import { PlatformModuleSelectCard } from '@/platform/components/workspace/PlatformModuleSelectCard';
 import { useUpdateWorkspaceModules, useWorkspaceModules } from '@/platform/hooks/usePlatformWorkspaces';
 import {
   Loader2,
@@ -27,7 +27,6 @@ import {
   BookOpen,
   Scale,
 } from 'lucide-react';
-import { cn } from '@/lib/utils';
 
 const MODULE_ICONS: Record<string, React.ElementType> = {
   dashboard: LayoutDashboard,
@@ -195,41 +194,14 @@ export function PlatformWorkspaceModulesDialog({
                     const Icon = MODULE_ICONS[module.id] || LayoutDashboard;
                     const isSelected = selectedModuleSet.has(module.id);
                     return (
-                      <label
+                      <PlatformModuleSelectCard
                         key={module.id}
-                        htmlFor={`module-${module.id}`}
-                        className={cn(
-                          'flex items-start gap-3 rounded-2xl border p-3.5 shadow-2xs transition-all cursor-pointer select-none',
-                          isSelected
-                            ? 'border-primary/40 bg-primary/5 shadow-xs'
-                            : 'border-border/60 bg-card/60 hover:bg-card hover:border-border',
-                          module.required && 'cursor-default opacity-85',
-                        )}
-                      >
-                        <Checkbox
-                          id={`module-${module.id}`}
-                          checked={isSelected}
-                          disabled={module.required || isPending}
-                          onCheckedChange={(checked) => toggleModule(module.id, checked as boolean)}
-                          className="mt-0.5"
-                        />
-                        <div className="space-y-1 min-w-0 flex-1">
-                          <div className="flex items-center gap-1.5">
-                            <Icon className={cn('w-3.5 h-3.5 shrink-0', isSelected ? 'text-primary' : 'text-muted-foreground')} aria-hidden />
-                            <span className="text-xs font-bold text-foreground truncate">
-                              {module.label}
-                            </span>
-                            {module.required && (
-                              <span className="ms-auto text-3xs font-semibold text-muted-foreground">
-                                {t('platform.moduleRequired')}
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-3xs text-muted-foreground leading-relaxed">
-                            {module.description}
-                          </p>
-                        </div>
-                      </label>
+                        module={module}
+                        selected={isSelected}
+                        disabled={isPending}
+                        icon={Icon}
+                        onToggle={toggleModule}
+                      />
                     );
                   })}
                 </div>

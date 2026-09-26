@@ -9,7 +9,7 @@ metadata:
 
 # MMS Database Performance
 
-**Rules (norms SSOT):** `mms-performance.mdc` §1 (query discipline, projections, indexes, pagination) · `mms-data-layer.mdc` §1–§6 (schema, RLS, soft-delete index tiers, autovacuum) · `mms-audit-trail.mdc` (partitioned tables).
+**Rules (norms SSOT):** `mms-performance.mdc` §1 (query discipline, projections, indexes, pagination) · `mms-data-layer.mdc` §1–§7 (schema, RLS, soft-delete index tiers, autovacuum). Partition upkeep → `mms-audit-trail`.
 
 ## Ratchets that already run in CI
 

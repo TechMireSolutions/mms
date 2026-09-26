@@ -1,155 +1,53 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import type { Teacher } from '@mms/shared';
 
-const mockLoadContactsByIdsForTenant = vi.fn();
-
-vi.mock('../contacts/use-cases/contactUseCases.js', () => ({
-  contactUseCases: {
-    loadContactsByIdsForTenant: (...args: unknown[]) =>
-      mockLoadContactsByIdsForTenant(...args),
-  },
+const mocks = vi.hoisted(() => ({
+  loadContacts: vi.fn(),
+  listCurrent: vi.fn(),
 }));
 
-import { hydrateTeachersFromContacts } from '../faculty/use-cases/facultyHydrateUseCases.js';
+vi.mock('../services/contactService.js', () => ({
+  loadContactsByIdsForTenant: mocks.loadContacts,
+}));
 
-type ContactRow = {
-  id: string;
-  name?: string;
-  gender?: string;
-  dob?: string;
-  phone?: string;
-  email?: string;
-  city?: string;
-  avatar?: string | null;
-  phones?: Array<{ number?: string }>;
-  emails?: Array<{ address?: string }>;
-  education?: Array<{ degree?: string; fieldOfStudy?: string; institution?: string }>;
-  skills?: Array<{ name?: string }>;
-  qualification?: string;
-  specialization?: string;
-};
+vi.mock('../db/repositories/facultyDesignationRepository.js', () => ({
+  listCurrentFacultyDesignationAssignments: mocks.listCurrent,
+}));
 
-function fakeTeacher(id: string, overrides: Partial<Teacher> = {}): Teacher {
-  return {
-    id,
-    contactId: `c-${id}`,
-    name: `Teacher ${id}`,
-    status: 'active',
-    ...overrides,
-  };
-}
+import { hydrateFacultyFromContacts } from '../faculty/use-cases/facultyHydrateUseCases.js';
 
-function mockContactStore(contacts: ContactRow[]): void {
-  mockLoadContactsByIdsForTenant.mockImplementation(
-    async (_tenant: string, ids: string[]) => {
-      const wanted = new Set(ids.map(String));
-      return contacts.filter((contact) => wanted.has(String(contact.id)));
-    },
-  );
-}
-
-describe('hydrateTeachersFromContacts', () => {
+describe('hydrateFacultyFromContacts temporal designations', () => {
   beforeEach(() => {
-    mockLoadContactsByIdsForTenant.mockReset();
+    vi.clearAllMocks();
+    mocks.loadContacts.mockResolvedValue([]);
   });
 
-  it('returns [] for empty rows without loading contacts', async () => {
-    await expect(hydrateTeachersFromContacts('demo', [])).resolves.toEqual([]);
-    expect(mockLoadContactsByIdsForTenant).not.toHaveBeenCalled();
-  });
+  it('projects the designation effective today over legacy scalar fields', async () => {
+    mocks.listCurrent.mockResolvedValue(new Map([['fac-1', {
+      id: 'assignment-1',
+      facultyId: 'fac-1',
+      designationId: 'hod',
+      designationName: 'Head of Department',
+      hierarchyRank: 2,
+      assignableRoles: ['teacher', 'department_manager'],
+      startsOn: '2026-01-01',
+      endsOn: null,
+    }]]));
 
-  it('returns rows unchanged when no row has a contactId', async () => {
-    const rows = [fakeTeacher('t1', { contactId: '' }), fakeTeacher('t2', { contactId: '' })];
-    const result = await hydrateTeachersFromContacts('demo', rows);
+    const [faculty] = await hydrateFacultyFromContacts('demo', [{
+      id: 'fac-1',
+      contactId: 'contact-1',
+      status: 'active',
+      designation: 'Legacy Teacher',
+      hierarchyRank: 4,
+    }]);
 
-    expect(result).toEqual(rows);
-    expect(mockLoadContactsByIdsForTenant).not.toHaveBeenCalled();
-  });
-
-  it('hydrates profile fields from the linked contact', async () => {
-    mockContactStore([
-      {
-        id: 'c-t1',
-        name: 'Ahmed Ali',
-        gender: 'male',
-        dob: '1985-06-01',
-        phone: '+123456',
-        email: 'ahmed@example.com',
-        city: 'Karachi',
-      },
-    ]);
-
-    const result = await hydrateTeachersFromContacts('demo', [fakeTeacher('t1')]);
-
-    expect(result[0]?.name).toBe('Ahmed Ali');
-    expect(result[0]?.gender).toBe('male');
-    expect(result[0]?.dob).toBe('1985-06-01');
-    expect(result[0]?.phone).toBe('+123456');
-    expect(result[0]?.email).toBe('ahmed@example.com');
-    expect(result[0]?.city).toBe('Karachi');
-    expect(mockLoadContactsByIdsForTenant).toHaveBeenCalledWith('demo', ['c-t1']);
-  });
-
-  it('resolves phone/email from contact detail arrays when scalar fields are empty', async () => {
-    mockContactStore([
-      {
-        id: 'c-t1',
-        name: 'Ahmed Ali',
-        phones: [{ number: '+987654' }],
-        emails: [{ address: 'ahmed@school.org' }],
-      },
-    ]);
-
-    const result = await hydrateTeachersFromContacts('demo', [fakeTeacher('t1')]);
-
-    expect(result[0]?.phone).toBe('+987654');
-    expect(result[0]?.email).toBe('ahmed@school.org');
-  });
-
-  it('hydrates the canonical avatar from the linked contact', async () => {
-    mockContactStore([
-      { id: 'c-t1', name: 'Ahmed Ali', avatar: 'https://cdn.example/avatar.png' },
-    ]);
-
-    const result = await hydrateTeachersFromContacts('demo', [fakeTeacher('t1')]);
-
-    expect(result[0]?.avatar).toBe('https://cdn.example/avatar.png');
-  });
-
-  it('batches ids across rows in a single load', async () => {
-    mockContactStore([
-      { id: 'c-t1', name: 'Ahmed Ali' },
-      { id: 'c-t2', name: 'Fatima Noor' },
-    ]);
-
-    const result = await hydrateTeachersFromContacts('demo', [
-      fakeTeacher('t1'),
-      fakeTeacher('t2'),
-    ]);
-
-    expect(result.map((row: Teacher) => row.name)).toEqual(['Ahmed Ali', 'Fatima Noor']);
-    expect(mockLoadContactsByIdsForTenant).toHaveBeenCalledTimes(1);
-    expect(mockLoadContactsByIdsForTenant).toHaveBeenCalledWith(
-      'demo',
-      expect.arrayContaining(['c-t1', 'c-t2']),
-    );
-  });
-
-  it('hydrates qualification and specialization from the linked contact education and skills', async () => {
-    mockContactStore([
-      {
-        id: 'c-t1',
-        name: 'Ahmed Ali',
-        education: [
-          { degree: 'Shahadat-ul-Aalamiyyah', fieldOfStudy: 'Hadith & Fiqh' },
-        ],
-        skills: [{ name: 'Tajweed' }],
-      },
-    ]);
-
-    const result = await hydrateTeachersFromContacts('demo', [fakeTeacher('t1')]);
-
-    expect(result[0]?.qualification).toBe('Shahadat-ul-Aalamiyyah');
-    expect(result[0]?.specialization).toBe('Hadith & Fiqh');
+    expect(faculty).toMatchObject({
+      designation: 'Head of Department',
+      designationId: 'hod',
+      designationStartsOn: '2026-01-01',
+      designationEndsOn: null,
+      designationAssignableRoles: ['teacher', 'department_manager'],
+      hierarchyRank: 2,
+    });
   });
 });

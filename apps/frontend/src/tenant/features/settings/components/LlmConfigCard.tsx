@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from '@/lib/semanticTone';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { LlmConfig } from '@mms/shared';
 
@@ -36,12 +37,23 @@ export function LlmConfigCard({
       whileHover={{ y: -2 }}
       transition={{ duration: 0.15 }}
       className={cn(
-        'relative flex flex-col justify-between rounded-2xl border p-4 shadow-sm transition-all',
+        'relative overflow-hidden group/card flex flex-col justify-between rounded-2xl border p-4 shadow-sm transition-all',
+        CARD_STRIPE_INSET,
         config.isDefaultText
           ? 'border-primary/40 bg-primary/5 dark:bg-primary/10 ring-1 ring-primary/20'
           : 'border-border/70 bg-card',
       )}
     >
+      <div
+        aria-hidden="true"
+        className={cn(
+          CARD_STRIPE_BASE,
+          'transition-colors duration-150 ease-out',
+          config.isDefaultText
+            ? 'bg-primary/80 group-hover/card:bg-primary'
+            : 'bg-primary/45 group-hover/card:bg-primary',
+        )}
+      />
       <div>
         <div className="mb-3 flex min-w-0 items-center justify-between gap-2">
           <div className="flex min-w-0 flex-1 items-center gap-2">

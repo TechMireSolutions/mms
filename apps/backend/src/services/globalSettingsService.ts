@@ -1,4 +1,6 @@
 import {
+  DEFAULT_GLOBAL_SETTINGS,
+  GLOBAL_SETTINGS_ADMIN_FIELD_KEYS,
   mergeGlobalSettings,
   parseSessionTimeoutMinutes,
   validatePasswordPolicy,
@@ -10,7 +12,8 @@ import {
   upsertWorkspaceGlobalSettings as upsertWorkspaceGlobalSettingsRepo,
 } from '../db/repositories/workspaceRepository.js';
 import { saveObject } from '../db/database.js';
-import { redisGet, redisSet, redisDel, redisKeys } from '../lib/redis.js';
+import { redisDel, redisKeys } from '../lib/redis.js';
+import { getOrSetMultiTier, invalidateMultiTierCache } from '../lib/cache/index.js';
 
 const MASK_PREFIX = '****';
 const GLOBAL_SETTINGS_CACHE_TTL_SECONDS = 300;
@@ -19,7 +22,9 @@ const globalSettingsCacheKey = (t: string) => redisKeys.globalSettings(t);
 export async function invalidateGlobalSettingsCache(tenant: string): Promise<void> {
   const cleanTenant = tenant.trim().toLowerCase();
   if (!cleanTenant) return;
-  await redisDel(globalSettingsCacheKey(cleanTenant));
+  const key = globalSettingsCacheKey(cleanTenant);
+  await redisDel(key);
+  await invalidateMultiTierCache({ tenantId: cleanTenant, domain: 'global_settings', key });
 }
 
 /**
@@ -53,6 +58,36 @@ export function maskGlobalSettingsForClient(settings: GlobalSettings): GlobalSet
   };
 }
 
+/**
+ * Returns a copy of `settings` with every admin-only field (notifications, security,
+ * AI assistance, system modules) reset to its default — used when the caller lacks
+ * `settings.global.write` so a non-admin read never reveals those values.
+ */
+export function redactAdminOnlyGlobalSettings(settings: GlobalSettings): GlobalSettings {
+  const redacted = { ...settings };
+  for (const key of GLOBAL_SETTINGS_ADMIN_FIELD_KEYS) {
+    (redacted as GlobalSettings)[key] = DEFAULT_GLOBAL_SETTINGS[key] as never;
+  }
+  return redacted;
+}
+
+/**
+ * Returns a copy of `incoming` with every admin-only field forced back to `current`'s
+ * value — used when the caller lacks `settings.global.write` so a non-admin save can
+ * only ever change the public fields (Language & Region, Theme), regardless of what
+ * the request body contains.
+ */
+export function sanitizeGlobalSettingsWrite(
+  incoming: GlobalSettings,
+  current: GlobalSettings,
+): GlobalSettings {
+  const sanitized = { ...incoming };
+  for (const key of GLOBAL_SETTINGS_ADMIN_FIELD_KEYS) {
+    (sanitized as GlobalSettings)[key] = current[key] as never;
+  }
+  return sanitized;
+}
+
 /** Loads merged global settings for the current request tenant (or specified subdomain). */
 export async function loadGlobalSettings(subdomain?: string): Promise<GlobalSettings> {
   const tenant = subdomain ?? getRequestTenant();
@@ -61,23 +96,20 @@ export async function loadGlobalSettings(subdomain?: string): Promise<GlobalSett
   }
   const cleanTenant = tenant.trim().toLowerCase();
   const key = globalSettingsCacheKey(cleanTenant);
-  const cached = await redisGet(key);
-  if (cached) {
-    try {
-      return JSON.parse(cached) as GlobalSettings;
-    } catch {
-      // Fall through
-    }
-  }
-
-  try {
-    const settings = await getWorkspaceGlobalSettings(cleanTenant);
-    const resolved = settings ?? mergeGlobalSettings(null);
-    await redisSet(key, JSON.stringify(resolved), GLOBAL_SETTINGS_CACHE_TTL_SECONDS);
-    return resolved;
-  } catch {
-    return mergeGlobalSettings(null);
-  }
+  return getOrSetMultiTier(
+    cleanTenant,
+    'global_settings',
+    key,
+    async () => {
+      try {
+        const settings = await getWorkspaceGlobalSettings(cleanTenant);
+        return settings ? mergeGlobalSettings(settings) : mergeGlobalSettings(null);
+      } catch {
+        return mergeGlobalSettings(null);
+      }
+    },
+    { ttlSeconds: GLOBAL_SETTINGS_CACHE_TTL_SECONDS },
+  );
 }
 
 /** Saves full global settings for the current request tenant (or specified subdomain). */

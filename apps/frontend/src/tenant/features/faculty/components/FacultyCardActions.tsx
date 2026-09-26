@@ -1,6 +1,5 @@
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
-import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
-import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Teacher } from '@mms/shared';
 import { TeachersListRowActions } from "@/tenant/features/faculty/components/FacultyListRowActions";
@@ -40,31 +39,27 @@ export function TeacherCardActions({
   const { t } = useTranslation();
 
   return (
-    <DirectoryCardFooter
-      trailing={
-        <>
-          <DirectoryCardViewButton
-            label={t("teachers.actionViewShort")}
-            ariaLabel={`${t("teachers.list.viewDetails")} - ${displayName}`}
-            onClick={() => onView(teacher)}
-          />
-          <TeachersListRowActions
-            teacher={teacher}
-            teacherId={teacherId}
-            showDeleted={showDeleted}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            hideViewItem
-            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
-            onEdit={onEdit}
-            onRequestDelete={onRequestDelete}
-            onView={onView}
-            onRestore={onRestore}
-            onSms={onSms}
-            onWhatsApp={onWhatsApp}
-            onEmail={onEmail}
-          />
-        </>
+    <DirectoryCardFooterActions
+      onView={() => onView(teacher)}
+      viewLabel={t("faculty.actionViewShort") || t("teachers.actionViewShort")}
+      viewAriaLabel={`${t("faculty.list.viewDetails") || t("teachers.list.viewDetails")} - ${displayName}`}
+      overflowActions={
+        <TeachersListRowActions
+          teacher={teacher}
+          teacherId={teacherId}
+          showDeleted={showDeleted}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          hideViewItem
+          triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+          onEdit={onEdit}
+          onRequestDelete={onRequestDelete}
+          onView={onView}
+          onRestore={onRestore}
+          onSms={onSms}
+          onWhatsApp={onWhatsApp}
+          onEmail={onEmail}
+        />
       }
     />
   );

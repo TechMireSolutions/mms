@@ -1,13 +1,15 @@
 import type React from 'react';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { useWorkCardAction } from '@/hooks/useWorkCardAction';
 import { formatDate } from '@mms/shared';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { TimePicker } from '@/components/ui/TimePicker';
-import { DirectoryCardFooter } from '@/components/ui/DirectoryCardFooter';
+import { DirectoryCardFooterActions } from '@/components/ui/DirectoryCardFooterActions';
 import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
+import { DirectoryCardMetaGrid } from '@/components/ui/DirectoryCardMetaGrid';
+import { DirectoryCardMetaTile } from '@/components/ui/DirectoryCardMetaTile';
 import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
-import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { AttendanceRecord, AttendanceStatus } from '@/lib/data/attendanceData';
@@ -31,6 +33,130 @@ export interface AttendanceListCardsProps {
 }
 
 export type AttendanceRecordsMobileListProps = AttendanceListCardsProps;
+
+const getAttendanceAccentClass = (status?: string): string => {
+  if (status === 'present') return 'bg-success/60 group-hover:bg-success';
+  if (status === 'absent') return 'bg-destructive/60 group-hover:bg-destructive';
+  if (status === 'late') return 'bg-warning/60 group-hover:bg-warning';
+  if (status === 'excused') return 'bg-info/60 group-hover:bg-info';
+  return 'bg-primary/50 group-hover:bg-primary';
+};
+
+function AttendanceCard({
+  attendanceRecord,
+  isColumnVisible,
+  editingRecord,
+  statuses,
+  updateDraft,
+  renderRowActions,
+  classLabel,
+  selectedIds,
+  canDelete,
+  onToggleSelectedRecord,
+  reducedMotion,
+  t,
+}: {
+  attendanceRecord: AttendanceRecord;
+  isColumnVisible: (key: string) => boolean;
+  editingRecord: AttendanceRecord | null;
+  statuses: AttendanceStatus[];
+  updateDraft: <K extends keyof AttendanceRecord>(key: K, value: AttendanceRecord[K]) => void;
+  renderRowActions: (record: AttendanceRecord) => React.ReactNode;
+  classLabel: (classId: string) => string;
+  selectedIds: string[];
+  canDelete: boolean;
+  onToggleSelectedRecord: (id: string, checked: boolean) => void;
+  reducedMotion: boolean;
+  t: TranslationFunction;
+}): React.JSX.Element {
+  const { isSelected, onSelect, cardProps } = useWorkCardAction({
+    entity: attendanceRecord,
+    selectedIds,
+    onToggleSelected: onToggleSelectedRecord,
+    canSelect: canDelete,
+  });
+
+  return (
+    <DirectoryEntityCard
+      key={attendanceRecord.id}
+      isSelected={isSelected}
+      reducedMotion={reducedMotion}
+      accentClassName={getAttendanceAccentClass(attendanceRecord.status)}
+      {...cardProps}
+    >
+      <DirectoryCardHeader
+        id={attendanceRecord.id}
+        displayName={attendanceRecord.studentName}
+        isSelected={isSelected}
+        showSelect={canDelete}
+        onSelect={onSelect}
+        selectAriaLabel={t('attendance.trash.selectRecord', { student: attendanceRecord.studentName })}
+        reducedMotion={reducedMotion}
+        subtitle={
+          isColumnVisible("class") ? (
+            <p className="truncate text-xs text-muted-foreground">{classLabel(attendanceRecord.classId)}</p>
+          ) : undefined
+        }
+      />
+      <DirectoryCardMetaGrid>
+        {isColumnVisible("date") && (
+          <DirectoryCardMetaTile label={t('attendance.columns.date')}>
+            <span className="font-mono">{formatDate(attendanceRecord.date, true)}</span>
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("session") && (
+          <DirectoryCardMetaTile label={t('attendance.columns.session')}>
+            {attendanceRecord.sessionName || '—'}
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("status") && (
+          <DirectoryCardMetaTile label={t('attendance.columns.status')}>
+            <AttendanceRecordStatusCell
+              attendanceRecord={attendanceRecord}
+              editingRecord={editingRecord}
+              statuses={statuses}
+              updateDraft={updateDraft}
+            />
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("timeIn") && (
+          <DirectoryCardMetaTile label={t('attendance.columns.timeIn')}>
+            {editingRecord?.id === attendanceRecord.id
+              ? <TimePicker
+                  id={`attendance-mobile-time-in-${attendanceRecord.id}`}
+                  name="timeIn"
+                  value={editingRecord.timeIn}
+                  onChange={(nextValue) => updateDraft('timeIn', nextValue)}
+                  aria-label={t('attendance.columns.timeIn')}
+                  className="w-full min-w-0 text-xs"
+                />
+              : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeIn || '—'}</span>}
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("timeOut") && (
+          <DirectoryCardMetaTile label={t('attendance.columns.timeOut')}>
+            {editingRecord?.id === attendanceRecord.id
+              ? <TimePicker
+                  id={`attendance-mobile-time-out-${attendanceRecord.id}`}
+                  name="timeOut"
+                  value={editingRecord.timeOut}
+                  onChange={(nextValue) => updateDraft('timeOut', nextValue)}
+                  aria-label={t('attendance.columns.timeOut')}
+                  className="w-full min-w-0 text-xs"
+                />
+              : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeOut || '—'}</span>}
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("notes") && (
+          <DirectoryCardMetaTile label={t('attendance.columns.notes')}>
+            <span className="break-words text-xs text-muted-foreground">{attendanceRecord.notes || '—'}</span>
+          </DirectoryCardMetaTile>
+        )}
+      </DirectoryCardMetaGrid>
+      <DirectoryCardFooterActions actions={renderRowActions(attendanceRecord)} />
+    </DirectoryEntityCard>
+  );
+}
 
 export function AttendanceListCards({
   paginatedRecords,
@@ -64,8 +190,6 @@ export function AttendanceListCards({
     );
   }
 
-  const selectedSet = new Set(selectedIds);
-
   return (
     <div className="space-y-4">
       <ModuleDirectoryCards
@@ -79,99 +203,23 @@ export function AttendanceListCards({
         selectedCountLabel={t('attendance.trash.selected', { count: selectedIds.length })}
         pageCountLabel={pageCountLabel}
         checkboxIdPrefix="attendance-select-cards"
-        renderItem={(attendanceRecord) => {
-          const isSelected = selectedSet.has(attendanceRecord.id);
-          return (
-            <DirectoryEntityCard key={attendanceRecord.id} isSelected={isSelected} reducedMotion={reducedMotion}>
-              <DirectoryCardHeader
-                id={attendanceRecord.id}
-                displayName={attendanceRecord.studentName}
-                isSelected={isSelected}
-                showSelect={canDelete}
-                onSelect={() => onToggleSelectedRecord(attendanceRecord.id, !isSelected)}
-                selectAriaLabel={t('attendance.trash.selectRecord', { student: attendanceRecord.studentName })}
-                reducedMotion={reducedMotion}
-                subtitle={
-                  isColumnVisible("class") ? (
-                    <p className="truncate text-xs text-muted-foreground">{classLabel(attendanceRecord.classId)}</p>
-                  ) : undefined
-                }
-              />
-              <StatGrid columns="sm2" className="ms-1">
-                {isColumnVisible("date") && (
-                  <StatRow
-                    label={t('attendance.columns.date')}
-                    value={formatDate(attendanceRecord.date, true)}
-                    ddClassName="font-mono"
-                  />
-                )}
-                {isColumnVisible("session") && (
-                  <StatRow
-                    label={t('attendance.columns.session')}
-                    value={attendanceRecord.sessionName || '—'}
-                  />
-                )}
-                {isColumnVisible("status") && (
-                  <StatRow
-                    label={t('attendance.columns.status')}
-                    value={
-                      <AttendanceRecordStatusCell
-                        attendanceRecord={attendanceRecord}
-                        editingRecord={editingRecord}
-                        statuses={statuses}
-                        updateDraft={updateDraft}
-                      />
-                    }
-                    dtClassName="mb-1"
-                  />
-                )}
-                {isColumnVisible("timeIn") && (
-                  <StatRow
-                    label={t('attendance.columns.timeIn')}
-                    value={
-                      editingRecord?.id === attendanceRecord.id
-                        ? <TimePicker
-                            id={`attendance-mobile-time-in-${attendanceRecord.id}`}
-                            name="timeIn"
-                            value={editingRecord.timeIn}
-                            onChange={(nextValue) => updateDraft('timeIn', nextValue)}
-                            aria-label={t('attendance.columns.timeIn')}
-                            className="w-full min-w-0 text-xs"
-                          />
-                        : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeIn || '—'}</span>}
-                    dtClassName="mb-1"
-                  />
-                )}
-                {isColumnVisible("timeOut") && (
-                  <StatRow
-                    label={t('attendance.columns.timeOut')}
-                    value={
-                      editingRecord?.id === attendanceRecord.id
-                        ? <TimePicker
-                            id={`attendance-mobile-time-out-${attendanceRecord.id}`}
-                            name="timeOut"
-                            value={editingRecord.timeOut}
-                            onChange={(nextValue) => updateDraft('timeOut', nextValue)}
-                            aria-label={t('attendance.columns.timeOut')}
-                            className="w-full min-w-0 text-xs"
-                          />
-                        : <span className="font-mono text-xs text-muted-foreground">{attendanceRecord.timeOut || '—'}</span>}
-                    dtClassName="mb-1"
-                  />
-                )}
-                {isColumnVisible("notes") && (
-                  <StatRow
-                    fullWidth
-                    label={t('attendance.columns.notes')}
-                    value={attendanceRecord.notes || '—'}
-                    ddClassName="break-words text-xs text-muted-foreground"
-                  />
-                )}
-              </StatGrid>
-              <DirectoryCardFooter trailing={renderRowActions(attendanceRecord)} />
-            </DirectoryEntityCard>
-          );
-        }}
+        renderItem={(attendanceRecord) => (
+          <AttendanceCard
+            key={attendanceRecord.id}
+            attendanceRecord={attendanceRecord}
+            isColumnVisible={isColumnVisible}
+            editingRecord={editingRecord}
+            statuses={statuses}
+            updateDraft={updateDraft}
+            renderRowActions={renderRowActions}
+            classLabel={classLabel}
+            selectedIds={selectedIds}
+            canDelete={canDelete}
+            onToggleSelectedRecord={onToggleSelectedRecord}
+            reducedMotion={reducedMotion}
+            t={t}
+          />
+        )}
       />
     </div>
   );

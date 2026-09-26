@@ -3,6 +3,7 @@ import { Receipt } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { JournalEntriesListCards } from "@/tenant/features/accounting/components/JournalEntriesListCards";
 import { JournalEntriesListDesktopTable } from "@/tenant/features/accounting/components/JournalEntriesListDesktopTable";
@@ -25,8 +26,15 @@ export function JournalEntriesList(props: JournalEntriesListWithPagingProps): Re
         <EmptyState
           variant="dashed"
           icon={Receipt}
-          title={t("accounting.journal.dashboard.noEntriesMatch")}
-          description={t("accounting.journal.dashboard.noEntriesHint")}
+          title={props.showDeleted ? t("accounting.trash.empty") : props.hasActiveFilters ? t("accounting.journal.dashboard.noEntriesMatch") : t("accounting.journal.dashboard.noTransactionsYet")}
+          description={props.showDeleted ? t("accounting.trash.emptyHint") : props.hasActiveFilters ? t("accounting.journal.dashboard.noEntriesHint") : t("accounting.journal.dashboard.useQuickActions")}
+          action={props.showDeleted && props.onShowActive ? (
+            <Button type="button" variant="outline" className="min-h-11" onClick={props.onShowActive}>{t("accounting.trash.showActive")}</Button>
+          ) : props.hasActiveFilters && props.onClearFilters ? (
+            <Button type="button" variant="outline" className="min-h-11" onClick={props.onClearFilters}>{t("common.clearFilters")}</Button>
+          ) : props.canWrite && props.onCreate ? (
+            <Button type="button" className="min-h-11" onClick={props.onCreate}>{t("accounting.journal.dashboard.newEntry")}</Button>
+          ) : undefined}
         />
       ) : props.viewMode === "cards" ? (
         <JournalEntriesListCards {...props} />

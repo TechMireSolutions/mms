@@ -1,8 +1,8 @@
 import { type z } from 'zod';
 import {
-  buildDynamicTeacherSchema,
-  resolveTeacherEnabledTabIds,
-  resolveTeacherFieldsMapForColumnSync,
+  buildDynamicFacultySchema,
+  resolveFacultyEnabledTabIds,
+  resolveFacultyFieldsMapForColumnSync,
   type FieldDefinition,
 } from '@mms/shared';
 import { loadFacultySettingsCombined } from './facultyConfigService.js';
@@ -31,13 +31,13 @@ export async function validateFacultyDynamic(
   language = 'en',
 ): Promise<void> {
   const settings = await loadFacultySettingsCombined();
-  const fields = resolveTeacherFieldsMapForColumnSync(settings.fields);
-  const enabledTabIds = new Set(resolveTeacherEnabledTabIds(settings));
+  const fields = resolveFacultyFieldsMapForColumnSync(settings.fields);
+  const enabledTabIds = new Set(resolveFacultyEnabledTabIds(settings));
   const cacheKey = facultyValidationCacheKey(tenant, [...enabledTabIds], fields, language);
 
   let schema = schemaCache.get(cacheKey);
   if (!schema) {
-    schema = buildDynamicTeacherSchema(settings, enabledTabIds, fields, language);
+    schema = buildDynamicFacultySchema(settings, enabledTabIds, fields, language);
     if (schemaCache.size >= SCHEMA_CACHE_MAX_ENTRIES) {
       const oldestKey = schemaCache.keys().next().value;
       if (oldestKey) schemaCache.delete(oldestKey);
@@ -47,5 +47,3 @@ export async function validateFacultyDynamic(
 
   validateOrThrow(schema, facultyRecord);
 }
-
-export const validateTeacherDynamic = validateFacultyDynamic;

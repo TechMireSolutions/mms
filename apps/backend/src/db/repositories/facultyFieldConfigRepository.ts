@@ -1,8 +1,8 @@
-import { teacherFieldConfigs } from '../schema.js';
+import { facultyFieldConfigs } from '../schema.js';
 import { createWorkspaceSingletonJsonRepo } from './moduleSetupRepoFactories.js';
 
 const repo = createWorkspaceSingletonJsonRepo({
-  table: teacherFieldConfigs,
+  table: facultyFieldConfigs,
   jsonColumn: 'config',
 });
 
@@ -11,7 +11,3 @@ export const upsertFacultyFieldConfig = repo.upsert;
 export const listAllFacultyFieldConfigsByWorkspace = repo.listAllByWorkspace;
 export const replaceFacultyFieldConfigsForWorkspace = repo.replaceForWorkspace;
 
-export const getTeacherFieldConfigByWorkspace = getFacultyFieldConfigByWorkspace;
-export const upsertTeacherFieldConfig = upsertFacultyFieldConfig;
-export const listAllTeacherFieldConfigsByWorkspace = listAllFacultyFieldConfigsByWorkspace;
-export const replaceTeacherFieldConfigsForWorkspace = replaceFacultyFieldConfigsForWorkspace;

@@ -8,22 +8,7 @@
 // ---------------------------------------------------------------------------
 // 1. Core Auth & User Identity
 // ---------------------------------------------------------------------------
-/** Shared User interface used across frontend and backend. */
-export interface User {
-  id: string;
-  /** Sign-in email (`loginEmail`); kept as `email` for JWT backward compatibility. */
-  email: string;
-  name: string;
-  role: string;
-  /** Madrasa subdomain this account belongs to. */
-  workspaceSubdomain: string;
-  /** Linked CRM contact for profile fields. */
-  contactId?: string | number;
-  loginEmail?: string;
-  emailVerifiedAt?: string;
-  /** Forces the user through password change before normal workspace access. */
-  mustChangePassword?: boolean;
-}
+export type { User } from './tenantAuthTypes.js';
 
 export * from './zodCsp.js';
 export * from './auditTypes.js';
@@ -287,6 +272,7 @@ export * from './financeModuleManifest.js';
 export * from './financeModuleSettings.js';
 export * from './financeReportAggregates.js';
 export * from './financeSetupConfigTypes.js';
+export * from './facultyDesignationTypes.js';
 export * from './obligationsModuleManifest.js';
 export * from './obligationsReportAggregates.js';
 

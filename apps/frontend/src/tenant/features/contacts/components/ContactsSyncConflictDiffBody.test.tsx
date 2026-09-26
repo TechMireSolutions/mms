@@ -40,5 +40,32 @@ describe("ContactsSyncConflictDiffBody Component", () => {
     expect(html).toContain("contacts.sync.conflictApplyMerge");
     expect(html).toContain("contacts.sync.conflictKeepLocal");
     expect(html).toContain("contacts.sync.conflictUseServer");
+    expect(html).not.toContain("hidden md:block");
+  });
+
+  it("renders diffs as cards when viewMode is cards", () => {
+    const html = renderToStaticMarkup(
+      <ContactsSyncConflictDiffBody
+        local={mockContact}
+        serverContact={mockContact}
+        serverLoading={false}
+        diffs={[
+          { field: "firstName", local: "Zayd", server: "Zaid" },
+        ]}
+        fieldPicks={{ firstName: "local" }}
+        applying={false}
+        onTogglePick={vi.fn()}
+        onApplyMerge={vi.fn()}
+        onKeepMine={vi.fn()}
+        onUseServer={vi.fn()}
+        t={((key: string) => key) as never}
+        viewMode="cards"
+      />,
+    );
+
+    expect(html).toContain("Zayd");
+    expect(html).toContain("Zaid");
+    expect(html).not.toContain("<table");
+    expect(html).not.toContain("md:hidden");
   });
 });

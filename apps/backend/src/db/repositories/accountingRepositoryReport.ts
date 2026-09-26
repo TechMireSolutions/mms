@@ -111,6 +111,7 @@ export async function aggregateAccountingReport(
     const buildTrialBalance = async (
       rangeStart: string | undefined,
       rangeEnd: string | undefined,
+      excludeClosing = false,
     ): Promise<TrialBalanceRow[]> => {
       const entryDateFilter = and(
         rangeStart ? sql`${accountingEntries.date} >= ${rangeStart}` : undefined,
@@ -132,6 +133,7 @@ export async function aggregateAccountingReport(
             eq(accountingJournalLines.entryId, accountingEntries.id),
             isNull(accountingEntries.deletedAt),
             eq(accountingEntries.status, 'posted'),
+            excludeClosing ? sql`${accountingEntries.sourceType} IS DISTINCT FROM 'closing'` : undefined,
             entryDateFilter,
           ),
         )
@@ -188,6 +190,7 @@ export async function aggregateAccountingReport(
     };
 
     const rangeRows = await buildTrialBalance(dateFrom, dateTo);
+    const flowRows = await buildTrialBalance(dateFrom, dateTo, true);
     // Cumulative stock figures: everything through dateTo, deliberately ignoring
     // dateFrom so prior-period assets/equity still appear.
     const asOfRows = dateFrom ? await buildTrialBalance(undefined, dateTo) : rangeRows;
@@ -195,8 +198,8 @@ export async function aggregateAccountingReport(
     const sumByType = (rows: readonly TrialBalanceRow[], type: string): number =>
       rows.reduce((total, row) => (row.type === type ? total + row.balance : total), 0);
 
-    const revenue = sumByType(rangeRows, 'Revenue');
-    const expenses = sumByType(rangeRows, 'Expense');
+    const revenue = sumByType(flowRows, 'Revenue');
+    const expenses = sumByType(flowRows, 'Expense');
     const netSurplus = revenue - expenses;
     const assets = sumByType(asOfRows, 'Asset');
     const liabilities = sumByType(asOfRows, 'Liability');
@@ -209,7 +212,7 @@ export async function aggregateAccountingReport(
     let payableMovement = 0;
     let depreciation = 0;
 
-    for (const row of rangeRows) {
+    for (const row of flowRows) {
       if (isCashAccount(row, postingRules.cashAccountId)) {
         cashInflow += row.totalDebit;
         cashOutflow += row.totalCredit;
@@ -257,6 +260,7 @@ export async function aggregateAccountingReport(
       netCashFlowIndirect,
       cashFlowAdjustments,
       trialBalance: rangeRows,
+      incomeStatementTrialBalance: flowRows,
       balanceSheetTrialBalance: asOfRows.filter(
         (row) => row.type === 'Asset' || row.type === 'Liability' || row.type === 'Equity',
       ),

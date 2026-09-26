@@ -1,15 +1,15 @@
 import type {
-  TeachersCommandMetricsSnapshot,
-  TeachersWidgetAggregateResult,
-  TeachersWidgetQuery,
+  FacultyCommandMetricsSnapshot,
+  FacultyWidgetAggregateResult,
+  FacultyWidgetQuery,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import type { TeachersRepository } from '../repository/facultyRepository.js';
-import { teachersRepository } from '../repository/facultyRepositoryAdapter.js';
+import type { FacultyRepository } from '../repository/facultyRepository.js';
+import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
 
-export async function loadTeachersCommandMetrics(
-  repo: TeachersRepository = teachersRepository,
-): Promise<TeachersCommandMetricsSnapshot> {
+export async function loadFacultyCommandMetrics(
+  repo: FacultyRepository = facultyRepository,
+): Promise<FacultyCommandMetricsSnapshot> {
   const tenant = getRequestTenant();
   if (!tenant) {
     return {
@@ -24,13 +24,12 @@ export async function loadTeachersCommandMetrics(
   return repo.aggregateCommandMetrics(tenant);
 }
 
-
-
-export async function loadTeachersWidgetAggregates(
-  queries: TeachersWidgetQuery[],
-  repo: TeachersRepository = teachersRepository,
-): Promise<Record<string, TeachersWidgetAggregateResult>> {
+export async function loadFacultyWidgetAggregates(
+  queries: FacultyWidgetQuery[],
+  repo: FacultyRepository = facultyRepository,
+): Promise<Record<string, FacultyWidgetAggregateResult>> {
   const tenant = getRequestTenant();
   if (!tenant) return {};
   return repo.aggregateWidgetQueries(tenant, queries);
 }
+

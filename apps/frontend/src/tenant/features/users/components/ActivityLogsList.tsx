@@ -14,8 +14,11 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { WORK_SURFACE, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
+import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
+import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
 import { StatGrid, StatRow } from '@/components/ui/StatGrid';
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 
 export interface ActivityLogsListProps {
   paginated: ActivityLog[];
@@ -39,6 +42,7 @@ export function ActivityLogsList({
   onColumnResize,
 }: ActivityLogsListProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { viewMode } = useWorkDirectoryViewMode();
   const globalSettings = useGlobalSettings();
   const fmtTs = (ts: string): string => formatDate(ts, globalSettings.dateFormat, false);
 
@@ -78,35 +82,36 @@ export function ActivityLogsList({
       paginationVariant="range"
     >
       <div className={WORK_SURFACE}>
-        <div className="space-y-3 p-3 md:hidden">
-          {paginated.map((log) => (
-            <article
-              key={log.id}
-              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
-            >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <div className="min-w-0">
-                  <p className="text-sm font-semibold text-foreground">{userNameFor(log)}</p>
-                  <p className="text-xs text-muted-foreground">{fmtTs(log.ts)}</p>
+        {viewMode === "cards" ? (
+          <DirectoryCardsGrid className="p-3">
+            {paginated.map((log) => (
+              <DirectoryEntityCard
+                key={log.id}
+                className="space-y-3 p-4"
+              >
+                <div className="flex min-w-0 items-start justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-semibold text-foreground">{userNameFor(log)}</p>
+                    <p className="text-xs text-muted-foreground">{fmtTs(log.ts)}</p>
+                  </div>
+                  <ActivityActionBadge action={log.action} />
                 </div>
-                <ActivityActionBadge action={log.action} />
-              </div>
-              <StatGrid columns="1">
-                <StatRow
-                  label={t('users.activityColDetail')}
-                  value={log.detail}
-                  ddClassName="text-xs text-muted-foreground"
-                />
-                <StatRow
-                  label={t('users.activityColIp')}
-                  value={log.ip}
-                  ddClassName="font-mono text-xs text-muted-foreground"
-                />
-              </StatGrid>
-            </article>
-          ))}
-        </div>
-        <div className="hidden md:block">
+                <StatGrid columns="1">
+                  <StatRow
+                    label={t('users.activityColDetail')}
+                    value={log.detail}
+                    ddClassName="text-xs text-muted-foreground"
+                  />
+                  <StatRow
+                    label={t('users.activityColIp')}
+                    value={log.ip}
+                    ddClassName="font-mono text-xs text-muted-foreground"
+                  />
+                </StatGrid>
+              </DirectoryEntityCard>
+            ))}
+          </DirectoryCardsGrid>
+        ) : (
           <Table className="table-fixed">
             <TableHeader>
               <TableRow className="border-b border-border/60 hover:bg-muted/30">
@@ -141,7 +146,7 @@ export function ActivityLogsList({
               ))}
             </TableBody>
           </Table>
-        </div>
+        )}
       </div>
     </ReportDataGridContainer>
   );

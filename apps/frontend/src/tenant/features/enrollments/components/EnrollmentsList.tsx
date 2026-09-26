@@ -133,7 +133,7 @@ export function EnrollmentsList({
         pageSize={pageSize}
         students={students}
         isColumnVisible={columnVisible}
-        columnRegistry={columnCustomizer.columnRegistry}
+        columnRegistry={columnCustomizer.columnRegistry ?? []}
         canSelectEnrollments={canSelectEnrollments}
         selectedIds={selectedIds}
         allVisibleSelected={allVisibleSelected}

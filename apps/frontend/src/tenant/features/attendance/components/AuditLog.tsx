@@ -14,6 +14,8 @@ import { reportClientError } from "@/lib/clientErrorReporting";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import {
   Table,
   TableBody,
@@ -39,6 +41,7 @@ export interface AuditEntry {
 
 export interface AuditLogProps {
   filters: Partial<AttendanceFilterState>;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
@@ -72,8 +75,10 @@ function describeEntry(entry: AuditEntry, studentNameFor: (id?: string) => strin
  * @param props - The component props.
  * @returns The rendered audit log component.
  */
-export function AuditLog({ filters }: AuditLogProps): React.JSX.Element {
+export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
   const sessions = useSessionsCollection();
   const [log, setLog] = useState<AuditEntry[]>([]);
   const studentIds = (() => uniqueRegistryIds(log.map((entry) => entry.studentId)))();
@@ -179,21 +184,24 @@ export function AuditLog({ filters }: AuditLogProps): React.JSX.Element {
         />
       ) : (
         <div className={WORK_SURFACE}>
-          <div className="space-y-3 p-3 md:hidden">
-            {log.map((entry, index) => (
-              <article key={index} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
-                <div className="flex items-start justify-between gap-2">
-                  <time className="text-xs font-mono text-muted-foreground">{formatDateTime(entry.ts)}</time>
-                  <StatusBadge status={entry.action} config={actionConfig} size="sm" />
-                </div>
-                <p className="text-xs text-foreground m-0">{describeEntry(entry, studentNameFor, t)}</p>
-                {entry.by && (
-                  <p className="text-xs font-semibold text-muted-foreground capitalize m-0">{entry.by}</p>
-                )}
-              </article>
-            ))}
-          </div>
-          <div className="hidden md:block">
+          {viewMode === "cards" ? (
+            <div className="p-3">
+              <DirectoryCardsGrid className="grid-cols-1 sm:grid-cols-2">
+                {log.map((entry, index) => (
+                  <article key={index} className={`${WORK_SURFACE_INNER} space-y-2 p-3 rounded-lg border border-border/60`}>
+                    <div className="flex items-start justify-between gap-2">
+                      <time className="text-xs font-mono text-muted-foreground">{formatDateTime(entry.ts)}</time>
+                      <StatusBadge status={entry.action} config={actionConfig} size="sm" />
+                    </div>
+                    <p className="text-xs text-foreground m-0">{describeEntry(entry, studentNameFor, t)}</p>
+                    {entry.by && (
+                      <p className="text-xs font-semibold text-muted-foreground capitalize m-0">{entry.by}</p>
+                    )}
+                  </article>
+                ))}
+              </DirectoryCardsGrid>
+            </div>
+          ) : (
             <Table>
               <TableHeader>
                 <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
@@ -216,7 +224,7 @@ export function AuditLog({ filters }: AuditLogProps): React.JSX.Element {
                 ))}
               </TableBody>
             </Table>
-          </div>
+          )}
         </div>
       )}
     </section>

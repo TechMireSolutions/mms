@@ -29,7 +29,7 @@ export function AppleContactsPreviewList({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="min-w-0 flex items-center gap-2">
           {fileName && (
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-xs font-medium text-foreground max-w-[200px] truncate" title={fileName}>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted text-xs font-medium text-foreground max-w-48 truncate" title={fileName}>
               <FileText className="w-3.5 h-3.5 text-muted-foreground shrink-0" />
               <span className="truncate">{fileName}</span>
             </span>

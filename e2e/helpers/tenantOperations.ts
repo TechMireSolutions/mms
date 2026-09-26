@@ -59,10 +59,10 @@ async function fillContactGender(dialog: Locator, page: Page, gender: string): P
 /** Adds and fills phone number on a contact FormModal */
 async function fillContactPhone(dialog: Locator, phone: string): Promise<void> {
   await dialog.getByRole('tab', { name: 'Phones' }).click();
-  const phoneInput = dialog.locator('[id$="-phone-number-0"]');
+  const phoneInput = dialog.locator('[id$="-phone-number-0"]').first();
   const isInputVisible = await phoneInput.isVisible({ timeout: 2000 }).catch(() => false);
   if (!isInputVisible) {
-    const addPhoneBtn = dialog.getByRole('button', { name: /Add phone number|Add/i });
+    const addPhoneBtn = dialog.getByRole('button', { name: 'Add Phone Number' }).first();
     if (await addPhoneBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await addPhoneBtn.click();
     }
@@ -75,11 +75,14 @@ async function fillContactPhone(dialog: Locator, phone: string): Promise<void> {
 /** Adds and fills email address on a contact FormModal */
 async function fillContactEmail(dialog: Locator, email: string): Promise<void> {
   await dialog.getByRole('tab', { name: 'Emails' }).click();
-  const addEmailBtn = dialog.getByRole('button', { name: /Add (Email|email)/i }).first();
-  if (await addEmailBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
-    await addEmailBtn.click();
+  const emailInput = dialog.locator('[id$="-email-address-0"]').first();
+  const isInputVisible = await emailInput.isVisible({ timeout: 2000 }).catch(() => false);
+  if (!isInputVisible) {
+    const addEmailBtn = dialog.getByRole('button', { name: 'Add Email Address' }).first();
+    if (await addEmailBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await addEmailBtn.click();
+    }
   }
-  const emailInput = dialog.locator('[id$="-email-address-0"]');
   await expect(emailInput).toBeVisible({ timeout: 5000 });
   await emailInput.fill(email);
   await emailInput.dispatchEvent('change');
@@ -175,12 +178,12 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
     await studentContactSearch.fill('Jane Doe');
     const janeOption = page.getByRole('option', { name: /Jane Doe/ }).first();
     await expect(janeOption).toBeVisible({ timeout: 15_000 });
-    await janeOption.click({ force: true });
+    await janeOption.click();
 
     const editRelationshipsCta = registerDialog.getByRole('button', { name: /Edit contact relationships/i });
     // Wait for the linked contact to load before the guardian section renders the button.
     // The button depends on linkedContact?.id being truthy (fetched via useContactById after contact selection).
-    await expect(editRelationshipsCta).toBeVisible({ timeout: 45_000 });
+    await expect(editRelationshipsCta).toBeVisible({ timeout: 15_000 });
     await editRelationshipsCta.click();
 
     const editJaneDialog = page.getByRole('dialog', { name: /Edit Contact/i });
@@ -202,11 +205,37 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
     // After John Doe is linked, ensure the "Relationship type" is set to "Parent".
     await expect(editJaneDialog.getByText('John Doe').first()).toBeVisible({ timeout: 10_000 });
 
-    const targetBtn = await findRelationshipTypeButton(editJaneDialog, 'John Doe');
-    const currentType = (await targetBtn.textContent().catch(() => '')) ?? '';
-    if (!currentType.toLowerCase().includes('parent')) {
-      await targetBtn.click();
-      await page.locator('[role="option"]').filter({ hasText: /^Parent$/i }).click();
+    // Ensure relationship type is set to Parent (supports native <select> and custom dropdown buttons)
+    const relSelects = editJaneDialog.locator('select[id*="-relationship-type-"]');
+    const selectCount = await relSelects.count();
+    if (selectCount > 0) {
+      let targetSelect = relSelects.last();
+      for (let i = 0; i < selectCount; i++) {
+        const sel = relSelects.nth(i);
+        const selId = (await sel.getAttribute('id')) ?? '';
+        const match = selId.match(/-relationship-type-(\d+)$/);
+        if (match) {
+          const rowSection = editJaneDialog.locator(`[id$="-relationship-contact-${match[1]}"]`);
+          const rowText = await rowSection.textContent().catch(() => '');
+          if (rowText?.includes('John Doe')) {
+            targetSelect = sel;
+            break;
+          }
+        }
+      }
+      const currentVal = await targetSelect.inputValue().catch(() => '');
+      if (currentVal.toLowerCase() !== 'parent') {
+        await targetSelect.selectOption({ label: 'Parent' }).catch(() => targetSelect.selectOption('Parent'));
+      }
+    } else {
+      const targetBtn = await findRelationshipTypeButton(editJaneDialog, 'John Doe');
+      if ((await targetBtn.count()) > 0) {
+        const currentType = (await targetBtn.textContent().catch(() => '')) ?? '';
+        if (!currentType.toLowerCase().includes('parent')) {
+          await targetBtn.click();
+          await page.locator('[role="option"]').filter({ hasText: /^Parent$/i }).click();
+        }
+      }
     }
 
     await waitForToastOverlayToClear(page, 'before saving Jane relationship');
@@ -306,7 +335,7 @@ export function seedTestClassAndEnrollment(subdomain: string): void {
 export async function createTeacherFromContact(page: Page): Promise<void> {
   await test.step('Create Teacher record from John Doe contact', async () => {
     await ensureWorkTierActive(page);
-    await page.getByRole('button', { name: 'Add Teacher' }).first().click();
+    await page.getByRole('button', { name: /Add (Teacher|Faculty)/i }).first().click();
     const teacherDialog = page.getByRole('dialog');
     await expect(teacherDialog).toBeVisible({ timeout: 15_000 });
 
@@ -318,12 +347,12 @@ export async function createTeacherFromContact(page: Page): Promise<void> {
 
     await waitForToastOverlayToClear(page, 'before creating teacher');
 
-    const saveBtn = teacherDialog.locator('button').filter({ hasText: /^Add Teacher$/i }).last();
+    const saveBtn = teacherDialog.locator('button').filter({ hasText: /^Add (Teacher|Faculty Member|Faculty)|Save/i }).last();
     await expect(saveBtn).toBeEnabled({ timeout: 15_000 });
 
     const teacherCreate = page.waitForResponse(
       (response) =>
-        response.url().includes('/api/teachers') &&
+        (response.url().includes('/api/faculty') || response.url().includes('/api/teachers')) &&
         response.request().method() === 'POST' &&
         !response.url().includes('/bulk'),
       { timeout: 30_000 },
@@ -342,7 +371,7 @@ export async function createTeacherFromContact(page: Page): Promise<void> {
     }
     await expect(teacherDialog).toBeHidden({ timeout: 20_000 });
     await expect(
-      page.locator('table:visible tbody tr, [data-testid="teacher-card"]').filter({ hasText: 'John Doe' }).first(),
+      page.locator('table:visible tbody tr, [data-testid="teacher-card"], [data-testid="faculty-card"]').filter({ hasText: 'John Doe' }).first(),
     ).toBeVisible({ timeout: 20_000 });
   });
 }
@@ -418,13 +447,22 @@ export async function createSessionAndClass(page: Page): Promise<void> {
     ).toBeVisible({ timeout: 20_000 });
 
     await page.getByRole('button', { name: 'Add class' }).first().click();
-    const classDialog = page.getByRole('dialog', { name: 'Add class' });
+    const classDialog = page.getByRole('dialog', { name: /(Add class|New Session Class|Class:)/i });
     await expect(classDialog).toBeVisible();
 
     await expect(classDialog.locator('#class-teacher')).toContainText('John Doe', { timeout: 15_000 });
+    await selectOptionByMatchingText(classDialog.locator('#class-teacher'), /John Doe/);
     const className = classDialog.getByRole('textbox', { name: /Class name/ });
     await className.fill('Tajweed A');
     await expect(className).toHaveValue('Tajweed A');
+    const capacityInput = classDialog.locator('#class-capacity');
+    if (await capacityInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await capacityInput.fill('25');
+    }
+    const maxAgeInput = classDialog.locator('#class-max-age');
+    if (await maxAgeInput.isVisible({ timeout: 2000 }).catch(() => false)) {
+      await maxAgeInput.fill('25');
+    }
     await expect(classDialog.getByRole('button', { name: 'Save' })).toBeEnabled();
 
     const sessionUpdate = page.waitForResponse(

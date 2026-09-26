@@ -27,123 +27,45 @@ paths:
 
 **Workflow skill:** `mms-backend-security` (CSRF/Origin, cookies, RBAC, tenant isolation) · audit trail security → `mms-audit-trail`. Route/service wiring → `mms-backend-api`.
 
-Governs user authentication, sessions, tenant isolation, role-based authorization (RBAC), and server threat protections in the Madrasa Management System (MMS). These security rules apply **equally and rigorously to both tenant workspaces and the platform apex**.
-
----
-
 ## 1. Authentication & Session Management
 
-### Session Cookies Shape
-
-**Tenant workspace**
-- **Access Token**: httpOnly cookie `mms_access` (15-minute JWT, `SameSite=Lax`, `Path=/`).
-- **Refresh Token**: httpOnly cookie `mms_refresh` (7-day opaque token rotated on refresh, `SameSite=Lax`, `Path=/api/auth/refresh`).
-- **Verification Hook**: On tenant hosts, `attachAccessTokenFromCookie` copies `mms_access` to `Authorization` before verification.
-
-**Platform apex** (separate from tenant — do not reuse `mms_access` / `mms_refresh`)
-- **Access Token**: httpOnly cookie `mms_platform_access` — browser **session** cookie (no `maxAge`; cleared when the browser closes).
-- **JWT**: Sign only `{ id, tokenType: 'platform_access', sessionVersion }` (`PlatformAccessTokenPayload`); ~8h `expiresIn`. Do **not** embed role/permissions/email — reload via DB in `authenticatePlatform`. The JWT has an ~8h server-side max-expiry; the *cookie* is a session cookie (no `maxAge`) and is cleared when the browser closes — whichever ends first wins.
-- **No platform refresh cookie** — expired/revoked sessions require re-login. FE idle timeout (`PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES`, 30) also signs out.
-- **Verification**: On apex, `attachPlatformTokenFromCookie` binds the cookie. `authenticatePlatform` runs `requireMainDomain`, **deletes** any client `Authorization` header, then re-attaches from cookie only (Bearer injection is not trusted).
-- **Mutual exclusion**: Issuing or clearing a platform session also clears tenant auth cookies (and logout clears both).
-
-**Client Configuration**
-- `apiClient` must use `credentials: 'include'`. Never store JWTs in `localStorage`. Clearing legacy `mms_user` on platform login/logout is OK (tenant cache hygiene), not a session store.
-
-### Platform FE session probe
-- On apex boot, `PlatformAuthProvider` **always** calls `GET /api/platform/auth/me` (no sessionStorage gate).
-- Logged-out / invalid / revoked / disabled probe → **`200 { user: null, isAuthenticated: false }`** (soft probe via `optionalAuthenticatePlatform`) — treat as unauthenticated; do not toast or trigger tenant `/api/auth/refresh`.
-- Hard `authenticatePlatform` on other `/api/platform/*` routes still returns typed `401` (`auth_required` / `session_revoked` / `account_disabled`).
-- Never reintroduce a sessionStorage (or similar) gate that skips the `/me` probe on new tabs / deep links / post-setup / password-reset.
-
-### Platform session revoke & soft-disable
-- **`sessionVersion`**: Compare JWT claim to `platform_users.session_version`. Mismatch → `401` `{ type: 'session_revoked' }`. Bump on password change/reset and admin **disable** (re-issue cookie after self password change). Re-enable does **not** bump.
-- **Soft-disable**: `platform_users.disabled_at` (API `disabledAt`). Non-null → login (after password verifies) and middleware `401` `{ type: 'account_disabled' }`. Super-users cannot be disabled/deleted; cannot disable/delete self; destructive admin ops require current-password re-auth (`sendInvalidCurrentPassword`).
-- **Soft-Delete Session Invalidation ("Not deleted until sessions die"):** When a user or staff account (`tenant_users`, `teachers`) is soft-deleted, all active sessions and refresh tokens must be revoked immediately in Redis/auth stores. All authentication resolvers (`authenticateTenant`, `/me`, credentials login, OAuth) must explicitly verify `deleted_at IS NULL` to prevent zombie sessions and silent account resurrection (`mms-soft-delete`).
-- Missing/invalid JWT → default `auth_required` (`sendUnauthorized`).
-
-### Platform error SSOT
-- All platform API `type` strings live in `@mms/shared` `platformApiErrors.ts` (`PLATFORM_API_ERROR_TYPES` / `PlatformApiErrorType`). BE `PlatformError` uses `PLATFORM_SERVICE_ERROR_STATUSES`; FE maps via `mapPlatformAuthError` / `getPlatformErrorMessage` — do not invent ad-hoc platform `type` strings.
-
-### Authentication Artifacts (`auth_artifacts` PG Table)
-Ephemeral auth challenges and tokens are persisted in `auth_artifacts` (not in-memory):
-- `handoff` (2 min TTL): Subdomain session exchange (prefer `scope_key` `ws:{subdomain}`).
-- `two_factor_challenge` (10 min TTL): OTP hashes (prefer workspace `scope_key`).
-- `refresh_token` (7 days TTL): Token rotation hashes — store opaque hash in indexed `lookup_key` and `user:{id}` in `scope_key` (not payload-only scans).
-- `login_email_change` (10 min TTL): Verification hashes.
-- `platform_password_reset`: Apex password-reset OTP artifacts (platform TTLs via shared constants). Do **not** reintroduce unused `platform_setup` artifact kind — first-run uses interactive setup when no users exist.
-- **2FA scope**: OTP via `auth_artifacts.two_factor_challenge` only — do not invent WebAuthn/passkeys or recovery-code flows outside an explicit product task. If recovery codes ever ship, store only hashed artifacts (same TTL/purge rules).
-- **Purge**: Startup + scheduled `purgeExpiredAuthArtifacts` (API process) — TTL hygiene only; see `mms-ops-infrastructure.md` for wipe/reset paths.
-
----
+- **Tenant Workspace Cookies:** HttpOnly `mms_access` (15m JWT, `SameSite=Lax`, `Path=/`) and `mms_refresh` (7d rotated opaque token, `Path=/api/auth/refresh`).
+- **Platform Apex Cookies:** HttpOnly session cookie `mms_platform_access` (no `maxAge`, cleared on browser close). JWT signs `{ id, tokenType: 'platform_access', sessionVersion }` (~8h max). No refresh cookie. Platform login clears tenant cookies.
+- **Client Hygiene:** Always `credentials: 'include'`. Never store JWTs in `localStorage`.
+- **Platform Session Probe:** `PlatformAuthProvider` calls `GET /api/platform/auth/me` on boot; unauthenticated returns `200 { user: null, isAuthenticated: false }`.
+- **Session Revocation:** JWT `sessionVersion` mismatch with DB returns `401 { type: 'session_revoked' }`. Soft-deleting accounts revokes all active sessions/tokens immediately; resolvers must verify `deleted_at IS NULL`.
+- **Auth Artifacts (`auth_artifacts` table):** Ephemeral challenges: `handoff` (2m), `two_factor_challenge` (10m), `refresh_token` (7d, indexed `lookup_key`), `login_email_change` (10m). Purged via scheduled `purgeExpiredAuthArtifacts`.
 
 ## 2. Multi-Tenant Routing & Isolation
 
-### Tenant Resolution
-- **Subdomain Routing**: Hosts are resolved dynamically:
-  - **Apex Host** (`localhost` in dev, or configured `MMS_APP_DOMAIN`): Marketing, platform console, onboarding, and **tenant-not-found**.
-  - **Tenant Host** (`{slug}.localhost` / `{slug}.{MMS_APP_DOMAIN}`): Full workspace instance.
-- **Unknown tenant SPA gate**: If the FE resolves no registered workspace for the host subdomain, **hard-redirect** to apex `/tenant-not-found?subdomain=…` — never mount tenant `/settings` or leave the user on the unregistered host (`mms-settings-i18n.md`, `mms-ui-ux-design.md` §4).
-- **Request Context**: Backend parses tenant from `Host` or `X-Forwarded-Host` headers (never from client JSON bodies) and starts an AsyncLocalStorage scope (`tenantStorage`).
-- **Endpoint Protection**: Tenant API routes require **`authenticateTenant`**: JWT from cookie **or** Bearer (does **not** strip client `Authorization`) → workspace enabled → `workspaceSubdomain` match → reject `refresh` / `platform_access` → `twoFactorVerified !== false` → `bindRequestUserId`. Apex requests to tenant routes return `403`.
-
-### Platform API protection
-- All `/api/platform/*` routes: apex-only (`requireMainDomain` inside `authenticatePlatform` and on public platform plugins — tenant subdomain → `403`).
-- **`authenticatePlatform`** (not `authenticateTenant`): cookie-only trust → `tokenType === 'platform_access'` → load user → `disabledAt` / `sessionVersion` → `request.platformUser`. Prefer hydrated `platformUser` over JWT claims for email/role.
-- Capability gates: `requireSuperUser` for super-user-only admin management; `requirePlatformPermission('workspaces'|'onboard')` / shared `platformUserCan` for grantable admin caps. Do not invent tenant `can()` strings for platform ops.
-- **OTP delivery (platform)**: Production fail-closed — no `devCode` / proceed when email `sent === false` (`email_send_failed`); prod without SMTP → `smtp_required`. Non-prod may surface `devCode` / `devReset`.
-- **Env bootstrap**: Seed platform super-user only when `PLATFORM_ALLOW_ENV_BOOTSTRAP=true` **and** `PLATFORM_ADMIN_EMAIL` + password env (`PLATFORM_ADMIN_PASSWORD` or `SEED_DEV_PASSWORD`) are set; otherwise first-run UI.
-
----
+- **Host Routing:** Apex (`localhost` / `MMS_APP_DOMAIN`) vs Tenant (`{slug}.localhost` / `{slug}.{MMS_APP_DOMAIN}`). Unregistered tenants hard-redirect to `/tenant-not-found?subdomain=…`.
+- **Context Binding:** Parse tenant from `Host` or `X-Forwarded-Host` into `tenantStorage` (`AsyncLocalStorage`). Never trust tenant or user IDs from request bodies.
+- **Tenant Route Protection:** `authenticateTenant` validates JWT, verifies workspace is enabled, checks 2FA, and binds `userId`. Apex requests to tenant routes return `403`.
+- **Platform Route Protection:** All `/api/platform/*` routes require `authenticatePlatform` and apex host (`requireMainDomain`). Capability gates: `requireSuperUser`, `requirePlatformPermission`, and `platformUserCan`.
 
 ## 3. Role-Based Access Control (RBAC)
 
-### Permissions Matrix
-- **Permissions Hook**: Frontend gates use `can('permission.string')` via `usePermissions`, or **`useModulePermissions(X_MODULE_MANIFEST)`** for module pages (resolves `canWrite` / `canDelete` / `canExport` / `canViewSetup` / reports from the manifest).
-- **Do not widen write gates with Setup**: entity sync / mutate paths that need `contacts.write` (or module `canWrite`) must not OR with `canEditSetup` (Google Contacts sync pattern — Setup configures; write permission performs).
-- **Module pages**: Prefer contract-driven gates + `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`. Do not introduce new `role === 'admin'|'teacher'|…` write gates on tenant modules.
-- **Platform console**: Use `platformUserCan` / `requirePlatformPermission` for grantable caps; keep intentional `super_user` checks for admin-management gates — do not invent tenant permission strings.
-- **DOM Rendering**: Forbidden elements must be omitted from rendering entirely; do not render disabled placeholders for unauthorized actions.
-- **Backend Enforcement**: Enforce permission checks inside route preHandlers (e.g. `canWriteCollection(user, 'students')`). Denied operations must return `403` with a stable `type: 'forbidden'` payload.
-- **Soft-Delete & Trash RBAC Gating:** All soft-delete actions (`DELETE /:id`, `POST /:id/restore`, `POST /bulk-delete`, `POST /bulk-restore`) and trash inspection queries (`GET /?includeDeleted=true`, `GET /:id?includeDeleted=true`) require delete privileges (`canDeleteCollection(user, collection)` or module `canDelete`). Lacking delete permissions returns `403 Forbidden` immediately; non-delete users must never be permitted to browse archived rows.
-
----
+- **Frontend Gates:** Use `can('permission.string')` via `usePermissions`, or `useModulePermissions(MANIFEST)` (`canWrite`, `canDelete`, `canExport`, `canViewSetup`). Never OR write gates with `canEditSetup`. Omit unauthorized elements from DOM (no disabled placeholders).
+- **Backend Enforcement:** Enforce in route preHandlers (`canWriteCollection`). Denials return `403 { type: 'forbidden' }`. Soft-delete mutations and trash queries require delete privileges (`canDeleteCollection`).
 
 ## 4. Threat Mitigations & Security Checklist
-- **Never Log Credentials**: Passwords, tokens, OTP/2FA codes, session cookies, `Authorization` headers and API keys must never reach the log stream — logs are shipped, indexed and retained, which is a far wider audience than the API response that legitimately carries a token. Both pino instances (Fastify's request logger and `lib/logger.ts`) apply `LOG_REDACTION_OPTIONS` from `lib/logRedaction.ts` as defense in depth, but that is a backstop, not a licence: do not pass them in the first place. A bare `code` key is deliberately NOT redacted because it carries error/SQLSTATE diagnostics — credential codes are listed explicitly (`otp`, `otpCode`, `verificationCode`, `devCode`, `twoFactorCode`). Local development enables the 2FA/login-code log line only when `NODE_ENV` is exactly `development`/`test` AND `MMS_LOG_DEV_CREDENTIALS=true` (`lib/devLogging.ts`); every other value fails closed, so a staging box with `NODE_ENV` unset cannot leak real user OTPs.
-- **Mask PII in Logs**: Log `maskEmail(email)` (`lib/devLogging.ts`) rather than a full address — the domain is enough to correlate and distinguish environments, while the local part is the identifying component.
-- **Secret Scanning**: `gitleaks` runs in CI over the FULL git history (`ci.yml`, config `.gitleaks.toml`) because a credential committed and later deleted is still recoverable from the repository. If it fires on a real finding: rotate the credential FIRST, then purge history — adding an allowlist entry without rotating is not a fix. Allowlist entries must stay narrow (path + value pattern), never a bare directory.
-- **Outbound Calls Must Be Bounded & SSRF Hardened**: Every outbound network call needs an explicit timeout (`lib/outboundTimeouts.ts`). Use `fetchWithTimeout`/`fetchSafeExternal` (`lib/outboundUrl.ts`) for HTTP and spread `SMTP_TIMEOUT_OPTIONS` into any `nodemailer.createTransport`. A hung provider must never hold a request open until the global `REQUEST_TIMEOUT_MS`, nor pin a worker queue slot. Outbound fetching must enforce Server-Side Request Forgery (SSRF) and DNS rebinding defenses by resolving and blocking private/internal IP ranges: loopback (`127.0.0.0/8`, `::1`), private subnets (RFC 1918 `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`), link-local & cloud metadata (`169.254.169.254`, `fe80::/10`), and carrier-grade NAT (`100.64.0.0/10`).
-- **Rate Limiting**: Limit onboarding/login and write-heavy / messaging send endpoints (`@fastify/rate-limit`); return `429` on abuse (`type: 'rate_limit_exceeded'` where configured). Emit **`Retry-After`** and IETF draft standard headers (`RateLimit-Limit`, `RateLimit-Remaining`, `RateLimit-Reset` alongside `X-RateLimit-*`). FE must not tight-loop retries on `429` — back off / surface `notify`.
-- **Platform `AUTH_RATE_LIMIT`**: Auth-sensitive + destructive platform routes (login/setup/password flows; admin disable/delete; workspace delete; database reset; migrate-and-restart) — do not ship those mutations without the limit + password confirm where already required.
-- **Hard-Delete Bypass Security:** Physical row deletion is blocked by PostgreSQL `forbid_hard_delete()` trigger. Executing `SET LOCAL app.allow_hard_purge = 'true'` is strictly restricted to authorized background retention workers (`purgeExpiredArchivedRecords`) and platform workspace teardown (`purgeTenantDataBySubdomain`).
-- **Cookie CSRF / Origin**: Cookie-auth state-changing requests (`POST`/`PUT`/`PATCH`/`DELETE`) must enforce same-origin (`Origin` / `Sec-Fetch-Site` header checks against allowed origin) or an equivalent CSRF defense. Do not rely on `SameSite=Lax` alone for mutations.
-- **Content-Type**: JSON mutation routes reject bodies without `application/json` (multipart only on upload routes). Ban empty/`text/plain` bodies on JSON write paths.
-- **Password Security**: Keep `scrypt` + `crypto.timingSafeEqual` (constant-time check from `node:crypto`) to prevent timing side-channel attacks. Enforce onboarding / platform password policy. Do not switch to argon2 (or dual algorithms) without an explicit dual-verify migration plan.
-- **OTP Generation & Verification**: `crypto.randomInt()` from `node:crypto` only — `Math.random()` strictly forbidden. Verify OTP hashes using constant-time comparison (`timingSafeEqual`).
-- **One-Shot Hashing**: Use `crypto.hash()` from `node:crypto` instead of verbose `createHash().update().digest()` chains.
-- **URL Resolution**: Use WHATWG `new URL()` and `URLPattern` API — legacy `url.parse()` is strictly forbidden.
-- **Node Permission Controls**: Enforce the Node 24 `--permission` model (e.g. `--permission --allow-fs-read=/var/www/mmsv2/data`) in high-risk / production environments.
-- **CORS**: Explicit origins (`ALLOWED_ORIGIN`) when using credentials; wildcard `*` strictly forbidden with credentials.
-- **Cookies (prod)**: Set `Secure` under HTTPS / `NODE_ENV=production`. Prefer `__Host-` cookie names when `Path=/` and no `Domain` is required; never `SameSite=None` without `Secure` and an explicit cross-site need (tenant/platform stay `SameSite=Lax`).
-- **Security Headers & CSP**: Register `@fastify/helmet` with strict defaults: `frame-ancestors 'none'` (and `X-Frame-Options: DENY`), MIME sniffing prevention (`nosniff`), HSTS with `includeSubDomains` in production, and strict Content Security Policy (CSP): disallow `unsafe-eval`, restrict `connect-src` strictly to `'self'`, configured `MMS_APP_DOMAIN`, and WebSocket `/api/ws`. Dynamic script execution requires cryptographic nonces.
-- **Rate Limiting**: Public authentication endpoints (`/api/auth/login`, `/api/auth/request-otp`, `/api/auth/refresh`, `/api/platform/auth/*`) must enforce Redis-backed sliding-window rate limits partitioned by IP + workspace subdomain. Return standard `429 Too Many Requests` with `Retry-After` header upon exhaustion.
-- **Identity & Authorization**: Never trust client body/query for `workspaceSubdomain` or authz `userId` — bind from session + host after `authenticateTenant` / `authenticatePlatform`.
-- **IDOR Defense**: Authorize via explicit permission **and** tenant RLS. Never trust body `workspaceSubdomain` / authz `userId` — force from authenticated session.
-- **Secrets storage**: Long-lived OAuth/API secrets in FORCE-RLS tenant tables — never in unscoped `objects` KV. Strip legacy secret object keys from backups (`SERVER_ONLY_OBJECT_KEYS`).
-- **Workspace backup / restore**: Admin + `canBulkSync` on `/api/db/backup` and `/api/db/sync`. Envelope/KDF/credential-strip mechanics → **`mms-data-layer.md`**. Settings two-step UI + password step-up → **`mms-settings-i18n.md`**.
-- **Document-store RBAC**: Remove obsolete keys from `ALLOWED_OBJECTS` / object permission maps **and** `ALLOWED_COLLECTIONS` / FE `BUSINESS_COLLECTIONS` after migrating entities to typed REST tables.
-- **XSS & Output Encoding**: No unsanitized HTML (`dangerouslySetInnerHTML` forbidden without strict DOMPurify sanitization); encode user content in PDF/CSV/Excel cells to prevent CSV formula injection.
-- **Logs Hygiene**: NEVER print passwords, session tokens, JWT signatures, OTP codes, bulk PII, or OAuth client secrets / refresh tokens. Structured logging emits to `stdout` (Pino).
-- **Auditing**: `auditService` append-only entry on collection writes, merges, soft-deletes. PG row triggers and outbox workers read `app.current_user_id` + `app.current_tenant` (SET LOCAL in `withTenant` / `runInTransaction`).
 
----
+- **IDOR Defense:** Authorize via permissions + transaction RLS (`SET LOCAL app.current_tenant`). Bind IDs strictly from session context.
+- **Rate Limiting:** Redis-backed sliding window on public auth, messaging, and destructive routes. Return `429 { type: 'rate_limit_exceeded' }` with `Retry-After`.
+- **Credential Redaction:** Passwords, tokens, OTPs, and cookies must never appear in logs or stdout. Fastify enforces `LOG_REDACTION_OPTIONS`. CI scans full git history via `gitleaks`.
+- **CSRF & Cookies:** State-changing requests enforce same-origin verification (`Origin` / `Sec-Fetch-Site`). Production cookies require `Secure`, `SameSite=Lax`. CORS requires explicit `ALLOWED_ORIGIN` (no wildcard with credentials).
+- **Security Headers:** `@fastify/helmet` with `frame-ancestors 'none'` (`X-Frame-Options: DENY`), `nosniff`, HSTS, and strict CSP.
+- **SSRF Defense:** Outbound fetches enforce timeouts and block private/loopback/cloud-metadata IP ranges (`127.0.0.0/8`, `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`, `169.254.169.254`).
+- **Cryptography:** Use `scrypt` + `crypto.timingSafeEqual` for passwords/OTPs; `crypto.randomInt()` for OTP generation (`Math.random()` banned).
+- **XSS & Injection:** Ban unsanitized `dangerouslySetInnerHTML`; sanitize formula triggers (`=`, `+`, `-`, `@`) in CSV/Excel/PDF cell exports.
+- **Hard-Delete Guard:** Schema `forbid_hard_delete()` trigger blocks SQL deletes. Bypass requires `SET LOCAL app.allow_hard_purge = 'true'`.
 
 ## 5. Audit Trail Security, Governance & Trace Context
-- **W3C Trace Context Propagation:** Propagate W3C Trace Context `traceparent` header into `AsyncLocalStorage` (`tenantStorage`) to bind as `correlation_id` in audit records. Banned: bespoke UUIDs breaking APM tracing correlation.
-- **Database Privilege Hardening & JIT Access:** Application services receive `INSERT`-only privileges on audit schema; `UPDATE` and `DELETE` strictly revoked. Direct read access segregated to dedicated security role with mandatory MFA and Just-In-Time (JIT) break-glass access.
-- **Auditing the Auditor:** Access to audit logs is an auditable event (`action_type: 'VIEW'`, `table_name: 'audit_trail_events'`).
-- **Complementary Statement Auditing (`pgAudit`):** Pair row-level audit with database-native statement auditing (`pgAudit`) to capture direct console access and DDL bypassing Fastify.
-- **Data Layer Invariants:** 5-dimension payload, RFC 8785 canonical JSON, cryptographic hash chains, crypto-shredding, and monthly partitioning → **`mms-data-layer.md` §5** · operational workflows → skill **`mms-audit-trail`**.
 
+- **W3C Trace Context:** Propagate `traceparent` into `AsyncLocalStorage` to bind as `correlation_id` in audit records.
+- **Privilege Hardening:** Database user has `INSERT`-only on audit tables (`UPDATE`/`DELETE` revoked). Viewing audit logs is an auditable event.
 
+## 6. Workflow & Output Speed Rules
+
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler and post-code recaps.
+- **Verification Gates:** Verify with `pnpm typecheck` and scoped tests before marking tasks done. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

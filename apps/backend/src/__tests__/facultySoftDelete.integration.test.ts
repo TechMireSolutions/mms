@@ -42,35 +42,34 @@ vi.mock('../faculty/use-cases/facultyUseCases.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../faculty/use-cases/facultyUseCases.js')>();
   const mocked = {
     ...actual.facultyUseCases,
-    loadTeachersPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
-    deleteTeacherById: (...args: unknown[]) => mockDeleteTeacherById(...args),
-    softDeleteTeacherById: (...args: unknown[]) => mockDeleteTeacherById(...args),
-    restoreTeacherById: (...args: unknown[]) => mockRestoreTeacherById(...args),
-    bulkSoftDeleteTeachers: (...args: unknown[]) => mockBulkSoftDeleteTeachers(...args),
-    bulkRestoreTeachers: (...args: unknown[]) => mockBulkRestoreTeachers(...args),
-    bulkUpdateTeacherStatus: (...args: unknown[]) => mockBulkUpdateTeacherStatus(...args),
-    sanitizeTeacherForViewer: async (teacher: unknown) => teacher,
-    sanitizeTeachersForViewer: async (teachers: unknown) => teachers,
+    loadFacultyPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
+    deleteFacultyById: (...args: unknown[]) => mockDeleteTeacherById(...args),
+    softDeleteFacultyById: (...args: unknown[]) => mockDeleteTeacherById(...args),
+    restoreFacultyById: (...args: unknown[]) => mockRestoreTeacherById(...args),
+    bulkSoftDeleteFaculty: (...args: unknown[]) => mockBulkSoftDeleteTeachers(...args),
+    bulkRestoreFaculty: (...args: unknown[]) => mockBulkRestoreTeachers(...args),
+    bulkUpdateFacultyStatus: (...args: unknown[]) => mockBulkUpdateTeacherStatus(...args),
+    sanitizeFacultyForViewer: async (faculty: unknown) => faculty,
+    sanitizeFacultyListForViewer: async (facultyList: unknown) => facultyList,
   };
   return {
     ...actual,
     facultyUseCases: mocked,
-    teacherUseCases: mocked,
   };
 });
 
-describe('teachers soft delete routes', () => {
+describe('faculty soft delete routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
     vi.clearAllMocks();
   });
 
-  it('DELETE /api/teachers/:id soft-deletes teacher', async () => {
+  it('DELETE /api/faculty/:id soft-deletes faculty member', async () => {
     mockDeleteTeacherById.mockResolvedValue(true);
     const app = await buildApp();
     const res = await app.inject({
       method: 'DELETE',
-      url: '/api/teachers/t1',
+      url: '/api/faculty/t1',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -82,12 +81,12 @@ describe('teachers soft delete routes', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/:id/restore restores a teacher', async () => {
+  it('POST /api/faculty/:id/restore restores a faculty member', async () => {
     mockRestoreTeacherById.mockResolvedValue(true);
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/t1/restore',
+      url: '/api/faculty/t1/restore',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -98,7 +97,7 @@ describe('teachers soft delete routes', () => {
     await app.close();
   });
 
-  it('GET /api/teachers lists with includeDeleted options', async () => {
+  it('GET /api/faculty lists with includeDeleted options', async () => {
     mockLoadTeachersPage.mockResolvedValue({
       teachers: [],
       total: 0,
@@ -109,7 +108,7 @@ describe('teachers soft delete routes', () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
-      url: '/api/teachers?page=1&includeDeleted=true',
+      url: '/api/faculty?page=1&includeDeleted=true',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -122,12 +121,12 @@ describe('teachers soft delete routes', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/bulk-delete soft-deletes multiple teachers', async () => {
+  it('POST /api/faculty/bulk-delete soft-deletes multiple faculty members', async () => {
     mockBulkSoftDeleteTeachers.mockResolvedValue({ succeeded: 2, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/bulk-delete',
+      url: '/api/faculty/bulk-delete',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -140,12 +139,12 @@ describe('teachers soft delete routes', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/bulk-restore restores multiple teachers', async () => {
+  it('POST /api/faculty/bulk-restore restores multiple faculty members', async () => {
     mockBulkRestoreTeachers.mockResolvedValue({ succeeded: 2, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/bulk-restore',
+      url: '/api/faculty/bulk-restore',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -158,12 +157,12 @@ describe('teachers soft delete routes', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/bulk-status updates teacher status', async () => {
+  it('POST /api/faculty/bulk-status updates faculty status', async () => {
     mockBulkUpdateTeacherStatus.mockResolvedValue({ succeeded: 1, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/bulk-status',
+      url: '/api/faculty/bulk-status',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,
@@ -176,12 +175,12 @@ describe('teachers soft delete routes', () => {
     await app.close();
   });
 
-  it('POST /api/teachers/bulk-status accepts custom lookup statuses', async () => {
+  it('POST /api/faculty/bulk-status accepts custom lookup statuses', async () => {
     mockBulkUpdateTeacherStatus.mockResolvedValue({ succeeded: 1, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
-      url: '/api/teachers/bulk-status',
+      url: '/api/faculty/bulk-status',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${adminToken(app)}`,

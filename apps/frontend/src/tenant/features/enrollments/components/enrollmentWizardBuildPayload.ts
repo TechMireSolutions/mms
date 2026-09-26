@@ -35,7 +35,6 @@ export function buildEnrollmentPayload(params: {
     invoiceId: null,
     paymentStatus: "pending" as const,
     notes,
-    customFields: customFieldValues,
     timeline: [
       { ts: nowISO, event: t("enrollments.wizard.timelineCreated"), by: "Admin" },
       {
@@ -44,5 +43,5 @@ export function buildEnrollmentPayload(params: {
         by: "System",
       },
     ],
-  } as unknown as Enrollment;
+  } satisfies Enrollment;
 }

@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import { resolveTenantLoginEmail, type Contact, type TenantUserProfile } from '@mms/shared';
 import { getContactById } from '../contactService.js';
-import { hashPassword, verifyPassword } from './passwordService.js';
+import { hashPassword, verifyPassword, DUMMY_PASSWORD_HASH } from './passwordService.js';
 import {
   asAuthUser,
   getRawUsers,
@@ -12,26 +12,19 @@ import {
   type StoredUser,
 } from './userServiceShared.js';
 import { getHydratedUsers, getWorkspaceUserRow, saveUsers } from './userServiceList.js';
-
-/**
- * Fixed-format "salt:hash" used to burn a scrypt verification when the account
- * does not exist, so login timing does not reveal which emails are registered.
- */
-const DUMMY_PASSWORD_HASH = `${'0'.repeat(32)}:${'0'.repeat(128)}`;
-
 export async function findUserByLoginEmailAndWorkspace(
   email: string,
   workspaceSubdomain: string,
 ): Promise<StoredUser | undefined> {
-  const normalizedEmail = email.toLowerCase();
-  const normalizedSubdomain = workspaceSubdomain.toLowerCase();
+  const normalizedEmail = email.trim().toLowerCase();
+  const normalizedSubdomain = workspaceSubdomain.trim().toLowerCase();
   const users = await getHydratedUsers();
 
   for (const user of users) {
     const loginEmail = resolveTenantLoginEmail(user, hydratedEmail(user));
     const subdomain =
       typeof user.workspaceSubdomain === 'string'
-        ? user.workspaceSubdomain.toLowerCase()
+        ? user.workspaceSubdomain.trim().toLowerCase()
         : '';
     if (loginEmail !== normalizedEmail || subdomain !== normalizedSubdomain) continue;
     const authUser = asAuthUser(user);

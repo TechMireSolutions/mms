@@ -1,9 +1,9 @@
 import type React from "react";
-import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
+import { useWorkCardAction } from "@/hooks/useWorkCardAction";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
 import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
-import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -19,15 +19,28 @@ export type InvoicesListCardsProps = Omit<
   "visibleColCount" | "getColumnWidth" | "onColumnResize"
 >;
 
-export function InvoicesListCards(props: InvoicesListCardsProps): React.JSX.Element {
+const getInvoiceAccentClass = (status: string): string => {
+  if (status === "paid") return "bg-success/60 group-hover:bg-success";
+  if (status === "overdue") return "bg-destructive/60 group-hover:bg-destructive";
+  if (status === "partially_paid") return "bg-warning/60 group-hover:bg-warning";
+  return "bg-primary/50 group-hover:bg-primary";
+};
+
+function InvoiceCard({
+  invoice,
+  props,
+  reducedMotion,
+}: {
+  invoice: InvoicesListCardsProps["invoices"][number];
+  props: InvoicesListCardsProps;
+  reducedMotion: boolean;
+}): React.JSX.Element {
+  const { t } = useTranslation();
   const {
-    invoices,
     isColumnVisible,
     columnRegistry,
     canSelectInvoices,
     selectedIds,
-    allVisibleSelected,
-    someVisibleSelected,
     canWrite,
     canDelete,
     canWriteMessaging,
@@ -38,13 +51,89 @@ export function InvoicesListCards(props: InvoicesListCardsProps): React.JSX.Elem
     onRecord,
     onRequestDelete,
     onRestore,
-    onToggleSelectAll,
     onToggleSelectedInvoice,
     openComposer,
   } = props;
+
+  const { isSelected, onSelect, onView: handleView, cardProps } = useWorkCardAction({
+    entity: invoice,
+    selectedIds,
+    onToggleSelected: onToggleSelectedInvoice,
+    onView,
+    canSelect: canSelectInvoices,
+  });
+
+  const visibleColumns = getInvoiceVisibleWorkColumns(columnRegistry, isColumnVisible, {
+    excludeFace: true,
+  });
+
+  return (
+    <DirectoryEntityCard
+      key={invoice.id}
+      isSelected={isSelected}
+      reducedMotion={reducedMotion}
+      accentClassName={getInvoiceAccentClass(invoice.status)}
+      {...cardProps}
+    >
+      <DirectoryCardHeader
+        id={invoice.id}
+        displayName={invoice.studentName}
+        isSelected={isSelected}
+        showSelect={canSelectInvoices}
+        onSelect={onSelect}
+        selectAriaLabel={t("finance.table.selectInvoice", { id: invoice.id })}
+        onView={handleView}
+        viewAriaLabel={`${t("finance.table.viewProfile")} - ${invoice.studentName}`}
+        reducedMotion={reducedMotion}
+        subtitle={
+          <p className="font-mono text-xs text-muted-foreground truncate">{invoice.id}</p>
+        }
+      />
+
+      <DirectoryCardMetadata
+        columns={visibleColumns}
+        keyFor={(col) => col.key}
+        labelFor={(col) => col.label}
+        renderValue={(col) =>
+          renderInvoiceWorkColumnValue(invoice, col.key, {
+            t,
+            statusConfig,
+            formatCurrency,
+            emptyFallback: null,
+          })
+        }
+      />
+
+      <DirectoryCardFooterActions
+        onView={handleView}
+        viewLabel={t("finance.table.viewProfile")}
+        viewAriaLabel={`${t("finance.table.viewProfile")} - ${invoice.studentName}`}
+        overflowActions={
+          <InvoicesRowActions
+            invoice={invoice}
+            canWrite={canWrite}
+            canDelete={canDelete}
+            canWriteMessaging={canWriteMessaging}
+            showDeleted={showDeleted}
+            hideViewItem
+            triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+            onView={onView}
+            onRecord={onRecord}
+            onRequestDelete={onRequestDelete}
+            onRestore={onRestore}
+            openComposer={openComposer}
+          />
+        }
+      />
+    </DirectoryEntityCard>
+  );
+}
+
+export function InvoicesListCards(props: InvoicesListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const selectedSet = new Set(selectedIds);
+  const { invoices, selectedIds, canSelectInvoices, allVisibleSelected, someVisibleSelected, onToggleSelectAll } = props;
+
   const pageCountLabel = formatDirectoryPageCountLabel(invoices.length, t, {
     singular: "finance.item.invoice",
     plural: "finance.item.invoices",
@@ -62,72 +151,9 @@ export function InvoicesListCards(props: InvoicesListCardsProps): React.JSX.Elem
       selectedCountLabel={t("finance.trash.selected", { count: selectedIds.length })}
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="finance-invoices"
-      renderItem={(invoice) => {
-        const isSelected = selectedSet.has(invoice.id);
-        const visibleColumns = getInvoiceVisibleWorkColumns(columnRegistry, isColumnVisible, {
-          excludeFace: true,
-        });
-
-        return (
-          <DirectoryEntityCard key={invoice.id} isSelected={isSelected} reducedMotion={reducedMotion}>
-            <DirectoryCardHeader
-              id={invoice.id}
-              displayName={invoice.studentName}
-              isSelected={isSelected}
-              showSelect={canSelectInvoices}
-              onSelect={() => onToggleSelectedInvoice(invoice.id, !isSelected)}
-              selectAriaLabel={t("finance.table.selectInvoice", { id: invoice.id })}
-              onView={() => onView(invoice)}
-              viewAriaLabel={`${t("finance.table.viewProfile")} - ${invoice.studentName}`}
-              reducedMotion={reducedMotion}
-              subtitle={
-                <p className="font-mono text-xs text-muted-foreground truncate">{invoice.id}</p>
-              }
-            />
-
-            <DirectoryCardMetadata
-              columns={visibleColumns}
-              keyFor={(col) => col.key}
-              labelFor={(col) => col.label}
-              renderValue={(col) =>
-                renderInvoiceWorkColumnValue(invoice, col.key, {
-                  t,
-                  statusConfig,
-                  formatCurrency,
-                  emptyFallback: null,
-                })
-              }
-            />
-
-            <DirectoryCardFooter
-              trailing={
-                <>
-                  <DirectoryCardViewButton
-                    label={t("finance.table.viewProfile")}
-                    ariaLabel={`${t("finance.table.viewProfile")} - ${invoice.studentName}`}
-                    onClick={() => onView(invoice)}
-                  />
-                  <InvoicesRowActions
-                    invoice={invoice}
-                    canWrite={canWrite}
-                    canDelete={canDelete}
-                    canWriteMessaging={canWriteMessaging}
-                    showDeleted={showDeleted}
-                    hideViewItem
-                    triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
-                    onView={onView}
-                    onRecord={onRecord}
-                    onRequestDelete={onRequestDelete}
-                    onRestore={onRestore}
-                    openComposer={openComposer}
-                  />
-                </>
-              }
-            />
-          </DirectoryEntityCard>
-        );
-      }}
+      renderItem={(invoice) => (
+        <InvoiceCard key={invoice.id} invoice={invoice} props={props} reducedMotion={reducedMotion} />
+      )}
     />
   );
 }
-

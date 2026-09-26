@@ -130,7 +130,7 @@ export function useContactsPageDeleteActions({
         throw err;
       }
     },
-    [canDelete, findContactById, restoreContactAction, notify, t, handleError],
+    [canDelete, findContactById, restoreContactAction, t, handleError],
   );
 
   return {

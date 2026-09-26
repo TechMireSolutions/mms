@@ -17,6 +17,7 @@ export const attendanceRecordSchema = z
     rollNo: z.string().optional().default(''),
     sessionId: z.string().optional(),
     sessionName: z.string().optional(),
+    facultyId: z.string().optional(),
     teacherId: z.string().optional(),
     status: attendanceRecordStatusSchema,
     timeIn: z.string().optional().default(''),

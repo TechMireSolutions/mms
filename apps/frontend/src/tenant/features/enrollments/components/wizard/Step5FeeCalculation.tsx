@@ -19,16 +19,16 @@ export function Step5FeeCalculation({ student, session, feeResult, onFeeResult }
   const { t } = useTranslation();
   const { formatCurrency } = useFinanceCurrency();
   const baseFee = session?.baseFee || 0;
-
-  const fee = (() => {
-    return calcFee(baseFee, student || {}, [], (session as any)?.discounts || []);
-
-  })() as CalculatedFee;
+  const sessionDiscounts = (session as { discounts?: Array<{ id?: string; name?: string; percentage?: number; type?: string }> } | null)?.discounts ?? [];
+  const discountsKey = JSON.stringify(sessionDiscounts);
+  const fee = React.useMemo(() => {
+    return calcFee(baseFee, student || {}, [], sessionDiscounts);
+  }, [baseFee, student?.id, student?.discountType, student?.discountPct, discountsKey]);
 
   // Notify parent
   React.useEffect(() => {
     onFeeResult(fee);
-  }, [student?.id, session?.id, fee, onFeeResult]);
+  }, [fee, onFeeResult]);
 
   const displayFee = feeResult || fee;
 

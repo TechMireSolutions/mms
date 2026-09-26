@@ -21,7 +21,7 @@ describe("TeacherNotesSection Component", () => {
   it("renders notes textarea input", () => {
     const html = renderToStaticMarkup(<TeacherNotesSection {...defaultProps} />);
 
-    expect(html).toContain("teachers.form.notesSection");
+    expect(html).toContain("faculty.form.notesSection");
     expect(html).toContain("Full-time teacher for Qirat level 3");
   });
 

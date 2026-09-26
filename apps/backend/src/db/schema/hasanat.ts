@@ -2,7 +2,7 @@ import { pgTable, text, timestamp, index, integer, boolean, jsonb, primaryKey, v
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
 import { students } from "./students.js";
-import { teachers } from "./faculty.js";
+import { faculty } from "./faculty.js";
 import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export const hasanatDenoms = pgTable('hasanat_denoms', {
@@ -52,7 +52,7 @@ export const hasanatDistributions = pgTable('hasanat_distributions', {
   denominationName: varchar('denomination_name', { length: 120 }).notNull().default(''),
   recipientType: varchar('recipient_type', { length: 20 }).notNull().default('student'),
   recipientStudentId: varchar('recipient_student_id', { length: 64 }),
-  recipientTeacherId: varchar('recipient_teacher_id', { length: 64 }),
+  recipientFacultyId: varchar('recipient_faculty_id', { length: 64 }),
   recipientName: varchar('recipient_name', { length: 255 }).notNull().default(''),
   recipientClass: varchar('recipient_class', { length: 120 }).notNull().default(''),
   quantity: integer('quantity').notNull().default(1),
@@ -79,11 +79,11 @@ export const hasanatDistributions = pgTable('hasanat_distributions', {
     foreignColumns: [students.workspaceSubdomain, students.id],
   }).onDelete('set null'),
   foreignKey({
-    columns: [table.workspaceSubdomain, table.recipientTeacherId],
-    foreignColumns: [teachers.workspaceSubdomain, teachers.id],
+    columns: [table.workspaceSubdomain, table.recipientFacultyId],
+    foreignColumns: [faculty.workspaceSubdomain, faculty.id],
   }).onDelete('set null'),
   index('hasanat_dist_workspace_student_idx').on(table.workspaceSubdomain, table.recipientStudentId),
-  index('hasanat_dist_workspace_teacher_idx').on(table.workspaceSubdomain, table.recipientTeacherId),
+  index('hasanat_dist_workspace_faculty_idx').on(table.workspaceSubdomain, table.recipientFacultyId),
   index('hasanat_dist_workspace_batch_idx').on(table.workspaceSubdomain, table.batchId),
   index('hasanat_dist_workspace_denom_idx').on(table.workspaceSubdomain, table.denominationId),
   index('hasanat_dist_workspace_issued_date_idx').on(table.workspaceSubdomain, table.issuedDate),

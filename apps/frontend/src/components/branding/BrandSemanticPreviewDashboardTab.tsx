@@ -18,7 +18,7 @@ export function BrandSemanticPreviewDashboardTab({
           <div className="space-y-1">
             <p className="text-xs font-medium text-muted-foreground">{t("theme.previewMetricTitle")}</p>
             <p className="text-xl font-extrabold text-foreground tracking-tight">842</p>
-            <div className="flex items-center gap-1 text-2xs font-semibold text-emerald-600 dark:text-emerald-400">
+            <div className="flex items-center gap-1 text-2xs font-semibold text-success">
               <TrendingUp className="h-3 w-3" />
               <span>{t("theme.previewMetricTrend")}</span>
             </div>

@@ -3,6 +3,7 @@ import { type Student } from '@mms/shared';
 import { students, studentEnrolledSessions } from '../schema.js';
 import { withTenant, type AppDb } from '../tenant-context.js';
 import { mapAuditToInsert } from './repositoryMappers.js';
+import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 export type StudentInsert = typeof students.$inferInsert;
 
@@ -75,15 +76,16 @@ export async function persistStudentTx(
 
 export async function saveStudent(tenant: string, student: Student): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await persistStudentTx(tx, subdomain, student);
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'students', key: String(student.id) });
 }
 
 export async function bulkSaveStudents(tenant: string, items: Student[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   if (items.length === 0) return;
-  return withTenant(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     const studentIds = items.map((s) => String(s.id));
 
     await tx
@@ -142,11 +144,12 @@ export async function bulkSaveStudents(tenant: string, items: Student[]): Promis
       await tx.insert(studentEnrolledSessions).values(allSessions);
     }
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'students' });
 }
 
 export async function replaceStudentsForWorkspace(tenant: string, items: Student[]): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  await withTenant(subdomain, async (tx) => {
     await tx.delete(studentEnrolledSessions).where(eq(studentEnrolledSessions.workspaceSubdomain, subdomain));
     await tx.delete(students).where(eq(students.workspaceSubdomain, subdomain));
     if (items.length === 0) return;
@@ -170,6 +173,7 @@ export async function replaceStudentsForWorkspace(tenant: string, items: Student
       await tx.insert(studentEnrolledSessions).values(allSessions);
     }
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'students' });
 }
 
 export async function bulkEnrollStudentsTx(
@@ -264,7 +268,9 @@ export async function bulkEnrollStudents(
   mode: 'add' | 'replace' | 'remove' = 'add',
 ): Promise<{ succeeded: number; failed: number }> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
+  const res = await withTenant(subdomain, async (tx) => {
     return bulkEnrollStudentsTx(tx, subdomain, studentIds, sessionIds, mode);
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'students' });
+  return res;
 }

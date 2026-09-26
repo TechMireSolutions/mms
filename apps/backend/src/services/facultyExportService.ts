@@ -1,13 +1,13 @@
 import {
-  TEACHERS_MODULE_MANIFEST,
-  DEFAULT_TEACHER_EXPORT_COLUMNS,
+  FACULTY_MODULE_MANIFEST,
+  DEFAULT_FACULTY_EXPORT_COLUMNS,
   buildCsvContent,
-  buildTeachersExportRows,
-  filterTeacherExportColumnsForViewer,
-  type Teacher,
-  type TeacherExportColumn,
-  type TeachersListQuery,
-  type TeachersSettings,
+  buildFacultyExportRows,
+  filterFacultyExportColumnsForViewer,
+  type Faculty,
+  type FacultyExportColumn,
+  type FacultyListQuery,
+  type FacultySettings,
 } from '@mms/shared';
 import {
   createModuleCsvExportService,
@@ -19,23 +19,19 @@ import { normalizeIncludeDeletedFlag } from '../lib/csvExportStreamFactory.js';
 import { loadFacultyFieldConfig } from './facultyConfigService.js';
 import { loadFacultyByIds, loadFacultyPage } from './facultyService.js';
 
-export type FacultyExportQueryInput = ModuleExportQueryInput<TeachersListQuery>;
-export type FacultyCsvExportOptions = ModuleCsvExportOptions<TeacherExportColumn>;
+export type FacultyExportQueryInput = ModuleExportQueryInput<FacultyListQuery>;
+export type FacultyCsvExportOptions = ModuleCsvExportOptions<FacultyExportColumn>;
 export type FacultyCsvExportResult = ModuleCsvExportResult;
-
-export type TeachersExportQueryInput = FacultyExportQueryInput;
-export type TeachersCsvExportOptions = FacultyCsvExportOptions;
-export type TeachersCsvExportResult = FacultyCsvExportResult;
 
 async function prepareFacultyExport(
   options: FacultyCsvExportOptions,
-): Promise<{ columns: TeacherExportColumn[]; context: undefined }> {
+): Promise<{ columns: FacultyExportColumn[]; context: undefined }> {
   const requestedColumns =
     options.columns && options.columns.length > 0
       ? options.columns
-      : DEFAULT_TEACHER_EXPORT_COLUMNS;
-  const settings = (await loadFacultyFieldConfig()) as TeachersSettings | null;
-  const columns = filterTeacherExportColumnsForViewer(
+      : DEFAULT_FACULTY_EXPORT_COLUMNS;
+  const settings = (await loadFacultyFieldConfig()) as FacultySettings | null;
+  const columns = filterFacultyExportColumnsForViewer(
     requestedColumns,
     settings,
     options.viewerRole,
@@ -44,17 +40,17 @@ async function prepareFacultyExport(
 }
 
 const facultyCsv = createModuleCsvExportService<
-  Teacher,
+  Faculty,
   FacultyExportQueryInput,
-  TeacherExportColumn
+  FacultyExportColumn
 >({
-  manifest: TEACHERS_MODULE_MANIFEST,
+  manifest: FACULTY_MODULE_MANIFEST,
   normalizeQuery: (query, allowDeleted) => ({
     ...query,
     includeDeleted: normalizeIncludeDeletedFlag(query.includeDeleted, allowDeleted),
   }),
   prepareExport: prepareFacultyExport,
-  loadByIds: (ids) => loadFacultyByIds(ids) as Promise<Teacher[]>,
+  loadByIds: (ids) => loadFacultyByIds(ids) as Promise<Faculty[]>,
   loadPage: async (query, page, limit, afterId) => {
     const pageResult = await loadFacultyPage({
       ...query,
@@ -63,17 +59,18 @@ const facultyCsv = createModuleCsvExportService<
       afterId,
       skipCount: true,
     } as never);
+    const sourceList = (pageResult.faculty ?? []) as Faculty[];
     return {
-      rows: pageResult.teachers as Teacher[],
+      rows: sourceList,
       hasMore: pageResult.hasMore,
       nextCursor: (pageResult as { nextCursor?: string }).nextCursor,
     };
   },
-  yieldDataChunks: (teachers, columns, chunkSize) => {
+  yieldDataChunks: (facultyList, columns, chunkSize) => {
     function* gen(): Generator<string, void, undefined> {
-      for (let i = 0; i < teachers.length; i += chunkSize) {
-        const chunk = teachers.slice(i, i + chunkSize);
-        const chunkExportRows = buildTeachersExportRows(chunk, columns);
+      for (let i = 0; i < facultyList.length; i += chunkSize) {
+        const chunk = facultyList.slice(i, i + chunkSize);
+        const chunkExportRows = buildFacultyExportRows(chunk, columns);
         const dataRows = chunkExportRows.slice(1);
         if (dataRows.length > 0) {
           yield '\n' + buildCsvContent(dataRows);
@@ -89,6 +86,3 @@ export const buildFacultyCsvExport = facultyCsv.buildExport as (
   query: FacultyExportQueryInput,
   options: FacultyCsvExportOptions,
 ) => Promise<FacultyCsvExportResult>;
-
-export const generateTeachersCsvStreamChunks = generateFacultyCsvStreamChunks;
-export const buildTeachersCsvExport = buildFacultyCsvExport;

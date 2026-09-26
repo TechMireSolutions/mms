@@ -8,6 +8,7 @@ import { listFiscalYearsByWorkspace, saveFiscalYear } from '../../db/repositorie
 import { aggregateAccountingReport } from '../../db/repositories/accountingRepositoryReport.js';
 import { getAccountingPreferencesService } from '../../services/accountingPreferencesService.js';
 import { prepareJournalEntryForPersist } from './accountingLedgerGuards.js';
+import { findAccountById } from '../../db/repositories/accountingAccountsRepository.js';
 
 function ledgerError(message: string, statusCode = 422): Error & { statusCode: number; type: string } {
   return Object.assign(new Error(message), { statusCode, type: 'validation_error' });
@@ -29,6 +30,10 @@ export async function closeFiscalYearForTenant(
     retainedEarningsAccountId?.trim() || prefs?.retainedEarningsAccount?.trim() || '';
   if (!retainedEarnings) {
     throw ledgerError('Retained earnings account is required to close a fiscal year');
+  }
+  const account = await findAccountById(tenant, retainedEarnings);
+  if (!account || account.deletedAt || !account.isActive || account.type !== 'Equity') {
+    throw ledgerError('Retained earnings must reference an active Equity account');
   }
 
   const report = await aggregateAccountingReport(tenant, {

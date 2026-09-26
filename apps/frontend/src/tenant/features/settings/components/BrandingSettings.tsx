@@ -9,6 +9,8 @@ import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import BrandingIdentityPreview from '@/components/branding/BrandingIdentityPreview';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
 import { SocialLinksEditor } from '@/components/branding/BrandingShared';
+import { SettingsAdminOnlyNotice } from '@/tenant/features/settings/components/SettingsAdminOnlyNotice';
+import { usePermissions } from '@/tenant/hooks/usePermissions';
 import {
   BrandingSettingsContactSection,
   BrandingSettingsProfileSection,
@@ -20,6 +22,7 @@ import {
  */
 export default function BrandingSettings(): React.JSX.Element {
   const { t } = useTranslation();
+  const { can } = usePermissions();
   const {
     data,
     isIdentityDirty,
@@ -29,6 +32,14 @@ export default function BrandingSettings(): React.JSX.Element {
     handleSaveIdentity,
     handleDiscardIdentity,
   } = useSettingsBrandingDraft();
+
+  if (!can('settings.branding.write')) {
+    return (
+      <SettingsPanel width="medium" introKey="settings.introBranding">
+        <SettingsAdminOnlyNotice />
+      </SettingsPanel>
+    );
+  }
 
   return (
     <SettingsPanel

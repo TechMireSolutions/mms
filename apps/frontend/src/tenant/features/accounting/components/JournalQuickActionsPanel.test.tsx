@@ -95,6 +95,7 @@ describe("JournalQuickActionsPanel", () => {
           onNlChange={onNlChange}
           onOpenPrefill={onOpenPrefill}
           onExportCsv={onExportCsv}
+          pageScopeLabel="Current page: 2 of 20"
         />,
       );
     });
@@ -133,6 +134,7 @@ describe("JournalQuickActionsPanel", () => {
           onNlChange={vi.fn()}
           onOpenPrefill={onOpenPrefill}
           onExportCsv={vi.fn()}
+          pageScopeLabel="Current page: 2 of 20"
         />,
       );
     });
@@ -167,6 +169,7 @@ describe("JournalQuickActionsPanel", () => {
           onNlChange={vi.fn()}
           onOpenPrefill={vi.fn()}
           onExportCsv={vi.fn()}
+          pageScopeLabel="Current page: 2 of 20"
         />,
       );
     });
@@ -189,6 +192,7 @@ describe("JournalQuickActionsPanel", () => {
           onNlChange={vi.fn()}
           onOpenPrefill={vi.fn()}
           onExportCsv={vi.fn()}
+          pageScopeLabel="Current page: 0 of 0"
         />,
       );
     });
@@ -210,6 +214,7 @@ describe("JournalQuickActionsPanel", () => {
           onNlChange={vi.fn()}
           onOpenPrefill={vi.fn()}
           onExportCsv={onExportCsv}
+          pageScopeLabel="Current page: 2 of 20"
         />,
       );
     });
@@ -223,5 +228,6 @@ describe("JournalQuickActionsPanel", () => {
       exportBtn.click();
     });
     expect(onExportCsv).toHaveBeenCalled();
+    expect(container.textContent).toContain("Current page: 2 of 20");
   });
 });

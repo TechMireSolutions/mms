@@ -6,7 +6,7 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
+import { isJournalRefUnique, type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import {
   calculateAccountBalanceCents,
   getTransactionGroupColorClasses,
@@ -84,6 +84,12 @@ export function StepTransactionForm({
   const amountIsInvalid = !amountIsEmpty && !isTypingDecimal && (parsedAmount === null || parsedAmount <= 0);
   const isSameAccount = Boolean(form.debitAcc && form.creditAcc && form.debitAcc === form.creditAcc);
   const currencyPaddingClass = currencySymbol.length > 2 ? "ps-14" : currencySymbol.length > 1 ? "ps-11" : "ps-8";
+
+  const isDuplicateRef = useMemo(() => {
+    const trimmed = form.ref ? form.ref.trim() : "";
+    if (!trimmed || !entries) return false;
+    return !isJournalRefUnique(trimmed, entries);
+  }, [form.ref, entries]);
 
   // D7: warn when the money-leg account has zero or negative balance
   const moneyLegAccountId = isMoneyIn ? form.debitAcc : form.creditAcc;
@@ -196,12 +202,22 @@ export function StepTransactionForm({
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault();
-                onProceed?.();
+                if (!isDuplicateRef) {
+                  onProceed?.();
+                }
               }
             }}
             placeholder={t("accounting.journal.dashboard.wizard.refPlaceholder")}
+            aria-invalid={isDuplicateRef}
+            aria-describedby={isDuplicateRef ? `${prefix}-ref-error` : undefined}
           />
-          <p className="text-xs text-muted-foreground mt-1">{t("accounting.journal.dashboard.wizard.optional")}</p>
+          {isDuplicateRef ? (
+            <p id={`${prefix}-ref-error`} className="text-xs text-destructive mt-1" role="alert">
+              {t("accounting.journal.dashboard.wizard.errorRefDuplicate")}
+            </p>
+          ) : (
+            <p className="text-xs text-muted-foreground mt-1">{t("accounting.journal.dashboard.wizard.optional")}</p>
+          )}
         </div>
 
         <div>

@@ -1,5 +1,5 @@
 import type { AuthError } from '@/lib/authErrors';
-import type { User, Workspace } from '@mms/shared';
+import type { TenantLoginResponse, User, Workspace } from '@mms/shared';
 import { getCurrentSubdomain, isCurrentHostApex } from '@/lib/config/tenantConfig';
 import { reportClientError } from '@/lib/clientErrorReporting';
 
@@ -51,8 +51,9 @@ export interface AuthContextType {
   authError: AuthError | null;
   appPublicSettings: unknown | null;
   authChecked: boolean;
-  login: (email: string, password: string) => Promise<{ user: User; requires2FA: boolean; challengeId?: string }>;
+  login: (email: string, password: string) => Promise<TenantLoginResponse>;
   verify2FA: (code: string) => Promise<{ user: User }>;
+  resend2FA: (challengeId?: string) => Promise<boolean>;
   logout: (shouldRedirect?: boolean) => void;
   /** Sliding-extension: posts to the session extend endpoint so inactivity is reset. */
   extendSession: () => Promise<void>;
@@ -71,11 +72,7 @@ export interface AuthContextType {
   resetPasswordWithOtp: (email: string, code: string, password: string) => Promise<void>;
 }
 
-export interface LoginApiResponse {
-  user: User;
-  requires2FA?: boolean;
-  challengeId?: string;
-}
+export type LoginApiResponse = TenantLoginResponse;
 
 export const AUTH_USER_STORAGE_KEY = 'mms_user';
 

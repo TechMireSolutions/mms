@@ -279,4 +279,65 @@ describe('AuthContext', () => {
       root.unmount();
     });
   });
+
+  it('recovers a cookie session from /api/auth/me when no user is persisted', async () => {
+    let capturedAuth: ReturnType<typeof useAuth> = undefined as any;
+    function Consumer() {
+      capturedAuth = useAuth();
+      return <div>{capturedAuth.user?.name ?? 'Guest'}</div>;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    await act(async () => {
+      root.render(
+        <AuthProvider>
+          <Consumer />
+        </AuthProvider>,
+      );
+    });
+
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+    });
+
+    const authMeCalls = vi.mocked(apiJson).mock.calls.filter(([url]) => url === '/api/auth/me');
+    expect(authMeCalls.length).toBe(1);
+    expect(capturedAuth.isAuthenticated).toBe(true);
+    expect(capturedAuth.user).toEqual(mockUser);
+    expect(capturedAuth.isLoadingAuth).toBe(false);
+    expect(capturedAuth.authChecked).toBe(true);
+
+    act(() => {
+      root.unmount();
+    });
+  });
+
+  it('does not authenticate from a persisted user before the server confirms the session', async () => {
+    localStorage.setItem(AUTH_USER_STORAGE_KEY, JSON.stringify(mockUser));
+    let resolveMe!: (value: { user: User }) => void;
+    vi.mocked(apiJson).mockReturnValueOnce(new Promise((resolve) => {
+      resolveMe = resolve;
+    }));
+    let capturedAuth!: ReturnType<typeof useAuth>;
+    function Consumer() {
+      capturedAuth = useAuth();
+      return null;
+    }
+
+    const container = document.createElement('div');
+    const root = createRoot(container);
+    act(() => {
+      root.render(<AuthProvider><Consumer /></AuthProvider>);
+    });
+
+    expect(capturedAuth.user).toEqual(mockUser);
+    expect(capturedAuth.isAuthenticated).toBe(false);
+    expect(capturedAuth.authChecked).toBe(false);
+
+    await act(async () => resolveMe({ user: mockUser }));
+    expect(capturedAuth.isAuthenticated).toBe(true);
+    expect(capturedAuth.authChecked).toBe(true);
+    act(() => root.unmount());
+  });
 });

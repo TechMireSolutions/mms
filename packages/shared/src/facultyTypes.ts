@@ -72,6 +72,42 @@ export const DEFAULT_FACULTY_SPECIALIZATION: FacultySpecialization =
   FACULTY_SPECIALIZATION_VALUES.find((value) => value === 'General')
   ?? FACULTY_SPECIALIZATION_VALUES[0];
 
+/** Hierarchy presets for delegation authority (lower number = higher authority). */
+export interface FacultyHierarchyPreset {
+  rank: number;
+  label: string;
+}
+
+export const FACULTY_HIERARCHY_RANK_PRESETS: readonly FacultyHierarchyPreset[] = [
+  { rank: 1, label: 'Dean / Principal' },
+  { rank: 2, label: 'Head of Department (HoD)' },
+  { rank: 3, label: 'Senior Faculty / Professor' },
+  { rank: 4, label: 'Lecturer / Teacher' },
+  { rank: 5, label: 'Assistant / Teaching Support' },
+] as const;
+
+export const DEFAULT_FACULTY_HIERARCHY_RANK = 4;
+
+/** Hierarchical tree node for organizational chart and task delegation. */
+export interface FacultyHierarchyNode {
+  id: string;
+  contactId: string | number;
+  name: string;
+  employeeId?: string;
+  department?: string;
+  designation?: string;
+  /** Server-projected designation effective today. */
+  designationId?: string;
+  designationStartsOn?: string;
+  designationEndsOn?: string | null;
+  designationAssignableRoles?: string[];
+  hierarchyRank: number;
+  status: string;
+  avatar?: string | null;
+  reportingFacultyId?: string | null;
+  subordinates: FacultyHierarchyNode[];
+}
+
 /**
  * Faculty profile in the `faculty` collection.
  * Identity fields (`name`, `phone`, `email`, `gender`) live on the linked Contact and are hydrated for display.
@@ -92,6 +128,18 @@ export interface FacultyMember {
   specialization?: string;
   department?: string;
   designation?: string;
+  /** Server-projected designation effective today; writes select a definition by id. */
+  designationId?: string;
+  designationStartsOn?: string;
+  designationEndsOn?: string | null;
+  designationAssignableRoles?: string[];
+  customDesignation?: string;
+  reportingFacultyId?: string | null;
+  /** Numeric hierarchy rank (1 is highest authority, e.g. Dean; higher numbers denote subordinate tiers). */
+  hierarchyRank?: number;
+  /** Hydrated supervisory metadata */
+  reportingFacultyName?: string;
+  subordinateCount?: number;
   status: string;
   joinDate?: string;
   /** Hydrated from the linked Contact's education degrees — canonical data lives on Contact. */

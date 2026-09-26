@@ -98,6 +98,8 @@ describe("ClassModal Component", () => {
             minAge: 15,
             maxAge: 10,
             gender: "mixed",
+            facultyId: "",
+            facultyName: "",
             teacherId: "",
             teacherName: "",
             maxStudents: 20,

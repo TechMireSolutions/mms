@@ -27,7 +27,7 @@ export default function PlatformAuthLayout({
     <div className="space-y-4">
       {footer}
       <div className="pt-3 border-t border-border/40 text-center space-y-1.5">
-        <div className="flex items-center justify-center gap-3 text-3xs font-semibold text-muted-foreground/80">
+        <div className="flex items-center justify-center gap-3 text-3xs font-semibold text-muted-foreground">
           <span className="flex items-center gap-1 text-primary">
             <Lock className="w-3 h-3 shrink-0" aria-hidden />
             256-Bit TLS
@@ -38,7 +38,7 @@ export default function PlatformAuthLayout({
             PostgreSQL RLS
           </span>
         </div>
-        <p className="text-2xs text-muted-foreground/60 font-medium uppercase tracking-wider">
+        <p className="text-2xs text-muted-foreground font-medium uppercase tracking-wider">
           {t("platform.consoleTitle")}
         </p>
       </div>
@@ -51,9 +51,6 @@ export default function PlatformAuthLayout({
         <PlatformLanguagePicker compact />
       </div>
       <div className="relative z-elevated w-full max-w-md text-start">
-        {/* Backdrop Glow */}
-        <div className="absolute -inset-4 bg-gradient-to-tr from-primary/25 via-primary/10 to-transparent rounded-3xl blur-2xl opacity-75 pointer-events-none" />
-
         <AuthCardShell
           footer={combinedFooter}
           header={

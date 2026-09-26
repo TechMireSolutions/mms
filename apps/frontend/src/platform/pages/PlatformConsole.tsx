@@ -2,10 +2,9 @@ import React, { Suspense, lazy } from "react";
 import { useLocation, useSearchParams, Link } from "react-router-dom";
 import { User, LayoutDashboard, Building2, BarChart3, Settings, Server, Activity, Plus, ArrowRight } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
-import { PlatformPageShell } from "@/platform/components/PlatformPageShell";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { ModuleScaffold } from "@/components/common/ModuleScaffold";
 import { usePlatformPermissions } from "@/platform/hooks/usePlatformPermissions";
 import { ROUTES } from "@/lib/config/routes";
 import { CardSkeleton, StatsSkeleton } from "@/components/ui/LoadingState";
@@ -109,20 +108,20 @@ export default function PlatformConsole(): React.JSX.Element {
   }[activeTab];
 
   return (
-    <PlatformPageShell width="7xl">
+    <ModuleScaffold
+      seoTitle={`${tabHeaderProps.title} | ${t("platform.consoleTitle")}`}
+      seoDescription={tabHeaderProps.subtitle}
+      headerIcon={tabHeaderProps.icon}
+      headerTitle={tabHeaderProps.title}
+      headerSubtitle={tabHeaderProps.subtitle}
+      headerActions={tabHeaderProps.actions}
+    >
       <motion.div
         variants={containerVariants}
         initial={reducedMotion ? false : "hidden"}
         animate="show"
         className="space-y-6"
       >
-        <PageHeader
-          icon={tabHeaderProps.icon}
-          title={tabHeaderProps.title}
-          subtitle={tabHeaderProps.subtitle}
-          actions={tabHeaderProps.actions}
-        />
-
         {canWorkspaces ? (
           <AnimatePresence mode="wait">
             <motion.div
@@ -167,6 +166,6 @@ export default function PlatformConsole(): React.JSX.Element {
           </motion.div>
         )}
       </motion.div>
-    </PlatformPageShell>
+    </ModuleScaffold>
   );
 }

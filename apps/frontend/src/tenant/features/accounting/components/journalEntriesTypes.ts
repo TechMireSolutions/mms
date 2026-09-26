@@ -3,11 +3,17 @@ import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCu
 
 export interface JournalEntriesProps {
   entries: JournalEntry[];
+  allEntries?: JournalEntry[];
   accounts: Account[];
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];
   onChange: (entries: JournalEntry[] | ((prev: JournalEntry[]) => JournalEntry[])) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
+  onShortcutStateChange?: (state: {
+    mode: 'simple' | 'advanced';
+    selectedCount: number;
+    clearSelection: () => void;
+  }) => void;
   canWrite?: boolean;
   canDelete?: boolean;
   showDeleted?: boolean;

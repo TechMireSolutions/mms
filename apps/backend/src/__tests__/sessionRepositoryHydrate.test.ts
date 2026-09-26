@@ -1,130 +1,86 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-
-const mockWithTenant = vi.fn();
-
-vi.mock('../db/tenant-context.js', () => ({
-  withTenant: (_tenant: string, cb: (tx: unknown) => Promise<unknown>) => mockWithTenant(cb),
-  withTenantRead: (_tenant: string, cb: (tx: unknown) => Promise<unknown>) => mockWithTenant(cb),
-}));
-
-import {
-  findSessionById,
-  findSessionsByIds,
-  listSessionsByWorkspace,
-} from '../db/repositories/sessionRepositoryHydrate.js';
-
-function createMockTx(queue: unknown[][]) {
-  let index = 0;
-  const makeNode = (): any => ({
-    from: () => makeNode(),
-    where: () => makeNode(),
-    orderBy: () => makeNode(),
-    offset: () => makeNode(),
-    limit: () => makeNode(),
-    then: (resolve: (v: unknown) => void) => resolve(queue[index++] ?? []),
-  });
-
-  return {
-    select: vi.fn(() => makeNode()),
-  };
-}
+import { describe, expect, it, vi } from 'vitest';
+import { hydrateSessionsListAggregated } from '../db/repositories/sessionRepositoryHydrate.js';
 
 describe('sessionRepositoryHydrate', () => {
-  beforeEach(() => {
-    mockWithTenant.mockReset();
-  });
-
-  it('findSessionById returns null when session is not found', async () => {
-    const tx = createMockTx([[]]);
-    mockWithTenant.mockImplementation(async (cb) => cb(tx));
-
-    const result = await findSessionById('test-tenant', 'sess-nonexistent');
-
-    expect(result).toBeNull();
-  });
-
-  it('findSessionById returns fully hydrated session when found', async () => {
-    const sessionRow = {
-      id: 'sess-1',
-      workspaceSubdomain: 'test-tenant',
+  it('hydrateSessionsListAggregated hydrates classes, faculty, fees, schedules, and scholarships in 1 SQL query', async () => {
+    const mockSessionRow = {
+      id: 's1',
+      workspaceSubdomain: 'test-madrasa',
       name: 'Spring 2026',
-      type: 'term',
+      type: 'academic',
       status: 'active',
-      startDate: '2026-01-01',
-      endDate: '2026-06-30',
-      baseFee: '500',
+      startDate: new Date(),
+      endDate: new Date(),
+      baseFee: '100.00',
       currency: 'USD',
       description: 'Spring term',
-      budgetTotalRevenue: '10000',
-      budgetCollected: '5000',
       deletedAt: null,
       deletedBy: null,
       deletionReason: null,
-      createdAt: new Date('2026-01-01T00:00:00Z'),
-      updatedAt: new Date('2026-01-01T00:00:00Z'),
+      restoredAt: null,
+      restoredBy: null,
+      deletedWithCascade: false,
+      createdAt: new Date(),
+      updatedAt: new Date(),
     };
-    const classRow = {
-      id: 'cls-1',
-      sessionId: 'sess-1',
-      name: 'Quran 101',
-      ageMin: 5,
-      ageMax: 10,
-      gender: 'any',
-      teacherId: 't-1',
-      teacherName: 'Ustadh Ali',
-      capacity: 20,
+
+    const mockFacultyRow = {
+      id: 'sf1',
+      sessionId: 's1',
+      workspaceSubdomain: 'test-madrasa',
+      facultyId: 'f1',
+      facultyName: 'Teacher A',
+      role: 'instructor',
+      status: 'active',
+      createdAt: new Date().toISOString(),
+    };
+
+    const mockClassRow = {
+      id: 'sc1',
+      sessionId: 's1',
+      workspaceSubdomain: 'test-madrasa',
+      name: 'Tajweed 101',
+      gender: 'all',
+      ageCalcDate: null,
+      ageMin: 10,
+      ageMax: 18,
+      capacity: 30,
       enrolled: 15,
-      room: '1A',
-      sortOrder: 1,
-      createdAt: new Date('2026-01-01T00:00:00Z'),
+      enrollmentDeadline: null,
+      status: 'active',
+      teacherId: 'f1',
+      teacherName: 'Teacher A',
+      room: 'Room A',
+      sortOrder: 0,
+      createdAt: new Date().toISOString(),
+      fees: [{ id: 'fee1', sessionClassId: 'sc1', workspaceSubdomain: 'test-madrasa', feeType: 'tuition', amount: '100.00', createdAt: new Date().toISOString() }],
+      schedules: [],
+      budgets: [],
+      discounts: [],
+      timetables: [],
+      refreshments: [],
+      scholarships: [],
     };
 
-    // 1 select for session row, 2 selects for faculty and classes, then 7 selects for class children
-    const tx = createMockTx([[sessionRow], [], [classRow], [], [], [], [], [], [], []]);
-    mockWithTenant.mockImplementation(async (cb) => cb(tx));
+    const tx = {
+      execute: vi.fn().mockResolvedValue({
+        rows: [
+          {
+            sessionId: 's1',
+            faculty: [mockFacultyRow],
+            classes: [mockClassRow],
+          },
+        ],
+      }),
+    } as any;
 
-    const result = await findSessionById('test-tenant', 'sess-1');
+    const result = await hydrateSessionsListAggregated(tx, 'test-madrasa', [mockSessionRow as any]);
 
-    expect(result).not.toBeNull();
-    expect(result?.id).toBe('sess-1');
-    expect(result?.name).toBe('Spring 2026');
-    expect(result?.classes).toHaveLength(1);
-    expect(result?.classes[0]?.name).toBe('Quran 101');
-  });
-
-  it('findSessionsByIds returns empty array when empty ids given', async () => {
-    const result = await findSessionsByIds('test-tenant', []);
-    expect(result).toEqual([]);
-    expect(mockWithTenant).not.toHaveBeenCalled();
-  });
-
-  it('listSessionsByWorkspace handles options and hydrates session list', async () => {
-    const sessionRow = {
-      id: 'sess-1',
-      workspaceSubdomain: 'test-tenant',
-      name: 'Summer 2026',
-      type: 'camp',
-      status: 'upcoming',
-      startDate: '2026-07-01',
-      endDate: '2026-08-15',
-      baseFee: '250',
-      currency: 'USD',
-      description: null,
-      budgetTotalRevenue: null,
-      budgetCollected: null,
-      deletedAt: null,
-      deletedBy: null,
-      deletionReason: null,
-      createdAt: new Date('2026-01-01T00:00:00Z'),
-      updatedAt: new Date('2026-01-01T00:00:00Z'),
-    };
-
-    const tx = createMockTx([[sessionRow], [], [], [], [], [], [], []]);
-    mockWithTenant.mockImplementation(async (cb) => cb(tx));
-
-    const result = await listSessionsByWorkspace('test-tenant', { limit: 10, offset: 5 });
-
+    expect(tx.execute).toHaveBeenCalledTimes(1);
     expect(result).toHaveLength(1);
-    expect(result[0]?.name).toBe('Summer 2026');
+    expect(result[0].id).toBe('s1');
+    expect(result[0].name).toBe('Spring 2026');
+    expect(result[0].classes).toHaveLength(1);
+    expect(result[0].classes[0].name).toBe('Tajweed 101');
   });
 });

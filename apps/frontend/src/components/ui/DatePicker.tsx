@@ -28,32 +28,31 @@ export interface DatePickerProps {
   "aria-label"?: string
   "aria-invalid"?: boolean
   "aria-describedby"?: string
+  ref?: React.Ref<HTMLInputElement>
 }
 
-export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(function DatePicker(
-  {
-    value,
-    onChange,
-    onBlur,
-    placeholder,
-    className,
-    disabled,
-    min,
-    max,
-    id,
-    name,
-    required,
-    autoComplete,
-    mode = "date",
-    yearOnly,
-    minYear,
-    maxYear,
-    "aria-label": ariaLabel,
-    "aria-invalid": ariaInvalid,
-    "aria-describedby": ariaDescribedBy,
-  },
+export function DatePicker({
   ref,
-) {
+  value,
+  onChange,
+  onBlur,
+  placeholder,
+  className,
+  disabled,
+  min,
+  max,
+  id,
+  name,
+  required,
+  autoComplete,
+  mode = "date",
+  yearOnly,
+  minYear,
+  maxYear,
+  "aria-label": ariaLabel,
+  "aria-invalid": ariaInvalid,
+  "aria-describedby": ariaDescribedBy,
+}: DatePickerProps) {
   const { t } = useTranslation()
   const rootRef = React.useRef<HTMLDivElement>(null)
   const {
@@ -145,7 +144,7 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(fu
           <CalendarIcon className="h-4 w-4 transition-colors opacity-80" />
         </PopoverTrigger>
         <PopoverContent
-          className="w-auto p-0 border border-border/80 shadow-xl bg-background/95 backdrop-blur-xl rounded-2xl overflow-hidden"
+          className="w-auto p-0 surface-overlay rounded-2xl overflow-hidden"
           align="start"
           onInteractOutside={keepOpenForChrome}
           onFocusOutside={keepOpenForChrome}
@@ -267,5 +266,5 @@ export const DatePicker = React.forwardRef<HTMLInputElement, DatePickerProps>(fu
       />
     </div>
   )
-})
+}
 DatePicker.displayName = "DatePicker"

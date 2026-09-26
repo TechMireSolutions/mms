@@ -81,6 +81,19 @@ function journalEntryContentChanged(incoming: JournalEntry, stored: JournalEntry
   );
 }
 
+function mapJournalEntryUniqueError(error: unknown): never {
+  const pgErr = error as { constraint?: string; message?: string };
+  if (
+    pgErr.constraint === 'accounting_entries_workspace_ref_active_uidx' ||
+    pgErr.message?.includes('accounting_entries_workspace_ref_active_uidx')
+  ) {
+    throw new ConflictError('A journal entry with this reference already exists');
+  }
+  throw new ConflictError(
+    'A journal entry already exists for this source (conflicting source_type/source_id)',
+  );
+}
+
 export interface AccountingUseCasesDependencies {
   countActiveJournalLinesForAccount?: (tenant: string, accountId: string) => Promise<number>;
   countActiveJournalLinesForAccounts?: (tenant: string, accountIds: string[]) => Promise<Map<string, number>>;
@@ -271,6 +284,11 @@ export function createAccountingUseCases(
     );
     const storedById = new Map(stored.map((year) => [year.id, year]));
     for (const year of incoming) {
+      if (year.deletedAt || year.deletedBy || year.deletionReason) {
+        throw Object.assign(new Error('Fiscal year lifecycle fields cannot be changed through bulk saves'), {
+          statusCode: 422, type: 'validation_error',
+        });
+      }
       const existing = storedById.get(year.id);
       const isClosed = year.status === 'closed';
       if (existing?.status === 'closed') {
@@ -392,9 +410,64 @@ export function createAccountingUseCases(
       if (!tenant) throw new Error('Tenant context required');
       return withTenant(tenant, async () => {
         const parsed = journalEntryListSchema.parse(entries);
+        await repo.lockJournalEntries(tenant, parsed.map((entry) => entry.id));
         const fiscalYears = await fiscalYearService.load();
         const storedById = await loadStoredEntriesByIds(parsed);
-        const sanitized = parsed.map((entry) =>
+
+        // 1. Intra-batch duplicate ref check
+        const seenRefs = new Set<string>();
+        for (const entry of parsed) {
+          const ref = entry.ref?.trim();
+          if (ref) {
+            if (seenRefs.has(ref)) {
+              throw new ConflictError(`Duplicate reference "${ref}" within the same batch`);
+            }
+            seenRefs.add(ref);
+          }
+        }
+
+        // 2. Allocate next unique ref if missing or blank
+        const entriesWithRef: JournalEntry[] = [];
+        for (const entry of parsed) {
+          let ref = entry.ref?.trim();
+          if (!ref) {
+            let candidate = repo.allocateNextJournalRef
+              ? await repo.allocateNextJournalRef(tenant)
+              : `JE-${randomUUID().slice(0, 8)}`;
+            if (seenRefs.has(candidate)) {
+              const match = candidate.match(/^(.*)-(\d+)$/);
+              if (match) {
+                const prefix = match[1];
+                let num = parseInt(match[2], 10);
+                while (seenRefs.has(candidate)) {
+                  num += 1;
+                  candidate = `${prefix}-${num.toString().padStart(4, '0')}`;
+                }
+              } else {
+                while (seenRefs.has(candidate)) {
+                  candidate = `JE-${randomUUID().slice(0, 8)}`;
+                }
+              }
+            }
+            ref = candidate;
+            seenRefs.add(ref);
+          }
+          entriesWithRef.push({ ...entry, ref });
+        }
+
+        // 3. DB duplicate check for incoming refs against existing entries
+        if (repo.findActiveEntryRefs) {
+          const incomingRefs = entriesWithRef.map((e) => e.ref.trim()).filter(Boolean);
+          const activeRefs = await repo.findActiveEntryRefs(tenant, incomingRefs);
+          const incomingIds = new Set(entriesWithRef.map((e) => e.id));
+          for (const [ref, existingId] of activeRefs.entries()) {
+            if (!incomingIds.has(existingId)) {
+              throw new ConflictError(`A journal entry with reference "${ref}" already exists`);
+            }
+          }
+        }
+
+        const sanitized = entriesWithRef.map((entry) =>
           withServerOwnedSourceKeys(entry, storedById.get(entry.id)),
         );
         assertEntriesMutable(sanitized, storedById);
@@ -409,15 +482,8 @@ export function createAccountingUseCases(
             { skipValidation: true },
           );
         } catch (error) {
-          // The partial unique index accounting_entries_workspace_source_uidx
-          // backs the finance module's post-at-most-once source keys. A client
-          // write conflicting with an existing (source_type, source_id) is a
-          // conflict to report, not a server fault — map it instead of letting
-          // the raw Postgres error escape as a 500.
           if (isUniqueViolation(error)) {
-            throw new ConflictError(
-              'A journal entry already exists for this source (conflicting source_type/source_id)',
-            );
+            mapJournalEntryUniqueError(error);
           }
           throw error;
         }
@@ -441,31 +507,94 @@ export function createAccountingUseCases(
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       return withTenant(tenant, async () => {
+        const id = record.id?.trim() || `je-${randomUUID()}`;
+        await repo.lockJournalEntries(tenant, [id]);
         const fiscalYears = await fiscalYearService.load();
+        const existing = await repo.findEntryById(tenant, id);
+
+        let ref = record.ref?.trim();
+        if (!ref) {
+          ref = repo.allocateNextJournalRef
+            ? await repo.allocateNextJournalRef(tenant)
+            : `JE-${randomUUID().slice(0, 8)}`;
+        } else if (repo.findEntryByRef) {
+          const conflicting = await repo.findEntryByRef(tenant, ref, { excludeId: id });
+          if (conflicting) {
+            throw new ConflictError(`A journal entry with reference "${ref}" already exists`);
+          }
+        }
+
         const sanitized = withServerOwnedSourceKeys(
-          { ...record, id: record.id || `je-${randomUUID()}` },
-          undefined,
+          { ...record, id, ref },
+          existing ?? undefined,
         );
+        const prepared = prepareJournalEntryForPersist(sanitized, fiscalYears);
+        if (existing) {
+          if (existing.deletedAt || journalEntryContentChanged(prepared, existing)) {
+            throw new ConflictError('A different journal entry already exists with this ID');
+          }
+          return existing;
+        }
         assertJournalEntryPeriodOpen(sanitized, fiscalYears);
         await assertEntryAccountsWritable(tenant, [sanitized]);
-        return entryCrud.create(prepareJournalEntryForPersist(sanitized, fiscalYears));
+        try {
+          return await entryCrud.create(prepared);
+        } catch (error) {
+          if (isUniqueViolation(error)) {
+            mapJournalEntryUniqueError(error);
+          }
+          throw error;
+        }
       });
     },
     updateJournalEntryById: async (id: string, record: JournalEntry) => {
       const tenant = getRequestTenant();
       if (!tenant) throw new Error('Tenant context required');
       return withTenant(tenant, async () => {
+        await repo.lockJournalEntries(tenant, [id]);
         const fiscalYears = await fiscalYearService.load();
         const existing = await repo.findEntryById(tenant, id);
-        const sanitized = withServerOwnedSourceKeys({ ...record, id }, existing ?? undefined);
+        const ref = record.ref?.trim();
+        if (ref && repo.findEntryByRef) {
+          const conflicting = await repo.findEntryByRef(tenant, ref, { excludeId: id });
+          if (conflicting) {
+            throw new ConflictError(`A journal entry with reference "${ref}" already exists`);
+          }
+        }
+        const effectiveRef = ref || existing?.ref;
+        const sanitized = withServerOwnedSourceKeys(
+          { ...record, id, ...(effectiveRef ? { ref: effectiveRef } : {}) },
+          existing ?? undefined,
+        );
         const storedById = new Map(existing ? [[existing.id, existing]] : []);
         assertEntriesMutable([sanitized], storedById);
         assertJournalEntryPeriodOpen(sanitized, fiscalYears);
         await assertEntryAccountsWritable(tenant, [sanitized]);
-        return entryCrud.updateById(id, prepareJournalEntryForPersist(sanitized, fiscalYears));
+        try {
+          return await entryCrud.updateById(id, prepareJournalEntryForPersist(sanitized, fiscalYears));
+        } catch (error) {
+          if (isUniqueViolation(error)) {
+            mapJournalEntryUniqueError(error);
+          }
+          throw error;
+        }
       });
     },
-    restoreJournalEntryById: entryCrud.restoreById,
+    restoreJournalEntryById: async (id: string, userId?: string) => {
+      const tenant = getRequestTenant();
+      if (tenant && repo.findEntryById && repo.findEntryByRef) {
+        const trashed = await repo.findEntryById(tenant, id);
+        if (trashed?.ref?.trim()) {
+          const conflicting = await repo.findEntryByRef(tenant, trashed.ref.trim(), { excludeId: id });
+          if (conflicting) {
+            throw new ConflictError(
+              `Cannot restore journal entry: reference "${trashed.ref}" is already used by an active entry`,
+            );
+          }
+        }
+      }
+      return entryCrud.restoreById(id, userId);
+    },
     bulkRestoreJournalEntries: entryCrud.bulkRestoreByIds,
 
     deleteJournalEntryById,

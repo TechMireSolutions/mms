@@ -1,5 +1,6 @@
 import {
   FACULTY_MODULE_MANIFEST,
+  composeFacultySettings,
   normalizeFacultyModulePreferences,
   type FacultyModulePreferences,
   type FacultySettings,
@@ -32,13 +33,16 @@ const setupConfigHooks = createModuleSetupConfigHooks<FacultyModulePreferences |
 export const useFacultyPreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useFacultyPreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
+import { useMemo } from 'react';
+
 export const useTeacherPreferencesQuery = useFacultyPreferencesQuery;
 export const useTeacherPreferencesMutation = useFacultyPreferencesMutation;
 
 /** Composed FacultySettings from preferences queries. */
 export function useComposedFacultySettings(): FacultySettings {
   const prefsQuery = useFacultyPreferencesQuery();
-  return (prefsQuery.data ?? normalizePrefs(null)) as unknown as FacultySettings;
+  const fallback = useMemo(() => normalizePrefs(null), []);
+  return composeFacultySettings(null, prefsQuery.data ?? fallback);
 }
 export const useComposedTeachersSettings = useComposedFacultySettings;
 

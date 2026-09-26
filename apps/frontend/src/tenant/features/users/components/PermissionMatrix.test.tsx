@@ -40,4 +40,16 @@ describe('PermissionMatrix', () => {
     const html = renderToStaticMarkup(<PermissionMatrix {...defaultProps} modules={[]} />);
     expect(html).toContain('users.permissions.emptyRoles');
   });
+
+  it('renders cards mode without table element', () => {
+    const html = renderToStaticMarkup(<PermissionMatrix {...defaultProps} viewMode="cards" />);
+    expect(html).not.toContain('<table');
+    expect(html).toContain('students');
+  });
+
+  it('renders table mode with table element', () => {
+    const html = renderToStaticMarkup(<PermissionMatrix {...defaultProps} viewMode="table" />);
+    expect(html).toContain('<table');
+    expect(html).toContain('users.permissions.colModule');
+  });
 });

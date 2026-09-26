@@ -140,7 +140,7 @@ export function AuditIntegritySection({
               </span>
             </div>
             {anomaliesQuery.data?.anomalies.map((anom, idx) => (
-              <p key={idx} className="text-muted-foreground ps-5 text-[11px] leading-relaxed">
+              <p key={idx} className="text-muted-foreground ps-5 text-3xs leading-relaxed">
                 • {anom.description}
               </p>
             ))}

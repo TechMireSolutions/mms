@@ -48,6 +48,7 @@ import {
   loginBodySchema as platformLoginBodySchema,
   challengeCodeBodySchema,
   challengeIdBodySchema,
+  type PlatformLoginResponse,
 } from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
 
@@ -141,13 +142,15 @@ export default async function platformAuthRoutes(
         });
       }
       if (result.requires2FA) {
-        return reply.send({
+        const payload: PlatformLoginResponse = {
           user: result.user,
           requires2FA: true,
           challengeId: result.challengeId,
-        });
+        };
+        return reply.send(payload);
       }
-      return reply.send({ user: result.user });
+      const payload: PlatformLoginResponse = { user: result.user };
+      return reply.send(payload);
     });
 
     inner.post('/2fa/verify', async (request, reply) => {

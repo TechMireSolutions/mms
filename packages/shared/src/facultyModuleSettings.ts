@@ -1,23 +1,23 @@
 import type { TabDefinition, ColumnRegistryEntry, FieldDefinition } from "./contactTypes.js";
-import { INITIAL_TEACHERS_FIELD_SEED } from "./moduleFieldSetupPersons.js";
-import { DEFAULT_TEACHER_SPECIALIZATION } from './facultyTypes.js';
-import { teacherFieldLabelKey } from './facultyDirectoryColumns.js';
+import { INITIAL_FACULTY_FIELD_SEED } from "./moduleFieldSetupPersons.js";
+import { DEFAULT_FACULTY_SPECIALIZATION } from './facultyTypes.js';
+import { facultyFieldLabelKey } from './facultyDirectoryColumns.js';
 import {
-  cloneTeacherFieldSeed,
-  listEnabledCustomTeacherFormFields,
-  listTeacherSystemFormFieldKeys,
-  resolveTeacherFieldsMapForColumnSync,
+  cloneFacultyFieldSeed,
+  listEnabledCustomFacultyFormFields,
+  listFacultySystemFormFieldKeys,
+  resolveFacultyFieldsMapForColumnSync,
 } from './facultyFormCustomFields.js';
 
-// ─── Teachers Module Settings ─────────────────────────────────────────────────
+// ─── Faculty Module Settings ──────────────────────────────────────────────────
 
-export interface TeacherFieldConfig {
+export interface FacultyFieldConfig {
   enabled?: boolean;
   required?: boolean;
 }
 
 /** Legacy compat shape — read-only bridge; tabbed `fields` is the write SSOT. */
-export interface TeacherCustomField {
+export interface FacultyCustomField {
   id: string;
   label: string;
   type?: string;
@@ -25,15 +25,13 @@ export interface TeacherCustomField {
   options?: string[];
 }
 
-export type FacultyCustomField = TeacherCustomField;
-
 /**
- * Configuration for the Teachers module.
- * Field registry + prefs live on typed `teacher_field_configs` / `teacher_module_preferences`.
+ * Configuration for the Faculty module.
+ * Field registry + prefs live on typed `faculty_field_configs` / `faculty_module_preferences`.
  * Work directory view uses `useWorkDirectoryViewMode`.
  * `fields` is a tabbed `Record<tabId, FieldDefinition[]>` (flat legacy blobs still accepted on read).
  */
-export interface TeachersSettings {
+export interface FacultySettings {
   idPrefix: string;
   autoGenerateId: boolean;
   requireContactLink: boolean;
@@ -42,6 +40,12 @@ export interface TeachersSettings {
   idDigits?: number;
   idStartSeq?: number;
   idRestartAnnually?: boolean;
+  employeeIdPrefix?: string;
+  employeeIdYearFormat?: 'YYYY' | 'YY';
+  employeeIdSequenceDigits?: number;
+  employeeIdDelimiter?: string;
+  employeeIdLastYear?: number;
+  employeeIdCurrentSequence?: number;
   fields?: Record<string, unknown>;
   fieldOrder?: string[];
   formTabs?: TabDefinition[];
@@ -50,18 +54,18 @@ export interface TeachersSettings {
   columnRegistry?: ColumnRegistryEntry[];
 }
 
-function defaultTeacherFieldOrderFromSeed(): string[] {
-  return Object.values(INITIAL_TEACHERS_FIELD_SEED).flatMap((tabFields) =>
+function defaultFacultyFieldOrderFromSeed(): string[] {
+  return Object.values(INITIAL_FACULTY_FIELD_SEED).flatMap((tabFields) =>
     [...tabFields]
       .sort((left, right) => (left.order ?? 0) - (right.order ?? 0))
       .map((field) => field.key),
   );
 }
 
-function teacherFieldDefFromDefinition(field: FieldDefinition, isCustom: boolean): TeacherFieldDef {
+function facultyFieldDefFromDefinition(field: FieldDefinition, isCustom: boolean): FacultyFieldDef {
   return {
     id: field.key,
-    labelKey: field.labelKey ?? teacherFieldLabelKey(field.key),
+    labelKey: field.labelKey ?? facultyFieldLabelKey(field.key),
     label: field.label,
     type: field.type,
     required: Boolean(field.required),
@@ -71,21 +75,27 @@ function teacherFieldDefFromDefinition(field: FieldDefinition, isCustom: boolean
   };
 }
 
-/** Authoritative default values for TeachersSettings (tabbed Fields SSOT). */
-export const DEFAULT_TEACHERS_SETTINGS: TeachersSettings = {
-  idPrefix: "TCH",
+/** Authoritative default values for FacultySettings (tabbed Fields SSOT). */
+export const DEFAULT_FACULTY_SETTINGS: FacultySettings = {
+  idPrefix: "FAC",
   idTemplate: "{PREFIX}-{SEQ}",
   idDigits: 4,
   idStartSeq: 1,
   idRestartAnnually: false,
+  employeeIdPrefix: "FAC",
+  employeeIdYearFormat: "YYYY",
+  employeeIdSequenceDigits: 4,
+  employeeIdDelimiter: "",
+  employeeIdCurrentSequence: 0,
+  employeeIdLastYear: 2026,
   autoGenerateId: true,
   requireContactLink: true,
-  defaultSpecialization: DEFAULT_TEACHER_SPECIALIZATION,
-  fields: cloneTeacherFieldSeed(),
-  fieldOrder: defaultTeacherFieldOrderFromSeed(),
+  defaultSpecialization: DEFAULT_FACULTY_SPECIALIZATION,
+  fields: cloneFacultyFieldSeed(),
+  fieldOrder: defaultFacultyFieldOrderFromSeed(),
 };
 
-export interface TeacherFieldDef {
+export interface FacultyFieldDef {
   id: string;
   labelKey?: string;
   label?: string;
@@ -97,55 +107,55 @@ export interface TeacherFieldDef {
 }
 
 const seedFieldsByKey = new Map(
-  Object.values(INITIAL_TEACHERS_FIELD_SEED)
+  Object.values(INITIAL_FACULTY_FIELD_SEED)
     .flat()
     .map((field) => [field.key, field]),
 );
 
-/** Seed system field defs in seed order (from tabbed {@link INITIAL_TEACHERS_FIELD_SEED}). */
-export const DEFAULT_TEACHER_FIELD_DEFS: ReadonlyArray<TeacherFieldDef> = Object.freeze(
-  defaultTeacherFieldOrderFromSeed().map((fieldId) => {
+/** Seed system field defs in seed order (from tabbed {@link INITIAL_FACULTY_FIELD_SEED}). */
+export const DEFAULT_FACULTY_FIELD_DEFS: ReadonlyArray<FacultyFieldDef> = Object.freeze(
+  defaultFacultyFieldOrderFromSeed().map((fieldId) => {
     const field = seedFieldsByKey.get(fieldId);
     if (!field) {
-      throw new Error(`Teachers seed missing system field: ${fieldId}`);
+      throw new Error(`Faculty seed missing system field: ${fieldId}`);
     }
-    return teacherFieldDefFromDefinition(field, false);
+    return facultyFieldDefFromDefinition(field, false);
   }),
 );
 
 /**
- * Returns sorted teacher field definitions (system + custom) from tabbed `fields` only.
+ * Returns sorted faculty field definitions (system + custom) from tabbed `fields` only.
  */
-export function getSortedTeacherFields(
+export function getSortedFacultyFields(
   fieldOrder?: ReadonlyArray<string> | string[],
   fieldsRaw?: unknown,
-): TeacherFieldDef[] {
-  const tabbed = resolveTeacherFieldsMapForColumnSync(
+): FacultyFieldDef[] {
+  const tabbed = resolveFacultyFieldsMapForColumnSync(
     fieldsRaw && typeof fieldsRaw === "object" && !Array.isArray(fieldsRaw)
       ? (fieldsRaw as Record<string, unknown>)
       : undefined,
   );
-  const systemKeys = listTeacherSystemFormFieldKeys();
+  const systemKeys = listFacultySystemFormFieldKeys();
   const seenKeys = new Set<string>();
-  const fieldDefinitions: TeacherFieldDef[] = [];
+  const fieldDefinitions: FacultyFieldDef[] = [];
 
   for (const tabFields of Object.values(tabbed)) {
     for (const field of tabFields) {
       if (systemKeys.has(field.key) && !seenKeys.has(field.key)) {
         seenKeys.add(field.key);
-        fieldDefinitions.push(teacherFieldDefFromDefinition(field, false));
+        fieldDefinitions.push(facultyFieldDefFromDefinition(field, false));
       }
     }
   }
 
-  for (const field of listEnabledCustomTeacherFormFields(tabbed)) {
+  for (const field of listEnabledCustomFacultyFormFields(tabbed)) {
     if (!seenKeys.has(field.key)) {
       seenKeys.add(field.key);
-      fieldDefinitions.push(teacherFieldDefFromDefinition(field, true));
+      fieldDefinitions.push(facultyFieldDefFromDefinition(field, true));
     }
   }
 
-  const order = fieldOrder || DEFAULT_TEACHERS_SETTINGS.fieldOrder || [];
+  const order = fieldOrder || DEFAULT_FACULTY_SETTINGS.fieldOrder || [];
   const orderIndexByFieldId = Object.fromEntries(order.map((fieldId, index) => [fieldId, index]));
   return fieldDefinitions.sort((left, right) => {
     const leftIndex = orderIndexByFieldId[left.id] ?? 9999;
@@ -155,6 +165,14 @@ export function getSortedTeacherFields(
   });
 }
 
+/* ========================================================================= */
+/*                    BACKWARD COMPATIBILITY ALIASES                        */
+/* ========================================================================= */
 
-export const DEFAULT_FACULTY_SETTINGS = DEFAULT_TEACHERS_SETTINGS;
-export type FacultySettings = TeachersSettings;
+export type TeacherFieldConfig = FacultyFieldConfig;
+export type TeacherCustomField = FacultyCustomField;
+export type TeachersSettings = FacultySettings;
+export const DEFAULT_TEACHERS_SETTINGS = DEFAULT_FACULTY_SETTINGS;
+export type TeacherFieldDef = FacultyFieldDef;
+export const DEFAULT_TEACHER_FIELD_DEFS = DEFAULT_FACULTY_FIELD_DEFS;
+export const getSortedTeacherFields = getSortedFacultyFields;

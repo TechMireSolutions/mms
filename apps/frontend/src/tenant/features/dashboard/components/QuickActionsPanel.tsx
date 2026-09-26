@@ -76,7 +76,7 @@ export function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): Re
                   <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors m-0 leading-tight">
                     {label}
                   </p>
-                  <p className="text-xs text-muted-foreground/80 mt-1 m-0 leading-normal transition-colors group-hover/item:text-muted-foreground">
+                  <p className="text-xs text-muted-foreground mt-1 m-0 leading-normal">
                     {t(quickAction.descKey)}
                   </p>
                 </div>

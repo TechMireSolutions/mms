@@ -36,18 +36,25 @@ export function TeacherCardHeader({
   const showGender = (!isColumnVisible || isColumnVisible("gender")) && Boolean(teacher.gender);
   const effectiveGender = showGender ? teacher.gender : undefined;
 
-  const hasSubtitle = showEmployeeId || showGender;
+  const hasSubtitle = showEmployeeId || showGender || Boolean(teacher.designation);
   const subtitle = hasSubtitle ? (
     <DirectoryCardSubtitleStack>
-      {showEmployeeId && teacher.employeeId ? (
-        <FormFooterBadge
-          tone="muted"
-          className="mt-1 max-w-full px-1.5 py-0.5 rounded font-bold tracking-tight truncate self-start"
-          title={teacher.employeeId}
-        >
-          {teacher.employeeId}
-        </FormFooterBadge>
-      ) : null}
+      <div className="flex items-center gap-1.5 flex-wrap">
+        {showEmployeeId && teacher.employeeId ? (
+          <FormFooterBadge
+            tone="muted"
+            className="mt-1 max-w-full px-1.5 py-0.5 rounded font-bold tracking-tight truncate self-start"
+            title={teacher.employeeId}
+          >
+            {teacher.employeeId}
+          </FormFooterBadge>
+        ) : null}
+        {teacher.designation ? (
+          <span className="mt-1 inline-flex items-center px-1.5 py-0.5 rounded text-[11px] font-semibold bg-primary/10 text-primary border border-primary/20 truncate">
+            {teacher.designation}
+          </span>
+        ) : null}
+      </div>
       {showGender && teacher.gender ? (
         <PersonIdentityMeta gender={teacher.gender} className="font-semibold truncate" />
       ) : null}

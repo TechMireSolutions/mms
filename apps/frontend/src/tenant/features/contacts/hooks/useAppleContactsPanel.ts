@@ -4,7 +4,7 @@ import {
   type ChangeEvent,
   type RefObject,
 } from "react";
-import { type Contact, buildTenantExportFilename, parseContactsCsv, parseVCard } from "@mms/shared";
+import { type Contact, buildTenantExportFilename } from "@mms/shared";
 import { useOptionalTenant } from "@/lib/contexts/TenantContext";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { resolvePhoneLabel, resolveEmailLabel } from "@/lib/contacts/contactI18n";
@@ -20,6 +20,7 @@ import {
   buildAppleImportIdentityCandidates,
   filterAppleImportFreshContacts,
 } from "@/tenant/features/contacts/hooks/appleContactsIdentity";
+import { readAndParseAppleContactsFile } from "@/tenant/features/contacts/hooks/appleContactsFileParser";
 
 export function useAppleContactsPanel({
   onImport,
@@ -59,40 +60,19 @@ export function useAppleContactsPanel({
   const processFile = (file: File): void => {
     setFileName(file.name);
     setFileError(null);
-    const reader = new FileReader();
-    reader.onload = (readerEvent) => {
-      if (readerEvent.target && typeof readerEvent.target.result === "string") {
-        const text = readerEvent.target.result;
-        const isCsv = file.name.toLowerCase().endsWith(".csv") || file.type === "text/csv";
-        let parsed: Contact[] = [];
-        if (isCsv) {
-          const { contacts, errors } = parseContactsCsv(text, {
-            defaultPhoneLabel: mobileLabel,
-            defaultEmailLabel: personalLabel,
-          });
-          parsed = contacts;
-          if (contacts.length === 0) {
-            const reason = errors[0] || t("contacts.sync.emptyOrInvalidFile", { filename: file.name });
-            setFileError(reason);
-            notify.error(reason);
-          }
-        } else {
-          parsed = parseVCard(text, {
-            mobileLabel,
-            personalLabel,
-            defaultPhoneCountryCode,
-          });
-          if (parsed.length === 0) {
-            const reason = t("contacts.sync.emptyOrInvalidFile", { filename: file.name });
-            setFileError(reason);
-            notify.error(reason);
-          }
+    readAndParseAppleContactsFile(
+      file,
+      { mobileLabel, personalLabel, defaultPhoneCountryCode },
+      ({ parsed, error }) => {
+        if (parsed.length === 0) {
+          const reason = error || t("contacts.sync.emptyOrInvalidFile", { filename: file.name });
+          setFileError(reason);
+          notify.error(reason);
         }
         setPreviewList(parsed);
         setResult(null);
-      }
-    };
-    reader.readAsText(file);
+      },
+    );
   };
 
   const handleFile = (event: ChangeEvent<HTMLInputElement>): void => {

@@ -14,11 +14,11 @@ import { NetworkStatusIndicator } from '@/components/ui/NetworkStatusIndicator';
 
 const AuthenticatedApp = (): React.JSX.Element | null => {
   const isTenantHost = useIsTenantHost();
-  const { isLoadingAuth, authError, authChecked, user } = useAuth();
+  const { isLoadingAuth, authError, authChecked } = useAuth();
 
   if (isTenantHost) {
     const isEntry = typeof window !== 'undefined' && isEntryPath(window.location.pathname, { isApex: false });
-    const bootLoading = !user && !isEntry && isLoadingAuth && !authChecked;
+    const bootLoading = !isEntry && isLoadingAuth && !authChecked;
     if (bootLoading) {
       return <RouteStatusFallback fullScreen />;
     }

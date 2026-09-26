@@ -112,6 +112,10 @@ export default function HasanatCards() {
                 onBulkDelete={c.handleBulkDelete}
                 onBulkRestore={c.handleBulkRestore}
                 onMessage={c.handleMessageDistributions}
+                selectedIds={c.distributionSelection.selectedIds}
+                onToggleSelectedDistribution={c.distributionSelection.toggleSelected}
+                onToggleSelectAll={c.distributionSelection.toggleSelectAll}
+                onClearSelection={c.distributionSelection.clearSelection}
               />
             )}
           </ModuleTierMotion>

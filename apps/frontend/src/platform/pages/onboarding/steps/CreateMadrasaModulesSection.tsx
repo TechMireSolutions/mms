@@ -3,8 +3,8 @@ import { LayoutDashboard, Sparkles, BookOpen, GraduationCap, School } from "luci
 import type { AppTranslationKey } from "@mms/shared";
 import { SYSTEM_MODULES } from "@mms/shared";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
+import { PlatformModuleSelectCard } from "@/platform/components/workspace/PlatformModuleSelectCard";
 import type { CreateMadrasaController } from "@/platform/pages/onboarding/steps/useCreateMadrasaController";
 
 interface CreateMadrasaModulesSectionProps {
@@ -96,33 +96,13 @@ export function CreateMadrasaModulesSection({ controller }: CreateMadrasaModules
           {(() => {
             const moduleSet = new Set(data.modules);
             return SYSTEM_MODULES.map((module) => (
-            <div
-              key={module.id}
-              className="flex items-start gap-3 rounded-xl border border-border/60 p-3.5 bg-card/50 hover:bg-card transition-colors shadow-2xs"
-            >
-              <Checkbox
-                id={`module-${module.id}`}
-                checked={moduleSet.has(module.id)}
-                disabled={module.required}
-                onCheckedChange={(checked) => toggleModule(module.id, checked as boolean)}
-                className="mt-0.5"
+              <PlatformModuleSelectCard
+                key={module.id}
+                module={module}
+                selected={moduleSet.has(module.id)}
+                onToggle={toggleModule}
               />
-              <div className="space-y-1 leading-none">
-                <label
-                  htmlFor={`module-${module.id}`}
-                  className="text-sm font-bold text-foreground leading-none cursor-pointer flex items-center gap-1.5"
-                >
-                  {module.label}{' '}
-                  {module.required && (
-                    <span className="text-3xs font-semibold text-muted-foreground">
-                      {t("platform.moduleRequired")}
-                    </span>
-                  )}
-                </label>
-                <p className="text-xs text-muted-foreground leading-relaxed pt-1">{module.description}</p>
-              </div>
-            </div>
-            ))
+            ));
           })()}
         </div>
       </div>

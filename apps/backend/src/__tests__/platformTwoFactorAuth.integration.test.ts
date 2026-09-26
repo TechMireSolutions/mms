@@ -40,10 +40,14 @@ vi.mock('../db/repositories/platformUserRepository.js', () => ({
   countPlatformUserRows: vi.fn().mockResolvedValue(1),
 }));
 
-vi.mock('../services/auth/passwordService.js', () => ({
-  verifyPassword: mocks.verifyPassword,
-  hashPassword: vi.fn().mockResolvedValue('hash'),
-}));
+vi.mock('../services/auth/passwordService.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../services/auth/passwordService.js')>();
+  return {
+    ...actual,
+    verifyPassword: mocks.verifyPassword,
+    hashPassword: vi.fn().mockResolvedValue('hash'),
+  };
+});
 
 vi.mock('../services/platform/platformTwoFactorService.js', () => ({
   isPlatformTwoFactorRequired: mocks.isTwoFactorRequired,

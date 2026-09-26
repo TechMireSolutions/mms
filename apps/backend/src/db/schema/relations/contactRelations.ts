@@ -19,7 +19,7 @@ import {
   tenantUsers,
 } from "../contacts.js";
 import { students } from "../students.js";
-import { teachers } from "../faculty.js";
+import { faculty } from "../faculty.js";
 import { messageLogs } from "../messaging.js";
 
 export const contactsRelations = relations(contacts, ({ one, many }) => ({
@@ -40,7 +40,7 @@ export const contactsRelations = relations(contacts, ({ one, many }) => ({
   attachments: many(contactAttachments),
   bankDetails: many(contactBankDetails),
   students: many(students),
-  teachers: many(teachers),
+  faculty: many(faculty),
   tenantUsers: many(tenantUsers),
   messageLogs: many(messageLogs),
 }));
@@ -138,7 +138,7 @@ export const tenantUsersRelations = relations(tenantUsers, ({ one, many }) => ({
     fields: [tenantUsers.workspaceSubdomain, tenantUsers.contactId],
     references: [contacts.workspaceSubdomain, contacts.id],
   }),
-  teachers: many(teachers),
+  faculty: many(faculty),
   backgroundJobs: many(backgroundJobs),
   userActivityLogs: many(userActivityLogs),
   auditTrailEvents: many(auditTrailEvents),

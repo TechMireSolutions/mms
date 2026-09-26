@@ -12,7 +12,6 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { ObligationCollectionsListContent } from "@/tenant/features/obligations/components/ObligationCollectionsListContent";
 import { ObligationCollectionsListFilters } from "@/tenant/features/obligations/components/ObligationCollectionsListFilters";
 import { ObligationsBulkActionBar } from "@/tenant/features/obligations/components/ObligationsBulkActionBar";
-import { useObligationSelection } from "@/tenant/features/obligations/hooks/useObligationSelection";
 
 const PrintInvoiceModal = lazy(() => import("@/tenant/features/obligations/components/invoice/PrintInvoiceModal").then((module) => ({ default: module.PrintInvoiceModal })));
 const InvoiceTemplateEditor = lazy(() => import("@/tenant/features/obligations/components/invoice/InvoiceTemplateEditor").then((module) => ({ default: module.InvoiceTemplateEditor })));
@@ -36,6 +35,10 @@ export interface ObligationCollectionListProps {
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
+  selectedIds?: string[];
+  onToggleSelectedCollection?: (id: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean, visibleIds: string[]) => void;
+  onClearSelection?: () => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -59,6 +62,10 @@ export function ObligationCollectionsList({
   onRestore,
   onBulkDelete,
   onBulkRestore,
+  selectedIds = [],
+  onToggleSelectedCollection,
+  onToggleSelectAll,
+  onClearSelection,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -86,37 +93,10 @@ export function ObligationCollectionsList({
   }, [collections]);
   const contacts = useMergedObligationContacts(contactIds);
 
-  const contactsMap = useMemo(() => {
-    const map = new Map<string, (typeof contacts)[number]>();
-    for (const c of contacts) {
-      if (c?.id != null) map.set(String(c.id), c);
-    }
-    return map;
-  }, [contacts]);
-
-  const repsMap = useMemo(() => {
-    const map = new Map<string, (typeof reps)[number]>();
-    for (const r of reps) {
-      if (r?.id != null) map.set(String(r.id), r);
-    }
-    return map;
-  }, [reps]);
-
-  const mujtahidsMap = useMemo(() => {
-    const map = new Map<string, (typeof mujtahids)[number]>();
-    for (const m of mujtahids) {
-      if (m?.id != null) map.set(String(m.id), m);
-    }
-    return map;
-  }, [mujtahids]);
-
-  const obTypesMap = useMemo(() => {
-    const map = new Map<string, (typeof obligationTypes)[number]>();
-    for (const o of obligationTypes) {
-      if (o?.id != null) map.set(String(o.id), o);
-    }
-    return map;
-  }, [obligationTypes]);
+  const contactsMap = useMemo(() => new Map(contacts.filter(Boolean).map((c) => [String(c.id), c])), [contacts]);
+  const repsMap = useMemo(() => new Map(reps.filter(Boolean).map((r) => [String(r.id), r])), [reps]);
+  const mujtahidsMap = useMemo(() => new Map(mujtahids.filter(Boolean).map((m) => [String(m.id), m])), [mujtahids]);
+  const obTypesMap = useMemo(() => new Map(obligationTypes.filter(Boolean).map((o) => [String(o.id), o])), [obligationTypes]);
 
   const getContact = useCallback(
     (contactId?: string | number | null) => (contactId != null ? contactsMap.get(String(contactId)) : undefined),
@@ -164,18 +144,13 @@ export function ObligationCollectionsList({
     Online: { label: t("obligations.paymentMode.online"), cls: SEMANTIC_BADGE.info },
   }), [t]) as Record<string, StatusBadgeConfigItem>;
 
-  const {
-    selectedIds,
-    allVisibleSelected,
-    someVisibleSelected,
-    toggleSelectAll,
-    toggleSelectedCollection,
-    clearSelection,
-  } = useObligationSelection(filtered);
+  const selectedSet = new Set(selectedIds);
+  const allVisibleSelected = filtered.length > 0 && filtered.every((col) => selectedSet.has(col.id));
+  const someVisibleSelected = selectedSet.size > 0 && filtered.some((col) => selectedSet.has(col.id));
 
   useEffect(() => {
-    clearSelection();
-  }, [showDeleted, clearSelection]);
+    onClearSelection?.();
+  }, [search, typeFilter, onClearSelection]);
 
   const confirmRowTrash = async (): Promise<void> => {
     if (!pendingTrashId) return;
@@ -191,7 +166,7 @@ export function ObligationCollectionsList({
       if (showDeleted) await onBulkRestore?.(selectedIds);
       else await onBulkDelete?.(selectedIds);
     } finally {
-      clearSelection();
+      onClearSelection?.();
       setConfirmBulkOpen(false);
     }
   };
@@ -221,7 +196,7 @@ export function ObligationCollectionsList({
           canDelete={canDelete}
           onRequestBulkDelete={() => setConfirmBulkOpen(true)}
           onRequestBulkRestore={() => setConfirmBulkOpen(true)}
-          onClearSelection={clearSelection}
+          onClearSelection={onClearSelection ?? (() => {})}
         />
       )}
 
@@ -247,8 +222,8 @@ export function ObligationCollectionsList({
         onAddNew={onAddNew}
         onView={onView}
         onPrint={setPrintCollection}
-        onToggleSelectAll={toggleSelectAll}
-        onToggleSelectedCollection={toggleSelectedCollection}
+        onToggleSelectAll={(checked) => onToggleSelectAll?.(checked, filtered.map((col) => col.id))}
+        onToggleSelectedCollection={(id, checked) => onToggleSelectedCollection?.(id, checked)}
         onTrashAction={(id) => {
           if (showDeleted) void onRestore?.(id);
           else setPendingTrashId(id);

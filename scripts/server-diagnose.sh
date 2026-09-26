@@ -39,14 +39,21 @@ pm2 status 2>/dev/null || echo "pm2 not available"
 echo ""
 
 echo "── Local ports ──"
-for port in "$BACKEND_PORT" "$FRONTEND_PORT"; do
-  if curl_local_backend_ok "http://127.0.0.1:${port}/" "$APP_DOMAIN" \
-    || curl_local_backend_ok "http://127.0.0.1:${port}/health" "$APP_DOMAIN"; then
-    echo "port ${port}: responding"
-  else
-    echo "port ${port}: NOT responding"
-  fi
-done
+if curl_local_backend_ok "http://127.0.0.1:${BACKEND_PORT}/" "$APP_DOMAIN" \
+  || curl_local_backend_ok "http://127.0.0.1:${BACKEND_PORT}/health" "$APP_DOMAIN"; then
+  echo "port ${BACKEND_PORT} (backend + SPA): responding"
+else
+  echo "port ${BACKEND_PORT} (backend + SPA): NOT responding"
+fi
+echo ""
+
+echo "── Redis ──"
+if command -v redis-cli &>/dev/null; then
+  REDIS_PING="$(redis-cli ping 2>/dev/null || echo 'FAILED')"
+  echo "redis-cli ping: ${REDIS_PING}"
+else
+  echo "redis-cli: not installed or not in PATH"
+fi
 echo ""
 
 echo "── Backend health ──"
@@ -82,5 +89,5 @@ fi
 echo "── Recent backend logs ──"
 pm2 logs mmsv2-backend --lines 20 --nostream 2>/dev/null || true
 echo ""
-echo "── Recent frontend logs ──"
-pm2 logs mmsv2-frontend --lines 20 --nostream 2>/dev/null || true
+echo "── Recent worker logs ──"
+pm2 logs mmsv2-worker --lines 20 --nostream 2>/dev/null || true

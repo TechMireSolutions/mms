@@ -1,59 +1,71 @@
 import {
-  TEACHERS_MODULE_MANIFEST,
-  type TeachersListPageResult,
-  type TeachersListQuery,
+  FACULTY_MODULE_MANIFEST,
+  type FacultyListPageResult,
+  type FacultyListQuery,
 } from '@mms/shared';
-import { teachers } from '../schema.js';
+import { faculty } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
-import { teacherRowToRecord } from './facultyRepository.js';
+import { facultyRowToRecord } from './facultyRepositoryColumns.js';
+import { countSubordinatesBatch } from './facultyRepositorySubordinates.js';
 import { buildListConditions, buildOrderBy } from './facultyRepositoryListQuerySql.js';
 
-const TEACHER_LIST_COLUMNS = {
-  id: teachers.id,
-  workspaceSubdomain: teachers.workspaceSubdomain,
-  contactId: teachers.contactId,
-  userId: teachers.userId,
-  employeeId: teachers.employeeId,
-  status: teachers.status,
-  specialization: teachers.specialization,
-  qualification: teachers.qualification,
-  joinDate: teachers.joinDate,
-  deletedAt: teachers.deletedAt,
-  deletedBy: teachers.deletedBy,
-  deletionReason: teachers.deletionReason,
-  createdAt: teachers.createdAt,
-  updatedAt: teachers.updatedAt,
-  createdBy: teachers.createdBy,
-  updatedBy: teachers.updatedBy,
+export const FACULTY_LIST_COLUMNS = {
+  id: faculty.id,
+  workspaceSubdomain: faculty.workspaceSubdomain,
+  contactId: faculty.contactId,
+  userId: faculty.userId,
+  employeeId: faculty.employeeId,
+  status: faculty.status,
+  specialization: faculty.specialization,
+  department: faculty.department,
+  designation: faculty.designation,
+  reportingFacultyId: faculty.reportingFacultyId,
+  hierarchyRank: faculty.hierarchyRank,
+  qualification: faculty.qualification,
+  joinDate: faculty.joinDate,
+  deletedAt: faculty.deletedAt,
+  deletedBy: faculty.deletedBy,
+  deletionReason: faculty.deletionReason,
+  createdAt: faculty.createdAt,
+  updatedAt: faculty.updatedAt,
+  createdBy: faculty.createdBy,
+  updatedBy: faculty.updatedBy,
 };
 
 /**
- * SQL-filtered teachers Work list page (typed deleted_at + contact join for name).
+ * SQL-filtered faculty Work list page (typed deleted_at + contact join for name).
  * includeDeleted → deleted-only (Contacts trash parity).
  */
-export async function listTeachersPage(
+export async function listFacultyPage(
   tenant: string,
-  query: TeachersListQuery & { includeDeleted?: boolean; afterId?: string; skipCount?: boolean },
-): Promise<TeachersListPageResult & { nextCursor?: string }> {
+  query: FacultyListQuery & { includeDeleted?: boolean; afterId?: string; skipCount?: boolean },
+): Promise<FacultyListPageResult & { nextCursor?: string }> {
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenantRead(subdomain, async (tx) => {
     const sortDir = query.sortDir === 'desc' ? 'desc' : query.sortDir === 'asc' ? 'asc' : undefined;
-    const result = await runListPage(tx, teachers, {
+    const result = await runListPage(tx, faculty, {
       conditions: buildListConditions(subdomain, query),
       orderBy: buildOrderBy(query.sortField, sortDir),
-      columns: TEACHER_LIST_COLUMNS,
+      columns: FACULTY_LIST_COLUMNS,
       page: query.page,
       limit: query.limit,
       afterId: query.afterId,
       skipCount: query.skipCount,
-      defaultPageSize: TEACHERS_MODULE_MANIFEST.defaultPageSize,
-      rowMapper: (row) => teacherRowToRecord(row as typeof teachers.$inferSelect),
+      defaultPageSize: FACULTY_MODULE_MANIFEST.defaultPageSize,
+      rowMapper: (row) => facultyRowToRecord(row as typeof faculty.$inferSelect),
     });
 
+    const itemIds = result.items.map((t) => String(t.id));
+    const subCounts = await countSubordinatesBatch(subdomain, itemIds);
+    const enriched = result.items.map((t) => ({
+      ...t,
+      subordinateCount: subCounts[String(t.id)] ?? 0,
+    }));
+
     return {
-      teachers: result.items,
+      faculty: enriched,
       total: result.total,
       page: result.page,
       limit: result.limit,
@@ -62,3 +74,4 @@ export async function listTeachersPage(
     };
   });
 }
+

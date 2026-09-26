@@ -4,7 +4,7 @@ import { invalidateEnrollmentsQueries } from '@/tenant/hooks/collections/enrollm
 import { invalidateMessagingQueries } from '@/tenant/hooks/collections/messaging';
 import { invalidateSessionsQueries } from '@/tenant/hooks/collections/sessions';
 import { invalidateStudentsQueries } from '@/tenant/hooks/collections/students';
-import { invalidateTeachersQueries } from '@/tenant/hooks/collections/faculty';
+import { invalidateFacultyQueries, invalidateTeachersQueries } from '@/tenant/hooks/collections/faculty';
 import { invalidateUsersQueries } from '@/tenant/hooks/collections/users';
 import { invalidateAttendanceQueries } from '@/tenant/hooks/collections/attendance';
 import { invalidateFinanceQueries } from '@/tenant/hooks/collections/finance';
@@ -29,6 +29,7 @@ export function invalidateModuleQueries(queryClient: QueryClient, key: string): 
   switch (key) {
     case 'contacts': return invalidateContactsQueries(queryClient);
     case 'students': return invalidateStudentsQueries(queryClient);
+    case 'faculty': return invalidateFacultyQueries(queryClient);
     case 'teachers': return invalidateTeachersQueries(queryClient);
     case 'sessions': return invalidateSessionsQueries(queryClient);
     case 'enrollments': return invalidateEnrollmentsQueries(queryClient);

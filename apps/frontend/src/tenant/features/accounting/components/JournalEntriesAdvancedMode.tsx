@@ -21,6 +21,7 @@ interface JournalEntriesAdvancedModeProps {
   mode: JournalMode;
   modeTabs: Array<{ key: JournalMode; label: string }>;
   entries: JournalEntry[];
+  allEntries?: JournalEntry[];
   filteredEntries: JournalEntry[];
   accounts: Account[];
   fiscalYears: FiscalYear[];
@@ -78,6 +79,8 @@ interface JournalEntriesAdvancedModeProps {
   onPendingReverseEntryChange: (entry: JournalEntry | null) => void;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
+  pageScopeLabel: string;
+  onRestoreEntry?: (id: string) => void | Promise<void>;
 }
 
 export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProps) {
@@ -133,6 +136,8 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         />
       )}
 
+      <p className="m-0 text-xs text-muted-foreground" role="status">{props.pageScopeLabel}</p>
+
       <JournalEntriesList
         viewMode={viewMode}
         entries={props.filteredEntries}
@@ -152,6 +157,18 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         onToggleSelectAll={props.onToggleSelectAll}
         getColumnWidth={props.getColumnWidth}
         onColumnResize={props.onColumnResize}
+        showDeleted={props.showDeleted}
+        hasActiveFilters={props.search.trim().length > 0 || props.statusFilter !== "all" || props.tagFilter !== "all" || Boolean(props.dateFrom || props.dateTo)}
+        onClearFilters={() => {
+          props.onSearchChange("");
+          props.onStatusFilterChange("all");
+          props.onTagFilterChange("all");
+          props.onDateFromChange("");
+          props.onDateToChange("");
+        }}
+        onShowActive={props.onToggleDeleted}
+        onCreate={props.onOpenNew}
+        canWrite={props.canWrite}
         {...props.paging}
       />
 
@@ -159,7 +176,7 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         {props.canWrite && (props.modal === "new" || props.modal === "edit") && (
           <JournalEntryForm
             accounts={props.accounts}
-            entries={props.entries}
+            entries={(props.allEntries && props.allEntries.length > 0) ? props.allEntries : props.entries}
             initial={props.modal === "edit" ? props.selected : null}
             fiscalYears={props.fiscalYears}
             onSave={props.onSave}
@@ -173,8 +190,10 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
               entry={entry}
               accounts={props.accounts}
               onClose={props.onCloseModal}
-              onEdit={props.canWrite ? props.onEditSelected : undefined}
-              onReverse={props.canWrite ? () => props.onRequestReverse(entry) : undefined}
+              onEdit={props.canWrite && !entry.deletedAt ? props.onEditSelected : undefined}
+              onReverse={props.canWrite && !entry.deletedAt ? () => props.onRequestReverse(entry) : undefined}
+              onRestore={props.canDelete && entry.deletedAt && props.onRestoreEntry ? () => props.onRestoreEntry?.(entry.id) : undefined}
+              canRestore={props.canDelete}
             />
           );
         })()}

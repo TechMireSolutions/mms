@@ -10,7 +10,7 @@ import {
   TEACHER_SORT_FIELD_SET,
   type TeacherSortField,
 } from './facultyDirectoryColumns.js';
-import { resolveTeacherStatusRoles, type Teacher } from './facultyTypes.js';
+import { resolveTeacherStatusRoles, type Faculty } from './facultyTypes.js';
 
 export {
   FACULTY_SORT_FIELDS,
@@ -79,6 +79,9 @@ export const teachersListQuerySchema = z.object({
   ...baseListQueryFields,
   status: z.string().max(TEACHER_STATUS_WRITE_MAX).optional(),
   specialization: z.string().optional(),
+  department: z.string().optional(),
+  designation: z.string().optional(),
+  reportingFacultyId: z.string().optional(),
   gender: z.string().optional(),
   quickFilter: teachersQuickFilterSchema.optional(),
   sortField: z.enum(TEACHER_SORT_FIELDS).optional(),
@@ -97,9 +100,9 @@ export type TeachersListQuery = Omit<TeachersListQueryParsed, 'includeDeleted' |
 };
 
 /** Server SQL page result shape (FE Query + BE repository). */
-export interface TeachersListPageResult {
-  teachers: Teacher[];
-  faculty?: Teacher[];
+export interface FacultyListPageResult {
+  faculty: Faculty[];
+  teachers?: Faculty[];
   total: number;
   page: number;
   limit: number;
@@ -107,7 +110,7 @@ export interface TeachersListPageResult {
   nextCursor?: string;
 }
 
-export type FacultyListPageResult = TeachersListPageResult;
+export type TeachersListPageResult = FacultyListPageResult;
 export const facultyListQuerySchema = teachersListQuerySchema;
 export type FacultyListQuery = TeachersListQuery;
 export type FacultyListQueryParsed = TeachersListQueryParsed;

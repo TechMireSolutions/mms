@@ -52,7 +52,7 @@ function ActivityItem({
           <span className={DETAIL_SECTION_TITLE}>
             {ACTIVITY_TYPE_I18N[act.type] ? t(ACTIVITY_TYPE_I18N[act.type]) : act.type}
           </span>
-          <span className="text-xs font-bold text-muted-foreground/60">{formatDate(act.date)}</span>
+          <span className="text-xs font-bold text-muted-foreground">{formatDate(act.date)}</span>
         </div>
         <p className="text-xs text-foreground font-medium leading-relaxed">{act.content}</p>
         {act.by && <span className="block mt-2 text-xs font-bold text-primary italic">— {act.by}</span>}

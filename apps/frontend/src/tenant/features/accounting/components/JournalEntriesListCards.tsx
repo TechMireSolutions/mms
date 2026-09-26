@@ -12,19 +12,131 @@ import {
   isJournalBalanced,
   type JournalEntriesListProps,
 } from "@/tenant/features/accounting/components/journalEntriesListShared";
-import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
 import { ModuleDirectoryCards } from "@/components/ui/ModuleDirectoryCards";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
+import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { cn } from "@/lib/utils";
 
-type JournalEntriesListCardsProps = Omit<
+export type JournalEntriesListCardsProps = Omit<
   JournalEntriesListProps,
-  "getColumnWidth" | "onColumnResize"
+  "getColumnWidth" | "onColumnResize" | "renderEntryActions" | "viewMode"
 >;
+
+function JournalEntryCard({
+  entry,
+  props,
+  reducedMotion,
+}: {
+  entry: JournalEntriesListProps["entries"][number];
+  props: JournalEntriesListCardsProps;
+  reducedMotion: boolean;
+}): React.JSX.Element {
+  const { t } = useTranslation();
+  const {
+    selectedIds,
+    canDelete,
+    isColumnVisible,
+    journalStatusConfig,
+    formatAmount,
+    renderEntryActionsCards,
+    onToggleSelectedEntry,
+    onView,
+  } = props;
+
+  const { isSelected, onSelect, onView: handleView, cardProps } = useWorkCardAction({
+    entity: entry,
+    selectedIds,
+    onToggleSelected: onToggleSelectedEntry,
+    onView,
+    canSelect: canDelete,
+  });
+
+  const { totalDebit, totalCredit } = getJournalEntryLineTotals(entry);
+
+  return (
+    <DirectoryEntityCard
+      key={entry.id}
+      isSelected={isSelected}
+      reducedMotion={reducedMotion}
+      accentClassName={entry.reversed_ref ? "bg-warning/60 group-hover:bg-warning" : "bg-primary/50 group-hover:bg-primary"}
+      {...cardProps}
+    >
+      <DirectoryCardHeader
+        id={entry.id}
+        displayName={entry.description}
+        isSelected={isSelected}
+        showSelect={canDelete}
+        onSelect={onSelect}
+        selectAriaLabel={t("accounting.trash.selectEntry", { ref: entry.ref })}
+        onView={handleView}
+        viewAriaLabel={t("accounting.journal.actions.viewEntry", { ref: entry.ref })}
+        reducedMotion={reducedMotion}
+        subtitle={
+          <div className="min-w-0">
+            <p className="mt-0.5 truncate font-mono text-xs font-bold text-primary">
+              {entry.ref}
+            </p>
+            {entry.reversed_ref ? (
+              <p className="text-xs text-warning font-semibold">
+                {t("accounting.journal.dashboard.reversalOf", { ref: entry.reversed_ref })}
+              </p>
+            ) : null}
+            {entry.simple_mode ? (
+              <span className="text-xs text-primary/60 font-semibold">
+                {t("accounting.journal.dashboard.simpleMode")}
+              </span>
+            ) : null}
+          </div>
+        }
+      />
+      <DirectoryCardMetaGrid>
+        {isColumnVisible("date") && (
+          <DirectoryCardMetaTile label={t("accounting.columns.journal.date")}>
+            <span className="font-mono">{formatDate(entry.date)}</span>
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("tags") && (entry.tags || []).length > 0 && (
+          <DirectoryCardMetaTile label={t("accounting.columns.journal.tags")}>
+            <span className="flex flex-wrap gap-1">
+              {(entry.tags || []).map((tag) => (
+                <Badge key={tag} pill tone="primary" className="px-1.5 font-bold">
+                  {getJournalTagLabel(tag, t)}
+                </Badge>
+              ))}
+            </span>
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("status") && (
+          <DirectoryCardMetaTile label={t("accounting.columns.journal.status")}>
+            <StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("debit") && (
+          <DirectoryCardMetaTile label={t("accounting.columns.journal.debit")}>
+            <span className="font-mono text-xs font-semibold text-info">{formatAmount(totalDebit)}</span>
+          </DirectoryCardMetaTile>
+        )}
+        {isColumnVisible("credit") && (
+          <DirectoryCardMetaTile label={t("accounting.columns.journal.credit")}>
+            <span className="font-mono text-xs font-semibold text-success">{formatAmount(totalCredit)}</span>
+          </DirectoryCardMetaTile>
+        )}
+      </DirectoryCardMetaGrid>
+      <DirectoryCardFooterActions
+        onView={handleView}
+        viewLabel={t("contacts.actionViewShort")}
+        viewAriaLabel={t("accounting.journal.actions.viewEntry", { ref: entry.ref })}
+        overflowActions={renderEntryActionsCards(entry)}
+      />
+    </DirectoryEntityCard>
+  );
+}
 
 /** Accounting journal entries cards — shared directory chrome with a ledger summary strip. */
 export function JournalEntriesListCards(props: JournalEntriesListCardsProps): React.JSX.Element {
@@ -35,14 +147,10 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
     allVisibleSelected,
     someVisibleSelected,
     isColumnVisible,
-    journalStatusConfig,
     grandDebit,
     grandCredit,
     formatAmount,
-    renderEntryActionsCards,
-    onToggleSelectedEntry,
     onToggleSelectAll,
-    onView,
   } = props;
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -51,7 +159,6 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
     singular: "accounting.item.entry",
     plural: "accounting.item.entries",
   });
-  const selectedSet = new Set(selectedIds);
 
   return (
     <div className="space-y-4">
@@ -66,95 +173,14 @@ export function JournalEntriesListCards(props: JournalEntriesListCardsProps): Re
         selectedCountLabel={t("accounting.trash.selected", { count: selectedIds.length })}
         pageCountLabel={pageCountLabel}
         checkboxIdPrefix="accounting-select-cards"
-        renderItem={(entry) => {
-          const isSelected = selectedSet.has(entry.id);
-          const { totalDebit, totalCredit } = getJournalEntryLineTotals(entry);
-          return (
-            <DirectoryEntityCard key={entry.id} isSelected={isSelected} reducedMotion={reducedMotion}>
-              <DirectoryCardHeader
-                id={entry.id}
-                displayName={entry.description}
-                isSelected={isSelected}
-                showSelect={canDelete}
-                onSelect={() => onToggleSelectedEntry(entry.id, !isSelected)}
-                selectAriaLabel={t("accounting.trash.selectEntry", { ref: entry.ref })}
-                onView={() => onView(entry)}
-                viewAriaLabel={t("accounting.journal.actions.viewEntry", { ref: entry.ref })}
-                reducedMotion={reducedMotion}
-                subtitle={
-                  <div className="min-w-0">
-                    <p className="mt-0.5 truncate font-mono text-xs font-bold text-primary">
-                      {entry.ref}
-                    </p>
-                    {entry.reversed_ref ? (
-                      <p className="text-xs text-warning font-semibold">
-                        {t("accounting.journal.dashboard.reversalOf", { ref: entry.reversed_ref })}
-                      </p>
-                    ) : null}
-                    {entry.simple_mode ? (
-                      <span className="text-xs text-primary/60 font-semibold">
-                        {t("accounting.journal.dashboard.simpleMode")}
-                      </span>
-                    ) : null}
-                  </div>
-                }
-              />
-              <StatGrid columns="sm2" className="ms-1">
-                {isColumnVisible("date") && (
-                  <StatRow label={t("accounting.columns.journal.date")} value={formatDate(entry.date)} />
-                )}
-                {isColumnVisible("tags") && (entry.tags || []).length > 0 && (
-                  <StatRow
-                    label={t("accounting.columns.journal.tags")}
-                    value={
-                      <span className="flex flex-wrap gap-1">
-                        {(entry.tags || []).map((tag) => (
-                          <Badge key={tag} pill tone="primary" className="px-1.5 font-bold">
-                            {getJournalTagLabel(tag, t)}
-                          </Badge>
-                        ))}
-                      </span>
-                    }
-                    dtClassName="mb-1"
-                  />
-                )}
-                {isColumnVisible("status") && (
-                  <StatRow
-                    label={t("accounting.columns.journal.status")}
-                    value={<StatusBadge status={entry.status} config={journalStatusConfig} size="sm" />}
-                    dtClassName="mb-1"
-                  />
-                )}
-                {isColumnVisible("debit") && (
-                  <StatRow
-                    label={t("accounting.columns.journal.debit")}
-                    value={formatAmount(totalDebit)}
-                    ddClassName="font-mono text-xs font-semibold text-info"
-                  />
-                )}
-                {isColumnVisible("credit") && (
-                  <StatRow
-                    label={t("accounting.columns.journal.credit")}
-                    value={formatAmount(totalCredit)}
-                    ddClassName="font-mono text-xs font-semibold text-success"
-                  />
-                )}
-              </StatGrid>
-              <DirectoryCardFooter
-                trailing={
-                  <>
-                    <DirectoryCardViewButton
-                      label={t("accounting.table.view")}
-                      ariaLabel={t("accounting.journal.actions.viewEntry", { ref: entry.ref })}
-                      onClick={() => onView(entry)}
-                    />
-                    {renderEntryActionsCards(entry)}
-                  </>
-                }
-              />
-            </DirectoryEntityCard>
-          );
-        }}
+        renderItem={(entry) => (
+          <JournalEntryCard
+            key={entry.id}
+            entry={entry}
+            props={props}
+            reducedMotion={reducedMotion}
+          />
+        )}
       />
       <div className={cn(WORK_SURFACE, "flex flex-col gap-2 p-3 sm:flex-row sm:items-center sm:justify-between")}>
         <p className="text-xs font-bold text-muted-foreground uppercase m-0">{pageCountLabel}</p>

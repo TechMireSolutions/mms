@@ -85,13 +85,13 @@ describe('formStyles Design Token Contract', () => {
     expect(FORM_ERROR_BOX).toContain('bg-destructive');
   });
 
-  it('defines valid glass surface and toolbar tokens with radius hierarchy', () => {
-    expect(WORK_SURFACE).toContain('backdrop-blur');
+  it('defines valid calm surface elevation and toolbar tokens with radius hierarchy', () => {
+    expect(WORK_SURFACE).toContain('border-foreground/10');
     expect(WORK_SURFACE).toContain('rounded-2xl');
-    expect(WORK_SURFACE_INNER).toContain('backdrop-blur');
-    expect(WORK_SURFACE_INNER).toContain('rounded-2xl');
-    expect(WORK_STICKY_HEAD).toContain('backdrop-blur');
-    expect(FORM_CARD).toContain('backdrop-blur');
+    expect(WORK_SURFACE_INNER).toContain('border-foreground/8');
+    expect(WORK_SURFACE_INNER).toContain('rounded-xl');
+    expect(WORK_STICKY_HEAD).toContain('bg-card');
+    expect(FORM_CARD).toContain('border-foreground/10');
     expect(FORM_CARD).toContain('rounded-2xl');
 
     expect(WORK_TOOLBAR_TRIGGER).toContain('rounded-xl');

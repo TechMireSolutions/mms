@@ -14,47 +14,45 @@ import { auditFaculty, sanitizeFacultyForUser } from './facultyRouteHelpers.js';
 /** Count, metrics, resolve, widget aggregates, and inline restore routes. */
 export const facultyAggregateRoutes: FastifyPluginAsync = async (sub) => {
   registerCountRoute(sub, {
-    collection: 'teachers',
-    loadCountFn: () => facultyUseCases.countTeachers(),
-    errorMessagePrefix: 'teachers',
+    collection: 'faculty',
+    loadCountFn: () => facultyUseCases.countFaculty(),
+    errorMessagePrefix: 'faculty',
   });
 
   registerMetricsRoute(sub, {
-    collection: 'teachers',
-    loadMetricsFn: () => facultyUseCases.loadTeachersCommandMetrics(),
-    errorMessagePrefix: 'teacher',
+    collection: 'faculty',
+    loadMetricsFn: () => facultyUseCases.loadFacultyCommandMetrics(),
+    errorMessagePrefix: 'faculty',
   });
 
   registerWidgetAggregatesRoute(sub, {
-    collection: 'teachers',
-    loadAggregatesFn: (queries) => facultyUseCases.loadTeachersWidgetAggregates(queries),
-    errorMessagePrefix: 'teacher',
+    collection: 'faculty',
+    loadAggregatesFn: (queries) => facultyUseCases.loadFacultyWidgetAggregates(queries),
+    errorMessagePrefix: 'faculty',
   });
 
   registerResolveRoute(sub, {
-    collection: 'teachers',
+    collection: 'faculty',
     loadByIdsFn: async (ids, request) => {
-      const teachers = await facultyUseCases.loadTeachersByIds(ids);
-      return sanitizeFacultyForUser(teachers, request.user as User);
+      const faculty = await facultyUseCases.loadFacultyByIds(ids);
+      return sanitizeFacultyForUser(faculty, request.user as User);
     },
-    responseKey: 'teachers',
-    errorMessagePrefix: 'teachers',
+    responseKey: 'faculty',
+    errorMessagePrefix: 'faculty',
   });
 
   registerLinkedContactIdsRoute(sub, {
-    collection: 'teachers',
-    loadLinkedContactIdsFn: (excludeId) => facultyUseCases.loadTeacherLinkedContactIds(excludeId),
-    errorMessagePrefix: 'teachers',
+    collection: 'faculty',
+    loadLinkedContactIdsFn: (excludeId) => facultyUseCases.loadFacultyLinkedContactIds(excludeId),
+    errorMessagePrefix: 'faculty',
   });
 
   registerSingleRestoreRoute(sub, {
-    collection: 'teachers',
-    nameSingular: 'teacher',
-    restoreFn: (id, userId) => facultyUseCases.restoreTeacherById(id, userId),
+    collection: 'faculty',
+    nameSingular: 'faculty',
+    restoreFn: (id, userId) => facultyUseCases.restoreFacultyById(id, userId),
     onAfterRestore: async (user, id) => {
-      await auditFaculty(user, 'teacher.restore', `Restored teacher ${id}`, id);
+      await auditFaculty(user, 'faculty.restore', `Restored faculty member ${id}`, id);
     },
   });
 };
-
-export const teacherAggregateRoutes = facultyAggregateRoutes;

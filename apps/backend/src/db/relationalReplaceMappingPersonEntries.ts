@@ -20,10 +20,16 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     fnName: 'replaceStudentsForWorkspace',
     snapshotFnName: 'listStudentsByWorkspace',
   },
-  teachers: {
+  faculty: {
+    priority: 20,
     importPath: './repositories/facultyRepository.js',
-    fnName: 'replaceTeachersForWorkspace',
-    snapshotFnName: 'listTeachersByWorkspace',
+    fnName: 'replaceFacultyForWorkspace',
+    snapshotFnName: 'listFacultyByWorkspace',
+  },
+  teachers: {
+    priority: 20,
+    importPath: './repositories/facultyRepository.js',
+    fnName: 'replaceFacultyForWorkspace',
   },
   sessions: {
     importPath: './repositories/sessionRepository.js',
@@ -66,23 +72,38 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     fnName: 'replaceStudentModulePreferencesForWorkspace',
     snapshotFnName: 'listAllStudentModulePreferencesByWorkspace',
   },
+  faculty_lookups: {
+    priority: 32,
+    importPath: './repositories/facultyLookupsRepository.js',
+    fnName: 'replaceFacultyLookupsForWorkspace',
+    snapshotFnName: 'listAllFacultyLookupsByWorkspace',
+  },
   teacher_lookups: {
     priority: 32,
     importPath: './repositories/facultyLookupsRepository.js',
-    fnName: 'replaceTeacherLookupsForWorkspace',
-    snapshotFnName: 'listAllTeacherLookupsByWorkspace',
+    fnName: 'replaceFacultyLookupsForWorkspace',
+  },
+  faculty_field_configs: {
+    priority: 33,
+    importPath: './repositories/facultyFieldConfigRepository.js',
+    fnName: 'replaceFacultyFieldConfigsForWorkspace',
+    snapshotFnName: 'listAllFacultyFieldConfigsByWorkspace',
   },
   teacher_field_configs: {
     priority: 33,
     importPath: './repositories/facultyFieldConfigRepository.js',
-    fnName: 'replaceTeacherFieldConfigsForWorkspace',
-    snapshotFnName: 'listAllTeacherFieldConfigsByWorkspace',
+    fnName: 'replaceFacultyFieldConfigsForWorkspace',
+  },
+  faculty_module_preferences: {
+    priority: 34,
+    importPath: './repositories/facultyModulePreferencesRepository.js',
+    fnName: 'replaceFacultyModulePreferencesForWorkspace',
+    snapshotFnName: 'listAllFacultyModulePreferencesByWorkspace',
   },
   teacher_module_preferences: {
     priority: 34,
     importPath: './repositories/facultyModulePreferencesRepository.js',
-    fnName: 'replaceTeacherModulePreferencesForWorkspace',
-    snapshotFnName: 'listAllTeacherModulePreferencesByWorkspace',
+    fnName: 'replaceFacultyModulePreferencesForWorkspace',
   },
   session_lookups: {
     priority: 35,

@@ -47,7 +47,7 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
     modalOpen,
   );
 
-  const teachersList = (teachersData?.body?.teachers ?? []) as Teacher[];
+  const teachersList = ((teachersData?.body?.faculty ?? teachersData?.body?.teachers ?? []) as Teacher[]);
 
   const selectedTeacherId = teacherId ? [teacherId] : [];
   const { data: selectedTeachersData } = useTeachersByIds(selectedTeacherId);
@@ -144,16 +144,16 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
       <div className="flex items-center justify-between">
         <div>
           <h3 className="text-sm font-semibold text-foreground">
-            {t('sessions.faculty.title' as any) || 'Session Faculty Management'}
+            {t('sessions.faculty.title')}
           </h3>
           <p className="text-xs text-muted-foreground">
-            {t('sessions.faculty.subtitle' as any) || 'Assign teachers and faculty roles to manage this academic session'}
+            {t('sessions.faculty.subtitle')}
           </p>
         </div>
         {canMutate && (
           <Button size="sm" onClick={handleOpenAdd} className="gap-1.5">
             <Plus className="h-4 w-4" />
-            {t('sessions.faculty.add' as any) || 'Add Faculty'}
+            {t('sessions.faculty.add')}
           </Button>
         )}
       </div>
@@ -161,13 +161,13 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
       {facultyItems.length === 0 ? (
         <EmptyState
           icon={UserCheck}
-          title={t('sessions.faculty.emptyTitle' as any) || 'No Faculty Assigned'}
-          description={t('sessions.faculty.emptyDescription' as any) || 'Add faculty members and instructors to coordinate this academic session.'}
+          title={t('sessions.faculty.emptyTitle')}
+          description={t('sessions.faculty.emptyDescription')}
           action={
             canMutate ? (
               <Button size="sm" onClick={handleOpenAdd} className="gap-1.5">
                 <Plus className="h-4 w-4" />
-                {t('sessions.faculty.add' as any) || 'Add Faculty'}
+                {t('sessions.faculty.add')}
               </Button>
             ) : undefined
           }
@@ -194,7 +194,7 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
                     </span>
                     <span className="flex items-center gap-1">
                       {item.status === 'active' ? (
-                        <CheckCircle2 className="h-3 w-3 text-emerald-600" />
+                        <CheckCircle2 className="h-3 w-3 text-success" />
                       ) : (
                         <XCircle className="h-3 w-3 text-muted-foreground" />
                       )}
@@ -243,7 +243,7 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
         <div className="space-y-4">
           <div>
             <label className={FORM_LABEL} htmlFor="faculty-teacher">
-              {t('sessions.faculty.selectTeacher' as any) || 'Faculty Member / Teacher'}
+              {t('sessions.faculty.selectTeacher')}
             </label>
             <FormSelect
               id="faculty-teacher"
@@ -264,7 +264,7 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
 
           <div>
             <label className={FORM_LABEL} htmlFor="faculty-role">
-              {t('sessions.faculty.role' as any) || 'Session Faculty Role'}
+              {t('sessions.faculty.role')}
             </label>
             <FormSelect
               id="faculty-role"
@@ -282,7 +282,7 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
           {role === 'Custom' && (
             <div>
               <label className={FORM_LABEL} htmlFor="faculty-custom-role">
-                {t('sessions.faculty.customRoleName' as any) || 'Custom Role Name'}
+                {t('sessions.faculty.customRoleName')}
               </label>
               <Input
                 id="faculty-custom-role"
@@ -295,7 +295,7 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
 
           <div>
             <label className={FORM_LABEL} htmlFor="faculty-status">
-              {t('sessions.faculty.status' as any) || 'Status'}
+              {t('sessions.faculty.status')}
             </label>
             <FormSelect
               id="faculty-status"

@@ -25,7 +25,7 @@ import {
   useMergedObligationContacts,
   useMergedObligationUsers,
 } from "@/tenant/features/obligations/hooks/useObligationLookups";
-import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { DetailSheet } from "@/components/common/DetailSheet";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
@@ -43,6 +43,7 @@ import { WarningCallout } from "@/components/ui/WarningCallout";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { DetailAttributeRow } from "@/components/ui/DetailAttributeRow";
 import {
@@ -89,6 +90,7 @@ export const ObligationCollectionDetail = function ObligationCollectionDetail({
   onRestore,
 }: ObligationCollectionDetailProps) {
   const { t } = useTranslation();
+  const { viewMode } = useWorkDirectoryViewMode();
   const currencies = DEFAULT_CURRENCIES;
   const [showPrint, setShowPrint] = useState(false);
   const [showEditor, setShowEditor] = useState(false);
@@ -175,7 +177,7 @@ export const ObligationCollectionDetail = function ObligationCollectionDetail({
   const isArchived = Boolean(collection.deletedAt);
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       open
       onClose={onClose}
       title={t("obligations.detail.title")}
@@ -238,35 +240,36 @@ export const ObligationCollectionDetail = function ObligationCollectionDetail({
           <section aria-label={t("obligations.detail.distribution")}>
             <h4 className="text-xs font-semibold text-muted-foreground uppercase tracking-wide mb-2 m-0">{t("obligations.detail.distribution")}</h4>
             <div className={WORK_SURFACE}>
-              <div className="space-y-3 p-3 md:hidden">
-                {dists.map((distribution) => (
-                  <article key={distribution.id} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
-                    <div className="flex items-start justify-between gap-3">
-                      <p className="text-sm font-medium text-foreground m-0">{distribution.name}</p>
-                      <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
-                    </div>
-                    <StatGrid>
-                      <StatRow
-                        label={t("obligations.detail.colPct")}
-                        value={`${distribution.percentage}%`}
-                        ddClassName="font-mono text-xs font-semibold"
-                      />
-                      <StatRow
-                        label={t("obligations.columns.amount")}
-                        value={formatMoney((collection.amount * distribution.percentage) / 100, currency?.code)}
-                        ddClassName="font-mono text-xs font-semibold"
-                      />
-                    </StatGrid>
-                  </article>
-                ))}
-                <div className="flex items-center justify-between px-3 py-2 bg-muted/40 rounded-lg border border-border/50 text-xs font-semibold">
-                  <span>{t("reports.fields.total")}</span>
-                  <span className="font-mono">
-                    {totalPct}% • {formatMoney(totalAmount, currency?.code)}
-                  </span>
+              {viewMode === "cards" ? (
+                <div className="space-y-3 p-3">
+                  {dists.map((distribution) => (
+                    <article key={distribution.id} className={`${WORK_SURFACE_INNER} space-y-2 p-3`}>
+                      <div className="flex items-start justify-between gap-3">
+                        <p className="text-sm font-medium text-foreground m-0">{distribution.name}</p>
+                        <StatusBadge status={distribution.type} config={distributionTypeConfig} size="sm" />
+                      </div>
+                      <StatGrid>
+                        <StatRow
+                          label={t("obligations.detail.colPct")}
+                          value={`${distribution.percentage}%`}
+                          ddClassName="font-mono text-xs font-semibold"
+                        />
+                        <StatRow
+                          label={t("obligations.columns.amount")}
+                          value={formatMoney((collection.amount * distribution.percentage) / 100, currency?.code)}
+                          ddClassName="font-mono text-xs font-semibold"
+                        />
+                      </StatGrid>
+                    </article>
+                  ))}
+                  <div className="flex items-center justify-between px-3 py-2 bg-muted/40 rounded-lg border border-border/50 text-xs font-semibold">
+                    <span>{t("reports.fields.total")}</span>
+                    <span className="font-mono">
+                      {totalPct}% • {formatMoney(totalAmount, currency?.code)}
+                    </span>
+                  </div>
                 </div>
-              </div>
-              <div className="hidden md:block">
+              ) : (
                 <Table>
                   <caption className="sr-only">{t("obligations.detail.distributionCaption", { receipt: collection.receipt_no })}</caption>
                   <TableHeader>
@@ -301,7 +304,7 @@ export const ObligationCollectionDetail = function ObligationCollectionDetail({
                     </TableRow>
                   </TableFooter>
                 </Table>
-              </div>
+              )}
             </div>
           </section>
         )}
@@ -360,6 +363,6 @@ export const ObligationCollectionDetail = function ObligationCollectionDetail({
           />
         </Suspense>
       )}
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 };

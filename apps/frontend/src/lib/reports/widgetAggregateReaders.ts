@@ -69,11 +69,13 @@ export function readTeachersWidgetAggregate(widgetId: string): TeachersWidgetAgg
   }
   return undefined;
 }
+export const readFacultyWidgetAggregate = readTeachersWidgetAggregate;
 
 export function readTeachersTotalFromMetrics(): number {
   const metrics = queryClientInstance.getQueryData<{ total: number }>(TEACHERS_METRICS_QUERY_KEY);
   return metrics?.total ?? 0;
 }
+export const readFacultyTotalFromMetrics = readTeachersTotalFromMetrics;
 
 export function readSessionsWidgetAggregate(widgetId: string): SessionsWidgetAggregateResult | undefined {
   const queries = queryClientInstance.getQueriesData<Record<string, SessionsWidgetAggregateResult>>({

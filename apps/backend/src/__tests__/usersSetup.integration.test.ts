@@ -150,6 +150,65 @@ describe('users Setup routes', () => {
     });
     expect(prefsWriteOk.statusCode).toBe(200);
     expect(mockSaveUserModulePreferences).toHaveBeenCalled();
+
+    // Verify /api/users/config/preferences alias (used by frontend client)
+    const configPrefsReadOk = await app.inject({
+      method: 'GET',
+      url: '/api/users/config/preferences',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(configPrefsReadOk.statusCode).toBe(200);
+    const configPrefsBody = JSON.parse(configPrefsReadOk.body);
+    expect(configPrefsBody).toHaveProperty('preferences');
+
+    // Verify /api/users/config/preferences PUT
+    const configPrefsWriteOk = await app.inject({
+      method: 'PUT',
+      url: '/api/users/config/preferences',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { requireEmailVerification: true },
+    });
+    expect(configPrefsWriteOk.statusCode).toBe(200);
+
+    // Verify /api/users/config/fields GET & PUT
+    const configFieldsReadOk = await app.inject({
+      method: 'GET',
+      url: '/api/users/config/fields',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(configFieldsReadOk.statusCode).toBe(200);
+
+    const configFieldsWriteOk = await app.inject({
+      method: 'PUT',
+      url: '/api/users/config/fields',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+      payload: { version: 1, enabledTabs: ['basic'], fields: {} },
+    });
+    expect(configFieldsWriteOk.statusCode).toBe(200);
+
+    // Verify /api/users/config/composed GET
+    const composedReadOk = await app.inject({
+      method: 'GET',
+      url: '/api/users/config/composed',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${adminToken(app)}`,
+      },
+    });
+    expect(composedReadOk.statusCode).toBe(200);
+
     await app.close();
   });
 });

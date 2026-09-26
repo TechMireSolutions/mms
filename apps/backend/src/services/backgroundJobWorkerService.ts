@@ -22,6 +22,7 @@ export interface BackgroundJobRunContext {
   tenant: string;
   userId: string;
   jobId: string;
+  signal?: AbortSignal;
   updateProgress: (current: number, total: number) => Promise<void>;
   complete: (patch?: Partial<BackgroundJobRecord>) => Promise<void>;
   fail: (error: string) => Promise<void>;
@@ -71,21 +72,19 @@ async function patchJob(
     updateValues.completedAt = patch.completedAt ? new Date(patch.completedAt) : null;
   }
 
-  return withTenant(tenantId, async (tx) => {
-    const updatedRows = await tx.update(backgroundJobs)
+  const [updated] = await withTenant(tenantId, async (tx) => {
+    return tx
+      .update(backgroundJobs)
       .set(updateValues)
-      .where(and(
-        eq(backgroundJobs.tenantId, tenantId),
-        eq(backgroundJobs.id, jobId),
-      ))
+      .where(and(eq(backgroundJobs.tenantId, tenantId), eq(backgroundJobs.id, jobId)))
       .returning();
-
-    const row = updatedRows[0];
-    if (!row) {
-      throw new Error(`Background job not found: ${jobId}`);
-    }
-    return rowToJobRecord(row);
   });
+
+  if (!updated) {
+    throw new Error(`Background job ${jobId} not found for tenant ${tenantId}`);
+  }
+
+  return rowToJobRecord(updated);
 }
 
 export async function executeJob(
@@ -95,7 +94,12 @@ export async function executeJob(
   moduleId: string,
   kind: string,
   payload: unknown,
+  signal?: AbortSignal,
 ): Promise<void> {
+  if (signal?.aborted) {
+    throw new Error(`Background job ${jobId} aborted before execution`);
+  }
+
   const key = `${moduleId}:${kind}`;
   const runner = runners.get(key);
 
@@ -103,6 +107,7 @@ export async function executeJob(
     tenant,
     userId,
     jobId,
+    signal,
     updateProgress: async (current, total) => {
       await patchJob(tenant, userId, jobId, { progress: { current, total } });
       const percent = total > 0 ? Math.round((current / total) * 100) : 0;

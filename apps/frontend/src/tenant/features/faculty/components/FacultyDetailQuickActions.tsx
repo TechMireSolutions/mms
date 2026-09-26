@@ -35,7 +35,8 @@ export function TeacherDetailQuickActions({
       labels={labels}
       callAriaLabel={
         primaryPhone
-          ? t("teachers.detail.callPhone", { phone: primaryPhone })
+          ? (t("faculty.detail.callPhone", { phone: primaryPhone }) ||
+              t("teachers.detail.callPhone", { phone: primaryPhone }))
           : undefined
       }
       messagingEnabled={canWriteMessaging}

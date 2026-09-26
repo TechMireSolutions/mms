@@ -5,11 +5,9 @@ import {
   type FacultyDuplicateReason,
   type FacultyRecord,
   type FacultyCommandMetricsSnapshot,
-  facultyWidgetQueryFromWidget,
   type TeacherDuplicateCheckInput,
   type TeacherDuplicateReason,
   type TeachersCommandMetricsSnapshot,
-  teachersWidgetQueryFromWidget,
 } from '@mms/shared';
 import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -19,7 +17,6 @@ import { useQuery } from '@tanstack/react-query';
 import { uniqueRegistryIds } from '@/lib/registryResolve';
 import {
   FACULTY_QUERY_KEY,
-  FACULTY_WIDGET_AGGREGATES_QUERY_KEY,
   type FacultyNextEmployeeIdParams,
   type FacultyWidgetAggregateWidgetInput,
   type TeacherNextEmployeeIdParams,
@@ -62,11 +59,12 @@ export async function fetchAllFacultyForQuery(
   let total = 0;
 
   for (;;) {
-    const response = await apiContract.teachers.list({
+    const response = await apiContract.faculty.list({
       query: { ...(params), page, limit }
     });
     const facultyPage = response.body as FacultyListPageResult;
-    all.push(...(facultyPage.teachers as FacultyRecord[]));
+    const items = (facultyPage.faculty ?? facultyPage.teachers ?? []) as FacultyRecord[];
+    all.push(...items);
     total = facultyPage.total;
     onProgress?.(all.length, total);
     if (!facultyPage.hasMore) break;
@@ -86,7 +84,7 @@ export function useFacultyLinkedContactIds(excludeId?: string, enabled = true) {
   return useQuery({
     queryKey: [...FACULTY_QUERY_KEY, 'linked-contact-ids', excludeId ?? ''] as const,
     queryFn: async ({ signal }) => {
-      const res = await apiContract.teachers.linkedContactIds({
+      const res = await apiContract.faculty.linkedContactIds({
         query: { excludeId },
         fetchOptions: { signal },
       });
@@ -108,9 +106,13 @@ export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
   
   const query = useQuery({
     queryKey: [...FACULTY_QUERY_KEY, 'resolve', normalized.join(',')] as const,
-    queryFn: async () => {
-      const res = await apiContract.teachers.resolve({ body: { ids: normalized } });
-      return (res.body as { teachers?: Faculty[] } | null)?.teachers;
+    queryFn: async ({ signal }) => {
+      const res = await apiContract.faculty.resolve({
+        body: { ids: normalized },
+        fetchOptions: { signal },
+      });
+      const body = res.body as { faculty?: Faculty[]; teachers?: Faculty[] } | null;
+      return body?.faculty ?? body?.teachers;
     },
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,
@@ -127,7 +129,7 @@ export function useFacultyNextEmployeeId(params: FacultyNextEmployeeIdParams = {
   return useQuery({
     queryKey: [...FACULTY_QUERY_KEY, 'next-employee-id', params] as const,
     queryFn: async ({ signal }) => {
-      const res = await apiContract.teachers.nextEmployeeId({
+      const res = await apiContract.faculty.nextEmployeeId({
         query: {
           prefix: params.prefix,
           template: params.template,
@@ -153,7 +155,7 @@ export const useTeacherNextEmployeeId = useFacultyNextEmployeeId;
 export async function checkFacultyRegistrationDuplicate(
   input: FacultyDuplicateCheckInput | TeacherDuplicateCheckInput,
 ): Promise<FacultyDuplicateReason | TeacherDuplicateReason | null> {
-  const res = await apiContract.teachers.duplicateCheck({ body: input });
+  const res = await apiContract.faculty.duplicateCheck({ body: input });
   if (res.status !== 200) throw new Error("Duplicate check failed");
   return (res.body as { reason?: FacultyDuplicateReason | null } | null)?.reason ?? null;
 }
@@ -168,51 +170,14 @@ export function useFacultyMetrics(options?: { enabled?: boolean }) {
 }
 export const useTeachersMetrics = useFacultyMetrics;
 
-const toWidgetQuery = facultyWidgetQueryFromWidget || teachersWidgetQueryFromWidget;
-
-export function useFacultyWidgetAggregates(
-  widgets: FacultyWidgetAggregateWidgetInput[],
-  options?: { enabled?: boolean },
-) {
-  const { isAuthenticated } = useAuth();
-  const enabled = options?.enabled ?? true;
-
-  const queries = (() =>
-      widgets
-        .filter((widget) => widget.collection === 'teachers' || widget.collection === 'faculty')
-        .map((widget) => toWidgetQuery(widget)))();
-
-  const querySignature = (() => {
-    return JSON.stringify(
-      [...queries]
-        .sort((a, b) => a.id.localeCompare(b.id))
-        .map((query) => ({
-          id: query.id,
-          target: query.targetField,
-          filter: query.filterValue,
-          filterOperator: query.filterOperator,
-          xAxis: query.xAxisField,
-        })),
-    );
-  })();
-
-  const query = useQuery({
-    queryKey: [...FACULTY_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async () => {
-      const res = await apiContract.teachers.widgetAggregates({ body: { widgets: queries } });
-      return (res.body as { results?: Record<string, { value?: number; totalCount?: number; chartData?: Array<{ name: string; value: number }> }> } | null)?.results ?? {};
-    },
-    enabled: isAuthenticated && enabled && queries.length > 0,
-    staleTime: 30_000,
-  });
-  
-  return { ...query, data: query.data ?? {} };
-}
-export const useTeachersWidgetAggregates = useFacultyWidgetAggregates;
+export {
+  useFacultyWidgetAggregates,
+  useTeachersWidgetAggregates,
+} from '@/tenant/features/faculty/hooks/useFacultyWidgetAggregates';
 
 /** One-shot employee-id backfill for active faculty missing one (Setup writers). */
 export async function migrateFacultyEmployeeIds(): Promise<{ updated: number }> {
-  const res = await apiContract.teachers.migrateEmployeeIds({ body: {} });
+  const res = await apiContract.faculty.migrateEmployeeIds({ body: {} });
   if (res.status !== 200) throw new Error("Migration failed");
   return { updated: (res.body as { updated?: number } | null)?.updated ?? 0 };
 }

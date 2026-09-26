@@ -16,6 +16,7 @@ import {
   useHasanatMutations,
 } from '@/tenant/features/hasanat/hooks/useHasanatApi';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
+import { useWorkSelection } from '@/hooks/useWorkSelection';
 import { useHasanatDistributionTrashActions } from '@/tenant/features/hasanat/hooks/useHasanatDistributionTrashActions';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 import { notify } from '@/lib/notify';
@@ -53,6 +54,12 @@ export function useHasanatCardsPageController() {
   const [createDistributeKey, setCreateDistributeKey] = useState(0);
   const [activeDistribution, setActiveDistribution] = useState<Distribution | null>(null);
 
+  const distributionSelection = useWorkSelection<string>();
+  const { clearSelection: clearDistributionSelection } = distributionSelection;
+  useEffect(() => {
+    clearDistributionSelection();
+  }, [showDeleted, clearDistributionSelection]);
+
   const denomsResult = useHasanatDenoms();
   const batchesResult = useHasanatBatches();
   const distributionsResult = useHasanatDistributions({ includeDeleted: showDeleted });
@@ -82,14 +89,24 @@ export function useHasanatCardsPageController() {
   const {
     handleDeleteDistribution,
     handleRestoreDistribution,
-    handleBulkDelete,
-    handleBulkRestore,
+    handleBulkDelete: rawBulkDelete,
+    handleBulkRestore: rawBulkRestore,
   } = useHasanatDistributionTrashActions({
     deleteDistribution,
     restoreDistribution,
     bulkDeleteDistributions,
     bulkRestoreDistributions,
   });
+
+  const handleBulkDelete = async (ids: string[]) => {
+    await rawBulkDelete(ids);
+    clearDistributionSelection();
+  };
+
+  const handleBulkRestore = async (ids: string[]) => {
+    await rawBulkRestore(ids);
+    clearDistributionSelection();
+  };
 
   const notifySaveFailure = ((error: unknown) => {
     if (error instanceof NotifiedMutationError) return;
@@ -127,10 +144,10 @@ export function useHasanatCardsPageController() {
 
   useModuleShortcuts({
     searchInputId: 'hasanat-search-input',
-    selectedCount: 0,
+    selectedCount: distributionSelection.selectedIds.length,
     hasActiveFilters: false,
     clearFilters: () => {},
-    clearSelection: () => {},
+    clearSelection: distributionSelection.clearSelection,
     canWrite,
     showDeleted,
     onCreate: () => {
@@ -200,6 +217,7 @@ export function useHasanatCardsPageController() {
     createDistribution,
     updateDistribution,
     openDistribute,
+    distributionSelection,
     refetchDistributions: () => { void distributionsResult.refetch(); },
   };
 }

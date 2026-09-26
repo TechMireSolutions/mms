@@ -2,6 +2,7 @@ import {
   type PublicWorkspaceSummary,
   type PlatformWorkspaceRow,
   type BrandingSettings,
+  BRANDING_IDENTITY_FIELD_KEYS,
   DEFAULT_USERS_SETTINGS,
   mergeBrandingSettings,
   normalizeUserModulePreferences,
@@ -136,4 +137,21 @@ export async function upsertWorkspaceBranding(
   const normalized = normalizeSubdomainInput(subdomain);
   await upsertWorkspaceBrandingRepo(normalized, branding);
   await invalidateWorkspaceCache(normalized);
+}
+
+/**
+ * Returns a copy of `incoming` with every institution-identity field forced back to
+ * `current`'s value — used when the caller lacks `settings.branding.write` so a
+ * non-admin save can only ever change the theme fields (colours, corner style,
+ * footer), regardless of what the request body contains.
+ */
+export function sanitizeBrandingWrite(
+  incoming: BrandingSettings,
+  current: BrandingSettings,
+): BrandingSettings {
+  const sanitized = { ...incoming };
+  for (const key of BRANDING_IDENTITY_FIELD_KEYS) {
+    (sanitized as BrandingSettings)[key] = current[key] as never;
+  }
+  return sanitized;
 }

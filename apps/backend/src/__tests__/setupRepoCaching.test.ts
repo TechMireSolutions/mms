@@ -1,6 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { pgTable, text, jsonb, timestamp, integer } from 'drizzle-orm/pg-core';
 import { clearInMemoryRedisFallback, redisGet } from '../lib/redis.js';
+import { clearL1Cache } from '../lib/cache/index.js';
 import { createWorkspaceSingletonJsonRepo } from '../db/repositories/moduleSetupRepoSingletonJson.js';
 import { createModuleLookupsRepo } from '../db/repositories/moduleSetupRepoLookups.js';
 
@@ -14,6 +15,7 @@ describe('Setup Repositories Redis Caching & Invalidation', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     clearInMemoryRedisFallback();
+    clearL1Cache();
   });
 
   describe('createWorkspaceSingletonJsonRepo', () => {

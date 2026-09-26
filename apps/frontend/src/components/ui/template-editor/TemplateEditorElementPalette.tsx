@@ -34,13 +34,13 @@ export interface TemplateEditorElementPaletteProps<TPayload = Record<string, unk
 const FIELD_SEARCH_THRESHOLD = 6;
 
 const PRIMITIVE_BUTTON =
-  "w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[3px] border-s-muted-foreground/40 bg-card hover:bg-muted/50 hover:border-s-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-colors flex items-center justify-between group shadow-2xs";
+  "w-full text-start min-h-11 px-3 py-2 text-xs font-semibold rounded-lg border border-border border-s-[--palette-stripe-width] border-s-muted-foreground/40 bg-card hover:bg-muted/50 hover:border-s-muted-foreground focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-colors flex items-center justify-between group shadow-2xs";
 
 const PRIMITIVE_ICON =
   "p-1 rounded bg-muted text-muted-foreground group-hover:bg-foreground group-hover:text-background transition-colors";
 
 const FIELD_BUTTON =
-  "w-full text-start min-h-11 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-border border-s-[3px] border-s-primary/40 bg-card hover:bg-primary/5 hover:border-primary/50 hover:border-s-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-colors flex items-center justify-between group shadow-2xs";
+  "w-full text-start min-h-11 px-2.5 py-1.5 text-xs font-medium rounded-lg border border-border border-s-[--palette-stripe-width] border-s-primary/40 bg-card hover:bg-primary/5 hover:border-primary/50 hover:border-s-primary hover:text-primary focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden transition-colors flex items-center justify-between group shadow-2xs";
 
 export function TemplateEditorElementPalette<TPayload = Record<string, unknown>>({
   availableFields = [],

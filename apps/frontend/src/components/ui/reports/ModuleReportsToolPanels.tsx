@@ -53,7 +53,7 @@ export function getInitialReportCollection(category: ModuleReportCategory) {
   switch (category) {
     case "students": return "students" as const;
     case "teachers":
-    case "faculty": return "teachers" as const;
+    case "faculty": return "faculty" as const;
     case "sessions": return "sessions" as const;
     case "finance":
     case "financial":

@@ -664,6 +664,25 @@ describe('platform auth routes', () => {
     await app.close();
   });
 
+  it('POST /api/platform/auth/login runs dummy verification when account does not exist to prevent timing attacks', async () => {
+    mockFindPlatformUserByEmail.mockResolvedValue(null);
+    mockVerifyPassword.mockResolvedValue(false);
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/platform/auth/login',
+      headers: { host: 'localhost' },
+      payload: { email: 'nonexistent@test.com', password: 'password123' },
+    });
+    expect(res.statusCode).toBe(401);
+    expect(res.json()).toMatchObject({ type: 'invalid_credentials' });
+    expect(mockVerifyPassword).toHaveBeenCalledWith(
+      'password123',
+      expect.stringMatching(/^[0-9a-f]{32}:[0-9a-f]{128}$/i),
+    );
+    await app.close();
+  });
+
   it('GET /api/platform/auth/me soft-probes session on apex', async () => {
     const app = await buildApp();
     const unauth = await app.inject({

@@ -15,7 +15,7 @@ export const TEACHERS_LOOKUPS_QUERY_KEY = FACULTY_LOOKUPS_QUERY_KEY;
 const emptyMap = emptyFacultyLookupsMap || emptyTeacherLookupsMap;
 
 export async function fetchFacultyLookups(_signal?: AbortSignal): Promise<FacultyLookupsMap> {
-  const res = await apiContract.teachers.getLookups({ query: undefined, extraHeaders: {} });
+  const res = await apiContract.faculty.getLookups({ query: undefined, extraHeaders: {} });
   return (res.body as { lookups?: FacultyLookupsMap }).lookups ?? emptyMap();
 }
 export const fetchTeacherLookups = fetchFacultyLookups;
@@ -24,7 +24,7 @@ export async function putFacultyLookupKind(
   kind: FacultyLookupKind | TeacherLookupKind,
   items: string[],
 ): Promise<string[]> {
-  const res = await apiContract.teachers.updateLookupKind({ params: { kind }, body: { items }, query: undefined, extraHeaders: {} });
+  const res = await apiContract.faculty.updateLookupKind({ params: { kind }, body: { items }, query: undefined, extraHeaders: {} });
   return (res.body as { items?: string[] }).items ?? [];
 }
 export const putTeacherLookupKind = putFacultyLookupKind;

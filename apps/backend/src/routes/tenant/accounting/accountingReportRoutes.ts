@@ -6,7 +6,7 @@ import {
 } from '@mms/shared';
 import { canReadCollection } from '../../../services/rbacService.js';
 import { accountingUseCases } from '../../../accounting/use-cases/accountingUseCases.js';
-import { sendDatabaseError, sendForbidden } from '../../../lib/httpErrors.js';
+import { sendDatabaseError, sendForbidden, sendIfHttpDomainError } from '../../../lib/httpErrors.js';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 
 const COLLECTION = ACCOUNTING_MODULE_MANIFEST.collectionKey;
@@ -24,8 +24,11 @@ export async function accountingReportRoutes(
     try {
       const aggregates = await accountingUseCases.loadAccountingReportAggregates(parsed.data);
       return reply.send(aggregates);
-    } catch {
-      return sendDatabaseError(reply, 'Failed to load accounting report aggregates');
+    } catch (error) {
+      return (
+        sendIfHttpDomainError(reply, error) ??
+        sendDatabaseError(reply, 'Failed to load accounting report aggregates', error)
+      );
     }
   });
 }

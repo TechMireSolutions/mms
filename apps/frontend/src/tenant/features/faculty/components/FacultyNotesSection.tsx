@@ -15,6 +15,7 @@ export interface TeacherNotesSectionProps {
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
   onDraftChange: (patch: Partial<Teacher>) => void;
+  error?: string;
 }
 
 export function TeacherNotesSection({
@@ -23,6 +24,7 @@ export function TeacherNotesSection({
   isFieldEnabled,
   isFieldRequired,
   onDraftChange,
+  error,
 }: TeacherNotesSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
@@ -36,20 +38,21 @@ export function TeacherNotesSection({
   return (
     <div className="space-y-6">
       <SectionCard
-        title={t("teachers.form.notesSection")}
-        subtitle={t("teachers.form.notesSectionDesc")}
+        title={t("faculty.form.notesSection") || t("teachers.form.notesSection")}
+        subtitle={t("faculty.form.notesSectionDesc") || t("teachers.form.notesSectionDesc")}
         icon={FileText}
         accentColor="emerald"
       >
-        <Field label={notesLabel} id="notes" required={notesRequired}>
+        <Field label={notesLabel} id="notes" required={notesRequired} error={error}>
           <Textarea
             id="notes"
             name="notes"
             required={notesRequired}
             value={notes || ""}
             onChange={(event) => onDraftChange({ notes: event.target.value })}
-            placeholder={t("teachers.form.notesPlaceholder")}
+            placeholder={t("faculty.form.notesPlaceholder") || t("teachers.form.notesPlaceholder")}
             className={cn(FORM_TEXTAREA, "min-h-30")}
+            aria-invalid={Boolean(error)}
           />
         </Field>
       </SectionCard>
@@ -59,4 +62,3 @@ export function TeacherNotesSection({
 
 export type FacultyNotesSectionProps = TeacherNotesSectionProps;
 export const FacultyNotesSection = TeacherNotesSection;
-

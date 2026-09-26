@@ -7,6 +7,8 @@ import {
   computeTrialBalance,
   createReversalEntry,
   hasReversalEntry,
+  generateJERef,
+  isJournalRefUnique,
   type Account,
   type JournalEntry,
 } from './accountingData';
@@ -41,8 +43,6 @@ describe('computeLedger', () => {
     const lines = computeLedger('a-cash', [balancedEntry()]);
     expect(lines).toHaveLength(2);
     expect(lines.map((ledgerLine) => ledgerLine.debit)).toEqual([0.1, 0.2]);
-    // Accumulated through integer cents — what the ledger view does for its
-    // running balance — the total is exactly 0.3, never 0.30000000000000004.
     const runningCents = lines.reduce((cents, ledgerLine) => cents + moneyToCents(ledgerLine.debit), 0);
     expect(String(centsToMoney(runningCents))).toBe('0.3');
   });
@@ -60,7 +60,6 @@ describe('computeTrialBalance', () => {
     expect(cash?.totalDebit).toBe(0.3);
     expect(cash?.balance).toBe(0.3);
     expect(income?.totalCredit).toBe(0.3);
-    // Revenue is credit-normal: balance = -(debit - credit).
     expect(income?.balance).toBe(0.3);
   });
 
@@ -91,7 +90,6 @@ describe('createReversalEntry', () => {
     expect(reversal.reversed_ref).toBe('JE-0001');
     expect(reversal.ref).toBe('REV-JE-0001-1');
     expect(reversal.fiscal_year_id).toBe('fy-2026');
-    // Swapped lines are balanced by construction, so the posted write is legal.
     expect(reversal.lines.map((line) => [line.debit, line.credit])).toEqual([
       [0, 0.1],
       [0, 0.2],
@@ -106,7 +104,90 @@ describe('hasReversalEntry', () => {
     const reversal = createReversalEntry(original, [original]);
     expect(hasReversalEntry(original, [original])).toBe(false);
     expect(hasReversalEntry(original, [original, reversal])).toBe(true);
-    // A reversal is not "already reversed" by itself.
     expect(hasReversalEntry(reversal, [original, reversal])).toBe(false);
+  });
+});
+
+function createEntry(id: string, ref: string, overrides: Partial<JournalEntry> = {}): JournalEntry {
+  return {
+    id,
+    ref,
+    date: '2026-03-01',
+    description: 'Test entry',
+    status: 'posted',
+    created_by: 'admin',
+    fiscal_year: 'FY 2026',
+    tags: [],
+    attachments: [],
+    lines: [],
+    ...overrides,
+  };
+}
+
+describe('accountingData reference utilities', () => {
+  describe('isJournalRefUnique', () => {
+    it('returns true for empty or whitespace-only reference', () => {
+      const entries = [createEntry('je-1', 'JE-0001')];
+      expect(isJournalRefUnique('', entries)).toBe(true);
+      expect(isJournalRefUnique('   ', entries)).toBe(true);
+    });
+
+    it('returns false when another active entry shares the reference case-insensitively', () => {
+      const entries = [createEntry('je-1', 'JE-0001')];
+      expect(isJournalRefUnique('JE-0001', entries)).toBe(false);
+      expect(isJournalRefUnique('je-0001', entries)).toBe(false);
+      expect(isJournalRefUnique('  JE-0001  ', entries)).toBe(false);
+    });
+
+    it('returns true when the only matching entry is the one being edited (currentId matches)', () => {
+      const entries = [createEntry('je-1', 'JE-0001')];
+      expect(isJournalRefUnique('JE-0001', entries, 'je-1')).toBe(true);
+    });
+
+    it('returns false when matching entry has a different id from currentId', () => {
+      const entries = [
+        createEntry('je-1', 'JE-0001'),
+        createEntry('je-2', 'JE-0002'),
+      ];
+      expect(isJournalRefUnique('JE-0002', entries, 'je-1')).toBe(false);
+    });
+
+    it('ignores soft-deleted entries when checking uniqueness', () => {
+      const entries = [
+        createEntry('je-1', 'JE-0001', { deletedAt: '2026-03-01T00:00:00.000Z' }),
+      ];
+      expect(isJournalRefUnique('JE-0001', entries)).toBe(true);
+    });
+  });
+
+  describe('generateJERef', () => {
+    it('generates JE-0001 when there are no entries', () => {
+      expect(generateJERef([])).toBe('JE-0001');
+    });
+
+    it('increments from highest existing JE number', () => {
+      const entries = [
+        createEntry('je-1', 'JE-0001'),
+        createEntry('je-2', 'JE-0005'),
+        createEntry('je-3', 'JE-0002'),
+      ];
+      expect(generateJERef(entries)).toBe('JE-0006');
+    });
+
+    it('skips any existing references in case of out-of-order collision', () => {
+      const entries = [
+        createEntry('je-1', 'JE-0001'),
+        createEntry('je-2', 'JE-0002'),
+      ];
+      expect(generateJERef(entries)).toBe('JE-0003');
+    });
+
+    it('ignores soft-deleted entries when finding highest numeric sequence', () => {
+      const entries = [
+        createEntry('je-1', 'JE-0001'),
+        createEntry('je-2', 'JE-0050', { deletedAt: '2026-03-01T00:00:00.000Z' }),
+      ];
+      expect(generateJERef(entries)).toBe('JE-0002');
+    });
   });
 });

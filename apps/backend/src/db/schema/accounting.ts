@@ -52,6 +52,26 @@ export const accountingFiscalYears = pgTable('accounting_fiscal_years', {
     .where(sql`${table.deletedAt} is not null`),
 ]);
 
+export const accountingPostingPeriods = pgTable('accounting_posting_periods', {
+  id: text('id').notNull(),
+  workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  fiscalYearId: text('fiscal_year_id').notNull(),
+  label: varchar('label', { length: 120 }).notNull(),
+  startDate: varchar('start_date', { length: 10 }).notNull(),
+  endDate: varchar('end_date', { length: 10 }).notNull(),
+  status: varchar('status', { length: 20 }).notNull().default('open'),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+}, (table) => [
+  primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.fiscalYearId],
+    foreignColumns: [accountingFiscalYears.workspaceSubdomain, accountingFiscalYears.id],
+  }).onDelete('cascade'),
+  uniqueIndex('accounting_posting_periods_year_start_uidx').on(table.workspaceSubdomain, table.fiscalYearId, table.startDate),
+  index('accounting_posting_periods_workspace_date_idx').on(table.workspaceSubdomain, table.startDate, table.endDate),
+]);
+
 export const accountingEntries = pgTable('accounting_entries', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
@@ -79,6 +99,9 @@ export const accountingEntries = pgTable('accounting_entries', {
   uniqueIndex('accounting_entries_workspace_source_uidx')
     .on(table.workspaceSubdomain, table.sourceType, table.sourceId)
     .where(sql`${table.sourceType} is not null and ${table.sourceId} is not null and ${table.deletedAt} is null`),
+  uniqueIndex('accounting_entries_workspace_ref_active_uidx')
+    .on(table.workspaceSubdomain, table.ref)
+    .where(sql`${table.deletedAt} is null and ${table.ref} is not null and ${table.ref} <> ''`),
   foreignKey({
     columns: [table.workspaceSubdomain, table.fiscalYearId],
     foreignColumns: [accountingFiscalYears.workspaceSubdomain, accountingFiscalYears.id],
@@ -172,6 +195,7 @@ export type AccountingAccountRow = typeof accountingAccounts.$inferSelect;
 export type InsertAccountingAccountRow = typeof accountingAccounts.$inferInsert;
 export type AccountingFiscalYearRow = typeof accountingFiscalYears.$inferSelect;
 export type InsertAccountingFiscalYearRow = typeof accountingFiscalYears.$inferInsert;
+export type AccountingPostingPeriodRow = typeof accountingPostingPeriods.$inferSelect;
 export type AccountingEntryRow = typeof accountingEntries.$inferSelect;
 export type InsertAccountingEntryRow = typeof accountingEntries.$inferInsert;
 export type AccountingJournalLineRow = typeof accountingJournalLines.$inferSelect;

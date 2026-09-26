@@ -827,6 +827,76 @@
       "when": 1789760592000,
       "tag": "0117_attendance_composite_active_idx",
       "breakpoints": true
+    },
+    {
+      "idx": 118,
+      "version": "7",
+      "when": 1789800000000,
+      "tag": "0118_faculty_employee_id_setup_config",
+      "breakpoints": true
+    },
+    {
+      "idx": 119,
+      "version": "7",
+      "when": 1789900000000,
+      "tag": "0119_faculty_domain_migration_cleanup",
+      "breakpoints": true
+    },
+    {
+      "idx": 120,
+      "version": "7",
+      "when": 1790000000000,
+      "tag": "0120_session_classes_faculty_columns",
+      "breakpoints": true
+    },
+    {
+      "idx": 121,
+      "version": "7",
+      "when": 1790100000000,
+      "tag": "0121_faculty_hierarchy_and_task_management",
+      "breakpoints": true
+    },
+    {
+      "idx": 122,
+      "version": "7",
+      "when": 1790200000000,
+      "tag": "0122_drop_teachers_compatibility_view",
+      "breakpoints": true
+    },
+    {
+      "idx": 123,
+      "version": "7",
+      "when": 1790300000000,
+      "tag": "0123_faculty_temporal_designations",
+      "breakpoints": true
+    },
+    {
+      "idx": 124,
+      "version": "7",
+      "when": 1790400000000,
+      "tag": "0124_faculty_schema_improvements",
+      "breakpoints": true
+    },
+    {
+      "idx": 125,
+      "version": "7",
+      "when": 1790500000000,
+      "tag": "0125_accounting_posting_periods",
+      "breakpoints": true
+    },
+    {
+      "idx": 126,
+      "version": "7",
+      "when": 1790600000000,
+      "tag": "0126_faculty_custom_data",
+      "breakpoints": true
+    },
+    {
+      "idx": 127,
+      "version": "7",
+      "when": 1790700000000,
+      "tag": "0127_accounting_entries_ref_unique",
+      "breakpoints": true
     }
   ]
 }

@@ -3,6 +3,7 @@ import { Users } from "lucide-react";
 import { motion } from "framer-motion";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { StatCardBody } from "@/components/ui/StatCardBody";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { COLOR_MAP, ICONS_LIST } from "@/lib/reports/pinnedWidgetTypes";
 import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
@@ -17,11 +18,12 @@ interface CustomWidgetCardLayoutProps {
 export function CustomWidgetCardLayout({ computedCard }: CustomWidgetCardLayoutProps): React.JSX.Element {
   const Icon = ICONS_LIST[computedCard.icon || ""] || Users;
   const colorClasses = COLOR_MAP[computedCard.color || ""] || COLOR_MAP.emerald;
+  const reducedMotion = useReducedMotion();
 
   return (
     <motion.div
-      layout
-      whileHover={{ y: -4, scale: 1.015 }}
+      layout={!reducedMotion}
+      whileHover={reducedMotion ? undefined : { y: -4, scale: 1.015 }}
       transition={{ type: "spring", stiffness: 350, damping: 25 }}
       className={cn(
         WORK_SURFACE,

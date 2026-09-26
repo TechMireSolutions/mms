@@ -39,10 +39,10 @@ export function SettingsPanel({
   const introDescKey = `${introKey}Desc` as AppTranslationKey;
 
   return (
-    <div className={cn(SETTINGS_WIDTH[width], 'space-y-5 pb-2')}>
+    <div className={cn(SETTINGS_WIDTH[width], 'space-y-8 pb-2')}>
       <SettingsPanelIntro description={t(introDescKey)} />
       <SettingsStatusBadges isDirty={isDirty} saved={saved} />
-      <div className="space-y-5">{children}</div>
+      <div className="space-y-8">{children}</div>
       {footer}
     </div>
   );

@@ -74,7 +74,7 @@ export const TeachersListDesktopTableRow = React.memo(function TeachersListDeskt
       <ModuleTableSelectionCell
         checked={isSelected}
         onCheckedChange={() => onSelectOne(teacherIdStr)}
-        ariaLabel={t("teachers.table.selectTeacher", { name: displayName })}
+        ariaLabel={t("faculty.table.selectTeacher", { name: displayName })}
       />
       {visibleColumns.map((col) => (
         <TableCell
@@ -114,7 +114,7 @@ export const TeachersListDesktopTableRow = React.memo(function TeachersListDeskt
                 ) : null}
                 {showDeleted && teacher.deletionReason ? (
                   <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2" title={teacher.deletionReason}>
-                    {t("teachers.deletionReasonLabel")}: {teacher.deletionReason}
+                    {t("faculty.deletionReasonLabel")}: {teacher.deletionReason}
                   </p>
                 ) : null}
               </div>

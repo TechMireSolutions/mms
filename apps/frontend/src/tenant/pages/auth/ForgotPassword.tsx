@@ -13,6 +13,13 @@ import {
   formatEntryTitle,
   validateAuthEmail,
 } from "@/components/entry";
+import {
+  DEFAULT_GLOBAL_SETTINGS,
+  getPasswordPolicyHintKey,
+  validatePasswordPolicy,
+} from "@mms/shared";
+import { PasswordStrengthMeter } from "@/components/ui/PasswordStrengthMeter";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
 import { createEmptyOtp, isOtpComplete, OtpInput } from "@/components/ui/OtpInput";
 import { useResendCountdown } from "@/hooks/useResendCountdown";
 import { ROUTES } from '@/lib/config/routes';
@@ -24,6 +31,28 @@ import { notify } from "@/lib/notify";
 type View = "email" | "otp" | "reset";
 type Flow = "reset" | "activate";
 
+/** Local form wrapper — owns the shared className/noValidate/aria-busy so each view step is DRY. */
+function AuthStepForm({
+  onSubmit,
+  busy,
+  children,
+}: {
+  onSubmit: (event: React.FormEvent<HTMLFormElement>) => void;
+  busy: boolean;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <form
+      onSubmit={(event) => onSubmit(event)}
+      className="mt-4 space-y-4"
+      noValidate
+      aria-busy={busy}
+    >
+      {children}
+    </form>
+  );
+}
+
 /**
  * Tenant "set your password" flow — one OTP mechanism (request code → verify →
  * set password) shared by forgot-password and a new user's first activation.
@@ -33,6 +62,8 @@ type Flow = "reset" | "activate";
 export default function ForgotPassword(): React.JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const settings = useGlobalSettings();
+  const activePolicy = settings.passwordPolicy ?? DEFAULT_GLOBAL_SETTINGS.passwordPolicy;
   const [searchParams, setSearchParams] = useSearchParams();
   const { requestPasswordOtp, verifyPasswordOtp, resetPasswordWithOtp } = useAuth();
   const formId = useId();
@@ -115,6 +146,11 @@ export default function ForgotPassword(): React.JSX.Element {
       setError(t("auth.forgotPasswordMismatch"));
       return;
     }
+    const policy = validatePasswordPolicy(password, activePolicy);
+    if (!policy.valid) {
+      setError(policy.errorKey ? t(policy.errorKey) : policy.message);
+      return;
+    }
     setLoading(true);
     setError("");
     try {
@@ -155,7 +191,7 @@ export default function ForgotPassword(): React.JSX.Element {
         {error && <AuthStatusBanner message={error} />}
 
         {view === "email" && (
-          <form onSubmit={(event) => void handleRequestCode(event)} className="mt-4 space-y-4" noValidate aria-busy={loading}>
+          <AuthStepForm onSubmit={handleRequestCode} busy={loading}>
             <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
               <AuthEmailField
                 id={emailFieldId}
@@ -171,11 +207,11 @@ export default function ForgotPassword(): React.JSX.Element {
               <AuthSubmitButton busy={loading} busyLabel={t("auth.sendingResetLink")} label={t("auth.sendCode")} />
               <AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />
             </fieldset>
-          </form>
+          </AuthStepForm>
         )}
 
         {view === "otp" && (
-          <form onSubmit={(event) => void handleVerifyCode(event)} className="mt-4 space-y-4" noValidate aria-busy={loading}>
+          <AuthStepForm onSubmit={handleVerifyCode} busy={loading}>
             <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
               <OtpInput
                 value={code}
@@ -203,22 +239,28 @@ export default function ForgotPassword(): React.JSX.Element {
               />
               <AuthBackLink to={ROUTES.login} label={t("auth.backToSignIn")} />
             </fieldset>
-          </form>
+          </AuthStepForm>
         )}
 
         {view === "reset" && (
-          <form onSubmit={(event) => void handleSetPassword(event)} className="mt-4 space-y-4" noValidate aria-busy={loading}>
+          <AuthStepForm onSubmit={handleSetPassword} busy={loading}>
             <fieldset disabled={loading} className="m-0 min-w-0 space-y-4 border-0 p-0">
-              <AuthPasswordField
-                id={passwordFieldId}
-                label={t("auth.password")}
-                value={password}
-                autoComplete="new-password"
-                onChange={(value) => {
-                  setPassword(value);
-                  setError("");
-                }}
-              />
+              <div className="space-y-2">
+                <AuthPasswordField
+                  id={passwordFieldId}
+                  label={t("auth.password")}
+                  value={password}
+                  autoComplete="new-password"
+                  onChange={(value) => {
+                    setPassword(value);
+                    setError("");
+                  }}
+                />
+                <PasswordStrengthMeter password={password} />
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  {t(getPasswordPolicyHintKey(activePolicy))}
+                </p>
+              </div>
               <AuthPasswordField
                 id={confirmFieldId}
                 label={t("auth.forgotConfirmPasswordLabel")}
@@ -231,7 +273,7 @@ export default function ForgotPassword(): React.JSX.Element {
               />
               <AuthSubmitButton busy={loading} busyLabel={t("auth.settingPassword")} label={t("auth.setPassword")} />
             </fieldset>
-          </form>
+          </AuthStepForm>
         )}
       </AuthLayout>
     </>

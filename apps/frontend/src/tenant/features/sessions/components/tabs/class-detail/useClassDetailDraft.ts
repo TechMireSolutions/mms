@@ -24,6 +24,8 @@ export const EMPTY_CLASS: Class = {
   enrolled: 0,
   enrollmentDeadline: '',
   status: 'active',
+  facultyId: '',
+  facultyName: '',
   teacherId: '',
   teacherName: '',
   room: '',
@@ -190,6 +192,8 @@ export function useClassDetailDraft({ open, sessionClass, allTeachers }: UseClas
         startTime: '08:00',
         endTime: '09:00',
         subject: 'Quran Memorization',
+        facultyId: firstTeacher?.id ? String(firstTeacher.id) : '',
+        facultyName: initialTeacherName,
         teacherId: firstTeacher?.id ? String(firstTeacher.id) : '',
         teacherName: initialTeacherName,
       };

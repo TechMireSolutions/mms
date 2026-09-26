@@ -38,7 +38,7 @@ export function JournalEntryLinesEditorMobile({
   const accountMap = new Map(accounts.map((account) => [account.id, account]));
 
   return (
-    <div className="space-y-3 p-3 md:hidden">
+    <div className="space-y-3 p-3">
       {lines.map((line, lineIndex) => {
         const account = accountMap.get(line.account_id);
         return (
@@ -48,10 +48,10 @@ export function JournalEntryLinesEditorMobile({
                 type="button"
                 variant="ghost"
                 size="icon"
-                aria-label={`Remove line ${lineIndex + 1}`}
+                aria-label={t("accounting.journal.form.lineRemoveAria", { line: lineIndex + 1 })}
                 onClick={() => onRemoveLine(lineIndex)}
                 disabled={lines.length <= 2}
-                className="text-muted-foreground hover:text-destructive transition-colors"
+                className="min-h-11 min-w-11 text-muted-foreground hover:text-destructive transition-colors"
               >
                 <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
               </Button>
@@ -61,7 +61,7 @@ export function JournalEntryLinesEditorMobile({
               <FormSelect
                 id={`line-mobile-${lineIndex}-account`}
                 name={`lines.${lineIndex}.account_id`}
-                aria-label={`Account for line ${lineIndex + 1}`}
+                aria-label={t("accounting.journal.form.lineAccountAria", { line: lineIndex + 1 })}
                 value={line.account_id}
                 onChange={(accountId) => onUpdateLine(lineIndex, "account_id", accountId)}
                 placeholder={t("accounting.journal.form.selectAccount")}
@@ -79,7 +79,7 @@ export function JournalEntryLinesEditorMobile({
               <Input
                 id={`line-mobile-${lineIndex}-description`}
                 name={`lines.${lineIndex}.description`}
-                aria-label={`Description for line ${lineIndex + 1}`}
+                aria-label={t("accounting.journal.form.lineDescriptionAria", { line: lineIndex + 1 })}
                 value={line.description || ""}
                 onChange={(event) => onUpdateLine(lineIndex, "description", event.target.value)}
                 placeholder={t("accounting.journal.form.notePlaceholder")}
@@ -94,7 +94,7 @@ export function JournalEntryLinesEditorMobile({
                   name={`lines.${lineIndex}.debit`}
                   type="text"
                   inputMode="decimal"
-                  aria-label={`Debit amount for line ${lineIndex + 1}`}
+                  aria-label={t("accounting.journal.form.lineDebitAria", { line: lineIndex + 1 })}
                   value={line.debit}
                   placeholder="0.00"
                   onChange={(event) => onUpdateLine(lineIndex, "debit", event.target.value)}
@@ -108,7 +108,7 @@ export function JournalEntryLinesEditorMobile({
                   name={`lines.${lineIndex}.credit`}
                   type="text"
                   inputMode="decimal"
-                  aria-label={`Credit amount for line ${lineIndex + 1}`}
+                  aria-label={t("accounting.journal.form.lineCreditAria", { line: lineIndex + 1 })}
                   value={line.credit}
                   placeholder="0.00"
                   onChange={(event) => onUpdateLine(lineIndex, "credit", event.target.value)}

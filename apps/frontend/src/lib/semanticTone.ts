@@ -1,7 +1,7 @@
 /** Semantic Tailwind tone classes — prefer these over raw palette utilities. */
 
 export const SURFACE = {
-  glass: 'border border-border/60 bg-card/80 backdrop-blur-xl',
+  glass: 'border border-foreground/12 bg-card shadow-surface-lg',
   card: 'rounded-xl border border-border bg-card shadow-surface',
   elevated: 'rounded-xl border border-border bg-card shadow-surface-lg',
   mutedHeader: 'border-b border-border bg-muted/20',
@@ -19,7 +19,7 @@ export const WIZARD_SELECTION_DOT = 'bg-primary-foreground';
 
 /** Frosted chip on primary gradient banners */
 export const BANNER_FROST_CHIP =
-  'bg-primary-foreground/10 backdrop-blur-sm border border-primary-foreground/15';
+  'bg-primary-foreground/10 border border-primary-foreground/15';
 
 export const SEMANTIC_BADGE = {
   primary: 'bg-primary/10 text-primary border-primary/20',
@@ -28,6 +28,7 @@ export const SEMANTIC_BADGE = {
   successStrong: 'bg-success/15 text-success border-success/30',
   destructive: 'bg-destructive/10 text-destructive border-destructive/20',
   destructiveStrong: 'bg-destructive/15 text-destructive border-destructive/30',
+  destructiveSolid: 'bg-destructive text-destructive-foreground border-destructive',
   warning: 'bg-warning/10 text-warning border-warning/20',
   warningStrong: 'bg-warning/15 text-warning border-warning/30',
   info: 'bg-info/10 text-info border-info/20',
@@ -57,6 +58,8 @@ export const SEMANTIC_BG = {
   warningSolid: 'bg-warning',
   info: 'bg-info/10',
   infoSolid: 'bg-info',
+  secondary: 'bg-secondary/10',
+  secondarySolid: 'bg-secondary',
   muted: 'bg-muted/10',
   mutedSolid: 'bg-muted',
 } as const;
@@ -259,8 +262,8 @@ export const SUB_LIST_CARD_ACCENTS = {
     icon: "text-success group-hover:text-success",
   },
   bankDetails: {
-    accent: "bg-emerald-500/70 group-hover:bg-emerald-500",
-    icon: "text-emerald-500 group-hover:text-emerald-500",
+    accent: "bg-success/70 group-hover:bg-success",
+    icon: "text-success group-hover:text-success",
   },
 } as const;
 
@@ -292,6 +295,3 @@ export const BALANCE_TONE = {
 export function balanceToneClass(isBalanced: boolean): string {
   return isBalanced ? BALANCE_TONE.balanced : BALANCE_TONE.unbalanced;
 }
-
-
-

@@ -1,14 +1,15 @@
 import {
-  TEACHERS_MODULE_MANIFEST,
+  FACULTY_MODULE_MANIFEST,
   buildTeacherWorkColumnRegistry,
   teacherColumnLabelKey,
   teacherWorkColumnLabelsFrom,
+  type FacultySettings,
   type TeachersSettings,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 
-export function useTeacherColumnLayout(settings: TeachersSettings) {
+export function useFacultyColumnLayout(settings: FacultySettings | TeachersSettings) {
   const { t } = useTranslation();
 
   const tenantRegistry = (() =>
@@ -18,16 +19,16 @@ export function useTeacherColumnLayout(settings: TeachersSettings) {
       ))();
 
   const { customizerLabels: baseLabels, updateUserColumnLayout, ...base } = useModuleColumnLayout({
-    moduleId: TEACHERS_MODULE_MANIFEST.moduleId,
+    moduleId: FACULTY_MODULE_MANIFEST.moduleId,
     tenantRegistry,
-    apiPath: TEACHERS_MODULE_MANIFEST.restBasePath,
-    translationPrefix: 'teachers.columns',
+    apiPath: FACULTY_MODULE_MANIFEST.restBasePath,
+    translationPrefix: 'faculty.columns',
   });
 
   const customizerLabels = (() => ({
       ...baseLabels,
-      reset: t('teachers.resetLayout'),
-      searchPlaceholder: t('teachers.searchColumnsPlaceholder'),
+      reset: t('faculty.resetLayout'),
+      searchPlaceholder: t('faculty.searchColumnsPlaceholder'),
     }))();
 
   const resetColumnLayout = (() => {
@@ -42,5 +43,6 @@ export function useTeacherColumnLayout(settings: TeachersSettings) {
   };
 }
 
-export const useFacultyColumnLayout = useTeacherColumnLayout;
+export const useTeacherColumnLayout = useFacultyColumnLayout;
+
 

@@ -1,9 +1,17 @@
-import { WORKSPACES_COLLECTION, splitStudentsSettingsBlob, DEFAULT_STUDENTS_SETTINGS } from '@mms/shared';
+import {
+  WORKSPACES_COLLECTION,
+  splitStudentsSettingsBlob,
+  DEFAULT_STUDENTS_SETTINGS,
+  splitFacultySettingsBlob,
+  DEFAULT_FACULTY_SETTINGS,
+} from '@mms/shared';
 import { getMinimalCollectionsForSeed, getMinimalObjects } from '../db/minimalSeeds.js';
 import { getCollection, getObject, saveCollection, saveObject } from '../db/database.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { upsertStudentFieldConfig } from '../db/repositories/studentFieldConfigRepository.js';
 import { upsertStudentModulePreferences } from '../db/repositories/studentModulePreferencesRepository.js';
+import { upsertFacultyFieldConfig } from '../db/repositories/facultyFieldConfigRepository.js';
+import { upsertFacultyModulePreferences } from '../db/repositories/facultyModulePreferencesRepository.js';
 
 /**
  * Seeds default collections and objects for a new tenant workspace.
@@ -35,6 +43,13 @@ export async function seedTenantDefaults(): Promise<void> {
     await upsertStudentModulePreferences(
       subdomain,
       preferences as unknown as Record<string, unknown>,
+    );
+
+    const facultySetup = splitFacultySettingsBlob(DEFAULT_FACULTY_SETTINGS);
+    await upsertFacultyFieldConfig(subdomain, facultySetup.fieldConfig);
+    await upsertFacultyModulePreferences(
+      subdomain,
+      facultySetup.preferences as unknown as Record<string, unknown>,
     );
   }
 }

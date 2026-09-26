@@ -17,6 +17,7 @@ export function TemplateEditorPropertiesEmptyState<TPayload = Record<string, unk
 }: TemplateEditorPropertiesEmptyStateProps<TPayload>): React.JSX.Element {
   return (
     <aside
+      role="complementary"
       aria-label={t('templateEditor.properties')}
       className="max-h-64 w-full shrink-0 space-y-4 overflow-y-auto border-t border-border bg-card p-3 lg:max-h-none lg:w-60 lg:border-t-0 lg:border-s select-none print:hidden"
     >
@@ -25,7 +26,7 @@ export function TemplateEditorPropertiesEmptyState<TPayload = Record<string, unk
           <Layers className="w-6 h-6" aria-hidden="true" />
         </div>
         <p className="text-xs font-semibold text-foreground m-0">{t('templateEditor.emptyHint')}</p>
-        <p className="text-3xs text-muted-foreground mt-1.5 max-w-[190px] leading-relaxed m-0">
+        <p className="text-3xs text-muted-foreground mt-1.5 max-w-48 leading-relaxed m-0">
           {t('templateEditor.emptyHintDetail')}
         </p>
       </div>

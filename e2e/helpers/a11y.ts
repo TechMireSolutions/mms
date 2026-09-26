@@ -161,6 +161,22 @@ export async function assertNoSeriousA11yViolations(
   page: Page,
   options: A11yAuditOptions,
 ): Promise<void> {
+  // Settle finite CSS animations and transitions (e.g. Radix dialog / popover fade-in,
+  // card entrance animations) so axe does not measure mid-transition alpha-blended contrast.
+  await page
+    .evaluate(async () => {
+      await new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r)));
+      const finiteAnimations = document.getAnimations().filter((a) => {
+        const timing = a.effect?.getTiming();
+        return timing && timing.iterations !== Infinity;
+      });
+      return Promise.race([
+        Promise.all(finiteAnimations.map((a) => a.finished)),
+        new Promise((resolve) => setTimeout(resolve, 500)),
+      ]);
+    })
+    .catch(() => undefined);
+
   let builder = new AxeBuilder({ page }).withTags([
     'wcag2a',
     'wcag2aa',

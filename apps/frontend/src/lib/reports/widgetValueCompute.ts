@@ -68,7 +68,7 @@ export function computeWidgetSingleValue(
     };
   }
 
-  if (widget.collection === "teachers") {
+  if (widget.collection === "teachers" || widget.collection === "faculty") {
     const aggregate = readTeachersWidgetAggregate(widget.id);
     if (aggregate) {
       return formatGenericWidgetValue(widget, aggregate);
@@ -155,7 +155,7 @@ export function computeWidgetChartData(
     const aggregate = readStudentsWidgetAggregate(widget.id);
     return aggregate?.chartData ?? [];
   }
-  if (widget.collection === "teachers") {
+  if (widget.collection === "teachers" || widget.collection === "faculty") {
     const aggregate = readTeachersWidgetAggregate(widget.id);
     return aggregate?.chartData ?? [];
   }

@@ -30,8 +30,8 @@ import {
   STUDENTS_LEGACY_SETUP_OBJECT_KEYS,
 } from '../db/hydrateStudentsSetupFromLegacyBackup.js';
 import {
-  hydrateTeachersSetupCollectionsFromLegacyObjects,
-  TEACHERS_LEGACY_SETUP_OBJECT_KEYS,
+  hydrateFacultySetupCollectionsFromLegacyObjects,
+  FACULTY_LEGACY_SETUP_OBJECT_KEYS,
 } from '../db/hydrateFacultySetupFromLegacyBackup.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { maskGlobalSettingsForClient } from './globalSettingsService.js';
@@ -139,7 +139,7 @@ export async function synchronizeData(
 ): Promise<void> {
   const collections = withCompleteRelationalRestoreCollections(
     fullRestore
-      ? hydrateTeachersSetupCollectionsFromLegacyObjects(
+      ? hydrateFacultySetupCollectionsFromLegacyObjects(
           hydrateStudentsSetupCollectionsFromLegacyObjects(
             { ...(payload.collections ?? {}) },
             payload.objects,
@@ -151,7 +151,7 @@ export async function synchronizeData(
   const { objects } = payload;
   const skipLegacySetupObjects = new Set<string>(
     fullRestore
-      ? [...STUDENTS_LEGACY_SETUP_OBJECT_KEYS, ...TEACHERS_LEGACY_SETUP_OBJECT_KEYS]
+      ? [...STUDENTS_LEGACY_SETUP_OBJECT_KEYS, ...FACULTY_LEGACY_SETUP_OBJECT_KEYS]
       : [],
   );
 

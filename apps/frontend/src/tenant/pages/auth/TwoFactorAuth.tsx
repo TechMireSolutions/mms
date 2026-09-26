@@ -22,7 +22,6 @@ import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import {
   getPendingChallengeId,
   is2FAVerified,
-  resend2FACode,
 } from '@/lib/twoFactor';
 import { useResendCountdown } from '@/hooks/useResendCountdown';
 import { OtpInput, createEmptyOtp, isOtpComplete } from '@/components/ui/OtpInput';
@@ -31,7 +30,7 @@ import { OtpInput, createEmptyOtp, isOtpComplete } from '@/components/ui/OtpInpu
  * Two-factor verification after login when global settings require it.
  */
 export default function TwoFactorAuth(): React.JSX.Element {
-  const { isAuthenticated, user, verify2FA } = useAuth();
+  const { isAuthenticated, user, verify2FA, resend2FA } = useAuth();
   const settings = useGlobalSettings();
   const { t } = useTranslation();
   const navigate = useNavigate();
@@ -84,8 +83,9 @@ export default function TwoFactorAuth(): React.JSX.Element {
 
     const entered = code.join('');
     try {
-      await verify2FA(entered);
-      navigate(redirectTo, { replace: true });
+      const res = await verify2FA(entered);
+      const dest = res?.user?.mustChangePassword ? ROUTES.forcePasswordChange : redirectTo;
+      navigate(dest, { replace: true });
     } catch {
       setError(t('auth.otpInvalid'));
       setCode(createEmptyOtp());
@@ -96,7 +96,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
 
   const handleResend = async (): Promise<void> => {
     if (!challengeId) return;
-    const ok = await resend2FACode(challengeId);
+    const ok = await resend2FA(challengeId);
     if (!ok) {
       setError(t('auth.otpResendFailed'));
       return;
@@ -118,6 +118,7 @@ export default function TwoFactorAuth(): React.JSX.Element {
       >
         <form onSubmit={(event) => void handleSubmit(event)} className="space-y-5" noValidate aria-busy={loading}>
           <fieldset disabled={loading} className="m-0 min-w-0 space-y-5 border-0 p-0">
+            <legend className="sr-only">{t('auth.twoFactorTitle')}</legend>
             <AuthMutedPanel align="center">
               <p className="text-xs text-muted-foreground">
                 {t('auth.codeSentTo')}{' '}

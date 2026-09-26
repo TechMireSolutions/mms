@@ -153,14 +153,35 @@ export function hasReversalEntry(entry: JournalEntry, allEntries: JournalEntry[]
   );
 }
 
+export function isJournalRefUnique(
+  ref: string,
+  entries: readonly JournalEntry[],
+  currentId?: string,
+): boolean {
+  const clean = ref?.trim();
+  if (!clean) return true;
+  return !entries.some(
+    (e) => !e.deletedAt && e.ref?.trim().toLowerCase() === clean.toLowerCase() && (!currentId || e.id !== currentId),
+  );
+}
+
 export function generateJERef(entries: JournalEntry[]): string {
-  const journalEntries = entries.filter((entry) => entry.ref.startsWith("JE-"));
+  const journalEntries = entries.filter((entry) => !entry.deletedAt && entry.ref?.startsWith("JE-"));
   let maxId = 0;
   journalEntries.forEach((entry) => {
-    const referenceNumber = parseInt(entry.ref.substring(3));
-    if (!isNaN(referenceNumber) && referenceNumber > maxId) maxId = referenceNumber;
+    const referenceNumber = parseInt(entry.ref.substring(3), 10);
+    if (!Number.isNaN(referenceNumber) && referenceNumber > maxId) maxId = referenceNumber;
   });
-  return `JE-${(maxId + 1).toString().padStart(4, "0")}`;
+  let attempt = maxId + 1;
+  let candidate = `JE-${attempt.toString().padStart(4, "0")}`;
+  const existingRefs = new Set(
+    entries.filter((e) => !e.deletedAt).map((e) => e.ref?.trim().toLowerCase()),
+  );
+  while (existingRefs.has(candidate.toLowerCase())) {
+    attempt += 1;
+    candidate = `JE-${attempt.toString().padStart(4, "0")}`;
+  }
+  return candidate;
 }
 
 export function computeTrialBalance(

@@ -239,7 +239,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
             role="dialog"
             aria-modal="true"
             aria-label={t('nav.openMenu')}
-            className="relative w-sidebar-mobile max-w-sheet bg-sidebar h-full shadow-2xl flex flex-col z-elevated border-e border-sidebar-border"
+            className="relative w-sidebar-mobile max-w-sheet bg-sidebar h-full shadow-drawer flex flex-col z-elevated border-e border-sidebar-border"
           >
             {sidebarContent(true)}
           </div>

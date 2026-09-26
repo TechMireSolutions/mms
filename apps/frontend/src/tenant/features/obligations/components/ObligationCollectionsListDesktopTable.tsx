@@ -107,7 +107,7 @@ export function ObligationCollectionsListDesktopTable(props: ObligationCollectio
           return (
             <>
               <span>{rep?.name || "—"}</span>
-              {mujtahid && <span className="text-xs block text-muted-foreground/70">{mujtahid.name}</span>}
+              {mujtahid && <span className="text-xs block text-muted-foreground">{mujtahid.name}</span>}
             </>
           );
         },

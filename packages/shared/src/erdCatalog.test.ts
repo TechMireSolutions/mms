@@ -92,4 +92,22 @@ describe('erdCatalog', () => {
     expect(source).toMatch(/accounting_journal_lines \}o--\|\| accounting_accounts : account_id/);
     expect(source).toMatch(/accounting_entries \}o--\|\| accounting_fiscal_years : fiscal_year_id/);
   });
+
+  it('looks up faculty domain with hierarchy relationship and backwards compatibility', () => {
+    expect(isErdDomainId('faculty')).toBe(true);
+    expect(isErdDomainId('teachers')).toBe(true);
+    const faculty = getErdDomain('faculty');
+    const legacy = getErdDomain('teachers');
+    expect(faculty.id).toBe('faculty');
+    expect(legacy).toBe(faculty);
+    expect(listErdTableNames(faculty.tables)).toContain('faculty');
+    expect(listErdTableNames(faculty.tables)).toContain('faculty_lookups');
+
+    const hierarchyRel = faculty.relationships.find(
+      (rel) => rel.fromTable === 'faculty' && rel.toTable === 'faculty' && rel.fromColumn === 'reporting_faculty_id',
+    );
+    expect(hierarchyRel).toBeDefined();
+    expect(hierarchyRel?.cardinality).toBe('N:1');
+    expect(hierarchyRel?.onDelete).toBe('set null');
+  });
 });

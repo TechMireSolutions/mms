@@ -9,6 +9,7 @@ export interface AttendanceListQuery {
   search?: string;
   sessionId?: string;
   classId?: string;
+  facultyId?: string;
   teacherId?: string;
   date?: string;
   dateFrom?: string;
@@ -40,8 +41,9 @@ export function filterAttendanceForQuery(
   if (query.classId?.trim()) {
     rows = rows.filter((record) => record.classId === query.classId);
   }
-  if (query.teacherId?.trim()) {
-    rows = rows.filter((record) => record.teacherId === query.teacherId);
+  const facultyFilter = (query.facultyId || query.teacherId)?.trim();
+  if (facultyFilter) {
+    rows = rows.filter((record) => record.facultyId === facultyFilter || record.teacherId === facultyFilter);
   }
   if (query.date?.trim()) {
     rows = rows.filter((record) => record.date === query.date);

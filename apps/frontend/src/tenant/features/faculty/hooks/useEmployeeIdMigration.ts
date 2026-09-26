@@ -3,13 +3,14 @@ import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { apiContract } from "@/lib/api";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
-import { invalidateTeachersQueries } from "@/tenant/features/faculty/hooks/invalidateFacultyQueries";
+import { invalidateFacultyQueries } from "@/tenant/features/faculty/hooks/invalidateFacultyQueries";
 
-const TEACHERS_EMPLOYEE_ID_MIGRATION_KEY = "mms_teachers_employee_id_migration_v1";
+const FACULTY_EMPLOYEE_ID_MIGRATION_KEY = "mms_faculty_employee_id_migration_v1";
+const TEACHERS_EMPLOYEE_ID_MIGRATION_KEY = FACULTY_EMPLOYEE_ID_MIGRATION_KEY;
 
 function employeeIdMigrationAlreadyDone(): boolean {
   try {
-    return localStorage.getItem(TEACHERS_EMPLOYEE_ID_MIGRATION_KEY) === "1";
+    return localStorage.getItem(FACULTY_EMPLOYEE_ID_MIGRATION_KEY) === "1" || localStorage.getItem("mms_teachers_employee_id_migration_v1") === "1";
   } catch {
     return false;
   }
@@ -17,14 +18,14 @@ function employeeIdMigrationAlreadyDone(): boolean {
 
 function markEmployeeIdMigrationDone(): void {
   try {
-    localStorage.setItem(TEACHERS_EMPLOYEE_ID_MIGRATION_KEY, "1");
+    localStorage.setItem(FACULTY_EMPLOYEE_ID_MIGRATION_KEY, "1");
   } catch {
     // non-fatal: the one-shot gate is best-effort dedupe only
   }
 }
 
 /**
- * One-shot employee-id backfill for legacy teachers missing an id.
+ * One-shot employee-id backfill for legacy faculty/teachers missing an id.
  * Runs once per browser (localStorage gate) when a Setup writer opens the Work
  * tab — matches BE `setupWrite`. The POST goes through a `useMutation` so the
  * outcome surfaces via `notify.*` + `t()` instead of silent console warnings.
@@ -36,20 +37,20 @@ export function useEmployeeIdMigration(activeTab: string, canEditSetup: boolean)
   const migrationAppliedRef = useRef(false);
 
   const { mutate } = useMutation({
-    mutationFn: () => apiContract.teachers.migrateEmployeeIds({ body: {} }).then((res) => ({ updated: (res.body as { updated?: number } | null)?.updated ?? 0 })),
+    mutationFn: () => apiContract.faculty.migrateEmployeeIds({ body: {} }).then((res) => ({ updated: (res.body as { updated?: number } | null)?.updated ?? 0 })),
     onSuccess: (result: { updated: number }) => {
-      invalidateTeachersQueries(queryClient);
+      invalidateFacultyQueries(queryClient);
       markEmployeeIdMigrationDone();
       setNeedsMigrationScan(false);
       if (result.updated > 0) {
-        notify.success(t("teachers.employeeIdMigrationCompleted"), {
-          description: t("teachers.employeeIdMigrationUpdated", { count: result.updated }),
+        notify.success(t("faculty.employeeIdMigrationCompleted"), {
+          description: t("faculty.employeeIdMigrationUpdated", { count: result.updated }),
         });
       }
     },
     onError: () => {
       migrationAppliedRef.current = false;
-      notify.error(t("teachers.employeeIdMigrationFailed"));
+      notify.error(t("faculty.employeeIdMigrationFailed"));
     },
   });
 

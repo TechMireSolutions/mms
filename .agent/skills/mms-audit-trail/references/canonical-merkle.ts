@@ -1,60 +1,15 @@
-import crypto from 'node:crypto';
-
 /**
- * Deterministic JSON Canonicalization according to RFC 8785 (JCS).
- * Recursively sorts keys lexicographically and strips extraneous whitespace.
+ * Audit implementation pointers — no standalone cryptographic recipe.
+ *
+ * Use packages/shared/src/auditTypes.ts for canonicalizeJson and
+ * formatAuditEventHashInput; verify behavior with auditTypes.test.ts.
+ * The writer is apps/backend/src/services/auditTrailService.ts.
+ * Verification and checkpoint construction are in
+ * apps/backend/src/services/auditVerificationService.ts.
+ *
+ * Advisory: preserve deployed framing, ordering, shard identity and algorithm
+ * version. A new serializer or Merkle algorithm requires compatibility evidence
+ * and a migration plan; do not paste an illustrative hash-concatenation recipe.
+ * RFC 8785 conformance requires validating supported inputs and canonicalization
+ * edge cases; sorted object keys alone do not establish conformance.
  */
-export function canonicalizeJson(obj: unknown): string {
-  if (obj === null || typeof obj !== 'object') {
-    return JSON.stringify(obj);
-  }
-
-  if (Array.isArray(obj)) {
-    return `[${obj.map(canonicalizeJson).join(',')}]`;
-  }
-
-  const sortedKeys = Object.keys(obj as Record<string, unknown>).sort();
-  const pairs = sortedKeys.map(
-    (key) => `${JSON.stringify(key)}:${canonicalizeJson((obj as Record<string, unknown>)[key])}`
-  );
-  return `{${pairs.join(',')}}`;
-}
-
-/**
- * Computes deterministic SHA-256 hash chain link for an audit event.
- * hash_current = SHA-256(hash_previous + canonical_json(payload) + transaction_timestamp)
- */
-export function computeAuditEventHash(
-  hashPrevious: string,
-  payload: Record<string, unknown>,
-  transactionTimestamp: string,
-): string {
-  const canonicalPayload = canonicalizeJson(payload);
-  const content = `${hashPrevious}${canonicalPayload}${transactionTimestamp}`;
-  return crypto.hash('sha256', content, 'hex');
-}
-
-/**
- * Computes a binary Merkle tree root from a list of leaf hashes (SHA-256).
- */
-export function computeMerkleRoot(leaves: string[]): string {
-  if (leaves.length === 0) return '';
-  if (leaves.length === 1) return leaves[0];
-
-  let currentLevel = [...leaves];
-  while (currentLevel.length > 1) {
-    const nextLevel: string[] = [];
-    for (let i = 0; i < currentLevel.length; i += 2) {
-      if (i + 1 < currentLevel.length) {
-        const combined = currentLevel[i] + currentLevel[i + 1];
-        nextLevel.push(crypto.hash('sha256', combined, 'hex'));
-      } else {
-        // Odd leaf is paired with itself or promoted
-        const combined = currentLevel[i] + currentLevel[i];
-        nextLevel.push(crypto.hash('sha256', combined, 'hex'));
-      }
-    }
-    currentLevel = nextLevel;
-  }
-  return currentLevel[0];
-}

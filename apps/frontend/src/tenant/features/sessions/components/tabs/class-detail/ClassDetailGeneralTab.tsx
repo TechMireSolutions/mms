@@ -147,8 +147,15 @@ export function ClassDetailGeneralTab({
           <FormSelect
             id="class-teacher"
             name="teacherId"
-            value={classDraft.teacherId || ''}
-            onChange={(val) => updateDraft('teacherId', val)}
+            value={classDraft.facultyId || classDraft.teacherId || ''}
+            onChange={(val) => {
+              const teacher = allTeachers.find((t) => String(t.id) === val);
+              const displayName = teacher ? formatTeacherDisplayName(teacher) : '';
+              updateDraft('teacherId', val);
+              updateDraft('teacherName', displayName);
+              updateDraft('facultyId', val);
+              updateDraft('facultyName', displayName);
+            }}
             options={[
               { value: '', label: t('sessions.classes.unassigned') },
               ...allTeachers.map((teacher) => ({

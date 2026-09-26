@@ -34,7 +34,7 @@ test.describe.serial('Tenant Operations & Module Flows E2E', { tag: '@local-only
     resetPlatformUsers();
   });
 
-  test('should execute full operational module flows: teachers, finance, sessions, enrollments, messaging, accounting, and users', async ({ page }) => {
+  test('should execute full operational module flows: faculty, finance, sessions, enrollments, messaging, accounting, and users', async ({ page }) => {
     test.setTimeout(270_000);
 
     // Bootstrap tenant workspace and login
@@ -42,7 +42,7 @@ test.describe.serial('Tenant Operations & Module Flows E2E', { tag: '@local-only
     await expect(page.locator('h1')).toContainText('Assalamu Alaikum');
 
     // 1. Verify module shells accessibility
-    for (const modulePath of ['/teachers', '/finance', '/sessions', '/messaging', '/users', '/accounting'] as const) {
+    for (const modulePath of ['/faculty', '/finance', '/sessions', '/messaging', '/users', '/accounting'] as const) {
       await assertModuleTierSmoke(page, modulePath, credentials.tenantOrigin);
     }
 
@@ -71,8 +71,8 @@ test.describe.serial('Tenant Operations & Module Flows E2E', { tag: '@local-only
     await page.waitForLoadState('domcontentloaded');
     await registerStudentJaneDoe(page);
 
-    // 5. Create Teacher from John Doe contact
-    await page.goto(`${credentials.tenantOrigin}/teachers`);
+    // 5. Create Faculty from John Doe contact
+    await page.goto(`${credentials.tenantOrigin}/faculty`);
     await page.waitForLoadState('domcontentloaded');
     await createTeacherFromContact(page);
 

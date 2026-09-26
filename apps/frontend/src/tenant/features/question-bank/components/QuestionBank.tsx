@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { useQuestionBankFilters } from '@/tenant/features/question-bank/hooks/useQuestionBankFilters';
-import { useQuestionBankSelection } from '@/tenant/features/question-bank/hooks/useQuestionBankSelection';
 import type { QuestionBankQuestion as Question } from '@mms/shared';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { QuestionBankTrashDialogs } from '@/tenant/features/question-bank/components/QuestionBankTrashDialogs';
@@ -37,6 +36,10 @@ interface QuestionBankProps {
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
+  selectedIds?: string[];
+  onToggleSelectedQuestion?: (id: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean, visibleIds: string[]) => void;
+  onClearSelection?: () => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -61,6 +64,10 @@ export function QuestionBank({
   onBulkDelete,
   onBulkRestore,
   onFilteredCountChange,
+  selectedIds = [],
+  onToggleSelectedQuestion,
+  onToggleSelectAll,
+  onClearSelection,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -88,22 +95,22 @@ export function QuestionBank({
     serverHasMore,
   } = useQuestionBankFilters({ showDeleted, onFilteredCountChange });
 
-  const {
-    selectedIds,
-    setSelectedIds,
-    allVisibleSelected,
-    someVisibleSelected,
-    toggleSelectAll,
-    toggleSelectedQuestion,
-    clearSelection,
-  } = useQuestionBankSelection(pageQuestions);
+  const selectedSet = new Set(selectedIds);
+  const allVisibleSelected = pageQuestions.length > 0
+    && pageQuestions.every((q) => selectedSet.has(q.id));
+  const someVisibleSelected = selectedSet.size > 0
+    && pageQuestions.some((q) => selectedSet.has(q.id));
+
+  const handleToggleSelectAll = (checked: boolean) => {
+    onToggleSelectAll?.(checked, pageQuestions.map((q) => q.id));
+  };
 
   const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
   const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
 
   useEffect(() => {
-    setSelectedIds([]);
-  }, [showDeleted, listPage, search, filterCats, filterDiff, setSelectedIds]);
+    onClearSelection?.();
+  }, [listPage, search, filterCats, filterDiff, onClearSelection]);
 
   const { difficultyConfig, typeConfig } = useQuestionBankDisplayConfig(config);
 
@@ -142,7 +149,7 @@ export function QuestionBank({
   const confirmBulkTrash = (): void => {
     if (showDeleted) void onBulkRestore?.(selectedIds);
     else void onBulkDelete?.(selectedIds);
-    clearSelection();
+    onClearSelection?.();
     setConfirmBulkOpen(false);
   };
 
@@ -176,7 +183,7 @@ export function QuestionBank({
           canDelete={canDelete}
           onRequestBulkDelete={() => setConfirmBulkOpen(true)}
           onRequestBulkRestore={() => setConfirmBulkOpen(true)}
-          onClearSelection={clearSelection}
+          onClearSelection={onClearSelection ?? (() => {})}
         />
       )}
 
@@ -231,8 +238,8 @@ export function QuestionBank({
               if (showDeleted) void onRestore?.(id);
               else setPendingTrashId(id);
             }}
-            onToggleSelectedQuestion={toggleSelectedQuestion}
-            onToggleSelectAll={toggleSelectAll}
+            onToggleSelectedQuestion={onToggleSelectedQuestion ?? (() => {})}
+            onToggleSelectAll={handleToggleSelectAll}
             onRowClick={onRowClick}
           />
         )}

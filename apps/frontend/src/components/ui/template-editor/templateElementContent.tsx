@@ -148,7 +148,7 @@ export function TemplateElementContent({
             <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
             <circle cx="12" cy="7" r="4" />
           </svg>
-          <span className="text-[7px] font-semibold uppercase tracking-wider mt-0.5 opacity-75">
+          <span className="text-4xs font-semibold uppercase tracking-wider mt-0.5 opacity-75">
             {t("students.cardTemplate.field.photo") || "Photo"}
           </span>
         </div>
@@ -243,7 +243,7 @@ export function TemplateElementContent({
   const isEmptyBoundField = el.type === "field" && content === "";
   if (isEmptyBoundField && mode === "edit") {
     return (
-      <span className="w-full truncate italic text-muted-foreground/70">
+      <span className="w-full truncate italic text-muted-foreground">
         {`{${el.field}}`}
       </span>
     );

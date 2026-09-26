@@ -3,6 +3,7 @@ import { dedupeTrimmedIds, type StoredTenantUser } from '@mms/shared';
 import { withTenantRead, withGlobalTenant } from '../tenant-context.js';
 import { tenantUsers } from '../schema.js';
 import { mapAuditTimestamps, toIsoString } from './repositoryMappers.js';
+import { getPreparedTenantUserById } from '../preparedStatements.js';
 
 export type TenantUserRow = StoredTenantUser & Record<string, unknown>;
 
@@ -169,16 +170,34 @@ export async function findTenantUserRowById(
   const cleanId = id?.trim();
   if (!subdomain || !cleanId) return null;
   return withTenantRead(subdomain, async (tx) => {
-    const rows = await tx
-      .select(tenantUserColumns)
-      .from(tenantUsers)
-      .where(
-        and(
-          eq(tenantUsers.workspaceSubdomain, subdomain),
-          eq(tenantUsers.id, cleanId),
-        ),
-      );
-    const row = rows[0];
+    let row: typeof tenantUsers.$inferSelect | undefined;
+    if (
+      process.env.MMS_USE_PREPARED_STATEMENTS !== 'false' &&
+      typeof (tx as any).execute === 'function' &&
+      (tx as any).dialect !== undefined
+    ) {
+      try {
+        const stmt = getPreparedTenantUserById(tx);
+        if (stmt && typeof stmt.execute === 'function') {
+          const rows = await stmt.execute({ subdomain, id: cleanId });
+          row = rows[0];
+        }
+      } catch {
+        // Fallback to standard select
+      }
+    }
+    if (!row) {
+      const rows = await tx
+        .select(tenantUserColumns)
+        .from(tenantUsers)
+        .where(
+          and(
+            eq(tenantUsers.workspaceSubdomain, subdomain),
+            eq(tenantUsers.id, cleanId),
+          ),
+        );
+      row = rows[0];
+    }
     return row ? rowToTenantUser(row) : null;
   });
 }

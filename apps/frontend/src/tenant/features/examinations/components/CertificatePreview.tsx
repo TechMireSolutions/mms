@@ -112,7 +112,7 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold"
             title="Export Typst Compiler JSON"
           >
-            <FileCode2 className="w-3.5 h-3.5 text-sky-600" aria-hidden="true" />
+            <FileCode2 className="w-3.5 h-3.5 text-info" aria-hidden="true" />
             <span>Typst</span>
           </Button>
           <Button

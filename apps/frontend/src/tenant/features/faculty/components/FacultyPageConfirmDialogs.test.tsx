@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TeachersPageConfirmDialogs } from "./FacultyPageConfirmDialogs";
+import { FacultyPageConfirmDialogs } from "./FacultyPageConfirmDialogs";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -36,34 +36,34 @@ const defaultProps = {
   onConfirmBulkRestore: vi.fn(),
 };
 
-describe("TeachersPageConfirmDialogs Component", () => {
+describe("FacultyPageConfirmDialogs Component", () => {
   it("renders single delete dialog when deleteTarget is set", () => {
     const html = renderToStaticMarkup(
-      <TeachersPageConfirmDialogs
+      <FacultyPageConfirmDialogs
         {...defaultProps}
         deleteTarget={{ id: "tch-1", name: "Ustadh Umar" }}
       />,
     );
 
-    expect(html).toContain("teachers.confirmDeleteTitle");
+    expect(html).toContain("faculty.confirmDeleteTitle");
     expect(html).toContain("Ustadh Umar");
   });
 
   it("renders bulk delete dialog when bulkDeleteOpen is true", () => {
     const html = renderToStaticMarkup(
-      <TeachersPageConfirmDialogs {...defaultProps} bulkDeleteOpen={true} />,
+      <FacultyPageConfirmDialogs {...defaultProps} bulkDeleteOpen={true} />,
     );
 
-    expect(html).toContain("teachers.bulkDelete");
-    expect(html).toContain("teachers.bulkDeleteConfirm:3");
+    expect(html).toContain("faculty.bulkDelete");
+    expect(html).toContain("faculty.bulkDeleteConfirm:3");
   });
 
   it("renders bulk restore dialog when bulkRestoreOpen is true", () => {
     const html = renderToStaticMarkup(
-      <TeachersPageConfirmDialogs {...defaultProps} bulkRestoreOpen={true} />,
+      <FacultyPageConfirmDialogs {...defaultProps} bulkRestoreOpen={true} />,
     );
 
-    expect(html).toContain("teachers.bulkRestore");
-    expect(html).toContain("teachers.bulkRestoreConfirm:3");
+    expect(html).toContain("faculty.bulkRestore");
+    expect(html).toContain("faculty.bulkRestoreConfirm:3");
   });
 });

@@ -4,7 +4,7 @@ description: Implements or reviews MMS background jobs and queued processing —
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Background Jobs Workflow
@@ -14,6 +14,12 @@ metadata:
 Source: `mms-module-architecture.mdc` §5. Rules: `mms-module-architecture.mdc`, `mms-auth-security.mdc`, `mms-performance.mdc` §2 (Zero Memory Buffering & Streaming Background Workers). Retention hard-purge workflow → **`mms-soft-delete`**.
 
 Use this skill when adding or changing background processing, export/download artifacts, bulk operation progress, job tray UX, or queued sync recovery.
+
+## Financial jobs and retention
+
+Advisory: read [ledger controls](../mms-finance-accounting/references/ledger-controls.md) for import/posting retry identity, payload conflicts, atomic batches and external settlement uncertainty. Bind tenant/user and recheck authority at execution; record progress only after durable commit. A BullMQ job ID alone is not proof of economic idempotency.
+
+For report packs use a cutoff-consistent dataset and retain evidence per [closing and reporting](../mms-finance-accounting/references/closing-reporting.md). Generic retention workers must not treat ledger history, source idempotency evidence, or legal-hold documents as ordinary expired trash; inspect the effective retention policy before scheduling a purge.
 
 ## Reference Files
 

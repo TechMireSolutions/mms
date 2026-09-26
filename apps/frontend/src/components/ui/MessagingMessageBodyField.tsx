@@ -52,7 +52,7 @@ export function MessagingMessageBodyField({
         aria-invalid={Boolean(error)}
         className={cn(error && FORM_INPUT_ERROR)}
       />
-      <p className="mt-1 flex items-center gap-1 text-xs italic text-muted-foreground/80">
+      <p className="mt-1 flex items-center gap-1 text-xs italic text-muted-foreground">
         <Sparkles className="h-3 w-3 flex-shrink-0 text-primary/70" />
         {t('messaging.fallbackHint')}
       </p>

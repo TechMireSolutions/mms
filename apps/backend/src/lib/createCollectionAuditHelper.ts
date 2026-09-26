@@ -19,8 +19,8 @@ export interface CollectionAuditExtraOptions {
 }
 
 /**
- * Shared collection-audit helper factory. Module route helpers (Teachers/Students/Users/
- * Sessions/Contacts/Enrollments) each reduce to `createCollectionAuditHelper('teachers')`.
+ * Shared collection-audit helper factory. Module route helpers (Faculty/Students/Users/
+ * Sessions/Contacts/Enrollments) each reduce to `createCollectionAuditHelper('faculty')`.
  * Supports transactional outbox logging when `options.tx` is passed.
  */
 export function createCollectionAuditHelper(defaultEntityId: string) {

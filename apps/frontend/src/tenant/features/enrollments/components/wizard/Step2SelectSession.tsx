@@ -55,10 +55,15 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
         )}
         {activeSessions.map((session) => {
           const selected = value?.id === session.id;
-          const totalSpots = (session.classes || []).reduce((total, sessionClass) => total + (sessionClass.maxStudents ?? (sessionClass as any).capacity ?? 30), 0);
+          const totalSpots = (session.classes && session.classes.length > 0)
+            ? session.classes.reduce((total, sessionClass) => {
+                const cap = sessionClass.maxStudents || (sessionClass as { capacity?: number }).capacity || 30;
+                return total + cap;
+              }, 0)
+            : 30;
           const totalEnrolled = (session.classes || []).reduce((total, sessionClass) => total + (sessionClass.enrolled ?? 0), 0);
 
-          const spotsLeft = totalSpots - totalEnrolled;
+          const spotsLeft = Math.max(0, totalSpots - totalEnrolled);
           const isFull = spotsLeft <= 0;
 
           return (
@@ -104,7 +109,7 @@ export function Step2SelectSession({ value, onChange, sessions = [] }: Step2Sele
                         <Badge key={sessionClass.id} pill tone="muted" className="px-2 font-medium">
                           {t("enrollments.wizard.step2ClassSpots", {
                             name: sessionClass.name,
-                            count: (sessionClass.maxStudents ?? (sessionClass as any).capacity ?? 30) - (sessionClass.enrolled ?? 0),
+                            count: (sessionClass.maxStudents ?? (sessionClass as { capacity?: number }).capacity ?? 30) - (sessionClass.enrolled ?? 0),
                           })}
 
                         </Badge>

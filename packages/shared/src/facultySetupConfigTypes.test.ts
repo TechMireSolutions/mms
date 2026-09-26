@@ -24,6 +24,12 @@ describe('teacherSetupConfigTypes prefs SSOT', () => {
       autoGenerateId: DEFAULT_TEACHERS_SETTINGS.autoGenerateId,
       requireContactLink: DEFAULT_TEACHERS_SETTINGS.requireContactLink,
       defaultSpecialization: DEFAULT_TEACHERS_SETTINGS.defaultSpecialization,
+      employeeIdPrefix: DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix,
+      employeeIdYearFormat: DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat,
+      employeeIdSequenceDigits: DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits,
+      employeeIdDelimiter: DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter,
+      employeeIdLastYear: DEFAULT_TEACHERS_SETTINGS.employeeIdLastYear,
+      employeeIdCurrentSequence: DEFAULT_TEACHERS_SETTINGS.employeeIdCurrentSequence,
     });
     expect('defaultViewLayout' in prefs).toBe(false);
   });

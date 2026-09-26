@@ -120,3 +120,6 @@ desktop.ini
 /typecheck_output.txt
 
 
+
+# Local diagram tooling (standalone clone, not a submodule)
+/.diagram-design-tool/

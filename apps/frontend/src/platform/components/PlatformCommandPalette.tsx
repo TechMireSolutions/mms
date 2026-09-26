@@ -108,7 +108,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={reducedMotion ? undefined : { opacity: 0, scale: 0.96, y: -8 }}
           transition={{ duration: 0.15 }}
-          className="relative w-full max-w-xl overflow-hidden rounded-2xl border border-border/80 bg-card shadow-2xl surface-glass text-start"
+          className="relative w-full max-w-xl overflow-hidden rounded-2xl surface-overlay text-start"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Search Bar Header */}

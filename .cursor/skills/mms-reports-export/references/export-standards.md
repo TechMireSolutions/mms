@@ -14,7 +14,7 @@
 | PDF large | Backend Typst worker via BullMQ | >200 rows → background | Background job + tray download |
 
 - Use shared `ExportToolbar` — always use `columns` + `rows` prop API (not deprecated `data` + `headers`).
-- Escape formula-prefix cells (`=`, `+`, `-`, `@`) to eliminate formula injection vulnerabilities.
+- Escape untrusted text cells with formula prefixes (`=`, `+`, `-`, `@`) using the format-specific export helper; preserve legitimate signed numeric cells as numbers. Advisory: test separator, whitespace and control-character payloads in the target format.
 - Standard export filename: `{module}-report-{date-range}-{YYYY-MM-DD}.{ext}`.
 - Include `generatedAt` timestamp and `generatedBy` metadata in export headers.
 - Respect filters, RBAC permissions, field visibility, and soft-delete policy (`exportsIncludeDeleted` from module manifest).
@@ -23,7 +23,11 @@
 
 ## Tamper-Evident Compliance & Audit Exports
 
-For regulatory compliance (HIPAA, SOX, PCI-DSS, GDPR) targeting `audit_trail_events`:
+Advisory design guidance for evidence exports targeting `audit_trail_events`; cryptographic metadata alone does not establish regulatory compliance. Verify actual endpoint support and applicable retention/access policies before claiming these capabilities:
 - **Cryptographic Attestation in Exports**: When exporting audit records (`POST /api/audit/export`), embed the cryptographic chain hash, the published Merkle root proof, and verification status in document metadata (PDF properties or JSON envelope).
 - **Auditing the Auditor**: Every view, query, filter evaluation, or export targeting audit logs must itself emit an immutable audit event (`action_type: 'VIEW'`, `tableName: 'audit_trail_events'`).
 - **Data Minimization**: Compliance exports must strip raw decrypted PII unless explicitly requested under an authorized break-glass session.
+
+## Accounting exports
+
+Advisory: distinguish live report definitions from issued financial evidence packs; use consistent cutoff, currency, filters and reconciled totals. Follow [closing and reporting](../../mms-finance-accounting/references/closing-reporting.md) for stock/flow semantics and issuance metadata.

@@ -55,7 +55,7 @@ export function ClassDetailModal({
     { page: 1, limit: TEACHERS_MODULE_MANIFEST.maxPageSize, status: 'active' },
     open,
   );
-  const teachersList = (teachersData?.body?.teachers ?? []) as Teacher[];
+  const teachersList = ((teachersData?.body?.faculty ?? teachersData?.body?.teachers ?? []) as Teacher[]);
 
   const {
     classDraft,

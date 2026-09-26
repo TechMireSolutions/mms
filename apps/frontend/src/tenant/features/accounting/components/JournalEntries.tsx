@@ -43,6 +43,7 @@ export function JournalEntries(props: JournalEntriesWithQueryProps) {
         modeTabs={controller.modeTabs}
         journalSubTabs={controller.journalSubTabs}
         entries={entries}
+        allEntries={props.allEntries}
         accounts={accounts}
         fiscalYears={fiscalYears}
         canWrite={controller.canWrite}
@@ -57,6 +58,7 @@ export function JournalEntries(props: JournalEntriesWithQueryProps) {
         onExportCsv={controller.exportCSV}
         onSave={controller.handleSave}
         onCloseSimpleModal={() => controller.setSimpleModal(null)}
+        pageScopeLabel={controller.pageScopeLabel}
       />
     );
   }
@@ -66,6 +68,7 @@ export function JournalEntries(props: JournalEntriesWithQueryProps) {
       mode={controller.mode}
       modeTabs={controller.modeTabs}
       entries={entries}
+      allEntries={props.allEntries}
       filteredEntries={controller.filtered}
       accounts={accounts}
       fiscalYears={fiscalYears}
@@ -131,6 +134,8 @@ export function JournalEntries(props: JournalEntriesWithQueryProps) {
       onPendingReverseEntryChange={controller.setPendingReverseEntry}
       getColumnWidth={getColumnWidth}
       onColumnResize={onColumnResize}
+      pageScopeLabel={controller.pageScopeLabel}
+      onRestoreEntry={props.onRestore}
     />
   );
 }

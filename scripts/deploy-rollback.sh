@@ -71,6 +71,7 @@ if [ -f "${TARBALL}.sha256" ]; then
 fi
 
 echo "Extracting ${TARBALL} → ${ROOT_DIR}"
+rm -rf "${ROOT_DIR}/apps/frontend/dist" "${ROOT_DIR}/apps/backend/dist"
 tar xzf "$TARBALL" -C "$ROOT_DIR"
 
 export NVM_DIR="${NVM_DIR:-$HOME/.nvm}"

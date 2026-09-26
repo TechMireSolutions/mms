@@ -2,7 +2,7 @@ import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { School } from "lucide-react";
-import { TeachersPageView } from "./FacultyPageView";
+import { FacultyPageView } from "./FacultyPageView";
 
 vi.mock("@/components/ui/ModulePageShell", () => ({
   ModulePageShell: ({ headerTitle, children, headerActions, metricsStrip }: {
@@ -47,10 +47,10 @@ vi.mock("@/tenant/features/faculty/components/FacultyPageOverlays", () => ({
   TeachersPageOverlays: () => <div data-testid="teachers-page-overlays">Teacher Overlays</div>,
 }));
 
-describe("TeachersPageView Component", () => {
-  it("renders teacher page shell with header actions, metrics, and work tier", () => {
+describe("FacultyPageView Component", () => {
+  it("renders faculty page shell with header actions, metrics, and work tier", () => {
     const html = renderToStaticMarkup(
-      <TeachersPageView
+      <FacultyPageView
         canWrite={true}
         canExport={true}
         visibleTabs={[

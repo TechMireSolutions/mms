@@ -1,6 +1,6 @@
 import type {
   StudentsCommandMetricsSnapshot,
-  TeachersCommandMetricsSnapshot,
+  FacultyCommandMetricsSnapshot,
   ContactsCommandMetricsSnapshot,
   SessionsCommandMetricsSnapshot,
   AttendanceCommandMetricsSnapshot,
@@ -13,7 +13,7 @@ import { getRequestTenant } from '../lib/tenantContext.js';
 import { withTenant } from '../db/tenant-context.js';
 import { redisGet, redisSet, redisKeys } from '../lib/redis.js';
 import { studentUseCases } from '../students/use-cases/studentUseCases.js';
-import { teacherUseCases } from '../faculty/use-cases/facultyUseCases.js';
+import { facultyUseCases } from '../faculty/use-cases/facultyUseCases.js';
 import { contactUseCases } from '../contacts/use-cases/contactUseCases.js';
 import { loadSessionsCommandMetrics } from './sessionService.js';
 import { aggregateAttendanceCommandMetrics } from '../db/repositories/attendanceRepositoryList.js';
@@ -24,7 +24,7 @@ import { loadQuestionBankCommandMetrics } from './questionBankMetricsService.js'
 
 export interface DashboardSummaryResponse {
   students?: StudentsCommandMetricsSnapshot;
-  teachers?: TeachersCommandMetricsSnapshot;
+  faculty?: FacultyCommandMetricsSnapshot;
   contacts?: ContactsCommandMetricsSnapshot;
   sessions?: SessionsCommandMetricsSnapshot;
   attendance?: AttendanceCommandMetricsSnapshot;
@@ -66,31 +66,19 @@ export async function loadDashboardSummary(
   const result = await withTenant(
     cleanTenant,
     async () => {
-      const [
-        students,
-        teachers,
-        contacts,
-        sessions,
-        attendance,
-        finance,
-        hasanat,
-        questionBank,
-        accounting,
-      ] = await Promise.all([
-        studentUseCases.loadStudentsCommandMetrics(),
-        teacherUseCases.loadTeachersCommandMetrics(),
-        contactUseCases.loadContactsCommandMetrics(),
-        loadSessionsCommandMetrics(),
-        aggregateAttendanceCommandMetrics(cleanTenant, { selectedDate: date }),
-        loadFinanceCommandMetrics(),
-        loadHasanatCommandMetrics(),
-        loadQuestionBankCommandMetrics(),
-        loadAccountingCommandMetrics(),
-      ]);
+      const students = await studentUseCases.loadStudentsCommandMetrics();
+      const facultyData = await facultyUseCases.loadFacultyCommandMetrics();
+      const contacts = await contactUseCases.loadContactsCommandMetrics();
+      const sessions = await loadSessionsCommandMetrics();
+      const attendance = await aggregateAttendanceCommandMetrics(cleanTenant, { selectedDate: date });
+      const finance = await loadFinanceCommandMetrics();
+      const hasanat = await loadHasanatCommandMetrics();
+      const questionBank = await loadQuestionBankCommandMetrics();
+      const accounting = await loadAccountingCommandMetrics();
 
       return {
         students,
-        teachers,
+        faculty: facultyData,
         contacts,
         sessions,
         attendance,

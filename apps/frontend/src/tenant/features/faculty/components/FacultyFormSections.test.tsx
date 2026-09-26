@@ -103,4 +103,84 @@ describe("TeacherFormSections Components", () => {
     expect(empHtml).toContain('aria-describedby="employeeId-error"');
     expect(empHtml).toContain("border-destructive");
   });
+
+  it("derives hierarchy rank from a dynamic designation and renders the supervisor picker", () => {
+    const html = renderToStaticMarkup(
+      <TeacherEmploymentSection
+        autoGenerateId={false}
+        errors={{}}
+        fields={{}}
+        idPrefix="FAC-"
+        statusOptions={[{ value: "active", label: "Active" }]}
+        teacherDraft={{
+          employeeId: "FAC-001",
+          status: "active",
+          hierarchyRank: 3,
+          designationId: "senior-faculty",
+          designationStartsOn: "2026-01-01",
+          reportingFacultyId: "fac-sup-1",
+        }}
+        supervisorCandidates={[
+          {
+            id: "fac-sup-1",
+            contactId: "cnt-sup-1",
+            name: "Dean Ahmad",
+            hierarchyRank: 1,
+            designation: "Dean",
+            status: "active",
+          } as any,
+        ]}
+        designationOptions={[{
+          id: "senior-faculty",
+          code: "SENIOR",
+          name: "Senior Faculty",
+          hierarchyRank: 3,
+          isActive: true,
+          assignableRoles: ["teacher"],
+        }]}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('id="designationId"');
+    expect(html).not.toContain('id="hierarchyRank"');
+    expect(html).toContain('id="reportingFacultyId"');
+    expect(html).toContain("Dean Ahmad");
+    expect(html).toContain("Rank 1");
+    // Verifies DatePicker was used instead of raw HTML5 date input (type="date" is banned)
+    expect(html).not.toContain('type="date"');
+    expect(html).toContain('id="designationStartsOn"');
+  });
+
+  it("renders department, specialization, and qualification when enabled", () => {
+    const html = renderToStaticMarkup(
+      <TeacherEmploymentSection
+        autoGenerateId={false}
+        errors={{}}
+        fields={{}}
+        idPrefix="FAC-"
+        statusOptions={[{ value: "active", label: "Active" }]}
+        teacherDraft={{
+          employeeId: "FAC-001",
+          status: "active",
+          department: "Islamic Jurisprudence",
+          specialization: "Fiqh",
+          qualification: "Ph.D. Islamic Law",
+        }}
+        specializationOptions={["Fiqh", "Hadith", "Tafsir"]}
+        isFieldEnabled={(fieldId) => ["department", "specialization", "qualification"].includes(fieldId)}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('id="department"');
+    expect(html).toContain('value="Islamic Jurisprudence"');
+    expect(html).toContain('id="specialization"');
+    expect(html).toContain("Fiqh");
+    expect(html).toContain('id="qualification"');
+    expect(html).toContain('value="Ph.D. Islamic Law"');
+  });
 });

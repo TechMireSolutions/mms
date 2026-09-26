@@ -31,7 +31,7 @@ export const ERD_DOMAIN_HASANAT: ErdDomain = {
         { name: 'batch_id', type: 'text', kind: 'fk' },
         { name: 'denomination_id', type: 'text', kind: 'fk' },
         { name: 'recipient_student_id', type: 'varchar(64)', kind: 'fk' },
-        { name: 'recipient_teacher_id', type: 'varchar(64)', kind: 'fk' },
+        { name: 'recipient_faculty_id', type: 'varchar(64)', kind: 'fk' },
       ],
     },
     {

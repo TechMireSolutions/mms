@@ -27,8 +27,8 @@ import {
 const EMPTY_TENANT_COLLECTIONS = [
   'studentStatuses',
   'studentGenderFilters',
-  'teacherStatuses',
-  'teacherSpecializations',
+  'facultyStatuses',
+  'facultySpecializations',
   'studentDiscountTypes',
   'relationships',
   'whatsappTemplates',

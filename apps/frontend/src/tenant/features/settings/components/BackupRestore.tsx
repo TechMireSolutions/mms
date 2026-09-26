@@ -1,6 +1,6 @@
 import React from 'react';
-import { ShieldAlert, Trash2 } from 'lucide-react';
-import { SectionCard } from '@/components/ui/SectionCard';
+import { Trash2 } from 'lucide-react';
+import { SettingsAdminOnlyNotice } from '@/tenant/features/settings/components/SettingsAdminOnlyNotice';
 import BackupRestoreConfirmModal from '@/tenant/features/settings/components/BackupRestoreConfirmModal';
 import BackupCredentialsModal from '@/tenant/features/settings/components/BackupCredentialsModal';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
@@ -64,9 +64,7 @@ const BackupRestore = (function BackupRestore(): React.JSX.Element {
   if (!isAdmin) {
     return (
       <SettingsPanel width="medium" introKey="settings.introBackup">
-        <SectionCard title={t('backup.adminOnlyTitle')} icon={ShieldAlert}>
-          <p className="text-xs leading-relaxed text-muted-foreground">{t('backup.adminOnlyDesc')}</p>
-        </SectionCard>
+        <SettingsAdminOnlyNotice titleKey="backup.adminOnlyTitle" descKey="backup.adminOnlyDesc" />
       </SettingsPanel>
     );
   }

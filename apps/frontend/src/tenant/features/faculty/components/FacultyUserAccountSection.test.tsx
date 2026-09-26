@@ -57,7 +57,7 @@ describe("FacultyUserAccountSection Component", () => {
       ),
     );
 
-    expect(html).toContain("teachers.form.linkedUserAccount");
+    expect(html).toContain("faculty.form.linkedUserAccount");
     expect(html).toContain("teacher@madrasa.org");
     expect(html).toContain("users.fieldRole");
   });
@@ -83,8 +83,8 @@ describe("FacultyUserAccountSection Component", () => {
       ),
     );
 
-    expect(html).toContain("teachers.form.sectionUserAccount");
-    expect(html).toContain("teachers.form.grantLoginAccess");
+    expect(html).toContain("faculty.form.sectionUserAccount");
+    expect(html).toContain("faculty.form.grantLoginAccess");
     expect(html).toContain("users.addAccountMethod");
     expect(html).toContain("auth.password");
   });

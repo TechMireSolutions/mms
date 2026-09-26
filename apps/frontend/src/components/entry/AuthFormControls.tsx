@@ -5,20 +5,36 @@ import { Button } from "@/components/ui/button";
 
 export function AuthBackLink({
   to,
+  onClick,
+  disabled,
   label,
 }: {
-  to: string;
+  to?: string;
+  onClick?: () => void;
+  disabled?: boolean;
   label: string;
 }): React.JSX.Element {
+  const commonClasses =
+    "inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 font-medium text-primary transition-colors hover:text-primary/80 hover:underline disabled:pointer-events-none disabled:opacity-50";
+
   return (
     <p className="text-center text-xs text-muted-foreground">
-      <Link
-        to={to}
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-md px-2 font-medium text-primary transition-colors hover:text-primary/80 hover:underline"
-      >
-        <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
-        {label}
-      </Link>
+      {to ? (
+        <Link to={to} className={commonClasses}>
+          <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
+          {label}
+        </Link>
+      ) : (
+        <button
+          type="button"
+          onClick={onClick}
+          disabled={disabled}
+          className={commonClasses}
+        >
+          <ArrowLeft className="h-3.5 w-3.5 rtl:rotate-180" aria-hidden />
+          {label}
+        </button>
+      )}
     </p>
   );
 }

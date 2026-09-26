@@ -4,8 +4,8 @@ import { DEFAULT_PLATFORM_ADMIN_PERMISSIONS, type PlatformAdminPermissions } fro
 import PasswordInput from '@/components/ui/PasswordInput';
 import { Button } from '@/components/ui/button';
 import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
-import { FORM_LABEL } from '@/components/ui/formStyles';
 import { FormModal } from '@/components/ui/FormModal';
+import { Field } from '@/components/ui/FormField';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
@@ -94,10 +94,7 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
       >
         <div className="space-y-4 text-start">
           {/* Full Name Field */}
-          <div className="space-y-1.5">
-            <label htmlFor="admin-name" className={FORM_LABEL}>
-              {t('platform.adminName')}
-            </label>
+          <Field label={t('platform.adminName')} required id="admin-name">
             <LeadingIconInput
               id="admin-name"
               name="adminName"
@@ -113,13 +110,10 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
               disabled={addAdmin.isPending}
               placeholder={t('platform.setupFullName')}
             />
-          </div>
+          </Field>
 
           {/* Email Address Field */}
-          <div className="space-y-1.5">
-            <label htmlFor="admin-email" className={FORM_LABEL}>
-              {t('platform.adminEmail')}
-            </label>
+          <Field label={t('platform.adminEmail')} required id="admin-email">
             <LeadingIconInput
               id="admin-email"
               name="adminEmail"
@@ -135,7 +129,7 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
               disabled={addAdmin.isPending}
               placeholder={t('auth.emailPlaceholder')}
             />
-          </div>
+          </Field>
 
           {/* Password Field & Real-time Strength Bar */}
           <div className="space-y-2">

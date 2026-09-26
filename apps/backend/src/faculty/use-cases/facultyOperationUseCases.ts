@@ -1,32 +1,32 @@
 import {
-  formatTeacherEmployeeId,
-  DEFAULT_TEACHERS_SETTINGS,
-  normalizeTeacherModulePreferences,
-  type TeacherDuplicateCheckInput,
-  type TeacherEmployeeIdSettings,
-  type TeacherDuplicateReason,
+  formatFacultyEmployeeId,
+  DEFAULT_FACULTY_SETTINGS,
+  normalizeFacultyModulePreferences,
+  type FacultyDuplicateCheckInput,
+  type FacultyEmployeeIdSettings,
+  type FacultyDuplicateReason,
 } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
-import { loadTeacherModulePreferences } from './facultyPreferencesService.js';
+import { loadFacultyModulePreferences } from './facultyPreferencesService.js';
 import { broadcastCollection } from '../../lib/livePush.js';
-import type { FacultyRepository as TeachersRepository } from '../repository/facultyRepository.js';
-import { facultyRepository as teachersRepository } from '../repository/facultyRepositoryAdapter.js';
+import type { FacultyRepository } from '../repository/facultyRepository.js';
+import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
 
 /** Active duplicate probe (contact / employeeId) before save — server authoritative. */
-export async function checkTeacherRegistrationDuplicate(
-  input: TeacherDuplicateCheckInput,
-  repo: TeachersRepository = teachersRepository,
-): Promise<{ reason: TeacherDuplicateReason | null }> {
+export async function checkFacultyRegistrationDuplicate(
+  input: FacultyDuplicateCheckInput,
+  repo: FacultyRepository = facultyRepository,
+): Promise<{ reason: FacultyDuplicateReason | null }> {
   const tenant = getRequestTenant();
   if (!tenant) return { reason: null };
   const reason = await repo.findRegistrationConflict(tenant, input);
   return { reason };
 }
 
-export async function bulkUpdateTeacherStatus(
+export async function bulkUpdateFacultyStatus(
   ids: string[],
   status: string,
-  repo: TeachersRepository = teachersRepository,
+  repo: FacultyRepository = facultyRepository,
 ): Promise<{ succeeded: number; failed: number }> {
   const tenant = getRequestTenant();
   if (!tenant) return { succeeded: 0, failed: ids.length };
@@ -36,15 +36,15 @@ export async function bulkUpdateTeacherStatus(
 
   const succeeded = await repo.bulkUpdateStatusSql(tenant, uniqueIds, status);
   if (succeeded > 0) {
-    await broadcastCollection('teachers');
+    await broadcastCollection('faculty');
   }
   return { succeeded, failed: uniqueIds.length - succeeded };
 }
 
-export async function bulkUpdateTeacherSpecialization(
+export async function bulkUpdateFacultySpecialization(
   ids: string[],
   specialization: string,
-  repo: TeachersRepository = teachersRepository,
+  repo: FacultyRepository = facultyRepository,
 ): Promise<{ succeeded: number; failed: number }> {
   const tenant = getRequestTenant();
   if (!tenant) return { succeeded: 0, failed: ids.length };
@@ -54,42 +54,42 @@ export async function bulkUpdateTeacherSpecialization(
 
   const succeeded = await repo.bulkUpdateSpecializationSql(tenant, uniqueIds, specialization);
   if (succeeded > 0) {
-    await broadcastCollection('teachers');
+    await broadcastCollection('faculty');
   }
   return { succeeded, failed: uniqueIds.length - succeeded };
 }
 
 /** Next employee id from sequence watermark + dynamic tenant settings + collision probing. */
-export async function computeNextTeacherEmployeeIdForSettings(
-  settingsInput?: Partial<TeacherEmployeeIdSettings>,
-  repo: TeachersRepository = teachersRepository,
+export async function computeNextFacultyEmployeeIdForSettings(
+  settingsInput?: Partial<FacultyEmployeeIdSettings>,
+  repo: FacultyRepository = facultyRepository,
 ): Promise<string> {
   const tenant = getRequestTenant();
   const savedPrefs = tenant
-    ? normalizeTeacherModulePreferences(await loadTeacherModulePreferences())
-    : DEFAULT_TEACHERS_SETTINGS;
+    ? normalizeFacultyModulePreferences(await loadFacultyModulePreferences())
+    : DEFAULT_FACULTY_SETTINGS;
 
-  const settings: TeacherEmployeeIdSettings = {
+  const settings: FacultyEmployeeIdSettings = {
     idPrefix:
       settingsInput?.idPrefix?.trim() ||
       savedPrefs.idPrefix ||
-      DEFAULT_TEACHERS_SETTINGS.idPrefix,
+      DEFAULT_FACULTY_SETTINGS.idPrefix,
     idTemplate:
       settingsInput?.idTemplate?.trim() ||
       savedPrefs.idTemplate ||
-      DEFAULT_TEACHERS_SETTINGS.idTemplate,
+      DEFAULT_FACULTY_SETTINGS.idTemplate,
     idDigits:
       settingsInput?.idDigits ??
       savedPrefs.idDigits ??
-      DEFAULT_TEACHERS_SETTINGS.idDigits,
+      DEFAULT_FACULTY_SETTINGS.idDigits,
     idStartSeq:
       settingsInput?.idStartSeq ??
       savedPrefs.idStartSeq ??
-      DEFAULT_TEACHERS_SETTINGS.idStartSeq,
+      DEFAULT_FACULTY_SETTINGS.idStartSeq,
     idRestartAnnually:
       settingsInput?.idRestartAnnually ??
       savedPrefs.idRestartAnnually ??
-      DEFAULT_TEACHERS_SETTINGS.idRestartAnnually,
+      DEFAULT_FACULTY_SETTINGS.idRestartAnnually,
   };
 
   const now = new Date();
@@ -108,37 +108,42 @@ export async function computeNextTeacherEmployeeIdForSettings(
       : 1;
 
   let candidateSeq = Math.max(count + 1, startSeq);
-  let candidateId = formatTeacherEmployeeId(candidateSeq, settings, now);
+  let candidateId = formatFacultyEmployeeId(candidateSeq, settings, now);
 
   if (tenant) {
     let attempts = 0;
-    while (attempts < 100) {
+    while (attempts < 10) {
       const conflict = await repo.findRegistrationConflict(tenant, { employeeId: candidateId });
       if (conflict !== 'employeeId') break;
       candidateSeq += 1;
-      candidateId = formatTeacherEmployeeId(candidateSeq, settings, now);
+      candidateId = formatFacultyEmployeeId(candidateSeq, settings, now);
       attempts += 1;
+    }
+    if (attempts === 10) {
+      throw new Error(
+        `Cannot generate a unique employee ID after 10 attempts. ` +
+        `Check the prefix ("${settings.idPrefix}") and starting sequence configuration.`,
+      );
     }
   }
 
   return candidateId;
 }
 
-/** One-shot backfill of missing employee ids for active teachers (Setup writers). */
-export async function migrateTeachersMissingEmployeeIds(
-  repo: TeachersRepository = teachersRepository,
+/** One-shot backfill of missing employee ids for active faculty (Setup writers). */
+export async function migrateFacultyMissingEmployeeIds(
+  repo: FacultyRepository = facultyRepository,
 ): Promise<{ updated: number }> {
   const tenant = getRequestTenant();
   if (!tenant) return { updated: 0 };
 
-  const settings = normalizeTeacherModulePreferences(await loadTeacherModulePreferences());
+  const settings = normalizeFacultyModulePreferences(await loadFacultyModulePreferences());
   const missing = await repo.listActiveMissingEmployeeId(tenant);
   if (missing.length === 0) return { updated: 0 };
 
   let updated = 0;
   for (const row of missing) {
-    // Persist each row before the next count so SQL next-employee-id stays monotonic.
-    const employeeId = await computeNextTeacherEmployeeIdForSettings(
+    const employeeId = await computeNextFacultyEmployeeIdForSettings(
       { idPrefix: settings.idPrefix },
       repo,
     );
@@ -146,13 +151,6 @@ export async function migrateTeachersMissingEmployeeIds(
     updated += 1;
   }
 
-  await broadcastCollection('teachers');
+  await broadcastCollection('faculty');
   return { updated };
 }
-
-export const checkFacultyRegistrationDuplicate = checkTeacherRegistrationDuplicate;
-export const bulkUpdateFacultyStatus = bulkUpdateTeacherStatus;
-export const bulkUpdateFacultySpecialization = bulkUpdateTeacherSpecialization;
-export const computeNextFacultyEmployeeIdForSettings = computeNextTeacherEmployeeIdForSettings;
-export const migrateFacultyMissingEmployeeIds = migrateTeachersMissingEmployeeIds;
-

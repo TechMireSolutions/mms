@@ -6,12 +6,15 @@ import {
   TableFooter,
   TableRow,
 } from "@/components/ui/table";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { balanceToneClass } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import { useAccountingCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 interface CashFlowStatementPanelProps {
   netSurplus: number;
@@ -24,6 +27,7 @@ interface CashFlowStatementPanelProps {
   netCashFlow: number;
   cashInflow: number;
   cashOutflow: number;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 /**
@@ -44,9 +48,12 @@ export function CashFlowStatementPanel({
   netCashFlow,
   cashInflow,
   cashOutflow,
+  viewMode: propViewMode,
 }: CashFlowStatementPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
   const adjustments = [
     { label: t('accounting.reports.cashflow.depreciation'), amount: depreciationAdjustment },
     { label: t('accounting.reports.cashflow.receivables'), amount: receivablesChange },
@@ -62,40 +69,41 @@ export function CashFlowStatementPanel({
         <header className="px-4 py-2.5 bg-info/10 border-b border-border">
           <SectionLabel as="h3" weight="bold" tracking="wide" tone="foreground" className="m-0">{t('accounting.reports.cashflow.title')}</SectionLabel>
         </header>
-        <div className="space-y-3 p-3 md:hidden">
-          <article className="rounded-xl border border-border bg-muted/10 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-semibold text-foreground">{t('accounting.reports.cashflow.netSurplusOrDeficit')}</span>
-              <span className="font-mono font-semibold">{formatCurrency(netSurplus)}</span>
-            </div>
-          </article>
-          {adjustments.map((item) => (
-            <article key={item.label} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
+        {viewMode === "cards" ? (
+          <DirectoryCardsGrid className="p-3">
+            <DirectoryEntityCard className="rounded-xl border border-border bg-muted/10 p-3 col-span-full">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm text-muted-foreground">{item.label}</span>
-                <span className="font-mono text-muted-foreground">{formatCurrency(item.amount)}</span>
+                <span className="font-semibold text-foreground">{t('accounting.reports.cashflow.netSurplusOrDeficit')}</span>
+                <span className="font-mono font-semibold">{formatCurrency(netSurplus)}</span>
               </div>
-            </article>
-          ))}
-          <article className="rounded-xl border border-border bg-muted/10 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-semibold text-foreground">{t('accounting.reports.cashflow.netCashOperations')}</span>
-              <span className="font-mono font-semibold text-foreground">{formatCurrency(netCashFlowIndirect)}</span>
-            </div>
-          </article>
-          <article className="rounded-xl border border-border bg-muted/30 p-3">
-            <div className="flex items-center justify-between gap-3">
-              <span className="font-bold text-foreground">{t('accounting.reports.cashflow.netCashFlow')}</span>
-              <span className="font-mono font-bold text-foreground text-base">
-                {formatCurrency(Math.abs(netCashFlow))}
-                <span className={`text-xs ms-1 ${netCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
-                  {netCashFlow >= 0 ? t('accounting.reports.cashflow.inflow') : t('accounting.reports.cashflow.outflow')}
+            </DirectoryEntityCard>
+            {adjustments.map((item) => (
+              <DirectoryEntityCard key={item.label} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
+                <div className="flex items-center justify-between gap-3">
+                  <span className="text-sm text-muted-foreground">{item.label}</span>
+                  <span className="font-mono text-muted-foreground">{formatCurrency(item.amount)}</span>
+                </div>
+              </DirectoryEntityCard>
+            ))}
+            <DirectoryEntityCard className="rounded-xl border border-border bg-muted/10 p-3 col-span-full">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-semibold text-foreground">{t('accounting.reports.cashflow.netCashOperations')}</span>
+                <span className="font-mono font-semibold text-foreground">{formatCurrency(netCashFlowIndirect)}</span>
+              </div>
+            </DirectoryEntityCard>
+            <DirectoryEntityCard className="rounded-xl border border-border bg-muted/30 p-3 col-span-full">
+              <div className="flex items-center justify-between gap-3">
+                <span className="font-bold text-foreground">{t('accounting.reports.cashflow.netCashFlow')}</span>
+                <span className="font-mono font-bold text-foreground text-base">
+                  {formatCurrency(Math.abs(netCashFlow))}
+                  <span className={`text-xs ms-1 ${netCashFlow >= 0 ? 'text-success' : 'text-destructive'}`}>
+                    {netCashFlow >= 0 ? t('accounting.reports.cashflow.inflow') : t('accounting.reports.cashflow.outflow')}
+                  </span>
                 </span>
-              </span>
-            </div>
-          </article>
-        </div>
-        <div className="hidden md:block">
+              </div>
+            </DirectoryEntityCard>
+          </DirectoryCardsGrid>
+        ) : (
           <Table>
             <caption className="sr-only">{t('accounting.reports.cashflow.breakdownCaption')}</caption>
             <TableBody className="divide-y divide-border/50">
@@ -126,7 +134,7 @@ export function CashFlowStatementPanel({
               </TableRow>
             </TableFooter>
           </Table>
-        </div>
+        )}
       </div>
 
       {hasReconciliationDifference && (

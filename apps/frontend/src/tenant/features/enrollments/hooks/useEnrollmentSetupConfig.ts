@@ -27,8 +27,11 @@ const setupConfigHooks = createModuleSetupConfigHooks<EnrollmentModulePreference
 export const useEnrollmentPreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useEnrollmentPreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
+import { useMemo } from 'react';
+
 /** Composed EnrollmentsSettings from preferences queries. */
 export function useComposedEnrollmentsSettings(): EnrollmentsSettings {
   const prefsQuery = useEnrollmentPreferencesQuery();
-  return (prefsQuery.data ?? normalizeEnrollmentModulePreferences(null)) as unknown as EnrollmentsSettings;
+  const fallback = useMemo(() => normalizeEnrollmentModulePreferences(null), []);
+  return (prefsQuery.data ?? fallback) as unknown as EnrollmentsSettings;
 }

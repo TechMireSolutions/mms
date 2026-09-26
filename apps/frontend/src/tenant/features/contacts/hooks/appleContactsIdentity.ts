@@ -20,7 +20,7 @@ export function buildAppleImportIdentityCandidates(
     for (const phone of contact.phones ?? []) {
       const normalized = normalizeUniqueContactFieldValue("phones", "number", phone.number, {
         defaultPhoneCountryCode,
-        row: phone as unknown as Record<string, unknown>,
+        row: { countryCode: phone.countryCode, number: phone.number },
       });
       if (normalized) phones.push(normalized);
       const comparison = getPhoneNumbers({ phones: [phone] } as Contact);

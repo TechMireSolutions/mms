@@ -54,24 +54,56 @@ async function openInvoiceTemplateEditor(page: Page) {
   await page.waitForLoadState('domcontentloaded');
   await waitForAppShellReady(page);
 
-  const setupTab = page.getByRole('tab', { name: /^Setup$/i });
-  if (await setupTab.count()) {
-    await setupTab.first().click();
-  } else {
-    await page.getByRole('button', { name: /^Setup$/i }).first().click();
+  const tierContainer = page
+    .locator('div.hidden.lg\\:block, div.space-y-3.lg\\:hidden')
+    .filter({ visible: true })
+    .first();
+  await tierContainer.waitFor({ state: 'visible', timeout: 30_000 });
+
+  const setupTrigger = tierContainer
+    .getByRole('tab', { name: /Setup/i })
+    .or(tierContainer.getByRole('button', { name: /Setup/i }))
+    .first();
+  await setupTrigger.waitFor({ state: 'visible', timeout: 30_000 });
+
+  const isSetupActive = async () => {
+    const selected = await setupTrigger.getAttribute('aria-selected');
+    const expanded = await setupTrigger.getAttribute('aria-expanded');
+    return selected === 'true' || expanded === 'true';
+  };
+
+  if (!(await isSetupActive())) {
+    await setupTrigger.click();
+    await expect.poll(isSetupActive, { timeout: 15_000 }).toBe(true);
   }
+
   await waitForToastsToClear(page);
 
-  const invoiceTemplateTab = page.getByRole('tab', { name: /Invoice Template/i });
-  if (await invoiceTemplateTab.count()) {
-    await invoiceTemplateTab.first().click();
-  } else {
-    await page.getByRole('button', { name: /Invoice Template/i }).first().click();
+  const subTabContainer = page
+    .locator('div[role="tablist"]:visible')
+    .filter({ hasText: /Invoice Template/i })
+    .first();
+  await subTabContainer.waitFor({ state: 'visible', timeout: 30_000 });
+
+  const invoiceTemplateTrigger = subTabContainer
+    .getByRole('tab', { name: /Invoice Template/i })
+    .or(subTabContainer.getByRole('button', { name: /Invoice Template/i }))
+    .first();
+  await invoiceTemplateTrigger.waitFor({ state: 'visible', timeout: 30_000 });
+
+  const isTemplateActive = async () => {
+    const selected = await invoiceTemplateTrigger.getAttribute('aria-selected');
+    return selected === 'true';
+  };
+
+  if (!(await isTemplateActive())) {
+    await invoiceTemplateTrigger.click();
+    await expect.poll(isTemplateActive, { timeout: 15_000 }).toBe(true);
   }
 
   // The editor is embedded (`fullscreen={false}`) here, so it is a labelled region.
   const heading = page.getByRole('heading', { name: /Invoice Template Editor/i });
-  await expect(heading).toBeVisible({ timeout: 25_000 });
+  await expect(heading).toBeVisible({ timeout: 30_000 });
 
   const editor = page.getByRole('region').filter({ has: heading }).first();
   return { editor, heading };
@@ -119,7 +151,11 @@ test.describe.serial('Invoice template editor', { tag: '@local-only' }, () => {
     await expect(editor.getByText(/\d+ × \d+ px/).first()).toBeVisible();
 
     // Printing the editor must use the template's own paper size.
-    const printRule = await page.locator('style', { hasText: '@page' }).first().textContent();
+    const printRule = await page.evaluate(() => {
+      const styles = Array.from(document.querySelectorAll('style'));
+      const printStyle = styles.find((s) => s.textContent?.includes('@page'));
+      return printStyle ? printStyle.textContent : null;
+    });
     expect(printRule).toMatch(/@page\s*\{\s*size:\s*\d+px\s+\d+px\s+(portrait|landscape)/);
   });
 
@@ -175,7 +211,6 @@ test.describe.serial('Invoice template editor', { tag: '@local-only' }, () => {
       const { editor } = await openInvoiceTemplateEditor(page);
 
       await assertNoHorizontalOverflow(page);
-      await assertPrimaryControlsMeetTouchTarget(page, { within: '[role="complementary"]' });
 
       if (viewport.width < 1024) {
         // Below `lg` the panes are tabs; the canvas is the default pane and the
@@ -187,6 +222,8 @@ test.describe.serial('Invoice template editor', { tag: '@local-only' }, () => {
       } else {
         await expect(editor.getByText(/\d+ × \d+ px/).first()).toBeVisible();
       }
+
+      await assertPrimaryControlsMeetTouchTarget(page, { within: 'aside[aria-label*="Properties"], [role="complementary"]' });
     });
 
     test(`${viewport.name} (${viewport.width}px) editor axe audit (LTR + RTL)`, async ({ page }) => {

@@ -150,12 +150,15 @@ export default function Finance(): React.JSX.Element {
                   onToggleDeleted={() => c.setShowDeleted((value) => !value)}
                   onDelete={(id) => c.deleteInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.deleted")), onError: c.mutationError })}
                   onRestore={(id) => c.restoreInvoice.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
-                  onBulkDelete={(ids) => c.bulkDeleteInvoices.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.deleted"), onError: c.mutationError })}
-                  onBulkRestore={(ids) => c.bulkRestoreInvoices.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.restored"), onError: c.mutationError })}
+                  onBulkDelete={(ids) => c.bulkDeleteInvoices.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.deleted", "invoices"), onError: c.mutationError })}
+                  onBulkRestore={(ids) => c.bulkRestoreInvoices.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.restored", "invoices"), onError: c.mutationError })}
                   onBulkStatusChange={(ids, status) => void c.handleBulkStatusChange(ids, status)}
                   onBulkPrintReceipts={(inv) => setReceiptInvoices(inv)}
                   isBulkStatusPending={c.bulkUpdateInvoiceStatus.isPending}
-                  selectionResetKey={`${c.activeSubTab}:${c.showDeleted}`}
+                  selectedIds={c.invoiceSelection.selectedIds}
+                  onToggleSelectedInvoice={c.invoiceSelection.toggleSelected}
+                  onToggleSelectAll={c.invoiceSelection.toggleSelectAll}
+                  onClearSelection={c.invoiceSelection.clearSelection}
                   isColumnVisible={c.invoiceColumnLayout.isColumnVisible}
                   getColumnWidth={c.invoiceColumnLayout.getColumnWidth}
                   onColumnResize={c.invoiceColumnLayout.setColumnWidth}
@@ -179,9 +182,12 @@ export default function Finance(): React.JSX.Element {
                   showDeleted={c.showDeleted}
                   onDelete={(id) => c.deletePayment.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.deleted")), onError: c.mutationError })}
                   onRestore={(id) => c.restorePayment.mutate(id, { onSuccess: () => notify.success(c.t("finance.trash.restored")), onError: c.mutationError })}
-                  onBulkDelete={(ids) => c.bulkDeletePayments.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.deleted"), onError: c.mutationError })}
-                  onBulkRestore={(ids) => c.bulkRestorePayments.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.restored"), onError: c.mutationError })}
-                  selectionResetKey={`${c.activeSubTab}:${c.showDeleted}`}
+                  onBulkDelete={(ids) => c.bulkDeletePayments.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.deleted", "payments"), onError: c.mutationError })}
+                  onBulkRestore={(ids) => c.bulkRestorePayments.mutate(ids, { onSuccess: (result: unknown) => c.handleBulkResult(result as { succeeded: number; failed: number }, "finance.trash.restored", "payments"), onError: c.mutationError })}
+                  selectedIds={c.paymentSelection.selectedIds}
+                  onTogglePayment={c.paymentSelection.toggleSelected}
+                  onToggleSelectAll={c.paymentSelection.toggleSelectAll}
+                  onClearSelection={c.paymentSelection.clearSelection}
                   isColumnVisible={c.paymentColumnLayout.isColumnVisible}
                   getColumnWidth={c.paymentColumnLayout.getColumnWidth}
                   onColumnResize={c.paymentColumnLayout.setColumnWidth}

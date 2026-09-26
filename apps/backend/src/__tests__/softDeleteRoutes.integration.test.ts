@@ -68,10 +68,6 @@ vi.mock('../faculty/repository/facultyRepositoryAdapter.js', async (importOrigin
   const actual = await importOriginal<typeof import('../faculty/repository/facultyRepositoryAdapter.js')>();
   return {
     ...actual,
-    teachersRepository: {
-      ...actual.teachersRepository,
-      findById: (...args: unknown[]) => mockFindTeacherById(...args),
-    },
     facultyRepository: {
       ...actual.facultyRepository,
       findById: (...args: unknown[]) => mockFindTeacherById(...args),

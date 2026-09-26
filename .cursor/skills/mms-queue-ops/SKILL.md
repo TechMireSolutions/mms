@@ -4,13 +4,19 @@ description: Diagnoses and safely operates the MMS BullMQ worker — stuck, retr
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 compatibility: Requires a reachable Redis instance and the worker process for live queue inspection.
 ---
 
 # MMS Queue Ops
 
-**Rules (norms SSOT):** `mms-data-layer.mdc` (queue mechanics, Redis, connections) · `mms-module-architecture.mdc` §5 (job UX contract, worker isolation) · `mms-background-jobs.mdc` (authoring).
+**Rules (norms SSOT):** `mms-data-layer.mdc` (queue mechanics, Redis, connections) · `mms-module-architecture.mdc` §5 (job UX contract, worker isolation). Job authoring workflow → `mms-background-jobs`.
+
+## Financial replay decisions
+
+Advisory: before replaying billing, collection, payroll, opening/closing, or bank-import jobs, use [ledger controls](../mms-finance-accounting/references/ledger-controls.md) to inspect committed source IDs, journals, allocations and provider outcomes. Retry the same operation identity only after establishing its state; do not mint a new key to bypass a conflict.
+
+An export retry can regenerate an artifact, but its source cutoff may change. A payment timeout can mean the bank accepted it. Reconcile first and report exactly which operation was resumed; do not delete deduplication evidence to clear the queue.
 
 ## Topology (verified)
 

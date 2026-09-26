@@ -1,20 +1,20 @@
 import { and, eq, inArray, isNull, sql } from 'drizzle-orm';
 import {
-  DEFAULT_TEACHER_STATUS,
+  DEFAULT_FACULTY_STATUS,
   dedupeTrimmedIds,
   MODULE_METRICS_DEFAULT_PERIOD_DAYS,
-  resolveTeacherStatusRoles,
-  type TeachersCommandMetricsSnapshot,
+  resolveFacultyStatusRoles,
+  type FacultyCommandMetricsSnapshot,
 } from '@mms/shared';
-import { teachers } from '../schema.js';
+import { faculty } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
-import { teacherStatusExpr } from './facultyRepositoryListQuery.js';
+import { facultyStatusExpr } from './facultyRepositoryListQuerySql.js';
 
 /**
- * Set typed `status` for active teachers in one UPDATE.
+ * Set typed `status` for active faculty in one UPDATE.
  * Returns how many rows were updated; callers treat missing/deleted ids as failed.
  */
-export async function bulkUpdateTeachersStatusSql(
+export async function bulkUpdateFacultyStatusSql(
   workspaceSubdomain: string,
   ids: string[],
   status: string,
@@ -22,32 +22,32 @@ export async function bulkUpdateTeachersStatusSql(
   const subdomain = workspaceSubdomain.trim().toLowerCase();
   const uniqueIds = dedupeTrimmedIds(ids);
   if (!subdomain || uniqueIds.length === 0) return 0;
-  const normalizedStatus = status.trim().toLowerCase() || DEFAULT_TEACHER_STATUS;
+  const normalizedStatus = status.trim().toLowerCase() || DEFAULT_FACULTY_STATUS;
 
   return withTenant(subdomain, async (tx) => {
     const updated = await tx
-      .update(teachers)
+      .update(faculty)
       .set({
         status: normalizedStatus,
         updatedAt: new Date(),
       })
       .where(
         and(
-          eq(teachers.workspaceSubdomain, subdomain),
-          inArray(teachers.id, uniqueIds),
-          isNull(teachers.deletedAt),
+          eq(faculty.workspaceSubdomain, subdomain),
+          inArray(faculty.id, uniqueIds),
+          isNull(faculty.deletedAt),
         ),
       )
-      .returning({ id: teachers.id });
+      .returning({ id: faculty.id });
     return updated.length;
   });
 }
 
 /**
- * Set typed `specialization` for active teachers in one UPDATE.
+ * Set typed `specialization` for active faculty in one UPDATE.
  * Returns how many rows were updated; callers treat missing/deleted ids as failed.
  */
-export async function bulkUpdateTeachersSpecializationSql(
+export async function bulkUpdateFacultySpecializationSql(
   workspaceSubdomain: string,
   ids: string[],
   specialization: string,
@@ -59,38 +59,37 @@ export async function bulkUpdateTeachersSpecializationSql(
 
   return withTenant(subdomain, async (tx) => {
     const updated = await tx
-      .update(teachers)
+      .update(faculty)
       .set({
         specialization: normalizedSpecialization || null,
         updatedAt: new Date(),
       })
       .where(
         and(
-          eq(teachers.workspaceSubdomain, subdomain),
-          inArray(teachers.id, uniqueIds),
-          isNull(teachers.deletedAt),
+          eq(faculty.workspaceSubdomain, subdomain),
+          inArray(faculty.id, uniqueIds),
+          isNull(faculty.deletedAt),
         ),
       )
-      .returning({ id: teachers.id });
+      .returning({ id: faculty.id });
     return updated.length;
   });
 }
 
-/** SQL aggregates for Teachers command-centre metrics (active rows only). */
-export async function aggregateTeachersCommandMetrics(
+/** SQL aggregates for Faculty command-centre metrics (active rows only). */
+export async function aggregateFacultyCommandMetrics(
   tenant: string,
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
-): Promise<TeachersCommandMetricsSnapshot> {
+): Promise<FacultyCommandMetricsSnapshot> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
-    const joinDateRaw = sql`NULLIF(trim(COALESCE(
-      ${teachers.joinDate},
-      to_char(${teachers.createdAt}, 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"'),
-      ''
-    )), '')`;
-    const status = teacherStatusExpr();
+    const joinDateExpr = sql`COALESCE(
+      CASE WHEN ${faculty.joinDate}::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}' THEN (${faculty.joinDate})::date ELSE NULL END,
+      (${faculty.createdAt})::date
+    )`;
+    const status = facultyStatusExpr();
     const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } =
-      resolveTeacherStatusRoles();
+      resolveFacultyStatusRoles();
 
     const rows = await tx
       .select({
@@ -100,14 +99,11 @@ export async function aggregateTeachersCommandMetrics(
         onLeave: sql<number>`count(*) FILTER (WHERE ${status} = ${onLeaveStatus})::int`,
         other: sql<number>`count(*) FILTER (WHERE ${status} IS NOT NULL AND ${status} <> '' AND ${status} NOT IN (${activeStatus}, ${inactiveStatus}, ${onLeaveStatus}))::int`,
         newThisPeriod: sql<number>`count(*) FILTER (WHERE
-          ${joinDateRaw} IS NOT NULL
-          AND ${joinDateRaw} ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
-          AND (${joinDateRaw})::timestamptz
-            >= (NOW() - (${periodDays} * INTERVAL '1 day'))
+          ${joinDateExpr} >= (CURRENT_DATE - (${periodDays} * INTERVAL '1 day'))::date
         )::int`,
       })
-      .from(teachers)
-      .where(and(eq(teachers.workspaceSubdomain, subdomain), isNull(teachers.deletedAt)));
+      .from(faculty)
+      .where(and(eq(faculty.workspaceSubdomain, subdomain), isNull(faculty.deletedAt)));
 
     const row = rows[0];
     return {
@@ -120,3 +116,4 @@ export async function aggregateTeachersCommandMetrics(
     };
   });
 }
+

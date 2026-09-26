@@ -1,17 +1,15 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { type AppTranslationKey } from "@mms/shared";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import {
-  Table,
-  TableBody,
-} from "@/components/ui/table";
-import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { Badge } from "@/components/ui/badge";
-import { type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
+import { type StatusBadgeConfigItem, StatusBadge } from "@/components/ui/StatusBadge";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work/WorkBatchTable";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { ACCOUNT_TYPES, ACCOUNT_TYPE_META, type Account, type AccountType } from "@/lib/data/accountingData";
-import { AccountMobileCard, AccountTableRow } from "@/tenant/features/accounting/components/ChartOfAccountsTreeRows";
+import { AccountMobileCard, AccountRowActions } from "@/tenant/features/accounting/components/ChartOfAccountsTreeRows";
 
 interface ChartOfAccountsListDesktopTableProps {
   accounts: Account[];
@@ -24,6 +22,7 @@ interface ChartOfAccountsListDesktopTableProps {
   onEdit: (account: Account) => void;
   onDelete: (id: string) => void;
   onReactivate: (id: string) => void;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 export function ChartOfAccountsListDesktopTable({
@@ -37,6 +36,7 @@ export function ChartOfAccountsListDesktopTable({
   onEdit,
   onDelete,
   onReactivate,
+  viewMode,
 }: ChartOfAccountsListDesktopTableProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -70,6 +70,7 @@ export function ChartOfAccountsListDesktopTable({
             onEdit={onEdit}
             onDelete={onDelete}
             onReactivate={onReactivate}
+            viewMode={viewMode}
           />
         );
       })}
@@ -93,8 +94,78 @@ function AccountTypeGroup({
   onEdit,
   onDelete,
   onReactivate,
+  viewMode: propViewMode,
 }: AccountTypeGroupProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
+  
+  const batchColumns = useMemo<WorkBatchTableColumn<Account>[]>(() => {
+    const cols: WorkBatchTableColumn<Account>[] = [];
+    
+    if (isColumnVisible("code")) {
+      cols.push({
+        id: "code",
+        label: t("accounting.columns.account.code"),
+        width: getColumnWidth?.("code"),
+        cellClassName: "font-mono text-xs font-bold text-muted-foreground",
+        render: (account) => account.code,
+      });
+    }
+    
+    if (isColumnVisible("name")) {
+      cols.push({
+        id: "name",
+        label: t("accounting.columns.account.name"),
+        width: getColumnWidth?.("name"),
+        render: (account) => (
+          <>
+            <span className="font-semibold text-foreground">{account.name}</span>
+            {account.isActive === false && <Badge as="span" pill tone="muted" className="ms-2 px-1.5">{t("accounting.coa.inactive")}</Badge>}
+          </>
+        ),
+      });
+    }
+    
+    if (isColumnVisible("subtype")) {
+      cols.push({
+        id: "subtype",
+        label: t("accounting.columns.account.subtype"),
+        width: getColumnWidth?.("subtype"),
+        headerClassName: "hidden md:table-cell",
+        cellClassName: "hidden text-xs text-muted-foreground md:table-cell",
+        render: (account) => account.subtype || "—",
+      });
+    }
+    
+    if (isColumnVisible("description")) {
+      cols.push({
+        id: "description",
+        label: t("accounting.columns.account.description"),
+        width: getColumnWidth?.("description"),
+        headerClassName: "hidden lg:table-cell",
+        cellClassName: "hidden max-w-cell-trunc truncate text-xs text-muted-foreground lg:table-cell",
+        render: (account) => account.description || "—",
+      });
+    }
+    
+    if (isColumnVisible("normalBalance")) {
+      cols.push({
+        id: "normalBalance",
+        label: t("accounting.columns.account.normalBalance"),
+        width: getColumnWidth?.("normalBalance"),
+        render: (account) => (
+          <StatusBadge
+            status={ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? "debit" : "credit"}
+            config={balanceConfig}
+            size="sm"
+          />
+        ),
+      });
+    }
+    
+    return cols;
+  }, [isColumnVisible, t, getColumnWidth, balanceConfig]);
 
   return (
     <article className={`${WORK_SURFACE} overflow-hidden`}>
@@ -109,38 +180,11 @@ function AccountTypeGroup({
           })}
         </span>
       </header>
-      <div className="space-y-3 p-3 md:hidden">
-        {accountTypeRows.map((account) => (
-          <AccountMobileCard
-            key={account.id}
-            account={account}
-            balanceConfig={balanceConfig}
-            canWrite={canWrite}
-            isColumnVisible={isColumnVisible}
-            onEdit={onEdit}
-            onDelete={onDelete}
-            onReactivate={onReactivate}
-          />
-        ))}
-      </div>
-      <div className="hidden md:block">
-        <Table className="table-fixed">
-          <caption className="sr-only">{t("accounting.coa.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
-          <ModuleWorkTableHeader
-            columns={[
-              isColumnVisible("code") ? { id: "code", label: t("accounting.columns.account.code"), headerClassName: "px-4 py-2" } : null,
-              isColumnVisible("name") ? { id: "name", label: t("accounting.columns.account.name"), headerClassName: "px-4 py-2" } : null,
-              isColumnVisible("subtype") ? { id: "subtype", label: t("accounting.columns.account.subtype"), headerClassName: "px-4 py-2 hidden md:table-cell" } : null,
-              isColumnVisible("description") ? { id: "description", label: t("accounting.columns.account.description"), headerClassName: "px-4 py-2 hidden lg:table-cell" } : null,
-              isColumnVisible("normalBalance") ? { id: "normalBalance", label: t("accounting.columns.account.normalBalance"), headerClassName: "px-4 py-2" } : null,
-            ].filter((c): c is Exclude<typeof c, null> => c !== null)}
-            getColumnWidth={(key) => getColumnWidth?.(key)}
-            setColumnWidth={onColumnResize ?? (() => {})}
-            actionsLabel={t("accounting.columns.actions")}
-          />
-          <TableBody className="divide-y divide-border">
+      {viewMode === "cards" ? (
+        <div className="p-3">
+          <DirectoryCardsGrid>
             {accountTypeRows.map((account) => (
-              <AccountTableRow
+              <AccountMobileCard
                 key={account.id}
                 account={account}
                 balanceConfig={balanceConfig}
@@ -151,9 +195,25 @@ function AccountTypeGroup({
                 onReactivate={onReactivate}
               />
             ))}
-          </TableBody>
-        </Table>
-      </div>
+          </DirectoryCardsGrid>
+        </div>
+      ) : (
+        <WorkBatchTable
+          data={accountTypeRows}
+          columns={batchColumns}
+          columnResize={{
+            getColumnWidth,
+            onColumnResize,
+          }}
+          actionsLabel={t("accounting.columns.actions")}
+          rowClassName={(account) => account.isActive === false ? "opacity-50" : ""}
+          renderRowActions={(account) => (
+            <div className="flex items-center justify-end gap-1">
+              {canWrite && <AccountRowActions account={account} onEdit={onEdit} onDelete={onDelete} onReactivate={onReactivate} />}
+            </div>
+          )}
+        />
+      )}
     </article>
   );
 }

@@ -1,5 +1,6 @@
 import React from "react";
 import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import { isComposedWidgetType } from "@/components/dashboard-widgets/registry";
 import { Switch } from "@/components/ui/switch";
@@ -67,7 +68,7 @@ export function CustomWidgetCompactLayout({
         <span className="text-base font-black tracking-tight font-mono my-auto max-w-full truncate text-foreground">
           {computedCard.value}
         </span>
-        <SectionLabel toneClassName="text-muted-foreground/60" className="mb-0.5">
+        <SectionLabel className="mb-0.5">
           {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
         </SectionLabel>
       </motion.button>
@@ -167,12 +168,12 @@ function CompactMetricButton({
       onClick={() => onMetricClick(widget)}
       className={`size-widget-compact ${isProgress ? "p-1.5" : "p-2"} text-center flex flex-col justify-between items-center rounded-2xl border cursor-pointer outline-none select-none relative overflow-hidden ${
         alertScheme
-          ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow} animate-pulse`
+          ? `${alertScheme.bg} ${alertScheme.border} ${alertScheme.glow}`
           : `${WORK_SURFACE} hover:border-primary/20 hover:shadow-md`
       }`}
       type="button"
     >
-      <span className="text-xs font-black uppercase text-muted-foreground tracking-wider line-clamp-1 w-full mt-0.5">
+      <span className={cn("text-xs font-black uppercase tracking-wider line-clamp-1 w-full mt-0.5", alertScheme ? "text-foreground" : "text-muted-foreground")}>
         {resolveWidgetTitle(widget, t)}
       </span>
       {isProgress ? (
@@ -182,7 +183,7 @@ function CompactMetricButton({
           {body}
         </span>
       )}
-      <SectionLabel toneClassName="text-muted-foreground/60" className="mb-0.5">
+      <SectionLabel tone={alertScheme ? "foreground" : "muted"} className="mb-0.5">
         {getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t)}
       </SectionLabel>
     </motion.button>

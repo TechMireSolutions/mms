@@ -1,7 +1,7 @@
 import React from 'react';
 import { BookOpen } from 'lucide-react';
 import { EXAMINATIONS_MODULE_MANIFEST } from '@mms/shared';
-import { ModuleStandardBulkActionBar } from '@/components/ui/ModuleStandardBulkActionBar';
+import { ModuleUniversalBulkActionBar } from '@/components/ui/ModuleUniversalBulkActionBar';
 
 export interface ExaminationsBulkActionBarProps {
   selectedCount: number;
@@ -13,7 +13,7 @@ export interface ExaminationsBulkActionBarProps {
   bulkActions?: readonly string[];
 }
 
-/** Examinations Work bulk bar — thin adapter delegating to shared ModuleStandardBulkActionBar. */
+/** Examinations Work bulk bar — thin adapter delegating to shared ModuleUniversalBulkActionBar. */
 export function ExaminationsBulkActionBar({
   selectedCount,
   showDeleted,
@@ -24,9 +24,9 @@ export function ExaminationsBulkActionBar({
   bulkActions = EXAMINATIONS_MODULE_MANIFEST.work.bulkActions,
 }: ExaminationsBulkActionBarProps): React.JSX.Element {
   return (
-    <ModuleStandardBulkActionBar
+    <ModuleUniversalBulkActionBar
       selectedCount={selectedCount}
-      showDeleted={showDeleted}
+      viewingDeleted={showDeleted}
       canDelete={canDelete}
       onRequestBulkDelete={onRequestBulkDelete}
       onRequestBulkRestore={onRequestBulkRestore}

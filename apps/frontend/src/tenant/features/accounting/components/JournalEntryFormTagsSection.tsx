@@ -60,8 +60,8 @@ export function JournalEntryFormTagsSection({ t, form, toggleTag }: JournalEntry
               <button
                 type="button"
                 onClick={() => toggleTag(tag)}
-                aria-label={`Remove tag ${tag}`}
-                className="hover:text-destructive transition-colors focus:outline-none"
+                aria-label={t("contacts.form.removeTag", { tag })}
+                className="hover:text-destructive transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded p-0.5"
               >
                 <X className="w-3.5 h-3.5" aria-hidden="true" />
               </button>
@@ -72,6 +72,7 @@ export function JournalEntryFormTagsSection({ t, form, toggleTag }: JournalEntry
         <div className="flex items-center gap-2 pt-1">
           <Input
             id="journal-custom-tag-input"
+            aria-label={t("contacts.form.typeTagPlaceholder")}
             value={customTagInput}
             onChange={(event) => setCustomTagInput(event.target.value)}
             onKeyDown={(event) => {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { UserCheck } from 'lucide-react';
 import { ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
-import { ModuleStandardBulkActionBar } from '@/components/ui/ModuleStandardBulkActionBar';
+import { ModuleUniversalBulkActionBar } from '@/components/ui/ModuleUniversalBulkActionBar';
 
 export interface AttendanceBulkActionBarProps {
   selectedCount: number;
@@ -13,7 +13,7 @@ export interface AttendanceBulkActionBarProps {
   bulkActions?: readonly string[];
 }
 
-/** Attendance Work bulk bar — thin adapter delegating to shared ModuleStandardBulkActionBar. */
+/** Attendance Work bulk bar — thin adapter delegating to shared ModuleUniversalBulkActionBar. */
 export function AttendanceBulkActionBar({
   selectedCount,
   showDeleted,
@@ -24,9 +24,9 @@ export function AttendanceBulkActionBar({
   bulkActions = ATTENDANCE_MODULE_MANIFEST.work.bulkActions,
 }: AttendanceBulkActionBarProps): React.JSX.Element {
   return (
-    <ModuleStandardBulkActionBar
+    <ModuleUniversalBulkActionBar
       selectedCount={selectedCount}
-      showDeleted={showDeleted}
+      viewingDeleted={showDeleted}
       canDelete={canDelete}
       onRequestBulkDelete={onRequestBulkDelete}
       onRequestBulkRestore={onRequestBulkRestore}

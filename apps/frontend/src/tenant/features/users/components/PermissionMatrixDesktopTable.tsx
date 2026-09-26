@@ -90,7 +90,7 @@ export function PermissionMatrixDesktopTable({
   const matrixActions = { perms, readOnly, onToggle, onSelectAll, onClearAll };
 
   return (
-    <div className="hidden md:block">
+    <div>
       <Table>
         <caption className="sr-only">{t('users.permissions.matrixCaption')}</caption>
         <TableHeader>

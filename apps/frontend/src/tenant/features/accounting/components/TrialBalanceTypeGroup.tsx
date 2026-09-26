@@ -1,5 +1,4 @@
 import React from "react";
-import { motion } from "framer-motion";
 import { ACCOUNT_TYPE_META, type AccountType } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
@@ -14,6 +13,9 @@ import {
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { type AppTranslationKey } from "@mms/shared";
 
 interface TrialBalanceRow {
@@ -30,14 +32,19 @@ interface TrialBalanceTypeGroupProps {
   type: AccountType;
   accountTypeRows: TrialBalanceRow[];
   formatPositiveNumber: (amount: number) => string;
+  viewMode?: WorkDirectoryViewMode;
 }
 
 export function TrialBalanceTypeGroup({
   type,
   accountTypeRows,
   formatPositiveNumber,
+  viewMode: propViewMode,
 }: TrialBalanceTypeGroupProps): React.ReactElement | null {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
+
   if (accountTypeRows.length === 0) return null;
 
   const typeMeta = ACCOUNT_TYPE_META[type];
@@ -54,59 +61,57 @@ export function TrialBalanceTypeGroup({
         </SectionLabel>
         <span className="shrink-0 text-xs font-semibold text-muted-foreground">{t("accounting.tb.accountsCount", { count: accountTypeRows.length })}</span>
       </header>
-      <div className="space-y-3 p-3 md:hidden">
-        {sortedRows.map((trialBalanceRow, index) => (
-          <motion.article
-            key={trialBalanceRow.id}
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: index * 0.03 }}
-            className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
-          >
-            <div className="flex min-w-0 items-start justify-between gap-3">
-              <div className="min-w-0">
-                <p className="font-mono text-xs font-bold text-muted-foreground">{trialBalanceRow.code}</p>
-                <h4 className="truncate text-sm font-medium text-foreground">{trialBalanceRow.name}</h4>
+      {viewMode === "cards" ? (
+        <DirectoryCardsGrid className="p-3">
+          {sortedRows.map((trialBalanceRow) => (
+            <DirectoryEntityCard
+              key={trialBalanceRow.id}
+              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
+            >
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="font-mono text-xs font-bold text-muted-foreground m-0">{trialBalanceRow.code}</p>
+                  <h4 className="truncate text-sm font-medium text-foreground m-0 mt-0.5">{trialBalanceRow.name}</h4>
+                </div>
+                <div className="shrink-0 text-end">
+                  <p className="font-mono text-xs font-semibold text-info m-0">{formatPositiveNumber(trialBalanceRow.totalDebit)}</p>
+                  <p className="font-mono text-xs font-semibold text-success m-0">{formatPositiveNumber(trialBalanceRow.totalCredit)}</p>
+                </div>
               </div>
-              <div className="shrink-0 text-end">
-                <p className="font-mono text-xs font-semibold text-info">{formatPositiveNumber(trialBalanceRow.totalDebit)}</p>
-                <p className="font-mono text-xs font-semibold text-success">{formatPositiveNumber(trialBalanceRow.totalCredit)}</p>
-              </div>
-            </div>
-            {trialBalanceRow.subtype ? (
-              <p className="text-xs text-muted-foreground">{trialBalanceRow.subtype}</p>
-            ) : null}
+              {trialBalanceRow.subtype ? (
+                <p className="text-xs text-muted-foreground m-0">{trialBalanceRow.subtype}</p>
+              ) : null}
+              <StatGrid>
+                <StatRow
+                  label={t("accounting.columns.journal.debit")}
+                  value={formatPositiveNumber(trialBalanceRow.totalDebit)}
+                  ddClassName="font-mono text-xs font-semibold text-info"
+                />
+                <StatRow
+                  label={t("accounting.columns.journal.credit")}
+                  value={formatPositiveNumber(trialBalanceRow.totalCredit)}
+                  ddClassName="font-mono text-xs font-semibold text-success"
+                />
+              </StatGrid>
+            </DirectoryEntityCard>
+          ))}
+          <article className="rounded-xl border border-border bg-muted/20 p-3 col-span-full">
+            <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.tb.subTotal")}</p>
             <StatGrid>
               <StatRow
                 label={t("accounting.columns.journal.debit")}
-                value={formatPositiveNumber(trialBalanceRow.totalDebit)}
-                ddClassName="font-mono text-xs font-semibold text-info"
+                value={formatPositiveNumber(groupDebit)}
+                ddClassName="font-mono font-bold text-info"
               />
               <StatRow
                 label={t("accounting.columns.journal.credit")}
-                value={formatPositiveNumber(trialBalanceRow.totalCredit)}
-                ddClassName="font-mono text-xs font-semibold text-success"
+                value={formatPositiveNumber(groupCredit)}
+                ddClassName="font-mono font-bold text-success"
               />
             </StatGrid>
-          </motion.article>
-        ))}
-        <article className="rounded-xl border border-border bg-muted/20 p-3">
-          <p className="text-xs font-bold uppercase text-muted-foreground m-0 mb-2">{t("accounting.tb.subTotal")}</p>
-          <StatGrid>
-            <StatRow
-              label={t("accounting.columns.journal.debit")}
-              value={formatPositiveNumber(groupDebit)}
-              ddClassName="font-mono font-bold text-info"
-            />
-            <StatRow
-              label={t("accounting.columns.journal.credit")}
-              value={formatPositiveNumber(groupCredit)}
-              ddClassName="font-mono font-bold text-success"
-            />
-          </StatGrid>
-        </article>
-      </div>
-      <div className="hidden md:block">
+          </article>
+        </DirectoryCardsGrid>
+      ) : (
         <Table>
           <caption className="sr-only">{t("accounting.tb.typeCaption", { type: t(`accounting.type.${type}` as AppTranslationKey) })}</caption>
           <TableHeader>
@@ -137,7 +142,7 @@ export function TrialBalanceTypeGroup({
             </TableRow>
           </TableFooter>
         </Table>
-      </div>
+      )}
     </section>
   );
 }

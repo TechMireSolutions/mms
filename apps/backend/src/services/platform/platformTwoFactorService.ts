@@ -1,4 +1,4 @@
-import type { StoredPlatformUser } from '@mms/shared';
+import { PLATFORM_OTP_MAX_ATTEMPTS, type StoredPlatformUser } from '@mms/shared';
 import {
   createArtifactId,
   deleteAuthArtifact,
@@ -15,7 +15,6 @@ import { getStoredPlatformUserById } from './platformUserService.js';
 import { dispatchPlatformOtp } from './platformOtpService.js';
 
 const CHALLENGE_TTL_MS = 10 * 60 * 1000;
-const MAX_ATTEMPTS = 5;
 
 export interface PlatformTwoFactorChallengePayload {
   userId: string;
@@ -126,7 +125,7 @@ export async function verifyPlatformTwoFactorChallenge(
   const normalizedCode = code.replace(/\s/g, '');
   if (!verifyOtpCode(normalizedCode, entry.payload.codeHash)) {
     const attempts = (entry.payload.attempts ?? 0) + 1;
-    if (attempts >= MAX_ATTEMPTS) {
+    if (attempts >= PLATFORM_OTP_MAX_ATTEMPTS) {
       return null;
     }
     await putAuthArtifact<PlatformTwoFactorChallengePayload>(

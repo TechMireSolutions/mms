@@ -16,10 +16,24 @@
  *
  * Errors fail the run; warnings never do. Exit code 1 on any error.
  */
+import { execFileSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 
 const ROOT = process.cwd();
+
+// Windows has no exec bit on disk; read the mode git records instead.
+const gitExecutables =
+  process.platform === 'win32'
+    ? new Set(
+        execFileSync('git', ['ls-files', '-s', '--', '.agent/skills'], { cwd: ROOT, encoding: 'utf8', maxBuffer: 1 << 26 })
+          .split('\n')
+          .filter((line) => line.startsWith('100755 '))
+          .map((line) => path.join(ROOT, line.slice(line.indexOf('\t') + 1))),
+      )
+    : null;
+const isExecutable = (file) =>
+  gitExecutables ? gitExecutables.has(file) : (fs.statSync(file).mode & 0o111) !== 0;
 const cursorRulesDir = path.join(ROOT, '.cursor/rules');
 const skillsDir = path.join(ROOT, '.agent/skills');
 const manifestPath = path.join(ROOT, '.agent/skills-manifest.json');
@@ -64,7 +78,7 @@ const fileIndex = new Map();
       buildFileIndex(full);
     } else {
       const list = fileIndex.get(entry.name) ?? [];
-      list.push(path.relative(ROOT, full));
+      list.push(path.relative(ROOT, full).replaceAll(path.sep, '/'));
       fileIndex.set(entry.name, list);
     }
   }
@@ -177,8 +191,8 @@ const agentsMd = fs.readFileSync(agentsMdPath, 'utf8');
 // ─────────────────────────────────────────────────────────────────────────────
 
 const frontmatterOf = (file) => {
-  const content = fs.readFileSync(file, 'utf8');
-  const m = content.match(/^---\r?\n([\s\S]*?)\r?\n---\r?\n?/);
+  const content = fs.readFileSync(file, 'utf8').replaceAll('\r\n', '\n');
+  const m = content.match(/^---\n([\s\S]*?)\n---\n?/);
   return { front: m ? m[1] : '', body: m ? content.slice(m[0].length) : content };
 };
 
@@ -365,7 +379,7 @@ for (const skill of diskSkills) {
   const nameMatch = front.match(/^name:\s*([^\n]+)$/m);
   const descMatch = front.match(/^description:\s*([^\n]+)$/m);
 
-  if (!raw.startsWith('---\n') || !nameMatch || !descMatch) {
+  if (!/^---\r?\n/.test(raw) || !nameMatch || !descMatch) {
     fail(`Invalid or missing frontmatter in ${skill}/SKILL.md`);
     continue;
   }
@@ -464,7 +478,7 @@ for (const skill of diskSkills) {
   if (isDir(scriptsDir)) {
     for (const scriptFile of fs.readdirSync(scriptsDir)) {
       const scriptPath = path.join(scriptsDir, scriptFile);
-      if ((fs.statSync(scriptPath).mode & 0o111) === 0) {
+      if (!isExecutable(scriptPath)) {
         fail(`Skill ${skill}: script '${scriptFile}' is not executable`);
       }
       if (!raw.includes(scriptFile)) {

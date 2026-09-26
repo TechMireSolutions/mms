@@ -13,6 +13,13 @@ const rootDir = path.dirname(fileURLToPath(import.meta.url));
 // Override with MMS_BACKEND_PROXY when the backend runs on a non-default port.
 const backendProxyTarget = process.env.MMS_BACKEND_PROXY ?? 'http://127.0.0.1:3000';
 
+// Shared banner for vendor-validation chunk — injected by both Rollup and Rolldown.
+// Disables Zod v4 JIT compilation globally to avoid boot-time cost in the browser.
+const chunkBanner = (chunk: { name: string }): string =>
+  chunk.name === 'vendor-validation'
+    ? 'globalThis.__zod_globalConfig = Object.assign(globalThis.__zod_globalConfig || {}, { jitless: true });'
+    : '';
+
 // https://vite.dev/config/
 export default defineConfig({
   resolve: {
@@ -57,29 +64,31 @@ export default defineConfig({
   },
   build: {
     target: 'es2022',
-    sourcemap: false,
+    // 'hidden' maps are written to disk but not linked in the bundle —
+    // safe to upload to Sentry without exposing them publicly.
+    sourcemap: process.env.CI === 'true' ? 'hidden' : false,
     manifest: true,
     minify: 'esbuild',
     cssMinify: true,
-    chunkSizeWarningLimit: 600,
-    modulePreload: {
-      resolveDependencies(url, deps) {
-        return deps.filter((dep) => {
-          return (
-            dep.includes('rolldown-runtime') ||
-            dep.includes('vendor-react')
-          );
-        });
-      },
+    // Skip Vite's built-in in-memory gzip sizing pass; vite-plugin-compression2
+    // already produces the real on-disk artefacts.
+    reportCompressedSize: false,
+    chunkSizeWarningLimit: 500,
+    esbuild: {
+      // Remove preserved licence comment blocks from vendor bundles.
+      // OSS licences don't require in-binary comment preservation for web bundles.
+      legalComments: 'none',
     },
+    // Disabled: the Workbox SW intercepts every modulepreload fetch via the
+    // CacheFirst /assets/ rule and returns a response from the SW's world.
+    // The browser refuses to use that response for module preloading (cross-world
+    // security boundary), producing a warning for every chunk. Since the SW's
+    // CacheFirst strategy already serves all assets from cache after first install,
+    // preload hints are redundant and only create noise.
+    modulePreload: false,
     rollupOptions: {
       output: {
-        banner: (chunk) => {
-          if (chunk.name === 'vendor-validation') {
-            return 'globalThis.__zod_globalConfig = Object.assign(globalThis.__zod_globalConfig || {}, { jitless: true });';
-          }
-          return '';
-        },
+        banner: chunkBanner,
         manualChunks(id) {
           if (id.includes('node_modules')) {
             if (
@@ -100,16 +109,15 @@ export default defineConfig({
             if (id.includes('/react-easy-crop/')) {
               return 'vendor-crop';
             }
+            // Recharts 3 dropped its internal Redux dependency.
+            // @reduxjs/toolkit removed — add it back if the app adopts Redux directly.
             if (
               id.includes('/recharts/') ||
               id.includes('/victory-vendor/') ||
-              id.includes('/d3-') ||
-              id.includes('/@reduxjs/toolkit/')
+              id.includes('/d3-')
             ) {
               return 'vendor-charts';
             }
-
-
             if (
               id.includes('/@radix-ui/') ||
               id.includes('/@floating-ui/') ||
@@ -158,12 +166,7 @@ export default defineConfig({
     },
     rolldownOptions: {
       output: {
-        banner: (chunk) => {
-          if (chunk.name === 'vendor-validation') {
-            return 'globalThis.__zod_globalConfig = Object.assign(globalThis.__zod_globalConfig || {}, { jitless: true });';
-          }
-          return '';
-        },
+        banner: chunkBanner,
         codeSplitting: {
           minSize: 20000,
           groups: [
@@ -198,12 +201,13 @@ export default defineConfig({
               priority: 35,
             },
             {
+              // Recharts 3 dropped its internal Redux dependency.
+              // @reduxjs/toolkit removed — add it back if the app adopts Redux directly.
+              // d3-[^\\/]+ matches full package names (e.g. d3-scale) not just the prefix.
               name: 'vendor-charts',
-              test: /node_modules[\\/](?:recharts|victory-vendor|d3-|react-redux|@reduxjs[\\/]toolkit)[\\/]/,
+              test: /node_modules[\\/](?:recharts|victory-vendor|d3-[^\\/]+)[\\/]/,
               priority: 30,
             },
-
-
             {
               name: 'vendor-validation',
               test: /node_modules[\\/](?:zod|@ts-rest)[\\/]/,
@@ -240,7 +244,8 @@ export default defineConfig({
       algorithm: 'brotliCompress',
       threshold: 1024,
       deleteOriginalAssets: false,
-      include: /\.(js|mjs|cjs|css|svg|json|webmanifest)$/i,
+      // html added: index.html is on the critical first-visit path and benefits from compression.
+      include: /\.(html|js|mjs|cjs|css|svg|json|webmanifest)$/i,
       compressionOptions: {
         params: {
           [constants.BROTLI_PARAM_QUALITY]: 11,
@@ -251,7 +256,7 @@ export default defineConfig({
       algorithm: 'gzip',
       threshold: 1024,
       deleteOriginalAssets: false,
-      include: /\.(js|mjs|cjs|css|svg|json|webmanifest)$/i,
+      include: /\.(html|js|mjs|cjs|css|svg|json|webmanifest)$/i,
       compressionOptions: {
         level: 9,
       },
@@ -259,6 +264,8 @@ export default defineConfig({
     visualizer({
       filename: path.resolve(rootDir, 'dist/stats.html'),
       title: 'MMS Frontend Bundle Analysis',
+      template: 'treemap',
+      projectRoot: rootDir,
       gzipSize: true,
       brotliSize: true,
       open: false,
@@ -275,11 +282,21 @@ export default defineConfig({
         navigateFallbackDenylist: [/^\/api\//, /^\/uploads\//, /^\/health/],
         runtimeCaching: [
           {
+            // Non-GET check is first so it short-circuits cheaply for mutations.
+            // Order matters: this rule must remain before all caching rules.
             urlPattern: ({ url, request }) =>
+              request.method !== 'GET' ||
               url.pathname.startsWith('/api/') ||
               url.pathname.startsWith('/uploads/') ||
-              url.pathname.startsWith('/health') ||
-              request.method !== 'GET',
+              url.pathname.startsWith('/health'),
+            handler: 'NetworkOnly',
+          },
+          // Google Fonts — pass through; browser caches them natively
+          // and SW fetch would violate connect-src CSP
+          {
+            urlPattern: ({ url }) =>
+              url.hostname === 'fonts.googleapis.com' ||
+              url.hostname === 'fonts.gstatic.com',
             handler: 'NetworkOnly',
           },
           {

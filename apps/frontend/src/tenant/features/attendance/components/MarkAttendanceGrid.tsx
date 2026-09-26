@@ -1,7 +1,11 @@
 import { useRef } from "react";
-import { motion } from "framer-motion";
+import { motion, type HTMLMotionProps } from "framer-motion";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Card } from "@/components/ui/card";
+import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import {
   Table,
@@ -13,8 +17,11 @@ import {
 } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
+import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { getAttendanceStatusInfo, type AttendanceStatus } from "@/lib/data/attendanceData";
 import { MarkAttendanceFieldControl } from "@/tenant/features/attendance/components/MarkAttendanceFieldControl";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import { cn } from "@/lib/utils";
 import type { ModuleFieldDef } from "@mms/shared";
 import type { AttendanceRow } from "@/tenant/features/attendance/components/markAttendanceTypes";
 
@@ -24,6 +31,58 @@ export interface MarkAttendanceGridProps {
   statuses: AttendanceStatus[];
   isFieldEnabled: (fieldId: string) => boolean;
   onFieldChange: (studentId: string, key: string, value: unknown) => void;
+  viewMode?: WorkDirectoryViewMode;
+}
+
+function MarkAttendanceStudentCard({
+  row,
+  statusInfo,
+  enabledFields,
+  onFieldChange,
+  motionProps,
+}: {
+  row: AttendanceRow;
+  statusInfo: ReturnType<typeof getAttendanceStatusInfo>;
+  enabledFields: ModuleFieldDef[];
+  onFieldChange: (studentId: string, key: string, value: unknown) => void;
+  motionProps?: HTMLMotionProps<"div">;
+}): React.JSX.Element {
+  const { cardProps } = useWorkCardAction({
+    entity: { id: row.studentId, name: row.name },
+    selectedIds: [],
+    canSelect: false,
+  });
+
+  return (
+    <DirectoryEntityCard
+      className={cn("space-y-3 p-4", statusInfo?.bg)}
+      {...cardProps}
+      {...motionProps}
+    >
+      <DirectoryCardHeader
+        id={row.studentId}
+        displayName={row.name}
+        subtitle={<span className="font-mono text-xs text-muted-foreground">{row.rollNo}</span>}
+        isSelected={false}
+        onSelect={() => {}}
+        selectAriaLabel=""
+        showSelect={false}
+      />
+      <DirectoryCardMetaGrid className="grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-border/40 ms-0">
+        {enabledFields.map((field) => (
+          <DirectoryCardMetaTile
+            key={field.id}
+            label={`${field.label}${field.required ? " *" : ""}`}
+            className={field.id === "notes" ? "sm:col-span-2" : ""}
+          >
+            <div className={field.id === "status" ? "flex justify-start mt-0.5" : "mt-0.5"}>
+              <MarkAttendanceFieldControl row={row} field={field} idPrefix="mobile" onFieldChange={onFieldChange} />
+            </div>
+          </DirectoryCardMetaTile>
+        ))}
+      </DirectoryCardMetaGrid>
+    </DirectoryEntityCard>
+  );
 }
 
 export function MarkAttendanceGrid({
@@ -32,8 +91,11 @@ export function MarkAttendanceGrid({
   statuses,
   isFieldEnabled,
   onFieldChange,
+  viewMode: propViewMode,
 }: MarkAttendanceGridProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
   const rowMotion = useListRowMotion({ layout: true });
   const enabledFields = orderedFields.filter((field) => isFieldEnabled(field.id));
 
@@ -46,7 +108,7 @@ export function MarkAttendanceGrid({
     getScrollElement: () => desktopParentRef.current,
     estimateSize: () => 48,
     overscan: 5,
-    enabled: isVirtualized,
+    enabled: isVirtualized && viewMode === "table",
   });
 
   const mobileVirtualizer = useVirtualizer({
@@ -54,94 +116,68 @@ export function MarkAttendanceGrid({
     getScrollElement: () => mobileParentRef.current,
     estimateSize: () => 140,
     overscan: 3,
-    enabled: isVirtualized,
+    enabled: isVirtualized && viewMode === "cards",
   });
 
   return (
     <Card accentColor="primary" className="p-0 overflow-hidden">
-      <div
-        ref={mobileParentRef}
-        className={isVirtualized ? "space-y-3 p-3 md:hidden max-h-160 overflow-y-auto" : "space-y-3 p-3 md:hidden"}
-      >
-        {rows.length === 0 ? (
-          <EmptyState title={t("attendance.mark.noStudents")} compact />
-        ) : isVirtualized ? (
-          <div style={{ height: `${mobileVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
-            {mobileVirtualizer.getVirtualItems().map((virtualRow) => {
-              const row = rows[virtualRow.index];
+      {viewMode === "cards" ? (
+        <div
+          ref={mobileParentRef}
+          className={isVirtualized ? "space-y-3 p-3 max-h-160 overflow-y-auto" : "space-y-3 p-3"}
+        >
+          {rows.length === 0 ? (
+            <EmptyState title={t("attendance.mark.noStudents")} compact />
+          ) : isVirtualized ? (
+            <div style={{ height: `${mobileVirtualizer.getTotalSize()}px`, width: "100%", position: "relative" }}>
+              {mobileVirtualizer.getVirtualItems().map((virtualRow) => {
+                const row = rows[virtualRow.index];
+                const statusInfo = getAttendanceStatusInfo(row.status, statuses);
+                return (
+                  <div
+                    key={row.studentId}
+                    style={{
+                      position: "absolute",
+                      top: 0,
+                      left: 0,
+                      width: "100%",
+                      transform: `translateY(${virtualRow.start}px)`,
+                    }}
+                    className="pb-3"
+                  >
+                    <MarkAttendanceStudentCard
+                      row={row}
+                      statusInfo={statusInfo}
+                      enabledFields={enabledFields}
+                      onFieldChange={onFieldChange}
+                      motionProps={rowMotion()}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+          ) : (
+            rows.map((row) => {
               const statusInfo = getAttendanceStatusInfo(row.status, statuses);
               return (
-                <div
+                <MarkAttendanceStudentCard
                   key={row.studentId}
-                  style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    transform: `translateY(${virtualRow.start}px)`,
-                  }}
-                  className="pb-3"
-                >
-                  <motion.article
-                    {...rowMotion()}
-                    className={`space-y-3 rounded-xl border border-border p-3 ${statusInfo?.bg || ""}`}
-                  >
-                    <div className="flex min-w-0 items-start justify-between gap-3">
-                      <h3 className="min-w-0 break-words text-sm font-semibold text-foreground">{row.name}</h3>
-                      <span className="shrink-0 font-mono text-xs text-muted-foreground">{row.rollNo}</span>
-                    </div>
-                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                      {enabledFields.map((field) => (
-                        <div key={field.id} className={field.id === "notes" ? "sm:col-span-2" : ""}>
-                          <p className="mb-1 text-xs font-semibold text-muted-foreground">
-                            {field.label} {field.required ? "*" : ""}
-                          </p>
-                          <div className={field.id === "status" ? "flex justify-start" : ""}>
-                            <MarkAttendanceFieldControl row={row} field={field} idPrefix="mobile" onFieldChange={onFieldChange} />
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.article>
-                </div>
+                  row={row}
+                  statusInfo={statusInfo}
+                  enabledFields={enabledFields}
+                  onFieldChange={onFieldChange}
+                  motionProps={rowMotion()}
+                />
               );
-            })}
-          </div>
-        ) : (
-          rows.map((row) => {
-            const statusInfo = getAttendanceStatusInfo(row.status, statuses);
-            return (
-              <motion.article
-                key={row.studentId}
-                {...rowMotion()}
-                className={`space-y-3 rounded-xl border border-border p-3 ${statusInfo?.bg || ""}`}
-              >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <h3 className="min-w-0 break-words text-sm font-semibold text-foreground">{row.name}</h3>
-                  <span className="shrink-0 font-mono text-xs text-muted-foreground">{row.rollNo}</span>
-                </div>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-                  {enabledFields.map((field) => (
-                    <div key={field.id} className={field.id === "notes" ? "sm:col-span-2" : ""}>
-                      <p className="mb-1 text-xs font-semibold text-muted-foreground">
-                        {field.label} {field.required ? "*" : ""}
-                      </p>
-                      <div className={field.id === "status" ? "flex justify-start" : ""}>
-                        <MarkAttendanceFieldControl row={row} field={field} idPrefix="mobile" onFieldChange={onFieldChange} />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </motion.article>
-            );
-          })
-        )}
-      </div>
-      <div
-        ref={desktopParentRef}
-        className={isVirtualized ? "hidden md:block max-h-160 overflow-y-auto" : "hidden md:block"}
-      >
-        <Table>
+            })
+          )}
+        </div>
+      ) : (
+        <div
+          ref={desktopParentRef}
+          className={isVirtualized ? "max-h-160 overflow-y-auto" : ""}
+        >
+          <Table>
           <TableHeader className={`bg-muted/60 border-b border-border ${isVirtualized ? "sticky top-0 z-10 backdrop-blur-sm" : ""}`}>
             <TableRow>
               <TableHead className="px-3 py-2.5 text-start text-xs font-semibold text-muted-foreground uppercase w-8">#</TableHead>
@@ -216,6 +252,7 @@ export function MarkAttendanceGrid({
           </TableBody>
         </Table>
       </div>
+      )}
     </Card>
   );
 }

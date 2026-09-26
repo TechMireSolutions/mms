@@ -41,7 +41,7 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
             <button
               type="button"
               onClick={showAll}
-              className="text-3xs font-medium text-primary hover:underline transition-colors cursor-pointer"
+              className="text-3xs font-semibold text-foreground hover:text-primary underline-offset-2 hover:underline transition-colors cursor-pointer"
             >
               {labels.showAll || 'Show all'}
             </button>
@@ -52,7 +52,7 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
             <button
               type="button"
               onClick={hideAll}
-              className="text-3xs font-medium text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
+              className="text-3xs font-medium text-foreground/75 hover:text-foreground transition-colors cursor-pointer"
             >
               {labels.hideAll || 'Hide all'}
             </button>
@@ -62,7 +62,7 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
 
       {visibleColumns.length > 0 && (
         <div className="space-y-1">
-          <span className="text-3xs font-bold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-3xs font-bold text-foreground/75 uppercase tracking-wider block">
             {labels.visibleAndOrder}
           </span>
           {visibleColumns.map((col) => (
@@ -121,7 +121,7 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
 
       {hiddenColumns.length > 0 && (
         <div className="space-y-1 pt-1 border-t border-border/50">
-          <span className="text-3xs font-bold text-muted-foreground uppercase tracking-wider block">
+          <span className="text-3xs font-bold text-foreground/75 uppercase tracking-wider block">
             {labels.hidden}
           </span>
           {hiddenColumns.map((col) => (

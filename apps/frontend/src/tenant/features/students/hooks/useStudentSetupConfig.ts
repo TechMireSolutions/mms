@@ -27,8 +27,11 @@ const setupConfigHooks = createModuleSetupConfigHooks<StudentModulePreferences>(
 export const useStudentPreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useStudentPreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
+import { useMemo } from 'react';
+
 /** Composed StudentsSettings from preferences queries. */
 export function useComposedStudentsSettings(): StudentsSettings {
   const prefsQuery = useStudentPreferencesQuery();
-  return (prefsQuery.data ?? normalizeStudentModulePreferences(null)) as unknown as StudentsSettings;
+  const fallback = useMemo(() => normalizeStudentModulePreferences(null), []);
+  return (prefsQuery.data ?? fallback) as unknown as StudentsSettings;
 }

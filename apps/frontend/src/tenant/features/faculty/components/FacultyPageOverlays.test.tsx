@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TeachersPageOverlays } from "./FacultyPageOverlays";
+import { FacultyPageOverlays } from "./FacultyPageOverlays";
 
 vi.mock("@/tenant/hooks/collections/sessions", () => ({
   useSessions: () => ({ data: [] }),
@@ -52,10 +52,10 @@ const defaultProps = {
   onCloseIdCards: vi.fn(),
 };
 
-describe("TeachersPageOverlays Component", () => {
+describe("FacultyPageOverlays Component", () => {
   it("renders confirm dialogs and overlays structure", () => {
     const html = renderToStaticMarkup(
-      <TeachersPageOverlays {...defaultProps} bulkDeleteOpen={true} />,
+      <FacultyPageOverlays {...defaultProps} bulkDeleteOpen={true} />,
     );
 
     expect(html).toContain("dialogs-rendered:true");

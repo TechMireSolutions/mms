@@ -107,11 +107,11 @@ export function useContactsPageController() {
     workContacts: directory.workContacts,
   });
 
+  const { setImportOpen } = overlay;
   /** Import writes contacts; a reader without `contacts.write` must not open the dialog. */
   const handleOpenImport = useCallback(() => {
-    if (!canWrite) return;
-    overlay.setImportOpen(true);
-  }, [canWrite, overlay.setImportOpen]);
+    if (canWrite) setImportOpen(true);
+  }, [canWrite, setImportOpen]);
 
   useContactsKeyboardShortcuts({
     selectedCount: directory.selected.length,

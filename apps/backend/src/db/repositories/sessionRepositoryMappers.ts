@@ -80,8 +80,10 @@ export function sessionRowToRecord(
       startTime: p.startTime,
       endTime: p.endTime,
       subject: p.subject,
-      teacherId: p.teacherId || '',
-      teacherName: p.teacherName || '',
+      facultyId: p.facultyId || (p as { teacherId?: string }).teacherId || '',
+      facultyName: p.facultyName || (p as { teacherName?: string }).teacherName || '',
+      teacherId: p.facultyId || (p as { teacherId?: string }).teacherId || '',
+      teacherName: p.facultyName || (p as { teacherName?: string }).teacherName || '',
     });
     periodsByTimetable.set(p.timetableId, arr);
   }
@@ -188,7 +190,11 @@ export function sessionRowToRecord(
     facultyName: f.facultyName || '',
     role: f.role || 'coordinator',
     status: (f.status === 'inactive' ? 'inactive' : 'active') as 'active' | 'inactive',
-    createdAt: f.createdAt ? f.createdAt.toISOString() : undefined,
+    createdAt: f.createdAt
+      ? f.createdAt instanceof Date
+        ? f.createdAt.toISOString()
+        : String(f.createdAt)
+      : undefined,
   }));
 
   const mappedClasses: Class[] = classRows.map((c) => {
@@ -205,8 +211,10 @@ export function sessionRowToRecord(
       enrolled: raw.enrolled ?? 0,
       enrollmentDeadline: raw.enrollmentDeadline || '',
       status: (raw.status === 'inactive' ? 'inactive' : 'active') as 'active' | 'inactive',
-      teacherId: raw.teacherId || '',
-      teacherName: raw.teacherName || '',
+      facultyId: raw.facultyId || (raw as { teacherId?: string }).teacherId || '',
+      facultyName: raw.facultyName || (raw as { teacherName?: string }).teacherName || '',
+      teacherId: raw.facultyId || (raw as { teacherId?: string }).teacherId || '',
+      teacherName: raw.facultyName || (raw as { teacherName?: string }).teacherName || '',
       room: raw.room || '',
       fees: feesByClass.get(raw.id) || [],
       schedules: schedulesByClass.get(raw.id) || [],

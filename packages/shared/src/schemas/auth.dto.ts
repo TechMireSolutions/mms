@@ -1,5 +1,9 @@
 import { z } from 'zod';
 import { deepSanitizeStrings } from './sanitize.js';
+import { TENANT_AUTH_ERROR_TYPES, type User } from '../tenantAuthTypes.js';
+import { workspaceUserRecordSchema } from '../usersModuleManifest.js';
+import { platformUserProfileDtoSchema } from './platform.dto.js';
+import type { PlatformUserProfile } from '../platformTypes.js';
 
 const onboardBodyBaseSchema = z.object({
   madrasaName: z.string().min(1),
@@ -70,3 +74,35 @@ export const handoffBodySchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   return deepSanitizeStrings(raw);
 }, handoffBodyBaseSchema);
+
+export type HandoffBody = z.infer<typeof handoffBodySchema>;
+
+export const tenantAuthErrorSchema = z.object({
+  type: z.enum(TENANT_AUTH_ERROR_TYPES),
+  message: z.string(),
+});
+export type TenantAuthError = z.infer<typeof tenantAuthErrorSchema>;
+
+export const tenantLoginResponseSchema = z.object({
+  user: workspaceUserRecordSchema,
+  requires2FA: z.boolean(),
+  challengeId: z.string().optional(),
+});
+
+export interface TenantLoginResponse {
+  user: User;
+  requires2FA: boolean;
+  challengeId?: string;
+}
+
+export const platformLoginResponseSchema = z.object({
+  user: platformUserProfileDtoSchema,
+  requires2FA: z.boolean().optional(),
+  challengeId: z.string().optional(),
+});
+
+export interface PlatformLoginResponse {
+  user: PlatformUserProfile;
+  requires2FA?: boolean;
+  challengeId?: string;
+}

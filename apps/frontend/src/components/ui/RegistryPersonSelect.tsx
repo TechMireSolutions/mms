@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { useStudentsContractList } from '@/tenant/features/students/hooks/useStudentsTsrHooks';
-import { useTeachersContractList } from '@/tenant/features/faculty/hooks/useFacultyTsrHooks';
+import { useStudentsContractList } from '@/tenant/hooks/collections/students';
+import { useFacultyContractList } from '@/tenant/hooks/collections/faculty';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { SearchBar } from '@/components/ui/SearchBar';
@@ -10,7 +10,7 @@ import { FormSelect } from '@/components/ui/FormSelect';
 const PERSON_SELECT_PAGE_SIZE = 50;
 
 export interface RegistryPersonSelectProps {
-  kind: 'student' | 'teacher';
+  kind: 'student' | 'teacher' | 'faculty';
   value: string;
   onChange: (id: string) => void;
   label: string;
@@ -32,7 +32,7 @@ export function RegistryPersonSelect({
   const [search, setSearch] = useState('');
 
   const studentsEnabled = kind === 'student';
-  const teachersEnabled = kind === 'teacher';
+  const facultyEnabled = kind === 'teacher' || kind === 'faculty';
 
   const { data: studentPage } = useStudentsContractList({
     page: 1,
@@ -40,18 +40,18 @@ export function RegistryPersonSelect({
     search,
   }, studentsEnabled);
 
-  const { data: teacherPage } = useTeachersContractList({
+  const { data: facultyPage } = useFacultyContractList({
     page: 1,
     limit: PERSON_SELECT_PAGE_SIZE,
     search,
-  }, teachersEnabled);
+  }, facultyEnabled);
 
   const excludeIdsKey = excludeIds.join(',');
 
   const options = (() => {
     const rows = (kind === 'student'
       ? (studentPage?.body?.students ?? [])
-      : (teacherPage?.body?.teachers ?? [])) as Array<{ id: string | number; name?: string | null }>;
+      : (facultyPage?.body?.faculty ?? facultyPage?.body?.teachers ?? [])) as Array<{ id: string | number; name?: string | null }>;
     const excluded = new Set(excludeIds.map(String));
     return rows
       .filter((row: { id: string | number; name?: string | null }) => !excluded.has(String(row.id)))
@@ -60,7 +60,7 @@ export function RegistryPersonSelect({
 
   const hasMore = kind === 'student'
     ? Boolean(studentPage?.body?.hasMore)
-    : Boolean(teacherPage?.body?.hasMore);
+    : Boolean(facultyPage?.body?.hasMore);
 
   const valueInOptions = options.some((row) => String(row.id) === value);
 

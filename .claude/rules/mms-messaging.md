@@ -18,52 +18,39 @@ paths:
 
 # MMS Messaging & Campaign Specification
 
-**Workflow skill:** `mms-messaging`.
+**Workflow skills:** campaign authoring & templates → `mms-messaging` · background CSV exports → `mms-background-jobs`.
 
-Governs campaign composition, templates, and sent-history for the Messaging module and cross-module `MessageComposer`.
+## 1. Architectural Boundaries & Recipient Modeling
 
-## 1. Boundaries
+- **Composer SSOT:** Outbound campaigns strictly consume `MessageComposer` with `MessagingRecipient` / `toMessagingRecipient` from `@mms/shared`. Feature modules enter via `useMessageComposerState`.
+- **Domain Isolation:** Never import Contacts-specific schemas or UI tables into messaging primitives.
 
-- Outbound campaigns use `MessageComposer` + `MessagingRecipient` / `toMessagingRecipient` from `@mms/shared`.
-- Do not import contacts-specific schemas into messaging primitives.
-- Cross-module entry: `useMessageComposerState` from feature pages.
+## 2. Data Layer, RLS & Idempotent Delivery
 
-## 2. Data layer (REST + Query)
+- **Query-First Persistence:** Templates, logs, and metrics use TanStack Query (`useMessageTemplates`, `useMessageLogs`, `useMessagingMetrics`). Ad-hoc `fetch` or localStorage writes are banned.
+- **Tenant Isolation & RLS:** Enforce `authenticateTenant` + transaction RLS (`withTenant`). Derive `userId` from session; strip client-supplied `deletedAt` on POST.
+- **Idempotent Broadcasts:** Send POSTs must accept an `idempotencyKey` cryptographically bound to a body digest; reject mismatched payloads with `409 Conflict` (`mms-api-interface.md` §6). Surface `429 Too Many Requests` via shared notifications.
+- **Recipients & Aggregation:** Work directory pages via `GET /recipients`. Select-all queries use `GET /recipients/match` (capped at `MESSAGING_RECIPIENTS_MATCH_LIMIT`). Hydrate via `POST /contacts/resolve`. Client-side page walks are strictly banned.
+- **Async CSV Export:** Queue large CSV exports via `POST /export/csv` (`messaging:export` worker). Enforce `canWriteMessaging`, `MESSAGING_CSV_EXPORT_MAX_ROWS`, and `MESSAGING_CSV_EXPORT_MAX_BYTES`. Exclude archived logs.
 
-- Templates, logs, metrics via TanStack Query (`useMessageTemplates`, `useMessageLogs`, `useMessagingMetrics` / `useMessagingMutations`) — not raw `fetch` or localStorage-first writes.
-- Manifest: `MESSAGING_MODULE_MANIFEST` (`setupSubTabs: ['templates']`, `softDelete` metadata, column-prefs object keys).
-- Bulk writes: upsert only — **`mms-api-interface.md` §5** (backup/restore mapping may still use replace helpers).
-- Typed tables `message_logs` / `message_templates` with FORCE RLS. **Log clear**: intentional soft-archive via typed `deleted_at` (strip JSONB `deletedAt`) — not a Contacts-style trash browser.
-- Document-store: never put `message_logs` / `message_templates` in `ALLOWED_COLLECTIONS`; never re-allowlist `messages_u:` (legacy inbox retired). Keep `COLLECTION_*` maps only for prefs/RBAC helpers — not for `/api/db/collections` dual-write.
-- Recipients: Work directory `GET /recipients` (paged); select-all `GET /recipients/match` (lean `MessagingRecipient`, cap `MESSAGING_RECIPIENTS_MATCH_LIMIT`); hydrate `POST /contacts/resolve` (batch max). No FE page-walk for select-all or CSV when these endpoints exist.
-- Reports CSV: queue `POST /export/csv` → runner `messaging:export` → artifact download; gate **`canWriteMessaging`**; never export archived (`includeDeleted` omitted from export body).
-- Column prefs: server paths under `/recipients|/history|/templates/column-preferences` (manifest object keys).
-- BE: `authenticateTenant` + RLS/`withTenant`; force `userId` from session; strip client `deletedAt` on POST; never echo SQL to clients.
-- Campaign/send POSTs: accept an **idempotency key** when the client may retry — bind key to a **body digest** and reject mismatched replays with `409` / `conflict` (`mms-api-interface.md` §6). Surface `429` / `Retry-After` via shared notify — `mms-auth-security.md`.
-- `GET /logs?includeDeleted` requires `canClearMessagingLogs` (not only `messaging.read`).
-- Clear-logs (`DELETE /logs`) soft-archives and **audits** `messaging.logs.clear`.
-- CSV export job caps rows (`MESSAGING_CSV_EXPORT_MAX_ROWS`) and bytes (`MESSAGING_CSV_EXPORT_MAX_BYTES`).
+## 3. Template Tokens, Security & Delivery Channels
 
-**Do not reintroduce** (see `mms-migration-status.md`): ungated `includeDeleted`, unbounded CSV accumulate, unaudited clear-logs, idempotency without body-digest bind.
+- **Safe Token Substitution:** Evaluate variable tokens (e.g. `{name}`) on the client against a strict manifest allowlist; reject unknown placeholders.
+- **Content Security:** Message templates and payloads are plain text; executable HTML or script tags are strictly banned. Do not log message bodies at INFO level.
+- **Delivery Providers:** WhatsApp number resolution requires `PuppeteerWhatsAppProvider.getNumberId` (`@mms/shared`). Sequential dispatch with configurable delay. SMS dispatches via `openDeviceSmsComposer`.
 
-## 3. Template Tokens, Security & Delivery
+## 4. Module Page Parity & Soft-Archive Semantics
 
-- Placeholders evaluate on the client; allowlist known tokens (e.g. `{name}`) — reject unknown tokens.
-- Template/body content is plain text — no executable HTML.
-- Batch WhatsApp opens: sequential with configurable delay; SMS: `openDeviceSmsComposer`.
-- WhatsApp number resolution: only via `PuppeteerWhatsAppProvider.getNumberId` (`@mms/shared` `whatsappProvider`) — no ad-hoc phone → number-id derivation.
-- Do not log full message bodies at info level; keep recipient identifiers minimal.
+- **Three-Tier Parity:** Follow Work | Reports | Setup standard. Gate actions via `useModulePermissions(MESSAGING_MODULE_MANIFEST)`. Setup renders read-only when `!canEditSetup`.
+- **Soft-Archive Semantics:** `DELETE /logs` soft-archives records via typed `deleted_at` and records an immutable audit event (`messaging.logs.clear`). `GET /logs?includeDeleted` requires `canClearMessagingLogs`.
+- **Work UX & i18n:** Render `ErrorState` with retry. Keyboard shortcut `Cmd/Ctrl+N` initiates new campaigns when `canWrite`. All UI copy via `t()`.
 
-## 4. Module page parity (§7)
+## 5. Architectural Invariants & Banned Patterns
 
-- Work | Reports | Setup; `useModulePermissions(MESSAGING_MODULE_MANIFEST)` — omit forbidden CTAs; Setup read-only when `!canEditSetup`.
-- Work/Reports: `ErrorState` + retry; Cmd/Ctrl+N for new campaign when `canWrite`.
-- Reports date filters (`startDate`/`endDate`) must flow to logs, metrics, and CSV enqueue.
-- Soft-archive clear confirm copy must not use generic “delete” if it misleads — prefer messaging-specific `t()` keys.
-- Copy via `t()` (en/ar/ur/fa).
+- **Banned Document Store:** Never include `message_logs` or `message_templates` in `ALLOWED_COLLECTIONS`. Never re-allowlist `messages_u:` or dual-write via `saveCollection`.
+- **Banned Mutations:** Bulk wipe PUT is strictly prohibited (`mms-api-interface.md` §5); use upsert only. Never echo raw SQL errors to clients.
 
-## 5. Do not reintroduce
+## 6. Workflow & Output Speed Rules
 
-- Contacts schemas in composer; client `userId` / `deletedAt` on log POST; bulk wipe PUT on REST saves (`mms-api-interface.md` §5); SQL error echo to clients.
-- `messages_u:` document-store allowlist; dual-write messaging via `getCollection` / `saveCollection`.
-- FE capped page-walk for select-all or CSV when `/recipients/match` or `/export/csv` exists.
+- **Zero Output Bloat:** Emit surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational greetings, polite preambles, and post-code summaries.
+- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards/rules are altered, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

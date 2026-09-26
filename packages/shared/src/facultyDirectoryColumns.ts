@@ -38,7 +38,7 @@ export const TEACHER_DIRECTORY_COLUMN_SURFACES = [
     sortable: true,
   },
   {
-    key: 'specialization',
+    key: 'designation',
     work: true,
     sort: true,
     export: true,
@@ -46,6 +46,22 @@ export const TEACHER_DIRECTORY_COLUMN_SURFACES = [
     workOrder: 1,
     sortOrder: 2,
     exportOrder: 2,
+    label: 'Designation',
+    labelKey: 'teachers.field.designation' as AppTranslationKey,
+    exportLabel: 'Designation',
+    width: 140,
+    sortable: true,
+    mapping: { tabId: 'employment', fieldId: 'designation' },
+  },
+  {
+    key: 'specialization',
+    work: true,
+    sort: true,
+    export: true,
+    fixed: false,
+    workOrder: 2,
+    sortOrder: 3,
+    exportOrder: 3,
     label: 'Specialization',
     labelKey: 'teachers.field.specialization' as AppTranslationKey,
     exportLabel: 'Specialization',
@@ -59,9 +75,9 @@ export const TEACHER_DIRECTORY_COLUMN_SURFACES = [
     sort: true,
     export: true,
     fixed: false,
-    workOrder: 2,
-    sortOrder: 3,
-    exportOrder: 4,
+    workOrder: 3,
+    sortOrder: 4,
+    exportOrder: 5,
     label: 'Qualification',
     labelKey: 'teachers.field.qualification' as AppTranslationKey,
     exportLabel: 'Qualification',
@@ -75,9 +91,9 @@ export const TEACHER_DIRECTORY_COLUMN_SURFACES = [
     sort: true,
     export: true,
     fixed: false,
-    workOrder: 3,
-    sortOrder: 5,
-    exportOrder: 5,
+    workOrder: 4,
+    sortOrder: 6,
+    exportOrder: 6,
     label: 'Join Date',
     labelKey: 'teachers.field.joinDate' as AppTranslationKey,
     exportLabel: 'Join date',
@@ -91,9 +107,9 @@ export const TEACHER_DIRECTORY_COLUMN_SURFACES = [
     sort: true,
     export: true,
     fixed: false,
-    workOrder: 4,
-    sortOrder: 4,
-    exportOrder: 3,
+    workOrder: 5,
+    sortOrder: 5,
+    exportOrder: 4,
     label: 'Status',
     labelKey: 'teachers.field.status' as AppTranslationKey,
     exportLabel: 'Status',
@@ -108,7 +124,7 @@ export const TEACHER_DIRECTORY_COLUMN_SURFACES = [
     export: false,
     fixed: false,
     workOrder: -1,
-    sortOrder: 6,
+    sortOrder: 7,
     exportOrder: -1,
     label: 'Updated',
     labelKey: undefined,
@@ -127,6 +143,7 @@ export const TEACHER_WORK_COLUMN_KEYS = TEACHER_DIRECTORY_COLUMN_SURFACES
   .slice()
   .sort((left, right) => left.workOrder - right.workOrder)
   .map((surface) => surface.key) as unknown as readonly [
+    'designation',
     'specialization',
     'qualification',
     'joinDate',
@@ -136,7 +153,7 @@ export const TEACHER_WORK_COLUMN_KEYS = TEACHER_DIRECTORY_COLUMN_SURFACES
 export type TeacherWorkColumnKey = (typeof TEACHER_WORK_COLUMN_KEYS)[number];
 
 /**
- * Builds the 5-key Work column labels map (`name` + {@link TEACHER_WORK_COLUMN_KEYS}).
+ * Builds the 6-key Work column labels map (`name` + {@link TEACHER_WORK_COLUMN_KEYS}).
  * SSOT for the label keys shared by the translated FE labels and placeholder labels.
  */
 export function teacherWorkColumnLabelsFrom(
@@ -198,6 +215,7 @@ export const TEACHER_SORT_FIELDS = TEACHER_DIRECTORY_COLUMN_SURFACES
   .map((surface) => surface.key) as unknown as readonly [
     'name',
     'employeeId',
+    'designation',
     'specialization',
     'qualification',
     'status',

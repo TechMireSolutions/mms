@@ -1,7 +1,7 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, boolean, jsonb, primaryKey, foreignKey, unique } from "drizzle-orm/pg-core";
 import { sql } from "drizzle-orm";
 import { workspaces } from "./platform.js";
-import { contacts } from "./contactTables.js";
+import { contacts } from "./contactCoreTables.js";
 import { softDeleteColumns } from "./softDeleteSchema.js";
 
 /** Madrasa workspace auth users — isolated per subdomain. */

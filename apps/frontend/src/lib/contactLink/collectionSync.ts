@@ -11,7 +11,7 @@ import {
   hydrateSessionsCollection,
   hydrateStudentListFromContacts,
   hydrateStudentLinkedRows,
-  hydrateTeacherListFromContacts,
+  hydrateFacultyListFromContacts,
   hydrateUserActorField,
   hydrateWorkspaceUserProfileList,
   normalizeActivityLog,
@@ -22,7 +22,7 @@ import {
   normalizeSessionClasses,
   normalizeSessionsCollection,
   normalizeStoredStudent,
-  normalizeStoredTeacher,
+  normalizeStoredFaculty,
   normalizeStudentLinkedRows,
   normalizeUserActorField,
   stripWorkspaceUserProfileFields,
@@ -60,8 +60,9 @@ export function normalizeCollectionRows(key: string, rows: Row[]): Row[] {
   switch (key) {
     case 'students':
       return rows.map((row) => normalizeStoredStudent(row));
+    case 'faculty':
     case 'teachers':
-      return rows.map((row) => normalizeStoredTeacher(row));
+      return rows.map((row) => normalizeStoredFaculty(row));
     case 'enrollments':
     case 'attendance_records':
     case 'finance_invoices':
@@ -108,18 +109,22 @@ export function hydrateCollectionRows(
   context: {
     contacts: ContactLike[];
     students: Row[];
-    teachers: Row[];
+    faculty?: Row[];
+    teachers?: Row[];
     users: Row[];
     distributions: Row[];
   },
 ): Row[] {
   if (!rows || !Array.isArray(rows)) return [];
 
+  const facultyRows = context.faculty ?? context.teachers ?? [];
+
   switch (key) {
     case 'students':
       return hydrateStudentListFromContacts(rows as never, context.contacts) as Row[];
+    case 'faculty':
     case 'teachers':
-      return hydrateTeacherListFromContacts(rows as never, context.contacts) as Row[];
+      return hydrateFacultyListFromContacts(rows as never, context.contacts) as Row[];
     case 'enrollments':
     case 'attendance_records':
     case 'finance_invoices':
@@ -131,7 +136,7 @@ export function hydrateCollectionRows(
       );
     }
     case 'sessions':
-      return hydrateSessionsCollection(rows as SessionLike[], asNamedMap(context.teachers)) as Row[];
+      return hydrateSessionsCollection(rows as SessionLike[], asNamedMap(facultyRows)) as Row[];
     case 'users':
       return hydrateWorkspaceUserProfileList(rows, context.contacts);
     case 'user_activity_logs':
@@ -139,7 +144,7 @@ export function hydrateCollectionRows(
     case 'hasanat_distributions': {
       const userMap = asNamedMap(context.users);
       const studentMap = asNamedMap(context.students);
-      const teacherMap = asNamedMap(context.teachers);
+      const teacherMap = asNamedMap(facultyRows);
       return rows.map((row) =>
         withUserActor(
           hydrateHasanatDistribution(row as HasanatDistributionLike, studentMap, teacherMap),

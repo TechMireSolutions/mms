@@ -59,6 +59,54 @@ describe('teacherWriteSchema and soft-delete helpers', () => {
     expect(cleaned.employeeId).toBe('EMP-02');
   });
 
+  it('stripTeacherWriteNoise strips transient designation and hierarchy metadata', () => {
+    const raw = {
+      contactId: 'c-1',
+      employeeId: 'EMP-02',
+      designationAssignableRoles: ['teacher', 'admin'],
+      designationEndsOn: '2026-12-31',
+      contact: { id: 'c-1', name: 'Ustadh' },
+      subordinates: [{ id: 'f-2' }],
+    };
+
+    const cleaned = stripTeacherWriteNoise(raw);
+    expect(cleaned.designationAssignableRoles).toBeUndefined();
+    expect(cleaned.designationEndsOn).toBeUndefined();
+    expect(cleaned.contact).toBeUndefined();
+    expect(cleaned.subordinates).toBeUndefined();
+    expect(cleaned.contactId).toBe('c-1');
+    expect(cleaned.employeeId).toBe('EMP-02');
+  });
+
+  it('buildDynamicTeacherSchema allows transient designation and hierarchy fields by stripping them', () => {
+    const schema = buildDynamicTeacherSchema(DEFAULT_TEACHERS_SETTINGS, new Set(['basic']), {
+      basic: [
+        { key: 'contactId', label: 'Contact', type: 'text', enabled: true, required: true, order: 1 },
+        { key: 'employeeId', label: 'Employee ID', type: 'text', enabled: true, required: false, order: 2 },
+      ],
+    });
+
+    const parsed = schema.safeParse({
+      contactId: 'c-1',
+      employeeId: 'EMP-03',
+      designationAssignableRoles: ['teacher'],
+      designationEndsOn: null,
+      contact: { name: 'Teacher' },
+      subordinates: [],
+      designationStartsOn: '',
+    });
+
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      const data = parsed.data as Record<string, unknown>;
+      expect(data).not.toHaveProperty('designationAssignableRoles');
+      expect(data).not.toHaveProperty('designationEndsOn');
+      expect(data).not.toHaveProperty('contact');
+      expect(data).not.toHaveProperty('subordinates');
+      expect(data.designationStartsOn).toBeUndefined();
+    }
+  });
+
   it('buildDynamicTeacherSchema strips soft-delete metadata and strictly validates fields', () => {
     const schema = buildDynamicTeacherSchema(DEFAULT_TEACHERS_SETTINGS, new Set(['basic']), {
       basic: [

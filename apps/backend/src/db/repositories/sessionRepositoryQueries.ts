@@ -1,8 +1,9 @@
 import { and, eq, inArray, isNull } from 'drizzle-orm';
 import { type Session } from '@mms/shared';
-import { sessions } from '../schema.js';
+import { sessions, sessionClasses } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
 import { hydrateSessionsList, hydrateSessionsListSummary } from './sessionRepositoryHydrate.js';
+import { getPreparedSessionById } from '../preparedStatements.js';
 
 export const sessionSelectColumns = {
   id: sessions.id,
@@ -50,10 +51,23 @@ export async function findSessionById(tenant: string, id: string): Promise<Sessi
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     if (!tx || typeof (tx as any).select !== 'function') return null;
-    const rows = await tx
-      .select(sessionSelectColumns)
-      .from(sessions)
-      .where(and(eq(sessions.workspaceSubdomain, subdomain), eq(sessions.id, id)));
+    let rows: (typeof sessions.$inferSelect)[];
+    if (process.env.MMS_USE_PREPARED_STATEMENTS !== 'false' && typeof (tx as any).execute === 'function') {
+      try {
+        const stmt = getPreparedSessionById(tx);
+        rows = await stmt.execute({ subdomain, id });
+      } catch {
+        rows = await tx
+          .select(sessionSelectColumns)
+          .from(sessions)
+          .where(and(eq(sessions.workspaceSubdomain, subdomain), eq(sessions.id, id)));
+      }
+    } else {
+      rows = await tx
+        .select(sessionSelectColumns)
+        .from(sessions)
+        .where(and(eq(sessions.workspaceSubdomain, subdomain), eq(sessions.id, id)));
+    }
     const row = rows[0];
     if (!row) return null;
     const [result] = await hydrateSessionsList(tx, subdomain, rows);
@@ -87,4 +101,48 @@ export async function findSessionsSummaryByIds(
       .where(and(eq(sessions.workspaceSubdomain, subdomain), inArray(sessions.id, ids)));
     return hydrateSessionsListSummary(tx, subdomain, rows);
   });
+}
+
+export async function findClassesOrSessionsByIds(
+  tenant: string,
+  ids: string[],
+): Promise<{ id: string; deletedAt?: unknown }[]> {
+  if (ids.length === 0) return [];
+  const subdomain = tenant.trim().toLowerCase();
+  return withTenantRead(subdomain, async (tx) => {
+    if (!tx || typeof (tx as { select?: unknown }).select !== 'function') return [];
+    const sessionRows = await tx
+      .select({ id: sessions.id, deletedAt: sessions.deletedAt })
+      .from(sessions)
+      .where(and(eq(sessions.workspaceSubdomain, subdomain), inArray(sessions.id, ids)));
+
+    const foundSessionIds = new Set(sessionRows.map((r) => r.id));
+    const missingIds = ids.filter((id) => !foundSessionIds.has(id));
+
+    if (missingIds.length === 0) {
+      return sessionRows;
+    }
+
+    const classRows = await tx
+      .select({ id: sessionClasses.id, deletedAt: sessions.deletedAt })
+      .from(sessionClasses)
+      .innerJoin(
+        sessions,
+        and(
+          eq(sessions.workspaceSubdomain, sessionClasses.workspaceSubdomain),
+          eq(sessions.id, sessionClasses.sessionId),
+        ),
+      )
+      .where(and(eq(sessionClasses.workspaceSubdomain, subdomain), inArray(sessionClasses.id, missingIds)));
+
+    return [...sessionRows, ...classRows];
+  });
+}
+
+export async function findClassOrSessionById(
+  tenant: string,
+  id: string,
+): Promise<{ id: string; deletedAt?: unknown } | null> {
+  const [result] = await findClassesOrSessionsByIds(tenant, [id]);
+  return result ?? null;
 }

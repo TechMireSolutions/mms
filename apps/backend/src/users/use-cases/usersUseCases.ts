@@ -4,6 +4,7 @@ import { usersRepository } from '../repository/usersRepositoryAdapter.js';
 import { getRequestTenant, requireTenant } from '../../lib/tenantContext.js';
 import { broadcastCollection } from '../../services/websocketService.js';
 import { getHydratedUsers, saveUsers } from '../../services/auth/userService.js';
+import { invalidateTenantRbac } from '../../services/rbacService.js';
 import { getRawUsers, type PersistedUser } from '../../services/auth/userServiceShared.js';
 import { deleteRefreshTokensForUser } from '../../services/auth/authArtifactService.js';
 import { sendTenantWelcomeEmail } from '../../services/auth/tenantPasswordOtpService.js';
@@ -11,6 +12,8 @@ import { hashPassword } from '../../services/auth/passwordService.js';
 import { assertPasswordMeetsPolicy } from '../../services/globalSettingsService.js';
 import { loadContactsByIds } from '../../services/contactService.js';
 import { HttpDomainError } from '../../lib/httpErrors.js';
+import { findFacultyByContactId } from '../../db/repositories/facultyRepository.js';
+import { findCurrentFacultyDesignationAssignment } from '../../db/repositories/facultyDesignationRepository.js';
 import {
   type WorkspaceUser,
   type Contact,
@@ -91,6 +94,19 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     return users.map((u) => normalizeWorkspaceUser(u));
   };
 
+  const assertFacultyRoleAllowed = async (tenant: string, contactId: string | undefined, role: string | undefined): Promise<void> => {
+    if (!contactId || !role) return;
+    const faculty = await findFacultyByContactId(tenant, contactId);
+    if (!faculty) return;
+    const designation = await findCurrentFacultyDesignationAssignment(tenant, String(faculty.id));
+    if (!designation) {
+      throw new HttpDomainError(400, 'faculty_designation_required', 'Assign an active faculty designation before creating a user account');
+    }
+    if (!(designation.assignableRoles ?? []).includes(role)) {
+      throw new HttpDomainError(400, 'faculty_role_not_allowed', `Role "${role}" is not assignable to the current designation`);
+    }
+  };
+
   const createWorkspaceUser = async (
     input: (CreateWorkspaceUserInput | WorkspaceUser) & Record<string, unknown>,
     actorId: string,
@@ -118,6 +134,8 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
         phone = phone || getPrimaryPhone(c) || '';
       }
     }
+
+    await assertFacultyRoleAllowed(tenant, contactId != null ? String(contactId) : undefined, input.role);
 
     if (!email) {
       throw new HttpDomainError(400, 'validation_error', 'User email is required');
@@ -169,6 +187,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     const users = await getRawUsers();
     users.push(userRecord);
     await saveUsers(users);
+    await invalidateTenantRbac(tenant);
     await broadcastCollection('users');
 
     await recordUserActivityLog(
@@ -230,6 +249,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     const ok = await repo.softDeleteTenantUserRow(tenant, id, deletedBy);
     if (ok) {
       await deleteRefreshTokensForUser(id);
+      await invalidateTenantRbac(tenant);
       await broadcastCollection('users');
 
       await recordUserActivityLog(
@@ -260,6 +280,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
 
     const ok = await repo.restoreTenantUserRow(tenant, id);
     if (ok) {
+      await invalidateTenantRbac(tenant);
       await broadcastCollection('users');
 
       await recordUserActivityLog(
@@ -372,6 +393,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       }
 
       await saveUsers(merged as unknown as Parameters<typeof saveUsers>[0]);
+      await invalidateTenantRbac(requireTenant());
       await broadcastCollection('users');
       return loadWorkspaceUsers();
     },
@@ -400,6 +422,12 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
         throw new HttpDomainError(403, 'forbidden_super_admin_assignment', 'Only Super Admin can assign the Super Admin role');
       }
 
+
+      const effectiveContactId = input.contactId !== undefined
+        ? (input.contactId != null && input.contactId !== '' ? String(input.contactId) : undefined)
+        : (existingRow.contactId ? String(existingRow.contactId) : undefined);
+      await assertFacultyRoleAllowed(tenant, effectiveContactId, input.role ?? existingRow.role);
+
       const rawUsers = await getRawUsers();
       const target = rawUsers.find((u) => String(u.id) === id);
       if (!target) {
@@ -420,6 +448,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       }
 
       await saveUsers(rawUsers);
+      await invalidateTenantRbac(tenant);
       await broadcastCollection('users');
 
       await recordUserActivityLog(

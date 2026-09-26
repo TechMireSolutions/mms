@@ -14,6 +14,8 @@ import {
   accountingPostingRules,
 } from '../schema.js';
 import { withTenant, type TenantTransaction } from '../tenant-context.js';
+import { lockJournalEntries } from './accountingEntryLocks.js';
+import { ConflictError } from '../../lib/httpErrors.js';
 
 async function syncEntryChildren(
   tx: TenantTransaction,
@@ -85,6 +87,7 @@ async function syncEntryChildren(
 export async function saveEntry(tenant: string, record: JournalEntry): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
+    await lockJournalEntries(subdomain, [record.id]);
     await tx
       .insert(accountingEntries)
       .values(entryInsertValues(subdomain, record))
@@ -164,6 +167,7 @@ export async function bulkSaveEntries(tenant: string, records: JournalEntry[]): 
   const entryIds = uniqueRecords.map((r) => r.id);
 
   await withTenant(subdomain, async (tx) => {
+    await lockJournalEntries(subdomain, entryIds);
     // Single batched upsert of all entries (keeps rows not in the batch, updates
     // matching rows — semantically identical to the previous per-record upsert).
     // The soft-delete columns are deliberately absent from this SET list: a bulk
@@ -381,26 +385,74 @@ export async function bulkRestoreEntries(
   if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
   const now = new Date();
   return withTenant(subdomain, async (tx) => {
-    const updated = await tx
-      .update(accountingEntries)
-      .set({
-        deletedAt: null,
-        deletedBy: null,
-        deletionReason: null,
-        updatedAt: now,
-      })
+    // Pre-check for conflicting active references per MMS soft-delete standard
+    const candidateRows = await tx
+      .select({ id: accountingEntries.id, ref: accountingEntries.ref })
+      .from(accountingEntries)
       .where(
         and(
           eq(accountingEntries.workspaceSubdomain, subdomain),
           inArray(accountingEntries.id, uniqueIds),
           isNotNull(accountingEntries.deletedAt),
         ),
-      )
-      .returning({ id: accountingEntries.id });
+      );
 
-    return {
-      succeeded: updated.length,
-      failed: uniqueIds.length - updated.length,
-    };
+    const nonBlankRefs = candidateRows
+      .map((r) => r.ref?.trim())
+      .filter((r): r is string => Boolean(r));
+
+    if (nonBlankRefs.length > 0) {
+      const activeConflicts = await tx
+        .select({ id: accountingEntries.id, ref: accountingEntries.ref })
+        .from(accountingEntries)
+        .where(
+          and(
+            eq(accountingEntries.workspaceSubdomain, subdomain),
+            inArray(accountingEntries.ref, nonBlankRefs),
+            isNull(accountingEntries.deletedAt),
+          ),
+        );
+      if (activeConflicts.length > 0) {
+        throw new ConflictError(
+          `Cannot restore journal entry: reference "${activeConflicts[0].ref}" is already used by an active entry`,
+        );
+      }
+    }
+
+    try {
+      const updated = await tx
+        .update(accountingEntries)
+        .set({
+          deletedAt: null,
+          deletedBy: null,
+          deletionReason: null,
+          updatedAt: now,
+        })
+        .where(
+          and(
+            eq(accountingEntries.workspaceSubdomain, subdomain),
+            inArray(accountingEntries.id, uniqueIds),
+            isNotNull(accountingEntries.deletedAt),
+          ),
+        )
+        .returning({ id: accountingEntries.id });
+
+      return {
+        succeeded: updated.length,
+        failed: uniqueIds.length - updated.length,
+      };
+    } catch (error) {
+      const err = error as { code?: string; constraint?: string };
+      if (
+        err?.code === '23505' &&
+        (err?.constraint === 'accounting_entries_workspace_ref_active_uidx' ||
+          err?.constraint?.includes('ref'))
+      ) {
+        throw new ConflictError(
+          'Cannot restore journal entry: reference is already used by an active entry',
+        );
+      }
+      throw error;
+    }
   });
 }

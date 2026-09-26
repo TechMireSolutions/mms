@@ -14,15 +14,14 @@ vi.mock("@/lib/clientErrorReporting", () => ({
   reportClientError: vi.fn(),
 }));
 
-vi.mock("@/tenant/features/faculty/components/facultyFormValidation", () => ({
-  validateTeacherDraft: vi.fn(),
-  checkTeacherFormDuplicate: vi.fn().mockResolvedValue(null),
-  teacherValidationErrorsByField: (errors: Array<{ fieldId: string; message: string }>) =>
-    Object.fromEntries(errors.map((e) => [e.fieldId, e.message])),
-  DUPLICATE_ERROR_KEYS: {
-    employeeId: "teachers.duplicate.employeeId",
-  },
-}));
+vi.mock("@/tenant/features/faculty/components/facultyFormValidation", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/tenant/features/faculty/components/facultyFormValidation")>();
+  return {
+    ...actual,
+    validateTeacherDraft: vi.fn(),
+    checkTeacherFormDuplicate: vi.fn().mockResolvedValue(null),
+  };
+});
 
 describe("TeacherForm Validation Auto-Scroll & Contact SSOT", () => {
   beforeEach(() => {

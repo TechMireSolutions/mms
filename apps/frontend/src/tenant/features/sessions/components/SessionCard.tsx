@@ -1,12 +1,12 @@
 import type { ModuleColumnRegistryEntry } from "@mms/shared";
-import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
 import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
-import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ProgressBar } from "@/components/ui/ProgressBar";
+import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Session } from "@/lib/data/sessionsData";
 import { SessionListRowActions } from "@/tenant/features/sessions/components/SessionListRowActions";
@@ -18,7 +18,8 @@ import {
 
 export interface SessionCardProps {
   session: Session;
-  isSelected: boolean;
+  isSelected?: boolean;
+  selectedIds?: string[];
   canSelectSessions: boolean;
   showDeleted: boolean;
   canDelete: boolean;
@@ -37,6 +38,7 @@ export interface SessionCardProps {
 export function SessionCard({
   session,
   isSelected,
+  selectedIds = [],
   canSelectSessions,
   showDeleted,
   canDelete,
@@ -51,6 +53,16 @@ export function SessionCard({
   reducedMotion = false,
 }: SessionCardProps): React.JSX.Element {
   const { t } = useTranslation();
+
+  const { isSelected: derivedSelected, onSelect, onView: handleView, cardProps } = useWorkCardAction({
+    entity: session,
+    selectedIds: selectedIds.length > 0 ? selectedIds : (isSelected ? [session.id] : []),
+    onToggleSelected: onToggleSelectedSession,
+    onView,
+    canSelect: canSelectSessions,
+  });
+
+  const effectiveSelected = isSelected ?? derivedSelected;
   const { totalCapacity, capacityPercent, classCount } = getSessionCapacityMeta(session);
   const visibleColumns = getSessionVisibleWorkColumns(columnRegistry, isColumnVisible, {
     excludeFace: true,
@@ -58,15 +70,15 @@ export function SessionCard({
   const columnOptions = { t, statusConfig, typeConfig };
 
   return (
-    <DirectoryEntityCard isSelected={isSelected} reducedMotion={reducedMotion}>
+    <DirectoryEntityCard isSelected={effectiveSelected} reducedMotion={reducedMotion} {...cardProps}>
       <DirectoryCardHeader
         id={session.id}
         displayName={session.name}
-        isSelected={isSelected}
+        isSelected={effectiveSelected}
         showSelect={canSelectSessions}
-        onSelect={() => onToggleSelectedSession(session.id, !isSelected)}
+        onSelect={onSelect}
         selectAriaLabel={t("sessions.table.selectSession", { name: session.name })}
-        onView={() => onView(session)}
+        onView={handleView}
         viewAriaLabel={`${t("sessions.table.viewProfile")} - ${session.name}`}
         reducedMotion={reducedMotion}
         subtitle={
@@ -86,7 +98,7 @@ export function SessionCard({
       />
 
       {totalCapacity > 0 && (
-        <div className="ms-1">
+        <div>
           <ProgressBar
             value={Math.min(capacityPercent, 100)}
             fillClassName={capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success"}
@@ -103,27 +115,23 @@ export function SessionCard({
         </div>
       )}
 
-      <DirectoryCardFooter
-        trailing={
-          <>
-            <DirectoryCardViewButton
-              label={t("sessions.actionViewShort")}
-              ariaLabel={`${t("sessions.table.viewProfile")} - ${session.name}`}
-              onClick={() => onView(session)}
+      <DirectoryCardFooterActions
+        onView={() => onView(session)}
+        viewLabel={t("sessions.actionViewShort")}
+        viewAriaLabel={`${t("sessions.table.viewProfile")} - ${session.name}`}
+        overflowActions={
+          canDelete ? (
+            <SessionListRowActions
+              session={session}
+              showDeleted={showDeleted}
+              canDelete={canDelete}
+              hideViewItem
+              onView={onView}
+              triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
+              onRequestDelete={onRequestDelete}
+              onRestore={onRestore}
             />
-            {canDelete ? (
-              <SessionListRowActions
-                session={session}
-                showDeleted={showDeleted}
-                canDelete={canDelete}
-                hideViewItem
-                onView={onView}
-                triggerClassName={DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS}
-                onRequestDelete={onRequestDelete}
-                onRestore={onRestore}
-              />
-            ) : null}
-          </>
+          ) : null
         }
       />
     </DirectoryEntityCard>

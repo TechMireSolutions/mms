@@ -74,4 +74,29 @@ describe("AttendanceListCards Component", () => {
 
     expect(html).toContain("attendance.empty.records");
   });
+
+  it("renders selected state and editing time controls", () => {
+    const html = renderToStaticMarkup(
+      <AttendanceListCards
+        paginatedRecords={[mockRecord]}
+        isColumnVisible={(key) => key === "timeIn" || key === "timeOut"}
+        editingRecord={mockRecord}
+        statuses={mockStatuses}
+        updateDraft={vi.fn()}
+        classLabel={() => "Class 1A"}
+        renderRowActions={() => <button type="button">Edit</button>}
+        selectedIds={["rec-1"]}
+        canDelete={true}
+        allVisibleSelected={true}
+        someVisibleSelected={false}
+        onToggleSelectAll={vi.fn()}
+        onToggleSelectedRecord={vi.fn()}
+        t={((k: string) => k) as any}
+      />,
+    );
+
+    expect(html).toContain("attendance-mobile-time-in-rec-1");
+    expect(html).toContain("attendance-mobile-time-out-rec-1");
+  });
 });
+

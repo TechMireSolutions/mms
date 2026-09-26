@@ -3,15 +3,15 @@ import { translateApp } from '../appTranslations.js';
 import type { AppTranslationKey } from '../appTranslations.js';
 import type { FieldDefinition } from '../contactTypes.js';
 import { buildCustomFieldSchema } from '../contactValidation.js';
-import { isTeacherLockedEnabledTab } from '../moduleFieldSetupPersons.js';
+import { isFacultyLockedEnabledTab } from '../moduleFieldSetupPersons.js';
 import {
-  findTeacherFieldInMap,
-  listEnabledCustomTeacherFormFields,
-  listTeacherSystemFormFieldKeys,
+  findFacultyFieldInMap,
+  listEnabledCustomFacultyFormFields,
+  listFacultySystemFormFieldKeys,
 } from '../facultyFormCustomFields.js';
-import type { TeachersSettings } from '../facultyModuleSettings.js';
+import type { FacultySettings } from '../facultyModuleSettings.js';
 import { FACULTY_STATUS_WRITE_MAX, facultyCoreSchema } from '../facultyModuleManifest.js';
-import { stripTeacherWriteNoise } from '../facultyUtils.js';
+import { stripFacultyWriteNoise } from '../facultyUtils.js';
 import { deepSanitizeStrings } from './sanitize.js';
 
 /** Audit / meta keys accepted on faculty writes. */
@@ -29,9 +29,16 @@ const FACULTY_WRITE_AUDIT_META_KEYS = [
  */
 export const FACULTY_WRITE_SYSTEM_KEYS: readonly string[] = (() => {
   const keys = new Set<string>(FACULTY_WRITE_AUDIT_META_KEYS);
-  for (const key of listTeacherSystemFormFieldKeys()) {
+  for (const key of listFacultySystemFormFieldKeys()) {
     keys.add(key);
   }
+  keys.add('customDesignation');
+  keys.add('reportingFacultyId');
+  keys.add('hierarchyRank');
+  keys.add('reportingFacultyName');
+  keys.add('subordinateCount');
+  keys.add('designationId');
+  keys.add('designationStartsOn');
   return [...keys].sort((left, right) => left.localeCompare(right));
 })();
 
@@ -42,7 +49,7 @@ export function collectFacultyWriteExtraFieldKeys(
   fields: Record<string, FieldDefinition[]> | null | undefined,
 ): string[] {
   if (!fields) return [];
-  return listEnabledCustomTeacherFormFields(fields)
+  return listEnabledCustomFacultyFormFields(fields)
     .map((field) => field.key)
     .filter((key) => !FACULTY_WRITE_SYSTEM_KEY_SET.has(key));
 }
@@ -53,17 +60,17 @@ export function collectFacultyWriteExtraFieldKeys(
  * Contact profile dual-write keys are stripped in preprocess (Contacts SSOT).
  */
 export function buildDynamicFacultySchema(
-  settings: TeachersSettings,
+  settings: FacultySettings,
   enabledTabIds: Set<string>,
   fields: Record<string, FieldDefinition[]>,
   language = 'en',
 ): z.ZodTypeAny {
   const contactRequiredMsg = translateApp(
-    'teachers.errorContactRequired' as AppTranslationKey,
+    'faculty.errorContactRequired' as AppTranslationKey,
     language,
-  );
+  ) || translateApp('teachers.errorContactRequired' as AppTranslationKey, language);
   const requiredMsg = translateApp('common.formPleaseFixErrors' as AppTranslationKey, language);
-  const systemKeys = listTeacherSystemFormFieldKeys();
+  const systemKeys = listFacultySystemFormFieldKeys();
   const requireContactLink = settings.requireContactLink !== false;
 
   const schemaObject: Record<string, z.ZodTypeAny> = {
@@ -73,6 +80,13 @@ export function buildDynamicFacultySchema(
     specialization: z.string().nullish(),
     department: z.string().nullish(),
     designation: z.string().nullish(),
+    designationId: z.string().nullish(),
+    designationStartsOn: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')]).nullish().transform((v) => (v === '' ? undefined : v)),
+    customDesignation: z.string().trim().optional(),
+    reportingFacultyId: z.string().nullable().nullish(),
+    hierarchyRank: z.coerce.number().int().min(1).max(99).nullish(),
+    reportingFacultyName: z.string().nullish(),
+    subordinateCount: z.coerce.number().int().min(0).nullish(),
     status: z.string().max(FACULTY_STATUS_WRITE_MAX).nullish(),
     joinDate: z.string().nullish(),
     qualification: z.string().nullish(),
@@ -96,7 +110,7 @@ export function buildDynamicFacultySchema(
   };
 
   Object.entries(fields).forEach(([tabId, tabFields]) => {
-    if (!isTeacherLockedEnabledTab(tabId) && !enabledTabIds.has(tabId)) return;
+    if (!isFacultyLockedEnabledTab(tabId) && !enabledTabIds.has(tabId)) return;
 
     for (const field of tabFields) {
       if (!field.enabled) continue;
@@ -139,14 +153,14 @@ export function buildDynamicFacultySchema(
   });
 
   // Customs enabled outside the tab loop (when flat legacy maps omit tab arrays of customs).
-  for (const field of listEnabledCustomTeacherFormFields(fields)) {
+  for (const field of listEnabledCustomFacultyFormFields(fields)) {
     if (schemaObject[field.key]) continue;
     schemaObject[field.key] = buildCustomFieldSchema(field, language);
   }
 
   // When requireContactLink and contactId field is missing/disabled, still enforce link.
   if (requireContactLink) {
-    const contactField = findTeacherFieldInMap(fields, 'contactId');
+    const contactField = findFacultyFieldInMap(fields, 'contactId');
     if (!contactField || contactField.enabled !== false) {
       schemaObject.contactId = z
         .union([z.string(), z.number()], { error: contactRequiredMsg })
@@ -161,7 +175,7 @@ export function buildDynamicFacultySchema(
 
   return z.preprocess((raw) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
-    const stripped = stripTeacherWriteNoise(raw as Record<string, unknown>);
+    const stripped = stripFacultyWriteNoise(raw as Record<string, unknown>);
     return deepSanitizeStrings(stripped);
   }, objectSchema);
 }
@@ -181,7 +195,7 @@ export const facultyDuplicateCheckBodySchema: z.ZodType<FacultyDuplicateCheckBod
 
 export const facultyWriteSchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
-  const stripped = stripTeacherWriteNoise(raw as Record<string, unknown>);
+  const stripped = stripFacultyWriteNoise(raw as Record<string, unknown>);
   return deepSanitizeStrings(stripped);
 }, facultyCoreSchema);
 

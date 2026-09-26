@@ -23,8 +23,8 @@ const ROOT = process.cwd();
 
 /** Baselines measured when the ratchet landed; only lower them. */
 const BASELINE = {
-  anyAnnotations: 54,
-  hexColourFiles: 37,
+  anyAnnotations: 51,
+  hexColourFiles: 31,
   filesOverHardLimit: 77,
 };
 

@@ -84,12 +84,12 @@ export const authSessionRoutes: FastifyPluginAsync = async (fastify) => {
         if (userRow?.deletedAt) {
           return sendUnauthorized(reply, 'Session revoked');
         }
-        if (user.role === 'teacher') {
+        if (user.role === 'faculty' || user.role === 'teacher') {
           const tenant = getRequestTenant() ?? user.workspaceSubdomain;
           if (tenant) {
-            const { teachersRepository } = await import('../../../faculty/repository/facultyRepositoryAdapter.js');
-            const teacherRow = await teachersRepository.findById(tenant, String(user.id));
-            if (teacherRow?.deletedAt) {
+            const { facultyRepository } = await import('../../../faculty/repository/facultyRepositoryAdapter.js');
+            const facultyRow = await facultyRepository.findById(tenant, String(user.id));
+            if (facultyRow?.deletedAt) {
               return sendUnauthorized(reply, 'Session revoked');
             }
           }

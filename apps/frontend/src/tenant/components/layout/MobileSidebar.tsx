@@ -75,7 +75,7 @@ export default function MobileSidebar({ open, onClose }: MobileSidebarProps): Re
         role="dialog"
         aria-modal="true"
         aria-label={t("nav.openMenu")}
-        className="fixed start-0 top-0 z-sidebar-mobile flex h-full w-sidebar-mobile max-w-sheet flex-col bg-sidebar shadow-2xl border-e border-sidebar-border lg:hidden"
+        className="fixed start-0 top-0 z-sidebar-mobile flex h-full w-sidebar-mobile max-w-sheet flex-col bg-sidebar shadow-drawer border-e border-sidebar-border lg:hidden"
       >
         <div className="flex h-16 flex-shrink-0 items-center justify-between gap-2 border-b border-sidebar-border px-5">
           <Link

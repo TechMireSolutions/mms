@@ -6,7 +6,7 @@ import {
 } from "@/components/ui/BulkSelectionActions";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { AppTranslationKey } from "@mms/shared";
+import { APP_TRANSLATIONS_EN, type AppTranslationKey } from "@mms/shared";
 
 export interface ModuleUniversalBulkActionBarProps<T = unknown> {
   selectedCount: number;
@@ -32,6 +32,10 @@ export interface ModuleUniversalBulkActionBarProps<T = unknown> {
   // Export
   exportLabel?: string;
   onBulkExport?: () => void;
+  exportAction?: {
+    label: string;
+    onClick: () => void | Promise<void>;
+  };
   // Messaging
   messagingTargets?: {
     waTargets: T[];
@@ -70,6 +74,7 @@ export function ModuleUniversalBulkActionBar<T>({
   statusPending = false,
   exportLabel,
   onBulkExport,
+  exportAction,
   messagingTargets,
   onWhatsApp,
   onSms,
@@ -91,19 +96,31 @@ export function ModuleUniversalBulkActionBar<T>({
     else if (channel === "email" && onEmail && messagingTargets) onEmail(messagingTargets.emailReady);
   };
 
-  const countKey = `${i18nNamespace}.selectedCount` as AppTranslationKey;
-  const restoreKey = `${i18nNamespace}.bulkRestore` as AppTranslationKey;
+  const primaryCountKey = `${i18nNamespace}.selectedCount` as AppTranslationKey;
+  const fallbackCountKey = `${i18nNamespace}.trash.selected` as AppTranslationKey;
+  const useFallbackCount = !(primaryCountKey in APP_TRANSLATIONS_EN);
+  const countLabel =
+    (!useFallbackCount ? t(primaryCountKey, { count: selectedCount }) : "") ||
+    t(fallbackCountKey, { count: selectedCount });
+
+  const primaryRestoreKey = `${i18nNamespace}.bulkRestore` as AppTranslationKey;
+  const fallbackRestoreKey = `${i18nNamespace}.trash.restore` as AppTranslationKey;
+  const useFallbackRestore = !(primaryRestoreKey in APP_TRANSLATIONS_EN);
+  const restoreLabelFinal =
+    restoreLabel ??
+    ((!useFallbackRestore ? t(primaryRestoreKey) : "") || t(fallbackRestoreKey));
+
   const statusKey = `${i18nNamespace}.bulkStatus` as AppTranslationKey;
 
   return (
     <ModuleWorkBulkActionBar
       selectedCount={selectedCount}
       viewingDeleted={viewingDeleted}
-      countLabel={t(countKey, { count: selectedCount })}
+      countLabel={countLabel}
       leading={<LeadingIcon className="w-4 h-4 text-primary" aria-hidden="true" />}
       deselectLabel={t("common.deselect")}
       canDelete={canDelete}
-      restoreLabel={restoreLabel ?? t(restoreKey)}
+      restoreLabel={restoreLabelFinal}
       onRequestBulkRestore={onRequestBulkRestore}
       onClearSelection={onClearSelection}
       deleteAction={
@@ -115,9 +132,11 @@ export function ModuleUniversalBulkActionBar<T>({
           : undefined
       }
       exportAction={
-        bulkActions?.includes("export") && canExport && onBulkExport
-          ? { label: exportLabel ?? t(`${i18nNamespace}.bulkExport` as AppTranslationKey), onClick: onBulkExport }
-          : undefined
+        exportAction
+          ? { label: exportAction.label, onClick: exportAction.onClick }
+          : bulkActions?.includes("export") && canExport && onBulkExport
+            ? { label: exportLabel ?? t(`${i18nNamespace}.bulkExport` as AppTranslationKey), onClick: onBulkExport }
+            : undefined
       }
       messaging={
         showMessaging

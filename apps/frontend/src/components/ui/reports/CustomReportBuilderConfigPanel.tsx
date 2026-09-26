@@ -58,7 +58,7 @@ export function CustomReportBuilderConfigPanel({
   return (
     <div className="space-y-5 lg:col-span-1">
       <div className="space-y-1.5">
-        <SectionLabel as="label" htmlFor="report-builder-name" weight="bold" className="block ms-1">
+        <SectionLabel as="label" htmlFor="report-builder-name" weight="bold" className="block">
           {t("reports.builder.reportTitleLabel")}
         </SectionLabel>
         <Input
@@ -73,7 +73,7 @@ export function CustomReportBuilderConfigPanel({
       </div>
 
       <div className="space-y-1.5">
-        <SectionLabel as="label" htmlFor="report-builder-source" weight="bold" className="block ms-1">
+        <SectionLabel as="label" htmlFor="report-builder-source" weight="bold" className="block">
           {t("reports.builder.queryDataSource")}
         </SectionLabel>
         <FormSelect
@@ -100,7 +100,7 @@ export function CustomReportBuilderConfigPanel({
       </div>
 
       <div className="space-y-1.5">
-        <div className="flex justify-between items-center ms-1">
+        <div className="flex justify-between items-center">
           <SectionLabel weight="bold" className="block">
             {t("reports.builder.schemaFieldsPicker")}
           </SectionLabel>
@@ -135,7 +135,7 @@ export function CustomReportBuilderConfigPanel({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
         <div className="space-y-1.5">
-          <SectionLabel as="label" htmlFor="report-builder-aggregate" weight="bold" className="block ms-1">
+          <SectionLabel as="label" htmlFor="report-builder-aggregate" weight="bold" className="block">
             {t("reports.builder.aggregatorFunction")}
           </SectionLabel>
           <FormSelect
@@ -157,7 +157,7 @@ export function CustomReportBuilderConfigPanel({
           />
         </div>
         <div className="space-y-1.5">
-          <SectionLabel as="label" htmlFor="report-builder-group-by" weight="bold" className="block ms-1">
+          <SectionLabel as="label" htmlFor="report-builder-group-by" weight="bold" className="block">
             {t("reports.builder.groupCategory")}
           </SectionLabel>
           <FormSelect
@@ -180,7 +180,7 @@ export function CustomReportBuilderConfigPanel({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-start">
         <div className="space-y-1.5">
-          <SectionLabel weight="bold" className="block ms-1">
+          <SectionLabel weight="bold" className="block">
             {t("reports.builder.docAlignment")}
           </SectionLabel>
           <CompactSegmentedControl
@@ -196,7 +196,7 @@ export function CustomReportBuilderConfigPanel({
           />
         </div>
         <div className="space-y-1.5">
-          <SectionLabel as="label" htmlFor="report-builder-page-size" weight="bold" className="block ms-1">
+          <SectionLabel as="label" htmlFor="report-builder-page-size" weight="bold" className="block">
             {t("reports.builder.exportLayoutFormat")}
           </SectionLabel>
           <FormSelect

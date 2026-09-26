@@ -2,7 +2,7 @@ import React from 'react';
 import { FileSignature } from 'lucide-react';
 import type { Exam } from '@/lib/data/examinationData';
 import { useTranslation } from '@/hooks/useTranslation';
-import { DetailDrawerShell } from '@/components/ui/DetailDrawerShell';
+import { DetailSheet } from '@/components/common/DetailSheet';
 import { DetailDrawerArchivedBanner, DetailDrawerRestoreOrEditAction } from '@/components/ui/DetailDrawerArchiveChrome';
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 import { Card } from '@/components/ui/card';
@@ -30,12 +30,20 @@ export const ExaminationDetail = (function ExaminationDetail({
   
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       open
       onClose={onClose}
       title={exam.name}
       subtitle={undefined}
       icon={FileSignature}
+      archiveState={{
+        isDeleted: isArchived,
+        deletedAt: exam.deletedAt,
+        canRestore: canDelete,
+        onRestore: onRestore ? () => void onRestore(exam.id) : undefined,
+        restoreLabel: t('common.restore'),
+        recordTitle: exam.name,
+      }}
       headerExtra={isArchived && <DetailDrawerArchivedBanner deletedAt={exam.deletedAt} />}
       headerActions={
         <DetailDrawerRestoreOrEditAction
@@ -79,6 +87,6 @@ export const ExaminationDetail = (function ExaminationDetail({
           </section>
         )}
       </div>
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 });

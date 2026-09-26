@@ -42,7 +42,7 @@ describe("TeacherDetailSessionsSection Component", () => {
       <TeacherDetailSessionsSection assignedClasses={[]} />,
     );
 
-    expect(html).toContain("teachers.detail.noAssignedClasses");
+    expect(html).toContain("faculty.detail.noAssignedClasses");
   });
 
   it("renders error state when error is true", () => {
@@ -50,6 +50,6 @@ describe("TeacherDetailSessionsSection Component", () => {
       <TeacherDetailSessionsSection assignedClasses={[]} error={true} />,
     );
 
-    expect(html).toContain("teachers.loadFailed");
+    expect(html).toContain("faculty.loadFailed");
   });
 });

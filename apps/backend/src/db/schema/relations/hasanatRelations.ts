@@ -47,12 +47,8 @@ export const hasanatDistributionsRelations = relations(hasanatDistributions, ({ 
     fields: [hasanatDistributions.workspaceSubdomain, hasanatDistributions.recipientStudentId],
     references: [students.workspaceSubdomain, students.id],
   }),
-  recipientTeacher: one(faculty, {
-    fields: [hasanatDistributions.workspaceSubdomain, hasanatDistributions.recipientTeacherId],
-    references: [faculty.workspaceSubdomain, faculty.id],
-  }),
   recipientFaculty: one(faculty, {
-    fields: [hasanatDistributions.workspaceSubdomain, hasanatDistributions.recipientTeacherId],
+    fields: [hasanatDistributions.workspaceSubdomain, hasanatDistributions.recipientFacultyId],
     references: [faculty.workspaceSubdomain, faculty.id],
   }),
   redemptions: many(hasanatRedemptions),

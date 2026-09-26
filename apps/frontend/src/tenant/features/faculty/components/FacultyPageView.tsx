@@ -45,10 +45,10 @@ export function FacultyPageView({
   return (
     <ModulePageShell
       seoTitle={`MMS - ${t('nav.faculty')}`}
-      seoDescription={t('page.teachers.subtitle')}
+      seoDescription={t('page.faculty.subtitle') || t('page.teachers.subtitle')}
       headerIcon={School}
       headerTitle={t('nav.faculty')}
-      headerSubtitle={t('page.teachers.subtitle')}
+      headerSubtitle={t('page.faculty.subtitle') || t('page.teachers.subtitle')}
       headerActions={
         <FacultyPageHeaderActions
           canExport={canExport}
@@ -57,6 +57,7 @@ export function FacultyPageView({
           onExport={() => {
             void handleExportCSV();
           }}
+          onAddFaculty={openCreateForm}
           onAddTeacher={openCreateForm}
         />
       }
@@ -68,7 +69,7 @@ export function FacultyPageView({
         tabs={visibleTabs}
         activeTab={activeTab}
         onTabChange={setActiveTab}
-        panelIdPrefix="teachers-tab"
+        panelIdPrefix="faculty-tab"
       >
         <AnimatePresence mode="wait">
           {activeTab === "work" ? (

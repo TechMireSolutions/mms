@@ -123,7 +123,7 @@ export function BrandColorImportModal({
               <p className="text-xs font-semibold text-foreground truncate">
                 {parsedCandidate.primary} & {parsedCandidate.secondary}
               </p>
-              <p className="text-2xs text-emerald-600 dark:text-emerald-400 font-semibold truncate">
+              <p className="text-2xs text-success font-semibold truncate">
                 Valid palette detected
               </p>
             </div>

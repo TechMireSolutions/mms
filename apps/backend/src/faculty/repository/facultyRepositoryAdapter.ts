@@ -1,55 +1,65 @@
-import type { Teacher } from '@mms/shared';
+import type { Faculty } from '@mms/shared';
 import {
-  bulkSaveTeachers,
-  findTeacherById,
-  findTeachersByIds,
-  saveTeacher,
+  bulkSaveFaculty,
+  findFacultyById,
+  findFacultyByIds,
+  saveFaculty,
+  countSubordinates,
+  countSubordinatesBatch,
+  findSubordinates,
+  reassignSubordinates,
+  findAncestorChain,
 } from '../../db/repositories/facultyRepository.js';
 import {
-  aggregateTeachersCommandMetrics,
-  bulkUpdateTeachersSpecializationSql,
-  bulkUpdateTeachersStatusSql,
-  countTeachersActive,
-  countTeachersForNextEmployeeId,
-  findSoftDeletedTeacherByContactIdSql,
-  findTeacherRegistrationConflictSql,
-  listActiveTeachersMissingEmployeeId,
-  listTeacherLinkedContactIdsSql,
-  listTeachersPage,
+  aggregateFacultyCommandMetrics,
+  bulkUpdateFacultySpecializationSql,
+  bulkUpdateFacultyStatusSql,
+  countFacultyActive,
+  countFacultyForNextEmployeeId,
+  findSoftDeletedFacultyByContactIdSql,
+  findFacultyRegistrationConflictSql,
+  listActiveFacultyMissingEmployeeId,
+  listFacultyLinkedContactIdsSql,
+  listFacultyPage,
 } from '../../db/repositories/facultyRepositoryList.js';
-import { aggregateTeachersWidgetQueries } from '../../db/repositories/facultyRepositoryWidgets.js';
-import type { FacultyRepository, TeachersRepository } from './facultyRepository.js';
+import { aggregateFacultyWidgetQueries } from '../../db/repositories/facultyRepositoryWidgets.js';
+import type { FacultyRepository } from './facultyRepository.js';
 
 /**
  * Drizzle adapter for `FacultyRepository`.
  *
- * Delegates to the existing tenant-scoped Drizzle repository functions; the
+ * Delegates to the tenant-scoped Drizzle repository functions; the
  * interface is the contract use cases depend on (SSOT storage gateway).
  */
 function createFacultyRepository(): FacultyRepository {
   return {
-    countByWorkspace: (tenant, options) => countTeachersActive(tenant, options),
-    listPage: (tenant, query) => listTeachersPage(tenant, query),
-    findById: (tenant, id) => findTeacherById(tenant, id),
-    findByIds: (tenant, ids) => findTeachersByIds(tenant, ids),
+    countByWorkspace: (tenant, options) => countFacultyActive(tenant, options),
+    listPage: (tenant, query) => listFacultyPage(tenant, query),
+    findById: (tenant, id) => findFacultyById(tenant, id),
+    findByIds: (tenant, ids) => findFacultyByIds(tenant, ids),
     findSoftDeletedByContactId: (tenant, contactId) =>
-      findSoftDeletedTeacherByContactIdSql(tenant, contactId),
-    save: (tenant, teacher) => saveTeacher(tenant, teacher as Teacher),
-    bulkSave: (tenant, teachers) => bulkSaveTeachers(tenant, teachers as Teacher[]),
+      findSoftDeletedFacultyByContactIdSql(tenant, contactId),
+    save: (tenant, member) => saveFaculty(tenant, member as Faculty),
+    bulkSave: (tenant, members) => bulkSaveFaculty(tenant, members as Faculty[]),
     aggregateCommandMetrics: (tenant, periodDays) =>
-      aggregateTeachersCommandMetrics(tenant, periodDays),
-    aggregateWidgetQueries: (tenant, queries) => aggregateTeachersWidgetQueries(tenant, queries),
-    listLinkedContactIds: (tenant, excludeTeacherId) =>
-      listTeacherLinkedContactIdsSql(tenant, excludeTeacherId),
-    countNextEmployeeId: (tenant, options) => countTeachersForNextEmployeeId(tenant, options),
-    listActiveMissingEmployeeId: (tenant) => listActiveTeachersMissingEmployeeId(tenant),
-    findRegistrationConflict: (tenant, input) => findTeacherRegistrationConflictSql(tenant, input),
-    bulkUpdateStatusSql: (tenant, ids, status) => bulkUpdateTeachersStatusSql(tenant, ids, status),
+      aggregateFacultyCommandMetrics(tenant, periodDays),
+    aggregateWidgetQueries: (tenant, queries) => aggregateFacultyWidgetQueries(tenant, queries),
+    listLinkedContactIds: (tenant, excludeFacultyId) =>
+      listFacultyLinkedContactIdsSql(tenant, excludeFacultyId),
+    countNextEmployeeId: (tenant, options) => countFacultyForNextEmployeeId(tenant, options),
+    listActiveMissingEmployeeId: (tenant) => listActiveFacultyMissingEmployeeId(tenant),
+    findRegistrationConflict: (tenant, input) => findFacultyRegistrationConflictSql(tenant, input),
+    bulkUpdateStatusSql: (tenant, ids, status) => bulkUpdateFacultyStatusSql(tenant, ids, status),
     bulkUpdateSpecializationSql: (tenant, ids, specialization) =>
-      bulkUpdateTeachersSpecializationSql(tenant, ids, specialization),
+      bulkUpdateFacultySpecializationSql(tenant, ids, specialization),
+    countSubordinates: (tenant, supervisorId) => countSubordinates(tenant, supervisorId),
+    countSubordinatesBatch: (tenant, supervisorIds) => countSubordinatesBatch(tenant, supervisorIds),
+    findSubordinates: (tenant, supervisorId) => findSubordinates(tenant, supervisorId),
+    reassignSubordinates: (tenant, oldSupervisorId, newSupervisorId, txClient) =>
+      reassignSubordinates(tenant, oldSupervisorId, newSupervisorId, txClient),
+    findAncestorChain: (tenant, facultyId, maxDepth) => findAncestorChain(tenant, facultyId, maxDepth),
   };
 }
 
 /** Default Drizzle-backed instance used by the production use-case layer. */
 export const facultyRepository: FacultyRepository = createFacultyRepository();
-export const teachersRepository: TeachersRepository = facultyRepository;

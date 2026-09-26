@@ -12,7 +12,14 @@ import {
   authenticatePlatform,
   requirePlatformPermission,
 } from '../../../middleware/authenticatePlatform.js';
-import { onboardBodySchema, challengeCodeBodySchema, challengeIdBodySchema, loginBodySchema } from '@mms/shared';
+import {
+  onboardBodySchema,
+  challengeCodeBodySchema,
+  challengeIdBodySchema,
+  loginBodySchema,
+  type TenantLoginResponse,
+  type TenantAuthError,
+} from '@mms/shared';
 import { parseRequest, replyValidationError } from '../../../lib/zodRequest.js';
 import { sendNotFound } from '../../../lib/httpErrors.js';
 
@@ -30,10 +37,11 @@ export const authLoginRoutes: FastifyPluginAsync = async (fastify) => {
       const subdomain = getRequestTenant();
 
       if (!subdomain) {
-        return reply.status(400).send({
+        const error: TenantAuthError = {
           type: 'invalid_credentials',
           message: 'Sign in on your madrasa subdomain (e.g. your-madrasa.localhost).',
-        });
+        };
+        return reply.status(400).send(error);
       }
 
       try {
@@ -41,35 +49,40 @@ export const authLoginRoutes: FastifyPluginAsync = async (fastify) => {
 
         if (result) {
           if (result.requires2FA) {
-            return reply.send({
+            const payload: TenantLoginResponse = {
               user: result.user,
               requires2FA: true,
               challengeId: result.challengeId,
-            });
+            };
+            return reply.send(payload);
           }
-          return reply.send({ user: result.user, requires2FA: false });
+          const payload: TenantLoginResponse = { user: result.user, requires2FA: false };
+          return reply.send(payload);
         }
       } catch (error: unknown) {
         const err = error as Error & { statusCode?: number; type?: string };
         if (err.statusCode === 403 && err.type === 'workspace_disabled') {
-          return reply.status(403).send({
+          const disabledError: TenantAuthError = {
             type: 'workspace_disabled',
             message: err.message,
-          });
+          };
+          return reply.status(403).send(disabledError);
         }
         if (err.statusCode === 403 && err.type === 'email_not_verified') {
-          return reply.status(403).send({
+          const unverifiedError: TenantAuthError = {
             type: 'email_not_verified',
             message: err.message,
-          });
+          };
+          return reply.status(403).send(unverifiedError);
         }
         throw error;
       }
 
-      return reply.status(401).send({
+      const invalidError: TenantAuthError = {
         type: 'invalid_credentials',
         message: 'Invalid email or password',
-      });
+      };
+      return reply.status(401).send(invalidError);
     });
 
     inner.post(
@@ -124,12 +137,14 @@ export const authLoginRoutes: FastifyPluginAsync = async (fastify) => {
       const { challengeId, code } = parsed.data;
       const result = await completeTwoFactorLogin(challengeId, code, fastify.jwt, reply);
       if (!result) {
-        return reply.status(401).send({
+        const error: TenantAuthError = {
           type: 'invalid_credentials',
           message: 'Invalid or expired verification code',
-        });
+        };
+        return reply.status(401).send(error);
       }
-      return reply.send({ user: result.user, requires2FA: false });
+      const payload: TenantLoginResponse = { user: result.user, requires2FA: false };
+      return reply.send(payload);
     });
 
     inner.post('/2fa/resend', async (request, reply) => {

@@ -4,7 +4,7 @@ description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboar
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Reports & Export Workflow
@@ -13,6 +13,12 @@ metadata:
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
 Report checklists (accessibility, filters, i18n/formatting, completion): **`references/report-checklists.md`**.
+
+## Accounting statements and issued exports
+
+Advisory accounting workflow: read [closing and reporting](../mms-finance-accounting/references/closing-reporting.md) before changing financial filters or calculations. Keep post-closing trial-balance rows separate from income-statement flows and cumulative balance-sheet balances. Trace dashboard/command metrics and exports too; a correct report endpoint does not validate independent KPI queries.
+
+Saved report definitions remain live logic. An explicitly issued/exported financial pack can retain its authorized artifact, source cutoff, basis, currency, and policy version under retention controls; it is not a stale cache serving live reports. Cash-flow classification and framework applicability come from the finance reference, not a chart label.
 
 ## Placement
 

@@ -1,9 +1,10 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useRef, useMemo } from 'react';
-import { clear2FAState, getPendingChallengeId, mark2FAVerified, setPendingChallengeId } from '@/lib/twoFactor';
+import { clear2FAState, getPendingChallengeId, mark2FAVerified, resend2FACode, setPendingChallengeId } from '@/lib/twoFactor';
 import { type User } from '@mms/shared';
 import { appNavigate } from '@/lib/routing/appNavigate';
 import { ROUTES } from '@/lib/config/routes';
 import { apiFetch, apiJson, isApiError, SESSION_EXPIRED_EVENT } from '@/lib/apiClient';
+import { AUTH_PATHS } from '@/lib/apiClientHelpers';
 import { isCurrentHostApex } from '@/lib/config/tenantConfig';
 import { getWorkspaceLocalStoragePrefix } from '@/lib/dbStorageCore';
 import { queryClientInstance } from '@/lib/queryClient';
@@ -30,11 +31,13 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [initialUser] = useState<User | null>(() => (typeof window !== 'undefined' ? getPersistedAuthUser() : null));
   const [user, setUser] = useState<User | null>(initialUser);
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(Boolean(initialUser));
-  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(!initialUser);
+  // The HttpOnly cookie session is authoritative. A cached user may avoid a
+  // visual identity flash, but it must never grant authenticated UI access.
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  const [isLoadingAuth, setIsLoadingAuth] = useState<boolean>(true);
   const [isLoadingPublicSettings] = useState<boolean>(false);
   const [authError, setAuthError] = useState<AuthError | null>(null);
-  const [authChecked, setAuthChecked] = useState<boolean>(Boolean(initialUser));
+  const [authChecked, setAuthChecked] = useState<boolean>(false);
   const [appPublicSettings] = useState<unknown | null>(null);
 
   const userRef = useRef<User | null>(initialUser);
@@ -60,13 +63,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
 
-    if (!userRef.current) {
-      setIsLoadingAuth(true);
-    }
+    setIsLoadingAuth(true);
+    setAuthChecked(false);
     setAuthError(null);
 
     try {
-      const authResponse = await apiJson<{ user: User }>('/api/auth/me', { signal });
+      const authResponse = await apiJson<{ user: User }>(AUTH_PATHS.me, { signal });
       await applyAuthSession(authResponse.user);
     } catch (error) {
       if (signal?.aborted) return;
@@ -87,7 +89,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoadingAuth(true);
     setAuthError(null);
     try {
-      const response = await apiFetch('/api/auth/login', {
+      const response = await apiFetch(AUTH_PATHS.login, {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       });
@@ -132,7 +134,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (!challengeId) {
         throw new Error('No pending 2FA challenge found');
       }
-      const response = await apiJson<{ user: User }>('/api/auth/2fa/verify', {
+      const response = await apiJson<{ user: User }>(AUTH_PATHS.twoFactorVerify, {
         method: 'POST',
         body: JSON.stringify({ challengeId, code }),
       });
@@ -153,6 +155,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
+  const resend2FA = useCallback(async (challengeIdOverride?: string): Promise<boolean> => {
+    const challengeId = challengeIdOverride ?? getPendingChallengeId();
+    if (!challengeId) return false;
+    return resend2FACode(challengeId);
+  }, []);
+
   const logout = (shouldRedirect = true): void => {
     clear2FAState();
 
@@ -167,7 +175,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setAuthError(null);
     setAuthChecked(true);
 
-    void apiFetch('/api/auth/logout', { method: 'POST' });
+    void apiFetch(AUTH_PATHS.logout, { method: 'POST' });
 
     if (shouldRedirect) {
       appNavigate(ROUTES.login, { replace: true });
@@ -179,7 +187,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (!isAuthenticated) return;
     setIsExtendingSession(true);
     try {
-      await apiFetch('/api/auth/session/extend', { method: 'POST' });
+      await apiFetch(AUTH_PATHS.sessionExtend, { method: 'POST' });
     } finally {
       setIsExtendingSession(false);
     }
@@ -187,7 +195,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const onboard = async (onboardingPayload: OnboardPayload): Promise<OnboardResult> => {
     setAuthError(null);
-    return apiJson<OnboardResult>('/api/auth/onboard', {
+    return apiJson<OnboardResult>(AUTH_PATHS.onboard, {
       method: 'POST',
       body: JSON.stringify(onboardingPayload),
     });
@@ -195,7 +203,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const exchangeHandoff = async (code: string): Promise<void> => {
     setAuthError(null);
-    const authResponse = await apiJson<{ user: User }>('/api/auth/handoff', {
+    const authResponse = await apiJson<{ user: User }>(AUTH_PATHS.handoff, {
       method: 'POST',
       body: JSON.stringify({ code }),
     });
@@ -204,14 +212,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const requestPasswordOtp = async (email: string): Promise<void> => {
-    await apiJson('/api/auth/forgot-password', {
+    await apiJson(AUTH_PATHS.forgotPassword, {
       method: 'POST',
       body: JSON.stringify({ email }),
     });
   };
 
   const verifyPasswordOtp = async (email: string, code: string): Promise<void> => {
-    await apiJson('/api/auth/forgot-password/verify', {
+    await apiJson(AUTH_PATHS.forgotPasswordVerify, {
       method: 'POST',
       body: JSON.stringify({ email, code }),
     });
@@ -219,7 +227,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const resetPasswordWithOtp = async (email: string, code: string, password: string): Promise<void> => {
     setAuthError(null);
-    const authResponse = await apiJson<{ user: User }>('/api/auth/forgot-password/reset', {
+    const authResponse = await apiJson<{ user: User }>(AUTH_PATHS.forgotPasswordReset, {
       method: 'POST',
       body: JSON.stringify({ email, code, password }),
     });
@@ -291,6 +299,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     authChecked,
     login,
     verify2FA,
+    resend2FA,
     logout,
     extendSession,
     isExtendingSession,
@@ -310,6 +319,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     authError,
     appPublicSettings,
     authChecked,
+    resend2FA,
     isExtendingSession,
     checkUserAuth,
     checkAppState,

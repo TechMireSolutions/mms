@@ -1,7 +1,7 @@
 import { randomBytes } from 'node:crypto';
 import type { FastifyReply } from 'fastify';
 import type { JWT } from '@fastify/jwt';
-import { TENANT_PASSWORD_OTP_TTL_MINUTES, type ActivityLog } from '@mms/shared';
+import { TENANT_PASSWORD_OTP_TTL_MINUTES, TENANT_OTP_MAX_ATTEMPTS, type ActivityLog } from '@mms/shared';
 import {
   deleteAuthArtifact,
   findAuthArtifactByLookupKey,
@@ -21,7 +21,6 @@ import { logger } from '../../lib/logger.js';
 
 const OTP_TTL_MS = TENANT_PASSWORD_OTP_TTL_MINUTES * 60 * 1000;
 const RESEND_COOLDOWN_MS = 60_000;
-const MAX_OTP_ATTEMPTS = 5;
 
 export interface TenantPasswordOtpPayload {
   userId: string;
@@ -179,7 +178,7 @@ export async function verifyTenantPasswordResetOtp(input: {
   const normalizedCode = input.code.replace(/\s/g, '');
   if (!verifyOtpCode(normalizedCode, entry.payload.codeHash)) {
     const attempts = entry.payload.attempts + 1;
-    if (attempts >= MAX_OTP_ATTEMPTS) {
+    if (attempts >= TENANT_OTP_MAX_ATTEMPTS) {
       await deleteAuthArtifact(entry.id);
       throw new TenantPasswordOtpError('too_many_attempts', 'Too many invalid attempts. Request a new code.');
     }

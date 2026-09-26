@@ -1,10 +1,9 @@
 import React from 'react';
 import { Waypoints } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { PlatformPageShell } from '@/platform/components/PlatformPageShell';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { PageHeader } from '@/components/ui/PageHeader';
+import { ModuleScaffold } from '@/components/common/ModuleScaffold';
 import { ErdExplorer } from '@/platform/components/erd/ErdExplorer';
 import { containerVariantsConsole as containerVariants, itemVariants } from '@/platform/lib/animations';
 
@@ -13,7 +12,13 @@ export default function PlatformErdPage(): React.JSX.Element {
   const reducedMotion = useReducedMotion();
 
   return (
-    <PlatformPageShell width="7xl">
+    <ModuleScaffold
+      seoTitle={`${t('platform.erdTitle')} | ${t('platform.consoleTitle')}`}
+      seoDescription={t('platform.erdSubtitle')}
+      headerIcon={Waypoints}
+      headerTitle={t('platform.erdTitle')}
+      headerSubtitle={t('platform.erdSubtitle')}
+    >
       <motion.div
         variants={containerVariants}
         initial={reducedMotion ? false : 'hidden'}
@@ -21,17 +26,9 @@ export default function PlatformErdPage(): React.JSX.Element {
         className="space-y-6"
       >
         <motion.div variants={itemVariants}>
-          <PageHeader
-            icon={Waypoints}
-            title={t('platform.erdTitle')}
-            subtitle={t('platform.erdSubtitle')}
-          />
-        </motion.div>
-
-        <motion.div variants={itemVariants}>
           <ErdExplorer />
         </motion.div>
       </motion.div>
-    </PlatformPageShell>
+    </ModuleScaffold>
   );
 }

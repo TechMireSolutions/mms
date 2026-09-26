@@ -111,8 +111,8 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
               key={session.id}
               initial={{ opacity: 0, x: -8 }}
               animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: sessionIndex * 0.05, duration: 0.3, ease: "easeOut" }}
-              className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/30 transition-colors"
+              transition={{ delay: sessionIndex * 0.03, duration: 0.15, ease: "easeOut" }}
+              className="flex items-center gap-4 px-5 py-3.5 hover:bg-muted/30 transition-colors duration-150 ease-out"
             >
               <div className="w-24 flex-shrink-0 text-start">
                 <p className="text-sm font-bold text-foreground m-0 tabular-nums">{session.time}</p>
@@ -124,10 +124,10 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
                     as="span"
                     pill
                     tone="success"
-                    className="gap-1.5 font-black uppercase tracking-wider select-none animate-pulse"
+                    className="gap-1.5 font-black uppercase tracking-wider select-none"
                     aria-label={t("dashboard.widgets.sessionLiveAria")}
                   >
-                    <span className="w-1.5 h-1.5 rounded-full bg-success animate-ping shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-success shrink-0" />
                     <span>{t("dashboard.widgets.live")}</span>
                   </Badge>
                 ) : (
@@ -137,10 +137,10 @@ export default function SessionsTable({ title, items }: SessionsTableProps) {
 
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-bold text-foreground truncate m-0">{session.name}</p>
-                <p className="text-xs text-muted-foreground/80 mt-0.5 m-0 font-medium">{session.teacher}</p>
+                <p className="text-xs text-muted-foreground mt-0.5 m-0 font-medium">{session.teacher}</p>
               </div>
 
-              <div className="hidden sm:flex items-center gap-3.5 text-xs text-muted-foreground/75 flex-shrink-0 font-semibold select-none">
+              <div className="hidden sm:flex items-center gap-3.5 text-xs text-muted-foreground flex-shrink-0 font-semibold select-none">
                 <span className="flex items-center gap-1">
                   <MapPin className="w-3.5 h-3.5" aria-hidden="true" />
                   <span className="sr-only">{t("dashboard.widgets.roomLabel")}</span> {session.room}

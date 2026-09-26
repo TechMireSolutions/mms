@@ -1,0 +1,127 @@
+import type React from "react";
+import { Award, Shield, Info } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { DatePicker } from "@/components/ui/DatePicker";
+import { Field } from "@/components/ui/FormPrimitives";
+import { FormSelect } from "@/components/ui/FormSelect";
+import { SectionCard } from "@/components/ui/SectionCard";
+import { useTranslation } from "@/hooks/useTranslation";
+import type { FacultyDesignationDefinition, Teacher } from "@mms/shared";
+
+export interface FacultyFormDesignationSectionProps {
+  teacher?: Teacher;
+  teacherDraft: Partial<Teacher>;
+  errors: Record<string, string>;
+  designationOptions?: FacultyDesignationDefinition[];
+  isFieldEnabled: (fieldId: string) => boolean;
+  isFieldRequired: (fieldId: string) => boolean;
+  onDraftChange: (patch: Partial<Teacher>) => void;
+}
+
+export function FacultyFormDesignationSection({
+  teacher,
+  teacherDraft,
+  errors,
+  designationOptions,
+  isFieldEnabled,
+  isFieldRequired,
+  onDraftChange,
+}: FacultyFormDesignationSectionProps): React.JSX.Element | null {
+  const { t } = useTranslation();
+  if (!isFieldEnabled("designation")) return null;
+
+  const currentDefinition = designationOptions?.find(
+    (item) => item.id === teacherDraft.designationId,
+  );
+  const assignableRoles = currentDefinition?.assignableRoles ?? teacherDraft.designationAssignableRoles ?? [];
+  const activeOptions = (designationOptions ?? []).filter((item) => item.isActive || item.id === teacherDraft.designationId);
+
+  return (
+    <div className="space-y-4 text-start">
+      <SectionCard
+        title={t("faculty.form.tab.designation")}
+        icon={Award}
+        accentColor="primary"
+      >
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
+          <Field
+            label={t("faculty.field.designation")}
+            id="designationId"
+            required={isFieldRequired("designation")}
+            error={errors.designationId || errors.designation}
+          >
+            <FormSelect
+              id="designationId"
+              name="designationId"
+              value={teacherDraft.designationId || ""}
+              placeholder={t("faculty.designations.selectPlaceholder")}
+              disabled={Boolean(teacher?.id)}
+              onChange={(value) => {
+                const definition = designationOptions?.find((item) => item.id === value);
+                onDraftChange({
+                  designationId: value,
+                  designation: definition?.name ?? "",
+                  hierarchyRank: definition?.hierarchyRank,
+                  designationAssignableRoles: definition?.assignableRoles ?? [],
+                  ...(definition?.hierarchyRank === 1 ? { reportingFacultyId: null } : {}),
+                });
+              }}
+              options={activeOptions
+                .map((item) => ({ value: item.id, label: item.name }))}
+            />
+            {activeOptions.length === 0 ? (
+              <p role="status" className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
+                <Info className="size-3.5 shrink-0" aria-hidden />
+                {t("faculty.designations.empty")}
+              </p>
+            ) : null}
+            {teacher?.id ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("faculty.designations.manageInHistory")}
+              </p>
+            ) : !teacherDraft.designationId && teacherDraft.designation ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                {t("faculty.designations.current")}: {teacherDraft.designation}
+              </p>
+            ) : null}
+          </Field>
+
+          {!teacher?.id && (
+            <Field
+              label={t("faculty.designations.startsOn")}
+              id="designationStartsOn"
+              required
+              error={errors.designationStartsOn}
+            >
+              <DatePicker
+                id="designationStartsOn"
+                name="designationStartsOn"
+                value={teacherDraft.designationStartsOn || undefined}
+                onChange={(dateStr) => onDraftChange({ designationStartsOn: dateStr })}
+              />
+            </Field>
+          )}
+
+          {currentDefinition ? (
+            <div className="md:col-span-2 space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-3">
+              <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+                <Shield className="size-3.5 text-primary" aria-hidden />
+                <span>{t("faculty.designations.roles")}</span>
+              </div>
+              <div className="flex flex-wrap gap-1.5">
+                {assignableRoles.map((role) => (
+                  <Badge key={role} variant="secondary" className="text-xs font-normal">
+                    {role}
+                  </Badge>
+                ))}
+                {assignableRoles.length === 0 ? (
+                  <span className="text-xs text-muted-foreground">{t("faculty.designations.noAssignableRoles")}</span>
+                ) : null}
+              </div>
+            </div>
+          ) : null}
+        </div>
+      </SectionCard>
+    </div>
+  );
+}

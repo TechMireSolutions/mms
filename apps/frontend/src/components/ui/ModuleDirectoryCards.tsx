@@ -73,7 +73,7 @@ export function ModuleDirectoryCards<T>({
       {isVirtualized ? (
         <div
           ref={parentRef}
-          className="w-full max-h-[75vh] overflow-y-auto overflow-x-hidden pe-1"
+          className="w-full max-h-drawer overflow-y-auto overflow-x-hidden pe-1"
         >
           <div
             style={{

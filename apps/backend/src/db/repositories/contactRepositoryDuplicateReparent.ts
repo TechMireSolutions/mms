@@ -2,7 +2,7 @@ import { sql } from 'drizzle-orm';
 import {
   contactRelationships,
   students,
-  teachers,
+  faculty,
   tenantUsers,
   messageLogs,
 } from '../schema.js';
@@ -77,7 +77,7 @@ export async function reparentContactReferences(
     `);
 
     await tx.execute(sql`
-      UPDATE ${teachers}
+      UPDATE ${faculty}
       SET contact_id = ${keepId}
       WHERE workspace_subdomain = ${subdomain}
         AND contact_id = ${deleteId}

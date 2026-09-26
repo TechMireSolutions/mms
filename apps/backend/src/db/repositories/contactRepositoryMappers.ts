@@ -1,17 +1,6 @@
 import {
   hydrateContactRelationshipFields,
   type Contact,
-  type PhoneNumber,
-  type EmailAddress,
-  type Address,
-  type SocialLink,
-  type ContactEducation,
-  type ContactExperience,
-  type ContactSkill,
-  type ContactBankDetail,
-  type RelationshipContact,
-  type ContactActivity,
-  type ContactAttachment,
 } from '@mms/shared';
 import {
   type contacts,
@@ -29,6 +18,19 @@ import {
   type contactBankDetails,
 } from '../schema.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
+import {
+  mapChildPhones,
+  mapChildEmails,
+  mapChildAddresses,
+  mapChildSocials,
+  mapChildEducations,
+  mapChildExperiences,
+  mapChildSkills,
+  mapChildRelationships,
+  mapChildActivities,
+  mapChildAttachments,
+  mapChildBankDetails,
+} from './contactChildRowMappers.js';
 
 type ContactRow = typeof contacts.$inferSelect;
 type PhoneRow = typeof contactPhones.$inferSelect;
@@ -59,130 +61,6 @@ export function contactRowToRecord(
   attachments: AttachmentRow[] = [],
   bankDetails: BankDetailRow[] = [],
 ): Contact {
-  const mappedPhones: PhoneNumber[] = phones.map((p) => {
-    const phone: PhoneNumber = {
-      label: p.label || 'Main',
-      number: p.number,
-      isPrimary: p.isPrimary,
-    };
-    if (p.countryCode) phone.countryCode = p.countryCode;
-    if (p.whatsappStatus) phone.whatsappStatus = p.whatsappStatus as PhoneNumber['whatsappStatus'];
-    return phone;
-  });
-
-  const mappedEmails: EmailAddress[] = emails.map((e) => ({
-    label: e.label || 'Primary',
-    address: e.address,
-    isPrimary: e.isPrimary,
-    isVerified: e.isVerified,
-  }));
-
-  const mappedAddresses: Address[] = addresses.map((a) => {
-    const addr: Address = {
-      isPrimary: a.isPrimary,
-    };
-    if (a.label) addr.label = a.label;
-    if (a.line1) addr.line1 = a.line1;
-    if (a.city) addr.city = a.city;
-    if (a.state) addr.state = a.state;
-    if (a.country) addr.country = a.country;
-    return addr;
-  });
-
-  const mappedSocials: SocialLink[] = socials.map((s) => ({
-    platform: s.platform,
-    url: s.url,
-  }));
-
-  const mappedEducations: ContactEducation[] = educations.map((edu) => {
-    const item: ContactEducation = {
-      id: edu.id,
-      institution: edu.institution,
-      sortOrder: edu.sortOrder,
-    };
-    if (edu.degree) item.degree = edu.degree;
-    if (edu.fieldOfStudy) item.fieldOfStudy = edu.fieldOfStudy;
-    if (edu.year) item.year = edu.year;
-    if (edu.grade) item.grade = edu.grade;
-    if (edu.label) item.label = edu.label;
-    return item;
-  });
-
-  const mappedExperiences: ContactExperience[] = experiences.map((exp) => {
-    const item: ContactExperience = {
-      id: exp.id,
-      title: exp.title,
-      organization: exp.organization,
-      isCurrent: exp.isCurrent,
-      sortOrder: exp.sortOrder,
-    };
-    if (exp.employmentType) item.employmentType = exp.employmentType;
-    if (exp.location) item.location = exp.location;
-    if (exp.startDate) item.startDate = exp.startDate;
-    if (exp.endDate) item.endDate = exp.endDate;
-    if (exp.description) item.description = exp.description;
-    return item;
-  });
-
-  const mappedSkills: ContactSkill[] = skills.map((s) => {
-    const item: ContactSkill = {
-      id: s.id,
-      name: s.name,
-      isCertified: s.isCertified,
-      sortOrder: s.sortOrder,
-    };
-    if (s.category) item.category = s.category;
-    if (s.proficiency) item.proficiency = s.proficiency;
-    if (s.yearsOfExperience) item.yearsOfExperience = s.yearsOfExperience;
-    if (s.issuer) item.issuer = s.issuer;
-    if (s.description) item.description = s.description;
-    return item;
-  });
-
-  const mappedRelationships: RelationshipContact[] = relationships.map((r) => {
-    const item: RelationshipContact = {
-      inferred: r.inferred,
-      inferenceDepth: r.inferenceDepth,
-    };
-    if (r.name) item.name = r.name;
-    if (r.relationship) item.relationship = r.relationship;
-    if (r.phone) item.phone = r.phone;
-    if (r.relatedContactId) item.contactId = r.relatedContactId;
-    if (r.inferredFromContactId) item.inferredFromContactId = r.inferredFromContactId;
-    return item;
-  });
-
-  const mappedActivities: ContactActivity[] = activities.map((act) => {
-    const item: ContactActivity = {
-      id: act.id,
-      type: act.type as ContactActivity['type'],
-      content: act.content,
-      date: act.date,
-    };
-    if (act.by) item.by = act.by;
-    return item;
-  });
-
-  const mappedAttachments: ContactAttachment[] = attachments.map((att) => ({
-    id: att.id,
-    name: att.name,
-    type: att.type,
-    size: att.size,
-    url: att.url,
-    date: att.date,
-  }));
-
-  const mappedBankDetails: ContactBankDetail[] = bankDetails.map((b) => {
-    const item: ContactBankDetail = {
-      id: b.id,
-      bankName: b.bankName,
-      accountTitle: b.accountTitle,
-      accountNumber: b.accountNumber,
-      sortOrder: b.sortOrder,
-    };
-    return item;
-  });
-
   const contact: Contact = {
     id: row.id,
     firstName: row.firstName,
@@ -191,17 +69,17 @@ export function contactRowToRecord(
     tags: tagsRows.map((t) => t.name),
     tag: tagsRows.map((t) => t.name).join(', '),
     whatsappStatus: (row.whatsappStatus as Contact['whatsappStatus']) ?? 'unknown',
-    phones: mappedPhones,
-    emails: mappedEmails,
-    addresses: mappedAddresses,
-    socials: mappedSocials,
-    education: mappedEducations,
-    experience: mappedExperiences,
-    skills: mappedSkills,
-    bankDetails: mappedBankDetails,
-    relationshipContacts: mappedRelationships,
-    activities: mappedActivities,
-    attachments: mappedAttachments,
+    phones: mapChildPhones(phones),
+    emails: mapChildEmails(emails),
+    addresses: mapChildAddresses(addresses),
+    socials: mapChildSocials(socials),
+    education: mapChildEducations(educations),
+    experience: mapChildExperiences(experiences),
+    skills: mapChildSkills(skills),
+    bankDetails: mapChildBankDetails(bankDetails),
+    relationshipContacts: mapChildRelationships(relationships),
+    activities: mapChildActivities(activities),
+    attachments: mapChildAttachments(attachments),
     ...mapAuditTimestamps(row),
   };
 
@@ -211,7 +89,9 @@ export function contactRowToRecord(
   if (row.cnic) contact.cnic = row.cnic;
   if (row.avatar) contact.avatar = row.avatar;
   if (row.notes) contact.notes = row.notes;
-  if (row.lastCheckedAt) contact.lastCheckedAt = row.lastCheckedAt instanceof Date ? row.lastCheckedAt.toISOString() : String(row.lastCheckedAt);
+  if (row.lastCheckedAt) {
+    contact.lastCheckedAt = row.lastCheckedAt instanceof Date ? row.lastCheckedAt.toISOString() : String(row.lastCheckedAt);
+  }
   if (row.aiSummary) contact.aiSummary = row.aiSummary;
 
   return hydrateContactRelationshipFields(contact);

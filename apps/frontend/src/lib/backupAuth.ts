@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/apiClient';
+import { AUTH_PATHS } from '@/lib/apiClientHelpers';
 
 /** Confirms the signed-in admin's password before encrypting or restoring a backup. */
 export async function verifyAdminBackupPassword(
@@ -6,7 +7,7 @@ export async function verifyAdminBackupPassword(
   password: string,
 ): Promise<{ ok: true } | { ok: false; errorKey: 'backup.invalidAdminPassword' | 'backup.serverForbidden' | 'backup.serverFetchFailed' }> {
   try {
-    const response = await apiFetch('/api/auth/verify-password', {
+    const response = await apiFetch(AUTH_PATHS.verifyPassword, {
       method: 'POST',
       body: JSON.stringify({ password, email: email.trim().toLowerCase() }),
     });

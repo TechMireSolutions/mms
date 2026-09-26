@@ -21,6 +21,7 @@ interface JournalEntriesSimpleModeProps {
   modeTabs: Array<{ key: JournalMode; label: string }>;
   journalSubTabs: Array<{ key: JournalSubTab; label: string }>;
   entries: JournalEntry[];
+  allEntries?: JournalEntry[];
   accounts: Account[];
   fiscalYears: FiscalYear[];
   canWrite: boolean;
@@ -39,6 +40,7 @@ interface JournalEntriesSimpleModeProps {
   onExportCsv: () => void;
   onSave: (entry: JournalEntry) => void | Promise<void>;
   onCloseSimpleModal: () => void;
+  pageScopeLabel: string;
 }
 
 export function JournalEntriesSimpleMode({
@@ -47,6 +49,7 @@ export function JournalEntriesSimpleMode({
   modeTabs,
   journalSubTabs,
   entries,
+  allEntries,
   accounts,
   fiscalYears,
   canWrite,
@@ -61,6 +64,7 @@ export function JournalEntriesSimpleMode({
   onExportCsv,
   onSave,
   onCloseSimpleModal,
+  pageScopeLabel,
 }: JournalEntriesSimpleModeProps) {
   const { t } = useTranslation();
   const specializedType = simpleModal?.prefillType && SPECIALIZED_ENTRY_TYPES.has(simpleModal.prefillType.id)
@@ -87,7 +91,7 @@ export function JournalEntriesSimpleMode({
       />
 
       {tab === "cashbook" ? (
-        <CashbookView entries={entries} accounts={accounts} />
+        <CashbookView entries={entries} accounts={accounts} pageScopeLabel={pageScopeLabel} />
       ) : (
         <JournalQuickActionsPanel
           entries={entries}
@@ -98,6 +102,7 @@ export function JournalEntriesSimpleMode({
           onNlChange={onNlChange}
           onOpenPrefill={onOpenPrefill}
           onExportCsv={onExportCsv}
+          pageScopeLabel={pageScopeLabel}
         />
       )}
 
@@ -105,7 +110,7 @@ export function JournalEntriesSimpleMode({
         <SimpleTransactionWizard
           open={simpleModal !== null && specializedType === null}
           accounts={accounts}
-          entries={entries}
+          entries={(allEntries && allEntries.length > 0) ? allEntries : entries}
           fiscalYears={fiscalYears}
           prefillType={simpleModal?.prefillType}
           prefillAmount={simpleModal?.initialAmount}

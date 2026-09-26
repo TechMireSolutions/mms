@@ -1,8 +1,8 @@
 import { Briefcase, ChevronDown, IdCard, Users } from 'lucide-react';
 import {
+  FACULTY_MODULE_MANIFEST,
   TEACHERS_MODULE_MANIFEST,
   type Faculty,
-  type Teacher,
 } from '@mms/shared';
 import { ModuleUniversalBulkActionBar } from '@/components/ui/ModuleUniversalBulkActionBar';
 import { Button } from '@/components/ui/button';
@@ -65,14 +65,14 @@ export function FacultyBulkActionBar({
   onClearSelection,
   canExport = false,
   onBulkExport,
-  bulkActions = TEACHERS_MODULE_MANIFEST.work.bulkActions,
+  bulkActions = FACULTY_MODULE_MANIFEST.work.bulkActions ?? TEACHERS_MODULE_MANIFEST.work.bulkActions,
   statusPending = false,
   specializationPending = false,
 }: TeachersBulkActionBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
-    <ModuleUniversalBulkActionBar<Teacher>
+    <ModuleUniversalBulkActionBar<Faculty>
       selectedCount={selectedIds.length}
       viewingDeleted={showDeleted}
       canWrite={canWrite}
@@ -80,7 +80,7 @@ export function FacultyBulkActionBar({
       canExport={canExport}
       canWriteMessaging={canWriteMessaging}
       leadingIcon={Users}
-      i18nNamespace="teachers"
+      i18nNamespace="faculty"
       bulkActions={bulkActions}
       onClearSelection={onClearSelection}
       onRequestBulkDelete={onRequestBulkDelete}
@@ -111,7 +111,7 @@ export function FacultyBulkActionBar({
                       className="min-h-11 gap-1.5 px-3 font-medium text-xs border-border/60 hover:bg-muted/80"
                     >
                       <Briefcase className="w-3.5 h-3.5" aria-hidden />
-                      <span>{t('teachers.bulkSpecialization')}</span>
+                      <span>{t('faculty.bulkSpecialization') || t('teachers.bulkSpecialization')}</span>
                       <ChevronDown className="w-3 h-3 text-muted-foreground" aria-hidden />
                     </Button>
                   </DropdownMenuTrigger>
@@ -137,7 +137,7 @@ export function FacultyBulkActionBar({
                 className="min-h-11 gap-1.5 px-3 font-medium text-xs border-border/60 hover:bg-muted/80"
               >
                 <IdCard className="w-3.5 h-3.5" aria-hidden />
-                <span>{t('teachers.idCard.print')}</span>
+                <span>{t('faculty.idCard.print') || t('teachers.idCard.print')}</span>
               </Button>
             )}
           </div>

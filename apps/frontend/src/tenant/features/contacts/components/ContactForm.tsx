@@ -1,16 +1,21 @@
 import type React from "react";
-import { useState, useMemo, useEffect, useCallback, type ComponentType } from "react";
-import { User, Phone, Mail, MapPin, Share2, GraduationCap, Briefcase, Award, Heart, FolderKanban, Landmark } from "lucide-react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { User } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
-import { type Contact, DEFAULT_FORM_TABS } from "@mms/shared";
+import type { Contact } from "@mms/shared";
 import { getScopedBrandingSettings } from "@/lib/settingsPreviewStore";
 import { useContactFormDraft } from "@/tenant/features/contacts/hooks/useContactFormDraft";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { ContactFormTabContent } from "@/tenant/features/contacts/components/ContactFormTabContent";
 import { ContactFormFooterStart } from "@/tenant/features/contacts/components/ContactFormFooterStart";
+import {
+  computeContactTabErrorCounts,
+  buildContactFormVisibleTabs,
+  buildContactValidationErrorSummary,
+} from "@/tenant/features/contacts/components/contactFormTabUtils";
 
 export interface ContactFormProps {
   open?: boolean;
@@ -27,25 +32,6 @@ export interface ContactFormProps {
   priority?: boolean;
 }
 
-/**
- * Icon map for the system form tabs. The tab definitions (key, labelKey,
- * order) come from the shared `DEFAULT_FORM_TABS` SSOT in `@mms/shared`
- * (`contactTabRegistry.ts`); only the Lucide icon components are local because
- * Lucide React icons are a frontend concern.
- */
-const SYSTEM_TAB_ICONS: Record<string, ComponentType> = {
-  basic: User,
-  phones: Phone,
-  emails: Mail,
-  addresses: MapPin,
-  social: Share2,
-  socials: Share2,
-  education: GraduationCap,
-  experience: Briefcase,
-  skills: Award,
-  relationship: Heart,
-  bankDetails: Landmark,
-};
 export function ContactForm({
   open = true,
   contact,
@@ -96,68 +82,31 @@ export function ContactForm({
     onClose();
   }, [draft.isDirty, onClose]);
 
-  const tabErrorCounts = useMemo(() => {
-    const counts: Record<string, number> = {};
-    if (!draft.validationErrors || draft.validationErrors.length === 0) return counts;
-    for (const err of draft.validationErrors) {
-      const tabId = err.tabId || "basic";
-      counts[tabId] = (counts[tabId] || 0) + 1;
-    }
-    return counts;
-  }, [draft.validationErrors]);
+  const tabErrorCounts = useMemo(
+    () => computeContactTabErrorCounts(draft.validationErrors),
+    [draft.validationErrors],
+  );
 
-  const visibleTabs = useMemo(() => {
-    const countMap: Record<string, number> = {
-      phones: draft.collectionCounts.filledPhones,
-      emails: draft.collectionCounts.filledEmails,
-      addresses: draft.collectionCounts.filledAddresses,
-      social: draft.collectionCounts.filledSocials,
-      socials: draft.collectionCounts.filledSocials,
-      education: draft.collectionCounts.filledEducation,
-      experience: draft.collectionCounts.filledExperience,
-      skills: draft.collectionCounts.filledSkills,
-      relationship: draft.collectionCounts.filledRelationships,
-      bankDetails: draft.collectionCounts.filledBankDetails,
-    };
-
-    // System tabs from shared SSOT (DEFAULT_FORM_TABS) filtered by enabledTabIds (with basic locked on)
-    return DEFAULT_FORM_TABS
-      .filter((sys) => enabledTabIds.has(sys.key))
-      .map((sys) => {
-        const count = countMap[sys.key];
-        const errorCount = tabErrorCounts[sys.key];
-        const hasErrors = Boolean(errorCount && errorCount > 0);
-        const label = sys.labelKey ? t(sys.labelKey) : (sys.label || sys.key);
-        return {
-          key: sys.key,
-          icon: SYSTEM_TAB_ICONS[sys.key] ?? FolderKanban,
-          label,
-          badge: hasErrors ? errorCount : count && count > 0 ? count : undefined,
-          tone: hasErrors ? ("destructive" as const) : undefined,
-        };
-      });
-  }, [draft.collectionCounts, tabErrorCounts, enabledTabIds, t]);
+  const visibleTabs = useMemo(
+    () =>
+      buildContactFormVisibleTabs({
+        enabledTabIds,
+        collectionCounts: draft.collectionCounts,
+        tabErrorCounts,
+        t,
+      }),
+    [draft.collectionCounts, tabErrorCounts, enabledTabIds, t],
+  );
 
   // Synchronously guard active tab — avoids the post-render useEffect extra paint
   const activeTab = visibleTabs.some((tabItem) => tabItem.key === tab)
     ? tab
     : (visibleTabs[0]?.key ?? "basic");
 
-  const validationErrorSummary = useMemo(() => {
-    if (draft.lookupsError) return t("contacts.form.lookupsLoadFailed");
-    if (!draft.validationErrors || draft.validationErrors.length === 0) return undefined;
-    const seen = new Set<string>();
-    const messages: string[] = [];
-    for (const err of draft.validationErrors) {
-      if (!err.message) continue;
-      // Dedup by fieldId+message so two different fields with identical text both surface
-      const key = `${err.fieldId ?? ""}|${err.message}`;
-      if (seen.has(key)) continue;
-      seen.add(key);
-      messages.push(err.message);
-    }
-    return messages.length > 0 ? messages : undefined;
-  }, [draft.lookupsError, draft.validationErrors, t]);
+  const validationErrorSummary = useMemo(
+    () => buildContactValidationErrorSummary(Boolean(draft.lookupsError), draft.validationErrors, t),
+    [draft.lookupsError, draft.validationErrors, t],
+  );
 
   return (
     <>

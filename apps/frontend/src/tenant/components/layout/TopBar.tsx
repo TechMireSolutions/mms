@@ -24,8 +24,7 @@ export default function TopBar({ sidebarCollapsed, onOpenCommandPalette }: TopBa
   })();
 
   return (
-    <header
-      role="banner"
+    <div
       className={cn(
         "fixed top-0 end-0 z-header flex h-16 items-center gap-4 border-b border-border bg-card/80 px-4 backdrop-blur-xl transition-all duration-300 sm:px-6",
         sidebarCollapsed ? "start-sidebar-collapsed" : "start-sidebar",
@@ -52,6 +51,6 @@ export default function TopBar({ sidebarCollapsed, onOpenCommandPalette }: TopBa
       </div>
 
       <TopBarActions className="ms-auto" />
-    </header>
+    </div>
   );
 }

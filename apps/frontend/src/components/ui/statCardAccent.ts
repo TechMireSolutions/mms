@@ -17,8 +17,8 @@ export type AccentColor = CardAccentColor | string;
 export const ACCENT_MAP: Record<string, AccentConfig> = {
   primary: {
     stripe: getCardStripeClass("primary"),
-    iconBg: "bg-primary/10",
-    iconText: "text-primary",
+    iconBg: SEMANTIC_BG.primary,
+    iconText: SEMANTIC_TEXT.primary,
     ring: "ring-primary/20",
   },
   success: {
@@ -47,14 +47,14 @@ export const ACCENT_MAP: Record<string, AccentConfig> = {
   },
   secondary: {
     stripe: getCardStripeClass("secondary"),
-    iconBg: "bg-secondary/10",
+    iconBg: SEMANTIC_BG.secondary,
     iconText: SEMANTIC_TEXT.secondary,
     ring: "ring-secondary/20",
   },
   muted: {
     stripe: getCardStripeClass("muted"),
-    iconBg: "bg-muted",
-    iconText: "text-muted-foreground",
+    iconBg: SEMANTIC_BG.mutedSolid,
+    iconText: SEMANTIC_TEXT.muted,
     ring: "ring-muted/20",
   },
 };

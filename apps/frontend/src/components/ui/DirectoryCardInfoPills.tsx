@@ -101,7 +101,7 @@ export const DirectoryCardInfoPills = (function DirectoryCardInfoPills({
   if (!showPhones && !showEmails) return null;
 
   return (
-    <div className="space-y-2 py-0.5 ms-1">
+    <div className="space-y-2 py-0.5">
       {showPhones
         ? effectivePhones.map((p, idx) => (
             <ContactPhoneAction

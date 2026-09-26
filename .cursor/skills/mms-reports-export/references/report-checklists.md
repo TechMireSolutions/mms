@@ -20,7 +20,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Print: isAnimationActive={false} on charts for @media print
 - [ ] ExportToolbar uses columns+rows API (not deprecated data+headers)
 - [ ] Export filename includes module + date range + timestamp
-- [ ] Formula injection escaped in Excel/CSV cells
+- [ ] Formula injection escaped in untrusted text cells; negative numeric values preserved
 - [ ] PII exports logged to audit log
 - [ ] Tamper-evident compliance exports embed chain hash + Merkle root proof
 - [ ] Accessing audit logs emits 'VIEW' audit entry (Auditing the Auditor)
@@ -28,7 +28,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Permissions match Work boundary (can(), field visibility, soft-delete policy: reportsIncludeDeleted / exportsIncludeDeleted from manifest; Export CTA hidden in trash mode)
 - [ ] a11y: aria-label, table caption, keyboard drill-down, aria-busy on export
 - [ ] All strings via t(); numbers via formatNumber(); dates via formatDate()
-- [ ] Filter state URL-serializable; date ranges UTC-normalized
+- [ ] Filter state URL-serializable; date ranges interpreted using the domain date/time contract
 - [ ] Tier shell: ModuleTierMotion space-y-4, no inner wrapper divs
 ```
 
@@ -36,7 +36,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 
 ```
 - [ ] <section aria-label={t('module.reports.aria')}> on report root
-- [ ] aria-hidden="true" on chart containers (table is the accessible alternative)
+- [ ] Hide decorative charts only when an equivalent accessible alternative exists; no focusable descendants inside aria-hidden
 - [ ] <table> has <caption> or aria-labelledby pointing to section heading
 - [ ] Interactive chart bars/segments: tabIndex={0} + onKeyDown Enter/Space drill-down
 - [ ] KPI delta badges: aria-label="Up 12% vs last month" (not just colored icon)
@@ -47,7 +47,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 
 ```
 - [ ] Date range defaults to current academic session (or current month for finance)
-- [ ] Date strings normalized to UTC midnight before querying
+- [ ] Date-only values preserved as calendar dates; timestamp ranges use explicit timezone and inclusive/exclusive bounds
 - [ ] Free-text debounced 300ms
 - [ ] Filter state URL-serializable (bookmarkable)
 - [ ] Clearing a filter resets to module default, not unbounded "all time"
@@ -59,7 +59,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 ```
 - [ ] All chart labels, tooltips, legends via t()
 - [ ] Numbers via formatNumber() from @mms/shared
-- [ ] Currency via formatCurrency()
+- [ ] Currency via the settings-aware formatMoney helper
 - [ ] Month/date labels via formatMonthName() / formatDate() from @mms/shared
 - [ ] Export column headers via t() — same keys as table column headers
 ```

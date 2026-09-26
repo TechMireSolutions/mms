@@ -45,7 +45,7 @@ export function WorkspaceIdentityCell({
           </a>
         </div>
         {workspace.tagline ? (
-          <p className="text-xs font-medium text-muted-foreground/75 truncate">
+          <p className="text-xs font-medium text-muted-foreground truncate">
             {workspace.tagline}
           </p>
         ) : null}
@@ -55,7 +55,7 @@ export function WorkspaceIdentityCell({
             className="inline-flex items-center gap-1 rounded-md bg-muted/60 px-2 py-0.5 border border-border/50 font-mono text-2xs"
           >
             <span className="font-bold text-primary">{workspace.subdomain}</span>
-            <span className="text-muted-foreground/70">.{appDomain}</span>
+            <span className="text-muted-foreground">.{appDomain}</span>
           </div>
           <CopyBtn
             text={tenantLink}

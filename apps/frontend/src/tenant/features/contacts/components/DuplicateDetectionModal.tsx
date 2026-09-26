@@ -1,15 +1,14 @@
-import { AlertTriangle, Check, Search } from "lucide-react";
+import { AlertTriangle, Check } from "lucide-react";
 import type { ContactPreferences } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Modal } from "@/components/ui/Modal";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { WarningCallout } from "@/components/ui/WarningCallout";
-import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
-import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
 import { DuplicatePairCard } from "@/tenant/features/contacts/components/DuplicatePairCard";
+import { DuplicateDetectionToolbar } from "@/tenant/features/contacts/components/DuplicateDetectionToolbar";
 import type { DuplicatePair } from "@/tenant/features/contacts/components/duplicateDetectionTypes";
 import type { DuplicateTierFilter } from "@/tenant/features/contacts/hooks/useDuplicateDetectionState";
 
@@ -106,48 +105,14 @@ export function DuplicateDetectionModal({
           />
         )}
 
-        {/* Filter Toolbar: Search & Confidence Tier Tabs */}
-        <div className="space-y-2.5 pb-1">
-          <LeadingIconInput
-            icon={Search}
-            type="search"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder={t("contacts.duplicates.searchPlaceholder")}
-            aria-label={t("contacts.duplicates.searchPlaceholder")}
-          />
-
-          <div className="flex flex-wrap gap-2 border-b border-border/60 pb-2.5">
-            {filterTabs.map((tab) => {
-              const active = tierFilter === tab.id;
-              return (
-                <Button
-                  key={tab.id}
-                  type="button"
-                  variant={active ? "default" : "secondary"}
-                  aria-pressed={active}
-                  onClick={() => setTierFilter(tab.id)}
-                  className={`min-h-11 rounded-xl px-3.5 py-2 text-xs font-semibold gap-1.5 shadow-none ${
-                    active
-                      ? "bg-primary text-primary-foreground shadow-xs"
-                      : "bg-muted/50 text-muted-foreground hover:bg-muted hover:text-foreground"
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <Badge
-                    pill
-                    variant="outline"
-                    className={`px-1.5 py-0 text-xs font-bold ${
-                      active ? "bg-primary-foreground/20 text-primary-foreground border-transparent" : "border-border/60"
-                    }`}
-                  >
-                    {tab.count}
-                  </Badge>
-                </Button>
-              );
-            })}
-          </div>
-        </div>
+        <DuplicateDetectionToolbar
+          searchQuery={searchQuery}
+          onSearchChange={setSearchQuery}
+          tierFilter={tierFilter}
+          onTierFilterChange={setTierFilter}
+          filterTabs={filterTabs}
+          searchPlaceholder={t("contacts.duplicates.searchPlaceholder")}
+        />
 
         {pairsError ? (
           <ErrorState

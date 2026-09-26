@@ -44,7 +44,7 @@ export function formatTeacherCustomFieldValue(
   field: TeacherCustomFieldDisplay,
   t: TranslationFunction,
 ): string | undefined {
-  const fieldValue = (teacher as unknown as Record<string, unknown>)[field.id];
+  const fieldValue = (teacher as Record<string, unknown>)[field.id];
   return formatTeacherFieldCellValue(fieldValue, {
     fieldType: field.type,
     booleanLabels: { yes: t("common.yes"), no: t("common.no") },
@@ -123,7 +123,19 @@ export function resolveTeacherFieldDisplayText(
     return teacher.department || missing();
   }
   if (fieldKey === "designation") {
-    return teacher.designation || missing();
+    // Prefer the server-projected current designation name (from assignment join),
+    // falling back to the legacy static designation string.
+    const dynamic = (teacher as Record<string, unknown>).designationName;
+    return (typeof dynamic === 'string' && dynamic) ? dynamic : teacher.designation || missing();
+  }
+  if (fieldKey === "reportingFacultyId" || fieldKey === "reportingFacultyName") {
+    return teacher.reportingFacultyName || missing();
+  }
+  if (fieldKey === "hierarchyRank") {
+    return teacher.hierarchyRank != null ? String(teacher.hierarchyRank) : missing();
+  }
+  if (fieldKey === "subordinateCount") {
+    return teacher.subordinateCount != null ? String(teacher.subordinateCount) : missing();
   }
   if (fieldKey === "notes") {
     return teacher.notes || missing();

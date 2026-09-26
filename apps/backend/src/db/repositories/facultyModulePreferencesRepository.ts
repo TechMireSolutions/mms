@@ -1,8 +1,8 @@
-import { teacherModulePreferences } from '../schema.js';
+import { facultyModulePreferences } from '../schema.js';
 import { createWorkspaceSingletonJsonRepo } from './moduleSetupRepoFactories.js';
 
 const repo = createWorkspaceSingletonJsonRepo({
-  table: teacherModulePreferences,
+  table: facultyModulePreferences,
   jsonColumn: 'preferences',
 });
 
@@ -11,7 +11,3 @@ export const upsertFacultyModulePreferences = repo.upsert;
 export const listAllFacultyModulePreferencesByWorkspace = repo.listAllByWorkspace;
 export const replaceFacultyModulePreferencesForWorkspace = repo.replaceForWorkspace;
 
-export const getTeacherModulePreferencesByWorkspace = getFacultyModulePreferencesByWorkspace;
-export const upsertTeacherModulePreferences = upsertFacultyModulePreferences;
-export const listAllTeacherModulePreferencesByWorkspace = listAllFacultyModulePreferencesByWorkspace;
-export const replaceTeacherModulePreferencesForWorkspace = replaceFacultyModulePreferencesForWorkspace;

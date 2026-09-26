@@ -111,7 +111,7 @@ export function TemplateEditorToolbar<TPayload = Record<string, unknown>>({
   t,
 }: TemplateEditorToolbarProps<TPayload>): React.JSX.Element {
   return (
-    <header className="flex items-center border-b border-border bg-card/95 backdrop-blur-sm flex-shrink-0 min-h-[60px] print:hidden relative">
+    <header className="flex items-center border-b border-border bg-card/95 backdrop-blur-sm flex-shrink-0 min-h-16 print:hidden relative">
       {/*
        * Scrollable region: all controls left of the spacer.
        * The right-edge fade mask signals there are more controls to the right

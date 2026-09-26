@@ -6,6 +6,7 @@ import {
   useId,
   type ChangeEvent,
   type RefObject,
+  useMemo,
 } from "react";
 import {
   type Contact,
@@ -60,10 +61,10 @@ export function useContactPickerState({
   const avatarInputId = `${resolvedId}-avatar`;
   const menuStyle = useAnchorMenuStyle(open, anchorRef);
 
-  const normalizedExcludeIds = (() =>
+  const normalizedExcludeIds = useMemo(() =>
       excludeIds
         .filter((excludeId): excludeId is string | number => excludeId != null && String(excludeId).length > 0)
-        .map(String))();
+        .map(String), [excludeIds.join(",")]);
 
   const debouncedQuery = useDebounce(query, 250);
   const { data: searchPage, isFetching: isSearching } = useContactsContractList({

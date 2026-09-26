@@ -138,8 +138,8 @@ export function StudentResultCard({
         </div>
 
         {/* Exam info */}
-        <Card accentColor="primary" className="p-4 space-y-2 text-sm text-muted-foreground" aria-label={t("examinations.resultCard.examDetailsAria")}>
-          <div className={cn("space-y-2", CARD_STRIPE_INSET)}>
+        <Card accentColor="primary" className={cn("p-4 space-y-2 text-sm text-muted-foreground", CARD_STRIPE_INSET)} aria-label={t("examinations.resultCard.examDetailsAria")}>
+          <div className="space-y-2">
             <div className="flex justify-between">
               <span>{t("examinations.resultCard.exam")}</span>
               <span className="font-semibold text-foreground">{exam.name}</span>

@@ -1,4 +1,4 @@
-import React, { type JSX, type ReactNode } from 'react';
+import React, { useMemo, type JSX, type ReactNode } from 'react';
 import {
   getDisplayName,
   getPrimaryEmail,
@@ -6,10 +6,12 @@ import {
   type Contact,
 } from '@mms/shared';
 import { DirectoryCardHeader } from '@/components/ui/DirectoryCardHeader';
+import { DirectoryCardMetaGrid } from '@/components/ui/DirectoryCardMetaGrid';
+import { DirectoryCardMetaTile } from '@/components/ui/DirectoryCardMetaTile';
 import { ModuleDirectoryCards } from '@/components/ui/ModuleDirectoryCards';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
-import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useWorkCardAction } from '@/hooks/useWorkCardAction';
 import type { MessagingSelectedMap } from '@/tenant/features/messaging/components/messagingWorkPanelShared';
 import { MissingFieldBadge } from './messagingRecipientsShared';
 
@@ -27,6 +29,72 @@ export interface MessagingWorkRecipientsCardsProps {
   onToggleAllVisible: (checked: boolean) => void;
 }
 
+function MessagingRecipientCard({
+  contact,
+  selectedIds,
+  reducedMotion,
+  showPhoneCol,
+  showEmailCol,
+  onToggleRecipient,
+}: {
+  contact: Contact;
+  selectedIds: string[];
+  reducedMotion: boolean;
+  showPhoneCol: boolean;
+  showEmailCol: boolean;
+  onToggleRecipient: (contact: Contact) => void;
+}): JSX.Element {
+  const { t } = useTranslation();
+  const displayName = getDisplayName(contact);
+
+  const { isSelected, onSelect, cardProps } = useWorkCardAction({
+    entity: contact,
+    selectedIds,
+    onToggleSelected: () => onToggleRecipient(contact),
+    canSelect: true,
+  });
+
+  const phone = getPrimaryPhone(contact);
+  const email = getPrimaryEmail(contact);
+
+  return (
+    <DirectoryEntityCard isSelected={isSelected} reducedMotion={reducedMotion} {...cardProps}>
+      <DirectoryCardHeader
+        id={contact.id}
+        displayName={displayName}
+        avatar={contact.avatar}
+        isSelected={isSelected}
+        onSelect={onSelect}
+        selectAriaLabel={t('messaging.selectRecipient', { name: displayName })}
+        reducedMotion={reducedMotion}
+        showSelect={true}
+      />
+      {(showPhoneCol || showEmailCol) && (
+        <DirectoryCardMetaGrid>
+          {showPhoneCol && (
+            <DirectoryCardMetaTile label={t('contacts.form.primaryPhone')}>
+              {phone ? (
+                <span className="font-mono text-xs">{phone}</span>
+              ) : (
+                <MissingFieldBadge label={t('messaging.missingPhone')} />
+              )}
+            </DirectoryCardMetaTile>
+          )}
+          {showEmailCol && (
+            <DirectoryCardMetaTile label={t('contacts.form.primaryEmail')}>
+              {email ? (
+                <span className="text-xs">{email}</span>
+              ) : (
+                <MissingFieldBadge label={t('messaging.missingEmail')} />
+              )}
+            </DirectoryCardMetaTile>
+          )}
+        </DirectoryCardMetaGrid>
+      )}
+    </DirectoryEntityCard>
+  );
+}
+
 export function MessagingWorkRecipientsCards({
   contacts,
   selectedById,
@@ -42,10 +110,15 @@ export function MessagingWorkRecipientsCards({
 }: MessagingWorkRecipientsCardsProps): JSX.Element {
   const { t } = useTranslation();
 
+  const selectedIds = useMemo(
+    () => Object.keys(selectedById).filter((id) => selectedById[id]),
+    [selectedById],
+  );
+
   return (
     <ModuleDirectoryCards
       items={contacts}
-      selectedIds={Object.keys(selectedById).filter((id) => selectedById[id])}
+      selectedIds={selectedIds}
       onSelectAll={() => onToggleAllVisible(!allVisibleSelected)}
       allSelected={allVisibleSelected}
       someSelected={someVisibleSelected}
@@ -54,40 +127,17 @@ export function MessagingWorkRecipientsCards({
       selectedCountLabel={selectedCountLabel}
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="messaging-recipients-select-cards"
-      renderItem={(contact) => {
-        const isSelected = Boolean(selectedById[String(contact.id)]);
-        const displayName = getDisplayName(contact);
-        return (
-          <DirectoryEntityCard key={contact.id} isSelected={isSelected} reducedMotion={reducedMotion}>
-            <DirectoryCardHeader
-              id={contact.id}
-              displayName={displayName}
-              avatar={contact.avatar}
-              isSelected={isSelected}
-              onSelect={() => onToggleRecipient(contact)}
-              selectAriaLabel={t('messaging.selectRecipient', { name: displayName })}
-              reducedMotion={reducedMotion}
-              showSelect={true}
-            />
-            <StatGrid columns="sm2" className="ms-1">
-              {showPhoneCol && (
-                <StatRow
-                  label={t('contacts.form.primaryPhone')}
-                  value={getPrimaryPhone(contact) ?? <MissingFieldBadge label={t('messaging.missingPhone')} />}
-                  ddClassName="font-mono text-xs"
-                />
-              )}
-              {showEmailCol && (
-                <StatRow
-                  label={t('contacts.form.primaryEmail')}
-                  value={getPrimaryEmail(contact) ?? <MissingFieldBadge label={t('messaging.missingEmail')} />}
-                  ddClassName="text-xs"
-                />
-              )}
-            </StatGrid>
-          </DirectoryEntityCard>
-        );
-      }}
+      renderItem={(contact) => (
+        <MessagingRecipientCard
+          key={contact.id}
+          contact={contact}
+          selectedIds={selectedIds}
+          reducedMotion={reducedMotion}
+          showPhoneCol={showPhoneCol}
+          showEmailCol={showEmailCol}
+          onToggleRecipient={onToggleRecipient}
+        />
+      )}
     />
   );
 }

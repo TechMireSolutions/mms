@@ -27,8 +27,11 @@ const setupConfigHooks = createModuleSetupConfigHooks<ExaminationsModulePreferen
 export const useExaminationPreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useExaminationPreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
+import { useMemo } from 'react';
+
 /** Composed ExaminationsSettings from preferences queries. */
 export function useComposedExaminationsSettings(): ExaminationsSettings {
   const prefsQuery = useExaminationPreferencesQuery();
-  return (prefsQuery.data ?? normalizeExaminationsModulePreferences(null)) as unknown as ExaminationsSettings;
+  const fallback = useMemo(() => normalizeExaminationsModulePreferences(null), []);
+  return (prefsQuery.data ?? fallback) as unknown as ExaminationsSettings;
 }

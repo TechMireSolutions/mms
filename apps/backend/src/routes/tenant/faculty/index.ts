@@ -5,3 +5,4 @@ export * from './facultyExportRoutes.js';
 export * from './facultyLookupRoutes.js';
 export * from './facultySetupConfigRoutes.js';
 export * from './facultySoftDeleteRoutes.js';
+export * from './facultyDesignationRouteHandlers.js';

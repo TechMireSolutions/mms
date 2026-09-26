@@ -9,7 +9,7 @@ metadata:
 
 # MMS Vulnerability Response
 
-**Rule (norms SSOT):** `mms-dependencies.md` (version/override policy, banned packages) · `mms-performance.md` (banned client deps) · `mms-backend-security.md` (application-level controls).
+**Rule (norms SSOT):** `mms-dependencies.md` (version/override policy, banned packages) · `mms-performance.md` (banned client deps) · `mms-auth-security.md` (application-level controls). Auth audit workflow → `mms-backend-security`.
 
 ## Severity decides the response
 

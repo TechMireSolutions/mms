@@ -4,7 +4,7 @@ import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { FieldGroupCard } from "./ContactDetailShared";
 import { ContactDetailCollections } from "./ContactDetailCollections";
 import { ContactDetailNetwork } from "./ContactDetailNetwork";
-import { ContactDetailOverviewHero } from "./ContactDetailOverviewHero";
+import { ContactDetailHeroCard } from "./ContactDetailHeroCard";
 import { ContactDetailOverviewQuickActions } from "./ContactDetailOverviewQuickActions";
 
 const ACCENT_COLORS = [
@@ -90,7 +90,7 @@ export function ContactDetailOverview({
 
   return (
     <>
-      <ContactDetailOverviewHero contact={contact} />
+      <ContactDetailHeroCard contact={contact} />
 
       {showQuickActions ? (
         <ContactDetailOverviewQuickActions

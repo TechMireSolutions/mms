@@ -32,7 +32,7 @@ export function buildSessionCapacityData(sessions: Session[]): SessionCapacityIt
   for (const session of sessions) {
     for (const cls of session.classes || []) {
       const enrolled = cls.enrolled ?? 0;
-      const capacity = cls.maxStudents ?? (cls as any).capacity ?? 0;
+      const capacity = cls.maxStudents ?? (cls as { capacity?: number }).capacity ?? 0;
       const rate = capacity > 0 ? Math.round((enrolled / capacity) * 100) : 0;
 
       result.push({

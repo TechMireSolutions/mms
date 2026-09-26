@@ -25,6 +25,12 @@ import {
   platformErrorDtoSchema as platformErrorSchema,
 } from '../schemas/platform.dto.js';
 import {
+  loginBodySchema,
+  challengeCodeBodySchema,
+  challengeIdBodySchema,
+  platformLoginResponseSchema,
+} from '../schemas/auth.dto.js';
+import {
   platformSettingsUpdateSchema,
   migrateAndRestartSchema,
 } from '../platformSettingsTypes.js';
@@ -251,6 +257,37 @@ export const platformAdminsContract = c.router(platformAdminsRoutes);
 
 export const platformContract = c.router({
   // Auth
+  login: {
+    method: 'POST',
+    path: '/api/platform/auth/login',
+    body: loginBodySchema,
+    responses: {
+      200: platformLoginResponseSchema,
+      401: platformErrorSchema,
+      503: platformErrorSchema,
+    },
+    summary: 'Platform admin login',
+  },
+  verifyTwoFactor: {
+    method: 'POST',
+    path: '/api/platform/auth/2fa/verify',
+    body: challengeCodeBodySchema,
+    responses: {
+      200: z.object({ user: platformUserSchema }),
+      401: platformErrorSchema,
+    },
+    summary: 'Verify platform two-factor authentication challenge',
+  },
+  resendTwoFactor: {
+    method: 'POST',
+    path: '/api/platform/auth/2fa/resend',
+    body: challengeIdBodySchema,
+    responses: {
+      200: z.object({ success: z.boolean() }),
+      404: platformErrorSchema,
+    },
+    summary: 'Resend platform two-factor challenge',
+  },
   getSetupStatus: {
     method: 'GET',
     path: '/api/platform/auth/setup/status',

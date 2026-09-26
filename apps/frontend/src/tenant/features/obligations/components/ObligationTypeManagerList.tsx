@@ -11,9 +11,16 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import { StatGrid, StatRow } from "@/components/ui/StatGrid";
+import { WORK_SURFACE } from "@/components/ui/formStyles";
+import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
+import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
+import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
+import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 interface ObligationTypeManagerListProps {
   types: ObligationType[];
@@ -21,6 +28,83 @@ interface ObligationTypeManagerListProps {
   quantityConfig: Record<string, StatusBadgeConfigItem>;
   onEdit: (obligationType: ObligationType) => void;
   onDelete: (obligationTypeId: string) => void;
+  viewMode?: WorkDirectoryViewMode;
+}
+
+interface ObligationTypeCardProps {
+  obligationType: ObligationType;
+  quantityConfig: Record<string, StatusBadgeConfigItem>;
+  designatedConfig: Record<string, StatusBadgeConfigItem>;
+  onEdit: (obligationType: ObligationType) => void;
+  onDelete: (obligationTypeId: string) => void;
+}
+
+function ObligationTypeCard({
+  obligationType,
+  quantityConfig,
+  designatedConfig,
+  onEdit,
+  onDelete,
+}: ObligationTypeCardProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const { cardProps, onEdit: handleEdit } = useWorkCardAction({
+    entity: obligationType,
+    selectedIds: [],
+    canSelect: false,
+    onEdit,
+  });
+
+  return (
+    <DirectoryEntityCard
+      className="space-y-3 p-4"
+      {...cardProps}
+    >
+      <DirectoryCardHeader
+        id={obligationType.id}
+        displayName={obligationType.name}
+        isSelected={false}
+        onSelect={() => {}}
+        selectAriaLabel=""
+        showSelect={false}
+        onView={handleEdit}
+        viewAriaLabel={t("obligations.types.editAria", { name: obligationType.name })}
+      />
+      <DirectoryCardMetaGrid className="pt-2 border-t border-border/40 ms-0">
+        <DirectoryCardMetaTile label={t("obligations.types.colQuantity")}>
+          <StatusBadge status={obligationType.quantity_based ? "yes" : "no"} config={quantityConfig} size="sm" />
+        </DirectoryCardMetaTile>
+        <DirectoryCardMetaTile label={t("obligations.types.colDesignated")}>
+          <StatusBadge status={obligationType.designated_for} config={designatedConfig} size="sm" />
+        </DirectoryCardMetaTile>
+      </DirectoryCardMetaGrid>
+      <DirectoryCardFooterActions
+        actions={
+          <>
+            <Button
+              type="button"
+              aria-label={t("obligations.types.editAria", { name: obligationType.name })}
+              onClick={handleEdit}
+              variant="ghost"
+              size="icon"
+              className="min-h-11 min-w-11 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors"
+            >
+              <Pencil className="w-4 h-4" aria-hidden="true" />
+            </Button>
+            <Button
+              type="button"
+              aria-label={t("obligations.types.deleteAria", { name: obligationType.name })}
+              onClick={() => onDelete(obligationType.id)}
+              variant="ghost"
+              size="icon"
+              className="min-h-11 min-w-11 rounded-xl border border-border/50 dark:border-border/30 hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors"
+            >
+              <Trash2 className="w-4 h-4" aria-hidden="true" />
+            </Button>
+          </>
+        }
+      />
+    </DirectoryEntityCard>
+  );
 }
 
 export function ObligationTypeManagerList({
@@ -29,21 +113,24 @@ export function ObligationTypeManagerList({
   quantityConfig,
   onEdit,
   onDelete,
+  viewMode: propViewMode,
 }: ObligationTypeManagerListProps) {
   const { t } = useTranslation();
+  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
+  const viewMode = propViewMode ?? hookViewMode;
 
   const renderActions = (obligationType: ObligationType) => (
     <div className="flex shrink-0 items-center gap-1">
       <Button type="button" aria-label={t("obligations.types.editAria", { name: obligationType.name })} onClick={() => onEdit(obligationType)}
         variant="ghost"
         size="icon"
-        className="rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
+        className="min-h-11 min-w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground shadow-none transition-colors">
         <Pencil className="w-3.5 h-3.5" aria-hidden="true" />
       </Button>
       <Button type="button" aria-label={t("obligations.types.deleteAria", { name: obligationType.name })} onClick={() => onDelete(obligationType.id)}
         variant="ghost"
         size="icon"
-        className="rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
+        className="min-h-11 min-w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-destructive shadow-none transition-colors">
         <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
       </Button>
     </div>
@@ -52,33 +139,21 @@ export function ObligationTypeManagerList({
   return (
     <section aria-label={t("obligations.types")} className={WORK_SURFACE}>
       {types.length === 0 ? (
-        <EmptyState title={t("obligations.types.empty")} compact className="md:hidden" />
-      ) : (
-        <div className="space-y-3 p-3 md:hidden">
+        <EmptyState title={t("obligations.types.empty")} compact className="p-4" />
+      ) : viewMode === "cards" ? (
+        <DirectoryCardsGrid className="p-3">
           {types.map((obligationType) => (
-            <article
+            <ObligationTypeCard
               key={obligationType.id}
-              className={`${WORK_SURFACE_INNER} space-y-3 p-3`}
-            >
-              <div className="flex min-w-0 items-start justify-between gap-3">
-                <p className="min-w-0 flex-1 truncate text-sm font-semibold text-foreground">{obligationType.name}</p>
-                {renderActions(obligationType)}
-              </div>
-              <StatGrid columns="sm2">
-                <StatRow
-                  label={t("obligations.types.colQuantity")}
-                  value={<StatusBadge status={obligationType.quantity_based ? "yes" : "no"} config={quantityConfig} size="sm" />}
-                />
-                <StatRow
-                  label={t("obligations.types.colDesignated")}
-                  value={<StatusBadge status={obligationType.designated_for} config={designatedConfig} size="sm" />}
-                />
-              </StatGrid>
-            </article>
+              obligationType={obligationType}
+              quantityConfig={quantityConfig}
+              designatedConfig={designatedConfig}
+              onEdit={onEdit}
+              onDelete={onDelete}
+            />
           ))}
-        </div>
-      )}
-      <div className="hidden md:block">
+        </DirectoryCardsGrid>
+      ) : (
         <Table>
           <caption className="sr-only">{t("obligations.types")}</caption>
           <TableHeader>
@@ -90,9 +165,6 @@ export function ObligationTypeManagerList({
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/50">
-            {types.length === 0 && (
-              <TableRow><TableCell colSpan={4} className="py-4"><EmptyState title={t("obligations.types.empty")} compact /></TableCell></TableRow>
-            )}
             {types.map((obligationType) => (
               <TableRow key={obligationType.id} className="hover:bg-muted/20 transition-colors">
                 <TableCell className="px-3 py-2.5 font-semibold text-foreground">{obligationType.name}</TableCell>
@@ -107,7 +179,7 @@ export function ObligationTypeManagerList({
             ))}
           </TableBody>
         </Table>
-      </div>
+      )}
     </section>
   );
 }

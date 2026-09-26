@@ -1,5 +1,6 @@
 import type React from 'react';
 import type { ModuleColumnRegistryEntry } from '@mms/shared';
+import type { EntityDescriptor } from '@/types/entityRegistry';
 
 export interface ModuleColumnCustomizerLabels {
   trigger: string;
@@ -18,7 +19,9 @@ export interface ModuleColumnCustomizerLabels {
 }
 
 export interface ModuleColumnCustomizerProps {
-  columnRegistry: ModuleColumnRegistryEntry[];
+  columnRegistry?: ModuleColumnRegistryEntry[];
+  entityType?: string;
+  descriptor?: EntityDescriptor<unknown>;
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   onResetLayout?: () => void;
   labels?: Partial<ModuleColumnCustomizerLabels>;

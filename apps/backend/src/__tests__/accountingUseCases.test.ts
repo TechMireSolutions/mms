@@ -5,6 +5,7 @@ import { runWithTenant } from '../lib/tenantContext.js';
 
 function createFakeRepo(): AccountingRepository {
   return {
+    lockJournalEntries: vi.fn().mockResolvedValue(undefined),
     listAccountsByWorkspace: vi.fn().mockResolvedValue([]),
     findAccountById: vi.fn().mockResolvedValue(null),
     findAccountsByIds: vi.fn().mockResolvedValue([]),
@@ -21,6 +22,9 @@ function createFakeRepo(): AccountingRepository {
     listEntriesByWorkspace: vi.fn().mockResolvedValue([]),
     findEntryById: vi.fn().mockResolvedValue(null),
     findEntriesByIds: vi.fn().mockResolvedValue([]),
+    findEntryByRef: vi.fn().mockResolvedValue(null),
+    findActiveEntryRefs: vi.fn().mockResolvedValue(new Set()),
+    allocateNextJournalRef: vi.fn().mockResolvedValue('JE-0001'),
     saveEntry: vi.fn().mockResolvedValue(undefined),
     bulkSaveEntries: vi.fn().mockResolvedValue(undefined),
     replaceEntriesForWorkspace: vi.fn().mockResolvedValue(undefined),
@@ -306,11 +310,13 @@ describe('accounting write guards', () => {
     status: 'active' as const,
   };
 
+  let entrySeq = 1;
   function postedEntry(overrides: Record<string, unknown> = {}) {
+    const seq = entrySeq++;
     return {
-      id: 'je_1',
+      id: `je_${seq}`,
       date: '2026-03-01',
-      ref: 'JE-0001',
+      ref: `JE-${String(seq).padStart(4, '0')}`,
       description: 'Tuition',
       status: 'posted' as const,
       created_by: 'admin',
@@ -353,6 +359,58 @@ describe('accounting write guards', () => {
         ]),
       ),
     ).rejects.toThrow(/closed fiscal year/);
+    expect(repo.bulkSaveEntries).not.toHaveBeenCalled();
+  });
+
+  it.each(['deletedAt', 'deletedBy', 'deletionReason'] as const)(
+    'rejects fiscal-year lifecycle changes through bulk saves: %s', async (field) => {
+      const repo = createFakeRepo();
+      vi.mocked(repo.findFiscalYearsByIds).mockResolvedValue([closedYear]);
+      const useCases = createAccountingUseCases(repo);
+      await expect(runWithTenant('demo', () => useCases.upsertFiscalYears([
+        { ...closedYear, [field]: '2026-01-01T00:00:00Z' },
+      ]))).rejects.toThrow('lifecycle fields');
+      expect(repo.bulkSaveFiscalYears).not.toHaveBeenCalled();
+    },
+  );
+
+  it('returns an unchanged create replay without rewriting a posted journal', async () => {
+    const repo = createFakeRepo();
+    const stored = { ...postedEntry(), source_type: 'manual' as const };
+    vi.mocked(repo.findEntryById).mockResolvedValue(stored);
+    const useCases = createAccountingUseCases(repo);
+    const result = await runWithTenant('demo', () => useCases.createJournalEntry(stored));
+    expect(result).toEqual(stored);
+    expect(repo.saveEntry).not.toHaveBeenCalled();
+    expect(repo.lockJournalEntries).toHaveBeenCalledWith('demo', [stored.id]);
+  });
+
+  it('rejects a salary create replay that changes the selected payment account', async () => {
+    const repo = createFakeRepo();
+    const stored = { ...postedEntry(), source_type: 'manual' as const, transaction_type: 'salary' };
+    vi.mocked(repo.findEntryById).mockResolvedValue(stored);
+    const useCases = createAccountingUseCases(repo);
+    const changed = {
+      ...stored,
+      lines: stored.lines.map((line) => ({ ...line, account_id: 'different-account' })),
+    };
+    await expect(runWithTenant('demo', () => useCases.createJournalEntry(changed)))
+      .rejects.toMatchObject({ statusCode: 409 });
+    expect(repo.saveEntry).not.toHaveBeenCalled();
+  });
+
+  it('checks mutability after acquiring the journal lock', async () => {
+    const repo = createFakeRepo();
+    const posted = { ...postedEntry(), source_type: 'manual' as const };
+    vi.mocked(repo.findEntriesByIds).mockResolvedValue([{ ...posted, status: 'draft' }]);
+    vi.mocked(repo.lockJournalEntries).mockImplementation(async () => {
+      // The competing writer committed a posting before this lock was granted.
+      vi.mocked(repo.findEntriesByIds).mockResolvedValue([posted]);
+    });
+    const useCases = createAccountingUseCases(repo);
+    await expect(runWithTenant('demo', () => useCases.upsertEntries([
+      { ...posted, status: 'draft', description: 'stale draft save' },
+    ]))).rejects.toThrow('immutable');
     expect(repo.bulkSaveEntries).not.toHaveBeenCalled();
   });
 
@@ -541,5 +599,322 @@ describe('accounting write guards', () => {
         useCases.upsertFiscalYears([{ ...openYear, id: 'fy-brand-new', status: 'closed' } as any]),
       ),
     ).rejects.toThrow(/close-fiscal-year action/);
+  });
+});
+
+describe('journal entry reference uniqueness guards', () => {
+  const openYear = {
+    id: 'fy-open',
+    label: 'FY 2026',
+    startDate: '2026-01-01',
+    endDate: '2026-12-31',
+    status: 'active' as const,
+  };
+
+  it('createJournalEntry rejects a duplicate reference when an active entry already has that ref', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    vi.mocked(repo.findEntryByRef!).mockResolvedValue({ id: 'je_existing', ref: 'JE-0050' } as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.createJournalEntry({
+          id: 'je_new',
+          date: '2026-03-01',
+          ref: 'JE-0050',
+          description: 'Payment',
+          status: 'draft',
+          created_by: 'admin',
+          fiscal_year: 'FY 2026',
+          fiscal_year_id: 'fy-open',
+          simple_mode: false,
+          tags: [],
+          attachments: [],
+          lines: [
+            { id: 'l1', account_id: 'acc_ar', debit: 50, credit: 0, description: '' },
+            { id: 'l2', account_id: 'acc_income', debit: 0, credit: 50, description: '' },
+          ],
+        }),
+      ),
+    ).rejects.toThrow(/already exists/);
+  });
+
+  it('createJournalEntry allocates next sequential reference if ref is omitted', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    vi.mocked(repo.allocateNextJournalRef!).mockResolvedValue('JE-0099');
+    const useCases = createAccountingUseCases(repo);
+
+    const created = await runWithTenant('demo', () =>
+      useCases.createJournalEntry({
+        id: 'je_new',
+        date: '2026-03-01',
+        ref: '',
+        description: 'Auto-ref',
+        status: 'draft',
+        created_by: 'admin',
+        fiscal_year: 'FY 2026',
+        fiscal_year_id: 'fy-open',
+        simple_mode: false,
+        tags: [],
+        attachments: [],
+        lines: [
+          { id: 'l1', account_id: 'acc_ar', debit: 50, credit: 0, description: '' },
+          { id: 'l2', account_id: 'acc_income', debit: 0, credit: 50, description: '' },
+        ],
+      }),
+    );
+
+    expect(created.ref).toBe('JE-0099');
+    expect(repo.allocateNextJournalRef).toHaveBeenCalledWith('demo');
+  });
+
+  it('updateJournalEntryById rejects update when changed ref conflicts with another active entry', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    vi.mocked(repo.findEntryById).mockResolvedValue({
+      id: 'je_1',
+      date: '2026-03-01',
+      ref: 'JE-0001',
+      description: 'Original',
+      status: 'draft',
+      lines: [
+        { id: 'l1', account_id: 'acc_ar', debit: 50, credit: 0, description: '' },
+        { id: 'l2', account_id: 'acc_income', debit: 0, credit: 50, description: '' },
+      ],
+    } as any);
+    vi.mocked(repo.findEntryByRef!).mockResolvedValue({ id: 'je_2', ref: 'JE-0002' } as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.updateJournalEntryById('je_1', {
+          id: 'je_1',
+          date: '2026-03-01',
+          ref: 'JE-0002',
+          description: 'Updated with conflicting ref',
+          status: 'draft',
+          created_by: 'admin',
+          fiscal_year: 'FY 2026',
+          fiscal_year_id: 'fy-open',
+          simple_mode: false,
+          tags: [],
+          attachments: [],
+          lines: [
+            { id: 'l1', account_id: 'acc_ar', debit: 50, credit: 0, description: '' },
+            { id: 'l2', account_id: 'acc_income', debit: 0, credit: 50, description: '' },
+          ],
+        }),
+      ),
+    ).rejects.toThrow(/already exists/);
+  });
+
+  it('upsertEntries rejects intra-batch duplicate references', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    const useCases = createAccountingUseCases(repo);
+
+    const baseEntry = {
+      date: '2026-03-01',
+      ref: 'JE-DUP',
+      description: 'Batch entry',
+      status: 'draft' as const,
+      created_by: 'admin',
+      fiscal_year: 'FY 2026',
+      fiscal_year_id: 'fy-open',
+      simple_mode: false,
+      tags: [],
+      attachments: [],
+      lines: [
+        { id: 'l1', account_id: 'acc_ar', debit: 10, credit: 0, description: '' },
+        { id: 'l2', account_id: 'acc_income', debit: 0, credit: 10, description: '' },
+      ],
+    };
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.upsertEntries([
+          { ...baseEntry, id: 'je_batch_1' } as any,
+          { ...baseEntry, id: 'je_batch_2' } as any,
+        ]),
+      ),
+    ).rejects.toThrow(/Duplicate reference "JE-DUP" within the same batch/);
+  });
+
+  it('restoreJournalEntryById blocks restoration when an active entry holds the same reference', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.findEntryById).mockResolvedValue({
+      id: 'je_trashed',
+      ref: 'JE-0042',
+      deletedAt: '2026-03-01T00:00:00.000Z',
+    } as any);
+    vi.mocked(repo.findEntryByRef!).mockResolvedValue({
+      id: 'je_active',
+      ref: 'JE-0042',
+    } as any);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () => useCases.restoreJournalEntryById('je_trashed')),
+    ).rejects.toThrow(/already used by an active entry/);
+  });
+
+  it('upsertEntries allocates sequential non-colliding references when multiple entries in a batch omit references', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    vi.mocked(repo.allocateNextJournalRef!).mockResolvedValue('JE-0001');
+    const useCases = createAccountingUseCases(repo);
+
+    const baseEntry = {
+      date: '2026-03-01',
+      ref: '',
+      description: 'Batch entry',
+      status: 'draft' as const,
+      created_by: 'admin',
+      fiscal_year: 'FY 2026',
+      fiscal_year_id: 'fy-open',
+      simple_mode: false,
+      tags: [],
+      attachments: [],
+      lines: [
+        { id: 'l1', account_id: 'acc_ar', debit: 10, credit: 0, description: '' },
+        { id: 'l2', account_id: 'acc_income', debit: 0, credit: 10, description: '' },
+      ],
+    };
+
+    const saved = await runWithTenant('demo', () =>
+      useCases.upsertEntries([
+        { ...baseEntry, id: 'je_batch_1' } as any,
+        { ...baseEntry, id: 'je_batch_2' } as any,
+        { ...baseEntry, id: 'je_batch_3' } as any,
+      ]),
+    );
+
+    expect(saved[0].ref).toBe('JE-0001');
+    expect(saved[1].ref).toBe('JE-0002');
+    expect(saved[2].ref).toBe('JE-0003');
+  });
+
+  it('createJournalEntry maps unique reference constraint 23505 to ConflictError', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    const uniqueErr = new Error('duplicate key value violates unique constraint') as any;
+    uniqueErr.code = '23505';
+    uniqueErr.constraint = 'accounting_entries_workspace_ref_active_uidx';
+    vi.mocked(repo.saveEntry).mockRejectedValue(uniqueErr);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.createJournalEntry({
+          id: 'je_new',
+          date: '2026-03-01',
+          ref: 'JE-RACE',
+          description: 'Payment',
+          status: 'draft',
+          created_by: 'admin',
+          fiscal_year: 'FY 2026',
+          fiscal_year_id: 'fy-open',
+          simple_mode: false,
+          tags: [],
+          attachments: [],
+          lines: [
+            { id: 'l1', account_id: 'acc_ar', debit: 50, credit: 0, description: '' },
+            { id: 'l2', account_id: 'acc_income', debit: 0, credit: 50, description: '' },
+          ],
+        }),
+      ),
+    ).rejects.toThrow(/already exists/);
+  });
+
+  it('updateJournalEntryById preserves existing reference when updated ref is blank or omitted', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    vi.mocked(repo.findEntryById).mockResolvedValue({
+      id: 'je_1',
+      date: '2026-03-01',
+      ref: 'JE-KEEP-ME',
+      description: 'Original',
+      status: 'draft',
+      lines: [
+        { id: 'l1', account_id: 'acc_ar', debit: 50, credit: 0, description: '' },
+        { id: 'l2', account_id: 'acc_income', debit: 0, credit: 50, description: '' },
+      ],
+    } as any);
+    const useCases = createAccountingUseCases(repo);
+
+    const updated = await runWithTenant('demo', () =>
+      useCases.updateJournalEntryById('je_1', {
+        id: 'je_1',
+        date: '2026-03-01',
+        ref: '   ',
+        description: 'Updated without changing ref',
+        status: 'draft',
+        created_by: 'admin',
+        fiscal_year: 'FY 2026',
+        fiscal_year_id: 'fy-open',
+        simple_mode: false,
+        tags: [],
+        attachments: [],
+        lines: [
+          { id: 'l1', account_id: 'acc_ar', debit: 50, credit: 0, description: '' },
+          { id: 'l2', account_id: 'acc_income', debit: 0, credit: 50, description: '' },
+        ],
+      }),
+    );
+
+    expect(updated?.ref).toBe('JE-KEEP-ME');
+  });
+
+  it('updateJournalEntryById maps unique reference constraint 23505 to ConflictError', async () => {
+    const repo = createFakeRepo();
+    vi.mocked(repo.listFiscalYearsByWorkspace).mockResolvedValue([openYear] as any);
+    vi.mocked(repo.findAccountsByIds).mockResolvedValue([{ id: 'acc_ar' }, { id: 'acc_income' }] as any);
+    vi.mocked(repo.findEntryById).mockResolvedValue({
+      id: 'je_1',
+      date: '2026-03-01',
+      ref: 'JE-0001',
+      description: 'Original',
+      status: 'draft',
+      lines: [
+        { id: 'l1', account_id: 'acc_ar', debit: 50, credit: 0, description: '' },
+        { id: 'l2', account_id: 'acc_income', debit: 0, credit: 50, description: '' },
+      ],
+    } as any);
+    const uniqueErr = new Error('duplicate key value violates unique constraint') as any;
+    uniqueErr.code = '23505';
+    uniqueErr.constraint = 'accounting_entries_workspace_ref_active_uidx';
+    vi.mocked(repo.saveEntry).mockRejectedValue(uniqueErr);
+    const useCases = createAccountingUseCases(repo);
+
+    await expect(
+      runWithTenant('demo', () =>
+        useCases.updateJournalEntryById('je_1', {
+          id: 'je_1',
+          date: '2026-03-01',
+          ref: 'JE-RACE',
+          description: 'Updated with conflicting ref',
+          status: 'draft',
+          created_by: 'admin',
+          fiscal_year: 'FY 2026',
+          fiscal_year_id: 'fy-open',
+          simple_mode: false,
+          tags: [],
+          attachments: [],
+          lines: [
+            { id: 'l1', account_id: 'acc_ar', debit: 50, credit: 0, description: '' },
+            { id: 'l2', account_id: 'acc_income', debit: 0, credit: 50, description: '' },
+          ],
+        }),
+      ),
+    ).rejects.toThrow(/already exists/);
   });
 });

@@ -54,7 +54,7 @@ export function WidgetCardHeader({
             <p
               className={cn(
                 "mt-0.5 m-0 text-xs font-semibold",
-                variant === "destructive" ? "text-destructive/80" : "text-muted-foreground",
+                variant === "destructive" ? "text-destructive" : "text-muted-foreground",
               )}
             >
               {subtitle}

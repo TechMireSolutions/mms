@@ -49,7 +49,7 @@ export default function WizardLayout({
     >
       <AuthPageBackdrop />
 
-      <header className="sticky top-0 z-sticky flex h-14 items-center justify-between border-b border-border/40 bg-background/80 px-4 shadow-sm backdrop-blur-md sm:px-6">
+      <header className="sticky top-0 z-sticky flex h-14 items-center justify-between border-b border-border bg-background px-4 shadow-2xs sm:px-6">
         <div className="flex items-center gap-2.5">
           <PlatformLogoMark size="sm" />
           <span className="text-sm font-semibold uppercase tracking-wider text-foreground">
@@ -132,11 +132,10 @@ export default function WizardLayout({
           key={currentStep}
           initial={reducedMotion ? false : { opacity: 0, x: 16 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={reducedMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
-          className="relative w-full max-w-2xl overflow-hidden rounded-2xl border border-border/60 bg-card/85 shadow-surface-lg backdrop-blur-xl"
+          transition={reducedMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
+          className="relative w-full max-w-2xl overflow-hidden rounded-2xl surface-raised"
           aria-labelledby="wizard-step-title"
         >
-          <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" aria-hidden />
           <header className="border-b border-border/50 bg-muted/10 px-6 py-5 sm:px-8">
             <h1 id="wizard-step-title" className="m-0 text-lg font-bold tracking-tight text-foreground sm:text-xl">
               {title}

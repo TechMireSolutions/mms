@@ -3,6 +3,7 @@ import {
   alignElements,
   boxesIntersect,
   bringSelectedToFront,
+  CANVAS_ACCENT,
   centerElementOnPage,
   computeSmartGuides,
   distributeElements,
@@ -17,6 +18,26 @@ import {
 import type { DocumentTemplate } from "@mms/shared";
 
 describe("templateEditorUtils", () => {
+  describe("CANVAS_ACCENT", () => {
+    it("derives selection colors from the primary brand token", () => {
+      expect(CANVAS_ACCENT.selection).toBe("hsl(var(--primary, 199 89% 48%))");
+      expect(CANVAS_ACCENT.selectionSoft).toBe("hsl(var(--primary, 199 89% 48%) / 0.06)");
+      expect(CANVAS_ACCENT.marqueeSoft).toBe("hsl(var(--primary, 199 89% 48%) / 0.08)");
+    });
+
+    it("derives the strong selection variant and grid from semantic tokens", () => {
+      expect(CANVAS_ACCENT.selectionStrong).toContain("var(--primary, 201 96% 27%)");
+      expect(CANVAS_ACCENT.grid).toBe("hsl(var(--muted-foreground, 215 20% 65%) / 0.6)");
+    });
+
+    it("contains no bare hex colors outside var() fallbacks", () => {
+      for (const value of Object.values(CANVAS_ACCENT)) {
+        const withoutFallbacks = value.replace(/var\([^)]*\)/g, "");
+        expect(withoutFallbacks).not.toMatch(/#[0-9a-fA-F]{3,6}/);
+      }
+    });
+  });
+
   describe("snap", () => {
     it("snaps values to nearest multiple of 4", () => {
       expect(snap(0)).toBe(0);

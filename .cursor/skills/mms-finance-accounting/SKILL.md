@@ -4,71 +4,49 @@ description: Implements or audits MMS finance and accounting workflows — invoi
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-09-24
 ---
 
 # MMS Finance & Accounting Workflow
 
-**Rule (norms SSOT):** `mms-core.mdc` · `mms-data-layer.mdc` §5 · `mms-auth-security.mdc` §5 · `mms-form-architecture.mdc`.
-**Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
+**Rules (norms SSOT):** `mms-core.mdc` (money and boundaries), `mms-data-layer.mdc` (transactions, audit, lifecycle), `mms-auth-security.mdc` (authorization), `mms-api-interface.mdc` (write contracts), `mms-reports.mdc` (report authority).
 
-## Anti-Patterns & Banned Operations
+Use for ledger posting, fee billing and collections, payroll journals, chart of accounts, periods, reconciliation, and financial statements. This is a software implementation workflow, not an assertion that MMS meets any accounting framework.
 
-- ❌ **NEVER use floating point numbers for currency**: Always use decimal strings matching `/^\d+(\.\d{1,2})?$/`.
-- ❌ **NEVER allow single-sided ledger mutations**: `SUM(debit)` must strictly equal `SUM(credit)` in every entry.
-- ❌ **NEVER use optimistic UI updates for money**: Await server persistence before confirming transactions in UI.
-- ❌ **NEVER hard-delete financial records**: Invoices and payments use soft-delete; journal entries are append-only immutable.
-- ❌ **NEVER store raw card data (PAN/CVV)**: PCI-DSS compliance strictly bans cardholder secrets in tables or logs.
+## Scope and policy first
 
-## Double-Entry Journal Entry Implementation Pattern
+1. Establish the entity, jurisdiction, reporting framework/version, cash or accrual basis, fiscal calendar, functional currency, and any donor restrictions from existing configuration or the task. When unknown, remain framework-neutral and ask only when the answer changes the requested behavior.
+2. Inspect the actual schema and write paths before designing a change. Distinguish implemented controls, tested behavior, and proposed capabilities; a UI setting, type, or skill paragraph is not proof of enforcement.
+3. Apply only the relevant references below. New recommendations are **advisory design/review guidance** unless backed by an existing rule and the specific evidence identified in the verification reference. Implementing an unsupported feature requires task scope; do not silently add a new accounting basis, fund engine, approval system, or statutory regime.
 
-```ts
-import { db } from '@/db';
-import { accountingEntries, accountingAccounts } from '@/db/schema';
-import { eq, sql, and } from 'drizzle-orm';
-import { z } from 'zod';
+## Read by task
 
-export const moneyStringSchema = z.string().regex(/^\d+(\.\d{1,2})?$/, 'Invalid money format');
+| Task | Reference |
+|---|---|
+| Amounts, journals, retries, payment integration, authorization | [Ledger controls](references/ledger-controls.md) |
+| Period close, opening balances, bank matching, reports, exports | [Closing and reporting](references/closing-reporting.md) |
+| Recognition, restricted funds, FX, Islamic funds, AI, 2026 applicability | [Accounting policies and sources](references/policies-2026.md) |
+| Regression selection, evidence, capability gaps, related-skill ownership | [Verification and routing](references/verification.md) |
 
-export async function postJournalEntry(tenant: string, entry: {
-  description: string;
-  lines: Array<{ accountId: string; debit: string; credit: string }>;
-}) {
-  const totalDebit = entry.lines.reduce((acc, l) => acc + Number(l.debit || 0), 0);
-  const totalCredit = entry.lines.reduce((acc, l) => acc + Number(l.credit || 0), 0);
+## MMS implementation map
 
-  if (Math.abs(totalDebit - totalCredit) > 0.001) {
-    throw new Error('Double-entry violation: debits and credits must balance');
-  }
+- Shared validation and posting helpers: `packages/shared/src/accountingLedgerInvariants.ts`, `packages/shared/src/accountingLedgerPosting.ts`, `packages/shared/src/accountingModuleManifest.ts`, `packages/shared/src/accountingLedgerOps.ts`.
+- Posting orchestration: `apps/backend/src/accounting/use-cases/`, `apps/backend/src/accounting/ledgerPosting/ledgerPostingService.ts`, `apps/backend/src/finance/use-cases/`.
+- Persistence: `apps/backend/src/db/repositories/accountingEntriesPersist.ts`, `apps/backend/src/db/repositories/accountingEntryLocks.ts`, `apps/backend/src/db/repositories/accountingLedgerOpsRepository.ts`.
+- Close/report: `apps/backend/src/accounting/use-cases/accountingPeriodClose.ts`, `apps/backend/src/db/repositories/accountingRepositoryReport.ts`, `packages/shared/src/accountingReportAggregates.ts`.
+- UI: `apps/frontend/src/tenant/features/accounting/`; cross-module reads through `apps/frontend/src/tenant/hooks/collections/accounting.ts` and `apps/frontend/src/tenant/hooks/collections/finance.ts`.
 
-  return await db.transaction(async (tx) => {
-    await tx.execute(sql`SET LOCAL app.current_tenant = ${tenant}`);
+The existing journal DTO uses two-decimal **numbers**, `moneyToCents` returns a JavaScript number, and database amounts use numeric columns. This is a compatibility boundary, not proof of arbitrary precision or multicurrency support. Follow the exact-money migration guidance in the ledger reference; do not copy a floating-point summation or invent a parallel money validator.
 
-    for (const line of entry.lines) {
-      // Verify account is active (active foreign key guarding)
-      const [acc] = await tx.select().from(accountingAccounts)
-        .where(and(eq(accountingAccounts.id, line.accountId), sql`deleted_at IS NULL`));
-      if (!acc) throw new Error(`Account ${line.accountId} not found or archived`);
+## Workflow
 
-      await tx.insert(accountingEntries).values({
-        workspaceSubdomain: tenant,
-        accountId: line.accountId,
-        debit: line.debit,
-        credit: line.credit,
-        description: entry.description,
-      });
-    }
-  });
-}
-```
+1. Trace every writer for the operation: interactive form, bulk API, specialized fee/salary entry, finance posting, worker retry, import, and restore. Use the same domain guards for equivalent mutations.
+2. Specify the expected entry, source identity, date/period, account eligibility, and report effect. Separate draft storage from posting and external payment authorization from ledger recognition.
+3. Make validation and persistence atomic with an explicit concurrency strategy. A transaction alone does not serialize a read-check-upsert sequence. Preserve tenant scope across locks, source keys, audit rows, and artifacts.
+4. Implement the smallest compatible change through shared contracts, use cases, and repositories. Ordinary edits do not own lifecycle, source, approval, or close metadata. Posted corrections use linked reversals/adjustments, not overwrites.
+5. Verify financial effects through the ledger and all affected consumers: subledger, trial balance, income statement, balance sheet, cash flow, dashboard, and export. A balanced journal alone does not prove correct recognition, classification, authorization, or completeness.
+6. Run the applicable evidence matrix and report what was actually tested, any skipped checks, and remaining capability gaps. Do not describe a mocked repository test as proof of PostgreSQL locking or RLS.
 
-## Verification Checklist
+## Completion
 
-```
-- [ ] Money validated as decimal strings (/^\d+(\.\d{1,2})?$/)
-- [ ] Journal entries strictly balanced (debits === credits)
-- [ ] No optimistic UI updates for financial transactions
-- [ ] Active foreign key guard verified on accounts and invoices
-- [ ] Closed fiscal periods immutable; corrections via adjustments
-- [ ] Run: pnpm typecheck && cd apps/backend && pnpm test
-```
+Use [verification](references/verification.md) for exact scoped commands, then the completion review in `mms-completion-review.mdc`. Standards-only edits use `bash .agent/scripts/sync-all.sh` and `node scripts/verify-rules-integrity.mjs`; they do not by themselves require financial data changes or deployment.

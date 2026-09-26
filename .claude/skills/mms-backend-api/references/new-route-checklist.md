@@ -37,6 +37,6 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Relational child queries in `with: { ... }` explicitly declare `where: (c, { isNull }) => isNull(c.deletedAt)`
 - [ ] Restore traps PostgreSQL error `23505` mapping to `409 Conflict`
 - [ ] Single-record `GET /:id` returns 404 for archived records unless `?includeDeleted=true` with `canDelete`
-- [ ] Session invalidation on user/teacher soft delete + `deleted_at IS NULL` verification in auth resolvers
+- [ ] Session invalidation on user/faculty soft delete + `deleted_at IS NULL` verification in auth resolvers
 - [ ] CDC outbox events emitted with monotonic versioning (`entity.soft_deleted` / `entity.restored`)
 ```

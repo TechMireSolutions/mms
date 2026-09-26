@@ -50,7 +50,7 @@ export const ContactEmailAction = (function ContactEmailAction({
   showMail = true,
   onEmail,
   disabled = false,
-  emptyFallback = <span className="text-sm text-muted-foreground/60">—</span>,
+  emptyFallback = <span className="text-sm text-muted-foreground">—</span>,
   copyToast,
   className,
   actionsClassName,

@@ -47,25 +47,25 @@ export function SetupIncompleteCallout({ branding, isAdmin }: SetupIncompleteCal
         transition={{ duration: 0.3, ease: 'easeOut' }}
         role="status"
         aria-live="polite"
-        className="relative flex items-start gap-4 rounded-2xl border border-amber-200 bg-amber-50 px-5 py-4 shadow-sm dark:border-amber-800/40 dark:bg-amber-950/30"
+        className="relative flex items-start gap-4 rounded-2xl border border-warning/30 bg-warning/10 px-5 py-4 shadow-sm"
       >
         {/* Icon */}
-        <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400">
+        <div className="mt-0.5 flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-warning/20 text-warning">
           <Building2 className="h-4.5 w-4.5" aria-hidden />
         </div>
 
         {/* Body */}
         <div className="flex-1 min-w-0">
-          <p className="text-sm font-bold text-amber-900 dark:text-amber-200">
+          <p className="text-sm font-bold text-foreground">
             {t('dashboard.setupCallout.title')}
           </p>
-          <p className="mt-0.5 text-xs leading-relaxed text-amber-700 dark:text-amber-400">
+          <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
             {t('dashboard.setupCallout.description')}
           </p>
           <Button
             variant="outline"
             size="sm"
-            className="mt-3 h-8 gap-1.5 rounded-lg border-amber-300 bg-white px-3 text-xs font-bold text-amber-800 hover:bg-amber-50 dark:border-amber-700 dark:bg-transparent dark:text-amber-300 dark:hover:bg-amber-900/30"
+            className="mt-3 h-8 gap-1.5 rounded-lg border-warning/40 bg-background px-3 text-xs font-bold text-warning hover:bg-warning/15 transition-colors"
             onClick={() => navigate('/settings', { state: { section: 'branding' } })}
           >
             {t('dashboard.setupCallout.cta')}
@@ -78,7 +78,7 @@ export function SetupIncompleteCallout({ branding, isAdmin }: SetupIncompleteCal
           type="button"
           aria-label={t('common.dismiss')}
           onClick={handleDismiss}
-          className="flex-shrink-0 rounded-lg p-1 text-amber-500 hover:bg-amber-100 hover:text-amber-700 transition-colors dark:text-amber-400 dark:hover:bg-amber-900/40"
+          className="flex-shrink-0 rounded-lg p-1 text-muted-foreground hover:bg-warning/15 hover:text-foreground transition-colors cursor-pointer"
         >
           <X className="h-4 w-4" aria-hidden />
         </button>

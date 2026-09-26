@@ -19,7 +19,7 @@ Project rules for the Madrasa Management System. Claude Code loads `.md` files f
 | Rule | Focus / Topic |
 |------|---------------|
 | `mms-dry.md` | DRY — single source of truth, extraction thresholds, `@mms/shared` exports |
-| `mms-structure-naming.md` | Monorepo layout, colocation, **file-size bands (~300 hard / ~220 soft)**, Title Case on save, naming |
+| `mms-structure-naming.md` | Monorepo layout, colocation, **file-size cap (200 lines hard)**, Title Case on save, naming |
 | `mms-dependencies.md` | Latest stable Node, pnpm, and workspace dependency upgrades |
 | `mms-ops-infrastructure.md` | Local dev setup, environment variables, Docker backend ports, health endpoints, Linux compatibility, and CI orchestration |
 | `mms-performance.md` | Performance & resource efficiency (DB, streaming, Redis caching, bundle, virtualization) |
@@ -37,7 +37,7 @@ Project rules for the Madrasa Management System. Claude Code loads `.md` files f
 
 | Rule | Focus / Topic |
 |------|---------------|
-| `mms-ui-ux-design.md` | UI primitives, design tokens, tabs, notifications, a11y (RTL / WCAG), and **§7 responsiveness** (FormModal chrome → `mms-form-architecture.md`) |
+| `mms-ui-ux-design.md` | UI primitives, design tokens, tabs, notifications, a11y (RTL / WCAG), and **§4 responsiveness** (FormModal chrome → `mms-form-architecture.md`) |
 | `mms-module-architecture.md` | Universal module manifest schemas, three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
 | `mms-form-architecture.md` | Static FormModal forms, write Zod `.strict()`, React 19 defaults, decimal-as-string, local multipart uploads |
 | `mms-hooks.md` | Custom React hooks (Query recipes, page controllers / action handlers, Work layout) |
@@ -101,7 +101,7 @@ Update this table in the same change that adds or removes a check.
 | Wildcard DB projections | `pnpm run check:db-projections` (CI) | ratchet |
 | Write-blocking index in a migration | `pnpm run check:migration-indexes` (CI) | ratchet |
 | Bundle budget | `pnpm run check:bundle` (CI, build-dist job) | ratchet |
-| i18n key parity across en/ar/ur/fa | `pnpm run check:i18n` (CI) | script |
+| i18n completeness across en/ar/ur/fa | `pnpm run check:i18n` reports missing/English-equal values; currently does not fail on counts | advisory report |
 | Dependency advisories | `pnpm audit --audit-level=high` + dependency-review (CI) | CI |
 | Secrets in history | gitleaks (CI, full history) | CI |
 | Rule/skill/mirror integrity | `node scripts/verify-rules-integrity.mjs` + sync drift diff (CI) | CI |
@@ -110,6 +110,7 @@ Update this table in the same change that adds or removes a check.
 | `@mms/shared` runtime purity | `mms-shared-package/scripts/check-shared-exports.sh` | skill script |
 | a11y serious/critical violations | `e2e/tests/a11y-shell.spec.ts` (CI e2e job) | test |
 | Coverage floors (FE 41/39, BE 45/27) | vitest thresholds in each workspace | test |
+| Work directory convergence (selection SSOT, two-layer bulk chrome, no dead adapters) | `pnpm run check:work-directory` | ratchet |
 | Tier structure, trunk tests, review criteria, UX polish | none — **advisory** (review discipline) | advisory |
 
 
@@ -124,7 +125,7 @@ All rules in this directory apply **equally** to tenant workspace code and platf
 | WCAG AA a11y, RTL, touch targets | ✅ Yes |
 | TanStack Query v5 factories, `AbortSignal` | ✅ Yes |
 | Zod `.strict()` DTOs via `@mms/shared` | ✅ Yes |
-| File size bands (~300 hard / ~220 soft), naming | ✅ Yes |
+| File size cap (200 lines hard), naming | ✅ Yes |
 | `ErrorState` with hint description on list failures | ✅ Yes |
 | `notify.*` for all toasts | ✅ Yes |
 | Fastify layering (routes → services → repository) | ✅ Yes |
@@ -185,7 +186,7 @@ bash .agent/scripts/sync-all.sh
 - [ ] Dashboard/report KPI cards use `/metrics` where available — `mms-reports.md`
 - [ ] Setup Fields / form: tab enablement SSOT + enabled fields render in form **and** drawer — `mms-fields.md` / `mms-form-architecture.md`
 - [ ] Shared logic in `@mms/shared` if cross-app or 2+ modules
-- [ ] Touched app files stay under hard ~300 lines (prefer ~220 for FE shells); splits keep public import barrels — `mms-structure-naming.md`
+- [ ] Touched app files stay under hard 200 lines; splits keep public import barrels — `mms-structure-naming.md`
 - [ ] No commit unless user requested
 - [ ] Update **all mirrors** when changing standards: `bash .agent/scripts/sync-all.sh`
 - [ ] Auth/write routes: `mms-auth-security.md` (do not OR entity write with `canEditSetup`)

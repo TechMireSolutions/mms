@@ -9,7 +9,7 @@ import { useWidgetCollections } from "@/lib/reports/useReportCollections";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
 import { useContactsWidgetAggregates } from "@/tenant/hooks/collections/contacts";
 import { useStudentsWidgetAggregates } from "@/tenant/hooks/collections/students";
-import { useTeachersWidgetAggregates } from "@/tenant/hooks/collections/faculty";
+import { useFacultyWidgetAggregates } from "@/tenant/hooks/collections/faculty";
 import { useSessionsWidgetAggregates } from "@/tenant/hooks/collections/sessions";
 import { useEnrollmentsWidgetAggregates } from "@/tenant/hooks/collections/enrollments";
 import { notify } from "@/lib/notify";
@@ -45,7 +45,7 @@ export function usePinnedWidgetsController(category: string) {
   });
 
   const normalizedCategory = (() => {
-    if (category === "faculty") return "teachers";
+    if (category === "faculty" || category === "teachers") return "faculty";
     if (category === "finance" || category === "financial") return "financial";
     if (category === "academic" || category === "examinations") return "examinations";
     if (category === "question-bank" || category === "questionBank") return "questionBank";
@@ -55,7 +55,7 @@ export function usePinnedWidgetsController(category: string) {
   const defaultCollection = (() => {
     if (normalizedCategory === "students") return "students";
     if (normalizedCategory === "contacts") return "contacts";
-    if (normalizedCategory === "teachers") return "teachers";
+    if (normalizedCategory === "faculty") return "faculty";
     if (normalizedCategory === "attendance") return "attendance_records";
     if (normalizedCategory === "financial" || normalizedCategory === "accounting") return "finance_invoices";
     if (normalizedCategory === "hasanat") return "hasanat_distributions";
@@ -68,7 +68,7 @@ export function usePinnedWidgetsController(category: string) {
 
   const filteredWidgets = (() => {
     return widgets.filter((widget) => {
-      const widgetCategory = widget.category === "faculty" ? "teachers"
+      const widgetCategory = (widget.category === "faculty" || widget.category === "teachers") ? "faculty"
         : widget.category === "finance" ? "financial"
         : widget.category === "academic" ? "examinations"
         : widget.category === "question-bank" ? "questionBank"
@@ -88,7 +88,7 @@ export function usePinnedWidgetsController(category: string) {
 
   useContactsWidgetAggregates(filteredWidgets);
   useStudentsWidgetAggregates(filteredWidgets);
-  useTeachersWidgetAggregates(filteredWidgets);
+  useFacultyWidgetAggregates(filteredWidgets);
   useSessionsWidgetAggregates(filteredWidgets);
   useEnrollmentsWidgetAggregates(filteredWidgets);
 

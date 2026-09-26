@@ -117,14 +117,14 @@ describe("rbacService", () => {
     expect(isAllowedCollectionName("whatsappTemplates_u:other-user")).toBe(false);
     expect(isAllowedCollectionName("students")).toBe(false);
     expect(isAllowedCollectionName("contacts")).toBe(false);
-    expect(isAllowedCollectionName("teachers")).toBe(false);
-    expect(isAllowedCollectionName("teacherStatuses")).toBe(false);
-    expect(isAllowedCollectionName("teacherSpecializations")).toBe(false);
+    expect(isAllowedCollectionName("faculty")).toBe(false);
+    expect(isAllowedCollectionName("facultyStatuses")).toBe(false);
+    expect(isAllowedCollectionName("facultySpecializations")).toBe(false);
     expect(canWriteCollection(admin, "whatsappTemplates")).toBe(false);
     expect(canWriteCollection(admin, "whatsappTemplates_u:other-user")).toBe(false);
     expect(canWriteCollection(admin, "currencies")).toBe(true);
-    expect(canWriteCollection(admin, "teachers")).toBe(true);
-    expect(canWriteCollection(admin, "teacherStatuses")).toBe(false);
+    expect(canWriteCollection(admin, "faculty")).toBe(true);
+    expect(canWriteCollection(admin, "facultyStatuses")).toBe(false);
     // Legacy doc-store config collections pruned from ALLOWED_COLLECTIONS (typed tables / no runtime read).
     expect(canWriteCollection(admin, "sessionTypes")).toBe(false);
     expect(canWriteCollection(admin, "attendanceStatuses")).toBe(false);
@@ -169,10 +169,10 @@ describe("rbacService", () => {
     expect(canDeleteCollection(teacher, "contacts")).toBe(false);
   });
 
-  it("aligns teachers delete with teachers.delete permission", () => {
-    expect(canDeleteCollection(admin, "teachers")).toBe(true);
-    expect(canDeleteCollection(teacher, "teachers")).toBe(false);
-    expect(canDeleteCollection(accountant, "teachers")).toBe(false);
+  it("aligns faculty delete with faculty.delete permission", () => {
+    expect(canDeleteCollection(admin, "faculty")).toBe(true);
+    expect(canDeleteCollection(teacher, "faculty")).toBe(false);
+    expect(canDeleteCollection(accountant, "faculty")).toBe(false);
   });
 
   it("aligns contacts read with contacts.read permission", () => {

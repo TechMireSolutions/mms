@@ -10,7 +10,6 @@ export interface ContactsCommandMetricsProps {
   conflictCount: number;
   flushing: boolean;
   onFlushPending?: () => void;
-  onOpenDuplicates?: () => void;
   onReviewConflicts?: () => void;
 }
 
@@ -21,7 +20,6 @@ export const ContactsCommandMetrics = React.memo(function ContactsCommandMetrics
   conflictCount,
   flushing,
   onFlushPending,
-  onOpenDuplicates: _onOpenDuplicates,
   onReviewConflicts,
 }: ContactsCommandMetricsProps): React.JSX.Element {
   const { t } = useTranslation();

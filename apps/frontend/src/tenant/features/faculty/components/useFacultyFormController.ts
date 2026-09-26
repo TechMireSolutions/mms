@@ -1,46 +1,32 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useContactById } from "@/tenant/hooks/collections/contacts";
-import { useUsersContractList, invalidateUsersQueries } from "@/tenant/hooks/collections/users";
-import { useFacultyLookupMutation } from "@/tenant/features/faculty/hooks/useFacultyLookups";
-import { useTeacherLinkedContactIds, useTeacherNextEmployeeId } from "@/tenant/features/faculty/hooks/useFaculty";
+import { useUsersContractList } from "@/tenant/hooks/collections/users";
 import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { teacherStatusOptions } from "@/lib/faculty/facultyStatusUi";
 import { useTeacherStatusConfig, useTeacherLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
+import { useFacultyDesignations } from "@/tenant/features/faculty/hooks/useFacultyDesignations";
 import {
-  type FacultyMember,
-  type Teacher,
+  type Faculty,
   DEFAULT_TEACHERS_SETTINGS,
-  type TeacherDuplicateReason,
-  getContactQualification,
-  getContactSpecialization,
+  FACULTY_HIERARCHY_RANK_PRESETS,
   resolveTeacherEnabledTabIds,
   resolveTeacherFieldsMapForColumnSync,
 } from "@mms/shared";
-import { extractEmployeeId, getInitialTeacherDraft, teacherDraftSnapshot } from "@/tenant/features/faculty/components/facultyFormDraft";
-import { confirmPendingTeacherSave, runTeacherSaveFlow } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
+import { useFacultyContractList } from "@/tenant/features/faculty/hooks/useFacultyTsrHooks";
+import {
+  filterSupervisorCandidates,
+  type FacultyFormControllerOptions,
+  type UseTeacherFormControllerOptions,
+  type UseFacultyFormControllerOptions,
+} from "@/tenant/features/faculty/components/facultyFormDraft";
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/faculty/components/facultyFormValidation";
-import type { TeacherStatusOption } from '@/tenant/features/faculty/components/FacultyFormSections';
-import type { FacultyUserAccountDraft } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
+import type { TeacherStatusOption } from "@/tenant/features/faculty/components/FacultyFormSections";
+import { useFacultyHierarchyFormSync } from "@/tenant/features/faculty/components/useFacultyFormSync";
+import { useFacultyDraftState } from "@/tenant/features/faculty/components/useFacultyDraftState";
+import { useFacultyFormSaveActions } from "@/tenant/features/faculty/components/useFacultyFormSaveActions";
 
-export interface FacultyFormControllerOptions {
-  faculty?: FacultyMember;
-  teacher?: Teacher;
-  onClose: () => void;
-  onSave: (faculty: FacultyMember) => void | Promise<void>;
-}
-
-export type UseTeacherFormControllerOptions = FacultyFormControllerOptions;
-export type UseFacultyFormControllerOptions = FacultyFormControllerOptions;
-
-const DEFAULT_USER_ACCOUNT_DRAFT: FacultyUserAccountDraft = {
-  enabled: false,
-  role: "teacher",
-  setupMethod: "password",
-  password: "",
-  forceReset: true,
-};
+export type { FacultyFormControllerOptions, UseTeacherFormControllerOptions, UseFacultyFormControllerOptions };
 
 export function useTeacherFormController({
   teacher: teacherProp,
@@ -49,135 +35,44 @@ export function useTeacherFormController({
   onSave,
 }: FacultyFormControllerOptions) {
   const teacher = faculty ?? teacherProp;
-
   const queryClient = useQueryClient();
   const { t, dir, language } = useTranslation();
 
   const { settings, isFieldEnabled, isFieldRequired } = useTeacherConfig();
+  const { statusOptions: statusValues, specializationOptions } = useTeacherLookupOptions();
+  const designationDefinitions = useFacultyDesignations();
 
-  const {
-    statusOptions: statusValues,
-    specializationOptions,
-    designationOptions,
-  } = useTeacherLookupOptions();
-
-  const { mutateAsync: mutateLookup } = useFacultyLookupMutation();
-  const handleUpdateDesignations = async (next: string[]) => {
-    await mutateLookup({ kind: "designations", items: next });
-  };
-
-  const defaultSpecialization =
-    settings.defaultSpecialization
-    || specializationOptions[0]
-    || DEFAULT_TEACHERS_SETTINGS.defaultSpecialization;
+  const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_TEACHERS_SETTINGS.defaultSpecialization;
   const idPrefix = settings.idPrefix || DEFAULT_TEACHERS_SETTINGS.idPrefix;
   const autoGenerateId = settings.autoGenerateId !== false;
   const requireContactLink = settings.requireContactLink !== false;
-
-  const fieldsMap = (() => resolveTeacherFieldsMapForColumnSync(settings.fields))();
-
-  const statusOptions = (() => teacherStatusOptions(t, statusValues))() as TeacherStatusOption[];
-
+  const fieldsMap = resolveTeacherFieldsMapForColumnSync(settings.fields);
+  const statusOptions = teacherStatusOptions(t, statusValues) as TeacherStatusOption[];
   const statusConfig = useTeacherStatusConfig();
-
-  const [saving, setSaving] = useState(false);
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [pendingSaveData, setPendingSaveData] = useState<Partial<Teacher> | null>(null);
-  const [typedDuplicateReason, setTypedDuplicateReason] = useState<TeacherDuplicateReason | null>(null);
-  const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
   const formInstanceId = String(teacher?.id ?? "new");
 
-  const [teacherDraft, setTeacherDraft] = useState<Partial<Teacher>>(() =>
-    getInitialTeacherDraft({ teacher, defaultSpecialization }),
-  );
-  const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
-    teacherDraftSnapshot(getInitialTeacherDraft({ teacher, defaultSpecialization })),
-  );
-
-  const [userAccountDraft, setUserAccountDraft] = useState<FacultyUserAccountDraft>(DEFAULT_USER_ACCOUNT_DRAFT);
-
-  useEffect(() => {
-    const nextDraft = getInitialTeacherDraft({ teacher, defaultSpecialization });
-    setTeacherDraft(nextDraft);
-    setBaselineSnapshot(teacherDraftSnapshot(nextDraft));
-    setErrors({});
-    setUserAccountDraft(DEFAULT_USER_ACCOUNT_DRAFT);
-  }, [teacher, defaultSpecialization]);
-
-  const updateDraft = (patch: Partial<Teacher>) => {
-    setTeacherDraft((prev) => ({ ...prev, ...patch }));
-  };
-
-  const isDirty =
-    teacherDraftSnapshot(teacherDraft) !== baselineSnapshot
-    || userAccountDraft.enabled;
-
-  const enabledTabs = (() => new Set(resolveTeacherEnabledTabIds(settings)))();
-
-  const getFieldError = (fieldId: string): string | undefined =>
-    errors[fieldId] || errors[`custom:${fieldId}`];
-
-  /** FormModal error banner — deduped field validation messages (Students parity). */
-  const validationErrorSummary = (() => {
-    const messages = Object.values(errors).filter((message) => Boolean(message));
-    const reasonMessage = typedDuplicateReason
-      ? t(DUPLICATE_ERROR_KEYS[typedDuplicateReason])
-      : "";
-    if (reasonMessage) messages.push(reasonMessage);
-    return messages.length > 0 ? [...new Set(messages)] : undefined;
-  })();
-
-  const { data: linkedContact } = useContactById(
-    teacherDraft.contactId ? String(teacherDraft.contactId) : undefined,
-    !!teacherDraft.contactId,
-  );
-
-  useEffect(() => {
-    if (!linkedContact) return;
-    const qual = getContactQualification(linkedContact);
-    const spec = getContactSpecialization(linkedContact);
-    setTeacherDraft((prev) => {
-      const nextQual = qual || prev.qualification || "";
-      const nextSpec = spec || prev.specialization || "";
-      if (prev.qualification === nextQual && prev.specialization === nextSpec) return prev;
-      return { ...prev, qualification: nextQual, specialization: nextSpec };
-    });
-  }, [linkedContact]);
-
-  const { data: linkedTeacherContactIds = [] } = useTeacherLinkedContactIds(
-    teacher?.id ? String(teacher.id) : undefined,
-  );
-
   const {
-    data: nextEmployeeId,
-    refetch: refetchNextEmployeeId,
-    isFetching: isFetchingNextEmployeeId,
-  } = useTeacherNextEmployeeId({
-    prefix: idPrefix,
-    template: settings.idTemplate,
-    digits: settings.idDigits,
-    startSeq: settings.idStartSeq,
-    restartAnnually: settings.idRestartAnnually,
-    enabled: !teacher?.id && autoGenerateId,
+    teacherDraft,
+    setTeacherDraft,
+    setBaselineSnapshot,
+    updateDraft,
+    isDirty,
+    userAccountDraft,
+    setUserAccountDraft,
+    linkedContact,
+    linkedTeacherContactIds,
+    nextEmployeeId,
+    isFetchingNextEmployeeId,
+    handleRegenerateEmployeeId,
+  } = useFacultyDraftState({
+    teacher,
+    defaultSpecialization,
+    autoGenerateId,
+    idPrefix,
+    settings,
   });
 
-  const handleRegenerateEmployeeId = useCallback(async () => {
-    const res = await refetchNextEmployeeId();
-    const nextId = extractEmployeeId(res.data);
-    if (nextId) setTeacherDraft((prev) => ({ ...prev, employeeId: nextId }));
-  }, [refetchNextEmployeeId]);
-
-  useEffect(() => {
-    if (teacher?.id || !autoGenerateId) return;
-    const resolved = extractEmployeeId(nextEmployeeId);
-    if (!resolved || teacherDraft.employeeId) return;
-    setTeacherDraft((prev) => {
-      if (prev.employeeId) return prev;
-      const nextDraft = { ...prev, employeeId: resolved };
-      setBaselineSnapshot(teacherDraftSnapshot(nextDraft));
-      return nextDraft;
-    });
-  }, [nextEmployeeId, teacher?.id, teacherDraft.employeeId, autoGenerateId]);
+  const enabledTabs = useMemo(() => new Set(resolveTeacherEnabledTabIds(settings)), [settings]);
 
   const usersQuery = useUsersContractList({ limit: 100 }, Boolean(teacherDraft.contactId));
   const existingUsers = (usersQuery.data as { users?: Array<{ id: string; contactId?: string | number; email?: string; role?: string; status?: string }> })?.users;
@@ -191,61 +86,57 @@ export function useTeacherFormController({
     ) ?? null;
   }, [existingUsers, teacherDraft.contactId, teacherDraft.userId]);
 
-  const clearDuplicatePrompt = () => {
-    setDuplicateConfirmOpen(false);
-    setTypedDuplicateReason(null);
-    setPendingSaveData(null);
-  };
+  const facultyListQuery = useFacultyContractList({ limit: 100 });
+  const allFaculty = ((facultyListQuery.data as { faculty?: Faculty[] })?.faculty ?? []) as Faculty[];
 
-  const handleDuplicateDialogOpenChange = (open: boolean) =>
-    open ? setDuplicateConfirmOpen(true) : clearDuplicatePrompt();
+  const currentRank = typeof teacherDraft.hierarchyRank === "number" ? teacherDraft.hierarchyRank : 4;
+  const currentId = teacher?.id ? String(teacher.id) : null;
+  const supervisorCandidates = useMemo(
+    () => filterSupervisorCandidates(allFaculty, currentId, currentRank),
+    [allFaculty, currentId, currentRank],
+  );
 
-  const handleSave = async (options?: { keepOpen?: boolean }): Promise<boolean> => {
-    return await runTeacherSaveFlow({
-      teacherDraft,
-      teacher,
-      autoGenerateId,
-      nextEmployeeId,
-      formInstanceId,
-      linkedContact,
-      settings,
-      enabledTabs,
-      fields: fieldsMap,
-      language,
-      t,
-      onSave,
-      onClose,
-      keepOpen: options?.keepOpen,
-      onBaselineReset: (payload) => {
-        setBaselineSnapshot(teacherDraftSnapshot(payload));
-      },
-      setErrors,
-      setSaving,
-      setPendingSaveData,
-      setTypedDuplicateReason,
-      setDuplicateConfirmOpen,
-      userAccountDraft,
-      linkedUser,
-      onUserInvalidate: () => invalidateUsersQueries(queryClient),
-    });
-  };
+  useFacultyHierarchyFormSync({
+    teacherDraft,
+    setTeacherDraft,
+    userAccountDraft,
+    setUserAccountDraft,
+    supervisorCandidates,
+  });
 
-  const confirmDuplicateSave = () => {
-    void confirmPendingTeacherSave({
-      pendingSaveData,
-      teacher,
-      t,
-      onSave,
-      onClose,
-      setSaving,
-      setPendingSaveData,
-      setDuplicateConfirmOpen,
-      userAccountDraft,
-      linkedUser,
-      onUserInvalidate: () => invalidateUsersQueries(queryClient),
-      setErrors,
-    });
-  };
+  const {
+    saving,
+    errors,
+    handleSave,
+    confirmDuplicateSave,
+    validationErrorSummary,
+    pendingSaveData,
+    typedDuplicateReason,
+    duplicateConfirmOpen,
+    clearDuplicatePrompt,
+    handleDuplicateDialogOpenChange,
+  } = useFacultyFormSaveActions({
+    teacherDraft,
+    teacher,
+    autoGenerateId,
+    nextEmployeeId,
+    formInstanceId,
+    linkedContact,
+    settings,
+    enabledTabs,
+    fieldsMap,
+    language,
+    t,
+    onSave,
+    onClose,
+    setBaselineSnapshot,
+    userAccountDraft,
+    linkedUser,
+    queryClient,
+  });
+
+  const getFieldError = (fieldId: string): string | undefined =>
+    errors[fieldId] || errors[`custom:${fieldId}`];
 
   return {
     t,
@@ -257,8 +148,7 @@ export function useTeacherFormController({
     isDirty,
     defaultSpecialization,
     specializationOptions,
-    designationOptions,
-    handleUpdateDesignations,
+    designationOptions: designationDefinitions.data ?? [],
     statusOptions,
     statusConfig,
     autoGenerateId,
@@ -287,6 +177,8 @@ export function useTeacherFormController({
     handleDuplicateDialogOpenChange,
     confirmDuplicateSave,
     duplicateErrorKeys: DUPLICATE_ERROR_KEYS,
+    supervisorCandidates,
+    hierarchyRankPresets: FACULTY_HIERARCHY_RANK_PRESETS,
   };
 }
 

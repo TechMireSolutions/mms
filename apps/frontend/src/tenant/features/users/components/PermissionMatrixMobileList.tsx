@@ -54,7 +54,7 @@ export function PermissionMatrixMobileList({
   const matrixActions = { perms, readOnly, onToggle, onSelectAll, onClearAll };
 
   return (
-    <div className="space-y-4 p-3 md:hidden">
+    <div className="space-y-4 p-3">
       {groups.map((group) => {
         const groupChecked = isGroupAllChecked(group.modules);
         return (

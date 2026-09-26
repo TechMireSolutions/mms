@@ -13,12 +13,20 @@ export interface DomProgressResult {
 export function useDomFormProgress(open: boolean, active: boolean): DomProgressResult {
   const [progress, setProgress] = useState<number | undefined>(undefined);
   const [label, setLabel] = useState<string | undefined>(undefined);
+  const progressRef = useRef<number | undefined>(undefined);
+  const labelRef = useRef<string | undefined>(undefined);
   const ref = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!open || !active) {
-      setProgress(undefined);
-      setLabel(undefined);
+      if (progressRef.current !== undefined) {
+        progressRef.current = undefined;
+        setProgress(undefined);
+      }
+      if (labelRef.current !== undefined) {
+        labelRef.current = undefined;
+        setLabel(undefined);
+      }
       return;
     }
 
@@ -31,8 +39,14 @@ export function useDomFormProgress(open: boolean, active: boolean): DomProgressR
       ) as HTMLElement[];
 
       if (inputs.length === 0) {
-        setProgress(undefined);
-        setLabel(undefined);
+        if (progressRef.current !== undefined) {
+          progressRef.current = undefined;
+          setProgress(undefined);
+        }
+        if (labelRef.current !== undefined) {
+          labelRef.current = undefined;
+          setLabel(undefined);
+        }
         return;
       }
 
@@ -43,8 +57,14 @@ export function useDomFormProgress(open: boolean, active: boolean): DomProgressR
       });
 
       if (targetInputs.length === 0) {
-        setProgress(undefined);
-        setLabel(undefined);
+        if (progressRef.current !== undefined) {
+          progressRef.current = undefined;
+          setProgress(undefined);
+        }
+        if (labelRef.current !== undefined) {
+          labelRef.current = undefined;
+          setLabel(undefined);
+        }
         return;
       }
 
@@ -76,10 +96,23 @@ export function useDomFormProgress(open: boolean, active: boolean): DomProgressR
         }
         return false;
       }).length;
-
       const percentage = Math.round((filledCount / sourceList.length) * 100);
-      setProgress(percentage);
-      setLabel(`${filledCount}/${sourceList.length}`);
+      const newLabel = `${filledCount}/${sourceList.length}`;
+      
+      if (progressRef.current !== percentage) {
+        progressRef.current = percentage;
+        setProgress(percentage);
+      }
+      if (labelRef.current !== newLabel) {
+        labelRef.current = newLabel;
+        setLabel(newLabel);
+      }
+    };
+    
+    let debounceTimer: ReturnType<typeof setTimeout>;
+    const debouncedUpdateProgress = () => {
+      clearTimeout(debounceTimer);
+      debounceTimer = setTimeout(updateProgress, 100);
     };
 
     const container = ref.current;
@@ -87,15 +120,17 @@ export function useDomFormProgress(open: boolean, active: boolean): DomProgressR
 
     updateProgress();
 
-    const observer = new MutationObserver(updateProgress);
-    observer.observe(container, { childList: true, subtree: true, attributes: true });
+    const observer = new MutationObserver(debouncedUpdateProgress);
+    // Be careful with attributes: true, it triggers on ANY attribute change in the entire tree!
+    observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ['value', 'checked', 'aria-checked', 'aria-required', 'class'] });
 
-    container.addEventListener('input', updateProgress);
-    container.addEventListener('change', updateProgress);
+    container.addEventListener('input', debouncedUpdateProgress);
+    container.addEventListener('change', debouncedUpdateProgress);
 
     return () => {
-      container.removeEventListener('input', updateProgress);
-      container.removeEventListener('change', updateProgress);
+      clearTimeout(debounceTimer);
+      container.removeEventListener('input', debouncedUpdateProgress);
+      container.removeEventListener('change', debouncedUpdateProgress);
       observer.disconnect();
     };
   }, [open, active]);

@@ -7,6 +7,7 @@ import { scopedStorageKey } from "@/lib/dbStorageCore.js";
 
 export const LINK_MANAGED_COLLECTIONS = new Set([
   "students",
+  "faculty",
   "teachers",
   "enrollments",
   "attendance_records",
@@ -39,24 +40,28 @@ export function readRawCollection<T = CollectionRow>(key: string): T[] {
 export function getLinkHydrationContext() {
   const contacts = readRawCollection<ContactLike>("contacts");
   const rawStudents = readRawCollection("students");
-  const rawTeachers = readRawCollection("teachers");
+  const rawFaculty = readRawCollection("faculty");
+  const rawTeachers = rawFaculty.length > 0 ? rawFaculty : readRawCollection("teachers");
   const base = {
     contacts,
     students: [] as CollectionRow[],
+    faculty: [] as CollectionRow[],
     teachers: [] as CollectionRow[],
     users: [] as CollectionRow[],
     distributions: [] as CollectionRow[],
   };
   const students = hydrateCollectionRows("students", rawStudents, base);
-  const teachers = hydrateCollectionRows("teachers", rawTeachers, base);
+  const faculty = hydrateCollectionRows("faculty", rawFaculty.length > 0 ? rawFaculty : rawTeachers, base);
+  const teachers = faculty;
   const users = hydrateCollectionRows(
     "users",
     readRawCollection("users"),
-    { ...base, students, teachers },
+    { ...base, students, faculty, teachers },
   );
   return {
     contacts,
     students,
+    faculty,
     teachers,
     users,
     distributions: readRawCollection("hasanat_distributions"),

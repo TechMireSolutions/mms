@@ -10,10 +10,9 @@ import { Button } from "@/components/ui/button";
 import { ChannelBadge } from "@/components/ui/ChannelBadge";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { DirectoryCardHeader } from "@/components/ui/DirectoryCardHeader";
-import { DirectoryCardFooter } from "@/components/ui/DirectoryCardFooter";
+import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
 import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
-import { DirectoryCardViewButton } from "@/components/ui/DirectoryCardViewButton";
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
@@ -139,7 +138,7 @@ export function MessagingListCardItem({
                 variant="ghost"
                 size="icon"
                 onClick={(e) => void onCopyBody(e, log)}
-                className={`h-6 w-6 min-h-6 min-w-6 shrink-0 text-muted-foreground hover:${SEMANTIC_TEXT.primary}`}
+                className={`min-h-11 min-w-11 shrink-0 text-muted-foreground hover:${SEMANTIC_TEXT.primary}`}
                 title={t("contacts.table.copy")}
               >
                 {isCopied ? (
@@ -160,8 +159,11 @@ export function MessagingListCardItem({
         </div>
       )}
 
-      <DirectoryCardFooter
-        trailing={
+      <DirectoryCardFooterActions
+        onView={onViewLog ? () => onViewLog(log) : undefined}
+        viewAriaLabel={`${t("contacts.table.viewProfile")} - ${name}`}
+        viewLabel={t("contacts.actionViewShort")}
+        actions={
           <>
             {onFilterContact && (
               <Button
@@ -172,32 +174,26 @@ export function MessagingListCardItem({
                   e.stopPropagation();
                   onFilterContact(name);
                 }}
-                className={`h-7 px-2 text-xs text-muted-foreground hover:${SEMANTIC_TEXT.primary}`}
+                className={`min-h-11 px-2.5 text-xs text-muted-foreground hover:${SEMANTIC_TEXT.primary}`}
               >
-                <Filter className="me-1 h-3 w-3" />
+                <Filter className="me-1 h-3.5 w-3.5" />
                 <span>{t("common.filters")}</span>
               </Button>
             )}
             {canWrite && (
               <Button
+                type="button"
                 variant="ghost"
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
                   onResendLog(log);
                 }}
-                className={`h-7 px-2.5 text-xs font-semibold ${SEMANTIC_TEXT.primary} hover:bg-primary/10`}
+                className={`min-h-11 px-2.5 text-xs font-semibold ${SEMANTIC_TEXT.primary} hover:bg-primary/10`}
               >
-                <RotateCcw className="me-1 h-3 w-3" />
+                <RotateCcw className="me-1 h-3.5 w-3.5" />
                 {t("messaging.resend")}
               </Button>
-            )}
-            {onViewLog && (
-              <DirectoryCardViewButton
-                label={t("contacts.actionViewShort")}
-                ariaLabel={`${t("contacts.table.viewProfile")} - ${name}`}
-                onClick={() => onViewLog(log)}
-              />
             )}
           </>
         }

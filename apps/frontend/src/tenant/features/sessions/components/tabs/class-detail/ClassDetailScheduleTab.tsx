@@ -68,7 +68,7 @@ export function ClassDetailScheduleTab({
                     { value: 'monthly', label: t('sessions.classes.detail.schedule.monthly') },
                     { value: 'custom', label: t('sessions.classes.detail.schedule.custom') },
                   ]}
-                  className="w-32 min-w-[120px] shrink-0 text-xs"
+                  className="w-32 min-w-32 shrink-0 text-xs"
                 />
                 <Input
                   type="date"
@@ -102,7 +102,7 @@ export function ClassDetailScheduleTab({
       <div className="rounded-xl border border-border/70 bg-card p-4 space-y-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <Clock className="h-4 w-4 text-indigo-600" />
+            <Clock className="h-4 w-4 text-primary" />
             <h4 className="text-sm font-semibold text-foreground">{t('sessions.classes.detail.timetable.title')}</h4>
           </div>
           <Button size="sm" variant="outline" onClick={onAddPeriod} className="h-8 gap-1 text-xs">
@@ -145,9 +145,12 @@ export function ClassDetailScheduleTab({
                     const found = allTeachers.find(
                       (teacher) => formatTeacherDisplayName(teacher) === val || (teacher.name || '').trim() === val,
                     );
+                    const id = found?.id ? String(found.id) : (period.facultyId || period.teacherId);
                     onUpdatePeriod(period.id, {
+                      facultyName: val,
+                      facultyId: id,
                       teacherName: val,
-                      teacherId: found?.id ? String(found.id) : period.teacherId,
+                      teacherId: id,
                     });
                   }}
                   options={[
@@ -160,7 +163,7 @@ export function ClassDetailScheduleTab({
                       };
                     }),
                   ]}
-                  className="w-44 min-w-[160px] shrink-0 text-xs"
+                  className="w-44 min-w-40 shrink-0 text-xs"
                 />
                 <Button
                   size="icon"

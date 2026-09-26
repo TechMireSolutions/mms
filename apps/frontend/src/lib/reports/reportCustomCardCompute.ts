@@ -23,6 +23,7 @@ export function computeCustomCard(
   card: CustomCard,
   collections: {
     students: Student[];
+    faculty?: Teacher[];
     teachers: Teacher[];
     sessions: Session[];
     enrollments?: Enrollment[];
@@ -37,7 +38,8 @@ export function computeCustomCard(
   },
   t?: TranslationFunction,
 ) {
-  const collectionRows = (collections[card.collection] as Record<string, unknown>[]) || [];
+  const collectionKey = card.collection === 'faculty' && !collections.faculty ? 'teachers' : card.collection;
+  const collectionRows = ((collections as Record<string, unknown[]>)[collectionKey] as Record<string, unknown>[]) || [];
 
   const filteredRows = collectionRows.filter((collectionRow) =>
     matchesWidgetFilter(collectionRow, card.filterField, card.filterOperator, card.filterValue),

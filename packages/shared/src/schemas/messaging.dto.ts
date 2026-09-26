@@ -106,7 +106,7 @@ export const messagingLogsQuerySchema = z.object({
     .transform((value) => value === true || value === 'true'),
 }).strict();
 
-export const MESSAGING_RECIPIENT_ROLES = ['all', 'students', 'teachers', 'staff', 'contacts'] as const;
+export const MESSAGING_RECIPIENT_ROLES = ['all', 'students', 'faculty', 'teachers', 'staff', 'contacts'] as const;
 export const MESSAGING_RECIPIENT_GENDERS = ['all', 'male', 'female', 'unspecified'] as const;
 
 /** Cap for Work “select all reachable” match — same ceiling as the retired FE page-walk. */

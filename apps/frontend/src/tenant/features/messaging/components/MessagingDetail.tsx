@@ -5,7 +5,7 @@ import {
   type StandardMessagingRecipient as MessagingRecipient,
 } from '@mms/shared';
 import { ChannelBadge } from '@/components/ui/ChannelBadge';
-import { DetailDrawerShell } from '@/components/ui/DetailDrawerShell';
+import { DetailSheet } from '@/components/common/DetailSheet';
 import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -83,7 +83,7 @@ export const MessagingDetail = (function MessagingDetail({
   };
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       open={Boolean(log)}
       onClose={onClose}
       title={recipientName}
@@ -184,6 +184,6 @@ export const MessagingDetail = (function MessagingDetail({
         <MessagingDetailBodyCard log={log} />
         <MessagingDetailMetadataCard log={log} />
       </div>
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 });

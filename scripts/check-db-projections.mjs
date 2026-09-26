@@ -34,8 +34,8 @@ import { fileURLToPath } from 'node:url';
 const rootDir = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const srcDir = path.join(rootDir, 'apps', 'backend', 'src');
 
-/** Measured 2026-09-15. Raise deliberately with a reason; never casually. */
-const BASELINE = 13;
+/** Measured 2026-09-19. Zero wildcard projections across apps/backend. */
+const BASELINE = 0;
 
 /** Recursively collects non-test TypeScript sources. */
 function collectSourceFiles(dir) {

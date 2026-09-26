@@ -43,8 +43,12 @@ export function getRedisClient(): Redis | null {
       },
     });
 
-    client.on('connect', () => {
+    client.on('ready', () => {
       isRedisConnected = true;
+    });
+
+    client.on('close', () => {
+      isRedisConnected = false;
     });
 
     client.on('error', (err: Error) => {
@@ -97,8 +101,12 @@ export function getRateLimitRedisClient(): Redis | null {
       },
     });
 
-    client.on('connect', () => {
+    client.on('ready', () => {
       isRateLimitRedisConnected = true;
+    });
+
+    client.on('close', () => {
+      isRateLimitRedisConnected = false;
     });
 
     client.on('error', (err: Error) => {
@@ -213,6 +221,71 @@ export async function redisSet(key: string, value: string, ttlSeconds?: number):
     }
   }
   inMemoryStore.set(key, { value, expiresAt });
+}
+
+export async function redisIncr(key: string, ttlSeconds?: number): Promise<number> {
+  const client = getRedisClient();
+  if (client && isRedisConnected) {
+    try {
+      const val = await client.incr(key);
+      if (ttlSeconds && ttlSeconds > 0) {
+        await client.expire(key, ttlSeconds);
+      }
+      return val;
+    } catch {
+      // Fallback to in-memory on error
+    }
+  }
+
+  const now = Date.now();
+  const entry = inMemoryStore.get(key);
+  let currentNum = 0;
+  if (entry && (!entry.expiresAt || now <= entry.expiresAt)) {
+    currentNum = Number.parseInt(entry.value, 10) || 0;
+  }
+  const nextNum = currentNum + 1;
+  const expiresAt = ttlSeconds && ttlSeconds > 0 ? now + ttlSeconds * 1000 : undefined;
+  inMemoryStore.set(key, { value: String(nextNum), expiresAt });
+  return nextNum;
+}
+
+export async function redisDecr(key: string, ttlSeconds?: number): Promise<number> {
+  const client = getRedisClient();
+  if (client && isRedisConnected) {
+    try {
+      const luaScript = `
+        local val = redis.call('DECR', KEYS[1])
+        if val <= 0 then
+          redis.call('DEL', KEYS[1])
+          return 0
+        else
+          if ARGV[1] and tonumber(ARGV[1]) > 0 then
+            redis.call('EXPIRE', KEYS[1], ARGV[1])
+          end
+          return val
+        end
+      `;
+      const result = await client.eval(luaScript, 1, key, ttlSeconds ? String(ttlSeconds) : '0');
+      return Number(result) || 0;
+    } catch {
+      // Fallback to in-memory on error
+    }
+  }
+
+  const now = Date.now();
+  const entry = inMemoryStore.get(key);
+  let currentNum = 0;
+  if (entry && (!entry.expiresAt || now <= entry.expiresAt)) {
+    currentNum = Number.parseInt(entry.value, 10) || 0;
+  }
+  const nextNum = Math.max(0, currentNum - 1);
+  if (nextNum === 0) {
+    inMemoryStore.delete(key);
+  } else {
+    const expiresAt = ttlSeconds && ttlSeconds > 0 ? now + ttlSeconds * 1000 : entry?.expiresAt;
+    inMemoryStore.set(key, { value: String(nextNum), expiresAt });
+  }
+  return nextNum;
 }
 
 export async function redisDel(key: string): Promise<void> {

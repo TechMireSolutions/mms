@@ -13,10 +13,7 @@ import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 
 export interface ContactExperienceEntryCardProps
-  extends Pick<
-    ContactSubListTabBaseProps,
-    "formInstanceId" | "getLocalId" | "getListItemError" | "isFieldRequired"
-  > {
+  extends Pick<ContactSubListTabBaseProps, "formInstanceId" | "getLocalId" | "getListItemError" | "isFieldRequired"> {
   exp: ContactExperience;
   idx: number;
   showTitle: boolean;
@@ -55,13 +52,14 @@ export function ContactExperienceEntryCard({
 }: ContactExperienceEntryCardProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const titleError = getListItemError("experience", "title", idx);
-  const orgError = getListItemError("experience", "organization", idx);
-  const locationError = getListItemError("experience", "location", idx);
-  const startDateError = getListItemError("experience", "startDate", idx);
-  const endDateError = getListItemError("experience", "endDate", idx);
-  const isCurrentError = getListItemError("experience", "isCurrent", idx);
-  const descriptionError = getListItemError("experience", "description", idx);
+  const getErr = (field: string) => getListItemError("experience", field, idx);
+  const titleError = getErr("title");
+  const orgError = getErr("organization");
+  const locationError = getErr("location");
+  const startDateError = getErr("startDate");
+  const endDateError = getErr("endDate");
+  const isCurrentError = getErr("isCurrent");
+  const descriptionError = getErr("description");
 
   return (
     <ListFieldCard

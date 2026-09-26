@@ -6,7 +6,7 @@ import {
   resolveTeacherSpecializations,
   resolveTeacherStatuses,
 } from "@mms/shared";
-import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
+import { useFacultyConfig, useTeacherConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { facultyStatusBadgeConfig } from "@/lib/faculty/facultyStatusUi";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
@@ -14,6 +14,7 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 const resolveStatuses = resolveFacultyStatuses || resolveTeacherStatuses;
 const resolveSpecs = resolveFacultySpecializations || resolveTeacherSpecializations;
 const resolveDesignations = resolveFacultyDesignations || resolveTeacherDesignations;
+const useFacultyConfigHook = useFacultyConfig || useTeacherConfig;
 
 /**
  * SSOT for the faculty StatusBadge config, derived from the tenant's configured statuses.
@@ -21,7 +22,7 @@ const resolveDesignations = resolveFacultyDesignations || resolveTeacherDesignat
  */
 export function useFacultyStatusConfig(): Record<string, StatusBadgeConfigItem> {
   const { t } = useTranslation();
-  const { statuses } = useTeacherConfig();
+  const { statuses } = useFacultyConfigHook();
   return (() => facultyStatusBadgeConfig(t, statuses))();
 }
 export const useTeacherStatusConfig = useFacultyStatusConfig;
@@ -35,7 +36,7 @@ export function useFacultyLookupOptions(): {
   specializationOptions: string[];
   designationOptions: string[];
 } {
-  const { statuses, specializations, designations } = useTeacherConfig();
+  const { statuses, specializations, designations } = useFacultyConfigHook();
   return (() => ({
     statusOptions: [...resolveStatuses(statuses)],
     specializationOptions: [...resolveSpecs(specializations)],

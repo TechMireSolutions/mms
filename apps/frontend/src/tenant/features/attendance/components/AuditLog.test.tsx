@@ -58,4 +58,24 @@ describe("AuditLog Component", () => {
     expect(container!.innerHTML).toContain("attendance.audit.action.submitted");
     expect(container!.innerHTML).toContain("admin");
   });
+
+  it("renders audit log in cards mode without table", async () => {
+    await act(async () => {
+      const root = createRoot(container!);
+      root.render(React.createElement(AuditLog, { filters: { classId: "cls-1", date: "2025-01-01" }, viewMode: "cards" }));
+    });
+
+    expect(container!.innerHTML).toContain("admin");
+    expect(container!.innerHTML).not.toContain("<table");
+  });
+
+  it("renders audit log in table mode", async () => {
+    await act(async () => {
+      const root = createRoot(container!);
+      root.render(React.createElement(AuditLog, { filters: { classId: "cls-1", date: "2025-01-01" }, viewMode: "table" }));
+    });
+
+    expect(container!.innerHTML).toContain("admin");
+    expect(container!.innerHTML).toContain("<table");
+  });
 });

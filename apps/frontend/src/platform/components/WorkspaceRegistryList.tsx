@@ -13,6 +13,8 @@ import { ErrorState } from "@/components/ui/ErrorState";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { containerVariants, cardVariants } from "@/platform/lib/animations";
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { cn } from "@/lib/utils";
 
 type WorkspaceLinkDestination = typeof ROUTES.login | typeof ROUTES.forgotPassword;
 
@@ -64,7 +66,7 @@ export default function WorkspaceRegistryList({
 
   return (
     <div className="w-full space-y-3">
-      <SectionLabel as="p" weight="semibold" toneClassName="text-muted-foreground/80" className="text-center">
+      <SectionLabel as="p" weight="semibold" className="text-center">
         {t(headingKey)}
       </SectionLabel>
       <motion.ul
@@ -86,7 +88,7 @@ export default function WorkspaceRegistryList({
           ))}
         </AnimatePresence>
       </motion.ul>
-      <p className="flex items-center justify-center gap-1.5 pt-1 text-center text-xs font-medium text-muted-foreground/70">
+      <p className="flex items-center justify-center gap-1.5 pt-1 text-center text-xs font-medium text-muted-foreground">
         <ExternalLink className="h-3.5 w-3.5" aria-hidden />
         {t("apex.opensSignInHint")}
       </p>
@@ -115,9 +117,19 @@ const RegistryWorkspaceRow = (function RegistryWorkspaceRow({
     <motion.li variants={reducedMotion ? undefined : cardVariants} layout={!reducedMotion}>
       <a
         href={targetUrl}
-        className="group block w-full cursor-pointer rounded-2xl border border-border/50 bg-card/70 p-4 text-start shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30"
+        className={cn(
+          "relative overflow-hidden group/card block w-full cursor-pointer rounded-2xl border border-border/50 bg-card/70 p-4 text-start shadow-sm backdrop-blur-sm transition-all duration-300 hover:border-primary/30 hover:bg-card hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/30",
+          CARD_STRIPE_INSET,
+        )}
         aria-label={actionLabel}
       >
+        <div
+          aria-hidden="true"
+          className={cn(
+            CARD_STRIPE_BASE,
+            "bg-primary/50 group-hover/card:bg-primary transition-colors duration-150 ease-out",
+          )}
+        />
         <div className="flex items-center gap-3.5">
           <div className="relative transition-transform duration-300 group-hover:scale-105">
             <WorkspaceLogo
@@ -130,11 +142,11 @@ const RegistryWorkspaceRow = (function RegistryWorkspaceRow({
             <p className="text-sm font-bold text-foreground transition-colors group-hover:text-primary">
               {workspace.madrasaName}
             </p>
-            <p className="break-all font-mono text-xs text-muted-foreground opacity-85">
+            <p className="break-all font-mono text-xs text-muted-foreground">
               {workspace.subdomain}.{appDomain}
             </p>
             {workspace.tagline ? (
-              <p className="truncate text-xs font-medium text-muted-foreground/75">
+              <p className="truncate text-xs font-medium text-muted-foreground">
                 {workspace.tagline}
               </p>
             ) : null}

@@ -3,6 +3,7 @@ import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import type { ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import type { EntityDescriptor } from "@/types/entityRegistry";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
@@ -68,7 +69,9 @@ export interface WorkTaskToolbarProps {
   };
 
   columnCustomizer?: {
-    registry: ModuleColumnRegistryEntry[];
+    registry?: ModuleColumnRegistryEntry[];
+    entityType?: string;
+    descriptor?: EntityDescriptor<unknown>;
     onUpdate: (layout: ModuleColumnRegistryEntry[]) => void;
     onReset?: () => void;
     labels?: Partial<ModuleColumnCustomizerLabels>;
@@ -172,7 +175,7 @@ export function WorkTaskToolbar({
                       <Badge
                         variant="secondary"
                         className={cn(
-                          "h-5 min-w-5 px-1 text-[10px] font-normal leading-none",
+                          "h-5 min-w-5 px-1 text-4xs font-normal leading-none",
                           option.badgeCls,
                         )}
                       >

@@ -1,6 +1,6 @@
 import type { Permission } from './permissions.js';
 import { z } from 'zod';
-import { normalizeStoredTeacher, stripTeacherWriteNoise } from './facultyUtils.js';
+import { normalizeStoredFaculty, stripFacultyWriteNoise } from './facultyUtils.js';
 
 /** Faculty status write bound — matches lookup item max length. */
 export const FACULTY_STATUS_WRITE_MAX = 200;
@@ -23,6 +23,11 @@ export const facultyCoreSchema = z.object({
   specialization: z.string().optional(),
   department: z.string().optional(),
   designation: z.string().optional(),
+  customDesignation: z.string().trim().optional(),
+  reportingFacultyId: z.string().nullable().optional(),
+  hierarchyRank: z.coerce.number().int().min(1).max(99).optional().default(10),
+  reportingFacultyName: z.string().optional(),
+  subordinateCount: z.coerce.number().int().min(0).optional(),
   status: z.string().min(1).max(FACULTY_STATUS_WRITE_MAX).optional(),
   joinDate: z.string().optional(),
   qualification: z.string().optional(),
@@ -38,9 +43,9 @@ export const facultyCoreSchema = z.object({
 export const facultyRecordSchema = z.preprocess(
   (raw) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
-    return stripTeacherWriteNoise({ ...(raw as Record<string, unknown>) });
+    return stripFacultyWriteNoise({ ...(raw as Record<string, unknown>) });
   },
-  facultyCoreSchema.transform((record) => normalizeStoredTeacher(record)),
+  facultyCoreSchema.transform((record) => normalizeStoredFaculty(record)),
 );
 
 /** POST /api/faculty/bulk-status body. */
@@ -67,7 +72,7 @@ export const facultyNextEmployeeIdQuerySchema = z.object({
 });
 
 export const facultyListSchema = z.array(facultyCoreSchema).transform((list) =>
-  list.map((record) => normalizeStoredTeacher(record)),
+  list.map((record) => normalizeStoredFaculty(record)),
 );
 
 export type FacultyRecord = z.infer<typeof facultyCoreSchema>;

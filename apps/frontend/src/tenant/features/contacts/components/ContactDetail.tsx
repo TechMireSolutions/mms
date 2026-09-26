@@ -1,5 +1,5 @@
 import React from "react";
-import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { DetailSheet } from "@/components/common/DetailSheet";
 import { getDisplayName, type Contact } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useContactDetailAttachments } from "@/tenant/features/contacts/hooks/useContactDetailAttachments";
@@ -30,7 +30,7 @@ export interface ContactDetailProps {
 
 /**
  * Contacts Detail Drawer: orchestrates tab state, timeline notes, file uploads,
- * communications actions, and soft-delete/restore operations within {@link DetailDrawerShell}.
+ * communications actions, and soft-delete/restore operations within {@link DetailSheet}.
  */
 export function ContactDetail({
   contact: initialContact,
@@ -116,7 +116,7 @@ export function ContactDetail({
   const footerNode = hasFooterStamp ? <ContactDetailDrawerFooter contact={contactState} /> : null;
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       onClose={onClose}
       title={displayName}
       subtitle={isArchived ? t("contacts.detail.archivedSubtitle") : undefined}
@@ -164,7 +164,7 @@ export function ContactDetail({
         }}
         destructive
       />
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 }
 

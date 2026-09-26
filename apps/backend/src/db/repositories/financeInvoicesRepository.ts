@@ -7,6 +7,7 @@ import { ValidationError } from '../../lib/httpErrors.js';
 import { invoiceWriteValues } from './financeInvoiceValues.js';
 import { invoiceLineRowToRecord, replaceInvoiceLines } from './financeBillingRepository.js';
 import { mapAuditTimestamps } from './repositoryMappers.js';
+import { invalidateMultiTierCache } from '../../lib/cache/index.js';
 
 type InvoiceRow = typeof financeInvoices.$inferSelect;
 
@@ -266,6 +267,7 @@ export async function saveInvoice(tenant: string, record: Invoice): Promise<void
   if (record.lines) {
     await replaceInvoiceLines(tenant, record.id, record.lines);
   }
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'finance', key: String(record.id) });
 }
 
 export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Promise<void> {
@@ -318,6 +320,7 @@ export async function bulkSaveInvoices(tenant: string, records: Invoice[]): Prom
         },
       });
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'finance' });
 }
 
 export async function replaceInvoicesForWorkspace(tenant: string, records: Invoice[]): Promise<void> {
@@ -335,6 +338,7 @@ export async function replaceInvoicesForWorkspace(tenant: string, records: Invoi
       await tx.insert(financeInvoices).values(uniqueRecords.map((r) => invoiceWriteValues(subdomain, r)));
     }
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'finance' });
 }
 
 export async function deleteInvoice(tenant: string, id: string): Promise<void> {
@@ -344,6 +348,7 @@ export async function deleteInvoice(tenant: string, id: string): Promise<void> {
       .delete(financeInvoices)
       .where(and(eq(financeInvoices.workspaceSubdomain, subdomain), eq(financeInvoices.id, id)));
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'finance', key: id });
 }
 
 export async function bulkSoftDeleteInvoices(
@@ -356,7 +361,7 @@ export async function bulkSoftDeleteInvoices(
   const uniqueIds = dedupeTrimmedIds(ids);
   if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
   const now = new Date();
-  return withTenant(subdomain, async (tx) => {
+  const res = await withTenant(subdomain, async (tx) => {
     const activePaymentsCount = await tx.$count(
       financePayments,
       and(
@@ -393,6 +398,8 @@ export async function bulkSoftDeleteInvoices(
       failed: uniqueIds.length - updated.length,
     };
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'finance' });
+  return res;
 }
 
 export async function bulkRestoreInvoices(
@@ -404,7 +411,7 @@ export async function bulkRestoreInvoices(
   const uniqueIds = dedupeTrimmedIds(ids);
   if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
   const now = new Date();
-  return withTenant(subdomain, async (tx) => {
+  const res = await withTenant(subdomain, async (tx) => {
     const updated = await tx
       .update(financeInvoices)
       .set({
@@ -427,5 +434,7 @@ export async function bulkRestoreInvoices(
       failed: uniqueIds.length - updated.length,
     };
   });
+  await invalidateMultiTierCache({ tenantId: subdomain, domain: 'finance' });
+  return res;
 }
 

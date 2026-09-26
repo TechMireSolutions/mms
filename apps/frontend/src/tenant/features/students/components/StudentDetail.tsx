@@ -2,7 +2,7 @@ import React from "react";
 import { useNavigate } from "react-router-dom";
 import { GraduationCap, IdCard } from "lucide-react";
 import type { Student } from "@mms/shared";
-import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
+import { DetailSheet } from "@/components/common/DetailSheet";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
 import { Button } from "@/components/ui/button";
@@ -10,7 +10,7 @@ import type { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
 import { StudentDetailContactSection } from "@/tenant/features/students/components/StudentDetailContactSection";
 import { StudentDetailFieldsSection } from "@/tenant/features/students/components/StudentDetailFieldsSection";
-import { StudentDetailHero } from "@/tenant/features/students/components/StudentDetailHero";
+import { StudentDetailHeroCard } from "@/tenant/features/students/components/StudentDetailHeroCard";
 import { StudentDetailNotesSection } from "@/tenant/features/students/components/StudentDetailNotesSection";
 import { StudentDetailQuickActions } from "@/tenant/features/students/components/StudentDetailQuickActions";
 import { StudentDetailRelationsSection } from "@/tenant/features/students/components/StudentDetailRelationsSection";
@@ -113,7 +113,7 @@ export const StudentDetail = (function StudentDetail({
     ))();
 
   return (
-    <DetailDrawerShell
+    <DetailSheet
       onClose={onClose}
       title={t("students.detail.title")}
       subtitle={
@@ -129,7 +129,7 @@ export const StudentDetail = (function StudentDetail({
       headerExtra={headerExtraNode}
       footer={footerNode}
     >
-      <StudentDetailHero student={student} statusBadgeConfig={statusBadgeConfig} />
+      <StudentDetailHeroCard student={student} statusBadgeConfig={statusBadgeConfig} />
 
       {!isArchived && canWriteMessaging && (
         <StudentDetailQuickActions
@@ -185,7 +185,7 @@ export const StudentDetail = (function StudentDetail({
         loading={sessionsLoading}
         error={sessionsError}
       />
-    </DetailDrawerShell>
+    </DetailSheet>
   );
 });
 

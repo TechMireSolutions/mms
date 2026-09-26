@@ -1,4 +1,4 @@
-import { asc, gt } from 'drizzle-orm';
+import { asc, gt, sql } from 'drizzle-orm';
 import {
   WORKSPACES_COLLECTION,
   PLATFORM_SUPER_USERS_OBJECT_KEY,
@@ -28,12 +28,12 @@ const PAGE_SIZE = 200;
 export async function* pageTenantCollections(
   tx: DbClient,
   subdomain: string | null,
-): AsyncGenerator<[string, unknown[]]> {
+): AsyncGenerator<[string, AsyncIterable<unknown>]> {
   const tenant = subdomain?.trim().toLowerCase() || '';
   let lastSeenName: string | null = null;
   for (;;) {
     const baseQuery = tx
-      .select({ name: schema.collections.name, data: schema.collections.data })
+      .select({ name: schema.collections.name }) // Exclude data to avoid buffering huge JSON
       .from(schema.collections);
 
     const rows = await (lastSeenName
@@ -48,12 +48,33 @@ export async function* pageTenantCollections(
     for (const row of rows) {
       if (row.name === WORKSPACES_COLLECTION) continue;
       const parsed = parseTenantScopedStorageKey(row.name);
-      if (tenant) {
-        if (!parsed || parsed.subdomain !== tenant) continue;
-        yield [parsed.logicalKey, row.data];
-      } else if (!parsed) {
-        yield [row.name, row.data];
+      if (tenant && (!parsed || parsed.subdomain !== tenant)) continue;
+      const logicalKey = parsed ? parsed.logicalKey : row.name;
+
+      async function* streamCollectionData(): AsyncIterable<unknown> {
+        const CHUNK = 500;
+        let offset = 0;
+        for (;;) {
+          const chunkQuery = sql`
+            SELECT item
+            FROM (
+              SELECT jsonb_array_elements(data) AS item
+              FROM ${schema.collections}
+              WHERE name = ${row.name}
+            ) AS t
+            LIMIT ${CHUNK} OFFSET ${offset}
+          `;
+          const chunkResult = await tx.execute(chunkQuery);
+          if (chunkResult.rows.length === 0) break;
+          for (const chunkRow of chunkResult.rows) {
+            yield (chunkRow as { item: unknown }).item;
+          }
+          if (chunkResult.rows.length < CHUNK) break;
+          offset += CHUNK;
+        }
       }
+
+      yield [logicalKey, streamCollectionData()];
     }
 
     if (rows.length < PAGE_SIZE) break;

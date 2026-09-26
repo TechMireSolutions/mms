@@ -30,6 +30,7 @@ interface JournalQuickActionsPanelProps {
   onNlChange: (inputValue: string) => void;
   onOpenPrefill: (prefillType: QuickActionType | null) => void;
   onExportCsv: () => void;
+  pageScopeLabel: string;
 }
 
 export function JournalQuickActionsPanel({
@@ -41,6 +42,7 @@ export function JournalQuickActionsPanel({
   onNlChange,
   onOpenPrefill,
   onExportCsv,
+  pageScopeLabel,
 }: JournalQuickActionsPanelProps) {
   const { t } = useTranslation();
   const { formatCurrency } = useAccountingCurrency();
@@ -131,10 +133,11 @@ export function JournalQuickActionsPanel({
           title={<span className="min-w-0 text-xs font-bold text-muted-foreground uppercase tracking-wide m-0">{t("accounting.journal.dashboard.recentTransactions")}</span>}
           actions={
             <Button type="button" variant="link" size="sm" onClick={onExportCsv} className="flex shrink-0 items-center gap-1.5 text-xs font-semibold text-muted-foreground hover:text-foreground transition-colors min-h-11 px-2 self-start sm:self-auto">
-              <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.dashboard.export")}
+              <Download className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.exportCurrentPage")}
             </Button>
           }
         />
+        <p className="mb-2 mt-0 text-xs text-muted-foreground" role="status">{pageScopeLabel}</p>
 
         {entries.length === 0 ? (
           <EmptyState
@@ -152,7 +155,7 @@ export function JournalQuickActionsPanel({
               return (
                 <Card key={entry.id} accentColor={isMoneyIn ? "success" : "destructive"} className="flex flex-col gap-3 px-5 py-3 hover:bg-muted/20 transition-all duration-300 sm:flex-row sm:items-center sm:gap-4">
                   <div className="flex min-w-0 flex-1 items-center gap-3">
-                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 ${isMoneyIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
+                    <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${isMoneyIn ? "bg-success/15" : "bg-destructive/15"}`} aria-hidden="true">
                       {isMoneyIn ? <TrendingUp className="w-4 h-4 text-success" /> : <TrendingUp className="w-4 h-4 text-destructive rotate-180" />}
                     </div>
                     <div className="flex-1 min-w-0">
@@ -168,7 +171,7 @@ export function JournalQuickActionsPanel({
                       </div>
                     </div>
                   </div>
-                  <div className="flex items-center justify-between gap-3 sm:justify-end flex-shrink-0 ps-12 sm:ps-0">
+                  <div className="flex items-center justify-between gap-3 sm:justify-end shrink-0 ps-12 sm:ps-0">
                     <div className="text-end">
                       <p className={`text-sm font-bold font-mono m-0 ${isMoneyIn ? "text-success" : "text-destructive"}`}>
                         {isMoneyIn ? "+" : "−"}{formatCurrency(amount)}

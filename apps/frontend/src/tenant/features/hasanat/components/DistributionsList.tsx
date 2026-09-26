@@ -9,7 +9,6 @@ import { DistributeModal } from "./DistributeModal";
 import { DistributionsListContent } from "./DistributionsListContent";
 import { DistributionsListFilters } from "./DistributionsListFilters";
 import { HasanatBulkActionBar } from "./HasanatBulkActionBar";
-import { useDistributionSelection } from "@/tenant/features/hasanat/hooks/useDistributionSelection";
 import { useDistributionsList } from "../hooks/useDistributionsList";
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
@@ -29,6 +28,10 @@ export interface DistributionsListProps {
   onRestore?: (id: string) => void | Promise<void>;
   onBulkDelete?: (ids: string[]) => void | Promise<void>;
   onBulkRestore?: (ids: string[]) => void | Promise<void>;
+  selectedIds?: string[];
+  onToggleSelectedDistribution?: (id: string, checked: boolean) => void;
+  onToggleSelectAll?: (checked: boolean, visibleIds: string[]) => void;
+  onClearSelection?: () => void;
   isColumnVisible?: (key: string) => boolean;
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -62,6 +65,10 @@ export function DistributionsList({
   onRestore,
   onBulkDelete,
   onBulkRestore,
+  selectedIds = [],
+  onToggleSelectedDistribution,
+  onToggleSelectAll,
+  onClearSelection,
   isColumnVisible,
   getColumnWidth,
   onColumnResize,
@@ -102,18 +109,14 @@ export function DistributionsList({
     createRequestKey,
   });
 
-  const {
-    selectedIds,
-    setSelectedIds,
-    allVisibleSelected,
-    someVisibleSelected,
-    toggleSelectAll,
-    toggleSelectedDistribution,
-  } = useDistributionSelection(pageDistributions);
+  const selectedSet = new Set(selectedIds);
+  const allVisibleSelected = pageDistributions.length > 0
+    && pageDistributions.every((distribution) => selectedSet.has(distribution.id));
+  const someVisibleSelected = selectedSet.size > 0 && pageDistributions.some((distribution) => selectedSet.has(distribution.id));
 
   useEffect(() => {
-    setSelectedIds([]);
-  }, [showDeleted, listPage, search, filterStatus, setSelectedIds]);
+    onClearSelection?.();
+  }, [listPage, search, filterStatus, onClearSelection]);
 
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
 
@@ -126,7 +129,7 @@ export function DistributionsList({
   const confirmBulkTrash = (): void => {
     if (showDeleted) void onBulkRestore?.(selectedIds);
     else void onBulkDelete?.(selectedIds);
-    setSelectedIds([]);
+    onClearSelection?.();
     setConfirmBulkOpen(false);
   };
 
@@ -158,7 +161,7 @@ export function DistributionsList({
           canDelete={canDelete}
           onRequestBulkDelete={() => setConfirmBulkOpen(true)}
           onRequestBulkRestore={() => setConfirmBulkOpen(true)}
-          onClearSelection={() => setSelectedIds([])}
+          onClearSelection={onClearSelection ?? (() => {})}
         />
       )}
 
@@ -204,8 +207,8 @@ export function DistributionsList({
             if (distribution) onRowClick(distribution);
           } : undefined}
           onChangeStatus={changeStatus}
-          onToggleSelectedDistribution={toggleSelectedDistribution}
-          onToggleSelectAll={toggleSelectAll}
+          onToggleSelectedDistribution={(id, checked) => onToggleSelectedDistribution?.(id, checked)}
+          onToggleSelectAll={(checked) => onToggleSelectAll?.(checked, pageDistributions.map((d) => d.id))}
           onTrashAction={(id) => {
             if (showDeleted) void onRestore?.(id);
             else setPendingTrashId(id);

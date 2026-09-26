@@ -1,20 +1,14 @@
-import React, { useMemo, useRef } from "react";
-import { useVirtualizer } from "@tanstack/react-virtual";
-import { AnimatePresence } from "framer-motion";
-import type { Contact } from "@mms/shared";
+import React, { useMemo } from "react";
+import { type Contact, getDisplayName } from "@mms/shared";
 import { useContactConfig } from "@/lib/contexts/ContactConfigContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { buildContactsMap } from "@/lib/contacts/contactI18n";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
-import {
-  ContactTableRow,
-  type ContactsColumnConfig,
-} from "@/tenant/features/contacts/components/ContactTableRow";
-import { ContactsTableHeader } from "@/tenant/features/contacts/components/ContactsTableHeader";
-import { Table, TableBody } from "@/components/ui/table";
-import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
-import { cn } from "@/lib/utils";
+import { type ContactsColumnConfig } from "@/tenant/features/contacts/components/ContactTableRow";
+import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work/WorkBatchTable";
+import { renderContactTableCell } from "@/tenant/features/contacts/components/ContactTableCells";
+import { ContactsRowActions } from "@/tenant/features/contacts/components/ContactsRowActions";
+import { MODULE_ROW_ACTIONS_TRIGGER_CLASS } from "@/components/ui/ModuleRowActionsMenu";
 
 export interface ContactsListDesktopTableProps {
   contacts: Contact[];
@@ -65,134 +59,86 @@ export const ContactsListDesktopTable = React.memo(function ContactsListDesktopT
 }: ContactsListDesktopTableProps): React.JSX.Element {
   const { prefs, countryCodesMap, countryCodes, getColumnWidth, setColumnWidth } = useContactConfig();
   const { t } = useTranslation();
-  const parentRef = useRef<HTMLDivElement>(null);
 
   const contactsMap = useMemo(() => buildContactsMap(allContacts), [allContacts]);
-  const selectedSet = useMemo(() => new Set(selected), [selected]);
   const pageCountLabel = formatDirectoryPageCountLabel(contacts.length, t, {
     singular: "contacts.form.contact",
     plural: "contacts.table.contacts",
   });
 
-  const isVirtualized = contacts.length > 30;
 
-  const rowVirtualizer = useVirtualizer({
-    count: contacts.length,
-    getScrollElement: () => parentRef.current,
-    estimateSize: () => 52,
-    overscan: 10,
-    enabled: isVirtualized,
-  });
+
+  const finalColumns = useMemo<WorkBatchTableColumn<Contact>[]>(() => {
+    return columns.map((col) => ({
+      id: col.id,
+      label: col.label,
+      sortField: col.id,
+      width: col.width,
+      render: (row, _idx) => {
+        const isSelected = selected.includes(row.id) || selected.includes(String(row.id));
+        return renderContactTableCell({
+          col,
+          contact: row,
+          displayName: getDisplayName(row),
+          getColumnWidth,
+          prefs,
+          countryCodesMap,
+          countryCodes,
+          contactsMap,
+          allContacts,
+          showArchived,
+          isSelected,
+          t,
+          onView,
+          onWhatsApp,
+        });
+      },
+    }));
+  }, [columns, getColumnWidth, prefs, countryCodesMap, countryCodes, contactsMap, allContacts, showArchived, t, onView, onWhatsApp, selected]);
 
   return (
-    <div className={cn(WORK_SURFACE, "shadow-xs")}>
-      <div
-        ref={parentRef}
-        className={cn("w-full overflow-x-auto", isVirtualized && "max-h-150 overflow-y-auto")}
-      >
-        <Table className="table-fixed">
-          <ContactsTableHeader
-            columns={columns}
-            sortField={sortField}
-            sortDir={sortDir}
-            onSort={onSort}
-            getColumnWidth={getColumnWidth}
-            setColumnWidth={setColumnWidth}
-            allSelected={allSelected}
-            someSelected={someSelected}
-            onSelectAll={onSelectAll}
-            t={t}
-          />
-          <TableBody className="divide-y divide-border/50">
-            {isVirtualized ? (
-              <>
-                {rowVirtualizer.getVirtualItems().length > 0 && (
-                  <tr style={{ height: `${rowVirtualizer.getVirtualItems()[0].start}px` }}>
-                    <td colSpan={columns.length + 2} />
-                  </tr>
-                )}
-                {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                  const contact = contacts[virtualRow.index];
-                  return (
-                    <ContactTableRow
-                      key={contact.id}
-                      contact={contact}
-                      isSelected={selectedSet.has(contact.id)}
-                      columns={columns}
-                      getColumnWidth={getColumnWidth}
-                      prefs={prefs}
-                      countryCodesMap={countryCodesMap}
-                      countryCodes={countryCodes}
-                      contactsMap={contactsMap}
-                      allContacts={allContacts}
-                      showArchived={showArchived}
-                      canWrite={canWrite}
-                      canDelete={canDelete}
-                      t={t}
-                      onSelect={onSelect}
-                      onView={onView}
-                      onEdit={onEdit}
-                      onDelete={onDelete}
-                      onRestore={onRestore}
-                      onWhatsApp={onWhatsApp}
-                      onSms={onSms}
-                      onEmail={onEmail}
-                    />
-                  );
-                })}
-                {rowVirtualizer.getVirtualItems().length > 0 && (
-                  <tr
-                    style={{
-                      height: `${
-                        rowVirtualizer.getTotalSize() -
-                        rowVirtualizer.getVirtualItems()[rowVirtualizer.getVirtualItems().length - 1].end
-                      }px`,
-                    }}
-                  >
-                    <td colSpan={columns.length + 2} />
-                  </tr>
-                )}
-              </>
-            ) : (
-              <AnimatePresence>
-                {contacts.map((contact) => (
-                  <ContactTableRow
-                    key={contact.id}
-                    contact={contact}
-                    isSelected={selectedSet.has(contact.id)}
-                    columns={columns}
-                    getColumnWidth={getColumnWidth}
-                    prefs={prefs}
-                    countryCodesMap={countryCodesMap}
-                    countryCodes={countryCodes}
-                    contactsMap={contactsMap}
-                    allContacts={allContacts}
-                    showArchived={showArchived}
-                    canWrite={canWrite}
-                    canDelete={canDelete}
-                    t={t}
-                    onSelect={onSelect}
-                    onView={onView}
-                    onEdit={onEdit}
-                    onDelete={onDelete}
-                    onRestore={onRestore}
-                    onWhatsApp={onWhatsApp}
-                    onSms={onSms}
-                    onEmail={onEmail}
-                  />
-                ))}
-              </AnimatePresence>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <ModuleTableFooterCount
-        selectedCount={selected.length}
-        selectedCountLabel={t("contacts.selectedCount", { count: selected.length })}
-        pageCountLabel={pageCountLabel}
-      />
-    </div>
+    <WorkBatchTable
+      data={contacts}
+      columns={finalColumns}
+      selection={{
+        selectedIds: selected,
+        onSelectOne: (id) => onSelect(id),
+        onSelectAll,
+        allSelected,
+        someSelected,
+      }}
+      sort={{
+        field: sortField,
+        dir: sortDir,
+        onSort,
+      }}
+      columnResize={{
+        getColumnWidth,
+        onColumnResize: setColumnWidth,
+      }}
+      actionsLabel={t("contacts.table.actions")}
+      renderRowActions={(contact) => (
+        <ContactsRowActions
+          contact={contact}
+          onView={onView}
+          onEdit={onEdit}
+          onDelete={onDelete}
+          onRestore={onRestore}
+          onWhatsApp={onWhatsApp}
+          onSms={onSms}
+          onEmail={onEmail}
+          showArchived={showArchived}
+          canWrite={canWrite}
+          canDelete={canDelete}
+          triggerClassName={MODULE_ROW_ACTIONS_TRIGGER_CLASS}
+        />
+      )}
+      stickyColumnId="name"
+      footerCount={{
+        selectedCountLabel: t("contacts.selectedCount", { count: selected.length }),
+        pageCountLabel,
+      }}
+    />
   );
 });
 

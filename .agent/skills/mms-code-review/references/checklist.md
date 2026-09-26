@@ -35,7 +35,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Query factories / tuple keys — skill **`mms-query-factories`**
 - [ ] `enabled: isAuthenticated` on tenant REST hooks
 - [ ] Mutations invalidate affected queries (list + count keys; Contacts also messaging resolve)
-- [ ] Optimistic updates: banned for money, bulk, backup/restore, messaging send; single-record soft-delete uses optimistic hide with 5–10s Undo toast (`docs/soft-delete.md` §7.8)
+- [ ] Optimistic updates: banned for money, bulk, backup/restore, messaging send; eligible non-financial single-record soft-delete uses optimistic hide with 5–10s Undo toast (`docs/soft-delete.md` §7.8)
 - [ ] No duplicate data path (Query mutations + parallel `saveCollection` for same write)
 - [ ] After server `bulkSave` imports (e.g. Google sync), invalidate only — do not re-upsert the same rows
 - [ ] REST pages use Query hooks / collection facades — not raw `useLiveCollection` for entity rows
@@ -66,11 +66,11 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Batched single-statement SQL for bulk delete/restore (`WHERE id IN (...) AND deleted_at IS NULL` — no per-row loops)
 - [ ] List supports `includeDeleted`; Work default excludes deleted; BE SQL-filters `deleted_at` via dynamic AST (no parameterized booleans)
 - [ ] Relational child queries in `with: { ... }` explicitly filter `where: (c, { isNull }) => isNull(c.deletedAt)`
-- [ ] Partial unique indexes (`WHERE deleted_at IS NULL`) used for recyclable keys (email, phone, employee_id) — `UNIQUE NULLS NOT DISTINCT` banned
-- [ ] Session invalidation on user/teacher soft delete + auth resolvers gate on `deleted_at IS NULL`
+- [ ] Partial unique indexes (`WHERE deleted_at IS NULL`) used for recyclable keys (email, phone, employee_id) — assess actual NULL semantics; financial source identities may need lifetime uniqueness (advisory)
+- [ ] Session invalidation on user/faculty soft delete + auth resolvers gate on `deleted_at IS NULL`
 - [ ] Active foreign key guarding: write schemas reject references to soft-deleted records
 - [ ] Create/update write schemas strip client soft-delete fields
-- [ ] FE trash UI: URL param sync (`?view=trash`), filter state preserved on toggle, optimistic 5–10s Undo toast, drawer `ArchivedBanner` (`WarningCallout`) with single restore
+- [ ] FE trash UI: URL param sync (`?view=trash`), filter state preserved on toggle, eligible non-financial optimistic 5–10s Undo toast, drawer `ArchivedBanner` (`WarningCallout`) with single restore
 - [ ] Soft-delete modules: trash toggle + restore omit Add/messaging/exports in archive mode
 - [ ] Work multi-select uses `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` / Messaging) on list/parent (no forked selection chrome; no toolbar-inline trash)
 - [ ] Entity merge (if any) is atomic server endpoint — not FE dual-write
@@ -118,7 +118,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 ### Testing
 - [ ] New `@mms/shared` pure helpers have unit tests
 - [ ] Strict assertion specificity: ban `toBeTruthy()`, `toBeFalsy()`, generic `toBeDefined()`; use strict types, ISO regex (`/^\d{4}-\d{2}-\d{2}T/`), or typed DOM instances (`toBeInstanceOf(...)`) — `mms-testing-observability.md` §1
-- [ ] Zero DB skip latches: ban `isDbAvailable`; integration tests use in-memory repository mock fixture (`vi.hoisted()`) and Fastify `inject()` — `mms-testing-observability.md` §1
+- [ ] Zero DB skip latches: ban `isDbAvailable`; ordinary integration tests use in-memory repository mock fixtures and Fastify `inject()`; explicit PostgreSQL `test:db` must actually execute for locking/RLS evidence — `mms-testing-observability.md` §1
 - [ ] Negative tests spy on `console.error` / `console.warn` for silent test output
 - [ ] Auth/RBAC/tenant changes have `inject()` allow+deny tests
 - [ ] Playwright: prefer `getByRole`/`getByLabel` — no `waitForTimeout` sleeps
@@ -146,3 +146,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 ### Scope
 - [ ] No drive-by refactors
 - [ ] No unused imports in changed files
+
+## Accounting review (advisory)
+
+Use the [financial verification matrix](../../mms-finance-accounting/references/verification.md). Distinguish posted-entry corrections from draft CRUD, test every posting writer, and trace report consumers and close/retry races. Record missing controls rather than imply compliance.

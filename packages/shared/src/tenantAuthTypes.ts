@@ -10,6 +10,23 @@ export interface TenantAuthFields {
   mustChangePassword?: boolean;
 }
 
+/** Shared User interface used across frontend and backend. */
+export interface User {
+  id: string;
+  /** Sign-in email (`loginEmail`); kept as `email` for JWT backward compatibility. */
+  email: string;
+  name: string;
+  role: string;
+  /** Madrasa subdomain this account belongs to. */
+  workspaceSubdomain: string;
+  /** Linked CRM contact for profile fields. */
+  contactId?: string | number;
+  loginEmail?: string;
+  emailVerifiedAt?: string;
+  /** Forces the user through password change before normal workspace access. */
+  mustChangePassword?: boolean;
+}
+
 /** Persisted tenant user with optional auth credentials. */
 export interface StoredTenantUser extends Partial<TenantAuthFields> {
   id: string;
@@ -49,3 +66,20 @@ export interface TenantUserProfile {
   contact: Contact | null;
   pendingLoginEmail?: string;
 }
+
+/**
+ * Canonical tenant authentication API error types.
+ * Single source of truth across frontend error mappers and backend login routes.
+ */
+export const TENANT_AUTH_ERROR_TYPES = [
+  'invalid_credentials',
+  'auth_required',
+  'connection_error',
+  'user_not_registered',
+  'workspace_disabled',
+  'email_not_verified',
+  'validation_error',
+  'rate_limit_exceeded',
+] as const;
+
+export type TenantAuthErrorType = (typeof TENANT_AUTH_ERROR_TYPES)[number];

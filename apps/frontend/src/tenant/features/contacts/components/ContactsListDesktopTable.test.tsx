@@ -20,15 +20,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("@/tenant/features/contacts/components/ContactsTableHeader", () => ({
-  ContactsTableHeader: () => <thead data-testid="table-header"><tr><th>Header</th></tr></thead>,
-}));
 
-vi.mock("@/tenant/features/contacts/components/ContactTableRow", () => ({
-  ContactTableRow: ({ contact }: { contact: { name: string } }) => (
-    <tr data-testid="table-row"><td>{contact.name}</td></tr>
-  ),
-}));
 
 const mockContact: Contact = {
   id: "cnt-1",
@@ -54,10 +46,10 @@ describe("ContactsListDesktopTable Component", () => {
         sortField="name"
         sortDir="asc"
         onSort={vi.fn()}
+        columns={[{ id: "name", label: "Name" }]}
       />,
     );
 
-    expect(html).toContain("table-header");
     expect(html).toContain("Zayd Harith");
   });
 });

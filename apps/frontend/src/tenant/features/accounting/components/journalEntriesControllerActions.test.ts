@@ -140,7 +140,8 @@ describe("journalEntriesControllerActions", () => {
       expect(runGridCsvExportJob).toHaveBeenCalledWith(
         expect.objectContaining({
           moduleId: "accounting",
-          filename: "journal_entries.csv",
+          label: "accounting.journal.exportCurrentPageLabel",
+          filename: "journal_entries_current_page.csv",
           columns: expect.arrayContaining([
             expect.objectContaining({ key: "ref" }),
             expect.objectContaining({ key: "debit" }),

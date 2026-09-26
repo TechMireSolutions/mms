@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TeachersFiltersMenuButton } from "./FacultyFiltersMenuButton";
+import { FacultyFiltersMenuButton } from "./FacultyFiltersMenuButton";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -28,11 +28,11 @@ const defaultProps = {
   onClearFilters: vi.fn(),
 };
 
-describe("TeachersFiltersMenuButton Component", () => {
+describe("FacultyFiltersMenuButton Component", () => {
   it("renders filter menu button with active count badge", () => {
-    const html = renderToStaticMarkup(<TeachersFiltersMenuButton {...defaultProps} />);
+    const html = renderToStaticMarkup(<FacultyFiltersMenuButton {...defaultProps} />);
 
-    expect(html).toContain("teachers.filters");
+    expect(html).toContain("faculty.filters");
     expect(html).toContain("3");
   });
 });

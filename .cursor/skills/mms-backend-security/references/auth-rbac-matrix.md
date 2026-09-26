@@ -19,7 +19,7 @@
 
 ## Security Invariants
 
-- **Session Invalidation on Soft-Delete**: Soft-deleting user or teacher accounts (`tenant_users`, `teachers`) must immediately revoke all active JWTs, refresh tokens, and Redis sessions. Authentication resolvers (`authenticateTenant`, `/me`, OAuth, credentials login) must verify `deleted_at IS NULL` (`mms-soft-delete`).
+- **Session Invalidation on Soft-Delete**: Soft-deleting user or faculty accounts (`tenant_users`, `faculty`) must immediately revoke all active JWTs, refresh tokens, and Redis sessions. Authentication resolvers (`authenticateTenant`, `/me`, OAuth, credentials login) must verify `deleted_at IS NULL` (`mms-soft-delete`).
 - **Hard-Delete Defense-in-Depth**: Blocked by PostgreSQL `forbid_hard_delete()` trigger. Privilege escalation via `SET LOCAL app.allow_hard_purge = 'true'` is restricted to retention purge workers.
 - **GDPR Article 17 Erasure**: Dual-track: cryptographic shredding of KMS keys for encrypted data + in-place pseudonymization of plain PII attributes.
 - **Audit Trails**: RFC 8785 canonical JSON outbox payloads, sharded cryptographic hash chains, `INSERT`-only DB privileges (`REVOKE UPDATE, DELETE`), MFA on audit reads (`mms-audit-trail`).

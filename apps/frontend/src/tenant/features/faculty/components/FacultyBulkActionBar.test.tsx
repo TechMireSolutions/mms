@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TeachersBulkActionBar } from "./FacultyBulkActionBar";
+import { FacultyBulkActionBar } from "./FacultyBulkActionBar";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -34,22 +34,22 @@ const defaultProps = {
   onClearSelection: vi.fn(),
 };
 
-describe("TeachersBulkActionBar Component", () => {
+describe("FacultyBulkActionBar Component", () => {
   it("renders bulk action bar with selected count and actions", () => {
-    const html = renderToStaticMarkup(<TeachersBulkActionBar {...defaultProps} />);
+    const html = renderToStaticMarkup(<FacultyBulkActionBar {...defaultProps} />);
 
-    expect(html).toContain("teachers.selectedCount:2");
-    expect(html).toContain("teachers.bulkStatus");
-    expect(html).toContain("teachers.bulkSpecialization");
-    expect(html).toContain("teachers.idCard.print");
-    expect(html).toContain("teachers.bulkExport");
+    expect(html).toContain("faculty.selectedCount:2");
+    expect(html).toContain("faculty.bulkStatus");
+    expect(html).toContain("faculty.bulkSpecialization");
+    expect(html).toContain("faculty.idCard.print");
+    expect(html).toContain("faculty.bulkExport");
   });
 
   it("renders restore action when showDeleted is true", () => {
     const html = renderToStaticMarkup(
-      <TeachersBulkActionBar {...defaultProps} showDeleted={true} />,
+      <FacultyBulkActionBar {...defaultProps} showDeleted={true} />,
     );
 
-    expect(html).toContain("teachers.bulkRestore");
+    expect(html).toContain("faculty.bulkRestore");
   });
 });

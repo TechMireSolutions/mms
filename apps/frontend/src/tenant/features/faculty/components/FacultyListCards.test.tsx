@@ -82,8 +82,8 @@ describe("TeachersListCards", () => {
     expect(html).toContain("+1234567890");
     expect(html).toContain("ahmad@madrasa.com");
     expect(html).toContain("Ustadha Fatima");
-    expect(html).toContain("teachers-cards");
-    expect(html).toContain("teachers.selectedCount:1");
+    expect(html).toContain("faculty-cards");
+    expect(html).toContain("faculty.selectedCount:1");
     expect(html).toContain('aria-checked="true"');
   });
 

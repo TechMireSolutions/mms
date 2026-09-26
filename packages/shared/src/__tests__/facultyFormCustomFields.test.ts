@@ -68,7 +68,7 @@ describe('findTeacherSeedField', () => {
   it('finds a seeded teacher field across any tab', () => {
     expect(findTeacherSeedField('contactId')?.key).toBe('contactId');
     expect(findTeacherSeedField('employeeId')?.key).toBe('employeeId');
-    expect(findTeacherSeedField('status')?.labelKey).toBe('teachers.field.status');
+    expect(findTeacherSeedField('status')?.labelKey).toBe('faculty.field.status');
   });
 
   it('returns undefined for unknown fields', () => {

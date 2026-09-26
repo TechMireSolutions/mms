@@ -23,30 +23,30 @@ export function FacultyListContent(props: FacultyListContentInput): React.JSX.El
 
   if (teachers.length === 0) {
     const emptyDescription = hasActiveFilters
-      ? t("teachers.tryAdjustingFilters")
+      ? (t("faculty.tryAdjustingFilters") || t("teachers.tryAdjustingFilters"))
       : showDeleted
-        ? t("teachers.empty.trashSubtitle")
+        ? (t("faculty.empty.trashSubtitle") || t("teachers.empty.trashSubtitle"))
         : canWrite
-          ? t("teachers.clickAddTeacher")
-          : t("teachers.emptyDirectoryReadOnly");
+          ? (t("faculty.clickAddTeacher") || t("teachers.clickAddTeacher"))
+          : (t("faculty.emptyDirectoryReadOnly") || t("teachers.emptyDirectoryReadOnly"));
 
     return (
       <ModuleWorkDirectoryEmpty
         icon={School}
         title={
           hasActiveFilters
-            ? t("teachers.noTeachersMatchFilters")
+            ? (t("faculty.noTeachersMatchFilters") || t("teachers.noTeachersMatchFilters"))
             : showDeleted
-              ? t("teachers.noDeletedTeachers")
-              : t("teachers.empty.title")
+              ? (t("faculty.noDeletedTeachers") || t("teachers.noDeletedTeachers"))
+              : (t("faculty.empty.title") || t("teachers.empty.title"))
         }
         description={emptyDescription}
         hasActiveFilters={hasActiveFilters}
         viewingDeleted={showDeleted}
         onClearFilters={onClearFilters ?? (() => undefined)}
         onShowActive={onShowActive}
-        clearFiltersLabel={t("teachers.clearFilters")}
-        showActiveLabel={t("teachers.showActive")}
+        clearFiltersLabel={t("faculty.clearFilters") || t("teachers.clearFilters")}
+        showActiveLabel={t("faculty.showActive") || t("teachers.showActive")}
       />
     );
   }

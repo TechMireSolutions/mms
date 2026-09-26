@@ -27,8 +27,11 @@ const setupConfigHooks = createModuleSetupConfigHooks<HasanatModulePreferences>(
 export const useHasanatPreferencesQuery = setupConfigHooks.usePreferencesQuery;
 export const useHasanatPreferencesMutation = setupConfigHooks.usePreferencesMutation;
 
+import { useMemo } from 'react';
+
 /** Composed HasanatSettings from preferences queries. */
 export function useComposedHasanatSettings(): HasanatSettings {
   const prefsQuery = useHasanatPreferencesQuery();
-  return (prefsQuery.data ?? normalizeHasanatModulePreferences(null)) as unknown as HasanatSettings;
+  const fallback = useMemo(() => normalizeHasanatModulePreferences(null), []);
+  return (prefsQuery.data ?? fallback) as unknown as HasanatSettings;
 }

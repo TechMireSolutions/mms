@@ -42,7 +42,7 @@ export function buildTeacherCustomFieldsById(
 
 /** Responsive breakpoint utility for a Work column (shared by head + cell). */
 function teacherWorkColumnBreakpointClass(columnKey: string): string {
-  if (columnKey === "specialization") return "hidden sm:table-cell";
+  if (columnKey === "designation" || columnKey === "specialization") return "hidden sm:table-cell";
   if (columnKey === "qualification" || columnKey === "joinDate") {
     return "hidden md:table-cell";
   }

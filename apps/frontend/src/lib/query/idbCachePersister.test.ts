@@ -77,8 +77,9 @@ describe('createIdbCachePersister', () => {
         queries: [
           {
             queryKey: ['test-key'],
-            queryHash: 'test-hash',
+            queryHash: '["test-key"]',
             state: { data: 'sample-data', dataUpdatedAt: Date.now(), status: 'success' } as any,
+            dehydratedAt: Date.now(),
           },
         ],
       };

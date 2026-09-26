@@ -90,12 +90,17 @@ export function useModuleColumnLayout({
       hideAll: t('common.columns.hideAll'),
     }))();
 
+  const resetColumnLayout = useCallback(() => {
+    updateUserColumnLayout(tenantRegistry);
+  }, [updateUserColumnLayout, tenantRegistry]);
+
   return {
     columnRegistry,
     isColumnVisible,
     getColumnWidth,
     setColumnWidth,
     updateUserColumnLayout,
+    resetColumnLayout,
     customizerLabels,
   };
 }

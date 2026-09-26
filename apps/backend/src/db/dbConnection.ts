@@ -8,6 +8,7 @@ import { getDb, setDb } from './dbClient.js';
 import * as schema from './schema.js';
 import { applyTenantTransactionGuards } from './tenantTransactionGuards.js';
 import { logger } from '../lib/logger.js';
+import { ServiceUnavailableError } from '../lib/httpErrors.js';
 
 export type DbClient = NodePgDatabase<typeof schema>;
 
@@ -17,12 +18,61 @@ let readReplicaPool: pg.Pool | null = null;
 let rootDb: DbClient | null = null;
 let readReplicaDb: DbClient | null = null;
 
-export function initializeDatabaseConnection(): void {
+export type DatabasePoolRole = 'http' | 'worker';
+
+export interface DatabaseConnectionOptions {
+  role?: DatabasePoolRole;
+  max?: number;
+}
+
+let activePoolRole: DatabasePoolRole = 'http';
+let activeMaxPoolSize = 30;
+
+const tenantTxCounts = new Map<string, number>();
+
+function incrementTenantTx(tenant: string): void {
+  tenantTxCounts.set(tenant, (tenantTxCounts.get(tenant) || 0) + 1);
+}
+
+function decrementTenantTx(tenant: string): void {
+  const count = tenantTxCounts.get(tenant) || 0;
+  if (count <= 1) {
+    tenantTxCounts.delete(tenant);
+  } else {
+    tenantTxCounts.set(tenant, count - 1);
+  }
+}
+
+function checkTenantConnectionBudget(tenant: string): void {
+  if (activePoolRole === 'http') {
+    const active = tenantTxCounts.get(tenant) || 0;
+    // Cap any single tenant at 40% of the HTTP pool (min 5 connections)
+    const limit = Math.max(5, Math.floor(activeMaxPoolSize * 0.4));
+    if (active >= limit) {
+      throw new ServiceUnavailableError(
+        `Too many concurrent database requests for workspace. Please try again shortly.`,
+      );
+    }
+  }
+}
+
+export function getActivePoolRole(): DatabasePoolRole {
+  return activePoolRole;
+}
+
+export function initializeDatabaseConnection(options?: DatabaseConnectionOptions): void {
   if (pool) return;
 
   const config = loadServerConfig();
+  const role = options?.role ?? (process.env.MMS_PROCESS_ROLE === 'worker' ? 'worker' : 'http');
+  activePoolRole = role;
+
+  const defaultMax = role === 'worker' ? 10 : Math.min(Math.max(config.pgPoolMax, 20), 30);
+  const poolMax = options?.max ?? defaultMax;
+  activeMaxPoolSize = poolMax;
+
   const poolConfig: pg.PoolConfig = {
-    max: Math.min(Math.max(config.pgPoolMax, 20), 30),
+    max: poolMax,
     connectionTimeoutMillis: 5_000,
     idleTimeoutMillis: 30_000,
     maxUses: 7_500,
@@ -97,6 +147,7 @@ export function getPool(): pg.Pool {
 
 /** Interface representing active DB connection pool utilization metrics. */
 export interface PoolMetrics {
+  role?: DatabasePoolRole;
   totalCount: number;
   idleCount: number;
   waitingCount: number;
@@ -111,6 +162,7 @@ export interface PoolMetrics {
 export function getPoolMetrics(): PoolMetrics | null {
   if (!pool) return null;
   const metrics: PoolMetrics = {
+    role: activePoolRole,
     totalCount: pool.totalCount,
     idleCount: pool.idleCount,
     waitingCount: pool.waitingCount,
@@ -228,6 +280,11 @@ export async function beginLongLivedTenantTransaction(
     );
   }
 
+  if (resolvedTenantId) {
+    checkTenantConnectionBudget(resolvedTenantId);
+    incrementTenantTx(resolvedTenantId);
+  }
+
   const pool = getPool();
   const client = await pool.connect();
 
@@ -244,6 +301,7 @@ export async function beginLongLivedTenantTransaction(
     const finish = async (action: 'COMMIT' | 'ROLLBACK'): Promise<void> => {
       if (finished) return;
       finished = true;
+      if (resolvedTenantId) decrementTenantTx(resolvedTenantId);
       try {
         if (began) await client.query(action);
       } finally {
@@ -257,6 +315,7 @@ export async function beginLongLivedTenantTransaction(
       rollback: () => finish('ROLLBACK'),
     };
   } catch (error) {
+    if (resolvedTenantId) decrementTenantTx(resolvedTenantId);
     try {
       if (began) await client.query('ROLLBACK');
     } catch {
@@ -291,8 +350,14 @@ async function runTransaction<T>(
   const tenant = getRequestTenant();
   const startTime = Date.now();
 
+  if (tenant) {
+    checkTenantConnectionBudget(tenant);
+    incrementTenantTx(tenant);
+  }
+
   await using _timerDisposer = {
     [Symbol.asyncDispose]: async () => {
+      if (tenant) decrementTenantTx(tenant);
       const duration = Date.now() - startTime;
       if (duration > SLOW_QUERY_THRESHOLD_MS) {
         logger.warn(

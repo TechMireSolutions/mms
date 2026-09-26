@@ -50,7 +50,7 @@ export function TemplateEditorPanes<TPayload = Record<string, unknown>>({
       )}
       <div
         /* `print:flex`: below lg an inactive pane is `hidden`, and print is not a screen. */
-        className={`${paneClass("canvas")} lg:flex print:flex flex-1 min-h-[320px] relative flex-col overflow-hidden`}
+        className={`${paneClass("canvas")} lg:flex print:flex flex-1 min-h-80 relative flex-col overflow-hidden`}
       >
         <ErrorBoundary>
           <TemplateEditorCanvas

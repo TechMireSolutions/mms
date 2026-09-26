@@ -1,135 +1,147 @@
-import { dedupeTrimmedIds, type Teacher } from '@mms/shared';
+import { dedupeTrimmedIds, type Faculty } from '@mms/shared';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import { runInTransaction } from '../../db/database.js';
 import { broadcastCollection } from '../../lib/livePush.js';
-import type { FacultyRepository as TeachersRepository } from '../repository/facultyRepository.js';
-import { facultyRepository as teachersRepository } from '../repository/facultyRepositoryAdapter.js';
+import type { FacultyRepository } from '../repository/facultyRepository.js';
+import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
 import { ConflictError } from '../../lib/httpErrors.js';
-import { isUniqueViolation } from '../../lib/pgErrors.js';
+import { nowIso } from '../../lib/softDeleteHelpers.js';
+import { emitOutboxEvent } from '../../services/outboxEventService.js';
+import { revokeFacultySessions } from './facultySoftDeleteSessions.js';
+import { restoreFacultyById, bulkRestoreFaculty } from './facultyRestoreUseCases.js';
 
-import { buildRestoredRecord, nowIso } from '../../lib/softDeleteHelpers.js';
+export { restoreFacultyById, bulkRestoreFaculty };
 
-export async function restoreTeacherById(
-  id: string,
-  userId?: string,
-  repo: TeachersRepository = teachersRepository,
-): Promise<Teacher | null> {
-  const restored = await runInTransaction(async () => {
-    const tenant = getRequestTenant();
-    if (!tenant) return null;
-    const existing = await repo.findById(tenant, id);
-    if (!existing) return null;
-    if (!existing.deletedAt) return existing;
-
-    if (existing.employeeId) {
-      const conflict = await repo.findRegistrationConflict(tenant, {
-        excludeId: id,
-        employeeId: existing.employeeId,
-      });
-      if (conflict === 'employeeId') {
-        throw new ConflictError(
-          `Employee ID ${existing.employeeId} is already in use by another active teacher`,
-        );
-      }
-    }
-
-    const next = buildRestoredRecord(existing, userId);
-    try {
-      await repo.save(tenant, next);
-    } catch (err: unknown) {
-      if (
-        isUniqueViolation(err) ||
-        (typeof err === 'object' && err !== null && 'code' in err && (err as { code: unknown }).code === '23505')
-      ) {
-        throw new ConflictError(
-          'Cannot restore teacher: active record with this unique identifier already exists',
-        );
-      }
-      throw err;
-    }
-    return next;
-  });
-  if (restored) await broadcastCollection('teachers');
-  return restored;
+export class SubordinateReassignmentError extends ConflictError {
+  constructor(message = 'Cannot delete faculty member with active subordinates. Please reassign subordinates before deletion.') {
+    super(message);
+    this.name = 'SubordinateReassignmentError';
+  }
 }
 
-export async function bulkRestoreTeachers(
-  ids: string[],
-  userId?: string,
-  repo: TeachersRepository = teachersRepository,
-): Promise<{ succeeded: number; failed: number }> {
-  const uniqueIds = dedupeTrimmedIds(ids);
-  if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+async function guardSubordinatesOnDelete(
+  tenant: string,
+  id: string,
+  reassignSubordinatesTo: string | undefined,
+  repo: FacultyRepository,
+): Promise<void> {
+  const subordinateCount = repo.countSubordinates ? await repo.countSubordinates(tenant, id) : 0;
+  if (subordinateCount === 0) return;
+
+  if (reassignSubordinatesTo && reassignSubordinatesTo.trim()) {
+    const targetId = reassignSubordinatesTo.trim();
+    if (targetId === id) {
+      throw new ConflictError('Cannot reassign subordinates to the faculty member being deleted');
+    }
+    const targetSupervisor = await repo.findById(tenant, targetId);
+    if (!targetSupervisor || targetSupervisor.deletedAt) {
+      throw new ConflictError('Target supervisor for reassignment does not exist or has been deleted');
+    }
+    await repo.reassignSubordinates(tenant, id, targetId);
+  } else {
+    throw new SubordinateReassignmentError(
+      `Cannot delete faculty member with ${subordinateCount} active subordinate(s). Please reassign subordinates before deletion.`,
+    );
+  }
+}
+
+export async function softDeleteFacultyById(
+  id: string,
+  deletedBy: string,
+  deletionReason?: string,
+  repo: FacultyRepository = facultyRepository,
+  reassignSubordinatesTo?: string,
+): Promise<boolean> {
   const result = await runInTransaction(async () => {
     const tenant = getRequestTenant();
-    if (!tenant) return { succeeded: 0, failed: uniqueIds.length };
-    let succeeded = 0;
-    let failed = 0;
-    const toSave: Teacher[] = [];
+    if (!tenant) return { succeeded: 0, failed: 1 };
 
-    const existingTeachers = await repo.findByIds(tenant, uniqueIds);
-    const existingMap = new Map(existingTeachers.map((teacher) => [String(teacher.id), teacher]));
+    await guardSubordinatesOnDelete(tenant, id, reassignSubordinatesTo, repo);
 
-    for (const id of uniqueIds) {
-      const existing = existingMap.get(id);
-      if (!existing || !existing.deletedAt) {
-        failed += 1;
-        continue;
-      }
-      toSave.push(buildRestoredRecord(existing, userId));
-      succeeded += 1;
+    const now = nowIso();
+    const trimmedReason = deletionReason?.trim();
+    const toSave: Faculty[] = [];
+
+    const existingFaculty = await repo.findByIds(tenant, [id]);
+    const existing = existingFaculty[0];
+    if (existing && !existing.deletedAt) {
+      toSave.push({
+        ...existing,
+        deletedAt: now,
+        deletedBy,
+        deletionReason: trimmedReason || undefined,
+      });
     }
 
     if (toSave.length > 0) {
-      try {
-        await repo.bulkSave(tenant, toSave);
-      } catch (err: unknown) {
-        if (
-          isUniqueViolation(err) ||
-          (typeof err === 'object' && err !== null && 'code' in err && (err as { code: unknown }).code === '23505')
-        ) {
-          throw new ConflictError(
-            'Cannot restore teacher: active record with this unique identifier already exists',
-          );
-        }
-        throw err;
+      await repo.bulkSave(tenant, toSave);
+      for (const f of toSave) {
+        await emitOutboxEvent('entity.soft_deleted', {
+          entityType: 'faculty',
+          entityId: String(f.id),
+          tenantId: tenant,
+          deletedAt: f.deletedAt ?? now,
+          deletedBy,
+          deletionReason: f.deletionReason,
+          version: Date.now(),
+          snapshot: f,
+        });
       }
+      await revokeFacultySessions(tenant, toSave);
+      return { succeeded: 1, failed: 0 };
     }
-    return { succeeded, failed };
+    return { succeeded: 0, failed: 1 };
   });
-  if (result.succeeded > 0) await broadcastCollection('teachers');
-  return result;
-}
 
-export async function softDeleteTeacherById(
-  id: string,
-  deletedBy: string,
-  deletionReason?: string,
-  repo: TeachersRepository = teachersRepository,
-): Promise<boolean> {
-  const result = await bulkSoftDeleteTeachers([id], deletedBy, deletionReason, repo);
+  if (result.succeeded > 0) {
+    await broadcastCollection('faculty');
+  }
   return result.succeeded === 1;
 }
 
-export async function bulkSoftDeleteTeachers(
+export async function bulkSoftDeleteFaculty(
   ids: string[],
   deletedBy: string,
   deletionReason?: string,
-  repo: TeachersRepository = teachersRepository,
+  repo: FacultyRepository = facultyRepository,
 ): Promise<{ succeeded: number; failed: number }> {
   const uniqueIds = dedupeTrimmedIds(ids);
   if (uniqueIds.length === 0) return { succeeded: 0, failed: 0 };
+  const tenant = getRequestTenant();
+
   const result = await runInTransaction(async () => {
-    const tenant = getRequestTenant();
     if (!tenant) return { succeeded: 0, failed: uniqueIds.length };
+
+    if (repo.countSubordinatesBatch) {
+      const subCounts = await repo.countSubordinatesBatch(tenant, uniqueIds);
+      const getCount = (id: string): number => {
+        if (!subCounts) return 0;
+        if (subCounts instanceof Map) return subCounts.get(id) ?? 0;
+        return (subCounts as Record<string, number>)[id] ?? 0;
+      };
+      const supervisorIdsWithSubs = uniqueIds.filter((id) => getCount(id) > 0);
+      if (supervisorIdsWithSubs.length > 0) {
+        const deletedIdSet = new Set(uniqueIds);
+        for (const supId of supervisorIdsWithSubs) {
+          const subs = repo.findSubordinates ? await repo.findSubordinates(tenant, supId) : [];
+          const activeOrphaned = subs.filter((sub) => !sub.deletedAt && !deletedIdSet.has(String(sub.id)));
+          if (activeOrphaned.length > 0) {
+            throw new SubordinateReassignmentError(
+              `Cannot delete faculty member (${supId}) with ${activeOrphaned.length} active subordinate(s). Please reassign subordinates before deletion.`,
+            );
+          }
+        }
+      }
+    }
+
     let succeeded = 0;
     let failed = 0;
     const now = nowIso();
     const trimmedReason = deletionReason?.trim();
-    const toSave: Teacher[] = [];
+    const toSave: Faculty[] = [];
 
-    const existingTeachers = await repo.findByIds(tenant, uniqueIds);
-    const existingMap = new Map(existingTeachers.map((teacher) => [String(teacher.id), teacher]));
+    const existingFaculty = await repo.findByIds(tenant, uniqueIds);
+    const existingMap = new Map(existingFaculty.map((f) => [String(f.id), f]));
 
     for (const id of uniqueIds) {
       const existing = existingMap.get(id);
@@ -148,44 +160,25 @@ export async function bulkSoftDeleteTeachers(
 
     if (toSave.length > 0) {
       await repo.bulkSave(tenant, toSave);
-      try {
-        const { revokeAllUserSessions, revokeUserSessionKeys } = await import('../../services/session.service.js');
-        const { listAllTenantUsersByWorkspace } = await import(
-          '../../db/repositories/tenantUserRepository.js'
-        );
-        for (const t of toSave) {
-          await revokeAllUserSessions(String(t.id));
-          await revokeUserSessionKeys(String(t.id));
-        }
-        const contactIds = new Set(toSave.map((t) => t.contactId).filter(Boolean));
-        if (contactIds.size > 0) {
-          const tenantUsersList = await listAllTenantUsersByWorkspace(tenant);
-          for (const u of tenantUsersList) {
-            if (u.contactId && contactIds.has(String(u.contactId))) {
-              await revokeAllUserSessions(u.id);
-              await revokeUserSessionKeys(u.id);
-            }
-          }
-        }
-        const directUserIds = toSave
-          .map((t) => (t as unknown as { userId?: string }).userId)
-          .filter((uid): uid is string => Boolean(uid && uid.trim()));
-        for (const uid of directUserIds) {
-          await revokeAllUserSessions(uid);
-          await revokeUserSessionKeys(uid);
-        }
-      } catch {
-        // Non-blocking in decoupled unit tests
+      for (const f of toSave) {
+        await emitOutboxEvent('entity.soft_deleted', {
+          entityType: 'faculty',
+          entityId: String(f.id),
+          tenantId: tenant,
+          deletedAt: f.deletedAt ?? now,
+          deletedBy,
+          deletionReason: f.deletionReason,
+          version: Date.now(),
+          snapshot: f,
+        });
       }
+      await revokeFacultySessions(tenant, toSave);
     }
     return { succeeded, failed };
   });
-  if (result.succeeded > 0) await broadcastCollection('teachers');
+
+  if (result.succeeded > 0) {
+    await broadcastCollection('faculty');
+  }
   return result;
 }
-
-export const restoreFacultyById = restoreTeacherById;
-export const bulkRestoreFaculty = bulkRestoreTeachers;
-export const softDeleteFacultyById = softDeleteTeacherById;
-export const bulkSoftDeleteFaculty = bulkSoftDeleteTeachers;
-

@@ -11,7 +11,10 @@ import {
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
+import { cn } from "@/lib/utils";
+import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
 
 interface RoleCardProps {
   role: WorkspaceRole;
@@ -22,17 +25,49 @@ interface RoleCardProps {
 export function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Element {
   const { t } = useTranslation();
   const globalSettings = useGlobalSettings();
+  const reducedMotion = useReducedMotion();
   const [showPerms, setShowPerms] = useState(false);
+  const permsId = `role-perms-${role.id}`;
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      onSelect(role.id);
+    }
+  };
 
   return (
-    <div className={`rounded-xl border-2 transition-all cursor-pointer ${
-      selected ? "border-primary bg-primary/5" : "border-border bg-card hover:border-primary/40"
-    }`}>
-      <div className="p-3 flex items-start gap-3" onClick={() => onSelect(role.id)}>
-        <div className={`w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
-          selected ? "bg-primary border-primary" : "border-border"
-        }`}>
-          {selected && <Check className="w-2.5 h-2.5 text-white" />}
+    <div
+      role="radio"
+      aria-checked={selected}
+      tabIndex={0}
+      onClick={() => onSelect(role.id)}
+      onKeyDown={handleKeyDown}
+      className={cn(
+        "relative overflow-hidden group/card rounded-xl border-2 transition-all cursor-pointer select-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:outline-none",
+        CARD_STRIPE_INSET,
+        selected
+          ? "border-primary bg-primary/5 shadow-xs"
+          : "border-border bg-card hover:border-primary/40 hover:bg-muted/20"
+      )}
+    >
+      <div
+        aria-hidden="true"
+        className={cn(
+          CARD_STRIPE_BASE,
+          selected ? "bg-primary" : "bg-primary/30 group-hover/card:bg-primary/50",
+          "transition-colors duration-150 ease-out"
+        )}
+      />
+      <div className="p-3 flex items-start gap-3">
+        <div
+          className={cn(
+            "w-4 h-4 mt-0.5 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all",
+            selected ? "bg-primary border-primary" : "border-border"
+          )}
+          aria-hidden="true"
+        >
+          {selected && <Check className="w-2.5 h-2.5 text-primary-foreground" />}
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
@@ -42,10 +77,15 @@ export function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Eleme
             <Button
               type="button"
               variant="link"
-              onClick={(event) => { event.stopPropagation(); setShowPerms((visible) => !visible); }}
+              aria-expanded={showPerms}
+              aria-controls={permsId}
+              onClick={(event) => {
+                event.stopPropagation();
+                setShowPerms((visible) => !visible);
+              }}
               className="text-xs text-primary font-semibold flex items-center gap-0.5 hover:underline min-h-11 px-2 shadow-none"
             >
-              <Info className="w-3 h-3" /> {showPerms ? t("users.addHidePermissions") : t("users.addShowPermissions")}
+              <Info className="w-3.5 h-3.5" aria-hidden /> {showPerms ? t("users.addHidePermissions") : t("users.addShowPermissions")}
             </Button>
           </div>
           <p className="text-xs text-muted-foreground mt-1">{workspaceRoleDescription(role, t)}</p>
@@ -55,9 +95,11 @@ export function RoleCard({ role, selected, onSelect }: RoleCardProps): JSX.Eleme
       <AnimatePresence>
         {showPerms && (
           <motion.div
-            initial={{ height: 0 }}
+            id={permsId}
+            initial={reducedMotion ? false : { height: 0 }}
             animate={{ height: "auto" }}
-            exit={{ height: 0 }}
+            exit={reducedMotion ? { opacity: 0 } : { height: 0 }}
+            transition={reducedMotion ? { duration: 0 } : { duration: 0.2 }}
             className="overflow-hidden border-t border-border"
           >
             <div className="p-3 grid grid-cols-1 gap-1 sm:grid-cols-2">

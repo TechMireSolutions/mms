@@ -232,7 +232,8 @@ describe('ClassDetail Sub-Tabs & Helpers', () => {
       expect(pctInput).not.toBeNull();
       expect(pctInput.value).toBe('50');
 
-      const orphanCheckbox = container.querySelector('input[type="checkbox"]') as HTMLInputElement;
+      const orphanCheckbox = (container.querySelector('button[role="checkbox"]') ||
+        container.querySelector('input[type="checkbox"]')) as HTMLElement;
       expect(orphanCheckbox).not.toBeNull();
       await act(async () => {
         orphanCheckbox.click();

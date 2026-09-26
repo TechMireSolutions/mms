@@ -71,10 +71,10 @@ To manage application processes securely and ensure they survive reboots:
 
 ## Script
 
-`scripts/check-linux-compat.sh` audits CRLF line endings and missing execute bits across `scripts/`, `.agent/`, `apps/*/src`, `.github/workflows`, and `e2e/`:
+`.agent/skills/mms-linux-compatibility/scripts/check-linux-compat.sh` audits CRLF line endings and missing execute bits across `scripts/`, `.agent/`, `apps/*/src`, `.github/workflows`, and `e2e/`:
 
 ```bash
-bash scripts/check-linux-compat.sh
+bash .agent/skills/mms-linux-compatibility/scripts/check-linux-compat.sh
 ```
 
 Run it before any deploy; it exits non-zero on the first class of failure it finds.

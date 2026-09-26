@@ -53,7 +53,7 @@ export function DashboardCustomizeWidgetsSection({
           <p className="font-bold text-foreground">
             {t('dashboard.pinnedCharts', { count: pinnedDashboardWidgetCount })}
           </p>
-          <p className="text-xs text-muted-foreground/80 font-semibold">
+          <p className="text-xs text-muted-foreground font-semibold">
             {t('dashboard.totalWidgets', { count: customWidgets.length })}
           </p>
         </div>
