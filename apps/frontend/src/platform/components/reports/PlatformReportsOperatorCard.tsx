@@ -3,8 +3,8 @@ import { ShieldCheck, ShieldAlert, CheckCircle2, Award } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { WidgetCard } from '@/components/ui/WidgetCard';
 import { WidgetCardHeader } from '@/components/ui/WidgetCardHeader';
+import { Badge } from '@/components/ui/badge';
 import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
-import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { cn } from '@/lib/utils';
 import type { PlatformUser } from '@mms/shared';
 
@@ -77,34 +77,34 @@ export function PlatformReportsOperatorCard({
           </span>
           <div className="flex flex-wrap gap-1.5">
             {canWorkspaces && (
-              <span className={cn(SEMANTIC_BADGE.primary, 'px-2.5 py-0.5 rounded-full text-3xs font-bold')}>
+              <Badge as="span" tone="primary" size="sm" pill>
                 {t('platform.manageMadrasas')}
-              </span>
+              </Badge>
             )}
             {canOnboard && (
-              <span className={cn(SEMANTIC_BADGE.success, 'px-2.5 py-0.5 rounded-full text-3xs font-bold')}>
+              <Badge as="span" tone="success" size="sm" pill>
                 {t('platform.onboardCapability')}
-              </span>
+              </Badge>
             )}
             {canSettings && (
-              <span className={cn(SEMANTIC_BADGE.info, 'px-2.5 py-0.5 rounded-full text-3xs font-bold')}>
+              <Badge as="span" tone="info" size="sm" pill>
                 {t('platform.permSettings')}
-              </span>
+              </Badge>
             )}
             {canAdmins && (
-              <span className={cn(SEMANTIC_BADGE.primary, 'px-2.5 py-0.5 rounded-full text-3xs font-bold')}>
+              <Badge as="span" tone="primary" size="sm" pill>
                 {t('platform.permAdmins')}
-              </span>
+              </Badge>
             )}
             {canSystem && (
-              <span className={cn(SEMANTIC_BADGE.warning, 'px-2.5 py-0.5 rounded-full text-3xs font-bold')}>
+              <Badge as="span" tone="warning" size="sm" pill>
                 {t('platform.permSystem')}
-              </span>
+              </Badge>
             )}
             {isSuperUser && (
-              <span className={cn(SEMANTIC_BADGE.warning, 'px-2.5 py-0.5 rounded-full text-3xs font-bold')}>
+              <Badge as="span" tone="warning" size="sm" pill>
                 {t('platform.roleSuperUser')}
-              </span>
+              </Badge>
             )}
           </div>
         </div>

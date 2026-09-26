@@ -5,7 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { DETAIL_SECTION_TITLE } from '@/components/ui/formStyles';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
@@ -117,17 +117,15 @@ export function PlatformAdminsList({
           onViewModeChange: setViewMode,
         }}
         primaryAction={
-          <Button
-            variant="outline"
-            size="sm"
+          <ActionButton
+            variant="secondary"
+            icon={Download}
             onClick={() => exportPlatformAdminsCsv(filteredItems, descriptor)}
             disabled={filteredItems.length === 0}
-            className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 shrink-0 cursor-pointer"
             title={t('platform.exportAdminsCsv')}
           >
-            <Download className="w-3.5 h-3.5" aria-hidden />
             {t('platform.exportAdminsCsv')}
-          </Button>
+          </ActionButton>
         }
       />
 
@@ -154,14 +152,12 @@ export function PlatformAdminsList({
               title={hasActiveFilters ? t('platform.noMatchingAdmins') : t('platform.noAdmins')}
               action={
                 hasActiveFilters ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
+                  <ActionButton
+                    variant="secondary"
                     onClick={handleClearFilters}
-                    className="min-h-11 h-11 px-4 text-xs font-bold rounded-xl cursor-pointer"
                   >
                     {t('common.clearFilters')}
-                  </Button>
+                  </ActionButton>
                 ) : undefined
               }
             />

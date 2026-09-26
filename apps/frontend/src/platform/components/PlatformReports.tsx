@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { containerVariantsConsole, itemVariants } from '@/platform/lib/animations';
@@ -44,9 +44,9 @@ export function PlatformReports(): React.JSX.Element {
           <h2 className="text-lg font-bold text-foreground">{t('module.reports')}</h2>
           <p className="text-xs text-muted-foreground">{t('platform.reports.growthTrendSub')}</p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
+        <ActionButton
+          variant="secondary"
+          icon={Download}
           onClick={() =>
             exportPlatformReportsCsv(workspaces, {
               totalWorkspaces,
@@ -58,12 +58,10 @@ export function PlatformReports(): React.JSX.Element {
             })
           }
           disabled={!metricsReady || totalWorkspaces === 0}
-          className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 shrink-0 cursor-pointer"
           title={t('platform.reports.exportCsv')}
         >
-          <Download className="w-3.5 h-3.5" aria-hidden />
           {t('platform.reports.exportCsv')}
-        </Button>
+        </ActionButton>
       </motion.div>
       <motion.div variants={reducedMotion ? undefined : itemVariants}>
         <PlatformReportsMetrics

@@ -1,11 +1,9 @@
 import React, { useId } from 'react';
-import { Loader2 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { Input } from '@/components/ui/input';
 import PasswordInput from '@/components/ui/PasswordInput';
-import { FieldErrorMessage } from '@/components/ui/FormField';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { Field, FieldErrorMessage } from '@/components/ui/FormField';
 import {
   AlertDialog,
   AlertDialogCancel,
@@ -104,10 +102,7 @@ export function PlatformTypedConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <div className="space-y-3 my-2 text-start">
-          <div className="space-y-1.5">
-            <label htmlFor={confirmInputId} className={FORM_LABEL}>
-              {confirmLabel}
-            </label>
+          <Field id={confirmInputId} label={confirmLabel}>
             <Input
               id={confirmInputId}
               name={confirmInputName}
@@ -119,7 +114,7 @@ export function PlatformTypedConfirmDialog({
               className="min-h-11"
               autoComplete="off"
             />
-          </div>
+          </Field>
           <PasswordInput
             id={passwordInputId}
             name={passwordInputName}
@@ -138,22 +133,14 @@ export function PlatformTypedConfirmDialog({
           <AlertDialogCancel disabled={pending} className="min-h-11 rounded-xl font-bold">
             {t('common.cancel')}
           </AlertDialogCancel>
-          <Button
-            type="button"
-            variant={confirmVariant}
+          <ActionButton
+            variant={confirmVariant === 'destructive' ? 'danger' : 'primary'}
             disabled={pending || !matches || !password.trim()}
+            loading={pending}
             onClick={onConfirm}
-            className="min-h-11 rounded-xl font-bold"
           >
-            {pending ? (
-              <>
-                <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
-                {confirmButtonLabel}
-              </>
-            ) : (
-              confirmButtonLabel
-            )}
-          </Button>
+            {confirmButtonLabel}
+          </ActionButton>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

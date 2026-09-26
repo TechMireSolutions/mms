@@ -2,9 +2,9 @@ import React, { useState } from 'react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { KeyRound, RefreshCw, Check } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/FormField';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { CopyBtn } from '@/components/ui/CopyBtn';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -70,17 +70,17 @@ export function PlatformWorkspaceResetPasswordDialog({
       size="md"
       footer={
         result ? (
-          <Button type="button" onClick={handleClose} className="min-h-11 px-6 font-bold cursor-pointer">
+          <ActionButton variant="primary" onClick={handleClose}>
             {t('common.close')}
-          </Button>
+          </ActionButton>
         ) : (
           <div className="flex items-center justify-end gap-2.5 w-full">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={resetPending} className="min-h-11 px-4 cursor-pointer">
+            <ActionButton variant="secondary" onClick={handleClose} disabled={resetPending}>
               {t('common.cancel')}
-            </Button>
-            <Button type="button" onClick={handleReset} disabled={resetPending} className="min-h-11 px-5 font-bold cursor-pointer">
-              {resetPending ? t('common.loading') : t('platform.resetPasswordBtn')}
-            </Button>
+            </ActionButton>
+            <ActionButton variant="primary" onClick={handleReset} loading={resetPending}>
+              {t('platform.resetPasswordBtn')}
+            </ActionButton>
           </div>
         )
       }
@@ -131,10 +131,7 @@ export function PlatformWorkspaceResetPasswordDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="new-admin-password" className="text-xs font-semibold">
-              {t('platform.newPasswordLabel')}
-            </Label>
+          <Field label={t('platform.newPasswordLabel')} error={error || undefined}>
             <div className="flex items-center gap-2">
               <Input
                 id="new-admin-password"
@@ -145,21 +142,21 @@ export function PlatformWorkspaceResetPasswordDialog({
                 className="font-mono text-sm h-11"
                 disabled={resetPending}
               />
-              <Button
+              <ActionButton
                 type="button"
-                variant="outline"
+                variant="secondary"
+                size="sm"
+                icon={RefreshCw}
                 onClick={generateRandomPassword}
                 disabled={resetPending}
-                className="min-h-11 h-11 px-3 text-xs font-semibold gap-1.5 shrink-0 cursor-pointer"
+                className="shrink-0 cursor-pointer font-semibold"
                 title={t('platform.autoGenerateTitle')}
                 aria-label={t('platform.autoGenerateTitle')}
               >
-                <RefreshCw className="w-3.5 h-3.5" />
                 {t('platform.autoGenerateBtn')}
-              </Button>
+              </ActionButton>
             </div>
-            {error ? <p className="text-xs font-medium text-destructive">{error}</p> : null}
-          </div>
+          </Field>
         </div>
       )}
     </Modal>

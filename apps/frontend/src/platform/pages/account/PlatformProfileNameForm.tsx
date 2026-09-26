@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Loader2, User } from "lucide-react";
+import { User } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { Input } from "@/components/ui/input";
-import { FORM_LABEL } from "@/components/ui/formStyles";
-import { FieldErrorMessage } from "@/components/ui/FormField";
+import { Field } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformAuth } from "@/platform/lib/PlatformAuthContext";
 import { useUpdatePlatformProfileName } from "@/platform/hooks/usePlatformProfile";
@@ -53,9 +52,12 @@ export function PlatformProfileNameForm({
       accentColor="info"
     >
       <form onSubmit={(event) => void handleSaveName(event)} className="space-y-4 text-start">
-        {nameError ? <FieldErrorMessage message={nameError} /> : null}
-        <div className="space-y-1.5">
-          <label htmlFor="platform-profile-name" className={FORM_LABEL}>{t("platform.profileName")}</label>
+        <Field
+          label={t("platform.profileName")}
+          required
+          error={nameError ?? undefined}
+          id="platform-profile-name"
+        >
           <Input
             id="platform-profile-name"
             name="name"
@@ -69,17 +71,16 @@ export function PlatformProfileNameForm({
             }}
             className="min-h-11"
           />
-        </div>
-        <Button type="submit" className={PLATFORM_PROFILE_SUBMIT_CLASS} disabled={updateName.isPending || name === platformUser?.name}>
-          {updateName.isPending ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
-              {t("common.save")}
-            </>
-          ) : (
-            t("platform.profileSave")
-          )}
-        </Button>
+        </Field>
+        <ActionButton
+          type="submit"
+          variant="primary"
+          className={PLATFORM_PROFILE_SUBMIT_CLASS}
+          loading={updateName.isPending}
+          disabled={name === platformUser?.name}
+        >
+          {t("platform.profileSave")}
+        </ActionButton>
       </form>
     </SectionCard>
   );

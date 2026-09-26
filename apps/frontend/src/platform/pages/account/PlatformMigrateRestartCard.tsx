@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Loader2, ServerCog } from "lucide-react";
+import { ServerCog } from "lucide-react";
 import { MIGRATE_AND_RESTART_CONFIRM } from "@mms/shared";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   useMigrateAndRestartPlatform,
@@ -53,10 +53,11 @@ export function PlatformMigrateRestartCard(): React.JSX.Element {
         accentColor="indigo"
         className="text-start"
       >
-        <Button
+        <ActionButton
           type="button"
-          variant="outline"
-          className="w-full font-bold min-h-11 rounded-xl cursor-pointer transition-all"
+          variant="secondary"
+          className="w-full font-bold"
+          loading={waitingForReady}
           disabled={isBusy}
           onClick={() => {
             setFormError(null);
@@ -65,15 +66,10 @@ export function PlatformMigrateRestartCard(): React.JSX.Element {
             setDialogOpen(true);
           }}
         >
-          {waitingForReady ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin me-2" aria-hidden />
-              {t("platform.profileMigrateRestartWaiting")}
-            </>
-          ) : (
-            t("platform.profileMigrateRestartButton")
-          )}
-        </Button>
+          {waitingForReady
+            ? t("platform.profileMigrateRestartWaiting")
+            : t("platform.profileMigrateRestartButton")}
+        </ActionButton>
       </SectionCard>
 
       <PlatformTypedConfirmDialog

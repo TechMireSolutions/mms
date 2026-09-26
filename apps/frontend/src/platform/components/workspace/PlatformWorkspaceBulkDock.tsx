@@ -3,7 +3,7 @@ import { Download, CheckCircle2, Ban } from 'lucide-react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { BulkActionDock } from '@/components/common/BulkActionDock';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { downloadWorkspacesCsv } from '@/platform/components/platformWorkspaceListData';
 
 export interface PlatformWorkspaceBulkDockProps {
@@ -38,40 +38,35 @@ export function PlatformWorkspaceBulkDock({
       className="z-elevated"
     >
       <div className="flex items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
+        <ActionButton
+          variant="secondary"
           size="sm"
+          icon={Download}
           onClick={() => downloadWorkspacesCsv(selectedWorkspaces)}
-          className="min-h-11 h-11 px-3 text-xs font-bold gap-1.5 rounded-xl border-border/60 hover:bg-muted/80 cursor-pointer"
         >
-          <Download className="w-3.5 h-3.5" aria-hidden />
-          <span>{t('platform.workspaces.exportSelected')}</span>
-        </Button>
+          {t('platform.workspaces.exportSelected')}
+        </ActionButton>
 
-        <Button
-          type="button"
-          variant="outline"
+        <ActionButton
+          variant="secondary"
           size="sm"
+          icon={CheckCircle2}
           disabled={busy}
+          className="border-success/30 text-success hover:bg-success/10"
           onClick={() => onBulkEnable(selectedWorkspaces)}
-          className="min-h-11 h-11 px-3 text-xs font-bold gap-1.5 rounded-xl border-success/30 text-success hover:bg-success/10 cursor-pointer"
         >
-          <CheckCircle2 className="w-3.5 h-3.5" aria-hidden />
-          <span>{t('platform.workspaces.enableSelected')}</span>
-        </Button>
+          {t('platform.workspaces.enableSelected')}
+        </ActionButton>
 
-        <Button
-          type="button"
-          variant="outline"
+        <ActionButton
+          variant="danger"
           size="sm"
+          icon={Ban}
           disabled={busy}
           onClick={() => onBulkDisable(selectedWorkspaces)}
-          className="min-h-11 h-11 px-3 text-xs font-bold gap-1.5 rounded-xl border-destructive/30 text-destructive hover:bg-destructive/10 cursor-pointer"
         >
-          <Ban className="w-3.5 h-3.5" aria-hidden />
-          <span>{t('platform.workspaces.disableSelected')}</span>
-        </Button>
+          {t('platform.workspaces.disableSelected')}
+        </ActionButton>
       </div>
     </BulkActionDock>
   );

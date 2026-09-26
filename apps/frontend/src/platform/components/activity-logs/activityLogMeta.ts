@@ -1,4 +1,4 @@
-import { SEMANTIC_BADGE } from '@/lib/semanticTone';
+import type { BadgeTone } from '@/components/ui/badge';
 import {
   Trash2,
   PlusCircle,
@@ -20,21 +20,21 @@ export function getActionCategory(action: string): LogCategory {
   return 'system';
 }
 
-export function getActionMeta(action: string): { tone: string; Icon: React.ElementType } {
+export function getActionMeta(action: string): { tone: BadgeTone; Icon: React.ElementType } {
   if (action.includes('delete') || action.includes('disable') || action.includes('purge') || action.includes('reset')) {
-    return { tone: SEMANTIC_BADGE.destructive, Icon: Trash2 };
+    return { tone: 'destructive', Icon: Trash2 };
   }
   if (action.includes('create') || action.includes('enable') || action.includes('onboard')) {
-    return { tone: SEMANTIC_BADGE.success, Icon: PlusCircle };
+    return { tone: 'success', Icon: PlusCircle };
   }
   if (action.includes('migrate') || action.includes('restart') || action.includes('reload')) {
-    return { tone: SEMANTIC_BADGE.info, Icon: RefreshCw };
+    return { tone: 'info', Icon: RefreshCw };
   }
   if (action.includes('login') || action.includes('auth') || action.includes('password')) {
-    return { tone: SEMANTIC_BADGE.warning, Icon: Key };
+    return { tone: 'warning', Icon: Key };
   }
   if (action.includes('setting') || action.includes('config') || action.includes('update')) {
-    return { tone: SEMANTIC_BADGE.primary, Icon: Settings };
+    return { tone: 'primary', Icon: Settings };
   }
-  return { tone: SEMANTIC_BADGE.primary, Icon: Terminal };
+  return { tone: 'primary', Icon: Terminal };
 }

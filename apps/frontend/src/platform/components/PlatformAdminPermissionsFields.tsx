@@ -1,7 +1,7 @@
 import React from 'react';
 import { Shield, Building2, UserPlus, Settings, ShieldCheck, Server, Sparkles, CheckCheck, XCircle } from 'lucide-react';
 import type { PlatformAdminPermissions } from '@mms/shared';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PlatformPermissionCheckboxItem } from '@/platform/components/admin/PlatformPermissionCheckboxItem';
 
@@ -48,39 +48,34 @@ export function PlatformAdminPermissionsFields({
         </legend>
 
         <div className="flex flex-wrap items-center gap-1.5">
-          <Button
-            type="button"
-            variant="outline"
+          <ActionButton
+            variant="secondary"
             size="sm"
+            icon={CheckCheck}
             disabled={disabled}
             onClick={() => setAll(true)}
-            className="min-h-11 h-11 px-3 text-xs font-bold rounded-xl border-border/60 hover:bg-primary/10 hover:text-primary gap-1.5 cursor-pointer"
           >
-            <CheckCheck className="w-3.5 h-3.5 text-primary" aria-hidden />
             {t('contacts.table.selectAll')}
-          </Button>
-          <Button
-            type="button"
-            variant="outline"
+          </ActionButton>
+          <ActionButton
+            variant="secondary"
             size="sm"
+            icon={Sparkles}
             disabled={disabled}
             onClick={setOperations}
-            className="min-h-11 h-11 px-3 text-xs font-bold rounded-xl border-border/60 hover:bg-primary/10 hover:text-primary gap-1.5 cursor-pointer"
           >
-            <Sparkles className="w-3.5 h-3.5 text-primary" aria-hidden />
             {t('platform.permWorkspaces')}
-          </Button>
-          <Button
-            type="button"
+          </ActionButton>
+          <ActionButton
             variant="ghost"
             size="sm"
+            icon={XCircle}
             disabled={disabled}
             onClick={() => setAll(false)}
-            className="min-h-11 h-11 px-3 text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground gap-1.5 cursor-pointer"
+            className="text-muted-foreground hover:text-foreground"
           >
-            <XCircle className="w-3.5 h-3.5" aria-hidden />
             {t('common.deselect')}
-          </Button>
+          </ActionButton>
         </div>
       </div>
 

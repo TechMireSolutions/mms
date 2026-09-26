@@ -4,7 +4,7 @@ import { Database, Activity, Cpu, RefreshCw, CheckCircle2, Zap } from "lucide-re
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { StatCard } from "@/components/ui/StatCard";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/ActionButton";
 import { apiFetch } from "@/lib/apiClient";
 import { formatDateTime } from "@/lib/utils";
 import { containerVariantsConsole as containerVariants, itemVariants as cardVariants } from "@/platform/lib/animations";
@@ -120,18 +120,16 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
               <CheckCircle2 className="w-3 h-3 text-success" />
               {t("platform.maintenance.pm2Active")}
             </span>
-            <Button
-              variant="outline"
-              size="sm"
+            <ActionButton
+              variant="secondary"
+              icon={RefreshCw}
               onClick={() => void runHealthProbe()}
-              disabled={probing}
-              className="min-h-11 h-11 px-3 text-xs font-bold gap-1.5 rounded-xl border-border/60 hover:bg-muted/80 cursor-pointer"
+              loading={probing}
               title={t("platform.maintenance.runDiagnostics")}
               aria-label={t("platform.maintenance.runDiagnostics")}
             >
-              <RefreshCw className={probing ? "w-3.5 h-3.5 animate-spin" : "w-3.5 h-3.5"} aria-hidden />
               {probing ? t("platform.maintenance.diagnosticsRunning") : t("platform.maintenance.runDiagnostics")}
-            </Button>
+            </ActionButton>
           </div>
         </div>
 

@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Mail, User, UserPlus, ShieldPlus } from 'lucide-react';
 import { DEFAULT_PLATFORM_ADMIN_PERMISSIONS, type PlatformAdminPermissions } from '@mms/shared';
 import PasswordInput from '@/components/ui/PasswordInput';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
 import { FormModal } from '@/components/ui/FormModal';
 import { Field } from '@/components/ui/FormField';
@@ -13,7 +13,6 @@ import { getPlatformRegisterError } from '@/platform/lib/platformValidation';
 import { useAddPlatformAdmin } from '@/platform/hooks/usePlatformAdmins';
 import { PlatformAdminPermissionsFields } from '@/platform/components/PlatformAdminPermissionsFields';
 import { PasswordStrengthMeter } from '@/components/ui/PasswordStrengthMeter';
-import { cn } from '@/lib/utils';
 
 export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?: boolean } = {}): React.JSX.Element {
   const { t, dir, language } = useTranslation();
@@ -66,17 +65,14 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
 
   const content = (
     <>
-      <Button
-        type="button"
-        className={cn(
-          "font-bold min-h-11 rounded-xl shadow-sm shadow-primary/20 interactive-scale cursor-pointer",
-          asTriggerOnly ? "px-5" : "w-full"
-        )}
+      <ActionButton
+        variant="primary"
+        icon={UserPlus}
+        className={asTriggerOnly ? undefined : 'w-full'}
         onClick={() => setOpen(true)}
       >
-        <UserPlus className="w-4 h-4 me-2" aria-hidden />
         {t('platform.addAdmin')}
-      </Button>
+      </ActionButton>
 
       <FormModal
         open={open}

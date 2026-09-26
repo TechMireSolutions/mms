@@ -6,7 +6,7 @@ import { itemVariants } from "@/platform/lib/animations";
 import { useTranslation } from "@/hooks/useTranslation";
 import { usePlatformTelemetry } from "@/platform/hooks/usePlatformTelemetry";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
-import { Button } from "@/components/ui/button";
+import { ActionButton } from "@/components/ui/ActionButton";
 
 export function PlatformDashboardTelemetry(): React.JSX.Element {
   const reducedMotion = useReducedMotion();
@@ -64,35 +64,29 @@ export function PlatformDashboardTelemetry(): React.JSX.Element {
         </div>
 
         <div className="flex items-center gap-2">
-          <Button
+          <ActionButton
             type="button"
-            variant="outline"
+            variant="secondary"
             size="sm"
+            icon={isPaused ? Play : Pause}
             onClick={() => setIsPaused((prev) => !prev)}
-            className="min-h-11 h-11 px-3 text-xs font-semibold gap-1.5 rounded-xl border-border/60 hover:bg-muted/80 cursor-pointer"
             title={isPaused ? t("platform.telemetry.resumePolling") : t("platform.telemetry.pausePolling")}
             aria-label={isPaused ? t("platform.telemetry.resumePolling") : t("platform.telemetry.pausePolling")}
           >
-            {isPaused ? (
-              <Play className="w-3.5 h-3.5 text-success" aria-hidden />
-            ) : (
-              <Pause className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
-            )}
-            <span>{isPaused ? t("platform.telemetry.resumePolling") : t("platform.telemetry.pausePolling")}</span>
-          </Button>
+            {isPaused ? t("platform.telemetry.resumePolling") : t("platform.telemetry.pausePolling")}
+          </ActionButton>
 
-          <Button
+          <ActionButton
             type="button"
-            variant="outline"
-            size="icon"
+            variant="secondary"
+            size="sm"
+            icon={RefreshCw}
+            loading={isFetching}
             onClick={() => void refetch()}
-            disabled={isFetching}
-            className="min-h-11 min-w-11 h-11 w-11 rounded-xl border-border/60 hover:bg-muted/80 cursor-pointer"
+            className="min-w-11"
             title={t("platform.telemetry.refreshNow")}
             aria-label={t("platform.telemetry.refreshNow")}
-          >
-            <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? "animate-spin text-primary" : "text-muted-foreground"}`} aria-hidden />
-          </Button>
+          />
         </div>
       </div>
 

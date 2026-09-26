@@ -1,15 +1,14 @@
 import React, { type ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
-import { Check, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { AuthPageBackdrop } from "@/components/entry/AuthPageShell";
 import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { Button } from "@/components/ui/button";
-import { SectionLabel } from "@/components/ui/SectionLabel";
+import { WizardStepIndicator } from "@/components/ui/WizardStepIndicator";
 import { ROUTES } from "@/lib/config/routes";
-import { cn } from "@/lib/utils";
 
 export interface WizardStepConfig {
   id: number;
@@ -87,45 +86,12 @@ export default function WizardLayout({
       </div>
 
       <main id="main-content" className="relative z-elevated flex flex-1 flex-col items-center px-4 py-8 sm:px-6 sm:py-10">
-        <nav aria-label={stepLabel} className="mb-8 flex items-center gap-0 sm:mb-10">
-          {steps.map((step, index) => {
-            const done = currentStep > step.id;
-            const active = currentStep === step.id;
-            return (
-              <React.Fragment key={step.id}>
-                <div className="flex flex-col items-center gap-1.5" aria-current={active ? "step" : undefined}>
-                  <div
-                    className={cn(
-                      "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all duration-300",
-                      done || active
-                        ? "bg-primary text-primary-foreground"
-                        : "border border-border bg-muted text-muted-foreground",
-                      active && "ring-4 ring-primary/20 shadow-sm shadow-primary/20",
-                    )}
-                  >
-                    {done ? <Check className="h-4 w-4" aria-hidden /> : <span aria-hidden>{step.id}</span>}
-                  </div>
-                  <SectionLabel
-                    as="span"
-                    weight="semibold"
-                    tracking="wider"
-                    className={cn("hidden sm:block", active ? "text-foreground" : "text-muted-foreground")}
-                  >
-                    {step.label}
-                  </SectionLabel>
-                </div>
-                {index < steps.length - 1 ? (
-                  <div
-                    className={cn(
-                      "mx-1 mb-5 h-px w-12 sm:w-24 transition-colors duration-300",
-                      currentStep > step.id ? "bg-primary/40" : "bg-border",
-                    )}
-                    aria-hidden
-                  />
-                ) : null}
-              </React.Fragment>
-            );
-          })}
+        <nav aria-label={stepLabel} className="mb-8 flex justify-center w-full max-w-2xl sm:mb-10">
+          <WizardStepIndicator
+            steps={steps}
+            current={currentStep}
+            ariaLabel={stepLabel}
+          />
         </nav>
 
         <motion.section

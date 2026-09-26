@@ -31,7 +31,7 @@ export function PlatformAdminStatusBadges({ admin }: PlatformAdminStatusBadgesPr
         config={{
           super_user: {
             label: t('platform.roleSuperUser'),
-            cls: 'bg-primary/10 text-primary border-primary/20',
+            cls: SEMANTIC_BADGE.primary,
           },
           admin: { label: t('platform.roleAdmin'), cls: SEMANTIC_BADGE.muted },
         }}
@@ -68,7 +68,7 @@ export function PlatformAdminPermissionsBadges({ admin }: PlatformAdminPermissio
           config={{
             workspaces: {
               label: t('platform.permWorkspaces'),
-              cls: 'bg-primary/10 text-primary border-primary/20',
+              cls: SEMANTIC_BADGE.primary,
             },
           }}
           size="sm"
@@ -80,7 +80,7 @@ export function PlatformAdminPermissionsBadges({ admin }: PlatformAdminPermissio
           config={{
             onboard: {
               label: t('platform.permOnboard'),
-              cls: 'bg-primary/10 text-primary border-primary/20',
+              cls: SEMANTIC_BADGE.primary,
             },
           }}
           size="sm"
@@ -92,7 +92,7 @@ export function PlatformAdminPermissionsBadges({ admin }: PlatformAdminPermissio
           config={{
             settings: {
               label: t('platform.permSettings'),
-              cls: 'bg-primary/10 text-primary border-primary/20',
+              cls: SEMANTIC_BADGE.primary,
             },
           }}
           size="sm"
@@ -104,7 +104,7 @@ export function PlatformAdminPermissionsBadges({ admin }: PlatformAdminPermissio
           config={{
             admins: {
               label: t('platform.permAdmins'),
-              cls: 'bg-primary/10 text-primary border-primary/20',
+              cls: SEMANTIC_BADGE.primary,
             },
           }}
           size="sm"
@@ -116,7 +116,7 @@ export function PlatformAdminPermissionsBadges({ admin }: PlatformAdminPermissio
           config={{
             system: {
               label: t('platform.permSystem'),
-              cls: 'bg-primary/10 text-primary border-primary/20',
+              cls: SEMANTIC_BADGE.primary,
             },
           }}
           size="sm"

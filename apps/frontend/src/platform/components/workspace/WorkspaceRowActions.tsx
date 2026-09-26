@@ -1,6 +1,7 @@
 import React from 'react';
 import { Blocks, ExternalLink, KeyRound, Trash2, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -57,57 +58,53 @@ export function WorkspaceRowActions({
         </a>
       </Button>
 
-      <Button
+      <ActionButton
         variant="ghost"
-        size="icon"
+        size="sm"
         disabled={busy}
         onClick={onOpenModules}
-        className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-xl transition-all cursor-pointer"
+        icon={Blocks}
+        className="min-w-11 text-muted-foreground hover:text-primary hover:bg-primary/10"
         title={`${t('platform.modulesTitle')} (${subdomain})`}
         aria-label={`${t('platform.modulesTitle')} (${subdomain})`}
-      >
-        <Blocks className="w-4 h-4" aria-hidden />
-      </Button>
+      />
 
       {onOpenCreateAdmin ? (
-        <Button
+        <ActionButton
           variant="ghost"
-          size="icon"
+          size="sm"
           disabled={busy}
           onClick={onOpenCreateAdmin}
-          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-success hover:bg-success/10 rounded-xl transition-all cursor-pointer"
+          icon={UserPlus}
+          className="min-w-11 text-muted-foreground hover:text-success hover:bg-success/10"
           title={t('platform.tooltipCreateAdmin', { subdomain })}
           aria-label={t('platform.tooltipCreateAdmin', { subdomain })}
-        >
-          <UserPlus className="w-4 h-4" aria-hidden />
-        </Button>
+        />
       ) : null}
 
       {onOpenResetPassword ? (
-        <Button
+        <ActionButton
           variant="ghost"
-          size="icon"
+          size="sm"
           disabled={busy}
           onClick={onOpenResetPassword}
-          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-warning hover:bg-warning/10 rounded-xl transition-all cursor-pointer"
+          icon={KeyRound}
+          className="min-w-11 text-muted-foreground hover:text-warning hover:bg-warning/10"
           title={t('platform.tooltipResetPassword', { subdomain })}
           aria-label={t('platform.tooltipResetPassword', { subdomain })}
-        >
-          <KeyRound className="w-4 h-4" aria-hidden />
-        </Button>
+        />
       ) : null}
 
-      <Button
+      <ActionButton
         variant="ghost"
-        size="icon"
+        size="sm"
         disabled={busy || deletePending}
         onClick={onOpenDelete}
-        className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-xl transition-all cursor-pointer"
+        icon={Trash2}
+        className="min-w-11 text-muted-foreground hover:text-destructive hover:bg-destructive/10"
         title={`${t('platform.deleteWorkspace')} (${subdomain})`}
         aria-label={`${t('platform.deleteWorkspace')} (${subdomain})`}
-      >
-        <Trash2 className="w-4 h-4" aria-hidden />
-      </Button>
+      />
     </div>
   );
 

@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
-import { UserPlus, RefreshCw } from 'lucide-react';
+import { UserPlus, RefreshCw, User, Mail } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/FormField';
+import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CreateAdminResultCard } from '@/platform/components/workspace/CreateAdminResultCard';
 
@@ -89,17 +90,17 @@ export function PlatformWorkspaceCreateAdminDialog({
       size="md"
       footer={
         result ? (
-          <Button type="button" onClick={handleClose} className="min-h-11 px-6 font-bold cursor-pointer">
+          <ActionButton variant="primary" onClick={handleClose}>
             {t('common.close')}
-          </Button>
+          </ActionButton>
         ) : (
           <div className="flex items-center justify-end gap-2.5 w-full">
-            <Button type="button" variant="outline" onClick={handleClose} disabled={createPending} className="min-h-11 px-4 cursor-pointer">
+            <ActionButton variant="secondary" onClick={handleClose} disabled={createPending}>
               {t('common.cancel')}
-            </Button>
-            <Button type="button" onClick={handleCreate} disabled={createPending} className="min-h-11 px-5 font-bold cursor-pointer">
-              {createPending ? t('common.loading') : t('platform.createAdminBtn')}
-            </Button>
+            </ActionButton>
+            <ActionButton variant="primary" onClick={handleCreate} loading={createPending}>
+              {t('platform.createAdminBtn')}
+            </ActionButton>
           </div>
         )
       }
@@ -124,40 +125,33 @@ export function PlatformWorkspaceCreateAdminDialog({
           </div>
 
           <div className="space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="admin-name" className="text-xs font-semibold">
-                {t('platform.adminNameLabel')} <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="admin-name"
+            <Field label={t('platform.adminNameLabel')} required error={!name.trim() && error ? error : undefined}>
+              <LeadingIconInput
+                icon={User}
                 type="text"
+                id="admin-name"
                 placeholder={t('platform.adminNamePlaceholder')}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 className="h-11 text-sm"
                 disabled={createPending}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="admin-email" className="text-xs font-semibold">
-                {t('platform.adminEmailLabel')} <span className="text-destructive">*</span>
-              </Label>
-              <Input
-                id="admin-email"
+            <Field label={t('platform.adminEmailLabel')} required>
+              <LeadingIconInput
+                icon={Mail}
                 type="email"
+                id="admin-email"
                 placeholder={t('platform.adminEmailPlaceholder')}
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="h-11 text-sm"
                 disabled={createPending}
               />
-            </div>
+            </Field>
 
-            <div className="space-y-1.5">
-              <Label htmlFor="admin-password" className="text-xs font-semibold">
-                {t('platform.initialPasswordLabel')}
-              </Label>
+            <Field label={t('platform.initialPasswordLabel')}>
               <div className="flex items-center gap-2">
                 <Input
                   id="admin-password"
@@ -168,20 +162,21 @@ export function PlatformWorkspaceCreateAdminDialog({
                   className="font-mono text-sm h-11 flex-1"
                   disabled={createPending}
                 />
-                <Button
+                <ActionButton
                   type="button"
-                  variant="outline"
+                  variant="secondary"
+                  size="sm"
+                  icon={RefreshCw}
                   onClick={generateRandomPassword}
                   disabled={createPending}
-                  className="min-h-11 h-11 px-3 text-xs font-semibold gap-1.5 shrink-0 cursor-pointer"
+                  className="shrink-0 cursor-pointer font-semibold"
                   title={t('platform.autoGenerateTitle')}
                   aria-label={t('platform.autoGenerateTitle')}
                 >
-                  <RefreshCw className="w-3.5 h-3.5" />
                   {t('platform.autoGenerateBtn')}
-                </Button>
+                </ActionButton>
               </div>
-            </div>
+            </Field>
 
             {error ? <p className="text-xs font-medium text-destructive">{error}</p> : null}
           </div>

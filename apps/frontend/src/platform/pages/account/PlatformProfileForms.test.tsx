@@ -74,7 +74,7 @@ describe("PlatformProfileForms", () => {
 
     const label = container.querySelector<HTMLLabelElement>('label[for="platform-profile-name"]');
     expect(label).not.toBeNull();
-    expect(label?.textContent).toBe("platform.profileName");
+    expect(label?.textContent).toContain("platform.profileName");
   });
 
   it("renders PlatformProfilePasswordForm with current, new, and confirm password inputs", async () => {

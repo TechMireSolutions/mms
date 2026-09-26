@@ -1,5 +1,5 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { PlatformUserProfile } from '@mms/shared';
 
@@ -31,47 +31,40 @@ export function PlatformAdminActionButtons({
   return (
     <div className="flex flex-wrap items-center justify-end gap-2">
       {!admin.emailVerifiedAt && onVerifyEmail ? (
-        <Button
-          type="button"
-          variant="outline"
+        <ActionButton
+          variant="secondary"
           size="sm"
           disabled={verifyPending}
-          className="min-h-11 rounded-lg font-bold border-success/40 bg-success/10 text-success hover:bg-success/20 hover:border-success/60 cursor-pointer"
+          className="border-success/40 bg-success/10 text-success hover:bg-success/20 hover:border-success/60"
           onClick={() => onVerifyEmail(admin.id)}
         >
           {t('users.actionVerifyEmail')}
-        </Button>
+        </ActionButton>
       ) : null}
 
-      <Button
-        type="button"
-        variant="outline"
+      <ActionButton
+        variant="secondary"
         size="sm"
-        className="min-h-11 rounded-lg font-bold cursor-pointer"
         onClick={() => onEditAccess(admin)}
       >
         {t('platform.editAdminAccess')}
-      </Button>
+      </ActionButton>
 
-      <Button
-        type="button"
-        variant="outline"
+      <ActionButton
+        variant="secondary"
         size="sm"
-        className="min-h-11 rounded-lg font-bold cursor-pointer"
         onClick={() => onToggleStatus(admin, isDisabled ? 'enable' : 'disable')}
       >
         {t(isDisabled ? 'platform.enableAdmin' : 'platform.disableAdmin')}
-      </Button>
+      </ActionButton>
 
-      <Button
-        type="button"
-        variant="destructive"
+      <ActionButton
+        variant="danger"
         size="sm"
-        className="min-h-11 rounded-lg font-bold cursor-pointer"
         onClick={() => onDelete(admin)}
       >
         {t('platform.deleteAdmin')}
-      </Button>
+      </ActionButton>
     </div>
   );
 }

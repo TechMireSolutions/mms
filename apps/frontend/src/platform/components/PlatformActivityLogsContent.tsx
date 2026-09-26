@@ -12,7 +12,7 @@ import { WidgetCardHeader } from '@/components/ui/WidgetCardHeader';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { EmptyState } from '@/components/ui/EmptyState';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { exportActivityLogsCsv } from './activity-logs/exportActivityLogsCsv';
@@ -65,29 +65,26 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
         clearFiltersLabel={t('common.clearFilters')}
         primaryAction={
           <div className="flex items-center gap-2">
-            <Button
-              variant="outline"
-              size="icon"
+            <ActionButton
+              variant="secondary"
+              size="sm"
+              icon={RefreshCw}
+              loading={isFetching}
               onClick={() => void refetch()}
-              disabled={isFetching}
-              className="min-h-11 h-11 min-w-11 w-11 rounded-xl border-border/80 hover:bg-muted/80 cursor-pointer"
+              className="min-w-11"
               title={t('common.refresh')}
               aria-label={t('common.refresh')}
-            >
-              <RefreshCw className={`w-3.5 h-3.5 ${isFetching ? 'animate-spin' : ''}`} aria-hidden />
-            </Button>
+            />
 
-            <Button
-              variant="outline"
-              size="sm"
+            <ActionButton
+              variant="secondary"
+              icon={Download}
               onClick={() => exportActivityLogsCsv(items)}
               disabled={items.length === 0}
-              className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 shrink-0 cursor-pointer"
               title={t('platform.exportCsv')}
             >
-              <Download className="w-3.5 h-3.5" aria-hidden />
               {t('platform.exportCsv')}
-            </Button>
+            </ActionButton>
           </div>
         }
       >
@@ -130,14 +127,12 @@ export function PlatformActivityLogsContent(): React.JSX.Element {
             title={isFiltered ? t('platform.noMatchingLogs') : t('platform.noActivityLogsYet')}
             action={
               isFiltered ? (
-                <Button
-                  variant="outline"
-                  size="sm"
+                <ActionButton
+                  variant="secondary"
                   onClick={handleClearFilters}
-                  className="min-h-11 h-11 px-4 text-xs font-bold rounded-xl cursor-pointer"
                 >
                   {t('common.clearFilters')}
-                </Button>
+                </ActionButton>
               ) : undefined
             }
             compact

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sparkles, School, BookOpen, GraduationCap } from 'lucide-react';
 import { SYSTEM_MODULES } from '@mms/shared';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export interface PlatformModulePresetsBarProps {
@@ -22,43 +22,37 @@ export function PlatformModulePresetsBar({
         <span>{t('onboarding.presetsLabel')}</span>
       </div>
       <div className="flex flex-wrap items-center gap-2">
-        <Button
-          type="button"
-          variant="outline"
+        <ActionButton
+          variant="secondary"
           size="sm"
+          icon={School}
           disabled={disabled}
           onClick={() => onApplyPreset(SYSTEM_MODULES.map((m) => m.id))}
-          className="min-h-11 h-11 px-3 text-xs font-bold rounded-xl border-border/70 hover:bg-primary/10 hover:text-primary gap-1.5 shadow-2xs cursor-pointer"
         >
-          <School className="w-3.5 h-3.5 text-primary" aria-hidden />
           {t('onboarding.presetFull')}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
           size="sm"
+          icon={BookOpen}
           disabled={disabled}
           onClick={() =>
             onApplyPreset(['dashboard', 'contacts', 'messaging', 'students', 'teachers', 'attendance', 'hasanat', 'users'])
           }
-          className="min-h-11 h-11 px-3 text-xs font-bold rounded-xl border-border/70 hover:bg-primary/10 hover:text-primary gap-1.5 shadow-2xs cursor-pointer"
         >
-          <BookOpen className="w-3.5 h-3.5 text-primary" aria-hidden />
           {t('onboarding.presetHifz')}
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
+        </ActionButton>
+        <ActionButton
+          variant="secondary"
           size="sm"
+          icon={GraduationCap}
           disabled={disabled}
           onClick={() =>
             onApplyPreset(['dashboard', 'contacts', 'messaging', 'students', 'attendance', 'finance', 'users'])
           }
-          className="min-h-11 h-11 px-3 text-xs font-bold rounded-xl border-border/70 hover:bg-primary/10 hover:text-primary gap-1.5 shadow-2xs cursor-pointer"
         >
-          <GraduationCap className="w-3.5 h-3.5 text-primary" aria-hidden />
           {t('onboarding.presetWeekend')}
-        </Button>
+        </ActionButton>
       </div>
     </div>
   );

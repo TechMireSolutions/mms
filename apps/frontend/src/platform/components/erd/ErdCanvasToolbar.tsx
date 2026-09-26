@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 
 export interface ErdCanvasToolbarProps {
   zoom: number;
@@ -46,7 +47,7 @@ export function ErdCanvasToolbar({
       aria-label={t('platform.erdDiagram')}
       className="flex flex-wrap items-center justify-between gap-2 border-b border-border/40 pb-3"
     >
-      {/* Zoom controls */}
+      {/* Zoom controls — icon-only square buttons, stay as Button */}
       <div className="flex items-center gap-1.5 bg-muted/40 p-1 rounded-xl border border-border/50">
         <Button
           type="button"
@@ -61,15 +62,17 @@ export function ErdCanvasToolbar({
           <ZoomOut className="w-4 h-4 text-foreground" aria-hidden />
         </Button>
 
-        <button
+        <Button
           type="button"
+          variant="ghost"
+          size="sm"
           onClick={onResetZoom}
           className="min-h-11 px-2.5 text-xs font-mono font-bold text-foreground hover:bg-muted/80 rounded-lg transition-colors cursor-pointer"
           title={t('platform.erdResetZoom')}
           aria-label={t('platform.erdResetZoom')}
         >
           {zoomPercent}%
-        </button>
+        </Button>
 
         <Button
           type="button"
@@ -99,57 +102,40 @@ export function ErdCanvasToolbar({
 
       {/* Action buttons */}
       <div className="flex items-center gap-1.5 flex-wrap">
-        <Button
-          type="button"
-          variant="outline"
+        <ActionButton
+          variant="secondary"
           size="sm"
+          icon={copied ? Check : Copy}
           onClick={onCopySource}
-          className="min-h-11 h-11 px-3 text-xs font-semibold gap-1.5 rounded-xl border-border/60 hover:bg-muted/80 cursor-pointer"
           title={copied ? t('platform.erdCopied') : t('platform.erdCopySource')}
           aria-label={copied ? t('platform.erdCopied') : t('platform.erdCopySource')}
+          className={copied ? 'text-success border-success/30' : undefined}
         >
-          {copied ? (
-            <>
-              <Check className="w-3.5 h-3.5 text-success" aria-hidden />
-              <span>{t('platform.erdCopied')}</span>
-            </>
-          ) : (
-            <>
-              <Copy className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
-              <span>{t('platform.erdCopySource')}</span>
-            </>
-          )}
-        </Button>
+          {copied ? t('platform.erdCopied') : t('platform.erdCopySource')}
+        </ActionButton>
 
-        <Button
-          type="button"
-          variant="outline"
+        <ActionButton
+          variant="secondary"
           size="sm"
+          icon={Download}
           onClick={onDownloadSvg}
           disabled={!canDownload}
-          className="min-h-11 h-11 px-3 text-xs font-semibold gap-1.5 rounded-xl border-border/60 hover:bg-muted/80 cursor-pointer"
           title={t('platform.erdDownloadSvg')}
           aria-label={t('platform.erdDownloadSvg')}
         >
-          <Download className="w-3.5 h-3.5 text-muted-foreground" aria-hidden />
-          <span>{t('platform.erdDownloadSvg')}</span>
-        </Button>
+          {t('platform.erdDownloadSvg')}
+        </ActionButton>
 
-        <Button
+        <ActionButton
           type="button"
-          variant="outline"
+          variant="secondary"
           size="sm"
+          icon={isFullscreen ? Minimize2 : Maximize2}
           onClick={onToggleFullscreen}
-          className="min-h-11 min-w-11 h-11 w-11 p-0 rounded-xl border-border/60 hover:bg-muted/80 cursor-pointer"
+          className="min-w-11"
           title={isFullscreen ? t('platform.erdExitFullscreen') : t('platform.erdFullscreen')}
           aria-label={isFullscreen ? t('platform.erdExitFullscreen') : t('platform.erdFullscreen')}
-        >
-          {isFullscreen ? (
-            <Minimize2 className="w-4 h-4 text-primary" aria-hidden />
-          ) : (
-            <Maximize2 className="w-4 h-4 text-foreground" aria-hidden />
-          )}
-        </Button>
+        />
       </div>
     </div>
   );

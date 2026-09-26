@@ -58,7 +58,7 @@ export function PlatformNotificationsPopover({
               <div className="flex items-center justify-between">
                 <h3 className="text-sm font-black text-foreground">{t('platform.notificationsTitle')}</h3>
                 {unreadCount > 0 && (
-                  <Badge variant="secondary" className="px-2 py-0.5 text-xs font-bold bg-primary/10 text-primary">
+                  <Badge tone="primary" size="sm" className="font-bold">
                     {t('platform.notificationsNewBadge', { count: String(unreadCount) })}
                   </Badge>
                 )}
@@ -111,7 +111,7 @@ export function PlatformNotificationsPopover({
                   setPopoverOpen(false);
                   navigate(ROUTES.platformReports);
                 }}
-                className="text-xs font-bold text-primary hover:underline min-h-10 p-0 cursor-pointer"
+                className="text-xs font-bold text-primary hover:underline min-h-11 p-0 cursor-pointer"
               >
                 {t('platform.notificationsViewAllReports')}
               </Button>

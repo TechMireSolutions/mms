@@ -3,6 +3,7 @@ import { Globe, Check, Type } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RequiredMark } from "@/components/ui/FormField";
 import { FieldHint, NAME_MAX } from "@/components/branding/BrandingShared";
 import type { CreateMadrasaController } from "@/platform/pages/onboarding/steps/useCreateMadrasaController";
 
@@ -28,7 +29,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
       <div className="space-y-4">
         <div className="space-y-2">
           <div className="flex items-center justify-between gap-2">
-            <Label htmlFor="onboarding-name">{t("branding.madrasaName")} <span className="text-destructive" aria-hidden>*</span></Label>
+            <Label htmlFor="onboarding-name">{t("branding.madrasaName")} <RequiredMark /></Label>
             <span className="text-xs text-muted-foreground" aria-live="polite">
               {data.name.length}/{NAME_MAX}
             </span>
@@ -49,7 +50,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
 
         <div className="space-y-2">
           <Label htmlFor="onboarding-subdomain">
-            {t("onboarding.madrasa.subdomainLabel")} <span className="text-destructive" aria-hidden>*</span>
+            {t("onboarding.madrasa.subdomainLabel")} <RequiredMark />
           </Label>
           <div className="flex items-center overflow-hidden rounded-lg border border-border focus-within:border-primary/40 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
             <div className="flex items-center gap-1.5 border-e border-border bg-muted px-3 py-2.5">

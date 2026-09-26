@@ -4,7 +4,7 @@ import type { OnboardingData } from "@/platform/pages/onboarding/OnboardingWizar
 import { useTranslation } from "@/hooks/useTranslation";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormField";
 import { AuthEmailField } from "@/components/entry";
 import { AdminSetupPasswordFields } from "@/platform/pages/onboarding/steps/AdminSetupPasswordFields";
 
@@ -17,25 +17,6 @@ export interface AdminSetupData {
   confirmPassword?: string;
   agreedTerms?: boolean;
 }
-
-interface FieldRowProps {
-  id: string;
-  label: string;
-  required?: boolean;
-  children: React.ReactNode;
-  hint?: string;
-}
-
-const FieldRow = ({ id, label, required = false, children, hint }: FieldRowProps) => (
-  <div className="space-y-1.5 text-start">
-    <label htmlFor={id} className={FORM_LABEL}>
-      {label}
-      {required ? <span className="ms-1 text-destructive" aria-hidden>*</span> : null}
-    </label>
-    {children}
-    {hint ? <p className="text-xs leading-relaxed text-muted-foreground">{hint}</p> : null}
-  </div>
-);
 
 interface AdminSetupProps {
   data: OnboardingData;
@@ -55,7 +36,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <FieldRow id="firstName" label={t("onboarding.admin.firstName")} required>
+        <Field id="firstName" label={t("onboarding.admin.firstName")} required>
           <Input
             id="firstName"
             name="firstName"
@@ -68,8 +49,8 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
             placeholder={t("onboarding.admin.firstNamePlaceholder")}
             className="h-11"
           />
-        </FieldRow>
-        <FieldRow id="lastName" label={t("onboarding.admin.lastName")} required>
+        </Field>
+        <Field id="lastName" label={t("onboarding.admin.lastName")} required>
           <Input
             id="lastName"
             name="lastName"
@@ -81,7 +62,7 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
             placeholder={t("onboarding.admin.lastNamePlaceholder")}
             className="h-11"
           />
-        </FieldRow>
+        </Field>
       </div>
 
       <AuthEmailField

@@ -1,7 +1,8 @@
 import type React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { FORM_LABEL, WORK_SURFACE } from '@/components/ui/formStyles';
+import { Field } from '@/components/ui/FormField';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { ErdMermaidDiagram } from '@/platform/components/erd/ErdMermaidDiagram';
 import { ErdRelationshipList } from '@/platform/components/erd/ErdRelationshipList';
 import { useErdPageController } from '@/platform/hooks/useErdPageController';
@@ -31,8 +32,7 @@ export function ErdExplorer(): React.JSX.Element {
   return (
     <div className="space-y-6">
       <div className={`${WORK_SURFACE} grid gap-4 p-4 sm:grid-cols-2`}>
-        <label className="block min-w-0">
-          <span className={FORM_LABEL}>{t('platform.erdDomainLabel')}</span>
+        <Field label={t('platform.erdDomainLabel')} id="erd-domain">
           <FormSelect
             name="erd-domain"
             aria-label={t('platform.erdDomainLabel')}
@@ -40,9 +40,8 @@ export function ErdExplorer(): React.JSX.Element {
             onChange={setDomainId}
             options={formattedDomainOptions}
           />
-        </label>
-        <label className="block min-w-0">
-          <span className={FORM_LABEL}>{t('platform.erdFocusTable')}</span>
+        </Field>
+        <Field label={t('platform.erdFocusTable')} id="erd-table">
           <FormSelect
             name="erd-table"
             aria-label={t('platform.erdFocusTable')}
@@ -50,7 +49,7 @@ export function ErdExplorer(): React.JSX.Element {
             onChange={setFocusTable}
             options={tableOptions}
           />
-        </label>
+        </Field>
       </div>
 
       <div className="flex items-center justify-between text-sm text-muted-foreground">

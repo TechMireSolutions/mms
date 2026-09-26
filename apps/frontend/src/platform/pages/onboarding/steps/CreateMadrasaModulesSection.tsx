@@ -1,43 +1,14 @@
 import React from "react";
-import { LayoutDashboard, Sparkles, BookOpen, GraduationCap, School } from "lucide-react";
-import type { AppTranslationKey } from "@mms/shared";
+import { LayoutDashboard } from "lucide-react";
 import { SYSTEM_MODULES } from "@mms/shared";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { Button } from "@/components/ui/button";
 import { PlatformModuleSelectCard } from "@/platform/components/workspace/PlatformModuleSelectCard";
+import { PlatformModulePresetsBar } from "@/platform/components/workspace/PlatformModulePresetsBar";
 import type { CreateMadrasaController } from "@/platform/pages/onboarding/steps/useCreateMadrasaController";
 
 interface CreateMadrasaModulesSectionProps {
   controller: CreateMadrasaController;
 }
-
-interface ModulePreset {
-  id: string;
-  labelKey: AppTranslationKey;
-  icon: React.ElementType;
-  modules: string[];
-}
-
-const PRESETS: ModulePreset[] = [
-  {
-    id: "full",
-    labelKey: "onboarding.presetFull",
-    icon: School,
-    modules: SYSTEM_MODULES.map((m) => m.id),
-  },
-  {
-    id: "hifz",
-    labelKey: "onboarding.presetHifz",
-    icon: BookOpen,
-    modules: ["dashboard", "contacts", "messaging", "students", "teachers", "attendance", "hasanat", "users"],
-  },
-  {
-    id: "weekend",
-    labelKey: "onboarding.presetWeekend",
-    icon: GraduationCap,
-    modules: ["dashboard", "contacts", "messaging", "students", "attendance", "finance", "users"],
-  },
-];
 
 export function CreateMadrasaModulesSection({ controller }: CreateMadrasaModulesSectionProps): React.JSX.Element {
   const { t, data, onChange } = controller;
@@ -66,30 +37,7 @@ export function CreateMadrasaModulesSection({ controller }: CreateMadrasaModules
     >
       <div className="space-y-4 text-start">
         {/* Preset Archetype Chips */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-3 rounded-xl bg-muted/40 border border-border/50">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-            <Sparkles className="w-3.5 h-3.5 text-primary" aria-hidden />
-            <span>{t("onboarding.presetsLabel")}</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            {PRESETS.map((preset) => {
-              const Icon = preset.icon;
-              return (
-                <Button
-                  key={preset.id}
-                  type="button"
-                  variant="outline"
-                  size="sm"
-                  onClick={() => applyPreset(preset.modules)}
-                  className="min-h-11 h-11 px-3 text-xs font-bold rounded-lg border-border/70 hover:bg-primary/10 hover:text-primary gap-1.5 shadow-2xs cursor-pointer"
-                >
-                  <Icon className="w-3.5 h-3.5 text-primary" aria-hidden />
-                  {t(preset.labelKey)}
-                </Button>
-              );
-            })}
-          </div>
-        </div>
+        <PlatformModulePresetsBar onApplyPreset={applyPreset} />
 
         {/* Module Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4">
@@ -107,6 +55,5 @@ export function CreateMadrasaModulesSection({ controller }: CreateMadrasaModules
         </div>
       </div>
     </SectionCard>
-
   );
 }

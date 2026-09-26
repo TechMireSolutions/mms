@@ -3,13 +3,12 @@ import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shar
 import { SYSTEM_MODULES } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/button';
+import { ActionButton } from '@/components/ui/ActionButton';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import { PlatformModuleSelectCard } from '@/platform/components/workspace/PlatformModuleSelectCard';
 import { PlatformModulePresetsBar } from '@/platform/components/workspace/PlatformModulePresetsBar';
 import { useUpdateWorkspaceModules, useWorkspaceModules } from '@/platform/hooks/usePlatformWorkspaces';
 import {
-  Loader2,
   LayoutDashboard,
   Users,
   MessageSquare,
@@ -115,22 +114,21 @@ export function PlatformWorkspaceModulesDialog({
       subtitle={`${workspace.madrasaName} (${workspace.subdomain})`}
       footer={
         <>
-          <Button
-            variant="outline"
+          <ActionButton
+            variant="secondary"
             onClick={() => onOpenChange(false)}
             disabled={isPending}
-            className="min-h-11 rounded-xl font-bold px-4"
           >
             {t('common.cancel')}
-          </Button>
-          <Button
+          </ActionButton>
+          <ActionButton
+            variant="primary"
             onClick={handleSave}
+            loading={isPending}
             disabled={isPending || isLoading}
-            className="min-h-11 rounded-xl font-bold px-5 shadow-sm shadow-primary/20 interactive-scale cursor-pointer"
           >
-            {isPending && <Loader2 className="me-2 h-4 w-4 animate-spin" aria-hidden />}
             {t('common.save')}
-          </Button>
+          </ActionButton>
         </>
       }
     >

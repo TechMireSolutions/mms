@@ -6,7 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { Button } from "@/components/ui/button";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { Badge } from "@/components/ui/badge";
 import { itemVariants } from "@/platform/lib/animations";
 import { ROUTES } from "@/lib/config/routes";
 import { cn } from "@/lib/utils";
@@ -39,23 +39,12 @@ export function PlatformDashboardBanner({
     >
       <div className="relative z-elevated space-y-4">
         <div className="flex flex-wrap items-center gap-2.5">
-          <span
-            className={cn(
-              SEMANTIC_BADGE.primary,
-              "px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1.5 shadow-2xs border border-primary/20",
-            )}
-          >
+          <Badge tone="primary" pill size="md" className="font-bold uppercase tracking-wider shadow-2xs">
             {t("platform.consoleTitle")}
-          </span>
-          <span
-            className={cn(
-              SEMANTIC_BADGE.success,
-              "px-3 py-1 rounded-full text-xs font-semibold flex items-center gap-1.5 shadow-2xs border border-success/20",
-            )}
-          >
-            <span className="w-2 h-2 rounded-full bg-success" />
+          </Badge>
+          <Badge tone="success" pill size="md" dot pulse className="font-semibold shadow-2xs">
             {t("platform.statusOperational")}
-          </span>
+          </Badge>
           <span className="text-xs font-mono text-muted-foreground ms-auto hidden sm:inline-flex items-center gap-1.5 bg-muted/60 px-2.5 py-1 rounded-lg border border-border/60">
             <Radio className="w-3 h-3 text-success" /> {t('platform.banner.realtimePulse')}
           </span>

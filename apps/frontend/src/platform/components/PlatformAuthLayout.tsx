@@ -4,8 +4,7 @@ import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
 import { PlatformLanguagePicker } from "@/platform/components/header/PlatformLanguagePicker";
 import { AuthCardShell, AuthFormHeading, AuthPageFrame } from "@/components/entry";
 import { useTranslation } from "@/hooks/useTranslation";
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
-import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 export interface PlatformAuthLayoutProps {
   children: React.ReactNode;
@@ -58,10 +57,10 @@ export default function PlatformAuthLayout({
               <PlatformLogoMark />
 
               <div className="flex justify-center">
-                <span className={cn(SEMANTIC_BADGE.primary, "px-3 py-1 rounded-full text-3xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-xs")}>
-                  <ShieldAlert className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
+                <Badge tone="primary" pill size="lg" className="font-black uppercase tracking-wider shadow-xs">
+                  <ShieldAlert className="w-3.5 h-3.5 shrink-0" aria-hidden />
                   {t("platform.consoleTitle")}
-                </span>
+                </Badge>
               </div>
 
               <AuthFormHeading title={title} subtitle={subtitle} />
