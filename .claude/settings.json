@@ -14,7 +14,6 @@
       "Bash(git log:*)"
     ],
     "deny": [
-      "Bash(git push:*)",
       "Bash(pnpm publish:*)",
       "Bash(rm -rf /:*)",
       "Bash(drizzle-kit push:*)",

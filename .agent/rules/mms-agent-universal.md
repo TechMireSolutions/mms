@@ -29,7 +29,7 @@ description: Universal agent cognition, behaviour, output economy, security, and
 - **TypeScript**: Strict mode. Use `unknown` + narrowing (never `any`, never `as unknown as T`). Native immutability: use `toSorted()`, `toReversed()`, `toSpliced()`, `Object.groupBy()`. Zero non-erasable syntax (`enum`, `namespace`).
 - **Node.js 24**: Native built-ins (`node:` imports, `new URL()`, `using` / `await using`) — details `mms-dependencies.md`.
 - **A11y & UI**: Semantic HTML5, Tailwind utilities, semantic landmarks (`<main>`, `<nav>`, `<header>`), minimum 44×44px touch targets (`mms-ui-ux-design.md` §3).
-- **Git Boundaries**: Conventional Commits. Protected `main` branch. **NEVER run `git add`, `git commit`, or `git push` (or any equivalent) unless the user explicitly says "commit" in that exact message. Never push to GitHub under any circumstance — the user handles all pushes themselves. Do not stage or commit as a "convenience" after edits. The user owns all git operations.**
+- **Git Boundaries**: Conventional Commits. Protected `main` branch. **NEVER run `git add` or `git commit` (or any equivalent) unless the user explicitly says "commit" in that exact message. NEVER run `git push` (or any equivalent) unless the user explicitly says "push" in that exact message. Do not stage, commit, or push as a "convenience" after edits.**
 - **Shell Commands**: Pass explicit working directory or use single-shot `cd <dir> && <cmd>`. Never leave shell in an un-reset directory.
 - **Enforcement Principle**: A norm is either machine-enforced (lint rule, ratchet script, CI check, hook, test) or explicitly labelled advisory. Land the check with the norm. Tool-neutral rule bodies mirrored across `.cursor`, `.agent`, `.claude`.
 
