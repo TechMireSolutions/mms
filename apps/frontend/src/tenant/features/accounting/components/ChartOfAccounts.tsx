@@ -13,6 +13,7 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Button } from "@/components/ui/button";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
+import { ChartOfAccountsSeedEmptyState } from "@/tenant/features/accounting/components/ChartOfAccountsSeedEmptyState";
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
@@ -20,6 +21,8 @@ import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 
 interface ChartOfAccountsProps {
   accounts: Account[];
+  /** False while the account list is still loading — suppresses the "no chart yet" state. */
+  accountsLoaded?: boolean;
   onChange: (accounts: Account[] | ((prev: Account[]) => Account[])) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
@@ -40,6 +43,7 @@ interface ChartOfAccountsProps {
  */
 export function ChartOfAccounts({
   accounts,
+  accountsLoaded = true,
   onChange,
   onFilteredCountChange,
   canWrite = true,
@@ -93,6 +97,7 @@ export function ChartOfAccounts({
   };
 
   const existingCodes = accounts.map((account) => account.code);
+  const openAddAccount = () => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true });
 
   const exportCSV = () => {
     runGridCsvExportJob({
@@ -130,12 +135,14 @@ export function ChartOfAccounts({
         showInactive={showInactive}
         setShowInactive={setShowInactive}
         onExportCsv={exportCSV}
-        onAddAccount={() => setModal({ id: "", code: "", name: "", type: "Asset", subtype: "", description: "", isActive: true })}
+        onAddAccount={openAddAccount}
         canWrite={canWrite}
         columnCustomizer={columnCustomizer}
       />
 
-      {filtered.length === 0 ? <EmptyState
+      {accountsLoaded && accounts.length === 0 ? (
+        <ChartOfAccountsSeedEmptyState canWrite={canWrite} onAddAccount={openAddAccount} />
+      ) : filtered.length === 0 ? <EmptyState
         variant="dashed"
         icon={Landmark}
         title={t("accounting.coa.noAccountsMatch")}

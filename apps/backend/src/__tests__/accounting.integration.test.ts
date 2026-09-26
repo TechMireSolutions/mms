@@ -85,6 +85,12 @@ vi.mock('../accounting/use-cases/accountingUseCases.js', () => ({
   },
 }));
 
+const mockSeedDefaultChart = vi.fn();
+
+vi.mock('../accounting/use-cases/seedDefaultChartOfAccounts.js', () => ({
+  seedDefaultChartOfAccountsUseCase: (...args: unknown[]) => mockSeedDefaultChart(...args),
+}));
+
 const mockGetUserColumnPreferencesForModule = vi.fn();
 const mockSetUserColumnPreferencesForModule = vi.fn();
 
@@ -567,5 +573,59 @@ describe('account archive routes', () => {
     expect(res.statusCode).toBe(200);
     expect(JSON.parse(res.body)).toMatchObject({ success: true, succeeded: 1, failed: 1 });
     await app.close();
+  });
+});
+
+describe('default chart of accounts seed route', () => {
+  beforeEach(() => {
+    process.env.JWT_SECRET = 'test-secret';
+    mockSeedDefaultChart.mockReset();
+  });
+
+  const seed = async (authorization?: string) => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'POST',
+      url: '/api/accounting/accounts/seed-default',
+      headers: { host: 'demo.localhost', ...(authorization ? { authorization } : {}) },
+    });
+    await app.close();
+    return res;
+  };
+
+  it('requires auth', async () => {
+    const res = await seed();
+    expect(res.statusCode).toBe(401);
+    expect(mockSeedDefaultChart).not.toHaveBeenCalled();
+  });
+
+  it('denies roles without account write access', async () => {
+    const app = await buildApp();
+    const token = guardianToken(app, { id: 'u-guardian', email: 'guardian@test.com', name: 'Guardian' });
+    await app.close();
+    const res = await seed(`Bearer ${token}`);
+    expect(res.statusCode).toBe(403);
+    expect(mockSeedDefaultChart).not.toHaveBeenCalled();
+  });
+
+  it('seeds for an accountant and returns the created count', async () => {
+    mockSeedDefaultChart.mockResolvedValue({ count: 61, defaultsApplied: { retainedEarnings: true, cashAccount: false } });
+    const app = await buildApp();
+    const token = accountantToken(app);
+    await app.close();
+    const res = await seed(`Bearer ${token}`);
+    expect(res.statusCode).toBe(201);
+    expect(res.json()).toEqual({ success: true, count: 61, defaultsApplied: { retainedEarnings: true, cashAccount: false } });
+  });
+
+  it('returns 409 when a chart already exists', async () => {
+    const { ConflictError } = await import('../lib/httpErrors.js');
+    mockSeedDefaultChart.mockRejectedValue(new ConflictError('A Chart of Accounts already exists'));
+    const app = await buildApp();
+    const token = accountantToken(app);
+    await app.close();
+    const res = await seed(`Bearer ${token}`);
+    expect(res.statusCode).toBe(409);
+    expect(res.json()).toMatchObject({ type: 'conflict' });
   });
 });

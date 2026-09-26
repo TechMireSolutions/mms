@@ -8,5 +8,6 @@ const repo = createWorkspaceSingletonJsonRepo({
 
 export const getAccountingModulePreferences = repo.getByWorkspace;
 export const setAccountingModulePreferences = repo.upsert;
+export const evictAccountingModulePreferencesCache = repo.evictCache;
 export const replaceAccountingModulePreferencesForWorkspace = repo.replaceForWorkspace;
 export const listAllAccountingModulePreferencesByWorkspace = repo.listAllByWorkspace;
