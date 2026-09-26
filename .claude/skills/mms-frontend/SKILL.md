@@ -4,12 +4,12 @@ description: Builds or modifies the MMS React frontend — apiClient, routing, p
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-09-26
 ---
 
 # MMS Frontend Workflow
 
-**Rules (norms SSOT):** `mms-api-interface.md` · `mms-data-layer.md` · `mms-hooks.md` · `mms-ui-ux-design.md` · `mms-structure-naming.md`.
+**Rules (norms SSOT):** `mms-api-interface.md` · `mms-data-layer.md` · `mms-hooks.md` · `mms-ui-ux-design.md` §4, §8 · `mms-structure-naming.md`.
 
 Operational guide for authoring React 19 frontend features, UI components, hooks, and routing.
 
@@ -28,6 +28,7 @@ Operational guide for authoring React 19 frontend features, UI components, hooks
   - Alignment: `text-start`, `text-end` (never `text-left`, `text-right`).
   - Borders: `border-s-*`, `border-e-*`.
 - **Shared Chrome Reuse**: Always reuse design system components (`EmptyState`, `FieldErrorMessage`, `WarningCallout`, `BulkSelectionBar`, `DirectoryCard`, `DetailSheet`) and `formStyles` tokens.
+- **Design Intelligence**: Leverage `ui-ux-pro-max` (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py`) for palettes, typography pairings, stack patterns, and UX guidelines conforming to `mms-ui-ux-design.md` §8.
 
 ## 3. Host Isolation & Routing
 

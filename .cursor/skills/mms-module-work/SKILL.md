@@ -4,12 +4,12 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-09-26
 ---
 
 # MMS Module Work Workflow
 
-**Rules (norms SSOT):** `mms-module-architecture.mdc` §2–§3, §6–§7 · `mms-data-layer.mdc` §6 · `mms-ui-ux-design.mdc` · `mms-performance.mdc`. Soft-delete workflow → `mms-soft-delete`.
+**Rules (norms SSOT):** `mms-module-architecture.mdc` §2–§3, §6–§7 · `mms-data-layer.mdc` §6 · `mms-ui-ux-design.mdc` §4, §8 · `mms-performance.mdc`. Soft-delete workflow → `mms-soft-delete`.
 
 ## 1. Work Architecture & Command Center
 
@@ -21,9 +21,10 @@ metadata:
 
 ## 2. Directory Cards & UI Components
 
-- **Card Primitives**: Standardize cards on `<DirectoryEntityCard>` (or `<DirectoryCard>`) with `<DirectoryCardFooterActions>` (min 44×44px touch floor).
+- **Card Primitives**: Standardize cards on `<DirectoryEntityCard>` (or `<DirectoryCard>`) with `<DirectoryCardFooterActions>` (min 44×44px touch floor, BiDi logical classes).
 - **Sub-Component Hook**: Extract per-card components and call `useWorkCardAction<TEntity>` for selection, view, edit, and keyboard handling (`Space`/`Enter`).
 - **Metadata Layout**: Use `DirectoryCardMetaGrid` + `DirectoryCardMetaTile` for card key-value pairs (never `<dl>/<dt>/<dd>`).
+- **Design Intelligence**: Query UI/UX Pro Max (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<topic>" --domain ux`) for data table density, card layouts, badge status hierarchy, and filter interactions. Apply semantic HSL tokens and text wrap balance.
 
 ## 3. Soft-Delete Trash & Bulk Operations
 

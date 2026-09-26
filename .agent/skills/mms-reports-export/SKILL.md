@@ -4,7 +4,7 @@ description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboar
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-09-26
 ---
 
 # MMS Reports & Export Workflow
@@ -46,6 +46,7 @@ saveCollection('students', rows)                     // widget toggle banned
 - Module category must be module-specific — never `category="academic"`.
 - Cross-module ids via batch `/resolve` — no N+1 hydrate loops.
 - Charts: `lazy` + `SafeResponsiveContainer` — recharts must NOT be imported directly in report parent components.
+- **Chart Type Intelligence**: Consult UI/UX Pro Max chart recommendations (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<metric type>" --domain chart`, skill `ui-ux-pro-max`) to choose accessible chart types (bullet charts for KPI targets, trend areas, and distribution bars with data table fallbacks).
 - Widget toggles: `persistWidgetRecordToggle` — not `saveCollection`.
 - **Aggregation on server only**: charts showing monthly/weekly/daily bucketing require a `/report-aggregates` backend endpoint. No `limit:500` page dump + client `reduce()`.
 - **QueryOptions**: report aggregate queries use `staleTime: 5 * 60 * 1000` — reports are not real-time.

@@ -537,6 +537,23 @@
         "policy",
         "reviewed-exception"
       ]
+    },
+    {
+      "name": "ui-ux-pro-max",
+      "path": "skills/ui-ux-pro-max",
+      "keywords": [
+        "ui",
+        "ux",
+        "design system",
+        "styles",
+        "color palettes",
+        "typography",
+        "charts",
+        "data visualization",
+        "ux guidelines",
+        "resilient text",
+        "motion"
+      ]
     }
   ],
   "rules": {

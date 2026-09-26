@@ -4,7 +4,7 @@ description: Covers the Master Module Scaffold Layout, Tailwind CSS v4 BiDi Desi
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-09-26
 ---
 
 # MMS UI/UX Design System & BiDi Layout Contract
@@ -65,23 +65,33 @@ The enforcement is mechanical: `mms-bidi/no-physical-directional-classes` (ESLin
 
 For deep-dive implementation details on modern 2026 capabilities (Top-layer `@starting-style`, CSS Anchor positioning, CSS Subgrid, CSS Container Queries, and WCAG 2.2 AA criteria), consult `.agent/skills/mms-ui-ux-design/references/modern-ui-ux-2026.md`.
 
+## 5. UI/UX Pro Max Design Intelligence
+
+Integrate design intelligence from the `ui-ux-pro-max` skill (`.agent/skills/ui-ux-pro-max/SKILL.md`):
+- **Design System Generation**: Run `python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<product/feature>" --design-system -p "MMS"` for comprehensive system recommendations (pattern, style, palette, typography, effects, anti-patterns).
+- **Targeted Domain Queries**: Query specific guidelines via `python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<query>" --domain <style|ux|chart|color|typography>`.
+- **Resilient Text & Compact UI**: Headings use `text-wrap: balance`; compact chips and badges wrap or offer operable `+n` disclosures; badge semantics pair with localized `t()` copy; motion transitions (150–300ms) cancel cleanly without corrupting state.
+- **MMS HSL Token Mapping**: Map palette colors to existing semantic tokens in `apps/frontend/src/index.css` (`hsl(var(--primary))`, `hsl(var(--card))`, etc.). Raw hex colors remain banned.
+
 ## Checklist
 
 ```
 - [ ] Module follows the 3-tier structure (Work, Reports, Setup)
-- [ ] No physical spacing classes are used (e.g., used `ps-` instead of `pl-`)
-- [ ] No physical positioning classes are used (e.g., used `start-` instead of `left-`)
+- [ ] UI/UX Pro Max design system generated or consulted for visual style, palette, and UX guidelines
+- [ ] No physical spacing classes are used (e.g., used ps- instead of pl-)
+- [ ] No physical positioning classes are used (e.g., used start- instead of left-)
 - [ ] Typography follows language-aware overrides (Geist vs Readex Pro vs Noto Nastaliq Urdu)
-- [ ] Headings use `text-wrap: balance` and body/alerts use `text-wrap: pretty`
-- [ ] Mixed-script user content uses `dir="auto"` or `unicode-bidi: plaintext`
+- [ ] Headings use text-wrap: balance and body/alerts use text-wrap: pretty
+- [ ] Chips, badges, and labels reflow without clipping or truncation artifacts
+- [ ] Mixed-script user content uses dir="auto" or unicode-bidi: plaintext
 - [ ] Card/dialog sub-layouts verified at actual container widths; container queries/subgrid are optional (advisory)
-- [ ] Interactive touch targets meet the 44×44px floor (`min-h-11 min-w-11`)
-- [ ] Sticky headers/docks apply `scroll-padding` to prevent obscuring focused elements (WCAG 2.2 2.4.11)
+- [ ] Interactive touch targets meet the 44×44px floor (min-h-11 min-w-11)
+- [ ] Sticky headers/docks apply scroll-padding to prevent obscuring focused elements (WCAG 2.2 2.4.11)
 - [ ] Dragging interactions provide keyboard-accessible single-pointer alternatives (WCAG 2.2 2.5.7)
 - [ ] Auth and input fields strictly preserve pasteability (WCAG 2.2 3.3.8)
 - [ ] E2E tests include testing the UI on both LTR (English) and RTL (Urdu/Arabic) modes
-- [ ] Tables, lists, and card feeds > 30 items use `@tanstack/react-virtual` virtualization — `mms-performance.md`
-- [ ] Images and charts have explicit width/height dimensions for CLS = 0 — `mms-performance.md`
+- [ ] Tables, lists, and card feeds > 30 items use @tanstack/react-virtual virtualization — mms-performance.md
+- [ ] Images and charts have explicit width/height dimensions for CLS = 0 — mms-performance.md
 ```
 
 ## Done

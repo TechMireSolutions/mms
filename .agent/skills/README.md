@@ -4,7 +4,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 
 **Antigravity:** start with [antigravity-workspace](antigravity-workspace/SKILL.md). Manifest: [.agent/skills-manifest.json](../skills-manifest.json)
 
-## Skills index (38)
+## Skills index (39)
 
 | Skill | Use when |
 |-------|----------|
@@ -46,6 +46,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-testing-e2e](mms-testing-e2e/SKILL.md) | Writing, running, or debugging frontend, backend, shared package, or end-to-end tests |
 | [mms-ui-ux-design](mms-ui-ux-design/SKILL.md) | Designing UI/UX components, enforcing logical CSS properties for BiDi layouts, or adhering to the layout contract |
 | [mms-vuln-response](mms-vuln-response/SKILL.md) | Pnpm audit, Dependabot, dependency-review, or gitleaks reports a finding and it must be fixed or explicitly accepted |
+| [ui-ux-pro-max](ui-ux-pro-max/SKILL.md) | Generating design systems, selecting styles/palettes/typography, or retrieving UX & chart guidelines |
 ## Rules vs skills
 
 | Layer | Location | Behavior |
@@ -53,7 +54,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | **Rules** | `.cursor/rules/*.mdc` | Auto-applied (always or by glob) — norms/SSOT |
 | **Skills** | `.cursor/skills/*/SKILL.md` | Invoked when description matches — workflows/checklists that **point** at rules |
 
-Always-on rules: `mms-agent-universal`, `mms-core`, `mms-completion-review`. Scoped examples: `mms-performance`, `mms-migration-status`, `mms-dry`, `mms-dependencies`, `mms-structure-naming` (38 skills; rules: 3 always-on + 18 scoped).
+Always-on rules: `mms-agent-universal`, `mms-core`, `mms-completion-review`. Scoped examples: `mms-performance`, `mms-migration-status`, `mms-dry`, `mms-dependencies`, `mms-structure-naming` (39 skills; rules: 3 always-on + 18 scoped).
 
 ## Verify setup
 

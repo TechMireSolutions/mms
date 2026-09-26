@@ -16,7 +16,7 @@ paths:
 
 # MMS Reports & Analytics
 
-**Workflow skills:** charts/exports/KPIs → `mms-reports-export` · mega export job tray → `mms-background-jobs`. Query policy → `mms-data-layer.md` · skill `mms-query-factories`.
+**Workflow skills:** charts intelligence → `ui-ux-pro-max` · charts/exports/KPIs → `mms-reports-export` · mega export job tray → `mms-background-jobs`. Query policy → `mms-data-layer.md` · skill `mms-query-factories`.
 
 ## 1. Data Layer (Query-First)
 
@@ -38,6 +38,7 @@ paths:
 ## 4. Visualizations & Chart Rules
 
 - **Design Tokens:** Recharts must bind to semantic Tailwind tokens (`@theme`, `StatusBadge`). Export/print labels via `t()`.
+- **Chart Selection & Intelligence:** Consult UI/UX Pro Max chart recommendations (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<data type>" --domain chart`, skill `ui-ux-pro-max`) to select accessible, context-appropriate chart types (bullet charts for KPI targets, line/area for trends, bar/donut for distributions; visible fallback data table required).
 - **Workload Modeling:** Simulated metric padding (e.g. `hours += 2`) is banned; charts must reflect verifiable schedule and session records.
 
 ## 5. Dashboard & KPI SSOT

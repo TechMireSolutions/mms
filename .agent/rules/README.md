@@ -71,15 +71,15 @@ in the enforcement registry below are how the norm is actually held.
 | PostgreSQL, Drizzle, RLS, migrations, Query policy | `mms-data-layer.md` | `mms-schema-migrate` · `mms-query-factories` · `mms-db-performance` |
 | Soft-delete lifecycle and index tiers | `mms-data-layer.md` §6 · `mms-module-architecture.md` | `mms-soft-delete` |
 | Audit trail, tamper evidence, retention | `mms-data-layer.md` §5 | `mms-audit-trail` |
-| Module pages, tiers, background jobs | `mms-module-architecture.md` | `mms-module-page` · `mms-background-jobs` · `mms-queue-ops` |
-| Work directory, drawer, trash UX | `mms-module-architecture.md` | `mms-module-work` |
+| Module pages, tiers, background jobs | `mms-module-architecture.md` | `mms-module-page` · `mms-background-jobs` · `mms-queue-ops` · `ui-ux-pro-max` |
+| Work directory, drawer, trash UX | `mms-module-architecture.md` | `mms-module-work` · `ui-ux-pro-max` |
 | Setup tier, preferences, sub-tabs | `mms-module-architecture.md` | `mms-module-setup` |
 | Field/tab registry and guards | `mms-fields.md` | `mms-fields-registry` |
-| Forms, FormModal, write schemas, uploads | `mms-form-architecture.md` | `mms-form-architecture` |
+| Forms, FormModal, write schemas, uploads | `mms-form-architecture.md` | `mms-form-architecture` · `ui-ux-pro-max` |
 | Hooks, page controllers, facades | `mms-hooks.md` | `mms-query-factories` · `mms-frontend` |
-| UI primitives, tokens, a11y, responsiveness | `mms-ui-ux-design.md` | `mms-ui-ux-design` · `mms-a11y-smoke` |
+| UI primitives, tokens, a11y, responsiveness | `mms-ui-ux-design.md` | `mms-ui-ux-design` · `ui-ux-pro-max` · `mms-a11y-smoke` |
 | Settings, navigation, i18n keys | `mms-settings-i18n.md` | `mms-settings-i18n` · `mms-i18n-completeness` |
-| Reports, analytics, exports | `mms-reports.md` | `mms-reports-export` |
+| Reports, analytics, exports | `mms-reports.md` | `mms-reports-export` · `ui-ux-pro-max` |
 | Messaging campaigns and logs | `mms-messaging.md` | `mms-messaging` |
 | Performance, caching, virtualization | `mms-performance.md` | `mms-db-performance` · `mms-frontend` |
 | Testing, logging, telemetry, resilience | `mms-testing-observability.md` | `mms-testing-e2e` · `mms-error-triage` |
@@ -111,7 +111,7 @@ Update this table in the same change that adds or removes a check.
 | a11y serious/critical violations | `e2e/tests/a11y-shell.spec.ts` (CI e2e job) | test |
 | Coverage floors (FE 41/39, BE 45/27) | vitest thresholds in each workspace | test |
 | Work directory convergence (selection SSOT, two-layer bulk chrome, no dead adapters) | `pnpm run check:work-directory` | ratchet |
-| Tier structure, trunk tests, review criteria, UX polish | none — **advisory** (review discipline) | advisory |
+| Tier structure, trunk tests, review criteria, UI/UX Pro Max design intelligence | none — **advisory** (review discipline) | advisory |
 
 
 ## Tenant = Platform Parity Principle
@@ -153,6 +153,7 @@ Every rule starts with a **Workflow skills:** line; the full topic→rule→skil
 | Audit trails / tamper-evidence / retention | `mms-audit-trail` |
 | Dep upgrades / catalogs | `mms-dependency-upgrade` |
 | axe / focus-return | `mms-a11y-smoke` |
+| UI design system / styles / palettes / UX guidelines | `ui-ux-pro-max` |
 | Soft-delete / trash lifecycle / hard-purge | `mms-soft-delete` |
 | Migration debt | `mms-migration-fixes` |
 | PR / self-review | `mms-code-review` |

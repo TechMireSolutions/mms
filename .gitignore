@@ -123,3 +123,7 @@ desktop.ini
 
 # Local diagram tooling (standalone clone, not a submodule)
 /.diagram-design-tool/
+
+# Python bytecode and caches
+__pycache__/
+*.py[cod]
