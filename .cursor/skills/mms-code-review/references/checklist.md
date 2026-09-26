@@ -53,6 +53,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Bulk id bodies / contacts list filters: shared schemas (`bulkIdsBodySchema`, `contactsListQuerySchema`) — no forked Messaging flags
 - [ ] Contacts `activeCount` = soft-delete-filtered total (not phantom `isActive`)
 - [ ] Settings: draft hooks + preview — skill **`mms-settings-i18n`** / **`mms-frontend`**
+- [ ] UI/UX Pro Max alignment on coding and review (`mms-ui-ux-design.md` §8, skill `ui-ux-pro-max`): semantic tokens (no raw hex/brackets), BiDi logical CSS, touch targets ≥ 44×44px, text-wrap: balance on headings, chip/tag wrapping, table overflow wrapping, 150-300ms transitions respecting prefers-reduced-motion
 - [ ] **Platform apex English-only** (`mms-settings-i18n.md`) / **missing tenant hard-redirect** (`mms-auth-security.md`)
 
 ### RBAC (frontend)

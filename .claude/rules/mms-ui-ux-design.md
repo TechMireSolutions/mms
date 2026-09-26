@@ -66,14 +66,18 @@ paths:
 
 ## 8. UI/UX Pro Max Design Intelligence System
 
-- **Design System Generation**: For all new modules, page redesigns, and complex UI components, consult the UI/UX Pro Max engine (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<product/feature>" --design-system -p "MMS"`, skill `ui-ux-pro-max`).
-- **Styles & Palettes**: Leverage the 79 UI styles (50 active; Bento Grid, Minimalist, Clean Corporate) and 192 color palettes. Map recommended colors to MMS semantic HSL tokens in `index.css` (`hsl(var(--primary))`, `hsl(var(--secondary))`, `hsl(var(--card))`, `hsl(var(--muted))`, `hsl(var(--border))`, `hsl(var(--destructive))`). Raw hex literals and arbitrary Tailwind brackets (`bg-[#4F46E5]`, `bg-gray-100`) are banned.
-- **Resilient Text & Compact UI**:
-  - Headings use `text-wrap: balance` as a progressive enhancement; layouts must reflow cleanly without broken labels or orphan lines across widths, fonts, and locales.
-  - Essential text must reflow without clipping at narrow widths, browser zoom, and text scaling (`mms-ui-ux-design.md` §4).
-  - Chip and tag collections must wrap or use an operable `+n` disclosure. Compact labels should remain whole; unavoidable truncation requires an accessible full-value path for keyboard, pointer, and touch users.
-  - Badges must never rely on color alone; always pair with localized text via `t()`.
-  - Micro-interactions follow platform-appropriate timing (150–300ms ease-out). Rapid interrupted interactions must cancel animations cleanly while ensuring final semantic state, focus, and content remain valid. `prefers-reduced-motion` must be strictly respected.
+- **Mandatory Usage When Coding UI/UX**:
+  - **Feature Modules & Pages**: Before creating or refactoring pages, views, cards, or dashboards, consult the UI/UX Pro Max engine (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<feature/domain keywords>" --design-system -p "MMS"`, skill `ui-ux-pro-max`). Use design dials: `--density 7-9` for compact administrative directories/tables, `--motion 2-4` for enterprise transitions.
+  - **Component & Domain Search**: Query targeted domains before implementation: `--domain style` (79 styles; e.g. Bento Grid, Minimalist, Clean Corporate), `--domain ux` (119 UX guidelines for tables, forms, modals, error states), `--domain typography` (74 pairings), `--domain chart` (25 data visualization types for KPIs/reports), and `--domain color` (192 curated industry palettes).
+  - **Stack Guidance**: Query `--stack react` or `--stack html-tailwind` for framework-specific patterns (table horizontal overflow wrappers, memoization hygiene, dialog portals, focus traps).
+- **Mandatory Checks When Reviewing UI/UX**:
+  - **Semantic Token Compliance**: Every color must map to semantic HSL CSS tokens in `index.css` (`hsl(var(--primary))`, `hsl(var(--secondary))`, `hsl(var(--card))`, `hsl(var(--muted))`, `hsl(var(--border))`, `hsl(var(--destructive))`). Raw hex (`#4F46E5`) and arbitrary Tailwind bracket colors (`bg-[#4F46E5]`, `text-[#000]`) are strictly banned.
+  - **Strict BiDi Logical CSS**: Enforce zero physical direction classes. Must use `ps-*`/`pe-*`, `ms-*`/`me-*`, `start-*`/`end-*`, `text-start`/`text-end`, `border-s-*`/`border-e-*`, `rounded-s-*`/`rounded-e-*`, and `rtl:rotate-180` for directional chevrons/icons.
+  - **Touch Target Floor**: All interactive controls (buttons, tabs, inputs, icon triggers) must meet the minimum 44×44px touch floor (`min-h-11 min-w-11`).
+  - **Text Resilience & Reflow**: Headings use progressive `text-wrap: balance`; layouts must reflow without clipping across 375px, 768px, 1024px, and 1440px viewports (`mms-ui-ux-design.md` §4). Chip and tag collections must wrap or provide an accessible `+n` disclosure.
+  - **Visual & State Polish**: Badges must never rely on color alone; always pair with localized text via `t()`. Micro-interactions must stay within 150–300ms ease-out and respect `prefers-reduced-motion`.
+  - **Table Handling**: Tables must be wrapped with `overflow-x-auto max-w-full` or adopt responsive card layouts on narrow viewports (`--domain ux` table handling).
+  - **Keyboard & Focus**: Visible focus rings (`focus-visible:ring-2 focus-visible:ring-ring`), no blocked paste, and focus return on dismiss.
 - **Chart & Analytics Recommendations**: Query `--domain chart` for KPI grids, trend lines, and distribution visualizations (`mms-reports.md`).
 
 ## 9. Workflow & Output Speed Rules
