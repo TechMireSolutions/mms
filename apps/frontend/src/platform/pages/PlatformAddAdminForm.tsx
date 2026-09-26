@@ -16,7 +16,7 @@ import { PasswordStrengthMeter } from '@/components/ui/PasswordStrengthMeter';
 import { cn } from '@/lib/utils';
 
 export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?: boolean } = {}): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir, language } = useTranslation();
   const addAdmin = useAddPlatformAdmin();
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
@@ -89,8 +89,8 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
         saveLabel={t('platform.addAdmin')}
         onSave={handleSave}
         saving={addAdmin.isPending}
-        dir="ltr"
-        lang="en"
+        dir={dir}
+        lang={language}
       >
         <div className="space-y-4 text-start">
           {/* Full Name Field */}

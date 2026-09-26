@@ -7,17 +7,12 @@ import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions'
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
+import { updateWorkspacesCache } from './platformWorkspacesCache';
 
 export const PLATFORM_WORKSPACES_QUERY_KEY = ['platform', 'workspaces'] as const;
 
 /** Platform workspace list — super-user or admin with `workspaces` permission. */
-export function usePlatformWorkspaces(): {
-  data: PlatformWorkspaceRow[] | undefined;
-  isLoading: boolean;
-  isError: boolean;
-  isFetching: boolean;
-  refetch: () => Promise<unknown>;
-} {
+export function usePlatformWorkspaces() {
   const { isPlatformAuthenticated, canWorkspaces } = usePlatformPermissions();
 
   const query = useQuery({
@@ -39,40 +34,6 @@ export function usePlatformWorkspaces(): {
     isFetching: query.isFetching,
     refetch: query.refetch,
   };
-}
-
-function updateWorkspacesCache(
-  old: unknown,
-  subdomain: string,
-  patch: Partial<PlatformWorkspaceRow>,
-): unknown {
-  if (!old || typeof old !== 'object') return old;
-  const asTsr = old as { body?: { workspaces?: PlatformWorkspaceRow[] }; workspaces?: PlatformWorkspaceRow[] };
-  if (asTsr.body && Array.isArray(asTsr.body.workspaces)) {
-    return {
-      ...asTsr,
-      body: {
-        ...asTsr.body,
-        workspaces: asTsr.body.workspaces.map((w) =>
-          w.subdomain === subdomain ? { ...w, ...patch } : w,
-        ),
-      },
-    };
-  }
-  if (Array.isArray(asTsr.workspaces)) {
-    return {
-      ...asTsr,
-      workspaces: asTsr.workspaces.map((w) =>
-        w.subdomain === subdomain ? { ...w, ...patch } : w,
-      ),
-    };
-  }
-  if (Array.isArray(old)) {
-    return (old as PlatformWorkspaceRow[]).map((w) =>
-      w.subdomain === subdomain ? { ...w, ...patch } : w,
-    );
-  }
-  return old;
 }
 
 export function useSetWorkspaceEnabled() {
@@ -175,57 +136,7 @@ export function useDeleteWorkspace() {
   });
 }
 
-export function useWorkspaceModules(subdomain: string, open: boolean): { data: string[] | undefined; isLoading: boolean; isError: boolean } {
-  const { isPlatformAuthenticated, canWorkspaces } = usePlatformPermissions();
-
-  const query = useQuery({
-    queryKey: ['platform', 'workspace-modules', subdomain],
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ modules: string[] }>(`/api/platform/workspaces/${encodeURIComponent(subdomain)}/modules`, {
-        signal,
-      });
-      return res.modules;
-    },
-    enabled: isPlatformAuthenticated && canWorkspaces && open && !!subdomain,
-    staleTime: 0,
-  });
-
-  return { data: query.data, isLoading: query.isLoading, isError: query.isError };
-}
-
-export function useUpdateWorkspaceModules() {
-  const queryClient = useQueryClient();
-  const { t } = useTranslation();
-
-  return useMutation<
-    { success: true; modules: string[] },
-    Error,
-    { subdomain: string; modules: string[] }
-  >({
-    mutationFn: async ({ subdomain, modules }) => {
-      const res = await apiContract.platform.updateWorkspaceModules({
-        params: { subdomain },
-        body: { modules },
-      });
-      if (res.status >= 400) {
-        const errorBody = res.body as { message?: string; type?: string } | undefined;
-        throw new ApiError(
-          res.status,
-          errorBody?.message || t('platform.loadFailed'),
-          errorBody?.type,
-        );
-      }
-      return res.body as { success: true; modules: string[] };
-    },
-    onSuccess: (response, variables) => {
-      queryClient.setQueryData(['platform', 'workspace-modules', variables.subdomain], response.modules);
-      notify.success(t('platform.modulesTitle'));
-    },
-    onError: (error) => {
-      notify.error(getPlatformErrorMessage(error, t, undefined, 'platform.loadFailed'));
-    },
-  });
-}
+export { useWorkspaceModules, useUpdateWorkspaceModules } from './usePlatformWorkspaceModules';
 
 export function useSetWorkspaceEmailVerification() {
   const queryClient = useQueryClient();
@@ -282,76 +193,4 @@ export function useSetWorkspaceEmailVerification() {
   });
 }
 
-export function useResetWorkspaceAdminPassword() {
-  const queryClient = useQueryClient();
-  const { t } = useTranslation();
-
-  return useMutation<
-    { success: true; subdomain: string; adminEmail: string; newPassword: string },
-    Error,
-    { subdomain: string; newPassword?: string }
-  >({
-    mutationFn: async ({ subdomain, newPassword }) => {
-      const res = await apiContract.platform.resetWorkspaceAdminPassword({
-        params: { subdomain },
-        body: { newPassword },
-      });
-      if (res.status >= 400) {
-        const errorBody = res.body as { message?: string; type?: string } | undefined;
-        throw new ApiError(
-          res.status,
-          errorBody?.message || t('platform.loadFailed'),
-          errorBody?.type,
-        );
-      }
-      return res.body as { success: true; subdomain: string; adminEmail: string; newPassword: string };
-    },
-    onSuccess: (res) => {
-      notify.success('Admin password reset successfully', { description: `${res.adminEmail} (${res.subdomain})` });
-      void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
-    },
-    onError: (error) => {
-      notify.error(getPlatformErrorMessage(error, t, undefined, 'platform.loadFailed'));
-    },
-  });
-}
-
-export function useCreateWorkspaceAdmin() {
-  const queryClient = useQueryClient();
-  const { t } = useTranslation();
-
-  return useMutation<
-    { success: true; subdomain: string; adminEmail: string; name: string; initialPassword: string },
-    Error,
-    { subdomain: string; name: string; email: string; password?: string }
-  >({
-    mutationFn: async ({ subdomain, name, email, password }) => {
-      const res = await apiContract.platform.createWorkspaceAdminUser({
-        params: { subdomain },
-        body: { name, email, password },
-      });
-      if (res.status >= 400) {
-        const errorBody = res.body as { message?: string; type?: string } | undefined;
-        throw new ApiError(
-          res.status,
-          errorBody?.message || t('platform.loadFailed'),
-          errorBody?.type,
-        );
-      }
-      return res.body as {
-        success: true;
-        subdomain: string;
-        adminEmail: string;
-        name: string;
-        initialPassword: string;
-      };
-    },
-    onSuccess: (res) => {
-      notify.success('Admin user created successfully', { description: `${res.name} <${res.adminEmail}>` });
-      void queryClient.invalidateQueries({ queryKey: PLATFORM_WORKSPACES_QUERY_KEY });
-    },
-    onError: (error) => {
-      notify.error(getPlatformErrorMessage(error, t, undefined, 'platform.loadFailed'));
-    },
-  });
-}
+export { useResetWorkspaceAdminPassword, useCreateWorkspaceAdmin } from './usePlatformWorkspaceAdminMutations';

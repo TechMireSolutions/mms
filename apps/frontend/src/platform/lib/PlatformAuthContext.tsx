@@ -5,55 +5,15 @@ import { apiFetch, apiJson } from '@/lib/apiClient';
 import { PLATFORM_AUTH_PATHS } from '@/lib/apiClientHelpers';
 import { clearPersistedAuthUser } from '@/lib/contexts/authContextHelpers';
 import { useTenant } from '@/lib/contexts/TenantContext';
-import { usePlatformSessionTimeout } from '@/platform/hooks/usePlatformSessionTimeout';
+import { PlatformSessionTimeoutWatcher } from '@/platform/components/PlatformSessionTimeoutWatcher';
+import type { PlatformAuthContextType, PlatformLoginOutcome } from './platformAuthTypes';
 
-function PlatformSessionTimeoutWatcher({
-  enabled,
-  onTimeout,
-}: {
-  enabled: boolean;
-  onTimeout: () => void;
-}): React.JSX.Element | null {
-  const { extendPlatformSession, isExtendingPlatformSession } = usePlatformAuth();
-  return usePlatformSessionTimeout({
-    enabled,
-    onTimeout,
-    onExtend: () => extendPlatformSession(),
-    busy: isExtendingPlatformSession,
-  });
-}
+export type { PlatformAuthContextType, PlatformLoginOutcome } from './platformAuthTypes';
 
-function normalizeSessionUser(user: PlatformUserProfile): PlatformUserProfile {
-  return {
-    ...user,
-    permissions: normalizePlatformAdminPermissions(user.permissions),
-  };
-}
-
-export interface PlatformAuthContextType {
-  platformUser: PlatformUserProfile | null;
-  isPlatformAuthenticated: boolean;
-  /** True while probing existing session (`/me`) on boot. */
-  isCheckingPlatformAuth: boolean;
-  /** True while a sign-in form submission is in flight. */
-  isPlatformLoginSubmitting: boolean;
-  platformAuthChecked: boolean;
-  platformLogin: (email: string, password: string) => Promise<PlatformLoginOutcome>;
-  platformVerify2FA: (challengeId: string, code: string) => Promise<void>;
-  platformResend2FA: (challengeId: string) => Promise<{ success: boolean }>;
-  /** Sliding-extension: posts to the platform session extend endpoint (idle reset). */
-  extendPlatformSession: () => Promise<void>;
-  /** True while an extend request is in flight. */
-  isExtendingPlatformSession: boolean;
-  platformLogout: () => Promise<void>;
-  checkPlatformAuth: () => Promise<void>;
-}
-
-/** Result of a platform login attempt. When 2FA is required, the session is not
- *  established until the code is verified via `platformVerify2FA`. */
-export type PlatformLoginOutcome =
-  | { requires2FA: true; challengeId: string }
-  | { requires2FA: false };
+const normalizeSessionUser = (user: PlatformUserProfile): PlatformUserProfile => ({
+  ...user,
+  permissions: normalizePlatformAdminPermissions(user.permissions),
+});
 
 const PlatformAuthContext = createContext<PlatformAuthContextType | undefined>(undefined);
 
@@ -217,15 +177,13 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     ],
   );
 
-  const handleTimeoutLogout = useCallback(() => {
-    void platformLogout();
-  }, [platformLogout]);
-
   return (
     <PlatformAuthContext.Provider value={value}>
       <PlatformSessionTimeoutWatcher
         enabled={isApex && isPlatformAuthenticated}
-        onTimeout={handleTimeoutLogout}
+        onTimeout={() => void platformLogout()}
+        onExtend={extendPlatformSession}
+        busy={isExtendingPlatformSession}
       />
       {children}
     </PlatformAuthContext.Provider>

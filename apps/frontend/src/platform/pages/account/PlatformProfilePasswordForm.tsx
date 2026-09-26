@@ -56,7 +56,7 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
     <SectionCard
       title={t("platform.profileChangePassword")}
       icon={Key}
-      accentColor="emerald"
+      accentColor="success"
     >
       <form onSubmit={(event) => void handleChangePassword(event)} className="space-y-4 text-start">
         {passwordError ? <FieldErrorMessage message={passwordError} /> : null}

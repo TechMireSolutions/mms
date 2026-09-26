@@ -18,7 +18,7 @@ import { PlatformLogoMark } from "@/platform/components/PlatformPageShell";
  * English/LTR via platform host lock — contact MMS platform administrator only.
  */
 export default function TenantNotFoundPage(): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
   const [searchParams] = useSearchParams();
   const appDomain = getAppDomain();
   const rawSubdomain = searchParams.get("subdomain")?.trim() ?? "";
@@ -31,7 +31,7 @@ export default function TenantNotFoundPage(): React.JSX.Element {
         title={formatEntryTitle(t("apex.workspaceNotFoundTitle"), t("entry.productName"))}
         description={t("entry.meta.workspaceNotFound")}
       />
-      <AuthPageFrame dir="ltr">
+      <AuthPageFrame dir={dir}>
         <AuthCardShell
           className="max-w-md"
           header={

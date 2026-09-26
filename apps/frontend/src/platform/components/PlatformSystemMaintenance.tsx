@@ -102,14 +102,15 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
               {t("platform.maintenance.pm2Active")}
             </span>
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={() => void runHealthProbe()}
               disabled={probing}
-              className="h-6 px-2 text-3xs font-bold gap-1 rounded-md cursor-pointer"
+              className="min-h-11 h-11 px-3 text-xs font-bold gap-1.5 rounded-xl border-border/60 hover:bg-muted/80 cursor-pointer"
               title={t("platform.maintenance.runDiagnostics")}
+              aria-label={t("platform.maintenance.runDiagnostics")}
             >
-              <RefreshCw className={probing ? "w-3 h-3 animate-spin" : "w-3 h-3"} aria-hidden />
+              <RefreshCw className={probing ? "w-3.5 h-3.5 animate-spin" : "w-3.5 h-3.5"} aria-hidden />
               {probing ? t("platform.maintenance.diagnosticsRunning") : t("platform.maintenance.runDiagnostics")}
             </Button>
           </div>

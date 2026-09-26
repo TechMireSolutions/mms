@@ -2,7 +2,6 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Search } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
-import type { AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
@@ -16,6 +15,7 @@ import {
   commandItemIsPermitted,
   type PlatformCommandItem,
 } from '@/platform/components/platformCommandItems';
+import { PlatformCommandResultsList } from '@/platform/components/command/PlatformCommandResultsList';
 
 export interface PlatformCommandPaletteProps {
   open: boolean;
@@ -121,7 +121,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
               onChange={(e) => setQuery(e.target.value)}
               onKeyDown={handleKeyDown}
               placeholder={t('platform.searchConsolePlaceholder')}
-              className="flex-1 bg-transparent text-sm font-semibold border-0 shadow-none focus-visible:ring-0 px-0 h-9"
+              className="flex-1 bg-transparent text-sm font-semibold border-0 shadow-none focus-visible:ring-0 px-0 min-h-11 h-11"
               aria-label={t('platform.searchConsolePlaceholder')}
               role="combobox"
               aria-expanded={open}
@@ -139,66 +139,17 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
           <div className="sr-only" aria-live="polite" aria-atomic="true">
             {filteredItems.length === 0
               ? t('platform.noMatchingConsolePages', { query })
-              : `${filteredItems.length} results available.`}
+              : t('platform.searchResultsCount', { count: String(filteredItems.length) })}
           </div>
 
           {/* Search Results List */}
-          <div className="max-h-80 overflow-y-auto p-2" role="listbox" id="platform-command-listbox">
-            {filteredItems.length === 0 ? (
-              <div className="px-4 py-8 text-center text-sm font-semibold text-muted-foreground">
-                {t('platform.noMatchingConsolePages', { query })}
-              </div>
-            ) : (
-              Object.entries(
-                filteredItems.reduce<Record<string, PlatformCommandItem[]>>((acc, item) => {
-                  (acc[item.category] ??= []).push(item);
-                  return acc;
-                }, {}),
-              ).map(([categoryKey, items]) => (
-                <div key={categoryKey} className="mb-1">
-                  <div className="px-3.5 pt-3 pb-1 text-3xs font-black uppercase tracking-widest text-muted-foreground select-none">
-                    {t(categoryKey as AppTranslationKey)}
-                  </div>
-                  {items.map((item) => {
-                    const index = filteredItems.indexOf(item);
-                    const Icon = item.icon;
-                    const isSelected = index === selectedIndex;
-                    const translatedLabel = item.customLabel ?? (item.labelKey ? t(item.labelKey) : '');
-                    return (
-                      <button
-                        key={item.id}
-                        id={`platform-cmd-item-${item.id}`}
-                        type="button"
-                        role="option"
-                        aria-selected={isSelected}
-                        onClick={() => handleSelect(item.path)}
-                        onMouseEnter={() => setSelectedIndex(index)}
-                        className={cn(
-                          'flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-start text-sm transition-all cursor-pointer min-h-11',
-                          isSelected
-                            ? 'bg-primary text-primary-foreground font-bold shadow-sm'
-                            : 'text-foreground hover:bg-muted/70 font-semibold',
-                        )}
-                      >
-                        <Icon className={cn('h-4.5 w-4.5 shrink-0', isSelected ? 'text-primary-foreground' : 'text-primary')} aria-hidden="true" />
-                        <div className="flex-1 min-w-0 flex flex-col">
-                          <span className="truncate">{translatedLabel}</span>
-                          {item.customSubtitle && (
-                            <span className={cn('text-2xs font-mono truncate', isSelected ? 'text-primary-foreground/80' : 'text-muted-foreground')}>
-                              {item.customSubtitle}
-                            </span>
-                          )}
-                        </div>
-                        <span className={cn('text-xs opacity-80 font-mono', isSelected ? 'text-primary-foreground' : 'text-muted-foreground')}>
-                          {item.path}
-                        </span>
-                      </button>
-                    );
-                  })}
-                </div>
-              ))
-            )}
-          </div>
+          <PlatformCommandResultsList
+            filteredItems={filteredItems}
+            selectedIndex={selectedIndex}
+            query={query}
+            onSelect={handleSelect}
+            onHoverIndex={setSelectedIndex}
+          />
 
           {/* Footer Shortcuts Bar */}
           <div className="border-t border-border/50 px-4 py-2 bg-muted/30 flex items-center justify-between text-3xs text-muted-foreground font-medium select-none">

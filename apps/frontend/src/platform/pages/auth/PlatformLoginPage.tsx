@@ -15,7 +15,7 @@ import PlatformSetup from '@/platform/pages/auth/PlatformSetup';
  * Redirects authenticated operators directly to `/platform/dashboard`.
  */
 export default function PlatformLoginPage(): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
   const { isPlatformAuthenticated, platformAuthChecked, isCheckingPlatformAuth } = usePlatformAuth();
   const { setupStatus, isLoadingSetup, isError, refetch } = usePlatformSetupStatus();
 
@@ -33,7 +33,7 @@ export default function PlatformLoginPage(): React.JSX.Element {
 
   if (isError) {
     return (
-      <AuthPageFrame dir="ltr">
+      <AuthPageFrame dir={dir}>
         <div className="relative z-elevated w-full max-w-md">
           <ErrorState
             title={t('platform.loadFailed')}

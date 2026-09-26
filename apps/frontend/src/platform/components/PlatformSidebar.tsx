@@ -1,7 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { ChevronLeft, ChevronRight, LogOut, ShieldAlert, X, Search } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Search } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
@@ -9,15 +7,14 @@ import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions'
 import { usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
 import { getVisiblePlatformNavItems, type PlatformNavSection, type PlatformNavItem } from '@/platform/lib/platformNav';
 import { useOverlayBehavior } from '@/hooks/useOverlayBehavior';
-import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import { SectionLabel } from '@/components/ui/SectionLabel';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
-import { ROUTES } from '@/lib/config/routes';
 import { OVERLAY_BACKDROP } from '@/components/ui/formStyles';
 import { PlatformSidebarNav } from '@/platform/components/PlatformSidebarNav';
+import { PlatformSidebarBrand } from '@/platform/components/sidebar/PlatformSidebarBrand';
+import { PlatformSidebarFooter } from '@/platform/components/sidebar/PlatformSidebarFooter';
 
 export function PlatformSidebar(): React.JSX.Element | null {
   const { t } = useTranslation();
@@ -27,7 +24,6 @@ export function PlatformSidebar(): React.JSX.Element | null {
   const { isPlatformAuthenticated, isSuperUser } = perms;
   const { mobileOpen, closeMobileSidebar, collapsed, toggleCollapsed, openCommandPalette } = usePlatformSidebar();
   const [openedAt, setOpenedAt] = useState<number>(0);
-  const [logoError, setLogoError] = useState<boolean>(false);
   const [confirmSignOutOpen, setConfirmSignOutOpen] = useState<boolean>(false);
 
   useEffect(() => {
@@ -63,56 +59,12 @@ export function PlatformSidebar(): React.JSX.Element | null {
   const sidebarContent = (isMobile = false) => (
     <div className="flex flex-col justify-between h-full w-full">
       {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border shrink-0">
-        <Link
-          to={ROUTES.home}
-          onClick={() => isMobile && closeMobileSidebar()}
-          className="flex min-h-11 items-center gap-3 overflow-hidden hover:opacity-90 transition-opacity"
-        >
-          <div className="w-9 h-9 rounded-xl bg-card border border-sidebar-primary/40 flex items-center justify-center shrink-0 shadow-xs p-1 overflow-hidden">
-            {!logoError ? (
-              <img
-                src="/platform-logo.webp"
-                alt="Platform Logo"
-                className="h-full w-full object-contain"
-                onError={() => setLogoError(true)}
-              />
-            ) : (
-              <ShieldAlert className="w-5 h-5 text-sidebar-primary" />
-            )}
-          </div>
-          <AnimatePresence>
-            {(isMobile || !collapsed) && (
-              <motion.div
-                initial={reducedMotion ? false : { opacity: 0, width: 0 }}
-                animate={{ opacity: 1, width: 'auto' }}
-                exit={reducedMotion ? undefined : { opacity: 0, width: 0 }}
-                className="overflow-hidden whitespace-nowrap flex flex-col text-start"
-              >
-                <span className="text-sidebar-foreground font-semibold text-sm tracking-wide leading-tight">
-                  {t('entry.productName')}
-                </span>
-                <span className="text-2xs font-mono text-sidebar-muted-foreground uppercase tracking-wider leading-tight mt-0.5">
-                  {t('platform.consoleTitle')}
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </Link>
-
-        {isMobile && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={() => closeMobileSidebar()}
-            className="h-11 w-11 min-h-11 min-w-11 text-sidebar-muted-foreground hover:text-sidebar-foreground shrink-0 rounded-lg cursor-pointer"
-            aria-label={t('nav.closeSidebar')}
-          >
-            <X className="w-4 h-4" />
-          </Button>
-        )}
-      </div>
+      <PlatformSidebarBrand
+        isMobile={isMobile}
+        collapsed={collapsed}
+        reducedMotion={reducedMotion}
+        onCloseMobile={closeMobileSidebar}
+      />
 
       {/* Quick Search Shortcut Trigger */}
       {(isMobile || !collapsed) && (
@@ -121,7 +73,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
             variant="outline"
             size="sm"
             onClick={openCommandPalette}
-            className="w-full h-9 justify-between px-3 text-xs text-sidebar-muted-foreground border-sidebar-border bg-sidebar-accent/30 hover:bg-sidebar-accent hover:text-sidebar-foreground rounded-xl transition-all select-none cursor-pointer"
+            className="w-full min-h-11 h-11 justify-between px-3 text-xs text-sidebar-muted-foreground border-sidebar-border bg-sidebar-accent/30 hover:bg-sidebar-accent hover:text-sidebar-foreground rounded-xl transition-all select-none cursor-pointer"
             aria-label={t('platform.nav.searchConsole')}
           >
             <span className="flex items-center gap-2">
@@ -147,71 +99,15 @@ export function PlatformSidebar(): React.JSX.Element | null {
       </TooltipProvider>
 
       {/* Footer Section: User Profile & Collapse Toggle */}
-      <div className="px-3 py-3 border-t border-sidebar-border space-y-2 shrink-0">
-        {(isMobile || !collapsed) && (
-          <Link
-            to={ROUTES.platformAccount}
-            onClick={() => isMobile && closeMobileSidebar()}
-            className="flex items-center gap-3 px-2 py-1.5 rounded-xl hover:bg-sidebar-accent/50 transition-colors group cursor-pointer"
-            aria-label={t('platform.myAccount')}
-          >
-            <UserAvatar
-              name={platformUser?.name}
-              className="h-9 w-9 ring-1 ring-sidebar-border group-hover:ring-sidebar-primary/50 transition-all"
-              fallbackClassName="bg-sidebar-primary/20 text-sidebar-primary text-xs font-bold"
-            />
-            <div className="flex flex-col text-start min-w-0 flex-1">
-              <span className="text-xs font-bold text-sidebar-foreground truncate group-hover:text-sidebar-primary transition-colors">{platformUser?.name}</span>
-              <SectionLabel tracking="wider" className="flex items-center gap-1 mt-0.5 text-sidebar-muted-foreground truncate">
-                {isSuperUser ? (
-                  <>
-                    <ShieldAlert className="w-2.5 h-2.5 text-sidebar-primary shrink-0" aria-hidden />
-                    {t('platform.roleSuperUser')}
-                  </>
-                ) : (
-                  t('platform.roleAdmin')
-                )}
-              </SectionLabel>
-            </div>
-          </Link>
-        )}
-
-        <div className="flex items-center gap-1">
-          <Button
-            type="button"
-            variant="ghost"
-            onClick={() => setConfirmSignOutOpen(true)}
-            className={cn(
-              'flex min-h-11 flex-1 items-center gap-2 rounded-lg px-3 py-2 text-sidebar-muted-foreground transition-colors hover:bg-destructive/10 hover:text-destructive cursor-pointer',
-              !isMobile && collapsed && 'justify-center px-0 min-w-11',
-            )}
-            title={t('platform.signOut')}
-            aria-label={t('platform.signOut')}
-          >
-            <LogOut className="h-4 w-4 shrink-0" />
-            {(isMobile || !collapsed) && <span className="text-xs font-medium truncate">{t('platform.signOut')}</span>}
-          </Button>
-
-          {!isMobile && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="icon"
-              onClick={toggleCollapsed}
-              className="h-11 w-11 shrink-0 rounded-lg text-sidebar-muted-foreground hover:bg-sidebar-accent/50 hover:text-sidebar-foreground transition-colors cursor-pointer"
-              title={collapsed ? t('nav.expand') : t('nav.collapse')}
-              aria-label={collapsed ? t('nav.expand') : t('nav.collapse')}
-              aria-expanded={!collapsed}
-            >
-              {collapsed ? (
-                <ChevronRight className="h-4 w-4 rtl:rotate-180" />
-              ) : (
-                <ChevronLeft className="h-4 w-4 rtl:rotate-180" />
-              )}
-            </Button>
-          )}
-        </div>
-      </div>
+      <PlatformSidebarFooter
+        isMobile={isMobile}
+        collapsed={collapsed}
+        platformUser={platformUser}
+        isSuperUser={isSuperUser}
+        onSignOutClick={() => setConfirmSignOutOpen(true)}
+        onToggleCollapsed={toggleCollapsed}
+        onCloseMobile={closeMobileSidebar}
+      />
     </div>
   );
 

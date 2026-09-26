@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 export default function ApexPageNotFound(): React.JSX.Element {
   const location = useLocation();
   const { isPlatformAuthenticated, platformUser } = usePlatformAuth();
-  const { t } = useTranslation();
+  const { t, dir } = useTranslation();
   const canOnboard = platformUserCan(platformUser, "onboard");
 
   const primaryLabel = isPlatformAuthenticated
@@ -27,7 +27,7 @@ export default function ApexPageNotFound(): React.JSX.Element {
         title={formatEntryTitle(t("page.notFound.title"), t("entry.productName"))}
         description={t("entry.meta.apexNotFound")}
       />
-      <AuthPageFrame dir="ltr">
+      <AuthPageFrame dir={dir}>
         <AuthCardShell
           className="max-w-md"
           header={

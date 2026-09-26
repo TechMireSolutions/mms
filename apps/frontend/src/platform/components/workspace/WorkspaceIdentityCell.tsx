@@ -38,7 +38,7 @@ export function WorkspaceIdentityCell({
             target="_blank"
             rel="noopener noreferrer"
             title={openTitle}
-            className="text-muted-foreground hover:text-primary transition-colors inline-flex p-1.5 rounded-lg hover:bg-primary/10 shrink-0"
+            className="text-muted-foreground hover:text-primary transition-colors inline-flex items-center justify-center min-h-11 min-w-11 rounded-lg hover:bg-primary/10 shrink-0 cursor-pointer"
             aria-label={openTitle}
           >
             <ExternalLink className="w-3.5 h-3.5" aria-hidden />
@@ -59,7 +59,7 @@ export function WorkspaceIdentityCell({
           </div>
           <CopyBtn
             text={tenantLink}
-            className="h-6 w-6 min-h-6 min-w-6 p-0 text-muted-foreground hover:text-foreground opacity-60 hover:opacity-100 transition-opacity rounded-md"
+            className="min-h-11 min-w-11 p-0 text-muted-foreground hover:text-foreground opacity-60 hover:opacity-100 transition-opacity rounded-md cursor-pointer"
             showToast
           />
         </div>

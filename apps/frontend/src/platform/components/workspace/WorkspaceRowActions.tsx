@@ -75,9 +75,9 @@ export function WorkspaceRowActions({
           size="icon"
           disabled={busy}
           onClick={onOpenCreateAdmin}
-          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-emerald-600 hover:bg-emerald-500/10 rounded-xl transition-all cursor-pointer"
-          title={`Create Admin User (${subdomain})`}
-          aria-label={`Create Admin User (${subdomain})`}
+          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-success hover:bg-success/10 rounded-xl transition-all cursor-pointer"
+          title={t('platform.tooltipCreateAdmin', { subdomain })}
+          aria-label={t('platform.tooltipCreateAdmin', { subdomain })}
         >
           <UserPlus className="w-4 h-4" aria-hidden />
         </Button>
@@ -89,9 +89,9 @@ export function WorkspaceRowActions({
           size="icon"
           disabled={busy}
           onClick={onOpenResetPassword}
-          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-amber-600 hover:bg-amber-500/10 rounded-xl transition-all cursor-pointer"
-          title={`Reset Admin Password (${subdomain})`}
-          aria-label={`Reset Admin Password (${subdomain})`}
+          className="min-h-11 min-w-11 h-11 w-11 text-muted-foreground hover:text-warning hover:bg-warning/10 rounded-xl transition-all cursor-pointer"
+          title={t('platform.tooltipResetPassword', { subdomain })}
+          aria-label={t('platform.tooltipResetPassword', { subdomain })}
         >
           <KeyRound className="w-4 h-4" aria-hidden />
         </Button>

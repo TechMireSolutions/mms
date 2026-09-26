@@ -77,12 +77,12 @@ describe('PlatformWorkspaceCreateAdminDialog', () => {
       />,
     );
 
-    expect(html).toContain('Create Admin User');
+    expect(html).toContain('platform.createAdminUser');
     expect(html).toContain('Darul Ulum');
     expect(html).toContain('darul-ulum');
-    expect(html).toContain('Administrator Name');
-    expect(html).toContain('Administrator Email');
-    expect(html).toContain('Initial Password (Optional)');
-    expect(html).toContain('Create Admin');
+    expect(html).toContain('platform.adminNameLabel');
+    expect(html).toContain('platform.adminEmailLabel');
+    expect(html).toContain('platform.initialPasswordLabel');
+    expect(html).toContain('platform.createAdminBtn');
   });
 });

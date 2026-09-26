@@ -6,10 +6,10 @@ import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/button';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import { PlatformModuleSelectCard } from '@/platform/components/workspace/PlatformModuleSelectCard';
+import { PlatformModulePresetsBar } from '@/platform/components/workspace/PlatformModulePresetsBar';
 import { useUpdateWorkspaceModules, useWorkspaceModules } from '@/platform/hooks/usePlatformWorkspaces';
 import {
   Loader2,
-  Sparkles,
   LayoutDashboard,
   Users,
   MessageSquare,
@@ -24,7 +24,6 @@ import {
   DollarSign,
   TrendingUp,
   UserCog,
-  BookOpen,
   Scale,
 } from 'lucide-react';
 
@@ -136,49 +135,7 @@ export function PlatformWorkspaceModulesDialog({
       }
     >
       <div className="flex-1 overflow-y-auto px-1 py-2 text-start space-y-5">
-        {/* Preset Archetype Chips */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 p-3 rounded-2xl bg-muted/40 border border-border/50">
-          <div className="flex items-center gap-1.5 text-xs font-bold text-muted-foreground">
-            <Sparkles className="w-3.5 h-3.5 text-primary" aria-hidden />
-            <span>{t('onboarding.presetsLabel')}</span>
-          </div>
-          <div className="flex flex-wrap items-center gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => applyPreset(SYSTEM_MODULES.map((m) => m.id))}
-              className="min-h-9 h-9 px-2.5 text-2xs font-bold rounded-lg border-border/70 hover:bg-primary/10 hover:text-primary gap-1 shadow-2xs cursor-pointer"
-            >
-              <School className="w-3.5 h-3.5 text-primary" aria-hidden />
-              {t('onboarding.presetFull')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                applyPreset(['dashboard', 'contacts', 'messaging', 'students', 'teachers', 'attendance', 'hasanat', 'users'])
-              }
-              className="min-h-9 h-9 px-2.5 text-2xs font-bold rounded-lg border-border/70 hover:bg-primary/10 hover:text-primary gap-1 shadow-2xs cursor-pointer"
-            >
-              <BookOpen className="w-3.5 h-3.5 text-primary" aria-hidden />
-              {t('onboarding.presetHifz')}
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() =>
-                applyPreset(['dashboard', 'contacts', 'messaging', 'students', 'attendance', 'finance', 'users'])
-              }
-              className="min-h-9 h-9 px-2.5 text-2xs font-bold rounded-lg border-border/70 hover:bg-primary/10 hover:text-primary gap-1 shadow-2xs cursor-pointer"
-            >
-              <GraduationCap className="w-3.5 h-3.5 text-primary" aria-hidden />
-              {t('onboarding.presetWeekend')}
-            </Button>
-          </div>
-        </div>
+        <PlatformModulePresetsBar onApplyPreset={applyPreset} disabled={isPending} />
 
         {isLoading ? (
           <CardSkeleton count={3} />

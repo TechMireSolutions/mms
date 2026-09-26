@@ -34,7 +34,7 @@ export default function WizardLayout({
   title,
   subtitle,
 }: WizardLayoutProps): React.JSX.Element {
-  const { t } = useTranslation();
+  const { t, dir, language } = useTranslation();
   const reducedMotion = useReducedMotion();
   const stepLabel = t("onboarding.stepOf", {
     current: String(currentStep),
@@ -43,8 +43,8 @@ export default function WizardLayout({
 
   return (
     <div
-      dir="ltr"
-      lang="en"
+      dir={dir}
+      lang={language}
       className="relative flex min-h-dvh flex-col overflow-hidden bg-background selection:bg-primary/10 selection:text-primary"
     >
       <AuthPageBackdrop />
@@ -130,8 +130,8 @@ export default function WizardLayout({
 
         <motion.section
           key={currentStep}
-          initial={reducedMotion ? false : { opacity: 0, x: 16 }}
-          animate={{ opacity: 1, x: 0 }}
+          initial={reducedMotion ? false : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={reducedMotion ? { duration: 0 } : { duration: 0.18, ease: "easeOut" }}
           className="relative w-full max-w-2xl overflow-hidden rounded-2xl surface-raised"
           aria-labelledby="wizard-step-title"

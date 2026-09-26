@@ -81,7 +81,7 @@ export function CreateMadrasaModulesSection({ controller }: CreateMadrasaModules
                   variant="outline"
                   size="sm"
                   onClick={() => applyPreset(preset.modules)}
-                  className="min-h-9 h-9 px-2.5 text-xs font-bold rounded-lg border-border/70 hover:bg-primary/10 hover:text-primary gap-1.5 shadow-2xs"
+                  className="min-h-11 h-11 px-3 text-xs font-bold rounded-lg border-border/70 hover:bg-primary/10 hover:text-primary gap-1.5 shadow-2xs cursor-pointer"
                 >
                   <Icon className="w-3.5 h-3.5 text-primary" aria-hidden />
                   {t(preset.labelKey)}

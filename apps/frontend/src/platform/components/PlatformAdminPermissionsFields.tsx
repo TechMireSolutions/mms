@@ -1,11 +1,9 @@
-import React, { useId } from 'react';
+import React from 'react';
 import { Shield, Building2, UserPlus, Settings, ShieldCheck, Server, Sparkles, CheckCheck, XCircle } from 'lucide-react';
 import type { PlatformAdminPermissions } from '@mms/shared';
-import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
-import { SEMANTIC_BADGE } from '@/lib/semanticTone';
-import { cn } from '@/lib/utils';
+import { PlatformPermissionCheckboxItem } from '@/platform/components/admin/PlatformPermissionCheckboxItem';
 
 interface PlatformAdminPermissionsFieldsProps {
   value: PlatformAdminPermissions;
@@ -20,11 +18,6 @@ export function PlatformAdminPermissionsFields({
   disabled = false,
 }: PlatformAdminPermissionsFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const workspacesId = useId();
-  const onboardId = useId();
-  const settingsId = useId();
-  const adminsId = useId();
-  const systemId = useId();
 
   const setAll = (enabled: boolean) => {
     onChange({
@@ -61,9 +54,9 @@ export function PlatformAdminPermissionsFields({
             size="sm"
             disabled={disabled}
             onClick={() => setAll(true)}
-            className="min-h-8 h-8 px-2 text-3xs font-bold rounded-lg border-border/60 hover:bg-primary/10 hover:text-primary gap-1"
+            className="min-h-11 h-11 px-3 text-xs font-bold rounded-xl border-border/60 hover:bg-primary/10 hover:text-primary gap-1.5 cursor-pointer"
           >
-            <CheckCheck className="w-3 h-3 text-primary" aria-hidden />
+            <CheckCheck className="w-3.5 h-3.5 text-primary" aria-hidden />
             {t('contacts.table.selectAll')}
           </Button>
           <Button
@@ -72,9 +65,9 @@ export function PlatformAdminPermissionsFields({
             size="sm"
             disabled={disabled}
             onClick={setOperations}
-            className="min-h-8 h-8 px-2 text-3xs font-bold rounded-lg border-border/60 hover:bg-primary/10 hover:text-primary gap-1"
+            className="min-h-11 h-11 px-3 text-xs font-bold rounded-xl border-border/60 hover:bg-primary/10 hover:text-primary gap-1.5 cursor-pointer"
           >
-            <Sparkles className="w-3 h-3 text-primary" aria-hidden />
+            <Sparkles className="w-3.5 h-3.5 text-primary" aria-hidden />
             {t('platform.permWorkspaces')}
           </Button>
           <Button
@@ -83,178 +76,63 @@ export function PlatformAdminPermissionsFields({
             size="sm"
             disabled={disabled}
             onClick={() => setAll(false)}
-            className="min-h-8 h-8 px-2 text-3xs font-semibold rounded-lg text-muted-foreground hover:text-foreground gap-1"
+            className="min-h-11 h-11 px-3 text-xs font-semibold rounded-xl text-muted-foreground hover:text-foreground gap-1.5 cursor-pointer"
           >
-            <XCircle className="w-3 h-3" aria-hidden />
+            <XCircle className="w-3.5 h-3.5" aria-hidden />
             {t('common.deselect')}
           </Button>
         </div>
       </div>
 
-      {/* 1. Workspaces Capability */}
-      <label
-        htmlFor={workspacesId}
-        className={cn(
-          'flex min-h-12 cursor-pointer items-start gap-3.5 p-3 rounded-xl border border-border/40 bg-card/60 hover:bg-accent/20 transition-all select-none',
-          value.workspaces && 'border-primary/40 bg-primary/5',
-          disabled && 'opacity-60 cursor-not-allowed',
-        )}
-      >
-        <Checkbox
-          id={workspacesId}
-          name="permWorkspaces"
-          checked={value.workspaces}
-          disabled={disabled}
-          onCheckedChange={(checked) =>
-            onChange({ ...value, workspaces: checked === true })
-          }
-          className="mt-1"
-        />
-        <div className="flex-1 min-w-0 text-start space-y-1">
-          <div className="flex items-center gap-2">
-            <Building2 className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
-            <span className="text-xs font-bold text-foreground">{t('platform.permWorkspaces')}</span>
-            <span className={cn('ms-auto text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.workspaces ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
-              {value.workspaces ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
-            </span>
-          </div>
-          <p className="text-3xs font-medium text-muted-foreground leading-relaxed">
-            {t('platform.permWorkspacesDesc')}
-          </p>
-        </div>
-      </label>
+      <PlatformPermissionCheckboxItem
+        name="permWorkspaces"
+        label={t('platform.permWorkspaces')}
+        description={t('platform.permWorkspacesDesc')}
+        icon={Building2}
+        checked={value.workspaces}
+        disabled={disabled}
+        onChange={(checked) => onChange({ ...value, workspaces: checked })}
+      />
 
-      {/* 2. Onboarding Capability */}
-      <label
-        htmlFor={onboardId}
-        className={cn(
-          'flex min-h-12 cursor-pointer items-start gap-3.5 p-3 rounded-xl border border-border/40 bg-card/60 hover:bg-accent/20 transition-all select-none',
-          value.onboard && 'border-primary/40 bg-primary/5',
-          disabled && 'opacity-60 cursor-not-allowed',
-        )}
-      >
-        <Checkbox
-          id={onboardId}
-          name="permOnboard"
-          checked={value.onboard}
-          disabled={disabled}
-          onCheckedChange={(checked) =>
-            onChange({ ...value, onboard: checked === true })
-          }
-          className="mt-1"
-        />
-        <div className="flex-1 min-w-0 text-start space-y-1">
-          <div className="flex items-center gap-2">
-            <UserPlus className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
-            <span className="text-xs font-bold text-foreground">{t('platform.permOnboard')}</span>
-            <span className={cn('ms-auto text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.onboard ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
-              {value.onboard ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
-            </span>
-          </div>
-          <p className="text-3xs font-medium text-muted-foreground leading-relaxed">
-            {t('platform.permOnboardDesc')}
-          </p>
-        </div>
-      </label>
+      <PlatformPermissionCheckboxItem
+        name="permOnboard"
+        label={t('platform.permOnboard')}
+        description={t('platform.permOnboardDesc')}
+        icon={UserPlus}
+        checked={value.onboard}
+        disabled={disabled}
+        onChange={(checked) => onChange({ ...value, onboard: checked })}
+      />
 
-      {/* 3. Global Settings Capability */}
-      <label
-        htmlFor={settingsId}
-        className={cn(
-          'flex min-h-12 cursor-pointer items-start gap-3.5 p-3 rounded-xl border border-border/40 bg-card/60 hover:bg-accent/20 transition-all select-none',
-          value.settings && 'border-primary/40 bg-primary/5',
-          disabled && 'opacity-60 cursor-not-allowed',
-        )}
-      >
-        <Checkbox
-          id={settingsId}
-          name="permSettings"
-          checked={value.settings}
-          disabled={disabled}
-          onCheckedChange={(checked) =>
-            onChange({ ...value, settings: checked === true })
-          }
-          className="mt-1"
-        />
-        <div className="flex-1 min-w-0 text-start space-y-1">
-          <div className="flex items-center gap-2">
-            <Settings className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
-            <span className="text-xs font-bold text-foreground">{t('platform.permSettings')}</span>
-            <span className={cn('ms-auto text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.settings ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
-              {value.settings ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
-            </span>
-          </div>
-          <p className="text-3xs font-medium text-muted-foreground leading-relaxed">
-            {t('platform.permSettingsDesc')}
-          </p>
-        </div>
-      </label>
+      <PlatformPermissionCheckboxItem
+        name="permSettings"
+        label={t('platform.permSettings')}
+        description={t('platform.permSettingsDesc')}
+        icon={Settings}
+        checked={value.settings}
+        disabled={disabled}
+        onChange={(checked) => onChange({ ...value, settings: checked })}
+      />
 
-      {/* 4. Manage Admins Capability */}
-      <label
-        htmlFor={adminsId}
-        className={cn(
-          'flex min-h-12 cursor-pointer items-start gap-3.5 p-3 rounded-xl border border-border/40 bg-card/60 hover:bg-accent/20 transition-all select-none',
-          value.admins && 'border-primary/40 bg-primary/5',
-          disabled && 'opacity-60 cursor-not-allowed',
-        )}
-      >
-        <Checkbox
-          id={adminsId}
-          name="permAdmins"
-          checked={value.admins}
-          disabled={disabled}
-          onCheckedChange={(checked) =>
-            onChange({ ...value, admins: checked === true })
-          }
-          className="mt-1"
-        />
-        <div className="flex-1 min-w-0 text-start space-y-1">
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
-            <span className="text-xs font-bold text-foreground">{t('platform.permAdmins')}</span>
-            <span className={cn('ms-auto text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.admins ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
-              {value.admins ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
-            </span>
-          </div>
-          <p className="text-3xs font-medium text-muted-foreground leading-relaxed">
-            {t('platform.permAdminsDesc')}
-          </p>
-        </div>
-      </label>
+      <PlatformPermissionCheckboxItem
+        name="permAdmins"
+        label={t('platform.permAdmins')}
+        description={t('platform.permAdminsDesc')}
+        icon={ShieldCheck}
+        checked={value.admins}
+        disabled={disabled}
+        onChange={(checked) => onChange({ ...value, admins: checked })}
+      />
 
-      {/* 5. System Maintenance & Logs Capability */}
-      <label
-        htmlFor={systemId}
-        className={cn(
-          'flex min-h-12 cursor-pointer items-start gap-3.5 p-3 rounded-xl border border-border/40 bg-card/60 hover:bg-accent/20 transition-all select-none',
-          value.system && 'border-primary/40 bg-primary/5',
-          disabled && 'opacity-60 cursor-not-allowed',
-        )}
-      >
-        <Checkbox
-          id={systemId}
-          name="permSystem"
-          checked={value.system}
-          disabled={disabled}
-          onCheckedChange={(checked) =>
-            onChange({ ...value, system: checked === true })
-          }
-          className="mt-1"
-        />
-        <div className="flex-1 min-w-0 text-start space-y-1">
-          <div className="flex items-center gap-2">
-            <Server className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
-            <span className="text-xs font-bold text-foreground">{t('platform.permSystem')}</span>
-            <span className={cn('ms-auto text-2xs font-bold px-2 py-0.5 rounded-full uppercase tracking-wider', value.system ? SEMANTIC_BADGE.success : 'bg-muted text-muted-foreground')}>
-              {value.system ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
-            </span>
-          </div>
-          <p className="text-3xs font-medium text-muted-foreground leading-relaxed">
-            {t('platform.permSystemDesc')}
-          </p>
-        </div>
-      </label>
+      <PlatformPermissionCheckboxItem
+        name="permSystem"
+        label={t('platform.permSystem')}
+        description={t('platform.permSystemDesc')}
+        icon={Server}
+        checked={value.system}
+        disabled={disabled}
+        onChange={(checked) => onChange({ ...value, system: checked })}
+      />
     </fieldset>
   );
 }

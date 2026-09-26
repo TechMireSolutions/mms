@@ -1,5 +1,5 @@
 import React, { useState, useDeferredValue, useMemo } from 'react';
-import { ShieldCheck, Download, Mail } from 'lucide-react';
+import { ShieldCheck, Download } from 'lucide-react';
 import type { PlatformUserProfile } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
@@ -10,20 +10,11 @@ import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
 import { PlatformEditAdminAccessDialog } from '@/platform/components/PlatformEditAdminAccessDialog';
 import { PlatformAdminDangerDialog } from '@/platform/components/PlatformAdminDangerDialog';
-import { triggerFileDownload } from '@/lib/download';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableRow,
-} from '@/components/ui/table';
+import { exportPlatformAdminsCsv } from '@/platform/components/admin/exportPlatformAdminsCsv';
 import { PlatformAdminsListCards } from '@/platform/components/admin/PlatformAdminsListCards';
-import { PlatformAdminStatusBadges, PlatformAdminPermissionsBadges } from '@/platform/components/admin/PlatformAdminBadges';
-import { PlatformAdminActionButtons } from '@/platform/components/admin/PlatformAdminActionButtons';
+import { PlatformAdminsTableView, type DangerMode } from '@/platform/components/admin/PlatformAdminsTableView';
 import { DetailSheet } from '@/components/common/DetailSheet';
-import { ModuleWorkTableHeader } from '@/components/ui/ModuleWorkTableHeader';
 import { useVerifyPlatformAdminEmail } from '@/platform/hooks/usePlatformAdmins';
-import { formatDate } from '@mms/shared';
 import { usePlatformUserDescriptor } from '@/platform/hooks/usePlatformUserDescriptor';
 
 interface PlatformAdminsListProps {
@@ -33,7 +24,7 @@ interface PlatformAdminsListProps {
   onRetry: () => void;
 }
 
-type DangerMode = 'disable' | 'enable' | 'delete';
+
 
 export function PlatformAdminsList({
   admins,
@@ -71,21 +62,7 @@ export function PlatformAdminsList({
     );
   }, [rawItems, deferredQuery]);
 
-  const handleExportCsv = () => {
-    if (filteredItems.length === 0) return;
-    const columns = descriptor.getTableColumns();
-    const headers = ['ID', ...columns.map((c) => c.label)];
-    const rows = filteredItems.map((admin) => [
-      admin.id,
-      ...columns.map((col) => descriptor.formatFieldValue(col.id, admin)),
-    ]);
-    const csvContent = [
-      headers.join(','),
-      ...rows.map((row) => row.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(',')),
-    ].join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    triggerFileDownload(blob, `platform-admins-${new Date().toISOString().slice(0, 10)}.csv`);
-  };
+
 
   return (
     <div className="lg:col-span-2 space-y-4 text-start">
@@ -113,7 +90,7 @@ export function PlatformAdminsList({
           <Button
             variant="outline"
             size="sm"
-            onClick={handleExportCsv}
+            onClick={() => exportPlatformAdminsCsv(filteredItems, descriptor)}
             disabled={filteredItems.length === 0}
             className="min-h-11 h-11 px-3.5 text-xs font-bold gap-1.5 rounded-xl border-border/80 hover:bg-muted/80 shrink-0 cursor-pointer"
             title={t('platform.exportAdminsCsv')}
@@ -160,61 +137,16 @@ export function PlatformAdminsList({
             />
           </div>
         ) : viewMode === 'table' ? (
-          <div className="rounded-xl border border-border/40 overflow-hidden bg-card shadow-sm">
-            <Table>
-              <ModuleWorkTableHeader
-                columns={descriptor.getTableColumns().map(col => ({
-                  id: col.id,
-                  label: col.label,
-                  sortField: col.id,
-                  headerClassName: col.id === "name" ? "" : "w-40",
-                }))}
-                getColumnWidth={() => undefined}
-                setColumnWidth={() => {}}
-                actionsLabel={t('common.actions')}
-              />
-              <TableBody className="divide-y divide-border/50">
-                {filteredItems.map((admin) => (
-                  <TableRow
-                    key={admin.id}
-                    className="group hover:bg-muted/30 transition-colors cursor-pointer"
-                    onClick={() => setInspectAdmin(admin)}
-                  >
-                    <TableCell className="px-4 py-3 align-top">
-                      <div className="space-y-1">
-                        <p className="font-bold text-foreground">{admin.name}</p>
-                        <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-                          <Mail className="w-3.5 h-3.5" aria-hidden />
-                          <span dir="ltr">{admin.email}</span>
-                        </div>
-                        {admin.createdAt ? (
-                          <p className="text-2xs text-muted-foreground font-semibold mt-1">
-                            {t('platform.profileMemberSince')}: {formatDate(admin.createdAt)}
-                          </p>
-                        ) : null}
-                      </div>
-                    </TableCell>
-                    <TableCell className="px-4 py-3 align-top">
-                      <PlatformAdminStatusBadges admin={admin} />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 align-top">
-                      <PlatformAdminPermissionsBadges admin={admin} />
-                    </TableCell>
-                    <TableCell className="px-4 py-3 align-top text-end" onClick={(e) => e.stopPropagation()}>
-                      <PlatformAdminActionButtons
-                        admin={admin}
-                        onEditAccess={(a) => setEditingAdmin(a)}
-                        onToggleStatus={(a, mode) => openDanger(a, mode)}
-                        onDelete={(a) => openDanger(a, 'delete')}
-                        verifyPending={verifyEmailMutation.isPending}
-                        onVerifyEmail={(adminId) => verifyEmailMutation.mutate(adminId)}
-                      />
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+          <PlatformAdminsTableView
+            admins={filteredItems}
+            descriptor={descriptor}
+            onInspect={setInspectAdmin}
+            onEditAccess={(a) => setEditingAdmin(a)}
+            onToggleStatus={(a, mode) => openDanger(a, mode)}
+            onDelete={(a) => openDanger(a, 'delete')}
+            verifyPending={verifyEmailMutation.isPending}
+            onVerifyEmail={(adminId) => verifyEmailMutation.mutate(adminId)}
+          />
         ) : (
           <PlatformAdminsListCards
             admins={filteredItems}
