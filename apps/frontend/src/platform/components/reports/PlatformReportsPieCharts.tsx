@@ -1,14 +1,8 @@
+import { PlatformDistributionTooltip } from '@/platform/components/reports/platformChartTooltips';
 import React from 'react';
 import { PieChart, Pie, Cell, Tooltip, Legend } from 'recharts';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ReportChartCard } from '@/components/ui/reports/ReportChartCard';
-
-const CHART_TOOLTIP_STYLE = {
-  backgroundColor: 'hsl(var(--card))',
-  borderColor: 'hsl(var(--border))',
-  borderRadius: '0.75rem',
-  boxShadow: 'var(--shadow-surface)',
-};
 
 const LEGEND_FORMATTER = (value: string) => (
   <span className="text-xs font-semibold text-foreground">{value}</span>
@@ -57,7 +51,7 @@ export function PlatformReportsPieCharts({
           <Cell key={`cell-${keyPrefix}-${index}`} fill={entry.color} />
         ))}
       </Pie>
-      <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+      <Tooltip content={<PlatformDistributionTooltip />} />
       <Legend verticalAlign="bottom" height={36} formatter={LEGEND_FORMATTER} />
     </PieChart>
   );

@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Eye, EyeOff, Lock } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FORM_LABEL } from '@/components/ui/formStyles';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -54,7 +55,9 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
           {...rest}
         />
         {showToggle ? (
-          <button
+          <Button
+            variant="ghost"
+            size="icon"
             type="button"
             disabled={disabled}
             onClick={() => setShowPassword((prev) => !prev)}
@@ -67,7 +70,7 @@ export const PasswordInput: React.FC<PasswordInputProps> = ({
             ) : (
               <Eye className="h-4 w-4" aria-hidden />
             )}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>

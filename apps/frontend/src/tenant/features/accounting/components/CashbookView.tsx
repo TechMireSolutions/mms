@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { TrendingUp, TrendingDown, ArrowUpDown, AlertTriangle } from "lucide-react";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { centsToMoney, type JournalEntry, type Account } from '@/lib/data/accountingData';
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
@@ -81,10 +82,7 @@ export function CashbookView({ entries, accounts, configuredCashAccountId, pageS
         rendering a silently empty or all-transfer cashbook.
       */}
       {cashAccountIds.size === 0 && (
-        <p role="status" className="flex items-start gap-2 rounded-xl border border-warning/30 bg-warning/10 px-3 py-2 text-xs font-semibold text-warning m-0">
-          <AlertTriangle className="w-3.5 h-3.5 mt-0.5 shrink-0" aria-hidden="true" />
-          {t("accounting.cashbook.noCashAccount")}
-        </p>
+        <WarningCallout density="compact" description={t("accounting.cashbook.noCashAccount")} />
       )}
       {countByType.unclassified > 0 && (
         <p role="status" className="flex items-start gap-2 rounded-xl border border-border bg-muted/30 px-3 py-2 text-xs font-semibold text-muted-foreground m-0">

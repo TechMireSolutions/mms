@@ -5,7 +5,6 @@ import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
 import { AccountProfileContactTab } from "./AccountProfileContactTab";
 import { AccountProfileSecurityTab } from "./AccountProfileSecurityTab";
-import type { PasswordStrengthResult } from "./passwordStrength";
 
 interface AccountProfileSettingsTabsProps {
   profile: TenantUserProfile;
@@ -26,7 +25,6 @@ interface AccountProfileSettingsTabsProps {
   passwordBusy: boolean;
   showEmailForm: boolean;
   showPasswordForm: boolean;
-  passwordStrength: PasswordStrengthResult;
   onNameChange: (value: string) => void;
   onPhoneChange: (value: string) => void;
   onContactEmailChange: (value: string) => void;
@@ -66,7 +64,6 @@ export function AccountProfileSettingsTabs({
   passwordBusy,
   showEmailForm,
   showPasswordForm,
-  passwordStrength,
   onNameChange,
   onPhoneChange,
   onContactEmailChange,
@@ -135,7 +132,6 @@ export function AccountProfileSettingsTabs({
             passwordBusy={passwordBusy}
             showEmailForm={showEmailForm}
             showPasswordForm={showPasswordForm}
-            passwordStrength={passwordStrength}
             onNewLoginEmailChange={onNewLoginEmailChange}
             onLoginPasswordChange={onLoginPasswordChange}
             onVerifyCodeChange={onVerifyCodeChange}

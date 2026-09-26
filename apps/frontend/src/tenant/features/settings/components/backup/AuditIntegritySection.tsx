@@ -1,5 +1,6 @@
 import React, { useState, useCallback } from 'react';
 import { ShieldCheck, RefreshCw, Download, CheckCircle2, AlertTriangle, Hash, Layers } from 'lucide-react';
+import { WarningCallout } from '@/components/ui/WarningCallout';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { Button } from '@/components/ui/button';
 import { StatCard } from '@/components/ui/StatCard';
@@ -130,21 +131,15 @@ export function AuditIntegritySection({
         )}
 
         {(anomaliesQuery.data?.anomalies?.length ?? 0) > 0 && (
-          <div className="rounded-lg border border-warning/30 bg-warning/10 p-3.5 text-xs space-y-1.5">
-            <div className="flex items-center gap-1.5 font-semibold text-warning">
-              <AlertTriangle className="h-4 w-4 shrink-0" />
-              <span>
-                {t('audit.anomaliesDetected', {
-                  count: anomaliesQuery.data?.anomalies.length ?? 0,
-                })}
-              </span>
-            </div>
-            {anomaliesQuery.data?.anomalies.map((anom, idx) => (
-              <p key={idx} className="text-muted-foreground ps-5 text-3xs leading-relaxed">
-                • {anom.description}
-              </p>
-            ))}
-          </div>
+          <WarningCallout density="compact" title={t('audit.anomaliesDetected', {
+            count: anomaliesQuery.data?.anomalies.length ?? 0,
+          })}>
+            <ul className="list-disc ps-4 text-muted-foreground text-3xs leading-relaxed space-y-1">
+              {anomaliesQuery.data?.anomalies.map((anom, idx) => (
+                <li key={idx}>{anom.description}</li>
+              ))}
+            </ul>
+          </WarningCallout>
         )}
 
         <div className="flex flex-wrap items-center gap-3 pt-2">

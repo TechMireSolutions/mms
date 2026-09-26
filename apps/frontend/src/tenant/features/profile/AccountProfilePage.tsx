@@ -82,7 +82,6 @@ export default function AccountProfile(): JSX.Element {
             passwordBusy={c.passwordBusy}
             showEmailForm={c.showEmailForm}
             showPasswordForm={c.showPasswordForm}
-            passwordStrength={c.passwordStrength}
             onNameChange={c.setName}
             onPhoneChange={c.setPhone}
             onContactEmailChange={c.setContactEmail}

@@ -1,11 +1,14 @@
-import type React from "react";
-import { CheckCircle2, Loader2, Mail } from "lucide-react";
+import { useId } from "react";
+import { CheckCircle2, Mail } from "lucide-react";
 import type { TenantUserProfile } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/FormField";
+import PasswordInput from "@/components/ui/PasswordInput";
+import { FormSubmitActions } from "@/components/ui/FormSubmitActions";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
@@ -50,6 +53,7 @@ export function AccountProfileLoginEmailCard({
   onConfirmLoginEmail,
 }: AccountProfileLoginEmailCardProps): React.JSX.Element {
   const { t } = useTranslation();
+  const id = useId();
 
   return (
     <Card accentColor="primary" className="group/login-card">
@@ -62,7 +66,7 @@ export function AccountProfileLoginEmailCard({
       <CardContent className={cn("pt-5 space-y-4", CARD_STRIPE_INSET)}>
         <div className="flex items-center gap-3 p-3 bg-muted/30 border border-border/30 rounded-xl text-sm">
           <Mail className="h-4 w-4 text-muted-foreground shrink-0" />
-          <div className="text-start">
+          <div className="min-w-0 text-start break-words">
             <p className="text-xs text-muted-foreground font-medium">{t("account.loginEmail")}</p>
             <p className="font-semibold text-foreground mt-0.5">{profile.loginEmail}</p>
           </div>
@@ -103,10 +107,9 @@ export function AccountProfileLoginEmailCard({
                   }}
                   className="space-y-4"
                 >
-                  <div className="space-y-1 text-start">
-                    <Label htmlFor="new-login-email" className="text-xs font-semibold text-muted-foreground">{t("account.newLoginEmail")}</Label>
+                  <Field id={`${id}-new-login-email`} label={t("account.newLoginEmail")} required>
                     <Input
-                      id="new-login-email"
+                      id={`${id}-new-login-email`}
                       name="newLoginEmail"
                       type="email"
                       value={newLoginEmail}
@@ -115,39 +118,14 @@ export function AccountProfileLoginEmailCard({
                       autoComplete="email"
                       className="min-h-11"
                     />
-                  </div>
-                  <div className="space-y-1 text-start">
-                    <Label htmlFor="login-email-password" className="text-xs font-semibold text-muted-foreground">{t("account.currentPassword")}</Label>
-                    <Input
-                      id="login-email-password"
-                      name="loginPassword"
-                      type="password"
-                      value={loginPassword}
-                      onChange={(event) => onLoginPasswordChange(event.target.value)}
-                      required
-                      autoComplete="current-password"
-                      className="min-h-11"
-                    />
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    <Button
-                      type="submit"
-                      variant="outline"
-                      disabled={loginEmailBusy || !newLoginEmail.trim() || !loginPassword}
-                      className="w-full sm:w-auto min-h-11"
-                    >
-                      {loginEmailBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("account.sendCode")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={onCancelLoginEmailRequest}
-                      disabled={loginEmailBusy}
-                      className="w-full sm:w-auto min-h-11"
-                    >
-                      {t("common.cancel")}
-                    </Button>
-                  </div>
+                  </Field>
+                  <PasswordInput id={`${id}-password`} name="loginPassword"
+                    label={t("account.currentPassword")} value={loginPassword}
+                    onChange={(event) => onLoginPasswordChange(event.target.value)}
+                    required autoComplete="current-password" />
+                  <FormSubmitActions submitLabel={t("account.sendCode")} pending={loginEmailBusy}
+                    variant="secondary" disabled={!newLoginEmail.trim() || !loginPassword}
+                    cancel={{ label: t("common.cancel"), onClick: onCancelLoginEmailRequest }} />
                 </form>
               ) : (
                 <form
@@ -158,14 +136,12 @@ export function AccountProfileLoginEmailCard({
                   className="space-y-4 pt-2"
                 >
                   {devCode ? (
-                    <p className="text-xs text-muted-foreground bg-info/10 text-info p-2 rounded border border-info/20">
-                      {t("account.devCodeHint", { code: devCode })}
-                    </p>
+                    <WarningCallout tone="info" density="compact"
+                      description={t("account.devCodeHint", { code: devCode })} />
                   ) : null}
-                  <div className="space-y-1 text-start">
-                    <Label htmlFor="login-email-code" className="text-xs font-semibold text-muted-foreground">{t("account.verificationCode")}</Label>
+                  <Field id={`${id}-login-email-code`} label={t("account.verificationCode")} required>
                     <Input
-                      id="login-email-code"
+                      id={`${id}-login-email-code`}
                       name="verifyCode"
                       inputMode="numeric"
                       value={verifyCode}
@@ -174,25 +150,10 @@ export function AccountProfileLoginEmailCard({
                       autoComplete="one-time-code"
                       className="min-h-11"
                     />
-                  </div>
-                  <div className="flex flex-wrap gap-2 pt-2">
-                    <Button
-                      type="submit"
-                      disabled={loginEmailBusy || !verifyCode.trim()}
-                      className="flex-1 sm:flex-none min-h-11"
-                    >
-                      {loginEmailBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("account.confirmLoginEmail")}
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      onClick={onCancelLoginEmailConfirm}
-                      disabled={loginEmailBusy}
-                      className="flex-1 sm:flex-none min-h-11"
-                    >
-                      {t("common.cancel")}
-                    </Button>
-                  </div>
+                  </Field>
+                  <FormSubmitActions submitLabel={t("account.confirmLoginEmail")} pending={loginEmailBusy}
+                    variant="primary" disabled={!verifyCode.trim()}
+                    cancel={{ label: t("common.cancel"), onClick: onCancelLoginEmailConfirm }} />
                 </form>
               )}
             </>

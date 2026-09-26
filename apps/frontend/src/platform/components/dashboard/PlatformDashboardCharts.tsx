@@ -1,5 +1,7 @@
-import React from "react";
-import { TrendingUp, Layers, Activity } from "lucide-react";
+import { ChartAreaGradient } from '@/components/dashboard-widgets/charts/chartPrimitives';
+import { PlatformCountTooltip } from '@/platform/components/reports/platformChartTooltips';
+import React, { useId } from "react";
+import { TrendingUp } from "lucide-react";
 import {
   BarChart,
   Bar,
@@ -12,7 +14,7 @@ import {
   Area,
 } from "recharts";
 import { useTranslation } from "@/hooks/useTranslation";
-import { SafeResponsiveContainer } from "@/components/ui/SafeResponsiveContainer";
+import { ReportChartCard } from "@/components/ui/reports/ReportChartCard";
 import { WidgetCard } from "@/components/ui/WidgetCard";
 import { WidgetCardHeader } from "@/components/ui/WidgetCardHeader";
 import { usePlatformActivityTrend } from "@/platform/hooks/usePlatformTelemetry";
@@ -27,6 +29,7 @@ export function PlatformDashboardCharts({
   disabledWorkspaces,
 }: PlatformDashboardChartsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const gradientId = useId();
   const { data: activityTrend } = usePlatformActivityTrend();
 
   const chartData = [
@@ -67,98 +70,66 @@ export function PlatformDashboardCharts({
       />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
-        <div className="h-64 w-full flex flex-col justify-between p-3 rounded-xl bg-muted/20 border border-border/40">
-          <p className="text-xs font-bold text-foreground mb-2 flex items-center gap-1.5">
-            <Layers className="w-3.5 h-3.5 text-primary" /> {t('platform.charts.activeVsInactive')}
-          </p>
-          <div className="h-52 w-full">
-            <SafeResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
-                <XAxis
-                  dataKey="name"
-                  stroke="currentColor"
-                  className="text-xs font-semibold text-muted-foreground"
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="currentColor"
-                  className="text-xs font-semibold text-muted-foreground"
-                  allowDecimals={false}
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    borderColor: "hsl(var(--border))",
-                    borderRadius: "0.75rem",
-                    boxShadow: "var(--shadow-surface)",
-                  }}
-                />
-                <Bar dataKey="count" radius={[8, 8, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={entry.color} />
-                  ))}
-                </Bar>
-              </BarChart>
-            </SafeResponsiveContainer>
-          </div>
-        </div>
+        <ReportChartCard title={t('platform.charts.activeVsInactive')} heightClass="h-52">
+          <BarChart data={chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
+            <XAxis
+              dataKey="name"
+              stroke="currentColor"
+              className="text-xs font-semibold text-muted-foreground"
+              tickLine={false}
+            />
+            <YAxis
+              stroke="currentColor"
+              className="text-xs font-semibold text-muted-foreground"
+              allowDecimals={false}
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip content={<PlatformCountTooltip />} />
+            <Bar dataKey="count" radius={[8, 8, 0, 0]}>
+              {chartData.map((entry, index) => (
+                <Cell key={`cell-${index}`} fill={entry.color} />
+              ))}
+            </Bar>
+          </BarChart>
+        </ReportChartCard>
 
-        <div className="h-64 w-full flex flex-col justify-between p-3 rounded-xl bg-muted/20 border border-border/40">
-          <div className="flex items-center justify-between gap-2 mb-2">
-            <p className="text-xs font-bold text-foreground flex items-center gap-1.5">
-              <Activity className="w-3.5 h-3.5 text-success" /> {t('platform.charts.activityTrend')}
-            </p>
-            {isAwaitingTrend && (
-              <span className="inline-flex items-center gap-1 rounded-full bg-muted/60 border border-border/40 px-2 py-0.5 text-3xs font-semibold text-muted-foreground">
-                {t('platform.charts.awaitingTrend')}
-              </span>
-            )}
-          </div>
-          <div className="h-52 w-full">
-            <SafeResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorOps" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-                    <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
-                <XAxis
-                  dataKey="month"
-                  stroke="currentColor"
-                  className="text-xs font-semibold text-muted-foreground"
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="currentColor"
-                  className="text-xs font-semibold text-muted-foreground"
-                  tickLine={false}
-                  axisLine={false}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "hsl(var(--card))",
-                    borderColor: "hsl(var(--border))",
-                    borderRadius: "0.75rem",
-                    boxShadow: "var(--shadow-surface)",
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="ops"
-                  stroke="hsl(var(--primary))"
-                  strokeWidth={2.5}
-                  fillOpacity={1}
-                  fill="url(#colorOps)"
-                />
-              </AreaChart>
-            </SafeResponsiveContainer>
-          </div>
-        </div>
+        <ReportChartCard title={t('platform.charts.activityTrend')} heightClass="h-52"
+          actions={isAwaitingTrend ? (
+            <span className="text-3xs font-semibold text-muted-foreground">
+              {t('platform.charts.awaitingTrend')}
+            </span>
+          ) : undefined}
+        >
+          <AreaChart data={trendData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+            <defs>
+              <ChartAreaGradient id={gradientId} color="hsl(var(--primary))" opacity={0.4} />
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" opacity={0.1} vertical={false} />
+            <XAxis
+              dataKey="month"
+              stroke="currentColor"
+              className="text-xs font-semibold text-muted-foreground"
+              tickLine={false}
+            />
+            <YAxis
+              stroke="currentColor"
+              className="text-xs font-semibold text-muted-foreground"
+              tickLine={false}
+              axisLine={false}
+            />
+            <Tooltip content={<PlatformCountTooltip />} />
+            <Area
+              type="monotone"
+              dataKey="ops"
+              stroke="hsl(var(--primary))"
+              strokeWidth={2.5}
+              fillOpacity={1}
+              fill={`url(#${gradientId})`}
+            />
+          </AreaChart>
+        </ReportChartCard>
       </div>
     </WidgetCard>
   );

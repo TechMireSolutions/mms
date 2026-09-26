@@ -1,5 +1,7 @@
-import type React from "react";
-import { Loader2, Lock } from "lucide-react";
+import { PasswordStrengthMeter } from '@/components/ui/PasswordStrengthMeter';
+import { FormSubmitActions } from '@/components/ui/FormSubmitActions';
+import { useId } from "react";
+import { Lock } from "lucide-react";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,7 +10,6 @@ import { FieldErrorMessage } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
 import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
-import type { PasswordStrengthResult } from "./passwordStrength";
 
 export interface AccountProfilePasswordCardProps {
   currentPassword: string;
@@ -16,7 +17,6 @@ export interface AccountProfilePasswordCardProps {
   confirmPassword: string;
   passwordBusy: boolean;
   showPasswordForm: boolean;
-  passwordStrength: PasswordStrengthResult;
   onCurrentPasswordChange: (value: string) => void;
   onNewPasswordChange: (value: string) => void;
   onConfirmPasswordChange: (value: string) => void;
@@ -31,7 +31,6 @@ export function AccountProfilePasswordCard({
   confirmPassword,
   passwordBusy,
   showPasswordForm,
-  passwordStrength,
   onCurrentPasswordChange,
   onNewPasswordChange,
   onConfirmPasswordChange,
@@ -40,6 +39,7 @@ export function AccountProfilePasswordCard({
   onChangePassword,
 }: AccountProfilePasswordCardProps): React.JSX.Element {
   const { t } = useTranslation();
+  const id = useId();
 
   return (
     <Card accentColor="success" className="group/password-card">
@@ -65,7 +65,7 @@ export function AccountProfilePasswordCard({
             className="space-y-4"
           >
             <PasswordInput
-              id="current-password"
+              id={`${id}-current-password`}
               name="currentPassword"
               label={t("account.currentPassword")}
               value={currentPassword}
@@ -76,7 +76,7 @@ export function AccountProfilePasswordCard({
             />
             <div className="space-y-1">
               <PasswordInput
-                id="new-password"
+                id={`${id}-new-password`}
                 name="newPassword"
                 label={t("account.newPassword")}
                 value={newPassword}
@@ -86,34 +86,12 @@ export function AccountProfilePasswordCard({
                 className="min-h-11"
               />
 
-              <div className="space-y-2 mt-2">
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
-                  <span className="min-w-0 text-xs leading-snug text-muted-foreground">
-                    {t("account.passwordRulesHint")}
-                  </span>
-                  {newPassword && passwordStrength.key && (
-                    <span className="shrink-0 font-semibold text-foreground">
-                      {t(passwordStrength.key)}
-                    </span>
-                  )}
-                </div>
-                {newPassword && (
-                  <div className="grid grid-cols-5 gap-1.5 h-1.5 w-full mt-1.5">
-                    {[1, 2, 3, 4, 5].map((level) => (
-                      <div
-                        key={level}
-                        className={`h-full rounded-full transition-all duration-300 ${
-                          passwordStrength.score >= level ? passwordStrength.colorClass : "bg-muted"
-                        }`}
-                      />
-                    ))}
-                  </div>
-                )}
-              </div>
+              <p className="text-xs leading-snug text-muted-foreground">{t("account.passwordRulesHint")}</p>
+              <PasswordStrengthMeter password={newPassword} />
             </div>
             <div className="space-y-1">
               <PasswordInput
-                id="confirm-password"
+                id={`${id}-confirm-password`}
                 name="confirmPassword"
                 label={t("account.confirmPassword")}
                 value={confirmPassword}
@@ -131,25 +109,9 @@ export function AccountProfilePasswordCard({
                 <FieldErrorMessage message={t("account.passwordMismatch")} />
               ) : null}
             </div>
-            <div className="flex flex-wrap gap-2 pt-2">
-              <Button
-                type="submit"
-                variant="outline"
-                disabled={passwordBusy || !currentPassword || !newPassword || newPassword !== confirmPassword}
-                className="w-full sm:w-auto min-h-11"
-              >
-                {passwordBusy ? <Loader2 className="h-4 w-4 animate-spin" /> : t("account.changePassword")}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                onClick={onCancelPasswordChange}
-                disabled={passwordBusy}
-                className="w-full sm:w-auto min-h-11"
-              >
-                {t("common.cancel")}
-              </Button>
-            </div>
+            <FormSubmitActions submitLabel={t("account.changePassword")} pending={passwordBusy}
+              variant="secondary" disabled={!currentPassword || !newPassword || newPassword !== confirmPassword}
+              cancel={{ label: t("common.cancel"), onClick: onCancelPasswordChange }} />
           </form>
         )}
       </CardContent>

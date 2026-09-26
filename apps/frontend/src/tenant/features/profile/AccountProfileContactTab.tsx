@@ -1,7 +1,7 @@
 import type React from "react";
-import { Loader2, ShieldCheck, User } from "lucide-react";
+import { ShieldCheck, User } from "lucide-react";
 import { getPrimaryEmail, getPrimaryPhone, normalizePhoneInput, type TenantUserProfile } from "@mms/shared";
-import { Button } from "@/components/ui/button";
+import { FormSubmitActions } from "@/components/ui/FormSubmitActions";
 import { Card, CardContent } from "@/components/ui/card";
 import { CardTitleBar } from "@/components/ui/CardTitleBar";
 import { Input } from "@/components/ui/input";
@@ -106,11 +106,8 @@ export function AccountProfileContactTab({
               />
               <p className="text-xs text-muted-foreground mt-1">{t("account.contactEmailHint")}</p>
             </div>
-            <div className="pt-2">
-              <Button type="submit" disabled={savingContact || !contactDirty} className="w-full sm:w-auto min-h-11 px-6">
-                {savingContact ? <Loader2 className="h-4 w-4 animate-spin" /> : t("account.saveContact")}
-              </Button>
-            </div>
+            <FormSubmitActions submitLabel={t("account.saveContact")} pending={savingContact}
+              disabled={!contactDirty} />
           </form>
         )}
       </CardContent>

@@ -3,7 +3,6 @@ import { calculateProfileCompleteness, type FieldConfig } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTenantProfile } from '@/tenant/hooks/useTenantProfile';
 import { genderAvatarGradient } from '@/lib/semanticTone';
-import { getPasswordStrength } from '@/tenant/features/profile/passwordStrength';
 import { useAccountProfileContactActions } from '@/tenant/features/profile/hooks/useAccountProfileContactActions';
 import { useAccountProfileSecurityActions } from '@/tenant/features/profile/hooks/useAccountProfileSecurityActions';
 
@@ -25,10 +24,6 @@ export function useAccountProfilePageController() {
 
   const avatarGradient = (() => {
     return genderAvatarGradient(profile?.contact?.gender ?? '');
-  })();
-
-  const passwordStrength = (() => {
-    return getPasswordStrength(security.newPassword);
   })();
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
@@ -60,7 +55,6 @@ export function useAccountProfilePageController() {
     loginVerified,
     completeness,
     avatarGradient,
-    passwordStrength,
     handleFileChange,
     handleAvatarCrop,
   };

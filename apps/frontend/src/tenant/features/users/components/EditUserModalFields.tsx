@@ -7,6 +7,7 @@ import {
   type WorkspaceRole,
   type ModuleCustomField,
 } from '@mms/shared';
+import { WarningCallout } from '@/components/ui/WarningCallout';
 import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -43,9 +44,8 @@ export function EditUserModalFields({
   return (
     <form className="space-y-4" onSubmit={onSubmit}>
       {!canManageThisUser && (
-        <div className="rounded-lg border border-destructive/30 bg-destructive/10 p-3 text-xs text-destructive">
-          {t('users.errors.cannotModifySuperAdmin')}
-        </div>
+        <WarningCallout tone="destructive" density="compact" role="alert"
+          description={t('users.errors.cannotModifySuperAdmin')} />
       )}
       <FormField
         control={form.control}

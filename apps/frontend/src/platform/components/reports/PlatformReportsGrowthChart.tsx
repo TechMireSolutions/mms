@@ -1,3 +1,5 @@
+import { ChartAreaGradient } from '@/components/dashboard-widgets/charts/chartPrimitives';
+import { PlatformCountTooltip } from '@/platform/components/reports/platformChartTooltips';
 import React, { useId, useState } from 'react';
 import {
   AreaChart,
@@ -77,24 +79,12 @@ export function PlatformReportsGrowthChart({ workspaces }: PlatformReportsGrowth
     >
       <AreaChart data={growthTrendData} margin={{ top: 10, right: 20, left: -10, bottom: 0 }}>
         <defs>
-          <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
-            <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.4} />
-            <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0.0} />
-          </linearGradient>
+          <ChartAreaGradient id={gradientId} color="hsl(var(--primary))" opacity={0.4} />
         </defs>
         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.6} />
         <XAxis dataKey="period" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} />
         <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} allowDecimals={false} />
-        <Tooltip
-          contentStyle={{
-            backgroundColor: 'hsl(var(--card))',
-            borderColor: 'hsl(var(--border))',
-            borderRadius: '0.75rem',
-            boxShadow: 'var(--shadow-surface)',
-            fontSize: '12px',
-            fontWeight: 'bold',
-          }}
-        />
+        <Tooltip content={<PlatformCountTooltip />} />
         <Area
           type="monotone"
           dataKey="cumulative"

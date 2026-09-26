@@ -2,7 +2,6 @@ import type React from "react";
 import type { TenantUserProfile } from "@mms/shared";
 import { AccountProfileLoginEmailCard } from "./AccountProfileLoginEmailCard";
 import { AccountProfilePasswordCard } from "./AccountProfilePasswordCard";
-import type { PasswordStrengthResult } from "./passwordStrength";
 
 export interface AccountProfileSecurityTabProps {
   profile: TenantUserProfile;
@@ -19,7 +18,6 @@ export interface AccountProfileSecurityTabProps {
   passwordBusy: boolean;
   showEmailForm: boolean;
   showPasswordForm: boolean;
-  passwordStrength: PasswordStrengthResult;
   onNewLoginEmailChange: (value: string) => void;
   onLoginPasswordChange: (value: string) => void;
   onVerifyCodeChange: (value: string) => void;
@@ -51,7 +49,6 @@ export function AccountProfileSecurityTab({
   passwordBusy,
   showEmailForm,
   showPasswordForm,
-  passwordStrength,
   onNewLoginEmailChange,
   onLoginPasswordChange,
   onVerifyCodeChange,
@@ -95,7 +92,6 @@ export function AccountProfileSecurityTab({
         confirmPassword={confirmPassword}
         passwordBusy={passwordBusy}
         showPasswordForm={showPasswordForm}
-        passwordStrength={passwordStrength}
         onCurrentPasswordChange={onCurrentPasswordChange}
         onNewPasswordChange={onNewPasswordChange}
         onConfirmPasswordChange={onConfirmPasswordChange}

@@ -1,5 +1,5 @@
 import React from 'react';
-import { estimatePasswordStrength } from '@mms/shared';
+import { getPasswordStrength } from '@/lib/passwordStrength';
 import { useTranslation } from '@/hooks/useTranslation';
 import { cn } from '@/lib/utils';
 
@@ -18,8 +18,7 @@ export function PasswordStrengthMeter({
 
   if (!password) return null;
 
-  const { score: rawScore } = estimatePasswordStrength(password);
-  const score = rawScore === 0 ? 0 : Math.min(4, rawScore);
+  const { score, colorClass, key } = getPasswordStrength(password);
 
   const checks = [
     { label: t('auth.passwordCheckLength'), pass: password.length >= 8 },
@@ -28,45 +27,30 @@ export function PasswordStrengthMeter({
     { label: t('auth.passwordCheckSymbol'), pass: /[^A-Za-z0-9]/.test(password) },
   ];
 
-  const strengthColorCls =
-    score <= 1
-      ? 'bg-destructive text-destructive'
-      : score === 2
-        ? 'bg-warning text-warning'
-        : score === 3
-          ? 'bg-primary text-primary'
-          : 'bg-success text-success';
-
-  const strengthLabel =
-    score <= 1
-      ? t('auth.passwordStrengthWeak')
-      : score === 2
-        ? t('auth.passwordStrengthFair')
-        : score === 3
-          ? t('auth.passwordStrengthGood')
-          : t('auth.passwordStrengthStrong');
+  const strengthLabel = key ? t(key) : t('account.passwordStrengthVeryWeak');
 
   return (
     <div className={cn('space-y-2 pt-1', className)} aria-live="polite">
-      <div className="flex items-center justify-between text-xs">
+      <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
         <span className="text-muted-foreground font-medium">{t('auth.passwordStrength')}</span>
         <span className="font-semibold text-xs capitalize">{strengthLabel}</span>
       </div>
 
       <div
-        className="grid grid-cols-4 gap-1.5 h-1.5 rounded-full overflow-hidden bg-muted"
+        className="grid grid-cols-5 gap-1.5 h-1.5 rounded-full overflow-hidden bg-muted"
         role="meter"
         aria-valuenow={score}
         aria-valuemin={0}
-        aria-valuemax={4}
-        aria-label={strengthLabel}
+        aria-valuemax={5}
+        aria-label={t('auth.passwordStrength')}
+        aria-valuetext={strengthLabel}
       >
-        {[1, 2, 3, 4].map((step) => (
+        {[1, 2, 3, 4, 5].map((step) => (
           <div
             key={step}
             className={cn(
-              'h-full transition-all duration-300',
-              score >= step ? strengthColorCls.split(' ')[0] : 'bg-transparent',
+              'h-full transition-colors duration-300 motion-reduce:transition-none',
+              score >= step ? colorClass : 'bg-transparent',
             )}
           />
         ))}
