@@ -152,7 +152,12 @@ export async function resetWorkspaceAdminPassword(
 
   const db = getDb();
   const users = await db
-    .select()
+    .select({
+      id: tenantUsers.id,
+      role: tenantUsers.role,
+      loginEmail: tenantUsers.loginEmail,
+      createdAt: tenantUsers.createdAt,
+    })
     .from(tenantUsers)
     .where(
       and(
