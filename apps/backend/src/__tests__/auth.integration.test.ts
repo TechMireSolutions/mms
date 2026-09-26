@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { hashRefreshToken } from '../services/auth/authCookieService.js';
 import { ContactUniqueFieldError } from '../services/contactUniqueValidationService.js';
 import { signTenantToken } from './helpers/tokens.js';
@@ -163,7 +163,16 @@ vi.mock('../db/repositories/platformActivityLogsRepository.js', () => ({
 }));
 
 import { buildApp } from '../app.js';
+import { resetServerConfigCacheForTesting } from '../config/serverConfig.js';
 import { PLATFORM_ACCESS_COOKIE } from '../services/platform/platformCookieService.js';
+import { unblockTenant } from '../services/session.service.js';
+
+// Never let state from one test leak into the next: production-mode tests cache
+// server config, and the workspace-delete test blocklists the demo tenant.
+afterEach(async () => {
+  resetServerConfigCacheForTesting();
+  await unblockTenant('demo');
+});
 
 describe('auth routes', () => {
   beforeEach(() => {
@@ -512,6 +521,14 @@ describe('auth routes', () => {
 describe('platform auth routes', () => {
   beforeEach(() => {
     process.env.JWT_SECRET = 'test-secret';
+    mockVerifyPlatformUserPassword.mockReset().mockResolvedValue(true);
+    mockDeleteWorkspace.mockReset().mockResolvedValue({
+      id: 'ws-demo',
+      subdomain: 'demo',
+      madrasaName: 'Demo Madrasa',
+      createdAt: '2026-01-01T00:00:00.000Z',
+      enabled: true,
+    });
     mockHasPlatformUsers.mockReset().mockResolvedValue(true);
     mockFindPlatformUserByEmail.mockReset().mockResolvedValue(null);
     mockVerifyPassword.mockReset().mockResolvedValue(true);
