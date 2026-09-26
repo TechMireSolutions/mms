@@ -34,6 +34,8 @@ export interface ConfirmAlertDialogProps {
   onConfirm: (reason?: string) => void | boolean | Promise<void | boolean>;
   destructive?: boolean;
   optionalReason?: ConfirmAlertDialogOptionalReason;
+  /** Extra fields rendered between the description and the footer. */
+  children?: React.ReactNode;
 }
 
 /** Accessible confirmation dialog — replaces `window.confirm` in module flows. */
@@ -47,6 +49,7 @@ export function ConfirmAlertDialog({
   onConfirm,
   destructive = false,
   optionalReason,
+  children,
 }: ConfirmAlertDialogProps): React.JSX.Element {
   const { t } = useTranslation();
   const [reason, setReason] = useState("");
@@ -102,6 +105,7 @@ export function ConfirmAlertDialog({
             />
           </div>
         )}
+        {children}
         <AlertDialogFooter>
           <AlertDialogCancel disabled={confirming}>
             {cancelLabel ?? t("common.cancel")}

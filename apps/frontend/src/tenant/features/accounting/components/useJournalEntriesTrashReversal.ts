@@ -137,7 +137,7 @@ export function useJournalEntriesTrashReversal({
     setPendingReverseEntry(entry);
   };
 
-  const confirmReverse = async (): Promise<void> => {
+  const confirmReverse = async (date?: string): Promise<void> => {
     const entry = pendingReverseEntry;
     if (!entry || !onChange) return;
     /**
@@ -149,7 +149,7 @@ export function useJournalEntriesTrashReversal({
     reverseInFlightRef.current = true;
     setPendingReverseEntry(null);
     try {
-      const reversal = await reverseJournalEntry(entry, entries, (updater) => onChange(updater));
+      const reversal = await reverseJournalEntry(entry, entries, (updater) => onChange(updater), date);
       // The reversal is posted immediately, so name the reference: without it
       // the user cannot tell which row in the list now offsets the entry.
       notify.success(t("accounting.journal.alerts.reversalPosted", { ref: reversal.ref }));

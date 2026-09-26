@@ -181,6 +181,8 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "accounting.journal.alerts.cannotDeletePosted": "لا يمكن حذف قيد مرحل. يرجى استخدام خيار العكس بدلاً من ذلك.",
   "accounting.journal.alerts.deleteDraftConfirm": "هل تريد حذف هذا القيد المسودة؟",
   "accounting.journal.alerts.reverseConfirm": "هل تريد ترحيل قيد عكسي للقيد {ref}؟ يُرحّل قيد التصحيح فورًا وتتغير أرقام دفتر الأستاذ.",
+  "accounting.journal.alerts.reversalDateLabel": "تاريخ القيد العكسي",
+  "accounting.journal.alerts.reversalDateHint": "الافتراضي هو تاريخ اليوم. استخدم التاريخ الأصلي ({date}) فقط لتصحيح خطأ في فترة لا تزال مفتوحة.",
   "accounting.journal.alerts.reverseFailed": "تعذّر عكس {ref}.",
   "accounting.journal.alerts.reversalPosted": "تم ترحيل قيد العكس {ref}.",
   "accounting.journal.dashboard.action.addExpense": "إضافة مصروف",

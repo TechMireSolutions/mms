@@ -179,6 +179,8 @@ export const APP_TRANSLATIONS_EN = {
   "accounting.journal.alerts.cannotDeletePosted": "Cannot delete a posted entry. Use Reverse instead.",
   "accounting.journal.alerts.deleteDraftConfirm": "Delete This Draft Entry?",
   "accounting.journal.alerts.reverseConfirm": "Post a reversal entry for {ref}? The correcting entry is posted immediately and changes the ledger figures.",
+  "accounting.journal.alerts.reversalDateLabel": "Reversal date",
+  "accounting.journal.alerts.reversalDateHint": "Defaults to today. Use the original date ({date}) only to correct a mistake in a period that is still open.",
   "accounting.journal.alerts.reverseFailed": "Could not reverse {ref}.",
   "accounting.journal.alerts.reversalPosted": "Reversal {ref} posted.",
   "accounting.journal.dashboard.action.addExpense": "Add Expense",

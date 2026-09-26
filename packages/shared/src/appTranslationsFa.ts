@@ -185,6 +185,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "accounting.journal.alerts.cannotDeletePosted": "امکان حذف سند صادر شده وجود ندارد. لطفاً از گزینه برگشت سند استفاده کنید.",
   "accounting.journal.alerts.deleteDraftConfirm": "آیا از حذف این پیش‌نویس اطمینان دارید؟",
   "accounting.journal.alerts.reverseConfirm": "آیا سند برگشتی برای سند شماره {ref} ثبت شود؟ سند اصلاحی بی‌درنگ ثبت می‌شود و ارقام دفتر تغییر می‌کند.",
+  "accounting.journal.alerts.reversalDateLabel": "تاریخ سند برگشتی",
+  "accounting.journal.alerts.reversalDateHint": "پیش‌فرض تاریخ امروز است. تاریخ اصلی ({date}) را فقط برای اصلاح اشتباه در دوره‌ای که هنوز باز است به کار ببرید.",
   "accounting.journal.alerts.reverseFailed": "برگشت سند {ref} انجام نشد.",
   "accounting.journal.alerts.reversalPosted": "سند برگشت {ref} ثبت شد.",
   "accounting.journal.dashboard.action.addExpense": "ثبت هزینه",

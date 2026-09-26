@@ -115,8 +115,15 @@ export function computeLedger(
  * the journal list. Swapped debit/credit lines are balanced by construction and
  * the server accepts a balanced posted write into an open period; a closed
  * period is refused there and now surfaced to the user.
+ *
+ * `date` defaults to today; the user may pick another (e.g. the original date to
+ * correct a mistake in a still-open period).
  */
-export function createReversalEntry(entry: JournalEntry, allEntries: JournalEntry[]): JournalEntry {
+export function createReversalEntry(
+  entry: JournalEntry,
+  allEntries: JournalEntry[],
+  date: string = todayISO(),
+): JournalEntry {
   const count = allEntries.filter(e => e.ref.startsWith("REV-")).length + 1;
   const nextRef = `REV-${entry.ref}-${count}`;
   const reversedLines = entry.lines.map(line => ({
@@ -128,7 +135,7 @@ export function createReversalEntry(entry: JournalEntry, allEntries: JournalEntr
   }));
   return {
     id: `je_${Math.random().toString(36).substring(2, 9)}`,
-    date: todayISO(),
+    date,
     ref: nextRef,
 
     description: `Reversal of Entry ${entry.ref}: ${entry.description}`,
@@ -137,10 +144,11 @@ export function createReversalEntry(entry: JournalEntry, allEntries: JournalEntr
     created_by: "System",
     tags: ["Reversal"],
     attachments: [],
-    fiscal_year: entry.fiscal_year,
-    // Carry the resolved fiscal-year FK too: without it the now-posted reversal
-    // relies on label/date resolution to land inside the right period.
-    fiscal_year_id: entry.fiscal_year_id,
+    // The fiscal year is not copied from the original: the server prefers a
+    // declared year over the date, so a reversal dated in a later period would be
+    // filed under (or locked by) the original's year. It resolves from `date`.
+    fiscal_year: "",
+    fiscal_year_id: undefined,
     lines: reversedLines,
     reversed_ref: entry.ref
   };

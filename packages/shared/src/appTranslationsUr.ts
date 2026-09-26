@@ -181,6 +181,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "accounting.journal.alerts.cannotDeletePosted": "پوسٹ شدہ اندراج کو حذف نہیں کیا جا سکتا۔ براہ کرم ریورس کا اختیار استعمال کریں۔",
   "accounting.journal.alerts.deleteDraftConfirm": "کیا آپ اس ڈرافٹ کو حذف کرنا چاہتے ہیں؟",
   "accounting.journal.alerts.reverseConfirm": "کیا {ref} کے لیے ریورسل اندراج پوسٹ کیا جائے؟ تصحیحی اندراج فوراً پوسٹ ہو جائے گا اور کھاتوں کے اعداد بدل جائیں گے۔",
+  "accounting.journal.alerts.reversalDateLabel": "ریورسل کی تاریخ",
+  "accounting.journal.alerts.reversalDateHint": "بطورِ طے شدہ آج کی تاریخ۔ اصل تاریخ ({date}) صرف اسی صورت میں استعمال کریں جب کسی ایسی مدت کی غلطی درست کرنی ہو جو ابھی کھلی ہے۔",
   "accounting.journal.alerts.reverseFailed": "{ref} ریورس نہیں ہو سکا۔",
   "accounting.journal.alerts.reversalPosted": "ریورسل {ref} پوسٹ ہو گیا۔",
   "accounting.journal.dashboard.action.addExpense": "اخراجات شامل کریں",

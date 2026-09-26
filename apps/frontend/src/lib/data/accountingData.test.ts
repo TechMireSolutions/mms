@@ -88,12 +88,20 @@ describe('createReversalEntry', () => {
     expect(reversal.source_type).toBe('reversal');
     expect(reversal.reversed_ref).toBe('JE-0001');
     expect(reversal.ref).toBe('REV-JE-0001-1');
-    expect(reversal.fiscal_year_id).toBe('fy-2026');
+    expect(reversal.date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
     expect(reversal.lines.map((line) => [line.debit, line.credit])).toEqual([
       [0, 0.1],
       [0, 0.2],
       [0.3, 0],
     ]);
+  });
+
+  it('uses the chosen date and lets the server resolve the fiscal year from it', () => {
+    const original = balancedEntry();
+    const reversal = createReversalEntry(original, [original], '2027-01-15');
+    expect(reversal.date).toBe('2027-01-15');
+    expect(reversal.fiscal_year_id).toBeUndefined();
+    expect(reversal.fiscal_year).toBe('');
   });
 });
 
