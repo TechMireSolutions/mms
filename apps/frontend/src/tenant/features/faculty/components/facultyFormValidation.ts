@@ -33,9 +33,11 @@ export function focusTeacherValidationField(formInstanceId: string, fieldId: str
 }
 
 export const DUPLICATE_ERROR_KEYS: Record<TeacherDuplicateReason, AppTranslationKey> = {
-  contact: "teachers.form.contactAlreadyTeacher",
-  employeeId: "teachers.form.duplicateEmployeeId",
+  contact: "faculty.form.contactAlreadyTeacher",
+  employeeId: "faculty.form.duplicateEmployeeId",
 };
+export const FACULTY_DUPLICATE_ERROR_KEYS = DUPLICATE_ERROR_KEYS;
+
 
 export interface TeacherDuplicateCheckInput {
   teacherId?: string;
@@ -91,3 +93,11 @@ export function teacherValidationErrorsByField(
   }
   return byField;
 }
+
+export const focusFacultyValidationField = focusTeacherValidationField;
+export const facultyValidationErrorsByField = teacherValidationErrorsByField;
+export const validateFacultyDraft = validateTeacherDraft;
+export const checkFacultyFormDuplicate = checkTeacherFormDuplicate;
+export type FacultyDuplicateCheckInput = TeacherDuplicateCheckInput;
+export type FacultyValidationContext = TeacherValidationContext;
+

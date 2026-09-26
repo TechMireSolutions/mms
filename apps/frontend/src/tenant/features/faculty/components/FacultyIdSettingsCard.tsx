@@ -45,7 +45,7 @@ export function FacultyIdSettingsCard({
 
   return (
     <SectionCard
-      title={t("teachers.settings.idSectionTitle")}
+      title={t("faculty.settings.idSectionTitle") || t("teachers.settings.idSectionTitle")}
       icon={Hash}
       accentColor="primary"
       className={SETUP_SECTION_CARD_CLASS}
@@ -53,7 +53,7 @@ export function FacultyIdSettingsCard({
       <div className="space-y-4">
         {/* Master Auto-generation switch */}
         <ToggleRow
-          label={t("teachers.settings.autoGenerateId")}
+          label={t("faculty.settings.autoGenerateId") || t("teachers.settings.autoGenerateId")}
           value={settingsDraft.autoGenerateId}
           onChange={(value) => upd("autoGenerateId", value)}
         />
@@ -64,8 +64,8 @@ export function FacultyIdSettingsCard({
             <FacultyIdLivePreview
               livePreview={livePreview}
               formulaTemplate={formulaTemplate}
-              previewLabel={t("teachers.settings.preview")}
-              templateLabel={t("teachers.settings.idTemplate")}
+              previewLabel={t("faculty.settings.preview") || t("teachers.settings.preview")}
+              templateLabel={t("faculty.settings.idTemplate") || t("teachers.settings.idTemplate")}
             />
 
             {/* Core Parameters Grid: Prefix, Year Format, Sequence Digits, Delimiter */}
@@ -81,13 +81,13 @@ export function FacultyIdSettingsCard({
             {/* Starting Sequence & Live Telemetry Box */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <Field
-                label={t("teachers.settings.idStartSeq")}
-                hint={t("teachers.settings.idStartSeqHint")}
-                id="teacher-idStartSeq"
+                label={t("faculty.settings.idStartSeq") || t("teachers.settings.idStartSeq")}
+                hint={t("faculty.settings.idStartSeqHint") || t("teachers.settings.idStartSeqHint")}
+                id="faculty-idStartSeq"
               >
                 <Input
-                  id="teacher-idStartSeq"
-                  name="teacher-idStartSeq"
+                  id="faculty-idStartSeq"
+                  name="faculty-idStartSeq"
                   type="number"
                   min="1"
                   className={FORM_INPUT}
@@ -98,15 +98,15 @@ export function FacultyIdSettingsCard({
 
               <div className="flex flex-col justify-center p-3 rounded-lg border border-border/60 bg-muted/25 space-y-1">
                 <span className="text-xs font-medium text-foreground">
-                  {t("teachers.settings.sequenceTelemetry")}
+                  {t("faculty.settings.sequenceTelemetry") || t("teachers.settings.sequenceTelemetry")}
                 </span>
                 <div className="flex flex-wrap items-center gap-2 pt-0.5">
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium bg-background border border-border/80">
-                    <span className="text-muted-foreground">{t("teachers.settings.currentCounter")}</span>
+                    <span className="text-muted-foreground">{t("faculty.settings.currentCounter") || t("teachers.settings.currentCounter")}</span>
                     <span className="font-mono font-semibold text-foreground">{currentSeq}</span>
                   </span>
                   <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-medium bg-background border border-border/80">
-                    <span className="text-muted-foreground">{t("teachers.settings.rolloverYear")}</span>
+                    <span className="text-muted-foreground">{t("faculty.settings.rolloverYear") || t("teachers.settings.rolloverYear")}</span>
                     <span className="font-mono font-semibold text-foreground">{lastYear}</span>
                   </span>
                 </div>
@@ -116,8 +116,8 @@ export function FacultyIdSettingsCard({
             {/* Annual Rollover Toggle */}
             <div className="pt-2 border-t border-border/40">
               <ToggleRow
-                label={t("teachers.settings.idRestartAnnually")}
-                description={t("teachers.settings.idRestartAnnuallyDesc")}
+                label={t("faculty.settings.idRestartAnnually") || t("teachers.settings.idRestartAnnually")}
+                description={t("faculty.settings.idRestartAnnuallyDesc") || t("teachers.settings.idRestartAnnuallyDesc")}
                 value={settingsDraft.idRestartAnnually ?? true}
                 onChange={(value) => upd("idRestartAnnually", value)}
               />

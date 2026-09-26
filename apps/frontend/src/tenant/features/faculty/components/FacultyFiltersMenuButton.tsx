@@ -62,14 +62,14 @@ export function FacultyFiltersMenuButton({
 
   return (
     <ModuleFilterDropdown
-      label={t("teachers.filters")}
+      label={t("faculty.filters") || t("teachers.filters")}
       activeCount={activeFilterCount}
       icon={SlidersHorizontal}
-      clearLabel={t("teachers.clearFilters")}
+      clearLabel={t("faculty.clearFilters") || t("teachers.clearFilters")}
       onClear={onClearFilters}
     >
       <ModuleFilterRadioGroup
-        label={t("teachers.filters")}
+        label={t("faculty.filters") || t("teachers.filters")}
         value={quickFilter}
         options={TEACHERS_QUICK_FILTER_OPTIONS.map((option) => ({
           value: option.id,
@@ -83,7 +83,7 @@ export function FacultyFiltersMenuButton({
       <ModuleFilterDivider />
 
       <ModuleFilterCheckboxGroup
-        label={t("teachers.filter.status")}
+        label={t("faculty.filter.status") || t("teachers.filter.status")}
         options={statusOptions.map((status) => ({
           value: status,
           label: facultyStatusLabel(t, status),
@@ -95,10 +95,10 @@ export function FacultyFiltersMenuButton({
       <ModuleFilterDivider />
 
       <ModuleFilterRadioGroup
-        label={t("teachers.filter.gender")}
+        label={t("faculty.filter.gender") || t("teachers.filter.gender")}
         value={filterGender}
         options={[
-          { value: "all", label: t("teachers.filter.allGenders") },
+          { value: "all", label: t("faculty.filter.allGenders") || t("teachers.filter.allGenders") },
           ...genderFilters.map((gender) => ({
             value: gender,
             label: formatContactGenderLabel(gender, t),
@@ -112,10 +112,10 @@ export function FacultyFiltersMenuButton({
         <>
           <ModuleFilterDivider />
           <ModuleFilterRadioGroup
-            label={t("teachers.filter.specialization")}
+            label={t("faculty.filter.specialization") || t("teachers.filter.specialization")}
             value={filterSpecialization}
             options={[
-              { value: "all", label: t("teachers.filter.allSpecializations") },
+              { value: "all", label: t("faculty.filter.allSpecializations") || t("teachers.filter.allSpecializations") },
               ...specializationOptions.map((specialization) => ({
                 value: specialization,
                 label: specialization,
@@ -130,7 +130,7 @@ export function FacultyFiltersMenuButton({
         <>
           <ModuleFilterDivider />
           <ModuleFilterRadioGroup
-            label={t("teachers.sortBy")}
+            label={t("faculty.sortBy") || t("teachers.sortBy")}
             value={sortField}
             options={sortOptions.map((option) => ({
               value: option.field,

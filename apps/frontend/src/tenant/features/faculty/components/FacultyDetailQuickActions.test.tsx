@@ -41,9 +41,9 @@ describe("TeacherDetailQuickActions Component", () => {
       />,
     );
 
-    expect(html).toContain("teachers.detail.call");
-    expect(html).toContain("teachers.list.actionWhatsApp");
-    expect(html).toContain("teachers.list.actionSms");
-    expect(html).toContain("teachers.list.actionEmail");
+    expect(html).toContain("faculty.detail.call");
+    expect(html).toContain("faculty.list.actionWhatsApp");
+    expect(html).toContain("faculty.list.actionSms");
+    expect(html).toContain("faculty.list.actionEmail");
   });
 });

@@ -47,7 +47,10 @@ export function FacultyEmploymentEmployeeIdField({
             icon={Hash}
             value={extractEmployeeId(employeeId)}
             onChange={(event) => onDraftChange({ employeeId: event.target.value })}
-            placeholder={t("teachers.form.employeeIdPlaceholder", { prefix: idPrefix })}
+            placeholder={
+              t("faculty.form.employeeIdPlaceholder", { prefix: idPrefix }) ||
+              t("teachers.form.employeeIdPlaceholder", { prefix: idPrefix })
+            }
             disabled={autoGenerateId && !isExistingFaculty && hasNextEmployeeId}
             aria-invalid={Boolean(error)}
             aria-describedby={error ? "employeeId-error" : undefined}
@@ -62,8 +65,8 @@ export function FacultyEmploymentEmployeeIdField({
             className="min-h-11 min-w-11 shrink-0 border-border/70 hover:bg-muted"
             onClick={onRegenerateEmployeeId}
             disabled={isFetchingNextEmployeeId}
-            title={t("teachers.form.regenerateId")}
-            aria-label={t("teachers.form.regenerateId")}
+            title={t("faculty.form.regenerateId") || t("teachers.form.regenerateId")}
+            aria-label={t("faculty.form.regenerateId") || t("teachers.form.regenerateId")}
           >
             <RotateCw className={cn("h-4 w-4 text-muted-foreground", isFetchingNextEmployeeId && "animate-spin text-primary")} />
           </Button>

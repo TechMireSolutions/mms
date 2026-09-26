@@ -46,7 +46,7 @@ export function useFacultyWorkPanelProps({
   canDelete,
   canExport,
 }: UseFacultyWorkPanelPropsInput) {
-  const { workPageQuery, workTeachers, workPageData, useServerWork, handleBulkExport } = workTierState;
+  const { workPageQuery, workTeachers, workFaculty, workPageData, useServerWork, handleBulkExport } = workTierState;
 
   return useFacultyPageTabPanelProps(effectiveTab, {
     search: filters.search,
@@ -71,7 +71,8 @@ export function useFacultyWorkPanelProps({
     updateUserColumnLayout: columnLayout.updateUserColumnLayout,
     onResetLayout: columnLayout.resetColumnLayout,
     customizerLabels: columnLayout.customizerLabels,
-    teachers: workTeachers,
+    faculty: workFaculty ?? workTeachers,
+    teachers: workFaculty ?? workTeachers,
     workPageQuery: {
       data: workPageData,
       isLoading: workPageQuery.isLoading,
@@ -101,7 +102,7 @@ export function useFacultyWorkPanelProps({
     openEditForm: formState.openEdit,
     handleRestore: pageActions.handleRestore,
     handleBulkStatusChange: filters.showDeleted ? undefined : pageActions.handleBulkStatusChange,
-    bulkStatusPending: mutations.bulkUpdateTeacherStatus.isPending,
+    bulkStatusPending: mutations.bulkUpdateFacultyStatus.isPending,
     handleBulkSpecializationChange: filters.showDeleted ? undefined : pageActions.handleBulkSpecializationChange,
     bulkSpecializationPending: pageActions.isBulkSpecializationPending,
     handleWhatsApp: filters.showDeleted ? undefined : pageActions.handleWhatsApp,

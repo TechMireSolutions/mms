@@ -2,7 +2,7 @@ import React from "react";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Contact, Teacher } from "@mms/shared";
-import { TeacherFormFooter } from "./FacultyFormFooter";
+import { FacultyFormFooter, TeacherFormFooter } from "./FacultyFormFooter";
 
 const mockContact: Contact = {
   id: "cnt-1",
@@ -29,10 +29,10 @@ const mockT = (key: string, params?: Record<string, string | number>) => {
   return key;
 };
 
-describe("TeacherFormFooter Component", () => {
+describe("FacultyFormFooter Component", () => {
   it("renders linked contact name, employee ID, and status badge", () => {
     const html = renderToStaticMarkup(
-      <TeacherFormFooter
+      <FacultyFormFooter
         linkedContact={mockContact}
         teacherDraft={mockTeacherDraft}
         requireContactLink={false}
@@ -48,7 +48,7 @@ describe("TeacherFormFooter Component", () => {
 
   it("renders contact required banner when contact is required and unlinked", () => {
     const html = renderToStaticMarkup(
-      <TeacherFormFooter
+      <FacultyFormFooter
         linkedContact={null}
         teacherDraft={{}}
         requireContactLink={true}
@@ -57,12 +57,12 @@ describe("TeacherFormFooter Component", () => {
       />,
     );
 
-    expect(html).toContain("teachers.form.contactRequired");
+    expect(html).toContain("faculty.form.contactRequired");
   });
 
   it("does not render contact required banner when teacherDraft has contactId pending contact hydration", () => {
     const html = renderToStaticMarkup(
-      <TeacherFormFooter
+      <FacultyFormFooter
         linkedContact={null}
         teacherDraft={{ contactId: "cnt-123" }}
         requireContactLink={true}
@@ -71,7 +71,7 @@ describe("TeacherFormFooter Component", () => {
       />,
     );
 
-    expect(html).not.toContain("teachers.form.contactRequired");
+    expect(html).not.toContain("faculty.form.contactRequired");
     expect(html).toBe("");
   });
 

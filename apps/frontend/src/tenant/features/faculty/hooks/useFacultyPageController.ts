@@ -37,7 +37,7 @@ export function useFacultyPageController() {
   const lookups = useFacultyLookupOptions();
   const columnLayout = useFacultyColumnLayout(config.settings);
 
-  const [activeTab, setActiveTab] = usePersistedTabState<string>('teachers_active_tab', 'work');
+  const [activeTab, setActiveTab] = usePersistedTabState<string>('faculty_active_tab', 'work');
   const effectiveTab = resolveModuleTierTab(activeTab, visibleTabs.map((tab) => tab.id));
 
   useEmployeeIdMigration(effectiveTab, canEditSetup);

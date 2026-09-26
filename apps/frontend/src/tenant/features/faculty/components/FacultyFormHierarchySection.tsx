@@ -49,10 +49,12 @@ export function FacultyFormHierarchySection({
               <div className="flex items-center gap-2">
                 <BadgeCheck className="size-4 shrink-0 text-primary" aria-hidden />
                 <div>
-                  <p className="text-sm font-medium text-foreground">{t("teachers.form.hierarchyRank")}</p>
+                  <p className="text-sm font-medium text-foreground">
+                    {t("faculty.form.hierarchyRank") || t("teachers.form.hierarchyRank")}
+                  </p>
                   <p className="text-xs text-muted-foreground">
                     {hierarchyRankPresets.find((preset) => preset.rank === (teacherDraft.hierarchyRank ?? 4))?.label ?? t("common.notSpecified")}
-                    {` · ${t("teachers.form.rankValue", { rank: teacherDraft.hierarchyRank ?? 4 })}`}
+                    {` · ${t("faculty.form.rankValue", { rank: teacherDraft.hierarchyRank ?? 4 }) || t("teachers.form.rankValue", { rank: teacherDraft.hierarchyRank ?? 4 })}`}
                   </p>
                 </div>
               </div>
@@ -63,7 +65,7 @@ export function FacultyFormHierarchySection({
 
           {showSupervisor && (
             <Field
-              label={t("teachers.form.reportingSupervisor")}
+              label={t("faculty.form.reportingSupervisor") || t("teachers.form.reportingSupervisor")}
               id="reportingFacultyId"
               required={isFieldRequired("reportingFacultyId")}
               error={errors.reportingFacultyId}
@@ -75,7 +77,7 @@ export function FacultyFormHierarchySection({
                 disabled={teacherDraft.hierarchyRank === 1}
                 onChange={(val) => onDraftChange({ reportingFacultyId: val || null })}
                 options={[
-                  { value: "", label: t("teachers.form.noSupervisor") },
+                  { value: "", label: t("faculty.form.noSupervisor") || t("teachers.form.noSupervisor") },
                   ...(supervisorCandidates || []).map((cand) => ({
                     value: String(cand.id),
                     label: `${cand.name || cand.employeeId || "Faculty"} (Rank ${cand.hierarchyRank ?? 4}${cand.designation ? ` · ${cand.designation}` : ""})`,
@@ -84,7 +86,7 @@ export function FacultyFormHierarchySection({
               />
               {teacherDraft.hierarchyRank === 1 && (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {t("teachers.form.topLevelRankNotice")}
+                  {t("faculty.form.topLevelRankNotice") || t("teachers.form.topLevelRankNotice")}
                 </p>
               )}
             </Field>

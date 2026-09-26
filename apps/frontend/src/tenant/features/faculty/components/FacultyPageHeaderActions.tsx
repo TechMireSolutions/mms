@@ -2,22 +2,26 @@ import { UserPlus, Download } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export interface TeachersPageHeaderActionsProps {
+export interface FacultyPageHeaderActionsProps {
   canExport: boolean;
   canWrite: boolean;
   viewingDeleted: boolean;
   onExport: () => void;
-  onAddTeacher: () => void;
+  onAddFaculty?: () => void;
+  onAddTeacher?: () => void;
 }
+export type TeachersPageHeaderActionsProps = FacultyPageHeaderActionsProps;
 
-export function TeachersPageHeaderActions({
+export function FacultyPageHeaderActions({
   canExport,
   canWrite,
   viewingDeleted,
   onExport,
+  onAddFaculty,
   onAddTeacher,
-}: TeachersPageHeaderActionsProps): React.JSX.Element {
+}: FacultyPageHeaderActionsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const handleAdd = onAddFaculty ?? onAddTeacher;
 
   return (
     <>
@@ -26,8 +30,8 @@ export function TeachersPageHeaderActions({
           {t("common.export")}
         </ActionButton>
       ) : null}
-      {canWrite && !viewingDeleted ? (
-        <ActionButton variant="primary" icon={UserPlus} onClick={onAddTeacher}>
+      {canWrite && !viewingDeleted && handleAdd ? (
+        <ActionButton variant="primary" icon={UserPlus} onClick={handleAdd}>
           {t("action.addFaculty") || t("action.addTeacher")}
         </ActionButton>
       ) : null}
@@ -35,7 +39,7 @@ export function TeachersPageHeaderActions({
   );
 }
 
-export const FacultyPageHeaderActions = TeachersPageHeaderActions;
-export type FacultyPageHeaderActionsProps = TeachersPageHeaderActionsProps;
+export const TeachersPageHeaderActions = FacultyPageHeaderActions;
+
 
 

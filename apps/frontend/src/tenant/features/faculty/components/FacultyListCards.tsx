@@ -7,7 +7,7 @@ import { useFacultyEntityDescriptor } from "@/tenant/features/faculty/hooks/useF
 import { TeacherCardItem } from "@/tenant/features/faculty/components/FacultyCardItem";
 import type { TeacherListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
 
-export type TeacherListCardsProps = Omit<
+export interface FacultyListCardsProps extends Omit<
   TeacherListContentProps,
   | "sortField"
   | "sortDir"
@@ -18,11 +18,15 @@ export type TeacherListCardsProps = Omit<
   | "hasActiveFilters"
   | "onClearFilters"
   | "onShowActive"
->;
+> {
+  faculty?: TeacherListContentProps["faculty"];
+}
+export type TeacherListCardsProps = FacultyListCardsProps;
 
-export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Element {
+export function FacultyListCards(props: FacultyListCardsProps): React.JSX.Element {
   const {
-    teachers,
+    faculty,
+    teachers: teachersProp,
     selectedIds,
     allSelected,
     someSelected,
@@ -43,27 +47,28 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
     onWhatsApp,
     onEmail,
   } = props;
+  const items = faculty ?? teachersProp ?? [];
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const descriptor = useFacultyEntityDescriptor();
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const pageCountLabel = formatDirectoryPageCountLabel(teachers.length, t, {
-    singular: "teachers.form.teacher",
-    plural: "teachers.table.teachers",
+  const pageCountLabel = formatDirectoryPageCountLabel(items.length, t, {
+    singular: "faculty.form.teacher",
+    plural: "faculty.table.teachers",
   });
 
   return (
     <ModuleDirectoryCards
-      items={teachers}
+      items={items}
       selectedIds={selectedIds}
       onSelectAll={onSelectAll}
       allSelected={allSelected}
       someSelected={someSelected}
-      selectAllLabel={t("teachers.table.selectAll")}
+      selectAllLabel={t("faculty.table.selectAll") || t("teachers.table.selectAll")}
       deselectAllLabel={t("common.deselect")}
-      selectedCountLabel={t("teachers.selectedCount", { count: selectedIds.length })}
+      selectedCountLabel={t("faculty.selectedCount", { count: selectedIds.length }) || t("teachers.selectedCount", { count: selectedIds.length })}
       pageCountLabel={pageCountLabel}
-      checkboxIdPrefix="teachers-cards"
+      checkboxIdPrefix="faculty-cards"
       renderItem={(teacher) => (
         <TeacherCardItem
           key={teacher.id}
@@ -93,5 +98,5 @@ export function TeachersListCards(props: TeacherListCardsProps): React.JSX.Eleme
   );
 }
 
-export type FacultyListCardsProps = TeacherListCardsProps;
-export const FacultyListCards = TeachersListCards;
+export const TeachersListCards = FacultyListCards;
+

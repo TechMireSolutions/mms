@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TeachersPageHeaderActions } from "./FacultyPageHeaderActions";
+import { FacultyPageHeaderActions } from "./FacultyPageHeaderActions";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -9,15 +9,15 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-describe("TeachersPageHeaderActions Component", () => {
-  it("renders export and add teacher buttons when canExport and canWrite are true", () => {
+describe("FacultyPageHeaderActions Component", () => {
+  it("renders export and add faculty buttons when canExport and canWrite are true", () => {
     const html = renderToStaticMarkup(
-      <TeachersPageHeaderActions
+      <FacultyPageHeaderActions
         canExport={true}
         canWrite={true}
         viewingDeleted={false}
         onExport={vi.fn()}
-        onAddTeacher={vi.fn()}
+        onAddFaculty={vi.fn()}
       />,
     );
 
@@ -27,12 +27,12 @@ describe("TeachersPageHeaderActions Component", () => {
 
   it("hides buttons when viewingDeleted is true", () => {
     const html = renderToStaticMarkup(
-      <TeachersPageHeaderActions
+      <FacultyPageHeaderActions
         canExport={true}
         canWrite={true}
         viewingDeleted={true}
         onExport={vi.fn()}
-        onAddTeacher={vi.fn()}
+        onAddFaculty={vi.fn()}
       />,
     );
 

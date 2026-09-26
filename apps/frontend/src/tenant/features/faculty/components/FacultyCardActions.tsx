@@ -41,8 +41,8 @@ export function TeacherCardActions({
   return (
     <DirectoryCardFooterActions
       onView={() => onView(teacher)}
-      viewLabel={t("teachers.actionViewShort")}
-      viewAriaLabel={`${t("teachers.list.viewDetails")} - ${displayName}`}
+      viewLabel={t("faculty.actionViewShort") || t("teachers.actionViewShort")}
+      viewAriaLabel={`${t("faculty.list.viewDetails") || t("teachers.list.viewDetails")} - ${displayName}`}
       overflowActions={
         <TeachersListRowActions
           teacher={teacher}

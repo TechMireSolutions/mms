@@ -50,7 +50,7 @@ export function FacultyEmploymentAcademicFields({
             name="department"
             value={teacherDraft.department ?? ""}
             onChange={(e) => onDraftChange({ department: e.target.value })}
-            placeholder={t("teachers.form.departmentPlaceholder")}
+            placeholder={t("faculty.form.departmentPlaceholder") || t("teachers.form.departmentPlaceholder")}
             className={cn(FORM_INPUT, errors.department && FORM_INPUT_ERROR)}
           />
         </Field>
@@ -97,7 +97,7 @@ export function FacultyEmploymentAcademicFields({
             name="qualification"
             value={teacherDraft.qualification ?? ""}
             onChange={(e) => onDraftChange({ qualification: e.target.value })}
-            placeholder={t("teachers.form.qualificationPlaceholder")}
+            placeholder={t("faculty.form.qualificationPlaceholder") || t("teachers.form.qualificationPlaceholder")}
             className={cn(FORM_INPUT, errors.qualification && FORM_INPUT_ERROR)}
           />
         </Field>

@@ -1,12 +1,14 @@
 import { useEffect, useRef } from "react";
-import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
-import { type TeachersSettings } from "@mms/shared";
+import { useFacultyConfig, useTeacherConfig } from "@/hooks/useStandardModuleConfig";
+import { type FacultySettings, type TeachersSettings } from "@mms/shared";
 import { useModuleSettingsEditor } from "@/tenant/hooks/useModuleSettingsEditor";
-import { useTeachersSetupSaveActions } from "@/tenant/features/faculty/hooks/useFacultySetupSaveActions";
+import { useFacultySetupSaveActions } from "@/tenant/features/faculty/hooks/useFacultySetupSaveActions";
 
-/** Teachers Setup panel state */
-export function useTeachersSetupPanelState() {
-  const config = useTeacherConfig();
+const useConfigHook = useFacultyConfig || useTeacherConfig;
+
+/** Faculty Setup panel state */
+export function useFacultySetupPanelState() {
+  const config = useConfigHook();
   const {
     settings,
     settingsDraft,
@@ -14,7 +16,7 @@ export function useTeachersSetupPanelState() {
     setSaved,
     upd,
     discardDrafts,
-  } = useModuleSettingsEditor<TeachersSettings>({
+  } = useModuleSettingsEditor<FacultySettings | TeachersSettings>({
     config,
   });
 
@@ -22,7 +24,7 @@ export function useTeachersSetupPanelState() {
     saving,
     isPrefsDirty,
     handleSave,
-  } = useTeachersSetupSaveActions({
+  } = useFacultySetupSaveActions({
     settings,
     settingsDraft,
     setSaved,
@@ -53,3 +55,6 @@ export function useTeachersSetupPanelState() {
     discardSetupDrafts,
   };
 }
+
+export const useTeachersSetupPanelState = useFacultySetupPanelState;
+

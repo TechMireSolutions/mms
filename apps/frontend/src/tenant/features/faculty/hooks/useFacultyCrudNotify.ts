@@ -1,17 +1,23 @@
 import type { AppTranslationKey } from "@mms/shared";
 import { useModuleCrudNotify } from "@/lib/useModuleCrudNotify";
 
-export function useTeachersCrudNotify() {
+export function useFacultyCrudNotify() {
   return useModuleCrudNotify({
-    saveFailedKey: "teachers.toast.saveFailed",
-    bulkPartialFailureKey: "teachers.toast.bulkPartial",
-    defaultErrorKey: "teachers.toast.saveFailed",
+    saveFailedKey: "faculty.toast.saveFailed",
+    bulkPartialFailureKey: "faculty.toast.bulkPartial",
+    defaultErrorKey: "faculty.toast.saveFailed",
     messageKeyForBulkFailure,
   });
 }
 
 function messageKeyForBulkFailure(singleSuccessKey: AppTranslationKey): AppTranslationKey {
-  if (singleSuccessKey === "teachers.restoreSuccess") return "teachers.restoreFailed";
-  if (singleSuccessKey === "teachers.toast.statusUpdated") return "teachers.bulkStatusFailed";
-  return "teachers.deleteFailed";
+  if (singleSuccessKey === "faculty.restoreSuccess" || singleSuccessKey === "teachers.restoreSuccess") {
+    return "faculty.restoreFailed";
+  }
+  if (singleSuccessKey === "faculty.toast.statusUpdated" || singleSuccessKey === "teachers.toast.statusUpdated") {
+    return "faculty.bulkStatusFailed";
+  }
+  return "faculty.deleteFailed";
 }
+
+export const useTeachersCrudNotify = useFacultyCrudNotify;

@@ -52,11 +52,11 @@ export function TeachersListRowActions({
 
   return (
     <ModuleRowActionsMenu
-      triggerLabel={t("teachers.table.actions")}
-      viewLabel={t("teachers.list.viewDetails")}
+      triggerLabel={t("faculty.table.actions") || t("teachers.table.actions")}
+      viewLabel={t("faculty.list.viewDetails") || t("teachers.list.viewDetails")}
       editLabel={t("common.edit")}
       deleteLabel={t("common.delete")}
-      restoreLabel={t("teachers.restore")}
+      restoreLabel={t("faculty.restore") || t("teachers.restore")}
       archived={showDeleted}
       canWrite={canWrite}
       canDelete={canDelete}

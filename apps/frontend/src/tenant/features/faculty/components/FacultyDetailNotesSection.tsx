@@ -15,11 +15,11 @@ export function TeacherDetailNotesSection({
 
   return (
     <div className="space-y-2">
-      <DetailSectionTitle>{t("teachers.detail.notesSection")}</DetailSectionTitle>
+      <DetailSectionTitle>{t("faculty.detail.notesSection") || t("teachers.detail.notesSection")}</DetailSectionTitle>
       <div className={cn("p-3.5 border-border/60 text-xs text-foreground space-y-1", WORK_SURFACE_INNER)}>
         <div className="flex items-center gap-2 text-muted-foreground mb-1">
           <FileText className="w-3.5 h-3.5 text-primary" />
-          <span className="text-xs font-bold uppercase">{t("teachers.detail.notesSection")}</span>
+          <span className="text-xs font-bold uppercase">{t("faculty.detail.notesSection") || t("teachers.detail.notesSection")}</span>
         </div>
         <p className="whitespace-pre-wrap leading-relaxed text-muted-foreground">{notes}</p>
       </div>

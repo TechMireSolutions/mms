@@ -47,7 +47,7 @@ export function FacultyManagementTab({ session, onUpdate, canMutate }: FacultyMa
     modalOpen,
   );
 
-  const teachersList = (teachersData?.body?.teachers ?? []) as Teacher[];
+  const teachersList = ((teachersData?.body?.faculty ?? teachersData?.body?.teachers ?? []) as Teacher[]);
 
   const selectedTeacherId = teacherId ? [teacherId] : [];
   const { data: selectedTeachersData } = useTeachersByIds(selectedTeacherId);

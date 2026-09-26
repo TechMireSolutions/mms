@@ -9,11 +9,12 @@ import type { FacultyUserAccountDraft } from "@/tenant/features/faculty/componen
 export function notifyTeacherSaveFailed(t: TranslationFunction, err: unknown, scope: string): void {
   const validationMessage = getApiValidationMessage(err);
   notify.error(
-    t("teachers.toast.saveFailed"),
+    t("faculty.toast.saveFailed") || t("teachers.toast.saveFailed"),
     validationMessage ? { description: validationMessage } : undefined,
   );
   reportClientError(err, { scope });
 }
+export const notifyFacultySaveFailed = notifyTeacherSaveFailed;
 
 export interface SyncUserAccountInput {
   userAccountDraft?: FacultyUserAccountDraft;
@@ -39,7 +40,7 @@ export async function syncUserAccount(input: SyncUserAccountInput): Promise<bool
       if (updateRes.status !== 200) {
         const msg = typeof updateRes.body === "object" && updateRes.body !== null && "message" in updateRes.body
           ? String((updateRes.body as { message?: unknown }).message)
-          : t("teachers.toast.saveFailed");
+          : (t("faculty.toast.saveFailed") || t("teachers.toast.saveFailed"));
         setErrors({ "user.role": msg });
         notify.error(msg);
         return false;
@@ -65,7 +66,7 @@ export async function syncUserAccount(input: SyncUserAccountInput): Promise<bool
     if (createRes.status !== 200) {
       const msg = typeof createRes.body === "object" && createRes.body !== null && "message" in createRes.body
         ? String((createRes.body as { message?: unknown }).message)
-        : t("teachers.toast.saveFailed");
+        : (t("faculty.toast.saveFailed") || t("teachers.toast.saveFailed"));
       setErrors({ "user.create": msg });
       notify.error(msg);
       return false;
@@ -128,3 +129,5 @@ export async function confirmPendingTeacherSave(input: ConfirmPendingTeacherSave
     input.setSaving(false);
   }
 }
+
+export const confirmPendingFacultySave = confirmPendingTeacherSave;

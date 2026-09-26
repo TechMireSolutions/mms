@@ -98,7 +98,7 @@ export function FacultyUserAccountSection({
 
   return (
     <SectionCard
-      title={t("teachers.form.sectionUserAccount")}
+      title={t("faculty.form.sectionUserAccount") || t("teachers.form.sectionUserAccount")}
       icon={ShieldCheck}
       accentColor="primary"
       className="z-elevated"
@@ -106,8 +106,8 @@ export function FacultyUserAccountSection({
       <div className="space-y-4 text-start">
         <div className="flex items-center justify-between gap-4 p-3 rounded-xl border border-border bg-muted/20">
           <div className="space-y-0.5">
-            <p className="text-sm font-semibold text-foreground">{t("teachers.form.grantLoginAccess")}</p>
-            <p className="text-xs text-muted-foreground">{t("teachers.form.grantLoginAccessHint")}</p>
+            <p className="text-sm font-semibold text-foreground">{t("faculty.form.grantLoginAccess") || t("teachers.form.grantLoginAccess")}</p>
+            <p className="text-xs text-muted-foreground">{t("faculty.form.grantLoginAccessHint") || t("teachers.form.grantLoginAccessHint")}</p>
           </div>
           <Switch
             checked={userAccountDraft.enabled}
@@ -118,7 +118,7 @@ export function FacultyUserAccountSection({
                 role: userAccountDraft.role || "teacher",
               })
             }
-            aria-label={t("teachers.form.grantLoginAccess")}
+            aria-label={t("faculty.form.grantLoginAccess") || t("teachers.form.grantLoginAccess")}
           />
         </div>
 

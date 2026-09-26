@@ -1,15 +1,17 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { FacultyForm, TeacherForm } from "./FacultyForm";
+import { FacultyForm } from "./FacultyForm";
 
-let mockControllerState = {
-  errors: {} as Record<string, string>,
-  isFieldEnabled: (_fieldId: string) => true,
-};
+const { mockControllerState } = vi.hoisted(() => ({
+  mockControllerState: {
+    errors: {} as Record<string, string>,
+    isFieldEnabled: (_fieldId: string) => true,
+  },
+}));
 
-vi.mock("@/tenant/features/faculty/components/useFacultyFormController", () => ({
-  useTeacherFormController: () => ({
+vi.mock("@/tenant/features/faculty/components/useFacultyFormController", () => {
+  const getController = () => ({
     t: (key: string) => key,
     dir: "ltr",
     language: "en",
@@ -19,6 +21,7 @@ vi.mock("@/tenant/features/faculty/components/useFacultyFormController", () => (
     isDirty: false,
     defaultSpecialization: "Tajweed",
     specializationOptions: [],
+    designationOptions: [],
     statusOptions: [],
     statusConfig: {},
     autoGenerateId: false,
@@ -26,7 +29,7 @@ vi.mock("@/tenant/features/faculty/components/useFacultyFormController", () => (
     fieldsMap: {},
     linkedContact: { id: "cnt-1", name: "Ustadh Umar" },
     linkedTeacherContactIds: [],
-    idPrefix: "TCH-",
+    idPrefix: "FAC-",
     formInstanceId: "test-tch-inst",
     isFieldEnabled: mockControllerState.isFieldEnabled,
     isFieldRequired: () => false,
@@ -39,8 +42,12 @@ vi.mock("@/tenant/features/faculty/components/useFacultyFormController", () => (
     handleDuplicateDialogOpenChange: vi.fn(),
     confirmDuplicateSave: vi.fn(),
     duplicateErrorKeys: {},
-  }),
-}));
+  });
+  return {
+    useFacultyFormController: getController,
+    useTeacherFormController: getController,
+  };
+});
 
 vi.mock("@/components/ui/FormModal", () => ({
   FormModal: ({
@@ -72,34 +79,35 @@ vi.mock("@/components/ui/FormModal", () => ({
 }));
 
 vi.mock("@/tenant/features/faculty/components/FacultyFormTabContent", () => ({
+  FacultyFormTabContent: ({ activeTab }: { activeTab?: string }) => (
+    <div data-testid="faculty-form-tab-content" data-current-tab={activeTab}>
+      Faculty Tab Content: {activeTab}
+    </div>
+  ),
   TeacherFormTabContent: ({ activeTab }: { activeTab?: string }) => (
     <div data-testid="teacher-form-tab-content" data-current-tab={activeTab}>
-      Teacher Tab Content: {activeTab}
+      Faculty Tab Content: {activeTab}
     </div>
   ),
 }));
 
-describe("TeacherForm Component", () => {
-  it("renders teacher form modal with title, footer, and tab content", () => {
-    mockControllerState = {
-      errors: {},
-      isFieldEnabled: () => true,
-    };
+describe("FacultyForm Component", () => {
+  it("renders faculty form modal with title, footer, and tab content", () => {
+    mockControllerState.errors = {};
+    mockControllerState.isFieldEnabled = () => true;
 
     const html = renderToStaticMarkup(
-      <TeacherForm onClose={vi.fn()} onSave={vi.fn()} />,
+      <FacultyForm onClose={vi.fn()} onSave={vi.fn()} />,
     );
 
-    expect(html).toContain("teachers.form.addTitle");
+    expect(html).toContain("faculty.form.addTitle");
     expect(html).toContain("Ustadh Umar");
-    expect(html).toContain("Teacher Tab Content: contact");
+    expect(html).toContain("Faculty Tab Content: contact");
   });
 
   it("provides tabs for contact, employment, designation, hierarchy, account, and notes", () => {
-    mockControllerState = {
-      errors: {},
-      isFieldEnabled: () => true,
-    };
+    mockControllerState.errors = {};
+    mockControllerState.isFieldEnabled = () => true;
 
     const html = renderToStaticMarkup(
       <FacultyForm onClose={vi.fn()} onSave={vi.fn()} />,
@@ -114,13 +122,11 @@ describe("TeacherForm Component", () => {
   });
 
   it("calculates tab error counts and displays error badges on affected tabs", () => {
-    mockControllerState = {
-      errors: {
-        employeeId: "Employee ID required",
-        designationStartsOn: "Start date required",
-      },
-      isFieldEnabled: () => true,
+    mockControllerState.errors = {
+      employeeId: "Employee ID required",
+      designationStartsOn: "Start date required",
     };
+    mockControllerState.isFieldEnabled = () => true;
 
     const html = renderToStaticMarkup(
       <FacultyForm onClose={vi.fn()} onSave={vi.fn()} />,
@@ -133,14 +139,12 @@ describe("TeacherForm Component", () => {
   });
 
   it("maps user.* and designation errors to their respective tabs", () => {
-    mockControllerState = {
-      errors: {
-        "user.password": "Password too short",
-        "user.role": "Invalid role",
-        designation: "Designation required",
-      },
-      isFieldEnabled: () => true,
+    mockControllerState.errors = {
+      "user.password": "Password too short",
+      "user.role": "Invalid role",
+      designation: "Designation required",
     };
+    mockControllerState.isFieldEnabled = () => true;
 
     const html = renderToStaticMarkup(
       <FacultyForm onClose={vi.fn()} onSave={vi.fn()} />,

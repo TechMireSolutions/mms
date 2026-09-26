@@ -10,30 +10,34 @@ import {
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { extractEmployeeId } from "@/tenant/features/faculty/components/facultyFormDraft";
 
-export interface TeacherFormFooterProps {
+export interface FacultyFormFooterProps {
   linkedContact?: Contact | null;
   teacherDraft: Partial<Teacher>;
+  facultyDraft?: Partial<Teacher>;
   requireContactLink: boolean;
   statusConfig: Record<string, StatusBadgeConfigItem>;
   t: TranslationFunction;
 }
+export type TeacherFormFooterProps = FacultyFormFooterProps;
 
-export function TeacherFormFooter({
+export function FacultyFormFooter({
   linkedContact,
   teacherDraft,
+  facultyDraft,
   requireContactLink,
   statusConfig,
   t,
-}: TeacherFormFooterProps): React.JSX.Element | null {
+}: FacultyFormFooterProps): React.JSX.Element | null {
+  const draft = facultyDraft ?? teacherDraft;
   if (linkedContact?.name) {
-    const status = resolveTeacherStatus(teacherDraft.status);
-    const employeeId = extractEmployeeId(teacherDraft.employeeId);
+    const status = resolveTeacherStatus(draft.status);
+    const employeeId = extractEmployeeId(draft.employeeId);
     return (
       <div className="flex flex-wrap items-center gap-2.5 text-xs">
         <FormFooterEntityChip>{linkedContact.name}</FormFooterEntityChip>
         <div className="flex items-center gap-1.5">
           <FormFooterBadge>
-            {t("teachers.form.employeeIdBadge", { id: employeeId || t("common.notSpecified") })}
+            {t("faculty.form.employeeIdBadge", { id: employeeId || t("common.notSpecified") })}
           </FormFooterBadge>
           <StatusBadge status={status} config={statusConfig} size="sm" />
         </div>
@@ -41,15 +45,15 @@ export function TeacherFormFooter({
     );
   }
 
-  if (requireContactLink && !teacherDraft.contactId) {
+  if (requireContactLink && !draft.contactId) {
     return (
-      <RequiredBanner message={t("teachers.form.contactRequired")} />
+      <RequiredBanner message={t("faculty.form.contactRequired")} />
     );
   }
 
   return null;
 }
 
-export type FacultyFormFooterProps = TeacherFormFooterProps;
-export const FacultyFormFooter = TeacherFormFooter;
+export const TeacherFormFooter = FacultyFormFooter;
+
 

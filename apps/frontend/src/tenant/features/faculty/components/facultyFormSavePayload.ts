@@ -38,8 +38,9 @@ export function validateUserDraftRequirements(input: TeacherSaveFlowInput): bool
 
   const primaryEmail = input.linkedContact ? getPrimaryEmail(input.linkedContact) : null;
   if (!primaryEmail) {
-    input.setErrors({ "user.email": input.t("teachers.form.noEmailWarning") });
-    notify.error(input.t("teachers.form.noEmailWarning"));
+    const warning = input.t("faculty.form.noEmailWarning") || input.t("teachers.form.noEmailWarning");
+    input.setErrors({ "user.email": warning });
+    notify.error(warning);
     return false;
   }
   if (!input.userAccountDraft.role) {
@@ -70,3 +71,6 @@ export function isEmployeeIdConflictError(err: unknown): boolean {
     (typeof validationMessage === "string" && validationMessage.toLowerCase().includes("employee"))
   );
 }
+
+export type FacultySaveFlowInput = TeacherSaveFlowInput;
+export const buildFacultySavePayload = buildTeacherSavePayload;

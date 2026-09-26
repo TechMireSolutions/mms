@@ -38,8 +38,8 @@ describe("TeacherCardActions Component", () => {
   it("renders view details button and overflow actions menu", () => {
     const html = renderToStaticMarkup(<TeacherCardActions {...defaultProps} />);
 
-    expect(html).toContain("teachers.actionViewShort");
-    expect(html).toContain("teachers.list.viewDetails - Ustadh Umar");
-    expect(html).toContain("teachers.table.actions");
+    expect(html).toContain("faculty.actionViewShort");
+    expect(html).toContain("faculty.list.viewDetails - Ustadh Umar");
+    expect(html).toContain("faculty.table.actions");
   });
 });

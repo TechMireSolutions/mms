@@ -19,15 +19,20 @@ vi.mock("@/tenant/hooks/collections/sessions", () => ({
   ],
 }));
 
-vi.mock("@/tenant/hooks/collections/faculty", () => ({
-  useTeachersContractList: () => ({
+vi.mock("@/tenant/hooks/collections/faculty", () => {
+  const mockList = () => ({
     data: {
       body: {
+        faculty: [{ id: "tch-1", name: "Ustadh Khalid", status: "active" }],
         teachers: [{ id: "tch-1", name: "Ustadh Khalid", status: "active" }],
       },
     },
-  }),
-}));
+  });
+  return {
+    useFacultyContractList: mockList,
+    useTeachersContractList: mockList,
+  };
+});
 
 describe("AttendanceFilters Component", () => {
   it("renders filter controls for session, class, teacher, and date", () => {

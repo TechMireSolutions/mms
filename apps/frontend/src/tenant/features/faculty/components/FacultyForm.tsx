@@ -3,9 +3,9 @@ import { School } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import type { FacultyMember, Teacher } from "@mms/shared";
-import { TeacherFormTabContent } from "@/tenant/features/faculty/components/FacultyFormTabContent";
-import { useTeacherFormController } from "@/tenant/features/faculty/components/useFacultyFormController";
-import { TeacherFormFooter } from "@/tenant/features/faculty/components/FacultyFormFooter";
+import { FacultyFormTabContent } from "@/tenant/features/faculty/components/FacultyFormTabContent";
+import { useFacultyFormController } from "@/tenant/features/faculty/components/useFacultyFormController";
+import { FacultyFormFooter } from "@/tenant/features/faculty/components/FacultyFormFooter";
 import {
   useFacultyFormTabs,
   type FacultyFormTabKey,
@@ -65,7 +65,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     duplicateErrorKeys,
     supervisorCandidates,
     hierarchyRankPresets,
-  } = useTeacherFormController({ teacher, onClose, onSave });
+  } = useFacultyFormController({ teacher, faculty: props.faculty, onClose, onSave });
 
   const { activeTab, setActiveTab, visibleTabs } = useFacultyFormTabs({
     isFieldEnabled,
@@ -83,8 +83,8 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
       <FormModal<FacultyFormTabKey>
         open
         onClose={onClose}
-        title={teacher ? t("teachers.form.editTitle") : t("teachers.form.addTitle")}
-        subtitle={t("teachers.form.contactHint")}
+        title={teacher ? t("faculty.form.editTitle") : t("faculty.form.addTitle")}
+        subtitle={t("faculty.form.contactHint")}
         icon={School}
         tall
         priority={priority}
@@ -94,7 +94,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
         activeTab={activeTab}
         onTabChange={setActiveTab}
         cancelLabel={t("common.cancel")}
-        saveLabel={saving ? t("teachers.form.saving") : teacher ? t("teachers.form.saveUpdate") : t("teachers.form.saveCreate")}
+        saveLabel={saving ? t("faculty.form.saving") : teacher ? t("faculty.form.saveUpdate") : t("faculty.form.saveCreate")}
         onSave={onSaveWithTabFocus}
         isDirty={isDirty}
         saving={saving}
@@ -104,7 +104,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
           || (Boolean(teacher?.id) && !isDirty)
         }
         footerStart={
-          <TeacherFormFooter
+          <FacultyFormFooter
             linkedContact={linkedContact}
             teacherDraft={teacherDraft}
             requireContactLink={requireContactLink}
@@ -113,7 +113,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
           />
         }
       >
-        <TeacherFormTabContent
+        <FacultyFormTabContent
           formInstanceId={formInstanceId}
           activeTab={activeTab}
           teacher={teacher}
@@ -145,12 +145,12 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
       <ConfirmAlertDialog
         open={duplicateConfirmOpen}
         onOpenChange={handleDuplicateDialogOpenChange}
-        title={teacher ? t("teachers.form.editTitle") : t("teachers.form.addTitle")}
+        title={teacher ? t("faculty.form.editTitle") : t("faculty.form.addTitle")}
         description={typedDuplicateReason
-          ? t("teachers.form.duplicateSaveWarning", { message: t(duplicateErrorKeys[typedDuplicateReason]) })
+          ? t("faculty.form.duplicateSaveWarning", { message: t(duplicateErrorKeys[typedDuplicateReason]) })
           : ""}
-        confirmLabel={t("teachers.form.saveAnyway")}
-        cancelLabel={t("teachers.form.reviewDuplicate")}
+        confirmLabel={t("faculty.form.saveAnyway")}
+        cancelLabel={t("faculty.form.reviewDuplicate")}
         onConfirm={confirmDuplicateSave}
       />
     </>

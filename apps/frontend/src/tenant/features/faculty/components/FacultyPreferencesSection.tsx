@@ -32,14 +32,14 @@ export function TeachersPreferencesSection({
 
       {/* General Faculty Module Configuration Card */}
       <SectionCard
-        title={t("teachers.settings.title")}
+        title={t("faculty.settings.title") || t("teachers.settings.title")}
         icon={SlidersHorizontal}
         accentColor="primary"
         className={SETUP_SECTION_CARD_CLASS}
       >
         <div className="space-y-4">
           <Field
-            label={t("teachers.settings.defaultSpecialization")}
+            label={t("faculty.settings.defaultSpecialization") || t("teachers.settings.defaultSpecialization")}
             id="teacher-defaultSpecialization"
           >
             <FormSelect
@@ -53,7 +53,7 @@ export function TeachersPreferencesSection({
 
           <div className="pt-2 border-t border-border/60">
             <ToggleRow
-              label={t("teachers.settings.requireContactLink")}
+              label={t("faculty.settings.requireContactLink") || t("teachers.settings.requireContactLink")}
               value={settingsDraft.requireContactLink}
               onChange={(value) => upd("requireContactLink", value)}
             />

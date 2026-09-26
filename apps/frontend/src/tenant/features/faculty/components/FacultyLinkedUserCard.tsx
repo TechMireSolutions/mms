@@ -35,7 +35,7 @@ export function FacultyLinkedUserCard({
 
   return (
     <SectionCard
-      title={t("teachers.form.linkedUserAccount")}
+      title={t("faculty.form.linkedUserAccount") || t("teachers.form.linkedUserAccount")}
       icon={UserCheck}
       accentColor="primary"
       className="z-elevated"
@@ -44,7 +44,7 @@ export function FacultyLinkedUserCard({
         <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-xl border border-border bg-muted/20">
           <div className="space-y-0.5">
             <p className="text-sm font-semibold text-foreground">{linkedUser.email}</p>
-            <p className="text-xs text-muted-foreground">{t("teachers.form.linkedUserAccountHint")}</p>
+            <p className="text-xs text-muted-foreground">{t("faculty.form.linkedUserAccountHint") || t("teachers.form.linkedUserAccountHint")}</p>
           </div>
           <Badge pill tone="primary" className="px-2.5 font-bold">
             {resolveRoleDisplayName(linkedUser.role || "teacher", workspaceRoles, t)}

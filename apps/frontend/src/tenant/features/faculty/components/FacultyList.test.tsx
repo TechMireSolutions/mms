@@ -2,7 +2,7 @@ import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import type { Teacher } from "@mms/shared";
-import { TeachersList } from "./FacultyList";
+import { FacultyList } from "./FacultyList";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -59,24 +59,24 @@ const baseProps = {
   columnRegistry: mockColumnRegistry,
 };
 
-describe("TeachersList Component", () => {
+describe("FacultyList Component", () => {
   it("renders table view by default", () => {
-    const html = renderToStaticMarkup(<TeachersList {...baseProps} />);
+    const html = renderToStaticMarkup(<FacultyList {...baseProps} />);
 
     expect(html).toContain("Ustadh Ahmad");
     expect(html).toContain("EMP-001");
   });
 
   it("renders cards view when viewMode is cards", () => {
-    const html = renderToStaticMarkup(<TeachersList {...baseProps} viewMode="cards" />);
+    const html = renderToStaticMarkup(<FacultyList {...baseProps} viewMode="cards" />);
 
     expect(html).toContain("Ustadh Ahmad");
-    expect(html).toContain("teachers-cards");
+    expect(html).toContain("faculty-cards");
   });
 
-  it("renders empty state when teachers list is empty", () => {
-    const html = renderToStaticMarkup(<TeachersList {...baseProps} teachers={[]} />);
+  it("renders empty state when faculty list is empty", () => {
+    const html = renderToStaticMarkup(<FacultyList {...baseProps} faculty={[]} teachers={[]} />);
 
-    expect(html).toContain("teachers.empty.title");
+    expect(html).toContain("faculty.empty.title");
   });
 });

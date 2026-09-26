@@ -2,18 +2,23 @@ import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { DEFAULT_TEACHER_COLUMN_REGISTRY, type Teacher } from "@mms/shared";
-import { TeachersListContent } from "./FacultyListContent";
+import { FacultyListContent } from "./FacultyListContent";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string | number>) => {
-      if (key === "teachers.table.selectTeacher" && params?.name) {
+      if ((key === "faculty.table.selectTeacher" || key === "teachers.table.selectTeacher") && params?.name) {
         return `Select ${params.name}`;
       }
-      if (key === "teachers.selectedCount" && params?.count != null) {
+      if ((key === "faculty.selectedCount" || key === "teachers.selectedCount") && params?.count != null) {
         return `${params.count} selected`;
       }
       const labels: Record<string, string> = {
+        "faculty.table.selectAll": "Select All",
+        "faculty.table.actions": "Actions",
+        "faculty.table.emptyDash": "—",
+        "faculty.tryAdjustingFilters": "Try adjusting your filters",
+        "faculty.noTeachersMatchFilters": "No teachers match filters",
         "teachers.table.selectAll": "Select All",
         "teachers.table.actions": "Actions",
         "teachers.table.emptyDash": "—",
@@ -60,9 +65,9 @@ const defaultProps = {
   viewMode: "table" as const,
 };
 
-describe("TeachersListContent Component", () => {
+describe("FacultyListContent Component", () => {
   it("renders desktop table view when viewMode is table", () => {
-    const html = renderToStaticMarkup(<TeachersListContent {...defaultProps} />);
+    const html = renderToStaticMarkup(<FacultyListContent {...defaultProps} />);
 
     expect(html).toContain("Ustadh Umar");
     expect(html).toContain("EMP-010");
@@ -70,7 +75,7 @@ describe("TeachersListContent Component", () => {
 
   it("renders cards view when viewMode is cards", () => {
     const html = renderToStaticMarkup(
-      <TeachersListContent {...defaultProps} viewMode="cards" />,
+      <FacultyListContent {...defaultProps} viewMode="cards" />,
     );
 
     expect(html).toContain("Ustadh Umar");
@@ -78,7 +83,7 @@ describe("TeachersListContent Component", () => {
 
   it("renders empty state when teachers is empty", () => {
     const html = renderToStaticMarkup(
-      <TeachersListContent
+      <FacultyListContent
         {...defaultProps}
         teachers={[]}
         hasActiveFilters={true}

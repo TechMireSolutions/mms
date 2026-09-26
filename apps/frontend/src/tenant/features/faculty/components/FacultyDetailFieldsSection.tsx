@@ -35,7 +35,7 @@ export function TeacherDetailFieldsSection({
   settings,
 }: TeacherDetailFieldsSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const emptyDash = t("teachers.table.emptyDash");
+  const emptyDash = t("faculty.table.emptyDash") || t("teachers.table.emptyDash");
   const messagingLabels = teacherMessagingLabels(t);
 
   const rowForField = (field: TeacherDetailFieldRow): React.ReactNode => {

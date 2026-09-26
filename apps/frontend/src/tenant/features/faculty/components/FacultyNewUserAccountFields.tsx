@@ -35,7 +35,7 @@ export function FacultyNewUserAccountFields({
       {!primaryEmail ? (
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20 text-warning text-xs font-medium">
           <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span>{t("teachers.form.noEmailWarning")}</span>
+          <span>{t("faculty.form.noEmailWarning") || t("teachers.form.noEmailWarning")}</span>
         </div>
       ) : null}
 

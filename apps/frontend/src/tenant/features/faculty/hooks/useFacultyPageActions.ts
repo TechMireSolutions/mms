@@ -3,7 +3,7 @@ import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { notify } from "@/lib/notify";
 import type { Faculty, Teacher } from '@mms/shared';
 import { useFacultyMutations } from "@/tenant/features/faculty/hooks/useFaculty";
-import { useTeachersCrudNotify } from "@/tenant/features/faculty/hooks/useFacultyCrudNotify";
+import { useFacultyCrudNotify } from "@/tenant/features/faculty/hooks/useFacultyCrudNotify";
 import { type FacultyRecord, toMessagingRecipient } from "@mms/shared";
 
 export interface UseFacultyPageActionsParams {
@@ -18,7 +18,7 @@ export function useFacultyPageActions({
 }: UseFacultyPageActionsParams) {
   const effectiveEditTarget = editFaculty ?? editTeacher ?? null;
   const { t } = useTranslation();
-  const { handleError, notifyBulkResult, notifyArchivedWithUndo } = useTeachersCrudNotify();
+  const { handleError, notifyBulkResult, notifyArchivedWithUndo } = useFacultyCrudNotify();
   const {
     createFaculty,
     updateFaculty,
@@ -56,7 +56,7 @@ export function useFacultyPageActions({
         params: { id: String(facultyToSave.id) },
         body: facultyToSave as FacultyRecord,
       });
-      notify.success(t("teachers.toast.updated"));
+      notify.success(t("faculty.toast.updated"));
       const raw = res.body as unknown;
       if (raw && typeof raw === "object") {
         const envelope = raw as Record<string, unknown>;
@@ -68,7 +68,7 @@ export function useFacultyPageActions({
       const res = await createFaculty.mutateAsync({
         body: facultyToSave as FacultyRecord,
       });
-      notify.success(t("teachers.toast.created"));
+      notify.success(t("faculty.toast.created"));
       const raw = res.body as unknown;
       if (raw && typeof raw === "object") {
         const envelope = raw as Record<string, unknown>;
@@ -84,7 +84,7 @@ export function useFacultyPageActions({
       await deleteFaculty.mutateAsync({ params: { id }, body: { deletionReason } });
       notifyArchivedWithUndo(() => handleRestore(id));
     } catch (error) {
-      handleError(error, "teachers.delete", "teachers.deleteFailed");
+      handleError(error, "faculty.delete", "faculty.deleteFailed");
       throw error;
     }
   };
@@ -92,9 +92,9 @@ export function useFacultyPageActions({
   const handleRestore = async (id: string): Promise<void> => {
     try {
       await restoreFaculty.mutateAsync({ params: { id }, body: {} });
-      notifyBulkResult(1, 0, "teachers.restoreSuccess", "teachers.restoreSuccess");
+      notifyBulkResult(1, 0, "faculty.restoreSuccess", "faculty.restoreSuccess");
     } catch (error) {
-      handleError(error, "teachers.restore", "teachers.restoreFailed");
+      handleError(error, "faculty.restore", "faculty.restoreFailed");
       throw error;
     }
   };
@@ -105,11 +105,11 @@ export function useFacultyPageActions({
       notifyBulkResult(
         result.body.succeeded,
         result.body.failed,
-        "teachers.toast.deleted",
-        "teachers.toast.deleted",
+        "faculty.toast.deleted",
+        "faculty.toast.deleted",
       );
     } catch (error) {
-      handleError(error, "teachers.bulk_delete", "teachers.deleteFailed");
+      handleError(error, "faculty.bulk_delete", "faculty.deleteFailed");
       throw error;
     }
   };
@@ -120,11 +120,11 @@ export function useFacultyPageActions({
       notifyBulkResult(
         result.body.succeeded,
         result.body.failed,
-        "teachers.restoreSuccess",
-        "teachers.restoreSuccess",
+        "faculty.restoreSuccess",
+        "faculty.restoreSuccess",
       );
     } catch (error) {
-      handleError(error, "teachers.bulk_restore", "teachers.restoreFailed");
+      handleError(error, "faculty.bulk_restore", "faculty.restoreFailed");
       throw error;
     }
   };
@@ -135,11 +135,11 @@ export function useFacultyPageActions({
       notifyBulkResult(
         result.body.succeeded,
         result.body.failed,
-        "teachers.toast.statusUpdated",
-        "teachers.toast.statusUpdated",
+        "faculty.toast.statusUpdated",
+        "faculty.toast.statusUpdated",
       );
     } catch (error) {
-      handleError(error, "teachers.bulk_status", "teachers.bulkStatusFailed");
+      handleError(error, "faculty.bulk_status", "faculty.bulkStatusFailed");
       throw error;
     }
   };
@@ -153,11 +153,11 @@ export function useFacultyPageActions({
       notifyBulkResult(
         result.body.succeeded,
         result.body.failed,
-        "teachers.bulkSpecializationSuccess",
-        "teachers.bulkSpecializationSuccess",
+        "faculty.bulkSpecializationSuccess",
+        "faculty.bulkSpecializationSuccess",
       );
     } catch (error) {
-      handleError(error, "teachers.bulk_specialization", "teachers.bulkStatusFailed");
+      handleError(error, "faculty.bulk_specialization", "faculty.bulkStatusFailed");
       throw error;
     }
   };

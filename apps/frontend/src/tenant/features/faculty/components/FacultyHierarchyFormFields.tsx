@@ -37,7 +37,7 @@ export function FacultyHierarchyFormFields({
     <>
       {showDepartment && (
         <Field
-          label={t("teachers.form.department")}
+          label={t("faculty.form.department") || t("teachers.form.department")}
           id="department"
           required={isFieldRequired("department")}
           error={errors.department}
@@ -47,7 +47,7 @@ export function FacultyHierarchyFormFields({
             name="department"
             value={teacherDraft.department ?? ""}
             onChange={(e) => onDraftChange({ department: e.target.value })}
-            placeholder={t("teachers.form.departmentPlaceholder")}
+            placeholder={t("faculty.form.departmentPlaceholder") || t("teachers.form.departmentPlaceholder")}
             className={cn(FORM_INPUT, errors.department && FORM_INPUT_ERROR)}
           />
         </Field>
@@ -55,7 +55,7 @@ export function FacultyHierarchyFormFields({
 
       {showSupervisor && (
         <Field
-          label={t("teachers.form.reportingSupervisor")}
+          label={t("faculty.form.reportingSupervisor") || t("teachers.form.reportingSupervisor")}
           id="reportingFacultyId"
           required={isFieldRequired("reportingFacultyId")}
           error={errors.reportingFacultyId}
@@ -67,7 +67,7 @@ export function FacultyHierarchyFormFields({
             disabled={teacherDraft.hierarchyRank === 1}
             onChange={(val) => onDraftChange({ reportingFacultyId: val || null })}
             options={[
-              { value: "", label: t("teachers.form.noSupervisor") },
+              { value: "", label: t("faculty.form.noSupervisor") || t("teachers.form.noSupervisor") },
               ...(supervisorCandidates || []).map((cand) => ({
                 value: String(cand.id),
                 label: `${cand.name || cand.employeeId || "Faculty"} (Rank ${cand.hierarchyRank ?? 4}${cand.designation ? ` · ${cand.designation}` : ""})`,
@@ -76,7 +76,7 @@ export function FacultyHierarchyFormFields({
           />
           {teacherDraft.hierarchyRank === 1 && (
             <p className="mt-1 text-xs text-muted-foreground">
-              {t("teachers.form.topLevelRankNotice")}
+              {t("faculty.form.topLevelRankNotice") || t("teachers.form.topLevelRankNotice")}
             </p>
           )}
         </Field>

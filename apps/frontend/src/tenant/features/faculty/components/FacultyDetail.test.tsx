@@ -90,10 +90,10 @@ describe("TeacherDetail Component", () => {
       />,
     );
 
-    expect(html).toContain("teachers.detail.title");
+    expect(html).toContain("faculty.detail.title");
     expect(html).toContain("ID: EMP-77");
     expect(html).toContain("Senior instructor note");
-    expect(html).toContain("teachers.detail.printIdCard");
+    expect(html).toContain("faculty.detail.printIdCard");
     expect(html).toContain("faculty.designations.history");
   });
 });

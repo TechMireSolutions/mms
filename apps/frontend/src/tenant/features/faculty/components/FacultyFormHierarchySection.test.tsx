@@ -68,6 +68,6 @@ describe("FacultyFormHierarchySection", () => {
       />,
     );
 
-    expect(html).toContain("teachers.form.topLevelRankNotice");
+    expect(html).toContain("faculty.form.topLevelRankNotice");
   });
 });

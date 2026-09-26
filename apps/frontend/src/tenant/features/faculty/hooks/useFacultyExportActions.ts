@@ -37,8 +37,8 @@ export interface UseTeachersExportActionsOptions {
   };
 }
 
-/** Server CSV export actions for Teachers Work (Students-shaped shared factory). */
-export function useTeachersExportActions({
+/** Server CSV export actions for Faculty Work (Students-shaped shared factory). */
+export function useFacultyExportActions({
   tableColumns,
   canExport,
   search,
@@ -67,7 +67,7 @@ export function useTeachersExportActions({
     });
 
   const onError = (err: unknown, _scope: string) => {
-    notify.error(t("teachers.exportFailed"), {
+    notify.error(t("faculty.exportFailed"), {
       description: err instanceof Error ? err.message : String(err),
     });
   };
@@ -77,12 +77,12 @@ export function useTeachersExportActions({
     trashMode: viewingDeleted,
     selectedIds,
     columns: tableColumns,
-    filename: t("teachers.exportFilename"),
-    label: t("teachers.jobs.exportLabelServer"),
-    successMessage: t("teachers.exportSuccess"),
-    auditScope: "teachers.export_audit",
-    filteredErrorScope: "teachers.server_export_csv",
-    selectionErrorScope: "teachers.server_export_csv_selection",
+    filename: t("faculty.exportFilename"),
+    label: t("faculty.jobs.exportLabelServer"),
+    successMessage: t("faculty.exportSuccess"),
+    auditScope: "faculty.export_audit",
+    filteredErrorScope: "faculty.server_export_csv",
+    selectionErrorScope: "faculty.server_export_csv_selection",
     hasActiveFilters,
     buildFilteredQuery,
     startExport: startServerFacultyCsvExport,
@@ -90,6 +90,8 @@ export function useTeachersExportActions({
     onError,
   });
 }
+
+export const useTeachersExportActions = useFacultyExportActions;
 
 /** Default Work export columns when registry is unavailable. */
 export function defaultTeachersExportColumns(
@@ -124,7 +126,6 @@ export function resolveTeachersExportColumns(
 }
 
 export type UseFacultyExportActionsOptions = UseTeachersExportActionsOptions;
-export const useFacultyExportActions = useTeachersExportActions;
 export const defaultFacultyExportColumns = defaultTeachersExportColumns;
 export const resolveFacultyExportColumns = resolveTeachersExportColumns;
 

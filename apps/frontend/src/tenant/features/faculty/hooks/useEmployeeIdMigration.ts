@@ -43,14 +43,14 @@ export function useEmployeeIdMigration(activeTab: string, canEditSetup: boolean)
       markEmployeeIdMigrationDone();
       setNeedsMigrationScan(false);
       if (result.updated > 0) {
-        notify.success(t("teachers.employeeIdMigrationCompleted"), {
-          description: t("teachers.employeeIdMigrationUpdated", { count: result.updated }),
+        notify.success(t("faculty.employeeIdMigrationCompleted"), {
+          description: t("faculty.employeeIdMigrationUpdated", { count: result.updated }),
         });
       }
     },
     onError: () => {
       migrationAppliedRef.current = false;
-      notify.error(t("teachers.employeeIdMigrationFailed"));
+      notify.error(t("faculty.employeeIdMigrationFailed"));
     },
   });
 

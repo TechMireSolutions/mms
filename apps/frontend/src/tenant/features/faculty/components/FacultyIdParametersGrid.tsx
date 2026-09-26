@@ -36,8 +36,8 @@ export function FacultyIdParametersGrid({
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
       <Field
-        label={t("teachers.settings.idPrefix")}
-        hint={t("teachers.settings.idPrefixHint")}
+        label={t("faculty.settings.idPrefix") || t("teachers.settings.idPrefix")}
+        hint={t("faculty.settings.idPrefixHint") || t("teachers.settings.idPrefixHint")}
         id="teacher-idPrefix"
       >
         <Input
@@ -56,8 +56,8 @@ export function FacultyIdParametersGrid({
       </Field>
 
       <Field
-        label={t("teachers.settings.yearFormat") || "Year Format"}
-        hint={t("teachers.settings.yearFormatHint") || "Four-digit or two-digit year"}
+        label={t("faculty.settings.yearFormat") || t("teachers.settings.yearFormat") || "Year Format"}
+        hint={t("faculty.settings.yearFormatHint") || t("teachers.settings.yearFormatHint") || "Four-digit or two-digit year"}
         id="teacher-employeeIdYearFormat"
       >
         <FormSelect
@@ -76,8 +76,8 @@ export function FacultyIdParametersGrid({
       </Field>
 
       <Field
-        label={t("teachers.settings.idDigits")}
-        hint={t("teachers.settings.idDigitsHint")}
+        label={t("faculty.settings.idDigits") || t("teachers.settings.idDigits")}
+        hint={t("faculty.settings.idDigitsHint") || t("teachers.settings.idDigitsHint")}
         id="teacher-idDigits"
       >
         <Input
@@ -97,8 +97,8 @@ export function FacultyIdParametersGrid({
       </Field>
 
       <Field
-        label={t("teachers.settings.delimiter") || "Delimiter"}
-        hint={t("teachers.settings.delimiterHint") || "Optional separator (e.g. - or /)"}
+        label={t("faculty.settings.delimiter") || t("teachers.settings.delimiter") || "Delimiter"}
+        hint={t("faculty.settings.delimiterHint") || t("teachers.settings.delimiterHint") || "Optional separator (e.g. - or /)"}
         id="teacher-employeeIdDelimiter"
       >
         <div className="space-y-1.5">

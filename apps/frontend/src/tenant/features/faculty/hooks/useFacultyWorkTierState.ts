@@ -92,14 +92,16 @@ export function useFacultyWorkTierState({
     useServerWork,
   );
 
-  const workTeachers = (workPageQuery.data?.body?.teachers ?? []) as FacultyMember[];
-  const shownCount = workPageQuery.data?.body?.total ?? workTeachers.length;
+  const workFaculty = (workPageQuery.data?.body?.faculty ?? workPageQuery.data?.body?.teachers ?? []) as FacultyMember[];
+  const workTeachers = workFaculty;
+  const shownCount = workPageQuery.data?.body?.total ?? workFaculty.length;
   const isWorkError = workPageQuery.isError || (workPageQuery.data != null && workPageQuery.data.status !== 200);
   const workPageData = workPageQuery.data?.status === 200 ? workPageQuery.data.body : undefined;
 
   return {
     useServerWork,
     workPageQuery,
+    workFaculty,
     workTeachers,
     shownCount,
     isWorkError,

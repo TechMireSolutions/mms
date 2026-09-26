@@ -13,8 +13,9 @@ import type { useFacultyEntityDescriptor } from "@/tenant/features/faculty/hooks
 import type { TeacherListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
 import type { Teacher } from "@mms/shared";
 
-export interface TeacherCardItemProps {
-  teacher: Teacher;
+export interface FacultyCardItemProps {
+  faculty?: Teacher;
+  teacher?: Teacher;
   selectedSet: Set<string>;
   selectedIds: string[];
   showDeleted: boolean;
@@ -35,29 +36,31 @@ export interface TeacherCardItemProps {
   onWhatsApp?: (teachers: Teacher[]) => void;
   onEmail?: (teachers: Teacher[]) => void;
 }
+export type TeacherCardItemProps = FacultyCardItemProps;
 
-export function TeacherCardItem({
-  teacher,
-  selectedSet,
-  selectedIds,
-  showDeleted,
-  canWrite,
-  canDelete,
-  isColumnVisible,
-  columnRegistry,
-  customFieldsById,
-  statusConfig,
-  descriptor,
-  reducedMotion,
-  onSelectOne,
-  onView,
-  onEdit,
-  onRequestDelete,
-  onRestore,
-  onSms,
-  onWhatsApp,
-  onEmail,
-}: TeacherCardItemProps): React.JSX.Element {
+export function FacultyCardItem(props: FacultyCardItemProps): React.JSX.Element {
+  const teacher = (props.faculty ?? props.teacher)!;
+  const {
+    selectedSet,
+    selectedIds,
+    showDeleted,
+    canWrite,
+    canDelete,
+    isColumnVisible,
+    columnRegistry,
+    customFieldsById,
+    statusConfig,
+    descriptor,
+    reducedMotion,
+    onSelectOne,
+    onView,
+    onEdit,
+    onRequestDelete,
+    onRestore,
+    onSms,
+    onWhatsApp,
+    onEmail,
+  } = props;
   const { t } = useTranslation();
   const teacherIdStr = String(teacher.id);
   const isSelected = selectedSet.has(teacherIdStr);
@@ -137,5 +140,5 @@ export function TeacherCardItem({
   );
 }
 
-export type FacultyCardItemProps = TeacherCardItemProps;
-export const FacultyCardItem = TeacherCardItem;
+export const TeacherCardItem = FacultyCardItem;
+

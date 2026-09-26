@@ -15,7 +15,7 @@ describe("TeacherDetailNotesSection Component", () => {
       <TeacherDetailNotesSection notes="Senior instructor for advanced Tajweed curriculum." />,
     );
 
-    expect(html).toContain("teachers.detail.notesSection");
+    expect(html).toContain("faculty.detail.notesSection");
     expect(html).toContain("Senior instructor for advanced Tajweed curriculum.");
   });
 });

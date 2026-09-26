@@ -61,9 +61,9 @@ export function TeacherContactSection({
           value={teacherDraft.contactId ? String(teacherDraft.contactId) : null}
           onChange={(contactId) => onDraftChange({ contactId: contactId ? String(contactId) : "" })}
           excludeIds={linkedTeacherContactIds.map(String)}
-          searchPlaceholder={t("teachers.form.searchContact")}
-          emptyTitle={t("teachers.form.noContacts")}
-          emptyHint={t("teachers.form.noContactsHint")}
+          searchPlaceholder={t("faculty.form.searchContact") || t("teachers.form.searchContact")}
+          emptyTitle={t("faculty.form.noContacts") || t("teachers.form.noContacts")}
+          emptyHint={t("faculty.form.noContactsHint") || t("teachers.form.noContactsHint")}
           required={isFieldRequired("contactId")}
           error={!!errors.contactId}
           errorMessage={errors.contactId}
@@ -86,7 +86,7 @@ export function TeacherContactSection({
               <div
                 data-testid="teacher-contact-qualification-pill"
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 text-xs text-muted-foreground font-medium"
-                title={t("teachers.field.qualification")}
+                title={t("faculty.field.qualification") || t("teachers.field.qualification")}
               >
                 <GraduationCap className="w-3.5 h-3.5 text-primary" aria-hidden />
                 <span>{contactQualification}</span>
@@ -96,7 +96,7 @@ export function TeacherContactSection({
               <div
                 data-testid="teacher-contact-specialization-pill"
                 className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted/60 text-xs text-muted-foreground font-medium"
-                title={t("teachers.field.specialization")}
+                title={t("faculty.field.specialization") || t("teachers.field.specialization")}
               >
                 <School className="w-3.5 h-3.5 text-primary" aria-hidden />
                 <span>{contactSpecialization}</span>
@@ -108,3 +108,7 @@ export function TeacherContactSection({
     </SectionCard>
   );
 }
+
+export type FacultyContactSectionProps = TeacherContactSectionProps;
+export const FacultyContactSection = TeacherContactSection;
+

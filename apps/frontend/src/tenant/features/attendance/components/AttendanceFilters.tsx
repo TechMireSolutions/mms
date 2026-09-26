@@ -7,8 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
-import { useTeachersContractList } from '@/tenant/hooks/collections/faculty';
-import { TEACHERS_MODULE_MANIFEST } from '@mms/shared';
+import { useFacultyContractList } from '@/tenant/hooks/collections/faculty';
+import { FACULTY_MODULE_MANIFEST } from '@mms/shared';
 import { activeTeachersForAssignment } from '@/lib/faculty/facultyAssignment';
 import { useTranslation } from '@/hooks/useTranslation';
 import { todayISO } from '@mms/shared';
@@ -38,12 +38,12 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
   const { t } = useTranslation();
   const [open, setOpen] = useState(true);
   const sessions = useSessionsCollection();
-  const { data: activeTeachersPage } = useTeachersContractList({
+  const { data: activeFacultyPage } = useFacultyContractList({
     page: 1,
-    limit: TEACHERS_MODULE_MANIFEST.maxPageSize,
+    limit: FACULTY_MODULE_MANIFEST.maxPageSize,
     status: 'active',
   });
-  const assignableTeachers = (() => activeTeachersForAssignment((activeTeachersPage?.body?.teachers ?? []) as import('@mms/shared').Teacher[]))();
+  const assignableTeachers = (() => activeTeachersForAssignment(((activeFacultyPage?.body?.faculty ?? activeFacultyPage?.body?.teachers ?? []) as import('@mms/shared').Teacher[])))();
   
   const allClasses = (() => {
     return sessions.flatMap((session) =>

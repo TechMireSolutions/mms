@@ -38,8 +38,8 @@ export function TeacherNotesSection({
   return (
     <div className="space-y-6">
       <SectionCard
-        title={t("teachers.form.notesSection")}
-        subtitle={t("teachers.form.notesSectionDesc")}
+        title={t("faculty.form.notesSection") || t("teachers.form.notesSection")}
+        subtitle={t("faculty.form.notesSectionDesc") || t("teachers.form.notesSectionDesc")}
         icon={FileText}
         accentColor="emerald"
       >
@@ -50,7 +50,7 @@ export function TeacherNotesSection({
             required={notesRequired}
             value={notes || ""}
             onChange={(event) => onDraftChange({ notes: event.target.value })}
-            placeholder={t("teachers.form.notesPlaceholder")}
+            placeholder={t("faculty.form.notesPlaceholder") || t("teachers.form.notesPlaceholder")}
             className={cn(FORM_TEXTAREA, "min-h-30")}
             aria-invalid={Boolean(error)}
           />

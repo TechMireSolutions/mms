@@ -22,11 +22,13 @@ export function TeacherDetailSessionsSection({
   error,
 }: TeacherDetailSessionsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
+  const assignedClassesTitle =
+    t("faculty.detail.assignedClasses") || t("teachers.detail.assignedClasses");
 
   if (loading) {
     return (
       <div className="space-y-3">
-        <DetailSectionTitle>{t("teachers.detail.assignedClasses")}</DetailSectionTitle>
+        <DetailSectionTitle>{assignedClassesTitle}</DetailSectionTitle>
         <div className="space-y-2.5">
           <Skeleton className="h-12 w-full rounded-xl" />
           <Skeleton className="h-12 w-full rounded-xl" />
@@ -38,11 +40,11 @@ export function TeacherDetailSessionsSection({
   if (error) {
     return (
       <div className="space-y-3">
-        <DetailSectionTitle>{t("teachers.detail.assignedClasses")}</DetailSectionTitle>
+        <DetailSectionTitle>{assignedClassesTitle}</DetailSectionTitle>
         <ErrorState
           compact
-          title={t("teachers.loadFailed")}
-          description={t("teachers.loadFailedHint")}
+          title={t("faculty.loadFailed") || t("teachers.loadFailed")}
+          description={t("faculty.loadFailedHint") || t("teachers.loadFailedHint")}
         />
       </div>
     );
@@ -51,12 +53,12 @@ export function TeacherDetailSessionsSection({
   if (assignedClasses.length === 0) {
     return (
       <div className="space-y-3">
-        <DetailSectionTitle>{t("teachers.detail.assignedClasses")}</DetailSectionTitle>
+        <DetailSectionTitle>{assignedClassesTitle}</DetailSectionTitle>
         <EmptyState
           compact
           icon={School}
-          title={t("teachers.detail.noAssignedClasses")}
-          description={t("teachers.empty.subtitle")}
+          title={t("faculty.detail.noAssignedClasses") || t("teachers.detail.noAssignedClasses")}
+          description={t("faculty.empty.subtitle") || t("teachers.empty.subtitle")}
         />
       </div>
     );
@@ -65,7 +67,7 @@ export function TeacherDetailSessionsSection({
   return (
     <div className="space-y-3">
       <div className="flex items-center justify-between">
-        <DetailSectionTitle>{t("teachers.detail.assignedClasses")}</DetailSectionTitle>
+        <DetailSectionTitle>{assignedClassesTitle}</DetailSectionTitle>
         <span className="text-xs font-semibold text-muted-foreground px-2 py-0.5 rounded-full bg-muted/60">
           {assignedClasses.length}
         </span>
@@ -112,17 +114,17 @@ export function TeacherDetailSessionsSection({
                   {item.room ? (
                     <div className="flex items-center gap-1">
                       <DoorOpen className="w-3.5 h-3.5 text-primary/70" aria-hidden />
-                      <span>{t("teachers.detail.room", { room: item.room })}</span>
+                      <span>{t("faculty.detail.room", { room: item.room }) || t("teachers.detail.room", { room: item.room })}</span>
                     </div>
                   ) : null}
 
                   {item.enrolled != null ? (
                     <div className="flex items-center gap-1">
                       <Users className="w-3.5 h-3.5 text-primary/70" aria-hidden />
-                      <span>{t("teachers.detail.enrolledCount", { count: item.enrolled })}</span>
+                      <span>{t("faculty.detail.enrolledCount", { count: item.enrolled }) || t("teachers.detail.enrolledCount", { count: item.enrolled })}</span>
                       {item.capacity ? (
                         <span className="text-muted-foreground">
-                          ({t("teachers.detail.capacity", { capacity: item.capacity })})
+                          ({t("faculty.detail.capacity", { capacity: item.capacity }) || t("teachers.detail.capacity", { capacity: item.capacity })})
                         </span>
                       ) : null}
                     </div>

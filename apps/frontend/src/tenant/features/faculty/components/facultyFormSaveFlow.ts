@@ -140,3 +140,6 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
     input.setSaving(false);
   }
 }
+
+export const runFacultySaveFlow = runTeacherSaveFlow;
+

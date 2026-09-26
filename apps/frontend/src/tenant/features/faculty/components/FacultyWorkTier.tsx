@@ -98,14 +98,14 @@ export function FacultyWorkTier(props: FacultyWorkTierProps): React.JSX.Element 
           isLoading={props.isWorkPageLoading}
           isFetching={props.isWorkPageFetching}
           onRetry={() => void props.onRetry()}
-          errorTitle={t("teachers.loadFailed")}
-          errorHint={t("teachers.loadFailedHint")}
+          errorTitle={t("faculty.loadFailed") || t("teachers.loadFailed")}
+          errorHint={t("faculty.loadFailedHint") || t("teachers.loadFailedHint")}
           viewMode={props.viewMode}
           skeletonColumnCount={props.columnRegistry.length}
           useServerWork={props.useServerWork}
           pageData={props.workPageData}
           onPageChange={props.onPageChange}
-          i18nNamespace="teachers"
+          i18nNamespace="faculty"
           showPagination={items.length > 0}
           loadingLabel={t("common.loading")}
         >

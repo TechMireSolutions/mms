@@ -67,7 +67,7 @@ describe("TeacherFormTabContent Component", () => {
     expect(html).toContain("teachers.form.sectionEmployment");
 
     // Notes section
-    expect(html).toContain("teachers.form.notesSection");
+    expect(html).toContain("faculty.form.notesSection");
     expect(html).toContain("Teacher notes sample");
 
     // System User Account & RBAC section
