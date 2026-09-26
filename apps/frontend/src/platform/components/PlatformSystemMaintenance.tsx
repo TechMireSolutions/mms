@@ -61,7 +61,7 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
           variant="compact"
           label={t("platform.dbEngine")}
           value="PostgreSQL 16"
-          sub="RLS Enabled"
+          sub={t("platform.maintenance.rlsEnabled")}
           icon={Database}
           accent="primary"
         />
@@ -69,7 +69,7 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
           variant="compact"
           label={t("platform.wsBroadcaster")}
           value="Fastify WebSocket"
-          sub="In-Process"
+          sub={t("platform.maintenance.inProcess")}
           icon={Activity}
           accent="success"
         />
@@ -77,7 +77,7 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
           variant="compact"
           label={t("platform.contextStorage")}
           value="Node ALS"
-          sub="AsyncLocalStorage"
+          sub={t("platform.maintenance.asyncLocalStorage")}
           icon={Cpu}
           accent="warning"
         />
@@ -89,7 +89,7 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
             avgLatency !== null
               ? `${t("platform.maintenance.avgLatency")}: ${avgLatency} ms`
               : lastChecked
-                ? `Checked: ${lastChecked}`
+                ? t("platform.maintenance.lastChecked", { time: lastChecked })
                 : t("platform.statusOperational")
           }
           icon={Zap}

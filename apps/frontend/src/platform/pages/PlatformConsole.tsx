@@ -97,7 +97,7 @@ export default function PlatformConsole(): React.JSX.Element {
     system: {
       icon: Server,
       title: t("platform.systemMaintenance"),
-      subtitle: t("platform.profileSubtitle"),
+      subtitle: t("platform.systemMaintenanceSubtitle"),
     },
     setup: {
       icon: Settings,

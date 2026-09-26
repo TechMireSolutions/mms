@@ -1,5 +1,6 @@
 import React from "react";
-import { Building2, Globe, Ban } from "lucide-react";
+import { Building2, Globe, Ban, PlusCircle } from "lucide-react";
+import { Link } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
@@ -8,11 +9,14 @@ import { usePlatformWorkspaces } from "@/platform/hooks/usePlatformWorkspaces";
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
 import { StatsSkeleton } from "@/components/ui/LoadingState";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { EmptyState } from "@/components/ui/EmptyState";
+import { Button } from "@/components/ui/button";
 import { containerVariantsConsole, itemVariants } from "@/platform/lib/animations";
 import { PlatformDashboardBanner } from "./dashboard/PlatformDashboardBanner";
 import { PlatformDashboardTelemetry } from "./dashboard/PlatformDashboardTelemetry";
 import { PlatformDashboardCharts } from "./dashboard/PlatformDashboardCharts";
 import { PlatformDashboardQuickActions } from "./dashboard/PlatformDashboardQuickActions";
+import { ROUTES } from "@/lib/config/routes";
 
 export function PlatformDashboard(): React.JSX.Element {
   const { t } = useTranslation();
@@ -52,6 +56,20 @@ export function PlatformDashboard(): React.JSX.Element {
             title={t("platform.loadFailed")}
             description={t("platform.loadFailedHint")}
             onRetry={() => void refetch()}
+          />
+        ) : metricsReady && totalWorkspaces === 0 && canOnboard ? (
+          <EmptyState
+            icon={Building2}
+            title={t("apex.noMadrasasYet")}
+            description={t("platform.superConsoleDesc")}
+            action={
+              <Button asChild className="min-h-11 rounded-xl font-bold px-5 cursor-pointer">
+                <Link to={ROUTES.onboarding}>
+                  <PlusCircle className="w-4 h-4 me-1.5" aria-hidden />
+                  {t('auth.createMadrasa')}
+                </Link>
+              </Button>
+            }
           />
         ) : metricsReady ? (
           <ModuleCommandMetricsGrid

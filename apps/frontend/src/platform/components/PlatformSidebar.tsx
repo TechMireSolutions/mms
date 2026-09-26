@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Search } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -23,13 +23,17 @@ export function PlatformSidebar(): React.JSX.Element | null {
   const perms = usePlatformPermissions();
   const { isPlatformAuthenticated, isSuperUser } = perms;
   const { mobileOpen, closeMobileSidebar, collapsed, toggleCollapsed, openCommandPalette } = usePlatformSidebar();
-  const [openedAt, setOpenedAt] = useState<number>(0);
   const [confirmSignOutOpen, setConfirmSignOutOpen] = useState<boolean>(false);
+  // Tracks whether the open gesture is still in progress — prevents the backdrop
+  // click from immediately closing the drawer on the same pointer event.
+  const openGestureActiveRef = useRef(false);
 
   useEffect(() => {
-    if (mobileOpen) {
-      setOpenedAt(Date.now());
-    }
+    if (!mobileOpen) return;
+    openGestureActiveRef.current = true;
+    // Clear on the next tick so a backdrop click from a different pointer event can close the drawer.
+    const id = setTimeout(() => { openGestureActiveRef.current = false; }, 0);
+    return () => clearTimeout(id);
   }, [mobileOpen]);
 
   const drawerRef = useOverlayBehavior<HTMLDivElement>({
@@ -124,7 +128,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
             data-overlay-backdrop
             className={cn("fixed inset-0", OVERLAY_BACKDROP, "transition-opacity duration-300")}
             onClick={() => {
-              if (Date.now() - openedAt > 300) {
+              if (!openGestureActiveRef.current) {
                 closeMobileSidebar();
               }
             }}

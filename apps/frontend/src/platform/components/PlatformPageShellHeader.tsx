@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { Menu, ChevronRight } from 'lucide-react';
+import { cva } from 'class-variance-authority';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
@@ -16,17 +17,32 @@ export interface PlatformPageShellHeaderProps {
   searchOpen?: boolean;
 }
 
-const HEALTH_BADGE: Record<string, string> = {
-  operational: 'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs sm:text-xs font-semibold hover:opacity-85 transition-opacity cursor-pointer bg-success/10 text-success border border-success/20',
-  degraded: 'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs sm:text-xs font-semibold hover:opacity-85 transition-opacity cursor-pointer bg-warning/10 text-warning border border-warning/20',
-  unknown: 'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs sm:text-xs font-semibold hover:opacity-85 transition-opacity cursor-pointer bg-muted text-muted-foreground border border-border/40',
-};
+const healthBadge = cva(
+  'hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full text-2xs sm:text-xs font-semibold hover:opacity-85 transition-opacity cursor-pointer border',
+  {
+    variants: {
+      status: {
+        operational: 'bg-success/10 text-success border-success/20',
+        degraded: 'bg-warning/10 text-warning border-warning/20',
+        unknown: 'bg-muted text-muted-foreground border-border/40',
+      },
+    },
+    defaultVariants: { status: 'unknown' },
+  },
+);
 
-const HEALTH_DOT: Record<string, string> = {
-  operational: 'w-2 h-2 rounded-full bg-success animate-pulse',
-  degraded: 'w-2 h-2 rounded-full bg-warning animate-pulse',
-  unknown: 'w-2 h-2 rounded-full bg-muted-foreground',
-};
+const healthDot = cva('w-2 h-2 rounded-full', {
+  variants: {
+    status: {
+      operational: 'bg-success animate-pulse',
+      degraded: 'bg-warning animate-pulse',
+      unknown: 'bg-muted-foreground',
+    },
+  },
+  defaultVariants: { status: 'unknown' },
+});
+
+type HealthStatus = 'operational' | 'degraded' | 'unknown';
 
 export function PlatformPageShellHeader({
   onOpenSearch,
@@ -37,7 +53,8 @@ export function PlatformPageShellHeader({
   const perms = usePlatformPermissions();
   const { isPlatformAuthenticated } = perms;
   const { openMobileSidebar } = usePlatformSidebar();
-  const { status } = usePlatformHealth();
+  const { status: rawStatus } = usePlatformHealth();
+  const status = (rawStatus as HealthStatus | undefined) ?? 'unknown';
 
   if (!isPlatformAuthenticated) return null;
 
@@ -91,11 +108,11 @@ export function PlatformPageShellHeader({
           {/* Health Status Badge */}
           <Link
             to={ROUTES.platformSystem}
-            className={HEALTH_BADGE[status] ?? HEALTH_BADGE.unknown}
+            className={healthBadge({ status })}
             title={t('platform.systemMaintenance')}
             aria-label={`${t('platform.systemMaintenance')}: ${healthLabel}`}
           >
-            <span className={HEALTH_DOT[status] ?? HEALTH_DOT.unknown} />
+            <span className={healthDot({ status })} />
             {healthLabel}
           </Link>
         </div>
