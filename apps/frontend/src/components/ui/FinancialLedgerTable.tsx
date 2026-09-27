@@ -68,10 +68,7 @@ export function FinancialLedgerTable({
       <Table className="min-w-review-panel w-full">
         <TableCaption className="sr-only">{caption}</TableCaption>
         <TableHeader>
-          <TableRow
-            className="border-b border-border"
-            style={{ backgroundColor: 'var(--color-surface-table-header)' }}
-          >
+          <TableRow className="border-b border-border bg-surface-table-header">
             <TableHead className="table-header-cell text-start">{labels.account}</TableHead>
             <TableHead className="table-header-cell text-end">{labels.debit}</TableHead>
             <TableHead className="table-header-cell text-end">{labels.credit}</TableHead>
