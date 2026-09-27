@@ -155,6 +155,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             onOpenDelete={deleteState.handleOpenDelete}
             onOpenResetPassword={modalState.handleOpenResetPassword}
             onOpenCreateAdmin={modalState.handleOpenCreateAdmin}
+            onInspect={modalState.handleOpenInspect}
             selectedSubdomains={selection.selectedSubdomains}
             onToggleSelect={selection.toggleSelect}
             onToggleSelectAll={() => selection.toggleSelectAll(sortedItems)}
@@ -166,6 +167,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         appDomain={appDomain}
         deleteState={deleteState}
         modalState={modalState}
+        descriptor={descriptor}
       />
 
       <PlatformWorkspaceBulkDock

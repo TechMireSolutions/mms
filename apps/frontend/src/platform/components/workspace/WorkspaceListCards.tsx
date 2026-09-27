@@ -6,14 +6,17 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
 import { DirectoryCard } from '@/components/ui/DirectoryCard';
+import { DirectoryCardMetadata } from '@/components/ui/DirectoryCardMetadata';
 import { WorkspaceIdentityCell } from '@/platform/components/workspace/WorkspaceIdentityCell';
 import { WorkspaceStatusBadge } from '@/platform/components/workspace/WorkspaceStatusBadge';
 import { WorkspaceRowActions } from '@/platform/components/workspace/WorkspaceRowActions';
 import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
+import type { EntityDescriptor } from '@/types/entityRegistry';
 
 export interface WorkspaceListCardsProps {
   workspaces: PlatformWorkspaceRowData[];
+  descriptor?: EntityDescriptor<PlatformWorkspaceRowData>;
   appDomain: string;
   togglePending: boolean;
   deletePending: boolean;
@@ -24,6 +27,7 @@ export interface WorkspaceListCardsProps {
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
   onOpenResetPassword?: (workspace: PlatformWorkspaceRowData) => void;
   onOpenCreateAdmin?: (workspace: PlatformWorkspaceRowData) => void;
+  onInspect?: (workspace: PlatformWorkspaceRowData) => void;
   selectedSubdomains?: ReadonlySet<string>;
   onToggleSelect?: (subdomain: string) => void;
 }
@@ -31,6 +35,7 @@ export interface WorkspaceListCardsProps {
 /** Directory list cards view for platform workspaces, aligning with tenant [Entity]ListCards. */
 export function WorkspaceListCards({
   workspaces,
+  descriptor,
   appDomain,
   togglePending,
   deletePending,
@@ -41,6 +46,7 @@ export function WorkspaceListCards({
   onOpenDelete,
   onOpenResetPassword,
   onOpenCreateAdmin,
+  onInspect,
   selectedSubdomains,
   onToggleSelect,
 }: WorkspaceListCardsProps): React.JSX.Element {
@@ -57,8 +63,10 @@ export function WorkspaceListCards({
             entity={{ id: workspace.subdomain, ...workspace }}
             reducedMotion={reducedMotion}
             accentClassName={!workspace.enabled ? 'bg-muted-foreground/50' : 'bg-primary/80'}
+            onView={onInspect ? () => onInspect(workspace) : undefined}
             className={cn(
               'flex flex-col justify-between transition-all',
+              onInspect && 'cursor-pointer',
               !workspace.enabled && 'opacity-85 hover:opacity-100',
               isTargetDelete && 'opacity-40 pointer-events-none',
             )}
@@ -79,7 +87,13 @@ export function WorkspaceListCards({
               </div>
             }
             metadataSlot={
-              workspace.createdAt ? (
+              descriptor ? (
+                <DirectoryCardMetadata
+                  descriptor={descriptor}
+                  entity={workspace}
+                  visibleColumnIds={['createdAt']}
+                />
+              ) : workspace.createdAt ? (
                 <div className="flex items-center gap-1.5 text-2xs font-semibold text-muted-foreground">
                   <Calendar className="w-3.5 h-3.5 shrink-0 opacity-75" aria-hidden />
                   <span>

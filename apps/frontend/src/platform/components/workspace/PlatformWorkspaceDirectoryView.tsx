@@ -22,6 +22,7 @@ export interface PlatformWorkspaceDirectoryViewProps {
   onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
   onOpenResetPassword: (workspace: PlatformWorkspaceRowData) => void;
   onOpenCreateAdmin: (workspace: PlatformWorkspaceRowData) => void;
+  onInspect?: (workspace: PlatformWorkspaceRowData) => void;
   selectedSubdomains?: ReadonlySet<string>;
   onToggleSelect?: (subdomain: string) => void;
   onToggleSelectAll?: () => void;
@@ -44,6 +45,7 @@ export function PlatformWorkspaceDirectoryView({
   onOpenDelete,
   onOpenResetPassword,
   onOpenCreateAdmin,
+  onInspect,
   selectedSubdomains,
   onToggleSelect,
   onToggleSelectAll,
@@ -66,6 +68,7 @@ export function PlatformWorkspaceDirectoryView({
         onOpenDelete={onOpenDelete}
         onOpenResetPassword={onOpenResetPassword}
         onOpenCreateAdmin={onOpenCreateAdmin}
+        onInspect={onInspect}
         selectedSubdomains={selectedSubdomains}
         onToggleSelect={onToggleSelect}
         onToggleSelectAll={onToggleSelectAll}
@@ -76,6 +79,7 @@ export function PlatformWorkspaceDirectoryView({
   return (
     <WorkspaceListCards
       workspaces={workspaces}
+      descriptor={descriptor}
       appDomain={appDomain}
       togglePending={togglePending}
       deletePending={deletePending}
@@ -86,6 +90,7 @@ export function PlatformWorkspaceDirectoryView({
       onOpenDelete={onOpenDelete}
       onOpenResetPassword={onOpenResetPassword}
       onOpenCreateAdmin={onOpenCreateAdmin}
+      onInspect={onInspect}
       selectedSubdomains={selectedSubdomains}
       onToggleSelect={onToggleSelect}
     />

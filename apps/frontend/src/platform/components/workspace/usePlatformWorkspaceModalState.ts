@@ -11,6 +11,8 @@ export function usePlatformWorkspaceModalState() {
   const [createAdminOpen, setCreateAdminOpen] = useState(false);
   const [targetCreateWorkspace, setTargetCreateWorkspace] = useState<PlatformWorkspaceRowData | null>(null);
 
+  const [inspectWorkspace, setInspectWorkspace] = useState<PlatformWorkspaceRowData | null>(null);
+
   const handleOpenModules = (workspace: PlatformWorkspaceRowData): void => {
     setTargetModulesWorkspace(workspace);
     setModulesOpen(true);
@@ -26,6 +28,14 @@ export function usePlatformWorkspaceModalState() {
     setCreateAdminOpen(true);
   };
 
+  const handleOpenInspect = (workspace: PlatformWorkspaceRowData): void => {
+    setInspectWorkspace(workspace);
+  };
+
+  const handleCloseInspect = (): void => {
+    setInspectWorkspace(null);
+  };
+
   return {
     modulesOpen,
     setModulesOpen,
@@ -39,5 +49,8 @@ export function usePlatformWorkspaceModalState() {
     setCreateAdminOpen,
     targetCreateWorkspace,
     handleOpenCreateAdmin,
+    inspectWorkspace,
+    handleOpenInspect,
+    handleCloseInspect,
   };
 }

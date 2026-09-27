@@ -28,6 +28,8 @@ export function WorkBatchTable<TData extends { id: string | number }>({
   columnResize,
   renderRowActions,
   actionsLabel = "Actions",
+  actionsHeaderClassName,
+  actionsCellClassName,
   stickyColumnId,
   optimisticDeletedIds,
   footerCount,
@@ -115,6 +117,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
                 : undefined
             }
             actionsLabel={renderRowActions ? actionsLabel : undefined}
+            actionsClassName={actionsHeaderClassName}
             stickyColumnId={stickyColumnId}
           />
 
@@ -132,6 +135,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
                 onSelectOne={selection?.onSelectOne}
                 selectRowAriaLabel={selection?.selectRowAriaLabel}
                 renderRowActions={renderRowActions}
+                actionsCellClassName={actionsCellClassName}
                 onRowClick={onRowClick}
                 onRowHover={onRowHover}
                 rowClassName={rowClassName}
@@ -157,6 +161,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
                       columns={columns}
                       stickyColumnId={stickyColumnId}
                       renderRowActions={renderRowActions}
+                      actionsCellClassName={actionsCellClassName}
                     />
                   );
                 })}

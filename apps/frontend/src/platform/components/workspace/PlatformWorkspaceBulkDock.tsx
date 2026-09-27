@@ -2,8 +2,7 @@ import React from 'react';
 import { CheckCircle2, Ban } from 'lucide-react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { BulkActionDock, BulkSelectionExportAction } from '@/components/common/BulkActionDock';
-import { ActionButton } from '@/components/ui/ActionButton';
+import { WorkActionDock } from '@/components/common/work/WorkActionDock';
 import { downloadWorkspacesCsv } from '@/platform/components/platformWorkspaceListData';
 
 export interface PlatformWorkspaceBulkDockProps {
@@ -28,7 +27,7 @@ export function PlatformWorkspaceBulkDock({
   if (selectedCount === 0) return null;
 
   return (
-    <BulkActionDock
+    <WorkActionDock
       selectedCount={selectedCount}
       countLabel={t('platform.workspaces.selectedCount', { count: selectedCount })}
       onClearSelection={onClearSelection}
@@ -36,34 +35,29 @@ export function PlatformWorkspaceBulkDock({
       placement="floating"
       tone="glass"
       className="z-elevated"
-    >
-      <div className="flex items-center gap-2">
-        <BulkSelectionExportAction
-          label={t('platform.workspaces.exportSelected')}
-          onClick={() => downloadWorkspacesCsv(selectedWorkspaces)}
-        />
-
-        <ActionButton
-          variant="secondary"
-          size="sm"
-          icon={CheckCircle2}
-          disabled={busy}
-          className="border-success/30 text-success hover:bg-success/10"
-          onClick={() => onBulkEnable(selectedWorkspaces)}
-        >
-          {t('platform.workspaces.enableSelected')}
-        </ActionButton>
-
-        <ActionButton
-          variant="danger"
-          size="sm"
-          icon={Ban}
-          disabled={busy}
-          onClick={() => onBulkDisable(selectedWorkspaces)}
-        >
-          {t('platform.workspaces.disableSelected')}
-        </ActionButton>
-      </div>
-    </BulkActionDock>
+      exportAction={{
+        label: t('platform.workspaces.exportSelected'),
+        onExport: () => downloadWorkspacesCsv(selectedWorkspaces),
+      }}
+      transitions={[
+        {
+          id: 'bulk-enable',
+          label: t('platform.workspaces.enableSelected'),
+          icon: CheckCircle2,
+          tone: 'secondary',
+          disabled: busy,
+          className: 'border-success/30 text-success hover:bg-success/10',
+          onClick: () => onBulkEnable(selectedWorkspaces),
+        },
+        {
+          id: 'bulk-disable',
+          label: t('platform.workspaces.disableSelected'),
+          icon: Ban,
+          tone: 'destructive',
+          disabled: busy,
+          onClick: () => onBulkDisable(selectedWorkspaces),
+        },
+      ]}
+    />
   );
 }

@@ -22,6 +22,7 @@ export interface WorkBatchTableRowProps<TData extends { id: string | number }> {
   columns: WorkBatchTableColumn<TData>[];
   stickyColumnId?: string;
   renderRowActions?: (row: TData, rowIndex: number) => React.ReactNode;
+  actionsCellClassName?: string;
 }
 
 function WorkBatchTableRowComponent<TData extends { id: string | number }>(
@@ -42,6 +43,7 @@ function WorkBatchTableRowComponent<TData extends { id: string | number }>(
     columns,
     stickyColumnId,
     renderRowActions,
+    actionsCellClassName,
   } = props;
 
   const idStr = String(row.id);
@@ -51,6 +53,16 @@ function WorkBatchTableRowComponent<TData extends { id: string | number }>(
 
   const trProps = {
     onClick: () => onRowClick?.(row),
+    onKeyDown: onRowClick
+      ? (e: React.KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onRowClick(row);
+          }
+        }
+      : undefined,
+    tabIndex: onRowClick ? 0 : undefined,
+    role: onRowClick ? "button" : undefined,
     onMouseEnter: onRowHover ? () => onRowHover(row) : undefined,
     className: cn(
       "group border-b border-border/40 transition-colors hover:bg-muted/40",
@@ -98,7 +110,7 @@ function WorkBatchTableRowComponent<TData extends { id: string | number }>(
       {/* Actions Menu */}
       {renderRowActions && (
         <TableCell
-          className="w-12 min-w-12 px-2 py-3 text-end"
+          className={cn("text-end", actionsCellClassName ?? "w-12 min-w-12 px-2 py-3")}
           onClick={(e) => e.stopPropagation()}
         >
           {renderRowActions(row, rowIndex)}

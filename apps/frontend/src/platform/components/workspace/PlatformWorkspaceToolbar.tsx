@@ -3,7 +3,7 @@ import { Globe, Ban, Download, RefreshCw } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ActionButton } from '@/components/ui/ActionButton';
-import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
+import { WorkTaskToolbar } from '@/components/common/work';
 import { PlatformWorkspaceSortMenu } from '@/platform/components/PlatformWorkspaceSortMenu';
 import type { WorkspaceSortDirection, WorkspaceSortField } from '@/platform/components/platformWorkspaceListData';
 
@@ -51,7 +51,7 @@ export function PlatformWorkspaceToolbar({
   const { t } = useTranslation();
 
   return (
-    <ModuleWorkToolbar
+    <WorkTaskToolbar
       regionLabel={t('platform.manageMadrasas')}
       shownCountLabel={`${shownCount} of ${totalCount}`}
       search={search}
@@ -66,6 +66,36 @@ export function PlatformWorkspaceToolbar({
         viewMode,
         onViewModeChange,
       }}
+      filterButton={
+        <PlatformWorkspaceSortMenu
+          sortField={sortField}
+          sortDirection={sortDirection}
+          onToggleSort={onToggleSort}
+        />
+      }
+      primaryAction={
+        <div className="flex items-center gap-2">
+          <ActionButton
+            variant="secondary"
+            size="sm"
+            icon={RefreshCw}
+            loading={isSearching}
+            onClick={onRefetch}
+            className="min-w-11"
+            title={t('common.refresh')}
+            aria-label={t('common.refresh')}
+          />
+          <ActionButton
+            variant="secondary"
+            icon={Download}
+            onClick={onExportCsv}
+            disabled={shownCount === 0}
+            title={t('platform.exportWorkspacesCsv')}
+          >
+            {t('platform.exportWorkspacesCsv')}
+          </ActionButton>
+        </div>
+      }
     >
       <SubTabBar
         tabs={[
@@ -76,33 +106,6 @@ export function PlatformWorkspaceToolbar({
         value={statusFilter}
         onChange={onStatusFilterChange}
       />
-
-      <PlatformWorkspaceSortMenu
-        sortField={sortField}
-        sortDirection={sortDirection}
-        onToggleSort={onToggleSort}
-      />
-
-      <ActionButton
-        variant="secondary"
-        size="sm"
-        icon={RefreshCw}
-        loading={isSearching}
-        onClick={onRefetch}
-        className="min-w-11"
-        title={t('common.refresh')}
-        aria-label={t('common.refresh')}
-      />
-
-      <ActionButton
-        variant="secondary"
-        icon={Download}
-        onClick={onExportCsv}
-        disabled={shownCount === 0}
-        title={t('platform.exportWorkspacesCsv')}
-      >
-        {t('platform.exportWorkspacesCsv')}
-      </ActionButton>
-    </ModuleWorkToolbar>
+    </WorkTaskToolbar>
   );
 }

@@ -7,6 +7,9 @@ import {
   useResetWorkspaceAdminPassword,
   useCreateWorkspaceAdmin,
 } from '@/platform/hooks/usePlatformWorkspaces';
+import { DetailSheet } from '@/components/common/DetailSheet';
+import type { EntityDescriptor } from '@/types/entityRegistry';
+import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import type { useWorkspaceDeleteState } from '@/platform/components/workspace/useWorkspaceDeleteState';
 import type { usePlatformWorkspaceModalState } from '@/platform/components/workspace/usePlatformWorkspaceModalState';
 
@@ -14,12 +17,14 @@ export interface PlatformWorkspaceDialogsProps {
   appDomain: string;
   deleteState: ReturnType<typeof useWorkspaceDeleteState>;
   modalState: ReturnType<typeof usePlatformWorkspaceModalState>;
+  descriptor?: EntityDescriptor<PlatformWorkspaceRowData>;
 }
 
 export function PlatformWorkspaceDialogs({
   appDomain,
   deleteState,
   modalState,
+  descriptor,
 }: PlatformWorkspaceDialogsProps): React.JSX.Element {
   const {
     confirmOpen,
@@ -100,6 +105,15 @@ export function PlatformWorkspaceDialogs({
           }}
         />
       ) : null}
+
+      <DetailSheet<PlatformWorkspaceRowData>
+        open={Boolean(modalState.inspectWorkspace)}
+        onClose={modalState.handleCloseInspect}
+        entityType="platformWorkspaces"
+        descriptor={descriptor}
+        entity={modalState.inspectWorkspace ?? undefined}
+        title={modalState.inspectWorkspace?.madrasaName ?? 'Workspace'}
+      />
     </>
   );
 }

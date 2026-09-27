@@ -16,6 +16,7 @@ export interface WorkActionTransition {
   onClick: () => void | Promise<void>;
   loading?: boolean;
   disabled?: boolean;
+  className?: string;
 }
 
 export interface WorkActionDockProps {

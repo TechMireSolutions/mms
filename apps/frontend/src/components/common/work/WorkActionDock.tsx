@@ -9,6 +9,7 @@ import {
 } from "@/components/common/BulkActionDock";
 import { Button } from "@/components/ui/button";
 import { Loader2 } from "lucide-react";
+import { cn } from "@/lib/utils";
 import type {
   WorkActionDockProps,
   WorkActionTransition,
@@ -89,7 +90,7 @@ export function WorkActionDock({
               size="sm"
               disabled={transition.disabled || transition.loading}
               onClick={() => void transition.onClick()}
-              className="h-8 gap-1.5 px-2.5 text-xs font-medium"
+              className={cn("h-8 gap-1.5 px-2.5 text-xs font-medium", transition.className)}
             >
               {transition.loading ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />

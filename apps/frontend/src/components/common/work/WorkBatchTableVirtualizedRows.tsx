@@ -15,6 +15,7 @@ export interface WorkBatchTableVirtualizedRowsProps<TData extends { id: string |
   onSelectOne?: (id: string) => void;
   selectRowAriaLabel?: (row: TData) => string;
   renderRowActions?: (row: TData, index: number) => React.ReactNode;
+  actionsCellClassName?: string;
   onRowClick?: (row: TData) => void;
   onRowHover?: (row: TData) => void;
   rowClassName?: (row: TData) => string | undefined;
@@ -32,6 +33,7 @@ export function WorkBatchTableVirtualizedRows<TData extends { id: string | numbe
   onSelectOne,
   selectRowAriaLabel,
   renderRowActions,
+  actionsCellClassName,
   onRowClick,
   onRowHover,
   rowClassName,
@@ -63,6 +65,7 @@ export function WorkBatchTableVirtualizedRows<TData extends { id: string | numbe
             columns={columns}
             stickyColumnId={stickyColumnId}
             renderRowActions={renderRowActions}
+            actionsCellClassName={actionsCellClassName}
           />
         );
       })}

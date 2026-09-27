@@ -16,7 +16,12 @@ export interface WorkBatchTableProps<TData extends { id: string | number }> {
 
   // Selection
   selection?: {
-    selectedIds: Set<string | number> | Array<string | number>;
+    selectedIds:
+      | Set<string | number>
+      | ReadonlySet<string | number>
+      | ReadonlySet<string>
+      | Array<string | number>
+      | ReadonlyArray<string | number>;
     onSelectOne: (id: string) => void;
     onSelectAll: () => void;
     allSelected: boolean;
@@ -41,6 +46,8 @@ export interface WorkBatchTableProps<TData extends { id: string | number }> {
   // Row Actions
   renderRowActions?: (row: TData, index: number) => React.ReactNode;
   actionsLabel?: string;
+  actionsHeaderClassName?: string;
+  actionsCellClassName?: string;
 
   // Sticky column
   stickyColumnId?: string;
