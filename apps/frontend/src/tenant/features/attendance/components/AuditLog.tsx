@@ -1,19 +1,18 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { formatDateTime, todayISO, type AppTranslationKey } from "@mms/shared";
+import { formatDateTime, todayISO } from "@mms/shared";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ClipboardList, RefreshCw } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { getAuditLog } from "@/tenant/features/attendance/components/MarkAttendance";
-import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
+import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { type AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { StatusBadge, type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
-import { SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { StatusBadge } from "@/components/ui/StatusBadge";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import {
@@ -24,46 +23,19 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { useStudentsByIds } from "@/tenant/hooks/collections/students";
+import { uniqueRegistryIds } from "@/lib/registryResolve";
+import {
+  type AuditEntry,
+  describeAuditEntry,
+  buildAuditActionConfig,
+} from "@/tenant/features/attendance/components/auditLogFormatters";
 
-export interface AuditEntry {
-  ts?: string | number;
-  action: string;
-  studentId?: string;
-  field?: string;
-  from?: string;
-  to?: string;
-  studentName?: string;
-  count?: number;
-  status?: string;
-  geo?: boolean | { lat: number; lng: number } | null;
-  by?: string;
-}
+export type { AuditEntry };
 
 export interface AuditLogProps {
   filters: Partial<AttendanceFilterState>;
   viewMode?: WorkDirectoryViewMode;
-}
-
-import { useStudentsByIds } from "@/tenant/hooks/collections/students";
-import { uniqueRegistryIds } from "@/lib/registryResolve";
-
-function describeEntry(entry: AuditEntry, studentNameFor: (id?: string) => string, t: (key: AppTranslationKey, vars?: Record<string, string | number>) => string): string {
-  if (entry.action === "edit") {
-    const studentLabel = studentNameFor(entry.studentId) || entry.studentName || "student";
-    return t("attendance.audit.desc.edit", { field: entry.field ?? "", from: entry.from ?? "", to: entry.to ?? "", name: studentLabel });
-  }
-  if (entry.action === "bulk_mark") {
-    return t("attendance.audit.desc.bulkMark", { count: entry.count ?? 0, status: entry.status ?? "" });
-  }
-  if (entry.action === "submitted") {
-    return entry.geo
-      ? t("attendance.audit.desc.submittedGeo", { count: entry.count ?? 0 })
-      : t("attendance.audit.desc.submitted", { count: entry.count ?? 0 });
-  }
-  if (entry.action === "draft_saved") {
-    return t("attendance.audit.desc.draftSaved");
-  }
-  return entry.action;
 }
 
 /**
@@ -71,9 +43,6 @@ function describeEntry(entry: AuditEntry, studentNameFor: (id?: string) => strin
  * 
  * Displays a log of actions taken regarding attendance (e.g., editing, bulk marking).
  * Allows filtering by class and date.
- * 
- * @param props - The component props.
- * @returns The rendered audit log component.
  */
 export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -81,14 +50,9 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
   const viewMode = propViewMode ?? hookViewMode;
   const sessions = useSessionsCollection();
   const [log, setLog] = useState<AuditEntry[]>([]);
-  const studentIds = (() => uniqueRegistryIds(log.map((entry) => entry.studentId)))();
+  const studentIds = uniqueRegistryIds(log.map((entry) => entry.studentId));
   const { data: students = [] } = useStudentsByIds(studentIds);
-  const actionConfig = (() => ({
-    edit: { label: t("attendance.audit.action.edit"), cls: SEMANTIC_BADGE.info },
-    bulk_mark: { label: t("attendance.audit.action.bulkMark"), cls: SEMANTIC_BADGE.warning },
-    submitted: { label: t("attendance.audit.action.submitted"), cls: SEMANTIC_BADGE.success },
-    draft_saved: { label: t("attendance.audit.action.draftSaved"), cls: SEMANTIC_BADGE.muted },
-  }))() as Record<string, StatusBadgeConfigItem>;
+  const actionConfig = buildAuditActionConfig(t);
 
   const studentMap = (() => {
     const map = new Map<string, string>();
@@ -105,11 +69,9 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
     return studentMap.get(String(id)) ?? "";
   };
   
-  const allClasses = (() => {
-    return sessions.flatMap((session) =>
-      (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
-    );
-  })();
+  const allClasses = sessions.flatMap((session) =>
+    (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
+  );
 
   const [classId, setClassId] = useState(filters.classId || "");
   const [date, setDate] = useState(filters.date || todayISO());
@@ -119,7 +81,7 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
       const result = getAuditLog(classId, date);
       setLog(Array.isArray(result) ? result : []);
     } catch (error) {
-      reportClientError(error, { context: 'attendance.loadAuditLog' });
+      reportClientError(error, { context: "attendance.loadAuditLog" });
       setLog([]);
     }
   }, [classId, date]);
@@ -128,7 +90,7 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
   
   useEffect(() => {
     if (filters.classId) setClassId(filters.classId);
-    if (filters.date)    setDate(filters.date);
+    if (filters.date) setDate(filters.date);
   }, [filters.classId, filters.date]);
 
   return (
@@ -145,7 +107,7 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
             size="icon"
             onClick={reload}
             aria-label={t("attendance.audit.reload")}
-            className="text-muted-foreground hover:text-foreground"
+            className="text-muted-foreground hover:text-foreground cursor-pointer"
           >
             <RefreshCw className="w-3.5 h-3.5" />
           </Button>
@@ -193,7 +155,7 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
                       <time className="text-xs font-mono text-muted-foreground">{formatDateTime(entry.ts)}</time>
                       <StatusBadge status={entry.action} config={actionConfig} size="sm" />
                     </div>
-                    <p className="text-xs text-foreground m-0">{describeEntry(entry, studentNameFor, t)}</p>
+                    <p className="text-xs text-foreground m-0">{describeAuditEntry(entry, studentNameFor, t)}</p>
                     {entry.by && (
                       <p className="text-xs font-semibold text-muted-foreground capitalize m-0">{entry.by}</p>
                     )}
@@ -218,7 +180,7 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
                     <TableCell className="px-3 py-2.5">
                       <StatusBadge status={entry.action} config={actionConfig} size="sm" />
                     </TableCell>
-                    <TableCell className="px-3 py-2.5 text-xs text-foreground">{describeEntry(entry, studentNameFor, t)}</TableCell>
+                    <TableCell className="px-3 py-2.5 text-xs text-foreground">{describeAuditEntry(entry, studentNameFor, t)}</TableCell>
                     <TableCell className="px-3 py-2.5 text-xs font-semibold text-muted-foreground capitalize">{entry.by || "—"}</TableCell>
                   </TableRow>
                 ))}

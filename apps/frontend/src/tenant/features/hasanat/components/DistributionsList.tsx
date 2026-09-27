@@ -1,7 +1,5 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
-import type { Denomination, Distribution, StockBatch } from '@/lib/data/hasanatData';
-import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { HasanatTrashDialogs } from "./HasanatTrashDialogs";
 import { ModuleWorkListStateShell } from "@/components/ui/ModuleWorkListStateShell";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -10,129 +8,56 @@ import { DistributionsListContent } from "./DistributionsListContent";
 import { DistributionsListFilters } from "./DistributionsListFilters";
 import { HasanatBulkActionBar } from "./HasanatBulkActionBar";
 import { useDistributionsList } from "../hooks/useDistributionsList";
+import { useDistributionsTrashState } from "../hooks/useDistributionsTrashState";
+import type { DistributionsListProps } from "./distributionsListTypes";
+
+export type { DistributionsListProps };
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
-
-export interface DistributionsListProps {
-  denoms: Denomination[];
-  batches: StockBatch[];
-  onCreate: (distribution: Distribution) => void | Promise<void>;
-  onUpdate: (distribution: Distribution) => void | Promise<void>;
-  onFilteredCountChange?: (count: number) => void;
-  canWrite?: boolean;
-  canDelete?: boolean;
-  showDeleted?: boolean;
-  onToggleDeleted?: () => void;
-  createRequestKey?: number;
-  onDelete?: (id: string) => void | Promise<void>;
-  onRestore?: (id: string) => void | Promise<void>;
-  onBulkDelete?: (ids: string[]) => void | Promise<void>;
-  onBulkRestore?: (ids: string[]) => void | Promise<void>;
-  selectedIds?: string[];
-  onToggleSelectedDistribution?: (id: string, checked: boolean) => void;
-  onToggleSelectAll?: (checked: boolean, visibleIds: string[]) => void;
-  onClearSelection?: () => void;
-  isColumnVisible?: (key: string) => boolean;
-  getColumnWidth?: (key: string) => number | undefined;
-  onColumnResize?: (key: string, width: number) => void;
-  columnCustomizer?: ModuleColumnCustomizerProps;
-  onMessage?: (channel: 'sms' | 'whatsapp' | 'email', distributions: Distribution[]) => void;
-  onRowClick?: (distribution: Distribution) => void;
-}
 
 /**
  * DistributionsList Component
  *
  * Renders the ledger interface for tracking physical reward cards distributed to students or faculty.
- * Enables searching and filtering distributions by keyword or status (e.g., active, redeemed, returned),
- * updating distribution statuses, and launching a modal to issue new cards to recipients.
- *
- * @param props - Component properties.
- * @returns React element representing the card distribution manager UI.
  */
-export function DistributionsList({
-  denoms,
-  batches,
-  onCreate,
-  onUpdate,
-  onFilteredCountChange,
-  canWrite = true,
-  canDelete = false,
-  showDeleted = false,
-  onToggleDeleted,
-  createRequestKey = 0,
-  onDelete,
-  onRestore,
-  onBulkDelete,
-  onBulkRestore,
-  selectedIds = [],
-  onToggleSelectedDistribution,
-  onToggleSelectAll,
-  onClearSelection,
-  isColumnVisible,
-  getColumnWidth,
-  onColumnResize,
-  columnCustomizer,
-  onMessage,
-  onRowClick,
-}: DistributionsListProps) {
+export function DistributionsList(props: DistributionsListProps) {
+  const {
+    denoms,
+    batches,
+    canWrite = true,
+    canDelete = false,
+    showDeleted = false,
+    onToggleDeleted,
+    selectedIds = [],
+    onToggleSelectedDistribution,
+    onToggleSelectAll,
+    onClearSelection,
+    isColumnVisible,
+    getColumnWidth,
+    onColumnResize,
+    columnCustomizer,
+    onMessage,
+    onRowClick,
+    onRestore,
+    onDelete,
+    onBulkRestore,
+    onBulkDelete,
+  } = props;
   const { t } = useTranslation();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
-  const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
-  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
-  const {
-    statusLabels,
-    statusConfig,
-    showModal,
-    setShowModal,
-    search,
-    setSearch,
-    filterStatus,
-    setFilterStatus,
-    listPage,
-    setListPage,
-    pageDistributions,
-    pageQuery,
-    serverTotal,
-    serverPage,
-    serverLimit,
-    serverHasMore,
-    toggleStatus,
-    handleDistribute,
-    changeStatus,
-  } = useDistributionsList({
-    onCreate,
-    onUpdate,
-    onFilteredCountChange,
-    canWrite,
-    showDeleted,
-    createRequestKey,
-  });
+  const list = useDistributionsList(props);
+  const trash = useDistributionsTrashState(props);
 
   const selectedSet = new Set(selectedIds);
-  const allVisibleSelected = pageDistributions.length > 0
-    && pageDistributions.every((distribution) => selectedSet.has(distribution.id));
-  const someVisibleSelected = selectedSet.size > 0 && pageDistributions.some((distribution) => selectedSet.has(distribution.id));
+  const allVisibleSelected = list.pageDistributions.length > 0
+    && list.pageDistributions.every((distribution) => selectedSet.has(distribution.id));
+  const someVisibleSelected = selectedSet.size > 0 && list.pageDistributions.some((distribution) => selectedSet.has(distribution.id));
 
   useEffect(() => {
     onClearSelection?.();
-  }, [listPage, search, filterStatus, onClearSelection]);
+  }, [list.listPage, list.search, list.filterStatus, onClearSelection]);
 
   const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
-
-  const confirmRowTrash = (): void => {
-    if (!pendingTrashId) return;
-    void onDelete?.(pendingTrashId);
-    setPendingTrashId(null);
-  };
-
-  const confirmBulkTrash = (): void => {
-    if (showDeleted) void onBulkRestore?.(selectedIds);
-    else void onBulkDelete?.(selectedIds);
-    onClearSelection?.();
-    setConfirmBulkOpen(false);
-  };
-
   const canBulkTrash = canDelete && Boolean(showDeleted ? onBulkRestore : onBulkDelete);
 
   return (
@@ -140,18 +65,18 @@ export function DistributionsList({
       <DistributionsListFilters
         viewMode={viewMode}
         onViewModeChange={setViewMode}
-        search={search}
-        filterStatus={filterStatus}
-        statusLabels={statusLabels}
+        search={list.search}
+        filterStatus={list.filterStatus}
+        statusLabels={list.statusLabels}
         canWrite={canWrite}
         canDelete={canDelete}
         showDeleted={showDeleted}
         onToggleDeleted={onToggleDeleted}
         columnCustomizer={columnCustomizer}
-        onSearchChange={setSearch}
-        onToggleStatus={toggleStatus}
-        onClearStatuses={() => setFilterStatus([])}
-        onOpenModal={() => setShowModal(true)}
+        onSearchChange={list.setSearch}
+        onToggleStatus={list.toggleStatus}
+        onClearStatuses={() => list.setFilterStatus([])}
+        onOpenModal={() => list.setShowModal(true)}
       />
 
       {canBulkTrash && (
@@ -159,43 +84,43 @@ export function DistributionsList({
           selectedCount={selectedIds.length}
           showDeleted={showDeleted}
           canDelete={canDelete}
-          onRequestBulkDelete={() => setConfirmBulkOpen(true)}
-          onRequestBulkRestore={() => setConfirmBulkOpen(true)}
+          onRequestBulkDelete={() => trash.setConfirmBulkOpen(true)}
+          onRequestBulkRestore={() => trash.setConfirmBulkOpen(true)}
           onClearSelection={onClearSelection ?? (() => {})}
         />
       )}
 
       <ModuleWorkListStateShell
-        isError={pageQuery.isError}
-        isLoading={pageQuery.isLoading}
-        isFetching={pageQuery.isFetching}
-        onRetry={() => { void pageQuery.refetch(); }}
+        isError={list.pageQuery.isError}
+        isLoading={list.pageQuery.isLoading}
+        isFetching={list.pageQuery.isFetching}
+        onRetry={() => { void list.pageQuery.refetch(); }}
         errorTitle={t("hasanat.loadFailed")}
         errorHint={t("hasanat.loadFailedHint")}
         viewMode={viewMode}
         skeletonColumnCount={6}
         useServerWork={true}
         pageData={{
-          page: serverPage,
-          total: serverTotal,
-          limit: serverLimit,
-          hasMore: serverHasMore,
+          page: list.serverPage,
+          total: list.serverTotal,
+          limit: list.serverLimit,
+          hasMore: list.serverHasMore,
         }}
-        onPageChange={setListPage}
+        onPageChange={list.setListPage}
         i18nNamespace="hasanat"
         showPagination={true}
         loadingLabel={t("common.loading")}
       >
         <DistributionsListContent
           viewMode={viewMode}
-          distributions={pageDistributions}
+          distributions={list.pageDistributions}
           denoms={denoms}
           selectedIds={selectedIds}
           allVisibleSelected={allVisibleSelected}
           someVisibleSelected={someVisibleSelected}
           isColumnVisible={columnVisible}
-          statusLabels={statusLabels}
-          statusConfig={statusConfig}
+          statusLabels={list.statusLabels}
+          statusConfig={list.statusConfig}
           canWrite={canWrite}
           canDelete={canDelete}
           showDeleted={showDeleted}
@@ -203,15 +128,15 @@ export function DistributionsList({
           canDeleteRows={!!onDelete}
           onMessage={onMessage}
           onRowClick={onRowClick ? (id) => {
-            const distribution = pageDistributions.find((item) => item.id === id);
+            const distribution = list.pageDistributions.find((item) => item.id === id);
             if (distribution) onRowClick(distribution);
           } : undefined}
-          onChangeStatus={changeStatus}
+          onChangeStatus={list.changeStatus}
           onToggleSelectedDistribution={(id, checked) => onToggleSelectedDistribution?.(id, checked)}
-          onToggleSelectAll={(checked) => onToggleSelectAll?.(checked, pageDistributions.map((d) => d.id))}
+          onToggleSelectAll={(checked) => onToggleSelectAll?.(checked, list.pageDistributions.map((d) => d.id))}
           onTrashAction={(id) => {
             if (showDeleted) void onRestore?.(id);
-            else setPendingTrashId(id);
+            else trash.setPendingTrashId(id);
           }}
           getColumnWidth={getColumnWidth}
           onColumnResize={onColumnResize}
@@ -220,23 +145,23 @@ export function DistributionsList({
 
       {canWrite && !showDeleted && (
         <DistributeModal
-          open={showModal}
+          open={list.showModal}
           denoms={denoms}
           batches={batches}
-          onClose={() => setShowModal(false)}
-          onSave={handleDistribute}
+          onClose={() => list.setShowModal(false)}
+          onSave={list.handleDistribute}
         />
       )}
 
       <HasanatTrashDialogs
-        pendingTrashId={pendingTrashId}
-        onPendingTrashIdChange={setPendingTrashId}
-        confirmBulkOpen={confirmBulkOpen}
-        onConfirmBulkOpenChange={setConfirmBulkOpen}
+        pendingTrashId={trash.pendingTrashId}
+        onPendingTrashIdChange={trash.setPendingTrashId}
+        confirmBulkOpen={trash.confirmBulkOpen}
+        onConfirmBulkOpenChange={trash.setConfirmBulkOpen}
         showDeleted={showDeleted}
         selectedCount={selectedIds.length}
-        onConfirmRowTrash={confirmRowTrash}
-        onConfirmBulkTrash={confirmBulkTrash}
+        onConfirmRowTrash={trash.confirmRowTrash}
+        onConfirmBulkTrash={trash.confirmBulkTrash}
       />
     </section>
   );

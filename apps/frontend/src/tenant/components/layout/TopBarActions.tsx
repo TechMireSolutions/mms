@@ -1,7 +1,6 @@
 import React from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import {
-  Bell,
   ChevronDown,
   LogOut,
   User,
@@ -10,8 +9,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { ROUTES } from "@/lib/config/routes";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
+import { UserAvatar } from "@/components/ui/UserAvatar";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -21,23 +19,11 @@ import {
   DropdownMenuTrigger,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import SyncStatusBadge from "@/tenant/components/layout/SyncStatusBadge";
 import { BackgroundJobsTray } from "@/components/ui/BackgroundJobsTray";
-
-import { useDashboardData } from "@/tenant/features/dashboard/hooks/useDashboardData";
-import { resolveDashboardRole } from "@/lib/dashboardRole";
-import { getInitials } from "@mms/shared";
-
-import { usePermissions } from "@/tenant/hooks/usePermissions";
-import { buildDashboardNotifications } from "@/lib/buildDashboardNotifications";
-import { useFinanceCurrency } from "@/hooks/useCurrency";
+import { TenantNotificationsPopover } from "@/tenant/components/layout/TenantNotificationsPopover";
 
 export interface TopBarActionsProps {
   /** Tighter spacing for mobile header. */
@@ -53,39 +39,6 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
   const { user, logout } = useAuth();
   const { t } = useTranslation();
 
-  const initials = (user?.name ? getInitials(user.name, 2) : "") || "U";
-
-  const { can } = usePermissions();
-  const { formatCurrency } = useFinanceCurrency();
-  const dashboardRole = resolveDashboardRole(can);
-  const {
-    financeMetrics,
-    attendanceMetrics,
-    studentMetricsInactive,
-  } = useDashboardData([], dashboardRole);
-
-  const notifications = (() => {
-    return buildDashboardNotifications(
-      dashboardRole,
-      {
-        outstandingInvoiceCount: financeMetrics?.outstanding ?? 0,
-        outstandingBalance: financeMetrics?.outstandingBalance ?? 0,
-        attendanceRate:
-          attendanceMetrics?.selectedDatePresentRate
-          ?? attendanceMetrics?.overallPresentRate
-          ?? null,
-        inactiveStudents: studentMetricsInactive,
-      },
-      t,
-      formatCurrency,
-    );
-  })();
-
-  const unreadCount = notifications.length;
-
-  const navigate = useNavigate();
-  const [popoverOpen, setPopoverOpen] = React.useState(false);
-
   return (
     <div className={cn("flex shrink-0 items-center gap-1 sm:gap-2", className)}>
       {compact && onOpenCommandPalette && (
@@ -96,80 +49,12 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
           aria-label={t("nav.globalSearchPlaceholder")}
           className="relative flex items-center justify-center rounded-lg text-xs text-muted-foreground border-border/80 hover:bg-muted/80 transition-colors cursor-pointer min-h-11 min-w-11 h-11 w-11 p-0"
         >
-          <Search className="h-4 w-4 shrink-0 text-muted-foreground" />
+          <Search className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
         </Button>
       )}
       <SyncStatusBadge />
       <BackgroundJobsTray compact={compact} />
-
-      <Popover open={popoverOpen} onOpenChange={setPopoverOpen}>
-        <PopoverTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            aria-label={t("notifications.title")}
-            className="relative min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted transition-colors"
-          >
-            <Bell className="h-4.5 w-4.5 text-muted-foreground" />
-            {unreadCount > 0 && (
-              <span className="absolute top-1.5 end-1.5 h-2 w-2 rounded-full bg-destructive animate-pulse" />
-            )}
-          </Button>
-        </PopoverTrigger>
-        <PopoverContent align="end" className="w-popover-menu max-w-full p-0">
-          {popoverOpen && (
-            <>
-              <div className="border-b border-border px-4 py-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-semibold">{t("notifications.title")}</h3>
-                  {unreadCount > 0 && (
-                    <Badge variant="secondary" className="px-1.5 py-0 text-xs">
-                      {unreadCount}
-                    </Badge>
-                  )}
-                </div>
-              </div>
-              <div className="max-h-80 overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="px-4 py-6 text-center text-xs text-foreground/75 font-medium">
-                    {t("notifications.empty")}
-                  </div>
-                ) : (
-                  notifications.map((notification) => (
-                    <div
-                      key={notification.id}
-                      className="border-b border-border/50 px-4 py-3 last:border-0 hover:bg-muted/50 transition-colors"
-                    >
-                      <div className="flex items-start gap-3">
-                        <div className="mt-2 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
-                        <div>
-                          <p className="text-sm font-medium text-foreground">{notification.title}</p>
-                          <p className="mt-0.5 text-xs text-foreground/80">{notification.desc}</p>
-                          <p className="mt-1 text-xs text-foreground/75 font-medium">{notification.time}</p>
-                        </div>
-                      </div>
-                    </div>
-                  ))
-                )}
-              </div>
-              <div className="border-t border-border px-3 py-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  onClick={() => {
-                    setPopoverOpen(false);
-                    navigate(ROUTES.home);
-                  }}
-                  className="w-full justify-center text-xs font-semibold text-foreground hover:text-primary hover:bg-muted/60 min-h-11 px-3"
-                >
-                  {t("notifications.viewAll")}
-                </Button>
-              </div>
-            </>
-          )}
-        </PopoverContent>
-      </Popover>
+      <TenantNotificationsPopover />
 
       {!compact ? <div className="mx-1 hidden h-6 w-px bg-border sm:block" /> : null}
 
@@ -180,21 +65,21 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
             variant="ghost"
             aria-label={t("account.title")}
             className={cn(
-              "flex items-center rounded-lg transition-colors hover:bg-muted justify-start font-normal h-auto",
+              "flex items-center rounded-lg transition-colors hover:bg-muted justify-start font-normal h-auto cursor-pointer",
               compact ? "min-h-11 min-w-11 gap-1 p-2" : "min-h-11 gap-2.5 py-2 ps-2 pe-3",
             )}
           >
-            <Avatar className={compact ? "h-7 w-7" : "h-8 w-8"}>
-              <AvatarFallback className="bg-primary/10 text-primary text-xs font-semibold">
-                {initials}
-              </AvatarFallback>
-            </Avatar>
+            <UserAvatar
+              name={user?.name ?? "User"}
+              size={compact ? "sm" : "md"}
+              className={compact ? "h-7 w-7" : "h-8 w-8"}
+            />
             {!compact ? (
               <>
                 <div className="hidden text-start sm:block">
                   <p className="text-sm font-medium leading-none">{user?.name ?? "User"}</p>
                 </div>
-                <ChevronDown className="hidden h-3 w-3 text-muted-foreground sm:block" />
+                <ChevronDown className="hidden h-3 w-3 text-muted-foreground sm:block" aria-hidden />
               </>
             ) : null}
           </Button>
@@ -221,7 +106,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
           </DropdownMenuItem>
           <DropdownMenuSeparator />
           <DropdownMenuItem
-            className="text-destructive"
+            className="text-destructive cursor-pointer"
             onClick={() => logout(true)}
           >
             <LogOut className="me-2 h-4 w-4" />
