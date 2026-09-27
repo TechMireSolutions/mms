@@ -225,13 +225,18 @@ test.describe('Platform Admin Creation and Access Management Flow', () => {
 
       // Wait for modal to close and new admin to appear in directory
       await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 20_000 });
-      await expect(page.getByText(e2eCreatedAdminName).first()).toBeVisible({ timeout: 25_000 });
+      
+      const adminRow = page.locator('tr', { hasText: new RegExp(e2eCreatedAdminName, 'i') }).first();
+      await adminRow.scrollIntoViewIfNeeded().catch(() => {});
+      await expect(adminRow).toBeVisible({ timeout: 25_000 });
     });
 
     // 4. Edit administrator permissions
     await test.step('4. Edit administrator permissions', async () => {
       // Find row or card containing the created admin
-      const adminContainer = page.locator('tr').filter({ hasText: e2eCreatedAdminName }).first();
+      const adminContainer = page.locator('tr', { hasText: new RegExp(e2eCreatedAdminName, 'i') }).first();
+      await adminContainer.scrollIntoViewIfNeeded().catch(() => {});
+      
       const editAccessBtn = adminContainer.getByRole('button', { name: /Edit permissions|Edit access/i });
       await expect(editAccessBtn).toBeVisible({ timeout: 15_000 });
       await editAccessBtn.click();

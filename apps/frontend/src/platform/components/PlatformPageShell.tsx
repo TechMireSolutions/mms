@@ -24,6 +24,13 @@ interface PlatformPageShellProps {
   width?: 'md' | 'lg' | 'xl' | '7xl';
 }
 
+/** Registers the Cmd/Ctrl+K command-palette shortcut exactly once within the sidebar context. */
+function PlatformGlobalShortcuts(): null {
+  const { setCommandPaletteOpen } = usePlatformSidebar();
+  useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
+  return null;
+}
+
 /** Inner component that reads command palette state from sidebar context. */
 function PlatformAuthenticatedShell({
   children,
@@ -36,8 +43,6 @@ function PlatformAuthenticatedShell({
 }): React.JSX.Element {
   const { dir, language } = useTranslation();
   const { commandPaletteOpen, setCommandPaletteOpen, collapsed } = usePlatformSidebar();
-
-  useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
 
   return (
     <AppShell
@@ -66,6 +71,7 @@ function PlatformAuthenticatedShell({
       maxWidthClass={maxClass}
       footer={footer}
     >
+      <PlatformGlobalShortcuts />
       {children}
     </AppShell>
   );
@@ -125,8 +131,6 @@ function UnauthenticatedShell({
 }): React.JSX.Element {
   const { commandPaletteOpen, setCommandPaletteOpen } = usePlatformSidebar();
 
-  useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
-
   return (
     <AppShell
       dir={dir as "ltr" | "rtl"}
@@ -152,6 +156,7 @@ function UnauthenticatedShell({
       maxWidthClass={maxClass}
       footer={footer}
     >
+      <PlatformGlobalShortcuts />
       {children}
     </AppShell>
   );

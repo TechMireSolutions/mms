@@ -17,6 +17,11 @@ export {
 } from "./WorkBatchTable";
 
 export {
+  deriveSelectionState,
+  WORK_TABLE_CONTAINER_CLASS,
+} from "./workBatchTableTypes";
+
+export {
   WorkBatchTableRow,
   type WorkBatchTableRowProps,
 } from "./WorkBatchTableRow";

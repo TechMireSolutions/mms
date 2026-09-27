@@ -7,6 +7,7 @@ import {
   WorkBatchTable,
   type WorkBatchTableColumn,
 } from '@/components/common/work/WorkBatchTable';
+import { deriveSelectionState, WORK_TABLE_CONTAINER_CLASS } from '@/components/common/work/workBatchTableTypes';
 import {
   PlatformAdminStatusBadges,
   PlatformAdminPermissionsBadges,
@@ -47,14 +48,11 @@ export function PlatformAdminsTableView({
 
   const selection = React.useMemo(() => {
     if (!selectedIds || !onToggleSelect || !onToggleSelectAll) return undefined;
-    const allSelected = admins.length > 0 && admins.every((a) => selectedIds.has(a.id));
-    const someSelected = !allSelected && admins.some((a) => selectedIds.has(a.id));
     return {
       selectedIds,
       onSelectOne: onToggleSelect,
       onSelectAll: onToggleSelectAll,
-      allSelected,
-      someSelected,
+      ...deriveSelectionState(admins, selectedIds),
     };
   }, [admins, selectedIds, onToggleSelect, onToggleSelectAll]);
 
@@ -124,9 +122,8 @@ export function PlatformAdminsTableView({
       rowClassName={() =>
         'group hover:bg-muted/30 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset'
       }
-      containerClassName="rounded-xl border border-border/40 overflow-hidden bg-card shadow-sm"
+      containerClassName={WORK_TABLE_CONTAINER_CLASS}
       bordered={false}
-      virtualize={false}
     />
   );
 }

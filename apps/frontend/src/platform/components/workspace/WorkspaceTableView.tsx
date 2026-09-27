@@ -4,6 +4,7 @@ import { tenantUrl } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { EntityDescriptor } from '@/types/entityRegistry';
 import { WorkBatchTable, type WorkBatchTableColumn } from '@/components/common/work/WorkBatchTable';
+import { deriveSelectionState, WORK_TABLE_CONTAINER_CLASS } from '@/components/common/work/workBatchTableTypes';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { WorkspaceIdentityCell } from '@/platform/components/workspace/WorkspaceIdentityCell';
@@ -143,8 +144,7 @@ export function WorkspaceTableView({
           selectedIds: selectedSubdomains,
           onSelectOne: (id) => onToggleSelect(id),
           onSelectAll: onToggleSelectAll,
-          allSelected: workspaces.length > 0 && workspaces.every((w) => selectedSubdomains.has(w.subdomain)),
-          someSelected: workspaces.some((w) => selectedSubdomains.has(w.subdomain)) && !workspaces.every((w) => selectedSubdomains.has(w.subdomain)),
+          ...deriveSelectionState(workspaces.map((w) => ({ ...w, id: w.subdomain })), selectedSubdomains),
           selectAllAriaLabel: t('platform.workspaces.selectAll'),
           selectRowAriaLabel: (w) => t('platform.workspaces.selectItem', { name: w.madrasaName }),
         } : undefined
@@ -182,7 +182,7 @@ export function WorkspaceTableView({
           deletePending && targetWorkspaceSubdomain === workspace.subdomain && 'opacity-40 pointer-events-none',
         )
       }
-      containerClassName="rounded-xl border border-border/40 overflow-hidden bg-card shadow-sm"
+      containerClassName={WORK_TABLE_CONTAINER_CLASS}
       bordered={false}
       virtualize={false}
     />

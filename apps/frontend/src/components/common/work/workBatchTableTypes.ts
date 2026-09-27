@@ -1,5 +1,30 @@
 import type React from "react";
 
+/**
+ * Computes allSelected / someSelected from a list of items and a selection set.
+ * Eliminates duplicated inline derivation across table views.
+ */
+export function deriveSelectionState<T extends { id: string | number }>(
+  items: T[],
+  selectedIds: ReadonlySet<string> | ReadonlySet<string | number> | ReadonlyArray<string | number>,
+): { allSelected: boolean; someSelected: boolean } {
+  const has = (id: string | number): boolean => {
+    if (selectedIds instanceof Set) {
+      return (selectedIds as ReadonlySet<string | number>).has(id) ||
+        (selectedIds as ReadonlySet<string | number>).has(String(id));
+    }
+    const arr = selectedIds as ReadonlyArray<string | number>;
+    return arr.includes(id) || arr.includes(String(id));
+  };
+  const allSelected = items.length > 0 && items.every((x) => has(x.id));
+  const someSelected = !allSelected && items.some((x) => has(x.id));
+  return { allSelected, someSelected };
+}
+
+/** Shared container class string for bordered WorkBatchTable wrappers. */
+export const WORK_TABLE_CONTAINER_CLASS =
+  "rounded-xl border border-border/40 overflow-hidden bg-card shadow-sm" as const;
+
 export interface WorkBatchTableColumn<TData> {
   id: string;
   label: string;
