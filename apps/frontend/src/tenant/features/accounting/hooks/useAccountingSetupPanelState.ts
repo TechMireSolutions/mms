@@ -163,20 +163,15 @@ export function useAccountingSetupPanelState({
    * only ever used to write a row here — deletion has no route at all and is
    * called out in the UI instead of being faked with a collection filter.
    */
-  const handleSaveFY = (async (fiscalYear: FiscalYear) => {
-      await onSaveFiscalYears((prev) => {
-        const updatedFiscalYears = prev.find(
-          (existingFiscalYear) => existingFiscalYear.id === fiscalYear.id,
-        )
-          ? prev.map((existingFiscalYear) =>
-              existingFiscalYear.id === fiscalYear.id ? fiscalYear : existingFiscalYear,
-            )
-          : [...prev, fiscalYear];
-        return updatedFiscalYears;
-      });
-      setFyModal(null);
-      notify.success(t("accounting.settings.fy.saved"));
-    });
+  const handleSaveFY = async (fiscalYear: FiscalYear) => {
+    await onSaveFiscalYears((prev) =>
+      prev.some((fy) => fy.id === fiscalYear.id)
+        ? prev.map((fy) => (fy.id === fiscalYear.id ? fiscalYear : fy))
+        : [...prev, fiscalYear],
+    );
+    setFyModal(null);
+    notify.success(t("accounting.settings.fy.saved"));
+  };
 
   return {
     settingsDraft,

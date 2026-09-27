@@ -1,12 +1,7 @@
 import type {
-  ObligationType,
-  Mujtahid,
-  MujtahidRep,
-  WakalaType,
-  ObligationDistribution,
-  ObligationCollection,
-  ObligationsCommandMetricsSnapshot,
-  ObligationsReportQuery,
+  ObligationType, Mujtahid, MujtahidRep, WakalaType,
+  ObligationDistribution, ObligationCollection,
+  ObligationsCommandMetricsSnapshot, ObligationsReportQuery,
 } from '@mms/shared';
 import { OBLIGATIONS_MODULE_MANIFEST } from '@mms/shared';
 import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
@@ -32,14 +27,9 @@ import {
 } from '@/tenant/features/obligations/hooks/obligationsQueryKeys';
 
 export {
-  OBLIGATIONS_TYPES_QUERY_KEY,
-  OBLIGATIONS_MUJTAHIDS_QUERY_KEY,
-  OBLIGATIONS_REPS_QUERY_KEY,
-  OBLIGATIONS_WAKALA_QUERY_KEY,
-  OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY,
-  OBLIGATIONS_COLLECTIONS_QUERY_KEY,
-  OBLIGATIONS_METRICS_QUERY_KEY,
-  OBLIGATIONS_REPORT_AGGREGATES_QUERY_KEY,
+  OBLIGATIONS_TYPES_QUERY_KEY, OBLIGATIONS_MUJTAHIDS_QUERY_KEY, OBLIGATIONS_REPS_QUERY_KEY,
+  OBLIGATIONS_WAKALA_QUERY_KEY, OBLIGATIONS_DISTRIBUTIONS_QUERY_KEY, OBLIGATIONS_COLLECTIONS_QUERY_KEY,
+  OBLIGATIONS_METRICS_QUERY_KEY, OBLIGATIONS_REPORT_AGGREGATES_QUERY_KEY,
 };
 export { useObligationsMutations } from '@/tenant/features/obligations/hooks/useObligationsMutations';
 

@@ -6,38 +6,21 @@ import {
 } from "@mms/shared";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { Checkbox } from "@/components/ui/checkbox";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Badge } from "@/components/ui/badge";
 import { getFieldLabel } from "@/lib/reports/reportMetadata";
 import type { ChartOperation, ChartType } from "@/components/ui/reports/dynamicChartVisualizerTypes";
 import type { DynamicChartVisualizerConfigPanelProps } from "@/components/ui/reports/dynamicChartVisualizerConfigPanelTypes";
+import { DynamicChartVisualizerDisplayFields } from "./DynamicChartVisualizerDisplayFields";
 
 type FieldsProps = Pick<
   DynamicChartVisualizerConfigPanelProps,
-  | "title"
-  | "setTitle"
-  | "collectionKey"
-  | "setCollectionKey"
-  | "xAxisField"
-  | "setXAxisField"
-  | "operation"
-  | "setOperation"
-  | "targetField"
-  | "setTargetField"
-  | "chartType"
-  | "setChartType"
-  | "activePalette"
-  | "setActivePalette"
-  | "showGrid"
-  | "setShowGrid"
-  | "showLegend"
-  | "setShowLegend"
-  | "showTooltip"
-  | "setShowTooltip"
-  | "activeMeta"
-  | "metadataConfigs"
-  | "t"
+  | "title" | "setTitle" | "collectionKey" | "setCollectionKey"
+  | "xAxisField" | "setXAxisField" | "operation" | "setOperation"
+  | "targetField" | "setTargetField" | "chartType" | "setChartType"
+  | "activePalette" | "setActivePalette" | "showGrid" | "setShowGrid"
+  | "showLegend" | "setShowLegend" | "showTooltip" | "setShowTooltip"
+  | "activeMeta" | "metadataConfigs" | "t"
 >;
 
 export function DynamicChartVisualizerConfigFields({
@@ -186,32 +169,15 @@ export function DynamicChartVisualizerConfigFields({
         </div>
       </div>
 
-      <div className="pt-2">
-        <SectionLabel weight="bold" tracking="wider" className="block mb-2">{t("reports.visualizer.displayCustomizations")}</SectionLabel>
-        <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-          <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
-            <Checkbox
-              checked={showGrid}
-              onCheckedChange={(checked) => setShowGrid(Boolean(checked))}
-            />
-            {t("reports.visualizer.gridLines")}
-          </label>
-          <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
-            <Checkbox
-              checked={showLegend}
-              onCheckedChange={(checked) => setShowLegend(Boolean(checked))}
-            />
-            {t("reports.visualizer.legends")}
-          </label>
-          <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
-            <Checkbox
-              checked={showTooltip}
-              onCheckedChange={(checked) => setShowTooltip(Boolean(checked))}
-            />
-            {t("reports.visualizer.tooltips")}
-          </label>
-        </div>
-      </div>
+      <DynamicChartVisualizerDisplayFields
+        showGrid={showGrid}
+        setShowGrid={setShowGrid}
+        showLegend={showLegend}
+        setShowLegend={setShowLegend}
+        showTooltip={showTooltip}
+        setShowTooltip={setShowTooltip}
+        t={t}
+      />
     </div>
   );
 }

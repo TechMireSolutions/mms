@@ -180,21 +180,13 @@ export function getPdfPageDimensions(
   pdfFormat: string,
   pdfOrientation: 'p' | 'l',
 ): { formatWidth: number; formatHeight: number } {
-  let formatWidth = 210;
-  let formatHeight = 297;
-  if (pdfFormat === 'a3') {
-    formatWidth = 297;
-    formatHeight = 420;
-  } else if (pdfFormat === 'legal') {
-    formatWidth = 215.9;
-    formatHeight = 355.6;
-  } else if (pdfFormat === 'letter') {
-    formatWidth = 215.9;
-    formatHeight = 279.4;
-  }
-
-  if (pdfOrientation === 'l') {
-    return { formatWidth: formatHeight, formatHeight: formatWidth };
-  }
-  return { formatWidth, formatHeight };
+  const SIZES: Record<string, [number, number]> = {
+    a3: [297, 420],
+    legal: [215.9, 355.6],
+    letter: [215.9, 279.4],
+  };
+  const [w, h] = SIZES[pdfFormat] ?? [210, 297];
+  return pdfOrientation === 'l'
+    ? { formatWidth: h, formatHeight: w }
+    : { formatWidth: w, formatHeight: h };
 }

@@ -4,17 +4,7 @@
  */
 
 import React, { useState } from "react";
-import {
-  AlignHorizontalDistributeCenter,
-  AlignVerticalDistributeCenter,
-  ArrowDownToLine,
-  ArrowUpToLine,
-  Copy,
-  Layers,
-  Move,
-  Trash2,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Layers, Move } from "lucide-react";
 import type { ElementStyle, TemplateElement } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { normalizeHexColor, type AlignmentType } from "./templateEditorUtils";
@@ -23,6 +13,9 @@ import { TemplateEditorAlignmentGrid } from "./TemplateEditorAlignmentGrid";
 import { TemplateEditorTypographySection } from "./TemplateEditorTypographySection";
 import { TemplateEditorMultiSelectCenterSnap } from "./TemplateEditorMultiSelectCenterSnap";
 import { TemplateEditorMultiSelectAppearance } from "./TemplateEditorMultiSelectAppearance";
+import { TemplateEditorMultiSelectDistribute } from "./TemplateEditorMultiSelectDistribute";
+import { TemplateEditorMultiSelectLayers } from "./TemplateEditorMultiSelectLayers";
+import { TemplateEditorMultiSelectActions } from "./TemplateEditorMultiSelectActions";
 
 export interface TemplateEditorMultiSelectPanelProps<TPayload = Record<string, unknown>> {
   selectedElements: TemplateElement<keyof TPayload & string>[];
@@ -87,11 +80,6 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
     return { w: Math.round(maxX - minX), h: Math.round(maxY - minY) };
   }, [selectedElements]);
 
-  /*
-   * Alignment here is deliberately physical (left/right edge of the selection), not
-   * logical start/end: element coordinates are absolute left-origin values on an
-   * LTR canvas, so "align left edge" means the same edge in every locale.
-   */
   return (
     <aside
       aria-label={t("templateEditor.elementsSelected", { count: selectedElements.length })}
@@ -126,37 +114,12 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
       </TemplateEditorSection>
 
       {onDistributeSelected && selectedElements.length >= 3 && (
-        <TemplateEditorSection
-          titleKey="templateEditor.distribute"
-          icon={AlignHorizontalDistributeCenter}
+        <TemplateEditorMultiSelectDistribute
           isOpen={openSections.distribute}
           onToggle={() => toggleSection("distribute")}
+          onDistributeSelected={onDistributeSelected}
           t={t}
-          panelClassName="space-y-1.5"
-        >
-          <div role="group" aria-label={t("templateEditor.distribute")} className="grid grid-cols-2 gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onDistributeSelected("horizontal")}
-              title={t("templateEditor.distributeHorizontally")}
-              aria-label={t("templateEditor.distributeHorizontally")}
-              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-            >
-              <AlignHorizontalDistributeCenter className="w-4 h-4" aria-hidden="true" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onDistributeSelected("vertical")}
-              title={t("templateEditor.distributeVertically")}
-              aria-label={t("templateEditor.distributeVertically")}
-              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-            >
-              <AlignVerticalDistributeCenter className="w-4 h-4" aria-hidden="true" />
-            </Button>
-          </div>
-        </TemplateEditorSection>
+        />
       )}
 
       <TemplateEditorMultiSelectCenterSnap
@@ -168,37 +131,13 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
       />
 
       {onBringToFront && onSendToBack && (
-        <TemplateEditorSection
-          titleKey="templateEditor.layerOrdering"
-          icon={Layers}
+        <TemplateEditorMultiSelectLayers
           isOpen={openSections.layers}
           onToggle={() => toggleSection("layers")}
+          onBringToFront={onBringToFront}
+          onSendToBack={onSendToBack}
           t={t}
-          panelClassName="space-y-1.5"
-        >
-          <div role="group" aria-label={t("templateEditor.layerOrdering")} className="grid grid-cols-2 gap-1.5">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onBringToFront()}
-              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-              title={t("templateEditor.bringToFront")}
-              aria-label={t("templateEditor.bringToFront")}
-            >
-              <ArrowUpToLine className="w-4 h-4" aria-hidden="true" />
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onSendToBack()}
-              className="min-h-11 min-w-11 p-0 rounded-lg border-border hover:bg-muted flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-              title={t("templateEditor.sendToBack")}
-              aria-label={t("templateEditor.sendToBack")}
-            >
-              <ArrowDownToLine className="w-4 h-4" aria-hidden="true" />
-            </Button>
-          </div>
-        </TemplateEditorSection>
+        />
       )}
 
       {hasTextLike && onPatchSelectedStyles && (
@@ -228,32 +167,12 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
         />
       )}
 
-      <div role="group" aria-label={t("common.actions")} className="flex gap-2 pt-2 border-t border-border">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onDuplicateSelected}
-          className="flex-1 text-xs min-h-11 border-border hover:bg-muted flex items-center justify-center gap-1.5 rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-          title={t("templateEditor.duplicate")}
-          aria-label={t("templateEditor.duplicate")}
-        >
-          <Copy className="w-4 h-4" aria-hidden="true" />
-          <span>{t("templateEditor.duplicate")}</span>
-        </Button>
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onDeleteSelected}
-          className="flex-1 text-xs min-h-11 border-destructive/40 text-destructive hover:bg-destructive/10 flex items-center justify-center gap-1.5 rounded-lg focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:outline-hidden"
-          title={`${t("templateEditor.delete")} (${selectedElements.length})`}
-          aria-label={`${t("templateEditor.delete")} (${selectedElements.length})`}
-        >
-          <Trash2 className="w-4 h-4" aria-hidden="true" />
-          <span>
-            {t("templateEditor.delete")} ({selectedElements.length})
-          </span>
-        </Button>
-      </div>
+      <TemplateEditorMultiSelectActions
+        selectedCount={selectedElements.length}
+        onDuplicateSelected={onDuplicateSelected}
+        onDeleteSelected={onDeleteSelected}
+        t={t}
+      />
     </aside>
   );
 }

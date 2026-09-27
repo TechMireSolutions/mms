@@ -1,9 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useCallback, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { CommandPaletteModal } from '@/components/ui/CommandPaletteModal';
+import { useCommandPaletteSearch } from '@/components/ui/useCommandPaletteSearch';
 import {
   PLATFORM_STATIC_COMMANDS,
   buildWorkspaceCommandItems,
@@ -18,27 +19,41 @@ export interface PlatformCommandPaletteProps {
 }
 
 export function PlatformCommandPalette({ open, onClose }: PlatformCommandPaletteProps): React.JSX.Element | null {
-  const [query, setQuery] = useState('');
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
   const { t } = useTranslation();
   const perms = usePlatformPermissions();
   const { data: workspaces } = usePlatformWorkspaces();
 
-  const allAvailableItems = (() => {
-    // 1. Filter static items by user permissions
+  const allAvailableItems = useMemo(() => {
     const permittedStatic = PLATFORM_STATIC_COMMANDS.filter((item) =>
       commandItemIsPermitted(item, perms),
     );
-
-    // 2. Add dynamic workspace items if permitted
     const workspaceItems: PlatformCommandItem[] =
       perms.canWorkspaces && workspaces ? buildWorkspaceCommandItems(workspaces) : [];
-
     return [...permittedStatic, ...workspaceItems];
-  })();
+  }, [perms, workspaces]);
 
-  const filteredItems = (() => {
+  const handleSelect = useCallback(
+    (item: PlatformCommandItem) => {
+      onClose();
+      navigate(item.path);
+    },
+    [navigate, onClose],
+  );
+
+  const {
+    query,
+    setQuery,
+    selectedIndex,
+    setSelectedIndex,
+    handleKeyDown,
+  } = useCommandPaletteSearch<PlatformCommandItem>({
+    items: allAvailableItems,
+    onSelect: handleSelect,
+    onClose,
+  });
+
+  const filteredItems = useMemo(() => {
     const q = query.trim().toLowerCase();
     if (!q) return allAvailableItems;
     return allAvailableItems.filter((item) => {
@@ -50,40 +65,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
         item.keywords.some((k) => k.toLowerCase().includes(q))
       );
     });
-  })();
-
-  useEffect(() => {
-    setSelectedIndex(0);
-  }, [query]);
-
-  const handleSelect = useCallback(
-    (path: string) => {
-      onClose();
-      setQuery('');
-      navigate(path);
-    },
-    [navigate, onClose],
-  );
-
-  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((prev) => (filteredItems.length > 0 ? (prev + 1) % filteredItems.length : 0));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((prev) =>
-        filteredItems.length > 0 ? (prev - 1 + filteredItems.length) % filteredItems.length : 0,
-      );
-    } else if (e.key === 'Enter') {
-      e.preventDefault();
-      if (filteredItems[selectedIndex]) {
-        handleSelect(filteredItems[selectedIndex].path);
-      }
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      onClose();
-    }
-  };
+  }, [allAvailableItems, query, t]);
 
   const screenReaderAnnouncement =
     filteredItems.length === 0
@@ -111,7 +93,11 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
         filteredItems={filteredItems}
         selectedIndex={selectedIndex}
         query={query}
-        onSelect={handleSelect}
+        onSelect={(path) => {
+          onClose();
+          setQuery('');
+          navigate(path);
+        }}
         onHoverIndex={setSelectedIndex}
       />
     </CommandPaletteModal>

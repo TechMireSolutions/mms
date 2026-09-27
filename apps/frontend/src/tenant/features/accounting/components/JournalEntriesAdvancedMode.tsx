@@ -1,83 +1,18 @@
-import type { ReactNode } from "react";
-import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
 import { JournalEntriesList } from "@/tenant/features/accounting/components/JournalEntriesList";
-import type { JournalEntriesListPaging } from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
-import { JournalEntriesListFilters, JournalEntriesAdvancedFilters } from "@/tenant/features/accounting/components/JournalEntriesListFilters";
+import {
+  JournalEntriesListFilters,
+  JournalEntriesAdvancedFilters,
+} from "@/tenant/features/accounting/components/JournalEntriesListFilters";
 import { AccountingBulkActionBar } from "@/tenant/features/accounting/components/AccountingBulkActionBar";
-import { JournalEntriesModalLayer, type JournalModalMode } from "@/tenant/features/accounting/components/JournalEntriesModalLayer";
-import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import type { JournalEntrySave } from "./journalEntriesTypes";
+import { JournalEntriesModalLayer } from "@/tenant/features/accounting/components/JournalEntriesModalLayer";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import type {
+  JournalMode,
+  JournalEntriesAdvancedModeProps,
+} from "./journalEntriesAdvancedModeTypes";
 
-type JournalMode = "simple" | "advanced";
-
-interface JournalEntriesAdvancedModeProps {
-  mode: JournalMode;
-  modeTabs: Array<{ key: JournalMode; label: string }>;
-  entries: JournalEntry[];
-  allEntries?: JournalEntry[];
-  filteredEntries: JournalEntry[];
-  accounts: Account[];
-  fiscalYears: FiscalYear[];
-  selectedIds: string[];
-  allVisibleSelected: boolean;
-  someVisibleSelected: boolean;
-  isColumnVisible: (key: string) => boolean;
-  journalStatusConfig: Record<string, StatusBadgeConfigItem>;
-  grandDebit: number;
-  grandCredit: number;
-  search: string;
-  statusFilter: string;
-  tagFilter: string;
-  dateFrom: string;
-  dateTo: string;
-  /** Page/total/hasMore from the page that owns the server query. */
-  paging: JournalEntriesListPaging;
-  showFilters: boolean;
-  modal: JournalModalMode;
-  selected: JournalEntry | null;
-  canWrite: boolean;
-  canDelete: boolean;
-  showDeleted: boolean;
-  onToggleDeleted?: () => void;
-  columnCustomizer?: ModuleColumnCustomizerProps;
-  renderEntryActions: (entry: JournalEntry) => ReactNode;
-  renderEntryActionsCards: (entry: JournalEntry) => ReactNode;
-  formatAmount: (amount: number) => string;
-  onModeChange: (mode: JournalMode) => void;
-  onSearchChange: (value: string) => void;
-  onStatusFilterChange: (value: string) => void;
-  onTagFilterChange: (value: string) => void;
-  onDateFromChange: (value: string) => void;
-  onDateToChange: (value: string) => void;
-  onShowFiltersChange: (showFilters: boolean) => void;
-  onOpenNew: () => void;
-  onRequestBulkTrash: () => void;
-  onConfirmBulkTrash: () => void;
-  onConfirmRowTrash: () => void;
-  onExportCsv: () => void;
-  onToggleSelectedEntry: (id: string, checked: boolean) => void;
-  onToggleSelectAll: (checked: boolean) => void;
-  onClearSelection: () => void;
-  onSave: JournalEntrySave;
-  onCloseModal: () => void;
-  onEditSelected: () => void;
-  onViewEntry: (entry: JournalEntry) => void;
-  onRequestReverse: (entry: JournalEntry) => void;
-  onConfirmReverse: (date: string) => void | Promise<void>;
-  pendingTrashId: string | null;
-  confirmBulkOpen: boolean;
-  pendingReverseEntry: JournalEntry | null;
-  onPendingTrashIdChange: (id: string | null) => void;
-  onConfirmBulkOpenChange: (open: boolean) => void;
-  onPendingReverseEntryChange: (entry: JournalEntry | null) => void;
-  getColumnWidth?: (key: string) => number | undefined;
-  onColumnResize?: (key: string, width: number) => void;
-  pageScopeLabel: string;
-  onRestoreEntry?: (id: string) => void | Promise<void>;
-}
+export type { JournalMode, JournalEntriesAdvancedModeProps };
 
 export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProps) {
   const { t } = useTranslation();

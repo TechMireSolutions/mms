@@ -4,13 +4,8 @@ import type { Session } from "@/lib/data/sessionsData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
 import type { Distribution } from "@/lib/data/hasanatData";
-import type {
-  Contact,
-  Enrollment,
-  QuestionBankQuestion,
-  QuestionBankTest,
-  QuestionBankResult,
-} from "@mms/shared";
+import type { Contact, Enrollment } from "@mms/shared";
+import { QUESTION_BANK_METADATA_FIELDS } from "./reportMetadataQuestionBankFields";
 
 export const METADATA_FIELDS = {
   students: {
@@ -165,44 +160,5 @@ export const METADATA_FIELDS = {
     ],
     numericFields: []
   },
-  questions: {
-    name: "Question Bank Questions",
-    dbKey: "questions",
-    defaultData: [] as QuestionBankQuestion[],
-    fields: [
-      { value: "type", label: "Question Type" },
-      { value: "difficulty", label: "Difficulty" },
-      { value: "questionLanguage", label: "Question Language" },
-      { value: "marks", label: "Marks", isNumeric: true }
-    ],
-    numericFields: [
-      { value: "marks", label: "Marks" }
-    ]
-  },
-  tests: {
-    name: "Generated Tests",
-    dbKey: "tests",
-    defaultData: [] as QuestionBankTest[],
-    fields: [
-      { value: "difficulty", label: "Difficulty" },
-      { value: "categoryId", label: "Category" },
-      { value: "duration", label: "Duration", isNumeric: true },
-      { value: "createdAt", label: "Created Date" }
-    ],
-    numericFields: [
-      { value: "duration", label: "Duration" }
-    ]
-  },
-  assessment_results: {
-    name: "Assessment Results",
-    dbKey: "assessment_results",
-    defaultData: [] as QuestionBankResult[],
-    fields: [
-      { value: "testId", label: "Test" },
-      { value: "studentName", label: "Student Name" },
-      { value: "studentId", label: "Student ID" },
-      { value: "submittedAt", label: "Submitted Date" }
-    ],
-    numericFields: []
-  }
+  ...QUESTION_BANK_METADATA_FIELDS,
 } as const;

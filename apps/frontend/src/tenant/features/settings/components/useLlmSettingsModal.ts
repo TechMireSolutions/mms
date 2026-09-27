@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { apiContract } from '@/lib/api';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   LLM_PROVIDERS_META,
@@ -10,6 +9,8 @@ import {
   type LlmTestResult,
 } from '@mms/shared';
 import { useLlmModelFetch } from './useLlmModelFetch';
+
+import { computeNextLlmConfigs, testLlmConnectivity } from './llmSettingsModalHelpers';
 
 interface UseLlmSettingsModalOptions {
   configs: LlmConfig[];
@@ -104,23 +105,8 @@ export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions
     };
 
     try {
-      const res = await apiContract.ai.test({
-        body: {
-          prompt: 'Test connectivity check',
-          customConfig,
-        },
-      });
-      const status = res.status;
-      const body = res.body as LlmTestResult;
-      if (status !== 200) {
-        throw new Error(body.message || 'Failed to test connection');
-      }
-      setModalTestResult(body);
-    } catch (err: unknown) {
-      setModalTestResult({
-        success: false,
-        message: (err instanceof Error ? err.message : undefined) || t('settings.llmTestConnectionFailed'),
-      });
+      const result = await testLlmConnectivity(customConfig, t('settings.llmTestConnectionFailed'));
+      setModalTestResult(result);
     } finally {
       setModalTesting(false);
     }
@@ -147,22 +133,7 @@ export function useLlmSettingsModal({ configs, upd }: UseLlmSettingsModalOptions
       topP: formTopP,
     };
 
-    let updatedConfigs = [...configs];
-
-    if (formIsDefaultText) {
-      updatedConfigs = updatedConfigs.map((config) => ({ ...config, isDefaultText: false }));
-    }
-
-    if (editingConfig) {
-      updatedConfigs = updatedConfigs.map((config) => (config.id === editingConfig.id ? nextConfig : config));
-    } else {
-      updatedConfigs.push(nextConfig);
-    }
-
-    if (updatedConfigs.length > 0 && !updatedConfigs.some((config) => config.isDefaultText)) {
-      updatedConfigs[0] = { ...updatedConfigs[0], isDefaultText: true };
-    }
-
+    const updatedConfigs = computeNextLlmConfigs(configs, nextConfig, Boolean(editingConfig));
     upd('llmConfigs', updatedConfigs);
     setModalOpen(false);
   };

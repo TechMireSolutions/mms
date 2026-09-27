@@ -2,12 +2,9 @@ import { useQueryClient } from '@tanstack/react-query';
 import type {
   AttendanceCommandMetricsSnapshot,
   AttendanceListPageResult,
-  AttendanceReportAggregates,
-  AttendanceReportComparisonQuery,
 } from '@mms/shared';
 import {
   ATTENDANCE_MODULE_MANIFEST,
-  normalizeAttendanceReportComparisonQuery,
 } from '@mms/shared';
 import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { tsrClient } from '@/lib/api';
@@ -17,10 +14,6 @@ import { invalidateAttendanceQueries } from '@/tenant/features/attendance/hooks/
 
 export const ATTENDANCE_QUERY_KEY = ['attendance', 'list'] as const;
 export const ATTENDANCE_METRICS_QUERY_KEY = ['attendance', 'metrics'] as const;
-export const ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY = [
-  ATTENDANCE_MODULE_MANIFEST.collectionKey,
-  'report-aggregates',
-] as const;
 
 export function attendanceCommandMetricsQueryOptions(selectedDate: string) {
   return serverMetricsQueryOptions<AttendanceCommandMetricsSnapshot>({
@@ -38,8 +31,6 @@ export function useAttendanceMetrics(selectedDate: string, options?: { enabled?:
     enabled: options?.enabled,
   });
 }
-
-const ATTENDANCE_API = ATTENDANCE_MODULE_MANIFEST.restBasePath;
 
 export interface AttendancePaginatedParams {
   page: number;
@@ -172,38 +163,7 @@ export function useAttendanceMutations() {
 }
 
 
-export function useAttendanceReportAggregates(
-  options?: {
-    enabled?: boolean;
-    classId?: string;
-    comparison?: AttendanceReportComparisonQuery;
-  },
-) {
-  const { isAuthenticated } = useAuth();
-  const enabled = options?.enabled ?? true;
-  const comparison = normalizeAttendanceReportComparisonQuery(options?.comparison);
-  const classId = options?.classId?.trim() || undefined;
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  const query = tsrClient.attendance.reportAggregates.useQuery({
-    queryKey: [...ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY, classId ?? null, comparison ?? null] as const,
-    queryData: {
-      query: {
-        classId,
-        sessionIds: comparison?.sessionIds?.length ? comparison.sessionIds.join(',') : undefined,
-        rangeAFrom: comparison?.rangeAFrom,
-        rangeATo: comparison?.rangeATo,
-        rangeBFrom: comparison?.rangeBFrom,
-        rangeBTo: comparison?.rangeBTo,
-      },
-    },
-    enabled: isAuthenticated && enabled,
-    staleTime: 30_000,
-  });
-
-  return {
-    ...query,
-    data: query.data?.status === 200
-      ? query.data.body as AttendanceReportAggregates
-      : undefined,
-  };
-}
+export {
+  ATTENDANCE_REPORT_AGGREGATES_QUERY_KEY,
+  useAttendanceReportAggregates,
+} from './useAttendanceReportAggregates';

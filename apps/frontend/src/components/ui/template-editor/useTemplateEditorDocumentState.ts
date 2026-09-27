@@ -11,7 +11,7 @@ import {
   type TemplateOrientation,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { newId } from "./templateEditorUtils";
+import { cloneTemplateElements } from "./templateEditorCloning";
 import { notify } from "@/lib/notify";
 
 /** Repeated edits closer together than this collapse into a single undo step. */
@@ -155,16 +155,9 @@ export function useTemplateEditorDocumentState<TPayload = Record<string, unknown
 
   const resetToDefault = useCallback(() => {
     pushHistory(template);
-    const clonedElements: TemplateElement<keyof TPayload & string>[] = defaultTemplate.elements.map((el) => ({
-      ...el,
-      id: newId(),
-      style: el.style ? { ...el.style } : undefined,
-      columns: el.columns ? el.columns.map((col) => ({ ...col })) : undefined,
-      tableConfig: el.tableConfig ? { ...el.tableConfig } : undefined,
-    }));
     setTemplate({
       ...defaultTemplate,
-      elements: clonedElements,
+      elements: cloneTemplateElements(defaultTemplate.elements),
     });
   }, [defaultTemplate, pushHistory, template]);
 

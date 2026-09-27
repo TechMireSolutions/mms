@@ -5,6 +5,11 @@
  */
 
 import { useEffect, useEffectEvent } from "react";
+import {
+  isInputElementFocused,
+  handleResizeShortcut,
+  handleNudgeShortcut,
+} from "./templateEditorShortcutUtils";
 
 export interface UseTemplateEditorShortcutsOptions {
   undo: () => void;
@@ -67,15 +72,7 @@ export function useTemplateEditorShortcuts({
     }
 
     const target = e.target as HTMLElement | null;
-    const isInputFocused = Boolean(
-      target &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable ||
-          target.tagName === "SELECT")
-    );
-
-    if (isInputFocused) {
+    if (isInputElementFocused(target)) {
       if (e.key === "Escape") {
         target?.blur();
       }
@@ -83,9 +80,7 @@ export function useTemplateEditorShortcuts({
     }
 
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "c") {
-      if (hasSelection) {
-        copySelected?.();
-      }
+      if (hasSelection) copySelected?.();
       return;
     }
 
@@ -132,12 +127,6 @@ export function useTemplateEditorShortcuts({
     }
 
     if (e.key === "Escape") {
-      /*
-       * Only the selection is cleared here. Closing the editor on Escape belongs to
-       * `useOverlayBehavior` (`useTemplateEditorModal`), which knows whether a nested
-       * dialog owns the key — a second handler here used to close the whole editor out
-       * from under a confirm dialog.
-       */
       if (hasSelection) {
         e.preventDefault();
         deselectAll();
@@ -155,49 +144,15 @@ export function useTemplateEditorShortcuts({
 
     if (!hasSelection) return;
 
-    if (e.altKey && resizeSelected) {
-      const step = e.shiftKey ? 8 : 1;
-      if (e.key === "ArrowRight") {
-        e.preventDefault();
-        resizeSelected(step, 0);
-        return;
-      }
-      if (e.key === "ArrowLeft") {
-        e.preventDefault();
-        resizeSelected(-step, 0);
-        return;
-      }
-      if (e.key === "ArrowDown") {
-        e.preventDefault();
-        resizeSelected(0, step);
-        return;
-      }
-      if (e.key === "ArrowUp") {
-        e.preventDefault();
-        resizeSelected(0, -step);
-        return;
-      }
+    if (resizeSelected && handleResizeShortcut(e, resizeSelected)) {
+      return;
     }
 
-    const step = e.shiftKey ? 8 : 1;
-    if (e.key === "ArrowLeft") {
-      e.preventDefault();
-      nudgeSelected(-step, 0);
-    } else if (e.key === "ArrowRight") {
-      e.preventDefault();
-      nudgeSelected(step, 0);
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      nudgeSelected(0, -step);
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      nudgeSelected(0, step);
-    }
+    handleNudgeShortcut(e, nudgeSelected);
   });
 
   useEffect(() => {
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-   
   }, []);
 }

@@ -3,7 +3,7 @@
  * @description Headless hook managing template state, undo/redo stacks, element lifecycle, and shortcut commands.
  */
 
-import { useCallback, useMemo, useRef, useState, type MouseEvent as ReactMouseEvent } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   type DocumentTemplate,
@@ -13,16 +13,16 @@ import {
 import {
   useTemplateEditorInteractions,
   type DragStateInfo,
-  type ResizeHandle,
   type ResizeStateInfo,
 } from "./useTemplateEditorInteractions";
-import { useTemplateEditorShortcuts } from "./useTemplateEditorShortcuts";
+import { useTemplateEditorShortcutsSetup } from "./useTemplateEditorShortcutsSetup";
 import { useTemplateEditorElementActions } from "./useTemplateEditorElementActions";
 import { useTemplateEditorZoom } from "./useTemplateEditorZoom";
 import { useTemplateEditorClipboard } from "./useTemplateEditorClipboard";
 import { useTemplateEditorDocumentState } from "./useTemplateEditorDocumentState";
 import { useTemplateEditorPresetsAndIo } from "./useTemplateEditorPresetsAndIo";
 import { useTemplateEditorNotices } from "./useTemplateEditorNotices";
+import { useTemplateEditorElementSelection } from "./useTemplateEditorElementSelection";
 
 export interface UseTemplateEditorOptions<TPayload = Record<string, unknown>> {
   initialTemplate?: DocumentTemplate<TPayload>;
@@ -30,10 +30,6 @@ export interface UseTemplateEditorOptions<TPayload = Record<string, unknown>> {
   availableFields?: TemplateFieldDefinition<TPayload>[];
   presets?: DocumentTemplatePreset<TPayload>[];
   onSave?: (template: DocumentTemplate<TPayload>) => void | Promise<void>;
-  /**
-   * Called when the editor itself wants to close. Escape is owned by the overlay
-   * behaviour hook (see `useTemplateEditorModal`), which understands nested overlays.
-   */
   onClose?: () => void;
   documentType?: string;
 }
@@ -43,7 +39,6 @@ const FALLBACK_TEMPLATE: DocumentTemplate = {
   orientation: "portrait",
   elements: [],
 };
-
 
 export function useTemplateEditor<TPayload = Record<string, unknown>>({
   initialTemplate,
@@ -62,7 +57,6 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     t,
   });
 
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [showGuides, setShowGuides] = useState(true);
   const [isPreviewMode, setIsPreviewMode] = useState(false);
 
@@ -75,24 +69,25 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
 
   const zoom = useTemplateEditorZoom({ size: doc.size });
 
-  const selectedId = useMemo(
-    () => (selectedIds.length > 0 ? selectedIds[selectedIds.length - 1] : null),
-    [selectedIds]
-  );
-  const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
-  const selectedElements = useMemo(
-    () => doc.template.elements.filter((el) => selectedSet.has(el.id)),
-    [doc.template.elements, selectedSet]
-  );
-  const selectedElement = useMemo(
-    () => doc.template.elements.find((el) => el.id === selectedId),
-    [doc.template.elements, selectedId]
-  );
-
-  const setSelectedId = useCallback((id: string | null) => setSelectedIds(id ? [id] : []), []);
-  const deselectAll = useCallback(() => setSelectedIds([]), []);
-  const selectAll = useCallback(() => setSelectedIds(doc.template.elements.map((el) => el.id)), [doc.template.elements]);
-
+  const {
+    selectedIds,
+    setSelectedIds,
+    selectedId,
+    setSelectedId,
+    selectedSet,
+    selectedElements,
+    selectedElement,
+    deselectAll,
+    selectAll,
+    onMouseDownElement,
+    onMouseDownResize,
+  } = useTemplateEditorElementSelection<TPayload>({
+    elements: doc.template.elements,
+    canvasRef,
+    dragState,
+    resizeState,
+    template: doc.template,
+  });
 
   const interactions = useTemplateEditorInteractions({
     canvasScale: zoom.canvasScale,
@@ -127,22 +122,14 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
     size: doc.size,
   });
 
-  useTemplateEditorShortcuts({
-    undo: doc.undo,
-    redo: doc.redo,
+  useTemplateEditorShortcutsSetup({
+    doc,
     selectAll,
     deselectAll,
-    duplicateSelected: elementActions.duplicateSelected,
-    deleteSelected: elementActions.deleteSelected,
-    nudgeSelected: elementActions.nudgeSelected,
-    resizeSelected: elementActions.resizeSelected,
-    hasSelection: selectedIds.length > 0,
-    onSave: doc.handleSave,
-    copySelected: clipboard.copySelected,
-    paste: clipboard.paste,
-    zoomIn: zoom.zoomIn,
-    zoomOut: zoom.zoomOut,
-    zoomReset: zoom.zoomReset,
+    elementActions,
+    clipboard,
+    zoom,
+    selectedIds,
   });
 
   const { exportTemplateJson, importTemplateJson, applyPreset } =
@@ -157,67 +144,10 @@ export function useTemplateEditor<TPayload = Record<string, unknown>>({
       t,
     });
 
-  const onMouseDownElement = useCallback(
-    (event: ReactMouseEvent, elementId: string) => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      event.stopPropagation();
-      if (!canvasRef.current) return;
-
-      const isMulti = event.shiftKey || event.metaKey || event.ctrlKey;
-      let activeIds = selectedIds;
-      if (isMulti) {
-        activeIds = selectedSet.has(elementId)
-          ? selectedIds.filter((id) => id !== elementId)
-          : [...selectedIds, elementId];
-        setSelectedIds(activeIds);
-      } else if (!selectedSet.has(elementId)) {
-        activeIds = [elementId];
-        setSelectedIds(activeIds);
-      }
-
-      const activeIdSet = new Set(activeIds);
-      const itemsToDrag = doc.template.elements
-        .filter((el) => activeIdSet.has(el.id))
-        .map((el) => ({ id: el.id, origX: el.x, origY: el.y }));
-      dragState.current = {
-        items: itemsToDrag.length > 0 ? itemsToDrag : [{ id: elementId, origX: 0, origY: 0 }],
-        startX: event.clientX,
-        startY: event.clientY,
-        initialTemplate: doc.template,
-        hasMoved: false,
-      };
-    },
-    [doc.template, selectedIds, selectedSet]
-  );
-
-  const onMouseDownResize = useCallback(
-    (event: ReactMouseEvent, elementId: string, handle: ResizeHandle = "se") => {
-      if (event.button !== 0) return;
-      event.preventDefault();
-      event.stopPropagation();
-      const el = doc.template.elements.find((e) => e.id === elementId);
-      if (!el) return;
-      resizeState.current = {
-        id: elementId,
-        handle,
-        startX: event.clientX,
-        startY: event.clientY,
-        origX: el.x,
-        origY: el.y,
-        origW: el.w,
-        origH: el.h,
-        initialTemplate: doc.template,
-        hasMoved: false,
-      };
-    },
-    [doc.template]
-  );
-
   const resetToDefault = useCallback(() => {
     doc.resetToDefault();
     setSelectedIds([]);
-  }, [doc]);
+  }, [doc, setSelectedIds]);
 
   return {
     t,

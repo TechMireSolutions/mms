@@ -9,11 +9,14 @@ import {
   type PageSizeInfo,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { CANVAS_ACCENT, type SmartGuideLine } from "./templateEditorUtils";
+import { type SmartGuideLine } from "./templateEditorUtils";
 import { useTemplateMarquee } from "./useTemplateMarquee";
 import { TemplateElementRenderer } from "./TemplateElementRenderer";
 import { TemplateEditorCanvasEmptyState } from "./TemplateEditorCanvasEmptyState";
 import { TemplateEditorCanvasGuides } from "./TemplateEditorCanvasGuides";
+import { TemplateEditorCanvasStatusPill } from "./TemplateEditorCanvasStatusPill";
+import { TemplateEditorGridOverlay } from "./TemplateEditorGridOverlay";
+import { TemplateEditorMarqueeOverlay } from "./TemplateEditorMarqueeOverlay";
 import { TEMPLATE_PAGE_WRAPPER_ATTR } from "./useTemplateEditorZoom";
 import type { ResizeHandle } from "./useTemplateEditorInteractions";
 
@@ -37,9 +40,7 @@ export interface TemplateEditorCanvasProps<TPayload = Record<string, unknown>> {
   onSelectElements?: (elementIds: string[]) => void;
   onDeleteElement: (elementId: string) => void;
   onSelectElement?: (elementId: string) => void;
-  /** Id of a just-added element to reveal and highlight, if any. */
   flashElementId?: string | null;
-  /** Application direction, used as the fallback writing direction for elements. */
   appDir?: "ltr" | "rtl";
   sampleData?: TPayload;
   activeGuides?: SmartGuideLine[];
@@ -76,11 +77,6 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
   t,
 }: TemplateEditorCanvasProps<TPayload>): React.JSX.Element {
   const selectedSet = React.useMemo(() => new Set(selectedIds), [selectedIds]);
-
-  /*
-   * Roving tabindex: exactly one element is a tab stop, so a 25-element preset does not
-   * put 25 stops between the canvas and the inspector. Enter/Space/arrows select.
-   */
   const focusTargetId = selectedId ?? template.elements[0]?.id ?? null;
 
   const { marquee, onPointerDownBackground } = useTemplateMarquee({
@@ -95,11 +91,6 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
     onSelectElements,
   });
 
-  /*
-   * "Add" used to drop the new element wherever the stagger maths landed — on a shipped
-   * preset that was around (36,36), underneath the logo — so adding appeared to do
-   * nothing. Now the canvas scrolls the new element into view.
-   */
   React.useEffect(() => {
     if (!flashElementId) return;
     const viewport = canvasViewportRef.current;
@@ -112,18 +103,11 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
       top: Math.max(0, targetTop + 24 - viewport.clientHeight / 2),
       behavior: "smooth",
     });
-  }, [flashElementId, canvasScale, canvasViewportRef, template.elements]);
-
+  }, [flashElementId, canvasScale, template.elements, canvasViewportRef]);
 
   return (
     <section
       ref={canvasViewportRef as React.RefObject<HTMLElement>}
-      /*
-       * tabIndex={0} is load-bearing: this is an `overflow-auto` scroll region and in
-       * preview mode it has no other focusable descendant, so a keyboard user could
-       * not scroll the page at all (axe `scrollable-region-focusable`). It is not a
-       * landmark role: `<main>` would create a second main landmark inside the page.
-       */
       tabIndex={0}
       aria-label={t("templateEditor.canvasViewport")}
       onPointerDown={onPointerDownViewport}
@@ -131,39 +115,13 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
         isSpacePressed ? (isPanning ? "cursor-grabbing" : "cursor-grab") : ""
       }`}
     >
-      {/* Status pill */}
-      <div
-        role="status"
-        /* No aria-label here: it used to repeat the viewport region's name verbatim,
-           so screen readers announced two identically-named elements. The pill's own
-           text is the status content. */
-        className="mb-3 px-3 py-1 rounded-full bg-background/90 border border-border/70 text-3xs text-muted-foreground font-mono shadow-sm backdrop-blur-md flex items-center gap-2 ring-1 ring-black/[0.04] print:hidden"
-      >
-        <span className="font-semibold text-foreground/80">{size.label}</span>
-        <span className="text-border">·</span>
-        {/* PAGE_SIZES are CSS pixels at 96dpi (A6 = 397px = 105mm), not typographic points. */}
-        <span>{size.width} × {size.height} px</span>
-        <span className="text-border">·</span>
-        <span className="font-medium text-foreground/90">{Math.round(canvasScale * 100)}%</span>
-        {isPreviewMode && (
-          <>
-            <span className="text-border">·</span>
-            <span className="text-success font-bold uppercase tracking-wider text-2xs flex items-center gap-1">
-              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-              {t("templateEditor.previewMode")}
-            </span>
-          </>
-        )}
-      </div>
+      <TemplateEditorCanvasStatusPill
+        size={size}
+        canvasScale={canvasScale}
+        isPreviewMode={isPreviewMode}
+        t={t}
+      />
 
-      {/*
-       * The page is scaled with a transform, which does not affect layout — so the
-       * wrapper carries the *scaled* box. Without it the canvas kept its full unscaled
-       * footprint, leaving large dead space and scrollbars whenever the zoom was below
-       * 100%. The inline size is undone for print (the `!` is Tailwind v4's important
-       * modifier and is required to beat the inline style), because print resets the
-       * transform on the page itself.
-       */}
       <div
         {...{ [TEMPLATE_PAGE_WRAPPER_ATTR]: "" }}
         className="shrink-0 print:w-auto! print:h-auto!"
@@ -185,21 +143,7 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
             isSpacePressed ? (isPanning ? "cursor-grabbing" : "cursor-grab") : ""
           }`}
         >
-          {!isPreviewMode && showGuides && (
-            <div className="print:hidden" aria-hidden="true">
-              <div
-                className="absolute inset-0 pointer-events-none opacity-20"
-                style={{
-                  backgroundImage: `radial-gradient(${CANVAS_ACCENT.grid} 1px, transparent 1px)`,
-                  backgroundSize: "16px 16px",
-                }}
-              />
-              <div
-                className="absolute inset-6 pointer-events-none border border-dashed border-info/35 rounded-xs"
-                title={t("templateEditor.safeMargins")}
-              />
-            </div>
-          )}
+          <TemplateEditorGridOverlay showGuides={showGuides} isPreviewMode={isPreviewMode} t={t} />
 
           {!isPreviewMode && <TemplateEditorCanvasGuides activeGuides={activeGuides} />}
 
@@ -226,23 +170,7 @@ export function TemplateEditorCanvas<TPayload = Record<string, unknown>>({
             />
           ))}
 
-          {!isPreviewMode && marquee && (
-            <div
-              aria-hidden="true"
-              className="print:hidden"
-              style={{
-                position: "absolute",
-                left: Math.min(marquee.startX, marquee.currentX),
-                top: Math.min(marquee.startY, marquee.currentY),
-                width: Math.abs(marquee.currentX - marquee.startX),
-                height: Math.abs(marquee.currentY - marquee.startY),
-                backgroundColor: CANVAS_ACCENT.marqueeSoft,
-                border: `1px dashed ${CANVAS_ACCENT.selection}`,
-                borderRadius: "2px",
-                pointerEvents: "none",
-              }}
-            />
-          )}
+          {!isPreviewMode && <TemplateEditorMarqueeOverlay marquee={marquee} />}
         </div>
       </div>
     </section>

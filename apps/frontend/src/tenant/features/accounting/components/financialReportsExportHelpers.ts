@@ -1,5 +1,6 @@
 import type { AppTranslationKey } from "@mms/shared";
 import type { ExportColumn } from "@/components/ui/ExportToolbar";
+import { buildCashflowExportRows } from "./financialReportsCashflowExport";
 
 export interface TrialBalanceRow {
   id: string;
@@ -13,23 +14,18 @@ export interface TrialBalanceRow {
 
 export interface BuildFinancialReportExportRowsOptions {
   view: "income" | "balance" | "cashflow";
-  /** Range-based rows — the Income Statement source. */
   tb: TrialBalanceRow[];
-  /** Cumulative Asset/Liability/Equity rows as of `dateTo` — the Balance Sheet source. */
   balanceSheetTb: TrialBalanceRow[];
   revenue: number;
   expenses: number;
   netSurplus: number;
   assets: number;
   liabilities: number;
-  /** Cumulative (as-of `dateTo`) equity, incl. unclosed P&L. */
   equity: number;
   depreciationAdjustment: number;
   receivablesChange: number;
   payablesChange: number;
-  /** Indirect-method subtotal (`netCashFlowIndirect`). */
   netCashFlowIndirect: number;
-  /** Direct-method net movement on cash/bank accounts within the window. */
   netCashFlow: number;
   cashInflow: number;
   cashOutflow: number;
@@ -47,9 +43,6 @@ export function getFinancialReportExportColumns(
     { header: t("accounting.reports.export.amount"), key: "amount" },
   ];
 }
-
-/** Two server-computed figures can differ by a cent without being a real mismatch. */
-const RECONCILIATION_TOLERANCE = 0.01;
 
 export function buildFinancialReportExportRows({
   view,
@@ -71,7 +64,21 @@ export function buildFinancialReportExportRows({
   formatCurrency,
   t,
 }: BuildFinancialReportExportRowsOptions): Record<string, string>[] {
-  // Income Statement rows are range-based; Balance Sheet rows are cumulative as of `dateTo`.
+  if (view === "cashflow") {
+    return buildCashflowExportRows({
+      netSurplus,
+      depreciationAdjustment,
+      receivablesChange,
+      payablesChange,
+      netCashFlowIndirect,
+      netCashFlow,
+      cashInflow,
+      cashOutflow,
+      formatCurrency,
+      t,
+    });
+  }
+
   const sourceTb = view === "balance" ? balanceSheetTb : tb;
   const rowsByType = new Map<string, TrialBalanceRow[]>();
   for (const row of sourceTb) {
@@ -162,67 +169,6 @@ export function buildFinancialReportExportRows({
       code: "",
       account: t("accounting.reports.totalEquity"),
       amount: formatCurrency(equity),
-    });
-  } else if (view === "cashflow") {
-    const section = t("accounting.reports.views.cashflow");
-    rows.push({
-      section,
-      code: "",
-      account: t("accounting.reports.cashflow.netSurplusOrDeficit"),
-      amount: formatCurrency(netSurplus),
-    });
-    rows.push({
-      section,
-      code: "",
-      account: t("accounting.reports.cashflow.depreciation"),
-      amount: formatCurrency(depreciationAdjustment),
-    });
-    rows.push({
-      section,
-      code: "",
-      account: t("accounting.reports.cashflow.receivables"),
-      amount: formatCurrency(receivablesChange),
-    });
-    rows.push({
-      section,
-      code: "",
-      account: t("accounting.reports.cashflow.payables"),
-      amount: formatCurrency(payablesChange),
-    });
-    rows.push({
-      section: "",
-      code: "",
-      account: t("accounting.reports.cashflow.netCashOperations"),
-      amount: formatCurrency(netCashFlowIndirect),
-    });
-    rows.push({
-      section: "",
-      code: "",
-      account: t("accounting.reports.cashflow.netCashFlow"),
-      amount: formatCurrency(netCashFlow),
-    });
-
-    const reconciliationDifference = Math.abs(netCashFlowIndirect - netCashFlow);
-    if (reconciliationDifference >= RECONCILIATION_TOLERANCE) {
-      rows.push({
-        section: "",
-        code: "",
-        account: t("accounting.dashboard.difference", { amount: formatCurrency(reconciliationDifference) }),
-        amount: formatCurrency(reconciliationDifference),
-      });
-    }
-
-    rows.push({
-      section,
-      code: "",
-      account: t("accounting.reports.cashflow.cashInflow"),
-      amount: formatCurrency(cashInflow),
-    });
-    rows.push({
-      section,
-      code: "",
-      account: t("accounting.reports.cashflow.cashOutflow"),
-      amount: formatCurrency(cashOutflow),
     });
   }
 

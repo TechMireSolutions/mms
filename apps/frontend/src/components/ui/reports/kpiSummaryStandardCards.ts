@@ -5,9 +5,6 @@ import {
   DollarSign,
   GraduationCap,
   MessageCircle,
-  MessageSquare,
-  Receipt,
-  ShieldCheck,
   Star,
   TrendingUp,
   UserCheck,
@@ -37,6 +34,7 @@ import type {
 } from './kpiSummaryTypes';
 import { buildQuestionBankKPICards } from './kpiSummaryQuestionBankCards';
 import { computeDerivedKpiMetrics } from './kpiSummaryDerivedMetrics';
+import { buildDomainKPICards } from './kpiSummaryDomainCards';
 
 interface BuildStandardKPICardsOptions {
   category: string;
@@ -92,6 +90,15 @@ export function buildStandardKPICards(options: BuildStandardKPICardsOptions): Ca
     questionBankQuestions: options.questionBankQuestions,
     questionBankTests: options.questionBankTests,
     questionBankResults: options.questionBankResults,
+    t,
+  });
+
+  const domainCards = buildDomainKPICards({
+    activeCurrencyCode,
+    obligationsMetrics: options.obligationsMetrics,
+    accountingMetrics: options.accountingMetrics,
+    usersMetrics: options.usersMetrics,
+    messagingMetrics: options.messagingMetrics,
     t,
   });
 
@@ -168,66 +175,6 @@ export function buildStandardKPICards(options: BuildStandardKPICardsOptions): Ca
       sub: t('reports.kpi.sub.facultyOnLeave'), color: 'warning', trend: 'flat', categories: ['teachers', 'faculty'],
       isAvailable: (teacherValues?.onLeave ?? 0) > 0,
     },
-    // Obligations
-    {
-      id: 'kpi-obligations-total', icon: Receipt, label: t('obligations.summary.kpi.totalCollections'),
-      value: String(options.obligationsMetrics?.total ?? 0),
-      sub: `${options.obligationsMetrics?.obligationTypes ?? 0} types`,
-      color: 'primary', trend: 'flat', categories: ['obligations'],
-      isAvailable: (options.obligationsMetrics?.total ?? 0) > 0,
-    },
-    {
-      id: 'kpi-obligations-amount', icon: TrendingUp, label: t('obligations.summary.kpi.totalAmountReceived'),
-      value: `${activeCurrencyCode} ${((options.obligationsMetrics?.totalAmount ?? 0) / 1000).toFixed(1)}k`,
-      sub: `${activeCurrencyCode} Cash: ${((options.obligationsMetrics?.cash ?? 0) / 1000).toFixed(1)}k`,
-      color: 'success', trend: 'flat', categories: ['obligations'],
-      isAvailable: (options.obligationsMetrics?.totalAmount ?? 0) > 0,
-    },
-    // Accounting
-    {
-      id: 'kpi-accounting-entries', icon: Receipt, label: t('accounting.reports.views.income'),
-      value: String(options.accountingMetrics?.totalEntries ?? 0),
-      sub: `${options.accountingMetrics?.posted ?? 0} posted`,
-      color: 'primary', trend: 'flat', categories: ['accounting'],
-      isAvailable: (options.accountingMetrics?.totalEntries ?? 0) > 0,
-    },
-    {
-      id: 'kpi-accounting-surplus', icon: DollarSign, label: t('accounting.reports.netSurplus'),
-      value: `${activeCurrencyCode} ${((options.accountingMetrics?.surplus ?? 0) / 1000).toFixed(1)}k`,
-      sub: `${activeCurrencyCode} Rev: ${((options.accountingMetrics?.revenue ?? 0) / 1000).toFixed(1)}k`,
-      color: (options.accountingMetrics?.surplus ?? 0) >= 0 ? 'success' : 'destructive',
-      trend: 'flat', categories: ['accounting'],
-      isAvailable: Boolean(options.accountingMetrics),
-    },
-    // Users
-    {
-      id: 'kpi-users-total', icon: Users, label: t('nav.users'),
-      value: String(options.usersMetrics?.total ?? 0),
-      sub: `${options.usersMetrics?.active ?? 0} active`,
-      color: 'primary', trend: 'flat', categories: ['users'],
-      isAvailable: (options.usersMetrics?.total ?? 0) > 0,
-    },
-    {
-      id: 'kpi-users-sessions', icon: ShieldCheck, label: t('users.detailSessions'),
-      value: String(options.usersMetrics?.activeSessions ?? 0),
-      sub: `${options.usersMetrics?.twoFaEnabled ?? 0} 2FA`,
-      color: 'info', trend: 'flat', categories: ['users'],
-      isAvailable: (options.usersMetrics?.total ?? 0) > 0,
-    },
-    // Messaging
-    {
-      id: 'kpi-messaging-total', icon: MessageSquare, label: t('nav.messaging'),
-      value: String(options.messagingMetrics?.total ?? 0),
-      sub: `${options.messagingMetrics?.deliveredCount ?? 0} delivered`,
-      color: 'primary', trend: 'flat', categories: ['messaging'],
-      isAvailable: (options.messagingMetrics?.total ?? 0) > 0,
-    },
-    {
-      id: 'kpi-messaging-whatsapp', icon: MessageCircle, label: t('messaging.channel.whatsapp'),
-      value: String(options.messagingMetrics?.whatsappCount ?? 0),
-      sub: `SMS: ${options.messagingMetrics?.smsCount ?? 0}`,
-      color: 'success', trend: 'flat', categories: ['messaging'],
-      isAvailable: (options.messagingMetrics?.total ?? 0) > 0,
-    },
+    ...domainCards,
   ];
 }

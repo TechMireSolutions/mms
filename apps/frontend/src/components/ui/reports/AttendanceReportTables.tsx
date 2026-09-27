@@ -1,9 +1,8 @@
 import React, { useState } from "react";
-import { UserCheck, Users } from "lucide-react";
+import { Users } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ReportDataGridContainer } from "@/components/ui/reports/ReportDataGridContainer";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
-import { TableCellLink } from "@/components/ui/TableCellLink";
 import {
   Table,
   TableBody,
@@ -12,12 +11,11 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
-import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
-
 import type { AttendanceSummaryItem, RateBarRenderer, StudentAttendanceItem } from "./attendanceReportTypes";
-import type { ExportColumn } from '@/components/ui/ExportToolbar';
+import type { ExportColumn } from "@/components/ui/ExportToolbar";
+import { AttendanceSummaryTable } from "./AttendanceSummaryTable";
 
 interface AttendanceReportTablesProps {
   summary: AttendanceSummaryItem[];
@@ -26,7 +24,7 @@ interface AttendanceReportTablesProps {
   onToggleClassFilter: (className: string) => void;
 }
 
-export const AttendanceReportTables = (function AttendanceReportTables({
+export function AttendanceReportTables({
   summary,
   studentAttendanceRows,
   rateBar,
@@ -34,23 +32,7 @@ export const AttendanceReportTables = (function AttendanceReportTables({
 }: AttendanceReportTablesProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const summaryColumns = (() => [
-    { key: "class", header: t("attendance.report.colClass") },
-    { key: "total", header: t("attendance.report.colTotalStudents") },
-    { key: "avgRate", header: t("attendance.report.colAvgRate") },
-    { key: "perfectAttendance", header: t("attendance.report.colPerfectAttendance") },
-    { key: "belowThreshold", header: t("attendance.report.colBelowThreshold") },
-  ])() as ExportColumn[];
-
-  const summaryRows = (() => summary.map((summaryRow) => ({
-    class: summaryRow.class,
-    total: summaryRow.total,
-    avgRate: `${summaryRow.avgRate}%`,
-    perfectAttendance: summaryRow.perfectAttendance,
-    belowThreshold: summaryRow.belowThreshold,
-  })))();
-
-  const studentColumns = (() => [
+  const studentColumns = [
     { key: "studentName", header: t("attendance.report.colStudent") },
     { key: "class", header: t("attendance.report.colStudentClass") },
     { key: "present", header: t("attendance.report.colPresent") },
@@ -58,9 +40,9 @@ export const AttendanceReportTables = (function AttendanceReportTables({
     { key: "late", header: t("attendance.report.colLate") },
     { key: "total", header: t("attendance.report.colTotal") },
     { key: "rate", header: t("attendance.report.colRate") },
-  ])() as ExportColumn[];
+  ] as ExportColumn[];
 
-  const studentRows = (() => studentAttendanceRows.map((studentAttendance) => ({
+  const studentRows = studentAttendanceRows.map((studentAttendance) => ({
     studentName: studentAttendance.studentName,
     class: studentAttendance.class,
     present: studentAttendance.present,
@@ -68,81 +50,22 @@ export const AttendanceReportTables = (function AttendanceReportTables({
     late: studentAttendance.late,
     total: studentAttendance.total,
     rate: `${studentAttendance.rate}%`,
-  })))();
+  }));
 
   const [studentPage, setStudentPage] = useState(1);
   const studentPageSize = 15;
-  const pagedStudentAttendanceRows = (() => studentAttendanceRows.slice((studentPage - 1) * studentPageSize, studentPage * studentPageSize))();
+  const pagedStudentAttendanceRows = studentAttendanceRows.slice(
+    (studentPage - 1) * studentPageSize,
+    studentPage * studentPageSize
+  );
 
   return (
     <div className="space-y-6">
-      {summary.length === 0 ? (
-        <EmptyState icon={UserCheck} title={t("attendance.report.noData")} description={t("attendance.report.adjustFilters")} compact />
-      ) : (
-        <ReportDataGridContainer
-          title={t("attendance.report.summaryTitle")}
-          columns={summaryColumns}
-          rows={summaryRows}
-          moduleId="attendance"
-        >
-          <div className="space-y-3 p-3 md:hidden">
-            {summary.map((summaryRow) => (
-              <article key={summaryRow.class} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
-                <TableCellLink tap onClick={() => onToggleClassFilter(summaryRow.class)}>
-                  {summaryRow.class}
-                </TableCellLink>
-                <StatGrid>
-                  <StatRow className="min-w-0" label={t("attendance.report.colTotalStudents")} value={summaryRow.total} />
-                  <StatRow className="min-w-0" label={t("attendance.report.colAvgRate")} value={rateBar(summaryRow.avgRate)} />
-                  <StatRow
-                    className="min-w-0"
-                    label={t("attendance.report.colPerfectAttendance")}
-                    value={<Badge pill tone="success">{summaryRow.perfectAttendance}</Badge>}
-                  />
-                  <StatRow
-                    className="min-w-0"
-                    label={t("attendance.report.colBelowThreshold")}
-                    value={<Badge pill tone="destructive">{summaryRow.belowThreshold}</Badge>}
-                  />
-                </StatGrid>
-              </article>
-            ))}
-          </div>
-          <div className="hidden md:block">
-            <Table>
-              <caption className="sr-only">{t("attendance.report.summaryTitle")}</caption>
-              <TableHeader>
-                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                  <ModuleTableHeaderCell columnKey="class" className="px-3 py-2.5">{t("attendance.report.colClass")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="totalStudents" className="px-3 py-2.5">{t("attendance.report.colTotalStudents")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="avgRate" className="px-3 py-2.5">{t("attendance.report.colAvgRate")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="perfectAttendance" className="px-3 py-2.5">{t("attendance.report.colPerfectAttendance")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="belowThreshold" className="px-3 py-2.5">{t("attendance.report.colBelowThreshold")}</ModuleTableHeaderCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/50">
-                {summary.map((summaryRow) => (
-                  <TableRow key={summaryRow.class} className="hover:bg-muted/20 transition-colors">
-                    <TableCell className="px-3 py-2.5 font-medium text-foreground">
-                      <TableCellLink tap onClick={() => onToggleClassFilter(summaryRow.class)}>
-                        {summaryRow.class}
-                      </TableCellLink>
-                    </TableCell>
-                    <TableCell className="px-3 py-2.5 text-muted-foreground">{summaryRow.total}</TableCell>
-                    <TableCell className="px-3 py-2.5 w-36">{rateBar(summaryRow.avgRate)}</TableCell>
-                    <TableCell className="px-3 py-2.5">
-                      <Badge pill tone="success">{summaryRow.perfectAttendance}</Badge>
-                    </TableCell>
-                    <TableCell className="px-3 py-2.5">
-                      <Badge pill tone="destructive">{summaryRow.belowThreshold}</Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-        </ReportDataGridContainer>
-      )}
+      <AttendanceSummaryTable
+        summary={summary}
+        rateBar={rateBar}
+        onToggleClassFilter={onToggleClassFilter}
+      />
 
       {studentAttendanceRows.length === 0 ? (
         <EmptyState icon={Users} title={t("attendance.report.noStudentRecords")} compact />
@@ -212,4 +135,4 @@ export const AttendanceReportTables = (function AttendanceReportTables({
       )}
     </div>
   );
-});
+}

@@ -13,6 +13,7 @@ import {
   buildDefaultRows,
   enrolledStudentsForClass,
   isEnrollmentInAttendanceRoster,
+  resolveSessionAndClassInfo,
 } from "@/tenant/features/attendance/components/markAttendanceRowUtils";
 import {
   loadQueue,
@@ -44,22 +45,7 @@ export function useMarkAttendanceController({
 
   const { data: enrolledStudents = [] } = useStudentsByIds(studentIds);
 
-  const { classInfo, sessionInfo } = (() => {
-    if (!filters.classId) return { classInfo: undefined, sessionInfo: null };
-    for (const session of sessions) {
-      if (session.classes) {
-        for (const sessionClass of session.classes) {
-          if (sessionClass.id === filters.classId) {
-            return {
-              classInfo: { ...sessionClass, sessionId: session.id, sessionName: session.name },
-              sessionInfo: session,
-            };
-          }
-        }
-      }
-    }
-    return { classInfo: undefined, sessionInfo: null };
-  })();
+  const { classInfo, sessionInfo } = resolveSessionAndClassInfo(sessions, filters.classId);
   const students: ClassStudent[] = (() => {
     if (!filters.classId) return [];
     return enrolledStudentsForClass(

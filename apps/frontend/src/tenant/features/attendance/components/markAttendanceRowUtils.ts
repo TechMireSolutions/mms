@@ -1,6 +1,7 @@
 import type { ModuleCustomField } from "@mms/shared";
 import type { AttendanceRecord, ClassStudent } from "@/lib/data/attendanceData";
 import type { Enrollment } from "@/lib/data/enrollmentData";
+import type { Session } from "@/lib/data/sessionsData";
 import type { Student } from "@/lib/data/studentsData";
 import type { AttendanceRow, GeoData, OfflinePayload } from "@/tenant/features/attendance/components/markAttendanceTypes";
 
@@ -129,3 +130,21 @@ export function enrolledStudentsForClass(
       }];
     });
 }
+
+export function resolveSessionAndClassInfo(sessions: readonly Session[], classId?: string) {
+  if (!classId) return { classInfo: undefined, sessionInfo: null };
+  for (const session of sessions) {
+    if (session.classes) {
+      for (const sessionClass of session.classes) {
+        if (sessionClass.id === classId) {
+          return {
+            classInfo: { ...sessionClass, sessionId: session.id, sessionName: session.name },
+            sessionInfo: session,
+          };
+        }
+      }
+    }
+  }
+  return { classInfo: undefined, sessionInfo: null };
+}
+

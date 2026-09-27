@@ -1,3 +1,20 @@
+import {
+  API_REFRESH_PATH,
+  executeFetchWithTimeout,
+  type FetchWithTimeoutOptions,
+  isTenantSessionRequest,
+  sanitizeColumnPreferencesBody,
+} from '@/lib/apiClientHelpers';
+import {
+  ApiError,
+  isApiError,
+  parseRetryAfterSeconds,
+  type ApiErrorBody,
+} from './apiError';
+
+export { ApiError, isApiError, type ApiErrorBody };
+export { resolveApiUrl } from '@/lib/apiClientHelpers';
+
 const JSON_CONTENT_TYPE = 'application/json';
 
 let refreshPromise: Promise<boolean> | null = null;
@@ -20,68 +37,6 @@ export function resetSessionRefreshStateForTests(): void {
   lastRefreshedAt = 0;
 }
 
-export interface ApiErrorBody {
-  type?: string;
-  message?: string;
-  /** Field-level validation issues (e.g. Contacts unique conflicts). */
-  errors?: unknown;
-}
-
-/** Structured API failure — map `type` to `t('errors.*')` in UI. */
-export class ApiError extends Error {
-  readonly status: number;
-  readonly type: string;
-  readonly requestId?: string;
-  readonly errors?: unknown;
-  /** Seconds to wait before retrying (from `Retry-After`). */
-  readonly retryAfterSeconds?: number;
-
-  constructor(
-    status: number,
-    message: string,
-    type?: string,
-    requestId?: string,
-    errors?: unknown,
-    retryAfterSeconds?: number,
-  ) {
-    super(message);
-    this.name = 'ApiError';
-    this.status = status;
-    this.type = type ?? (status === 401 ? 'auth_required' : status === 403 ? 'forbidden' : 'request_failed');
-    this.requestId = requestId;
-    this.errors = errors;
-    this.retryAfterSeconds = retryAfterSeconds;
-  }
-}
-
-export function isApiError(error: unknown): error is ApiError {
-  return error instanceof ApiError;
-}
-
-function parseRetryAfterSeconds(header: string | null): number | undefined {
-  if (!header) return undefined;
-  const asInt = Number.parseInt(header, 10);
-  if (!Number.isNaN(asInt) && String(asInt) === header.trim()) {
-    return Math.max(0, asInt);
-  }
-  const dateMs = Date.parse(header);
-  if (!Number.isNaN(dateMs)) {
-    return Math.max(0, Math.ceil((dateMs - Date.now()) / 1000));
-  }
-  return undefined;
-}
-
-import {
-  API_REFRESH_PATH,
-  executeFetchWithTimeout,
-  type FetchWithTimeoutOptions,
-  isTenantSessionRequest,
-  sanitizeColumnPreferencesBody,
-} from '@/lib/apiClientHelpers';
-
-// Re-export for callers that need to build absolute API URLs.
-export { resolveApiUrl } from '@/lib/apiClientHelpers';
-
 async function refreshSession(): Promise<boolean> {
   if (!refreshPromise) {
     const headers = new Headers();
@@ -89,9 +44,6 @@ async function refreshSession(): Promise<boolean> {
     if (csrf) headers.set('X-CSRF-Token', csrf);
     headers.set('X-Request-Id', crypto.randomUUID());
 
-    // Two-argument .then(onFulfilled, onRejected) is intentional: it handles
-    // both non-ok responses and network failures in a single rejection path,
-    // preventing an unhandled-rejection window between .then() and .catch().
     refreshPromise = executeFetchWithTimeout(API_REFRESH_PATH, {
       method: 'POST',
       credentials: 'include',
@@ -122,7 +74,6 @@ async function refreshSession(): Promise<boolean> {
 
 async function isAuthenticationRequired(response: Response): Promise<boolean> {
   if (response.status !== 401) return false;
-  // Narrow the parsed JSON before casting — json() can return any JSON value.
   const raw = await response.clone().json().catch((): null => null);
   const body: ApiErrorBody | null =
     raw !== null && typeof raw === 'object' && !Array.isArray(raw)
@@ -141,11 +92,8 @@ function getCsrfCookieValue(): string | null {
   return match && match[1] ? decodeURIComponent(match[1]) : null;
 }
 
-// Throws synchronously if the signal has already been aborted, propagating
-// the original abort reason rather than hiding it under a generic error.
 function throwIfAborted(signal: AbortSignal | null | undefined): void {
   if (signal?.aborted) {
-    // Use ?? not || — signal.reason may be 0 or '' which are valid abort reasons.
     throw signal.reason ?? new DOMException('The user aborted a request.', 'AbortError');
   }
 }
@@ -153,8 +101,6 @@ function throwIfAborted(signal: AbortSignal | null | undefined): void {
 /** Cookie-first API client (`credentials: 'include'`). */
 export async function apiFetch(path: string, init: RequestInit = {}): Promise<Response> {
   const headers = new Headers(init.headers ?? {});
-  // FormData is natively available in all targets (browsers + Node 18+);
-  // no typeof guard needed.
   const isFormData = init.body instanceof FormData;
   if (!headers.has('Content-Type') && init.body && !isFormData) {
     headers.set('Content-Type', JSON_CONTENT_TYPE);
@@ -190,7 +136,6 @@ export async function apiFetch(path: string, init: RequestInit = {}): Promise<Re
       return { ...requestInit, headers: retryHeaders };
     };
 
-    // If a refresh succeeded moments ago, retry immediately without re-refreshing.
     if (Date.now() - lastRefreshedAt < REFRESH_GRACE_PERIOD_MS) {
       throwIfAborted(requestInit.signal);
       return executeFetchWithTimeout(path, buildRetryRequestInit());

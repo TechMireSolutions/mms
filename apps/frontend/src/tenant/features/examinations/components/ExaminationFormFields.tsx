@@ -17,7 +17,7 @@ export type ExaminationFormFieldsProps = Pick<
   "t" | "errors" | "examDraft" | "classes" | "updateDraft" | "getFieldError"
 >;
 
-export const ExaminationFormFields = (function ExaminationFormFields({
+export function ExaminationFormFields({
   t,
   errors,
   examDraft,
@@ -25,9 +25,8 @@ export const ExaminationFormFields = (function ExaminationFormFields({
   updateDraft,
   getFieldError,
 }: ExaminationFormFieldsProps): React.JSX.Element {
-
-      return (
-        <div className="space-y-5 text-start">
+  return (
+    <div className="space-y-5 text-start">
           <SectionCard
             accentColor="primary"
             icon={BookOpen}
@@ -196,5 +195,5 @@ export const ExaminationFormFields = (function ExaminationFormFields({
             </div>
           </SectionCard>
         </div>
-      );
-    });
+  );
+}

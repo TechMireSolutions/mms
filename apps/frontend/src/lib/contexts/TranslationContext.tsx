@@ -2,45 +2,23 @@ import React, { createContext, useState, useEffect } from 'react';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useLocation } from 'react-router-dom';
 import { useTenant } from '@/lib/contexts/TenantContext';
-import { isEntryPath } from '@/lib/config/routes';
-import { shouldForcePlatformEnglish } from '@/platform/lib/themeScope';
 import { readStoredPlatformLanguage } from '@/platform/hooks/usePlatformLanguage';
 import {
   translateAppParams,
-  registerLanguagePack,
   getLanguageDirection,
   isRtlLanguage,
   applyDocumentLanguage,
-  APP_TRANSLATIONS_EN,
   type AppTranslationKey,
   type TranslationArgs,
   type AppLanguageCode,
 } from '@mms/shared';
 import { ensureLocaleFontsLoaded } from '@/lib/localeFonts';
 import { reportClientError } from '@/lib/clientErrorReporting';
-
-/**
- * Keys already reported as missing, so a key rendered in a loop warns once
- * rather than on every render.
- */
-const reportedMissingKeys = new Set<string>();
-
-/**
- * Dev-only guard against a key that exists in the type union but not in the
- * English pack at runtime — `translateApp` silently falls back to returning the
- * raw key, which ships as literal `students.idCard.title` text in the UI.
- * Warning here rather than in `@mms/shared` keeps it out of the backend build
- * and lets us rely on Vite's `import.meta.env.DEV`.
- */
-function warnIfKeyMissingAtRuntime(key: string): void {
-  if (!import.meta.env.DEV) return;
-  if (key in APP_TRANSLATIONS_EN) return;
-  if (reportedMissingKeys.has(key)) return;
-  reportedMissingKeys.add(key);
-  console.warn(
-    `[i18n] Missing translation key "${key}" — add it to APP_TRANSLATIONS_EN (packages/shared/src/appTranslationsEn.ts).`,
-  );
-}
+import {
+  warnIfKeyMissingAtRuntime,
+  resolveUiLanguage,
+  fetchLanguagePack,
+} from '@/lib/contexts/translationContextHelpers';
 
 export type TranslationFunction = <K extends AppTranslationKey>(
   key: K,
@@ -56,33 +34,6 @@ interface TranslationContextType {
 }
 
 export const TranslationContext = createContext<TranslationContextType | null>(null);
-
-function resolveUiLanguage(options: {
-  isApex: boolean;
-  workspaceLoading: boolean;
-  workspace: { enabled?: boolean } | null;
-  workspaceLookupFailed: boolean;
-  pathname: string;
-  settingsLanguage: string;
-  platformLanguage: string;
-}): string {
-  if (
-    shouldForcePlatformEnglish({
-      isApex: options.isApex,
-      workspaceLoading: options.workspaceLoading,
-      workspace: options.workspace,
-      workspaceLookupFailed: options.workspaceLookupFailed,
-    })
-  ) {
-    // Platform apex: respect the operator's chosen platform language
-    return options.platformLanguage;
-  }
-  // Tenant auth entry (login / 2FA / forgot) stays English before workspace language applies.
-  if (isEntryPath(options.pathname, { isApex: false })) {
-    return 'en';
-  }
-  return options.settingsLanguage;
-}
 
 export function TranslationProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
   const settings = useGlobalSettings();
@@ -125,33 +76,13 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
 
     let active = true;
     setIsLoading(true);
-    let promise: Promise<void>;
 
-    if (language === 'ar') {
-      promise = import('@mms/shared/translations/ar').then((translationModule) => {
-        registerLanguagePack('ar', translationModule.APP_TRANSLATIONS_AR);
-      });
-    } else if (language === 'ur') {
-      promise = import('@mms/shared/translations/ur').then((translationModule) => {
-        registerLanguagePack('ur', translationModule.APP_TRANSLATIONS_UR);
-      });
-    } else if (language === 'fa') {
-      promise = Promise.all([
-        import('@mms/shared/translations/ar'),
-        import('@mms/shared/translations/fa'),
-      ]).then(([arModule, faModule]) => {
-        registerLanguagePack('ar', arModule.APP_TRANSLATIONS_AR);
-        registerLanguagePack('fa', {
-          ...arModule.APP_TRANSLATIONS_AR,
-          ...faModule.APP_TRANSLATIONS_FA,
-        });
-      });
-    } else {
+    if (language !== 'ar' && language !== 'ur' && language !== 'fa') {
       setIsLoading(false);
       return;
     }
 
-    promise
+    fetchLanguagePack(language)
       .then(() => {
         if (!active) return;
         setLoadedLanguages((currentLoadedLanguages) => ({ ...currentLoadedLanguages, [language]: true }));
@@ -175,9 +106,9 @@ export function TranslationProvider({ children }: { children: React.ReactNode })
   }, [activeLanguage]);
 
   const t = (<K extends AppTranslationKey>(key: K, ...args: TranslationArgs<K>) => {
-      warnIfKeyMissingAtRuntime(key);
-      return translateAppParams(key, activeLanguage, ...args);
-    });
+    warnIfKeyMissingAtRuntime(key);
+    return translateAppParams(key, activeLanguage, ...args);
+  });
 
   if (!isLanguageLoaded && !hasLoadedAnyLanguage) {
     return (

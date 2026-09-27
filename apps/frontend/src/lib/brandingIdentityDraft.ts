@@ -27,3 +27,23 @@ export function retainThemeDraftAfterIdentitySave(
     ...pickBrandingFields(draft, BRANDING_THEME_FIELD_KEYS),
   });
 }
+
+/** Clean empty social links from branding settings. */
+export function sanitizeBrandingSocialLinks(data: BrandingSettings): BrandingSettings {
+  const cleanedSocialLinks = (data.socialLinks || []).filter(
+    (link) => (link.url || "").trim().length > 0,
+  );
+  return { ...data, socialLinks: cleanedSocialLinks };
+}
+
+/** Discard identity changes and reset to baseline identity fields. */
+export function resetBrandingIdentityFields(
+  current: BrandingSettings,
+  baseline: BrandingSettings,
+): BrandingSettings {
+  return {
+    ...current,
+    ...pickBrandingFields(baseline, BRANDING_IDENTITY_FIELD_KEYS),
+  };
+}
+

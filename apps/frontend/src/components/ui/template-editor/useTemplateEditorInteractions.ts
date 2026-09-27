@@ -1,50 +1,16 @@
-import { useEffect, useEffectEvent, useRef, useState, type Dispatch, type PointerEvent as ReactPointerEvent, type RefObject, type SetStateAction } from "react";
-import type { DocumentTemplate, PageSizeInfo, TemplateElement } from "@mms/shared";
+import { useEffect, useEffectEvent, useState } from "react";
 import { computeSmartGuides, snap, type SmartGuideLine } from "./templateEditorUtils";
+import {
+  type DragItem,
+  type DragStateInfo,
+  type ResizeHandle,
+  type ResizeStateInfo,
+  type UseTemplateEditorInteractionsOptions,
+} from "./templateEditorInteractionTypes";
+import { computeResizedElement } from "./templateEditorResizeCalculation";
+import { useTemplateEditorPan } from "./useTemplateEditorPan";
 
-export interface DragItem {
-  id: string;
-  origX: number;
-  origY: number;
-}
-
-export interface DragStateInfo<TPayload = Record<string, unknown>> {
-  items: DragItem[];
-  startX: number;
-  startY: number;
-  initialTemplate: DocumentTemplate<TPayload>;
-  hasMoved?: boolean;
-}
-
-export type ResizeHandle = "n" | "s" | "e" | "w" | "ne" | "nw" | "se" | "sw";
-
-export interface ResizeStateInfo<TPayload = Record<string, unknown>> {
-  id: string;
-  handle?: ResizeHandle;
-  startX: number;
-  startY: number;
-  origX: number;
-  origY: number;
-  origW: number;
-  origH: number;
-  initialTemplate: DocumentTemplate<TPayload>;
-  hasMoved?: boolean;
-}
-
-interface DragResizeRefs<TPayload = Record<string, unknown>> {
-  dragState: RefObject<DragStateInfo<TPayload> | null>;
-  resizeState: RefObject<ResizeStateInfo<TPayload> | null>;
-  canvasViewportRef?: RefObject<HTMLElement | null>;
-}
-
-export interface UseTemplateEditorInteractionsOptions<TPayload = Record<string, unknown>> extends DragResizeRefs<TPayload> {
-  canvasScale: number;
-  size: PageSizeInfo;
-  templateElements: TemplateElement<keyof TPayload & string>[];
-  updateElements: (updateFn: (templateElements: TemplateElement<keyof TPayload & string>[]) => TemplateElement<keyof TPayload & string>[]) => void;
-  setHistory: Dispatch<SetStateAction<DocumentTemplate<TPayload>[]>>;
-  setFuture: Dispatch<SetStateAction<DocumentTemplate<TPayload>[]>>;
-}
+export type { DragItem, DragStateInfo, ResizeHandle, ResizeStateInfo, UseTemplateEditorInteractionsOptions };
 
 export function useTemplateEditorInteractions<TPayload = Record<string, unknown>>({
   canvasScale,
@@ -57,86 +23,17 @@ export function useTemplateEditorInteractions<TPayload = Record<string, unknown>
   setHistory,
   setFuture,
 }: UseTemplateEditorInteractionsOptions<TPayload>) {
-  const panState = useRef<{ startX: number; startY: number; scrollLeft: number; scrollTop: number } | null>(null);
-  const [isSpacePressed, setIsSpacePressed] = useState(false);
-  const [isPanning, setIsPanning] = useState(false);
   const [activeGuides, setActiveGuides] = useState<SmartGuideLine[]>([]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === "INPUT" ||
-          target.tagName === "TEXTAREA" ||
-          target.isContentEditable ||
-          target.tagName === "SELECT")
-      ) {
-        return;
-      }
-      if (e.code === "Space" && !e.repeat) {
-        /*
-         * Space is the standard activation key for buttons, and this listener is on
-         * `window`: calling preventDefault unconditionally meant that while the editor
-         * was open, Space silently did nothing on every focused button (Save, Close,
-         * palette, inspector) — and it put the canvas into pan mode at the same time.
-         * Interactive elements keep their native behaviour; the canvas element itself is
-         * a `role="button"` that handles Space in its own key handler.
-         */
-        const interactive = target?.closest(
-          'button, a[href], [role="button"], summary, [contenteditable="true"]'
-        );
-        if (interactive) return;
-        e.preventDefault();
-        setIsSpacePressed(true);
-      }
-    };
-
-    const handleKeyUp = (e: KeyboardEvent) => {
-      if (e.code === "Space") {
-        setIsSpacePressed(false);
-      }
-    };
-
-    const handleBlur = () => {
-      setIsSpacePressed(false);
-      setIsPanning(false);
-      panState.current = null;
-    };
-
-    window.addEventListener("keydown", handleKeyDown);
-    window.addEventListener("keyup", handleKeyUp);
-    window.addEventListener("blur", handleBlur);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-      window.removeEventListener("keyup", handleKeyUp);
-      window.removeEventListener("blur", handleBlur);
-    };
-  }, []);
-
-  const onPointerDownViewport = (event: ReactPointerEvent<HTMLElement>) => {
-    if ((event.button === 1 || isSpacePressed) && canvasViewportRef?.current) {
-      event.preventDefault();
-      panState.current = {
-        startX: event.clientX,
-        startY: event.clientY,
-        scrollLeft: canvasViewportRef.current.scrollLeft,
-        scrollTop: canvasViewportRef.current.scrollTop,
-      };
-      setIsPanning(true);
-    }
-  };
+  const {
+    isSpacePressed,
+    isPanning,
+    onPointerDownViewport,
+    handlePanMove,
+    handlePanEnd,
+  } = useTemplateEditorPan(canvasViewportRef);
 
   const onPointerMove = useEffectEvent((event: PointerEvent) => {
-    if (!panState.current && !dragState.current && !resizeState.current) {
-      return;
-    }
-
-    if (panState.current && canvasViewportRef?.current) {
-      const dx = event.clientX - panState.current.startX;
-      const dy = event.clientY - panState.current.startY;
-      canvasViewportRef.current.scrollLeft = panState.current.scrollLeft - dx;
-      canvasViewportRef.current.scrollTop = panState.current.scrollTop - dy;
+    if (handlePanMove(event)) {
       return;
     }
 
@@ -193,62 +90,15 @@ export function useTemplateEditorInteractions<TPayload = Record<string, unknown>
       currentResize.hasMoved = true;
       const deltaX = (event.clientX - currentResize.startX) / canvasScale;
       const deltaY = (event.clientY - currentResize.startY) / canvasScale;
-      const hType: ResizeHandle = currentResize.handle || "se";
-      const isCorner = ["nw", "ne", "sw", "se"].includes(hType);
-      const keepRatio = event.shiftKey && isCorner && currentResize.origH > 0;
-      const ratio = currentResize.origW / currentResize.origH;
 
       updateElements((els) =>
-        els.map((templateElement) => {
-          if (templateElement.id !== currentResize.id) return templateElement;
-
-          let newX = currentResize.origX;
-          let newY = currentResize.origY;
-          let newW = currentResize.origW;
-          let newH = currentResize.origH;
-
-          // Width & X adjustments
-          if (hType === "e" || hType === "ne" || hType === "se") {
-            const maxW = Math.max(20, size.width - currentResize.origX);
-            newW = Math.min(maxW, Math.max(20, currentResize.origW + deltaX));
-          } else if (hType === "w" || hType === "nw" || hType === "sw") {
-            const maxW = currentResize.origX + currentResize.origW;
-            newW = Math.min(maxW, Math.max(20, currentResize.origW - deltaX));
-            newX = currentResize.origX + (currentResize.origW - newW);
-          }
-
-          // Height & Y adjustments
-          if (hType === "s" || hType === "se" || hType === "sw") {
-            const maxH = Math.max(4, size.height - currentResize.origY);
-            newH = Math.min(maxH, Math.max(4, currentResize.origH + deltaY));
-          } else if (hType === "n" || hType === "ne" || hType === "nw") {
-            const maxH = currentResize.origY + currentResize.origH;
-            newH = Math.min(maxH, Math.max(4, currentResize.origH - deltaY));
-            newY = currentResize.origY + (currentResize.origH - newH);
-          }
-
-          if (keepRatio) {
-            newH = Math.max(4, newW / ratio);
-            if (hType === "ne" || hType === "nw") {
-              newY = currentResize.origY + (currentResize.origH - newH);
-            }
-          }
-
-          return {
-            ...templateElement,
-            x: snap(Math.max(0, newX)),
-            y: snap(Math.max(0, newY)),
-            w: snap(newW),
-            h: snap(newH),
-          };
-        })
+        els.map((el) => computeResizedElement(el, currentResize, deltaX, deltaY, size, event.shiftKey))
       );
     }
   });
 
   const onPointerUp = useEffectEvent(() => {
-    panState.current = null;
-    setIsPanning(false);
+    handlePanEnd();
     setActiveGuides([]);
     if (dragState.current?.hasMoved) {
       const initial = dragState.current.initialTemplate;
@@ -272,7 +122,6 @@ export function useTemplateEditorInteractions<TPayload = Record<string, unknown>
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-   
   }, []);
 
   return {

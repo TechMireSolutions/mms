@@ -11,6 +11,8 @@ import { buildBrandingPreviewPatch } from '@/lib/brandingPreviewPatch';
 import {
   mergeBrandingIdentityForSave,
   retainThemeDraftAfterIdentitySave,
+  sanitizeBrandingSocialLinks,
+  resetBrandingIdentityFields,
 } from '@/lib/brandingIdentityDraft';
 import { loadBranding } from '@/components/branding/BrandingShared';
 import { serverSyncErrorKey } from '@/lib/serverSyncErrors';
@@ -112,10 +114,7 @@ export function useBrandingDraft({
     ): Promise<boolean> => {
       setSaving(true);
       try {
-        const cleanedSocialLinks = (data.socialLinks || []).filter(
-          (link) => (link.url || "").trim().length > 0,
-        );
-        const cleanedData = { ...data, socialLinks: cleanedSocialLinks };
+        const cleanedData = sanitizeBrandingSocialLinks(data);
         const merged = mergeBrandingSettings(cleanedData);
         const result = await saveBrandingSettings(merged);
         if (!result.ok) {
@@ -142,10 +141,7 @@ export function useBrandingDraft({
   const handleSaveIdentity = (async (toast?: UseBrandingDraftSaveToast): Promise<boolean> => {
       setSaving(true);
       try {
-        const cleanedSocialLinks = (data.socialLinks || []).filter(
-          (link) => (link.url || "").trim().length > 0,
-        );
-        const cleanedData = { ...data, socialLinks: cleanedSocialLinks };
+        const cleanedData = sanitizeBrandingSocialLinks(data);
         const persisted = mergeBrandingIdentityForSave(cleanedData, baseline);
         const result = await saveBrandingSettings(persisted);
         if (!result.ok) {
@@ -169,23 +165,7 @@ export function useBrandingDraft({
     });
 
   const handleDiscardIdentity = ((): void => {
-    setData((current) => ({
-      ...current,
-      madrasaName: baseline.madrasaName,
-      logoUrl: baseline.logoUrl,
-      email: baseline.email,
-      phone: baseline.phone,
-      website: baseline.website,
-      addressLine1: baseline.addressLine1,
-      addressLine2: baseline.addressLine2,
-      city: baseline.city,
-      region: baseline.region,
-      postalCode: baseline.postalCode,
-      country: baseline.country,
-      legalName: baseline.legalName,
-      registrationNumber: baseline.registrationNumber,
-      socialLinks: baseline.socialLinks,
-    }));
+    setData((current) => resetBrandingIdentityFields(current, baseline));
     clearSaved();
   });
 

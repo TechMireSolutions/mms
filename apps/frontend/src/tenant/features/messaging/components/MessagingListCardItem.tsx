@@ -1,5 +1,5 @@
 import type React from "react";
-import { AlertCircle, Check, Copy, Filter, RotateCcw } from "lucide-react";
+import { AlertCircle, Check, Copy } from "lucide-react";
 import {
   calculateSmsSegments,
   formatDateTime,
@@ -18,16 +18,10 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { SEMANTIC_TEXT } from "@/lib/semanticTone";
 
-export const getMessagingChannelAccentBarClass = (
-  isSelected: boolean,
-  channel: string,
-): string => {
-  if (isSelected) return "bg-primary/70 group-hover:bg-primary";
-  if (channel === "whatsapp") return "bg-success/50 group-hover:bg-success";
-  if (channel === "sms") return "bg-info/50 group-hover:bg-info";
-  if (channel === "email") return "bg-warning/50 group-hover:bg-warning";
-  return "bg-muted-foreground/35 group-hover:bg-muted-foreground/60";
-};
+import { getMessagingChannelAccentBarClass } from "./messagingCardTokens";
+import { MessagingListCardActions } from "./MessagingListCardActions";
+
+export { getMessagingChannelAccentBarClass };
 
 export interface MessagingListCardItemProps {
   log: Message;
@@ -164,38 +158,13 @@ export function MessagingListCardItem({
         viewAriaLabel={`${t("contacts.table.viewProfile")} - ${name}`}
         viewLabel={t("contacts.actionViewShort")}
         actions={
-          <>
-            {onFilterContact && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onFilterContact(name);
-                }}
-                className={`min-h-11 px-2.5 text-xs text-muted-foreground hover:${SEMANTIC_TEXT.primary}`}
-              >
-                <Filter className="me-1 h-3.5 w-3.5" />
-                <span>{t("common.filters")}</span>
-              </Button>
-            )}
-            {canWrite && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  onResendLog(log);
-                }}
-                className={`min-h-11 px-2.5 text-xs font-semibold ${SEMANTIC_TEXT.primary} hover:bg-primary/10`}
-              >
-                <RotateCcw className="me-1 h-3.5 w-3.5" />
-                {t("messaging.resend")}
-              </Button>
-            )}
-          </>
+          <MessagingListCardActions
+            log={log}
+            name={name}
+            canWrite={canWrite}
+            onResendLog={onResendLog}
+            onFilterContact={onFilterContact}
+          />
         }
       />
     </DirectoryEntityCard>

@@ -53,3 +53,16 @@ export function unwrapHasanatEnvelopes(
       : distributionsEnvelope?.distributions ?? [],
   };
 }
+
+export function formatHasanatMessageRecipients(
+  distList: Array<{ id: string; recipientName?: string; phone?: string; email?: string }>,
+  defaultRecipientLabel: string,
+) {
+  return distList.map((distribution) => ({
+    id: distribution.id,
+    name: distribution.recipientName || defaultRecipientLabel,
+    phone: distribution.phone || "",
+    email: distribution.email || "",
+  }));
+}
+

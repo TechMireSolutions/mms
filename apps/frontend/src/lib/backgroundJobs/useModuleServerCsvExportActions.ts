@@ -63,33 +63,17 @@ const sanitizeColumns = (cols: ModuleServerCsvExportColumn[]) =>
 
 /**
  * Shared filtered + selection server CSV export flow (Contacts / Students / Teachers / Enrollments).
- *
- * `startExport` polls until the job is terminal, so on return the record carries the real
- * row count and `hasDownload`; the artifact is downloaded here and the audit row records
- * that count. A poll timeout is *not* a failure — the worker keeps running and the
- * artifact appears in the jobs tray, so it is surfaced as an in-progress notice.
  */
 export function useModuleServerCsvExportActions<
   TColumn extends ModuleServerCsvExportColumn = ModuleServerCsvExportColumn,
   TQuery = Record<string, unknown>,
->({
-  canExport,
-  trashMode,
-  selectedIds,
-  columns,
-  filename,
-  label,
-  successMessage,
-  auditScope,
-  filteredErrorScope,
-  selectionErrorScope,
-  hasActiveFilters = false,
-  buildFilteredQuery,
-  startExport,
-  logExportAudit,
-  onError,
-  tenantName,
-}: UseModuleServerCsvExportActionsOptions<TColumn, TQuery>) {
+>(options: UseModuleServerCsvExportActionsOptions<TColumn, TQuery>) {
+  const {
+    canExport, trashMode, selectedIds, columns, filename, label,
+    successMessage, auditScope, filteredErrorScope, selectionErrorScope,
+    hasActiveFilters = false, buildFilteredQuery, startExport,
+    logExportAudit, onError, tenantName,
+  } = options;
   const [isExporting, setIsExporting] = useState(false);
   const attemptRef = useRef<CsvExportAttempt | null>(null);
 
@@ -98,8 +82,7 @@ export function useModuleServerCsvExportActions<
     tenantName ??
     optionalTenant?.workspace?.madrasaName ??
     optionalTenant?.publicBranding?.madrasaName ??
-    optionalTenant?.subdomain ??
-    null;
+    optionalTenant?.subdomain ?? null;
   const resolvedFilename = useMemo(
     () => buildTenantExportFilename(effectiveTenantName, filename),
     [effectiveTenantName, filename],

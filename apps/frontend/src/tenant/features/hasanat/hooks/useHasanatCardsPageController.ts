@@ -6,14 +6,9 @@ import { useTrashMode } from '@/hooks/useTrashMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { HASANAT_MODULE_MANIFEST, resolveModuleTierTab, toMessagingRecipient, type Distribution } from '@mms/shared';
-import { useHasanatDistributionColumnLayout } from '@/tenant/features/hasanat/hooks/useHasanatDistributionColumnLayout';
-import { useHasanatRedemptionColumnLayout } from '@/tenant/features/hasanat/hooks/useHasanatRedemptionColumnLayout';
-import {
-  useHasanatDenoms,
-  useHasanatBatches,
-  useHasanatDistributions,
-  useHasanatMutations,
-} from '@/tenant/features/hasanat/hooks/useHasanatApi';
+import { useHasanatDistributionColumnLayout } from './useHasanatDistributionColumnLayout';
+import { useHasanatRedemptionColumnLayout } from './useHasanatRedemptionColumnLayout';
+import { useHasanatDenoms, useHasanatBatches, useHasanatDistributions, useHasanatMutations } from './useHasanatApi';
 import { NotifiedMutationError } from '@/lib/notifiedMutationError';
 import { useWorkSelection } from '@/hooks/useWorkSelection';
 import { useHasanatDistributionTrashActions } from '@/tenant/features/hasanat/hooks/useHasanatDistributionTrashActions';
@@ -23,6 +18,7 @@ import {
   getHasanatSetupTabs,
   getHasanatSubTabs,
   unwrapHasanatEnvelopes,
+  formatHasanatMessageRecipients,
 } from './hasanatPageDescriptors';
 
 export function useHasanatCardsPageController() {
@@ -91,32 +87,17 @@ export function useHasanatCardsPageController() {
     await rawBulkDelete(ids);
     clearDistributionSelection();
   };
-
   const handleBulkRestore = async (ids: string[]) => {
     await rawBulkRestore(ids);
     clearDistributionSelection();
   };
 
-  const notifySaveFailure = ((error: unknown) => {
-    if (error instanceof NotifiedMutationError) return;
-    notify.error(t('hasanat.saveFailed'), {
-      description: error instanceof Error ? error.message : String(error),
-    });
-  });
-
   const handleMessageDistributions = (channel: 'sms' | 'whatsapp' | 'email', distList: Array<{ id: string; recipientName?: string; phone?: string; email?: string }>) => {
     if (!canWriteMessaging) return;
-    openComposer(
-      channel,
-      distList.map((distribution) =>
-        toMessagingRecipient({
-          id: distribution.id,
-          name: distribution.recipientName || t('hasanat.messaging.recipient'),
-          phone: distribution.phone || '',
-          email: distribution.email || '',
-        }),
-      ),
+    const recipients = formatHasanatMessageRecipients(distList, t('hasanat.messaging.recipient')).map((r) =>
+      toMessagingRecipient(r)
     );
+    openComposer(channel, recipients);
   };
 
   const effectiveTab = resolveModuleTierTab(
@@ -151,7 +132,11 @@ export function useHasanatCardsPageController() {
     try {
       await save();
     } catch (error: unknown) {
-      notifySaveFailure(error);
+      if (!(error instanceof NotifiedMutationError)) {
+        notify.error(t('hasanat.saveFailed'), {
+          description: error instanceof Error ? error.message : String(error),
+        });
+      }
       throw error;
     }
   };

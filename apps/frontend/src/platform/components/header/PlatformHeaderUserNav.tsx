@@ -1,23 +1,16 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { LogOut, ShieldAlert, User, Users, ChevronDown, Search } from 'lucide-react';
+import { ShieldAlert, User, Users, Search } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
-import { UserAvatar } from '@/components/ui/UserAvatar';
 import { Button } from '@/components/ui/button';
 import { BackgroundJobsTray } from '@/components/ui/BackgroundJobsTray';
 import { PlatformLanguagePicker } from '@/platform/components/header/PlatformLanguagePicker';
 import { PlatformNotificationsPopover } from '@/platform/components/header/PlatformNotificationsPopover';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
+import { UserNavDropdown } from '@/components/ui/UserNavDropdown';
+import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { ROUTES } from '@/lib/config/routes';
 import { cn } from '@/lib/utils';
 
@@ -28,6 +21,9 @@ export interface PlatformHeaderUserNavProps {
   className?: string;
 }
 
+/**
+ * Platform header user navigation and utilities toolbar using shared UserNavDropdown.
+ */
 export function PlatformHeaderUserNav({
   compact = false,
   onOpenSearch,
@@ -38,6 +34,15 @@ export function PlatformHeaderUserNav({
   const { platformUser, platformLogout } = usePlatformAuth();
   const { isSuperUser, canAdmins } = usePlatformPermissions();
   const { data: workspaces } = usePlatformWorkspaces();
+
+  const roleSubtitle = isSuperUser ? (
+    <>
+      <ShieldAlert className="w-2.5 h-2.5 text-primary shrink-0" aria-hidden />
+      {t('platform.roleSuperUser')}
+    </>
+  ) : (
+    t('platform.roleAdmin')
+  );
 
   return (
     <div className={cn('flex shrink-0 items-center gap-1 sm:gap-2', className)}>
@@ -78,79 +83,31 @@ export function PlatformHeaderUserNav({
 
       {!compact ? <div className="mx-1 hidden h-6 w-px bg-border sm:block" /> : null}
 
-      {/* User Profile Dropdown */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            type="button"
-            variant="ghost"
-            aria-label={platformUser?.name ?? t('platform.operatorRole')}
-            className={cn(
-              'flex items-center gap-2.5 rounded-xl hover:bg-muted transition-colors text-start min-h-11',
-              compact ? 'h-11 w-11 min-w-11 p-0 justify-center' : 'px-2.5 py-1',
-            )}
-          >
-            <UserAvatar
-              name={platformUser?.name}
-              className={compact ? 'h-7 w-7' : 'h-8 w-8 border border-primary/20 shadow-xs'}
-              fallbackClassName="bg-primary/10 text-primary text-xs font-bold"
-            />
-            {!compact ? (
-              <>
-                <div className="hidden sm:flex flex-col text-start">
-                  <span className="text-xs font-bold text-foreground leading-tight truncate max-w-30">
-                    {platformUser?.name ?? t('platform.operatorRole')}
-                  </span>
-                  <span className="text-2xs font-semibold text-muted-foreground flex items-center gap-1 leading-tight">
-                    {isSuperUser ? (
-                      <>
-                        <ShieldAlert className="w-2.5 h-2.5 text-primary shrink-0" aria-hidden />
-                        {t('platform.roleSuperUser')}
-                      </>
-                    ) : (
-                      t('platform.roleAdmin')
-                    )}
-                  </span>
-                </div>
-                <ChevronDown className="hidden sm:block h-3.5 w-3.5 text-muted-foreground shrink-0" aria-hidden />
-              </>
-            ) : null}
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-60 p-1.5 rounded-2xl surface-overlay text-start">
-          <DropdownMenuLabel className="p-2">
-            <div className="flex flex-col text-start">
-              <p className="text-sm font-black text-foreground">{platformUser?.name}</p>
-              <p className="text-xs font-mono text-muted-foreground truncate">{platformUser?.email}</p>
-            </div>
-          </DropdownMenuLabel>
-          <DropdownMenuSeparator className="my-1" />
+      <UserNavDropdown
+        name={platformUser?.name ?? t('platform.operatorRole')}
+        email={platformUser?.email}
+        subtitle={roleSubtitle}
+        compact={compact}
+        signOutLabel={t('platform.signOut')}
+        onSignOut={platformLogout}
+        avatarClassName={compact ? 'h-7 w-7' : 'h-8 w-8 border border-primary/20 shadow-xs'}
+        avatarFallbackClassName="bg-primary/10 text-primary text-xs font-bold"
+      >
+        <DropdownMenuItem asChild className="rounded-xl font-bold text-xs gap-2 min-h-11 cursor-pointer">
+          <Link to={ROUTES.platformAccount}>
+            <User className="h-4 w-4 text-warning" aria-hidden />
+            {t('platform.myAccount')}
+          </Link>
+        </DropdownMenuItem>
+        {canAdmins && (
           <DropdownMenuItem asChild className="rounded-xl font-bold text-xs gap-2 min-h-11 cursor-pointer">
-            <Link to={ROUTES.platformAccount}>
-              <User className="h-4 w-4 text-warning" aria-hidden />
-              {t('platform.myAccount')}
+            <Link to={ROUTES.platformAdmins}>
+              <Users className="h-4 w-4 text-success" aria-hidden />
+              {t('platform.adminsTitle')}
             </Link>
           </DropdownMenuItem>
-          {canAdmins && (
-            <DropdownMenuItem asChild className="rounded-xl font-bold text-xs gap-2 min-h-11 cursor-pointer">
-              <Link to={ROUTES.platformAdmins}>
-                <Users className="h-4 w-4 text-success" aria-hidden />
-                {t('platform.adminsTitle')}
-              </Link>
-            </DropdownMenuItem>
-          )}
-          <DropdownMenuSeparator className="my-1" />
-          <DropdownMenuItem
-            className="rounded-xl font-bold text-xs gap-2 min-h-11 text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
-            onClick={() => {
-              void platformLogout();
-            }}
-          >
-            <LogOut className="h-4 w-4" aria-hidden />
-            {t('platform.signOut')}
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+        )}
+      </UserNavDropdown>
     </div>
   );
 }

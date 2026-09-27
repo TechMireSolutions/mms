@@ -15,6 +15,7 @@ import { notify } from '@/lib/notify';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { MESSAGING_WORK_SEARCH_INPUT_ID } from './components/MessagingListFilters';
+import { useMessagingKeyboardShortcuts } from './hooks/useMessagingKeyboardShortcuts';
 import {
   MESSAGING_LOGS_QUERY_KEY,
   MESSAGING_METRICS_QUERY_KEY,
@@ -90,37 +91,11 @@ export default function MessagingPage(): React.JSX.Element {
     }
   }, [composeParam, canWrite, startCampaign, searchParams, setSearchParams]);
 
-  // Direct channel keyboard shortcuts (W = WhatsApp, S = SMS, E = Email)
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent): void => {
-      const target = e.target as HTMLElement | null;
-      if (
-        target &&
-        (target.tagName === 'INPUT' ||
-          target.tagName === 'TEXTAREA' ||
-          target.tagName === 'SELECT' ||
-          target.isContentEditable)
-      ) {
-        return;
-      }
-
-      if (!canWrite || messagingTarget) return;
-
-      if ((e.key === 'w' || e.key === 'W') && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-        void startCampaign('whatsapp');
-      } else if ((e.key === 's' || e.key === 'S') && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-        void startCampaign('sms');
-      } else if ((e.key === 'e' || e.key === 'E') && !e.ctrlKey && !e.metaKey && !e.altKey) {
-        e.preventDefault();
-        void startCampaign('email');
-      }
-    };
-
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [canWrite, messagingTarget, startCampaign]);
+  useMessagingKeyboardShortcuts({
+    canWrite,
+    hasActiveComposer: Boolean(messagingTarget),
+    startCampaign,
+  });
 
   useModuleShortcuts({
     searchInputId: MESSAGING_WORK_SEARCH_INPUT_ID,
