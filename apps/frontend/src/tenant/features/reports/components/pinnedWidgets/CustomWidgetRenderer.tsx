@@ -7,7 +7,7 @@ import {
 import { useBrandPalette } from "@/lib/contexts/BrandingPaletteContext";
 import { resolveThresholdChartHex, resolveWidgetChartHex } from "@/lib/brandingChartPalette";
 import { computeCustomCard, type CustomCard } from "@/lib/reports/reportMetadata";
-import { getObject } from "@/lib/db";
+import { readDashboardSwitchState } from "@/tenant/features/reports/components/pinnedWidgets/useDashboardSectionSettings";
 import {
   type ReportCollectionsSnapshot,
 } from "@/lib/reports/useReportCollections";
@@ -75,13 +75,7 @@ export function CustomWidgetRenderer({
   const isSwitchOn = (() => {
     if (resolvedWidgetType === "card") return false;
     if (widget.switchActionType === "app_setting") {
-      const switchStateKey = widget.switchStateKey || "";
-      if (switchStateKey.startsWith("section_")) {
-        const sectionKey = switchStateKey.replace("section_", "");
-        const settings = getObject<Record<string, boolean>>("dashboard_section_settings", {});
-        return !!settings[sectionKey];
-      }
-      return getObject<unknown>(switchStateKey, false) === true || getObject<unknown>(switchStateKey, "false") === "true";
+      return readDashboardSwitchState(widget.switchStateKey || "");
     }
     const collectionName = widget.switchCollection;
     const recordId = widget.switchRecordId;

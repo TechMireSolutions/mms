@@ -3,10 +3,11 @@ import * as React from "react"
 import { cn } from "@/lib/utils"
 import { FORM_TEXTAREA } from "@/components/ui/formStyles"
 
-const Textarea = React.forwardRef<
-  HTMLTextAreaElement,
-  React.TextareaHTMLAttributes<HTMLTextAreaElement>
->(({ className, id, name, ...props }, ref) => {
+export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextAreaElement> {
+  ref?: React.Ref<HTMLTextAreaElement>
+}
+
+function Textarea({ className, id, name, ref, ...props }: TextareaProps) {
   const fallbackId = React.useId();
   const resolvedId = id || fallbackId;
   const resolvedName = name || fallbackId;
@@ -19,7 +20,7 @@ const Textarea = React.forwardRef<
       {...props}
     />
   );
-})
+}
 Textarea.displayName = "Textarea"
 
 export { Textarea }

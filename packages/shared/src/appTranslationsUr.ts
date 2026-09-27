@@ -7985,5 +7985,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "nav.forcePasswordChange": "پاس ورڈ تبدیل کریں",
   "nav.institutionSetup": "ادارے کی ترتیب",
   "nav.profile": "پروفائل",
-  "common.archivedIndefinitely": "غیر معینہ مدت تک محفوظ"
+  "common.archivedIndefinitely": "غیر معینہ مدت تک محفوظ",
+  "common.sequenceNumbering.startLabel": "ابتدائی ترتیب",
+  "common.sequenceNumbering.startHint": "تخلیق کے لیے ابتدائی ترتیب نمبر (مثال: 1 یا 1001)"
 } as const;

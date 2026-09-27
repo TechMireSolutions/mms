@@ -1,5 +1,6 @@
 import React from "react";
 import { WidgetBuilder, type CustomWidget } from "@/tenant/features/reports/components/PinnedWidgets";
+import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
 import { type CustomCard } from "@/lib/reports/reportMetadata";
 import { getObject, saveObject } from "@/lib/db";
 import { useDashboardConfig } from "@/hooks/useDashboardConfig";
@@ -107,6 +108,15 @@ export default function DynamicCardBuilder({
       category={category}
       mode={mode}
       initialWidgetType="card"
+      renderWidget={(widget, isCompact) => (
+        <CustomWidgetRenderer
+          widget={widget}
+          collections={{} as Parameters<typeof CustomWidgetRenderer>[0]['collections']}
+          isCompact={isCompact}
+          onSwitchToggle={() => {}}
+          onMetricClick={() => {}}
+        />
+      )}
     />
   );
 }

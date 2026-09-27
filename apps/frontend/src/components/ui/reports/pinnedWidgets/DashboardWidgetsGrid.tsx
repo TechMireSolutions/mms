@@ -5,7 +5,6 @@ import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { Button } from '@/components/ui/button';
 import { isComposedWidgetType } from '@/components/dashboard-widgets/registry';
 import { isSeededDashboardWidget } from '@/lib/dashboardWidgets';
-import { CustomWidgetRenderer } from '@/components/ui/reports/pinnedWidgets/CustomWidgetRenderer';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 
 interface DashboardWidgetsGridProps {
@@ -18,18 +17,20 @@ interface DashboardWidgetsGridProps {
   onUnpin: (id: string) => void;
   onEditWidget?: (widget: CustomWidget) => void;
   onDeleteWidget?: (id: string) => void;
+  renderWidget: (widget: CustomWidget, isCompact: boolean) => React.ReactNode;
 }
 
 export function DashboardWidgetsGrid({
   widgets,
   gridMode,
-  collections,
+  collections: _collections,
   isEditMode,
-  onSwitchToggle,
-  onMetricClick,
+  onSwitchToggle: _onSwitchToggle,
+  onMetricClick: _onMetricClick,
   onUnpin,
   onEditWidget,
   onDeleteWidget,
+  renderWidget,
 }: DashboardWidgetsGridProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -62,14 +63,7 @@ export function DashboardWidgetsGrid({
               className={`relative group ${colSpanClass}`}
             >
               <ErrorBoundary>
-                <CustomWidgetRenderer
-                  widget={widget}
-                  collections={collections}
-                  isCompact={gridMode === 'compact'}
-                  isEditMode={isEditMode}
-                  onSwitchToggle={onSwitchToggle}
-                  onMetricClick={onMetricClick}
-                />
+                {renderWidget(widget, gridMode === 'compact')}
               </ErrorBoundary>
 
               <div

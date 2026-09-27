@@ -3,6 +3,8 @@ import { PinnedWidgetsBuilderSection } from "@/components/ui/reports/PinnedWidge
 import { PinnedWidgetsChrome } from "@/components/ui/reports/PinnedWidgetsChrome";
 import { PinnedWidgetsGrid } from "@/components/ui/reports/PinnedWidgetsGrid";
 import { usePinnedWidgetsController } from "@/tenant/features/reports/controllers/usePinnedWidgetsController";
+import { CustomWidgetRenderer } from "@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer";
+import { applyContactsWidgetWorkDrillDown } from "@/lib/contacts/contactsWidgetWorkDrillDown";
 
 export type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 export {
@@ -59,6 +61,17 @@ export default function PinnedWidgets({ category }: { category: string }): React
         category={category}
         onCancelEdit={handleCancelBuilder}
         onSaveWidget={handleSaveWidget}
+        renderWidget={(widget, isCompact) => (
+          <CustomWidgetRenderer
+            widget={widget}
+            collections={collections}
+            isCompact={isCompact}
+            onSwitchToggle={handleToggleSwitchStateLocal}
+            onMetricClick={(clicked) => {
+              if (applyContactsWidgetWorkDrillDown(clicked)) return;
+            }}
+          />
+        )}
       />
 
       <PinnedWidgetsGrid
@@ -69,6 +82,16 @@ export default function PinnedWidgets({ category }: { category: string }): React
         onDeleteWidget={handleDeleteWidget}
         onSwitchToggle={handleToggleSwitchStateLocal}
         t={t}
+        renderWidget={(widget, collectionArg) => (
+          <CustomWidgetRenderer
+            widget={widget}
+            collections={collectionArg}
+            onSwitchToggle={handleToggleSwitchStateLocal}
+            onMetricClick={(clicked) => {
+              if (applyContactsWidgetWorkDrillDown(clicked)) return;
+            }}
+          />
+        )}
       />
     </div>
   );

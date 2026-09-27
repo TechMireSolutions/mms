@@ -2,6 +2,7 @@ import React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { WidgetBuilder } from '@/lib/reports/pinnedWidgets';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
+import { CustomWidgetRenderer } from '@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { StatItem } from '@/lib/dashboardWidgets';
 import type { Permission } from '@mms/shared';
@@ -81,6 +82,15 @@ export function DashboardCustomizePanel({
               category={widgetScope.category}
               mode="dashboard"
               initialWidgetType={widgetBuilderType}
+              renderWidget={(widget, isCompact) => (
+                <CustomWidgetRenderer
+                  widget={widget}
+                  collections={{} as Parameters<typeof CustomWidgetRenderer>[0]['collections']}
+                  isCompact={isCompact}
+                  onSwitchToggle={() => {}}
+                  onMetricClick={() => {}}
+                />
+              )}
             />
           </div>
         )}

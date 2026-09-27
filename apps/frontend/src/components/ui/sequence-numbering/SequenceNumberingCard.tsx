@@ -1,4 +1,5 @@
 import React, { useMemo } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { Hash } from "lucide-react";
 import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
@@ -62,6 +63,7 @@ export function SequenceNumberingCard({
   restartLabel,
   restartDesc,
 }: SequenceNumberingCardProps): React.JSX.Element {
+  const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
 
   const livePreview = useMemo(() => {
@@ -125,8 +127,8 @@ export function SequenceNumberingCard({
             {/* Starting Sequence & Live Telemetry Box */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <Field
-                label={startSeqLabel ?? "Starting Sequence"}
-                hint={startSeqHint ?? "Initial sequence number for generation (e.g. 1 or 1001)"}
+                label={startSeqLabel ?? t('common.sequenceNumbering.startLabel')}
+                hint={startSeqHint ?? t('common.sequenceNumbering.startHint')}
                 id="sequence-startSeq"
               >
                 <Input

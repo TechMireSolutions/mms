@@ -10,6 +10,7 @@ interface PinnedWidgetsBuilderSectionProps {
   category: string;
   onCancelEdit: () => void;
   onSaveWidget: (savedWidget: CustomWidget) => void;
+  renderWidget: (widget: CustomWidget, isCompact: boolean) => React.ReactNode;
 }
 
 export function PinnedWidgetsBuilderSection({
@@ -19,6 +20,7 @@ export function PinnedWidgetsBuilderSection({
   category,
   onCancelEdit,
   onSaveWidget,
+  renderWidget,
 }: PinnedWidgetsBuilderSectionProps): React.JSX.Element {
   return (
     <AnimatePresence>
@@ -29,6 +31,7 @@ export function PinnedWidgetsBuilderSection({
           onCancelEdit={onCancelEdit}
           onSaveWidget={onSaveWidget}
           category={category}
+          renderWidget={renderWidget}
         />
       )}
     </AnimatePresence>

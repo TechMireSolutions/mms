@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
-import { getObject, saveObject } from '@/lib/db';
+import { toggleDashboardSwitchState } from '@/tenant/features/reports/components/pinnedWidgets/useDashboardSectionSettings';
 import {
   isRestWidgetCollection,
   persistWidgetRecordToggle,
@@ -9,7 +9,7 @@ import { useWidgetCollections } from '@/lib/reports/useReportCollections';
 import type { ReportCollection } from '@/lib/reports/reportMetadata';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
-import { WidgetDrilldownModal } from '@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer';
+import { WidgetDrilldownModal, CustomWidgetRenderer } from '@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer';
 import { reportClientError } from '@/lib/clientErrorReporting';
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
@@ -75,18 +75,7 @@ export function DashboardWidgets({
 
   const handleToggleSwitchState = (widget: CustomWidget) => {
     if (widget.switchActionType === 'app_setting') {
-      const switchStateKey = widget.switchStateKey || '';
-      if (switchStateKey.startsWith('section_')) {
-        const sectionKey = switchStateKey.replace('section_', '');
-        const settings = getObject<Record<string, boolean>>('dashboard_section_settings', {});
-        settings[sectionKey] = !settings[sectionKey];
-        saveObject('dashboard_section_settings', settings);
-      } else {
-        const isEnabled =
-          getObject<unknown>(switchStateKey, false) === true || getObject<unknown>(switchStateKey, 'false') === 'true';
-        saveObject(switchStateKey, !isEnabled);
-      }
-      window.dispatchEvent(new Event('local-database-update'));
+      toggleDashboardSwitchState(widget.switchStateKey || '');
       return;
     }
 
@@ -128,6 +117,16 @@ export function DashboardWidgets({
         onUnpin={handleLocalUnpin}
         onEditWidget={onEditWidget}
         onDeleteWidget={onDeleteWidget}
+        renderWidget={(widget, isCompact) => (
+          <CustomWidgetRenderer
+            widget={widget}
+            collections={collections}
+            isCompact={isCompact}
+            isEditMode={isEditMode}
+            onSwitchToggle={handleToggleSwitchState}
+            onMetricClick={handleMetricClick}
+          />
+        )}
       />
 
       <AnimatePresence>

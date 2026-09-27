@@ -7988,4 +7988,6 @@ export const APP_TRANSLATIONS_EN = {
   "common.purgesInOneDay": "Purges in 1 day",
   "common.permanentlyDelete": "Permanently Delete",
   "common.restore": "Restore",
+  "common.sequenceNumbering.startLabel": "Starting Sequence",
+  "common.sequenceNumbering.startHint": "Initial sequence number for generation (e.g. 1 or 1001)",
 } as const;

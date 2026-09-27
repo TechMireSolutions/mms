@@ -51,26 +51,25 @@ export interface ButtonProps
   extends React.ButtonHTMLAttributes<HTMLButtonElement>,
     VariantProps<typeof buttonVariants> {
   asChild?: boolean
+  ref?: React.Ref<HTMLButtonElement>
 }
 
 /**
  * Standard touch-first button component enforcing 44x44px minimum target bounds.
  */
-const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ className, variant, size, asChild = false, title, "aria-label": ariaLabel, ...props }, ref) => {
-    const Comp = asChild ? Slot : "button"
-    const resolvedAriaLabel = ariaLabel || (typeof title === "string" ? title : undefined);
-    return (
-      <Comp
-        className={cn(buttonVariants({ variant, size, className }))}
-        ref={ref}
-        title={title}
-        aria-label={resolvedAriaLabel}
-        {...props}
-      />
-    )
-  }
-)
+function Button({ className, variant, size, asChild = false, title, "aria-label": ariaLabel, ref, ...props }: ButtonProps) {
+  const Comp = asChild ? Slot : "button"
+  const resolvedAriaLabel = ariaLabel || (typeof title === "string" ? title : undefined);
+  return (
+    <Comp
+      className={cn(buttonVariants({ variant, size, className }))}
+      ref={ref}
+      title={title}
+      aria-label={resolvedAriaLabel}
+      {...props}
+    />
+  )
+}
 Button.displayName = "Button"
 
 export { Button, buttonVariants }

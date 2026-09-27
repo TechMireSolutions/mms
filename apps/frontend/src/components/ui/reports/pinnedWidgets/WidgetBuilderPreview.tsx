@@ -4,7 +4,6 @@ import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Slider } from "@/components/ui/slider";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
-import { CustomWidgetRenderer } from "@/components/ui/reports/pinnedWidgets/CustomWidgetRenderer";
 import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
@@ -19,18 +18,20 @@ interface WidgetBuilderPreviewProps {
   canSave: boolean;
   isEditing: boolean;
   onSwitchToggle: () => void;
+  renderWidget: (widget: CustomWidget, isCompact: boolean) => React.ReactNode;
 }
 
 export function WidgetBuilderPreview({
   previewWidget,
-  collections,
+  collections: _collections,
   scalerSize,
   setScalerSize,
   onCancelEdit,
   onSave,
   canSave,
   isEditing,
-  onSwitchToggle,
+  onSwitchToggle: _onSwitchToggle,
+  renderWidget,
 }: WidgetBuilderPreviewProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -60,13 +61,7 @@ export function WidgetBuilderPreview({
             className={cn(WORK_SURFACE_INNER, "overflow-hidden shadow-lg rounded-3xl transition-all duration-100 flex items-center justify-center animate-fade-in")}
             style={{ width: scalerSize, height: scalerSize }}
           >
-            <CustomWidgetRenderer
-              widget={previewWidget}
-              collections={collections}
-              isCompact={scalerSize < 140}
-              onSwitchToggle={onSwitchToggle}
-              onMetricClick={() => {}}
-            />
+            {renderWidget(previewWidget, scalerSize < 140)}
           </div>
         </div>
       </div>

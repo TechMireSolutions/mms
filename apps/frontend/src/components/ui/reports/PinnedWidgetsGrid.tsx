@@ -6,10 +6,8 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { applyContactsWidgetWorkDrillDown } from "@/lib/contacts/contactsWidgetWorkDrillDown";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
-import { CustomWidgetRenderer } from "@/components/ui/reports/pinnedWidgets/CustomWidgetRenderer";
 import type { CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 import { METADATA_FIELDS, getCollectionLabel } from "@/lib/reports/reportMetadata";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -40,6 +38,7 @@ interface PinnedWidgetsGridProps {
   onDeleteWidget: (id: string) => void;
   onSwitchToggle: (widget: CustomWidget) => void;
   t: TranslationFunction;
+  renderWidget: (widget: CustomWidget, collections: ReportCollectionsSnapshot) => React.ReactNode;
 }
 
 export function PinnedWidgetsGrid({
@@ -49,6 +48,7 @@ export function PinnedWidgetsGrid({
   onEditClick,
   onDeleteWidget,
   onSwitchToggle,
+  renderWidget,
   t,
 }: PinnedWidgetsGridProps): React.JSX.Element {
   if (filteredWidgets.length === 0) {
@@ -121,14 +121,7 @@ export function PinnedWidgetsGrid({
             </div>
 
             <ErrorBoundary>
-              <CustomWidgetRenderer
-                widget={widget}
-                collections={collections}
-                onSwitchToggle={onSwitchToggle}
-                onMetricClick={(clicked) => {
-                  if (applyContactsWidgetWorkDrillDown(clicked)) return;
-                }}
-              />
+              {renderWidget(widget, collections)}
             </ErrorBoundary>
           </motion.div>
         );

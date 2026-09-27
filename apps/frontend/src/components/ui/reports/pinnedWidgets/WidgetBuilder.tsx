@@ -15,6 +15,7 @@ interface WidgetBuilderProps {
   category?: string;
   mode?: "dashboard" | "kpi";
   initialWidgetType?: CustomWidget["widgetType"];
+  renderWidget: (widget: CustomWidget, isCompact: boolean) => React.ReactNode;
 }
 
 export function WidgetBuilder({
@@ -25,6 +26,7 @@ export function WidgetBuilder({
   category = "students",
   mode = "kpi",
   initialWidgetType = "kpi",
+  renderWidget,
 }: WidgetBuilderProps): React.JSX.Element {
   const {
     collections,
@@ -79,6 +81,7 @@ export function WidgetBuilder({
           canSave={canSave}
           isEditing={Boolean(editWidgetConfig)}
           onSwitchToggle={() => {}}
+          renderWidget={renderWidget}
         />
       </div>
     </div>

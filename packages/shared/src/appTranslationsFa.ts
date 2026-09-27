@@ -7990,4 +7990,6 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "common.purgesInDays": "حذف در {count} روز",
   "common.purgesInOneDay": "حذف در یک روز",
   "common.permanentlyDelete": "حذف کامل",
+  "common.sequenceNumbering.startLabel": "شماره توالی اولیه",
+  "common.sequenceNumbering.startHint": "شماره توالی اولیه برای تولید (مثال: 1 یا 1001)"
 };

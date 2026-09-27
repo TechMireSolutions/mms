@@ -7985,5 +7985,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "nav.forcePasswordChange": "تغيير كلمة المرور",
   "nav.institutionSetup": "إعداد المؤسسة",
   "nav.profile": "الملف الشخصي",
-  "common.archivedIndefinitely": "مؤرشف بلا حد زمني"
+  "common.archivedIndefinitely": "مؤرشف بلا حد زمني",
+  "common.sequenceNumbering.startLabel": "التسلسل الابتدائي",
+  "common.sequenceNumbering.startHint": "رقم التسلسل الابتدائي للإنشاء (مثال: 1 أو 1001)"
 } as const;
