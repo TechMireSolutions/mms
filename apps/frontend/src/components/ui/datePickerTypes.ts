@@ -1,4 +1,5 @@
 import type * as React from "react";
+import type { DateFormatId } from "@mms/shared";
 
 export interface DatePickerProps {
   value?: string | number | Date | null;
@@ -17,6 +18,7 @@ export interface DatePickerProps {
   yearOnly?: boolean;
   minYear?: number | null;
   maxYear?: number | null;
+  dateFormat?: DateFormatId | string;
   "aria-label"?: string;
   "aria-invalid"?: boolean;
   "aria-describedby"?: string;

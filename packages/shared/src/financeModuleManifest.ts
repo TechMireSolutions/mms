@@ -6,6 +6,9 @@ import {
 } from './financeBilling.js';
 import { isoDateSchema } from './isoDateSchema.js';
 
+export const INVOICE_STATUSES = ['paid', 'pending', 'overdue', 'partial', 'cancelled'] as const;
+export type InvoiceStatus = (typeof INVOICE_STATUSES)[number];
+
 export const invoiceRecordSchema = z
   .object({
     id: z.string(),
@@ -18,7 +21,7 @@ export const invoiceRecordSchema = z
     discountValue: z.number().nonnegative().default(0),
     discountAmt: z.number().nonnegative().default(0),
     finalAmt: z.number().nonnegative().default(0),
-    status: z.enum(['paid', 'pending', 'overdue', 'partial', 'cancelled']).default('pending'),
+    status: z.enum(INVOICE_STATUSES).default('pending'),
     dueDate: z.string(),
     paidDate: z.string().nullable().optional(),
     method: z.string().nullable().optional(),
@@ -41,8 +44,7 @@ export const invoiceRecordSchema = z
     deletedWithCascade: z.boolean().nullable().optional(),
     createdAt: z.string().optional(),
     updatedAt: z.string().optional(),
-  })
-  .strict();
+  }).strict();
 
 export const invoiceRecordInsertSchema = z
   .object({
@@ -56,7 +58,7 @@ export const invoiceRecordInsertSchema = z
     discountValue: z.number().nonnegative().optional().default(0),
     discountAmt: z.number().nonnegative().optional().default(0),
     finalAmt: z.number().nonnegative().default(0),
-    status: z.enum(['paid', 'pending', 'overdue', 'partial', 'cancelled']).optional().default('pending'),
+    status: z.enum(INVOICE_STATUSES).optional().default('pending'),
     dueDate: isoDateSchema,
     paidDate: z.string().nullable().optional(),
     method: z.string().nullable().optional(),
@@ -71,8 +73,7 @@ export const invoiceRecordInsertSchema = z
     lastRemindedAt: z.string().nullable().optional(),
     reminderCount: z.number().int().nonnegative().optional(),
     lines: z.array(invoiceLineInsertSchema).optional(),
-  })
-  .strict();
+  }).strict();
 
 export const invoiceRecordUpdateSchema = invoiceRecordInsertSchema.partial().strict();
 

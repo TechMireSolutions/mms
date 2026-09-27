@@ -16,3 +16,12 @@ export const moduleColumnPreferencesBodySchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   return deepSanitizeStrings(raw);
 }, moduleColumnPreferencesBodyBaseSchema);
+
+export const moduleColumnPreferencesResponseSchema = z.object({
+  success: z.boolean().optional(),
+  preferences: z.array(moduleColumnPreferenceSchema).optional(),
+  prefs: z.array(moduleColumnPreferenceSchema).optional(),
+});
+
+export type ModuleColumnPreferencesResponse = z.infer<typeof moduleColumnPreferencesResponseSchema>;
+

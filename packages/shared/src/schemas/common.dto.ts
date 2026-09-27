@@ -61,3 +61,22 @@ export const widgetAggregateResultSchema = z.object({
 
 export type WidgetAggregateResult = z.infer<typeof widgetAggregateResultSchema>;
 
+/** Standard image upload response schema. */
+export const imageUploadResponseSchema = z.object({
+  url: z.string().min(1),
+  purpose: z.string().optional(),
+}).strict();
+
+export type ImageUploadResponse = z.infer<typeof imageUploadResponseSchema>;
+
+/** Standard file attachment upload response schema. */
+export const attachmentUploadResponseSchema = z.object({
+  url: z.string().min(1),
+  name: z.string().min(1),
+  type: z.string().min(1),
+  size: z.number().int().nonnegative(),
+}).strict();
+
+export type AttachmentUploadResponse = z.infer<typeof attachmentUploadResponseSchema>;
+
+

@@ -1,11 +1,5 @@
+import { type AttachmentUploadResponse } from '@mms/shared';
 import { apiJson, resolveApiUrl } from '@/lib/apiClient';
-
-interface AttachmentUploadResponse {
-  url: string;
-  name: string;
-  type: string;
-  size: number;
-}
 
 /**
  * Uploads an attachment file to the MMS backend.

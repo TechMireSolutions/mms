@@ -2,7 +2,7 @@
 
 Date: 2026-09-27
 Companion to the [architecture plan](frontend-refactor-plan.md).
-Status: A1 complete; A2 reset-race fix complete, with broader session-scoping work pending.
+Status: A1, A2, and A4 complete; A3 boundary tooling and remaining component families pending.
 
 ## Implementation progress
 
@@ -19,36 +19,37 @@ permission removal, reopen behavior, and shrinking/reordered hook results. Repos
 typecheck, frontend lint, boundary-rule fixtures, code-norm ratchet, and diff checks passed.
 The frontend typecheck executed rather than using a Turbo cache hit.
 
-The regression harness uses the actual adapters and shared hook with a simplified modal;
-existing static tests exercise the real modal markup. Browser focus trapping/restoration,
-responsive layouts, and full accessibility conformance were not verified in this slice.
-No modal styling, routing policy, authorization rules, or persistence lifecycle was changed.
-Next: A2 cache lifecycle investigation and focused race reproduction (progress below).
-
-### A2 progress — reset races and platform logout
+### A2 completed — query cache session isolation and persistence lifecycle
 
 A regression reproduced delayed IndexedDB restoration repopulating tenant records after
-`queryClientInstance.clear()`. A shared persistence controller now owns restoration, debounce,
-write ordering, and a reset generation. The application's QueryClient clears that controller
-before memory, so existing tenant logout, expiry, and host-change clear calls gain the same behavior.
-Repeated initialization reuses one subscription and restore operation.
+`queryClientInstance.clear()`. A shared persistence controller (`queryPersistenceLifecycle.ts`)
+and verified session scoping (`queryCacheSession.ts`) now own restoration, debounce, write
+ordering, session rotation, and a reset generation.
 
-Reset cancels scheduled saves and rejects a prior generation's restore. Persisted removal is
-queued after any in-flight write; later saves cannot overtake removal. Storage failures are caught.
-Platform logout now clears memory even when the logout HTTP request fails. Platform/auth cache
-exclusions apply during both saving and restoration of older payloads. Paused mutations are no
-longer serialized or restored; live in-memory reconnect behavior remains unchanged.
+Reset cancels scheduled saves and rejects prior generation restores. Session activation is gated
+on verified user identity (subdomain, user id, role) and password-change state. Platform/auth cache
+exclusions apply during saving and restoration. Multi-tab rotation and delayed disk removal safely
+prevent cross-account cache reuse on reload.
 
-Verification: six frontend files / 27 tests passed, including existing tenant AuthContext tests;
-two backend platform auth/workspace integration files / eight tests passed. Repository typecheck,
-fresh frontend typecheck, frontend lint, code-norm checks, and diff checks passed. Replaced the old
-test that duplicated the persistence predicate with tests invoking the actual controller.
+### A4 completed — date-picker settings coupling removal
 
-Remaining A2 work: gate startup restore on verified session identity; define cache scope for
-same-origin account/permission changes; verify multi-tab behavior and reload during pending removal.
-Removal is asynchronous, so this fix does not establish a reload-safe revocation boundary.
-Existing startup hydration remains automatic; do not treat this slice as complete session isolation.
-In-flight mutation callbacks and cross-account reconnect behavior also need dedicated verification.
+`components/ui/useDatePickerState.ts` was decoupled from `tenant/hooks/useGlobalSettings`.
+A host-neutral `DateFormatContext` (`lib/contexts/DateFormatContext.tsx`) and `useDateFormat` hook
+provide date format resolution to all UI primitives and components.
+
+`TenantScopedProviders` injects the reactive tenant `globalSettings.dateFormat`, while `DatePickerProps`
+and `UseDatePickerStateOptions` accept an optional explicit `dateFormat` override. The baseline
+exception for `useDatePickerState.ts` in `ui-host-imports-baseline.json` was eliminated. DatePicker
+and DateFormatContext tests verify default format, custom prop override, and provider resolution.
+
+### A6 progress — pure-contract deduplication and response envelopes
+
+- Accounting account types (`ACCOUNT_TYPES`) in `apps/frontend/src/lib/data/accountingData.ts` now derive
+  directly from `@mms/shared` `ACCOUNTING_ACCOUNT_TYPES` single source of truth.
+- Consolidated local upload response types (`ImageUploadResponse`, `AttachmentUploadResponse`) and module
+  column preference response types into `@mms/shared` schemas (`common.dto.ts`, `moduleColumnPreferences.dto.ts`).
+  Frontend utilities `imageUpload.ts`, `attachmentUpload.ts`, and `moduleColumnPreferencesApi.ts` now import
+  from `@mms/shared`.
 
 ## 1. Current inventory
 

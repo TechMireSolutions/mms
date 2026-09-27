@@ -8,9 +8,12 @@ new RuleTester().run('no-ui-host-imports', rule, {
     { filename: '/repo/src/tenant/components/Adapter.tsx', code: "import { useUsers } from '@/tenant/hooks/users';" },
     { filename: '/repo/src/components/ui/FreshView.test.tsx', code: "import { useUsers } from '@/tenant/hooks/users';" },
     { filename: '/repo/src/components/ui/UserActorSelect.tsx', code: "export { UserActorSelect } from '@/tenant/components/selectors/UserActorSelect';" },
+    { filename: '/repo/src/components/ui/UserActorSelect.tsx', code: "export { UserActorSelect } from '@/tenant/components/selectors/UserActorSelect/index';" },
+    { filename: '/repo/src/components/ui/UserActorSelect.tsx', code: "export { UserActorSelect } from '@/tenant/components/selectors/UserActorSelect.tsx';" },
   ],
   invalid: [
     { filename, code: "import { useUsers } from '@/tenant/hooks/users';", errors: [{ messageId: 'boundary' }] },
+    { filename, code: "import { useUsers } from '@/tenant/hooks/users/index';", errors: [{ messageId: 'boundary' }] },
     { filename, code: "export * from '../../tenant/hooks/users';", errors: [{ messageId: 'boundary' }] },
     { filename, code: "const load = () => import('@/platform/lib/data');", errors: [{ messageId: 'boundary' }] },
     { filename, code: "const data = require('@/lib/db');", errors: [{ messageId: 'boundary' }] },

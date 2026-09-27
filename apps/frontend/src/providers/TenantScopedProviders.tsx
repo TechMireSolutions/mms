@@ -1,8 +1,10 @@
 import React from 'react';
 import { ContactConfigProvider } from '@/lib/contexts/ContactConfigContext';
+import { DateFormatProvider } from '@/lib/contexts/DateFormatContext';
 import { useIsTenantHost } from '@/lib/host/useIsTenantHost';
 import { useTenantDatabaseUpdates } from '@/hooks/useTenantDatabaseUpdates';
 import { useAuth } from '@/lib/contexts/AuthContext';
+import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 
 import { isInstitutionSetupComplete } from '@mms/shared';
 import { useBranding } from '@/tenant/hooks/useBranding';
@@ -12,7 +14,7 @@ function TenantLivePushSubscriber(): null {
   return null;
 }
 
-/** Mounts tenant-only providers (contacts config + live push) — live push is active only when authenticated. */
+/** Mounts tenant-only providers (contacts config + date format + live push) — live push is active only when authenticated. */
 export default function TenantScopedProviders({
   children,
 }: {
@@ -21,6 +23,7 @@ export default function TenantScopedProviders({
   const isTenantHost = useIsTenantHost();
   const { isAuthenticated, user, authChecked } = useAuth();
   const branding = useBranding();
+  const globalSettings = useGlobalSettings();
 
   if (!isTenantHost) {
     return <>{children}</>;
@@ -35,9 +38,11 @@ export default function TenantScopedProviders({
   );
 
   return (
-    <ContactConfigProvider>
-      {shouldSubscribeLivePush ? <TenantLivePushSubscriber /> : null}
-      {children}
-    </ContactConfigProvider>
+    <DateFormatProvider value={globalSettings.dateFormat}>
+      <ContactConfigProvider>
+        {shouldSubscribeLivePush ? <TenantLivePushSubscriber /> : null}
+        {children}
+      </ContactConfigProvider>
+    </DateFormatProvider>
   );
 }

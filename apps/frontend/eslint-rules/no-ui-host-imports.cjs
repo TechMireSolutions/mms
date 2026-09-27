@@ -31,7 +31,7 @@ module.exports = {
     const observed = new Set();
     function check(node, source) {
       if (typeof source !== 'string') return;
-      const target = sourcePath(relative, source).replace(/\.(tsx?|jsx?)$/, '');
+      const target = sourcePath(relative, source).replace(/\.(tsx?|jsx?)$/, '').replace(/\/index$/, '');
       if (!isHostDependency(target)) return;
       observed.add(target);
       if (!allowed.has(target)) context.report({ node, messageId: 'boundary', data: { target } });

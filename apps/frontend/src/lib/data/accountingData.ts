@@ -1,4 +1,20 @@
-export const ACCOUNT_TYPES = ["Asset", "Liability", "Equity", "Revenue", "Expense"] as const;
+import {
+  ACCOUNTING_ACCOUNT_TYPES,
+  type Account,
+  type JournalLine,
+  type JournalEntry,
+  type FiscalYear,
+  type AccountingSettings,
+  DEFAULT_ACCOUNTING_SETTINGS as DEFAULT_SETTINGS,
+  todayISO,
+} from "@mms/shared";
+import {
+  computeLedger,
+  computeTrialBalance,
+  computeFinancials,
+} from "./accountingCalculations";
+
+export const ACCOUNT_TYPES = ACCOUNTING_ACCOUNT_TYPES;
 export type AccountType = typeof ACCOUNT_TYPES[number];
 
 export const ACCOUNT_SUBTYPES: Record<AccountType, string[]> = {
@@ -16,21 +32,6 @@ export const ACCOUNT_TYPE_META = {
   Revenue:   { normalBalance: "credit", color: "bg-success/15 text-success border-success/30", group: "income" as const,  icon: "💰" },
   Expense:   { normalBalance: "debit",  color: "bg-warning/15 text-warning border-warning/30", group: "income" as const,  icon: "📉" },
 };
-
-import {
-  type Account,
-  type JournalLine,
-  type JournalEntry,
-  type FiscalYear,
-  type AccountingSettings,
-  DEFAULT_ACCOUNTING_SETTINGS as DEFAULT_SETTINGS,
-  todayISO,
-} from "@mms/shared";
-import {
-  computeLedger,
-  computeTrialBalance,
-  computeFinancials,
-} from "./accountingCalculations";
 
 export type { Account, JournalLine, JournalEntry, FiscalYear, AccountingSettings };
 export { DEFAULT_SETTINGS, computeLedger, computeTrialBalance, computeFinancials };

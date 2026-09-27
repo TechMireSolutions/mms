@@ -6,7 +6,7 @@ import {
   normalizeDateFormat,
   type DateFormatId,
 } from "@mms/shared";
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
+import { useDateFormat } from "@/lib/contexts/DateFormatContext";
 import { useDatePickerYearMode } from "./datePickerYearMode";
 import { useDatePickerDateMode } from "./useDatePickerDateMode";
 import {
@@ -24,6 +24,7 @@ export interface UseDatePickerStateOptions {
   yearOnly?: boolean;
   minYear?: number | null;
   maxYear?: number | null;
+  dateFormat?: DateFormatId | string;
 }
 
 export function useDatePickerState({
@@ -36,14 +37,15 @@ export function useDatePickerState({
   yearOnly,
   minYear,
   maxYear,
+  dateFormat: explicitDateFormat,
 }: UseDatePickerStateOptions) {
   const [open, setOpen] = React.useState(false);
   const [inputValue, setInputValue] = React.useState("");
   const fallbackId = React.useId();
 
-  const settings = useGlobalSettings();
+  const contextFormat = useDateFormat();
   const dateFormat = normalizeDateFormat(
-    settings.dateFormat,
+    explicitDateFormat ?? contextFormat,
     DEFAULT_GLOBAL_SETTINGS.dateFormat as DateFormatId,
   );
 

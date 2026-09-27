@@ -1,13 +1,17 @@
-import type { Invoice, Payment } from '@mms/shared';
-export type { Invoice, Payment };
-
 import {
+  type Invoice,
+  type Payment,
   type FinanceSettings,
-  DEFAULT_FINANCE_SETTINGS
+  DEFAULT_FINANCE_SETTINGS,
+  INVOICE_STATUSES,
+  type InvoiceStatus,
+  OPEN_INVOICE_STATUSES,
+  type OpenInvoiceStatus,
+  isOpenInvoiceStatus,
 } from "@mms/shared";
 
-export type { FinanceSettings };
-export { DEFAULT_FINANCE_SETTINGS };
+export type { Invoice, Payment, FinanceSettings, InvoiceStatus, OpenInvoiceStatus };
+export { DEFAULT_FINANCE_SETTINGS, INVOICE_STATUSES, OPEN_INVOICE_STATUSES, isOpenInvoiceStatus };
 
 export const PAYMENT_METHODS = ["Cash", "Bank Transfer", "Online", "Cheque", "Other"] as const;
-export const INVOICE_STATUSES = ["paid", "pending", "overdue", "partial", "cancelled"] as const;
+

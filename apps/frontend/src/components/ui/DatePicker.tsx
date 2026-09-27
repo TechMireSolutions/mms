@@ -32,6 +32,7 @@ export function DatePicker({
   yearOnly,
   minYear,
   maxYear,
+  dateFormat,
   "aria-label": ariaLabel,
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
@@ -48,6 +49,7 @@ export function DatePicker({
     yearOnly,
     minYear,
     maxYear,
+    dateFormat,
   });
 
   const resolvedId = id || state.fallbackId;

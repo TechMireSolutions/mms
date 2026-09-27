@@ -660,4 +660,31 @@ describe('DatePicker Component', () => {
       expect(onChange).toHaveBeenCalledWith('2025-09');
     });
   });
+
+  describe('Date Format Resolution', () => {
+    it('renders with custom dateFormat prop (YYYY-MM-DD)', async () => {
+      const onChange = vi.fn();
+      const { input } = await renderDatePicker({
+        value: '2026-07-21',
+        onChange,
+        dateFormat: 'YYYY-MM-DD',
+      });
+
+      expect(input.value).toBe('2026-07-21');
+      expect(input.placeholder).toBe('YYYY-MM-DD');
+    });
+
+    it('renders with custom dateFormat prop (MM/DD/YYYY)', async () => {
+      const onChange = vi.fn();
+      const { input } = await renderDatePicker({
+        value: '2026-07-21',
+        onChange,
+        dateFormat: 'MM/DD/YYYY',
+      });
+
+      expect(input.value).toBe('07/21/2026');
+      expect(input.placeholder).toBe('MM/DD/YYYY');
+    });
+  });
 });
+

@@ -5,13 +5,9 @@ import {
   imageExtensionForMime,
   prepareImageForUpload,
   type ImageUploadPurpose,
+  type ImageUploadResponse,
 } from '@mms/shared';
 import { apiJson, resolveApiUrl } from '@/lib/apiClient';
-
-interface ImageUploadResponse {
-  url: string;
-  purpose?: ImageUploadPurpose;
-}
 
 function assertImageFile(file: File): void {
   if (!file.type.startsWith('image/')) {

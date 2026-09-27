@@ -1,10 +1,6 @@
-import type { ModuleColumnPref } from '@mms/shared';
+import type { ModuleColumnPref, ModuleColumnPreferencesResponse } from '@mms/shared';
 
-export type ModuleColumnPreferencesResponse = {
-  success?: boolean;
-  preferences?: ModuleColumnPref[];
-  prefs?: ModuleColumnPref[];
-};
+export type { ModuleColumnPreferencesResponse };
 
 export function readModuleColumnPreferences(
   body: ModuleColumnPreferencesResponse,
