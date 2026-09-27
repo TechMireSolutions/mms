@@ -15,7 +15,7 @@ void import('@/lib/clientErrorReporting').then(({ initErrorReporting }) => initE
 void import('@/lib/documentFavicon').then(({ applyPlatformDocumentFavicon, applyTenantDocumentFavicon }) => {
   if (typeof window !== 'undefined' && isApexHost(window.location.hostname, getAppDomain())) {
     applyPlatformDocumentFavicon();
-    void import('@/lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => {
+    void import('@/platform/lib/brandingEntryTheme').then(({ applyApexPlatformTheme }) => {
       applyApexPlatformTheme('en');
     });
   } else {

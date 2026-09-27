@@ -3,18 +3,13 @@ import {
   applyDocumentLanguage,
   brandingPrimaryToThemeColor,
   buildBrandingCssVariables,
-  DEFAULT_BRANDING_SETTINGS,
-  DEFAULT_GLOBAL_SETTINGS,
-  mergeBrandingSettings,
   normalizeAppLanguage,
   normalizeBrandingCornerStyle,
   resolveBrandingCornerRadius,
   type BrandingSettings,
   type BrandingThemeMode,
   type GlobalSettings,
-  type PublicBranding,
 } from '@mms/shared';
-import { MMS_PLATFORM_BRANDING, MMS_PLATFORM_GLOBAL_SETTINGS } from '@/platform/lib/themeScope';
 import { ensureLocaleFontsLoaded } from '@/lib/localeFonts';
 
 function resolveThemeMode(settings: GlobalSettings): BrandingThemeMode {
@@ -68,41 +63,18 @@ function applyDocumentLanguageWithFonts(language: string): void {
   ensureLocaleFontsLoaded(normalized);
 }
 
-/** Lightweight apex boot theme — platform defaults only, English entry fonts. */
-export function applyApexPlatformTheme(language = 'en'): void {
-  const settings = MMS_PLATFORM_GLOBAL_SETTINGS;
-  const root = document.documentElement;
-  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  const activeTheme = settings.theme === 'system' ? systemTheme : settings.theme;
-
-  if (activeTheme === 'dark') {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
-
+/** Applies an explicit host theme without reading tenant or platform state. */
+export function applyDocumentTheme(
+  branding: BrandingSettings,
+  theme: GlobalSettings['theme'],
+  language: string,
+): void {
+  const activeTheme = theme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light')
+    : theme;
+  document.documentElement.classList.toggle('dark', activeTheme === 'dark');
   applyDocumentLanguageWithFonts(language);
-  applyBrandingFromSettings(MMS_PLATFORM_BRANDING, activeTheme);
-}
-
-/** Tenant auth entry theme — public workspace branding, English/LTR, no db reads. */
-export function applyTenantEntryTheme(branding: PublicBranding): void {
-  const settings = DEFAULT_GLOBAL_SETTINGS;
-  const root = document.documentElement;
-  const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  const activeTheme = settings.theme === 'system' ? systemTheme : settings.theme;
-
-  if (activeTheme === 'dark') {
-    root.classList.add('dark');
-  } else {
-    root.classList.remove('dark');
-  }
-
-  applyDocumentLanguageWithFonts('en');
-  applyBrandingFromSettings(
-    mergeBrandingSettings({ ...DEFAULT_BRANDING_SETTINGS, ...branding }),
-    activeTheme,
-  );
+  applyBrandingFromSettings(branding, activeTheme);
 }
 
 export { resolveThemeMode, syncDocumentChrome, applyDocumentLanguageWithFonts };

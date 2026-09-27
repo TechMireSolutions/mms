@@ -29,7 +29,7 @@ import { ObligationsTypeBreakdownSection } from "./ObligationsTypeBreakdownSecti
 import { ObligationsWakalaSummarySection } from "./ObligationsWakalaSummarySection";
 import { useObligationsSummaryModel } from "./useObligationsSummaryModel";
 import { ObligationsSummaryFilters } from "./ObligationsSummaryFilters";
-import PinnedWidgets from "@/components/ui/reports/PinnedWidgets";
+import PinnedWidgets from "@/tenant/features/reports/components/PinnedWidgets";
 
 export function ObligationsSummary() {
   const collections = useObligationsCollectionsCollection();

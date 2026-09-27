@@ -1,3 +1,4 @@
+import { resolveAccentTone, withAccentAliases } from '@/lib/accentTone';
 import {
   type CardAccentColor,
   getCardStripeClass,
@@ -12,9 +13,9 @@ export interface AccentConfig {
   ring: string;
 }
 
-export type AccentColor = CardAccentColor | string;
+export type AccentColor = CardAccentColor;
 
-export const ACCENT_MAP: Record<string, AccentConfig> = {
+export const ACCENT_MAP = withAccentAliases<AccentConfig>({
   primary: {
     stripe: getCardStripeClass("primary"),
     iconBg: SEMANTIC_BG.primary,
@@ -57,30 +58,9 @@ export const ACCENT_MAP: Record<string, AccentConfig> = {
     iconText: SEMANTIC_TEXT.muted,
     ring: "ring-muted/20",
   },
-};
+});
 
-ACCENT_MAP.green = ACCENT_MAP.success;
-ACCENT_MAP.emerald = ACCENT_MAP.success;
-ACCENT_MAP.amber = ACCENT_MAP.warning;
-ACCENT_MAP.red = ACCENT_MAP.destructive;
-ACCENT_MAP.rose = ACCENT_MAP.destructive;
-ACCENT_MAP.blue = ACCENT_MAP.info;
-ACCENT_MAP.indigo = ACCENT_MAP.info;
-ACCENT_MAP.teal = ACCENT_MAP.info;
-ACCENT_MAP.violet = ACCENT_MAP.primary;
-ACCENT_MAP.purple = ACCENT_MAP.secondary;
-
-/** Resolves an accent configuration with comprehensive fallback to primary tone. */
-export function resolveAccent(accent?: AccentColor | string | null): AccentConfig {
-  if (!accent) return ACCENT_MAP.primary;
-
-  const normalized = accent.toLowerCase();
-  if (normalized.includes("success") || normalized.includes("emerald") || normalized.includes("green")) return ACCENT_MAP.success;
-  if (normalized.includes("destructive") || normalized.includes("rose") || normalized.includes("red")) return ACCENT_MAP.destructive;
-  if (normalized.includes("warning") || normalized.includes("amber")) return ACCENT_MAP.warning;
-  if (normalized.includes("info") || normalized.includes("blue") || normalized.includes("indigo") || normalized.includes("teal")) return ACCENT_MAP.info;
-  if (normalized.includes("secondary") || normalized.includes("purple")) return ACCENT_MAP.secondary;
-  if (normalized.includes("primary") || normalized.includes("violet")) return ACCENT_MAP.primary;
-
-  return ACCENT_MAP[normalized] || ACCENT_MAP.primary;
+/** Resolves legacy names and semantic tokens through the shared accent contract. */
+export function resolveAccent(accent?: string | null): AccentConfig {
+  return ACCENT_MAP[resolveAccentTone(accent)];
 }

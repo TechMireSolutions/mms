@@ -4,7 +4,7 @@ import { type Denomination, type StockBatch } from '@/lib/data/hasanatData';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { FormModal } from '@/components/ui/FormModal';
 import { FieldErrorMessage, RequiredMark } from '@/components/ui/FormPrimitives';
-import { UserActorSelect } from '@/components/ui/UserActorSelect';
+import { UserActorSelect } from '@/tenant/components/selectors/UserActorSelect';
 import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';

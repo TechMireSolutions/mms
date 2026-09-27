@@ -73,7 +73,7 @@ vi.mock('@/components/ui/FormModal', () => ({
   ),
 }));
 
-vi.mock('@/components/ui/RegistryPersonSelect', () => ({
+vi.mock('@/tenant/components/selectors/RegistryPersonSelect', () => ({
   RegistryPersonSelect: ({
     id,
     value,
@@ -92,7 +92,7 @@ vi.mock('@/components/ui/RegistryPersonSelect', () => ({
   ),
 }));
 
-vi.mock('@/components/ui/UserActorSelect', () => ({
+vi.mock('@/tenant/components/selectors/UserActorSelect', () => ({
   UserActorSelect: ({
     id,
     value,

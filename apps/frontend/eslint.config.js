@@ -5,6 +5,7 @@ import pluginReactHooks from "eslint-plugin-react-hooks";
 import pluginUnusedImports from "eslint-plugin-unused-imports";
 import tseslint from "typescript-eslint";
 import boundaryImports from "./eslint-rules/no-cross-feature-imports.cjs";
+import uiHostImports from "./eslint-rules/no-ui-host-imports.cjs";
 import directionalRule from "./eslint-rules/no-physical-directional-classes.cjs";
 
 const appFiles = [
@@ -51,7 +52,7 @@ export default tseslint.config(
       react: pluginReact,
       "react-hooks": pluginReactHooks,
       "unused-imports": pluginUnusedImports,
-      "mms-boundary": { rules: { "no-cross-feature-imports": boundaryImports } },
+      "mms-boundary": { rules: { "no-cross-feature-imports": boundaryImports, "no-ui-host-imports": uiHostImports } },
       "mms-bidi": { rules: { "no-physical-directional-classes": directionalRule } },
     },
     rules: {
@@ -72,6 +73,7 @@ export default tseslint.config(
         },
       ],
       "mms-boundary/no-cross-feature-imports": "error",
+      "mms-boundary/no-ui-host-imports": "error",
       "mms-bidi/no-physical-directional-classes": "error",
       "react/jsx-uses-vars": "error",
       "react/jsx-uses-react": "error",

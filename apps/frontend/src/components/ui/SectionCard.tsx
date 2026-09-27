@@ -13,7 +13,7 @@ export interface SectionCardProps {
   padding?: boolean | string;
   className?: string;
   children: React.ReactNode;
-  accentColor?: CardAccentColor | string | false | null;
+  accentColor?: CardAccentColor | 'none' | false | null;
   headingLevel?: 2 | 3;
   headingId?: string;
 }

@@ -3,7 +3,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { FieldErrorMessage, RequiredMark } from "@/components/ui/FormPrimitives";
 import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
-import { UserActorSelect } from "@/components/ui/UserActorSelect";
+import { UserActorSelect } from "@/tenant/components/selectors/UserActorSelect";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type Denomination, type Distribution } from "@/lib/data/hasanatData";

@@ -49,7 +49,7 @@ describe('mapTeacherRow', () => {
 
 describe('computeFacultyWorkload and summarizeFacultyWorkload', () => {
   it('aggregates workload across classes and sessions and sorts descending by totalStudents', async () => {
-    const { computeFacultyWorkload, summarizeFacultyWorkload } = await import('./facultyReportMetrics');
+    const { computeFacultyWorkload, summarizeFacultyWorkload } = await import('@/tenant/features/reports/controllers/facultyReportMetrics');
     const sessions = [
       {
         id: 's1',

@@ -26,3 +26,6 @@ export {
   useMessagingContractRecordLogs,
   useMessagingContractClearLogs,
 } from '@/tenant/features/messaging/hooks/useMessagingTsrHooks';
+
+export { MESSAGING_CHANNEL_CONFIG, type MessagingChannelConfig } from '@/tenant/features/messaging/config';
+export { exportMessagingLogsFiltered, messagingExportEndDateBound } from '@/tenant/features/messaging/components/messagingReportsExport';

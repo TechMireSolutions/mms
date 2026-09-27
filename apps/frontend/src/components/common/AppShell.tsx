@@ -14,16 +14,8 @@ export interface NavigationAdapter {
   notifications?: React.ReactNode;
 }
 
-export interface AppShellProps {
+export interface AppShellProps extends NavigationAdapter {
   adapter?: NavigationAdapter;
-  sidebar?: React.ReactNode;
-  mobileSidebar?: React.ReactNode;
-  topBar?: React.ReactNode;
-  mobileHeader?: React.ReactNode;
-  commandPalette?: React.ReactNode;
-  extraModals?: React.ReactNode;
-  footer?: React.ReactNode;
-  notifications?: React.ReactNode;
   sidebarCollapsed?: boolean;
   contentPadding?: boolean;
   maxWidthClass?: string;

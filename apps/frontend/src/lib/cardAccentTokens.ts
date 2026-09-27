@@ -1,10 +1,12 @@
+import { resolveAccentTone, withAccentAliases, type AccentName } from './accentTone';
+
 /** SSOT for card and section start-edge accent stripe geometry */
 export const CARD_STRIPE_WIDTH = "w-1.5";
 export const CARD_STRIPE_INSET = "ps-5 sm:ps-6";
 export const CARD_STRIPE_BASE = "absolute inset-y-0 start-0 w-1.5";
 
 /** Card start-edge accent stripe colors (theme tokens). */
-export const CARD_STRIPE_COLORS = {
+export const CARD_STRIPE_COLORS = withAccentAliases({
   primary: "bg-primary/45 group-hover/card:bg-primary",
   success: "bg-success/45 group-hover/card:bg-success",
   warning: "bg-warning/45 group-hover/card:bg-warning",
@@ -12,25 +14,14 @@ export const CARD_STRIPE_COLORS = {
   info: "bg-info/45 group-hover/card:bg-info",
   secondary: "bg-secondary/45 group-hover/card:bg-secondary",
   muted: "bg-muted-foreground/35 group-hover/card:bg-muted-foreground",
-  // Aliases for chart & entity palettes
-  emerald: "bg-success/45 group-hover/card:bg-success",
-  indigo: "bg-info/45 group-hover/card:bg-info",
-  rose: "bg-destructive/45 group-hover/card:bg-destructive",
-  amber: "bg-warning/45 group-hover/card:bg-warning",
-  teal: "bg-info/45 group-hover/card:bg-info",
-  purple: "bg-secondary/45 group-hover/card:bg-secondary",
-  green: "bg-success/45 group-hover/card:bg-success",
-  red: "bg-destructive/45 group-hover/card:bg-destructive",
-  blue: "bg-info/45 group-hover/card:bg-info",
-  violet: "bg-primary/45 group-hover/card:bg-primary",
-} as const satisfies Record<string, string>;
+});
 
-export type CardAccentColor = keyof typeof CARD_STRIPE_COLORS;
+export type CardAccentColor = AccentName;
 
 /** Returns the matching CSS class for a card accent stripe with safe primary fallback. */
 export function getCardStripeClass(accent?: CardAccentColor | string): string {
   if (!accent) return "";
-  return CARD_STRIPE_COLORS[accent as CardAccentColor] ?? CARD_STRIPE_COLORS.primary;
+  return CARD_STRIPE_COLORS[resolveAccentTone(accent)];
 }
 
 /** Sub-list form tab card accent styles (Education, Experience, Skills, Relationships, Emails, Phones, Socials, Addresses). */

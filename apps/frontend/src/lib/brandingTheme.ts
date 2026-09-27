@@ -1,8 +1,4 @@
 import {
-  BRANDING_THEME_VARIABLES,
-  buildBrandingCssVariables,
-  normalizeBrandingCornerStyle,
-  resolveBrandingCornerRadius,
   type BrandingSettings,
   type BrandingThemeMode,
   type GlobalSettings,
@@ -14,14 +10,14 @@ import {
 import { isEntryPath } from '@/lib/config/routes';
 import { isTenantHost, MMS_PLATFORM_BRANDING, MMS_PLATFORM_GLOBAL_SETTINGS } from '@/platform/lib/themeScope';
 import {
-  applyApexPlatformTheme,
   applyBrandingFromSettings,
   applyDocumentLanguageWithFonts,
   resolveThemeMode,
-  syncDocumentChrome,
 } from '@/lib/brandingThemeCore';
 
-export { applyApexPlatformTheme, applyTenantEntryTheme } from '@/lib/brandingThemeCore';
+import { applyApexPlatformTheme } from '@/platform/lib/brandingEntryTheme';
+export { applyApexPlatformTheme } from '@/platform/lib/brandingEntryTheme';
+export { applyTenantEntryTheme } from '@/tenant/lib/brandingEntryTheme';
 
 function resolveTenantDocumentLanguage(storedLanguage: string, pathname: string): string {
   // Tenant auth entry stays English; authenticated app uses workspace language.
@@ -43,27 +39,12 @@ export function applyBrandingTheme(
     return;
   }
 
-  const root = document.documentElement;
   const settings = getScopedGlobalSettings();
   const activeMode = mode ?? resolveThemeMode(settings);
   const scoped = getScopedBrandingSettings();
   const merged = branding ? { ...scoped, ...branding } : scoped;
 
-  const variables = buildBrandingCssVariables(
-    merged.primaryColor,
-    merged.secondaryColor,
-    activeMode,
-  );
-
-  for (const key of BRANDING_THEME_VARIABLES) {
-    const value = variables[key];
-    if (value) root.style.setProperty(key, value);
-  }
-
-  const cornerStyle = normalizeBrandingCornerStyle(merged.cornerStyle);
-  root.style.setProperty('--radius', resolveBrandingCornerRadius(cornerStyle));
-
-  syncDocumentChrome(activeMode, merged.primaryColor);
+  applyBrandingFromSettings(merged, activeMode);
 }
 
 export type AppThemeOverrides = Partial<Pick<GlobalSettings, 'theme' | 'language'>>;

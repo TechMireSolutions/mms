@@ -16,7 +16,7 @@ import {
   useAccountingFiscalYearsPaginated,
   useAccountingReportAggregates,
 } from "../hooks/useAccountingApi";
-import PinnedWidgets from "@/components/ui/reports/PinnedWidgets";
+import PinnedWidgets from "@/tenant/features/reports/components/PinnedWidgets";
 import {
   buildFinancialReportExportRows,
   getFinancialReportExportColumns,

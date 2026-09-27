@@ -31,7 +31,7 @@ vi.mock("@/hooks/useCurrency", () => ({
   }),
 }));
 
-vi.mock("@/components/ui/UserActorSelect", () => ({
+vi.mock("@/tenant/components/selectors/UserActorSelect", () => ({
   UserActorSelect: ({
     id,
     value,

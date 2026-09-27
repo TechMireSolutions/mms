@@ -3,11 +3,11 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ExaminationsReportsTier } from "./ExaminationsReportsTier";
 
-vi.mock("@/components/ui/reports/KPISummary", () => ({
+vi.mock("@/tenant/features/reports/components/KPISummary", () => ({
   default: ({ category }: { category: string }) => <div data-testid="kpi-summary">{category}</div>,
 }));
 
-vi.mock("@/components/ui/reports/ModuleReports", () => ({
+vi.mock("@/tenant/features/reports/components/ModuleReports", () => ({
   default: ({ category }: { category: string }) => <div data-testid="module-reports">{category}</div>,
 }));
 

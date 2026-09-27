@@ -40,7 +40,7 @@ vi.mock("@/components/ui/ModuleCommandMetricsGrid", () => ({
   ),
 }));
 
-vi.mock("@/components/ui/reports/PinnedWidgets", () => ({
+vi.mock("@/tenant/features/reports/components/PinnedWidgets", () => ({
   default: () => <div data-testid="pinned-widgets">Pinned Widgets</div>,
 }));
 

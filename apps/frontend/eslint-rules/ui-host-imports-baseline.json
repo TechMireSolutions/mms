@@ -1,0 +1,169 @@
+{
+  "src/components/ui/BackgroundJobsTray.tsx": [
+    "src/tenant/hooks/useBackgroundJobs"
+  ],
+  "src/components/ui/RegistryPersonSelect.tsx": [
+    "src/tenant/components/selectors/RegistryPersonSelect"
+  ],
+  "src/components/ui/TemplateEditor.tsx": [
+    "src/tenant/hooks/useBranding"
+  ],
+  "src/components/ui/UserActorSelect.tsx": [
+    "src/tenant/components/selectors/UserActorSelect"
+  ],
+  "src/components/ui/messageComposer/MessageComposerRecipientPicker.tsx": [
+    "src/tenant/features/contacts/components/ContactsListDesktopTable",
+    "src/tenant/features/messaging/hooks/useMessagingWorkRecipients"
+  ],
+  "src/components/ui/messageComposer/useMessageComposerDispatch.ts": [
+    "src/lib/contexts/AuthContext",
+    "src/tenant/hooks/useBranding"
+  ],
+  "src/components/ui/reports/AcademicReport.tsx": [
+    "src/tenant/features/reports/components/AcademicReport"
+  ],
+  "src/components/ui/reports/AttendanceReport.tsx": [
+    "src/tenant/features/reports/components/AttendanceReport"
+  ],
+  "src/components/ui/reports/ComparisonMode.tsx": [
+    "src/tenant/features/reports/components/ComparisonMode"
+  ],
+  "src/components/ui/reports/ContactReport.tsx": [
+    "src/tenant/features/reports/components/ContactReport"
+  ],
+  "src/components/ui/reports/ContactsSavedReports.tsx": [
+    "src/tenant/features/reports/components/ContactsSavedReports"
+  ],
+  "src/components/ui/reports/ContactsSavedReportsEditor.tsx": [
+    "src/tenant/features/reports/components/ContactsSavedReportsEditor"
+  ],
+  "src/components/ui/reports/CustomReportBuilder.tsx": [
+    "src/tenant/features/reports/components/CustomReportBuilder"
+  ],
+  "src/components/ui/reports/DynamicCardBuilder.tsx": [
+    "src/tenant/features/reports/components/DynamicCardBuilder"
+  ],
+  "src/components/ui/reports/DynamicChartVisualizer.tsx": [
+    "src/tenant/features/reports/components/DynamicChartVisualizer"
+  ],
+  "src/components/ui/reports/FacultyReport.tsx": [
+    "src/tenant/features/reports/components/FacultyReport"
+  ],
+  "src/components/ui/reports/FacultyReportDashboardWidgets.tsx": [
+    "src/tenant/features/reports/components/FacultyReportDashboardWidgets"
+  ],
+  "src/components/ui/reports/FinancialReport.tsx": [
+    "src/tenant/features/reports/components/FinancialReport"
+  ],
+  "src/components/ui/reports/HasanatReport.tsx": [
+    "src/tenant/features/reports/components/HasanatReport"
+  ],
+  "src/components/ui/reports/KPISummary.tsx": [
+    "src/tenant/features/reports/components/KPISummary"
+  ],
+  "src/components/ui/reports/MessagingReport.tsx": [
+    "src/tenant/features/reports/components/MessagingReport"
+  ],
+  "src/components/ui/reports/MessagingReportChannelStats.tsx": [
+    "src/tenant/features/reports/components/MessagingReportChannelStats"
+  ],
+  "src/components/ui/reports/ModuleReports.tsx": [
+    "src/tenant/features/reports/components/ModuleReports"
+  ],
+  "src/components/ui/reports/ModuleReportsToolPanels.tsx": [
+    "src/tenant/features/reports/components/ModuleReportsToolPanels"
+  ],
+  "src/components/ui/reports/PinnedWidgets.tsx": [
+    "src/tenant/features/reports/components/PinnedWidgets"
+  ],
+  "src/components/ui/reports/QuestionBankReport.tsx": [
+    "src/tenant/features/reports/components/QuestionBankReport"
+  ],
+  "src/components/ui/reports/QuestionBankSummaryDataGrid.tsx": [
+    "src/tenant/features/reports/components/QuestionBankSummaryDataGrid"
+  ],
+  "src/components/ui/reports/ReportFilters.tsx": [
+    "src/tenant/features/reports/components/ReportFilters"
+  ],
+  "src/components/ui/reports/SavedReportCard.tsx": [
+    "src/tenant/features/reports/components/SavedReportCard"
+  ],
+  "src/components/ui/reports/SessionReport.tsx": [
+    "src/tenant/features/reports/components/SessionReport"
+  ],
+  "src/components/ui/reports/StudentReport.tsx": [
+    "src/tenant/features/reports/components/StudentReport"
+  ],
+  "src/components/ui/reports/UsersReport.tsx": [
+    "src/tenant/features/reports/components/UsersReport"
+  ],
+  "src/components/ui/reports/facultyReportExport.ts": [
+    "src/tenant/features/reports/controllers/facultyReportExport"
+  ],
+  "src/components/ui/reports/facultyReportMetrics.ts": [
+    "src/tenant/features/reports/controllers/facultyReportMetrics"
+  ],
+  "src/components/ui/reports/kpiSummaryCardHandlers.ts": [
+    "src/tenant/features/reports/controllers/kpiSummaryCardHandlers"
+  ],
+  "src/components/ui/reports/kpiSummaryCardSelection.ts": [
+    "src/tenant/features/reports/controllers/kpiSummaryCardSelection"
+  ],
+  "src/components/ui/reports/pinnedWidgets/CustomWidgetRenderer.tsx": [
+    "src/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer"
+  ],
+  "src/components/ui/reports/pinnedWidgets/DashboardWidgets.tsx": [
+    "src/tenant/features/reports/components/pinnedWidgets/DashboardWidgets"
+  ],
+  "src/components/ui/reports/studentReportExport.ts": [
+    "src/tenant/features/reports/controllers/studentReportExport"
+  ],
+  "src/components/ui/reports/studentReportMetrics.ts": [
+    "src/tenant/features/reports/controllers/studentReportMetrics"
+  ],
+  "src/components/ui/reports/useComparisonModeData.ts": [
+    "src/tenant/features/reports/controllers/useComparisonModeData"
+  ],
+  "src/components/ui/reports/useCustomReportBuilderState.ts": [
+    "src/tenant/features/reports/controllers/useCustomReportBuilderState"
+  ],
+  "src/components/ui/reports/useDynamicChartVisualizer.ts": [
+    "src/tenant/features/reports/controllers/useDynamicChartVisualizer"
+  ],
+  "src/components/ui/reports/useDynamicChartVisualizerData.ts": [
+    "src/tenant/features/reports/controllers/useDynamicChartVisualizerData"
+  ],
+  "src/components/ui/reports/useFacultyReportController.ts": [
+    "src/tenant/features/reports/controllers/useFacultyReportController"
+  ],
+  "src/components/ui/reports/useKPISummaryModel.ts": [
+    "src/tenant/features/reports/controllers/useKPISummaryModel"
+  ],
+  "src/components/ui/reports/useKpiSummaryCardSelection.ts": [
+    "src/tenant/features/reports/controllers/useKpiSummaryCardSelection"
+  ],
+  "src/components/ui/reports/useKpiSummaryCustomCards.ts": [
+    "src/tenant/features/reports/controllers/useKpiSummaryCustomCards"
+  ],
+  "src/components/ui/reports/useKpiSummaryDataSources.ts": [
+    "src/tenant/features/reports/controllers/useKpiSummaryDataSources"
+  ],
+  "src/components/ui/reports/useMessagingReportData.ts": [
+    "src/tenant/features/reports/controllers/useMessagingReportData"
+  ],
+  "src/components/ui/reports/useModuleWidgetAggregates.ts": [
+    "src/tenant/features/reports/controllers/useModuleWidgetAggregates"
+  ],
+  "src/components/ui/reports/usePinnedWidgetsController.ts": [
+    "src/tenant/features/reports/controllers/usePinnedWidgetsController"
+  ],
+  "src/components/ui/reports/useQuestionBankReportData.ts": [
+    "src/tenant/features/reports/controllers/useQuestionBankReportData"
+  ],
+  "src/components/ui/reports/useStudentReportController.ts": [
+    "src/tenant/features/reports/controllers/useStudentReportController"
+  ],
+  "src/components/ui/useDatePickerState.ts": [
+    "src/tenant/hooks/useGlobalSettings"
+  ]
+}

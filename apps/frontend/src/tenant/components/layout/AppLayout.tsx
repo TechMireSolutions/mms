@@ -18,6 +18,7 @@ import { useSessionTimeout } from "@/tenant/hooks/useSessionTimeout";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
+import { useNavigationState } from '@/hooks/useNavigationState';
 import { useInitializeUiState } from "@/tenant/hooks/useInitializeUiState";
 
 /**
@@ -25,15 +26,17 @@ import { useInitializeUiState } from "@/tenant/hooks/useInitializeUiState";
  * top navigation bar, mobile-responsive layouts, and wraps nested router views.
  */
 export default function AppLayout(): React.JSX.Element {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState<boolean>(false);
-  const [mobileOpen, setMobileOpen] = useState<boolean>(false);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState<boolean>(false);
+  const {
+    collapsed: sidebarCollapsed, toggleCollapsed, mobileOpen,
+    openMobileSidebar, closeMobileSidebar, commandPaletteOpen,
+    openCommandPalette, closeCommandPalette, toggleCommandPalette,
+  } = useNavigationState();
   const branding = useBranding();
   const { t } = useTranslation();
   const sessionTimeoutModal = useSessionTimeout();
   useInitializeUiState();
 
-  useGlobalShortcut("k", () => setCommandPaletteOpen((prev) => !prev));
+  useGlobalShortcut("k", toggleCommandPalette);
 
   const [logoError, setLogoError] = useState<boolean>(false);
 
@@ -46,16 +49,16 @@ export default function AppLayout(): React.JSX.Element {
       sidebar={
         <Sidebar
           collapsed={sidebarCollapsed}
-          onToggle={() => setSidebarCollapsed(!sidebarCollapsed)}
+          onToggle={toggleCollapsed}
         />
       }
       mobileSidebar={
-        <MobileSidebar open={mobileOpen} onClose={() => setMobileOpen(false)} />
+        <MobileSidebar open={mobileOpen} onClose={closeMobileSidebar} />
       }
       topBar={
         <TopBar
           sidebarCollapsed={sidebarCollapsed}
-          onOpenCommandPalette={() => setCommandPaletteOpen(true)}
+          onOpenCommandPalette={openCommandPalette}
         />
       }
       mobileHeader={
@@ -67,7 +70,7 @@ export default function AppLayout(): React.JSX.Element {
             aria-label={t("nav.openMenu")}
             onClick={(event) => {
               event.stopPropagation();
-              setMobileOpen(true);
+              openMobileSidebar();
             }}
             className="shrink-0 rounded-lg transition-colors hover:bg-muted"
           >
@@ -94,13 +97,13 @@ export default function AppLayout(): React.JSX.Element {
               {branding.madrasaName || t("entry.productName")}
             </span>
           </div>
-          <TopBarActions compact onOpenCommandPalette={() => setCommandPaletteOpen(true)} />
+          <TopBarActions compact onOpenCommandPalette={openCommandPalette} />
         </div>
       }
       commandPalette={
         commandPaletteOpen ? (
           <Suspense fallback={null}>
-            <CommandPalette open={commandPaletteOpen} onClose={() => setCommandPaletteOpen(false)} />
+            <CommandPalette open={commandPaletteOpen} onClose={closeCommandPalette} />
           </Suspense>
         ) : null
       }

@@ -7,7 +7,7 @@ import { FORM_LABEL } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
-import { RegistryPersonSelect } from "@/components/ui/RegistryPersonSelect";
+import { RegistryPersonSelect } from "@/tenant/components/selectors/RegistryPersonSelect";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import { useTranslation } from "@/hooks/useTranslation";
 

@@ -4,7 +4,7 @@ import { FormModal } from "@/components/ui/FormModal";
 import { Input } from "@/components/ui/input";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
-import { UserActorSelect } from "@/components/ui/UserActorSelect";
+import { UserActorSelect } from "@/tenant/components/selectors/UserActorSelect";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notify } from "@/lib/notify";
 import { PAYMENT_METHODS, type Invoice } from '@/lib/data/financeData';

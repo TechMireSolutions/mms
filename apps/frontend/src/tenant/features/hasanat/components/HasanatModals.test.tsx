@@ -75,7 +75,7 @@ vi.mock('@/components/ui/DatePicker', () => ({
   ),
 }));
 
-vi.mock('@/components/ui/UserActorSelect', () => ({
+vi.mock('@/tenant/components/selectors/UserActorSelect', () => ({
   UserActorSelect: ({
     id,
     value,

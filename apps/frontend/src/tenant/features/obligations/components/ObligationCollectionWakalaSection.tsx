@@ -4,7 +4,7 @@ import { type Mujtahid, type MujtahidRep, type ObligationType } from '@/lib/data
 import { type AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormSelect } from '@/components/ui/FormSelect';
-import { UserActorSelect } from '@/components/ui/UserActorSelect';
+import { UserActorSelect } from '@/tenant/components/selectors/UserActorSelect';
 import { SectionCard } from '@/components/ui/SectionCard';
 import type { ObligationCollectionFormState } from './ObligationCollectionFormFields';
 

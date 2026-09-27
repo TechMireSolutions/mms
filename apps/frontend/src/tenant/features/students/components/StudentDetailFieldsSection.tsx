@@ -137,7 +137,7 @@ export function StudentDetailFieldsSection({
       .filter((entry) => entry.rows.length > 0);
   })();
 
-  const ACCENT_COLORS: string[] = ["info", "warning", "success", "primary", "secondary"];
+  const ACCENT_COLORS = ["info", "warning", "success", "primary", "secondary"] as const;
 
   if (groups.length === 0) return null;
 

@@ -24,7 +24,7 @@ vi.mock("@/tenant/hooks/collections/students", () => ({
   }),
 }));
 
-vi.mock("@/components/ui/RegistryPersonSelect", () => ({
+vi.mock("@/tenant/components/selectors/RegistryPersonSelect", () => ({
   RegistryPersonSelect: ({ label }: { label: string }) => (
     <div data-testid="person-select">{label}</div>
   ),

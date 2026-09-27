@@ -11,7 +11,7 @@ export interface PersonDetailHeroCardProps {
   displayName: string;
   avatar?: string | null;
   gender?: string | null;
-  accentColor?: CardAccentColor | string | false | null;
+  accentColor?: CardAccentColor | 'none' | false | null;
   className?: string;
   /** Meta row (badges / identity chips) rendered under the title. */
   children?: ReactNode;

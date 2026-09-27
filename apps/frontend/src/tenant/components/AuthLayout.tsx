@@ -5,7 +5,7 @@ import {
   getInitials,
 } from "@mms/shared";
 import { useTenant } from "@/lib/contexts/TenantContext";
-import { applyTenantEntryTheme } from "@/lib/brandingThemeCore";
+import { applyTenantEntryTheme } from "@/tenant/lib/brandingEntryTheme";
 import { applyTenantDocumentFavicon } from "@/lib/documentFavicon";
 import { LOGO_IMAGE } from "@/lib/semanticTone";
 import { useTranslation } from "@/hooks/useTranslation";

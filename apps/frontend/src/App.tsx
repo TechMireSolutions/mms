@@ -50,7 +50,7 @@ function App(): React.JSX.Element {
 
   useEffect(() => {
     const applyTheme = isApexBoot
-      ? () => import('@/lib/brandingThemeCore').then(({ applyApexPlatformTheme }) => applyApexPlatformTheme('en'))
+      ? () => import('@/platform/lib/brandingEntryTheme').then(({ applyApexPlatformTheme }) => applyApexPlatformTheme('en'))
       : () => import('@/lib/brandingTheme').then(({ applyAppTheme }) => applyAppTheme());
 
     void applyTheme();

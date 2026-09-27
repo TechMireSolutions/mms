@@ -61,7 +61,6 @@ export const StatCard = (function StatCard({
   const Comp = onClick ? motion.button : motion.div;
   const buttonProps = onClick ? { type: "button" as const, "aria-pressed": isActive } : {};
   const isCompact = variant === "compact";
-  const resolvedAccentColor = accent as React.ComponentProps<typeof Card>["accentColor"];
   const formattedValue = typeof value === "number" ? formatNumber(value) : value;
 
   const reducedMotion = useReducedMotion();
@@ -82,7 +81,7 @@ export const StatCard = (function StatCard({
         className={cn("w-full text-start", onClick && "cursor-pointer")}
       >
         <Card
-          accentColor={resolvedAccentColor}
+          accentColor={accent}
           className={cn(
             "flex items-center justify-between gap-3 px-4 py-3 min-h-11 w-full",
             CARD_STRIPE_INSET,
@@ -125,7 +124,7 @@ export const StatCard = (function StatCard({
       className={cn("w-full text-start", onClick && "cursor-pointer")}
     >
       <Card
-        accentColor={resolvedAccentColor}
+        accentColor={accent}
         className={cn(
           "flex items-center justify-between p-4 min-h-stat-compact w-full",
           CARD_STRIPE_INSET,

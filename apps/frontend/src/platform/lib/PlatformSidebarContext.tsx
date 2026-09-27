@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext } from 'react';
+import { useNavigationState, type NavigationState } from '@/hooks/useNavigationState';
 
 const STORAGE_KEY = 'mms_platform_sidebar_collapsed';
 
@@ -10,66 +11,30 @@ function getInitialCollapsed(): boolean {
   }
 }
 
-interface PlatformSidebarContextValue {
-  mobileOpen: boolean;
-  setMobileOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  openMobileSidebar: () => void;
-  closeMobileSidebar: () => void;
-  collapsed: boolean;
-  setCollapsed: React.Dispatch<React.SetStateAction<boolean>>;
-  toggleCollapsed: () => void;
-  /** Opens the platform command palette from any sidebar button. */
-  openCommandPalette: () => void;
-  /** Internal setter — injected by PlatformSidebarProvider to own command palette open state. */
-  setCommandPaletteOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  /** Read by PlatformPageShell to sync its local searchOpen state with context. */
-  commandPaletteOpen: boolean;
+function persistCollapsed(collapsed: boolean): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, String(collapsed));
+  } catch {
+    // Storage can be unavailable in private mode.
+  }
 }
 
-const PlatformSidebarContext = createContext<PlatformSidebarContextValue | null>(null);
+const PlatformSidebarContext = createContext<NavigationState | null>(null);
 
 export function PlatformSidebarProvider({ children }: { children: React.ReactNode }): React.JSX.Element {
-  const [mobileOpen, setMobileOpen] = useState(false);
-  const [collapsed, setCollapsed] = useState<boolean>(getInitialCollapsed);
-  const [commandPaletteOpen, setCommandPaletteOpen] = useState(false);
-
-  useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, String(collapsed));
-    } catch {
-      // Ignore quota/private mode restrictions
-    }
-  }, [collapsed]);
-
-  const toggleCollapsed = (() => {
-    setCollapsed((prev) => !prev);
-  });
-
-  const openCommandPalette = (() => {
-    setCommandPaletteOpen(true);
+  const navigation = useNavigationState({
+    initialCollapsed: getInitialCollapsed,
+    onCollapsedChange: persistCollapsed,
   });
 
   return (
-    <PlatformSidebarContext.Provider
-      value={{
-        mobileOpen,
-        setMobileOpen,
-        openMobileSidebar: () => setMobileOpen(true),
-        closeMobileSidebar: () => setMobileOpen(false),
-        collapsed,
-        setCollapsed,
-        toggleCollapsed,
-        openCommandPalette,
-        setCommandPaletteOpen,
-        commandPaletteOpen,
-      }}
-    >
+    <PlatformSidebarContext.Provider value={navigation}>
       {children}
     </PlatformSidebarContext.Provider>
   );
 }
 
-export function usePlatformSidebar(): PlatformSidebarContextValue {
+export function usePlatformSidebar(): NavigationState {
   const context = useContext(PlatformSidebarContext);
   if (!context) {
     // Graceful fallback for non-provider renders in unit tests
@@ -82,6 +47,8 @@ export function usePlatformSidebar(): PlatformSidebarContextValue {
       setCollapsed: () => {},
       toggleCollapsed: () => {},
       openCommandPalette: () => {},
+      closeCommandPalette: () => {},
+      toggleCommandPalette: () => {},
       setCommandPaletteOpen: () => {},
       commandPaletteOpen: false,
     };
