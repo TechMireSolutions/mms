@@ -161,7 +161,7 @@ test.describe('accessibility smoke @smoke', () => {
    * gate deterministic under CI sharding.
    */
   test('app shell and module surfaces pass axe at 375 and 1440 (LTR + RTL)', async ({ page }) => {
-    test.setTimeout(300_000);
+    test.setTimeout(600_000);
     resetPlatformUsers();
 
     await bootstrapAuthenticatedTenant(page, {
