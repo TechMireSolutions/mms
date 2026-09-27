@@ -25,6 +25,9 @@ export interface PlatformAdminsTableViewProps {
   onDelete: (admin: PlatformUserProfile) => void;
   verifyPending: boolean;
   onVerifyEmail: (adminId: string) => void;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelect?: (id: string) => void;
+  onToggleSelectAll?: () => void;
 }
 
 export function PlatformAdminsTableView({
@@ -36,8 +39,24 @@ export function PlatformAdminsTableView({
   onDelete,
   verifyPending,
   onVerifyEmail,
+  selectedIds,
+  onToggleSelect,
+  onToggleSelectAll,
 }: PlatformAdminsTableViewProps): React.JSX.Element {
   const { t } = useTranslation();
+
+  const selection = React.useMemo(() => {
+    if (!selectedIds || !onToggleSelect || !onToggleSelectAll) return undefined;
+    const allSelected = admins.length > 0 && admins.every((a) => selectedIds.has(a.id));
+    const someSelected = !allSelected && admins.some((a) => selectedIds.has(a.id));
+    return {
+      selectedIds,
+      onSelectOne: onToggleSelect,
+      onSelectAll: onToggleSelectAll,
+      allSelected,
+      someSelected,
+    };
+  }, [admins, selectedIds, onToggleSelect, onToggleSelectAll]);
 
   const columns: WorkBatchTableColumn<PlatformUserProfile>[] = React.useMemo(() => {
     return descriptor.getTableColumns().map((col) => {
@@ -88,6 +107,7 @@ export function PlatformAdminsTableView({
       data={admins}
       columns={columns}
       onRowClick={onInspect}
+      selection={selection}
       actionsLabel={t('common.actions')}
       actionsHeaderClassName="w-56 min-w-56 text-end px-4 py-3"
       actionsCellClassName="w-56 min-w-56 text-end px-4 py-3 align-top"
@@ -106,6 +126,7 @@ export function PlatformAdminsTableView({
       }
       containerClassName="rounded-xl border border-border/40 overflow-hidden bg-card shadow-sm"
       bordered={false}
+      virtualize={false}
     />
   );
 }

@@ -55,7 +55,7 @@ export function PlatformAdminPermissionsFields({
             disabled={disabled}
             onClick={() => setAll(true)}
           >
-            {t('contacts.table.selectAll')}
+            {t('common.selectAll')}
           </ActionButton>
           <ActionButton
             variant="secondary"

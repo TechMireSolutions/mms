@@ -1,18 +1,19 @@
 import React, { useState, useDeferredValue, useMemo } from 'react';
-import { ShieldCheck, Download } from 'lucide-react';
+import { ShieldCheck } from 'lucide-react';
 import type { PlatformUserProfile } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { DETAIL_SECTION_TITLE } from '@/components/ui/formStyles';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ActionButton } from '@/components/ui/ActionButton';
-import { SubTabBar } from '@/components/ui/SubTabBar';
-import { ModuleWorkToolbar } from '@/components/ui/ModuleWorkToolbar';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
 import { exportPlatformAdminsCsv } from '@/platform/components/admin/exportPlatformAdminsCsv';
+import { PlatformAdminsToolbar } from '@/platform/components/admin/PlatformAdminsToolbar';
+import { PlatformAdminBulkDock } from '@/platform/components/admin/PlatformAdminBulkDock';
 import { PlatformAdminsListCards } from '@/platform/components/admin/PlatformAdminsListCards';
 import { PlatformAdminsTableView, type DangerMode } from '@/platform/components/admin/PlatformAdminsTableView';
 import { PlatformAdminsDialogs } from '@/platform/components/admin/PlatformAdminsDialogs';
+import { usePlatformAdminSelection } from '@/platform/components/admin/usePlatformAdminSelection';
 import { useVerifyPlatformAdminEmail } from '@/platform/hooks/usePlatformAdmins';
 import { usePlatformUserDescriptor } from '@/platform/hooks/usePlatformUserDescriptor';
 
@@ -41,15 +42,24 @@ export function PlatformAdminsList({
   const [dangerMode, setDangerMode] = useState<DangerMode>('disable');
   const [inspectAdmin, setInspectAdmin] = useState<PlatformUserProfile | null>(null);
 
+  const rawItems = admins ?? [];
+  const deferredQuery = useDeferredValue(searchQuery);
+
+  const {
+    selectedAdminSet,
+    selectedAdmins,
+    selectedCount,
+    handleToggleSelect,
+    handleToggleSelectAll,
+    clearSelection,
+  } = usePlatformAdminSelection(rawItems);
+
   const verifyEmailMutation = useVerifyPlatformAdminEmail();
 
   const openDanger = (admin: PlatformUserProfile, mode: DangerMode): void => {
     setDangerAdmin(admin);
     setDangerMode(mode);
   };
-
-  const rawItems = admins ?? [];
-  const deferredQuery = useDeferredValue(searchQuery);
 
   const superUserCount = rawItems.filter((a) => a.role === 'super_user').length;
   const adminCount = rawItems.filter((a) => a.role === 'admin').length;
@@ -83,6 +93,9 @@ export function PlatformAdminsList({
     onDelete: (a: PlatformUserProfile) => openDanger(a, 'delete'),
     verifyPending: verifyEmailMutation.isPending,
     onVerifyEmail: (id: string) => verifyEmailMutation.mutate(id),
+    selectedIds: selectedAdminSet,
+    onToggleSelect: handleToggleSelect,
+    onToggleSelectAll: () => handleToggleSelectAll(filteredItems),
   };
 
   return (
@@ -91,42 +104,22 @@ export function PlatformAdminsList({
         <h2 className={`${DETAIL_SECTION_TITLE} text-balance`}>
           {t('platform.manageAdmins')} ({rawItems.length})
         </h2>
-        <SubTabBar
-          tabs={[
-            { key: 'all', label: `${t('platform.roleAll')} (${rawItems.length})` },
-            { key: 'super_user', label: `${t('platform.roleSuperUser')} (${superUserCount})` },
-            { key: 'admin', label: `${t('platform.roleAdmin')} (${adminCount})` },
-          ]}
-          value={roleFilter}
-          onChange={(k) => setRoleFilter(k as AdminRoleFilter)}
-        />
       </div>
 
-      <ModuleWorkToolbar
-        regionLabel={t('platform.manageAdmins')}
-        shownCountLabel={`${filteredItems.length} of ${rawItems.length}`}
+      <PlatformAdminsToolbar
+        shownCount={filteredItems.length}
+        totalCount={rawItems.length}
+        superUserCount={superUserCount}
+        adminCount={adminCount}
         search={searchQuery}
         onSearchChange={setSearchQuery}
-        searchPlaceholder={t('platform.searchAdminsPlaceholder')}
-        searchId="platform-admins-search"
         hasActiveFilters={hasActiveFilters}
         onClearFilters={handleClearFilters}
-        clearFiltersLabel={t('common.clearFilters')}
-        viewModeToggle={{
-          viewMode,
-          onViewModeChange: setViewMode,
-        }}
-        primaryAction={
-          <ActionButton
-            variant="secondary"
-            icon={Download}
-            onClick={() => exportPlatformAdminsCsv(filteredItems, descriptor)}
-            disabled={filteredItems.length === 0}
-            title={t('platform.exportAdminsCsv')}
-          >
-            {t('platform.exportAdminsCsv')}
-          </ActionButton>
-        }
+        roleFilter={roleFilter}
+        onRoleFilterChange={setRoleFilter}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        onExportCsv={() => exportPlatformAdminsCsv(filteredItems, descriptor)}
       />
 
       <ModuleWorkListStateShell
@@ -152,10 +145,7 @@ export function PlatformAdminsList({
               title={hasActiveFilters ? t('platform.noMatchingAdmins') : t('platform.noAdmins')}
               action={
                 hasActiveFilters ? (
-                  <ActionButton
-                    variant="secondary"
-                    onClick={handleClearFilters}
-                  >
+                  <ActionButton variant="secondary" onClick={handleClearFilters}>
                     {t('common.clearFilters')}
                   </ActionButton>
                 ) : undefined
@@ -168,6 +158,13 @@ export function PlatformAdminsList({
           <PlatformAdminsListCards admins={filteredItems} {...actionProps} />
         )}
       </ModuleWorkListStateShell>
+
+      <PlatformAdminBulkDock
+        selectedCount={selectedCount}
+        selectedAdmins={selectedAdmins}
+        onClearSelection={clearSelection}
+        onBulkExport={() => exportPlatformAdminsCsv(selectedAdmins, descriptor)}
+      />
 
       <PlatformAdminsDialogs
         editingAdmin={editingAdmin}

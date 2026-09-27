@@ -2,19 +2,12 @@ import React from 'react';
 import { Activity } from 'lucide-react';
 import { formatDate, type ActivityLog } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { type TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ReportDataGridContainer } from '@/tenant/components/moduleReports';
 import { ActivityActionBadge } from '@/tenant/features/users/components/UserBadges';
-import { ModuleTableHeaderCell } from '@/components/ui/ModuleTableHeaderCell';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import { WORK_SURFACE } from '@/components/ui/formStyles';
+import { WorkBatchTable, type WorkBatchTableColumn } from '@/components/common/work/WorkBatchTable';
 import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
 import { StatGrid, StatRow } from '@/components/ui/StatGrid';
@@ -31,6 +24,49 @@ export interface ActivityLogsListProps {
   onColumnResize?: (key: string, width: number) => void;
 }
 
+function useActivityLogColumns(
+  t: TranslationFunction,
+  fmtTs: (ts: string) => string,
+  userNameFor: (log: ActivityLog) => string,
+): WorkBatchTableColumn<ActivityLog>[] {
+  return React.useMemo<WorkBatchTableColumn<ActivityLog>[]>(
+    () => [
+      {
+        id: 'time',
+        label: t('users.activityColTime'),
+        cellClassName: 'whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground',
+        render: (log) => fmtTs(log.ts),
+      },
+      {
+        id: 'user',
+        label: t('users.activityColUser'),
+        cellClassName: 'px-3 py-2.5 text-xs font-semibold text-foreground',
+        render: (log) => userNameFor(log),
+      },
+      {
+        id: 'action',
+        label: t('users.activityColAction'),
+        cellClassName: 'px-3 py-2.5',
+        render: (log) => <ActivityActionBadge action={log.action} />,
+      },
+      {
+        id: 'detail',
+        label: t('users.activityColDetail'),
+        cellClassName: 'px-3 py-2.5 text-xs text-muted-foreground',
+        render: (log) => log.detail,
+      },
+      {
+        id: 'ip',
+        label: t('users.activityColIp'),
+        cellClassName: 'px-3 py-2.5 font-mono text-xs text-muted-foreground',
+        render: (log) => log.ip,
+      },
+    ],
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [t, fmtTs, userNameFor],
+  );
+}
+
 export function ActivityLogsList({
   paginated,
   filteredCount,
@@ -44,23 +80,35 @@ export function ActivityLogsList({
   const { t } = useTranslation();
   const { viewMode } = useWorkDirectoryViewMode();
   const globalSettings = useGlobalSettings();
-  const fmtTs = (ts: string): string => formatDate(ts, globalSettings.dateFormat, false);
+  const fmtTs = React.useCallback(
+    (ts: string): string => formatDate(ts, globalSettings.dateFormat, false),
+    [globalSettings.dateFormat],
+  );
 
-  const exportColumns = (() => [
-    { key: 'time', header: t('users.activityColTime') },
-    { key: 'user', header: t('users.activityColUser') },
-    { key: 'action', header: t('users.activityColAction') },
-    { key: 'detail', header: t('users.activityColDetail') },
-    { key: 'ip', header: t('users.activityColIp') },
-  ])();
+  const columns = useActivityLogColumns(t, fmtTs, userNameFor);
 
-  const exportRows = (() => paginated.map((log) => ({
-    time: fmtTs(log.ts),
-    user: userNameFor(log),
-    action: log.action,
-    detail: log.detail,
-    ip: log.ip,
-  })))();
+  const exportColumns = React.useMemo(
+    () => [
+      { key: 'time', header: t('users.activityColTime') },
+      { key: 'user', header: t('users.activityColUser') },
+      { key: 'action', header: t('users.activityColAction') },
+      { key: 'detail', header: t('users.activityColDetail') },
+      { key: 'ip', header: t('users.activityColIp') },
+    ],
+    [t],
+  );
+
+  const exportRows = React.useMemo(
+    () =>
+      paginated.map((log) => ({
+        time: fmtTs(log.ts),
+        user: userNameFor(log),
+        action: log.action,
+        detail: log.detail,
+        ip: log.ip,
+      })),
+    [paginated, fmtTs, userNameFor],
+  );
 
   if (paginated.length === 0) {
     return (
@@ -81,73 +129,44 @@ export function ActivityLogsList({
       i18nNamespace="users"
       paginationVariant="range"
     >
-      <div className={WORK_SURFACE}>
-        {viewMode === "cards" ? (
-          <DirectoryCardsGrid className="p-3">
-            {paginated.map((log) => (
-              <DirectoryEntityCard
-                key={log.id}
-                className="space-y-3 p-4"
-              >
-                <div className="flex min-w-0 items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="text-sm font-semibold text-foreground">{userNameFor(log)}</p>
-                    <p className="text-xs text-muted-foreground">{fmtTs(log.ts)}</p>
-                  </div>
-                  <ActivityActionBadge action={log.action} />
+      {viewMode === 'cards' ? (
+        <DirectoryCardsGrid className="p-3">
+          {paginated.map((log) => (
+            <DirectoryEntityCard key={log.id} className="space-y-3 p-4">
+              <div className="flex min-w-0 items-start justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-sm font-semibold text-foreground">{userNameFor(log)}</p>
+                  <p className="text-xs text-muted-foreground">{fmtTs(log.ts)}</p>
                 </div>
-                <StatGrid columns="1">
-                  <StatRow
-                    label={t('users.activityColDetail')}
-                    value={log.detail}
-                    ddClassName="text-xs text-muted-foreground"
-                  />
-                  <StatRow
-                    label={t('users.activityColIp')}
-                    value={log.ip}
-                    ddClassName="font-mono text-xs text-muted-foreground"
-                  />
-                </StatGrid>
-              </DirectoryEntityCard>
-            ))}
-          </DirectoryCardsGrid>
-        ) : (
-          <Table className="table-fixed">
-            <TableHeader>
-              <TableRow className="border-b border-border/60 hover:bg-muted/30">
-                <ModuleTableHeaderCell columnKey="time" width={getColumnWidth?.('time')} onResize={onColumnResize} className="px-3 py-2.5">
-                  {t('users.activityColTime')}
-                </ModuleTableHeaderCell>
-                <ModuleTableHeaderCell columnKey="user" width={getColumnWidth?.('user')} onResize={onColumnResize} className="px-3 py-2.5">
-                  {t('users.activityColUser')}
-                </ModuleTableHeaderCell>
-                <ModuleTableHeaderCell columnKey="action" width={getColumnWidth?.('action')} onResize={onColumnResize} className="px-3 py-2.5">
-                  {t('users.activityColAction')}
-                </ModuleTableHeaderCell>
-                <ModuleTableHeaderCell columnKey="detail" width={getColumnWidth?.('detail')} onResize={onColumnResize} className="px-3 py-2.5">
-                  {t('users.activityColDetail')}
-                </ModuleTableHeaderCell>
-                <ModuleTableHeaderCell columnKey="ip" width={getColumnWidth?.('ip')} onResize={onColumnResize} className="px-3 py-2.5">
-                  {t('users.activityColIp')}
-                </ModuleTableHeaderCell>
-              </TableRow>
-            </TableHeader>
-            <TableBody className="divide-y divide-border/50">
-              {paginated.map((log) => (
-                <TableRow key={log.id} className="transition-colors hover:bg-muted/20">
-                  <TableCell className="whitespace-nowrap px-3 py-2.5 text-xs text-muted-foreground">{fmtTs(log.ts)}</TableCell>
-                  <TableCell className="px-3 py-2.5 text-xs font-semibold text-foreground">{userNameFor(log)}</TableCell>
-                  <TableCell className="px-3 py-2.5">
-                    <ActivityActionBadge action={log.action} />
-                  </TableCell>
-                  <TableCell className="px-3 py-2.5 text-xs text-muted-foreground">{log.detail}</TableCell>
-                  <TableCell className="px-3 py-2.5 font-mono text-xs text-muted-foreground">{log.ip}</TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        )}
-      </div>
+                <ActivityActionBadge action={log.action} />
+              </div>
+              <StatGrid columns="1">
+                <StatRow
+                  label={t('users.activityColDetail')}
+                  value={log.detail}
+                  ddClassName="text-xs text-muted-foreground"
+                />
+                <StatRow
+                  label={t('users.activityColIp')}
+                  value={log.ip}
+                  ddClassName="font-mono text-xs text-muted-foreground"
+                />
+              </StatGrid>
+            </DirectoryEntityCard>
+          ))}
+        </DirectoryCardsGrid>
+      ) : (
+        <WorkBatchTable<ActivityLog>
+          data={paginated}
+          columns={columns}
+          columnResize={
+            getColumnWidth || onColumnResize
+              ? { getColumnWidth, onColumnResize }
+              : undefined
+          }
+          bordered={false}
+        />
+      )}
     </ReportDataGridContainer>
   );
 }

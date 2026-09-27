@@ -11,7 +11,7 @@ import {
 } from '@/components/ui/table';
 import { getSolidBgClass } from '@/lib/semanticTone';
 
-export interface ChannelSummaryRow {
+export interface ChannelSummaryRow extends Record<string, unknown> {
   id: string;
   channel: string;
   count: number;
@@ -38,7 +38,7 @@ export function MessagingReportSummaryTable({
     <ReportDataGridContainer
       title={title}
       columns={columns}
-      rows={rows as unknown as Record<string, unknown>[]}
+      rows={rows}
       moduleId="messaging"
       hideExport={rows.length === 0}
     >

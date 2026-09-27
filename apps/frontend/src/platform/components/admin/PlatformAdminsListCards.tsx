@@ -11,6 +11,7 @@ import {
   PlatformAdminPermissionsBadges,
 } from '@/platform/components/admin/PlatformAdminBadges';
 import { PlatformAdminActionButtons } from '@/platform/components/admin/PlatformAdminActionButtons';
+import { Checkbox } from '@/components/ui/checkbox';
 import type { EntityDescriptor } from '@/types/entityRegistry';
 
 export interface PlatformAdminsListCardsProps {
@@ -22,6 +23,8 @@ export interface PlatformAdminsListCardsProps {
   onDelete: (admin: PlatformUserProfile) => void;
   verifyPending?: boolean;
   onVerifyEmail?: (adminId: string) => void;
+  selectedIds?: ReadonlySet<string>;
+  onToggleSelect?: (id: string) => void;
 }
 
 /**
@@ -36,6 +39,8 @@ export function PlatformAdminsListCards({
   onDelete,
   verifyPending = false,
   onVerifyEmail,
+  selectedIds,
+  onToggleSelect,
 }: PlatformAdminsListCardsProps): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
@@ -52,7 +57,18 @@ export function PlatformAdminsListCards({
           onView={onInspect}
           headerSlot={
             <div className="flex min-w-0 items-center justify-between gap-3">
-              <p className="min-w-0 flex-1 truncate text-sm font-bold text-foreground">{admin.name}</p>
+              <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                {onToggleSelect && selectedIds && (
+                  <Checkbox
+                    checked={selectedIds.has(admin.id)}
+                    onCheckedChange={() => onToggleSelect(admin.id)}
+                    aria-label={admin.name}
+                    className="shrink-0"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
+                <p className="min-w-0 truncate text-sm font-bold text-foreground">{admin.name}</p>
+              </div>
               <div className="flex shrink-0 flex-wrap justify-end gap-1.5">
                 <PlatformAdminStatusBadges admin={admin} />
               </div>

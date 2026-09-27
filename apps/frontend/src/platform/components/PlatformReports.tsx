@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Download } from 'lucide-react';
+import { formatDate } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ActionButton } from '@/components/ui/ActionButton';
@@ -47,7 +48,7 @@ export function PlatformReports(): React.JSX.Element {
         status: w.enabled ? 'Active' : 'Disabled',
         verification: w.requireEmailVerification ? 'Required' : 'Optional',
         adminEmail: w.adminEmail || '—',
-        createdAt: w.createdAt ? new Date(w.createdAt).toLocaleDateString() : '—',
+        createdAt: w.createdAt ? formatDate(w.createdAt) : '—',
       })) ?? [],
     [workspaces],
   );

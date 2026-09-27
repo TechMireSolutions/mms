@@ -7,41 +7,8 @@ import { CardSkeleton } from '@/components/ui/LoadingState';
 import { PlatformModuleSelectCard } from '@/platform/components/workspace/PlatformModuleSelectCard';
 import { PlatformModulePresetsBar } from '@/platform/components/workspace/PlatformModulePresetsBar';
 import { useUpdateWorkspaceModules, useWorkspaceModules } from '@/platform/hooks/usePlatformWorkspaces';
-import {
-  LayoutDashboard,
-  Users,
-  MessageSquare,
-  GraduationCap,
-  School,
-  Calendar,
-  UserCheck,
-  ClipboardList,
-  Star,
-  FileText,
-  Library,
-  DollarSign,
-  TrendingUp,
-  UserCog,
-  Scale,
-} from 'lucide-react';
-
-const MODULE_ICONS: Record<string, React.ElementType> = {
-  dashboard: LayoutDashboard,
-  contacts: Users,
-  messaging: MessageSquare,
-  students: GraduationCap,
-  teachers: School,
-  sessions: Calendar,
-  attendance: UserCheck,
-  enrollment: ClipboardList,
-  hasanat: Star,
-  examination: FileText,
-  questionBank: Library,
-  finance: DollarSign,
-  accounting: TrendingUp,
-  obligations: Scale,
-  users: UserCog,
-};
+import { resolveModuleIcon } from '@/lib/config/moduleIcons';
+import { LayoutDashboard } from 'lucide-react';
 
 interface PlatformWorkspaceModulesDialogProps {
   workspace: PlatformWorkspaceRowData;
@@ -135,7 +102,7 @@ export function PlatformWorkspaceModulesDialog({
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {modules.map((module) => {
-                    const Icon = MODULE_ICONS[module.id] || LayoutDashboard;
+                    const Icon = resolveModuleIcon(module.icon);
                     const isSelected = selectedModuleSet.has(module.id);
                     return (
                       <PlatformModuleSelectCard

@@ -184,6 +184,7 @@ export function WorkspaceTableView({
       }
       containerClassName="rounded-xl border border-border/40 overflow-hidden bg-card shadow-sm"
       bordered={false}
+      virtualize={false}
     />
   );
 }

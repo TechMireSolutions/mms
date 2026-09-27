@@ -73,7 +73,7 @@ export function PlatformWorkspaceResetPasswordDialog({
           fields={[{ label: t('platform.adminEmailValue'), value: result.adminEmail }]}
           passwordLabel={t('platform.newPasswordValue')}
           password={result.newPassword} copyText={result.newPassword}
-          copyLabel={t('contacts.table.copy')} hint={t('platform.sharePasswordHint')}
+          copyLabel={t('common.copy')} hint={t('platform.sharePasswordHint')}
         />
       ) : (
         <div className="space-y-4 py-2">

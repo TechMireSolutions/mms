@@ -1,9 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { ShieldAlert, Trash2 } from 'lucide-react';
 import type { PlatformUserProfile } from '@mms/shared';
-import { FormModal } from '@/components/ui/FormModal';
-import PasswordInput from '@/components/ui/PasswordInput';
 import { useTranslation } from '@/hooks/useTranslation';
+import { PlatformTypedConfirmDialog } from '@/platform/components/PlatformTypedConfirmDialog';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import {
   useDeletePlatformAdmin,
@@ -25,7 +23,7 @@ export function PlatformAdminDangerDialog({
   open,
   onOpenChange,
 }: PlatformAdminDangerDialogProps): React.JSX.Element {
-  const { t, dir, language } = useTranslation();
+  const { t } = useTranslation();
   const setDisabled = useSetPlatformAdminDisabled();
   const deleteAdmin = useDeletePlatformAdmin();
   const [password, setPassword] = useState('');
@@ -59,7 +57,7 @@ export function PlatformAdminDangerDialog({
         ? 'platform.disableAdminConfirm'
         : 'platform.enableAdminConfirm';
 
-  const handleSave = async (): Promise<void> => {
+  const handleConfirm = async (): Promise<void> => {
     if (!password.trim()) return;
     setError(null);
     try {
@@ -79,37 +77,22 @@ export function PlatformAdminDangerDialog({
   };
 
   return (
-    <FormModal
+    <PlatformTypedConfirmDialog
       open={open}
-      onClose={() => onOpenChange(false)}
+      onOpenChange={onOpenChange}
       title={t(titleKey)}
-      subtitle={`${admin.name} · ${admin.email}`}
-      icon={mode === 'delete' ? Trash2 : ShieldAlert}
-      size="sm"
-      error={error ?? undefined}
-      cancelLabel={t('common.cancel')}
-      saveLabel={t(saveKey)}
-      onSave={handleSave}
-      saving={pending}
-      saveDisabled={!password.trim()}
-      dir={dir}
-      lang={language}
-    >
-      <div className="space-y-4 text-start">
-        <p className="text-sm text-muted-foreground leading-relaxed">{t(descKey)}</p>
-        <PasswordInput
-          id="platform-admin-danger-password"
-          name="adminDangerPassword"
-          label={t('platform.adminPasswordConfirm')}
-          autoComplete="current-password"
-          value={password}
-          onChange={(event) => {
-            setPassword(event.target.value);
-            if (error) setError(null);
-          }}
-          disabled={pending}
-        />
-      </div>
-    </FormModal>
+      description={`${t(descKey)} (${admin.name} · ${admin.email})`}
+      password={password}
+      onPasswordChange={setPassword}
+      passwordInputId={`platform-admin-danger-password-${admin.id}`}
+      passwordInputName="adminDangerPassword"
+      passwordLabel={t('platform.adminPasswordConfirm')}
+      error={error}
+      pending={pending}
+      confirmButtonLabel={t(saveKey)}
+      confirmVariant={mode === 'delete' || mode === 'disable' ? 'destructive' : 'default'}
+      destructiveTitle={mode === 'delete' || mode === 'disable'}
+      onConfirm={handleConfirm}
+    />
   );
 }

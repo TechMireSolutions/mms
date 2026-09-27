@@ -19,11 +19,11 @@ export interface TypedConfirmDialogProps {
   onOpenChange: (open: boolean) => void;
   title: string;
   description: string;
-  confirmLabel: string;
+  confirmLabel?: string;
   /** Expected confirmation string (literal token, name, or subdomain). */
-  expectedConfirm: string;
-  confirmValue: string;
-  onConfirmValueChange: (value: string) => void;
+  expectedConfirm?: string;
+  confirmValue?: string;
+  onConfirmValueChange?: (value: string) => void;
   confirmInputName?: string;
   confirmPlaceholder?: string;
   password?: string;
@@ -85,7 +85,8 @@ export function TypedConfirmDialog({
 }: TypedConfirmDialogProps): React.JSX.Element {
   const { t } = useTranslation();
   const confirmInputId = useId();
-  const matches = confirmMatches(confirmValue, expectedConfirm, confirmMatch);
+  const hasTypedConfirm = Boolean(expectedConfirm && onConfirmValueChange);
+  const matches = !hasTypedConfirm || confirmMatches(confirmValue ?? '', expectedConfirm ?? '', confirmMatch);
   const requiresPassword = typeof password === 'string' && onPasswordChange !== undefined;
   const passwordValid = !requiresPassword || password.trim().length > 0;
   const canConfirm = !pending && matches && passwordValid;
@@ -108,19 +109,21 @@ export function TypedConfirmDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         <div className="space-y-3 my-2 text-start">
-          <Field id={confirmInputId} label={confirmLabel}>
-            <Input
-              id={confirmInputId}
-              name={confirmInputName}
-              type="text"
-              value={confirmValue}
-              onChange={(event) => onConfirmValueChange(event.target.value)}
-              placeholder={confirmPlaceholder}
-              disabled={pending}
-              className="min-h-11"
-              autoComplete="off"
-            />
-          </Field>
+          {hasTypedConfirm && confirmLabel && onConfirmValueChange ? (
+            <Field id={confirmInputId} label={confirmLabel}>
+              <Input
+                id={confirmInputId}
+                name={confirmInputName}
+                type="text"
+                value={confirmValue ?? ''}
+                onChange={(event) => onConfirmValueChange(event.target.value)}
+                placeholder={confirmPlaceholder}
+                disabled={pending}
+                className="min-h-11"
+                autoComplete="off"
+              />
+            </Field>
+          ) : null}
           {requiresPassword && onPasswordChange ? (
             <>
               <PasswordInput

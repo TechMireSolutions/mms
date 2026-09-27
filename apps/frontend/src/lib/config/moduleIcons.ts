@@ -7,8 +7,11 @@ import {
   FileText,
   GraduationCap,
   LayoutDashboard,
+  Library,
   type LucideIcon,
   MessageSquare,
+  Scale,
+  School,
   Star,
   TrendingUp,
   UserCheck,
@@ -32,6 +35,9 @@ export const MODULE_ICONS: Record<string, LucideIcon> = {
   TrendingUp,
   BookOpen,
   Boxes,
+  School,
+  Library,
+  Scale,
 };
 
 export function resolveModuleIcon(iconName: string, fallback: LucideIcon = Boxes): LucideIcon {
