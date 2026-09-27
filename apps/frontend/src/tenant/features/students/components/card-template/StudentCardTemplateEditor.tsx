@@ -178,6 +178,7 @@ export function StudentCardTemplateEditor({
           documentType="student-card"
           sampleData={sampleData}
           fullscreen={fullscreen}
+          branding={branding}
           onChange={handleSideTemplateChange}
           onSave={handleSave}
           onClose={onClose}

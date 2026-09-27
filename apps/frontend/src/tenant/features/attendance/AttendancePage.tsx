@@ -22,7 +22,7 @@ const AttendanceSetupTier = React.lazy(() =>
   }))
 );
 
-const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
+const MessageComposer = React.lazy(() => import('@/tenant/components/messaging/TenantMessageComposer'));
 
 export default function Attendance() {
   const {

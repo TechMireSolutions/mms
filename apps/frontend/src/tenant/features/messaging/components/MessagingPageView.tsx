@@ -23,7 +23,7 @@ const MessagingSetupTier = lazy(() =>
   import("./MessagingSetupTier").then((m) => ({ default: m.MessagingSetupTier }))
 );
 
-const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
+const MessageComposer = lazy(() => import("@/tenant/components/messaging/TenantMessageComposer"));
 
 export interface MessagingPageViewProps {
   canRead: boolean;

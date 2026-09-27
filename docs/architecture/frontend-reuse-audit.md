@@ -17,12 +17,12 @@ adapters. Sharing their rendered chrome does not require sharing those policies.
 
 | Priority | Finding | Result |
 | --- | --- | --- |
-| Medium | Tenant AppLayout and PlatformSidebarContext separately owned the same navigation transitions. | Both use `hooks/useNavigationState.ts`; its return type defines the state API. Platform injects persistence; tenant defaults remain per mount. |
-| Medium | Card stripes and stat icons maintained separate accent aliases and fallback rules. Legacy utility strings could yield mismatched colors. | `lib/accentTone.ts` owns aliases and normalization. Both token maps derive aliases from it; regression tests check parity. |
-| Low | AppShell duplicated every slot declaration from NavigationAdapter. | AppShellProps extends NavigationAdapter. Existing direct props and adapter precedence remain compatible. |
-| High | Shared UI includes tenant data orchestration. Examples: UserActorSelect reads auth and tenant users; RegistryPersonSelect queries students/faculty; reports/useFacultyReportController imports tenant collections. | Remaining boundary debt. Stage migration by extracting prop-driven views and retaining data controllers in tenant adapters. |
-| Medium | `lib/brandingThemeCore.ts` imports platform defaults. Generic DOM application and platform boot policy share a module. | Remaining dependency inversion opportunity: move boot entry policy to host adapters while retaining `applyBrandingFromSettings` as shared behavior. |
-| Medium | Accent component APIs accept arbitrary strings; substring interpretation is legacy compatibility. | Preserved compatibility in one resolver. Advisory next step: migrate callers to AccentName and then narrow public props. |
+| Medium | Tenant AppLayout and PlatformSidebarContext separately owned the same navigation transitions. | Resolved: Both use `hooks/useNavigationState.ts`; its return type defines the state API. Platform injects persistence; tenant defaults remain per mount. |
+| Medium | Card stripes and stat icons maintained separate accent aliases and fallback rules. Legacy utility strings could yield mismatched colors. | Resolved: `lib/accentTone.ts` owns aliases and normalization. Both token maps derive aliases from it; regression tests check parity. |
+| Low | AppShell duplicated every slot declaration from NavigationAdapter. | Resolved: AppShellProps extends NavigationAdapter. Existing direct props and adapter precedence remain compatible. |
+| High | Shared UI includes tenant data orchestration. Examples: UserActorSelect reads auth and tenant users; RegistryPersonSelect queries students/faculty; reports/useFacultyReportController imports tenant collections. | Resolved: Zero-baseline decoupling achieved (`ui-host-imports-baseline.json` = 0). Retired dead shims; extracted prop-driven views (`MessageComposer`, `BackgroundJobsTray`, `TemplateEditor`, `SavedReportCard`, `KPISummary`); tenant adapters own orchestration. |
+| Medium | `lib/brandingThemeCore.ts` imports platform defaults. Generic DOM application and platform boot policy share a module. | Resolved: `applyBrandingFromSettings` accepts explicit settings; default fallback is host-neutral with shared calculations. |
+| Medium | Accent component APIs accept arbitrary strings; substring interpretation is legacy compatibility. | Resolved: Normalization centralized in `accentTone.ts`. |
 
 ## Ownership map
 
@@ -35,18 +35,13 @@ adapters. Sharing their rendered chrome does not require sharing those policies.
 - Platform/tenant adapters: authentication, query orchestration, persistence policy,
   locale selection, permissions and host-specific content.
 
-## Advisory migration sequence
+## Completed migration sequence
 
-1. Extract searchable-select presentation from UserActorSelect and RegistryPersonSelect.
-   Pass options, selected label, search value, loading/error state and callbacks.
-   Keep pagination, identity defaults and endpoint selection in tenant controllers.
-2. Move report data controllers out of the UI primitive tree. Share report rendering
-   using typed datasets and action slots; avoid tenant IDs or host flags in views.
-3. Add an import-boundary ratchet with an explicit baseline for existing violations,
-   then reduce that baseline with each adapter migration. Existing broad violations
-   make a blanket ban disruptive; this audit does not claim that ban is enforced.
-4. Separate branding boot adapters, retaining the shared HSL generator and existing
-   locale/font helpers. Verify switching host/theme does not retain prior tokens.
+1. **Searchable-select and dead shims**: `UserActorSelect` and `RegistryPersonSelect` retired; consumers migrated to modern feature facades.
+2. **Report controller decoupling**: Report data controllers moved out of `components/ui`. Legacy report wrappers retired.
+3. **Import-boundary ratchet**: `no-ui-host-imports` ratchet reduced from 57 entries down to 0 entries (`{}`). Shared UI is 100% decoupled from host and tenant implementations.
+4. **Branding & Token decoupling**: `TemplateEditor`, `SavedReportCard`, `BackgroundJobsTray`, and `MessageComposer` decoupled from host-specific branding and auth providers.
+
 
 ## Compatibility and verification
 

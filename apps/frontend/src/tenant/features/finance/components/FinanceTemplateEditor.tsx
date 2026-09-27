@@ -5,6 +5,7 @@
 
 import React, { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useBranding } from "@/tenant/hooks/useBranding";
 import { TemplateEditor } from "@/components/ui/TemplateEditor";
 import { getObject, saveObject } from "@/lib/db";
 import {
@@ -119,6 +120,7 @@ export function FinanceTemplateEditor({
   };
 
   const { t } = useTranslation();
+  const branding = useBranding();
 
   const handleSave = (tmpl: DocumentTemplate<TypstFeeReceiptPayload>) => {
     saveObject(FINANCE_TEMPLATE_STORAGE_KEY, tmpl);
@@ -161,6 +163,7 @@ export function FinanceTemplateEditor({
       documentType="invoice"
       sampleData={sampleData}
       fullscreen={fullscreen}
+      branding={branding}
       onSave={handleSave}
       onClose={onClose}
       onExportTypst={handleExportTypst}

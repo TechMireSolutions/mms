@@ -49,7 +49,7 @@ vi.mock('@/tenant/features/users/components/InviteUserModal', () => ({
   ),
 }));
 
-vi.mock('@/components/ui/MessageComposer', () => ({
+vi.mock('@/tenant/components/messaging/TenantMessageComposer', () => ({
   default: ({ onClose }: any) => (
     <div data-testid="message-composer">
       <button onClick={onClose}>Close Composer</button>

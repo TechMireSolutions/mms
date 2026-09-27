@@ -20,7 +20,7 @@ import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useUsersContractVerifyEmail } from '@/tenant/hooks/collections/users';
 import { UserDetailSections } from '@/tenant/features/users/components/UserDetailSections';
 
-const MessageComposer = lazy(() => import('@/components/ui/MessageComposer'));
+const MessageComposer = lazy(() => import('@/tenant/components/messaging/TenantMessageComposer'));
 
 export interface UserDetailProps {
   user: SystemUser;

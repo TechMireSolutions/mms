@@ -15,7 +15,7 @@ import { WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { Badge } from "@/components/ui/badge";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { HasanatReportItem } from "./HasanatReport";
+import type { HasanatReportItem } from "./hasanatReportTypes";
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 interface HasanatDistributionTableProps {

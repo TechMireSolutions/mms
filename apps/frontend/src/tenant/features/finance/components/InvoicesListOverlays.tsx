@@ -3,7 +3,7 @@ import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashD
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import type { MessagingTarget } from "@/hooks/useMessageComposerState";
 
-const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
+const MessageComposer = React.lazy(() => import("@/tenant/components/messaging/TenantMessageComposer"));
 
 export interface InvoicesListOverlaysProps {
   messagingTarget: MessagingTarget | null;

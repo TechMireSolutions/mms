@@ -1,12 +1,14 @@
 import { useQuery, useMutation, useQueryClient, queryOptions } from '@tanstack/react-query';
 import { apiJson } from '@/lib/apiClient';
 import type {
-  ModernAuditEvent,
-  AuditVerificationStatus,
   AuditRetentionRegime,
   AuditActionType,
-  AuditMerkleRoot,
   AuditAnomalyReport,
+  AuditListResponse,
+  AuditVerificationResult,
+  AuditExportPayload,
+  AuditMerkleRootsResponse,
+  AuditErasureResponse,
 } from '@mms/shared';
 
 export const AUDIT_EVENTS_QUERY_KEY = ['audit', 'events'] as const;
@@ -21,33 +23,13 @@ export interface AuditListFilters {
   actionType?: AuditActionType;
 }
 
-export interface AuditListResponse {
-  items: ModernAuditEvent[];
-  total: number;
-  limit: number;
-  offset: number;
-}
-
-export interface AuditVerificationResult {
-  runId: string;
-  workspaceSubdomain: string;
-  status: AuditVerificationStatus;
-  recordsChecked: number;
-  discrepancies: string[];
-  headHash: string;
-}
-
-export interface AuditExportPayload {
-  metadata: {
-    workspaceSubdomain: string;
-    exportedAt: string;
-    exportedBy: string;
-    shardHeadHash: string;
-    lastVerificationStatus: AuditVerificationStatus;
-    lastVerificationAt: string | null;
-  };
-  events: ModernAuditEvent[];
-}
+export type {
+  AuditListResponse,
+  AuditVerificationResult,
+  AuditExportPayload,
+  AuditMerkleRootsResponse,
+  AuditErasureResponse,
+};
 
 export interface ExecuteErasureParams {
   subjectId: string;
@@ -81,7 +63,7 @@ export function useAuditEventsQuery(filters: AuditListFilters = {}) {
 export function useAuditMerkleRootsQuery() {
   return useQuery({
     queryKey: AUDIT_MERKLE_ROOTS_QUERY_KEY,
-    queryFn: ({ signal }) => apiJson<{ items: AuditMerkleRoot[] }>('/api/audit/merkle-roots', { signal }),
+    queryFn: ({ signal }) => apiJson<AuditMerkleRootsResponse>('/api/audit/merkle-roots', { signal }),
     staleTime: 60_000,
   });
 }
@@ -103,7 +85,7 @@ export function useAuditErasureMutation() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: (params: ExecuteErasureParams) =>
-      apiJson<{ erasureRequestId: string; status: string }>('/api/audit/erasure', {
+      apiJson<AuditErasureResponse>('/api/audit/erasure', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(params),

@@ -1,17 +1,21 @@
 import React, { useState } from "react";
 import { Download, Loader2, CheckCircle2, AlertCircle, RefreshCw, X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useBackgroundJobs } from "@/tenant/hooks/useBackgroundJobs";
-import { downloadBackgroundJobArtifact } from "@/lib/backgroundJobs/backgroundJobApi";
 import { FormModal } from "@/components/ui/FormModal";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { type AppTranslationKey, formatDateTime } from "@mms/shared";
+import { type AppTranslationKey, type BackgroundJobRecord, formatDateTime } from "@mms/shared";
 
-interface BackgroundJobsTrayProps {
+export interface BackgroundJobsTrayProps {
   compact?: boolean;
   className?: string;
+  jobs?: BackgroundJobRecord[];
+  activeJobs?: BackgroundJobRecord[];
+  onDismiss?: (id: string) => void;
+  onClearFinished?: () => void;
+  onRefresh?: () => void;
+  onDownload?: (jobId: string) => Promise<void>;
 }
 
 type ModuleLabelKey =
@@ -31,13 +35,20 @@ function moduleLabel(moduleId: string, t: (key: AppTranslationKey) => string): s
   return key ? t(key) : moduleId;
 }
 
+const EMPTY_JOBS: BackgroundJobRecord[] = [];
+
 /** Global download / background job centre (globle1 §8). */
 export function BackgroundJobsTray({
   compact: _compact = false,
   className,
+  jobs = EMPTY_JOBS,
+  activeJobs = EMPTY_JOBS,
+  onDismiss,
+  onClearFinished,
+  onRefresh,
+  onDownload,
 }: BackgroundJobsTrayProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const { jobs, activeJobs, dismiss, clearFinished, refresh } = useBackgroundJobs();
   const [open, setOpen] = useState(false);
   const [downloadingId, setDownloadingId] = useState<string | null>(null);
 
@@ -46,9 +57,10 @@ export function BackgroundJobsTray({
   const badgeCount = activeJobs.length || jobs.filter((j) => j.status === "failed").length;
 
   const handleDownload = async (jobId: string) => {
+    if (!onDownload) return;
     setDownloadingId(jobId);
     try {
-      await downloadBackgroundJobArtifact(jobId);
+      await onDownload(jobId);
     } finally {
       setDownloadingId(null);
     }
@@ -91,15 +103,17 @@ export function BackgroundJobsTray({
           <div className="space-y-3">
             <div className="flex flex-wrap items-start justify-between gap-3">
               <p className="min-w-0 flex-1 text-sm text-muted-foreground">{t("backgroundJobs.panelDesc")}</p>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={refresh}
-                className="min-h-11 shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium shadow-none"
-              >
-                <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
-                {t("backgroundJobs.refresh")}
-              </Button>
+              {onRefresh && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={onRefresh}
+                  className="min-h-11 shrink-0 inline-flex items-center gap-1 rounded-lg px-2 py-2 text-xs font-medium shadow-none"
+                >
+                  <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t("backgroundJobs.refresh")}
+                </Button>
+              )}
             </div>
             <ul className="space-y-2 max-h-80 overflow-y-auto">
               {jobs.map((job) => {
@@ -131,7 +145,7 @@ export function BackgroundJobsTray({
                       </div>
                     </div>
                     <div className="flex shrink-0 items-center gap-1">
-                      {job.status === "completed" && job.hasDownload && (
+                      {job.status === "completed" && job.hasDownload && onDownload && (
                         <Button
                           type="button"
                           variant="ghost"
@@ -148,12 +162,12 @@ export function BackgroundJobsTray({
                           )}
                         </Button>
                       )}
-                      {job.status !== "running" && (
+                      {job.status !== "running" && onDismiss && (
                         <Button
                           type="button"
                           variant="ghost"
                           size="icon"
-                          onClick={() => dismiss(job.id)}
+                          onClick={() => onDismiss(job.id)}
                           className="shadow-none"
                           aria-label={t("backgroundJobs.dismiss")}
                         >
@@ -165,11 +179,11 @@ export function BackgroundJobsTray({
                 );
               })}
             </ul>
-            {jobs.some((j) => j.status !== "running") && (
+            {jobs.some((j) => j.status !== "running") && onClearFinished && (
               <Button
                 type="button"
                 variant="link"
-                onClick={clearFinished}
+                onClick={onClearFinished}
                 className="min-h-11 px-2 text-xs text-muted-foreground"
               >
                 {t("backgroundJobs.clearFinished")}

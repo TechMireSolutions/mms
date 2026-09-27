@@ -14,7 +14,7 @@ import React from "react";
 
 const ContactForm = lazy(() => import("@/tenant/features/contacts/components/ContactForm"));
 const DuplicateDetection = lazy(() => import("@/tenant/features/contacts/components/DuplicateDetection"));
-const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
+const MessageComposer = lazy(() => import("@/tenant/components/messaging/TenantMessageComposer"));
 const ContactDetail = lazy(() => import("@/tenant/features/contacts/components/ContactDetail"));
 
 export interface ContactsPageOverlaysProps {

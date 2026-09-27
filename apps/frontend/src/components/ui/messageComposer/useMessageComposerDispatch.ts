@@ -5,9 +5,7 @@ import {
   type StandardMessagingRecipient as MessagingRecipient,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useAuth } from '@/lib/contexts/AuthContext';
 import { notify } from '@/lib/notify';
-import { useBranding } from '@/tenant/hooks/useBranding';
 import { useMessagingMutations } from '@/hooks/useMessaging';
 import {
   executeRecipientSend,
@@ -31,6 +29,8 @@ interface UseMessageComposerDispatchParams {
   message: string;
   onClose: () => void;
   onSent?: (sent: { recipientId: string | number; body: string }[]) => void;
+  madrasaName?: string;
+  user?: unknown;
 }
 
 export function useMessageComposerDispatch({
@@ -42,10 +42,10 @@ export function useMessageComposerDispatch({
   message,
   onClose,
   onSent,
+  madrasaName,
+  user,
 }: UseMessageComposerDispatchParams) {
   const { t } = useTranslation();
-  const { user } = useAuth();
-  const branding = useBranding();
   const { recordDispatches } = useMessagingMutations();
   const [opening, setOpening] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -59,7 +59,7 @@ export function useMessageComposerDispatch({
   const auditIdempotencyKeyRef = useRef<string | null>(null);
   pausedRef.current = isPaused;
 
-  const personalizeOptions = { madrasaName: branding.madrasaName || undefined };
+  const personalizeOptions = { madrasaName: madrasaName || undefined };
   const validatedRecipients = validateMessagingRecipients(recipients, channel);
   const eligibleRecipients = validatedRecipients.filter((recipient) => recipient.isValid);
   const skippedRecipients = validatedRecipients.filter((recipient) => !recipient.isValid);

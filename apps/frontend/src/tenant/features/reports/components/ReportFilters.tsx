@@ -7,15 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { ReportFilterFieldsPanel } from '@/components/ui/reports/ReportFilterFieldsPanel';
+import type { ReportFilterFields, ReportFilterFieldKey } from '@/components/ui/reports/reportFilterTypes';
 
-export interface ReportFilterFields extends Record<string, unknown> {
-  session: string;
-  class: string;
-  status: string;
-  dateFrom: string;
-  dateTo: string;
-  student: string;
-}
+export type { ReportFilterFields };
 
 interface ReportFiltersProps {
   category: string;
@@ -23,7 +17,7 @@ interface ReportFiltersProps {
   onChange: (filters: ReportFilterFields) => void;
 }
 
-const CATEGORY_FILTERS: Record<string, (keyof ReportFilterFields)[]> = {
+const CATEGORY_FILTERS: Record<string, ReportFilterFieldKey[]> = {
   attendance: ['session', 'class', 'dateFrom', 'dateTo', 'student'],
   students: ['session', 'class', 'status', 'student'],
   faculty: ['session', 'class', 'status', 'student'],

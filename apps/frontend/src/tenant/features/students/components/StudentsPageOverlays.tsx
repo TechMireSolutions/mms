@@ -11,7 +11,7 @@ import type { StudentsPageOverlaysProps } from "@/tenant/features/students/hooks
 import React from "react";
 
 const StudentForm = lazy(() => import("@/tenant/features/students/components/StudentForm"));
-const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
+const MessageComposer = lazy(() => import("@/tenant/components/messaging/TenantMessageComposer"));
 const StudentDetail = lazy(() =>
   import("@/tenant/features/students/components/StudentDetail").then((m) => ({
     default: m.default,

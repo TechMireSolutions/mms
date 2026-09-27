@@ -2,7 +2,7 @@ import React from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
-import type { ReportFilterFields } from './ReportFilters';
+import type { ReportFilterFields, ReportFilterFieldKey } from './reportFilterTypes';
 import {
   normalizeReportFilterCategory,
   getReportFilterStatusOptions,
@@ -12,9 +12,9 @@ import { ReportFilterDateRangeSection } from './ReportFilterDateRangeSection';
 
 interface ReportFilterFieldsPanelProps {
   category?: string;
-  allowed: (keyof ReportFilterFields)[];
+  allowed: ReportFilterFieldKey[];
   filters: ReportFilterFields;
-  onFieldChange: (key: keyof ReportFilterFields, value: string) => void;
+  onFieldChange: (key: ReportFilterFieldKey, value: string) => void;
   sessions: Array<{ id: string; name: string }>;
   classes: Array<{ id: string; name: string }>;
 }

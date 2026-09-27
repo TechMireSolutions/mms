@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ACCOUNTING_ACCOUNT_TYPES,
+  ACCOUNT_SUBTYPES,
   accountingAccountsListQuerySchema,
   accountingEntriesListQuerySchema,
 } from './accountingListQuery.js';
@@ -63,5 +65,17 @@ describe('accounting list query schemas', () => {
     }
     expect(accountingAccountsListQuerySchema.safeParse({ accountType: 'asset' }).success).toBe(false);
     expect(accountingAccountsListQuerySchema.safeParse({ accountType: 'Income' }).success).toBe(false);
+  });
+
+  it('defines valid subtypes for every account type in ACCOUNT_SUBTYPES', () => {
+    for (const accountType of ACCOUNTING_ACCOUNT_TYPES) {
+      const subtypes = ACCOUNT_SUBTYPES[accountType];
+      expect(subtypes).toBeDefined();
+      expect(subtypes.length).toBeGreaterThan(0);
+      for (const subtype of subtypes) {
+        expect(typeof subtype).toBe('string');
+        expect(subtype.trim().length).toBeGreaterThan(0);
+      }
+    }
   });
 });

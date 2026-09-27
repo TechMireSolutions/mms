@@ -9,7 +9,7 @@ import { InviteUserModal } from '@/tenant/features/users/components/InviteUserMo
 import { UserDetail } from '@/tenant/features/users/components/UserDetail';
 import { ResetUserPasswordModal } from '@/tenant/features/users/components/ResetUserPasswordModal';
 
-const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
+const MessageComposer = React.lazy(() => import('@/tenant/components/messaging/TenantMessageComposer'));
 
 export interface UsersModalLayerProps {
   viewing: SystemUser | null;

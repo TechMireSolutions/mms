@@ -5,7 +5,6 @@
  */
 
 import React, { useCallback, useEffect, useId, useRef, useState } from "react";
-import { useBranding } from "@/tenant/hooks/useBranding";
 import {
   TemplateEditorKeyboardHints,
   TemplateEditorPaneSwitcher,
@@ -21,6 +20,12 @@ import {
 } from "./template-editor";
 
 export type { TemplateEditorBranding, TemplateEditorProps };
+
+const DEFAULT_FALLBACK_BRANDING: TemplateEditorBranding = {
+  logoUrl: null,
+  primaryColor: undefined,
+  secondaryColor: undefined,
+};
 
 export function TemplateEditor<TPayload = Record<string, unknown>>({
   title,
@@ -41,8 +46,7 @@ export function TemplateEditor<TPayload = Record<string, unknown>>({
   branding: brandingProp,
 }: TemplateEditorProps<TPayload>): React.JSX.Element {
   const [pane, setPane] = useState<EditorPane>("canvas");
-  const defaultBranding = useBranding();
-  const branding = brandingProp ?? defaultBranding;
+  const branding = brandingProp ?? DEFAULT_FALLBACK_BRANDING;
   const titleId = useId();
 
   // The editor's Escape/Ctrl-close handler must invoke the modal's close logic,

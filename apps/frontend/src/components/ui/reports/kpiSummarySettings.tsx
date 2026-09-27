@@ -7,7 +7,6 @@ import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { cn } from '@/lib/utils';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { useTranslation } from '@/hooks/useTranslation';
-import DynamicCardBuilder from './DynamicCardBuilder';
 import type { CustomCard } from '@/lib/reports/reportMetadata';
 import type { CategorizedKPIItem, KPIItem } from './kpiSummaryTypes';
 
@@ -19,10 +18,11 @@ interface KPISummarySettingsProps {
   customCards: CustomCard[];
   selectedCardIds: string[];
   primaryVolume: number;
-  defaultCollection: CustomCard['collection'];
-  editingCardConfig: CustomCard | null;
+  defaultCollection?: CustomCard['collection'];
+  editingCardConfig?: CustomCard | null;
+  cardBuilder?: React.ReactNode;
   onOpenChange: (isOpen: boolean) => void;
-  onCancelEdit: () => void;
+  onCancelEdit?: () => void;
   onToggleCard: (cardId: string) => void;
   onEditCard: (card: KPIItem) => void;
   onDeleteCard: (cardId: string) => void;
@@ -38,6 +38,7 @@ export function KPISummarySettings({
   primaryVolume,
   defaultCollection,
   editingCardConfig,
+  cardBuilder,
   onOpenChange,
   onCancelEdit,
   onToggleCard,
@@ -91,13 +92,7 @@ export function KPISummarySettings({
             </div>
             <div className="grid grid-cols-1 gap-6 border-t border-border pt-4 lg:grid-cols-3">
               <div className="lg:col-span-2">
-                <DynamicCardBuilder
-                  mode="kpi"
-                  category={category}
-                  initialCollection={defaultCollection}
-                  editCardConfig={editingCardConfig}
-                  onCancelEdit={onCancelEdit}
-                />
+                {cardBuilder}
               </div>
               <div className="flex flex-col justify-between space-y-4 rounded-2xl border border-border/50 bg-card/25 p-5 text-start shadow-inner">
                 <div>

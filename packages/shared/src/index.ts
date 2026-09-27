@@ -12,6 +12,7 @@ export type { User } from './tenantAuthTypes.js';
 
 export * from './zodCsp.js';
 export * from './auditTypes.js';
+export * from './auditResponses.js';
 export * from './rfc8785CanonicalJson.js';
 export * from './passwordStrengthUtils.js';
 export * from './permissions.js';

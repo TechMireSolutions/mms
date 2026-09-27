@@ -15,14 +15,14 @@ import {
   type ModuleReportCategory,
 } from "@/tenant/features/reports/components/ModuleReportsToolPanels";
 
-import StudentReport from "@/components/ui/reports/StudentReport";
+import StudentReport from "@/tenant/features/reports/components/StudentReport";
 import ContactReport from "@/tenant/features/reports/components/ContactReport";
 import AttendanceReport from "@/tenant/features/reports/components/AttendanceReport";
 import FinancialReport from "@/tenant/features/reports/components/FinancialReport";
 import AcademicReport from "@/tenant/features/reports/components/AcademicReport";
 import HasanatReport from "@/tenant/features/reports/components/HasanatReport";
 import SessionReport from "@/tenant/features/reports/components/SessionReport";
-import FacultyReport from "@/components/ui/reports/FacultyReport";
+import FacultyReport from "@/tenant/features/reports/components/FacultyReport";
 import QuestionBankReport from "@/tenant/features/reports/components/QuestionBankReport";
 import { FinancialReports } from '@/tenant/components/reports/moduleReportAdapters';
 import { ObligationsSummary } from '@/tenant/components/reports/moduleReportAdapters';

@@ -8,7 +8,7 @@ import { useContactColumns } from '@/lib/contexts/ContactConfigContext';
 import ContactsListDesktopTable from '@/tenant/features/contacts/components/ContactsListDesktopTable';
 import { SearchBar } from '@/components/ui/SearchBar';
 
-interface MessageComposerRecipientPickerProps {
+export interface MessageComposerRecipientPickerProps {
   kind: 'phone' | 'email';
   existingIds: Set<string>;
   disabled?: boolean;
@@ -17,10 +17,8 @@ interface MessageComposerRecipientPickerProps {
 }
 
 const DEBOUNCE_MS = 300;
-const MAX_RESULTS = 100;
 
-export function MessageComposerRecipientPicker({
-  kind,
+export function TenantMessageComposerRecipientPicker({
   existingIds,
   disabled,
   onAdd,
@@ -31,14 +29,12 @@ export function MessageComposerRecipientPicker({
 
   const [query, setQuery] = useState('');
   const [debouncedQuery, setDebouncedQuery] = useState('');
-
-  // Pagination for the table
   const [page, setPage] = useState(1);
 
   useEffect(() => {
     const id = setTimeout(() => { 
       setDebouncedQuery(query);
-      setPage(1); // Reset to first page on search
+      setPage(1);
     }, DEBOUNCE_MS);
     return () => clearTimeout(id);
   }, [query]);
@@ -62,7 +58,6 @@ export function MessageComposerRecipientPicker({
     if (isAdded) {
       onRemove(contact.id);
     } else {
-      // Map Contact to StandardMessagingRecipient
       const recipient = toMessagingRecipient(contact, {
         getPrimaryPhone: (c) => c.phone,
         getPrimaryEmail: (c) => c.email,
@@ -78,7 +73,6 @@ export function MessageComposerRecipientPicker({
   });
 
   const handleSelectAll = (() => {
-    // If all current page contacts are selected, deselect them. Otherwise, select all.
     const allSelected = contacts.every(c => existingIds.has(String(c.id)));
     if (allSelected) {
       contacts.forEach(c => onRemove(c.id));
@@ -98,8 +92,6 @@ export function MessageComposerRecipientPicker({
 
   const allSelected = contacts.length > 0 && contacts.every(c => existingIds.has(String(c.id)));
   const someSelected = contacts.length > 0 && contacts.some(c => existingIds.has(String(c.id))) && !allSelected;
-
-  // Stub functions for required table props
   const noop = () => {};
 
   return (

@@ -4,11 +4,18 @@ import { SearchBar } from "@/components/ui/SearchBar";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
 import { useTranslation } from "@/hooks/useTranslation";
-import { MessageComposerRecipientPicker } from "./MessageComposerRecipientPicker";
 import { MessageComposerRecipientsList } from "./MessageComposerRecipientsList";
 import type { ValidatedMessagingRecipient } from "./useMessageComposerDispatch";
 
 export type RecipientTab = "all" | "eligible" | "skipped";
+
+export interface RecipientPickerSlotProps {
+  kind: "phone" | "email";
+  existingIds: Set<string>;
+  disabled?: boolean;
+  onAdd: (recipient: StandardMessagingRecipient) => void;
+  onRemove: (id: string | number) => void;
+}
 
 const MIN_RECIPIENTS_FOR_SEARCH = 3;
 
@@ -31,6 +38,7 @@ export interface MessageComposerRecipientsProps {
   onAdd: (recipient: StandardMessagingRecipient) => void;
   onRemove: (id: string | number) => void;
   isPickStep: boolean;
+  renderRecipientPicker?: (props: RecipientPickerSlotProps) => React.ReactNode;
 }
 
 export function MessageComposerRecipients({
@@ -52,6 +60,7 @@ export function MessageComposerRecipients({
   onAdd,
   onRemove,
   isPickStep,
+  renderRecipientPicker,
 }: MessageComposerRecipientsProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -97,13 +106,15 @@ export function MessageComposerRecipients({
           </div>
         )}
 
-        <MessageComposerRecipientPicker
-          kind={isEmail ? "email" : "phone"}
-          existingIds={existingIds}
-          disabled={disabled}
-          onAdd={onAdd}
-          onRemove={onRemove}
-        />
+        {renderRecipientPicker ? (
+          renderRecipientPicker({
+            kind: isEmail ? "email" : "phone",
+            existingIds,
+            disabled,
+            onAdd,
+            onRemove,
+          })
+        ) : null}
 
         {!isPickStep && (
           <>

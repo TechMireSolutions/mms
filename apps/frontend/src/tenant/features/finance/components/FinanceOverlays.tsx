@@ -33,7 +33,7 @@ const InvoiceReceiptModal = lazy(() =>
     default: m.InvoiceReceiptModal,
   }))
 );
-const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
+const MessageComposer = lazy(() => import("@/tenant/components/messaging/TenantMessageComposer"));
 
 export interface FinanceOverlaysProps {
   c: ReturnType<typeof useFinancePageController>;

@@ -4,6 +4,15 @@ import type { Account, JournalEntry, FiscalYear } from './accountingModuleManife
 
 /** Account types accepted by the chart-of-accounts type filter. */
 export const ACCOUNTING_ACCOUNT_TYPES = ['Asset', 'Liability', 'Equity', 'Revenue', 'Expense'] as const;
+export type AccountingAccountType = (typeof ACCOUNTING_ACCOUNT_TYPES)[number];
+
+export const ACCOUNT_SUBTYPES: Record<AccountingAccountType, string[]> = {
+  Asset:     ['Current Asset', 'Fixed Asset', 'Contra Asset', 'Other Asset'],
+  Liability: ['Current Liability', 'Long-term Liability', 'Other Liability'],
+  Equity:    ["Owner's Equity", 'Retained Earnings', 'Other Equity'],
+  Revenue:   ['Operating Revenue', 'Non-operating Revenue', 'Other Revenue'],
+  Expense:   ['Operating Expense', 'Administrative Expense', 'Financial Expense', 'Other Expense'],
+};
 
 export interface AccountingListQuery {
   page?: number;

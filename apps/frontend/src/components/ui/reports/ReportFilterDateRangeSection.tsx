@@ -4,14 +4,14 @@ import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
 import { Button } from '@/components/ui/button';
 import { calculateReportDateRange } from '@/lib/reports/reportDateUtils';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
-import type { ReportFilterFields } from './ReportFilters';
+import type { ReportFilterFieldKey } from './reportFilterTypes';
 
 export interface ReportFilterDateRangeSectionProps {
   dateFrom: string;
   dateTo: string;
   showDateFrom: boolean;
   showDateTo: boolean;
-  onFieldChange: (key: keyof ReportFilterFields, value: string) => void;
+  onFieldChange: (key: ReportFilterFieldKey, value: string) => void;
   t: TranslationFunction;
 }
 

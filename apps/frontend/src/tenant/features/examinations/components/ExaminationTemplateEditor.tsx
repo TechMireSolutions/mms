@@ -5,6 +5,7 @@
 
 import React, { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useBranding } from "@/tenant/hooks/useBranding";
 import { TemplateEditor } from "@/components/ui/TemplateEditor";
 import { getObject, saveObject } from "@/lib/db";
 import {
@@ -130,6 +131,7 @@ export function ExaminationTemplateEditor({
   };
 
   const { t } = useTranslation();
+  const branding = useBranding();
 
   const handleSave = (tmpl: DocumentTemplate<TypstReportCardPayload>) => {
     saveObject(EXAMINATION_TEMPLATE_STORAGE_KEY, tmpl);
@@ -159,6 +161,7 @@ export function ExaminationTemplateEditor({
       documentType="report-card"
       sampleData={sampleData}
       fullscreen={fullscreen}
+      branding={branding}
       onSave={handleSave}
       onClose={onClose}
       onExportTypst={handleExportTypst}

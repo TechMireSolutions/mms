@@ -1,4 +1,4 @@
-import MessageComposer from "@/components/ui/MessageComposer";
+import TenantMessageComposer from "@/tenant/components/messaging/TenantMessageComposer";
 import type { MessagingTarget } from "@/hooks/useMessageComposerState";
 
 /**
@@ -15,7 +15,7 @@ export function MessageComposerLauncher({
 }) {
   if (!messagingTarget) return null;
   return (
-    <MessageComposer
+    <TenantMessageComposer
       channel={messagingTarget.channel}
       recipients={messagingTarget.recipients}
       onClose={onClose}

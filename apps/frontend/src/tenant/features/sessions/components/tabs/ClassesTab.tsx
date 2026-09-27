@@ -13,7 +13,7 @@ import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { ClassCard } from "@/tenant/features/sessions/components/tabs/ClassCard";
 import { ClassModal } from "@/tenant/features/sessions/components/tabs/ClassModal";
 
-const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
+const MessageComposer = React.lazy(() => import("@/tenant/components/messaging/TenantMessageComposer"));
 
 interface ClassesTabProps {
   session: Session;

@@ -16,7 +16,7 @@ const FacultyForm = lazy(() =>
     default: m.FacultyForm,
   })),
 );
-const MessageComposer = lazy(() => import("@/components/ui/MessageComposer"));
+const MessageComposer = lazy(() => import("@/tenant/components/messaging/TenantMessageComposer"));
 const FacultyDetail = lazy(() =>
   import("@/tenant/features/faculty/components/FacultyDetail").then((m) => ({
     default: m.FacultyDetail,

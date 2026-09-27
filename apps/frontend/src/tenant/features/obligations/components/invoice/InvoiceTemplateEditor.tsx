@@ -139,6 +139,7 @@ export function InvoiceTemplateEditor({
       documentType="receipt"
       sampleData={sampleData}
       fullscreen={fullscreen}
+      branding={branding}
       onSave={handleSave}
       onClose={onClose}
       onExportTypst={handleExportTypst}

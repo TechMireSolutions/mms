@@ -1,6 +1,6 @@
 import React, { lazy } from "react";
 import { AnimatePresence } from "framer-motion";
-import type { MessageComposerProps } from "@/components/ui/MessageComposer";
+import type { MessageComposerProps } from "@/tenant/components/messaging/TenantMessageComposer";
 import type {
   ObligationCollection,
   ObligationDistribution,
@@ -21,7 +21,7 @@ const ObligationCollectionForm = lazy(() =>
   }))
 );
 
-const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
+const MessageComposer = React.lazy(() => import("@/tenant/components/messaging/TenantMessageComposer"));
 
 interface MessagingTarget {
   channel: "sms" | "whatsapp" | "email";

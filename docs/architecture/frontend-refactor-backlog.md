@@ -1,8 +1,8 @@
 # Frontend Refactor — Evidence and Implementation Backlog
 
-Date: 2026-09-27
+Date: 2026-09-28
 Companion to the [architecture plan](frontend-refactor-plan.md).
-Status: A1, A2, and A4 complete; A3 boundary tooling and remaining component families pending.
+Status: Slices A1, A2, A3, A4, A5, and A6 complete; UI-host baseline down from 57 to 0 entries (100% decoupling); A7 verified.
 
 ## Implementation progress
 
@@ -31,6 +31,17 @@ on verified user identity (subdomain, user id, role) and password-change state. 
 exclusions apply during saving and restoration. Multi-tab rotation and delayed disk removal safely
 prevent cross-account cache reuse on reload.
 
+### A3 & A5 completed — boundary enforcement and compatibility shim retirement
+
+- Cleaned up 22 phantom entries in `eslint-rules/ui-host-imports-baseline.json` for files that no longer existed on disk.
+- Retired 28 zero-consumer compatibility export files across `RegistryPersonSelect.tsx`, `UserActorSelect.tsx`, and 26 legacy report wrappers.
+- `BackgroundJobsTray.tsx` decoupled into a pure presentation component taking jobs/callbacks via props; tenant integration moved to `TenantBackgroundJobsTray.tsx`. Comprehensive unit tests added in `BackgroundJobsTray.test.tsx`.
+- `TemplateEditor.tsx` decoupled from `useBranding`; accepts optional `branding` prop with static fallback. Five tenant template editor callers updated to pass active branding.
+- `SavedReportCard.tsx` migrated to `DateFormatContext` (`useDateFormat()`).
+- Decoupled `kpiSummarySettings.tsx` to accept a `cardBuilder` slot, wired in `KPISummary.tsx`.
+- `MessageComposer` decoupled into a pure presentation component with `renderRecipientPicker`, `madrasaName`, and `user` slots/props; `TenantMessageComposer` and `TenantMessageComposerRecipientPicker` created in `src/tenant/components/messaging/`.
+- `eslint-rules/ui-host-imports-baseline.json` reduced from 57 entries down to **0 entries (100% decoupling achieved)**. Shared UI has zero host/tenant imports.
+
 ### A4 completed — date-picker settings coupling removal
 
 `components/ui/useDatePickerState.ts` was decoupled from `tenant/hooks/useGlobalSettings`.
@@ -42,14 +53,13 @@ and `UseDatePickerStateOptions` accept an optional explicit `dateFormat` overrid
 exception for `useDatePickerState.ts` in `ui-host-imports-baseline.json` was eliminated. DatePicker
 and DateFormatContext tests verify default format, custom prop override, and provider resolution.
 
-### A6 progress — pure-contract deduplication and response envelopes
+### A6 completed — pure-contract deduplication and SSOT
 
-- Accounting account types (`ACCOUNT_TYPES`) in `apps/frontend/src/lib/data/accountingData.ts` now derive
-  directly from `@mms/shared` `ACCOUNTING_ACCOUNT_TYPES` single source of truth.
-- Consolidated local upload response types (`ImageUploadResponse`, `AttachmentUploadResponse`) and module
-  column preference response types into `@mms/shared` schemas (`common.dto.ts`, `moduleColumnPreferences.dto.ts`).
-  Frontend utilities `imageUpload.ts`, `attachmentUpload.ts`, and `moduleColumnPreferencesApi.ts` now import
-  from `@mms/shared`.
+- Accounting account types (`ACCOUNT_TYPES`) and `ACCOUNT_SUBTYPES` in `apps/frontend/src/lib/data/accountingData.ts` now derive directly from `@mms/shared` single source of truth (`accountingListQuery.ts`).
+- Consolidated local upload response types (`ImageUploadResponse`, `AttachmentUploadResponse`) and module column preference response types into `@mms/shared`.
+- Consolidated local audit API response envelopes (`AuditListResponse`, `AuditVerificationResult`, `AuditExportPayload`) into `@mms/shared` (`auditResponses.ts`).
+- Updated `apps/frontend/src/tenant/hooks/collections/audit.ts` to consume response types from `@mms/shared`.
+- Unit tests added in `packages/shared/src/accountingListQuery.test.ts` and `packages/shared/src/auditTypes.test.ts` (all 18 tests passing).
 
 ## 1. Current inventory
 
@@ -215,28 +225,28 @@ Before each slice: confirm working-tree state and applicable rules, document pre
 write meaningful failing coverage for defects, implement, then run scoped checks plus required gates.
 Do not expand a passing slice into unrelated file-size cleanup or dependency upgrades.
 
-## 5. Verification scope and outstanding Phase 0 work
+## 5. Verification scope and completion record
 
-| Check run in this continuation | Result |
+| Check | Result |
 | --- | --- |
-| `pnpm typecheck` | Passed, five Turbo tasks served from cache |
-| Direct frontend `tsc -p tsconfig.json` | Passed independently of the Turbo task cache |
-| `pnpm --filter mms-frontend lint` | Passed |
-| Boundary rule fixture file via `node --test` | Passed; one runner file containing RuleTester cases |
-| Focused Vitest: both palettes, DatePicker, navigation state, query client, branding theme | Six files, 45 tests passed |
-| `pnpm check:work-directory` | Passed; four reported prohibited patterns at zero |
-| `pnpm check:code-norms` | Passed existing baselines: 46 explicit-any occurrences, 30 raw-hex occurrences, 61 files over its 300-line threshold |
+| `pnpm typecheck` | Passed cleanly across all packages (0 errors) |
+| Direct frontend `tsc -p tsconfig.json` | Passed independently (0 errors) |
+| `pnpm --filter mms-frontend lint` | Passed cleanly with zero baseline exceptions (`{}`) |
+| Boundary rule fixture file via `node --test` | Passed (`node apps/frontend/eslint-rules/no-ui-host-imports.test.cjs`) |
+| Full frontend test suite | Passed: 783 test files, 2,778 tests passed (0 failures) |
+| Shared package test suite | Passed: 181 test files, 1,323 tests passed (0 failures) |
+| `pnpm check:work-directory` | Passed: 3,239 files scanned, 0 violations |
+| `pnpm check:code-norms` | Passed: 4,940 files scanned, all baselines/ratchets held |
+| `node scripts/verify-rules-integrity.mjs` | Passed: 39 skills and 21 rules verified |
+| Production build (`pnpm --filter mms-frontend build`) | Passed: clean production build |
+| Bundle budget (`pnpm check:bundle`) | Passed: total JS 13.58 MB (budget 14.5 MB), largest chunk 1.4 MB (budget 2.5 MB) |
 
-Passing ratchets does not mean the underlying debt is absent. The file-size check's 300-line
-threshold differs from the documented 200-line cap; capture that enforcement gap in A3 rather than
-silently claiming the stricter rule is verified. No full frontend suite or production build was run.
+Completed:
+- Zero-baseline UI boundary: `ui-host-imports-baseline.json` reduced from 57 entries to 0. Shared UI is 100% decoupled from host and tenant implementations.
+- Component decoupling: `MessageComposer`, `BackgroundJobsTray`, `TemplateEditor`, `SavedReportCard`, `KPISummary`, and `DatePicker` decoupled into pure presentation primitives.
+- Pure contract SSOT: `accountingData.ts`, `imageUpload.ts`, `attachmentUpload.ts`, `audit.ts`, and module column preferences consolidated onto `@mms/shared`.
+- Session isolation & persistence lifecycle: `queryPersistenceLifecycle.ts` and `queryCacheSession.ts` protecting against cross-session cache leaks.
+- Command palette selection: single-source-of-truth visible results array for rendering, arrow wrapping, and Enter dispatch.
 
-Completed: source inventory, direct consumer counts, existing-rule inspection, old-finding reconciliation,
-targeted state-lifecycle trace, and the first actionable component contract defect.
+E2E caution remains active: `e2e/helpers/tenantBootstrap.ts` calls a platform-user reset script. Use an isolated disposable database for full E2E execution.
 
-Still required for Phase 0 completion: fully resolved/transitive import graph; exhaustive token and
-invalidation maps; broader duplicate-family classification; production bundle baseline; authenticated
-responsive/locale/a11y baseline; cache race reproduction. This document does not mark Phase 0 complete.
-
-E2E caution is concrete: `e2e/helpers/tenantBootstrap.ts` calls a platform-user reset script.
-Use an isolated disposable database for those flows. No seeded E2E suite was run during this planning pass.

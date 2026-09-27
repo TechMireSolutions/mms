@@ -9,7 +9,7 @@ import { DropdownMenuItem } from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import SyncStatusBadge from "@/tenant/components/layout/SyncStatusBadge";
-import { BackgroundJobsTray } from "@/components/ui/BackgroundJobsTray";
+import { TenantBackgroundJobsTray } from "@/tenant/components/layout/TenantBackgroundJobsTray";
 import { TenantNotificationsPopover } from "@/tenant/components/layout/TenantNotificationsPopover";
 
 export interface TopBarActionsProps {
@@ -40,7 +40,7 @@ export default function TopBarActions({ compact = false, onOpenCommandPalette, c
         </Button>
       )}
       <SyncStatusBadge />
-      <BackgroundJobsTray compact={compact} />
+      <TenantBackgroundJobsTray compact={compact} />
       <TenantNotificationsPopover />
 
       {!compact ? <div className="mx-1 hidden h-6 w-px bg-border sm:block" /> : null}

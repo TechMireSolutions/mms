@@ -21,7 +21,7 @@ const HasanatSetupTier = React.lazy(() =>
   }))
 );
 
-const MessageComposer = React.lazy(() => import('@/components/ui/MessageComposer'));
+const MessageComposer = React.lazy(() => import('@/tenant/components/messaging/TenantMessageComposer'));
 
 /**
  * Hasanat Cards — denominations, stock, and redemptions. Work | Reports | Setup.

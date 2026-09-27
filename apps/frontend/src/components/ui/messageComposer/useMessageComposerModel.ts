@@ -25,6 +25,8 @@ export interface UseMessageComposerModelProps {
   initialMessage?: string;
   initialSubject?: string;
   onSent?: (sent: { recipientId: string | number; body: string }[]) => void;
+  madrasaName?: string;
+  user?: unknown;
 }
 
 export function useMessageComposerModel({
@@ -35,6 +37,8 @@ export function useMessageComposerModel({
   initialMessage,
   initialSubject,
   onSent,
+  madrasaName,
+  user,
 }: UseMessageComposerModelProps) {
   const { t } = useTranslation();
   const { templates: fetchedTemplates } = useMessageTemplates();
@@ -81,6 +85,8 @@ export function useMessageComposerModel({
     message,
     onClose,
     onSent,
+    madrasaName,
+    user,
   });
 
   const displayedRecipients = (() => {

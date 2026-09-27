@@ -5,6 +5,7 @@
 
 import React, { useMemo } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useBranding } from "@/tenant/hooks/useBranding";
 import { TemplateEditor } from "@/components/ui/TemplateEditor";
 import { getObject, saveObject } from "@/lib/db";
 import type {
@@ -125,6 +126,7 @@ export function HasanatTemplateEditor({
   };
 
   const { t } = useTranslation();
+  const branding = useBranding();
 
   const handleSave = (tmpl: DocumentTemplate<HasanatPayload>) => {
     saveObject(HASANAT_TEMPLATE_STORAGE_KEY, tmpl);
@@ -141,6 +143,7 @@ export function HasanatTemplateEditor({
       documentType="voucher"
       sampleData={sampleData}
       fullscreen={fullscreen}
+      branding={branding}
       onSave={handleSave}
       onClose={onClose}
     />

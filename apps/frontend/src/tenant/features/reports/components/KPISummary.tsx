@@ -2,6 +2,7 @@ import { KPISummarySettings } from '@/components/ui/reports/kpiSummarySettings';
 import { KPICardsGrid } from '@/components/ui/reports/kpiSummaryCards';
 import type { KPISummaryProps } from '@/components/ui/reports/kpiSummaryTypes';
 import { useKPISummaryModel } from '@/tenant/features/reports/controllers/useKPISummaryModel';
+import DynamicCardBuilder from '@/tenant/features/reports/components/DynamicCardBuilder';
 
 export default function KPISummary({ category, role }: KPISummaryProps): JSX.Element {
   const model = useKPISummaryModel({ category, role });
@@ -18,6 +19,15 @@ export default function KPISummary({ category, role }: KPISummaryProps): JSX.Ele
         primaryVolume={model.primaryVolume}
         defaultCollection={model.defaultCollection}
         editingCardConfig={model.editingCardConfig}
+        cardBuilder={
+          <DynamicCardBuilder
+            mode="kpi"
+            category={category}
+            initialCollection={model.defaultCollection}
+            editCardConfig={model.editingCardConfig}
+            onCancelEdit={model.cancelEdit}
+          />
+        }
         onOpenChange={model.setIsConfigOpen}
         onCancelEdit={model.cancelEdit}
         onToggleCard={model.handleToggleCard}

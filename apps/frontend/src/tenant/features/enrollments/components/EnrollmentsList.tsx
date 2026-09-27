@@ -12,7 +12,7 @@ import { EnrollmentsListContent } from "@/tenant/features/enrollments/components
 import { EnrollmentsListFilters } from "@/tenant/features/enrollments/components/EnrollmentsListFilters";
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
-const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
+const MessageComposer = React.lazy(() => import("@/tenant/components/messaging/TenantMessageComposer"));
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 

@@ -7,8 +7,10 @@ import type {
 } from '@mms/shared';
 import { MessageComposerDispatchControls } from './messageComposer/MessageComposerDispatchControls';
 import { MessageComposerFormBody } from './messageComposer/MessageComposerFormBody';
-import { MessageComposerRecipients } from './messageComposer/MessageComposerRecipients';
+import { MessageComposerRecipients, type RecipientPickerSlotProps } from './messageComposer/MessageComposerRecipients';
 import { useMessageComposerModel } from './messageComposer/useMessageComposerModel';
+
+export type { RecipientPickerSlotProps };
 
 export interface MessageComposerProps {
   channel: 'sms' | 'whatsapp' | 'email';
@@ -18,6 +20,9 @@ export interface MessageComposerProps {
   initialMessage?: string;
   initialSubject?: string;
   onSent?: (sent: { recipientId: string | number; body: string }[]) => void;
+  madrasaName?: string;
+  user?: unknown;
+  renderRecipientPicker?: (props: RecipientPickerSlotProps) => React.ReactNode;
 }
 
 export default function MessageComposer(props: MessageComposerProps): React.JSX.Element {
@@ -125,6 +130,7 @@ export default function MessageComposer(props: MessageComposerProps): React.JSX.
           onAdd={model.addRecipient}
           onRemove={model.removeRecipient}
           isPickStep={step === 'pick'}
+          renderRecipientPicker={props.renderRecipientPicker}
         />
       </div>
     </FormModal>

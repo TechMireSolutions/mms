@@ -1,5 +1,6 @@
 import {
   ACCOUNTING_ACCOUNT_TYPES,
+  ACCOUNT_SUBTYPES,
   type Account,
   type JournalLine,
   type JournalEntry,
@@ -16,14 +17,7 @@ import {
 
 export const ACCOUNT_TYPES = ACCOUNTING_ACCOUNT_TYPES;
 export type AccountType = typeof ACCOUNT_TYPES[number];
-
-export const ACCOUNT_SUBTYPES: Record<AccountType, string[]> = {
-  Asset:     ["Current Asset", "Fixed Asset", "Contra Asset", "Other Asset"],
-  Liability: ["Current Liability", "Long-term Liability", "Other Liability"],
-  Equity:    ["Owner's Equity", "Retained Earnings", "Other Equity"],
-  Revenue:   ["Operating Revenue", "Non-operating Revenue", "Other Revenue"],
-  Expense:   ["Operating Expense", "Administrative Expense", "Financial Expense", "Other Expense"],
-};
+export { ACCOUNT_SUBTYPES };
 
 export const ACCOUNT_TYPE_META = {
   Asset:     { normalBalance: "debit",  color: "bg-info/15 text-info border-info/30",       group: "balance" as const, icon: "🏦" },
