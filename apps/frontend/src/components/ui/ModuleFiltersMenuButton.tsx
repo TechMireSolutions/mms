@@ -1,14 +1,10 @@
-import React, { forwardRef, type ComponentPropsWithoutRef, type ReactNode } from "react";
+import React, { type ComponentPropsWithoutRef, type ReactNode } from "react";
 import { RotateCcw, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
-  DropdownMenuCheckboxItem,
   DropdownMenuContent,
   DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
@@ -20,56 +16,64 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
+export {
+  ModuleFilterCheckboxGroup,
+  ModuleFilterRadioGroup,
+  ModuleFilterDivider,
+  type ModuleFilterCheckboxOption,
+  type ModuleFilterCheckboxGroupProps,
+  type ModuleFilterRadioOption,
+  type ModuleFilterRadioGroupProps,
+  type ModuleFilterDividerProps,
+} from "@/components/ui/moduleFilterGroups";
+
 export interface ModuleFiltersMenuTriggerProps extends ComponentPropsWithoutRef<"button"> {
   label: string;
   activeCount?: number;
   icon?: LucideIcon;
   className?: string;
   children?: ReactNode;
+  ref?: React.Ref<HTMLButtonElement>;
 }
 
 /**
  * Shared Filters menu trigger (badge + active styles). Use as DropdownMenuTrigger child via asChild.
  */
-export const ModuleFiltersMenuTrigger = (forwardRef<HTMLButtonElement, ModuleFiltersMenuTriggerProps>(
-    function ModuleFiltersMenuTrigger(
-      {
-        label,
-        activeCount = 0,
-        icon: Icon = SlidersHorizontal,
-        className,
-        children,
-        type = "button",
-        ...rest
-      },
-      ref,
-    ) {
-      const isActive = activeCount > 0;
+export function ModuleFiltersMenuTrigger({
+  label,
+  activeCount = 0,
+  icon: Icon = SlidersHorizontal,
+  className,
+  children,
+  type = "button",
+  ref,
+  ...rest
+}: ModuleFiltersMenuTriggerProps): React.JSX.Element {
+  const isActive = activeCount > 0;
 
-      return (
-        <Button
-          ref={ref}
-          type={type}
-          variant="ghost"
-          className={cn(
-            WORK_TOOLBAR_TRIGGER,
-            isActive ? WORK_TOOLBAR_TRIGGER_FILTER_ACTIVE : WORK_TOOLBAR_TRIGGER_FILTER_IDLE,
-            className,
-          )}
-          {...rest}
-        >
-          <Icon className="w-3.5 h-3.5" aria-hidden="true" />
-          <span>{label}</span>
-          {isActive ? (
-            <Badge className="min-w-4 h-4 px-1 text-2xs font-bold inline-flex items-center justify-center">
-              {activeCount}
-            </Badge>
-          ) : null}
-          {children}
-        </Button>
-      );
-    },
-  ));
+  return (
+    <Button
+      ref={ref}
+      type={type}
+      variant="ghost"
+      className={cn(
+        WORK_TOOLBAR_TRIGGER,
+        isActive ? WORK_TOOLBAR_TRIGGER_FILTER_ACTIVE : WORK_TOOLBAR_TRIGGER_FILTER_IDLE,
+        className,
+      )}
+      {...rest}
+    >
+      <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+      <span>{label}</span>
+      {isActive ? (
+        <Badge className="min-w-4 h-4 px-1 text-2xs font-bold inline-flex items-center justify-center">
+          {activeCount}
+        </Badge>
+      ) : null}
+      {children}
+    </Button>
+  );
+}
 
 export interface ModuleFilterDropdownProps {
   /** Localized label shown on the trigger button. */
@@ -90,7 +94,7 @@ export interface ModuleFilterDropdownProps {
  * filter menus (Contacts / Students / Teachers / Messaging). Compose checkbox/radio
  * groups via {@link ModuleFilterCheckboxGroup} / {@link ModuleFilterRadioGroup}.
  */
-export const ModuleFilterDropdown = (function ModuleFilterDropdown({
+export function ModuleFilterDropdown({
   label,
   activeCount,
   icon,
@@ -124,83 +128,5 @@ export const ModuleFilterDropdown = (function ModuleFilterDropdown({
       </DropdownMenuContent>
     </DropdownMenu>
   );
-});
-
-export interface ModuleFilterCheckboxOption {
-  value: string;
-  label: string;
 }
-
-export interface ModuleFilterCheckboxGroupProps {
-  label: string;
-  options: ModuleFilterCheckboxOption[];
-  selected: string[];
-  onToggle: (value: string) => void;
-}
-
-/** Labeled multi-select checkbox group for a filter dropdown. */
-export const ModuleFilterCheckboxGroup = (function ModuleFilterCheckboxGroup({
-  label,
-  options,
-  selected,
-  onToggle,
-}: ModuleFilterCheckboxGroupProps): React.JSX.Element {
-  const selectedSet = new Set(selected);
-  return (
-    <>
-      <DropdownMenuLabel className="text-xs text-foreground">{label}</DropdownMenuLabel>
-      {options.map((option) => (
-        <DropdownMenuCheckboxItem
-          key={option.value}
-          checked={selectedSet.has(option.value)}
-          onCheckedChange={() => onToggle(option.value)}
-        >
-          {option.label}
-        </DropdownMenuCheckboxItem>
-      ))}
-    </>
-  );
-});
-
-export interface ModuleFilterRadioOption {
-  value: string;
-  label: ReactNode;
-}
-
-export interface ModuleFilterRadioGroupProps {
-  label: string;
-  options: ModuleFilterRadioOption[];
-  value: string;
-  onValueChange: (value: string) => void;
-}
-
-/** Labeled single-select radio group for a filter dropdown. */
-export const ModuleFilterRadioGroup = (function ModuleFilterRadioGroup({
-  label,
-  options,
-  value,
-  onValueChange,
-}: ModuleFilterRadioGroupProps): React.JSX.Element {
-  return (
-    <>
-      <DropdownMenuLabel className="text-xs text-foreground">{label}</DropdownMenuLabel>
-      <DropdownMenuRadioGroup value={value} onValueChange={onValueChange}>
-        {options.map((option) => (
-          <DropdownMenuRadioItem key={option.value} value={option.value} className="text-sm">
-            {option.label}
-          </DropdownMenuRadioItem>
-        ))}
-      </DropdownMenuRadioGroup>
-    </>
-  );
-});
-
-export interface ModuleFilterDividerProps {
-  className?: string;
-}
-
-/** Vertical divider between groups within a filter dropdown. */
-export const ModuleFilterDivider = (function ModuleFilterDivider({ className }: ModuleFilterDividerProps): React.JSX.Element {
-  return <DropdownMenuSeparator className={cn("bg-border", className)} />;
-});
 

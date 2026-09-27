@@ -50,16 +50,16 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
   const [pendingSaveData, setPendingSaveData] = useState<Partial<Student> | null>(null);
   const grManuallyEdited = useRef(false);
 
-  const statusBadgeConfig = (() => studentStatusBadgeConfig(t))();
-  const statusSelectOptions = ((): StudentStatusSelectOption[] => {
-    const resolved = [...resolveStudentStatuses(configStatuses)];
-    const current = studentDraft.status || "active";
-    if (current && !resolved.includes(current)) resolved.unshift(current);
-    return resolved.map((status) => ({
-      value: status,
-      label: studentStatusLabel(t, status),
-    }));
-  })();
+  const statusBadgeConfig = studentStatusBadgeConfig(t);
+  const resolvedStatuses = resolveStudentStatuses(configStatuses);
+  const currentStatus = studentDraft.status || "active";
+  const statusList = currentStatus && !resolvedStatuses.includes(currentStatus)
+    ? [currentStatus, ...resolvedStatuses]
+    : resolvedStatuses;
+  const statusSelectOptions: StudentStatusSelectOption[] = statusList.map((status) => ({
+    value: status,
+    label: studentStatusLabel(t, status),
+  }));
 
   const handleUpdateStatuses = async (nextStatuses: string[]) => {
     await lookupMutation.mutateAsync({ kind: "statuses", items: nextStatuses });
@@ -95,15 +95,12 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     }
   }, [student, fields]);
 
-
-
   const updateDraft = (patch: Partial<Student>) => {
     setStudentDraft((prev) => ({ ...prev, ...patch }));
   };
 
   const isDirty = studentDraftSnapshot(studentDraft) !== baselineSnapshot;
-
-  const enabledTabs = (() => new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS))();
+  const enabledTabs = new Set(settings.enabledTabs || DEFAULT_STUDENT_ENABLED_TABS);
 
   const getFieldError = (fieldId: string) => {
     const fieldError = validationErrors.find((validationError) => validationError.fieldId === fieldId);
@@ -198,5 +195,3 @@ export function useStudentFormState({ student, onClose, onSave }: UseStudentForm
     ...actions,
   };
 }
-
-

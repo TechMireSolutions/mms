@@ -1,13 +1,13 @@
 import React from "react";
-import { ArrowUpRight, FileText, IdCard, Mail, Phone } from "lucide-react";
+import { ArrowUpRight, FileText, IdCard } from "lucide-react";
 import type { Contact, EmailAddress, PhoneNumber, StandardMessagingRecipient as MessagingRecipient } from "@mms/shared";
 import { toMessagingRecipient } from "@mms/shared";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
-import { EntityMessagingIconActions } from "@/components/ui/EntityMessagingIconActions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import { MESSAGING_ICON_BTN, MESSAGING_ICON_BTN_TONES } from "@/components/ui/messagingActionStyles";
+import { StudentRelationshipContactList } from "./StudentRelationshipContactList";
 
 export interface StudentRelationshipCardData {
   key: string;
@@ -136,72 +136,15 @@ export function StudentRelationshipCard({
         </div>
       </div>
 
-      {phones.length > 0 && (
-        <div className="space-y-1.5">
-          {phones.map((phone, idx) => (
-            <div
-              key={`phone-${phone.number}-${idx}`}
-              className="flex items-center justify-between gap-2 py-1 px-2.5 rounded-lg bg-muted/40 text-xs"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <Phone className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-                <span className="font-mono text-foreground truncate" title={phone.number}>{phone.number}</span>
-                {phone.label && (
-                  <span className="text-2xs text-muted-foreground font-medium uppercase tracking-tight">
-                    {phone.label}
-                  </span>
-                )}
-              </div>
-              {canMessage && (
-                <EntityMessagingIconActions
-                  primaryPhone={phone.number}
-                  labels={{
-                    call: t("students.detail.call"),
-                    whatsapp: t("students.list.actionWhatsApp"),
-                    sms: t("students.list.actionSms"),
-                  }}
-                  callAriaLabel={t("students.detail.callPhone", { phone: phone.number })}
-                  whatsappAriaLabel={t("students.list.actionWhatsApp")}
-                  smsAriaLabel={t("students.list.actionSms")}
-                  onWhatsApp={() => handleWhatsApp(phone.number)}
-                  onSms={() => handleSms(phone.number)}
-                  className="shrink-0"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
-
-      {emails.length > 0 && (
-        <div className="space-y-1.5">
-          {emails.map((email, idx) => (
-            <div
-              key={`email-${email.address}-${idx}`}
-              className="flex items-center justify-between gap-2 py-1 px-2.5 rounded-lg bg-muted/40 text-xs"
-            >
-              <div className="flex items-center gap-2 min-w-0">
-                <Mail className="w-3.5 h-3.5 text-muted-foreground shrink-0" aria-hidden />
-                <span className="text-foreground truncate" title={email.address}>{email.address}</span>
-                {email.label && (
-                  <span className="text-2xs text-muted-foreground font-medium uppercase tracking-tight">
-                    {email.label}
-                  </span>
-                )}
-              </div>
-              {canMessage && openComposer && (
-                <EntityMessagingIconActions
-                  primaryEmail={email.address}
-                  labels={{ email: t("students.list.actionEmail") }}
-                  emailAriaLabel={t("students.list.actionEmail")}
-                  onEmail={() => handleEmail(email.address)}
-                  className="shrink-0"
-                />
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+      <StudentRelationshipContactList
+        phones={phones}
+        emails={emails}
+        canMessage={canMessage}
+        hasOpenComposer={Boolean(openComposer)}
+        onWhatsApp={handleWhatsApp}
+        onSms={handleSms}
+        onEmail={handleEmail}
+      />
 
       {(cnic || notes) && (
         <div className="flex flex-wrap items-center gap-3 pt-1 text-xs text-muted-foreground">

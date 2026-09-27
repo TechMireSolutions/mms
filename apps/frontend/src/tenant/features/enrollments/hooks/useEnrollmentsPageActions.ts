@@ -8,6 +8,7 @@ import { useEnrollmentViewerRole } from "@/tenant/hooks/useViewerRole";
 import {
   useEnrollmentMutations,
 } from "@/tenant/features/enrollments/hooks/useEnrollmentsApi";
+import { useEnrollmentsBulkActions } from "@/tenant/features/enrollments/hooks/useEnrollmentsBulkActions";
 import { reportClientError } from "@/lib/clientErrorReporting";
 
 export interface UseEnrollmentsPageActionsParams {
@@ -121,69 +122,45 @@ export function useEnrollmentsPageActions({
     });
   };
 
-  const handleBulkDelete = (ids: string[], deletionReason?: string) => {
-    bulkDeleteEnrollments.mutate({ ids, deletionReason }, {
-      onSuccess: (raw: unknown) => {
-        const result = (raw ?? {}) as { succeeded?: number; failed?: number };
-        notify.success(
-          (result.failed ?? 0) > 0
-            ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded ?? 0, failed: result.failed ?? 0 })
-            : t("enrollments.toast.bulkDeleted", { count: result.succeeded ?? ids.length }),
-        );
-      },
-      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
+  const { handleBulkDelete, handleBulkRestore, handleBulkCancel } = useEnrollmentsBulkActions({
+    bulkDeleteEnrollments,
+    bulkRestoreEnrollments,
+    handleCancel,
+  });
 
-  const handleBulkRestore = (ids: string[]) => {
-    bulkRestoreEnrollments.mutate(ids, {
-      onSuccess: (raw: unknown) => {
-        const result = (raw ?? {}) as { succeeded?: number; failed?: number };
-        notify.success(
-          (result.failed ?? 0) > 0
-            ? t("enrollments.toast.bulkPartial", { succeeded: result.succeeded ?? 0, failed: result.failed ?? 0 })
-            : t("enrollments.toast.bulkRestored", { count: result.succeeded ?? ids.length }),
-        );
+  const updateEnrollmentWithTimeline = (
+    enrollment: Enrollment,
+    event: string,
+    patch: Partial<Enrollment>,
+  ) => {
+    const updated: Enrollment = {
+      ...enrollment,
+      ...patch,
+      timeline: [...(enrollment.timeline || []), { ts: new Date().toISOString(), event, by: role }],
+    };
+    updateEnrollment.mutate(
+      { id: enrollment.id, enrollment: updated },
+      {
+        onSuccess: () => {
+          if (viewing?.id === enrollment.id) onViewingChange(updated);
+          notify.success(t("enrollments.toast.updated"));
+        },
+        onError: (err: unknown) =>
+          notify.error(t("enrollments.toast.saveFailed"), {
+            description: err instanceof Error ? err.message : String(err),
+          }),
       },
-      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
-  };
-
-  const handleBulkCancel = (ids: string[]) => {
-    ids.forEach((id) => handleCancel(id));
+    );
   };
 
   const handleStatusChange = (id: string, newStatus: Enrollment["status"]) => {
     const enrollment = enrollments.find((candidate) => candidate.id === id);
     if (!enrollment) return;
-    const updated: Enrollment = {
-      ...enrollment,
-      status: newStatus,
-      timeline: [
-        ...(enrollment.timeline || []),
-        {
-          ts: new Date().toISOString(),
-          event: t("enrollments.timeline.statusChange", { status: newStatus }),
-          by: role,
-        },
-      ],
-    };
-    updateEnrollment.mutate({
-      id,
-      enrollment: updated,
-    }, {
-      onSuccess: () => {
-        if (viewing?.id === id) onViewingChange(updated);
-        notify.success(t("enrollments.toast.updated"));
-      },
-      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
+    updateEnrollmentWithTimeline(
+      enrollment,
+      t("enrollments.timeline.statusChange", { status: newStatus }),
+      { status: newStatus },
+    );
   };
 
   const handlePaymentStatusChange = (
@@ -192,30 +169,11 @@ export function useEnrollmentsPageActions({
   ) => {
     const enrollment = enrollments.find((candidate) => candidate.id === id);
     if (!enrollment) return;
-    const updated: Enrollment = {
-      ...enrollment,
-      paymentStatus: newPaymentStatus,
-      timeline: [
-        ...(enrollment.timeline || []),
-        {
-          ts: new Date().toISOString(),
-          event: t("enrollments.timeline.paymentStatusChange", { status: newPaymentStatus }),
-          by: role,
-        },
-      ],
-    };
-    updateEnrollment.mutate({
-      id,
-      enrollment: updated,
-    }, {
-      onSuccess: () => {
-        if (viewing?.id === id) onViewingChange(updated);
-        notify.success(t("enrollments.toast.updated"));
-      },
-      onError: (err: unknown) => notify.error(t("enrollments.toast.saveFailed"), {
-        description: err instanceof Error ? err.message : String(err),
-      }),
-    });
+    updateEnrollmentWithTimeline(
+      enrollment,
+      t("enrollments.timeline.paymentStatusChange", { status: newPaymentStatus }),
+      { paymentStatus: newPaymentStatus },
+    );
   };
 
   return {

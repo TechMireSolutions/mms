@@ -6,26 +6,23 @@ import { useFilteredModuleTierTabs } from "@/tenant/hooks/useModuleTierTabs";
 import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTrashMode } from "@/hooks/useTrashMode";
-import { type Invoice } from '@/lib/data/financeData';
 import {
   FINANCE_MODULE_MANIFEST,
-  type InvoiceCreateInput,
   type Payment,
-  type PaymentCreateInput,
 } from "@mms/shared";
 import {
   useFinanceInvoicesPaginated,
   useFinancePaymentsPaginated,
   useFinanceMutations,
 } from "@/tenant/features/finance/hooks/useFinanceApi";
-import { NotifiedMutationError } from "@/lib/notifiedMutationError";
 import { useFinanceInvoiceColumnLayout } from "@/tenant/features/finance/hooks/useFinanceInvoiceColumnLayout";
 import { useFinancePaymentColumnLayout } from "@/tenant/features/finance/hooks/useFinancePaymentColumnLayout";
-import { notify } from "@/lib/notify";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { useWorkSelection } from "@/hooks/useWorkSelection";
 import { useFinanceCollectActions } from "./useFinanceCollectActions";
 import { useFinanceBulkActions } from "./useFinanceBulkActions";
+import { useFinanceModalState } from "./useFinanceModalState";
+import { useFinanceFormActions } from "./useFinanceFormActions";
 
 export function useFinancePageController() {
   const { t } = useTranslation();
@@ -71,10 +68,7 @@ export function useFinancePageController() {
   } = useFinanceMutations();
   const { canWriteMessaging, messagingTarget, openComposer, closeComposer } =
     useMessageComposerState();
-  const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
-  const [recordInvoice, setRecordInvoice] = useState<Invoice | null>(null);
-  const [creatingInvoice, setCreatingInvoice] = useState(false);
-  const [generatingInvoices, setGeneratingInvoices] = useState(false);
+  const modalState = useFinanceModalState();
 
   const invoiceColumnLayout = useFinanceInvoiceColumnLayout();
   const paymentColumnLayout = useFinancePaymentColumnLayout();
@@ -96,14 +90,14 @@ export function useFinancePageController() {
     onCreate: () => {
       setActiveTab("work");
       setActiveSubTab("invoices");
-      setCreatingInvoice(true);
+      modalState.setCreatingInvoice(true);
     },
     searchInputId: "finance-search-input",
     selectedCount: invoiceSelection.selectedIds.length + paymentSelection.selectedIds.length,
     clearSelection: () => {
-      setViewInvoice(null);
-      setRecordInvoice(null);
-      setCreatingInvoice(false);
+      modalState.setViewInvoice(null);
+      modalState.setRecordInvoice(null);
+      modalState.setCreatingInvoice(false);
       clearInvoiceSelection();
       clearPaymentSelection();
     },
@@ -113,39 +107,15 @@ export function useFinancePageController() {
     if (activeTab !== "work") setShowDeleted(false);
   }, [activeTab]);
 
-  const handleRecordPayment = async (
-    paymentToRecord: PaymentCreateInput,
-  ): Promise<void> => {
-    try {
-      await createPayment.mutateAsync(paymentToRecord);
-      setRecordInvoice(null);
-    } catch (error: unknown) {
-      notify.error(t("finance.paymentSaveFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw new NotifiedMutationError(
-        error instanceof Error ? error.message : String(error),
-      );
-    }
-  };
-
-  const handleCreateInvoice = async (
-    invoiceToCreate: InvoiceCreateInput,
-  ): Promise<void> => {
-    try {
-      await createInvoice.mutateAsync(invoiceToCreate);
-      setCreatingInvoice(false);
-      setActiveTab("work");
-      setActiveSubTab("invoices");
-    } catch (error: unknown) {
-      notify.error(t("finance.invoiceSaveFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-      throw new NotifiedMutationError(
-        error instanceof Error ? error.message : String(error),
-      );
-    }
-  };
+  const { handleRecordPayment, handleCreateInvoice, openCreateInvoice } = useFinanceFormActions({
+    createPayment,
+    createInvoice,
+    setRecordInvoice: modalState.setRecordInvoice,
+    setCreatingInvoice: modalState.setCreatingInvoice,
+    setActiveTab,
+    setActiveSubTab,
+    t,
+  });
 
   const { mutationError, handleBulkResult, handleBulkStatusChange } =
     useFinanceBulkActions({
@@ -165,12 +135,6 @@ export function useFinancePageController() {
     openComposer,
     t,
   });
-
-  const openCreateInvoice = () => {
-    setActiveTab("work");
-    setActiveSubTab("invoices");
-    setCreatingInvoice(true);
-  };
 
   return {
     activePayment,
@@ -192,14 +156,7 @@ export function useFinancePageController() {
     payments,
     createInvoice,
     canWriteMessaging,
-    viewInvoice,
-    setViewInvoice,
-    recordInvoice,
-    setRecordInvoice,
-    creatingInvoice,
-    setCreatingInvoice,
-    generatingInvoices,
-    setGeneratingInvoices,
+    ...modalState,
     invoiceColumnLayout,
     paymentColumnLayout,
     handleRecordPayment,

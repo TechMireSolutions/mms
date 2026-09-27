@@ -3,7 +3,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { UserPlus } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import {
-  USER_STATUS_VALUES,
   filterAssignableRoles,
   inviteWorkspaceUserSchema,
   toTitleCase,
@@ -19,20 +18,10 @@ import { useAuth } from '@/lib/contexts/AuthContext';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { useContactById } from '@/tenant/hooks/collections/contacts';
 import { FormModal } from '@/components/ui/FormModal';
-import ContactPicker from '@/components/contactLink/ContactPicker';
-import { Button } from '@/components/ui/button';
-import { Checkbox } from '@/components/ui/checkbox';
-import { FormSelect } from '@/components/ui/FormSelect';
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-} from '@/components/ui/form';
+import { Form } from '@/components/ui/form';
 import { firstZodFieldError } from '@/lib/forms/translateZodError';
-import { TranslatedFormMessage } from '@/lib/forms/TranslatedFormMessage';
 import { notify } from '@/lib/notify';
+import { InviteUserFormFields } from '@/tenant/features/users/components/InviteUserFormFields';
 
 export interface InviteUserModalProps {
   onClose: () => void;
@@ -124,84 +113,11 @@ export function InviteUserModal({
     >
       <Form {...form}>
         <form className="space-y-4" onSubmit={handleSave}>
-          <FormField
-            control={form.control}
-            name="contactId"
-            render={({ field }) => (
-              <FormItem>
-                <ContactPicker
-                  label={t('users.fieldContact')}
-                  value={field.value || null}
-                  excludeIds={excludeIds}
-                  onChange={(id) => field.onChange(id ?? '')}
-                  searchPlaceholder={t('users.contactSearch')}
-                  emptyTitle={t('users.contactEmptyTitle')}
-                  emptyHint={t('users.contactEmptyHint')}
-                />
-                <TranslatedFormMessage messageKey={form.formState.errors.contactId?.message} />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="role"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>{t('users.fieldRole')}</FormLabel>
-                <div className="mt-1.5 flex flex-wrap gap-2">
-                  {assignableRoles.map((workspaceRole) => (
-                    <Button
-                      key={workspaceRole.id}
-                      type="button"
-                      size="sm"
-                      variant={field.value === workspaceRole.id ? 'default' : 'outline'}
-                      onClick={() => field.onChange(workspaceRole.id)}
-                    >
-                      {workspaceRole.customLabel?.trim() || t(workspaceRole.labelKey)}
-                    </Button>
-                  ))}
-                </div>
-                <TranslatedFormMessage messageKey={form.formState.errors.role?.message} />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="status"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel htmlFor="invite-status">{t('users.fieldStatus')}</FormLabel>
-                <FormControl>
-                  <FormSelect
-                    id="invite-status"
-                    name="status"
-                    value={field.value}
-                    onChange={field.onChange}
-                    options={USER_STATUS_VALUES.map((status) => ({
-                      value: status,
-                      label: t(`users.status.${status}`),
-                    }))}
-                  />
-                </FormControl>
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name="sendEmail"
-            render={({ field }) => (
-              <FormItem>
-                <label htmlFor={field.name} className="flex cursor-pointer items-center gap-2">
-                  <Checkbox
-                    id={field.name}
-                    name={field.name}
-                    checked={field.value}
-                    onCheckedChange={(checked) => field.onChange(checked === true)}
-                  />
-                  <span className="text-xs font-medium text-foreground">{t('users.inviteSendEmail')}</span>
-                </label>
-              </FormItem>
-            )}
+          <InviteUserFormFields
+            form={form}
+            excludeIds={excludeIds}
+            assignableRoles={assignableRoles}
+            t={t}
           />
         </form>
       </Form>

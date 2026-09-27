@@ -1,0 +1,124 @@
+import React from "react";
+import { AnimatePresence } from "framer-motion";
+import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
+import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
+import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
+import { JournalEntryForm } from "@/tenant/features/accounting/components/JournalEntryForm";
+import { JournalReverseDialog } from "@/tenant/features/accounting/components/JournalReverseDialog";
+import type { JournalEntrySave } from "./journalEntriesTypes";
+import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
+
+export type JournalModalMode = "new" | "edit" | "view" | null;
+
+export interface JournalEntriesModalLayerProps {
+  modal: JournalModalMode;
+  canWrite: boolean;
+  canDelete: boolean;
+  selected: JournalEntry | null;
+  accounts: Account[];
+  allEntries?: JournalEntry[];
+  entries: JournalEntry[];
+  fiscalYears: FiscalYear[];
+  onSave: JournalEntrySave;
+  onCloseModal: () => void;
+  onEditSelected: () => void;
+  onRequestReverse: (entry: JournalEntry) => void;
+  onRestoreEntry?: (id: string) => void | Promise<void>;
+  pendingTrashId: string | null;
+  onPendingTrashIdChange: (id: string | null) => void;
+  confirmBulkOpen: boolean;
+  onConfirmBulkOpenChange: (open: boolean) => void;
+  showDeleted: boolean;
+  selectedIds: string[];
+  onConfirmRowTrash: () => void;
+  onConfirmBulkTrash: () => void;
+  pendingReverseEntry: JournalEntry | null;
+  onPendingReverseEntryChange: (entry: JournalEntry | null) => void;
+  onConfirmReverse: (date: string) => void | Promise<void>;
+  t: TranslationFunction;
+}
+
+export function JournalEntriesModalLayer({
+  modal,
+  canWrite,
+  canDelete,
+  selected,
+  accounts,
+  allEntries,
+  entries,
+  fiscalYears,
+  onSave,
+  onCloseModal,
+  onEditSelected,
+  onRequestReverse,
+  onRestoreEntry,
+  pendingTrashId,
+  onPendingTrashIdChange,
+  confirmBulkOpen,
+  onConfirmBulkOpenChange,
+  showDeleted,
+  selectedIds,
+  onConfirmRowTrash,
+  onConfirmBulkTrash,
+  pendingReverseEntry,
+  onPendingReverseEntryChange,
+  onConfirmReverse,
+  t,
+}: JournalEntriesModalLayerProps): React.JSX.Element {
+  return (
+    <>
+      <AnimatePresence>
+        {canWrite && (modal === "new" || modal === "edit") && (
+          <JournalEntryForm
+            accounts={accounts}
+            entries={(allEntries && allEntries.length > 0) ? allEntries : entries}
+            initial={modal === "edit" ? selected : null}
+            fiscalYears={fiscalYears}
+            onSave={onSave}
+            onClose={onCloseModal}
+          />
+        )}
+        {modal === "view" && selected && (() => {
+          const entry = selected;
+          return (
+            <JournalEntryDetail
+              entry={entry}
+              accounts={accounts}
+              onClose={onCloseModal}
+              onEdit={canWrite && !entry.deletedAt ? onEditSelected : undefined}
+              onReverse={canWrite && !entry.deletedAt ? () => onRequestReverse(entry) : undefined}
+              onRestore={canDelete && entry.deletedAt && onRestoreEntry ? () => onRestoreEntry?.(entry.id) : undefined}
+              canRestore={canDelete}
+            />
+          );
+        })()}
+      </AnimatePresence>
+
+      <ModuleStandardTrashDialogs
+        pendingTrashId={pendingTrashId}
+        onPendingTrashIdChange={onPendingTrashIdChange}
+        confirmBulkOpen={confirmBulkOpen}
+        onConfirmBulkOpenChange={onConfirmBulkOpenChange}
+        showDeleted={showDeleted}
+        selectedCount={selectedIds.length}
+        i18nNamespace="accounting"
+        onConfirmRowTrash={onConfirmRowTrash}
+        onConfirmBulkTrash={onConfirmBulkTrash}
+        labels={{
+          singleDescription: t("accounting.trash.deleteEntryConfirm"),
+        }}
+      />
+
+      {pendingReverseEntry && (
+        <JournalReverseDialog
+          key={pendingReverseEntry.id}
+          entry={pendingReverseEntry}
+          onOpenChange={(open) => {
+            if (!open) onPendingReverseEntryChange(null);
+          }}
+          onConfirm={onConfirmReverse}
+        />
+      )}
+    </>
+  );
+}

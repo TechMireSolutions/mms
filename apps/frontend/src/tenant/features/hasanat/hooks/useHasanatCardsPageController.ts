@@ -5,8 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useTrashMode } from '@/hooks/useTrashMode';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import { LayoutDashboard, Package, Send, Gift } from 'lucide-react';
-import { HASANAT_MODULE_MANIFEST, resolveModuleTierTab, toMessagingRecipient, type AppTranslationKey, type Denomination, type StockBatch, type Distribution } from '@mms/shared';
+import { HASANAT_MODULE_MANIFEST, resolveModuleTierTab, toMessagingRecipient, type Distribution } from '@mms/shared';
 import { useHasanatDistributionColumnLayout } from '@/tenant/features/hasanat/hooks/useHasanatDistributionColumnLayout';
 import { useHasanatRedemptionColumnLayout } from '@/tenant/features/hasanat/hooks/useHasanatRedemptionColumnLayout';
 import {
@@ -20,12 +19,11 @@ import { useWorkSelection } from '@/hooks/useWorkSelection';
 import { useHasanatDistributionTrashActions } from '@/tenant/features/hasanat/hooks/useHasanatDistributionTrashActions';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
 import { notify } from '@/lib/notify';
-
-const SETUP_TAB_LABEL_KEYS: Record<(typeof HASANAT_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
-  denominations: 'hasanat.setup.denominations',
-  preferences: 'hasanat.setup.preferences',
-  templates: 'hasanat.setup.templates',
-};
+import {
+  getHasanatSetupTabs,
+  getHasanatSubTabs,
+  unwrapHasanatEnvelopes,
+} from './hasanatPageDescriptors';
 
 export function useHasanatCardsPageController() {
   const { t } = useTranslation();
@@ -37,16 +35,8 @@ export function useHasanatCardsPageController() {
     canEditSetup,
   } = useModulePermissions(HASANAT_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const SETUP_TABS = (() => HASANAT_MODULE_MANIFEST.setupSubTabs.map((id) => ({
-      id,
-      label: t(SETUP_TAB_LABEL_KEYS[id]),
-    })))();
-  const SUB_TABS = (() => [
-      { id: 'overview' as const, label: t('hasanat.tabs.overview'), icon: LayoutDashboard },
-      { id: 'stock' as const, label: t('hasanat.tabs.stock'), icon: Package },
-      { id: 'distribute' as const, label: t('hasanat.tabs.distribute'), icon: Send },
-      { id: 'redemptions' as const, label: t('hasanat.tabs.redemptions'), icon: Gift },
-    ])();
+  const SETUP_TABS = getHasanatSetupTabs(t);
+  const SUB_TABS = getHasanatSubTabs(t);
   const [activeTab, setActiveTab] = usePersistedTabState<string>('hasanat_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = useState('overview');
   const [configSubTab, setConfigSubTab] = useState<string>('denominations');
@@ -63,12 +53,11 @@ export function useHasanatCardsPageController() {
   const denomsResult = useHasanatDenoms();
   const batchesResult = useHasanatBatches();
   const distributionsResult = useHasanatDistributions({ includeDeleted: showDeleted });
-  const denomsEnvelope = denomsResult.data?.body as Denomination[] | { denoms?: Denomination[] } | null;
-  const batchesEnvelope = batchesResult.data?.body as StockBatch[] | { batches?: StockBatch[] } | null;
-  const distributionsEnvelope = distributionsResult.data?.body as Distribution[] | { distributions?: Distribution[] } | null;
-  const denoms = Array.isArray(denomsEnvelope) ? denomsEnvelope : denomsEnvelope?.denoms ?? [];
-  const batches = Array.isArray(batchesEnvelope) ? batchesEnvelope : batchesEnvelope?.batches ?? [];
-  const distributions = Array.isArray(distributionsEnvelope) ? distributionsEnvelope : distributionsEnvelope?.distributions ?? [];
+  const { denoms, batches, distributions } = unwrapHasanatEnvelopes(
+    denomsResult.data?.body,
+    batchesResult.data?.body,
+    distributionsResult.data?.body,
+  );
 
   const {
     replaceDenoms,

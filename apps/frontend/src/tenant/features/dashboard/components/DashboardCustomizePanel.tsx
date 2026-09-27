@@ -1,42 +1,18 @@
 import React from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { WidgetBuilder } from '@/lib/reports/pinnedWidgets';
-import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { CustomWidgetRenderer } from '@/tenant/features/reports/components/pinnedWidgets/CustomWidgetRenderer';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { StatItem } from '@/lib/dashboardWidgets';
-import type { Permission } from '@mms/shared';
 import { resolveDefaultDashboardWidgetScope } from '@/lib/dashboardRole';
 import { CustomizeItemRow } from '@/tenant/features/dashboard/components/CustomizeItemRow';
 import { DashboardCustomizeWidgetsSection } from '@/tenant/features/dashboard/components/DashboardCustomizeWidgetsSection';
 import { CustomizeSectionCard } from '@/tenant/features/dashboard/components/CustomizeSectionCard';
+import { DashboardAlertThresholdsSection } from '@/tenant/features/dashboard/components/DashboardAlertThresholdsSection';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import type { DashboardCustomizePanelProps } from '@/tenant/features/dashboard/components/dashboardCustomizePanelTypes';
 
-export interface DashboardCustomizePanelProps {
-  can: (permission: Permission) => boolean;
-  customWidgets: CustomWidget[];
-  disabledCardIds: string[];
-  toggleCardVisibility: (cardId: string) => void;
-  dashboardMetricCards: StatItem[];
-  selectedDashboardCardCount: number;
-  pinnedDashboardWidgetCount: number;
-  isWidgetBuilderOpen: boolean;
-  editingWidget: CustomWidget | null;
-  widgetBuilderType: CustomWidget['widgetType'];
-  lowAttendanceThreshold?: number;
-  urgentAttendanceThreshold?: number;
-  gridMode?: 'comfortable' | 'compact';
-  onUpdateThreshold?: (key: 'lowAttendanceThreshold' | 'urgentAttendanceThreshold', value: number) => void;
-  onUpdateGridMode?: (mode: 'comfortable' | 'compact') => void;
-  onCloseBuilder: () => void;
-  onSaveWidget: (widget: CustomWidget) => void;
-  onEditWidget: (widget: CustomWidget) => void;
-  onDeleteWidget: (widgetId: string) => void;
-  onToggleWidgetPin: (widgetId: string) => void;
-  onOpenWidgetBuilder: (type: CustomWidget['widgetType'], widget?: CustomWidget | null) => void;
-  onReorderWidgets?: (widgets: CustomWidget[]) => void;
-}
+export type { DashboardCustomizePanelProps };
+
 
 /**
  * Dashboard customize mode: metric card visibility + pinned widget management + alert thresholds + layout density.
@@ -157,53 +133,13 @@ export function DashboardCustomizePanel({
         )}
 
         {onUpdateThreshold && (
-          <div className={onUpdateGridMode ? 'md:col-span-1' : 'md:col-span-2'}>
-            <CustomizeSectionCard
-              title={t('dashboard.alertSettings')}
-              description={t('dashboard.alertSettingsDesc')}
-            >
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-1">
-                <div className="space-y-1.5">
-                  <label htmlFor="pref-low-att" className="text-xs font-bold text-foreground">
-                    {t('dashboard.lowAttendanceThresholdLabel')}
-                  </label>
-                  <Input
-                    id="pref-low-att"
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={lowAttendanceThreshold ?? 75}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      if (!isNaN(val) && val >= 1 && val <= 100) {
-                        onUpdateThreshold('lowAttendanceThreshold', val);
-                      }
-                    }}
-                    className="min-h-10 text-sm"
-                  />
-                </div>
-                <div className="space-y-1.5">
-                  <label htmlFor="pref-urgent-att" className="text-xs font-bold text-foreground">
-                    {t('dashboard.urgentAttendanceThresholdLabel')}
-                  </label>
-                  <Input
-                    id="pref-urgent-att"
-                    type="number"
-                    min={1}
-                    max={100}
-                    value={urgentAttendanceThreshold ?? 60}
-                    onChange={(e) => {
-                      const val = parseInt(e.target.value, 10);
-                      if (!isNaN(val) && val >= 1 && val <= 100) {
-                        onUpdateThreshold('urgentAttendanceThreshold', val);
-                      }
-                    }}
-                    className="min-h-10 text-sm"
-                  />
-                </div>
-              </div>
-            </CustomizeSectionCard>
-          </div>
+          <DashboardAlertThresholdsSection
+            lowAttendanceThreshold={lowAttendanceThreshold}
+            urgentAttendanceThreshold={urgentAttendanceThreshold}
+            onUpdateThreshold={onUpdateThreshold}
+            hasGridMode={Boolean(onUpdateGridMode)}
+            t={t}
+          />
         )}
       </div>
     </div>

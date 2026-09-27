@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
+import { InvoicesListOverlays } from "@/tenant/features/finance/components/InvoicesListOverlays";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
@@ -13,7 +13,6 @@ import { InvoicesListFilters } from "@/tenant/features/finance/components/Invoic
 import { getInvoiceVisibleWorkColumns } from "@/tenant/features/finance/components/invoiceListVisibleColumns";
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 
-const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
@@ -178,36 +177,20 @@ export function InvoicesList({
         openComposer={openComposer}
       />
 
-      {messagingTarget && (
-        <React.Suspense fallback={null}>
-          <MessageComposer
-            channel={messagingTarget.channel}
-            recipients={messagingTarget.recipients}
-            onClose={closeComposer}
-          />
-        </React.Suspense>
-      )}
-      <ModuleStandardTrashDialogs
-        pendingTrashId={pendingDeleteId}
-        onPendingTrashIdChange={setPendingDeleteId}
+      <InvoicesListOverlays
+        messagingTarget={messagingTarget}
+        closeComposer={closeComposer}
+        pendingDeleteId={pendingDeleteId}
+        onPendingDeleteIdChange={setPendingDeleteId}
         confirmBulkOpen={confirmBulkOpen}
         onConfirmBulkOpenChange={setConfirmBulkOpen}
         showDeleted={showDeleted}
-        selectedCount={selectedIds.length}
-        i18nNamespace="finance"
-        onConfirmRowTrash={() => {
-          if (pendingDeleteId) onDelete?.(pendingDeleteId);
-          setPendingDeleteId(null);
-        }}
-        onConfirmBulkTrash={() => {
-          if (showDeleted) onBulkRestore?.(selectedIds);
-          else onBulkDelete?.(selectedIds);
-          onClearSelection?.();
-          setConfirmBulkOpen(false);
-        }}
-        labels={{
-          singleDescription: t("finance.trash.deleteInvoiceConfirm"),
-        }}
+        selectedIds={selectedIds}
+        onDelete={onDelete}
+        onBulkDelete={onBulkDelete}
+        onBulkRestore={onBulkRestore}
+        onClearSelection={onClearSelection}
+        t={t}
       />
     </section>
   );

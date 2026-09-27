@@ -1,4 +1,3 @@
-import type React from "react";
 import {
   LayoutDashboard,
   Users,
@@ -14,22 +13,11 @@ import {
   Calculator,
   ShieldAlert,
   MessageSquare,
-  UserCog,
-  Settings,
-  User,
 } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
+import { SYSTEM_COMMAND_ITEMS, type CommandItem } from "@/components/ui/systemCommandItems";
 
-export interface CommandItem {
-  id: string;
-  labelKey: string;
-  fallbackLabel: string;
-  categoryKey: string;
-  fallbackCategory: string;
-  path: string;
-  icon: React.ElementType;
-  keywords: string[];
-}
+export type { CommandItem };
 
 export const COMMAND_ITEMS: CommandItem[] = [
   {
@@ -172,34 +160,6 @@ export const COMMAND_ITEMS: CommandItem[] = [
     icon: MessageSquare,
     keywords: ["messaging", "sms", "whatsapp", "notifications", "broadcast"],
   },
-  {
-    id: "users",
-    labelKey: "nav.users",
-    fallbackLabel: "Users",
-    categoryKey: "nav.system",
-    fallbackCategory: "System",
-    path: ROUTES.users,
-    icon: UserCog,
-    keywords: ["users", "admins", "staff", "permissions", "roles"],
-  },
-  {
-    id: "settings",
-    labelKey: "nav.settings",
-    fallbackLabel: "Settings",
-    categoryKey: "nav.system",
-    fallbackCategory: "System",
-    path: ROUTES.settings,
-    icon: Settings,
-    keywords: ["settings", "branding", "theme", "backup", "configuration"],
-  },
-  {
-    id: "profile",
-    labelKey: "account.title",
-    fallbackLabel: "Account Profile",
-    categoryKey: "nav.system",
-    fallbackCategory: "System",
-    path: ROUTES.profile,
-    icon: User,
-    keywords: ["profile", "account", "password", "security", "me"],
-  },
+  ...SYSTEM_COMMAND_ITEMS,
 ];
+

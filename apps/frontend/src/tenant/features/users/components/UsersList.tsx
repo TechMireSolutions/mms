@@ -1,13 +1,11 @@
 import React from 'react';
 import { UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import type { ModuleColumnRegistryEntry, SystemUser, UsersListPageResult } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { formatDate } from '@mms/shared';
-import type { ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
 import { UsersListContent } from '@/tenant/features/users/components/UsersListContent';
 import { UsersListFilters } from '@/tenant/features/users/components/UsersListFilters';
@@ -18,44 +16,9 @@ import {
   togglePageIdsInSelection,
 } from '@/lib/directorySelection';
 
-export interface UsersListProps {
-  users: SystemUser[];
-  workPageData?: UsersListPageResult;
-  listPage: number;
-  onPageChange: (page: number) => void;
-  search: string;
-  roleFilter: string;
-  statusFilter: string;
-  selectedIds: string[];
-  onSelectedIdsChange: (ids: string[]) => void;
-  onSearchChange: (value: string) => void;
-  onRoleFilterChange: (value: string) => void;
-  onStatusFilterChange: (value: string) => void;
-  onView: (user: SystemUser) => void;
-  onEdit: (user: SystemUser) => void;
-  onDelete: (id: string) => void;
-  onRestore: (id: string) => void;
-  onBulkDelete: (ids: string[]) => void;
-  onBulkRestore: (ids: string[]) => void;
-  onResetPassword: (user: SystemUser) => void;
-  onAddUser: () => void;
-  onInviteUser?: () => void;
-  onMessage?: (channel: 'sms' | 'whatsapp' | 'email', users: SystemUser[]) => void;
-  canWrite?: boolean;
-  canDelete?: boolean;
-  showDeleted?: boolean;
-  onToggleDeleted?: (next: boolean) => void;
-  isLoading?: boolean;
-  isError?: boolean;
-  isFetching?: boolean;
-  onRetry?: () => void;
-  getColumnWidth?: (key: string) => number | undefined;
-  onColumnResize?: (key: string, width: number) => void;
-  isColumnVisible?: (key: string) => boolean;
-  columnRegistry?: ModuleColumnRegistryEntry[];
-  updateUserColumnLayout?: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
-  customizerLabels?: ModuleColumnCustomizerLabels;
-}
+import type { UsersListProps } from '@/tenant/features/users/components/usersListTypes';
+export type { UsersListProps };
+
 
 export function UsersList({
   users,

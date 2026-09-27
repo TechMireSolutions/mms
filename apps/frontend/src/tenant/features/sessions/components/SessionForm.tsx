@@ -1,29 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Calendar } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
-import { useTranslation } from '@/hooks/useTranslation';
-import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
-import { useFinanceCurrency } from '@/hooks/useCurrency';
-import { useSessionConfig } from '@/hooks/useStandardModuleConfig';
-import { notify } from '@/lib/notify';
-import { type Session, SESSION_TYPES } from '@/lib/data/sessionsData';
-import { SessionSchema, toTitleCase, type AppTranslationKey } from '@mms/shared';
+import { type Session } from '@/lib/data/sessionsData';
 import {
   SessionDetailsSection,
   SessionFinancialSection,
-  type SessionSelectOption,
 } from '@/tenant/features/sessions/components/SessionFormSections';
-import {
-  SESSION_CURRENCIES,
-  SESSION_STATUSES,
-  SESSION_TYPE_LABEL_KEYS,
-  buildSessionDraftFromRecord,
-  sessionFormDraftSnapshot,
-  type SessionFormDraft,
-} from '@/tenant/features/sessions/components/sessionFormShared';
 import { SessionFormFooter } from '@/tenant/features/sessions/components/SessionFormFooter';
+import { useSessionFormController } from '@/tenant/features/sessions/components/useSessionFormController';
 
-interface SessionFormProps {
+export interface SessionFormProps {
   open?: boolean;
   session?: Session | null;
   onClose: () => void;
@@ -31,177 +17,73 @@ interface SessionFormProps {
 }
 
 export const SessionForm = (function SessionForm({
-      open = true,
-      session,
-      onClose,
-      onSave,
-    }: SessionFormProps): React.JSX.Element {
-      const { t } = useTranslation();
-      const { language } = useGlobalSettings();
-      const { settings, types, statuses } = useSessionConfig();
-      const { activeCurrency } = useFinanceCurrency();
-      const defaultCurrency = activeCurrency.code;
+  open = true,
+  session,
+  onClose,
+  onSave,
+}: SessionFormProps): React.JSX.Element {
+  const {
+    t,
+    language,
+    defaultType,
+    defaultCurrency,
+    saving,
+    errors,
+    sessionDraft,
+    updateDraft,
+    isDirty,
+    handleSave,
+    sessionTypeOptions,
+    statusOptions,
+    currencyOptions,
+  } = useSessionFormController({ session, onClose, onSave });
 
-      const typeOptions = types.length > 0 ? types : [...SESSION_TYPES];
-      const statusValues = statuses.length > 0 ? statuses : [...SESSION_STATUSES];
-      const defaultType = typeOptions.includes(settings.defaultSessionType)
-        ? settings.defaultSessionType
-        : (typeOptions[0] || 'Hifz');
-
-      const [saving, setSaving] = useState(false);
-      const [errors, setErrors] = useState<Record<string, string>>({});
-      const [sessionDraft, setSessionDraft] = useState<SessionFormDraft>(() =>
-        buildSessionDraftFromRecord(session, defaultType, defaultCurrency),
-      );
-      const [baselineSnapshot, setBaselineSnapshot] = useState(() =>
-        sessionFormDraftSnapshot(buildSessionDraftFromRecord(session, defaultType, defaultCurrency)),
-      );
-
-      useEffect(() => {
-        const nextDraft = buildSessionDraftFromRecord(session, defaultType, defaultCurrency);
-        setSessionDraft(nextDraft);
-        setBaselineSnapshot(sessionFormDraftSnapshot(nextDraft));
-        setErrors({});
-      }, [session, defaultCurrency, defaultType]);
-
-      const updateDraft = (patch: Partial<SessionFormDraft>) => {
-        setSessionDraft((prev) => ({ ...prev, ...patch }));
-      };
-
-      const isDirty = sessionFormDraftSnapshot(sessionDraft) !== baselineSnapshot;
-
-      const handleSave = async (options?: { keepOpen?: boolean }): Promise<boolean> => {
-        setErrors({});
-        const newErrors: Record<string, string> = {};
-
-        if (!sessionDraft.name?.trim()) {
-          newErrors.name = t('sessions.form.nameRequired');
-        }
-        if (!sessionDraft.startDate) {
-          newErrors.startDate = t('sessions.form.startDateRequired');
-        }
-        if (!sessionDraft.endDate) {
-          newErrors.endDate = t('sessions.form.endDateRequired');
-        } else if (sessionDraft.startDate && sessionDraft.endDate < sessionDraft.startDate) {
-          newErrors.endDate = t('sessions.form.endDateAfterStartDate');
-        }
-        if (sessionDraft.baseFee && Number(sessionDraft.baseFee) < 0) {
-          newErrors.baseFee = t('common.formPleaseFixErrors');
-        }
-
-        if (Object.keys(newErrors).length > 0) {
-          setErrors(newErrors);
-          notify.error(t('common.formPleaseFixErrors'));
-          return false;
-        }
-
-        setSaving(true);
-        try {
-          const payload: Session = {
-            id: session?.id || crypto.randomUUID(),
-            name: toTitleCase(sessionDraft.name || ''),
-            type: sessionDraft.type || defaultType,
-            status: (sessionDraft.status as Session['status']) || 'active',
-            startDate: sessionDraft.startDate || '',
-            endDate: sessionDraft.endDate || '',
-            baseFee: Number(sessionDraft.baseFee || 0),
-            currency: sessionDraft.currency || defaultCurrency,
-            description: sessionDraft.description || '',
-            faculty: sessionDraft.faculty || session?.faculty || [],
-            classes: sessionDraft.classes || session?.classes || [],
-          };
-
-          const parsed = SessionSchema.safeParse(payload);
-          if (!parsed.success) {
-            const schemaErrors: Record<string, string> = {};
-            for (const issue of parsed.error.issues) {
-              const field = issue.path[0];
-              if (typeof field === 'string' && !schemaErrors[field]) {
-                schemaErrors[field] = issue.message;
-              }
-            }
-            setErrors((prev) => ({ ...prev, ...schemaErrors }));
-            notify.error(t('common.formPleaseFixErrors'));
-            return false;
-          }
-
-          await onSave(payload);
-          setBaselineSnapshot(sessionFormDraftSnapshot(sessionDraft));
-          if (!options?.keepOpen) {
-            onClose();
-          }
-          return true;
-        } catch {
-          notify.error(t('sessions.toast.saveFailed'));
-          return false;
-        } finally {
-          setSaving(false);
-        }
-      };
-
-      const sessionTypeOptions = ((): SessionSelectOption[] =>
-          typeOptions.map((typeOption) => {
-            const translationKey = SESSION_TYPE_LABEL_KEYS[typeOption];
-            return {
-              value: typeOption,
-              label: translationKey ? t(translationKey) : typeOption,
-            };
-          }))();
-
-      const statusOptions = ((): SessionSelectOption[] =>
-          statusValues.map((statusOption) => {
-            const translationKey = `sessions.statuses.${statusOption}` as AppTranslationKey;
-            const translated = t(translationKey);
-            const label = translated === translationKey ? toTitleCase(statusOption) : translated;
-            return { value: statusOption, label };
-          }))();
-
-      return (
-        <FormModal
-          open={open}
-          onClose={onClose}
-          title={session ? t('sessions.form.editTitle') : t('sessions.form.addTitle')}
-          subtitle={t('sessions.form.subtitle')}
-          icon={Calendar}
-          lang={language}
-          cancelLabel={t('common.cancel')}
-          saveLabel={session ? t('sessions.action.update') : t('sessions.action.create')}
-          onSave={handleSave}
-          isDirty={isDirty}
-          saving={saving}
-          error={Object.values(errors)[0]}
-          saveDisabled={
-            !sessionDraft.name?.trim()
-            || !sessionDraft.startDate
-            || !sessionDraft.endDate
-            || (Boolean(session?.id) && !isDirty)
-          }
-          footerStart={
-            <SessionFormFooter
-              sessionName={sessionDraft.name}
-              sessionType={sessionDraft.type}
-              sessionStatus={sessionDraft.status}
-              nameRequiredLabel={t('sessions.form.nameRequired')}
-            />
-          }
-        >
-          <div className="space-y-4">
-            <SessionDetailsSection
-              sessionDraft={sessionDraft}
-              errors={errors}
-              defaultType={defaultType}
-              sessionTypeOptions={sessionTypeOptions}
-              statusOptions={statusOptions}
-              onDraftChange={updateDraft}
-            />
-            <SessionFinancialSection
-              sessionDraft={sessionDraft}
-              errors={errors}
-              currencyOptions={SESSION_CURRENCIES}
-              defaultCurrency={defaultCurrency}
-              onDraftChange={updateDraft}
-            />
-          </div>
-        </FormModal>
-      );
-    });
+  return (
+    <FormModal
+      open={open}
+      onClose={onClose}
+      title={session ? t('sessions.form.editTitle') : t('sessions.form.addTitle')}
+      subtitle={t('sessions.form.subtitle')}
+      icon={Calendar}
+      lang={language}
+      cancelLabel={t('common.cancel')}
+      saveLabel={session ? t('sessions.action.update') : t('sessions.action.create')}
+      onSave={handleSave}
+      isDirty={isDirty}
+      saving={saving}
+      error={Object.values(errors)[0]}
+      saveDisabled={
+        !sessionDraft.name?.trim()
+        || !sessionDraft.startDate
+        || !sessionDraft.endDate
+        || (Boolean(session?.id) && !isDirty)
+      }
+      footerStart={
+        <SessionFormFooter
+          sessionName={sessionDraft.name}
+          sessionType={sessionDraft.type}
+          sessionStatus={sessionDraft.status}
+          nameRequiredLabel={t('sessions.form.nameRequired')}
+        />
+      }
+    >
+      <div className="space-y-4">
+        <SessionDetailsSection
+          sessionDraft={sessionDraft}
+          errors={errors}
+          defaultType={defaultType}
+          sessionTypeOptions={sessionTypeOptions}
+          statusOptions={statusOptions}
+          onDraftChange={updateDraft}
+        />
+        <SessionFinancialSection
+          sessionDraft={sessionDraft}
+          errors={errors}
+          currencyOptions={currencyOptions}
+          defaultCurrency={defaultCurrency}
+          onDraftChange={updateDraft}
+        />
+      </div>
+    </FormModal>
+  );
+});

@@ -25,7 +25,7 @@ const ROOT = process.cwd();
 const BASELINE = {
   anyAnnotations: 46,
   hexColourFiles: 30,
-  filesOverHardLimit: 63,
+  filesOverHardLimit: 61,
 };
 
 const SCAN_DIRS = ['apps/frontend/src', 'apps/backend/src', 'packages/shared/src'];

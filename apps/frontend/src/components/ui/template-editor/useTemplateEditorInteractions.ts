@@ -272,7 +272,7 @@ export function useTemplateEditorInteractions<TPayload = Record<string, unknown>
       window.removeEventListener("pointerup", onPointerUp);
       window.removeEventListener("pointercancel", onPointerUp);
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []);
 
   return {

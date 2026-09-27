@@ -14,7 +14,6 @@ import {
   type QuestionBankQuestion,
   type QuestionBankTest,
 } from '@mms/shared';
-import type { PaperBuilderTab } from '@/tenant/features/question-bank/components/PaperBuilder';
 import { useQuestionBankColumnLayout } from '@/tenant/features/question-bank/hooks/useQuestionBankColumnLayout';
 import {
   useQuestionBankQuestions,
@@ -24,6 +23,7 @@ import {
   useQuestionBankMutations,
 } from '@/tenant/features/question-bank/hooks/useQuestionBankApi';
 import { useQuestionBankTrashActions } from '@/tenant/features/question-bank/hooks/useQuestionBankTrashActions';
+import { useQuestionBankModalState } from './useQuestionBankModalState';
 
 
 export function useQuestionBankPageController() {
@@ -47,13 +47,8 @@ export function useQuestionBankPageController() {
     ])();
   const [activeTab, setActiveTab] = usePersistedTabState<string>('question_bank_active_tab', 'work');
   const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('question_bank_ops_subtab', 'questions');
-  const [showQuestionModal, setShowQuestionModal] = useState(false);
-  const [editQuestion, setEditQuestion] = useState<QuestionBankQuestion | null>(null);
-  const [activeQuestion, setActiveQuestion] = useState<QuestionBankQuestion | null>(null);
+  const modalState = useQuestionBankModalState();
   const [filteredCount, setFilteredCount] = useState(0);
-  const [paperBuilderSession, setPaperBuilderSession] = useState(0);
-  const [paperBuilderOpen, setPaperBuilderOpen] = useState(false);
-  const [paperBuilderTab, setPaperBuilderTab] = useState<PaperBuilderTab>('details');
   const columnLayout = useQuestionBankColumnLayout();
   const questionSelection = useWorkSelection<string>();
 
@@ -108,36 +103,18 @@ export function useQuestionBankPageController() {
     [questions, replaceQuestions],
   );
 
-  const openAddQuestion = ((): void => {
-    setActiveTab('work');
-    setActiveSubTab('questions');
-    setEditQuestion(null);
-    setShowQuestionModal(true);
-  });
+  const openAddQuestion = () => modalState.openAddQuestion(setActiveTab, setActiveSubTab);
+  const openCreatePaper = () => modalState.openCreatePaper(setActiveTab, setActiveSubTab);
 
-  const openCreatePaper = ((): void => {
-    setActiveTab('work');
-    setActiveSubTab('generate');
-    setPaperBuilderTab('details');
-    setPaperBuilderSession((session) => session + 1);
-    setPaperBuilderOpen(true);
-  });
-
-  const handleQuestionSave = (async (question: QuestionBankQuestion): Promise<void> => {
-      const existingQuestion = questions.find((questionItem) => questionItem.id === question.id);
-      await setQuestions(
-        existingQuestion
-          ? questions.map((questionItem) => (questionItem.id === question.id ? question : questionItem))
-          : [...questions, question],
-      );
-      setShowQuestionModal(false);
-      setEditQuestion(null);
-    });
-
-  const closeQuestionModal = ((): void => {
-    setShowQuestionModal(false);
-    setEditQuestion(null);
-  });
+  const handleQuestionSave = async (question: QuestionBankQuestion): Promise<void> => {
+    const existingQuestion = questions.find((questionItem) => questionItem.id === question.id);
+    await setQuestions(
+      existingQuestion
+        ? questions.map((questionItem) => (questionItem.id === question.id ? question : questionItem))
+        : [...questions, question],
+    );
+    modalState.closeQuestionModal();
+  };
 
   const handleSaveTest = (async (test: QuestionBankTest) => {
     await replaceTests.mutateAsync(
@@ -185,19 +162,9 @@ export function useQuestionBankPageController() {
     effectiveSubTab,
     showDeleted,
     setShowDeleted,
-    showQuestionModal,
-    setShowQuestionModal,
-    editQuestion,
-    setEditQuestion,
-    activeQuestion,
-    setActiveQuestion,
     filteredCount,
     setFilteredCount,
-    paperBuilderSession,
-    paperBuilderOpen,
-    setPaperBuilderOpen,
-    paperBuilderTab,
-    setPaperBuilderTab,
+    ...modalState,
     columnLayout,
     questions,
     tests,
@@ -209,7 +176,7 @@ export function useQuestionBankPageController() {
     openAddQuestion,
     openCreatePaper,
     handleQuestionSave,
-    closeQuestionModal,
+    closeQuestionModal: modalState.closeQuestionModal,
     handleDeleteQuestion,
     handleRestoreQuestion,
     handleBulkDelete,

@@ -1,16 +1,12 @@
 import React, { useEffect } from 'react';
-import { Plus, Pencil, Shield, Lock } from 'lucide-react';
-import {
-  workspaceRoleDescription,
-  workspaceRoleLabel,
-} from '@mms/shared';
+import { Shield, Lock } from 'lucide-react';
+import { workspaceRoleLabel } from '@mms/shared';
 import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import { UserRoleBadge } from '@/tenant/features/users/components/UserBadges';
 import { SettingsMetaBadge } from '@/components/ui/SettingsShell';
 import { PermissionMatrix } from '@/tenant/features/users/components/PermissionMatrix';
 import { RoleFormModal } from '@/tenant/features/users/components/RoleFormModal';
+import { RolesListSidebar } from '@/tenant/features/users/components/RolesListSidebar';
 import { useRolesPermissionsController } from '@/tenant/features/users/hooks/useRolesPermissionsController';
 
 export interface RolesPermissionsProps {
@@ -64,78 +60,14 @@ export function RolesPermissions({
   return (
     <div className="space-y-5">
       <div className="grid grid-cols-1 gap-5 lg:grid-cols-3">
-        <div className="space-y-3">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-sm font-bold text-foreground">{t('users.permissions.rolesTitle')}</p>
-            {isAdmin ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="min-h-11 px-2 text-xs"
-                onClick={() => requestEditRole('new')}
-              >
-                <Plus className="me-1 h-3 w-3" />
-                {t('users.permissions.addRole')}
-              </Button>
-            ) : null}
-          </div>
-          {roles.length === 0 ? (
-            <EmptyState variant="dashed" title={t('users.permissions.emptyRoles')} compact />
-          ) : null}
-          {roles.map((workspaceRole) => (
-            <div
-              key={workspaceRole.id}
-              role="button"
-              tabIndex={0}
-              onClick={() => requestSelectRole(workspaceRole)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter' || event.key === ' ') {
-                  event.preventDefault();
-                  requestSelectRole(workspaceRole);
-                }
-              }}
-              className={`w-full cursor-pointer rounded-xl border-2 p-3 text-start transition-all ${
-                displayRole?.id === workspaceRole.id
-                  ? 'border-primary bg-primary/5'
-                  : 'border-border bg-card hover:border-primary/40'
-              }`}
-            >
-              <div className="flex min-w-0 items-center justify-between gap-2">
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-center gap-1.5">
-                    {workspaceRole.isSystem ? (
-                      <UserRoleBadge roleId={workspaceRole.id} />
-                    ) : (
-                      <SettingsMetaBadge variant={workspaceRole.badgeVariant}>{workspaceRoleLabel(workspaceRole, t)}</SettingsMetaBadge>
-                    )}
-                    {workspaceRole.isSystem ? (
-                      <SettingsMetaBadge variant="muted">{t('users.permissions.systemBadge')}</SettingsMetaBadge>
-                    ) : null}
-                  </div>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    {workspaceRoleDescription(workspaceRole, t)}
-                  </p>
-                </div>
-                 {!workspaceRole.isSystem && isAdmin ? (
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    size="icon"
-                    onClick={(event) => {
-                      event.stopPropagation();
-                      requestEditRole(workspaceRole);
-                    }}
-                    className="shrink-0 rounded text-muted-foreground transition-colors hover:text-primary shadow-none hover:bg-transparent"
-                    aria-label={t('users.permissions.editRoleDetails', { name: workspaceRoleLabel(workspaceRole, t) })}
-                  >
-                    <Pencil className="h-3 w-3" />
-                  </Button>
-                ) : null}
-              </div>
-            </div>
-          ))}
-        </div>
+        <RolesListSidebar
+          roles={roles}
+          displayRole={displayRole}
+          isAdmin={isAdmin}
+          requestSelectRole={requestSelectRole}
+          requestEditRole={requestEditRole}
+          t={t}
+        />
 
         <div className="space-y-3 lg:col-span-2">
           {displayRole && permDraft ? (

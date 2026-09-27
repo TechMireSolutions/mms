@@ -1,22 +1,17 @@
 import type { ReactNode } from "react";
-import { AnimatePresence } from "framer-motion";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
-import { ModuleStandardTrashDialogs } from "@/components/ui/ModuleStandardTrashDialogs";
 import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
-import { JournalEntryDetail } from "@/tenant/features/accounting/components/JournalEntryDetail";
-import { JournalEntryForm } from "@/tenant/features/accounting/components/JournalEntryForm";
 import { JournalEntriesList } from "@/tenant/features/accounting/components/JournalEntriesList";
 import type { JournalEntriesListPaging } from "@/tenant/features/accounting/components/journalEntriesControllerFilters";
 import { JournalEntriesListFilters, JournalEntriesAdvancedFilters } from "@/tenant/features/accounting/components/JournalEntriesListFilters";
 import { AccountingBulkActionBar } from "@/tenant/features/accounting/components/AccountingBulkActionBar";
-import { JournalReverseDialog } from "@/tenant/features/accounting/components/JournalReverseDialog";
+import { JournalEntriesModalLayer, type JournalModalMode } from "@/tenant/features/accounting/components/JournalEntriesModalLayer";
 import type { ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import type { JournalEntrySave } from "./journalEntriesTypes";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 type JournalMode = "simple" | "advanced";
-type JournalModalMode = "new" | "edit" | "view" | null;
 
 interface JournalEntriesAdvancedModeProps {
   mode: JournalMode;
@@ -173,58 +168,33 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         {...props.paging}
       />
 
-      <AnimatePresence>
-        {props.canWrite && (props.modal === "new" || props.modal === "edit") && (
-          <JournalEntryForm
-            accounts={props.accounts}
-            entries={(props.allEntries && props.allEntries.length > 0) ? props.allEntries : props.entries}
-            initial={props.modal === "edit" ? props.selected : null}
-            fiscalYears={props.fiscalYears}
-            onSave={props.onSave}
-            onClose={props.onCloseModal}
-          />
-        )}
-        {props.modal === "view" && props.selected && (() => {
-          const entry = props.selected;
-          return (
-            <JournalEntryDetail
-              entry={entry}
-              accounts={props.accounts}
-              onClose={props.onCloseModal}
-              onEdit={props.canWrite && !entry.deletedAt ? props.onEditSelected : undefined}
-              onReverse={props.canWrite && !entry.deletedAt ? () => props.onRequestReverse(entry) : undefined}
-              onRestore={props.canDelete && entry.deletedAt && props.onRestoreEntry ? () => props.onRestoreEntry?.(entry.id) : undefined}
-              canRestore={props.canDelete}
-            />
-          );
-        })()}
-      </AnimatePresence>
-
-      <ModuleStandardTrashDialogs
+      <JournalEntriesModalLayer
+        modal={props.modal}
+        canWrite={props.canWrite}
+        canDelete={props.canDelete}
+        selected={props.selected}
+        accounts={props.accounts}
+        allEntries={props.allEntries}
+        entries={props.entries}
+        fiscalYears={props.fiscalYears}
+        onSave={props.onSave}
+        onCloseModal={props.onCloseModal}
+        onEditSelected={props.onEditSelected}
+        onRequestReverse={props.onRequestReverse}
+        onRestoreEntry={props.onRestoreEntry}
         pendingTrashId={props.pendingTrashId}
         onPendingTrashIdChange={props.onPendingTrashIdChange}
         confirmBulkOpen={props.confirmBulkOpen}
         onConfirmBulkOpenChange={props.onConfirmBulkOpenChange}
         showDeleted={props.showDeleted}
-        selectedCount={props.selectedIds.length}
-        i18nNamespace="accounting"
+        selectedIds={props.selectedIds}
         onConfirmRowTrash={props.onConfirmRowTrash}
         onConfirmBulkTrash={props.onConfirmBulkTrash}
-        labels={{
-          singleDescription: t("accounting.trash.deleteEntryConfirm"),
-        }}
+        pendingReverseEntry={props.pendingReverseEntry}
+        onPendingReverseEntryChange={props.onPendingReverseEntryChange}
+        onConfirmReverse={props.onConfirmReverse}
+        t={t}
       />
-
-      {props.pendingReverseEntry && (
-        <JournalReverseDialog
-          key={props.pendingReverseEntry.id}
-          entry={props.pendingReverseEntry}
-          onOpenChange={(open) => {
-            if (!open) props.onPendingReverseEntryChange(null);
-          }}
-          onConfirm={props.onConfirmReverse}
-        />
-      )}
     </section>
   );
 }

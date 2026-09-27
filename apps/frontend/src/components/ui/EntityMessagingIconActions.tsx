@@ -6,11 +6,9 @@ import {
   sanitizePhoneForTel,
   sanitizePhoneForWhatsApp,
 } from "@mms/shared";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  MESSAGING_ICON_BTN,
-  MESSAGING_ICON_BTN_TONES,
-} from "@/components/ui/messagingActionStyles";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { MESSAGING_ICON_BTN_TONES } from "@/components/ui/messagingActionStyles";
+import { MessagingActionButton } from "@/components/ui/MessagingActionButton";
 import { cn } from "@/lib/utils";
 
 export interface EntityMessagingIconActionLabels {
@@ -84,148 +82,48 @@ export const EntityMessagingIconActions = (function EntityMessagingIconActions({
   return (
     <TooltipProvider delayDuration={200}>
       <div className={cn("flex flex-wrap items-center gap-1.5", className)}>
-        {showCall && (telHref || primaryPhone) ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <a
-                href={telHref || `tel:${primaryPhone}`}
-                className={cn(
-                  MESSAGING_ICON_BTN,
-                  MESSAGING_ICON_BTN_TONES.call,
-                  "inline-flex items-center justify-center select-none",
-                )}
-                aria-label={callLabel ? `${callLabel} ${primaryPhone}` : primaryPhone || undefined}
-                onClick={(e) => e.stopPropagation()}
-              >
-                <Phone aria-hidden="true" className="h-4 w-4" />
-              </a>
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={4} className="text-xs">
-              {callLabel}
-            </TooltipContent>
-          </Tooltip>
+        {showCall ? (
+          <MessagingActionButton
+            icon={Phone}
+            label={callLabel}
+            ariaLabel={callLabel ? `${callLabel} ${primaryPhone}` : primaryPhone || undefined}
+            toneClass={MESSAGING_ICON_BTN_TONES.call}
+            href={telHref || `tel:${primaryPhone}`}
+          />
         ) : null}
 
         {showWhatsApp ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              {onWhatsApp ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onWhatsApp();
-                  }}
-                  className={cn(
-                    MESSAGING_ICON_BTN,
-                    MESSAGING_ICON_BTN_TONES.whatsapp,
-                    "inline-flex items-center justify-center select-none",
-                  )}
-                  aria-label={whatsappLabel || undefined}
-                >
-                  <MessageCircle aria-hidden="true" className="h-4 w-4" />
-                </button>
-              ) : waHref ? (
-                <a
-                  href={waHref}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className={cn(
-                    MESSAGING_ICON_BTN,
-                    MESSAGING_ICON_BTN_TONES.whatsapp,
-                    "inline-flex items-center justify-center select-none",
-                  )}
-                  aria-label={whatsappLabel || undefined}
-                >
-                  <MessageCircle aria-hidden="true" className="h-4 w-4" />
-                </a>
-              ) : null}
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={4} className="text-xs">
-              {whatsappLabel}
-            </TooltipContent>
-          </Tooltip>
+          <MessagingActionButton
+            icon={MessageCircle}
+            label={whatsappLabel}
+            ariaLabel={whatsappLabel || undefined}
+            toneClass={MESSAGING_ICON_BTN_TONES.whatsapp}
+            onClick={onWhatsApp}
+            href={onWhatsApp ? undefined : waHref}
+            targetBlank={!onWhatsApp}
+          />
         ) : null}
 
         {showSms ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              {onSms ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onSms();
-                  }}
-                  className={cn(
-                    MESSAGING_ICON_BTN,
-                    MESSAGING_ICON_BTN_TONES.sms,
-                    "inline-flex items-center justify-center select-none",
-                  )}
-                  aria-label={smsLabel || undefined}
-                >
-                  <MessageSquare aria-hidden="true" className="h-4 w-4" />
-                </button>
-              ) : smsHref ? (
-                <a
-                  href={smsHref}
-                  onClick={(e) => e.stopPropagation()}
-                  className={cn(
-                    MESSAGING_ICON_BTN,
-                    MESSAGING_ICON_BTN_TONES.sms,
-                    "inline-flex items-center justify-center select-none",
-                  )}
-                  aria-label={smsLabel || undefined}
-                >
-                  <MessageSquare aria-hidden="true" className="h-4 w-4" />
-                </a>
-              ) : null}
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={4} className="text-xs">
-              {smsLabel}
-            </TooltipContent>
-          </Tooltip>
+          <MessagingActionButton
+            icon={MessageSquare}
+            label={smsLabel}
+            ariaLabel={smsLabel || undefined}
+            toneClass={MESSAGING_ICON_BTN_TONES.sms}
+            onClick={onSms}
+            href={onSms ? undefined : smsHref}
+          />
         ) : null}
 
         {showEmail ? (
-          <Tooltip>
-            <TooltipTrigger asChild>
-              {onEmail ? (
-                <button
-                  type="button"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    onEmail();
-                  }}
-                  className={cn(
-                    MESSAGING_ICON_BTN,
-                    MESSAGING_ICON_BTN_TONES.email,
-                    "inline-flex items-center justify-center select-none",
-                  )}
-                  aria-label={emailLabel || undefined}
-                >
-                  <Mail aria-hidden="true" className="h-4 w-4" />
-                </button>
-              ) : mailHref ? (
-                <a
-                  href={mailHref}
-                  onClick={(e) => e.stopPropagation()}
-                  className={cn(
-                    MESSAGING_ICON_BTN,
-                    MESSAGING_ICON_BTN_TONES.email,
-                    "inline-flex items-center justify-center select-none",
-                  )}
-                  aria-label={emailLabel || undefined}
-                >
-                  <Mail aria-hidden="true" className="h-4 w-4" />
-                </a>
-              ) : null}
-            </TooltipTrigger>
-            <TooltipContent side="bottom" sideOffset={4} className="text-xs">
-              {emailLabel}
-            </TooltipContent>
-          </Tooltip>
+          <MessagingActionButton
+            icon={Mail}
+            label={emailLabel}
+            ariaLabel={emailLabel || undefined}
+            toneClass={MESSAGING_ICON_BTN_TONES.email}
+            onClick={onEmail}
+            href={onEmail ? undefined : mailHref}
+          />
         ) : null}
       </div>
     </TooltipProvider>

@@ -1,15 +1,12 @@
 import React, { useState } from 'react';
 import { BookOpen } from 'lucide-react';
-import { ACCOUNT_TYPES, ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, type Account, type AccountType } from '@/lib/data/accountingData';
+import { ACCOUNT_SUBTYPES, ACCOUNT_TYPE_META, type Account, type AccountType } from '@/lib/data/accountingData';
 import { useAccountingConfig } from '@/hooks/useStandardModuleConfig';
 import { FormModal } from '@/components/ui/FormModal';
 import { useTranslation } from '@/hooks/useTranslation';
 import { accountRecordSchema, type AppTranslationKey } from '@mms/shared';
-import { Input } from '@/components/ui/input';
-import { FormSelect } from '@/components/ui/FormSelect';
-import { Field } from '@/components/ui/FormPrimitives';
-
 import { mapZodFormErrors } from '@/lib/forms/mapZodFormErrors';
+import { AccountModalFields } from '@/tenant/features/accounting/components/AccountModalFields';
 
 interface AccountModalProps {
   initial: Account | null;
@@ -35,6 +32,18 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
       setErrors((prev) => {
         const next = { ...prev };
         delete next[key];
+        return next;
+      });
+    }
+  };
+
+  const onTypeChange = (newType: AccountType) => {
+    setForm((prev) => ({ ...prev, type: newType, subtype: '' }));
+    if (errors.type || errors.subtype) {
+      setErrors((prev) => {
+        const next = { ...prev };
+        delete next.type;
+        delete next.subtype;
         return next;
       });
     }
@@ -92,111 +101,17 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
       saving={submitting}
       error={errorMessages}
     >
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {orderedFields.map((field) => {
-          const isEnabled = isFieldEnabled(field.id);
-          if (!isEnabled) return null;
-
-          if (field.id === 'code') {
-            return (
-              <Field key="code" id="account-code" label={t('accounting.coa.fields.code')} required error={errors.code}>
-                <Input
-                  id="account-code"
-                  name="code"
-                  value={form.code || ''}
-                  onChange={(event) => updateField('code', event.target.value)}
-                  placeholder={t('accounting.coa.fields.codePlaceholder')}
-                  aria-invalid={Boolean(errors.code)}
-                  required
-                />
-              </Field>
-            );
-          }
-
-          if (field.id === 'type') {
-            return (
-              <Field key="type" id="account-type" label={t('accounting.coa.fields.type')} required error={errors.type}>
-                <FormSelect
-                  id="account-type"
-                  name="type"
-                  value={form.type || 'Asset'}
-                  onChange={(val) => {
-                    setForm((prev) => ({ ...prev, type: val as AccountType, subtype: '' }));
-                    if (errors.type || errors.subtype) {
-                      setErrors((prev) => {
-                        const next = { ...prev };
-                        delete next.type;
-                        delete next.subtype;
-                        return next;
-                      });
-                    }
-                  }}
-                  options={ACCOUNT_TYPES.map((accType) => ({ value: accType, label: t(`accounting.type.${accType}` as AppTranslationKey) }))}
-                  aria-invalid={Boolean(errors.type)}
-                />
-              </Field>
-            );
-          }
-
-          if (field.id === 'name') {
-            return (
-              <div key="name" className="sm:col-span-2">
-                <Field id="account-name" label={t('accounting.coa.fields.name')} required error={errors.name}>
-                  <Input
-                    id="account-name"
-                    name="name"
-                    value={form.name || ''}
-                    onChange={(event) => updateField('name', event.target.value)}
-                    placeholder={t('accounting.coa.fields.namePlaceholder')}
-                    aria-invalid={Boolean(errors.name)}
-                    required
-                  />
-                </Field>
-              </div>
-            );
-          }
-
-          if (field.id === 'subtype') {
-            const isRequired = !!fields[field.id]?.required;
-            return (
-              <div key="subtype" className="sm:col-span-2">
-                <Field id="account-subtype" label={t('accounting.coa.fields.subtype')} required={isRequired} error={errors.subtype}>
-                  <FormSelect
-                    id="account-subtype"
-                    name="subtype"
-                    value={form.subtype || ''}
-                    onChange={(val) => updateField('subtype', val)}
-                    options={subtypes}
-                    placeholder={t('accounting.journal.form.none')}
-                    aria-invalid={Boolean(errors.subtype)}
-                  />
-                </Field>
-              </div>
-            );
-          }
-
-          if (field.id === 'description') {
-            const isRequired = !!fields[field.id]?.required;
-            return (
-              <div key="description" className="sm:col-span-2">
-                <Field id="account-description" label={t('accounting.coa.fields.description')} required={isRequired} error={errors.description}>
-                  <Input
-                    id="account-description"
-                    name="description"
-                    value={form.description || ''}
-                    onChange={(event) => updateField('description', event.target.value)}
-                    placeholder={t('accounting.coa.fields.descriptionPlaceholder')}
-                    aria-invalid={Boolean(errors.description)}
-                    required={isRequired}
-                  />
-                </Field>
-              </div>
-            );
-          }
-
-          return null;
-        })}
-      </div>
+      <AccountModalFields
+        orderedFields={orderedFields}
+        fields={fields}
+        isFieldEnabled={isFieldEnabled}
+        form={form}
+        errors={errors}
+        updateField={updateField}
+        onTypeChange={onTypeChange}
+        subtypes={subtypes}
+        t={t}
+      />
 
       {type && ACCOUNT_TYPE_META[type] && (
         <div className={`mt-4 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border ${ACCOUNT_TYPE_META[type].color}`} aria-live="polite">

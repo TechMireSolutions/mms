@@ -5,7 +5,7 @@ import { createRequire } from "node:module";
 
 
 const require = createRequire(import.meta.url);
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+ 
 const directionalRule = require("../../eslint-rules/no-physical-directional-classes.cjs");
 
 /**

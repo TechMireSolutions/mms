@@ -38,28 +38,7 @@ export function useMessagingWorkTierController({
   const { categorySelectOptions, channelSelectOptions, statusOptions, logStatusConfig } = useMessagingPageOptions();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
-  const {
-    search,
-    setSearch,
-    debouncedSearch,
-    logsPage,
-    setLogsPage,
-    channel,
-    setChannel,
-    category,
-    setCategory,
-    status,
-    setStatus,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    queryStartDate,
-    queryEndDate,
-    hasActiveFilters,
-    activeFilterCount,
-    clearFilters,
-  } = useMessagingWorkFilters({
+  const filters = useMessagingWorkFilters({
     searchParams,
     setSearchParams,
     controlledChannel,
@@ -67,13 +46,13 @@ export function useMessagingWorkTierController({
   });
 
   const logsQuery = useMessageLogs({
-    channel,
-    category,
-    search: debouncedSearch,
-    status,
-    startDate: queryStartDate,
-    endDate: queryEndDate,
-    page: logsPage,
+    channel: filters.channel,
+    category: filters.category,
+    search: filters.debouncedSearch,
+    status: filters.status,
+    startDate: filters.queryStartDate,
+    endDate: filters.queryEndDate,
+    page: filters.logsPage,
     pageSize: MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
   });
 
@@ -125,12 +104,12 @@ export function useMessagingWorkTierController({
 
   const { handleBulkResendLogs, handleExportLogs } = useMessagingWorkTierBulkActions({
     canWrite,
-    channel,
-    category,
-    debouncedSearch,
-    status,
-    queryStartDate,
-    endDate,
+    channel: filters.channel,
+    category: filters.category,
+    debouncedSearch: filters.debouncedSearch,
+    status: filters.status,
+    queryStartDate: filters.queryStartDate,
+    endDate: filters.endDate,
     t,
     getRecipient,
     getRecipientName,
@@ -145,26 +124,26 @@ export function useMessagingWorkTierController({
   const failedLogs = logsQuery.logs.filter((l: Message) => l.status === 'failed');
 
   const handleFilterContact = (contactName: string): void => {
-    setSearch(contactName);
-    setLogsPage(1);
+    filters.setSearch(contactName);
+    filters.setLogsPage(1);
   };
 
   const filterChips = buildMessagingWorkFilterChips({
-    search: debouncedSearch,
-    onSearchChange: setSearch,
-    channel,
-    onChannelChange: setChannel,
+    search: filters.debouncedSearch,
+    onSearchChange: filters.setSearch,
+    channel: filters.channel,
+    onChannelChange: filters.setChannel,
     channelOptions: channelSelectOptions,
-    status,
-    onStatusChange: setStatus,
+    status: filters.status,
+    onStatusChange: filters.setStatus,
     statusOptions,
-    category,
-    onCategoryChange: setCategory,
+    category: filters.category,
+    onCategoryChange: filters.setCategory,
     categoryOptions: categorySelectOptions,
-    startDate: queryStartDate || '',
-    onStartDateChange: setStartDate,
-    endDate,
-    onEndDateChange: setEndDate,
+    startDate: filters.queryStartDate || '',
+    onStartDateChange: filters.setStartDate,
+    endDate: filters.endDate,
+    onEndDateChange: filters.setEndDate,
     t,
   });
 
@@ -172,29 +151,14 @@ export function useMessagingWorkTierController({
     t,
     viewMode,
     setViewMode,
-    search,
-    setSearch,
-    channel,
-    setChannel,
     channelSelectOptions,
-    status,
-    setStatus,
     statusOptions,
-    category,
-    setCategory,
     categorySelectOptions,
-    startDate,
-    setStartDate,
-    endDate,
-    setEndDate,
-    hasActiveFilters,
-    activeFilterCount,
-    clearFilters,
+    ...filters,
     columnRegistry,
     updateUserColumnLayout,
     customizerLabels,
     logsQuery,
-    setLogsPage,
     selectedById,
     setSelectedById,
     allVisibleSelected,

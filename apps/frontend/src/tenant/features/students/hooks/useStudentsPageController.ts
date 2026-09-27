@@ -7,7 +7,6 @@ import {
   STUDENTS_MODULE_MANIFEST,
   resolveModuleTierTab,
   resolveStudentStatuses,
-  type StudentsBulkEnrollBody,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useStudentsMetrics } from "@/tenant/features/students/hooks/useStudentsAnalyticsQueries";
@@ -20,6 +19,7 @@ import { useStudentsKeyboardShortcuts } from "@/tenant/features/students/hooks/u
 import { useStudentsPageDirectoryProps } from "@/tenant/features/students/hooks/useStudentsPageDirectoryProps";
 import { useStudentsPageFormState } from "@/tenant/features/students/hooks/useStudentsPageFormState";
 import { useStudentsPageTabPanelProps } from "@/tenant/features/students/hooks/useStudentsPageTabPanelProps";
+import { buildStudentsWorkSource } from "@/tenant/features/students/hooks/useStudentsWorkTierSource";
 import { useStudentsPageWorkQuery } from "@/tenant/features/students/hooks/useStudentsPageWorkQuery";
 import { useStudentsSelectionTargets } from "@/tenant/features/students/hooks/useStudentsSelectionTargets";
 import { useStudentsCrudActions } from "@/tenant/features/students/hooks/useStudentsCrudActions";
@@ -134,78 +134,32 @@ export function useStudentsPageController() {
     logExportAudit: mutations.logExportAudit,
   });
 
-  const tabPanelProps = useStudentsPageTabPanelProps(effectiveTab, {
-    studentSearch: directory.studentSearch,
-    studentFilterStatus: directory.studentFilterStatus,
-    studentFilterGender: directory.studentFilterGender,
-    quickFilter: directory.quickFilter,
-    changeQuickFilter: directory.changeQuickFilter,
-    studentStatusOptions,
-    genderFilters,
-    viewingDeleted: directory.viewingDeleted,
-    canWrite,
-    canDelete,
-    canExport,
-    isStatusEnabled: isFieldEnabled("status"),
-    isGenderEnabled: isFieldEnabled("gender"),
-    bulkActions: STUDENTS_MODULE_MANIFEST.work.bulkActions,
-    workStudents,
-    workPageQuery,
-    useServerWork,
-    viewMode,
-    setViewMode,
-    columnLayout,
-    setStudentSearch: directory.setStudentSearch,
-    toggleStudentStatus: directory.toggleStudentStatus,
-    setStudentFilterGender: directory.setStudentFilterGender,
-    toggleViewingDeleted: directory.toggleViewingDeleted,
-    clearFilters: directory.clearFilters,
-    hasActiveFilters: directory.hasActiveFilters,
-    activeFilterCount: directory.activeFilterCount,
-    selectedIds: directory.selectedIds,
-    selectedTargets,
-    allSelected,
-    someSelected,
-    handleSelectOne: directory.handleSelectOne,
-    handleSelectAll: directory.handleSelectAll,
-    clearSelection: directory.clearSelection,
-    setListPage: directory.setListPage,
-    openEditForm: formState.openEditForm,
-    handleRestore: workActions.handleRestore,
-    handleBulkStatusChange: workActions.handleBulkStatusChange,
-    handleBulkEnroll: async (payload: { sessionIds: string[]; mode: StudentsBulkEnrollBody["mode"] }) => {
-      try {
-        await workActions.handleBulkEnroll(directory.selectedIds, payload);
-        directory.clearSelection();
-      } catch {
-        // Keep selection on error
-      }
-    },
-    bulkEnrollPending: workActions.bulkEnrollPending,
-    handleBulkPrintIdCards: () => {
-      const selectedIdSet = new Set(directory.selectedIds);
-      const selectedList = workStudents.filter((s) => selectedIdSet.has(String(s.id)));
-      if (selectedList.length > 0) {
-        overlays.openIdCards(selectedList);
-      }
-    },
-    handleBulkExport,
-    bulkStatusPending: mutations.bulkUpdateStudentStatus.isPending,
-    sortField: directory.sortField,
-    sortDir: directory.sortDir,
-    handleServerSort: directory.handleServerSort,
-    workOverlays: {
-      statusBadgeConfig: overlays.statusBadgeConfig,
-      openComposer: overlays.openComposer,
-      openSelectionMessage: overlays.openSelectionMessage,
-      canWriteMessaging: overlays.canWriteMessaging,
-      setConfirmBulkDeleteOpen: overlays.setConfirmBulkDeleteOpen,
-      setConfirmBulkRestoreOpen: overlays.setConfirmBulkRestoreOpen,
-      setDeleteTarget: overlays.setDeleteTarget,
-      setViewStudent: overlays.setViewStudent,
-      openIdCards: overlays.openIdCards,
-    },
-  });
+  const tabPanelProps = useStudentsPageTabPanelProps(
+    effectiveTab,
+    buildStudentsWorkSource({
+      directory,
+      formState,
+      workActions,
+      overlays,
+      workStudents,
+      workPageQuery,
+      useServerWork,
+      viewMode,
+      setViewMode,
+      columnLayout,
+      studentStatusOptions,
+      genderFilters,
+      canWrite,
+      canDelete,
+      canExport,
+      isFieldEnabled,
+      selectedTargets,
+      allSelected,
+      someSelected,
+      handleBulkExport,
+      bulkStatusPending: mutations.bulkUpdateStudentStatus.isPending,
+    }),
+  );
 
   const pageOverlaysProps = useStudentsPageOverlayProps({
     canWrite,

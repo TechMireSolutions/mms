@@ -14,15 +14,7 @@ import { useSessionsDialogs } from '@/tenant/features/sessions/hooks/useSessions
 import { useSessionConfig } from '@/hooks/useStandardModuleConfig';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import { SESSIONS_MODULE_MANIFEST, type SessionsListPageResult } from '@mms/shared';
-import {
-  createSessionBulkDeleteHandler,
-  createSessionBulkRestoreHandler,
-  createSessionBulkStatusHandler,
-  createSessionDeleteHandler,
-  createSessionRestoreHandler,
-  createSessionSaveHandler,
-  createSessionUpdateHandler,
-} from '@/tenant/features/sessions/hooks/sessionsPageControllerActions';
+import { useSessionsPageCrudActions } from '@/tenant/features/sessions/hooks/useSessionsPageCrudActions';
 import {
   defaultSessionsExportColumns,
   useSessionsExportActions,
@@ -50,46 +42,27 @@ export function useSessionsPageController() {
 
   const columnLayout = useSessionColumnLayout();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
-  const {
-    listPage,
-    setListPage,
-    showDeleted,
-    setShowDeleted,
-    sortField,
-    setSortField,
-    sortDir,
-    setSortDir,
-    search,
-    setSearch,
-    debouncedSearch,
-    filterStatus,
-    setFilterStatus,
-    filterType,
-    setFilterType,
-    clearFilters,
-    hasActiveFilters,
-  } = useSessionsDirectoryFilters();
-  const dialogs = useSessionsDialogs((id, reason) => handleDelete(id, reason));
+  const directory = useSessionsDirectoryFilters();
+  const dialogs = useSessionsDialogs((id, reason) => crudActions.handleDelete(id, reason));
   const [activeTab, setActiveTab] = usePersistedTabState<string>('sessions_active_tab', 'work');
 
   const useServerWork = activeTab === 'work';
   const { data: workPageData, isLoading: isWorkLoading, isFetching: isWorkFetching, isError: isErrorTsr, refetch } =
     useSessionsPaginated({
-      page: listPage,
+      page: directory.listPage,
       limit: SESSIONS_MODULE_MANIFEST.defaultPageSize,
-      search: debouncedSearch,
-      status: filterStatus.length > 0 ? filterStatus.join(',') : undefined,
-      type: filterType.length > 0 ? filterType.join(',') : undefined,
-      sortField,
-      sortDir,
-      includeDeleted: showDeleted,
+      search: directory.debouncedSearch,
+      status: directory.filterStatus.length > 0 ? directory.filterStatus.join(',') : undefined,
+      type: directory.filterType.length > 0 ? directory.filterType.join(',') : undefined,
+      sortField: directory.sortField,
+      sortDir: directory.sortDir,
+      includeDeleted: directory.showDeleted,
       enabled: useServerWork,
     });
 
   const isError = isErrorTsr || (workPageData != null && workPageData.status !== 200);
   const pageData = workPageData?.status === 200 ? (workPageData.body as SessionsListPageResult) : undefined;
-
-  const sessions = (() => (pageData?.sessions ?? []) as Session[])();
+  const sessions = (pageData?.sessions ?? []) as Session[];
 
   const {
     selectedIds,
@@ -103,21 +76,21 @@ export function useSessionsPageController() {
 
   useEffect(() => {
     setSelectedIds([]);
-  }, [debouncedSearch, filterStatus, filterType, showDeleted, sortField, sortDir, setSelectedIds]);
+  }, [directory.debouncedSearch, directory.filterStatus, directory.filterType, directory.showDeleted, directory.sortField, directory.sortDir, setSelectedIds]);
 
   useSessionsKeyboardShortcuts({
     selectedCount: selectedIds.length,
-    hasActiveFilters,
-    clearFilters,
+    hasActiveFilters: directory.hasActiveFilters,
+    clearFilters: directory.clearFilters,
     clearSelection,
     canWrite,
-    showDeleted,
+    showDeleted: directory.showDeleted,
     onCreate: dialogs.openCreateForm,
   });
 
   const shownCount = pageData?.total ?? sessions.length;
 
-  const mutationDeps = {
+  const crudActions = useSessionsPageCrudActions({
     t,
     editSession: dialogs.editSession,
     detailSession: dialogs.detailSession,
@@ -128,44 +101,31 @@ export function useSessionsPageController() {
     restoreSession,
     bulkDeleteSessions,
     bulkRestoreSessions,
-    selectedIds,
-    setSelectedIds,
-  };
-
-  const handleSave = createSessionSaveHandler(mutationDeps);
-  const handleUpdate = createSessionUpdateHandler(mutationDeps);
-  const handleDelete = createSessionDeleteHandler(mutationDeps);
-  const handleRestore = createSessionRestoreHandler(mutationDeps);
-  const handleBulkDelete = createSessionBulkDeleteHandler(mutationDeps);
-  const handleBulkRestore = createSessionBulkRestoreHandler(mutationDeps);
-  const handleBulkStatusChange = createSessionBulkStatusHandler({
-    t,
     bulkUpdateSessionStatus,
+    selectedIds,
     setSelectedIds,
   });
 
-  const exportColumns = (() => defaultSessionsExportColumns(t))();
-
   const { handleExportCSV, handleBulkExport } = useSessionsExportActions({
-    tableColumns: exportColumns,
+    tableColumns: defaultSessionsExportColumns(t),
     canExport,
-    search,
-    filterStatus,
-    filterType,
-    sortField,
-    sortDir,
-    viewingDeleted: showDeleted,
+    search: directory.search,
+    filterStatus: directory.filterStatus,
+    filterType: directory.filterType,
+    sortField: directory.sortField,
+    sortDir: directory.sortDir,
+    viewingDeleted: directory.showDeleted,
     selectedIds,
     logExportAudit,
   });
 
   const handleSort = (nextSortField: SessionSortField) => {
-    if (sortField === nextSortField) {
-      setSortDir((currentDirection) => currentDirection === 'asc' ? 'desc' : 'asc');
+    if (directory.sortField === nextSortField) {
+      directory.setSortDir((dir) => (dir === 'asc' ? 'desc' : 'asc'));
       return;
     }
-    setSortField(nextSortField);
-    setSortDir('asc');
+    directory.setSortField(nextSortField);
+    directory.setSortDir('asc');
   };
 
   const toggleFilter = <T,>(selectedValues: T[], setSelectedValues: React.Dispatch<React.SetStateAction<T[]>>, nextValue: T) =>
@@ -181,9 +141,6 @@ export function useSessionsPageController() {
     PAGE_TABS,
     activeTab,
     setActiveTab,
-    search,
-    filterStatus,
-    filterType,
     statusOptions,
     typeOptions,
     statusLabels,
@@ -192,7 +149,7 @@ export function useSessionsPageController() {
     setViewMode,
     columnLayout,
     ...dialogs,
-    showDeleted,
+    ...directory,
     workPageData: pageData,
     isError,
     isWorkLoading,
@@ -202,32 +159,19 @@ export function useSessionsPageController() {
     selectedIds,
     allVisibleSelected,
     someVisibleSelected,
-    sortField,
-    sortDir,
     statusConfig,
     typeConfig,
     sessions,
     shownCount,
-    setSearch,
     toggleFilter,
-    setFilterStatus,
-    setFilterType,
-    setShowDeleted,
-    clearFilters,
     refetch,
     handleSort,
     toggleSelectAll,
     toggleSelectedSession,
     clearSelection,
-    handleRestore,
-    handleSave,
-    handleUpdate,
-    handleBulkDelete,
-    handleBulkRestore,
-    handleBulkStatusChange,
+    ...crudActions,
     bulkStatusPending: bulkUpdateSessionStatus.isPending,
     handleExportCSV,
     handleBulkExport,
-    setListPage,
   };
 }

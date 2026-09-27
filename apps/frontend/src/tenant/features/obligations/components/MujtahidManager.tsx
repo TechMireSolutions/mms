@@ -11,11 +11,9 @@ import { NameFormModal } from "@/tenant/features/obligations/components/Mujtahid
 import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
 import type {
-  Mujtahid,
   MujtahidManagerProps,
-  MujtahidRep,
-  ModalState,
 } from "@/tenant/features/obligations/components/mujtahidManagerTypes";
+import { useMujtahidManagerCrud } from "./useMujtahidManagerCrud";
 
 export type { Mujtahid, MujtahidRep, MujtahidManagerProps } from "@/tenant/features/obligations/components/mujtahidManagerTypes";
 
@@ -25,52 +23,26 @@ export type { Mujtahid, MujtahidRep, MujtahidManagerProps } from "@/tenant/featu
  * @param {MujtahidManagerProps} props
  * @returns {React.ReactElement}
  */
-function generateEntityId(prefix: string): string {
-  const uuid = typeof crypto !== "undefined" && typeof crypto.randomUUID === "function"
-    ? crypto.randomUUID()
-    : Math.random().toString(36).substring(2, 11);
-  return `${prefix}${uuid}`;
-}
-
 export function MujtahidManager({ mujtahids, reps, onChangeMujtahids, onChangeReps }: MujtahidManagerProps) {
   const { t } = useTranslation();
-  const [modal, setModal] = useState<ModalState | null>(null);
   const [expanded, setExpanded] = useState<Record<string, boolean>>({});
-  const [deleteMujtahidId, setDeleteMujtahidId] = useState<string | null>(null);
-  const [deleteRepId, setDeleteRepId] = useState<string | null>(null);
-
-  const handleSaveMujtahid = async (form: Partial<Mujtahid>) => {
-    if (modal?.mode === "add") {
-      await onChangeMujtahids([...mujtahids, { ...form, id: generateEntityId("m") } as Mujtahid]);
-    } else if (modal?.mode === "edit") {
-      await onChangeMujtahids(mujtahids.map((mujtahid) => mujtahid.id === form.id ? (form as Mujtahid) : mujtahid));
-    }
-    setModal(null);
-  };
-
-  const handleConfirmDeleteMujtahid = async () => {
-    if (!deleteMujtahidId) return;
-    const targetId = deleteMujtahidId;
-    await onChangeMujtahids(mujtahids.filter((mujtahid) => mujtahid.id !== targetId));
-    await onChangeReps(reps.filter((representative) => representative.mujtahid_id !== targetId));
-    setDeleteMujtahidId(null);
-  };
-
-  const handleSaveRep = async (form: Partial<MujtahidRep>) => {
-    if (modal?.mode === "add-rep") {
-      await onChangeReps([...reps, { ...form, id: generateEntityId("mr") } as MujtahidRep]);
-    } else if (modal?.mode === "edit-rep") {
-      await onChangeReps(reps.map((representative) => representative.id === form.id ? (form as MujtahidRep) : representative));
-    }
-    setModal(null);
-  };
-
-  const handleConfirmDeleteRep = async () => {
-    if (!deleteRepId) return;
-    const targetId = deleteRepId;
-    await onChangeReps(reps.filter((representative) => representative.id !== targetId));
-    setDeleteRepId(null);
-  };
+  const {
+    modal,
+    setModal,
+    deleteMujtahidId,
+    setDeleteMujtahidId,
+    deleteRepId,
+    setDeleteRepId,
+    handleSaveMujtahid,
+    handleConfirmDeleteMujtahid,
+    handleSaveRep,
+    handleConfirmDeleteRep,
+  } = useMujtahidManagerCrud({
+    mujtahids,
+    reps,
+    onChangeMujtahids,
+    onChangeReps,
+  });
 
   return (
     <div className="space-y-4">

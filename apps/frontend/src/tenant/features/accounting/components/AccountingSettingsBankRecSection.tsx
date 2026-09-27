@@ -15,13 +15,13 @@ import {
   hasAtMostTwoDecimals,
   parseMoneyInput,
   useBankStatements,
-  useMatchBankReconciliation,
   useSaveBankStatement,
   type MoneySeparator,
 } from "@/tenant/features/accounting/hooks/useAccountingLedgerOps";
 import { accountingErrorMessage } from "@/tenant/features/accounting/hooks/useAccountingSetupSaveActions";
+import { BankReconciliationMatcher } from "./BankReconciliationMatcher";
 
-interface AccountingSettingsBankRecSectionProps {
+export interface AccountingSettingsBankRecSectionProps {
   accounts: Account[];
   /** `decimalSeparator` preference — money inputs must be parsed with it. */
   decimalSeparator: MoneySeparator;
@@ -34,7 +34,6 @@ export function AccountingSettingsBankRecSection({
   const { t } = useTranslation();
   const { data: statements = [] } = useBankStatements();
   const save = useSaveBankStatement();
-  const match = useMatchBankReconciliation();
   const [accountId, setAccountId] = useState("");
   const [periodStart, setPeriodStart] = useState(todayISO());
   const [periodEnd, setPeriodEnd] = useState(todayISO());
@@ -44,9 +43,6 @@ export function AccountingSettingsBankRecSection({
   const [lineDesc, setLineDesc] = useState("");
   const [lineAmount, setLineAmount] = useState("0");
   const [amountErrors, setAmountErrors] = useState<Record<string, string>>({});
-  const [journalEntryId, setJournalEntryId] = useState("");
-  const [journalLineId, setJournalLineId] = useState("");
-  const [statementLineId, setStatementLineId] = useState("");
 
   const clearAmountError = (field: string) => {
     setAmountErrors((prev) => {
@@ -59,8 +55,6 @@ export function AccountingSettingsBankRecSection({
 
   const handleSave = async (): Promise<void> => {
     if (!accountId) return;
-    // Parsed through the configured decimal separator: `Number("1,50")` is NaN
-    // and `Number("1.234")` is silently 1.234 on a comma-decimal workspace.
     const openingValue = parseMoneyInput(openingBalance, decimalSeparator);
     const closingValue = parseMoneyInput(closingBalance, decimalSeparator);
     const lineAmountValue = parseMoneyInput(lineAmount, decimalSeparator);
@@ -77,8 +71,6 @@ export function AccountingSettingsBankRecSection({
       nextErrors.lineAmount = t("accounting.settings.bankRec.invalidAmount");
     }
     setAmountErrors(nextErrors);
-    // Never send NaN: the request would fail schema validation with a message
-    // that points at the payload rather than the field the user typed into.
     if (Object.keys(nextErrors).length > 0) return;
 
     try {
@@ -95,18 +87,6 @@ export function AccountingSettingsBankRecSection({
       notify.success(t("accounting.settings.bankRec.saved"));
     } catch (error) {
       notify.error(t("accounting.settings.bankRec.saveFailed"), {
-        description: accountingErrorMessage(error),
-      });
-    }
-  };
-
-  const handleMatch = async (): Promise<void> => {
-    if (!statementLineId || !journalEntryId || !journalLineId) return;
-    try {
-      await match.mutateAsync({ statementLineId, journalEntryId, journalLineId });
-      notify.success(t("accounting.settings.bankRec.matched"));
-    } catch (error) {
-      notify.error(t("accounting.settings.bankRec.matchFailed"), {
         description: accountingErrorMessage(error),
       });
     }
@@ -190,14 +170,8 @@ export function AccountingSettingsBankRecSection({
       <p className="m-0 mt-3 text-xs text-muted-foreground">
         {t("accounting.settings.bankRec.count", { count: String(statements.length) })}
       </p>
-      <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Input id="bank-statement-line" name="statementLineId" className={FORM_INPUT} value={statementLineId} onChange={(event) => setStatementLineId(event.target.value)} aria-label={t("accounting.settings.bankRec.statementLine")} />
-        <Input id="bank-journal-entry" name="journalEntryId" className={FORM_INPUT} value={journalEntryId} onChange={(event) => setJournalEntryId(event.target.value)} aria-label={t("accounting.settings.bankRec.journalEntry")} />
-        <Input id="bank-journal-line" name="journalLineId" className={FORM_INPUT} value={journalLineId} onChange={(event) => setJournalLineId(event.target.value)} aria-label={t("accounting.settings.bankRec.journalLine")} />
-      </div>
-      <Button type="button" variant="outline" className="mt-3 min-h-11" onClick={async () => { await handleMatch(); }} disabled={match.isPending}>
-        {t("accounting.settings.bankRec.match")}
-      </Button>
+
+      <BankReconciliationMatcher t={t} />
     </SectionCard>
   );
 }

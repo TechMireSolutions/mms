@@ -6,7 +6,7 @@ import { FormModal } from "@/components/ui/FormModal";
 import { DetailDrawerShell } from "@/components/ui/DetailDrawerShell";
 
 declare global {
-  // eslint-disable-next-line no-var
+   
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;

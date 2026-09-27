@@ -15,12 +15,8 @@ import {
   type ClassDetailTabId,
   type ClassDetailTabItem,
   useClassDetailDraft,
-  ClassDetailGeneralTab,
-  ClassDetailFeesTab,
-  ClassDetailScheduleTab,
-  ClassDetailBudgetTab,
-  ClassDetailScholarshipTab,
 } from './class-detail';
+import { ClassDetailTabBody } from './ClassDetailTabBody';
 
 interface ClassDetailModalProps {
   open: boolean;
@@ -160,67 +156,36 @@ export function ClassDetailModal({
       <div className="max-w-3xl space-y-4">
         <SubTabBar tabs={subTabs} value={activeTab} onChange={setActiveTab} />
 
-        {/* Tab Body */}
-        <div className="space-y-4">
-          {activeTab === 'general' && (
-            <ClassDetailGeneralTab
-              classDraft={classDraft}
-              updateDraft={updateDraft}
-              errors={errors}
-              allTeachers={allTeachers}
-            />
-          )}
-
-          {activeTab === 'fees' && (
-            <ClassDetailFeesTab
-              fees={classDraft.fees || []}
-              discounts={classDraft.discounts || []}
-              currencySymbol={currencySymbol}
-              onAddFee={addFeeRow}
-              onRemoveFee={removeFeeRow}
-              onUpdateFee={updateFeeRow}
-              onAddDiscount={addDiscountRow}
-              onRemoveDiscount={removeDiscountRow}
-              onUpdateDiscount={updateDiscountRow}
-            />
-          )}
-
-          {activeTab === 'schedule' && (
-            <ClassDetailScheduleTab
-              schedules={classDraft.schedules || []}
-              periods={activeTimetable.periods || []}
-              allTeachers={allTeachers}
-              onAddSchedule={addScheduleRow}
-              onRemoveSchedule={removeScheduleRow}
-              onUpdateSchedule={updateScheduleRow}
-              onAddPeriod={addPeriodRow}
-              onRemovePeriod={removePeriodRow}
-              onUpdatePeriod={updatePeriodRow}
-            />
-          )}
-
-          {activeTab === 'budget' && (
-            <ClassDetailBudgetTab
-              budgets={classDraft.budgets || []}
-              refreshments={classDraft.refreshments || []}
-              currencySymbol={currencySymbol}
-              onAddBudget={addBudgetRow}
-              onRemoveBudget={removeBudgetRow}
-              onUpdateBudget={updateBudgetRow}
-              onAddRefreshment={addRefreshmentRow}
-              onRemoveRefreshment={removeRefreshmentRow}
-              onUpdateRefreshment={updateRefreshmentRow}
-            />
-          )}
-
-          {activeTab === 'scholarship' && (
-            <ClassDetailScholarshipTab
-              scholarship={activeScholarship}
-              onUpdateScholarship={updateScholarship}
-              onUpdateEligibility={updateEligibility}
-            />
-          )}
-        </div>
+        <ClassDetailTabBody
+          activeTab={activeTab}
+          classDraft={classDraft}
+          updateDraft={updateDraft}
+          errors={errors}
+          allTeachers={allTeachers}
+          currencySymbol={currencySymbol}
+          addFeeRow={addFeeRow}
+          removeFeeRow={removeFeeRow}
+          updateFeeRow={updateFeeRow}
+          addDiscountRow={addDiscountRow}
+          removeDiscountRow={removeDiscountRow}
+          updateDiscountRow={updateDiscountRow}
+          addScheduleRow={addScheduleRow}
+          removeScheduleRow={removeScheduleRow}
+          updateScheduleRow={updateScheduleRow}
+          activeTimetable={activeTimetable}
+          addPeriodRow={addPeriodRow}
+          removePeriodRow={removePeriodRow}
+          updatePeriodRow={updatePeriodRow}
+          addBudgetRow={addBudgetRow}
+          removeBudgetRow={removeBudgetRow}
+          updateBudgetRow={updateBudgetRow}
+          addRefreshmentRow={addRefreshmentRow}
+          removeRefreshmentRow={removeRefreshmentRow}
+          updateRefreshmentRow={updateRefreshmentRow}
+          activeScholarship={activeScholarship}
+          updateScholarship={updateScholarship}
+          updateEligibility={updateEligibility}
+        />
       </div>
     </FormModal>
   );
