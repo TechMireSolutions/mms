@@ -1393,6 +1393,7 @@ export const APP_TRANSLATIONS_EN = {
   "contacts.columns.preferredContactMethod": "Preferred Contact Method",
   "contacts.columns.preferredLanguage": "Preferred Language",
   "contacts.columns.relationshipContact": "Relationship Contact",
+  "contacts.columns.relationship_contact": "Relationship Contact",
   "contacts.columns.relationshipType": "Relationship Type",
   "contacts.columns.relationship_type": "Relationship Type",
   "contacts.columns.skills": "Skills",
