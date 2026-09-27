@@ -2,6 +2,8 @@ import React from 'react';
 import { translateAppParams } from '@mms/shared';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 
+import { Button } from '@/components/ui/button';
+
 export default function RootErrorBoundary({ children }: { children: React.ReactNode }): React.JSX.Element {
   return (
     <ErrorBoundary
@@ -14,13 +16,11 @@ export default function RootErrorBoundary({ children }: { children: React.ReactN
             <p className="text-sm text-muted-foreground">
               {translateAppParams('errors.boundary.description', 'en')}
             </p>
-            <button
-              type="button"
+            <Button
               onClick={() => window.location.reload()}
-              className="inline-flex min-h-11 items-center justify-center rounded-xl bg-primary px-6 py-2 text-sm font-semibold text-primary-foreground shadow hover:bg-primary/90 cursor-pointer"
             >
               Retry
-            </button>
+            </Button>
           </div>
         </div>
       }
