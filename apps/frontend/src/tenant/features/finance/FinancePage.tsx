@@ -16,31 +16,7 @@ import { type Invoice } from '@/lib/data/financeData';
 import { FinanceCommandMetrics } from "@/tenant/features/finance/components/FinanceCommandMetrics";
 import { notify } from "@/lib/notify";
 
-const InvoiceDetail = React.lazy(() =>
-  import("@/tenant/features/finance/components/InvoiceDetail").then((m) => ({
-    default: m.InvoiceDetail,
-  }))
-);
-const InvoiceForm = React.lazy(() =>
-  import("@/tenant/features/finance/components/InvoiceForm").then((m) => ({
-    default: m.InvoiceForm,
-  }))
-);
-const FinanceGenerateInvoicesDialog = React.lazy(() =>
-  import("@/tenant/features/finance/components/FinanceGenerateInvoicesDialog").then((m) => ({
-    default: m.FinanceGenerateInvoicesDialog,
-  }))
-);
-const PaymentForm = React.lazy(() =>
-  import("@/tenant/features/finance/components/PaymentForm").then((m) => ({
-    default: m.PaymentForm,
-  }))
-);
-const PaymentDetail = React.lazy(() =>
-  import("@/tenant/features/finance/components/PaymentDetail").then((m) => ({
-    default: m.PaymentDetail,
-  }))
-);
+import { FinanceOverlays } from "@/tenant/features/finance/components/FinanceOverlays";
 
 const FinanceSetupTier = React.lazy(() =>
   import("@/tenant/features/finance/components/FinanceSetupTier").then((m) => ({
@@ -52,12 +28,6 @@ const FinanceReportsTier = React.lazy(() =>
     default: m.FinanceReportsTier,
   }))
 );
-const InvoiceReceiptModal = React.lazy(() =>
-  import("@/tenant/features/finance/components/InvoiceReceiptModal").then((m) => ({
-    default: m.InvoiceReceiptModal,
-  }))
-);
-const MessageComposer = React.lazy(() => import("@/components/ui/MessageComposer"));
 
 /**
  * Finance — invoices and payments. Work | Reports | Setup.
@@ -67,7 +37,6 @@ export default function Finance(): React.JSX.Element {
   const [receiptInvoices, setReceiptInvoices] = React.useState<Invoice[]>([]);
 
   return (
-    <>
     <ModulePageShell
       seoTitle={`MMS - ${c.t("nav.finance")}`}
       seoDescription={c.t("page.finance.subtitle")}
@@ -207,77 +176,12 @@ export default function Finance(): React.JSX.Element {
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      <AnimatePresence>
-        {c.generatingInvoices && c.canWrite && !c.showDeleted && (
-          <React.Suspense fallback={null}>
-            <FinanceGenerateInvoicesDialog
-              open={c.generatingInvoices}
-              onClose={() => c.setGeneratingInvoices(false)}
-            />
-          </React.Suspense>
-        )}
-        {c.creatingInvoice && c.canWrite && !c.showDeleted && (
-          <React.Suspense fallback={null}>
-            <InvoiceForm
-              open={c.creatingInvoice}
-              saving={c.createInvoice.isPending}
-              onClose={() => c.setCreatingInvoice(false)}
-              onSave={c.handleCreateInvoice}
-            />
-          </React.Suspense>
-        )}
-        {c.viewInvoice && (
-          <React.Suspense fallback={null}>
-            <InvoiceDetail
-              invoice={c.viewInvoice}
-              onClose={() => c.setViewInvoice(null)}
-              onRecord={(invoiceToRecord: Invoice) => { c.setViewInvoice(null); c.setRecordInvoice(invoiceToRecord); }}
-              onPrintReceipt={(inv) => { c.setViewInvoice(null); setReceiptInvoices([inv]); }}
-              canWrite={c.canWrite}
-              canDelete={c.canDelete}
-              onRestore={c.restoreInvoice.mutateAsync}
-            />
-          </React.Suspense>
-        )}
-        {c.recordInvoice && c.canWrite && !c.showDeleted && (
-          <React.Suspense fallback={null}>
-            <PaymentForm open={!!c.recordInvoice} invoice={c.recordInvoice} onClose={() => c.setRecordInvoice(null)} onSave={c.handleRecordPayment} />
-          </React.Suspense>
-        )}
-      </AnimatePresence>
-
-      {receiptInvoices.length > 0 && (
-        <React.Suspense fallback={null}>
-          <InvoiceReceiptModal
-            invoices={receiptInvoices}
-            onClose={() => setReceiptInvoices([])}
-          />
-        </React.Suspense>
-      )}
-      {c.messagingTarget && (
-        <React.Suspense fallback={null}>
-          <MessageComposer
-            channel={c.messagingTarget.channel}
-            recipients={c.messagingTarget.recipients}
-            initialMessage={c.messagingTarget.initialMessage}
-            onClose={c.closeComposer}
-          />
-        </React.Suspense>
-      )}
+      <FinanceOverlays
+        c={c}
+        receiptInvoices={receiptInvoices}
+        onCloseReceipts={() => setReceiptInvoices([])}
+        onSetReceiptInvoices={setReceiptInvoices}
+      />
     </ModulePageShell>
-
-      <AnimatePresence>
-        {c.activePayment && (
-          <React.Suspense fallback={null}>
-            <PaymentDetail
-              payment={c.activePayment}
-              onClose={() => c.setActivePayment(null)}
-              canDelete={c.canDelete}
-              onRestore={c.restorePayment.mutateAsync}
-            />
-          </React.Suspense>
-        )}
-      </AnimatePresence>
-    </>
   );
 }

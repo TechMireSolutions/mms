@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { User } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { ActionButton } from "@/components/ui/ActionButton";
+import { FormSubmitActions } from "@/components/ui/FormSubmitActions";
 import { Input } from "@/components/ui/input";
 import { Field } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -10,7 +10,6 @@ import { useUpdatePlatformProfileName } from "@/platform/hooks/usePlatformProfil
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
 import { getPlatformNameError } from "@/platform/lib/platformValidation";
 import { notify } from "@/lib/notify";
-import { PLATFORM_PROFILE_SUBMIT_CLASS } from "./platformAccountStyles";
 
 export function PlatformProfileNameForm({
   initialName,
@@ -72,15 +71,11 @@ export function PlatformProfileNameForm({
             className="min-h-11"
           />
         </Field>
-        <ActionButton
-          type="submit"
-          variant="primary"
-          className={PLATFORM_PROFILE_SUBMIT_CLASS}
-          loading={updateName.isPending}
+        <FormSubmitActions
+          submitLabel={t("platform.profileSave")}
+          pending={updateName.isPending}
           disabled={name === platformUser?.name}
-        >
-          {t("platform.profileSave")}
-        </ActionButton>
+        />
       </form>
     </SectionCard>
   );

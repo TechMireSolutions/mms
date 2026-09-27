@@ -7,7 +7,12 @@ import { useModulePermissions } from "@/tenant/hooks/usePermissions";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useTrashMode } from "@/hooks/useTrashMode";
 import { type Invoice } from '@/lib/data/financeData';
-import { FINANCE_MODULE_MANIFEST, type InvoiceCreateInput, type Payment, type PaymentCreateInput } from "@mms/shared";
+import {
+  FINANCE_MODULE_MANIFEST,
+  type InvoiceCreateInput,
+  type Payment,
+  type PaymentCreateInput,
+} from "@mms/shared";
 import {
   useFinanceInvoicesPaginated,
   useFinancePaymentsPaginated,
@@ -18,8 +23,9 @@ import { useFinanceInvoiceColumnLayout } from "@/tenant/features/finance/hooks/u
 import { useFinancePaymentColumnLayout } from "@/tenant/features/finance/hooks/useFinancePaymentColumnLayout";
 import { notify } from "@/lib/notify";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
-import { useFinanceCollectMutations } from "@/tenant/features/finance/hooks/useFinanceCollect";
 import { useWorkSelection } from "@/hooks/useWorkSelection";
+import { useFinanceCollectActions } from "./useFinanceCollectActions";
+import { useFinanceBulkActions } from "./useFinanceBulkActions";
 
 export function useFinancePageController() {
   const { t } = useTranslation();
@@ -30,16 +36,24 @@ export function useFinancePageController() {
     canViewSetup,
   } = useModulePermissions(FINANCE_MODULE_MANIFEST);
   const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const SUB_TABS = (() => [
-      { id: "invoices", label: t("finance.invoices"), icon: ReceiptText },
-      { id: "payments", label: t("finance.payments"), icon: CreditCard },
-    ])();
+  const SUB_TABS = [
+    { id: "invoices", label: t("finance.invoices"), icon: ReceiptText },
+    { id: "payments", label: t("finance.payments"), icon: CreditCard },
+  ];
   const [activeTab, setActiveTab] = usePersistedTabState<string>("finance_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("invoices");
   const [activePayment, setActivePayment] = useState<Payment | null>(null);
   const [showDeleted, setShowDeleted] = useTrashMode();
-  const invoicesResult = useFinanceInvoicesPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
-  const paymentsResult = useFinancePaymentsPaginated({ includeDeleted: showDeleted, page: 1, limit: 100 });
+  const invoicesResult = useFinanceInvoicesPaginated({
+    includeDeleted: showDeleted,
+    page: 1,
+    limit: 100,
+  });
+  const paymentsResult = useFinancePaymentsPaginated({
+    includeDeleted: showDeleted,
+    page: 1,
+    limit: 100,
+  });
   const invoices = invoicesResult.data?.invoices ?? [];
   const payments = paymentsResult.data?.payments ?? [];
   const {
@@ -55,8 +69,8 @@ export function useFinancePageController() {
     bulkDeletePayments,
     bulkRestorePayments,
   } = useFinanceMutations();
-  const { canWriteMessaging, messagingTarget, openComposer, closeComposer } = useMessageComposerState();
-  const { collect, remind } = useFinanceCollectMutations();
+  const { canWriteMessaging, messagingTarget, openComposer, closeComposer } =
+    useMessageComposerState();
   const [viewInvoice, setViewInvoice] = useState<Invoice | null>(null);
   const [recordInvoice, setRecordInvoice] = useState<Invoice | null>(null);
   const [creatingInvoice, setCreatingInvoice] = useState(false);
@@ -99,7 +113,9 @@ export function useFinancePageController() {
     if (activeTab !== "work") setShowDeleted(false);
   }, [activeTab]);
 
-  const handleRecordPayment = async (paymentToRecord: PaymentCreateInput): Promise<void> => {
+  const handleRecordPayment = async (
+    paymentToRecord: PaymentCreateInput,
+  ): Promise<void> => {
     try {
       await createPayment.mutateAsync(paymentToRecord);
       setRecordInvoice(null);
@@ -107,11 +123,15 @@ export function useFinancePageController() {
       notify.error(t("finance.paymentSaveFailed"), {
         description: error instanceof Error ? error.message : String(error),
       });
-      throw new NotifiedMutationError(error instanceof Error ? error.message : String(error));
+      throw new NotifiedMutationError(
+        error instanceof Error ? error.message : String(error),
+      );
     }
   };
 
-  const handleCreateInvoice = async (invoiceToCreate: InvoiceCreateInput): Promise<void> => {
+  const handleCreateInvoice = async (
+    invoiceToCreate: InvoiceCreateInput,
+  ): Promise<void> => {
     try {
       await createInvoice.mutateAsync(invoiceToCreate);
       setCreatingInvoice(false);
@@ -121,100 +141,35 @@ export function useFinancePageController() {
       notify.error(t("finance.invoiceSaveFailed"), {
         description: error instanceof Error ? error.message : String(error),
       });
-      throw new NotifiedMutationError(error instanceof Error ? error.message : String(error));
-    }
-  };
-
-  const mutationError = (error: Error): void => {
-    notify.error(t("finance.trash.actionFailed"), { description: error.message });
-  };
-
-  const handleBulkResult = (
-    result: { succeeded: number; failed: number },
-    successKey: "finance.trash.deleted" | "finance.trash.restored",
-    scope?: "invoices" | "payments",
-  ): void => {
-    if (result.failed > 0) {
-      notify.error(t("finance.trash.bulkPartial", { succeeded: result.succeeded, failed: result.failed }));
-    } else if (result.succeeded > 1) {
-      notify.success(
-        t(
-          successKey === "finance.trash.deleted"
-            ? "finance.trash.bulkDeleted"
-            : "finance.trash.bulkRestored",
-          { count: result.succeeded },
-        ),
+      throw new NotifiedMutationError(
+        error instanceof Error ? error.message : String(error),
       );
-    } else {
-      notify.success(t(successKey));
-    }
-    if (scope === "invoices") {
-      clearInvoiceSelection();
-    } else if (scope === "payments") {
-      clearPaymentSelection();
-    } else {
-      clearInvoiceSelection();
-      clearPaymentSelection();
     }
   };
 
-  const handleCollectOverdue = async (): Promise<void> => {
-    try {
-      const result = await collect.mutateAsync({ applyLateFee: true });
-      notify.success(t("finance.collect.success", { overdue: result.markedOverdue, lateFees: result.lateFeesApplied }));
-    } catch (error) {
-      notify.error(t("finance.collect.failed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-    }
-  };
+  const { mutationError, handleBulkResult, handleBulkStatusChange } =
+    useFinanceBulkActions({
+      bulkUpdateInvoiceStatus,
+      clearInvoiceSelection,
+      clearPaymentSelection,
+      t,
+    });
 
-  const handleRemindInvoices = async (): Promise<void> => {
-    try {
-      const result = await remind.mutateAsync({});
-      if (result.recipients.length === 0) {
-        notify.info(t("finance.collect.remindNone"));
-        return;
-      }
-      notify.success(t("finance.collect.reminded", { count: result.reminded }));
-      if (!canWriteMessaging) return;
-      const hasPhone = result.recipients.some((recipient) => recipient.phone);
-      openComposer(
-        hasPhone ? "whatsapp" : "email",
-        result.recipients.map((recipient) => ({
-          id: recipient.id,
-          name: recipient.name,
-          phone: recipient.phone,
-          email: recipient.email,
-        })),
-        { initialMessage: t("finance.collect.remindMessage") },
-      );
-    } catch (error) {
-      notify.error(t("finance.collect.remindFailed"), {
-        description: error instanceof Error ? error.message : String(error),
-      });
-    }
-  };
+  const {
+    handleCollectOverdue,
+    handleRemindInvoices,
+    collectPending,
+    remindPending,
+  } = useFinanceCollectActions({
+    canWriteMessaging,
+    openComposer,
+    t,
+  });
 
   const openCreateInvoice = () => {
     setActiveTab("work");
     setActiveSubTab("invoices");
     setCreatingInvoice(true);
-  };
-
-  const handleBulkStatusChange = async (ids: string[], status: string): Promise<void> => {
-    try {
-      const result = await bulkUpdateInvoiceStatus.mutateAsync({ ids, status: status as import('@mms/shared').InvoicesBulkStatusBody['status'] });
-      if (result.failed > 0) {
-        notify.error(t('finance.bulkStatusFailed'), { description: `${result.succeeded} updated, ${result.failed} failed` });
-      } else if (result.succeeded > 1) {
-        notify.success(t('finance.bulkStatusSuccessMany', { count: result.succeeded }));
-      } else {
-        notify.success(t('finance.bulkStatusSuccess'));
-      }
-    } catch {
-      notify.error(t('finance.bulkStatusFailed'));
-    }
   };
 
   return {
@@ -254,8 +209,8 @@ export function useFinancePageController() {
     openCreateInvoice,
     handleCollectOverdue,
     handleRemindInvoices,
-    collectPending: collect.isPending,
-    remindPending: remind.isPending,
+    collectPending,
+    remindPending,
     messagingTarget,
     closeComposer,
     deleteInvoice,

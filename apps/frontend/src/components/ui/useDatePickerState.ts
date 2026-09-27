@@ -1,45 +1,29 @@
-import * as React from "react"
-import type { Matcher } from "react-day-picker"
+import * as React from "react";
 import {
   DEFAULT_GLOBAL_SETTINGS,
-  formatDateInputAsYouType,
   formatDateToIso,
   formatIsoDateToDisplay,
-  isDateWithinIsoBounds,
-  isYearWithinBounds,
   normalizeDateFormat,
-  parseDisplayDateToIso,
-  parseFlexibleIsoDate,
-  resolveDatePickerMonthBounds,
   type DateFormatId,
-} from "@mms/shared"
-import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings"
-import { useDatePickerYearMode } from "./datePickerYearMode"
+} from "@mms/shared";
+import { useGlobalSettings } from "@/tenant/hooks/useGlobalSettings";
+import { useDatePickerYearMode } from "./datePickerYearMode";
+import { useDatePickerDateMode } from "./useDatePickerDateMode";
+import {
+  processDatePickerBlur,
+  processDatePickerInputChange,
+} from "./datePickerInputProcessing";
 
 export interface UseDatePickerStateOptions {
-  value?: string | number | Date | null
-  onChange?: (value: string) => void
-  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
-  min?: string | number | null
-  max?: string | number | null
-  mode?: "date" | "year" | "flexible"
-  yearOnly?: boolean
-  minYear?: number | null
-  maxYear?: number | null
-}
-
-function resolveInitialDisplayMonth(
-  targetDate?: Date,
-  minIso?: string | number | null,
-  maxIso?: string | number | null,
-): Date {
-  if (targetDate) return targetDate
-  const today = new Date()
-  const minDate = typeof minIso === "string" ? parseFlexibleIsoDate(minIso) : undefined
-  if (minDate && today < minDate) return minDate
-  const maxDate = typeof maxIso === "string" ? parseFlexibleIsoDate(maxIso) : undefined
-  if (maxDate && today > maxDate) return maxDate
-  return today
+  value?: string | number | Date | null;
+  onChange?: (value: string) => void;
+  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void;
+  min?: string | number | null;
+  max?: string | number | null;
+  mode?: "date" | "year" | "flexible";
+  yearOnly?: boolean;
+  minYear?: number | null;
+  maxYear?: number | null;
 }
 
 export function useDatePickerState({
@@ -53,32 +37,20 @@ export function useDatePickerState({
   minYear,
   maxYear,
 }: UseDatePickerStateOptions) {
-  const [open, setOpen] = React.useState(false)
-  const [inputValue, setInputValue] = React.useState("")
-  const fallbackId = React.useId()
+  const [open, setOpen] = React.useState(false);
+  const [inputValue, setInputValue] = React.useState("");
+  const fallbackId = React.useId();
 
-  const settings = useGlobalSettings()
+  const settings = useGlobalSettings();
   const dateFormat = normalizeDateFormat(
     settings.dateFormat,
     DEFAULT_GLOBAL_SETTINGS.dateFormat as DateFormatId,
-  )
+  );
 
-  const lastParsedRef = React.useRef<string | null>(null)
-  const lastFormatRef = React.useRef<string>(dateFormat)
+  const lastParsedRef = React.useRef<string | null>(null);
+  const lastFormatRef = React.useRef<string>(dateFormat);
 
-  const {
-    isYearMode,
-    selectedYear,
-    resolvedMinYear,
-    resolvedMaxYear,
-    yearPageStart,
-    setYearPageStart,
-    goToPreviousYearPage,
-    goToNextYearPage,
-    handleSelectYear,
-    handleSelectThisYear,
-    isThisYearAllowed,
-  } = useDatePickerYearMode({
+  const yearMode = useDatePickerYearMode({
     mode,
     yearOnly,
     value,
@@ -91,197 +63,82 @@ export function useDatePickerState({
     setOpen,
     setInputValue,
     lastParsedRef,
-  })
+  });
 
-  const rawIsoString = typeof value === "string" ? value : value instanceof Date ? formatDateToIso(value) : ""
+  const dateMode = useDatePickerDateMode({
+    value,
+    min,
+    max,
+    open,
+    isYearMode: yearMode.isYearMode,
+    dateFormat,
+    onChange,
+    setOpen,
+    setInputValue,
+    lastParsedRef,
+    setYearPageStart: yearMode.setYearPageStart,
+  });
+
+  const rawIsoString =
+    typeof value === "string" ? value : value instanceof Date ? formatDateToIso(value) : "";
 
   React.useEffect(() => {
-    if (isYearMode) return
-
+    if (yearMode.isYearMode) return;
     if (rawIsoString !== lastParsedRef.current || dateFormat !== lastFormatRef.current) {
-      setInputValue(formatIsoDateToDisplay(rawIsoString || "", dateFormat))
-      lastParsedRef.current = rawIsoString || null
-      lastFormatRef.current = dateFormat
+      setInputValue(formatIsoDateToDisplay(rawIsoString || "", dateFormat));
+      lastParsedRef.current = rawIsoString || null;
+      lastFormatRef.current = dateFormat;
     }
-  }, [rawIsoString, dateFormat, isYearMode])
-
-  const dateValue = React.useMemo(
-    () => (typeof value === "string" ? parseFlexibleIsoDate(value) : value instanceof Date ? value : undefined),
-    [value],
-  )
-
-  /** Month shown in the calendar — jump to the filled value (or clamped valid month) when opening. */
-  const [displayMonth, setDisplayMonth] = React.useState<Date>(() =>
-    resolveInitialDisplayMonth(dateValue, min, max),
-  )
-
-  React.useEffect(() => {
-    if (!open || isYearMode) return
-    setDisplayMonth(resolveInitialDisplayMonth(dateValue, min, max))
-  }, [open, dateValue, min, max, isYearMode])
-
-  const minIsoStr = typeof min === "string" ? min : undefined
-  const maxIsoStr = typeof max === "string" ? max : undefined
-
-  const disabledDays = React.useMemo(() => {
-    if (isYearMode) return undefined
-    const rules: Matcher[] = []
-    const minDate = parseFlexibleIsoDate(minIsoStr)
-    if (minDate) rules.push({ before: minDate })
-    const maxDate = parseFlexibleIsoDate(maxIsoStr)
-    if (maxDate) rules.push({ after: maxDate })
-    return rules.length > 0 ? rules : undefined
-  }, [minIsoStr, maxIsoStr, isYearMode])
-
-  const { startMonth, endMonth } = React.useMemo(
-    () => resolveDatePickerMonthBounds(minIsoStr, maxIsoStr),
-    [minIsoStr, maxIsoStr],
-  )
-
-  const commitIso = (iso: string, nextDisplayMonth?: Date, updateInput = true) => {
-    lastParsedRef.current = iso
-    onChange?.(iso)
-    if (updateInput) {
-      setInputValue(formatIsoDateToDisplay(iso, dateFormat))
-    }
-    if (nextDisplayMonth) setDisplayMonth(nextDisplayMonth)
-  }
-
-  const clearValue = () => {
-    lastParsedRef.current = ""
-    onChange?.("")
-    setInputValue("")
-    setDisplayMonth(new Date())
-    setYearPageStart(Math.floor(new Date().getFullYear() / 10) * 10)
-  }
-
-  const handleSelect = (date: Date | undefined) => {
-    if (!date) {
-      clearValue()
-      setOpen(false)
-      return
-    }
-    commitIso(formatDateToIso(date), date)
-    setOpen(false)
-  }
+  }, [rawIsoString, dateFormat, yearMode.isYearMode]);
 
   const handleInputChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const rawValue = event.target.value
-    if (rawValue === "") {
-      clearValue()
-      return
-    }
-
-    if (isYearMode) {
-      const digits = rawValue.replace(/\D/g, "").slice(0, 4)
-      setInputValue(digits)
-
-      if (digits.length === 4) {
-        const num = Number(digits)
-        if (isYearWithinBounds(num, resolvedMinYear, resolvedMaxYear)) {
-          lastParsedRef.current = digits
-          onChange?.(digits)
-          setYearPageStart(Math.floor(num / 10) * 10)
-        }
-      }
-      return
-    }
-
-    const formatted = formatDateInputAsYouType(rawValue, dateFormat, inputValue)
-    setInputValue(formatted)
-
-    const parsed = parseDisplayDateToIso(formatted, dateFormat)
-    if (!parsed) return
-    const parsedDate = parseFlexibleIsoDate(parsed)
-    if (!parsedDate || !isDateWithinIsoBounds(parsedDate, minIsoStr, maxIsoStr)) return
-    commitIso(parsed, parsedDate, false)
-  }
+    processDatePickerInputChange({
+      rawValue: event.target.value,
+      isYearMode: yearMode.isYearMode,
+      resolvedMinYear: yearMode.resolvedMinYear,
+      resolvedMaxYear: yearMode.resolvedMaxYear,
+      dateFormat,
+      currentInputValue: inputValue,
+      minIsoStr: dateMode.minIsoStr,
+      maxIsoStr: dateMode.maxIsoStr,
+      clearValue: dateMode.clearValue,
+      setInputValue,
+      lastParsedRef,
+      onChange,
+      setYearPageStart: yearMode.setYearPageStart,
+      commitIso: dateMode.commitIso,
+    });
+  };
 
   const handleBlur = (event?: React.FocusEvent<HTMLInputElement>) => {
-    if (isYearMode) {
-      if (!inputValue) {
-        clearValue()
-      } else if (inputValue.length === 4) {
-        const num = Number(inputValue)
-        if (isYearWithinBounds(num, resolvedMinYear, resolvedMaxYear)) {
-          const yearStr = String(num)
-          lastParsedRef.current = yearStr
-          onChange?.(yearStr)
-          setInputValue(yearStr)
-        } else {
-          setInputValue(selectedYear ? String(selectedYear) : "")
-        }
-      } else {
-        setInputValue(selectedYear ? String(selectedYear) : "")
-      }
-      if (event) onBlur?.(event)
-      return
-    }
-
-    if (!inputValue) {
-      clearValue()
-      if (event) onBlur?.(event)
-      return
-    }
-
-    const parsed = parseDisplayDateToIso(inputValue, dateFormat)
-    const parsedDate = parsed ? parseFlexibleIsoDate(parsed) : undefined
-    if (parsed && parsedDate && isDateWithinIsoBounds(parsedDate, minIsoStr, maxIsoStr)) {
-      commitIso(parsed, parsedDate)
-      if (event) onBlur?.(event)
-      return
-    }
-    setInputValue(formatIsoDateToDisplay(rawIsoString || "", dateFormat))
-    if (event) onBlur?.(event)
-  }
-
-  const isTodayAllowed = React.useMemo(() => {
-    return isDateWithinIsoBounds(new Date(), minIsoStr, maxIsoStr)
-  }, [minIsoStr, maxIsoStr])
-
-  const handleSelectToday = () => {
-    const today = new Date()
-    if (isTodayAllowed) {
-      commitIso(formatDateToIso(today), today)
-      setOpen(false)
-    }
-  }
-
-  const handleClear = (event?: React.MouseEvent | React.SyntheticEvent) => {
-    event?.stopPropagation()
-    clearValue()
-  }
+    processDatePickerBlur({
+      inputValue,
+      isYearMode: yearMode.isYearMode,
+      resolvedMinYear: yearMode.resolvedMinYear,
+      resolvedMaxYear: yearMode.resolvedMaxYear,
+      selectedYear: yearMode.selectedYear,
+      dateFormat,
+      rawIsoString,
+      minIsoStr: dateMode.minIsoStr,
+      maxIsoStr: dateMode.maxIsoStr,
+      clearValue: dateMode.clearValue,
+      setInputValue,
+      lastParsedRef,
+      onChange,
+      commitIso: dateMode.commitIso,
+    });
+    if (event) onBlur?.(event);
+  };
 
   return {
+    ...yearMode,
+    ...dateMode,
     open,
     setOpen,
     inputValue,
     fallbackId,
     dateFormat,
-    dateValue,
-    displayMonth,
-    setDisplayMonth,
-    disabledDays,
-    startMonth,
-    endMonth,
-    isTodayAllowed,
-    handleSelect,
-    handleSelectToday,
     handleInputChange,
     handleBlur,
-    handleClear,
-    // Year Mode
-    isYearMode,
-    selectedYear,
-    resolvedMinYear,
-    resolvedMaxYear,
-    yearPageStart,
-    setYearPageStart,
-    goToPreviousYearPage,
-    goToNextYearPage,
-    handleSelectYear,
-    handleSelectThisYear,
-    isThisYearAllowed,
-  }
+  };
 }
-

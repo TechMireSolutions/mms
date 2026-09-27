@@ -1,22 +1,14 @@
-import { useState } from 'react';
-import { Mail, MessageCircle, MessageSquare } from 'lucide-react';
-import {
-  mergeMessageTemplates,
-  type MessageTemplate,
-  type StandardMessagingRecipient as MessagingRecipient,
-} from '@mms/shared';
 import { FormModal } from '@/components/ui/FormModal';
 import { WarningCallout } from '@/components/ui/WarningCallout';
-import { useMessageTemplates } from '@/hooks/useMessaging';
-import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
+import type {
+  MessageTemplate,
+  StandardMessagingRecipient as MessagingRecipient,
+} from '@mms/shared';
 import { MessageComposerDispatchControls } from './messageComposer/MessageComposerDispatchControls';
 import { MessageComposerFormBody } from './messageComposer/MessageComposerFormBody';
-import {
-  MessageComposerRecipients,
-  type RecipientTab,
-} from './messageComposer/MessageComposerRecipients';
-import { useMessageComposerDispatch } from './messageComposer/useMessageComposerDispatch';
+import { MessageComposerRecipients } from './messageComposer/MessageComposerRecipients';
+import { useMessageComposerModel } from './messageComposer/useMessageComposerModel';
 
 export interface MessageComposerProps {
   channel: 'sms' | 'whatsapp' | 'email';
@@ -28,205 +20,60 @@ export interface MessageComposerProps {
   onSent?: (sent: { recipientId: string | number; body: string }[]) => void;
 }
 
-export default function MessageComposer({
-  channel,
-  recipients,
-  onClose,
-  templates,
-  initialMessage,
-  initialSubject,
-  onSent,
-}: MessageComposerProps): React.JSX.Element {
+export default function MessageComposer(props: MessageComposerProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { templates: fetchedTemplates } = useMessageTemplates();
+  const model = useMessageComposerModel(props);
+  const { step, setStep, localRecipients, dispatch, isEmail, isSms, isBulk, Icon } = model;
 
-  const activeTemplates = (() => templates ?? mergeMessageTemplates(fetchedTemplates))();
-  const channelTemplates = (() => activeTemplates.filter(
-      (tpl) => !tpl.channel || tpl.channel === 'all' || tpl.channel === channel,
-    ))();
-
-  const [templateId, setTemplateId] = useState(
-    () => channelTemplates[0]?.id || activeTemplates[0]?.id || 'custom',
-  );
-  const [subject, setSubject] = useState(initialSubject ?? '');
-  const [message, setMessage] = useState(
-    () => initialMessage || channelTemplates[0]?.body || activeTemplates[0]?.body || '',
-  );
-  const [recipientTab, setRecipientTab] = useState<RecipientTab>('all');
-  const [recipientSearch, setRecipientSearch] = useState('');
-  const [previewIndex, setPreviewIndex] = useState(0);
-  const [localRecipients, setLocalRecipients] = useState<MessagingRecipient[]>(recipients);
-  const [step, setStep] = useState<'pick' | 'compose'>(recipients.length > 0 ? 'compose' : 'pick');
-
-  // Fix #1: read current state before setter — no mutation inside the updater closure
-  const addRecipient = ((candidate: MessagingRecipient): void => {
-    const isDuplicate = localRecipients.some((r) => String(r.id) === String(candidate.id));
-    if (!isDuplicate) {
-      setLocalRecipients((prev) => [...prev, candidate]);
-      notify.success(t('messaging.recipientAdded'));
+  const handleClose = () => {
+    if (step === 'compose' && props.recipients.length === 0) {
+      setStep('pick');
     } else {
-      notify.warning(t('messaging.recipientAlreadyAdded'));
+      dispatch.requestClose();
     }
-  });
+  };
 
-  const removeRecipient = ((id: string | number): void => {
-    setLocalRecipients((prev) => prev.filter((r) => String(r.id) !== String(id)));
-    notify.success(t('messaging.recipientRemoved'));
-  });
-
-  const dispatch = useMessageComposerDispatch({
-    channel,
-    recipients: localRecipients,
-    activeTemplates,
-    templateId,
-    subject,
-    message,
-    onClose,
-    onSent,
-  });
-
-  const displayedRecipients = (() => {
-    const list =
-      recipientTab === 'eligible'
-        ? dispatch.eligibleRecipients
-        : recipientTab === 'skipped'
-          ? dispatch.skippedRecipients
-          : dispatch.validatedRecipients;
-    const query = recipientSearch.trim().toLowerCase();
-    return query
-      ? list.filter(
-          (r) =>
-            r.name.toLowerCase().includes(query) ||
-            r.phone?.includes(query) ||
-            r.email?.toLowerCase().includes(query),
-        )
-      : list;
-  })();
-
-  const isEmail = channel === 'email';
-  const isSms = channel === 'sms';
-  const isBulk = localRecipients.length > 1;
-  const Icon = isEmail ? Mail : isSms ? MessageSquare : MessageCircle;
-
-  // Fix #2: dep narrowed to first recipient's name — full array ref not needed
-  const firstRecipientName = localRecipients[0]?.name ?? '';
-  const title = (() => {
-    if (step === 'pick') return t('messaging.selectRecipients');
-    if (isBulk) {
-      return isEmail
-        ? t('messaging.bulkEmailTitle')
-        : isSms
-          ? t('messaging.bulkSmsTitle')
-          : t('messaging.bulkWhatsappTitle');
-    }
-    return isEmail
-      ? `${t('messaging.sendEmail')} – ${firstRecipientName}`
-      : isSms
-        ? `${t('messaging.sms')} – ${firstRecipientName}`
-        : t('messaging.whatsappSingleTitle', { name: firstRecipientName });
-  })();
-
-  const subtitle = (() => {
-    if (step === 'pick') return t('messaging.selectRecipientsDesc');
-    if (!isBulk) return undefined;
-    const eligible = dispatch.eligibleRecipients.length;
-    const total = localRecipients.length;
-    return isEmail
-      ? `${eligible} ${t('messaging.of')} ${total} ${t('messaging.selectRecipientsDesc')}`
-      : isSms
-        ? `${eligible} ${t('messaging.of')} ${total} ${t('messaging.contactsHavePhone')}`
-        : `${eligible} ${t('messaging.of')} ${total} ${t('messaging.contactsHaveWhatsapp')}`;
-  })();
-
-  const note = (() =>
-      isEmail
-        ? t('messaging.bulkEmailDesc')
-        : isSms
-          ? t('messaging.smsManualSendNote')
-          : t('messaging.whatsappBulkManualNote'))();
-
-  const saveLabel = (() => {
-    if (step === 'pick') return t('common.next');
-    if (dispatch.pendingAudit) return t('messaging.retrySaveHistory');
-    if (dispatch.opening) return isEmail ? t('messaging.openingMail') : t('messaging.openingTabs');
-    const count = String(dispatch.eligibleRecipients.length);
-    return isEmail
-      ? isBulk
-        ? t('messaging.openAllMail', { count })
-        : t('messaging.openMailDraft')
-      : isSms
-        ? t('messaging.openSmsApp')
-        : isBulk
-          ? `${t('messaging.openAllWhatsapp')} (${count})`
-          : t('messaging.openWhatsapp');
-  })();
-
-  // Fix #4: stable reference — prevents MessageComposerFormBody re-render on every keystroke
-  const changeTemplate = ((nextTemplateId: string): void => {
-    setTemplateId(nextTemplateId);
-    const selected = channelTemplates.find((tpl) => tpl.id === nextTemplateId);
-    if (selected && selected.id !== 'custom') setMessage(selected.body);
-  });
-
-  const handleSave = (() => {
-    if (step === 'pick') {
-      setStep('compose');
-      return;
-    }
-    void dispatch.sendAll();
-  });
-
-  // Fix #6: stable ref — setRecipientTab is stable so deps are empty
-  const showSkipped = (() => setRecipientTab('skipped'));
-
-  // Fix #7: single source for the busy guard used in two places below
-  const isBusy = dispatch.opening || dispatch.saving;
-
-  const saveDisabled = step === 'pick'
-    ? localRecipients.length === 0
-    : dispatch.pendingAudit
-      ? dispatch.saving
-      : isBusy ||
-        !dispatch.eligibleRecipients.length ||
-        !message.trim() ||
-        (isEmail && !subject.trim());
+  const cancelLabel =
+    step === 'compose' && props.recipients.length === 0
+      ? t('common.previous')
+      : t('common.cancel');
 
   return (
     <FormModal
       open
       priority
       size={step === 'pick' ? '2xl' : 'xl'}
-      onClose={step === 'compose' && recipients.length === 0 ? () => setStep('pick') : dispatch.requestClose}
-      title={title}
-      subtitle={subtitle}
+      onClose={handleClose}
+      title={model.title}
+      subtitle={model.subtitle}
       icon={Icon}
-      cancelLabel={step === 'compose' && recipients.length === 0 ? t('common.previous') : t('common.cancel')}
-      saveLabel={saveLabel}
+      cancelLabel={cancelLabel}
+      saveLabel={model.saveLabel}
       saving={step === 'compose' && (dispatch.opening || dispatch.saving)}
-      onSave={handleSave}
-      saveDisabled={saveDisabled}
+      onSave={model.handleSave}
+      saveDisabled={model.saveDisabled}
     >
-      <div 
-        id="debug-saveDisabled" 
-        data-debug={JSON.stringify({ 
-          step, 
-          localRecipientsCount: localRecipients.length, 
-          pendingAudit: !!dispatch.pendingAudit, 
-          isBusy, 
+      <div
+        id="debug-saveDisabled"
+        data-debug={JSON.stringify({
+          step,
+          localRecipientsCount: localRecipients.length,
+          pendingAudit: !!dispatch.pendingAudit,
+          isBusy: model.isBusy,
           opening: dispatch.opening,
           saving: dispatch.saving,
-          eligibleRecipientsCount: dispatch.eligibleRecipients.length, 
-          messageEmpty: !message.trim(),
-          messageValue: message,
+          eligibleRecipientsCount: dispatch.eligibleRecipients.length,
+          messageEmpty: !model.message.trim(),
+          messageValue: model.message,
           isEmail,
-          subjectEmpty: !subject.trim(),
-          saveDisabled
-        })} 
+          subjectEmpty: !model.subject.trim(),
+          saveDisabled: model.saveDisabled,
+        })}
       />
       <div className="space-y-4">
         {step === 'compose' && (
           <>
-            <p className="text-xs leading-relaxed text-muted-foreground">{note}</p>
+            <p className="text-xs leading-relaxed text-muted-foreground">{model.note}</p>
             {dispatch.pendingAudit ? (
               <WarningCallout density="compact" description={t('messaging.pendingAuditHint')} />
             ) : null}
@@ -238,45 +85,45 @@ export default function MessageComposer({
               dispatchSpeed={dispatch.dispatchSpeed}
               dispatchProgress={dispatch.dispatchProgress}
               isPaused={dispatch.isPaused}
-              onShowSkipped={showSkipped}
+              onShowSkipped={model.showSkipped}
               onDispatchSpeedChange={dispatch.setDispatchSpeed}
               onPausedChange={dispatch.setIsPaused}
               onCancel={dispatch.cancelDispatch}
             />
             <MessageComposerFormBody
-              channel={channel}
-              channelTemplates={channelTemplates}
-              templateId={templateId}
-              subject={subject}
-              message={message}
+              channel={props.channel}
+              channelTemplates={model.channelTemplates}
+              templateId={model.templateId}
+              subject={model.subject}
+              message={model.message}
               eligibleRecipients={dispatch.eligibleRecipients}
-              previewIndex={previewIndex}
+              previewIndex={model.previewIndex}
               personalizeOptions={dispatch.personalizeOptions}
-              onTemplateChange={changeTemplate}
-              onSubjectChange={setSubject}
-              onMessageChange={setMessage}
-              onPreviewIndexChange={setPreviewIndex}
+              onTemplateChange={model.changeTemplate}
+              onSubjectChange={model.setSubject}
+              onMessageChange={model.setMessage}
+              onPreviewIndexChange={model.setPreviewIndex}
             />
           </>
         )}
         <MessageComposerRecipients
           isEmail={isEmail}
           isSms={isSms}
-          recipientTab={recipientTab}
-          search={recipientSearch}
-          displayedRecipients={displayedRecipients}
+          recipientTab={model.recipientTab}
+          search={model.recipientSearch}
+          displayedRecipients={model.displayedRecipients}
           validatedRecipients={dispatch.validatedRecipients}
           eligibleRecipients={dispatch.eligibleRecipients}
           skippedRecipients={dispatch.skippedRecipients}
-          previewIndex={previewIndex}
-          message={message}
-          disabled={isBusy}
-          onRecipientTabChange={setRecipientTab}
-          onSearchChange={setRecipientSearch}
-          onPreviewIndexChange={setPreviewIndex}
+          previewIndex={model.previewIndex}
+          message={model.message}
+          disabled={model.isBusy}
+          onRecipientTabChange={model.setRecipientTab}
+          onSearchChange={model.setRecipientSearch}
+          onPreviewIndexChange={model.setPreviewIndex}
           onSendOne={dispatch.executeSend}
-          onAdd={addRecipient}
-          onRemove={removeRecipient}
+          onAdd={model.addRecipient}
+          onRemove={model.removeRecipient}
           isPickStep={step === 'pick'}
         />
       </div>

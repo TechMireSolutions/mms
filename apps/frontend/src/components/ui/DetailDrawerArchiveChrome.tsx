@@ -1,10 +1,28 @@
-import { useState } from "react";
-import { Archive, Edit2, Loader2, RotateCcw } from "lucide-react";
+import React from "react";
+import { Archive } from "lucide-react";
 import { formatDate } from "@mms/shared";
-import { Button } from "@/components/ui/button";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { formatEntityStamp } from "@/lib/formatEntityStamp";
 import { useTranslation } from "@/hooks/useTranslation";
+import {
+  calculateRemainingRetentionDays,
+  RetentionCountdownBadge,
+  type RetentionCountdownBadgeProps,
+} from "@/components/ui/RetentionCountdownBadge";
+import {
+  DetailDrawerRestoreOrEditAction,
+  type DetailDrawerRestoreOrEditActionProps,
+} from "@/components/ui/DetailDrawerRestoreOrEditAction";
+
+export {
+  calculateRemainingRetentionDays,
+  RetentionCountdownBadge,
+  DetailDrawerRestoreOrEditAction,
+};
+export type {
+  RetentionCountdownBadgeProps,
+  DetailDrawerRestoreOrEditActionProps,
+};
 
 export interface DetailDrawerArchivedBannerProps {
   deletedAt: unknown;
@@ -17,79 +35,6 @@ export interface DetailDrawerArchivedBannerProps {
   description?: string;
   /** Manifest retention policy in days (null = keep indefinitely). */
   retentionDays?: number | null;
-}
-
-/** Calculates remaining days before hard-purge based on deletedAt stamp and manifest retention policy or purgeAfter timestamp. */
-export function calculateRemainingRetentionDays(
-  deletedAt: unknown,
-  retentionDays?: number | null,
-  purgeAfter?: unknown,
-): number | null {
-  if (purgeAfter) {
-    const purgeStamp = formatEntityStamp(purgeAfter);
-    if (purgeStamp) {
-      const purgeTime = new Date(purgeStamp).getTime();
-      if (!Number.isNaN(purgeTime)) {
-        const diffMs = purgeTime - Date.now();
-        return Math.max(0, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
-      }
-    }
-  }
-  if (retentionDays == null || Number.isNaN(Number(retentionDays))) return null;
-  
-  const stamp = formatEntityStamp(deletedAt);
-  if (!stamp) return null;
-  const deletedTime = new Date(stamp).getTime();
-  if (Number.isNaN(deletedTime)) return null;
-  const purgeTime = deletedTime + Number(retentionDays) * 24 * 60 * 60 * 1000;
-  const diffMs = purgeTime - Date.now();
-  return Math.max(0, Math.ceil(diffMs / (24 * 60 * 60 * 1000)));
-}
-
-export interface RetentionCountdownBadgeProps {
-  deletedAt: unknown;
-  retentionDays?: number | null;
-  purgeAfter?: unknown;
-  className?: string;
-}
-
-/** Retention expiry countdown badge for trash directories and cards (§7.9). */
-export function RetentionCountdownBadge({
-  deletedAt,
-  retentionDays,
-  purgeAfter,
-  className = "",
-}: RetentionCountdownBadgeProps): React.JSX.Element | null {
-  const { t } = useTranslation();
-  const stamp = formatEntityStamp(deletedAt);
-  if (!stamp) return null;
-
-  const remaining = calculateRemainingRetentionDays(deletedAt, retentionDays, purgeAfter);
-
-  if (remaining === null) {
-    return (
-      <span
-        className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-muted text-muted-foreground ${className}`}
-      >
-        {t("common.archivedIndefinitely")}
-      </span>
-    );
-  }
-
-  const isWarning = remaining <= 7;
-
-  return (
-    <span
-      className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-        isWarning
-          ? "bg-destructive/10 text-destructive border border-destructive/20 font-semibold"
-          : "bg-muted text-muted-foreground"
-      } ${className}`}
-    >
-      {isWarning ? "⚠️ " : ""}
-      {remaining === 1 ? t("common.purgesInOneDay") : t("common.purgesInDays", { count: remaining })}
-    </span>
-  );
 }
 
 /** Soft-delete archive banner for entity detail drawers and directory cards. */
@@ -175,7 +120,6 @@ export function EntityArchivedBanner({
   );
 }
 
-
 export interface DrawerSyncStatusFooterProps {
   isArchived: boolean;
   /** Localized "archived" status label shown when the entity is soft-deleted. */
@@ -205,77 +149,5 @@ export function DrawerSyncStatusFooter({
         {isArchived ? archivedLabel : syncedLabel}
       </span>
     </div>
-  );
-}
-
-export interface DetailDrawerRestoreOrEditActionProps {
-  isArchived: boolean;
-  canRestore: boolean;
-  canEdit?: boolean;
-  restoreLabel: string;
-  editLabel?: string;
-  onRestore?: () => void | Promise<void>;
-  onEdit?: () => void;
-  className?: string;
-}
-
-/** Header restore (archived) or edit action for entity detail drawers. */
-export function DetailDrawerRestoreOrEditAction({
-  isArchived,
-  canRestore,
-  canEdit = false,
-  restoreLabel,
-  editLabel = "",
-  onRestore,
-  onEdit,
-  className = "rounded-lg border border-border hover:bg-muted transition-colors text-muted-foreground hover:text-foreground shadow-none",
-}: DetailDrawerRestoreOrEditActionProps): React.JSX.Element | null {
-  const [restoring, setRestoring] = useState(false);
-
-  if (isArchived && canRestore && onRestore) {
-    return (
-      <Button
-        type="button"
-        variant="outline"
-        size="icon"
-        disabled={restoring}
-        onClick={() => {
-          void (async () => {
-            setRestoring(true);
-            try {
-              await onRestore();
-            } finally {
-              setRestoring(false);
-            }
-          })();
-        }}
-        aria-label={restoreLabel}
-        aria-busy={restoring}
-        className={className}
-        title={restoreLabel}
-      >
-        {restoring ? (
-          <Loader2 className="w-4 h-4 animate-spin motion-reduce:animate-none" aria-hidden />
-        ) : (
-          <RotateCcw className="w-4 h-4" />
-        )}
-      </Button>
-    );
-  }
-
-  if (!canEdit || isArchived || !onEdit) return null;
-
-  return (
-    <Button
-      type="button"
-      variant="outline"
-      size="icon"
-      onClick={onEdit}
-      aria-label={editLabel}
-      className={className}
-      title={editLabel}
-    >
-      <Edit2 className="w-4 h-4" />
-    </Button>
   );
 }

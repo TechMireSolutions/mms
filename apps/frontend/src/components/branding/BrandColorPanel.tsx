@@ -1,21 +1,19 @@
 import React, { useState } from 'react';
-import { ArrowLeftRight, Copy, Upload, Wand2 } from 'lucide-react';
+import { ArrowLeftRight } from 'lucide-react';
 import {
-  BRANDING_HARMONY_SCHEMES,
   brandingTokenToHex,
   buildBrandingCssVariables,
   suggestHarmoniousSecondaryColor,
-  type AppTranslationKey,
   type BrandingHarmonyScheme,
   type BrandingThemeMode,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BrandDerivedTokens, BrandPresetPicker, BrandSemanticPreview } from '@/components/branding/BrandColorPanelSections';
 import { BrandColorContrastMatrix } from '@/components/branding/BrandColorContrastMatrix';
 import { BrandColorField } from '@/components/branding/BrandColorField';
 import { BrandColorImportModal } from '@/components/branding/BrandColorImportModal';
+import { BrandColorHarmonyBar } from '@/components/branding/BrandColorHarmonyBar';
 import { notify } from '@/lib/notify';
 
 interface BrandColorPanelProps {
@@ -48,6 +46,11 @@ export default function BrandColorPanel({
   const onPrimaryFg = brandingTokenToHex(tokens['--primary-foreground'] ?? '', '#ffffff');
   const onSecondaryBg = brandingTokenToHex(tokens['--secondary'] ?? '', secondaryColor);
   const onSecondaryFg = brandingTokenToHex(tokens['--secondary-foreground'] ?? '', '#ffffff');
+
+  const handleSwapColors = (): void => {
+    onPrimaryChange(secondaryColor);
+    onSecondaryChange(primaryColor);
+  };
 
   const handleCopyPalette = (): void => {
     const payload = JSON.stringify({ primary: primaryColor, accent: secondaryColor }, null, 2);
@@ -97,10 +100,7 @@ export default function BrandColorPanel({
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              onPrimaryChange(secondaryColor);
-              onSecondaryChange(primaryColor);
-            }}
+            onClick={handleSwapColors}
             title={t('theme.swapColors')}
             aria-label={t('theme.swapColors')}
             className="h-8 w-8 p-0 rounded-full border-border bg-card shadow-sm hover:bg-muted hover:scale-110 active:scale-95 transition-all"
@@ -111,79 +111,18 @@ export default function BrandColorPanel({
       </div>
 
       <div className="space-y-3 pt-1">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => {
-                onPrimaryChange(secondaryColor);
-                onSecondaryChange(primaryColor);
-              }}
-              title={t('theme.swapColors')}
-              className="min-h-11 px-3 text-xs whitespace-nowrap shrink-0 lg:hidden"
-            >
-              <ArrowLeftRight className="h-3.5 w-3.5 me-1.5 shrink-0" />
-              <span>{t('theme.swapColors')}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => onSecondaryChange(suggestHarmoniousSecondaryColor(primaryColor, harmonyScheme))}
-              className="min-h-11 px-3 text-xs whitespace-nowrap shrink-0"
-            >
-              <Wand2 className="h-3.5 w-3.5 me-1.5 shrink-0" />
-              <span>{t('theme.harmonizeAccent')}</span>
-            </Button>
-            <Select
-              value={harmonyScheme}
-              onValueChange={(val) => {
-                const scheme = val as BrandingHarmonyScheme;
-                setHarmonyScheme(scheme);
-                onSecondaryChange(suggestHarmoniousSecondaryColor(primaryColor, scheme));
-              }}
-            >
-              <SelectTrigger
-                aria-label={t('theme.harmonyScheme')}
-                className="h-11 min-h-11 w-44 shrink-0 text-xs font-medium"
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {BRANDING_HARMONY_SCHEMES.map((scheme) => (
-                  <SelectItem key={scheme.id} value={scheme.id} className="text-xs">
-                    {t(scheme.labelKey as AppTranslationKey)}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="flex items-center gap-1.5 shrink-0">
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={handleCopyPalette}
-              className="min-h-11 px-3 text-xs text-muted-foreground hover:text-foreground whitespace-nowrap shrink-0"
-            >
-              <Copy className="h-3.5 w-3.5 me-1.5 shrink-0" />
-              <span>{t('theme.copyPalette')}</span>
-            </Button>
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={() => setIsImporting(true)}
-              className="min-h-11 px-3 text-xs text-muted-foreground hover:text-foreground whitespace-nowrap shrink-0"
-            >
-              <Upload className="h-3.5 w-3.5 me-1.5 shrink-0" />
-              <span>{t('theme.pastePalette')}</span>
-            </Button>
-          </div>
-        </div>
+        <BrandColorHarmonyBar
+          harmonyScheme={harmonyScheme}
+          onHarmonySchemeChange={(scheme) => {
+            setHarmonyScheme(scheme);
+            onSecondaryChange(suggestHarmoniousSecondaryColor(primaryColor, scheme));
+          }}
+          onSwapColors={handleSwapColors}
+          onHarmonizeAccent={() => onSecondaryChange(suggestHarmoniousSecondaryColor(primaryColor, harmonyScheme))}
+          onCopyPalette={handleCopyPalette}
+          onOpenImport={() => setIsImporting(true)}
+          t={t}
+        />
 
         <BrandColorContrastMatrix
           primaryColor={primaryColor}
@@ -208,3 +147,4 @@ export default function BrandColorPanel({
     </div>
   );
 }
+

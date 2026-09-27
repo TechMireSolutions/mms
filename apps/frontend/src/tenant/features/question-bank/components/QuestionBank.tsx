@@ -1,23 +1,15 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useQuestionBankConfig } from '@/tenant/features/question-bank/hooks/useQuestionBankConfig';
 import { useQuestionBankFilters } from '@/tenant/features/question-bank/hooks/useQuestionBankFilters';
 import type { QuestionBankQuestion as Question } from '@mms/shared';
 import type { ModuleColumnCustomizerProps } from '@/components/ui/ModuleColumnCustomizer';
 import { QuestionBankTrashDialogs } from '@/tenant/features/question-bank/components/QuestionBankTrashDialogs';
-import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { QuestionsList } from '@/tenant/features/question-bank/components/QuestionsList';
 import { QuestionsListFilters } from '@/tenant/features/question-bank/components/QuestionsListFilters';
 import { QuestionBankBulkActionBar } from '@/tenant/features/question-bank/components/QuestionBankBulkActionBar';
-import {
-  buildQuestionsListMetaFields,
-  shouldShowQuestionSourceCitation,
-  useQuestionBankDisplayConfig,
-} from '@/tenant/features/question-bank/components/useQuestionBankDisplayConfig';
+import { useQuestionBankWorkController } from '@/tenant/features/question-bank/hooks/useQuestionBankWorkController';
+import { QuestionBankListContent } from '@/tenant/features/question-bank/components/QuestionBankListContent';
 import { useTranslation } from '@/hooks/useTranslation';
-
-const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 
 interface QuestionBankProps {
   questions: Question[];
@@ -78,6 +70,7 @@ export function QuestionBank({
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   // Config (category/difficulty options) derives from the FULL question list.
   const config = useQuestionBankConfig(questions);
+  const filters = useQuestionBankFilters({ showDeleted, onFilteredCountChange });
   const {
     search,
     setSearch,
@@ -86,74 +79,40 @@ export function QuestionBank({
     filterDiff,
     setFilterDiff,
     listPage,
-    setListPage,
     pageQuestions,
-    pageQuery,
-    serverTotal,
-    serverPage,
-    serverLimit,
-    serverHasMore,
-  } = useQuestionBankFilters({ showDeleted, onFilteredCountChange });
+  } = filters;
 
-  const selectedSet = new Set(selectedIds);
-  const allVisibleSelected = pageQuestions.length > 0
-    && pageQuestions.every((q) => selectedSet.has(q.id));
-  const someVisibleSelected = selectedSet.size > 0
-    && pageQuestions.some((q) => selectedSet.has(q.id));
+  const controller = useQuestionBankWorkController({
+    config,
+    pageQuestions,
+    selectedIds,
+    listPage,
+    search,
+    filterCats,
+    filterDiff,
+    showDeleted,
+    canDelete,
+    onClearSelection,
+    onToggleSelectAll,
+    onDelete,
+    onRestore,
+    onBulkDelete,
+    onBulkRestore,
+    onModalOpenChange,
+    onEditQuestionChange,
+    isColumnVisible,
+  });
 
-  const handleToggleSelectAll = (checked: boolean) => {
-    onToggleSelectAll?.(checked, pageQuestions.map((q) => q.id));
-  };
-
-  const [pendingTrashId, setPendingTrashId] = useState<string | null>(null);
-  const [confirmBulkOpen, setConfirmBulkOpen] = useState(false);
-
-  useEffect(() => {
-    onClearSelection?.();
-  }, [listPage, search, filterCats, filterDiff, onClearSelection]);
-
-  const { difficultyConfig, typeConfig } = useQuestionBankDisplayConfig(config);
-
-  const setShowModal = (open: boolean): void => {
-    onModalOpenChange?.(open);
-    if (!open) onEditQuestionChange?.(null);
-  };
-
-  const setEditingQuestion = (question: Question | null): void => {
-    onEditQuestionChange?.(question);
-  };
-
-  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
-  const showSource = columnVisible('source');
-
-  const listMetaFields = (() => buildQuestionsListMetaFields(config, columnVisible))();
-
-  const showSourceCitation = (() => shouldShowQuestionSourceCitation(config, showSource))();
-
-  const openNewQuestion = (): void => {
-    setEditingQuestion(null);
-    setShowModal(true);
-  };
-
-  const openEditQuestion = (question: Question): void => {
-    setEditingQuestion(question);
-    setShowModal(true);
-  };
-
-  const confirmRowTrash = (): void => {
-    if (!pendingTrashId) return;
-    void onDelete?.(pendingTrashId);
-    setPendingTrashId(null);
-  };
-
-  const confirmBulkTrash = (): void => {
-    if (showDeleted) void onBulkRestore?.(selectedIds);
-    else void onBulkDelete?.(selectedIds);
-    onClearSelection?.();
-    setConfirmBulkOpen(false);
-  };
-
-  const canBulkTrash = canDelete && Boolean(showDeleted ? onBulkRestore : onBulkDelete);
+  const {
+    pendingTrashId,
+    setPendingTrashId,
+    confirmBulkOpen,
+    setConfirmBulkOpen,
+    confirmRowTrash,
+    confirmBulkTrash,
+    canBulkTrash,
+    openNewQuestion,
+  } = controller;
 
   return (
     <div className="space-y-4">
@@ -187,63 +146,23 @@ export function QuestionBank({
         />
       )}
 
-      <ModuleWorkListStateShell
-        isError={pageQuery.isError}
-        isLoading={pageQuery.isPending}
-        isFetching={pageQuery.isFetching}
-        onRetry={() => { void pageQuery.refetch(); }}
-        errorTitle={t('questionBank.loadFailed')}
-        errorHint={t('questionBank.loadFailedHint')}
+      <QuestionBankListContent
         viewMode={viewMode}
-        skeletonColumnCount={6}
-        useServerWork={true}
-        pageData={{
-          page: serverPage,
-          total: serverTotal,
-          limit: serverLimit,
-          hasMore: serverHasMore,
-        }}
-        onPageChange={setListPage}
-        i18nNamespace="questionBank"
-        showPagination={pageQuestions.length > 0}
-        loadingLabel={t("common.loading")}
-      >
-        {pageQuestions.length === 0 ? (
-          <EmptyState
-            variant="dashed"
-            title={t('questionBank.noQuestions')}
-            className="py-14"
-          />
-        ) : (
-          <QuestionsList
-            viewMode={viewMode}
-            questions={pageQuestions}
-            config={config}
-            difficultyConfig={difficultyConfig}
-            typeConfig={typeConfig}
-            listMetaFields={listMetaFields}
-            selectedIds={selectedIds}
-            allVisibleSelected={allVisibleSelected}
-            someVisibleSelected={someVisibleSelected}
-            canWrite={canWrite}
-            canDelete={canDelete}
-            canTrashRows={canDelete && Boolean(showDeleted ? onRestore : onDelete)}
-            showDeleted={showDeleted}
-            showSourceCitation={showSourceCitation}
-            isColumnVisible={columnVisible}
-            getColumnWidth={getColumnWidth}
-            onColumnResize={onColumnResize}
-            onEditQuestion={openEditQuestion}
-            onTrashAction={(id) => {
-              if (showDeleted) void onRestore?.(id);
-              else setPendingTrashId(id);
-            }}
-            onToggleSelectedQuestion={onToggleSelectedQuestion ?? (() => {})}
-            onToggleSelectAll={handleToggleSelectAll}
-            onRowClick={onRowClick}
-          />
-        )}
-      </ModuleWorkListStateShell>
+        config={config}
+        filters={filters}
+        controller={controller}
+        selectedIds={selectedIds}
+        canWrite={canWrite}
+        canDelete={canDelete}
+        showDeleted={showDeleted}
+        onRestore={onRestore}
+        onDelete={onDelete}
+        getColumnWidth={getColumnWidth}
+        onColumnResize={onColumnResize}
+        onToggleSelectedQuestion={onToggleSelectedQuestion}
+        onRowClick={onRowClick}
+        t={t}
+      />
 
       <QuestionBankTrashDialogs
         pendingTrashId={pendingTrashId}
@@ -258,3 +177,5 @@ export function QuestionBank({
     </div>
   );
 }
+
+

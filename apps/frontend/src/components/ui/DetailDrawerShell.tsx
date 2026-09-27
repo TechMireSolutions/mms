@@ -1,14 +1,13 @@
 import React, { useId, useCallback } from "react";
 import { createPortal } from "react-dom";
 import { motion, AnimatePresence, type PanInfo, useDragControls } from "framer-motion";
-import { X } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 import { cn } from "@/lib/utils";
 import { OVERLAY_BACKDROP } from "@/components/ui/formStyles";
+import { DetailDrawerHeader } from "./DetailDrawerHeader";
 
 export type DetailDrawerSize = "sm" | "md" | "lg" | "xl" | "2xl" | "3xl" | "full";
 
@@ -161,60 +160,18 @@ export const DetailDrawerShell = (function DetailDrawerShell({
             </div>
 
             {/* Sticky Header */}
-            <div className="sticky top-0 z-elevated px-5 pt-2 sm:pt-4 pb-3 border-b border-border/30 flex-shrink-0 space-y-3">
-              <div 
-                className="flex items-center justify-between gap-4 touch-none sm:touch-auto select-none"
-                onPointerDown={(e) => {
-                  const target = e.target as HTMLElement | null;
-                  const isInteractive = target?.closest(
-                    'button, input, select, textarea, a, [role="tab"], [data-no-drag]'
-                  );
-                  if (!isDesktop && !isInteractive) {
-                    dragControls.start(e);
-                  }
-                }}
-              >
-                <div className="flex items-center gap-3 min-w-0">
-                  {Icon && (
-                    <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-5 h-5 text-primary" />
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-2 min-w-0">
-                      <h2 id={titleId} className="text-sm font-bold text-foreground leading-tight truncate">
-                        {title}
-                      </h2>
-                      {badge}
-                    </div>
-                    {subtitle && (
-                      <span className="text-3xs text-muted-foreground uppercase tracking-wider font-bold block truncate mt-0.5">
-                        {subtitle}
-                      </span>
-                    )}
-                  </div>
-                </div>
-
-                <div className="flex items-center gap-2 flex-shrink-0" data-no-drag>
-                  {headerActions}
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="icon"
-                    onClick={onClose}
-                    className="rounded-lg border border-border/50 bg-background/50 hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
-                    aria-label={t("common.close")}
-                  >
-                    <X className="w-4 h-4" />
-                  </Button>
-                </div>
-              </div>
-              {headerExtra && (
-                <div className="touch-pan-x" data-no-drag>
-                  {headerExtra}
-                </div>
-              )}
-            </div>
+            <DetailDrawerHeader
+              titleId={titleId}
+              title={title}
+              subtitle={subtitle}
+              badge={badge}
+              icon={Icon}
+              headerActions={headerActions}
+              headerExtra={headerExtra}
+              onClose={onClose}
+              isDesktop={isDesktop}
+              onPointerDragStart={(e) => dragControls.start(e)}
+            />
 
             {/* Content Area */}
             <div className={cn("flex-1 overflow-y-auto overscroll-contain px-5 py-5 space-y-6", contentClassName)}>

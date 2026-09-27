@@ -1,4 +1,3 @@
-import { useCallback } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import {
   MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
@@ -9,7 +8,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { formatDirectoryPageCountLabel } from '@/lib/formatDirectoryPageCountLabel';
 import { useMessageLogs } from '@/hooks/useMessaging';
-import { useMessagingRecipientsByIds } from '../hooks/useMessagingContactsByIds';
 import { useMessagingHistoryColumnLayout } from '../hooks/useMessagingColumnLayouts';
 import { useMessagingPageOptions } from '../hooks/useMessagingPageOptions';
 import { buildMessagingWorkFilterChips } from './buildMessagingWorkFilterChips';
@@ -17,6 +15,7 @@ import { useMessagingWorkFilters } from './useMessagingWorkFilters';
 import { useMessagingWorkTierBulkActions } from './useMessagingWorkTierBulkActions';
 import { useMessagingWorkTierKeyboardNav } from './useMessagingWorkTierKeyboardNav';
 import { useMessagingWorkTierSelection } from './useMessagingWorkTierSelection';
+import { useMessagingWorkTierDetail } from './useMessagingWorkTierDetail';
 
 export interface MessagingWorkTierControllerProps {
   canWrite: boolean;
@@ -78,37 +77,19 @@ export function useMessagingWorkTierController({
     pageSize: MESSAGE_LOGS_DEFAULT_PAGE_SIZE,
   });
 
-  const urlLogId = searchParams.get('logId');
-
-  const activeDetailLog = (() => {
-    if (!urlLogId || logsQuery.logs.length === 0) return null;
-    return logsQuery.logs.find((l: Message) => String(l.id) === urlLogId) || null;
-  })();
-
-  const handleOpenDetail = ((log: Message): void => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.set('logId', String(log.id));
-        return next;
-      },
-      { replace: true }
-    );
+  const {
+    activeDetailLog,
+    activeRecipient,
+    getRecipient,
+    getRecipientName,
+    handleOpenDetail,
+    handleCloseDetail,
+    handleResendLog,
+  } = useMessagingWorkTierDetail({
+    logs: logsQuery.logs,
+    onResend,
+    t,
   });
-
-  const handleCloseDetail = ((): void => {
-    setSearchParams(
-      (prev) => {
-        const next = new URLSearchParams(prev);
-        next.delete('logId');
-        return next;
-      },
-      { replace: true }
-    );
-  });
-
-  const contactIds = (() => logsQuery.logs.map((log: Message) => log.contactId))();
-  const { getRecipient } = useMessagingRecipientsByIds(contactIds);
 
   const {
     columnRegistry,
@@ -118,21 +99,6 @@ export function useMessagingWorkTierController({
     updateUserColumnLayout,
     customizerLabels,
   } = useMessagingHistoryColumnLayout();
-
-  const getRecipientName = useCallback((contactId: string | number): string => {
-    const recipient = getRecipient(contactId);
-    return recipient?.name || t('messaging.contactFallback', { id: contactId });
-  }, [getRecipient, t]);
-
-  const handleResendLog = ((log: Message): void => {
-    const recipient = getRecipient(log.contactId);
-    onResend(log, recipient ?? {
-      id: log.contactId,
-      name: getRecipientName(log.contactId),
-      phone: '',
-      email: '',
-    });
-  });
 
   const {
     selectedById,
@@ -172,23 +138,18 @@ export function useMessagingWorkTierController({
     onBulkResend,
   });
 
-  const handleBulkResend = ((targetChannel?: 'whatsapp' | 'sms' | 'email'): void => {
+  const handleBulkResend = (targetChannel?: 'whatsapp' | 'sms' | 'email'): void => {
     handleBulkResendLogs(selectedList, targetChannel);
-  });
+  };
 
-  const failedLogs = (() => logsQuery.logs.filter((l: Message) => l.status === 'failed'))();
+  const failedLogs = logsQuery.logs.filter((l: Message) => l.status === 'failed');
 
-  const activeRecipient = (() => {
-    if (!activeDetailLog) return null;
-    return getRecipient(activeDetailLog.contactId);
-  })();
-
-  const handleFilterContact = ((contactName: string): void => {
+  const handleFilterContact = (contactName: string): void => {
     setSearch(contactName);
     setLogsPage(1);
-  });
+  };
 
-  const filterChips = (() => buildMessagingWorkFilterChips({
+  const filterChips = buildMessagingWorkFilterChips({
     search: debouncedSearch,
     onSearchChange: setSearch,
     channel,
@@ -205,7 +166,7 @@ export function useMessagingWorkTierController({
     endDate,
     onEndDateChange: setEndDate,
     t,
-  }))();
+  });
 
   return {
     t,

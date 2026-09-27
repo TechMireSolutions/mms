@@ -1,101 +1,12 @@
-import React, { useRef, useState, useMemo, useCallback, useEffect } from "react";
-import { Printer, FileDown, Loader2, Settings } from "lucide-react";
-import { getPageDimensions, useInvoiceTemplate } from "@/lib/invoiceTemplateStore";
-import { type ObligationCollection, type ObligationType, type MujtahidRep, type Mujtahid } from '@/lib/data/obligationsData';
-import { DEFAULT_CURRENCIES } from '@mms/shared';
-import { useMergedObligationContacts, useMergedObligationUsers } from "@/tenant/features/obligations/hooks/useObligationLookups";
+import React from "react";
+import { Printer, Settings } from "lucide-react";
+import type { ObligationCollection, ObligationType, MujtahidRep, Mujtahid } from "@/lib/data/obligationsData";
 import { InvoicePrintPreview } from "@/tenant/features/obligations/components/invoice/InvoicePrintPreview";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/Modal";
 import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
-
-interface PrintHtmlOptions {
-  windowTitle: string;
-  language: string;
-  width: number;
-  height: number;
-  orientation?: string;
-  /** Writing direction of the document — the active locale decides it. */
-  direction?: "ltr" | "rtl";
-  bodyContent: string;
-}
-
-/**
- * Fonts the printed document may use.
- *
- * The window used to load Inter + Amiri only, while `--font-urdu` (Noto Nastaliq Urdu)
- * and `--font-persian` (Vazirmatn) were unreachable — so an Urdu or Persian receipt
- * printed with fallback glyphs even though the app renders it correctly on screen.
- */
-const PRINT_FONT_STACK =
-  "'Inter', 'Readex Pro', 'Noto Nastaliq Urdu', 'Vazirmatn', 'Amiri', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif";
-
-const PRINT_FONT_LINK =
-  "https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Amiri:wght@400;700&family=Readex+Pro:wght@400;600;700&family=Noto+Nastaliq+Urdu:wght@400;600&family=Vazirmatn:wght@400;600&display=swap";
-
-function buildPrintWindowHtml({
-  windowTitle,
-  language,
-  width,
-  height,
-  orientation = "portrait",
-  direction = "ltr",
-  bodyContent,
-}: PrintHtmlOptions): string {
-  return `<!DOCTYPE html>
-<html lang="${language || "en"}" dir="${direction}">
-<head>
-  <meta charset="utf-8" />
-  <title>${windowTitle}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    /* The document direction follows the locale: this used to be hardcoded LTR while
-       <html lang> was set from the active language, so ar/ur/fa receipts printed
-       left-to-right. */
-    body { background: #ffffff; direction: ${direction}; font-family: ${PRINT_FONT_STACK}; }
-    @page { size: ${width}px ${height}px ${orientation}; margin: 0; }
-    @media print {
-      body {
-        width: ${width}px;
-        print-color-adjust: exact;
-        -webkit-print-color-adjust: exact;
-      }
-    }
-  </style>
-  <link rel="stylesheet" href="${PRINT_FONT_LINK}" />
-</head>
-<body>
-  ${bodyContent}
-  <script>
-    function triggerPrint() {
-      window.focus();
-      if (document.fonts && document.fonts.ready) {
-        document.fonts.ready.then(function() {
-          window.print();
-        }).catch(function() {
-          window.print();
-        });
-      } else {
-        setTimeout(function() {
-          window.print();
-        }, 200);
-      }
-    }
-
-    if (document.readyState === 'complete') {
-      triggerPrint();
-    } else {
-      window.addEventListener('load', triggerPrint);
-    }
-
-    window.onafterprint = function() {
-      window.close();
-    };
-  </script>
-</body>
-</html>`;
-}
+import { usePrintInvoiceModalController } from "./usePrintInvoiceModalController";
+import { PrintInvoiceModalFooter } from "./PrintInvoiceModalFooter";
 
 export interface PrintInvoiceModalProps {
   collection: ObligationCollection;
@@ -106,160 +17,31 @@ export interface PrintInvoiceModalProps {
   onOpenEditor?: () => void;
 }
 
-/**
- * PrintInvoiceModal component.
- * Shows a print-ready preview of the invoice for a specific collection.
- *
- * @param {PrintInvoiceModalProps} props
- * @returns {React.ReactElement}
- */
 export function PrintInvoiceModal({
   collection,
   obligationTypes = [],
   reps = [],
   mujtahids = [],
   onClose,
-  onOpenEditor = undefined,
-}: PrintInvoiceModalProps) {
-  const { t, language, isRtl } = useTranslation();
-  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
-  const { template } = useInvoiceTemplate();
-  const size = getPageDimensions(template.pageSize, template.orientation);
-  const printRef = useRef<HTMLDivElement>(null);
-  const exportRef = useRef<HTMLDivElement>(null);
-
-  const contactIds = useMemo(
-    () => [collection.sender_id, collection.reference_id],
-    [collection.sender_id, collection.reference_id]
-  );
-  const userIds = useMemo(
-    () => [collection.received_by],
-    [collection.received_by]
-  );
-  const liveContacts = useMergedObligationContacts(contactIds);
-  const liveUsers = useMergedObligationUsers(userIds);
-  const currencies = DEFAULT_CURRENCIES;
-
-  const lookups = useMemo(
-    () => ({
-      contacts: liveContacts,
-      users: liveUsers,
-      currencies,
-      obligationTypes,
-      mujtahids,
-      reps,
-    }),
-    [liveContacts, liveUsers, currencies, obligationTypes, mujtahids, reps]
-  );
-
-  const handlePrint = useCallback(() => {
-    const content = printRef.current;
-    if (!content) return;
-
-    const printWindow = window.open("", "_blank", "width=800,height=700");
-    if (!printWindow) {
-      notify.error(t("templateEditor.exportFailed"));
-      return;
-    }
-
-    printWindow.document.write(
-      buildPrintWindowHtml({
-        windowTitle: t("obligations.print.windowTitle", { number: collection.receipt_no }),
-        language: language || "en",
-        direction: isRtl ? "rtl" : "ltr",
-        width: size.width,
-        height: size.height,
-        orientation: template.orientation || "portrait",
-        bodyContent: content.innerHTML,
-      })
-    );
-    printWindow.document.close();
-  }, [collection.receipt_no, isRtl, language, size.height, size.width, t, template.orientation]);
-
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === "p") {
-        e.preventDefault();
-        handlePrint();
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [handlePrint]);
-
-  const handleExportPDF = useCallback(async () => {
-    const target = exportRef.current || printRef.current;
-    if (!target || isGeneratingPdf) return;
-
-    try {
-      setIsGeneratingPdf(true);
-
-      // Pre-load web fonts so text glyphs render with exact metrics
-      if (document.fonts?.ready) {
-        await document.fonts.ready;
-      }
-
-      // Ensure any images (branding logo, QR code) are fully loaded
-      const images = Array.from(target.querySelectorAll("img"));
-      await Promise.all(
-        images.map(
-          (img) =>
-            new Promise<void>((resolve) => {
-              if (img.complete && img.naturalWidth > 0) {
-                resolve();
-              } else {
-                img.onload = () => resolve();
-                img.onerror = () => resolve();
-              }
-            })
-        )
-      );
-
-      const [html2canvasModule, jsPDFModule] = await Promise.all([
-        import("html2canvas"),
-        import("jspdf"),
-      ]);
-      const html2canvas = html2canvasModule.default;
-      const jsPDF = jsPDFModule.default || jsPDFModule.jsPDF;
-
-      const pixelRatio = typeof window !== "undefined" ? window.devicePixelRatio || 2 : 2;
-      const adaptiveScale = Math.max(2, Math.min(3, pixelRatio));
-
-      const canvas = await html2canvas(target, {
-        scale: adaptiveScale,
-        useCORS: true,
-        logging: false,
-        backgroundColor: "#ffffff",
-        width: size.width,
-        height: size.height,
-        x: 0,
-        y: 0,
-        scrollX: 0,
-        scrollY: 0,
-        windowWidth: size.width,
-        windowHeight: size.height,
-      });
-
-      const imgData = canvas.toDataURL("image/png");
-      const orientation = size.width > size.height ? "landscape" : "portrait";
-      const pdfWidth = size.width * 0.264583;
-      const pdfHeight = size.height * 0.264583;
-
-      const pdf = new jsPDF({
-        orientation,
-        unit: "mm",
-        format: [pdfWidth, pdfHeight],
-      });
-
-      pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight, undefined, "FAST");
-      pdf.save(`Receipt-${collection.receipt_no || "obligation"}.pdf`);
-    } catch {
-      notify.error(t("templateEditor.exportFailed"));
-      handlePrint();
-    } finally {
-      setIsGeneratingPdf(false);
-    }
-  }, [collection.receipt_no, handlePrint, isGeneratingPdf, size.height, size.width, t]);
+  onOpenEditor,
+}: PrintInvoiceModalProps): React.JSX.Element {
+  const { t } = useTranslation();
+  const {
+    template,
+    size,
+    isRtl,
+    printRef,
+    exportRef,
+    lookups,
+    isGeneratingPdf,
+    handlePrint,
+    handleExportPDF,
+  } = usePrintInvoiceModalController({
+    collection,
+    obligationTypes,
+    reps,
+    mujtahids,
+  });
 
   return (
     <Modal
@@ -282,52 +64,15 @@ export function PrintInvoiceModal({
         ) : null
       }
       footer={
-        <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="m-0 min-w-0 text-xs text-muted-foreground">
-            {t("obligations.print.pageSize", {
-              size: template.pageSize,
-              width: size.width,
-              height: size.height,
-            })}
-          </p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              type="button"
-              onClick={onClose}
-              variant="outline"
-              className="min-h-11 px-4 py-2 h-auto rounded-lg border border-border text-sm font-medium hover:bg-muted transition-colors shadow-none"
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button
-              type="button"
-              onClick={handleExportPDF}
-              disabled={isGeneratingPdf}
-              /* The label switches to a generating state; `aria-busy` is what makes that
-                 change perceivable to assistive tech. */
-              aria-busy={isGeneratingPdf}
-              variant="outline"
-              className="flex min-h-11 items-center gap-2 px-4 py-2 h-auto rounded-lg border border-border text-sm font-semibold hover:bg-muted transition-colors disabled:opacity-50 shadow-none"
-            >
-              {isGeneratingPdf ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> {t("obligations.invoiceTemplate.exportingPdf")}
-                </>
-              ) : (
-                <>
-                  <FileDown className="w-4 h-4" aria-hidden="true" /> {t("reports.export.pdf")}
-                </>
-              )}
-            </Button>
-            <Button
-              type="button"
-              onClick={handlePrint}
-              className="flex min-h-11 items-center gap-2 px-5 py-2 h-auto rounded-lg bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
-            >
-              <Printer className="w-4 h-4" aria-hidden="true" /> {t("reports.export.print")}
-            </Button>
-          </div>
-        </div>
+        <PrintInvoiceModalFooter
+          pageSize={template.pageSize}
+          width={size.width}
+          height={size.height}
+          isGeneratingPdf={isGeneratingPdf}
+          onClose={onClose}
+          onExportPDF={handleExportPDF}
+          onPrint={handlePrint}
+        />
       }
     >
       {/* Offscreen unscaled container for clean, high-fidelity PDF rasterization */}
@@ -349,7 +94,7 @@ export function PrintInvoiceModal({
           style={{
             width: size.width,
             height: size.height,
-            backgroundColor: "#ffffff",
+            backgroundColor: "white",
             position: "relative",
             lineHeight: 1.25,
             direction: isRtl ? "rtl" : "ltr",
@@ -371,7 +116,10 @@ export function PrintInvoiceModal({
         aria-label={t("obligations.print.preview")}
         className="flex min-h-preview-tall justify-center overflow-x-auto rounded-xl border border-dashed border-border bg-muted/20 p-4 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
       >
-        <div className="origin-top scale-preview-sm sm:scale-preview-md md:scale-preview-lg lg:scale-preview-xl" style={{ direction: isRtl ? "rtl" : "ltr" }}>
+        <div
+          className="origin-top scale-preview-sm sm:scale-preview-md md:scale-preview-lg lg:scale-preview-xl"
+          style={{ direction: isRtl ? "rtl" : "ltr" }}
+        >
           <div
             ref={printRef}
             style={{ lineHeight: 1.4, width: size.width, height: size.height }}

@@ -1,29 +1,16 @@
-import React, { lazy, Suspense, useCallback, useState } from 'react';
+import React, { lazy, Suspense } from 'react';
 import { MessageSquareOff } from 'lucide-react';
 import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import { useMessagingMetrics } from '@/tenant/hooks/collections/messaging';
-import {
-  MESSAGING_MODULE_MANIFEST,
-  getChannelLabelKey,
-} from '@mms/shared';
-import {
-  MESSAGING_CHANNEL_CONFIG,
-  type MessagingChannelConfig,
-} from '@/tenant/features/messaging/config';
-import {
-  exportMessagingLogsFiltered,
-  messagingExportEndDateBound,
-} from '@/tenant/features/messaging/components/messagingReportsExport';
-import { calculateReportDateRange } from '@/lib/reports/reportDateUtils';
-import { notify } from '@/lib/notify';
-import { WORK_SURFACE, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
-import { SEMANTIC_TEXT, getSolidBgClass } from '@/lib/semanticTone';
+import { MESSAGING_MODULE_MANIFEST } from '@mms/shared';
+import { WORK_SURFACE } from '@/components/ui/formStyles';
 import { MessagingReportHeaderBar } from './MessagingReportHeaderBar';
-import { type ChannelSummaryRow, MessagingReportSummaryTable } from './MessagingReportSummaryTable';
+import { MessagingReportSummaryTable } from './MessagingReportSummaryTable';
+import { MessagingReportChannelStats } from './MessagingReportChannelStats';
+import { useMessagingReportData } from './useMessagingReportData';
 import PinnedWidgets from '@/components/ui/reports/PinnedWidgets';
 
 const MessagingReportsVolumeChart = lazy(() =>
@@ -31,7 +18,6 @@ const MessagingReportsVolumeChart = lazy(() =>
     default: m.MessagingReportsVolumeChart,
   }))
 );
-import type { ExportColumn } from '@/components/ui/ExportToolbar';
 
 export interface MessagingReportProps {
   canWrite?: boolean;
@@ -41,94 +27,24 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
   const { canWrite: canWritePermission } = useModulePermissions(MESSAGING_MODULE_MANIFEST);
   const canWrite = canWriteProp ?? canWritePermission;
   const { t } = useTranslation();
-  const [startDate, setStartDate] = useState('');
-  const [endDate, setEndDate] = useState('');
-  const [exporting, setExporting] = useState(false);
 
-  const queryStartDate = (() => startDate.trim() || undefined)();
-  const queryEndDate = (() => (endDate.trim() ? messagingExportEndDateBound(endDate) : undefined))();
-
-  const metricsQuery = useMessagingMetrics({
-    startDate: queryStartDate,
-    endDate: queryEndDate,
-  });
-
-  const stats = metricsQuery.data;
-  const total = stats?.total ?? 0;
-
-  const chartData = (() => {
-    if (!stats) return [];
-    return (Object.values(MESSAGING_CHANNEL_CONFIG) as MessagingChannelConfig[]).map((config) => {
-      const value = (stats[`${config.id}Count` as keyof typeof stats] as number) ?? 0;
-      return {
-        name: t(getChannelLabelKey(config.id)),
-        value,
-        fillColor: `var(--color-${config.themeAccent})`,
-      };
-    }).filter((item) => item.value > 0);
-  })();
-
-  const showSkeleton = metricsQuery.isPending && !metricsQuery.data;
-
-  const calcPercentage = useCallback(
-    (count: number): string => {
-      if (total === 0) return '0%';
-      return `${Math.round((count / total) * 100)}%`;
-    },
-    [total],
-  );
-
-  const applyPreset = ((days?: number): void => {
-    if (days === undefined) {
-      setStartDate('');
-      setEndDate('');
-      return;
-    }
-    const preset = days === 0 ? 'today' : days === 7 ? '7d' : days === 30 ? '30d' : 'none';
-    const range = calculateReportDateRange(preset);
-    setStartDate(range.from);
-    setEndDate(range.to);
-  });
-
-  const exportAllFilteredLogs = (async (): Promise<void> => {
-    if (!canWrite || exporting) return;
-    setExporting(true);
-    try {
-      await exportMessagingLogsFiltered({
-        channel: 'all',
-        category: 'all',
-        debouncedSearch: '',
-        status: 'all',
-        startDate: queryStartDate,
-        endDate,
-        t,
-      });
-    } catch {
-      notify.error(t('messaging.exportFailed'), { description: t('messaging.loadFailedHint') });
-    } finally {
-      setExporting(false);
-    }
-  });
-
-  const channelExportColumns = (() => [
-    { key: 'channel', header: t('messaging.channel') },
-    { key: 'count', header: t('common.details') },
-    { key: 'rate', header: t('reports.kpi.growthRate') },
-  ])() as ExportColumn[];
-
-  const channelSummaryRows = (() => {
-    if (!stats) return [];
-    return (Object.values(MESSAGING_CHANNEL_CONFIG) as MessagingChannelConfig[]).map((config) => {
-      const count = (stats[`${config.id}Count` as keyof typeof stats] as number) ?? 0;
-      return {
-        id: config.id,
-        channel: t(getChannelLabelKey(config.id)),
-        count,
-        rate: calcPercentage(count),
-        accent: config.themeAccent,
-      };
-    });
-  })() as ChannelSummaryRow[];
+  const {
+    startDate,
+    setStartDate,
+    endDate,
+    setEndDate,
+    exporting,
+    metricsQuery,
+    stats,
+    total,
+    chartData,
+    showSkeleton,
+    calcPercentage,
+    applyPreset,
+    exportAllFilteredLogs,
+    channelExportColumns,
+    channelSummaryRows,
+  } = useMessagingReportData(t, canWrite);
 
   if (metricsQuery.isError) {
     return (
@@ -175,54 +91,12 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
           )}
         </div>
 
-        <div className={`${WORK_SURFACE} p-4 space-y-3 flex flex-col justify-between`}>
-          <div>
-            <h4 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-3">
-              {t('messaging.channel')}
-            </h4>
-
-            {total > 0 && (
-              <div className="mb-4 space-y-1.5">
-                <div className="flex h-2.5 w-full overflow-hidden rounded-full bg-muted/60">
-                  {(Object.values(MESSAGING_CHANNEL_CONFIG) as MessagingChannelConfig[]).map((config) => {
-                    const count = (stats?.[`${config.id}Count` as keyof typeof stats] as number) ?? 0;
-                    if (count === 0) return null;
-                    return (
-                      <div
-                        key={config.id}
-                        style={{ width: `${(count / total) * 100}%` }}
-                        className={`${getSolidBgClass(config.themeAccent)} transition-all duration-300`}
-                        title={`${t(getChannelLabelKey(config.id))}: ${calcPercentage(count)}`}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-2">
-              <div className={`${WORK_SURFACE_INNER} p-3 flex items-center justify-between`}>
-                <span className="text-xs font-medium text-foreground">{t('messaging.stats.total')}</span>
-                <span className={`font-bold text-sm ${SEMANTIC_TEXT.primary}`}>{total}</span>
-              </div>
-              {(Object.values(MESSAGING_CHANNEL_CONFIG) as MessagingChannelConfig[]).map((config) => {
-                const count = (stats?.[`${config.id}Count` as keyof typeof stats] as number) ?? 0;
-                return (
-                  <div key={config.id} className={`${WORK_SURFACE_INNER} p-3 flex items-center justify-between`}>
-                    <div className="flex items-center gap-2">
-                      <span className={`h-2 w-2 rounded-full ${getSolidBgClass(config.themeAccent)}`} />
-                      <span className="text-xs font-medium text-foreground">{t(getChannelLabelKey(config.id))}</span>
-                    </div>
-                    <div className="text-end">
-                      <span className={`font-bold text-sm ${SEMANTIC_TEXT[config.themeAccent as keyof typeof SEMANTIC_TEXT]}`}>{count}</span>
-                      <span className="text-3xs font-mono text-muted-foreground ms-1.5">({calcPercentage(count)})</span>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
+        <MessagingReportChannelStats
+          stats={stats}
+          total={total}
+          calcPercentage={calcPercentage}
+          t={t}
+        />
       </div>
 
       {total > 0 && (
@@ -243,3 +117,4 @@ export default function MessagingReport({ canWrite: canWriteProp }: MessagingRep
     </ErrorBoundary>
   );
 }
+

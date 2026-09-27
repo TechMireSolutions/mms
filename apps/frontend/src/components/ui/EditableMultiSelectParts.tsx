@@ -1,14 +1,21 @@
 import React from "react";
-import { Check, Search, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useVirtualizer } from "@tanstack/react-virtual";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { REMOVE_BTN } from "@/components/ui/formPrimitiveStyles";
 import { formatContactOptionLabel } from "@/lib/contacts/contactI18n";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { cn } from "@/lib/utils";
 import { isOptionSelected } from "@/components/ui/editableMultiSelectUtils";
+import {
+  EditableMultiSelectOptionItem,
+  type EditableMultiSelectOptionItemProps,
+} from "@/components/ui/EditableMultiSelectOptionItem";
+import {
+  EditableMultiSelectSearchBar,
+  type EditableMultiSelectSearchBarProps,
+} from "@/components/ui/EditableMultiSelectSearchBar";
+
+export { EditableMultiSelectOptionItem, EditableMultiSelectSearchBar };
+export type { EditableMultiSelectOptionItemProps, EditableMultiSelectSearchBarProps };
 
 interface EditableMultiSelectChipRowProps {
   values: string[];
@@ -53,43 +60,6 @@ export const EditableMultiSelectChipRow = React.memo(function EditableMultiSelec
   );
 });
 
-interface EditableMultiSelectSearchBarProps {
-  searchQuery: string;
-  onSearchChange: (query: string) => void;
-  onClearSearch: () => void;
-  t: TranslationFunction;
-}
-
-export const EditableMultiSelectSearchBar = React.memo(function EditableMultiSelectSearchBar({
-  searchQuery,
-  onSearchChange,
-  onClearSearch,
-  t,
-}: EditableMultiSelectSearchBarProps): React.JSX.Element {
-  return (
-    <div className="p-2 flex items-center gap-2 bg-muted/20">
-      <Search className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
-      <Input
-        type="text"
-        value={searchQuery}
-        onChange={(e) => onSearchChange(e.target.value)}
-        placeholder={t("common.search")}
-        className="h-8 text-xs bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-1 shadow-none"
-      />
-      {searchQuery && (
-        <button
-          type="button"
-          onClick={onClearSearch}
-          className="text-muted-foreground hover:text-foreground cursor-pointer"
-          aria-label={t("common.clearSearch")}
-        >
-          <X className="w-3.5 h-3.5" />
-        </button>
-      )}
-    </div>
-  );
-});
-
 interface EditableMultiSelectOptionListProps {
   resolvedId: string;
   listboxId: string;
@@ -102,78 +72,6 @@ interface EditableMultiSelectOptionListProps {
   onToggleOption: (option: string) => void;
   onRemoveOption: (option: string, event: React.MouseEvent) => void;
 }
-
-interface EditableMultiSelectOptionItemProps {
-  option: string;
-  index: number;
-  resolvedId: string;
-  isSelected: boolean;
-  isHighlighted: boolean;
-  canRemoveOptions: boolean;
-  t: TranslationFunction;
-  onHoverOption?: (index: number) => void;
-  onToggleOption: (option: string) => void;
-  onRemoveOption: (option: string, event: React.MouseEvent) => void;
-}
-
-const EditableMultiSelectOptionItem = React.memo(function EditableMultiSelectOptionItem({
-  option,
-  index,
-  resolvedId,
-  isSelected,
-  isHighlighted,
-  canRemoveOptions,
-  t,
-  onHoverOption,
-  onToggleOption,
-  onRemoveOption,
-}: EditableMultiSelectOptionItemProps): React.JSX.Element {
-  return (
-    <div
-      id={`${resolvedId}-opt-${index}`}
-      role="option"
-      aria-selected={isSelected}
-      onMouseEnter={() => onHoverOption?.(index)}
-      onClick={() => onToggleOption(option)}
-      className={cn(
-        "flex min-h-9 items-center justify-between gap-2 px-3 py-1.5 text-sm cursor-pointer transition-colors select-none",
-        isSelected
-          ? isHighlighted
-            ? "bg-primary/15 text-primary font-medium"
-            : "bg-primary/10 text-primary font-medium"
-          : isHighlighted
-            ? "bg-muted/80 text-foreground"
-            : "text-foreground hover:bg-muted/60",
-      )}
-    >
-      <span className="truncate flex-1">{formatContactOptionLabel(option, t) || option}</span>
-      <div className="flex items-center gap-1.5 flex-shrink-0">
-        <div
-          className={cn(
-            "w-4 h-4 rounded border flex items-center justify-center transition-colors",
-            isSelected
-              ? "bg-primary border-primary text-primary-foreground"
-              : "border-muted-foreground/40 bg-background",
-          )}
-        >
-          {isSelected && <Check strokeWidth={2.5} className="w-3 h-3" />}
-        </div>
-        {canRemoveOptions && (
-          <Button
-            type="button"
-            variant="ghost"
-            size="icon"
-            onClick={(event) => onRemoveOption(option, event)}
-            className={cn("relative h-7 w-7 rounded transition-colors after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']", REMOVE_BTN)}
-            aria-label={t("contacts.form.removeOption", { option })}
-          >
-            <X className="w-3.5 h-3.5" aria-hidden />
-          </Button>
-        )}
-      </div>
-    </div>
-  );
-});
 
 export const EditableMultiSelectOptionList = React.memo(function EditableMultiSelectOptionList({
   resolvedId,
@@ -198,10 +96,9 @@ export const EditableMultiSelectOptionList = React.memo(function EditableMultiSe
     enabled: isVirtualized,
   });
 
-  // Scroll active item into view when navigating via keyboard
   React.useEffect(() => {
     if (isVirtualized && highlightedIndex >= 0 && highlightedIndex < filteredOptions.length) {
-      rowVirtualizer.scrollToIndex(highlightedIndex, { align: 'auto' });
+      rowVirtualizer.scrollToIndex(highlightedIndex, { align: "auto" });
     }
   }, [highlightedIndex, isVirtualized, filteredOptions.length, rowVirtualizer]);
 
@@ -281,4 +178,3 @@ export const EditableMultiSelectOptionList = React.memo(function EditableMultiSe
     </div>
   );
 });
-

@@ -2,9 +2,6 @@ import React, { useState } from "react";
 import {
   MESSAGING_MODULE_MANIFEST,
   mergeMessageTemplates,
-  findUnknownPersonalizationTokens,
-  type MessageCategory,
-  type MessageTemplate,
 } from "@mms/shared";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
@@ -12,13 +9,12 @@ import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { SetupReadOnlyMessage } from "@/components/ui/SetupReadOnlyMessage";
 import { SubTabBar } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
-import { notify } from "@/lib/notify";
-import { useAuth } from "@/lib/contexts/AuthContext";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
-import { useMessageTemplates, useMessagingMutations } from "../hooks/useMessaging";
+import { useMessageTemplates } from "../hooks/useMessaging";
 import { useMessagingTemplatesColumnLayout } from "../hooks/useMessagingColumnLayouts";
 import { useMessagingPageOptions } from "../hooks/useMessagingPageOptions";
+import { useMessagingTemplateEditor } from "../hooks/useMessagingTemplateEditor";
 import { MessagingSetupTemplateForm } from "./MessagingSetupTemplateForm";
 import { MessagingTemplateList } from "./MessagingTemplateList";
 
@@ -34,30 +30,38 @@ export const MessagingSetupTier = (function MessagingSetupTier({
   onDeleteRequest,
 }: MessagingSetupTierProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { user } = useAuth();
   const { categorySelectOptions, templateCategorySelectOptions, channelSelectOptions, categoryBadgeConfig } =
     useMessagingPageOptions();
   const templatesQuery = useMessageTemplates();
-  const { saveTemplate } = useMessagingMutations();
   const { getColumnWidth, setColumnWidth } = useMessagingTemplatesColumnLayout();
 
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
-  const [editingId, setEditingId] = useState<string | null>(null);
-  const [label, setLabel] = useState("");
-  const [body, setBody] = useState("");
-  const [category, setCategory] = useState<MessageCategory>("general");
-  const [channel, setChannel] = useState<"all" | "sms" | "whatsapp" | "email">("all");
-  const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const isFormDirty = Boolean(label.trim() || body.trim() || editingId);
+  const editor = useMessagingTemplateEditor();
+  const {
+    editingId,
+    label,
+    body,
+    category,
+    setCategory,
+    channel,
+    setChannel,
+    errors,
+    isFormDirty,
+    resetForm,
+    handleLabelChange,
+    handleBodyChange,
+    save,
+    handleEdit,
+    handleDuplicate,
+    handleCopy,
+  } = editor;
 
   const subTabs = useModuleSetupSubTabs({
     initialKey: MESSAGING_MODULE_MANIFEST.setupSubTabs[0] || "templates",
     isDirty: () => isFormDirty,
-    onDiscard: () => {
-      resetForm();
-    },
+    onDiscard: resetForm,
   });
 
   const setupTabs = (() => MESSAGING_MODULE_MANIFEST.setupSubTabs.map((key) => ({ key, label: t("messaging.tabs.templates") })))();
@@ -70,99 +74,6 @@ export const MessagingSetupTier = (function MessagingSetupTier({
             template.body.toLowerCase().includes(search.toLowerCase())) &&
           (categoryFilter === "all" || (template.category || "general") === categoryFilter),
       ))();
-
-  const resetForm = (): void => {
-    setEditingId(null);
-    setLabel("");
-    setBody("");
-    setCategory("general");
-    setChannel("all");
-    setErrors({});
-  };
-
-  const handleLabelChange = (value: string): void => {
-    setLabel(value);
-    if (errors.label) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next.label;
-        return next;
-      });
-    }
-  };
-
-  const handleBodyChange = (value: string): void => {
-    setBody(value);
-    if (errors.body) {
-      setErrors((prev) => {
-        const next = { ...prev };
-        delete next.body;
-        return next;
-      });
-    }
-  };
-
-  const save = async (event: React.FormEvent): Promise<void> => {
-    event.preventDefault();
-    if (!user) return;
-    const newErrors: Record<string, string> = {};
-    if (!label.trim()) newErrors.label = t("common.required");
-    if (!body.trim()) newErrors.body = t("common.required");
-    if (Object.keys(newErrors).length > 0) {
-      setErrors(newErrors);
-      notify.error(t("messaging.createPresetDesc"));
-      return;
-    }
-    const unknownTokens = findUnknownPersonalizationTokens(body.trim());
-    if (unknownTokens.length > 0) {
-      notify.error(t("messaging.unknownTokens", { tokens: unknownTokens.map((token) => `{${token}}`).join(", ") }));
-      return;
-    }
-    try {
-      await saveTemplate.mutateAsync({
-        body: { id: editingId ?? undefined, label: label.trim(), body: body.trim(), category, channel },
-      });
-      notify.success(t("messaging.saveTemplate"));
-      resetForm();
-    } catch {
-      // Mutation hook reports the failure.
-    }
-  };
-
-  const handleEdit = (template: MessageTemplate): void => {
-    setEditingId(template.id);
-    setLabel(template.label);
-    setBody(template.body);
-    setCategory(template.category || "general");
-    setChannel(template.channel || "all");
-  };
-
-  const handleDuplicate = async (template: MessageTemplate): Promise<void> => {
-    if (!user) return;
-    const unknownTokens = findUnknownPersonalizationTokens(template.body);
-    if (unknownTokens.length > 0) {
-      notify.error(t("messaging.unknownTokens", { tokens: unknownTokens.map((token) => `{${token}}`).join(", ") }));
-      return;
-    }
-    try {
-      await saveTemplate.mutateAsync({
-        body: {
-          label: `${template.label} (${t("messaging.tagCustom")})`,
-          body: template.body,
-          category: template.category || "general",
-          channel: template.channel || "all",
-        },
-      });
-      notify.success(t("messaging.duplicateSuccess"));
-    } catch {
-      // Mutation hook reports the failure.
-    }
-  };
-
-  const handleCopy = async (templateBody: string): Promise<void> => {
-    await navigator.clipboard.writeText(templateBody);
-    notify.success(t("messaging.copySuccess"));
-  };
 
   if (templatesQuery.isError) {
     return (
@@ -214,7 +125,7 @@ export const MessagingSetupTier = (function MessagingSetupTier({
                     setColumnWidth={setColumnWidth}
                     onSearch={setSearch}
                     onCategoryFilter={setCategoryFilter}
-                    onCopy={(body) => void handleCopy(body)}
+                    onCopy={(copyBody) => void handleCopy(copyBody)}
                     onDuplicate={(template) => void handleDuplicate(template)}
                     onEdit={handleEdit}
                     onDeleteRequest={onDeleteRequest}
@@ -243,3 +154,4 @@ export const MessagingSetupTier = (function MessagingSetupTier({
 });
 
 export default MessagingSetupTier;
+

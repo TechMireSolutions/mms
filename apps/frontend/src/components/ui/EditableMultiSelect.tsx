@@ -1,23 +1,16 @@
-import React, { useId, useState, useDeferredValue, useMemo, useCallback } from "react";
-import { ChevronDown, Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import React, { useId } from "react";
+import { ChevronDown } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { FORM_INPUT_COMPACT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
+import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
-import {
-  buildAddedTags,
-  filterOptionsByQuery,
-  removeOptionFromCatalog,
-  removeSelectedValue,
-  toggleSelectedValue,
-} from "@/components/ui/editableMultiSelectUtils";
 import {
   EditableMultiSelectChipRow,
   EditableMultiSelectOptionList,
   EditableMultiSelectSearchBar,
 } from "@/components/ui/EditableMultiSelectParts";
+import { EditableMultiSelectAddBar } from "@/components/ui/EditableMultiSelectAddBar";
+import { useEditableMultiSelectState } from "@/components/ui/useEditableMultiSelectState";
 
 export interface EditableMultiSelectProps {
   options: string[];
@@ -32,8 +25,6 @@ export interface EditableMultiSelectProps {
   error?: boolean;
 }
 
-const INPUT_CLASS = cn("h-auto min-w-0 flex-1", FORM_INPUT_COMPACT);
-
 export function EditableMultiSelect({
   options,
   values = [],
@@ -47,11 +38,12 @@ export function EditableMultiSelect({
   error = false,
 }: EditableMultiSelectProps): React.JSX.Element {
   const { t } = useTranslation();
-  const [open, setOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
-  const deferredSearchQuery = useDeferredValue(searchQuery);
-  const [newTagValue, setNewTagValue] = useState("");
-  const [highlightedIndex, setHighlightedIndex] = useState(-1);
+  const state = useEditableMultiSelectState({
+    options,
+    values,
+    onChange,
+    onUpdateOptions,
+  });
 
   const fallbackId = useId();
   const resolvedId = id || fallbackId;
@@ -59,72 +51,29 @@ export function EditableMultiSelect({
   const listboxId = `${resolvedId}-multi-listbox`;
   const resolvedPlaceholder = placeholder ?? t("contacts.form.selectOption");
   const addInputLabel = addPlaceholder ?? t("contacts.form.addNewTypePlaceholder");
-  const triggerRef = React.useRef<HTMLButtonElement>(null);
-  const canRemoveOptions = Boolean(onUpdateOptions);
-
-  const toggleOption = useCallback((option: string): void => {
-    onChange(toggleSelectedValue(values, option));
-  }, [onChange, values]);
-
-  const removeValue = useCallback((valToRemove: string, event: React.MouseEvent): void => {
-    event.stopPropagation();
-    onChange(removeSelectedValue(values, valToRemove));
-    triggerRef.current?.focus();
-  }, [onChange, values]);
-
-  const handleRemoveOption = useCallback((option: string, event: React.MouseEvent): void => {
-    if (!onUpdateOptions) return;
-    event.stopPropagation();
-    const { nextOptions, nextValues } = removeOptionFromCatalog(options, values, option);
-    onUpdateOptions(nextOptions);
-    onChange(nextValues);
-  }, [onChange, onUpdateOptions, options, values]);
-
-  const handleAdd = useCallback((valueToAdd?: string): void => {
-    const rawText = (valueToAdd ?? newTagValue).trim();
-    if (!rawText) return;
-
-    const { nextValues, nextOptions, optionsChanged } = buildAddedTags(
-      rawText,
-      options,
-      values,
-      canRemoveOptions,
-    );
-
-    if (optionsChanged && onUpdateOptions) {
-      onUpdateOptions(nextOptions);
-    }
-    onChange(nextValues);
-    setNewTagValue("");
-  }, [canRemoveOptions, newTagValue, onChange, onUpdateOptions, options, values]);
-
-  const filteredOptions = useMemo(
-    () => filterOptionsByQuery(options, deferredSearchQuery),
-    [options, deferredSearchQuery],
-  );
 
   return (
     <Popover
-      open={open}
+      open={state.open}
       onOpenChange={(isOpen) => {
-        if (!isOpen && newTagValue.trim()) {
-          handleAdd(newTagValue);
+        if (!isOpen && state.newTagValue.trim()) {
+          state.handleAdd(state.newTagValue);
         }
-        setOpen(isOpen);
-        setHighlightedIndex(isOpen ? 0 : -1);
+        state.setOpen(isOpen);
+        state.setHighlightedIndex(isOpen ? 0 : -1);
         if (!isOpen) {
-          setSearchQuery("");
-          setNewTagValue("");
+          state.setSearchQuery("");
+          state.setNewTagValue("");
         }
       }}
     >
       <PopoverTrigger
-        ref={triggerRef}
+        ref={state.triggerRef}
         type="button"
         id={resolvedId}
         name={resolvedName}
         aria-label={resolvedPlaceholder}
-        aria-expanded={open}
+        aria-expanded={state.open}
         aria-haspopup="listbox"
         aria-controls={listboxId}
         aria-invalid={Boolean(error)}
@@ -139,13 +88,13 @@ export function EditableMultiSelect({
             values={values}
             placeholder={resolvedPlaceholder}
             t={t}
-            onRemoveValue={removeValue}
+            onRemoveValue={state.removeValue}
           />
         </div>
         <ChevronDown
           className={cn(
             "w-4 h-4 flex-shrink-0 text-muted-foreground transition-transform",
-            open && "rotate-180",
+            state.open && "rotate-180",
           )}
         />
       </PopoverTrigger>
@@ -158,34 +107,36 @@ export function EditableMultiSelect({
         onKeyDown={(event) => {
           if (event.key === "ArrowDown") {
             event.preventDefault();
-            if (filteredOptions.length === 0) return;
-            setHighlightedIndex((prev) => (prev + 1) % filteredOptions.length);
+            if (state.filteredOptions.length === 0) return;
+            state.setHighlightedIndex((prev) => (prev + 1) % state.filteredOptions.length);
           } else if (event.key === "ArrowUp") {
             event.preventDefault();
-            if (filteredOptions.length === 0) return;
-            setHighlightedIndex((prev) => (prev - 1 + filteredOptions.length) % filteredOptions.length);
+            if (state.filteredOptions.length === 0) return;
+            state.setHighlightedIndex(
+              (prev) => (prev - 1 + state.filteredOptions.length) % state.filteredOptions.length,
+            );
           } else if (
             event.key === "Enter" &&
             (event.target as HTMLElement).tagName !== "INPUT"
           ) {
-            const highlighted = filteredOptions[highlightedIndex];
+            const highlighted = state.filteredOptions[state.highlightedIndex];
             if (highlighted !== undefined) {
               event.preventDefault();
-              toggleOption(highlighted);
+              state.toggleOption(highlighted);
             }
           }
         }}
       >
         {options.length > 4 && (
           <EditableMultiSelectSearchBar
-            searchQuery={searchQuery}
+            searchQuery={state.searchQuery}
             onSearchChange={(query) => {
-              setSearchQuery(query);
-              setHighlightedIndex(0);
+              state.setSearchQuery(query);
+              state.setHighlightedIndex(0);
             }}
             onClearSearch={() => {
-              setSearchQuery("");
-              setHighlightedIndex(0);
+              state.setSearchQuery("");
+              state.setHighlightedIndex(0);
             }}
             t={t}
           />
@@ -194,52 +145,23 @@ export function EditableMultiSelect({
         <EditableMultiSelectOptionList
           resolvedId={resolvedId}
           listboxId={listboxId}
-          filteredOptions={filteredOptions}
+          filteredOptions={state.filteredOptions}
           values={values}
-          canRemoveOptions={canRemoveOptions}
+          canRemoveOptions={state.canRemoveOptions}
           t={t}
-          highlightedIndex={highlightedIndex}
-          onHoverOption={setHighlightedIndex}
-          onToggleOption={toggleOption}
-          onRemoveOption={handleRemoveOption}
+          highlightedIndex={state.highlightedIndex}
+          onHoverOption={state.setHighlightedIndex}
+          onToggleOption={state.toggleOption}
+          onRemoveOption={state.handleRemoveOption}
         />
 
-        <div className="p-2 space-y-1.5 bg-muted/20 flex-shrink-0">
-          <div className="flex gap-1.5">
-            <Input
-              type="text"
-              value={newTagValue}
-              onChange={(e) => {
-                const val = e.target.value;
-                if (val.includes(",")) {
-                  handleAdd(val);
-                } else {
-                  setNewTagValue(val);
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" || e.key === ",") {
-                  e.preventDefault();
-                  e.stopPropagation();
-                  handleAdd();
-                }
-              }}
-              placeholder={addInputLabel}
-              aria-label={addInputLabel}
-              className={INPUT_CLASS}
-            />
-            <Button
-              type="button"
-              size="sm"
-              onClick={() => handleAdd()}
-              disabled={!newTagValue.trim()}
-              className="px-2.5 min-h-11 text-xs font-semibold rounded-lg flex-shrink-0 gap-1"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              {t("common.add")}
-            </Button>
-          </div>
-        </div>
+        <EditableMultiSelectAddBar
+          newTagValue={state.newTagValue}
+          onNewTagChange={state.setNewTagValue}
+          onAdd={state.handleAdd}
+          addInputLabel={addInputLabel}
+          t={t}
+        />
       </PopoverContent>
     </Popover>
   );

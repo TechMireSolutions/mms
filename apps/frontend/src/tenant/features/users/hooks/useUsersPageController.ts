@@ -1,10 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import {
   canAccessRolesAndPermissions,
-  canManageTargetUser,
   normalizeWorkspaceUser,
   resolveModuleTierTab,
   USERS_MODULE_MANIFEST,
@@ -28,11 +27,12 @@ import {
   useUsersExportActions,
 } from '@/tenant/features/users/hooks/useUsersExportActions';
 import { useAuth } from '@/lib/contexts/AuthContext';
-import { useMessageComposerState } from '@/hooks/useMessageComposerState';
-import { notify } from '@/lib/notify';
 import { buildUsersWorkTierProps } from '@/tenant/features/users/hooks/usersPageWorkTierProps';
-import { buildUsersModalLayerProps } from '@/tenant/features/users/hooks/usersPageModalLayerProps';
-import { getUsersConfigTabs, getUsersSubTabs } from '@/tenant/features/users/hooks/usersPageTabConfig';
+import {
+  getUsersConfigTabs,
+  getUsersSubTabs,
+} from '@/tenant/features/users/hooks/usersPageTabConfig';
+import { useUsersModalLayer } from './useUsersModalLayer';
 
 export function useUsersPageController() {
   const { t } = useTranslation();
@@ -66,11 +66,16 @@ export function useUsersPageController() {
     setSelectedIds,
   } = filters;
 
-  const logsResult = useActivityLogs({ enabled: activeTab === 'work' && activeSubTab === 'activity' });
-  const logs = extractActivityLogs(logsResult.data);
-  const activityUsersResult = useUsersByIds(logs.map((log) => log.userId), {
+  const logsResult = useActivityLogs({
     enabled: activeTab === 'work' && activeSubTab === 'activity',
   });
+  const logs = extractActivityLogs(logsResult.data);
+  const activityUsersResult = useUsersByIds(
+    logs.map((log) => log.userId),
+    {
+      enabled: activeTab === 'work' && activeSubTab === 'activity',
+    },
+  );
   const activityUsers = activityUsersResult.data as SystemUser[];
   const logsLoadFailed = logsResult.isError;
   const isLogsLoading = logsResult.isLoading || activityUsersResult.isLoading;
@@ -118,37 +123,27 @@ export function useUsersPageController() {
     setSelectedIds([]);
   }, [activeTab, activeSubTab, setSelectedIds]);
 
-  const [viewing, setViewing] = useState<SystemUser | null>(null);
-  const [editing, setEditing] = useState<SystemUser | null>(null);
-  const [resettingPasswordFor, setResettingPasswordFor] = useState<SystemUser | null>(null);
-  const [showInvite, setShowInvite] = useState(false);
-  const [showAddUser, setShowAddUser] = useState(false);
-
   const actorId = authUser?.id ?? 'system';
-
-  const handleOpenEdit = (user: SystemUser): void => {
-    if (!canManageTargetUser(authUser?.role, user.role)) {
-      notify.error(t('users.errors.cannotModifySuperAdmin'));
-      return;
-    }
-    setEditing(user);
-  };
-
-  const handleOpenPasswordReset = (user: SystemUser): void => {
-    if (user.id === actorId) {
-      notify.info(t('users.resetPasswordSelfTitle'), {
-        description: t('users.resetPasswordSelfDescription'),
-      });
-      return;
-    }
-    if (!canManageTargetUser(authUser?.role, user.role)) {
-      notify.error(t('users.errors.cannotResetSuperAdminPassword'));
-      return;
-    }
-    setResettingPasswordFor(user);
-  };
-
   const actions = useUsersPageActions({ actorId, t });
+
+  const {
+    setViewing,
+    setShowInvite,
+    setShowAddUser,
+    handleOpenEdit,
+    handleOpenPasswordReset,
+    handleOpenAddUser,
+    handleOpenInviteUser,
+    handleMessageUsers,
+    modalLayerProps,
+  } = useUsersModalLayer({
+    authUser,
+    canWrite,
+    canDelete,
+    users,
+    actions,
+    t,
+  });
 
   const visibleTopTabs = useFilteredModuleTierTabs({
     canViewSetup,
@@ -179,24 +174,12 @@ export function useUsersPageController() {
     },
   });
 
-  const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
-
-  const handleMessageUsers = (channel: 'sms' | 'whatsapp' | 'email', targetUsers: SystemUser[]) => {
-    openComposer(
-      channel,
-      targetUsers.map((u) => ({
-        id: u.id,
-        name: u.name,
-        phone: u.phone || '',
-        email: u.email || '',
-      })),
-    );
+  const refetchUsers = () => {
+    void workPageQuery.refetch();
   };
-
-  const handleOpenAddUser = () => setShowAddUser(true);
-  const handleOpenInviteUser = () => setShowInvite(true);
-  const refetchUsers = () => { void workPageQuery.refetch(); };
-  const refetchLogs = () => { void logsResult.refetch(); };
+  const refetchLogs = () => {
+    void logsResult.refetch();
+  };
 
   const workTierProps = buildUsersWorkTierProps({
     tabs: SUB_TABS,
@@ -225,26 +208,6 @@ export function useUsersPageController() {
     onAddUser: handleOpenAddUser,
     onInviteUser: handleOpenInviteUser,
     onMessageUsers: handleMessageUsers,
-  });
-
-  const modalLayerProps = buildUsersModalLayerProps({
-    viewing,
-    editing,
-    resettingPasswordFor,
-    showAddUser,
-    showInvite,
-    canWrite,
-    canDelete,
-    users,
-    messagingTarget,
-    actions,
-    setViewing,
-    setEditing,
-    setResettingPasswordFor,
-    setShowAddUser,
-    setShowInvite,
-    handleOpenEdit,
-    closeComposer,
   });
 
   return {

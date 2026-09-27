@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import { Key } from "lucide-react";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { ActionButton } from "@/components/ui/ActionButton";
+import { FormSubmitActions } from "@/components/ui/FormSubmitActions";
 import PasswordInput from "@/components/ui/PasswordInput";
 import { FieldErrorMessage } from "@/components/ui/FormField";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -15,7 +15,6 @@ import {
 import { PasswordStrengthMeter } from "@/components/ui/PasswordStrengthMeter";
 import { notify } from "@/lib/notify";
 import { ROUTES } from "@/lib/config/routes";
-import { PLATFORM_PROFILE_SUBMIT_CLASS } from "./platformAccountStyles";
 
 export function PlatformProfilePasswordForm(): React.JSX.Element {
   const { t } = useTranslation();
@@ -104,14 +103,11 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
           <PasswordStrengthMeter password={newPassword} className="md:col-span-2" showChecks />
         </div>
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-          <ActionButton
-            type="submit"
-            variant="primary"
-            className={PLATFORM_PROFILE_SUBMIT_CLASS}
-            loading={updatePassword.isPending}
-          >
-            {t("platform.profileChangePassword")}
-          </ActionButton>
+          <FormSubmitActions
+            submitLabel={t("platform.profileChangePassword")}
+            pending={updatePassword.isPending}
+            disabled={!currentPassword || !newPassword || !confirmPassword}
+          />
           <Link to={ROUTES.platformForgotPassword} className="inline-flex min-h-11 items-center text-xs text-primary font-bold hover:underline">
             {t("platform.profileForgotLink")}
           </Link>

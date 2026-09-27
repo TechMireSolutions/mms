@@ -5,86 +5,15 @@ import { Table, TableBody } from "@/components/ui/table";
 import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
 import { WorkBatchTableRow } from "./WorkBatchTableRow";
-
+import { WorkBatchTableVirtualizedRows } from "./WorkBatchTableVirtualizedRows";
+import type {
+  WorkBatchTableColumn,
+  WorkBatchTableProps,
+} from "./workBatchTableTypes";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
 import { cn } from "@/lib/utils";
 
-export interface WorkBatchTableColumn<TData> {
-  id: string;
-  label: string;
-  sortField?: string;
-  width?: number;
-  headerClassName?: string;
-  cellClassName?: string | ((row: TData) => string | undefined);
-  render: (row: TData, index: number) => React.ReactNode;
-}
-
-export interface WorkBatchTableProps<TData extends { id: string | number }> {
-  data: TData[];
-  columns: WorkBatchTableColumn<TData>[];
-
-  // Selection
-  selection?: {
-    selectedIds: Set<string | number> | Array<string | number>;
-    onSelectOne: (id: string) => void;
-    onSelectAll: () => void;
-    allSelected: boolean;
-    someSelected: boolean;
-    selectAllAriaLabel?: string;
-    selectRowAriaLabel?: (row: TData) => string;
-  };
-
-  // Sorting
-  sort?: {
-    field?: string;
-    dir?: "asc" | "desc";
-    onSort: (field: string) => void;
-  };
-
-  // Column Resizing
-  columnResize?: {
-    getColumnWidth?: (key: string) => number | undefined;
-    onColumnResize?: (key: string, width: number) => void;
-  };
-
-  // Row Actions
-  renderRowActions?: (row: TData, index: number) => React.ReactNode;
-  actionsLabel?: string;
-
-  // Sticky column
-  stickyColumnId?: string;
-
-  // Optimistic removals
-  optimisticDeletedIds?: Set<string | number>;
-
-  // Footer summary
-  footerCount?: {
-    pageCountLabel?: string;
-    selectedCountLabel?: string;
-  };
-
-  // Screen reader caption
-  caption?: string;
-
-  // Outer border styling (default: true)
-  bordered?: boolean;
-
-  // Custom table footer element (rendered inside Table)
-  tableFooter?: React.ReactNode;
-
-  // Empty & loading states
-  emptyState?: React.ReactNode;
-  isLoading?: boolean;
-
-  onRowClick?: (row: TData) => void;
-  onRowHover?: (row: TData) => void;
-  virtualize?: boolean;
-  maxHeightClassName?: string;
-  rowClassName?: (row: TData) => string | undefined;
-  className?: string;
-  tableBodyClassName?: string;
-  containerClassName?: string;
-}
+export type { WorkBatchTableColumn, WorkBatchTableProps };
 
 /**
  * Universal WorkBatchTable primitive.
@@ -131,7 +60,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
     return data.filter((row) => !optimisticDeletedIds.has(row.id));
   }, [data, optimisticDeletedIds]);
 
-  const isVirtualized = Boolean(virtualize ?? (activeRows.length > 30));
+  const isVirtualized = Boolean(virtualize ?? activeRows.length > 30);
 
   const rowVirtualizer = useVirtualizer({
     count: activeRows.length,
@@ -191,48 +120,22 @@ export function WorkBatchTable<TData extends { id: string | number }>({
 
           <TableBody className={cn("divide-y divide-border/50", tableBodyClassName)}>
             {isVirtualized ? (
-              <>
-                {virtualItems.length > 0 && (
-                  <tr style={{ height: `${virtualItems[0].start}px` }}>
-                    <td colSpan={totalColSpan} className="p-0 border-0" />
-                  </tr>
-                )}
-                {virtualItems.map((virtualRow) => {
-                  const row = activeRows[virtualRow.index];
-                  const isSelected = selectedSet.has(row.id) || selectedSet.has(String(row.id));
-                  return (
-                    <WorkBatchTableRow
-                      key={String(row.id)}
-                      row={row}
-                      rowIndex={virtualRow.index}
-                      isMotion={false}
-                      isSelected={isSelected}
-                      rowMotion={rowMotion}
-                      onRowClick={onRowClick}
-                      onRowHover={onRowHover}
-                      rowClassName={rowClassName}
-                      hasSelection={Boolean(selection)}
-                      onSelectOne={selection?.onSelectOne}
-                      selectRowAriaLabel={selection?.selectRowAriaLabel}
-                      columns={columns}
-                      stickyColumnId={stickyColumnId}
-                      renderRowActions={renderRowActions}
-                    />
-                  );
-                })}
-                {virtualItems.length > 0 && (
-                  <tr
-                    style={{
-                      height: `${
-                        rowVirtualizer.getTotalSize() -
-                        virtualItems[virtualItems.length - 1].end
-                      }px`,
-                    }}
-                  >
-                    <td colSpan={totalColSpan} className="p-0 border-0" />
-                  </tr>
-                )}
-              </>
+              <WorkBatchTableVirtualizedRows
+                virtualItems={virtualItems}
+                activeRows={activeRows}
+                selectedSet={selectedSet}
+                totalColSpan={totalColSpan}
+                totalSize={rowVirtualizer.getTotalSize()}
+                columns={columns}
+                stickyColumnId={stickyColumnId}
+                hasSelection={Boolean(selection)}
+                onSelectOne={selection?.onSelectOne}
+                selectRowAriaLabel={selection?.selectRowAriaLabel}
+                renderRowActions={renderRowActions}
+                onRowClick={onRowClick}
+                onRowHover={onRowHover}
+                rowClassName={rowClassName}
+              />
             ) : (
               <AnimatePresence initial={false}>
                 {activeRows.map((row, rowIndex) => {

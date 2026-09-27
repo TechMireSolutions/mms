@@ -5,8 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SimpleTransactionPostingCards } from "./SimpleTransactionPostingCards";
 import { SimpleTransactionPostingTable } from "./SimpleTransactionPostingTable";
-import { FORM_LABEL } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
+import { ReviewList } from "@/components/ui/ReviewList";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Account } from "@/lib/data/accountingData";
 import type { QuickActionType, WizardFormState } from "./simpleTransactionWizardTypes";
@@ -113,29 +112,25 @@ export function StepReview({
 
   return (
     <section aria-label={t("accounting.wizard.reviewAria")} className="space-y-4">
-      <dl className="rounded-2xl border border-border overflow-hidden m-0">
-        {rows.map((row, index) => (
-          <div
-            key={row.label}
-            className={`flex items-start gap-4 px-4 py-3 ${index < rows.length - 1 ? "border-b border-border" : ""}`}
-          >
-            <dt className={cn(FORM_LABEL, "mb-0 w-32 shrink-0 pt-0.5")}>{row.label}</dt>
-            <dd className="min-w-0 flex-1 break-words text-sm font-semibold text-foreground m-0">{row.value}</dd>
-            {row.editable && onEditDetails && (
+      <ReviewList
+        items={rows.map((row) => ({
+          label: row.label,
+          value: row.value,
+          action:
+            row.editable && onEditDetails ? (
               <Button
                 type="button"
                 variant="ghost"
                 size="icon"
                 onClick={onEditDetails}
                 aria-label={`${t("common.edit")} ${row.label}`}
-                className="shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg -my-1"
+                className="shrink-0 min-h-11 min-w-11 inline-flex items-center justify-center text-muted-foreground hover:text-foreground transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-lg"
               >
                 <Pencil className="w-4 h-4" aria-hidden="true" />
               </Button>
-            )}
-          </div>
-        ))}
-      </dl>
+            ) : undefined,
+        }))}
+      />
 
       {/* R1: Status banner prominently outside the data table */}
       {amount === null ? (

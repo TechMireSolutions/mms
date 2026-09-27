@@ -6,7 +6,7 @@ import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import { EnrollmentsCommandMetrics } from "@/tenant/features/enrollments/components/EnrollmentsCommandMetrics";
-import { EnrollmentsModalLayer } from "@/tenant/features/enrollments/components/EnrollmentsModalLayer";
+import { EnrollmentsPageModals } from "@/tenant/features/enrollments/components/EnrollmentsPageModals";
 import { EnrollmentsWorkTier } from "@/tenant/features/enrollments/components/EnrollmentsWorkTier";
 import { EnrollmentsPageHeaderActions } from "@/tenant/features/enrollments/components/EnrollmentsPageHeaderActions";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
@@ -28,6 +28,7 @@ const EnrollmentsSetupTier = lazy(() =>
  * Enrollments management — Work | Reports | Setup.
  */
 export default function EnrollmentsPage() {
+  const pageState = useEnrollmentsPageState();
   const {
     t,
     SUB_TABS,
@@ -45,21 +46,16 @@ export default function EnrollmentsPage() {
     filteredCount,
     isWorkPageError,
     refetchWorkPage,
-    viewing,
     setViewing,
-    showWizard,
     setShowWizard,
-    pendingDeleteId,
     setPendingDeleteId,
-    confirmBulkDeleteOpen,
     setConfirmBulkDeleteOpen,
-    confirmBulkRestoreOpen,
     setConfirmBulkRestoreOpen,
     columnLayout,
     selection,
     exportActions,
     pageActions,
-  } = useEnrollmentsPageState();
+  } = pageState;
 
   const {
     listPage,
@@ -84,17 +80,7 @@ export default function EnrollmentsPage() {
   } = selection;
 
   const { handleExportCSV, handleBulkExport } = exportActions;
-  const {
-    handleComplete,
-    handleCancel,
-    handleDelete,
-    handleRestore,
-    handleStatusChange,
-    handlePaymentStatusChange,
-    handleBulkDelete,
-    handleBulkRestore,
-    handleBulkCancel,
-  } = pageActions;
+  const { handleCancel, handleRestore, handleBulkCancel } = pageActions;
 
   return (
     <ModulePageShell
@@ -126,123 +112,85 @@ export default function EnrollmentsPage() {
         onTabChange={setTab}
         panelIdPrefix="enrollments-tab"
       >
-      <AnimatePresence mode="wait">
-        <ModuleTierMotion
-          tier={tab + "-" + activeSubTab + (showDeleted ? "-trash" : "")}
-          className="space-y-4"
-        >
-          {tab === "reports" && (
-            <ErrorBoundary>
-              <Suspense fallback={<RouteStatusFallback />}>
-                <EnrollmentsReportsTier />
-              </Suspense>
-            </ErrorBoundary>
-          )}
+        <AnimatePresence mode="wait">
+          <ModuleTierMotion
+            tier={tab + "-" + activeSubTab + (showDeleted ? "-trash" : "")}
+            className="space-y-4"
+          >
+            {tab === "reports" && (
+              <ErrorBoundary>
+                <Suspense fallback={<RouteStatusFallback />}>
+                  <EnrollmentsReportsTier />
+                </Suspense>
+              </ErrorBoundary>
+            )}
 
-          {tab === "work" && (
-            <EnrollmentsWorkTier
-              activeSubTab={activeSubTab}
-              subTabs={SUB_TABS}
-              enrollments={enrollments}
-              total={filteredCount}
-              page={listPage}
-              pageSize={ENROLLMENTS_MODULE_MANIFEST.defaultPageSize}
-              search={search}
-              statusFilter={statusFilter}
-              sessionFilter={sessionFilter}
-              canWrite={canWriteEnrollments}
-              canDelete={canDelete}
-              canExport={canExport}
-              canSelectEnrollments={canSelectEnrollments}
-              showDeleted={showDeleted}
-              selectedIds={selectedIds}
-              allVisibleSelected={allVisibleSelected}
-              someVisibleSelected={someVisibleSelected}
-              isWorkListError={isWorkPageError}
-              loadFailedTitle={t("enrollments.loadFailed")}
-              onSubTabChange={setActiveSubTab}
-              onRetry={() => void refetchWorkPage()}
-              onShowDeletedChange={setShowDeleted}
-              onSearchChange={setSearch}
-              onStatusFilterChange={setStatusFilter}
-              onSessionFilterChange={setSessionFilter}
-              onClearFilters={() => {
-                setStatusFilter("all");
-                setSessionFilter("all");
-                setSearch("");
-              }}
-              onPageChange={setListPage}
-              onView={setViewing}
-              onCancel={handleCancel}
-              onDeleteRequest={setPendingDeleteId}
-              onRestore={handleRestore}
-              onToggleSelectAll={toggleSelectAll}
-              onToggleSelectedEnrollment={toggleSelectedEnrollment}
-              onClearSelection={clearSelection}
-              onRequestBulkDelete={() => setConfirmBulkDeleteOpen(true)}
-              onRequestBulkRestore={() => setConfirmBulkRestoreOpen(true)}
-              onRequestBulkCancel={() => handleBulkCancel(selectedIds)}
-              onBulkExport={() => void handleBulkExport()}
-              columnProps={{
-                isColumnVisible: columnLayout.isColumnVisible,
-                getColumnWidth: columnLayout.getColumnWidth,
-                onColumnResize: columnLayout.setColumnWidth,
-                columnCustomizer: {
-                  columnRegistry: columnLayout.columnRegistry,
-                  updateUserColumnLayout: columnLayout.updateUserColumnLayout,
-                  onResetLayout: columnLayout.resetColumnLayout,
-                  labels: columnLayout.customizerLabels,
-                },
-              }}
-            />
-          )}
+            {tab === "work" && (
+              <EnrollmentsWorkTier
+                activeSubTab={activeSubTab}
+                subTabs={SUB_TABS}
+                enrollments={enrollments}
+                total={filteredCount}
+                page={listPage}
+                pageSize={ENROLLMENTS_MODULE_MANIFEST.defaultPageSize}
+                search={search}
+                statusFilter={statusFilter}
+                sessionFilter={sessionFilter}
+                canWrite={canWriteEnrollments}
+                canDelete={canDelete}
+                canExport={canExport}
+                canSelectEnrollments={canSelectEnrollments}
+                showDeleted={showDeleted}
+                selectedIds={selectedIds}
+                allVisibleSelected={allVisibleSelected}
+                someVisibleSelected={someVisibleSelected}
+                isWorkListError={isWorkPageError}
+                loadFailedTitle={t("enrollments.loadFailed")}
+                onSubTabChange={setActiveSubTab}
+                onRetry={() => void refetchWorkPage()}
+                onShowDeletedChange={setShowDeleted}
+                onSearchChange={setSearch}
+                onStatusFilterChange={setStatusFilter}
+                onSessionFilterChange={setSessionFilter}
+                onClearFilters={() => { setStatusFilter("all"); setSessionFilter("all"); setSearch(""); }}
+                onPageChange={setListPage}
+                onView={setViewing}
+                onCancel={handleCancel}
+                onDeleteRequest={setPendingDeleteId}
+                onRestore={handleRestore}
+                onToggleSelectAll={toggleSelectAll}
+                onToggleSelectedEnrollment={toggleSelectedEnrollment}
+                onClearSelection={clearSelection}
+                onRequestBulkDelete={() => setConfirmBulkDeleteOpen(true)}
+                onRequestBulkRestore={() => setConfirmBulkRestoreOpen(true)}
+                onRequestBulkCancel={() => handleBulkCancel(selectedIds)}
+                onBulkExport={() => void handleBulkExport()}
+                columnProps={{
+                  isColumnVisible: columnLayout.isColumnVisible,
+                  getColumnWidth: columnLayout.getColumnWidth,
+                  onColumnResize: columnLayout.setColumnWidth,
+                  columnCustomizer: {
+                    columnRegistry: columnLayout.columnRegistry,
+                    updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+                    onResetLayout: columnLayout.resetColumnLayout,
+                    labels: columnLayout.customizerLabels,
+                  },
+                }}
+              />
+            )}
 
-          {tab === "setup" && (
-            <ErrorBoundary>
-              <Suspense fallback={<RouteStatusFallback />}>
-                <EnrollmentsSetupTier />
-              </Suspense>
-            </ErrorBoundary>
-          )}
-        </ModuleTierMotion>
-      </AnimatePresence>
+            {tab === "setup" && (
+              <ErrorBoundary>
+                <Suspense fallback={<RouteStatusFallback />}>
+                  <EnrollmentsSetupTier />
+                </Suspense>
+              </ErrorBoundary>
+            )}
+          </ModuleTierMotion>
+        </AnimatePresence>
       </ResponsiveAccordionTabs>
 
-      <EnrollmentsModalLayer
-        viewing={viewing}
-        canWrite={canWriteEnrollments}
-        canDelete={canDelete}
-        onRestore={handleRestore}
-        showDeleted={showDeleted}
-        showWizard={showWizard}
-        pendingDeleteId={pendingDeleteId}
-        wizardTitle={t("enrollments.new")}
-        onCloseViewing={() => setViewing(null)}
-        onStatusChange={handleStatusChange}
-        onPaymentStatusChange={handlePaymentStatusChange}
-        onCloseWizard={() => setShowWizard(false)}
-        onCompleteWizard={handleComplete}
-        onPendingDeleteChange={setPendingDeleteId}
-        onConfirmDelete={(deletionReason) => {
-          if (pendingDeleteId) handleDelete(pendingDeleteId, deletionReason);
-          setPendingDeleteId(null);
-        }}
-        bulkDeleteCount={selectedIds.length}
-        bulkDeleteOpen={confirmBulkDeleteOpen}
-        onBulkDeleteOpenChange={setConfirmBulkDeleteOpen}
-        bulkRestoreOpen={confirmBulkRestoreOpen}
-        onBulkRestoreOpenChange={setConfirmBulkRestoreOpen}
-        onConfirmBulkDelete={(deletionReason) => {
-          handleBulkDelete(selectedIds, deletionReason);
-          setConfirmBulkDeleteOpen(false);
-          clearSelection();
-        }}
-        onConfirmBulkRestore={() => {
-          handleBulkRestore(selectedIds);
-          setConfirmBulkRestoreOpen(false);
-          clearSelection();
-        }}
-      />
+      <EnrollmentsPageModals pageState={pageState} />
     </ModulePageShell>
   );
 }

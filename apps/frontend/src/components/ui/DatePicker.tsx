@@ -1,35 +1,18 @@
-import * as React from "react"
-import { Calendar as CalendarIcon, X } from "lucide-react"
-import { Calendar } from "@/components/ui/calendar"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { isRadixSelectPortalTarget } from "@/components/ui/select"
-import { YearPickerGrid } from "@/components/ui/YearPickerGrid"
-import { cn } from "@/lib/utils"
-import { useTranslation } from "@/hooks/useTranslation"
-import { useDatePickerState } from "@/components/ui/useDatePickerState"
+import * as React from "react";
+import { Calendar as CalendarIcon, X } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { YearPickerGrid } from "@/components/ui/YearPickerGrid";
+import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
+import { useDatePickerState } from "@/components/ui/useDatePickerState";
+import { DatePickerCalendarContent } from "@/components/ui/DatePickerCalendarContent";
+import {
+  keepOpenForChrome,
+  resolveDatePickerHiddenValue,
+} from "@/components/ui/datePickerBounds";
+import type { DatePickerProps } from "@/components/ui/datePickerTypes";
 
-export interface DatePickerProps {
-  value?: string | number | Date | null
-  onChange?: (value: string) => void
-  onBlur?: (event: React.FocusEvent<HTMLInputElement>) => void
-  placeholder?: string
-  className?: string
-  disabled?: boolean
-  min?: string | number | null
-  max?: string | number | null
-  id?: string
-  name?: string
-  required?: boolean
-  autoComplete?: string
-  mode?: "date" | "year" | "flexible"
-  yearOnly?: boolean
-  minYear?: number | null
-  maxYear?: number | null
-  "aria-label"?: string
-  "aria-invalid"?: boolean
-  "aria-describedby"?: string
-  ref?: React.Ref<HTMLInputElement>
-}
+export type { DatePickerProps };
 
 export function DatePicker({
   ref,
@@ -53,38 +36,9 @@ export function DatePicker({
   "aria-invalid": ariaInvalid,
   "aria-describedby": ariaDescribedBy,
 }: DatePickerProps) {
-  const { t } = useTranslation()
-  const rootRef = React.useRef<HTMLDivElement>(null)
-  const {
-    open,
-    setOpen,
-    inputValue,
-    fallbackId,
-    dateFormat,
-    dateValue,
-    displayMonth,
-    setDisplayMonth,
-    disabledDays,
-    startMonth,
-    endMonth,
-    isTodayAllowed,
-    handleSelect,
-    handleSelectToday,
-    handleInputChange,
-    handleBlur,
-    handleClear,
-    // Year Mode
-    isYearMode,
-    selectedYear,
-    resolvedMinYear,
-    resolvedMaxYear,
-    yearPageStart,
-    goToPreviousYearPage,
-    goToNextYearPage,
-    handleSelectYear,
-    handleSelectThisYear,
-    isThisYearAllowed,
-  } = useDatePickerState({
+  const { t } = useTranslation();
+  const rootRef = React.useRef<HTMLDivElement>(null);
+  const state = useDatePickerState({
     value,
     onChange,
     onBlur,
@@ -94,33 +48,25 @@ export function DatePicker({
     yearOnly,
     minYear,
     maxYear,
-  })
+  });
 
-  const resolvedId = id || fallbackId
-  const resolvedName = name || fallbackId
-  const resolvedPlaceholder = placeholder || (isYearMode ? "YYYY" : dateFormat)
+  const resolvedId = id || state.fallbackId;
+  const resolvedName = name || state.fallbackId;
+  const resolvedPlaceholder = placeholder || (state.isYearMode ? "YYYY" : state.dateFormat);
+  const hiddenValue = resolveDatePickerHiddenValue(value, state.isYearMode);
 
-  const keepOpenForChrome = (event: { target: EventTarget | null; preventDefault: () => void }) => {
-    const target = event.target
-    if (isRadixSelectPortalTarget(target)) {
-      event.preventDefault()
-      return
+  const handleInputKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    if (event.key === "Enter") {
+      event.preventDefault();
+      state.handleBlur();
+      state.setOpen(false);
+    } else if (event.key === "Escape") {
+      state.setOpen(false);
+    } else if (event.key === "ArrowDown" && (event.altKey || !state.open)) {
+      event.preventDefault();
+      state.setOpen(true);
     }
-    if (target instanceof Node && rootRef.current?.contains(target)) {
-      event.preventDefault()
-    }
-  }
-
-  const hiddenValue =
-    typeof value === "string"
-      ? value
-      : typeof value === "number"
-        ? String(value)
-        : value instanceof Date
-          ? isYearMode
-            ? String(value.getFullYear())
-            : value.toISOString().split("T")[0]
-          : ""
+  };
 
   return (
     <div
@@ -134,69 +80,52 @@ export function DatePicker({
         className,
       )}
     >
-      <Popover modal open={open} onOpenChange={setOpen}>
+      <Popover modal open={state.open} onOpenChange={state.setOpen}>
         <PopoverTrigger
           type="button"
           disabled={disabled}
           className="relative me-1.5 h-8 w-8 flex items-center justify-center hover:bg-muted/80 rounded-md text-muted-foreground group-focus-within:text-primary hover:text-foreground transition-colors disabled:cursor-not-allowed disabled:opacity-50 cursor-pointer shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
-          aria-label={isYearMode ? t("datePicker.openYearAria") : t("datePicker.openAria")}
+          aria-label={state.isYearMode ? t("datePicker.openYearAria") : t("datePicker.openAria")}
         >
           <CalendarIcon className="h-4 w-4 transition-colors opacity-80" />
         </PopoverTrigger>
         <PopoverContent
           className="w-auto p-0 surface-overlay rounded-2xl overflow-hidden"
           align="start"
-          onInteractOutside={keepOpenForChrome}
-          onFocusOutside={keepOpenForChrome}
+          onInteractOutside={(e) => keepOpenForChrome(e, rootRef.current)}
+          onFocusOutside={(e) => keepOpenForChrome(e, rootRef.current)}
         >
-          {isYearMode ? (
+          {state.isYearMode ? (
             <YearPickerGrid
-              selectedYear={selectedYear}
-              yearPageStart={yearPageStart}
-              minYear={resolvedMinYear}
-              maxYear={resolvedMaxYear}
-              onSelectYear={handleSelectYear}
-              onPreviousPage={goToPreviousYearPage}
-              onNextPage={goToNextYearPage}
-              onClear={handleClear}
-              onSelectThisYear={handleSelectThisYear}
-              isThisYearAllowed={isThisYearAllowed}
+              selectedYear={state.selectedYear}
+              yearPageStart={state.yearPageStart}
+              minYear={state.resolvedMinYear}
+              maxYear={state.resolvedMaxYear}
+              onSelectYear={state.handleSelectYear}
+              onPreviousPage={state.goToPreviousYearPage}
+              onNextPage={state.goToNextYearPage}
+              onClear={state.handleClear}
+              onSelectThisYear={state.handleSelectThisYear}
+              isThisYearAllowed={state.isThisYearAllowed}
               hasValue={Boolean(value)}
               disabled={disabled}
             />
           ) : (
-            <>
-              <Calendar
-                mode="single"
-                selected={dateValue}
-                onSelect={handleSelect}
-                month={displayMonth}
-                onMonthChange={setDisplayMonth}
-                disabled={disabledDays}
-                captionLayout="dropdown"
-                startMonth={startMonth}
-                endMonth={endMonth}
-                autoFocus
-              />
-              <div className="flex items-center justify-between border-t border-border/60 px-3.5 py-2.5 bg-muted/20">
-                <button
-                  type="button"
-                  onClick={() => handleClear()}
-                  disabled={!value || disabled}
-                  className="min-h-8.5 px-3 py-1.5 text-xs font-semibold text-muted-foreground hover:text-destructive disabled:opacity-30 disabled:hover:text-muted-foreground transition-colors cursor-pointer disabled:cursor-not-allowed rounded-lg hover:bg-destructive/10"
-                >
-                  {t("datePicker.clear")}
-                </button>
-                <button
-                  type="button"
-                  onClick={handleSelectToday}
-                  disabled={!isTodayAllowed || disabled}
-                  className="min-h-8.5 px-3 py-1.5 text-xs font-semibold text-primary hover:text-primary/80 disabled:opacity-30 disabled:hover:text-primary transition-colors cursor-pointer disabled:cursor-not-allowed rounded-lg hover:bg-primary/10"
-                >
-                  {t("datePicker.today")}
-                </button>
-              </div>
-            </>
+            <DatePickerCalendarContent
+              dateValue={state.dateValue}
+              displayMonth={state.displayMonth}
+              setDisplayMonth={state.setDisplayMonth}
+              disabledDays={state.disabledDays}
+              startMonth={state.startMonth}
+              endMonth={state.endMonth}
+              handleSelect={state.handleSelect}
+              handleClear={state.handleClear}
+              handleSelectToday={state.handleSelectToday}
+              isTodayAllowed={state.isTodayAllowed}
+              hasValue={Boolean(value)}
+              disabled={disabled}
+              t={t}
+            />
           )}
         </PopoverContent>
       </Popover>
@@ -206,32 +135,26 @@ export function DatePicker({
         type="text"
         dir="ltr"
         inputMode="numeric"
-        maxLength={isYearMode ? 4 : undefined}
+        maxLength={state.isYearMode ? 4 : undefined}
         id={resolvedId}
         name={resolvedName}
-        value={inputValue}
-        onChange={handleInputChange}
-        onBlur={handleBlur}
+        value={state.inputValue}
+        onChange={state.handleInputChange}
+        onBlur={state.handleBlur}
         autoComplete={autoComplete}
-        onKeyDown={(event) => {
-          if (event.key === "Enter") {
-            event.preventDefault()
-            handleBlur()
-            setOpen(false)
-          } else if (event.key === "Escape") {
-            setOpen(false)
-          } else if (event.key === "ArrowDown" && (event.altKey || !open)) {
-            event.preventDefault()
-            setOpen(true)
-          }
-        }}
+        onKeyDown={handleInputKeyDown}
         placeholder={resolvedPlaceholder}
         disabled={disabled}
         className="min-h-11 min-w-0 flex-1 border-0 bg-transparent p-0 text-start text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
         aria-haspopup="dialog"
-        aria-expanded={open}
+        aria-expanded={state.open}
         aria-required={required}
-        aria-label={ariaLabel || (isYearMode ? t("datePicker.enterYearAria") : t("datePicker.enterFormatAria", { format: dateFormat }))}
+        aria-label={
+          ariaLabel ||
+          (state.isYearMode
+            ? t("datePicker.enterYearAria")
+            : t("datePicker.enterFormatAria", { format: state.dateFormat }))
+        }
         aria-invalid={ariaInvalid}
         aria-describedby={ariaDescribedBy}
       />
@@ -239,7 +162,7 @@ export function DatePicker({
       {value && !disabled && (
         <button
           type="button"
-          onClick={handleClear}
+          onClick={state.handleClear}
           className="relative h-7 w-7 flex items-center justify-center hover:bg-destructive/10 rounded-md text-muted-foreground hover:text-destructive transition-colors cursor-pointer shrink-0 ms-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
           aria-label={t("datePicker.clearAria")}
         >
@@ -259,12 +182,8 @@ export function DatePicker({
           tabIndex={-1}
         />
       )}
-      <input
-        type="hidden"
-        name={`${resolvedName}_hidden`}
-        value={hiddenValue || ""}
-      />
+      <input type="hidden" name={`${resolvedName}_hidden`} value={hiddenValue || ""} />
     </div>
-  )
+  );
 }
-DatePicker.displayName = "DatePicker"
+DatePicker.displayName = "DatePicker";

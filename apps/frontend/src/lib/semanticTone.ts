@@ -79,50 +79,13 @@ export const HOVER_BORDER_TONE = {
   muted: 'hover:border-border',
 } as const;
 
-export const AVATAR_GRADIENTS = {
-  male: 'from-info to-primary',
-  female: 'from-secondary to-primary',
-  neutral: 'from-primary to-info',
-} as const;
-
-export const AVATAR_GRADIENT_ROTATION = [
-  'from-info to-primary',
-  'from-secondary to-primary',
-  'from-primary to-success',
-  'from-warning to-primary',
-] as const;
-
-const GENDER_SELECT_IDLE =
-  'border-border bg-card text-muted-foreground hover:bg-muted';
-
-/** Gender pill selected/unselected classes — theme tokens only (Tailwind v4). */
-export function genderSelectClass(gender: string, isSelected: boolean): string {
-  if (!isSelected) return GENDER_SELECT_IDLE;
-  const g = gender.toLowerCase();
-  if (g === 'male') {
-    return 'border-info text-info bg-info/10 ring-2 ring-info/10';
-  }
-  if (g === 'female') {
-    return 'border-secondary text-secondary bg-secondary/10 ring-2 ring-secondary/10';
-  }
-  return 'border-primary text-primary bg-primary/10 ring-2 ring-primary/10';
-}
-
-/** Gender badge chip — theme tokens only. */
-export function genderBadgeClass(gender: string): string {
-  const g = gender?.toLowerCase();
-  if (g === 'male') return SEMANTIC_BADGE.info;
-  if (g === 'female') return SEMANTIC_BADGE.secondary;
-  return SEMANTIC_BADGE.infoStrong;
-}
-
-/** Avatar gradient by gender — theme tokens only. */
-export function genderAvatarGradient(gender: string): string {
-  const g = gender?.toLowerCase();
-  if (g === 'male') return AVATAR_GRADIENTS.male;
-  if (g === 'female') return AVATAR_GRADIENTS.female;
-  return AVATAR_GRADIENTS.neutral;
-}
+export {
+  AVATAR_GRADIENTS,
+  AVATAR_GRADIENT_ROTATION,
+  genderSelectClass,
+  genderBadgeClass,
+  genderAvatarGradient,
+} from './avatarThemeTokens';
 
 /** Capacity / progress bar fill by percentage. */
 export function progressBarClass(pct: number, thresholds = { warn: 80, danger: 100 }): string {
@@ -192,80 +155,15 @@ export const OBLIGATION_TYPE_BADGE: Record<string, string> = {
   Liability: SEMANTIC_BADGE.destructive,
 };
 
-/** SSOT for card and section start-edge accent stripe geometry */
-export const CARD_STRIPE_WIDTH = "w-1.5";
-export const CARD_STRIPE_INSET = "ps-5 sm:ps-6";
-export const CARD_STRIPE_BASE = "absolute inset-y-0 start-0 w-1.5";
-
-/** Card start-edge accent stripe colors (theme tokens). */
-export const CARD_STRIPE_COLORS = {
-  primary: "bg-primary/45 group-hover/card:bg-primary",
-  success: "bg-success/45 group-hover/card:bg-success",
-  warning: "bg-warning/45 group-hover/card:bg-warning",
-  destructive: "bg-destructive/45 group-hover/card:bg-destructive",
-  info: "bg-info/45 group-hover/card:bg-info",
-  secondary: "bg-secondary/45 group-hover/card:bg-secondary",
-  muted: "bg-muted-foreground/35 group-hover/card:bg-muted-foreground",
-  // Aliases for chart & entity palettes
-  emerald: "bg-success/45 group-hover/card:bg-success",
-  indigo: "bg-info/45 group-hover/card:bg-info",
-  rose: "bg-destructive/45 group-hover/card:bg-destructive",
-  amber: "bg-warning/45 group-hover/card:bg-warning",
-  teal: "bg-info/45 group-hover/card:bg-info",
-  purple: "bg-secondary/45 group-hover/card:bg-secondary",
-  green: "bg-success/45 group-hover/card:bg-success",
-  red: "bg-destructive/45 group-hover/card:bg-destructive",
-  blue: "bg-info/45 group-hover/card:bg-info",
-  violet: "bg-primary/45 group-hover/card:bg-primary",
-} as const satisfies Record<string, string>;
-
-export type CardAccentColor = keyof typeof CARD_STRIPE_COLORS;
-
-/** Returns the matching CSS class for a card accent stripe with safe primary fallback. */
-export function getCardStripeClass(accent?: CardAccentColor | string): string {
-  if (!accent) return "";
-  return CARD_STRIPE_COLORS[accent as CardAccentColor] ?? CARD_STRIPE_COLORS.primary;
-}
-
-/** Sub-list form tab card accent styles (Education, Experience, Skills, Relationships, Emails, Phones, Socials, Addresses). */
-export const SUB_LIST_CARD_ACCENTS = {
-  education: {
-    accent: "bg-info/70 group-hover:bg-info",
-    icon: "text-info group-hover:text-info",
-  },
-  experience: {
-    accent: "bg-primary/70 group-hover:bg-primary",
-    icon: "text-primary group-hover:text-primary",
-  },
-  skills: {
-    accent: "bg-secondary/70 group-hover:bg-secondary",
-    icon: "text-secondary group-hover:text-secondary",
-  },
-  relationships: {
-    accent: "bg-warning/70 group-hover:bg-warning",
-    icon: "text-warning group-hover:text-warning",
-  },
-  emails: {
-    accent: "bg-warning/60 group-hover:bg-warning",
-    icon: "text-warning group-hover:text-warning",
-  },
-  phones: {
-    accent: "bg-primary/60 group-hover:bg-primary",
-    icon: "text-primary/70 group-hover:text-primary",
-  },
-  socials: {
-    accent: "bg-info/60 group-hover:bg-info",
-    icon: "text-info group-hover:text-info",
-  },
-  addresses: {
-    accent: "bg-success/60 group-hover:bg-success",
-    icon: "text-success group-hover:text-success",
-  },
-  bankDetails: {
-    accent: "bg-success/70 group-hover:bg-success",
-    icon: "text-success group-hover:text-success",
-  },
-} as const;
+export {
+  CARD_STRIPE_WIDTH,
+  CARD_STRIPE_INSET,
+  CARD_STRIPE_BASE,
+  CARD_STRIPE_COLORS,
+  type CardAccentColor,
+  getCardStripeClass,
+  SUB_LIST_CARD_ACCENTS,
+} from './cardAccentTokens';
 
 /** Grade badge class mapping by grade tone. */
 export function gradeBadgeClass(tone: string = 'primary'): string {

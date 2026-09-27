@@ -1,20 +1,14 @@
 import React from 'react';
-import { Calendar } from 'lucide-react';
-import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import {
-  STUDENT_STATUS_VALUES,
-  TEACHER_STATUS_VALUES,
-  ENROLLMENT_STATUSES,
-  ATTENDANCE_RECORD_STATUSES,
-  type AppTranslationKey,
-  toTitleCase,
-} from '@mms/shared';
 import type { ReportFilterFields } from './ReportFilters';
-import { calculateReportDateRange } from '@/lib/reports/reportDateUtils';
+import {
+  normalizeReportFilterCategory,
+  getReportFilterStatusOptions,
+  getReportFilterSearchMeta,
+} from './reportFilterStatusOptions';
+import { ReportFilterDateRangeSection } from './ReportFilterDateRangeSection';
 
 interface ReportFilterFieldsPanelProps {
   category?: string;
@@ -37,87 +31,15 @@ export function ReportFilterFieldsPanel({
   const showDateFrom = allowed.includes('dateFrom');
   const showDateTo = allowed.includes('dateTo');
 
-  const normalizedCategory = (() => {
-    const c = category?.toLowerCase() || '';
-    if (c === 'faculty') return 'teachers';
-    if (c === 'financial') return 'finance';
-    if (c === 'academic') return 'examinations';
-    if (c === 'questionbank') return 'question-bank';
-    return c;
-  })();
-
-  const statusOptions = (() => {
-    let rawStatuses: readonly string[] = ['all'];
-
-    switch (normalizedCategory) {
-      case 'students':
-        rawStatuses = ['all', ...STUDENT_STATUS_VALUES];
-        break;
-      case 'teachers':
-        rawStatuses = ['all', ...TEACHER_STATUS_VALUES];
-        break;
-      case 'enrollments':
-        rawStatuses = ['all', ...ENROLLMENT_STATUSES];
-        break;
-      case 'attendance':
-        rawStatuses = ['all', ...ATTENDANCE_RECORD_STATUSES];
-        break;
-      case 'finance':
-        rawStatuses = ['all', 'unpaid', 'paid', 'partial', 'overdue', 'cancelled'];
-        break;
-      case 'sessions':
-        rawStatuses = ['all', 'active', 'upcoming', 'completed', 'cancelled'];
-        break;
-      case 'users':
-        rawStatuses = ['all', 'active', 'inactive', 'suspended'];
-        break;
-      default:
-        rawStatuses = ['all', 'active', 'inactive', 'completed'];
-        break;
-    }
-
-    return rawStatuses.map((st) => {
-      if (st === 'all') {
-        return { value: 'all', label: t('reports.filters.allStatuses') };
-      }
-
-      // Try module-specific translation keys first
-      let label = '';
-      if (normalizedCategory === 'students') {
-        label = t(`students.status.${st}` as AppTranslationKey);
-      } else if (normalizedCategory === 'teachers') {
-        label = t(`teachers.status.${st}` as AppTranslationKey);
-      } else if (normalizedCategory === 'enrollments') {
-        label = t(`enrollments.status.${st}` as AppTranslationKey);
-      } else if (normalizedCategory === 'attendance') {
-        label = t(`attendance.status.${st}` as AppTranslationKey);
-      } else if (normalizedCategory === 'finance') {
-        label = t(`finance.invoiceStatus.${st}` as AppTranslationKey);
-      } else if (normalizedCategory === 'sessions') {
-        label = t(`sessions.status.${st}` as AppTranslationKey);
-      } else if (normalizedCategory === 'users') {
-        label = t(`users.status.${st}` as AppTranslationKey);
-      }
-
-      if (!label || label.startsWith('students.') || label.startsWith('teachers.') || label.startsWith('enrollments.') || label.startsWith('attendance.') || label.startsWith('finance.') || label.startsWith('sessions.') || label.startsWith('users.')) {
-        label = toTitleCase(st.replace(/_/g, ' '));
-      }
-
-      return { value: st, label };
-    });
-  })();
-
-  const searchLabel = (() => {
-    if (normalizedCategory === 'teachers') return t('teachers.report.colFaculty');
-    if (normalizedCategory === 'contacts') return t('contacts.columns.name');
-    return t('reports.filters.student');
-  })();
-
-  const searchPlaceholder = (() => {
-    if (normalizedCategory === 'teachers') return t('teachers.searchPlaceholder');
-    if (normalizedCategory === 'contacts') return t('contacts.searchPlaceholder');
-    return t('reports.filters.searchName');
-  })();
+  const normalizedCategory = normalizeReportFilterCategory(category);
+  const statusOptions = React.useMemo(
+    () => getReportFilterStatusOptions(normalizedCategory, t),
+    [normalizedCategory, t],
+  );
+  const { label: searchLabel, placeholder: searchPlaceholder } = React.useMemo(
+    () => getReportFilterSearchMeta(normalizedCategory, t),
+    [normalizedCategory, t],
+  );
 
   return (
     <div className="px-4 pb-4 flex flex-wrap gap-4 border-t border-border/50 pt-4">
@@ -164,94 +86,14 @@ export function ReportFilterFieldsPanel({
       )}
 
       {(showDateFrom || showDateTo) && (
-        <div className="flex flex-col gap-1 min-w-filter-md flex-1">
-          <div className="flex items-center justify-between gap-2">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
-              {t('reports.comparison.dateRanges')}
-            </span>
-            <div className="flex flex-wrap items-center gap-1">
-              <Button
-                type="button"
-                variant={!filters.dateFrom && !filters.dateTo ? 'secondary' : 'ghost'}
-                size="sm"
-                className="min-h-11 px-2.5 text-3xs font-medium"
-                onClick={() => {
-                  const range = calculateReportDateRange('none');
-                  onFieldChange('dateFrom', range.from);
-                  onFieldChange('dateTo', range.to);
-                }}
-              >
-                {t('common.none')}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="min-h-11 px-2.5 text-3xs font-medium"
-                onClick={() => {
-                  const range = calculateReportDateRange('today');
-                  onFieldChange('dateFrom', range.from);
-                  onFieldChange('dateTo', range.to);
-                }}
-              >
-                {t('datePicker.today')}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="min-h-11 px-2.5 text-3xs font-medium"
-                onClick={() => {
-                  const range = calculateReportDateRange('7d');
-                  onFieldChange('dateFrom', range.from);
-                  onFieldChange('dateTo', range.to);
-                }}
-              >
-                {t('messaging.datePreset7d')}
-              </Button>
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="min-h-11 px-2.5 text-3xs font-medium"
-                onClick={() => {
-                  const range = calculateReportDateRange('30d');
-                  onFieldChange('dateFrom', range.from);
-                  onFieldChange('dateTo', range.to);
-                }}
-              >
-                {t('messaging.datePreset30d')}
-              </Button>
-            </div>
-          </div>
-          <DateRangeFilterBar
-            idPrefix="report-filters"
-            dateFrom={filters.dateFrom}
-            dateTo={filters.dateTo}
-            onDateFromChange={(value) => onFieldChange('dateFrom', value)}
-            onDateToChange={(value) => onFieldChange('dateTo', value)}
-            showFrom={showDateFrom}
-            showTo={showDateTo}
-            fromLabel={
-              showDateFrom ? (
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="h-3 w-3" aria-hidden="true" />
-                  {t('reports.filters.from')}
-                </span>
-              ) : undefined
-            }
-            toLabel={
-              showDateTo ? (
-                <span className="inline-flex items-center gap-1">
-                  <Calendar className="h-3 w-3" aria-hidden="true" />
-                  {t('reports.filters.to')}
-                </span>
-              ) : undefined
-            }
-            className="w-full gap-3"
-            pickerClassName="w-full min-w-0"
-          />
-        </div>
+        <ReportFilterDateRangeSection
+          dateFrom={filters.dateFrom}
+          dateTo={filters.dateTo}
+          showDateFrom={showDateFrom}
+          showDateTo={showDateTo}
+          onFieldChange={onFieldChange}
+          t={t}
+        />
       )}
 
       {allowed.includes('student') && (
