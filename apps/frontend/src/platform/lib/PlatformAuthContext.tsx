@@ -2,12 +2,12 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 import type { PlatformLoginResponse, PlatformUserProfile } from '@mms/shared';
 import { normalizePlatformAdminPermissions } from '@mms/shared';
 import { apiFetch, apiJson } from '@/lib/apiClient';
+import { queryClientInstance } from '@/lib/queryClient';
 import { PLATFORM_AUTH_PATHS } from '@/lib/apiClientHelpers';
 import { clearPersistedAuthUser } from '@/lib/contexts/authContextHelpers';
 import { useTenant } from '@/lib/contexts/TenantContext';
 import { PlatformSessionTimeoutWatcher } from '@/platform/components/PlatformSessionTimeoutWatcher';
 import type { PlatformAuthContextType, PlatformLoginOutcome } from './platformAuthTypes';
-
 export type { PlatformAuthContextType, PlatformLoginOutcome } from './platformAuthTypes';
 
 const normalizeSessionUser = (user: PlatformUserProfile): PlatformUserProfile => ({
@@ -135,6 +135,7 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     } catch {
       /* clear client session even if logout request fails */
     } finally {
+      queryClientInstance.clear();
       clearPersistedAuthUser();
       setPlatformUser(null);
       setIsPlatformAuthenticated(false);
@@ -189,7 +190,6 @@ export const PlatformAuthProvider: React.FC<{ children: React.ReactNode }> = ({ 
     </PlatformAuthContext.Provider>
   );
 };
-
 export function usePlatformAuth(): PlatformAuthContextType {
   const platformAuth = useContext(PlatformAuthContext);
   if (!platformAuth) {

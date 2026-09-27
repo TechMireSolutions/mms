@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 import type { PlatformCommandItem } from '@/platform/components/platformCommandItems';
 
 export interface PlatformCommandResultsListProps {
-  filteredItems: PlatformCommandItem[];
+  filteredItems: readonly PlatformCommandItem[];
   selectedIndex: number;
   query: string;
   onSelect: (path: string) => void;

@@ -43,22 +43,28 @@ export function useAuthSessionSync({
       return;
     }
 
+    const revision = queryClientInstance.sessionRevision;
+    const isCurrent = () => !signal?.aborted && revision === queryClientInstance.sessionRevision;
     setIsLoadingAuth(true);
     setAuthChecked(false);
     setAuthError(null);
 
     try {
       const authResponse = await apiJson<{ user: User }>(AUTH_PATHS.me, { signal });
+      if (!isCurrent()) return;
       await applyAuthSession(authResponse.user);
     } catch (error) {
-      if (signal?.aborted) return;
+      if (!isCurrent()) return;
+      setAuthChecked(true);
+      setIsLoadingAuth(false);
+      queryClientInstance.clear();
       setUser(null);
       setIsAuthenticated(false);
       if (isApiError(error) && (error.status === 401 || error.status === 403)) {
         clearPersistedAuthUser();
       }
     } finally {
-      if (!signal?.aborted) {
+      if (isCurrent()) {
         setAuthChecked(true);
         setIsLoadingAuth(false);
       }
@@ -78,16 +84,9 @@ export function useAuthSessionSync({
           setAuthChecked(true);
           queryClientInstance.clear();
         } else {
-          try {
-            const nextUser = JSON.parse(event.newValue) as User;
-            if (nextUser?.id) {
-              setUser(nextUser);
-              setIsAuthenticated(true);
-              setAuthChecked(true);
-            }
-          } catch {
-            // Ignore parse errors
-          }
+          queryClientInstance.clear();
+          setIsAuthenticated(false);
+          void checkUserAuth(controller.signal);
         }
       }
     };

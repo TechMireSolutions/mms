@@ -1,6 +1,52 @@
-import { QueryClient, dehydrate, hydrate, onlineManager } from '@tanstack/react-query';
+import type { User } from '@mms/shared';
+import { QueryClient, onlineManager } from '@tanstack/react-query';
 import { isApiError } from '@/lib/apiClient';
 import { createIdbCachePersister } from '@/lib/query/idbCachePersister';
+import { createQueryPersistenceLifecycle } from '@/lib/query/queryPersistenceLifecycle';
+
+import { readQueryCacheSession, resolveQueryCacheSession, revokeQueryCacheSession, tenantCacheIdentity } from '@/lib/query/queryCacheSession';
+
+class SessionQueryClient extends QueryClient {
+  private persistence?: ReturnType<typeof createQueryPersistenceLifecycle>;
+  private cacheKey = readQueryCacheSession()?.key;
+  private identity?: string;
+  private revision = 0;
+
+  get sessionRevision(): number { return this.revision; }
+
+  override clear(): void {
+    this.revision += 1;
+    revokeQueryCacheSession(this.cacheKey);
+    this.persistence?.stop();
+    this.persistence = undefined;
+    this.identity = undefined;
+    this.cacheKey = undefined;
+    super.clear();
+  }
+
+  activateTenantSession(user: User): Promise<void> {
+    const identity = tenantCacheIdentity(user);
+    if (user.mustChangePassword) {
+      this.clear();
+      return Promise.resolve();
+    }
+    if (this.identity === identity && this.cacheKey === readQueryCacheSession()?.key && this.persistence) {
+      return this.persistence.start();
+    }
+    if (this.identity) this.clear();
+    else super.clear();
+    this.identity = identity;
+    const session = resolveQueryCacheSession(identity);
+    this.cacheKey = session?.key;
+    if (!session) return Promise.resolve();
+    this.persistence = createQueryPersistenceLifecycle(
+      this,
+      createIdbCachePersister({ key: session.key }),
+      () => readQueryCacheSession()?.key === session.key,
+    );
+    return this.persistence.start();
+  }
+}
 
 /** Standard tiered stale times for TanStack Query caching across MMS domains. */
 export const TRANSACTIONAL_STALE_TIME = 30_000;      // 30s: directory lists, recent logs, live queues
@@ -12,7 +58,7 @@ export const STATIC_LOOKUP_STALE_TIME = 30 * 60_000; // 30m: branding, static en
  * Shared React Query client — server state defaults for tenant REST resources.
  * Features 3-attempt exponential backoff, 24h gcTime for offline readiness, and online-mode pausing.
  */
-export const queryClientInstance = new QueryClient({
+export const queryClientInstance = new SessionQueryClient({
   defaultOptions: {
     queries: {
       staleTime: TRANSACTIONAL_STALE_TIME,
@@ -35,51 +81,6 @@ export const queryClientInstance = new QueryClient({
   },
 });
 
-const idbPersister = createIdbCachePersister();
-
-/**
- * Restores dehydrated query cache from IndexedDB upon startup and schedules debounced
- * persistence on query cache updates.
- */
-export async function initQueryClientPersistence(): Promise<void> {
-  if (typeof window === 'undefined') return;
-
-  try {
-    const restored = await idbPersister.restoreClient();
-    if (restored) {
-      hydrate(queryClientInstance, restored);
-    }
-  } catch (err) {
-    // Non-blocking fallback
-  }
-
-  // Subscribe to query cache changes with debounce to persist client state
-  let saveTimer: ReturnType<typeof setTimeout> | null = null;
-  queryClientInstance.getQueryCache().subscribe(() => {
-    if (saveTimer) clearTimeout(saveTimer);
-    saveTimer = setTimeout(() => {
-      try {
-        const state = dehydrate(queryClientInstance, {
-          shouldDehydrateQuery: (query) => {
-            const firstKey = query.queryKey[0];
-            // Never persist platform super-user queries — they are session-scoped
-            // and must not bleed across logins or test retries via IDB hydration.
-            if (firstKey === 'platform') return false;
-            return (
-              query.state.status === 'success' &&
-              query.state.data !== undefined &&
-              !query.queryKey.some((k) => typeof k === 'string' && k.includes('auth'))
-            );
-          },
-        });
-        void idbPersister.persistClient(state);
-      } catch {
-        // Non-blocking
-      }
-    }, 1000);
-  });
-}
-
 // Automatically resume paused mutations upon network recovery
 if (typeof window !== 'undefined') {
   window.addEventListener('online', () => {
@@ -90,6 +91,6 @@ if (typeof window !== 'undefined') {
     onlineManager.setOnline(false);
   });
 
-  // Initialize persistence on client start
-  void initQueryClientPersistence();
+  // Legacy unscoped records are never restored.
+  void createIdbCachePersister().removeClient();
 }

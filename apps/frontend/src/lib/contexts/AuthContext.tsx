@@ -44,6 +44,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const applyAuthSession = useCallback(async (authUser: User): Promise<void> => {
+    void queryClientInstance.activateTenantSession(authUser);
     setUser(authUser);
     setIsAuthenticated(true);
     setAuthChecked(true);
@@ -89,6 +90,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
 
     queryClientInstance.clear();
+    setIsLoadingAuth(false);
     clearPersistedAuthUser();
     setUser(null);
     setIsAuthenticated(false);

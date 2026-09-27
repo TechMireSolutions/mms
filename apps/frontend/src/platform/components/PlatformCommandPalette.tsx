@@ -41,19 +41,7 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
     [navigate, onClose],
   );
 
-  const {
-    query,
-    setQuery,
-    selectedIndex,
-    setSelectedIndex,
-    handleKeyDown,
-  } = useCommandPaletteSearch<PlatformCommandItem>({
-    items: allAvailableItems,
-    onSelect: handleSelect,
-    onClose,
-  });
-
-  const filteredItems = useMemo(() => {
+  const filterItems = useCallback((query: string) => {
     const q = query.trim().toLowerCase();
     if (!q) return allAvailableItems;
     return allAvailableItems.filter((item) => {
@@ -65,7 +53,20 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
         item.keywords.some((k) => k.toLowerCase().includes(q))
       );
     });
-  }, [allAvailableItems, query, t]);
+  }, [allAvailableItems, t]);
+
+  const {
+    query,
+    setQuery,
+    filteredItems,
+    selectedIndex,
+    setSelectedIndex,
+    handleKeyDown,
+  } = useCommandPaletteSearch<PlatformCommandItem>({
+    filterItems,
+    onSelect: handleSelect,
+    onClose,
+  });
 
   const screenReaderAnnouncement =
     filteredItems.length === 0

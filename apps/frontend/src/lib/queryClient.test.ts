@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { dehydrate, onlineManager } from '@tanstack/react-query';
+import { onlineManager } from '@tanstack/react-query';
 import { queryClientInstance } from './queryClient';
 import { ApiError } from './apiClient';
 
@@ -42,26 +42,6 @@ describe('queryClient configuration', () => {
       expect(retryFn(2, serverError)).toBe(true);
       expect(retryFn(3, serverError)).toBe(false); // Max 3 retries
     }
-  });
-
-  it('shouldDehydrateQuery excludes platform queries from IDB persistence', () => {
-    // Seed a successful platform query into the cache
-    void queryClientInstance.setQueryData(['platform', 'workspaces'], [{ subdomain: 'test' }]);
-    const state = dehydrate(queryClientInstance, {
-      shouldDehydrateQuery: (query) => {
-        const firstKey = query.queryKey[0];
-        if (firstKey === 'platform') return false;
-        return (
-          query.state.status === 'success' &&
-          query.state.data !== undefined &&
-          !query.queryKey.some((k) => typeof k === 'string' && k.includes('auth'))
-        );
-      },
-    });
-    const keys = state.queries.map((q) => q.queryKey[0]);
-    expect(keys).not.toContain('platform');
-    // Cleanup
-    queryClientInstance.removeQueries({ queryKey: ['platform', 'workspaces'] });
   });
 
   it('updates onlineManager and resumes paused mutations on window online/offline events', () => {

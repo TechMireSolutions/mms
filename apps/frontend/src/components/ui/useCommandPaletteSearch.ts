@@ -1,7 +1,7 @@
-import { useState, useEffect, useDeferredValue } from 'react';
+import { useState, useEffect, useDeferredValue, useMemo } from 'react';
 
 export interface UseCommandPaletteSearchOptions<T> {
-  items: readonly T[];
+  filterItems: (query: string) => readonly T[];
   onSelect: (item: T) => void;
   onClose: () => void;
 }
@@ -10,13 +10,15 @@ export interface UseCommandPaletteSearchOptions<T> {
  * Headless keyboard navigation and selection state for command palette modals.
  */
 export function useCommandPaletteSearch<T>({
-  items,
+  filterItems,
   onSelect,
   onClose,
 }: UseCommandPaletteSearchOptions<T>) {
   const [query, setQuery] = useState('');
   const deferredQuery = useDeferredValue(query);
-  const [selectedIndex, setSelectedIndex] = useState(0);
+  const [requestedIndex, setSelectedIndex] = useState(0);
+  const items = useMemo(() => filterItems(deferredQuery), [filterItems, deferredQuery]);
+  const selectedIndex = Math.max(0, Math.min(requestedIndex, items.length - 1));
 
   useEffect(() => {
     setSelectedIndex(0);
@@ -25,11 +27,11 @@ export function useCommandPaletteSearch<T>({
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'ArrowDown') {
       e.preventDefault();
-      setSelectedIndex((prev) => (items.length > 0 ? (prev + 1) % items.length : 0));
+      setSelectedIndex(() => (items.length > 0 ? (selectedIndex + 1) % items.length : 0));
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
-      setSelectedIndex((prev) =>
-        items.length > 0 ? (prev - 1 + items.length) % items.length : 0,
+      setSelectedIndex(() =>
+        items.length > 0 ? (selectedIndex - 1 + items.length) % items.length : 0,
       );
     } else if (e.key === 'Enter') {
       e.preventDefault();
@@ -43,6 +45,7 @@ export function useCommandPaletteSearch<T>({
   };
 
   return {
+    filteredItems: items,
     query,
     setQuery,
     deferredQuery,

@@ -34,6 +34,7 @@ vi.mock('@/lib/apiClient', async (importOriginal) => {
 vi.mock('@/lib/queryClient', () => ({
   queryClientInstance: {
     clear: vi.fn(),
+    activateTenantSession: vi.fn(async () => {}),
   },
 }));
 

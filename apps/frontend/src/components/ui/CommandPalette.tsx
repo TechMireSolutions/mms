@@ -53,20 +53,15 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
   const {
     query,
     setQuery,
-    deferredQuery,
+    filteredItems: activeFilteredItems,
     selectedIndex,
     setSelectedIndex,
     handleKeyDown,
   } = useCommandPaletteSearch<CommandItem>({
-    items: filteredItems(""),
+    filterItems: filteredItems,
     onSelect: handleSelect,
     onClose,
   });
-
-  const activeFilteredItems = useMemo(
-    () => filteredItems(deferredQuery),
-    [filteredItems, deferredQuery],
-  );
 
   return (
     <CommandPaletteModal
