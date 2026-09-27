@@ -2,9 +2,7 @@ import React, { useState } from 'react';
 import { FileSpreadsheet, FileText, Printer, Settings as SettingsIcon } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Button } from '@/components/ui/button';
-import { FormSelect } from '@/components/ui/FormSelect';
-import { SectionLabel } from '@/components/ui/SectionLabel';
-import { CompactSegmentedControl } from '@/components/ui/CompactSegmentedControl';
+import { ExportPdfSettingsPopover } from '@/components/ui/ExportPdfSettingsPopover';
 import {
   exportExcel,
   exportPdf,
@@ -57,12 +55,6 @@ export function ExportToolbar({
     return [parts[0] || '', parts[1] || ''];
   })();
 
-  const pageSizeOptions = (() => [
-      { value: 'a4', label: t('reports.builder.formatA4') },
-      { value: 'letter', label: t('reports.builder.formatLetter') },
-      { value: 'a3', label: t('reports.builder.formatA3') },
-      { value: 'legal', label: t('reports.builder.formatLegal') },
-    ])();
 
   const finalRows = (() => rows || (data as Record<string, unknown>[]) || [])();
   const finalColumns = (() => columns || (headers ? headers.map((h) => ({ header: h, key: h })) : []))();
@@ -138,31 +130,15 @@ export function ExportToolbar({
       </p>
 
       <div className="flex items-center gap-2 flex-wrap">
-        {showPdfSettings && (
-          <div className="absolute end-0 bottom-full mb-2 surface-overlay rounded-xl p-3 z-popover flex flex-col gap-3 min-w-popover-md max-w-full">
-            <div className="space-y-1.5">
-              <SectionLabel as="label" htmlFor="export-orientation" weight="bold">{t('reports.export.orientation')}</SectionLabel>
-              <CompactSegmentedControl
-                options={[
-                  { value: 'p', label: t('reports.export.portrait') },
-                  { value: 'l', label: t('reports.export.landscape') },
-                ]}
-                value={orientation}
-                onChange={(val) => setOrientation(val as 'p' | 'l')}
-                fill
-              />
-            </div>
-            <div className="space-y-1.5">
-              <SectionLabel as="label" htmlFor="export-page-size" weight="bold">{t('reports.export.pageSize')}</SectionLabel>
-              <FormSelect
-                id="export-page-size"
-                value={formatSize}
-                onChange={setFormatSize}
-                options={pageSizeOptions}
-              />
-            </div>
-          </div>
-        )}
+        <ExportPdfSettingsPopover
+          open={showPdfSettings}
+          orientation={orientation}
+          onOrientationChange={setOrientation}
+          pageSize={formatSize}
+          onPageSizeChange={setFormatSize}
+          placement="top"
+          idPrefix="export"
+        />
 
         <Button
           onClick={handlePrint}

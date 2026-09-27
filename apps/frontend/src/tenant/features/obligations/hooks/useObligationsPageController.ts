@@ -8,7 +8,6 @@ import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import {
   OBLIGATIONS_MODULE_MANIFEST,
   resolveModuleTierTab,
-  toMessagingRecipient,
   type AppTranslationKey,
   type ObligationCollection,
 } from '@mms/shared';
@@ -21,13 +20,11 @@ import {
   useObligationsCollections,
   useObligationsCollectionsCollection,
   useObligationsMutations,
-  NotifiedObligationsMutationError,
 } from '@/tenant/features/obligations/hooks/useObligationsApi';
 import { useObligationColumnLayout } from '@/tenant/features/obligations/hooks/useObligationColumnLayout';
 import { useWorkSelection } from '@/hooks/useWorkSelection';
-import { useObligationsTrashActions } from '@/tenant/features/obligations/hooks/useObligationsTrashActions';
 import { useMessageComposerState } from '@/hooks/useMessageComposerState';
-import { notify } from '@/lib/notify';
+import { useObligationsPageActions } from './useObligationsPageActions';
 
 const SETUP_TAB_LABEL_KEYS: Record<(typeof OBLIGATIONS_MODULE_MANIFEST.setupSubTabs)[number], AppTranslationKey> = {
   types: 'obligations.types',
@@ -89,35 +86,27 @@ export function useObligationsPageController() {
 
   const { messagingTarget, openComposer, closeComposer, canWriteMessaging } = useMessageComposerState();
 
-  const notifySaveFailure = ((error: unknown) => {
-    if (error instanceof NotifiedObligationsMutationError) return;
-    notify.error(t('obligations.saveFailed'), {
-      description: error instanceof Error ? error.message : String(error),
-    });
+  const {
+    handleMessageCollections,
+    handleSaveCollection,
+    handleDelete,
+    handleRestore,
+    handleBulkDelete,
+    handleBulkRestore,
+    runSetupSave,
+  } = useObligationsPageActions({
+    t,
+    collections,
+    replaceCollections,
+    deleteCollection,
+    restoreCollection,
+    bulkDeleteCollections,
+    bulkRestoreCollections,
+    clearCollectionSelection,
+    setShowForm,
+    openComposer,
+    canWriteMessaging,
   });
-
-  const handleMessageCollections = (channel: 'sms' | 'whatsapp' | 'email', collectionList: ObligationCollection[]) => {
-    if (!canWriteMessaging) return;
-    openComposer(
-      channel,
-      collectionList.map((collection) =>
-        toMessagingRecipient(
-          {
-            id: collection.id,
-            name: collection.receipt_no
-              ? t('obligations.messaging.receipt', { receipt: collection.receipt_no })
-              : t('obligations.messaging.donor'),
-            phone: typeof (collection as { phone?: string }).phone === 'string'
-              ? (collection as { phone?: string }).phone
-              : '',
-            email: typeof (collection as { email?: string }).email === 'string'
-              ? (collection as { email?: string }).email
-              : '',
-          },
-        ),
-      ),
-    );
-  };
 
   useEffect(() => {
     setFilteredCount(collections.length);
@@ -137,53 +126,6 @@ export function useObligationsPageController() {
     },
     enabled: activeTab === 'work',
   });
-
-  const handleSaveCollection = async (collectionPayload: ObligationCollection) => {
-    try {
-      const existingCollection = collections.find((collection) => collection.id === collectionPayload.id);
-      await replaceCollections.mutateAsync(
-        existingCollection
-          ? collections.map((collection) => (collection.id === collectionPayload.id ? collectionPayload : collection))
-          : [collectionPayload, ...collections],
-      );
-      setShowForm(false);
-    } catch (error: unknown) {
-      notifySaveFailure(error);
-      throw error;
-    }
-  };
-
-  const {
-    handleDelete,
-    handleRestore,
-    handleBulkDelete: rawBulkDelete,
-    handleBulkRestore: rawBulkRestore,
-  } = useObligationsTrashActions({
-    t,
-    deleteCollection,
-    restoreCollection,
-    bulkDeleteCollections,
-    bulkRestoreCollections,
-  });
-
-  const handleBulkDelete = async (ids: string[]) => {
-    await rawBulkDelete(ids);
-    clearCollectionSelection();
-  };
-
-  const handleBulkRestore = async (ids: string[]) => {
-    await rawBulkRestore(ids);
-    clearCollectionSelection();
-  };
-
-  const runSetupSave = async (save: () => Promise<unknown>): Promise<void> => {
-    try {
-      await save();
-    } catch (error: unknown) {
-      notifySaveFailure(error);
-      throw error;
-    }
-  };
 
   const effectiveTab = resolveModuleTierTab(
     activeTab,

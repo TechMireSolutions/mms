@@ -159,3 +159,34 @@ export function buildContactsCustomReportFieldCatalog(
   if (!viewerRole) return [];
   return buildContactsReportFieldCatalog(contactFields, contactTabs, viewerRole);
 }
+
+export function getReportDataSourceOptions(
+  t: (key: AppTranslationKey) => string,
+): Array<{ value: DataSource; label: string }> {
+  return [
+    { value: "students", label: t("reports.builder.sourceStudents") },
+    { value: "contacts", label: t("contacts.reportBuilder.sourceLabel") },
+    { value: "attendance", label: t("reports.builder.sourceAttendance") },
+    { value: "financial", label: t("reports.builder.sourceFinancial") },
+    { value: "academic", label: t("reports.builder.sourceAcademic") },
+    { value: "hasanat", label: t("reports.builder.sourceHasanat") },
+    { value: "sessions", label: t("reports.builder.sourceSessions") },
+    { value: "faculty", label: t("reports.builder.sourceFaculty") },
+  ];
+}
+
+export function getAggregateFunctionOptions(
+  t: (key: AppTranslationKey) => string,
+): Array<{ value: AggregateFn; label: string }> {
+  return AGGREGATE_FNS.map((aggregateName) => {
+    let label: string = aggregateName;
+    if (aggregateName === "None") label = t("reports.builder.noGrouping");
+    else if (aggregateName === "Sum") label = t("reports.visualizer.opSum");
+    else if (aggregateName === "Average") label = t("reports.visualizer.opAvg");
+    else if (aggregateName === "Count") label = t("reports.visualizer.opCount");
+    else if (aggregateName === "Max") label = t("reports.visualizer.opMax");
+    else if (aggregateName === "Min") label = t("reports.visualizer.opMin");
+    return { value: aggregateName, label };
+  });
+}
+

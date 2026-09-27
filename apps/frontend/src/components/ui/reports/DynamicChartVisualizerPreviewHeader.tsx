@@ -10,8 +10,7 @@ import {
   Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { SectionLabel } from "@/components/ui/SectionLabel";
+import { ExportPdfSettingsPopover } from "@/components/ui/ExportPdfSettingsPopover";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { getCollectionLabel, getFieldLabel } from "@/lib/reports/reportMetadata";
 import type { CollectionMeta } from "@/components/ui/reports/dynamicChartVisualizerTypes";
@@ -112,45 +111,15 @@ export function VisualizerPreviewHeader({
         )}
 
         <div className="flex items-center gap-1.5 relative">
-          {showPdfSettings && (
-            <div className="absolute end-0 bottom-full mb-2 surface-overlay rounded-2xl p-4 z-popover flex flex-col gap-3.5 min-w-popover-md">
-              <div className="space-y-1.5">
-                <SectionLabel as="label" weight="bold">{t("reports.visualizer.pdfOrientation")}</SectionLabel>
-                <div className="flex gap-1 p-1 bg-muted rounded-xl">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => onPdfOrientationChange("p")}
-                    className={`min-h-11 flex-1 px-2 rounded-lg text-xs font-black uppercase shadow-none ${pdfOrientation === "p" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    {t("reports.export.portrait")}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => onPdfOrientationChange("l")}
-                    className={`min-h-11 flex-1 px-2 rounded-lg text-xs font-black uppercase shadow-none ${pdfOrientation === "l" ? "bg-card text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"}`}
-                  >
-                    {t("reports.export.landscape")}
-                  </Button>
-                </div>
-              </div>
-              <div className="space-y-1.5">
-                <SectionLabel as="label" weight="bold">{t("reports.visualizer.pdfPageSize")}</SectionLabel>
-                <FormSelect
-                  value={pdfFormat}
-                  onChange={onPdfFormatChange}
-                  className="w-full text-xs"
-                  options={[
-                    { value: "a4", label: t("reports.builder.formatA4") },
-                    { value: "letter", label: t("reports.builder.formatLetter") },
-                    { value: "a3", label: t("reports.builder.formatA3") },
-                    { value: "legal", label: t("reports.builder.formatLegal") },
-                  ]}
-                />
-              </div>
-            </div>
-          )}
+          <ExportPdfSettingsPopover
+            open={showPdfSettings}
+            orientation={pdfOrientation}
+            onOrientationChange={onPdfOrientationChange}
+            pageSize={pdfFormat}
+            onPageSizeChange={onPdfFormatChange}
+            placement="top"
+            idPrefix="preview-pdf"
+          />
 
           <Button
             type="button"

@@ -127,7 +127,7 @@ export function SequenceNumberingCard({
             {/* Starting Sequence & Live Telemetry Box */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
               <Field
-                label={startSeqLabel ?? t('common.sequenceNumbering.startLabel')}
+                label={startSeqLabel ?? (t('common.sequenceNumbering.startLabel') !== 'common.sequenceNumbering.startLabel' ? t('common.sequenceNumbering.startLabel') : 'Starting Sequence')}
                 hint={startSeqHint ?? t('common.sequenceNumbering.startHint')}
                 id="sequence-startSeq"
               >

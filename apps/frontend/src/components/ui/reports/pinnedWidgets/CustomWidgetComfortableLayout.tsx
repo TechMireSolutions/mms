@@ -1,8 +1,8 @@
 import React from "react";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { motion } from "framer-motion";
-import { capitalize, type AppTranslationKey } from "@mms/shared";
 import { resolveWidgetTitle } from "@/lib/dashboardWidgets";
+import { getWidgetSubtitle } from "@/components/ui/reports/pinnedWidgets/customWidgetLayoutHelpers";
 import { ComposedDashboardWidget, isComposedWidgetType } from "@/components/dashboard-widgets/registry";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
@@ -11,7 +11,6 @@ import { StatusBadge } from "@/components/ui/StatusBadge";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { CARD_STRIPE_BASE, SEMANTIC_BADGE } from "@/lib/semanticTone";
 import { cn } from "@/lib/utils";
-import { METADATA_FIELDS, getCollectionLabel } from "@/lib/reports/reportMetadata";
 import { ProgressRing } from "@/components/ui/reports/pinnedWidgets/WidgetProgressRing";
 import { COLOR_MAP, type CustomWidget } from "@/lib/reports/pinnedWidgetTypes";
 import { CustomWidgetCardLayout } from "@/components/ui/reports/pinnedWidgets/CustomWidgetCardLayout";
@@ -195,17 +194,4 @@ export function CustomWidgetComfortableLayout({
       </div>
     </motion.div>
   );
-}
-
-function getWidgetSubtitle(widget: CustomWidget, resolvedWidgetType: string, t: TranslationFunction): string {
-  const widgetTitle = resolveWidgetTitle(widget, t);
-  const collectionLabel = getCollectionLabel(widget.collection, METADATA_FIELDS[widget.collection]?.name || widget.collection, t);
-  const showCollection = !widgetTitle.toLowerCase().includes(collectionLabel.toLowerCase());
-  const formulaPart = resolvedWidgetType !== "switch"
-    ? t(`reports.widgets.builder.formula${capitalize(widget.operation)}` as AppTranslationKey) || widget.operation
-    : "";
-
-  return showCollection
-    ? `${collectionLabel}${formulaPart ? ` • ${formulaPart}` : ""}`
-    : formulaPart;
 }

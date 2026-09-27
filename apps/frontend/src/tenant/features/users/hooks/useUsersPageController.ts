@@ -1,21 +1,13 @@
-import { useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import {
   canAccessRolesAndPermissions,
   normalizeWorkspaceUser,
-  resolveModuleTierTab,
   USERS_MODULE_MANIFEST,
   type SystemUser,
 } from '@mms/shared';
-import { usePersistedTabState } from '@/hooks/usePersistedTabState';
-import {
-  extractActivityLogs,
-  useActivityLogs,
-  useUsersByIds,
-  useUsersMutations,
-} from '@/tenant/features/users/hooks/useUsersApi';
+import { useUsersMutations } from '@/tenant/features/users/hooks/useUsersApi';
+import { useUsersActivityLogs } from './useUsersActivityLogs';
 import { useUsersPaginated } from '@/tenant/features/users/hooks/useUsersListQueries';
 import { useUsersDirectoryFilters } from '@/tenant/features/users/hooks/useUsersDirectoryFilters';
 import { useUsersKeyboardShortcuts } from '@/tenant/features/users/hooks/useUsersKeyboardShortcuts';
@@ -28,11 +20,8 @@ import {
 } from '@/tenant/features/users/hooks/useUsersExportActions';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { buildUsersWorkTierProps } from '@/tenant/features/users/hooks/usersPageWorkTierProps';
-import {
-  getUsersConfigTabs,
-  getUsersSubTabs,
-} from '@/tenant/features/users/hooks/usersPageTabConfig';
 import { useUsersModalLayer } from './useUsersModalLayer';
+import { useUsersTabState } from './useUsersTabState';
 
 export function useUsersPageController() {
   const { t } = useTranslation();
@@ -46,14 +35,7 @@ export function useUsersPageController() {
     canViewSetup,
   } = useModulePermissions(USERS_MODULE_MANIFEST);
   const canAccessRoles = canAccessRolesAndPermissions(authUser?.role);
-  const USERS_CONFIG_TABS = getUsersConfigTabs(canAccessRoles, t);
-  const SUB_TABS = getUsersSubTabs(t);
-  const [activeTab, setActiveTab] = usePersistedTabState<string>('users_active_tab', 'work');
-  const [activeSubTab, setActiveSubTab] = usePersistedTabState<string>('users_ops_subtab', 'users');
-  const [configSubTab, setConfigSubTab] = usePersistedTabState<string>(
-    'users_config_subtab',
-    'permissions',
-  );
+
   const filters = useUsersDirectoryFilters();
   const {
     listPage,
@@ -63,22 +45,31 @@ export function useUsersPageController() {
     roleFilter,
     statusFilter,
     selectedIds,
-    setSelectedIds,
   } = filters;
 
-  const logsResult = useActivityLogs({
-    enabled: activeTab === 'work' && activeSubTab === 'activity',
+  const {
+    USERS_CONFIG_TABS,
+    SUB_TABS,
+    activeTab,
+    setActiveTab,
+    activeSubTab,
+    setActiveSubTab,
+    configSubTab,
+    setConfigSubTab,
+    visibleTopTabs,
+    effectiveTab,
+    effectiveSubTab,
+    effectiveConfigTab,
+  } = useUsersTabState({
+    canAccessRoles,
+    canViewSetup,
+    canViewReports,
+    onResetSelection: filters.clearSelection,
+    t,
   });
-  const logs = extractActivityLogs(logsResult.data);
-  const activityUsersResult = useUsersByIds(
-    logs.map((log) => log.userId),
-    {
-      enabled: activeTab === 'work' && activeSubTab === 'activity',
-    },
-  );
-  const activityUsers = activityUsersResult.data as SystemUser[];
-  const logsLoadFailed = logsResult.isError;
-  const isLogsLoading = logsResult.isLoading || activityUsersResult.isLoading;
+
+  const { logs, activityUsers, logsLoadFailed, isLogsLoading, refetchLogs } =
+    useUsersActivityLogs({ enabled: activeTab === 'work' && activeSubTab === 'activity' });
 
   const useServerWork = activeTab === 'work' && activeSubTab === 'users';
   const workPageQuery = useUsersPaginated({
@@ -113,16 +104,6 @@ export function useUsersPageController() {
     logExportAudit,
   });
 
-  useEffect(() => {
-    if ((!canViewSetup && activeTab === 'setup') || (!canViewReports && activeTab === 'reports')) {
-      setActiveTab('work');
-    }
-  }, [canViewSetup, canViewReports, activeTab, setActiveTab]);
-
-  useEffect(() => {
-    setSelectedIds([]);
-  }, [activeTab, activeSubTab, setSelectedIds]);
-
   const actorId = authUser?.id ?? 'system';
   const actions = useUsersPageActions({ actorId, t });
 
@@ -145,21 +126,6 @@ export function useUsersPageController() {
     t,
   });
 
-  const visibleTopTabs = useFilteredModuleTierTabs({
-    canViewSetup,
-    canViewReports,
-  });
-
-  const effectiveTab = resolveModuleTierTab(
-    activeTab,
-    visibleTopTabs.map((tab) => tab.id),
-  );
-  const effectiveSubTab = SUB_TABS.find((tab) => tab.id === activeSubTab) ? activeSubTab : 'users';
-  const effectiveConfigTab =
-    USERS_CONFIG_TABS.find((tab) => tab.id === configSubTab)?.id ??
-    USERS_CONFIG_TABS[0]?.id ??
-    'preferences';
-
   useUsersKeyboardShortcuts({
     enabled: effectiveTab === 'work' && effectiveSubTab === 'users',
     selectedCount: selectedIds.length,
@@ -176,9 +142,6 @@ export function useUsersPageController() {
 
   const refetchUsers = () => {
     void workPageQuery.refetch();
-  };
-  const refetchLogs = () => {
-    void logsResult.refetch();
   };
 
   const workTierProps = buildUsersWorkTierProps({

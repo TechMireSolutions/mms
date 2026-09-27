@@ -7,8 +7,10 @@ import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useTranslation } from "@/hooks/useTranslation";
+import { getStandardPageSizeOptions } from "@/components/ui/ExportPdfSettingsPopover";
 import {
-  AGGREGATE_FNS,
+  getAggregateFunctionOptions,
+  getReportDataSourceOptions,
   getSelectedFieldsForSource,
   type AggregateFn,
   type DataSource,
@@ -85,16 +87,7 @@ export function CustomReportBuilderConfigPanel({
             setSource(newSource);
             setSelectedFields(getSelectedFieldsForSource(newSource));
           }}
-          options={[
-            { value: "students", label: t("reports.builder.sourceStudents") },
-            { value: "contacts", label: t("contacts.reportBuilder.sourceLabel") },
-            { value: "attendance", label: t("reports.builder.sourceAttendance") },
-            { value: "financial", label: t("reports.builder.sourceFinancial") },
-            { value: "academic", label: t("reports.builder.sourceAcademic") },
-            { value: "hasanat", label: t("reports.builder.sourceHasanat") },
-            { value: "sessions", label: t("reports.builder.sourceSessions") },
-            { value: "faculty", label: t("reports.builder.sourceFaculty") },
-          ]}
+          options={getReportDataSourceOptions(t)}
           className="w-full"
         />
       </div>
@@ -143,16 +136,7 @@ export function CustomReportBuilderConfigPanel({
             name="reportAggregate"
             value={aggregate}
             onChange={(value) => setAggregate(value as AggregateFn)}
-            options={AGGREGATE_FNS.map((aggregateName) => {
-              let label: string = aggregateName;
-              if (aggregateName === "None") label = t("reports.builder.noGrouping");
-              else if (aggregateName === "Sum") label = t("reports.visualizer.opSum");
-              else if (aggregateName === "Average") label = t("reports.visualizer.opAvg");
-              else if (aggregateName === "Count") label = t("reports.visualizer.opCount");
-              else if (aggregateName === "Max") label = t("reports.visualizer.opMax");
-              else if (aggregateName === "Min") label = t("reports.visualizer.opMin");
-              return { value: aggregateName, label };
-            })}
+            options={getAggregateFunctionOptions(t)}
             className="w-full"
           />
         </div>
@@ -168,10 +152,7 @@ export function CustomReportBuilderConfigPanel({
             onChange={(value) => setGroupBy(value)}
             options={[
               { value: "", label: t("reports.builder.noGrouping") },
-              ...selectedFields.map((selectedField) => ({
-                value: selectedField,
-                label: resolveFieldLabel(selectedField),
-              })),
+              ...selectedFields.map((field) => ({ value: field, label: resolveFieldLabel(field) })),
             ]}
             className="w-full text-xs font-semibold rounded-xl border border-border bg-card/50 px-2 py-2.5 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all cursor-pointer text-foreground disabled:opacity-40 disabled:cursor-not-allowed"
           />
@@ -204,12 +185,7 @@ export function CustomReportBuilderConfigPanel({
             name="reportPageSize"
             value={pageSize}
             onChange={(value) => setPageSize(value)}
-            options={[
-              { value: "a4", label: t("reports.builder.formatA4") },
-              { value: "letter", label: t("reports.builder.formatLetter") },
-              { value: "a3", label: t("reports.builder.formatA3") },
-              { value: "legal", label: t("reports.builder.formatLegal") },
-            ]}
+            options={getStandardPageSizeOptions(t)}
             className="w-full animate-none"
           />
         </div>

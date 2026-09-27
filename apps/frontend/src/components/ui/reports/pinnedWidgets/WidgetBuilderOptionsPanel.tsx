@@ -15,15 +15,6 @@ import { WidgetBuilderThresholdOptions } from "@/components/ui/reports/pinnedWid
 import { WidgetBuilderTypeSelector } from "@/components/ui/reports/pinnedWidgets/WidgetBuilderTypeSelector";
 import type { WidgetBuilderOptionsPanelProps } from "@/components/ui/reports/pinnedWidgets/widgetBuilderOptionsPanelTypes";
 
-export type {
-  WidgetBuilderCardState,
-  WidgetBuilderIconState,
-  WidgetBuilderMetricState,
-  WidgetBuilderOptionsPanelProps,
-  WidgetBuilderSwitchState,
-  WidgetBuilderThresholdState,
-  WidgetBuilderTitleState,
-} from "@/components/ui/reports/pinnedWidgets/widgetBuilderOptionsPanelTypes";
 
 export function WidgetBuilderOptionsPanel({
   mode,
