@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   financeSettingsToSequenceConfig,
   type FinanceSettings,
@@ -15,6 +16,8 @@ export function FinanceInvoiceNumberingSection({
   settingsDraft,
   upd,
 }: FinanceInvoiceNumberingSectionProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   const config = useMemo(
     () => financeSettingsToSequenceConfig(settingsDraft),
     [settingsDraft]
@@ -35,8 +38,8 @@ export function FinanceInvoiceNumberingSection({
 
   return (
     <SequenceNumberingCard
-      title="Fee Invoice Numbering"
-      entityLabel="Fee Invoice"
+      title={t("finance.invoiceNumbering.title")}
+      entityLabel={t("finance.invoiceNumbering.entityLabel")}
       config={config}
       onChange={handleChange}
       allowYearless={true}

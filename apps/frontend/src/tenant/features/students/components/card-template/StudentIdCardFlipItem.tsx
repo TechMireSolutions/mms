@@ -38,7 +38,7 @@ export function StudentIdCardFlipItem({
         style={{ perspective: 1000 }}
         className="relative cursor-pointer select-none"
         onClick={onToggleFlip}
-        title={t("students.idCard.flipCard") || "Click to flip card"}
+        title={t("students.idCard.flipCard")}
       >
         <div
           style={{
@@ -95,7 +95,7 @@ export function StudentIdCardFlipItem({
           onToggleFlip();
         }}
         className="absolute top-2 end-2 p-1 rounded-md bg-background/80 hover:bg-background border border-border/80 shadow-2xs text-muted-foreground hover:text-foreground opacity-75 hover:opacity-100 transition-all print:hidden"
-        title={t("students.idCard.flipCard") || "Flip Card"}
+        title={t("students.idCard.flipCard")}
       >
         <RotateCw className="w-3.5 h-3.5" />
       </button>

@@ -13,8 +13,8 @@ describe("FinanceInvoiceNumberingSection Component", () => {
       />
     );
 
-    expect(html).toContain("Fee Invoice Numbering");
-    expect(html).toContain("Auto-generate Fee Invoices");
+    expect(html).toContain("finance.invoiceNumbering.title");
+    expect(html).toContain("finance.invoiceNumbering.entityLabel");
     expect(html).toContain("Live Preview");
     expect(html).toContain("INV-");
   });

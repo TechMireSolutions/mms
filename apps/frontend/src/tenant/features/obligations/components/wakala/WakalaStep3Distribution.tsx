@@ -34,7 +34,7 @@ export function WakalaStep3Distribution({
   return (
     <div className="space-y-4 animate-in fade-in-50 duration-200">
       <div className="rounded-lg border border-border bg-muted/20 p-3 text-xs space-y-1">
-        <div className="font-semibold text-muted-foreground">Configuration Summary:</div>
+        <div className="font-semibold text-muted-foreground">{t("obligations.wakala.configSummary")}</div>
         <div className="flex flex-wrap gap-2 text-foreground font-medium">
           <span>{selectedObType?.name}</span>
           <span>•</span>
@@ -46,7 +46,7 @@ export function WakalaStep3Distribution({
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h4 className="m-0 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            Initial Distribution Split (Optional)
+            {t("obligations.wakala.initialSplit")}
           </h4>
           <span
             className={cn(
@@ -58,13 +58,13 @@ export function WakalaStep3Distribution({
                 : "border-amber-500/30 bg-amber-500/10 text-amber-600",
             )}
           >
-            Total: {totalPercentage}%
+            {t("obligations.wakala.total", { total: String(totalPercentage) })}
           </span>
         </div>
 
         {initialDistributions.length === 0 ? (
           <p className="text-xs text-muted-foreground italic border border-dashed rounded-lg p-3 text-center">
-            No distribution splits added yet. You can save now and add distribution rules later.
+            {t("obligations.wakala.noDistYet")}
           </p>
         ) : (
           <div className="space-y-2">
@@ -74,7 +74,7 @@ export function WakalaStep3Distribution({
                 className="flex items-center gap-2 rounded-lg border border-border p-2 bg-background"
               >
                 <Input
-                  placeholder="Name (e.g. Saham-e-Imam)"
+                  placeholder={t("obligations.wakala.namePlaceholder")}
                   value={row.name}
                   onChange={(e) => onUpdateRow(row.id, { name: e.target.value })}
                   className="flex-1 text-xs h-9"

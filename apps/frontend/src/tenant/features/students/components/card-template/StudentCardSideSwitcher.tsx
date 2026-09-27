@@ -26,7 +26,7 @@ export function StudentCardSideSwitcher({
         }`}
       >
         <IdCard className="w-3.5 h-3.5" />
-        <span>{t('students.cardTemplate.side.front') || 'Front Side'}</span>
+        <span>{t('students.cardTemplate.side.front')}</span>
       </button>
       <button
         type="button"
@@ -38,7 +38,7 @@ export function StudentCardSideSwitcher({
         }`}
       >
         <RotateCw className="w-3.5 h-3.5" />
-        <span>{t('students.cardTemplate.side.back') || 'Back Side'}</span>
+        <span>{t('students.cardTemplate.side.back')}</span>
       </button>
     </div>
   );

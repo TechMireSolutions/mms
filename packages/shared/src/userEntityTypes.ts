@@ -68,6 +68,7 @@ export interface WorkspaceUser {
   restoredBy?: string | null;
   deletedWithCascade?: boolean | null;
   emailVerifiedAt?: string | null;
+  [key: string]: unknown;
 }
 
 export type SystemUser = WorkspaceUser;

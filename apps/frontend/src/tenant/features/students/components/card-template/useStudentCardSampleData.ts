@@ -28,12 +28,15 @@ export function useStudentCardSampleData({
   return useMemo<StudentCardPayload>(() => {
     const institutionAddress = formatBrandingAddress(branding) || '123 Seminary Road, Karachi';
     const madrasaName = branding.madrasaName || 'Madrasa Management System';
-    const studentWithExtras = sampleStudent as unknown as {
-      avatarUrl?: string;
-      photo?: string;
-      cnic?: string;
-      identificationNumber?: string;
-    };
+    const studentWithExtras = sampleStudent as
+      | {
+          avatarUrl?: string;
+          photo?: string;
+          cnic?: string;
+          identificationNumber?: string;
+        }
+      | null
+      | undefined;
 
     if (sampleStudent) {
       return {
@@ -52,11 +55,8 @@ export function useStudentCardSampleData({
         city: sampleStudent.city || 'Karachi',
         national_id: studentWithExtras?.cnic || studentWithExtras?.identificationNumber || '42101-1234567-1',
         photo: studentWithExtras?.avatarUrl || studentWithExtras?.photo || DEMO_STUDENT_PHOTO,
-        card_terms:
-          t('students.idCard.termsDefault') ||
-          'This card is the property of the institution. If found, please return to the address above.',
-        authorized_signature:
-          t('students.idCard.principalSign') || 'Principal / Authorized Signature',
+        card_terms: t('students.idCard.termsDefault'),
+        authorized_signature: t('students.idCard.principalSign'),
         expiry_date: '2027-06-30',
         institution_name: madrasaName,
         institution_phone: branding.phone || '+92 21 34567890',
@@ -82,11 +82,8 @@ export function useStudentCardSampleData({
       city: 'Karachi',
       national_id: '42101-1234567-1',
       photo: DEMO_STUDENT_PHOTO,
-      card_terms:
-        t('students.idCard.termsDefault') ||
-        'This card is the property of the institution. If found, please return to the address above.',
-      authorized_signature:
-        t('students.idCard.principalSign') || 'Principal / Authorized Signature',
+      card_terms: t('students.idCard.termsDefault'),
+      authorized_signature: t('students.idCard.principalSign'),
       expiry_date: '2027-06-30',
       institution_name: madrasaName,
       institution_phone: branding.phone || '+92 21 34567890',

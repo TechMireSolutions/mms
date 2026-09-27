@@ -20,7 +20,7 @@ describe("StudentsPreferencesSection Component", () => {
     );
 
     expect(html).toContain("students.settings.grSectionTitle");
-    expect(html).toContain("Auto-generate Student GR Numbers");
+    expect(html).toContain("students.settings.grEntityLabel");
     expect(html).toContain("Live Preview");
     expect(html).toContain("Starting Sequence");
     expect(html).toContain("Sequence Digits");

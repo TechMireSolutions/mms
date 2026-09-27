@@ -1,4 +1,5 @@
 import React, { useMemo, useCallback } from "react";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   obligationsSettingsToSequenceConfig,
   type SequenceNumberingConfig,
@@ -7,6 +8,7 @@ import { SequenceNumberingCard } from "@/components/ui/sequence-numbering";
 import { useObligationsSettings } from "@/tenant/features/obligations/hooks/useObligationsSettings";
 
 export function ObligationsReceiptNumberingSection(): React.JSX.Element {
+  const { t } = useTranslation();
   const { settings, updateSettings } = useObligationsSettings();
 
   const config = useMemo(
@@ -33,8 +35,8 @@ export function ObligationsReceiptNumberingSection(): React.JSX.Element {
   return (
     <div className="max-w-3xl text-start">
       <SequenceNumberingCard
-        title="Receipt Numbering"
-        entityLabel="Receipt"
+        title={t("obligations.receiptNumbering.title")}
+        entityLabel={t("obligations.receiptNumbering.entityLabel")}
         config={config}
         onChange={handleChange}
         allowYearless={true}

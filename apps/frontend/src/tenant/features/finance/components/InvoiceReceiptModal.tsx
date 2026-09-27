@@ -44,13 +44,13 @@ export const InvoiceReceiptModal = (function InvoiceReceiptModal({
           <span className="text-xs text-muted-foreground">({invoices.length})</span>
         </div>
         <div className="flex items-center gap-2">
-          <Button size="sm" variant="outline" onClick={handleExportTypst} className="gap-1.5" title="Export Typst Compiler JSON">
+          <Button size="sm" variant="outline" onClick={handleExportTypst} className="gap-1.5" title={t("templateEditor.exportTypst")}>
             <FileCode2 className="w-3.5 h-3.5 text-info" aria-hidden />
-            <span>Typst</span>
+            <span>{t("templateEditor.typst")}</span>
           </Button>
-          <Button size="sm" variant="outline" onClick={handleExportZoho} className="gap-1.5" title="Export Zoho Invoice JSON">
+          <Button size="sm" variant="outline" onClick={handleExportZoho} className="gap-1.5" title={t("templateEditor.exportZoho")}>
             <CloudUpload className="w-3.5 h-3.5 text-warning" aria-hidden />
-            <span>Zoho</span>
+            <span>{t("templateEditor.zoho")}</span>
           </Button>
           <Button size="sm" onClick={handlePrint} className="gap-1.5">
             <Printer className="w-3.5 h-3.5" aria-hidden />

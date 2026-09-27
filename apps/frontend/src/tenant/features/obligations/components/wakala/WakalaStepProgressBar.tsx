@@ -1,5 +1,6 @@
 import React from "react";
 import { Check } from "lucide-react";
+import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 
 interface WakalaStepProgressBarProps {
@@ -15,6 +16,8 @@ export function WakalaStepProgressBar({
   validateStep1,
   validateStep2,
 }: WakalaStepProgressBarProps): React.JSX.Element {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-center justify-between gap-1 rounded-xl bg-muted/40 p-2 text-xs font-semibold text-muted-foreground border border-border/50">
       <button
@@ -32,7 +35,7 @@ export function WakalaStepProgressBar({
         <span className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px]">
           {step > 1 ? <Check className="h-3 w-3" /> : "1"}
         </span>
-        <span>1. Mujtahid & Type</span>
+        <span>{t("obligations.wakala.stage1")}</span>
       </button>
 
       <button
@@ -53,7 +56,7 @@ export function WakalaStepProgressBar({
         <span className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px]">
           {step > 2 ? <Check className="h-3 w-3" /> : "2"}
         </span>
-        <span>2. Representative</span>
+        <span>{t("obligations.wakala.stage2")}</span>
       </button>
 
       <button
@@ -72,7 +75,7 @@ export function WakalaStepProgressBar({
         <span className="flex h-5 w-5 items-center justify-center rounded-full border border-current text-[11px]">
           3
         </span>
-        <span>3. Distribution</span>
+        <span>{t("obligations.wakala.stage3")}</span>
       </button>
     </div>
   );

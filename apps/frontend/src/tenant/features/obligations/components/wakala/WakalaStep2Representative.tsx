@@ -33,13 +33,13 @@ export function WakalaStep2Representative({
   return (
     <div className="space-y-4 animate-in fade-in-50 duration-200">
       <div className="rounded-lg border border-primary/20 bg-primary/5 p-3 text-xs">
-        <div className="font-semibold text-primary">Stage 1 Selection:</div>
+        <div className="font-semibold text-primary">{t("obligations.wakala.stage1Selection")}</div>
         <div className="mt-1 flex flex-wrap gap-2 text-foreground">
           <span className="rounded bg-background px-2 py-0.5 border font-medium">
-            Mujtahid: {selectedMujtahid?.name || "?"}
+            {t("obligations.wakala.mujtahidLabel", { name: selectedMujtahid?.name || "?" })}
           </span>
           <span className="rounded bg-background px-2 py-0.5 border font-medium">
-            Type: {selectedObType?.name || "?"}
+            {t("obligations.wakala.typeLabel", { name: selectedObType?.name || "?" })}
           </span>
         </div>
       </div>
@@ -78,7 +78,7 @@ export function WakalaStep2Representative({
         </div>
         {availableReps.length === 0 && (
           <p className="mt-1 text-xs text-muted-foreground">
-            No representative for this Mujtahid yet. Click `+` to add one.
+            {t("obligations.wakala.noRepYet")}
           </p>
         )}
         {errors.rep && (

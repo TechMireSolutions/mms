@@ -50,7 +50,7 @@ export function WakalaStep1MujtahidType({
               name="mujtahid_id"
               value={selectedMujtahidId}
               onChange={onSelectMujtahid}
-              placeholder="Select Mujtahid"
+              placeholder={t("obligations.wakala.selectMujtahid")}
               options={mujtahids.map((m) => ({ value: m.id, label: m.name }))}
             />
           </div>

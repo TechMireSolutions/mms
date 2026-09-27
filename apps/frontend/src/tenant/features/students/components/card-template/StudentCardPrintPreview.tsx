@@ -52,7 +52,7 @@ export function StudentCardPrintPreview({
   }, [side, template.elements, template.backElements]);
 
   const data = useMemo<Record<string, unknown>>(() => {
-    const studentWithExtras = student as unknown as {
+    const studentWithExtras = student as {
       avatarUrl?: string;
       photo?: string;
       cnic?: string;
@@ -78,11 +78,8 @@ export function StudentCardPrintPreview({
       city: student.city || "—",
       national_id: studentWithExtras.cnic || studentWithExtras.identificationNumber || "—",
       photo: studentWithExtras.avatarUrl || studentWithExtras.photo || "",
-      card_terms:
-        t("students.idCard.termsDefault") ||
-        "This card is the property of the institution. If found, please return to the address above.",
-      authorized_signature:
-        t("students.idCard.principalSign") || "Principal / Authorized Signature",
+      card_terms: t("students.idCard.termsDefault"),
+      authorized_signature: t("students.idCard.principalSign"),
       expiry_date: formatDate(oneYearLater),
       institution_name: madrasaName || branding.madrasaName || "Madrasa",
       institution_phone: branding.phone || "—",
@@ -90,7 +87,7 @@ export function StudentCardPrintPreview({
       institution_address: institutionAddress,
       issue_date: formatDate(new Date()),
     };
-    return payload as unknown as Record<string, unknown>;
+    return payload;
   }, [student, sessionNames, guardianName, emergencyPhone, bloodGroup, madrasaName, branding, t]);
 
   const qrPayload = useMemo(() => {

@@ -45,7 +45,7 @@ export function TemplateImageElementContent({
       return (
         <img
           src={photoVal}
-          alt={t("students.cardTemplate.field.photo") || "Student Photo"}
+          alt={t("students.cardTemplate.field.photo")}
           className="w-full h-full object-cover pointer-events-none"
           style={{ borderRadius: st.borderRadius != null ? `${st.borderRadius}px` : undefined }}
         />
@@ -71,7 +71,7 @@ export function TemplateImageElementContent({
           <circle cx="12" cy="7" r="4" />
         </svg>
         <span className="text-4xs font-semibold uppercase tracking-wider mt-0.5 opacity-75">
-          {t("students.cardTemplate.field.photo") || "Photo"}
+          {t("students.cardTemplate.field.photo")}
         </span>
       </div>
     );

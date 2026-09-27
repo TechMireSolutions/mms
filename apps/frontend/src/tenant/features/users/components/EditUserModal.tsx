@@ -51,7 +51,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
       status: user.status,
       twoFactorEnabled: user.twoFactorEnabled,
       ...Object.fromEntries(
-        customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
+        customFields.map((cf) => [cf.id, user[cf.id] ?? cf.defaultValue ?? '']),
       ),
     },
   });
@@ -65,7 +65,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
       status: user.status,
       twoFactorEnabled: user.twoFactorEnabled,
       ...Object.fromEntries(
-        customFields.map((cf) => [cf.id, (user as unknown as Record<string, unknown>)[cf.id] ?? cf.defaultValue ?? '']),
+        customFields.map((cf) => [cf.id, user[cf.id] ?? cf.defaultValue ?? '']),
       ),
     });
   }, [user.id, user.contactId, user.role, user.status, user.twoFactorEnabled, customFieldsKey]);
@@ -84,7 +84,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
     const email = contact ? (getPrimaryEmail(contact) || '').toLowerCase() : user.email;
     const phone = contact ? (getPrimaryPhone(contact) || '') : (user.phone || '');
     const customFieldValues = Object.fromEntries(
-      customFields.map((cf) => [cf.id, values[cf.id] ?? (user as unknown as Record<string, unknown>)[cf.id] ?? '']),
+      customFields.map((cf) => [cf.id, values[cf.id] ?? user[cf.id] ?? '']),
     );
 
     setSubmitting(true);

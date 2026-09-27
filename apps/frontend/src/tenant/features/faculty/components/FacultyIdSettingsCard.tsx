@@ -42,23 +42,23 @@ export function FacultyIdSettingsCard({
 
   return (
     <SequenceNumberingCard
-      title={t("faculty.settings.idSectionTitle") || t("teachers.settings.idSectionTitle") || "Employee ID Configuration"}
-      entityLabel="Employee ID"
+      title={t("faculty.settings.idSectionTitle")}
+      entityLabel={t("faculty.field.employeeId")}
       config={config}
       onChange={handleChange}
       defaultPrefixPlaceholder="FAC"
-      autoGenerateLabel={t("faculty.settings.autoGenerateId") || t("teachers.settings.autoGenerateId")}
-      previewLabel={t("faculty.settings.preview") || t("teachers.settings.preview")}
-      templateLabel={t("faculty.settings.idTemplate") || t("teachers.settings.idTemplate")}
-      prefixLabel={t("faculty.settings.idPrefix") || t("teachers.settings.idPrefix")}
-      prefixHint={t("faculty.settings.idPrefixHint") || t("teachers.settings.idPrefixHint")}
-      digitsLabel={t("faculty.settings.idDigits") || t("teachers.settings.idDigits")}
-      digitsHint={t("faculty.settings.idDigitsHint") || t("teachers.settings.idDigitsHint")}
-      startSeqLabel={t("faculty.settings.idStartSeq") || t("teachers.settings.idStartSeq")}
-      startSeqHint={t("faculty.settings.idStartSeqHint") || t("teachers.settings.idStartSeqHint")}
-      telemetryLabel={t("faculty.settings.sequenceTelemetry") || t("teachers.settings.sequenceTelemetry")}
-      restartLabel={t("faculty.settings.idRestartAnnually") || t("teachers.settings.idRestartAnnually")}
-      restartDesc={t("faculty.settings.idRestartAnnuallyDesc") || t("teachers.settings.idRestartAnnuallyDesc")}
+      autoGenerateLabel={t("faculty.settings.autoGenerateId")}
+      previewLabel={t("faculty.settings.preview")}
+      templateLabel={t("faculty.settings.idTemplate")}
+      prefixLabel={t("faculty.settings.idPrefix")}
+      prefixHint={t("faculty.settings.idPrefixHint")}
+      digitsLabel={t("faculty.settings.idDigits")}
+      digitsHint={t("faculty.settings.idDigitsHint")}
+      startSeqLabel={t("faculty.settings.idStartSeq")}
+      startSeqHint={t("faculty.settings.idStartSeqHint")}
+      telemetryLabel={t("faculty.settings.sequenceTelemetry")}
+      restartLabel={t("faculty.settings.idRestartAnnually")}
+      restartDesc={t("faculty.settings.idRestartAnnuallyDesc")}
     />
   );
 }

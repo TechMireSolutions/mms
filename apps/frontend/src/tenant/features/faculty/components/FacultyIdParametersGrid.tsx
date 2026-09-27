@@ -29,14 +29,14 @@ export function FacultyIdParametersGrid({
       sequenceDigits={sequenceDigits}
       delimiter={delimiter}
       currentYear={currentYear}
-      prefixLabel={t("faculty.settings.idPrefix") || t("teachers.settings.idPrefix") || "Employee ID prefix"}
-      prefixHint={t("faculty.settings.idPrefixHint") || t("teachers.settings.idPrefixHint") || "Default prefix used across employee IDs"}
-      yearFormatLabel={t("faculty.settings.yearFormat") || t("teachers.settings.yearFormat") || "Year Format"}
-      yearFormatHint={t("faculty.settings.yearFormatHint") || t("teachers.settings.yearFormatHint") || "Four-digit (YYYY) or two-digit (YY)"}
-      digitsLabel={t("faculty.settings.idDigits") || t("teachers.settings.idDigits") || "Sequence Digits"}
-      digitsHint={t("faculty.settings.idDigitsHint") || t("teachers.settings.idDigitsHint") || "e.g., 4 produces '0001', 3 produces '001'"}
-      delimiterLabel={t("faculty.settings.delimiter") || t("teachers.settings.delimiter") || "Delimiter"}
-      delimiterHint={t("faculty.settings.delimiterHint") || t("teachers.settings.delimiterHint") || "Optional separator (e.g. - or /)"}
+      prefixLabel={t("faculty.settings.idPrefix")}
+      prefixHint={t("faculty.settings.idPrefixHint")}
+      yearFormatLabel={t("faculty.settings.yearFormat")}
+      yearFormatHint={t("faculty.settings.yearFormatHint")}
+      digitsLabel={t("faculty.settings.idDigits")}
+      digitsHint={t("faculty.settings.idDigitsHint")}
+      delimiterLabel={t("faculty.settings.delimiter")}
+      delimiterHint={t("faculty.settings.delimiterHint")}
       onChangePrefix={(val) => {
         upd("employeeIdPrefix", val);
         upd("idPrefix", val);

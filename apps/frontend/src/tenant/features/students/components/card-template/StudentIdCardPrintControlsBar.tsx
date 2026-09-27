@@ -35,7 +35,7 @@ export function StudentIdCardPrintControlsBar({
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          {t('students.idCard.printFrontOnly') || 'Front Only'}
+          {t('students.idCard.printFrontOnly')}
         </button>
         <button
           type="button"
@@ -46,7 +46,7 @@ export function StudentIdCardPrintControlsBar({
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          {t('students.idCard.printBackOnly') || 'Back Only'}
+          {t('students.idCard.printBackOnly')}
         </button>
         <button
           type="button"
@@ -57,7 +57,7 @@ export function StudentIdCardPrintControlsBar({
               : 'text-muted-foreground hover:text-foreground'
           }`}
         >
-          {t('students.idCard.printBothSides') || 'Both Sides'}
+          {t('students.idCard.printBothSides')}
         </button>
       </div>
 
@@ -72,7 +72,7 @@ export function StudentIdCardPrintControlsBar({
             className="flex items-center gap-1.5 h-8 px-2.5 text-xs"
           >
             <RotateCw className="w-3.5 h-3.5" />
-            <span>{t('students.idCard.flipAll') || 'Flip All'}</span>
+            <span>{t('students.idCard.flipAll')}</span>
           </Button>
         )}
 
@@ -84,7 +84,7 @@ export function StudentIdCardPrintControlsBar({
           className="flex items-center gap-1.5 h-8 px-2.5 text-xs"
         >
           <Scissors className="w-3.5 h-3.5" />
-          <span>{t('students.idCard.cutGuides') || 'Cut Guides'}</span>
+          <span>{t('students.idCard.cutGuides')}</span>
         </Button>
       </div>
     </div>

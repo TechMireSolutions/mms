@@ -125,10 +125,10 @@ export function StudentCardTemplateEditor({
 
         saveStudentCardTemplate(updatedFullTemplate);
         setFullTemplate(updatedFullTemplate);
-        notify.success(t("students.idCard.templateSaved") || "Student card template saved");
+        notify.success(t("students.idCard.templateSaved"));
       } catch (err) {
         console.error("Failed to save student card template:", err);
-        notify.error(t("templateEditor.saveFailed") || "Failed to save template");
+        notify.error(t("templateEditor.saveFailed"));
       }
     },
     [fullTemplate, activeSide, t],
@@ -156,7 +156,7 @@ export function StudentCardTemplateEditor({
       <div className="flex items-center justify-between px-4 py-2 bg-card border-b border-border text-xs">
         <div className="flex items-center gap-2">
           <span className="font-semibold text-foreground">
-            {t("students.cardTemplate.title") || "Student ID Card Template"}
+            {t("students.cardTemplate.title")}
           </span>
           <span className="text-muted-foreground">({sideLabel})</span>
         </div>

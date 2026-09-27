@@ -25,6 +25,7 @@ export interface StudentCardPayload {
   institution_phone: string;
   institution_email: string;
   institution_address: string;
+  [key: string]: unknown;
 }
 
 export type CardSide = "front" | "back";

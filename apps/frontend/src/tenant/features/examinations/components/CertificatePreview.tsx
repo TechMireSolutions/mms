@@ -56,10 +56,10 @@ export function CertificatePreview({ result, exam, onClose }: CertificatePreview
             variant="outline"
             onClick={handleExportTypst}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold cursor-pointer"
-            title="Export Typst Compiler JSON"
+            title={t("examinations.certificatePreview.exportTypstTooltip")}
           >
             <FileCode2 className="w-3.5 h-3.5 text-info" aria-hidden="true" />
-            <span>Typst</span>
+            <span>{t("templateEditor.typst")}</span>
           </Button>
           <Button
             type="button"

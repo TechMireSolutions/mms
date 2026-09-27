@@ -55,7 +55,7 @@ export function StudentIdCardPrintGrid({
                   className={cutGuideClass}
                 />
                 <span className="absolute top-1.5 end-2 text-4xs font-bold uppercase tracking-wider text-muted-foreground print:hidden">
-                  {t('students.idCard.frontSide') || 'Front'}
+                  {t('students.idCard.frontSide')}
                 </span>
               </div>
 
@@ -73,7 +73,7 @@ export function StudentIdCardPrintGrid({
                   className={cutGuideClass}
                 />
                 <span className="absolute top-1.5 end-2 text-4xs font-bold uppercase tracking-wider text-muted-foreground print:hidden">
-                  {t('students.idCard.backSide') || 'Back'}
+                  {t('students.idCard.backSide')}
                 </span>
               </div>
             </React.Fragment>

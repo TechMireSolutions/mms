@@ -50,8 +50,8 @@ export function StudentsPreferencesSection({
   return (
     <div className="space-y-4">
       <SequenceNumberingCard
-        title={t("students.settings.grSectionTitle") || "General Register (GR) Number Settings"}
-        entityLabel="Student GR Number"
+        title={t("students.settings.grSectionTitle")}
+        entityLabel={t("students.settings.grEntityLabel")}
         config={config}
         onChange={handleChange}
         allowYearless={true}
