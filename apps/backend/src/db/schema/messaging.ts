@@ -88,6 +88,22 @@ export const emailIntegrations = pgTable('email_integrations', {
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
+/** Tenant-scoped SMS provider config & credentials — exactly one provider active per tenant. */
+export const smsIntegrations = pgTable('sms_integrations', {
+  workspaceSubdomain: text('workspace_subdomain').primaryKey().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
+  providerId: varchar('provider_id', { length: 40 }).notNull().default('twilio'),
+  accountId: varchar('account_id', { length: 255 }).notNull().default(''),
+  senderId: varchar('sender_id', { length: 255 }).notNull().default(''),
+  apiBaseUrl: varchar('api_base_url', { length: 255 }),
+  accountSecret: text('account_secret'),
+  connected: boolean('connected').notNull().default(false),
+  hasCredentials: boolean('has_credentials').notNull().default(false),
+  lastTestAt: timestamp('last_test_at', { withTimezone: true, mode: 'date' }),
+  lastTestOk: boolean('last_test_ok'),
+  lastError: text('last_error'),
+  updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+});
+
 /* ========================================================================= */
 /*                         ROW INFER TYPES                                   */
 /* ========================================================================= */
@@ -99,3 +115,6 @@ export type InsertMessageLogRow = typeof messageLogs.$inferInsert;
 
 export type EmailIntegrationRow = typeof emailIntegrations.$inferSelect;
 export type InsertEmailIntegrationRow = typeof emailIntegrations.$inferInsert;
+
+export type SmsIntegrationRow = typeof smsIntegrations.$inferSelect;
+export type InsertSmsIntegrationRow = typeof smsIntegrations.$inferInsert;

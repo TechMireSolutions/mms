@@ -1,4 +1,5 @@
 import type { AppTranslationKey } from './appTranslations.js';
+import { SMS_INTEGRATION_OBJECT_KEY, SMS_INTEGRATION_SECRETS_KEY } from './smsIntegrationTypes.js';
 
 /** Logical object keys for email integration storage. */
 export const EMAIL_INTEGRATION_OBJECT_KEY = 'email_integration' as const;
@@ -24,6 +25,8 @@ export const CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY = 'contact_google_sync_by_us
 const SERVER_ONLY_OBJECT_KEYS: readonly string[] = [
   EMAIL_INTEGRATION_OBJECT_KEY,
   EMAIL_INTEGRATION_SECRETS_KEY,
+  SMS_INTEGRATION_OBJECT_KEY,
+  SMS_INTEGRATION_SECRETS_KEY,
   USER_EXPORT_ARTIFACTS_OBJECT_KEY,
   CONTACTS_DUPLICATE_SCAN_CACHE_OBJECT_KEY,
   CONTACT_GOOGLE_SYNC_BY_USER_OBJECT_KEY,

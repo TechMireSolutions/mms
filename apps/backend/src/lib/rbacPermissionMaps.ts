@@ -116,12 +116,14 @@ export const OBJECT_READ_PERMISSION: Record<string, Permission> = {
   platform_settings: 'configuration.view',
   branding: 'configuration.view',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
+  sms_integration: 'settings.global.write',
 };
 
 export const OBJECT_WRITE_PERMISSION: Record<string, Permission> = {
   global_settings: 'settings.global.write',
   branding: 'settings.branding.write',
   [EMAIL_INTEGRATION_OBJECT_KEY]: 'settings.global.write',
+  sms_integration: 'settings.global.write',
 };
 
 export const ALLOWED_COLLECTIONS = new Set([
@@ -134,6 +136,7 @@ export const ALLOWED_OBJECTS = new Set([
   'platform_settings',
   'branding',
   EMAIL_INTEGRATION_OBJECT_KEY,
+  'sms_integration',
   DASHBOARD_PREFERENCES_KEY,
   INVOICE_TEMPLATE_OBJECT_KEY,
   STUDENT_CARD_TEMPLATE_OBJECT_KEY,

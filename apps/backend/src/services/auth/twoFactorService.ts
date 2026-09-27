@@ -22,6 +22,8 @@ import {
 import { getPublicUserById } from './userService.js';
 import { loadGlobalSettings } from '../globalSettingsService.js';
 import { sendTenantEmail } from '../email/emailService.js';
+import { sendTenantSms } from '../sms/smsService.js';
+import { getContactById } from '../../contacts/use-cases/contactLoadUseCases.js';
 import { runWithTenant } from '../../lib/tenantContext.js';
 import { logger } from '../../lib/logger.js';
 import { isDevCredentialLoggingEnabled } from '../../lib/devLogging.js';
@@ -32,6 +34,8 @@ const REFRESH_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 export interface TwoFactorChallengePayload {
   userId: string;
   email: string;
+  /** Carried through so the SMS channel can resolve a phone via the linked contact. */
+  contactId?: string | number;
   workspaceSubdomain: string;
   codeHash: string;
 }
@@ -50,6 +54,7 @@ export async function createTwoFactorChallenge(user: User): Promise<string> {
     {
       userId: user.id,
       email: user.email,
+      contactId: user.contactId,
       workspaceSubdomain: user.workspaceSubdomain,
       codeHash: hashOtpCode(code),
     },
@@ -59,7 +64,7 @@ export async function createTwoFactorChallenge(user: User): Promise<string> {
       scopeKey: authArtifactWorkspaceScopeKey(user.workspaceSubdomain),
     },
   );
-  await dispatchTwoFactorCode(user.email, code);
+  await dispatchTwoFactorCode(user.email, user.contactId, code);
   return challengeId;
 }
 
@@ -74,7 +79,7 @@ export async function resendTwoFactorChallenge(challengeId: string): Promise<boo
     id: challengeId,
     scopeKey: authArtifactWorkspaceScopeKey(entry.payload.workspaceSubdomain),
   });
-  await dispatchTwoFactorCode(entry.payload.email, code);
+  await dispatchTwoFactorCode(entry.payload.email, entry.payload.contactId, code);
   return true;
 }
 
@@ -94,17 +99,27 @@ export async function verifyTwoFactorChallenge(
   return user;
 }
 
-async function dispatchTwoFactorCode(email: string, code: string): Promise<void> {
+async function dispatchTwoFactorCode(email: string, contactId: string | number | undefined, code: string): Promise<void> {
   const settings = await loadGlobalSettings();
   const channel = resolveNotificationChannel(settings);
+  const text = `Your MMS verification code is ${code}. It expires in 10 minutes.`;
 
   if (channel === 'email') {
-    await sendTenantEmail({
-      to: email,
-      subject: 'MMS verification code',
-      text: `Your verification code is ${code}. It expires in 10 minutes.`,
-    });
+    await sendTenantEmail({ to: email, subject: 'MMS verification code', text });
     return;
+  }
+
+  if (channel === 'sms') {
+    // Users have no phone field of their own — resolve it via the linked contact
+    // (Contacts Canonical: profile fields, including phone, live on the contact).
+    const contact = contactId != null ? await getContactById(String(contactId)) : null;
+    if (contact?.phone) {
+      const result = await sendTenantSms({ to: contact.phone, body: text }, settings);
+      if (result.sent) return;
+      logger.warn({ channel, reason: result.reason }, '2FA SMS dispatch failed, falling back to log');
+    } else {
+      logger.warn({ channel }, '2FA SMS channel active but the admin has no phone number on file');
+    }
   }
 
   // Never log a live credential by default: the log stream is shipped, indexed

@@ -19,6 +19,7 @@ import { SectionCard } from '@/components/ui/SectionCard';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import DateFormatSelect from '@/tenant/features/settings/components/DateFormatSelect';
 import EmailIntegrationPanel from '@/tenant/features/settings/components/EmailIntegrationPanel';
+import SmsIntegrationPanel from '@/tenant/features/settings/components/SmsIntegrationPanel';
 import TimezoneSelect from '@/tenant/features/settings/components/TimezoneSelect';
 import { GlobalSettingsSecuritySection } from '@/tenant/features/settings/components/GlobalSettingsSecuritySection';
 import { SettingsAdminOnlyNotice } from '@/tenant/features/settings/components/SettingsAdminOnlyNotice';
@@ -150,6 +151,7 @@ export default function GlobalSettings(): React.JSX.Element {
                 checked={Boolean(data.emailNotifications)}
                 onCheckedChange={(v) => upd('emailNotifications', v)}
               />
+              {data.emailNotifications ? <EmailIntegrationPanel /> : null}
               <SettingsToggleRow
                 id="smsNotifications"
                 label={t('global.smsNotifications')}
@@ -157,7 +159,7 @@ export default function GlobalSettings(): React.JSX.Element {
                 checked={Boolean(data.smsNotifications)}
                 onCheckedChange={(v) => upd('smsNotifications', v)}
               />
-              <EmailIntegrationPanel emailNotificationsEnabled={Boolean(data.emailNotifications)} />
+              {data.smsNotifications ? <SmsIntegrationPanel /> : null}
             </div>
           </SectionCard>
 

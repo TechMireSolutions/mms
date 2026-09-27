@@ -904,7 +904,13 @@
       "when": 1790800000000,
       "tag": "0128_accounting_voucher_counters",
       "breakpoints": true
+    },
+    {
+      "idx": 129,
+      "version": "7",
+      "when": 1790900000000,
+      "tag": "0129_sms_integrations_table",
+      "breakpoints": true
     }
   ]
 }
-

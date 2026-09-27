@@ -14,16 +14,11 @@ import { cn } from '@/lib/utils';
 
 import { Skeleton } from '@/components/ui/skeleton';
 
-interface EmailIntegrationPanelProps {
-  emailNotificationsEnabled: boolean;
-}
-
 /**
  * Multi-provider SMTP setup (Gmail, Microsoft 365, Outlook, Yahoo, iCloud, Zoho, custom).
+ * Only mounted by the parent while Email Notifications is enabled.
  */
-export default function EmailIntegrationPanel({
-  emailNotificationsEnabled,
-}: EmailIntegrationPanelProps): React.JSX.Element {
+export default function EmailIntegrationPanel(): React.JSX.Element {
   const {
     t,
     providers,
@@ -78,9 +73,7 @@ export default function EmailIntegrationPanel({
         )}
       </div>
 
-      <SettingsCallout variant={emailNotificationsEnabled ? 'info' : 'warning'}>
-        {emailNotificationsEnabled ? t('email.separateSaveNote') : t('email.disabledNote')}
-      </SettingsCallout>
+      <SettingsCallout variant="info">{t('email.separateSaveNote')}</SettingsCallout>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <div className="space-y-2 sm:col-span-2">
@@ -190,7 +183,7 @@ export default function EmailIntegrationPanel({
           type="button"
           variant="outline"
           onClick={() => void handleTest()}
-          disabled={saving || testing || !emailNotificationsEnabled}
+          disabled={saving || testing}
           className="min-h-11 gap-2 px-4"
         >
           {testing ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden /> : null}
