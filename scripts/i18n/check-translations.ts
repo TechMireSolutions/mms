@@ -79,6 +79,11 @@ function isInvariantValue(key: string, value: string): boolean {
       '09:00 - 11:00',
       'PK36MEZN00012345678901',
       'MEZNPKKA',
+      'Infobip',
+      'MSG91',
+      'Telesign',
+      'Twilio',
+      'Vonage (Nexmo)',
     ].includes(value)
   ) {
     return true;
