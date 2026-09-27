@@ -98,6 +98,17 @@
   --color-surface-raised: hsl(var(--surface-raised));
   --color-surface-overlay: hsl(var(--surface-overlay));
 
+  /*
+   * Financial table row surface tokens.
+   * Used by FinancialLedgerTable, JournalEntriesListDesktopTable,
+   * CashbookViewTable, TrialBalance, and any other ledger/statement table.
+   * Replaces ad-hoc `bg-info/5`, `bg-success/10`, `bg-muted/60` inline strings.
+   */
+  --color-surface-table-header: hsl(var(--muted) / 0.6);
+  --color-surface-debit-row: hsl(var(--info) / 0.05);
+  --color-surface-credit-row: hsl(var(--success) / 0.1);
+  --color-surface-table-footer: hsl(var(--muted) / 0.3);
+
   /* 8pt grid macro-spacing scale (32px-64px) to reduce visual density */
   --spacing-macro-sm: 2rem;
   --spacing-macro-md: 2.5rem;
@@ -630,6 +641,48 @@
 
 @utility grid-cols-paper-builder-xl {
   grid-template-columns: minmax(0, 1fr) minmax(23.75rem, 0.8fr);
+}
+
+/* ─── Financial / ledger table structural utilities ───────────────────────────
+ *
+ * Use these instead of repeating raw Tailwind class strings in every table that
+ * shows monetary data (accounting, finance, cashbook, trial balance, etc.).
+ * Each maps to a single visual concept and can be updated in one place.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+@utility table-header-cell {
+  padding-inline: 0.75rem;
+  padding-block: 0.5rem;
+  font-weight: 700;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+}
+
+@utility table-amount-cell {
+  padding-inline: 0.75rem;
+  padding-block: 0.5rem;
+  text-align: end;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-weight: 700;
+}
+
+@utility table-footer-label {
+  padding-inline: 0.75rem;
+  padding-block: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: hsl(var(--muted-foreground));
+  text-transform: uppercase;
+}
+
+@utility row-debit {
+  background-color: var(--color-surface-debit-row);
+  &:hover { background-color: var(--color-surface-debit-row); }
+}
+
+@utility row-credit {
+  background-color: var(--color-surface-credit-row);
+  &:hover { background-color: var(--color-surface-credit-row); }
 }
 
 ::-webkit-scrollbar {

@@ -3,6 +3,7 @@ import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ExportToolbar } from "@/components/ui/ExportToolbar";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { MoneyTableCell } from "@/components/ui/MoneyTableCell";
 import {
   Table,
   TableBody,
@@ -166,7 +167,7 @@ export function ObligationsWakalaSummarySection({
                       <Badge as="span" pill tone="primary" className="px-2 font-bold">{wakalaSummaryItem.obligationType}</Badge>
                     </TableCell>
                     <TableCell className="px-3 py-2.5 text-end text-sm font-semibold text-foreground">{wakalaSummaryItem.count}</TableCell>
-                    <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-sm">{formatCurrency(wakalaSummaryItem.total)}</TableCell>
+                    <MoneyTableCell value={formatCurrency(wakalaSummaryItem.total)} variant="credit" />
                     <TableCell className="px-3 py-2.5">
                       {wakalaSummaryItem.distributions.length > 0 ? (
                         <div className="flex flex-wrap gap-1">
@@ -183,8 +184,8 @@ export function ObligationsWakalaSummarySection({
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={4} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</TableCell>
-                  <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-xs">{formatCurrency(totalAmount)}</TableCell>
+                  <TableCell colSpan={4} className="table-footer-label">{t("obligations.summary.wakala.configCount", { count: wakalaSummary.length })}</TableCell>
+                  <MoneyTableCell value={formatCurrency(totalAmount)} variant="credit" isFooter />
                   <TableCell />
                 </TableRow>
               </TableFooter>

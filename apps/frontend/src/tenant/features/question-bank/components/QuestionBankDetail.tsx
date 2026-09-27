@@ -68,7 +68,7 @@ export const QuestionBankDetail = (function QuestionBankDetail({
                 value={
                   <div className="flex flex-wrap gap-1">
                     {question.categoryIds?.map(catId => (
-                      <CategoryColorChip key={catId} name={config.categories.find(c => c.id === catId)?.name || catId} color={config.categories.find(c => c.id === catId)?.color || '#ccc'} />
+                      <CategoryColorChip key={catId} name={config.categories.find(c => c.id === catId)?.name || catId} color={config.categories.find(c => c.id === catId)?.color || 'hsl(var(--muted-foreground))'} />
                     ))}
                   </div>
                 } 

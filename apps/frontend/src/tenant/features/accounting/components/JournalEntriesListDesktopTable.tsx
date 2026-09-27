@@ -1,8 +1,7 @@
 import React from "react";
-import { TableCell, TableFooter, TableRow } from "@/components/ui/table";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLabel";
-import { WorkBatchTable } from "@/components/common/work";
+import { WorkBatchTable, type WorkBatchTableFooterRow } from "@/components/common/work";
 import {
   getJournalBalanceDifference,
   getVisibleLeadingColumnCount,
@@ -46,34 +45,48 @@ export function JournalEntriesListDesktopTable(props: JournalEntriesListDesktopT
     formatAmount,
   });
 
-  const tableFooter = (
-    <TableFooter className="border-t-2 border-border bg-muted/30">
-      <TableRow className="hover:bg-transparent">
-        <TableCell colSpan={visibleLeadingColumnCount || 1} className="px-3 py-2 text-xs font-bold text-muted-foreground uppercase">
-          {entriesCountLabel}
-        </TableCell>
-        {isColumnVisible("debit") && (
-          <TableCell className="px-3 py-2 text-end font-mono font-bold text-info text-xs">
-            {formatAmount(grandDebit)}
-          </TableCell>
-        )}
-        {isColumnVisible("credit") && (
-          <TableCell className="px-3 py-2 text-end font-mono font-bold text-success text-xs">
-            {formatAmount(grandCredit)}
-          </TableCell>
-        )}
-        <TableCell colSpan={(isColumnVisible("status") ? 1 : 0) + 1} className="px-3 py-2 text-end text-xs font-semibold text-muted-foreground">
-          {balanced ? (
-            <span className="text-success">{t("accounting.journal.dashboard.balanced")}</span>
-          ) : (
-            <span className="text-destructive">
-              {t("accounting.journal.dashboard.difference", { diff: getJournalBalanceDifference(grandDebit, grandCredit, formatAmount) })}
-            </span>
-          )}
-        </TableCell>
-      </TableRow>
-    </TableFooter>
-  );
+  const footerRow: WorkBatchTableFooterRow = {
+    className: "border-t-2 border-border bg-muted/30",
+    cells: [
+      {
+        colSpan: visibleLeadingColumnCount || 1,
+        className: "table-footer-label",
+        content: entriesCountLabel,
+      },
+      ...(isColumnVisible("debit")
+        ? [
+            {
+              className: "table-amount-cell text-info text-xs",
+              align: "end" as const,
+              content: formatAmount(grandDebit),
+            },
+          ]
+        : []),
+      ...(isColumnVisible("credit")
+        ? [
+            {
+              className: "table-amount-cell text-success text-xs",
+              align: "end" as const,
+              content: formatAmount(grandCredit),
+            },
+          ]
+        : []),
+      {
+        colSpan: (isColumnVisible("status") ? 1 : 0) + 1,
+        align: "end" as const,
+        className: "px-3 py-2 text-end text-xs font-semibold text-muted-foreground",
+        content: balanced ? (
+          <span className="text-success">{t("accounting.journal.dashboard.balanced")}</span>
+        ) : (
+          <span className="text-destructive">
+            {t("accounting.journal.dashboard.difference", {
+              diff: getJournalBalanceDifference(grandDebit, grandCredit, formatAmount),
+            })}
+          </span>
+        ),
+      },
+    ],
+  };
 
   return (
     <WorkBatchTable
@@ -101,7 +114,7 @@ export function JournalEntriesListDesktopTable(props: JournalEntriesListDesktopT
       }}
       renderRowActions={renderEntryActions}
       actionsLabel={renderEntryActions !== undefined ? t("accounting.table.actions") : undefined}
-      tableFooter={tableFooter}
+      footerRow={footerRow}
     />
   );
 }

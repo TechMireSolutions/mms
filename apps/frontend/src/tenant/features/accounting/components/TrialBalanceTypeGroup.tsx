@@ -3,6 +3,7 @@ import { ACCOUNT_TYPE_META, type AccountType } from '@/lib/data/accountingData';
 import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { MoneyTableCell } from "@/components/ui/MoneyTableCell";
 import {
   Table,
   TableBody,
@@ -129,16 +130,16 @@ export function TrialBalanceTypeGroup({
                 <TableCell className="px-3 py-2.5 font-mono text-xs font-bold text-muted-foreground">{trialBalanceRow.code}</TableCell>
                 <TableCell className="px-3 py-2.5 font-medium text-foreground">{trialBalanceRow.name}</TableCell>
                 <TableCell className="px-3 py-2.5 text-xs text-muted-foreground hidden md:table-cell">{trialBalanceRow.subtype || "—"}</TableCell>
-                <TableCell className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-info">{formatPositiveNumber(trialBalanceRow.totalDebit)}</TableCell>
-                <TableCell className="px-3 py-2.5 text-end font-mono text-xs font-semibold text-success">{formatPositiveNumber(trialBalanceRow.totalCredit)}</TableCell>
+                <MoneyTableCell value={formatPositiveNumber(trialBalanceRow.totalDebit)} variant="debit" />
+                <MoneyTableCell value={formatPositiveNumber(trialBalanceRow.totalCredit)} variant="credit" />
               </TableRow>
             ))}
           </TableBody>
           <TableFooter>
             <TableRow>
-              <TableCell colSpan={3} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">{t("accounting.tb.subTotal")}</TableCell>
-              <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-info">{formatPositiveNumber(groupDebit)}</TableCell>
-              <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success">{formatPositiveNumber(groupCredit)}</TableCell>
+              <TableCell colSpan={3} className="table-footer-label">{t("accounting.tb.subTotal")}</TableCell>
+              <MoneyTableCell value={formatPositiveNumber(groupDebit)} variant="debit" isFooter />
+              <MoneyTableCell value={formatPositiveNumber(groupCredit)} variant="credit" isFooter />
             </TableRow>
           </TableFooter>
         </Table>

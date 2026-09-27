@@ -3,6 +3,7 @@ import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import type { Account, JournalEntry } from '@/lib/data/accountingData';
 import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { MoneyTableCell } from "@/components/ui/MoneyTableCell";
 import {
   Table,
   TableBody,
@@ -119,21 +120,23 @@ export function JournalEntryDetailLines({
                     </div>
                   </TableCell>
                   <TableCell className="px-4 py-2.5 text-xs text-muted-foreground hidden sm:table-cell">{line.description || "—"}</TableCell>
-                  <TableCell className="px-4 py-2.5 text-end font-mono font-semibold text-info">
-                    {line.debit > 0 ? formatCurrency(line.debit) : "—"}
-                  </TableCell>
-                  <TableCell className="px-4 py-2.5 text-end font-mono font-semibold text-success">
-                    {line.credit > 0 ? formatCurrency(line.credit) : "—"}
-                  </TableCell>
+                  <MoneyTableCell
+                    value={line.debit > 0 ? formatCurrency(line.debit) : "—"}
+                    variant="debit"
+                  />
+                  <MoneyTableCell
+                    value={line.credit > 0 ? formatCurrency(line.credit) : "—"}
+                    variant="credit"
+                  />
                 </TableRow>
               );
             })}
           </TableBody>
           <TableFooter className="border-t-2 border-border bg-muted/30">
             <TableRow className="hover:bg-transparent">
-              <TableCell colSpan={2} className="px-4 py-2 text-xs font-bold text-muted-foreground uppercase">{t("accounting.journal.detail.totals")}</TableCell>
-              <TableCell className="px-4 py-2 text-end font-mono font-bold text-info">{formatCurrency(totalDebit)}</TableCell>
-              <TableCell className="px-4 py-2 text-end font-mono font-bold text-success">{formatCurrency(totalCredit)}</TableCell>
+              <TableCell colSpan={2} className="table-footer-label">{t("accounting.journal.detail.totals")}</TableCell>
+              <MoneyTableCell value={formatCurrency(totalDebit)} variant="debit" isFooter />
+              <MoneyTableCell value={formatCurrency(totalCredit)} variant="credit" isFooter />
             </TableRow>
           </TableFooter>
         </Table>

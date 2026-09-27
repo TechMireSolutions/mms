@@ -21,7 +21,7 @@ const EnrollmentReportsCharts = lazy(() =>
   import("./EnrollmentReportsCharts").then((mod) => ({ default: mod.EnrollmentReportsCharts })),
 );
 
-import PinnedWidgets from "@/tenant/features/reports/components/PinnedWidgets";
+import { PinnedWidgets } from "@/tenant/components/reports";
 
 export interface EnrollmentReportsProps {
   aggregates?: EnrollmentsReportAggregates;

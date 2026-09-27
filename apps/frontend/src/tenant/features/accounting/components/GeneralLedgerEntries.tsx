@@ -131,7 +131,7 @@ export function GeneralLedgerEntries({
   const tableFooter = (
     <TableFooter className="border-t-2 border-border bg-muted/30">
       <TableRow className="hover:bg-transparent">
-        <TableCell colSpan={3} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">
+        <TableCell colSpan={3} className="table-footer-label">
           {t("accounting.ledger.closingBalance")}
         </TableCell>
         <TableCell className="hidden lg:table-cell" />

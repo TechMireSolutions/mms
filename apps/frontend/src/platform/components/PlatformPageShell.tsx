@@ -1,7 +1,7 @@
 import React, { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
-import { ModuleScaffoldSkeleton } from '@/components/common/ModuleScaffold';
+import { AppPageShellSkeleton } from '@/components/common';
 import { PlatformSidebarProvider, usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut';
@@ -93,7 +93,7 @@ export function PlatformPageShell({
       <PlatformSidebarProvider>
         <PlatformAuthenticatedShell maxClass={maxClass} footer={footer}>
           {children || (
-            <Suspense fallback={<ModuleScaffoldSkeleton />}>
+            <Suspense fallback={<AppPageShellSkeleton />}>
               <Outlet />
             </Suspense>
           )}
@@ -107,7 +107,7 @@ export function PlatformPageShell({
     <PlatformSidebarProvider>
       <UnauthenticatedShell dir={dir} lang={language} maxClass={maxClass} footer={footer}>
         {children || (
-          <Suspense fallback={<ModuleScaffoldSkeleton />}>
+          <Suspense fallback={<AppPageShellSkeleton />}>
             <Outlet />
           </Suspense>
         )}

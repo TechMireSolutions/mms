@@ -182,9 +182,9 @@ export function CashbookViewTable({
       tableFooter={
         <TableFooter>
           <TableRow>
-            <TableCell colSpan={3} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">{t("accounting.cashbook.transactionCount", { count: rows.length })}</TableCell>
-            <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-success text-xs">{formatCurrency(totalIn)}</TableCell>
-            <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-destructive text-xs">{formatCurrency(totalOut)}</TableCell>
+            <TableCell colSpan={3} className="table-footer-label">{t("accounting.cashbook.transactionCount", { count: rows.length })}</TableCell>
+            <TableCell className="table-amount-cell text-success text-xs">{formatCurrency(totalIn)}</TableCell>
+            <TableCell className="table-amount-cell text-destructive text-xs">{formatCurrency(totalOut)}</TableCell>
           </TableRow>
         </TableFooter>
       }

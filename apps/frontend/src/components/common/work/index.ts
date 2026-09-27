@@ -17,8 +17,15 @@ export {
 } from "./WorkBatchTable";
 
 export {
+  WorkBatchTableFooter,
+  type WorkBatchTableFooterProps,
+} from "./WorkBatchTableFooter";
+
+export {
   deriveSelectionState,
   WORK_TABLE_CONTAINER_CLASS,
+  type WorkBatchTableFooterRow,
+  type WorkBatchTableFooterCell,
 } from "./workBatchTableTypes";
 
 export {

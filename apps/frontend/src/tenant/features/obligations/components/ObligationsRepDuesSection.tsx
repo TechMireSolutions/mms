@@ -6,6 +6,7 @@ import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/us
 import { getInitials } from "@mms/shared";
 import { Users } from "lucide-react";
 import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
+import { MoneyTableCell } from "@/components/ui/MoneyTableCell";
 import {
   Table,
   TableBody,
@@ -127,18 +128,16 @@ export function ObligationsRepDuesSection({
                       </div>
                     </TableCell>
                     <TableCell className="px-3 py-2.5 text-end text-sm font-semibold text-foreground">{representativeSummary.count}</TableCell>
-                    <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-foreground text-sm">{formatCurrency(representativeSummary.total)}</TableCell>
-                    <TableCell className="px-3 py-2.5 text-end">
-                      <span className="font-mono font-bold text-destructive text-sm">{formatCurrency(representativeSummary.due)}</span>
-                    </TableCell>
+                    <MoneyTableCell value={formatCurrency(representativeSummary.total)} variant="neutral" />
+                    <MoneyTableCell value={formatCurrency(representativeSummary.due)} variant="negative" />
                   </TableRow>
                 ))}
               </TableBody>
               <TableFooter>
                 <TableRow>
-                  <TableCell colSpan={4} className="px-3 py-2.5 text-xs font-bold text-muted-foreground uppercase">{t("obligations.summary.rep.repCount", { count: repSummary.length })}</TableCell>
-                  <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-foreground text-xs">{formatCurrency(totalAmount)}</TableCell>
-                  <TableCell className="px-3 py-2.5 text-end font-mono font-bold text-destructive text-xs">{formatCurrency(totalDue)}</TableCell>
+                  <TableCell colSpan={4} className="table-footer-label">{t("obligations.summary.rep.repCount", { count: repSummary.length })}</TableCell>
+                  <MoneyTableCell value={formatCurrency(totalAmount)} variant="neutral" isFooter />
+                  <MoneyTableCell value={formatCurrency(totalDue)} variant="negative" isFooter />
                 </TableRow>
               </TableFooter>
             </Table>

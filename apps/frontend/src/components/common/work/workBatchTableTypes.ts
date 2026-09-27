@@ -35,6 +35,18 @@ export interface WorkBatchTableColumn<TData> {
   render: (row: TData, index: number) => React.ReactNode;
 }
 
+export interface WorkBatchTableFooterCell {
+  colSpan?: number;
+  content: React.ReactNode;
+  align?: "start" | "end" | "center";
+  className?: string;
+}
+
+export interface WorkBatchTableFooterRow {
+  cells: WorkBatchTableFooterCell[];
+  className?: string;
+}
+
 export interface WorkBatchTableProps<TData extends { id: string | number }> {
   data: TData[];
   columns: WorkBatchTableColumn<TData>[];
@@ -94,6 +106,9 @@ export interface WorkBatchTableProps<TData extends { id: string | number }> {
 
   // Custom table footer element (rendered inside Table)
   tableFooter?: React.ReactNode;
+
+  // Structured footer row
+  footerRow?: WorkBatchTableFooterRow;
 
   // Empty & loading states
   emptyState?: React.ReactNode;

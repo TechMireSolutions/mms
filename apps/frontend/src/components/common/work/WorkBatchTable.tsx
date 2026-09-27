@@ -6,6 +6,7 @@ import { ModuleWorkTableHeader } from "@/components/ui/ModuleWorkTableHeader";
 import { ModuleTableFooterCount } from "@/components/ui/ModuleTableFooterCount";
 import { WorkBatchTableRow } from "./WorkBatchTableRow";
 import { WorkBatchTableVirtualizedRows } from "./WorkBatchTableVirtualizedRows";
+import { WorkBatchTableFooter } from "./WorkBatchTableFooter";
 import type {
   WorkBatchTableColumn,
   WorkBatchTableProps,
@@ -36,6 +37,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
   caption,
   bordered = true,
   tableFooter,
+  footerRow,
   emptyState,
   isLoading,
   onRowClick,
@@ -168,7 +170,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
               </AnimatePresence>
             )}
           </TableBody>
-          {tableFooter}
+          {tableFooter ?? (footerRow ? <WorkBatchTableFooter footerRow={footerRow} /> : null)}
         </Table>
       </div>
 

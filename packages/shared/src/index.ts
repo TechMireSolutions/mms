@@ -263,6 +263,7 @@ export * from './accountingModuleSettings.js';
 export * from './accountingReportAggregates.js';
 export * from './accountingSetupConfigTypes.js';
 export * from './accountingSpecializedEntries.js';
+export * from './financialLedgerTypes.js';
 export * from './attendanceListQuery.js';
 export * from './attendanceLookupTypes.js';
 export * from './attendanceModuleManifest.js';

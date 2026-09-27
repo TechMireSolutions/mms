@@ -9,7 +9,7 @@ import {
   CashFlowStatementPanel,
   IncomeStatementPanel,
 } from "./FinancialStatementPanels";
-import PinnedWidgets from "@/tenant/features/reports/components/PinnedWidgets";
+import { PinnedWidgets } from "@/tenant/components/reports";
 import { useFinancialReportsModel } from "./useFinancialReportsModel";
 
 /**

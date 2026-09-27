@@ -130,5 +130,26 @@ describe("WorkBatchTable", () => {
     expect(html).toContain("max-h-150");
     expect(html).toContain("overflow-y-auto");
   });
+
+  it("renders structured footerRow with alignment and colSpan", () => {
+    const html = renderToStaticMarkup(
+      <TestWrapper>
+        <WorkBatchTable
+          data={sampleData}
+          columns={columns}
+          footerRow={{
+            cells: [
+              { colSpan: 1, content: "Total Records: 2", align: "start" },
+              { colSpan: 1, content: "100%", align: "end" },
+            ],
+          }}
+        />
+      </TestWrapper>,
+    );
+
+    expect(html).toContain("Total Records: 2");
+    expect(html).toContain("100%");
+    expect(html).toContain("text-end");
+  });
 });
 
