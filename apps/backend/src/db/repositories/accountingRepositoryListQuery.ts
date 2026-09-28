@@ -1,4 +1,4 @@
-import { eq, ilike, or, isNull, isNotNull, exists, type SQL, desc, asc, sql } from 'drizzle-orm';
+import { eq, ilike, or, isNull, isNotNull, exists, type SQL, type AnyColumn, desc, asc, sql } from 'drizzle-orm';
 import { isQueryFlagTrue, type AccountingListQuery } from '@mms/shared';
 import {
   accountingAccounts,
@@ -140,51 +140,51 @@ export function buildFiscalYearListConditions(subdomain: string, query: Accounti
 
 export function buildAccountOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
-  let column: SQL;
+  let column: AnyColumn;
   switch (field) {
     case 'createdAt':
-      column = accountingAccounts.createdAt as unknown as SQL;
+      column = accountingAccounts.createdAt;
       break;
     case 'id':
-      column = accountingAccounts.id as unknown as SQL;
+      column = accountingAccounts.id;
       break;
     case 'code':
-      column = accountingAccounts.code as unknown as SQL;
+      column = accountingAccounts.code;
       break;
     case 'name':
-      column = accountingAccounts.name as unknown as SQL;
+      column = accountingAccounts.name;
       break;
     case 'type':
-      column = accountingAccounts.type as unknown as SQL;
+      column = accountingAccounts.type;
       break;
     default:
-      column = accountingAccounts.createdAt as unknown as SQL;
+      column = accountingAccounts.createdAt;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
 
 export function buildEntryOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
-  let column: SQL;
+  let column: AnyColumn;
   switch (field) {
     case 'createdAt':
-      column = accountingEntries.createdAt as unknown as SQL;
+      column = accountingEntries.createdAt;
       break;
     case 'id':
-      column = accountingEntries.id as unknown as SQL;
+      column = accountingEntries.id;
       break;
     case 'date':
-      column = accountingEntries.date as unknown as SQL;
+      column = accountingEntries.date;
       break;
     case 'ref':
     case 'reference':
-      column = accountingEntries.ref as unknown as SQL;
+      column = accountingEntries.ref;
       break;
     case 'status':
-      column = accountingEntries.status as unknown as SQL;
+      column = accountingEntries.status;
       break;
     default:
-      column = accountingEntries.createdAt as unknown as SQL;
+      column = accountingEntries.createdAt;
   }
   // `id` breaks ties so the order is total. Offset paging needs that: with a
   // non-unique sort key (a date is shared by every entry booked that day) two
@@ -197,29 +197,29 @@ export function buildEntryOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' |
 
 export function buildFiscalYearOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
-  let column: SQL;
+  let column: AnyColumn;
   switch (field) {
     case 'createdAt':
-      column = accountingFiscalYears.createdAt as unknown as SQL;
+      column = accountingFiscalYears.createdAt;
       break;
     case 'id':
-      column = accountingFiscalYears.id as unknown as SQL;
+      column = accountingFiscalYears.id;
       break;
     case 'label':
     case 'name':
-      column = accountingFiscalYears.label as unknown as SQL;
+      column = accountingFiscalYears.label;
       break;
     case 'startDate':
-      column = accountingFiscalYears.startDate as unknown as SQL;
+      column = accountingFiscalYears.startDate;
       break;
     case 'endDate':
-      column = accountingFiscalYears.endDate as unknown as SQL;
+      column = accountingFiscalYears.endDate;
       break;
     case 'status':
-      column = accountingFiscalYears.status as unknown as SQL;
+      column = accountingFiscalYears.status;
       break;
     default:
-      column = accountingFiscalYears.createdAt as unknown as SQL;
+      column = accountingFiscalYears.createdAt;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }

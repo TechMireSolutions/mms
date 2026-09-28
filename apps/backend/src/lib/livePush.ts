@@ -35,7 +35,7 @@ export {
 let redisPublisher: { publish: (channel: string, message: string) => Promise<unknown> } | null = null;
 let redisSubscriber: {
   subscribe: (...channels: string[]) => Promise<unknown>;
-  on: (event: string, listener: (...args: any[]) => void) => void;
+  on: (event: string, listener: (...args: string[]) => void) => void;
 } | null = null;
 
 const WS_INVALIDATION_CHANNEL = redisKeys.wsInvalidationChannel;
@@ -45,7 +45,7 @@ export function configureRedisPubSub(
   publisher: { publish: (channel: string, message: string) => Promise<unknown> },
   subscriber?: {
     subscribe: (...channels: string[]) => Promise<unknown>;
-    on: (event: string, listener: (...args: any[]) => void) => void;
+    on: (event: string, listener: (...args: string[]) => void) => void;
   }
 ): void {
   redisPublisher = publisher;

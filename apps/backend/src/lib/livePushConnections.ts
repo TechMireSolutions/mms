@@ -9,10 +9,8 @@ export interface MinimalWebSocket {
   on(event: 'pong', listener: () => void): void;
   on(event: 'close', listener: () => void): void;
   on(event: 'error', listener: (err: Error) => void): void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  off?(event: string, listener: (...args: any[]) => void): void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  removeListener?(event: string, listener: (...args: any[]) => void): void;
+  off?(event: string, listener: (...args: [Error]) => void): void;
+  removeListener?(event: string, listener: (...args: [Error]) => void): void;
 }
 
 export interface MinimalSseResponse {
@@ -22,10 +20,8 @@ export interface MinimalSseResponse {
   write(chunk: string | Buffer): boolean;
   end(): void;
   on(event: 'close' | 'error', listener: (err?: Error) => void): void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  off?(event: string, listener: (...args: any[]) => void): void;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  removeListener?(event: string, listener: (...args: any[]) => void): void;
+  off?(event: string, listener: (err?: Error) => void): void;
+  removeListener?(event: string, listener: (err?: Error) => void): void;
 }
 
 export const SSE_STREAM_HEADERS = {

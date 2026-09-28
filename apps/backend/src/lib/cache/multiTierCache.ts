@@ -53,7 +53,7 @@ export const l1LruCache = new LRUCache<string, any>({
 });
 
 // Single-flight coalescing map to protect against cache stampedes
-const inFlightFetches = new Map<string, Promise<any>>();
+const inFlightFetches = new Map<string, Promise<unknown>>();
 
 // Performance Metrics
 const metrics: MultiTierCacheMetrics = {

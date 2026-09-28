@@ -6,7 +6,7 @@
 export function stripUndefinedFields<T>(value: T): T {
   if (value === null || value === undefined) return value;
   if (Array.isArray(value)) {
-    return value.map((item) => stripUndefinedFields(item)) as unknown as T;
+    return (value as unknown[]).map((item) => stripUndefinedFields(item)) as T;
   }
   if (typeof value === 'object') {
     if (value instanceof Date || Buffer.isBuffer(value) || value instanceof RegExp) {

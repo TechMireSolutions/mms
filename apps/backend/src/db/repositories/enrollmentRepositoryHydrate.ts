@@ -115,7 +115,7 @@ export async function listEnrollmentsByWorkspace(
       timelineMap.set(t.enrollmentId, arr);
     }
 
-    return rows.map((row) => enrollmentRowToRecord(row, (timelineMap.get(row.id) ?? []) as unknown as TimelineEventRow[]));
+    return rows.map((row) => enrollmentRowToRecord(row, (timelineMap.get(row.id) ?? []) as TimelineEventRow[]));
   });
 }
 

@@ -10,6 +10,7 @@ import {
   desc,
   sql,
   type SQL,
+  type AnyColumn,
 } from 'drizzle-orm';
 import {
   dedupeTrimmedIds,
@@ -68,32 +69,28 @@ const DISTRIBUTION_SORT_FIELDS = new Set([
 
 function buildDistributionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
-  let column: SQL;
+  let column: AnyColumn = hasanatDistributions.updatedAt;
   if (field && DISTRIBUTION_SORT_FIELDS.has(field)) {
     switch (field) {
-      case 'updatedAt':
-        column = hasanatDistributions.updatedAt as unknown as SQL;
-        break;
       case 'recipientName':
-        column = hasanatDistributions.recipientName as unknown as SQL;
+        column = hasanatDistributions.recipientName;
         break;
       case 'denominationName':
-        column = hasanatDistributions.denominationName as unknown as SQL;
+        column = hasanatDistributions.denominationName;
         break;
       case 'reason':
-        column = hasanatDistributions.reason as unknown as SQL;
+        column = hasanatDistributions.reason;
         break;
       case 'status':
-        column = hasanatDistributions.status as unknown as SQL;
+        column = hasanatDistributions.status;
         break;
       case 'issuedDate':
-        column = hasanatDistributions.issuedDate as unknown as SQL;
+        column = hasanatDistributions.issuedDate;
         break;
+      case 'updatedAt':
       default:
-        column = hasanatDistributions.updatedAt as unknown as SQL;
+        column = hasanatDistributions.updatedAt;
     }
-  } else {
-    column = hasanatDistributions.updatedAt as unknown as SQL;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }

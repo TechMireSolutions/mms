@@ -11,7 +11,7 @@ import { messagingUseCases } from '../../../messaging/use-cases/messagingUseCase
 
 const s = initServer();
 
-function requireMessagingTenant(request: any): { id: string; subdomain: string } {
+function requireMessagingTenant(request: { tenant?: { id?: string; subdomain?: string } }): { id: string; subdomain: string } {
   const id = request.tenant?.id;
   const subdomain = getRequestTenant() || request.tenant?.subdomain;
   if (!id || !subdomain) {

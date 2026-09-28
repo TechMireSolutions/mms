@@ -171,7 +171,7 @@ export function resolveStudentGuardianLinks(
 
   const toLegacyId = (id: unknown) => (id != null && String(id).trim() ? String(id) : undefined);
   let fatherLink = explicitFatherLink;
-  let motherLink = explicitMotherLink;
+  let motherLink: typeof explicitMotherLink;
   if (explicitFatherLink || explicitMotherLink) {
     fatherLink = explicitFatherLink ?? parentLinks.find((l) => l !== explicitMotherLink && l.gender !== 'female');
     motherLink = explicitMotherLink ?? parentLinks.find((l) => l !== fatherLink && l.gender !== 'male');

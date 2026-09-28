@@ -83,7 +83,7 @@ export interface BulkRoutesOptions<T> {
   collection: string;
   schema: ZodType<T>;
   loadFn?: () => Promise<unknown>;
-  loadPageFn?: (query: any) => Promise<unknown>;
+  loadPageFn?: (query: Record<string, unknown>) => Promise<unknown>;
   /** When provided, the GET branch validates the full query (page/limit/search/sort/filters) and forwards it to `loadPageFn`. */
   listQuerySchema?: ZodType;
   /** Fallback page size when the client omits `limit` (schema path). */
@@ -104,7 +104,7 @@ export interface SoftDeletableBulkRoutesOptions<T> {
   collection: string;
   schema: ZodType<T>;
   loadFn: (options?: { includeDeleted?: boolean }) => Promise<unknown>;
-  loadPageFn?: (query: any) => Promise<unknown>;
+  loadPageFn?: (query: Record<string, unknown>) => Promise<unknown>;
   /** When provided, the GET branch validates the full query (page/limit/search/sort/filters) and forwards it to `loadPageFn`. */
   listQuerySchema?: ZodType;
   /** Fallback page size when the client omits `limit` (schema path). */
@@ -180,7 +180,7 @@ export type SoftDeletableBulkTrashRoutesOptions = {
 
 export type BulkListLoadContext = {
   loadFn?: () => Promise<unknown>;
-  loadPageFn?: (query: any) => Promise<unknown>;
+  loadPageFn?: (query: Record<string, unknown>) => Promise<unknown>;
   listQuerySchema?: ZodType;
   defaultPageSize?: number;
   responseKey: string;

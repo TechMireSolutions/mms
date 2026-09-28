@@ -173,8 +173,8 @@ export async function findTenantUserRowById(
     let row: typeof tenantUsers.$inferSelect | undefined;
     if (
       process.env.MMS_USE_PREPARED_STATEMENTS !== 'false' &&
-      typeof (tx as any).execute === 'function' &&
-      (tx as any).dialect !== undefined
+      typeof (tx as { execute?: unknown }).execute === 'function' &&
+      (tx as { dialect?: unknown }).dialect !== undefined
     ) {
       try {
         const stmt = getPreparedTenantUserById(tx);

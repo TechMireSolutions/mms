@@ -20,7 +20,7 @@ import type { SoftDeleteRouteErrorMapper } from './crudBulkRoutes.js';
 export interface ResourceRoutesOptions<T extends ResourceRecord = ResourceRecord> {
   prefix?: string;
   collection: string;
-  schema?: ZodType<any>;
+  schema?: ZodType<T>;
   /** Tenant-aware strict write schema (system keys ∪ Setup custom keys). POST/PUT use it when set. */
   buildWriteSchema?: () => Promise<ZodType<T>>;
   loadByIdFn?: (id: string, includeDeleted?: boolean) => Promise<unknown | null>;

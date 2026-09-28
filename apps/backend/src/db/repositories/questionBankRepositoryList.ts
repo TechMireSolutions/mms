@@ -6,6 +6,7 @@ import {
   isNotNull,
   isNull,
   type SQL,
+  type AnyColumn,
   asc,
   desc,
   sql,
@@ -75,32 +76,28 @@ const QUESTION_SORT_FIELDS = new Set([
 
 function buildQuestionsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
-  let column: SQL;
+  let column: AnyColumn = questions.updatedAt;
   if (field && QUESTION_SORT_FIELDS.has(field)) {
     switch (field) {
-      case 'updatedAt':
-        column = questions.updatedAt as unknown as SQL;
-        break;
       case 'createdAt':
-        column = questions.createdAt as unknown as SQL;
+        column = questions.createdAt;
         break;
       case 'text':
-        column = questions.text as unknown as SQL;
+        column = questions.text;
         break;
       case 'difficulty':
-        column = questions.difficulty as unknown as SQL;
+        column = questions.difficulty;
         break;
       case 'type':
-        column = questions.type as unknown as SQL;
+        column = questions.type;
         break;
       case 'questionLanguage':
-        column = questions.questionLanguage as unknown as SQL;
+        column = questions.questionLanguage;
         break;
+      case 'updatedAt':
       default:
-        column = questions.updatedAt as unknown as SQL;
+        column = questions.updatedAt;
     }
-  } else {
-    column = questions.updatedAt as unknown as SQL;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }

@@ -30,7 +30,7 @@ export function createMemoryBoundedTransform(options?: StreamingPipelineOptions)
 
   return new Transform({
     highWaterMark,
-    transform(chunk: any, _encoding, callback) {
+    transform(chunk: unknown, _encoding, callback) {
       // Propagate chunk downstream; backpressure will halt upstream generator if downstream buffer is full
       callback(null, chunk);
     },
@@ -42,7 +42,7 @@ export function createMemoryBoundedTransform(options?: StreamingPipelineOptions)
  * abort signal propagation, and memory metrics monitoring.
  */
 export async function executeMemoryBoundedPipeline(
-  source: Readable | AsyncIterable<any>,
+  source: Readable | AsyncIterable<unknown>,
   destination: Writable,
   options?: StreamingPipelineOptions,
 ): Promise<StreamMemoryMetrics> {
@@ -81,8 +81,14 @@ export async function executeMemoryBoundedPipeline(
     await pipeline(readableStream, monitorTransform, destination, {
       signal: options?.signal,
     });
-  } catch (err: any) {
-    if (err?.name === 'AbortError') {
+  } catch (err: unknown) {
+    const errorName =
+      err instanceof Error
+        ? err.name
+        : typeof err === 'object' && err !== null && 'name' in err
+          ? String((err as { name: unknown }).name)
+          : undefined;
+    if (errorName === 'AbortError') {
       logger.info('Streaming pipeline aborted by client');
     } else {
       logger.error({ err }, 'Streaming pipeline failed');

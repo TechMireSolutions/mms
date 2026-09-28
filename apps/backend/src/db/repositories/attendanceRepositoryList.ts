@@ -1,4 +1,4 @@
-import { and, eq, ilike, inArray, isNotNull, isNull, or, type SQL, asc, desc, sql } from 'drizzle-orm';
+import { and, eq, ilike, inArray, isNotNull, isNull, or, type SQL, type AnyColumn, asc, desc, sql } from 'drizzle-orm';
 import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
@@ -84,29 +84,29 @@ const ATTENDANCE_SORT_FIELDS = new Set(['date', 'studentName', 'rollNo', 'status
 
 function buildAttendanceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
-  let column: SQL;
+  let column: AnyColumn;
   if (field && ATTENDANCE_SORT_FIELDS.has(field)) {
     switch (field) {
       case 'updatedAt':
-        column = attendance.updatedAt as unknown as SQL;
+        column = attendance.updatedAt;
         break;
       case 'date':
-        column = attendance.date as unknown as SQL;
+        column = attendance.date;
         break;
       case 'studentName':
-        column = attendance.studentName as unknown as SQL;
+        column = attendance.studentName;
         break;
       case 'rollNo':
-        column = attendance.rollNo as unknown as SQL;
+        column = attendance.rollNo;
         break;
       case 'status':
-        column = attendance.status as unknown as SQL;
+        column = attendance.status;
         break;
       default:
-        column = attendance.updatedAt as unknown as SQL;
+        column = attendance.updatedAt;
     }
   } else {
-    column = attendance.updatedAt as unknown as SQL;
+    column = attendance.updatedAt;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }

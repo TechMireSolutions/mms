@@ -19,8 +19,6 @@ import {
 } from '../../db/repositories/facultyDesignationRepository.js';
 import {
   type WorkspaceUser,
-  type Contact,
-  type ContactLike,
   type UsersListQuery,
   type UsersListPageResult,
   type CreateWorkspaceUserInput,
@@ -83,7 +81,7 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
       ),
     ];
     const contacts =
-      contactIds.length > 0 ? (await loadContactsByIds(contactIds)) as ContactLike[] : [];
+      contactIds.length > 0 ? await loadContactsByIds(contactIds) : [];
     const contactMap = createContactLookupMap(contacts);
     return rows.map((row) =>
       normalizeWorkspaceUser(
@@ -131,9 +129,9 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
     const contactId = input.contactId;
 
     if (contactId != null && contactId !== '') {
-      const contacts = (await loadContactsByIds([String(contactId)])) as ContactLike[];
-      if (contacts.length > 0) {
-        const c = contacts[0] as unknown as Contact;
+      const contacts = await loadContactsByIds([String(contactId)]);
+      const c = contacts[0];
+      if (c) {
         name = name || getDisplayName(c);
         email = email || (getPrimaryEmail(c) || '').toLowerCase();
         phone = phone || getPrimaryPhone(c) || '';
@@ -390,14 +388,17 @@ export function createUsersUseCases(repo: UsersRepository = usersRepository) {
         }
       }
 
-      const merged = existing.map((u) => updatesById.get(String(u.id)) ?? u);
+      const merged: PersistedUser[] = existing.map((u) => {
+        const update = updatesById.get(String(u.id));
+        return update ? ({ ...u, ...update } as PersistedUser) : u;
+      });
       for (const update of parsed) {
         if (!existingById.has(String(update.id))) {
-          merged.push(update as unknown as (typeof existing)[number]);
+          merged.push(update as PersistedUser);
         }
       }
 
-      await saveUsers(merged as unknown as Parameters<typeof saveUsers>[0]);
+      await saveUsers(merged);
       await invalidateTenantRbac(requireTenant());
       await broadcastCollection('users');
       return loadWorkspaceUsers();

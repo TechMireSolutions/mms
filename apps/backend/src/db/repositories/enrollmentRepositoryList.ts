@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL } from 'drizzle-orm';
+import { and, asc, desc, eq, ilike, inArray, isNotNull, isNull, or, sql, type SQL, type AnyColumn } from 'drizzle-orm';
 import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
@@ -28,31 +28,31 @@ function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'desc' | '
   if (!field || !ENROLLMENT_SORT_FIELDS.has(field)) {
     return sql`${enrollments.id} asc`;
   }
-  let column: SQL;
+  let column: AnyColumn;
   switch (field) {
     case 'updatedAt':
-      column = enrollments.updatedAt as unknown as SQL;
+      column = enrollments.updatedAt;
       break;
     case 'studentName':
-      column = enrollments.studentName as unknown as SQL;
+      column = enrollments.studentName;
       break;
     case 'sessionName':
-      column = enrollments.sessionName as unknown as SQL;
+      column = enrollments.sessionName;
       break;
     case 'className':
-      column = enrollments.className as unknown as SQL;
+      column = enrollments.className;
       break;
     case 'status':
-      column = enrollments.status as unknown as SQL;
+      column = enrollments.status;
       break;
     case 'enrolledDate':
-      column = enrollments.enrolledDate as unknown as SQL;
+      column = enrollments.enrolledDate;
       break;
     case 'finalFee':
-      column = enrollments.finalFee as unknown as SQL;
+      column = enrollments.finalFee;
       break;
     default:
-      column = enrollments.updatedAt as unknown as SQL;
+      column = enrollments.updatedAt;
   }
   return dir === 'desc' ? desc(column) : asc(column);
 }

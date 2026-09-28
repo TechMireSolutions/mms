@@ -17,7 +17,7 @@ export async function hydrateStudentsList(
   const sessionsByStudentId = new Map<string, Array<{ sessionId: string; sortOrder: number }>>();
   for (const id of ids) sessionsByStudentId.set(id, []);
 
-  const queryResult = await (tx as any).execute(sql`
+  const queryResult = await (tx as { execute: (q: unknown) => Promise<unknown> }).execute(sql`
     SELECT
       ses.student_id AS "studentId",
       COALESCE(
@@ -35,7 +35,10 @@ export async function hydrateStudentsList(
     GROUP BY ses.student_id
   `);
   
-  const aggRows = Array.isArray(queryResult) ? queryResult : ((queryResult as any)?.rows ?? []);
+  const aggRows = (Array.isArray(queryResult) ? queryResult : ((queryResult as { rows?: unknown[] })?.rows ?? [])) as Array<{
+    studentId?: unknown;
+    sessions?: Array<{ sessionId: string; sortOrder: number }>;
+  }>;
   for (const row of aggRows) {
     if (row.studentId && Array.isArray(row.sessions)) {
       sessionsByStudentId.set(String(row.studentId), row.sessions);
@@ -102,9 +105,9 @@ export async function listStudentsByWorkspace(
 export async function findStudentById(tenant: string, id: string): Promise<Student | null> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
-    if (!tx || typeof (tx as any).select !== 'function') return null;
+    if (!tx || typeof (tx as { select?: unknown }).select !== 'function') return null;
     let rows: (typeof students.$inferSelect)[];
-    if (process.env.MMS_USE_PREPARED_STATEMENTS !== 'false' && typeof (tx as any).execute === 'function') {
+    if (process.env.MMS_USE_PREPARED_STATEMENTS !== 'false' && typeof (tx as { execute?: unknown }).execute === 'function') {
       try {
         const stmt = getPreparedStudentById(tx);
         rows = await stmt.execute({ subdomain, id });
@@ -190,7 +193,7 @@ export async function findStudentsByIds(tenant: string, ids: string[]): Promise<
   const subdomain = tenant.trim().toLowerCase();
   if (ids.length === 0) return [];
   return withTenantRead(subdomain, async (tx) => {
-    if (!tx || typeof (tx as any).select !== 'function') return [];
+    if (!tx || typeof (tx as { select?: unknown }).select !== 'function') return [];
     const rows = await tx
       .select({
         id: students.id,

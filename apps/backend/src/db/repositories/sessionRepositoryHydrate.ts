@@ -29,6 +29,17 @@ export {
 type Transaction = TenantTransaction;
 
 export type SessionRow = typeof sessions.$inferSelect;
+type SessionFacultyRow = typeof sessionFaculty.$inferSelect;
+type ClassRow = typeof sessionClasses.$inferSelect;
+type FeeRow = typeof sessionClassFees.$inferSelect;
+type ScheduleRow = typeof sessionClassSchedules.$inferSelect;
+type BudgetRow = typeof sessionClassBudgets.$inferSelect;
+type DiscountRow = typeof sessionClassDiscounts.$inferSelect;
+type TimetableRow = typeof sessionClassTimetables.$inferSelect;
+type PeriodRow = typeof sessionClassTimetablePeriods.$inferSelect;
+type RefreshmentRow = typeof sessionClassRefreshments.$inferSelect;
+type ScholarshipRow = typeof sessionClassScholarships.$inferSelect;
+type EligibilityRow = typeof scholarshipEligibilities.$inferSelect;
 
 export const SESSION_HYDRATION_BATCH_SIZE = 250;
 
@@ -40,7 +51,7 @@ export async function hydrateSessionsListAggregated(
   if (sessionRows.length === 0) return [];
   const sessionIds = sessionRows.map((s) => s.id);
 
-  const queryResult = await (tx as any).execute(sql`
+  const queryResult = await (tx as { execute: (q: unknown) => Promise<unknown> }).execute(sql`
     SELECT
       s.id AS "sessionId",
       COALESCE((
@@ -211,18 +222,30 @@ export async function hydrateSessionsListAggregated(
     FROM (VALUES ${sql.join(sessionIds.map((id) => sql`(${id}::text)`), sql`, `)}) AS s(id)
   `);
 
-  const rows = Array.isArray(queryResult) ? queryResult : ((queryResult as any)?.rows ?? []);
-  const facultyBySession = new Map<string, any[]>();
-  const classesBySession = new Map<string, any[]>();
-  const feesRows: any[] = [];
-  const schedulesRows: any[] = [];
-  const budgetsRows: any[] = [];
-  const discountsRows: any[] = [];
-  const timetablesRows: any[] = [];
-  const periodsRows: any[] = [];
-  const refreshmentsRows: any[] = [];
-  const scholarshipsRows: any[] = [];
-  const eligibilitiesRows: any[] = [];
+  const rows = (Array.isArray(queryResult) ? queryResult : ((queryResult as { rows?: unknown[] })?.rows ?? [])) as Array<{
+    sessionId: unknown;
+    faculty?: SessionFacultyRow[];
+    classes?: Array<ClassRow & {
+      fees?: FeeRow[];
+      schedules?: ScheduleRow[];
+      budgets?: BudgetRow[];
+      discounts?: DiscountRow[];
+      timetables?: Array<TimetableRow & { periods?: PeriodRow[] }>;
+      refreshments?: RefreshmentRow[];
+      scholarships?: Array<ScholarshipRow & { eligibility?: EligibilityRow }>;
+    }>;
+  }>;
+  const facultyBySession = new Map<string, SessionFacultyRow[]>();
+  const classesBySession = new Map<string, ClassRow[]>();
+  const feesRows: FeeRow[] = [];
+  const schedulesRows: ScheduleRow[] = [];
+  const budgetsRows: BudgetRow[] = [];
+  const discountsRows: DiscountRow[] = [];
+  const timetablesRows: TimetableRow[] = [];
+  const periodsRows: PeriodRow[] = [];
+  const refreshmentsRows: RefreshmentRow[] = [];
+  const scholarshipsRows: ScholarshipRow[] = [];
+  const eligibilitiesRows: EligibilityRow[] = [];
 
   for (const r of rows) {
     const sid = String(r.sessionId);
@@ -292,7 +315,7 @@ export async function hydrateSessionsList(
   // Attempt consolidated O(1) SQL aggregation when tx.execute is available
   if (
     process.env.MMS_DISABLE_AGGREGATED_CHILD_HYDRATION !== 'true' &&
-    typeof (tx as any)?.execute === 'function'
+    typeof (tx as { execute?: unknown })?.execute === 'function'
   ) {
     try {
       return await hydrateSessionsListAggregated(tx, subdomain, sessionRows);
@@ -612,7 +635,7 @@ export async function hydrateSessionsListSummary(
   }
   const sessionIds = sessionRows.map((s) => s.id);
 
-  const queryResult = await (tx as any).execute(sql`
+  const queryResult = await (tx as { execute: (q: unknown) => Promise<unknown> }).execute(sql`
     SELECT
       s.id AS "sessionId",
       COALESCE((
@@ -654,9 +677,13 @@ export async function hydrateSessionsListSummary(
     FROM (VALUES ${sql.join(sessionIds.map((id) => sql`(${id}::text)`), sql`, `)}) AS s(id)
   `);
 
-  const rows = Array.isArray(queryResult) ? queryResult : ((queryResult as any)?.rows ?? []);
-  const facultyBySession = new Map<string, any[]>();
-  const classesBySession = new Map<string, any[]>();
+  const rows = (Array.isArray(queryResult) ? queryResult : ((queryResult as { rows?: unknown[] })?.rows ?? [])) as Array<{
+    sessionId: unknown;
+    faculty?: SessionFacultyRow[];
+    classes?: ClassRow[];
+  }>;
+  const facultyBySession = new Map<string, SessionFacultyRow[]>();
+  const classesBySession = new Map<string, ClassRow[]>();
   for (const row of rows) {
     const sid = String(row.sessionId);
     if (Array.isArray(row.faculty)) facultyBySession.set(sid, row.faculty);

@@ -200,7 +200,7 @@ export async function aggregateSessionsCommandMetrics(
         AND s.deleted_at IS NULL
     `);
 
-    const rows = (result as unknown as { rows: Record<string, unknown>[] }).rows ?? result;
+    const rows = ((result as { rows?: Record<string, unknown>[] }).rows ?? (Array.isArray(result) ? result : [])) as Record<string, unknown>[];
     const row = (Array.isArray(rows) ? rows[0] : {}) ?? {};
 
     const num = (k: string): number => Number(row[k] ?? 0) || 0;

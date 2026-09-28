@@ -1,4 +1,4 @@
-import { and, eq, ilike, or, isNull, isNotNull, inArray, type SQL, desc, asc, sql } from 'drizzle-orm';
+import { and, eq, ilike, or, isNull, isNotNull, inArray, type SQL, type AnyColumn, desc, asc, sql } from 'drizzle-orm';
 import {
   dedupeTrimmedIds,
   isQueryFlagTrue,
@@ -66,59 +66,59 @@ function buildPaymentListConditions(subdomain: string, query: FinanceListQuery):
 
 function buildInvoiceOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
-  let column: SQL;
+  let column: AnyColumn;
   switch (field) {
     case 'createdAt':
-      column = financeInvoices.createdAt as unknown as SQL;
+      column = financeInvoices.createdAt;
       break;
     case 'id':
-      column = financeInvoices.id as unknown as SQL;
+      column = financeInvoices.id;
       break;
     case 'studentName':
-      column = financeInvoices.studentName as unknown as SQL;
+      column = financeInvoices.studentName;
       break;
     case 'class':
-      column = financeInvoices.class as unknown as SQL;
+      column = financeInvoices.class;
       break;
     case 'session':
-      column = financeInvoices.session as unknown as SQL;
+      column = financeInvoices.session;
       break;
     case 'totalAmount':
-      column = financeInvoices.finalAmt as unknown as SQL;
+      column = financeInvoices.finalAmt;
       break;
     case 'status':
-      column = financeInvoices.status as unknown as SQL;
+      column = financeInvoices.status;
       break;
     default:
-      column = financeInvoices.createdAt as unknown as SQL;
+      column = financeInvoices.createdAt;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }
 
 function buildPaymentOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim() || 'createdAt';
-  let column: SQL;
+  let column: AnyColumn;
   switch (field) {
     case 'createdAt':
-      column = financePayments.createdAt as unknown as SQL;
+      column = financePayments.createdAt;
       break;
     case 'id':
-      column = financePayments.id as unknown as SQL;
+      column = financePayments.id;
       break;
     case 'invoiceId':
-      column = financePayments.invoiceId as unknown as SQL;
+      column = financePayments.invoiceId;
       break;
     case 'studentName':
-      column = financePayments.studentName as unknown as SQL;
+      column = financePayments.studentName;
       break;
     case 'method':
-      column = financePayments.method as unknown as SQL;
+      column = financePayments.method;
       break;
     case 'amount':
-      column = financePayments.amount as unknown as SQL;
+      column = financePayments.amount;
       break;
     default:
-      column = financePayments.createdAt as unknown as SQL;
+      column = financePayments.createdAt;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }

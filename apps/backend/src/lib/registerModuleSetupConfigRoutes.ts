@@ -1,6 +1,5 @@
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
-import type { ZodType } from 'zod';
-import type { z } from 'zod';
+import type { ZodType, z } from 'zod';
 import type { Permission, User } from '@mms/shared';
 import { roleHasPermission } from '@mms/shared';
 import { sendDatabaseError, sendForbidden } from './httpErrors.js';
@@ -9,10 +8,11 @@ import { getRequestTenant } from './tenantContext.js';
 import { getOrSetMultiTier, invalidateMultiTierCache } from './cache/index.js';
 
 export type RegisterModuleSetupConfigRoutesOptions<
-  TConfigSchema extends ZodType<any> = ZodType<any>,
-  TPrefsSchema extends ZodType<any> = ZodType<any>,
+  TConfigSchema extends ZodType = ZodType,
+  TPrefsSchema extends ZodType = ZodType,
   TConfig = z.infer<TConfigSchema>,
   TPrefs = z.infer<TPrefsSchema>,
+  TPrefsInput = never,
 > = {
   domain?: string;
   canRead: (user: User) => boolean;
@@ -23,14 +23,9 @@ export type RegisterModuleSetupConfigRoutesOptions<
   saveFieldConfig: (body: TConfig) => Promise<unknown>;
   loadPreferences: () => Promise<TPrefs | null | unknown>;
   /** Normalize prefs for GET fallback and before save. */
-  normalizePreferences: (partial?: any) => TPrefs;
+  normalizePreferences: (partial?: TPrefsInput) => TPrefs;
   savePreferences: (normalized: TPrefs) => Promise<unknown>;
-  audit: (
-    user: User,
-    action: string,
-    summary: string,
-    entityId: string,
-  ) => Promise<void>;
+  audit: (user: User, action: string, summary: string, entityId: string) => Promise<void>;
   fieldConfigAuditAction: string;
   fieldConfigAuditSummary: string;
   preferencesAuditAction: string;
@@ -45,13 +40,14 @@ export type RegisterModuleSetupConfigRoutesOptions<
  * Register GET/PUT `/field-config` + `/preferences` for module Setup with multi-tier L1/L2 caching.
  */
 export function registerModuleSetupConfigRoutes<
-  TConfigSchema extends ZodType<any> = ZodType<any>,
-  TPrefsSchema extends ZodType<any> = ZodType<any>,
+  TConfigSchema extends ZodType = ZodType,
+  TPrefsSchema extends ZodType = ZodType,
   TConfig = z.infer<TConfigSchema>,
   TPrefs = z.infer<TPrefsSchema>,
+  TPrefsInput = never,
 >(
   fastify: FastifyInstance,
-  options: RegisterModuleSetupConfigRoutesOptions<TConfigSchema, TPrefsSchema, TConfig, TPrefs>,
+  options: RegisterModuleSetupConfigRoutesOptions<TConfigSchema, TPrefsSchema, TConfig, TPrefs, TPrefsInput>,
 ): void {
   const canWriteSetup = (user: User) =>
     roleHasPermission(user.role, options.setupWritePermission);
@@ -135,17 +131,17 @@ export function registerModuleSetupConfigRoutes<
           'preferences',
           async () => {
             const loaded = await options.loadPreferences();
-            return loaded ?? options.normalizePreferences(null);
+            return loaded ?? options.normalizePreferences();
           },
           { ttlSeconds: 600 },
         );
         return reply.send({
-          preferences: preferences ?? options.normalizePreferences(null),
+          preferences: preferences ?? options.normalizePreferences(),
         });
       }
       const preferences = await options.loadPreferences();
       return reply.send({
-        preferences: preferences ?? options.normalizePreferences(null),
+        preferences: preferences ?? options.normalizePreferences(),
       });
     } catch (error: unknown) {
       return sendDatabaseError(
@@ -166,7 +162,7 @@ export function registerModuleSetupConfigRoutes<
     const tenant = getRequestTenant() ?? user.workspaceSubdomain;
     try {
       const saved = await options.savePreferences(
-        options.normalizePreferences(body.data),
+        options.normalizePreferences(body.data as TPrefsInput),
       );
       if (tenant) {
         await invalidateMultiTierCache({

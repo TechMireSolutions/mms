@@ -50,9 +50,9 @@ export async function listSessionsByWorkspace(
 export async function findSessionById(tenant: string, id: string): Promise<Session | null> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
-    if (!tx || typeof (tx as any).select !== 'function') return null;
+    if (!tx || typeof (tx as { select?: unknown }).select !== 'function') return null;
     let rows: (typeof sessions.$inferSelect)[];
-    if (process.env.MMS_USE_PREPARED_STATEMENTS !== 'false' && typeof (tx as any).execute === 'function') {
+    if (process.env.MMS_USE_PREPARED_STATEMENTS !== 'false' && typeof (tx as { execute?: unknown }).execute === 'function') {
       try {
         const stmt = getPreparedSessionById(tx);
         rows = await stmt.execute({ subdomain, id });
@@ -79,7 +79,7 @@ export async function findSessionsByIds(tenant: string, ids: string[]): Promise<
   if (ids.length === 0) return [];
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
-    if (!tx || typeof (tx as any).select !== 'function') return [];
+    if (!tx || typeof (tx as { select?: unknown }).select !== 'function') return [];
     const rows = await tx
       .select(sessionSelectColumns)
       .from(sessions)

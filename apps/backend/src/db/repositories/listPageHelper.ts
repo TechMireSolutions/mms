@@ -53,7 +53,7 @@ export async function runListPage<Row, Record>(
   const conditions = [...options.conditions];
   if (isCursorPaging) {
     // Keyset pagination: filter id > afterId strictly using the primary key index.
-    conditions.push(sql`${(table as unknown as { id: SQL }).id} > ${options.afterId!.trim()}`);
+    conditions.push(sql`${getTableColumns(table).id} > ${options.afterId!.trim()}`);
   }
   const whereClause = and(...conditions);
 
@@ -69,7 +69,7 @@ export async function runListPage<Row, Record>(
 
   // When keyset paging on `id > afterId`, ordering must be `id ASC` to preserve index scan consistency
   const effectiveOrderBy = isCursorPaging
-    ? sql`${(table as unknown as { id: SQL }).id} asc`
+    ? sql`${getTableColumns(table).id} asc`
     : options.orderBy;
 
   // Never fall back to a bare `tx.select()` (SELECT *) wildcard. Project an
@@ -85,7 +85,7 @@ export async function runListPage<Row, Record>(
     .limit(limit)
     .offset(offset);
 
-  const items = (rows as unknown as Row[]).map(options.rowMapper);
+  const items = (rows as Row[]).map(options.rowMapper);
   const hasMore = isCursorPaging ? items.length === limit : page * limit < total;
   const lastItem = items[items.length - 1] as { id?: unknown } | undefined;
   const nextCursor = isCursorPaging && hasMore && lastItem?.id ? String(lastItem.id) : undefined;

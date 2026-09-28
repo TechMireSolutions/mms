@@ -10,6 +10,7 @@ import {
   desc,
   sql,
   type SQL,
+  type AnyColumn,
 } from 'drizzle-orm';
 import {
   dedupeTrimmedIds,
@@ -57,29 +58,29 @@ const EXAM_SORT_FIELDS = new Set(['name', 'subject', 'status', 'date', 'updatedA
 
 function buildExamsOrderBy(sortField?: string, sortDir?: 'asc' | 'desc' | ''): SQL {
   const field = sortField?.trim();
-  let column: SQL;
+  let column: AnyColumn;
   if (field && EXAM_SORT_FIELDS.has(field)) {
     switch (field) {
       case 'updatedAt':
-        column = exams.updatedAt as unknown as SQL;
+        column = exams.updatedAt;
         break;
       case 'name':
-        column = exams.name as unknown as SQL;
+        column = exams.name;
         break;
       case 'subject':
-        column = exams.subject as unknown as SQL;
+        column = exams.subject;
         break;
       case 'status':
-        column = exams.status as unknown as SQL;
+        column = exams.status;
         break;
       case 'date':
-        column = exams.date as unknown as SQL;
+        column = exams.date;
         break;
       default:
-        column = exams.updatedAt as unknown as SQL;
+        column = exams.updatedAt;
     }
   } else {
-    column = exams.updatedAt as unknown as SQL;
+    column = exams.updatedAt;
   }
   return sortDir === 'asc' ? asc(column) : desc(column);
 }

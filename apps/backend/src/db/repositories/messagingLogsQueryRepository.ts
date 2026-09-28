@@ -213,7 +213,7 @@ export async function queryMessagingMetrics(
         )
     `);
 
-    const rows = (result as unknown as { rows: Record<string, unknown>[] }).rows ?? result;
+    const rows = ((result as { rows?: Record<string, unknown>[] }).rows ?? (Array.isArray(result) ? result : [])) as Record<string, unknown>[];
     const row = (Array.isArray(rows) ? rows[0] : {}) ?? {};
 
     const num = (key: string): number => Number(row[key] ?? 0) || 0;
