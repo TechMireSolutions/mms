@@ -5,6 +5,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useScrollSurfaceOnChange } from "@/lib/routing/useScrollSurfaceOnChange";
 import { TabTrigger } from "@/components/ui/ResponsiveAccordionTabTrigger";
 import { ResponsiveAccordionTabsDesktop } from "@/components/ui/ResponsiveAccordionTabsDesktop";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { MEDIA_LG_UP } from "@/lib/breakpoints";
 import type { ResponsiveAccordionTabsProps } from "@/components/ui/ResponsiveAccordionTabsTypes";
 
 export type { AccordionTabItem, ResponsiveAccordionTabsProps } from "@/components/ui/ResponsiveAccordionTabsTypes";
@@ -51,6 +53,7 @@ export const ResponsiveAccordionTabs = (function ResponsiveAccordionTabs({
     resolveMobileTarget: (key) => sectionRefs.current[key],
   });
 
+  const isDesktop = useMediaQuery(MEDIA_LG_UP);
   const panelContent = collapsible && !activeTab ? null : children;
 
   if (hideWhenSingle && tabs.length <= 1) {
@@ -63,61 +66,63 @@ export const ResponsiveAccordionTabs = (function ResponsiveAccordionTabs({
 
   return (
     <div className={cn("space-y-4", className)}>
-      <div className="space-y-3 lg:hidden">
-        {tabs.map((tab) => {
-          const active = activeTab === tab.id;
-          const panelId = `${prefix}-${tab.id}`;
+      {!isDesktop ? (
+        <div className="space-y-3">
+          {tabs.map((tab) => {
+            const active = activeTab === tab.id;
+            const panelId = `${prefix}-${tab.id}`;
 
-          return (
-            <section
-              key={tab.id}
-              ref={(node) => {
-                sectionRefs.current[tab.id] = node;
-              }}
-              className={cn(
-                "overflow-hidden rounded-xl border transition-colors",
-                active
-                  ? "border-primary/30 bg-card shadow-md ring-1 ring-primary/10"
-                  : "border-border/70 bg-card/60 hover:border-border hover:bg-card/80",
-              )}
-            >
-              <TabTrigger
-                tab={tab}
-                active={active}
-                panelId={panelId}
-                onTabChange={handleTabChange}
-              />
+            return (
+              <section
+                key={tab.id}
+                ref={(node) => {
+                  sectionRefs.current[tab.id] = node;
+                }}
+                className={cn(
+                  "overflow-hidden rounded-xl border transition-colors",
+                  active
+                    ? "border-primary/30 bg-card shadow-md ring-1 ring-primary/10"
+                    : "border-border/70 bg-card/60 hover:border-border hover:bg-card/80",
+                )}
+              >
+                <TabTrigger
+                  tab={tab}
+                  active={active}
+                  panelId={panelId}
+                  onTabChange={handleTabChange}
+                />
 
-              <AnimatePresence initial={false}>
-                {active ? (
-                  <motion.div
-                    id={panelId}
-                    key={tab.id}
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: "auto", opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.22, ease: "easeInOut" }}
-                    className="overflow-hidden"
-                  >
-                    <div className="space-y-4 border-t border-border/70 px-3 py-4 sm:px-4">
-                      {children}
-                    </div>
-                  </motion.div>
-                ) : null}
-              </AnimatePresence>
-            </section>
-          );
-        })}
-      </div>
-
-      <ResponsiveAccordionTabsDesktop
-        tabs={tabs}
-        activeTab={activeTab}
-        desktopLayout={desktopLayout}
-        panelContent={panelContent}
-        onTabChange={handleTabChange}
-        sectionAriaLabel={t("nav.sectionAria")}
-      />
+                <AnimatePresence initial={false}>
+                  {active ? (
+                    <motion.div
+                      id={panelId}
+                      key={tab.id}
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: "auto", opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.22, ease: "easeInOut" }}
+                      className="overflow-hidden"
+                    >
+                      <div className="space-y-4 border-t border-border/70 px-3 py-4 sm:px-4">
+                        {children}
+                      </div>
+                    </motion.div>
+                  ) : null}
+                </AnimatePresence>
+              </section>
+            );
+          })}
+        </div>
+      ) : (
+        <ResponsiveAccordionTabsDesktop
+          tabs={tabs}
+          activeTab={activeTab}
+          desktopLayout={desktopLayout}
+          panelContent={panelContent}
+          onTabChange={handleTabChange}
+          sectionAriaLabel={t("nav.sectionAria")}
+        />
+      )}
     </div>
   );
 });

@@ -13,6 +13,7 @@ import type { DashboardRole } from '@/lib/dashboardRole';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 
 interface QuickActionsPanelProps {
   dashboardRole: DashboardRole;
@@ -26,6 +27,7 @@ export function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): Re
   const settings = useGlobalSettings();
   const { t } = useTranslation();
   const { can } = usePermissions();
+  const reducedMotion = useReducedMotion();
   const enabledModules = (() => settings.enabledModules || {})();
 
   const actions = (() =>
@@ -52,9 +54,13 @@ export function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): Re
           return (
             <motion.div
               key={quickAction.id}
-              initial={{ opacity: 0, scale: 0.95 }}
+              initial={false}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: actionIndex * 0.05, duration: 0.3, ease: 'easeOut' }}
+              transition={
+                reducedMotion
+                  ? { duration: 0 }
+                  : { delay: actionIndex * 0.05, duration: 0.3, ease: 'easeOut' }
+              }
             >
               <Link
                 to={href}
@@ -76,7 +82,7 @@ export function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): Re
                   <p className="text-sm font-bold text-foreground group-hover/item:text-primary transition-colors m-0 leading-tight">
                     {label}
                   </p>
-                  <p className="text-xs text-muted-foreground mt-1 m-0 leading-normal">
+                  <p className="text-xs font-medium text-foreground mt-1 m-0 leading-normal">
                     {t(quickAction.descKey)}
                   </p>
                 </div>

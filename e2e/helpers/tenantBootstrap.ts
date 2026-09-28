@@ -119,7 +119,7 @@ export async function bootstrapAuthenticatedTenant(
 
   await expect(platformLanding.first()).toBeVisible({ timeout: 20_000 });
 
-  await page.click('a[href="/onboarding"]');
+  await page.locator('a[href="/onboarding"]:visible').first().click();
   await page.waitForURL('**/onboarding');
   await page.waitForSelector('#wizard-step-title');
 

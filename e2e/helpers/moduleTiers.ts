@@ -95,19 +95,24 @@ export async function loginTenant(
   const emailInput = page.locator('input[name="email"]');
   const dashboardHeading = page.getByRole('heading', { name: /Assalamu Alaikum/i });
 
-  const isLoginForm = await emailInput
-    .or(dashboardHeading)
-    .first()
-    .waitFor({ state: 'visible', timeout: 25_000 })
-    .then(() => emailInput.isVisible())
-    .catch(() => false);
+  if (await dashboardHeading.isVisible().catch(() => false)) {
+    return;
+  }
 
-  if (!isLoginForm) {
+  const retryBtn = page.getByRole('button', { name: /Try again/i });
+  if (await retryBtn.isVisible({ timeout: 1000 }).catch(() => false)) {
+    await retryBtn.click().catch(() => {});
+  }
+
+  await emailInput.or(dashboardHeading).first().waitFor({ state: 'visible', timeout: 30_000 });
+
+  if (await dashboardHeading.isVisible().catch(() => false)) {
     await completeInstitutionSetupIfPresent(page);
     await expect(dashboardHeading).toBeVisible({ timeout: 10_000 });
     return;
   }
 
+  await expect(emailInput).toBeVisible({ timeout: 10_000 });
   await emailInput.fill(email);
   await page.fill('input[name="password"]', password);
 

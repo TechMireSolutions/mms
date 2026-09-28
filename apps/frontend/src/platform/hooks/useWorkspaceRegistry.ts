@@ -18,7 +18,7 @@ export function useWorkspaceRegistry(options?: { enabled?: boolean }): {
   const query = useQuery({
     queryKey: WORKSPACE_REGISTRY_QUERY_KEY,
     queryFn: async ({ signal }) => {
-      const res = await apiJson<{ workspaces: PublicWorkspaceSummary[] }>('/api/workspaces/registry', {
+      const res = await apiJson<{ workspaces: PublicWorkspaceSummary[] }>('/api/workspace/registry', {
         signal,
       });
       return res.workspaces;

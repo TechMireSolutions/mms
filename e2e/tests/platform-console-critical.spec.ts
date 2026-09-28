@@ -231,7 +231,7 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
     // 2. Bootstrap an ephemeral workspace via the onboarding wizard.
     // ------------------------------------------------------------------
     await test.step('2. Bootstrap ephemeral workspace via onboarding wizard', async () => {
-      await page.locator('a[href="/onboarding"]').click();
+      await page.locator('a[href="/onboarding"]:visible').first().click();
       await page.waitForURL('**/onboarding');
       await expect(page.locator('#wizard-step-title')).toBeVisible({ timeout: 30_000 });
 

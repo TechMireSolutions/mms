@@ -11,7 +11,7 @@ export const FORM_INPUT_ERROR =
 
 /** Shared label class for modal / registry-driven forms. */
 export const FORM_LABEL =
-  'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-muted-foreground';
+  'mb-1.5 block text-xs font-semibold uppercase tracking-wide text-foreground';
 
 /** Shared text input — full width, 44px min height, primary focus ring (no border/shadow transitions). */
 export const FORM_INPUT =

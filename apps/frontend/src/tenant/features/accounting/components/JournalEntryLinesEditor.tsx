@@ -64,10 +64,10 @@ export function JournalEntryLinesEditor({
       actions={
         <Button
           type="button"
-          variant="link"
+          variant="outline"
           size="sm"
           onClick={onAddLine}
-          className="flex items-center gap-1 min-h-11 text-xs font-semibold text-primary hover:text-primary/80 transition-colors"
+          className="flex items-center gap-1 min-h-11 text-xs font-semibold"
         >
           <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("accounting.journal.form.addLine")}
         </Button>

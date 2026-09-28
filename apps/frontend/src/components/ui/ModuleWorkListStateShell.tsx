@@ -4,6 +4,7 @@ import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ListPagination } from "@/components/ui/ListPagination";
 import { TableSkeleton, CardSkeleton } from "@/components/ui/LoadingState";
+import { useReducedMotion } from "@/hooks/useReducedMotion";
 
 export type ModuleWorkListViewMode = "table" | "cards";
 
@@ -53,6 +54,53 @@ export function ModuleWorkListStateShell({
   loadingLabel,
   children,
 }: ModuleWorkListStateShellProps): React.JSX.Element {
+  const reducedMotion = useReducedMotion();
+
+  if (reducedMotion) {
+    if (isError) {
+      return (
+        <div>
+          <ErrorState title={errorTitle} description={errorHint} onRetry={onRetry} />
+        </div>
+      );
+    }
+    if (isLoading) {
+      return (
+        <div aria-busy="true" role="status" aria-live="polite">
+          {viewMode === "cards" ? (
+            <CardSkeleton count={6} className="grid-cols-1 sm:grid-cols-2" />
+          ) : (
+            <TableSkeleton rows={6} cols={skeletonColumnCount} />
+          )}
+          <span className="sr-only">{loadingLabel}</span>
+        </div>
+      );
+    }
+    return (
+      <div aria-busy={useServerWork && isFetching ? true : undefined}>
+        <ErrorBoundary>
+          {children}
+          {useServerWork && pageData && showPagination ? (
+            <ListPagination
+              page={pageData.page}
+              total={pageData.total}
+              limit={pageData.limit}
+              hasMore={pageData.hasMore}
+              onPageChange={onPageChange}
+              i18nNamespace={i18nNamespace}
+              variant={paginationVariant}
+            />
+          ) : null}
+          {useServerWork && isFetching ? (
+            <p className="text-xs text-muted-foreground px-1" role="status" aria-live="polite">
+              {loadingLabel}
+            </p>
+          ) : null}
+        </ErrorBoundary>
+      </div>
+    );
+  }
+
   return (
     <AnimatePresence mode="wait">
       {isError ? (
@@ -79,7 +127,7 @@ export function ModuleWorkListStateShell({
       ) : (
         <motion.div
           key="list-view"
-          initial={{ opacity: 0 }}
+          initial={false}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}

@@ -79,13 +79,13 @@ export function StatCardBody({
           <p className="text-2xl font-black text-foreground tracking-tight leading-none m-0 truncate tabular-nums">
             {value}
           </p>
-          <h4 className="text-sm font-bold text-foreground/80 mt-1.5 m-0 truncate tracking-wide">
+          <h4 className="text-sm font-bold text-foreground mt-1.5 m-0 truncate tracking-wide">
             {title}
           </h4>
         </div>
       </div>
       {footer && (
-        <footer className="text-xs text-muted-foreground mt-3 border-t border-border/30 pt-2 m-0 truncate">
+        <footer className="text-xs font-medium text-foreground mt-3 border-t border-border/30 pt-2 m-0 truncate">
           {footer}
         </footer>
       )}

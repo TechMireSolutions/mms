@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { resetPlatformUsers } from '../helpers/tenantBootstrap.js';
+import { resetPlatformUsers, ensureE2ePlatformAdmin } from '../helpers/tenantBootstrap.js';
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
 process.env.JWT_SECRET = process.env.JWT_SECRET || 'e2e-test-jwt-secret-key-at-least-32-chars-long';
@@ -14,6 +14,7 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
 
   test.beforeAll(() => {
     resetPlatformUsers();
+    ensureE2ePlatformAdmin(platformEmail, platformPassword);
   });
 
   test('should setup platform, onboard a new madrasa, force first password change, and load tenant dashboard', async ({ page }) => {
@@ -45,28 +46,39 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
     await page.goto('/');
     await page.waitForLoadState('domcontentloaded');
 
-    // 2. Perform first-run platform setup
-    await page.waitForSelector('#platform-setup-email');
-    await page.fill('#platform-setup-name', 'Platform Admin');
-    await page.fill('#platform-setup-email', platformEmail);
-    await page.fill('#platform-setup-password', platformPassword);
-    await page.click('button[type="submit"]');
-
-    const platformConsoleLanding = page.getByRole('heading', { name: /Dashboard|Welcome back/i }).or(page.locator('a[href="/onboarding"]'));
+    // 2. Perform first-run platform setup or sign in if already initialized
+    const setupEmailInput = page.locator('#platform-setup-email');
     const signInEmailInput = page.locator('#platform-email');
-    await platformConsoleLanding.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
+    const platformConsoleLanding = page
+      .getByRole('heading', { name: /Dashboard|Welcome back/i })
+      .or(page.locator('a[href="/onboarding"]'));
+
+    await setupEmailInput
+      .or(signInEmailInput)
+      .or(platformConsoleLanding)
+      .first()
+      .waitFor({ state: 'visible', timeout: 25_000 });
+
+    if (await setupEmailInput.isVisible()) {
+      await page.fill('#platform-setup-name', 'Platform Admin');
+      await setupEmailInput.fill(platformEmail);
+      await page.fill('#platform-setup-password', platformPassword);
+      await page.click('button[type="submit"]');
+      await platformConsoleLanding.or(signInEmailInput).first().waitFor({ state: 'visible', timeout: 25_000 });
+    }
 
     if (await signInEmailInput.isVisible()) {
       await signInEmailInput.fill(platformEmail);
       await page.fill('#platform-password', platformPassword);
       await page.click('button[type="submit"]');
-      await platformConsoleLanding.first().waitFor({ state: 'visible', timeout: 25_000 });
     }
+
+    await expect(platformConsoleLanding.first()).toBeVisible({ timeout: 20_000 });
 
     await expect(page.getByRole('link', { name: /Create New Madrasa/i }).or(page.locator('a[href="/onboarding"]')).first()).toBeVisible();
 
     // 3. Open Onboarding Wizard & Fill Step 1
-    await page.click('a[href="/onboarding"]');
+    await page.locator('a[href="/onboarding"]:visible').first().click();
     await page.waitForURL('**/onboarding');
     await page.waitForSelector('#wizard-step-title');
     await expect(page.locator('#wizard-step-title')).toContainText('Institution & theme');

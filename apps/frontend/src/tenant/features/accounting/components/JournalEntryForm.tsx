@@ -62,7 +62,7 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
       saveDisabled={!isBalanced || submitting}
       error={errorMessages}
       footerStart={
-        <Button type="button" variant="secondary" disabled={submitting} onClick={async () => { await saveEntry("draft"); }}>
+        <Button type="button" variant="outline" disabled={submitting} onClick={async () => { await saveEntry("draft"); }}>
           {t("accounting.journal.form.saveDraft")}
         </Button>
       }

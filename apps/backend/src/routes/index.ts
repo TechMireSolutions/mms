@@ -49,6 +49,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(platformAdminSystemRoutes, { prefix: '/api/platform/admin/system' });
   await app.register(platformSchemaRoutes, { prefix: '/api/platform/schema' });
   await app.register(workspaceRoutes, { prefix: '/api/workspace' });
+  await app.register(workspaceRoutes, { prefix: '/api/workspaces' });
   await app.register(uploadRoutes, { prefix: '/api/uploads' });
   await app.register(dbRoutes, { prefix: '/api/db' });
   await app.register(contactRoutes);

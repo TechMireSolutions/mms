@@ -148,8 +148,6 @@ export function DatePicker({
         placeholder={resolvedPlaceholder}
         disabled={disabled}
         className="min-h-11 min-w-0 flex-1 border-0 bg-transparent p-0 text-start text-sm placeholder:text-muted-foreground/60 focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50"
-        aria-haspopup="dialog"
-        aria-expanded={state.open}
         aria-required={required}
         aria-label={
           ariaLabel ||

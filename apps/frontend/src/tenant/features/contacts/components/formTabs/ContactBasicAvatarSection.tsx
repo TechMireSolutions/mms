@@ -142,8 +142,9 @@ export function ContactBasicAvatarSection({
         <label
           htmlFor={avatarInputId}
           className="absolute -bottom-1 -end-1 flex h-7 w-7 cursor-pointer items-center justify-center rounded-lg bg-primary text-primary-foreground shadow-md border-2 border-card hover:scale-110 focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform before:absolute before:-inset-2 before:content-['']"
-          aria-label={t("account.changePhoto")}
+          title={t("account.changePhoto")}
         >
+          <span className="sr-only">{t("account.changePhoto")}</span>
           <Camera className="h-3.5 w-3.5" aria-hidden />
         </label>
 

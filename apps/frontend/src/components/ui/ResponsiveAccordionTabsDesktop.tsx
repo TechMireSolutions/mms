@@ -22,7 +22,7 @@ export function ResponsiveAccordionTabsDesktop({
 }: ResponsiveAccordionTabsDesktopProps): React.JSX.Element {
   if (desktopLayout === "horizontal") {
     return (
-      <div className="hidden space-y-4 lg:block">
+      <div className="space-y-4">
         <div
           role="tablist"
           aria-label={sectionAriaLabel}
@@ -74,7 +74,7 @@ export function ResponsiveAccordionTabsDesktop({
   }
 
   return (
-    <div className="hidden gap-5 lg:flex lg:items-start">
+    <div className="flex gap-5 items-start">
       <nav
         aria-label={sectionAriaLabel}
         className="sticky top-header w-sidebar-mobile shrink-0 space-y-0.5 rounded-2xl border border-border/70 bg-card/70 p-2 shadow-sm backdrop-blur-sm"

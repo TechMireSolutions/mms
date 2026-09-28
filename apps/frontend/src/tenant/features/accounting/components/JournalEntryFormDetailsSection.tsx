@@ -68,7 +68,7 @@ export function JournalEntryFormDetailsSection({ t, form, setForm, errors, fisca
           <div>
             <label htmlFor="journal-entry-ref" className={FORM_LABEL}>
               {t("accounting.journal.dashboard.wizard.refNo")}{" "}
-              <span className="normal-case font-normal text-muted-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span>
+              <span className="normal-case font-normal text-foreground">{t("accounting.journal.dashboard.wizard.optional")}</span>
             </label>
             <Input
               id="journal-entry-ref"

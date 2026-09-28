@@ -13,6 +13,7 @@ import { SettingsTabProvider } from '@/lib/contexts/SettingsTabContext';
 import { SettingsBrandingDraftProvider } from '@/lib/contexts/SettingsBrandingDraftContext';
 import { SettingsGlobalDraftProvider } from '@/lib/contexts/SettingsGlobalDraftContext';
 
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ModulePanelSuspenseFallback } from '@/components/ui/ModulePanelSuspenseFallback';
 
 function SettingsContent({ section }: { section: SettingsSection }): React.JSX.Element {
@@ -31,6 +32,7 @@ function SettingsContent({ section }: { section: SettingsSection }): React.JSX.E
 export default function Settings(): React.JSX.Element {
   const { t } = useTranslation();
   const { can } = usePermissions();
+  const reducedMotion = useReducedMotion();
   const [tab, setTab] = usePersistedTabState<SettingsSection>('mms-settings-tab', 'global');
 
   const handleTabChange = ((id: string) => {
@@ -78,10 +80,10 @@ export default function Settings(): React.JSX.Element {
               <AnimatePresence mode="wait">
                 <motion.div
                   key={effectiveTab}
-                  initial={{ opacity: 0, y: 8 }}
+                  initial={reducedMotion ? false : { opacity: 0, y: 8 }}
                   animate={{ opacity: 1, y: 0 }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.18 }}
+                  transition={{ duration: reducedMotion ? 0 : 0.18 }}
                 >
                   <SettingsContent section={effectiveTab} />
                 </motion.div>

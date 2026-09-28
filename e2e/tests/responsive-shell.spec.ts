@@ -11,7 +11,8 @@ const APEX_READY = '#platform-setup-email, #platform-email, a[href*="login"], bu
 
 function getTenantOrigin(subdomain: string, baseURL?: string): string {
   const base = new URL(baseURL || 'http://localhost:5173');
-  base.hostname = `${subdomain}.${base.hostname}`;
+  const host = base.hostname === '127.0.0.1' ? 'localhost' : base.hostname;
+  base.hostname = `${subdomain}.${host}`;
   return base.origin;
 }
 

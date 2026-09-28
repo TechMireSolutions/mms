@@ -60,13 +60,14 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.BASE_URL || 'http://127.0.0.1:5173',
+    baseURL: process.env.BASE_URL || 'http://localhost:5173',
     actionTimeout: 10 * 1000,
     navigationTimeout: 20 * 1000,
     trace: 'retain-on-failure',
     video: 'off',
     screenshot: 'only-on-failure',
     ignoreHTTPSErrors: true,
+    reducedMotion: 'reduce',
   },
 
   /* Configure projects for major browsers */

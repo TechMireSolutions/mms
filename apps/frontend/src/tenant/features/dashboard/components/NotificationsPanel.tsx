@@ -82,12 +82,13 @@ export function NotificationsPanel({ items }: NotificationsPanelProps): React.JS
         title={t('notifications.title')}
         badge={
           urgent > 0 && (
-            <span
-              className="inline-flex items-center px-2 py-0.5 rounded-md bg-destructive/10 text-destructive font-black border border-destructive/20 text-xs shrink-0 uppercase tracking-wider"
+            <Badge
+              variant="destructive"
+              className="text-xs shrink-0 font-bold uppercase tracking-wider"
               aria-label={t('notifications.urgentCount', { count: urgent })}
             >
               {urgent} {t('notifications.urgent')}
-            </span>
+            </Badge>
           )
         }
         actions={
@@ -145,7 +146,7 @@ export function NotificationsPanel({ items }: NotificationsPanelProps): React.JS
                         {notif.title}
                       </p>
                       {notif.urgent && (
-                        <Badge pill tone="destructive" className="uppercase tracking-wider flex-shrink-0 select-none">
+                        <Badge pill variant="destructive" className="uppercase tracking-wider flex-shrink-0 select-none">
                           {t('notifications.urgentLabel')}
                         </Badge>
                       )}

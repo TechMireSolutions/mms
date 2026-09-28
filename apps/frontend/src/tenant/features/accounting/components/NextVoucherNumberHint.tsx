@@ -14,7 +14,7 @@ export function NextVoucherNumberHint({ id, date }: NextVoucherNumberHintProps):
   const { data } = useVoucherNumbering(date);
   if (!data) return null;
   return (
-    <p id={id} className="m-0 mt-1 text-xs text-muted-foreground" aria-live="polite">
+    <p id={id} className="m-0 mt-1 text-xs font-medium text-foreground" aria-live="polite">
       {data.autoGenerate
         ? t("accounting.journal.form.nextVoucherHint", { number: data.nextVoucherNumber })
         : t("accounting.journal.form.refRequiredManual")}
