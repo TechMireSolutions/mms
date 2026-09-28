@@ -2,8 +2,9 @@ import { useQuery } from "@tanstack/react-query";
 import type { PublicWorkspaceSummary } from "@mms/shared";
 import { apiJson } from "@/lib/apiClient";
 import { useTenant } from "@/lib/contexts/TenantContext";
+import { WORKSPACE_REGISTRY_QUERY_KEY } from "@/platform/lib/platformQueryKeys";
 
-export const WORKSPACE_REGISTRY_QUERY_KEY = ["workspace", "registry"] as const;
+export { WORKSPACE_REGISTRY_QUERY_KEY } from "@/platform/lib/platformQueryKeys";
 
 /** Apex-only list of registered madrasa workspaces (TanStack Query). */
 export function useWorkspaceRegistry(options?: { enabled?: boolean }): {

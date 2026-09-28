@@ -16,7 +16,9 @@ const READY_POLL_TIMEOUT_MS = 60_000;
 /** Interval between `/ready` probes while waiting for the backend. */
 const READY_POLL_INTERVAL_MS = 750;
 
-export const PLATFORM_SETTINGS_QUERY_KEY = ['platform', 'settings'] as const;
+import { PLATFORM_SETTINGS_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
+
+export { PLATFORM_SETTINGS_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
 
 function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => {

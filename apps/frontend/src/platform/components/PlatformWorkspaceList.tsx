@@ -1,14 +1,14 @@
 import React, { useDeferredValue, useMemo } from 'react';
 import { Globe } from 'lucide-react';
-import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { getAppDomain } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
-import { usePlatformWorkspaces, useSetWorkspaceEmailVerification, useSetWorkspaceEnabled } from '@/platform/hooks/usePlatformWorkspaces';
+import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePlatformWorkspaceDescriptor } from '@/platform/hooks/usePlatformWorkspaceDescriptor';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
+import { ListPagination } from '@/components/ui/ListPagination';
 import { PlatformWorkspaceDialogs } from '@/platform/components/workspace/PlatformWorkspaceDialogs';
 import { PlatformWorkspaceToolbar } from '@/platform/components/workspace/PlatformWorkspaceToolbar';
 import { usePlatformWorkspaceUrlState } from '@/platform/components/workspace/usePlatformWorkspaceUrlState';
@@ -18,26 +18,26 @@ import { useWorkspaceDeleteState } from '@/platform/components/workspace/useWork
 import { usePlatformWorkspaceModalState } from '@/platform/components/workspace/usePlatformWorkspaceModalState';
 import { usePlatformWorkspaceSelection } from '@/platform/components/workspace/usePlatformWorkspaceSelection';
 import { PlatformWorkspaceBulkDock } from '@/platform/components/workspace/PlatformWorkspaceBulkDock';
+import { usePlatformWorkspaceListActions } from '@/platform/components/workspace/usePlatformWorkspaceListActions';
 
 /**
- * Super-user workspace list with enable/disable, delete controls, and bulk selection.
+ * Super-user workspace list with enable/disable, delete controls, bulk selection, and pagination.
  */
 export default function PlatformWorkspaceList(): React.JSX.Element {
   const { t } = useTranslation();
   const appDomain = getAppDomain();
   const { data: workspaces, isLoading, isError, refetch, isFetching } = usePlatformWorkspaces();
-  const setEnabled = useSetWorkspaceEnabled();
-  const setEmailVerification = useSetWorkspaceEmailVerification();
 
   const {
-    search, statusFilter, sortField, sortDirection,
-    setSearch, setStatusFilter, toggleSort, isFiltered, handleClearFilters,
+    search, statusFilter, sortField, sortDirection, page, pageSize,
+    setSearch, setStatusFilter, toggleSort, setPage, isFiltered, handleClearFilters,
   } = usePlatformWorkspaceUrlState();
 
   const descriptor = usePlatformWorkspaceDescriptor();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const deleteState = useWorkspaceDeleteState();
   const modalState = usePlatformWorkspaceModalState();
+  const listActions = usePlatformWorkspaceListActions();
 
   const items = workspaces ?? [];
   const deferredSearch = useDeferredValue(search);
@@ -46,6 +46,11 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
     () => sortWorkspaces(filterWorkspaces(items, deferredSearch, statusFilter), sortField, sortDirection),
     [items, deferredSearch, statusFilter, sortField, sortDirection],
   );
+
+  const paginatedItems = useMemo(() => {
+    const start = (page - 1) * pageSize;
+    return sortedItems.slice(start, start + pageSize);
+  }, [sortedItems, page, pageSize]);
 
   const selection = usePlatformWorkspaceSelection(sortedItems);
 
@@ -58,28 +63,6 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
     }
     return { totalCount: items.length, activeCount: active, inactiveCount: inactive };
   }, [items]);
-
-  const handleToggleEnabled = (subdomain: string, enabled: boolean): void => {
-    setEnabled.mutate({ subdomain, enabled });
-  };
-
-  const handleToggleEmailVerification = (subdomain: string, requireEmailVerification: boolean): void => {
-    setEmailVerification.mutate({ subdomain, requireEmailVerification });
-  };
-
-  const handleBulkEnable = (selected: PlatformWorkspaceRowData[]): void => {
-    for (const item of selected) {
-      if (!item.enabled) setEnabled.mutate({ subdomain: item.subdomain, enabled: true });
-    }
-  };
-
-  const handleBulkDisable = (selected: PlatformWorkspaceRowData[]): void => {
-    for (const item of selected) {
-      if (item.enabled) setEnabled.mutate({ subdomain: item.subdomain, enabled: false });
-    }
-  };
-
-  const togglePending = setEnabled.isPending || setEmailVerification.isPending;
 
   return (
     <div className="space-y-6 w-full text-start">
@@ -138,28 +121,40 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
             />
           </div>
         ) : (
-          <PlatformWorkspaceDirectoryView
-            viewMode={viewMode}
-            workspaces={sortedItems}
-            descriptor={descriptor}
-            appDomain={appDomain}
-            sortField={sortField}
-            sortDirection={sortDirection}
-            onToggleSort={toggleSort}
-            togglePending={togglePending}
-            deletePending={deleteState.deletePending}
-            targetWorkspaceSubdomain={deleteState.targetWorkspace?.subdomain}
-            onToggleEnabled={handleToggleEnabled}
-            onToggleEmailVerification={handleToggleEmailVerification}
-            onOpenModules={modalState.handleOpenModules}
-            onOpenDelete={deleteState.handleOpenDelete}
-            onOpenResetPassword={modalState.handleOpenResetPassword}
-            onOpenCreateAdmin={modalState.handleOpenCreateAdmin}
-            onInspect={modalState.handleOpenInspect}
-            selectedSubdomains={selection.selectedSubdomains}
-            onToggleSelect={selection.toggleSelect}
-            onToggleSelectAll={() => selection.toggleSelectAll(sortedItems)}
-          />
+          <div className="space-y-4">
+            <PlatformWorkspaceDirectoryView
+              viewMode={viewMode}
+              workspaces={paginatedItems}
+              descriptor={descriptor}
+              appDomain={appDomain}
+              sortField={sortField}
+              sortDirection={sortDirection}
+              onToggleSort={toggleSort}
+              togglePending={listActions.togglePending}
+              deletePending={deleteState.deletePending}
+              targetWorkspaceSubdomain={deleteState.targetWorkspace?.subdomain}
+              onToggleEnabled={listActions.handleToggleEnabled}
+              onToggleEmailVerification={listActions.handleToggleEmailVerification}
+              onOpenModules={modalState.handleOpenModules}
+              onOpenDelete={deleteState.handleOpenDelete}
+              onOpenResetPassword={modalState.handleOpenResetPassword}
+              onOpenCreateAdmin={modalState.handleOpenCreateAdmin}
+              onInspect={modalState.handleOpenInspect}
+              selectedSubdomains={selection.selectedSubdomains}
+              onToggleSelect={selection.toggleSelect}
+              onToggleSelectAll={() => selection.toggleSelectAll(sortedItems)}
+            />
+            {sortedItems.length > pageSize && (
+              <ListPagination
+                page={page}
+                total={sortedItems.length}
+                limit={pageSize}
+                onPageChange={setPage}
+                i18nNamespace="platform"
+                variant="range"
+              />
+            )}
+          </div>
         )}
       </ModuleWorkListStateShell>
 
@@ -174,9 +169,9 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         selectedCount={selection.selectedCount}
         selectedWorkspaces={selection.selectedWorkspaces}
         onClearSelection={selection.clearSelection}
-        onBulkEnable={handleBulkEnable}
-        onBulkDisable={handleBulkDisable}
-        busy={togglePending}
+        onBulkEnable={listActions.handleBulkEnable}
+        onBulkDisable={listActions.handleBulkDisable}
+        busy={listActions.togglePending}
       />
     </div>
   );

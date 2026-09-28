@@ -8,7 +8,7 @@ import { PlatformModuleSelectCard } from '@/platform/components/workspace/Platfo
 import { PlatformModulePresetsBar } from '@/platform/components/workspace/PlatformModulePresetsBar';
 import { useUpdateWorkspaceModules, useWorkspaceModules } from '@/platform/hooks/usePlatformWorkspaces';
 import { resolveModuleIcon } from '@/lib/config/moduleIcons';
-import { LayoutDashboard } from 'lucide-react';
+import { LayoutDashboard, AlertTriangle } from 'lucide-react';
 
 interface PlatformWorkspaceModulesDialogProps {
   workspace: PlatformWorkspaceRowData;
@@ -72,6 +72,11 @@ export function PlatformWorkspaceModulesDialog({
 
   const selectedModuleSet = new Set(selectedModules);
 
+  const disabledActiveModules = (() => {
+    if (!currentModules || currentModules.length === 0) return [];
+    return currentModules.filter((id) => !selectedModuleSet.has(id));
+  })();
+
   return (
     <FormModal
       open={open}
@@ -90,6 +95,27 @@ export function PlatformWorkspaceModulesDialog({
     >
       <div className="flex-1 overflow-y-auto px-1 py-2 text-start space-y-5">
         <PlatformModulePresetsBar onApplyPreset={applyPreset} disabled={isPending} />
+
+        {disabledActiveModules.length > 0 && (
+          <div
+            className="flex items-start gap-2.5 p-3 rounded-xl border border-warning/40 bg-warning/10 text-xs text-foreground"
+            role="alert"
+          >
+            <AlertTriangle className="w-4 h-4 text-warning shrink-0 mt-0.5" aria-hidden />
+            <div className="space-y-0.5 min-w-0 flex-1">
+              <p className="font-bold text-foreground">
+                {t('platform.modulesDisabledWarningTitle')}
+              </p>
+              <p className="text-3xs text-muted-foreground leading-relaxed">
+                {t('platform.modulesDisabledWarningBody', {
+                  modules: disabledActiveModules
+                    .map((id) => SYSTEM_MODULES.find((m) => m.id === id)?.label || id)
+                    .join(', '),
+                })}
+              </p>
+            </div>
+          </div>
+        )}
 
         {isLoading ? (
           <CardSkeleton count={3} />

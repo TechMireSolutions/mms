@@ -17,7 +17,10 @@ import { PasswordStrengthMeter } from '@/components/ui/PasswordStrengthMeter';
 export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?: boolean } = {}): React.JSX.Element {
   const { t, dir, language } = useTranslation();
   const addAdmin = useAddPlatformAdmin();
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return new URLSearchParams(window.location.search).get('create') === 'true';
+  });
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -36,7 +39,14 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
 
   const handleOpenChange = (next: boolean): void => {
     setOpen(next);
-    if (!next) resetForm();
+    if (!next) {
+      resetForm();
+      if (typeof window !== 'undefined' && window.location.search.includes('create=')) {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('create');
+        window.history.replaceState({}, '', `${url.pathname}${url.search}`);
+      }
+    }
   };
 
   const handleSave = async (): Promise<void> => {

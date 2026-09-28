@@ -7,8 +7,9 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import { updateAdminsCache } from './platformAdminsCache';
+import { PLATFORM_ADMINS_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
 
-export const PLATFORM_ADMINS_QUERY_KEY = ['platform', 'admins'] as const;
+export { PLATFORM_ADMINS_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
 
 
 

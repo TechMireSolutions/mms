@@ -18,7 +18,9 @@ export interface PlatformActivityLogsResponse {
   logs: PlatformActivityLogItem[];
 }
 
-export const PLATFORM_ACTIVITY_LOGS_QUERY_KEY = ['platform', 'activity-logs'] as const;
+import { PLATFORM_ACTIVITY_LOGS_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
+
+export { PLATFORM_ACTIVITY_LOGS_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
 
 export function usePlatformActivityLogs(): {
   data: PlatformActivityLogItem[] | undefined;

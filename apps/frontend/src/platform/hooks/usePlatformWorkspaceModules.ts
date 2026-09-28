@@ -5,6 +5,7 @@ import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions'
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
+import { PLATFORM_QUERY_KEYS } from '@/platform/lib/platformQueryKeys';
 
 export function useWorkspaceModules(subdomain: string, open: boolean): {
   data: string[] | undefined;
@@ -14,7 +15,7 @@ export function useWorkspaceModules(subdomain: string, open: boolean): {
   const { isPlatformAuthenticated, canWorkspaces } = usePlatformPermissions();
 
   const query = useQuery({
-    queryKey: ['platform', 'workspace-modules', subdomain],
+    queryKey: PLATFORM_QUERY_KEYS.workspaceModules(subdomain),
     queryFn: async ({ signal }) => {
       const res = await apiJson<{ modules: string[] }>(`/api/platform/workspaces/${encodeURIComponent(subdomain)}/modules`, {
         signal,
@@ -53,7 +54,7 @@ export function useUpdateWorkspaceModules() {
       return res.body as { success: true; modules: string[] };
     },
     onSuccess: (response, variables) => {
-      queryClient.setQueryData(['platform', 'workspace-modules', variables.subdomain], response.modules);
+      queryClient.setQueryData(PLATFORM_QUERY_KEYS.workspaceModules(variables.subdomain), response.modules);
       notify.success(t('module.system.saved'));
     },
     onError: (error) => {

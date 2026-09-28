@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useQueryClient } from "@tanstack/react-query";
 import {
   DEFAULT_BRANDING_SETTINGS,
   DEFAULT_GLOBAL_SETTINGS,
@@ -12,7 +13,9 @@ import { applyBrandingTheme } from "@/lib/brandingTheme";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useTranslation } from "@/hooks/useTranslation";
 import { isApiError } from "@/lib/apiClient";
+import { notify } from "@/lib/notify";
 import { getPlatformErrorMessage } from "@/platform/lib/platformAuthErrors";
+import { PLATFORM_QUERY_KEYS } from "@/platform/lib/platformQueryKeys";
 import {
   ONBOARDING_INITIAL_DATA,
   ONBOARDING_STEP_DEFS,
@@ -23,6 +26,7 @@ export function useOnboardingWizardController() {
   const { onboard } = useAuth();
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
   const [step, setStep] = useState(1);
   const [data, setData] = useState<OnboardingData>(ONBOARDING_INITIAL_DATA);
   const [loading, setLoading] = useState(false);
@@ -91,7 +95,13 @@ export function useOnboardingWizardController() {
         modules: data.modules,
       });
 
-      navigate(ROUTES.home, { replace: true });
+      notify.success(t("platform.workspaceCreatedToast"), {
+        description: data.subdomain,
+      });
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_QUERY_KEYS.workspaces });
+      void queryClient.invalidateQueries({ queryKey: PLATFORM_QUERY_KEYS.workspaceRegistry });
+
+      navigate(ROUTES.platformWorkspaces, { replace: true });
     } catch (err: unknown) {
       if (isApiError(err) && err.type === "conflict") {
         setSubmitError(t("onboarding.workspaceConflict"));

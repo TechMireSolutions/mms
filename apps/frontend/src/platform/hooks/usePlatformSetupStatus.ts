@@ -3,8 +3,9 @@ import { apiContract } from "@/lib/api";
 import { ApiError } from "@/lib/apiClient";
 import type { PlatformSetupStatus } from "@mms/shared";
 import { useTenant } from "@/lib/contexts/TenantContext";
+import { PLATFORM_SETUP_STATUS_QUERY_KEY } from "@/platform/lib/platformQueryKeys";
 
-export const PLATFORM_SETUP_STATUS_QUERY_KEY = ["platform", "setup", "status"] as const;
+export { PLATFORM_SETUP_STATUS_QUERY_KEY } from "@/platform/lib/platformQueryKeys";
 
 export async function fetchPlatformSetupStatus(signal?: AbortSignal): Promise<PlatformSetupStatus> {
   const response = await apiContract.platform.getSetupStatus({

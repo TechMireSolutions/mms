@@ -1,5 +1,5 @@
 import type React from 'react';
-import { LayoutDashboard, Building2, BarChart3, Activity, Server, ShieldCheck, User, PlusCircle, Waypoints } from 'lucide-react';
+import { LayoutDashboard, Building2, BarChart3, Activity, Server, ShieldCheck, User, PlusCircle, Waypoints, Download, UserPlus } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
 import { ROUTES } from '@/lib/config/routes';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
@@ -104,6 +104,33 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     icon: PlusCircle,
     keywords: ['create', 'add', 'onboard', 'provision', 'new madrasa', 'tenant'],
     requiredPermission: 'onboard',
+  },
+  {
+    id: 'create-admin',
+    labelKey: 'platform.createAdminAction',
+    category: 'platform.commandCategory.actions',
+    path: `${ROUTES.platformAdmins}?create=true`,
+    icon: UserPlus,
+    keywords: ['admin', 'operator', 'invite', 'user', 'super_user', 'new'],
+    requiredPermission: 'admins',
+  },
+  {
+    id: 'system-diagnostics',
+    labelKey: 'platform.runDiagnosticsAction',
+    category: 'platform.commandCategory.actions',
+    path: `${ROUTES.platformSystem}?probe=true`,
+    icon: Activity,
+    keywords: ['diagnostics', 'health', 'ping', 'check', 'probe', 'status'],
+    requiredPermission: 'system',
+  },
+  {
+    id: 'export-workspaces',
+    labelKey: 'platform.exportCsvAction',
+    category: 'platform.commandCategory.actions',
+    path: `${ROUTES.platformWorkspaces}?export=true`,
+    icon: Download,
+    keywords: ['export', 'csv', 'download', 'madrasas', 'list', 'tenants'],
+    requiredPermission: 'workspaces',
   },
 ];
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { Database, Activity, Cpu, RefreshCw, CheckCircle2, Zap } from "lucide-react";
+import { Database, Activity, Cpu, RefreshCw, CheckCircle2, Zap, Layers } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { StatCard } from "@/components/ui/StatCard";
@@ -17,6 +17,7 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
   const [probing, setProbing] = useState(false);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [latencyHistory, setLatencyHistory] = useState<number[]>([]);
+  const [redisStatus, setRedisStatus] = useState<string>('connected');
   const [lastChecked, setLastChecked] = useState<string | null>(null);
 
   const runHealthProbe = useCallback(async () => {
@@ -26,13 +27,17 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
       const res = await apiFetch("/ready", { cache: "no-store" });
       const elapsed = Math.round(performance.now() - start);
       if (res.ok) {
+        const body = (await res.json()) as { redis?: string; database?: string };
+        setRedisStatus(body.redis ?? 'connected');
         setLatencyMs(elapsed);
         setLatencyHistory((prev) => [...prev.slice(-7), elapsed]);
       } else {
         setLatencyMs(null);
+        setRedisStatus('disconnected');
       }
     } catch {
       setLatencyMs(null);
+      setRedisStatus('disconnected');
     } finally {
       setProbing(false);
       setLastChecked(formatDateTime(new Date().toISOString()));
@@ -56,7 +61,7 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
       className="space-y-6 text-start"
     >
       {/* System Maintenance Header Metrics */}
-      <motion.div variants={cardVariants} className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <motion.div variants={cardVariants} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <StatCard
           variant="compact"
           label={t("platform.dbEngine")}
@@ -80,6 +85,14 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
           sub={t("platform.maintenance.asyncLocalStorage")}
           icon={Cpu}
           accent="warning"
+        />
+        <StatCard
+          variant="compact"
+          label={t("platform.maintenance.queueEngine")}
+          value={redisStatus === 'connected' ? "BullMQ Active" : redisStatus === 'optional' ? "BullMQ Standalone" : "BullMQ Offline"}
+          sub={t("platform.maintenance.queueEngineSub")}
+          icon={Layers}
+          accent={redisStatus === 'connected' ? "success" : "warning"}
         />
         <StatCard
           variant="compact"
@@ -115,6 +128,10 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
             <span className="bg-card px-2 py-0.5 rounded border border-border/50 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-success" />
               {t("platform.maintenance.dbConnsHealthy")}
+            </span>
+            <span className="bg-card px-2 py-0.5 rounded border border-border/50 flex items-center gap-1">
+              <CheckCircle2 className="w-3 h-3 text-success" />
+              {redisStatus === 'connected' ? 'BullMQ: Redis' : 'BullMQ: In-Memory'}
             </span>
             <span className="bg-card px-2 py-0.5 rounded border border-border/50 flex items-center gap-1">
               <CheckCircle2 className="w-3 h-3 text-success" />

@@ -7,8 +7,9 @@ import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
+import { PLATFORM_PROFILE_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
 
-export const PLATFORM_PROFILE_QUERY_KEY = ['platform', 'profile'] as const;
+export { PLATFORM_PROFILE_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
 
 function updateProfileCache(old: unknown, user: PlatformUserProfile): unknown {
   if (!old || typeof old !== 'object') return old;

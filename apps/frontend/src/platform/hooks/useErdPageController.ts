@@ -13,6 +13,7 @@ import {
   type PlatformErdResponse,
 } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
+import { PLATFORM_QUERY_KEYS } from '@/platform/lib/platformQueryKeys';
 
 const DEFAULT_DOMAIN: ErdDomainId = 'accounting';
 const ALL_TABLES = '';
@@ -38,7 +39,7 @@ export function useErdPageController(): {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const { data: dynamicData, isLoading } = useQuery<PlatformErdResponse>({
-    queryKey: ['platform', 'schema', 'erd'],
+    queryKey: PLATFORM_QUERY_KEYS.erd,
     queryFn: () => apiJson<PlatformErdResponse>('/api/platform/schema/erd'),
     staleTime: 60_000,
     retry: 1,

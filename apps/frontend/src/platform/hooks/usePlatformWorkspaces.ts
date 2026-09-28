@@ -8,8 +8,9 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { getPlatformErrorMessage } from '@/platform/lib/platformAuthErrors';
 import { updateWorkspacesCache } from './platformWorkspacesCache';
+import { PLATFORM_WORKSPACES_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
 
-export const PLATFORM_WORKSPACES_QUERY_KEY = ['platform', 'workspaces'] as const;
+export { PLATFORM_WORKSPACES_QUERY_KEY } from '@/platform/lib/platformQueryKeys';
 
 /** Platform workspace list — super-user or admin with `workspaces` permission. */
 export function usePlatformWorkspaces() {

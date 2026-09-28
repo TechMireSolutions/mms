@@ -13,6 +13,7 @@ import { PlatformReportsMetrics } from './reports/PlatformReportsMetrics';
 import { PlatformReportsGrowthChart } from './reports/PlatformReportsGrowthChart';
 import { PlatformReportsPieCharts } from './reports/PlatformReportsPieCharts';
 import { PlatformReportsOperatorCard } from './reports/PlatformReportsOperatorCard';
+import { PlatformReportsModuleAdoption } from './reports/PlatformReportsModuleAdoption';
 import { exportPlatformReportsCsv } from './reports/exportPlatformReportsCsv';
 
 const EXPORT_COLUMNS: ExportColumn[] = [
@@ -121,6 +122,10 @@ export function PlatformReports(): React.JSX.Element {
           verifyRequiredCount={verifyRequiredCount}
           verifyOptionalCount={verifyOptionalCount}
         />
+      </motion.div>
+
+      <motion.div variants={reducedMotion ? undefined : itemVariants}>
+        <PlatformReportsModuleAdoption />
       </motion.div>
 
       <motion.div variants={reducedMotion ? undefined : itemVariants}>
