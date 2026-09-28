@@ -12,7 +12,7 @@ export * from "./facultyDesignationTables.js";
 export const faculty = pgTable('faculty', {
   id: text('id').notNull(),
   workspaceSubdomain: text('workspace_subdomain').notNull().references(() => workspaces.subdomain, { onDelete: 'cascade' }),
-  contactId: text('contact_id'),
+  contactId: text('contact_id').notNull(),
   userId: text('user_id'),
   employeeId: varchar('employee_id', { length: 100 }),
   status: varchar('status', { length: 50 }).notNull().default('active'),
@@ -86,7 +86,7 @@ export const faculty = pgTable('faculty', {
   foreignKey({
     columns: [table.workspaceSubdomain, table.contactId],
     foreignColumns: [contacts.workspaceSubdomain, contacts.id],
-  }).onDelete('set null'),
+  }).onDelete('restrict'),
   foreignKey({
     columns: [table.workspaceSubdomain, table.userId],
     foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],

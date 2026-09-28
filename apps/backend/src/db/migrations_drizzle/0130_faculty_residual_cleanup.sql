@@ -27,3 +27,27 @@ DROP VIEW IF EXISTS teacher_module_preferences;
 --> statement-breakpoint
 
 DROP VIEW IF EXISTS teacher_setup_config;
+--> statement-breakpoint
+
+-- Re-assert the 0122 hardening idempotently. Environments whose faculty table was
+-- rebuilt from the Drizzle schema after 0122 was recorded (e.g. a stray schema push)
+-- drifted back to nullable contact_id + ON DELETE SET NULL; forward-only re-apply.
+DO $$
+BEGIN
+  IF EXISTS (SELECT 1 FROM "faculty" WHERE "contact_id" IS NULL) THEN
+    RAISE EXCEPTION 'faculty.contact_id contains NULL values; link every faculty row to contacts before migration 0130';
+  END IF;
+END $$;
+--> statement-breakpoint
+
+ALTER TABLE "faculty" ALTER COLUMN "contact_id" SET NOT NULL;
+--> statement-breakpoint
+
+ALTER TABLE "faculty"
+  DROP CONSTRAINT IF EXISTS "faculty_workspace_subdomain_contact_id_contacts_workspace_subdomain_id_fk";
+--> statement-breakpoint
+ALTER TABLE "faculty"
+  ADD CONSTRAINT "faculty_workspace_subdomain_contact_id_contacts_workspace_subdomain_id_fk"
+  FOREIGN KEY ("workspace_subdomain", "contact_id")
+  REFERENCES "contacts" ("workspace_subdomain", "id")
+  ON DELETE RESTRICT;

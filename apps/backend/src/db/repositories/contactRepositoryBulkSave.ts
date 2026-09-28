@@ -103,7 +103,7 @@ export async function replaceContactsForWorkspace(tenant: string, records: Conta
       .update(students)
       .set({ contactId: null, fatherContactId: null, motherContactId: null, guardianContactId: null })
       .where(eq(students.workspaceSubdomain, subdomain));
-    await tx.update(faculty).set({ contactId: null }).where(eq(faculty.workspaceSubdomain, subdomain));
+    await tx.delete(faculty).where(eq(faculty.workspaceSubdomain, subdomain));
     await tx.update(tenantUsers).set({ contactId: null }).where(eq(tenantUsers.workspaceSubdomain, subdomain));
     await tx.delete(contacts).where(eq(contacts.workspaceSubdomain, subdomain));
     if (uniqueRecords.length === 0) return;

@@ -51,7 +51,7 @@ export function facultyWriteValues(subdomain: string, facultyMember: FacultyMemb
   return {
     id: String(facultyMember.id),
     workspaceSubdomain: subdomain,
-    contactId: facultyMember.contactId ? String(facultyMember.contactId) : null,
+    contactId: String(facultyMember.contactId),
     userId: facultyMember.userId ? String(facultyMember.userId) : null,
     employeeId: facultyMember.employeeId ?? null,
     status: facultyMember.status ?? 'active',
