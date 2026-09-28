@@ -1,6 +1,5 @@
-import React from 'react';
-import { Mail, MessageCircle, MessageSquare } from 'lucide-react';
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import React from "react";
+import { EntityMessagingActions } from "@/components/ui/EntityMessagingActions";
 
 export interface EntityMessagingDropdownItemsProps {
   showWhatsApp: boolean;
@@ -9,7 +8,6 @@ export interface EntityMessagingDropdownItemsProps {
   onWhatsAppClick: () => void;
   onSmsClick: () => void;
   onEmailClick: () => void;
-  /** Localized channel labels (translated by the module). */
   labels: {
     whatsapp: string;
     sms: string;
@@ -18,10 +16,7 @@ export interface EntityMessagingDropdownItemsProps {
 }
 
 /**
- * WhatsApp / SMS / Email channel trio for Work row-action menus.
- *
- * Modules translate the labels and pass `show*` + click handlers; the icon
- * tones stay canonical (`text-success` WhatsApp, `text-info` SMS, `text-primary` Email).
+ * Backward-compatible wrapper delegating to EntityMessagingActions with variant="dropdown".
  */
 export const EntityMessagingDropdownItems = (function EntityMessagingDropdownItems({
   showWhatsApp,
@@ -33,23 +28,15 @@ export const EntityMessagingDropdownItems = (function EntityMessagingDropdownIte
   labels,
 }: EntityMessagingDropdownItemsProps): React.JSX.Element {
   return (
-    <>
-      {showWhatsApp ? (
-        <DropdownMenuItem onClick={onWhatsAppClick}>
-          <MessageCircle className="w-3.5 h-3.5 me-2 text-success" /> {labels.whatsapp}
-        </DropdownMenuItem>
-      ) : null}
-      {showSms ? (
-        <DropdownMenuItem onClick={onSmsClick}>
-          <MessageSquare className="w-3.5 h-3.5 me-2 text-info" /> {labels.sms}
-        </DropdownMenuItem>
-      ) : null}
-      {showEmail ? (
-        <DropdownMenuItem onClick={onEmailClick}>
-          <Mail className="w-3.5 h-3.5 me-2 text-primary" /> {labels.email}
-        </DropdownMenuItem>
-      ) : null}
-    </>
+    <EntityMessagingActions
+      variant="dropdown"
+      showWhatsApp={showWhatsApp}
+      showSms={showSms}
+      showEmail={showEmail}
+      onWhatsApp={onWhatsAppClick}
+      onSms={onSmsClick}
+      onEmail={onEmailClick}
+      labels={labels}
+    />
   );
 });
-

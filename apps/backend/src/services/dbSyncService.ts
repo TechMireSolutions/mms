@@ -32,7 +32,7 @@ import {
 import {
   hydrateFacultySetupCollectionsFromLegacyObjects,
   FACULTY_LEGACY_SETUP_OBJECT_KEYS,
-} from '../db/hydrateFacultySetupFromLegacyBackup.js';
+} from '../db/legacyFacultySetupHydration.js';
 import { getRequestTenant } from '../lib/tenantContext.js';
 import { maskGlobalSettingsForClient } from './globalSettingsService.js';
 import { throwIfSyncAborted } from '../lib/syncLimits.js';

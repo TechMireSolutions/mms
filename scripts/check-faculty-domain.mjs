@@ -26,8 +26,11 @@ for (const root of roots) {
 }
 
 const facultySchema = await readFile('apps/backend/src/db/schema/faculty.ts', 'utf8');
+// Designation tables live in facultyDesignationTables.ts and are re-exported by faculty.ts.
+const facultyDesignationSchema = await readFile('apps/backend/src/db/schema/facultyDesignationTables.ts', 'utf8');
+const facultySchemaSource = `${facultySchema}\n${facultyDesignationSchema}`;
 for (const needle of requiredSchemaNeedles) {
-  if (!facultySchema.includes(needle)) violations.push(`apps/backend/src/db/schema/faculty.ts: missing ${needle}`);
+  if (!facultySchemaSource.includes(needle)) violations.push(`apps/backend/src/db/schema/faculty.ts: missing ${needle}`);
 }
 
 const temporalMigration = await readFile('apps/backend/src/db/migrations_drizzle/0123_faculty_temporal_designations.sql', 'utf8');

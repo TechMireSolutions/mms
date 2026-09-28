@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { hydrateFacultySetupCollectionsFromLegacyObjects } from '../db/hydrateFacultySetupFromLegacyBackup.js';
+import { hydrateFacultySetupCollectionsFromLegacyObjects } from '../db/legacyFacultySetupHydration.js';
 
 describe('hydrateFacultySetupCollectionsFromLegacyObjects', () => {
   it('no-ops without users (partial payload)', () => {

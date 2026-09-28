@@ -137,7 +137,7 @@ export const TEACHERS_MODULE_MANIFEST = {
   configObjectKey: 'teacher_field_config',
   preferencesObjectKey: 'teacher_module_preferences',
   columnPreferencesObjectKey: 'teacher_user_column_preferences',
-  restBasePath: '/api/teachers',
+  restBasePath: '/api/faculty',
   analyticsCategory: 'teachers',
   defaultExportFilename: 'teachers.csv',
   permissions: {

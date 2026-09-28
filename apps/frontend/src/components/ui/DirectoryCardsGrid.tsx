@@ -1,38 +1,21 @@
-import type { ReactNode } from "react";
-import { motion } from "framer-motion";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { cn } from "@/lib/utils";
-
-const containerVariants = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.05,
-    },
-  },
-};
+import React, { type ReactNode } from "react";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
 
 export interface DirectoryCardsGridProps {
   children: ReactNode;
   className?: string;
 }
 
-/** Shared Work cards grid with optional staggered entrance (Contacts gold-standard). */
+/**
+ * Backward-compatible alias for unified EntityCardsGrid.
+ */
 export function DirectoryCardsGrid({
   children,
   className,
 }: DirectoryCardsGridProps): React.JSX.Element {
-  const reducedMotion = useReducedMotion();
-
   return (
-    <motion.div
-      variants={reducedMotion ? undefined : containerVariants}
-      initial={reducedMotion ? false : "hidden"}
-      animate={reducedMotion ? undefined : "visible"}
-      className={cn("grid grid-cols-1 sm:grid-cols-2 gap-4", className)}
-    >
+    <EntityCardsGrid cols={2} className={className}>
       {children}
-    </motion.div>
+    </EntityCardsGrid>
   );
 }

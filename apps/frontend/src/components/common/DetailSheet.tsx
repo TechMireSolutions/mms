@@ -37,10 +37,11 @@ export interface DetailSheetProps<T = unknown> extends Omit<DetailDrawerShellPro
   attributeVariant?: DetailAttributeRowVariant;
 }
 
+let warned = false;
+
 /**
- * Universal DetailSheet primitive.
- * BiDi-aware Radix/Framer slide-over drawer from inline-end with responsive bottom-sheet adaptation on mobile,
- * optional integrated archive banner, and declarative SSOT entity descriptor attribute rendering.
+ * @deprecated DetailSheet is deprecated and will be consolidated with Drawer.
+ * Use `Drawer` from `@/components/ui/Drawer` directly with composed sections.
  */
 export function DetailSheet<T = unknown>({
   archiveState,
@@ -51,7 +52,16 @@ export function DetailSheet<T = unknown>({
   children,
   ...props
 }: DetailSheetProps<T>): React.JSX.Element | null {
-  const effectiveDescriptor = (descriptor ?? (entityType ? (getEntityDescriptor(entityType) as EntityDescriptor<T> | undefined) : undefined));
+  if (process.env.NODE_ENV !== "production" && !warned) {
+    warned = true;
+    console.warn(
+      "[MMS Deprecation] `DetailSheet` is deprecated. Use `Drawer` from `@/components/ui/Drawer` directly.",
+    );
+  }
+
+  const effectiveDescriptor =
+    descriptor ??
+    (entityType ? (getEntityDescriptor(entityType) as EntityDescriptor<T> | undefined) : undefined);
 
   const { t } = useTranslation();
 
@@ -104,7 +114,6 @@ export function DetailSheet<T = unknown>({
           ))}
         </div>
       ) : null}
-
       {children}
     </DetailDrawerShell>
   );

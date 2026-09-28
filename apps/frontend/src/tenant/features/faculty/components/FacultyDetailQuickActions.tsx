@@ -1,5 +1,5 @@
 import { useTranslation } from "@/hooks/useTranslation";
-import { EntityMessagingQuickActions } from "@/components/ui/EntityMessagingQuickActions";
+import { EntityMessagingActions } from "@/components/ui/EntityMessagingActions";
 import { teacherMessagingLabels } from "@/lib/faculty/facultyMessagingLabels";
 import { toMessagingRecipient, type Teacher } from "@mms/shared";
 
@@ -29,7 +29,8 @@ export function TeacherDetailQuickActions({
   const labels = teacherMessagingLabels(t);
 
   return (
-    <EntityMessagingQuickActions
+    <EntityMessagingActions
+      variant="button-group"
       primaryPhone={primaryPhone}
       primaryEmail={primaryEmail}
       labels={labels}

@@ -10,7 +10,13 @@ description: DRY (Don't Repeat Yourself) guidelines, extraction thresholds, boun
 ## 1. Proactive Search & Duplication Audits
 
 - **Search First:** Audit `@mms/shared`, `apps/frontend/src/lib/config/`, `apps/frontend/src/hooks/`, and `@/components/ui/` before authoring new utilities, DTOs, or primitives. Extend existing shared abstractions.
-- **Shared Chrome SSOT:** Reuse central primitives (`BulkSelectionBar`, `ModuleUniversalBulkActionBar`, `ModuleWorkBulkActionBar`, `ModuleTrashToggle`, `EmptyState`, `FieldErrorMessage`, `ModuleCommandMetricsGrid`, `WarningCallout`, `DirectoryCard`, `DetailSheet`) and `formStyles` tokens. Duplicating UI markup across feature directories is strictly banned.
+- **Shared Chrome SSOT:** Reuse central primitives and tokenized design systems:
+  - **Overlays:** `OverlayShell` (portal/backdrop/focus-trap/escape), `Modal` (`Modal.Header`, `Modal.Tabs`, `Modal.Footer`, `Modal.Error`), and `Drawer` (`Drawer.Header`, `Drawer.ArchiveBanner`, `Drawer.RestoreOrEditAction`, responsive bottom sheet + side slide-in).
+  - **Selection Docks:** `BulkActionDock` (`BulkActionDock.Action`, `BulkActionDock.Separator`, `BulkActionDock.Delete`, `BulkActionDock.Restore`, generic selection model, escape dismissal).
+  - **Selects & Dropdowns:** `DropdownSelectBase` & `useDropdownListbox` (popover positioning, keyboard arrow navigation, option highlight, and BiDi alignment).
+  - **Directory Cards & Grids:** `EntityCard` (`EntityCard.Header`, `EntityCard.MetaGrid`, `EntityCard.Footer`), `EntityCardsGrid` (responsive cols, virtualization, select-all bar integration).
+  - **Entity Messaging:** `EntityMessagingActions` (`dropdown`, `icon-row`, `button-group` channel dispatch).
+  - Duplicating UI markup, overlay shells, or messaging channels across feature directories is strictly banned.
 - **Entity Descriptors:** Consume declarative `EntityDescriptor<T>` registries (`@/components/common/entityRegistry`, `mms-ui-ux-design.md` §6). Runtime labels mandate `labelKey: AppTranslationKey`.
 - **Node 24 Built-Ins:** Use native `glob`, `crypto.hash()`, `URLPattern`, `using`/`await using`, and `process.loadEnvFile()` instead of introducing third-party packages.
 - **Zod DTO SSOT:** Share request/response contracts in `@mms/shared`. Derive variants via `.pick()`, `.omit()`, or `.extend()`.

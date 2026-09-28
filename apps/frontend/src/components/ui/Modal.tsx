@@ -1,36 +1,46 @@
-import React from "react";
-import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
-import { useOverlayBehavior } from "@/hooks/useOverlayBehavior";
+import React, { useId } from "react";
+import { motion } from "framer-motion";
+import { OverlayShell } from "@/components/ui/OverlayShell";
+import { ModalHeader } from "@/components/ui/ModalHeader";
+import { FormModalTabs } from "@/components/ui/FormModalTabs";
+import { FormModalFooter } from "@/components/ui/FormModalFooter";
+import { FormErrorBanner } from "@/components/ui/FormErrorBanner";
+import type { SubTab } from "@/components/ui/SubTabBar";
 import { useTranslation } from "@/hooks/useTranslation";
-import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { OVERLAY_BACKDROP } from "@/components/ui/formStyles";
 
-export interface ModalProps {
+export interface ModalProps<K extends string = string> {
   open: boolean;
   onClose: () => void;
-  title: React.ReactNode;
+  title?: React.ReactNode;
   subtitle?: React.ReactNode;
   icon?: React.ComponentType<{ className?: string }>;
   size?: "sm" | "md" | "lg" | "xl" | "2xl" | "3xl";
-  /** Extra block below the title row (e.g. progress bar). */
   headerExtra?: React.ReactNode;
-  /** Custom action elements rendered in the header (e.g. builder switch). */
   headerActions?: React.ReactNode;
-  /** Applied to the dialog panel (e.g. fixed height for tabbed forms). */
   panelClassName?: string;
   footer?: React.ReactNode;
-  /** Raise above other modals (nested dialogs). */
   priority?: boolean;
-  /**
-   * Whether the user may dismiss via Escape, the backdrop, or the close button.
-   * Defaults to true. Set false for overlays that must be resolved explicitly
-   * (the session-timeout warning) — focus trapping and scroll lock still apply.
-   */
   dismissible?: boolean;
   children: React.ReactNode;
+  // Consolidated FormModal capabilities
+  progress?: number;
+  progressLabel?: React.ReactNode;
+  error?: string | readonly string[];
+  tabs?: readonly SubTab<K>[];
+  activeTab?: K;
+  onTabChange?: (key: K) => void;
+  dir?: "ltr" | "rtl";
+  cancelLabel?: string;
+  saveLabel?: string;
+  onSave?: (options?: { keepOpen?: boolean }) => void | Promise<unknown>;
+  isDirty?: boolean;
+  saving?: boolean;
+  saveDisabled?: boolean;
+  saved?: boolean;
+  savedLabel?: string;
+  footerStart?: React.ReactNode;
+  hideFooter?: boolean;
 }
 
 const SIZE = {
@@ -43,17 +53,15 @@ const SIZE = {
 };
 
 /**
- * Modal — unified overlay dialog.
- *
- * @param {ModalProps} props - The component props.
- * @returns {React.ReactElement} The rendered Modal component.
+ * Unified accessible Modal primitive supporting modal headers, tab headers,
+ * form footers, progress indicators, and compound component composition.
  */
-export function Modal({
+export function Modal<K extends string = string>({
   open,
   onClose,
   title,
   subtitle,
-  icon: Icon,
+  icon,
   size = "md",
   headerExtra,
   headerActions,
@@ -62,90 +70,120 @@ export function Modal({
   priority = false,
   dismissible = true,
   children,
-}: ModalProps): React.ReactElement {
+  progress,
+  progressLabel,
+  error,
+  tabs,
+  activeTab,
+  onTabChange,
+  dir,
+  cancelLabel,
+  saveLabel,
+  onSave,
+  saving = false,
+  saveDisabled = false,
+  saved = false,
+  savedLabel,
+  footerStart,
+  hideFooter = false,
+}: ModalProps<K>): React.JSX.Element | null {
   const { t } = useTranslation();
-  const containerRef = useOverlayBehavior<HTMLDivElement>({ open, onClose, dismissible });
-  const titleId = React.useId();
+  const titleId = useId();
 
-  return createPortal(
-    <AnimatePresence>
-      {open && (
-        <div
+  const errors = (() => {
+    if (!error) return [];
+    return (Array.isArray(error) ? error : [error]).filter(Boolean);
+  })();
+
+  const resolvedFooter = (() => {
+    if (footer !== undefined) return footer;
+    if (hideFooter || !onSave) return null;
+    return (
+      <FormModalFooter
+        footerStart={footerStart}
+        cancelLabel={cancelLabel ?? t("common.cancel")}
+        saveLabel={saveLabel ?? t("common.save")}
+        savedLabel={savedLabel}
+        onClose={onClose}
+        onSave={() => {
+          void onSave();
+        }}
+        saving={saving}
+        saveDisabled={saveDisabled}
+        saved={saved}
+      />
+    );
+  })();
+
+  return (
+    <OverlayShell<HTMLDivElement>
+      open={open}
+      onClose={onClose}
+      dismissible={dismissible}
+      priority={priority}
+      containerClassName="flex items-center justify-center p-3 sm:p-4"
+    >
+      {({ containerRef }) => (
+        <motion.div
+          ref={containerRef}
+          initial={{ opacity: 0, scale: 0.96, y: 12 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.96, y: 8 }}
+          transition={{ duration: 0.18, ease: "easeOut" }}
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby={title ? titleId : undefined}
           data-print-unclamp
-          className={cn("fixed inset-0 flex items-center justify-center p-3 sm:p-4", priority ? "z-modal-priority" : "z-modal")}
+          className={cn(
+            "relative bg-card rounded-2xl border border-foreground/12 shadow-surface-lg w-full z-elevated max-h-modal flex flex-col min-w-0",
+            SIZE[size],
+            panelClassName,
+          )}
         >
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            data-overlay-backdrop
-            className={cn("absolute inset-0", OVERLAY_BACKDROP)}
-            onClick={dismissible ? onClose : undefined}
-          />
-          <motion.div
-            ref={containerRef}
-            initial={{ opacity: 0, scale: 0.96, y: 12 }}
-            animate={{ opacity: 1, scale: 1, y: 0 }}
-            exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.18, ease: "easeOut" }}
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby={titleId}
-            data-print-unclamp
-            className={cn(
-              "relative bg-card rounded-2xl border border-foreground/12 shadow-surface-lg w-full z-elevated max-h-modal flex flex-col min-w-0",
-              SIZE[size],
-              panelClassName
-            )}
-          >
-            {/* Header */}
-            <div className="flex-shrink-0 border-b border-border/40 px-5 py-4 bg-muted/5">
-              <div className="flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2.5">
-                  {Icon && (
-                    <div className="w-7 h-7 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
-                    </div>
-                  )}
-                  <div className="min-w-0">
-                    <h3 id={titleId} className="text-sm font-bold text-foreground leading-tight truncate">{title}</h3>
-                    {subtitle && <p className="text-xs text-muted-foreground truncate">{subtitle}</p>}
-                  </div>
-                </div>
-                <div className="flex shrink-0 items-center gap-2">
-                  {headerActions}
-                  {dismissible ? (
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="icon"
-                      onClick={onClose}
-                      aria-label={t("common.close")}
-                      className="min-h-11 min-w-11 h-11 w-11 rounded-lg hover:bg-muted text-muted-foreground hover:text-foreground transition-colors shadow-none"
-                    >
-                      <X className="w-4 h-4" />
-                    </Button>
-                  ) : null}
-                </div>
-              </div>
-              {headerExtra ? <div className="mt-3">{headerExtra}</div> : null}
-            </div>
+          {title ? (
+            <ModalHeader
+              titleId={titleId}
+              title={title}
+              subtitle={subtitle}
+              icon={icon}
+              headerActions={headerActions}
+              headerExtra={headerExtra}
+              progress={progress}
+              progressLabel={progressLabel}
+              onClose={onClose}
+              dismissible={dismissible}
+            />
+          ) : null}
 
-            {/* Body */}
-            <div data-print-unclamp className="flex-1 overflow-y-auto overscroll-contain px-5 py-4 min-h-0">
-              {children}
-            </div>
+          {errors.length > 0 && <FormErrorBanner errors={errors} />}
 
-            {/* Footer */}
-            {footer && (
-              <div data-print-hide className="px-5 py-4 border-t border-border flex justify-end gap-2.5 flex-shrink-0 bg-muted/20">
-                {footer}
-              </div>
+          <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
+            {tabs && activeTab !== undefined && onTabChange ? (
+              <FormModalTabs
+                tabs={tabs}
+                activeTab={activeTab}
+                onTabChange={onTabChange}
+                dir={dir}
+              >
+                {children}
+              </FormModalTabs>
+            ) : (
+              children
             )}
-          </motion.div>
-        </div>
+          </div>
+
+          {resolvedFooter && (
+            <div className="px-4 py-3 sm:px-6 border-t border-border/40 bg-muted/20 flex items-center justify-end rounded-b-2xl">
+              {resolvedFooter}
+            </div>
+          )}
+        </motion.div>
       )}
-    </AnimatePresence>,
-    document.body,
+    </OverlayShell>
   );
 }
+
+Modal.Header = ModalHeader;
+Modal.Tabs = FormModalTabs;
+Modal.Footer = FormModalFooter;
+Modal.Error = FormErrorBanner;

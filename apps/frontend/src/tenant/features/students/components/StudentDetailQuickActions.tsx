@@ -1,5 +1,5 @@
 import { useTranslation } from "@/hooks/useTranslation";
-import { EntityMessagingQuickActions } from "@/components/ui/EntityMessagingQuickActions";
+import { EntityMessagingActions } from "@/components/ui/EntityMessagingActions";
 import { toMessagingRecipient, type Student } from "@mms/shared";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
@@ -22,7 +22,8 @@ export function StudentDetailQuickActions({
   const { t } = useTranslation();
 
   return (
-    <EntityMessagingQuickActions
+    <EntityMessagingActions
+      variant="button-group"
       primaryPhone={primaryPhone}
       primaryEmail={primaryEmail}
       labels={{

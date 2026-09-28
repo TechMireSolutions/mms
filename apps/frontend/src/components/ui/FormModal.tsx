@@ -1,55 +1,25 @@
 import React from 'react';
-import { Modal } from '@/components/ui/Modal';
-import { FormErrorBanner } from '@/components/ui/FormErrorBanner';
-import { FormModalTabs } from '@/components/ui/FormModalTabs';
-import { FormModalFooter } from '@/components/ui/FormModalFooter';
-import type { SubTab } from '@/components/ui/SubTabBar';
-import { useTranslation } from '@/hooks/useTranslation';
+import { Modal, type ModalProps } from '@/components/ui/Modal';
 import { useFormModalLayout } from '@/components/ui/useFormModalLayout';
+import type { SubTab } from '@/components/ui/SubTabBar';
 
 export type { SubTab as FormModalTab };
 
-export interface FormModalProps<K extends string = string> {
-  open: boolean;
-  onClose: () => void;
-  title: React.ReactNode;
-  subtitle?: React.ReactNode;
-  icon?: React.ComponentType<{ className?: string }>;
-  size?: 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl';
-  panelClassName?: string;
+export interface FormModalProps<K extends string = string> extends ModalProps<K> {
   tall?: boolean;
-  progress?: number;
-  progressLabel?: React.ReactNode;
-  headerExtra?: React.ReactNode;
-  error?: string | readonly string[];
-  tabs?: readonly SubTab<K>[];
-  activeTab?: K;
-  onTabChange?: (key: K) => void;
   tabPanelIdPrefix?: string;
   lang?: string;
-  dir?: 'ltr' | 'rtl';
-  cancelLabel?: string;
-  saveLabel?: string;
-  onSave?: (options?: { keepOpen?: boolean }) => void | Promise<unknown>;
-  isDirty?: boolean;
-  saving?: boolean;
-  saveDisabled?: boolean;
-  saved?: boolean;
-  savedLabel?: string;
-  footerStart?: React.ReactNode;
-  hideFooter?: boolean;
   showBuilderToggle?: boolean;
   builderMode?: boolean;
   onBuilderModeChange?: (active: boolean) => void;
-  priority?: boolean;
-  /** Persist the current draft when switching tabs (default true). Disable for
-   *  create flows where tab navigation should not create the record early. */
   saveOnTabChange?: boolean;
-  children: React.ReactNode;
 }
 
+let warned = false;
+
 /**
- * Canonical add/edit entity dialog — `Modal` + optional `SubTabBar` + error banner + footer actions.
+ * @deprecated FormModal is deprecated and consolidated into Modal.
+ * Use `Modal` from `@/components/ui/Modal` directly.
  */
 export function FormModal<K extends string = string>({
   open,
@@ -67,8 +37,8 @@ export function FormModal<K extends string = string>({
   tabs,
   activeTab,
   onTabChange,
-  tabPanelIdPrefix: _tabPanelIdPrefix = 'form-modal-tab',
-  lang,
+  tabPanelIdPrefix: _tabPanelIdPrefix,
+  lang: _lang,
   dir,
   cancelLabel,
   saveLabel,
@@ -86,36 +56,35 @@ export function FormModal<K extends string = string>({
   priority = false,
   saveOnTabChange = true,
   children,
-}: FormModalProps<K>): React.JSX.Element {
-  const { t } = useTranslation();
-  const errors = (() => {
-    if (!error) return [];
-    return (Array.isArray(error) ? error : [error]).filter(Boolean);
-  })();
+}: FormModalProps<K>): React.JSX.Element | null {
+  if (process.env.NODE_ENV !== 'production' && !warned) {
+    warned = true;
+    console.warn(
+      '[MMS Deprecation] `FormModal` is deprecated. Use `Modal` from `@/components/ui/Modal` directly.',
+    );
+  }
 
-  const handleTabChange = (async (nextTab: K) => {
-      if (nextTab === activeTab) return;
-      if (saveOnTabChange && isDirty && onSave && !saveDisabled && !saving) {
-        try {
-          const result = await onSave({ keepOpen: true });
-          if (result === false) return;
-        } catch {
-          return;
-        }
+  const handleTabChange = async (nextTab: K) => {
+    if (nextTab === activeTab) return;
+    if (saveOnTabChange && isDirty && onSave && !saveDisabled && !saving) {
+      try {
+        const result = await onSave({ keepOpen: true });
+        if (result === false) return;
+      } catch {
+        return;
       }
-      onTabChange?.(nextTab);
-    });
+    }
+    onTabChange?.(nextTab);
+  };
 
   const {
-    hasTabs,
-    containerRef,
     panelClassName,
     effectiveSize,
     resolvedHeaderExtra,
     headerActions,
   } = useFormModalLayout({
     open,
-    size,
+    size: size as 'sm' | 'md' | 'lg' | 'xl' | '2xl' | '3xl',
     tall,
     progress,
     progressLabel,
@@ -127,36 +96,6 @@ export function FormModal<K extends string = string>({
     onBuilderModeChange,
     panelClassNameProp,
   });
-
-  const resolvedCancelLabel = cancelLabel ?? t('common.cancel');
-  const resolvedSaveLabel = saveLabel ?? t('common.save');
-
-  React.useEffect(() => {
-    if (!open || saving || saveDisabled || saved || !onSave) return;
-
-    const handleShortcut = (e: KeyboardEvent) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'Enter') {
-        e.preventDefault();
-        onSave();
-      }
-    };
-
-    window.addEventListener('keydown', handleShortcut);
-    return () => window.removeEventListener('keydown', handleShortcut);
-  }, [open, saving, saveDisabled, saved, onSave]);
-
-  const body = (
-    <div ref={containerRef} lang={lang} dir={dir} className="@container h-full" aria-busy={saving || undefined}>
-      <FormErrorBanner errors={errors} />
-      {hasTabs && activeTab !== undefined && onTabChange ? (
-        <FormModalTabs tabs={tabs!} activeTab={activeTab} onTabChange={handleTabChange} dir={dir}>
-          {children}
-        </FormModalTabs>
-      ) : (
-        children
-      )}
-    </div>
-  );
 
   return (
     <Modal
@@ -170,23 +109,22 @@ export function FormModal<K extends string = string>({
       headerActions={headerActions}
       panelClassName={panelClassName}
       priority={priority}
-      footer={
-        hideFooter || builderMode ? null : (
-          <FormModalFooter
-            footerStart={footerStart}
-            cancelLabel={resolvedCancelLabel}
-            saveLabel={resolvedSaveLabel}
-            savedLabel={savedLabel}
-            onClose={onClose}
-            onSave={onSave ? () => { void onSave(); } : undefined}
-            saving={saving}
-            saveDisabled={saveDisabled}
-            saved={saved}
-          />
-        )
-      }
+      error={error}
+      tabs={tabs}
+      activeTab={activeTab}
+      onTabChange={handleTabChange}
+      dir={dir}
+      cancelLabel={cancelLabel}
+      saveLabel={saveLabel}
+      onSave={onSave}
+      saving={saving}
+      saveDisabled={saveDisabled}
+      saved={saved}
+      savedLabel={savedLabel}
+      footerStart={footerStart}
+      hideFooter={hideFooter || builderMode}
     >
-      {body}
+      {children}
     </Modal>
   );
 }

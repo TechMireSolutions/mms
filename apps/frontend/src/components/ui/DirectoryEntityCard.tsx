@@ -1,73 +1,15 @@
-import React from "react";
-import type { ReactNode } from "react";
-import { motion, type HTMLMotionProps } from "framer-motion";
-import { FORM_CARD } from "@/components/ui/formStyles";
-import { cn } from "@/lib/utils";
+import {
+  EntityCard,
+  entityCardVariants,
+  entityCardVariantsReduced,
+  type EntityCardProps,
+} from "@/components/ui/EntityCard";
 
-import { CARD_STRIPE_BASE, CARD_STRIPE_INSET } from "@/lib/semanticTone";
+export const directoryEntityCardVariants = entityCardVariants;
+export const directoryEntityCardVariantsReduced = entityCardVariantsReduced;
+export type DirectoryEntityCardProps = EntityCardProps;
 
-export const directoryEntityCardVariants = {
-  hidden: { opacity: 0, y: 8 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: "easeOut" as const } },
-};
-
-export const directoryEntityCardVariantsReduced = {
-  hidden: { opacity: 1, y: 0 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0 } },
-};
-
-export interface DirectoryEntityCardProps extends Omit<HTMLMotionProps<"div">, "children"> {
-  isSelected?: boolean;
-  reducedMotion?: boolean;
-  accentClassName?: string | false | null;
-  children: ReactNode;
-}
-
-/** Shared Work directory entity card shell (FORM_CARD + selection chrome). */
-export const DirectoryEntityCard = React.memo(function DirectoryEntityCard({
-  isSelected = false,
-  reducedMotion = false,
-  accentClassName,
-  className,
-  children,
-  ...motionProps
-}: DirectoryEntityCardProps): React.JSX.Element {
-  const effectiveAccent =
-    accentClassName === false || accentClassName === null
-      ? null
-      : (accentClassName || "bg-primary/50 group-hover:bg-primary");
-
-  return (
-    <motion.div
-      layout={!reducedMotion}
-      variants={reducedMotion ? directoryEntityCardVariantsReduced : directoryEntityCardVariants}
-      className={cn(
-        FORM_CARD,
-        "p-4 space-y-4 shadow-xs [contain-intrinsic-size:180px] [content-visibility:auto]",
-        effectiveAccent && CARD_STRIPE_INSET,
-        isSelected
-          ? "border-primary/50 bg-primary/5 shadow-xs"
-          : "border-foreground/10 hover:border-foreground/20",
-        className,
-      )}
-      style={{
-        contain: "content",
-        ...motionProps.style,
-      }}
-      {...motionProps}
-    >
-      {effectiveAccent ? (
-        <div
-          aria-hidden="true"
-          className={cn(
-            CARD_STRIPE_BASE,
-            effectiveAccent,
-            reducedMotion ? "" : "transition-colors duration-150 ease-out",
-          )}
-        />
-      ) : null}
-      {children}
-    </motion.div>
-  );
-});
-
+/**
+ * Backward-compatible alias for unified EntityCard.
+ */
+export const DirectoryEntityCard = EntityCard;

@@ -8,7 +8,7 @@ import { TEACHERS_TAB_REGISTRY } from './moduleFieldSetupPersons.js';
 import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
 import { deepSanitizeStrings } from './schemas/sanitize.js';
 
-/** PUT /api/teachers/field-config — field registry JSON without formTabs SSOT. */
+/** PUT /api/faculty/field-config — field registry JSON without formTabs SSOT. */
 const teacherFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     columnRegistry: z.array(z.record(z.string(), z.unknown())).optional(),
@@ -20,7 +20,7 @@ export const teacherFieldConfigPutBodySchema = z.preprocess((raw) => {
   return deepSanitizeStrings(raw);
 }, teacherFieldConfigPutBodyBaseSchema);
 
-/** PUT /api/teachers/preferences — employee ID / contact-link prefs only. */
+/** PUT /api/faculty/preferences — employee ID / contact-link prefs only. */
 export const teacherPreferencesPutBodySchema = z
   .object({
     idPrefix: z.string().optional(),

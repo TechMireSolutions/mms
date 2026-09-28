@@ -41,7 +41,7 @@ describe('sessionLifecycleNavigation', () => {
         return new Response(JSON.stringify({ students: [] }), { status: 200 });
       }
 
-      if (url.includes('/api/faculty') || url.includes('/api/teachers')) {
+      if (url.includes('/api/faculty')) {
         teachersCalls++;
         if (teachersCalls === 1) {
           return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
