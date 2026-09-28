@@ -7,7 +7,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalShortcut } from '@/hooks/useGlobalShortcut';
 import { AppFooter } from '@/components/ui/AppFooter';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
-import { PlatformSidebar } from '@/platform/components/PlatformSidebar';
+import { PlatformSidebar, PlatformMobileSidebar } from '@/platform/components/PlatformSidebar';
 import { PlatformCommandPalette } from '@/platform/components/PlatformCommandPalette';
 import { AppShell } from '@/components/common/AppShell';
 
@@ -49,6 +49,7 @@ function PlatformAuthenticatedShell({
       dir={dir as "ltr" | "rtl"}
       lang={language}
       sidebar={<PlatformSidebar />}
+      mobileSidebar={<PlatformMobileSidebar />}
       topBar={
         <PlatformPageShellHeader
           onOpenSearch={() => setCommandPaletteOpen(true)}

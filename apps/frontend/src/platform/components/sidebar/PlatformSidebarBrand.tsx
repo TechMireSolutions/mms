@@ -10,7 +10,7 @@ export interface PlatformSidebarBrandProps {
   isMobile?: boolean;
   collapsed: boolean;
   reducedMotion: boolean;
-  onCloseMobile: () => void;
+  onCloseMobile?: () => void;
 }
 
 export function PlatformSidebarBrand({
@@ -26,7 +26,7 @@ export function PlatformSidebarBrand({
     <div className="h-16 flex items-center justify-between px-4 border-b border-sidebar-border shrink-0">
       <Link
         to={ROUTES.home}
-        onClick={() => isMobile && onCloseMobile()}
+        onClick={() => isMobile && onCloseMobile?.()}
         className="flex min-h-11 items-center gap-3 overflow-hidden hover:opacity-90 transition-opacity"
       >
         <div className="w-9 h-9 rounded-xl bg-card border border-sidebar-primary/40 flex items-center justify-center shrink-0 shadow-xs p-1 overflow-hidden">

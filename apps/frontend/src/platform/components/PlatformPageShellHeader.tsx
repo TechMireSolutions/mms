@@ -52,20 +52,23 @@ export function PlatformPageShellHeader({
             type="button"
             variant="ghost"
             size="icon"
-            onClick={openMobileSidebar}
+            onClick={(e) => {
+              e.stopPropagation();
+              openMobileSidebar();
+            }}
             aria-label={t('nav.openMenu')}
-            className="md:hidden flex min-h-11 min-w-11 h-11 w-11 shrink-0 items-center justify-center rounded-xl text-foreground hover:bg-muted"
+            className="lg:hidden flex min-h-11 min-w-11 h-11 w-11 shrink-0 items-center justify-center rounded-xl text-foreground hover:bg-muted cursor-pointer"
           >
             <Menu className="h-5 w-5" />
           </Button>
 
           {/* Mobile Brand Logo */}
-          <div className="md:hidden">
+          <div className="lg:hidden">
             <PlatformHeaderBrand />
           </div>
 
           {/* Desktop Breadcrumb Trail */}
-          <nav aria-label={t('common.breadcrumb')} className="hidden md:flex items-center gap-2 text-xs">
+          <nav aria-label={t('common.breadcrumb')} className="hidden lg:flex items-center gap-2 text-xs">
             <Link
               to={ROUTES.platformDashboard}
               className="font-medium text-muted-foreground hover:text-foreground transition-colors"

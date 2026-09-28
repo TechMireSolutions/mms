@@ -1,74 +1,31 @@
-import React, { Suspense, lazy } from "react";
-import { useLocation, useSearchParams, Link } from "react-router-dom";
-import { User, LayoutDashboard, Building2, BarChart3, Settings, Server, Activity, Plus, ArrowRight } from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
-import { useTranslation } from "@/hooks/useTranslation";
-import { useReducedMotion } from "@/hooks/useReducedMotion";
-import { ModuleScaffold } from "@/components/common/ModuleScaffold";
-import { usePlatformPermissions } from "@/platform/hooks/usePlatformPermissions";
-import { ROUTES } from "@/lib/config/routes";
-import { CardSkeleton, StatsSkeleton } from "@/components/ui/LoadingState";
-import { Button } from "@/components/ui/button";
-import { EmptyState } from "@/components/ui/EmptyState";
-
-import { PlatformAddAdminForm } from "@/platform/pages/PlatformAddAdminForm";
-import { containerVariantsConsole as containerVariants, itemVariants } from "@/platform/lib/animations";
-
-const PlatformDashboard = lazy(() => import("@/platform/components/PlatformDashboard").then(m => ({ default: m.PlatformDashboard })));
-const PlatformReports = lazy(() => import("@/platform/components/PlatformReports").then(m => ({ default: m.PlatformReports })));
-const PlatformSystemMaintenance = lazy(() => import("@/platform/components/PlatformSystemMaintenance").then(m => ({ default: m.PlatformSystemMaintenance })));
-const PlatformActivityLogsContent = lazy(() => import("@/platform/components/PlatformActivityLogsContent"));
-const PlatformAdminsContent = lazy(() => import("@/platform/components/PlatformAdminsContent").then(m => ({ default: m.PlatformAdminsContent })));
-const PlatformWorkspaceList = lazy(() => import("@/platform/components/PlatformWorkspaceList"));
-
-function TabFallback(): React.JSX.Element {
-  return <StatsSkeleton count={3} />;
-}
-
-function WorkspaceListFallback(): React.JSX.Element {
-  return <CardSkeleton count={2} className="grid-cols-1 lg:grid-cols-2" />;
-}
-
-type PlatformTab = "dashboard" | "work" | "reports" | "logs" | "system" | "setup";
+import React from 'react';
+import { Link } from 'react-router-dom';
+import { User, Plus, ArrowRight } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
+import { ModuleScaffold } from '@/components/common/ModuleScaffold';
+import { ROUTES } from '@/lib/config/routes';
+import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { PlatformAddAdminForm } from '@/platform/pages/PlatformAddAdminForm';
+import { containerVariantsConsole as containerVariants, itemVariants } from '@/platform/lib/animations';
+import { usePlatformConsoleController } from '@/platform/pages/usePlatformConsoleController';
+import { PlatformWorkTier } from '@/platform/components/tiers/PlatformWorkTier';
+import { PlatformReportsTier } from '@/platform/components/tiers/PlatformReportsTier';
+import { PlatformSetupTier } from '@/platform/components/tiers/PlatformSetupTier';
 
 /**
- * Authenticated apex console — clean view driven strictly by sidebar navigation links.
+ * Authenticated apex console aligned with the MMS 3-tier architecture:
+ * Work · Reports · Setup
  */
 export default function PlatformConsole(): React.JSX.Element {
-  const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
-  const location = useLocation();
-  const [searchParams] = useSearchParams();
-  const { platformUser, isSuperUser, canWorkspaces, canOnboard, canSystem } = usePlatformPermissions();
+  const controller = usePlatformConsoleController();
+  const { t, perms, activeTab } = controller;
 
-  const pathname = location.pathname;
-  const rawTab = searchParams.get("tab");
-  const activeTab: PlatformTab =
-    pathname === ROUTES.platformWorkspaces || rawTab === "work"
-      ? "work"
-      : pathname === ROUTES.platformReports || rawTab === "reports"
-        ? "reports"
-        : (pathname === ROUTES.platformActivityLogs || rawTab === "logs") && canSystem
-          ? "logs"
-          : (pathname === ROUTES.platformSystem || rawTab === "system") && canSystem
-            ? "system"
-            : rawTab === "setup"
-              ? "setup"
-              : "dashboard";
-
-  const tabHeaderProps = {
-    dashboard: {
-      icon: LayoutDashboard,
-      title: t("dashboard.title"),
-      subtitle: isSuperUser
-        ? t("platform.consoleSubtitle", { name: platformUser?.name ?? "" })
-        : t("platform.adminConsoleSubtitle", { name: platformUser?.name ?? "" }),
-    },
-    work: {
-      icon: Building2,
-      title: t("platform.manageMadrasas"),
-      subtitle: t("platform.consoleSubtitle", { name: platformUser?.name ?? "" }),
-      actions: canOnboard ? (
+  const headerActions = (() => {
+    if (activeTab === 'work' && controller.activeWorkSubTab === 'workspaces' && perms.canOnboard) {
+      return (
         <Button
           asChild
           className="min-h-11 rounded-xl font-bold px-5 shadow-sm shadow-primary/20 hover:shadow-md interactive-scale cursor-pointer"
@@ -82,47 +39,36 @@ export default function PlatformConsole(): React.JSX.Element {
             <ArrowRight className="w-4 h-4 ms-1 rtl:rotate-180" aria-hidden />
           </Link>
         </Button>
-      ) : null,
-    },
-    reports: {
-      icon: BarChart3,
-      title: t("module.reports"),
-      subtitle: t("platform.consoleSubtitle", { name: platformUser?.name ?? "" }),
-    },
-    logs: {
-      icon: Activity,
-      title: t("platform.activityLogsTitle"),
-      subtitle: t("platform.activityLogsSubtitle"),
-    },
-    system: {
-      icon: Server,
-      title: t("platform.systemMaintenance"),
-      subtitle: t("platform.systemMaintenanceSubtitle"),
-    },
-    setup: {
-      icon: Settings,
-      title: t("platform.adminsTitle"),
-      subtitle: t("platform.adminsSubtitle"),
-      actions: <PlatformAddAdminForm asTriggerOnly />,
-    },
-  }[activeTab];
+      );
+    }
+    if (activeTab === 'setup' && controller.activeSetupSubTab === 'admins' && perms.canAdmins) {
+      return <PlatformAddAdminForm asTriggerOnly />;
+    }
+    return undefined;
+  })();
+
+  const hasAnyCapability = perms.canWorkspaces || perms.canAdmins || perms.canSystem;
 
   return (
     <ModuleScaffold
-      seoTitle={`${tabHeaderProps.title} | ${t("platform.consoleTitle")}`}
-      seoDescription={tabHeaderProps.subtitle}
-      headerIcon={tabHeaderProps.icon}
-      headerTitle={tabHeaderProps.title}
-      headerSubtitle={tabHeaderProps.subtitle}
-      headerActions={tabHeaderProps.actions}
+      seoTitle={`${controller.headerProps.title} | ${t('platform.consoleTitle')}`}
+      seoDescription={controller.headerProps.subtitle}
+      headerIcon={controller.headerProps.icon}
+      headerTitle={controller.headerProps.title}
+      headerSubtitle={controller.headerProps.subtitle}
+      headerActions={headerActions}
+      tabs={controller.topTabs}
+      activeTab={controller.activeTab}
+      onTabChange={controller.handleTabChange}
+      panelIdPrefix="platform-main-tab"
     >
       <motion.div
         variants={containerVariants}
-        initial={reducedMotion ? false : "hidden"}
+        initial={reducedMotion ? false : 'hidden'}
         animate="show"
         className="space-y-6"
       >
-        {canWorkspaces ? (
+        {hasAnyCapability ? (
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}
@@ -131,36 +77,40 @@ export default function PlatformConsole(): React.JSX.Element {
               exit={reducedMotion ? undefined : { opacity: 0, y: -8 }}
               transition={{ duration: 0.2 }}
             >
-              <Suspense fallback={<TabFallback />}>
-                {activeTab === "dashboard" && <PlatformDashboard />}
+              {activeTab === 'work' && (
+                <PlatformWorkTier
+                  activeSubTab={controller.activeWorkSubTab}
+                  onSubTabChange={controller.handleWorkSubTabChange}
+                  canSystem={perms.canSystem}
+                />
+              )}
 
-                {activeTab === "work" && (
-                  <div className="space-y-6">
-                    <Suspense fallback={<WorkspaceListFallback />}>
-                      <PlatformWorkspaceList />
-                    </Suspense>
-                  </div>
-                )}
+              {activeTab === 'reports' && (
+                <PlatformReportsTier
+                  activeSubTab={controller.activeReportsSubTab}
+                  onSubTabChange={controller.handleReportsSubTabChange}
+                />
+              )}
 
-                {activeTab === "reports" && <PlatformReports />}
-
-                {activeTab === "logs" && canSystem && <PlatformActivityLogsContent />}
-
-                {activeTab === "system" && canSystem && <PlatformSystemMaintenance />}
-
-                {activeTab === "setup" && <PlatformAdminsContent />}
-              </Suspense>
+              {activeTab === 'setup' && (
+                <PlatformSetupTier
+                  activeSubTab={controller.activeSetupSubTab}
+                  onSubTabChange={controller.handleSetupSubTabChange}
+                  canAdmins={perms.canAdmins}
+                  canSystem={perms.canSystem}
+                />
+              )}
             </motion.div>
           </AnimatePresence>
         ) : (
           <motion.div variants={itemVariants}>
             <EmptyState
               icon={User}
-              title={t("platform.adminNoCapabilities")}
+              title={t('platform.adminNoCapabilities')}
               description={
-                canOnboard
-                  ? t("platform.permOnboardDesc")
-                  : t("platform.adminLimitedDescription")
+                perms.canOnboard
+                  ? t('platform.permOnboardDesc')
+                  : t('platform.adminLimitedDescription')
               }
             />
           </motion.div>

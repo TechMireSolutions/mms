@@ -18,7 +18,15 @@ vi.mock('@/hooks/useTranslation', () => ({
         'platform.consoleSubtitle': `System management for ${params?.name ?? 'Admin'}`,
         'platform.manageMadrasas': 'Madrasas Directory',
         'auth.createMadrasa': 'Create Madrasa',
+        'module.work': 'Work',
+        'module.workHint': 'Daily operations',
         'module.reports': 'Platform Analytics',
+        'module.reportsHint': 'Analytics and metrics',
+        'module.setup': 'Platform Setup',
+        'module.setupHint': 'System configuration',
+        'platform.workspacesTab': 'Workspaces',
+        'platform.analyticsTab': 'Analytics',
+        'platform.telemetryTab': 'Telemetry',
         'platform.activityLogsTitle': 'Audit & Activity Logs',
         'platform.activityLogsSubtitle': 'Security events and mutation history',
         'platform.systemMaintenance': 'System Maintenance',
@@ -61,17 +69,23 @@ vi.mock('@/platform/components/PlatformAdminsContent', () => ({
   PlatformAdminsContent: () => <div data-testid="platform-admins">Admins View</div>,
 }));
 
+vi.mock('@/platform/pages/PlatformAddAdminForm', () => ({
+  PlatformAddAdminForm: () => <button data-testid="add-admin-btn">Add Admin</button>,
+}));
+
 describe('PlatformConsole', () => {
+  const fullPermissions = {
+    platformUser: { id: 'u1', name: 'Zaid', email: 'zaid@example.com', role: 'super_user' },
+    isSuperUser: true,
+    canWorkspaces: true,
+    canOnboard: true,
+    canSystem: true,
+    canSettings: true,
+    canAdmins: true,
+  };
+
   it('renders dashboard by default for authorized platform operators', () => {
-    mockUsePlatformPermissions.mockReturnValue({
-      platformUser: { id: 'u1', name: 'Zaid', email: 'zaid@example.com', role: 'super_user' },
-      isSuperUser: true,
-      canWorkspaces: true,
-      canOnboard: true,
-      canSystem: true,
-      canSettings: true,
-      canAdmins: true,
-    });
+    mockUsePlatformPermissions.mockReturnValue(fullPermissions);
 
     const html = renderToStaticMarkup(
       <MemoryRouter initialEntries={['/platform/dashboard']}>
@@ -106,15 +120,7 @@ describe('PlatformConsole', () => {
   });
 
   it('renders Workspaces view and onboarding button when on work tab', () => {
-    mockUsePlatformPermissions.mockReturnValue({
-      platformUser: { id: 'u1', name: 'Zaid', email: 'zaid@example.com', role: 'super_user' },
-      isSuperUser: true,
-      canWorkspaces: true,
-      canOnboard: true,
-      canSystem: true,
-      canSettings: true,
-      canAdmins: true,
-    });
+    mockUsePlatformPermissions.mockReturnValue(fullPermissions);
 
     const html = renderToStaticMarkup(
       <MemoryRouter initialEntries={['/platform/workspaces']}>
@@ -124,5 +130,61 @@ describe('PlatformConsole', () => {
 
     expect(html).toContain('Madrasas Directory');
     expect(html).toContain('Create Madrasa');
+    expect(html).toContain('Workspaces');
+  });
+
+  it('renders 3 main module tabs: Work, Reports, and Setup', () => {
+    mockUsePlatformPermissions.mockReturnValue(fullPermissions);
+
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/platform/workspaces']}>
+        <PlatformConsole />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('Work');
+    expect(html).toContain('Platform Analytics');
+    expect(html).toContain('Platform Setup');
+  });
+
+  it('renders Reports tier when navigating to reports tab', () => {
+    mockUsePlatformPermissions.mockReturnValue(fullPermissions);
+
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/platform/reports']}>
+        <PlatformConsole />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('Platform Analytics');
+    expect(html).toContain('Analytics');
+    expect(html).toContain('Telemetry');
+  });
+
+  it('renders Setup tier when navigating to setup tab', () => {
+    mockUsePlatformPermissions.mockReturnValue(fullPermissions);
+
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/platform/dashboard?tab=setup']}>
+        <PlatformConsole />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('Platform Operators');
+    expect(html).toContain('System Maintenance');
+    expect(html).toContain('Add Admin');
+  });
+
+  it('renders Activity Logs when navigating to activity logs route', () => {
+    mockUsePlatformPermissions.mockReturnValue(fullPermissions);
+
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/platform/activity-logs']}>
+        <PlatformConsole />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('Activity Logs');
   });
 });
+

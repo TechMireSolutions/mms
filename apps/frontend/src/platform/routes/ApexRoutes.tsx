@@ -5,17 +5,17 @@ import PlatformBootGate, { PlatformFallbackRoute } from '@/platform/components/P
 import { PlatformFirstRunGate } from '@/platform/components/PlatformFirstRunGate';
 import { PlatformPageShell } from '@/platform/components/PlatformPageShell';
 import RouteStatusFallback from '@/components/routing/RouteStatusFallback';
+import { PlatformAuthProvider } from '@/platform/lib/PlatformAuthContext';
+import { ApexBootPrefetch } from '@/platform/components/ApexBootPrefetch';
 
 const ApexHome = React.lazy(() => import('@/platform/pages/ApexHome'));
 const ApexWorkspaceGate = React.lazy(() => import('@/platform/pages/ApexWorkspaceGate'));
 const TenantNotFoundPage = React.lazy(() => import('@/platform/pages/TenantNotFoundPage'));
 const OnboardingWizard = React.lazy(() => import('@/platform/pages/onboarding/OnboardingWizard'));
 const PlatformAccount = React.lazy(() => import('@/platform/pages/PlatformAccount'));
-const PlatformAdmins = React.lazy(() => import('@/platform/pages/PlatformAdmins'));
 const PlatformForgotPassword = React.lazy(() => import('@/platform/pages/auth/PlatformForgotPassword'));
 const PlatformLoginPage = React.lazy(() => import('@/platform/pages/auth/PlatformLoginPage'));
 const PlatformConsole = React.lazy(() => import('@/platform/pages/PlatformConsole'));
-const PlatformErdPage = React.lazy(() => import('@/platform/pages/PlatformErdPage'));
 
 const apexTenantGate = (
   <ApexWorkspaceGate variant="tenantOnly" showWorkspaceList />
@@ -63,14 +63,14 @@ export default function ApexRoutes(): React.JSX.Element {
       </Route>
       <Route element={<PlatformBootGate requireAuth requirePermission="admins" />}>
         <Route element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PlatformPageShell width="7xl" /></React.Suspense>}>
-          <Route path={ROUTES.platformAdmins} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformAdmins /></React.Suspense>} />
+          <Route path={ROUTES.platformAdmins} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
         </Route>
       </Route>
       <Route element={<PlatformBootGate requireAuth requirePermission="system" />}>
         <Route element={<React.Suspense fallback={<RouteStatusFallback fullScreen />}><PlatformPageShell width="7xl" /></React.Suspense>}>
           <Route path={ROUTES.platformActivityLogs} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
           <Route path={ROUTES.platformSystem} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
-          <Route path={ROUTES.platformErd} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformErdPage /></React.Suspense>} />
+          <Route path={ROUTES.platformErd} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
         </Route>
       </Route>
 
@@ -78,9 +78,6 @@ export default function ApexRoutes(): React.JSX.Element {
     </Routes>
   );
 }
-
-import { PlatformAuthProvider } from '@/platform/lib/PlatformAuthContext';
-import { ApexBootPrefetch } from '@/platform/components/ApexBootPrefetch';
 
 export function ApexRoutesWithSuspense(): React.JSX.Element {
   return (
