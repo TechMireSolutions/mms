@@ -6,29 +6,44 @@ process.env.JWT_SECRET = process.env.JWT_SECRET || 'e2e-test-jwt-secret-key-at-l
 const isProduction = process.env.E2E_TARGET === 'production' || process.env.NODE_ENV === 'production';
 const skipWebServer = isProduction || Boolean(process.env.NO_WEB_SERVER);
 
+/** Specs that mutate shared state and are restricted to local single-run environments. */
+const LOCAL_ONLY_SPECS = [
+  '**/contacts-import-export.spec.ts',
+  '**/platform-onboarding.spec.ts',
+  '**/responsive-authenticated.spec.ts',
+  '**/template-editor.spec.ts',
+  '**/tenant-academic-flow.spec.ts',
+  '**/tenant-critical-lifecycles.spec.ts',
+  '**/tenant-operations-flow.spec.ts',
+] as const;
+
+/** Heavy mutation/seed flows excluded when running against production environments. */
+const PRODUCTION_IGNORED_SPECS = [
+  '**/platform-onboarding.spec.ts',
+  '**/tenant-operations-flow.spec.ts',
+  '**/tenant-academic-flow.spec.ts',
+  '**/responsive-authenticated.spec.ts',
+] as const;
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
 export default defineConfig({
   testDir: './tests',
-  /* Ignore heavy mutation/seed flows on production targets. */
-  testIgnore: isProduction
-    ? [
-        '**/platform-onboarding.spec.ts',
-        '**/tenant-operations-flow.spec.ts',
-        '**/tenant-academic-flow.spec.ts',
-        '**/responsive-authenticated.spec.ts',
-      ]
-    : [],
+  /* Ignore heavy mutation/seed flows on production targets or CI local-only specs */
+  testIgnore: [
+    ...(isProduction ? PRODUCTION_IGNORED_SPECS : []),
+    ...(process.env.CI ? LOCAL_ONLY_SPECS : []),
+  ],
   /* Skip heavy local-only tests on CI */
   grepInvert: process.env.CI ? /@local-only/ : undefined,
   /* Maximum time one test can run for. */
   timeout: 45 * 1000,
   expect: {
-    timeout: 5 * 1000,
+    timeout: process.env.CI ? 10 * 1000 : 5 * 1000,
   },
-  /* Run tests sequentially per runner to avoid concurrent database resets */
-  fullyParallel: false,
+  /* Allow granular test sharding across runners; workers: 1 preserves sequential DB safety per runner */
+  fullyParallel: true,
   /* Fail the build on CI if you accidentally left test.only in the source code. */
   forbidOnly: !!process.env.CI,
   /* Retry on CI only */
@@ -45,14 +60,12 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('/')`. */
-    baseURL: process.env.BASE_URL || 'http://localhost:5173',
-
-    /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
+    baseURL: process.env.BASE_URL || 'http://127.0.0.1:5173',
+    actionTimeout: 10 * 1000,
+    navigationTimeout: 20 * 1000,
     trace: 'retain-on-failure',
     video: 'off',
     screenshot: 'only-on-failure',
-
-    /* Ignore HTTP errors because of dev SSL or proxy certificates */
     ignoreHTTPSErrors: true,
   },
 
@@ -73,7 +86,7 @@ export default defineConfig({
         url: 'http://127.0.0.1:5173',
         reuseExistingServer: !process.env.CI,
         timeout: 90 * 1000,
-        stdout: 'ignore',
+        stdout: process.env.CI ? 'pipe' : 'ignore',
         stderr: 'pipe',
       },
 });

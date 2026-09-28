@@ -17,7 +17,7 @@ permissions:
   contents: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
@@ -121,6 +121,14 @@ jobs:
       # @mms/shared, e2e) via turbo — shared/e2e were previously unlinted.
       - name: Lint (all packages)
         run: pnpm lint
+
+      # Production build of all packages (validates Vite rollup build & backend compilation)
+      - name: Build (all packages)
+        run: pnpm build
+
+      # Frontend bundle budget gate: catches chunk bloat and un-lazy-loaded dependencies
+      - name: Frontend bundle budget
+        run: pnpm run check:bundle
 
       # Ratchet: declared-but-unenforced norms (no `any` in source, no raw hex
       # colours outside @theme, file-size bands). Baselines live in the script.
@@ -296,7 +304,7 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
     steps:
-      - name: Check Status of All Jobs
+      - name: Evaluate CI Gate & Publish Summary
         run: |
           echo "==================== CI Gate Summary ===================="
           echo "Lint & Typecheck:       ${{ needs.lint-and-typecheck.result }}"
@@ -340,37 +348,41 @@ jobs:
           fi
 
           if [ "$failed" -ne 0 ]; then
+            STATUS_HEADER="❌ MMS CI Gate Status: Failed"
+          else
+            STATUS_HEADER="🚀 MMS CI Gate Status: Passed"
+          fi
+
+          cat << EOF >> $GITHUB_STEP_SUMMARY
+          ### ${STATUS_HEADER}
+
+          | Quality Check | Status | Execution Mode |
+          |---|---|---|
+          | **Lint & Typecheck** | \`${{ needs.lint-and-typecheck.result }}\` | Turbo Cache Concurrent |
+          | **Frontend Tests** | \`${{ needs.test-frontend.result }}\` | 2-Way Sharded Parallel Matrix |
+          | **Frontend Coverage** | \`${{ needs.test-frontend-coverage.result }}\` | Merged Blob Reports & Coverage Enforcement |
+          | **Backend Unit Tests** | \`${{ needs.test-backend-unit.result }}\` | In-Memory Fast Unit + Coverage Gate |
+          | **Backend DB Tests** | \`${{ needs.test-backend-db.result }}\` | Docker Postgres 16 (Healthchecked, tmpfs) |
+          | **E2E Tests** | \`${{ needs.e2e.result }}\` | 4-Way Sharded Playwright Matrix |
+          EOF
+
+          if [ "$failed" -ne 0 ]; then
             echo "CI Gate failed: One or more required checks did not succeed."
             exit 1
           fi
 
           echo "CI Gate passed: All required checks succeeded (or were safely bypassed via hermetic path filtering)."
 
-      - name: Publish CI Gate Step Summary
-        run: |
-          cat << 'EOF' >> $GITHUB_STEP_SUMMARY
-          ### 🚀 MMS CI Gate Status: Passed
-
-          | Quality Check | Status | Execution Mode |
-          |---|---|---|
-          | **Lint & Typecheck** | `${{ needs.lint-and-typecheck.result }}` | Turbo Cache Concurrent |
-          | **Frontend Tests** | `${{ needs.test-frontend.result }}` | 2-Way Sharded Parallel Matrix |
-          | **Frontend Coverage** | `${{ needs.test-frontend-coverage.result }}` | Merged Blob Reports & Coverage Enforcement |
-          | **Backend Unit Tests** | `${{ needs.test-backend-unit.result }}` | In-Memory Fast Unit + Coverage Gate |
-          | **Backend DB Tests** | `${{ needs.test-backend-db.result }}` | Docker Postgres 16 (Healthchecked, tmpfs) |
-          | **E2E Tests** | `${{ needs.e2e.result }}` | 2-Way Sharded Playwright Matrix |
-          EOF
-
   e2e:
     needs: [changes]
     if: ${{ needs.changes.outputs.e2e == 'true' || github.event_name != 'pull_request' }}
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        shardIndex: [1, 2]
-        shardTotal: [2]
+        shardIndex: [1, 2, 3, 4]
+        shardTotal: [4]
     services:
       postgres:
         image: postgres:16-alpine
@@ -399,9 +411,8 @@ jobs:
 
       - name: Setup Environment
         uses: ./.github/actions/setup-mms
-
-      - name: Fast Build Apps
-        run: pnpm build
+        with:
+          build-shared: 'true'
 
       - name: Run DB Migrations
         run: pnpm --filter mms-backend run db:migrate
@@ -411,15 +422,11 @@ jobs:
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
-          key: playwright-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
 
-      - name: Install Playwright Browsers
+      - name: Install Playwright Chromium Browser
         if: steps.playwright-cache.outputs.cache-hit != 'true'
-        run: pnpm --filter e2e-tests exec playwright install chromium --with-deps
-
-      - name: Install Playwright OS Dependencies (if cached)
-        if: steps.playwright-cache.outputs.cache-hit == 'true'
-        run: pnpm --filter e2e-tests exec playwright install-deps chromium
+        run: pnpm --filter e2e-tests exec playwright install chromium
 
       - name: Run E2E Tests with Sharding
         run: pnpm test:e2e --shard=${{ matrix.shardIndex }}/${{ matrix.shardTotal }}

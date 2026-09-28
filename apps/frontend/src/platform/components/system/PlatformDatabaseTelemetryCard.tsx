@@ -136,20 +136,34 @@ export function PlatformDatabaseTelemetryCard({
         </div>
 
         <div className="pt-2 border-t border-border/50 text-xs">
-          <div className="text-3xs font-medium text-muted-foreground mb-1.5">
-            Active Tenant Transaction Leases:
+          <div className="text-3xs font-medium text-muted-foreground mb-1.5 flex items-center justify-between">
+            <span>Active Tenant Transaction Leases:</span>
+            {activeTenants.some((it) => it.count >= capLimit - 1) && (
+              <span className="text-3xs font-semibold text-warning">
+                Near Cap Warning
+              </span>
+            )}
           </div>
           {activeTenants.length > 0 ? (
             <div className="flex flex-wrap gap-1.5 max-h-16 overflow-y-auto">
-              {activeTenants.map((item) => (
-                <span
-                  key={item.tenant}
-                  className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-3xs font-mono bg-muted/50 border border-border/50 text-foreground"
-                >
-                  <span className="font-semibold">{item.tenant}:</span>
-                  <span className="text-primary font-bold">{item.count} tx</span>
-                </span>
-              ))}
+              {activeTenants.map((item) => {
+                const isNearCap = item.count >= capLimit - 1;
+                return (
+                  <span
+                    key={item.tenant}
+                    className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-3xs font-mono border ${
+                      isNearCap
+                        ? 'bg-warning/20 border-warning/50 text-warning-foreground animate-pulse'
+                        : 'bg-muted/50 border-border/50 text-foreground'
+                    }`}
+                  >
+                    <span className="font-semibold">{item.tenant}:</span>
+                    <span className={isNearCap ? 'text-destructive font-black' : 'text-primary font-bold'}>
+                      {item.count} tx {isNearCap ? `(near ${capLimit})` : ''}
+                    </span>
+                  </span>
+                );
+              })}
             </div>
           ) : (
             <div className="text-3xs text-muted-foreground/80 italic flex items-center gap-1.5 py-0.5">

@@ -95,4 +95,22 @@ describe('PlatformDatabaseTelemetryCard', () => {
 
     expect(html).toContain('platform.db.noActiveTenantTx');
   });
+
+  it('renders near cap warning when a tenant approaches connection limit', () => {
+    const nearCapTelemetry: PlatformTelemetryData = {
+      ...mockTelemetry,
+      tenantDb: {
+        ...mockTelemetry.tenantDb!,
+        tenantCapLimit: 5,
+        activeTenants: [{ tenant: 'tenant-busy', count: 4 }],
+      },
+    };
+
+    const html = renderToStaticMarkup(
+      <PlatformDatabaseTelemetryCard telemetry={nearCapTelemetry} />,
+    );
+
+    expect(html).toContain('Near Cap Warning');
+    expect(html).toContain('near 5');
+  });
 });

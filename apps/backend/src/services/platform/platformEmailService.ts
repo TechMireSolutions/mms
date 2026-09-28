@@ -18,32 +18,16 @@ export interface PlatformEmailResult {
   message?: string;
 }
 
-function readEnv(name: string): string {
-  return process.env[name]?.trim() ?? '';
-}
+import {
+  readEnv,
+  isPlatformSmtpTransportConfigured,
+  isPlatformResendConfigured,
+  isPlatformSmtpConfigured,
+  platformFromHeader,
+  resolvePlatformAppOrigin,
+} from './platformEmailConfig.js';
 
-function isPlatformSmtpTransportConfigured(): boolean {
-  const host = readEnv('PLATFORM_SMTP_HOST');
-  const user = readEnv('PLATFORM_SMTP_USER');
-  const pass = readEnv('PLATFORM_SMTP_PASS');
-  const from = readEnv('PLATFORM_EMAIL_FROM');
-  return Boolean(host && user && pass && from);
-}
-
-function isPlatformResendConfigured(): boolean {
-  return Boolean(readEnv('PLATFORM_RESEND_API_KEY') && readEnv('PLATFORM_EMAIL_FROM'));
-}
-
-/** True when platform email can be sent (Resend API or SMTP + from address). */
-export function isPlatformSmtpConfigured(): boolean {
-  return isPlatformResendConfigured() || isPlatformSmtpTransportConfigured();
-}
-
-function platformFromHeader(): string {
-  const fromAddress = readEnv('PLATFORM_EMAIL_FROM');
-  const fromName = readEnv('PLATFORM_EMAIL_FROM_NAME') || 'MMS Platform';
-  return `"${fromName}" <${fromAddress}>`;
-}
+export { isPlatformSmtpConfigured, resolvePlatformAppOrigin };
 
 async function sendViaResend(input: PlatformEmailInput): Promise<PlatformEmailResult> {
   const apiKey = readEnv('PLATFORM_RESEND_API_KEY');
@@ -137,17 +121,6 @@ export async function sendPlatformEmail(input: PlatformEmailInput): Promise<Plat
   return sendViaSmtp(input);
 }
 
-/** Public apex URL for links in platform emails (reset password, etc.). */
-export function resolvePlatformAppOrigin(): string {
-  const configured = readEnv('PLATFORM_APP_URL') || readEnv('VITE_APP_URL');
-  if (configured) return configured.replace(/\/$/, '');
-  if (process.env.NODE_ENV === 'production') {
-    // Fail closed rather than emailing links that point at localhost.
-    throw new Error('PLATFORM_APP_URL is required in production for platform email links');
-  }
-  return 'http://localhost:5173';
-}
-
 export interface PlatformVerificationEmailInput {
   email: string;
   code: string;
@@ -156,8 +129,6 @@ export interface PlatformVerificationEmailInput {
   ttlMinutes: number;
   logLabel: string;
 }
-
-
 
 /**
  * Sends a platform OTP email.
@@ -188,21 +159,19 @@ export async function dispatchPlatformVerificationEmail(
     }
 
     const detail = result.message || 'unknown';
-    if (!isDevCredentialLoggingEnabled()) {
-      logger.warn({ email: maskEmail(input.email), detail, label: input.logLabel }, 'email delivery failed');
-      return { sent: false };
-    }
-
-    logger.warn({ email: maskEmail(input.email), code: input.code, detail, label: input.logLabel }, 'email delivery failed (dev credential logging enabled)');
-    return { sent: false, devCode: input.code };
+    const devLog = isDevCredentialLoggingEnabled();
+    logger.warn(
+      { email: maskEmail(input.email), ...(devLog ? { code: input.code } : {}), detail, label: input.logLabel },
+      `email delivery failed${devLog ? ' (dev logging enabled)' : ''}`,
+    );
+    return { sent: false, ...(devLog ? { devCode: input.code } : {}) };
   } catch (error) {
     const detail = error instanceof Error ? error.message : String(error);
-    if (!isDevCredentialLoggingEnabled()) {
-      logger.warn({ email: maskEmail(input.email), detail, label: input.logLabel }, 'email delivery threw');
-      return { sent: false };
-    }
-
-    logger.warn({ email: maskEmail(input.email), code: input.code, detail, label: input.logLabel }, 'email delivery threw (dev credential logging enabled)');
-    return { sent: false, devCode: input.code };
+    const devLog = isDevCredentialLoggingEnabled();
+    logger.warn(
+      { email: maskEmail(input.email), ...(devLog ? { code: input.code } : {}), detail, label: input.logLabel },
+      `email delivery threw${devLog ? ' (dev logging enabled)' : ''}`,
+    );
+    return { sent: false, ...(devLog ? { devCode: input.code } : {}) };
   }
 }

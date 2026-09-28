@@ -18,6 +18,7 @@ const PlatformLoginPage = React.lazy(() => import('@/platform/pages/auth/Platfor
 const PlatformConsole = React.lazy(() => import('@/platform/pages/PlatformConsole'));
 const PlatformUsersPage = React.lazy(() => import('@/platform/pages/PlatformUsersPage'));
 const PlatformSettingsPage = React.lazy(() => import('@/platform/pages/PlatformSettingsPage'));
+const PlatformErdPage = React.lazy(() => import('@/platform/pages/PlatformErdPage'));
 
 const apexTenantGate = (
   <ApexWorkspaceGate variant="tenantOnly" showWorkspaceList />
@@ -74,7 +75,7 @@ export default function ApexRoutes(): React.JSX.Element {
           <Route path={ROUTES.platformSettings} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformSettingsPage /></React.Suspense>} />
           <Route path={ROUTES.platformActivityLogs} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
           <Route path={ROUTES.platformSystem} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
-          <Route path={ROUTES.platformErd} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformConsole /></React.Suspense>} />
+          <Route path={ROUTES.platformErd} element={<React.Suspense fallback={<RouteStatusFallback />}><PlatformErdPage /></React.Suspense>} />
         </Route>
       </Route>
 

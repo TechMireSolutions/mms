@@ -1,8 +1,10 @@
 import React, { Suspense, lazy } from 'react';
-import { ShieldCheck, Server, Waypoints } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ShieldCheck, Server, Waypoints, ArrowUpRight } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SubTabBar, type SubTab } from '@/components/ui/SubTabBar';
 import { CardSkeleton } from '@/components/ui/LoadingState';
+import { ROUTES } from '@/lib/config/routes';
 
 const PlatformAdminsContent = lazy(() =>
   import('@/platform/components/PlatformAdminsContent').then((m) => ({ default: m.PlatformAdminsContent })),
@@ -70,6 +72,28 @@ export function PlatformSetupTier({
         variant="pill"
         panelIdPrefix="platform-setup-subtab"
       />
+
+      {activeSubTab === 'admins' && canAdmins && (
+        <div className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs">
+          <span className="text-muted-foreground font-medium">
+            Looking for operator permissions matrix, reports, and directory?
+          </span>
+          <Link to={ROUTES.platformUsers} className="inline-flex items-center gap-1 font-bold text-primary hover:underline">
+            Open Platform Users Module <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
+
+      {activeSubTab === 'system' && canSystem && (
+        <div className="flex items-center justify-between p-3 rounded-xl bg-primary/5 border border-primary/20 text-xs">
+          <span className="text-muted-foreground font-medium">
+            Configure Apex TLS, Appearance themes, and Security Governance in Settings.
+          </span>
+          <Link to={ROUTES.platformSettings} className="inline-flex items-center gap-1 font-bold text-primary hover:underline">
+            Open Platform Settings <ArrowUpRight className="w-3.5 h-3.5" />
+          </Link>
+        </div>
+      )}
 
       <Suspense fallback={<SetupFallback />}>
         {activeSubTab === 'admins' && canAdmins && <PlatformAdminsContent />}

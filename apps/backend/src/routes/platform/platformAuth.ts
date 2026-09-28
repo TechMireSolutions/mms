@@ -3,54 +3,29 @@ import {
   authenticatePlatform,
   optionalAuthenticatePlatform,
   requireMainDomain,
-  type PlatformAuthenticatedRequest,
-  type PlatformOptionalAuthRequest,
 } from '../../middleware/authenticatePlatform.js';
-import {
-  issuePlatformSession,
-  loginPlatformUser,
-  logoutPlatformUser,
-  type PlatformAccessTokenPayload,
-} from '../../services/platform/platformAuthService.js';
-import { PLATFORM_ACCESS_COOKIE } from '../../services/platform/platformCookieService.js';
-import { revokeToken } from '../../services/session.service.js';
-import { verifyPlatformTwoFactorChallenge, resendPlatformTwoFactorChallenge } from '../../services/platform/platformTwoFactorService.js';
-import {
-  platformSessionScope,
-  touchSession,
-} from '../../services/sessionClockService.js';
-import { platformSessionPolicy } from '../../services/sessionPolicyService.js';
-import {
-  getPlatformSetupStatus,
-  startPlatformSetup,
-} from '../../services/platform/platformSetupService.js';
-import {
-  toPublicPlatformUser,
-  getPlatformUserProfile,
-  getStoredPlatformUserById,
-  changePlatformUserPassword as updatePlatformUserPassword,
-  updatePlatformUserProfile,
-} from '../../services/platform/platformUserService.js';
-import {
-  completePlatformPasswordReset,
-  requestPlatformPasswordReset,
-  resendPlatformPasswordReset,
-} from '../../services/platform/platformPasswordResetService.js';
 import { AUTH_RATE_LIMIT } from '../../lib/rateLimitConfig.js';
 import { createStrictRateLimitGuard } from '../../lib/rateLimitGuard.js';
+import { getPlatformSetupStatus } from '../../services/platform/platformSetupService.js';
+import { platformSessionPolicy } from '../../services/sessionPolicyService.js';
 import {
-  platformChangePasswordBodySchema,
-  platformPasswordForgotBodySchema,
-  platformPasswordResendBodySchema,
-  platformPasswordResetBodySchema,
-  platformProfilePatchBodySchema,
-  platformSetupRegisterBodySchema,
-  loginBodySchema as platformLoginBodySchema,
-  challengeCodeBodySchema,
-  challengeIdBodySchema,
-  type PlatformLoginResponse,
-} from '@mms/shared';
-import { parseRequest, replyValidationError } from '../../lib/zodRequest.js';
+  handlePlatformSetupRegister,
+  handlePlatformPasswordForgot,
+  handlePlatformPasswordReset,
+  handlePlatformPasswordResend,
+} from './platformRecoveryHandlers.js';
+import {
+  handlePlatformLogin,
+  handlePlatform2FAVerify,
+  handlePlatform2FAResend,
+  handlePlatformLogout,
+} from './platformAuthHandlers.js';
+import {
+  handlePlatformMe,
+  handlePlatformSessionExtend,
+  handlePlatformUpdateMe,
+  handlePlatformChangePassword,
+} from './platformProfileHandlers.js';
 
 export default async function platformAuthRoutes(
   fastify: FastifyInstance,
@@ -64,226 +39,41 @@ export default async function platformAuthRoutes(
 
   await fastify.register(async function platformSetupRateLimited(inner) {
     inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
-
-    inner.post('/setup/register', async (request, reply) => {
-      const parsed = parseRequest(platformSetupRegisterBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-      const stored = await startPlatformSetup(parsed.data);
-      const user = await issuePlatformSession(
-        toPublicPlatformUser(stored),
-        fastify.jwt,
-        reply,
-        stored.sessionVersion,
-      );
-      return reply.send({ user });
-    });
+    inner.post('/setup/register', (req, rep) => handlePlatformSetupRegister(fastify, req, rep));
   });
 
   await fastify.register(async function platformPasswordResetRateLimited(inner) {
     inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
-
-    inner.post('/password/forgot', async (request, reply) => {
-      const parsed = parseRequest(platformPasswordForgotBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-      const result = await requestPlatformPasswordReset(parsed.data.email);
-      return reply.send(result);
-    });
-
-    inner.post('/password/reset', async (request, reply) => {
-      const parsed = parseRequest(platformPasswordResetBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const { resetId, code, password } = parsed.data;
-
-      const stored = await completePlatformPasswordReset(resetId, code, password);
-      const user = await issuePlatformSession(
-        toPublicPlatformUser(stored),
-        fastify.jwt,
-        reply,
-        stored.sessionVersion,
-      );
-      return reply.send({ user });
-    });
-
-    inner.post('/password/resend', async (request, reply) => {
-      const parsed = parseRequest(platformPasswordResendBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-      const result = await resendPlatformPasswordReset(parsed.data.resetId);
-      return reply.send(result);
-    });
+    inner.post('/password/forgot', handlePlatformPasswordForgot);
+    inner.post('/password/reset', (req, rep) => handlePlatformPasswordReset(fastify, req, rep));
+    inner.post('/password/resend', handlePlatformPasswordResend);
   });
 
   await fastify.register(async function platformAuthRateLimited(inner) {
     inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
-
-    inner.post('/login', async (request, reply) => {
-      const parsed = parseRequest(platformLoginBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const { email, password } = parsed.data;
-      const result = await loginPlatformUser(email, password, fastify.jwt, reply);
-      if (!result.ok) {
-        if (result.type === 'account_disabled') {
-          return reply.status(401).send({
-            type: 'account_disabled',
-            message: 'Platform account has been disabled',
-          });
-        }
-        if (result.type === 'two_factor_unavailable') {
-          return reply.status(503).send({
-            type: 'two_factor_unavailable',
-            message: 'Two-factor verification is required but the code could not be sent. Check platform email configuration.',
-          });
-        }
-        return reply.status(401).send({
-          type: 'invalid_credentials',
-          message: 'Invalid platform credentials',
-        });
-      }
-      if (result.requires2FA) {
-        const payload: PlatformLoginResponse = {
-          user: result.user,
-          requires2FA: true,
-          challengeId: result.challengeId,
-        };
-        return reply.send(payload);
-      }
-      const payload: PlatformLoginResponse = { user: result.user };
-      return reply.send(payload);
-    });
-
-    inner.post('/2fa/verify', async (request, reply) => {
-      const parsed = parseRequest(challengeCodeBodySchema, request.body ?? {});
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const { challengeId, code } = parsed.data;
-
-      const stored = await verifyPlatformTwoFactorChallenge(challengeId, code);
-      if (!stored) {
-        return reply.status(401).send({
-          type: 'invalid_credentials',
-          message: 'Invalid or expired verification code',
-        });
-      }
-      const user = await issuePlatformSession(
-        toPublicPlatformUser(stored),
-        fastify.jwt,
-        reply,
-        stored.sessionVersion,
-      );
-      return reply.send({ user });
-    });
-
-    inner.post('/2fa/resend', async (request, reply) => {
-      const parsed = parseRequest(challengeIdBodySchema, request.body ?? {});
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-
-      const result = await resendPlatformTwoFactorChallenge(parsed.data.challengeId);
-      if (!result.ok) {
-        return reply.status(404).send({
-          type: 'invalid_credentials',
-          message: 'Challenge not found or expired',
-        });
-      }
-      return reply.send({ success: true });
-    });
+    inner.post('/login', (req, rep) => handlePlatformLogin(fastify, req, rep));
+    inner.post('/2fa/verify', (req, rep) => handlePlatform2FAVerify(fastify, req, rep));
+    inner.post('/2fa/resend', handlePlatform2FAResend);
   });
 
-  fastify.post('/logout', async (request, reply) => {
-    // Revoke the platform session server-side so a copied access token cannot
-    // be replayed after sign-out. Platform access tokens live 8h, so the
-    // revocation entry must outlive the token's remaining lifetime.
-    const token = request.cookies?.[PLATFORM_ACCESS_COOKIE];
-    if (token) {
-      try {
-        const decoded = fastify.jwt.decode(token) as PlatformAccessTokenPayload | null;
-        if (decoded?.jti) await revokeToken(decoded.jti, 8 * 60 * 60 + 300);
-      } catch {
-        // Best effort — logout still clears cookies.
-      }
-    }
-    logoutPlatformUser(reply);
-    return reply.send({ success: true });
-  });
+  fastify.post('/logout', (req, rep) => handlePlatformLogout(fastify, req, rep));
 
-  fastify.get('/me', { preHandler: optionalAuthenticatePlatform }, async (request, reply) => {
-    const { platformUser } = request as PlatformOptionalAuthRequest;
-    if (!platformUser) {
-      return reply.send({ user: null, isAuthenticated: false });
-    }
-    const profile = await getPlatformUserProfile(platformUser.id);
-    if (!profile) {
-      return reply.send({ user: null, isAuthenticated: false });
-    }
-    return reply.send({ user: profile, isAuthenticated: true });
-  });
+  fastify.get('/me', { preHandler: optionalAuthenticatePlatform }, handlePlatformMe);
 
-  // Public — the apex app needs the configured timeout policy to arm its idle
-  // timer, and the values are non-sensitive.
   fastify.get('/session/policy', async (_request, reply) => {
     return reply.send(platformSessionPolicy());
   });
 
-  // Sliding extension for the platform "stay signed in" warning action.
-  fastify.post(
-    '/session/extend',
-    { preHandler: authenticatePlatform },
-    async (request, reply) => {
-      const { platformUser } = request as PlatformAuthenticatedRequest;
-      const { idleMs } = platformSessionPolicy();
-      await touchSession(platformSessionScope(platformUser.id), idleMs, true);
-      return reply.send({ ok: true, idleMs });
-    },
-  );
+  fastify.post('/session/extend', { preHandler: authenticatePlatform }, handlePlatformSessionExtend);
 
-  fastify.patch(
-    '/me',
-    { preHandler: authenticatePlatform },
-    async (request, reply) => {
-      const parsed = parseRequest(platformProfilePatchBodySchema, request.body);
-      if (!parsed.ok) return replyValidationError(reply, parsed.message);
-      const { platformUser } = request as PlatformAuthenticatedRequest;
-      const profile = await updatePlatformUserProfile(platformUser.id, parsed.data.name);
-      const stored = await getStoredPlatformUserById(profile.id);
-      await issuePlatformSession(
-        {
-          id: profile.id,
-          email: profile.email,
-          name: profile.name,
-          role: profile.role,
-          permissions: profile.permissions,
-        },
-        fastify.jwt,
-        reply,
-        stored?.sessionVersion ?? 0,
-      );
-      return reply.send({ user: profile });
-    },
+  fastify.patch('/me', { preHandler: authenticatePlatform }, (req, rep) =>
+    handlePlatformUpdateMe(fastify, req, rep),
   );
 
   await fastify.register(async function platformChangePasswordRateLimited(inner) {
     inner.addHook('preHandler', createStrictRateLimitGuard(inner, AUTH_RATE_LIMIT));
-
-    inner.post(
-      '/change-password',
-      { preHandler: authenticatePlatform },
-      async (request, reply) => {
-        const parsed = parseRequest(platformChangePasswordBodySchema, request.body);
-        if (!parsed.ok) return replyValidationError(reply, parsed.message);
-        const { platformUser } = request as PlatformAuthenticatedRequest;
-        const stored = await updatePlatformUserPassword(
-          platformUser.id,
-          parsed.data.currentPassword,
-          parsed.data.newPassword,
-        );
-        await issuePlatformSession(
-          toPublicPlatformUser(stored),
-          fastify.jwt,
-          reply,
-          stored.sessionVersion,
-        );
-        return reply.send({ success: true });
-      },
+    inner.post('/change-password', { preHandler: authenticatePlatform }, (req, rep) =>
+      handlePlatformChangePassword(fastify, req, rep),
     );
   });
 }

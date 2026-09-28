@@ -73,6 +73,31 @@ export function PlatformSecuritySettingsPanel(): React.JSX.Element {
           </div>
         </CardContent>
       </Card>
+
+      <Card className="rounded-xl border-border/60 shadow-xs">
+        <CardHeader>
+          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+            <Lock className="w-4 h-4 text-primary" />
+            Audit Logging & Compliance
+          </CardTitle>
+          <CardDescription className="text-xs">
+            Append-only platform activity logs with IP tracking and operator attribution.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-3">
+          <p className="text-xs text-muted-foreground">
+            All administrative actions, authentication attempts, tenant lifecycle events, and system migrations are written to the immutable <code className="text-3xs bg-muted px-1.5 py-0.5 rounded font-mono">platform_activity_logs</code> registry.
+          </p>
+          <div className="pt-2">
+            <Button asChild variant="secondary" className="min-h-11 rounded-xl text-xs cursor-pointer">
+              <Link to={ROUTES.platformActivityLogs}>
+                View Platform Activity Logs
+                <ArrowRight className="w-3.5 h-3.5 ms-1.5 rtl:rotate-180" />
+              </Link>
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }
