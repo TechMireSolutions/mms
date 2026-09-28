@@ -15,30 +15,17 @@ import { stripFacultyWriteNoise } from '../facultyUtils.js';
 import { deepSanitizeStrings } from './sanitize.js';
 
 /** Audit / meta keys accepted on faculty writes. */
-const FACULTY_WRITE_AUDIT_META_KEYS = [
-  'id',
-  'userId',
-  'createdAt',
-  'updatedAt',
-  'createdBy',
-  'updatedBy',
-] as const;
+const FACULTY_WRITE_AUDIT_META_KEYS = ['id', 'userId', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy'] as const;
 
 /**
  * Top-level keys accepted on faculty form drafts / writes (no Contacts profile dual-write keys).
  */
 export const FACULTY_WRITE_SYSTEM_KEYS: readonly string[] = (() => {
-  const keys = new Set<string>(FACULTY_WRITE_AUDIT_META_KEYS);
-  for (const key of listFacultySystemFormFieldKeys()) {
-    keys.add(key);
-  }
-  keys.add('customDesignation');
-  keys.add('reportingFacultyId');
-  keys.add('hierarchyRank');
-  keys.add('reportingFacultyName');
-  keys.add('subordinateCount');
-  keys.add('designationId');
-  keys.add('designationStartsOn');
+  const extra = [
+    'customDesignation', 'reportingFacultyId', 'hierarchyRank', 'reportingFacultyName',
+    'subordinateCount', 'designationId', 'designationStartsOn',
+  ];
+  const keys = new Set<string>([...FACULTY_WRITE_AUDIT_META_KEYS, ...listFacultySystemFormFieldKeys(), ...extra]);
   return [...keys].sort((left, right) => left.localeCompare(right));
 })();
 

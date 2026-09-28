@@ -5,21 +5,9 @@ import { normalizeContactReportFieldId } from './contactEmergencyTabMigration.js
 import { getPrimaryEmail, getPrimaryPhone } from './utils.js';
 
 const CONTACTS_REPORT_FIELD_IDS = [
-  'fullName',
-  'firstName',
-  'lastName',
-  'gender',
-  'dob',
-  'isSyed',
-  'phone',
-  'email',
-  'streetAddress',
-  'city',
-  'state',
-  'country',
-  'relationshipContact',
-  'lastActivity',
-  'notesCount',
+  'fullName', 'firstName', 'lastName', 'gender', 'dob', 'isSyed', 'phone',
+  'email', 'streetAddress', 'city', 'state', 'country', 'relationshipContact',
+  'lastActivity', 'notesCount',
 ] as const;
 
 type ContactsReportFieldId = (typeof CONTACTS_REPORT_FIELD_IDS)[number] | string;
@@ -29,23 +17,10 @@ interface ContactsReportFieldDef {
   labelKey: string;
 }
 
-const CONTACTS_REPORT_FIELDS: ContactsReportFieldDef[] = [
-  { id: 'fullName', labelKey: 'contacts.reportFields.fullName' },
-  { id: 'firstName', labelKey: 'contacts.reportFields.firstName' },
-  { id: 'lastName', labelKey: 'contacts.reportFields.lastName' },
-  { id: 'gender', labelKey: 'contacts.reportFields.gender' },
-  { id: 'dob', labelKey: 'contacts.reportFields.dob' },
-  { id: 'isSyed', labelKey: 'contacts.reportFields.isSyed' },
-  { id: 'phone', labelKey: 'contacts.reportFields.phone' },
-  { id: 'email', labelKey: 'contacts.reportFields.email' },
-  { id: 'streetAddress', labelKey: 'contacts.reportFields.streetAddress' },
-  { id: 'city', labelKey: 'contacts.reportFields.city' },
-  { id: 'state', labelKey: 'contacts.reportFields.state' },
-  { id: 'country', labelKey: 'contacts.reportFields.country' },
-  { id: 'relationshipContact', labelKey: 'contacts.reportFields.relationshipContact' },
-  { id: 'lastActivity', labelKey: 'contacts.reportFields.lastActivity' },
-  { id: 'notesCount', labelKey: 'contacts.reportFields.notesCount' },
-];
+const CONTACTS_REPORT_FIELDS: ContactsReportFieldDef[] = CONTACTS_REPORT_FIELD_IDS.map((id) => ({
+  id,
+  labelKey: `contacts.reportFields.${id}`,
+}));
 
 const REPORT_FIELD_ID_SET = new Set<string>(CONTACTS_REPORT_FIELD_IDS);
 const CONTACTS_REPORT_FIELDS_BY_ID = new Map(CONTACTS_REPORT_FIELDS.map((d) => [d.id, d]));

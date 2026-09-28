@@ -54,8 +54,8 @@ export function paginateSessions(sessions: Session[], query: SessionsListQuery):
     const dir = query.sortDir === 'desc' ? -1 : 1;
     const isNumeric = NUMERIC_SORT_FIELDS.has(sortField);
     rows = [...rows].sort((left, right) => {
-      const leftRaw = (left as unknown as Record<string, unknown>)[sortField];
-      const rightRaw = (right as unknown as Record<string, unknown>)[sortField];
+      const leftRaw = Reflect.get(left, sortField);
+      const rightRaw = Reflect.get(right, sortField);
       if (isNumeric) {
         const leftNum = Number(leftRaw ?? 0);
         const rightNum = Number(rightRaw ?? 0);

@@ -100,7 +100,7 @@ export function useStudentFormActionHandlers({
         settings,
         enabledTabs,
         requiredTabs: new Set(settings.requiredTabs || []),
-        fields: (settings.fields || {}) as unknown as Record<string, FieldDefinition[]>,
+        fields: (settings.fields ?? {}) as Record<string, FieldDefinition[]>,
         language,
       },
       blueprintVersion: settings.version,

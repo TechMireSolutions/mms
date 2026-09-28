@@ -28,15 +28,30 @@ function isLegacyFlatFields(fields: unknown): boolean {
 
 function normalizeTabs(tabs: unknown): StudentsSettings['formTabs'] | undefined {
   if (!Array.isArray(tabs)) return undefined;
-  return tabs
-    .filter((tab) => tab && typeof tab === 'object')
-    .map((tab) => {
-      const tabRecord = tab as Record<string, unknown>;
-      if (!tabRecord.key && typeof tabRecord.id === 'string') {
-        return { ...tabRecord, key: tabRecord.id };
-      }
-      return tabRecord;
-    }) as unknown as StudentsSettings['formTabs'];
+  const result: TabDefinition[] = [];
+  for (let i = 0; i < tabs.length; i++) {
+    const tab = tabs[i];
+    if (!tab || typeof tab !== 'object') continue;
+    const tabRecord = tab as Record<string, unknown>;
+    const key =
+      typeof tabRecord.key === 'string' && tabRecord.key
+        ? tabRecord.key
+        : typeof tabRecord.id === 'string'
+          ? tabRecord.id
+          : `tab_${i}`;
+    const label = typeof tabRecord.label === 'string' ? tabRecord.label : key;
+    result.push({
+      key,
+      label,
+      enabled: typeof tabRecord.enabled === 'boolean' ? tabRecord.enabled : true,
+      order: typeof tabRecord.order === 'number' ? tabRecord.order : i,
+      ...(typeof tabRecord.icon === 'string' ? { icon: tabRecord.icon } : {}),
+      ...(typeof tabRecord.description === 'string' ? { description: tabRecord.description } : {}),
+      ...(typeof tabRecord.color === 'string' ? { color: tabRecord.color } : {}),
+      ...(typeof tabRecord.isSystem === 'boolean' ? { isSystem: tabRecord.isSystem } : {}),
+    });
+  }
+  return result;
 }
 
 function mergeFieldLists(

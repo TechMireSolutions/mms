@@ -43,11 +43,12 @@ export function normalizeReportComparisonQuery<T extends BaseReportComparisonQue
 
   if (!hasSessions && !hasRangeA && !hasRangeB) return undefined;
 
-  return {
+  const result: BaseReportComparisonQuery = {
     ...(hasSessions ? { sessionIds } : {}),
     ...(hasRangeA ? { rangeAFrom, rangeATo } : {}),
     ...(hasRangeB ? { rangeBFrom, rangeBTo } : {}),
-  } as unknown as T;
+  };
+  return result as T;
 }
 
 /** True when any comparison SQL slice should run. */

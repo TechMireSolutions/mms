@@ -25,24 +25,9 @@ export function normalizeEducationItem(
   defaults: ContactItemNormalizeDefaults = {},
 ): ContactEducation {
   const defaultDegree = defaults.educationDegree || DEFAULT_EDUCATION_DEGREE_LABELS[0] || "Matric / Secondary";
-  if (!item) {
-    return {
-      degree: defaultDegree,
-      institution: "",
-      fieldOfStudy: "",
-      year: "",
-      grade: "",
-    };
-  }
-  if (typeof item === "string") {
-    return {
-      degree: defaultDegree,
-      institution: item.trim(),
-      fieldOfStudy: "",
-      year: "",
-      grade: "",
-    };
-  }
+  const empty: ContactEducation = { degree: defaultDegree, institution: "", fieldOfStudy: "", year: "", grade: "" };
+  if (!item) return empty;
+  if (typeof item === "string") return { ...empty, institution: item.trim() };
   if (typeof item === "object") {
     const obj = item as Record<string, unknown>;
     const degree = String(obj.degree || obj.label || obj.type || defaultDegree).trim() || defaultDegree;
@@ -64,13 +49,7 @@ export function normalizeEducationItem(
       ...(isCurrentlyEnrolled ? { isCurrentlyEnrolled: true } : {}),
     };
   }
-  return {
-    degree: defaultDegree,
-    institution: "",
-    fieldOfStudy: "",
-    year: "",
-    grade: "",
-  };
+  return empty;
 }
 
 /**
@@ -80,32 +59,13 @@ export function normalizeExperienceItem(
   item: unknown,
   defaults: ContactItemNormalizeDefaults = {},
 ): ContactExperience {
-  const defaultEmploymentType =
-    defaults.employmentType || DEFAULT_EMPLOYMENT_TYPE_LABELS[0] || "Full-time";
-  if (!item) {
-    return {
-      title: "",
-      organization: "",
-      employmentType: defaultEmploymentType,
-      location: "",
-      startDate: "",
-      endDate: "",
-      isCurrent: false,
-      description: "",
-    };
-  }
-  if (typeof item === "string") {
-    return {
-      title: item.trim(),
-      organization: "",
-      employmentType: defaultEmploymentType,
-      location: "",
-      startDate: "",
-      endDate: "",
-      isCurrent: false,
-      description: "",
-    };
-  }
+  const defaultEmploymentType = defaults.employmentType || DEFAULT_EMPLOYMENT_TYPE_LABELS[0] || "Full-time";
+  const empty: ContactExperience = {
+    title: "", organization: "", employmentType: defaultEmploymentType,
+    location: "", startDate: "", endDate: "", isCurrent: false, description: "",
+  };
+  if (!item) return empty;
+  if (typeof item === "string") return { ...empty, title: item.trim() };
   if (typeof item === "object") {
     const obj = item as Record<string, unknown>;
     const title = String(obj.title || obj.jobTitle || obj.role || obj.designation || obj.value || "").trim();
@@ -118,26 +78,10 @@ export function normalizeExperienceItem(
     const description = String(obj.description || obj.notes || obj.responsibilities || "").trim();
     return {
       ...retainExtraKeys(obj, EXPERIENCE_SYSTEM_KEYS),
-      title,
-      organization,
-      employmentType,
-      location,
-      startDate,
-      endDate,
-      isCurrent,
-      description,
+      title, organization, employmentType, location, startDate, endDate, isCurrent, description,
     };
   }
-  return {
-    title: "",
-    organization: "",
-    employmentType: defaultEmploymentType,
-    location: "",
-    startDate: "",
-    endDate: "",
-    isCurrent: false,
-    description: "",
-  };
+  return empty;
 }
 
 /**
@@ -147,32 +91,14 @@ export function normalizeSkillItem(
   item: unknown,
   defaults: ContactItemNormalizeDefaults = {},
 ): ContactSkill {
-  const defaultCategory =
-    defaults.skillCategory || DEFAULT_SKILL_CATEGORY_LABELS[0] || "Islamic Studies";
-  const defaultProficiency =
-    defaults.skillProficiency || DEFAULT_SKILL_PROFICIENCY_LABELS[1] || "Intermediate";
-  if (!item) {
-    return {
-      name: "",
-      category: defaultCategory,
-      proficiency: defaultProficiency,
-      yearsOfExperience: "",
-      isCertified: false,
-      issuer: "",
-      description: "",
-    };
-  }
-  if (typeof item === "string") {
-    return {
-      name: item.trim(),
-      category: defaultCategory,
-      proficiency: defaultProficiency,
-      yearsOfExperience: "",
-      isCertified: false,
-      issuer: "",
-      description: "",
-    };
-  }
+  const defaultCategory = defaults.skillCategory || DEFAULT_SKILL_CATEGORY_LABELS[0] || "Islamic Studies";
+  const defaultProficiency = defaults.skillProficiency || DEFAULT_SKILL_PROFICIENCY_LABELS[1] || "Intermediate";
+  const empty: ContactSkill = {
+    name: "", category: defaultCategory, proficiency: defaultProficiency,
+    yearsOfExperience: "", isCertified: false, issuer: "", description: "",
+  };
+  if (!item) return empty;
+  if (typeof item === "string") return { ...empty, name: item.trim() };
   if (typeof item === "object") {
     const obj = item as Record<string, unknown>;
     const name = String(obj.name || obj.skill || obj.title || obj.value || "").trim();
@@ -184,22 +110,8 @@ export function normalizeSkillItem(
     const description = String(obj.description || obj.notes || obj.details || "").trim();
     return {
       ...retainExtraKeys(obj, SKILL_SYSTEM_KEYS),
-      name,
-      category,
-      proficiency,
-      yearsOfExperience,
-      isCertified,
-      issuer,
-      description,
+      name, category, proficiency, yearsOfExperience, isCertified, issuer, description,
     };
   }
-  return {
-    name: "",
-    category: defaultCategory,
-    proficiency: defaultProficiency,
-    yearsOfExperience: "",
-    isCertified: false,
-    issuer: "",
-    description: "",
-  };
+  return empty;
 }

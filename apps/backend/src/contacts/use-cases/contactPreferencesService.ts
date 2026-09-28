@@ -50,7 +50,7 @@ export async function loadContactPreferences(): Promise<ContactPreferences | nul
   if (rawNeedsRelationshipPairsRewrite(record)) {
     await upsertContactModulePreferences(
       requireTenant(),
-      normalized as unknown as Record<string, unknown>,
+      Object.assign({}, normalized),
     );
   }
   // Align lookups + field-config options with pair-derived labels (purges stale seeds).

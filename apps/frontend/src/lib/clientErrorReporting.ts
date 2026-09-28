@@ -10,6 +10,12 @@
  * from here, never from the core module or `@sentry/react` directly.
  */
 
+declare global {
+  interface Window {
+    _MMS_SENTRY_DSN?: string;
+  }
+}
+
 type CoreModule = typeof import('./clientErrorReportingCore');
 
 let corePromise: Promise<CoreModule> | null = null;
@@ -23,7 +29,9 @@ function loadCore(): Promise<CoreModule> {
  * Initializes client-side error reporting using Sentry if the DSN is configured.
  */
 export function initErrorReporting(): void {
-  const dsn = (import.meta.env.VITE_SENTRY_DSN as string | undefined) || (window as unknown as { _MMS_SENTRY_DSN?: string })._MMS_SENTRY_DSN;
+  const dsn =
+    (import.meta.env.VITE_SENTRY_DSN as string | undefined) ||
+    (typeof window !== 'undefined' ? window._MMS_SENTRY_DSN : undefined);
   if (!dsn) {
     return;
   }

@@ -16,13 +16,16 @@ export const CONTACT_PROFILE_FIELDS = [
 ] as const;
 
 export interface ContactLike {
-  id: string | number;
+  id?: string | number | null;
   name?: string;
   firstName?: string;
   lastName?: string;
   gender?: string;
   dob?: string;
   avatar?: string | null;
+  email?: string;
+  phone?: string;
+  city?: string;
   phones?: { number?: string; isPrimary?: boolean }[];
   emails?: { address?: string; isPrimary?: boolean }[];
   addresses?: { city?: string; state?: string; country?: string; line1?: string; isPrimary?: boolean }[];
@@ -103,7 +106,7 @@ export function lookupContact(
   if (contacts instanceof Map) {
     return contacts.get(strId);
   }
-  return contacts.find((candidateContact) => String(candidateContact.id) === strId);
+  return contacts.find((c) => c?.id != null && String(c.id) === strId);
 }
 
 /** Pre-indexes a contact collection into an O(1) lookup map for batch hydration. */
@@ -126,15 +129,9 @@ export function hydrateContactProfile<T extends Record<string, unknown>>(
   if (!contact) return record;
   const contactName = contactDisplayName(contact);
   // Prefer collections; fall back to scalar mirrors for legacy/test fixtures.
-  const contactEmail =
-    nonEmpty(contact.emails?.[0]?.address) ||
-    nonEmpty(((contact as unknown) as Record<string, unknown>).email as string | undefined);
-  const contactPhone =
-    nonEmpty(contact.phones?.[0]?.number) ||
-    nonEmpty(((contact as unknown) as Record<string, unknown>).phone as string | undefined);
-  const contactCity =
-    nonEmpty(contact.addresses?.[0]?.city as string | undefined) ||
-    nonEmpty(((contact as unknown) as Record<string, unknown>).city as string | undefined);
+  const contactEmail = nonEmpty(contact.emails?.[0]?.address) || nonEmpty(contact.email);
+  const contactPhone = nonEmpty(contact.phones?.[0]?.number) || nonEmpty(contact.phone);
+  const contactCity = nonEmpty(contact.addresses?.[0]?.city as string | undefined) || nonEmpty(contact.city);
   return {
     ...record,
     // Prefer non-empty contact values — `??` would keep "" and wipe stored auth names.

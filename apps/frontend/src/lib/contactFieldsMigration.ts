@@ -43,7 +43,9 @@ export function migrateContactFieldConfig(config: unknown): FieldConfig {
     return getContactFieldSystemDefaults();
   }
 
-  const workingConfig = { ...rawConfig } as unknown as Partial<FieldConfig>;
+  const workingConfig: Partial<FieldConfig> & Record<string, unknown> = {
+    ...(config as Partial<FieldConfig> & Record<string, unknown>),
+  };
   const defaults = getContactFieldSystemDefaults();
 
   const normalizeTabs = <T extends { id?: string; key?: string }>(tabs: T[] | undefined): T[] | undefined => {

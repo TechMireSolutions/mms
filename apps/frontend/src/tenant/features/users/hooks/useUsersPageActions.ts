@@ -92,7 +92,7 @@ export function useUsersPageActions({
   };
 
   const handleSaveEdit = async (updated: SystemUser): Promise<void> => {
-    await updateUser.mutateAsync({ id: updated.id, data: updated as unknown as Record<string, unknown> });
+    await updateUser.mutateAsync({ id: updated.id, data: Object.assign({}, updated) });
     notify.success(t('users.saveChanges'));
   };
 
@@ -109,12 +109,12 @@ export function useUsersPageActions({
   };
 
   const handleInvite = async (user: SystemUser): Promise<void> => {
-    const result = await inviteUser.mutateAsync(user as unknown as Record<string, unknown>);
+    const result = await inviteUser.mutateAsync(Object.assign({}, user));
     notifyUserCreated(result);
   };
 
   const handleAddUser = async (user: SystemUser): Promise<void> => {
-    const result = await createUser.mutateAsync(user as unknown as Record<string, unknown>);
+    const result = await createUser.mutateAsync(Object.assign({}, user));
     notifyUserCreated(result);
   };
 

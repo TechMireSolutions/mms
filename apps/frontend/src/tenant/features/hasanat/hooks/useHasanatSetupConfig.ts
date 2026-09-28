@@ -1,6 +1,7 @@
 import {
   HASANAT_MODULE_MANIFEST,
   normalizeHasanatModulePreferences,
+  normalizeHasanatSettings,
   type HasanatModulePreferences,
   type HasanatSettings
 } from '@mms/shared';
@@ -32,6 +33,5 @@ import { useMemo } from 'react';
 /** Composed HasanatSettings from preferences queries. */
 export function useComposedHasanatSettings(): HasanatSettings {
   const prefsQuery = useHasanatPreferencesQuery();
-  const fallback = useMemo(() => normalizeHasanatModulePreferences(null), []);
-  return (prefsQuery.data ?? fallback) as unknown as HasanatSettings;
+  return useMemo(() => normalizeHasanatSettings(prefsQuery.data), [prefsQuery.data]);
 }

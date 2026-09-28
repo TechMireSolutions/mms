@@ -41,16 +41,11 @@ const encryptedWorkspaceBackupFileSchema = z.object({
   kdf: z.literal('PBKDF2'),
   hash: z.literal('SHA-256'),
   cipher: z.literal('AES-GCM'),
-  iterations: z
-    .number()
-    .int()
-    .min(BACKUP_KDF_MIN_ITERATIONS)
-    .max(BACKUP_KDF_MAX_ITERATIONS),
+  iterations: z.number().int().min(BACKUP_KDF_MIN_ITERATIONS).max(BACKUP_KDF_MAX_ITERATIONS),
   salt: z.string().min(1).max(MAX_SALT_BASE64_LENGTH),
   iv: z.string().min(1).max(MAX_IV_BASE64_LENGTH),
   ciphertext: z.string().min(1),
 });
-
 
 export type BackupDecryptResult =
   | { ok: true; plaintext: string; meta: EncryptedWorkspaceBackupFile }
@@ -58,9 +53,7 @@ export type BackupDecryptResult =
 
 function getSubtle(): SubtleCrypto {
   const subtle = globalThis.crypto?.subtle;
-  if (!subtle) {
-    throw new Error('backup.cryptoUnavailable');
-  }
+  if (!subtle) throw new Error('backup.cryptoUnavailable');
   return subtle;
 }
 
@@ -70,18 +63,14 @@ function randomBytes(length: number): Uint8Array {
 
 function bytesToBase64(bytes: Uint8Array): string {
   let binary = '';
-  for (const byte of bytes) {
-    binary += String.fromCharCode(byte);
-  }
+  for (const byte of bytes) binary += String.fromCharCode(byte);
   return btoa(binary);
 }
 
 function base64ToBytes(value: string): Uint8Array<ArrayBuffer> {
   const binary = atob(value);
   const bytes = new Uint8Array(binary.length);
-  for (let i = 0; i < binary.length; i += 1) {
-    bytes[i] = binary.charCodeAt(i);
-  }
+  for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
   return bytes;
 }
 
@@ -184,9 +173,7 @@ export async function decryptWorkspaceBackup(
   credentials: BackupCryptoCredentials,
 ): Promise<BackupDecryptResult> {
   const parsed = parseEncryptedBackupFile(fileJson);
-  if (!parsed) {
-    return { ok: false, errorKey: 'backup.invalidFormat' };
-  }
+  if (!parsed) return { ok: false, errorKey: 'backup.invalidFormat' };
 
   const email = credentials.adminEmail.trim().toLowerCase();
   if (email !== parsed.adminEmail.trim().toLowerCase()) {

@@ -1,4 +1,4 @@
-import { calcAge, formatDate, type Session, type Student } from "@mms/shared";
+import { calcAge, formatDate, type Session, type Student, type StudentRecord } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
 export type StudentReportSubTab = "list" | "history";
@@ -47,10 +47,11 @@ export interface StudentReportTablesProps {
 }
 
 export function resolveStudentSessionLabels(
-  student: Student,
+  student: Student | StudentRecord,
   sessions: Session[],
 ): { sessionLabel: string; classLabel: string } {
-  const enrolledIds = student.enrolledSessions ?? [];
+  const rawSessions = (student as { enrolledSessions?: unknown }).enrolledSessions;
+  const enrolledIds = Array.isArray(rawSessions) ? (rawSessions as string[]) : [];
   const enrolledIdSet = new Set(enrolledIds);
   const matchedSessions = sessions.filter((session) => enrolledIdSet.has(session.id));
   const sessionLabel = matchedSessions.map((session) => session.name).filter(Boolean).join(", ") || "—";
@@ -64,9 +65,10 @@ export function resolveStudentSessionLabels(
   return { sessionLabel, classLabel };
 }
 
-export function mapStudentRow(student: Student, sessions: Session[] = []): ReportStudent {
+export function mapStudentRow(student: Student | StudentRecord, sessions: Session[] = []): ReportStudent {
   const age = calcAge(student.dob) ?? 0;
   const { sessionLabel, classLabel } = resolveStudentSessionLabels(student, sessions);
+  const registeredDate = (student as { registeredDate?: string }).registeredDate;
   return {
     id: String(student.id),
     name: student.name || "",
@@ -75,7 +77,7 @@ export function mapStudentRow(student: Student, sessions: Session[] = []): Repor
     session: sessionLabel,
     class: classLabel,
     city: student.city || "—",
-    registered: student.registeredDate ? formatDate(student.registeredDate, true) : "—",
+    registered: registeredDate ? formatDate(registeredDate, true) : "—",
     age,
   };
 }

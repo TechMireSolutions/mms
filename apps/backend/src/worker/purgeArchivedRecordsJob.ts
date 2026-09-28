@@ -1,6 +1,5 @@
 import { and, eq, inArray, isNotNull, lte, sql } from 'drizzle-orm';
 import type { DbClient } from '../db/dbConnection.js';
-import type { AppDb } from '../db/tenant-context.js';
 import { messageLogs, attendance } from '../db/schema.js';
 import { recordModernAuditEvent } from '../services/auditTrailService.js';
 import { emitOutboxEvent } from '../services/outboxEventService.js';
@@ -137,10 +136,10 @@ export async function purgeExpiredArchivedRecords(
         });
 
         // 3b. Emit CDC outbox event for each purged entity (cache eviction / tombstoning)
-        if (typeof (tx as unknown as { insert?: unknown }).insert === 'function') {
+        if ('insert' in tx && typeof tx.insert === 'function') {
           for (const id of ids) {
             try {
-              await emitOutboxEvent(tx as unknown as AppDb, 'entity.hard_purge', {
+              await emitOutboxEvent(tx, 'entity.hard_purge', {
                 entityType: name,
                 entityId: id,
                 tenantId: normalizedTenant,

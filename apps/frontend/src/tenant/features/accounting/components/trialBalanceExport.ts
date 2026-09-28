@@ -2,13 +2,13 @@ import { runGridCsvExportJob } from "@/lib/backgroundJobs/runGridCsvExportJob";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { type AppTranslationKey } from "@mms/shared";
 
-interface TrialBalanceExportRow {
+type TrialBalanceExportRow = {
   code: string;
   name: string;
   type: string;
   debit: string;
   credit: string;
-}
+};
 
 export function exportTrialBalanceCsv(
   rows: Array<{ code: string; name: string; type: string; totalDebit: number; totalCredit: number }>,
@@ -41,6 +41,6 @@ export function exportTrialBalanceCsv(
       { header: t("accounting.columns.journal.debit"), key: "debit" },
       { header: t("accounting.columns.journal.credit"), key: "credit" },
     ],
-    rows: exportRows as unknown as Record<string, unknown>[],
+    rows: exportRows,
   });
 }

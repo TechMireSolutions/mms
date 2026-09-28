@@ -40,9 +40,8 @@ export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
   const handleClassMessage = (channel: 'sms' | 'whatsapp' | 'email', sessionClass: Class) => {
     const teacher = teachers.find((t) => t.id === sessionClass.teacherId);
     const recipientName = (teacher ? teacher.name : sessionClass.teacherName || sessionClass.name) || t("sessions.classes.fallbackName");
-    const teacherObj = teacher as unknown as { phone?: string; email?: string } | undefined;
-    const phoneStr: string = teacherObj?.phone ?? "";
-    const emailStr: string | undefined = teacherObj?.email ?? undefined;
+    const phoneStr: string = teacher?.phone ?? "";
+    const emailStr: string | undefined = teacher?.email ?? undefined;
     openComposer(channel, [{ id: sessionClass.id, name: recipientName, phone: phoneStr, email: emailStr }]);
   };
 

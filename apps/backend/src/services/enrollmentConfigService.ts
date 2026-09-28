@@ -1,5 +1,6 @@
 import {
   composeEnrollmentsSettings,
+  normalizeEnrollmentsSettings,
   stripEnrollmentFieldConfigForPersist,
   type FieldDefinition,
   type EnrollmentsSettings,
@@ -38,7 +39,7 @@ export const loadEnrollmentFieldConfig = enrollmentFieldConfig.load;
 export async function saveEnrollmentFieldConfig(
   config: EnrollmentsSettings | Record<string, unknown>,
 ): Promise<EnrollmentsSettings> {
-  return enrollmentFieldConfig.save(config as EnrollmentsSettings);
+  return enrollmentFieldConfig.save(normalizeEnrollmentsSettings(config));
 }
 
 /** Full EnrollmentsSettings for export / validation (field-config + preferences + tabs). */

@@ -1,6 +1,7 @@
 import {
   SESSIONS_MODULE_MANIFEST,
   normalizeSessionModulePreferences,
+  normalizeSessionsSettings,
   type SessionModulePreferences,
   type SessionsSettings
 } from '@mms/shared';
@@ -32,6 +33,5 @@ import { useMemo } from 'react';
 /** Composed SessionsSettings from preferences queries. */
 export function useComposedSessionsSettings(): SessionsSettings {
   const prefsQuery = useSessionPreferencesQuery();
-  const fallback = useMemo(() => normalizeSessionModulePreferences(null), []);
-  return (prefsQuery.data ?? fallback) as unknown as SessionsSettings;
+  return useMemo(() => normalizeSessionsSettings(prefsQuery.data), [prefsQuery.data]);
 }

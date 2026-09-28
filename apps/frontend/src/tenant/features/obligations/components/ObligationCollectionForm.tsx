@@ -51,7 +51,7 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
   const [submitting, setSubmitting] = useState(false);
 
   const completeness = (() =>
-      calculateKeyedUnitsCompleteness(form as unknown as Record<string, unknown>, [
+      calculateKeyedUnitsCompleteness(form, [
         { key: "received_date" },
         { key: "sender_id" },
         { key: "amount" },

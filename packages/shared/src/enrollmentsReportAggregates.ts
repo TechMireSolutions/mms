@@ -7,16 +7,13 @@ export const enrollmentsCumulativeTrendSchema = z.object({
 });
 
 export const enrollmentsReportStatusCountsSchema = z.object({
-  pending: z.number().int().nonnegative(),
-  confirmed: z.number().int().nonnegative(),
-  cancelled: z.number().int().nonnegative(),
-  completed: z.number().int().nonnegative(),
+  pending: z.number().int().nonnegative(), confirmed: z.number().int().nonnegative(),
+  cancelled: z.number().int().nonnegative(), completed: z.number().int().nonnegative(),
   total: z.number().int().nonnegative(),
 });
 
 export const enrollmentsReportFeesSchema = z.object({
-  due: z.number().nonnegative(),
-  paid: z.number().nonnegative(),
+  due: z.number().nonnegative(), paid: z.number().nonnegative(),
 });
 
 export const enrollmentsReportBySessionItemSchema = z.object({

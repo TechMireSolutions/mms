@@ -37,13 +37,16 @@ export function Step1SelectStudent({ value, onChange, sessions = [] }: Step1Sele
   });
 
   const selectedId = value?.id ? String(value.id) : "";
-  const valueInPage = (studentPage?.body?.students ?? []).some((student: { id: string | number }) => String(student.id) === selectedId);
+  const pageStudents: Student[] = Array.isArray(studentPage?.body?.students)
+    ? (studentPage.body.students as Student[])
+    : [];
+  const valueInPage = pageStudents.some((student) => String(student.id) === selectedId);
   const { data: resolvedSelected = [] } = useStudentsByIds(
     selectedId && !valueInPage ? [selectedId] : [],
   );
 
   const students = (() => {
-    const rows = (studentPage?.body?.students ?? []) as unknown as Student[];
+    const rows = pageStudents;
     if (value && !rows.some((student) => String(student.id) === String(value.id))) {
       return [value, ...rows];
     }

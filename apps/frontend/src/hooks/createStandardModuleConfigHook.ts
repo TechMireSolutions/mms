@@ -37,7 +37,7 @@ export interface CreateStandardModuleConfigHookOptions<
   TExtra extends Record<string, unknown>,
 > {
   defaultSettings: TSettings;
-  defaultFieldDefs: ModuleFieldDef[];
+  defaultFieldDefs: readonly ModuleFieldDef[];
   useSettings?: () => TSettings;
   useUpdateSettingsAsync?: () => (draft: TSettings) => Promise<void>;
   customFieldsFrom?: (settings: TSettings) => ModuleCustomField[];

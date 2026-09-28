@@ -46,9 +46,10 @@ export function InvoicesRowActions({
   triggerClassName,
 }: InvoicesRowActionsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const invoiceRecord = invoice as unknown as Record<string, unknown>;
-  const phone = typeof invoiceRecord.phone === "string" ? invoiceRecord.phone.trim() : "";
-  const email = typeof invoiceRecord.email === "string" ? invoiceRecord.email : undefined;
+  const rawPhone = Reflect.get(invoice, "phone");
+  const rawEmail = Reflect.get(invoice, "email");
+  const phone = typeof rawPhone === "string" ? rawPhone.trim() : "";
+  const email = typeof rawEmail === "string" ? rawEmail : undefined;
   const recipient: StandardMessagingRecipient = {
     id: invoice.id,
     name: invoice.studentName,

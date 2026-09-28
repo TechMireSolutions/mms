@@ -37,11 +37,12 @@ function buildFieldData(
   lookups: FieldLookupInfo | undefined,
 ): Record<string, unknown> | null {
   if (!collection) return null;
+  const record: Record<string, unknown> = { ...collection };
   const data: Record<string, unknown> = {};
   for (const item of AVAILABLE_FIELDS) {
     const value = resolveField(
       item.field,
-      collection as unknown as Record<string, unknown>,
+      record,
       lookups as FieldLookupInfo,
     );
     if (value !== undefined && value !== null && value !== "") {

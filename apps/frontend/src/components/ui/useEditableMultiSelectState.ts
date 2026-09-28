@@ -33,7 +33,7 @@ export function useEditableMultiSelectState({
     onChange(toggleSelectedValue(values, option));
   }, [onChange, values]);
 
-  const removeValue = useCallback((valToRemove: string, event: React.MouseEvent): void => {
+  const removeValue = useCallback((valToRemove: string, event: React.SyntheticEvent): void => {
     event.stopPropagation();
     onChange(removeSelectedValue(values, valToRemove));
     triggerRef.current?.focus();

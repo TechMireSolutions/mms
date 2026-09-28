@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import {
   coercePaperNumberInput,
   createPaperDraftFromTest,
@@ -98,5 +100,27 @@ describe("paperBuilderUtils", () => {
     expect(escapeHtml(`A&B <Paper> "Final" 'One'`)).toBe(
       "A&amp;B &lt;Paper&gt; &quot;Final&quot; &#039;One&#039;",
     );
+  });
+
+  /**
+   * Source-read ratchet: guards the print-script contract in openPaperPrintWindow.
+   * Same technique as printStyles.test.ts — reads the source so the test runs
+   * without a real DOM and catches regressions in the generated HTML string.
+   */
+  describe("openPaperPrintWindow print-script contract", () => {
+    const src = readFileSync(
+      path.resolve(import.meta.dirname, "./paperBuilderUtils.ts"),
+      "utf-8",
+    );
+
+    it("uses document.fonts.ready instead of a fixed setTimeout for print", () => {
+      expect(src).toContain("document.fonts.ready");
+      expect(src).not.toMatch(/setTimeout[^)]*window\.print/);
+    });
+
+    it("closes via onafterprint rather than a timed setTimeout", () => {
+      expect(src).toContain("window.onafterprint");
+      expect(src).not.toMatch(/setTimeout[^)]*window\.close/);
+    });
   });
 });

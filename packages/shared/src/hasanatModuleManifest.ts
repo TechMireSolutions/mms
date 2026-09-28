@@ -123,13 +123,11 @@ export type DistributionInsert = z.infer<typeof distributionRecordInsertSchema>;
 export type DistributionUpdate = z.infer<typeof distributionRecordUpdateSchema>;
 export const distributionListSchema = z.array(distributionRecordSchema);
 
-export function isDistributionDeleted(distribution: { deletedAt?: string | null }): boolean {
-  return Boolean(distribution.deletedAt);
-}
+export const isDistributionDeleted = (distribution: { deletedAt?: string | null }): boolean =>
+  Boolean(distribution.deletedAt);
 
-export function filterActiveDistributions<T extends { deletedAt?: string | null }>(distributions: T[]): T[] {
-  return distributions.filter((d) => !isDistributionDeleted(d));
-}
+export const filterActiveDistributions = <T extends { deletedAt?: string | null }>(distributions: T[]): T[] =>
+  distributions.filter((d) => !isDistributionDeleted(d));
 
 export const redemptionRecordSchema = z
   .object({
@@ -178,13 +176,7 @@ export const HASANAT_MODULE_MANIFEST = {
   analyticsCategory: 'hasanat',
   tiers: ['work', 'reports', 'setup'] as const,
   setupSubTabs: ['denominations', 'preferences', 'templates'] as const,
-  softDelete: {
-    workExcludesDeleted: true,
-    reportsIncludeDeleted: false,
-    exportsIncludeDeleted: false,
-    captureDeletionReason: false,
-    retentionDays: null,
-  },
+  softDelete: { workExcludesDeleted: true, reportsIncludeDeleted: false, exportsIncludeDeleted: false, captureDeletionReason: false, retentionDays: null },
   permissions: {
     read: 'hasanat.read',
     write: 'hasanat.write',

@@ -38,6 +38,6 @@ export const getHasanatFieldConfigService = hasanatFieldConfig.load;
 export async function updateHasanatFieldConfigService(
   config: HasanatSettings | Record<string, unknown>,
 ): Promise<HasanatSettings> {
-  return hasanatFieldConfig.save(config as HasanatSettings);
+  return hasanatFieldConfig.save(normalizeHasanatSettings(config));
 }
 

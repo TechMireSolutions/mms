@@ -14,7 +14,7 @@ import { ObligationCollectionWakalaSection } from '@/tenant/features/obligations
 import { cn } from '@/lib/utils';
 import { CARD_STRIPE_INSET } from '@/lib/semanticTone';
 
-export interface ObligationCollectionFormState {
+export type ObligationCollectionFormState = {
   receipt_no: string;
   received_date: string;
   sender_id: string;
@@ -25,7 +25,7 @@ export interface ObligationCollectionFormState {
   obligation_type_id: string;
   mujtahid_representative_id: string;
   received_by: string;
-}
+};
 
 export interface ObligationCollectionFormFieldsProps {
   form: ObligationCollectionFormState;

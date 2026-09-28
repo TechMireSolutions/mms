@@ -23,7 +23,6 @@ export interface TeachersCommandMetricsSnapshot {
 
 export type FacultyCommandMetricsSnapshot = TeachersCommandMetricsSnapshot;
 
-
 export interface FinanceCommandMetricsSnapshot {
   totalInvoices: number;
   outstanding: number;
@@ -52,17 +51,12 @@ export interface UsersCommandMetricsSnapshot {
 type StatusRecord = { status?: string };
 type RegisteredRecord = StatusRecord & { registeredDate?: string; createdAt?: string };
 type JoinDateRecord = StatusRecord & { joinDate?: string; createdAt?: string };
-type WorkspaceUserMetricRecord = StatusRecord & {
-  role?: string;
-  twoFactorEnabled?: boolean;
-  activeSessions?: number;
-};
+type WorkspaceUserMetricRecord = StatusRecord & { role?: string; twoFactorEnabled?: boolean; activeSessions?: number };
 
 export function countRecordsWithStatus<T>(
   records: T[],
   status: string,
-  getStatus: (record: T) => string | undefined = (record) =>
-    (record as StatusRecord).status,
+  getStatus: (record: T) => string | undefined = (record) => (record as StatusRecord).status,
 ): number {
   let count = 0;
   for (let i = 0; i < records.length; i++) {
@@ -99,10 +93,7 @@ export function computeStudentsCommandMetrics(
   cutoff.setDate(cutoff.getDate() - periodDays);
   const cutoffTime = cutoff.getTime();
 
-  let active = 0;
-  let inactive = 0;
-  let suspended = 0;
-  let newThisPeriod = 0;
+  let active = 0, inactive = 0, suspended = 0, newThisPeriod = 0;
 
   for (let i = 0; i < students.length; i++) {
     const s = students[i];
@@ -143,11 +134,7 @@ export function computeTeachersCommandMetrics(
   cutoff.setDate(cutoff.getDate() - periodDays);
   const cutoffTime = cutoff.getTime();
 
-  let active = 0;
-  let inactive = 0;
-  let onLeave = 0;
-  let other = 0;
-  let newThisPeriod = 0;
+  let active = 0, inactive = 0, onLeave = 0, other = 0, newThisPeriod = 0;
 
   for (let i = 0; i < teachers.length; i++) {
     const t = teachers[i];
@@ -183,16 +170,10 @@ export function computeTeachersCommandMetrics(
 export const computeFacultyCommandMetrics = computeTeachersCommandMetrics;
 export const computeFacultyCommandMetricsSnapshot = computeTeachersCommandMetrics;
 
-
-
 export function computeUsersCommandMetrics(
   users: WorkspaceUserMetricRecord[],
 ): UsersCommandMetricsSnapshot {
-  let active = 0;
-  let suspended = 0;
-  let admins = 0;
-  let twoFaEnabled = 0;
-  let activeSessions = 0;
+  let active = 0, suspended = 0, admins = 0, twoFaEnabled = 0, activeSessions = 0;
 
   for (let i = 0; i < users.length; i++) {
     const user = users[i];

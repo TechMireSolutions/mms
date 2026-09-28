@@ -138,17 +138,13 @@ export type TeacherDirectoryColumnKey =
   (typeof TEACHER_DIRECTORY_COLUMN_SURFACES)[number]['key'];
 
 /** Work-directory column keys (excluding fixed `name`). */
-export const TEACHER_WORK_COLUMN_KEYS = TEACHER_DIRECTORY_COLUMN_SURFACES
-  .filter((surface) => surface.work && surface.key !== 'name')
-  .slice()
-  .sort((left, right) => left.workOrder - right.workOrder)
-  .map((surface) => surface.key) as unknown as readonly [
-    'designation',
-    'specialization',
-    'qualification',
-    'joinDate',
-    'status',
-  ];
+export const TEACHER_WORK_COLUMN_KEYS = [
+  'designation',
+  'specialization',
+  'qualification',
+  'joinDate',
+  'status',
+] as const;
 
 export type TeacherWorkColumnKey = (typeof TEACHER_WORK_COLUMN_KEYS)[number];
 
@@ -208,20 +204,16 @@ export const TEACHER_COLUMN_FIELD_MAPPING: Record<
 })();
 
 /** Work-list / SQL sort keys for teachers (FE + BE SSOT). */
-export const TEACHER_SORT_FIELDS = TEACHER_DIRECTORY_COLUMN_SURFACES
-  .filter((surface) => surface.sort)
-  .slice()
-  .sort((left, right) => left.sortOrder - right.sortOrder)
-  .map((surface) => surface.key) as unknown as readonly [
-    'name',
-    'employeeId',
-    'designation',
-    'specialization',
-    'qualification',
-    'status',
-    'joinDate',
-    'updatedAt',
-  ];
+export const TEACHER_SORT_FIELDS = [
+  'name',
+  'employeeId',
+  'designation',
+  'specialization',
+  'qualification',
+  'status',
+  'joinDate',
+  'updatedAt',
+] as const;
 
 export type TeacherSortField = (typeof TEACHER_SORT_FIELDS)[number];
 

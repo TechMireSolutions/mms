@@ -1,6 +1,7 @@
 import {
   ATTENDANCE_MODULE_MANIFEST,
   normalizeAttendanceModulePreferences,
+  normalizeAttendanceSettings,
   type AttendanceModulePreferences,
   type AttendanceSettings
 } from '@mms/shared';
@@ -32,6 +33,5 @@ import { useMemo } from 'react';
 /** Composed AttendanceSettings from preferences queries. */
 export function useComposedAttendanceSettings(): AttendanceSettings {
   const prefsQuery = useAttendancePreferencesQuery();
-  const fallback = useMemo(() => normalizeAttendanceModulePreferences(null), []);
-  return (prefsQuery.data ?? fallback) as unknown as AttendanceSettings;
+  return useMemo(() => normalizeAttendanceSettings(prefsQuery.data), [prefsQuery.data]);
 }

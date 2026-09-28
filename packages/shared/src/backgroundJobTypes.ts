@@ -29,10 +29,10 @@ export const BACKGROUND_JOBS_MAX_PER_USER = 50;
 export interface BackgroundJobEventMessage {
   event: 'job-progress' | 'job-completed' | 'job-failed';
   tenantId: string;
-  userId: string;
+  userId?: string;
   jobId: string;
-  moduleId: string;
-  kind: string;
+  moduleId?: string;
+  kind?: string;
   label?: string;
   progress?: { current: number; total: number; percent: number };
   hasDownload?: boolean;

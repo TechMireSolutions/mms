@@ -1,6 +1,5 @@
 import { lazy, Suspense } from "react";
 import { AnimatePresence } from "framer-motion";
-import type { Student } from "@mms/shared";
 import {
   ModuleDrawerLoadingSkeleton,
   ModuleOverlayLoadingFallback,
@@ -78,7 +77,7 @@ export const StudentsPageOverlays = (function StudentsPageOverlays({
         <AnimatePresence>
           {showStudentForm && !configPending ? (
             <StudentForm
-              student={editStudent as unknown as Partial<Student> | null}
+              student={editStudent}
               onClose={onCloseForm}
               onSave={onSave}
             />

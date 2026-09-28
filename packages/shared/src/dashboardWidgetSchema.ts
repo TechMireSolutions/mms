@@ -32,47 +32,8 @@ const THRESHOLD_COLORS = ["red", "amber", "yellow"] as const;
 const FILTER_OPERATORS = ["equals", "contains", "gt", "lt"] as const;
 const CHART_TYPES = ["bar", "line", "area", "pie", "radar", "kpi", "progress", "switch"] as const;
 
-export interface DashboardWidgetDto {
-  id: string;
-  title: string;
-  titleKey?: string;
-  category: string;
-  collection: string;
-  widgetType?: (typeof WIDGET_TYPES)[number];
-  icon?: string;
-  subTextType?: (typeof SUB_TEXT_TYPES)[number];
-  fixedSubText?: string;
-  fixedSubTextKey?: string;
-  trend?: number;
-  trendType?: (typeof TREND_TYPES)[number];
-  role?: string;
-  switchActionType?: (typeof SWITCH_ACTION_TYPES)[number];
-  switchStateKey?: string;
-  switchLabelOn?: string;
-  switchLabelOff?: string;
-  switchLabelOnKey?: string;
-  switchLabelOffKey?: string;
-  switchCollection?: string;
-  switchRecordId?: string;
-  switchField?: string;
-  thresholdEnabled?: boolean;
-  thresholdCondition?: (typeof THRESHOLD_CONDITIONS)[number];
-  thresholdValue?: number;
-  thresholdColor?: (typeof THRESHOLD_COLORS)[number];
-  chartType?: (typeof CHART_TYPES)[number];
-  xAxisField?: string;
-  operation: (typeof OPERATIONS)[number];
-  targetField?: string;
-  filterField?: string;
-  filterOperator?: (typeof FILTER_OPERATORS)[number];
-  filterValue?: string;
-  color: string;
-  isPinnedToDashboard: boolean;
-  sortOrder?: number;
-}
-
 /** Single dashboard widget — resilient write DTO (accepts clean shapes, strips anomalies during normalization). */
-export const customWidgetSchema: z.ZodType<DashboardWidgetDto> = z
+export const customWidgetSchema = z
   .object({
     id: z.string().min(1),
     title: z.string(),
@@ -111,7 +72,10 @@ export const customWidgetSchema: z.ZodType<DashboardWidgetDto> = z
     isPinnedToDashboard: z.boolean(),
     /** Stable pin order within the dashboard layout (BE defaults to array index). */
     sortOrder: z.number().optional(),
-  }).passthrough() as unknown as z.ZodType<DashboardWidgetDto>;
+  })
+  .passthrough();
+
+export type DashboardWidgetDto = z.infer<typeof customWidgetSchema>;
 
 /**
  * Pure helper for normalizing arbitrary raw widget records (e.g. from local storage,

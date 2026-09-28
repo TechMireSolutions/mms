@@ -1,4 +1,4 @@
-import { ENROLLMENTS_MODULE_MANIFEST, formatDate, type Enrollment, type Session, type Student } from '@mms/shared';
+import { ENROLLMENTS_MODULE_MANIFEST, formatDate, type Enrollment, type Session } from '@mms/shared';
 import { apiContract } from '@/lib/api';
 import { fetchAllStudentsForQuery } from '@/tenant/hooks/collections/students';
 import { mapStudentRow, type EnrollmentHistoryItem } from '@/components/ui/reports/studentReportTypes';
@@ -51,7 +51,7 @@ export async function resolveStudentReportExportRows(input: {
     sessionId,
     className,
   });
-  return (source as unknown as Student[]).map((student) => ({ ...mapStudentRow(student, sessions) }));
+  return source.map((student) => ({ ...mapStudentRow(student, sessions) }));
 }
 
 /** Resolves full enrollment rows for report export. */

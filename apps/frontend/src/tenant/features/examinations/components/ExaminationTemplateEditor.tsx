@@ -139,7 +139,7 @@ export function ExaminationTemplateEditor({
   };
 
   const handleExportTypst = (payload: TypstReportCardPayload) => {
-    const conforming = mapToTypstReportCard(payload as unknown as Record<string, unknown>);
+    const conforming = mapToTypstReportCard({ ...payload });
     const jsonStr = JSON.stringify(conforming, null, 2);
     const blob = new Blob([jsonStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);

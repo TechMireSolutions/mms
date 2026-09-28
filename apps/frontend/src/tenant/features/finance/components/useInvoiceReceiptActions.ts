@@ -48,48 +48,58 @@ export function useInvoiceReceiptActions(
     `);
     win.document.close();
     win.focus();
-    win.print();
-    win.close();
+    void win.document.fonts.ready.then(() => {
+      win.print();
+      win.close();
+    });
   }, [printRef, t]);
 
   const handleExportTypst = useCallback(() => {
-    const inv = invoices[0];
-    if (!inv) return;
-    const collected = getCollectedAmountForInvoice(inv);
-    const outstanding = getOutstandingAmountForInvoice(inv);
-    const payload = mapToTypstFeeReceipt({
-      institution: madrasaName,
-      receiptNo: inv.id,
-      date: inv.paidDate ?? inv.dueDate,
-      studentName: inv.studentName,
-      rollNo: inv.studentId,
-      className: `${inv.class} · ${inv.session}`,
-      feeItems: [
-        {
-          description: 'Tuition Fee',
-          amount: String(inv.finalAmt),
-          paid: String(collected),
-        },
-      ],
-      totalAmount: String(inv.finalAmt),
-      paidAmount: String(collected),
-      balance: String(outstanding),
-      paymentMethod: inv.method ?? 'Cash',
-      transactionRef: inv.id,
-    });
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `typst-fee-receipt-${inv.id}.json`;
-    a.click();
-    URL.revokeObjectURL(url);
-    notify.success('Typst fee-receipt payload exported');
+    if (invoices.length === 0) return;
+    for (const inv of invoices) {
+      const collected = getCollectedAmountForInvoice(inv);
+      const outstanding = getOutstandingAmountForInvoice(inv);
+      const payload = mapToTypstFeeReceipt({
+        institution: madrasaName,
+        receiptNo: inv.id,
+        date: inv.paidDate ?? inv.dueDate,
+        studentName: inv.studentName,
+        rollNo: inv.studentId,
+        className: `${inv.class} · ${inv.session}`,
+        feeItems: [
+          {
+            description: 'Tuition Fee',
+            amount: String(inv.finalAmt),
+            paid: String(collected),
+          },
+        ],
+        totalAmount: String(inv.finalAmt),
+        paidAmount: String(collected),
+        balance: String(outstanding),
+        paymentMethod: inv.method ?? 'Cash',
+        transactionRef: inv.id,
+      });
+      const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `typst-fee-receipt-${inv.id}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    notify.success(
+      invoices.length > 1
+        ? `${invoices.length} Typst fee-receipt payloads exported`
+        : 'Typst fee-receipt payload exported',
+    );
   }, [invoices, madrasaName]);
 
   const handleExportZoho = useCallback(() => {
     const inv = invoices[0];
     if (!inv) return;
+    if (invoices.length > 1) {
+      notify.info(t('finance.receipt.zohoSingleInvoiceNote'));
+    }
     const outstanding = getOutstandingAmountForInvoice(inv);
     const payload = mapToZohoInvoice({
       invoice_number: inv.id,
@@ -116,7 +126,7 @@ export function useInvoiceReceiptActions(
     a.click();
     URL.revokeObjectURL(url);
     notify.success('Zoho invoice payload exported');
-  }, [invoices]);
+  }, [invoices, t]);
 
   return {
     handlePrint,

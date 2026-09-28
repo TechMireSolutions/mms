@@ -1,6 +1,7 @@
 import {
   EXAMINATIONS_MODULE_MANIFEST,
   normalizeExaminationsModulePreferences,
+  normalizeExaminationsSettings,
   type ExaminationsModulePreferences,
   type ExaminationsSettings
 } from '@mms/shared';
@@ -32,6 +33,5 @@ import { useMemo } from 'react';
 /** Composed ExaminationsSettings from preferences queries. */
 export function useComposedExaminationsSettings(): ExaminationsSettings {
   const prefsQuery = useExaminationPreferencesQuery();
-  const fallback = useMemo(() => normalizeExaminationsModulePreferences(null), []);
-  return (prefsQuery.data ?? fallback) as unknown as ExaminationsSettings;
+  return useMemo(() => normalizeExaminationsSettings(prefsQuery.data), [prefsQuery.data]);
 }

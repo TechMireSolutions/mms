@@ -47,7 +47,7 @@ function compileEnrollmentColumnExtractor(columnId: string): (enrollment: Enroll
   if (columnId === 'paymentStatus') return (e) => String(e.paymentStatus || '');
   const propKey = columnId.startsWith('custom:') ? columnId.slice('custom:'.length) : columnId;
   return (enrollment) => {
-    const cellVal = (enrollment as unknown as Record<string, unknown>)[propKey];
+    const cellVal = Reflect.get(enrollment, propKey);
     if (cellVal === undefined || cellVal === null) return '';
     if (Array.isArray(cellVal)) return cellVal.map(String).filter(Boolean).join('; ');
     if (typeof cellVal === 'object') return '';

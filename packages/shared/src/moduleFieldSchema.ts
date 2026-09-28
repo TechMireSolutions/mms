@@ -48,7 +48,7 @@ export interface ModuleFieldDef {
  * @param customFields Custom fields created by the user
  */
 export function getSortedFields(
-  defaultDefs: ModuleFieldDef[],
+  defaultDefs: readonly ModuleFieldDef[],
   fieldOrder: string[] | undefined,
   fieldsConfig: Record<string, ModuleFieldConfig> | undefined,
   customFields: ModuleCustomField[] | undefined

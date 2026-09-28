@@ -52,15 +52,16 @@ export function cacheWorkspaceLookup(subdomain: string, data: WorkspaceLookupRes
 export async function fetchWorkspaceBySubdomain(
   subdomain: string,
   signal?: AbortSignal,
-): Promise<{ status: number; body: WorkspaceLookupResult }> {
+): Promise<{ status: number; body: WorkspaceLookupResult | null }> {
   const url = resolveApiUrl(`/api/workspace/by-subdomain/${encodeURIComponent(subdomain)}`);
   const res = await apiFetch(url, { signal });
   if (res.status === 404) {
-    return { status: 404, body: null as unknown as WorkspaceLookupResult };
+    return { status: 404, body: null };
   }
   if (!res.ok) {
-    const error = new Error(`Workspace lookup failed: ${res.status}`);
-    (error as unknown as { status: number }).status = res.status;
+    const error = Object.assign(new Error(`Workspace lookup failed: ${res.status}`), {
+      status: res.status,
+    });
     throw error;
   }
   const data = (await res.json()) as WorkspaceLookupResult;
@@ -68,7 +69,7 @@ export async function fetchWorkspaceBySubdomain(
 }
 
 export function useWorkspaceBySubdomain(subdomain: string | null, enabled: boolean) {
-  return useQuery<{ status: number; body: WorkspaceLookupResult }>({
+  return useQuery<{ status: number; body: WorkspaceLookupResult | null }>({
     queryKey: [...WORKSPACE_BY_SUBDOMAIN_KEY, subdomain],
     queryFn: ({ signal }) => fetchWorkspaceBySubdomain(subdomain!, signal),
     enabled: enabled && Boolean(subdomain),

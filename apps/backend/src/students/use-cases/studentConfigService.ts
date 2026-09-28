@@ -1,5 +1,6 @@
 import {
   composeStudentsSettings,
+  normalizeStudentsSettings,
   stripStudentFieldConfigForPersist,
   type FieldDefinition,
   type StudentsSettings,
@@ -39,7 +40,7 @@ export const loadStudentFieldConfig = studentFieldConfig.load;
 export async function saveStudentFieldConfig(
   config: StudentsSettings | Record<string, unknown>,
 ): Promise<StudentsSettings> {
-  return studentFieldConfig.save(config as StudentsSettings);
+  return studentFieldConfig.save(normalizeStudentsSettings(config));
 }
 
 /** Full StudentsSettings for validation / GR (field-config + preferences + tabs). */

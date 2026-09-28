@@ -26,16 +26,18 @@ interface ClassCardProps {
 
 export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWrite }: ClassCardProps) {
   const { t } = useTranslation();
-  const rawClass = sessionClass as unknown as Record<string, unknown>;
-  const maxCapacity = sessionClass.maxStudents ?? (typeof rawClass.capacity === "number" ? rawClass.capacity : 30);
+  const rawCapacity = Reflect.get(sessionClass, "capacity");
+  const maxCapacity = sessionClass.maxStudents ?? (typeof rawCapacity === "number" ? rawCapacity : 30);
   const enrolledCount = sessionClass.enrolled ?? 0;
   const capacityPercent = Math.round((enrolledCount / Math.max(1, maxCapacity)) * 100);
   const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
   const teacherLabel = teacherNameById(teachers, sessionClass.facultyId || sessionClass.teacherId) || sessionClass.facultyName || sessionClass.teacherName || t("sessions.classes.unassigned");
   const genderConfig: Record<string, StatusBadgeConfigItem> = genderStatusBadgeConfig(t, { includeAny: true });
 
-  const minAge = sessionClass.minAge ?? (typeof rawClass.ageMin === "number" ? rawClass.ageMin : 5);
-  const maxAge = sessionClass.maxAge ?? (typeof rawClass.ageMax === "number" ? rawClass.ageMax : 18);
+  const rawAgeMin = Reflect.get(sessionClass, "ageMin");
+  const rawAgeMax = Reflect.get(sessionClass, "ageMax");
+  const minAge = sessionClass.minAge ?? (typeof rawAgeMin === "number" ? rawAgeMin : 5);
+  const maxAge = sessionClass.maxAge ?? (typeof rawAgeMax === "number" ? rawAgeMax : 18);
 
   const feeCount = sessionClass.fees?.length ?? 0;
   const scheduleCount = sessionClass.schedules?.length ?? 0;

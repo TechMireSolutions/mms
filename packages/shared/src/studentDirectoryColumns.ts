@@ -182,21 +182,17 @@ export const STUDENT_DIRECTORY_COLUMN_SURFACES = [
 export type StudentDirectoryColumnKey =
   (typeof STUDENT_DIRECTORY_COLUMN_SURFACES)[number]['key'];
 
-export const STUDENT_WORK_COLUMN_KEYS = STUDENT_DIRECTORY_COLUMN_SURFACES
-  .filter((surface) => surface.work && surface.key !== 'name')
-  .slice()
-  .sort((left, right) => left.workOrder - right.workOrder)
-  .map((surface) => surface.key) as unknown as readonly [
-    'grNumber',
-    'gender',
-    'phone',
-    'email',
-    'dob',
-    'parents',
-    'status',
-    'registeredDate',
-    'notes',
-  ];
+export const STUDENT_WORK_COLUMN_KEYS = [
+  'grNumber',
+  'gender',
+  'phone',
+  'email',
+  'dob',
+  'parents',
+  'status',
+  'registeredDate',
+  'notes',
+] as const;
 
 export type StudentWorkColumnKey = (typeof STUDENT_WORK_COLUMN_KEYS)[number];
 
@@ -253,19 +249,15 @@ export const STUDENT_COLUMN_FIELD_MAPPING: Record<
   return mapping;
 })();
 
-export const STUDENT_SORT_FIELDS = STUDENT_DIRECTORY_COLUMN_SURFACES
-  .filter((surface) => surface.sort)
-  .slice()
-  .sort((left, right) => left.sortOrder - right.sortOrder)
-  .map((surface) => surface.key) as unknown as readonly [
-    'name',
-    'grNumber',
-    'status',
-    'gender',
-    'registeredDate',
-    'dob',
-    'updatedAt',
-  ];
+export const STUDENT_SORT_FIELDS = [
+  'name',
+  'grNumber',
+  'status',
+  'gender',
+  'registeredDate',
+  'dob',
+  'updatedAt',
+] as const;
 
 export type StudentSortField = (typeof STUDENT_SORT_FIELDS)[number];
 export const STUDENT_SORT_FIELD_SET: ReadonlySet<string> = new Set(STUDENT_SORT_FIELDS);

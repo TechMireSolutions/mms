@@ -60,7 +60,7 @@ export async function* generateSnapshotJsonChunks(
   }
 
   // Any other top-level metadata properties (e.g. version, exportedAt)
-  for (const [key, value] of Object.entries(snapshot as unknown as Record<string, unknown>)) {
+  for (const [key, value] of Object.entries(Object.assign({}, snapshot))) {
     if (key === 'collections' || key === 'objects' || key === 'assets') continue;
     if (value === undefined) continue;
     if (hasPreviousField) yield ',';

@@ -21,11 +21,7 @@ export const sessionListPageResponseSchema = z.object({
 });
 
 /** `{ success: true, succeeded, failed }` bulk-operation envelope. */
-const sessionBulkResultResponseSchema = z.object({
-  success: z.literal(true),
-  succeeded: z.number(),
-  failed: z.number(),
-});
+const sessionBulkResultResponseSchema = z.object({ success: z.literal(true), succeeded: z.number(), failed: z.number() });
 
 /** Normalized Sessions Setup preferences (`SessionModulePreferences`). */
 export const sessionPreferencesResponseSchema = z.object({

@@ -1,4 +1,5 @@
-import type { TabDefinition, ColumnRegistryEntry } from "./contactTypes.js";
+import type { TabDefinition, ColumnRegistryEntry, FieldDefinition } from "./contactTypes.js";
+import type { ModuleFieldDef } from './moduleFieldSchema.js';
 import type { SequenceYearFormat } from "./sequenceNumberingTypes.js";
 
 // ─── Students Module Settings ─────────────────────────────────────────────────
@@ -36,7 +37,7 @@ export interface StudentsSettings {
   /** Current counter telemetry. */
   grNumberCurrentSeq?: number;
   /** Field level customization visibility/requirement toggles */
-  fields?: Record<string, unknown>;
+  fields?: Record<string, FieldDefinition[]> | Record<string, unknown>;
   /** User defined dynamic custom fields */
   customFields?: StudentCustomField[];
   /** Sequence ordering of the default and custom fields in the form/views */
@@ -63,13 +64,7 @@ export const DEFAULT_STUDENTS_SETTINGS: StudentsSettings = {
   fieldOrder: ["gender", "dob", "contactRelationships", "registeredDate"],
 };
 
-interface StudentFieldDef {
-  id: string;
-  label: string;
-  type?: string;
-  required?: boolean;
-  options?: string[];
-  enabled?: boolean;
+interface StudentFieldDef extends ModuleFieldDef {
   isCustom?: boolean;
 }
 

@@ -325,7 +325,7 @@ export const attendanceContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const saved = await updateAttendanceFieldConfigService(body);
         await auditAttendance(user, 'UPDATE_ATTENDANCE_CONFIG', 'Updated attendance field configuration', 'field-config');
-        return { status: 200 as const, body: { success: true, config: saved as unknown as Record<string, unknown> } };
+        return { status: 200 as const, body: { success: true, config: Object.assign({}, saved) } };
       } catch (error) {
 
         return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to save attendance field config' } });

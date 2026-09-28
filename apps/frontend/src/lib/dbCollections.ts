@@ -43,12 +43,9 @@ export function hasCollectionInCache(key: string): boolean {
  */
 export function saveCollectionCacheOnly<T>(key: string, collectionItems: T[]): void {
   try {
-    let dataToSave = collectionItems;
-    if (key === "sessions") {
-      dataToSave = validateSessions(collectionItems) as unknown as T[];
-    }
-    dataToSave = normalizeLinkedCollection(key, dataToSave);
-    dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
+    const sanitized: unknown[] = key === "sessions" ? validateSessions(collectionItems) : collectionItems;
+    const normalized = normalizeLinkedCollection(key, sanitized);
+    const dataToSave = applyTitleCaseRecursive(normalized);
     safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
     dispatchLocalDatabaseUpdate();
   } catch (error) {
@@ -71,12 +68,12 @@ export function getCollection<T = unknown>(key: string, defaultData: T[] = [] as
       try {
         const parsed = JSON.parse(saved) as unknown;
         if (Array.isArray(parsed)) {
-          let collection = parsed as T[];
+          let collection: unknown[] = parsed;
           if (key === "sessions") {
-            collection = validateSessions(collection) as unknown as T[];
+            collection = validateSessions(collection);
           }
           collection = hydrateLinkedCollection(key, collection);
-          return collection;
+          return collection as T[];
         }
       } catch (error) {
         reportClientWarn(error, { context: 'db.parseCachedCollection', key });
@@ -89,11 +86,8 @@ export function getCollection<T = unknown>(key: string, defaultData: T[] = [] as
     if (defaultData.length === 0) {
       return [];
     }
-    let dataToSave = defaultData;
-    if (key === "sessions") {
-      dataToSave = validateSessions(defaultData) as unknown as T[];
-    }
-    dataToSave = normalizeLinkedCollection(key, dataToSave);
+    const sanitized: unknown[] = key === "sessions" ? validateSessions(defaultData) : defaultData;
+    const dataToSave = normalizeLinkedCollection(key, sanitized);
     safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
 
     // Defer so reads during render (e.g. useLiveCollection init) don't update other components synchronously
@@ -103,12 +97,12 @@ export function getCollection<T = unknown>(key: string, defaultData: T[] = [] as
       });
     }
 
-    let seedData = hydrateLinkedCollection(key, dataToSave);
+    let seedData: unknown[] = hydrateLinkedCollection(key, dataToSave);
     if (key === "sessions") {
-      seedData = validateSessions(seedData) as unknown as T[];
+      seedData = validateSessions(seedData);
       seedData = hydrateLinkedCollection(key, seedData);
     }
-    return seedData;
+    return seedData as T[];
   } catch (error) {
     reportClientError(error, { context: 'db.getCollection', key });
     return defaultData;
@@ -125,12 +119,9 @@ export function getCollection<T = unknown>(key: string, defaultData: T[] = [] as
  */
 export function saveCollection<T>(key: string, collectionItems: T[]): void {
   try {
-    let dataToSave = collectionItems;
-    if (key === "sessions") {
-      dataToSave = validateSessions(collectionItems) as unknown as T[];
-    }
-    dataToSave = normalizeLinkedCollection(key, dataToSave);
-    dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
+    const sanitized: unknown[] = key === "sessions" ? validateSessions(collectionItems) : collectionItems;
+    const normalized = normalizeLinkedCollection(key, sanitized);
+    const dataToSave = applyTitleCaseRecursive(normalized);
     safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
     dispatchLocalDatabaseUpdate();
 
@@ -148,12 +139,9 @@ export function saveCollection<T>(key: string, collectionItems: T[]): void {
  * Throws when the server rejects the write.
  */
 export async function saveCollectionAsync<T>(key: string, collectionItems: T[]): Promise<void> {
-  let dataToSave = collectionItems;
-  if (key === "sessions") {
-    dataToSave = validateSessions(collectionItems) as unknown as T[];
-  }
-  dataToSave = normalizeLinkedCollection(key, dataToSave);
-  dataToSave = applyTitleCaseRecursive(dataToSave) as T[];
+  const sanitized: unknown[] = key === "sessions" ? validateSessions(collectionItems) : collectionItems;
+  const normalized = normalizeLinkedCollection(key, sanitized);
+  const dataToSave = applyTitleCaseRecursive(normalized);
   safeSetItem(scopedStorageKey(key), JSON.stringify(dataToSave));
   dispatchLocalDatabaseUpdate();
 

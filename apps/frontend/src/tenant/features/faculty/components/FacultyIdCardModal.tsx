@@ -71,7 +71,7 @@ export function TeacherIdCardModal({
         <div
           ref={printAreaRef}
           data-print-unclamp
-          className="id-card-print-container grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-dialog-scroll overflow-y-auto p-2"
+          className="id-card-print-container grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-dialog-scroll overflow-y-auto p-2 print:grid-cols-2 print:gap-3 print:max-h-none print:overflow-visible print:p-0"
         >
           {items.map(({ teacher, assignedClasses, qualification, emergencyPhone }) => {
             const displayPhone = emergencyPhone || (teacher.phone ? String(teacher.phone) : undefined);
@@ -79,7 +79,7 @@ export function TeacherIdCardModal({
             return (
               <div
                 key={teacher.id}
-                className="id-card-preview relative border border-border/80 rounded-2xl p-4 bg-gradient-to-br from-card via-card/95 to-muted/30 shadow-sm overflow-hidden flex flex-col justify-between min-h-panel-sm"
+                className="id-card-preview relative border border-border/80 rounded-2xl p-4 bg-gradient-to-br from-card via-card/95 to-muted/30 shadow-sm overflow-hidden flex flex-col justify-between min-h-panel-sm print:shadow-none print:border-black/30 print:bg-white"
               >
                 {/* Header */}
                 <div className="flex items-center justify-between border-b border-border/40 pb-2.5 mb-3">

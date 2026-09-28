@@ -94,7 +94,7 @@ export function CustomWidgetRenderer({
   const computedCard = (() => {
     if (resolvedWidgetType !== "card") return null;
 
-    const card = widget as unknown as CustomCard;
+    const card: CustomCard = Object.assign({ operation: "count" as const, color: "blue", icon: "star", subTextType: "dynamic" as const }, widget);
     const serverComputed = computeServerBackedCard(card, t);
 
     return serverComputed ?? computeCustomCard(card, {

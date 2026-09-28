@@ -1,4 +1,4 @@
-import type { ModuleFieldDef, ModuleCustomField } from '@mms/shared';
+import type { ModuleCustomField } from '@mms/shared';
 import {
   getSortedTeacherFields,
   listEnabledCustomTeacherFormFields,
@@ -51,8 +51,8 @@ const useTeacherConfigImpl = createStandardModuleConfigHook<
   { statuses: string[]; specializations: string[]; genderFilters: string[]; designations: string[] }
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultSettings as TeachersSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultFieldDefs as unknown as ModuleFieldDef[],
-  useSettings: useComposedFacultySettings as unknown as () => TeachersSettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultFieldDefs,
+  useSettings: useComposedFacultySettings,
   useUpdateSettingsAsync: () => {
     const mutation = useFacultyPreferencesMutation();
     return async (draft: TeachersSettings) => {
@@ -70,7 +70,7 @@ const useTeacherConfigImpl = createStandardModuleConfigHook<
       }),
     ) as ModuleCustomField[],
   orderedFieldsFrom: ({ fieldOrder, settings }) =>
-    getSortedTeacherFields(fieldOrder, settings.fields) as ModuleFieldDef[],
+    getSortedTeacherFields(fieldOrder, settings.fields),
   lookupsFrom: function useTeacherConfigLookups() {
     const lookupsQuery = useTeacherLookupsQuery();
     const lookups = lookupsQuery.data ?? emptyTeacherLookupsMap();
@@ -95,7 +95,7 @@ const useStudentConfigImpl = createStandardModuleConfigHook<
   { statuses: string[]; genderFilters: string[]; discountTypes: string[] }
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.students.defaultSettings as StudentsSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.students.defaultFieldDefs as unknown as ModuleFieldDef[],
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.students.defaultFieldDefs,
   useSettings: useComposedStudentsSettings,
   useUpdateSettingsAsync: () => {
     const mutation = useStudentPreferencesMutation();
@@ -124,7 +124,7 @@ const useSessionConfigImpl = createStandardModuleConfigHook<
   { statuses: string[]; types: string[] }
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.sessions.defaultSettings as SessionsSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.sessions.defaultFieldDefs as unknown as ModuleFieldDef[],
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.sessions.defaultFieldDefs,
   useSettings: useComposedSessionsSettings,
   useUpdateSettingsAsync: () => {
     const mutation = useSessionPreferencesMutation();
@@ -152,7 +152,7 @@ const useEnrollmentConfigImpl = createStandardModuleConfigHook<
   Record<string, never>
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.enrollments.defaultSettings as EnrollmentsSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.enrollments.defaultFieldDefs as unknown as ModuleFieldDef[],
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.enrollments.defaultFieldDefs,
   useSettings: useComposedEnrollmentsSettings,
   useUpdateSettingsAsync: () => {
     const mutation = useEnrollmentPreferencesMutation();
@@ -172,7 +172,7 @@ const useExaminationConfigImpl = createStandardModuleConfigHook<
   Record<string, never>
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.examinations.defaultSettings as ExaminationsSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.examinations.defaultFieldDefs as unknown as ModuleFieldDef[],
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.examinations.defaultFieldDefs,
   useSettings: useComposedExaminationsSettings,
   useUpdateSettingsAsync: () => {
     const mutation = useExaminationPreferencesMutation();

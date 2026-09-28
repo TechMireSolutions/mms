@@ -1,5 +1,6 @@
 import {
   composeFacultySettings,
+  normalizeFacultySettings,
   stripFacultyFieldConfigForPersist,
   type FieldDefinition,
   type FacultySettings,
@@ -38,7 +39,7 @@ export const loadFacultyFieldConfig = facultyFieldConfig.load;
 export async function saveFacultyFieldConfig(
   config: FacultySettings | Record<string, unknown>,
 ): Promise<FacultySettings> {
-  return facultyFieldConfig.save(config as FacultySettings);
+  return facultyFieldConfig.save(normalizeFacultySettings(config));
 }
 
 /** Full FacultySettings for validation / employee ID (field-config + preferences + tabs). */

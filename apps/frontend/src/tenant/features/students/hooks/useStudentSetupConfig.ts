@@ -1,6 +1,7 @@
 import {
   STUDENTS_MODULE_MANIFEST,
   normalizeStudentModulePreferences,
+  normalizeStudentsSettings,
   type StudentModulePreferences,
   type StudentsSettings
 } from '@mms/shared';
@@ -32,6 +33,5 @@ import { useMemo } from 'react';
 /** Composed StudentsSettings from preferences queries. */
 export function useComposedStudentsSettings(): StudentsSettings {
   const prefsQuery = useStudentPreferencesQuery();
-  const fallback = useMemo(() => normalizeStudentModulePreferences(null), []);
-  return (prefsQuery.data ?? fallback) as unknown as StudentsSettings;
+  return useMemo(() => normalizeStudentsSettings(prefsQuery.data), [prefsQuery.data]);
 }

@@ -36,10 +36,10 @@ export function useFinanceSetupSaveActions({
   const [saving, setSaving] = useState(false);
 
   const isPrefsDirty = (() => {
-    const draft = settingsDraft as unknown as Record<string, unknown>;
-    const savedSettings = settings as unknown as Record<string, unknown>;
     return PREF_KEYS.some(
-      (key) => JSON.stringify(draft[key]) !== JSON.stringify(savedSettings[key]),
+      (key) =>
+        JSON.stringify(Reflect.get(settingsDraft, key)) !==
+        JSON.stringify(Reflect.get(settings, key)),
     );
   })();
 

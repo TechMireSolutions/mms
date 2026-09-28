@@ -12,7 +12,7 @@ export type OutboxEventType =
   | 'entity.restored'
   | 'entity.hard_purge';
 
-export interface SoftDeletedPayload {
+export type SoftDeletedPayload = {
   entityType: string;
   entityId: string;
   tenantId: string;
@@ -34,24 +34,24 @@ export interface SoftDeletedPayload {
    * row deletion.
    */
   snapshot?: Record<string, unknown>;
-}
+};
 
-export interface RestoredPayload {
+export type RestoredPayload = {
   entityType: string;
   entityId: string;
   tenantId: string;
   restoredAt: string;
   restoredBy: string;
   version: number;
-}
+};
 
-export interface HardPurgePayload {
+export type HardPurgePayload = {
   entityType: string;
   entityId: string;
   tenantId: string;
   purgedAt: string;
   version: number;
-}
+};
 
 export type OutboxPayload = SoftDeletedPayload | RestoredPayload | HardPurgePayload;
 
@@ -81,33 +81,33 @@ export async function emitOutboxEvent(
   second: OutboxEventType | OutboxPayload,
   third?: OutboxPayload,
 ): Promise<void> {
-  let executor: AppDb;
-  let eventType: OutboxEventType;
-  let payload: OutboxPayload;
+  const isExplicitTx = third !== undefined;
+  const eventType = isExplicitTx ? (second as OutboxEventType) : (first as OutboxEventType);
+  const payload = isExplicitTx ? third : (second as OutboxPayload);
 
-  if (third !== undefined) {
-    executor = first as AppDb;
-    eventType = second as OutboxEventType;
-    payload = third;
+  const row = {
+    workspaceSubdomain: payload.tenantId,
+    eventType,
+    entityType: payload.entityType,
+    entityId: payload.entityId,
+    payload,
+  };
+
+  if (isExplicitTx) {
+    const tx = first as AppDb;
+    await tx.insert(outboxEvents).values(row);
+    if ('execute' in tx && typeof tx.execute === 'function') {
+      try {
+        await tx.execute(sql`NOTIFY mms_outbox_events, 'new_event'`);
+      } catch {
+        // Non-blocking fallback if NOTIFY is unsupported in testing or mock transactions
+      }
+    }
   } else {
-    executor = activeDb() as unknown as AppDb;
-    eventType = first as OutboxEventType;
-    payload = second as OutboxPayload;
-  }
-
-  await executor
-    .insert(outboxEvents)
-    .values({
-      workspaceSubdomain: payload.tenantId,
-      eventType,
-      entityType: payload.entityType,
-      entityId: payload.entityId,
-      payload: payload as unknown as Record<string, unknown>,
-    });
-
-  if ('execute' in executor && typeof executor.execute === 'function') {
+    const db = activeDb();
+    await db.insert(outboxEvents).values(row);
     try {
-      await executor.execute(sql`NOTIFY mms_outbox_events, 'new_event'`);
+      await db.execute(sql`NOTIFY mms_outbox_events, 'new_event'`);
     } catch {
       // Non-blocking fallback if NOTIFY is unsupported in testing or mock transactions
     }

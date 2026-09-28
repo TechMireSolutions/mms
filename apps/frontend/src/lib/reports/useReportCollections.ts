@@ -113,12 +113,6 @@ export function useReportCollectionRows(
   const { isAuthenticated } = useAuth();
   const key = collectionKey;
 
-  // Contacts + students + teachers + sessions + enrollments chart visualizers use POST /widget-aggregates — no row dump.
-  const contacts: Contact[] = [];
-  const students: Student[] = [];
-  const teachers: Teacher[] = [];
-  const sessions: Session[] = [];
-  const enrollments: Enrollment[] = [];
   const financeInvoices = useFinanceInvoicesPaginated(
     { page: 1, limit: FINANCE_MODULE_MANIFEST.maxPageSize },
     { enabled: isAuthenticated && key === 'finance_invoices' }
@@ -142,39 +136,23 @@ export function useReportCollectionRows(
 
   let rows: Record<string, unknown>[] = [];
   switch (key) {
-    case 'contacts':
-      rows = contacts as unknown as Record<string, unknown>[];
-      break;
-    case 'students':
-      rows = students as unknown as Record<string, unknown>[];
-      break;
-    case 'faculty':
-    case 'teachers':
-      rows = teachers as unknown as Record<string, unknown>[];
-      break;
-    case 'sessions':
-      rows = sessions as unknown as Record<string, unknown>[];
-      break;
-    case 'enrollments':
-      rows = enrollments as unknown as Record<string, unknown>[];
-      break;
     case 'finance_invoices':
-      rows = financeInvoices as unknown as Record<string, unknown>[];
+      rows = financeInvoices.map((inv) => ({ ...inv }));
       break;
     case 'attendance_records':
-      rows = attendanceRecords as unknown as Record<string, unknown>[];
+      rows = attendanceRecords.map((att) => ({ ...att }));
       break;
     case 'hasanat_distributions':
-      rows = hasanatDistributions as unknown as Record<string, unknown>[];
+      rows = hasanatDistributions.map((dist) => ({ ...dist }));
       break;
     case 'questions':
-      rows = questions as unknown as Record<string, unknown>[];
+      rows = questions.map((q) => ({ ...q }));
       break;
     case 'tests':
-      rows = tests as unknown as Record<string, unknown>[];
+      rows = tests.map((t) => ({ ...t }));
       break;
     case 'assessment_results':
-      rows = assessmentResults as unknown as Record<string, unknown>[];
+      rows = assessmentResults.map((res) => ({ ...res }));
       break;
     default:
       rows = [];

@@ -7,7 +7,7 @@ import {
 import type { StudentsListContentSortField } from "@/tenant/features/students/components/studentsListTypes";
 
 /** Sortable Work columns that map to the Students list API allowlist. */
-const STUDENT_LIST_SORTABLE_FIELDS = new Set<StudentsListContentSortField>(STUDENT_SORT_FIELDS as unknown as StudentsListContentSortField[]);
+const STUDENT_LIST_SORTABLE_FIELDS = new Set<StudentsListContentSortField>(STUDENT_SORT_FIELDS);
 
 /** Visible Work columns in registry order (checkbox / actions stay outside). */
 export function getStudentVisibleWorkColumns(

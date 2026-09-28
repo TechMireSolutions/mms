@@ -28,7 +28,7 @@ export interface UseTemplateMarqueeOptions {
 
 export interface UseTemplateMarqueeReturn {
   marquee: MarqueeBox | null;
-  onPointerDownBackground: (event: React.PointerEvent) => void;
+  onPointerDownBackground: (event: React.PointerEvent | React.MouseEvent) => void;
   onMouseDownBackground: (event: React.MouseEvent) => void;
 }
 
@@ -59,7 +59,7 @@ export function useTemplateMarquee({
     marqueeRef.current = marquee;
   }, [marquee]);
 
-  const onPointerDownBackground = (event: React.PointerEvent) => {
+  const onPointerDownBackground = (event: React.PointerEvent | React.MouseEvent) => {
     if (event.button !== 0 || isPreviewMode || isSpacePressed) return;
     if (!canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
@@ -123,6 +123,6 @@ export function useTemplateMarquee({
   return {
     marquee,
     onPointerDownBackground,
-    onMouseDownBackground: onPointerDownBackground as unknown as (event: React.MouseEvent) => void,
+    onMouseDownBackground: onPointerDownBackground,
   };
 }

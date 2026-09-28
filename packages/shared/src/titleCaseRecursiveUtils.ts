@@ -248,5 +248,5 @@ export function applyTitleCaseToContact<T extends Record<string, unknown>>(conta
     }
   });
 
-  return result as unknown as T;
+  return result as T;
 }

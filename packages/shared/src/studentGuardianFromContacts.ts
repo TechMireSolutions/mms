@@ -1,4 +1,5 @@
 import type { ContactRelationship, RelationshipContact } from './contactEntityTypes.js';
+import type { ContactLike } from './contactLinkPolicy.js';
 import { isAllowedRelationshipLabel } from './contactRelationshipRules.js';
 import { DEFAULT_RELATIONSHIP_PAIRS, normalizeRelationshipTerm } from './contactRelationshipPairUtils.js';
 
@@ -43,20 +44,9 @@ export type RelationshipLinkLike = {
   inferred?: boolean;
 };
 
-export type ContactWithRelationships = {
-  id?: string | number | null;
-  name?: string;
-  firstName?: string;
-  lastName?: string;
-  gender?: string;
-  dob?: string;
-  avatar?: string | null;
-  phones?: { number?: string; isPrimary?: boolean }[];
-  emails?: { address?: string; isPrimary?: boolean }[];
-  addresses?: { city?: string; state?: string; country?: string; line1?: string; isPrimary?: boolean }[];
+export type ContactWithRelationships = ContactLike & {
   relationshipContacts?: RelationshipContact[];
   relationships?: ContactRelationship[];
-  [key: string]: unknown;
 };
 
 const RESPONSIBLE_ADULT_LABELS = new Set(['parent', 'guardian']);
@@ -126,39 +116,25 @@ export function listStudentContactRelationships(
 /** True when the contact has a Parent or Guardian link (responsible adult). */
 export function hasResponsibleAdultLink(contact?: ContactWithRelationships | null): boolean {
   if (!contact) return false;
-  const links = collectContactRelationshipLinks(contact);
-  for (let i = 0; i < links.length; i++) {
-    const rel = (links[i].relationship || '').trim();
-    if (rel && isAllowedRelationshipLabel(rel) && RESPONSIBLE_ADULT_LABELS.has(normalizeRelationshipTerm(rel))) {
-      return true;
-    }
-  }
-  return false;
+  return collectContactRelationshipLinks(contact).some((link) => {
+    const rel = (link.relationship || '').trim();
+    return Boolean(rel && isAllowedRelationshipLabel(rel) && RESPONSIBLE_ADULT_LABELS.has(normalizeRelationshipTerm(rel)));
+  });
 }
 
 /** First Parent link, else first Guardian link — for list/detail primary display. */
 export function pickPrimaryResponsibleAdult(
   links: readonly StudentContactRelationshipLink[],
 ): StudentContactRelationshipLink | undefined {
-  let guardian: StudentContactRelationshipLink | undefined;
-  for (let i = 0; i < links.length; i++) {
-    const term = normalizeRelationshipTerm(links[i].relationship);
-    if (term === 'parent') return links[i];
-    if (!guardian && term === 'guardian') guardian = links[i];
-  }
-  return guardian;
+  return links.find((l) => normalizeRelationshipTerm(l.relationship) === 'parent')
+    ?? links.find((l) => normalizeRelationshipTerm(l.relationship) === 'guardian');
 }
 
 /** Display name for list/export: Father, else Mother, else Guardian. */
 export function primaryResponsibleAdultDisplayName(
-  student?: {
-    fatherName?: string | null;
-    motherName?: string | null;
-    guardianName?: string | null;
-  } | null,
+  student?: { fatherName?: string | null; motherName?: string | null; guardianName?: string | null } | null,
 ): string {
-  if (!student) return '';
-  return (student.fatherName || student.motherName || student.guardianName || '').trim();
+  return (student?.fatherName || student?.motherName || student?.guardianName || '').trim();
 }
 
 /**
@@ -182,69 +158,33 @@ export function resolveStudentGuardianLinks(
   let explicitFatherLink: StudentContactRelationshipLink | undefined;
   let explicitMotherLink: StudentContactRelationshipLink | undefined;
 
-  for (let i = 0; i < links.length; i++) {
-    const link = links[i];
+  for (const link of links) {
     const relTerm = normalizeRelationshipTerm(link.relationship);
     if (relTerm === 'parent') {
       parentLinks.push(link);
-      if (!explicitFatherLink && link.gender === 'male') {
-        explicitFatherLink = link;
-      } else if (!explicitMotherLink && link.gender === 'female') {
-        explicitMotherLink = link;
-      }
+      if (!explicitFatherLink && link.gender === 'male') explicitFatherLink = link;
+      else if (!explicitMotherLink && link.gender === 'female') explicitMotherLink = link;
     } else if (!guardian && relTerm === 'guardian') {
       guardian = link;
     }
   }
 
-  const legacyFatherId =
-    student.fatherContactId != null && String(student.fatherContactId).trim()
-      ? String(student.fatherContactId)
-      : undefined;
-  const legacyMotherId =
-    student.motherContactId != null && String(student.motherContactId).trim()
-      ? String(student.motherContactId)
-      : undefined;
-  const legacyGuardianId =
-    student.guardianContactId != null && String(student.guardianContactId).trim()
-      ? String(student.guardianContactId)
-      : undefined;
-
-  let fatherLink: StudentContactRelationshipLink | undefined;
-  let motherLink: StudentContactRelationshipLink | undefined;
-
+  const toLegacyId = (id: unknown) => (id != null && String(id).trim() ? String(id) : undefined);
+  let fatherLink = explicitFatherLink;
+  let motherLink = explicitMotherLink;
   if (explicitFatherLink || explicitMotherLink) {
-    fatherLink = explicitFatherLink;
-    motherLink = explicitMotherLink;
-    if (!fatherLink) {
-      for (let i = 0; i < parentLinks.length; i++) {
-        const l = parentLinks[i];
-        if (l !== motherLink && l.gender !== 'female') {
-          fatherLink = l;
-          break;
-        }
-      }
-    }
-    if (!motherLink) {
-      for (let i = 0; i < parentLinks.length; i++) {
-        const l = parentLinks[i];
-        if (l !== fatherLink && l.gender !== 'male') {
-          motherLink = l;
-          break;
-        }
-      }
-    }
+    fatherLink = explicitFatherLink ?? parentLinks.find((l) => l !== explicitMotherLink && l.gender !== 'female');
+    motherLink = explicitMotherLink ?? parentLinks.find((l) => l !== fatherLink && l.gender !== 'male');
   } else {
-    fatherLink = parentLinks[0];
-    motherLink = parentLinks.length > 1 ? parentLinks[1] : undefined;
+    [fatherLink, motherLink] = parentLinks;
   }
 
   return {
-    fatherContactId: fatherLink?.contactId ?? legacyFatherId,
+    fatherContactId: fatherLink?.contactId ?? toLegacyId(student.fatherContactId),
     fatherName: fatherLink?.name ?? (student.fatherName?.trim() || undefined),
-    motherContactId: motherLink?.contactId ?? legacyMotherId,
+    motherContactId: motherLink?.contactId ?? toLegacyId(student.motherContactId),
     motherName: motherLink?.name ?? (student.motherName?.trim() || undefined),
-    guardianContactId: guardian?.contactId ?? legacyGuardianId,
+    guardianContactId: guardian?.contactId ?? toLegacyId(student.guardianContactId),
     guardianName: guardian?.name ?? (student.guardianName?.trim() || undefined),
   };
 }

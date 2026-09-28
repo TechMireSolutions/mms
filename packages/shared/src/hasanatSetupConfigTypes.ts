@@ -173,11 +173,8 @@ export function composeHasanatSettings(
 }
 
 /** Drops preference keys before saving field-config to avoid overriding prefs layer. */
-export function stripHasanatFieldConfigForPersist(
-  config: Partial<HasanatSettings>
-): Partial<HasanatSettings> {
-  // `_`-prefixed names omit preference keys from the rest object (ESLint-clean, no behavior change).
-  const { pointsPerUnit: _pointsPerUnit, autoApprovePayouts: _autoApprovePayouts, defaultViewLayout: _defaultViewLayout, ...fieldConfigOnly } = config;
+export function stripHasanatFieldConfigForPersist(config: Partial<HasanatSettings>): Partial<HasanatSettings> {
+  const { pointsPerUnit: _p, autoApprovePayouts: _a, defaultViewLayout: _d, ...fieldConfigOnly } = config;
   return fieldConfigOnly;
 }
 
@@ -185,21 +182,15 @@ export function mergeHasanatFormTabsFromApi(
   documentFormTabs: TabDefinition[] | undefined,
   apiTabs: TabDefinition[],
 ): TabDefinition[] {
-  const documentOrDefault =
-    documentFormTabs && documentFormTabs.length > 0 ? documentFormTabs : [...HASANAT_TAB_REGISTRY];
-  const merged =
-    apiTabs.length === 0
-      ? documentOrDefault
-      : [
-          ...apiTabs,
-          ...HASANAT_TAB_REGISTRY.filter(
-            (seedTab: TabDefinition) => !apiTabs.some((apiTab) => apiTab.key === seedTab.key),
-          ),
-        ];
-  const seenKeys = new Set<string>();
+  const base = documentFormTabs && documentFormTabs.length > 0 ? documentFormTabs : [...HASANAT_TAB_REGISTRY];
+  const merged = apiTabs.length === 0 ? base : [
+    ...apiTabs,
+    ...HASANAT_TAB_REGISTRY.filter((s: TabDefinition) => !apiTabs.some((a) => a.key === s.key)),
+  ];
+  const seen = new Set<string>();
   return merged.filter((tab) => {
-    if (!tab?.key || seenKeys.has(tab.key)) return false;
-    seenKeys.add(tab.key);
+    if (!tab?.key || seen.has(tab.key)) return false;
+    seen.add(tab.key);
     return true;
   });
 }

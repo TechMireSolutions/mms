@@ -38,19 +38,35 @@ export function parseTenantDatabaseUpdate(raw: string | unknown): TenantDatabase
   }
 }
 
+function parseProgress(value: unknown): BackgroundJobEventMessage['progress'] {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return undefined;
+  const p = value as Record<string, unknown>;
+  return typeof p.current === 'number' && typeof p.total === 'number' && typeof p.percent === 'number'
+    ? { current: p.current, total: p.total, percent: p.percent }
+    : undefined;
+}
+
 export function parseTenantJobEvent(raw: string | unknown): BackgroundJobEventMessage | null {
   try {
     const parsed: unknown = typeof raw === 'string' ? JSON.parse(raw) : raw;
     if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) return null;
-    const record = parsed as Record<string, unknown>;
-    if (
-      record.event !== 'job-progress' &&
-      record.event !== 'job-completed' &&
-      record.event !== 'job-failed'
-    ) return null;
-    if (typeof record.jobId !== 'string') return null;
-    if (typeof record.tenantId !== 'string') return null;
-    return record as unknown as BackgroundJobEventMessage;
+    const r = parsed as Record<string, unknown>;
+    if (r.event !== 'job-progress' && r.event !== 'job-completed' && r.event !== 'job-failed') return null;
+    if (typeof r.jobId !== 'string' || typeof r.tenantId !== 'string') return null;
+    const progress = parseProgress(r.progress);
+    return {
+      event: r.event,
+      tenantId: r.tenantId,
+      jobId: r.jobId,
+      ...(typeof r.userId === 'string' ? { userId: r.userId } : {}),
+      ...(typeof r.moduleId === 'string' ? { moduleId: r.moduleId } : {}),
+      ...(typeof r.kind === 'string' ? { kind: r.kind } : {}),
+      ...(typeof r.label === 'string' ? { label: r.label } : {}),
+      ...(progress ? { progress } : {}),
+      ...(typeof r.hasDownload === 'boolean' ? { hasDownload: r.hasDownload } : {}),
+      ...(typeof r.error === 'string' ? { error: r.error } : {}),
+      ...(typeof r.completedAt === 'string' ? { completedAt: r.completedAt } : {}),
+    };
   } catch {
     return null;
   }

@@ -1,6 +1,7 @@
 import React, { useCallback, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "@/hooks/useTranslation";
+import type { AppTranslationKey } from "@mms/shared";
 import { cn } from "@/lib/utils";
 import { COMMAND_ITEMS, type CommandItem } from "@/components/ui/commandPaletteItems";
 import { CommandPaletteModal } from "@/components/ui/CommandPaletteModal";
@@ -18,7 +19,7 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
   const translate = useCallback(
     (key: string) => {
       try {
-        const val = (t as unknown as (k: string) => string)(key);
+        const val = t(key as AppTranslationKey);
         return typeof val === "string" && val ? val : "";
       } catch {
         return "";

@@ -82,11 +82,12 @@ export function useInvoiceTemplateSampleData({
       branding,
     });
 
+    const record: Record<string, unknown> = { ...collection };
     const data: InvoiceReceiptPayload = { ...defaultSampleData };
     for (const item of AVAILABLE_FIELDS) {
       const val = resolveField(
         item.field,
-        collection as unknown as Record<string, unknown>,
+        record,
         indexedLookups,
       );
       if (val !== undefined && val !== null && val !== '') {

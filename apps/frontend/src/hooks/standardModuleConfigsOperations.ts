@@ -1,4 +1,3 @@
-import type { ModuleFieldDef } from '@mms/shared';
 import {
   emptyAttendanceLookupsMap,
   normalizeUserModulePreferences,
@@ -44,7 +43,7 @@ const useUsersConfigImpl = createStandardModuleConfigHook<
   Record<string, never>
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.users.defaultSettings as UsersSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.users.defaultFieldDefs as unknown as ModuleFieldDef[],
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.users.defaultFieldDefs,
   useSettings: useComposedUsersSettings,
   useUpdateSettingsAsync: () => {
     const mutation = useUserPreferencesMutation();
@@ -64,7 +63,7 @@ const useHasanatConfigImpl = createStandardModuleConfigHook<
   Record<string, never>
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.hasanat.defaultSettings as HasanatSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.hasanat.defaultFieldDefs as unknown as ModuleFieldDef[],
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.hasanat.defaultFieldDefs,
   useSettings: useComposedHasanatSettings,
   useUpdateSettingsAsync: () => {
     const mutation = useHasanatPreferencesMutation();
@@ -84,7 +83,7 @@ const useFinanceConfigImpl = createStandardModuleConfigHook<
   Record<string, never>
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.finance.defaultSettings as FinanceSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.finance.defaultFieldDefs as unknown as ModuleFieldDef[],
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.finance.defaultFieldDefs,
   useSettings: useComposedFinanceSettings,
   useUpdateSettingsAsync: () => {
     const mutation = useFinancePreferencesMutation();
@@ -104,7 +103,7 @@ const useAccountingConfigImpl = createStandardModuleConfigHook<
   Record<string, never>
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.accounting.defaultSettings as AccountingSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.accounting.defaultFieldDefs as unknown as ModuleFieldDef[],
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.accounting.defaultFieldDefs,
   useSettings: useComposedAccountingSettings,
   useUpdateSettingsAsync: () => {
     const mutation = useAccountingPreferencesMutation();
@@ -124,7 +123,7 @@ const useAttendanceConfigImpl = createStandardModuleConfigHook<
   { statuses: import('@/lib/data/attendanceData').AttendanceStatus[] }
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.attendance.defaultSettings as AttendanceSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.attendance.defaultFieldDefs as unknown as ModuleFieldDef[],
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.attendance.defaultFieldDefs,
   useSettings: useComposedAttendanceSettings,
   useUpdateSettingsAsync: () => {
     const mutation = useAttendancePreferencesMutation();

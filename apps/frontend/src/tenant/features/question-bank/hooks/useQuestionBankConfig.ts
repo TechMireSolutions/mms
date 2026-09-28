@@ -46,7 +46,7 @@ export function useQuestionBankConfig(
   const { data: settings, updateAsync } = useComposedQuestionBankSettings();
   
   const defaultSettings = registry.defaultSettings as QuestionBankSettings;
-  const defaultFieldDefs = registry.defaultFieldDefs as unknown as ModuleFieldDef[];
+  const defaultFieldDefs = registry.defaultFieldDefs;
 
   const updateSettingsAsync = useCallback(
     async (settingsDraft: QuestionBankSettings) => {

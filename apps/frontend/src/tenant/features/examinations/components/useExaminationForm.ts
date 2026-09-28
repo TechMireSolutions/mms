@@ -79,11 +79,12 @@ export function useExaminationForm({ open, exam, onClose, onSave }: UseExaminati
 
     setSaving(true);
     try {
-      await onSave({
+      const examToSave: Exam = {
         ...examDraft,
         name: toTitleCase(examDraft.name || ""),
-        id: exam?.id || `ex${crypto.randomUUID()}`
-      } as unknown as Exam);
+        id: exam?.id || `ex${crypto.randomUUID()}`,
+      };
+      await onSave(examToSave);
       notify.success(exam ? t("examinations.form.toast.updated") : t("examinations.form.toast.created"));
       onClose();
     } catch (err: unknown) {

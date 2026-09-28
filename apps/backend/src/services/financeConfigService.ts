@@ -1,5 +1,6 @@
 import {
   composeFinanceSettings,
+  normalizeFinanceSettings,
   stripFinanceFieldConfigForPersist,
   type FieldDefinition,
   type FinanceSettings,
@@ -38,7 +39,7 @@ export const loadFinanceFieldConfig = financeFieldConfig.load;
 export async function saveFinanceFieldConfig(
   config: FinanceSettings | Record<string, unknown>,
 ): Promise<FinanceSettings> {
-  return financeFieldConfig.save(config as FinanceSettings);
+  return financeFieldConfig.save(normalizeFinanceSettings(config));
 }
 
 /** Full FinanceSettings for export / validation (field-config + preferences + tabs). */

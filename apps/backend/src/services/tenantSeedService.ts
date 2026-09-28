@@ -42,14 +42,14 @@ export async function seedTenantDefaults(): Promise<void> {
     await upsertStudentFieldConfig(subdomain, fieldConfig);
     await upsertStudentModulePreferences(
       subdomain,
-      preferences as unknown as Record<string, unknown>,
+      Object.assign({}, preferences),
     );
 
     const facultySetup = splitFacultySettingsBlob(DEFAULT_FACULTY_SETTINGS);
     await upsertFacultyFieldConfig(subdomain, facultySetup.fieldConfig);
     await upsertFacultyModulePreferences(
       subdomain,
-      facultySetup.preferences as unknown as Record<string, unknown>,
+      Object.assign({}, facultySetup.preferences),
     );
   }
 }

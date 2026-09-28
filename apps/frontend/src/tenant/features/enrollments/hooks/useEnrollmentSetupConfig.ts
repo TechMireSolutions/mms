@@ -1,6 +1,7 @@
 import {
   ENROLLMENTS_MODULE_MANIFEST,
   normalizeEnrollmentModulePreferences,
+  normalizeEnrollmentsSettings,
   type EnrollmentModulePreferences,
   type EnrollmentsSettings
 } from '@mms/shared';
@@ -32,6 +33,5 @@ import { useMemo } from 'react';
 /** Composed EnrollmentsSettings from preferences queries. */
 export function useComposedEnrollmentsSettings(): EnrollmentsSettings {
   const prefsQuery = useEnrollmentPreferencesQuery();
-  const fallback = useMemo(() => normalizeEnrollmentModulePreferences(null), []);
-  return (prefsQuery.data ?? fallback) as unknown as EnrollmentsSettings;
+  return useMemo(() => normalizeEnrollmentsSettings(prefsQuery.data), [prefsQuery.data]);
 }

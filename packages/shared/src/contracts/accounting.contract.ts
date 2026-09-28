@@ -23,31 +23,26 @@ const c = initContract();
 const errorResponse = z.object({ type: z.string(), message: z.string() }).passthrough();
 const ok = z.unknown();
 
+const paginationFields = {
+  total: z.number(), page: z.number(), limit: z.number(), hasMore: z.boolean(),
+};
+
 /** Envelope for paginated chart-of-accounts responses. */
 export const accountingAccountsPageResponseSchema = z.object({
   accounts: z.array(accountRecordSchema),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  hasMore: z.boolean(),
+  ...paginationFields,
 });
 
 /** Envelope for paginated journal-entry responses. */
 export const accountingEntriesPageResponseSchema = z.object({
   entries: z.array(journalEntryRecordSchema),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  hasMore: z.boolean(),
+  ...paginationFields,
 });
 
 /** Envelope for paginated fiscal-year responses. */
 export const accountingFiscalYearsPageResponseSchema = z.object({
   fiscalYears: z.array(fiscalYearRecordSchema),
-  total: z.number(),
-  page: z.number(),
-  limit: z.number(),
-  hasMore: z.boolean(),
+  ...paginationFields,
 });
 
 /** `{ success: true, succeeded, failed }` bulk-operation envelope. */
@@ -59,19 +54,11 @@ const accountingBulkResultResponseSchema = z.object({
 
 /** Normalized Accounting Setup preferences (`AccountingModulePreferences`). */
 export const accountingPreferencesResponseSchema = z.object({
-  currency: z.string(),
-  currencySymbol: z.string(),
-  dateFormat: z.string(),
-  decimalSeparator: z.enum(['period', 'comma']),
-  decimalPlaces: z.number(),
-  fyStartMonth: z.string(),
-  accountCodeLength: z.number(),
-  requireNarration: z.boolean(),
-  allowEditPosted: z.boolean(),
-  autoPostDrafts: z.boolean(),
-  retainedEarningsAccount: z.string(),
-  organizationName: z.string().optional(),
-  defaultViewLayout: z.string().optional(),
+  currency: z.string(), currencySymbol: z.string(), dateFormat: z.string(),
+  decimalSeparator: z.enum(['period', 'comma']), decimalPlaces: z.number(),
+  fyStartMonth: z.string(), accountCodeLength: z.number(), requireNarration: z.boolean(),
+  allowEditPosted: z.boolean(), autoPostDrafts: z.boolean(), retainedEarningsAccount: z.string(),
+  organizationName: z.string().optional(), defaultViewLayout: z.string().optional(),
 });
 
 /**

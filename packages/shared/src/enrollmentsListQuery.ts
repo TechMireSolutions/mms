@@ -67,8 +67,8 @@ export function paginateEnrollments(
   if (sortField) {
     const dir = query.sortDir === 'desc' ? -1 : 1;
     rows = [...rows].sort((left, right) => {
-      const leftValue = String((left as unknown as Record<string, unknown>)[sortField] ?? '');
-      const rightValue = String((right as unknown as Record<string, unknown>)[sortField] ?? '');
+      const leftValue = String(Reflect.get(left, sortField) ?? '');
+      const rightValue = String(Reflect.get(right, sortField) ?? '');
       return leftValue.localeCompare(rightValue) * dir;
     });
   }

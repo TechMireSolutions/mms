@@ -1,6 +1,7 @@
 import {
   USERS_MODULE_MANIFEST,
   normalizeUserModulePreferences,
+  normalizeUsersSettings,
   type UserModulePreferences,
   type UsersSettings
 } from '@mms/shared';
@@ -32,6 +33,5 @@ import { useMemo } from 'react';
 /** Composed UsersSettings from preferences queries. */
 export function useComposedUsersSettings(): UsersSettings {
   const prefsQuery = useUserPreferencesQuery();
-  const fallback = useMemo(() => normalizeUserModulePreferences(null), []);
-  return (prefsQuery.data ?? fallback) as unknown as UsersSettings;
+  return useMemo(() => normalizeUsersSettings(prefsQuery.data), [prefsQuery.data]);
 }

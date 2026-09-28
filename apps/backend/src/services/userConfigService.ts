@@ -1,5 +1,6 @@
 import {
   composeUsersSettings,
+  normalizeUsersSettings,
   stripUserFieldConfigForPersist,
   type FieldDefinition,
   type UsersSettings,
@@ -35,6 +36,6 @@ export const loadUserFieldConfig = userFieldConfig.load;
 export async function saveUserFieldConfig(
   config: UsersSettings | Record<string, unknown>,
 ): Promise<UsersSettings> {
-  return userFieldConfig.save(config as UsersSettings);
+  return userFieldConfig.save(normalizeUsersSettings(config));
 }
 

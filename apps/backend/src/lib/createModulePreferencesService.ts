@@ -28,7 +28,7 @@ export function createModulePreferencesService<TPreferences>({
   ): Promise<TPreferences> {
     const tenant = requireTenant();
     const normalized = normalize(preferences);
-    await upsert(tenant, normalized as unknown as Record<string, unknown>);
+    await upsert(tenant, Object.assign({}, normalized));
     await broadcastCollection(broadcastKey);
     return normalized;
   }

@@ -16,7 +16,8 @@ export function TemplateEditorKeyboardHints({
 }: TemplateEditorKeyboardHintsProps): React.JSX.Element {
   const isMac = useMemo(() => {
     if (typeof window === "undefined" || typeof navigator === "undefined") return false;
-    const platformData = (navigator as unknown as { userAgentData?: { platform?: string } }).userAgentData?.platform;
+    const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+    const platformData = nav.userAgentData?.platform;
     if (platformData) {
       return /Mac|iPhone|iPad|iPod/i.test(platformData);
     }

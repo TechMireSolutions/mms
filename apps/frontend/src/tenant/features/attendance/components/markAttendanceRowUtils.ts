@@ -30,12 +30,12 @@ export function attendanceRowsFromRecords(records: AttendanceRecord[]): Attendan
   return records.map((attendanceRecord) => ({
     studentId: attendanceRecord.studentId || "",
     name: attendanceRecord.studentName || "",
-    rollNo: (attendanceRecord as AttendanceRecord & { rollNo?: string }).rollNo ?? "",
+    rollNo: attendanceRecord.rollNo ?? "",
     status: attendanceRecord.status,
     timeIn: attendanceRecord.timeIn || "07:00",
     timeOut: attendanceRecord.timeOut || "08:30",
     notes: attendanceRecord.notes || "",
-    ...((attendanceRecord as unknown as { customFields?: Record<string, unknown> }).customFields || {}),
+    ...(attendanceRecord.customFields || {}),
   }));
 }
 
@@ -45,7 +45,7 @@ export function attendanceRecordsFromRows(
   classId: string,
   date: string,
 ): AttendanceRecord[] {
-  return rows.map((row) => {
+  return rows.map((row): AttendanceRecord => {
     const customFieldValues: Record<string, unknown> = {};
     customFields.forEach((customField) => {
       customFieldValues[customField.id] = row[customField.id];
@@ -63,7 +63,7 @@ export function attendanceRecordsFromRows(
       timeOut: row.status !== "absent" ? row.timeOut : "",
       notes: row.notes || "",
       customFields: customFieldValues,
-    } as unknown as AttendanceRecord;
+    };
   });
 }
 

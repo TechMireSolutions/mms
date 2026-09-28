@@ -92,7 +92,7 @@ export function QuestionCardAnswerPreview({
         );
       })()}
       {visibleCustomFields.map((field) => {
-        const fieldValue = (question as unknown as Record<string, unknown>)[field.id];
+        const fieldValue = Reflect.get(question, field.id);
         if (fieldValue === undefined || fieldValue === "") return null;
         return (
           <p key={field.id} className="text-xs text-muted-foreground">

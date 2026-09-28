@@ -3309,6 +3309,7 @@ import type { AppTranslationKey } from "./appTranslations.js";
   "finance.receipt.studentInfo": "بيانات الطالب",
   "finance.receipt.title": "سند إيصال الرسوم",
   "finance.receipt.voucherNo": "رقم السند / الفاتورة",
+  "finance.receipt.zohoSingleInvoiceNote": "يدعم تصدير Zoho فاتورةً واحدةً في المرة — جارٍ تصدير أول فاتورة محددة.",
   "finance.receivedByRequired": "حقل المستلم مطلوب.",
   "finance.recordPayment": "تسجيل دفعة",
   "finance.recordPaymentFor": "تسجيل دفعة لـ {id}",

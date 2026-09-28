@@ -1,9 +1,11 @@
 import {
   composeAccountingSettings,
+  normalizeAccountingModulePreferences,
+  normalizeAccountingSettings,
   stripAccountingFieldConfigForPersist,
   type FieldDefinition,
   type AccountingSettings,
-  type TabDefinition,  type AccountingModulePreferences,
+  type TabDefinition,
 } from '@mms/shared';
 import { createModuleFieldConfigService } from '../lib/createModuleFieldConfigService.js';
 import {
@@ -24,9 +26,10 @@ const accountingFieldConfig = createModuleFieldConfigService<
   upsert: setAccountingFieldConfig,
   toDocument: async (raw, tenant) => {
     const prefs = await getAccountingModulePreferences(tenant);
-    return composeAccountingSettings((raw as unknown) as AccountingSettings, // (typed as AccountingModulePreferences because preferences are untyped JSON rows)
-    // (typed as AccountingModulePreferences because preferences are untyped JSON rows from the db)
-    (prefs || {}) as unknown as AccountingModulePreferences);
+    return composeAccountingSettings(
+      normalizeAccountingSettings(raw),
+      normalizeAccountingModulePreferences(prefs),
+    );
   },
   stripForPersist: stripAccountingFieldConfigForPersist,
   reloadFailedMessage: 'Failed to reload accounting field config after save',
@@ -37,6 +40,5 @@ export const getAccountingFieldConfigService = accountingFieldConfig.load;
 export async function updateAccountingFieldConfigService(
   config: AccountingSettings | Record<string, unknown>,
 ): Promise<AccountingSettings> {
-  return accountingFieldConfig.save(config as AccountingSettings);
+  return accountingFieldConfig.save(normalizeAccountingSettings(config));
 }
-

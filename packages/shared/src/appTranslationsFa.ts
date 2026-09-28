@@ -3313,6 +3313,7 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "finance.receipt.studentInfo": "مشخصات دانش‌آموز",
   "finance.receipt.title": "رسید شهریه",
   "finance.receipt.voucherNo": "شماره قبض / فاکتور",
+  "finance.receipt.zohoSingleInvoiceNote": "صدور Zoho فقط یک فاکتور در هر بار داده می‌شود — اولین فاکتور انتخابی صادر می‌شود.",
   "finance.receivedByRequired": "وارد کردن نام دریافت‌کننده الزامی است.",
   "finance.recordPayment": "ثبت پرداخت فاکتور",
   "finance.recordPaymentFor": "ثبت پرداخت برای {id}",

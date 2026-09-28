@@ -8,6 +8,7 @@ import {
   upsertLocalBackgroundJob,
 } from '@/lib/backgroundJobs/backgroundJobStore';
 import { fetchBackgroundJob } from '@/lib/backgroundJobs/pollBackgroundJob';
+import { reportClientError } from '@/lib/clientErrorReporting';
 
 let invalidateModulePromise: Promise<typeof import('@/lib/tenant/invalidateModuleQueries')> | null = null;
 
@@ -33,10 +34,10 @@ export function useTenantDatabaseUpdates(): void {
 
   // Coalesce rapid collection invalidations arriving in the same frame tick
   const pendingKeysRef = useRef<Set<string>>(new Set());
-  const rafHandleRef = useRef<number | null>(null);
+  const cancelScheduleRef = useRef<(() => void) | null>(null);
 
   const flushInvalidations = useCallback(() => {
-    rafHandleRef.current = null;
+    cancelScheduleRef.current = null;
     const keys = Array.from(pendingKeysRef.current);
     pendingKeysRef.current.clear();
 
@@ -49,31 +50,33 @@ export function useTenantDatabaseUpdates(): void {
         }
       })
       .catch((err) => {
-        console.error('Failed to dispatch module query invalidation:', err);
+        reportClientError(err, { context: 'useTenantDatabaseUpdates.dispatch' });
       });
   }, [queryClient]);
 
   const scheduleInvalidate = useCallback((key: string) => {
     pendingKeysRef.current.add(key);
-    if (rafHandleRef.current === null) {
+    if (cancelScheduleRef.current === null) {
       if (typeof window !== 'undefined' && typeof window.requestAnimationFrame === 'function') {
-        rafHandleRef.current = window.requestAnimationFrame(flushInvalidations);
+        const id = window.requestAnimationFrame(() => {
+          cancelScheduleRef.current = null;
+          flushInvalidations();
+        });
+        cancelScheduleRef.current = () => window.cancelAnimationFrame(id);
       } else {
-        rafHandleRef.current = setTimeout(flushInvalidations, 16) as unknown as number;
+        const id = setTimeout(() => {
+          cancelScheduleRef.current = null;
+          flushInvalidations();
+        }, 16);
+        cancelScheduleRef.current = () => clearTimeout(id);
       }
     }
   }, [flushInvalidations]);
 
   useEffect(() => {
     return () => {
-      if (rafHandleRef.current !== null) {
-        if (typeof window !== 'undefined' && typeof window.cancelAnimationFrame === 'function') {
-          window.cancelAnimationFrame(rafHandleRef.current);
-        } else {
-          clearTimeout(rafHandleRef.current);
-        }
-        rafHandleRef.current = null;
-      }
+      cancelScheduleRef.current?.();
+      cancelScheduleRef.current = null;
       pendingKeysRef.current.clear();
     };
   }, []);
@@ -99,9 +102,16 @@ export function useTenantDatabaseUpdates(): void {
 
         // Only fetch if missing locally or if it's the final event (to ensure we don't miss final DB state)
         if (!patched || message.event !== 'job-progress') {
-          void fetchBackgroundJob(message.jobId).then((job) => {
-            if (job) upsertLocalBackgroundJob(job);
-          });
+          void fetchBackgroundJob(message.jobId)
+            .then((job) => {
+              if (job) upsertLocalBackgroundJob(job);
+            })
+            .catch((err) => {
+              reportClientError(err, {
+                context: 'useTenantDatabaseUpdates.fetchJob',
+                jobId: message.jobId,
+              });
+            });
         }
 
         // On completion, invalidate the relevant module collection so directory

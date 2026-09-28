@@ -67,8 +67,8 @@ export function useAccountProfileContactActions() {
   useEffect(() => {
     if (!profile) return;
     setName(profile.contact?.name ?? profile.name ?? '');
-    setPhone(profile.contact ? (getPrimaryPhone(profile.contact) || '') : ((profile as unknown as Record<string, unknown>).phone as string | undefined ?? ''));
-    setContactEmail(profile.contact ? (getPrimaryEmail(profile.contact) || '') : ((profile as unknown as Record<string, unknown>).email as string | undefined ?? ''));
+    setPhone(profile.contact ? (getPrimaryPhone(profile.contact) || '') : String(Reflect.get(profile, 'phone') ?? ''));
+    setContactEmail(profile.contact ? (getPrimaryEmail(profile.contact) || '') : String(Reflect.get(profile, 'email') ?? ''));
   }, [profile]);
 
   /** Persists the own-contact patch (shared by Save and avatar crop). Empty arrays clear. */

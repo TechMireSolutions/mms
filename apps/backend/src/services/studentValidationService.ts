@@ -87,7 +87,7 @@ export async function validateStudentDynamic(
   if (!schema) {
     const enabledTabIds = new Set(settings.enabledTabs || []);
     const requiredTabIds = new Set(settings.requiredTabs || []);
-    const fields = (settings.fields || {}) as unknown as Record<string, FieldDefinition[]>;
+    const fields = (settings.fields || {}) as Record<string, FieldDefinition[]>;
 
     schema = buildDynamicStudentSchema(
       settings,

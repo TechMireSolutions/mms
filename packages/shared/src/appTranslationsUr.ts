@@ -3309,6 +3309,7 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "finance.receipt.studentInfo": "طالب علم کی تفصیلات",
   "finance.receipt.title": "فیس رسید واؤچر",
   "finance.receipt.voucherNo": "واؤچر / انوائس نمبر",
+  "finance.receipt.zohoSingleInvoiceNote": "Zoho ایک وقت میں صرف ایک انوائس برآمد کرتا ہے — پہلی منتخب انوائس برآمد ہو رہی ہے۔",
   "finance.receivedByRequired": "وصول کنندہ درکار ہے۔",
   "finance.recordPayment": "ادائیگی درج کریں",
   "finance.recordPaymentFor": "{id} کی ادائیگی درج کریں",

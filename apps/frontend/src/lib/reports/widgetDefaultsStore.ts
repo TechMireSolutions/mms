@@ -28,16 +28,16 @@ function restoreSeededWidgetBehavior(
   widget: CustomWidget,
   defaultWidget: CustomWidget,
 ): CustomWidget {
-  const restored = { ...widget } as Record<string, unknown>;
+  const restored: Partial<CustomWidget> = { ...widget };
   for (const key of SEEDED_WIDGET_BEHAVIOR_KEYS) {
     const value = defaultWidget[key];
     if (value === undefined) {
       delete restored[key];
     } else {
-      restored[key] = value;
+      restored[key] = value as never;
     }
   }
-  return restored as unknown as CustomWidget;
+  return restored as CustomWidget;
 }
 
 /** Pure union of all seeded default widgets across categories (no localStorage I/O). */

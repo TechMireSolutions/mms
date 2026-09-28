@@ -41,10 +41,12 @@ export function useWidgetDrilldownModal(widget: CustomWidget) {
 
   const studentNameMap = (() => {
     const students = collections.students;
-    return new Map((students as unknown as Record<string, unknown>[]).map((student) => [
-      String(student.id),
-      String(student.name || student.studentName || student.id),
-    ]));
+    return new Map(
+      students.map((student) => [
+        String(student.id),
+        String(student.name || (student as { studentName?: string }).studentName || student.id),
+      ]),
+    );
   })();
 
   const handleToggleStatus = (recordId: string) => {

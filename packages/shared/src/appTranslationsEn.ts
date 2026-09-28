@@ -3313,6 +3313,7 @@ export const APP_TRANSLATIONS_EN = {
   "finance.receipt.studentInfo": "Student Details",
   "finance.receipt.title": "Fee Receipt Voucher",
   "finance.receipt.voucherNo": "Voucher / Invoice No.",
+  "finance.receipt.zohoSingleInvoiceNote": "Zoho export supports one invoice at a time — exporting the first selected invoice.",
   "finance.receivedByRequired": "Received By is required.",
   "finance.recordPayment": "Record payment",
   "finance.recordPaymentFor": "Record payment for {id}",

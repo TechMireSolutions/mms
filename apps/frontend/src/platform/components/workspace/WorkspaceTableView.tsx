@@ -123,7 +123,7 @@ export function WorkspaceTableView({
           );
         }
         if (col.id === 'createdAt') return formatDate(workspace.createdAt);
-        return String((workspace as unknown as Record<string, unknown>)[col.id] ?? '—');
+        return String(Reflect.get(workspace, col.id) ?? '—');
       };
 
       return { id: col.id, label, sortField: col.id, headerClassName, cellClassName, render };

@@ -1,4 +1,5 @@
 import type { TabDefinition, ColumnRegistryEntry, FieldDefinition } from "./contactTypes.js";
+import type { ModuleFieldDef } from './moduleFieldSchema.js';
 import { INITIAL_FACULTY_FIELD_SEED } from "./moduleFieldSetupPersons.js";
 import { DEFAULT_FACULTY_SPECIALIZATION } from './facultyTypes.js';
 import { facultyFieldLabelKey } from './facultyDirectoryColumns.js';
@@ -95,14 +96,8 @@ export const DEFAULT_FACULTY_SETTINGS: FacultySettings = {
   fieldOrder: defaultFacultyFieldOrderFromSeed(),
 };
 
-export interface FacultyFieldDef {
-  id: string;
+export interface FacultyFieldDef extends ModuleFieldDef {
   labelKey?: string;
-  label?: string;
-  type?: string;
-  required?: boolean;
-  options?: string[];
-  enabled?: boolean;
   isCustom?: boolean;
 }
 

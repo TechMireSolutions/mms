@@ -1,6 +1,7 @@
 import {
   FINANCE_MODULE_MANIFEST,
   normalizeFinanceModulePreferences,
+  normalizeFinanceSettings,
   type FinanceModulePreferences,
   type FinanceSettings
 } from '@mms/shared';
@@ -32,6 +33,5 @@ import { useMemo } from 'react';
 /** Composed FinanceSettings from preferences queries. */
 export function useComposedFinanceSettings(): FinanceSettings {
   const prefsQuery = useFinancePreferencesQuery();
-  const fallback = useMemo(() => normalizeFinanceModulePreferences(null), []);
-  return (prefsQuery.data ?? fallback) as unknown as FinanceSettings;
+  return useMemo(() => normalizeFinanceSettings(prefsQuery.data), [prefsQuery.data]);
 }

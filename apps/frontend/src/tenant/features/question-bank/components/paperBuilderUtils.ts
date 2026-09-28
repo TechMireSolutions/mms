@@ -159,7 +159,22 @@ export function openPaperPrintWindow(content: HTMLElement, title: string): boole
     </head>
     <body>
       ${content.innerHTML}
-      <script>window.onload = () => { window.print(); setTimeout(() => window.close(), 500); }</script>
+      <script>
+        function triggerPrint() {
+          window.focus();
+          if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function() { window.print(); }).catch(function() { window.print(); });
+          } else {
+            window.print();
+          }
+        }
+        if (document.readyState === 'complete') {
+          triggerPrint();
+        } else {
+          window.addEventListener('load', triggerPrint);
+        }
+        window.onafterprint = function() { window.close(); };
+      </script>
     </body>
     </html>
   `);

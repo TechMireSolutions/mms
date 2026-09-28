@@ -197,4 +197,3 @@ export function registerModuleSetupConfigRoutes<
   fastify.put('/preferences', handlePutPreferences);
   fastify.put('/config/preferences', handlePutPreferences);
 }
-

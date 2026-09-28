@@ -202,7 +202,7 @@ export const sessionContractRouter: FastifyPluginAsync = async (fastify) => {
       try {
         const saved = await saveSessionFieldConfig(body);
         await auditSession(user, 'session.field-config', 'Updated session field configuration', 'field-config');
-        return { status: 200 as const, body: { success: true, config: saved as unknown as Record<string, unknown> } };
+        return { status: 200 as const, body: { success: true, config: Object.assign({}, saved) } };
       } catch (error) {
         return handleContractError(request, error, { status: 500, body: { type: 'database_error', message: 'Failed to save session field config' } });
       }

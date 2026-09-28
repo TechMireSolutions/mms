@@ -1,5 +1,6 @@
 import {
   composeSessionsSettings,
+  normalizeSessionsSettings,
   stripSessionFieldConfigForPersist,
   type FieldDefinition,
   type SessionsSettings,
@@ -38,7 +39,7 @@ export const loadSessionFieldConfig = sessionFieldConfig.load;
 export async function saveSessionFieldConfig(
   config: SessionsSettings | Record<string, unknown>,
 ): Promise<SessionsSettings> {
-  return sessionFieldConfig.save(config as SessionsSettings);
+  return sessionFieldConfig.save(normalizeSessionsSettings(config));
 }
 
 /** Full SessionsSettings for export / validation (field-config + preferences + tabs). */

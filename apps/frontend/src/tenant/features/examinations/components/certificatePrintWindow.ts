@@ -25,10 +25,10 @@ export function printHtmlDocument(title: string, content: string): void {
   `);
   win.document.close();
   win.focus();
-  setTimeout(() => {
+  void win.document.fonts.ready.then(() => {
     win.print();
     win.close();
-  }, 500);
+  });
 }
 
 export function exportTypstReportCard(

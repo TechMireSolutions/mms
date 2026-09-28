@@ -1,10 +1,9 @@
 import { and, isNull, asc, eq, lt, sql } from 'drizzle-orm';
-import { withGlobalTenant, type AppDb } from '../../db/tenant-context.js';
+import { withGlobalTenant } from '../../db/tenant-context.js';
 import { outboxEvents } from '../../db/schema/outboxEvents.js';
 import { redisGet, redisSet, redisDelPattern, redisKeys } from '../../lib/redis.js';
 import { logger } from '../../lib/logger.js';
 import type { SearchIndexAdapter } from '../adapters/searchIndexAdapter.js';
-import type { SoftDeletedPayload, RestoredPayload } from '../../services/outboxEventService.js';
 
 const BATCH_SIZE = 100;
 /** After this many consecutive failures an event stops being retried (poison). */
@@ -49,9 +48,7 @@ export async function processOutboxCdcBatch(
   let processed = 0;
   let skipped = 0;
 
-  await withGlobalTenant(async (tx) => {
-    const db = tx as unknown as AppDb;
-
+  await withGlobalTenant(async (db) => {
     // Select up to BATCH_SIZE unprocessed, non-poisoned events, locking rows so
     // concurrent workers cannot process the same event.
     const rows = await db
@@ -108,18 +105,16 @@ export async function processOutboxCdcBatch(
 
       try {
         if (row.eventType === 'entity.soft_deleted') {
-          const p = payload as unknown as SoftDeletedPayload;
           // 1. Tombstone search index
-          await searchAdapter.deleteDocument(p.entityType, p.entityId);
+          await searchAdapter.deleteDocument(row.entityType, row.entityId);
           // 2. Evict all tenant entity cache keys
-          await redisDelPattern(cacheEvictPattern(row.workspaceSubdomain, p.entityType));
+          await redisDelPattern(cacheEvictPattern(row.workspaceSubdomain, row.entityType));
 
         } else if (row.eventType === 'entity.restored') {
-          const p = payload as unknown as RestoredPayload;
           // 1. Re-index document (snapshot payload used if available)
-          await searchAdapter.indexDocument(p.entityType, p.entityId, payload);
+          await searchAdapter.indexDocument(row.entityType, row.entityId, payload);
           // 2. Evict stale cache entries so next read is fresh
-          await redisDelPattern(cacheEvictPattern(row.workspaceSubdomain, p.entityType));
+          await redisDelPattern(cacheEvictPattern(row.workspaceSubdomain, row.entityType));
 
         } else {
           // entity.hard_purge or unknown — just evict cache

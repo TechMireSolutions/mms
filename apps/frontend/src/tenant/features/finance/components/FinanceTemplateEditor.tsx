@@ -128,7 +128,7 @@ export function FinanceTemplateEditor({
   };
 
   const handleExportTypst = (payload: TypstFeeReceiptPayload) => {
-    const conforming = mapToTypstFeeReceipt(payload as unknown as Record<string, unknown>);
+    const conforming = mapToTypstFeeReceipt({ ...payload });
     const jsonStr = JSON.stringify(conforming, null, 2);
     const blob = new Blob([jsonStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);
@@ -141,7 +141,7 @@ export function FinanceTemplateEditor({
   };
 
   const handleExportZoho = (zohoPayload: ZohoInvoicePayload) => {
-    const conforming = mapToZohoInvoice(zohoPayload as unknown as Record<string, unknown>);
+    const conforming = mapToZohoInvoice({ ...zohoPayload });
     const jsonStr = JSON.stringify(conforming, null, 2);
     const blob = new Blob([jsonStr], { type: "application/json" });
     const url = URL.createObjectURL(blob);

@@ -40,7 +40,7 @@ function asNamed(rows: Row[]): NamedEntity[] {
 }
 
 function asNamedMap(rows: Row[]): Map<string, NamedEntity> {
-  return createNamedEntityLookupMap(rows as unknown as NamedEntity[]);
+  return createNamedEntityLookupMap(asNamed(rows));
 }
 
 function withUserActor(

@@ -1,6 +1,7 @@
 import {
   ACCOUNTING_MODULE_MANIFEST,
   normalizeAccountingModulePreferences,
+  normalizeAccountingSettings,
   type AccountingModulePreferences,
   type AccountingSettings
 } from '@mms/shared';
@@ -32,6 +33,5 @@ import { useMemo } from 'react';
 /** Composed AccountingSettings from preferences queries. */
 export function useComposedAccountingSettings(): AccountingSettings {
   const prefsQuery = useAccountingPreferencesQuery();
-  const fallback = useMemo(() => normalizeAccountingModulePreferences(null), []);
-  return (prefsQuery.data ?? fallback) as unknown as AccountingSettings;
+  return useMemo(() => normalizeAccountingSettings(prefsQuery.data), [prefsQuery.data]);
 }

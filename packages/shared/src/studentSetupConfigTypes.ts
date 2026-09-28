@@ -23,14 +23,12 @@ export const studentFieldConfigPutBodySchema = z.preprocess((raw) => {
 }, studentFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/students/preferences — GR / auto-id prefs only. */
-export const studentPreferencesPutBodySchema = z
-  .object({
-    autoGenerateId: z.boolean().optional(),
-    grNumberTemplate: z.string().optional(),
-    grNumberDigits: z.number().optional(),
-    grNumberRestartAnnually: z.boolean().optional(),
-  })
-  .passthrough();
+export const studentPreferencesPutBodySchema = z.object({
+  autoGenerateId: z.boolean().optional(),
+  grNumberTemplate: z.string().optional(),
+  grNumberDigits: z.number().optional(),
+  grNumberRestartAnnually: z.boolean().optional(),
+}).passthrough();
 
 export type StudentModulePreferences = Pick<
   StudentsSettings,

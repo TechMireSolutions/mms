@@ -74,7 +74,7 @@ export interface FieldConfig {
 }
 
 /** Tenant and user preferences for contact views, defaults, and duplicate scoring thresholds. */
-export interface ContactPreferences {
+export type ContactPreferences = {
   defaultCountry?: string;
   defaultProvince?: string;
   defaultCity?: string;
@@ -104,7 +104,7 @@ export interface ContactPreferences {
   relationshipPairs?: RelationshipPair[];
   /** Preferred Relationship-type dropdown order (subset of pair-derived labels). */
   relationshipOptionOrder?: string[];
-}
+};
 
 
 /** WhatsApp quick template preset for campaign messaging. */

@@ -21,7 +21,7 @@ interface EditableMultiSelectChipRowProps {
   values: string[];
   placeholder: string;
   t: TranslationFunction;
-  onRemoveValue: (valToRemove: string, event: React.MouseEvent) => void;
+  onRemoveValue: (valToRemove: string, event: React.SyntheticEvent) => void;
 }
 
 export const EditableMultiSelectChipRow = React.memo(function EditableMultiSelectChipRow({
@@ -46,7 +46,7 @@ export const EditableMultiSelectChipRow = React.memo(function EditableMultiSelec
             onKeyDown={(e) => {
               if (e.key === "Enter" || e.key === " ") {
                 e.preventDefault();
-                onRemoveValue(val, e as unknown as React.MouseEvent);
+                onRemoveValue(val, e);
               }
             }}
             className="relative inline-flex h-4 w-4 items-center justify-center rounded-full hover:bg-primary/20 text-primary hover:text-destructive transition-colors cursor-pointer after:absolute after:start-1/2 after:top-1/2 after:h-11 after:w-11 after:-translate-x-1/2 after:-translate-y-1/2 after:content-['']"
