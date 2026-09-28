@@ -85,7 +85,7 @@ export function createMessagingUseCases(repo: MessagingRepository = messagingRep
     if (role === 'students') {
       return loadContactsPageForTenant(subdomain, { ...baseQuery, moduleLinkFilter: 'students' });
     }
-    if (role === 'faculty' || role === 'teachers') {
+    if (role === 'faculty') {
       return loadContactsPageForTenant(subdomain, { ...baseQuery, moduleLinkFilter: 'faculty' });
     }
     if (role === 'staff') {

@@ -34,13 +34,13 @@ import {
 const s = initServer();
 
 /**
- * Category → owning module manifest gate. Legacy aliases resolve to their
- * modern module (teachers → faculty, financial → finance). obligations follows
- * the FE report-collection mapping (ModuleReportsToolPanels → finance_invoices),
- * and messaging/users gate on contacts — the module whose report panel hosts
- * those categories. There is no exported ModuleManifest type in @mms/shared
- * (manifests are structural consts), so the gate declares the slice this
- * router needs and `satisfies` proves the map covers all 15 categories.
+ * Category → owning module manifest gate. The `financial` alias resolves to the
+ * modern finance module. obligations follows the FE report-collection mapping
+ * (ModuleReportsToolPanels → finance_invoices), and messaging/users gate on
+ * contacts — the module whose report panel hosts those categories. There is no
+ * exported ModuleManifest type in @mms/shared (manifests are structural
+ * consts), so the gate declares the slice this router needs and `satisfies`
+ * proves the map covers all 14 categories.
  */
 interface SavedReportCategoryGate {
   readonly moduleId: string;
@@ -50,7 +50,6 @@ interface SavedReportCategoryGate {
 
 const CATEGORY_MODULE_MAP = {
   students: STUDENTS_MODULE_MANIFEST,
-  teachers: FACULTY_MODULE_MANIFEST,
   attendance: ATTENDANCE_MODULE_MANIFEST,
   finance: FINANCE_MODULE_MANIFEST,
   financial: FINANCE_MODULE_MANIFEST,

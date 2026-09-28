@@ -52,12 +52,12 @@ describe('createCollectionAuditHelper', () => {
   });
 
   it('defaults recordId to the factory argument', async () => {
-    const auditCollection = createCollectionAuditHelper('teachers');
-    await auditCollection(admin, 'teachers.delete', '');
+    const auditCollection = createCollectionAuditHelper('faculty');
+    await auditCollection(admin, 'faculty.delete', '');
 
     expect(mockRecordModernAuditEvent.mock.calls[0][0]).toMatchObject({
-      tableName: 'teachers',
-      recordId: 'teachers',
+      tableName: 'faculty',
+      recordId: 'faculty',
     });
   });
 

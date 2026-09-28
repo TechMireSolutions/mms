@@ -87,7 +87,7 @@ export function useDashboardData(
   const shouldLoadTeachers =
     (requiredDashboardCollections.has('teachers') || requiredDashboardCollections.has('faculty')) &&
     (isModuleEnabled('faculty') || isModuleEnabled('teachers')) &&
-    (hasPermission('faculty.read') || hasPermission('teachers.read'));
+    hasPermission('faculty.read');
   // Role shell needs: teacher banner (sessions), admin/accountant notifications (finance + attendance).
   const shouldLoadSessions =
     (requiredDashboardCollections.has('sessions') || isDashboardTeacher(dashboardRole)) &&

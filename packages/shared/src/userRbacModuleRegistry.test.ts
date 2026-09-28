@@ -11,9 +11,9 @@ import {
 } from './userRbacModuleRegistry.js';
 
 describe('userRbacModuleRegistry', () => {
-  it('contains all 17 canonical RBAC modules', () => {
-    expect(RBAC_MODULE_IDS.length).toBe(17);
-    expect(RBAC_MODULE_REGISTRY.length).toBe(17);
+  it('contains all 16 canonical RBAC modules', () => {
+    expect(RBAC_MODULE_IDS.length).toBe(16);
+    expect(RBAC_MODULE_REGISTRY.length).toBe(16);
     for (const id of RBAC_MODULE_IDS) {
       expect(RBAC_MODULES_BY_ID[id]).toBeDefined();
       expect(RBAC_MODULES_BY_ID[id].id).toBe(id);
@@ -21,7 +21,7 @@ describe('userRbacModuleRegistry', () => {
   });
 
   it('resolves system module IDs correctly', () => {
-    expect(rbacModuleSystemId('faculty')).toBe('teachers');
+    expect(rbacModuleSystemId('faculty')).toBe('faculty');
     expect(rbacModuleSystemId('enrollments')).toBe('enrollment');
     expect(rbacModuleSystemId('examinations')).toBe('examination');
     expect(rbacModuleSystemId('obligations')).toBe('obligations');
@@ -39,7 +39,7 @@ describe('userRbacModuleRegistry', () => {
     expect(isValidRbacModuleId('students')).toBe(true);
     expect(isValidRbacModuleId('dashboard')).toBe(true);
     expect(isValidRbacModuleId('faculty')).toBe(true);
-    expect(isValidRbacModuleId('teachers')).toBe(true);
+    expect(isValidRbacModuleId('teachers')).toBe(false);
     expect(isValidRbacModuleId('accounting')).toBe(true);
     expect(isValidRbacModuleId('fake_module')).toBe(false);
     expect(isValidRbacModuleId(null)).toBe(false);
@@ -65,6 +65,6 @@ describe('userRbacModuleRegistry', () => {
 
   it('defaults to all modules enabled when null/undefined settings provided', () => {
     const visible = filterRbacModulesForSettings(null);
-    expect(visible.length).toBe(17);
+    expect(visible.length).toBe(16);
   });
 });

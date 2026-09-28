@@ -59,7 +59,7 @@ function computeCanWriteObject(user: User, key: string): boolean {
   }
   // Platform-authoritative module grants: tenants may read (SystemModulesSettings)
   // but never write. Without this the unmapped key fell through to WRITE_ROLES,
-  // letting any teacher/accountant self-grant modules.
+  // letting any write-capable role self-grant modules.
   if (key === 'platform_settings') {
     return false;
   }

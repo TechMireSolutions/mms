@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
 import { useTeachersContractList, useTeachersByIds } from "@/tenant/hooks/collections/faculty";
-import { TEACHERS_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from "@mms/shared";
+import { FACULTY_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from "@mms/shared";
 import type { Session, SessionFaculty } from "@/lib/data/sessionsData";
 import { COMMON_FACULTY_ROLES } from "./facultyManagementShared";
 
@@ -17,7 +17,7 @@ export function useFacultyManagementState(
   const [saving, setSaving] = useState(false);
 
   const { data: teachersData } = useTeachersContractList(
-    { page: 1, limit: TEACHERS_MODULE_MANIFEST.maxPageSize, status: "active" },
+    { page: 1, limit: FACULTY_MODULE_MANIFEST.maxPageSize, status: "active" },
     modalOpen,
   );
 

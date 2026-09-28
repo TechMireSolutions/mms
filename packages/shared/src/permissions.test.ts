@@ -72,7 +72,7 @@ describe("roleHasPermission", () => {
       badgeVariant: "primary",
       permissions: {
         students: ["read", "update"],
-        teachers: ["read", "create", "update", "delete"],
+        faculty: ["read", "create", "update", "delete"],
         examinations: ["read", "create", "update", "delete"],
         users: ["read"],
       },
@@ -80,8 +80,8 @@ describe("roleHasPermission", () => {
 
     const customRoles = [customSupervisorRole];
 
-    expect(roleHasPermission("supervisor", "teachers.write", customRoles)).toBe(true);
-    expect(roleHasPermission("supervisor", "teachers.delete", customRoles)).toBe(true);
+    expect(roleHasPermission("supervisor", "faculty.write", customRoles)).toBe(true);
+    expect(roleHasPermission("supervisor", "faculty.delete", customRoles)).toBe(true);
     expect(roleHasPermission("supervisor", "examinations.write", customRoles)).toBe(true);
     expect(roleHasPermission("supervisor", "students.write", customRoles)).toBe(true);
     expect(roleHasPermission("supervisor", "students.delete", customRoles)).toBe(false);

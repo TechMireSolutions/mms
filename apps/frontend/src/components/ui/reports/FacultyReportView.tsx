@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from 'react';
-import { TEACHERS_MODULE_MANIFEST, toTitleCase } from '@mms/shared';
+import { FACULTY_MODULE_MANIFEST, toTitleCase } from '@mms/shared';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ReportDataGridContainer } from './ReportDataGridContainer';
 import { ErrorState } from '@/components/ui/ErrorState';
@@ -69,7 +69,7 @@ export function FacultyReportView({ report, widgets }: {
           moduleId="teachers"
           page={report.listPage}
           total={report.listTotal}
-          limit={TEACHERS_MODULE_MANIFEST.defaultPageSize}
+          limit={FACULTY_MODULE_MANIFEST.defaultPageSize}
           hasMore={report.listHasMore}
           onPageChange={report.setListPage}
           i18nNamespace="teachers"

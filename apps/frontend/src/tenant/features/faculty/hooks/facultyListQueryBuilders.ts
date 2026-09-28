@@ -3,7 +3,6 @@ import {
   type FacultyRecord,
   type FacultyListPageResult,
   type FacultyListQuery,
-  type TeacherRecord,
   type TeachersListPageResult,
 } from '@mms/shared';
 import {
@@ -11,10 +10,10 @@ import {
   FACULTY_QUERY_KEY,
 } from '@/tenant/features/faculty/hooks/facultyQueryKeys';
 
+export type TeacherRecord = FacultyRecord;
 export type {
   FacultyRecord,
   FacultyListPageResult,
-  TeacherRecord,
   TeachersListPageResult,
 };
 

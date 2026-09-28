@@ -299,7 +299,7 @@ describe('savedReportsContractRouter', () => {
 
   describe('category to module manifest mapping', () => {
     it.each([
-      { category: 'teachers', allowToken: (a: FastifyInstance) => teacherToken(a), allowUserId: 'u-teacher', denyToken: (a: FastifyInstance) => viewerToken(a) },
+      { category: 'faculty', allowToken: (a: FastifyInstance) => teacherToken(a), allowUserId: 'u-teacher', denyToken: (a: FastifyInstance) => viewerToken(a) },
       { category: 'financial', allowToken: (a: FastifyInstance) => accountantToken(a), allowUserId: 'u-accountant', denyToken: (a: FastifyInstance) => teacherToken(a) },
     ])('gates $category on its owning module read permission', async ({ category, allowToken, allowUserId, denyToken }) => {
       const allowResponse = await app.inject({

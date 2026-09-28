@@ -124,7 +124,7 @@ export function buildListConditions(
   const linkFilter = query.moduleLinkFilter;
   if (linkFilter === 'students') {
     conditions.push(existsActiveStudentLinkSql(subdomain));
-  } else if (linkFilter === 'faculty' || linkFilter === 'teachers') {
+  } else if (linkFilter === 'faculty') {
     conditions.push(existsActiveFacultyLinkSql(subdomain));
   } else if (linkFilter === 'staff') {
     conditions.push(existsActiveStaffLinkSql(subdomain));
@@ -136,7 +136,7 @@ export function buildListConditions(
   if (query.excludeLinkedModules?.includes('students')) {
     conditions.push(sql`NOT ${existsActiveStudentLinkSql(subdomain)}`);
   }
-  if (query.excludeLinkedModules?.includes('faculty') || query.excludeLinkedModules?.includes('teachers')) {
+  if (query.excludeLinkedModules?.includes('faculty')) {
     conditions.push(sql`NOT ${existsActiveFacultyLinkSql(subdomain)}`);
   }
 

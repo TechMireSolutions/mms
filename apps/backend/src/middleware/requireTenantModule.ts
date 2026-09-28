@@ -92,20 +92,15 @@ export function requireTenantModule(moduleId: string) {
         (globalSettings as { enabledModules?: Record<string, boolean> } | null)?.enabledModules
       );
 
-      const isFacultyOrTeachers = moduleId === 'faculty' || moduleId === 'teachers';
       if (grantedModules.length > 0) {
-        const hasAccess = isFacultyOrTeachers
-          ? grantedModules.includes('faculty') || grantedModules.includes('teachers')
-          : grantedModules.includes(moduleId);
+        const hasAccess = grantedModules.includes(moduleId);
         if (!hasAccess) {
           await sendForbidden(reply, `The ${moduleId} module is not permitted by the platform.`);
           return;
         }
       }
 
-      const isEnabled = isFacultyOrTeachers
-        ? (enabledModules['faculty'] ?? enabledModules['teachers']) !== false
-        : enabledModules[moduleId] !== false;
+      const isEnabled = enabledModules[moduleId] !== false;
 
       if (!isEnabled) {
         await sendForbidden(reply, `The ${moduleId} module is disabled for this workspace.`);

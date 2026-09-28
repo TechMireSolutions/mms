@@ -37,11 +37,11 @@ describe('contactsListQuerySchema', () => {
     expect(
       contactsListQuerySchema.parse({
         excludeIds: ' 1, 2, ,3 ',
-        excludeLinkedModules: 'students,unknown,teachers',
+        excludeLinkedModules: 'students,unknown,faculty',
       }),
     ).toMatchObject({
       excludeIds: ['1', '2', '3'],
-      excludeLinkedModules: ['students', 'teachers'],
+      excludeLinkedModules: ['students', 'faculty'],
     });
   });
 

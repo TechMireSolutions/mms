@@ -30,7 +30,7 @@ export function isDevCredentialLoggingEnabled(): boolean {
 
 /**
  * Masks an email address for log correlation without recording the full PII:
- * `teacher@example.com` → `t***@example.com`.
+ * `faculty@example.com` → `f***@example.com`.
  *
  * Logs still need to correlate events to a user; the domain alone is usually
  * enough to distinguish environments, while the local part is the identifying

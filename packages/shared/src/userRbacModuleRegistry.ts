@@ -11,7 +11,6 @@ export const RBAC_MODULE_IDS = [
   'dashboard',
   'contacts',
   'faculty',
-  'teachers',
   'messaging',
   'students',
   'sessions',
@@ -33,7 +32,6 @@ export const RBAC_MODULE_REGISTRY: readonly RbacModuleDef[] = [
   { id: 'dashboard', labelKey: 'nav.dashboard' },
   { id: 'contacts', labelKey: 'nav.contacts' },
   { id: 'faculty', labelKey: 'nav.faculty' },
-  { id: 'teachers', labelKey: 'nav.teachers' },
   { id: 'messaging', labelKey: 'nav.messaging' },
   { id: 'students', labelKey: 'nav.students' },
   { id: 'sessions', labelKey: 'nav.sessions' },
@@ -69,7 +67,6 @@ export function isValidRbacModuleId(id: unknown): id is RbacModuleId {
  * (e.g. RBAC `enrollments` ↔ system module `enrollment`.)
  */
 export const RBAC_SYSTEM_MODULE_ID: Readonly<Record<string, string>> = Object.freeze({
-  faculty: 'teachers',
   enrollments: 'enrollment',
   examinations: 'examination',
 });

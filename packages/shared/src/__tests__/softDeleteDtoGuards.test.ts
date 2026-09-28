@@ -76,7 +76,7 @@ import type { Contact } from '../contactTypes.js';
 import { DEFAULT_TEACHERS_SETTINGS } from '../facultyModuleSettings.js';
 import { CONTACTS_MODULE_MANIFEST } from '../contactsModuleManifest.js';
 import { STUDENTS_MODULE_MANIFEST } from '../studentsModuleManifest.js';
-import { TEACHERS_MODULE_MANIFEST } from '../facultyModuleManifest.js';
+import { FACULTY_MODULE_MANIFEST } from '../facultyModuleManifest.js';
 import { SESSIONS_MODULE_MANIFEST } from '../sessionsModuleManifest.js';
 import {
   ENROLLMENTS_MODULE_MANIFEST,
@@ -409,7 +409,7 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
     const manifests = [
       { name: 'contacts', manifest: CONTACTS_MODULE_MANIFEST, expectedReasonCapture: true },
       { name: 'students', manifest: STUDENTS_MODULE_MANIFEST, expectedReasonCapture: true },
-      { name: 'teachers', manifest: TEACHERS_MODULE_MANIFEST, expectedReasonCapture: true },
+      { name: 'faculty', manifest: FACULTY_MODULE_MANIFEST, expectedReasonCapture: true },
       { name: 'sessions', manifest: SESSIONS_MODULE_MANIFEST, expectedReasonCapture: true },
       { name: 'enrollments', manifest: ENROLLMENTS_MODULE_MANIFEST, expectedReasonCapture: true },
       { name: 'finance', manifest: FINANCE_MODULE_MANIFEST, expectedReasonCapture: false },

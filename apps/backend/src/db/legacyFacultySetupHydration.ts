@@ -1,8 +1,6 @@
 import {
   FACULTY_MODULE_MANIFEST,
   splitFacultySettingsBlob,
-  TEACHERS_MODULE_MANIFEST,
-  splitTeachersSettingsBlob,
 } from '@mms/shared';
 import {
   hydrateModuleSetupCollectionsFromLegacyObjects,
@@ -12,8 +10,8 @@ import {
 /** Legacy document-store Faculty / Teachers Setup object keys. */
 const FACULTY_SETTINGS_OBJECT_KEY = FACULTY_MODULE_MANIFEST.settingsObjectKey;
 const FACULTY_COLUMN_PREFS_OBJECT_KEY = FACULTY_MODULE_MANIFEST.columnPreferencesObjectKey;
-const TEACHERS_SETTINGS_OBJECT_KEY = TEACHERS_MODULE_MANIFEST.settingsObjectKey;
-const TEACHERS_COLUMN_PREFS_OBJECT_KEY = TEACHERS_MODULE_MANIFEST.columnPreferencesObjectKey;
+const TEACHERS_SETTINGS_OBJECT_KEY = 'teachers_settings';
+const TEACHERS_COLUMN_PREFS_OBJECT_KEY = 'teacher_user_column_preferences';
 
 /** Legacy Faculty Setup object keys that must not re-enter the document store after typed hydrate. */
 export const FACULTY_LEGACY_SETUP_OBJECT_KEYS = [
@@ -42,7 +40,7 @@ export function hydrateFacultySetupCollectionsFromLegacyObjects(
     fieldConfigCollection: 'faculty_field_configs',
     modulePrefsCollection: 'faculty_module_preferences',
     columnPrefsCollection: 'faculty_user_column_prefs',
-    splitSettingsBlob: splitFacultySettingsBlob || splitTeachersSettingsBlob,
+    splitSettingsBlob: splitFacultySettingsBlob,
   };
 
   const result = hydrateModuleSetupCollectionsFromLegacyObjects(collections, objects, config);

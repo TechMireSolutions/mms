@@ -1,5 +1,5 @@
 import React, { lazy, Suspense } from "react";
-import { TEACHERS_MODULE_MANIFEST } from "@mms/shared";
+import { FACULTY_MODULE_MANIFEST } from "@mms/shared";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
 import { ModulePanelSuspenseFallback } from "@/components/ui/ModulePanelSuspenseFallback";
@@ -23,7 +23,7 @@ export const FacultySetupTier = function FacultySetupTier({
   onPrefsDirtyChange,
 }: FacultySetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();
-  const { canEditSetup } = useModulePermissions(TEACHERS_MODULE_MANIFEST);
+  const { canEditSetup } = useModulePermissions(FACULTY_MODULE_MANIFEST);
 
   return (
     <ModuleTierMotion tier="setup">

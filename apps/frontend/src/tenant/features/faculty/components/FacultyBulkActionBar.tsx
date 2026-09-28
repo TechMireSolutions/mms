@@ -1,7 +1,6 @@
 import { Briefcase, ChevronDown, IdCard, Users } from 'lucide-react';
 import {
   FACULTY_MODULE_MANIFEST,
-  TEACHERS_MODULE_MANIFEST,
   type Faculty,
 } from '@mms/shared';
 import { ModuleUniversalBulkActionBar } from '@/components/ui/ModuleUniversalBulkActionBar';
@@ -65,7 +64,7 @@ export function FacultyBulkActionBar({
   onClearSelection,
   canExport = false,
   onBulkExport,
-  bulkActions = FACULTY_MODULE_MANIFEST.work.bulkActions ?? TEACHERS_MODULE_MANIFEST.work.bulkActions,
+  bulkActions = FACULTY_MODULE_MANIFEST.work.bulkActions,
   statusPending = false,
   specializationPending = false,
 }: TeachersBulkActionBarProps): React.JSX.Element {

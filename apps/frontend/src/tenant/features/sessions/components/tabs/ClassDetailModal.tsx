@@ -9,7 +9,7 @@ import { SubTabBar } from '@/components/ui/SubTabBar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTeachersContractList, useTeachersByIds } from '@/tenant/hooks/collections/faculty';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
-import { TEACHERS_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from '@mms/shared';
+import { FACULTY_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from '@mms/shared';
 import type { Class } from '@/lib/data/sessionsData';
 import {
   type ClassDetailTabId,
@@ -48,7 +48,7 @@ export function ClassDetailModal({
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const { data: teachersData } = useTeachersContractList(
-    { page: 1, limit: TEACHERS_MODULE_MANIFEST.maxPageSize, status: 'active' },
+    { page: 1, limit: FACULTY_MODULE_MANIFEST.maxPageSize, status: 'active' },
     open,
   );
   const teachersList = ((teachersData?.body?.faculty ?? teachersData?.body?.teachers ?? []) as Teacher[]);

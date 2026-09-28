@@ -24,7 +24,7 @@ import {
   DEFAULT_STUDENTS_SETTINGS,
   DEFAULT_STUDENT_FIELD_DEFS,
   normalizeStudentsSettings,
-  TEACHERS_MODULE_MANIFEST,
+  FACULTY_MODULE_MANIFEST,
   DEFAULT_TEACHERS_SETTINGS,
   DEFAULT_TEACHER_FIELD_DEFS,
   USERS_MODULE_MANIFEST,
@@ -91,7 +91,7 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     normalizeFn: normalizeStudentsSettings,
   },
   teachers: {
-    settingsObjectKey: TEACHERS_MODULE_MANIFEST.settingsObjectKey,
+    settingsObjectKey: FACULTY_MODULE_MANIFEST.settingsObjectKey,
     defaultSettings: DEFAULT_TEACHERS_SETTINGS,
     defaultFieldDefs: DEFAULT_TEACHER_FIELD_DEFS,
   },

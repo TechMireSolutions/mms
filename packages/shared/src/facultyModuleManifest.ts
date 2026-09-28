@@ -80,7 +80,6 @@ export type FacultyRecord = z.infer<typeof facultyCoreSchema>;
 /** Faculty module manifest — aligns with globle1 universal module architecture. */
 export const FACULTY_MODULE_MANIFEST = {
   moduleId: 'faculty',
-  moduleAlias: 'teachers',
   entityType: 'FacultyMember',
   collectionKey: 'faculty',
   /** Legacy remap / backup key — typed field-config lives on `faculty_field_configs`. */
@@ -123,41 +122,3 @@ export const FACULTY_MODULE_MANIFEST = {
 } as const;
 
 export type FacultyModuleTier = (typeof FACULTY_MODULE_MANIFEST.tiers)[number];
-
-/* ========================================================================= */
-/*                    BACKWARD COMPATIBILITY ALIASES                        */
-/* ========================================================================= */
-
-export const TEACHERS_MODULE_MANIFEST = {
-  ...FACULTY_MODULE_MANIFEST,
-  moduleId: 'teachers',
-  entityType: 'Teacher',
-  collectionKey: 'teachers',
-  settingsObjectKey: 'teachers_settings',
-  configObjectKey: 'teacher_field_config',
-  preferencesObjectKey: 'teacher_module_preferences',
-  columnPreferencesObjectKey: 'teacher_user_column_preferences',
-  restBasePath: '/api/faculty',
-  analyticsCategory: 'teachers',
-  defaultExportFilename: 'teachers.csv',
-  permissions: {
-    read: 'teachers.read',
-    write: 'teachers.write',
-    delete: 'teachers.delete',
-    setupView: 'configuration.view',
-    setupWrite: 'settings.global.write',
-    export: 'teachers.read',
-    reports: 'teachers.read',
-  } satisfies Record<string, Permission>,
-} as const;
-
-export const teacherCoreSchema = facultyCoreSchema;
-export const teacherRecordSchema = facultyRecordSchema;
-export const teachersBulkStatusSchema = facultyBulkStatusSchema;
-export const teachersBulkSpecializationSchema = facultyBulkSpecializationSchema;
-export type TeachersBulkSpecializationBody = FacultyBulkSpecializationBody;
-export const teachersNextEmployeeIdQuerySchema = facultyNextEmployeeIdQuerySchema;
-export const teacherListSchema = facultyListSchema;
-export type TeacherRecord = FacultyRecord;
-export type TeachersModuleTier = FacultyModuleTier;
-export const TEACHER_STATUS_WRITE_MAX = FACULTY_STATUS_WRITE_MAX;

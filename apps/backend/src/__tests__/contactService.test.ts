@@ -169,7 +169,7 @@ describe('contactService relationship reciprocal mapping', () => {
     await loadContactsPage({
       page: 1,
       limit: 50,
-      excludeLinkedModules: ['students', 'teachers'],
+      excludeLinkedModules: ['students', 'faculty'],
     });
 
     expect(mockListContactsPage).toHaveBeenCalledWith(
@@ -177,7 +177,7 @@ describe('contactService relationship reciprocal mapping', () => {
       expect.objectContaining({
         page: 1,
         limit: 50,
-        excludeLinkedModules: ['students', 'teachers'],
+        excludeLinkedModules: ['students', 'faculty'],
       }),
     );
   });

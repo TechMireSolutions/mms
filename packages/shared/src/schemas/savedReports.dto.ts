@@ -6,7 +6,7 @@ export const CONTACTS_SAVED_REPORT_CATEGORY = 'contacts' as const;
 /** Report categories supported by the generic saved-reports REST resource. */
 export const GENERIC_SAVED_REPORT_CATEGORIES = [
   'students',
-  'teachers',
+  'faculty',
   'attendance',
   'finance',
   'financial',
@@ -15,7 +15,6 @@ export const GENERIC_SAVED_REPORT_CATEGORIES = [
   'questionBank',
   'hasanat',
   'sessions',
-  'faculty',
   'enrollments',
   'obligations',
   'messaging',

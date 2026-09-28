@@ -72,7 +72,7 @@ export const SYSTEM_MODULES: ModuleDefinition[] = [
   { id: "contacts",    label: "Contacts",       description: "Comprehensive CRM directory",         icon: "Users",           category: "core",     required: true },
   { id: "messaging",   label: "Messaging",      description: "SMS, WhatsApp and announcements",     icon: "MessageSquare",   category: "core",     required: true },
   { id: "students",    label: "Students",       description: "Student directory and records",       icon: "GraduationCap",   category: "academic", required: true },
-  { id: "teachers",    label: "Faculty",        description: "Faculty directory and assignments",   icon: "School",          category: "academic" },
+  { id: "faculty",     label: "Faculty",        description: "Faculty directory and assignments",   icon: "School",          category: "academic" },
   { id: "sessions",    label: "Sessions",       description: "Classes, schedules and timetables",   icon: "Calendar",        category: "academic" },
   { id: "attendance",  label: "Attendance",     description: "Tracking and reporting",              icon: "UserCheck",       category: "academic" },
   { id: "enrollment",  label: "Enrollments",    description: "Student enrollment into sessions",    icon: "ClipboardList",   category: "academic" },
@@ -162,6 +162,7 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   enabledModules: {
     dashboard: true,
     students: true,
+    faculty: true,
     teachers: true,
     contacts: true,
     messaging: true,
@@ -191,6 +192,11 @@ export function normalizeEnabledModules(
     ...DEFAULT_GLOBAL_SETTINGS.enabledModules,
     ...(partial ?? {}),
   };
+  if (partial?.teachers !== undefined && partial?.faculty === undefined) {
+    merged.faculty = partial.teachers;
+  } else if (partial?.faculty !== undefined && partial?.teachers === undefined) {
+    merged.teachers = partial.faculty;
+  }
   for (const mod of SYSTEM_MODULES) {
     if (mod.required) {
       merged[mod.id] = true;
