@@ -177,6 +177,30 @@ export function getPoolMetrics(): PoolMetrics | null {
   return metrics;
 }
 
+export interface TenantDbMetrics {
+  activeTenantsCount: number;
+  totalTenantActiveTransactions: number;
+  tenantCapLimit: number;
+  tenantBudgetPercent: number;
+  activeTenants: { tenant: string; count: number }[];
+}
+
+/** Returns live per-tenant active transaction metrics and connection budget. */
+export function getTenantDbMetrics(): TenantDbMetrics {
+  const activeTenants = Array.from(tenantTxCounts.entries())
+    .filter(([_, count]) => count > 0)
+    .map(([tenant, count]) => ({ tenant, count }));
+  const totalTenantActiveTransactions = activeTenants.reduce((sum, item) => sum + item.count, 0);
+  const tenantCapLimit = Math.max(5, Math.floor(activeMaxPoolSize * 0.4));
+  return {
+    activeTenantsCount: activeTenants.length,
+    totalTenantActiveTransactions,
+    tenantCapLimit,
+    tenantBudgetPercent: 40,
+    activeTenants,
+  };
+}
+
 /** Lightweight DB connectivity check for `/ready`. */
 export async function pingDatabase(): Promise<boolean> {
   try {

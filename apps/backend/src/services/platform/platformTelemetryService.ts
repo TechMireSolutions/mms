@@ -1,11 +1,29 @@
 import { performance } from 'node:perf_hooks';
-import { getPoolMetrics, pingDatabase } from '../../db/dbConnection.js';
+import { getPoolMetrics, getTenantDbMetrics, pingDatabase } from '../../db/dbConnection.js';
 import {
   getPlatformMonthlyActivityTrend,
   type MonthlyPlatformActivityItem,
 } from '../../db/repositories/platformActivityLogsRepository.js';
 
 export interface PlatformTelemetryResult {
+  platformDb: {
+    engine: string;
+    totalCount: number;
+    idleCount: number;
+    waitingCount: number;
+    activeCount: number;
+    utilizationRate: number;
+    latencyMs: number;
+    hasReplica: boolean;
+  };
+  tenantDb: {
+    rlsIsolation: 'enforced';
+    activeTenantsCount: number;
+    totalTenantTransactions: number;
+    tenantCapLimit: number;
+    tenantBudgetPercent: number;
+    activeTenants: { tenant: string; count: number }[];
+  };
   dbPool: {
     totalCount: number;
     idleCount: number;
@@ -26,6 +44,7 @@ export interface PlatformTelemetryResult {
 export async function getPlatformTelemetry(): Promise<PlatformTelemetryResult> {
   const mem = process.memoryUsage();
   const pool = getPoolMetrics() ?? { totalCount: 1, idleCount: 1, waitingCount: 0 };
+  const tenantMetrics = getTenantDbMetrics();
   const total = pool.totalCount;
   const idle = pool.idleCount;
   const active = Math.max(0, total - idle);
@@ -36,6 +55,24 @@ export async function getPlatformTelemetry(): Promise<PlatformTelemetryResult> {
   const latencyMs = Math.round(performance.now() - start);
 
   return {
+    platformDb: {
+      engine: 'PostgreSQL 16 (Drizzle ORM)',
+      totalCount: total,
+      idleCount: idle,
+      waitingCount: pool.waitingCount,
+      activeCount: active,
+      utilizationRate,
+      latencyMs,
+      hasReplica: Boolean(pool.replica),
+    },
+    tenantDb: {
+      rlsIsolation: 'enforced',
+      activeTenantsCount: tenantMetrics.activeTenantsCount,
+      totalTenantTransactions: tenantMetrics.totalTenantActiveTransactions,
+      tenantCapLimit: tenantMetrics.tenantCapLimit,
+      tenantBudgetPercent: tenantMetrics.tenantBudgetPercent,
+      activeTenants: tenantMetrics.activeTenants,
+    },
     dbPool: {
       totalCount: total,
       idleCount: idle,

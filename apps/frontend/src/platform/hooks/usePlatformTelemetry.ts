@@ -3,6 +3,24 @@ import { apiJson } from '@/lib/apiClient';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 
 export interface PlatformTelemetryData {
+  platformDb?: {
+    engine: string;
+    totalCount: number;
+    idleCount: number;
+    waitingCount: number;
+    activeCount: number;
+    utilizationRate: number;
+    latencyMs: number;
+    hasReplica: boolean;
+  };
+  tenantDb?: {
+    rlsIsolation: 'enforced';
+    activeTenantsCount: number;
+    totalTenantTransactions: number;
+    tenantCapLimit: number;
+    tenantBudgetPercent: number;
+    activeTenants: { tenant: string; count: number }[];
+  };
   dbPool: {
     totalCount: number;
     idleCount: number;

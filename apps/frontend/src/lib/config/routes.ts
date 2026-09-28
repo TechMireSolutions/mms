@@ -29,6 +29,8 @@ export const ROUTES = {
   platformForgotPassword: "/platform/forgot-password",
   platformAccount: "/platform/account",
   platformAdmins: "/platform/admins",
+  platformUsers: "/platform/users",
+  platformSettings: "/platform/settings",
   platformDashboard: "/platform/dashboard",
   platformWorkspaces: "/platform/workspaces",
   platformReports: "/platform/reports",

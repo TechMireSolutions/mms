@@ -1,5 +1,5 @@
 import type React from "react";
-import { LayoutDashboard, Building2, BarChart3, Users, User, Server, Activity, Waypoints } from "lucide-react";
+import { LayoutDashboard, Building2, BarChart3, Users, User, Server, Activity, Waypoints, Settings } from "lucide-react";
 import { ROUTES } from "@/lib/config/routes";
 import type { AppTranslationKey } from "@mms/shared";
 import type { PlatformPermissionsState } from "@/platform/hooks/usePlatformPermissions";
@@ -45,8 +45,8 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     isVisible: (perms) => perms.canWorkspaces,
   },
   {
-    id: "admins",
-    path: ROUTES.platformAdmins,
+    id: "users",
+    path: ROUTES.platformUsers,
     labelKey: "platform.adminsTitle",
     icon: Users,
     section: "admin",
@@ -59,6 +59,14 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
     icon: Activity,
     section: "admin",
     isVisible: (perms) => perms.canSystem,
+  },
+  {
+    id: "settings",
+    path: ROUTES.platformSettings,
+    labelKey: "settings.title",
+    icon: Settings,
+    section: "ops",
+    isVisible: (perms) => perms.canSystem || perms.isSuperUser,
   },
   {
     id: "system",

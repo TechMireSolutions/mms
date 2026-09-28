@@ -10,10 +10,13 @@ import { formatDateTime } from "@/lib/utils";
 import { containerVariantsConsole as containerVariants, itemVariants as cardVariants } from "@/platform/lib/animations";
 import { PlatformMigrateRestartCard } from "@/platform/pages/account/PlatformMigrateRestartCard";
 import { PlatformLatencySparkline } from "@/platform/components/system/PlatformLatencySparkline";
+import { usePlatformTelemetry } from "@/platform/hooks/usePlatformTelemetry";
+import { PlatformDatabaseTelemetryCard } from "@/platform/components/system/PlatformDatabaseTelemetryCard";
 
 export function PlatformSystemMaintenance(): React.JSX.Element {
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
+  const { data: telemetry, isLoading: telemetryLoading } = usePlatformTelemetry();
   const [probing, setProbing] = useState(false);
   const [latencyMs, setLatencyMs] = useState<number | null>(null);
   const [latencyHistory, setLatencyHistory] = useState<number[]>([]);
@@ -149,6 +152,12 @@ export function PlatformSystemMaintenance(): React.JSX.Element {
             </ActionButton>
           </div>
         </div>
+
+        {/* Database Telemetry (Platform DB separated from Tenant DB) */}
+        <PlatformDatabaseTelemetryCard
+          telemetry={telemetry}
+          isLoading={telemetryLoading}
+        />
 
         <div className="grid grid-cols-1 max-w-xl gap-8 items-start">
           <PlatformMigrateRestartCard />

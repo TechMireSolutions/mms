@@ -102,10 +102,9 @@ describe('Platform Telemetry & Activity Trend API', () => {
     it('returns valid telemetry shape from getPlatformTelemetry()', async () => {
       const telemetry = await getPlatformTelemetry();
       expect(typeof telemetry).toBe('object');
-      expect(typeof telemetry.dbPool).toBe('object');
+      expect(telemetry.platformDb.engine).toContain('PostgreSQL');
+      expect(telemetry.tenantDb.rlsIsolation).toBe('enforced');
       expect(typeof telemetry.dbPool.totalCount).toBe('number');
-      expect(typeof telemetry.dbPool.utilizationRate).toBe('number');
-      expect(typeof telemetry.memory).toBe('object');
       expect(typeof telemetry.memory.rssMb).toBe('number');
       expect(typeof telemetry.latencyMs).toBe('number');
       expect(typeof telemetry.uptimeSeconds).toBe('number');
@@ -165,6 +164,8 @@ describe('Platform Telemetry & Activity Trend API', () => {
       });
       expect(res.statusCode).toBe(200);
       const json = res.json();
+      expect(json).toHaveProperty('platformDb');
+      expect(json).toHaveProperty('tenantDb');
       expect(json).toHaveProperty('dbPool');
       expect(json).toHaveProperty('memory');
       expect(json).toHaveProperty('latencyMs');

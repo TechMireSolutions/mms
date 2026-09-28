@@ -109,8 +109,12 @@ export function PlatformDashboardTelemetry(): React.JSX.Element {
           {
             icon: ShieldCheck,
             label: t("platform.telemetry.securityBoundary"),
-            value: t("platform.telemetry.rls100"),
-            sub: t("platform.telemetry.tenantIsolated"),
+            value: telemetry?.tenantDb
+              ? `${telemetry.tenantDb.activeTenantsCount} Tenants`
+              : t("platform.telemetry.rls100"),
+            sub: telemetry?.tenantDb
+              ? `${telemetry.tenantDb.totalTenantTransactions} active tx · RLS 100%`
+              : t("platform.telemetry.tenantIsolated"),
             accent: "success",
           },
           {

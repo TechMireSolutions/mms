@@ -1,5 +1,4 @@
-import type React from 'react';
-import { LayoutDashboard, Building2, BarChart3, Activity, Server, ShieldCheck, User, PlusCircle, Waypoints, Download, UserPlus } from 'lucide-react';
+import { LayoutDashboard, Building2, BarChart3, Activity, Server, ShieldCheck, User, PlusCircle, Waypoints, Download, UserPlus, Settings } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
 import { ROUTES } from '@/lib/config/routes';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
@@ -14,7 +13,7 @@ export interface PlatformCommandItem {
   path: string;
   icon: React.ElementType;
   keywords: string[];
-  requiredPermission?: 'workspaces' | 'onboard' | 'system' | 'admins';
+  requiredPermission?: 'workspaces' | 'onboard' | 'system' | 'admins' | 'settings';
 }
 
 export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
@@ -74,10 +73,19 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     id: 'admins',
     labelKey: 'platform.adminsTitle',
     category: 'platform.commandCategory.navigation',
-    path: ROUTES.platformAdmins,
+    path: ROUTES.platformUsers,
     icon: ShieldCheck,
     keywords: ['admins', 'super_user', 'operators', 'users', 'access', 'rbac', 'permissions'],
     requiredPermission: 'admins',
+  },
+  {
+    id: 'settings',
+    labelKey: 'settings.title',
+    category: 'platform.commandCategory.navigation',
+    path: ROUTES.platformSettings,
+    icon: Settings,
+    keywords: ['settings', 'preferences', 'tls', 'appearance', 'theme', 'config', 'certbot'],
+    requiredPermission: 'system',
   },
   {
     id: 'account',
