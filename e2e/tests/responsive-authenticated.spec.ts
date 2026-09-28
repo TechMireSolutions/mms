@@ -10,7 +10,7 @@ import {
 } from '../helpers/responsive.js';
 import {
   bootstrapAuthenticatedTenant,
-  resetPlatformUsers,
+  ensureE2ePlatformAdmin,
 } from '../helpers/tenantBootstrap.js';
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
@@ -121,7 +121,7 @@ async function assertModuleRouteLayout(page: Page, path: string, ready: string):
 
 test.describe.serial('Authenticated tenant shell responsive layout', { tag: '@local-only' }, () => {
   test.beforeAll(() => {
-    resetPlatformUsers();
+    ensureE2ePlatformAdmin(platformEmail, platformPassword);
   });
 
   test('bootstrap platform admin and tenant workspace', async ({ page }) => {

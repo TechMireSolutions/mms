@@ -24,6 +24,8 @@ export const PRINT_COLORS = {
   borderGray: '#d1d5db',
   borderLight: '#e5e7eb',
   borderLighter: '#f3f4f6',
+  /** Slate-200 — default canvas border in the template editor. */
+  borderSlate: '#cbd5e1',
   ruleGray: '#9ca3af',
   slateDark: '#0f172a',
   slateMedium: '#334155',

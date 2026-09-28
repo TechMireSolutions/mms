@@ -20,6 +20,21 @@ description: Consolidated UI component primitives, design tokens, navigation tab
 ## 2. Design Tokens & Surface Styling
 
 - **Semantic Tokens Only:** Use `index.css` theme mapping (`hsl(var(--primary))`; no standalone `oklch()`). Zero raw hex colors or arbitrary Tailwind brackets (`bg-gray-100`, `rounded-[2rem]`). Print styles quarantined in `lib/printTemplateStyles.ts`.
+
+  **Token-exemption register** (reviewed; do not clean up these files — each has a rationale):
+
+  | File | Reason |
+  |---|---|
+  | `src/tenant/features/settings/components/ThemeModeSelector.tsx` | Theme-preview swatches render literal light/dark window chrome regardless of active brand tokens; semantic tokens would make all three options look identical. |
+  | `src/lib/printTemplateStyles.ts` | SSOT quarantine for all print-canvas hex constants; all other print hex must import from here. |
+  | `src/lib/printBrandingTokens.ts` | Runtime bridge that resolves institution brand hex into print tokens. |
+  | `src/lib/documentFavicon.ts` | Generates SVG data-URL for browser favicon; SVG does not consume CSS custom properties. |
+  | `src/lib/qrCodeGenerator.ts` | Generates SVG QR codes with literal black-on-white (QR scanner spec requirement). |
+  | `src/lib/extractLogoBrandColors.ts` | Canvas flatten fallback on user-uploaded logo images. |
+  | `src/platform/components/erd/ErdMermaidDiagram.tsx` | Mermaid.js theme config accepts only hex; reads CSS vars via `readThemeColor()` with hex fallbacks. |
+  | `src/platform/lib/themeScope.ts` | Platform-admin default theme seed values; not rendered in tenant UI. |
+  | `src/components/branding/Brand*.tsx` | Branding contrast-matrix and preview components operate on raw hex by design — they display and compare extracted hex values from user logos. |
+  | `src/components/ui/template-editor/` | Print canvas editor; hex constants imported from `printTemplateStyles.ts` SSOT (4 files). |
 - **Micro-Typography & Sizing:** `text-2xs` (10px) for compact meta, `text-3xs` (11px) for pills. Semantic z-index: `z-modal` (50), `z-modal-priority` (60), `z-popover` (70), `z-toast` (100). Never write arbitrary font-size or z-index bracket classes (`z-[100]`).
 - **Touch Target Floor:** Mandatory `min-h-11 min-w-11` (44×44px) on all interactive triggers, buttons, inputs, and action icons. Never use `min-h-[44px]`.
 - **Surfaces & Insets:** Use `WORK_SURFACE` / `WORK_SURFACE_INNER` for panels, `FORM_CARD` for forms (`formStyles.ts`). Use `color-mix(in srgb, var(--primary) 20%, transparent)` for tints. Outer card primitives govern padding (`p-4` / `px-5 py-4`); no child-level inline offsets (`ms-1`). Honor `useReducedMotion()`.

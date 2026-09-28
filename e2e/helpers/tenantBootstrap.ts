@@ -3,6 +3,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { expect, type Page } from '@playwright/test';
 import { loginTenant } from './moduleTiers.js';
+import { ensureE2ePlatformAdmin } from './platformAdminSeeder.js';
+
+export { ensureE2ePlatformAdmin } from './platformAdminSeeder.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const backendDir = path.resolve(__dirname, '../../apps/backend');
@@ -21,10 +24,15 @@ export interface TenantBootstrapCredentials {
 
 /**
  * Clears platform users so first-run setup is always available.
+ * Guarded: skipped by default to preserve persistent developer accounts.
  */
 export function resetPlatformUsers(): void {
   if (process.env.E2E_TARGET === 'production' || process.env.NODE_ENV === 'production') {
     console.warn('[E2E SAFEGUARD] Skipping platform users reset on production environment.');
+    return;
+  }
+  if (process.env.ALLOW_RESET_PLATFORM_USERS !== 'true') {
+    console.log('[E2E SAFEGUARD] Skipping destructive platform user reset (ALLOW_RESET_PLATFORM_USERS!=true). Using ensureE2ePlatformAdmin instead.');
     return;
   }
   try {
@@ -80,6 +88,8 @@ export async function bootstrapAuthenticatedTenant(
     platformEmail,
     platformPassword,
   } = credentials;
+
+  ensureE2ePlatformAdmin(platformEmail, platformPassword);
 
   await page.goto('/');
   await page.waitForLoadState('domcontentloaded');

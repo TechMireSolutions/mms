@@ -7,6 +7,7 @@
 import React from "react";
 import type { DocumentTemplate } from "@mms/shared";
 import { PRINT_NEUTRAL } from "@/lib/printBrandingTokens";
+import { PRINT_COLORS } from "@/lib/printTemplateStyles";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { interpolateTemplateTokens } from "./templateEditorUtils";
 import { TemplateElementContent } from "./templateElementContent";
@@ -111,7 +112,7 @@ export const TemplateElementRenderer = React.memo(function TemplateElementRender
         textAlign: geometry.textAlign,
         direction: geometry.direction,
         border: st.borderWidth
-          ? `${st.borderWidth}px solid ${st.borderColor || "#cbd5e1"}`
+          ? `${st.borderWidth}px solid ${st.borderColor || PRINT_COLORS.borderSlate}`
           : "1px dashed transparent",
         borderRadius: st.borderRadius != null ? `${st.borderRadius}px` : undefined,
         backgroundColor: st.backgroundColor || "transparent",

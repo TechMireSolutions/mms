@@ -18,6 +18,7 @@ import {
   SWATCHES,
   resolveTypographyStates,
 } from "./templateEditorTypographyUtils";
+import { PRINT_EMERALD, PRINT_EMERALD_DEEP } from "@/lib/printTemplateStyles";
 
 export { FONT_OPTIONS, SWATCHES };
 
@@ -58,8 +59,8 @@ export function TemplateEditorTypographySection({
   const currentFontSize = Number(elStyle.fontSize ?? 10) || 10;
 
   const swatches = [
-    { label: t("templateEditor.swatchBrandPrimary"), color: primaryColor || "#059669" },
-    { label: t("templateEditor.swatchBrandSecondary"), color: secondaryColor || "#047857" },
+    { label: t("templateEditor.swatchBrandPrimary"), color: primaryColor || PRINT_EMERALD },
+    { label: t("templateEditor.swatchBrandSecondary"), color: secondaryColor || PRINT_EMERALD_DEEP },
     ...SWATCHES.map((s) => ({ label: t(s.labelKey), color: s.color })),
   ];
 

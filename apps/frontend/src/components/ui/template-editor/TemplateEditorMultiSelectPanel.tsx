@@ -8,6 +8,7 @@ import { Layers, Move } from "lucide-react";
 import type { ElementStyle, TemplateElement } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { normalizeHexColor, type AlignmentType } from "./templateEditorUtils";
+import { PRINT_COLORS } from "@/lib/printTemplateStyles";
 import { TemplateEditorSection } from "./TemplateEditorSection";
 import { TemplateEditorAlignmentGrid } from "./TemplateEditorAlignmentGrid";
 import { TemplateEditorTypographySection } from "./TemplateEditorTypographySection";
@@ -66,8 +67,8 @@ export function TemplateEditorMultiSelectPanel<TPayload = Record<string, unknown
   );
 
   const sampleStyle = selectedElements[0]?.style || {};
-  const initialBgColor = normalizeHexColor(sampleStyle.backgroundColor, "#ffffff");
-  const initialBorderColor = normalizeHexColor(sampleStyle.borderColor, "#cbd5e1");
+  const initialBgColor = normalizeHexColor(sampleStyle.backgroundColor, PRINT_COLORS.white);
+  const initialBorderColor = normalizeHexColor(sampleStyle.borderColor, PRINT_COLORS.borderSlate);
   const initialBorderRadius = sampleStyle.borderRadius ?? 0;
   const initialBorderWidth = sampleStyle.borderWidth ?? 0;
 

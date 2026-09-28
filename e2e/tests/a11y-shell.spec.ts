@@ -9,7 +9,7 @@ import {
 } from '../helpers/responsive.js';
 import {
   bootstrapAuthenticatedTenant,
-  resetPlatformUsers,
+  ensureE2ePlatformAdmin,
 } from '../helpers/tenantBootstrap.js';
 
 process.env.NODE_ENV = process.env.NODE_ENV || 'test';
@@ -162,7 +162,7 @@ test.describe('accessibility smoke @smoke', () => {
    */
   test('app shell and module surfaces pass axe at 375 and 1440 (LTR + RTL)', async ({ page }) => {
     test.setTimeout(600_000);
-    resetPlatformUsers();
+    ensureE2ePlatformAdmin(platformEmail, platformPassword);
 
     await bootstrapAuthenticatedTenant(page, {
       subdomain,

@@ -6,6 +6,7 @@ import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { StyleInput } from './TemplateEditorStyleControls';
 import { normalizeHexColor } from './templateEditorUtils';
 import { TemplateEditorSection } from './TemplateEditorSection';
+import { PRINT_COLORS } from '@/lib/printTemplateStyles';
 
 export interface TemplateEditorAppearanceSectionProps {
   elementId: string;
@@ -49,7 +50,7 @@ export function TemplateEditorAppearanceSection({
               name={bgColorId}
               aria-label={t('templateEditor.backgroundColor')}
               type="color"
-              value={normalizeHexColor(elStyle.backgroundColor, '#ffffff')}
+              value={normalizeHexColor(elStyle.backgroundColor, PRINT_COLORS.white)}
               onChange={(e) => onPatchStyle(elementId, { backgroundColor: e.target.value })}
               className="w-11 h-11 p-0.5 border border-border rounded-md bg-background cursor-pointer touch-manipulation min-h-11 min-w-11"
             />
@@ -78,7 +79,7 @@ export function TemplateEditorAppearanceSection({
             name={borderColorId}
             aria-label={t('templateEditor.borderColor')}
             type="color"
-            value={normalizeHexColor(elStyle.borderColor, '#cbd5e1')}
+            value={normalizeHexColor(elStyle.borderColor, PRINT_COLORS.borderSlate)}
             onChange={(e) => onPatchStyle(elementId, { borderColor: e.target.value })}
             className="w-full min-h-11 h-11 p-1 border border-border rounded-lg bg-background cursor-pointer"
           />

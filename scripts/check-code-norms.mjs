@@ -2,13 +2,21 @@
 /**
  * MMS code-norm ratchets.
  *
- * Three norms are declared in the rules but were previously unenforceable, so
- * they silently drifted: `any` in frontend source, raw hex colours instead of
- * design tokens, and the file-size bands. This script holds the CURRENT count as
- * a baseline and fails when a change makes any of them worse.
+ * Four norms are enforced here:
+ *   1. Explicit `any` annotations in source.
+ *   2. Raw 6-digit hex colour literals in .ts/.tsx (outside @theme).
+ *      Accepted categories (grandfathered):
+ *        - Branding tools: read CSS vars at runtime; need hex for WCAG contrast APIs.
+ *        - Template editor: user-authored print content; `normalizeHexColor` operates on hex.
+ *        - Print/PDF styles: printTemplateStyles.ts — absolute colours for non-CSS print output.
+ *        - ERD diagram: Mermaid fallback defaults when CSS vars are unavailable.
+ *      All other hex literals require a semantic token.
+ *   3. Tailwind arbitrary-colour bracket expressions ([#…], [rgb(…)], [hsl(…)]).
+ *      Baseline: 0. No new arbitrary colour expressions may be introduced.
+ *   4. Files over the 300-line hard ceiling.
  *
- * Ratchets, not cleanups: the existing sites are grandfathered on purpose, and
- * lowering a baseline as code improves is always welcome.
+ * Ratchets, not cleanups: existing sites are grandfathered; lowering a baseline
+ * as code improves is always welcome.
  *
  *   node scripts/check-code-norms.mjs
  *   node scripts/check-code-norms.mjs --json
@@ -24,7 +32,8 @@ const ROOT = process.cwd();
 /** Baselines measured when the ratchet landed; only lower them. */
 const BASELINE = {
   anyAnnotations: 1,
-  hexColourFiles: 30,
+  hexColourFiles: 26,
+  arbitraryColourExpressions: 0,
   filesOverHardLimit: 61,
 };
 
@@ -36,6 +45,12 @@ const TEST_FILE = /\.(test|spec)\.(ts|tsx)$/;
 const HARD_LIMIT = 300;
 /** 6-digit hex literals; design tokens live in index.css `@theme`. */
 const HEX_COLOUR = /#[0-9a-fA-F]{6}\b/;
+/**
+ * Tailwind arbitrary-colour bracket expressions:
+ *   text-[#abc], bg-[rgb(...)], border-[hsl(...)] etc.
+ * Zero are allowed — use semantic tokens from index.css @theme instead.
+ */
+const ARBITRARY_COLOUR = /\[#[0-9a-fA-F]|\[rgb[a]?\(|\[hsl[a]?\(/;
 /** `any` annotations, but not the words "any" in prose. */
 const ANY_ANNOTATION = /:\s*any\b|<any>|\bas\s+any\b/;
 
@@ -86,6 +101,8 @@ const cssFiles = SCAN_DIRS.flatMap((dir) => walkCss(path.join(ROOT, dir)));
 let anyCount = 0;
 const anySites = [];
 const hexFiles = [];
+let arbitraryColourCount = 0;
+const arbitraryColourSites = [];
 const oversized = [];
 
 for (const rel of files) {
@@ -97,6 +114,10 @@ for (const rel of files) {
       if (ANY_ANNOTATION.test(line) && !line.trimStart().startsWith('//') && !line.trimStart().startsWith('*')) {
         anyCount++;
         if (anySites.length < 5) anySites.push(`${rel}:${index + 1}`);
+      }
+      if (ARBITRARY_COLOUR.test(line) && !line.trimStart().startsWith('//') && !line.trimStart().startsWith('*')) {
+        arbitraryColourCount++;
+        if (arbitraryColourSites.length < 5) arbitraryColourSites.push(`${rel}:${index + 1}`);
       }
     });
     if (!rel.endsWith('.css') && HEX_COLOUR.test(content)) hexFiles.push(rel);
@@ -165,6 +186,15 @@ const results = [
     sample: hexFiles.slice(0, 5),
   },
   {
+    // Zero baseline — arbitrary colour bracket expressions are never accepted debt.
+    // Use semantic tokens from index.css @theme instead of text-[#abc] / bg-[rgb(…)].
+    name: 'Tailwind arbitrary-colour expressions ([#…], [rgb(…)], [hsl(…)])',
+    norm: 'mms-ui-ux-design.md §2',
+    count: arbitraryColourCount,
+    baseline: BASELINE.arbitraryColourExpressions,
+    sample: arbitraryColourSites,
+  },
+  {
     name: `Files over the ${HARD_LIMIT}-line hard ceiling`,
     norm: 'mms-structure-naming.md §3',
     count: oversized.length,
@@ -201,6 +231,10 @@ if (isUpdateBaselines) {
     newBaseline.hexColourFiles = hexFiles.length;
     updated = true;
   }
+  if (arbitraryColourCount < BASELINE.arbitraryColourExpressions) {
+    newBaseline.arbitraryColourExpressions = arbitraryColourCount;
+    updated = true;
+  }
   if (oversized.length < BASELINE.filesOverHardLimit) {
     newBaseline.filesOverHardLimit = oversized.length;
     updated = true;
@@ -211,7 +245,7 @@ if (isUpdateBaselines) {
     const content = fs.readFileSync(scriptPath, 'utf8');
     const replaced = content.replace(
       /const BASELINE = \{[\s\S]*?\};/,
-      `const BASELINE = {\n  anyAnnotations: ${newBaseline.anyAnnotations},\n  hexColourFiles: ${newBaseline.hexColourFiles},\n  filesOverHardLimit: ${newBaseline.filesOverHardLimit},\n};`
+      `const BASELINE = {\n  anyAnnotations: ${newBaseline.anyAnnotations},\n  hexColourFiles: ${newBaseline.hexColourFiles},\n  arbitraryColourExpressions: ${newBaseline.arbitraryColourExpressions},\n  filesOverHardLimit: ${newBaseline.filesOverHardLimit},\n};`
     );
     fs.writeFileSync(scriptPath, replaced, 'utf8');
     console.log(`✅ Baselines successfully ratcheted down:`, newBaseline);
