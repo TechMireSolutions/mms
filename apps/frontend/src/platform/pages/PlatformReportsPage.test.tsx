@@ -25,8 +25,8 @@ vi.mock('@/platform/hooks/usePlatformPermissions', () => ({
 }));
 
 vi.mock('@/platform/components/tiers/PlatformReportsTier', () => ({
-  PlatformReportsTier: ({ activeSubTab }: { activeSubTab: string }) => (
-    <div data-testid="platform-reports-tier">Reports Tier: {activeSubTab}</div>
+  PlatformReportsTier: () => (
+    <div data-testid="platform-reports-tier">Reports Analytics View</div>
   ),
 }));
 
@@ -40,16 +40,7 @@ describe('PlatformReportsPage', () => {
 
     expect(html).toContain('Platform Analytics');
     expect(html).toContain('System management for Zaid');
-    expect(html).toContain('Reports Tier: analytics');
-  });
-
-  it('renders telemetry subtab when requested via query param', () => {
-    const html = renderToStaticMarkup(
-      <MemoryRouter initialEntries={['/platform/reports?subtab=telemetry']}>
-        <PlatformReportsPage />
-      </MemoryRouter>,
-    );
-
-    expect(html).toContain('Reports Tier: telemetry');
+    expect(html).toContain('Reports Analytics View');
   });
 });
+

@@ -63,9 +63,32 @@ describe('PlatformUsersPage', () => {
       </MemoryRouter>,
     );
 
-    expect(html).toContain('platform.adminsTitle');
+    expect(html).toContain('nav.users');
+    expect(html).toContain('platform.adminsSubtitle');
     expect(html).toContain('module.work');
     expect(html).toContain('module.reports');
+    expect(html).toContain('module.setup');
+  });
+
+  it('renders reports tab when specified in query string', () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/platform/users?tab=reports']}>
+        <PlatformUsersPage />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('nav.users');
+    expect(html).toContain('module.reports');
+  });
+
+  it('renders setup tab when specified in query string', () => {
+    const html = renderToStaticMarkup(
+      <MemoryRouter initialEntries={['/platform/users?tab=setup']}>
+        <PlatformUsersPage />
+      </MemoryRouter>,
+    );
+
+    expect(html).toContain('nav.users');
     expect(html).toContain('module.setup');
   });
 });

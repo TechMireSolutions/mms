@@ -1,15 +1,17 @@
 import { useMemo, useCallback } from 'react';
 import { useLocation, useSearchParams } from 'react-router-dom';
-import { Building2, BarChart3, Settings, LayoutDashboard, Activity, Server, ShieldCheck, Waypoints } from 'lucide-react';
+import { Building2, BarChart3, Settings, Users } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { ROUTES } from '@/lib/config/routes';
 import type { AccordionTabItem } from '@/components/ui/ResponsiveAccordionTabs';
 import type { PlatformWorkSubTab } from '@/platform/components/tiers/PlatformWorkTier';
+import type { PlatformUsersSubTab } from '@/platform/components/tiers/PlatformUsersTier';
 import type { PlatformReportsSubTab } from '@/platform/components/tiers/PlatformReportsTier';
 import type { PlatformSetupSubTab } from '@/platform/components/tiers/PlatformSetupTier';
+import { getPlatformConsoleHeaderProps, type PlatformMainTab } from './platformConsoleHeaderProps';
 
-export type PlatformMainTab = 'work' | 'reports' | 'setup';
+export type { PlatformMainTab };
 
 export function usePlatformConsoleController() {
   const { t } = useTranslation();
@@ -23,12 +25,14 @@ export function usePlatformConsoleController() {
   const rawSubTab = searchParams.get('subtab');
 
   const activeTab: PlatformMainTab = useMemo(() => {
+    if (rawTab === 'users' || pathname === ROUTES.platformUsers) return 'users';
     if (rawTab === 'reports' || pathname === ROUTES.platformReports) return 'reports';
     if (rawTab === 'setup' || pathname === ROUTES.platformSystem || pathname === ROUTES.platformAdmins || pathname === ROUTES.platformErd) return 'setup';
     if (rawTab === 'work' || pathname === ROUTES.platformWorkspaces || pathname === ROUTES.platformActivityLogs) return 'work';
     if (pathname === ROUTES.platformDashboard) return 'reports';
     if (canWorkspaces) return 'work';
-    if (canAdmins || canSystem) return 'setup';
+    if (canAdmins) return 'users';
+    if (canSystem) return 'setup';
     return 'work';
   }, [rawTab, pathname, canWorkspaces, canAdmins, canSystem]);
 
@@ -39,12 +43,13 @@ export function usePlatformConsoleController() {
     return 'workspaces';
   }, [pathname, rawSubTab, canSystem]);
 
-  const activeReportsSubTab: PlatformReportsSubTab = useMemo(() => {
-    if (pathname === ROUTES.platformDashboard || rawSubTab === 'telemetry') {
-      return 'telemetry';
-    }
-    return 'analytics';
-  }, [pathname, rawSubTab]);
+  const activeUsersSubTab: PlatformUsersSubTab = useMemo(() => {
+    if (rawSubTab === 'reports') return 'reports';
+    if (rawSubTab === 'setup') return 'setup';
+    return 'work';
+  }, [rawSubTab]);
+
+  const activeReportsSubTab: PlatformReportsSubTab = 'analytics';
 
   const activeSetupSubTab: PlatformSetupSubTab = useMemo(() => {
     if (pathname === ROUTES.platformSystem || rawSubTab === 'system') return 'system';
@@ -54,7 +59,7 @@ export function usePlatformConsoleController() {
   }, [pathname, rawSubTab, canAdmins]);
 
   const handleTabChange = useCallback((tabId: string) => {
-    const validTab = (tabId === 'reports' || tabId === 'setup' || tabId === 'work') ? tabId : 'work';
+    const validTab = (tabId === 'users' || tabId === 'reports' || tabId === 'setup' || tabId === 'work') ? tabId : 'work';
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.set('tab', validTab);
@@ -67,6 +72,15 @@ export function usePlatformConsoleController() {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.set('tab', 'work');
+      next.set('subtab', subTab);
+      return next;
+    });
+  }, [setSearchParams]);
+
+  const handleUsersSubTabChange = useCallback((subTab: PlatformUsersSubTab) => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', 'users');
       next.set('subtab', subTab);
       return next;
     });
@@ -100,6 +114,14 @@ export function usePlatformConsoleController() {
         icon: Building2,
       });
     }
+    if (canAdmins) {
+      tabs.push({
+        id: 'users',
+        label: t('nav.users'),
+        description: t('platform.adminsSubtitle'),
+        icon: Users,
+      });
+    }
     if (canWorkspaces) {
       tabs.push({
         id: 'reports',
@@ -120,61 +142,15 @@ export function usePlatformConsoleController() {
   }, [canWorkspaces, canSystem, canAdmins, t]);
 
   const headerProps = useMemo(() => {
-    const userName = platformUser?.name ?? '';
-    const userSubtitle = isSuperUser
-      ? t('platform.consoleSubtitle', { name: userName })
-      : t('platform.adminConsoleSubtitle', { name: userName });
-
-    if (pathname === ROUTES.platformDashboard) {
-      return {
-        icon: LayoutDashboard,
-        title: t('dashboard.title'),
-        subtitle: userSubtitle,
-      };
-    }
-
-    if (activeTab === 'work') {
-      if (activeWorkSubTab === 'logs') {
-        return {
-          icon: Activity,
-          title: t('platform.activityLogsTitle'),
-          subtitle: t('platform.activityLogsSubtitle'),
-        };
-      }
-      return {
-        icon: Building2,
-        title: t('platform.manageMadrasas'),
-        subtitle: userSubtitle,
-      };
-    }
-
-    if (activeTab === 'reports') {
-      return {
-        icon: BarChart3,
-        title: t('module.reports'),
-        subtitle: userSubtitle,
-      };
-    }
-
-    if (activeSetupSubTab === 'system') {
-      return {
-        icon: Server,
-        title: t('platform.systemMaintenance'),
-        subtitle: t('platform.systemMaintenanceSubtitle'),
-      };
-    }
-    if (activeSetupSubTab === 'erd') {
-      return {
-        icon: Waypoints,
-        title: t('platform.erdTitle'),
-        subtitle: t('platform.erdSubtitle'),
-      };
-    }
-    return {
-      icon: ShieldCheck,
-      title: t('platform.adminsTitle'),
-      subtitle: t('platform.adminsSubtitle'),
-    };
+    return getPlatformConsoleHeaderProps({
+      pathname,
+      activeTab,
+      activeWorkSubTab,
+      activeSetupSubTab,
+      isSuperUser,
+      platformUser,
+      t,
+    });
   }, [pathname, activeTab, activeWorkSubTab, activeSetupSubTab, isSuperUser, platformUser, t]);
 
   return {
@@ -182,12 +158,14 @@ export function usePlatformConsoleController() {
     perms,
     activeTab,
     activeWorkSubTab,
+    activeUsersSubTab,
     activeReportsSubTab,
     activeSetupSubTab,
     topTabs,
     headerProps,
     handleTabChange,
     handleWorkSubTabChange,
+    handleUsersSubTabChange,
     handleReportsSubTabChange,
     handleSetupSubTabChange,
   };

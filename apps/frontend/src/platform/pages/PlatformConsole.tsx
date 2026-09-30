@@ -9,12 +9,13 @@ import { PlatformAddAdminForm } from '@/platform/pages/PlatformAddAdminForm';
 import { containerVariantsConsole as containerVariants, itemVariants } from '@/platform/lib/animations';
 import { usePlatformConsoleController } from '@/platform/pages/usePlatformConsoleController';
 import { PlatformWorkTier } from '@/platform/components/tiers/PlatformWorkTier';
+import { PlatformUsersTier } from '@/platform/components/tiers/PlatformUsersTier';
 import { PlatformReportsTier } from '@/platform/components/tiers/PlatformReportsTier';
 import { PlatformSetupTier } from '@/platform/components/tiers/PlatformSetupTier';
 
 /**
  * Authenticated apex console aligned with the MMS 3-tier architecture:
- * Work · Reports · Setup
+ * Work · Users · Reports · Setup
  */
 export default function PlatformConsole(): React.JSX.Element {
   const reducedMotion = useReducedMotion();
@@ -26,6 +27,9 @@ export default function PlatformConsole(): React.JSX.Element {
       return (
         <PlatformOnboardingAction />
       );
+    }
+    if (activeTab === 'users' && perms.canAdmins) {
+      return <PlatformAddAdminForm asTriggerOnly />;
     }
     if (activeTab === 'setup' && controller.activeSetupSubTab === 'admins' && perms.canAdmins) {
       return <PlatformAddAdminForm asTriggerOnly />;
@@ -68,6 +72,13 @@ export default function PlatformConsole(): React.JSX.Element {
                   activeSubTab={controller.activeWorkSubTab}
                   onSubTabChange={controller.handleWorkSubTabChange}
                   canSystem={perms.canSystem}
+                />
+              )}
+
+              {activeTab === 'users' && (
+                <PlatformUsersTier
+                  activeSubTab={controller.activeUsersSubTab}
+                  onSubTabChange={controller.handleUsersSubTabChange}
                 />
               )}
 

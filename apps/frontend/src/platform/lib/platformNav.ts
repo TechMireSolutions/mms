@@ -47,7 +47,7 @@ export const PLATFORM_NAV_ITEMS: readonly PlatformNavItem[] = [
   {
     id: "users",
     path: ROUTES.platformUsers,
-    labelKey: "platform.adminsTitle",
+    labelKey: "nav.users",
     icon: Users,
     section: "admin",
     isVisible: (perms) => perms.canAdmins,
