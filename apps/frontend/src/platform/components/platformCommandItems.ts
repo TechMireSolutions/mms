@@ -1,18 +1,24 @@
-import { LayoutDashboard, Building2, BarChart3, Activity, Server, ShieldCheck, User, PlusCircle, Waypoints, Download, UserPlus, Settings } from 'lucide-react';
+import { LayoutDashboard, Building2, BarChart3, Activity, Server, ShieldCheck, User, PlusCircle, Waypoints, Download, UserPlus, Settings, Sparkles } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
 import { ROUTES } from '@/lib/config/routes';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 
-/** A console palette entry: static route command or dynamic workspace link. */
+export type PlatformCommandCategory = 'platform.commandCategory.recent' | 'platform.commandCategory.navigation' | 'platform.commandCategory.actions' | 'platform.manageMadrasas';
+
+/** A console palette entry: static route command, direct action, or dynamic workspace link. */
 export interface PlatformCommandItem {
   id: string;
   labelKey?: AppTranslationKey;
   customLabel?: string;
   customSubtitle?: string;
-  category: 'platform.commandCategory.navigation' | 'platform.commandCategory.actions' | 'platform.manageMadrasas';
+  category: PlatformCommandCategory;
   path: string;
   icon: React.ElementType;
   keywords: string[];
+  badge?: string;
+  shortcut?: string;
+  actionType?: 'navigate' | 'action';
+  perform?: () => void | Promise<void>;
   requiredPermission?: 'workspaces' | 'onboard' | 'system' | 'admins' | 'settings';
 }
 
@@ -24,6 +30,7 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     path: ROUTES.platformDashboard,
     icon: LayoutDashboard,
     keywords: ['home', 'overview', 'metrics', 'stats', 'kpi', 'dashboard'],
+    badge: 'Nav',
   },
   {
     id: 'workspaces',
@@ -102,6 +109,7 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     path: ROUTES.platformSystem,
     icon: Server,
     keywords: ['migrations', 'drizzle', 'database', 'schema', 'reset', 'maintenance'],
+    badge: 'Ops',
     requiredPermission: 'system',
   },
   {
@@ -111,6 +119,9 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     path: ROUTES.onboarding,
     icon: PlusCircle,
     keywords: ['create', 'add', 'onboard', 'provision', 'new madrasa', 'tenant'],
+    badge: 'Create',
+    shortcut: 'Alt+N',
+    actionType: 'action',
     requiredPermission: 'onboard',
   },
   {
@@ -120,6 +131,9 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     path: `${ROUTES.platformAdmins}?create=true`,
     icon: UserPlus,
     keywords: ['admin', 'operator', 'invite', 'user', 'super_user', 'new'],
+    badge: 'Admin',
+    shortcut: 'Alt+A',
+    actionType: 'action',
     requiredPermission: 'admins',
   },
   {
@@ -129,7 +143,21 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     path: `${ROUTES.platformSystem}?probe=true`,
     icon: Activity,
     keywords: ['diagnostics', 'health', 'ping', 'check', 'probe', 'status'],
+    badge: 'Probe',
+    shortcut: 'Alt+D',
+    actionType: 'action',
     requiredPermission: 'system',
+  },
+  {
+    id: 'ai-copilot',
+    labelKey: 'platform.aiCopilotTitle',
+    category: 'platform.commandCategory.actions',
+    path: '#copilot',
+    icon: Sparkles,
+    keywords: ['ai', 'copilot', 'assistant', 'diagnostics', 'telemetry'],
+    badge: 'AI',
+    shortcut: '⌘J',
+    actionType: 'action',
   },
   {
     id: 'export-workspaces',
@@ -138,6 +166,9 @@ export const PLATFORM_STATIC_COMMANDS: PlatformCommandItem[] = [
     path: `${ROUTES.platformWorkspaces}?export=true`,
     icon: Download,
     keywords: ['export', 'csv', 'download', 'madrasas', 'list', 'tenants'],
+    badge: 'Export',
+    shortcut: 'Alt+E',
+    actionType: 'action',
     requiredPermission: 'workspaces',
   },
 ];
@@ -163,7 +194,7 @@ export function commandItemIsPermitted(
   if (!item.requiredPermission) return true;
   if (item.requiredPermission === 'workspaces') return perms.canWorkspaces;
   if (item.requiredPermission === 'onboard') return perms.canOnboard;
-  if (item.requiredPermission === 'system') return perms.canSystem;
+  if (item.requiredPermission === 'system' || item.requiredPermission === 'settings') return perms.canSystem;
   if (item.requiredPermission === 'admins') return perms.canAdmins;
   return true;
 }

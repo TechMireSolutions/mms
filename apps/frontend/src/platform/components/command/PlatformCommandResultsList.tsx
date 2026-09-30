@@ -8,7 +8,7 @@ export interface PlatformCommandResultsListProps {
   filteredItems: readonly PlatformCommandItem[];
   selectedIndex: number;
   query: string;
-  onSelect: (path: string) => void;
+  onSelect: (path: string, item?: PlatformCommandItem) => void;
   onHoverIndex: (index: number) => void;
 }
 
@@ -55,7 +55,7 @@ export function PlatformCommandResultsList({
                 type="button"
                 role="option"
                 aria-selected={isSelected}
-                onClick={() => onSelect(item.path)}
+                onClick={() => onSelect(item.path, item)}
                 onMouseEnter={() => onHoverIndex(index)}
                 className={cn(
                   'flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-start text-sm transition-all cursor-pointer min-h-11',
@@ -69,7 +69,21 @@ export function PlatformCommandResultsList({
                   aria-hidden="true"
                 />
                 <div className="flex-1 min-w-0 flex flex-col">
-                  <span className="truncate">{translatedLabel}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="truncate">{translatedLabel}</span>
+                    {item.badge && (
+                      <span
+                        className={cn(
+                          'px-1.5 py-0.5 text-3xs font-semibold rounded-md uppercase tracking-wider',
+                          isSelected
+                            ? 'bg-primary-foreground/20 text-primary-foreground'
+                            : 'bg-muted text-muted-foreground border border-border/40',
+                        )}
+                      >
+                        {item.badge}
+                      </span>
+                    )}
+                  </div>
                   {item.customSubtitle && (
                     <span
                       className={cn(
@@ -81,14 +95,30 @@ export function PlatformCommandResultsList({
                     </span>
                   )}
                 </div>
-                <span
-                  className={cn(
-                    'text-xs opacity-80 font-mono',
-                    isSelected ? 'text-primary-foreground' : 'text-muted-foreground',
-                  )}
-                >
-                  {item.path}
-                </span>
+                <div className="flex items-center gap-2 shrink-0">
+                  <span
+                    className={cn(
+                      'text-xs opacity-70 font-mono hidden sm:inline',
+                      isSelected ? 'text-primary-foreground' : 'text-muted-foreground',
+                    )}
+                  >
+                    {item.path}
+                  </span>
+                  {item.shortcut ? (
+                    <kbd
+                      className={cn(
+                        'px-1.5 py-0.5 text-3xs font-mono rounded shadow-2xs',
+                        isSelected
+                          ? 'bg-primary-foreground/20 text-primary-foreground'
+                          : 'bg-muted text-muted-foreground border border-border/60',
+                      )}
+                    >
+                      {item.shortcut}
+                    </kbd>
+                  ) : isSelected ? (
+                    <span className="text-3xs font-mono opacity-80">↵</span>
+                  ) : null}
+                </div>
               </button>
             );
           })}

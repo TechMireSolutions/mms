@@ -1,59 +1,44 @@
-import React, { useCallback, useMemo } from 'react';
+import React, { useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from '@/hooks/useTranslation';
-import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
-import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { CommandPaletteModal } from '@/components/ui/CommandPaletteModal';
 import { useCommandPaletteSearch } from '@/components/ui/useCommandPaletteSearch';
-import {
-  PLATFORM_STATIC_COMMANDS,
-  buildWorkspaceCommandItems,
-  commandItemIsPermitted,
-  type PlatformCommandItem,
-} from '@/platform/components/platformCommandItems';
+import type { PlatformCommandItem } from '@/platform/components/platformCommandItems';
 import { PlatformCommandResultsList } from '@/platform/components/command/PlatformCommandResultsList';
+import { useOmniCommandRegistry } from '@/platform/components/command/useOmniCommandRegistry';
 
 export interface PlatformCommandPaletteProps {
   open: boolean;
   onClose: () => void;
+  onOpenAi?: () => void;
 }
 
-export function PlatformCommandPalette({ open, onClose }: PlatformCommandPaletteProps): React.JSX.Element | null {
+export function PlatformCommandPalette({ open, onClose, onOpenAi }: PlatformCommandPaletteProps): React.JSX.Element | null {
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const perms = usePlatformPermissions();
-  const { data: workspaces } = usePlatformWorkspaces();
-
-  const allAvailableItems = useMemo(() => {
-    const permittedStatic = PLATFORM_STATIC_COMMANDS.filter((item) =>
-      commandItemIsPermitted(item, perms),
-    );
-    const workspaceItems: PlatformCommandItem[] =
-      perms.canWorkspaces && workspaces ? buildWorkspaceCommandItems(workspaces) : [];
-    return [...permittedStatic, ...workspaceItems];
-  }, [perms, workspaces]);
+  const { filterItems, recordRecent } = useOmniCommandRegistry();
 
   const handleSelect = useCallback(
     (item: PlatformCommandItem) => {
       onClose();
-      navigate(item.path);
+      if (item.id === 'ai-copilot') {
+        onOpenAi?.();
+        return;
+      }
+      if (item.customSubtitle && (item.category === 'platform.manageMadrasas' || item.category === 'platform.commandCategory.recent')) {
+        recordRecent({
+          subdomain: item.customSubtitle,
+          madrasaName: item.customLabel ?? item.customSubtitle,
+        });
+      }
+      if (item.perform) {
+        void item.perform();
+      } else {
+        navigate(item.path);
+      }
     },
-    [navigate, onClose],
+    [navigate, onClose, onOpenAi, recordRecent],
   );
-
-  const filterItems = useCallback((query: string) => {
-    const q = query.trim().toLowerCase();
-    if (!q) return allAvailableItems;
-    return allAvailableItems.filter((item) => {
-      const label = item.customLabel ?? (item.labelKey ? t(item.labelKey) : '');
-      const subtitle = item.customSubtitle ?? '';
-      return (
-        label.toLowerCase().includes(q) ||
-        subtitle.toLowerCase().includes(q) ||
-        item.keywords.some((k) => k.toLowerCase().includes(q))
-      );
-    });
-  }, [allAvailableItems, t]);
 
   const {
     query,
@@ -94,10 +79,14 @@ export function PlatformCommandPalette({ open, onClose }: PlatformCommandPalette
         filteredItems={filteredItems}
         selectedIndex={selectedIndex}
         query={query}
-        onSelect={(path) => {
-          onClose();
-          setQuery('');
-          navigate(path);
+        onSelect={(_path, item) => {
+          if (item) {
+            handleSelect(item);
+          } else {
+            onClose();
+            setQuery('');
+            navigate(_path);
+          }
         }}
         onHoverIndex={setSelectedIndex}
       />

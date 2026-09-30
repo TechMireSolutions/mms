@@ -15,6 +15,8 @@ import { PlatformHeaderUserNav } from '@/platform/components/header/PlatformHead
 export interface PlatformPageShellHeaderProps {
   onOpenSearch?: () => void;
   searchOpen?: boolean;
+  onOpenAi?: () => void;
+  aiOpen?: boolean;
 }
 
 type HealthStatus = 'operational' | 'degraded' | 'unknown';
@@ -22,6 +24,8 @@ type HealthStatus = 'operational' | 'degraded' | 'unknown';
 export function PlatformPageShellHeader({
   onOpenSearch,
   searchOpen = false,
+  onOpenAi,
+  aiOpen = false,
 }: PlatformPageShellHeaderProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const location = useLocation();
@@ -108,6 +112,8 @@ export function PlatformPageShellHeader({
         <PlatformHeaderUserNav
           onOpenSearch={onOpenSearch}
           searchOpen={searchOpen}
+          onOpenAi={onOpenAi}
+          aiOpen={aiOpen}
           className="ms-auto"
         />
       </div>

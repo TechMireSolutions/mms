@@ -36,6 +36,7 @@ export * from './platformTypes.js';
 export * from './erdCatalog.js';
 export * from './serverPorts.js';
 export * from './schemas/uiState.dto.js';
+export * from './schemas/platformAi.dto.js';
 
 // ---------------------------------------------------------------------------
 // 3. Global Settings, Theme & Branding

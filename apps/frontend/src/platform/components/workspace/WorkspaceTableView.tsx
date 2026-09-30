@@ -13,10 +13,13 @@ import { WorkspaceRowActions } from '@/platform/components/workspace/WorkspaceRo
 import type { WorkspaceSortDirection, WorkspaceSortField } from '@/platform/components/platformWorkspaceListData';
 import { cn } from '@/lib/utils';
 
+import type { PlatformDensity } from '@/platform/hooks/usePlatformDensity';
+
 export interface WorkspaceTableViewProps {
   workspaces: PlatformWorkspaceRowData[];
   descriptor: EntityDescriptor<PlatformWorkspaceRowData>;
   appDomain: string;
+  density?: PlatformDensity;
   sortField: WorkspaceSortField;
   sortDirection: WorkspaceSortDirection;
   onToggleSort: (field: WorkspaceSortField) => void;
@@ -41,6 +44,7 @@ export function WorkspaceTableView({
   workspaces,
   descriptor,
   appDomain,
+  density = 'standard',
   sortField,
   sortDirection,
   onToggleSort,
@@ -60,6 +64,9 @@ export function WorkspaceTableView({
 }: WorkspaceTableViewProps): React.JSX.Element {
   const { t } = useTranslation();
 
+  const pad = density === 'compact' ? 'px-3 py-1.5' : density === 'comfortable' ? 'px-4 py-3.5' : 'px-4 py-2.5';
+  const textSz = density === 'compact' ? 'text-2xs' : density === 'comfortable' ? 'text-sm' : 'text-xs';
+
   const rows: WorkspaceTableRow[] = React.useMemo(
     () => workspaces.map((w) => ({ ...w, id: w.subdomain })),
     [workspaces],
@@ -72,16 +79,16 @@ export function WorkspaceTableView({
       const translated = labelKey ? t(labelKey) : undefined;
       const label = translated && translated !== labelKey ? translated : col.label || f?.label || col.id;
 
-      const headerClassName = col.id === 'madrasaName' ? 'min-w-72 flex-1'
-        : col.id === 'enabled' ? 'w-44 min-w-44'
-        : col.id === 'requireEmailVerification' ? 'w-60 min-w-60'
-        : col.id === 'createdAt' ? 'w-40 min-w-40' : 'w-36';
+      const headerClassName = cn(
+        pad,
+        col.id === 'madrasaName' ? 'min-w-72 flex-1' : col.id === 'enabled' ? 'w-44 min-w-44' : col.id === 'requireEmailVerification' ? 'w-60 min-w-60' : col.id === 'createdAt' ? 'w-40 min-w-40' : 'w-36',
+      );
 
-      const cellClassName = col.id === 'madrasaName' ? 'px-4 py-3 align-middle min-w-72'
-        : col.id === 'enabled' ? 'px-4 py-3 align-middle w-44 min-w-44'
-        : col.id === 'requireEmailVerification' ? 'px-4 py-3 align-middle w-60 min-w-60'
-        : col.id === 'createdAt' ? 'px-4 py-3 align-middle text-xs font-medium text-muted-foreground whitespace-nowrap w-40 min-w-40'
-        : 'px-4 py-3 align-middle';
+      const cellClassName = cn(
+        pad,
+        'align-middle',
+        col.id === 'madrasaName' ? 'min-w-72' : col.id === 'enabled' ? 'w-44 min-w-44' : col.id === 'requireEmailVerification' ? 'w-60 min-w-60' : col.id === 'createdAt' ? cn('font-medium text-muted-foreground whitespace-nowrap w-40 min-w-40', textSz) : '',
+      );
 
       const render = (workspace: WorkspaceTableRow) => {
         if (col.id === 'madrasaName') {
@@ -128,7 +135,7 @@ export function WorkspaceTableView({
 
       return { id: col.id, label, sortField: col.id, headerClassName, cellClassName, render };
     });
-  }, [descriptor, t, appDomain, togglePending, deletePending, onToggleEnabled, onToggleEmailVerification]);
+  }, [descriptor, t, appDomain, togglePending, deletePending, onToggleEnabled, onToggleEmailVerification, pad, textSz]);
 
   return (
     <WorkBatchTable
@@ -152,31 +159,28 @@ export function WorkspaceTableView({
       onRowClick={onInspect ? (w) => onInspect(w) : undefined}
       stickyColumnId="madrasaName"
       actionsLabel={t('common.actions')}
-      actionsHeaderClassName="w-56 min-w-56 text-end px-4 py-3"
-      actionsCellClassName="w-56 min-w-56 text-end px-4 py-3 align-middle"
-      renderRowActions={(workspace) => {
-        const isDeleting = deletePending && targetWorkspaceSubdomain === workspace.subdomain;
-        return (
-          <WorkspaceRowActions
-            subdomain={workspace.subdomain}
-            enabled={workspace.enabled}
-            requireEmailVerification={workspace.requireEmailVerification}
-            busy={togglePending || deletePending}
-            deletePending={isDeleting}
-            tenantLink={tenantUrl(workspace.subdomain, '/')}
-            variant="table"
-            onToggle={(enabled) => onToggleEnabled(workspace.subdomain, enabled)}
-            onToggleEmailVerification={(req) => onToggleEmailVerification(workspace.subdomain, req)}
-            onOpenModules={() => onOpenModules(workspace)}
-            onOpenDelete={() => onOpenDelete(workspace)}
-            onOpenResetPassword={onOpenResetPassword ? () => onOpenResetPassword(workspace) : undefined}
-            onOpenCreateAdmin={onOpenCreateAdmin ? () => onOpenCreateAdmin(workspace) : undefined}
-          />
-        );
-      }}
+      actionsHeaderClassName={cn('w-56 min-w-56 text-end', pad)}
+      actionsCellClassName={cn('w-56 min-w-56 text-end align-middle', pad)}
+      renderRowActions={(workspace) => (
+        <WorkspaceRowActions
+          subdomain={workspace.subdomain}
+          enabled={workspace.enabled}
+          requireEmailVerification={workspace.requireEmailVerification}
+          busy={togglePending || deletePending}
+          deletePending={deletePending && targetWorkspaceSubdomain === workspace.subdomain}
+          tenantLink={tenantUrl(workspace.subdomain, '/')}
+          variant="table"
+          onToggle={(enabled) => onToggleEnabled(workspace.subdomain, enabled)}
+          onToggleEmailVerification={(req) => onToggleEmailVerification(workspace.subdomain, req)}
+          onOpenModules={() => onOpenModules(workspace)}
+          onOpenDelete={() => onOpenDelete(workspace)}
+          onOpenResetPassword={onOpenResetPassword ? () => onOpenResetPassword(workspace) : undefined}
+          onOpenCreateAdmin={onOpenCreateAdmin ? () => onOpenCreateAdmin(workspace) : undefined}
+        />
+      )}
       rowClassName={(workspace) =>
         cn(
-          'group hover:bg-muted/30 transition-colors',
+          'group hover:bg-muted/30 transition-colors scroll-mt-20',
           onInspect && 'cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset',
           !workspace.enabled && 'opacity-85 hover:opacity-100',
           deletePending && targetWorkspaceSubdomain === workspace.subdomain && 'opacity-40 pointer-events-none',
@@ -184,7 +188,8 @@ export function WorkspaceTableView({
       }
       containerClassName={WORK_TABLE_CONTAINER_CLASS}
       bordered={false}
-      virtualize={false}
+      virtualize={workspaces.length > 10}
+      estimateRowSize={density === 'compact' ? 38 : density === 'comfortable' ? 64 : 48}
     />
   );
 }

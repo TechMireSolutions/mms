@@ -2,6 +2,7 @@ import React from "react";
 import { Database, ShieldCheck, Layers, Cpu, Clock, CheckCircle2, Server } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { PlatformTelemetryData } from "@/platform/hooks/usePlatformTelemetry";
+import { usePlatformLiveAnnouncer } from "@/platform/components/common/PlatformLiveRegion";
 
 export interface PlatformDatabaseTelemetryCardProps {
   telemetry?: PlatformTelemetryData;
@@ -13,6 +14,7 @@ export function PlatformDatabaseTelemetryCard({
   isLoading = false,
 }: PlatformDatabaseTelemetryCardProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { announcePolite, announceAssertive } = usePlatformLiveAnnouncer();
 
   const platformDb = telemetry?.platformDb;
   const tenantDb = telemetry?.tenantDb;
@@ -24,6 +26,15 @@ export function PlatformDatabaseTelemetryCard({
   const utilRate = platformDb?.utilizationRate ?? telemetry?.dbPool.utilizationRate ?? 0;
   const latency = platformDb?.latencyMs ?? telemetry?.latencyMs ?? 0;
   const hasReplica = platformDb?.hasReplica ?? false;
+
+  React.useEffect(() => {
+    if (!telemetry || isLoading) return;
+    if (utilRate > 85) {
+      announceAssertive(`Critical alert: Database pool utilization at ${utilRate}%`);
+    } else {
+      announcePolite(`Database telemetry updated: latency ${latency}ms, pool utilization ${utilRate}%`);
+    }
+  }, [telemetry, isLoading, utilRate, latency, announcePolite, announceAssertive]);
 
   const activeTenantsCount = tenantDb?.activeTenantsCount ?? 0;
   const totalTenantTx = tenantDb?.totalTenantTransactions ?? 0;

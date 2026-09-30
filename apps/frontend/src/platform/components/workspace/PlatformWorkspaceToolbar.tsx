@@ -7,6 +7,9 @@ import { WorkTaskToolbar } from '@/components/common/work';
 import { PlatformWorkspaceSortMenu } from '@/platform/components/PlatformWorkspaceSortMenu';
 import type { WorkspaceSortDirection, WorkspaceSortField } from '@/platform/components/platformWorkspaceListData';
 
+import type { PlatformDensity } from '@/platform/hooks/usePlatformDensity';
+import { PlatformWorkspaceDensityToggle } from '@/platform/components/workspace/PlatformWorkspaceDensityToggle';
+
 export interface PlatformWorkspaceToolbarProps {
   shownCount: number;
   totalCount: number;
@@ -19,6 +22,8 @@ export interface PlatformWorkspaceToolbarProps {
   onClearFilters: () => void;
   viewMode: 'table' | 'cards';
   onViewModeChange: (viewMode: 'table' | 'cards') => void;
+  density?: PlatformDensity;
+  onDensityChange?: (density: PlatformDensity) => void;
   statusFilter: 'all' | 'active' | 'inactive';
   onStatusFilterChange: (status: 'all' | 'active' | 'inactive') => void;
   sortField: WorkspaceSortField;
@@ -40,6 +45,8 @@ export function PlatformWorkspaceToolbar({
   onClearFilters,
   viewMode,
   onViewModeChange,
+  density,
+  onDensityChange,
   statusFilter,
   onStatusFilterChange,
   sortField,
@@ -67,11 +74,19 @@ export function PlatformWorkspaceToolbar({
         onViewModeChange,
       }}
       filterButton={
-        <PlatformWorkspaceSortMenu
-          sortField={sortField}
-          sortDirection={sortDirection}
-          onToggleSort={onToggleSort}
-        />
+        <div className="flex items-center gap-2">
+          {onDensityChange && viewMode === 'table' && (
+            <PlatformWorkspaceDensityToggle
+              density={density ?? 'standard'}
+              onDensityChange={onDensityChange}
+            />
+          )}
+          <PlatformWorkspaceSortMenu
+            sortField={sortField}
+            sortDirection={sortDirection}
+            onToggleSort={onToggleSort}
+          />
+        </div>
       }
       primaryAction={
         <div className="flex items-center gap-2">

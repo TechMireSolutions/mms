@@ -43,6 +43,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
   onRowClick,
   onRowHover,
   virtualize,
+  estimateRowSize,
   maxHeightClassName = "max-h-150",
   rowClassName,
   className,
@@ -69,7 +70,7 @@ export function WorkBatchTable<TData extends { id: string | number }>({
   const rowVirtualizer = useVirtualizer({
     count: activeRows.length,
     getScrollElement: () => containerRef.current,
-    estimateSize: () => 52,
+    estimateSize: () => estimateRowSize ?? 52,
     overscan: 10,
     enabled: isVirtualized,
   });

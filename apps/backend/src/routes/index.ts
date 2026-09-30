@@ -12,6 +12,7 @@ import platformUsersRoutes from "./platform/platformUsers.js";
 import platformSettingsRoutes from "./platform/platformSettings.js";
 import platformAdminSystemRoutes from "./platform/platformAdminSystem.js";
 import platformSchemaRoutes from "./platform/platformSchemaRoutes.js";
+import platformAiRoutes from "./platform/platformAiRoutes.js";
 import publicRoutes from "./common/public.js";
 import studentsRoutes from "./tenant/students.js";
 import facultyRoutes from "./tenant/faculty.js";
@@ -48,6 +49,7 @@ export async function registerRoutes(app: FastifyInstance): Promise<void> {
   await app.register(platformSettingsRoutes);
   await app.register(platformAdminSystemRoutes, { prefix: '/api/platform/admin/system' });
   await app.register(platformSchemaRoutes, { prefix: '/api/platform/schema' });
+  await app.register(platformAiRoutes, { prefix: '/api/platform/ai' });
   await app.register(workspaceRoutes, { prefix: '/api/workspace' });
   await app.register(workspaceRoutes, { prefix: '/api/workspaces' });
   await app.register(uploadRoutes, { prefix: '/api/uploads' });

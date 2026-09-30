@@ -19,6 +19,7 @@ import { usePlatformWorkspaceModalState } from '@/platform/components/workspace/
 import { usePlatformWorkspaceSelection } from '@/platform/components/workspace/usePlatformWorkspaceSelection';
 import { PlatformWorkspaceBulkDock } from '@/platform/components/workspace/PlatformWorkspaceBulkDock';
 import { usePlatformWorkspaceListActions } from '@/platform/components/workspace/usePlatformWorkspaceListActions';
+import { usePlatformDensity } from '@/platform/hooks/usePlatformDensity';
 
 /**
  * Super-user workspace list with enable/disable, delete controls, bulk selection, and pagination.
@@ -35,6 +36,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
 
   const descriptor = usePlatformWorkspaceDescriptor();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
+  const { density, setDensity } = usePlatformDensity();
   const deleteState = useWorkspaceDeleteState();
   const modalState = usePlatformWorkspaceModalState();
   const listActions = usePlatformWorkspaceListActions();
@@ -65,7 +67,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   }, [items]);
 
   return (
-    <div className="space-y-6 w-full text-start">
+    <div className="space-y-6 w-full text-start pb-24 scroll-pb-24">
       <PlatformWorkspaceToolbar
         shownCount={sortedItems.length}
         totalCount={totalCount}
@@ -78,6 +80,8 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         onClearFilters={handleClearFilters}
         viewMode={viewMode}
         onViewModeChange={setViewMode}
+        density={density}
+        onDensityChange={setDensity}
         statusFilter={statusFilter}
         onStatusFilterChange={setStatusFilter}
         sortField={sortField}
@@ -127,6 +131,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
               workspaces={paginatedItems}
               descriptor={descriptor}
               appDomain={appDomain}
+              density={density}
               sortField={sortField}
               sortDirection={sortDirection}
               onToggleSort={toggleSort}

@@ -117,6 +117,7 @@ export interface WorkBatchTableProps<TData extends { id: string | number }> {
   onRowClick?: (row: TData) => void;
   onRowHover?: (row: TData) => void;
   virtualize?: boolean;
+  estimateRowSize?: number;
   maxHeightClassName?: string;
   rowClassName?: (row: TData) => string | undefined;
   className?: string;

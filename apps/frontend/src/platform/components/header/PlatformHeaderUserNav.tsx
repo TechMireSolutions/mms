@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { ShieldAlert, User, Users, Search } from 'lucide-react';
+import { ShieldAlert, User, Users, Search, Sparkles } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
@@ -18,6 +18,8 @@ export interface PlatformHeaderUserNavProps {
   compact?: boolean;
   onOpenSearch?: () => void;
   searchOpen?: boolean;
+  onOpenAi?: () => void;
+  aiOpen?: boolean;
   className?: string;
 }
 
@@ -28,6 +30,8 @@ export function PlatformHeaderUserNav({
   compact = false,
   onOpenSearch,
   searchOpen = false,
+  onOpenAi,
+  aiOpen = false,
   className,
 }: PlatformHeaderUserNavProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -66,6 +70,32 @@ export function PlatformHeaderUserNav({
               <span className="hidden md:inline font-normal">{t('platform.searchConsolePlaceholder')}</span>
               <kbd className="hidden md:inline-flex items-center gap-0.5 rounded border border-border/80 bg-muted px-1.5 py-0.5 text-2xs font-semibold text-muted-foreground select-none font-mono">
                 ⌘K
+              </kbd>
+            </>
+          )}
+        </Button>
+      )}
+
+      {onOpenAi && (
+        <Button
+          type="button"
+          variant="outline"
+          onClick={onOpenAi}
+          aria-label={t('platform.aiCopilotTitle')}
+          aria-keyshortcuts="Control+J Meta+J"
+          aria-pressed={aiOpen}
+          className={cn(
+            'relative flex items-center gap-1.5 rounded-xl text-xs text-muted-foreground border-border/80 hover:bg-muted/80 transition-colors cursor-pointer',
+            compact ? 'h-11 w-11 p-0 justify-center min-h-11 min-w-11' : 'h-11 px-3 py-1.5 min-h-11',
+            aiOpen && 'ring-2 ring-primary/30 bg-muted/60 text-primary',
+          )}
+        >
+          <Sparkles className="h-4 w-4 shrink-0 text-primary" aria-hidden />
+          {!compact && (
+            <>
+              <span className="hidden lg:inline font-normal">{t('platform.aiCopilotTitle')}</span>
+              <kbd className="hidden lg:inline-flex items-center gap-0.5 rounded border border-border/80 bg-muted px-1.5 py-0.5 text-2xs font-semibold text-muted-foreground select-none font-mono">
+                ⌘J
               </kbd>
             </>
           )}

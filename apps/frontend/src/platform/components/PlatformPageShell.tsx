@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { AppPageShellSkeleton } from '@/components/common';
@@ -9,7 +9,11 @@ import { AppFooter } from '@/components/ui/AppFooter';
 import { PlatformPageShellHeader } from '@/platform/components/PlatformPageShellHeader';
 import { PlatformSidebar, PlatformMobileSidebar } from '@/platform/components/PlatformSidebar';
 import { PlatformCommandPalette } from '@/platform/components/PlatformCommandPalette';
+import { PlatformAiDrawer } from '@/platform/components/intelligence/PlatformAiDrawer';
 import { AppShell } from '@/components/common/AppShell';
+import { PlatformLiveRegionProvider } from '@/platform/components/common/PlatformLiveRegion';
+
+export { PlatformLogoMark } from './common/PlatformLogoMark';
 
 const MAX_W: Record<NonNullable<PlatformPageShellProps['width']>, string> = {
   md: 'max-w-md',
@@ -24,14 +28,15 @@ interface PlatformPageShellProps {
   width?: 'md' | 'lg' | 'xl' | '7xl';
 }
 
-/** Registers the Cmd/Ctrl+K command-palette shortcut exactly once within the sidebar context. */
-function PlatformGlobalShortcuts(): null {
+/** Registers the Cmd/Ctrl+K and Cmd/Ctrl+J shortcuts. */
+function PlatformGlobalShortcuts({ onToggleAi }: { onToggleAi?: () => void }): null {
   const { setCommandPaletteOpen } = usePlatformSidebar();
   useGlobalShortcut('k', () => setCommandPaletteOpen((prev) => !prev));
+  useGlobalShortcut('j', () => onToggleAi?.());
   return null;
 }
 
-/** Inner component that reads command palette state from sidebar context. */
+/** Inner component that reads command palette & AI copilot state. */
 function PlatformAuthenticatedShell({
   children,
   maxClass,
@@ -43,6 +48,7 @@ function PlatformAuthenticatedShell({
 }): React.JSX.Element {
   const { dir, language } = useTranslation();
   const { commandPaletteOpen, setCommandPaletteOpen, collapsed } = usePlatformSidebar();
+  const [aiOpen, setAiOpen] = useState(false);
 
   return (
     <AppShell
@@ -54,26 +60,32 @@ function PlatformAuthenticatedShell({
         <PlatformPageShellHeader
           onOpenSearch={() => setCommandPaletteOpen(true)}
           searchOpen={commandPaletteOpen}
+          onOpenAi={() => setAiOpen(true)}
+          aiOpen={aiOpen}
         />
       }
       mobileHeader={
         <PlatformPageShellHeader
           onOpenSearch={() => setCommandPaletteOpen(true)}
           searchOpen={commandPaletteOpen}
+          onOpenAi={() => setAiOpen(true)}
+          aiOpen={aiOpen}
         />
       }
       commandPalette={
         <PlatformCommandPalette
           open={commandPaletteOpen}
           onClose={() => setCommandPaletteOpen(false)}
+          onOpenAi={() => setAiOpen(true)}
         />
       }
       sidebarCollapsed={collapsed}
       maxWidthClass={maxClass}
       footer={footer}
     >
-      <PlatformGlobalShortcuts />
+      <PlatformGlobalShortcuts onToggleAi={() => setAiOpen((prev) => !prev)} />
       {children}
+      <PlatformAiDrawer isOpen={aiOpen} onClose={() => setAiOpen(false)} />
     </AppShell>
   );
 }
@@ -86,34 +98,30 @@ export function PlatformPageShell({
   const { dir, language } = useTranslation();
   const { isPlatformAuthenticated } = usePlatformAuth();
   const maxClass = MAX_W[width] ?? 'w-full max-w-full';
-
   const footer = <AppFooter className="mt-auto" />;
 
-  if (isPlatformAuthenticated) {
-    return (
-      <PlatformSidebarProvider>
-        <PlatformAuthenticatedShell maxClass={maxClass} footer={footer}>
-          {children || (
-            <Suspense fallback={<AppPageShellSkeleton />}>
-              <Outlet />
-            </Suspense>
-          )}
-        </PlatformAuthenticatedShell>
-      </PlatformSidebarProvider>
-    );
-  }
-
-  // Unauthenticated: centered layout (login, setup, forgot-password)
   return (
-    <PlatformSidebarProvider>
-      <UnauthenticatedShell dir={dir} lang={language} maxClass={maxClass} footer={footer}>
-        {children || (
-          <Suspense fallback={<AppPageShellSkeleton />}>
-            <Outlet />
-          </Suspense>
+    <PlatformLiveRegionProvider>
+      <PlatformSidebarProvider>
+        {isPlatformAuthenticated ? (
+          <PlatformAuthenticatedShell maxClass={maxClass} footer={footer}>
+            {children || (
+              <Suspense fallback={<AppPageShellSkeleton />}>
+                <Outlet />
+              </Suspense>
+            )}
+          </PlatformAuthenticatedShell>
+        ) : (
+          <UnauthenticatedShell dir={dir} lang={language} maxClass={maxClass} footer={footer}>
+            {children || (
+              <Suspense fallback={<AppPageShellSkeleton />}>
+                <Outlet />
+              </Suspense>
+            )}
+          </UnauthenticatedShell>
         )}
-      </UnauthenticatedShell>
-    </PlatformSidebarProvider>
+      </PlatformSidebarProvider>
+    </PlatformLiveRegionProvider>
   );
 }
 
@@ -160,30 +168,5 @@ function UnauthenticatedShell({
       <PlatformGlobalShortcuts />
       {children}
     </AppShell>
-  );
-}
-
-export function PlatformLogoMark({
-  size = 'lg',
-}: {
-  size?: 'sm' | 'lg';
-} = {}): React.JSX.Element {
-  const { t } = useTranslation();
-  const isSm = size === 'sm';
-  return (
-    <div
-      className={
-        isSm
-          ? 'flex h-9 w-9 items-center justify-center rounded-xl bg-card border border-primary/40 p-1 shadow-sm shadow-primary/10 overflow-hidden'
-          : 'mx-auto flex h-20 w-20 items-center justify-center rounded-2xl bg-card border border-primary/40 p-2 shadow-xl shadow-primary/15 transition-transform hover:scale-105 select-none overflow-hidden'
-      }
-      aria-hidden
-    >
-      <img
-        src="/platform-logo.webp"
-        alt={t('entry.productName')}
-        className="h-full w-full object-contain"
-      />
-    </div>
   );
 }

@@ -2,7 +2,8 @@ import React from 'react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import type { usePlatformWorkspaceDescriptor } from '@/platform/hooks/usePlatformWorkspaceDescriptor';
 import type { WorkspaceSortDirection, WorkspaceSortField } from '@/platform/components/platformWorkspaceListData';
-import { WorkspaceTableView } from '@/platform/components/workspace/WorkspaceTableView';
+import type { PlatformDensity } from '@/platform/hooks/usePlatformDensity';
+import { PlatformWorkspaceVirtualTable } from '@/platform/components/workspace/PlatformWorkspaceVirtualTable';
 import { WorkspaceListCards } from '@/platform/components/workspace/WorkspaceListCards';
 
 export interface PlatformWorkspaceDirectoryViewProps {
@@ -10,6 +11,7 @@ export interface PlatformWorkspaceDirectoryViewProps {
   workspaces: PlatformWorkspaceRowData[];
   descriptor: ReturnType<typeof usePlatformWorkspaceDescriptor>;
   appDomain: string;
+  density?: PlatformDensity;
   sortField: WorkspaceSortField;
   sortDirection: WorkspaceSortDirection;
   onToggleSort: (field: WorkspaceSortField) => void;
@@ -33,6 +35,7 @@ export function PlatformWorkspaceDirectoryView({
   workspaces,
   descriptor,
   appDomain,
+  density,
   sortField,
   sortDirection,
   onToggleSort,
@@ -52,10 +55,11 @@ export function PlatformWorkspaceDirectoryView({
 }: PlatformWorkspaceDirectoryViewProps): React.JSX.Element {
   if (viewMode === 'table') {
     return (
-      <WorkspaceTableView
+      <PlatformWorkspaceVirtualTable
         workspaces={workspaces}
         descriptor={descriptor}
         appDomain={appDomain}
+        density={density}
         sortField={sortField}
         sortDirection={sortDirection}
         onToggleSort={onToggleSort}
