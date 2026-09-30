@@ -1,7 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ShieldCheck, Lock, Clock, Key, ArrowRight } from 'lucide-react';
-import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
+import { useTranslation } from '@/hooks/useTranslation';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,7 @@ import { ROUTES } from '@/lib/config/routes';
 import { PLATFORM_IDLE_SESSION_TIMEOUT_MINUTES } from '@mms/shared';
 
 export function PlatformSecuritySettingsPanel(): React.JSX.Element {
-  const { isSuperUser } = usePlatformPermissions();
+  const { t } = useTranslation();
 
   return (
     <div className="space-y-6 text-start">
@@ -45,7 +45,7 @@ export function PlatformSecuritySettingsPanel(): React.JSX.Element {
                 <div className="text-3xs text-muted-foreground">Mandatory password re-authentication for destructive actions (e.g. migrate & restart, deleting workspaces)</div>
               </div>
             </div>
-            <Badge variant="outline" className="text-3xs text-emerald-600 border-emerald-500/30 bg-emerald-500/5">
+            <Badge variant="outline" className="text-3xs text-success border-success/30 bg-success/5">
               Enforced
             </Badge>
           </div>
@@ -58,8 +58,8 @@ export function PlatformSecuritySettingsPanel(): React.JSX.Element {
                 <div className="text-3xs text-muted-foreground">Time-based one-time password (TOTP) verification</div>
               </div>
             </div>
-            <Badge variant={isSuperUser ? 'default' : 'secondary'} className="text-3xs">
-              {isSuperUser ? 'Active' : 'Optional'}
+            <Badge variant="secondary" className="text-3xs">
+              {t('platform.statusUnknown')}
             </Badge>
           </div>
 

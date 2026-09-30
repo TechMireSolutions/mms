@@ -1,3 +1,4 @@
+import { FeedbackStateLayout } from "./FeedbackStateLayout";
 import React from "react";
 import { AlertTriangle, RefreshCw, WifiOff } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -40,36 +41,28 @@ export const ErrorState = (function ErrorState({
   const Icon = stateConfig.icon;
 
   return (
-    <div
+    <FeedbackStateLayout
       role="alert"
-      aria-live="assertive"
-      className={cn(
-        "flex flex-col items-center justify-center text-center",
-        compact ? "py-8 px-4" : "py-16 px-6",
-        className,
-      )}
-    >
+      title={title || t(stateConfig.titleKey)}
+      description={description}
+      compact={compact}
+      className={className}
+      icon={
       <div className={cn(stateConfig.bg, "rounded-2xl flex items-center justify-center mb-4", compact ? "w-10 h-10" : "w-14 h-14")}>
         <Icon className={cn(stateConfig.color, compact ? "w-5 h-5" : "w-7 h-7")} aria-hidden="true" />
       </div>
-      <p className={cn("font-semibold text-foreground", compact ? "text-sm" : "text-base")}>
-        {title || t(stateConfig.titleKey)}
-      </p>
-      {description && (
-        <p className={cn("text-muted-foreground mt-1.5 max-w-xs", compact ? "text-xs" : "text-sm")}>{description}</p>
-      )}
-      {onRetry && (
+      }
+      action={onRetry && (
         <Button
           type="button"
           variant="outline"
           onClick={onRetry}
-          className="mt-4 flex min-h-11 items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
+          className="flex min-h-11 items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium"
         >
           <RefreshCw className="w-3.5 h-3.5" aria-hidden="true" />
           {t("common.tryAgain")}
         </Button>
       )}
-    </div>
+    />
   );
 });
-

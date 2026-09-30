@@ -1,9 +1,8 @@
 import React, { useId } from 'react';
 import type { LucideIcon } from 'lucide-react';
-import { Checkbox } from '@/components/ui/checkbox';
+import { FormCheckboxCard } from '@/components/ui/FormCheckboxCard';
 import { Badge } from '@/components/ui/badge';
 import { useTranslation } from '@/hooks/useTranslation';
-import { cn } from '@/lib/utils';
 
 export interface PlatformPermissionCheckboxItemProps {
   name: string;
@@ -28,24 +27,15 @@ export function PlatformPermissionCheckboxItem({
   const inputId = useId();
 
   return (
-    <label
-      htmlFor={inputId}
-      className={cn(
-        'flex min-h-12 cursor-pointer items-start gap-3.5 p-3 rounded-xl border border-border/40 bg-card/60 hover:bg-accent/20 transition-all select-none',
-        checked && 'border-primary/40 bg-primary/5',
-        disabled && 'opacity-60 cursor-not-allowed',
-      )}
-    >
-      <Checkbox
-        id={inputId}
-        name={name}
-        checked={checked}
-        disabled={disabled}
-        onCheckedChange={(c) => onChange(c === true)}
-        className="mt-1"
-      />
-      <div className="flex-1 min-w-0 text-start space-y-1">
-        <div className="flex items-center gap-2">
+    <FormCheckboxCard
+      id={inputId}
+      name={name}
+      checked={checked}
+      disabled={disabled}
+      onCheckedChange={onChange}
+      description={description}
+      label={
+        <span className="flex flex-wrap items-center gap-2">
           <Icon className="w-3.5 h-3.5 text-primary shrink-0" aria-hidden />
           <span className="text-xs font-bold text-foreground">{label}</span>
           <Badge
@@ -57,11 +47,8 @@ export function PlatformPermissionCheckboxItem({
           >
             {checked ? t('platform.workspaceActive') : t('platform.workspaceInactive')}
           </Badge>
-        </div>
-        <p className="text-3xs font-medium text-muted-foreground leading-relaxed">
-          {description}
-        </p>
-      </div>
-    </label>
+        </span>
+      }
+    />
   );
 }

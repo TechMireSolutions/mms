@@ -1,4 +1,5 @@
 import React from "react";
+import { FeedbackStateLayout } from "./FeedbackStateLayout";
 import { Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -33,23 +34,10 @@ export const EmptyState = (function EmptyState({
   const Icon = icon === undefined ? (isDashed ? null : Inbox) : icon;
 
   return (
-    <div
-      role={role}
-      aria-live={role === "status" ? "polite" : role === "alert" ? "assertive" : undefined}
-      className={cn(
-        "flex flex-col items-center justify-center text-center",
-        isDashed
-          ? cn(
-              "rounded-xl border-2 border-dashed border-border",
-              compact ? "py-8 px-4" : "py-12 px-4",
-            )
-          : compact
-            ? "py-8 px-4"
-            : "py-16 px-6",
-        className,
-      )}
-    >
-      {Icon && (
+    <FeedbackStateLayout
+      role={role} title={title} description={description} action={action}
+      compact={compact} dashed={isDashed} className={className}
+      icon={Icon && (
         isDashed ? (
           <Icon
             className={cn(
@@ -75,28 +63,6 @@ export const EmptyState = (function EmptyState({
           </div>
         )
       )}
-      <p
-        className={cn(
-          isDashed
-            ? "text-sm font-medium text-foreground m-0"
-            : cn("font-semibold text-foreground", compact ? "text-sm" : "text-base"),
-        )}
-      >
-        {title}
-      </p>
-      {description && (
-        <p
-          className={cn(
-            isDashed
-              ? "text-xs text-muted-foreground mt-0.5 m-0"
-              : cn("text-muted-foreground mt-1.5 max-w-xs", compact ? "text-xs" : "text-sm"),
-          )}
-        >
-          {description}
-        </p>
-      )}
-      {action && <div className="mt-4">{action}</div>}
-    </div>
+    />
   );
 });
-

@@ -1,5 +1,6 @@
 import * as React from "react";
 
+import { CARD_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { CARD_STRIPE_BASE, CARD_STRIPE_INSET, type CardAccentColor, getCardStripeClass } from "@/lib/semanticTone";
 
@@ -32,7 +33,7 @@ const Card = ({
     <div
       ref={ref}
       className={cn(
-        "relative overflow-hidden group/card rounded-2xl border border-foreground/10 bg-card text-card-foreground shadow-xs transition-colors duration-150 ease-out",
+        CARD_SURFACE,
         interactive && "cursor-pointer focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:outline-hidden active:scale-tap-micro hover:border-foreground/20",
         hasStripe && CARD_STRIPE_INSET,
         className,
@@ -72,7 +73,7 @@ const CardTitle = ({
 }: CardTitleProps & { ref?: React.Ref<HTMLHeadingElement> }) => (
   <Component
     ref={ref}
-    className={cn("font-semibold leading-none tracking-tight text-card-foreground", className)}
+    className={cn("font-semibold leading-none tracking-tight text-card-foreground text-balance break-words", className)}
     {...props}
   />
 );
@@ -85,7 +86,7 @@ const CardDescription = ({
 }: CardDescriptionProps & { ref?: React.Ref<HTMLParagraphElement> }) => (
   <p
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)}
+    className={cn("text-sm text-muted-foreground text-pretty break-words", className)}
     {...props}
   />
 );

@@ -35,7 +35,7 @@ export function PlatformAiMessageList({
           {t('platform.aiCopilotSubtitle')}
         </p>
         <div className="flex items-center gap-2 text-2xs text-muted-foreground bg-muted/50 px-3 py-1.5 rounded-full border border-border/60">
-          <Activity className="h-3 w-3 text-emerald-500 animate-pulse" aria-hidden />
+          <Activity className="h-3 w-3 text-success animate-pulse" aria-hidden />
           <span>{t('platform.banner.realtimePulse')}</span>
         </div>
       </div>

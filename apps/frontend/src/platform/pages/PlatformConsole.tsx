@@ -1,11 +1,9 @@
+import { PlatformOnboardingAction } from '@/platform/components/common/PlatformOnboardingAction';
 import React from 'react';
-import { Link } from 'react-router-dom';
-import { User, Plus, ArrowRight } from 'lucide-react';
+import { User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { ModuleScaffold } from '@/components/common/ModuleScaffold';
-import { ROUTES } from '@/lib/config/routes';
-import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { PlatformAddAdminForm } from '@/platform/pages/PlatformAddAdminForm';
 import { containerVariantsConsole as containerVariants, itemVariants } from '@/platform/lib/animations';
@@ -26,19 +24,7 @@ export default function PlatformConsole(): React.JSX.Element {
   const headerActions = (() => {
     if (activeTab === 'work' && controller.activeWorkSubTab === 'workspaces' && perms.canOnboard) {
       return (
-        <Button
-          asChild
-          className="min-h-11 rounded-xl font-bold px-5 shadow-sm shadow-primary/20 hover:shadow-md interactive-scale cursor-pointer"
-          onMouseEnter={() => {
-            void import('@/platform/pages/onboarding/OnboardingWizard');
-          }}
-        >
-          <Link to={ROUTES.onboarding}>
-            <Plus className="w-4 h-4 me-1.5" aria-hidden />
-            {t('auth.createMadrasa')}
-            <ArrowRight className="w-4 h-4 ms-1 rtl:rotate-180" aria-hidden />
-          </Link>
-        </Button>
+        <PlatformOnboardingAction />
       );
     }
     if (activeTab === 'setup' && controller.activeSetupSubTab === 'admins' && perms.canAdmins) {

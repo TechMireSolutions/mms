@@ -1,13 +1,12 @@
 import React, { useState } from 'react';
-import { Search } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { usePlatformAuth } from '@/platform/lib/PlatformAuthContext';
 import { usePlatformPermissions } from '@/platform/hooks/usePlatformPermissions';
 import { usePlatformSidebar } from '@/platform/lib/PlatformSidebarContext';
-import { getVisiblePlatformNavItems, type PlatformNavSection, type PlatformNavItem } from '@/platform/lib/platformNav';
-import { Button } from '@/components/ui/button';
-import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
+import { getVisiblePlatformNavSections } from '@/platform/lib/platformNav';
+import { PlatformSignOutDialog } from '@/platform/components/common/PlatformSignOutDialog';
+import { PlatformSidebarSearch } from '@/platform/components/sidebar/PlatformSidebarSearch';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { cn } from '@/lib/utils';
 import { PlatformSidebarNav } from '@/platform/components/PlatformSidebarNav';
@@ -30,19 +29,13 @@ export function PlatformSidebar(): React.JSX.Element | null {
 
   if (!isPlatformAuthenticated) return null;
 
-  const navItems = getVisiblePlatformNavItems(perms);
-  const sectionMap = new Map<PlatformNavSection, PlatformNavItem[]>();
-  for (const item of navItems) {
-    if (!sectionMap.has(item.section)) sectionMap.set(item.section, []);
-    sectionMap.get(item.section)!.push(item);
-  }
-  const sections = Array.from(sectionMap.entries()).map(([section, items]) => ({ section, items }));
+  const sections = getVisiblePlatformNavSections(perms);
 
   return (
     <>
       <div
         className={cn(
-          'flex h-screen shrink-0 border-e border-sidebar-border bg-sidebar transition-all duration-300 ease-in-out flex-col justify-between select-none z-sidebar',
+          'flex h-dvh shrink-0 border-e border-sidebar-border bg-sidebar transition-all duration-200 ease-out motion-reduce:transition-none flex-col justify-between select-none z-sidebar',
           collapsed ? 'w-sidebar-collapsed' : 'w-sidebar',
         )}
         aria-label={t('platform.navAria')}
@@ -55,23 +48,7 @@ export function PlatformSidebar(): React.JSX.Element | null {
           />
 
           {!collapsed && (
-            <div className="px-3 pt-3 pb-1 shrink-0">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={openCommandPalette}
-                className="w-full min-h-11 h-11 justify-between px-3 text-xs text-sidebar-muted-foreground border-sidebar-border bg-sidebar-accent/30 hover:bg-sidebar-accent hover:text-sidebar-foreground rounded-xl transition-all select-none cursor-pointer"
-                aria-label={t('platform.nav.searchConsole')}
-              >
-                <span className="flex items-center gap-2">
-                  <Search className="w-3.5 h-3.5" aria-hidden />
-                  {t('platform.nav.searchConsole')}
-                </span>
-                <kbd className="hidden sm:inline-flex items-center gap-0.5 rounded border border-sidebar-border bg-card px-1.5 py-0.2 text-3xs font-mono font-bold text-sidebar-muted-foreground">
-                  ⌘K
-                </kbd>
-              </Button>
-            </div>
+            <PlatformSidebarSearch onOpen={openCommandPalette} />
           )}
 
           <TooltipProvider delayDuration={150}>
@@ -96,13 +73,9 @@ export function PlatformSidebar(): React.JSX.Element | null {
         </div>
       </div>
 
-      <ConfirmAlertDialog
+      <PlatformSignOutDialog
         open={confirmSignOutOpen}
         onOpenChange={setConfirmSignOutOpen}
-        title={t('platform.signOut')}
-        description={t('platform.signOutConfirm')}
-        confirmLabel={t('platform.signOut')}
-        destructive
         onConfirm={() => {
           void platformLogout();
         }}

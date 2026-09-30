@@ -1,8 +1,9 @@
+import { PLATFORM_PERMISSION_CONFIG } from '@/platform/lib/platformPermissionConfig';
 import React from 'react';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
-import type { AppTranslationKey, PlatformUserProfile } from '@mms/shared';
+import type { PlatformUserProfile } from '@mms/shared';
 
 export interface PlatformAdminStatusBadgesProps {
   admin: PlatformUserProfile;
@@ -45,13 +46,6 @@ export interface PlatformAdminPermissionsBadgesProps {
   admin: PlatformUserProfile;
 }
 
-const PERMISSION_CONFIG: { key: keyof NonNullable<PlatformUserProfile['permissions']>; labelKey: AppTranslationKey }[] = [
-  { key: 'workspaces', labelKey: 'platform.permWorkspaces' },
-  { key: 'onboard', labelKey: 'platform.permOnboard' },
-  { key: 'settings', labelKey: 'platform.permSettings' },
-  { key: 'admins', labelKey: 'platform.permAdmins' },
-  { key: 'system', labelKey: 'platform.permSystem' },
-];
 
 export function PlatformAdminPermissionsBadges({ admin }: PlatformAdminPermissionsBadgesProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -61,7 +55,7 @@ export function PlatformAdminPermissionsBadges({ admin }: PlatformAdminPermissio
   }
 
   const perms = admin.permissions;
-  const activePerms = PERMISSION_CONFIG.filter(({ key }) => perms?.[key]);
+  const activePerms = PLATFORM_PERMISSION_CONFIG.filter(({ key }) => perms?.[key]);
 
   if (activePerms.length === 0) {
     return <span className="text-xs text-muted-foreground">{t('platform.adminNoCapabilities')}</span>;

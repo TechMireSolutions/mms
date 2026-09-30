@@ -4,7 +4,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { PlatformSidebar } from './PlatformSidebar';
 
-import { LayoutDashboard } from 'lucide-react';
 
 let mockIsAuth = true;
 let mockCollapsed = false;
@@ -44,18 +43,7 @@ vi.mock('@/platform/lib/PlatformSidebarContext', () => ({
   }),
 }));
 
-vi.mock('@/platform/lib/platformNav', () => ({
-  getVisiblePlatformNavItems: () => [
-    {
-      id: 'dashboard',
-      labelKey: 'dashboard.title',
-      path: '/platform/dashboard',
-      section: 'core',
-      icon: LayoutDashboard,
-      isVisible: () => true,
-    },
-  ],
-}));
+
 
 describe('PlatformSidebar', () => {
   it('returns null when unauthenticated', () => {

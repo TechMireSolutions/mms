@@ -54,6 +54,8 @@ describe('formStyles Design Token Contract', () => {
       FORM_INPUT_BUILDER,
       FORM_OTP_DIGIT,
       FORM_CHECKBOX,
+      FORM_SELECT_MINI,
+      WORK_TOOLBAR_TRIGGER,
     ];
 
     focusableTokens.forEach((token) => {

@@ -1,33 +1,10 @@
+import type { WorkspaceTableViewProps } from './WorkspaceTableView';
 import React from 'react';
-import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
-import type { usePlatformWorkspaceDescriptor } from '@/platform/hooks/usePlatformWorkspaceDescriptor';
-import type { WorkspaceSortDirection, WorkspaceSortField } from '@/platform/components/platformWorkspaceListData';
-import type { PlatformDensity } from '@/platform/hooks/usePlatformDensity';
 import { PlatformWorkspaceVirtualTable } from '@/platform/components/workspace/PlatformWorkspaceVirtualTable';
 import { WorkspaceListCards } from '@/platform/components/workspace/WorkspaceListCards';
 
-export interface PlatformWorkspaceDirectoryViewProps {
+export interface PlatformWorkspaceDirectoryViewProps extends WorkspaceTableViewProps {
   viewMode: 'table' | 'cards';
-  workspaces: PlatformWorkspaceRowData[];
-  descriptor: ReturnType<typeof usePlatformWorkspaceDescriptor>;
-  appDomain: string;
-  density?: PlatformDensity;
-  sortField: WorkspaceSortField;
-  sortDirection: WorkspaceSortDirection;
-  onToggleSort: (field: WorkspaceSortField) => void;
-  togglePending: boolean;
-  deletePending: boolean;
-  targetWorkspaceSubdomain?: string;
-  onToggleEnabled: (subdomain: string, enabled: boolean) => void;
-  onToggleEmailVerification: (subdomain: string, requireEmailVerification: boolean) => void;
-  onOpenModules: (workspace: PlatformWorkspaceRowData) => void;
-  onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
-  onOpenResetPassword: (workspace: PlatformWorkspaceRowData) => void;
-  onOpenCreateAdmin: (workspace: PlatformWorkspaceRowData) => void;
-  onInspect?: (workspace: PlatformWorkspaceRowData) => void;
-  selectedSubdomains?: ReadonlySet<string>;
-  onToggleSelect?: (subdomain: string) => void;
-  onToggleSelectAll?: () => void;
 }
 
 export function PlatformWorkspaceDirectoryView({

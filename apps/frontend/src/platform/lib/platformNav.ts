@@ -103,3 +103,11 @@ export function getVisiblePlatformNavItems(
   return PLATFORM_NAV_ITEMS.filter((item) => item.isVisible(perms));
 }
 
+
+export function getVisiblePlatformNavSections(perms: PlatformPermissionsState) {
+  const grouped = Object.groupBy(getVisiblePlatformNavItems(perms), (item) => item.section);
+  return Object.entries(grouped).map(([section, items]) => ({
+    section: section as PlatformNavSection,
+    items: items ?? [],
+  }));
+}

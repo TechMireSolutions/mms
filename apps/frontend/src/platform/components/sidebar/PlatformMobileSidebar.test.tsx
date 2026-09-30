@@ -4,7 +4,6 @@ import { renderToStaticMarkup } from 'react-dom/server';
 import { MemoryRouter } from 'react-router-dom';
 import { PlatformMobileSidebar } from './PlatformMobileSidebar';
 
-import { LayoutDashboard } from 'lucide-react';
 
 let mockMobileOpen = true;
 let mockIsAuth = true;
@@ -44,18 +43,7 @@ vi.mock('@/platform/lib/PlatformSidebarContext', () => ({
   }),
 }));
 
-vi.mock('@/platform/lib/platformNav', () => ({
-  getVisiblePlatformNavItems: () => [
-    {
-      id: 'dashboard',
-      labelKey: 'dashboard.title',
-      path: '/platform/dashboard',
-      section: 'core',
-      icon: LayoutDashboard,
-      isVisible: () => true,
-    },
-  ],
-}));
+
 
 describe('PlatformMobileSidebar', () => {
   it('returns null when mobileOpen is false', () => {

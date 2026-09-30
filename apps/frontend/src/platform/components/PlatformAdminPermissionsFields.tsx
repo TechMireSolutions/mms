@@ -1,6 +1,7 @@
 import React from 'react';
-import { Shield, Building2, UserPlus, Settings, ShieldCheck, Server, Sparkles, CheckCheck, XCircle } from 'lucide-react';
-import type { PlatformAdminPermissions } from '@mms/shared';
+import { Shield, Sparkles, CheckCheck, XCircle } from 'lucide-react';
+import { DEFAULT_PLATFORM_ADMIN_PERMISSIONS, FULL_PLATFORM_ADMIN_PERMISSIONS, type PlatformAdminPermissions } from '@mms/shared';
+import { PLATFORM_PERMISSION_CONFIG } from '@/platform/lib/platformPermissionConfig';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { useTranslation } from '@/hooks/useTranslation';
 import { PlatformPermissionCheckboxItem } from '@/platform/components/admin/PlatformPermissionCheckboxItem';
@@ -20,33 +21,24 @@ export function PlatformAdminPermissionsFields({
   const { t } = useTranslation();
 
   const setAll = (enabled: boolean) => {
-    onChange({
-      workspaces: enabled,
-      onboard: enabled,
-      settings: enabled,
-      admins: enabled,
-      system: enabled,
-    });
+    onChange({ ...(enabled ? FULL_PLATFORM_ADMIN_PERMISSIONS : DEFAULT_PLATFORM_ADMIN_PERMISSIONS) });
   };
 
   const setOperations = () => {
     onChange({
+      ...DEFAULT_PLATFORM_ADMIN_PERMISSIONS,
       workspaces: true,
       onboard: true,
-      settings: false,
-      admins: false,
-      system: false,
     });
   };
 
   return (
     <fieldset className="space-y-4 rounded-2xl border border-border/50 bg-card/40 p-4 transition-all">
+      <legend className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
+        <Shield className="w-3.5 h-3.5 text-primary" aria-hidden />
+        {t('platform.adminPermissionsLabel')}
+      </legend>
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
-        <legend className="px-1 text-xs font-black uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
-          <Shield className="w-3.5 h-3.5 text-primary" aria-hidden />
-          {t('platform.adminPermissionsLabel')}
-        </legend>
-
         <div className="flex flex-wrap items-center gap-1.5">
           <ActionButton
             variant="secondary"
@@ -79,55 +71,18 @@ export function PlatformAdminPermissionsFields({
         </div>
       </div>
 
-      <PlatformPermissionCheckboxItem
-        name="permWorkspaces"
-        label={t('platform.permWorkspaces')}
-        description={t('platform.permWorkspacesDesc')}
-        icon={Building2}
-        checked={value.workspaces}
-        disabled={disabled}
-        onChange={(checked) => onChange({ ...value, workspaces: checked })}
-      />
-
-      <PlatformPermissionCheckboxItem
-        name="permOnboard"
-        label={t('platform.permOnboard')}
-        description={t('platform.permOnboardDesc')}
-        icon={UserPlus}
-        checked={value.onboard}
-        disabled={disabled}
-        onChange={(checked) => onChange({ ...value, onboard: checked })}
-      />
-
-      <PlatformPermissionCheckboxItem
-        name="permSettings"
-        label={t('platform.permSettings')}
-        description={t('platform.permSettingsDesc')}
-        icon={Settings}
-        checked={value.settings}
-        disabled={disabled}
-        onChange={(checked) => onChange({ ...value, settings: checked })}
-      />
-
-      <PlatformPermissionCheckboxItem
-        name="permAdmins"
-        label={t('platform.permAdmins')}
-        description={t('platform.permAdminsDesc')}
-        icon={ShieldCheck}
-        checked={value.admins}
-        disabled={disabled}
-        onChange={(checked) => onChange({ ...value, admins: checked })}
-      />
-
-      <PlatformPermissionCheckboxItem
-        name="permSystem"
-        label={t('platform.permSystem')}
-        description={t('platform.permSystemDesc')}
-        icon={Server}
-        checked={value.system}
-        disabled={disabled}
-        onChange={(checked) => onChange({ ...value, system: checked })}
-      />
+      {PLATFORM_PERMISSION_CONFIG.map(({ key, name, labelKey, descriptionKey, icon }) => (
+        <PlatformPermissionCheckboxItem
+          key={key}
+          name={name}
+          label={t(labelKey)}
+          description={t(descriptionKey)}
+          icon={icon}
+          checked={value[key]}
+          disabled={disabled}
+          onChange={(checked) => onChange({ ...value, [key]: checked })}
+        />
+      ))}
     </fieldset>
   );
 }

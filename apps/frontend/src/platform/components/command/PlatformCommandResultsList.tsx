@@ -1,6 +1,7 @@
 import React from 'react';
 import type { AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import type { PlatformCommandItem } from '@/platform/components/platformCommandItems';
 
@@ -49,16 +50,17 @@ export function PlatformCommandResultsList({
             const isSelected = index === selectedIndex;
             const translatedLabel = item.customLabel ?? (item.labelKey ? t(item.labelKey) : '');
             return (
-              <button
+              <Button
                 key={item.id}
                 id={`platform-cmd-item-${item.id}`}
                 type="button"
+                variant="ghost"
                 role="option"
                 aria-selected={isSelected}
                 onClick={() => onSelect(item.path, item)}
                 onMouseEnter={() => onHoverIndex(index)}
                 className={cn(
-                  'flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-start text-sm transition-all cursor-pointer min-h-11',
+                  'flex w-full items-center gap-3 rounded-xl px-3.5 py-2.5 text-start text-sm h-auto whitespace-normal justify-start cursor-pointer min-h-11',
                   isSelected
                     ? 'bg-primary text-primary-foreground font-bold shadow-sm'
                     : 'text-foreground hover:bg-muted/70 font-semibold',
@@ -119,7 +121,7 @@ export function PlatformCommandResultsList({
                     <span className="text-3xs font-mono opacity-80">↵</span>
                   ) : null}
                 </div>
-              </button>
+              </Button>
             );
           })}
         </div>

@@ -1,39 +1,18 @@
-import React, { useState } from 'react';
-import { Palette, Sun, Moon, Monitor, Check } from 'lucide-react';
+import { usePlatformThemePreview } from '@/platform/hooks/usePlatformThemePreview';
+import { MMS_PLATFORM_BRANDING } from '@/platform/lib/themeScope';
+import React from 'react';
+import { Palette, Sun, Moon, Monitor } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
-import type { ThemeMode } from '@mms/shared';
+import { THEME_MODE_OPTIONS } from '@mms/shared';
+import { useTranslation } from '@/hooks/useTranslation';
 
-const THEME_OPTIONS: { mode: ThemeMode; label: string; icon: React.ComponentType<{ className?: string }> }[] = [
-  { mode: 'light', label: 'Light', icon: Sun },
-  { mode: 'dark', label: 'Dark', icon: Moon },
-  { mode: 'system', label: 'System', icon: Monitor },
-];
-
-const ACCENTS = [
-  { name: 'Emerald', class: 'bg-emerald-600', ring: 'ring-emerald-500' },
-  { name: 'Indigo', class: 'bg-indigo-600', ring: 'ring-indigo-500' },
-  { name: 'Sky', class: 'bg-sky-600', ring: 'ring-sky-500' },
-  { name: 'Violet', class: 'bg-violet-600', ring: 'ring-violet-500' },
-  { name: 'Amber', class: 'bg-amber-600', ring: 'ring-amber-500' },
-];
+const THEME_ICONS = { light: Sun, dark: Moon, system: Monitor };
 
 export function PlatformThemeSettingsPanel(): React.JSX.Element {
-  const [selectedMode, setSelectedMode] = useState<ThemeMode>('system');
-  const [selectedAccent, setSelectedAccent] = useState('Emerald');
-
-  const handleModeChange = (mode: ThemeMode) => {
-    setSelectedMode(mode);
-    if (mode === 'dark') {
-      document.documentElement.classList.add('dark');
-    } else if (mode === 'light') {
-      document.documentElement.classList.remove('dark');
-    } else {
-      const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-      document.documentElement.classList.toggle('dark', isDark);
-    }
-  };
+  const { t } = useTranslation();
+  const { selectedMode, setSelectedMode } = usePlatformThemePreview();
 
   return (
     <div className="space-y-6 text-start">
@@ -41,24 +20,25 @@ export function PlatformThemeSettingsPanel(): React.JSX.Element {
         <CardHeader>
           <CardTitle className="text-sm font-semibold flex items-center gap-2">
             <Palette className="w-4 h-4 text-primary" />
-            Display Appearance
+            {t('theme.cornerPreviewTitle')}
           </CardTitle>
           <CardDescription className="text-xs">
-            Choose your preferred color theme and visual mode for the Platform Apex console.
+            {t('theme.primaryColourDesc')}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {THEME_OPTIONS.map((opt) => {
-              const Icon = opt.icon;
-              const isSelected = selectedMode === opt.mode;
+            {THEME_MODE_OPTIONS.map((opt) => {
+              const Icon = THEME_ICONS[opt.value];
+              const isSelected = selectedMode === opt.value;
               return (
-                <button
-                  key={opt.mode}
+                <Button
+                  key={opt.value}
                   type="button"
-                  onClick={() => handleModeChange(opt.mode)}
+                  variant="ghost"
+                  onClick={() => setSelectedMode(opt.value)}
                   className={cn(
-                    'flex flex-col items-center justify-center p-4 rounded-xl border text-center transition-all cursor-pointer',
+                    'flex flex-col items-center justify-center p-4 rounded-xl border text-center h-auto transition-colors cursor-pointer',
                     isSelected
                       ? 'border-primary bg-primary/5 ring-2 ring-primary/20 font-semibold text-primary'
                       : 'border-border/60 hover:bg-muted/40 text-muted-foreground',
@@ -66,34 +46,30 @@ export function PlatformThemeSettingsPanel(): React.JSX.Element {
                   aria-pressed={isSelected}
                 >
                   <Icon className="w-6 h-6 mb-2" />
-                  <span className="text-xs">{opt.label}</span>
-                </button>
+                  <span className="text-xs">{t(opt.labelKey)}</span>
+                </Button>
               );
             })}
           </div>
 
           <div className="space-y-3 pt-2 border-t border-border/50">
-            <div className="flex items-center justify-between">
-              <span className="text-xs font-medium">Console Accent Palette</span>
-              <Badge variant="outline" className="text-3xs font-mono">{selectedAccent}</Badge>
-            </div>
-            <div className="flex items-center gap-3">
-              {ACCENTS.map((accent) => (
-                <button
-                  key={accent.name}
-                  type="button"
-                  onClick={() => setSelectedAccent(accent.name)}
-                  className={cn(
-                    'w-8 h-8 rounded-full flex items-center justify-center transition-transform hover:scale-110 cursor-pointer',
-                    accent.class,
-                    selectedAccent === accent.name && `ring-2 ring-offset-2 ${accent.ring}`,
-                  )}
-                  aria-label={`Select ${accent.name} accent`}
-                >
-                  {selectedAccent === accent.name && <Check className="w-4 h-4 text-white" />}
-                </button>
-              ))}
-            </div>
+            <p className="text-xs font-medium">{t('theme.swatchesTitle')}</p>
+            <dl className="grid gap-3 sm:grid-cols-2">
+              <div className="flex items-center gap-3">
+                <span aria-hidden="true" className="h-11 w-11 shrink-0 rounded-full bg-primary" />
+                <div>
+                  <dt className="text-xs">{t('theme.primaryColourLabel')}</dt>
+                  <dd className="text-xs font-mono text-muted-foreground">{MMS_PLATFORM_BRANDING.primaryColor}</dd>
+                </div>
+              </div>
+              <div className="flex items-center gap-3">
+                <span aria-hidden="true" className="h-11 w-11 shrink-0 rounded-full bg-secondary" />
+                <div>
+                  <dt className="text-xs">{t('theme.accentColourLabel')}</dt>
+                  <dd className="text-xs font-mono text-muted-foreground">{MMS_PLATFORM_BRANDING.secondaryColor}</dd>
+                </div>
+              </div>
+            </dl>
           </div>
         </CardContent>
       </Card>

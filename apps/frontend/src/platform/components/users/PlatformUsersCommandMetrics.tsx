@@ -1,3 +1,4 @@
+import { getPlatformAdminMetrics } from '@/platform/lib/platformAdminMetrics';
 import React from 'react';
 import { ShieldCheck, UserCheck, Crown } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -23,9 +24,7 @@ export function PlatformUsersCommandMetrics({
     return <StatsSkeleton count={3} />;
   }
 
-  const totalAdmins = admins.length;
-  const activeAdmins = admins.filter((a) => !a.disabledAt).length;
-  const superAdmins = admins.filter((a) => a.role === 'super_user').length;
+  const { total, active, superUsers } = getPlatformAdminMetrics(admins);
 
   return (
     <ModuleCommandMetricsGrid
@@ -33,19 +32,19 @@ export function PlatformUsersCommandMetrics({
         {
           icon: ShieldCheck,
           label: t('platform.manageAdmins'),
-          value: totalAdmins,
+          value: total,
           accent: 'primary',
         },
         {
           icon: UserCheck,
           label: t('platform.workspaceActive'),
-          value: activeAdmins,
+          value: active,
           accent: 'success',
         },
         {
           icon: Crown,
           label: t('platform.roleSuperUser'),
-          value: superAdmins,
+          value: superUsers,
           accent: 'warning',
         },
       ]}

@@ -1,3 +1,4 @@
+import type { WorkspaceTableViewProps } from './WorkspaceTableView';
 import React from 'react';
 import { Calendar } from 'lucide-react';
 import { formatDate, type PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
@@ -14,23 +15,9 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { cn } from '@/lib/utils';
 import type { EntityDescriptor } from '@/types/entityRegistry';
 
-export interface WorkspaceListCardsProps {
-  workspaces: PlatformWorkspaceRowData[];
-  descriptor?: EntityDescriptor<PlatformWorkspaceRowData>;
-  appDomain: string;
-  togglePending: boolean;
-  deletePending: boolean;
-  targetWorkspaceSubdomain?: string;
-  onToggleEnabled: (subdomain: string, enabled: boolean) => void;
-  onToggleEmailVerification: (subdomain: string, required: boolean) => void;
-  onOpenModules: (workspace: PlatformWorkspaceRowData) => void;
-  onOpenDelete: (workspace: PlatformWorkspaceRowData) => void;
-  onOpenResetPassword?: (workspace: PlatformWorkspaceRowData) => void;
-  onOpenCreateAdmin?: (workspace: PlatformWorkspaceRowData) => void;
-  onInspect?: (workspace: PlatformWorkspaceRowData) => void;
-  selectedSubdomains?: ReadonlySet<string>;
-  onToggleSelect?: (subdomain: string) => void;
-}
+export type WorkspaceListCardsProps = Omit<WorkspaceTableViewProps,
+  'descriptor' | 'density' | 'sortField' | 'sortDirection' | 'onToggleSort' | 'onToggleSelectAll'
+> & { descriptor?: EntityDescriptor<PlatformWorkspaceRowData> };
 
 /** Directory list cards view for platform workspaces, aligning with tenant [Entity]ListCards. */
 export function WorkspaceListCards({

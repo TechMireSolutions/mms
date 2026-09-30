@@ -109,6 +109,7 @@ Update this table in the same change that adds or removes a check.
 | Tenant RLS enablement per table | `mms-schema-migrate/scripts/check-migrations.sh` | skill script |
 | `@mms/shared` runtime purity | `mms-shared-package/scripts/check-shared-exports.sh` | skill script |
 | a11y serious/critical violations | `e2e/tests/a11y-shell.spec.ts` (CI e2e job) | test |
+| Platform UI ownership (native controls, duplicate exports/JSX, semantic palette classes) | `apps/frontend/src/platform/platformUiArchitecture.test.ts` | test |
 | Coverage floors (FE 41/39, BE 45/27) | vitest thresholds in each workspace | test |
 | Work directory convergence (selection SSOT, two-layer bulk chrome, no dead adapters) | `pnpm run check:work-directory` | ratchet |
 | Tier structure, trunk tests, review criteria, UI/UX Pro Max design intelligence | none — **advisory** (review discipline) | advisory |
