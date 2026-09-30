@@ -30,6 +30,7 @@ export default function TopBar({ sidebarCollapsed, onOpenCommandPalette }: TopBa
         sidebarCollapsed ? "start-sidebar-collapsed" : "start-sidebar",
       )}
     >
+      {/* Desktop: full pill with placeholder text */}
       <div className="hidden min-w-0 flex-1 md:flex md:max-w-md md:mx-auto">
         <Button
           type="button"
@@ -49,6 +50,21 @@ export default function TopBar({ sidebarCollapsed, onOpenCommandPalette }: TopBa
           </kbd>
         </Button>
       </div>
+
+      {/* Mobile: compact icon button (Cmd+K affordance visible on all viewports) */}
+      {onOpenCommandPalette && (
+        <Button
+          type="button"
+          variant="ghost"
+          size="icon"
+          onClick={onOpenCommandPalette}
+          aria-label={t("nav.globalSearchPlaceholder")}
+          aria-keyshortcuts="Control+K Meta+K"
+          className="flex md:hidden min-h-11 min-w-11 h-11 w-11 rounded-xl hover:bg-muted transition-colors cursor-pointer"
+        >
+          <Search className="h-4.5 w-4.5 text-muted-foreground" aria-hidden="true" />
+        </Button>
+      )}
 
       <TopBarActions className="ms-auto" />
     </div>

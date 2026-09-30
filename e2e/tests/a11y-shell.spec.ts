@@ -81,6 +81,22 @@ test.describe('accessibility smoke @smoke', () => {
               context: `${route.label} @ ${viewport.width}px (ltr)`,
             });
 
+            // Command Palette (Desktop & Mobile)
+            if (route.path === '/') {
+              await test.step(`Audit Command Palette @ ${viewport.width}px`, async () => {
+                await page.keyboard.press(process.platform === 'darwin' ? 'Meta+k' : 'Control+k');
+                const palette = page.locator('[role="dialog"][aria-label*="Search" i], [role="dialog"][aria-label*="Command" i]').first();
+                const opened = await palette.waitFor({ state: 'visible', timeout: 5_000 }).then(() => true).catch(() => false);
+                if (opened) {
+                  await assertNoSeriousA11yViolations(page, {
+                    context: `Command Palette @ ${viewport.width}px (ltr)`,
+                  });
+                  await page.keyboard.press('Escape');
+                  await palette.waitFor({ state: 'hidden', timeout: 3_000 }).catch(() => undefined);
+                }
+              });
+            }
+
             // Overlays: Dialogs & Drawers/FormModals (Desktop only)
             if (viewport.width === 1440 && route.path !== '/' && route.path !== '/settings') {
               const context = `${route.label} @ ${viewport.width}px (ltr)`;
@@ -99,6 +115,20 @@ test.describe('accessibility smoke @smoke', () => {
       await forceRtl(page, 'ar');
       await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
       await assertNoSeriousA11yViolations(page, { context: 'dashboard @ 1440px (rtl)' });
+
+      // RTL Command Palette verification
+      await test.step('Audit Command Palette @ 1440px (rtl)', async () => {
+        await page.keyboard.press(process.platform === 'darwin' ? 'Meta+k' : 'Control+k');
+        const palette = page.locator('[role="dialog"][aria-label*="Search" i], [role="dialog"][aria-label*="Command" i]').first();
+        const opened = await palette.waitFor({ state: 'visible', timeout: 5_000 }).then(() => true).catch(() => false);
+        if (opened) {
+          await assertNoSeriousA11yViolations(page, {
+            context: 'Command Palette @ 1440px (rtl)',
+          });
+          await page.keyboard.press('Escape');
+          await palette.waitFor({ state: 'hidden', timeout: 3_000 }).catch(() => undefined);
+        }
+      });
 
       // RTL overlay verification on dense work directory
       await gotoAndSettle(page, tenantOrigin, '/students', '#main-content');

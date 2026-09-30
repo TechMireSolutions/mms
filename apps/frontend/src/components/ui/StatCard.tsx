@@ -1,14 +1,15 @@
 import React from "react";
 import { motion } from "framer-motion";
-import { ArrowUpRight, ArrowDownRight, type LucideIcon } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Card } from "@/components/ui/card";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { formatNumber } from "@mms/shared";
-import { useTranslation } from "@/hooks/useTranslation";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { resolveAccent, type AccentColor } from "@/components/ui/statCardAccent";
-import { CARD_STRIPE_INSET, trendTextClass } from "@/lib/semanticTone";
+import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { StatCardTrend } from "@/components/ui/StatCardTrend";
+import { StatCardSparkline } from "@/components/ui/StatCardSparkline";
 
 export interface StatCardProps {
   label: string;
@@ -17,6 +18,20 @@ export interface StatCardProps {
   icon?: LucideIcon | React.ComponentType<{ className?: string; style?: React.CSSProperties }> | null;
   accent?: AccentColor;
   trend?: number;
+  /** Contextual label for the trend period, e.g. "vs last month". */
+  trendLabel?: string;
+  /**
+   * One-line narrative summary rendered below the value (P3-3).
+   * E.g. "Dropped 12% vs last month, mainly Grade 3".
+   * Label this as AI-generated at the call site if applicable.
+   */
+  narrativeText?: string;
+  /**
+   * Optional sparkline data — an array of numbers rendered as a 40px inline
+   * line chart (P3-6). Gives instant trend visualisation without a click.
+   * E.g. `[120, 132, 115, 148, 160, 155, 170]`
+   */
+  sparklineData?: number[];
   delayIndex?: number;
   onClick?: () => void;
   className?: string;
@@ -24,25 +39,6 @@ export interface StatCardProps {
   isActive?: boolean;
 }
 
-const StatCardTrend = (function StatCardTrend({ trend }: { trend: number }) {
-  const { t } = useTranslation();
-  return (
-    <span
-      className={cn(
-        "flex items-center gap-0.5 text-xs font-bold shrink-0 select-none",
-        trendTextClass(trend)
-      )}
-      aria-label={trend >= 0 ? t("ui.statCard.positiveTrend") : t("ui.statCard.negativeTrend")}
-    >
-      {trend >= 0 ? (
-        <ArrowUpRight className="w-3 h-3" aria-hidden="true" />
-      ) : (
-        <ArrowDownRight className="w-3 h-3" aria-hidden="true" />
-      )}
-      {Math.abs(trend)}%
-    </span>
-  );
-});
 
 export const StatCard = (function StatCard({
   label,
@@ -51,6 +47,9 @@ export const StatCard = (function StatCard({
   icon: Icon = null,
   accent,
   trend,
+  trendLabel,
+  narrativeText,
+  sparklineData,
   delayIndex = 0,
   onClick,
   className,
@@ -64,12 +63,18 @@ export const StatCard = (function StatCard({
   const formattedValue = typeof value === "number" ? formatNumber(value) : value;
 
   const reducedMotion = useReducedMotion();
+  // Use CSS token --animation-stagger-unit (0.04s) for consistent stagger across the design system.
+  const staggerUnit = parseFloat(
+    typeof window !== "undefined"
+      ? getComputedStyle(document.documentElement).getPropertyValue("--animation-stagger-unit").trim() || "0.04"
+      : "0.04"
+  );
   const motionProps = reducedMotion
     ? { initial: false, animate: { opacity: 1, y: 0 } }
     : {
         initial: { opacity: 0, y: isCompact ? 10 : 12 },
         animate: { opacity: 1, y: 0 },
-        transition: { delay: delayIndex * 0.04, duration: 0.3, ease: "easeOut" as const },
+        transition: { delay: delayIndex * staggerUnit, duration: 0.3, ease: "easeOut" as const },
       };
 
   if (isCompact) {
@@ -110,7 +115,8 @@ export const StatCard = (function StatCard({
               )}
             </div>
           </div>
-          {trend !== undefined && <StatCardTrend trend={trend} />}
+          {trend !== undefined && <StatCardTrend trend={trend} trendLabel={trendLabel} />}
+          {sparklineData && <StatCardSparkline data={sparklineData} />}
         </Card>
       </Comp>
     );
@@ -126,38 +132,47 @@ export const StatCard = (function StatCard({
       <Card
         accentColor={accent}
         className={cn(
-          "flex items-center justify-between p-4 min-h-stat-compact w-full",
+          "flex flex-col p-4 min-h-stat-compact w-full gap-2",
           CARD_STRIPE_INSET,
           onClick && "hover:border-primary/40 hover:bg-card/75",
           isActive && "ring-2 ring-primary/60 border-primary/60 bg-primary/5",
           className
         )}
       >
-        <div className="flex items-center gap-3.5 min-w-0">
-          {Icon && (
-            <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
-              <Icon className={cn("w-5 h-5", theme.iconText)} />
-            </div>
-          )}
-          <div className="min-w-0">
-            <SectionLabel as="p" className="block leading-none mb-1.5 truncate">
-              {label}
-            </SectionLabel>
-            <p className="text-lg font-black text-foreground leading-none tracking-tight tabular-nums">
-              {formattedValue}
-            </p>
-            {sub && (
-              <p className="text-xs font-semibold text-muted-foreground mt-1 truncate">
-                {sub}
-              </p>
+        <div className="flex items-start justify-between gap-3 w-full">
+          <div className="flex items-center gap-3.5 min-w-0">
+            {Icon && (
+              <div className={cn("w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 transition-transform group-hover:scale-110 shadow-sm ring-4", theme.iconBg, theme.ring)} aria-hidden="true">
+                <Icon className={cn("w-5 h-5", theme.iconText)} />
+              </div>
             )}
+            <div className="min-w-0">
+              <SectionLabel as="p" className="block leading-none mb-1.5 truncate">
+                {label}
+              </SectionLabel>
+              <p className="text-lg font-black text-foreground leading-none tracking-tight tabular-nums">
+                {formattedValue}
+              </p>
+              {sub && (
+                <p className="text-xs font-semibold text-muted-foreground mt-1 truncate">
+                  {sub}
+                </p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col items-end gap-1 shrink-0">
+            {trend !== undefined && (
+              <StatCardTrend trend={trend} trendLabel={trendLabel} />
+            )}
+            {sparklineData && <StatCardSparkline data={sparklineData} />}
           </div>
         </div>
 
-        {trend !== undefined && (
-          <span className="self-start">
-            <StatCardTrend trend={trend} />
-          </span>
+        {narrativeText && (
+          <p className="text-xs text-muted-foreground leading-relaxed border-t border-border/30 pt-2 mt-1">
+            {narrativeText}
+          </p>
         )}
       </Card>
     </Comp>

@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap');
 
 @source "../index.html";
 @source "./**/*.{js,jsx,ts,tsx}";
@@ -121,6 +122,9 @@
   --duration-fast: 150ms;
   --duration-normal: 200ms;
   --ease-calm: cubic-bezier(0.16, 1, 0.3, 1);
+
+  /* Stagger animation unit — used in StatCard, EntityCardsGrid stagger delays */
+  --animation-stagger-unit: 0.04s;
 
   --shadow-surface:
     0 1px 2px 0 hsl(var(--foreground) / 0.04),
@@ -312,10 +316,10 @@
 /* Tenant branding tokens — HSL components injected by applyBrandingTheme() */
 :root {
   color-scheme: light;
-  --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif;
+  --font-sans: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans Arabic", sans-serif;
   /* Latin display default. Amiri is only fetched for ar/ur (see lib/localeFonts.ts),
      so naming it here made English/Persian fall back to a generic serif. */
-  --font-display: 'Inter', system-ui, sans-serif;
+  --font-display: 'Plus Jakarta Sans', 'Inter', system-ui, sans-serif;
 
   /*
    * WCAG AA CONTRAST CONTRACT — do not lighten these without re-checking.
@@ -469,6 +473,11 @@
     max-width: 100%;
     overflow-x: hidden;
     -webkit-tap-highlight-color: transparent;
+    /*
+     * WCAG 2.4.11 Focus Not Obscured: offset scroll so focused elements are not
+     * hidden behind the sticky 4rem top header. The 0.5rem extra gives breathing room.
+     */
+    scroll-padding-top: calc(var(--spacing-header, 4rem) + 0.5rem);
   }
 
   body {
@@ -798,3 +807,18 @@
     border: none !important;
   }
 }
+
+/*
+ * Table row density system (P3-1) — applied via [data-density] on <table>.
+ * Modules pass `densityToggle` prop to ModuleWorkToolbar; the toolbar consumer
+ * sets data-density on the wrapping element. CSS picks it up here.
+ *
+ * Compact  : 2.75rem rows — information-dense, power-user mode.
+ * Default  : 3.25rem rows — baseline comfortable reading.
+ * Relaxed  : 4rem rows    — high-legibility / accessibility mode.
+ */
+[data-density="compact"] tr { --row-h: 2.75rem; }
+[data-density="default"] tr { --row-h: 3.25rem; }
+[data-density="relaxed"] tr { --row-h: 4rem; }
+[data-density] tr td,
+[data-density] tr th { block-size: var(--row-h, 3.25rem); }

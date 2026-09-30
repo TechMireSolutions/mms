@@ -70,6 +70,7 @@ export const ModuleColumnCustomizerList = (function ModuleColumnCustomizerList({
               key={col.key}
               tabIndex={col.fixed ? undefined : 0}
               draggable={!col.fixed}
+              aria-description={col.fixed ? undefined : 'Press Alt+ArrowUp or Alt+ArrowDown to reorder'}
               onDragStart={(event) => !col.fixed && handleDragStart(event, col.key)}
               onDragOver={(event) => handleDragOver(event, col.key)}
               onDrop={(event) => handleDrop(event, col.key)}

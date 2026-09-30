@@ -1,6 +1,6 @@
 import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X } from "lucide-react";
+import { X, ChevronDown, ChevronUp } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -22,12 +22,15 @@ export interface FilterChipsProps<T = unknown> {
   descriptor?: EntityDescriptor<T>;
   onRemoveFilter?: (fieldKey: string) => void;
   onClearAll?: () => void;
+  /** Max chips to show before collapsing into "+n more" disclosure. Default: 4. */
+  maxVisible?: number;
   className?: string;
 }
 
 /**
  * FilterChips — shows active filter pills with clear actions.
  * Supports both manual chip arrays and declarative entity descriptor-driven active filter state.
+ * Collapses chips beyond `maxVisible` into a "+n more" disclosure button (P2-4).
  */
 export function FilterChips<T = unknown>({
   chips = [],
@@ -36,9 +39,11 @@ export function FilterChips<T = unknown>({
   descriptor,
   onRemoveFilter,
   onClearAll,
+  maxVisible = 4,
   className,
 }: FilterChipsProps<T>): React.ReactElement | null {
   const { t } = useTranslation();
+  const [expanded, setExpanded] = React.useState(false);
 
   const effectiveDescriptor = (descriptor ?? (entityType ? getEntityDescriptor(entityType) : undefined)) as
     | EntityDescriptor<unknown>
@@ -70,6 +75,10 @@ export function FilterChips<T = unknown>({
 
   if (effectiveChips.length === 0) return null;
 
+  const overflow = effectiveChips.length > maxVisible;
+  const visibleChips = overflow && !expanded ? effectiveChips.slice(0, maxVisible) : effectiveChips;
+  const hiddenCount = effectiveChips.length - maxVisible;
+
   return (
     <AnimatePresence>
       <motion.div
@@ -78,7 +87,7 @@ export function FilterChips<T = unknown>({
         exit={{ opacity: 0, height: 0 }}
         className={cn("flex items-center gap-2 flex-wrap", className)}
       >
-        {effectiveChips.map((chip) => (
+        {visibleChips.map((chip) => (
           <button
             key={chip.key}
             type="button"
@@ -91,6 +100,28 @@ export function FilterChips<T = unknown>({
             <X className="w-3 h-3" aria-hidden="true" />
           </button>
         ))}
+
+        {overflow && (
+          <button
+            type="button"
+            onClick={() => setExpanded((e) => !e)}
+            aria-expanded={expanded}
+            className="flex min-h-11 items-center gap-1 text-xs font-semibold px-2.5 py-2 rounded-full border border-border/60 bg-muted/50 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            {expanded ? (
+              <>
+                <ChevronUp className="w-3 h-3" aria-hidden="true" />
+                {t("common.showLess" as never) || "Show less"}
+              </>
+            ) : (
+              <>
+                +{hiddenCount}
+                <ChevronDown className="w-3 h-3" aria-hidden="true" />
+              </>
+            )}
+          </button>
+        )}
+
         {effectiveChips.length > 1 && onClearAll && (
           <Button
             type="button"

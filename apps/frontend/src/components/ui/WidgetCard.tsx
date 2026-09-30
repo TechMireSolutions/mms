@@ -7,13 +7,15 @@ export interface WidgetCardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode;
   ariaLabelledby?: string;
   ref?: React.Ref<HTMLDivElement>;
+  /** Optional narrative/AI summary text displayed at the bottom of the widget (P3-3). */
+  narrativeText?: string;
 }
 
 /**
  * WidgetCard is a design system primitive that wraps the Card component.
  * It provides interactive dashboard-specific styles (e.g. lift on hover) and color accent stripes.
  */
-export function WidgetCard({ className, accentColor, ariaLabelledby, children, ref, ...props }: WidgetCardProps) {
+export function WidgetCard({ className, accentColor, ariaLabelledby, children, ref, narrativeText, ...props }: WidgetCardProps) {
   return (
     <Card
       ref={ref}
@@ -27,6 +29,11 @@ export function WidgetCard({ className, accentColor, ariaLabelledby, children, r
       {...props}
     >
       {children}
+      {narrativeText && (
+        <p className="text-xs text-muted-foreground leading-relaxed border-t border-border/30 pt-2 mt-2">
+          {narrativeText}
+        </p>
+      )}
     </Card>
   );
 }

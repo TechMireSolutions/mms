@@ -163,3 +163,5 @@ export const COMMAND_ITEMS: CommandItem[] = [
   ...SYSTEM_COMMAND_ITEMS,
 ];
 
+export { MODULE_TIER_COMMAND_ITEMS } from "@/components/ui/moduleTierCommandItems";
+

@@ -4,6 +4,8 @@ import { ResponsiveContainer, type ResponsiveContainerProps } from "recharts";
 type SafeResponsiveContainerProps = Omit<ResponsiveContainerProps, "width" | "height"> & {
   width?: number | string;
   height?: number | string;
+  /** Accessible label rendered as role="img" + aria-label on the wrapper (WCAG 1.1.1). */
+  ariaLabel?: string;
 };
 
 /**
@@ -13,6 +15,7 @@ type SafeResponsiveContainerProps = Omit<ResponsiveContainerProps, "width" | "he
 export function SafeResponsiveContainer({
   width = "100%",
   height,
+  ariaLabel,
   children,
   ...props
 }: SafeResponsiveContainerProps): React.JSX.Element {
@@ -45,7 +48,12 @@ export function SafeResponsiveContainer({
   };
 
   return (
-    <div ref={containerRef} style={wrapperStyle}>
+    <div
+      ref={containerRef}
+      style={wrapperStyle}
+      role={ariaLabel ? "img" : undefined}
+      aria-label={ariaLabel}
+    >
       {size.width > 0 && size.height > 0 ? (
         <ResponsiveContainer
           width="100%"

@@ -1,65 +1,14 @@
 import React, { type JSX } from "react";
-import type { ModuleColumnRegistryEntry } from "@mms/shared";
 import { SearchBar } from "@/components/ui/SearchBar";
 import { ModuleClearFiltersButton } from "@/components/ui/ModuleClearFiltersButton";
 import { ModuleTrashToggle } from "@/components/ui/ModuleTrashToggle";
 import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
+import { ModuleColumnCustomizer } from "@/components/ui/ModuleColumnCustomizer";
 import { WORK_SURFACE } from "@/components/ui/formStyles";
-import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
-import type { EntityDescriptor } from "@/types/entityRegistry";
 import { cn } from "@/lib/utils";
+import type { ModuleWorkToolbarProps } from "@/components/ui/moduleWorkToolbarTypes";
 
-export interface ModuleWorkToolbarProps {
-  // 1. Accessibility & Layout
-  shownCountLabel?: string;
-  regionLabel: string;
-  
-  // 2. Search
-  search: string;
-  onSearchChange: (val: string) => void;
-  searchPlaceholder: string;
-  searchId?: string;
-  isSearching?: boolean;
-
-  // 3. Middle Area (Filters)
-  filterButton?: React.ReactNode; 
-  hasActiveFilters?: boolean;
-  onClearFilters?: () => void;
-  clearFiltersLabel?: string;
-  filterChips?: React.ReactNode;
-
-  // 4. Action Bars & Triggers
-  primaryAction?: React.ReactNode;
-  
-  trashToggle?: {
-    canViewDeleted: boolean;
-    viewingDeleted: boolean;
-    onToggle: (viewing: boolean) => void;
-    activeLabel?: string;
-    deletedLabel?: string;
-  };
-  
-  viewModeToggle?: {
-    viewMode: WorkDirectoryViewMode;
-    onViewModeChange: (m: WorkDirectoryViewMode) => void;
-  };
-  
-  columnCustomizer?: {
-    registry?: ModuleColumnRegistryEntry[];
-    entityType?: string;
-    descriptor?: EntityDescriptor<unknown>;
-    onUpdate: (layout: ModuleColumnRegistryEntry[]) => void;
-    onReset?: () => void;
-    labels?: Partial<ModuleColumnCustomizerLabels>;
-    disabled?: boolean;
-    className?: string;
-  };
-
-  // 5. Additional custom slot
-  children?: React.ReactNode; 
-  showExportInTrash?: boolean;
-}
+export type { ModuleWorkToolbarProps };
 
 export const ModuleWorkToolbar = (function ModuleWorkToolbar({
   shownCountLabel,
@@ -78,6 +27,8 @@ export const ModuleWorkToolbar = (function ModuleWorkToolbar({
   trashToggle,
   viewModeToggle,
   columnCustomizer,
+  densityToggle,
+  aiSuggestions,
   children,
   showExportInTrash = true,
 }: ModuleWorkToolbarProps): JSX.Element {
@@ -100,6 +51,16 @@ export const ModuleWorkToolbar = (function ModuleWorkToolbar({
           {shownCountLabel}
         </div>
       ) : null}
+
+      {aiSuggestions && (
+        <div
+          className="flex items-center gap-2 flex-wrap px-3 pt-2.5 pb-0"
+          aria-description="AI-generated"
+          aria-label="Smart filter suggestions"
+        >
+          {aiSuggestions}
+        </div>
+      )}
 
       <div
         role="region"

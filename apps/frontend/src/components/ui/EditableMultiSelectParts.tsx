@@ -22,6 +22,7 @@ interface EditableMultiSelectChipRowProps {
   placeholder: string;
   t: TranslationFunction;
   onRemoveValue: (valToRemove: string, event: React.SyntheticEvent) => void;
+  maxVisible?: number;
 }
 
 export const EditableMultiSelectChipRow = React.memo(function EditableMultiSelectChipRow({
@@ -29,14 +30,18 @@ export const EditableMultiSelectChipRow = React.memo(function EditableMultiSelec
   placeholder,
   t,
   onRemoveValue,
+  maxVisible,
 }: EditableMultiSelectChipRowProps): React.JSX.Element {
   if (values.length === 0) {
     return <span className="text-muted-foreground select-none">{placeholder}</span>;
   }
 
+  const visibleValues = maxVisible && values.length > maxVisible ? values.slice(0, maxVisible) : values;
+  const remainingCount = maxVisible && values.length > maxVisible ? values.length - maxVisible : 0;
+
   return (
     <>
-      {values.map((val) => (
+      {visibleValues.map((val) => (
         <Badge key={val} tone="primary" className="gap-1 px-2 py-0.5 text-xs font-medium">
           <span>{formatContactOptionLabel(val, t) || val}</span>
           <span
@@ -56,6 +61,11 @@ export const EditableMultiSelectChipRow = React.memo(function EditableMultiSelec
           </span>
         </Badge>
       ))}
+      {remainingCount > 0 && (
+        <Badge tone="muted" className="px-1.5 py-0.5 text-xs font-semibold">
+          +{remainingCount}
+        </Badge>
+      )}
     </>
   );
 });

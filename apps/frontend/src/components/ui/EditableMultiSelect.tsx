@@ -23,6 +23,8 @@ export interface EditableMultiSelectProps {
   name?: string;
   addPlaceholder?: string;
   error?: boolean;
+  /** Maximum number of chips to display before summarizing with a +n count badge (P2-4). */
+  maxVisible?: number;
 }
 
 export function EditableMultiSelect({
@@ -36,6 +38,7 @@ export function EditableMultiSelect({
   name,
   addPlaceholder,
   error = false,
+  maxVisible,
 }: EditableMultiSelectProps): React.JSX.Element {
   const { t } = useTranslation();
   const state = useEditableMultiSelectState({
@@ -89,6 +92,7 @@ export function EditableMultiSelect({
             placeholder={resolvedPlaceholder}
             t={t}
             onRemoveValue={state.removeValue}
+            maxVisible={maxVisible}
           />
         </div>
         <ChevronDown

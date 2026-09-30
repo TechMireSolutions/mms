@@ -1,5 +1,5 @@
 import React from "react";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Sparkles } from "lucide-react";
 import { LABEL } from "@/components/ui/formPrimitiveStyles";
 import { FORM_ERROR } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
@@ -10,6 +10,12 @@ interface FieldProps {
   hint?: string;
   error?: string;
   id?: string;
+  /**
+   * Optional AI-generated context hint. When provided, a sparkle icon button
+   * appears beside the label that reveals the hint in an inline disclosure.
+   * Label: always shown as plain text — never represents AI as authoritative.
+   */
+  aiHint?: React.ReactNode;
   children: React.ReactNode;
 }
 
@@ -73,7 +79,8 @@ export function RequiredMark(): React.JSX.Element {
   return <span className="text-destructive ms-0.5" aria-hidden="true">*</span>;
 }
 
-export function Field({ label, required = false, hint = undefined, error = undefined, id, children }: FieldProps): React.JSX.Element {
+export function Field({ label, required = false, hint = undefined, error = undefined, id, aiHint, children }: FieldProps): React.JSX.Element {
+  const [aiOpen, setAiOpen] = React.useState(false);
   const fallbackId = React.useId();
   const instanceIdSuffix = React.useId().replace(/:/g, "");
   const slugified = typeof label === "string"
@@ -129,10 +136,32 @@ export function Field({ label, required = false, hint = undefined, error = undef
 
   return (
     <div id={id ? `${id}-container` : undefined} data-field-key={id}>
-      <label htmlFor={resolvedId} className={LABEL}>
-        {label}
+      <label htmlFor={resolvedId} className={cn(LABEL, aiHint ? "flex items-center gap-1.5" : "")}>
+        <span>{label}</span>
         {required && <RequiredMark />}
+        {aiHint && (
+          <>
+            <button
+              type="button"
+              aria-label="AI suggestion"
+              aria-expanded={aiOpen}
+              aria-description="AI-generated"
+              onClick={() => setAiOpen((o) => !o)}
+              className="ms-auto inline-flex items-center justify-center w-5 h-5 rounded text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+            </button>
+          </>
+        )}
       </label>
+      {aiHint && aiOpen && (
+        <p
+          className="mb-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-primary/80 leading-relaxed"
+          aria-description="AI-generated"
+        >
+          {aiHint}
+        </p>
+      )}
       {enhancedChildren}
       {error ? (
         <FieldErrorMessage message={error} id={errorId} />

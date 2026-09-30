@@ -2,6 +2,7 @@ import { Loader2, Save } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { cn } from "@/lib/utils";
+import { useUnsavedChangesGuard } from "@/hooks/useUnsavedChangesGuard";
 
 export interface ModuleSetupSaveFooterProps {
   dirty: boolean;
@@ -15,6 +16,11 @@ export interface ModuleSetupSaveFooterProps {
   /** Optional layout override (e.g. sticky Contacts chrome). */
   footerClassName?: string;
   buttonClassName?: string;
+  /**
+   * Confirmation dialog message shown when the user navigates away with
+   * unsaved changes (P2-5 — unsaved-changes guard). Defaults to a generic prompt.
+   */
+  navigationBlockMessage?: string;
 }
 
 /** Shared Setup Fields/Preferences unsaved warning + Save footer. */
@@ -28,7 +34,14 @@ export function ModuleSetupSaveFooter({
   onSave,
   footerClassName,
   buttonClassName,
+  navigationBlockMessage,
 }: ModuleSetupSaveFooterProps): React.JSX.Element {
+  // Intercepts browser unload / tab close when dirty (P2-5).
+  useUnsavedChangesGuard({
+    isDirty: dirty,
+    message: navigationBlockMessage,
+  });
+
   return (
     <>
       {dirty && unsavedWarning ? (
@@ -64,3 +77,4 @@ export function ModuleSetupSaveFooter({
     </>
   );
 }
+

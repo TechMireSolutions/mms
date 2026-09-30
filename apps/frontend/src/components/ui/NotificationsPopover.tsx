@@ -97,11 +97,11 @@ export function NotificationsPopover({
                 <h3 className="text-sm font-bold text-foreground text-balance">{title}</h3>
                 {unreadCount > 0 && (
                   newBadgeLabel ? (
-                    <Badge tone="primary" size="sm" className="font-bold">
+                    <Badge tone="primary" size="sm" className="font-bold" role="status" aria-atomic="true">
                       {newBadgeLabel}
                     </Badge>
                   ) : (
-                    <Badge variant="secondary" className="px-1.5 py-0 text-xs">
+                    <Badge variant="secondary" className="px-1.5 py-0 text-xs" role="status" aria-atomic="true" aria-label={`${unreadCount} unread notifications`}>
                       {unreadCount}
                     </Badge>
                   )
