@@ -1,22 +1,23 @@
 import { createModuleWorkDrillDown } from "@/lib/query/createModuleWorkDrillDown";
-import type { TeachersQuickFilter } from "@mms/shared";
+import type { FacultyQuickFilter } from "@mms/shared";
 
-export const TEACHERS_WORK_DRILLDOWN_EVENT = "teachers-work-drilldown";
+export const FACULTY_WORK_DRILLDOWN_EVENT = "faculty-work-drilldown";
 
-export interface TeachersWorkDrillDown {
+export interface FacultyWorkDrillDown {
   /** Work quick-filter preset (e.g. active, onLeave). */
-  quickFilter?: TeachersQuickFilter;
+  quickFilter?: FacultyQuickFilter;
 }
 
-const { apply, consume } = createModuleWorkDrillDown<TeachersWorkDrillDown>({
-  event: TEACHERS_WORK_DRILLDOWN_EVENT,
-  storageKey: "mms_teachers_work_drilldown",
+const { apply, consume } = createModuleWorkDrillDown<FacultyWorkDrillDown>({
+  event: FACULTY_WORK_DRILLDOWN_EVENT,
+  storageKey: "mms_faculty_work_drilldown",
 });
 
-export function applyTeachersWorkDrillDown(filter: TeachersWorkDrillDown): void {
+export function applyFacultyWorkDrillDown(filter: FacultyWorkDrillDown): void {
   apply(filter);
 }
 
-export function consumeTeachersWorkDrillDown(): TeachersWorkDrillDown | null {
+export function consumeFacultyWorkDrillDown(): FacultyWorkDrillDown | null {
   return consume();
 }
+

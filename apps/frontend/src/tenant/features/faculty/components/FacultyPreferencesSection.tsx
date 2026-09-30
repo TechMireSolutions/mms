@@ -6,23 +6,21 @@ import { ToggleRow } from "@/components/ui/ToggleRow";
 import { Field } from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { TeachersSettings } from "@mms/shared";
+import type { FacultySettings } from "@mms/shared";
 import { FacultyIdSettingsCard } from "./FacultyIdSettingsCard";
 
-export interface TeachersPreferencesSectionProps {
-  settingsDraft: TeachersSettings;
-  upd: <K extends keyof TeachersSettings>(field: K, value: TeachersSettings[K]) => void;
+export interface FacultyPreferencesSectionProps {
+  settingsDraft: FacultySettings;
+  upd: <K extends keyof FacultySettings>(field: K, value: FacultySettings[K]) => void;
   specializationOptions: string[];
 }
 
-export type FacultyPreferencesSectionProps = TeachersPreferencesSectionProps;
-
-/** Teachers Setup Preferences body — modernized and streamlined. */
-export function TeachersPreferencesSection({
+/** Faculty Setup Preferences body. */
+export function FacultyPreferencesSection({
   settingsDraft,
   upd,
   specializationOptions,
-}: TeachersPreferencesSectionProps): React.JSX.Element {
+}: FacultyPreferencesSectionProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -32,18 +30,18 @@ export function TeachersPreferencesSection({
 
       {/* General Faculty Module Configuration Card */}
       <SectionCard
-        title={t("faculty.settings.title") || t("teachers.settings.title")}
+        title={t("faculty.settings.title")}
         icon={SlidersHorizontal}
         accentColor="primary"
         className={SETUP_SECTION_CARD_CLASS}
       >
         <div className="space-y-4">
           <Field
-            label={t("faculty.settings.defaultSpecialization") || t("teachers.settings.defaultSpecialization")}
-            id="teacher-defaultSpecialization"
+            label={t("faculty.settings.defaultSpecialization")}
+            id="faculty-defaultSpecialization"
           >
             <FormSelect
-              id="teacher-defaultSpecialization"
+              id="faculty-defaultSpecialization"
               name="defaultSpecialization"
               value={settingsDraft.defaultSpecialization}
               onChange={(specialization) => upd("defaultSpecialization", specialization)}
@@ -53,7 +51,7 @@ export function TeachersPreferencesSection({
 
           <div className="pt-2 border-t border-border/60">
             <ToggleRow
-              label={t("faculty.settings.requireContactLink") || t("teachers.settings.requireContactLink")}
+              label={t("faculty.settings.requireContactLink")}
               value={settingsDraft.requireContactLink}
               onChange={(value) => upd("requireContactLink", value)}
             />
@@ -63,5 +61,3 @@ export function TeachersPreferencesSection({
     </div>
   );
 }
-
-export const FacultyPreferencesSection = TeachersPreferencesSection;

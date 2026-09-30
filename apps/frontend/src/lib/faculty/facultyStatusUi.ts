@@ -1,10 +1,10 @@
-import { resolveTeacherStatusRoles, resolveTeacherStatuses, resolveFacultyStatusRoles, resolveFacultyStatuses } from '@mms/shared';
+import { resolveFacultyStatusRoles, resolveFacultyStatuses } from '@mms/shared';
 import type { AccentColor } from '@/components/ui/statCardAccent';
 import { SEMANTIC_BADGE } from '@/lib/semanticTone';
 import { createModuleStatusUi } from '@/lib/moduleStatusUi';
 
-const resolveRoles = resolveFacultyStatusRoles || resolveTeacherStatusRoles;
-const resolveStatuses = resolveFacultyStatuses || resolveTeacherStatuses;
+const resolveRoles = resolveFacultyStatusRoles;
+const resolveStatuses = resolveFacultyStatuses;
 
 const { active: FACULTY_STATUS_ACTIVE, onLeave: FACULTY_STATUS_ON_LEAVE } = resolveRoles();
 
@@ -24,7 +24,7 @@ function facultyStatusTone(status: string): string {
 }
 
 const facultyStatusUi = createModuleStatusUi({
-  translationPrefix: 'teachers.status',
+  translationPrefix: 'faculty.status',
   resolveStatuses,
   toneForStatus: facultyStatusTone,
   metricAccentForStatus: facultyStatusSemanticAccent,
@@ -34,8 +34,3 @@ export const facultyStatusLabel = facultyStatusUi.statusLabel;
 export const facultyStatusOptions = facultyStatusUi.statusOptions;
 export const facultyStatusBadgeConfig = facultyStatusUi.statusBadgeConfig;
 export const facultyStatusMetricAccent = facultyStatusUi.statusMetricAccent;
-
-export const teacherStatusLabel = facultyStatusLabel;
-export const teacherStatusOptions = facultyStatusOptions;
-export const teacherStatusBadgeConfig = facultyStatusBadgeConfig;
-export const teacherStatusMetricAccent = facultyStatusMetricAccent;

@@ -1,15 +1,12 @@
 import {
-  buildDemoTeacherContacts,
-  buildDemoTeachers,
+  buildDemoFacultyContacts,
+  buildDemoFaculty,
 } from './demoSeedBuilders.js';
 
-export { DEMO_TEACHER_COUNT } from './demoSeedBuilders.js';
+export { DEMO_FACULTY_COUNT } from './demoSeedBuilders.js';
 
-/** Faculty contact profiles (ids 1–{@link DEMO_TEACHER_COUNT}). */
-export const DEMO_TEACHER_CONTACTS = buildDemoTeacherContacts();
+/** Faculty contact profiles (ids 1–{@link DEMO_FACULTY_COUNT}). */
+export const DEMO_FACULTY_CONTACTS = buildDemoFacultyContacts();
 
 /** Demo faculty rows — profile fields live on linked contacts. */
-export const DEMO_TEACHERS = buildDemoTeachers();
-
-export const DEMO_FACULTY_CONTACTS = DEMO_TEACHER_CONTACTS;
-export const DEMO_FACULTY = DEMO_TEACHERS;
+export const DEMO_FACULTY = buildDemoFaculty();

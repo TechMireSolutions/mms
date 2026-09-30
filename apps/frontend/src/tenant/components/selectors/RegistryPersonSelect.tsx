@@ -8,7 +8,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 const PERSON_SELECT_PAGE_SIZE = 50;
 
 export interface RegistryPersonSelectProps {
-  kind: 'student' | 'teacher' | 'faculty';
+  kind: 'student' | 'faculty';
   value: string;
   onChange: (id: string) => void;
   label: string;
@@ -30,7 +30,7 @@ export function RegistryPersonSelect({
   const [search, setSearch] = useState('');
 
   const studentsEnabled = kind === 'student';
-  const facultyEnabled = kind === 'teacher' || kind === 'faculty';
+  const facultyEnabled = kind === 'faculty';
 
   const studentQuery = useStudentsContractList({
     page: 1,
@@ -51,7 +51,7 @@ export function RegistryPersonSelect({
   const options = (() => {
     const rows: readonly { id: string | number; name?: string | null }[] = kind === 'student'
       ? (studentPage?.body?.students ?? [])
-      : (facultyPage?.body?.faculty ?? facultyPage?.body?.teachers ?? []);
+      : (facultyPage?.body?.faculty ?? []);
     const excluded = new Set(excludeIds.map(String));
     return rows
       .filter((row: { id: string | number; name?: string | null }) => !excluded.has(String(row.id)))
@@ -66,7 +66,7 @@ export function RegistryPersonSelect({
 
   const placeholder = kind === 'student'
     ? t('registryPerson.selectStudent')
-    : t('registryPerson.selectTeacher');
+    : t('registryPerson.selectFaculty');
 
   const fallbackId = React.useId();
   const sanitizedId = fallbackId.replace(/:/g, '');

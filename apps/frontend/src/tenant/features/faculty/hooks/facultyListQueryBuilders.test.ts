@@ -1,11 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildFacultyPageUrl,
-  buildTeachersPageUrl,
-  sameTeachersListFilters,
-  teachersListQueryKeyParams,
+  sameFacultyListFilters,
+  facultyListQueryKeyParams,
   facultyPaginatedQueryKey,
-  teachersPaginatedQueryKey,
   type FacultyPaginatedParams,
 } from '@/tenant/features/faculty/hooks/facultyListQueryBuilders';
 
@@ -14,7 +12,6 @@ const base: FacultyPaginatedParams = { page: 1 };
 describe('buildFacultyPageUrl', () => {
   it('builds the base faculty URL with default page size', () => {
     expect(buildFacultyPageUrl({ page: 3 })).toBe('/api/faculty?page=3&limit=50');
-    expect(buildTeachersPageUrl({ page: 3 })).toBe('/api/faculty?page=3&limit=50');
   });
 
   it('appends every optional filter', () => {
@@ -41,9 +38,9 @@ describe('buildFacultyPageUrl', () => {
   });
 });
 
-describe('teachersListQueryKeyParams', () => {
+describe('facultyListQueryKeyParams', () => {
   it('normalizes defaults and drops enabled', () => {
-    expect(teachersListQueryKeyParams({ page: 1, enabled: true })).toEqual({
+    expect(facultyListQueryKeyParams({ page: 1, enabled: true })).toEqual({
       page: 1,
       limit: 50,
       search: '',
@@ -58,7 +55,7 @@ describe('teachersListQueryKeyParams', () => {
   });
 
   it('trims strings and coerces includeDeleted', () => {
-    const params = teachersListQueryKeyParams({
+    const params = facultyListQueryKeyParams({
       page: 2,
       search: '  zain  ',
       status: ' active ',
@@ -88,24 +85,22 @@ describe('facultyPaginatedQueryKey', () => {
     expect(key[1]).toBe('list');
     expect(key[2]).toBe('page');
     expect(key[3]).toMatchObject({ page: 1 });
-
-    const teacherKey = teachersPaginatedQueryKey({ page: 1 });
-    expect(teacherKey[0]).toBe('faculty');
   });
 });
 
-describe('sameTeachersListFilters', () => {
+describe('sameFacultyListFilters', () => {
   it('returns false for undefined previous', () => {
-    expect(sameTeachersListFilters(undefined, teachersListQueryKeyParams(base))).toBe(false);
+    expect(sameFacultyListFilters(undefined, facultyListQueryKeyParams(base))).toBe(false);
   });
 
   it('returns true for identical params', () => {
-    const params = teachersListQueryKeyParams({ page: 1, search: 'a' });
-    expect(sameTeachersListFilters(params, teachersListQueryKeyParams({ page: 1, search: 'a' }))).toBe(true);
+    const params = facultyListQueryKeyParams({ page: 1, search: 'a' });
+    expect(sameFacultyListFilters(params, facultyListQueryKeyParams({ page: 1, search: 'a' }))).toBe(true);
   });
 
   it('returns false when a filter differs', () => {
-    const params = teachersListQueryKeyParams({ page: 1, search: 'a' });
-    expect(sameTeachersListFilters(params, teachersListQueryKeyParams({ page: 1, search: 'b' }))).toBe(false);
+    const params = facultyListQueryKeyParams({ page: 1, search: 'a' });
+    expect(sameFacultyListFilters(params, facultyListQueryKeyParams({ page: 1, search: 'b' }))).toBe(false);
   });
 });
+

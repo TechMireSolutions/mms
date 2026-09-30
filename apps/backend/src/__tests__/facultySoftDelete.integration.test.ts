@@ -30,25 +30,24 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
   };
 });
 
-const mockLoadTeachersPage = vi.fn();
-const mockDeleteTeacherById = vi.fn();
-const mockRestoreTeacherById = vi.fn();
-const mockBulkSoftDeleteTeachers = vi.fn();
-const mockBulkRestoreTeachers = vi.fn();
-const mockBulkUpdateTeacherStatus = vi.fn();
-
+const mockLoadFacultyPage = vi.fn();
+const mockDeleteFacultyById = vi.fn();
+const mockRestoreFacultyById = vi.fn();
+const mockBulkSoftDeleteFaculty = vi.fn();
+const mockBulkRestoreFaculty = vi.fn();
+const mockBulkUpdateFacultyStatus = vi.fn();
 
 vi.mock('../faculty/use-cases/facultyUseCases.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../faculty/use-cases/facultyUseCases.js')>();
   const mocked = {
     ...actual.facultyUseCases,
-    loadFacultyPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
-    deleteFacultyById: (...args: unknown[]) => mockDeleteTeacherById(...args),
-    softDeleteFacultyById: (...args: unknown[]) => mockDeleteTeacherById(...args),
-    restoreFacultyById: (...args: unknown[]) => mockRestoreTeacherById(...args),
-    bulkSoftDeleteFaculty: (...args: unknown[]) => mockBulkSoftDeleteTeachers(...args),
-    bulkRestoreFaculty: (...args: unknown[]) => mockBulkRestoreTeachers(...args),
-    bulkUpdateFacultyStatus: (...args: unknown[]) => mockBulkUpdateTeacherStatus(...args),
+    loadFacultyPage: (...args: unknown[]) => mockLoadFacultyPage(...args),
+    deleteFacultyById: (...args: unknown[]) => mockDeleteFacultyById(...args),
+    softDeleteFacultyById: (...args: unknown[]) => mockDeleteFacultyById(...args),
+    restoreFacultyById: (...args: unknown[]) => mockRestoreFacultyById(...args),
+    bulkSoftDeleteFaculty: (...args: unknown[]) => mockBulkSoftDeleteFaculty(...args),
+    bulkRestoreFaculty: (...args: unknown[]) => mockBulkRestoreFaculty(...args),
+    bulkUpdateFacultyStatus: (...args: unknown[]) => mockBulkUpdateFacultyStatus(...args),
     sanitizeFacultyForViewer: async (faculty: unknown) => faculty,
     sanitizeFacultyListForViewer: async (facultyList: unknown) => facultyList,
   };
@@ -65,7 +64,7 @@ describe('faculty soft delete routes', () => {
   });
 
   it('DELETE /api/faculty/:id soft-deletes faculty member', async () => {
-    mockDeleteTeacherById.mockResolvedValue(true);
+    mockDeleteFacultyById.mockResolvedValue(true);
     const app = await buildApp();
     const res = await app.inject({
       method: 'DELETE',
@@ -77,12 +76,12 @@ describe('faculty soft delete routes', () => {
       payload: { deletionReason: 'Left faculty' },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockDeleteTeacherById).toHaveBeenCalledWith('t1', 'u-admin', 'Left faculty');
+    expect(mockDeleteFacultyById).toHaveBeenCalledWith('t1', 'u-admin', 'Left faculty');
     await app.close();
   });
 
   it('POST /api/faculty/:id/restore restores a faculty member', async () => {
-    mockRestoreTeacherById.mockResolvedValue(true);
+    mockRestoreFacultyById.mockResolvedValue(true);
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -93,13 +92,13 @@ describe('faculty soft delete routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockRestoreTeacherById).toHaveBeenCalledWith('t1', 'u-admin');
+    expect(mockRestoreFacultyById).toHaveBeenCalledWith('t1', 'u-admin');
     await app.close();
   });
 
   it('GET /api/faculty lists with includeDeleted options', async () => {
-    mockLoadTeachersPage.mockResolvedValue({
-      teachers: [],
+    mockLoadFacultyPage.mockResolvedValue({
+      faculty: [],
       total: 0,
       page: 1,
       limit: 50,
@@ -115,14 +114,14 @@ describe('faculty soft delete routes', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockLoadTeachersPage).toHaveBeenCalledWith(
+    expect(mockLoadFacultyPage).toHaveBeenCalledWith(
       expect.objectContaining({ includeDeleted: true }),
     );
     await app.close();
   });
 
   it('POST /api/faculty/bulk-delete soft-deletes multiple faculty members', async () => {
-    mockBulkSoftDeleteTeachers.mockResolvedValue({ succeeded: 2, failed: 0 });
+    mockBulkSoftDeleteFaculty.mockResolvedValue({ succeeded: 2, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -135,12 +134,12 @@ describe('faculty soft delete routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 2, failed: 0 });
-    expect(mockBulkSoftDeleteTeachers).toHaveBeenCalledWith(['t1', 't2'], 'u-admin', 'Bulk archive');
+    expect(mockBulkSoftDeleteFaculty).toHaveBeenCalledWith(['t1', 't2'], 'u-admin', 'Bulk archive');
     await app.close();
   });
 
   it('POST /api/faculty/bulk-restore restores multiple faculty members', async () => {
-    mockBulkRestoreTeachers.mockResolvedValue({ succeeded: 2, failed: 0 });
+    mockBulkRestoreFaculty.mockResolvedValue({ succeeded: 2, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -153,12 +152,12 @@ describe('faculty soft delete routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 2, failed: 0 });
-    expect(mockBulkRestoreTeachers).toHaveBeenCalledWith(['t1', 't2'], 'u-admin');
+    expect(mockBulkRestoreFaculty).toHaveBeenCalledWith(['t1', 't2'], 'u-admin');
     await app.close();
   });
 
   it('POST /api/faculty/bulk-status updates faculty status', async () => {
-    mockBulkUpdateTeacherStatus.mockResolvedValue({ succeeded: 1, failed: 0 });
+    mockBulkUpdateFacultyStatus.mockResolvedValue({ succeeded: 1, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -171,12 +170,12 @@ describe('faculty soft delete routes', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, succeeded: 1, failed: 0 });
-    expect(mockBulkUpdateTeacherStatus).toHaveBeenCalledWith(['t1'], 'on_leave');
+    expect(mockBulkUpdateFacultyStatus).toHaveBeenCalledWith(['t1'], 'on_leave');
     await app.close();
   });
 
   it('POST /api/faculty/bulk-status accepts custom lookup statuses', async () => {
-    mockBulkUpdateTeacherStatus.mockResolvedValue({ succeeded: 1, failed: 0 });
+    mockBulkUpdateFacultyStatus.mockResolvedValue({ succeeded: 1, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -188,7 +187,7 @@ describe('faculty soft delete routes', () => {
       payload: { ids: ['t1'], status: 'sabbatical' },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockBulkUpdateTeacherStatus).toHaveBeenCalledWith(['t1'], 'sabbatical');
+    expect(mockBulkUpdateFacultyStatus).toHaveBeenCalledWith(['t1'], 'sabbatical');
     await app.close();
   });
 });

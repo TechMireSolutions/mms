@@ -60,9 +60,9 @@ export function DistributeRecipientTypeField({
                     recipientTypeOption.id === "student"
                       ? previousData.recipientStudentId
                       : undefined,
-                  recipientTeacherId:
+                  recipientFacultyId:
                     recipientTypeOption.id === "faculty"
-                      ? previousData.recipientTeacherId
+                      ? previousData.recipientFacultyId
                       : undefined,
                 }))
               }
@@ -98,23 +98,23 @@ export function DistributeRecipientSelectField({
   const { t } = useTranslation();
   const recipientId =
     data.recipientType === "faculty"
-      ? data.recipientTeacherId || ""
+      ? data.recipientFacultyId || ""
       : data.recipientStudentId || "";
 
   return (
     <div>
       <RegistryPersonSelect
         id="hasanat-recipient"
-        kind={data.recipientType === "faculty" ? "teacher" : "student"}
+        kind={data.recipientType === "faculty" ? "faculty" : "student"}
         label={t("hasanat.fieldRecipient")}
         required
         value={recipientId}
         onChange={(id) => {
           if (data.recipientType === "faculty") {
-            updateField("recipientTeacherId", id);
+            updateField("recipientFacultyId", id);
             setData((previousData) => ({
               ...previousData,
-              recipientTeacherId: id,
+              recipientFacultyId: id,
               recipientStudentId: undefined,
             }));
           } else {
@@ -122,7 +122,7 @@ export function DistributeRecipientSelectField({
             setData((previousData) => ({
               ...previousData,
               recipientStudentId: id,
-              recipientTeacherId: undefined,
+              recipientFacultyId: undefined,
             }));
           }
         }}

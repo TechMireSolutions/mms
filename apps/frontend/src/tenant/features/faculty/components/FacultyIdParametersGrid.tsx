@@ -1,6 +1,6 @@
 import React from "react";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { TeachersSettings, SequenceYearFormat } from "@mms/shared";
+import type { FacultySettings, SequenceYearFormat } from "@mms/shared";
 import { SequenceNumberingParametersGrid } from "@/components/ui/sequence-numbering";
 
 export interface FacultyIdParametersGridProps {
@@ -9,7 +9,7 @@ export interface FacultyIdParametersGridProps {
   sequenceDigits: number;
   delimiter: string;
   currentYear: number;
-  upd: <K extends keyof TeachersSettings>(field: K, value: TeachersSettings[K]) => void;
+  upd: <K extends keyof FacultySettings>(field: K, value: FacultySettings[K]) => void;
 }
 
 export function FacultyIdParametersGrid({

@@ -1,19 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DEFAULT_TEACHER_COLUMN_REGISTRY,
-  DEFAULT_TEACHERS_SETTINGS,
-  buildTeacherWorkColumnRegistry,
-  syncTeacherColumnRegistryWithFields,
-  TEACHER_WORK_COLUMN_PLACEHOLDER_LABELS,
+  DEFAULT_FACULTY_COLUMN_REGISTRY,
+  DEFAULT_FACULTY_SETTINGS,
+  buildFacultyWorkColumnRegistry,
+  syncFacultyColumnRegistryWithFields,
+  FACULTY_WORK_COLUMN_PLACEHOLDER_LABELS,
 } from './index.js';
 
-describe('syncTeacherColumnRegistryWithFields', () => {
+describe('syncFacultyColumnRegistryWithFields', () => {
   it('keeps mapped Work columns when seed fields are enabled', () => {
-    const registry = buildTeacherWorkColumnRegistry(
-      DEFAULT_TEACHERS_SETTINGS,
-      TEACHER_WORK_COLUMN_PLACEHOLDER_LABELS,
+    const registry = buildFacultyWorkColumnRegistry(
+      DEFAULT_FACULTY_SETTINGS,
+      FACULTY_WORK_COLUMN_PLACEHOLDER_LABELS,
     );
-    const synced = syncTeacherColumnRegistryWithFields(
+    const synced = syncFacultyColumnRegistryWithFields(
       registry,
       {
         basic: [
@@ -32,8 +32,8 @@ describe('syncTeacherColumnRegistryWithFields', () => {
   });
 
   it('disables mapped Work columns when the draft field is disabled', () => {
-    const synced = syncTeacherColumnRegistryWithFields(
-      DEFAULT_TEACHER_COLUMN_REGISTRY,
+    const synced = syncFacultyColumnRegistryWithFields(
+      DEFAULT_FACULTY_COLUMN_REGISTRY,
       {
         basic: [
           { key: 'specialization', label: 'Specialization', type: 'select', enabled: false, order: 0 },
@@ -51,7 +51,7 @@ describe('syncTeacherColumnRegistryWithFields', () => {
   });
 
   it('adds custom Work columns for enabled non-seed fields', () => {
-    const synced = syncTeacherColumnRegistryWithFields(
+    const synced = syncFacultyColumnRegistryWithFields(
       undefined,
       {
         employment: [
@@ -64,7 +64,7 @@ describe('syncTeacherColumnRegistryWithFields', () => {
   });
 
   it('drops custom Work columns when the draft field is disabled', () => {
-    const synced = syncTeacherColumnRegistryWithFields(
+    const synced = syncFacultyColumnRegistryWithFields(
       [{ key: 'custom:extraNote', label: 'Extra', enabled: true, order: 5 }],
       {
         employment: [
@@ -77,23 +77,23 @@ describe('syncTeacherColumnRegistryWithFields', () => {
   });
 });
 
-describe('buildTeacherWorkColumnRegistry', () => {
+describe('buildFacultyWorkColumnRegistry', () => {
   it('keeps custom columns from stored columnRegistry when Fields still enable them', () => {
-    const registry = buildTeacherWorkColumnRegistry(
+    const registry = buildFacultyWorkColumnRegistry(
       {
-        ...DEFAULT_TEACHERS_SETTINGS,
+        ...DEFAULT_FACULTY_SETTINGS,
         fields: {
           employment: [
             { key: 'extraNote', label: 'Extra', type: 'text', enabled: true, order: 0 },
           ],
         },
         columnRegistry: [
-          ...DEFAULT_TEACHER_COLUMN_REGISTRY,
+          ...DEFAULT_FACULTY_COLUMN_REGISTRY,
           { key: 'custom:extraNote', label: 'Extra', enabled: true, order: 20, width: 160 },
         ],
         enabledTabs: ['basic', 'employment'],
       },
-      TEACHER_WORK_COLUMN_PLACEHOLDER_LABELS,
+      FACULTY_WORK_COLUMN_PLACEHOLDER_LABELS,
     );
     const custom = registry.find((col) => col.key === 'custom:extraNote');
     expect(custom?.enabled).not.toBe(false);
@@ -101,9 +101,9 @@ describe('buildTeacherWorkColumnRegistry', () => {
   });
 
   it('disables system columns when tabbed Fields disable the mapped field', () => {
-    const registry = buildTeacherWorkColumnRegistry(
+    const registry = buildFacultyWorkColumnRegistry(
       {
-        ...DEFAULT_TEACHERS_SETTINGS,
+        ...DEFAULT_FACULTY_SETTINGS,
         fields: {
           basic: [
             { key: 'specialization', label: 'Specialization', type: 'select', enabled: false, order: 0 },
@@ -116,15 +116,15 @@ describe('buildTeacherWorkColumnRegistry', () => {
         },
         enabledTabs: ['basic', 'employment'],
       },
-      TEACHER_WORK_COLUMN_PLACEHOLDER_LABELS,
+      FACULTY_WORK_COLUMN_PLACEHOLDER_LABELS,
     );
     expect(registry.find((col) => col.key === 'specialization')?.enabled).toBe(false);
   });
 
   it('includes custom columns from the tabbed Fields map', () => {
-    const registry = buildTeacherWorkColumnRegistry(
+    const registry = buildFacultyWorkColumnRegistry(
       {
-        ...DEFAULT_TEACHERS_SETTINGS,
+        ...DEFAULT_FACULTY_SETTINGS,
         fields: {
           employment: [
             { key: 'extraNote', label: 'Extra', type: 'text', enabled: true, order: 0 },
@@ -132,7 +132,7 @@ describe('buildTeacherWorkColumnRegistry', () => {
         },
         enabledTabs: ['basic', 'employment'],
       },
-      TEACHER_WORK_COLUMN_PLACEHOLDER_LABELS,
+      FACULTY_WORK_COLUMN_PLACEHOLDER_LABELS,
     );
     expect(registry.some((col) => col.key === 'custom:extraNote')).toBe(true);
   });

@@ -1,17 +1,18 @@
 import { UserCheck, UserMinus, UserPlus, UserX, Users } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import type {
-  TeachersCommandMetricsSnapshot,
-  TeachersQuickFilter,
+  FacultyCommandMetricsSnapshot,
+  FacultyQuickFilter,
 } from '@mms/shared';
-import { resolveTeacherStatusRoles } from '@mms/shared';
+import { resolveFacultyStatusRoles } from '@mms/shared';
 import type { AccentColor } from '@/components/ui/statCardAccent';
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import { notify } from '@/lib/notify';
-import { applyTeachersWorkDrillDown } from '@/tenant/hooks/collections/faculty';
+import { applyFacultyWorkDrillDown } from '@/tenant/hooks/collections/faculty';
+import { resolveClassFacultyId, resolveClassFacultyName } from '@/lib/faculty/facultyAssignment';
 import type { FacultyWorkloadItem } from '@/components/ui/reports/facultyReportTypes';
 
-export interface TeacherReportMetricItem {
+export interface FacultyReportMetricItem {
   icon: LucideIcon;
   label: string;
   value: string | number;
@@ -21,22 +22,22 @@ export interface TeacherReportMetricItem {
 }
 
 /** Toast + route the Work directory to a status preset (Reports -> Work drill-down). */
-export function applyTeachersReportDrillDown(
+export function applyFacultyReportDrillDown(
   t: TranslationFunction,
-  quickFilter: TeachersQuickFilter | undefined,
+  quickFilter: FacultyQuickFilter | undefined,
 ): void {
-  notify.message(t('teachers.drillDownApplied'));
-  applyTeachersWorkDrillDown(quickFilter ? { quickFilter } : {});
+  notify.message(t('faculty.drillDownApplied'));
+  applyFacultyWorkDrillDown(quickFilter ? { quickFilter } : {});
 }
 
-/** Builds the Teachers report KPI tiles (parity with Students tile semantics). */
-export function buildTeacherReportMetricItems(input: {
+/** Builds the Faculty report KPI tiles (parity with Students tile semantics). */
+export function buildFacultyReportMetricItems(input: {
   t: TranslationFunction;
-  metrics: TeachersCommandMetricsSnapshot | undefined;
+  metrics: FacultyCommandMetricsSnapshot | undefined;
   reportStatusFilter: string | null;
   onStatusFilterChange: (status: string | null) => void;
-  onDrillDown: (quickFilter: TeachersQuickFilter | undefined) => void;
-}): TeacherReportMetricItem[] {
+  onDrillDown: (quickFilter: FacultyQuickFilter | undefined) => void;
+}): FacultyReportMetricItem[] {
   const {
     t,
     metrics,
@@ -45,7 +46,7 @@ export function buildTeacherReportMetricItems(input: {
     onDrillDown,
   } = input;
   const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } =
-    resolveTeacherStatusRoles();
+    resolveFacultyStatusRoles();
 
   const toggleStatus = (status: string): void =>
     onStatusFilterChange(reportStatusFilter === status ? null : status);
@@ -53,7 +54,7 @@ export function buildTeacherReportMetricItems(input: {
   return [
     {
       icon: Users,
-      label: t('teachers.report.totalFaculty'),
+      label: t('faculty.report.totalFaculty'),
       value: metrics?.total ?? 0,
       accent: 'primary',
       isActive: !reportStatusFilter,
@@ -64,7 +65,7 @@ export function buildTeacherReportMetricItems(input: {
     },
     {
       icon: UserCheck,
-      label: t('teachers.metrics.active'),
+      label: t('faculty.metrics.active'),
       value: metrics?.active ?? 0,
       accent: 'success',
       isActive: reportStatusFilter === activeStatus,
@@ -75,7 +76,7 @@ export function buildTeacherReportMetricItems(input: {
     },
     {
       icon: UserX,
-      label: t('teachers.metrics.inactive'),
+      label: t('faculty.metrics.inactive'),
       value: metrics?.inactive ?? 0,
       accent: 'destructive',
       isActive: reportStatusFilter === inactiveStatus,
@@ -86,7 +87,7 @@ export function buildTeacherReportMetricItems(input: {
     },
     {
       icon: UserMinus,
-      label: t('teachers.metrics.onLeave'),
+      label: t('faculty.metrics.onLeave'),
       value: metrics?.onLeave ?? 0,
       accent: 'warning',
       isActive: reportStatusFilter === onLeaveStatus,
@@ -97,7 +98,7 @@ export function buildTeacherReportMetricItems(input: {
     },
     {
       icon: UserPlus,
-      label: t('teachers.metrics.newThisPeriod'),
+      label: t('faculty.metrics.newThisPeriod'),
       value: metrics?.newThisPeriod ?? 0,
       accent: 'secondary',
       onClick: () => onDrillDown(undefined),
@@ -113,30 +114,29 @@ export function computeFacultyWorkload(
       id: string;
       enrolled: number;
       facultyId?: string;
-      teacherId?: string;
       facultyName?: string;
-      teacherName?: string;
+      [key: string]: unknown;
     }>;
   }>,
-  resolveClassTeacher: (teacherId: string, teacherName: string) => string,
+  resolveClassFaculty: (facultyId: string, facultyName: string) => string,
 ): FacultyWorkloadItem[] {
-  const workloadByTeacherName: Record<string, { classes: Set<string>; sessions: Set<string>; students: number }> = {};
+  const workloadByFacultyName: Record<string, { classes: Set<string>; sessions: Set<string>; students: number }> = {};
   filteredSessions.forEach((session) => {
     (session.classes || []).forEach((sessionClass) => {
-      const teacherName = resolveClassTeacher(
-        sessionClass.facultyId || sessionClass.teacherId || '',
-        (sessionClass.facultyName || sessionClass.teacherName) ?? '',
+      const facultyName = resolveClassFaculty(
+        resolveClassFacultyId(sessionClass),
+        resolveClassFacultyName(sessionClass),
       );
-      if (!workloadByTeacherName[teacherName]) {
-        workloadByTeacherName[teacherName] = { classes: new Set(), sessions: new Set(), students: 0 };
+      if (!workloadByFacultyName[facultyName]) {
+        workloadByFacultyName[facultyName] = { classes: new Set(), sessions: new Set(), students: 0 };
       }
-      workloadByTeacherName[teacherName].classes.add(sessionClass.id);
-      workloadByTeacherName[teacherName].sessions.add(session.id);
-      workloadByTeacherName[teacherName].students += sessionClass.enrolled;
+      workloadByFacultyName[facultyName].classes.add(sessionClass.id);
+      workloadByFacultyName[facultyName].sessions.add(session.id);
+      workloadByFacultyName[facultyName].students += sessionClass.enrolled;
     });
   });
 
-  return Object.entries(workloadByTeacherName)
+  return Object.entries(workloadByFacultyName)
     .map(([faculty, workload]) => ({
       faculty,
       classes: workload.classes.size,
@@ -154,5 +154,3 @@ export function summarizeFacultyWorkload(workload: Array<{ classes: number; tota
   const avgStudents = totalFaculty ? (totalStudents / totalFaculty).toFixed(1) : 0;
   return { totalFaculty, totalStudents, totalClasses, avgStudents };
 }
-
-

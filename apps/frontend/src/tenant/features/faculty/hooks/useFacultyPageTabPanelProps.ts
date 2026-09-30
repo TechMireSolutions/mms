@@ -10,9 +10,6 @@ export type FacultyPageTabPanelProps = {
   workTierProps: ComponentProps<typeof FacultyWorkTier>;
 };
 
-export type TeachersPageTabPanelProps = FacultyPageTabPanelProps;
-
-/** Tab panel bag: active tier + Work props (Reports/Setup need no props today). */
 export function useFacultyPageTabPanelProps(
   activeTab: string,
   workSource: FacultyWorkTierSource,
@@ -22,6 +19,4 @@ export function useFacultyPageTabPanelProps(
     workTierProps: buildFacultyWorkTierProps(workSource),
   };
 }
-
-export const useTeachersPageTabPanelProps = useFacultyPageTabPanelProps;
 

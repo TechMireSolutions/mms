@@ -3,15 +3,15 @@ import type { FieldDefinition } from './contactTypes.js';
 import type { ValidationError } from './contactValidation.js';
 
 export {
-  TEACHER_WRITE_SYSTEM_KEYS,
-  collectTeacherWriteExtraFieldKeys,
-  buildDynamicTeacherSchema,
+  FACULTY_WRITE_SYSTEM_KEYS,
+  collectFacultyWriteExtraFieldKeys,
+  buildDynamicFacultySchema,
 } from './schemas/faculty.dto.js';
 
 /**
- * Translates Zod validation errors into structured field errors for the Teachers form.
+ * Translates Zod validation errors into structured field errors for the Faculty form.
  */
-export function formatTeacherZodIssues(
+export function formatFacultyZodIssues(
   error: z.ZodError,
   _data: unknown,
   fields: Record<string, FieldDefinition[]>,
@@ -30,11 +30,3 @@ export function formatTeacherZodIssues(
   }
   return errors;
 }
-
-
-export const formatFacultyZodIssues = formatTeacherZodIssues;
-export {
-  FACULTY_WRITE_SYSTEM_KEYS,
-  collectFacultyWriteExtraFieldKeys,
-  buildDynamicFacultySchema,
-} from './schemas/faculty.dto.js';

@@ -13,13 +13,13 @@ import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 export type { DashboardRole };
 
 export const DASHBOARD_ROLE_GREETING_KEYS: Record<DashboardRole, AppTranslationKey> = {
-  teacher: 'dashboard.greeting.teacher',
+  faculty: 'dashboard.greeting.faculty',
   accountant: 'dashboard.greeting.accountant',
   admin: 'dashboard.greeting.admin',
 };
 
 export const DASHBOARD_ROLE_BADGE_KEYS: Record<DashboardRole, AppTranslationKey> = {
-  teacher: 'dashboard.badge.teacher',
+  faculty: 'dashboard.badge.faculty',
   accountant: 'dashboard.badge.accountant',
   admin: 'dashboard.badge.admin',
 };
@@ -27,11 +27,11 @@ export const DASHBOARD_ROLE_BADGE_KEYS: Record<DashboardRole, AppTranslationKey>
 /** Resolve the role-specific WelcomeBanner subtitle copy. Co-located with the
  *  greeting/badge key SSOT so all role→copy decisions live in one place. */
 export function resolveDashboardWelcomeSubtitle(
-  role: DashboardRole,
+  role: DashboardRole | string,
   counts: { activeSessionsCount: number; activeStudentCount: number },
   t: TranslationFunction,
 ): string {
-  if (isDashboardTeacher(role)) {
+  if (isDashboardFaculty(role)) {
     return counts.activeSessionsCount === 1
       ? t('dashboard.sessionsTodayOne')
       : t('dashboard.sessionsToday', { count: counts.activeSessionsCount });
@@ -56,10 +56,10 @@ export function resolveDashboardRole(can: (permission: Permission) => boolean): 
   if (can(FINANCE_MODULE_MANIFEST.permissions.write) && !can(ATTENDANCE_MODULE_MANIFEST.permissions.write)) {
     return 'accountant';
   }
-  if (can(ATTENDANCE_MODULE_MANIFEST.permissions.write)) return 'teacher';
+  if (can(ATTENDANCE_MODULE_MANIFEST.permissions.write)) return 'faculty';
   if (can(FINANCE_MODULE_MANIFEST.permissions.write)) return 'accountant';
   // Least-privilege layout among existing role buckets (not admin).
-  return 'teacher';
+  return 'faculty';
 }
 
 /** Default initial widget scope based on viewer permissions. */
@@ -81,22 +81,23 @@ export function widgetMatchesDashboardRole(
   widgetRole: string | undefined,
   dashboardRole: DashboardRole,
 ): boolean {
-  return (widgetRole ?? 'admin') === dashboardRole;
+  if (!widgetRole) return dashboardRole === 'admin';
+  return widgetRole === dashboardRole;
 }
 
 /** Centralized role capability helpers for dashboard scope logic. */
-export function isDashboardAdminOrAccountant(role: DashboardRole): boolean {
+export function isDashboardAdminOrAccountant(role: DashboardRole | string): boolean {
   return role === 'admin' || role === 'accountant';
 }
 
-export function isDashboardTeacher(role: DashboardRole): boolean {
-  return role === 'teacher';
+export function isDashboardFaculty(role: DashboardRole | string): boolean {
+  return role === 'faculty';
 }
 
-export function isDashboardAdmin(role: DashboardRole): boolean {
+export function isDashboardAdmin(role: DashboardRole | string): boolean {
   return role === 'admin';
 }
 
-export function isDashboardAccountant(role: DashboardRole): boolean {
+export function isDashboardAccountant(role: DashboardRole | string): boolean {
   return role === 'accountant';
 }

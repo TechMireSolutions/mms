@@ -8,13 +8,13 @@ import { Input } from "@/components/ui/input";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";
 import { useTranslation } from "@/hooks/useTranslation";
-import { listEnabledCustomFacultyFormFields, type FieldDefinition, type Teacher } from "@mms/shared";
+import { listEnabledCustomFacultyFormFields, type FacultyMember, type FieldDefinition } from "@mms/shared";
 
 interface FacultyCustomFieldsSectionProps {
   fields: Record<string, FieldDefinition[]>;
-  draft: Partial<Teacher>;
+  draft: Partial<FacultyMember>;
   errors: Record<string, string>;
-  onDraftChange: (patch: Partial<Teacher>) => void;
+  onDraftChange: (patch: Partial<FacultyMember>) => void;
 }
 
 export function FacultyCustomFieldsSection({ fields, draft, errors, onDraftChange }: FacultyCustomFieldsSectionProps): React.JSX.Element | null {
@@ -22,10 +22,10 @@ export function FacultyCustomFieldsSection({ fields, draft, errors, onDraftChang
   const customFields = listEnabledCustomFacultyFormFields(fields);
   if (customFields.length === 0) return null;
   const values = draft as Record<string, unknown>;
-  const change = (key: string, value: unknown) => onDraftChange({ [key]: value } as Partial<Teacher>);
+  const change = (key: string, value: unknown) => onDraftChange({ [key]: value } as Partial<FacultyMember>);
 
   return (
-    <SectionCard title={t("teachers.form.sectionCustom")} icon={SlidersHorizontal} accentColor="primary">
+    <SectionCard title={t("faculty.form.sectionCustom")} icon={SlidersHorizontal} accentColor="primary">
       <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
         {customFields.map((field) => {
           const value = values[field.key];

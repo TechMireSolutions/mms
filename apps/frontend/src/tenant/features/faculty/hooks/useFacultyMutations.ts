@@ -42,17 +42,6 @@ export function useFacultyMutations() {
       mutateAsync: (payload: { area: 'fields' | 'preferences'; summary: string }) => logSetupAuditMutation.mutateAsync({ body: payload }),
       isPending: logSetupAuditMutation.isPending,
     },
-    // Backward compatibility aliases
-    createTeacher: createFacultyMutation,
-    updateTeacher: updateFacultyMutation,
-    deleteTeacher: deleteFacultyMutation,
-    bulkDeleteTeachers: bulkDeleteFacultyMutation,
-    restoreTeacher: restoreFacultyMutation,
-    bulkRestoreTeachers: bulkRestoreFacultyMutation,
-    bulkUpdateTeacherStatus: bulkUpdateFacultyStatusMutation,
-    bulkUpdateTeacherSpecialization: bulkSpecializationMutation.mutateAsync,
   };
 }
-
-export const useTeacherMutations = useFacultyMutations;
 

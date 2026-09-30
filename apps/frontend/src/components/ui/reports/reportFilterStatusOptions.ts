@@ -1,6 +1,6 @@
 import {
   STUDENT_STATUS_VALUES,
-  TEACHER_STATUS_VALUES,
+  FACULTY_STATUS_VALUES,
   ENROLLMENT_STATUSES,
   ATTENDANCE_RECORD_STATUSES,
   type AppTranslationKey,
@@ -15,7 +15,6 @@ export interface ReportFilterOption {
 
 export function normalizeReportFilterCategory(category?: string): string {
   const c = category?.toLowerCase() || '';
-  if (c === 'faculty') return 'teachers';
   if (c === 'financial') return 'finance';
   if (c === 'academic') return 'examinations';
   if (c === 'questionbank') return 'question-bank';
@@ -32,8 +31,8 @@ export function getReportFilterStatusOptions(
     case 'students':
       rawStatuses = ['all', ...STUDENT_STATUS_VALUES];
       break;
-    case 'teachers':
-      rawStatuses = ['all', ...TEACHER_STATUS_VALUES];
+    case 'faculty':
+      rawStatuses = ['all', ...FACULTY_STATUS_VALUES];
       break;
     case 'enrollments':
       rawStatuses = ['all', ...ENROLLMENT_STATUSES];
@@ -63,8 +62,8 @@ export function getReportFilterStatusOptions(
     let label = '';
     if (normalizedCategory === 'students') {
       label = t(`students.status.${st}` as AppTranslationKey);
-    } else if (normalizedCategory === 'teachers') {
-      label = t(`teachers.status.${st}` as AppTranslationKey);
+    } else if (normalizedCategory === 'faculty') {
+      label = t(`faculty.status.${st}` as AppTranslationKey);
     } else if (normalizedCategory === 'enrollments') {
       label = t(`enrollments.status.${st}` as AppTranslationKey);
     } else if (normalizedCategory === 'attendance') {
@@ -80,7 +79,7 @@ export function getReportFilterStatusOptions(
     if (
       !label ||
       label.startsWith('students.') ||
-      label.startsWith('teachers.') ||
+      label.startsWith('faculty.') ||
       label.startsWith('enrollments.') ||
       label.startsWith('attendance.') ||
       label.startsWith('finance.') ||
@@ -98,10 +97,10 @@ export function getReportFilterSearchMeta(
   normalizedCategory: string,
   t: TranslationFunction,
 ): { label: string; placeholder: string } {
-  if (normalizedCategory === 'teachers') {
+  if (normalizedCategory === 'faculty') {
     return {
-      label: t('teachers.report.colFaculty'),
-      placeholder: t('teachers.searchPlaceholder'),
+      label: t('faculty.report.colFaculty'),
+      placeholder: t('faculty.searchPlaceholder'),
     };
   }
   if (normalizedCategory === 'contacts') {

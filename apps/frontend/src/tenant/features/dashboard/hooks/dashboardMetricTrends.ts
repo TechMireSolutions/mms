@@ -18,8 +18,8 @@ export function computeDashboardMetricTrends(data: DashboardData): DashboardMetr
   const {
     studentsTotal,
     studentMetricsNew,
-    teachersTotal,
-    teacherMetricsNew,
+    facultyTotal,
+    facultyMetricsNew,
     contactsTotal,
     contactMetricsNew,
     attendanceMetrics,
@@ -29,7 +29,7 @@ export function computeDashboardMetricTrends(data: DashboardData): DashboardMetr
   } = data;
 
   const studentTrend = computeGrowthTrend(studentsTotal, studentMetricsNew);
-  const teacherTrend = computeGrowthTrend(teachersTotal, teacherMetricsNew);
+  const facultyTrend = computeGrowthTrend(facultyTotal, facultyMetricsNew);
   const contactTrend = computeGrowthTrend(contactsTotal, contactMetricsNew);
 
   const attendanceTrend =
@@ -54,7 +54,7 @@ export function computeDashboardMetricTrends(data: DashboardData): DashboardMetr
 
   return {
     studentTrend,
-    teacherTrend,
+    facultyTrend,
     contactTrend,
     attendanceTrend,
     feesTrend,

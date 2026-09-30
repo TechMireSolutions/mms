@@ -4,16 +4,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { useTranslation } from '@/hooks/useTranslation';
-import { formatTeacherDisplayName, type Teacher } from '@mms/shared';
+import { formatFacultyDisplayName, type FacultyMember } from '@mms/shared';
 import type {
   SessionClassSchedule,
   SessionClassTimetablePeriod,
 } from '@/lib/data/sessionsData';
 
+
+
 interface ClassDetailScheduleTabProps {
   schedules: SessionClassSchedule[];
   periods: SessionClassTimetablePeriod[];
-  allTeachers: Teacher[];
+  allFaculty?: FacultyMember[];
   onAddSchedule: () => void;
   onRemoveSchedule: (id: string) => void;
   onUpdateSchedule: (id: string, patch: Partial<SessionClassSchedule>) => void;
@@ -25,7 +27,7 @@ interface ClassDetailScheduleTabProps {
 export function ClassDetailScheduleTab({
   schedules,
   periods,
-  allTeachers,
+  allFaculty = [],
   onAddSchedule,
   onRemoveSchedule,
   onUpdateSchedule,
@@ -34,6 +36,7 @@ export function ClassDetailScheduleTab({
   onUpdatePeriod,
 }: ClassDetailScheduleTabProps): React.JSX.Element {
   const { t } = useTranslation();
+  const facultyMembers = allFaculty;
 
   return (
     <div className="space-y-6">
@@ -138,25 +141,23 @@ export function ClassDetailScheduleTab({
                   className="flex-1 text-xs"
                 />
                 <FormSelect
-                  id={`period-teacher-${period.id}`}
-                  name="teacherName"
-                  value={period.teacherName || ''}
+                  id={`period-faculty-${period.id}`}
+                  name="facultyName"
+                  value={period.facultyName || ''}
                   onChange={(val) => {
-                    const found = allTeachers.find(
-                      (teacher) => formatTeacherDisplayName(teacher) === val || (teacher.name || '').trim() === val,
+                    const found = facultyMembers.find(
+                      (member) => formatFacultyDisplayName(member) === val || (member.name || '').trim() === val,
                     );
-                    const id = found?.id ? String(found.id) : (period.facultyId || period.teacherId);
+                    const id = found?.id ? String(found.id) : period.facultyId;
                     onUpdatePeriod(period.id, {
                       facultyName: val,
                       facultyId: id,
-                      teacherName: val,
-                      teacherId: id,
                     });
                   }}
                   options={[
-                    { value: '', label: t('sessions.classes.detail.timetable.selectTeacher') },
-                    ...allTeachers.map((teacher) => {
-                      const label = formatTeacherDisplayName(teacher);
+                    { value: '', label: t('sessions.classes.detail.timetable.selectFaculty') },
+                    ...facultyMembers.map((member) => {
+                      const label = formatFacultyDisplayName(member);
                       return {
                         value: label,
                         label,

@@ -4,7 +4,6 @@ import type {
   FacultyQuickFilter,
   FacultySortField,
   ModuleColumnRegistryEntry,
-  Teacher,
 } from "@mms/shared";
 import type { ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -34,7 +33,6 @@ export interface FacultyWorkTierProps {
   onResetLayout: () => void;
   customizerLabels: ModuleColumnCustomizerLabels;
   faculty?: FacultyMember[];
-  teachers?: Teacher[];
   workPageData?: FacultyListPageResult;
   isWorkPageLoading: boolean;
   isWorkPageError: boolean;
@@ -70,5 +68,3 @@ export interface FacultyWorkTierProps {
   /** Page-owned overlay interactions (composer, confirms, drawer target). */
   workOverlays: FacultyWorkOverlayInteractions;
 }
-
-export type TeachersWorkTierProps = FacultyWorkTierProps;

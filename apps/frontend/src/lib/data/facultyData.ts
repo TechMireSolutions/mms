@@ -1,3 +1,3 @@
-import type { FacultyMember, Teacher } from '@mms/shared';
-export type { FacultyMember, Teacher };
+import type { FacultyMember } from '@mms/shared';
+export type { FacultyMember };
 export type Faculty = FacultyMember;

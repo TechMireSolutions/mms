@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { resolveFacultyFieldLabel, resolveTeacherFieldLabel } from "./FacultyFormSectionShared";
+import { resolveFacultyFieldLabel } from "./FacultyFormSectionShared";
 
 describe("FacultyFormSectionShared", () => {
   it("resolves faculty field label from custom/tab fields or seed fields", () => {
@@ -21,7 +21,7 @@ describe("FacultyFormSectionShared", () => {
     ).toBe("Specialization");
 
     expect(
-      resolveTeacherFieldLabel(fields, "employment", "employeeId", t as never),
+      resolveFacultyFieldLabel(fields, "employment", "employeeId", t as never),
     ).toBe("faculty.field.employeeId");
   });
 });

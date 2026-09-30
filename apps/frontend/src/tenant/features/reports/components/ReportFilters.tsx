@@ -21,7 +21,6 @@ const CATEGORY_FILTERS: Record<string, ReportFilterFieldKey[]> = {
   attendance: ['session', 'class', 'dateFrom', 'dateTo', 'student'],
   students: ['session', 'class', 'status', 'student'],
   faculty: ['session', 'class', 'status', 'student'],
-  teachers: ['session', 'class', 'status', 'student'],
   /** Handled by internal/dedicated module filters or CRM analytics. */
   contacts: [],
   finance: ['session', 'dateFrom', 'dateTo', 'status'],

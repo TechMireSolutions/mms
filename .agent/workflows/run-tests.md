@@ -34,9 +34,9 @@ This workflow provides a comprehensive, systematic procedure for executing test 
   ```bash
   pnpm lint
   ```
-- [ ] **Run E2E & A11y (Optional but Recommended)**: Run MSW-backed Playwright tests.
+- [ ] **Run E2E & A11y (Optional but Recommended)**: Run browser user journey tests + axe-core accessibility checks.
   ```bash
-  pnpm --filter e2e-tests test
+  pnpm test:e2e
   ```
 
 > [!IMPORTANT]
@@ -50,14 +50,19 @@ For any failed test or diagnostic error, follow these steps sequentially:
 - [ ] **Categorize failures against Project Rules**:
   - **Type Errors (`TSxxxx`)**: Schema mismatches, missing properties, un-narrowed `unknown`. Check `@mms/shared` Zod exports.
   - **Assertion Failures**: Broken logic, invalid normalization. Verify backend tests include `inject()` allow/deny checks.
-  - **Mock/Fixture Errors**: Outdated fixtures missing schema fields, missing RBAC context, unhandled async promises.
+  - **Mock/Fixture Errors**: Outdated fixtures missing schema fields, missing RBAC context, unhandled async promises. Replace static `.json` fixtures with typed factories (`mms-testing-observability.md` §4).
   - **Lint & Boundaries**: Direct cross-feature imports (banned by `mms-dry.md`), missing `t()` keys, unused variables.
 - [ ] **Enforce strict invariants**: Address the root cause in the source logic or update test fixtures to match current `@mms/shared` Zod schemas.
 
 > [!CAUTION]
 > **Zero-Tolerance Anti-Patterns**
-> ❌ **NEVER** comment out failing assertions, delete tests, or add skip latches (`if (!isDbAvailable) return;`) to fake a pass.
-> ❌ **NEVER** use weak assertions (`toBeTruthy()`, `toBeFalsy()`, or generic `toBeDefined()`) when exact values, formats (e.g. ISO regex), or DOM element types (`toBeInstanceOf(HTMLButtonElement)`) can be asserted.
+> ❌ **NEVER** comment out failing assertions, delete tests, or add skip latches (`if (!isDbAvailable) return;`) to fake a pass (`mms-testing-observability.md` §1).
+> ❌ **NEVER** use weak assertions (`toBeTruthy()`, `toBeFalsy()`, or generic `toBeDefined()`) when exact values, formats (e.g. ISO regex), or DOM element types (`toBeInstanceOf(HTMLButtonElement)`) can be asserted (`mms-testing-observability.md` §1).
+> ❌ **NEVER** assert on component internal state, private functions, or CSS classes; query through accessible roles (`getByRole`), labels (`getByLabelText`), and visible text (`mms-testing-observability.md` §3).
+> ❌ **NEVER** use static mutable `.json` fixtures for domain models; use typed factory builders (`mms-testing-observability.md` §4).
+> ❌ **NEVER** use arbitrary `sleep()` or `waitForTimeout()` delays; use deterministic async awaiters (`findBy*`, `waitFor`) (`mms-testing-observability.md` §4).
+> ❌ **NEVER** write vanity tests without actionable behavioral assertions purely to execute code paths and boost percentages (`mms-testing-observability.md` §5).
+> ❌ **NEVER** lower repository or package coverage percentages below baseline (The Ratchet Rule, `mms-testing-observability.md` §5).
 > ❌ **NEVER** add `@ts-ignore`, `@ts-nocheck`, or cast to `any` to bypass type errors.
 > ❌ **NEVER** swallow errors in empty `catch` blocks or return dummy fallback values.
 > ❌ **NEVER** leave unmocked `console.error` / `console.warn` log pollution in expected negative test scenarios.

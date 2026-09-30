@@ -8,9 +8,7 @@ export interface FacultyPageHeaderActionsProps {
   viewingDeleted: boolean;
   onExport: () => void;
   onAddFaculty?: () => void;
-  onAddTeacher?: () => void;
 }
-export type TeachersPageHeaderActionsProps = FacultyPageHeaderActionsProps;
 
 export function FacultyPageHeaderActions({
   canExport,
@@ -18,10 +16,8 @@ export function FacultyPageHeaderActions({
   viewingDeleted,
   onExport,
   onAddFaculty,
-  onAddTeacher,
 }: FacultyPageHeaderActionsProps): React.JSX.Element {
   const { t } = useTranslation();
-  const handleAdd = onAddFaculty ?? onAddTeacher;
 
   return (
     <>
@@ -30,16 +26,14 @@ export function FacultyPageHeaderActions({
           {t("common.export")}
         </ActionButton>
       ) : null}
-      {canWrite && !viewingDeleted && handleAdd ? (
-        <ActionButton variant="primary" icon={UserPlus} onClick={handleAdd}>
-          {t("action.addFaculty") || t("action.addTeacher")}
+      {canWrite && !viewingDeleted && onAddFaculty ? (
+        <ActionButton variant="primary" icon={UserPlus} onClick={onAddFaculty}>
+          {t("action.addFaculty")}
         </ActionButton>
       ) : null}
     </>
   );
 }
-
-export const TeachersPageHeaderActions = FacultyPageHeaderActions;
 
 
 

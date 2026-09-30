@@ -1,8 +1,6 @@
 export type {
   Faculty,
   FacultyRecord,
-  Teacher,
-  TeacherRecord,
 } from '@/tenant/features/faculty/hooks/facultyQueryShared';
 
 export {
@@ -19,24 +17,10 @@ export {
   sameFacultyListFilters,
   facultyListQueryKeyParams,
   facultyPaginatedQueryKey,
-  TEACHERS_API,
-  TEACHERS_QUERY_KEY,
-  TEACHERS_METRICS_QUERY_KEY,
-  TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-  type TeachersPaginatedParams,
-  type TeacherNextEmployeeIdParams,
-  type TeachersWidgetAggregateWidgetInput,
-  type TeachersDirectoryQueryInput,
-  buildTeachersPageUrl,
-  buildTeachersDirectoryQuery,
-  sameTeachersListFilters,
-  teachersListQueryKeyParams,
-  teachersPaginatedQueryKey,
 } from '@/tenant/features/faculty/hooks/facultyQueryShared';
 
 export {
   useFacultyMutations,
-  useTeacherMutations,
 } from '@/tenant/features/faculty/hooks/useFacultyMutations';
 
 export {
@@ -49,14 +33,5 @@ export {
   useFacultyWidgetAggregates,
   checkFacultyRegistrationDuplicate,
   migrateFacultyEmployeeIds,
-  fetchAllTeachersForQuery,
-  useTeacherLinkedContactIds,
-  useTeacherNextEmployeeId,
-  teachersCommandMetricsQueryOptions,
-  useTeachersMetrics,
-  useTeachersByIds,
-  useTeachersWidgetAggregates,
-  checkTeacherRegistrationDuplicate,
-  migrateTeachersEmployeeIds,
 } from '@/tenant/features/faculty/hooks/useFacultyQueries';
 

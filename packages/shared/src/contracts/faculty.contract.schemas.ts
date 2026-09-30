@@ -10,19 +10,17 @@ export const facultyWidgetAggregateResultSchema = z.object({
 /** Envelope for paginated faculty list responses (`FacultyListPageResult`). */
 export const facultyListPageResponseSchema = z.object({
   faculty: z.array(facultyRecordSchema).optional(),
-  teachers: z.array(facultyRecordSchema).optional(),
   total: z.number(),
   page: z.number(),
   limit: z.number(),
   hasMore: z.boolean(),
 });
 
-/** `{ success: true, faculty, teacher }` envelope returned by create/update. */
+/** `{ success: true, faculty }` envelope returned by create/update. */
 export const facultyWrappedResponseSchema = z.object({
   success: z.literal(true),
   faculty: facultyRecordSchema.optional(),
   facultyMember: facultyRecordSchema.optional(),
-  teacher: facultyRecordSchema.optional(),
 });
 
 /** `{ success: true, succeeded, failed }` bulk-operation envelope. */

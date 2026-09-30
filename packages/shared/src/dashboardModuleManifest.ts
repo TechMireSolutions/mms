@@ -24,7 +24,7 @@ export const DASHBOARD_MODULE_MANIFEST = {
   } satisfies Record<string, Permission>,
 } as const;
 
-export const DASHBOARD_ROLES = ['admin', 'teacher', 'accountant'] as const;
+export const DASHBOARD_ROLES = ['admin', 'faculty', 'accountant'] as const;
 export type DashboardRole = (typeof DASHBOARD_ROLES)[number];
 
 export type DashboardModulePermission = keyof typeof DASHBOARD_MODULE_MANIFEST.permissions;

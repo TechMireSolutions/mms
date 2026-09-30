@@ -48,16 +48,30 @@ export const RBAC_MODULE_REGISTRY: readonly RbacModuleDef[] = [
 ] as const;
 
 /** Fast O(1) module definition lookup map. */
-export const RBAC_MODULES_BY_ID: Readonly<Record<string, RbacModuleDef>> = Object.freeze(
-  Object.fromEntries(RBAC_MODULE_REGISTRY.map((m) => [m.id, m])),
+export const RBAC_MODULES_BY_ID: Readonly<Record<RbacModuleId, RbacModuleDef>> = Object.freeze(
+  Object.fromEntries(RBAC_MODULE_REGISTRY.map((m) => [m.id, m])) as Record<
+    RbacModuleId,
+    RbacModuleDef
+  >,
 );
 
-/** Retrieves module definition for a given RBAC module ID. */
-export function getRbacModuleDef(id: string): RbacModuleDef | undefined {
-  return RBAC_MODULES_BY_ID[id];
+/** Canonical legacy aliases for backwards compatibility with historical permissions and tokens. */
+export const LEGACY_RBAC_MODULE_ALIASES: Readonly<Record<string, RbacModuleId>> = Object.freeze({
+  teachers: 'faculty',
+});
+
+/** Resolves an RBAC module identifier to its canonical name (e.g. 'teachers' -> 'faculty'). */
+export function canonicalizeRbacModuleId(id: string): RbacModuleId | string {
+  return LEGACY_RBAC_MODULE_ALIASES[id] ?? id;
 }
 
-/** Type guard verifying if a string is a valid RbacModuleId. */
+/** Retrieves module definition for a given RBAC module ID (with legacy alias support). */
+export function getRbacModuleDef(id: string): RbacModuleDef | undefined {
+  const canonical = canonicalizeRbacModuleId(id) as RbacModuleId;
+  return RBAC_MODULES_BY_ID[canonical];
+}
+
+/** Type guard verifying if a string is a valid canonical RbacModuleId. */
 export function isValidRbacModuleId(id: unknown): id is RbacModuleId {
   return typeof id === 'string' && Object.prototype.hasOwnProperty.call(RBAC_MODULES_BY_ID, id);
 }
@@ -69,11 +83,23 @@ export function isValidRbacModuleId(id: unknown): id is RbacModuleId {
 export const RBAC_SYSTEM_MODULE_ID: Readonly<Record<string, string>> = Object.freeze({
   enrollments: 'enrollment',
   examinations: 'examination',
-});
+} satisfies Partial<Record<RbacModuleId, string>>);
 
 /** Resolves the system-modules settings key for an RBAC permission row. */
 export function rbacModuleSystemId(rbacModuleId: string): string {
-  return RBAC_SYSTEM_MODULE_ID[rbacModuleId] ?? rbacModuleId;
+  const canonical = canonicalizeRbacModuleId(rbacModuleId);
+  return RBAC_SYSTEM_MODULE_ID[canonical] ?? canonical;
+}
+
+/** Helper evaluating whether a normalized module toggle allows an RBAC module. */
+function isNormalizedModuleEnabled(
+  rbacModuleId: string,
+  normalized: Record<string, boolean>,
+): boolean {
+  if (rbacModuleId === 'settings') return true;
+  const systemId = rbacModuleSystemId(rbacModuleId);
+  if (!SYSTEM_MODULES_BY_ID[systemId]) return true;
+  return normalized[systemId] !== false;
 }
 
 /**
@@ -84,11 +110,8 @@ export function isRbacModuleEnabled(
   rbacModuleId: string,
   enabledModules?: Record<string, boolean> | null,
 ): boolean {
-  if (rbacModuleId === 'settings') return true;
   const normalized = normalizeEnabledModules(enabledModules);
-  const systemId = rbacModuleSystemId(rbacModuleId);
-  if (!SYSTEM_MODULES_BY_ID[systemId]) return true;
-  return normalized[systemId] !== false;
+  return isNormalizedModuleEnabled(rbacModuleId, normalized);
 }
 
 /** RBAC registry rows visible for the current workspace module toggles. */
@@ -96,10 +119,6 @@ export function filterRbacModulesForSettings(
   enabledModules?: Record<string, boolean> | null,
 ): RbacModuleDef[] {
   const normalized = normalizeEnabledModules(enabledModules);
-  return RBAC_MODULE_REGISTRY.filter((m) => {
-    if (m.id === 'settings') return true;
-    const systemId = rbacModuleSystemId(m.id);
-    if (!SYSTEM_MODULES_BY_ID[systemId]) return true;
-    return normalized[systemId] !== false;
-  });
+  return RBAC_MODULE_REGISTRY.filter((m) => isNormalizedModuleEnabled(m.id, normalized));
 }
+

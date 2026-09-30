@@ -100,7 +100,7 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
             <button
               key={designation.id}
               type="button"
-              className={`flex min-h-11 w-full items-start justify-between gap-3 px-3 py-2.5 text-start hover:bg-muted/50 ${
+              className={`flex min-h-11 w-full items-start justify-between gap-3 px-3 py-2.5 text-start hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-md transition-colors ${
                 designation.isActive ? '' : 'opacity-60'
               }`}
               onClick={() => edit(designation)}

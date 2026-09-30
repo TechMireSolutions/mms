@@ -8,22 +8,21 @@ import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { FormFooterBadge } from "@/components/ui/FormFooterChip";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { TeacherAssignedClassItem } from "@/lib/faculty/facultyAssignment";
+import type { FacultyAssignedClassItem } from "@/lib/faculty/facultyAssignment";
 
-export interface TeacherDetailSessionsSectionProps {
-  assignedClasses: TeacherAssignedClassItem[];
+export interface FacultyDetailSessionsSectionProps {
+  assignedClasses: FacultyAssignedClassItem[];
   loading?: boolean;
   error?: boolean;
 }
 
-export function TeacherDetailSessionsSection({
+export function FacultyDetailSessionsSection({
   assignedClasses,
   loading,
   error,
-}: TeacherDetailSessionsSectionProps): React.JSX.Element {
+}: FacultyDetailSessionsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
-  const assignedClassesTitle =
-    t("faculty.detail.assignedClasses") || t("teachers.detail.assignedClasses");
+  const assignedClassesTitle = t("faculty.detail.assignedClasses");
 
   if (loading) {
     return (
@@ -43,8 +42,8 @@ export function TeacherDetailSessionsSection({
         <DetailSectionTitle>{assignedClassesTitle}</DetailSectionTitle>
         <ErrorState
           compact
-          title={t("faculty.loadFailed") || t("teachers.loadFailed")}
-          description={t("faculty.loadFailedHint") || t("teachers.loadFailedHint")}
+          title={t("faculty.loadFailed")}
+          description={t("faculty.loadFailedHint")}
         />
       </div>
     );
@@ -57,8 +56,8 @@ export function TeacherDetailSessionsSection({
         <EmptyState
           compact
           icon={School}
-          title={t("faculty.detail.noAssignedClasses") || t("teachers.detail.noAssignedClasses")}
-          description={t("faculty.empty.subtitle") || t("teachers.empty.subtitle")}
+          title={t("faculty.detail.noAssignedClasses")}
+          description={t("faculty.empty.subtitle")}
         />
       </div>
     );
@@ -114,17 +113,17 @@ export function TeacherDetailSessionsSection({
                   {item.room ? (
                     <div className="flex items-center gap-1">
                       <DoorOpen className="w-3.5 h-3.5 text-primary/70" aria-hidden />
-                      <span>{t("faculty.detail.room", { room: item.room }) || t("teachers.detail.room", { room: item.room })}</span>
+                      <span>{t("faculty.detail.room", { room: item.room })}</span>
                     </div>
                   ) : null}
 
                   {item.enrolled != null ? (
                     <div className="flex items-center gap-1">
                       <Users className="w-3.5 h-3.5 text-primary/70" aria-hidden />
-                      <span>{t("faculty.detail.enrolledCount", { count: item.enrolled }) || t("teachers.detail.enrolledCount", { count: item.enrolled })}</span>
+                      <span>{t("faculty.detail.enrolledCount", { count: item.enrolled })}</span>
                       {item.capacity ? (
                         <span className="text-muted-foreground">
-                          ({t("faculty.detail.capacity", { capacity: item.capacity }) || t("teachers.detail.capacity", { capacity: item.capacity })})
+                          ({t("faculty.detail.capacity", { capacity: item.capacity })})
                         </span>
                       ) : null}
                     </div>
@@ -138,7 +137,4 @@ export function TeacherDetailSessionsSection({
     </div>
   );
 }
-
-export type FacultyDetailSessionsSectionProps = TeacherDetailSessionsSectionProps;
-export const FacultyDetailSessionsSection = TeacherDetailSessionsSection;
 

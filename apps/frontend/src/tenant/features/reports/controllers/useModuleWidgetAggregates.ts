@@ -21,7 +21,6 @@ const COLLECTION_TO_API_PATH: Record<string, string> = {
   contacts: '/api/contacts/widget-aggregates',
   students: '/api/students/widget-aggregates',
   faculty: '/api/faculty/widget-aggregates',
-  teachers: '/api/faculty/widget-aggregates',
   sessions: '/api/sessions/widget-aggregates',
   enrollments: '/api/enrollments/widget-aggregates',
   finance_invoices: '/api/finance/widget-aggregates',

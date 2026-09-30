@@ -12,6 +12,7 @@ import {
   buildAggregateCustomCard,
   getDefaultCardConfig,
 } from '@/components/ui/reports/kpiSummaryFormatters';
+import { getKpiCategoryFlags } from '@/components/ui/reports/kpiSummaryCategoryFlags';
 import type { AggregateCardValue, CategorizedKPIItem, KPIItem } from '@/components/ui/reports/kpiSummaryTypes';
 
 const KPI_ROLE_ATTENDANCE_ONLY_SET = new Set(KPI_ROLE_ATTENDANCE_ONLY_IDS);
@@ -23,8 +24,10 @@ export function filterStandardPossibleCards(
   category: string,
   can: (permission: Permission) => boolean,
 ): CategorizedKPIItem[] {
+  const { isFacultyCategory } = getKpiCategoryFlags(category);
   return standardCards.filter((card) => {
-    if (!card.categories.includes(category)) return false;
+    const matchesCategory = card.categories.includes(category) || (isFacultyCategory && card.categories.includes('faculty'));
+    if (!matchesCategory) return false;
     if (can('attendance.write') && !can('finance.write')) {
       return KPI_ROLE_ATTENDANCE_ONLY_SET.has(card.id);
     }

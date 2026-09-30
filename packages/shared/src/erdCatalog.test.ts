@@ -93,13 +93,11 @@ describe('erdCatalog', () => {
     expect(source).toMatch(/accounting_entries \}o--\|\| accounting_fiscal_years : fiscal_year_id/);
   });
 
-  it('looks up faculty domain with hierarchy relationship and backwards compatibility', () => {
+  it('looks up faculty domain with hierarchy relationship', () => {
     expect(isErdDomainId('faculty')).toBe(true);
-    expect(isErdDomainId('teachers')).toBe(true);
+    expect(isErdDomainId('teachers')).toBe(false);
     const faculty = getErdDomain('faculty');
-    const legacy = getErdDomain('teachers');
     expect(faculty.id).toBe('faculty');
-    expect(legacy).toBe(faculty);
     expect(listErdTableNames(faculty.tables)).toContain('faculty');
     expect(listErdTableNames(faculty.tables)).toContain('faculty_lookups');
 

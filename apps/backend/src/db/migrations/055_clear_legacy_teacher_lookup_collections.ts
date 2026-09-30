@@ -2,19 +2,27 @@
  * Deletes orphan document-store Teachers lookup collections after typed backfill (054).
  * Safe to re-run: skips delete when typed `teacher_lookups` has no rows for that tenant+kind.
  */
+import { parseTenantScopedStorageKey } from '@mms/shared';
 import { and, eq } from 'drizzle-orm';
-import {
-  TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS,
-  isTeacherLookupLegacyCollectionKey,
-  parseTenantScopedStorageKey,
-  type TeacherLookupKind,
-} from '@mms/shared';
 import * as schema from '../schema.js';
 import {
   deleteCollectionByStorageName,
   listCollectionStorageNames,
 } from '../database.js';
 import { withGlobalTenant } from '../tenant-context.js';
+
+const TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS = {
+  teacherStatuses: 'statuses',
+  teacherSpecializations: 'specializations',
+} as const;
+
+type LegacyTeacherLookupKey = keyof typeof TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS;
+
+function isTeacherLookupLegacyCollectionKey(key: string): key is LegacyTeacherLookupKey {
+  return key in TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS;
+}
+
+type TeacherLookupKind = (typeof TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS)[LegacyTeacherLookupKey];
 
 async function tenantHasTypedLookupKind(
   tenant: string,

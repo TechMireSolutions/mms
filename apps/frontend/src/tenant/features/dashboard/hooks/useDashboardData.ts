@@ -2,7 +2,7 @@ import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import {
   isDashboardAdmin,
   isDashboardAdminOrAccountant,
-  isDashboardTeacher,
+  isDashboardFaculty,
   type DashboardRole,
 } from '@/lib/dashboardRole';
 import {
@@ -13,7 +13,7 @@ import {
 } from '@/lib/dashboardCollections';
 import { isSeededDashboardWidget } from '@/lib/dashboardWidgets';
 import { useStudentsMetrics, useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
-import { useTeachersMetrics, useTeachersWidgetAggregates } from '@/tenant/hooks/collections/faculty';
+import { useFacultyMetrics, useFacultyWidgetAggregates } from '@/tenant/hooks/collections/faculty';
 import { useContactsMetrics, useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useSessionsMetrics, useSessionsWidgetAggregates } from '@/tenant/hooks/collections/sessions';
 import { useAttendanceMetrics } from '@/tenant/hooks/collections/attendance';
@@ -27,7 +27,7 @@ import {
   todayISO,
   ACCOUNTING_MODULE_MANIFEST,
   type StudentsCommandMetricsSnapshot,
-  type TeachersCommandMetricsSnapshot,
+  type FacultyCommandMetricsSnapshot,
   type ContactsCommandMetricsSnapshot,
   type SessionsCommandMetricsSnapshot,
   type AttendanceCommandMetricsSnapshot,
@@ -40,16 +40,16 @@ import {
 
 export interface DashboardCollectionData {
   studentsTotal: number;
-  teachersTotal: number;
+  facultyTotal: number;
   contactsTotal: number;
   sessionsTotal: number;
   studentMetricsInactive: number;
   studentMetricsActive: number;
   studentMetricsNew: number;
-  teacherMetricsNew: number;
+  facultyMetricsNew: number;
   contactMetricsNew: number;
   studentMetrics?: StudentsCommandMetricsSnapshot;
-  teacherMetrics?: TeachersCommandMetricsSnapshot;
+  facultyMetrics?: FacultyCommandMetricsSnapshot;
   contactMetrics?: ContactsCommandMetricsSnapshot;
   sessionsMetrics?: SessionsCommandMetricsSnapshot;
   attendanceMetrics?: AttendanceCommandMetricsSnapshot;
@@ -84,58 +84,39 @@ export function useDashboardData(
     (requiredDashboardCollections.has('students') || isDashboardAdmin(dashboardRole)) &&
     isModuleEnabled('students') &&
     hasPermission('students.read');
-  const shouldLoadTeachers =
-    (requiredDashboardCollections.has('teachers') || requiredDashboardCollections.has('faculty')) &&
-    (isModuleEnabled('faculty') || isModuleEnabled('teachers')) &&
+  const shouldLoadFaculty =
+    requiredDashboardCollections.has('faculty') &&
+    isModuleEnabled('faculty') &&
     hasPermission('faculty.read');
-  // Role shell needs: teacher banner (sessions), admin/accountant notifications (finance + attendance).
+  // Role shell needs: faculty banner (sessions), admin/accountant notifications (finance + attendance).
   const shouldLoadSessions =
-    (requiredDashboardCollections.has('sessions') || isDashboardTeacher(dashboardRole)) &&
-    isModuleEnabled('sessions') &&
-    hasPermission('sessions.read');
+    (requiredDashboardCollections.has('sessions') || isDashboardFaculty(dashboardRole)) &&
+    isModuleEnabled('sessions') && hasPermission('sessions.read');
   const shouldLoadAttendance =
-    (requiredDashboardCollections.has('attendance_records') ||
-      isDashboardAdminOrAccountant(dashboardRole) ||
-      isDashboardTeacher(dashboardRole)) &&
-    isModuleEnabled('attendance') &&
-    hasPermission('attendance.read');
-
+    (requiredDashboardCollections.has('attendance_records') || isDashboardAdminOrAccountant(dashboardRole) || isDashboardFaculty(dashboardRole)) &&
+    isModuleEnabled('attendance') && hasPermission('attendance.read');
   const shouldLoadFinance =
     (requiredDashboardCollections.has('finance_invoices') || isDashboardAdminOrAccountant(dashboardRole)) &&
-    isModuleEnabled('finance') &&
-    hasPermission('finance.read');
+    isModuleEnabled('finance') && hasPermission('finance.read');
   const shouldLoadHasanat =
-    requiredDashboardCollections.has('hasanat_distributions') &&
-    isModuleEnabled('hasanat') &&
-    hasPermission('hasanat.read');
+    requiredDashboardCollections.has('hasanat_distributions') && isModuleEnabled('hasanat') && hasPermission('hasanat.read');
   const shouldLoadQuestionBank =
-    (requiredDashboardCollections.has('questions') ||
-      requiredDashboardCollections.has('tests') ||
-      requiredDashboardCollections.has('assessment_results')) &&
-    isModuleEnabled('questionBank') &&
-    hasPermission('questionBank.read');
+    (requiredDashboardCollections.has('questions') || requiredDashboardCollections.has('tests') || requiredDashboardCollections.has('assessment_results')) &&
+    isModuleEnabled('questionBank') && hasPermission('questionBank.read');
   const shouldLoadAccounting =
-    isModuleEnabled('accounting') &&
-    hasPermission('accounting.read') &&
-    widgets.some(
-      (widget) =>
-        isWidgetActiveForDashboard(widget, dashboardRole) &&
-        (widget.category === ACCOUNTING_MODULE_MANIFEST.moduleId || DASHBOARD_ACCOUNTING_WIDGET_IDS.has(widget.id)),
-    );
+    isModuleEnabled('accounting') && hasPermission('accounting.read') &&
+    widgets.some((w) => isWidgetActiveForDashboard(w, dashboardRole) && (w.category === ACCOUNTING_MODULE_MANIFEST.moduleId || DASHBOARD_ACCOUNTING_WIDGET_IDS.has(w.id)));
 
   const collectionWidgets = {
     contacts: filterDashboardWidgetsByCollection(widgets, 'contacts', dashboardRole).filter(needsWidgetAggregate),
     students: filterDashboardWidgetsByCollection(widgets, 'students', dashboardRole).filter(needsWidgetAggregate),
-    teachers: [
-      ...filterDashboardWidgetsByCollection(widgets, 'teachers', dashboardRole),
-      ...filterDashboardWidgetsByCollection(widgets, 'faculty', dashboardRole),
-    ].filter(needsWidgetAggregate),
+    faculty: filterDashboardWidgetsByCollection(widgets, 'faculty', dashboardRole).filter(needsWidgetAggregate),
     sessions: filterDashboardWidgetsByCollection(widgets, 'sessions', dashboardRole).filter(needsWidgetAggregate),
   };
 
   useContactsWidgetAggregates(collectionWidgets.contacts, { enabled: shouldLoadContacts });
   useStudentsWidgetAggregates(collectionWidgets.students, { enabled: shouldLoadStudents });
-  useTeachersWidgetAggregates(collectionWidgets.teachers, { enabled: shouldLoadTeachers });
+  useFacultyWidgetAggregates(collectionWidgets.faculty, { enabled: shouldLoadFaculty });
   useSessionsWidgetAggregates(collectionWidgets.sessions, { enabled: shouldLoadSessions });
 
   const { summary, isLoading, isPending } = useDashboardSummaryQuery(todayISO(), dashboardRole);
@@ -143,7 +124,9 @@ export function useDashboardData(
   const canFallback = !summaryInFlight;
 
   const { data: individualStudentMetrics } = useStudentsMetrics({ enabled: shouldLoadStudents && canFallback && !summary?.students });
-  const { data: individualTeacherMetrics } = useTeachersMetrics({ enabled: shouldLoadTeachers && canFallback && !summary?.teachers });
+  const { data: individualFacultyMetrics } = useFacultyMetrics({
+    enabled: shouldLoadFaculty && canFallback && !summary?.faculty,
+  });
   const { data: individualContactMetrics } = useContactsMetrics({ enabled: shouldLoadContacts && canFallback && !summary?.contacts });
   const { data: individualSessionsMetrics } = useSessionsMetrics({ enabled: shouldLoadSessions && canFallback && !summary?.sessions });
   const { data: individualAttendanceMetrics } = useAttendanceMetrics(todayISO(), { enabled: shouldLoadAttendance && canFallback && !summary?.attendance });
@@ -153,7 +136,9 @@ export function useDashboardData(
   const { data: individualAccountingMetrics } = useAccountingMetrics({ enabled: shouldLoadAccounting && canFallback && !summary?.accounting });
 
   const studentMetrics = (summary?.students as StudentsCommandMetricsSnapshot | undefined) ?? individualStudentMetrics;
-  const teacherMetrics = (summary?.teachers as TeachersCommandMetricsSnapshot | undefined) ?? individualTeacherMetrics;
+  const facultyMetrics =
+    (summary?.faculty as FacultyCommandMetricsSnapshot | undefined) ??
+    individualFacultyMetrics;
   const contactMetrics = (summary?.contacts as ContactsCommandMetricsSnapshot | undefined) ?? individualContactMetrics;
   const sessionsMetrics = (summary?.sessions as SessionsCommandMetricsSnapshot | undefined) ?? individualSessionsMetrics;
   const attendanceMetrics = (summary?.attendance as AttendanceCommandMetricsSnapshot | undefined) ?? individualAttendanceMetrics;
@@ -163,22 +148,22 @@ export function useDashboardData(
   const accountingMetrics = (summary?.accounting as AccountingCommandMetricsSnapshot | undefined) ?? individualAccountingMetrics;
 
   const studentsTotal = studentMetrics?.total ?? 0;
-  const teachersTotal = teacherMetrics?.total ?? 0;
+  const facultyTotal = facultyMetrics?.total ?? 0;
   const contactsTotal = contactMetrics?.total ?? 0;
   const sessionsTotal = sessionsMetrics?.total ?? 0;
 
   return {
     studentsTotal,
-    teachersTotal,
+    facultyTotal,
     contactsTotal,
     sessionsTotal,
     studentMetricsInactive: studentMetrics?.inactive ?? 0,
     studentMetricsActive: studentMetrics?.active ?? 0,
     studentMetricsNew: studentMetrics?.newThisPeriod ?? 0,
-    teacherMetricsNew: teacherMetrics?.newThisPeriod ?? 0,
+    facultyMetricsNew: facultyMetrics?.newThisPeriod ?? 0,
     contactMetricsNew: contactMetrics?.newThisPeriod ?? 0,
     studentMetrics,
-    teacherMetrics,
+    facultyMetrics,
     contactMetrics,
     sessionsMetrics,
     attendanceMetrics,

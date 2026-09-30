@@ -3,26 +3,19 @@ import {
   type FacultyRecord,
   type FacultyListPageResult,
   type FacultyListQuery,
-  type TeachersListPageResult,
 } from '@mms/shared';
 import {
   FACULTY_API,
   FACULTY_QUERY_KEY,
 } from '@/tenant/features/faculty/hooks/facultyQueryKeys';
 
-export type TeacherRecord = FacultyRecord;
-export type {
-  FacultyRecord,
-  FacultyListPageResult,
-  TeachersListPageResult,
-};
+export type { FacultyRecord, FacultyListPageResult };
 
 /** Work list Query params — shared {@link FacultyListQuery} + FE-only `enabled`. */
 export type FacultyPaginatedParams = FacultyListQuery & {
   page: number;
   enabled?: boolean;
 };
-export type TeachersPaginatedParams = FacultyPaginatedParams;
 
 export function buildFacultyPageUrl(params: FacultyPaginatedParams): string {
   const queryParams = new URLSearchParams();
@@ -38,7 +31,6 @@ export function buildFacultyPageUrl(params: FacultyPaginatedParams): string {
   if (params.includeDeleted) queryParams.set('includeDeleted', 'true');
   return `${FACULTY_API}?${queryParams.toString()}`;
 }
-export const buildTeachersPageUrl = buildFacultyPageUrl;
 
 export function facultyListQueryKeyParams(params: FacultyPaginatedParams) {
   return {
@@ -54,12 +46,10 @@ export function facultyListQueryKeyParams(params: FacultyPaginatedParams) {
     includeDeleted: Boolean(params.includeDeleted),
   } as const;
 }
-export const teachersListQueryKeyParams = facultyListQueryKeyParams;
 
 export function facultyPaginatedQueryKey(params: FacultyPaginatedParams) {
   return [...FACULTY_QUERY_KEY, 'page', facultyListQueryKeyParams(params)] as const;
 }
-export const teachersPaginatedQueryKey = facultyPaginatedQueryKey;
 
 /** Keep previous page data only when filters match (avoid stale flash on filter change). */
 export function sameFacultyListFilters(
@@ -79,5 +69,4 @@ export function sameFacultyListFilters(
     previous.limit === next.limit
   );
 }
-export const sameTeachersListFilters = sameFacultyListFilters;
 

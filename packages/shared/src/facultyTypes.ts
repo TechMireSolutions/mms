@@ -46,9 +46,9 @@ export function resolveFacultySpecializations(
 
 /** Academic / institutional designations for faculty members. */
 export const FACULTY_DESIGNATION_VALUES = [
-  'Teacher',
-  'Senior Teacher',
-  'Assistant Teacher',
+  'Instructor',
+  'Senior Instructor',
+  'Assistant Instructor',
   'Head of Department',
   'Qari',
   'Administrator',
@@ -63,9 +63,6 @@ export function resolveFacultyDesignations(
     ? designations
     : FACULTY_DESIGNATION_VALUES;
 }
-
-export const resolveTeacherDesignations = resolveFacultyDesignations;
-export const TEACHER_DESIGNATION_VALUES = FACULTY_DESIGNATION_VALUES;
 
 /** Default specialization when unset (must remain in {@link FACULTY_SPECIALIZATION_VALUES}). */
 export const DEFAULT_FACULTY_SPECIALIZATION: FacultySpecialization =
@@ -82,8 +79,8 @@ export const FACULTY_HIERARCHY_RANK_PRESETS: readonly FacultyHierarchyPreset[] =
   { rank: 1, label: 'Dean / Principal' },
   { rank: 2, label: 'Head of Department (HoD)' },
   { rank: 3, label: 'Senior Faculty / Professor' },
-  { rank: 4, label: 'Lecturer / Teacher' },
-  { rank: 5, label: 'Assistant / Teaching Support' },
+  { rank: 4, label: 'Lecturer / Instructor' },
+  { rank: 5, label: 'Assistant / Academic Support' },
 ] as const;
 
 export const DEFAULT_FACULTY_HIERARCHY_RANK = 4;
@@ -172,23 +169,5 @@ export function filterActiveFaculty<T extends { deletedAt?: string | null }>(fac
   return facultyList.filter((facultyMember) => !isFacultyDeleted(facultyMember));
 }
 
-/* ========================================================================= */
-/*                    BACKWARD COMPATIBILITY ALIASES                        */
-/* ========================================================================= */
-
-export type Teacher = FacultyMember;
-export type TeacherStatus = FacultyStatus;
-export type TeacherStatusRoles = FacultyStatusRoles;
-export const TEACHER_STATUS_VALUES = FACULTY_STATUS_VALUES;
-export const DEFAULT_TEACHER_STATUS = DEFAULT_FACULTY_STATUS;
-export const resolveTeacherStatusRoles = resolveFacultyStatusRoles;
-export const resolveTeacherStatuses = resolveFacultyStatuses;
-export const resolveTeacherStatus = resolveFacultyStatus;
-
-export type TeacherSpecialization = FacultySpecialization;
-export const TEACHER_SPECIALIZATION_VALUES = FACULTY_SPECIALIZATION_VALUES;
-export const DEFAULT_TEACHER_SPECIALIZATION = DEFAULT_FACULTY_SPECIALIZATION;
-export const resolveTeacherSpecializations = resolveFacultySpecializations;
-
-export const isTeacherDeleted = isFacultyDeleted;
-export const filterActiveTeachers = filterActiveFaculty;
+/** Default RBAC workspace user role assigned when provisioning a login for faculty. */
+export const DEFAULT_FACULTY_USER_ROLE = 'staff' as const;

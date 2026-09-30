@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
-import { TeacherCardHeader } from "./FacultyCardHeader";
+import type { Faculty } from "@mms/shared";
+import { FacultyCardHeader } from "./FacultyCardHeader";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -13,7 +13,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockTeacher: Teacher = {
+const mockFaculty: Faculty = {
   id: "tch-card-1",
   contactId: "cnt-tch-1",
   name: "Ustadha Fatima",
@@ -22,7 +22,7 @@ const mockTeacher: Teacher = {
   gender: "female",
   employeeId: "EMP-404",
   status: "active",
-  roles: ["teacher"],
+  roles: ["faculty"],
   department: "Quranic Sciences",
   subjects: ["Tajweed"],
   hireDate: "2023-01-01",
@@ -33,12 +33,12 @@ const mockTeacher: Teacher = {
   updatedAt: "2024-01-01T00:00:00Z",
 };
 
-describe("TeacherCardHeader Component", () => {
-  it("renders teacher name, employee ID, and gender meta by default", () => {
+describe("FacultyCardHeader Component", () => {
+  it("renders faculty name, employee ID, and gender meta by default", () => {
     const html = renderToStaticMarkup(
-      <TeacherCardHeader
-        teacher={mockTeacher}
-        teacherId="tch-card-1"
+      <FacultyCardHeader
+        faculty={mockFaculty}
+        facultyId="tch-card-1"
         isSelected={false}
         displayName="Ustadha Fatima"
         onSelectOne={vi.fn()}
@@ -49,14 +49,14 @@ describe("TeacherCardHeader Component", () => {
     expect(html).toContain("Ustadha Fatima");
     expect(html).toContain("EMP-404");
     expect(html).toContain("Female");
-    expect(html).toContain('aria-label="teachers.table.selectTeacher:Ustadha Fatima"');
+    expect(html).toContain('aria-label="faculty.table.selectFaculty:Ustadha Fatima"');
   });
 
   it("hides employee ID and gender when isColumnVisible returns false", () => {
     const html = renderToStaticMarkup(
-      <TeacherCardHeader
-        teacher={mockTeacher}
-        teacherId="tch-card-1"
+      <FacultyCardHeader
+        faculty={mockFaculty}
+        facultyId="tch-card-1"
         isSelected={false}
         displayName="Ustadha Fatima"
         isColumnVisible={() => false}
@@ -72,9 +72,9 @@ describe("TeacherCardHeader Component", () => {
 
   it("renders checked state when isSelected is true", () => {
     const html = renderToStaticMarkup(
-      <TeacherCardHeader
-        teacher={mockTeacher}
-        teacherId="tch-card-1"
+      <FacultyCardHeader
+        faculty={mockFaculty}
+        facultyId="tch-card-1"
         isSelected={true}
         displayName="Ustadha Fatima"
         onSelectOne={vi.fn()}

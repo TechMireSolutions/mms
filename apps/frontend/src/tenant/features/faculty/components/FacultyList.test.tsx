@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
+import type { Faculty } from "@mms/shared";
 import { FacultyList } from "./FacultyList";
 
 vi.mock("@/hooks/useTranslation", () => ({
@@ -15,14 +15,14 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("@/tenant/features/faculty/hooks/useFacultyStatusConfig", () => ({
-  useTeacherStatusConfig: () => ({
+  useFacultyStatusConfig: () => ({
     active: { label: "Active", cls: "bg-success/10 text-success" },
   }),
 }));
 
-const mockTeachers: Teacher[] = [
+const mockFaculty: Faculty[] = [
   {
-    id: "tch-1",
+    id: "fac-1",
     contactId: "cnt-1",
     name: "Ustadh Ahmad",
     employeeId: "EMP-001",
@@ -47,7 +47,7 @@ const mockColumnRegistry = [
 ];
 
 const baseProps = {
-  teachers: mockTeachers,
+  faculty: mockFaculty,
   viewMode: "table" as const,
   selectedIds: [],
   onSelectOne: vi.fn(),
@@ -75,7 +75,7 @@ describe("FacultyList Component", () => {
   });
 
   it("renders empty state when faculty list is empty", () => {
-    const html = renderToStaticMarkup(<FacultyList {...baseProps} faculty={[]} teachers={[]} />);
+    const html = renderToStaticMarkup(<FacultyList {...baseProps} faculty={[]} />);
 
     expect(html).toContain("faculty.empty.title");
   });

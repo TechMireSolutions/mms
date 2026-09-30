@@ -2,7 +2,7 @@ import React from "react";
 import { School } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
-import type { FacultyMember, Teacher } from "@mms/shared";
+import type { FacultyMember } from "@mms/shared";
 import { FacultyFormTabContent } from "@/tenant/features/faculty/components/FacultyFormTabContent";
 import { useFacultyFormController } from "@/tenant/features/faculty/components/useFacultyFormController";
 import { FacultyFormFooter } from "@/tenant/features/faculty/components/FacultyFormFooter";
@@ -15,24 +15,20 @@ export type { FacultyFormTabKey };
 
 export interface FacultyFormProps {
   faculty?: FacultyMember;
-  teacher?: Teacher;
   onClose: () => void;
   onSave: (faculty: FacultyMember) => void | Promise<void>;
   priority?: boolean;
 }
 
-export type TeacherFormProps = FacultyFormProps;
-
 export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React.JSX.Element {
-  const teacher = props.faculty ?? props.teacher;
-  const { onClose, onSave, priority = false } = props;
+  const { faculty, onClose, onSave, priority = false } = props;
   const {
     t,
     dir,
     language,
     saving,
     errors,
-    teacherDraft,
+    facultyDraft,
     isDirty,
     defaultSpecialization,
     specializationOptions,
@@ -43,7 +39,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     requireContactLink,
     fieldsMap,
     linkedContact,
-    linkedTeacherContactIds,
+    linkedFacultyContactIds,
     linkedUser,
     userAccountDraft,
     setUserAccountDraft,
@@ -65,7 +61,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     duplicateErrorKeys,
     supervisorCandidates,
     hierarchyRankPresets,
-  } = useFacultyFormController({ teacher, faculty: props.faculty, onClose, onSave });
+  } = useFacultyFormController({ faculty, onClose, onSave });
 
   const { activeTab, setActiveTab, visibleTabs } = useFacultyFormTabs({
     isFieldEnabled,
@@ -83,7 +79,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
       <FormModal<FacultyFormTabKey>
         open
         onClose={onClose}
-        title={teacher ? t("faculty.form.editTitle") : t("faculty.form.addTitle")}
+        title={faculty ? t("faculty.form.editTitle") : t("faculty.form.addTitle")}
         subtitle={t("faculty.form.contactHint")}
         icon={School}
         tall
@@ -94,19 +90,19 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
         activeTab={activeTab}
         onTabChange={setActiveTab}
         cancelLabel={t("common.cancel")}
-        saveLabel={saving ? t("faculty.form.saving") : teacher ? t("faculty.form.saveUpdate") : t("faculty.form.saveCreate")}
+        saveLabel={saving ? t("faculty.form.saving") : faculty ? t("faculty.form.saveUpdate") : t("faculty.form.saveCreate")}
         onSave={onSaveWithTabFocus}
         isDirty={isDirty}
         saving={saving}
         error={validationErrorSummary}
         saveDisabled={
-          (requireContactLink && isFieldEnabled("contactId") && !teacherDraft.contactId)
-          || (Boolean(teacher?.id) && !isDirty)
+          (requireContactLink && isFieldEnabled("contactId") && !facultyDraft.contactId)
+          || (Boolean(faculty?.id) && !isDirty)
         }
         footerStart={
           <FacultyFormFooter
             linkedContact={linkedContact}
-            teacherDraft={teacherDraft}
+            facultyDraft={facultyDraft}
             requireContactLink={requireContactLink}
             statusConfig={statusConfig}
             t={t}
@@ -116,12 +112,12 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
         <FacultyFormTabContent
           formInstanceId={formInstanceId}
           activeTab={activeTab}
-          teacher={teacher}
-          teacherDraft={teacherDraft}
+          faculty={faculty}
+          facultyDraft={facultyDraft}
           errors={errors}
           fields={fieldsMap}
           defaultSpecialization={defaultSpecialization}
-          linkedTeacherContactIds={linkedTeacherContactIds}
+          linkedFacultyContactIds={linkedFacultyContactIds}
           specializationOptions={specializationOptions}
           designationOptions={designationOptions}
           userAccountDraft={userAccountDraft}
@@ -145,7 +141,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
       <ConfirmAlertDialog
         open={duplicateConfirmOpen}
         onOpenChange={handleDuplicateDialogOpenChange}
-        title={teacher ? t("faculty.form.editTitle") : t("faculty.form.addTitle")}
+        title={faculty ? t("faculty.form.editTitle") : t("faculty.form.addTitle")}
         description={typedDuplicateReason
           ? t("faculty.form.duplicateSaveWarning", { message: t(duplicateErrorKeys[typedDuplicateReason]) })
           : ""}
@@ -158,8 +154,6 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
 });
 
 export {
-  FacultyForm as TeacherForm,
-  FacultyForm as TeacherFormModal,
   FacultyForm as FacultyFormModal,
 };
 export default FacultyForm;

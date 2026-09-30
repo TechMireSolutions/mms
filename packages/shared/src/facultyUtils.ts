@@ -1,4 +1,4 @@
-import type { FacultyMember, Teacher } from './facultyTypes.js';
+import type { FacultyMember } from './facultyTypes.js';
 import type { ContactLike } from './contactLinkPolicy.js';
 import {
   CONTACT_PROFILE_FIELDS,
@@ -8,15 +8,11 @@ import {
   stripRecordFields,
 } from './contactLinkPolicy.js';
 export {
-  TEACHER_CLIENT_SOFT_DELETE_KEYS,
-  stripTeacherClientSoftDeleteFields,
   FACULTY_CLIENT_SOFT_DELETE_KEYS,
   stripFacultyClientSoftDeleteFields,
   stripClientSoftDeleteFields,
   isEntityDeleted,
   filterActiveEntities,
-  isTeacherDeleted,
-  filterActiveTeachers,
   isFacultyDeleted,
   filterActiveFaculty,
 } from './facultySoftDelete.js';
@@ -166,24 +162,4 @@ export function hydrateFacultyListFromContacts<T extends FacultyMember>(
 export const getFacultyQualification = getContactQualification;
 export const getFacultySpecialization = getContactSpecialization;
 
-/* ========================================================================= */
-/*                    BACKWARD COMPATIBILITY ALIASES                        */
-/* ========================================================================= */
 
-export const stripTeacherWriteNoise = stripFacultyWriteNoise;
-export const normalizeStoredTeacher = normalizeStoredFaculty;
-export const hydrateTeacherFromContact = hydrateFacultyFromContact as <T extends Teacher>(
-  teacher: T,
-  contacts: ContactLike[] | Map<string, ContactLike>,
-) => T;
-export const formatTeacherDisplayName = formatFacultyDisplayName as (
-  teacher?: (Partial<Teacher> & {
-    firstName?: string;
-    lastName?: string;
-    contact?: { firstName?: string; lastName?: string } | null;
-  }) | null,
-) => string;
-export const hydrateTeacherListFromContacts = hydrateFacultyListFromContacts as <T extends Teacher>(
-  teachers: T[],
-  contacts: ContactLike[] | Map<string, ContactLike>,
-) => T[];

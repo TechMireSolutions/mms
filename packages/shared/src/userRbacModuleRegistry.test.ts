@@ -1,9 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
+  canonicalizeRbacModuleId,
   filterRbacModulesForSettings,
   getRbacModuleDef,
   isRbacModuleEnabled,
   isValidRbacModuleId,
+  LEGACY_RBAC_MODULE_ALIASES,
   RBAC_MODULE_IDS,
   RBAC_MODULE_REGISTRY,
   RBAC_MODULES_BY_ID,
@@ -20,8 +22,16 @@ describe('userRbacModuleRegistry', () => {
     }
   });
 
-  it('resolves system module IDs correctly', () => {
+  it('maps legacy teacher aliases to canonical faculty module', () => {
+    expect(LEGACY_RBAC_MODULE_ALIASES.teachers).toBe('faculty');
+    expect(canonicalizeRbacModuleId('teachers')).toBe('faculty');
+    expect(canonicalizeRbacModuleId('faculty')).toBe('faculty');
+    expect(canonicalizeRbacModuleId('students')).toBe('students');
+  });
+
+  it('resolves system module IDs correctly including legacy aliases', () => {
     expect(rbacModuleSystemId('faculty')).toBe('faculty');
+    expect(rbacModuleSystemId('teachers')).toBe('faculty');
     expect(rbacModuleSystemId('enrollments')).toBe('enrollment');
     expect(rbacModuleSystemId('examinations')).toBe('examination');
     expect(rbacModuleSystemId('obligations')).toBe('obligations');
@@ -30,8 +40,10 @@ describe('userRbacModuleRegistry', () => {
     expect(rbacModuleSystemId('unknown_mod')).toBe('unknown_mod');
   });
 
-  it('getRbacModuleDef returns module definition or undefined', () => {
+  it('getRbacModuleDef returns module definition or undefined, supporting legacy aliases', () => {
     expect(getRbacModuleDef('students')?.labelKey).toBe('nav.students');
+    expect(getRbacModuleDef('faculty')?.labelKey).toBe('nav.faculty');
+    expect(getRbacModuleDef('teachers')?.labelKey).toBe('nav.faculty');
     expect(getRbacModuleDef('nonexistent')).toBeUndefined();
   });
 
@@ -68,3 +80,4 @@ describe('userRbacModuleRegistry', () => {
     expect(visible.length).toBe(16);
   });
 });
+

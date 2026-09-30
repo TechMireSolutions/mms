@@ -6,9 +6,10 @@ export {
 export {
   computeWidgetSingleValue,
   computeWidgetChartData,
+  type WidgetChartDataPoint,
   computeContactsCustomCardValue,
   computeStudentsCustomCardValue,
-  computeTeachersCustomCardValue,
+  computeFacultyCustomCardValue,
   computeSessionsCustomCardValue,
   computeEnrollmentsCustomCardValue,
 } from "./widgetValueCompute.js";

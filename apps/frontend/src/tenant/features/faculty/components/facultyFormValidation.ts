@@ -1,20 +1,20 @@
 import {
-  buildDynamicTeacherSchema,
-  formatTeacherZodIssues,
+  buildDynamicFacultySchema,
+  formatFacultyZodIssues,
   type AppTranslationKey,
   type Contact,
   type FieldDefinition,
-  type TeacherDuplicateReason,
-  type TeachersSettings,
+  type FacultyDuplicateReason,
+  type FacultySettings,
   type ValidationError,
 } from "@mms/shared";
-import { checkTeacherRegistrationDuplicate } from "@/tenant/features/faculty/hooks/useFaculty";
+import { checkFacultyRegistrationDuplicate } from "@/tenant/features/faculty/hooks/useFaculty";
 import { scrollAndFocusFirstError } from "@/lib/forms/formAutoScroll";
 
-/** Focus the first invalid teacher form field with smooth auto-scroll. */
-export function focusTeacherValidationField(formInstanceId: string, fieldId: string): void {
+/** Focus the first invalid faculty form field with smooth auto-scroll. */
+export function focusFacultyValidationField(formInstanceId: string, fieldId: string): void {
   const fieldAliases: Record<string, string[]> = {
-    joinDate: ["teacher-join-date", "joinDate"],
+    joinDate: ["faculty-join-date", "joinDate"],
     designation: ["designationId", "designation"],
     "user.role": ["faculty-user-role", "linked-user-role"],
     "user.password": ["faculty-user-password"],
@@ -32,43 +32,42 @@ export function focusTeacherValidationField(formInstanceId: string, fieldId: str
   scrollAndFocusFirstError(candidates, { behavior: "smooth", block: "center" });
 }
 
-export const DUPLICATE_ERROR_KEYS: Record<TeacherDuplicateReason, AppTranslationKey> = {
-  contact: "faculty.form.contactAlreadyTeacher",
+export const DUPLICATE_ERROR_KEYS: Record<FacultyDuplicateReason, AppTranslationKey> = {
+  contact: "faculty.form.contactAlreadyFaculty",
   employeeId: "faculty.form.duplicateEmployeeId",
 };
 export const FACULTY_DUPLICATE_ERROR_KEYS = DUPLICATE_ERROR_KEYS;
 
-
-export interface TeacherDuplicateCheckInput {
-  teacherId?: string;
+export interface FacultyDuplicateCheckInput {
+  facultyId?: string;
   contactId: string;
   linkedContact?: Contact | null;
   employeeId?: string;
 }
 
-export async function checkTeacherFormDuplicate(
-  input: TeacherDuplicateCheckInput,
-): Promise<TeacherDuplicateReason | null> {
-  return checkTeacherRegistrationDuplicate({
-    excludeId: input.teacherId ? String(input.teacherId) : undefined,
+export async function checkFacultyFormDuplicate(
+  input: FacultyDuplicateCheckInput,
+): Promise<FacultyDuplicateReason | null> {
+  return checkFacultyRegistrationDuplicate({
+    excludeId: input.facultyId ? String(input.facultyId) : undefined,
     contactId: String(input.contactId),
     employeeId: input.employeeId?.trim() || undefined,
   });
 }
 
-export interface TeacherValidationContext {
-  settings: TeachersSettings;
+export interface FacultyValidationContext {
+  settings: FacultySettings;
   enabledTabs: Set<string>;
   fields: Record<string, FieldDefinition[]>;
   language: string;
 }
 
-/** Validate a teacher form draft against the dynamic Setup registry schema. */
-export function validateTeacherDraft(
+/** Validate a faculty form draft against the dynamic Setup registry schema. */
+export function validateFacultyDraft(
   draft: Record<string, unknown>,
-  context: TeacherValidationContext,
+  context: FacultyValidationContext,
 ): ValidationError[] | null {
-  const schema = buildDynamicTeacherSchema(
+  const schema = buildDynamicFacultySchema(
     context.settings,
     context.enabledTabs,
     context.fields,
@@ -77,12 +76,12 @@ export function validateTeacherDraft(
   const result = schema.safeParse(draft);
   const errors: ValidationError[] = result.success
     ? []
-    : formatTeacherZodIssues(result.error, draft, context.fields);
+    : formatFacultyZodIssues(result.error, draft, context.fields);
 
   return errors.length > 0 ? errors : null;
 }
 
-export function teacherValidationErrorsByField(
+export function facultyValidationErrorsByField(
   errors: ValidationError[],
 ): Record<string, string> {
   const byField: Record<string, string> = {};
@@ -93,11 +92,4 @@ export function teacherValidationErrorsByField(
   }
   return byField;
 }
-
-export const focusFacultyValidationField = focusTeacherValidationField;
-export const facultyValidationErrorsByField = teacherValidationErrorsByField;
-export const validateFacultyDraft = validateTeacherDraft;
-export const checkFacultyFormDuplicate = checkTeacherFormDuplicate;
-export type FacultyDuplicateCheckInput = TeacherDuplicateCheckInput;
-export type FacultyValidationContext = TeacherValidationContext;
 

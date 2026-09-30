@@ -59,7 +59,7 @@ describe("MarkAttendance Component", () => {
   it("renders empty state when no classId is selected", () => {
     const html = renderToStaticMarkup(
       <MarkAttendance
-        filters={{ classId: "", sessionId: "", teacherId: "", date: "2025-01-01" }}
+        filters={{ classId: "", sessionId: "", facultyId: "", date: "2025-01-01" }}
         role="admin"
         records={[]}
         persistBatch={vi.fn()}
@@ -72,7 +72,7 @@ describe("MarkAttendance Component", () => {
   it("renders attendance marking interface when class is selected", () => {
     const html = renderToStaticMarkup(
       <MarkAttendance
-        filters={{ classId: "cls-1", sessionId: "ses-1", teacherId: "", date: "2025-01-01" }}
+        filters={{ classId: "cls-1", sessionId: "ses-1", facultyId: "", date: "2025-01-01" }}
         role="admin"
         records={[]}
         persistBatch={vi.fn()}

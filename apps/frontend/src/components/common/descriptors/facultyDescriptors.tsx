@@ -11,8 +11,8 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
   fields: [
     {
       key: "name",
-      label: "Teacher Name",
-      labelKey: "teachers.columns.name",
+      label: "Name",
+      labelKey: "faculty.field.name",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -25,7 +25,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "employeeId",
       label: "Employee ID",
-      labelKey: "teachers.columns.employeeId",
+      labelKey: "faculty.field.employeeId",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -37,7 +37,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "designation",
       label: "Designation",
-      labelKey: "teachers.columns.designation",
+      labelKey: "faculty.field.designation",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -49,7 +49,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "department",
       label: "Department",
-      labelKey: "teachers.columns.department",
+      labelKey: "faculty.field.department",
       type: "text",
       sortable: true,
       defaultVisibleInTable: true,
@@ -85,7 +85,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "status",
       label: "Status",
-      labelKey: "teachers.columns.status",
+      labelKey: "faculty.field.status",
       type: "status",
       sortable: true,
       defaultVisibleInTable: true,
@@ -97,7 +97,7 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
     {
       key: "phone",
       label: "Phone",
-      labelKey: "teachers.columns.phone",
+      labelKey: "faculty.field.phone",
       type: "phone",
       sortable: false,
       defaultVisibleInTable: true,
@@ -107,13 +107,4 @@ export const facultyEntityDescriptor: EntityDescriptor<Faculty> = createEntityDe
       drawerOrder: 60,
     },
   ],
-});
-
-export const teachersEntityDescriptor: EntityDescriptor<Faculty> = createEntityDescriptor<Faculty>({
-  entityType: "teachers",
-  singularLabel: "Teacher",
-  pluralLabel: "Teachers",
-  idField: "id",
-  titleField: "name",
-  fields: facultyEntityDescriptor.fields,
 });

@@ -41,7 +41,7 @@ export function usePinnedWidgetsController(category: string) {
     return getObject<Record<string, boolean>>("dashboard_section_settings", DEFAULT_SECTION_SETTINGS);
   });
   const normalizedCategory = (() => {
-    if (category === "faculty" || category === "teachers") return "faculty";
+    if (category === "faculty") return "faculty";
     if (category === "finance" || category === "financial") return "financial";
     if (category === "academic" || category === "examinations") return "examinations";
     if (category === "question-bank" || category === "questionBank") return "questionBank";
@@ -62,7 +62,7 @@ export function usePinnedWidgetsController(category: string) {
   })() as CustomWidget["collection"];
   const filteredWidgets = (() => {
     return widgets.filter((widget) => {
-      const widgetCategory = (widget.category === "faculty" || widget.category === "teachers") ? "faculty"
+      const widgetCategory = widget.category === "faculty" ? "faculty"
         : widget.category === "finance" ? "financial"
         : widget.category === "academic" ? "examinations"
         : widget.category === "question-bank" ? "questionBank"

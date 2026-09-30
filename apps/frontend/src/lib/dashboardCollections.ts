@@ -32,7 +32,7 @@ export const TREND_METRIC_KEY_MAP: Record<DashboardTrendMetric, keyof DashboardM
   sessions: 'sessionsTrend',
   contacts: 'contactTrend',
   students: 'studentTrend',
-  teachers: 'teacherTrend',
+  faculty: 'facultyTrend',
 };
 
 /** Filters custom widgets to active card-type widgets matching the dashboard role. */

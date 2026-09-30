@@ -24,24 +24,22 @@ vi.mock("@/tenant/hooks/collections/faculty", () => {
     data: {
       body: {
         faculty: [{ id: "tch-1", name: "Ustadh Khalid", status: "active" }],
-        teachers: [{ id: "tch-1", name: "Ustadh Khalid", status: "active" }],
       },
     },
   });
   return {
     useFacultyContractList: mockList,
-    useTeachersContractList: mockList,
   };
 });
 
 describe("AttendanceFilters Component", () => {
-  it("renders filter controls for session, class, teacher, and date", () => {
+  it("renders filter controls for session, class, faculty, and date", () => {
     const html = renderToStaticMarkup(
       <AttendanceFilters
         filters={{
           sessionId: "",
           classId: "",
-          teacherId: "",
+          facultyId: "",
           date: "2025-01-01",
         }}
         onChange={vi.fn()}
@@ -51,7 +49,7 @@ describe("AttendanceFilters Component", () => {
     expect(html).toContain("attendance.filters.title");
     expect(html).toContain("attendance.filters.session");
     expect(html).toContain("attendance.filters.class");
-    expect(html).toContain("attendance.filters.teacher");
+    expect(html).toContain("attendance.filters.faculty");
     expect(html).toContain("attendance.filters.date");
   });
 });

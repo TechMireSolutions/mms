@@ -1,9 +1,9 @@
-import type { BackgroundJobRecord, TeacherExportColumn, TeachersListQuery } from '@mms/shared';
+import type { BackgroundJobRecord, FacultyExportColumn, FacultyListQuery } from '@mms/shared';
 import { startServerModuleCsvExport } from '@/lib/backgroundJobs/startServerModuleCsvExport';
 
 export async function startServerFacultyCsvExport(options: {
-  query: TeachersListQuery;
-  columns: TeacherExportColumn[];
+  query: FacultyListQuery;
+  columns: FacultyExportColumn[];
   filename: string;
   label: string;
   ids?: Array<string | number>;
@@ -19,6 +19,4 @@ export async function startServerFacultyCsvExport(options: {
     },
   });
 }
-
-export const startServerTeachersCsvExport = startServerFacultyCsvExport;
 

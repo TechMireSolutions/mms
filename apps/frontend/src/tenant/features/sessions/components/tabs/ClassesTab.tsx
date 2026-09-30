@@ -2,9 +2,9 @@ import React, { useState } from "react";
 import { Plus, GraduationCap } from "lucide-react";
 import { type Session, type Class } from '@/lib/data/sessionsData';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useTeachersByIds } from '@/tenant/hooks/collections/faculty';
-import { collectTeacherIdsFromClasses } from '@/lib/registryResolve';
-import { assignClassTeacher } from '@/lib/faculty/facultyAssignment';
+import { useFacultyByIds } from '@/tenant/hooks/collections/faculty';
+import { collectFacultyIdsFromClasses } from '@/lib/registryResolve';
+import { assignClassFaculty, resolveClassFacultyId, resolveClassFacultyName } from '@/lib/faculty/facultyAssignment';
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHeader } from "@/components/ui/SectionHeader";
@@ -28,8 +28,8 @@ interface ClassesTabProps {
  */
 export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
   const { t } = useTranslation();
-  const teacherIds = (() => collectTeacherIdsFromClasses(session.classes))();
-  const { data: teachers = [] } = useTeachersByIds(teacherIds);
+  const facultyIds = (() => collectFacultyIdsFromClasses(session.classes))();
+  const { data: facultyMembers = [] } = useFacultyByIds(facultyIds);
   const { messagingTarget, openComposer, closeComposer } = useMessageComposerState();
   const [showModal, setShowModal] = useState(false);
   const [classBeingEdited, setClassBeingEdited] = useState<Class | null>(null);
@@ -38,24 +38,25 @@ export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
   const deletePendingRef = React.useRef(false);
 
   const handleClassMessage = (channel: 'sms' | 'whatsapp' | 'email', sessionClass: Class) => {
-    const teacher = teachers.find((t) => t.id === sessionClass.teacherId);
-    const recipientName = (teacher ? teacher.name : sessionClass.teacherName || sessionClass.name) || t("sessions.classes.fallbackName");
-    const phoneStr: string = teacher?.phone ?? "";
-    const emailStr: string | undefined = teacher?.email ?? undefined;
+    const assignedFacultyId = resolveClassFacultyId(sessionClass);
+    const assignedFaculty = facultyMembers.find((f) => f.id === assignedFacultyId);
+    const fallbackName = resolveClassFacultyName(sessionClass) || sessionClass.name;
+    const recipientName = (assignedFaculty ? assignedFaculty.name : fallbackName) || t("sessions.classes.fallbackName");
+    const phoneStr: string = assignedFaculty?.phone ?? "";
+    const emailStr: string | undefined = assignedFaculty?.email ?? undefined;
     openComposer(channel, [{ id: sessionClass.id, name: recipientName, phone: phoneStr, email: emailStr }]);
   };
 
   const handleSave = async (sessionClass: Class) => {
-    const teacherFields = sessionClass.teacherId
-      ? assignClassTeacher(String(sessionClass.teacherId))
-      : { teacherId: '' };
-    const classWithTeacher = { ...sessionClass, ...teacherFields };
+    const assignedFacultyId = resolveClassFacultyId(sessionClass);
+    const facultyFields = assignClassFaculty(assignedFacultyId);
+    const updatedClass = { ...sessionClass, ...facultyFields };
 
     const classes = session.classes || [];
-    const existing = classes.find((classItem) => classItem.id === classWithTeacher.id);
+    const existing = classes.find((classItem) => classItem.id === updatedClass.id);
     const updatedClasses = existing
-      ? classes.map((classItem) => classItem.id === classWithTeacher.id ? classWithTeacher : classItem)
-      : [...classes, classWithTeacher];
+      ? classes.map((classItem) => classItem.id === updatedClass.id ? updatedClass : classItem)
+      : [...classes, updatedClass];
     setSaving(true);
     try {
       await onUpdate({ ...session, classes: updatedClasses });
@@ -106,7 +107,7 @@ export function ClassesTab({ session, onUpdate, canWrite }: ClassesTabProps) {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {session.classes.map((sessionClass) => (
-            <ClassCard key={sessionClass.id} sessionClass={sessionClass} teachers={teachers} onEdit={handleEdit} onDelete={() => setDeleteTarget(sessionClass)} onMessage={handleClassMessage} canWrite={canWrite} />
+            <ClassCard key={sessionClass.id} sessionClass={sessionClass} faculty={facultyMembers} onEdit={handleEdit} onDelete={() => setDeleteTarget(sessionClass)} onMessage={handleClassMessage} canWrite={canWrite} />
           ))}
         </div>
       )}

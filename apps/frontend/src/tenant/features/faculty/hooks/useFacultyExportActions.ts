@@ -1,29 +1,29 @@
 import {
-  DEFAULT_TEACHER_EXPORT_COLUMNS,
-  teacherColumnLabelKey,
+  DEFAULT_FACULTY_EXPORT_COLUMNS,
+  facultyColumnLabelKey,
   type AppTranslationKey,
-  type TeacherExportColumn,
-  type TeachersListQuery,
-  type TeachersQuickFilter,
+  type FacultyExportColumn,
+  type FacultyListQuery,
+  type FacultyQuickFilter,
+  type FacultySortField,
 } from "@mms/shared";
 import { startServerFacultyCsvExport } from "@/lib/backgroundJobs/startServerFacultyCsvExport";
 import { useModuleServerCsvExportActions } from "@/lib/backgroundJobs/useModuleServerCsvExportActions";
-import { buildTeachersDirectoryQuery } from "@/tenant/features/faculty/hooks/facultyQueryShared";
-import type { TeacherSortField } from "@/tenant/features/faculty/components/FacultyList";
+import { buildFacultyDirectoryQuery } from "@/tenant/features/faculty/hooks/facultyQueryShared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 
 type ExportAuditScope = "all" | "filtered" | "selection";
 
-export interface UseTeachersExportActionsOptions {
-  tableColumns: TeacherExportColumn[];
+export interface UseFacultyExportActionsOptions {
+  tableColumns: FacultyExportColumn[];
   canExport: boolean;
   search: string;
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
-  quickFilter: TeachersQuickFilter;
-  sortField: TeacherSortField | null;
+  quickFilter: FacultyQuickFilter;
+  sortField: FacultySortField | null;
   sortDir: "asc" | "desc";
   viewingDeleted: boolean;
   /** Whether any directory filter is applied — selects the audit scope. */
@@ -37,7 +37,7 @@ export interface UseTeachersExportActionsOptions {
   };
 }
 
-/** Server CSV export actions for Faculty Work (Students-shaped shared factory). */
+/** Server CSV export actions for Faculty Work directory. */
 export function useFacultyExportActions({
   tableColumns,
   canExport,
@@ -52,11 +52,11 @@ export function useFacultyExportActions({
   hasActiveFilters,
   selectedIds,
   logExportAudit,
-}: UseTeachersExportActionsOptions) {
+}: UseFacultyExportActionsOptions) {
   const { t } = useTranslation();
 
-  const buildFilteredQuery = (): TeachersListQuery =>
-    buildTeachersDirectoryQuery({
+  const buildFilteredQuery = (): FacultyListQuery =>
+    buildFacultyDirectoryQuery({
       search,
       filterStatus,
       filterSpecialization,
@@ -72,7 +72,7 @@ export function useFacultyExportActions({
     });
   };
 
-  return useModuleServerCsvExportActions<TeacherExportColumn, TeachersListQuery>({
+  return useModuleServerCsvExportActions<FacultyExportColumn, FacultyListQuery>({
     canExport,
     trashMode: viewingDeleted,
     selectedIds,
@@ -91,41 +91,34 @@ export function useFacultyExportActions({
   });
 }
 
-export const useTeachersExportActions = useFacultyExportActions;
-
 /** Default Work export columns when registry is unavailable. */
-export function defaultTeachersExportColumns(
+export function defaultFacultyExportColumns(
   t: (key: AppTranslationKey) => string,
-): TeacherExportColumn[] {
-  return DEFAULT_TEACHER_EXPORT_COLUMNS.map((column) => ({
+): FacultyExportColumn[] {
+  return DEFAULT_FACULTY_EXPORT_COLUMNS.map((column) => ({
     id: column.id,
-    label: t(teacherColumnLabelKey(column.id)),
+    label: t(facultyColumnLabelKey(column.id)),
   }));
 }
 
 /** Resolves active export columns from column registry and visibility state. */
-export function resolveTeachersExportColumns(
+export function resolveFacultyExportColumns(
   columnRegistry: Array<{ key: string; label?: string }>,
   isColumnVisible: (key: string) => boolean,
   t: (key: AppTranslationKey) => string,
-): TeacherExportColumn[] {
+): FacultyExportColumn[] {
   const visible = columnRegistry.filter((col) => isColumnVisible(col.key));
-  if (visible.length === 0) return defaultTeachersExportColumns(t);
+  if (visible.length === 0) return defaultFacultyExportColumns(t);
   const columns = visible.map((col) => ({
     id: col.key,
     label: col.label || col.key,
   }));
-  if (!columns.some((col) => col.id === 'employeeId')) {
-    const nameIndex = columns.findIndex((col) => col.id === 'name');
+  if (!columns.some((col) => col.id === "employeeId")) {
+    const nameIndex = columns.findIndex((col) => col.id === "name");
     columns.splice(nameIndex >= 0 ? nameIndex + 1 : 0, 0, {
-      id: 'employeeId',
-      label: t(teacherColumnLabelKey('employeeId')),
+      id: "employeeId",
+      label: t(facultyColumnLabelKey("employeeId")),
     });
   }
   return columns;
 }
-
-export type UseFacultyExportActionsOptions = UseTeachersExportActionsOptions;
-export const defaultFacultyExportColumns = defaultTeachersExportColumns;
-export const resolveFacultyExportColumns = resolveTeachersExportColumns;
-

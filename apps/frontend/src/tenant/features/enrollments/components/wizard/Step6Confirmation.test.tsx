@@ -33,7 +33,7 @@ const mockSession = {
 const mockClass = {
   id: "cls-1",
   name: "Hifz 1",
-  teacherName: "Ustadh Khalid",
+  facultyName: "Ustadh Khalid",
   ageMin: 7,
   ageMax: 12,
 } as any;

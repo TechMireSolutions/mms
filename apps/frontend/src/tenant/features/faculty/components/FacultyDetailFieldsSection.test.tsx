@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DEFAULT_TEACHERS_SETTINGS, type Teacher } from "@mms/shared";
-import { TeacherDetailFieldsSection } from "./FacultyDetailFieldsSection";
+import { DEFAULT_FACULTY_SETTINGS, type Faculty } from "@mms/shared";
+import { FacultyDetailFieldsSection } from "./FacultyDetailFieldsSection";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -10,8 +10,8 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockTeacher: Teacher = {
-  id: "tch-fields-1",
+const mockFaculty: Faculty = {
+  id: "fac-fields-1",
   contactId: "cnt-1",
   name: "Ustadh Umar",
   status: "active",
@@ -36,14 +36,14 @@ const mockDetailFields = [
   },
 ];
 
-describe("TeacherDetailFieldsSection Component", () => {
-  it("renders teacher fields and contact details grouped by tabs", () => {
+describe("FacultyDetailFieldsSection Component", () => {
+  it("renders faculty fields and contact details grouped by tabs", () => {
     const html = renderToStaticMarkup(
-      <TeacherDetailFieldsSection
-        teacher={mockTeacher}
+      <FacultyDetailFieldsSection
+        faculty={mockFaculty}
         detailFields={mockDetailFields}
         displayName="Ustadh Umar"
-        settings={DEFAULT_TEACHERS_SETTINGS}
+        settings={DEFAULT_FACULTY_SETTINGS}
       />,
     );
 
@@ -53,3 +53,4 @@ describe("TeacherDetailFieldsSection Component", () => {
     expect(html).toContain("umar@example.com");
   });
 });
+

@@ -1,26 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import {
-  defaultTeacherEnabledTabIds,
-  resolveTeacherEnabledTabIds,
+  defaultFacultyEnabledTabIds,
+  resolveFacultyEnabledTabIds,
 } from './facultyEnabledTabs.js';
 import type { TabDefinition } from './contactFieldSchemaTypes.js';
 
-describe('resolveTeacherEnabledTabIds', () => {
+describe('resolveFacultyEnabledTabIds', () => {
   it('falls back to registry defaults when settings are absent or empty', () => {
-    expect(resolveTeacherEnabledTabIds()).toEqual(defaultTeacherEnabledTabIds());
-    expect(resolveTeacherEnabledTabIds(null)).toEqual(defaultTeacherEnabledTabIds());
-    expect(resolveTeacherEnabledTabIds({})).toEqual(defaultTeacherEnabledTabIds());
-    expect(resolveTeacherEnabledTabIds({ enabledTabs: [] })).toEqual(
-      defaultTeacherEnabledTabIds(),
+    expect(resolveFacultyEnabledTabIds()).toEqual(defaultFacultyEnabledTabIds());
+    expect(resolveFacultyEnabledTabIds(null)).toEqual(defaultFacultyEnabledTabIds());
+    expect(resolveFacultyEnabledTabIds({})).toEqual(defaultFacultyEnabledTabIds());
+    expect(resolveFacultyEnabledTabIds({ enabledTabs: [] })).toEqual(
+      defaultFacultyEnabledTabIds(),
     );
   });
 
   it('uses non-empty enabledTabs when formTabs are absent and always includes locked basic', () => {
-    expect(resolveTeacherEnabledTabIds({ enabledTabs: ['employment'] })).toEqual(
+    expect(resolveFacultyEnabledTabIds({ enabledTabs: ['employment'] })).toEqual(
       expect.arrayContaining(['basic', 'employment']),
     );
     expect(
-      resolveTeacherEnabledTabIds({ enabledTabs: ['basic', 'employment'] }),
+      resolveFacultyEnabledTabIds({ enabledTabs: ['basic', 'employment'] }),
     ).toEqual(expect.arrayContaining(['basic', 'employment']));
   });
 
@@ -30,7 +30,7 @@ describe('resolveTeacherEnabledTabIds', () => {
       { key: 'employment', label: 'Employment', enabled: false, order: 1 },
       { key: 'custom_house', label: 'House', enabled: true, order: 2 },
     ];
-    const resolved = resolveTeacherEnabledTabIds({
+    const resolved = resolveFacultyEnabledTabIds({
       formTabs,
       enabledTabs: ['basic', 'employment'],
     });
@@ -43,7 +43,7 @@ describe('resolveTeacherEnabledTabIds', () => {
       { key: 'basic', label: 'Basic', enabled: false, order: 0 },
       { key: 'employment', label: 'Employment', enabled: true, order: 1 },
     ];
-    expect(resolveTeacherEnabledTabIds({ formTabs })).toEqual(
+    expect(resolveFacultyEnabledTabIds({ formTabs })).toEqual(
       expect.arrayContaining(['basic', 'employment']),
     );
   });

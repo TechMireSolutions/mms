@@ -33,13 +33,11 @@ import {
   isStudentDeleted,
 } from '../studentTypes.js';
 import {
-  TEACHER_CLIENT_SOFT_DELETE_KEYS,
-  stripTeacherClientSoftDeleteFields,
+  FACULTY_CLIENT_SOFT_DELETE_KEYS,
+  stripFacultyClientSoftDeleteFields,
+  filterActiveFaculty,
+  isFacultyDeleted,
 } from '../facultyUtils.js';
-import {
-  filterActiveTeachers,
-  isTeacherDeleted,
-} from '../facultyTypes.js';
 import {
   SESSION_CLIENT_SOFT_DELETE_KEYS,
   stripSessionClientSoftDeleteFields,
@@ -57,7 +55,7 @@ import {
   isEnrollmentDeleted,
 } from '../enrollmentsModuleManifest.js';
 import * as studentSoftDelete from '../studentSoftDelete.js';
-import * as teacherSoftDelete from '../facultySoftDelete.js';
+import * as facultySoftDelete from '../facultySoftDelete.js';
 import * as sessionSoftDelete from '../sessionSoftDelete.js';
 import * as enrollmentSoftDelete from '../enrollmentSoftDelete.js';
 import {
@@ -69,11 +67,11 @@ import { isQueryFlagTrue } from '../paginationUtils.js';
 import { manifestSoftDeleteSchema } from '../types/moduleManifest.js';
 import { contactWriteSchema } from '../schemas/contacts.dto.js';
 import { studentWriteSchema } from '../schemas/students.dto.js';
-import { buildDynamicTeacherSchema } from '../schemas/faculty.dto.js';
+import { buildDynamicFacultySchema } from '../schemas/faculty.dto.js';
 import { sessionCreateBodySchema, sessionUpdateBodySchema } from '../schemas/sessions.dto.js';
 import { SessionInsertSchema } from '../sessionTypes.js';
 import type { Contact } from '../contactTypes.js';
-import { DEFAULT_TEACHERS_SETTINGS } from '../facultyModuleSettings.js';
+import { DEFAULT_FACULTY_SETTINGS } from '../facultyModuleSettings.js';
 import { CONTACTS_MODULE_MANIFEST } from '../contactsModuleManifest.js';
 import { STUDENTS_MODULE_MANIFEST } from '../studentsModuleManifest.js';
 import { FACULTY_MODULE_MANIFEST } from '../facultyModuleManifest.js';
@@ -141,9 +139,9 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
       expect(parsed.deletedWithCascade).toBeUndefined();
     });
 
-    it('buildDynamicTeacherSchema strips client soft-delete fields', () => {
-      const teacherSchema = buildDynamicTeacherSchema(
-        { ...DEFAULT_TEACHERS_SETTINGS, requireContactLink: false },
+    it('buildDynamicFacultySchema strips client soft-delete fields', () => {
+      const facultySchema = buildDynamicFacultySchema(
+        { ...DEFAULT_FACULTY_SETTINGS, requireContactLink: false },
         new Set<string>(),
         {},
       );
@@ -156,7 +154,7 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
         deletionReason: 'Illegal archive attempt',
       };
 
-      const parsed = teacherSchema.parse(payload) as Record<string, unknown>;
+      const parsed = facultySchema.parse(payload) as Record<string, unknown>;
       expect(parsed.employeeId).toBe('EMP-001');
       expect(parsed.specialization).toBe('Fiqh');
       expect(parsed.deletedAt).toBeUndefined();
@@ -449,7 +447,7 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
       expect(CLIENT_SOFT_DELETE_KEYS).toEqual(expectedKeys);
       expect(CONTACT_CLIENT_SOFT_DELETE_KEYS).toEqual(expectedKeys);
       expect(STUDENT_CLIENT_SOFT_DELETE_KEYS).toEqual(expectedKeys);
-      expect(TEACHER_CLIENT_SOFT_DELETE_KEYS).toEqual(expectedKeys);
+      expect(FACULTY_CLIENT_SOFT_DELETE_KEYS).toEqual(expectedKeys);
       expect(SESSION_CLIENT_SOFT_DELETE_KEYS).toEqual(expectedKeys);
       expect(ENROLLMENT_CLIENT_SOFT_DELETE_KEYS).toEqual(expectedKeys);
     });
@@ -469,7 +467,7 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
       expect(stripClientSoftDeleteFields(raw)).toEqual({ name: 'Record', otherField: 123 });
       expect(stripContactClientSoftDeleteFields(raw)).toEqual({ name: 'Record', otherField: 123 });
       expect(stripStudentClientSoftDeleteFields(raw)).toEqual({ name: 'Record', otherField: 123 });
-      expect(stripTeacherClientSoftDeleteFields(raw)).toEqual({ name: 'Record', otherField: 123 });
+      expect(stripFacultyClientSoftDeleteFields(raw)).toEqual({ name: 'Record', otherField: 123 });
       expect(stripSessionClientSoftDeleteFields(raw)).toEqual({ name: 'Record', otherField: 123 });
       expect(stripEnrollmentClientSoftDeleteFields(raw)).toEqual({ name: 'Record', otherField: 123 });
     });
@@ -493,9 +491,9 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
       expect(isStudentDeleted(archived)).toBe(true);
       expect(filterActiveStudents([active, archived])).toEqual([active]);
 
-      expect(isTeacherDeleted(active)).toBe(false);
-      expect(isTeacherDeleted(archived)).toBe(true);
-      expect(filterActiveTeachers([active, archived])).toEqual([active]);
+      expect(isFacultyDeleted(active)).toBe(false);
+      expect(isFacultyDeleted(archived)).toBe(true);
+      expect(filterActiveFaculty([active, archived])).toEqual([active]);
 
       expect(isSessionDeleted(active)).toBe(false);
       expect(isSessionDeleted(archived)).toBe(true);
@@ -541,13 +539,13 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
       expect(studentSoftDelete.filterActiveEntities([activeSample, sample])).toEqual([activeSample]);
       expect(studentSoftDelete.filterActiveStudents([activeSample, sample])).toEqual([activeSample]);
 
-      expect(teacherSoftDelete.TEACHER_CLIENT_SOFT_DELETE_KEYS).toBeDefined();
-      expect(teacherSoftDelete.stripTeacherClientSoftDeleteFields(sample)).toEqual({ name: 'Entity', extra: 42 });
-      expect(teacherSoftDelete.stripClientSoftDeleteFields(sample)).toEqual({ name: 'Entity', extra: 42 });
-      expect(teacherSoftDelete.isEntityDeleted(sample)).toBe(true);
-      expect(teacherSoftDelete.isTeacherDeleted(sample)).toBe(true);
-      expect(teacherSoftDelete.filterActiveEntities([activeSample, sample])).toEqual([activeSample]);
-      expect(teacherSoftDelete.filterActiveTeachers([activeSample, sample])).toEqual([activeSample]);
+      expect(facultySoftDelete.FACULTY_CLIENT_SOFT_DELETE_KEYS).toBeDefined();
+      expect(facultySoftDelete.stripFacultyClientSoftDeleteFields(sample)).toEqual({ name: 'Entity', extra: 42 });
+      expect(facultySoftDelete.stripClientSoftDeleteFields(sample)).toEqual({ name: 'Entity', extra: 42 });
+      expect(facultySoftDelete.isEntityDeleted(sample)).toBe(true);
+      expect(facultySoftDelete.isFacultyDeleted(sample)).toBe(true);
+      expect(facultySoftDelete.filterActiveEntities([activeSample, sample])).toEqual([activeSample]);
+      expect(facultySoftDelete.filterActiveFaculty([activeSample, sample])).toEqual([activeSample]);
 
       expect(sessionSoftDelete.SESSION_CLIENT_SOFT_DELETE_KEYS).toBeDefined();
       expect(sessionSoftDelete.stripSessionClientSoftDeleteFields(sample)).toEqual({ name: 'Entity', extra: 42 });

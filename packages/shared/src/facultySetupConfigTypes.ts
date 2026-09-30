@@ -1,27 +1,38 @@
 import { z } from 'zod';
-import type { FieldDefinition, TabDefinition } from './contactTypes.js';
+import type { TabDefinition } from './contactTypes.js';
 import {
-  DEFAULT_TEACHERS_SETTINGS,
-  type TeachersSettings,
+  DEFAULT_FACULTY_SETTINGS,
+  type FacultySettings,
 } from './facultyModuleSettings.js';
-import { TEACHERS_TAB_REGISTRY } from './moduleFieldSetupPersons.js';
+import { FACULTY_TAB_REGISTRY } from './moduleFieldSetupPersons.js';
 import { moduleFieldConfigPutBodyBaseSchema } from './schemas/moduleFieldConfig.dto.js';
 import { deepSanitizeStrings } from './schemas/sanitize.js';
+import {
+  FACULTY_MODULE_PREFERENCE_KEYS,
+  type FacultyModulePreferences,
+  normalizeFacultyModulePreferences,
+} from './facultyPreferencesNormalization.js';
+
+export {
+  FACULTY_MODULE_PREFERENCE_KEYS,
+  type FacultyModulePreferences,
+  normalizeFacultyModulePreferences,
+};
 
 /** PUT /api/faculty/field-config — field registry JSON without formTabs SSOT. */
-const teacherFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
+const facultyFieldConfigPutBodyBaseSchema = moduleFieldConfigPutBodyBaseSchema
   .extend({
     columnRegistry: z.array(z.record(z.string(), z.unknown())).optional(),
   })
   .strict();
 
-export const teacherFieldConfigPutBodySchema = z.preprocess((raw) => {
+export const facultyFieldConfigPutBodySchema = z.preprocess((raw) => {
   if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;
   return deepSanitizeStrings(raw);
-}, teacherFieldConfigPutBodyBaseSchema);
+}, facultyFieldConfigPutBodyBaseSchema);
 
 /** PUT /api/faculty/preferences — employee ID / contact-link prefs only. */
-export const teacherPreferencesPutBodySchema = z
+export const facultyPreferencesPutBodySchema = z
   .object({
     idPrefix: z.string().optional(),
     idTemplate: z.string().optional(),
@@ -40,203 +51,71 @@ export const teacherPreferencesPutBodySchema = z
   })
   .passthrough();
 
-export type TeacherModulePreferences = Pick<
-  TeachersSettings,
-  | 'idPrefix'
-  | 'idTemplate'
-  | 'idDigits'
-  | 'idStartSeq'
-  | 'idRestartAnnually'
-  | 'employeeIdPrefix'
-  | 'employeeIdYearFormat'
-  | 'employeeIdSequenceDigits'
-  | 'employeeIdDelimiter'
-  | 'employeeIdLastYear'
-  | 'employeeIdCurrentSequence'
-  | 'autoGenerateId'
-  | 'requireContactLink'
-  | 'defaultSpecialization'
->;
-
-const PREF_KEYS = [
-  'idPrefix',
-  'idTemplate',
-  'idDigits',
-  'idStartSeq',
-  'idRestartAnnually',
-  'employeeIdPrefix',
-  'employeeIdYearFormat',
-  'employeeIdSequenceDigits',
-  'employeeIdDelimiter',
-  'employeeIdLastYear',
-  'employeeIdCurrentSequence',
-  'autoGenerateId',
-  'requireContactLink',
-  'defaultSpecialization',
-] as const;
-
-/** Normalize Teachers module preferences (typed `teacher_module_preferences`). */
-export function normalizeTeacherModulePreferences(
-  partial?: Partial<TeacherModulePreferences> | Record<string, unknown> | null,
-): TeacherModulePreferences {
-  const defaults: TeacherModulePreferences = {
-    idPrefix: DEFAULT_TEACHERS_SETTINGS.idPrefix,
-    idTemplate: DEFAULT_TEACHERS_SETTINGS.idTemplate ?? '{PREFIX}-{SEQ}',
-    idDigits: DEFAULT_TEACHERS_SETTINGS.idDigits ?? 4,
-    idStartSeq: DEFAULT_TEACHERS_SETTINGS.idStartSeq ?? 1,
-    idRestartAnnually: DEFAULT_TEACHERS_SETTINGS.idRestartAnnually ?? false,
-    employeeIdPrefix: DEFAULT_TEACHERS_SETTINGS.employeeIdPrefix ?? 'FAC',
-    employeeIdYearFormat: DEFAULT_TEACHERS_SETTINGS.employeeIdYearFormat ?? 'YYYY',
-    employeeIdSequenceDigits: DEFAULT_TEACHERS_SETTINGS.employeeIdSequenceDigits ?? 4,
-    employeeIdDelimiter: DEFAULT_TEACHERS_SETTINGS.employeeIdDelimiter ?? '',
-    employeeIdLastYear: DEFAULT_TEACHERS_SETTINGS.employeeIdLastYear,
-    employeeIdCurrentSequence: DEFAULT_TEACHERS_SETTINGS.employeeIdCurrentSequence ?? 0,
-    autoGenerateId: DEFAULT_TEACHERS_SETTINGS.autoGenerateId,
-    requireContactLink: DEFAULT_TEACHERS_SETTINGS.requireContactLink,
-    defaultSpecialization: DEFAULT_TEACHERS_SETTINGS.defaultSpecialization,
-  };
-  if (!partial || typeof partial !== 'object') return { ...defaults };
-
-  const rawPrefix = partial.employeeIdPrefix ?? partial.idPrefix;
-  const effectivePrefix =
-    typeof rawPrefix === 'string' && rawPrefix.trim()
-      ? rawPrefix.trim()
-      : defaults.idPrefix;
-
-  const parsedDigits = Number(partial.employeeIdSequenceDigits ?? partial.idDigits);
-  const effectiveDigits =
-    Number.isFinite(parsedDigits) && parsedDigits >= 1 && parsedDigits <= 8
-      ? Math.floor(parsedDigits)
-      : defaults.idDigits;
-
-  const parsedStartSeq = Number(partial.idStartSeq);
-  const parsedCurrentSeq = Number(partial.employeeIdCurrentSequence);
-  const parsedLastYear = Number(partial.employeeIdLastYear);
-
-  const rawYearFormat = String(partial.employeeIdYearFormat ?? '').toUpperCase();
-  const effectiveYearFormat = rawYearFormat === 'YY' ? 'YY' : 'YYYY';
-
-  const effectiveDelimiter =
-    typeof partial.employeeIdDelimiter === 'string'
-      ? partial.employeeIdDelimiter
-      : defaults.employeeIdDelimiter;
-
-  return {
-    idPrefix: effectivePrefix,
-    employeeIdPrefix: effectivePrefix,
-    idTemplate:
-      typeof partial.idTemplate === 'string' && partial.idTemplate.trim()
-        ? partial.idTemplate.trim()
-        : defaults.idTemplate,
-    idDigits: effectiveDigits,
-    employeeIdSequenceDigits: effectiveDigits,
-    idStartSeq:
-      Number.isFinite(parsedStartSeq) && parsedStartSeq >= 1
-        ? Math.floor(parsedStartSeq)
-        : defaults.idStartSeq,
-    idRestartAnnually:
-      typeof partial.idRestartAnnually === 'boolean'
-        ? partial.idRestartAnnually
-        : defaults.idRestartAnnually,
-    employeeIdYearFormat: effectiveYearFormat,
-    employeeIdDelimiter: effectiveDelimiter,
-    employeeIdLastYear: Number.isFinite(parsedLastYear) ? Math.floor(parsedLastYear) : defaults.employeeIdLastYear,
-    employeeIdCurrentSequence:
-      Number.isFinite(parsedCurrentSeq) && parsedCurrentSeq >= 0
-        ? Math.floor(parsedCurrentSeq)
-        : defaults.employeeIdCurrentSequence,
-    autoGenerateId:
-      typeof partial.autoGenerateId === 'boolean'
-        ? partial.autoGenerateId
-        : defaults.autoGenerateId,
-    requireContactLink:
-      typeof partial.requireContactLink === 'boolean'
-        ? partial.requireContactLink
-        : defaults.requireContactLink,
-    defaultSpecialization:
-      typeof partial.defaultSpecialization === 'string' && partial.defaultSpecialization.trim()
-        ? partial.defaultSpecialization
-        : defaults.defaultSpecialization,
-  };
-}
-
-/** Field-config slice persisted on `teacher_field_configs` (never formTabs / module prefs). */
-export function stripTeacherFieldConfigForPersist(
-  config: TeachersSettings | Record<string, unknown>,
+/** Field-config slice persisted on `faculty_field_configs` (never formTabs / module prefs). */
+export function stripFacultyFieldConfigForPersist(
+  config: FacultySettings | Record<string, unknown>,
 ): Record<string, unknown> {
   const {
-    formTabs: _formTabs,
-    idPrefix: _idPrefix,
-    idTemplate: _idTemplate,
-    idDigits: _idDigits,
-    idStartSeq: _idStartSeq,
-    idRestartAnnually: _idRestartAnnually,
-    autoGenerateId: _autoGenerateId,
-    requireContactLink: _requireContactLink,
+    formTabs: _formTabs, idPrefix: _idPrefix, idTemplate: _idTemplate,
+    idDigits: _idDigits, idStartSeq: _idStartSeq, idRestartAnnually: _idRestartAnnually,
+    autoGenerateId: _autoGenerateId, requireContactLink: _requireContactLink,
     defaultSpecialization: _defaultSpecialization,
-    defaultViewLayout: _defaultViewLayout,
     ...rest
-  } = config as TeachersSettings & Record<string, unknown>;
+  } = config as FacultySettings & Record<string, unknown>;
   return rest;
 }
 
-/** Normalize TeachersSettings from typed REST or legacy document blobs. */
-export function normalizeTeachersSettings(config: unknown): TeachersSettings {
-  const defaults = { ...DEFAULT_TEACHERS_SETTINGS, formTabs: [...TEACHERS_TAB_REGISTRY] };
+/** Normalize FacultySettings from typed REST or document blobs. */
+export function normalizeFacultySettings(config: unknown): FacultySettings {
+  const defaults = { ...DEFAULT_FACULTY_SETTINGS, formTabs: [...FACULTY_TAB_REGISTRY] };
   if (!config || typeof config !== 'object' || Array.isArray(config)) {
     return { ...defaults };
   }
   const raw = config as Record<string, unknown>;
-  const prefs = normalizeTeacherModulePreferences(raw);
-  const merged: TeachersSettings = {
+  const prefs = normalizeFacultyModulePreferences(raw);
+  const merged: FacultySettings = {
     ...defaults,
-    ...(raw as Partial<TeachersSettings>),
+    ...(raw as Partial<FacultySettings>),
     ...prefs,
-    fieldOrder: Array.isArray(raw.fieldOrder)
-      ? (raw.fieldOrder as string[])
-      : defaults.fieldOrder,
-    formTabs: Array.isArray(raw.formTabs)
-      ? (raw.formTabs as TabDefinition[])
-      : defaults.formTabs,
-    enabledTabs: Array.isArray(raw.enabledTabs) ? (raw.enabledTabs as string[]) : raw.enabledTabs as string[] | undefined,
-    requiredTabs: Array.isArray(raw.requiredTabs) ? (raw.requiredTabs as string[]) : raw.requiredTabs as string[] | undefined,
+    fieldOrder: Array.isArray(raw.fieldOrder) ? (raw.fieldOrder as string[]) : defaults.fieldOrder,
+    formTabs: Array.isArray(raw.formTabs) ? (raw.formTabs as TabDefinition[]) : defaults.formTabs,
+    enabledTabs: Array.isArray(raw.enabledTabs) ? (raw.enabledTabs as string[]) : (raw.enabledTabs as string[] | undefined),
+    requiredTabs: Array.isArray(raw.requiredTabs) ? (raw.requiredTabs as string[]) : (raw.requiredTabs as string[] | undefined),
     fields:
       raw.fields && typeof raw.fields === 'object' && !Array.isArray(raw.fields) && Object.keys(raw.fields).length > 0
-        ? (raw.fields as TeachersSettings['fields'])
+        ? (raw.fields as FacultySettings['fields'])
         : defaults.fields,
     columnRegistry: Array.isArray(raw.columnRegistry)
-      ? (raw.columnRegistry as TeachersSettings['columnRegistry'])
-      : raw.columnRegistry as TeachersSettings['columnRegistry'],
+      ? (raw.columnRegistry as FacultySettings['columnRegistry'])
+      : (raw.columnRegistry as FacultySettings['columnRegistry']),
   };
-  // Retired Setup preferences — Work uses useWorkDirectoryViewMode (Students parity),
-  // and legacy `customFields[]` is superseded by tabbed `fields`.
-  delete (merged as TeachersSettings & { defaultViewLayout?: unknown }).defaultViewLayout;
-  delete (merged as TeachersSettings & { customFields?: unknown }).customFields;
+  delete (merged as FacultySettings & { defaultViewLayout?: unknown }).defaultViewLayout;
+  delete (merged as FacultySettings & { customFields?: unknown }).customFields;
   return merged;
 }
 
-/** Split a legacy `teachers_settings` blob into typed field-config + preferences rows. */
-export function splitTeachersSettingsBlob(raw: unknown): {
+/** Split a `faculty_settings` blob into typed field-config + preferences rows. */
+export function splitFacultySettingsBlob(raw: unknown): {
   fieldConfig: Record<string, unknown>;
-  preferences: TeacherModulePreferences;
+  preferences: FacultyModulePreferences;
 } {
-  const settings = normalizeTeachersSettings(raw);
+  const settings = normalizeFacultySettings(raw);
   return {
-    fieldConfig: stripTeacherFieldConfigForPersist(settings),
-    preferences: normalizeTeacherModulePreferences(settings),
+    fieldConfig: stripFacultyFieldConfigForPersist(settings),
+    preferences: normalizeFacultyModulePreferences(settings),
   };
 }
 
-/** Compose FE/validation TeachersSettings from typed parts (+ optional custom tabs). */
-export function composeTeachersSettings(
+/** Compose FE/validation FacultySettings from typed parts (+ optional custom tabs). */
+export function composeFacultySettings(
   fieldConfig: unknown,
   preferences: unknown,
   formTabs?: TabDefinition[],
-): TeachersSettings {
-  const prefs = normalizeTeacherModulePreferences(
-    preferences as Partial<TeacherModulePreferences> | null,
+): FacultySettings {
+  const prefs = normalizeFacultyModulePreferences(
+    preferences as Partial<FacultyModulePreferences> | null,
   );
-  return normalizeTeachersSettings({
+  return normalizeFacultySettings({
     ...(fieldConfig && typeof fieldConfig === 'object' && !Array.isArray(fieldConfig)
       ? (fieldConfig as Record<string, unknown>)
       : {}),
@@ -245,28 +124,19 @@ export function composeTeachersSettings(
   });
 }
 
-/**
- * Merge API custom_tabs with document/default form tabs for Teachers Setup/forms.
- * Empty API → document tabs when present, else {@link TEACHERS_TAB_REGISTRY}.
- */
-export function mergeTeachersFormTabsFromApi(
+/** Merge API custom_tabs with default form tabs for Faculty Setup/forms. */
+export function mergeFacultyFormTabsFromApi(
   documentFormTabs: TabDefinition[] | undefined,
   apiTabs: TabDefinition[],
-  _fields?: Record<string, FieldDefinition[]> | undefined,
 ): TabDefinition[] {
   const documentOrDefault =
-    documentFormTabs && documentFormTabs.length > 0
-      ? documentFormTabs
-      : [...TEACHERS_TAB_REGISTRY];
-
+    documentFormTabs && documentFormTabs.length > 0 ? documentFormTabs : [...FACULTY_TAB_REGISTRY];
   const merged =
     apiTabs.length === 0
       ? documentOrDefault
       : [
           ...apiTabs,
-          ...TEACHERS_TAB_REGISTRY.filter(
-            (seedTab) => !apiTabs.some((apiTab) => apiTab.key === seedTab.key),
-          ),
+          ...FACULTY_TAB_REGISTRY.filter((seedTab) => !apiTabs.some((apiTab) => apiTab.key === seedTab.key)),
         ];
 
   const seenKeys = new Set<string>();
@@ -276,18 +146,3 @@ export function mergeTeachersFormTabsFromApi(
     return true;
   });
 }
-
-export { PREF_KEYS as TEACHER_MODULE_PREFERENCE_KEYS };
-
-
-export const facultyFieldConfigPutBodySchema = teacherFieldConfigPutBodySchema;
-export const facultyPreferencesPutBodySchema = teacherPreferencesPutBodySchema;
-export type FacultyModulePreferences = TeacherModulePreferences;
-export const FACULTY_MODULE_PREFERENCE_KEYS = PREF_KEYS;
-export const normalizeFacultyModulePreferences = normalizeTeacherModulePreferences;
-export const mergeFacultyFormTabsFromApi = mergeTeachersFormTabsFromApi;
-export const composeFacultySettings = composeTeachersSettings;
-export const splitFacultySettingsBlob = splitTeachersSettingsBlob;
-export const stripFacultyFieldConfigForPersist = stripTeacherFieldConfigForPersist;
-export const normalizeFacultySettings = normalizeTeachersSettings;
-

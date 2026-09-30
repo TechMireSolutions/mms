@@ -21,8 +21,8 @@ export function FacultyReportView({ report, widgets }: {
     return (
       <div className="p-4">
         <ErrorState
-          title={report.t('teachers.report.loadFailed')}
-          description={report.t('teachers.report.loadFailedHint')}
+          title={report.t('faculty.report.loadFailed')}
+          description={report.t('faculty.report.loadFailedHint')}
           onRetry={() => {
             void report.listRefetch();
           }}
@@ -34,14 +34,14 @@ export function FacultyReportView({ report, widgets }: {
   return (
     <div className="space-y-4">
       <ReportFilterBanner
-        label={report.t('teachers.report.filterLabel')}
+        label={report.t('faculty.report.filterLabel')}
         filters={[
           report.reportStatusFilter
             ? {
                 key: 'status',
                 value: toTitleCase(report.reportStatusFilter),
                 onClear: () => report.setReportStatusFilter(null),
-                clearLabel: report.t('teachers.report.clearFilter'),
+                clearLabel: report.t('faculty.report.clearFilter'),
               }
             : null,
           report.filters.student
@@ -62,22 +62,22 @@ export function FacultyReportView({ report, widgets }: {
 
       {report.activeSubTab === 'roster' ? (
         <ReportDataGridContainer
-          title={report.t('teachers.report.rosterTab')}
+          title={report.t('faculty.report.rosterTab')}
           columns={report.rosterExportColumns}
-          rows={report.teachers}
+          rows={report.faculty}
           resolveRows={report.resolveRosterExportRows}
-          moduleId="teachers"
+          moduleId="faculty"
           page={report.listPage}
           total={report.listTotal}
           limit={FACULTY_MODULE_MANIFEST.defaultPageSize}
           hasMore={report.listHasMore}
           onPageChange={report.setListPage}
-          i18nNamespace="teachers"
+          i18nNamespace="faculty"
           paginationVariant="range"
         >
           <FacultyReportTables
             activeSubTab={report.activeSubTab}
-            teachers={report.teachers}
+            faculty={report.faculty}
             statusBadgeConfig={report.statusBadgeConfig}
             listLoading={report.listLoading}
             workloadRows={report.filteredFacultyWorkload}
@@ -95,14 +95,14 @@ export function FacultyReportView({ report, widgets }: {
             />
           </Suspense>
           <ReportDataGridContainer
-            title={report.t('teachers.report.workloadTab')}
+            title={report.t('faculty.report.workloadTab')}
             columns={report.workloadExportColumns}
             rows={report.filteredFacultyWorkload}
-            moduleId="teachers"
+            moduleId="faculty"
           >
             <FacultyReportTables
               activeSubTab={report.activeSubTab}
-              teachers={report.teachers}
+              faculty={report.faculty}
               statusBadgeConfig={report.statusBadgeConfig}
               listLoading={report.listLoading}
               workloadRows={report.filteredFacultyWorkload}

@@ -1,5 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { listBackupSnapshotCollectionKeys } from '../db/relationalReplaceMapping.js';
+import {
+  synchronizeData,
+  fetchBackupSnapshot,
+  fetchDatabaseSnapshot,
+  persistCollection,
+} from '../services/dbSyncService.js';
 
 const dbSaveCollection = vi.fn();
 const dbSaveObject = vi.fn();
@@ -13,6 +19,8 @@ const runInTransaction = vi.fn(async (fn: () => Promise<void>) => fn());
 const runInReadSnapshotTransaction = vi.fn(async (fn: () => Promise<unknown>) => fn());
 const loadRelationalSnapshotCollections = vi.fn();
 const getRequestTenant = vi.fn();
+const getWorkspaceBranding = vi.fn();
+const getWorkspaceGlobalSettings = vi.fn();
 
 vi.mock('../db/database.js', () => ({
   getCollection: vi.fn(),
@@ -56,6 +64,15 @@ vi.mock('../db/repositories/tenantUserRepository.js', () => ({
   listAllTenantUsersByWorkspace: (subdomain: string) => listAllTenantUsersByWorkspace(subdomain),
 }));
 
+vi.mock('../db/repositories/workspaceRepository.js', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('../db/repositories/workspaceRepository.js')>();
+  return {
+    ...actual,
+    getWorkspaceBranding: (subdomain: string) => getWorkspaceBranding(subdomain),
+    getWorkspaceGlobalSettings: (subdomain: string) => getWorkspaceGlobalSettings(subdomain),
+  };
+});
+
 const acquireTenantRestoreLock = vi.fn(async () => true);
 vi.mock('../lib/restoreLock.js', () => ({
   acquireTenantRestoreLock: () => acquireTenantRestoreLock(),
@@ -75,15 +92,15 @@ describe('dbSyncService collection persistence', () => {
     dbListTenantObjectLogicalKeys.mockResolvedValue([]);
     dbListTenantCollectionLogicalKeys.mockResolvedValue([]);
     clearTenantBackgroundJobs.mockResolvedValue(0);
-    // Tests below override these; reset so no test depends on run order.
     getRequestTenant.mockReset();
     dbSaveCollection.mockReset();
     acquireTenantRestoreLock.mockReset().mockResolvedValue(true);
     listAllTenantUsersByWorkspace.mockReset().mockResolvedValue([]);
+    getWorkspaceBranding.mockReset().mockResolvedValue(null);
+    getWorkspaceGlobalSettings.mockReset().mockResolvedValue(null);
   });
 
   it('persistCollection writes JSON only without relational replace', async () => {
-    const { persistCollection } = await import('../services/dbSyncService.js');
     await persistCollection('students', [{ id: 's-1' }]);
     expect(dbSaveCollection).toHaveBeenCalledWith('students', [{ id: 's-1' }], undefined);
     const options = dbSaveCollection.mock.calls[0]?.[2] as { mirrorRelationalReplace?: boolean } | undefined;
@@ -91,9 +108,13 @@ describe('dbSyncService collection persistence', () => {
   });
 
   it('synchronizeData mirrors relational replace for admin restore', async () => {
-    const { synchronizeData } = await import('../services/dbSyncService.js');
     await synchronizeData({
-      collections: { users: [{ id: 'u-1' }], contacts: [{ id: 'c-1' }], students: [{ id: 's-1' }] },
+      collections: {
+        users: [{ id: 'u-1' }],
+        contacts: [{ id: 'c-1' }],
+        students: [{ id: 's-1' }],
+        faculty: [{ id: 'f-1' }],
+      },
       objects: {},
     }, undefined, true);
     const savedNames = dbSaveCollection.mock.calls.map((call) => call[0] as string);
@@ -102,8 +123,12 @@ describe('dbSyncService collection persistence', () => {
     // column-prefs (incl. hasanat user_id → tenant_users.id FK) restore after users.
     expect(savedNames.indexOf('users')).toBeGreaterThan(savedNames.indexOf('contacts'));
     expect(savedNames).toContain('students');
+    expect(savedNames).toContain('faculty');
     expect(savedNames).toContain('message_logs');
     expect(dbSaveCollection).toHaveBeenCalledWith('students', [{ id: 's-1' }], {
+      mirrorRelationalReplace: true,
+    });
+    expect(dbSaveCollection).toHaveBeenCalledWith('faculty', [{ id: 'f-1' }], {
       mirrorRelationalReplace: true,
     });
     expect(dbSaveCollection).toHaveBeenCalledWith('message_logs', [], {
@@ -113,7 +138,6 @@ describe('dbSyncService collection persistence', () => {
   });
 
   it('synchronizeData does not expand partial payloads without users', async () => {
-    const { synchronizeData } = await import('../services/dbSyncService.js');
     await synchronizeData({
       collections: { students: [{ id: 's-1' }] },
       objects: {},
@@ -124,7 +148,6 @@ describe('dbSyncService collection persistence', () => {
   });
 
   it('hydrates typed Students Setup from legacy objects on full restore and skips re-saving them', async () => {
-    const { synchronizeData } = await import('../services/dbSyncService.js');
     await synchronizeData({
       collections: { users: [{ id: 'u-1' }] },
       objects: {
@@ -163,13 +186,92 @@ describe('dbSyncService collection persistence', () => {
     expect(savedObjectKeys).not.toContain('student_user_column_preferences');
   });
 
+  it('hydrates typed Faculty Setup from modern faculty_settings on full restore and skips re-saving them', async () => {
+    await synchronizeData(
+      {
+        collections: { users: [{ id: 'u-1' }] },
+        objects: {
+          branding: { madrasaName: 'Demo' },
+          faculty_settings: {
+            fields: {},
+            autoGenerateId: true,
+          },
+          faculty_user_column_preferences: {
+            'u-admin': [{ key: 'specialization', enabled: true, order: 0 }],
+          },
+        },
+      },
+      undefined,
+      true,
+    );
+
+    const fieldCall = dbSaveCollection.mock.calls.find((call) => call[0] === 'faculty_field_configs');
+    const prefsCall = dbSaveCollection.mock.calls.find(
+      (call) => call[0] === 'faculty_module_preferences',
+    );
+    const columnCall = dbSaveCollection.mock.calls.find(
+      (call) => call[0] === 'faculty_user_column_prefs',
+    );
+    expect(fieldCall?.[1]).toEqual([expect.objectContaining({ config: expect.any(Object) })]);
+    expect(prefsCall?.[1]).toEqual([
+      expect.objectContaining({ preferences: expect.objectContaining({ autoGenerateId: true }) }),
+    ]);
+    expect(columnCall?.[1]).toEqual([
+      { userId: 'u-admin', preferences: [{ key: 'specialization', enabled: true, order: 0 }] },
+    ]);
+
+    const savedObjectKeys = dbSaveObject.mock.calls.map((call) => call[0] as string);
+    expect(savedObjectKeys).toContain('branding');
+    expect(savedObjectKeys).not.toContain('faculty_settings');
+    expect(savedObjectKeys).not.toContain('faculty_user_column_preferences');
+  });
+
+  it('hydrates typed Faculty Setup from historical teachers_settings on full restore and skips re-saving them', async () => {
+    await synchronizeData(
+      {
+        collections: { users: [{ id: 'u-1' }] },
+        objects: {
+          branding: { madrasaName: 'Demo' },
+          teachers_settings: {
+            fields: {},
+            autoGenerateId: false,
+          },
+          teacher_user_column_preferences: {
+            'u-admin': [{ key: 'specialization', enabled: true, order: 0 }],
+          },
+        },
+      },
+      undefined,
+      true,
+    );
+
+    const fieldCall = dbSaveCollection.mock.calls.find((call) => call[0] === 'faculty_field_configs');
+    const prefsCall = dbSaveCollection.mock.calls.find(
+      (call) => call[0] === 'faculty_module_preferences',
+    );
+    const columnCall = dbSaveCollection.mock.calls.find(
+      (call) => call[0] === 'faculty_user_column_prefs',
+    );
+    expect(fieldCall?.[1]).toEqual([expect.objectContaining({ config: expect.any(Object) })]);
+    expect(prefsCall?.[1]).toEqual([
+      expect.objectContaining({ preferences: expect.objectContaining({ autoGenerateId: false }) }),
+    ]);
+    expect(columnCall?.[1]).toEqual([
+      { userId: 'u-admin', preferences: [{ key: 'specialization', enabled: true, order: 0 }] },
+    ]);
+
+    const savedObjectKeys = dbSaveObject.mock.calls.map((call) => call[0] as string);
+    expect(savedObjectKeys).toContain('branding');
+    expect(savedObjectKeys).not.toContain('teachers_settings');
+    expect(savedObjectKeys).not.toContain('teacher_user_column_preferences');
+  });
+
   it('prunes tenant objects the full backup does not carry', async () => {
     dbListTenantObjectLogicalKeys.mockResolvedValue([
       'branding',
       'global_settings',
       'students_settings',
     ]);
-    const { synchronizeData } = await import('../services/dbSyncService.js');
     await synchronizeData({
       collections: { users: [{ id: 'u-1' }] },
       objects: { branding: { madrasaName: 'Dar ul Quran' } },
@@ -191,7 +293,6 @@ describe('dbSyncService collection persistence', () => {
       'users',
       'messages_u:peer',
     ]);
-    const { synchronizeData } = await import('../services/dbSyncService.js');
     await synchronizeData({
       collections: {
         users: [{ id: 'u-1' }],
@@ -212,7 +313,6 @@ describe('dbSyncService collection persistence', () => {
     dbSaveCollection.mockImplementation(async () => {
       controller.abort();
     });
-    const { synchronizeData } = await import('../services/dbSyncService.js');
 
     await expect(
       synchronizeData(
@@ -235,7 +335,6 @@ describe('dbSyncService collection persistence', () => {
   it('never prunes objects for a partial sync without users', async () => {
     dbListTenantObjectLogicalKeys.mockResolvedValue(['branding', 'global_settings']);
     dbListTenantCollectionLogicalKeys.mockResolvedValue(['genders']);
-    const { synchronizeData } = await import('../services/dbSyncService.js');
     await synchronizeData({
       collections: { students: [{ id: 's-1' }] },
       objects: { branding: { madrasaName: 'Dar ul Quran' } },
@@ -248,7 +347,6 @@ describe('dbSyncService collection persistence', () => {
   it('rejects a concurrent restore that cannot acquire the tenant lock before writing', async () => {
     getRequestTenant.mockReturnValue('demo');
     acquireTenantRestoreLock.mockResolvedValue(false);
-    const { synchronizeData } = await import('../services/dbSyncService.js');
 
     await expect(
       synchronizeData(
@@ -282,7 +380,6 @@ describe('dbSyncService collection persistence', () => {
       { id: 'u-1', role: 'admin', deletedAt: '2026-06-20T00:00:00Z' },
     ]);
 
-    const { synchronizeData } = await import('../services/dbSyncService.js');
     await expect(
       synchronizeData(
         {
@@ -301,6 +398,40 @@ describe('dbSyncService collection persistence', () => {
   });
 });
 
+describe('fetchDatabaseSnapshot', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    getRequestTenant.mockReturnValue('dar-ul-quran');
+    dbGetAllData.mockResolvedValue({
+      collections: { genders: [{ id: 'g-1' }] },
+      objects: { some_setting: { key: 'val' } },
+    });
+    getWorkspaceBranding.mockReset().mockResolvedValue(null);
+    getWorkspaceGlobalSettings.mockReset().mockResolvedValue(null);
+  });
+
+  it('returns doc-store data and leaves objects untouched when no tenant is in scope', async () => {
+    getRequestTenant.mockReturnValue(undefined);
+    const snapshot = await fetchDatabaseSnapshot();
+    expect(snapshot.collections?.genders).toEqual([{ id: 'g-1' }]);
+    expect(snapshot.objects?.some_setting).toEqual({ key: 'val' });
+    expect(snapshot.objects?.branding).toBeUndefined();
+  });
+
+  it('augments objects with branding and client-masked global settings for scoped tenant', async () => {
+    getWorkspaceBranding.mockResolvedValue({ madrasaName: 'Dar ul Quran' });
+    getWorkspaceGlobalSettings.mockResolvedValue({
+      llmApiKey: 'sk-secret-123',
+    });
+
+    const snapshot = await fetchDatabaseSnapshot();
+    expect(snapshot.objects?.branding).toEqual({ madrasaName: 'Dar ul Quran' });
+    expect(snapshot.objects?.global_settings).toBeDefined();
+    const gs = snapshot.objects?.global_settings as { llmApiKey?: string };
+    expect(gs.llmApiKey).toBe('****-123');
+  });
+});
+
 describe('fetchBackupSnapshot', () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -312,30 +443,33 @@ describe('fetchBackupSnapshot', () => {
     loadRelationalSnapshotCollections.mockImplementation(async () => {
       const collections: Record<string, unknown[]> = {};
       for (const key of listBackupSnapshotCollectionKeys()) {
-        collections[key] = key === 'students' ? [{ id: 's-1' }, { id: 's-2' }] : key === 'contacts' ? [{ id: 'c-1' }] : [];
+        collections[key] = key === 'students'
+          ? [{ id: 's-1' }, { id: 's-2' }]
+          : key === 'faculty'
+          ? [{ id: 'f-1' }]
+          : key === 'contacts'
+          ? [{ id: 'c-1' }]
+          : [];
       }
       return collections;
     });
   });
 
   it('reads document store and relational tables in one snapshot transaction', async () => {
-    const { fetchBackupSnapshot } = await import('../services/dbSyncService.js');
     await fetchBackupSnapshot();
-
     expect(runInReadSnapshotTransaction).toHaveBeenCalledTimes(1);
   });
 
   it('overrides the stale document store with authoritative relational rows', async () => {
-    const { fetchBackupSnapshot } = await import('../services/dbSyncService.js');
     const snapshot = await fetchBackupSnapshot();
 
     expect(loadRelationalSnapshotCollections).toHaveBeenCalledWith('dar-ul-quran');
     expect(snapshot.collections?.students).toEqual([{ id: 's-1' }, { id: 's-2' }]);
+    expect(snapshot.collections?.faculty).toEqual([{ id: 'f-1' }]);
     expect(snapshot.collections?.contacts).toEqual([{ id: 'c-1' }]);
   });
 
   it('includes every mapped business collection in the tenant backup', async () => {
-    const { fetchBackupSnapshot } = await import('../services/dbSyncService.js');
     const snapshot = await fetchBackupSnapshot();
     const keys = listBackupSnapshotCollectionKeys();
 
@@ -348,7 +482,6 @@ describe('fetchBackupSnapshot', () => {
   });
 
   it('keeps document-store-only collections and objects', async () => {
-    const { fetchBackupSnapshot } = await import('../services/dbSyncService.js');
     const snapshot = await fetchBackupSnapshot();
 
     expect(snapshot.collections?.genders).toEqual([{ id: 'g-1' }]);
@@ -357,7 +490,6 @@ describe('fetchBackupSnapshot', () => {
 
   it('falls back to the document store when no tenant is in scope', async () => {
     getRequestTenant.mockReturnValue(undefined);
-    const { fetchBackupSnapshot } = await import('../services/dbSyncService.js');
     const snapshot = await fetchBackupSnapshot();
 
     expect(loadRelationalSnapshotCollections).not.toHaveBeenCalled();

@@ -83,7 +83,7 @@ export function buildTodaysSessions(sessions: Session[]): TodaySessionItem[] {
         result.push({
           id: `${session.id}-${cls.id}`,
           name: `${cls.name} (${session.name})`,
-          teacher: cls.teacherName || session.name,
+          teacher: cls.facultyName || session.name,
           time: "Standard",
           room: cls.room || "Room 1",
           students: cls.enrolled ?? 0,
@@ -96,7 +96,7 @@ export function buildTodaysSessions(sessions: Session[]): TodaySessionItem[] {
           result.push({
             id: `${session.id}-${period.id}`,
             name: `${period.subject} (${session.name})`,
-            teacher: period.teacherName || session.name,
+            teacher: period.facultyName || session.name,
             time: `${period.startTime} - ${period.endTime}`,
             room: "Room 1",
             students: (session.classes || []).reduce((acc, c) => acc + (c.enrolled ?? 0), 0),

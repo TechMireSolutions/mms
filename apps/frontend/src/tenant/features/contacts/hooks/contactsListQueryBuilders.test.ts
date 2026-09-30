@@ -38,12 +38,12 @@ describe("buildContactsPageUrl", () => {
       hasReachable: true,
       quickFilter: "whatsapp",
       excludeIds: ["1", 2],
-      excludeLinkedModules: ["students", "teachers"],
+      excludeLinkedModules: ["students", "faculty"],
       sortField: "name",
       sortDir: "desc",
     });
     expect(url).toBe(
-      "/api/contacts?page=2&limit=50&search=ali&gender=male&includeDeleted=true&hasPhone=true&hasReachable=true&quickFilter=whatsapp&excludeIds=1%2C2&excludeLinkedModules=students%2Cteachers&sortField=name&sortDir=desc",
+      "/api/contacts?page=2&limit=50&search=ali&gender=male&includeDeleted=true&hasPhone=true&hasReachable=true&quickFilter=whatsapp&excludeIds=1%2C2&excludeLinkedModules=students%2Cfaculty&sortField=name&sortDir=desc",
     );
   });
 
@@ -76,12 +76,12 @@ describe("contactsListQueryKeyParams", () => {
       page: 2,
       search: "  zain  ",
       excludeIds: [1, "b"],
-      excludeLinkedModules: ["teachers"],
+      excludeLinkedModules: ["faculty"],
       sortDir: "desc",
     });
     expect(params.search).toBe("zain");
     expect(params.excludeIds).toBe("1,b");
-    expect(params.excludeLinkedModules).toBe("teachers");
+    expect(params.excludeLinkedModules).toBe("faculty");
     expect(params.sortDir).toBe("desc");
   });
 });

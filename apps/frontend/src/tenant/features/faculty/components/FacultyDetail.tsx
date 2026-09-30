@@ -1,6 +1,6 @@
 import React from "react";
 import { IdCard, School } from "lucide-react";
-import { hydrateTeacherFromContact, type FacultyMember, type Teacher } from "@mms/shared";
+import { hydrateFacultyFromContact, type FacultyMember } from "@mms/shared";
 import { DetailSheet } from "@/components/common/DetailSheet";
 import { DetailDrawerRestoreOrEditAction } from "@/components/ui/DetailDrawerArchiveChrome";
 import { DrawerUpdatedStamp } from "@/components/ui/DrawerUpdatedStamp";
@@ -16,13 +16,12 @@ import { FacultyDetailQuickActions } from "@/tenant/features/faculty/components/
 import { FacultyDetailSessionsSection } from "@/tenant/features/faculty/components/FacultyDetailSessionsSection";
 import { FacultyDesignationHistory } from "@/tenant/features/faculty/components/FacultyDesignationHistory";
 import {
-  resolveTeacherDisplayName,
+  resolveFacultyDisplayName,
 } from "@/tenant/features/faculty/components/facultyFieldDisplay";
 import { useFacultyDetailModel } from "@/tenant/features/faculty/components/useFacultyDetailModel";
 
 export interface FacultyDetailProps {
-  faculty?: FacultyMember;
-  teacher?: Teacher;
+  faculty: FacultyMember;
   onClose: () => void;
   onEdit?: (faculty: FacultyMember) => void;
   canDelete?: boolean;
@@ -33,19 +32,16 @@ export interface FacultyDetailProps {
   canWriteMessaging: boolean;
 }
 
-export type TeacherDetailProps = FacultyDetailProps;
-
-export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps): React.JSX.Element {
-  const teacher = (props.faculty ?? props.teacher)!;
-  const {
-    onClose,
-    onEdit,
-    canDelete = false,
-    onRestore,
-    onPrintIdCard,
-    openComposer,
-    canWriteMessaging,
-  } = props;
+export function FacultyDetail({
+  faculty,
+  onClose,
+  onEdit,
+  canDelete = false,
+  onRestore,
+  onPrintIdCard,
+  openComposer,
+  canWriteMessaging,
+}: FacultyDetailProps): React.JSX.Element {
   const { t } = useTranslation();
   const { settings, isFieldEnabled } = useFacultyConfig();
   const {
@@ -59,81 +55,80 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
     assignedClasses,
     sessionsLoading,
     sessionsError,
-  } = useFacultyDetailModel(teacher);
+  } = useFacultyDetailModel(faculty);
 
-  const effectiveTeacher = React.useMemo(() => {
-    if (!linkedContact) return teacher;
-    return hydrateTeacherFromContact(teacher, [linkedContact]);
-  }, [teacher, linkedContact]);
+  const effectiveFaculty = React.useMemo(() => {
+    if (!linkedContact) return faculty;
+    return hydrateFacultyFromContact(faculty, [linkedContact]);
+  }, [faculty, linkedContact]);
 
-  const isArchived = Boolean(teacher.deletedAt);
-  const displayName = resolveTeacherDisplayName(effectiveTeacher, t, linkedContact);
+  const isArchived = Boolean(faculty.deletedAt);
+  const displayName = resolveFacultyDisplayName(effectiveFaculty, t, linkedContact);
 
-  const headerActionsNode = (() => (
-      <div className="flex items-center gap-1.5">
-        {!isArchived && onPrintIdCard && (
-          <Button
-            type="button"
-            variant="outline"
-            size="sm"
-            onClick={() => onPrintIdCard(teacher)}
-            className="min-h-11 px-3 gap-1.5 font-medium text-xs border-border/60 hover:bg-muted/80"
-            title={t("faculty.detail.printIdCard") || t("teachers.detail.printIdCard")}
-            aria-label={t("faculty.detail.printIdCard") || t("teachers.detail.printIdCard")}
-          >
-            <IdCard className="w-3.5 h-3.5" aria-hidden />
-            <span className="hidden sm:inline">{t("faculty.detail.printIdCard") || t("teachers.detail.printIdCard")}</span>
-          </Button>
-        )}
-        <DetailDrawerRestoreOrEditAction
-          isArchived={isArchived}
-          canRestore={canDelete}
-          canEdit={Boolean(onEdit)}
-          restoreLabel={t("faculty.restore") || t("teachers.restore")}
-          editLabel={t("faculty.detail.editTitle") || t("teachers.detail.editTitle")}
-          onRestore={onRestore ? () => onRestore(String(teacher.id)) : undefined}
-          onEdit={onEdit ? () => onEdit(teacher) : undefined}
-        />
-      </div>
-    ))();
-
-  const headerExtraNode = (() => <FacultyArchivedBanner teacher={teacher} />)();
-
-  const footerNode = (() => (
-      <DrawerUpdatedStamp
-        updatedAt={teacher.updatedAt}
-        createdAt={teacher.createdAt}
-        label={t("faculty.detail.updatedLabel") || t("teachers.detail.updatedLabel")}
+  const headerActionsNode = (
+    <div className="flex items-center gap-1.5">
+      {!isArchived && onPrintIdCard && (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          onClick={() => onPrintIdCard(faculty)}
+          className="min-h-11 px-3 gap-1.5 font-medium text-xs border-border/60 hover:bg-muted/80"
+          title={t("faculty.detail.printIdCard")}
+          aria-label={t("faculty.detail.printIdCard")}
+        >
+          <IdCard className="w-3.5 h-3.5" aria-hidden />
+          <span className="hidden sm:inline">{t("faculty.detail.printIdCard")}</span>
+        </Button>
+      )}
+      <DetailDrawerRestoreOrEditAction
+        isArchived={isArchived}
+        canRestore={canDelete}
+        canEdit={Boolean(onEdit)}
+        restoreLabel={t("faculty.restore")}
+        editLabel={t("faculty.detail.editTitle")}
+        onRestore={onRestore ? () => onRestore(String(faculty.id)) : undefined}
+        onEdit={onEdit ? () => onEdit(faculty) : undefined}
       />
-    ))();
+    </div>
+  );
+
+  const headerExtraNode = <FacultyArchivedBanner faculty={faculty} />;
+
+  const footerNode = (
+    <DrawerUpdatedStamp
+      updatedAt={faculty.updatedAt}
+      createdAt={faculty.createdAt}
+      label={t("faculty.detail.updatedLabel")}
+    />
+  );
 
   const resolvedSubtitle = isArchived
-    ? (t("faculty.detail.archivedSubtitle") || t("teachers.detail.archivedSubtitle"))
-    : (t("faculty.detail.employeeSubtitle", { id: teacher.employeeId || t("common.notSpecified") }) ||
-       t("teachers.detail.employeeSubtitle", { id: teacher.employeeId || t("common.notSpecified") }));
+    ? t("faculty.detail.archivedSubtitle")
+    : t("faculty.detail.employeeSubtitle", { id: faculty.employeeId || t("common.notSpecified") });
 
   return (
     <DetailSheet
       onClose={onClose}
-      title={t("faculty.detail.title") || t("teachers.detail.title")}
+      title={t("faculty.detail.title")}
       subtitle={resolvedSubtitle}
       icon={School}
-      ariaLabel={t("faculty.detail.ariaLabel", { name: displayName }) || t("teachers.detail.ariaLabel", { name: displayName })}
+      ariaLabel={t("faculty.detail.ariaLabel", { name: displayName })}
       headerActions={headerActionsNode}
       headerExtra={headerExtraNode}
       footer={footerNode}
     >
       <FacultyDetailHeroCard
-        teacher={effectiveTeacher}
+        faculty={effectiveFaculty}
         displayName={displayName}
-        avatar={linkedContact?.avatar ?? effectiveTeacher.avatar}
+        avatar={linkedContact?.avatar ?? effectiveFaculty.avatar}
         statusConfig={statusConfig}
         showStatus={isFieldEnabled("status")}
       />
 
       {!isArchived && canWriteMessaging && (
         <FacultyDetailQuickActions
-          teacher={effectiveTeacher}
+          faculty={effectiveFaculty}
           displayName={displayName}
           primaryPhone={primaryPhone}
           primaryEmail={primaryEmail}
@@ -145,7 +140,7 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
 
       {hasVisibleDetailFields && (
         <FacultyDetailFieldsSection
-          teacher={effectiveTeacher}
+          faculty={effectiveFaculty}
           detailFields={detailFields}
           displayName={displayName}
           settings={settings}
@@ -158,17 +153,15 @@ export const FacultyDetail = (function FacultyDetail(props: FacultyDetailProps):
         error={sessionsError}
       />
 
-      {!isArchived ? <FacultyDesignationHistory faculty={effectiveTeacher} canEdit={Boolean(onEdit)} /> : null}
+      {!isArchived ? <FacultyDesignationHistory faculty={effectiveFaculty} canEdit={Boolean(onEdit)} /> : null}
 
-      {teacher.notes && isFieldEnabled("notes") && (
-        <FacultyDetailNotesSection notes={teacher.notes} />
+      {faculty.notes && isFieldEnabled("notes") && (
+        <FacultyDetailNotesSection notes={faculty.notes} />
       )}
     </DetailSheet>
   );
-});
+}
 
-export const TeacherDetail = FacultyDetail;
 export const FacultyDrawer = FacultyDetail;
-export const TeacherDrawer = FacultyDetail;
 export default FacultyDetail;
 

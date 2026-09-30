@@ -6,24 +6,17 @@ import {
   FACULTY_SORT_FIELDS,
   FACULTY_SORT_FIELD_SET,
   type FacultySortField,
-  TEACHER_SORT_FIELDS,
-  TEACHER_SORT_FIELD_SET,
-  type TeacherSortField,
 } from './facultyDirectoryColumns.js';
-import { resolveTeacherStatusRoles, type Faculty } from './facultyTypes.js';
+import { resolveFacultyStatusRoles, type Faculty } from './facultyTypes.js';
 
 export {
   FACULTY_SORT_FIELDS,
   FACULTY_SORT_FIELD_SET,
   type FacultySortField,
-  TEACHER_SORT_FIELDS,
-  TEACHER_SORT_FIELD_SET,
-  type TeacherSortField,
 };
 
-
 /** Work-directory filter presets — SSOT for schema + Filters menu. */
-export const TEACHERS_QUICK_FILTERS = [
+export const FACULTY_QUICK_FILTERS = [
   'all',
   'active',
   'inactive',
@@ -31,51 +24,51 @@ export const TEACHERS_QUICK_FILTERS = [
   'missingEmployeeId',
 ] as const;
 
-const teachersQuickFilterSchema = z.enum(TEACHERS_QUICK_FILTERS);
+const facultyQuickFilterSchema = z.enum(FACULTY_QUICK_FILTERS);
 
 /** Work-directory quick filter preset ids. */
-export type TeachersQuickFilter = z.infer<typeof teachersQuickFilterSchema>;
+export type FacultyQuickFilter = z.infer<typeof facultyQuickFilterSchema>;
 
-const TEACHERS_QUICK_FILTERS_SET = new Set<string>(TEACHERS_QUICK_FILTERS);
+const FACULTY_QUICK_FILTERS_SET = new Set<string>(FACULTY_QUICK_FILTERS);
 
-/** Narrow a dropdown/radio string to a Teachers quick-filter preset. */
-export function isTeachersQuickFilter(value: string): value is TeachersQuickFilter {
-  return TEACHERS_QUICK_FILTERS_SET.has(value);
+/** Narrow a dropdown/radio string to a Faculty quick-filter preset. */
+export function isFacultyQuickFilter(value: string): value is FacultyQuickFilter {
+  return FACULTY_QUICK_FILTERS_SET.has(value);
 }
 
-const TEACHERS_QUICK_FILTER_LABEL_KEYS = {
-  all: 'teachers.filtersAll',
-  active: 'teachers.filtersActive',
-  inactive: 'teachers.filtersInactive',
-  onLeave: 'teachers.filtersOnLeave',
-  missingEmployeeId: 'teachers.filtersMissingEmployeeId',
-} as const satisfies Record<TeachersQuickFilter, AppTranslationKey>;
+const FACULTY_QUICK_FILTER_LABEL_KEYS = {
+  all: 'faculty.filtersAll',
+  active: 'faculty.filtersActive',
+  inactive: 'faculty.filtersInactive',
+  onLeave: 'faculty.filtersOnLeave',
+  missingEmployeeId: 'faculty.filtersMissingEmployeeId',
+} as const satisfies Record<FacultyQuickFilter, AppTranslationKey>;
 
-/** Preset options for the Teachers Work Filters menu. */
-export const TEACHERS_QUICK_FILTER_OPTIONS: ReadonlyArray<{
-  id: TeachersQuickFilter;
+/** Preset options for the Faculty Work Filters menu. */
+export const FACULTY_QUICK_FILTER_OPTIONS: ReadonlyArray<{
+  id: FacultyQuickFilter;
   labelKey: AppTranslationKey;
-}> = TEACHERS_QUICK_FILTERS.map((id) => ({
+}> = FACULTY_QUICK_FILTERS.map((id) => ({
   id,
-  labelKey: TEACHERS_QUICK_FILTER_LABEL_KEYS[id],
+  labelKey: FACULTY_QUICK_FILTER_LABEL_KEYS[id],
 }));
 
-const TEACHERS_QUICK_FILTER_STATUS_VALUES = (() => {
-  const roles = resolveTeacherStatusRoles();
+const FACULTY_QUICK_FILTER_STATUS_VALUES = (() => {
+  const roles = resolveFacultyStatusRoles();
   return { active: roles.active, inactive: roles.inactive, onLeave: roles.onLeave } as const;
 })();
 
 /**
- * Stored teacher status value for a status quick-filter preset id
+ * Stored faculty status value for a status quick-filter preset id
  * (e.g. `onLeave` → `on_leave`); `undefined` for non-status presets.
  */
-export function teachersQuickFilterStatusValue(preset: TeachersQuickFilter): string | undefined {
+export function facultyQuickFilterStatusValue(preset: FacultyQuickFilter): string | undefined {
   if (preset === 'all' || preset === 'missingEmployeeId') return undefined;
-  return TEACHERS_QUICK_FILTER_STATUS_VALUES[preset];
+  return FACULTY_QUICK_FILTER_STATUS_VALUES[preset];
 }
 
-/** Validates Teachers Work list query received over HTTP (SQL page is authoritative). */
-export const teachersListQuerySchema = z.object({
+/** Validates Faculty Work list query received over HTTP (SQL page is authoritative). */
+export const facultyListQuerySchema = z.object({
   ...baseListQueryFields,
   status: z.string().max(FACULTY_STATUS_WRITE_MAX).optional(),
   specialization: z.string().optional(),
@@ -83,18 +76,18 @@ export const teachersListQuerySchema = z.object({
   designation: z.string().optional(),
   reportingFacultyId: z.string().optional(),
   gender: z.string().optional(),
-  quickFilter: teachersQuickFilterSchema.optional(),
-  sortField: z.enum(TEACHER_SORT_FIELDS).optional(),
+  quickFilter: facultyQuickFilterSchema.optional(),
+  sortField: z.enum(FACULTY_SORT_FIELDS).optional(),
 });
 
 /** Zod-inferred HTTP list query (includeDeleted is `'true' | 'false'` from base). */
-export type TeachersListQueryParsed = z.infer<typeof teachersListQuerySchema>;
+export type FacultyListQueryParsed = z.infer<typeof facultyListQuerySchema>;
 
 /**
  * Service / FE Query / SQL list query — Zod wire fields with boolean `includeDeleted`
- * after HTTP normalize (same authority as {@link teachersListQuerySchema}).
+ * after HTTP normalize (same authority as {@link facultyListQuerySchema}).
  */
-export type TeachersListQuery = Omit<TeachersListQueryParsed, 'includeDeleted' | 'skipCount'> & {
+export type FacultyListQuery = Omit<FacultyListQueryParsed, 'includeDeleted' | 'skipCount'> & {
   includeDeleted?: boolean;
   skipCount?: boolean;
 };
@@ -102,21 +95,9 @@ export type TeachersListQuery = Omit<TeachersListQueryParsed, 'includeDeleted' |
 /** Server SQL page result shape (FE Query + BE repository). */
 export interface FacultyListPageResult {
   faculty: Faculty[];
-  teachers?: Faculty[];
   total: number;
   page: number;
   limit: number;
   hasMore: boolean;
   nextCursor?: string;
 }
-
-export type TeachersListPageResult = FacultyListPageResult;
-export const facultyListQuerySchema = teachersListQuerySchema;
-export type FacultyListQuery = TeachersListQuery;
-export type FacultyListQueryParsed = TeachersListQueryParsed;
-export type FacultyQuickFilter = TeachersQuickFilter;
-export const FACULTY_QUICK_FILTERS = TEACHERS_QUICK_FILTERS;
-export const isFacultyQuickFilter = isTeachersQuickFilter;
-export const FACULTY_QUICK_FILTER_OPTIONS = TEACHERS_QUICK_FILTER_OPTIONS;
-export const facultyQuickFilterStatusValue = teachersQuickFilterStatusValue;
-

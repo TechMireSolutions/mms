@@ -1,6 +1,6 @@
 import { useCallback, useMemo } from 'react';
 import type { Dispatch, SetStateAction } from 'react';
-import { formatTeacherDisplayName, type Teacher } from '@mms/shared';
+import { formatFacultyDisplayName, type FacultyMember } from '@mms/shared';
 import type {
   Class,
   SessionClassSchedule,
@@ -13,10 +13,12 @@ import {
   createEmptyEligibility,
 } from './classDetailDraftDefaults';
 
+
+
 export function useClassDetailAcademicDraft(
   classDraft: Class,
   setClassDraft: Dispatch<SetStateAction<Class>>,
-  allTeachers: Teacher[],
+  allFaculty: FacultyMember[],
 ) {
   const addScheduleRow = useCallback(() => {
     setClassDraft((prev) => {
@@ -51,27 +53,26 @@ export function useClassDetailAcademicDraft(
   );
 
   const addPeriodRow = useCallback(() => {
-    const firstTeacher = allTeachers[0];
-    const initialTeacherName = formatTeacherDisplayName(firstTeacher) || 'Instructor';
+    const firstFaculty = allFaculty[0];
+    const initialFacultyName = formatFacultyDisplayName(firstFaculty) || 'Instructor';
     setClassDraft((prev) => {
       const timetable = prev.timetables?.[0] ?? createEmptyTimetable(prev.id);
+      const facultyIdStr = firstFaculty?.id ? String(firstFaculty.id) : '';
       const newPeriod: SessionClassTimetablePeriod = {
         id: crypto.randomUUID(),
         timetableId: timetable.id,
         startTime: '08:00',
         endTime: '09:00',
         subject: 'Quran Memorization',
-        facultyId: firstTeacher?.id ? String(firstTeacher.id) : '',
-        facultyName: initialTeacherName,
-        teacherId: firstTeacher?.id ? String(firstTeacher.id) : '',
-        teacherName: initialTeacherName,
+        facultyId: facultyIdStr,
+        facultyName: initialFacultyName,
       };
       return {
         ...prev,
         timetables: [{ ...timetable, periods: [...(timetable.periods || []), newPeriod] }],
       };
     });
-  }, [allTeachers, setClassDraft]);
+  }, [allFaculty, setClassDraft]);
 
   const removePeriodRow = useCallback((id: string) => {
     setClassDraft((prev) => {

@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import {
   FACULTY_MODULE_PREFERENCE_KEYS,
   normalizeFacultyModulePreferences,
   type FacultySettings,
-  type TeachersSettings,
 } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
@@ -16,8 +15,8 @@ export function useFacultySetupSaveActions({
   settingsDraft,
   setSaved,
 }: {
-  settings: FacultySettings | TeachersSettings;
-  settingsDraft: FacultySettings | TeachersSettings;
+  settings: FacultySettings;
+  settingsDraft: FacultySettings;
   setSaved: (value: boolean | ((curr: boolean) => boolean)) => void;
 }) {
   const { t } = useTranslation();
@@ -25,15 +24,15 @@ export function useFacultySetupSaveActions({
   const preferencesMutation = useFacultyPreferencesMutation();
   const { logSetupAudit } = useFacultyMutations();
 
-  const isPrefsDirty = (() => {
+  const isPrefsDirty = useMemo(() => {
     return FACULTY_MODULE_PREFERENCE_KEYS.some(
       (key) =>
         JSON.stringify(settingsDraft[key as keyof typeof settingsDraft]) !==
         JSON.stringify(settings[key as keyof typeof settings]),
     );
-  })();
+  }, [settingsDraft, settings]);
 
-  const handleSave = (async (): Promise<void> => {
+  const handleSave = useCallback(async (): Promise<void> => {
     if (!isPrefsDirty || saving) return;
     setSaving(true);
     try {
@@ -54,7 +53,7 @@ export function useFacultySetupSaveActions({
     } finally {
       setSaving(false);
     }
-  });
+  }, [isPrefsDirty, saving, preferencesMutation, settingsDraft, logSetupAudit, t, setSaved]);
 
   return {
     saving,
@@ -63,5 +62,5 @@ export function useFacultySetupSaveActions({
   };
 }
 
-export const useTeachersSetupSaveActions = useFacultySetupSaveActions;
+
 

@@ -321,7 +321,7 @@ describe("SSOT Entity UI Registry Architecture", () => {
       expect(studentsEntityDescriptor.formatFieldValue("grNumber", student as any)).toBe("GR-102");
     });
 
-    it("facultyEntityDescriptor aliases teachersEntityDescriptor and maps employee info", () => {
+    it("facultyEntityDescriptor maps employee info", () => {
       expect(facultyEntityDescriptor.entityType).toBe("faculty");
       const faculty = {
         id: "f1",

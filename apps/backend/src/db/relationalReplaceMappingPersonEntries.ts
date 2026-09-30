@@ -1,6 +1,6 @@
 import type { RelationalCollectionMapping } from './relationalReplaceMappingTypes.js';
 
-/** Person-module collections: contacts, students, teachers, sessions, users + setup prefs. */
+/** Person-module collections: contacts, students, faculty, sessions, users + setup prefs. */
 export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollectionMapping> = {
   users: {
     priority: 900,
@@ -25,11 +25,6 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     importPath: './repositories/facultyRepository.js',
     fnName: 'replaceFacultyForWorkspace',
     snapshotFnName: 'listFacultyByWorkspace',
-  },
-  teachers: {
-    priority: 20,
-    importPath: './repositories/facultyRepository.js',
-    fnName: 'replaceFacultyForWorkspace',
   },
   sessions: {
     importPath: './repositories/sessionRepository.js',
@@ -78,32 +73,17 @@ export const RELATIONAL_REPLACE_MAPPING_PERSON: Record<string, RelationalCollect
     fnName: 'replaceFacultyLookupsForWorkspace',
     snapshotFnName: 'listAllFacultyLookupsByWorkspace',
   },
-  teacher_lookups: {
-    priority: 32,
-    importPath: './repositories/facultyLookupsRepository.js',
-    fnName: 'replaceFacultyLookupsForWorkspace',
-  },
   faculty_field_configs: {
     priority: 33,
     importPath: './repositories/facultyFieldConfigRepository.js',
     fnName: 'replaceFacultyFieldConfigsForWorkspace',
     snapshotFnName: 'listAllFacultyFieldConfigsByWorkspace',
   },
-  teacher_field_configs: {
-    priority: 33,
-    importPath: './repositories/facultyFieldConfigRepository.js',
-    fnName: 'replaceFacultyFieldConfigsForWorkspace',
-  },
   faculty_module_preferences: {
     priority: 34,
     importPath: './repositories/facultyModulePreferencesRepository.js',
     fnName: 'replaceFacultyModulePreferencesForWorkspace',
     snapshotFnName: 'listAllFacultyModulePreferencesByWorkspace',
-  },
-  teacher_module_preferences: {
-    priority: 34,
-    importPath: './repositories/facultyModulePreferencesRepository.js',
-    fnName: 'replaceFacultyModulePreferencesForWorkspace',
   },
   session_lookups: {
     priority: 35,

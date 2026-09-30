@@ -50,7 +50,7 @@ export const DASHBOARD_QUICK_ACTIONS: readonly DashboardQuickAction[] = [
     moduleId: 'enrollment',
     permission: ENROLLMENTS_MODULE_MANIFEST.permissions.write,
     route: ROUTES.enrollments,
-    roles: ['admin', 'teacher'],
+    roles: ['admin', 'faculty'],
   },
   {
     id: 'create-session',
@@ -61,7 +61,7 @@ export const DASHBOARD_QUICK_ACTIONS: readonly DashboardQuickAction[] = [
     moduleId: 'sessions',
     permission: SESSIONS_MODULE_MANIFEST.permissions.write,
     route: ROUTES.sessions,
-    roles: ['admin', 'teacher'],
+    roles: ['admin', 'faculty'],
   },
   {
     id: 'record-payment',
@@ -83,7 +83,7 @@ export const DASHBOARD_QUICK_ACTIONS: readonly DashboardQuickAction[] = [
     moduleId: 'attendance',
     permission: ATTENDANCE_MODULE_MANIFEST.permissions.write,
     route: ROUTES.attendance,
-    roles: ['admin', 'teacher'],
+    roles: ['admin', 'faculty'],
   },
   {
     id: 'award-hasanat',
@@ -94,7 +94,7 @@ export const DASHBOARD_QUICK_ACTIONS: readonly DashboardQuickAction[] = [
     moduleId: 'hasanat',
     permission: HASANAT_MODULE_MANIFEST.permissions.write,
     route: ROUTES.hasanatCards,
-    roles: ['admin', 'teacher'],
+    roles: ['admin', 'faculty'],
   },
   {
     id: 'view-accounting',
@@ -131,6 +131,6 @@ export const DASHBOARD_QUICK_ACTIONS: readonly DashboardQuickAction[] = [
   },
 ] as const;
 
-export function getQuickActionsForRole(dashboardRole: DashboardRole): DashboardQuickAction[] {
-  return DASHBOARD_QUICK_ACTIONS.filter((action) => action.roles.includes(dashboardRole));
+export function getQuickActionsForRole(dashboardRole: DashboardRole | string): DashboardQuickAction[] {
+  return DASHBOARD_QUICK_ACTIONS.filter((action) => action.roles.includes(dashboardRole as DashboardRole));
 }

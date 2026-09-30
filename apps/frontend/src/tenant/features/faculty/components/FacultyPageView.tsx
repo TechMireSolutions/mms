@@ -23,7 +23,6 @@ const FacultySetupTier = lazy(() =>
 );
 
 export type FacultyPageViewProps = ReturnType<typeof useFacultyPageController>;
-export type TeachersPageViewProps = FacultyPageViewProps;
 
 /** Presentational Faculty page shell — Work / Reports / Setup + create form. */
 export function FacultyPageView({
@@ -44,11 +43,11 @@ export function FacultyPageView({
 
   return (
     <ModulePageShell
-      seoTitle={`MMS - ${t('nav.faculty')}`}
-      seoDescription={t('page.faculty.subtitle') || t('page.teachers.subtitle')}
+      seoTitle={t("page.faculty.seoTitle")}
+      seoDescription={t('page.faculty.subtitle')}
       headerIcon={School}
       headerTitle={t('nav.faculty')}
-      headerSubtitle={t('page.faculty.subtitle') || t('page.teachers.subtitle')}
+      headerSubtitle={t('page.faculty.subtitle')}
       headerActions={
         <FacultyPageHeaderActions
           canExport={canExport}
@@ -58,7 +57,6 @@ export function FacultyPageView({
             void handleExportCSV();
           }}
           onAddFaculty={openCreateForm}
-          onAddTeacher={openCreateForm}
         />
       }
       metricsStrip={
@@ -91,5 +89,4 @@ export function FacultyPageView({
   );
 }
 
-export const TeachersPageView = FacultyPageView;
 export default FacultyPageView;

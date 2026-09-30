@@ -30,8 +30,9 @@ import type {
   CategorizedKPIItem,
   ContactKPIAnalytics,
   EntityKPIMetrics,
-  TeacherKPIMetrics,
+  FacultyKPIMetrics,
 } from './kpiSummaryTypes';
+import { getKpiCategoryFlags } from './kpiSummaryCategoryFlags';
 import { buildQuestionBankKPICards } from './kpiSummaryQuestionBankCards';
 import { computeDerivedKpiMetrics } from './kpiSummaryDerivedMetrics';
 import { buildDomainKPICards } from './kpiSummaryDomainCards';
@@ -42,8 +43,8 @@ interface BuildStandardKPICardsOptions {
   contactAnalytics?: ContactKPIAnalytics;
   studentMetrics?: EntityKPIMetrics;
   auxiliaryStudentMetrics?: EntityKPIMetrics;
-  teacherMetrics?: TeacherKPIMetrics;
-  auxiliaryTeacherMetrics?: TeacherKPIMetrics;
+  facultyMetrics?: FacultyKPIMetrics;
+  auxiliaryFacultyMetrics?: FacultyKPIMetrics;
   attendanceMetrics?: AttendanceCommandMetricsSnapshot;
   financeMetrics?: FinanceCommandMetricsSnapshot;
   accountingMetrics?: AccountingCommandMetricsSnapshot;
@@ -75,15 +76,15 @@ export function buildStandardKPICards(options: BuildStandardKPICardsOptions): Ca
     contactAnalytics,
     studentMetrics,
     auxiliaryStudentMetrics,
-    teacherMetrics,
-    auxiliaryTeacherMetrics,
+    facultyMetrics,
+    auxiliaryFacultyMetrics,
     t,
   } = options;
 
   const derived = computeDerivedKpiMetrics(options);
   const isStudentsCategory = category === 'students';
-  const isTeachersCategory = category === 'teachers' || category === 'faculty';
-  const teacherValues = isTeachersCategory ? teacherMetrics : auxiliaryTeacherMetrics;
+  const { isFacultyCategory } = getKpiCategoryFlags(category);
+  const facultyValues = isFacultyCategory ? facultyMetrics : auxiliaryFacultyMetrics;
   const contactsRecent = contactAnalytics?.newThisPeriod ?? 0;
   const { cards: questionBankCards } = buildQuestionBankKPICards({
     questionBankMetrics: options.questionBankMetrics,
@@ -165,15 +166,15 @@ export function buildStandardKPICards(options: BuildStandardKPICardsOptions): Ca
     },
     ...questionBankCards,
     {
-      id: 'kpi-total-faculty', icon: GraduationCap, label: t('reports.kpi.totalFaculty'), value: String(teacherValues?.total ?? 0),
-      sub: t('reports.kpi.sub.activeCount', { count: teacherValues?.active ?? 0 }), color: 'primary',
-      trend: (teacherValues?.newThisPeriod ?? 0) > 0 ? 'up' : 'flat',
-      categories: ['teachers', 'faculty'], isAvailable: (teacherValues?.total ?? 0) > 0,
+      id: 'kpi-total-faculty', icon: GraduationCap, label: t('reports.kpi.totalFaculty'), value: String(facultyValues?.total ?? 0),
+      sub: t('reports.kpi.sub.activeCount', { count: facultyValues?.active ?? 0 }), color: 'primary',
+      trend: (facultyValues?.newThisPeriod ?? 0) > 0 ? 'up' : 'flat',
+      categories: ['faculty'], isAvailable: (facultyValues?.total ?? 0) > 0,
     },
     {
-      id: 'kpi-on-leave', icon: Activity, label: t('reports.kpi.onLeave'), value: String(teacherValues?.onLeave ?? 0),
-      sub: t('reports.kpi.sub.facultyOnLeave'), color: 'warning', trend: 'flat', categories: ['teachers', 'faculty'],
-      isAvailable: (teacherValues?.onLeave ?? 0) > 0,
+      id: 'kpi-on-leave', icon: Activity, label: t('reports.kpi.onLeave'), value: String(facultyValues?.onLeave ?? 0),
+      sub: t('reports.kpi.sub.facultyOnLeave'), color: 'warning', trend: 'flat', categories: ['faculty'],
+      isAvailable: (facultyValues?.onLeave ?? 0) > 0,
     },
     ...domainCards,
   ];

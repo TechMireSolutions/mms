@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TeacherDetailNotesSection } from "./FacultyDetailNotesSection";
+import { FacultyDetailNotesSection } from "./FacultyDetailNotesSection";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -9,10 +9,10 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-describe("TeacherDetailNotesSection Component", () => {
-  it("renders teacher notes content and header", () => {
+describe("FacultyDetailNotesSection Component", () => {
+  it("renders faculty notes content and header", () => {
     const html = renderToStaticMarkup(
-      <TeacherDetailNotesSection notes="Senior instructor for advanced Tajweed curriculum." />,
+      <FacultyDetailNotesSection notes="Senior instructor for advanced Tajweed curriculum." />,
     );
 
     expect(html).toContain("faculty.detail.notesSection");

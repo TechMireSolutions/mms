@@ -21,7 +21,7 @@ export const hasanatWidgetSeeds: CustomWidget[] = [
     isPinnedToDashboard: false,
   },
   {
-    id: "def-card-teacher-hasanat",
+    id: "def-card-faculty-hasanat",
     title: "",
     titleKey: "widget.title.hasanatAwarded",
     category: "hasanat",
@@ -36,7 +36,7 @@ export const hasanatWidgetSeeds: CustomWidget[] = [
     fixedSubTextKey: "widget.subtitle.awardedByMe",
     trend: 0,
     trendType: "database",
-    role: "teacher",
+    role: "faculty",
     isPinnedToDashboard: false,
   },
   {

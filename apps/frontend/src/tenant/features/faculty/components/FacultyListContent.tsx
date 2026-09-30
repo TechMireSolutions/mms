@@ -4,62 +4,62 @@ import { ModuleWorkDirectoryEmpty } from "@/components/ui/ModuleWorkDirectoryEmp
 import { WORK_SURFACE } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import { TeachersListCards } from "@/tenant/features/faculty/components/FacultyListCards";
-import { TeachersListDesktopTable } from "@/tenant/features/faculty/components/FacultyListDesktopTable";
-import { buildTeacherCustomFieldsById } from "@/tenant/features/faculty/components/facultyListVisibleColumns";
+import { FacultyListCards } from "@/tenant/features/faculty/components/FacultyListCards";
+import { FacultyListDesktopTable } from "@/tenant/features/faculty/components/FacultyListDesktopTable";
+import { buildFacultyCustomFieldsById } from "@/tenant/features/faculty/components/facultyListVisibleColumns";
 import type { FacultyListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
 
-export type { FacultyListContentProps, TeacherListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
+export type { FacultyListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
 
 export type FacultyListContentInput = Omit<FacultyListContentProps, "customFieldsById">;
-export type TeacherListContentInput = FacultyListContentInput;
+
 
 export function FacultyListContent(props: FacultyListContentInput): React.JSX.Element {
   const { t } = useTranslation();
-  const { teachers, showDeleted, viewMode, columnRegistry, hasActiveFilters, onClearFilters, onShowActive, canWrite } = props;
-  const customFieldsById = (() => buildTeacherCustomFieldsById(columnRegistry))();
-  const contentProps: FacultyListContentProps = { ...props, customFieldsById };
+  const { faculty, showDeleted, viewMode, columnRegistry, hasActiveFilters, onClearFilters, onShowActive, canWrite } = props;
+  const items = faculty ?? [];
+  const customFieldsById = React.useMemo(() => buildFacultyCustomFieldsById(columnRegistry), [columnRegistry]);
+  const contentProps: FacultyListContentProps = { ...props, faculty: items, customFieldsById };
 
-
-  if (teachers.length === 0) {
+  if (items.length === 0) {
     const emptyDescription = hasActiveFilters
-      ? (t("faculty.tryAdjustingFilters") || t("teachers.tryAdjustingFilters"))
+      ? t("faculty.tryAdjustingFilters")
       : showDeleted
-        ? (t("faculty.empty.trashSubtitle") || t("teachers.empty.trashSubtitle"))
+        ? t("faculty.empty.trashSubtitle")
         : canWrite
-          ? (t("faculty.clickAddTeacher") || t("teachers.clickAddTeacher"))
-          : (t("faculty.emptyDirectoryReadOnly") || t("teachers.emptyDirectoryReadOnly"));
+          ? t("faculty.clickAddFaculty")
+          : t("faculty.emptyDirectoryReadOnly");
 
     return (
       <ModuleWorkDirectoryEmpty
         icon={School}
         title={
           hasActiveFilters
-            ? (t("faculty.noTeachersMatchFilters") || t("teachers.noTeachersMatchFilters"))
+            ? t("faculty.noFacultyMatchFilters")
             : showDeleted
-              ? (t("faculty.noDeletedTeachers") || t("teachers.noDeletedTeachers"))
-              : (t("faculty.empty.title") || t("teachers.empty.title"))
+              ? t("faculty.noDeletedFaculty")
+              : t("faculty.empty.title")
         }
         description={emptyDescription}
         hasActiveFilters={hasActiveFilters}
         viewingDeleted={showDeleted}
         onClearFilters={onClearFilters ?? (() => undefined)}
         onShowActive={onShowActive}
-        clearFiltersLabel={t("faculty.clearFilters") || t("teachers.clearFilters")}
-        showActiveLabel={t("faculty.showActive") || t("teachers.showActive")}
+        clearFiltersLabel={t("faculty.clearFilters")}
+        showActiveLabel={t("faculty.showActive")}
       />
     );
   }
 
   if (viewMode === "cards") {
-    return <TeachersListCards {...contentProps} />;
+    return <FacultyListCards {...contentProps} />;
   }
 
   return (
     <div className={cn(WORK_SURFACE, "overflow-hidden")}>
-      <TeachersListDesktopTable {...contentProps} />
+      <FacultyListDesktopTable {...contentProps} />
     </div>
   );
 }
 
-export const TeachersListContent = FacultyListContent;
+

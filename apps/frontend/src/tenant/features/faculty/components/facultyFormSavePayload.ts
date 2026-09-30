@@ -1,28 +1,32 @@
 import {
-  type Teacher,
+  type FacultyMember,
   getPrimaryEmail,
 } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import { getApiValidationMessage } from "@/lib/apiValidationMessage";
 import { extractEmployeeId } from "@/tenant/features/faculty/components/facultyFormDraft";
-import type { TeacherSaveFlowInput } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
+import type { FacultySaveFlowInput } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
 
-/** Build the save payload (resolved employeeId + typed contactId) from the draft. */
-export function buildTeacherSavePayload(input: {
-  teacherDraft: Partial<Teacher>;
-  teacher?: Teacher;
+export interface FacultySavePayloadInput {
+  facultyDraft?: Partial<FacultyMember>;
+  faculty?: FacultyMember;
   autoGenerateId: boolean;
   nextEmployeeId?: string;
-}): Partial<Teacher> {
-  const rawEmployeeId = extractEmployeeId(input.teacherDraft.employeeId);
-  const rawNextEmployeeId = extractEmployeeId(input.nextEmployeeId);
-  const resolvedEmployeeId = rawEmployeeId || (input.autoGenerateId && !input.teacher?.id ? rawNextEmployeeId : undefined);
+}
 
-  const payload: Partial<Teacher> = {
-    ...input.teacherDraft,
+/** Build the save payload (resolved employeeId + typed contactId) from the draft. */
+export function buildFacultySavePayload(input: FacultySavePayloadInput): Partial<FacultyMember> {
+  const draft = input.facultyDraft ?? {};
+  const entity = input.faculty;
+  const rawEmployeeId = extractEmployeeId(draft.employeeId);
+  const rawNextEmployeeId = extractEmployeeId(input.nextEmployeeId);
+  const resolvedEmployeeId = rawEmployeeId || (input.autoGenerateId && !entity?.id ? rawNextEmployeeId : undefined);
+
+  const payload: Partial<FacultyMember> = {
+    ...draft,
     employeeId: resolvedEmployeeId,
-    contactId: String(input.teacherDraft.contactId || ""),
-    ...(input.teacher?.id != null ? { id: input.teacher.id } : {}),
+    contactId: String(draft.contactId || ""),
+    ...(entity?.id != null ? { id: entity.id } : {}),
   };
 
   delete (payload as Record<string, unknown>).designationAssignableRoles;
@@ -33,12 +37,12 @@ export function buildTeacherSavePayload(input: {
 }
 
 /** Validates email, role, and password requirements when user account creation is requested. */
-export function validateUserDraftRequirements(input: TeacherSaveFlowInput): boolean {
+export function validateUserDraftRequirements(input: FacultySaveFlowInput): boolean {
   if (!input.userAccountDraft?.enabled || input.linkedUser) return true;
 
   const primaryEmail = input.linkedContact ? getPrimaryEmail(input.linkedContact) : null;
   if (!primaryEmail) {
-    const warning = input.t("faculty.form.noEmailWarning") || input.t("teachers.form.noEmailWarning");
+    const warning = input.t("faculty.form.noEmailWarning");
     input.setErrors({ "user.email": warning });
     notify.error(warning);
     return false;
@@ -72,5 +76,4 @@ export function isEmployeeIdConflictError(err: unknown): boolean {
   );
 }
 
-export type FacultySaveFlowInput = TeacherSaveFlowInput;
-export const buildFacultySavePayload = buildTeacherSavePayload;
+export { type FacultySaveFlowInput };

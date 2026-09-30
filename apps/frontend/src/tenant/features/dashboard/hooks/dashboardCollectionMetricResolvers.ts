@@ -27,7 +27,7 @@ const COLLECTION_METRIC_RESOLVERS: Record<string, CollectionMetricResolver> = {
     }
     return { value: String(data.studentsTotal) };
   },
-  teachers: (_widget, data) => ({ value: String(data.teachersTotal) }),
+  faculty: (_widget, data) => ({ value: String(data.facultyTotal) }),
   sessions: (widget, data) => {
     const { sessionsMetrics } = data;
     if (widget.filterValue === 'active' || widget.id.includes('sessions')) {

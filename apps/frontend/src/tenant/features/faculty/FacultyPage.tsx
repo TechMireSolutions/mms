@@ -10,4 +10,4 @@ export default function FacultyPage(): React.JSX.Element {
   return <FacultyPageView {...view} />;
 }
 
-export { FacultyPage, FacultyPage as TeachersPage };
+export { FacultyPage };

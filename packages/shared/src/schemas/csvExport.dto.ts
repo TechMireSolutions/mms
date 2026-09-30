@@ -69,15 +69,14 @@ export const moduleFieldsPrefsAuditBodySchema = z.preprocess((raw) => {
 
 import { contactsListQuerySchema } from '../contactsListQuery.js';
 import { studentsListQuerySchema } from '../studentsListQuery.js';
-import { teachersListQuerySchema } from '../facultyListQuery.js';
+import { facultyListQuerySchema } from '../facultyListQuery.js';
 import { sessionsListQuerySchema } from '../sessionsListQuery.js';
 import { enrollmentsListQuerySchema } from '../enrollmentsListQuery.js';
 import { usersListQuerySchema } from '../usersListQuery.js';
 
 export const contactsCsvExportBodySchema = csvExportBodySchema(contactsListQuerySchema);
 export const studentsCsvExportBodySchema = csvExportBodySchema(studentsListQuerySchema);
-export const teachersCsvExportBodySchema = csvExportBodySchema(teachersListQuerySchema);
-export const facultyCsvExportBodySchema = teachersCsvExportBodySchema;
+export const facultyCsvExportBodySchema = csvExportBodySchema(facultyListQuerySchema);
 export const sessionsCsvExportBodySchema = csvExportBodySchema(sessionsListQuerySchema);
 export const enrollmentsCsvExportBodySchema = csvExportBodySchema(enrollmentsListQuerySchema);
 export const usersCsvExportBodySchema = csvExportBodySchema(usersListQuerySchema);

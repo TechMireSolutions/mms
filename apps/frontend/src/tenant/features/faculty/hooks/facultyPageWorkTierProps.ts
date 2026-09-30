@@ -28,7 +28,6 @@ export type FacultyWorkTierSource = {
   onResetLayout: WorkTierProps["onResetLayout"];
   customizerLabels: WorkTierProps["customizerLabels"];
   faculty?: WorkTierProps["faculty"];
-  teachers?: WorkTierProps["teachers"];
   workPageQuery: {
     data: WorkTierProps["workPageData"];
     isLoading: boolean;
@@ -67,13 +66,11 @@ export type FacultyWorkTierSource = {
   workOverlays: WorkTierProps["workOverlays"];
 };
 
-export type TeachersWorkTierSource = FacultyWorkTierSource;
-
 /** Builds Work-tier prop bag from controller/work source (Contacts-shaped composition). */
 export function buildFacultyWorkTierProps(
   source: FacultyWorkTierSource,
 ): FacultyWorkTierComponentProps {
-  const items = source.faculty ?? source.teachers ?? [];
+  const items = source.faculty ?? [];
   return {
     search: source.search,
     filterStatus: source.filterStatus,
@@ -98,7 +95,6 @@ export function buildFacultyWorkTierProps(
     onResetLayout: source.onResetLayout,
     customizerLabels: source.customizerLabels,
     faculty: items,
-    teachers: items,
     workPageData: source.workPageQuery.data,
     isWorkPageLoading: source.workPageQuery.isLoading,
     isWorkPageError: source.workPageQuery.isError,
@@ -134,6 +130,4 @@ export function buildFacultyWorkTierProps(
     workOverlays: source.workOverlays,
   };
 }
-
-export const buildTeachersWorkTierProps = buildFacultyWorkTierProps;
 

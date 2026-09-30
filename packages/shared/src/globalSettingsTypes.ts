@@ -41,8 +41,8 @@ export interface GlobalSettings {
   twoFactor: boolean;
   /** Session inactivity timeout in minutes. */
   sessionTimeout: string;
-  /** Password policy level: "basic" | "medium" | "strong". */
-  passwordPolicy: string;
+  /** Password policy level. */
+  passwordPolicy: "basic" | "medium" | "strong";
   /** UI colour theme preference. */
   theme: "light" | "dark" | "system";
   /** Map of module IDs to their enabled status. */
@@ -113,7 +113,7 @@ export type SystemModuleNavEntry = SystemModuleNavItem | SystemModuleNavGroup;
 export const SYSTEM_MODULE_NAV: SystemModuleNavEntry[] = [
   { type: "module", moduleId: "dashboard" },
   { type: "module", moduleId: "contacts" },
-  { type: "module", moduleId: "teachers" },
+  { type: "module", moduleId: "faculty" },
   { type: "module", moduleId: "messaging" },
   {
     type: "group",
@@ -148,7 +148,9 @@ export const GLOBAL_SETTINGS_ADMIN_FIELD_KEYS = [
   "llmConfigs",
 ] as const satisfies readonly (keyof GlobalSettings)[];
 
-/** Authoritative default values for GlobalSettings. */
+/** Authoritative default values for GlobalSettings.
+ * `enabledModules` is derived from `SYSTEM_MODULES` so it can never drift from the registry.
+ */
 export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   language: "en",
   timezone: "Asia/Karachi",
@@ -159,24 +161,7 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
   sessionTimeout: "60",
   passwordPolicy: "strong",
   theme: "system",
-  enabledModules: {
-    dashboard: true,
-    students: true,
-    faculty: true,
-    teachers: true,
-    contacts: true,
-    messaging: true,
-    sessions: true,
-    enrollment: true,
-    attendance: true,
-    examination: true,
-    questionBank: true,
-    finance: true,
-    accounting: true,
-    obligations: true,
-    hasanat: true,
-    users: true,
-  },
+  enabledModules: Object.fromEntries(SYSTEM_MODULES.map((m) => [m.id, true])),
   llmProvider: "none",
   llmApiKey: "",
   llmConfigs: [],
@@ -184,25 +169,25 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
 
 /**
  * Merges module visibility flags with defaults; required modules always stay enabled.
+ * Legacy key "teachers" is silently promoted to "faculty" for stored settings from older installs.
  */
 export function normalizeEnabledModules(
   partial?: Record<string, boolean> | null
 ): Record<string, boolean> {
+  const incoming = { ...(partial ?? {}) };
+  // Backward-compat: promote legacy "teachers" key → "faculty" when no explicit faculty flag.
+  if (incoming.teachers !== undefined && incoming.faculty === undefined) {
+    incoming.faculty = incoming.teachers;
+  }
+  delete incoming.teachers;
+
   const merged: Record<string, boolean> = {
     ...DEFAULT_GLOBAL_SETTINGS.enabledModules,
-    ...(partial ?? {}),
+    ...incoming,
   };
-  if (partial?.teachers !== undefined && partial?.faculty === undefined) {
-    merged.faculty = partial.teachers;
-  } else if (partial?.faculty !== undefined && partial?.teachers === undefined) {
-    merged.teachers = partial.faculty;
-  }
+  // Required modules are always on, regardless of stored value.
   for (const mod of SYSTEM_MODULES) {
-    if (mod.required) {
-      merged[mod.id] = true;
-    } else if (!(mod.id in merged)) {
-      merged[mod.id] = DEFAULT_GLOBAL_SETTINGS.enabledModules[mod.id] ?? true;
-    }
+    if (mod.required) merged[mod.id] = true;
   }
   return merged;
 }

@@ -4,15 +4,15 @@ import type {
   Faculty,
   FacultyDesignationDefinition,
   FacultyHierarchyPreset,
+  FacultyMember,
   FieldDefinition,
-  Teacher,
 } from "@mms/shared";
 import {
-  TeacherContactSection,
-  TeacherEmploymentSection,
-  type TeacherStatusOption,
+  FacultyContactSection,
+  FacultyEmploymentSection,
+  type FacultyStatusOption,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
-import { TeacherNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
+import { FacultyNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
 import {
   FacultyUserAccountSection,
   type FacultyUserAccountDraft,
@@ -20,11 +20,11 @@ import {
 } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 
 export interface FacultyFormAllSectionsProps {
-  teacher?: Teacher;
-  teacherDraft: Partial<Teacher>;
+  faculty?: FacultyMember;
+  facultyDraft?: Partial<FacultyMember>;
   errors: Record<string, string>;
   fields: Record<string, FieldDefinition[]>;
-  linkedTeacherContactIds: Array<string | number>;
+  linkedFacultyContactIds?: Array<string | number>;
   specializationOptions: string[];
   designationOptions?: FacultyDesignationDefinition[];
   autoGenerateId: boolean;
@@ -32,10 +32,10 @@ export interface FacultyFormAllSectionsProps {
   nextEmployeeId?: string;
   onRegenerateEmployeeId?: () => void;
   isFetchingNextEmployeeId?: boolean;
-  statusOptions: TeacherStatusOption[];
+  statusOptions: FacultyStatusOption[];
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
-  onDraftChange: (patch: Partial<Teacher>) => void;
+  onDraftChange: (patch: Partial<FacultyMember>) => void;
   linkedContact?: Contact | null;
   linkedUser?: LinkedUserInfo | null;
   userAccountDraft: FacultyUserAccountDraft;
@@ -46,11 +46,11 @@ export interface FacultyFormAllSectionsProps {
 
 export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): React.JSX.Element {
   const {
-    teacher,
-    teacherDraft,
+    faculty,
+    facultyDraft = {},
+    linkedFacultyContactIds = [],
     errors,
     fields,
-    linkedTeacherContactIds,
     specializationOptions,
     designationOptions,
     autoGenerateId,
@@ -72,10 +72,10 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
 
   return (
     <div className="space-y-6 pb-6">
-      <TeacherContactSection
-        teacherDraft={teacherDraft}
+      <FacultyContactSection
+        facultyDraft={facultyDraft}
         linkedContact={linkedContact}
-        linkedTeacherContactIds={linkedTeacherContactIds}
+        linkedFacultyContactIds={linkedFacultyContactIds}
         errors={errors}
         fields={fields}
         isFieldEnabled={isFieldEnabled}
@@ -83,9 +83,9 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         onDraftChange={onDraftChange}
       />
 
-      <TeacherEmploymentSection
-        teacher={teacher}
-        teacherDraft={teacherDraft}
+      <FacultyEmploymentSection
+        faculty={faculty}
+        facultyDraft={facultyDraft}
         errors={errors}
         fields={fields}
         autoGenerateId={autoGenerateId}
@@ -103,8 +103,8 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         hierarchyRankPresets={hierarchyRankPresets}
       />
 
-      <TeacherNotesSection
-        notes={teacherDraft.notes}
+      <FacultyNotesSection
+        notes={facultyDraft.notes}
         fields={fields}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
@@ -113,7 +113,7 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
       />
 
       <FacultyUserAccountSection
-        teacherDraft={teacherDraft}
+        facultyDraft={facultyDraft}
         linkedContact={linkedContact}
         linkedUser={linkedUser}
         userAccountDraft={userAccountDraft}

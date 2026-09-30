@@ -1,7 +1,7 @@
 import type { TranslationFunction } from '@/lib/contexts/TranslationContext';
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
 import type { SubTab } from '@/components/ui/SubTabBar';
-import type { TeacherReportTablesProps, TeacherReportFilters, FacultyWorkloadItem } from './facultyReportTypes';
+import type { FacultyReportTablesProps, FacultyReportFilters, FacultyWorkloadItem } from './facultyReportTypes';
 import type { StudentReportTablesProps, StudentReportFilters } from './studentReportTypes';
 
 interface ReportListModel {
@@ -17,10 +17,10 @@ interface ReportListModel {
 }
 
 export interface FacultyReportViewModel extends ReportListModel,
-  Omit<TeacherReportTablesProps, 'workloadRows' | 'onToggleFacultyFilter'> {
-  REPORT_TABS: readonly SubTab<TeacherReportTablesProps['activeSubTab']>[];
-  setActiveSubTab: (tab: TeacherReportTablesProps['activeSubTab']) => void;
-  filters: TeacherReportFilters;
+  Omit<FacultyReportTablesProps, 'workloadRows' | 'onToggleFacultyFilter'> {
+  REPORT_TABS: readonly SubTab<FacultyReportTablesProps['activeSubTab']>[];
+  setActiveSubTab: (tab: FacultyReportTablesProps['activeSubTab']) => void;
+  filters: FacultyReportFilters;
   rosterExportColumns: ExportColumn[];
   workloadExportColumns: ExportColumn[];
   resolveRosterExportRows: () => Promise<Record<string, unknown>[]>;

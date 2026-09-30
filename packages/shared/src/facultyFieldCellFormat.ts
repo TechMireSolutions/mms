@@ -1,12 +1,12 @@
 import { formatDate, formatDateTime } from './settingsDateFormatters.js';
-import { DEFAULT_TEACHER_STATUS } from './facultyTypes.js';
+import { DEFAULT_FACULTY_STATUS } from './facultyTypes.js';
 
-export type FormatTeacherFieldCellOptions = {
+export type FormatFacultyFieldCellOptions = {
   /** Setup field type (`date` | `datetime` | `boolean` | …). */
   fieldType?: string;
   /**
    * When `propKey` is `status` (or `statusDefault` is true), empty values become
-   * {@link DEFAULT_TEACHER_STATUS}.
+   * {@link DEFAULT_FACULTY_STATUS}.
    */
   propKey?: string;
   statusDefault?: boolean;
@@ -17,12 +17,12 @@ export type FormatTeacherFieldCellOptions = {
 };
 
 /**
- * Formats a teacher field / export cell value by optional Setup field type.
+ * Formats a faculty field / export cell value by optional Setup field type.
  * Returns `undefined` when empty (callers apply notSpecified / status default / blank CSV).
  */
-export function formatTeacherFieldCellValue(
+export function formatFacultyFieldCellValue(
   value: unknown,
-  options: FormatTeacherFieldCellOptions = {},
+  options: FormatFacultyFieldCellOptions = {},
 ): string | undefined {
   const {
     fieldType,
@@ -33,15 +33,15 @@ export function formatTeacherFieldCellValue(
   } = options;
 
   if (value === undefined || value === null || value === '') {
-    return statusDefault ? DEFAULT_TEACHER_STATUS : undefined;
+    return statusDefault ? DEFAULT_FACULTY_STATUS : undefined;
   }
   if (typeof value === 'string' && !value.trim()) {
-    return statusDefault ? DEFAULT_TEACHER_STATUS : undefined;
+    return statusDefault ? DEFAULT_FACULTY_STATUS : undefined;
   }
 
   if (Array.isArray(value)) {
     const joined = value.map(String).filter(Boolean).join(arraySeparator);
-    return joined || (statusDefault ? DEFAULT_TEACHER_STATUS : undefined);
+    return joined || (statusDefault ? DEFAULT_FACULTY_STATUS : undefined);
   }
 
   if (typeof value === 'boolean') {
@@ -69,6 +69,3 @@ export function formatTeacherFieldCellValue(
 
   return String(value);
 }
-
-export const formatFacultyFieldCellValue = formatTeacherFieldCellValue;
-export type FormatFacultyFieldCellOptions = FormatTeacherFieldCellOptions;

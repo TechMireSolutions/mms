@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Faculty, Teacher } from "@mms/shared";
+import type { Faculty } from "@mms/shared";
 
 /** Create/edit Faculty form overlay state (Students-shaped page form state). */
 export function useFacultyPageFormState() {
@@ -11,7 +11,7 @@ export function useFacultyPageFormState() {
     setShowForm(true);
   };
 
-  const openEdit = (facultyToEdit: Faculty | Teacher) => {
+  const openEdit = (facultyToEdit: Faculty) => {
     setEditFaculty(facultyToEdit);
     setShowForm(true);
   };
@@ -25,14 +25,10 @@ export function useFacultyPageFormState() {
     showForm,
     editFaculty,
     setEditFaculty,
-    editTeacher: editFaculty,
-    setEditTeacher: setEditFaculty,
     setShowForm,
     openCreate,
     openEdit,
     close,
   };
 }
-
-export const useTeachersPageFormState = useFacultyPageFormState;
 

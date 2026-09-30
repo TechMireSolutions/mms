@@ -1,16 +1,15 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
+import type { Faculty } from "@mms/shared";
 import {
   FacultyDetailHeroCard,
   FacultyDetailHero,
-  TeacherDetailHero,
 } from "./FacultyDetailHeroCard";
 
-const mockTeacher: Teacher = {
-  id: "tch-hero-1",
-  contactId: "cnt-tch-1",
+const mockFaculty: Faculty = {
+  id: "fac-hero-1",
+  contactId: "cnt-fac-1",
   name: "Ustadh Umar",
   status: "active",
   employeeId: "EMP-010",
@@ -25,10 +24,10 @@ const mockStatusConfig = {
 };
 
 describe("FacultyDetailHeroCard Component", () => {
-  it("renders teacher name, employee ID badge, and status badge via FacultyDetailHeroCard", () => {
+  it("renders faculty name, employee ID badge, and status badge via FacultyDetailHeroCard", () => {
     const html = renderToStaticMarkup(
       <FacultyDetailHeroCard
-        teacher={mockTeacher}
+        faculty={mockFaculty}
         displayName="Ustadh Umar"
         statusConfig={mockStatusConfig}
         showStatus={true}
@@ -43,7 +42,7 @@ describe("FacultyDetailHeroCard Component", () => {
   it("omits status badge when showStatus is false", () => {
     const html = renderToStaticMarkup(
       <FacultyDetailHeroCard
-        teacher={mockTeacher}
+        faculty={mockFaculty}
         displayName="Ustadh Umar"
         statusConfig={mockStatusConfig}
         showStatus={false}
@@ -54,8 +53,8 @@ describe("FacultyDetailHeroCard Component", () => {
     expect(html).not.toContain("Active");
   });
 
-  it("exports backward-compatible FacultyDetailHero and TeacherDetailHero aliases", () => {
+  it("exports backward-compatible FacultyDetailHero alias", () => {
     expect(FacultyDetailHero).toBe(FacultyDetailHeroCard);
-    expect(TeacherDetailHero).toBe(FacultyDetailHeroCard);
   });
 });
+

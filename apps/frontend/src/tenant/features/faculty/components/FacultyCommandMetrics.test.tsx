@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TeachersCommandMetrics } from "./FacultyCommandMetrics";
+import { FacultyCommandMetrics } from "./FacultyCommandMetrics";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -10,7 +10,7 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("@/tenant/features/faculty/hooks/useFaculty", () => ({
-  useTeachersMetrics: () => ({
+  useFacultyMetrics: () => ({
     data: {
       total: 25,
       active: 20,
@@ -22,15 +22,16 @@ vi.mock("@/tenant/features/faculty/hooks/useFaculty", () => ({
   }),
 }));
 
-describe("TeachersCommandMetrics Component", () => {
+describe("FacultyCommandMetrics Component", () => {
   it("renders metric counters from server metrics and shown count", () => {
-    const html = renderToStaticMarkup(<TeachersCommandMetrics total={25} shown={12} />);
+    const html = renderToStaticMarkup(<FacultyCommandMetrics total={25} shown={12} />);
 
-    expect(html).toContain("teachers.metrics.total");
+    expect(html).toContain("faculty.metrics.total");
     expect(html).toContain("25");
-    expect(html).toContain("teachers.metrics.filtered");
+    expect(html).toContain("faculty.metrics.filtered");
     expect(html).toContain("12");
-    expect(html).toContain("teachers.metrics.active");
+    expect(html).toContain("faculty.metrics.active");
     expect(html).toContain("20");
   });
 });
+

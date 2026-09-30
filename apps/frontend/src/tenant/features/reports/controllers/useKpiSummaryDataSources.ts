@@ -16,7 +16,7 @@ import {
 import { useSessionsMetrics } from '@/tenant/hooks/collections/sessions';
 import { useContactsReportAnalytics } from '@/tenant/hooks/collections/contacts';
 import { useStudentsMetrics } from '@/tenant/hooks/collections/students';
-import { useTeachersMetrics } from '@/tenant/hooks/collections/faculty';
+import { useFacultyMetrics } from '@/tenant/hooks/collections/faculty';
 import type { KpiCategoryFlags } from '@/components/ui/reports/kpiSummaryCategoryFlags';
 
 export type KpiSummaryDataSources = ReturnType<typeof useKpiSummaryDataSources>;
@@ -30,7 +30,7 @@ export function useKpiSummaryDataSources(category: string, flags: KpiCategoryFla
   const {
     isContactsCategory,
     isStudentsCategory,
-    isTeachersCategory,
+    isFacultyCategory,
     isObligationsCategory,
     isAccountingCategory,
     isUsersCategory,
@@ -47,12 +47,12 @@ export function useKpiSummaryDataSources(category: string, flags: KpiCategoryFla
 
   const { data: contactsReportData } = useContactsReportAnalytics({ enabled: needsContactAnalytics });
   const { data: studentMetrics } = useStudentsMetrics({ enabled: isStudentsCategory || category === 'enrollments' });
-  const { data: teacherMetrics } = useTeachersMetrics({ enabled: isTeachersCategory || category === 'enrollments' });
+  const { data: facultyMetrics } = useFacultyMetrics({ enabled: isFacultyCategory || category === 'enrollments' });
   const { data: crossStudentMetrics } = useStudentsMetrics({
-    enabled: !isStudentsCategory && !isContactsCategory && !isTeachersCategory && category !== 'enrollments',
+    enabled: !isStudentsCategory && !isContactsCategory && !isFacultyCategory && category !== 'enrollments',
   });
-  const { data: crossTeacherMetrics } = useTeachersMetrics({
-    enabled: !isTeachersCategory && category !== 'enrollments',
+  const { data: crossFacultyMetrics } = useFacultyMetrics({
+    enabled: !isFacultyCategory && category !== 'enrollments',
   });
 
   const { data: attendanceMetrics } = useAttendanceMetrics(todayISO(), { enabled: isAttendance });
@@ -72,14 +72,14 @@ export function useKpiSummaryDataSources(category: string, flags: KpiCategoryFla
 
   const contactAnalytics = contactsReportData?.analytics;
   const auxiliaryStudentMetrics = category === 'enrollments' ? studentMetrics : crossStudentMetrics;
-  const auxiliaryTeacherMetrics = category === 'enrollments' ? teacherMetrics : crossTeacherMetrics;
+  const auxiliaryFacultyMetrics = category === 'enrollments' ? facultyMetrics : crossFacultyMetrics;
 
   return {
     contactAnalytics,
     studentMetrics,
-    teacherMetrics,
+    facultyMetrics,
     auxiliaryStudentMetrics,
-    auxiliaryTeacherMetrics,
+    auxiliaryFacultyMetrics,
     attendanceMetrics,
     financeMetrics,
     accountingMetrics,

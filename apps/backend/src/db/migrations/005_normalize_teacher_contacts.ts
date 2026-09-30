@@ -1,5 +1,5 @@
 import {
-  normalizeStoredTeacher,
+  normalizeStoredFaculty,
   parseTenantScopedStorageKey,
   tenantCollectionKey,
   WORKSPACES_COLLECTION,
@@ -10,10 +10,12 @@ import {
   listCollectionStorageNames,
   saveCollection,
 } from '../database.js';
+import { LEGACY_FACULTY_COLLECTION_ALIASES } from '../hydrateFacultySetupFromLegacyBackup.js';
 
-const LEGACY_SEEDED_TEACHER_ID = /^tch([1-9]|[12]\d|30)$/;
+const LEGACY_SEEDED_FACULTY_ID = /^tch([1-9]|[12]\d|30)$/;
+const LEGACY_COLLECTION_KEY = LEGACY_FACULTY_COLLECTION_ALIASES[0][0];
 
-interface LegacyTeacherRow {
+interface LegacyFacultyRow {
   id: string | number;
   contactId?: string | number | null;
   name?: string;
@@ -29,31 +31,31 @@ interface ContactRow {
 }
 
 function resolveContactId(
-  teacher: LegacyTeacherRow,
+  faculty: LegacyFacultyRow,
   contacts: ContactRow[],
 ): string | number | null {
-  if (teacher.contactId != null && teacher.contactId !== '') {
-    return teacher.contactId;
+  if (faculty.contactId != null && faculty.contactId !== '') {
+    return faculty.contactId;
   }
-  const seededId = String(teacher.id).match(LEGACY_SEEDED_TEACHER_ID);
+  const seededId = String(faculty.id).match(LEGACY_SEEDED_FACULTY_ID);
   if (seededId) return Number(seededId[1]);
-  if (teacher.name) {
-    const match = contacts.find((contact) => contact.name === teacher.name);
+  if (faculty.name) {
+    const match = contacts.find((contact) => contact.name === faculty.name);
     if (match) return match.id;
   }
   return null;
 }
 
-function normalizeTenantTeachers(
-  teachers: LegacyTeacherRow[],
+function normalizeTenantFaculty(
+  facultyRows: LegacyFacultyRow[],
   contacts: ContactRow[],
-): { next: LegacyTeacherRow[]; changed: boolean } {
+): { next: LegacyFacultyRow[]; changed: boolean } {
   let changed = false;
-  const next = teachers.map((teacher) => {
-    const contactId = resolveContactId(teacher, contacts);
-    const withContact = contactId != null ? { ...teacher, contactId } : teacher;
-    const normalized = normalizeStoredTeacher(withContact) as LegacyTeacherRow;
-    if (JSON.stringify(normalized) !== JSON.stringify(teacher)) {
+  const next = facultyRows.map((faculty) => {
+    const contactId = resolveContactId(faculty, contacts);
+    const withContact = contactId != null ? { ...faculty, contactId } : faculty;
+    const normalized = normalizeStoredFaculty(withContact) as LegacyFacultyRow;
+    if (JSON.stringify(normalized) !== JSON.stringify(faculty)) {
       changed = true;
     }
     return normalized;
@@ -81,39 +83,45 @@ async function discoverTenantSubdomains(): Promise<Set<string>> {
 }
 
 /**
- * Links legacy teacher rows to contacts and strips duplicated contact fields.
+ * Links legacy faculty rows to contacts and strips duplicated contact fields.
  */
 export async function runMigration005(): Promise<void> {
   const subdomains = await discoverTenantSubdomains();
   let changed = false;
 
-  const normalizeStorage = async (teachersKey: string, contactsKey: string) => {
-    const teachers = await getCollectionByStorageName(teachersKey);
-    if (!Array.isArray(teachers) || teachers.length === 0) return;
+  const normalizeStorage = async (facultyKey: string, contactsKey: string) => {
+    const facultyRows = await getCollectionByStorageName(facultyKey);
+    if (!Array.isArray(facultyRows) || facultyRows.length === 0) return;
 
     const contacts = (await getCollectionByStorageName(contactsKey)) as ContactRow[] | null;
-    const { next, changed: rowChanged } = normalizeTenantTeachers(
-      teachers as LegacyTeacherRow[],
+    const { next, changed: rowChanged } = normalizeTenantFaculty(
+      facultyRows as LegacyFacultyRow[],
       Array.isArray(contacts) ? contacts : [],
     );
     if (!rowChanged) return;
 
-    await saveCollection(teachersKey, next);
+    await saveCollection(facultyKey, next);
     changed = true;
   };
 
+  const targetCollectionKeys = ['faculty', LEGACY_COLLECTION_KEY];
+
   if (subdomains.size === 0) {
-    await normalizeStorage('teachers', 'contacts');
+    for (const key of targetCollectionKeys) {
+      await normalizeStorage(key, 'contacts');
+    }
   } else {
     for (const subdomain of subdomains) {
-      await normalizeStorage(
-        tenantCollectionKey(subdomain, 'teachers'),
-        tenantCollectionKey(subdomain, 'contacts'),
-      );
+      for (const key of targetCollectionKeys) {
+        await normalizeStorage(
+          tenantCollectionKey(subdomain, key),
+          tenantCollectionKey(subdomain, 'contacts'),
+        );
+      }
     }
   }
 
   if (changed) {
-    console.log('[Migration 005] Linked teachers to contacts and removed duplicate profile fields.');
+    console.log('[Migration 005] Linked faculty to contacts and removed duplicate profile fields.');
   }
 }

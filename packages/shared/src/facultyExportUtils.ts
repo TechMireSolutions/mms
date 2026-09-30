@@ -1,43 +1,41 @@
 import type { FieldDefinition } from './contactTypes.js';
 import { canViewContactField, canViewContactTab } from './contactFieldAccess.js';
-import type { Teacher } from './facultyTypes.js';
-import type { TeachersSettings } from './facultyModuleSettings.js';
+import type { FacultyMember } from './facultyTypes.js';
+import type { FacultySettings } from './facultyModuleSettings.js';
+import { isFacultyLockedEnabledTab } from './moduleFieldSetupPersons.js';
 import {
-  TEACHER_COLUMN_FIELD_MAPPING,
-  isTeacherLockedEnabledTab,
-  type TeacherWorkColumnKey,
-} from './moduleFieldSetupPersons.js';
-import { DEFAULT_TEACHER_EXPORT_COLUMNS } from './facultyDirectoryColumns.js';
-import { resolveTeacherEnabledTabIds } from './facultyEnabledTabs.js';
+  DEFAULT_FACULTY_EXPORT_COLUMNS,
+  FACULTY_COLUMN_FIELD_MAPPING,
+  type FacultyWorkColumnKey,
+} from './facultyDirectoryColumns.js';
+import { resolveFacultyEnabledTabIds } from './facultyEnabledTabs.js';
 import { customFieldKeyFromColumnKey } from './moduleColumnCore.js';
-import { resolveTeacherFieldsMapForColumnSync } from './facultyFormCustomFields.js';
-import { formatTeacherFieldCellValue } from './facultyFieldCellFormat.js';
+import { resolveFacultyFieldsMapForColumnSync } from './facultyFormCustomFields.js';
+import { formatFacultyFieldCellValue } from './facultyFieldCellFormat.js';
 
-export interface TeacherExportColumn {
+export interface FacultyExportColumn {
   id: string;
   label: string;
 }
 
-export type FacultyExportColumn = TeacherExportColumn;
-
-export { DEFAULT_TEACHER_EXPORT_COLUMNS };
+export { DEFAULT_FACULTY_EXPORT_COLUMNS };
 
 /** CSV identity columns always exported regardless of Setup field registry. */
-const TEACHER_EXPORT_ALWAYS_VISIBLE = new Set(['name', 'employeeId']);
+const FACULTY_EXPORT_ALWAYS_VISIBLE = new Set(['name', 'employeeId']);
 
 function resolveExportFieldKey(columnId: string): string {
   const customFieldId = customFieldKeyFromColumnKey(columnId);
   if (customFieldId !== null) return customFieldId;
-  const mapping = TEACHER_COLUMN_FIELD_MAPPING[columnId as TeacherWorkColumnKey];
+  const mapping = FACULTY_COLUMN_FIELD_MAPPING[columnId as FacultyWorkColumnKey];
   return mapping?.fieldId ?? columnId;
 }
 
-function isTeacherExportTabEnabled(
+function isFacultyExportTabEnabled(
   tabId: string,
   enabledTabs: ReadonlySet<string>,
   enabledTabsLower: ReadonlySet<string>,
 ): boolean {
-  if (isTeacherLockedEnabledTab(tabId)) return true;
+  if (isFacultyLockedEnabledTab(tabId)) return true;
   if (enabledTabs.has(tabId)) return true;
   return enabledTabsLower.has(tabId.toLowerCase());
 }
@@ -47,16 +45,16 @@ function isTeacherExportTabEnabled(
  * Always-visible: `name`, `employeeId`. Disabled or role-hidden Setup fields are
  * dropped; unregistered custom keys and always-visible identity columns survive.
  */
-export function filterTeacherExportColumnsForViewer(
-  columns: TeacherExportColumn[],
-  settings?: TeachersSettings | null,
+export function filterFacultyExportColumnsForViewer(
+  columns: FacultyExportColumn[],
+  settings?: FacultySettings | null,
   viewerRole?: string,
-): TeacherExportColumn[] {
-  const source = columns.length > 0 ? columns : [...DEFAULT_TEACHER_EXPORT_COLUMNS];
+): FacultyExportColumn[] {
+  const source = columns.length > 0 ? columns : [...DEFAULT_FACULTY_EXPORT_COLUMNS];
   if (!settings) return source;
 
-  const fields = resolveTeacherFieldsMapForColumnSync(settings.fields);
-  const enabledTabs = new Set(resolveTeacherEnabledTabIds(settings));
+  const fields = resolveFacultyFieldsMapForColumnSync(settings.fields);
+  const enabledTabs = new Set(resolveFacultyEnabledTabIds(settings));
   const enabledTabsLower = new Set(Array.from(enabledTabs, (tab) => tab.toLowerCase()));
   const formTabs = settings.formTabs ?? [];
   const tabMap = new Map<string, (typeof formTabs)[number]>();
@@ -74,7 +72,7 @@ export function filterTeacherExportColumnsForViewer(
   }
 
   return source.filter((column) => {
-    if (TEACHER_EXPORT_ALWAYS_VISIBLE.has(column.id)) return true;
+    if (FACULTY_EXPORT_ALWAYS_VISIBLE.has(column.id)) return true;
 
     const fieldKey = resolveExportFieldKey(column.id);
     const found = fieldLocationMap.get(fieldKey);
@@ -83,7 +81,7 @@ export function filterTeacherExportColumnsForViewer(
       return true;
     }
     if (found.field.enabled === false) return false;
-    if (!isTeacherExportTabEnabled(found.tabId, enabledTabs, enabledTabsLower)) return false;
+    if (!isFacultyExportTabEnabled(found.tabId, enabledTabs, enabledTabsLower)) return false;
     if (viewerRole) {
       if (!canViewContactField(viewerRole, found.field)) return false;
       const tab = tabMap.get((found.tabId || '').toLowerCase());
@@ -93,11 +91,11 @@ export function filterTeacherExportColumnsForViewer(
   });
 }
 
-function compileTeacherColumnExtractor(
+function compileFacultyColumnExtractor(
   columnId: string,
   fieldTypeMap: Map<string, FieldDefinition['type']>,
-): (teacher: Teacher) => unknown {
-  const propKey = resolveExportFieldKey(columnId) as keyof Teacher;
+): (faculty: FacultyMember) => unknown {
+  const propKey = resolveExportFieldKey(columnId) as keyof FacultyMember;
   const fieldType = fieldTypeMap.get(propKey as string);
   const options = {
     fieldType,
@@ -105,22 +103,22 @@ function compileTeacherColumnExtractor(
     arraySeparator: '; ',
   };
 
-  return (teacher: Teacher) => {
-    const cellVal = teacher[propKey];
+  return (faculty: FacultyMember) => {
+    const cellVal = faculty[propKey];
     return (
-      formatTeacherFieldCellValue(cellVal, options) ?? ''
+      formatFacultyFieldCellValue(cellVal, options) ?? ''
     );
   };
 }
 
-/** Builds CSV rows (header + data) for the given teachers and visible columns. */
-export function buildTeachersExportRows(
-  teachers: Teacher[],
-  columns: TeacherExportColumn[],
-  settings?: TeachersSettings | null,
+/** Builds CSV rows (header + data) for the given faculty and visible columns. */
+export function buildFacultyExportRows(
+  faculty: FacultyMember[],
+  columns: FacultyExportColumn[],
+  settings?: FacultySettings | null,
 ): unknown[][] {
   const fields = settings
-    ? resolveTeacherFieldsMapForColumnSync(settings.fields)
+    ? resolveFacultyFieldsMapForColumnSync(settings.fields)
     : undefined;
 
   const fieldTypeMap = new Map<string, FieldDefinition['type']>();
@@ -135,15 +133,11 @@ export function buildTeachersExportRows(
   }
 
   const extractors = columns.map((col) =>
-    compileTeacherColumnExtractor(col.id, fieldTypeMap),
+    compileFacultyColumnExtractor(col.id, fieldTypeMap),
   );
   const header = columns.map((column) => column.label);
-  const rows = teachers.map((teacher) =>
-    extractors.map((extractor) => extractor(teacher)),
+  const rows = faculty.map((member) =>
+    extractors.map((extractor) => extractor(member)),
   );
   return [header, ...rows];
 }
-
-export const buildFacultyExportRows = buildTeachersExportRows;
-export const filterFacultyExportColumnsForViewer = filterTeacherExportColumnsForViewer;
-

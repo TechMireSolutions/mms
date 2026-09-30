@@ -41,7 +41,7 @@ export const studentsWidgetSeeds: CustomWidget[] = [
     isPinnedToDashboard: false,
   },
   {
-    id: "def-card-teacher-attendance",
+    id: "def-card-faculty-attendance",
     title: "",
     titleKey: "widget.title.attendanceToday",
     category: "students",
@@ -58,7 +58,7 @@ export const studentsWidgetSeeds: CustomWidget[] = [
     fixedSubTextKey: "widget.subtitle.averagePresentRate",
     trend: 0,
     trendType: "database",
-    role: "teacher",
+    role: "faculty",
     isPinnedToDashboard: false,
   },
   {

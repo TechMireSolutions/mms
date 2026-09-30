@@ -51,7 +51,7 @@ describe("useFacultyEntityDescriptor", () => {
     expect(columns.length).toBeGreaterThan(0);
 
     const nameCol = columns.find((c) => c.id === "name");
-    expect(nameCol?.label).toBe("[teachers.columns.name]");
+    expect(nameCol?.label).toBe("[faculty.field.name]");
 
     for (const col of columns) {
       expect(col.label).toMatch(/^\[/);
@@ -59,15 +59,15 @@ describe("useFacultyEntityDescriptor", () => {
     cleanup();
   });
 
-  it("labelKey values map to teachers.columns.* namespace", () => {
+  it("labelKey values map to faculty.* namespace", () => {
     const { getResult, cleanup } = renderHookWrapper();
     const fields = getResult().fields;
 
     const nameField = fields.find((f) => f.key === "name");
-    expect(nameField?.labelKey).toBe("teachers.columns.name");
+    expect(nameField?.labelKey).toBe("faculty.field.name");
 
     const statusField = fields.find((f) => f.key === "status");
-    expect(statusField?.labelKey).toBe("teachers.columns.status");
+    expect(statusField?.labelKey).toBe("faculty.field.status");
     cleanup();
   });
 

@@ -4,7 +4,7 @@ import {
   type QuestionBankQuestion,
   type QuestionBankResult,
   type QuestionBankTest,
-  type Teacher,
+  type FacultyMember,
   FINANCE_MODULE_MANIFEST,
 } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -29,8 +29,7 @@ import type { ReportCollection } from '@/lib/reports/reportMetadata';
 
 export type ReportCollectionsSnapshot = {
   students: Student[];
-  faculty: Teacher[];
-  teachers: Teacher[];
+  faculty: FacultyMember[];
   sessions: Session[];
   enrollments: Enrollment[];
   finance_invoices: Invoice[];
@@ -63,10 +62,10 @@ export function useWidgetCollections(options?: {
   const needs = (collection: ReportCollection): boolean =>
     queryEnabled && (required === null || required.has(collection));
 
-  // Contacts + students + teachers + sessions + enrollments widgets/charts read SQL aggregates — do not page-walk entities here.
+  // Contacts + students + faculty + sessions + enrollments widgets/charts read SQL aggregates — do not page-walk entities here.
   const contacts: Contact[] = [];
   const students: Student[] = [];
-  const teachers: Teacher[] = [];
+  const faculty: FacultyMember[] = [];
   const sessions: Session[] = [];
   const enrollments: Enrollment[] = [];
   const financeInvoices = useFinanceInvoicesPaginated({ page: 1, limit: FINANCE_MODULE_MANIFEST.maxPageSize }, { enabled: needs('finance_invoices') }).data?.invoices ?? [];
@@ -85,8 +84,7 @@ export function useWidgetCollections(options?: {
 
   return {
     students,
-    faculty: teachers,
-    teachers,
+    faculty,
     sessions,
     enrollments,
     finance_invoices: financeInvoices,

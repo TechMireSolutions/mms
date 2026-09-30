@@ -1,21 +1,20 @@
 import {
   FACULTY_MODULE_MANIFEST,
-  buildTeacherWorkColumnRegistry,
-  teacherColumnLabelKey,
-  teacherWorkColumnLabelsFrom,
+  buildFacultyWorkColumnRegistry,
+  facultyColumnLabelKey,
+  facultyWorkColumnLabelsFrom,
   type FacultySettings,
-  type TeachersSettings,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
 
-export function useFacultyColumnLayout(settings: FacultySettings | TeachersSettings) {
+export function useFacultyColumnLayout(settings: FacultySettings) {
   const { t } = useTranslation();
 
   const tenantRegistry = (() =>
-      buildTeacherWorkColumnRegistry(
+      buildFacultyWorkColumnRegistry(
         settings,
-        teacherWorkColumnLabelsFrom((key) => t(teacherColumnLabelKey(key))),
+        facultyWorkColumnLabelsFrom((key) => t(facultyColumnLabelKey(key))),
       ))();
 
   const { customizerLabels: baseLabels, updateUserColumnLayout, ...base } = useModuleColumnLayout({
@@ -42,7 +41,5 @@ export function useFacultyColumnLayout(settings: FacultySettings | TeachersSetti
     resetColumnLayout,
   };
 }
-
-export const useTeacherColumnLayout = useFacultyColumnLayout;
 
 

@@ -9,12 +9,12 @@ import type {
 } from '@mms/shared';
 
 describe('computeDashboardMetricTrends', () => {
-  it('computes trend percentages correctly for student, teacher, and contact metrics', () => {
+  it('computes trend percentages correctly for student, faculty, and contact metrics', () => {
     const mockData: DashboardCollectionData = {
       studentsTotal: 100,
       studentMetricsNew: 10,
-      teachersTotal: 20,
-      teacherMetricsNew: 2,
+      facultyTotal: 20,
+      facultyMetricsNew: 2,
       contactsTotal: 50,
       sessionsTotal: 20,
       contactMetricsNew: 5,
@@ -56,7 +56,7 @@ describe('computeDashboardMetricTrends', () => {
     const trends = computeDashboardMetricTrends(mockData);
 
     expect(trends.studentTrend).toBe(11); // 10 / (100 - 10) = 11.11% -> 11
-    expect(trends.teacherTrend).toBe(11); // 2 / (20 - 2) = 11.11% -> 11
+    expect(trends.facultyTrend).toBe(11); // 2 / (20 - 2) = 11.11% -> 11
     expect(trends.contactTrend).toBe(11); // 5 / (50 - 5) = 11.11% -> 11
     expect(trends.attendanceTrend).toBe(4); // 92 - 88
     expect(trends.feesTrend).toBe(20); // (1200 - 1000) / 1000 = 20%
@@ -68,20 +68,20 @@ describe('computeDashboardMetricTrends', () => {
   it('handles zero or missing metrics safely without division by zero', () => {
     const mockData: DashboardCollectionData = {
       studentsTotal: 0,
-      teachersTotal: 0,
+      facultyTotal: 0,
       contactsTotal: 0,
       sessionsTotal: 0,
       studentMetricsInactive: 0,
       studentMetricsActive: 0,
       studentMetricsNew: 0,
-      teacherMetricsNew: 0,
+      facultyMetricsNew: 0,
       contactMetricsNew: 0,
     };
 
     const trends = computeDashboardMetricTrends(mockData);
 
     expect(trends.studentTrend).toBe(0);
-    expect(trends.teacherTrend).toBe(0);
+    expect(trends.facultyTrend).toBe(0);
     expect(trends.contactTrend).toBe(0);
     expect(trends.attendanceTrend).toBe(0);
     expect(trends.feesTrend).toBe(0);

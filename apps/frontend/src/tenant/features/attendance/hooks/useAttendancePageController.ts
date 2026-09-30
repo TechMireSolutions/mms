@@ -14,7 +14,7 @@ import { usePermissions, useModulePermissions } from '@/tenant/hooks/usePermissi
 const DEFAULT_FILTERS = {
   sessionId: '',
   classId: '',
-  teacherId: '',
+  facultyId: '',
   date: todayISO(),
 };
 

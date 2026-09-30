@@ -1,31 +1,31 @@
 import type { Contact } from './contactTypes.js';
-import type { Teacher } from './facultyTypes.js';
-import { TEACHER_SPECIALIZATION_VALUES } from './facultyTypes.js';
+import type { FacultyMember } from './facultyTypes.js';
+import { FACULTY_SPECIALIZATION_VALUES } from './facultyTypes.js';
 import {
   DEMO_CITIES,
+  DEMO_FACULTY_COUNT,
+  DEMO_FACULTY_DATE,
+  DEMO_FACULTY_FEMALE_TITLES,
+  DEMO_FACULTY_MALE_TITLES,
   DEMO_FEMALE_FIRST,
   DEMO_LAST_NAMES,
   DEMO_MALE_FIRST,
   DEMO_QUALIFICATIONS,
-  DEMO_TEACHER_COUNT,
-  DEMO_TEACHER_DATE,
-  DEMO_TEACHER_FEMALE_TITLES,
-  DEMO_TEACHER_MALE_TITLES,
+  demoFacultyDob,
   demoJoinDate,
   demoPad,
   demoPhoneSuffix,
   demoPick,
   demoSlug,
-  demoTeacherDob,
 } from './demoSeedConstants.js';
 
-/** Builds faculty contact profiles (ids 1…{@link DEMO_TEACHER_COUNT}). */
-export function buildDemoTeacherContacts(): Contact[] {
+/** Builds faculty contact profiles (ids 1…{@link DEMO_FACULTY_COUNT}). */
+export function buildDemoFacultyContacts(): Contact[] {
   const contacts: Contact[] = [];
-  for (let index = 1; index <= DEMO_TEACHER_COUNT; index += 1) {
+  for (let index = 1; index <= DEMO_FACULTY_COUNT; index += 1) {
     const female = index % 5 === 0 || index % 7 === 0;
     const firstPool = female ? DEMO_FEMALE_FIRST : DEMO_MALE_FIRST;
-    const title = female ? demoPick(DEMO_TEACHER_FEMALE_TITLES, index) : demoPick(DEMO_TEACHER_MALE_TITLES, index);
+    const title = female ? demoPick(DEMO_FACULTY_FEMALE_TITLES, index) : demoPick(DEMO_FACULTY_MALE_TITLES, index);
     const firstName = demoPick(firstPool, index);
     const lastName = demoPick(DEMO_LAST_NAMES, index + 3);
     const name = `${title} ${firstName} ${lastName}`;
@@ -39,14 +39,14 @@ export function buildDemoTeacherContacts(): Contact[] {
       firstName: title,
       lastName: `${firstName} ${lastName}`,
       gender: female ? 'female' : 'male',
-      dob: demoTeacherDob(index),
+      dob: demoFacultyDob(index),
       email,
       phone,
       city,
       state: 'Sindh',
       country: 'Pakistan',
-      createdAt: DEMO_TEACHER_DATE,
-      updatedAt: DEMO_TEACHER_DATE,
+      createdAt: DEMO_FACULTY_DATE,
+      updatedAt: DEMO_FACULTY_DATE,
       phones: [{ label: 'Mobile', number: phone }],
       emails: [{ label: 'Work', address: email }],
       relationships: [],
@@ -56,24 +56,21 @@ export function buildDemoTeacherContacts(): Contact[] {
   return contacts;
 }
 
-/** Builds demo teacher rows linked to {@link buildDemoTeacherContacts}. */
-export function buildDemoTeachers(): Teacher[] {
-  const teachers: Teacher[] = [];
-  for (let index = 1; index <= DEMO_TEACHER_COUNT; index += 1) {
-    const status: Teacher['status'] =
+/** Builds demo faculty rows linked to {@link buildDemoFacultyContacts}. */
+export function buildDemoFaculty(): FacultyMember[] {
+  const facultyMembers: FacultyMember[] = [];
+  for (let index = 1; index <= DEMO_FACULTY_COUNT; index += 1) {
+    const status: FacultyMember['status'] =
       index % 11 === 0 ? 'inactive' : index % 9 === 0 ? 'on_leave' : 'active';
-    teachers.push({
+    facultyMembers.push({
       id: `tch${index}`,
       contactId: index,
       employeeId: `TCH-${demoPad(index, 4)}`,
-      specialization: demoPick([...TEACHER_SPECIALIZATION_VALUES], index),
+      specialization: demoPick([...FACULTY_SPECIALIZATION_VALUES], index),
       status,
       joinDate: demoJoinDate(index),
       qualification: demoPick(DEMO_QUALIFICATIONS, index),
     });
   }
-  return teachers;
+  return facultyMembers;
 }
-
-export const buildDemoFacultyContacts = buildDemoTeacherContacts;
-export const buildDemoFaculty = buildDemoTeachers;

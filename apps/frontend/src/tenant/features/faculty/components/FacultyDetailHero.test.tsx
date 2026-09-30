@@ -1,12 +1,12 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
-import { TeacherDetailHero } from "./FacultyDetailHero";
+import type { Faculty } from "@mms/shared";
+import { FacultyDetailHero } from "./FacultyDetailHero";
 
-const mockTeacher: Teacher = {
-  id: "tch-hero-1",
-  contactId: "cnt-tch-1",
+const mockFaculty: Faculty = {
+  id: "fac-hero-1",
+  contactId: "cnt-fac-1",
   name: "Ustadh Umar",
   status: "active",
   employeeId: "EMP-010",
@@ -20,11 +20,11 @@ const mockStatusConfig = {
   active: { label: "Active", cls: "bg-success/10 text-success" },
 };
 
-describe("TeacherDetailHero Component", () => {
-  it("renders teacher name, employee ID badge, and status badge", () => {
+describe("FacultyDetailHero Component", () => {
+  it("renders faculty name, employee ID badge, and status badge", () => {
     const html = renderToStaticMarkup(
-      <TeacherDetailHero
-        teacher={mockTeacher}
+      <FacultyDetailHero
+        faculty={mockFaculty}
         displayName="Ustadh Umar"
         statusConfig={mockStatusConfig}
         showStatus={true}
@@ -38,8 +38,8 @@ describe("TeacherDetailHero Component", () => {
 
   it("omits status badge when showStatus is false", () => {
     const html = renderToStaticMarkup(
-      <TeacherDetailHero
-        teacher={mockTeacher}
+      <FacultyDetailHero
+        faculty={mockFaculty}
         displayName="Ustadh Umar"
         statusConfig={mockStatusConfig}
         showStatus={false}
@@ -50,3 +50,4 @@ describe("TeacherDetailHero Component", () => {
     expect(html).not.toContain("Active");
   });
 });
+

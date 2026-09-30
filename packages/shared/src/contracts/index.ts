@@ -4,7 +4,6 @@ import { financeContract } from './finance.contract.js';
 import { attendanceContract } from './attendance.contract.js';
 import { contactsContract } from './contacts.contract.js';
 import { facultyContract } from './faculty.contract.js';
-const teacherContract = facultyContract;
 import { userContract } from './users.contract.js';
 import { messagingContract } from './messaging.contract.js';
 import { sessionContract } from './sessions.contract.js';
@@ -32,7 +31,6 @@ export const rootContract = c.router({
   attendance: attendanceContract,
   contacts: contactsContract,
   faculty: facultyContract,
-  teachers: facultyContract,
   users: userContract,
   messaging: messagingContract,
   sessions: sessionContract,
@@ -67,7 +65,6 @@ export {
   attendanceContract,
   contactsContract,
   facultyContract,
-  teacherContract,
   userContract,
   messagingContract,
   sessionContract,
@@ -96,7 +93,6 @@ export type DomainContracts = {
   attendance: typeof attendanceContract;
   contacts: typeof contactsContract;
   faculty: typeof facultyContract;
-  teachers: typeof facultyContract;
   users: typeof userContract;
   messaging: typeof messagingContract;
   sessions: typeof sessionContract;

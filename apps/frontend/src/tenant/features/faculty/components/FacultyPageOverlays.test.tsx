@@ -7,28 +7,30 @@ vi.mock("@/tenant/hooks/collections/sessions", () => ({
   useSessions: () => ({ data: [] }),
 }));
 
+vi.mock("@/tenant/hooks/useBranding", () => ({
+  useBranding: () => ({
+    madrasaName: "Test Madrasa",
+  }),
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
   }),
 }));
 
-vi.mock("@/tenant/features/faculty/components/FacultyPageConfirmDialogs", () => {
-  const dialog = ({ bulkDeleteOpen }: { bulkDeleteOpen?: boolean }) => (
+vi.mock("@/tenant/features/faculty/components/FacultyPageConfirmDialogs", () => ({
+  FacultyPageConfirmDialogs: ({ bulkDeleteOpen }: { bulkDeleteOpen?: boolean }) => (
     <div data-testid="confirm-dialogs">dialogs-rendered:{String(bulkDeleteOpen)}</div>
-  );
-  return {
-    FacultyPageConfirmDialogs: dialog,
-    TeachersPageConfirmDialogs: dialog,
-  };
-});
+  ),
+}));
 
 const defaultProps = {
   showForm: false,
-  editTeacher: null,
+  editFaculty: null,
   onCloseForm: vi.fn(),
   onSave: vi.fn(),
-  viewTeacher: null,
+  viewFaculty: null,
   onCloseView: vi.fn(),
   onEditFromDrawer: vi.fn(),
   onRestoreFromDrawer: vi.fn(),
@@ -48,7 +50,7 @@ const defaultProps = {
   bulkRestoreOpen: false,
   onBulkRestoreOpenChange: vi.fn(),
   onConfirmBulkRestore: vi.fn(),
-  idCardTeachers: [],
+  idCardFaculty: [],
   onCloseIdCards: vi.fn(),
 };
 

@@ -25,7 +25,6 @@ export const DASHBOARD_COLLECTION_MODULE_ID: Partial<Record<ReportCollection, st
   finance_invoices: FINANCE_MODULE_MANIFEST.moduleId,
   students: STUDENTS_MODULE_MANIFEST.moduleId,
   faculty: FACULTY_MODULE_MANIFEST.moduleId,
-  teachers: FACULTY_MODULE_MANIFEST.moduleId,
   contacts: CONTACTS_MODULE_MANIFEST.moduleId,
   questions: QUESTION_BANK_MODULE_MANIFEST.moduleId,
   tests: QUESTION_BANK_MODULE_MANIFEST.moduleId,
@@ -76,7 +75,6 @@ export function getDashboardWidgetRequiredPermission(
     case 'students':
       return STUDENTS_MODULE_MANIFEST.permissions.read;
     case 'faculty':
-    case 'teachers':
       return FACULTY_MODULE_MANIFEST.permissions.read;
     case 'contacts':
       return CONTACTS_MODULE_MANIFEST.permissions.read;

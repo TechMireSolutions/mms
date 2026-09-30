@@ -13,17 +13,17 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("@/tenant/hooks/collections/faculty", () => ({
-  useTeachersContractList: () => ({
+  useFacultyContractList: () => ({
     data: {
       body: {
         faculty: [
-          { id: "teacher-1", name: "Ustadh Ali" },
-          { id: "teacher-2", name: "Ustadh Hassan" },
+          { id: "faculty-1", name: "Ustadh Ali" },
+          { id: "faculty-2", name: "Ustadh Hassan" },
         ],
       },
     },
   }),
-  useTeachersByIds: () => ({
+  useFacultyByIds: () => ({
     data: [],
   }),
 }));
@@ -42,7 +42,7 @@ const mockSession: Session = {
     {
       id: "fac-1",
       sessionId: "session-1",
-      facultyId: "teacher-1",
+      facultyId: "faculty-1",
       facultyName: "Ustadh Ali",
       role: "Lead Instructor",
       status: "active",

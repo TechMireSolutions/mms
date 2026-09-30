@@ -1,32 +1,32 @@
-import { hasWhatsApp, type Teacher } from "@mms/shared";
-import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
-import { resolveTeacherPrimaryChannels } from "@/lib/faculty/facultyPrimaryChannels";
+import { hasWhatsApp, type Faculty } from "@mms/shared";
+import { useFacultyConfig } from "@/hooks/useStandardModuleConfig";
+import { resolveFacultyPrimaryChannels } from "@/lib/faculty/facultyPrimaryChannels";
 import { useContactById } from "@/tenant/hooks/collections/contacts";
 import { useSessions, useSessionsCollection } from "@/tenant/hooks/collections/sessions";
-import { useTeacherStatusConfig } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
-import { listTeacherDetailAttributeFields } from "@/tenant/features/faculty/components/facultyDetailFields";
-import { getTeacherAssignedClasses, type TeacherAssignedClassItem } from "@/lib/faculty/facultyAssignment";
+import { useFacultyStatusConfig } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
+import { listFacultyDetailAttributeFields } from "@/tenant/features/faculty/components/facultyDetailFields";
+import { getFacultyAssignedClasses, type FacultyAssignedClassItem } from "@/lib/faculty/facultyAssignment";
 
-/** Teacher detail drawer model — mirrors useStudentDetailModel (Students parity). */
-export function useTeacherDetailModel(teacher: Teacher) {
-  const { settings } = useTeacherConfig();
-  const statusConfig = useTeacherStatusConfig();
+/** Faculty detail drawer model — mirrors useStudentDetailModel (Students parity). */
+export function useFacultyDetailModel(faculty: Faculty) {
+  const { settings } = useFacultyConfig();
+  const statusConfig = useFacultyStatusConfig();
   const { data: linkedContact } = useContactById(
-    teacher.contactId != null ? String(teacher.contactId) : undefined,
-    Boolean(teacher.contactId),
+    faculty.contactId != null ? String(faculty.contactId) : undefined,
+    Boolean(faculty.contactId),
   );
   const sessionsQuery = useSessions();
   const sessions = useSessionsCollection();
 
-  const assignedClasses: TeacherAssignedClassItem[] = (() => {
-    if (!teacher.id) return [];
-    return getTeacherAssignedClasses(teacher.id, sessions);
+  const assignedClasses: FacultyAssignedClassItem[] = (() => {
+    if (!faculty.id) return [];
+    return getFacultyAssignedClasses(faculty.id, sessions);
   })();
 
-  const detailFields = (() => listTeacherDetailAttributeFields(settings))();
+  const detailFields = (() => listFacultyDetailAttributeFields(settings))();
 
-  const { phone: primaryPhone, email: primaryEmail } = resolveTeacherPrimaryChannels(
-    teacher,
+  const { phone: primaryPhone, email: primaryEmail } = resolveFacultyPrimaryChannels(
+    faculty,
     linkedContact,
   );
 
@@ -35,7 +35,7 @@ export function useTeacherDetailModel(teacher: Teacher) {
   // their own rows when present, so any of those also make the card render.
   const hasVisibleDetailFields =
     detailFields.some((field) => field.key !== "status" && field.key !== "notes") ||
-    Boolean(teacher.gender) ||
+    Boolean(faculty.gender) ||
     Boolean(primaryPhone) ||
     Boolean(primaryEmail);
 
@@ -54,5 +54,4 @@ export function useTeacherDetailModel(teacher: Teacher) {
   };
 }
 
-export const useFacultyDetailModel = useTeacherDetailModel;
 

@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
-import { TeachersListCards } from "@/tenant/features/faculty/components/FacultyListCards";
+import type { Faculty } from "@mms/shared";
+import { FacultyListCards } from "@/tenant/features/faculty/components/FacultyListCards";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -13,7 +13,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockTeachers: Teacher[] = [
+const mockFaculty: Faculty[] = [
   {
     id: "tch-1",
     contactId: "cnt-1",
@@ -50,11 +50,11 @@ const mockColumnRegistry = [
   { key: "status", label: "Status", enabled: true, fixed: false, order: 5 },
 ];
 
-describe("TeachersListCards", () => {
-  it("renders teacher cards with names, employee ID, info pills, and selection count", () => {
+describe("FacultyListCards", () => {
+  it("renders faculty cards with names, employee ID, info pills, and selection count", () => {
     const html = renderToStaticMarkup(
-      <TeachersListCards
-        teachers={mockTeachers}
+      <FacultyListCards
+        faculty={mockFaculty}
         selectedIds={["tch-1"]}
         allSelected={false}
         someSelected={true}
@@ -87,10 +87,10 @@ describe("TeachersListCards", () => {
     expect(html).toContain('aria-checked="true"');
   });
 
-  it("renders archived banner and restore button when viewing deleted teachers", () => {
+  it("renders archived banner and restore button when viewing deleted faculty", () => {
     const html = renderToStaticMarkup(
-      <TeachersListCards
-        teachers={mockTeachers}
+      <FacultyListCards
+        faculty={mockFaculty}
         selectedIds={[]}
         allSelected={false}
         someSelected={false}
@@ -115,8 +115,8 @@ describe("TeachersListCards", () => {
 
   it("respects isColumnVisible by hiding phone and email when disabled", () => {
     const html = renderToStaticMarkup(
-      <TeachersListCards
-        teachers={mockTeachers}
+      <FacultyListCards
+        faculty={mockFaculty}
         selectedIds={[]}
         allSelected={false}
         someSelected={false}
@@ -142,8 +142,8 @@ describe("TeachersListCards", () => {
 
   it("hides write and delete actions when permissions are disabled", () => {
     const html = renderToStaticMarkup(
-      <TeachersListCards
-        teachers={mockTeachers}
+      <FacultyListCards
+        faculty={mockFaculty}
         selectedIds={[]}
         allSelected={false}
         someSelected={false}
@@ -166,10 +166,10 @@ describe("TeachersListCards", () => {
     expect(html).not.toContain("common.delete");
   });
 
-  it("handles empty teachers array cleanly", () => {
+  it("handles empty faculty array cleanly", () => {
     const html = renderToStaticMarkup(
-      <TeachersListCards
-        teachers={[]}
+      <FacultyListCards
+        faculty={[]}
         selectedIds={[]}
         allSelected={false}
         someSelected={false}

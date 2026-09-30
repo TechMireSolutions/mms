@@ -16,9 +16,16 @@ describe('dashboardQuickActions', () => {
     expect(accountantActions.some((action) => action.id === 'print-receipt')).toBe(true);
   });
 
-  it('returns quick actions configured for teacher role', () => {
-    const teacherActions = getQuickActionsForRole('teacher');
-    expect(teacherActions.some((action) => action.id === 'take-attendance')).toBe(true);
-    expect(teacherActions.some((action) => action.id === 'print-receipt')).toBe(false);
+  it('returns quick actions configured for faculty role', () => {
+    const facultyActions = getQuickActionsForRole('faculty');
+    expect(facultyActions.length).toBeGreaterThan(0);
+    expect(facultyActions.every((action) => action.roles.includes('faculty'))).toBe(true);
+    expect(facultyActions.some((action) => action.id === 'take-attendance')).toBe(true);
+    expect(facultyActions.some((action) => action.id === 'print-receipt')).toBe(false);
+  });
+
+  it('returns empty list for unknown role', () => {
+    const unknownActions = getQuickActionsForRole('unknown');
+    expect(unknownActions).toHaveLength(0);
   });
 });

@@ -7,12 +7,11 @@ export function FacultyReportsTier(): React.JSX.Element {
   return (
     <ModuleTierMotion tier="reports" className="space-y-4">
       <ErrorBoundary>
-        <KPISummary category="teachers" />
-        <ModuleReports category="teachers" />
+        <KPISummary category="faculty" />
+        <ModuleReports category="faculty" />
       </ErrorBoundary>
     </ModuleTierMotion>
   );
 }
 
-export const TeachersReportsTier = FacultyReportsTier;
 export default FacultyReportsTier;

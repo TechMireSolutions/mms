@@ -1,7 +1,7 @@
 import React, { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { type Teacher } from '@mms/shared';
+import { type FacultyMember } from '@mms/shared';
 import { ClassDetailGeneralTab } from './ClassDetailGeneralTab';
 import { ClassDetailFeesTab } from './ClassDetailFeesTab';
 import { ClassDetailScheduleTab } from './ClassDetailScheduleTab';
@@ -51,7 +51,7 @@ describe('ClassDetail Sub-Tabs & Helpers', () => {
   describe('ClassDetailGeneralTab', () => {
     it('renders general inputs and calls updateDraft', async () => {
       const updateDraft = vi.fn();
-      const sampleTeacher: Teacher = {
+      const sampleFaculty: FacultyMember = {
         id: 't1',
         contactId: 'c1',
         name: 'Ustadh Ali',
@@ -63,7 +63,7 @@ describe('ClassDetail Sub-Tabs & Helpers', () => {
             classDraft={EMPTY_CLASS}
             updateDraft={updateDraft}
             errors={{}}
-            allTeachers={[sampleTeacher]}
+            allFaculty={[sampleFaculty]}
           />,
         );
       });
@@ -131,7 +131,7 @@ describe('ClassDetail Sub-Tabs & Helpers', () => {
           <ClassDetailScheduleTab
             schedules={[]}
             periods={[]}
-            allTeachers={[]}
+            allFaculty={[]}
             onAddSchedule={onAddSchedule}
             onRemoveSchedule={vi.fn()}
             onUpdateSchedule={vi.fn()}

@@ -1,9 +1,8 @@
+import { useMemo } from "react";
 import type {
   FacultySortField,
   FacultyQuickFilter,
   ModuleColumnRegistryEntry,
-  TeacherSortField,
-  TeachersQuickFilter,
 } from "@mms/shared";
 import type { ModuleColumnCustomizerLabels } from "@/components/ui/ModuleColumnCustomizer";
 import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
@@ -12,8 +11,8 @@ import { WorkTaskToolbar } from "@/components/common/work";
 import { FACULTY_WORK_SEARCH_INPUT_ID } from "@/tenant/features/faculty/hooks/useFacultyKeyboardShortcuts";
 import { FacultyFiltersMenuButton } from "@/tenant/features/faculty/components/FacultyFiltersMenuButton";
 import {
-  getTeacherVisibleWorkColumns,
-  toTeacherListSortField,
+  getFacultyVisibleWorkColumns,
+  toFacultyListSortField,
 } from "@/tenant/features/faculty/components/facultyListVisibleColumns";
 
 export interface FacultyListFiltersProps {
@@ -21,7 +20,7 @@ export interface FacultyListFiltersProps {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
-  quickFilter: FacultyQuickFilter | TeachersQuickFilter;
+  quickFilter: FacultyQuickFilter;
   onQuickFilterChange: (preset: string) => void;
   genderFilters: string[];
   activeFilterCount: number;
@@ -39,7 +38,7 @@ export interface FacultyListFiltersProps {
   customizerLabels: ModuleColumnCustomizerLabels;
   viewMode: WorkDirectoryViewMode;
   onViewModeChange: (mode: WorkDirectoryViewMode) => void;
-  sortField: FacultySortField | TeacherSortField;
+  sortField: FacultySortField;
   onSortChange: (field: FacultySortField) => void;
   onSearchChange: (value: string) => void;
   onToggleStatus: (status: string) => void;
@@ -48,10 +47,8 @@ export interface FacultyListFiltersProps {
   onToggleDeleted: () => void;
   filterChips?: React.ReactNode;
 }
-export type TeachersListFiltersProps = FacultyListFiltersProps;
 
 export function FacultyListFilters({
-
   search,
   filterStatus,
   filterSpecialization,
@@ -82,28 +79,31 @@ export function FacultyListFilters({
   onGenderChange,
   onToggleDeleted,
   filterChips,
-}: TeachersListFiltersProps): React.JSX.Element {
+}: FacultyListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
 
-  const sortOptions = (() =>
-      getTeacherVisibleWorkColumns(columnRegistry, isColumnVisible)
+  const sortOptions = useMemo(
+    () =>
+      getFacultyVisibleWorkColumns(columnRegistry, isColumnVisible)
         .map((col) => {
-          const field = toTeacherListSortField(col.key);
+          const field = toFacultyListSortField(col.key);
           return field ? { field, label: col.label } : null;
         })
-        .filter((option): option is { field: TeacherSortField; label: string } => option !== null))();
+        .filter((option): option is { field: FacultySortField; label: string } => option !== null),
+    [columnRegistry, isColumnVisible],
+  );
 
   return (
     <WorkTaskToolbar
-      shownCountLabel={shownCount != null ? t("teachers.shownCount", { count: shownCount }) : undefined}
-      regionLabel={t("teachers.filters")}
+      shownCountLabel={shownCount != null ? t("faculty.shownCount", { count: shownCount }) : undefined}
+      regionLabel={t("faculty.filters")}
       search={search}
       onSearchChange={onSearchChange}
-      searchPlaceholder={t("teachers.searchPlaceholder")}
+      searchPlaceholder={t("faculty.searchPlaceholder")}
       searchId={FACULTY_WORK_SEARCH_INPUT_ID}
       hasActiveFilters={hasActiveFilters}
       onClearFilters={onClearFilters}
-      clearFiltersLabel={t("teachers.clearFilters")}
+      clearFiltersLabel={t("faculty.clearFilters")}
       filterChips={filterChips}
       filterButton={
         <FacultyFiltersMenuButton
@@ -129,8 +129,8 @@ export function FacultyListFilters({
         canViewDeleted: canDelete,
         viewingDeleted: showDeleted,
         onToggle: onToggleDeleted,
-        activeLabel: t("teachers.showActive"),
-        deletedLabel: t("teachers.showDeleted"),
+        activeLabel: t("faculty.showActive"),
+        deletedLabel: t("faculty.showDeleted"),
       } : undefined}
       viewModeToggle={{
         viewMode,
@@ -146,5 +146,4 @@ export function FacultyListFilters({
   );
 }
 
-export const TeachersListFilters = FacultyListFilters;
 

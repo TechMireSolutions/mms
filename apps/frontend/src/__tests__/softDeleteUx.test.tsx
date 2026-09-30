@@ -19,12 +19,12 @@ import {
 } from "@/components/ui/DetailDrawerArchiveChrome";
 import { ContactArchivedBanner } from "@/tenant/features/contacts/components/ContactArchivedBanner";
 import { StudentArchivedBanner } from "@/tenant/features/students/components/StudentArchivedBanner";
-import { TeacherArchivedBanner } from "@/tenant/features/faculty/components/FacultyArchivedBanner";
+import { FacultyArchivedBanner } from "@/tenant/features/faculty/components/FacultyArchivedBanner";
 import { SessionArchivedBanner } from "@/tenant/features/sessions/components/SessionArchivedBanner";
 import { ContactDetailDrawerHeaderActions } from "@/tenant/features/contacts/components/detail/ContactDetailDrawerChrome";
 import { notify } from "@/lib/notify";
 import { Toaster } from "@/components/ui/toaster";
-import type { Contact, Student, Teacher, Session } from "@mms/shared";
+import type { Contact, Student, Faculty, Session } from "@mms/shared";
 import {
   useOptimisticSoftDelete,
   type UseOptimisticSoftDeleteOptions,
@@ -531,7 +531,7 @@ describe("Soft-Delete UX Architecture Integration", () => {
     });
   });
 
-  describe("4b. Module-specific archived banners (Contact, Student, Teacher, Session)", () => {
+  describe("4b. Module-specific archived banners (Contact, Student, Faculty, Session)", () => {
     it("renders ContactArchivedBanner with retention info when deletedAt is present", () => {
       const archivedContact: Contact = {
         id: "cnt-1",
@@ -594,19 +594,19 @@ describe("Soft-Delete UX Architecture Integration", () => {
       expect(html).toBe("");
     });
 
-    it("renders TeacherArchivedBanner with standard countdown when > 7 days remain", () => {
+    it("renders FacultyArchivedBanner with standard countdown when > 7 days remain", () => {
       vi.useFakeTimers();
       vi.setSystemTime(new Date("2026-03-01T12:00:00Z"));
       try {
-        const teacher: Teacher = {
+        const faculty: Faculty = {
           id: "tch-1",
           name: "Ustadh Umar",
           status: "active",
           deletedAt: "2026-02-20T12:00:00Z",
           deletionReason: "Contract ended",
           retentionDays: 30,
-        } as unknown as Teacher;
-        const html = renderToStaticMarkup(<TeacherArchivedBanner teacher={teacher} />);
+        } as unknown as Faculty;
+        const html = renderToStaticMarkup(<FacultyArchivedBanner faculty={faculty} />);
         expect(html).toContain("Contract ended");
         expect(html).toContain("common.purgesInDays");
       } finally {
@@ -614,15 +614,15 @@ describe("Soft-Delete UX Architecture Integration", () => {
       }
     });
 
-    it("renders null for TeacherArchivedBanner when teacher is active", () => {
-      const activeTeacher: Teacher = {
+    it("renders null for FacultyArchivedBanner when faculty is active", () => {
+      const activeFaculty: Faculty = {
         id: "tch-2",
         contactId: "cnt-2",
         name: "Ustadh Zaid",
         status: "active",
         deletedAt: undefined,
       };
-      const html = renderToStaticMarkup(<TeacherArchivedBanner teacher={activeTeacher} />);
+      const html = renderToStaticMarkup(<FacultyArchivedBanner faculty={activeFaculty} />);
       expect(html).toBe("");
     });
 

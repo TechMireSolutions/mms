@@ -1,72 +1,72 @@
 import {
   customFieldKeyFromColumnKey,
-  formatTeacherFieldCellValue,
-  type Teacher,
-  type TeacherCustomField,
+  formatFacultyFieldCellValue,
+  type FacultyMember,
+  type FacultyCustomField,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { formatDate } from "@mms/shared";
 
 type LinkedContactName = { name?: string | null } | null | undefined;
 
-/** Display name for Work list/detail — hydrated teacher name, then linked contact, then missing label. */
-export function resolveTeacherDisplayName(
-  teacher: Pick<Teacher, "name">,
+/** Display name for Work list/detail — hydrated faculty name, then linked contact, then missing label. */
+export function resolveFacultyDisplayName(
+  faculty: Pick<FacultyMember, "name">,
   t: TranslationFunction,
   linkedContact?: LinkedContactName,
 ): string {
-  return teacher.name || linkedContact?.name || t("teachers.contactMissing");
+  return faculty.name || linkedContact?.name || t("faculty.contactMissing");
 }
 
 /** Per-row identity + selection projection shared by the cards and table Work renderers. */
-export function teacherRowIdentity(
-  teacher: Teacher,
+export function facultyRowIdentity(
+  faculty: FacultyMember,
   selectedIds: string[] | ReadonlySet<string>,
   t: TranslationFunction,
-): { teacherIdStr: string; displayName: string; isSelected: boolean } {
-  const teacherIdStr = String(teacher.id);
-  const isSelected = Array.isArray(selectedIds) ? selectedIds.includes(teacherIdStr) : selectedIds.has(teacherIdStr);
+): { facultyIdStr: string; displayName: string; isSelected: boolean } {
+  const facultyIdStr = String(faculty.id);
+  const isSelected = Array.isArray(selectedIds) ? selectedIds.includes(facultyIdStr) : selectedIds.has(facultyIdStr);
   return {
-    teacherIdStr,
-    displayName: resolveTeacherDisplayName(teacher, t),
+    facultyIdStr,
+    displayName: resolveFacultyDisplayName(faculty, t),
     isSelected,
   };
 }
 
-type TeacherCustomFieldDisplay = Pick<TeacherCustomField, "id"> & { type?: string };
+export type FacultyCustomFieldDisplay = Pick<FacultyCustomField, "id"> & { type?: string };
 
 /**
- * Format a teacher custom field value for Work table/cards/detail read rows.
+ * Format a faculty custom field value for Work table/cards/detail read rows.
  * Returns `undefined` when empty so callers can hide the row or apply notSpecified once.
  */
-export function formatTeacherCustomFieldValue(
-  teacher: Teacher,
-  field: TeacherCustomFieldDisplay,
+export function formatFacultyCustomFieldValue(
+  faculty: FacultyMember,
+  field: FacultyCustomFieldDisplay,
   t: TranslationFunction,
 ): string | undefined {
-  const fieldValue = (teacher as Record<string, unknown>)[field.id];
-  return formatTeacherFieldCellValue(fieldValue, {
+  const fieldValue = (faculty as Record<string, unknown>)[field.id];
+  return formatFacultyFieldCellValue(fieldValue, {
     fieldType: field.type,
     booleanLabels: { yes: t("common.yes"), no: t("common.no") },
     arraySeparator: ", ",
   });
 }
 
-export function getTeacherCustomFieldValue(
-  teacher: Teacher,
-  field: TeacherCustomFieldDisplay,
+export function getFacultyCustomFieldValue(
+  faculty: FacultyMember,
+  field: FacultyCustomFieldDisplay,
   t: TranslationFunction,
 ): string {
-  return formatTeacherCustomFieldValue(teacher, field, t) ?? t("common.notSpecified");
+  return formatFacultyCustomFieldValue(faculty, field, t) ?? t("common.notSpecified");
 }
 
 /**
- * Text display value for a Teachers system or custom field key.
+ * Text display value for a Faculty system or custom field key.
  * Returns `undefined` when empty (detail may hide the row; Work falls back to notSpecified).
  * `status` is not formatted here — callers render StatusBadge.
  */
-export function resolveTeacherFieldDisplayText(
-  teacher: Teacher,
+export function resolveFacultyFieldDisplayText(
+  faculty: FacultyMember,
   fieldKey: string,
   options: {
     t: TranslationFunction;
@@ -97,54 +97,48 @@ export function resolveTeacherFieldDisplayText(
       type: customFieldType,
     };
     return notSpecifiedFallback
-      ? getTeacherCustomFieldValue(teacher, field, t)
-      : formatTeacherCustomFieldValue(teacher, field, t);
+      ? getFacultyCustomFieldValue(faculty, field, t)
+      : formatFacultyCustomFieldValue(faculty, field, t);
   }
 
   if (fieldKey === "status") {
-    return teacher.status || undefined;
+    return faculty.status || undefined;
   }
   if (fieldKey === "contactId") {
-    return displayName ?? resolveTeacherDisplayName(teacher, t);
+    return displayName ?? resolveFacultyDisplayName(faculty, t);
   }
   if (fieldKey === "employeeId") {
-    return teacher.employeeId || missing();
+    return faculty.employeeId || missing();
   }
   if (fieldKey === "specialization") {
-    return teacher.specialization || missing();
+    return faculty.specialization || missing();
   }
   if (fieldKey === "qualification") {
-    return teacher.qualification || missing();
+    return faculty.qualification || missing();
   }
   if (fieldKey === "joinDate") {
-    return teacher.joinDate ? formatDate(teacher.joinDate) : missing();
+    return faculty.joinDate ? formatDate(faculty.joinDate) : missing();
   }
   if (fieldKey === "department") {
-    return teacher.department || missing();
+    return faculty.department || missing();
   }
   if (fieldKey === "designation") {
     // Prefer the server-projected current designation name (from assignment join),
     // falling back to the legacy static designation string.
-    const dynamic = (teacher as Record<string, unknown>).designationName;
-    return (typeof dynamic === 'string' && dynamic) ? dynamic : teacher.designation || missing();
+    const dynamic = (faculty as Record<string, unknown>).designationName;
+    return (typeof dynamic === "string" && dynamic) ? dynamic : faculty.designation || missing();
   }
   if (fieldKey === "reportingFacultyId" || fieldKey === "reportingFacultyName") {
-    return teacher.reportingFacultyName || missing();
+    return faculty.reportingFacultyName || missing();
   }
   if (fieldKey === "hierarchyRank") {
-    return teacher.hierarchyRank != null ? String(teacher.hierarchyRank) : missing();
+    return faculty.hierarchyRank != null ? String(faculty.hierarchyRank) : missing();
   }
   if (fieldKey === "subordinateCount") {
-    return teacher.subordinateCount != null ? String(teacher.subordinateCount) : missing();
+    return faculty.subordinateCount != null ? String(faculty.subordinateCount) : missing();
   }
   if (fieldKey === "notes") {
-    return teacher.notes || missing();
+    return faculty.notes || missing();
   }
   return missing();
 }
-
-export const resolveFacultyDisplayName = resolveTeacherDisplayName;
-export const facultyRowIdentity = teacherRowIdentity;
-export const formatFacultyCustomFieldValue = formatTeacherCustomFieldValue;
-export const getFacultyCustomFieldValue = getTeacherCustomFieldValue;
-export const resolveFacultyFieldDisplayText = resolveTeacherFieldDisplayText;

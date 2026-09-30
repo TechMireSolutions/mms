@@ -17,7 +17,7 @@ export interface FacultySetupTierProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
-export type TeachersSetupTierProps = FacultySetupTierProps;
+
 
 export const FacultySetupTier = function FacultySetupTier({
   onPrefsDirtyChange,
@@ -30,7 +30,7 @@ export const FacultySetupTier = function FacultySetupTier({
       <ErrorBoundary>
         <div className="space-y-4">
           {!canEditSetup ? (
-            <SetupReadOnlyMessage title={t("teachers.setup.readOnly")} />
+            <SetupReadOnlyMessage title={t("faculty.setup.readOnly")} />
           ) : (
             <Suspense fallback={<ModulePanelSuspenseFallback />}>
               <FacultySettings onPrefsDirtyChange={onPrefsDirtyChange} />
@@ -42,5 +42,4 @@ export const FacultySetupTier = function FacultySetupTier({
   );
 };
 
-export const TeachersSetupTier = FacultySetupTier;
 export default FacultySetupTier;

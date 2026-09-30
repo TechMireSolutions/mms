@@ -2,103 +2,101 @@ import { useMemo } from "react";
 import { useQueryClient } from "@tanstack/react-query";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUsersContractList } from "@/tenant/hooks/collections/users";
-import { useTeacherConfig } from "@/hooks/useStandardModuleConfig";
-import { teacherStatusOptions } from "@/lib/faculty/facultyStatusUi";
-import { useTeacherStatusConfig, useTeacherLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
+import { useFacultyConfig } from "@/hooks/useStandardModuleConfig";
+import { facultyStatusOptions } from "@/lib/faculty/facultyStatusUi";
+import { useFacultyStatusConfig, useFacultyLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
 import { useFacultyDesignations } from "@/tenant/features/faculty/hooks/useFacultyDesignations";
 import {
   type Faculty,
-  DEFAULT_TEACHERS_SETTINGS,
+  DEFAULT_FACULTY_SETTINGS,
   FACULTY_HIERARCHY_RANK_PRESETS,
-  resolveTeacherEnabledTabIds,
-  resolveTeacherFieldsMapForColumnSync,
+  resolveFacultyEnabledTabIds,
+  resolveFacultyFieldsMapForColumnSync,
 } from "@mms/shared";
 import { useFacultyContractList } from "@/tenant/features/faculty/hooks/useFacultyTsrHooks";
 import {
   filterSupervisorCandidates,
   type FacultyFormControllerOptions,
-  type UseTeacherFormControllerOptions,
   type UseFacultyFormControllerOptions,
 } from "@/tenant/features/faculty/components/facultyFormDraft";
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/faculty/components/facultyFormValidation";
-import type { TeacherStatusOption } from "@/tenant/features/faculty/components/FacultyFormSections";
+import type { FacultyStatusOption } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { useFacultyHierarchyFormSync } from "@/tenant/features/faculty/components/useFacultyFormSync";
 import { useFacultyDraftState } from "@/tenant/features/faculty/components/useFacultyDraftState";
 import { useFacultyFormSaveActions } from "@/tenant/features/faculty/components/useFacultyFormSaveActions";
 
-export type { FacultyFormControllerOptions, UseTeacherFormControllerOptions, UseFacultyFormControllerOptions };
+export type { FacultyFormControllerOptions, UseFacultyFormControllerOptions };
 
-export function useTeacherFormController({
-  teacher: teacherProp,
+export function useFacultyFormController({
   faculty,
   onClose,
   onSave,
 }: FacultyFormControllerOptions) {
-  const teacher = faculty ?? teacherProp;
+  const currentFaculty = faculty;
   const queryClient = useQueryClient();
   const { t, dir, language } = useTranslation();
 
-  const { settings, isFieldEnabled, isFieldRequired } = useTeacherConfig();
-  const { statusOptions: statusValues, specializationOptions } = useTeacherLookupOptions();
+  const { settings, isFieldEnabled, isFieldRequired } = useFacultyConfig();
+  const { statusOptions: statusValues, specializationOptions } = useFacultyLookupOptions();
   const designationDefinitions = useFacultyDesignations();
 
-  const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_TEACHERS_SETTINGS.defaultSpecialization;
-  const idPrefix = settings.idPrefix || DEFAULT_TEACHERS_SETTINGS.idPrefix;
+  const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_FACULTY_SETTINGS.defaultSpecialization;
+  const idPrefix = settings.idPrefix || DEFAULT_FACULTY_SETTINGS.idPrefix;
   const autoGenerateId = settings.autoGenerateId !== false;
   const requireContactLink = settings.requireContactLink !== false;
-  const fieldsMap = resolveTeacherFieldsMapForColumnSync(settings.fields);
-  const statusOptions = teacherStatusOptions(t, statusValues) as TeacherStatusOption[];
-  const statusConfig = useTeacherStatusConfig();
-  const formInstanceId = String(teacher?.id ?? "new");
+  const fieldsMap = resolveFacultyFieldsMapForColumnSync(settings.fields);
+  const statusOptions = facultyStatusOptions(t, statusValues) as FacultyStatusOption[];
+  const statusConfig = useFacultyStatusConfig();
+  const formInstanceId = String(currentFaculty?.id ?? "new");
 
   const {
-    teacherDraft,
-    setTeacherDraft,
+    facultyDraft,
+    setFacultyDraft,
     setBaselineSnapshot,
     updateDraft,
     isDirty,
     userAccountDraft,
     setUserAccountDraft,
     linkedContact,
-    linkedTeacherContactIds,
+    linkedFacultyContactIds,
     nextEmployeeId,
     isFetchingNextEmployeeId,
     handleRegenerateEmployeeId,
   } = useFacultyDraftState({
-    teacher,
+    faculty: currentFaculty,
     defaultSpecialization,
     autoGenerateId,
     idPrefix,
     settings,
   });
 
-  const enabledTabs = useMemo(() => new Set(resolveTeacherEnabledTabIds(settings)), [settings]);
+  const enabledTabs = useMemo(() => new Set(resolveFacultyEnabledTabIds(settings)), [settings]);
 
-  const usersQuery = useUsersContractList({ limit: 100 }, Boolean(teacherDraft.contactId));
+  const usersQuery = useUsersContractList({ limit: 100 }, Boolean(facultyDraft.contactId));
   const existingUsers = (usersQuery.data as { users?: Array<{ id: string; contactId?: string | number; email?: string; role?: string; status?: string }> })?.users;
 
   const linkedUser = useMemo(() => {
-    if (!teacherDraft.contactId && !teacherDraft.userId) return null;
+    if (!facultyDraft.contactId && !facultyDraft.userId) return null;
     return existingUsers?.find(
       (u) =>
-        (teacherDraft.userId && u.id === teacherDraft.userId) ||
-        (teacherDraft.contactId && String(u.contactId) === String(teacherDraft.contactId)),
+        (facultyDraft.userId && u.id === facultyDraft.userId) ||
+        (facultyDraft.contactId && String(u.contactId) === String(facultyDraft.contactId)),
     ) ?? null;
-  }, [existingUsers, teacherDraft.contactId, teacherDraft.userId]);
+  }, [existingUsers, facultyDraft.contactId, facultyDraft.userId]);
 
   const facultyListQuery = useFacultyContractList({ limit: 100 });
   const allFaculty = ((facultyListQuery.data as { faculty?: Faculty[] })?.faculty ?? []) as Faculty[];
 
-  const currentRank = typeof teacherDraft.hierarchyRank === "number" ? teacherDraft.hierarchyRank : 4;
-  const currentId = teacher?.id ? String(teacher.id) : null;
+  const currentRank = typeof facultyDraft.hierarchyRank === "number" ? facultyDraft.hierarchyRank : 4;
+  const currentId = currentFaculty?.id ? String(currentFaculty.id) : null;
   const supervisorCandidates = useMemo(
     () => filterSupervisorCandidates(allFaculty, currentId, currentRank),
     [allFaculty, currentId, currentRank],
   );
 
   useFacultyHierarchyFormSync({
-    teacherDraft,
-    setTeacherDraft,
+    facultyDraft,
+    setFacultyDraft,
     userAccountDraft,
     setUserAccountDraft,
     supervisorCandidates,
@@ -116,8 +114,8 @@ export function useTeacherFormController({
     clearDuplicatePrompt,
     handleDuplicateDialogOpenChange,
   } = useFacultyFormSaveActions({
-    teacherDraft,
-    teacher,
+    facultyDraft,
+    faculty: currentFaculty,
     autoGenerateId,
     nextEmployeeId,
     formInstanceId,
@@ -144,7 +142,7 @@ export function useTeacherFormController({
     language,
     saving,
     errors,
-    teacherDraft,
+    facultyDraft,
     isDirty,
     defaultSpecialization,
     specializationOptions,
@@ -155,7 +153,7 @@ export function useTeacherFormController({
     requireContactLink,
     fieldsMap,
     linkedContact,
-    linkedTeacherContactIds,
+    linkedFacultyContactIds,
     linkedUser,
     userAccountDraft,
     setUserAccountDraft,
@@ -181,5 +179,3 @@ export function useTeacherFormController({
     hierarchyRankPresets: FACULTY_HIERARCHY_RANK_PRESETS,
   };
 }
-
-export const useFacultyFormController = useTeacherFormController;

@@ -1,32 +1,32 @@
 import { useRef, type JSX } from "react";
 import { Printer, IdCard } from "lucide-react";
-import { formatDate, teacherFieldLabelKey, type Teacher } from "@mms/shared";
+import { formatDate, facultyFieldLabelKey, type Faculty } from "@mms/shared";
 import { Modal } from "@/components/ui/Modal";
 import { Button } from "@/components/ui/button";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { EmployeeIdBadge } from "@/tenant/features/faculty/components/EmployeeIdBadge";
 import { useTranslation } from "@/hooks/useTranslation";
 
-export interface TeacherIdCardItem {
-  teacher: Teacher;
+export interface FacultyIdCardItem {
+  faculty: Faculty;
   assignedClasses: string[];
   qualification?: string;
   emergencyPhone?: string;
 }
 
-export interface TeacherIdCardModalProps {
+export interface FacultyIdCardModalProps {
   open: boolean;
   onClose: () => void;
-  items: TeacherIdCardItem[];
+  items: FacultyIdCardItem[];
   madrasaName?: string;
 }
 
-export function TeacherIdCardModal({
+export function FacultyIdCardModal({
   open,
   onClose,
   items,
   madrasaName = "Madrasa Management System",
-}: TeacherIdCardModalProps): JSX.Element | null {
+}: FacultyIdCardModalProps): JSX.Element | null {
   const { t } = useTranslation();
   const printAreaRef = useRef<HTMLDivElement>(null);
 
@@ -42,7 +42,7 @@ export function TeacherIdCardModal({
     <Modal
       open={open}
       onClose={onClose}
-      title={isBatch ? t("teachers.idCard.batchPrint", { count: items.length }) : t("teachers.idCard.title")}
+      title={isBatch ? t("faculty.idCard.batchPrint", { count: items.length }) : t("faculty.idCard.title")}
       icon={IdCard}
       size="lg"
       footer={
@@ -61,7 +61,7 @@ export function TeacherIdCardModal({
             className="flex items-center gap-2 px-5 min-h-11 font-semibold"
           >
             <Printer className="w-4 h-4" />
-            <span>{t("teachers.idCard.print")}</span>
+            <span>{t("faculty.idCard.print")}</span>
           </Button>
         </>
       }
@@ -73,12 +73,12 @@ export function TeacherIdCardModal({
           data-print-unclamp
           className="id-card-print-container grid grid-cols-1 sm:grid-cols-2 gap-4 max-h-dialog-scroll overflow-y-auto p-2 print:grid-cols-2 print:gap-3 print:max-h-none print:overflow-visible print:p-0"
         >
-          {items.map(({ teacher, assignedClasses, qualification, emergencyPhone }) => {
-            const displayPhone = emergencyPhone || (teacher.phone ? String(teacher.phone) : undefined);
+          {items.map(({ faculty, assignedClasses, qualification, emergencyPhone }) => {
+            const displayPhone = emergencyPhone || (faculty.phone ? String(faculty.phone) : undefined);
 
             return (
               <div
-                key={teacher.id}
+                key={faculty.id}
                 className="id-card-preview relative border border-border/80 rounded-2xl p-4 bg-gradient-to-br from-card via-card/95 to-muted/30 shadow-sm overflow-hidden flex flex-col justify-between min-h-panel-sm print:shadow-none print:border-black/30 print:bg-white"
               >
                 {/* Header */}
@@ -88,11 +88,11 @@ export function TeacherIdCardModal({
                       {madrasaName}
                     </h4>
                     <p className="text-2xs uppercase font-semibold text-primary tracking-wider">
-                      {t("teachers.idCard.title")}
+                      {t("faculty.idCard.title")}
                     </p>
                   </div>
-                  {teacher.employeeId && (
-                    <EmployeeIdBadge employeeId={teacher.employeeId} />
+                  {faculty.employeeId && (
+                    <EmployeeIdBadge employeeId={faculty.employeeId} />
                   )}
                 </div>
 
@@ -100,25 +100,25 @@ export function TeacherIdCardModal({
                 <div className="flex items-start gap-3.5 my-auto">
                   <div className="shrink-0 flex flex-col items-center">
                     <UserAvatar
-                      id={teacher.id}
-                      name={teacher.name}
+                      id={faculty.id}
+                      name={faculty.name}
                       className="w-16 h-16 rounded-xl border-2 border-primary/30 shadow-inner font-bold text-sm"
                     />
-                    {teacher.specialization && (
+                    {faculty.specialization && (
                       <span className="mt-1.5 text-4xs font-bold px-1.5 py-0.5 rounded bg-primary/10 text-primary border border-primary/20 max-w-20 truncate text-center">
-                        {teacher.specialization}
+                        {faculty.specialization}
                       </span>
                     )}
-                    {teacher.department && (
+                    {faculty.department && (
                       <span className="mt-1 text-4xs font-medium px-1.5 py-0.5 rounded bg-muted/60 text-muted-foreground border border-border/40 max-w-20 truncate text-center">
-                        {teacher.department}
+                        {faculty.department}
                       </span>
                     )}
                   </div>
 
                   <div className="min-w-0 flex-1 space-y-1">
                     <h3 className="text-sm font-bold text-foreground truncate leading-tight">
-                      {teacher.name}
+                      {faculty.name}
                     </h3>
 
                     {assignedClasses.length > 0 && (
@@ -127,27 +127,27 @@ export function TeacherIdCardModal({
                       </p>
                     )}
 
-                    {(qualification || teacher.qualification) && (
+                    {(qualification || faculty.qualification) && (
                       <div className="text-3xs text-muted-foreground truncate">
                         <span className="font-semibold text-foreground/80">
-                          {t(teacherFieldLabelKey("qualification"))}:{" "}
+                          {t(facultyFieldLabelKey("qualification"))}:{" "}
                         </span>
-                        <span>{qualification || teacher.qualification}</span>
+                        <span>{qualification || faculty.qualification}</span>
                       </div>
                     )}
 
                     {displayPhone && (
                       <div className="text-3xs text-muted-foreground truncate">
                         <span className="font-semibold text-foreground/80">
-                          {t(teacherFieldLabelKey("phone"))}:{" "}
+                          {t(facultyFieldLabelKey("phone"))}:{" "}
                         </span>
                         <span dir="ltr">{displayPhone}</span>
                       </div>
                     )}
 
-                    {teacher.joinDate && (
+                    {faculty.joinDate && (
                       <div className="text-2xs text-muted-foreground truncate">
-                        <span>{t(teacherFieldLabelKey("joinDate"))}: {teacher.joinDate}</span>
+                        <span>{t(facultyFieldLabelKey("joinDate"))}: {faculty.joinDate}</span>
                       </div>
                     )}
                   </div>
@@ -156,10 +156,10 @@ export function TeacherIdCardModal({
                 {/* Footer */}
                 <div className="flex items-center justify-between border-t border-border/40 pt-2 mt-3 text-4xs text-muted-foreground">
                   <div className="flex items-center gap-1 font-mono tracking-widest text-4xs uppercase">
-                    <span>{t("teachers.idCard.idLabel")}: {String(teacher.id).slice(0, 10)}</span>
+                    <span>{t("faculty.idCard.idLabel")}: {String(faculty.id).slice(0, 10)}</span>
                   </div>
                   <div>
-                    <span>{t("teachers.idCard.issueDate")}: {formatDate(new Date())}</span>
+                    <span>{t("faculty.idCard.issueDate")}: {formatDate(new Date())}</span>
                   </div>
                 </div>
               </div>
@@ -170,5 +170,3 @@ export function TeacherIdCardModal({
     </Modal>
   );
 }
-
-export { TeacherIdCardModal as FacultyIdCardModal };

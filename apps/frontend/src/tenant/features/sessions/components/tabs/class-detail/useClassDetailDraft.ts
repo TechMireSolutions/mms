@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import type { Teacher } from '@mms/shared';
+import type { FacultyMember } from '@mms/shared';
 import type { Class } from '@/lib/data/sessionsData';
 import { EMPTY_CLASS } from './classDetailDraftDefaults';
 import { useClassDetailAcademicDraft } from './useClassDetailAcademicDraft';
@@ -10,10 +10,10 @@ export { EMPTY_CLASS } from './classDetailDraftDefaults';
 export interface UseClassDetailDraftOptions {
   open: boolean;
   sessionClass: Class | null;
-  allTeachers: Teacher[];
+  allFaculty: FacultyMember[];
 }
 
-export function useClassDetailDraft({ open, sessionClass, allTeachers }: UseClassDetailDraftOptions) {
+export function useClassDetailDraft({ open, sessionClass, allFaculty }: UseClassDetailDraftOptions) {
   const [classDraft, setClassDraft] = useState<Class>(() =>
     sessionClass ? { ...sessionClass } : { ...EMPTY_CLASS, id: crypto.randomUUID() },
   );
@@ -29,7 +29,7 @@ export function useClassDetailDraft({ open, sessionClass, allTeachers }: UseClas
   }, []);
 
   const financial = useClassDetailFinancialDraft(setClassDraft);
-  const academic = useClassDetailAcademicDraft(classDraft, setClassDraft, allTeachers);
+  const academic = useClassDetailAcademicDraft(classDraft, setClassDraft, allFaculty);
 
   return {
     classDraft,

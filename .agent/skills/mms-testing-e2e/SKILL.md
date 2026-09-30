@@ -27,9 +27,13 @@ Operational guide for writing, running, and debugging automated test suites acro
 ## 2. Testing Quality Invariants
 
 - **Zero Skip Latches**: Never write conditional test skips (`if (!isDbAvailable) return;`). Tests must fail explicitly when required infrastructure is missing (`mms-testing-observability.md` §1).
+- **Specification Naming & AAA**: Structure tests with specification titles (`describe('Entity', () => it('given [X], should [Y] when [Z]'))`) and explicit `// Arrange`, `// Act`, `// Assert` blocks (`mms-testing-observability.md` §2).
+- **User-Centric Locators & Black Box**: Query via accessible roles and labels (`getByRole`, `getByLabelText`, `getByText`); never assert on internal state or class names (`mms-testing-observability.md` §3).
+- **Transport Mocking & Typed Factories**: Use Fastify `inject()` or transport interceptors; replace static JSON fixtures with typed factories (`mms-testing-observability.md` §4).
 - **Assertion Specificity**: Strict equality and type checks only. Loose `toBeTruthy()` or `toBeDefined()` on primitives or DOM elements are banned.
 - **Clean Stdout**: Spy on `console.error`/`console.warn` during expected error simulations. Test configs set `LOG_LEVEL = 'silent'`.
 - **Query Client Isolation**: Frontend tests wrap components in an isolated `new QueryClient({ defaultOptions: { queries: { retry: false, gcTime: 0 } } })`.
+- **Coverage Ratchet**: New additions must meet category coverage gates (utils ≥95%, hooks ≥90%, UI/routes ≥85%); PRs must never lower coverage baselines (`mms-testing-observability.md` §5).
 
 ## 3. Playwright E2E Best Practices
 

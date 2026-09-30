@@ -5,9 +5,6 @@ import {
   type FacultyDuplicateReason,
   type FacultyRecord,
   type FacultyCommandMetricsSnapshot,
-  type TeacherDuplicateCheckInput,
-  type TeacherDuplicateReason,
-  type TeachersCommandMetricsSnapshot,
 } from '@mms/shared';
 import { serverMetricsQueryOptions, useServerMetrics } from '@/hooks/useServerMetrics';
 import { useAuth } from '@/lib/contexts/AuthContext';
@@ -19,14 +16,10 @@ import {
   FACULTY_QUERY_KEY,
   type FacultyNextEmployeeIdParams,
   type FacultyWidgetAggregateWidgetInput,
-  type TeacherNextEmployeeIdParams,
-  type TeachersWidgetAggregateWidgetInput,
 } from '@/tenant/features/faculty/hooks/facultyQueryKeys';
 import {
   type FacultyListPageResult,
   type FacultyPaginatedParams,
-  type TeachersListPageResult,
-  type TeachersPaginatedParams,
 } from '@/tenant/features/faculty/hooks/facultyListQueryBuilders';
 
 export type {
@@ -34,19 +27,14 @@ export type {
   FacultyPaginatedParams,
   FacultyNextEmployeeIdParams,
   FacultyWidgetAggregateWidgetInput,
-  TeachersListPageResult,
-  TeachersPaginatedParams,
-  TeacherNextEmployeeIdParams,
-  TeachersWidgetAggregateWidgetInput,
 };
 
 export function facultyCommandMetricsQueryOptions() {
-  return serverMetricsQueryOptions<FacultyCommandMetricsSnapshot | TeachersCommandMetricsSnapshot>({
+  return serverMetricsQueryOptions<FacultyCommandMetricsSnapshot>({
     moduleId: FACULTY_MODULE_MANIFEST.moduleId,
     apiPath: FACULTY_MODULE_MANIFEST.restBasePath,
   });
 }
-export const teachersCommandMetricsQueryOptions = facultyCommandMetricsQueryOptions;
 
 /** Fetches all pages matching Work filters for export (parity with Students §8). */
 export async function fetchAllFacultyForQuery(
@@ -63,7 +51,7 @@ export async function fetchAllFacultyForQuery(
       query: { ...(params), page, limit }
     });
     const facultyPage = response.body as FacultyListPageResult;
-    const items = (facultyPage.faculty ?? facultyPage.teachers ?? []) as FacultyRecord[];
+    const items = (facultyPage.faculty ?? []) as FacultyRecord[];
     all.push(...items);
     total = facultyPage.total;
     onProgress?.(all.length, total);
@@ -76,7 +64,6 @@ export async function fetchAllFacultyForQuery(
 
   return all;
 }
-export const fetchAllTeachersForQuery = fetchAllFacultyForQuery;
 
 export function useFacultyLinkedContactIds(excludeId?: string, enabled = true) {
   const { isAuthenticated } = useAuth();
@@ -98,7 +85,6 @@ export function useFacultyLinkedContactIds(excludeId?: string, enabled = true) {
     staleTime: 30_000,
   });
 }
-export const useTeacherLinkedContactIds = useFacultyLinkedContactIds;
 
 export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
   const { isAuthenticated } = useAuth();
@@ -111,8 +97,8 @@ export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
         body: { ids: normalized },
         fetchOptions: { signal },
       });
-      const body = res.body as { faculty?: Faculty[]; teachers?: Faculty[] } | null;
-      return body?.faculty ?? body?.teachers;
+      const body = res.body as { faculty?: Faculty[] } | null;
+      return body?.faculty;
     },
     enabled: isAuthenticated && normalized.length > 0,
     staleTime: 30_000,
@@ -120,7 +106,6 @@ export function useFacultyByIds(ids: (string | number | null | undefined)[]) {
   
   return { ...query, data: query.data };
 }
-export const useTeachersByIds = useFacultyByIds;
 
 export function useFacultyNextEmployeeId(params: FacultyNextEmployeeIdParams = {}) {
   const { isAuthenticated } = useAuth();
@@ -149,30 +134,26 @@ export function useFacultyNextEmployeeId(params: FacultyNextEmployeeIdParams = {
     staleTime: 15_000,
   });
 }
-export const useTeacherNextEmployeeId = useFacultyNextEmployeeId;
 
 /** Server-authoritative active duplicate probe (contact / employeeId) before save. */
 export async function checkFacultyRegistrationDuplicate(
-  input: FacultyDuplicateCheckInput | TeacherDuplicateCheckInput,
-): Promise<FacultyDuplicateReason | TeacherDuplicateReason | null> {
+  input: FacultyDuplicateCheckInput,
+): Promise<FacultyDuplicateReason | null> {
   const res = await apiContract.faculty.duplicateCheck({ body: input });
   if (res.status !== 200) throw new Error("Duplicate check failed");
   return (res.body as { reason?: FacultyDuplicateReason | null } | null)?.reason ?? null;
 }
-export const checkTeacherRegistrationDuplicate = checkFacultyRegistrationDuplicate;
 
 export function useFacultyMetrics(options?: { enabled?: boolean }) {
-  return useServerMetrics<FacultyCommandMetricsSnapshot | TeachersCommandMetricsSnapshot>({
+  return useServerMetrics<FacultyCommandMetricsSnapshot>({
     moduleId: FACULTY_MODULE_MANIFEST.moduleId,
     apiPath: FACULTY_MODULE_MANIFEST.restBasePath,
     enabled: options?.enabled,
   });
 }
-export const useTeachersMetrics = useFacultyMetrics;
 
 export {
   useFacultyWidgetAggregates,
-  useTeachersWidgetAggregates,
 } from '@/tenant/features/faculty/hooks/useFacultyWidgetAggregates';
 
 /** One-shot employee-id backfill for active faculty missing one (Setup writers). */
@@ -181,5 +162,3 @@ export async function migrateFacultyEmployeeIds(): Promise<{ updated: number }> 
   if (res.status !== 200) throw new Error("Migration failed");
   return { updated: (res.body as { updated?: number } | null)?.updated ?? 0 };
 }
-export const migrateTeachersEmployeeIds = migrateFacultyEmployeeIds;
-

@@ -3,8 +3,8 @@ import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLab
 
 const t = (key: string): string => {
   const labels: Record<string, string> = {
-    "teachers.form.teacher": "teacher",
-    "teachers.table.teachers": "teachers",
+    "faculty.form.faculty": "faculty member",
+    "faculty.table.faculty": "faculty members",
     "students.form.student": "student",
     "students.table.students": "students",
     "contacts.form.contact": "contact",
@@ -15,17 +15,17 @@ const t = (key: string): string => {
 
 describe("formatDirectoryPageCountLabel", () => {
   const keys = {
-    singular: "teachers.form.teacher",
-    plural: "teachers.table.teachers",
+    singular: "faculty.form.faculty",
+    plural: "faculty.table.faculty",
   } as const;
 
   it("uses the singular label for one item", () => {
-    expect(formatDirectoryPageCountLabel(1, t, keys)).toBe("1 teacher");
+    expect(formatDirectoryPageCountLabel(1, t, keys)).toBe("1 faculty member");
   });
 
   it("uses the plural label for multiple items", () => {
-    expect(formatDirectoryPageCountLabel(0, t, keys)).toBe("0 teachers");
-    expect(formatDirectoryPageCountLabel(2, t, keys)).toBe("2 teachers");
+    expect(formatDirectoryPageCountLabel(0, t, keys)).toBe("0 faculty members");
+    expect(formatDirectoryPageCountLabel(2, t, keys)).toBe("2 faculty members");
   });
 
   it("keeps the module translation key parity across person modules", () => {

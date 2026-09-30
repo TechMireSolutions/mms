@@ -14,7 +14,7 @@ export function calculateCustomCardDynamicTrend(
 ): number {
   const dateField = {
     students: 'registeredDate',
-    teachers: 'joinDate',
+    faculty: 'joinDate',
     sessions: 'startDate',
     enrollments: 'enrolledDate',
     finance_invoices: 'dueDate',

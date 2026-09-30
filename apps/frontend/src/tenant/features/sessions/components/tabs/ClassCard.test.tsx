@@ -2,8 +2,7 @@ import React, { act } from "react";
 import { describe, expect, it, vi } from "vitest";
 import { createRoot } from "react-dom/client";
 import { ClassCard } from "./ClassCard";
-import type { Class } from "@/lib/data/sessionsData";
-import type { Teacher } from "@mms/shared";
+import { ClassSchema, type FacultyMember } from "@mms/shared";
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -14,7 +13,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockClass: Class = {
+const mockClass = ClassSchema.parse({
   id: "cls-1",
   name: "Class 1A",
   room: "Room 101",
@@ -25,21 +24,10 @@ const mockClass: Class = {
   gender: "mixed",
   facultyId: "t-1",
   facultyName: "Sheikh Ahmad",
-  teacherId: "t-1",
-  teacherName: "Sheikh Ahmad",
-  fees: [],
-  schedules: [],
-  budgets: [],
-  discounts: [],
-  timetables: [],
-  refreshments: [],
-  scholarships: [],
-  ageCalculationDate: "2025-01-01",
-  enrollmentDeadline: "2025-02-01",
   status: "active",
-};
+});
 
-const mockTeachers: Teacher[] = [
+const mockFaculty: FacultyMember[] = [
   {
     id: "t-1",
     contactId: "cnt-1",
@@ -60,7 +48,7 @@ describe("ClassCard", () => {
       root.render(
         <ClassCard
           sessionClass={mockClass}
-          teachers={mockTeachers}
+          faculty={mockFaculty}
           onEdit={vi.fn()}
           onDelete={vi.fn()}
           canWrite={true}
@@ -83,7 +71,7 @@ describe("ClassCard", () => {
       root.render(
         <ClassCard
           sessionClass={mockClass}
-          teachers={mockTeachers}
+          faculty={mockFaculty}
           onEdit={onEdit}
           onDelete={vi.fn()}
           canWrite={true}
@@ -110,7 +98,7 @@ describe("ClassCard", () => {
       root.render(
         <ClassCard
           sessionClass={mockClass}
-          teachers={mockTeachers}
+          faculty={mockFaculty}
           onEdit={vi.fn()}
           onDelete={vi.fn()}
           canWrite={false}

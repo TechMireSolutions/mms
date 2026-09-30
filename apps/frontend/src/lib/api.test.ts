@@ -117,7 +117,7 @@ describe('tsrClient & contract integration (Phase 7)', () => {
     expect(typeof tsrClient.contacts.list).toBe('object');
     expect(typeof tsrClient.finance.listInvoices).toBe('object');
     expect(typeof tsrClient.attendance.list).toBe('object');
-    expect(typeof tsrClient.teachers.list).toBe('object');
+    expect(typeof tsrClient.faculty.list).toBe('object');
     expect(typeof tsrClient.dashboard.getSummary).toBe('object');
     expect(typeof tsrClient.sessions.list).toBe('object');
     expect(typeof tsrClient.enrollments.list).toBe('object');
@@ -129,7 +129,7 @@ describe('tsrClient & contract integration (Phase 7)', () => {
     expect(typeof tsrClient.questionBank.listQuestions).toBe('object');
   });
 
-  it('transports contract GET queries for teachers and contacts', async () => {
+  it('transports contract GET queries for faculty and contacts', async () => {
     const originalFetch = globalThis.fetch;
     let requestedUrl = '';
 

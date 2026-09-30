@@ -98,9 +98,9 @@ describe('planLegacySavedReportsMigration', () => {
         filters: { status: 'active' },
       }),
       legacyReport({
-        id: 'tch-1',
-        name: 'Teachers A',
-        category: 'teachers',
+        id: 'fac-1',
+        name: 'Faculty A',
+        category: 'faculty',
         filters: { status: 'active' },
       }),
     ];
@@ -174,18 +174,18 @@ describe('removeMigratedLocalReports', () => {
       category: 'students',
       filters: {},
     });
-    const teachers = legacyReport({
-      id: 'tch-1',
-      name: 'Teachers',
-      category: 'teachers',
+    const faculty = legacyReport({
+      id: 'fac-1',
+      name: 'Faculty',
+      category: 'faculty',
       filters: {},
     });
     const invalid = { broken: true };
     const remaining = removeMigratedLocalReports(
-      [students, teachers, invalid],
+      [students, faculty, invalid],
       ['stu-1'],
     );
 
-    expect(remaining).toEqual([teachers, invalid]);
+    expect(remaining).toEqual([faculty, invalid]);
   });
 });

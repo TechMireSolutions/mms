@@ -55,7 +55,7 @@ export function buildDynamicFacultySchema(
   const contactRequiredMsg = translateApp(
     'faculty.errorContactRequired' as AppTranslationKey,
     language,
-  ) || translateApp('teachers.errorContactRequired' as AppTranslationKey, language);
+  );
   const requiredMsg = translateApp('common.formPleaseFixErrors' as AppTranslationKey, language);
   const systemKeys = listFacultySystemFormFieldKeys();
   const requireContactLink = settings.requireContactLink !== false;
@@ -188,11 +188,4 @@ export const facultyWriteSchema = z.preprocess((raw) => {
 
 export type FacultyWrite = z.infer<typeof facultyWriteSchema>;
 
-/* Backward compatibility aliases */
-export const TEACHER_WRITE_SYSTEM_KEYS = FACULTY_WRITE_SYSTEM_KEYS;
-export const collectTeacherWriteExtraFieldKeys = collectFacultyWriteExtraFieldKeys;
-export const buildDynamicTeacherSchema = buildDynamicFacultySchema;
-export type TeachersDuplicateCheckBody = FacultyDuplicateCheckBody;
-export const teachersDuplicateCheckBodySchema = facultyDuplicateCheckBodySchema;
-export const teacherWriteSchema = facultyWriteSchema;
-export type TeacherWrite = FacultyWrite;
+

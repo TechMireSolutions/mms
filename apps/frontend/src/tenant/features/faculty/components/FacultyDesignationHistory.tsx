@@ -46,16 +46,16 @@ export function FacultyDesignationHistory({
       <div className="flex items-center justify-between">
         <DetailSectionTitle>{t('faculty.designations.history')}</DetailSectionTitle>
         {canEdit && mode === 'idle' && (
-          <div className="flex gap-1.5">
+          <div className="flex gap-1.5 flex-wrap">
             {currentAssignment && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                className="h-7 gap-1.5 text-xs"
+                className="min-h-11 px-3 gap-1.5 text-xs font-medium"
                 onClick={() => { setMode('transition'); setForm({ ...EMPTY_DESIGNATION_FORM, startsOn: today }); }}
               >
-                <RefreshCw className="size-3" aria-hidden />
+                <RefreshCw className="size-3.5" aria-hidden />
                 {t('faculty.designations.transition')}
               </Button>
             )}
@@ -63,10 +63,10 @@ export function FacultyDesignationHistory({
               type="button"
               variant="outline"
               size="sm"
-              className="h-7 gap-1.5 text-xs"
+              className="min-h-11 px-3 gap-1.5 text-xs font-medium"
               onClick={() => { setMode('add'); setForm({ ...EMPTY_DESIGNATION_FORM, startsOn: today }); }}
             >
-              <Plus className="size-3" aria-hidden />
+              <Plus className="size-3.5" aria-hidden />
               {t('common.add')}
             </Button>
           </div>

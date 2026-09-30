@@ -61,7 +61,6 @@ export function normalizeCollectionRows(key: string, rows: Row[]): Row[] {
     case 'students':
       return rows.map((row) => normalizeStoredStudent(row));
     case 'faculty':
-    case 'teachers':
       return rows.map((row) => normalizeStoredFaculty(row));
     case 'enrollments':
     case 'attendance_records':
@@ -110,20 +109,18 @@ export function hydrateCollectionRows(
     contacts: ContactLike[];
     students: Row[];
     faculty?: Row[];
-    teachers?: Row[];
     users: Row[];
     distributions: Row[];
   },
 ): Row[] {
   if (!rows || !Array.isArray(rows)) return [];
 
-  const facultyRows = context.faculty ?? context.teachers ?? [];
+  const facultyRows = context.faculty ?? [];
 
   switch (key) {
     case 'students':
       return hydrateStudentListFromContacts(rows as never, context.contacts) as Row[];
     case 'faculty':
-    case 'teachers':
       return hydrateFacultyListFromContacts(rows as never, context.contacts) as Row[];
     case 'enrollments':
     case 'attendance_records':
@@ -144,10 +141,10 @@ export function hydrateCollectionRows(
     case 'hasanat_distributions': {
       const userMap = asNamedMap(context.users);
       const studentMap = asNamedMap(context.students);
-      const teacherMap = asNamedMap(facultyRows);
+      const facultyMap = asNamedMap(facultyRows);
       return rows.map((row) =>
         withUserActor(
-          hydrateHasanatDistribution(row as HasanatDistributionLike, studentMap, teacherMap),
+          hydrateHasanatDistribution(row as HasanatDistributionLike, studentMap, facultyMap),
           'issuedByUserId',
           'issuedBy',
           userMap,
@@ -181,8 +178,8 @@ export function hydrateCollectionRows(
   }
 }
 
-export function hydrateSessionRowClasses(classes: Row[], teachers: Row[]): Row[] {
-  return hydrateSessionClasses(classes, asNamed(teachers)) as Row[];
+export function hydrateSessionRowClasses(classes: Row[], faculty: Row[]): Row[] {
+  return hydrateSessionClasses(classes, asNamed(faculty)) as Row[];
 }
 
 export function normalizeSessionRowClasses(classes: Row[]): Row[] {

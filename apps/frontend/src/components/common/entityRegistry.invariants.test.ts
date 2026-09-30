@@ -5,11 +5,10 @@ import { SEMANTIC_BADGE } from "@/lib/semanticTone";
 const ALLOWED_BADGE_CLASSES = new Set<string>(Object.values(SEMANTIC_BADGE));
 
 describe("entity registry invariants", () => {
-  it("contains all 17 domain entity registrations", () => {
+  it("contains all 16 domain entity registrations", () => {
     const expectedEntities = [
       "contacts",
       "students",
-      "teachers",
       "faculty",
       "sessions",
       "finance",

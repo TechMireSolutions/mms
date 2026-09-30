@@ -6,7 +6,6 @@ export type {
 export { STANDARD_MODULES_CONFIG_REGISTRY } from './standardModuleConfigRegistry';
 
 export {
-  useTeacherConfig,
   useFacultyConfig,
   useStudentConfig,
   useSessionConfig,

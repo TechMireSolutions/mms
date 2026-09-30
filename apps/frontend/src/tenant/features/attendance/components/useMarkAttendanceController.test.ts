@@ -63,7 +63,7 @@ describe("useMarkAttendanceController Hook", () => {
 
     function TestComponent() {
       hookResult = useMarkAttendanceController({
-        filters: { classId: "cls-1", sessionId: "ses-1", teacherId: "", date: "2025-01-01" },
+        filters: { classId: "cls-1", sessionId: "ses-1", facultyId: "", date: "2025-01-01" },
         role: "admin",
         records: [],
         persistBatch: vi.fn(),

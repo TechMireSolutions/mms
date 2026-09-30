@@ -1,45 +1,39 @@
 import type { ColumnRegistryEntry } from './contactTypes.js';
-import { TEACHER_COLUMN_FIELD_MAPPING } from './moduleFieldSetupPersons.js';
+import { FACULTY_COLUMN_FIELD_MAPPING } from './facultyDirectoryColumns.js';
 import { createFieldRemovalIssuesChecker } from './createFieldRemovalIssuesChecker.js';
-import { listTeacherSystemFormFieldKeys } from './facultyFormCustomFields.js';
+import { listFacultySystemFormFieldKeys } from './facultyFormCustomFields.js';
 
-export type TeacherFieldDependencyArea = 'systemField' | 'column';
+export type FacultyFieldDependencyArea = 'systemField' | 'column';
 
-export interface TeacherFieldDependencyIssue {
-  area: TeacherFieldDependencyArea;
+export interface FacultyFieldDependencyIssue {
+  area: FacultyFieldDependencyArea;
   /** i18n key — FE passes to t() with optional { count }. */
   messageKey: string;
   count?: number;
 }
 
-export interface TeacherFieldDependencyInput {
+export interface FacultyFieldDependencyInput {
   fieldKey: string;
   columnRegistry: ColumnRegistryEntry[];
 }
 
 const checker = createFieldRemovalIssuesChecker({
-  systemFieldKeys: listTeacherSystemFormFieldKeys(),
-  columnFieldMapping: TEACHER_COLUMN_FIELD_MAPPING,
+  systemFieldKeys: listFacultySystemFormFieldKeys(),
+  columnFieldMapping: FACULTY_COLUMN_FIELD_MAPPING,
   messageKeys: {
-    systemField: 'teachers.setup.cannotDeleteSystemField',
-    fieldUsedInColumn: 'teachers.setup.fieldUsedInColumn',
+    systemField: 'faculty.setup.cannotDeleteSystemField',
+    fieldUsedInColumn: 'faculty.setup.fieldUsedInColumn',
   },
 });
 
-export const isTeacherSeedFieldKey = checker.isSeedFieldKey;
+export const isFacultySeedFieldKey = checker.isSeedFieldKey;
 
 /**
- * Returns blocking issues before removing a field from Teachers Setup.
+ * Returns blocking issues before removing a field from Faculty Setup.
  * Checks system seed keys and enabled Work column registry usage.
  */
-export function getTeacherFieldRemovalIssues(
-  input: TeacherFieldDependencyInput,
-): TeacherFieldDependencyIssue[] {
+export function getFacultyFieldRemovalIssues(
+  input: FacultyFieldDependencyInput,
+): FacultyFieldDependencyIssue[] {
   return checker.getFieldRemovalIssues(input);
 }
-
-
-export const isFacultySeedFieldKey = isTeacherSeedFieldKey;
-export const getFacultyFieldRemovalIssues = getTeacherFieldRemovalIssues;
-export type FacultyFieldDependencyInput = TeacherFieldDependencyInput;
-export type FacultyFieldDependencyIssue = TeacherFieldDependencyIssue;

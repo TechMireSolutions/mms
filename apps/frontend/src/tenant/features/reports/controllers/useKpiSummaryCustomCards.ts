@@ -26,7 +26,7 @@ export function useKpiSummaryCustomCards(
   dataSources: KpiSummaryDataSources,
   t: TranslationFunction,
 ) {
-  const { isContactsCategory, isStudentsCategory, isTeachersCategory, isSessionsCategory, isEnrollmentsCategory } = flags;
+  const { isContactsCategory, isStudentsCategory, isFacultyCategory, isSessionsCategory, isEnrollmentsCategory } = flags;
   const {
     questionBankQuestions: qbFromMetricsPath,
     questionBankTests: qbTestsFromMetricsPath,

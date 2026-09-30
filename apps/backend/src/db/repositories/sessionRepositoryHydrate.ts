@@ -84,8 +84,6 @@ export async function hydrateSessionsListAggregated(
           'status', c.status,
           'facultyId', c.faculty_id,
           'facultyName', c.faculty_name,
-          'teacherId', c.faculty_id,
-          'teacherName', c.faculty_name,
           'room', c.room,
           'sortOrder', c.sort_order,
           'createdAt', c.created_at,
@@ -160,8 +158,6 @@ export async function hydrateSessionsListAggregated(
                   'subject', per.subject,
                   'facultyId', per.faculty_id,
                   'facultyName', per.faculty_name,
-                  'teacherId', per.faculty_id,
-                  'teacherName', per.faculty_name,
                   'createdAt', per.created_at
                 ))
                 FROM session_class_timetable_periods per
@@ -362,8 +358,6 @@ export async function hydrateSessionsList(
         status: sessionClasses.status,
         facultyId: sessionClasses.facultyId,
         facultyName: sessionClasses.facultyName,
-        teacherId: sessionClasses.facultyId,
-        teacherName: sessionClasses.facultyName,
         room: sessionClasses.room,
         sortOrder: sessionClasses.sortOrder,
         createdAt: sessionClasses.createdAt,
@@ -544,8 +538,6 @@ export async function hydrateSessionsList(
             subject: sessionClassTimetablePeriods.subject,
             facultyId: sessionClassTimetablePeriods.facultyId,
             facultyName: sessionClassTimetablePeriods.facultyName,
-            teacherId: sessionClassTimetablePeriods.facultyId,
-            teacherName: sessionClassTimetablePeriods.facultyName,
             createdAt: sessionClassTimetablePeriods.createdAt,
           })
           .from(sessionClassTimetablePeriods)
@@ -663,8 +655,6 @@ export async function hydrateSessionsListSummary(
           'gender', c.gender,
           'facultyId', c.faculty_id,
           'facultyName', c.faculty_name,
-          'teacherId', c.faculty_id,
-          'teacherName', c.faculty_name,
           'capacity', c.capacity,
           'enrolled', c.enrolled,
           'room', c.room,

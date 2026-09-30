@@ -2,7 +2,7 @@ import type { CustomWidget } from './pinnedWidgetTypes';
 import {
   readContactsWidgetAggregate,
   readStudentsWidgetAggregate,
-  readTeachersWidgetAggregate,
+  readFacultyWidgetAggregate,
   readSessionsWidgetAggregate,
   readEnrollmentsWidgetAggregate,
 } from './widgetAggregateReaders.js';
@@ -55,8 +55,8 @@ export function computeStudentsCustomCardValue(
   return computeGenericCustomCardValue(card, readStudentsWidgetAggregate(card.id));
 }
 
-/** Resolve dashboard card values for teachers via server widget aggregates. */
-export function computeTeachersCustomCardValue(
+/** Resolve dashboard card values for faculty via server widget aggregates. */
+export function computeFacultyCustomCardValue(
   card: {
     id: string;
     operation: CustomWidget['operation'];
@@ -66,7 +66,7 @@ export function computeTeachersCustomCardValue(
     filterValue?: string;
   },
 ) {
-  return computeGenericCustomCardValue(card, readTeachersWidgetAggregate(card.id));
+  return computeGenericCustomCardValue(card, readFacultyWidgetAggregate(card.id));
 }
 
 /** Resolve dashboard card values for sessions via server widget aggregates. */

@@ -4,7 +4,6 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { buildWorkFilterChips, type WorkFilterChip } from "@/lib/query/buildWorkFilterChips";
 
 export type FacultyWorkFilterChip = WorkFilterChip;
-export type TeachersWorkFilterChip = FacultyWorkFilterChip;
 
 /** Build removable FilterChips models for active Faculty Work filters. */
 export function buildFacultyWorkFilterChips(input: {
@@ -66,5 +65,5 @@ export function buildFacultyWorkFilterChips(input: {
   });
 }
 
-export const buildTeachersWorkFilterChips = buildFacultyWorkFilterChips;
+
 

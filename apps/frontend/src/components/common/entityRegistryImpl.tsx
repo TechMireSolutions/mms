@@ -13,7 +13,6 @@ import {
   contactsEntityDescriptor,
   studentsEntityDescriptor,
   facultyEntityDescriptor,
-  teachersEntityDescriptor,
   sessionsEntityDescriptor,
   financeEntityDescriptor,
   attendanceEntityDescriptor,
@@ -32,7 +31,6 @@ import {
 export type EntityRegistryMap = {
   contacts: typeof contactsEntityDescriptor;
   students: typeof studentsEntityDescriptor;
-  teachers: typeof teachersEntityDescriptor;
   faculty: typeof facultyEntityDescriptor;
   sessions: typeof sessionsEntityDescriptor;
   finance: typeof financeEntityDescriptor;
@@ -66,7 +64,6 @@ export {
   contactsEntityDescriptor,
   studentsEntityDescriptor,
   facultyEntityDescriptor,
-  teachersEntityDescriptor,
   sessionsEntityDescriptor,
   financeEntityDescriptor,
   attendanceEntityDescriptor,
@@ -85,7 +82,6 @@ export {
 export const ENTITY_REGISTRY = {
   contacts: contactsEntityDescriptor,
   students: studentsEntityDescriptor,
-  teachers: teachersEntityDescriptor,
   faculty: facultyEntityDescriptor,
   sessions: sessionsEntityDescriptor,
   finance: financeEntityDescriptor,

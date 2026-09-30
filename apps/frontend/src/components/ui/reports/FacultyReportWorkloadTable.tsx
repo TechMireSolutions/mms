@@ -43,7 +43,7 @@ export const FacultyReportWorkloadTable = (function FacultyReportWorkloadTable({
             <StatGrid>
               <StatRow
                 className="min-w-0"
-                label={t("teachers.report.colClasses")}
+                label={t("faculty.report.colClasses")}
                 value={
                   <ProgressBar
                     value={(faculty.classes / maxClasses) * 100}
@@ -54,10 +54,10 @@ export const FacultyReportWorkloadTable = (function FacultyReportWorkloadTable({
                   />
                 }
               />
-              <StatRow className="min-w-0" label={t("teachers.report.colSessions")} value={faculty.sessions} />
+              <StatRow className="min-w-0" label={t("faculty.report.colSessions")} value={faculty.sessions} />
               <StatRow
                 className="min-w-0"
-                label={t("teachers.report.colStudents")}
+                label={t("faculty.report.colStudents")}
                 value={faculty.totalStudents}
                 ddClassName="font-semibold"
               />
@@ -67,14 +67,14 @@ export const FacultyReportWorkloadTable = (function FacultyReportWorkloadTable({
       </div>
       <div className="hidden md:block">
         <Table>
-          <caption className="sr-only">{t("teachers.report.workloadReportTitle")}</caption>
+          <caption className="sr-only">{t("faculty.report.workloadReportTitle")}</caption>
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
               {[
-                { key: "faculty", label: t("teachers.report.colFaculty") },
-                { key: "classes", label: t("teachers.report.colClasses") },
-                { key: "sessions", label: t("teachers.report.colSessions") },
-                { key: "students", label: t("teachers.report.colStudents") },
+                { key: "faculty", label: t("faculty.report.colFaculty") },
+                { key: "classes", label: t("faculty.report.colClasses") },
+                { key: "sessions", label: t("faculty.report.colSessions") },
+                { key: "students", label: t("faculty.report.colStudents") },
               ].map((header) => (
                 <ModuleTableHeaderCell key={header.key} columnKey={header.key} className="px-3 py-2.5">{header.label}</ModuleTableHeaderCell>
               ))}

@@ -1,12 +1,13 @@
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
-import type { Faculty, FacultySortField, ModuleColumnRegistryEntry, Teacher, TeacherCustomField, TeacherSortField } from "@mms/shared";
+import type { Faculty, FacultyCustomField, FacultySortField, ModuleColumnRegistryEntry } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
 export interface FacultyListContentProps {
   viewMode: WorkDirectoryViewMode;
+  /** All faculty members to render in the directory. */
   faculty?: Faculty[];
-  teachers: Teacher[];
   selectedIds: string[];
+
   allSelected: boolean;
   someSelected: boolean;
   showDeleted: boolean;
@@ -23,9 +24,9 @@ export interface FacultyListContentProps {
   /** Live Work column layout (tenant registry + user overlay). */
   columnRegistry: ModuleColumnRegistryEntry[];
   /** Custom column id → label map (lifted once for table + cards). */
-  customFieldsById: Map<string, TeacherCustomField>;
+  customFieldsById: Map<string, FacultyCustomField>;
   statusConfig: Record<string, StatusBadgeConfigItem>;
-  sortField: FacultySortField | TeacherSortField;
+  sortField: FacultySortField;
   sortDir: "asc" | "desc";
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
@@ -40,5 +41,6 @@ export interface FacultyListContentProps {
   onWhatsApp?: (faculty: Faculty[]) => void;
   onEmail?: (faculty: Faculty[]) => void;
 }
-export type TeacherListContentProps = FacultyListContentProps;
+
+
 

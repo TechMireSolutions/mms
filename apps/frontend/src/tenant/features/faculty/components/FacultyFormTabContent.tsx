@@ -1,11 +1,11 @@
 import type React from "react";
 import {
-  TeacherContactSection,
-  TeacherEmploymentSection,
+  FacultyContactSection,
+  FacultyEmploymentSection,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
 import { FacultyFormHierarchySection } from "@/tenant/features/faculty/components/FacultyFormHierarchySection";
-import { TeacherNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
+import { FacultyNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
 import {
   FacultyUserAccountSection,
   type FacultyUserAccountDraft,
@@ -13,26 +13,26 @@ import {
 import { FacultyCustomFieldsSection } from "./FacultyCustomFieldsSection";
 import { FacultyFormAllSections } from "./FacultyFormAllSections";
 import {
-  type TeacherFormTabContentProps,
   type FacultyFormTabContentProps,
 } from "./facultyFormTabs";
+import { DEFAULT_FACULTY_USER_ROLE } from "@mms/shared";
 
-export type { TeacherFormTabContentProps, FacultyFormTabContentProps };
+export type { FacultyFormTabContentProps };
 
 const DEFAULT_USER_ACCOUNT_DRAFT: FacultyUserAccountDraft = {
   enabled: false,
-  role: "teacher",
+  role: DEFAULT_FACULTY_USER_ROLE,
   setupMethod: "password",
 };
 
-export const TeacherFormTabContent = (function TeacherFormTabContent(props: TeacherFormTabContentProps): React.JSX.Element {
+export const FacultyFormTabContent = (function FacultyFormTabContent(props: FacultyFormTabContentProps): React.JSX.Element {
   const {
     activeTab,
-    teacher,
-    teacherDraft,
+    faculty,
+    facultyDraft: facultyDraftProp,
     errors,
     fields,
-    linkedTeacherContactIds,
+    linkedFacultyContactIds,
     specializationOptions,
     designationOptions,
     autoGenerateId,
@@ -52,14 +52,18 @@ export const TeacherFormTabContent = (function TeacherFormTabContent(props: Teac
     hierarchyRankPresets,
   } = props;
 
+  const effectiveFaculty = faculty;
+  const effectiveDraft = facultyDraftProp ?? {};
+  const effectiveContactIds = linkedFacultyContactIds ?? [];
+
   let tabBody: React.JSX.Element | null = null;
 
   if (activeTab === "contact") {
     tabBody = (
-      <TeacherContactSection
-        teacherDraft={teacherDraft}
+      <FacultyContactSection
+        facultyDraft={effectiveDraft}
         linkedContact={linkedContact}
-        linkedTeacherContactIds={linkedTeacherContactIds}
+        linkedFacultyContactIds={effectiveContactIds}
         errors={errors}
         fields={fields}
         isFieldEnabled={isFieldEnabled}
@@ -70,9 +74,9 @@ export const TeacherFormTabContent = (function TeacherFormTabContent(props: Teac
   } else if (activeTab === "employment") {
     tabBody = (
       <>
-        <TeacherEmploymentSection
-          teacher={teacher}
-          teacherDraft={teacherDraft}
+        <FacultyEmploymentSection
+          faculty={effectiveFaculty}
+          facultyDraft={effectiveDraft}
           errors={errors}
           fields={fields}
           autoGenerateId={autoGenerateId}
@@ -91,14 +95,14 @@ export const TeacherFormTabContent = (function TeacherFormTabContent(props: Teac
           hideDesignation
           hideHierarchy
         />
-        <FacultyCustomFieldsSection fields={fields} draft={teacherDraft} errors={errors} onDraftChange={onDraftChange} />
+        <FacultyCustomFieldsSection fields={fields} draft={effectiveDraft} errors={errors} onDraftChange={onDraftChange} />
       </>
     );
   } else if (activeTab === "designation") {
     tabBody = (
       <FacultyFormDesignationSection
-        teacher={teacher}
-        teacherDraft={teacherDraft}
+        faculty={effectiveFaculty}
+        facultyDraft={effectiveDraft}
         errors={errors}
         designationOptions={designationOptions}
         isFieldEnabled={isFieldEnabled}
@@ -109,7 +113,7 @@ export const TeacherFormTabContent = (function TeacherFormTabContent(props: Teac
   } else if (activeTab === "hierarchy") {
     tabBody = (
       <FacultyFormHierarchySection
-        teacherDraft={teacherDraft}
+        facultyDraft={effectiveDraft}
         errors={errors}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
@@ -121,7 +125,7 @@ export const TeacherFormTabContent = (function TeacherFormTabContent(props: Teac
   } else if (activeTab === "account") {
     tabBody = (
       <FacultyUserAccountSection
-        teacherDraft={teacherDraft}
+        facultyDraft={effectiveDraft}
         linkedContact={linkedContact}
         linkedUser={linkedUser}
         userAccountDraft={userAccountDraft}
@@ -131,8 +135,8 @@ export const TeacherFormTabContent = (function TeacherFormTabContent(props: Teac
     );
   } else if (activeTab === "notes") {
     tabBody = (
-      <TeacherNotesSection
-        notes={teacherDraft.notes}
+      <FacultyNotesSection
+        notes={effectiveDraft.notes}
         fields={fields}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
@@ -148,11 +152,11 @@ export const TeacherFormTabContent = (function TeacherFormTabContent(props: Teac
 
   return (
     <FacultyFormAllSections
-      teacher={teacher}
-      teacherDraft={teacherDraft}
+      faculty={effectiveFaculty}
+      facultyDraft={effectiveDraft}
       errors={errors}
       fields={fields}
-      linkedTeacherContactIds={linkedTeacherContactIds}
+      linkedFacultyContactIds={effectiveContactIds}
       specializationOptions={specializationOptions}
       designationOptions={designationOptions}
       autoGenerateId={autoGenerateId}
@@ -174,4 +178,4 @@ export const TeacherFormTabContent = (function TeacherFormTabContent(props: Teac
   );
 });
 
-export const FacultyFormTabContent = TeacherFormTabContent;
+export default FacultyFormTabContent;

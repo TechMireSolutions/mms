@@ -13,7 +13,7 @@ describe("FacultyFormDesignationSection", () => {
   it("returns null when designation field is disabled", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
-        teacherDraft={{}}
+        facultyDraft={{}}
         errors={{}}
         isFieldEnabled={() => false}
         isFieldRequired={() => false}
@@ -27,7 +27,7 @@ describe("FacultyFormDesignationSection", () => {
   it("renders designation dropdown and start date for a new faculty member", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
-        teacherDraft={{
+        facultyDraft={{
           designationId: "des-1",
           designationStartsOn: "2026-01-01",
         }}
@@ -36,10 +36,10 @@ describe("FacultyFormDesignationSection", () => {
           {
             id: "des-1",
             code: "HEAD",
-            name: "Head Teacher",
+            name: "Head of Department",
             hierarchyRank: 2,
             isActive: true,
-            assignableRoles: ["teacher", "department_head"],
+            assignableRoles: ["instructor", "department_head"],
           },
         ]}
         isFieldEnabled={() => true}
@@ -50,7 +50,7 @@ describe("FacultyFormDesignationSection", () => {
 
     expect(html).toContain("faculty.form.tab.designation");
     expect(html).toContain('id="designationId"');
-    expect(html).toContain("Head Teacher");
+    expect(html).toContain("Head of Department");
     expect(html).toContain("department_head");
     expect(html).toContain("designationStartsOn");
   });
@@ -58,14 +58,14 @@ describe("FacultyFormDesignationSection", () => {
   it("disables designation select and shows history notice for existing faculty member", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
-        teacher={{ id: "fac-1", contactId: "cnt-1", status: "active" } as any}
-        teacherDraft={{ designationId: "des-1" }}
+        faculty={{ id: "fac-1", contactId: "cnt-1", status: "active" } as any}
+        facultyDraft={{ designationId: "des-1" }}
         errors={{}}
         designationOptions={[
           {
             id: "des-1",
             code: "HEAD",
-            name: "Head Teacher",
+            name: "Head of Department",
             hierarchyRank: 2,
             isActive: true,
             assignableRoles: [],

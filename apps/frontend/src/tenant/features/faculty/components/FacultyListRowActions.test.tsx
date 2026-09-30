@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
-import { TeachersListRowActions } from "./FacultyListRowActions";
+import type { Faculty } from "@mms/shared";
+import { FacultyListRowActions } from "./FacultyListRowActions";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -10,7 +10,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockTeacher: Teacher = {
+const mockFaculty: Faculty = {
   id: "tch-act-1",
   contactId: "cnt-1",
   name: "Ustadh Umar",
@@ -24,12 +24,12 @@ const mockTeacher: Teacher = {
   updatedAt: "2024-01-01T00:00:00Z",
 };
 
-describe("TeachersListRowActions Component", () => {
+describe("FacultyListRowActions Component", () => {
   it("renders row actions menu trigger button with accessible label", () => {
     const html = renderToStaticMarkup(
-      <TeachersListRowActions
-        teacher={mockTeacher}
-        teacherId="tch-act-1"
+      <FacultyListRowActions
+        faculty={mockFaculty}
+        facultyId="tch-act-1"
         showDeleted={false}
         canWrite={true}
         canDelete={true}
@@ -42,3 +42,4 @@ describe("TeachersListRowActions Component", () => {
     expect(html).toContain("faculty.table.actions");
   });
 });
+

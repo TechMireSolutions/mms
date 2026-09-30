@@ -153,8 +153,6 @@ export const SessionClassTimetablePeriodSchema = z
     subject: z.string().min(1, 'Subject is required'),
     facultyId: z.string().optional().default(''),
     facultyName: z.string().optional().default(''),
-    teacherId: z.string().optional().default(''),
-    teacherName: z.string().optional().default(''),
   })
   .strict();
 
@@ -167,8 +165,6 @@ export const SessionClassTimetablePeriodInsertSchema = z
     subject: z.string().min(1, 'Subject is required'),
     facultyId: z.string().optional().default(''),
     facultyName: z.string().optional().default(''),
-    teacherId: z.string().optional().default(''),
-    teacherName: z.string().optional().default(''),
   })
   .strict();
 
@@ -305,8 +301,6 @@ export const ClassSchema = z
     status: z.enum(['active', 'inactive']).default('active'),
     facultyId: z.string().optional().default(''),
     facultyName: z.string().optional().default(''),
-    teacherId: z.string().optional().default(''),
-    teacherName: z.string().optional().default(''),
     room: z.string().optional().default(''),
     // Model 6 Child sub-entities
     fees: z.array(SessionClassFeeSchema).default([]),
@@ -334,8 +328,6 @@ export const ClassInsertSchema = z
     status: z.enum(['active', 'inactive']).default('active'),
     facultyId: z.string().optional().default(''),
     facultyName: z.string().optional().default(''),
-    teacherId: z.string().optional().default(''),
-    teacherName: z.string().optional().default(''),
     room: z.string().optional().default(''),
     fees: z.array(SessionClassFeeInsertSchema).default([]),
     schedules: z.array(SessionClassScheduleInsertSchema).default([]),

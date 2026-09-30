@@ -1,5 +1,4 @@
-import React from 'react';
-import type { Teacher } from '@mms/shared';
+import type { FacultyMember } from '@mms/shared';
 import {
   type ClassDetailTabId,
   ClassDetailGeneralTab,
@@ -17,7 +16,7 @@ export interface ClassDetailTabBodyProps {
   classDraft: DraftHookResult['classDraft'];
   updateDraft: DraftHookResult['updateDraft'];
   errors: Record<string, string>;
-  allTeachers: Teacher[];
+  allFaculty: FacultyMember[];
   currencySymbol: string;
   addFeeRow: DraftHookResult['addFeeRow'];
   removeFeeRow: DraftHookResult['removeFeeRow'];
@@ -48,7 +47,7 @@ export function ClassDetailTabBody({
   classDraft,
   updateDraft,
   errors,
-  allTeachers,
+  allFaculty,
   currencySymbol,
   addFeeRow,
   removeFeeRow,
@@ -80,7 +79,7 @@ export function ClassDetailTabBody({
           classDraft={classDraft}
           updateDraft={updateDraft}
           errors={errors}
-          allTeachers={allTeachers}
+          allFaculty={allFaculty}
         />
       )}
 
@@ -102,7 +101,7 @@ export function ClassDetailTabBody({
         <ClassDetailScheduleTab
           schedules={classDraft.schedules || []}
           periods={activeTimetable.periods || []}
-          allTeachers={allTeachers}
+          allFaculty={allFaculty}
           onAddSchedule={addScheduleRow}
           onRemoveSchedule={removeScheduleRow}
           onUpdateSchedule={updateScheduleRow}

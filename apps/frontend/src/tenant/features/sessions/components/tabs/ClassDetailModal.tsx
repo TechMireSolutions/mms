@@ -1,21 +1,14 @@
-/**
- * @file ClassDetailModal.tsx
- * @description Orchestrator FormModal for configuring Class General Rules, Fees, Schedules, Budgets, and Scholarships.
- */
+/** Orchestrator FormModal for configuring Class General Rules, Fees, Schedules, Budgets, Scholarships. */
 import React, { useState, useEffect, useMemo } from 'react';
 import { GraduationCap, Calendar, Coffee, Award, Wallet } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
 import { SubTabBar } from '@/components/ui/SubTabBar';
 import { useTranslation } from '@/hooks/useTranslation';
-import { useTeachersContractList, useTeachersByIds } from '@/tenant/hooks/collections/faculty';
+import { useFacultyContractList, useFacultyByIds } from '@/tenant/hooks/collections/faculty';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
-import { FACULTY_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from '@mms/shared';
+import { FACULTY_MODULE_MANIFEST, formatFacultyDisplayName, type FacultyMember } from '@mms/shared';
 import type { Class } from '@/lib/data/sessionsData';
-import {
-  type ClassDetailTabId,
-  type ClassDetailTabItem,
-  useClassDetailDraft,
-} from './class-detail';
+import { type ClassDetailTabId, type ClassDetailTabItem, useClassDetailDraft } from './class-detail';
 import { ClassDetailTabBody } from './ClassDetailTabBody';
 
 interface ClassDetailModalProps {
@@ -25,6 +18,8 @@ interface ClassDetailModalProps {
   onSave: (updatedClass: Class) => void | Promise<void>;
   saving?: boolean;
 }
+
+
 
 const TABS: readonly ClassDetailTabItem[] = [
   { id: 'general', labelKey: 'sessions.classes.detail.tab.general', icon: GraduationCap },
@@ -47,11 +42,11 @@ export function ClassDetailModal({
   const [activeTab, setActiveTab] = useState<ClassDetailTabId>('general');
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const { data: teachersData } = useTeachersContractList(
+  const { data: facultyData } = useFacultyContractList(
     { page: 1, limit: FACULTY_MODULE_MANIFEST.maxPageSize, status: 'active' },
     open,
   );
-  const teachersList = ((teachersData?.body?.faculty ?? teachersData?.body?.teachers ?? []) as Teacher[]);
+  const facultyList = (facultyData?.body?.faculty ?? []) as FacultyMember[];
 
   const {
     classDraft,
@@ -78,26 +73,26 @@ export function ClassDetailModal({
     activeScholarship,
     updateScholarship,
     updateEligibility,
-  } = useClassDetailDraft({ open, sessionClass, allTeachers: teachersList });
+  } = useClassDetailDraft({ open, sessionClass, allFaculty: facultyList });
 
-  // Track the live draft teacher so a newly assigned teacher not present in the
-  // active list is still resolved by id.
-  const selectedTeacherId = classDraft.teacherId ? [classDraft.teacherId] : [];
-  const { data: selectedTeachersData } = useTeachersByIds(selectedTeacherId);
-  const selectedTeachers = (selectedTeachersData ?? []) as Teacher[];
+  // Ensure a faculty member assigned outside the active page is still resolved by id.
+  const activeFacultyId = classDraft.facultyId;
+  const selectedFacultyId = activeFacultyId ? [activeFacultyId] : [];
+  const { data: selectedFacultyData } = useFacultyByIds(selectedFacultyId);
+  const selectedFaculty = (selectedFacultyData ?? []) as FacultyMember[];
 
-  const allTeachers = useMemo(() => {
-    const map = new Map<string, Teacher>();
-    for (const teacher of teachersList) {
-      if (teacher?.id) map.set(String(teacher.id), teacher);
+  const allFaculty = useMemo(() => {
+    const map = new Map<string, FacultyMember>();
+    for (const member of facultyList) {
+      if (member?.id) map.set(String(member.id), member);
     }
-    for (const teacher of selectedTeachers) {
-      if (teacher?.id && !map.has(String(teacher.id))) {
-        map.set(String(teacher.id), teacher);
+    for (const member of selectedFaculty) {
+      if (member?.id && !map.has(String(member.id))) {
+        map.set(String(member.id), member);
       }
     }
     return Array.from(map.values());
-  }, [teachersList, selectedTeachers]);
+  }, [facultyList, selectedFaculty]);
 
   const subTabs = useMemo(
     () => TABS.map((tab) => ({ key: tab.id, label: t(tab.labelKey), icon: tab.icon })),
@@ -126,26 +121,27 @@ export function ClassDetailModal({
       return;
     }
 
-    let resolvedTeacherName = classDraft.teacherName;
-    if (classDraft.teacherId) {
-      const teacher = allTeachers.find((candidate) => String(candidate.id) === String(classDraft.teacherId));
-      if (teacher) {
-        resolvedTeacherName = formatTeacherDisplayName(teacher) || resolvedTeacherName;
+    const activeFacultyId = classDraft.facultyId;
+    let resolvedFacultyName = classDraft.facultyName;
+    if (activeFacultyId) {
+      const member = allFaculty.find((candidate) => String(candidate.id) === String(activeFacultyId));
+      if (member) {
+        resolvedFacultyName = formatFacultyDisplayName(member) || resolvedFacultyName;
       }
     }
 
-    await onSave({ ...classDraft, teacherName: resolvedTeacherName });
+    await onSave({
+      ...classDraft,
+      facultyId: activeFacultyId,
+      facultyName: resolvedFacultyName,
+    });
   };
 
   return (
     <FormModal
       open={open}
       onClose={onClose}
-      title={
-        classDraft.name
-          ? t('sessions.classes.detail.title', { name: classDraft.name })
-          : t('sessions.classes.detail.newTitle')
-      }
+      title={classDraft.name ? t('sessions.classes.detail.title', { name: classDraft.name }) : t('sessions.classes.detail.newTitle')}
       icon={GraduationCap}
       cancelLabel={t('common.cancel')}
       saveLabel={t('common.save')}
@@ -161,7 +157,7 @@ export function ClassDetailModal({
           classDraft={classDraft}
           updateDraft={updateDraft}
           errors={errors}
-          allTeachers={allTeachers}
+          allFaculty={allFaculty}
           currencySymbol={currencySymbol}
           addFeeRow={addFeeRow}
           removeFeeRow={removeFeeRow}

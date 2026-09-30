@@ -41,7 +41,7 @@ export const sessionsWidgetSeeds: CustomWidget[] = [
     isPinnedToDashboard: false,
   },
   {
-    id: "def-card-teacher-classes",
+    id: "def-card-faculty-classes",
     title: "",
     titleKey: "widget.title.myClasses",
     category: "sessions",
@@ -55,11 +55,11 @@ export const sessionsWidgetSeeds: CustomWidget[] = [
     fixedSubTextKey: "widget.subtitle.activeClassesCount",
     trend: 0,
     trendType: "database",
-    role: "teacher",
+    role: "faculty",
     isPinnedToDashboard: false,
   },
   {
-    id: "def-card-teacher-sessions",
+    id: "def-card-faculty-sessions",
     title: "",
     titleKey: "widget.title.sessionsToday",
     category: "sessions",
@@ -73,7 +73,7 @@ export const sessionsWidgetSeeds: CustomWidget[] = [
     fixedSubTextKey: "widget.subtitle.fromActiveSessions",
     trend: 0,
     trendType: "database",
-    role: "teacher",
+    role: "faculty",
     isPinnedToDashboard: false,
   },
   {

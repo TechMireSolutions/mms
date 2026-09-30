@@ -1,7 +1,7 @@
 import { describe, expect, it, vi, beforeEach } from "vitest";
-import { runTeacherSaveFlow } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
+import { runFacultySaveFlow } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
 import * as formAutoScroll from "@/lib/forms/formAutoScroll";
-import type { Contact, TeachersSettings } from "@mms/shared";
+import type { Contact, FacultySettings } from "@mms/shared";
 
 vi.mock("@/lib/notify", () => ({
   notify: {
@@ -18,35 +18,35 @@ vi.mock("@/tenant/features/faculty/components/facultyFormValidation", async (imp
   const actual = await importOriginal<typeof import("@/tenant/features/faculty/components/facultyFormValidation")>();
   return {
     ...actual,
-    validateTeacherDraft: vi.fn(),
-    checkTeacherFormDuplicate: vi.fn().mockResolvedValue(null),
+    validateFacultyDraft: vi.fn(),
+    checkFacultyFormDuplicate: vi.fn().mockResolvedValue(null),
   };
 });
 
-describe("TeacherForm Validation Auto-Scroll & Contact SSOT", () => {
+describe("FacultyForm Validation Auto-Scroll & Contact SSOT", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
   it("triggers scrollAndFocusFirstError with smooth center options when validation fails", async () => {
     const scrollSpy = vi.spyOn(formAutoScroll, "scrollAndFocusFirstError");
-    const { validateTeacherDraft } = await import(
+    const { validateFacultyDraft } = await import(
       "@/tenant/features/faculty/components/facultyFormValidation"
     );
-    vi.mocked(validateTeacherDraft).mockReturnValue([
+    vi.mocked(validateFacultyDraft).mockReturnValue([
       { fieldId: "employeeId", message: "Employee ID is required", tabId: "basic" },
     ]);
 
     const setErrors = vi.fn();
     const onSave = vi.fn();
 
-    const success = await runTeacherSaveFlow({
-      teacherDraft: { contactId: "cnt-teacher-55" },
-      teacher: undefined,
+    const success = await runFacultySaveFlow({
+      facultyDraft: { contactId: "cnt-fac-55" },
+      faculty: undefined,
       autoGenerateId: false,
-      formInstanceId: "inst-teacher-55",
-      linkedContact: { id: "cnt-teacher-55", name: "Ustadh Bilal" } as Contact,
-      settings: {} as TeachersSettings,
+      formInstanceId: "inst-fac-55",
+      linkedContact: { id: "cnt-fac-55", name: "Ustadh Bilal" } as Contact,
+      settings: {} as FacultySettings,
       enabledTabs: new Set(["basic", "employment"]),
       fields: {},
       language: "en",
@@ -65,36 +65,36 @@ describe("TeacherForm Validation Auto-Scroll & Contact SSOT", () => {
       employeeId: "Employee ID is required",
     });
     expect(scrollSpy).toHaveBeenCalledWith(
-      expect.arrayContaining(["tf-inst-teacher-55-employeeId", "employeeId"]),
+      expect.arrayContaining(["tf-inst-fac-55-employeeId", "employeeId"]),
       { behavior: "smooth", block: "center" },
     );
     expect(onSave).not.toHaveBeenCalled();
   });
 
   it("persists contact selection (SSOT) through successful submission", async () => {
-    const { validateTeacherDraft } = await import(
+    const { validateFacultyDraft } = await import(
       "@/tenant/features/faculty/components/facultyFormValidation"
     );
-    vi.mocked(validateTeacherDraft).mockReturnValue(null);
+    vi.mocked(validateFacultyDraft).mockReturnValue(null);
 
     const onSave = vi.fn();
     const onClose = vi.fn();
 
-    const success = await runTeacherSaveFlow({
-      teacherDraft: {
-        contactId: "cnt-teacher-88",
+    const success = await runFacultySaveFlow({
+      facultyDraft: {
+        contactId: "cnt-fac-88",
         employeeId: "EMP-2026-088",
         status: "active",
         specialization: "Fiqh",
       },
-      teacher: undefined,
+      faculty: undefined,
       autoGenerateId: false,
-      formInstanceId: "inst-teacher-88",
+      formInstanceId: "inst-fac-88",
       linkedContact: {
-        id: "cnt-teacher-88",
+        id: "cnt-fac-88",
         name: "Ustadh Hamza",
       } as Contact,
-      settings: {} as TeachersSettings,
+      settings: {} as FacultySettings,
       enabledTabs: new Set(["basic", "employment"]),
       fields: {},
       language: "en",
@@ -111,7 +111,7 @@ describe("TeacherForm Validation Auto-Scroll & Contact SSOT", () => {
     expect(success).toBe(true);
     expect(onSave).toHaveBeenCalledWith(
       expect.objectContaining({
-        contactId: "cnt-teacher-88",
+        contactId: "cnt-fac-88",
         employeeId: "EMP-2026-088",
         status: "active",
         specialization: "Fiqh",

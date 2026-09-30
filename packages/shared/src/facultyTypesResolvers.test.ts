@@ -1,54 +1,55 @@
 import { describe, expect, it } from 'vitest';
 import {
-  DEFAULT_TEACHER_SPECIALIZATION,
-  DEFAULT_TEACHER_STATUS,
-  resolveTeacherSpecializations,
-  resolveTeacherStatus,
-  resolveTeacherStatusRoles,
-  resolveTeacherStatuses,
-  TEACHER_SPECIALIZATION_VALUES,
-  TEACHER_STATUS_VALUES,
+  DEFAULT_FACULTY_SPECIALIZATION,
+  DEFAULT_FACULTY_STATUS,
+  resolveFacultySpecializations,
+  resolveFacultyStatus,
+  resolveFacultyStatusRoles,
+  resolveFacultyStatuses,
+  FACULTY_SPECIALIZATION_VALUES,
+  FACULTY_STATUS_VALUES,
 } from './facultyTypes.js';
 
-describe('resolveTeacherStatuses / resolveTeacherSpecializations', () => {
-  it('DEFAULT_TEACHER_STATUS matches the first status value', () => {
-    expect(DEFAULT_TEACHER_STATUS).toBe(TEACHER_STATUS_VALUES[0]);
+describe('resolveFacultyStatuses / resolveFacultySpecializations', () => {
+  it('DEFAULT_FACULTY_STATUS matches the first status value', () => {
+    expect(DEFAULT_FACULTY_STATUS).toBe(FACULTY_STATUS_VALUES[0]);
   });
 
-  it('DEFAULT_TEACHER_SPECIALIZATION is in TEACHER_SPECIALIZATION_VALUES', () => {
-    expect(TEACHER_SPECIALIZATION_VALUES).toContain(DEFAULT_TEACHER_SPECIALIZATION);
-    expect(DEFAULT_TEACHER_SPECIALIZATION).toBe('General');
+  it('DEFAULT_FACULTY_SPECIALIZATION is in FACULTY_SPECIALIZATION_VALUES', () => {
+    expect(FACULTY_SPECIALIZATION_VALUES).toContain(DEFAULT_FACULTY_SPECIALIZATION);
+    expect(DEFAULT_FACULTY_SPECIALIZATION).toBe('General');
   });
 
   it('falls back to shared defaults when empty', () => {
-    expect(resolveTeacherStatuses()).toEqual(TEACHER_STATUS_VALUES);
-    expect(resolveTeacherStatuses([])).toEqual(TEACHER_STATUS_VALUES);
-    expect(resolveTeacherSpecializations(null)).toEqual(TEACHER_SPECIALIZATION_VALUES);
+    expect(resolveFacultyStatuses()).toEqual(FACULTY_STATUS_VALUES);
+    expect(resolveFacultyStatuses([])).toEqual(FACULTY_STATUS_VALUES);
+    expect(resolveFacultySpecializations(null)).toEqual(FACULTY_SPECIALIZATION_VALUES);
   });
 
   it('prefers configured lists when non-empty', () => {
-    expect(resolveTeacherStatuses(['active', 'inactive'])).toEqual(['active', 'inactive']);
-    expect(resolveTeacherSpecializations(['Hifz'])).toEqual(['Hifz']);
+    expect(resolveFacultyStatuses(['active', 'inactive'])).toEqual(['active', 'inactive']);
+    expect(resolveFacultySpecializations(['Hifz'])).toEqual(['Hifz']);
   });
 });
 
-describe('resolveTeacherStatus', () => {
+describe('resolveFacultyStatus', () => {
   it('returns the provided status when present', () => {
-    expect(resolveTeacherStatus('on_leave')).toBe('on_leave');
-    expect(resolveTeacherStatus('custom')).toBe('custom');
+    expect(resolveFacultyStatus('on_leave')).toBe('on_leave');
+    expect(resolveFacultyStatus('custom')).toBe('custom');
   });
 
-  it('falls back to DEFAULT_TEACHER_STATUS when unset', () => {
-    expect(resolveTeacherStatus()).toBe(DEFAULT_TEACHER_STATUS);
-    expect(resolveTeacherStatus(undefined)).toBe(DEFAULT_TEACHER_STATUS);
-    expect(resolveTeacherStatus('')).toBe(DEFAULT_TEACHER_STATUS);
-    expect(resolveTeacherStatus(null)).toBe(DEFAULT_TEACHER_STATUS);
+  it('falls back to DEFAULT_FACULTY_STATUS when unset', () => {
+    expect(resolveFacultyStatus()).toBe(DEFAULT_FACULTY_STATUS);
+    expect(resolveFacultyStatus(undefined)).toBe(DEFAULT_FACULTY_STATUS);
+    expect(resolveFacultyStatus('')).toBe(DEFAULT_FACULTY_STATUS);
+    expect(resolveFacultyStatus(null)).toBe(DEFAULT_FACULTY_STATUS);
   });
 });
 
-describe('resolveTeacherStatusRoles', () => {
-  it('maps TEACHER_STATUS_VALUES to named roles in order', () => {
-    const [active, inactive, onLeave] = TEACHER_STATUS_VALUES;
-    expect(resolveTeacherStatusRoles()).toEqual({ active, inactive, onLeave });
+describe('resolveFacultyStatusRoles', () => {
+  it('maps FACULTY_STATUS_VALUES to named roles in order', () => {
+    const [active, inactive, onLeave] = FACULTY_STATUS_VALUES;
+    expect(resolveFacultyStatusRoles()).toEqual({ active, inactive, onLeave });
   });
 });
+

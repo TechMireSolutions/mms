@@ -4,11 +4,11 @@ import { formatDirectoryPageCountLabel } from "@/lib/formatDirectoryPageCountLab
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFacultyEntityDescriptor } from "@/tenant/features/faculty/hooks/useFacultyEntityDescriptor";
-import { TeacherCardItem } from "@/tenant/features/faculty/components/FacultyCardItem";
-import type { TeacherListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
+import { FacultyCardItem } from "@/tenant/features/faculty/components/FacultyCardItem";
+import type { FacultyListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
 
 export interface FacultyListCardsProps extends Omit<
-  TeacherListContentProps,
+  FacultyListContentProps,
   | "sortField"
   | "sortDir"
   | "getColumnWidth"
@@ -19,14 +19,13 @@ export interface FacultyListCardsProps extends Omit<
   | "onClearFilters"
   | "onShowActive"
 > {
-  faculty?: TeacherListContentProps["faculty"];
+  faculty?: FacultyListContentProps["faculty"];
 }
-export type TeacherListCardsProps = FacultyListCardsProps;
+
 
 export function FacultyListCards(props: FacultyListCardsProps): React.JSX.Element {
   const {
     faculty,
-    teachers: teachersProp,
     selectedIds,
     allSelected,
     someSelected,
@@ -47,14 +46,14 @@ export function FacultyListCards(props: FacultyListCardsProps): React.JSX.Elemen
     onWhatsApp,
     onEmail,
   } = props;
-  const items = faculty ?? teachersProp ?? [];
+  const items = faculty ?? [];
   const { t } = useTranslation();
   const reducedMotion = useReducedMotion();
   const descriptor = useFacultyEntityDescriptor();
   const selectedSet = useMemo(() => new Set(selectedIds), [selectedIds]);
   const pageCountLabel = formatDirectoryPageCountLabel(items.length, t, {
-    singular: "faculty.form.teacher",
-    plural: "faculty.table.teachers",
+    singular: "faculty.form.faculty",
+    plural: "faculty.table.faculty",
   });
 
   return (
@@ -64,15 +63,15 @@ export function FacultyListCards(props: FacultyListCardsProps): React.JSX.Elemen
       onSelectAll={onSelectAll}
       allSelected={allSelected}
       someSelected={someSelected}
-      selectAllLabel={t("faculty.table.selectAll") || t("teachers.table.selectAll")}
+      selectAllLabel={t("faculty.table.selectAll")}
       deselectAllLabel={t("common.deselect")}
-      selectedCountLabel={t("faculty.selectedCount", { count: selectedIds.length }) || t("teachers.selectedCount", { count: selectedIds.length })}
+      selectedCountLabel={t("faculty.selectedCount", { count: selectedIds.length })}
       pageCountLabel={pageCountLabel}
       checkboxIdPrefix="faculty-cards"
-      renderItem={(teacher) => (
-        <TeacherCardItem
-          key={teacher.id}
-          teacher={teacher}
+      renderItem={(faculty) => (
+        <FacultyCardItem
+          key={faculty.id}
+          faculty={faculty}
           selectedSet={selectedSet}
           selectedIds={selectedIds}
           showDeleted={showDeleted}
@@ -97,6 +96,3 @@ export function FacultyListCards(props: FacultyListCardsProps): React.JSX.Elemen
     />
   );
 }
-
-export const TeachersListCards = FacultyListCards;
-

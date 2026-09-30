@@ -1,27 +1,26 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DEFAULT_TEACHERS_SETTINGS, type Teacher } from "@mms/shared";
-import { TeacherDetail } from "./FacultyDetail";
+import { DEFAULT_FACULTY_SETTINGS, type FacultyMember } from "@mms/shared";
+import { FacultyDetail } from "./FacultyDetail";
 
 vi.mock("@/hooks/useStandardModuleConfig", () => {
   const config = {
-    settings: DEFAULT_TEACHERS_SETTINGS,
+    settings: DEFAULT_FACULTY_SETTINGS,
     isFieldEnabled: () => true,
   };
   return {
     useFacultyConfig: () => config,
-    useTeacherConfig: () => config,
   };
 });
 
 vi.mock("@/tenant/features/faculty/components/useFacultyDetailModel", () => {
-  const model = (_teacher: Teacher) => ({
+  const model = (_faculty: FacultyMember) => ({
     statusConfig: {},
     detailFields: [],
     linkedContact: null,
     primaryPhone: "+1 555-0100",
-    primaryEmail: "teacher@example.com",
+    primaryEmail: "faculty@example.com",
     hasWhatsAppContact: false,
     hasVisibleDetailFields: false,
     assignedClasses: [],
@@ -30,7 +29,6 @@ vi.mock("@/tenant/features/faculty/components/useFacultyDetailModel", () => {
   });
   return {
     useFacultyDetailModel: model,
-    useTeacherDetailModel: model,
   };
 });
 
@@ -65,8 +63,8 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockTeacher: Teacher = {
-  id: "tch-detail-1",
+const mockFaculty: FacultyMember = {
+  id: "fac-detail-1",
   contactId: "cnt-1",
   name: "Ustadh Umar",
   status: "active",
@@ -78,11 +76,11 @@ const mockTeacher: Teacher = {
   updatedAt: "2024-01-01T00:00:00Z",
 };
 
-describe("TeacherDetail Component", () => {
-  it("renders teacher detail drawer with title, Employee ID, notes, and actions", () => {
+describe("FacultyDetail Component", () => {
+  it("renders faculty detail drawer with title, Employee ID, notes, and actions", () => {
     const html = renderToStaticMarkup(
-      <TeacherDetail
-        teacher={mockTeacher}
+      <FacultyDetail
+        faculty={mockFaculty}
         onClose={vi.fn()}
         openComposer={vi.fn()}
         canWriteMessaging={true}

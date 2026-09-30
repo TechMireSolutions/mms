@@ -19,5 +19,3 @@ export const invalidateFacultyQueries = createModuleQueryInvalidator({
   lookups: FACULTY_LOOKUPS_QUERY_KEY,
 });
 
-export const invalidateTeachersQueries = invalidateFacultyQueries;
-

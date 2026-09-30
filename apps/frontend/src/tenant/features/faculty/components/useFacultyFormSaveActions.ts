@@ -4,34 +4,34 @@ import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { invalidateUsersQueries } from "@/tenant/hooks/collections/users";
 import type {
   Contact,
+  FacultyDuplicateReason,
+  FacultyMember,
+  FacultySettings,
   FieldDefinition,
-  Teacher,
-  TeacherDuplicateReason,
-  TeachersSettings,
 } from "@mms/shared";
 import {
-  teacherDraftSnapshot,
+  facultyDraftSnapshot,
 } from "@/tenant/features/faculty/components/facultyFormDraft";
 import {
-  confirmPendingTeacherSave,
-  runTeacherSaveFlow,
+  confirmPendingFacultySave,
+  runFacultySaveFlow,
 } from "@/tenant/features/faculty/components/facultyFormSaveFlow";
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/faculty/components/facultyFormValidation";
 import type { FacultyUserAccountDraft, LinkedUserInfo } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 
 export interface UseFacultyFormSaveActionsInput {
-  teacherDraft: Partial<Teacher>;
-  teacher?: Teacher;
+  facultyDraft?: Partial<FacultyMember>;
+  faculty?: FacultyMember;
   autoGenerateId: boolean;
   nextEmployeeId?: string;
   formInstanceId: string;
   linkedContact?: Contact | null;
-  settings: TeachersSettings;
+  settings: FacultySettings;
   enabledTabs: Set<string>;
   fieldsMap: Record<string, FieldDefinition[]>;
   language: string;
   t: TranslationFunction;
-  onSave: (teacher: Teacher) => void | Promise<void>;
+  onSave: (faculty: FacultyMember) => void | Promise<void>;
   onClose: () => void;
   setBaselineSnapshot: (snapshot: string) => void;
   userAccountDraft: FacultyUserAccountDraft;
@@ -40,8 +40,8 @@ export interface UseFacultyFormSaveActionsInput {
 }
 
 export function useFacultyFormSaveActions({
-  teacherDraft,
-  teacher,
+  facultyDraft,
+  faculty,
   autoGenerateId,
   nextEmployeeId,
   formInstanceId,
@@ -58,10 +58,12 @@ export function useFacultyFormSaveActions({
   linkedUser,
   queryClient,
 }: UseFacultyFormSaveActionsInput) {
+  const currentDraft = facultyDraft ?? {};
+  const currentFaculty = faculty;
   const [saving, setSaving] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const [pendingSaveData, setPendingSaveData] = useState<Partial<Teacher> | null>(null);
-  const [typedDuplicateReason, setTypedDuplicateReason] = useState<TeacherDuplicateReason | null>(null);
+  const [pendingSaveData, setPendingSaveData] = useState<Partial<FacultyMember> | null>(null);
+  const [typedDuplicateReason, setTypedDuplicateReason] = useState<FacultyDuplicateReason | null>(null);
   const [duplicateConfirmOpen, setDuplicateConfirmOpen] = useState(false);
 
   const clearDuplicatePrompt = () => {
@@ -81,9 +83,9 @@ export function useFacultyFormSaveActions({
   }, [errors, typedDuplicateReason, t]);
 
   const handleSave = async (options?: { keepOpen?: boolean }): Promise<boolean> => {
-    return await runTeacherSaveFlow({
-      teacherDraft,
-      teacher,
+    return await runFacultySaveFlow({
+      facultyDraft: currentDraft,
+      faculty: currentFaculty,
       autoGenerateId,
       nextEmployeeId,
       formInstanceId,
@@ -96,7 +98,7 @@ export function useFacultyFormSaveActions({
       onSave,
       onClose,
       keepOpen: options?.keepOpen,
-      onBaselineReset: (payload) => setBaselineSnapshot(teacherDraftSnapshot(payload)),
+      onBaselineReset: (payload) => setBaselineSnapshot(facultyDraftSnapshot(payload)),
       setErrors,
       setSaving,
       setPendingSaveData,
@@ -109,9 +111,9 @@ export function useFacultyFormSaveActions({
   };
 
   const confirmDuplicateSave = () => {
-    void confirmPendingTeacherSave({
+    void confirmPendingFacultySave({
       pendingSaveData,
-      teacher,
+      faculty: currentFaculty,
       t,
       onSave,
       onClose,

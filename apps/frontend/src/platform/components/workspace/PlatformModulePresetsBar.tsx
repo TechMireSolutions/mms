@@ -37,7 +37,7 @@ export function PlatformModulePresetsBar({
           icon={BookOpen}
           disabled={disabled}
           onClick={() =>
-            onApplyPreset(['dashboard', 'contacts', 'messaging', 'students', 'teachers', 'attendance', 'hasanat', 'users'])
+            onApplyPreset(['dashboard', 'contacts', 'messaging', 'students', 'faculty', 'attendance', 'hasanat', 'users'])
           }
         >
           {t('onboarding.presetHifz')}

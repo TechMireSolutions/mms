@@ -18,7 +18,6 @@ import {
 
 export type ModuleReportCategory =
   | "students"
-  | "teachers"
   | "contacts"
   | "attendance"
   | "finance"
@@ -52,7 +51,6 @@ interface ModuleReportsToolPanelsProps {
 export function getInitialReportCollection(category: ModuleReportCategory) {
   switch (category) {
     case "students": return "students" as const;
-    case "teachers":
     case "faculty": return "faculty" as const;
     case "sessions": return "sessions" as const;
     case "finance":

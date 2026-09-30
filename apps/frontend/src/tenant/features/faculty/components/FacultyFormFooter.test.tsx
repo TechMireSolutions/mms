@@ -1,21 +1,21 @@
 import React from "react";
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Contact, Teacher } from "@mms/shared";
-import { FacultyFormFooter, TeacherFormFooter } from "./FacultyFormFooter";
+import type { Contact, FacultyMember } from "@mms/shared";
+import { FacultyFormFooter } from "./FacultyFormFooter";
 
 const mockContact: Contact = {
   id: "cnt-1",
   firstName: "Ustadh",
   lastName: "Umar",
   name: "Ustadh Umar",
-  type: "teacher",
+  type: "staff",
   status: "active",
   createdAt: "2024-01-01T00:00:00Z",
   updatedAt: "2024-01-01T00:00:00Z",
 };
 
-const mockTeacherDraft: Partial<Teacher> = {
+const mockFacultyDraft: Partial<FacultyMember> = {
   employeeId: "EMP-001",
   status: "active",
 };
@@ -34,7 +34,7 @@ describe("FacultyFormFooter Component", () => {
     const html = renderToStaticMarkup(
       <FacultyFormFooter
         linkedContact={mockContact}
-        teacherDraft={mockTeacherDraft}
+        facultyDraft={mockFacultyDraft}
         requireContactLink={false}
         statusConfig={mockStatusConfig}
         t={mockT}
@@ -50,7 +50,7 @@ describe("FacultyFormFooter Component", () => {
     const html = renderToStaticMarkup(
       <FacultyFormFooter
         linkedContact={null}
-        teacherDraft={{}}
+        facultyDraft={{}}
         requireContactLink={true}
         statusConfig={mockStatusConfig}
         t={mockT}
@@ -60,11 +60,11 @@ describe("FacultyFormFooter Component", () => {
     expect(html).toContain("faculty.form.contactRequired");
   });
 
-  it("does not render contact required banner when teacherDraft has contactId pending contact hydration", () => {
+  it("does not render contact required banner when facultyDraft has contactId pending contact hydration", () => {
     const html = renderToStaticMarkup(
       <FacultyFormFooter
         linkedContact={null}
-        teacherDraft={{ contactId: "cnt-123" }}
+        facultyDraft={{ contactId: "cnt-123" }}
         requireContactLink={true}
         statusConfig={mockStatusConfig}
         t={mockT}
@@ -77,9 +77,9 @@ describe("FacultyFormFooter Component", () => {
 
   it("returns null when no contact and link not required", () => {
     const html = renderToStaticMarkup(
-      <TeacherFormFooter
+      <FacultyFormFooter
         linkedContact={null}
-        teacherDraft={{}}
+        facultyDraft={{}}
         requireContactLink={false}
         statusConfig={mockStatusConfig}
         t={mockT}

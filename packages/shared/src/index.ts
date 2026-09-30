@@ -198,14 +198,13 @@ export {
 } from './studentValidation.js';
 
 // ---------------------------------------------------------------------------
-// 7. Faculty / Teachers Feature Module
+// 7. Faculty Feature Module
 // ---------------------------------------------------------------------------
 export * from './facultyTypes.js';
 export * from './facultyModuleManifest.js';
 export {
   facultyListPageResponseSchema,
   facultyPreferencesResponseSchema,
-  teacherListPageResponseSchema,
 } from './contracts/faculty.contract.js';
 export * from './facultyDirectoryColumns.js';
 export * from './facultyLookupTypes.js';
@@ -225,6 +224,7 @@ export * from './facultyModuleSettings.js';
 export * from './facultyWidgetAggregate.js';
 export * from './demoSeedFaculty.js';
 export * from './demoFaculty.js';
+export { facultyCsvExportBodySchema } from './schemas/csvExport.dto.js';
 
 // ---------------------------------------------------------------------------
 // 8. Sessions & Enrollments Modules

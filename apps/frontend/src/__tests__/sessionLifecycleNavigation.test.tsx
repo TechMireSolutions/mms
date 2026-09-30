@@ -22,7 +22,7 @@ describe('sessionLifecycleNavigation', () => {
   it('deduplicates concurrent 401s into a single refresh call and retries pending requests', async () => {
     let refreshCalls = 0;
     let studentsCalls = 0;
-    let teachersCalls = 0;
+    let facultyCalls = 0;
     let contactsCalls = 0;
 
     globalThis.fetch = async (input) => {
@@ -42,11 +42,11 @@ describe('sessionLifecycleNavigation', () => {
       }
 
       if (url.includes('/api/faculty')) {
-        teachersCalls++;
-        if (teachersCalls === 1) {
+        facultyCalls++;
+        if (facultyCalls === 1) {
           return new Response(JSON.stringify({ error: 'Unauthorized' }), { status: 401 });
         }
-        return new Response(JSON.stringify({ faculty: [], teachers: [] }), { status: 200 });
+        return new Response(JSON.stringify({ faculty: [] }), { status: 200 });
       }
 
       if (url.includes('/api/contacts')) {
@@ -74,7 +74,7 @@ describe('sessionLifecycleNavigation', () => {
     // Refresh must be called exactly once despite 3 concurrent 401 responses
     expect(refreshCalls).toBe(1);
     expect(studentsCalls).toBe(2);
-    expect(teachersCalls).toBe(2);
+    expect(facultyCalls).toBe(2);
     expect(contactsCalls).toBe(2);
   });
 
@@ -213,10 +213,10 @@ describe('sessionLifecycleNavigation', () => {
       return new Response(JSON.stringify({ ok: true }), { status: 200 });
     };
 
-    // User is on Contacts, then quickly clicks Students, then Teachers
+    // User is on Contacts, then quickly clicks Students, then Faculty
     const contactsCtrl = new AbortController();
     const studentsCtrl = new AbortController();
-    const teachersCtrl = new AbortController();
+    const facultyCtrl = new AbortController();
 
     // Module 1: Contacts starts fetching
     const pContacts = apiFetch('/api/contacts', { signal: contactsCtrl.signal });
@@ -231,19 +231,19 @@ describe('sessionLifecycleNavigation', () => {
     studentsCtrl.abort();
 
     // Module 3: Faculty starts fetching and user remains here
-    const pTeachers = apiFetch('/api/faculty', { signal: teachersCtrl.signal });
+    const pFaculty = apiFetch('/api/faculty', { signal: facultyCtrl.signal });
 
     // Settle all queries: aborted queries reject or complete cleanly, active query resolves 200
-    const [resContacts, resStudents, resTeachers] = await Promise.allSettled([
+    const [resContacts, resStudents, resFaculty] = await Promise.allSettled([
       pContacts,
       pStudents,
-      pTeachers,
+      pFaculty,
     ]);
 
     // Active destination query resolved successfully with 200
-    expect(resTeachers.status).toBe('fulfilled');
-    if (resTeachers.status === 'fulfilled') {
-      expect(resTeachers.value.status).toBe(200);
+    expect(resFaculty.status).toBe('fulfilled');
+    if (resFaculty.status === 'fulfilled') {
+      expect(resFaculty.value.status).toBe(200);
     }
 
     // Previous aborted queries settled without hanging the process

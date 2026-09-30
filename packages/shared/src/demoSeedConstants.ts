@@ -1,9 +1,9 @@
-export const DEMO_TEACHER_COUNT = 30;
+export const DEMO_FACULTY_COUNT = 30;
 export const DEMO_STUDENT_COUNT = 100;
 export const DEMO_STUDENT_CONTACT_ID_START = 1001;
 export const DEMO_PARENT_CONTACT_ID_START = 2001;
 
-export const DEMO_TEACHER_DATE = '2024-01-01';
+export const DEMO_FACULTY_DATE = '2024-01-01';
 export const DEMO_STUDENT_DATE = '2025-01-01';
 
 export const DEMO_CITIES = ['Karachi', 'Lahore', 'Islamabad', 'Peshawar', 'Faisalabad', 'Multan', 'Quetta'] as const;
@@ -23,8 +23,8 @@ export const DEMO_LAST_NAMES = [
   'Chaudhry', 'Butt', 'Mirza', 'Gilani', 'Jafri', 'Naqvi', 'Zaidi', 'Abbasi', 'Memon', 'Baloch',
 ] as const;
 
-export const DEMO_TEACHER_MALE_TITLES = ['Sheikh', 'Qari', 'Ustadh'] as const;
-export const DEMO_TEACHER_FEMALE_TITLES = ['Ustadha'] as const;
+export const DEMO_FACULTY_MALE_TITLES = ['Sheikh', 'Qari', 'Ustadh'] as const;
+export const DEMO_FACULTY_FEMALE_TITLES = ['Ustadha'] as const;
 
 export const DEMO_QUALIFICATIONS = [
   'Ijazah in Hifz',
@@ -51,7 +51,7 @@ export function demoPhoneSuffix(seed: number): string {
   return demoPad(1000000 + seed * 7919, 7);
 }
 
-export function demoTeacherDob(index: number): string {
+export function demoFacultyDob(index: number): string {
   const year = 1975 + (index % 20);
   const month = ((index * 3) % 12) + 1;
   const day = ((index * 5) % 27) + 1;

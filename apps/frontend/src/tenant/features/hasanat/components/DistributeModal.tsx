@@ -13,7 +13,7 @@ const EMPTY_DIST: Partial<Distribution> = {
   denominationId: "",
   recipientType: "student",
   recipientStudentId: "",
-  recipientTeacherId: "",
+  recipientFacultyId: "",
   recipientClass: "",
   quantity: 1,
   reason: "",
@@ -76,7 +76,7 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
       newErrors.denominationId = t("common.required");
     }
     const recipientId = data.recipientType === "faculty"
-      ? data.recipientTeacherId
+      ? data.recipientFacultyId
       : data.recipientStudentId;
     if (!recipientId) {
       newErrors.recipientName = t("common.required");
@@ -124,7 +124,7 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
     if (data.recipientType === "faculty") {
       delete payload.recipientStudentId;
     } else {
-      delete payload.recipientTeacherId;
+      delete payload.recipientFacultyId;
     }
     setSubmitting(true);
     try {

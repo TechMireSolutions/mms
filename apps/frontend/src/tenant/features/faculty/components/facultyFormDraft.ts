@@ -1,17 +1,20 @@
-import { resolveTeacherStatus, type Teacher, type FacultyMember, todayISO } from "@mms/shared";
+import {
+  DEFAULT_FACULTY_USER_ROLE,
+  resolveFacultyStatus,
+  type FacultyMember,
+  todayISO,
+} from "@mms/shared";
 import { createModuleFormDraft } from "@/lib/forms/createModuleFormDraft";
 
 export interface FacultyFormControllerOptions {
   faculty?: FacultyMember;
-  teacher?: Teacher;
   onClose: () => void;
   onSave: (faculty: FacultyMember) => void | Promise<void>;
 }
-export type UseTeacherFormControllerOptions = FacultyFormControllerOptions;
 export type UseFacultyFormControllerOptions = FacultyFormControllerOptions;
 
-/** Hydrated / archive chrome — not edited on the Teachers form. */
-const TEACHER_FORM_VOLATILE_KEYS = [
+/** Hydrated / archive chrome — not edited on the faculty form. */
+const FACULTY_FORM_VOLATILE_KEYS = [
   "id",
   "name",
   "phone",
@@ -35,45 +38,52 @@ const TEACHER_FORM_VOLATILE_KEYS = [
   "updatedBy",
 ];
 
-const { getInitialDraft, draftSnapshot } = createModuleFormDraft<Teacher>({
-  volatileKeys: TEACHER_FORM_VOLATILE_KEYS,
-  getDefaults: (teacher, defaultSpecialization) => ({
-    contactId: teacher?.contactId ?? "",
-    employeeId: teacher?.employeeId ?? "",
-    specialization: teacher?.specialization ?? (defaultSpecialization as string),
-    designation: teacher?.designation ?? "",
-    designationId: teacher?.designationId ?? "",
-    designationStartsOn: teacher?.designationStartsOn ?? todayISO(),
-    designationAssignableRoles: teacher?.designationAssignableRoles ?? [],
-    department: teacher?.department ?? "",
-    reportingFacultyId: teacher?.reportingFacultyId ?? null,
-    hierarchyRank: teacher?.hierarchyRank ?? 4,
-    status: resolveTeacherStatus(teacher?.status),
-    joinDate: teacher?.joinDate ?? todayISO(),
-    qualification: teacher?.qualification ?? "",
-    notes: teacher?.notes ?? "",
-    userId: teacher?.userId ?? null,
+const { getInitialDraft, draftSnapshot } = createModuleFormDraft<FacultyMember>({
+  volatileKeys: FACULTY_FORM_VOLATILE_KEYS,
+  getDefaults: (faculty, defaultSpecialization) => ({
+    contactId: faculty?.contactId ?? "",
+    employeeId: faculty?.employeeId ?? "",
+    specialization: faculty?.specialization ?? (defaultSpecialization as string),
+    designation: faculty?.designation ?? "",
+    designationId: faculty?.designationId ?? "",
+    designationStartsOn: faculty?.designationStartsOn ?? todayISO(),
+    designationAssignableRoles: faculty?.designationAssignableRoles ?? [],
+    department: faculty?.department ?? "",
+    reportingFacultyId: faculty?.reportingFacultyId ?? null,
+    hierarchyRank: faculty?.hierarchyRank ?? 4,
+    status: resolveFacultyStatus(faculty?.status),
+    joinDate: faculty?.joinDate ?? todayISO(),
+    qualification: faculty?.qualification ?? "",
+    notes: faculty?.notes ?? "",
+    userId: faculty?.userId ?? null,
   }),
 });
 
-interface GetInitialTeacherDraftOptions {
-  teacher?: Teacher;
+export interface GetInitialFacultyDraftOptions {
+  faculty?: FacultyMember;
   defaultSpecialization: string;
 }
 
 /** Draft for FormModal — form-owned fields; strip hydrated chrome. */
-export function getInitialTeacherDraft(
-  teacherOrOptions?: Teacher | GetInitialTeacherDraftOptions,
+export function getInitialFacultyDraft(
+  facultyOrOptions?: FacultyMember | GetInitialFacultyDraftOptions,
   defaultSpecializationOrUndefined?: string,
-): Partial<Teacher> {
-  const isOptions = teacherOrOptions && typeof teacherOrOptions === "object" && "defaultSpecialization" in teacherOrOptions;
-  const teacher = isOptions ? (teacherOrOptions as GetInitialTeacherDraftOptions).teacher : (teacherOrOptions as Teacher | undefined);
-  const defaultSpecialization = isOptions ? (teacherOrOptions as GetInitialTeacherDraftOptions).defaultSpecialization : (defaultSpecializationOrUndefined ?? "");
+): Partial<FacultyMember> {
+  const isOptions =
+    facultyOrOptions &&
+    typeof facultyOrOptions === "object" &&
+    "defaultSpecialization" in facultyOrOptions;
+  const faculty = isOptions
+    ? (facultyOrOptions as GetInitialFacultyDraftOptions).faculty
+    : (facultyOrOptions as FacultyMember | undefined);
+  const defaultSpecialization = isOptions
+    ? (facultyOrOptions as GetInitialFacultyDraftOptions).defaultSpecialization
+    : (defaultSpecializationOrUndefined ?? "");
 
-  return getInitialDraft(teacher, defaultSpecialization);
+  return getInitialDraft(faculty, defaultSpecialization);
 }
 
-export function teacherDraftSnapshot(draft: Partial<Teacher>): string {
+export function facultyDraftSnapshot(draft: Partial<FacultyMember>): string {
   return draftSnapshot(draft);
 }
 
@@ -100,7 +110,7 @@ export function extractEmployeeId(value: unknown): string {
 
 export const DEFAULT_USER_ACCOUNT_DRAFT = {
   enabled: false,
-  role: "teacher" as const,
+  role: DEFAULT_FACULTY_USER_ROLE,
   setupMethod: "password" as const,
   password: "",
   forceReset: true,
@@ -117,3 +127,4 @@ export function filterSupervisorCandidates(
     return rank < currentRank;
   });
 }
+

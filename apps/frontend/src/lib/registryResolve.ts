@@ -7,16 +7,16 @@ export function uniqueRegistryIds(ids: (string | number | null | undefined)[]): 
   )].sort();
 }
 
-export function collectTeacherIdsFromClasses(
-  classes: { teacherId?: string | number | null }[] | undefined,
+export function collectFacultyIdsFromClasses(
+  classes: { facultyId?: string | number | null }[] | undefined,
 ): string[] {
-  return uniqueRegistryIds((classes ?? []).map((sessionClass) => sessionClass.teacherId));
+  return uniqueRegistryIds((classes ?? []).map((sessionClass) => sessionClass.facultyId));
 }
 
-export function collectTeacherIdsFromSessions(
-  sessions: { classes?: { teacherId?: string | number | null }[] }[],
+export function collectFacultyIdsFromSessions(
+  sessions: { classes?: { facultyId?: string | number | null }[] }[],
 ): string[] {
   return uniqueRegistryIds(
-    sessions.flatMap((session) => (session.classes ?? []).map((sessionClass) => sessionClass.teacherId)),
+    sessions.flatMap((session) => (session.classes ?? []).map((sessionClass) => sessionClass.facultyId)),
   );
 }

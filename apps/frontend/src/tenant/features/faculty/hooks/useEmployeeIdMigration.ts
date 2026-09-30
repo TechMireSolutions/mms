@@ -6,7 +6,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { invalidateFacultyQueries } from "@/tenant/features/faculty/hooks/invalidateFacultyQueries";
 
 const FACULTY_EMPLOYEE_ID_MIGRATION_KEY = "mms_faculty_employee_id_migration_v1";
-const TEACHERS_EMPLOYEE_ID_MIGRATION_KEY = FACULTY_EMPLOYEE_ID_MIGRATION_KEY;
 
 function employeeIdMigrationAlreadyDone(): boolean {
   try {

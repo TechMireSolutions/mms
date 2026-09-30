@@ -24,7 +24,7 @@ const mockSession = {
       ageMin: 7,
       ageMax: 12,
       gender: "male",
-      teacherName: "Ustadh Khalid",
+      facultyName: "Ustadh Khalid",
     },
   ],
 } as any;

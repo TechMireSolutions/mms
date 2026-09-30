@@ -15,8 +15,6 @@ export type FacultyLookupKind = (typeof FACULTY_LOOKUP_KINDS)[number];
 export const FACULTY_LOOKUP_LEGACY_COLLECTION_KEYS = {
   facultyStatuses: 'statuses',
   facultySpecializations: 'specializations',
-  teacherStatuses: 'statuses',
-  teacherSpecializations: 'specializations',
 } as const satisfies Record<string, FacultyLookupKind>;
 
 export type FacultyLookupLegacyCollectionKey = keyof typeof FACULTY_LOOKUP_LEGACY_COLLECTION_KEYS;
@@ -78,20 +76,5 @@ export function emptyFacultyLookupsMap(): FacultyLookupsMap {
   };
 }
 
-/* ========================================================================= */
-/*                    BACKWARD COMPATIBILITY ALIASES                        */
-/* ========================================================================= */
 
-export const TEACHER_LOOKUP_KINDS = FACULTY_LOOKUP_KINDS;
-export type TeacherLookupKind = FacultyLookupKind;
-export const TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS = FACULTY_LOOKUP_LEGACY_COLLECTION_KEYS;
-export type TeacherLookupLegacyCollectionKey = FacultyLookupLegacyCollectionKey;
-export const teacherLookupKindSchema = facultyLookupKindSchema;
-export const teacherLookupsMapSchema = facultyLookupsMapSchema;
-export type TeacherLookupsMap = FacultyLookupsMap;
-export const teacherLookupKindParamsSchema = facultyLookupKindParamsSchema;
-export const isTeacherLookupKind = isFacultyLookupKind;
-export const isTeacherLookupLegacyCollectionKey = isFacultyLookupLegacyCollectionKey;
-export const defaultTeacherLookupItems = defaultFacultyLookupItems;
-export const emptyTeacherLookupsMap = emptyFacultyLookupsMap;
 

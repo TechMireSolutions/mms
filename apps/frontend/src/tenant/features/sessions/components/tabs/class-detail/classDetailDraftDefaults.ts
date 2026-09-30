@@ -18,8 +18,6 @@ export const EMPTY_CLASS: Class = {
   status: 'active',
   facultyId: '',
   facultyName: '',
-  teacherId: '',
-  teacherName: '',
   room: '',
   fees: [],
   schedules: [],

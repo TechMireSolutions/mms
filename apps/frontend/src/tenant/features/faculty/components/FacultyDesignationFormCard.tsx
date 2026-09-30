@@ -1,6 +1,7 @@
 import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { Field } from '@/components/ui/FormPrimitives';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
@@ -72,22 +73,22 @@ export function FacultyDesignationFormCard({
           }
           required
         >
-          <Input
+          <DatePicker
             id="des-form-start"
-            type="date"
+            name="startsOn"
             value={form.startsOn}
             min={mode === 'transition' ? minTransitionDate : undefined}
-            onChange={(e) => onPatchForm({ startsOn: e.target.value })}
+            onChange={(dateStr) => onPatchForm({ startsOn: dateStr })}
           />
         </Field>
         {mode !== 'transition' && (
           <Field id="des-form-end" label={t('faculty.designations.endsOn')}>
-            <Input
+            <DatePicker
               id="des-form-end"
-              type="date"
+              name="endsOn"
               value={form.endsOn}
               min={form.startsOn || undefined}
-              onChange={(e) => onPatchForm({ endsOn: e.target.value })}
+              onChange={(dateStr) => onPatchForm({ endsOn: dateStr })}
             />
           </Field>
         )}

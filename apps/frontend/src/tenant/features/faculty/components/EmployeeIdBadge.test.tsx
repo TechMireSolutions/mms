@@ -13,7 +13,7 @@ describe("EmployeeIdBadge Component", () => {
   it("renders Employee ID pill badge when employeeId is provided", () => {
     const html = renderToStaticMarkup(<EmployeeIdBadge employeeId="EMP-500" />);
 
-    expect(html).toContain("teachers.employeeIdPrefix: EMP-500");
+    expect(html).toContain("faculty.employeeIdPrefix: EMP-500");
   });
 
   it("returns null when employeeId is null or empty", () => {

@@ -43,8 +43,6 @@ const mockSession: Session = {
       status: "active",
       facultyId: "t-1",
       facultyName: "Sheikh Ahmad",
-      teacherId: "t-1",
-      teacherName: "Sheikh Ahmad",
       fees: [],
       schedules: [],
       discounts: [],

@@ -1,16 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { apiContract } from '@/lib/api';
-import {
-  facultyWidgetQueryFromWidget,
-  teachersWidgetQueryFromWidget,
-} from '@mms/shared';
+import { facultyWidgetQueryFromWidget } from '@mms/shared';
 import {
   FACULTY_WIDGET_AGGREGATES_QUERY_KEY,
   type FacultyWidgetAggregateWidgetInput,
 } from '@/tenant/features/faculty/hooks/facultyQueryKeys';
-
-const toWidgetQuery = facultyWidgetQueryFromWidget || teachersWidgetQueryFromWidget;
 
 export function useFacultyWidgetAggregates(
   widgets: FacultyWidgetAggregateWidgetInput[],
@@ -20,8 +15,8 @@ export function useFacultyWidgetAggregates(
   const enabled = options?.enabled ?? true;
 
   const queries = widgets
-    .filter((widget) => widget.collection === 'teachers' || widget.collection === 'faculty')
-    .map((widget) => toWidgetQuery(widget));
+    .filter((widget) => widget.collection === 'faculty')
+    .map((widget) => facultyWidgetQueryFromWidget(widget));
 
   const querySignature = JSON.stringify(
     [...queries]
@@ -37,8 +32,11 @@ export function useFacultyWidgetAggregates(
 
   const query = useQuery({
     queryKey: [...FACULTY_WIDGET_AGGREGATES_QUERY_KEY, querySignature] as const,
-    queryFn: async () => {
-      const res = await apiContract.faculty.widgetAggregates({ body: { widgets: queries } });
+    queryFn: async ({ signal }) => {
+      const res = await apiContract.faculty.widgetAggregates({
+        body: { widgets: queries },
+        fetchOptions: { signal },
+      });
       return (res.body as { results?: Record<string, { value?: number; totalCount?: number; chartData?: Array<{ name: string; value: number }> }> } | null)?.results ?? {};
     },
     enabled: isAuthenticated && enabled && queries.length > 0,
@@ -47,5 +45,3 @@ export function useFacultyWidgetAggregates(
 
   return { ...query, data: query.data ?? {} };
 }
-
-export const useTeachersWidgetAggregates = useFacultyWidgetAggregates;

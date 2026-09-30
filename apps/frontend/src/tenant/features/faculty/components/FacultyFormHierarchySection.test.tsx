@@ -13,7 +13,7 @@ describe("FacultyFormHierarchySection", () => {
   it("returns null when hierarchyRank and reportingFacultyId are disabled", () => {
     const html = renderToStaticMarkup(
       <FacultyFormHierarchySection
-        teacherDraft={{}}
+        facultyDraft={{}}
         errors={{}}
         isFieldEnabled={() => false}
         isFieldRequired={() => false}
@@ -27,7 +27,7 @@ describe("FacultyFormHierarchySection", () => {
   it("renders rank selector and supervisor options", () => {
     const html = renderToStaticMarkup(
       <FacultyFormHierarchySection
-        teacherDraft={{
+        facultyDraft={{
           hierarchyRank: 3,
           reportingFacultyId: "fac-sup",
         }}
@@ -58,7 +58,7 @@ describe("FacultyFormHierarchySection", () => {
   it("shows top level notice and disables supervisor select when hierarchyRank is 1", () => {
     const html = renderToStaticMarkup(
       <FacultyFormHierarchySection
-        teacherDraft={{
+        facultyDraft={{
           hierarchyRank: 1,
         }}
         errors={{}}

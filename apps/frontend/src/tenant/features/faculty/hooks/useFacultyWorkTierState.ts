@@ -1,8 +1,9 @@
+import { useMemo } from "react";
 import {
   FACULTY_MODULE_MANIFEST,
   type FacultyMember,
   type FacultySortField,
-  type TeachersQuickFilter,
+  type FacultyQuickFilter,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { useFacultyContractList } from "@/tenant/features/faculty/hooks/useFacultyTsrHooks";
@@ -11,7 +12,7 @@ import type { useFacultyColumnLayout } from "@/tenant/features/faculty/hooks/use
 import {
   resolveFacultyExportColumns,
   useFacultyExportActions,
-  type UseTeachersExportActionsOptions,
+  type UseFacultyExportActionsOptions,
 } from "@/tenant/features/faculty/hooks/useFacultyExportActions";
 
 export interface UseFacultyWorkTierStateInput {
@@ -21,7 +22,7 @@ export interface UseFacultyWorkTierStateInput {
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
-  quickFilter: TeachersQuickFilter;
+  quickFilter: FacultyQuickFilter;
   sortField: FacultySortField;
   sortDir: "asc" | "desc";
   showDeleted: boolean;
@@ -29,7 +30,7 @@ export interface UseFacultyWorkTierStateInput {
   canExport: boolean;
   hasActiveFilters: boolean;
   selectedIds: string[];
-  logExportAudit: UseTeachersExportActionsOptions["logExportAudit"];
+  logExportAudit: UseFacultyExportActionsOptions["logExportAudit"];
   t: TranslationFunction;
 }
 
@@ -51,10 +52,14 @@ export function useFacultyWorkTierState({
   logExportAudit,
   t,
 }: UseFacultyWorkTierStateInput) {
-  const exportColumns = resolveFacultyExportColumns(
-    columnLayout.columnRegistry,
-    columnLayout.isColumnVisible,
-    t,
+  const exportColumns = useMemo(
+    () =>
+      resolveFacultyExportColumns(
+        columnLayout.columnRegistry,
+        columnLayout.isColumnVisible,
+        t,
+      ),
+    [columnLayout.columnRegistry, columnLayout.isColumnVisible, t],
   );
 
   const { handleExportCSV, handleBulkExport } = useFacultyExportActions({
@@ -92,8 +97,7 @@ export function useFacultyWorkTierState({
     useServerWork,
   );
 
-  const workFaculty = (workPageQuery.data?.body?.faculty ?? workPageQuery.data?.body?.teachers ?? []) as FacultyMember[];
-  const workTeachers = workFaculty;
+  const workFaculty = (workPageQuery.data?.body?.faculty ?? []) as FacultyMember[];
   const shownCount = workPageQuery.data?.body?.total ?? workFaculty.length;
   const isWorkError = workPageQuery.isError || (workPageQuery.data != null && workPageQuery.data.status !== 200);
   const workPageData = workPageQuery.data?.status === 200 ? workPageQuery.data.body : undefined;
@@ -102,7 +106,6 @@ export function useFacultyWorkTierState({
     useServerWork,
     workPageQuery,
     workFaculty,
-    workTeachers,
     shownCount,
     isWorkError,
     workPageData,

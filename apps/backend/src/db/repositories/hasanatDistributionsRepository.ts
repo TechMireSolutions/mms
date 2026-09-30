@@ -23,11 +23,7 @@ export function distributionRowToRecord(row: DistRow): Distribution {
   };
 
   if (row.recipientStudentId) dist.recipientStudentId = row.recipientStudentId;
-  const facultyId = (row as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientFacultyId || (row as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientTeacherId;
-  if (facultyId) {
-    dist.recipientFacultyId = facultyId;
-    dist.recipientTeacherId = facultyId;
-  }
+  if (row.recipientFacultyId) dist.recipientFacultyId = row.recipientFacultyId;
   if (row.issuedByUserId) dist.issuedByUserId = row.issuedByUserId;
   if (row.issuedBy) dist.issuedBy = row.issuedBy;
 
@@ -197,7 +193,7 @@ export async function saveDistribution(tenant: string, record: Distribution): Pr
         denominationName: record.denominationName ?? '',
         recipientType: record.recipientType ?? 'student',
         recipientStudentId: record.recipientStudentId ?? null,
-        recipientFacultyId: (record as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientFacultyId ?? (record as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientTeacherId ?? null,
+        recipientFacultyId: record.recipientFacultyId ?? null,
         recipientName: record.recipientName ?? '',
         recipientClass: record.recipientClass ?? '',
         quantity: record.quantity ?? 1,
@@ -219,7 +215,7 @@ export async function saveDistribution(tenant: string, record: Distribution): Pr
           denominationName: record.denominationName ?? '',
           recipientType: record.recipientType ?? 'student',
           recipientStudentId: record.recipientStudentId ?? null,
-          recipientFacultyId: (record as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientFacultyId ?? (record as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientTeacherId ?? null,
+          recipientFacultyId: record.recipientFacultyId ?? null,
           recipientName: record.recipientName ?? '',
           recipientClass: record.recipientClass ?? '',
           quantity: record.quantity ?? 1,
@@ -260,7 +256,7 @@ export async function bulkSaveDistributions(tenant: string, records: Distributio
           denominationName: r.denominationName ?? '',
           recipientType: r.recipientType ?? 'student',
           recipientStudentId: r.recipientStudentId ?? null,
-          recipientFacultyId: (r as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientFacultyId ?? (r as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientTeacherId ?? null,
+          recipientFacultyId: r.recipientFacultyId ?? null,
           recipientName: r.recipientName ?? '',
           recipientClass: r.recipientClass ?? '',
           quantity: r.quantity ?? 1,
@@ -322,7 +318,7 @@ export async function replaceDistributionsForWorkspace(tenant: string, records: 
           denominationName: r.denominationName ?? '',
           recipientType: r.recipientType ?? 'student',
           recipientStudentId: r.recipientStudentId ?? null,
-          recipientFacultyId: (r as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientFacultyId ?? (r as { recipientFacultyId?: string; recipientTeacherId?: string }).recipientTeacherId ?? null,
+          recipientFacultyId: r.recipientFacultyId ?? null,
           recipientName: r.recipientName ?? '',
           recipientClass: r.recipientClass ?? '',
           quantity: r.quantity ?? 1,

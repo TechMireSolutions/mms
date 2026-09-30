@@ -1,41 +1,41 @@
 /**
- * @file teacherFormCustomFields.ts
- * @description Helpers for Teachers form custom (non-seed) fields and field lookups.
+ * @file facultyFormCustomFields.ts
+ * @description Helpers for Faculty form custom (non-seed) fields and field lookups.
  */
-import { INITIAL_TEACHERS_FIELD_SEED } from './moduleFieldSetupPersons.js';
+import { INITIAL_FACULTY_FIELD_SEED } from './moduleFieldSetupPersons.js';
 import type { FieldDefinition } from './contactFieldSchemaTypes.js';
 import { getFlatFieldsConfig } from './moduleFieldConfigUtils.js';
 import { createFormCustomFieldHelpers } from './createFormCustomFieldHelpers.js';
 
-const helpers = createFormCustomFieldHelpers(INITIAL_TEACHERS_FIELD_SEED);
+const helpers = createFormCustomFieldHelpers(INITIAL_FACULTY_FIELD_SEED);
 
 /**
- * Returns keys owned by static teacher form chrome ({@link INITIAL_TEACHERS_FIELD_SEED}).
+ * Returns keys owned by static faculty form chrome ({@link INITIAL_FACULTY_FIELD_SEED}).
  */
-export function listTeacherSystemFormFieldKeys(): ReadonlySet<string> {
+export function listFacultySystemFormFieldKeys(): ReadonlySet<string> {
   return helpers.listSystemFormFieldKeys();
 }
 
 /**
- * Deep-clone {@link INITIAL_TEACHERS_FIELD_SEED} for defaults and Setup overlays.
+ * Deep-clone {@link INITIAL_FACULTY_FIELD_SEED} for defaults and Setup overlays.
  */
-export function cloneTeacherFieldSeed(): Record<string, FieldDefinition[]> {
+export function cloneFacultyFieldSeed(): Record<string, FieldDefinition[]> {
   const next: Record<string, FieldDefinition[]> = {};
-  for (const [tabId, fields] of Object.entries(INITIAL_TEACHERS_FIELD_SEED)) {
+  for (const [tabId, fields] of Object.entries(INITIAL_FACULTY_FIELD_SEED)) {
     next[tabId] = fields.map((field) => ({ ...field }));
   }
   return next;
 }
 
 /**
- * Normalize Teachers `settings.fields` to a tabbed Setup Fields map for column sync.
- * Flat legacy `{ fieldId: { enabled } }` overlays onto {@link INITIAL_TEACHERS_FIELD_SEED}.
+ * Normalize Faculty `settings.fields` to a tabbed Setup Fields map for column sync.
+ * Flat legacy `{ fieldId: { enabled } }` overlays onto {@link INITIAL_FACULTY_FIELD_SEED}.
  */
-export function resolveTeacherFieldsMapForColumnSync(
+export function resolveFacultyFieldsMapForColumnSync(
   fields: Record<string, unknown> | undefined,
 ): Readonly<Record<string, FieldDefinition[]>> {
   if (!fields || typeof fields !== 'object') {
-    return cloneTeacherFieldSeed();
+    return cloneFacultyFieldSeed();
   }
   const entries = Object.entries(fields);
   if (entries.length > 0 && entries.every(([, value]) => Array.isArray(value))) {
@@ -43,7 +43,7 @@ export function resolveTeacherFieldsMapForColumnSync(
   }
 
   const flat = getFlatFieldsConfig(fields);
-  const tabbed = cloneTeacherFieldSeed();
+  const tabbed = cloneFacultyFieldSeed();
   for (const tabFields of Object.values(tabbed)) {
     for (let index = 0; index < tabFields.length; index += 1) {
       const field = tabFields[index];
@@ -60,11 +60,11 @@ export function resolveTeacherFieldsMapForColumnSync(
 }
 
 /**
- * Returns enabled non-seed fields for the Teachers form.
+ * Returns enabled non-seed fields for the Faculty form.
  * When `tabId` is set, only fields stored under that config tab are returned.
  * When omitted, returns enabled non-seed fields from every tab.
  */
-export function listEnabledCustomTeacherFormFields<T extends FieldDefinition>(
+export function listEnabledCustomFacultyFormFields<T extends FieldDefinition>(
   fields: Record<string, ReadonlyArray<T>>,
   tabId?: string,
 ): ReadonlyArray<T> {
@@ -74,24 +74,24 @@ export function listEnabledCustomTeacherFormFields<T extends FieldDefinition>(
 /**
  * Returns true when `fieldId` is part of the static form seed for `tabId`.
  */
-export function isTeacherSystemFormField(tabId: string, fieldId: string): boolean {
+export function isFacultySystemFormField(tabId: string, fieldId: string): boolean {
   return helpers.isSystemFormField(tabId, fieldId);
 }
 
 /**
- * Find a field definition by key across a tabbed Teachers fields map.
+ * Find a field definition by key across a tabbed Faculty fields map.
  */
-export function findTeacherFieldInMap(
+export function findFacultyFieldInMap(
   fields: Record<string, FieldDefinition[]>,
   fieldKey: string,
 ): FieldDefinition | undefined {
-  return findTeacherFieldLocation(fields, fieldKey)?.field;
+  return findFacultyFieldLocation(fields, fieldKey)?.field;
 }
 
 /**
- * Find tab id + field definition by key across a tabbed Teachers fields map.
+ * Find tab id + field definition by key across a tabbed Faculty fields map.
  */
-export function findTeacherFieldLocation(
+export function findFacultyFieldLocation(
   fields: Record<string, FieldDefinition[]>,
   fieldKey: string,
 ): { tabId: string; field: FieldDefinition } | null {
@@ -103,22 +103,12 @@ export function findTeacherFieldLocation(
 }
 
 /**
- * Find a field definition under a specific Teachers Setup tab.
+ * Find a field definition under a specific Faculty Setup tab.
  */
-export function findTeacherTabField(
+export function findFacultyTabField(
   fields: Record<string, FieldDefinition[]>,
   tabId: string,
   fieldKey: string,
 ): FieldDefinition | undefined {
   return (fields[tabId] ?? []).find((field) => field.key === fieldKey);
 }
-
-
-export const listFacultySystemFormFieldKeys = listTeacherSystemFormFieldKeys;
-export const cloneFacultyFieldSeed = cloneTeacherFieldSeed;
-export const resolveFacultyFieldsMapForColumnSync = resolveTeacherFieldsMapForColumnSync;
-export const listEnabledCustomFacultyFormFields = listEnabledCustomTeacherFormFields;
-export const isFacultySystemFormField = isTeacherSystemFormField;
-export const findFacultyFieldInMap = findTeacherFieldInMap;
-export const findFacultyFieldLocation = findTeacherFieldLocation;
-export const findFacultyTabField = findTeacherTabField;

@@ -17,7 +17,7 @@ vi.mock("@/tenant/features/faculty/components/useFacultyFormController", () => {
     language: "en",
     saving: false,
     errors: mockControllerState.errors,
-    teacherDraft: { contactId: "cnt-1", employeeId: "EMP-01", status: "active" },
+    facultyDraft: { contactId: "cnt-1", employeeId: "EMP-01", status: "active" },
     isDirty: false,
     defaultSpecialization: "Tajweed",
     specializationOptions: [],
@@ -28,9 +28,9 @@ vi.mock("@/tenant/features/faculty/components/useFacultyFormController", () => {
     requireContactLink: false,
     fieldsMap: {},
     linkedContact: { id: "cnt-1", name: "Ustadh Umar" },
-    linkedTeacherContactIds: [],
+    linkedFacultyContactIds: [],
     idPrefix: "FAC-",
-    formInstanceId: "test-tch-inst",
+    formInstanceId: "test-fac-inst",
     isFieldEnabled: mockControllerState.isFieldEnabled,
     isFieldRequired: () => false,
     getFieldError: () => undefined,
@@ -45,7 +45,6 @@ vi.mock("@/tenant/features/faculty/components/useFacultyFormController", () => {
   });
   return {
     useFacultyFormController: getController,
-    useTeacherFormController: getController,
   };
 });
 
@@ -81,11 +80,6 @@ vi.mock("@/components/ui/FormModal", () => ({
 vi.mock("@/tenant/features/faculty/components/FacultyFormTabContent", () => ({
   FacultyFormTabContent: ({ activeTab }: { activeTab?: string }) => (
     <div data-testid="faculty-form-tab-content" data-current-tab={activeTab}>
-      Faculty Tab Content: {activeTab}
-    </div>
-  ),
-  TeacherFormTabContent: ({ activeTab }: { activeTab?: string }) => (
-    <div data-testid="teacher-form-tab-content" data-current-tab={activeTab}>
       Faculty Tab Content: {activeTab}
     </div>
   ),

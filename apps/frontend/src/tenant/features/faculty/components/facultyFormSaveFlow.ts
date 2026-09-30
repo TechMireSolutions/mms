@@ -1,84 +1,83 @@
 import { notify } from "@/lib/notify";
 import {
-  type TeachersSettings,
-  type Teacher,
-  type TeacherDuplicateReason,
+  type FacultySettings,
+  type FacultyMember,
+  type FacultyDuplicateReason,
   type Contact,
   type ValidationError,
   type FieldDefinition,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import {
-  checkTeacherFormDuplicate,
+  checkFacultyFormDuplicate,
   DUPLICATE_ERROR_KEYS,
-  focusTeacherValidationField,
-  teacherValidationErrorsByField,
-  validateTeacherDraft,
+  focusFacultyValidationField,
+  facultyValidationErrorsByField,
+  validateFacultyDraft,
 } from "@/tenant/features/faculty/components/facultyFormValidation";
 import type { FacultyUserAccountDraft } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 import {
-  confirmPendingTeacherSave,
-  notifyTeacherSaveFailed,
+  confirmPendingFacultySave,
+  notifyFacultySaveFailed,
   syncUserAccount,
 } from "@/tenant/features/faculty/components/facultyFormUserSync";
 import {
-  buildTeacherSavePayload,
+  buildFacultySavePayload,
   validateUserDraftRequirements,
   isEmployeeIdConflictError,
 } from "@/tenant/features/faculty/components/facultyFormSavePayload";
 
-export { focusTeacherValidationField, confirmPendingTeacherSave };
+export { focusFacultyValidationField, confirmPendingFacultySave };
 
-export interface TeacherSaveFlowInput {
-  teacherDraft: Partial<Teacher>;
-  teacher?: Teacher;
+export interface FacultySaveFlowInput {
+  facultyDraft: Partial<FacultyMember>;
+  faculty?: FacultyMember;
   autoGenerateId: boolean;
   nextEmployeeId?: string;
   formInstanceId: string;
   linkedContact?: Contact | null;
-  settings: TeachersSettings;
+  settings: FacultySettings;
   enabledTabs: Set<string>;
   fields: Record<string, FieldDefinition[]>;
   language: string;
   t: TranslationFunction;
-  onSave: (teacher: Teacher) => void | Promise<void>;
+  onSave: (faculty: FacultyMember) => void | Promise<void>;
   onClose: () => void;
   keepOpen?: boolean;
-  onBaselineReset?: (payload: Partial<Teacher>) => void;
+  onBaselineReset?: (payload: Partial<FacultyMember>) => void;
   setErrors: (errors: Record<string, string>) => void;
   setSaving: (saving: boolean) => void;
-  setPendingSaveData: (data: Partial<Teacher> | null) => void;
-  setTypedDuplicateReason: (reason: TeacherDuplicateReason | null) => void;
+  setPendingSaveData: (data: Partial<FacultyMember> | null) => void;
+  setTypedDuplicateReason: (reason: FacultyDuplicateReason | null) => void;
   setDuplicateConfirmOpen: (open: boolean) => void;
   userAccountDraft?: FacultyUserAccountDraft;
   linkedUser?: { id: string; role?: string } | null;
   onUserInvalidate?: () => void;
 }
 
-
-/** Validate + persist teacher form draft; surfaces field errors and toasts on failure. */
-export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<boolean> {
+/** Validate + persist faculty form draft; surfaces field errors and toasts on failure. */
+export async function runFacultySaveFlow(input: FacultySaveFlowInput): Promise<boolean> {
   input.setErrors({});
-  const payload = buildTeacherSavePayload(input);
+  const payload = buildFacultySavePayload(input);
 
-  const validationErrors: ValidationError[] | null = validateTeacherDraft(payload as Record<string, unknown>, {
+  const validationErrors: ValidationError[] | null = validateFacultyDraft(payload as Record<string, unknown>, {
     settings: input.settings,
     enabledTabs: input.enabledTabs,
     fields: input.fields,
     language: input.language,
   });
   if (validationErrors) {
-    input.setErrors(teacherValidationErrorsByField(validationErrors));
+    input.setErrors(facultyValidationErrorsByField(validationErrors));
     const firstField = validationErrors[0]?.fieldId;
-    if (firstField) focusTeacherValidationField(input.formInstanceId, firstField);
+    if (firstField) focusFacultyValidationField(input.formInstanceId, firstField);
     notify.error(input.t("common.formPleaseFixErrors"));
     return false;
   }
 
-  const allowedDesignationRoles = input.teacherDraft.designationAssignableRoles;
+  const allowedDesignationRoles = input.facultyDraft.designationAssignableRoles;
   if (
     input.userAccountDraft?.enabled
-    && input.teacherDraft.designationId
+    && input.facultyDraft.designationId
     && !(allowedDesignationRoles ?? []).includes(input.userAccountDraft.role)
   ) {
     input.setErrors({ "user.role": input.t("faculty.designations.roleNotAllowed") });
@@ -90,16 +89,16 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
 
   input.setSaving(true);
   try {
-    const duplicateReason = await checkTeacherFormDuplicate({
-      teacherId: input.teacher?.id ? String(input.teacher.id) : undefined,
-      contactId: String(input.teacherDraft.contactId || ""),
+    const duplicateReason = await checkFacultyFormDuplicate({
+      facultyId: input.faculty?.id ? String(input.faculty.id) : undefined,
+      contactId: String(input.facultyDraft.contactId || ""),
       linkedContact: input.linkedContact,
       employeeId: typeof payload.employeeId === "string" ? payload.employeeId : undefined,
     });
 
     if (duplicateReason === "employeeId") {
       input.setErrors({ employeeId: input.t(DUPLICATE_ERROR_KEYS.employeeId) });
-      focusTeacherValidationField(input.formInstanceId, "employeeId");
+      focusFacultyValidationField(input.formInstanceId, "employeeId");
       notify.error(input.t(DUPLICATE_ERROR_KEYS.employeeId));
       return false;
     }
@@ -122,24 +121,21 @@ export async function runTeacherSaveFlow(input: TeacherSaveFlowInput): Promise<b
     });
     if (!userOk) return false;
 
-    await input.onSave(payload as Teacher);
+    await input.onSave(payload as FacultyMember);
     input.onBaselineReset?.(payload);
     if (!input.keepOpen) input.onClose();
     return true;
   } catch (err: unknown) {
     if (isEmployeeIdConflictError(err)) {
       input.setErrors({ employeeId: input.t(DUPLICATE_ERROR_KEYS.employeeId) });
-      focusTeacherValidationField(input.formInstanceId, "employeeId");
+      focusFacultyValidationField(input.formInstanceId, "employeeId");
       notify.error(input.t(DUPLICATE_ERROR_KEYS.employeeId));
       return false;
     }
 
-    notifyTeacherSaveFailed(input.t, err, "teachers.form_save");
+    notifyFacultySaveFailed(input.t, err, "faculty.form_save");
     return false;
   } finally {
     input.setSaving(false);
   }
 }
-
-export const runFacultySaveFlow = runTeacherSaveFlow;
-

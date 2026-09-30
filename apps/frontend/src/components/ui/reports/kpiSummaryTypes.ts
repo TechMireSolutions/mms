@@ -2,7 +2,7 @@ import type { LucideIcon } from 'lucide-react';
 import type {
   ContactsReportAnalyticsSnapshot,
   StudentsCommandMetricsSnapshot,
-  TeachersCommandMetricsSnapshot,
+  FacultyCommandMetricsSnapshot,
 } from '@mms/shared';
 
 export interface KPIItem {
@@ -28,7 +28,7 @@ export interface KPISummaryProps {
 
 export type ContactKPIAnalytics = ContactsReportAnalyticsSnapshot;
 export type EntityKPIMetrics = StudentsCommandMetricsSnapshot;
-export type TeacherKPIMetrics = TeachersCommandMetricsSnapshot;
+export type FacultyKPIMetrics = FacultyCommandMetricsSnapshot;
 
 export interface AggregateCardValue {
   value: number;

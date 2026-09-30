@@ -7,42 +7,42 @@ import { workTableStickyCellBg } from "@/components/ui/tableWorkSticky";
 import { TableCell } from "@/components/ui/table";
 import { UserAvatar } from "@/components/ui/UserAvatar";
 import { cn } from "@/lib/utils";
-import { TeachersListRowActions } from "@/tenant/features/faculty/components/FacultyListRowActions";
-import type { Teacher } from "@mms/shared";
-import type { TeacherSortField } from "@/tenant/features/faculty/components/facultyListTypes";
-import type { TeacherListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
+import { FacultyListRowActions } from "@/tenant/features/faculty/components/FacultyListRowActions";
+import type { Faculty } from "@mms/shared";
+import type { FacultySortField } from "@/tenant/features/faculty/components/facultyListTypes";
+import type { FacultyListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import {
-  teacherWorkColumnCellClass,
+  facultyWorkColumnCellClass,
 } from "@/tenant/features/faculty/components/facultyListVisibleColumns";
-import { teacherRowIdentity } from "@/tenant/features/faculty/components/facultyFieldDisplay";
-import { renderTeacherWorkColumnValue } from "@/tenant/features/faculty/components/facultyWorkColumnCell";
+import { facultyRowIdentity } from "@/tenant/features/faculty/components/facultyFieldDisplay";
+import { renderFacultyWorkColumnValue } from "@/tenant/features/faculty/components/facultyWorkColumnCell";
 
-export interface TeachersListDesktopTableRowProps {
-  teacher: Teacher;
+export interface FacultyListDesktopTableRowProps {
+  faculty: Faculty;
   rowIndex: number;
   selectedSet: ReadonlySet<string>;
-  visibleColumns: { key: TeacherSortField | string; label: string }[];
+  visibleColumns: { key: FacultySortField | string; label: string }[];
   showDeleted?: boolean;
   canWrite?: boolean;
   canDelete?: boolean;
-  statusConfig: TeacherListContentProps["statusConfig"];
-  customFieldsById?: TeacherListContentProps["customFieldsById"];
+  statusConfig: FacultyListContentProps["statusConfig"];
+  customFieldsById?: FacultyListContentProps["customFieldsById"];
   emptyDash: string;
   rowMotion: (delay: number) => Record<string, unknown>;
   t: TranslationFunction;
   onSelectOne: (id: string) => void;
-  onView: (teacher: Teacher) => void;
-  onEdit: (teacher: Teacher) => void;
+  onView: (faculty: Faculty) => void;
+  onEdit: (faculty: Faculty) => void;
   onRequestDelete: (id: string) => void;
   onRestore?: (id: string) => void;
-  onSms?: (teachers: Teacher[]) => void;
-  onWhatsApp?: (teachers: Teacher[]) => void;
-  onEmail?: (teachers: Teacher[]) => void;
+  onSms?: (faculty: Faculty[]) => void;
+  onWhatsApp?: (faculty: Faculty[]) => void;
+  onEmail?: (faculty: Faculty[]) => void;
 }
 
-export const TeachersListDesktopTableRow = React.memo(function TeachersListDesktopTableRow({
-  teacher,
+export const FacultyListDesktopTableRow = React.memo(function FacultyListDesktopTableRow({
+  faculty,
   rowIndex,
   selectedSet,
   visibleColumns,
@@ -62,19 +62,19 @@ export const TeachersListDesktopTableRow = React.memo(function TeachersListDeskt
   onSms,
   onWhatsApp,
   onEmail,
-}: TeachersListDesktopTableRowProps): React.JSX.Element {
-  const { teacherIdStr, displayName, isSelected } = teacherRowIdentity(teacher, selectedSet, t);
+}: FacultyListDesktopTableRowProps): React.JSX.Element {
+  const { facultyIdStr, displayName, isSelected } = facultyRowIdentity(faculty, selectedSet, t);
 
   return (
     <motion.tr
-      key={teacher.id}
+      key={faculty.id}
       {...rowMotion(Math.min(rowIndex * 0.03, 0.2))}
       className={cn("hover:bg-muted/20 transition-colors group", isSelected && "bg-primary/5")}
     >
       <ModuleTableSelectionCell
         checked={isSelected}
-        onCheckedChange={() => onSelectOne(teacherIdStr)}
-        ariaLabel={t("faculty.table.selectTeacher", { name: displayName })}
+        onCheckedChange={() => onSelectOne(facultyIdStr)}
+        ariaLabel={t("faculty.table.selectFaculty", { name: displayName })}
       />
       {visibleColumns.map((col) => (
         <TableCell
@@ -84,16 +84,16 @@ export const TeachersListDesktopTableRow = React.memo(function TeachersListDeskt
             col.key === "name" &&
               "sticky start-12 z-elevated transition-colors border-e border-border/30",
             col.key === "name" && workTableStickyCellBg(isSelected),
-            col.key !== "name" && teacherWorkColumnCellClass(col.key),
+            col.key !== "name" && facultyWorkColumnCellClass(col.key),
           )}
         >
           {col.key === "name" ? (
             <div className="flex min-w-0 items-center gap-3">
               <UserAvatar
-                id={teacher.id}
+                id={faculty.id}
                 name={displayName}
-                avatar={teacher.avatar}
-                gender={teacher.gender}
+                avatar={faculty.avatar}
+                gender={faculty.gender}
                 size="md"
                 className="shrink-0"
               />
@@ -101,26 +101,26 @@ export const TeachersListDesktopTableRow = React.memo(function TeachersListDeskt
                 <Button
                   type="button"
                   variant="ghost"
-                  onClick={() => onView(teacher)}
+                  onClick={() => onView(faculty)}
                   className="min-h-11 h-auto max-w-full p-0 text-sm font-semibold text-foreground hover:text-primary transition-colors text-start justify-start hover:bg-transparent"
                   title={displayName}
                 >
                   <span className="block truncate">{displayName}</span>
                 </Button>
-                {teacher.employeeId ? (
-                  <p className="text-xs text-muted-foreground truncate" title={teacher.employeeId}>
-                    {teacher.employeeId}
+                {faculty.employeeId ? (
+                  <p className="text-xs text-muted-foreground truncate" title={faculty.employeeId}>
+                    {faculty.employeeId}
                   </p>
                 ) : null}
-                {showDeleted && teacher.deletionReason ? (
-                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2" title={teacher.deletionReason}>
-                    {t("faculty.deletionReasonLabel")}: {teacher.deletionReason}
+                {showDeleted && faculty.deletionReason ? (
+                  <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2" title={faculty.deletionReason}>
+                    {t("faculty.deletionReasonLabel")}: {faculty.deletionReason}
                   </p>
                 ) : null}
               </div>
             </div>
           ) : (
-            renderTeacherWorkColumnValue(teacher, col.key, {
+            renderFacultyWorkColumnValue(faculty, col.key, {
               t,
               statusConfig,
               customFieldsById,
@@ -132,9 +132,9 @@ export const TeachersListDesktopTableRow = React.memo(function TeachersListDeskt
         </TableCell>
       ))}
       <TableCell className="px-4 py-3">
-        <TeachersListRowActions
-          teacher={teacher}
-          teacherId={teacherIdStr}
+        <FacultyListRowActions
+          faculty={faculty}
+          facultyId={facultyIdStr}
           showDeleted={showDeleted}
           canWrite={canWrite}
           canDelete={canDelete}
@@ -152,6 +152,4 @@ export const TeachersListDesktopTableRow = React.memo(function TeachersListDeskt
   );
 });
 
-export type FacultyListDesktopTableRowProps = TeachersListDesktopTableRowProps;
-export const FacultyListDesktopTableRow = TeachersListDesktopTableRow;
 

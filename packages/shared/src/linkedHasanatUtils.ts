@@ -10,7 +10,6 @@ export interface HasanatDistributionLike extends Record<string, unknown> {
   recipientType?: string;
   recipientStudentId?: string;
   recipientFacultyId?: string;
-  recipientTeacherId?: string;
   recipientName?: string;
 }
 
@@ -33,16 +32,13 @@ export function normalizeHasanatDistribution<T extends HasanatDistributionLike>(
   if (row.recipientFacultyId) {
     return normalizeIdLinkedName(row, 'recipientFacultyId', 'recipientName');
   }
-  if (row.recipientTeacherId) {
-    return normalizeIdLinkedName(row, 'recipientTeacherId', 'recipientName');
-  }
   return row;
 }
 
 export function hydrateHasanatDistribution<T extends HasanatDistributionLike>(
   row: T,
   students: NamedEntity[] | Map<string, NamedEntity>,
-  teachers: NamedEntity[] | Map<string, NamedEntity>,
+  faculty: NamedEntity[] | Map<string, NamedEntity>,
 ): T {
   if (!row || typeof row !== "object") return row;
   if (row.recipientStudentId) {
@@ -54,10 +50,9 @@ export function hydrateHasanatDistribution<T extends HasanatDistributionLike>(
       recipientName: resolved,
     };
   }
-  const facultyId = row.recipientFacultyId || row.recipientTeacherId;
-  if (facultyId) {
+  if (row.recipientFacultyId) {
     const current = row.recipientName;
-    const resolved = resolveEntityName(facultyId, teachers) || current;
+    const resolved = resolveEntityName(row.recipientFacultyId, faculty) || current;
     if (resolved === current) return row;
     return {
       ...row,
@@ -70,16 +65,16 @@ export function hydrateHasanatDistribution<T extends HasanatDistributionLike>(
 export function hydrateHasanatDistributionList<T extends HasanatDistributionLike>(
   rows: T[],
   students: NamedEntity[] | Map<string, NamedEntity>,
-  teachers: NamedEntity[] | Map<string, NamedEntity>,
+  faculty: NamedEntity[] | Map<string, NamedEntity>,
 ): T[] {
   if (!rows || !Array.isArray(rows)) return [];
   const studentLookup = students instanceof Map
     ? students
     : (students.length > 8 ? createNamedEntityLookupMap(students) : students);
-  const teacherLookup = teachers instanceof Map
-    ? teachers
-    : (teachers.length > 8 ? createNamedEntityLookupMap(teachers) : teachers);
-  return rows.map((r) => hydrateHasanatDistribution(r, studentLookup, teacherLookup));
+  const facultyLookup = faculty instanceof Map
+    ? faculty
+    : (faculty.length > 8 ? createNamedEntityLookupMap(faculty) : faculty);
+  return rows.map((r) => hydrateHasanatDistribution(r, studentLookup, facultyLookup));
 }
 
 export function normalizeHasanatRedemption<T extends Record<string, unknown>>(row: T): T {

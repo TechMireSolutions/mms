@@ -4,21 +4,23 @@ import { FormSelect } from '@/components/ui/FormSelect';
 import { FORM_LABEL, FORM_INPUT_ERROR } from '@/components/ui/formStyles';
 import { FieldErrorMessage, RequiredMark } from '@/components/ui/FormPrimitives';
 import { useTranslation } from '@/hooks/useTranslation';
-import { formatTeacherDisplayName, type Teacher } from '@mms/shared';
+import { formatFacultyDisplayName, type FacultyMember } from '@mms/shared';
 import type { Class } from '@/lib/data/sessionsData';
+
+
 
 interface ClassDetailGeneralTabProps {
   classDraft: Class;
   updateDraft: <K extends keyof Class>(field: K, value: Class[K]) => void;
   errors: Record<string, string>;
-  allTeachers: Teacher[];
+  allFaculty: FacultyMember[];
 }
 
 export function ClassDetailGeneralTab({
   classDraft,
   updateDraft,
   errors,
-  allTeachers,
+  allFaculty,
 }: ClassDetailGeneralTabProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -143,24 +145,22 @@ export function ClassDetailGeneralTab({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="class-teacher">{t('sessions.classes.detail.leadInstructor')}</label>
+          <label className={FORM_LABEL} htmlFor="class-faculty">{t('sessions.classes.detail.leadInstructor')}</label>
           <FormSelect
-            id="class-teacher"
-            name="teacherId"
-            value={classDraft.facultyId || classDraft.teacherId || ''}
+            id="class-faculty"
+            name="facultyId"
+            value={classDraft.facultyId || ''}
             onChange={(val) => {
-              const teacher = allTeachers.find((t) => String(t.id) === val);
-              const displayName = teacher ? formatTeacherDisplayName(teacher) : '';
-              updateDraft('teacherId', val);
-              updateDraft('teacherName', displayName);
+              const faculty = allFaculty.find((f) => String(f.id) === val);
+              const displayName = faculty ? formatFacultyDisplayName(faculty) : '';
               updateDraft('facultyId', val);
               updateDraft('facultyName', displayName);
             }}
             options={[
               { value: '', label: t('sessions.classes.unassigned') },
-              ...allTeachers.map((teacher) => ({
-                value: String(teacher.id),
-                label: formatTeacherDisplayName(teacher),
+              ...allFaculty.map((faculty) => ({
+                value: String(faculty.id),
+                label: formatFacultyDisplayName(faculty),
               })),
             ]}
             className="w-full"

@@ -1,4 +1,4 @@
-import { getPrimaryPhone, hasWhatsApp, type Faculty, type Teacher } from "@mms/shared";
+import { getPrimaryPhone, hasWhatsApp, type Faculty } from "@mms/shared";
 import { computeModuleMessagingSelectionTargets } from "@/lib/messaging/computeModuleMessagingSelectionTargets";
 
 export interface FacultySelectionTargets {
@@ -6,19 +6,16 @@ export interface FacultySelectionTargets {
   smsReady: Faculty[];
   emailReady: Faculty[];
 }
-export type TeachersSelectionTargets = FacultySelectionTargets;
 
 /** Pure eligibility for bulk messaging from current-page rows ∩ selected ids. */
 export function computeFacultySelectionTargets({
   selectedIds,
   workFaculty,
-  workTeachers,
 }: {
   selectedIds: string[];
   workFaculty?: Faculty[];
-  workTeachers?: Teacher[];
 }): FacultySelectionTargets {
-  const rows = workFaculty ?? workTeachers ?? [];
+  const rows = workFaculty ?? [];
   return computeModuleMessagingSelectionTargets({
     selectedIds,
     rows,
@@ -27,6 +24,4 @@ export function computeFacultySelectionTargets({
     hasEmail: (member) => Boolean(member.email?.trim()),
   });
 }
-
-export const computeTeachersSelectionTargets = computeFacultySelectionTargets;
 

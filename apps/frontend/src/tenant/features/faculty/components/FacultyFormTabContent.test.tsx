@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TeacherFormTabContent } from "./FacultyFormTabContent";
+import { FacultyFormTabContent } from "./FacultyFormTabContent";
 
 vi.mock("@/components/contactLink/ContactPicker", () => ({
   default: () => <div data-testid="contact-picker">contact-picker</div>,
@@ -18,18 +18,18 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 const defaultProps = {
-  formInstanceId: "inst-tch-1",
-  teacherDraft: {
+  formInstanceId: "inst-fac-1",
+  facultyDraft: {
     employeeId: "EMP-001",
-    notes: "Teacher notes sample",
+    notes: "Faculty notes sample",
   },
   errors: {},
   fields: {},
   defaultSpecialization: "Tajweed",
-  linkedTeacherContactIds: [],
+  linkedFacultyContactIds: [],
   specializationOptions: ["Tajweed", "Hifz"],
   autoGenerateId: false,
-  idPrefix: "TCH-",
+  idPrefix: "FAC-",
   statusOptions: [{ value: "active", label: "Active" }],
   isFieldEnabled: () => true,
   isFieldRequired: () => false,
@@ -37,12 +37,12 @@ const defaultProps = {
   onDraftChange: vi.fn(),
 };
 
-describe("TeacherFormTabContent Component", () => {
+describe("FacultyFormTabContent Component", () => {
   it("renders unified vertical layout with contact, employment, notes, and user account sections without details tab", () => {
     const html = renderToStaticMarkup(
-      <TeacherFormTabContent
+      <FacultyFormTabContent
         {...defaultProps}
-        teacherDraft={{ ...defaultProps.teacherDraft, contactId: "cnt-1" }}
+        facultyDraft={{ ...defaultProps.facultyDraft, contactId: "cnt-1" }}
         linkedContact={{
           id: "cnt-1",
           name: "Ustadh Umar",
@@ -61,16 +61,17 @@ describe("TeacherFormTabContent Component", () => {
     expect(html).toContain("Tajweed");
 
     // Details tab / section is retired
-    expect(html).not.toContain("teachers.form.sectionDetails");
+    expect(html).not.toContain("faculty.form.sectionDetails");
 
     // Employment section
-    expect(html).toContain("teachers.form.sectionEmployment");
+    expect(html).toContain("faculty.form.sectionEmployment");
 
     // Notes section
     expect(html).toContain("faculty.form.notesSection");
-    expect(html).toContain("Teacher notes sample");
+    expect(html).toContain("Faculty notes sample");
 
     // System User Account & RBAC section
     expect(html).toContain("user-account-section");
   });
 });
+

@@ -1,21 +1,21 @@
 import { describe, expect, it } from "vitest";
 import {
-  TEACHERS_TAB_REGISTRY,
-  isTeacherLockedEnabledTab,
-  isTeacherSeedFormTab,
-} from "./moduleFieldSetupPersons.js";
+  FACULTY_TAB_REGISTRY,
+  isFacultyLockedEnabledTab,
+  isFacultySeedFormTab,
+} from "./moduleFieldSetupFaculty.js";
 
-describe("teacher seed / locked tab helpers", () => {
+describe("faculty seed / locked tab helpers", () => {
   it("treats registry keys as seed tabs", () => {
-    expect(isTeacherSeedFormTab("basic")).toBe(true);
-    expect(isTeacherSeedFormTab("Employment")).toBe(true);
-    expect(isTeacherSeedFormTab("custom_foo")).toBe(false);
-    expect(TEACHERS_TAB_REGISTRY.every((tab) => isTeacherSeedFormTab(tab.key))).toBe(true);
+    expect(isFacultySeedFormTab("basic")).toBe(true);
+    expect(isFacultySeedFormTab("Employment")).toBe(true);
+    expect(isFacultySeedFormTab("custom_foo")).toBe(false);
+    expect(FACULTY_TAB_REGISTRY.every((tab) => isFacultySeedFormTab(tab.key))).toBe(true);
   });
 
   it("locks only basic as always-enabled", () => {
-    expect(isTeacherLockedEnabledTab("basic")).toBe(true);
-    expect(isTeacherLockedEnabledTab("Basic")).toBe(true);
-    expect(isTeacherLockedEnabledTab("employment")).toBe(false);
+    expect(isFacultyLockedEnabledTab("basic")).toBe(true);
+    expect(isFacultyLockedEnabledTab("Basic")).toBe(true);
+    expect(isFacultyLockedEnabledTab("employment")).toBe(false);
   });
 });

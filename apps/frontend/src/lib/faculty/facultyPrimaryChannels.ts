@@ -10,8 +10,6 @@ export type FacultyPrimaryChannels = {
   email: string | null;
 };
 
-export type TeacherPrimaryChannels = FacultyPrimaryChannels;
-
 /**
  * Phone/email for Faculty detail + directory messaging.
  * Prefers linked-contact primaries when provided; falls back to hydrated faculty scalars.
@@ -30,5 +28,3 @@ export function resolveFacultyPrimaryChannels(
     || null;
   return { phone, email };
 }
-
-export const resolveTeacherPrimaryChannels = resolveFacultyPrimaryChannels;

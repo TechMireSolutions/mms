@@ -5,7 +5,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import { formatTeacherDisplayName, type Teacher } from "@mms/shared";
+import { formatFacultyDisplayName, type FacultyMember } from "@mms/shared";
 import type { SessionFaculty } from "@/lib/data/sessionsData";
 import { COMMON_FACULTY_ROLES } from "./facultyManagementShared";
 
@@ -14,15 +14,15 @@ interface SessionFacultyFormModalProps {
   onClose: () => void;
   editingFaculty: SessionFaculty | null;
   saving: boolean;
-  teacherId: string;
-  onTeacherIdChange: (id: string) => void;
+  facultyId: string;
+  onFacultyIdChange: (id: string) => void;
   role: string;
   onRoleChange: (role: string) => void;
   customRole: string;
   onCustomRoleChange: (val: string) => void;
   status: "active" | "inactive";
   onStatusChange: (status: "active" | "inactive") => void;
-  allTeachers: Teacher[];
+  allFaculty: FacultyMember[];
   onSave: () => Promise<void> | void;
 }
 
@@ -31,15 +31,15 @@ export function SessionFacultyFormModal({
   onClose,
   editingFaculty,
   saving,
-  teacherId,
-  onTeacherIdChange,
+  facultyId,
+  onFacultyIdChange,
   role,
   onRoleChange,
   customRole,
   onCustomRoleChange,
   status,
   onStatusChange,
-  allTeachers,
+  allFaculty,
   onSave,
 }: SessionFacultyFormModalProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -57,21 +57,21 @@ export function SessionFacultyFormModal({
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="faculty-teacher">
-            {t("sessions.faculty.selectTeacher")}
+          <label className={FORM_LABEL} htmlFor="faculty-member">
+            {t("sessions.faculty.selectFaculty")}
           </label>
           <FormSelect
-            id="faculty-teacher"
-            name="teacherId"
-            value={teacherId}
-            onChange={onTeacherIdChange}
+            id="faculty-member"
+            name="facultyId"
+            value={facultyId}
+            onChange={onFacultyIdChange}
             options={
-              allTeachers.length > 0
-                ? allTeachers.map((teacher) => ({
-                    value: String(teacher.id),
-                    label: formatTeacherDisplayName(teacher),
+              allFaculty.length > 0
+                ? allFaculty.map((member) => ({
+                    value: String(member.id),
+                    label: formatFacultyDisplayName(member),
                   }))
-                : [{ value: "", label: "No active teachers found" }]
+                : [{ value: "", label: "No active faculty found" }]
             }
             className="w-full"
           />

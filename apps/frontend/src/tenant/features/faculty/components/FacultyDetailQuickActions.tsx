@@ -1,12 +1,12 @@
 import { useTranslation } from "@/hooks/useTranslation";
 import { EntityMessagingActions } from "@/components/ui/EntityMessagingActions";
-import { teacherMessagingLabels } from "@/lib/faculty/facultyMessagingLabels";
-import { toMessagingRecipient, type Teacher } from "@mms/shared";
+import { facultyMessagingLabels } from "@/lib/faculty/facultyMessagingLabels";
+import { toMessagingRecipient, type Faculty } from "@mms/shared";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
 
-export interface TeacherDetailQuickActionsProps {
-  teacher: Teacher;
+export interface FacultyDetailQuickActionsProps {
+  faculty: Faculty;
   displayName: string;
   primaryPhone: string | null | undefined;
   primaryEmail: string | null | undefined;
@@ -16,17 +16,17 @@ export interface TeacherDetailQuickActionsProps {
   onOpenComposer: (channel: MessageChannel, recipients: ReturnType<typeof toMessagingRecipient>[]) => void;
 }
 
-export function TeacherDetailQuickActions({
-  teacher,
+export function FacultyDetailQuickActions({
+  faculty,
   displayName,
   primaryPhone,
   primaryEmail,
   hasWhatsAppContact,
   canWriteMessaging,
   onOpenComposer,
-}: TeacherDetailQuickActionsProps): React.JSX.Element | null {
+}: FacultyDetailQuickActionsProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const labels = teacherMessagingLabels(t);
+  const labels = facultyMessagingLabels(t);
 
   return (
     <EntityMessagingActions
@@ -36,8 +36,7 @@ export function TeacherDetailQuickActions({
       labels={labels}
       callAriaLabel={
         primaryPhone
-          ? (t("faculty.detail.callPhone", { phone: primaryPhone }) ||
-              t("teachers.detail.callPhone", { phone: primaryPhone }))
+          ? t("faculty.detail.callPhone", { phone: primaryPhone })
           : undefined
       }
       messagingEnabled={canWriteMessaging}
@@ -45,7 +44,7 @@ export function TeacherDetailQuickActions({
         primaryPhone && hasWhatsAppContact && canWriteMessaging
           ? () =>
               onOpenComposer("whatsapp", [
-                toMessagingRecipient({ ...teacher, phone: primaryPhone, name: displayName }),
+                toMessagingRecipient({ ...faculty, phone: primaryPhone, name: displayName }),
               ])
           : undefined
       }
@@ -53,7 +52,7 @@ export function TeacherDetailQuickActions({
         primaryPhone && canWriteMessaging
           ? () =>
               onOpenComposer("sms", [
-                toMessagingRecipient({ ...teacher, phone: primaryPhone, name: displayName }),
+                toMessagingRecipient({ ...faculty, phone: primaryPhone, name: displayName }),
               ])
           : undefined
       }
@@ -61,14 +60,11 @@ export function TeacherDetailQuickActions({
         primaryEmail && canWriteMessaging
           ? () =>
               onOpenComposer("email", [
-                toMessagingRecipient({ ...teacher, email: primaryEmail, name: displayName }),
+                toMessagingRecipient({ ...faculty, email: primaryEmail, name: displayName }),
               ])
           : undefined
       }
     />
   );
 }
-
-export type FacultyDetailQuickActionsProps = TeacherDetailQuickActionsProps;
-export const FacultyDetailQuickActions = TeacherDetailQuickActions;
 

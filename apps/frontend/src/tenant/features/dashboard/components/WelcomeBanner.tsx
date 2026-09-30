@@ -13,7 +13,7 @@ import {
 
 interface WelcomeBannerProps {
   dashboardRole: DashboardRole;
-  /** Active sessions from server metrics (teacher subtitle). */
+  /** Active sessions from server metrics (faculty subtitle). */
   activeSessionsCount: number;
   /** Active student count from student metrics (admin subtitle). */
   activeStudentCount: number;

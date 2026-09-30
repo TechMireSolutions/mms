@@ -46,7 +46,7 @@ function makeService(overrides: Partial<ServiceOptions> = {}) {
   );
   const upsert = vi.fn(async () => ({}));
   const service = createModulePreferencesService<TestPreferences>({
-    broadcastKey: 'teachers',
+    broadcastKey: 'faculty',
     getByWorkspace,
     upsert,
     normalize,
@@ -102,7 +102,7 @@ describe('createModulePreferencesService', () => {
 
       expect(saved).toEqual({ theme: 'dark', pageSize: 50 });
       expect(upsert).toHaveBeenCalledWith('demo', { theme: 'dark', pageSize: 50 });
-      expect(mockBroadcastCollection).toHaveBeenCalledWith('teachers');
+      expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
       expect(getByWorkspace).not.toHaveBeenCalled();
     });
 

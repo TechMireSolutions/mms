@@ -18,13 +18,13 @@ describe('buildDashboardMetricCard', () => {
 
   const mockData: DashboardCollectionData = {
     studentsTotal: 120,
-    teachersTotal: 15,
+    facultyTotal: 15,
     contactsTotal: 45,
     sessionsTotal: 24,
     studentMetricsInactive: 5,
     studentMetricsActive: 115,
     studentMetricsNew: 8,
-    teacherMetricsNew: 1,
+    facultyMetricsNew: 1,
     contactMetricsNew: 3,
     sessionsMetrics: {
       active: 4,
@@ -53,7 +53,7 @@ describe('buildDashboardMetricCard', () => {
 
   const mockTrends: DashboardMetricTrends = {
     studentTrend: 7,
-    teacherTrend: 7,
+    facultyTrend: 7,
     contactTrend: 7,
     attendanceTrend: 5,
     feesTrend: 12,

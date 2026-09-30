@@ -2,19 +2,15 @@ import {
   resolveFacultyDesignations,
   resolveFacultySpecializations,
   resolveFacultyStatuses,
-  resolveTeacherDesignations,
-  resolveTeacherSpecializations,
-  resolveTeacherStatuses,
 } from "@mms/shared";
-import { useFacultyConfig, useTeacherConfig } from "@/hooks/useStandardModuleConfig";
+import { useFacultyConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { facultyStatusBadgeConfig } from "@/lib/faculty/facultyStatusUi";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
-const resolveStatuses = resolveFacultyStatuses || resolveTeacherStatuses;
-const resolveSpecs = resolveFacultySpecializations || resolveTeacherSpecializations;
-const resolveDesignations = resolveFacultyDesignations || resolveTeacherDesignations;
-const useFacultyConfigHook = useFacultyConfig || useTeacherConfig;
+const resolveStatuses = resolveFacultyStatuses;
+const resolveSpecs = resolveFacultySpecializations;
+const resolveDesignations = resolveFacultyDesignations;
 
 /**
  * SSOT for the faculty StatusBadge config, derived from the tenant's configured statuses.
@@ -22,10 +18,9 @@ const useFacultyConfigHook = useFacultyConfig || useTeacherConfig;
  */
 export function useFacultyStatusConfig(): Record<string, StatusBadgeConfigItem> {
   const { t } = useTranslation();
-  const { statuses } = useFacultyConfigHook();
+  const { statuses } = useFacultyConfig();
   return (() => facultyStatusBadgeConfig(t, statuses))();
 }
-export const useTeacherStatusConfig = useFacultyStatusConfig;
 
 /**
  * SSOT for faculty status, specialization, and designation option lists, derived from the tenant's
@@ -36,11 +31,11 @@ export function useFacultyLookupOptions(): {
   specializationOptions: string[];
   designationOptions: string[];
 } {
-  const { statuses, specializations, designations } = useFacultyConfigHook();
+  const { statuses, specializations, designations } = useFacultyConfig();
   return (() => ({
     statusOptions: [...resolveStatuses(statuses)],
     specializationOptions: [...resolveSpecs(specializations)],
     designationOptions: [...resolveDesignations(designations)],
   }))();
 }
-export const useTeacherLookupOptions = useFacultyLookupOptions;
+

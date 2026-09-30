@@ -3,14 +3,14 @@ import React from "react";
 export interface ModuleTableFooterCountProps {
   /** Number of rows currently selected in the Work table. */
   selectedCount: number;
-  /** Localized selection label (translated by the module, e.g. `t('teachers.selectedCount')`). */
+  /** Localized selection label (translated by the module, e.g. `t('faculty.selectedCount')`). */
   selectedCountLabel: string;
-  /** Localized page count label, e.g. `"24 teachers"`. */
+  /** Localized page count label, e.g. `"24 faculty"`. */
   pageCountLabel: string;
 }
 
 /**
- * Work table footer count bar shared by Contacts, Students, and Teachers.
+ * Work table footer count bar shared by Contacts, Students, and Faculty.
  * Shows the selected-count + page-count combo, or just the page count when nothing is selected.
  */
 export const ModuleTableFooterCount = (function ModuleTableFooterCount({

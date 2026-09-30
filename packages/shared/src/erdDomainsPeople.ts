@@ -480,5 +480,3 @@ export const ERD_DOMAIN_FACULTY: ErdDomain = {
     },
   ],
 };
-
-export const ERD_DOMAIN_TEACHERS: ErdDomain = ERD_DOMAIN_FACULTY;

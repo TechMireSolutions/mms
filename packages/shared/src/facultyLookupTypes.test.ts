@@ -1,31 +1,32 @@
 import { describe, expect, it } from 'vitest';
 import {
-  TEACHER_LOOKUP_KINDS,
-  TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS,
-  defaultTeacherLookupItems,
-  emptyTeacherLookupsMap,
-  isTeacherLookupKind,
-  isTeacherLookupLegacyCollectionKey,
+  FACULTY_LOOKUP_KINDS,
+  FACULTY_LOOKUP_LEGACY_COLLECTION_KEYS,
+  defaultFacultyLookupItems,
+  emptyFacultyLookupsMap,
+  isFacultyLookupKind,
+  isFacultyLookupLegacyCollectionKey,
 } from './facultyLookupTypes.js';
 
-describe('teacherLookupTypes', () => {
+describe('facultyLookupTypes', () => {
   it('exposes statuses, specializations, genderFilters, and designations Setup kinds', () => {
-    expect(TEACHER_LOOKUP_KINDS).toEqual(['statuses', 'specializations', 'genderFilters', 'designations']);
-    expect(TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS.teacherStatuses).toBe('statuses');
-    expect(isTeacherLookupLegacyCollectionKey('teacherStatuses')).toBe(true);
-    expect(isTeacherLookupKind('statuses')).toBe(true);
-    expect(isTeacherLookupKind('genderFilters')).toBe(true);
-    expect(isTeacherLookupKind('designations')).toBe(true);
-    expect(isTeacherLookupKind('genders')).toBe(false);
+    expect(FACULTY_LOOKUP_KINDS).toEqual(['statuses', 'specializations', 'genderFilters', 'designations']);
+    expect(FACULTY_LOOKUP_LEGACY_COLLECTION_KEYS.facultyStatuses).toBe('statuses');
+    expect(isFacultyLookupLegacyCollectionKey('facultyStatuses')).toBe(true);
+    expect(isFacultyLookupKind('statuses')).toBe(true);
+    expect(isFacultyLookupKind('genderFilters')).toBe(true);
+    expect(isFacultyLookupKind('designations')).toBe(true);
+    expect(isFacultyLookupKind('genders')).toBe(false);
   });
 
   it('defaults statuses, specializations, and genderFilters from shared enums', () => {
-    expect(defaultTeacherLookupItems('statuses')).toContain('active');
-    expect(defaultTeacherLookupItems('specializations').length).toBeGreaterThan(0);
-    expect(defaultTeacherLookupItems('genderFilters')).toEqual(['male', 'female']);
-    expect(defaultTeacherLookupItems('designations')).toContain('Teacher');
-    expect(emptyTeacherLookupsMap().statuses.length).toBeGreaterThan(0);
-    expect(emptyTeacherLookupsMap().genderFilters).toEqual(['male', 'female']);
-    expect(emptyTeacherLookupsMap().designations).toContain('Teacher');
+    expect(defaultFacultyLookupItems('statuses')).toContain('active');
+    expect(defaultFacultyLookupItems('specializations').length).toBeGreaterThan(0);
+    expect(defaultFacultyLookupItems('genderFilters')).toEqual(['male', 'female']);
+    expect(defaultFacultyLookupItems('designations')).toContain('Instructor');
+    expect(emptyFacultyLookupsMap().statuses.length).toBeGreaterThan(0);
+    expect(emptyFacultyLookupsMap().genderFilters).toEqual(['male', 'female']);
+    expect(emptyFacultyLookupsMap().designations).toContain('Instructor');
   });
 });
+

@@ -5,7 +5,6 @@ import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 type MessageChannel = "whatsapp" | "sms" | "email";
 
 export type FacultyDeleteTarget = { id: string; name?: string };
-export type TeachersDeleteTarget = FacultyDeleteTarget;
 
 /** Page-owned Work overlays: composer, soft-delete confirms, profile drawer target. */
 export function useFacultyPageOverlayState() {
@@ -46,16 +45,10 @@ export function useFacultyPageOverlayState() {
     setDeleteTarget,
     viewFaculty,
     setViewFaculty,
-    viewTeacher: viewFaculty,
-    setViewTeacher: setViewFaculty,
     idCardFaculty,
     setIdCardFaculty,
-    idCardTeachers: idCardFaculty,
-    setIdCardTeachers: setIdCardFaculty,
     openIdCardsModal,
     closeIdCardsModal,
   };
 }
-
-export const useTeachersPageOverlayState = useFacultyPageOverlayState;
 

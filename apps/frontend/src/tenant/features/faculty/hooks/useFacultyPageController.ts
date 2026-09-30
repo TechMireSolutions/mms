@@ -62,7 +62,7 @@ export function useFacultyPageController() {
   });
 
   const mutations = useFacultyMutations();
-  const pageActions = useFacultyPageActions({ editTeacher: formState.editTeacher, editFaculty: formState.editFaculty });
+  const pageActions = useFacultyPageActions({ editFaculty: formState.editFaculty });
 
   const workTierState = useFacultyWorkTierState({
     effectiveTab,
@@ -108,7 +108,6 @@ export function useFacultyPageController() {
     overlays,
     workActions: {
       handleSaveFaculty: pageActions.handleSaveFaculty,
-      handleSaveTeacher: pageActions.handleSaveTeacher,
       handleRestore: pageActions.handleRestore,
       handleDelete: pageActions.handleDelete,
       handleBulkDelete: pageActions.handleBulkDelete,
@@ -133,5 +132,3 @@ export function useFacultyPageController() {
     pageOverlaysProps,
   };
 }
-
-export const useTeachersPageController = useFacultyPageController;

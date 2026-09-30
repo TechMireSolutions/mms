@@ -7,29 +7,30 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   type Faculty,
   type FacultyHierarchyPreset,
-  type Teacher,
+  type FacultyMember,
   FACULTY_HIERARCHY_RANK_PRESETS,
 } from "@mms/shared";
 
 export interface FacultyFormHierarchySectionProps {
-  teacherDraft: Partial<Teacher>;
+  facultyDraft?: Partial<FacultyMember>;
   errors: Record<string, string>;
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
-  onDraftChange: (patch: Partial<Teacher>) => void;
+  onDraftChange: (patch: Partial<FacultyMember>) => void;
   supervisorCandidates?: Faculty[];
   hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
 }
 
-export function FacultyFormHierarchySection({
-  teacherDraft,
-  errors,
-  isFieldEnabled,
-  isFieldRequired,
-  onDraftChange,
-  supervisorCandidates,
-  hierarchyRankPresets = FACULTY_HIERARCHY_RANK_PRESETS,
-}: FacultyFormHierarchySectionProps): React.JSX.Element | null {
+export function FacultyFormHierarchySection(props: FacultyFormHierarchySectionProps): React.JSX.Element | null {
+  const {
+    facultyDraft = {},
+    errors,
+    isFieldEnabled,
+    isFieldRequired,
+    onDraftChange,
+    supervisorCandidates,
+    hierarchyRankPresets = FACULTY_HIERARCHY_RANK_PRESETS,
+  } = props;
   const { t } = useTranslation();
   const showSupervisor = isFieldEnabled("reportingFacultyId");
   const showHierarchyRank = isFieldEnabled("hierarchyRank");
@@ -50,11 +51,11 @@ export function FacultyFormHierarchySection({
                 <BadgeCheck className="size-4 shrink-0 text-primary" aria-hidden />
                 <div>
                   <p className="text-sm font-medium text-foreground">
-                    {t("faculty.form.hierarchyRank") || t("teachers.form.hierarchyRank")}
+                    {t("faculty.form.hierarchyRank")}
                   </p>
                   <p className="text-xs text-muted-foreground">
-                    {hierarchyRankPresets.find((preset) => preset.rank === (teacherDraft.hierarchyRank ?? 4))?.label ?? t("common.notSpecified")}
-                    {` · ${t("faculty.form.rankValue", { rank: teacherDraft.hierarchyRank ?? 4 }) || t("teachers.form.rankValue", { rank: teacherDraft.hierarchyRank ?? 4 })}`}
+                    {hierarchyRankPresets.find((preset) => preset.rank === (facultyDraft.hierarchyRank ?? 4))?.label ?? t("common.notSpecified")}
+                    {` · ${t("faculty.form.rankValue", { rank: facultyDraft.hierarchyRank ?? 4 })}`}
                   </p>
                 </div>
               </div>
@@ -65,7 +66,7 @@ export function FacultyFormHierarchySection({
 
           {showSupervisor && (
             <Field
-              label={t("faculty.form.reportingSupervisor") || t("teachers.form.reportingSupervisor")}
+              label={t("faculty.form.reportingSupervisor")}
               id="reportingFacultyId"
               required={isFieldRequired("reportingFacultyId")}
               error={errors.reportingFacultyId}
@@ -73,20 +74,20 @@ export function FacultyFormHierarchySection({
               <FormSelect
                 id="reportingFacultyId"
                 name="reportingFacultyId"
-                value={teacherDraft.reportingFacultyId ? String(teacherDraft.reportingFacultyId) : ""}
-                disabled={teacherDraft.hierarchyRank === 1}
+                value={facultyDraft.reportingFacultyId ? String(facultyDraft.reportingFacultyId) : ""}
+                disabled={facultyDraft.hierarchyRank === 1}
                 onChange={(val) => onDraftChange({ reportingFacultyId: val || null })}
                 options={[
-                  { value: "", label: t("faculty.form.noSupervisor") || t("teachers.form.noSupervisor") },
+                  { value: "", label: t("faculty.form.noSupervisor") },
                   ...(supervisorCandidates || []).map((cand) => ({
                     value: String(cand.id),
                     label: `${cand.name || cand.employeeId || "Faculty"} (Rank ${cand.hierarchyRank ?? 4}${cand.designation ? ` · ${cand.designation}` : ""})`,
                   })),
                 ]}
               />
-              {teacherDraft.hierarchyRank === 1 && (
+              {facultyDraft.hierarchyRank === 1 && (
                 <p className="mt-1 text-xs text-muted-foreground">
-                  {t("faculty.form.topLevelRankNotice") || t("teachers.form.topLevelRankNotice")}
+                  {t("faculty.form.topLevelRankNotice")}
                 </p>
               )}
             </Field>

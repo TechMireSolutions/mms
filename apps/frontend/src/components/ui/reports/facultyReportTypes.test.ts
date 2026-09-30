@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { mapTeacherRow } from './facultyReportTypes';
+import { mapFacultyRow } from './facultyReportTypes';
 
-describe('mapTeacherRow', () => {
-  it('maps a hydrated teacher to the roster row shape', () => {
-    const row = mapTeacherRow({
+describe('mapFacultyRow', () => {
+  it('maps a hydrated faculty member to the roster row shape', () => {
+    const row = mapFacultyRow({
       id: 't1',
       contactId: 99,
       name: 'Maulana Ahmed',
@@ -26,7 +26,7 @@ describe('mapTeacherRow', () => {
   });
 
   it('falls back to defaults for missing optional fields', () => {
-    const row = mapTeacherRow({ id: 't2', contactId: 'c1' } as never);
+    const row = mapFacultyRow({ id: 't2', contactId: 'c1' } as never);
     expect(row.name).toBe('');
     expect(row.employeeId).toBe('—');
     expect(row.specialization).toBe('—');
@@ -37,7 +37,7 @@ describe('mapTeacherRow', () => {
   });
 
   it('omits the join date column when absent', () => {
-    const row = mapTeacherRow({
+    const row = mapFacultyRow({
       id: 't3',
       contactId: 1,
       name: 'Ustadha Fatima',

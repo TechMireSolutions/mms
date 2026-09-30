@@ -62,7 +62,7 @@ export const DEFAULT_FALLBACK_CARD_CONFIG = {
 export const COLLECTION_DEFAULT_CARD_CONFIG: Partial<Record<string, { icon: string; color: string }>> = {
   contacts: { icon: 'Users', color: 'blue' },
   students: { icon: 'GraduationCap', color: 'emerald' },
-  teachers: { icon: 'School', color: 'blue' },
+  faculty: { icon: 'School', color: 'blue' },
 };
 
 export interface CardVisuals {

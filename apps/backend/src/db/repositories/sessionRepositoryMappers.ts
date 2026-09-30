@@ -80,10 +80,8 @@ export function sessionRowToRecord(
       startTime: p.startTime,
       endTime: p.endTime,
       subject: p.subject,
-      facultyId: p.facultyId || (p as { teacherId?: string }).teacherId || '',
-      facultyName: p.facultyName || (p as { teacherName?: string }).teacherName || '',
-      teacherId: p.facultyId || (p as { teacherId?: string }).teacherId || '',
-      teacherName: p.facultyName || (p as { teacherName?: string }).teacherName || '',
+      facultyId: p.facultyId || '',
+      facultyName: p.facultyName || '',
     });
     periodsByTimetable.set(p.timetableId, arr);
   }
@@ -211,10 +209,8 @@ export function sessionRowToRecord(
       enrolled: raw.enrolled ?? 0,
       enrollmentDeadline: raw.enrollmentDeadline || '',
       status: (raw.status === 'inactive' ? 'inactive' : 'active') as 'active' | 'inactive',
-      facultyId: raw.facultyId || (raw as { teacherId?: string }).teacherId || '',
-      facultyName: raw.facultyName || (raw as { teacherName?: string }).teacherName || '',
-      teacherId: raw.facultyId || (raw as { teacherId?: string }).teacherId || '',
-      teacherName: raw.facultyName || (raw as { teacherName?: string }).teacherName || '',
+      facultyId: raw.facultyId || '',
+      facultyName: raw.facultyName || '',
       room: raw.room || '',
       fees: feesByClass.get(raw.id) || [],
       schedules: schedulesByClass.get(raw.id) || [],

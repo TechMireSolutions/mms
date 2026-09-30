@@ -20,7 +20,7 @@ import {
   computeWidgetSingleValue,
   computeContactsCustomCardValue,
   computeStudentsCustomCardValue,
-  computeTeachersCustomCardValue,
+  computeFacultyCustomCardValue,
   computeSessionsCustomCardValue,
   computeEnrollmentsCustomCardValue,
 } from "@/lib/reports/widgetDataUtils";
@@ -100,7 +100,7 @@ export function CustomWidgetRenderer({
     return serverComputed ?? computeCustomCard(card, {
       ...collections,
       students: [],
-      teachers: [],
+      faculty: [],
       contacts: [],
     });
   })();
@@ -158,6 +158,14 @@ export function CustomWidgetRenderer({
 type ServerCardAggregate = ReturnType<typeof computeContactsCustomCardValue>;
 type ComputedCustomCard = ReturnType<typeof computeCustomCard>;
 
+const SERVER_CARD_COMPUTERS = {
+  contacts: computeContactsCustomCardValue,
+  students: computeStudentsCustomCardValue,
+  faculty: computeFacultyCustomCardValue,
+  sessions: computeSessionsCustomCardValue,
+  enrollments: computeEnrollmentsCustomCardValue,
+} as const;
+
 function computeServerBackedCard(card: CustomCard, t: TranslationFunction): ComputedCustomCard | null {
   const aggregateValue = getServerCardAggregate(card);
   if (!aggregateValue) return null;
@@ -174,21 +182,15 @@ function computeServerBackedCard(card: CustomCard, t: TranslationFunction): Comp
 }
 
 function getServerCardAggregate(card: CustomCard): ServerCardAggregate {
-  const aggregateInput = {
+  const computeFn = SERVER_CARD_COMPUTERS[card.collection as keyof typeof SERVER_CARD_COMPUTERS];
+  if (!computeFn) return null;
+
+  return computeFn({
     id: card.id,
     operation: card.operation,
     targetField: card.targetField,
     filterField: card.filterField,
     filterOperator: card.filterOperator,
     filterValue: card.filterValue,
-  };
-
-  if (card.collection === "contacts") return computeContactsCustomCardValue(aggregateInput);
-  if (card.collection === "students") return computeStudentsCustomCardValue(aggregateInput);
-  if (card.collection === "teachers") return computeTeachersCustomCardValue(aggregateInput);
-  if (card.collection === "sessions") return computeSessionsCustomCardValue(aggregateInput);
-  if (card.collection === "enrollments") return computeEnrollmentsCustomCardValue(aggregateInput);
-  return null;
+  });
 }
-
-

@@ -99,8 +99,8 @@ export async function persistSessionClassesTx(
       enrolled: c.enrolled ?? 0,
       enrollmentDeadline: c.enrollmentDeadline || '',
       status: c.status || 'active',
-      facultyId: (c as { facultyId?: string }).facultyId || c.teacherId || '',
-      facultyName: (c as { facultyName?: string }).facultyName || c.teacherName || '',
+      facultyId: c.facultyId || '',
+      facultyName: c.facultyName || '',
       room: c.room || '',
       sortOrder: idx,
     });
@@ -180,8 +180,8 @@ export async function persistSessionClassesTx(
           startTime: p.startTime,
           endTime: p.endTime,
           subject: p.subject,
-          facultyId: (p as { facultyId?: string }).facultyId || p.teacherId || '',
-          facultyName: (p as { facultyName?: string }).facultyName || p.teacherName || '',
+          facultyId: p.facultyId || '',
+          facultyName: p.facultyName || '',
         });
       }
     }

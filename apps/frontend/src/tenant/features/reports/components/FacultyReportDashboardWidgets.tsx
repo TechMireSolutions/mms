@@ -25,18 +25,18 @@ export const FacultyReportDashboardWidgets = React.memo(function FacultyReportDa
   return (
     <div className="border-t border-border/50 pt-6 mt-6 space-y-4">
       <div>
-        <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("teachers.report.dashboardWidgetsTitle")}</h3>
-        <SectionLabel as="p" weight="bold" tracking="wider" className="mt-0.5">{t("teachers.report.dashboardWidgetsSubtitle")}</SectionLabel>
+        <h3 className="text-sm font-black text-foreground uppercase tracking-widest">{t("faculty.report.dashboardWidgetsTitle")}</h3>
+        <SectionLabel as="p" weight="bold" tracking="wider" className="mt-0.5">{t("faculty.report.dashboardWidgetsSubtitle")}</SectionLabel>
       </div>
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <SectionCard title={t("teachers.report.classesPerSession")}>
+        <SectionCard title={t("faculty.report.classesPerSession")}>
           <SafeResponsiveContainer width="100%" height={200}>
             <BarChart data={classesPerSession} barSize={24}>
               <ChartGrid />
               <XAxis dataKey="name" tick={chartAxisTick(11)} interval={0} angle={-20} textAnchor="end" height={50} />
               <YAxis allowDecimals={false} tick={chartAxisTick(11)} />
               <Tooltip />
-              <Bar dataKey="value" fill="hsl(var(--primary))" name={t("teachers.report.colClasses")} radius={[4, 4, 0, 0]} />
+              <Bar dataKey="value" fill="hsl(var(--primary))" name={t("faculty.report.colClasses")} radius={[4, 4, 0, 0]} />
             </BarChart>
           </SafeResponsiveContainer>
         </SectionCard>

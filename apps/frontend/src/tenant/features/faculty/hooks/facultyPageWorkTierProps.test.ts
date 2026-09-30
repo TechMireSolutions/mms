@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from "vitest";
-import { buildTeachersWorkTierProps, type TeachersWorkTierSource } from "./facultyPageWorkTierProps";
+import { buildFacultyWorkTierProps, type FacultyWorkTierSource } from "./facultyPageWorkTierProps";
 
-const mockSource: TeachersWorkTierSource = {
+const mockSource: FacultyWorkTierSource = {
   search: "Umar",
   filterStatus: ["active"],
   filterSpecialization: "Tajweed",
@@ -24,7 +24,7 @@ const mockSource: TeachersWorkTierSource = {
   updateUserColumnLayout: vi.fn(),
   onResetLayout: vi.fn(),
   customizerLabels: {} as never,
-  teachers: [],
+  faculty: [],
   workPageQuery: {
     data: undefined,
     isLoading: false,
@@ -61,9 +61,9 @@ const mockSource: TeachersWorkTierSource = {
   workOverlays: {} as never,
 };
 
-describe("buildTeachersWorkTierProps", () => {
-  it("maps source controller fields to teachers work tier props", () => {
-    const props = buildTeachersWorkTierProps(mockSource);
+describe("buildFacultyWorkTierProps", () => {
+  it("maps source controller fields to faculty work tier props", () => {
+    const props = buildFacultyWorkTierProps(mockSource);
 
     expect(props.search).toBe("Umar");
     expect(props.filterStatus).toEqual(["active"]);

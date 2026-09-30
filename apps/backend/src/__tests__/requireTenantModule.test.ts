@@ -86,7 +86,7 @@ describe('requireTenantModule middleware', () => {
     mockGetWorkspaceGlobalSettings.mockResolvedValue({
       enabledModules: { students: true },
     });
-    mockGetWorkspaceGrantedModulesRepo.mockResolvedValue(['students', 'teachers']);
+    mockGetWorkspaceGrantedModulesRepo.mockResolvedValue(['students', 'faculty']);
 
     const middleware = requireTenantModule('students');
     await middleware(dummyRequest, dummyReply);

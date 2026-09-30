@@ -13,11 +13,11 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { type StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
 import { useTranslation } from '@/hooks/useTranslation';
-import type { FacultySelectionTargets, TeachersSelectionTargets } from '@/tenant/features/faculty/hooks/facultySelectionTargets';
+import type { FacultySelectionTargets } from '@/tenant/features/faculty/hooks/facultySelectionTargets';
 
 export interface FacultyBulkActionBarProps {
   selectedIds: string[];
-  selectionTargets: FacultySelectionTargets | TeachersSelectionTargets;
+  selectionTargets: FacultySelectionTargets;
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
@@ -40,7 +40,7 @@ export interface FacultyBulkActionBarProps {
   statusPending?: boolean;
   specializationPending?: boolean;
 }
-export type TeachersBulkActionBarProps = FacultyBulkActionBarProps;
+
 
 /** Faculty Work bulk bar — delegates core actions to ModuleUniversalBulkActionBar. */
 export function FacultyBulkActionBar({
@@ -67,7 +67,7 @@ export function FacultyBulkActionBar({
   bulkActions = FACULTY_MODULE_MANIFEST.work.bulkActions,
   statusPending = false,
   specializationPending = false,
-}: TeachersBulkActionBarProps): React.JSX.Element {
+}: FacultyBulkActionBarProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
@@ -110,7 +110,7 @@ export function FacultyBulkActionBar({
                       className="min-h-11 gap-1.5 px-3 font-medium text-xs border-border/60 hover:bg-muted/80"
                     >
                       <Briefcase className="w-3.5 h-3.5" aria-hidden />
-                      <span>{t('faculty.bulkSpecialization') || t('teachers.bulkSpecialization')}</span>
+                      <span>{t('faculty.bulkSpecialization')}</span>
                       <ChevronDown className="w-3 h-3 text-muted-foreground" aria-hidden />
                     </Button>
                   </DropdownMenuTrigger>
@@ -136,7 +136,7 @@ export function FacultyBulkActionBar({
                 className="min-h-11 gap-1.5 px-3 font-medium text-xs border-border/60 hover:bg-muted/80"
               >
                 <IdCard className="w-3.5 h-3.5" aria-hidden />
-                <span>{t('faculty.idCard.print') || t('teachers.idCard.print')}</span>
+                <span>{t('faculty.idCard.print')}</span>
               </Button>
             )}
           </div>
@@ -146,5 +146,5 @@ export function FacultyBulkActionBar({
   );
 }
 
-export const TeachersBulkActionBar = FacultyBulkActionBar;
+
 

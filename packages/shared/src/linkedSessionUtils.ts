@@ -7,8 +7,8 @@ import {
 
 export interface SessionClassLike extends Record<string, unknown> {
   id?: string;
-  teacherId?: string;
-  teacherName?: string;
+  facultyId?: string;
+  facultyName?: string;
 }
 
 export interface SessionLike extends Record<string, unknown> {
@@ -19,28 +19,28 @@ export function normalizeSessionClasses(classes: SessionClassLike[]): SessionCla
   if (!classes || !Array.isArray(classes)) return [];
   return classes.map((cls) => {
     if (!cls || typeof cls !== "object") return cls;
-    return normalizeIdLinkedName(cls, 'teacherId', 'teacherName');
+    return normalizeIdLinkedName(cls, 'facultyId', 'facultyName');
   });
 }
 
 export function hydrateSessionClasses(
   classes: SessionClassLike[],
-  teachers: NamedEntity[] | Map<string, NamedEntity>,
+  faculty: NamedEntity[] | Map<string, NamedEntity>,
 ): SessionClassLike[] {
   if (!classes || !Array.isArray(classes)) return [];
-  const lookup = teachers instanceof Map
-    ? teachers
-    : (teachers.length > 8 ? createNamedEntityLookupMap(teachers) : teachers);
+  const lookup = faculty instanceof Map
+    ? faculty
+    : (faculty.length > 8 ? createNamedEntityLookupMap(faculty) : faculty);
   let hasChanges = false;
   const mapped = classes.map((cls) => {
     if (!cls || typeof cls !== "object") return cls;
-    const current = cls.teacherName;
-    const resolved = resolveEntityName(cls.teacherId, lookup) || current;
+    const current = cls.facultyName;
+    const resolved = resolveEntityName(cls.facultyId, lookup) || current;
     if (resolved === current) return cls;
     hasChanges = true;
     return {
       ...cls,
-      teacherName: resolved,
+      facultyName: resolved,
     };
   });
   return hasChanges ? mapped : classes;
@@ -57,12 +57,12 @@ export function normalizeSessionsCollection(sessions: SessionLike[]): SessionLik
 
 export function hydrateSessionsCollection(
   sessions: SessionLike[],
-  teachers: NamedEntity[] | Map<string, NamedEntity>,
+  faculty: NamedEntity[] | Map<string, NamedEntity>,
 ): SessionLike[] {
   if (!sessions || !Array.isArray(sessions)) return [];
-  const lookup = teachers instanceof Map
-    ? teachers
-    : (teachers.length > 8 ? createNamedEntityLookupMap(teachers) : teachers);
+  const lookup = faculty instanceof Map
+    ? faculty
+    : (faculty.length > 8 ? createNamedEntityLookupMap(faculty) : faculty);
   return sessions.map((session) => {
     if (!session || typeof session !== "object") return session;
     if (!Array.isArray(session.classes)) return session;

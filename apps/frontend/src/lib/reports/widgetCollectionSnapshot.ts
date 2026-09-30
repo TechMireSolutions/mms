@@ -14,24 +14,24 @@ import type { CustomWidget } from "./pinnedWidgetTypes";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
 import type { Student } from "@/lib/data/studentsData";
-import type { Teacher } from "@/lib/data/facultyData";
 import type { Session } from "@/lib/data/sessionsData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
-import type {
-  Contact,
-  Enrollment,
-  QuestionBankQuestion,
-  QuestionBankTest,
-  QuestionBankResult,
+import {
+  matchesWidgetFilter,
+  type Contact,
+  type Enrollment,
+  type FacultyMember,
+  type QuestionBankQuestion,
+  type QuestionBankResult,
+  type QuestionBankTest,
 } from "@mms/shared";
-import { matchesWidgetFilter } from "@mms/shared";
 
 export function getWidgetCollections(): ReportCollectionsSnapshot {
-  // Contacts + students + teachers + sessions + enrollments: SQL aggregates / empty dump — do not invent localStorage rows.
+  // Contacts + students + faculty + sessions + enrollments: SQL aggregates / empty dump — do not invent localStorage rows.
   const contacts: Contact[] = [];
   const students: Student[] = [];
-  const teachers: Teacher[] = [];
+  const faculty: FacultyMember[] = [];
   const sessions: Session[] = [];
   const enrollments: Enrollment[] = [];
   const invoices = readQueryCollection<Invoice>(FINANCE_INVOICES_QUERY_KEY) ?? [];
@@ -45,8 +45,7 @@ export function getWidgetCollections(): ReportCollectionsSnapshot {
 
   return {
     students,
-    faculty: teachers,
-    teachers,
+    faculty,
     sessions,
     enrollments,
     finance_invoices: invoices,

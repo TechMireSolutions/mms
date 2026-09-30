@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
-import { TeacherIdCardModal } from "./FacultyIdCardModal";
+import type { Faculty } from "@mms/shared";
+import { FacultyIdCardModal } from "./FacultyIdCardModal";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -27,8 +27,8 @@ vi.mock("@/components/ui/Modal", () => ({
   ),
 }));
 
-const mockTeacher: Teacher = {
-  id: "tch-idcard-1",
+const mockFaculty: Faculty = {
+  id: "fac-idcard-1",
   contactId: "cnt-1",
   name: "Ustadh Umar",
   employeeId: "EMP-001",
@@ -41,22 +41,22 @@ const mockTeacher: Teacher = {
   updatedAt: "2024-01-01T00:00:00Z",
 };
 
-describe("TeacherIdCardModal Component", () => {
-  it("renders printable ID card preview with teacher details", () => {
+describe("FacultyIdCardModal Component", () => {
+  it("renders printable ID card preview with faculty details", () => {
     const html = renderToStaticMarkup(
-      <TeacherIdCardModal
+      <FacultyIdCardModal
         open={true}
         onClose={vi.fn()}
         items={[
           {
-            teacher: mockTeacher,
+            faculty: mockFaculty,
             assignedClasses: ["Class A - Tajweed"],
           },
         ]}
       />,
     );
 
-    expect(html).toContain("teachers.idCard.title");
+    expect(html).toContain("faculty.idCard.title");
     expect(html).toContain("Ustadh Umar");
     expect(html).toContain("EMP-001");
     expect(html).toContain("Class A - Tajweed");
@@ -66,7 +66,7 @@ describe("TeacherIdCardModal Component", () => {
 
   it("returns null when closed or items empty", () => {
     const htmlClosed = renderToStaticMarkup(
-      <TeacherIdCardModal open={false} onClose={vi.fn()} items={[]} />,
+      <FacultyIdCardModal open={false} onClose={vi.fn()} items={[]} />,
     );
     expect(htmlClosed).toBe("");
   });

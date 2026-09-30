@@ -1,10 +1,10 @@
 import { useEffect } from "react";
-import type { Faculty, Teacher } from "@mms/shared";
+import type { Faculty } from "@mms/shared";
 import type { FacultyUserAccountDraft } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 
 export interface FacultyFormHierarchySyncProps {
-  teacherDraft: Partial<Teacher>;
-  setTeacherDraft: React.Dispatch<React.SetStateAction<Partial<Teacher>>>;
+  facultyDraft?: Partial<Faculty>;
+  setFacultyDraft?: React.Dispatch<React.SetStateAction<Partial<Faculty>>>;
   userAccountDraft: FacultyUserAccountDraft;
   setUserAccountDraft: React.Dispatch<React.SetStateAction<FacultyUserAccountDraft>>;
   supervisorCandidates: Faculty[];
@@ -17,14 +17,17 @@ export interface FacultyFormHierarchySyncProps {
  * 3. Clears reporting supervisor if selected supervisor is no longer senior.
  */
 export function useFacultyHierarchyFormSync({
-  teacherDraft,
-  setTeacherDraft,
+  facultyDraft,
+  setFacultyDraft,
   userAccountDraft,
   setUserAccountDraft,
   supervisorCandidates,
 }: FacultyFormHierarchySyncProps): void {
+  const draft = facultyDraft ?? {};
+  const setDraft = setFacultyDraft;
+
   useEffect(() => {
-    const allowedRoles = teacherDraft.designationAssignableRoles;
+    const allowedRoles = draft.designationAssignableRoles;
     if (allowedRoles && allowedRoles.length > 0 && userAccountDraft.role) {
       if (!allowedRoles.includes(userAccountDraft.role)) {
         setUserAccountDraft((prev) => ({
@@ -33,27 +36,29 @@ export function useFacultyHierarchyFormSync({
         }));
       }
     }
-  }, [teacherDraft.designationAssignableRoles, userAccountDraft.role, setUserAccountDraft]);
+  }, [draft.designationAssignableRoles, userAccountDraft.role, setUserAccountDraft]);
 
   useEffect(() => {
-    if (teacherDraft.hierarchyRank === 1 && teacherDraft.reportingFacultyId) {
-      setTeacherDraft((prev) => ({
+    if (!setDraft) return;
+    if (draft.hierarchyRank === 1 && draft.reportingFacultyId) {
+      setDraft((prev) => ({
         ...prev,
         reportingFacultyId: null,
       }));
     }
-  }, [teacherDraft.hierarchyRank, teacherDraft.reportingFacultyId, setTeacherDraft]);
+  }, [draft.hierarchyRank, draft.reportingFacultyId, setDraft]);
 
   useEffect(() => {
+    if (!setDraft) return;
     if (
-      teacherDraft.reportingFacultyId &&
+      draft.reportingFacultyId &&
       supervisorCandidates.length > 0 &&
-      !supervisorCandidates.some((c) => String(c.id) === String(teacherDraft.reportingFacultyId))
+      !supervisorCandidates.some((c) => String(c.id) === String(draft.reportingFacultyId))
     ) {
-      setTeacherDraft((prev) => ({
+      setDraft((prev) => ({
         ...prev,
         reportingFacultyId: null,
       }));
     }
-  }, [supervisorCandidates, teacherDraft.reportingFacultyId, setTeacherDraft]);
+  }, [supervisorCandidates, draft.reportingFacultyId, setDraft]);
 }

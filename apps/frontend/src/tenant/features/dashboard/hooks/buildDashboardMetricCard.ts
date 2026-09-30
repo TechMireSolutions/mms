@@ -2,7 +2,7 @@ import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import {
   computeContactsCustomCardValue,
   computeStudentsCustomCardValue,
-  computeTeachersCustomCardValue,
+  computeFacultyCustomCardValue,
   computeSessionsCustomCardValue,
 } from '@/lib/reports/widgetDataUtils';
 import {
@@ -33,7 +33,7 @@ interface BuildDashboardMetricCardArgs {
 const CUSTOM_CARD_EVALUATORS = {
   contacts: { computeFn: computeContactsCustomCardValue, totalKey: 'contactsTotal', trendKey: 'contactTrend' },
   students: { computeFn: computeStudentsCustomCardValue, totalKey: 'studentsTotal', trendKey: 'studentTrend' },
-  teachers: { computeFn: computeTeachersCustomCardValue, totalKey: 'teachersTotal', trendKey: 'teacherTrend' },
+  faculty: { computeFn: computeFacultyCustomCardValue, totalKey: 'facultyTotal', trendKey: 'facultyTrend' },
   sessions: { computeFn: computeSessionsCustomCardValue, totalKey: 'sessionsTotal', trendKey: 'sessionsTrend' },
 } as const;
 

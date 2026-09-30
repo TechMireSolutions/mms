@@ -1,22 +1,19 @@
 import { useTranslation } from "@/hooks/useTranslation";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
 import { notify } from "@/lib/notify";
-import type { Faculty, Teacher } from '@mms/shared';
+import type { Faculty } from '@mms/shared';
 import { useFacultyMutations } from "@/tenant/features/faculty/hooks/useFaculty";
 import { useFacultyCrudNotify } from "@/tenant/features/faculty/hooks/useFacultyCrudNotify";
 import { type FacultyRecord, toMessagingRecipient } from "@mms/shared";
 
 export interface UseFacultyPageActionsParams {
   editFaculty?: Faculty | null;
-  editTeacher?: Teacher | null;
 }
-export type UseTeachersPageActionsParams = UseFacultyPageActionsParams;
 
 export function useFacultyPageActions({
   editFaculty,
-  editTeacher,
 }: UseFacultyPageActionsParams) {
-  const effectiveEditTarget = editFaculty ?? editTeacher ?? null;
+  const effectiveEditTarget = editFaculty ?? null;
   const { t } = useTranslation();
   const { handleError, notifyBulkResult, notifyArchivedWithUndo } = useFacultyCrudNotify();
   const {
@@ -60,7 +57,7 @@ export function useFacultyPageActions({
       const raw = res.body as unknown;
       if (raw && typeof raw === "object") {
         const envelope = raw as Record<string, unknown>;
-        const entity = envelope.faculty ?? envelope.teacher ?? envelope.facultyMember ?? envelope;
+        const entity = envelope.faculty ?? envelope.facultyMember ?? envelope;
         return entity as Faculty;
       }
       return raw as Faculty;
@@ -72,7 +69,7 @@ export function useFacultyPageActions({
       const raw = res.body as unknown;
       if (raw && typeof raw === "object") {
         const envelope = raw as Record<string, unknown>;
-        const entity = envelope.faculty ?? envelope.teacher ?? envelope.facultyMember ?? envelope;
+        const entity = envelope.faculty ?? envelope.facultyMember ?? envelope;
         return entity as Faculty;
       }
       return raw as Faculty;
@@ -171,7 +168,6 @@ export function useFacultyPageActions({
     handleSms,
     handleEmail,
     handleSaveFaculty,
-    handleSaveTeacher: handleSaveFaculty,
     handleDelete,
     handleRestore,
     handleBulkDelete,
@@ -181,6 +177,4 @@ export function useFacultyPageActions({
     isBulkSpecializationPending,
   };
 }
-
-export const useTeachersPageActions = useFacultyPageActions;
 

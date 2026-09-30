@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { TeacherNotesSection } from "./FacultyNotesSection";
+import { FacultyNotesSection } from "./FacultyNotesSection";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -10,24 +10,24 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 const defaultProps = {
-  notes: "Full-time teacher for Qirat level 3",
+  notes: "Full-time faculty member for Qirat level 3",
   fields: {},
   isFieldEnabled: () => true,
   isFieldRequired: () => false,
   onDraftChange: vi.fn(),
 };
 
-describe("TeacherNotesSection Component", () => {
+describe("FacultyNotesSection Component", () => {
   it("renders notes textarea input", () => {
-    const html = renderToStaticMarkup(<TeacherNotesSection {...defaultProps} />);
+    const html = renderToStaticMarkup(<FacultyNotesSection {...defaultProps} />);
 
     expect(html).toContain("faculty.form.notesSection");
-    expect(html).toContain("Full-time teacher for Qirat level 3");
+    expect(html).toContain("Full-time faculty member for Qirat level 3");
   });
 
   it("returns null when notes field is disabled", () => {
     const html = renderToStaticMarkup(
-      <TeacherNotesSection {...defaultProps} isFieldEnabled={() => false} />,
+      <FacultyNotesSection {...defaultProps} isFieldEnabled={() => false} />,
     );
 
     expect(html).toBe("");

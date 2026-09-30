@@ -1,29 +1,29 @@
 import { DIRECTORY_CARD_OVERFLOW_TRIGGER_CLASS } from "@/components/ui/directoryCardChrome";
 import { DirectoryCardFooterActions } from "@/components/ui/DirectoryCardFooterActions";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { Teacher } from '@mms/shared';
-import { TeachersListRowActions } from "@/tenant/features/faculty/components/FacultyListRowActions";
+import type { Faculty } from '@mms/shared';
+import { FacultyListRowActions } from "@/tenant/features/faculty/components/FacultyListRowActions";
 
-export interface TeacherCardActionsProps {
-  teacher: Teacher;
-  teacherId: string;
+export interface FacultyCardActionsProps {
+  faculty: Faculty;
+  facultyId: string;
   displayName: string;
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
-  onView: (teacher: Teacher) => void;
-  onEdit: (teacher: Teacher) => void;
+  onView: (faculty: Faculty) => void;
+  onEdit: (faculty: Faculty) => void;
   onRequestDelete: (id: string) => void;
   onRestore?: (id: string) => void;
-  onSms?: (teachers: Teacher[]) => void;
-  onWhatsApp?: (teachers: Teacher[]) => void;
-  onEmail?: (teachers: Teacher[]) => void;
+  onSms?: (faculty: Faculty[]) => void;
+  onWhatsApp?: (faculty: Faculty[]) => void;
+  onEmail?: (faculty: Faculty[]) => void;
 }
 
 /** Contacts-shaped card footer: View + overflow menu. */
-export function TeacherCardActions({
-  teacher,
-  teacherId,
+export function FacultyCardActions({
+  faculty,
+  facultyId,
   displayName,
   showDeleted,
   canWrite,
@@ -35,18 +35,18 @@ export function TeacherCardActions({
   onSms,
   onWhatsApp,
   onEmail,
-}: TeacherCardActionsProps): React.JSX.Element {
+}: FacultyCardActionsProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
     <DirectoryCardFooterActions
-      onView={() => onView(teacher)}
-      viewLabel={t("faculty.actionViewShort") || t("teachers.actionViewShort")}
-      viewAriaLabel={`${t("faculty.list.viewDetails") || t("teachers.list.viewDetails")} - ${displayName}`}
+      onView={() => onView(faculty)}
+      viewLabel={t("faculty.actionViewShort")}
+      viewAriaLabel={`${t("faculty.list.viewDetails")} - ${displayName}`}
       overflowActions={
-        <TeachersListRowActions
-          teacher={teacher}
-          teacherId={teacherId}
+        <FacultyListRowActions
+          faculty={faculty}
+          facultyId={facultyId}
           showDeleted={showDeleted}
           canWrite={canWrite}
           canDelete={canDelete}
@@ -64,7 +64,3 @@ export function TeacherCardActions({
     />
   );
 }
-
-export type FacultyCardActionsProps = TeacherCardActionsProps;
-export const FacultyCardActions = TeacherCardActions;
-

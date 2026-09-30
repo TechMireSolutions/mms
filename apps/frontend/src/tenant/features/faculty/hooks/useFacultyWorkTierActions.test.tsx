@@ -2,11 +2,11 @@ import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  useTeachersWorkTierActions,
-  type UseTeachersWorkTierActionsProps,
-  type UseTeachersWorkTierActionsReturn,
+  useFacultyWorkTierActions,
+  type UseFacultyWorkTierActionsProps,
+  type UseFacultyWorkTierActionsReturn,
 } from "./useFacultyWorkTierActions";
-import type { Teacher } from "@mms/shared";
+import type { Faculty } from "@mms/shared";
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean | undefined;
@@ -25,7 +25,6 @@ vi.mock("@/tenant/features/faculty/hooks/useFacultyStatusConfig", () => {
   });
   return {
     useFacultyStatusConfig: config,
-    useTeacherStatusConfig: config,
   };
 });
 
@@ -33,20 +32,20 @@ function TestHarness({
   props,
   onHook,
 }: {
-  props: UseTeachersWorkTierActionsProps;
-  onHook: (actions: UseTeachersWorkTierActionsReturn) => void;
+  props: UseFacultyWorkTierActionsProps;
+  onHook: (actions: UseFacultyWorkTierActionsReturn) => void;
 }) {
-  const actions = useTeachersWorkTierActions(props);
+  const actions = useFacultyWorkTierActions(props);
   onHook(actions);
   return null;
 }
 
-describe("useTeachersWorkTierActions", () => {
+describe("useFacultyWorkTierActions", () => {
   let container: HTMLDivElement;
   let root: Root;
 
-  const mockTeacher: Teacher = {
-    id: "tch-1",
+  const mockFaculty: Faculty = {
+    id: "fac-1",
     contactId: "cnt-1",
     name: "Ustadh Umar",
     status: "active",
@@ -74,7 +73,7 @@ describe("useTeachersWorkTierActions", () => {
   it("handles bulk status change and clears selection", async () => {
     const onBulkStatusChange = vi.fn().mockResolvedValue(undefined);
     const onClearSelection = vi.fn();
-    let hookActions!: UseTeachersWorkTierActionsReturn;
+    let hookActions!: UseFacultyWorkTierActionsReturn;
 
     await act(async () => {
       root.render(
@@ -89,8 +88,8 @@ describe("useTeachersWorkTierActions", () => {
             sortField: "name",
             sortDir: "asc",
             onSortChange: vi.fn(),
-            selectedIds: ["tch-1"],
-            teachers: [mockTeacher],
+            selectedIds: ["fac-1"],
+            faculty: [mockFaculty],
             onBulkStatusChange,
             onClearSelection,
           }}
@@ -105,13 +104,13 @@ describe("useTeachersWorkTierActions", () => {
       await hookActions.handleBulkStatusChange("inactive");
     });
 
-    expect(onBulkStatusChange).toHaveBeenCalledWith(["tch-1"], "inactive");
+    expect(onBulkStatusChange).toHaveBeenCalledWith(["fac-1"], "inactive");
     expect(onClearSelection).toHaveBeenCalled();
   });
 
   it("handles sort field change with direction toggling", async () => {
     const onSortChange = vi.fn();
-    let hookActions!: UseTeachersWorkTierActionsReturn;
+    let hookActions!: UseFacultyWorkTierActionsReturn;
 
     await act(async () => {
       root.render(
@@ -127,7 +126,7 @@ describe("useTeachersWorkTierActions", () => {
             sortDir: "asc",
             onSortChange,
             selectedIds: [],
-            teachers: [mockTeacher],
+            faculty: [mockFaculty],
             onClearSelection: vi.fn(),
           }}
           onHook={(actions) => {

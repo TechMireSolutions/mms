@@ -6,40 +6,40 @@ import { Textarea } from "@/components/ui/textarea";
 import { FORM_TEXTAREA } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { FieldDefinition, Teacher } from "@mms/shared";
-import { resolveTeacherFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
+import type { FacultyMember, FieldDefinition } from "@mms/shared";
+import { resolveFacultyFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
 
-export interface TeacherNotesSectionProps {
+export interface FacultyNotesSectionProps {
   notes?: string;
   fields: Record<string, FieldDefinition[]>;
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
-  onDraftChange: (patch: Partial<Teacher>) => void;
+  onDraftChange: (patch: Partial<FacultyMember>) => void;
   error?: string;
 }
 
-export function TeacherNotesSection({
+export function FacultyNotesSection({
   notes,
   fields,
   isFieldEnabled,
   isFieldRequired,
   onDraftChange,
   error,
-}: TeacherNotesSectionProps): React.JSX.Element | null {
+}: FacultyNotesSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
 
   if (!isFieldEnabled("notes")) {
     return null;
   }
 
-  const notesLabel = resolveTeacherFieldLabel(fields, "employment", "notes", t);
+  const notesLabel = resolveFacultyFieldLabel(fields, "employment", "notes", t);
   const notesRequired = isFieldRequired("notes");
 
   return (
     <div className="space-y-6">
       <SectionCard
-        title={t("faculty.form.notesSection") || t("teachers.form.notesSection")}
-        subtitle={t("faculty.form.notesSectionDesc") || t("teachers.form.notesSectionDesc")}
+        title={t("faculty.form.notesSection")}
+        subtitle={t("faculty.form.notesSectionDesc")}
         icon={FileText}
         accentColor="emerald"
       >
@@ -50,7 +50,7 @@ export function TeacherNotesSection({
             required={notesRequired}
             value={notes || ""}
             onChange={(event) => onDraftChange({ notes: event.target.value })}
-            placeholder={t("faculty.form.notesPlaceholder") || t("teachers.form.notesPlaceholder")}
+            placeholder={t("faculty.form.notesPlaceholder")}
             className={cn(FORM_TEXTAREA, "min-h-30")}
             aria-invalid={Boolean(error)}
           />
@@ -59,6 +59,3 @@ export function TeacherNotesSection({
     </div>
   );
 }
-
-export type FacultyNotesSectionProps = TeacherNotesSectionProps;
-export const FacultyNotesSection = TeacherNotesSection;

@@ -1,24 +1,20 @@
 import type {
   Faculty,
   FacultySortField,
-  Teacher,
-  TeacherSortField,
   ModuleColumnRegistryEntry,
 } from '@mms/shared';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 
-export type { FacultySortField, TeacherSortField };
+export type { FacultySortField };
 
 /** Single delete confirm target (page-owned — name for the named confirm copy). */
 export interface FacultyDeleteTarget {
   id: string;
   name?: string;
 }
-export type TeacherDeleteTarget = FacultyDeleteTarget;
 
 export interface FacultyListProps {
   faculty?: Faculty[];
-  teachers?: Teacher[];
   viewMode: WorkDirectoryViewMode;
   /** Active filter state for the directory empty state (Contacts/Students parity). */
   hasActiveFilters?: boolean;
@@ -36,7 +32,7 @@ export interface FacultyListProps {
   columnRegistry?: ModuleColumnRegistryEntry[];
   getColumnWidth?: (key: string) => number | undefined;
   onColumnResize?: (key: string, width: number) => void;
-  sortField?: FacultySortField | TeacherSortField;
+  sortField?: FacultySortField;
   sortDir?: 'asc' | 'desc';
   onSortChange: (field: FacultySortField, dir: 'asc' | 'desc') => void;
   onView: (faculty: Faculty) => void;
@@ -48,5 +44,4 @@ export interface FacultyListProps {
   onWhatsApp?: (faculty: Faculty[]) => void;
   onEmail?: (faculty: Faculty[]) => void;
 }
-export type TeacherListProps = FacultyListProps;
 

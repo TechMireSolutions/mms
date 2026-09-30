@@ -25,8 +25,8 @@ import {
   DEFAULT_STUDENT_FIELD_DEFS,
   normalizeStudentsSettings,
   FACULTY_MODULE_MANIFEST,
-  DEFAULT_TEACHERS_SETTINGS,
-  DEFAULT_TEACHER_FIELD_DEFS,
+  DEFAULT_FACULTY_SETTINGS,
+  DEFAULT_FACULTY_FIELD_DEFS,
   USERS_MODULE_MANIFEST,
   DEFAULT_USERS_SETTINGS,
   DEFAULT_USERS_FIELD_DEFS,
@@ -42,7 +42,7 @@ import {
   type HasanatSettings,
   type SessionsSettings,
   type StudentsSettings,
-  type TeachersSettings,
+  type FacultySettings,
   type UsersSettings,
   type QuestionBankSettings,
 } from '@mms/shared';
@@ -90,10 +90,10 @@ export const STANDARD_MODULES_CONFIG_REGISTRY = {
     defaultFieldDefs: DEFAULT_STUDENT_FIELD_DEFS,
     normalizeFn: normalizeStudentsSettings,
   },
-  teachers: {
+  faculty: {
     settingsObjectKey: FACULTY_MODULE_MANIFEST.settingsObjectKey,
-    defaultSettings: DEFAULT_TEACHERS_SETTINGS,
-    defaultFieldDefs: DEFAULT_TEACHER_FIELD_DEFS,
+    defaultSettings: DEFAULT_FACULTY_SETTINGS,
+    defaultFieldDefs: DEFAULT_FACULTY_FIELD_DEFS,
   },
   users: {
     settingsObjectKey: USERS_MODULE_MANIFEST.settingsObjectKey,
@@ -119,7 +119,7 @@ export type StandardModuleSettingsMap = {
   hasanat: HasanatSettings;
   sessions: SessionsSettings;
   students: StudentsSettings;
-  teachers: TeachersSettings;
+  faculty: FacultySettings;
   users: UsersSettings;
   'question-bank': QuestionBankSettings;
 };
@@ -137,7 +137,7 @@ export type StandardModuleConfigExtraMap = {
     genderFilters: string[];
     discountTypes: string[];
   };
-  teachers: {
+  faculty: {
     statuses: string[];
     specializations: string[];
     genderFilters: string[];

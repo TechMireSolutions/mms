@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DASHBOARD_ROLE_GREETING_KEYS,
+  DASHBOARD_ROLE_BADGE_KEYS,
   resolveDashboardWelcomeSubtitle,
   resolveDashboardRole,
   resolveDefaultDashboardWidgetScope,
   widgetMatchesDashboardRole,
   isDashboardAdminOrAccountant,
-  isDashboardTeacher,
+  isDashboardFaculty,
   isDashboardAdmin,
   isDashboardAccountant,
 } from '@/lib/dashboardRole';
@@ -16,14 +18,14 @@ const t = (key: string, params?: Record<string, unknown>) =>
 const can = (granted: string[]) => (permission: string) => granted.includes(permission);
 
 describe('resolveDashboardWelcomeSubtitle', () => {
-  it('teacher with one session uses singular copy', () => {
-    expect(resolveDashboardWelcomeSubtitle('teacher', { activeSessionsCount: 1, activeStudentCount: 0 }, t)).toBe(
+  it('faculty with one session uses singular copy', () => {
+    expect(resolveDashboardWelcomeSubtitle('faculty', { activeSessionsCount: 1, activeStudentCount: 0 }, t)).toBe(
       'dashboard.sessionsTodayOne',
     );
   });
 
-  it('teacher with multiple sessions uses plural copy with count', () => {
-    expect(resolveDashboardWelcomeSubtitle('teacher', { activeSessionsCount: 3, activeStudentCount: 0 }, t)).toBe(
+  it('faculty with multiple sessions uses plural copy with count', () => {
+    expect(resolveDashboardWelcomeSubtitle('faculty', { activeSessionsCount: 3, activeStudentCount: 0 }, t)).toBe(
       'dashboard.sessionsToday:{"count":3}',
     );
   });
@@ -56,12 +58,12 @@ describe('resolveDashboardRole', () => {
     expect(resolveDashboardRole(can(['finance.write']))).toBe('accountant');
   });
 
-  it('returns teacher when attendance write is granted', () => {
-    expect(resolveDashboardRole(can(['attendance.write']))).toBe('teacher');
+  it('returns faculty when attendance write is granted', () => {
+    expect(resolveDashboardRole(can(['attendance.write']))).toBe('faculty');
   });
 
-  it('defaults to teacher with no grants', () => {
-    expect(resolveDashboardRole(can([]))).toBe('teacher');
+  it('defaults to faculty with no grants', () => {
+    expect(resolveDashboardRole(can([]))).toBe('faculty');
   });
 });
 
@@ -92,7 +94,9 @@ describe('widgetMatchesDashboardRole', () => {
   it('matches the role and defaults to admin', () => {
     expect(widgetMatchesDashboardRole('admin', 'admin')).toBe(true);
     expect(widgetMatchesDashboardRole(undefined, 'admin')).toBe(true);
-    expect(widgetMatchesDashboardRole('teacher', 'admin')).toBe(false);
+    expect(widgetMatchesDashboardRole('faculty', 'admin')).toBe(false);
+    expect(widgetMatchesDashboardRole('faculty', 'faculty')).toBe(true);
+    expect(widgetMatchesDashboardRole('accountant', 'faculty')).toBe(false);
   });
 });
 
@@ -100,12 +104,27 @@ describe('role capability helpers', () => {
   it('isDashboardAdminOrAccountant', () => {
     expect(isDashboardAdminOrAccountant('admin')).toBe(true);
     expect(isDashboardAdminOrAccountant('accountant')).toBe(true);
-    expect(isDashboardAdminOrAccountant('teacher')).toBe(false);
+    expect(isDashboardAdminOrAccountant('faculty')).toBe(false);
   });
 
-  it('isDashboardTeacher / isDashboardAdmin / isDashboardAccountant', () => {
-    expect(isDashboardTeacher('teacher')).toBe(true);
+  it('isDashboardFaculty / isDashboardAdmin / isDashboardAccountant', () => {
+    expect(isDashboardFaculty('faculty')).toBe(true);
+    expect(isDashboardFaculty('admin')).toBe(false);
     expect(isDashboardAdmin('admin')).toBe(true);
     expect(isDashboardAccountant('accountant')).toBe(true);
+  });
+});
+
+describe('dashboard role translation key maps', () => {
+  it('maps faculty to canonical faculty greeting and badge keys', () => {
+    expect(DASHBOARD_ROLE_GREETING_KEYS.faculty).toBe('dashboard.greeting.faculty');
+    expect(DASHBOARD_ROLE_BADGE_KEYS.faculty).toBe('dashboard.badge.faculty');
+  });
+
+  it('maps admin and accountant to their respective keys', () => {
+    expect(DASHBOARD_ROLE_GREETING_KEYS.admin).toBe('dashboard.greeting.admin');
+    expect(DASHBOARD_ROLE_BADGE_KEYS.admin).toBe('dashboard.badge.admin');
+    expect(DASHBOARD_ROLE_GREETING_KEYS.accountant).toBe('dashboard.greeting.accountant');
+    expect(DASHBOARD_ROLE_BADGE_KEYS.accountant).toBe('dashboard.badge.accountant');
   });
 });

@@ -1,16 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
-  isTeachersQuickFilter,
-  TEACHERS_QUICK_FILTER_OPTIONS,
-  teachersQuickFilterStatusValue,
-  TEACHER_SORT_FIELDS,
-  TEACHER_SORT_FIELD_SET,
-  teachersListQuerySchema,
+  isFacultyQuickFilter,
+  FACULTY_QUICK_FILTER_OPTIONS,
+  facultyQuickFilterStatusValue,
+  FACULTY_SORT_FIELDS,
+  FACULTY_SORT_FIELD_SET,
+  facultyListQuerySchema,
 } from './facultyListQuery.js';
 
-describe('teachersListQuerySchema', () => {
+describe('facultyListQuerySchema', () => {
   it('parses list query with status and specialization filters', () => {
-    const parsed = teachersListQuerySchema.parse({
+    const parsed = facultyListQuerySchema.parse({
       page: '1',
       limit: '50',
       status: 'active,sabbatical',
@@ -24,7 +24,7 @@ describe('teachersListQuerySchema', () => {
   });
 
   it('parses gender and quickFilter filters', () => {
-    const parsed = teachersListQuerySchema.parse({
+    const parsed = facultyListQuerySchema.parse({
       gender: 'male',
       quickFilter: 'missingEmployeeId',
     });
@@ -33,50 +33,50 @@ describe('teachersListQuerySchema', () => {
   });
 
   it('rejects an unknown quickFilter preset', () => {
-    const result = teachersListQuerySchema.safeParse({
+    const result = facultyListQuerySchema.safeParse({
       quickFilter: 'bogus',
     });
     expect(result.success).toBe(false);
   });
 
-  it('rejects sortField outside TEACHER_SORT_FIELDS', () => {
-    const result = teachersListQuerySchema.safeParse({
+  it('rejects sortField outside FACULTY_SORT_FIELDS', () => {
+    const result = facultyListQuerySchema.safeParse({
       sortField: 'bogus',
     });
     expect(result.success).toBe(false);
   });
 });
 
-describe('TEACHER_SORT_FIELDS', () => {
+describe('FACULTY_SORT_FIELDS', () => {
   it('includes employeeId and exposes a Set for SQL allowlists', () => {
-    expect(TEACHER_SORT_FIELDS).toContain('employeeId');
-    expect(TEACHER_SORT_FIELD_SET.has('name')).toBe(true);
-    expect(TEACHER_SORT_FIELD_SET.has('bogus')).toBe(false);
+    expect(FACULTY_SORT_FIELDS).toContain('employeeId');
+    expect(FACULTY_SORT_FIELD_SET.has('name')).toBe(true);
+    expect(FACULTY_SORT_FIELD_SET.has('bogus')).toBe(false);
   });
 });
 
-describe('TEACHERS_QUICK_FILTERS', () => {
+describe('FACULTY_QUICK_FILTERS', () => {
   it('exposes the status + missing-employee-id presets with label keys', () => {
-    expect(TEACHERS_QUICK_FILTER_OPTIONS).toEqual([
-      { id: 'all', labelKey: 'teachers.filtersAll' },
-      { id: 'active', labelKey: 'teachers.filtersActive' },
-      { id: 'inactive', labelKey: 'teachers.filtersInactive' },
-      { id: 'onLeave', labelKey: 'teachers.filtersOnLeave' },
-      { id: 'missingEmployeeId', labelKey: 'teachers.filtersMissingEmployeeId' },
+    expect(FACULTY_QUICK_FILTER_OPTIONS).toEqual([
+      { id: 'all', labelKey: 'faculty.filtersAll' },
+      { id: 'active', labelKey: 'faculty.filtersActive' },
+      { id: 'inactive', labelKey: 'faculty.filtersInactive' },
+      { id: 'onLeave', labelKey: 'faculty.filtersOnLeave' },
+      { id: 'missingEmployeeId', labelKey: 'faculty.filtersMissingEmployeeId' },
     ]);
   });
 
   it('narrows valid preset strings', () => {
-    expect(isTeachersQuickFilter('active')).toBe(true);
-    expect(isTeachersQuickFilter('all')).toBe(true);
-    expect(isTeachersQuickFilter('bogus')).toBe(false);
+    expect(isFacultyQuickFilter('active')).toBe(true);
+    expect(isFacultyQuickFilter('all')).toBe(true);
+    expect(isFacultyQuickFilter('bogus')).toBe(false);
   });
 
   it('maps status presets to stored status values and non-status presets to undefined', () => {
-    expect(teachersQuickFilterStatusValue('active')).toBe('active');
-    expect(teachersQuickFilterStatusValue('inactive')).toBe('inactive');
-    expect(teachersQuickFilterStatusValue('onLeave')).toBe('on_leave');
-    expect(teachersQuickFilterStatusValue('all')).toBeUndefined();
-    expect(teachersQuickFilterStatusValue('missingEmployeeId')).toBeUndefined();
+    expect(facultyQuickFilterStatusValue('active')).toBe('active');
+    expect(facultyQuickFilterStatusValue('inactive')).toBe('inactive');
+    expect(facultyQuickFilterStatusValue('onLeave')).toBe('on_leave');
+    expect(facultyQuickFilterStatusValue('all')).toBeUndefined();
+    expect(facultyQuickFilterStatusValue('missingEmployeeId')).toBeUndefined();
   });
 });

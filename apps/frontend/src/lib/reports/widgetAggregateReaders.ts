@@ -8,8 +8,8 @@ import {
   STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
 } from "@/tenant/hooks/collections/students";
 import {
-  TEACHERS_METRICS_QUERY_KEY,
-  TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
+  FACULTY_METRICS_QUERY_KEY,
+  FACULTY_WIDGET_AGGREGATES_QUERY_KEY,
 } from "@/tenant/hooks/collections/faculty";
 import {
   SESSIONS_METRICS_QUERY_KEY,
@@ -23,88 +23,84 @@ import type { CustomWidget } from "./pinnedWidgetTypes";
 import {
   type ContactsWidgetAggregateResult,
   type StudentsWidgetAggregateResult,
-  type TeachersWidgetAggregateResult,
+  type FacultyWidgetAggregateResult,
   type SessionsWidgetAggregateResult,
   type EnrollmentsWidgetAggregateResult,
   formatMoney,
   formatNumber,
 } from "@mms/shared";
 
-export function readContactsWidgetAggregate(widgetId: string): ContactsWidgetAggregateResult | undefined {
-  const queries = queryClientInstance.getQueriesData<Record<string, ContactsWidgetAggregateResult>>({
-    queryKey: CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
+function readWidgetAggregateFromCache<T>(
+  queryKey: readonly unknown[],
+  widgetId: string,
+): T | undefined {
+  const queries = queryClientInstance.getQueriesData<Record<string, T>>({
+    queryKey,
   });
   for (const [, aggregateByWidgetId] of queries) {
     if (aggregateByWidgetId?.[widgetId]) return aggregateByWidgetId[widgetId];
   }
   return undefined;
+}
+
+function readTotalFromMetricsQuery(queryKey: readonly unknown[]): number {
+  const metrics = queryClientInstance.getQueryData<{ total: number }>(queryKey);
+  return metrics?.total ?? 0;
+}
+
+export function readContactsWidgetAggregate(widgetId: string): ContactsWidgetAggregateResult | undefined {
+  return readWidgetAggregateFromCache<ContactsWidgetAggregateResult>(
+    CONTACTS_WIDGET_AGGREGATES_QUERY_KEY,
+    widgetId,
+  );
 }
 
 export function readContactsTotalFromMetrics(): number {
-  const metrics = queryClientInstance.getQueryData<{ total: number }>(CONTACTS_METRICS_QUERY_KEY);
-  return metrics?.total ?? 0;
+  return readTotalFromMetricsQuery(CONTACTS_METRICS_QUERY_KEY);
 }
 
 export function readStudentsWidgetAggregate(widgetId: string): StudentsWidgetAggregateResult | undefined {
-  const queries = queryClientInstance.getQueriesData<Record<string, StudentsWidgetAggregateResult>>({
-    queryKey: STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
-  });
-  for (const [, aggregateByWidgetId] of queries) {
-    if (aggregateByWidgetId?.[widgetId]) return aggregateByWidgetId[widgetId];
-  }
-  return undefined;
+  return readWidgetAggregateFromCache<StudentsWidgetAggregateResult>(
+    STUDENTS_WIDGET_AGGREGATES_QUERY_KEY,
+    widgetId,
+  );
 }
 
 export function readStudentsTotalFromMetrics(): number {
-  const metrics = queryClientInstance.getQueryData<{ total: number }>(STUDENTS_METRICS_QUERY_KEY);
-  return metrics?.total ?? 0;
+  return readTotalFromMetricsQuery(STUDENTS_METRICS_QUERY_KEY);
 }
 
-export function readTeachersWidgetAggregate(widgetId: string): TeachersWidgetAggregateResult | undefined {
-  const queries = queryClientInstance.getQueriesData<Record<string, TeachersWidgetAggregateResult>>({
-    queryKey: TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-  });
-  for (const [, aggregateByWidgetId] of queries) {
-    if (aggregateByWidgetId?.[widgetId]) return aggregateByWidgetId[widgetId];
-  }
-  return undefined;
+export function readFacultyWidgetAggregate(widgetId: string): FacultyWidgetAggregateResult | undefined {
+  return readWidgetAggregateFromCache<FacultyWidgetAggregateResult>(
+    FACULTY_WIDGET_AGGREGATES_QUERY_KEY,
+    widgetId,
+  );
 }
-export const readFacultyWidgetAggregate = readTeachersWidgetAggregate;
 
-export function readTeachersTotalFromMetrics(): number {
-  const metrics = queryClientInstance.getQueryData<{ total: number }>(TEACHERS_METRICS_QUERY_KEY);
-  return metrics?.total ?? 0;
+export function readFacultyTotalFromMetrics(): number {
+  return readTotalFromMetricsQuery(FACULTY_METRICS_QUERY_KEY);
 }
-export const readFacultyTotalFromMetrics = readTeachersTotalFromMetrics;
 
 export function readSessionsWidgetAggregate(widgetId: string): SessionsWidgetAggregateResult | undefined {
-  const queries = queryClientInstance.getQueriesData<Record<string, SessionsWidgetAggregateResult>>({
-    queryKey: SESSIONS_WIDGET_AGGREGATES_QUERY_KEY,
-  });
-  for (const [, aggregateByWidgetId] of queries) {
-    if (aggregateByWidgetId?.[widgetId]) return aggregateByWidgetId[widgetId];
-  }
-  return undefined;
+  return readWidgetAggregateFromCache<SessionsWidgetAggregateResult>(
+    SESSIONS_WIDGET_AGGREGATES_QUERY_KEY,
+    widgetId,
+  );
 }
 
 export function readSessionsTotalFromMetrics(): number {
-  const metrics = queryClientInstance.getQueryData<{ total: number }>(SESSIONS_METRICS_QUERY_KEY);
-  return metrics?.total ?? 0;
+  return readTotalFromMetricsQuery(SESSIONS_METRICS_QUERY_KEY);
 }
 
 export function readEnrollmentsWidgetAggregate(widgetId: string): EnrollmentsWidgetAggregateResult | undefined {
-  const queries = queryClientInstance.getQueriesData<Record<string, EnrollmentsWidgetAggregateResult>>({
-    queryKey: ENROLLMENTS_WIDGET_AGGREGATES_QUERY_KEY,
-  });
-  for (const [, aggregateByWidgetId] of queries) {
-    if (aggregateByWidgetId?.[widgetId]) return aggregateByWidgetId[widgetId];
-  }
-  return undefined;
+  return readWidgetAggregateFromCache<EnrollmentsWidgetAggregateResult>(
+    ENROLLMENTS_WIDGET_AGGREGATES_QUERY_KEY,
+    widgetId,
+  );
 }
 
 export function readEnrollmentsTotalFromMetrics(): number {
-  const metrics = queryClientInstance.getQueryData<{ total: number }>(ENROLLMENTS_METRICS_QUERY_KEY);
-  return metrics?.total ?? 0;
+  return readTotalFromMetricsQuery(ENROLLMENTS_METRICS_QUERY_KEY);
 }
 
 export function formatGenericWidgetValue(

@@ -27,7 +27,7 @@ export function facultyListQueryOptions(query: Record<string, unknown> = {}) {
     staleTime: 15_000,
   });
 }
-export const teachersListQueryOptions = facultyListQueryOptions;
+
 
 
 /** Contract-backed paginated list. */
@@ -40,7 +40,7 @@ export function useFacultyContractList(query: Record<string, unknown>, enabled =
     enabled,
   });
 }
-export const useTeachersContractList = useFacultyContractList;
+
 
 /** Contract-backed get by ID. */
 export function useFacultyContractGet(id: string, enabled = true) {
@@ -52,7 +52,7 @@ export function useFacultyContractGet(id: string, enabled = true) {
     staleTime: 30_000,
   });
 }
-export const useTeachersContractGet = useFacultyContractGet;
+
 
 /** Contract-backed create. */
 export function useFacultyContractCreate() {
@@ -60,7 +60,7 @@ export function useFacultyContractCreate() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.create.useMutation({ onSuccess: () => invalidateFacultyQueries(queryClient) });
 }
-export const useTeachersContractCreate = useFacultyContractCreate;
+
 
 /** Contract-backed update. */
 export function useFacultyContractUpdate() {
@@ -68,7 +68,7 @@ export function useFacultyContractUpdate() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.update.useMutation({ onSuccess: () => invalidateFacultyQueries(queryClient) });
 }
-export const useTeachersContractUpdate = useFacultyContractUpdate;
+
 
 /** Contract-backed soft-delete. */
 export function useFacultyContractDelete() {
@@ -76,7 +76,7 @@ export function useFacultyContractDelete() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.delete.useMutation({ onSuccess: () => invalidateFacultyQueries(queryClient) });
 }
-export const useTeachersContractDelete = useFacultyContractDelete;
+
 
 /** Contract-backed bulk status update. */
 export function useFacultyContractBulkStatus() {
@@ -84,14 +84,14 @@ export function useFacultyContractBulkStatus() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.bulkStatus.useMutation({ onSuccess: () => invalidateFacultyQueries(queryClient) });
 }
-export const useTeachersContractBulkStatus = useFacultyContractBulkStatus;
+
 
 /** Contract-backed duplicate check mutation. */
 export function useFacultyContractDuplicateCheck() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.duplicateCheck.useMutation({});
 }
-export const useTeachersContractDuplicateCheck = useFacultyContractDuplicateCheck;
+
 
 /** Contract-backed next employee ID query. */
 export function useFacultyContractNextEmployeeId(query: { prefix?: string }, enabled = true) {
@@ -103,7 +103,7 @@ export function useFacultyContractNextEmployeeId(query: { prefix?: string }, ena
     staleTime: 0,
   });
 }
-export const useTeachersContractNextEmployeeId = useFacultyContractNextEmployeeId;
+
 
 /** Contract-backed restore */
 export function useFacultyContractRestore() {
@@ -111,7 +111,7 @@ export function useFacultyContractRestore() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.restore.useMutation({ onSuccess: () => invalidateFacultyQueries(queryClient) });
 }
-export const useTeachersContractRestore = useFacultyContractRestore;
+
 
 /** Contract-backed bulk delete */
 export function useFacultyContractBulkDelete() {
@@ -119,7 +119,7 @@ export function useFacultyContractBulkDelete() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.bulkDelete.useMutation({ onSuccess: () => invalidateFacultyQueries(queryClient) });
 }
-export const useTeachersContractBulkDelete = useFacultyContractBulkDelete;
+
 
 /** Contract-backed bulk restore */
 export function useFacultyContractBulkRestore() {
@@ -127,7 +127,7 @@ export function useFacultyContractBulkRestore() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.bulkRestore.useMutation({ onSuccess: () => invalidateFacultyQueries(queryClient) });
 }
-export const useTeachersContractBulkRestore = useFacultyContractBulkRestore;
+
 
 /** Contract-backed bulk specialization */
 export function useFacultyContractBulkSpecialization() {
@@ -135,28 +135,28 @@ export function useFacultyContractBulkSpecialization() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.bulkSpecialization.useMutation({ onSuccess: () => invalidateFacultyQueries(queryClient) });
 }
-export const useTeachersContractBulkSpecialization = useFacultyContractBulkSpecialization;
+
 
 /** Contract-backed migrate employee IDs */
 export function useFacultyContractMigrateEmployeeIds() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.migrateEmployeeIds.useMutation({});
 }
-export const useTeachersContractMigrateEmployeeIds = useFacultyContractMigrateEmployeeIds;
+
 
 /** Contract-backed log export audit */
 export function useFacultyContractLogExportAudit() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.exportAudit.useMutation({});
 }
-export const useTeachersContractLogExportAudit = useFacultyContractLogExportAudit;
+
 
 /** Contract-backed log setup audit */
 export function useFacultyContractLogSetupAudit() {
   // @ts-expect-error - TS union discrimination limit with ts-rest
   return facultyClient.setupAudit.useMutation({});
 }
-export const useTeachersContractLogSetupAudit = useFacultyContractLogSetupAudit;
+
 
 /** Contract-backed hierarchy tree */
 export function useFacultyHierarchyTree(enabled = true) {
@@ -167,7 +167,7 @@ export function useFacultyHierarchyTree(enabled = true) {
     staleTime: 60_000,
   });
 }
-export const useTeachersHierarchyTree = useFacultyHierarchyTree;
+
 
 
 

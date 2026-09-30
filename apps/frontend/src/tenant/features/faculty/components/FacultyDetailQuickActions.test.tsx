@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
-import { TeacherDetailQuickActions } from "./FacultyDetailQuickActions";
+import type { Faculty } from "@mms/shared";
+import { FacultyDetailQuickActions } from "./FacultyDetailQuickActions";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -13,8 +13,8 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockTeacher: Teacher = {
-  id: "tch-qa-1",
+const mockFaculty: Faculty = {
+  id: "fac-qa-1",
   contactId: "cnt-1",
   name: "Ustadh Umar",
   status: "active",
@@ -27,11 +27,11 @@ const mockTeacher: Teacher = {
   updatedAt: "2024-01-01T00:00:00Z",
 };
 
-describe("TeacherDetailQuickActions Component", () => {
+describe("FacultyDetailQuickActions Component", () => {
   it("renders quick action channels when messaging is enabled", () => {
     const html = renderToStaticMarkup(
-      <TeacherDetailQuickActions
-        teacher={mockTeacher}
+      <FacultyDetailQuickActions
+        faculty={mockFaculty}
         displayName="Ustadh Umar"
         primaryPhone="+1 555-0100"
         primaryEmail="umar@example.com"

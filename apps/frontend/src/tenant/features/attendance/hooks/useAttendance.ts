@@ -38,7 +38,7 @@ export interface AttendancePaginatedParams {
   search?: string;
   sessionId?: string;
   classId?: string;
-  teacherId?: string;
+  facultyId?: string;
   date?: string;
   dateFrom?: string;
   dateTo?: string;
@@ -63,7 +63,7 @@ export function useAttendancePaginated(params: AttendancePaginatedParams) {
         search: params.search?.trim(),
         sessionId: params.sessionId?.trim(),
         classId: params.classId?.trim(),
-        teacherId: params.teacherId?.trim(),
+        facultyId: params.facultyId?.trim(),
         date: params.date?.trim(),
         dateFrom: params.dateFrom?.trim(),
         dateTo: params.dateTo?.trim(),

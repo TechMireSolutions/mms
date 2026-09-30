@@ -1,3 +1,4 @@
+import { useCallback } from "react";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { FilterChips } from "@/components/ui/FilterChips";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
@@ -9,10 +10,9 @@ import { FacultyListFilters } from "@/tenant/features/faculty/components/Faculty
 import { useFacultyWorkTierActions } from "@/tenant/features/faculty/hooks/useFacultyWorkTierActions";
 import type {
   FacultyWorkTierProps,
-  TeachersWorkTierProps,
 } from "@/tenant/features/faculty/components/facultyWorkTierProps";
 
-export type { FacultyWorkTierProps, TeachersWorkTierProps };
+export type { FacultyWorkTierProps };
 
 export function FacultyWorkTier(props: FacultyWorkTierProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -24,7 +24,30 @@ export function FacultyWorkTier(props: FacultyWorkTierProps): React.JSX.Element 
     handleBulkSpecializationChange,
     handleSortFieldChange,
   } = useFacultyWorkTierActions(props);
-  const items = props.faculty ?? props.teachers ?? [];
+  const items = props.faculty ?? [];
+
+  const handleRequestBulkDelete = useCallback(() => {
+    props.workOverlays.setConfirmBulkDeleteOpen(true);
+  }, [props.workOverlays]);
+
+  const handleRequestBulkRestore = useCallback(() => {
+    props.workOverlays.setConfirmBulkRestoreOpen(true);
+  }, [props.workOverlays]);
+
+  const handleShowActive = useCallback(() => {
+    if (props.showDeleted) {
+      props.onToggleDeleted();
+    }
+  }, [props.showDeleted, props.onToggleDeleted]);
+
+  const handleBulkPrintIdCards = useCallback(() => {
+    const selectedMembers = (props.faculty ?? []).filter((m) =>
+      props.selectedIds.includes(String(m.id)),
+    );
+    if (selectedMembers.length > 0) {
+      props.workOverlays.openIdCardsModal(selectedMembers);
+    }
+  }, [props.faculty, props.selectedIds, props.workOverlays]);
 
   return (
     <ErrorBoundary>
@@ -84,8 +107,9 @@ export function FacultyWorkTier(props: FacultyWorkTierProps): React.JSX.Element 
           onEmail={props.onEmail}
           onBulkStatusChange={handleBulkStatusChange}
           onBulkSpecializationChange={handleBulkSpecializationChange}
-          onRequestBulkDelete={() => props.workOverlays.setConfirmBulkDeleteOpen(true)}
-          onRequestBulkRestore={() => props.workOverlays.setConfirmBulkRestoreOpen(true)}
+          onBulkPrintIdCards={handleBulkPrintIdCards}
+          onRequestBulkDelete={handleRequestBulkDelete}
+          onRequestBulkRestore={handleRequestBulkRestore}
           onClearSelection={props.onClearSelection}
           canExport={props.canExport}
           onBulkExport={props.onBulkExport ? () => void props.onBulkExport?.() : undefined}
@@ -98,8 +122,8 @@ export function FacultyWorkTier(props: FacultyWorkTierProps): React.JSX.Element 
           isLoading={props.isWorkPageLoading}
           isFetching={props.isWorkPageFetching}
           onRetry={() => void props.onRetry()}
-          errorTitle={t("faculty.loadFailed") || t("teachers.loadFailed")}
-          errorHint={t("faculty.loadFailedHint") || t("teachers.loadFailedHint")}
+          errorTitle={t("faculty.loadFailed")}
+          errorHint={t("faculty.loadFailedHint")}
           viewMode={props.viewMode}
           skeletonColumnCount={props.columnRegistry.length}
           useServerWork={props.useServerWork}
@@ -116,7 +140,7 @@ export function FacultyWorkTier(props: FacultyWorkTierProps): React.JSX.Element 
             onEdit={props.onEdit}
             onRestore={props.onRestore}
             onDeleteTargetChange={props.workOverlays.setDeleteTarget}
-            onView={props.workOverlays.setViewTeacher}
+            onView={props.workOverlays.setViewFaculty}
             onWhatsApp={props.onWhatsApp}
             onSms={props.onSms}
             onEmail={props.onEmail}
@@ -134,15 +158,11 @@ export function FacultyWorkTier(props: FacultyWorkTierProps): React.JSX.Element 
             sortDir={props.sortDir}
             onSortChange={props.onSortChange}
             onClearFilters={props.onClearFilters}
-            onShowActive={() => {
-              if (props.showDeleted) props.onToggleDeleted();
-            }}
+            onShowActive={handleShowActive}
           />
         </ModuleWorkListStateShell>
       </ModuleTierMotion>
     </ErrorBoundary>
   );
 }
-
-export const TeachersWorkTier = FacultyWorkTier;
 

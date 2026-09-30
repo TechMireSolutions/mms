@@ -1,9 +1,9 @@
-import { formatDate, type Teacher } from "@mms/shared";
+import { formatDate, type FacultyMember } from "@mms/shared";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
-export type TeacherReportSubTab = "roster" | "workload";
+export type FacultyReportSubTab = "roster" | "workload";
 
-export interface ReportTeacher extends Record<string, unknown> {
+export interface ReportFaculty extends Record<string, unknown> {
   id: string;
   name: string;
   employeeId: string;
@@ -21,21 +21,21 @@ export interface FacultyWorkloadItem extends Record<string, unknown> {
   totalStudents: number;
 }
 
-export interface TeacherReportFilters {
+export interface FacultyReportFilters {
   status: string;
   class: string;
   student: string;
   session?: string;
 }
 
-export interface TeacherReportProps {
-  filters: TeacherReportFilters;
+export interface FacultyReportProps {
+  filters: FacultyReportFilters;
   onEditVisual?: (config: unknown) => void;
 }
 
-export interface TeacherReportTablesProps {
-  activeSubTab: TeacherReportSubTab;
-  teachers: ReportTeacher[];
+export interface FacultyReportTablesProps {
+  activeSubTab: FacultyReportSubTab;
+  faculty: ReportFaculty[];
   statusBadgeConfig: Record<string, StatusBadgeConfigItem>;
   listLoading?: boolean;
   workloadRows: FacultyWorkloadItem[];
@@ -43,16 +43,16 @@ export interface TeacherReportTablesProps {
   onToggleFacultyFilter: (faculty: string) => void;
 }
 
-/** Maps a hydrated Teacher to the roster report row shape. */
-export function mapTeacherRow(teacher: Teacher): ReportTeacher {
+/** Maps a hydrated FacultyMember to the roster report row shape. */
+export function mapFacultyRow(member: FacultyMember): ReportFaculty {
   return {
-    id: String(teacher.id),
-    name: teacher.name || "",
-    employeeId: teacher.employeeId || "—",
-    specialization: teacher.specialization || "—",
-    status: teacher.status || "inactive",
-    qualification: teacher.qualification || "—",
-    joinDate: teacher.joinDate ? formatDate(teacher.joinDate, true) : "—",
-    gender: teacher.gender || "—",
+    id: String(member.id),
+    name: member.name || "",
+    employeeId: member.employeeId || "—",
+    specialization: member.specialization || "—",
+    status: member.status || "inactive",
+    qualification: member.qualification || "—",
+    joinDate: member.joinDate ? formatDate(member.joinDate, true) : "—",
+    gender: member.gender || "—",
   };
 }

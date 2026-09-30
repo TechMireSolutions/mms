@@ -57,7 +57,7 @@ describe('settingsGlobalDraft', () => {
     const draft: GlobalSettings = {
       ...baseline,
       language: 'ar',
-      enabledModules: { ...baseline.enabledModules, teachers: false },
+      enabledModules: { ...baseline.enabledModules, faculty: false },
     };
     expect(isGlobalPreferencesDirty(draft, baseline)).toBe(true);
     expect(isEnabledModulesDraftDirty(draft, baseline)).toBe(true);
@@ -73,26 +73,26 @@ describe('settingsGlobalDraft', () => {
     const draft: GlobalSettings = {
       ...persisted,
       language: 'ar',
-      enabledModules: { ...persisted.enabledModules, teachers: false },
+      enabledModules: { ...persisted.enabledModules, faculty: false },
     };
     const afterGlobal = retainModulesDraftAfterGlobalSave(persisted, draft);
     expect(afterGlobal.language).toBe('en');
-    expect(afterGlobal.enabledModules.teachers).toBe(false);
+    expect(afterGlobal.enabledModules.faculty).toBe(false);
 
     const afterModules = retainGlobalDraftAfterModulesSave(persisted, draft);
     expect(afterModules.language).toBe('ar');
-    expect(afterModules.enabledModules.teachers).toBe(true);
+    expect(afterModules.enabledModules.faculty).toBe(true);
   });
 
   it('previewGlobalSettingsDraft includes modules and preferences', () => {
     const draft: GlobalSettings = {
       ...DEFAULT_GLOBAL_SETTINGS,
       language: 'ur',
-      enabledModules: { ...DEFAULT_GLOBAL_SETTINGS.enabledModules, teachers: false },
+      enabledModules: { ...DEFAULT_GLOBAL_SETTINGS.enabledModules, faculty: false },
     };
     const patch = previewGlobalSettingsDraft(draft);
     expect(patch.language).toBe('ur');
-    expect(patch.enabledModules?.teachers).toBe(false);
+    expect(patch.enabledModules?.faculty).toBe(false);
     expect(globalSettingsPreviewPatch(draft).enabledModules).toBeUndefined();
   });
 });

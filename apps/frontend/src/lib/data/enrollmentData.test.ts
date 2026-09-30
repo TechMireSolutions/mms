@@ -92,7 +92,7 @@ describe('enrollmentData dynamic calculations', () => {
         ageMin: 5,
         ageMax: 18,
         gender: 'male' as const,
-        teacherId: 'teacher-1',
+        facultyId: 'faculty-1',
         capacity: 20,
         enrolled: 5,
       };

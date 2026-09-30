@@ -1,30 +1,32 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DEFAULT_TEACHER_COLUMN_REGISTRY, type Teacher } from "@mms/shared";
-import { TeachersListDesktopTable } from "./FacultyListDesktopTable";
+import { DEFAULT_FACULTY_COLUMN_REGISTRY, type Faculty } from "@mms/shared";
+import { FacultyListDesktopTable } from "./FacultyListDesktopTable";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string | number>) => {
-      if (key === "teachers.table.selectTeacher" && params?.name) {
+      if (key === "faculty.table.selectFaculty" && params?.name) {
         return `Select ${params.name}`;
       }
-      if (key === "teachers.selectedCount" && params?.count != null) {
+      if (key === "faculty.selectedCount" && params?.count != null) {
         return `${params.count} selected`;
       }
       const labels: Record<string, string> = {
-        "teachers.table.selectAll": "Select All",
-        "teachers.table.actions": "Actions",
-        "teachers.table.emptyDash": "—",
-        "teachers.deletionReasonLabel": "Reason",
+        "faculty.table.selectAll": "Select All",
+        "faculty.table.actions": "Actions",
+        "faculty.table.emptyDash": "—",
+        "faculty.deletionReasonLabel": "Reason",
+        "faculty.form.faculty": "faculty member",
+        "faculty.table.faculty": "faculty",
       };
       return labels[key] ?? key;
     },
   }),
 }));
 
-const mockTeacher: Teacher = {
+const mockFaculty: Faculty = {
   id: "tch-101",
   contactId: "cnt-tch-101",
   name: "Sheikh Jawad",
@@ -33,7 +35,7 @@ const mockTeacher: Teacher = {
   gender: "male",
   employeeId: "EMP-909",
   status: "active",
-  roles: ["teacher"],
+  roles: ["faculty"],
   department: "Islamic Studies",
   subjects: ["Fiqh", "Hadith"],
   hireDate: "2022-09-01",
@@ -48,7 +50,7 @@ const mockTeacher: Teacher = {
 
 const defaultProps = {
   viewMode: "table" as const,
-  teachers: [mockTeacher],
+  faculty: [mockFaculty],
   selectedIds: ["tch-101"],
   allSelected: true,
   someSelected: false,
@@ -57,7 +59,7 @@ const defaultProps = {
   canDelete: true,
   hasActiveFilters: false,
   isColumnVisible: () => true,
-  columnRegistry: DEFAULT_TEACHER_COLUMN_REGISTRY,
+  columnRegistry: DEFAULT_FACULTY_COLUMN_REGISTRY,
   customFieldsById: new Map(),
   statusConfig: { active: { label: "Active", cls: "bg-success/10 text-success" } },
   sortField: "name" as const,
@@ -70,9 +72,9 @@ const defaultProps = {
   onRequestDelete: vi.fn(),
 };
 
-describe("TeachersListDesktopTable Component", () => {
-  it("renders desktop table with teacher row, avatar, employeeId, and deletion reason", () => {
-    const html = renderToStaticMarkup(<TeachersListDesktopTable {...defaultProps} />);
+describe("FacultyListDesktopTable Component", () => {
+  it("renders desktop table with faculty row, avatar, employeeId, and deletion reason", () => {
+    const html = renderToStaticMarkup(<FacultyListDesktopTable {...defaultProps} />);
 
     expect(html).toContain("Sheikh Jawad");
     expect(html).toContain("EMP-909");
@@ -81,36 +83,36 @@ describe("TeachersListDesktopTable Component", () => {
     expect(html).toContain('aria-label="Select Sheikh Jawad"');
   });
 
-  it("renders empty table footer when no teachers are present", () => {
+  it("renders empty table footer when no faculty are present", () => {
     const html = renderToStaticMarkup(
-      <TeachersListDesktopTable
+      <FacultyListDesktopTable
         {...defaultProps}
-        teachers={[]}
+        faculty={[]}
         selectedIds={[]}
         allSelected={false}
         someSelected={false}
       />,
     );
 
-    expect(html).toContain("0 teachers.table.teachers");
+    expect(html).toContain("0 faculty");
     expect(html).not.toContain("0 selected");
   });
 
-  it("renders virtualized container when teachers exceed 30 items", () => {
-    const manyTeachers = Array.from({ length: 35 }, (_, index) => ({
-      ...mockTeacher,
-      id: `teacher-${index + 1}`,
-      name: `Teacher ${index + 1}`,
+  it("renders virtualized container when faculty exceed 30 items", () => {
+    const manyFaculty = Array.from({ length: 35 }, (_, index) => ({
+      ...mockFaculty,
+      id: `faculty-${index + 1}`,
+      name: `Faculty Member ${index + 1}`,
     }));
     const html = renderToStaticMarkup(
-      <TeachersListDesktopTable
+      <FacultyListDesktopTable
         {...defaultProps}
-        teachers={manyTeachers}
+        faculty={manyFaculty}
         selectedIds={[]}
       />,
     );
 
     expect(html).toContain("max-h-150 overflow-y-auto");
-    expect(html).toContain("35 teachers.table.teachers");
+    expect(html).toContain("35 faculty");
   });
 });

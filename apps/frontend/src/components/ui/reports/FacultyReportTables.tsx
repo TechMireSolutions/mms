@@ -17,17 +17,17 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { toTitleCase } from "@mms/shared";
 import { FacultyReportWorkloadTable } from "@/components/ui/reports/FacultyReportWorkloadTable";
 
-import type { TeacherReportTablesProps } from "./facultyReportTypes";
+import type { FacultyReportTablesProps } from "./facultyReportTypes";
 
 export const FacultyReportTables = (function FacultyReportTables({
   activeSubTab,
-  teachers,
+  faculty,
   statusBadgeConfig,
   listLoading,
   workloadRows,
   selectedFaculty,
   onToggleFacultyFilter,
-}: TeacherReportTablesProps): React.JSX.Element {
+}: FacultyReportTablesProps): React.JSX.Element {
   const { t } = useTranslation();
 
   if (activeSubTab === "workload") {
@@ -35,8 +35,8 @@ export const FacultyReportTables = (function FacultyReportTables({
       return (
         <EmptyState
           icon={Users}
-          title={t("teachers.report.noFacultyData")}
-          description={t("teachers.report.adjustFilters")}
+          title={t("faculty.report.noFacultyData")}
+          description={t("faculty.report.adjustFilters")}
           compact
         />
       );
@@ -55,41 +55,41 @@ export const FacultyReportTables = (function FacultyReportTables({
     return <TableSkeleton rows={5} cols={6} />;
   }
 
-  return teachers.length === 0 ? (
-    <EmptyState icon={Users} title={t("teachers.report.noTeachersFound")} description={t("teachers.report.adjustFilters")} compact />
+  return faculty.length === 0 ? (
+    <EmptyState icon={Users} title={t("faculty.report.noTeachersFound")} description={t("faculty.report.adjustFilters")} compact />
   ) : (
     <div className={WORK_SURFACE}>
       <div className="space-y-3 p-3 md:hidden">
-        {teachers.map((teacher) => (
-          <article key={teacher.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
+        {faculty.map((member) => (
+          <article key={member.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
             <div className="flex min-w-0 items-start justify-between gap-3">
-              <h4 className="truncate text-sm font-semibold text-foreground">{teacher.name}</h4>
-              <StatusBadge status={teacher.status} config={statusBadgeConfig} />
+              <h4 className="truncate text-sm font-semibold text-foreground">{member.name}</h4>
+              <StatusBadge status={member.status} config={statusBadgeConfig} />
             </div>
             <StatGrid>
-              <StatRow className="min-w-0" label={t("teachers.report.colEmployeeId")} value={teacher.employeeId} />
+              <StatRow className="min-w-0" label={t("faculty.report.colEmployeeId")} value={member.employeeId} />
               <StatRow
                 className="min-w-0"
-                label={t("teachers.report.colSpecialization")}
-                value={teacher.specialization}
+                label={t("faculty.report.colSpecialization")}
+                value={member.specialization}
                 ddClassName="truncate"
               />
               <StatRow
                 className="min-w-0"
-                label={t("teachers.report.colQualification")}
-                value={teacher.qualification}
+                label={t("faculty.report.colQualification")}
+                value={member.qualification}
                 ddClassName="truncate"
               />
               <StatRow
                 className="min-w-0"
-                label={t("teachers.report.colGender")}
-                value={toTitleCase(teacher.gender)}
+                label={t("faculty.report.colGender")}
+                value={toTitleCase(member.gender)}
                 ddClassName="truncate"
               />
               <StatRow
                 className="min-w-0"
-                label={t("teachers.report.colJoinDate")}
-                value={teacher.joinDate}
+                label={t("faculty.report.colJoinDate")}
+                value={member.joinDate}
                 ddClassName="text-muted-foreground"
               />
             </StatGrid>
@@ -98,29 +98,29 @@ export const FacultyReportTables = (function FacultyReportTables({
       </div>
       <div className="hidden md:block">
         <Table>
-          <caption className="sr-only">{t("teachers.report.rosterTab")}</caption>
+          <caption className="sr-only">{t("faculty.report.rosterTab")}</caption>
           <TableHeader>
             <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-              <ModuleTableHeaderCell columnKey="name" className="px-3 py-2.5">{t("teachers.report.colName")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="employeeId" className="px-3 py-2.5 hidden sm:table-cell">{t("teachers.report.colEmployeeId")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="specialization" className="px-3 py-2.5 hidden sm:table-cell">{t("teachers.report.colSpecialization")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="qualification" className="px-3 py-2.5 hidden md:table-cell">{t("teachers.report.colQualification")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="gender" className="px-3 py-2.5 hidden lg:table-cell">{t("teachers.report.colGender")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="joinDate" className="px-3 py-2.5 hidden lg:table-cell">{t("teachers.report.colJoinDate")}</ModuleTableHeaderCell>
-              <ModuleTableHeaderCell columnKey="status" className="px-3 py-2.5">{t("teachers.report.colStatus")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="name" className="px-3 py-2.5">{t("faculty.report.colName")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="employeeId" className="px-3 py-2.5 hidden sm:table-cell">{t("faculty.report.colEmployeeId")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="specialization" className="px-3 py-2.5 hidden sm:table-cell">{t("faculty.report.colSpecialization")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="qualification" className="px-3 py-2.5 hidden md:table-cell">{t("faculty.report.colQualification")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="gender" className="px-3 py-2.5 hidden lg:table-cell">{t("faculty.report.colGender")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="joinDate" className="px-3 py-2.5 hidden lg:table-cell">{t("faculty.report.colJoinDate")}</ModuleTableHeaderCell>
+              <ModuleTableHeaderCell columnKey="status" className="px-3 py-2.5">{t("faculty.report.colStatus")}</ModuleTableHeaderCell>
             </TableRow>
           </TableHeader>
           <TableBody className="divide-y divide-border/50">
-            {teachers.map((teacher) => (
-              <TableRow key={teacher.id} className="hover:bg-muted/20 transition-colors">
-                <TableCell className="px-3 py-2.5 font-medium text-foreground">{teacher.name}</TableCell>
-                <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{teacher.employeeId}</TableCell>
-                <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{teacher.specialization}</TableCell>
-                <TableCell className="px-3 py-2.5 text-muted-foreground max-w-cell-lg truncate hidden md:table-cell">{teacher.qualification}</TableCell>
-                <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{toTitleCase(teacher.gender)}</TableCell>
-                <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{teacher.joinDate}</TableCell>
+            {faculty.map((member) => (
+              <TableRow key={member.id} className="hover:bg-muted/20 transition-colors">
+                <TableCell className="px-3 py-2.5 font-medium text-foreground">{member.name}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{member.employeeId}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground hidden sm:table-cell">{member.specialization}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground max-w-cell-lg truncate hidden md:table-cell">{member.qualification}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{toTitleCase(member.gender)}</TableCell>
+                <TableCell className="px-3 py-2.5 text-muted-foreground hidden lg:table-cell">{member.joinDate}</TableCell>
                 <TableCell className="px-3 py-2.5">
-                  <StatusBadge status={teacher.status} config={statusBadgeConfig} />
+                  <StatusBadge status={member.status} config={statusBadgeConfig} />
                 </TableCell>
               </TableRow>
             ))}

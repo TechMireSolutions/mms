@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DEFAULT_TEACHER_COLUMN_REGISTRY, type Teacher } from "@mms/shared";
-import { TeacherCardMetadata } from "./FacultyCardMetadata";
+import { DEFAULT_FACULTY_COLUMN_REGISTRY, type Faculty } from "@mms/shared";
+import { FacultyCardMetadata } from "./FacultyCardMetadata";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -10,7 +10,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockTeacher: Teacher = {
+const mockFaculty: Faculty = {
   id: "tch-meta-1",
   contactId: "cnt-1",
   name: "Ustadh Umar",
@@ -22,13 +22,13 @@ const mockTeacher: Teacher = {
   updatedAt: "2024-01-01T00:00:00Z",
 };
 
-describe("TeacherCardMetadata Component", () => {
+describe("FacultyCardMetadata Component", () => {
   it("renders non-face metadata tiles for visible columns", () => {
     const html = renderToStaticMarkup(
-      <TeacherCardMetadata
-        teacher={mockTeacher}
+      <FacultyCardMetadata
+        faculty={mockFaculty}
         isColumnVisible={() => true}
-        columnRegistry={DEFAULT_TEACHER_COLUMN_REGISTRY}
+        columnRegistry={DEFAULT_FACULTY_COLUMN_REGISTRY}
         customFieldsById={new Map()}
         statusConfig={{ active: { label: "Active", cls: "bg-success" } }}
       />,
@@ -40,10 +40,10 @@ describe("TeacherCardMetadata Component", () => {
 
   it("returns null when no metadata columns are visible", () => {
     const html = renderToStaticMarkup(
-      <TeacherCardMetadata
-        teacher={mockTeacher}
+      <FacultyCardMetadata
+        faculty={mockFaculty}
         isColumnVisible={() => false}
-        columnRegistry={DEFAULT_TEACHER_COLUMN_REGISTRY}
+        columnRegistry={DEFAULT_FACULTY_COLUMN_REGISTRY}
         customFieldsById={new Map()}
         statusConfig={{}}
       />,

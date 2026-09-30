@@ -30,26 +30,26 @@ vi.mock('../services/workspaceService.js', async (importOriginal) => {
   };
 });
 
-const mockCreateTeacher = vi.fn();
-const mockUpdateTeacherById = vi.fn();
-const mockCheckTeacherRegistrationDuplicate = vi.fn();
-const mockMigrateTeachersMissingEmployeeIds = vi.fn();
-const mockLoadTeachersPage = vi.fn();
-const mockBulkUpdateTeacherSpecialization = vi.fn();
+const mockCreateFaculty = vi.fn();
+const mockUpdateFacultyById = vi.fn();
+const mockCheckFacultyRegistrationDuplicate = vi.fn();
+const mockMigrateFacultyMissingEmployeeIds = vi.fn();
+const mockLoadFacultyPage = vi.fn();
+const mockBulkUpdateFacultySpecialization = vi.fn();
 
 vi.mock('../faculty/use-cases/facultyUseCases.js', async (importOriginal) => {
   const actual = await importOriginal<typeof import('../faculty/use-cases/facultyUseCases.js')>();
   const mocked = {
     ...actual.facultyUseCases,
-    createFaculty: (...args: unknown[]) => mockCreateTeacher(...args),
-    updateFacultyById: (...args: unknown[]) => mockUpdateTeacherById(...args),
+    createFaculty: (...args: unknown[]) => mockCreateFaculty(...args),
+    updateFacultyById: (...args: unknown[]) => mockUpdateFacultyById(...args),
     checkFacultyRegistrationDuplicate: (...args: unknown[]) =>
-      mockCheckTeacherRegistrationDuplicate(...args),
+      mockCheckFacultyRegistrationDuplicate(...args),
     migrateFacultyMissingEmployeeIds: (...args: unknown[]) =>
-      mockMigrateTeachersMissingEmployeeIds(...args),
-    loadFacultyPage: (...args: unknown[]) => mockLoadTeachersPage(...args),
+      mockMigrateFacultyMissingEmployeeIds(...args),
+    loadFacultyPage: (...args: unknown[]) => mockLoadFacultyPage(...args),
     bulkUpdateFacultySpecialization: (...args: unknown[]) =>
-      mockBulkUpdateTeacherSpecialization(...args),
+      mockBulkUpdateFacultySpecialization(...args),
     sanitizeFacultyForViewer: async (faculty: unknown) => faculty,
     sanitizeFacultyListForViewer: async (facultyList: unknown) => facultyList,
   };
@@ -60,7 +60,6 @@ vi.mock('../faculty/use-cases/facultyUseCases.js', async (importOriginal) => {
 });
 
 vi.mock('../services/facultyValidationService.js', () => ({
-  validateTeacherDynamic: vi.fn().mockResolvedValue(undefined),
   validateFacultyDynamic: vi.fn().mockResolvedValue(undefined),
 }));
 
@@ -71,7 +70,7 @@ describe('faculty write contact-profile SSOT', () => {
   });
 
   it('POST /api/faculty strips contact profile dual-write keys before create', async () => {
-    mockCreateTeacher.mockImplementation(async (teacher: Record<string, unknown>) => ({
+    mockCreateFaculty.mockImplementation(async (teacher: Record<string, unknown>) => ({
       record: teacher,
       restored: false,
     }));
@@ -97,8 +96,8 @@ describe('faculty write contact-profile SSOT', () => {
     });
     expect(res.statusCode).toBe(201);
     expect(res.json()).toMatchObject({ success: true, faculty: { contactId: 'c-300' } });
-    expect(mockCreateTeacher).toHaveBeenCalled();
-    const created = mockCreateTeacher.mock.calls[0]?.[0] as Record<string, unknown>;
+    expect(mockCreateFaculty).toHaveBeenCalled();
+    const created = mockCreateFaculty.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(created.contactId).toBe('c-300');
     expect(created.specialization).toBe('Hifz');
     expect(created.name).toBeUndefined();
@@ -110,7 +109,7 @@ describe('faculty write contact-profile SSOT', () => {
   });
 
   it('POST /api/faculty returns 200 when the create restored an archived faculty member', async () => {
-    mockCreateTeacher.mockImplementation(async (teacher: Record<string, unknown>) => ({
+    mockCreateFaculty.mockImplementation(async (teacher: Record<string, unknown>) => ({
       record: { ...teacher, id: 't-archived' },
       restored: true,
     }));
@@ -137,7 +136,7 @@ describe('faculty write contact-profile SSOT', () => {
   });
 
   it('PUT /api/faculty/:id strips contact profile keys on update', async () => {
-    mockUpdateTeacherById.mockImplementation(
+    mockUpdateFacultyById.mockImplementation(
       async (_id: string, teacher: Record<string, unknown>) => teacher,
     );
     const app = await buildApp();
@@ -158,8 +157,8 @@ describe('faculty write contact-profile SSOT', () => {
       },
     });
     expect(res.statusCode).toBe(200);
-    expect(mockUpdateTeacherById).toHaveBeenCalled();
-    const updated = mockUpdateTeacherById.mock.calls[0]?.[1] as Record<string, unknown>;
+    expect(mockUpdateFacultyById).toHaveBeenCalled();
+    const updated = mockUpdateFacultyById.mock.calls[0]?.[1] as Record<string, unknown>;
     expect(updated.specialization).toBe('Tajweed');
     expect(updated.name).toBeUndefined();
     expect(updated.gender).toBeUndefined();
@@ -184,12 +183,12 @@ describe('faculty write contact-profile SSOT', () => {
       },
     });
     expect(res.statusCode).toBe(400);
-    expect(mockCreateTeacher).not.toHaveBeenCalled();
+    expect(mockCreateFaculty).not.toHaveBeenCalled();
     await app.close();
   });
 
   it('POST /api/faculty/duplicate-check returns the conflict reason for writers', async () => {
-    mockCheckTeacherRegistrationDuplicate.mockResolvedValue({ reason: 'employeeId' });
+    mockCheckFacultyRegistrationDuplicate.mockResolvedValue({ reason: 'employeeId' });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -203,7 +202,7 @@ describe('faculty write contact-profile SSOT', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ reason: 'employeeId' });
-    expect(mockCheckTeacherRegistrationDuplicate).toHaveBeenCalledWith({
+    expect(mockCheckFacultyRegistrationDuplicate).toHaveBeenCalledWith({
       contactId: 'c-300',
       employeeId: 'TCH-0001',
     });
@@ -223,12 +222,12 @@ describe('faculty write contact-profile SSOT', () => {
       payload: { contactId: 'c-300' },
     });
     expect(res.statusCode).toBe(403);
-    expect(mockCheckTeacherRegistrationDuplicate).not.toHaveBeenCalled();
+    expect(mockCheckFacultyRegistrationDuplicate).not.toHaveBeenCalled();
     await app.close();
   });
 
   it('POST /api/faculty/migrate-employee-ids backfills for setup writers', async () => {
-    mockMigrateTeachersMissingEmployeeIds.mockResolvedValue({ updated: 3 });
+    mockMigrateFacultyMissingEmployeeIds.mockResolvedValue({ updated: 3 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -242,7 +241,7 @@ describe('faculty write contact-profile SSOT', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toEqual({ success: true, updated: 3 });
-    expect(mockMigrateTeachersMissingEmployeeIds).toHaveBeenCalledTimes(1);
+    expect(mockMigrateFacultyMissingEmployeeIds).toHaveBeenCalledTimes(1);
     await app.close();
   });
 
@@ -259,12 +258,12 @@ describe('faculty write contact-profile SSOT', () => {
       payload: {},
     });
     expect(res.statusCode).toBe(403);
-    expect(mockMigrateTeachersMissingEmployeeIds).not.toHaveBeenCalled();
+    expect(mockMigrateFacultyMissingEmployeeIds).not.toHaveBeenCalled();
     await app.close();
   });
 
   it('GET /api/faculty forwards gender and quickFilter to the list page', async () => {
-    mockLoadTeachersPage.mockResolvedValue({
+    mockLoadFacultyPage.mockResolvedValue({
       faculty: [{ id: 't1', specialization: 'Hifz', status: 'active' }],
       total: 1,
       page: 1,
@@ -284,7 +283,7 @@ describe('faculty write contact-profile SSOT', () => {
     const body = res.json() as { faculty?: unknown[]; total: number };
     expect(body.faculty).toHaveLength(1);
     expect(body.total).toBe(1);
-    const query = mockLoadTeachersPage.mock.calls[0]?.[0] as Record<string, unknown>;
+    const query = mockLoadFacultyPage.mock.calls[0]?.[0] as Record<string, unknown>;
     expect(query.gender).toBe('male');
     expect(query.quickFilter).toBe('active');
     expect(query.specialization).toBe('Hifz');
@@ -292,7 +291,7 @@ describe('faculty write contact-profile SSOT', () => {
   });
 
   it('POST /api/faculty/bulk-specialization updates specialization for writers', async () => {
-    mockBulkUpdateTeacherSpecialization.mockResolvedValueOnce({ succeeded: 2, failed: 0 });
+    mockBulkUpdateFacultySpecialization.mockResolvedValueOnce({ succeeded: 2, failed: 0 });
     const app = await buildApp();
     const res = await app.inject({
       method: 'POST',
@@ -309,7 +308,7 @@ describe('faculty write contact-profile SSOT', () => {
     });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ success: true, succeeded: 2, failed: 0 });
-    expect(mockBulkUpdateTeacherSpecialization).toHaveBeenCalledWith(['t1', 't2'], 'Tajweed');
+    expect(mockBulkUpdateFacultySpecialization).toHaveBeenCalledWith(['t1', 't2'], 'Tajweed');
     await app.close();
   });
 
@@ -329,7 +328,7 @@ describe('faculty write contact-profile SSOT', () => {
       },
     });
     expect(res.statusCode).toBe(403);
-    expect(mockBulkUpdateTeacherSpecialization).not.toHaveBeenCalled();
+    expect(mockBulkUpdateFacultySpecialization).not.toHaveBeenCalled();
     await app.close();
   });
 });

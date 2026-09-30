@@ -58,7 +58,6 @@ export const ERD_DOMAINS: readonly ErdDomain[] = [
 const ERD_DOMAIN_BY_ID = new Map<string, ErdDomain>(
   ERD_DOMAINS.map((domain) => [domain.id, domain]),
 );
-ERD_DOMAIN_BY_ID.set('teachers', ERD_DOMAIN_FACULTY);
 
 /** Look up a domain ERD by id. */
 export function getErdDomain(id: ErdDomainId | string): ErdDomain {

@@ -21,8 +21,7 @@ vi.mock("@/components/ui/ModulePageShell", () => ({
 }));
 
 vi.mock("@/tenant/features/faculty/components/FacultyCommandMetrics", () => ({
-  FacultyCommandMetrics: () => <div data-testid="teachers-metrics">Teacher Metrics</div>,
-  TeachersCommandMetrics: () => <div data-testid="teachers-metrics">Teacher Metrics</div>,
+  FacultyCommandMetrics: () => <div data-testid="faculty-metrics">Faculty Metrics</div>,
 }));
 
 vi.mock("@/components/ui/ResponsiveAccordionTabs", () => ({
@@ -38,13 +37,11 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("@/tenant/features/faculty/components/FacultyWorkTier", () => ({
-  FacultyWorkTier: () => <div data-testid="teachers-work-tier">Teacher Work Tier</div>,
-  TeachersWorkTier: () => <div data-testid="teachers-work-tier">Teacher Work Tier</div>,
+  FacultyWorkTier: () => <div data-testid="faculty-work-tier">Faculty Work Tier</div>,
 }));
 
 vi.mock("@/tenant/features/faculty/components/FacultyPageOverlays", () => ({
-  FacultyPageOverlays: () => <div data-testid="teachers-page-overlays">Teacher Overlays</div>,
-  TeachersPageOverlays: () => <div data-testid="teachers-page-overlays">Teacher Overlays</div>,
+  FacultyPageOverlays: () => <div data-testid="faculty-page-overlays">Faculty Overlays</div>,
 }));
 
 describe("FacultyPageView Component", () => {
@@ -77,7 +74,7 @@ describe("FacultyPageView Component", () => {
     );
 
     expect(html).toContain("nav.faculty");
-    expect(html).toContain("Teacher Work Tier");
-    expect(html).toContain("Teacher Overlays");
+    expect(html).toContain("Faculty Work Tier");
+    expect(html).toContain("Faculty Overlays");
   });
 });

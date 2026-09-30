@@ -1,14 +1,14 @@
 import {
-  TEACHERS_TAB_REGISTRY,
-  isTeacherLockedEnabledTab,
-  listTeacherSystemFormFieldKeys,
-  resolveTeacherEnabledTabIds,
-  resolveTeacherFieldsMapForColumnSync,
+  FACULTY_TAB_REGISTRY,
+  isFacultyLockedEnabledTab,
+  listFacultySystemFormFieldKeys,
+  resolveFacultyEnabledTabIds,
+  resolveFacultyFieldsMapForColumnSync,
   type FieldDefinition,
-  type TeachersSettings,
+  type FacultySettings,
 } from "@mms/shared";
 
-export type TeacherDetailFieldRow = {
+export type FacultyDetailFieldRow = {
   key: string;
   label: string;
   labelKey?: FieldDefinition["labelKey"];
@@ -19,26 +19,26 @@ export type TeacherDetailFieldRow = {
 };
 
 /**
- * Enabled Setup fields for TeacherDetail, ordered by formTabs then field order.
+ * Enabled Setup fields for FacultyDetail, ordered by formTabs then field order.
  * Locked `basic` always participates; other tabs follow `enabledTabs`.
  */
-export function listTeacherDetailAttributeFields(
-  settings: TeachersSettings,
-): TeacherDetailFieldRow[] {
-  const fields = resolveTeacherFieldsMapForColumnSync(settings.fields);
+export function listFacultyDetailAttributeFields(
+  settings: FacultySettings,
+): FacultyDetailFieldRow[] {
+  const fields = resolveFacultyFieldsMapForColumnSync(settings.fields);
   const formTabs =
     settings.formTabs && settings.formTabs.length > 0
       ? settings.formTabs
-      : TEACHERS_TAB_REGISTRY;
+      : FACULTY_TAB_REGISTRY;
   const tabOrderMap = Object.fromEntries(
     formTabs.map((tab, index) => [tab.key, index]),
   );
-  const enabledTabIds = new Set(resolveTeacherEnabledTabIds(settings));
-  const systemKeys = listTeacherSystemFormFieldKeys();
+  const enabledTabIds = new Set(resolveFacultyEnabledTabIds(settings));
+  const systemKeys = listFacultySystemFormFieldKeys();
 
-  const list: TeacherDetailFieldRow[] = [];
+  const list: FacultyDetailFieldRow[] = [];
   for (const [tabId, tabFields] of Object.entries(fields)) {
-    if (!isTeacherLockedEnabledTab(tabId) && !enabledTabIds.has(tabId)) continue;
+    if (!isFacultyLockedEnabledTab(tabId) && !enabledTabIds.has(tabId)) continue;
     for (const field of tabFields) {
       if (!field.enabled) continue;
       list.push({
@@ -60,4 +60,6 @@ export function listTeacherDetailAttributeFields(
     return left.order - right.order;
   });
 }
+
+
 

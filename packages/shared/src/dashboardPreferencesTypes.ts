@@ -205,12 +205,12 @@ export type DashboardTrendMetric =
   | "sessions"
   | "contacts"
   | "students"
-  | "teachers";
+  | "faculty";
 
 /** Live trend snapshots computed from server `/metrics` aggregates. */
 export interface DashboardMetricTrends {
   studentTrend: number;
-  teacherTrend: number;
+  facultyTrend: number;
   contactTrend: number;
   attendanceTrend: number;
   feesTrend: number;

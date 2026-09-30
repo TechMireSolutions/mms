@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DEFAULT_TEACHERS_SETTINGS } from "@mms/shared";
+import { DEFAULT_FACULTY_SETTINGS } from "@mms/shared";
 import { FacultySettings } from "./FacultySettings";
 
 vi.mock("@/tenant/hooks/usePermissions", () => ({
@@ -12,22 +12,11 @@ vi.mock("@/tenant/features/faculty/hooks/useFacultyStatusConfig", () => ({
   useFacultyLookupOptions: () => ({
     specializationOptions: ["Tajweed", "Hifz"],
   }),
-  useTeacherLookupOptions: () => ({
-    specializationOptions: ["Tajweed", "Hifz"],
-  }),
 }));
 
 vi.mock("@/tenant/features/faculty/hooks/useFacultySetupPanelState", () => ({
   useFacultySetupPanelState: () => ({
-    settingsDraft: DEFAULT_TEACHERS_SETTINGS,
-    saved: false,
-    saving: false,
-    isPrefsDirty: false,
-    upd: vi.fn(),
-    handleSave: vi.fn(),
-  }),
-  useTeachersSetupPanelState: () => ({
-    settingsDraft: DEFAULT_TEACHERS_SETTINGS,
+    settingsDraft: DEFAULT_FACULTY_SETTINGS,
     saved: false,
     saving: false,
     isPrefsDirty: false,

@@ -1,23 +1,22 @@
+/**
+ * @file moduleColumnCore.ts
+ * @description Core primitives and algorithms for module Work column preferences, sizing, and overlay.
+ */
 import {
-  type StudentsSettings,
-  type TeachersSettings,
-} from './settingsTypes.js';
+  buildStudentWorkColumnRegistry,
+  type StudentWorkColumnLabels,
+} from './studentColumnRegistrySync.js';
 import {
-  listEnabledCustomStudentFormFields,
-  resolveStudentFieldsMapForColumnSync,
-} from './studentFormCustomFields.js';
-import { syncStudentColumnRegistryWithFields } from './studentColumnRegistrySync.js';
-import { syncTeacherColumnRegistryWithFields } from './facultyColumnRegistrySync.js';
-import {
-  listEnabledCustomTeacherFormFields,
-  resolveTeacherFieldsMapForColumnSync,
-} from './facultyFormCustomFields.js';
-import { resolveTeacherEnabledTabIds } from './facultyEnabledTabs.js';
-import { resolveStudentEnabledTabIds } from './studentSetupConfigTypes.js';
-import {
-  DEFAULT_STUDENT_COLUMN_REGISTRY,
-  DEFAULT_TEACHER_COLUMN_REGISTRY,
-} from './moduleFieldSetupPersons.js';
+  buildFacultyWorkColumnRegistry,
+  type FacultyWorkColumnLabels,
+} from './facultyColumnRegistrySync.js';
+
+export {
+  buildStudentWorkColumnRegistry,
+  type StudentWorkColumnLabels,
+  buildFacultyWorkColumnRegistry,
+  type FacultyWorkColumnLabels,
+};
 
 /** Per-user Work directory column layout (globle1 §3.4). */
 export interface ModuleColumnPreference {
@@ -100,97 +99,19 @@ export function mergeModuleColumnPreferences(
     return next;
   });
 
-  for (const localPreference of localPreferences) {
-    if (mergedKeys.has(localPreference.key)) continue;
-    const next: ModuleColumnPreference = {
-      key: localPreference.key,
-      enabled: localPreference.enabled,
-      order: localPreference.order,
-    };
-    if (typeof localPreference.width === 'number') {
-      next.width = clampModuleColumnWidth(localPreference.width);
+  if (localPreferences) {
+    for (const localPreference of localPreferences) {
+      if (mergedKeys.has(localPreference.key)) continue;
+      merged.push({
+        key: localPreference.key,
+        enabled: localPreference.enabled,
+        order: localPreference.order,
+        width: typeof localPreference.width === 'number' ? clampModuleColumnWidth(localPreference.width) : undefined,
+      });
     }
-    merged.push(next);
   }
 
   return merged;
-}
-
-/** Resolve stored pixel width for a Work column key. */
-export function getModuleColumnWidth(
-  registry: ModuleColumnRegistryEntry[],
-  key: string,
-): number | undefined {
-  const column = registry.find((registryColumn) => registryColumn.key === key);
-  return typeof column?.width === 'number' ? column.width : undefined;
-}
-
-export interface StudentWorkColumnLabels {
-  name: string;
-  grNumber: string;
-  gender: string;
-  phone: string;
-  email: string;
-  dob: string;
-  parents: string;
-  status: string;
-  registeredDate: string;
-  notes: string;
-}
-
-/** Builds tenant-default Work column registry for Students (before per-user overlay). */
-export function buildStudentWorkColumnRegistry(
-  settings: StudentsSettings,
-  labels: StudentWorkColumnLabels,
-): ModuleColumnRegistryEntry[] {
-  const fields = resolveStudentFieldsMapForColumnSync(settings?.fields);
-  const enabledTabs = resolveStudentEnabledTabIds(settings);
-  const storedRegistry = Array.isArray(settings?.columnRegistry) ? settings.columnRegistry : undefined;
-  const synced = syncStudentColumnRegistryWithFields(
-    storedRegistry ?? DEFAULT_STUDENT_COLUMN_REGISTRY,
-    fields,
-    enabledTabs,
-  );
-
-  const labelByKey: Record<string, string> = {
-    name: labels.name,
-    grNumber: labels.grNumber,
-    gender: labels.gender,
-    phone: labels.phone,
-    email: labels.email,
-    dob: labels.dob,
-    parents: labels.parents,
-    status: labels.status,
-    registeredDate: labels.registeredDate,
-    notes: labels.notes,
-  };
-
-  const customByKey = new Map(
-    listEnabledCustomStudentFormFields(fields).map((field) => [field.key, field]),
-  );
-
-  return synced.map((col) => {
-    const customFieldKey = customFieldKeyFromColumnKey(col.key);
-    if (customFieldKey !== null) {
-      const field = customByKey.get(customFieldKey);
-      return {
-        key: col.key,
-        label: field?.label || col.label,
-        enabled: col.enabled !== false,
-        order: col.order,
-        width: col.width,
-        fixed: col.fixed,
-      };
-    }
-    return {
-      key: col.key,
-      label: labelByKey[col.key] || col.label,
-      enabled: col.enabled !== false,
-      order: col.order,
-      width: col.width,
-      fixed: col.fixed || col.key === 'name',
-    };
-  });
 }
 
 export function isModuleColumnVisible(
@@ -199,6 +120,14 @@ export function isModuleColumnVisible(
 ): boolean {
   const column = registry.find((registryColumn) => registryColumn.key === key);
   return column?.enabled ?? false;
+}
+
+export function getModuleColumnWidth(
+  registry: ModuleColumnRegistryEntry[],
+  key: string,
+): number | undefined {
+  const column = registry.find((registryColumn) => registryColumn.key === key);
+  return column?.width;
 }
 
 /**
@@ -217,65 +146,6 @@ export function getVisibleWorkColumns(
       return true;
     })
     .sort((a, b) => a.order - b.order);
-}
-
-export interface TeacherWorkColumnLabels {
-  name: string;
-  designation: string;
-  specialization: string;
-  qualification: string;
-  joinDate: string;
-  status: string;
-}
-
-/** Builds tenant-default Work column registry for Teachers (before per-user overlay). */
-export function buildTeacherWorkColumnRegistry(
-  settings: TeachersSettings,
-  labels: TeacherWorkColumnLabels,
-): ModuleColumnRegistryEntry[] {
-  const fields = resolveTeacherFieldsMapForColumnSync(settings.fields);
-  const enabledTabs = resolveTeacherEnabledTabIds(settings);
-  const synced = syncTeacherColumnRegistryWithFields(
-    settings.columnRegistry ?? DEFAULT_TEACHER_COLUMN_REGISTRY,
-    fields,
-    enabledTabs,
-  );
-
-  const labelByKey: Record<string, string> = {
-    name: labels.name,
-    designation: labels.designation,
-    specialization: labels.specialization,
-    qualification: labels.qualification,
-    joinDate: labels.joinDate,
-    status: labels.status,
-  };
-
-  const customByKey = new Map(
-    listEnabledCustomTeacherFormFields(fields).map((field) => [field.key, field]),
-  );
-
-  return synced.map((col) => {
-    const customFieldKey = customFieldKeyFromColumnKey(col.key);
-    if (customFieldKey !== null) {
-      const field = customByKey.get(customFieldKey);
-      return {
-        key: col.key,
-        label: field?.label || col.label,
-        enabled: col.enabled !== false,
-        order: col.order,
-        width: col.width,
-        fixed: col.fixed,
-      };
-    }
-    return {
-      key: col.key,
-      label: labelByKey[col.key] || col.label,
-      enabled: col.enabled !== false,
-      order: col.order,
-      width: col.width,
-      fixed: col.fixed || col.key === 'name',
-    };
-  });
 }
 
 /** Helper to build a standard module column registry array from an ordered list of keys and labels. */

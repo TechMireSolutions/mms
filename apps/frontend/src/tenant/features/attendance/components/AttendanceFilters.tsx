@@ -8,15 +8,14 @@ import { Badge } from "@/components/ui/badge";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useFacultyContractList } from '@/tenant/hooks/collections/faculty';
-import { FACULTY_MODULE_MANIFEST } from '@mms/shared';
-import { activeTeachersForAssignment } from '@/lib/faculty/facultyAssignment';
+import { FACULTY_MODULE_MANIFEST, todayISO, type FacultyMember } from '@mms/shared';
+import { activeFacultyForAssignment, resolveClassFacultyId } from '@/lib/faculty/facultyAssignment';
 import { useTranslation } from '@/hooks/useTranslation';
-import { todayISO } from '@mms/shared';
 
 export interface AttendanceFilterState {
   sessionId: string;
   classId: string;
-  teacherId: string;
+  facultyId: string;
   date: string;
 }
 
@@ -29,7 +28,7 @@ export interface AttendanceFiltersProps {
  * AttendanceFilters
  * 
  * A collapsible filter component for the attendance records view.
- * Allows filtering by session, class, teacher, and date.
+ * Allows filtering by session, class, faculty, and date.
  * 
  * @param props - The component props.
  * @returns The rendered filters component.
@@ -43,27 +42,27 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
     limit: FACULTY_MODULE_MANIFEST.maxPageSize,
     status: 'active',
   });
-  const assignableTeachers = (() => activeTeachersForAssignment(((activeFacultyPage?.body?.faculty ?? activeFacultyPage?.body?.teachers ?? []) as import('@mms/shared').Teacher[])))();
+  const assignableFaculty = activeFacultyForAssignment(
+    ((activeFacultyPage?.body?.faculty ?? []) as FacultyMember[]),
+  );
   
-  const allClasses = (() => {
-    return sessions.flatMap((session) =>
-      (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
-    );
-  })();
+  const allClasses = sessions.flatMap((session) =>
+    (session.classes || []).map((sessionClass) => ({ ...sessionClass, sessionId: session.id, sessionName: session.name }))
+  );
 
   const setFilterValue = (key: keyof AttendanceFilterState, value: string) => onChange({ ...filters, [key]: value });
 
   const sessionClasses = allClasses.filter((sessionClass) =>
     (!filters.sessionId || sessionClass.sessionId === filters.sessionId)
-    && (!filters.teacherId || (sessionClass.facultyId || sessionClass.teacherId) === filters.teacherId),
+    && (!filters.facultyId || resolveClassFacultyId(sessionClass) === filters.facultyId),
   );
 
-  const setRelationFilter = (key: 'sessionId' | 'teacherId', value: string): void => {
+  const setRelationFilter = (key: 'sessionId' | 'facultyId', value: string): void => {
     const nextFilters = { ...filters, [key]: value };
     const selectedClassRemainsAvailable = allClasses.some((sessionClass) =>
       sessionClass.id === filters.classId
       && (!nextFilters.sessionId || sessionClass.sessionId === nextFilters.sessionId)
-      && (!nextFilters.teacherId || (sessionClass.facultyId || sessionClass.teacherId) === nextFilters.teacherId),
+      && (!nextFilters.facultyId || resolveClassFacultyId(sessionClass) === nextFilters.facultyId),
     );
     onChange({
       ...nextFilters,
@@ -76,14 +75,14 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
   const activeCount = [
     filters.sessionId,
     filters.classId,
-    filters.teacherId,
+    filters.facultyId,
     filters.date && filters.date !== today,
   ].filter(Boolean).length;
 
   const reset = () => onChange({
     sessionId: "",
     classId: "",
-    teacherId: "",
+    facultyId: "",
     date: today,
   });
 
@@ -163,16 +162,16 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                 />
               </div>
 
-              {/* Teacher */}
+              {/* Faculty */}
               <div className="flex flex-col gap-1">
-                <label htmlFor="filter-teacher" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.teacher")}</label>
+                <label htmlFor="filter-faculty" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.faculty") || t("nav.faculty")}</label>
                 <FormSelect
-                  id="filter-teacher"
-                  name="teacherId"
-                  value={filters.teacherId}
-                  onChange={(value) => setRelationFilter("teacherId", value)}
-                  placeholder={t('attendance.filters.allTeachers')}
-                  options={assignableTeachers.map((teacher) => ({ value: teacher.id, label: teacher.name || "Unknown" }))}
+                  id="filter-faculty"
+                  name="facultyId"
+                  value={filters.facultyId}
+                  onChange={(value) => setRelationFilter("facultyId", value)}
+                  placeholder={t('attendance.filters.allFaculty')}
+                  options={assignableFaculty.map((member) => ({ value: member.id, label: member.name || "Unknown" }))}
                 />
               </div>
 

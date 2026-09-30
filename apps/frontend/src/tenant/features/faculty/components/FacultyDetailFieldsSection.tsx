@@ -1,49 +1,50 @@
 import React from "react";
 import { Award, School } from "lucide-react";
 import type {
-  Teacher,
-  TeachersSettings,
+  Faculty,
+  FacultySettings,
 } from "@mms/shared";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { DetailSectionTitle } from "@/components/ui/DetailSectionTitle";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
-import { teacherMessagingLabels } from "@/lib/faculty/facultyMessagingLabels";
-import { TeacherDetailAttributeRow } from "@/tenant/features/faculty/components/FacultyDetailAttributeRow";
-import type { TeacherDetailFieldRow } from "@/tenant/features/faculty/components/facultyDetailFields";
+import { facultyMessagingLabels } from "@/lib/faculty/facultyMessagingLabels";
+import { FacultyDetailAttributeRow } from "@/tenant/features/faculty/components/FacultyDetailAttributeRow";
+import type { FacultyDetailFieldRow } from "@/tenant/features/faculty/components/facultyDetailFields";
 import {
-  resolveTeacherFieldDisplayText,
+  resolveFacultyFieldDisplayText,
 } from "@/tenant/features/faculty/components/facultyFieldDisplay";
 import {
-  resolveTeacherTabLabel,
+  resolveFacultyTabLabel,
   SYSTEM_FIELD_ICONS,
 } from "@/tenant/features/faculty/components/facultyDetailShared";
 import { buildFacultyContactRows } from "@/tenant/features/faculty/components/facultyDetailContactRows";
 
-export interface TeacherDetailFieldsSectionProps {
-  teacher: Teacher;
-  detailFields: TeacherDetailFieldRow[];
+export interface FacultyDetailFieldsSectionProps {
+  faculty: Faculty;
+  detailFields: FacultyDetailFieldRow[];
   displayName: string;
-  settings: TeachersSettings;
+  settings: FacultySettings;
 }
 
-export function TeacherDetailFieldsSection({
-  teacher,
+export function FacultyDetailFieldsSection({
+  faculty,
   detailFields,
   displayName,
   settings,
-}: TeacherDetailFieldsSectionProps): React.JSX.Element | null {
+}: FacultyDetailFieldsSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const emptyDash = t("faculty.table.emptyDash") || t("teachers.table.emptyDash");
-  const messagingLabels = teacherMessagingLabels(t);
+  const emptyDash = t("faculty.table.emptyDash");
+  const messagingLabels = facultyMessagingLabels(t);
 
-  const rowForField = (field: TeacherDetailFieldRow): React.ReactNode => {
+
+  const rowForField = (field: FacultyDetailFieldRow): React.ReactNode => {
     const label = resolveRegistryLabel(field, t);
     const icon = field.isCustom
       ? School
       : (SYSTEM_FIELD_ICONS[field.key] ?? School);
-    const displayValue = resolveTeacherFieldDisplayText(teacher, field.key, {
+    const displayValue = resolveFacultyFieldDisplayText(faculty, field.key, {
       t,
       displayName,
       customFieldLabel: field.label,
@@ -53,18 +54,18 @@ export function TeacherDetailFieldsSection({
     // For the designation field, also surface the assignable roles of the current designation.
     const assignableRoles: string[] =
       field.key === 'designation'
-        ? ((teacher as Record<string, unknown>).designationAssignableRoles as string[] | undefined) ?? []
+        ? ((faculty as Record<string, unknown>).designationAssignableRoles as string[] | undefined) ?? []
         : [];
     return (
       <React.Fragment key={field.key}>
-        <TeacherDetailAttributeRow
+        <FacultyDetailAttributeRow
           variant="inset"
           icon={icon}
           label={label}
           value={displayValue || emptyDash}
         />
         {assignableRoles.length > 0 && (
-          <TeacherDetailAttributeRow
+          <FacultyDetailAttributeRow
             variant="inset"
             icon={Award}
             label={t('faculty.designations.roles')}
@@ -84,14 +85,14 @@ export function TeacherDetailFieldsSection({
   };
 
   const contactRows = buildFacultyContactRows({
-    teacher,
+    faculty,
     displayName,
     t,
     emptyDash,
     messagingLabels,
   });
 
-  const byTab = new Map<string, TeacherDetailFieldRow[]>();
+  const byTab = new Map<string, FacultyDetailFieldRow[]>();
   const order: string[] = [];
   for (const field of detailFields) {
     if (field.key === "status" || field.key === "notes") continue;
@@ -114,7 +115,7 @@ export function TeacherDetailFieldsSection({
     return (
       <div key={tabId} className="space-y-2">
         <DetailSectionTitle>
-          {resolveTeacherTabLabel(settings, tabId, t)}
+          {resolveFacultyTabLabel(settings, tabId, t)}
         </DetailSectionTitle>
         <Card className="divide-y divide-border/50 p-0">{rows}</Card>
       </div>
@@ -126,5 +127,3 @@ export function TeacherDetailFieldsSection({
   return <>{sections}</>;
 }
 
-export type FacultyDetailFieldsSectionProps = TeacherDetailFieldsSectionProps;
-export const FacultyDetailFieldsSection = TeacherDetailFieldsSection;

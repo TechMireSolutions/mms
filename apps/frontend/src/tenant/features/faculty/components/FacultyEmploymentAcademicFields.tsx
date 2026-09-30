@@ -5,10 +5,10 @@ import { FORM_INPUT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
-import type { Teacher } from "@mms/shared";
+import type { FacultyMember } from "@mms/shared";
 
 export interface FacultyEmploymentAcademicFieldsProps {
-  teacherDraft: Partial<Teacher>;
+  facultyDraft?: Partial<FacultyMember>;
   errors: Record<string, string>;
   departmentLabel: string;
   specializationLabel: string;
@@ -17,12 +17,12 @@ export interface FacultyEmploymentAcademicFieldsProps {
   showSpecialization: boolean;
   showQualification: boolean;
   isFieldRequired: (fieldId: string) => boolean;
-  onDraftChange: (patch: Partial<Teacher>) => void;
+  onDraftChange: (patch: Partial<FacultyMember>) => void;
   specializationOptions?: string[];
 }
 
 export function FacultyEmploymentAcademicFields({
-  teacherDraft,
+  facultyDraft = {},
   errors,
   departmentLabel,
   specializationLabel,
@@ -48,9 +48,9 @@ export function FacultyEmploymentAcademicFields({
           <Input
             id="department"
             name="department"
-            value={teacherDraft.department ?? ""}
+            value={facultyDraft.department ?? ""}
             onChange={(e) => onDraftChange({ department: e.target.value })}
-            placeholder={t("faculty.form.departmentPlaceholder") || t("teachers.form.departmentPlaceholder")}
+            placeholder={t("faculty.form.departmentPlaceholder")}
             className={cn(FORM_INPUT, errors.department && FORM_INPUT_ERROR)}
           />
         </Field>
@@ -67,7 +67,7 @@ export function FacultyEmploymentAcademicFields({
             <FormSelect
               id="specialization"
               name="specialization"
-              value={teacherDraft.specialization ?? ""}
+              value={facultyDraft.specialization ?? ""}
               placeholder={specializationLabel}
               onChange={(val) => onDraftChange({ specialization: val })}
               options={specializationOptions.map((opt) => ({ value: opt, label: opt }))}
@@ -76,7 +76,7 @@ export function FacultyEmploymentAcademicFields({
             <Input
               id="specialization"
               name="specialization"
-              value={teacherDraft.specialization ?? ""}
+              value={facultyDraft.specialization ?? ""}
               onChange={(e) => onDraftChange({ specialization: e.target.value })}
               placeholder={specializationLabel}
               className={cn(FORM_INPUT, errors.specialization && FORM_INPUT_ERROR)}
@@ -95,9 +95,9 @@ export function FacultyEmploymentAcademicFields({
           <Input
             id="qualification"
             name="qualification"
-            value={teacherDraft.qualification ?? ""}
+            value={facultyDraft.qualification ?? ""}
             onChange={(e) => onDraftChange({ qualification: e.target.value })}
-            placeholder={t("faculty.form.qualificationPlaceholder") || t("teachers.form.qualificationPlaceholder")}
+            placeholder={t("faculty.form.qualificationPlaceholder")}
             className={cn(FORM_INPUT, errors.qualification && FORM_INPUT_ERROR)}
           />
         </Field>

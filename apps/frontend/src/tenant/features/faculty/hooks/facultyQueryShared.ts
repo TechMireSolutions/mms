@@ -3,10 +3,6 @@ import type {
   FacultyListQuery,
   FacultyQuickFilter,
   FacultySortField,
-  Teacher,
-  TeachersListQuery,
-  TeachersQuickFilter,
-  TeacherSortField,
 } from '@mms/shared';
 
 export {
@@ -18,14 +14,6 @@ export {
   facultyListQueryKeyParams,
   facultyPaginatedQueryKey,
   sameFacultyListFilters,
-  TEACHERS_API,
-  TEACHERS_METRICS_QUERY_KEY,
-  TEACHERS_QUERY_KEY,
-  TEACHERS_WIDGET_AGGREGATES_QUERY_KEY,
-  buildTeachersPageUrl,
-  sameTeachersListFilters,
-  teachersListQueryKeyParams,
-  teachersPaginatedQueryKey,
 } from './facultyQueryKeys.js';
 export type {
   FacultyRecord,
@@ -33,24 +21,18 @@ export type {
   FacultyListPageResult,
   FacultyPaginatedParams,
   FacultyWidgetAggregateWidgetInput,
-  TeacherRecord,
-  TeacherNextEmployeeIdParams,
-  TeachersListPageResult,
-  TeachersPaginatedParams,
-  TeachersWidgetAggregateWidgetInput,
 } from './facultyQueryKeys.js';
-export type { Faculty, FacultyListQuery, Teacher, TeachersListQuery };
+export type { Faculty, FacultyListQuery };
 
 export interface FacultyDirectoryQueryInput {
   search?: string;
   filterStatus: string[];
   filterSpecialization: string;
   filterGender: string;
-  quickFilter: FacultyQuickFilter | TeachersQuickFilter;
-  sortField: FacultySortField | TeacherSortField | null | undefined;
+  quickFilter: FacultyQuickFilter;
+  sortField: FacultySortField | null | undefined;
   sortDir: 'asc' | 'desc';
 }
-export type TeachersDirectoryQueryInput = FacultyDirectoryQueryInput;
 
 /** Directory filter state → {@link FacultyListQuery} (Work page + server CSV share this). */
 export function buildFacultyDirectoryQuery({
@@ -72,5 +54,4 @@ export function buildFacultyDirectoryQuery({
     sortDir: sortField ? sortDir : undefined,
   };
 }
-export const buildTeachersDirectoryQuery = buildFacultyDirectoryQuery;
 

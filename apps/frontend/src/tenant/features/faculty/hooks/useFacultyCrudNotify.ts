@@ -11,13 +11,11 @@ export function useFacultyCrudNotify() {
 }
 
 function messageKeyForBulkFailure(singleSuccessKey: AppTranslationKey): AppTranslationKey {
-  if (singleSuccessKey === "faculty.restoreSuccess" || singleSuccessKey === "teachers.restoreSuccess") {
+  if (singleSuccessKey === "faculty.restoreSuccess") {
     return "faculty.restoreFailed";
   }
-  if (singleSuccessKey === "faculty.toast.statusUpdated" || singleSuccessKey === "teachers.toast.statusUpdated") {
+  if (singleSuccessKey === "faculty.toast.statusUpdated") {
     return "faculty.bulkStatusFailed";
   }
   return "faculty.deleteFailed";
 }
-
-export const useTeachersCrudNotify = useFacultyCrudNotify;

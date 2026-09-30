@@ -1,42 +1,33 @@
 import { matchesWidgetFilter } from './utils.js';
 import type { WidgetQuery, WidgetAggregateResult, WidgetFilter } from './widgetAggregateTypes.js';
 
-export type TeachersWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
-export type TeachersWidgetFilterOperator = 'equals' | 'contains' | 'startsWith' | 'gt' | 'lt';
-export type TeachersWidgetFilter = WidgetFilter;
+export type FacultyWidgetOperation = 'count' | 'sum' | 'avg' | 'percentage';
+export type FacultyWidgetFilterOperator = 'equals' | 'contains' | 'startsWith' | 'gt' | 'lt';
+export type FacultyWidgetFilter = WidgetFilter;
+export type FacultyWidgetQuery = WidgetQuery;
+export type FacultyWidgetAggregateResult = WidgetAggregateResult;
 
-export type TeachersWidgetQuery = WidgetQuery;
-export type TeachersWidgetAggregateResult = WidgetAggregateResult;
+type FacultyRow = Record<string, unknown>;
 
-export type FacultyWidgetOperation = TeachersWidgetOperation;
-export type FacultyWidgetFilterOperator = TeachersWidgetFilterOperator;
-export type FacultyWidgetFilter = TeachersWidgetFilter;
-export type FacultyWidgetQuery = TeachersWidgetQuery;
-export type FacultyWidgetAggregateResult = TeachersWidgetAggregateResult;
-
-
-type TeacherRow = Record<string, unknown>;
-
-function teacherFieldValue(teacher: TeacherRow, field: string): unknown {
-  return teacher[field];
+function facultyFieldValue(faculty: FacultyRow, field: string): unknown {
+  return faculty[field];
 }
 
-
-function filterTeachersForWidget(teachers: TeacherRow[], query: TeachersWidgetQuery): TeacherRow[] {
-  return teachers.filter((teacher) =>
-    matchesWidgetFilter(teacher, query.filterField, query.filterOperator, query.filterValue),
+function filterFacultyForWidget(facultyList: FacultyRow[], query: FacultyWidgetQuery): FacultyRow[] {
+  return facultyList.filter((faculty) =>
+    matchesWidgetFilter(faculty, query.filterField, query.filterOperator, query.filterValue),
   );
 }
 
 function aggregateNumericField(
-  items: TeacherRow[],
+  items: FacultyRow[],
   operation: 'sum' | 'avg',
   targetField: string,
 ): number {
   let sum = 0;
   let count = 0;
   for (let i = 0; i < items.length; i++) {
-    const numericFieldValue = Number(teacherFieldValue(items[i], targetField));
+    const numericFieldValue = Number(facultyFieldValue(items[i], targetField));
     if (!Number.isNaN(numericFieldValue)) {
       sum += numericFieldValue;
       count += 1;
@@ -46,7 +37,7 @@ function aggregateNumericField(
   return count > 0 ? Math.round(sum / count) : 0;
 }
 
-function buildChartData(items: TeacherRow[], query: TeachersWidgetQuery): { name: string; value: number }[] {
+function buildChartData(items: FacultyRow[], query: FacultyWidgetQuery): { name: string; value: number }[] {
   const xAxisField = query.xAxisField || 'status';
   const isNumeric = query.operation === 'sum' || query.operation === 'avg';
   const targetField = query.targetField || '';
@@ -54,7 +45,7 @@ function buildChartData(items: TeacherRow[], query: TeachersWidgetQuery): { name
 
   for (let i = 0; i < items.length; i++) {
     const item = items[i];
-    const groupValue = teacherFieldValue(item, xAxisField);
+    const groupValue = facultyFieldValue(item, xAxisField);
     const groupKey = groupValue === undefined || groupValue === null || groupValue === '' ? 'Unknown' : String(groupValue);
     let stat = groupStats.get(groupKey);
     if (!stat) {
@@ -62,7 +53,7 @@ function buildChartData(items: TeacherRow[], query: TeachersWidgetQuery): { name
       groupStats.set(groupKey, stat);
     }
     if (isNumeric) {
-      const numericVal = Number(teacherFieldValue(item, targetField));
+      const numericVal = Number(facultyFieldValue(item, targetField));
       if (!Number.isNaN(numericVal)) {
         stat.sum += numericVal;
         stat.count += 1;
@@ -85,15 +76,15 @@ function buildChartData(items: TeacherRow[], query: TeachersWidgetQuery): { name
 }
 
 /**
- * @deprecated Prefer SQL `aggregateTeachersWidgetQueries` / `loadTeachersWidgetAggregates`.
- * Kept for pure unit tests of in-memory widget ops.
+ * In-memory widget aggregate computation for faculty.
+ * Prefer SQL backend aggregation in production routes.
  */
-export function computeTeachersWidgetAggregate(
-  teachers: TeacherRow[],
-  query: TeachersWidgetQuery,
-): TeachersWidgetAggregateResult {
-  const totalCount = teachers.length;
-  const filtered = filterTeachersForWidget(teachers, query);
+export function computeFacultyWidgetAggregate(
+  facultyList: FacultyRow[],
+  query: FacultyWidgetQuery,
+): FacultyWidgetAggregateResult {
+  const totalCount = facultyList.length;
+  const filtered = filterFacultyForWidget(facultyList, query);
 
   let value = 0;
   if (query.operation === 'count') {
@@ -111,29 +102,28 @@ export function computeTeachersWidgetAggregate(
   };
 }
 
-/** @deprecated Prefer SQL `aggregateTeachersWidgetQueries` / `loadTeachersWidgetAggregates`. */
-export function computeTeachersWidgetAggregates(
-  teachers: TeacherRow[],
-  queries: TeachersWidgetQuery[],
-): Record<string, TeachersWidgetAggregateResult> {
-  const results: Record<string, TeachersWidgetAggregateResult> = {};
+export function computeFacultyWidgetAggregates(
+  facultyList: FacultyRow[],
+  queries: FacultyWidgetQuery[],
+): Record<string, FacultyWidgetAggregateResult> {
+  const results: Record<string, FacultyWidgetAggregateResult> = {};
   for (const query of queries) {
-    results[query.id] = computeTeachersWidgetAggregate(teachers, query);
+    results[query.id] = computeFacultyWidgetAggregate(facultyList, query);
   }
   return results;
 }
 
-export function teachersWidgetQueryFromWidget(widget: {
+export function facultyWidgetQueryFromWidget(widget: {
   id: string;
-  operation: TeachersWidgetOperation;
+  operation: FacultyWidgetOperation;
   targetField?: string;
   filterField?: string;
-  filterOperator?: TeachersWidgetFilterOperator;
+  filterOperator?: FacultyWidgetFilterOperator;
   filterValue?: string;
   xAxisField?: string;
-  filters?: TeachersWidgetFilter[];
+  filters?: FacultyWidgetFilter[];
   chartLimit?: number;
-}): TeachersWidgetQuery {
+}): FacultyWidgetQuery {
   return {
     id: widget.id,
     operation: widget.operation,
@@ -146,8 +136,3 @@ export function teachersWidgetQueryFromWidget(widget: {
     chartLimit: widget.chartLimit,
   };
 }
-
-
-export const computeFacultyWidgetAggregate = computeTeachersWidgetAggregate;
-export const computeFacultyWidgetAggregates = computeTeachersWidgetAggregates;
-export const facultyWidgetQueryFromWidget = teachersWidgetQueryFromWidget;

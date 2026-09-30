@@ -10,7 +10,7 @@ import {
   type QuestionBankTest,
 } from '@mms/shared';
 import type { Student } from '@/lib/data/studentsData';
-import type { Teacher } from '@/lib/data/facultyData';
+import type { Faculty } from '@/lib/data/facultyData';
 import type { Session } from '@/lib/data/sessionsData';
 import type { Invoice } from '@/lib/data/financeData';
 import type { AttendanceRecord } from '@/lib/data/attendanceData';
@@ -23,8 +23,7 @@ export function computeCustomCard(
   card: CustomCard,
   collections: {
     students: Student[];
-    faculty?: Teacher[];
-    teachers: Teacher[];
+    faculty?: Faculty[];
     sessions: Session[];
     enrollments?: Enrollment[];
     finance_invoices: Invoice[];
@@ -38,7 +37,7 @@ export function computeCustomCard(
   },
   t?: TranslationFunction,
 ) {
-  const collectionKey = card.collection === 'faculty' && !collections.faculty ? 'teachers' : card.collection;
+  const collectionKey = card.collection;
   const collectionRows = ((collections as Record<string, unknown[]>)[collectionKey] as Record<string, unknown>[]) || [];
 
   const filteredRows = collectionRows.filter((collectionRow) =>

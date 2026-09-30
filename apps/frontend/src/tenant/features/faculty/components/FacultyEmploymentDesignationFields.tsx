@@ -3,21 +3,21 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { FacultyDesignationDefinition, Teacher } from "@mms/shared";
+import type { FacultyDesignationDefinition, FacultyMember } from "@mms/shared";
 
 export interface FacultyEmploymentDesignationFieldsProps {
-  teacher?: Teacher;
-  teacherDraft: Partial<Teacher>;
+  faculty?: FacultyMember;
+  facultyDraft?: Partial<FacultyMember>;
   errors: Record<string, string>;
   designationOptions?: FacultyDesignationDefinition[];
   designationLabel: string;
   isFieldRequired: (fieldId: string) => boolean;
-  onDraftChange: (patch: Partial<Teacher>) => void;
+  onDraftChange: (patch: Partial<FacultyMember>) => void;
 }
 
 export function FacultyEmploymentDesignationFields({
-  teacher,
-  teacherDraft,
+  faculty,
+  facultyDraft = {},
   errors,
   designationOptions,
   designationLabel,
@@ -37,9 +37,9 @@ export function FacultyEmploymentDesignationFields({
         <FormSelect
           id="designationId"
           name="designationId"
-          value={teacherDraft.designationId || ""}
+          value={facultyDraft.designationId || ""}
           placeholder={t("faculty.designations.selectPlaceholder")}
-          disabled={Boolean(teacher?.id)}
+          disabled={Boolean(faculty?.id)}
           onChange={(value) => {
             const definition = designationOptions?.find((item) => item.id === value);
             onDraftChange({
@@ -51,23 +51,23 @@ export function FacultyEmploymentDesignationFields({
             });
           }}
           options={(designationOptions ?? [])
-            .filter((item) => item.isActive || item.id === teacherDraft.designationId)
+            .filter((item) => item.isActive || item.id === facultyDraft.designationId)
             .map((item) => ({ value: item.id, label: item.name }))}
         />
-        {teacher?.id ? (
+        {faculty?.id ? (
           <p className="mt-1 text-xs text-muted-foreground">{t("faculty.designations.manageInHistory")}</p>
-        ) : !teacherDraft.designationId && teacherDraft.designation ? (
+        ) : !facultyDraft.designationId && facultyDraft.designation ? (
           <p className="mt-1 text-xs text-muted-foreground">
-            {t("faculty.designations.current")}: {teacherDraft.designation}
+            {t("faculty.designations.current")}: {facultyDraft.designation}
           </p>
         ) : null}
       </Field>
-      {!teacher?.id ? (
+      {!faculty?.id ? (
         <Field label={t("faculty.designations.startsOn")} id="designationStartsOn" required error={errors.designationStartsOn}>
           <DatePicker
             id="designationStartsOn"
             name="designationStartsOn"
-            value={teacherDraft.designationStartsOn || undefined}
+            value={facultyDraft.designationStartsOn || undefined}
             onChange={(dateStr) => onDraftChange({ designationStartsOn: dateStr })}
           />
         </Field>

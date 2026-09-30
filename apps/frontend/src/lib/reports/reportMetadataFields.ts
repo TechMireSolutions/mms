@@ -1,5 +1,5 @@
 import type { Student } from "@/lib/data/studentsData";
-import type { Teacher } from "@/lib/data/facultyData";
+import type { Faculty } from "@/lib/data/facultyData";
 import type { Session } from "@/lib/data/sessionsData";
 import type { Invoice } from "@/lib/data/financeData";
 import type { AttendanceRecord } from "@/lib/data/attendanceData";
@@ -29,20 +29,7 @@ export const METADATA_FIELDS = {
   faculty: {
     name: "Faculty",
     dbKey: "faculty",
-    defaultData: [] as Teacher[],
-    fields: [
-      { value: "status", label: "Status (active/inactive/on_leave)" },
-      { value: "gender", label: "Gender (male/female)" },
-      { value: "specialization", label: "Specialization" },
-      { value: "qualification", label: "Qualification" },
-      { value: "joinDate", label: "Join Date" },
-    ],
-    numericFields: [],
-  },
-  teachers: {
-    name: "Teachers",
-    dbKey: "teachers",
-    defaultData: [] as Teacher[],
+    defaultData: [] as Faculty[],
     fields: [
       { value: "status", label: "Status (active/inactive/on_leave)" },
       { value: "gender", label: "Gender (male/female)" },
@@ -61,7 +48,7 @@ export const METADATA_FIELDS = {
       { value: "gender", label: "Gender Orientation (male/female/any)" },
       { value: "type", label: "Course Type (Hifz/Tajweed/Qaidah...)" },
       { value: "room", label: "Classroom / Location" },
-      { value: "teacherName", label: "Instructor" },
+      { value: "facultyName", label: "Instructor" },
       { value: "baseFee", label: "Base Fee", isNumeric: true },
       { value: "enrolled", label: "Enrolled Count", isNumeric: true },
       { value: "capacity", label: "Capacity Limit", isNumeric: true },

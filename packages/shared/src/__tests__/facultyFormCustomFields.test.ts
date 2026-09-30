@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
-  isTeacherSystemFormField,
-  listEnabledCustomTeacherFormFields,
-  listTeacherSystemFormFieldKeys,
+  isFacultySystemFormField,
+  listEnabledCustomFacultyFormFields,
+  listFacultySystemFormFieldKeys,
 } from '../facultyFormCustomFields.js';
-import { findTeacherSeedField } from '../moduleFieldSetupPersons.js';
+import { findFacultySeedField } from '../moduleFieldSetupFaculty.js';
 import type { FieldDefinition } from '../contactFieldSchemaTypes.js';
 
 function field(partial: Partial<FieldDefinition> & { key: string }): FieldDefinition {
@@ -20,15 +20,15 @@ function field(partial: Partial<FieldDefinition> & { key: string }): FieldDefini
   };
 }
 
-describe('listEnabledCustomTeacherFormFields', () => {
+describe('listEnabledCustomFacultyFormFields', () => {
   it('scopes non-seed fields to the requested tab', () => {
     const fields = {
       basic: [field({ key: 'specialization', order: 0 }), field({ key: 'house', order: 10 })],
       employment: [field({ key: 'extraNote', order: 0 })],
     };
 
-    expect(listEnabledCustomTeacherFormFields(fields, 'basic').map((f) => f.key)).toEqual(['house']);
-    expect(listEnabledCustomTeacherFormFields(fields, 'employment').map((f) => f.key)).toEqual([
+    expect(listEnabledCustomFacultyFormFields(fields, 'basic').map((f) => f.key)).toEqual(['house']);
+    expect(listEnabledCustomFacultyFormFields(fields, 'employment').map((f) => f.key)).toEqual([
       'extraNote',
     ]);
   });
@@ -42,13 +42,13 @@ describe('listEnabledCustomTeacherFormFields', () => {
       ],
     };
 
-    expect(listEnabledCustomTeacherFormFields(fields, 'employment').map((f) => f.key)).toEqual([
+    expect(listEnabledCustomFacultyFormFields(fields, 'employment').map((f) => f.key)).toEqual([
       'visibleCustom',
     ]);
-    expect(listTeacherSystemFormFieldKeys().has('status')).toBe(true);
-    expect(listTeacherSystemFormFieldKeys().has('contactId')).toBe(true);
-    expect(isTeacherSystemFormField('basic', 'specialization')).toBe(true);
-    expect(isTeacherSystemFormField('employment', 'joinDate')).toBe(true);
+    expect(listFacultySystemFormFieldKeys().has('status')).toBe(true);
+    expect(listFacultySystemFormFieldKeys().has('contactId')).toBe(true);
+    expect(isFacultySystemFormField('basic', 'specialization')).toBe(true);
+    expect(isFacultySystemFormField('employment', 'joinDate')).toBe(true);
   });
 
   it('aggregates all tabs when tabId is omitted', () => {
@@ -57,21 +57,21 @@ describe('listEnabledCustomTeacherFormFields', () => {
       employment: [field({ key: 'onEmployment', order: 1 })],
     };
 
-    expect(listEnabledCustomTeacherFormFields(fields).map((f) => f.key)).toEqual([
+    expect(listEnabledCustomFacultyFormFields(fields).map((f) => f.key)).toEqual([
       'onEmployment',
       'onBasic',
     ]);
   });
 });
 
-describe('findTeacherSeedField', () => {
-  it('finds a seeded teacher field across any tab', () => {
-    expect(findTeacherSeedField('contactId')?.key).toBe('contactId');
-    expect(findTeacherSeedField('employeeId')?.key).toBe('employeeId');
-    expect(findTeacherSeedField('status')?.labelKey).toBe('faculty.field.status');
+describe('findFacultySeedField', () => {
+  it('finds a seeded faculty field across any tab', () => {
+    expect(findFacultySeedField('contactId')?.key).toBe('contactId');
+    expect(findFacultySeedField('employeeId')?.key).toBe('employeeId');
+    expect(findFacultySeedField('status')?.labelKey).toBe('faculty.field.status');
   });
 
   it('returns undefined for unknown fields', () => {
-    expect(findTeacherSeedField('house')).toBeUndefined();
+    expect(findFacultySeedField('house')).toBeUndefined();
   });
 });

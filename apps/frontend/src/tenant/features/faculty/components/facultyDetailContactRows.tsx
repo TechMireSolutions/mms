@@ -1,9 +1,9 @@
 import React from "react";
 import { Mail, Phone } from "lucide-react";
 import {
-  teacherFieldLabelKey,
+  facultyFieldLabelKey,
   type Contact,
-  type Teacher,
+  type Faculty,
 } from "@mms/shared";
 import { ContactPhoneAction, ContactEmailAction } from "@/components/ui/ContactAction";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -13,20 +13,20 @@ import {
 } from "@/lib/contacts/contactI18n";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18nFormat";
 import { getGenderIcon, getGenderIconClass } from "@/lib/genderUi";
-import type { TeacherMessagingLabels } from "@/lib/faculty/facultyMessagingLabels";
-import { TeacherDetailAttributeRow } from "@/tenant/features/faculty/components/FacultyDetailAttributeRow";
+import type { FacultyMessagingLabels } from "@/lib/faculty/facultyMessagingLabels";
+import { FacultyDetailAttributeRow } from "@/tenant/features/faculty/components/FacultyDetailAttributeRow";
 
 export interface BuildFacultyContactRowsParams {
-  teacher: Teacher;
+  faculty: Faculty;
   displayName: string;
   t: TranslationFunction;
   emptyDash: string;
-  messagingLabels: TeacherMessagingLabels;
+  messagingLabels: FacultyMessagingLabels;
 }
 
 /** Generates gender, phone, and email attribute rows for the Faculty detail drawer. */
 export function buildFacultyContactRows({
-  teacher,
+  faculty,
   displayName,
   t,
   emptyDash,
@@ -35,31 +35,34 @@ export function buildFacultyContactRows({
   const contactRows: React.ReactNode[] = [];
 
   contactRows.push(
-    <TeacherDetailAttributeRow
+    <FacultyDetailAttributeRow
       key="gender"
       variant="inset"
-      icon={getGenderIcon(teacher.gender)}
-      iconClassName={getGenderIconClass(teacher.gender)}
-      label={t(teacherFieldLabelKey("gender"))}
-      value={teacher.gender ? formatContactGenderLabel(teacher.gender, t) : emptyDash}
+      icon={getGenderIcon(faculty.gender)}
+      iconClassName={getGenderIconClass(faculty.gender)}
+      label={t(facultyFieldLabelKey("gender"))}
+      value={faculty.gender ? formatContactGenderLabel(faculty.gender, t) : emptyDash}
     />,
   );
 
+
+
   const contact: Partial<Contact> = {
-    phone: teacher.phone,
-    email: teacher.email,
+    phone: faculty.phone,
+    email: faculty.email,
   };
+
   const allPhones = resolveAllContactPhones(contact);
   const allEmails = resolveAllContactEmails(contact);
 
   if (allPhones.length > 0) {
     allPhones.forEach((p, idx) => {
       contactRows.push(
-        <TeacherDetailAttributeRow
+        <FacultyDetailAttributeRow
           key={`phone-${p.phone}-${idx}`}
           variant="inset"
           icon={Phone}
-          label={p.label || t(teacherFieldLabelKey("phone"))}
+          label={p.label || t(facultyFieldLabelKey("phone"))}
           value={
             <ContactPhoneAction
               phone={p.phone}
@@ -84,11 +87,11 @@ export function buildFacultyContactRows({
   if (allEmails.length > 0) {
     allEmails.forEach((e, idx) => {
       contactRows.push(
-        <TeacherDetailAttributeRow
+        <FacultyDetailAttributeRow
           key={`email-${e.email}-${idx}`}
           variant="inset"
           icon={Mail}
-          label={e.label || t(teacherFieldLabelKey("email"))}
+          label={e.label || t(facultyFieldLabelKey("email"))}
           value={
             <ContactEmailAction
               email={e.email}
@@ -108,3 +111,4 @@ export function buildFacultyContactRows({
 
   return contactRows;
 }
+

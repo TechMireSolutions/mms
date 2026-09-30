@@ -1,18 +1,18 @@
 import type { FieldDefinition, TabDefinition } from './contactTypes.js';
 import { canViewContactField, canViewContactTab } from './contactFieldAccess.js';
-import type { Teacher } from './facultyTypes.js';
-import type { TeachersSettings } from './facultyModuleSettings.js';
+import type { FacultyMember } from './facultyTypes.js';
+import type { FacultySettings } from './facultyModuleSettings.js';
 
-export interface TeachersFieldConfigSnapshot {
+export interface FacultyFieldConfigSnapshot {
   fields: Record<string, FieldDefinition[]>;
   tabs: TabDefinition[];
 }
 
 /**
- * Core teacher identity that stays visible regardless of the Setup field
+ * Core faculty identity that stays visible regardless of the Setup field
  * registry (Work list + drawer must not break for restricted viewers).
  */
-const TEACHER_ALWAYS_VISIBLE = new Set([
+const FACULTY_ALWAYS_VISIBLE = new Set([
   'id',
   'contactId',
   'name',
@@ -24,7 +24,7 @@ const TEACHER_ALWAYS_VISIBLE = new Set([
 ]);
 
 function isTabKeyedFieldRegistry(
-  fields: TeachersSettings['fields'],
+  fields: FacultySettings['fields'],
 ): fields is Record<string, FieldDefinition[]> {
   if (!fields || typeof fields !== 'object' || Array.isArray(fields)) return false;
   const first = Object.values(fields)[0];
@@ -32,12 +32,12 @@ function isTabKeyedFieldRegistry(
 }
 
 /**
- * Resolves teacher field keys that the viewer role cannot read.
+ * Resolves faculty field keys that the viewer role cannot read.
  * Precomputed once per batch to avoid O(N * T * F) iterations and repeated tab finds.
  */
-export function resolveTeacherKeysToStripForViewer(
+export function resolveFacultyKeysToStripForViewer(
   viewerRole: string,
-  config: TeachersFieldConfigSnapshot,
+  config: FacultyFieldConfigSnapshot,
 ): string[] {
   if (!config?.fields || !isTabKeyedFieldRegistry(config.fields)) return [];
   const tabMap = new Map<string, TabDefinition>();
@@ -52,7 +52,7 @@ export function resolveTeacherKeysToStripForViewer(
     const tab = tabMap.get(tabId.toLowerCase());
     const tabVisible = tab ? canViewContactTab(viewerRole, tab) : true;
     for (const field of tabFields) {
-      if (TEACHER_ALWAYS_VISIBLE.has(field.key)) continue;
+      if (FACULTY_ALWAYS_VISIBLE.has(field.key)) continue;
       if (!tabVisible || field.enabled === false || !canViewContactField(viewerRole, field)) {
         toStrip.push(field.key);
       }
@@ -62,33 +62,33 @@ export function resolveTeacherKeysToStripForViewer(
 }
 
 /**
- * Strips teacher properties the viewer role cannot read (API + restore guard).
+ * Strips faculty properties the viewer role cannot read (API + restore guard).
  * Mirrors `sanitizeStudentForViewer`: disabled or role-hidden Setup fields are
  * removed; always-visible identity keys and unregistered custom keys survive.
  */
-export function sanitizeTeacherForViewer(
-  teacher: Teacher,
+export function sanitizeFacultyForViewer(
+  facultyMember: FacultyMember,
   viewerRole: string,
-  config: TeachersFieldConfigSnapshot,
-): Teacher {
-  const keysToStrip = resolveTeacherKeysToStripForViewer(viewerRole, config);
-  if (keysToStrip.length === 0) return teacher;
-  const sanitized: Teacher = { ...teacher };
+  config: FacultyFieldConfigSnapshot,
+): FacultyMember {
+  const keysToStrip = resolveFacultyKeysToStripForViewer(viewerRole, config);
+  if (keysToStrip.length === 0) return facultyMember;
+  const sanitized: FacultyMember = { ...facultyMember };
   for (const key of keysToStrip) {
     delete sanitized[key];
   }
   return sanitized;
 }
 
-export function sanitizeTeachersForViewer(
-  teachers: Teacher[],
+export function sanitizeFacultyListForViewer(
+  facultyList: FacultyMember[],
   viewerRole: string,
-  config: TeachersFieldConfigSnapshot,
-): Teacher[] {
-  const keysToStrip = resolveTeacherKeysToStripForViewer(viewerRole, config);
-  if (keysToStrip.length === 0) return teachers;
-  return teachers.map((teacher) => {
-    const sanitized: Teacher = { ...teacher };
+  config: FacultyFieldConfigSnapshot,
+): FacultyMember[] {
+  const keysToStrip = resolveFacultyKeysToStripForViewer(viewerRole, config);
+  if (keysToStrip.length === 0) return facultyList;
+  return facultyList.map((facultyMember) => {
+    const sanitized: FacultyMember = { ...facultyMember };
     for (const key of keysToStrip) {
       delete sanitized[key];
     }
@@ -96,6 +96,3 @@ export function sanitizeTeachersForViewer(
   });
 }
 
-
-export const sanitizeFacultyForViewer = sanitizeTeacherForViewer;
-export const sanitizeFacultyListForViewer = sanitizeTeachersForViewer;

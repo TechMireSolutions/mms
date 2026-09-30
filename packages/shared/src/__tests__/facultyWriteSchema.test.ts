@@ -1,17 +1,17 @@
 import { describe, expect, it } from 'vitest';
 import {
-  stripTeacherClientSoftDeleteFields,
-  stripTeacherWriteNoise,
+  stripFacultyClientSoftDeleteFields,
+  stripFacultyWriteNoise,
 } from '../facultyUtils.js';
 import {
-  isTeacherDeleted,
-  filterActiveTeachers,
+  isFacultyDeleted,
+  filterActiveFaculty,
 } from '../facultyTypes.js';
-import { buildDynamicTeacherSchema } from '../schemas/faculty.dto.js';
-import { DEFAULT_TEACHERS_SETTINGS } from '../facultyModuleSettings.js';
+import { buildDynamicFacultySchema } from '../schemas/faculty.dto.js';
+import { DEFAULT_FACULTY_SETTINGS } from '../facultyModuleSettings.js';
 
-describe('teacherWriteSchema and soft-delete helpers', () => {
-  it('stripTeacherClientSoftDeleteFields strips all soft-delete metadata and deleted flag', () => {
+describe('facultyWriteSchema and soft-delete helpers', () => {
+  it('stripFacultyClientSoftDeleteFields strips all soft-delete metadata and deleted flag', () => {
     const raw = {
       id: 't-1',
       employeeId: 'EMP-01',
@@ -24,7 +24,7 @@ describe('teacherWriteSchema and soft-delete helpers', () => {
       deleted: true,
     };
 
-    const stripped = stripTeacherClientSoftDeleteFields(raw);
+    const stripped = stripFacultyClientSoftDeleteFields(raw);
     expect(stripped.deletedAt).toBeUndefined();
     expect(stripped.deletedBy).toBeUndefined();
     expect(stripped.deletionReason).toBeUndefined();
@@ -36,19 +36,19 @@ describe('teacherWriteSchema and soft-delete helpers', () => {
     expect(stripped.employeeId).toBe('EMP-01');
   });
 
-  it('stripTeacherWriteNoise removes contact profile keys, avatar, and soft delete keys', () => {
+  it('stripFacultyWriteNoise removes contact profile keys, avatar, and soft delete keys', () => {
     const raw = {
       contactId: 'c-1',
-      name: 'Teacher Name',
+      name: 'Faculty Member',
       phone: '+923001234567',
-      email: 'teacher@test.com',
+      email: 'faculty@test.com',
       gender: 'female',
       avatar: 'https://example.com/avatar.png',
       deletedAt: '2026-01-01T00:00:00.000Z',
       employeeId: 'EMP-02',
     };
 
-    const cleaned = stripTeacherWriteNoise(raw);
+    const cleaned = stripFacultyWriteNoise(raw);
     expect(cleaned.name).toBeUndefined();
     expect(cleaned.phone).toBeUndefined();
     expect(cleaned.email).toBeUndefined();
@@ -59,17 +59,17 @@ describe('teacherWriteSchema and soft-delete helpers', () => {
     expect(cleaned.employeeId).toBe('EMP-02');
   });
 
-  it('stripTeacherWriteNoise strips transient designation and hierarchy metadata', () => {
+  it('stripFacultyWriteNoise strips transient designation and hierarchy metadata', () => {
     const raw = {
       contactId: 'c-1',
       employeeId: 'EMP-02',
-      designationAssignableRoles: ['teacher', 'admin'],
+      designationAssignableRoles: ['faculty', 'admin'],
       designationEndsOn: '2026-12-31',
       contact: { id: 'c-1', name: 'Ustadh' },
       subordinates: [{ id: 'f-2' }],
     };
 
-    const cleaned = stripTeacherWriteNoise(raw);
+    const cleaned = stripFacultyWriteNoise(raw);
     expect(cleaned.designationAssignableRoles).toBeUndefined();
     expect(cleaned.designationEndsOn).toBeUndefined();
     expect(cleaned.contact).toBeUndefined();
@@ -78,8 +78,8 @@ describe('teacherWriteSchema and soft-delete helpers', () => {
     expect(cleaned.employeeId).toBe('EMP-02');
   });
 
-  it('buildDynamicTeacherSchema allows transient designation and hierarchy fields by stripping them', () => {
-    const schema = buildDynamicTeacherSchema(DEFAULT_TEACHERS_SETTINGS, new Set(['basic']), {
+  it('buildDynamicFacultySchema allows transient designation and hierarchy fields by stripping them', () => {
+    const schema = buildDynamicFacultySchema(DEFAULT_FACULTY_SETTINGS, new Set(['basic']), {
       basic: [
         { key: 'contactId', label: 'Contact', type: 'text', enabled: true, required: true, order: 1 },
         { key: 'employeeId', label: 'Employee ID', type: 'text', enabled: true, required: false, order: 2 },
@@ -89,9 +89,9 @@ describe('teacherWriteSchema and soft-delete helpers', () => {
     const parsed = schema.safeParse({
       contactId: 'c-1',
       employeeId: 'EMP-03',
-      designationAssignableRoles: ['teacher'],
+      designationAssignableRoles: ['faculty'],
       designationEndsOn: null,
-      contact: { name: 'Teacher' },
+      contact: { name: 'Faculty Member' },
       subordinates: [],
       designationStartsOn: '',
     });
@@ -107,8 +107,8 @@ describe('teacherWriteSchema and soft-delete helpers', () => {
     }
   });
 
-  it('buildDynamicTeacherSchema strips soft-delete metadata and strictly validates fields', () => {
-    const schema = buildDynamicTeacherSchema(DEFAULT_TEACHERS_SETTINGS, new Set(['basic']), {
+  it('buildDynamicFacultySchema strips soft-delete metadata and strictly validates fields', () => {
+    const schema = buildDynamicFacultySchema(DEFAULT_FACULTY_SETTINGS, new Set(['basic']), {
       basic: [
         { key: 'contactId', label: 'Contact', type: 'text', enabled: true, required: true, order: 1 },
         { key: 'employeeId', label: 'Employee ID', type: 'text', enabled: true, required: false, order: 2 },
@@ -138,8 +138,8 @@ describe('teacherWriteSchema and soft-delete helpers', () => {
     }
   });
 
-  it('buildDynamicTeacherSchema rejects unknown properties via strict schema', () => {
-    const schema = buildDynamicTeacherSchema(DEFAULT_TEACHERS_SETTINGS, new Set(['basic']), {
+  it('buildDynamicFacultySchema rejects unknown properties via strict schema', () => {
+    const schema = buildDynamicFacultySchema(DEFAULT_FACULTY_SETTINGS, new Set(['basic']), {
       basic: [
         { key: 'contactId', label: 'Contact', type: 'text', enabled: true, required: true, order: 1 },
       ],
@@ -153,20 +153,20 @@ describe('teacherWriteSchema and soft-delete helpers', () => {
     expect(parsed.success).toBe(false);
   });
 
-  it('isTeacherDeleted identifies soft-deleted teachers', () => {
-    expect(isTeacherDeleted({ deletedAt: '2026-01-01T00:00:00.000Z' })).toBe(true);
-    expect(isTeacherDeleted({ deletedAt: null })).toBe(false);
-    expect(isTeacherDeleted({})).toBe(false);
+  it('isFacultyDeleted identifies soft-deleted faculty', () => {
+    expect(isFacultyDeleted({ deletedAt: '2026-01-01T00:00:00.000Z' })).toBe(true);
+    expect(isFacultyDeleted({ deletedAt: null })).toBe(false);
+    expect(isFacultyDeleted({})).toBe(false);
   });
 
-  it('filterActiveTeachers excludes archived teachers', () => {
+  it('filterActiveFaculty excludes archived faculty', () => {
     const list = [
       { id: '1', status: 'active', contactId: 'c1' },
       { id: '2', status: 'active', contactId: 'c2', deletedAt: '2026-01-01T00:00:00.000Z' },
       { id: '3', status: 'on_leave', contactId: 'c3', deletedAt: null },
     ];
 
-    const active = filterActiveTeachers(list);
-    expect(active.map((t) => t.id)).toEqual(['1', '3']);
+    const active = filterActiveFaculty(list);
+    expect(active.map((f: { id: string }) => f.id)).toEqual(['1', '3']);
   });
 });

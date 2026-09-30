@@ -1,8 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   FACULTY_MODULE_MANIFEST,
-  type Teacher,
-  type TeachersQuickFilter,
+  type Faculty,
+  type FacultyQuickFilter,
 } from '@mms/shared';
 import { BookOpen, Layers, Users } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -12,30 +12,30 @@ import {
   useFacultyMetrics,
   useFacultyContractList,
 } from '@/tenant/hooks/collections/faculty';
-import { teacherStatusBadgeConfig } from '@/lib/faculty/facultyStatusUi';
-import { collectTeacherIdsFromSessions } from '@/lib/registryResolve';
-import { teacherNameById } from '@/lib/faculty/facultyAssignment';
+import { facultyStatusBadgeConfig } from '@/lib/faculty/facultyStatusUi';
+import { collectFacultyIdsFromSessions } from '@/lib/registryResolve';
+import { facultyNameById } from '@/lib/faculty/facultyAssignment';
 import {
-  applyTeachersReportDrillDown,
-  buildTeacherReportMetricItems,
+  applyFacultyReportDrillDown,
+  buildFacultyReportMetricItems,
   computeFacultyWorkload,
   summarizeFacultyWorkload,
 } from '@/tenant/features/reports/controllers/facultyReportMetrics';
-import { resolveTeacherReportExportRows } from '@/tenant/features/reports/controllers/facultyReportExport';
+import { resolveFacultyReportExportRows } from '@/tenant/features/reports/controllers/facultyReportExport';
 import type { ExportColumn } from '@/components/ui/ExportToolbar';
-import { mapTeacherRow, type TeacherReportProps, type TeacherReportSubTab } from '@/components/ui/reports/facultyReportTypes';
+import { mapFacultyRow, type FacultyReportProps, type FacultyReportSubTab } from '@/components/ui/reports/facultyReportTypes';
 import type { SubTab as UINavTab } from '@/components/ui/SubTabBar';
 
 /** Controller for Faculty Reports tier — Query + filters; presentational shell stays thin. */
-export function useFacultyReportController({ filters }: TeacherReportProps) {
+export function useFacultyReportController({ filters }: FacultyReportProps) {
   const { t } = useTranslation();
-  const [activeSubTab, setActiveSubTab] = useState<TeacherReportSubTab>('roster');
-  const statusBadgeConfig = (() => teacherStatusBadgeConfig(t))();
+  const [activeSubTab, setActiveSubTab] = useState<FacultyReportSubTab>('roster');
+  const statusBadgeConfig = (() => facultyStatusBadgeConfig(t))();
 
   const REPORT_TABS = (() => [
       { key: 'roster', label: t('faculty.report.rosterTab') },
       { key: 'workload', label: t('faculty.report.workloadTab') },
-    ])() as readonly UINavTab<TeacherReportSubTab>[];
+    ])() as readonly UINavTab<FacultyReportSubTab>[];
 
   const [listPage, setListPage] = useState(1);
   const [reportStatusFilter, setReportStatusFilter] = useState<string | null>(null);
@@ -63,16 +63,16 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
   const listLoading = rosterQuery.isLoading;
   const listRefetch = rosterQuery.refetch;
 
-  const rawList = (rosterQuery.data?.body as { faculty?: Teacher[]; teachers?: Teacher[] } | undefined);
-  const list = rawList?.faculty ?? rawList?.teachers ?? [];
-  const teachers = list.map(mapTeacherRow);
+  const rawList = (rosterQuery.data?.body as { faculty?: Faculty[] } | undefined);
+  const list = rawList?.faculty ?? [];
+  const faculty = list.map(mapFacultyRow);
 
   const listTotal = rosterQuery.data?.body?.total ?? 0;
   const listHasMore = Boolean(rosterQuery.data?.body?.hasMore);
 
   const sessions = useSessionsCollection();
-  const teacherIds = (() => collectTeacherIdsFromSessions(sessions))();
-  const { data: workloadTeachers = [] } = useFacultyByIds(teacherIds);
+  const facultyIds = (() => collectFacultyIdsFromSessions(sessions))();
+  const { data: workloadFaculty = [] } = useFacultyByIds(facultyIds);
 
   const filteredSessions = (() => {
     if (!sessionFilter && !classFilter) return sessions;
@@ -86,17 +86,17 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
     });
   })();
 
-  const resolveClassTeacher = useCallback(
-    (teacherId: string, teacherName: string): string => {
-      const fromRegistry = teacherNameById(workloadTeachers, teacherId);
-      return fromRegistry || teacherName || t('faculty.report.unassigned');
+  const resolveClassFacultyMember = useCallback(
+    (facultyId: string, facultyName: string): string => {
+      const fromRegistry = facultyNameById(workloadFaculty, facultyId);
+      return fromRegistry || facultyName || t('faculty.report.unassigned');
     },
-    [workloadTeachers, t],
+    [workloadFaculty, t],
   );
 
   const facultyWorkload = useMemo(
-    () => computeFacultyWorkload(filteredSessions, resolveClassTeacher),
-    [filteredSessions, resolveClassTeacher],
+    () => computeFacultyWorkload(filteredSessions, resolveClassFacultyMember),
+    [filteredSessions, resolveClassFacultyMember],
   );
 
   const { totalStudents, totalClasses, avgStudents } = summarizeFacultyWorkload(facultyWorkload);
@@ -128,15 +128,15 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
     ])() as ExportColumn[];
 
   const resolveRosterExportRows = (): Promise<Record<string, unknown>[]> =>
-    resolveTeacherReportExportRows({ search: searchParam, status: statusParam });
+    resolveFacultyReportExportRows({ search: searchParam, status: statusParam });
 
   const drillDownToWork = useCallback(
-    (quickFilter: TeachersQuickFilter | undefined) => applyTeachersReportDrillDown(t, quickFilter),
+    (quickFilter: FacultyQuickFilter | undefined) => applyFacultyReportDrillDown(t, quickFilter),
     [t],
   );
 
   const metricItems = (() => [
-      ...buildTeacherReportMetricItems({
+      ...buildFacultyReportMetricItems({
         t,
         metrics,
         reportStatusFilter,
@@ -162,7 +162,7 @@ export function useFacultyReportController({ filters }: TeacherReportProps) {
     listLoading,
     listRefetch,
     rosterQuery,
-    teachers,
+    faculty,
     listTotal,
     listHasMore,
     rosterExportColumns,

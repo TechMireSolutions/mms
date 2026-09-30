@@ -11,14 +11,14 @@ import {
 import type {
   Contact,
   Faculty,
+  FacultyMember,
   FacultyDesignationDefinition,
   FacultyHierarchyPreset,
   FieldDefinition,
-  Teacher,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { focusTeacherValidationField } from "@/tenant/features/faculty/components/facultyFormValidation";
-import type { TeacherStatusOption } from "@/tenant/features/faculty/components/FacultyFormSections";
+import { focusFacultyValidationField } from "@/tenant/features/faculty/components/facultyFormValidation";
+import type { FacultyStatusOption } from "@/tenant/features/faculty/components/FacultyFormSections";
 import type {
   FacultyUserAccountDraft,
   LinkedUserInfo,
@@ -65,15 +65,15 @@ export interface FormTabItem {
   tone?: "destructive";
 }
 
-export interface TeacherFormTabContentProps {
+export interface FacultyFormTabContentProps {
   formInstanceId: string;
   activeTab?: string;
-  teacher?: Teacher;
-  teacherDraft: Partial<Teacher>;
+  faculty?: FacultyMember;
+  facultyDraft?: Partial<FacultyMember>;
   errors: Record<string, string>;
   fields: Record<string, FieldDefinition[]>;
   defaultSpecialization: string;
-  linkedTeacherContactIds: Array<string | number>;
+  linkedFacultyContactIds?: Array<string | number>;
   specializationOptions: string[];
   designationOptions?: FacultyDesignationDefinition[];
   autoGenerateId: boolean;
@@ -81,11 +81,11 @@ export interface TeacherFormTabContentProps {
   nextEmployeeId?: string;
   onRegenerateEmployeeId?: () => void;
   isFetchingNextEmployeeId?: boolean;
-  statusOptions: TeacherStatusOption[];
+  statusOptions: FacultyStatusOption[];
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
   getFieldError: (fieldId: string) => string | undefined;
-  onDraftChange: (patch: Partial<Teacher>) => void;
+  onDraftChange: (patch: Partial<FacultyMember>) => void;
   linkedContact?: Contact | null;
   linkedUser?: LinkedUserInfo | null;
   userAccountDraft?: FacultyUserAccountDraft;
@@ -93,8 +93,6 @@ export interface TeacherFormTabContentProps {
   supervisorCandidates?: Faculty[];
   hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
 }
-
-export type FacultyFormTabContentProps = TeacherFormTabContentProps;
 
 export function useFacultyFormTabs(input: {
   isFieldEnabled: (fieldId: string) => boolean;
@@ -166,7 +164,7 @@ export function useFacultyFormTabs(input: {
     );
     if (!fieldForActiveTab) return;
     const timer = setTimeout(() => {
-      focusTeacherValidationField(formInstanceId, fieldForActiveTab);
+      focusFacultyValidationField(formInstanceId, fieldForActiveTab);
     }, 60);
     return () => clearTimeout(timer);
   }, [activeTab, errors, formInstanceId]);

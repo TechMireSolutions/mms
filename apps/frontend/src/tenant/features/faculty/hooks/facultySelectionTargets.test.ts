@@ -1,31 +1,31 @@
 import { describe, expect, it } from "vitest";
-import type { Teacher } from "@mms/shared";
-import { computeTeachersSelectionTargets } from "@/tenant/features/faculty/hooks/facultySelectionTargets";
+import type { Faculty } from "@mms/shared";
+import { computeFacultySelectionTargets } from "@/tenant/features/faculty/hooks/facultySelectionTargets";
 
-function teacher(partial: Partial<Teacher> & { id: string }): Teacher {
+function createFaculty(partial: Partial<Faculty> & { id: string }): Faculty {
   return {
     contactId: `c-${partial.id}`,
     status: "active",
     ...partial,
-  } as Teacher;
+  } as Faculty;
 }
 
-describe("computeTeachersSelectionTargets", () => {
+describe("computeFacultySelectionTargets", () => {
   it("returns empty buckets when nothing is selected", () => {
-    const result = computeTeachersSelectionTargets({
+    const result = computeFacultySelectionTargets({
       selectedIds: [],
-      workTeachers: [teacher({ id: "1", phone: "+923001234567" })],
+      workFaculty: [createFaculty({ id: "1", phone: "+923001234567" })],
     });
     expect(result).toEqual({ waTargets: [], smsReady: [], emailReady: [] });
   });
 
   it("filters current-page selected rows by channel eligibility", () => {
-    const withPhone = teacher({ id: "1", phone: "+923001234567" });
-    const withEmail = teacher({ id: "2", email: "teacher@example.com" });
-    const neither = teacher({ id: "3" });
-    const result = computeTeachersSelectionTargets({
+    const withPhone = createFaculty({ id: "1", phone: "+923001234567" });
+    const withEmail = createFaculty({ id: "2", email: "faculty@example.com" });
+    const neither = createFaculty({ id: "3" });
+    const result = computeFacultySelectionTargets({
       selectedIds: ["1", "2", "3", "missing"],
-      workTeachers: [withPhone, withEmail, neither],
+      workFaculty: [withPhone, withEmail, neither],
     });
 
     expect(result.smsReady.map((row) => row.id)).toEqual(["1"]);
@@ -34,10 +34,10 @@ describe("computeTeachersSelectionTargets", () => {
   });
 
   it("treats a short/landline phone as SMS-ready but not WhatsApp-capable", () => {
-    const shortPhone = teacher({ id: "4", phone: "123" });
-    const result = computeTeachersSelectionTargets({
+    const shortPhone = createFaculty({ id: "4", phone: "123" });
+    const result = computeFacultySelectionTargets({
       selectedIds: ["4"],
-      workTeachers: [shortPhone],
+      workFaculty: [shortPhone],
     });
 
     expect(result.smsReady.map((row) => row.id)).toEqual(["4"]);

@@ -1,13 +1,21 @@
-import {
-  parseTenantScopedStorageKey,
-  TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS,
-  isTeacherLookupLegacyCollectionKey,
-  type TeacherLookupKind,
-} from '@mms/shared';
+import { parseTenantScopedStorageKey } from '@mms/shared';
 import { and, eq } from 'drizzle-orm';
 import { getDb } from '../dbClient.js';
 import * as schema from '../schema.js';
 import { withGlobalTenant } from '../tenant-context.js';
+
+const TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS = {
+  teacherStatuses: 'statuses',
+  teacherSpecializations: 'specializations',
+} as const;
+
+type LegacyTeacherLookupKey = keyof typeof TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS;
+
+function isTeacherLookupLegacyCollectionKey(key: string): key is LegacyTeacherLookupKey {
+  return key in TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS;
+}
+
+type TeacherLookupKind = (typeof TEACHER_LOOKUP_LEGACY_COLLECTION_KEYS)[LegacyTeacherLookupKey];
 
 function slugifyLabel(label: string, index: number): string {
   const base = label

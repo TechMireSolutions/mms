@@ -1,14 +1,20 @@
 import type { CustomWidget } from "./pinnedWidgetTypes";
 import type { ReportCollectionsSnapshot } from "@/lib/reports/useReportCollections";
 import type { Denomination } from "@/lib/data/hasanatData";
-import { getDenominationPoints, matchesWidgetFilter } from "@mms/shared";
+import { getDenominationPoints } from "@mms/shared";
 import {
   readContactsWidgetAggregate,
   readStudentsWidgetAggregate,
-  readTeachersWidgetAggregate,
+  readFacultyWidgetAggregate,
   readSessionsWidgetAggregate,
   readEnrollmentsWidgetAggregate,
 } from "./widgetAggregateReaders.js";
+import { getFilteredRecords } from "./widgetCollectionSnapshot.js";
+
+export interface WidgetChartDataPoint {
+  name: string;
+  value: number;
+}
 
 function resolveHasanatPoints(
   record: Record<string, unknown>,
@@ -21,77 +27,81 @@ function resolveHasanatPoints(
   );
 }
 
+function computeGroupValue(
+  groupRecords: Record<string, unknown>[],
+  widget: CustomWidget,
+  denominations: Denomination[] | undefined,
+): number {
+  if (widget.operation === "count") {
+    return groupRecords.length;
+  }
+
+  const targetField = widget.targetField || "";
+  let numericTotal = 0;
+  let numericRecordCount = 0;
+
+  for (const record of groupRecords) {
+    if (widget.collection === "hasanat_distributions" && targetField === "points") {
+      numericTotal += Number(record.quantity || 1) * resolveHasanatPoints(record, denominations);
+      numericRecordCount++;
+    } else {
+      const rawValue = record[targetField];
+      if (rawValue !== null && rawValue !== undefined && rawValue !== "") {
+        const numericValue = Number(rawValue);
+        if (Number.isFinite(numericValue)) {
+          numericTotal += numericValue;
+          numericRecordCount++;
+        }
+      }
+    }
+  }
+
+  if (widget.operation === "sum") {
+    return numericTotal;
+  }
+  return numericRecordCount > 0 ? Math.round(numericTotal / numericRecordCount) : 0;
+}
+
+const AGGREGATE_READERS: Record<
+  string,
+  (widgetId: string) => { chartData?: WidgetChartDataPoint[] } | undefined
+> = {
+  contacts: readContactsWidgetAggregate,
+  students: readStudentsWidgetAggregate,
+  faculty: readFacultyWidgetAggregate,
+  sessions: readSessionsWidgetAggregate,
+  enrollments: readEnrollmentsWidgetAggregate,
+};
+
 export function computeWidgetChartData(
   widget: CustomWidget,
   collections: ReportCollectionsSnapshot,
-): { name: string; value: number }[] {
-  if (widget.collection === "contacts") {
-    const aggregate = readContactsWidgetAggregate(widget.id);
-    return aggregate?.chartData ?? [];
-  }
-  if (widget.collection === "students") {
-    const aggregate = readStudentsWidgetAggregate(widget.id);
-    return aggregate?.chartData ?? [];
-  }
-  if (widget.collection === "teachers" || widget.collection === "faculty") {
-    const aggregate = readTeachersWidgetAggregate(widget.id);
-    return aggregate?.chartData ?? [];
-  }
-  if (widget.collection === "sessions") {
-    const aggregate = readSessionsWidgetAggregate(widget.id);
-    return aggregate?.chartData ?? [];
-  }
-  if (widget.collection === "enrollments") {
-    const aggregate = readEnrollmentsWidgetAggregate(widget.id);
-    return aggregate?.chartData ?? [];
+): WidgetChartDataPoint[] {
+  const aggregateReader = AGGREGATE_READERS[widget.collection];
+  if (aggregateReader) {
+    return aggregateReader(widget.id)?.chartData ?? [];
   }
 
-  const collectionRecords = collections[widget.collection] || [];
-  const filteredRecords = collectionRecords.filter((collectionRecord) =>
-    matchesWidgetFilter(
-      collectionRecord as Record<string, unknown>,
-      widget.filterField,
-      widget.filterOperator,
-      widget.filterValue,
-    )
-  );
-
+  const filteredRecords = getFilteredRecords(widget, collections);
   const xAxis = widget.xAxisField || "status";
-  const groups: Record<string, Record<string, unknown>[]> = {};
-  filteredRecords.forEach((filteredRecord) => {
-    const groupValue = (filteredRecord as Record<string, unknown>)[xAxis];
-    const groupKey = groupValue === undefined || groupValue === null || groupValue === "" ? "Unknown" : String(groupValue);
-    if (!groups[groupKey]) groups[groupKey] = [];
-    groups[groupKey].push(filteredRecord as Record<string, unknown>);
+
+  const groups = Object.groupBy(filteredRecords, (record) => {
+    const groupValue = record[xAxis];
+    return groupValue === undefined || groupValue === null || groupValue === ""
+      ? "Unknown"
+      : String(groupValue);
   });
 
-  const chartData = Object.entries(groups).map(([groupName, groupRecords]) => {
-    let computedValue = 0;
-    if (widget.operation === "count") {
-      computedValue = groupRecords.length;
-    } else {
-      const targetField = widget.targetField || "";
-      let numericTotal = 0;
-      let numericRecordCount = 0;
-      groupRecords.forEach((groupRecord) => {
-        if (widget.collection === "hasanat_distributions" && targetField === "points") {
-          numericTotal += Number(groupRecord.quantity || 1) * resolveHasanatPoints(
-            groupRecord,
-            collections.hasanat_denoms,
-          );
-          numericRecordCount++;
-        } else {
-          const numericValue = Number(groupRecord[targetField]);
-          if (!isNaN(numericValue)) {
-            numericTotal += numericValue;
-            numericRecordCount++;
-          }
-        }
-      });
-      computedValue = widget.operation === "sum" ? numericTotal : (numericRecordCount > 0 ? Math.round(numericTotal / numericRecordCount) : 0);
-    }
-    return { name: groupName, value: computedValue };
-  });
+  const chartData: WidgetChartDataPoint[] = [];
+  for (const [groupName, groupRecords] of Object.entries(groups)) {
+    if (!groupRecords || groupRecords.length === 0) continue;
+    chartData.push({
+      name: groupName,
+      value: computeGroupValue(groupRecords, widget, collections.hasanat_denoms),
+    });
+  }
 
-  return chartData.sort((firstItem, secondItem) => secondItem.value - firstItem.value).slice(0, 8);
+  return chartData
+    .toSorted((firstItem, secondItem) => secondItem.value - firstItem.value)
+    .slice(0, 8);
 }

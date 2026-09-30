@@ -1,7 +1,7 @@
 export interface KpiCategoryFlags {
   isContactsCategory: boolean;
   isStudentsCategory: boolean;
-  isTeachersCategory: boolean;
+  isFacultyCategory: boolean;
   isSessionsCategory: boolean;
   isEnrollmentsCategory: boolean;
   isObligationsCategory: boolean;
@@ -14,7 +14,7 @@ export interface KpiCategoryFlags {
 export function getKpiCategoryFlags(category: string): KpiCategoryFlags {
   const isContactsCategory = category === 'contacts';
   const isStudentsCategory = category === 'students';
-  const isTeachersCategory = category === 'teachers' || category === 'faculty';
+  const isFacultyCategory = category === 'faculty';
   const isSessionsCategory = category === 'sessions';
   const isEnrollmentsCategory = category === 'enrollments';
   const isObligationsCategory = category === 'obligations';
@@ -25,7 +25,7 @@ export function getKpiCategoryFlags(category: string): KpiCategoryFlags {
   return {
     isContactsCategory,
     isStudentsCategory,
-    isTeachersCategory,
+    isFacultyCategory,
     isSessionsCategory,
     isEnrollmentsCategory,
     isObligationsCategory,

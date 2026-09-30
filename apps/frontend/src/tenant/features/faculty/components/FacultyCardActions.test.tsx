@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
-import { TeacherCardActions } from "./FacultyCardActions";
+import type { Faculty } from "@mms/shared";
+import { FacultyCardActions } from "./FacultyCardActions";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -10,7 +10,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockTeacher: Teacher = {
+const mockFaculty: Faculty = {
   id: "tch-card-1",
   contactId: "cnt-1",
   name: "Ustadh Umar",
@@ -23,8 +23,8 @@ const mockTeacher: Teacher = {
 };
 
 const defaultProps = {
-  teacher: mockTeacher,
-  teacherId: "tch-card-1",
+  faculty: mockFaculty,
+  facultyId: "tch-card-1",
   displayName: "Ustadh Umar",
   showDeleted: false,
   canWrite: true,
@@ -34,9 +34,9 @@ const defaultProps = {
   onRequestDelete: vi.fn(),
 };
 
-describe("TeacherCardActions Component", () => {
+describe("FacultyCardActions Component", () => {
   it("renders view details button and overflow actions menu", () => {
-    const html = renderToStaticMarkup(<TeacherCardActions {...defaultProps} />);
+    const html = renderToStaticMarkup(<FacultyCardActions {...defaultProps} />);
 
     expect(html).toContain("faculty.actionViewShort");
     expect(html).toContain("faculty.list.viewDetails - Ustadh Umar");

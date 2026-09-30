@@ -2,9 +2,9 @@ import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import {
-  TeacherBasicSection,
-  TeacherContactSection,
-  TeacherEmploymentSection,
+  FacultyBasicSection,
+  FacultyContactSection,
+  FacultyEmploymentSection,
 } from "./FacultyFormSections";
 
 vi.mock("@/components/contactLink/ContactPicker", () => ({
@@ -17,11 +17,11 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-describe("TeacherFormSections Components", () => {
-  it("renders TeacherContactSection with contact picker, phone, email, qualification, and specialization pills", () => {
+describe("FacultyFormSections Components", () => {
+  it("renders FacultyContactSection with contact picker, phone, email, qualification, and specialization pills", () => {
     const html = renderToStaticMarkup(
-      <TeacherContactSection
-        teacherDraft={{ contactId: "cnt-1" }}
+      <FacultyContactSection
+        facultyDraft={{ contactId: "cnt-1" }}
         linkedContact={{
           id: "cnt-1",
           name: "Ustadh Ali",
@@ -29,7 +29,7 @@ describe("TeacherFormSections Components", () => {
           emails: [{ address: "ali@madrasa.org" }],
           education: [{ degree: "M.A. Islamic Studies", fieldOfStudy: "Hadith" }],
         } as any}
-        linkedTeacherContactIds={[]}
+        linkedFacultyContactIds={[]}
         errors={{}}
         fields={{}}
         isFieldEnabled={() => true}
@@ -45,10 +45,10 @@ describe("TeacherFormSections Components", () => {
     expect(html).toContain("Hadith");
   });
 
-  it("renders TeacherBasicSection as null (retired in favor of contact education/skills)", () => {
+  it("renders FacultyBasicSection as null (retired in favor of contact education/skills)", () => {
     const html = renderToStaticMarkup(
-      <TeacherBasicSection
-        teacherDraft={{ specialization: "Tajweed" }}
+      <FacultyBasicSection
+        facultyDraft={{ specialization: "Tajweed" }}
         errors={{}}
         fields={{}}
         defaultSpecialization="Tajweed"
@@ -62,36 +62,36 @@ describe("TeacherFormSections Components", () => {
     expect(html).toBe("");
   });
 
-  it("renders TeacherEmploymentSection employeeId, status, and join date fields", () => {
+  it("renders FacultyEmploymentSection employeeId, status, and join date fields", () => {
     const html = renderToStaticMarkup(
-      <TeacherEmploymentSection
+      <FacultyEmploymentSection
         autoGenerateId={false}
         errors={{}}
         fields={{}}
-        idPrefix="TCH-"
-        nextEmployeeId="TCH-002"
+        idPrefix="FAC-"
+        nextEmployeeId="FAC-002"
         statusOptions={[{ value: "active", label: "Active" }]}
-        teacherDraft={{ employeeId: "TCH-001", status: "active" }}
+        facultyDraft={{ employeeId: "FAC-001", status: "active" }}
         isFieldEnabled={() => true}
         isFieldRequired={() => false}
         onDraftChange={vi.fn()}
       />,
     );
 
-    expect(html).toContain("teachers.form.sectionEmployment");
-    expect(html).toContain("TCH-001");
+    expect(html).toContain("faculty.form.sectionEmployment");
+    expect(html).toContain("FAC-001");
   });
 
   it("renders accessible error attributes on employeeId when errors are present", () => {
 
     const empHtml = renderToStaticMarkup(
-      <TeacherEmploymentSection
+      <FacultyEmploymentSection
         autoGenerateId={false}
         errors={{ employeeId: "Duplicate employee ID" }}
         fields={{}}
-        idPrefix="TCH-"
+        idPrefix="FAC-"
         statusOptions={[{ value: "active", label: "Active" }]}
-        teacherDraft={{ employeeId: "TCH-001", status: "active" }}
+        facultyDraft={{ employeeId: "FAC-001", status: "active" }}
         isFieldEnabled={() => true}
         isFieldRequired={() => true}
         onDraftChange={vi.fn()}
@@ -106,13 +106,13 @@ describe("TeacherFormSections Components", () => {
 
   it("derives hierarchy rank from a dynamic designation and renders the supervisor picker", () => {
     const html = renderToStaticMarkup(
-      <TeacherEmploymentSection
+      <FacultyEmploymentSection
         autoGenerateId={false}
         errors={{}}
         fields={{}}
         idPrefix="FAC-"
         statusOptions={[{ value: "active", label: "Active" }]}
-        teacherDraft={{
+        facultyDraft={{
           employeeId: "FAC-001",
           status: "active",
           hierarchyRank: 3,
@@ -136,7 +136,7 @@ describe("TeacherFormSections Components", () => {
           name: "Senior Faculty",
           hierarchyRank: 3,
           isActive: true,
-          assignableRoles: ["teacher"],
+          assignableRoles: ["faculty_member"],
         }]}
         isFieldEnabled={() => true}
         isFieldRequired={() => false}
@@ -156,13 +156,13 @@ describe("TeacherFormSections Components", () => {
 
   it("renders department, specialization, and qualification when enabled", () => {
     const html = renderToStaticMarkup(
-      <TeacherEmploymentSection
+      <FacultyEmploymentSection
         autoGenerateId={false}
         errors={{}}
         fields={{}}
         idPrefix="FAC-"
         statusOptions={[{ value: "active", label: "Active" }]}
-        teacherDraft={{
+        facultyDraft={{
           employeeId: "FAC-001",
           status: "active",
           department: "Islamic Jurisprudence",

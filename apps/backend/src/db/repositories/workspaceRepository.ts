@@ -123,7 +123,7 @@ function rowToGlobalSettings(ws: typeof workspacesTable.$inferSelect): GlobalSet
   if (ws.smsNotifications != null) overrides.smsNotifications = ws.smsNotifications;
   if (ws.twoFactor != null) overrides.twoFactor = ws.twoFactor;
   if (ws.sessionTimeout != null) overrides.sessionTimeout = ws.sessionTimeout;
-  if (ws.passwordPolicy) overrides.passwordPolicy = ws.passwordPolicy;
+  if (ws.passwordPolicy) overrides.passwordPolicy = ws.passwordPolicy as GlobalSettings['passwordPolicy'];
   if (ws.theme) overrides.theme = ws.theme as GlobalSettings['theme'];
   if (ws.enabledModules) overrides.enabledModules = ws.enabledModules as Record<string, boolean>;
   if (ws.llmProvider) overrides.llmProvider = ws.llmProvider as GlobalSettings['llmProvider'];

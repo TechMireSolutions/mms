@@ -1,5 +1,5 @@
 import type { Session, FacultyMember } from '@mms/shared';
-import { DEFAULT_TEACHER_STATUS, DEFAULT_FACULTY_STATUS } from '@mms/shared';
+import { DEFAULT_FACULTY_STATUS } from '@mms/shared';
 
 export interface FacultyAssignedClassItem {
   sessionId: string;
@@ -16,8 +16,6 @@ export interface FacultyAssignedClassItem {
   ageMax?: number;
 }
 
-export type TeacherAssignedClassItem = FacultyAssignedClassItem;
-
 /** Resolves a faculty display name from the faculty registry. */
 export function facultyNameById(faculty: FacultyMember[] | Map<string, FacultyMember>, id: string): string {
   if (!id) return '';
@@ -25,24 +23,33 @@ export function facultyNameById(faculty: FacultyMember[] | Map<string, FacultyMe
   return faculty.find((member) => String(member.id) === id)?.name ?? '';
 }
 
-export const teacherNameById = facultyNameById;
-
-/** Persists only `teacherId` / `facultyId` — display name is hydrated from registry. */
-export function assignClassFaculty(facultyId: string): { teacherId: string } {
-  return { teacherId: facultyId || '' };
+/** Persists only `facultyId` — display name is hydrated from registry. */
+export function assignClassFaculty(facultyId: string): { facultyId: string } {
+  const id = facultyId || '';
+  return { facultyId: id };
 }
 
-export const assignClassTeacher = assignClassFaculty;
+export function resolveClassFacultyId(
+  sessionClass: { facultyId?: string | null } | null | undefined,
+): string {
+  if (!sessionClass) return '';
+  return String(sessionClass.facultyId || '');
+}
+
+export function resolveClassFacultyName(
+  sessionClass: { facultyName?: string | null } | null | undefined,
+): string {
+  if (!sessionClass) return '';
+  return sessionClass.facultyName || '';
+}
 
 /** Active faculty eligible for new class assignments. */
 export function activeFacultyForAssignment(faculty: FacultyMember[]): FacultyMember[] {
-  const targetStatus = DEFAULT_FACULTY_STATUS || DEFAULT_TEACHER_STATUS;
+  const targetStatus = DEFAULT_FACULTY_STATUS;
   return faculty.filter((member) => member.status === targetStatus);
 }
 
-export const activeTeachersForAssignment = activeFacultyForAssignment;
-
-/** Options for class teacher select — active faculty plus the current assignee if inactive. */
+/** Options for class faculty select — active faculty plus the current assignee if inactive. */
 export function facultyOptionsForClass(
   faculty: FacultyMember[],
   currentFacultyId?: string,
@@ -55,8 +62,6 @@ export function facultyOptionsForClass(
   return current ? [current, ...active] : active;
 }
 
-export const teacherOptionsForClass = facultyOptionsForClass;
-
 /** Extracts all classes assigned to a specific faculty member from the sessions array. */
 export function getFacultyAssignedClasses(facultyId: string | number, sessions: Session[]): FacultyAssignedClassItem[] {
   const list: FacultyAssignedClassItem[] = [];
@@ -64,7 +69,7 @@ export function getFacultyAssignedClasses(facultyId: string | number, sessions: 
   for (const session of sessions) {
     if (!session.classes || session.classes.length === 0) continue;
     for (const cls of session.classes) {
-      if (String(cls.teacherId) === facultyIdStr) {
+      if (resolveClassFacultyId(cls) === facultyIdStr) {
         list.push({
           sessionId: session.id,
           sessionName: session.name,
@@ -84,5 +89,3 @@ export function getFacultyAssignedClasses(facultyId: string | number, sessions: 
   }
   return list;
 }
-
-export const getTeacherAssignedClasses = getFacultyAssignedClasses;

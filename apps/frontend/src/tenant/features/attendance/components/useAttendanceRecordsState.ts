@@ -47,7 +47,7 @@ export function useAttendanceRecordsState({
 
   useEffect(() => {
     setListPage(1);
-  }, [deferredSearch, statusFilter, dateFrom, dateTo, filters.sessionId, filters.classId, filters.teacherId, filters.date, showDeleted]);
+  }, [deferredSearch, statusFilter, dateFrom, dateTo, filters.sessionId, filters.classId, filters.facultyId, filters.date, showDeleted]);
 
   const attendancePageQuery = useAttendancePaginated({
     page: listPage,
@@ -55,7 +55,7 @@ export function useAttendanceRecordsState({
     search: deferredSearch,
     sessionId: filters.sessionId,
     classId: filters.classId,
-    teacherId: filters.teacherId,
+    facultyId: filters.facultyId,
     date: filters.date,
     status: statusFilter !== "all" ? statusFilter : undefined,
     dateFrom,
@@ -85,7 +85,7 @@ export function useAttendanceRecordsState({
 
   useEffect(() => {
     clearSelection();
-  }, [showDeleted, listPage, debouncedSearch, statusFilter, dateFrom, dateTo, filters.sessionId, filters.classId, filters.teacherId, filters.date, clearSelection]);
+  }, [showDeleted, listPage, debouncedSearch, statusFilter, dateFrom, dateTo, filters.sessionId, filters.classId, filters.facultyId, filters.date, clearSelection]);
 
   const statusMap = new Map<string, (typeof statuses)[number]>();
   for (const s of statuses) {

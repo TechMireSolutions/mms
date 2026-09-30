@@ -39,7 +39,7 @@ function buildAttendanceListConditions(subdomain: string, query: AttendanceListQ
     conditions.push(eq(attendance.classId, query.classId.trim()));
   }
   const sessionId = query.sessionId?.trim();
-  const facultyId = (query.facultyId || query.teacherId)?.trim();
+  const facultyId = query.facultyId?.trim();
   if (sessionId && facultyId) {
     conditions.push(sql`EXISTS (
       SELECT 1 FROM ${sessionClasses} sc
@@ -146,7 +146,7 @@ export async function listAttendancePage(
     if (query.sessionId?.trim()) {
       classJoinConditions.push(eq(sessionClasses.sessionId, query.sessionId.trim()));
     }
-    const facultyFilterId = (query.facultyId || query.teacherId)?.trim();
+    const facultyFilterId = query.facultyId?.trim();
     if (facultyFilterId) {
       classJoinConditions.push(eq(sessionClasses.facultyId, facultyFilterId));
     }
@@ -194,7 +194,6 @@ export async function listAttendancePage(
       rec.sessionId = r.sessionId ?? '';
       rec.sessionName = r.sessionName ?? '';
       rec.facultyId = r.facultyId ?? '';
-      rec.teacherId = r.facultyId ?? '';
       return rec;
     });
 

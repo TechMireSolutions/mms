@@ -3,10 +3,10 @@ import { StatusBadge, type StatusBadgeConfigItem } from "@/components/ui/StatusB
 import { PersonDetailHeroCard } from "@/components/ui/PersonDetailHeroCard";
 import { EmployeeIdBadge } from "@/tenant/features/faculty/components/EmployeeIdBadge";
 import { getGenderCardAccent } from "@/lib/genderUi";
-import { resolveTeacherStatus, type Teacher } from "@mms/shared";
+import { resolveFacultyStatus, type Faculty } from "@mms/shared";
 
 export interface FacultyDetailHeroCardProps {
-  teacher: Teacher;
+  faculty: Faculty;
   displayName: string;
   avatar?: string | null;
   statusConfig: Record<string, StatusBadgeConfigItem>;
@@ -14,7 +14,7 @@ export interface FacultyDetailHeroCardProps {
 }
 
 export function FacultyDetailHeroCard({
-  teacher,
+  faculty,
   displayName,
   avatar,
   statusConfig,
@@ -22,16 +22,16 @@ export function FacultyDetailHeroCard({
 }: FacultyDetailHeroCardProps): React.JSX.Element {
   return (
     <PersonDetailHeroCard
-      id={String(teacher.id)}
+      id={String(faculty.id)}
       displayName={displayName}
       avatar={avatar}
-      gender={teacher.gender}
-      accentColor={getGenderCardAccent(teacher.gender)}
+      gender={faculty.gender}
+      accentColor={getGenderCardAccent(faculty.gender)}
     >
       {showStatus ? (
-        <StatusBadge status={resolveTeacherStatus(teacher.status)} config={statusConfig} />
+        <StatusBadge status={resolveFacultyStatus(faculty.status)} config={statusConfig} />
       ) : null}
-      <EmployeeIdBadge employeeId={teacher.employeeId} />
+      <EmployeeIdBadge employeeId={faculty.employeeId} />
     </PersonDetailHeroCard>
   );
 }
@@ -40,5 +40,3 @@ export function FacultyDetailHeroCard({
 export type FacultyDetailHeroProps = FacultyDetailHeroCardProps;
 export const FacultyDetailHero = FacultyDetailHeroCard;
 
-export type TeacherDetailHeroProps = FacultyDetailHeroCardProps;
-export const TeacherDetailHero = FacultyDetailHeroCard;

@@ -1,50 +1,59 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
-  TEACHERS_WORK_DRILLDOWN_EVENT,
-  applyTeachersWorkDrillDown,
-  consumeTeachersWorkDrillDown,
-  type TeachersWorkDrillDown,
+  FACULTY_WORK_DRILLDOWN_EVENT,
+  applyFacultyWorkDrillDown,
+  consumeFacultyWorkDrillDown,
+  type FacultyWorkDrillDown,
 } from "@/tenant/features/faculty/hooks/facultyWorkDrillDown";
 
-const filter: TeachersWorkDrillDown = { quickFilter: "active" };
+const filter: FacultyWorkDrillDown = { quickFilter: "active" };
 
-describe("applyTeachersWorkDrillDown", () => {
+describe("applyFacultyWorkDrillDown", () => {
+  const mockHandler = vi.fn<(e: Event) => void>();
+  const listener: EventListener = (e: Event) => {
+    mockHandler(e);
+  };
+
   beforeEach(() => {
     sessionStorage.clear();
+    mockHandler.mockClear();
+  });
+
+  afterEach(() => {
+    window.removeEventListener(FACULTY_WORK_DRILLDOWN_EVENT, listener);
   });
 
   it("persists the filter to sessionStorage and dispatches a CustomEvent", () => {
-    const listener = vi.fn();
-    window.addEventListener(TEACHERS_WORK_DRILLDOWN_EVENT, listener);
+    window.addEventListener(FACULTY_WORK_DRILLDOWN_EVENT, listener);
 
-    applyTeachersWorkDrillDown(filter);
+    applyFacultyWorkDrillDown(filter);
 
-    expect(sessionStorage.getItem("mms_teachers_work_drilldown")).toBe(JSON.stringify(filter));
-    expect(listener).toHaveBeenCalledOnce();
-    const event = listener.mock.calls[0]?.[0] as CustomEvent;
+    expect(sessionStorage.getItem("mms_faculty_work_drilldown")).toBe(JSON.stringify(filter));
+    expect(mockHandler).toHaveBeenCalledOnce();
+    const event = mockHandler.mock.calls[0]?.[0] as CustomEvent<FacultyWorkDrillDown>;
     expect(event.detail).toEqual(filter);
   });
 });
 
-describe("consumeTeachersWorkDrillDown", () => {
+describe("consumeFacultyWorkDrillDown", () => {
   beforeEach(() => {
     sessionStorage.clear();
   });
 
   it("round-trips an applied filter and removes it from storage", () => {
-    applyTeachersWorkDrillDown(filter);
-    expect(consumeTeachersWorkDrillDown()).toEqual(filter);
-    expect(sessionStorage.getItem("mms_teachers_work_drilldown")).toBeNull();
-    expect(consumeTeachersWorkDrillDown()).toBeNull();
+    applyFacultyWorkDrillDown(filter);
+    expect(consumeFacultyWorkDrillDown()).toEqual(filter);
+    expect(sessionStorage.getItem("mms_faculty_work_drilldown")).toBeNull();
+    expect(consumeFacultyWorkDrillDown()).toBeNull();
   });
 
   it("returns null when storage is empty", () => {
-    expect(consumeTeachersWorkDrillDown()).toBeNull();
+    expect(consumeFacultyWorkDrillDown()).toBeNull();
   });
 
   it("returns null and clears corrupt JSON", () => {
-    sessionStorage.setItem("mms_teachers_work_drilldown", "{not-json");
-    expect(consumeTeachersWorkDrillDown()).toBeNull();
-    expect(sessionStorage.getItem("mms_teachers_work_drilldown")).toBeNull();
+    sessionStorage.setItem("mms_faculty_work_drilldown", "{not-json");
+    expect(consumeFacultyWorkDrillDown()).toBeNull();
+    expect(sessionStorage.getItem("mms_faculty_work_drilldown")).toBeNull();
   });
 });

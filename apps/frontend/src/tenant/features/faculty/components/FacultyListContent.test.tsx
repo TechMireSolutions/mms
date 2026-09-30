@@ -1,16 +1,16 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DEFAULT_TEACHER_COLUMN_REGISTRY, type Teacher } from "@mms/shared";
+import { DEFAULT_FACULTY_COLUMN_REGISTRY, type Faculty } from "@mms/shared";
 import { FacultyListContent } from "./FacultyListContent";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string | number>) => {
-      if ((key === "faculty.table.selectTeacher" || key === "teachers.table.selectTeacher") && params?.name) {
+      if (key === "faculty.table.selectFaculty" && params?.name) {
         return `Select ${params.name}`;
       }
-      if ((key === "faculty.selectedCount" || key === "teachers.selectedCount") && params?.count != null) {
+      if (key === "faculty.selectedCount" && params?.count != null) {
         return `${params.count} selected`;
       }
       const labels: Record<string, string> = {
@@ -18,19 +18,14 @@ vi.mock("@/hooks/useTranslation", () => ({
         "faculty.table.actions": "Actions",
         "faculty.table.emptyDash": "—",
         "faculty.tryAdjustingFilters": "Try adjusting your filters",
-        "faculty.noTeachersMatchFilters": "No teachers match filters",
-        "teachers.table.selectAll": "Select All",
-        "teachers.table.actions": "Actions",
-        "teachers.table.emptyDash": "—",
-        "teachers.tryAdjustingFilters": "Try adjusting your filters",
-        "teachers.noTeachersMatchFilters": "No teachers match filters",
+        "faculty.noFacultyMatchFilters": "No faculty match filters",
       };
       return labels[key] ?? key;
     },
   }),
 }));
 
-const mockTeacher: Teacher = {
+const mockFaculty: Faculty = {
   id: "tch-cnt-1",
   contactId: "cnt-1",
   name: "Ustadh Umar",
@@ -43,7 +38,7 @@ const mockTeacher: Teacher = {
 };
 
 const defaultProps = {
-  teachers: [mockTeacher],
+  faculty: [mockFaculty],
   selectedIds: ["tch-cnt-1"],
   allSelected: true,
   someSelected: false,
@@ -52,7 +47,7 @@ const defaultProps = {
   canDelete: true,
   hasActiveFilters: false,
   isColumnVisible: () => true,
-  columnRegistry: DEFAULT_TEACHER_COLUMN_REGISTRY,
+  columnRegistry: DEFAULT_FACULTY_COLUMN_REGISTRY,
   statusConfig: { active: { label: "Active", cls: "bg-success/10 text-success" } },
   sortField: "name" as const,
   sortDir: "asc" as const,
@@ -81,15 +76,15 @@ describe("FacultyListContent Component", () => {
     expect(html).toContain("Ustadh Umar");
   });
 
-  it("renders empty state when teachers is empty", () => {
+  it("renders empty state when faculty is empty", () => {
     const html = renderToStaticMarkup(
       <FacultyListContent
         {...defaultProps}
-        teachers={[]}
+        faculty={[]}
         hasActiveFilters={true}
       />,
     );
 
-    expect(html).toContain("No teachers match filters");
+    expect(html).toContain("No faculty match filters");
   });
 });

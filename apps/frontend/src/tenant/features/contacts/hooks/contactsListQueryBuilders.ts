@@ -21,7 +21,7 @@ export interface ContactsPaginatedParams {
   hasReachable?: boolean;
   quickFilter?: ContactsQuickFilter;
   excludeIds?: Array<string | number>;
-  excludeLinkedModules?: Array<"students" | "teachers">;
+  excludeLinkedModules?: Array<"students" | "faculty">;
   enabled?: boolean;
 }
 

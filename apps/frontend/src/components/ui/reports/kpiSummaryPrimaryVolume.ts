@@ -10,13 +10,13 @@ import type {
 import type {
   ContactKPIAnalytics,
   EntityKPIMetrics,
-  TeacherKPIMetrics,
+  FacultyKPIMetrics,
 } from './kpiSummaryTypes';
 
 export interface PrimaryVolumeInputs {
   category: string;
   studentMetrics?: EntityKPIMetrics;
-  teacherMetrics?: TeacherKPIMetrics;
+  facultyMetrics?: FacultyKPIMetrics;
   contactAnalytics?: ContactKPIAnalytics;
   attendanceMetrics?: AttendanceCommandMetricsSnapshot;
   financeMetrics?: FinanceCommandMetricsSnapshot;
@@ -34,7 +34,7 @@ export function computePrimaryVolume(inputs: PrimaryVolumeInputs): number {
   const {
     category,
     studentMetrics,
-    teacherMetrics,
+    facultyMetrics,
     contactAnalytics,
     attendanceMetrics,
     financeMetrics,
@@ -62,8 +62,7 @@ export function computePrimaryVolume(inputs: PrimaryVolumeInputs): number {
         + (questionBankMetrics?.totalTests ?? questionBankTests.length)
         + (questionBankMetrics?.totalResults ?? questionBankResults.length);
     case 'enrollments': return (studentMetrics?.total ?? 0) + (sessionsMetrics?.total ?? 0);
-    case 'teachers':
-    case 'faculty': return teacherMetrics?.total ?? 0;
+    case 'faculty': return facultyMetrics?.total ?? 0;
     default: return 0;
   }
 }

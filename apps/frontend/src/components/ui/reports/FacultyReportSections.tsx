@@ -36,7 +36,7 @@ interface FacultyReportChartSectionProps {
 export const FacultyReportChartSection = (function FacultyReportChartSection({ t, facultyWorkload, onBarClick }: FacultyReportChartSectionProps): React.JSX.Element {
   return (
     <ReportChartCard
-      title={t("teachers.report.workloadOverview")}
+      title={t("faculty.report.workloadOverview")}
       accentColor="primary"
       heightClass="h-chart-md"
     >
@@ -56,8 +56,8 @@ export const FacultyReportChartSection = (function FacultyReportChartSection({ t
         <XAxis type="number" tick={chartAxisTick(11)} />
         <YAxis dataKey="faculty" type="category" tick={chartAxisTick(11)} width={120} />
         <Tooltip content={<FacultyWorkloadTooltip />} />
-        <Bar dataKey="totalStudents" fill="hsl(var(--primary))" name={t("teachers.report.studentsLabel")} radius={[0, 4, 4, 0]} />
-        <Bar dataKey="classes" fill="hsl(var(--chart-2))" name={t("teachers.report.colClasses")} radius={[0, 4, 4, 0]} />
+        <Bar dataKey="totalStudents" fill="hsl(var(--primary))" name={t("faculty.report.studentsLabel")} radius={[0, 4, 4, 0]} />
+        <Bar dataKey="classes" fill="hsl(var(--chart-2))" name={t("faculty.report.colClasses")} radius={[0, 4, 4, 0]} />
       </BarChart>
     </ReportChartCard>
   );

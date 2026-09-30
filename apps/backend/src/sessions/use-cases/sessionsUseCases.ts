@@ -52,7 +52,7 @@ export function createSessionsUseCases(
     record: Partial<SessionRecord>,
   ) => {
     const facultyIds = dedupeTrimmedIds(
-      (record.classes ?? []).map((c) => (c as { facultyId?: string }).facultyId || c.teacherId).filter(Boolean),
+      (record.classes ?? []).map((c) => c.facultyId).filter(Boolean),
     );
     if (facultyIds.length > 0) {
       const getFaculty =

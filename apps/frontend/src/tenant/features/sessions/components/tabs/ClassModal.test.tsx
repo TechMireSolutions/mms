@@ -1,6 +1,7 @@
 import React, { act } from "react";
 import { createRoot, type Root } from "react-dom/client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { ClassSchema } from "@mms/shared";
 import { ClassModal } from "./ClassModal";
 
 declare global {
@@ -18,10 +19,10 @@ vi.mock("@/tenant/hooks/collections/faculty", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/tenant/hooks/collections/faculty")>();
   return {
     ...actual,
-    useTeachersContractList: () => ({
-      data: { body: { teachers: [{ id: "t1", name: "Ustadh Ali", status: "active" }] } },
+    useFacultyContractList: () => ({
+      data: { body: { faculty: [{ id: "t1", name: "Ustadh Ali", status: "active" }] } },
     }),
-    useTeachersByIds: () => ({ data: [] }),
+    useFacultyByIds: () => ({ data: [] }),
   };
 });
 
@@ -92,7 +93,7 @@ describe("ClassModal Component", () => {
       root.render(
         <ClassModal
           open={true}
-          sessionClass={{
+          sessionClass={ClassSchema.parse({
             id: "c1",
             name: "Hifz 1",
             minAge: 15,
@@ -100,22 +101,10 @@ describe("ClassModal Component", () => {
             gender: "mixed",
             facultyId: "",
             facultyName: "",
-            teacherId: "",
-            teacherName: "",
             maxStudents: 20,
             enrolled: 0,
             room: "Room 101",
-            fees: [],
-            schedules: [],
-            budgets: [],
-            discounts: [],
-            timetables: [],
-            refreshments: [],
-            scholarships: [],
-            ageCalculationDate: "",
-            enrollmentDeadline: "",
-            status: "active",
-          }}
+          })}
 
           onClose={vi.fn()}
           onSave={onSave}

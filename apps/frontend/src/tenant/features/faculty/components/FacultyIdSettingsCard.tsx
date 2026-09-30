@@ -3,14 +3,14 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   facultySettingsToSequenceConfig,
   buildSequenceFormulaTemplate,
-  type TeachersSettings,
+  type FacultySettings,
   type SequenceNumberingConfig,
 } from "@mms/shared";
 import { SequenceNumberingCard } from "@/components/ui/sequence-numbering";
 
 export interface FacultyIdSettingsCardProps {
-  settingsDraft: TeachersSettings;
-  upd: <K extends keyof TeachersSettings>(field: K, value: TeachersSettings[K]) => void;
+  settingsDraft: FacultySettings;
+  upd: <K extends keyof FacultySettings>(field: K, value: FacultySettings[K]) => void;
 }
 
 export function FacultyIdSettingsCard({

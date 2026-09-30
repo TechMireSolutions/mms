@@ -1,5 +1,5 @@
 import { Edit2, MessageCircle, MessageSquare, Trash2, Users, DollarSign, Clock } from "lucide-react";
-import type { Teacher } from "@mms/shared";
+import type { FacultyMember } from "@mms/shared";
 
 import { Button } from "@/components/ui/button";
 import { ProgressBar } from "@/components/ui/ProgressBar";
@@ -13,25 +13,30 @@ import { useWorkCardAction } from "@/hooks/useWorkCardAction";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Class } from "@/lib/data/sessionsData";
 import { genderStatusBadgeConfig } from "@/lib/genderStatusBadge";
-import { teacherNameById } from "@/lib/faculty/facultyAssignment";
+import {
+  facultyNameById,
+  resolveClassFacultyId,
+  resolveClassFacultyName,
+} from "@/lib/faculty/facultyAssignment";
 
 interface ClassCardProps {
   sessionClass: Class;
-  teachers: Teacher[];
+  faculty?: FacultyMember[];
   onEdit: (sessionClass: Class) => void;
   onDelete: (id: string) => void;
   onMessage?: (channel: "sms" | "whatsapp" | "email", sessionClass: Class) => void;
   canWrite: boolean;
 }
 
-export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage, canWrite }: ClassCardProps) {
+export function ClassCard({ sessionClass, faculty, onEdit, onDelete, onMessage, canWrite }: ClassCardProps) {
   const { t } = useTranslation();
+  const allFaculty = faculty ?? [];
   const rawCapacity = Reflect.get(sessionClass, "capacity");
   const maxCapacity = sessionClass.maxStudents ?? (typeof rawCapacity === "number" ? rawCapacity : 30);
   const enrolledCount = sessionClass.enrolled ?? 0;
   const capacityPercent = Math.round((enrolledCount / Math.max(1, maxCapacity)) * 100);
   const barColor = capacityPercent >= 100 ? "bg-destructive" : capacityPercent >= 80 ? "bg-warning" : "bg-success";
-  const teacherLabel = teacherNameById(teachers, sessionClass.facultyId || sessionClass.teacherId) || sessionClass.facultyName || sessionClass.teacherName || t("sessions.classes.unassigned");
+  const facultyLabel = facultyNameById(allFaculty, resolveClassFacultyId(sessionClass)) || resolveClassFacultyName(sessionClass) || t("sessions.classes.unassigned");
   const genderConfig: Record<string, StatusBadgeConfigItem> = genderStatusBadgeConfig(t, { includeAny: true });
 
   const rawAgeMin = Reflect.get(sessionClass, "ageMin");
@@ -85,7 +90,7 @@ export function ClassCard({ sessionClass, teachers, onEdit, onDelete, onMessage,
         <div className="mb-3 flex items-center gap-2 text-sm text-muted-foreground">
           <Users className="h-3.5 w-3.5" aria-hidden="true" />
           <span>
-            {t("sessions.classes.teacher")}: <span className="font-medium text-foreground">{teacherLabel}</span>
+            {t("nav.faculty")}: <span className="font-medium text-foreground">{facultyLabel}</span>
           </span>
         </div>
 

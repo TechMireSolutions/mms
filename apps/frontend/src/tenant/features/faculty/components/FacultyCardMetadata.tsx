@@ -1,32 +1,32 @@
-import type { Faculty, ModuleColumnRegistryEntry, Teacher, TeacherCustomField } from "@mms/shared";
+import type { Faculty, FacultyCustomField, ModuleColumnRegistryEntry } from "@mms/shared";
 import { DirectoryCardMetadata } from "@/components/ui/DirectoryCardMetadata";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import type { EntityDescriptor } from "@/types/entityRegistry";
 import { useTranslation } from "@/hooks/useTranslation";
-import { getTeacherVisibleWorkColumns } from "@/tenant/features/faculty/components/facultyListVisibleColumns";
-import { renderTeacherWorkColumnValue } from "@/tenant/features/faculty/components/facultyWorkColumnCell";
+import { getFacultyVisibleWorkColumns } from "@/tenant/features/faculty/components/facultyListVisibleColumns";
+import { renderFacultyWorkColumnValue } from "@/tenant/features/faculty/components/facultyWorkColumnCell";
 
-export interface TeacherCardMetadataProps {
-  teacher: Teacher;
+export interface FacultyCardMetadataProps {
+  faculty: Faculty;
   isColumnVisible: (key: string) => boolean;
   columnRegistry: ModuleColumnRegistryEntry[];
-  customFieldsById: Map<string, TeacherCustomField>;
+  customFieldsById: Map<string, FacultyCustomField>;
   statusConfig: Record<string, StatusBadgeConfigItem>;
   /** Optional entity descriptor — descriptor-driven fields supplement legacy column tiles. */
   descriptor?: EntityDescriptor<Faculty>;
 }
 
-/** Teachers domain metadata tiles — Contacts/Students card metadata chrome. */
-export function TeacherCardMetadata({
-  teacher,
+/** Faculty domain metadata tiles — Contacts/Students card metadata chrome. */
+export function FacultyCardMetadata({
+  faculty,
   isColumnVisible,
   columnRegistry,
   customFieldsById,
   statusConfig,
   descriptor,
-}: TeacherCardMetadataProps): React.JSX.Element | null {
+}: FacultyCardMetadataProps): React.JSX.Element | null {
   const { t } = useTranslation();
-  const metaColumns = getTeacherVisibleWorkColumns(columnRegistry, isColumnVisible, {
+  const metaColumns = getFacultyVisibleWorkColumns(columnRegistry, isColumnVisible, {
     excludeFace: true,
   });
 
@@ -41,7 +41,7 @@ export function TeacherCardMetadata({
           keyFor: (col: ModuleColumnRegistryEntry) => col.key,
           labelFor: (col: ModuleColumnRegistryEntry) => col.label,
           renderValue: (col: ModuleColumnRegistryEntry) =>
-            renderTeacherWorkColumnValue(teacher, col.key, {
+            renderFacultyWorkColumnValue(faculty, col.key, {
               t,
               statusConfig,
               customFieldsById,
@@ -53,7 +53,7 @@ export function TeacherCardMetadata({
   return (
     <DirectoryCardMetadata
       descriptor={descriptor}
-      entity={teacher as Faculty}
+      entity={faculty}
       isColumnVisible={isColumnVisible}
       extraColumns={extraColumns}
       columns={extraColumns?.columns}
@@ -64,6 +64,4 @@ export function TeacherCardMetadata({
   );
 }
 
-export type FacultyCardMetadataProps = TeacherCardMetadataProps;
-export const FacultyCardMetadata = TeacherCardMetadata;
 

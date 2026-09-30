@@ -6,23 +6,23 @@ import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import {
-  type Teacher,
   type Faculty,
+  type FacultyMember,
   type FacultyHierarchyPreset,
 } from "@mms/shared";
 
 export interface FacultyHierarchyFormFieldsProps {
-  teacherDraft: Partial<Teacher>;
+  facultyDraft?: Partial<FacultyMember>;
   errors: Record<string, string>;
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
-  onDraftChange: (patch: Partial<Teacher>) => void;
+  onDraftChange: (patch: Partial<FacultyMember>) => void;
   supervisorCandidates?: Faculty[];
   hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
 }
 
 export function FacultyHierarchyFormFields({
-  teacherDraft,
+  facultyDraft = {},
   errors,
   isFieldEnabled,
   isFieldRequired,
@@ -37,7 +37,7 @@ export function FacultyHierarchyFormFields({
     <>
       {showDepartment && (
         <Field
-          label={t("faculty.form.department") || t("teachers.form.department")}
+          label={t("faculty.form.department")}
           id="department"
           required={isFieldRequired("department")}
           error={errors.department}
@@ -45,9 +45,9 @@ export function FacultyHierarchyFormFields({
           <Input
             id="department"
             name="department"
-            value={teacherDraft.department ?? ""}
+            value={facultyDraft.department ?? ""}
             onChange={(e) => onDraftChange({ department: e.target.value })}
-            placeholder={t("faculty.form.departmentPlaceholder") || t("teachers.form.departmentPlaceholder")}
+            placeholder={t("faculty.form.departmentPlaceholder")}
             className={cn(FORM_INPUT, errors.department && FORM_INPUT_ERROR)}
           />
         </Field>
@@ -55,7 +55,7 @@ export function FacultyHierarchyFormFields({
 
       {showSupervisor && (
         <Field
-          label={t("faculty.form.reportingSupervisor") || t("teachers.form.reportingSupervisor")}
+          label={t("faculty.form.reportingSupervisor")}
           id="reportingFacultyId"
           required={isFieldRequired("reportingFacultyId")}
           error={errors.reportingFacultyId}
@@ -63,20 +63,20 @@ export function FacultyHierarchyFormFields({
           <FormSelect
             id="reportingFacultyId"
             name="reportingFacultyId"
-            value={teacherDraft.reportingFacultyId ? String(teacherDraft.reportingFacultyId) : ""}
-            disabled={teacherDraft.hierarchyRank === 1}
+            value={facultyDraft.reportingFacultyId ? String(facultyDraft.reportingFacultyId) : ""}
+            disabled={facultyDraft.hierarchyRank === 1}
             onChange={(val) => onDraftChange({ reportingFacultyId: val || null })}
             options={[
-              { value: "", label: t("faculty.form.noSupervisor") || t("teachers.form.noSupervisor") },
+              { value: "", label: t("faculty.form.noSupervisor") },
               ...(supervisorCandidates || []).map((cand) => ({
                 value: String(cand.id),
                 label: `${cand.name || cand.employeeId || "Faculty"} (Rank ${cand.hierarchyRank ?? 4}${cand.designation ? ` · ${cand.designation}` : ""})`,
               })),
             ]}
           />
-          {teacherDraft.hierarchyRank === 1 && (
+          {facultyDraft.hierarchyRank === 1 && (
             <p className="mt-1 text-xs text-muted-foreground">
-              {t("faculty.form.topLevelRankNotice") || t("teachers.form.topLevelRankNotice")}
+              {t("faculty.form.topLevelRankNotice")}
             </p>
           )}
         </Field>

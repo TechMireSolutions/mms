@@ -1,20 +1,19 @@
 import { notify } from "@/lib/notify";
 import { apiContract } from "@/lib/api";
-import type { Teacher } from "@mms/shared";
+import { DEFAULT_FACULTY_USER_ROLE, type FacultyMember } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import { getApiValidationMessage } from "@/lib/apiValidationMessage";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import type { FacultyUserAccountDraft } from "@/tenant/features/faculty/components/FacultyUserAccountSection";
 
-export function notifyTeacherSaveFailed(t: TranslationFunction, err: unknown, scope: string): void {
+export function notifyFacultySaveFailed(t: TranslationFunction, err: unknown, scope: string): void {
   const validationMessage = getApiValidationMessage(err);
   notify.error(
-    t("faculty.toast.saveFailed") || t("teachers.toast.saveFailed"),
+    t("faculty.toast.saveFailed"),
     validationMessage ? { description: validationMessage } : undefined,
   );
   reportClientError(err, { scope });
 }
-export const notifyFacultySaveFailed = notifyTeacherSaveFailed;
 
 export interface SyncUserAccountInput {
   userAccountDraft?: FacultyUserAccountDraft;
@@ -40,7 +39,7 @@ export async function syncUserAccount(input: SyncUserAccountInput): Promise<bool
       if (updateRes.status !== 200) {
         const msg = typeof updateRes.body === "object" && updateRes.body !== null && "message" in updateRes.body
           ? String((updateRes.body as { message?: unknown }).message)
-          : (t("faculty.toast.saveFailed") || t("teachers.toast.saveFailed"));
+          : t("faculty.toast.saveFailed");
         setErrors({ "user.role": msg });
         notify.error(msg);
         return false;
@@ -54,7 +53,7 @@ export async function syncUserAccount(input: SyncUserAccountInput): Promise<bool
     const createRes = await apiContract.users.create({
       body: {
         contactId: String(contactId || ""),
-        role: userAccountDraft.role || "teacher",
+        role: userAccountDraft.role || DEFAULT_FACULTY_USER_ROLE,
         status: userAccountDraft.setupMethod === "invite" ? "inactive" : "active",
         setupMethod: userAccountDraft.setupMethod,
         password: userAccountDraft.password,
@@ -66,7 +65,7 @@ export async function syncUserAccount(input: SyncUserAccountInput): Promise<bool
     if (createRes.status !== 200) {
       const msg = typeof createRes.body === "object" && createRes.body !== null && "message" in createRes.body
         ? String((createRes.body as { message?: unknown }).message)
-        : (t("faculty.toast.saveFailed") || t("teachers.toast.saveFailed"));
+        : t("faculty.toast.saveFailed");
       setErrors({ "user.create": msg });
       notify.error(msg);
       return false;
@@ -83,14 +82,14 @@ export async function syncUserAccount(input: SyncUserAccountInput): Promise<bool
   return true;
 }
 
-export interface ConfirmPendingTeacherSaveInput {
-  pendingSaveData: Partial<Teacher> | null;
-  teacher?: Teacher;
+export interface ConfirmPendingFacultySaveInput {
+  pendingSaveData: Partial<FacultyMember> | null;
+  faculty?: FacultyMember;
   t: TranslationFunction;
-  onSave: (teacher: Teacher) => void | Promise<void>;
+  onSave: (faculty: FacultyMember) => void | Promise<void>;
   onClose: () => void;
   setSaving: (saving: boolean) => void;
-  setPendingSaveData: (data: Partial<Teacher> | null) => void;
+  setPendingSaveData: (data: Partial<FacultyMember> | null) => void;
   setDuplicateConfirmOpen: (open: boolean) => void;
   userAccountDraft?: FacultyUserAccountDraft;
   linkedUser?: { id: string; role?: string } | null;
@@ -99,7 +98,7 @@ export interface ConfirmPendingTeacherSaveInput {
 }
 
 /** Commit the stashed draft after the user confirms "save anyway". */
-export async function confirmPendingTeacherSave(input: ConfirmPendingTeacherSaveInput): Promise<void> {
+export async function confirmPendingFacultySave(input: ConfirmPendingFacultySaveInput): Promise<void> {
   if (!input.pendingSaveData) return;
   input.setSaving(true);
   try {
@@ -118,16 +117,14 @@ export async function confirmPendingTeacherSave(input: ConfirmPendingTeacherSave
       return;
     }
 
-    await input.onSave(input.pendingSaveData as Teacher);
+    await input.onSave(input.pendingSaveData as FacultyMember);
     input.setPendingSaveData(null);
     input.setDuplicateConfirmOpen(false);
     input.onClose();
   } catch (err: unknown) {
     input.setDuplicateConfirmOpen(false);
-    notifyTeacherSaveFailed(input.t, err, "teachers.form_save_confirm");
+    notifyFacultySaveFailed(input.t, err, "faculty.form_save_confirm");
   } finally {
     input.setSaving(false);
   }
 }
-
-export const confirmPendingFacultySave = confirmPendingTeacherSave;

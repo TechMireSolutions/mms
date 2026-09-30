@@ -136,12 +136,12 @@ describe("useAttendance Hook suite", () => {
     expect(metricsResult.data).toBeDefined();
   });
 
-  it("sends session and teacher filters with the paginated request", async () => {
+  it("sends session and faculty filters with the paginated request", async () => {
     function TestComponent() {
       useAttendancePaginated({
         page: 2,
         sessionId: " session-1 ",
-        teacherId: " teacher-1 ",
+        facultyId: " faculty-1 ",
       });
       return null;
     }
@@ -156,7 +156,7 @@ describe("useAttendance Hook suite", () => {
         query: expect.objectContaining({
           page: 2,
           sessionId: "session-1",
-          teacherId: "teacher-1",
+          facultyId: "faculty-1",
         }),
       },
     }));

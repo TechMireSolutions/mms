@@ -1,19 +1,19 @@
 import type { ModuleCustomField } from '@mms/shared';
 import {
-  getSortedTeacherFields,
-  listEnabledCustomTeacherFormFields,
-  resolveTeacherFieldsMapForColumnSync,
+  getSortedFacultyFields,
+  listEnabledCustomFacultyFormFields,
+  resolveFacultyFieldsMapForColumnSync,
   emptyStudentLookupsMap,
   emptySessionLookupsMap,
-  emptyTeacherLookupsMap,
-  normalizeTeacherModulePreferences,
+  emptyFacultyLookupsMap,
+  normalizeFacultyModulePreferences,
   normalizeStudentModulePreferences,
   normalizeSessionModulePreferences,
   normalizeEnrollmentModulePreferences,
   normalizeExaminationsModulePreferences,
   type SessionsSettings,
   type StudentsSettings,
-  type TeachersSettings,
+  type FacultySettings,
   type EnrollmentsSettings,
   type ExaminationsSettings,
 } from '@mms/shared';
@@ -27,7 +27,7 @@ import { useStudentLookupsQuery } from '@/tenant/features/students/hooks/useStud
 import {
   useComposedFacultySettings,
   useFacultyPreferencesMutation,
-  useTeacherLookupsQuery,
+  useFacultyLookupsQuery,
 } from '@/tenant/hooks/collections/faculty';
 import {
   useComposedStudentsSettings,
@@ -46,21 +46,21 @@ import {
   useExaminationPreferencesMutation,
 } from '@/tenant/hooks/collections/examinations';
 
-const useTeacherConfigImpl = createStandardModuleConfigHook<
-  TeachersSettings,
+const useFacultyConfigImpl = createStandardModuleConfigHook<
+  FacultySettings,
   { statuses: string[]; specializations: string[]; genderFilters: string[]; designations: string[] }
 >({
-  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultSettings as TeachersSettings,
-  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.teachers.defaultFieldDefs,
+  defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.faculty.defaultSettings as FacultySettings,
+  defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.faculty.defaultFieldDefs,
   useSettings: useComposedFacultySettings,
   useUpdateSettingsAsync: () => {
     const mutation = useFacultyPreferencesMutation();
-    return async (draft: TeachersSettings) => {
-      await mutation.mutateAsync(normalizeTeacherModulePreferences(draft));
+    return async (draft: FacultySettings) => {
+      await mutation.mutateAsync(normalizeFacultyModulePreferences(draft));
     };
   },
   customFieldsFrom: (settings) =>
-    listEnabledCustomTeacherFormFields(resolveTeacherFieldsMapForColumnSync(settings.fields)).map(
+    listEnabledCustomFacultyFormFields(resolveFacultyFieldsMapForColumnSync(settings.fields)).map(
       (field) => ({
         id: field.key,
         label: field.label,
@@ -70,10 +70,10 @@ const useTeacherConfigImpl = createStandardModuleConfigHook<
       }),
     ) as ModuleCustomField[],
   orderedFieldsFrom: ({ fieldOrder, settings }) =>
-    getSortedTeacherFields(fieldOrder, settings.fields),
-  lookupsFrom: function useTeacherConfigLookups() {
-    const lookupsQuery = useTeacherLookupsQuery();
-    const lookups = lookupsQuery.data ?? emptyTeacherLookupsMap();
+    getSortedFacultyFields(fieldOrder, settings.fields),
+  lookupsFrom: function useFacultyConfigLookups() {
+    const lookupsQuery = useFacultyLookupsQuery();
+    const lookups = lookupsQuery.data ?? emptyFacultyLookupsMap();
     return {
       statuses: lookups.statuses,
       specializations: lookups.specializations,
@@ -83,12 +83,12 @@ const useTeacherConfigImpl = createStandardModuleConfigHook<
   },
 });
 
-export function useTeacherConfig() {
-  return useTeacherConfigImpl() as StandardModuleConfigCore<TeachersSettings> &
-    StandardModuleConfigExtraMap['teachers'];
+export function useFacultyConfig() {
+  return useFacultyConfigImpl() as StandardModuleConfigCore<FacultySettings> &
+    StandardModuleConfigExtraMap['faculty'];
 }
 
-export const useFacultyConfig = useTeacherConfig;
+
 
 const useStudentConfigImpl = createStandardModuleConfigHook<
   StudentsSettings,

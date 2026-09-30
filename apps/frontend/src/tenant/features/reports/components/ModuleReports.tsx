@@ -81,7 +81,6 @@ export default function ModuleReports({ category }: ModuleReportsProps) {
   const renderReport = () => {
     switch (category) {
       case "students":     return <StudentReport   filters={filters} onEditVisual={handleEditVisual} />;
-      case "teachers":
       case "faculty":      return <FacultyReport filters={filters} onEditVisual={handleEditVisual} />;
       case "contacts":     return <ContactReport onEditVisual={handleEditVisual} />;
       case "attendance":   return <AttendanceReport filters={filters} onEditVisual={handleEditVisual} />;

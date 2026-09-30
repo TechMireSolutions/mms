@@ -2,44 +2,44 @@ import type React from "react";
 import { DirectoryCard } from "@/components/ui/DirectoryCard";
 import { getGenderAccentBarClass } from "@/lib/directoryCardAccent";
 import { useTranslation } from "@/hooks/useTranslation";
-import { resolveTeacherPrimaryChannels } from "@/lib/faculty/facultyPrimaryChannels";
-import { TeacherArchivedBanner } from "@/tenant/features/faculty/components/FacultyArchivedBanner";
-import { TeacherCardActions } from "@/tenant/features/faculty/components/FacultyCardActions";
-import { TeacherCardHeader } from "@/tenant/features/faculty/components/FacultyCardHeader";
-import { TeacherCardMetadata } from "@/tenant/features/faculty/components/FacultyCardMetadata";
-import { resolveTeacherCardFaceVisibility } from "@/tenant/features/faculty/components/facultyCardFaceVisibility";
-import { teacherRowIdentity } from "@/tenant/features/faculty/components/facultyFieldDisplay";
+import { resolveFacultyPrimaryChannels } from "@/lib/faculty/facultyPrimaryChannels";
+import { FacultyArchivedBanner } from "@/tenant/features/faculty/components/FacultyArchivedBanner";
+import { FacultyCardActions } from "@/tenant/features/faculty/components/FacultyCardActions";
+import { FacultyCardHeader } from "@/tenant/features/faculty/components/FacultyCardHeader";
+import { FacultyCardMetadata } from "@/tenant/features/faculty/components/FacultyCardMetadata";
+import { resolveFacultyCardFaceVisibility } from "@/tenant/features/faculty/components/facultyCardFaceVisibility";
+import { facultyRowIdentity } from "@/tenant/features/faculty/components/facultyFieldDisplay";
 import type { useFacultyEntityDescriptor } from "@/tenant/features/faculty/hooks/useFacultyEntityDescriptor";
-import type { TeacherListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
-import type { Teacher } from "@mms/shared";
+import type { FacultyListContentProps } from "@/tenant/features/faculty/components/facultyListContentShared";
+import type { Faculty } from "@mms/shared";
+
 
 export interface FacultyCardItemProps {
-  faculty?: Teacher;
-  teacher?: Teacher;
+  faculty: Faculty;
   selectedSet: Set<string>;
   selectedIds: string[];
   showDeleted: boolean;
   canWrite: boolean;
   canDelete: boolean;
   isColumnVisible: (key: string) => boolean;
-  columnRegistry: TeacherListContentProps["columnRegistry"];
-  customFieldsById: TeacherListContentProps["customFieldsById"];
-  statusConfig: TeacherListContentProps["statusConfig"];
+  columnRegistry: FacultyListContentProps["columnRegistry"];
+  customFieldsById: FacultyListContentProps["customFieldsById"];
+  statusConfig: FacultyListContentProps["statusConfig"];
   descriptor: ReturnType<typeof useFacultyEntityDescriptor>;
   reducedMotion: boolean;
   onSelectOne: (id: string) => void;
-  onView: (teacher: Teacher) => void;
-  onEdit: (teacher: Teacher) => void;
+
+  onView: (faculty: Faculty) => void;
+  onEdit: (faculty: Faculty) => void;
   onRequestDelete: (id: string) => void;
   onRestore?: (id: string) => void;
-  onSms?: (teachers: Teacher[]) => void;
-  onWhatsApp?: (teachers: Teacher[]) => void;
-  onEmail?: (teachers: Teacher[]) => void;
+  onSms?: (faculty: Faculty[]) => void;
+  onWhatsApp?: (faculty: Faculty[]) => void;
+  onEmail?: (faculty: Faculty[]) => void;
 }
-export type TeacherCardItemProps = FacultyCardItemProps;
 
 export function FacultyCardItem(props: FacultyCardItemProps): React.JSX.Element {
-  const teacher = (props.faculty ?? props.teacher)!;
+  const faculty = props.faculty;
   const {
     selectedSet,
     selectedIds,
@@ -62,37 +62,37 @@ export function FacultyCardItem(props: FacultyCardItemProps): React.JSX.Element 
     onEmail,
   } = props;
   const { t } = useTranslation();
-  const teacherIdStr = String(teacher.id);
-  const isSelected = selectedSet.has(teacherIdStr);
-  const { displayName } = teacherRowIdentity(teacher, selectedSet, t);
-  const { phone, email } = resolveTeacherPrimaryChannels(teacher);
-  const faceVisible = resolveTeacherCardFaceVisibility(columnRegistry, isColumnVisible);
+  const facultyIdStr = String(faculty.id);
+  const isSelected = selectedSet.has(facultyIdStr);
+  const { displayName } = facultyRowIdentity(faculty, selectedSet, t);
+  const { phone, email } = resolveFacultyPrimaryChannels(faculty);
+  const faceVisible = resolveFacultyCardFaceVisibility(columnRegistry, isColumnVisible);
 
   return (
     <DirectoryCard
-      entity={teacher}
+      entity={faculty}
       selectedIds={selectedIds}
       canSelect={canDelete}
-      onToggleSelected={() => onSelectOne(teacherIdStr)}
+      onToggleSelected={() => onSelectOne(facultyIdStr)}
       onView={onView}
       onEdit={onEdit}
       reducedMotion={reducedMotion}
       accentClassName={
         isColumnVisible("gender")
-          ? getGenderAccentBarClass(isSelected, teacher.gender)
+          ? getGenderAccentBarClass(isSelected, faculty.gender)
           : undefined
       }
       header={{
         displayName,
       }}
       headerSlot={
-        <TeacherCardHeader
-          teacher={teacher}
-          teacherId={teacherIdStr}
+        <FacultyCardHeader
+          faculty={faculty}
+          facultyId={facultyIdStr}
           isSelected={isSelected}
           displayName={displayName}
           isColumnVisible={faceVisible}
-          onSelectOne={() => onSelectOne(teacherIdStr)}
+          onSelectOne={() => onSelectOne(facultyIdStr)}
           onView={onView}
           reducedMotion={reducedMotion}
         />
@@ -104,13 +104,13 @@ export function FacultyCardItem(props: FacultyCardItemProps): React.JSX.Element 
         showPhone: faceVisible("phone"),
         showEmail: faceVisible("email"),
         showArchived: showDeleted,
-        onWhatsApp: onWhatsApp ? () => onWhatsApp([teacher]) : undefined,
-        onSms: onSms ? () => onSms([teacher]) : undefined,
-        onEmail: onEmail ? () => onEmail([teacher]) : undefined,
+        onWhatsApp: onWhatsApp ? () => onWhatsApp([faculty]) : undefined,
+        onSms: onSms ? () => onSms([faculty]) : undefined,
+        onEmail: onEmail ? () => onEmail([faculty]) : undefined,
       }}
       metadataSlot={
-        <TeacherCardMetadata
-          teacher={teacher}
+        <FacultyCardMetadata
+          faculty={faculty}
           isColumnVisible={isColumnVisible}
           columnRegistry={columnRegistry}
           customFieldsById={customFieldsById}
@@ -118,11 +118,11 @@ export function FacultyCardItem(props: FacultyCardItemProps): React.JSX.Element 
           descriptor={descriptor}
         />
       }
-      banner={<TeacherArchivedBanner teacher={teacher} />}
+      banner={<FacultyArchivedBanner faculty={faculty} />}
       footer={
-        <TeacherCardActions
-          teacher={teacher}
-          teacherId={teacherIdStr}
+        <FacultyCardActions
+          faculty={faculty}
+          facultyId={facultyIdStr}
           displayName={displayName}
           showDeleted={showDeleted}
           canWrite={canWrite}
@@ -139,6 +139,3 @@ export function FacultyCardItem(props: FacultyCardItemProps): React.JSX.Element 
     />
   );
 }
-
-export const TeacherCardItem = FacultyCardItem;
-

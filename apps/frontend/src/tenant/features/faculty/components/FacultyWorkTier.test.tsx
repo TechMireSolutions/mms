@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { Teacher } from "@mms/shared";
-import { TeachersWorkTier } from "./FacultyWorkTier";
+import type { Faculty } from "@mms/shared";
+import { FacultyWorkTier } from "./FacultyWorkTier";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -14,18 +14,14 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-vi.mock("@/tenant/features/faculty/hooks/useFacultyStatusConfig", () => {
-  const statusConfig = () => ({
+vi.mock("@/tenant/features/faculty/hooks/useFacultyStatusConfig", () => ({
+  useFacultyStatusConfig: () => ({
     active: { label: "Active", cls: "bg-success/10 text-success" },
-  });
-  return {
-    useFacultyStatusConfig: statusConfig,
-    useTeacherStatusConfig: statusConfig,
-  };
-});
+  }),
+}));
 
-const mockTeacher: Teacher = {
-  id: "tch-wt-1",
+const mockFaculty: Faculty = {
+  id: "fac-wt-1",
   contactId: "cnt-1",
   name: "Ustadh Umar",
   status: "active",
@@ -45,14 +41,14 @@ const mockRegistry = [
 ];
 
 const mockWorkOverlays = {
-  setViewTeacher: vi.fn(),
+  setViewFaculty: vi.fn(),
   openComposer: vi.fn(),
   canWriteMessaging: true,
   setConfirmBulkDeleteOpen: vi.fn(),
   setConfirmBulkRestoreOpen: vi.fn(),
   setDeleteTarget: vi.fn(),
   openSelectionMessage: vi.fn(),
-  idCardTeachers: [],
+  idCardFaculty: [],
   openIdCardsModal: vi.fn(),
   closeIdCardsModal: vi.fn(),
 };
@@ -80,7 +76,7 @@ const baseProps = {
   updateUserColumnLayout: vi.fn(),
   onResetLayout: vi.fn(),
   customizerLabels: {} as never,
-  teachers: [mockTeacher],
+  faculty: [mockFaculty],
   workPageData: undefined,
   isWorkPageLoading: false,
   isWorkPageError: false,
@@ -108,9 +104,9 @@ const baseProps = {
   workOverlays: mockWorkOverlays,
 };
 
-describe("TeachersWorkTier Component", () => {
-  it("renders work tier with filters and teacher table", () => {
-    const html = renderToStaticMarkup(<TeachersWorkTier {...baseProps} />);
+describe("FacultyWorkTier Component", () => {
+  it("renders work tier with filters and faculty table", () => {
+    const html = renderToStaticMarkup(<FacultyWorkTier {...baseProps} />);
 
     expect(html).toContain("Ustadh Umar");
     expect(html).toContain("EMP-010");
@@ -118,9 +114,10 @@ describe("TeachersWorkTier Component", () => {
 
   it("renders bulk actions bar when items are selected", () => {
     const html = renderToStaticMarkup(
-      <TeachersWorkTier {...baseProps} selectedIds={["tch-wt-1"]} />,
+      <FacultyWorkTier {...baseProps} selectedIds={["fac-wt-1"]} />,
     );
 
     expect(html).toContain("Ustadh Umar");
+    expect(html).toContain("faculty.idCard.print");
   });
 });

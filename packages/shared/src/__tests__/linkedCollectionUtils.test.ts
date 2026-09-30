@@ -14,18 +14,18 @@ import {
 
 describe('linkedCollectionUtils', () => {
   describe('Session classes normalization & hydration', () => {
-    it('normalizes session classes by stripping redundant teacherName when teacherId is set', () => {
-      const classes = [{ id: 'c1', teacherId: 't1', teacherName: 'Ustadh Ali' }];
+    it('normalizes session classes by stripping redundant facultyName when facultyId is set', () => {
+      const classes = [{ id: 'c1', facultyId: 'f1', facultyName: 'Ustadh Ali' }];
       const normalized = normalizeSessionClasses(classes);
-      expect(normalized[0].teacherId).toBe('t1');
-      expect(normalized[0].teacherName).toBeUndefined();
+      expect(normalized[0].facultyId).toBe('f1');
+      expect(normalized[0].facultyName).toBeUndefined();
     });
 
-    it('hydrates session classes with teacher names from entity lookup', () => {
-      const classes = [{ id: 'c1', teacherId: 't1' }];
-      const teachers = [{ id: 't1', name: 'Ustadh Ali' }];
-      const hydrated = hydrateSessionClasses(classes, teachers);
-      expect(hydrated[0].teacherName).toBe('Ustadh Ali');
+    it('hydrates session classes with faculty names from entity lookup', () => {
+      const classes = [{ id: 'c1', facultyId: 'f1' }];
+      const faculty = [{ id: 'f1', name: 'Ustadh Ali' }];
+      const hydrated = hydrateSessionClasses(classes, faculty);
+      expect(hydrated[0].facultyName).toBe('Ustadh Ali');
     });
   });
 
@@ -76,16 +76,16 @@ describe('linkedCollectionUtils', () => {
       expect(hydrated[1].studentName).toBe('Student 2');
     });
 
-    it('hydrates hasanat distribution list with student and teacher lookups', () => {
+    it('hydrates hasanat distribution list with student and faculty lookups', () => {
       const rows: Record<string, unknown>[] = [
-        { id: 'd1', recipientStudentId: 's1', recipientTeacherId: undefined },
-        { id: 'd2', recipientStudentId: undefined, recipientTeacherId: 't1' },
+        { id: 'd1', recipientStudentId: 's1', recipientFacultyId: undefined },
+        { id: 'd2', recipientStudentId: undefined, recipientFacultyId: 'f1' },
       ];
       const students = [{ id: 's1', name: 'Student 1' }];
-      const teachers = [{ id: 't1', name: 'Teacher 1' }];
-      const hydrated = hydrateHasanatDistributionList(rows, students, teachers);
+      const faculty = [{ id: 'f1', name: 'Faculty 1' }];
+      const hydrated = hydrateHasanatDistributionList(rows, students, faculty);
       expect(hydrated[0].recipientName).toBe('Student 1');
-      expect(hydrated[1].recipientName).toBe('Teacher 1');
+      expect(hydrated[1].recipientName).toBe('Faculty 1');
     });
 
     it('hydrates workspace user profile list with contact lookup', () => {

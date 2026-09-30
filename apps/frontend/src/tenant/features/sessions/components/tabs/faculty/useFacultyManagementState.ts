@@ -1,6 +1,6 @@
 import { useState, useMemo } from "react";
-import { useTeachersContractList, useTeachersByIds } from "@/tenant/hooks/collections/faculty";
-import { FACULTY_MODULE_MANIFEST, formatTeacherDisplayName, type Teacher } from "@mms/shared";
+import { useFacultyContractList, useFacultyByIds } from "@/tenant/hooks/collections/faculty";
+import { FACULTY_MODULE_MANIFEST, formatFacultyDisplayName, type FacultyMember } from "@mms/shared";
 import type { Session, SessionFaculty } from "@/lib/data/sessionsData";
 import { COMMON_FACULTY_ROLES } from "./facultyManagementShared";
 
@@ -10,39 +10,39 @@ export function useFacultyManagementState(
 ) {
   const [modalOpen, setModalOpen] = useState(false);
   const [editingFaculty, setEditingFaculty] = useState<SessionFaculty | null>(null);
-  const [teacherId, setTeacherId] = useState("");
+  const [facultyId, setFacultyId] = useState("");
   const [role, setRole] = useState("Lead Instructor");
   const [customRole, setCustomRole] = useState("");
   const [status, setStatus] = useState<"active" | "inactive">("active");
   const [saving, setSaving] = useState(false);
 
-  const { data: teachersData } = useTeachersContractList(
+  const { data: facultyData } = useFacultyContractList(
     { page: 1, limit: FACULTY_MODULE_MANIFEST.maxPageSize, status: "active" },
     modalOpen,
   );
 
-  const teachersList = ((teachersData?.body?.faculty ?? teachersData?.body?.teachers ?? []) as Teacher[]);
+  const facultyList = (facultyData?.body?.faculty ?? []) as FacultyMember[];
 
-  const selectedTeacherId = teacherId ? [teacherId] : [];
-  const { data: selectedTeachersData } = useTeachersByIds(selectedTeacherId);
-  const selectedTeachers = (selectedTeachersData ?? []) as Teacher[];
+  const selectedFacultyIds = facultyId ? [facultyId] : [];
+  const { data: selectedFacultyData } = useFacultyByIds(selectedFacultyIds);
+  const selectedFaculty = (selectedFacultyData ?? []) as FacultyMember[];
 
-  const allTeachers = useMemo(() => {
-    const map = new Map<string, Teacher>();
-    for (const t of teachersList) {
-      if (t?.id) map.set(String(t.id), t);
+  const allFaculty = useMemo(() => {
+    const map = new Map<string, FacultyMember>();
+    for (const f of facultyList) {
+      if (f?.id) map.set(String(f.id), f);
     }
-    for (const t of selectedTeachers) {
-      if (t?.id && !map.has(String(t.id))) {
-        map.set(String(t.id), t);
+    for (const f of selectedFaculty) {
+      if (f?.id && !map.has(String(f.id))) {
+        map.set(String(f.id), f);
       }
     }
     return Array.from(map.values());
-  }, [teachersList, selectedTeachers]);
+  }, [facultyList, selectedFaculty]);
 
   const handleOpenAdd = () => {
     setEditingFaculty(null);
-    setTeacherId(allTeachers[0]?.id ? String(allTeachers[0].id) : "");
+    setFacultyId(allFaculty[0]?.id ? String(allFaculty[0].id) : "");
     setRole("Lead Instructor");
     setCustomRole("");
     setStatus("active");
@@ -51,7 +51,7 @@ export function useFacultyManagementState(
 
   const handleOpenEdit = (item: SessionFaculty) => {
     setEditingFaculty(item);
-    setTeacherId(item.facultyId || "");
+    setFacultyId(item.facultyId || "");
     if (COMMON_FACULTY_ROLES.includes(item.role)) {
       setRole(item.role);
       setCustomRole("");
@@ -63,46 +63,46 @@ export function useFacultyManagementState(
     setModalOpen(true);
   };
 
-  const handleDelete = async (facultyId: string) => {
-    const updatedFaculty = (session.faculty || []).filter((f) => f.id !== facultyId);
-    await onUpdate({ ...session, faculty: updatedFaculty });
+  const handleDelete = async (id: string) => {
+    const updated = (session.faculty || []).filter((f) => f.id !== id);
+    await onUpdate({ ...session, faculty: updated });
   };
 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const selectedTeacher = allTeachers.find((t) => String(t.id) === String(teacherId));
-      const resolvedTeacherName = selectedTeacher
-        ? formatTeacherDisplayName(selectedTeacher) || editingFaculty?.facultyName || "Faculty Member"
+      const selectedMember = allFaculty.find((f) => String(f.id) === String(facultyId));
+      const resolvedName = selectedMember
+        ? formatFacultyDisplayName(selectedMember) || editingFaculty?.facultyName || "Faculty Member"
         : editingFaculty?.facultyName || "Faculty Member";
 
       const finalRole = role === "Custom" ? customRole.trim() || "Instructor" : role;
-      const facultyList = [...(session.faculty || [])];
+      const updatedFaculty = [...(session.faculty || [])];
 
       if (editingFaculty) {
-        const index = facultyList.findIndex((f) => f.id === editingFaculty.id);
+        const index = updatedFaculty.findIndex((f) => f.id === editingFaculty.id);
         if (index >= 0) {
-          facultyList[index] = {
+          updatedFaculty[index] = {
             ...editingFaculty,
-            facultyId: teacherId || editingFaculty.facultyId,
-            facultyName: resolvedTeacherName,
+            facultyId: facultyId || editingFaculty.facultyId,
+            facultyName: resolvedName,
             role: finalRole,
             status,
           };
         }
       } else {
-        const newFaculty: SessionFaculty = {
-          id: typeof crypto !== "undefined" && crypto.randomUUID ? crypto.randomUUID() : Math.random().toString(36).slice(2, 11),
+        const newEntry: SessionFaculty = {
+          id: crypto.randomUUID(),
           sessionId: session.id,
-          facultyId: teacherId || "unassigned",
-          facultyName: resolvedTeacherName,
+          facultyId: facultyId || "unassigned",
+          facultyName: resolvedName,
           role: finalRole,
           status,
         };
-        facultyList.push(newFaculty);
+        updatedFaculty.push(newEntry);
       }
 
-      await onUpdate({ ...session, faculty: facultyList });
+      await onUpdate({ ...session, faculty: updatedFaculty });
       setModalOpen(false);
     } finally {
       setSaving(false);
@@ -113,8 +113,8 @@ export function useFacultyManagementState(
     modalOpen,
     setModalOpen,
     editingFaculty,
-    teacherId,
-    setTeacherId,
+    facultyId,
+    setFacultyId,
     role,
     setRole,
     customRole,
@@ -122,7 +122,7 @@ export function useFacultyManagementState(
     status,
     setStatus,
     saving,
-    allTeachers,
+    allFaculty,
     handleOpenAdd,
     handleOpenEdit,
     handleDelete,

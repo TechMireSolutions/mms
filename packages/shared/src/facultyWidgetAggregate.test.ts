@@ -1,24 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { computeTeachersWidgetAggregate } from './facultyWidgetAggregate.js';
+import { computeFacultyWidgetAggregate } from './facultyWidgetAggregate.js';
 
-describe('teachersWidgetAggregate', () => {
-  it('counts all teachers', () => {
-    const teachers = [
+describe('computeFacultyWidgetAggregate', () => {
+  it('counts all faculty', () => {
+    const faculty = [
       { id: 1, status: 'active' },
       { id: 2, status: 'inactive' },
     ];
-    const result = computeTeachersWidgetAggregate(teachers, { id: 'total', operation: 'count' });
+    const result = computeFacultyWidgetAggregate(faculty, { id: 'total', operation: 'count' });
     expect(result.value).toBe(2);
     expect(result.totalCount).toBe(2);
   });
 
   it('filters by status for percentage', () => {
-    const teachers = [
+    const faculty = [
       { id: 1, status: 'active' },
       { id: 2, status: 'active' },
       { id: 3, status: 'on_leave' },
     ];
-    const result = computeTeachersWidgetAggregate(teachers, {
+    const result = computeFacultyWidgetAggregate(faculty, {
       id: 'active-pct',
       operation: 'percentage',
       filterField: 'status',

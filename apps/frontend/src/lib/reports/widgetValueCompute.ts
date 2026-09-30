@@ -8,22 +8,22 @@ import {
   readContactsWidgetAggregate,
   readStudentsTotalFromMetrics,
   readStudentsWidgetAggregate,
-  readTeachersTotalFromMetrics,
-  readTeachersWidgetAggregate,
+  readFacultyTotalFromMetrics,
+  readFacultyWidgetAggregate,
   readSessionsTotalFromMetrics,
   readSessionsWidgetAggregate,
   readEnrollmentsTotalFromMetrics,
   readEnrollmentsWidgetAggregate,
 } from "./widgetAggregateReaders.js";
 import { getFilteredRecords } from "./widgetCollectionSnapshot.js";
-import { computeWidgetChartData } from "./widgetChartDataCompute.js";
+import { computeWidgetChartData, type WidgetChartDataPoint } from "./widgetChartDataCompute.js";
 
-export { computeWidgetChartData };
+export { computeWidgetChartData, type WidgetChartDataPoint };
 
 export {
   computeContactsCustomCardValue,
   computeStudentsCustomCardValue,
-  computeTeachersCustomCardValue,
+  computeFacultyCustomCardValue,
   computeSessionsCustomCardValue,
   computeEnrollmentsCustomCardValue,
 } from "./widgetCustomCardValues";
@@ -71,12 +71,12 @@ export function computeWidgetSingleValue(
     };
   }
 
-  if (widget.collection === "teachers" || widget.collection === "faculty") {
-    const aggregate = readTeachersWidgetAggregate(widget.id);
+  if (widget.collection === "faculty") {
+    const aggregate = readFacultyWidgetAggregate(widget.id);
     if (aggregate) {
       return formatGenericWidgetValue(widget, aggregate);
     }
-    const totalCount = readTeachersTotalFromMetrics();
+    const totalCount = readFacultyTotalFromMetrics();
     return {
       value: 0,
       formattedValue: widget.operation === "percentage" ? "0%" : "0",

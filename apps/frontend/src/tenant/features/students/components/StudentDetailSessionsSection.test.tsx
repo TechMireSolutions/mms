@@ -30,8 +30,8 @@ const mockSession: Session = {
     {
       id: "cls-1",
       name: "Class A",
-      teacherId: "tch-1",
-      teacherName: "Ustadh Umar",
+      facultyId: "fac-1",
+      facultyName: "Ustadh Umar",
       room: "Room 101",
       ageMin: 5,
       ageMax: 15,

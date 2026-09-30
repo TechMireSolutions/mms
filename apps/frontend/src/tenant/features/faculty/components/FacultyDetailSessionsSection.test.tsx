@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import type { TeacherAssignedClassItem } from "@/lib/faculty/facultyAssignment";
-import { TeacherDetailSessionsSection } from "./FacultyDetailSessionsSection";
+import type { FacultyAssignedClassItem } from "@/lib/faculty/facultyAssignment";
+import { FacultyDetailSessionsSection } from "./FacultyDetailSessionsSection";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -14,7 +14,7 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
-const mockAssignedClass: TeacherAssignedClassItem = {
+const mockAssignedClass: FacultyAssignedClassItem = {
   sessionId: "ses-1",
   sessionName: "Quran Hifz Morning",
   sessionType: "academic",
@@ -26,10 +26,10 @@ const mockAssignedClass: TeacherAssignedClassItem = {
   capacity: 20,
 };
 
-describe("TeacherDetailSessionsSection Component", () => {
+describe("FacultyDetailSessionsSection Component", () => {
   it("renders assigned class card with room and enrollment count", () => {
     const html = renderToStaticMarkup(
-      <TeacherDetailSessionsSection assignedClasses={[mockAssignedClass]} />,
+      <FacultyDetailSessionsSection assignedClasses={[mockAssignedClass]} />,
     );
 
     expect(html).toContain("Tajweed Advanced");
@@ -39,7 +39,7 @@ describe("TeacherDetailSessionsSection Component", () => {
 
   it("renders empty state when assignedClasses is empty", () => {
     const html = renderToStaticMarkup(
-      <TeacherDetailSessionsSection assignedClasses={[]} />,
+      <FacultyDetailSessionsSection assignedClasses={[]} />,
     );
 
     expect(html).toContain("faculty.detail.noAssignedClasses");
@@ -47,7 +47,7 @@ describe("TeacherDetailSessionsSection Component", () => {
 
   it("renders error state when error is true", () => {
     const html = renderToStaticMarkup(
-      <TeacherDetailSessionsSection assignedClasses={[]} error={true} />,
+      <FacultyDetailSessionsSection assignedClasses={[]} error={true} />,
     );
 
     expect(html).toContain("faculty.loadFailed");

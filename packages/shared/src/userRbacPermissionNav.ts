@@ -5,11 +5,12 @@
 
 import type { AppTranslationKey } from './appTranslations.js';
 import type { RbacModuleDef } from './userEntityTypes.js';
+import { canonicalizeRbacModuleId, type RbacModuleId } from './userRbacModuleRegistry.js';
 
 /** Standalone RBAC row in the permissions matrix nav layout. */
 export interface RbacPermissionNavModule {
   type: 'module';
-  rbacId: string;
+  rbacId: RbacModuleId | string;
 }
 
 /** Grouped RBAC rows — mirrors sidebar Academics section. */
@@ -17,7 +18,7 @@ export interface RbacPermissionNavGroup {
   type: 'group';
   groupId: string;
   labelKey: AppTranslationKey;
-  rbacIds: readonly string[];
+  rbacIds: readonly (RbacModuleId | string)[];
 }
 
 export type RbacPermissionNavEntry = RbacPermissionNavModule | RbacPermissionNavGroup;
@@ -30,7 +31,6 @@ export const RBAC_PERMISSION_NAV: readonly RbacPermissionNavEntry[] = [
   { type: 'module', rbacId: 'dashboard' },
   { type: 'module', rbacId: 'contacts' },
   { type: 'module', rbacId: 'faculty' },
-  { type: 'module', rbacId: 'teachers' },
   { type: 'module', rbacId: 'messaging' },
   {
     type: 'group',
@@ -61,16 +61,19 @@ export function isRbacPermissionGroup(group: RbacPermissionMatrixGroup): boolean
 export function groupRbacModulesForPermissionsNav(
   visibleModules: readonly RbacModuleDef[],
 ): RbacPermissionMatrixGroup[] {
-  const moduleById = new Map(visibleModules.map((moduleDefinition) => [moduleDefinition.id, moduleDefinition]));
+  const moduleById = new Map(
+    visibleModules.map((moduleDefinition) => [canonicalizeRbacModuleId(moduleDefinition.id), moduleDefinition]),
+  );
   const placed = new Set<string>();
   const groups: RbacPermissionMatrixGroup[] = [];
 
   const pushStandalone = (rbacId: string): void => {
-    const moduleDefinition = moduleById.get(rbacId);
-    if (!moduleDefinition || placed.has(rbacId)) return;
-    placed.add(rbacId);
+    const canonicalId = canonicalizeRbacModuleId(rbacId);
+    const moduleDefinition = moduleById.get(canonicalId);
+    if (!moduleDefinition || placed.has(canonicalId)) return;
+    placed.add(canonicalId);
     groups.push({
-      groupId: `module-${rbacId}`,
+      groupId: `module-${canonicalId}`,
       modules: [moduleDefinition],
     });
   };
@@ -82,10 +85,11 @@ export function groupRbacModulesForPermissionsNav(
     }
     const mods: RbacModuleDef[] = [];
     for (const rbacId of entry.rbacIds) {
-      const moduleDefinition = moduleById.get(rbacId);
-      if (moduleDefinition && !placed.has(rbacId)) {
+      const canonicalId = canonicalizeRbacModuleId(rbacId);
+      const moduleDefinition = moduleById.get(canonicalId);
+      if (moduleDefinition && !placed.has(canonicalId)) {
         mods.push(moduleDefinition);
-        placed.add(rbacId);
+        placed.add(canonicalId);
       }
     }
     if (mods.length > 0) {
@@ -98,9 +102,11 @@ export function groupRbacModulesForPermissionsNav(
   }
 
   for (const mod of visibleModules) {
-    if (!placed.has(mod.id)) {
+    const canonicalId = canonicalizeRbacModuleId(mod.id);
+    if (!placed.has(canonicalId)) {
+      placed.add(canonicalId);
       groups.push({
-        groupId: `module-${mod.id}`,
+        groupId: `module-${canonicalId}`,
         modules: [mod],
       });
     }
@@ -115,3 +121,4 @@ export function flattenRbacPermissionGroups(
 ): RbacModuleDef[] {
   return groups.flatMap((group) => group.modules);
 }
+

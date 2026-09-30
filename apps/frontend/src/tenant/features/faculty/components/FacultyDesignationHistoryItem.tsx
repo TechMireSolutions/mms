@@ -67,18 +67,18 @@ export function FacultyDesignationHistoryItem({
         )}
       </div>
       {canEdit && (
-        <div className="flex shrink-0 gap-1">
+        <div className="flex shrink-0 gap-1 items-center">
           <Button
             type="button"
             variant="ghost"
             size="icon"
-            className="size-7"
+            className="min-h-11 min-w-11 size-11"
             onClick={onToggleEdit}
             title={isEditing ? t('common.cancel') : t('common.edit')}
             aria-label={isEditing ? t('common.cancel') : t('common.edit')}
           >
             <ChevronRight
-              className={`size-3.5 transition-transform ${isEditing ? 'rotate-90' : ''}`}
+              className={`size-4 transition-transform ${isEditing ? 'rotate-90' : 'rtl:rotate-180'}`}
               aria-hidden
             />
           </Button>
@@ -86,7 +86,7 @@ export function FacultyDesignationHistoryItem({
             type="button"
             variant="ghost"
             size="icon"
-            className="size-7 text-destructive hover:text-destructive"
+            className="min-h-11 min-w-11 size-11 text-destructive hover:text-destructive"
             onClick={onDelete}
             disabled={!canDeleteAny || isDeletePending}
             title={
@@ -96,7 +96,7 @@ export function FacultyDesignationHistoryItem({
             }
             aria-label={t('faculty.designations.deleteAssignment')}
           >
-            <Trash2 className="size-3.5" aria-hidden />
+            <Trash2 className="size-4" aria-hidden />
           </Button>
         </div>
       )}

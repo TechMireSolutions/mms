@@ -1,14 +1,15 @@
-import { getTeacherAssignedClasses } from "@/lib/faculty/facultyAssignment";
+import { getFacultyAssignedClasses } from "@/lib/faculty/facultyAssignment";
 
-import { lazy, Suspense } from "react";
+import { lazy, Suspense, useMemo } from "react";
 import { AnimatePresence } from "framer-motion";
 import {
   ModuleDrawerLoadingSkeleton,
   ModuleOverlayLoadingFallback,
 } from "@/components/ui/ModuleOverlayLoadingChrome";
 import { useSessions } from "@/tenant/hooks/collections/sessions";
+import { useBranding } from "@/tenant/hooks/useBranding";
 import { FacultyPageConfirmDialogs } from "@/tenant/features/faculty/components/FacultyPageConfirmDialogs";
-import type { FacultyPageOverlaysProps, TeachersPageOverlaysProps } from "@/tenant/features/faculty/hooks/facultyPageOverlaysTypes";
+import type { FacultyPageOverlaysProps } from "@/tenant/features/faculty/hooks/facultyPageOverlaysTypes";
 import React from "react";
 
 const FacultyForm = lazy(() =>
@@ -30,11 +31,9 @@ const FacultyIdCardModal = lazy(() =>
 
 export const FacultyPageOverlays = (function FacultyPageOverlays({
   showForm,
-  editTeacher,
   editFaculty,
   onCloseForm,
   onSave,
-  viewTeacher,
   viewFaculty,
   onCloseView,
   onEditFromDrawer,
@@ -55,32 +54,32 @@ export const FacultyPageOverlays = (function FacultyPageOverlays({
   bulkRestoreOpen,
   onBulkRestoreOpenChange,
   onConfirmBulkRestore,
-  idCardTeachers = [],
-  idCardFaculty,
+  idCardFaculty = [],
   onCloseIdCards,
   onPrintIdCard,
 }: FacultyPageOverlaysProps): React.JSX.Element {
   const configPending = false;
+  const branding = useBranding();
   const sessionsQuery = useSessions();
-  const sessions = (() => sessionsQuery.data ?? [])();
-  const effectiveEdit = editFaculty ?? editTeacher;
-  const effectiveView = viewFaculty ?? viewTeacher;
-  const effectiveIdCards = idCardFaculty ?? idCardTeachers;
+  const sessions = sessionsQuery.data ?? [];
+  const effectiveEdit = editFaculty;
+  const effectiveView = viewFaculty;
+  const effectiveIdCards = idCardFaculty;
 
-  const idCardItems = (() => {
-    return effectiveIdCards.map((teacher) => {
-      const assignedClasses = teacher.id
-        ? getTeacherAssignedClasses(teacher.id, sessions)
+  const idCardItems = useMemo(() => {
+    return effectiveIdCards.map((facultyMember) => {
+      const assignedClasses = facultyMember.id
+        ? getFacultyAssignedClasses(facultyMember.id, sessions)
         : [];
-        
+
       return {
-        teacher,
+        faculty: facultyMember,
         assignedClasses: assignedClasses.map(cls => `${cls.className} (${cls.sessionName})`),
-        qualification: teacher.qualification,
-        emergencyPhone: teacher.phone ? String(teacher.phone) : undefined,
+        qualification: facultyMember.qualification,
+        emergencyPhone: facultyMember.phone ? String(facultyMember.phone) : undefined,
       };
     });
-  })();
+  }, [effectiveIdCards, sessions]);
 
   return (
     <>
@@ -126,6 +125,7 @@ export const FacultyPageOverlays = (function FacultyPageOverlays({
             open={effectiveIdCards.length > 0}
             onClose={onCloseIdCards}
             items={idCardItems}
+            madrasaName={branding.madrasaName || undefined}
           />
         </Suspense>
       ) : null}
@@ -146,6 +146,5 @@ export const FacultyPageOverlays = (function FacultyPageOverlays({
   );
 });
 
-export const TeachersPageOverlays = FacultyPageOverlays;
-export type { FacultyPageOverlaysProps, TeachersPageOverlaysProps };
+export type { FacultyPageOverlaysProps };
 

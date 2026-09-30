@@ -1,4 +1,4 @@
-import type { Faculty, Teacher } from "@mms/shared";
+import type { Faculty } from "@mms/shared";
 import type {
   FacultyPageOverlaysProps,
 } from "@/tenant/features/faculty/hooks/facultyPageOverlaysTypes";
@@ -32,22 +32,20 @@ export function useFacultyPageOverlayProps({
     | "handleBulkRestore"
   > & {
     handleSaveFaculty?: WorkActions["handleSaveFaculty"];
-    handleSaveTeacher?: WorkActions["handleSaveTeacher"];
   };
 
   selectedIds: string[];
   clearSelection: () => void;
 }): FacultyPageOverlaysProps {
-  const saveFn = workActions.handleSaveFaculty || workActions.handleSaveTeacher;
-  const currentEdit = formState.editFaculty ?? formState.editTeacher ?? null;
-  const currentView = overlays.viewFaculty ?? overlays.viewTeacher ?? null;
+  const saveFn = workActions.handleSaveFaculty;
+  const currentEdit = formState.editFaculty ?? null;
+  const currentView = overlays.viewFaculty ?? null;
 
   return {
     showForm: formState.showForm,
     editFaculty: formState.editFaculty,
-    editTeacher: formState.editTeacher,
     onCloseForm: formState.close,
-    onSave: async (faculty: Faculty | Teacher) => {
+    onSave: async (faculty: Faculty) => {
       if (!saveFn) return;
       const saved = await saveFn(faculty);
       if (!currentEdit && saved) {
@@ -55,9 +53,8 @@ export function useFacultyPageOverlayProps({
       }
     },
     viewFaculty: currentView,
-    viewTeacher: currentView,
     onCloseView: () => overlays.setViewFaculty(null),
-    onEditFromDrawer: (faculty: Faculty | Teacher) => {
+    onEditFromDrawer: (faculty: Faculty) => {
       overlays.setViewFaculty(null);
       formState.openEdit(faculty);
     },
@@ -100,11 +97,8 @@ export function useFacultyPageOverlayProps({
       clearSelection();
     },
     idCardFaculty: overlays.idCardFaculty,
-    idCardTeachers: overlays.idCardTeachers,
     onCloseIdCards: overlays.closeIdCardsModal,
-    onPrintIdCard: (faculty: Faculty | Teacher) => overlays.openIdCardsModal([faculty]),
+    onPrintIdCard: (faculty: Faculty) => overlays.openIdCardsModal([faculty]),
   };
 }
-
-export const useTeachersPageOverlayProps = useFacultyPageOverlayProps;
 

@@ -34,8 +34,8 @@ export function FacultyNewUserAccountFields({
     <div className="space-y-4 pt-2 border-t border-border/50">
       {!primaryEmail ? (
         <div className="flex items-center gap-2 p-2.5 rounded-lg bg-warning/10 border border-warning/20 text-warning text-xs font-medium">
-          <AlertCircle className="w-4 h-4 flex-shrink-0" />
-          <span>{t("faculty.form.noEmailWarning") || t("teachers.form.noEmailWarning")}</span>
+          <AlertCircle className="w-4 h-4 shrink-0" />
+          <span>{t("faculty.form.noEmailWarning")}</span>
         </div>
       ) : null}
 
@@ -55,7 +55,7 @@ export function FacultyNewUserAccountFields({
         {roleOptions.length === 0 ? <p className="mt-1 text-xs text-destructive">{t("faculty.designations.noAssignableRoles")}</p> : null}
         {selectedRoleObj ? (
           <div className="mt-1 flex items-center gap-1.5 text-xs text-muted-foreground">
-            <Shield className="w-3.5 h-3.5 text-primary flex-shrink-0" />
+            <Shield className="w-3.5 h-3.5 text-primary shrink-0" />
             <span>{workspaceRoleDescription(selectedRoleObj, t)}</span>
           </div>
         ) : null}
@@ -103,7 +103,10 @@ export function FacultyNewUserAccountFields({
       </div>
 
       {userAccountDraft.setupMethod === "password" ? (
-        <div className="flex items-center gap-2 pt-1">
+        <label
+          htmlFor="faculty-user-force-reset"
+          className="flex min-h-11 cursor-pointer items-center gap-2 pt-1 text-xs text-muted-foreground select-none font-medium"
+        >
           <Checkbox
             id="faculty-user-force-reset"
             checked={userAccountDraft.forceReset !== false}
@@ -114,13 +117,8 @@ export function FacultyNewUserAccountFields({
               })
             }
           />
-          <label
-            htmlFor="faculty-user-force-reset"
-            className="text-xs text-muted-foreground cursor-pointer select-none font-medium"
-          >
-            {t("users.addForceReset")}
-          </label>
-        </div>
+          <span>{t("users.addForceReset")}</span>
+        </label>
       ) : null}
     </div>
   );

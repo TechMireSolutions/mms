@@ -12,5 +12,4 @@ export const facultyLookupPutBodySchema = z.preprocess((raw) => {
   return deepSanitizeStrings(raw);
 }, facultyLookupPutBodyBaseSchema);
 
-export const teacherLookupStringItemsSchema = facultyLookupStringItemsSchema;
-export const teacherLookupPutBodySchema = facultyLookupPutBodySchema;
+

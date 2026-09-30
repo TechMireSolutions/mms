@@ -13,7 +13,7 @@ import { WidgetDrilldownModal, CustomWidgetRenderer } from '@/tenant/features/re
 import { reportClientError } from '@/lib/clientErrorReporting';
 import { useContactsWidgetAggregates } from '@/tenant/hooks/collections/contacts';
 import { useStudentsWidgetAggregates } from '@/tenant/hooks/collections/students';
-import { useTeachersWidgetAggregates } from '@/tenant/hooks/collections/faculty';
+import { useFacultyWidgetAggregates } from '@/tenant/hooks/collections/faculty';
 import { useSessionsWidgetAggregates } from '@/tenant/hooks/collections/sessions';
 import { useEnrollmentsWidgetAggregates } from '@/tenant/hooks/collections/enrollments';
 import { applyContactsWidgetWorkDrillDown } from '@/lib/contacts/contactsWidgetWorkDrillDown';
@@ -60,7 +60,7 @@ export function DashboardWidgets({
 
   useContactsWidgetAggregates(activeWidgets);
   useStudentsWidgetAggregates(activeWidgets);
-  useTeachersWidgetAggregates(activeWidgets);
+  useFacultyWidgetAggregates(activeWidgets);
   useSessionsWidgetAggregates(activeWidgets);
   useEnrollmentsWidgetAggregates(activeWidgets);
 

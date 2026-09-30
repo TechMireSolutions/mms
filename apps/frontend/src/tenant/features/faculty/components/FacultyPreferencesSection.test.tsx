@@ -1,8 +1,8 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { DEFAULT_TEACHERS_SETTINGS } from "@mms/shared";
-import { TeachersPreferencesSection } from "./FacultyPreferencesSection";
+import { DEFAULT_FACULTY_SETTINGS } from "@mms/shared";
+import { FacultyPreferencesSection } from "./FacultyPreferencesSection";
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
@@ -13,8 +13,8 @@ vi.mock("@/hooks/useTranslation", () => ({
 describe("FacultyPreferencesSection Component", () => {
   it("renders faculty preferences section with idPrefix, autoGenerateId, and specialization select", () => {
     const html = renderToStaticMarkup(
-      <TeachersPreferencesSection
-        settingsDraft={DEFAULT_TEACHERS_SETTINGS}
+      <FacultyPreferencesSection
+        settingsDraft={DEFAULT_FACULTY_SETTINGS}
         upd={vi.fn()}
         specializationOptions={["Tajweed", "Hifz"]}
       />,

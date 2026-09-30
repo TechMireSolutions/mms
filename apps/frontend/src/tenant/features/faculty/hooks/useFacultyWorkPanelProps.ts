@@ -46,7 +46,7 @@ export function useFacultyWorkPanelProps({
   canDelete,
   canExport,
 }: UseFacultyWorkPanelPropsInput) {
-  const { workPageQuery, workTeachers, workFaculty, workPageData, useServerWork, handleBulkExport } = workTierState;
+  const { workPageQuery, workFaculty, workPageData, useServerWork, handleBulkExport } = workTierState;
 
   return useFacultyPageTabPanelProps(effectiveTab, {
     search: filters.search,
@@ -71,8 +71,7 @@ export function useFacultyWorkPanelProps({
     updateUserColumnLayout: columnLayout.updateUserColumnLayout,
     onResetLayout: columnLayout.resetColumnLayout,
     customizerLabels: columnLayout.customizerLabels,
-    faculty: workFaculty ?? workTeachers,
-    teachers: workFaculty ?? workTeachers,
+    faculty: workFaculty,
     workPageQuery: {
       data: workPageData,
       isLoading: workPageQuery.isLoading,
@@ -118,8 +117,8 @@ export function useFacultyWorkPanelProps({
       setConfirmBulkDeleteOpen: overlays.setConfirmBulkDeleteOpen,
       setConfirmBulkRestoreOpen: overlays.setConfirmBulkRestoreOpen,
       setDeleteTarget: overlays.setDeleteTarget,
-      setViewTeacher: overlays.setViewTeacher,
-      idCardTeachers: overlays.idCardTeachers,
+      setViewFaculty: overlays.setViewFaculty,
+      idCardFaculty: overlays.idCardFaculty,
       openIdCardsModal: overlays.openIdCardsModal,
       closeIdCardsModal: overlays.closeIdCardsModal,
     },

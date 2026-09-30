@@ -1,39 +1,39 @@
 import { describe, expect, it } from 'vitest';
 import {
-  TEACHER_WRITE_SYSTEM_KEYS,
-  buildDynamicTeacherSchema,
-  formatTeacherZodIssues,
+  FACULTY_WRITE_SYSTEM_KEYS,
+  buildDynamicFacultySchema,
+  formatFacultyZodIssues,
 } from '../facultyValidation.js';
-import { listTeacherSystemFormFieldKeys } from '../facultyFormCustomFields.js';
-import { DEFAULT_TEACHERS_SETTINGS, type TeachersSettings } from '../facultyModuleSettings.js';
-import { INITIAL_TEACHERS_FIELD_SEED } from '../moduleFieldSetupPersons.js';
+import { listFacultySystemFormFieldKeys } from '../facultyFormCustomFields.js';
+import { DEFAULT_FACULTY_SETTINGS, type FacultySettings } from '../facultyModuleSettings.js';
+import { INITIAL_FACULTY_FIELD_SEED } from '../moduleFieldSetupFaculty.js';
 import type { FieldDefinition } from '../contactTypes.js';
 
-describe('buildDynamicTeacherSchema', () => {
-  const settings: TeachersSettings = {
-    ...DEFAULT_TEACHERS_SETTINGS,
+describe('buildDynamicFacultySchema', () => {
+  const settings: FacultySettings = {
+    ...DEFAULT_FACULTY_SETTINGS,
     requireContactLink: true,
   };
   const enabledTabs = new Set(['basic', 'employment']);
   const fields: Record<string, FieldDefinition[]> = {
-    basic: INITIAL_TEACHERS_FIELD_SEED.basic.map((field) => ({ ...field })),
-    employment: INITIAL_TEACHERS_FIELD_SEED.employment.map((field) => ({ ...field })),
+    basic: INITIAL_FACULTY_FIELD_SEED.basic.map((field) => ({ ...field })),
+    employment: INITIAL_FACULTY_FIELD_SEED.employment.map((field) => ({ ...field })),
   };
 
-  it('accepts a valid teacher write payload', () => {
-    const schema = buildDynamicTeacherSchema(settings, enabledTabs, fields);
+  it('accepts a valid faculty write payload', () => {
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
     const result = schema.safeParse({
       contactId: 'c-1',
       specialization: 'Hifz',
       status: 'active',
-      employeeId: 'TCH-1',
+      employeeId: 'FAC-1',
       joinDate: '2024-01-15',
     });
     expect(result.success).toBe(true);
   });
 
   it('requires contactId when requireContactLink is true', () => {
-    const schema = buildDynamicTeacherSchema(settings, enabledTabs, fields);
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
     const result = schema.safeParse({
       contactId: '',
       specialization: 'Hifz',
@@ -41,7 +41,7 @@ describe('buildDynamicTeacherSchema', () => {
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      const formatted = formatTeacherZodIssues(result.error, {}, fields);
+      const formatted = formatFacultyZodIssues(result.error, {}, fields);
       expect(formatted.some((err) => err.fieldId === 'contactId')).toBe(true);
     }
   });
@@ -61,17 +61,17 @@ describe('buildDynamicTeacherSchema', () => {
         },
       ],
     };
-    const schema = buildDynamicTeacherSchema(settings, enabledTabs, withCustom);
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, withCustom);
     const result = schema.safeParse({
       contactId: 'c-1',
       specialization: 'Hifz',
       status: 'active',
       joinDate: '2024-01-15',
-      employeeId: 'TCH-1',
+      employeeId: 'FAC-1',
     });
     expect(result.success).toBe(false);
     if (!result.success) {
-      const formatted = formatTeacherZodIssues(result.error, {}, withCustom);
+      const formatted = formatFacultyZodIssues(result.error, {}, withCustom);
       expect(formatted.some((err) => err.fieldId === 'badgeColor' && err.tabId === 'employment')).toBe(
         true,
       );
@@ -79,7 +79,7 @@ describe('buildDynamicTeacherSchema', () => {
   });
 
   it('rejects unknown keys via .strict()', () => {
-    const schema = buildDynamicTeacherSchema(settings, enabledTabs, fields);
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
     const result = schema.safeParse({
       contactId: 'c-1',
       specialization: 'Hifz',
@@ -90,13 +90,13 @@ describe('buildDynamicTeacherSchema', () => {
   });
 
   it('strips contact profile dual-write keys before validation', () => {
-    const schema = buildDynamicTeacherSchema(settings, enabledTabs, fields);
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
     const result = schema.safeParse({
       contactId: 'c-1',
       specialization: 'Hifz',
       status: 'active',
       joinDate: '2024-01-15',
-      employeeId: 'TCH-1',
+      employeeId: 'FAC-1',
       name: 'Should Strip',
       phone: '+10000000000',
       email: 'a@b.c',
@@ -113,13 +113,13 @@ describe('buildDynamicTeacherSchema', () => {
   });
 });
 
-describe('TEACHER_WRITE_SYSTEM_KEYS', () => {
+describe('FACULTY_WRITE_SYSTEM_KEYS', () => {
   it('includes every seed system field key plus audit meta keys', () => {
-    for (const key of listTeacherSystemFormFieldKeys()) {
-      expect(TEACHER_WRITE_SYSTEM_KEYS).toContain(key);
+    for (const key of listFacultySystemFormFieldKeys()) {
+      expect(FACULTY_WRITE_SYSTEM_KEYS).toContain(key);
     }
     for (const key of ['id', 'userId', 'createdAt', 'updatedAt', 'createdBy', 'updatedBy']) {
-      expect(TEACHER_WRITE_SYSTEM_KEYS).toContain(key);
+      expect(FACULTY_WRITE_SYSTEM_KEYS).toContain(key);
     }
   });
 });

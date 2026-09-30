@@ -1,23 +1,20 @@
 import React from 'react';
-import type { Faculty, Teacher } from '@mms/shared';
+import type { Faculty } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { FacultyListContent } from '@/tenant/features/faculty/components/FacultyListContent';
 import type { FacultyListProps } from '@/tenant/features/faculty/components/facultyListTypes';
-import { resolveFacultyDisplayName, resolveTeacherDisplayName } from '@/tenant/features/faculty/components/facultyFieldDisplay';
-import { useTeacherListState } from '@/tenant/features/faculty/components/useFacultyListState';
+import { resolveFacultyDisplayName } from '@/tenant/features/faculty/components/facultyFieldDisplay';
+import { useFacultyListState } from '@/tenant/features/faculty/components/useFacultyListState';
 
 export type {
   FacultyListProps,
   FacultySortField,
-  TeacherListProps,
-  TeacherSortField,
 } from '@/tenant/features/faculty/components/facultyListTypes';
 
 /** Work directory content (table/cards + empty state) — confirms/drawer live at page level. */
 export function FacultyList(props: FacultyListProps): React.JSX.Element {
   const {
     faculty,
-    teachers: rawTeachers,
     onEdit,
     onRestore,
     onSms,
@@ -44,7 +41,7 @@ export function FacultyList(props: FacultyListProps): React.JSX.Element {
     columnRegistry = [],
   } = props;
 
-  const listItems = faculty ?? rawTeachers ?? [];
+  const listItems = faculty ?? [];
   const { t } = useTranslation();
   const {
     sorted,
@@ -57,8 +54,8 @@ export function FacultyList(props: FacultyListProps): React.JSX.Element {
     handleSort,
     handleSelectAll,
     handleSelectOne,
-  } = useTeacherListState({
-    teachers: listItems,
+  } = useFacultyListState({
+    faculty: listItems,
     showDeleted,
     selectedIds,
     onSelectOne,
@@ -69,18 +66,18 @@ export function FacultyList(props: FacultyListProps): React.JSX.Element {
     isColumnVisible,
   });
 
-  const resolveName = resolveFacultyDisplayName || resolveTeacherDisplayName;
-
-  const handleRequestDelete = (id: string) => {
-    const member = listItems.find((candidate: Faculty | Teacher) => String(candidate.id) === String(id));
-    const name = member ? resolveName(member, t, undefined) : undefined;
-    onDeleteTargetChange({ id, name });
-  };
+  const handleRequestDelete = React.useCallback(
+    (id: string) => {
+      const member = listItems.find((candidate: Faculty) => String(candidate.id) === String(id));
+      const name = member ? resolveFacultyDisplayName(member, t, undefined) : undefined;
+      onDeleteTargetChange({ id, name });
+    },
+    [listItems, t, onDeleteTargetChange],
+  );
 
   return (
     <div className="space-y-4">
       <FacultyListContent
-        teachers={sorted}
         faculty={sorted}
         viewMode={viewMode}
         hasActiveFilters={hasActiveFilters}
@@ -113,6 +110,3 @@ export function FacultyList(props: FacultyListProps): React.JSX.Element {
     </div>
   );
 }
-
-export const TeachersList = FacultyList;
-

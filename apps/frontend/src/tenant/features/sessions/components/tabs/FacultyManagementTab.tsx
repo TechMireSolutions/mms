@@ -1,6 +1,6 @@
 /**
  * @file FacultyManagementTab.tsx
- * @description Model 6 Session Faculty Management tab (dynamic roles, teacher selector, active/inactive status).
+ * @description Model 6 Session Faculty Management tab (dynamic roles, faculty selector, active/inactive status).
  */
 import React from "react";
 import { UserCheck, Plus } from "lucide-react";
@@ -24,8 +24,8 @@ export function FacultyManagementTab({
     modalOpen,
     setModalOpen,
     editingFaculty,
-    teacherId,
-    setTeacherId,
+    facultyId,
+    setFacultyId,
     role,
     setRole,
     customRole,
@@ -33,7 +33,7 @@ export function FacultyManagementTab({
     status,
     setStatus,
     saving,
-    allTeachers,
+    allFaculty,
     handleOpenAdd,
     handleOpenEdit,
     handleDelete,
@@ -94,15 +94,15 @@ export function FacultyManagementTab({
         onClose={() => setModalOpen(false)}
         editingFaculty={editingFaculty}
         saving={saving}
-        teacherId={teacherId}
-        onTeacherIdChange={setTeacherId}
+        facultyId={facultyId}
+        onFacultyIdChange={setFacultyId}
         role={role}
         onRoleChange={setRole}
         customRole={customRole}
         onCustomRoleChange={setCustomRole}
         status={status}
         onStatusChange={setStatus}
-        allTeachers={allTeachers}
+        allFaculty={allFaculty}
         onSave={handleSave}
       />
     </div>

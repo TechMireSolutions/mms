@@ -1,22 +1,23 @@
-import type { Teacher, TeacherSortField } from '@mms/shared';
+import { useCallback, useMemo } from 'react';
+import type { Faculty, FacultySortField } from '@mms/shared';
 import { getDirectoryPageSelection } from '@/lib/directorySelection';
-import { useTeacherStatusConfig } from '@/tenant/features/faculty/hooks/useFacultyStatusConfig';
+import { useFacultyStatusConfig } from '@/tenant/features/faculty/hooks/useFacultyStatusConfig';
 
-interface UseTeacherListStateOptions {
-  teachers: Teacher[];
+export interface UseFacultyListStateOptions {
+  faculty: Faculty[];
   showDeleted: boolean;
   selectedIds: string[];
   onSelectOne: (id: string) => void;
   onSelectAll: (pageIds: string[]) => void;
-  controlledSortField?: TeacherSortField;
+  controlledSortField?: FacultySortField;
   controlledSortDir?: 'asc' | 'desc';
   /** Server SQL sort (Work list SSOT) — required; client re-sort removed. */
-  onSortChange: (field: TeacherSortField, dir: 'asc' | 'desc') => void;
+  onSortChange: (field: FacultySortField, dir: 'asc' | 'desc') => void;
   isColumnVisible?: (columnId: string) => boolean;
 }
 
-export function useTeacherListState({
-  teachers,
+export function useFacultyListState({
+  faculty,
   showDeleted: _showDeleted,
   selectedIds,
   onSelectOne,
@@ -25,32 +26,38 @@ export function useTeacherListState({
   controlledSortDir = 'asc',
   onSortChange,
   isColumnVisible,
-}: UseTeacherListStateOptions) {
+}: UseFacultyListStateOptions) {
   const columnVisible = isColumnVisible ?? (() => true);
 
-  const statusConfig = useTeacherStatusConfig();
+  const statusConfig = useFacultyStatusConfig();
 
   const sortField = controlledSortField;
   const sortDir = controlledSortDir;
 
-  const handleSort = (field: TeacherSortField) => {
-    const resolvedDir = sortField === field && sortDir === 'asc' ? 'desc' : 'asc';
-    onSortChange(field, resolvedDir);
-  };
+  const handleSort = useCallback(
+    (field: FacultySortField) => {
+      const resolvedDir = sortField === field && sortDir === 'asc' ? 'desc' : 'asc';
+      onSortChange(field, resolvedDir);
+    },
+    [sortField, sortDir, onSortChange],
+  );
 
-  const pageIds = teachers.map((teacher) => String(teacher.id));
+  const pageIds = useMemo(() => faculty.map((member) => String(member.id)), [faculty]);
   const { allSelected, someSelected } = getDirectoryPageSelection(pageIds, selectedIds);
 
-  const handleSelectAll = () => {
+  const handleSelectAll = useCallback(() => {
     onSelectAll(pageIds);
-  };
+  }, [onSelectAll, pageIds]);
 
-  const handleSelectOne = (id: string) => {
-    onSelectOne(id);
-  };
+  const handleSelectOne = useCallback(
+    (id: string) => {
+      onSelectOne(id);
+    },
+    [onSelectOne],
+  );
 
   return {
-    sorted: teachers,
+    sorted: faculty,
     sortField,
     sortDir,
     statusConfig,

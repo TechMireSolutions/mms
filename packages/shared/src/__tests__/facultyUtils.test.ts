@@ -1,41 +1,41 @@
 import { describe, expect, it } from 'vitest';
 import {
-  normalizeStoredTeacher,
-  hydrateTeacherFromContact,
-  formatTeacherDisplayName,
+  normalizeStoredFaculty,
+  hydrateFacultyFromContact,
+  formatFacultyDisplayName,
   getContactQualification,
   getContactSpecialization,
 } from '../facultyUtils.js';
-import type { Teacher } from '../facultyTypes.js';
+import type { FacultyMember } from '../facultyTypes.js';
 import type { Contact } from '../contactTypes.js';
 
-describe('teacherUtils', () => {
-  describe('formatTeacherDisplayName', () => {
+describe('facultyUtils', () => {
+  describe('formatFacultyDisplayName', () => {
     it('appends employee ID when a name is present', () => {
-      expect(formatTeacherDisplayName({ name: 'Zaid Khan', employeeId: 'EMP-01' })).toBe('Zaid Khan (EMP-01)');
+      expect(formatFacultyDisplayName({ name: 'Zaid Khan', employeeId: 'EMP-01' })).toBe('Zaid Khan (EMP-01)');
     });
 
     it('falls back to firstName and lastName when name is empty', () => {
-      expect(formatTeacherDisplayName({ firstName: 'Umar', lastName: 'Farooq' })).toBe('Umar Farooq');
+      expect(formatFacultyDisplayName({ firstName: 'Umar', lastName: 'Farooq' })).toBe('Umar Farooq');
     });
 
     it('falls back to contact firstName and lastName when top-level names are empty', () => {
-      expect(formatTeacherDisplayName({ contact: { firstName: 'Ali', lastName: 'Hassan' } })).toBe('Ali Hassan');
+      expect(formatFacultyDisplayName({ contact: { firstName: 'Ali', lastName: 'Hassan' } })).toBe('Ali Hassan');
     });
 
     it('falls back to employee ID only', () => {
-      expect(formatTeacherDisplayName({ employeeId: 'EMP-09' })).toBe('Faculty (EMP-09)');
+      expect(formatFacultyDisplayName({ employeeId: 'EMP-09' })).toBe('Faculty (EMP-09)');
     });
 
-    it('returns an empty string for nullish teachers', () => {
-      expect(formatTeacherDisplayName(null)).toBe('');
-      expect(formatTeacherDisplayName(undefined)).toBe('');
+    it('returns an empty string for nullish faculty members', () => {
+      expect(formatFacultyDisplayName(null)).toBe('');
+      expect(formatFacultyDisplayName(undefined)).toBe('');
     });
   });
 
-  describe('normalizeStoredTeacher', () => {
-    it('strips contact-owned display fields from teacher record', () => {
-      const rawTeacher = {
+  describe('normalizeStoredFaculty', () => {
+    it('strips contact-owned display fields from faculty record', () => {
+      const rawFaculty = {
         id: 't-1',
         contactId: 'c-300',
         name: 'Ustad Tariq',
@@ -45,7 +45,7 @@ describe('teacherUtils', () => {
         status: 'active',
       };
 
-      const normalized = normalizeStoredTeacher(rawTeacher);
+      const normalized = normalizeStoredFaculty(rawFaculty);
       expect(normalized.id).toBe('t-1');
       expect(normalized.contactId).toBe('c-300');
       expect(normalized.specialization).toBe('Hifz');
@@ -55,7 +55,7 @@ describe('teacherUtils', () => {
     });
 
     it('strips profile fields and clears empty contactId', () => {
-      const normalized = normalizeStoredTeacher({
+      const normalized = normalizeStoredFaculty({
         contactId: '',
         name: 'Orphan Name',
         firstName: 'Orphan',
@@ -68,7 +68,7 @@ describe('teacherUtils', () => {
     });
 
     it('strips a hydrated avatar from the write payload', () => {
-      const normalized = normalizeStoredTeacher({
+      const normalized = normalizeStoredFaculty({
         id: 't-9',
         contactId: 'c-300',
         avatar: 'https://cdn.example.com/avatar.jpg',
@@ -78,7 +78,7 @@ describe('teacherUtils', () => {
     });
   });
 
-  describe('hydrateTeacherFromContact', () => {
+  describe('hydrateFacultyFromContact', () => {
     const contacts: Contact[] = [
       {
         id: 'c-300',
@@ -91,15 +91,15 @@ describe('teacherUtils', () => {
       },
     ];
 
-    it('hydrates teacher display fields from linked contact profile', () => {
-      const rawTeacher: Teacher = {
+    it('hydrates faculty display fields from linked contact profile', () => {
+      const rawFaculty: FacultyMember = {
         id: 't-1',
         contactId: 'c-300',
         specialization: 'Tajweed',
         status: 'active',
       };
 
-      const hydrated = hydrateTeacherFromContact(rawTeacher, contacts);
+      const hydrated = hydrateFacultyFromContact(rawFaculty, contacts);
       expect(hydrated.name).toBe('Tariq Mahmood');
       expect(hydrated.email).toBe('tariq@madrasa.org');
       expect(hydrated.phone).toBe('3005554433');
@@ -108,18 +108,18 @@ describe('teacherUtils', () => {
     });
 
     it('leaves avatar unset when the linked contact has no avatar', () => {
-      const rawTeacher: Teacher = {
+      const rawFaculty: FacultyMember = {
         id: 't-2',
         contactId: 'c-300',
         status: 'active',
       };
 
-      const hydrated = hydrateTeacherFromContact(rawTeacher, [{ id: 'c-300', name: 'Tariq Mahmood' }]);
+      const hydrated = hydrateFacultyFromContact(rawFaculty, [{ id: 'c-300', name: 'Tariq Mahmood' }]);
       expect(hydrated.avatar).toBeUndefined();
     });
 
     it('hydrates qualification and specialization from contact education and skills', () => {
-      const rawTeacher: Teacher = {
+      const rawFaculty: FacultyMember = {
         id: 't-3',
         contactId: 'c-400',
         status: 'active',
@@ -136,13 +136,13 @@ describe('teacherUtils', () => {
         skills: [{ name: 'Arabic Grammar' }, { name: 'Fiqh' }],
       };
 
-      const hydrated = hydrateTeacherFromContact(rawTeacher, [contactWithEducation]);
+      const hydrated = hydrateFacultyFromContact(rawFaculty, [contactWithEducation]);
       expect(hydrated.qualification).toBe('Shahadat-ul-Aalamiyyah, M.A. Islamic Studies');
       expect(hydrated.specialization).toBe('Hadith Studies, Islamic Jurisprudence');
     });
 
     it('falls back to contact skills for specialization when education fieldOfStudy is empty', () => {
-      const rawTeacher: Teacher = {
+      const rawFaculty: FacultyMember = {
         id: 't-4',
         contactId: 'c-500',
         status: 'active',
@@ -156,7 +156,7 @@ describe('teacherUtils', () => {
         skills: [{ name: 'Tajweed' }, { name: 'Qirat Sab’ah' }],
       };
 
-      const hydrated = hydrateTeacherFromContact(rawTeacher, [contactWithSkills]);
+      const hydrated = hydrateFacultyFromContact(rawFaculty, [contactWithSkills]);
       expect(hydrated.qualification).toBe('Hifz Certificate');
       expect(hydrated.specialization).toBe('Tajweed, Qirat Sab’ah');
     });

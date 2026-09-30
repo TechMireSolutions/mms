@@ -1,13 +1,12 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Contact, Teacher } from "@mms/shared";
+import type { Contact, FacultyMember } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 import {
-  buildTeacherSavePayload,
   buildFacultySavePayload,
   validateUserDraftRequirements,
   isEmployeeIdConflictError,
 } from "./facultyFormSavePayload";
-import type { TeacherSaveFlowInput } from "./facultyFormSaveFlow";
+import type { FacultySaveFlowInput } from "./facultyFormSaveFlow";
 
 vi.mock("@/lib/notify", () => ({
   notify: {
@@ -16,10 +15,10 @@ vi.mock("@/lib/notify", () => ({
 }));
 
 describe("facultyFormSavePayload", () => {
-  describe("buildTeacherSavePayload / buildFacultySavePayload", () => {
-    it("builds payload using teacherDraft employeeId and converts contactId to string", () => {
-      const payload = buildTeacherSavePayload({
-        teacherDraft: {
+  describe("buildFacultySavePayload", () => {
+    it("builds payload using facultyDraft employeeId and converts contactId to string", () => {
+      const payload = buildFacultySavePayload({
+        facultyDraft: {
           name: "Ustadh Ahmad",
           employeeId: "EMP-001",
           contactId: "cnt-1",
@@ -32,9 +31,9 @@ describe("facultyFormSavePayload", () => {
       expect(payload.contactId).toBe("cnt-1");
     });
 
-    it("uses nextEmployeeId when autoGenerateId is true and creating new teacher", () => {
+    it("uses nextEmployeeId when autoGenerateId is true and creating new faculty member", () => {
       const payload = buildFacultySavePayload({
-        teacherDraft: {
+        facultyDraft: {
           name: "Ustadh Ahmad",
           contactId: "cnt-1",
         },
@@ -53,10 +52,10 @@ describe("facultyFormSavePayload", () => {
         designationEndsOn: "2026-12-31",
         contact: { id: "cnt-1" } as Contact,
         subordinates: [],
-      } as unknown as Partial<Teacher>;
+      } as unknown as Partial<FacultyMember>;
 
-      const payload = buildTeacherSavePayload({
-        teacherDraft: draft,
+      const payload = buildFacultySavePayload({
+        facultyDraft: draft,
         autoGenerateId: false,
       });
 
@@ -70,8 +69,8 @@ describe("facultyFormSavePayload", () => {
   describe("validateUserDraftRequirements", () => {
     const mockT: TranslationFunction = ((key: string, ..._rest: unknown[]) => key) as unknown as TranslationFunction;
 
-    const baseInput: TeacherSaveFlowInput = {
-      teacherDraft: {},
+    const baseInput: FacultySaveFlowInput = {
+      facultyDraft: {},
       formInstanceId: "form-1",
       autoGenerateId: false,
       settings: {} as any,
@@ -97,7 +96,7 @@ describe("facultyFormSavePayload", () => {
       const result = validateUserDraftRequirements({
         ...baseInput,
         setErrors,
-        userAccountDraft: { enabled: true, setupMethod: "password", role: "teacher" },
+        userAccountDraft: { enabled: true, setupMethod: "password", role: "staff" },
         linkedContact: { id: "cnt-1" } as Contact,
       });
 
@@ -127,7 +126,7 @@ describe("facultyFormSavePayload", () => {
       const result = validateUserDraftRequirements({
         ...baseInput,
         setErrors,
-        userAccountDraft: { enabled: true, setupMethod: "password", role: "teacher", password: "short" },
+        userAccountDraft: { enabled: true, setupMethod: "password", role: "staff", password: "short" },
         linkedContact: { id: "cnt-1", emails: [{ address: "test@example.com" }] } as any,
       });
 
@@ -140,7 +139,7 @@ describe("facultyFormSavePayload", () => {
     it("passes when valid email, role, and password are provided", () => {
       const result = validateUserDraftRequirements({
         ...baseInput,
-        userAccountDraft: { enabled: true, setupMethod: "password", role: "teacher", password: "securepassword123" },
+        userAccountDraft: { enabled: true, setupMethod: "password", role: "staff", password: "securepassword123" },
         linkedContact: { id: "cnt-1", emails: [{ address: "test@example.com" }] } as any,
       });
 

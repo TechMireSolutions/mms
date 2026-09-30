@@ -22,8 +22,6 @@ export function SpecializedEntryStaffPicker({
     }
     const rawList = ("faculty" in body && Array.isArray(body.faculty))
       ? body.faculty
-      : ("teachers" in body && Array.isArray(body.teachers))
-      ? body.teachers
       : [];
     return rawList
       .map((member: { id?: string; name?: string; employeeId?: string }) => ({

@@ -91,7 +91,7 @@ export function StudentDetailSessionsSection({
                   </SectionLabel>
                   {session.classes.map((sessionClass) => (
                     <div key={sessionClass.id} className="flex justify-between gap-1.5">
-                      <span className="font-medium text-foreground">{t("students.detail.classByTeacher", { name: sessionClass.name ?? "", teacher: sessionClass.teacherName ?? "" })}</span>
+                      <span className="font-medium text-foreground">{t("students.detail.classByTeacher", { name: sessionClass.name ?? "", teacher: sessionClass.facultyName ?? "" })}</span>
                       <span>{t("students.detail.classRoom", { room: sessionClass.room || emptyDash })}</span>
                     </div>
                   ))}

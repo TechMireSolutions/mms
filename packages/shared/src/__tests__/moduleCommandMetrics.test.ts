@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   computeStudentsCommandMetrics,
-  computeTeachersCommandMetrics,
+  computeFacultyCommandMetrics,
   computeSessionsCommandMetrics,
   computeEnrollmentsCommandMetrics,
   computeUsersCommandMetrics,
@@ -24,15 +24,15 @@ describe('moduleCommandMetrics', () => {
     expect(metrics.newThisPeriod).toBe(1);
   });
 
-  it('computes teacher metrics breakdown correctly', () => {
-    const teachers = [
+  it('computes faculty metrics breakdown correctly', () => {
+    const faculty = [
       { status: 'active', joinDate: new Date().toISOString() },
       { status: 'on_leave', joinDate: '2021-05-10' },
       { status: 'inactive' },
       { status: 'sabbatical' },
     ];
 
-    const metrics = computeTeachersCommandMetrics(teachers);
+    const metrics = computeFacultyCommandMetrics(faculty);
     expect(metrics.total).toBe(4);
     expect(metrics.active).toBe(1);
     expect(metrics.onLeave).toBe(1);

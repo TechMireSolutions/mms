@@ -6,7 +6,7 @@ import {
   normalizeHasanatRedemption,
   normalizeSessionsCollection,
   normalizeStoredStudent,
-  normalizeStoredTeacher,
+  normalizeStoredFaculty,
   normalizeStudentLinkedRows,
   normalizeUserActorField,
   stripWorkspaceUserProfileFields,
@@ -23,6 +23,9 @@ import {
   listCollectionStorageNames,
   saveCollection,
 } from '../database.js';
+import { LEGACY_FACULTY_COLLECTION_ALIASES } from '../hydrateFacultySetupFromLegacyBackup.js';
+
+const LEGACY_COLLECTION_KEY = LEGACY_FACULTY_COLLECTION_ALIASES[0][0];
 
 type Row = Record<string, unknown>;
 
@@ -53,14 +56,14 @@ function asNamed(rows: Row[]): NamedEntity[] {
 function linkHasanatRecipient(
   row: HasanatDistributionLike,
   students: NamedEntity[],
-  teachers: NamedEntity[],
+  facultyMembers: NamedEntity[],
 ): HasanatDistributionLike {
-  if (row.recipientStudentId || row.recipientTeacherId) return row;
+  if (row.recipientStudentId || row.recipientFacultyId) return row;
   const name = String(row.recipientName ?? '').trim();
   if (!name) return row;
   if (row.recipientType === 'faculty') {
-    const teacher = teachers.find((entry) => entry.name === name);
-    if (teacher) return { ...row, recipientTeacherId: String(teacher.id) };
+    const faculty = facultyMembers.find((entry) => entry.name === name);
+    if (faculty) return { ...row, recipientFacultyId: String(faculty.id) };
   } else {
     const student = students.find((entry) => entry.name === name);
     if (student) return { ...row, recipientStudentId: String(student.id) };
@@ -86,7 +89,7 @@ function normalizeTenantCollections(
   collections: Record<string, Row[]>,
 ): { next: Record<string, Row[]>; changed: boolean } {
   const students = asNamed(collections.students ?? []);
-  const teachers = asNamed(collections.teachers ?? []);
+  const facultyMembers = asNamed(collections.faculty ?? collections[LEGACY_COLLECTION_KEY] ?? []);
   const users = asNamed(collections.users ?? []);
   let changed = false;
 
@@ -96,8 +99,9 @@ function normalizeTenantCollections(
       case 'students':
         next = rows.map((row) => normalizeStoredStudent(row));
         break;
-      case 'teachers':
-        next = rows.map((row) => normalizeStoredTeacher(row));
+      case 'faculty':
+      case LEGACY_COLLECTION_KEY:
+        next = rows.map((row) => normalizeStoredFaculty(row));
         break;
       case 'enrollments':
       case 'attendance_records':
@@ -124,7 +128,7 @@ function normalizeTenantCollections(
         break;
       case 'hasanat_distributions':
         next = rows
-          .map((row) => linkHasanatRecipient(row as HasanatDistributionLike, students, teachers))
+          .map((row) => linkHasanatRecipient(row as HasanatDistributionLike, students, facultyMembers))
           .map((row) => linkUserActor(row, users, 'issuedByUserId', 'issuedBy'))
           .map((row) =>
             normalizeUserActorField(

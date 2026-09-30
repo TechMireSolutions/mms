@@ -1,4 +1,7 @@
-import { resolveTeacherStatusRoles, TEACHER_STATUS_VALUES } from './facultyTypes.js';
+import {
+  resolveFacultyStatusRoles,
+  FACULTY_STATUS_VALUES,
+} from './facultyTypes.js';
 
 /** Default rolling window for "new records" command-centre metrics (globle1 §2.1). */
 export const MODULE_METRICS_DEFAULT_PERIOD_DAYS = 30;
@@ -11,17 +14,15 @@ export interface StudentsCommandMetricsSnapshot {
   newThisPeriod: number;
 }
 
-export interface TeachersCommandMetricsSnapshot {
+export interface FacultyCommandMetricsSnapshot {
   total: number;
   active: number;
   inactive: number;
   onLeave: number;
-  /** Active rows whose status is outside {@link TEACHER_STATUS_VALUES}. */
+  /** Active rows whose status is outside {@link FACULTY_STATUS_VALUES}. */
   other: number;
   newThisPeriod: number;
 }
-
-export type FacultyCommandMetricsSnapshot = TeachersCommandMetricsSnapshot;
 
 export interface FinanceCommandMetricsSnapshot {
   totalInvoices: number;
@@ -120,25 +121,25 @@ export function computeStudentsCommandMetrics(
 }
 
 /**
- * @deprecated Prefer SQL `aggregateTeachersCommandMetrics` / `loadTeachersCommandMetrics`.
+ * Prefer SQL `aggregateFacultyCommandMetrics` / `loadFacultyCommandMetrics`.
  * Kept for pure unit tests of status / joinDate period predicates.
  */
-export function computeTeachersCommandMetrics(
-  teachers: JoinDateRecord[],
+export function computeFacultyCommandMetrics(
+  faculty: JoinDateRecord[],
   periodDays: number = MODULE_METRICS_DEFAULT_PERIOD_DAYS,
-): TeachersCommandMetricsSnapshot {
+): FacultyCommandMetricsSnapshot {
   const { active: activeStatus, inactive: inactiveStatus, onLeave: onLeaveStatus } =
-    resolveTeacherStatusRoles();
-  const knownStatuses = new Set<string>(TEACHER_STATUS_VALUES);
+    resolveFacultyStatusRoles();
+  const knownStatuses = new Set<string>(FACULTY_STATUS_VALUES);
   const cutoff = new Date();
   cutoff.setDate(cutoff.getDate() - periodDays);
   const cutoffTime = cutoff.getTime();
 
   let active = 0, inactive = 0, onLeave = 0, other = 0, newThisPeriod = 0;
 
-  for (let i = 0; i < teachers.length; i++) {
-    const t = teachers[i];
-    const status = t.status;
+  for (let i = 0; i < faculty.length; i++) {
+    const member = faculty[i];
+    const status = member.status;
     if (status === activeStatus) active++;
     else if (status === inactiveStatus) inactive++;
     else if (status === onLeaveStatus) onLeave++;
@@ -148,7 +149,7 @@ export function computeTeachersCommandMetrics(
       other++;
     }
 
-    const raw = t.joinDate ?? t.createdAt;
+    const raw = member.joinDate ?? member.createdAt;
     if (raw) {
       const time = new Date(raw).getTime();
       if (!Number.isNaN(time) && time >= cutoffTime) {
@@ -158,7 +159,7 @@ export function computeTeachersCommandMetrics(
   }
 
   return {
-    total: teachers.length,
+    total: faculty.length,
     active,
     inactive,
     onLeave,
@@ -167,8 +168,7 @@ export function computeTeachersCommandMetrics(
   };
 }
 
-export const computeFacultyCommandMetrics = computeTeachersCommandMetrics;
-export const computeFacultyCommandMetricsSnapshot = computeTeachersCommandMetrics;
+export const computeFacultyCommandMetricsSnapshot = computeFacultyCommandMetrics;
 
 export function computeUsersCommandMetrics(
   users: WorkspaceUserMetricRecord[],

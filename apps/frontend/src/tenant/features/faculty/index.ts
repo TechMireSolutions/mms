@@ -1,4 +1,4 @@
-export { default as FacultyPage, default as TeachersPage } from './FacultyPage';
+export { default as FacultyPage } from './FacultyPage';
 export * from './components/FacultyPageView';
 export * from './components/FacultyWorkTier';
 export * from './components/FacultyReportsTier';
