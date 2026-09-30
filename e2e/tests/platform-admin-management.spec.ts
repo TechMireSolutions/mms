@@ -78,6 +78,7 @@ function ensureE2eSuperUser(): void {
     '  const key = await scryptAsync(process.env.E2E_SUPER_PASSWORD, salt, 64);',
     '  const passwordHash = `${salt}:${key.toString("hex")}`;',
     '  await pool.query("UPDATE platform_users SET role = \'admin\' WHERE role = \'super_user\' AND email <> $1", [email]);',
+    '  await pool.query("DELETE FROM platform_users WHERE (email LIKE \'platform-a11y-%\' OR email LIKE \'e2e-%\') AND email <> $1", [email]);',
     '  const existing = await pool.query("SELECT id FROM platform_users WHERE email = $1", [email]);',
     '  let userId;',
     '  if (existing.rows.length > 0) {',
@@ -225,6 +226,11 @@ test.describe('Platform Admin Creation and Access Management Flow', () => {
 
       // Wait for modal to close and new admin to appear in directory
       await expect(page.locator('[role="dialog"]')).not.toBeVisible({ timeout: 20_000 });
+
+      const searchBox = page.locator('input[placeholder*="Search"]');
+      if (await searchBox.isVisible().catch(() => false)) {
+        await searchBox.fill(e2eCreatedAdminName);
+      }
       
       const adminRow = page.locator('tr:visible', { hasText: new RegExp(e2eCreatedAdminName, 'i') }).first();
       await adminRow.scrollIntoViewIfNeeded().catch(() => {});

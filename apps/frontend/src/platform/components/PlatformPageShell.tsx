@@ -12,6 +12,7 @@ import { PlatformCommandPalette } from '@/platform/components/PlatformCommandPal
 import { PlatformAiDrawer } from '@/platform/components/intelligence/PlatformAiDrawer';
 import { AppShell } from '@/components/common/AppShell';
 import { PlatformLiveRegionProvider } from '@/platform/components/common/PlatformLiveRegion';
+import { TooltipProvider } from '@/components/ui/tooltip';
 
 export { PlatformLogoMark } from './common/PlatformLogoMark';
 
@@ -102,25 +103,27 @@ export function PlatformPageShell({
 
   return (
     <PlatformLiveRegionProvider>
-      <PlatformSidebarProvider>
-        {isPlatformAuthenticated ? (
-          <PlatformAuthenticatedShell maxClass={maxClass} footer={footer}>
-            {children || (
-              <Suspense fallback={<AppPageShellSkeleton />}>
-                <Outlet />
-              </Suspense>
-            )}
-          </PlatformAuthenticatedShell>
-        ) : (
-          <UnauthenticatedShell dir={dir} lang={language} maxClass={maxClass} footer={footer}>
-            {children || (
-              <Suspense fallback={<AppPageShellSkeleton />}>
-                <Outlet />
-              </Suspense>
-            )}
-          </UnauthenticatedShell>
-        )}
-      </PlatformSidebarProvider>
+      <TooltipProvider delayDuration={150}>
+        <PlatformSidebarProvider>
+          {isPlatformAuthenticated ? (
+            <PlatformAuthenticatedShell maxClass={maxClass} footer={footer}>
+              {children || (
+                <Suspense fallback={<AppPageShellSkeleton />}>
+                  <Outlet />
+                </Suspense>
+              )}
+            </PlatformAuthenticatedShell>
+          ) : (
+            <UnauthenticatedShell dir={dir} lang={language} maxClass={maxClass} footer={footer}>
+              {children || (
+                <Suspense fallback={<AppPageShellSkeleton />}>
+                  <Outlet />
+                </Suspense>
+              )}
+            </UnauthenticatedShell>
+          )}
+        </PlatformSidebarProvider>
+      </TooltipProvider>
     </PlatformLiveRegionProvider>
   );
 }
