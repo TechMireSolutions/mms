@@ -23,12 +23,34 @@ export default function PlatformUsersPage(): React.JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
 
   const rawTab = searchParams.get('tab') as PlatformUsersTab | null;
+  const rawSubTab = searchParams.get('subtab');
   const activeTab: PlatformUsersTab = (rawTab === 'reports' || rawTab === 'setup' || rawTab === 'work') ? rawTab : 'work';
+  const activeWorkSubTab = rawSubTab === 'activity' ? 'activity' : 'operators';
+  const activeSetupSubTab = rawSubTab === 'preferences' ? 'preferences' : 'permissions';
 
   const handleTabChange = (id: string) => {
     setSearchParams((prev) => {
       const next = new URLSearchParams(prev);
       next.set('tab', id);
+      next.delete('subtab');
+      return next;
+    });
+  };
+
+  const handleWorkSubTabChange = (sub: 'operators' | 'activity') => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', 'work');
+      next.set('subtab', sub);
+      return next;
+    });
+  };
+
+  const handleSetupSubTabChange = (sub: 'permissions' | 'preferences') => {
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', 'setup');
+      next.set('subtab', sub);
       return next;
     });
   };
@@ -56,7 +78,7 @@ export default function PlatformUsersPage(): React.JSX.Element {
 
   const headerActions = (
     <div className="flex items-center gap-2">
-      {activeTab === 'work' && admins && admins.length > 0 ? (
+      {activeTab === 'work' && activeWorkSubTab === 'operators' && admins && admins.length > 0 ? (
         <ActionButton
           variant="ghost"
           size="sm"
@@ -90,6 +112,10 @@ export default function PlatformUsersPage(): React.JSX.Element {
       <PlatformUsersTier
         activeSubTab={activeTab}
         showSubTabBar={false}
+        activeWorkSubTab={activeWorkSubTab}
+        onWorkSubTabChange={handleWorkSubTabChange}
+        activeSetupSubTab={activeSetupSubTab}
+        onSetupSubTabChange={handleSetupSubTabChange}
       />
     </ModuleScaffold>
   );

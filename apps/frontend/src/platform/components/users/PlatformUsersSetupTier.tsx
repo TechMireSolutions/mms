@@ -1,28 +1,36 @@
-import React, { useState, Suspense, lazy } from 'react';
-import { ShieldCheck, Activity } from 'lucide-react';
+import React, { useState } from 'react';
+import { ShieldCheck, Settings } from 'lucide-react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { SubTabBar, type SubTab } from '@/components/ui/SubTabBar';
-import { CardSkeleton } from '@/components/ui/LoadingState';
 import { PlatformPermissionMatrix } from '@/platform/components/users/PlatformPermissionMatrix';
+import { PlatformSecuritySettingsPanel } from '@/platform/components/settings/PlatformSecuritySettingsPanel';
 
-const PlatformActivityLogsContent = lazy(() => import('@/platform/components/PlatformActivityLogsContent'));
+export type PlatformUsersSetupSubTab = 'permissions' | 'preferences';
 
-export type PlatformUsersSetupSubTab = 'matrix' | 'logs';
+export interface PlatformUsersSetupTierProps {
+  activeSubTab?: PlatformUsersSetupSubTab;
+  onSubTabChange?: (tab: PlatformUsersSetupSubTab) => void;
+}
 
-export function PlatformUsersSetupTier(): React.JSX.Element {
+export function PlatformUsersSetupTier({
+  activeSubTab,
+  onSubTabChange,
+}: PlatformUsersSetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();
-  const [subTab, setSubTab] = useState<PlatformUsersSetupSubTab>('matrix');
+  const [internalSubTab, setInternalSubTab] = useState<PlatformUsersSetupSubTab>('permissions');
+  const currentSubTab = activeSubTab ?? internalSubTab;
+  const setSubTab = onSubTabChange ?? setInternalSubTab;
 
   const subTabs: SubTab<PlatformUsersSetupSubTab>[] = [
     {
-      key: 'matrix',
-      label: 'Permissions Matrix',
+      key: 'permissions',
+      label: t('users.permissions'),
       icon: ShieldCheck,
     },
     {
-      key: 'logs',
-      label: t('platform.activityLogsTitle'),
-      icon: Activity,
+      key: 'preferences',
+      label: t('users.setup.preferences'),
+      icon: Settings,
     },
   ];
 
@@ -30,18 +38,14 @@ export function PlatformUsersSetupTier(): React.JSX.Element {
     <div className="space-y-6 text-start">
       <SubTabBar
         tabs={subTabs}
-        value={subTab}
+        value={currentSubTab}
         onChange={setSubTab}
         variant="pill"
         panelIdPrefix="platform-users-setup-tab"
       />
 
-      {subTab === 'matrix' && <PlatformPermissionMatrix />}
-      {subTab === 'logs' && (
-        <Suspense fallback={<CardSkeleton count={2} />}>
-          <PlatformActivityLogsContent />
-        </Suspense>
-      )}
+      {currentSubTab === 'permissions' && <PlatformPermissionMatrix />}
+      {currentSubTab === 'preferences' && <PlatformSecuritySettingsPanel />}
     </div>
   );
 }

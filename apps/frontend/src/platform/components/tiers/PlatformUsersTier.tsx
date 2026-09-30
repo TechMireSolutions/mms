@@ -7,12 +7,19 @@ import { PlatformUsersWorkTier } from '@/platform/components/users/PlatformUsers
 import { PlatformUsersReportsTier } from '@/platform/components/users/PlatformUsersReportsTier';
 import { PlatformUsersSetupTier } from '@/platform/components/users/PlatformUsersSetupTier';
 
+import type { PlatformUsersWorkSubTab } from '@/platform/components/users/PlatformUsersWorkTier';
+import type { PlatformUsersSetupSubTab } from '@/platform/components/users/PlatformUsersSetupTier';
+
 export type PlatformUsersSubTab = 'work' | 'reports' | 'setup';
 
 export interface PlatformUsersTierProps {
   activeSubTab?: PlatformUsersSubTab;
   onSubTabChange?: (tab: PlatformUsersSubTab) => void;
   showSubTabBar?: boolean;
+  activeWorkSubTab?: PlatformUsersWorkSubTab;
+  onWorkSubTabChange?: (tab: PlatformUsersWorkSubTab) => void;
+  activeSetupSubTab?: PlatformUsersSetupSubTab;
+  onSetupSubTabChange?: (tab: PlatformUsersSetupSubTab) => void;
 }
 
 function UsersFallback(): React.JSX.Element {
@@ -22,14 +29,18 @@ function UsersFallback(): React.JSX.Element {
 /**
  * Platform Users Tier component.
  * Features 3 tiers aligned with MMS standard architecture:
- * 1. Work — Operators & admins directory table/cards with filters, selection, and drawer
+ * 1. Work — Operators directory & audit activity logs
  * 2. Reports — Operator capabilities, security stats, and role distribution metrics
- * 3. Setup — Permissions matrix and system audit logs
+ * 3. Setup — Permissions matrix and platform security policies
  */
 export function PlatformUsersTier({
   activeSubTab = 'work',
   onSubTabChange,
   showSubTabBar = true,
+  activeWorkSubTab,
+  onWorkSubTabChange,
+  activeSetupSubTab,
+  onSetupSubTabChange,
 }: PlatformUsersTierProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -64,9 +75,19 @@ export function PlatformUsersTier({
       ) : null}
 
       <Suspense fallback={<UsersFallback />}>
-        {activeSubTab === 'work' && <PlatformUsersWorkTier />}
+        {activeSubTab === 'work' && (
+          <PlatformUsersWorkTier
+            activeSubTab={activeWorkSubTab}
+            onSubTabChange={onWorkSubTabChange}
+          />
+        )}
         {activeSubTab === 'reports' && <PlatformUsersReportsTier />}
-        {activeSubTab === 'setup' && <PlatformUsersSetupTier />}
+        {activeSubTab === 'setup' && (
+          <PlatformUsersSetupTier
+            activeSubTab={activeSetupSubTab}
+            onSubTabChange={onSetupSubTabChange}
+          />
+        )}
       </Suspense>
     </div>
   );

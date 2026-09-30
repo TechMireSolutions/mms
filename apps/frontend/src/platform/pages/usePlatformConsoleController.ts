@@ -25,7 +25,7 @@ export function usePlatformConsoleController() {
   const rawSubTab = searchParams.get('subtab');
 
   const activeTab: PlatformMainTab = useMemo(() => {
-    if (rawTab === 'users' || pathname === ROUTES.platformUsers) return 'users';
+    if ((rawTab === 'users' || pathname === ROUTES.platformUsers) && canAdmins) return 'users';
     if (rawTab === 'reports' || pathname === ROUTES.platformReports) return 'reports';
     if (rawTab === 'setup' || pathname === ROUTES.platformSystem || pathname === ROUTES.platformAdmins || pathname === ROUTES.platformErd) return 'setup';
     if (rawTab === 'work' || pathname === ROUTES.platformWorkspaces || pathname === ROUTES.platformActivityLogs) return 'work';
