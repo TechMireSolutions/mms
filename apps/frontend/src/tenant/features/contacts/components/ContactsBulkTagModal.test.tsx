@@ -3,17 +3,17 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { ContactsBulkTagModal } from "./ContactsBulkTagModal";
 
-vi.mock("@/components/ui/Modal", () => ({
-  Modal: ({ open, title, children, footer }: {
+vi.mock("@/components/ui/FormModal", () => ({
+  FormModal: ({ open, title, children, saveLabel }: {
     open: boolean;
     title: string;
     children: React.ReactNode;
-    footer: React.ReactNode;
+    saveLabel?: string;
   }) => (open ? (
     <div data-testid="modal">
       <h2>{title}</h2>
       <div>{children}</div>
-      <div>{footer}</div>
+      <button type="button">{saveLabel}</button>
     </div>
   ) : null),
 }));

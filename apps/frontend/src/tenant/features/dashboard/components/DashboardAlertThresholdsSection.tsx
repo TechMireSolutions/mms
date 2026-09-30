@@ -31,7 +31,9 @@ export function DashboardAlertThresholdsSection({
             </label>
             <Input
               id="pref-low-att"
+              name="lowAttendanceThreshold"
               type="number"
+              inputMode="numeric"
               min={1}
               max={100}
               value={lowAttendanceThreshold ?? 75}
@@ -41,7 +43,7 @@ export function DashboardAlertThresholdsSection({
                   onUpdateThreshold("lowAttendanceThreshold", val);
                 }
               }}
-              className="min-h-10 text-sm"
+              className="min-h-11 text-sm"
             />
           </div>
           <div className="space-y-1.5">
@@ -50,7 +52,9 @@ export function DashboardAlertThresholdsSection({
             </label>
             <Input
               id="pref-urgent-att"
+              name="urgentAttendanceThreshold"
               type="number"
+              inputMode="numeric"
               min={1}
               max={100}
               value={urgentAttendanceThreshold ?? 60}
@@ -60,7 +64,7 @@ export function DashboardAlertThresholdsSection({
                   onUpdateThreshold("urgentAttendanceThreshold", val);
                 }
               }}
-              className="min-h-10 text-sm"
+              className="min-h-11 text-sm"
             />
           </div>
         </div>

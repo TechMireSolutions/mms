@@ -157,6 +157,9 @@ export default function EmailIntegrationPanel(): React.JSX.Element {
                 id="email-smtp-port"
                 name="smtpPort"
                 type="number"
+                inputMode="numeric"
+                min={1}
+                max={65535}
                 value={form.smtpPort ?? 587}
                 onChange={(event) => setField('smtpPort', Number(event.target.value))}
               />

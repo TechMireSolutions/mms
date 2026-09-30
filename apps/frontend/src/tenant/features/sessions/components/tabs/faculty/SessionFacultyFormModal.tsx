@@ -48,12 +48,13 @@ export function SessionFacultyFormModal({
     <FormModal
       open={open}
       onClose={onClose}
-      title={editingFaculty ? "Edit Session Faculty" : "Add Session Faculty"}
+      title={editingFaculty ? t("faculty.form.editTitle") : t("sessions.faculty.add")}
       icon={UserCheck}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={onSave}
       saving={saving}
+      saveDisabled={saving || !facultyId || (role === "Custom" && !customRole.trim())}
     >
       <div className="space-y-4">
         <div>
@@ -71,7 +72,7 @@ export function SessionFacultyFormModal({
                     value: String(member.id),
                     label: formatFacultyDisplayName(member),
                   }))
-                : [{ value: "", label: "No active faculty found" }]
+                : [{ value: "", label: t("common.none") }]
             }
             className="w-full"
           />
@@ -88,7 +89,7 @@ export function SessionFacultyFormModal({
             onChange={onRoleChange}
             options={[
               ...COMMON_FACULTY_ROLES.map((r) => ({ value: r, label: r })),
-              { value: "Custom", label: "Custom Role..." },
+              { value: "Custom", label: t("sessions.classes.detail.schedule.custom") },
             ]}
             className="w-full"
           />
@@ -101,6 +102,7 @@ export function SessionFacultyFormModal({
             </label>
             <Input
               id="faculty-custom-role"
+              name="customRole"
               value={customRole}
               onChange={(e) => onCustomRoleChange(e.target.value)}
               placeholder={t("sessions.faculty.rolePlaceholder")}
@@ -118,8 +120,8 @@ export function SessionFacultyFormModal({
             value={status}
             onChange={(val) => onStatusChange(val as "active" | "inactive")}
             options={[
-              { value: "active", label: "Active" },
-              { value: "inactive", label: "Inactive" },
+              { value: "active", label: t("sessions.status.active") },
+              { value: "inactive", label: t("sessions.classes.detail.status.inactive") },
             ]}
             className="w-full"
           />

@@ -55,6 +55,8 @@ export function ClassDetailFeesTab({
             {fees.map((fee) => (
               <div key={fee.id} className="flex items-center gap-2">
                 <Input
+                  id={`fee-type-${fee.id}`}
+                  name={`fee-type-${fee.id}`}
                   placeholder={t('sessions.classes.detail.fees.typePlaceholder')}
                   value={fee.feeType}
                   onChange={(e) => onUpdateFee(fee.id, { feeType: e.target.value })}
@@ -65,11 +67,18 @@ export function ClassDetailFeesTab({
                     <span className="absolute start-2.5 top-2 text-xs text-muted-foreground">{currencySymbol}</span>
                   )}
                   <Input
-                    type="number"
-                    min={0}
+                    id={`fee-amount-${fee.id}`}
+                    name={`fee-amount-${fee.id}`}
+                    type="text"
+                    inputMode="decimal"
                     placeholder={t('sessions.classes.detail.amount')}
-                    value={fee.amount ?? 0}
-                    onChange={(e) => onUpdateFee(fee.id, { amount: parseFloat(e.target.value) || 0 })}
+                    value={fee.amount === 0 ? '' : String(fee.amount)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^\d*(\.\d{0,2})?$/.test(val)) {
+                        onUpdateFee(fee.id, { amount: parseFloat(val) || 0 });
+                      }
+                    }}
                     className={cn('text-xs', currencySymbol && 'ps-6')}
                   />
                 </div>
@@ -109,6 +118,8 @@ export function ClassDetailFeesTab({
             {discounts.map((discount) => (
               <div key={discount.id} className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
                 <Input
+                  id={`discount-name-${discount.id}`}
+                  name={`discount-name-${discount.id}`}
                   placeholder={t('sessions.classes.detail.discounts.namePlaceholder')}
                   value={discount.discountType}
                   onChange={(e) => onUpdateDiscount(discount.id, { discountType: e.target.value })}
@@ -116,11 +127,21 @@ export function ClassDetailFeesTab({
                 />
                 <div className="relative w-24">
                   <Input
-                    type="number"
-                    min={0}
-                    max={100}
-                    value={discount.percentage ?? 0}
-                    onChange={(e) => onUpdateDiscount(discount.id, { percentage: parseFloat(e.target.value) || 0 })}
+                    id={`discount-pct-${discount.id}`}
+                    name={`discount-pct-${discount.id}`}
+                    type="text"
+                    inputMode="decimal"
+                    placeholder="0"
+                    value={discount.percentage === 0 ? '' : String(discount.percentage)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === '' || /^\d*(\.\d{0,2})?$/.test(val)) {
+                        const num = parseFloat(val) || 0;
+                        if (num <= 100) {
+                          onUpdateDiscount(discount.id, { percentage: num });
+                        }
+                      }
+                    }}
                     className="text-xs pe-6"
                   />
                   <span className="absolute end-2.5 top-2 text-xs text-muted-foreground">%</span>

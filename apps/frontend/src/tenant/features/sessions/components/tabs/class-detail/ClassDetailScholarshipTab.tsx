@@ -39,13 +39,18 @@ export function ClassDetailScholarshipTab({
             <div className="relative">
               <Input
                 id="sch-pct"
-                type="number"
-                min={0}
-                max={100}
-                value={scholarship.percentage ?? 0}
-                onChange={(e) =>
-                  onUpdateScholarship({ percentage: parseFloat(e.target.value) || 0 })
-                }
+                name="percentage"
+                type="text"
+                inputMode="decimal"
+                placeholder="0"
+                value={scholarship.percentage === 0 ? '' : String(scholarship.percentage)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === '' || /^\d*(\.\d{0,2})?$/.test(val)) {
+                    const num = parseFloat(val) || 0;
+                    if (num <= 100) onUpdateScholarship({ percentage: num });
+                  }
+                }}
                 className="pe-6"
               />
               <span className="absolute end-3 top-2.5 text-xs text-muted-foreground">%</span>
@@ -58,6 +63,7 @@ export function ClassDetailScholarshipTab({
             </label>
             <Input
               id="sch-expiry"
+              name="expiryDate"
               type="date"
               value={scholarship.expiryDate || ''}
               onChange={(e) => onUpdateScholarship({ expiryDate: e.target.value })}
@@ -113,12 +119,17 @@ export function ClassDetailScholarshipTab({
             </label>
             <Input
               id="family-members"
-              type="number"
-              min={0}
-              value={eligibility?.familyMembers ?? 0}
-              onChange={(e) =>
-                onUpdateEligibility({ familyMembers: parseInt(e.target.value, 10) || 0 })
-              }
+              name="familyMembers"
+              type="text"
+              inputMode="numeric"
+              placeholder="0"
+              value={eligibility?.familyMembers === 0 ? '' : String(eligibility?.familyMembers ?? '')}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || /^\d+$/.test(val)) {
+                  onUpdateEligibility({ familyMembers: parseInt(val, 10) || 0 });
+                }
+              }}
               className="text-xs"
             />
           </div>
@@ -129,12 +140,17 @@ export function ClassDetailScholarshipTab({
             </label>
             <Input
               id="earning-members"
-              type="number"
-              min={0}
-              value={eligibility?.onJobMembers ?? 0}
-              onChange={(e) =>
-                onUpdateEligibility({ onJobMembers: parseInt(e.target.value, 10) || 0 })
-              }
+              name="earningMembers"
+              type="text"
+              inputMode="numeric"
+              placeholder="0"
+              value={eligibility?.onJobMembers === 0 ? '' : String(eligibility?.onJobMembers ?? '')}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || /^\d+$/.test(val)) {
+                  onUpdateEligibility({ onJobMembers: parseInt(val, 10) || 0 });
+                }
+              }}
               className="text-xs"
             />
           </div>
@@ -145,12 +161,17 @@ export function ClassDetailScholarshipTab({
             </label>
             <Input
               id="studying-siblings"
-              type="number"
-              min={0}
-              value={eligibility?.schoolGoingSiblings ?? 0}
-              onChange={(e) =>
-                onUpdateEligibility({ schoolGoingSiblings: parseInt(e.target.value, 10) || 0 })
-              }
+              name="studyingSiblings"
+              type="text"
+              inputMode="numeric"
+              placeholder="0"
+              value={eligibility?.schoolGoingSiblings === 0 ? '' : String(eligibility?.schoolGoingSiblings ?? '')}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || /^\d+$/.test(val)) {
+                  onUpdateEligibility({ schoolGoingSiblings: parseInt(val, 10) || 0 });
+                }
+              }}
               className="text-xs"
             />
           </div>

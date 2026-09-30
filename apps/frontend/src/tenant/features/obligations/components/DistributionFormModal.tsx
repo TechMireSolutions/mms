@@ -1,12 +1,14 @@
 import React, { useState } from "react";
+import { PieChart } from "lucide-react";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FormModal } from "@/components/ui/FormModal";
-import { RequiredMark } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FieldErrorMessage, RequiredMark } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DISTRIBUTION_TYPES, type ObligationDistribution } from "@/lib/data/obligationsData";
 import { type DistributionType } from "@/tenant/features/obligations/components/WakalaTypeManager";
+import { cn } from "@/lib/utils";
 
 interface DistributionFormModalProps {
   title: string;
@@ -58,14 +60,15 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
       open
       onClose={onClose}
       title={title}
+      icon={PieChart}
       cancelLabel={t("common.cancel")}
       saveLabel={t("common.save")}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={saving}
+      saveDisabled={saving || !form.name?.trim() || !form.percentage}
       error={errorMessages.length > 0 ? errorMessages : undefined}
     >
-      <div className="space-y-4">
+      <div className="space-y-4 text-start">
         <div>
           <label htmlFor="dist-name" className={FORM_LABEL}>{t("obligations.wakala.distName")}<RequiredMark /></label>
           <Input
@@ -82,9 +85,11 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
               }
               setForm({ ...form, name: event.target.value });
             }}
-            className={FORM_INPUT}
+            className={cn(FORM_INPUT, errors.name && FORM_INPUT_ERROR)}
             aria-invalid={!!errors.name}
+            aria-describedby={errors.name ? "dist-name-error" : undefined}
           />
+          <FieldErrorMessage id="dist-name-error" message={errors.name} />
         </div>
         <div>
           <label htmlFor="dist-type" className={FORM_LABEL}>{t("obligations.wakala.distType")}<RequiredMark /></label>
@@ -104,12 +109,10 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
           <Input
             id="dist-pct"
             name="percentage"
-            type="number"
+            type="text"
             inputMode="decimal"
-            min="0.01"
-            max="100"
-            step="0.01"
-            value={form.percentage || ""}
+            placeholder="0.00"
+            value={form.percentage === undefined || form.percentage === null ? "" : String(form.percentage)}
             onChange={(event) => {
               if (errors.pct) {
                 setErrors((prev) => {
@@ -118,13 +121,19 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
                   return next;
                 });
               }
-              setForm({ ...form, percentage: parseFloat(event.target.value) });
+              const val = event.target.value;
+              if (val === "" || /^\d*(\.\d{0,2})?$/.test(val)) {
+                setForm({ ...form, percentage: val === "" ? ("" as unknown as number) : parseFloat(val) || 0 });
+              }
             }}
-            className={FORM_INPUT}
+            className={cn(FORM_INPUT, errors.pct && FORM_INPUT_ERROR)}
             aria-invalid={!!errors.pct}
+            aria-describedby={errors.pct ? "dist-pct-error" : undefined}
           />
+          <FieldErrorMessage id="dist-pct-error" message={errors.pct} />
         </div>
       </div>
     </FormModal>
   );
 }
+

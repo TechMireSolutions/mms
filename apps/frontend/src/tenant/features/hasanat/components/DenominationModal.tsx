@@ -81,6 +81,7 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
       cancelLabel={t('common.cancel')}
       saveLabel={t('hasanat.denominations.save')}
       saving={submitting}
+      saveDisabled={submitting}
       error={submitError || undefined}
       onSave={handleSave}
     >

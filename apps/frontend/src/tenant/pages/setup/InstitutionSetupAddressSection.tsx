@@ -38,6 +38,7 @@ export function InstitutionSetupAddressSection({
           </Label>
           <Input
             id="setup-addressLine1"
+            name="addressLine1"
             className={FORM_INPUT}
             value={data.addressLine1 || ''}
             onChange={(e) => updateField('addressLine1', e.target.value)}
@@ -53,6 +54,7 @@ export function InstitutionSetupAddressSection({
           <Label htmlFor="setup-addressLine2">{t('branding.addressLine2')}</Label>
           <Input
             id="setup-addressLine2"
+            name="addressLine2"
             className={FORM_INPUT}
             value={data.addressLine2 || ''}
             onChange={(e) => updateField('addressLine2', e.target.value)}
@@ -67,6 +69,7 @@ export function InstitutionSetupAddressSection({
             </Label>
             <Input
               id="setup-city"
+              name="city"
               className={FORM_INPUT}
               value={data.city || ''}
               onChange={(e) => updateField('city', e.target.value)}
@@ -82,6 +85,7 @@ export function InstitutionSetupAddressSection({
             <Label htmlFor="setup-region">{t('branding.region')}</Label>
             <Input
               id="setup-region"
+              name="region"
               className={FORM_INPUT}
               value={data.region || ''}
               onChange={(e) => updateField('region', e.target.value)}
@@ -95,6 +99,7 @@ export function InstitutionSetupAddressSection({
             </Label>
             <Input
               id="setup-postalCode"
+              name="postalCode"
               className={FORM_INPUT}
               value={data.postalCode || ''}
               onChange={(e) => updateField('postalCode', e.target.value)}
@@ -112,6 +117,7 @@ export function InstitutionSetupAddressSection({
             </Label>
             <Input
               id="setup-country"
+              name="country"
               className={FORM_INPUT}
               value={data.country || ''}
               onChange={(e) => updateField('country', e.target.value)}

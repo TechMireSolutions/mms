@@ -69,6 +69,7 @@ export function ClassDetailGeneralTab({
             id="class-min-age"
             name="minAge"
             type="number"
+            inputMode="numeric"
             min={0}
             max={100}
             value={classDraft.minAge ?? 0}
@@ -82,6 +83,7 @@ export function ClassDetailGeneralTab({
             id="class-max-age"
             name="maxAge"
             type="number"
+            inputMode="numeric"
             min={0}
             max={100}
             value={classDraft.maxAge ?? 0}
@@ -96,6 +98,7 @@ export function ClassDetailGeneralTab({
           <label className={FORM_LABEL} htmlFor="class-calc-date">{t('sessions.classes.detail.ageCalculationDate')}</label>
           <Input
             id="class-calc-date"
+            name="ageCalculationDate"
             type="date"
             value={classDraft.ageCalculationDate}
             onChange={(e) => updateDraft('ageCalculationDate', e.target.value)}
@@ -110,7 +113,9 @@ export function ClassDetailGeneralTab({
           </label>
           <Input
             id="class-capacity"
+            name="maxStudents"
             type="number"
+            inputMode="numeric"
             min={0}
             value={classDraft.maxStudents ?? 0}
             onChange={(e) => updateDraft('maxStudents', parseInt(e.target.value, 10) || 0)}
@@ -121,6 +126,7 @@ export function ClassDetailGeneralTab({
           <label className={FORM_LABEL} htmlFor="class-deadline">{t('sessions.classes.detail.enrollmentDeadline')}</label>
           <Input
             id="class-deadline"
+            name="enrollmentDeadline"
             type="date"
             value={classDraft.enrollmentDeadline}
             onChange={(e) => updateDraft('enrollmentDeadline', e.target.value)}

@@ -50,10 +50,13 @@ export function BudgetAddModal({
       saveLabel={t("common.save")}
       onSave={onSave}
       saving={saving}
+      saveDisabled={saving || !targetClassId || !amount || amount <= 0}
     >
       <div className="space-y-4">
         <div>
-          <label className={FORM_LABEL} htmlFor="target-class">Target Class</label>
+          <label className={FORM_LABEL} htmlFor="target-class">
+            {t("sessions.classes.fallbackName")}
+          </label>
           <FormSelect
             id="target-class"
             name="targetClassId"
@@ -65,9 +68,12 @@ export function BudgetAddModal({
         </div>
 
         <div>
-          <label className={FORM_LABEL} htmlFor="budget-detail">Detail / Description</label>
+          <label className={FORM_LABEL} htmlFor="budget-detail">
+            {t("sessions.budget.form.note")}
+          </label>
           <Input
             id="budget-detail"
+            name="detail"
             value={detail}
             onChange={(e) => onDetailChange(e.target.value)}
             placeholder={t("sessions.budget.detailPlaceholder")}
@@ -82,13 +88,21 @@ export function BudgetAddModal({
           </label>
           <Input
             id="budget-amount"
-            type="number"
-            min={0}
-            value={amount || ""}
-            onChange={(e) => onAmountChange(parseFloat(e.target.value) || 0)}
+            name="amount"
+            type="text"
+            inputMode="decimal"
+            placeholder="0.00"
+            value={amount ? String(amount) : ""}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === "" || /^\d*(\.\d{0,2})?$/.test(val)) {
+                onAmountChange(parseFloat(val) || 0);
+              }
+            }}
           />
         </div>
       </div>
     </FormModal>
   );
 }
+

@@ -80,11 +80,13 @@ export function ContactsPreferencesDuplicateSection({
         </fieldset>
 
         <Field
+          id="namePrefixesToIgnore"
           label={t("contacts.setup.namePrefixesToIgnore")}
           hint={t("contacts.setup.namePrefixesToIgnoreDesc")}
         >
           <Input
             id="namePrefixesToIgnore"
+            name="namePrefixesToIgnore"
             className={FORM_INPUT}
             value={namePrefixesDraft}
             onChange={(e) => {
@@ -101,10 +103,12 @@ export function ContactsPreferencesDuplicateSection({
         </Field>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <Field label={t("contacts.setup.duplicateThresholdHigh")}>
+          <Field id="dupThresholdHigh" label={t("contacts.setup.duplicateThresholdHigh")}>
             <Input
               id="dupThresholdHigh"
+              name="duplicateDetectionThresholdHigh"
               type="number"
+              inputMode="numeric"
               min={1}
               max={100}
               className={FORM_INPUT}
@@ -118,10 +122,12 @@ export function ContactsPreferencesDuplicateSection({
               }}
             />
           </Field>
-          <Field label={t("contacts.setup.duplicateThresholdMedium")}>
+          <Field id="dupThresholdMedium" label={t("contacts.setup.duplicateThresholdMedium")}>
             <Input
               id="dupThresholdMedium"
+              name="duplicateDetectionThresholdMedium"
               type="number"
+              inputMode="numeric"
               min={1}
               max={100}
               className={FORM_INPUT}

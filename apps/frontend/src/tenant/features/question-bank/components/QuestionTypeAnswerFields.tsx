@@ -104,7 +104,7 @@ export function QuestionTypeAnswerFields({
           <Input
             id="qb-numeric-answer"
             name="numericAnswer"
-            type="number"
+            type="text"
             inputMode="decimal"
             className={FORM_INPUT}
             value={answer}
@@ -116,10 +116,8 @@ export function QuestionTypeAnswerFields({
           <Input
             id="qb-numeric-tolerance"
             name="numericTolerance"
-            type="number"
+            type="text"
             inputMode="decimal"
-            min={0}
-            step="any"
             className={FORM_INPUT}
             value={tolerance}
             onChange={(e) => onOptionsChange(e.target.value ? [e.target.value] : [])}

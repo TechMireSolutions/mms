@@ -145,7 +145,7 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
       saving={submitting}
       error={submitError || undefined}
       onSave={handleSave}
-      saveDisabled={totalAvailable === 0}
+      saveDisabled={totalAvailable === 0 || submitting}
     >
       <DistributeModalFields
         denoms={denoms}

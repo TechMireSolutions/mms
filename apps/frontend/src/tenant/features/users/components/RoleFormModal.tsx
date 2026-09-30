@@ -127,7 +127,7 @@ export function RoleFormModal({
         cancelLabel={t('users.cancel')}
         saveLabel={t('users.permissions.saveRole')}
         onSave={handleSave}
-        saveDisabled={!formDirty}
+        saveDisabled={!formDirty || !name.trim()}
         error={error || undefined}
       >
         <div className="space-y-5">

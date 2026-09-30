@@ -55,13 +55,13 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
         <p className="text-sm text-muted-foreground">{t('faculty.designations.setupHint')}</p>
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label={t('faculty.designations.name')} id="designation-name" required>
-            <Input id="designation-name" className={FORM_INPUT} value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
+            <Input id="designation-name" name="name" className={FORM_INPUT} value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
           </Field>
           <Field label={t('faculty.designations.code')} id="designation-code" required>
-            <Input id="designation-code" className={FORM_INPUT} value={draft.code} onChange={(event) => setDraft((current) => ({ ...current, code: event.target.value }))} />
+            <Input id="designation-code" name="code" className={FORM_INPUT} value={draft.code} onChange={(event) => setDraft((current) => ({ ...current, code: event.target.value }))} />
           </Field>
           <Field label={t('faculty.form.hierarchyRank')} id="designation-rank" required>
-            <Input id="designation-rank" className={FORM_INPUT} type="number" min={1} max={99} value={draft.hierarchyRank} onChange={(event) => setDraft((current) => ({ ...current, hierarchyRank: Number(event.target.value) || 1 }))} />
+            <Input id="designation-rank" name="hierarchyRank" className={FORM_INPUT} type="number" inputMode="numeric" min={1} max={99} value={draft.hierarchyRank} onChange={(event) => setDraft((current) => ({ ...current, hierarchyRank: Number(event.target.value) || 1 }))} />
           </Field>
           <Field label={t('faculty.designations.active')} id="designation-active">
             <div className="flex min-h-11 items-center gap-3">
@@ -89,8 +89,8 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
           </Field>
         </div>
         <div className="flex flex-wrap justify-end gap-2">
-          {draft.id && <Button type="button" variant="outline" onClick={reset}>{t('common.cancel')}</Button>}
-          <Button type="button" onClick={() => void submit()} disabled={save.isPending || !draft.name.trim() || !draft.code.trim()}>
+          {draft.id && <Button type="button" variant="outline" className="min-h-11" onClick={reset}>{t('common.cancel')}</Button>}
+          <Button type="button" className="min-h-11" onClick={() => void submit()} disabled={save.isPending || !draft.name.trim() || !draft.code.trim()}>
             <Plus className="size-4" aria-hidden />
             {t('common.save')}
           </Button>

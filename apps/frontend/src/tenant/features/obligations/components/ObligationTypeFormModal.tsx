@@ -67,7 +67,7 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
       saveLabel={t("common.save")}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={saving}
+      saveDisabled={saving || !form.name?.trim()}
       error={errorMessages.length > 0 ? errorMessages : undefined}
     >
       <div className="space-y-4">

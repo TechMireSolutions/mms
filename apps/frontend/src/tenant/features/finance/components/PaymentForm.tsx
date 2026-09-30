@@ -115,7 +115,14 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       saveLabel={t("finance.recordPayment")}
       onSave={handleSave}
       saving={saving}
-      saveDisabled={saving}
+      saveDisabled={
+        saving ||
+        !invoice ||
+        !paymentDraft.amount ||
+        Number(paymentDraft.amount) <= 0 ||
+        (balance > 0 && Number(paymentDraft.amount) > balance) ||
+        !paymentDraft.date
+      }
       error={Object.values(errors)[0]}
       footerStart={footerStart || undefined}
     >

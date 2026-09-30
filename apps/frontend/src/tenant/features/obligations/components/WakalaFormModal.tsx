@@ -30,7 +30,12 @@ export function WakalaFormModal(props: WakalaFormModalProps): React.JSX.Element 
         saveLabel={state.step === 3 ? t("common.save") : "Next"}
         onSave={state.handleNextOrSave}
         saving={state.saving}
-        saveDisabled={state.saving}
+        saveDisabled={
+          state.saving ||
+          (state.step === 1 && (!state.selectedMujtahidId || !state.selectedObTypeId)) ||
+          (state.step === 2 && !state.selectedRepId) ||
+          (state.step === 3 && state.totalPercentage > 100)
+        }
         error={allErrors.length > 0 ? allErrors : undefined}
       >
         <div className="space-y-5">

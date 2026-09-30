@@ -108,7 +108,7 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
       saving={submitting}
       error={submitError || undefined}
       onSave={handleSave}
-      saveDisabled={activeDistributions.length === 0}
+      saveDisabled={activeDistributions.length === 0 || submitting}
     >
       <div className="space-y-4">
         <div>

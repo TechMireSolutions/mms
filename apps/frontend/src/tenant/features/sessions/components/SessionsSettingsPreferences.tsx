@@ -29,6 +29,7 @@ export function SessionsSettingsPreferences({
             id="defaultDuration"
             name="defaultDuration"
             type="number"
+            inputMode="numeric"
             min="1"
             className={FORM_INPUT}
             value={settingsDraft.defaultDuration || ""}

@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { GraduationCap, Calendar, Coffee, Award, Wallet } from 'lucide-react';
 import { FormModal } from '@/components/ui/FormModal';
-import { SubTabBar } from '@/components/ui/SubTabBar';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useFacultyContractList, useFacultyByIds } from '@/tenant/hooks/collections/faculty';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
@@ -94,7 +93,7 @@ export function ClassDetailModal({
     return Array.from(map.values());
   }, [facultyList, selectedFaculty]);
 
-  const subTabs = useMemo(
+  const formTabs = useMemo(
     () => TABS.map((tab) => ({ key: tab.id, label: t(tab.labelKey), icon: tab.icon })),
     [t],
   );
@@ -138,20 +137,24 @@ export function ClassDetailModal({
   };
 
   return (
-    <FormModal
+    <FormModal<ClassDetailTabId>
       open={open}
       onClose={onClose}
       title={classDraft.name ? t('sessions.classes.detail.title', { name: classDraft.name }) : t('sessions.classes.detail.newTitle')}
       icon={GraduationCap}
+      tall
+      tabs={formTabs}
+      activeTab={activeTab}
+      onTabChange={setActiveTab}
+      saveOnTabChange={false}
       cancelLabel={t('common.cancel')}
       saveLabel={t('common.save')}
       onSave={handleSave}
       saving={saving}
+      saveDisabled={saving || !classDraft.name?.trim()}
       error={Object.values(errors)[0]}
     >
       <div className="max-w-3xl space-y-4">
-        <SubTabBar tabs={subTabs} value={activeTab} onChange={setActiveTab} />
-
         <ClassDetailTabBody
           activeTab={activeTab}
           classDraft={classDraft}
@@ -186,3 +189,4 @@ export function ClassDetailModal({
     </FormModal>
   );
 }
+

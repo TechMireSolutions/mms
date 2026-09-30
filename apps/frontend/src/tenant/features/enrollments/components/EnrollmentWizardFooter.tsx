@@ -36,7 +36,7 @@ export function EnrollmentWizardFooter({
           <Button
             onClick={onCancel}
             variant="outline"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors h-auto"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors min-h-11 h-auto"
           >
             <X className="w-3.5 h-3.5" aria-hidden="true" /> {t('common.cancel')}
           </Button>
@@ -44,7 +44,7 @@ export function EnrollmentWizardFooter({
           <Button
             onClick={onPrevious}
             variant="outline"
-            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-foreground hover:bg-muted transition-colors h-auto"
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-foreground hover:bg-muted transition-colors min-h-11 h-auto"
           >
             <ArrowLeft className="w-3.5 h-3.5" aria-hidden="true" /> {t('common.previous')}
           </Button>
@@ -58,7 +58,7 @@ export function EnrollmentWizardFooter({
           <Button
             onClick={onNext}
             disabled={!canNext}
-            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors h-auto"
+            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors min-h-11 h-auto"
           >
             {t('common.next')} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
           </Button>
@@ -66,7 +66,7 @@ export function EnrollmentWizardFooter({
           <Button
             onClick={() => { void onSubmit(); }}
             disabled={!canConfirm || submitting}
-            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors h-auto"
+            className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors min-h-11 h-auto"
           >
             <CheckCircle2 className="w-3.5 h-3.5" aria-hidden="true" /> {t('enrollments.new')}
           </Button>

@@ -53,6 +53,7 @@ export function InstitutionSetupFormSections({
             </Label>
             <Input
               id="setup-madrasaName"
+              name="madrasaName"
               className={FORM_INPUT}
               value={data.madrasaName}
               onChange={(e) => updateField('madrasaName', e.target.value)}
@@ -74,6 +75,7 @@ export function InstitutionSetupFormSections({
             </Label>
             <Input
               id="setup-tagline"
+              name="tagline"
               className={FORM_INPUT}
               value={data.tagline}
               onChange={(e) => updateField('tagline', e.target.value)}
@@ -101,6 +103,7 @@ export function InstitutionSetupFormSections({
             </Label>
             <Input
               id="setup-email"
+              name="email"
               type="email"
               className={FORM_INPUT}
               value={data.email}
@@ -119,7 +122,10 @@ export function InstitutionSetupFormSections({
             </Label>
             <Input
               id="setup-phone"
+              name="phone"
               type="tel"
+              inputMode="tel"
+              autoComplete="tel"
               className={FORM_INPUT}
               value={data.phone}
               onChange={(e) => updateField('phone', e.target.value)}
@@ -135,6 +141,7 @@ export function InstitutionSetupFormSections({
             <Label htmlFor="setup-website">{t('branding.website')}</Label>
             <Input
               id="setup-website"
+              name="website"
               type="url"
               className={FORM_INPUT}
               value={data.website}

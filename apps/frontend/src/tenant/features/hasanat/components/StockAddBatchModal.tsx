@@ -101,7 +101,7 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
       saving={submitting}
       error={submitError || undefined}
       onSave={handleSave}
-      saveDisabled={denoms.length === 0}
+      saveDisabled={denoms.length === 0 || submitting}
     >
       <div className="space-y-4">
         <div>

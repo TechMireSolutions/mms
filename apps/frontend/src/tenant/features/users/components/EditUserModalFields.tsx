@@ -86,6 +86,7 @@ export function EditUserModalFields({
                   aria-pressed={field.value === workspaceRole.id}
                   variant={field.value === workspaceRole.id ? 'default' : 'outline'}
                   onClick={() => field.onChange(workspaceRole.id)}
+                  className="min-h-11"
                 >
                   {workspaceRole.customLabel?.trim() || t(workspaceRole.labelKey)}
                 </Button>

@@ -33,6 +33,7 @@ const ExamForm = (function ExamForm({
           error={form.submitError}
           onSave={form.handleSave}
           saving={form.saving}
+          saveDisabled={form.saving || !form.valid}
         >
           <ExaminationFormFields
             t={form.t}

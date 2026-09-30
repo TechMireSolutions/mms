@@ -56,7 +56,7 @@ export function InviteUserModal({
   });
 
   const watchedContactId = form.watch('contactId');
-  const { data: selectedContact } = useContactById(
+  const { data: selectedContact, isLoading: isLoadingContact } = useContactById(
     watchedContactId ? String(watchedContactId) : undefined,
     Boolean(watchedContactId),
   );
@@ -110,6 +110,7 @@ export function InviteUserModal({
         await handleSave();
       }}
       saving={submitting}
+      saveDisabled={submitting || !watchedContactId || isLoadingContact}
     >
       <Form {...form}>
         <form className="space-y-4" onSubmit={handleSave}>

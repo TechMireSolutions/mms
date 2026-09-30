@@ -71,40 +71,57 @@ export function WakalaStep3Distribution({
             {initialDistributions.map((row) => (
               <div
                 key={row.id}
-                className="flex items-center gap-2 rounded-lg border border-border p-2 bg-background"
+                className="flex items-center gap-2 rounded-lg border border-border p-2 bg-background flex-wrap sm:flex-nowrap"
               >
                 <Input
+                  id={`wakala-dist-name-${row.id}`}
+                  name={`wakala-dist-name-${row.id}`}
                   placeholder={t("obligations.wakala.namePlaceholder")}
+                  aria-label={t("obligations.wakala.distName")}
                   value={row.name}
                   onChange={(e) => onUpdateRow(row.id, { name: e.target.value })}
-                  className="flex-1 text-xs h-9"
+                  className="flex-1 text-xs min-h-11"
                 />
-                <div className="w-20">
+                <div className="w-24">
                   <Input
-                    type="number"
-                    min={0}
-                    max={100}
+                    id={`wakala-dist-pct-${row.id}`}
+                    name={`wakala-dist-pct-${row.id}`}
+                    type="text"
+                    inputMode="decimal"
                     placeholder="%"
-                    value={row.percentage || ""}
-                    onChange={(e) => onUpdateRow(row.id, { percentage: Number(e.target.value) })}
-                    className="text-xs h-9"
+                    aria-label={t("obligations.wakala.distPct")}
+                    value={row.percentage === undefined || row.percentage === null ? "" : String(row.percentage)}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      if (val === "" || /^\d*(\.\d{0,2})?$/.test(val)) {
+                        const num = parseFloat(val) || 0;
+                        if (num <= 100) {
+                          onUpdateRow(row.id, { percentage: val === "" ? ("" as unknown as number) : num });
+                        }
+                      }
+                    }}
+                    className="text-xs min-h-11"
                   />
                 </div>
                 <FormSelect
+                  id={`wakala-dist-type-${row.id}`}
+                  name={`wakala-dist-type-${row.id}`}
+                  aria-label={t("obligations.wakala.distType")}
                   value={row.type}
                   onChange={(val) => onUpdateRow(row.id, { type: val as "Income" | "Liability" })}
                   options={[
                     { value: "Income", label: t("obligations.distribution.income") },
                     { value: "Liability", label: t("obligations.distribution.liability") },
                   ]}
-                  className="w-28 text-xs"
+                  className="w-28 text-xs min-h-11"
                 />
                 <Button
                   type="button"
                   variant="ghost"
                   size="icon"
+                  aria-label={t("common.delete")}
                   onClick={() => onRemoveRow(row.id)}
-                  className="h-8 w-8 text-destructive hover:text-destructive"
+                  className="min-h-11 min-w-11 text-destructive hover:text-destructive flex items-center justify-center"
                 >
                   <Trash2 className="h-4 w-4" />
                 </Button>
@@ -118,7 +135,7 @@ export function WakalaStep3Distribution({
           variant="outline"
           size="sm"
           onClick={onAddRow}
-          className="w-full flex items-center justify-center gap-1.5 text-xs h-9 border-dashed"
+          className="w-full flex items-center justify-center gap-1.5 text-xs min-h-11 border-dashed"
         >
           <Plus className="h-3.5 w-3.5" /> {t("obligations.wakala.addDistribution")}
         </Button>

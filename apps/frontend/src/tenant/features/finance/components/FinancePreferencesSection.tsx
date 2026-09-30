@@ -70,10 +70,9 @@ export function FinancePreferencesSection({
           <Input
             id="late-fee"
             name="lateFeePercent"
-            type="number"
-            inputMode="numeric"
-            min="0"
-            max="100"
+            type="text"
+            inputMode="decimal"
+            placeholder="0"
             className={FORM_INPUT}
             value={settingsDraft.lateFeePercent || ""}
             onChange={(event) => upd("lateFeePercent", event.target.value)}
@@ -84,10 +83,9 @@ export function FinancePreferencesSection({
           <Input
             id="tax-rate"
             name="taxRate"
-            type="number"
-            inputMode="numeric"
-            min="0"
-            max="100"
+            type="text"
+            inputMode="decimal"
+            placeholder="0"
             className={FORM_INPUT}
             value={settingsDraft.taxRate || ""}
             onChange={(event) => upd("taxRate", event.target.value)}

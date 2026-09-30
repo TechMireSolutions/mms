@@ -60,7 +60,7 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
             </motion.div>
           </AnimatePresence>
           <div className="mt-6 flex w-full items-center justify-between gap-2">
-            <Button type="button" variant="outline" onClick={step === 1 ? onClose : handleBack}>
+            <Button type="button" variant="outline" className="min-h-11" onClick={step === 1 ? onClose : handleBack}>
               {step === 1 ? <X className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
               {step === 1 ? t('users.cancel') : t('users.addBack')}
             </Button>
@@ -79,11 +79,11 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
               ))}
             </div>
             {step < 3 ? (
-              <Button type="button" onClick={handleNext}>
+              <Button type="button" className="min-h-11" onClick={handleNext}>
                 {t('users.addNext')} <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             ) : (
-              <Button type="button" onClick={() => { void handleSubmit(); }} disabled={submitting}>
+              <Button type="button" className="min-h-11" onClick={() => { void handleSubmit(); }} disabled={submitting}>
                 {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
                 {submitting ? t('users.addCreating') : t('users.addCreate')}
               </Button>

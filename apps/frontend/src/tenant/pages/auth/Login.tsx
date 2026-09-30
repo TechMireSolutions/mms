@@ -100,6 +100,7 @@ export default function Login(): React.ReactElement {
               <label htmlFor={rememberFieldId} className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg">
                 <Checkbox
                   id={rememberFieldId}
+                  name="rememberMe"
                   checked={rememberMe}
                   disabled={isBusy}
                   onCheckedChange={handleRememberMeChange}

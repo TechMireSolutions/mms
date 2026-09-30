@@ -1,8 +1,7 @@
 import type React from "react";
 import { useState } from "react";
-import { BookOpen, Loader2 } from "lucide-react";
-import { Modal } from "@/components/ui/Modal";
-import { Button } from "@/components/ui/button";
+import { BookOpen } from "lucide-react";
+import { FormModal } from "@/components/ui/FormModal";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useSessions, useSessionsCollection } from "@/tenant/hooks/collections/sessions";
 import type { StudentsBulkEnrollBody } from "@mms/shared";
@@ -53,8 +52,7 @@ export function StudentsBulkEnrollModal({
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSave = async () => {
     if (selectedSessionIds.length === 0) return;
     await onConfirm({ sessionIds: selectedSessionIds, mode });
     setSelectedSessionIds([]);
@@ -62,41 +60,20 @@ export function StudentsBulkEnrollModal({
   };
 
   return (
-    <Modal
+    <FormModal
       open={open}
       onClose={onClose}
       title={t("students.bulkEnrollTitle")}
       icon={BookOpen}
       size="md"
-      footer={
-        <>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={onClose}
-            disabled={isPending}
-            className="min-h-11 px-4 font-medium cursor-pointer"
-          >
-            {t("common.cancel")}
-          </Button>
-          <Button
-            type="button"
-            onClick={handleSubmit}
-            disabled={isPending || selectedSessionIds.length === 0}
-            className="flex items-center gap-2 px-5 min-h-11 font-semibold cursor-pointer"
-          >
-            {isPending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <BookOpen className="w-4 h-4" />
-            )}
-            <span>{t("students.bulkEnroll")}</span>
-          </Button>
-        </>
-      }
+      cancelLabel={t("common.cancel")}
+      saveLabel={t("students.bulkEnroll")}
+      onSave={handleSave}
+      saving={isPending}
+      saveDisabled={isPending || selectedSessionIds.length === 0}
     >
-      <form onSubmit={handleSubmit} className="space-y-5">
-        <p className="text-sm text-muted-foreground">
+      <div className="space-y-5 text-start">
+        <p className="text-sm text-muted-foreground m-0">
           {t("students.bulkEnrollDesc", { count: selectedCount })}
         </p>
 
@@ -156,7 +133,8 @@ export function StudentsBulkEnrollModal({
           onToggleSession={toggleSession}
           onSelectAll={handleSelectAll}
         />
-      </form>
-    </Modal>
+      </div>
+    </FormModal>
   );
 }
+

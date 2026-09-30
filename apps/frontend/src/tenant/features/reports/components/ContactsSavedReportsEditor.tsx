@@ -2,6 +2,7 @@ import React from "react";
 import type { ContactsSavedReportShareScope, WorkspaceUser } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
 import { FormModal } from "@/components/ui/FormModal";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -118,6 +119,8 @@ export function ContactsSavedReportsEditor({
           <Label htmlFor="saved-report-name">{t("contacts.savedReports.nameLabel")}</Label>
           <Input
             id="saved-report-name"
+            name="name"
+            className={FORM_INPUT}
             value={name}
             onChange={(event) => onNameChange(event.target.value)}
             placeholder={t("contacts.savedReports.namePlaceholder")}
@@ -128,6 +131,8 @@ export function ContactsSavedReportsEditor({
           <Label htmlFor="saved-report-search">{searchLabel}</Label>
           <Input
             id="saved-report-search"
+            name="search"
+            className={FORM_INPUT}
             value={search}
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={t("contacts.savedReports.searchPlaceholder")}
@@ -137,6 +142,7 @@ export function ContactsSavedReportsEditor({
           <Label htmlFor="saved-report-share-scope">{t("contacts.savedReports.shareScopeLabel")}</Label>
           <FormSelect
             id="saved-report-share-scope"
+            name="shareScope"
             value={shareScope}
             onChange={(value) => onShareScopeChange(value as ContactsSavedReportShareScope)}
             options={shareScopeOptions.map((scope) => ({
