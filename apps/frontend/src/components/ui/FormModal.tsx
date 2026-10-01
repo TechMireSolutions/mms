@@ -15,11 +15,9 @@ export interface FormModalProps<K extends string = string> extends ModalProps<K>
   saveOnTabChange?: boolean;
 }
 
-let warned = false;
-
 /**
- * @deprecated FormModal is deprecated and consolidated into Modal.
- * Use `Modal` from `@/components/ui/Modal` directly.
+ * Canonical accessible FormModal primitive supporting form headers, tab headers,
+ * form footers, progress indicators, dirty-state validation, and tall scrollable layouts.
  */
 export function FormModal<K extends string = string>({
   open,
@@ -55,14 +53,9 @@ export function FormModal<K extends string = string>({
   onBuilderModeChange,
   priority = false,
   saveOnTabChange = true,
+  formId,
   children,
 }: FormModalProps<K>): React.JSX.Element | null {
-  if (process.env.NODE_ENV !== 'production' && !warned) {
-    warned = true;
-    console.warn(
-      '[MMS Deprecation] `FormModal` is deprecated. Use `Modal` from `@/components/ui/Modal` directly.',
-    );
-  }
 
   const handleTabChange = async (nextTab: K) => {
     if (nextTab === activeTab) return;
@@ -123,6 +116,7 @@ export function FormModal<K extends string = string>({
       savedLabel={savedLabel}
       footerStart={footerStart}
       hideFooter={hideFooter || builderMode}
+      formId={formId}
     >
       {children}
     </Modal>

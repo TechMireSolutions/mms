@@ -45,11 +45,11 @@ export function BrandSaveCustomPresetModal({
             {t("common.cancel")}
           </Button>
           <Button
-            type="button"
+            type="submit"
+            form="brand-save-custom-preset-form"
             variant="default"
             size="sm"
             disabled={!presetNameDraft.trim()}
-            onClick={onSave}
             className="min-h-10 px-4 text-xs font-semibold"
           >
             {t("common.save")}
@@ -57,7 +57,15 @@ export function BrandSaveCustomPresetModal({
         </div>
       }
     >
-      <div className="space-y-4 py-1">
+      <form
+        id="brand-save-custom-preset-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (presetNameDraft.trim()) onSave();
+        }}
+        className="space-y-4 py-1"
+      >
         <div className="flex items-center gap-3 p-3 rounded-xl border border-border/80 bg-muted/30">
           <div className="flex items-center -space-x-2 rtl:space-x-reverse">
             <span
@@ -87,18 +95,12 @@ export function BrandSaveCustomPresetModal({
             id="preset-name-input"
             value={presetNameDraft}
             onChange={(e) => onPresetNameDraftChange(e.target.value)}
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                onSave();
-              }
-            }}
             placeholder={t("theme.presetNamePlaceholder")}
             autoFocus
             className="min-h-11 h-11 text-xs"
           />
         </div>
-      </div>
+      </form>
     </Modal>
   );
 }

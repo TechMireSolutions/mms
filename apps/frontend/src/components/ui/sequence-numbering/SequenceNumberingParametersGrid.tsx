@@ -88,7 +88,8 @@ export function SequenceNumberingParametersGrid({
         <Input
           id="sequence-digits"
           name="sequence-digits"
-          type="number"
+          type="text"
+          inputMode="numeric"
           min="2"
           max="8"
           className={FORM_INPUT}

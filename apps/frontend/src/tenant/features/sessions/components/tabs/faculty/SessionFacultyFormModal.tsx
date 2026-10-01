@@ -2,7 +2,7 @@ import React from "react";
 import { UserCheck } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatFacultyDisplayName, type FacultyMember } from "@mms/shared";
@@ -55,12 +55,20 @@ export function SessionFacultyFormModal({
       onSave={onSave}
       saving={saving}
       saveDisabled={saving || !facultyId || (role === "Custom" && !customRole.trim())}
+      formId="session-faculty-form"
     >
-      <div className="space-y-4">
-        <div>
-          <label className={FORM_LABEL} htmlFor="faculty-member">
-            {t("sessions.faculty.selectFaculty")}
-          </label>
+      <form
+        id="session-faculty-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!saving && facultyId && !(role === "Custom" && !customRole.trim())) {
+            void onSave();
+          }
+        }}
+        className="space-y-4"
+      >
+        <Field id="faculty-member" label={t("sessions.faculty.selectFaculty")}>
           <FormSelect
             id="faculty-member"
             name="facultyId"
@@ -76,12 +84,9 @@ export function SessionFacultyFormModal({
             }
             className="w-full"
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className={FORM_LABEL} htmlFor="faculty-role">
-            {t("sessions.faculty.role")}
-          </label>
+        <Field id="faculty-role" label={t("sessions.faculty.role")}>
           <FormSelect
             id="faculty-role"
             name="role"
@@ -93,13 +98,10 @@ export function SessionFacultyFormModal({
             ]}
             className="w-full"
           />
-        </div>
+        </Field>
 
         {role === "Custom" && (
-          <div>
-            <label className={FORM_LABEL} htmlFor="faculty-custom-role">
-              {t("sessions.faculty.customRoleName")}
-            </label>
+          <Field id="faculty-custom-role" label={t("sessions.faculty.customRoleName")}>
             <Input
               id="faculty-custom-role"
               name="customRole"
@@ -107,13 +109,10 @@ export function SessionFacultyFormModal({
               onChange={(e) => onCustomRoleChange(e.target.value)}
               placeholder={t("sessions.faculty.rolePlaceholder")}
             />
-          </div>
+          </Field>
         )}
 
-        <div>
-          <label className={FORM_LABEL} htmlFor="faculty-status">
-            {t("sessions.faculty.status")}
-          </label>
+        <Field id="faculty-status" label={t("sessions.faculty.status")}>
           <FormSelect
             id="faculty-status"
             name="status"
@@ -125,8 +124,8 @@ export function SessionFacultyFormModal({
             ]}
             className="w-full"
           />
-        </div>
-      </div>
+        </Field>
+      </form>
     </FormModal>
   );
 }

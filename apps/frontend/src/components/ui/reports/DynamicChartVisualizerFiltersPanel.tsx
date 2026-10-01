@@ -57,6 +57,7 @@ export function DynamicChartVisualizerFiltersPanel({
                 value={rule.field}
                 onChange={(val) => onUpdateFilter(rule.id, { field: val })}
                 className="min-w-0 flex-1"
+                aria-label={t("contacts.sync.conflictField")}
                 options={activeMeta.fields.map((metadataField) => ({
                   value: metadataField.value,
                   label: getFieldLabel(metadataField.value, metadataField.label, t),
@@ -67,6 +68,7 @@ export function DynamicChartVisualizerFiltersPanel({
                 value={rule.operator}
                 onChange={(val) => onUpdateFilter(rule.id, { operator: val as FilterRule["operator"] })}
                 className="w-full font-medium sm:w-24"
+                aria-label={t("reports.widgets.builder.operator")}
                 options={[
                   { value: "equals", label: "=" },
                   { value: "contains", label: "like" },
@@ -85,6 +87,7 @@ export function DynamicChartVisualizerFiltersPanel({
                 value={rule.value}
                 onChange={(event) => onUpdateFilter(rule.id, { value: event.target.value })}
                 placeholder={t("reports.visualizer.filterValuePlaceholder")}
+                aria-label={t("reports.visualizer.filterValuePlaceholder")}
                 className="min-h-11 min-w-0 flex-1 rounded-lg border border-border bg-card/60 px-2 py-2 text-xs font-semibold text-foreground focus:ring-2 focus:ring-primary/20"
               />
 

@@ -3,7 +3,7 @@ import { getInitials } from "@mms/shared";
 import { CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
 import { calcAge } from '@/lib/data/studentsData';
 import { type CheckResult, runFullEligibility, suggestClass } from '@/lib/data/enrollmentData';
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormField";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
@@ -64,8 +64,7 @@ export function EligibilityCheck(): React.JSX.Element {
           value={studentId}
           onChange={setStudentId}
         />
-        <div>
-          <label htmlFor="select-session" className={FORM_LABEL}>{t("enrollments.eligibility.session")}</label>
+        <Field id="select-session" label={t("enrollments.eligibility.session")}>
           <FormSelect
             id="select-session"
             name="sessionId"
@@ -77,7 +76,7 @@ export function EligibilityCheck(): React.JSX.Element {
             }))}
             placeholder={t("enrollments.eligibility.selectSession")}
           />
-        </div>
+        </Field>
       </div>
 
       {student && (

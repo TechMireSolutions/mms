@@ -45,7 +45,6 @@ export function AccountModalFields({
                 value={form.code || ''}
                 onChange={(event) => updateField('code', event.target.value)}
                 placeholder={t('accounting.coa.fields.codePlaceholder')}
-                aria-invalid={Boolean(errors.code)}
                 required
               />
             </Field>
@@ -64,7 +63,6 @@ export function AccountModalFields({
                   value: accType,
                   label: t(`accounting.type.${accType}` as AppTranslationKey),
                 }))}
-                aria-invalid={Boolean(errors.type)}
               />
             </Field>
           );
@@ -80,7 +78,6 @@ export function AccountModalFields({
                   value={form.name || ''}
                   onChange={(event) => updateField('name', event.target.value)}
                   placeholder={t('accounting.coa.fields.namePlaceholder')}
-                  aria-invalid={Boolean(errors.name)}
                   required
                 />
               </Field>
@@ -100,7 +97,6 @@ export function AccountModalFields({
                   onChange={(val) => updateField('subtype', val)}
                   options={subtypes}
                   placeholder={t('accounting.journal.form.none')}
-                  aria-invalid={Boolean(errors.subtype)}
                 />
               </Field>
             </div>
@@ -118,7 +114,6 @@ export function AccountModalFields({
                   value={form.description || ''}
                   onChange={(event) => updateField('description', event.target.value)}
                   placeholder={t('accounting.coa.fields.descriptionPlaceholder')}
-                  aria-invalid={Boolean(errors.description)}
                   required={isRequired}
                 />
               </Field>

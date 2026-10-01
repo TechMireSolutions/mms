@@ -1,7 +1,6 @@
 import React from "react";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FieldErrorMessage, RequiredMark } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
 
@@ -26,26 +25,20 @@ export function DistributeDenominationField({
 
   return (
     <div className="sm:col-span-2">
-      <label htmlFor="denom" className={FORM_LABEL}>
-        {t("hasanat.form.denomination")}
-        <RequiredMark />
-      </label>
-      <FormSelect
-        id="denom"
-        name="denominationId"
-        value={data.denominationId || ""}
-        onChange={(value) => updateField("denominationId", value)}
-        aria-invalid={Boolean(errors?.denominationId)}
-        aria-describedby={errors?.denominationId ? "denom-error" : undefined}
-        className={errors?.denominationId ? FORM_INPUT_ERROR : undefined}
-        options={denoms
-          .filter((denomination) => denomination.active)
-          .map((denomination) => ({
-            value: denomination.id,
-            label: `${denomination.icon} ${denomination.name} (${t("hasanat.form.pointsShort", { points: denomination.points })})`,
-          }))}
-      />
-      <FieldErrorMessage id="denom-error" message={errors?.denominationId} />
+      <Field id="denom" label={t("hasanat.form.denomination")} required error={errors?.denominationId}>
+        <FormSelect
+          id="denom"
+          name="denominationId"
+          value={data.denominationId || ""}
+          onChange={(value) => updateField("denominationId", value)}
+          options={denoms
+            .filter((denomination) => denomination.active)
+            .map((denomination) => ({
+              value: denomination.id,
+              label: `${denomination.icon} ${denomination.name} (${t("hasanat.form.pointsShort", { points: denomination.points })})`,
+            }))}
+        />
+      </Field>
       {selectedDenomination && (
         <div className="mt-2 flex items-center gap-2">
           <div

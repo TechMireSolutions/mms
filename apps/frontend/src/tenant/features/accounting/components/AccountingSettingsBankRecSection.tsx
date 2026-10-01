@@ -107,8 +107,8 @@ export function AccountingSettingsBankRecSection({
         />
       </Field>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <DatePicker id="bank-period-start" name="periodStart" value={periodStart} onChange={setPeriodStart} />
-        <DatePicker id="bank-period-end" name="periodEnd" value={periodEnd} onChange={setPeriodEnd} />
+        <DatePicker id="bank-period-start" name="periodStart" value={periodStart} onChange={setPeriodStart} aria-label={t("common.startDate")} />
+        <DatePicker id="bank-period-end" name="periodEnd" value={periodEnd} onChange={setPeriodEnd} aria-label={t("common.endDate")} />
       </div>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2">
         <Field
@@ -147,7 +147,7 @@ export function AccountingSettingsBankRecSection({
         </Field>
       </div>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <DatePicker id="bank-line-date" name="lineDate" value={lineDate} onChange={setLineDate} />
+        <DatePicker id="bank-line-date" name="lineDate" value={lineDate} onChange={setLineDate} aria-label={t("accounting.columns.journal.date")} />
         <Input id="bank-line-desc" name="lineDesc" className={FORM_INPUT} value={lineDesc} onChange={(event) => setLineDesc(event.target.value)} aria-label={t("accounting.settings.bankRec.lineDesc")} />
         <Input
           id="bank-line-amount"
@@ -160,7 +160,6 @@ export function AccountingSettingsBankRecSection({
             clearAmountError("lineAmount");
           }}
           aria-label={t("accounting.settings.bankRec.lineAmount")}
-          aria-invalid={Boolean(amountErrors.lineAmount)}
         />
       </div>
       <FieldErrorMessage message={amountErrors.lineAmount} className="mt-2" />

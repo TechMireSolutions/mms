@@ -87,6 +87,7 @@ export function PlatformWorkspaceCreateAdminDialog({
       footer={
         <WorkspaceAdminDialogFooter complete={Boolean(result)} pending={createPending}
           confirmLabel={t('platform.createAdminBtn')}
+          form="platform-create-admin-form"
           onClose={handleClose} onConfirm={handleCreate} />
       }
     >
@@ -97,31 +98,55 @@ export function PlatformWorkspaceCreateAdminDialog({
           initialPassword={result.initialPassword}
         />
       ) : (
-        <div className="space-y-4 py-2">
+        <form
+          id="platform-create-admin-form"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleCreate();
+          }}
+          className="space-y-4 py-2"
+        >
           <WorkspaceSummary workspace={workspace} />
 
           <div className="space-y-3">
-            <Field label={t('platform.adminNameLabel')} required error={!name.trim() && error ? error : undefined}>
+            <Field
+              id={nameId}
+              label={t('platform.adminNameLabel')}
+              required
+              error={error === t('platform.validationEnterName') ? error : undefined}
+            >
               <LeadingIconInput
                 icon={User}
                 type="text"
                 id={nameId}
                 placeholder={t('platform.adminNamePlaceholder')}
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (error) setError('');
+                }}
                 className="h-11 text-sm"
                 disabled={createPending}
               />
             </Field>
 
-            <Field label={t('platform.adminEmailLabel')} required>
+            <Field
+              id={emailId}
+              label={t('platform.adminEmailLabel')}
+              required
+              error={error === t('platform.validationEnterValidEmail') ? error : undefined}
+            >
               <LeadingIconInput
                 icon={Mail}
                 type="email"
                 id={emailId}
                 placeholder={t('platform.adminEmailPlaceholder')}
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (error) setError('');
+                }}
                 className="h-11 text-sm"
                 disabled={createPending}
               />
@@ -130,12 +155,23 @@ export function PlatformWorkspaceCreateAdminDialog({
             <WorkspacePasswordField
               label={t('platform.initialPasswordLabel')}
               placeholder={t('platform.initialPasswordPlaceholder')}
-              value={password} onChange={setPassword} pending={createPending}
+              value={password}
+              onChange={(val) => {
+                setPassword(val);
+                if (error) setError('');
+              }}
+              pending={createPending}
+              error={error === t('platform.validationPasswordLength') ? error : undefined}
             />
 
-            {error ? <FieldErrorMessage message={error} /> : null}
+            {error &&
+            error !== t('platform.validationEnterName') &&
+            error !== t('platform.validationEnterValidEmail') &&
+            error !== t('platform.validationPasswordLength') ? (
+              <FieldErrorMessage message={error} />
+            ) : null}
           </div>
-        </div>
+        </form>
       )}
     </Modal>
   );

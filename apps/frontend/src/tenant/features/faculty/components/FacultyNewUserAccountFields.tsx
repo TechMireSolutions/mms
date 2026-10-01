@@ -103,10 +103,7 @@ export function FacultyNewUserAccountFields({
       </div>
 
       {userAccountDraft.setupMethod === "password" ? (
-        <label
-          htmlFor="faculty-user-force-reset"
-          className="flex min-h-11 cursor-pointer items-center gap-2 pt-1 text-xs text-muted-foreground select-none font-medium"
-        >
+        <div className="flex min-h-11 items-center gap-2 pt-1 text-xs text-muted-foreground select-none font-medium">
           <Checkbox
             id="faculty-user-force-reset"
             checked={userAccountDraft.forceReset !== false}
@@ -116,9 +113,12 @@ export function FacultyNewUserAccountFields({
                 forceReset: Boolean(checked),
               })
             }
+            className="cursor-pointer"
           />
-          <span>{t("users.addForceReset")}</span>
-        </label>
+          <label htmlFor="faculty-user-force-reset" className="cursor-pointer select-none">
+            {t("users.addForceReset")}
+          </label>
+        </div>
       ) : null}
     </div>
   );

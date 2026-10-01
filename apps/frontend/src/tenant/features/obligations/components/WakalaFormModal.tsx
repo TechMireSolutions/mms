@@ -37,8 +37,17 @@ export function WakalaFormModal(props: WakalaFormModalProps): React.JSX.Element 
           (state.step === 3 && state.totalPercentage > 100)
         }
         error={allErrors.length > 0 ? allErrors : undefined}
+        formId="wakala-form-modal"
       >
-        <div className="space-y-5">
+        <form
+          id="wakala-form-modal"
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            void state.handleNextOrSave();
+          }}
+          className="space-y-5"
+        >
           <WakalaStepProgressBar
             step={state.step}
             onSetStep={state.setStep}
@@ -97,7 +106,7 @@ export function WakalaFormModal(props: WakalaFormModalProps): React.JSX.Element 
               onUpdateRow={state.updateDistributionRow}
             />
           )}
-        </div>
+        </form>
       </FormModal>
 
       <WakalaQuickCreateModals

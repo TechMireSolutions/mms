@@ -49,8 +49,6 @@ export function FacultyEmploymentEmployeeIdField({
             onChange={(event) => onDraftChange({ employeeId: event.target.value })}
             placeholder={t("faculty.form.employeeIdPlaceholder", { prefix: idPrefix })}
             disabled={autoGenerateId && !isExistingFaculty && hasNextEmployeeId}
-            aria-invalid={Boolean(error)}
-            aria-describedby={error ? "employeeId-error" : undefined}
             className={error ? FORM_INPUT_ERROR : undefined}
           />
         </div>

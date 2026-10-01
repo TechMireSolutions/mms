@@ -92,8 +92,17 @@ export function PlatformWorkspaceModulesDialog({
       saveDisabled={isPending || isLoading}
       dir={dir}
       lang={language}
+      formId="platform-workspace-modules-form"
     >
-      <div className="flex-1 overflow-y-auto px-1 py-2 text-start space-y-5">
+      <form
+        id="platform-workspace-modules-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!isPending && !isLoading) void handleSave();
+        }}
+        className="flex-1 overflow-y-auto px-1 py-2 text-start space-y-5"
+      >
         <PlatformModulePresetsBar onApplyPreset={applyPreset} disabled={isPending} />
 
         {disabledActiveModules.length > 0 && (
@@ -146,7 +155,7 @@ export function PlatformWorkspaceModulesDialog({
             ))}
           </div>
         )}
-      </div>
+      </form>
     </FormModal>
   );
 }

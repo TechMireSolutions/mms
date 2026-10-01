@@ -34,7 +34,7 @@ export function FacultyCustomFieldsSection({ fields, draft, errors, onDraftChang
           return (
             <Field key={field.key} label={field.label} id={field.key} required={Boolean(field.required)} error={error}>
               {field.type === "textarea" ? (
-                <Textarea {...common} value={String(value ?? "")} onChange={(event) => change(field.key, event.target.value)} aria-invalid={Boolean(error)} />
+                <Textarea {...common} value={String(value ?? "")} onChange={(event) => change(field.key, event.target.value)} />
               ) : field.type === "date" ? (
                 <DatePicker {...common} value={typeof value === "string" ? value : undefined} onChange={(next) => change(field.key, next)} />
               ) : field.type === "select" || field.type === "single_select" ? (
@@ -44,7 +44,13 @@ export function FacultyCustomFieldsSection({ fields, draft, errors, onDraftChang
                   {(field.options ?? []).map((option) => {
                     const optionValue = String(option);
                     const selected = Array.isArray(value) ? value.map(String) : [];
-                    return <label key={optionValue} className="flex min-h-11 cursor-pointer items-center gap-3 rounded px-2 hover:bg-muted/50"><Checkbox checked={selected.includes(optionValue)} onCheckedChange={(checked) => change(field.key, checked ? [...selected, optionValue] : selected.filter((item) => item !== optionValue))} /><span className="text-sm">{optionValue}</span></label>;
+                    const optionId = `${field.key}-${optionValue}`;
+                    return (
+                      <div key={optionValue} className="flex min-h-11 items-center gap-3 rounded px-2 hover:bg-muted/50">
+                        <Checkbox id={optionId} checked={selected.includes(optionValue)} onCheckedChange={(checked) => change(field.key, checked ? [...selected, optionValue] : selected.filter((item) => item !== optionValue))} />
+                        <label htmlFor={optionId} className="cursor-pointer text-sm select-none">{optionValue}</label>
+                      </div>
+                    );
                   })}
                 </div>
               ) : field.type === "boolean" ? (
@@ -53,7 +59,7 @@ export function FacultyCustomFieldsSection({ fields, draft, errors, onDraftChang
                   <label htmlFor={field.key} className="cursor-pointer text-sm">{field.label}</label>
                 </div>
               ) : (
-                <Input {...common} type={field.type === "number" || field.type === "currency" ? "number" : field.type === "email" ? "email" : field.type === "url" ? "url" : field.type === "datetime" ? "datetime-local" : "text"} value={String(value ?? "")} onChange={(event) => change(field.key, (field.type === "number" || field.type === "currency") && event.target.value !== "" ? Number(event.target.value) : event.target.value)} aria-invalid={Boolean(error)} />
+                <Input {...common} type={field.type === "number" || field.type === "currency" ? "number" : field.type === "email" ? "email" : field.type === "url" ? "url" : field.type === "datetime" ? "datetime-local" : "text"} value={String(value ?? "")} onChange={(event) => change(field.key, (field.type === "number" || field.type === "currency") && event.target.value !== "" ? Number(event.target.value) : event.target.value)} />
               )}
             </Field>
           );

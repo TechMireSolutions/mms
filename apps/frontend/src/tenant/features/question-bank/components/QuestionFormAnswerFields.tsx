@@ -1,11 +1,11 @@
 import { HelpCircle } from "lucide-react";
 import { type AppTranslationKey, type QuestionType } from "@mms/shared";
 import { Button } from "@/components/ui/button";
-import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
+import { Field, FieldErrorMessage, LABEL, RequiredMark } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/RadioGroup";
 import { Textarea } from "@/components/ui/textarea";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { QuestionTypeAnswerFields } from "@/tenant/features/question-bank/components/QuestionTypeAnswerFields";
 
@@ -36,7 +36,7 @@ export function QuestionFormAnswerFields({
   if (questionDraft.type === "mcq") {
     return (
       <div className="sm:col-span-2">
-        <span className={FORM_LABEL}>{t("questionBank.optionsLabel")}</span>
+        <span className={LABEL}>{t("questionBank.optionsLabel")}</span>
         <RadioGroup
           name="qb-answer"
           value={questionDraft.answer}
@@ -79,7 +79,7 @@ export function QuestionFormAnswerFields({
   if (questionDraft.type === "true_false") {
     return (
       <div className="sm:col-span-2">
-        <span className={FORM_LABEL}>{t("questionBank.correctAnswer")} *</span>
+        <span className={LABEL}>{t("questionBank.correctAnswer")}<RequiredMark /></span>
         <div className="flex gap-3 mt-1.5">
           {[trueLabel, falseLabel].map((answerValue) => (
             <Button
@@ -87,7 +87,7 @@ export function QuestionFormAnswerFields({
               type="button"
               variant="outline"
               onClick={() => updateDraft({ answer: answerValue })}
-              className={`flex-1 rounded-lg border py-2 text-sm font-medium ${questionDraft.answer === answerValue ? "border-primary bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
+              className={`flex-1 min-h-11 rounded-lg border py-2 text-sm font-medium ${questionDraft.answer === answerValue ? "border-primary bg-primary/5 text-primary hover:bg-primary/10 hover:text-primary" : "border-border text-muted-foreground hover:bg-muted"}`}
             >
               {answerValue}
             </Button>

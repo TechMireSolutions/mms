@@ -91,7 +91,6 @@ export function ContactEducationEntryCard({
               name={`cf-${formInstanceId}-education-institution-${idx}`}
               autoCapitalize="words"
               enterKeyHint="next"
-              aria-invalid={Boolean(institutionError)}
               value={edu.institution || ""}
               required={isFieldRequired("education", "institution")}
               onChange={(e) => onUpdateEducation({ institution: e.target.value })}
@@ -114,7 +113,6 @@ export function ContactEducationEntryCard({
               name={`cf-${formInstanceId}-education-field-${idx}`}
               autoCapitalize="words"
               enterKeyHint="next"
-              aria-invalid={Boolean(fieldOfStudyError)}
               value={edu.fieldOfStudy || ""}
               required={isFieldRequired("education", "fieldOfStudy")}
               onChange={(e) => onUpdateEducation({ fieldOfStudy: e.target.value })}
@@ -140,7 +138,6 @@ export function ContactEducationEntryCard({
                   inputMode="numeric"
                   spellCheck={false}
                   enterKeyHint="next"
-                  aria-invalid={Boolean(yearError)}
                   value={
                     edu.isCurrentlyEnrolled
                       ? t("contacts.form.currentlyStudying")
@@ -168,7 +165,6 @@ export function ContactEducationEntryCard({
                   name={`cf-${formInstanceId}-education-grade-${idx}`}
                   autoCapitalize="characters"
                   enterKeyHint="next"
-                  aria-invalid={Boolean(gradeError)}
                   value={edu.grade || ""}
                   required={isFieldRequired("education", "grade")}
                   onChange={(e) => onUpdateEducation({ grade: e.target.value })}

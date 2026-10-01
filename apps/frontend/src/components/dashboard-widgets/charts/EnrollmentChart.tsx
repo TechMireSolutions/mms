@@ -107,7 +107,7 @@ export default function EnrollmentChart({ isEditMode = false }: { isEditMode?: b
                     updatePref("enrollmentChartPeriod", Number(value));
                   }}
                 >
-                  <SelectTrigger className={FORM_SELECT_MINI}>
+                  <SelectTrigger className={FORM_SELECT_MINI} aria-label={t("dashboard.widgets.selectPeriod")}>
                     <SelectValue placeholder={t("dashboard.widgets.selectPeriod")} />
                   </SelectTrigger>
                   <SelectContent>

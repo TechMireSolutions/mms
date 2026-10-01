@@ -63,6 +63,7 @@ export function ClassDetailScheduleTab({
                 <FormSelect
                   id={`sch-type-${sch.id}`}
                   name="scheduleType"
+                  aria-label={t('sessions.classes.detail.schedule.title')}
                   value={sch.scheduleType?.toLowerCase() || 'daily'}
                   onChange={(val) => onUpdateSchedule(sch.id, { scheduleType: val })}
                   options={[
@@ -77,6 +78,7 @@ export function ClassDetailScheduleTab({
                   type="date"
                   value={sch.startDate}
                   onChange={(e) => onUpdateSchedule(sch.id, { startDate: e.target.value })}
+                  aria-label={t('common.startDate')}
                   className="text-xs"
                 />
                 <span className="text-xs text-muted-foreground">{t('sessions.classes.detail.to')}</span>
@@ -84,6 +86,7 @@ export function ClassDetailScheduleTab({
                   type="date"
                   value={sch.endDate}
                   onChange={(e) => onUpdateSchedule(sch.id, { endDate: e.target.value })}
+                  aria-label={t('common.endDate')}
                   className="text-xs"
                 />
                 <Button
@@ -125,6 +128,7 @@ export function ClassDetailScheduleTab({
                   type="time"
                   value={period.startTime}
                   onChange={(e) => onUpdatePeriod(period.id, { startTime: e.target.value })}
+                  aria-label={t('sessions.timetable.form.startTime')}
                   className="w-28 text-xs"
                 />
                 <span className="text-xs text-muted-foreground">–</span>
@@ -132,17 +136,20 @@ export function ClassDetailScheduleTab({
                   type="time"
                   value={period.endTime}
                   onChange={(e) => onUpdatePeriod(period.id, { endTime: e.target.value })}
+                  aria-label={t('sessions.timetable.form.endTime')}
                   className="w-28 text-xs"
                 />
                 <Input
                   placeholder={t('sessions.classes.detail.timetable.subjectPlaceholder')}
                   value={period.subject}
                   onChange={(e) => onUpdatePeriod(period.id, { subject: e.target.value })}
+                  aria-label={t('sessions.classes.detail.timetable.subjectPlaceholder')}
                   className="flex-1 text-xs"
                 />
                 <FormSelect
                   id={`period-faculty-${period.id}`}
                   name="facultyName"
+                  aria-label={t('sessions.classes.detail.timetable.selectFaculty')}
                   value={period.facultyName || ''}
                   onChange={(val) => {
                     const found = facultyMembers.find(

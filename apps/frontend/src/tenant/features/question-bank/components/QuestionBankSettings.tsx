@@ -73,7 +73,7 @@ export const QuestionBankSettings = (function QuestionBankSettings({
             <Input
               id="qb-default-duration"
               name="defaultTestDuration"
-              type="number"
+              type="text"
               inputMode="numeric"
               min={5}
               className={FORM_INPUT}

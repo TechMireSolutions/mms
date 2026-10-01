@@ -3,14 +3,13 @@ import { Package } from 'lucide-react';
 import { type Denomination, type StockBatch } from '@/lib/data/hasanatData';
 import { DatePicker } from '@/components/ui/DatePicker';
 import { FormModal } from '@/components/ui/FormModal';
-import { FieldErrorMessage, RequiredMark } from '@/components/ui/FormPrimitives';
+import { Field } from '@/components/ui/FormPrimitives';
 import { UserActorSelect } from '@/tenant/components/selectors/UserActorSelect';
-import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_INPUT } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { todayISO } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { cn } from '@/lib/utils';
 
 interface StockAddBatchModalProps {
   open: boolean;
@@ -102,52 +101,53 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
       error={submitError || undefined}
       onSave={handleSave}
       saveDisabled={denoms.length === 0 || submitting}
+      formId="stock-add-batch-modal-form"
     >
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="batch-denom" className={FORM_LABEL}>{t('hasanat.form.denomination')}<RequiredMark /></label>
+      <form
+        id="stock-add-batch-modal-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (denoms.length > 0 && !submitting) void handleSave();
+        }}
+        className="space-y-4"
+      >
+        <Field id="batch-denom" label={t('hasanat.form.denomination')} required error={errors.denominationId}>
           <FormSelect
             id="batch-denom"
             name="denominationId"
             value={data.denominationId || ''}
             onChange={(value) => updateField('denominationId', value)}
-            aria-invalid={Boolean(errors.denominationId)}
-            aria-describedby={errors.denominationId ? "batch-denom-error" : undefined}
-            className={errors.denominationId ? FORM_INPUT_ERROR : undefined}
             options={denoms.filter((denomination) => denomination.active).map((denomination) => ({
               value: denomination.id,
               label: `${denomination.icon} ${denomination.name} (${t('hasanat.form.pointsShort', { points: denomination.points })})`,
             }))}
           />
-          <FieldErrorMessage id="batch-denom-error" message={errors.denominationId} />
-        </div>
+        </Field>
         {selectedDenomination && (
           <div className="h-10 rounded-xl flex items-center gap-2 px-3 text-white text-sm font-semibold" style={{ background: selectedDenomination.color }}>
             <span aria-hidden="true">{selectedDenomination.icon}</span><span>{selectedDenomination.name}</span>
           </div>
         )}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="batch-qty" className={FORM_LABEL}>{t('hasanat.form.quantity')}<RequiredMark /></label>
+          <Field id="batch-qty" label={t('hasanat.form.quantity')} required error={errors.quantity}>
             <Input
               id="batch-qty"
               name="quantity"
-              type="number"
+              type="text"
               inputMode="numeric"
-              className={cn(FORM_INPUT, errors.quantity && FORM_INPUT_ERROR)}
+              className={FORM_INPUT}
               value={data.quantity || ''}
-              onChange={(event) => updateField('quantity', Number(event.target.value))}
+              onChange={(event) => {
+                const sanitized = event.target.value.replace(/[^0-9]/g, '');
+                updateField('quantity', (sanitized ? Number(sanitized) : 0) as StockBatch['quantity']);
+              }}
               placeholder="0"
-              min={1}
-              aria-invalid={Boolean(errors.quantity)}
-              aria-describedby={errors.quantity ? "batch-qty-error" : undefined}
             />
-            <FieldErrorMessage id="batch-qty-error" message={errors.quantity} />
-          </div>
-          <div>
-            <label htmlFor="add-date" className={FORM_LABEL}>{t('hasanat.stock.date')}</label>
+          </Field>
+          <Field id="add-date" label={t('hasanat.stock.date')}>
             <DatePicker id="add-date" name="addedDate" value={data.addedDate || ''} onChange={(value) => updateField('addedDate', value)} />
-          </div>
+          </Field>
         </div>
         <UserActorSelect
           id="added-by"
@@ -156,11 +156,10 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
           onChange={(id) => updateField('addedByUserId', id)}
           allowEmpty
         />
-        <div>
-          <label htmlFor="batch-note" className={FORM_LABEL}>{t('hasanat.stock.note')}</label>
-          <Input id="batch-note" name="note" className={FORM_INPUT} value={data.note} onChange={(event) => updateField('note', event.target.value)} placeholder={t('hasanat.stock.notePlaceholder')} />
-        </div>
-      </div>
+        <Field id="batch-note" label={t('hasanat.stock.note')}>
+          <Input id="batch-note" name="note" className={FORM_INPUT} value={data.note || ''} onChange={(event) => updateField('note', event.target.value)} placeholder={t('hasanat.stock.notePlaceholder')} />
+        </Field>
+      </form>
     </FormModal>
   );
 }

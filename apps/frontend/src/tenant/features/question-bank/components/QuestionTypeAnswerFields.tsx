@@ -1,6 +1,6 @@
 import React from 'react';
 import { Input } from '@/components/ui/input';
-import { RequiredMark } from '@/components/ui/FormPrimitives';
+import { Field } from '@/components/ui/FormPrimitives';
 import {
   countFillBlankMarkers,
   joinQuestionCompoundAnswer,
@@ -46,13 +46,10 @@ export function QuestionTypeAnswerFields({
     return (
       <div className="space-y-3 sm:col-span-2">
         <p className="text-xs text-muted-foreground">{t('questionBank.fillBlankHint')}</p>
-        <span className={FORM_LABEL}>{t('questionBank.blankAnswers')}</span>
+        <p className={FORM_LABEL}>{t('questionBank.blankAnswers')}</p>
         <div className="space-y-2">
           {blanks.map((blank, index) => (
-            <div key={index}>
-              <label htmlFor={`qb-blank-${index}`} className="mb-1 block text-xs font-medium text-foreground">
-                {t('questionBank.blankAnswerN', { n: index + 1 })}
-              </label>
+            <Field key={index} id={`qb-blank-${index}`} label={t('questionBank.blankAnswerN', { n: index + 1 })}>
               <Input
                 id={`qb-blank-${index}`}
                 name={`blank-${index}`}
@@ -64,7 +61,7 @@ export function QuestionTypeAnswerFields({
                   onAnswerChange(joinQuestionCompoundAnswer(updatedBlanks));
                 }}
               />
-            </div>
+            </Field>
           ))}
         </div>
       </div>
@@ -99,8 +96,7 @@ export function QuestionTypeAnswerFields({
 
     return (
       <div className="grid grid-cols-1 gap-4 sm:col-span-2 sm:grid-cols-2">
-        <div>
-          <label htmlFor="qb-numeric-answer" className={FORM_LABEL}>{t('questionBank.numericAnswer')}<RequiredMark /></label>
+        <Field id="qb-numeric-answer" label={t('questionBank.numericAnswer')} required>
           <Input
             id="qb-numeric-answer"
             name="numericAnswer"
@@ -110,9 +106,8 @@ export function QuestionTypeAnswerFields({
             value={answer}
             onChange={(e) => onAnswerChange(e.target.value)}
           />
-        </div>
-        <div>
-          <label htmlFor="qb-numeric-tolerance" className={FORM_LABEL}>{t('questionBank.numericTolerance')}</label>
+        </Field>
+        <Field id="qb-numeric-tolerance" label={t('questionBank.numericTolerance')}>
           <Input
             id="qb-numeric-tolerance"
             name="numericTolerance"
@@ -122,7 +117,7 @@ export function QuestionTypeAnswerFields({
             value={tolerance}
             onChange={(e) => onOptionsChange(e.target.value ? [e.target.value] : [])}
           />
-        </div>
+        </Field>
       </div>
     );
   }

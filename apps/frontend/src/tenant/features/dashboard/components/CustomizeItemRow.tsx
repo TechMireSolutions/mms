@@ -20,7 +20,7 @@ export function CustomizeItemRow({
 }: CustomizeItemRowProps): React.JSX.Element {
   return (
     <div
-      className="flex items-center justify-between gap-3 p-2.5 rounded-xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all select-none cursor-pointer"
+      className="flex min-h-11 items-center justify-between gap-3 p-2.5 rounded-xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all select-none cursor-pointer"
       onClick={onToggle}
     >
       <div className="flex items-center gap-3 flex-1 min-w-0">

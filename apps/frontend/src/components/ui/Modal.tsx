@@ -41,15 +41,12 @@ export interface ModalProps<K extends string = string> {
   savedLabel?: string;
   footerStart?: React.ReactNode;
   hideFooter?: boolean;
+  formId?: string;
 }
 
 const SIZE = {
-  sm: "max-w-sm",
-  md: "max-w-lg",
-  lg: "max-w-2xl",
-  xl: "max-w-4xl",
-  "2xl": "max-w-6xl",
-  "3xl": "max-w-modal-3xl",
+  sm: "max-w-sm", md: "max-w-lg", lg: "max-w-2xl",
+  xl: "max-w-4xl", "2xl": "max-w-6xl", "3xl": "max-w-modal-3xl",
 };
 
 /**
@@ -86,6 +83,7 @@ export function Modal<K extends string = string>({
   savedLabel,
   footerStart,
   hideFooter = false,
+  formId,
 }: ModalProps<K>): React.JSX.Element | null {
   const { t } = useTranslation();
   const titleId = useId();
@@ -111,6 +109,7 @@ export function Modal<K extends string = string>({
         saving={saving}
         saveDisabled={saveDisabled}
         saved={saved}
+        form={formId}
       />
     );
   })();

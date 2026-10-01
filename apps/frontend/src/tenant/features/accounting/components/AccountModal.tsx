@@ -100,18 +100,28 @@ export function AccountModal({ initial, onSave, onClose, existingCodes }: Accoun
       onSave={saveAccount}
       saving={submitting}
       error={errorMessages}
+      formId="account-modal-form"
     >
-      <AccountModalFields
-        orderedFields={orderedFields}
-        fields={fields}
-        isFieldEnabled={isFieldEnabled}
-        form={form}
-        errors={errors}
-        updateField={updateField}
-        onTypeChange={onTypeChange}
-        subtypes={subtypes}
-        t={t}
-      />
+      <form
+        id="account-modal-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          void saveAccount();
+        }}
+      >
+        <AccountModalFields
+          orderedFields={orderedFields}
+          fields={fields}
+          isFieldEnabled={isFieldEnabled}
+          form={form}
+          errors={errors}
+          updateField={updateField}
+          onTypeChange={onTypeChange}
+          subtypes={subtypes}
+          t={t}
+        />
+      </form>
 
       {type && ACCOUNT_TYPE_META[type] && (
         <div className={`mt-4 flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border ${ACCOUNT_TYPE_META[type].color}`} aria-live="polite">

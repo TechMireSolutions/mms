@@ -46,7 +46,7 @@ export function CustomReportBuilderPreviewPanel({
     <div className="lg:col-span-2 space-y-6 flex flex-col justify-between">
       <div className="space-y-2">
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <SectionLabel as="label" weight="bold" className="min-w-0 block">
+          <SectionLabel as="h3" weight="bold" className="min-w-0 block">
             {t("reports.builder.selectedColumns", { count: selectedFields.length })}
           </SectionLabel>
           {selectedFields.length > 0 && (
@@ -91,7 +91,7 @@ export function CustomReportBuilderPreviewPanel({
       <div className="space-y-3 flex-1 flex flex-col justify-end mt-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <SectionLabel as="label" weight="bold" className="block">
+            <SectionLabel as="h3" weight="bold" className="block">
               {t("reports.builder.liveVisualizer", { count: previewData.length })}
             </SectionLabel>
             {groupBy && (

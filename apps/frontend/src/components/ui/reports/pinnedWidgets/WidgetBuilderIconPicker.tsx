@@ -37,7 +37,7 @@ export function WidgetBuilderIconPicker({
   return (
     <div className="space-y-2 pt-3 border-t border-border/45 relative z-elevated">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-        <SectionLabel as="label" weight="bold" tracking="wider" className="block">
+        <SectionLabel as="p" weight="bold" tracking="wider" className="block">
           {t("reports.widgets.builder.iconSelector")}
         </SectionLabel>
         <div className="relative max-w-xs w-full">
@@ -45,6 +45,7 @@ export function WidgetBuilderIconPicker({
           <Input
             type="text"
             placeholder={t("reports.widgets.builder.searchIcons")}
+            aria-label={t("reports.widgets.builder.searchIcons")}
             value={iconSearch}
             onChange={(event) => setIconSearch(event.target.value)}
             className="w-full ps-8 pe-3 py-1.5 text-xs rounded-lg border border-border bg-card/20 backdrop-blur-md text-foreground focus:ring-1 focus:ring-primary/20 transition-all font-semibold animate-fade-in min-h-11"

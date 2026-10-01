@@ -1,5 +1,5 @@
 import { AlertTriangle } from "lucide-react";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormField";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { WizardFormState } from "./simpleTransactionWizardTypes";
@@ -35,8 +35,7 @@ export function SimpleTransactionAccountLegs({
 
   return (
     <>
-      <div>
-        <label htmlFor={leg1.id} className={FORM_LABEL}>{leg1.label}</label>
+      <Field id={leg1.id} label={leg1.label}>
         <FormSelect
           id={leg1.id}
           name={leg1.field}
@@ -53,9 +52,8 @@ export function SimpleTransactionAccountLegs({
             {t("accounting.journal.dashboard.wizard.lowBalanceWarning")}
           </p>
         )}
-      </div>
-      <div>
-        <label htmlFor={leg2.id} className={FORM_LABEL}>{leg2.label}</label>
+      </Field>
+      <Field id={leg2.id} label={leg2.label}>
         <FormSelect
           id={leg2.id}
           name={leg2.field}
@@ -66,7 +64,7 @@ export function SimpleTransactionAccountLegs({
           aria-invalid={isSameAccount}
           aria-describedby={isSameAccount ? `${prefix}-account-same-error` : undefined}
         />
-      </div>
+      </Field>
 
       {isSameAccount && (
         <div className="sm:col-span-2">

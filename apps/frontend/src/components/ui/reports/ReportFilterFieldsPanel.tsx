@@ -45,10 +45,11 @@ export function ReportFilterFieldsPanel({
     <div className="px-4 pb-4 flex flex-wrap gap-4 border-t border-border/50 pt-4">
       {allowed.includes('session') && (
         <div className="flex flex-col gap-1 text-start min-w-filter-lg flex-1">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          <label htmlFor="report-filter-session" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             {t('reports.filters.session')}
           </label>
           <FormSelect
+            id="report-filter-session"
             value={filters.session}
             onChange={(val) => onFieldChange('session', val)}
             options={sessions.map((session) => ({ value: session.id, label: session.name }))}
@@ -59,10 +60,11 @@ export function ReportFilterFieldsPanel({
 
       {allowed.includes('class') && (
         <div className="flex flex-col gap-1 text-start min-w-filter-lg flex-1">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          <label htmlFor="report-filter-class" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             {t('reports.filters.class')}
           </label>
           <FormSelect
+            id="report-filter-class"
             value={filters.class}
             onChange={(val) => onFieldChange('class', val)}
             options={classes.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
@@ -73,10 +75,11 @@ export function ReportFilterFieldsPanel({
 
       {allowed.includes('status') && (
         <div className="flex flex-col gap-1 text-start min-w-filter-sm flex-1">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          <label htmlFor="report-filter-status" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             {t('reports.filters.status')}
           </label>
           <FormSelect
+            id="report-filter-status"
             value={filters.status}
             onChange={(val) => onFieldChange('status', val)}
             options={statusOptions}
@@ -98,10 +101,11 @@ export function ReportFilterFieldsPanel({
 
       {allowed.includes('student') && (
         <div className="flex flex-col gap-1 text-start min-w-filter-xl flex-1">
-          <label className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
+          <label htmlFor="report-filter-search" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">
             {searchLabel}
           </label>
           <Input
+            id="report-filter-search"
             type="text"
             value={filters.student}
             onChange={(event) => onFieldChange('student', event.target.value)}

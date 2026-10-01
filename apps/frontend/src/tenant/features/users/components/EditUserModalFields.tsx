@@ -29,6 +29,7 @@ export interface EditUserModalFieldsProps {
   assignableRoles: WorkspaceRole[];
   customFields: ModuleCustomField[];
   onSubmit: (e?: React.BaseSyntheticEvent) => Promise<void>;
+  formId?: string;
 }
 
 export function EditUserModalFields({
@@ -38,11 +39,12 @@ export function EditUserModalFields({
   assignableRoles,
   customFields,
   onSubmit,
+  formId = 'edit-user-form',
 }: EditUserModalFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
 
   return (
-    <form className="space-y-4" onSubmit={onSubmit}>
+    <form id={formId} noValidate className="space-y-4" onSubmit={onSubmit}>
       {!canManageThisUser && (
         <WarningCallout tone="destructive" density="compact" role="alert"
           description={t('users.errors.cannotModifySuperAdmin')} />
@@ -121,7 +123,7 @@ export function EditUserModalFields({
         control={form.control}
         name="twoFactorEnabled"
         render={({ field }) => (
-          <FormItem className="flex flex-row items-center gap-2 space-y-0">
+          <FormItem className="flex min-h-11 flex-row items-center gap-2 space-y-0">
             <FormControl>
               <Checkbox
                 id={field.name}

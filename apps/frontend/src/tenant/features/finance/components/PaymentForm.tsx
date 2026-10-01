@@ -10,7 +10,8 @@ import { cn } from "@/lib/utils";
 import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
-import { type PaymentCreateInput } from "@mms/shared";
+import { type PaymentCreateInput, paymentRecordInsertSchema, type AppTranslationKey } from "@mms/shared";
+import { mapZodFormErrors } from "@/lib/forms/mapZodFormErrors";
 import { NotifiedMutationError } from "@/lib/notifiedMutationError";
 import {
   PAYMENT_METHOD_LABEL_KEYS,
@@ -72,15 +73,27 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
 
     if (!invoice) return;
 
+    const payload = buildPaymentCreatePayload(
+      paymentDraft,
+      invoice.id,
+      invoice.studentId,
+      invoice.studentName,
+      authUser?.id || '',
+    );
+
+    const parsed = paymentRecordInsertSchema.safeParse(payload);
+    if (!parsed.success) {
+      setErrors((prev) => ({
+        ...prev,
+        ...mapZodFormErrors(parsed.error, (message) => t(message as AppTranslationKey)),
+      }));
+      notify.error(t("finance.fixErrors"));
+      return;
+    }
+
     setSaving(true);
     try {
-      await onSave(buildPaymentCreatePayload(
-        paymentDraft,
-        invoice.id,
-        invoice.studentId,
-        invoice.studentName,
-        authUser?.id || '',
-      ));
+      await onSave(payload);
       notify.success(t("finance.paymentSaved"));
       onClose();
     } catch (err: unknown) {
@@ -125,8 +138,26 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
       }
       error={Object.values(errors)[0]}
       footerStart={footerStart || undefined}
+      formId="payment-form"
     >
-      <div className="space-y-5 text-start">
+      <form
+        id="payment-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (
+            !saving &&
+            invoice &&
+            paymentDraft.amount &&
+            Number(paymentDraft.amount) > 0 &&
+            !(balance > 0 && Number(paymentDraft.amount) > balance) &&
+            paymentDraft.date
+          ) {
+            void handleSave();
+          }
+        }}
+        className="space-y-5 text-start"
+      >
         {invoice && (
           <Card accentColor="primary" className={cn("p-5 space-y-2 shadow-sm", CARD_STRIPE_INSET)}>
             <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
@@ -152,7 +183,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
           paymentMethodOptions={paymentMethodOptions}
           t={t}
         />
-      </div>
+      </form>
     </FormModal>
   );
 }

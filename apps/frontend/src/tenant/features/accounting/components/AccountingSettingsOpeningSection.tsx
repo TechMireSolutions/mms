@@ -66,6 +66,7 @@ export function AccountingSettingsOpeningSection({
           value={accountId}
           onChange={setAccountId}
           placeholder={t("accounting.settings.opening.account")}
+          aria-label={t("accounting.settings.opening.account")}
           options={accounts
             .filter((account) => account.isActive !== false)
             .map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }))}

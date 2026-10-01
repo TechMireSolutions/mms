@@ -39,6 +39,7 @@ export function PermissionMatrixToolbar({
           value={searchQuery}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={t('common.columns.searchPlaceholder')}
+          aria-label={t('common.columns.searchPlaceholder')}
           className="ps-8 pe-3 h-8 text-xs bg-muted/30"
         />
       </div>

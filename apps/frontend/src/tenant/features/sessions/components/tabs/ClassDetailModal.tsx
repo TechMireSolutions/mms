@@ -18,8 +18,6 @@ interface ClassDetailModalProps {
   saving?: boolean;
 }
 
-
-
 const TABS: readonly ClassDetailTabItem[] = [
   { id: 'general', labelKey: 'sessions.classes.detail.tab.general', icon: GraduationCap },
   { id: 'fees', labelKey: 'sessions.classes.detail.tab.fees', icon: Wallet },
@@ -153,8 +151,17 @@ export function ClassDetailModal({
       saving={saving}
       saveDisabled={saving || !classDraft.name?.trim()}
       error={Object.values(errors)[0]}
+      formId="class-detail-modal-form"
     >
-      <div className="max-w-3xl space-y-4">
+      <form
+        id="class-detail-modal-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleSave();
+        }}
+        className="max-w-3xl space-y-4"
+      >
         <ClassDetailTabBody
           activeTab={activeTab}
           classDraft={classDraft}
@@ -185,8 +192,7 @@ export function ClassDetailModal({
           updateScholarship={updateScholarship}
           updateEligibility={updateEligibility}
         />
-      </div>
+      </form>
     </FormModal>
   );
 }
-

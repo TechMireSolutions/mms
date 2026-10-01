@@ -6,6 +6,7 @@ import { FORM_INPUT } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Field } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useUsersPaginated } from "@/tenant/hooks/collections/users";
 import { SearchBar } from "@/components/ui/SearchBar";
@@ -38,7 +39,7 @@ function ContactsSavedReportUserPicker({
 
   return (
     <div className="space-y-1.5">
-      <Label>{t("contacts.savedReports.usersPickerLabel")}</Label>
+      <Label htmlFor="saved-report-user-search">{t("contacts.savedReports.usersPickerLabel")}</Label>
       <SearchBar
         id="saved-report-user-search"
         name="savedReportUserSearch"
@@ -50,12 +51,15 @@ function ContactsSavedReportUserPicker({
         {options.length === 0 ? (
           <p className="px-3 py-2 text-xs text-muted-foreground">{t("common.loading")}</p>
         ) : (
-          options.map((user) => (
-            <label key={user.id} className="flex items-center gap-2 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50">
-              <Checkbox checked={valueSet.has(String(user.id))} onCheckedChange={() => toggle(String(user.id))} />
-              <span className="truncate">{user.name || user.email}</span>
-            </label>
-          ))
+          options.map((user) => {
+            const checkboxId = `saved-report-user-${user.id}`;
+            return (
+              <div key={user.id} className="flex items-center gap-2 px-3 py-2 text-sm hover:bg-muted/50">
+                <Checkbox id={checkboxId} checked={valueSet.has(String(user.id))} onCheckedChange={() => toggle(String(user.id))} />
+                <label htmlFor={checkboxId} className="truncate cursor-pointer flex-1">{user.name || user.email}</label>
+              </div>
+            );
+          })
         )}
       </div>
       {usersQuery.data?.hasMore && (
@@ -113,10 +117,20 @@ export function ContactsSavedReportsEditor({
       onSave={onSave}
       saving={saving}
       saveDisabled={!name.trim() || (shareScope === "users" && sharedWithUserIds.length === 0)}
+      formId="contacts-saved-reports-form"
     >
-      <div className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="saved-report-name">{t("contacts.savedReports.nameLabel")}</Label>
+      <form
+        id="contacts-saved-reports-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (name.trim() && !(shareScope === "users" && sharedWithUserIds.length === 0)) {
+            onSave();
+          }
+        }}
+        className="space-y-4"
+      >
+        <Field id="saved-report-name" label={t("contacts.savedReports.nameLabel")} required>
           <Input
             id="saved-report-name"
             name="name"
@@ -124,11 +138,11 @@ export function ContactsSavedReportsEditor({
             value={name}
             onChange={(event) => onNameChange(event.target.value)}
             placeholder={t("contacts.savedReports.namePlaceholder")}
+            required
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="saved-report-search">{searchLabel}</Label>
+        <Field id="saved-report-search" label={searchLabel}>
           <Input
             id="saved-report-search"
             name="search"
@@ -137,9 +151,9 @@ export function ContactsSavedReportsEditor({
             onChange={(event) => onSearchChange(event.target.value)}
             placeholder={t("contacts.savedReports.searchPlaceholder")}
           />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="saved-report-share-scope">{t("contacts.savedReports.shareScopeLabel")}</Label>
+        </Field>
+
+        <Field id="saved-report-share-scope" label={t("contacts.savedReports.shareScopeLabel")}>
           <FormSelect
             id="saved-report-share-scope"
             name="shareScope"
@@ -150,11 +164,11 @@ export function ContactsSavedReportsEditor({
               label: shareLabel(scope),
             }))}
           />
-        </div>
+        </Field>
         {shareScope === "users" && (
           <ContactsSavedReportUserPicker value={sharedWithUserIds} onChange={onSharedWithUserIdsChange} />
         )}
-      </div>
+      </form>
     </FormModal>
   );
 }

@@ -64,6 +64,7 @@ export function PlatformWorkspaceResetPasswordDialog({
       footer={
         <WorkspaceAdminDialogFooter complete={Boolean(result)} pending={resetPending}
           confirmLabel={t('platform.resetPasswordBtn')}
+          form="platform-reset-password-form"
           onClose={handleClose} onConfirm={handleReset} />
       }
     >
@@ -76,16 +77,29 @@ export function PlatformWorkspaceResetPasswordDialog({
           copyLabel={t('common.copy')} hint={t('platform.sharePasswordHint')}
         />
       ) : (
-        <div className="space-y-4 py-2">
+        <form
+          id="platform-reset-password-form"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleReset();
+          }}
+          className="space-y-4 py-2"
+        >
           <WorkspaceSummary workspace={workspace} showAdminEmail />
 
           <WorkspacePasswordField
             label={t('platform.newPasswordLabel')}
             placeholder={t('platform.newPasswordPlaceholder')}
-            value={password} onChange={setPassword} pending={resetPending}
+            value={password}
+            onChange={(val) => {
+              setPassword(val);
+              if (error) setError('');
+            }}
+            pending={resetPending}
             error={error || undefined}
           />
-        </div>
+        </form>
       )}
     </Modal>
   );

@@ -41,7 +41,7 @@ export function LlmConfigModalHyperparameters({
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
             <Label htmlFor="maxTokens" className="text-xs font-semibold">{t('settings.llmModalMaxTokens')}</Label>
-            <Input id="maxTokens" name="maxTokens" type="number" inputMode="numeric" min={1} max={16384} value={formMaxTokens} onChange={(event) => setFormMaxTokens(parseInt(event.target.value, 10) || 2048)} />
+            <Input id="maxTokens" name="maxTokens" type="text" inputMode="numeric" min={1} max={16384} value={formMaxTokens} onChange={(event) => setFormMaxTokens(parseInt(event.target.value, 10) || 2048)} />
             <p className="text-xs text-muted-foreground">{t('settings.llmModalMaxTokensDesc')}</p>
           </div>
           <div className="space-y-2">

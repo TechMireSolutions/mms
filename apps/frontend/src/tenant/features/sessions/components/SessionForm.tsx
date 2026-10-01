@@ -66,8 +66,24 @@ export const SessionForm = (function SessionForm({
           nameRequiredLabel={t('sessions.form.nameRequired')}
         />
       }
+      formId="session-form"
     >
-      <div className="space-y-4">
+      <form
+        id="session-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (
+            sessionDraft.name?.trim() &&
+            sessionDraft.startDate &&
+            sessionDraft.endDate &&
+            !(Boolean(session?.id) && !isDirty)
+          ) {
+            void handleSave();
+          }
+        }}
+        className="space-y-4"
+      >
         <SessionDetailsSection
           sessionDraft={sessionDraft}
           errors={errors}
@@ -83,7 +99,7 @@ export const SessionForm = (function SessionForm({
           defaultCurrency={defaultCurrency}
           onDraftChange={updateDraft}
         />
-      </div>
+      </form>
     </FormModal>
   );
 });

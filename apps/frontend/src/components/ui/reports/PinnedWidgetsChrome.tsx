@@ -1,4 +1,4 @@
-import type React from "react";
+import React, { useId } from "react";
 import { LayoutDashboard, SlidersHorizontal } from "lucide-react";
 import type { AppTranslationKey } from "@mms/shared";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,18 +22,20 @@ function DashboardControlOption({
   descriptionKey,
   t,
 }: DashboardControlOptionProps): React.JSX.Element {
+  const id = useId();
   return (
-    <label className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all cursor-pointer select-none">
+    <div className="flex items-start gap-3 p-3 rounded-2xl border border-border/50 bg-card/10 hover:bg-card/45 hover:border-primary/20 transition-all select-none">
       <Checkbox
+        id={id}
         checked={checked}
         onCheckedChange={onCheckedChange}
-        className="mt-0.5"
+        className="mt-0.5 cursor-pointer"
       />
-      <div className="space-y-0.5">
+      <label htmlFor={id} className="space-y-0.5 cursor-pointer flex-1">
         <p className="text-xs font-bold text-foreground">{t(labelKey)}</p>
         <p className="text-xs text-muted-foreground">{t(descriptionKey)}</p>
-      </div>
-    </label>
+      </label>
+    </div>
   );
 }
 

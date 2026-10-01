@@ -3,10 +3,10 @@ import type { AppTranslationKey } from '@mms/shared';
 import { ACCOUNT_TYPE_META, type Account } from '@/lib/data/accountingData';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FieldErrorMessage } from '@/components/ui/FormField';
+import { Field } from '@/components/ui/FormField';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
-import { FORM_LABEL, WORK_SURFACE_INNER } from '@/components/ui/formStyles';
+import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DraftLine } from './journalEntryFormTypes';
@@ -56,8 +56,11 @@ export function JournalEntryLinesEditorMobile({
                 <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
               </Button>
             </div>
-            <div>
-              <label htmlFor={`line-mobile-${lineIndex}-account`} className={FORM_LABEL}>{t("accounting.journal.detail.account")}</label>
+            <Field
+              id={`line-mobile-${lineIndex}-account`}
+              label={t("accounting.journal.detail.account")}
+              error={errors[`line${lineIndex}`]}
+            >
               <FormSelect
                 id={`line-mobile-${lineIndex}-account`}
                 name={`lines.${lineIndex}.account_id`}
@@ -72,10 +75,11 @@ export function JournalEntryLinesEditorMobile({
                   {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
                 </Badge>
               )}
-              <FieldErrorMessage message={errors[`line${lineIndex}`]} className="m-0" />
-            </div>
-            <div>
-              <label htmlFor={`line-mobile-${lineIndex}-description`} className={FORM_LABEL}>{t("accounting.ledger.columns.lineNote")}</label>
+            </Field>
+            <Field
+              id={`line-mobile-${lineIndex}-description`}
+              label={t("accounting.ledger.columns.lineNote")}
+            >
               <Input
                 id={`line-mobile-${lineIndex}-description`}
                 name={`lines.${lineIndex}.description`}
@@ -85,10 +89,12 @@ export function JournalEntryLinesEditorMobile({
                 placeholder={t("accounting.journal.form.notePlaceholder")}
                 className="text-xs"
               />
-            </div>
+            </Field>
             <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label htmlFor={`line-mobile-${lineIndex}-debit`} className={FORM_LABEL}>{t("accounting.ledger.columns.debit")}</label>
+              <Field
+                id={`line-mobile-${lineIndex}-debit`}
+                label={t("accounting.ledger.columns.debit")}
+              >
                 <Input
                   id={`line-mobile-${lineIndex}-debit`}
                   name={`lines.${lineIndex}.debit`}
@@ -100,9 +106,11 @@ export function JournalEntryLinesEditorMobile({
                   onChange={(event) => onUpdateLine(lineIndex, "debit", event.target.value)}
                   className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
                 />
-              </div>
-              <div>
-                <label htmlFor={`line-mobile-${lineIndex}-credit`} className={FORM_LABEL}>{t("accounting.ledger.columns.credit")}</label>
+              </Field>
+              <Field
+                id={`line-mobile-${lineIndex}-credit`}
+                label={t("accounting.ledger.columns.credit")}
+              >
                 <Input
                   id={`line-mobile-${lineIndex}-credit`}
                   name={`lines.${lineIndex}.credit`}
@@ -114,7 +122,7 @@ export function JournalEntryLinesEditorMobile({
                   onChange={(event) => onUpdateLine(lineIndex, "credit", event.target.value)}
                   className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
                 />
-              </div>
+              </Field>
             </div>
           </article>
         );

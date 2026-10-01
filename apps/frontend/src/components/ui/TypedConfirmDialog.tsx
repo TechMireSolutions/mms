@@ -85,11 +85,19 @@ export function TypedConfirmDialog({
 }: TypedConfirmDialogProps): React.JSX.Element {
   const { t } = useTranslation();
   const confirmInputId = useId();
+  const formId = useId();
   const hasTypedConfirm = Boolean(expectedConfirm && onConfirmValueChange);
   const matches = !hasTypedConfirm || confirmMatches(confirmValue ?? '', expectedConfirm ?? '', confirmMatch);
   const requiresPassword = typeof password === 'string' && onPasswordChange !== undefined;
   const passwordValid = !requiresPassword || password.trim().length > 0;
   const canConfirm = !pending && matches && passwordValid;
+
+  const handleSubmit = (event: React.FormEvent<HTMLFormElement>): void => {
+    event.preventDefault();
+    if (canConfirm) {
+      onConfirm();
+    }
+  };
 
   return (
     <AlertDialog
@@ -108,7 +116,7 @@ export function TypedConfirmDialog({
           </AlertDialogTitle>
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
-        <div className="space-y-3 my-2 text-start">
+        <form id={formId} noValidate onSubmit={handleSubmit} className="space-y-3 my-2 text-start">
           {hasTypedConfirm && confirmLabel && onConfirmValueChange ? (
             <Field id={confirmInputId} label={confirmLabel}>
               <Input
@@ -134,23 +142,38 @@ export function TypedConfirmDialog({
                 value={password}
                 onChange={(event) => onPasswordChange(event.target.value)}
                 disabled={pending}
+                aria-invalid={Boolean(error)}
+                aria-describedby={
+                  error
+                    ? `${passwordInputId}-error`
+                    : passwordHint
+                      ? `${passwordInputId}-hint`
+                      : undefined
+                }
               />
               {passwordHint ? (
-                <p className="text-xs text-muted-foreground">{passwordHint}</p>
+                <p id={`${passwordInputId}-hint`} className="text-xs text-muted-foreground">{passwordHint}</p>
               ) : null}
             </>
           ) : null}
-          {error ? <FieldErrorMessage message={error} /> : null}
-        </div>
+          {error ? <FieldErrorMessage id={`${passwordInputId}-error`} message={error} /> : null}
+        </form>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={pending} className="min-h-11 rounded-xl font-bold">
             {t('common.cancel')}
           </AlertDialogCancel>
           <ActionButton
+            type="submit"
+            form={formId}
             variant={confirmVariant === 'destructive' ? 'danger' : 'primary'}
             disabled={!canConfirm}
             loading={pending}
-            onClick={onConfirm}
+            onClick={(event) => {
+              event.preventDefault();
+              if (canConfirm) {
+                onConfirm();
+              }
+            }}
           >
             {confirmButtonLabel}
           </ActionButton>

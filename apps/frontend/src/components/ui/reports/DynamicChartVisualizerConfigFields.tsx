@@ -51,8 +51,9 @@ export function DynamicChartVisualizerConfigFields({
   return (
     <div className="space-y-3.5">
       <div className="space-y-1">
-        <SectionLabel as="label" weight="bold" tracking="wider" className="block">{t("reports.visualizer.chartTitleLabel")}</SectionLabel>
+        <SectionLabel as="label" htmlFor="chart-title" weight="bold" tracking="wider" className="block">{t("reports.visualizer.chartTitleLabel")}</SectionLabel>
         <Input
+          id="chart-title"
           type="text"
           value={title}
           onChange={(event) => setTitle(event.target.value)}
@@ -63,8 +64,9 @@ export function DynamicChartVisualizerConfigFields({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <SectionLabel as="label" weight="bold" tracking="wider" className="block">{t("reports.visualizer.dataCollection")}</SectionLabel>
+          <SectionLabel as="label" htmlFor="chart-collection" weight="bold" tracking="wider" className="block">{t("reports.visualizer.dataCollection")}</SectionLabel>
           <FormSelect
+            id="chart-collection"
             value={collectionKey}
             onChange={(value) => setCollectionKey(value)}
             className="w-full text-xs"
@@ -80,8 +82,9 @@ export function DynamicChartVisualizerConfigFields({
         </div>
 
         <div className="space-y-1">
-          <SectionLabel as="label" weight="bold" tracking="wider" className="block">{t("reports.visualizer.xAxisDimension")}</SectionLabel>
+          <SectionLabel as="label" htmlFor="chart-x-axis" weight="bold" tracking="wider" className="block">{t("reports.visualizer.xAxisDimension")}</SectionLabel>
           <FormSelect
+            id="chart-x-axis"
             value={xAxisField}
             onChange={setXAxisField}
             className="w-full text-xs"
@@ -95,8 +98,9 @@ export function DynamicChartVisualizerConfigFields({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <SectionLabel as="label" weight="bold" tracking="wider" className="block">{t("reports.visualizer.operation")}</SectionLabel>
+          <SectionLabel as="label" htmlFor="chart-operation" weight="bold" tracking="wider" className="block">{t("reports.visualizer.operation")}</SectionLabel>
           <FormSelect
+            id="chart-operation"
             value={operation}
             onChange={(value) => setOperation(value as ChartOperation)}
             className="w-full text-xs"
@@ -115,8 +119,9 @@ export function DynamicChartVisualizerConfigFields({
         </div>
 
         <div className="space-y-1">
-          <SectionLabel as="label" weight="bold" tracking="wider" className="block">{t("reports.visualizer.targetField")}</SectionLabel>
+          <SectionLabel as="label" htmlFor="chart-target-field" weight="bold" tracking="wider" className="block">{t("reports.visualizer.targetField")}</SectionLabel>
           <FormSelect
+            id="chart-target-field"
             disabled={operation === "count"}
             value={targetField}
             onChange={setTargetField}
@@ -135,8 +140,9 @@ export function DynamicChartVisualizerConfigFields({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <div className="space-y-1">
-          <SectionLabel as="label" weight="bold" tracking="wider" className="block">{t("reports.visualizer.chartType")}</SectionLabel>
+          <SectionLabel as="label" htmlFor="chart-type" weight="bold" tracking="wider" className="block">{t("reports.visualizer.chartType")}</SectionLabel>
           <FormSelect
+            id="chart-type"
             value={chartType}
             onChange={(value) => setChartType(value as ChartType)}
             className="w-full text-xs"
@@ -152,12 +158,13 @@ export function DynamicChartVisualizerConfigFields({
 
         <div className="space-y-1">
           <div className="flex justify-between items-center">
-            <SectionLabel as="label" weight="bold" tracking="wider" className="block">{t("reports.visualizer.colorPalette")}</SectionLabel>
+            <SectionLabel as="label" htmlFor="chart-palette" weight="bold" tracking="wider" className="block">{t("reports.visualizer.colorPalette")}</SectionLabel>
             {isColorblindSafeChartPalette(activePalette) && (
               <Badge pill tone="success" className="px-1.5 font-black uppercase tracking-widest leading-none">{t('charts.accessibleBadge')}</Badge>
             )}
           </div>
           <FormSelect
+            id="chart-palette"
             value={activePalette}
             onChange={setActivePalette}
             className="w-full text-xs"

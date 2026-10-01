@@ -1,6 +1,5 @@
 import { brandingTokenToCss, brandingTokenToHex } from "@mms/shared";
 
-import { Label } from "@/components/ui/label";
 import { useTranslation } from "@/hooks/useTranslation";
 
 import { DERIVED_SWATCHES, type BrandingTokens } from "./brandColorPanelShared";
@@ -14,7 +13,7 @@ export function BrandDerivedTokens({ tokens }: BrandDerivedTokensProps) {
 
   return (
     <div className="space-y-2">
-      <Label>{t("theme.derivedTokensTitle")}</Label>
+      <h3 className="text-sm font-semibold text-foreground">{t("theme.derivedTokensTitle")}</h3>
       <p className="text-xs text-muted-foreground">{t("theme.derivedTokensDesc")}</p>
       <div className="flex flex-wrap gap-2">
         {DERIVED_SWATCHES.map((swatch) => {

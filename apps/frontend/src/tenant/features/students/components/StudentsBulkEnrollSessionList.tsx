@@ -30,9 +30,9 @@ export function StudentsBulkEnrollSessionList({
   return (
     <div className="space-y-2">
       <div className="flex items-center justify-between">
-        <label className="text-xs font-semibold text-foreground">
+        <span className="text-xs font-semibold text-foreground">
           {t("students.bulkEnrollSelectSessions")}
-        </label>
+        </span>
         {sessions.length > 1 && (
           <button
             type="button"

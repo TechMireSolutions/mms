@@ -31,7 +31,16 @@ export default function OnboardingWizard(): React.JSX.Element {
       title={t(currentStep.titleKey)}
       subtitle={t(currentStep.subtitleKey)}
     >
-      <StepComponent data={data} onChange={setData} />
+      <form
+        id="onboarding-wizard-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          handleNext();
+        }}
+      >
+        <StepComponent data={data} onChange={setData} />
+      </form>
 
       <OnboardingWizardFooter
         t={t}

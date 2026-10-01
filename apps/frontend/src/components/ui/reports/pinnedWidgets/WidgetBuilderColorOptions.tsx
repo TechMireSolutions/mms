@@ -20,7 +20,7 @@ export function WidgetBuilderColorOptions({
 
   return (
     <div className="space-y-1.5 text-start font-sans">
-      <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.defaultColor")}</label>
+      <p className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.defaultColor")}</p>
       <div className="flex flex-wrap gap-2">
         {([
           { id: "emerald", labelKey: "reports.widgets.builder.themeEmerald" },

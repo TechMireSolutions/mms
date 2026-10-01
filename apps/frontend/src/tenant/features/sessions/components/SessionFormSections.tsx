@@ -4,7 +4,7 @@ import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { FORM_INPUT, FORM_INPUT_ERROR, FORM_TEXTAREA } from "@/components/ui/formStyles";
+import { FORM_INPUT, FORM_TEXTAREA } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
@@ -57,9 +57,7 @@ export function SessionDetailsSection({
               value={sessionDraft.name || ""}
               onChange={(event) => onDraftChange({ name: event.target.value })}
               placeholder={t("sessions.form.namePlaceholder")}
-              aria-invalid={Boolean(errors.name)}
-              aria-describedby={errors.name ? "session-name-error" : undefined}
-              className={cn(FORM_INPUT, "ps-10", errors.name && FORM_INPUT_ERROR)}
+              className={cn(FORM_INPUT, "ps-10")}
             />
           </div>
         </Field>
@@ -158,9 +156,7 @@ export function SessionFinancialSection({
               placeholder="0.00"
               value={sessionDraft.baseFee || ""}
               onChange={(event) => onDraftChange({ baseFee: event.target.value })}
-              aria-invalid={Boolean(errors.baseFee)}
-              aria-describedby={errors.baseFee ? "session-baseFee-error" : undefined}
-              className={cn(FORM_INPUT, "ps-10", errors.baseFee && FORM_INPUT_ERROR)}
+              className={cn(FORM_INPUT, "ps-10")}
             />
           </div>
         </Field>

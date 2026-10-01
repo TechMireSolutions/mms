@@ -3,14 +3,13 @@ import { Gift } from "lucide-react";
 import { type Redemption, type Distribution } from "@/lib/data/hasanatData";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
-import { FieldErrorMessage, RequiredMark } from "@/components/ui/FormPrimitives";
+import { Field } from "@/components/ui/FormPrimitives";
 import { UserActorSelect } from "@/tenant/components/selectors/UserActorSelect";
-import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { todayISO } from "@mms/shared";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { cn } from "@/lib/utils";
 
 interface RedeemModalProps {
   open: boolean;
@@ -66,7 +65,7 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
   const handleSave = async () => {
     const newErrors: Record<string, string> = {};
     if (!data.distributionId) {
-      newErrors.distributionId = t("common.required");
+      newErrors.denominationId = t("common.required");
     }
     if (!data.reward?.trim()) {
       newErrors.reward = t("common.required");
@@ -109,69 +108,66 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
       error={submitError || undefined}
       onSave={handleSave}
       saveDisabled={activeDistributions.length === 0 || submitting}
+      formId="redeem-modal-form"
     >
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="dist-sel" className={FORM_LABEL}>{t("hasanat.fieldRecipient")}<RequiredMark /></label>
+      <form
+        id="redeem-modal-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (activeDistributions.length > 0 && !submitting) void handleSave();
+        }}
+        className="space-y-4"
+      >
+        <Field id="dist-sel" label={t("hasanat.fieldRecipient")} required error={errors.distributionId}>
           <FormSelect
             id="dist-sel"
             name="distributionId"
             value={data.distributionId || ""}
             onChange={(value) => updateField("distributionId", value)}
-            aria-invalid={Boolean(errors.distributionId)}
-            aria-describedby={errors.distributionId ? "dist-sel-error" : undefined}
-            className={errors.distributionId ? FORM_INPUT_ERROR : undefined}
             options={activeDistributions.map((distribution) => ({
               value: distribution.id,
               label: `${distribution.recipientName} — ${distribution.denominationName} × ${distribution.quantity}`,
             }))}
           />
-          <FieldErrorMessage id="dist-sel-error" message={errors.distributionId} />
-          {selectedDistribution && (
-            <p className="text-xs text-muted-foreground mt-1 m-0">{selectedDistribution.reason}</p>
-          )}
-        </div>
-        <div>
-          <label htmlFor="reward-given" className={FORM_LABEL}>{t("hasanat.columns.redemption.reward")}<RequiredMark /></label>
+        </Field>
+        {selectedDistribution && (
+          <p className="text-xs text-muted-foreground mt-1 m-0">{selectedDistribution.reason}</p>
+        )}
+        <Field id="reward-given" errorId="reward-error" label={t("hasanat.columns.redemption.reward")} required error={errors.reward}>
           <Input
             id="reward-given"
             name="reward"
-            className={cn(FORM_INPUT, errors.reward && FORM_INPUT_ERROR)}
+            className={FORM_INPUT}
             value={data.reward || ""}
             onChange={(event) => updateField("reward", event.target.value)}
             placeholder={t("hasanat.rewardPlaceholder")}
-            aria-invalid={Boolean(errors.reward)}
-            aria-describedby={errors.reward ? "reward-error" : undefined}
           />
-          <FieldErrorMessage id="reward-error" message={errors.reward} />
-        </div>
+        </Field>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="pts-used" className={FORM_LABEL}>{t("hasanat.columns.redemption.pointsUsed")}<RequiredMark /></label>
+          <Field id="pts-used" label={t("hasanat.columns.redemption.pointsUsed")} required error={errors.pointsUsed}>
             <Input
               id="pts-used"
               name="pointsUsed"
-              type="number"
+              type="text"
               inputMode="numeric"
-              className={cn(FORM_INPUT, errors.pointsUsed && FORM_INPUT_ERROR)}
+              className={FORM_INPUT}
               value={data.pointsUsed || ""}
-              onChange={(event) => updateField("pointsUsed", Number(event.target.value))}
+              onChange={(event) => {
+                const sanitized = event.target.value.replace(/[^0-9]/g, '');
+                updateField("pointsUsed", (sanitized ? Number(sanitized) : 0) as Redemption['pointsUsed']);
+              }}
               placeholder="0"
-              min={1}
-              aria-invalid={Boolean(errors.pointsUsed)}
-              aria-describedby={errors.pointsUsed ? "pts-used-error" : undefined}
             />
-            <FieldErrorMessage id="pts-used-error" message={errors.pointsUsed} />
-          </div>
-          <div>
-            <label htmlFor="red-date" className={FORM_LABEL}>{t("hasanat.columns.redemption.date")}</label>
+          </Field>
+          <Field id="red-date" label={t("hasanat.columns.redemption.date")}>
             <DatePicker
               id="red-date"
               name="date"
               value={data.date || ""}
               onChange={(value) => updateField("date", value)}
             />
-          </div>
+          </Field>
         </div>
         <UserActorSelect
           id="approved-by"
@@ -183,7 +179,7 @@ export function RedeemModal({ open, distributions, onClose, onSave }: RedeemModa
           }}
           allowEmpty
         />
-      </div>
+      </form>
     </FormModal>
   );
 }

@@ -10,8 +10,9 @@ import {
   type QuestionSourceBook,
   type QuestionSourceReference,
 } from '@mms/shared';
-import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_INPUT } from '@/components/ui/formStyles';
 import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/FormPrimitives';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import { QuestionSourceInput } from '@/tenant/features/question-bank/components/QuestionSourceInput';
@@ -75,10 +76,7 @@ export function QuestionSourcesCitationsSection({
                 )}
               </div>
 
-              <div>
-                <label htmlFor={`qb-citation-book-${index}`} className={FORM_LABEL}>
-                  {t('questionBank.selectSourceBook')}
-                </label>
+              <Field id={`qb-citation-book-${index}`} label={t('questionBank.selectSourceBook')}>
                 <FormSelect
                   id={`qb-citation-book-${index}`}
                   className={FORM_INPUT}
@@ -87,7 +85,7 @@ export function QuestionSourcesCitationsSection({
                   placeholder={t('questionBank.selectSourceBook')}
                   options={sourceBooks.map((b) => ({ value: b.id, label: b.name }))}
                 />
-              </div>
+              </Field>
 
               {book && citationFieldIds.length > 0 && (
                 <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">

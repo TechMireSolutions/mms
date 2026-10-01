@@ -68,6 +68,7 @@ export function BrandColorField({
         />
         <div className="relative flex-1">
           <Input
+            id={`${id}-hex`}
             value={hexDraft}
             onChange={(event) => {
               const val = event.target.value;

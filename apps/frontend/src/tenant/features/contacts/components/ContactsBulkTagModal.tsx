@@ -2,9 +2,10 @@ import type React from "react";
 import { useState } from "react";
 import { Tag } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
+import { Field } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 
 export interface ContactsBulkTagModalProps {
   open: boolean;
@@ -50,15 +51,21 @@ export function ContactsBulkTagModal({
       onSave={handleSave}
       saving={isPending}
       saveDisabled={isPending || tagInput.trim().length === 0}
+      formId="bulk-tag-form"
     >
-      <div className="space-y-4 text-start">
+      <form
+        id="bulk-tag-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!isPending && tagInput.trim().length > 0) void handleSave();
+        }}
+        className="space-y-4 text-start"
+      >
         <p className="text-sm text-muted-foreground m-0">
           {t("contacts.selectedCount", { count: selectedCount })}
         </p>
-        <div className="space-y-2">
-          <label htmlFor="bulk-tag-input" className={FORM_LABEL}>
-            {t("contacts.bulkTagPlaceholder")}
-          </label>
+        <Field id="bulk-tag-input" label={t("contacts.bulkTagPlaceholder")}>
           <Input
             id="bulk-tag-input"
             name="tags"
@@ -69,8 +76,8 @@ export function ContactsBulkTagModal({
             disabled={isPending}
             className={FORM_INPUT}
           />
-        </div>
-      </div>
+        </Field>
+      </form>
     </FormModal>
   );
 }

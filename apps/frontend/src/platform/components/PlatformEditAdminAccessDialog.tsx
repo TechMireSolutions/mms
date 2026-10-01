@@ -61,12 +61,24 @@ export function PlatformEditAdminAccessDialog({
       saving={updatePermissions.isPending}
       dir={dir}
       lang={language}
+      formId="platform-edit-admin-access-form"
     >
-      <PlatformAdminPermissionsFields
-        value={permissions}
-        onChange={setPermissions}
-        disabled={updatePermissions.isPending}
-      />
+      <form
+        id="platform-edit-admin-access-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (!updatePermissions.isPending) {
+            void handleSave();
+          }
+        }}
+      >
+        <PlatformAdminPermissionsFields
+          value={permissions}
+          onChange={setPermissions}
+          disabled={updatePermissions.isPending}
+        />
+      </form>
     </FormModal>
   );
 }

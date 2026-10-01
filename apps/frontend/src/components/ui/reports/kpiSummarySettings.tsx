@@ -106,17 +106,17 @@ export function KPISummarySettings({
                       const isCustom = customCards.some((card) => card.id === kpi.id);
                       return (
                         <div key={kpi.id} className="flex items-center justify-between rounded-xl border border-border/40 bg-card/10 p-2.5 font-sans transition-all hover:bg-card/20">
-                          <label className="flex min-w-0 flex-1 cursor-pointer items-center gap-2.5">
-                            <Checkbox checked={isSelected} onCheckedChange={() => onToggleCard(kpi.id)} className="h-3.5 w-3.5" aria-label={kpi.label} />
-                            <div className="min-w-0 flex-1">
+                          <div className="flex min-w-0 flex-1 items-center gap-2.5">
+                            <Checkbox id={`kpi-${kpi.id}`} checked={isSelected} onCheckedChange={() => onToggleCard(kpi.id)} className="h-3.5 w-3.5" aria-label={kpi.label} />
+                            <label htmlFor={`kpi-${kpi.id}`} className="min-w-0 flex-1 cursor-pointer">
                               <p className="truncate text-xs font-bold leading-tight text-foreground">{kpi.label}</p>
                               <p className="mt-0.5 flex items-center gap-1 text-xs font-semibold leading-none text-muted-foreground">
                                 <span className={isCustom ? 'text-primary' : 'text-success'}>
                                   {t(isCustom ? 'reports.kpiCustomCard' : 'reports.kpiActiveData')}
                                 </span>
                               </p>
-                            </div>
-                          </label>
+                            </label>
+                          </div>
                           <div className="flex shrink-0 items-center gap-1">
                             <Button type="button" variant="ghost" size="icon" onClick={() => onEditCard(kpi)} className="rounded text-muted-foreground shadow-none hover:bg-primary/10 hover:text-primary" title={t('reports.kpiEditConfig')}>
                               <SlidersHorizontal className="h-3.5 w-3.5" aria-hidden="true" />

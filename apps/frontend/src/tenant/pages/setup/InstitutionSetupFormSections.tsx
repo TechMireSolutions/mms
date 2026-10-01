@@ -4,7 +4,7 @@ import type { BrandingSettings } from '@mms/shared';
 
 import { useTranslation } from '@/hooks/useTranslation';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/FormField';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from '@/components/ui/formStyles';
 import { InstitutionSetupAddressSection } from './InstitutionSetupAddressSection';
@@ -47,10 +47,13 @@ export function InstitutionSetupFormSections({
         className={SETUP_SECTION_CARD_CLASS}
       >
         <div className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="setup-madrasaName" className="font-semibold">
-              {t('branding.madrasaName')} *
-            </Label>
+          <Field
+            id="setup-madrasaName"
+            label={t('branding.madrasaName')}
+            required
+            error={errors.madrasaName}
+            hint={!errors.madrasaName ? t('branding.madrasaNameHint') : undefined}
+          >
             <Input
               id="setup-madrasaName"
               name="madrasaName"
@@ -58,21 +61,15 @@ export function InstitutionSetupFormSections({
               value={data.madrasaName}
               onChange={(e) => updateField('madrasaName', e.target.value)}
               placeholder={t('branding.madrasaNamePlaceholder')}
-              aria-invalid={Boolean(errors.madrasaName)}
             />
-            {errors.madrasaName ? (
-              <p className="text-xs text-destructive">{errors.madrasaName}</p>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                {t('branding.madrasaNameHint')}
-              </p>
-            )}
-          </div>
+          </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="setup-tagline" className="font-semibold">
-              {t('branding.tagline')} *
-            </Label>
+          <Field
+            id="setup-tagline"
+            label={t('branding.tagline')}
+            required
+            error={errors.tagline}
+          >
             <Input
               id="setup-tagline"
               name="tagline"
@@ -80,12 +77,8 @@ export function InstitutionSetupFormSections({
               value={data.tagline}
               onChange={(e) => updateField('tagline', e.target.value)}
               placeholder={t('institutionSetup.taglinePlaceholder')}
-              aria-invalid={Boolean(errors.tagline)}
             />
-            {errors.tagline && (
-              <p className="text-xs text-destructive">{errors.tagline}</p>
-            )}
-          </div>
+          </Field>
         </div>
       </SectionCard>
 
@@ -97,10 +90,12 @@ export function InstitutionSetupFormSections({
         className={SETUP_SECTION_CARD_CLASS}
       >
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="setup-email" className="font-semibold">
-              {t('branding.email')} *
-            </Label>
+          <Field
+            id="setup-email"
+            label={t('branding.email')}
+            required
+            error={errors.email}
+          >
             <Input
               id="setup-email"
               name="email"
@@ -109,17 +104,15 @@ export function InstitutionSetupFormSections({
               value={data.email}
               onChange={(e) => updateField('email', e.target.value)}
               placeholder={t('branding.emailPlaceholder')}
-              aria-invalid={Boolean(errors.email)}
             />
-            {errors.email && (
-              <p className="text-xs text-destructive">{errors.email}</p>
-            )}
-          </div>
+          </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="setup-phone" className="font-semibold">
-              {t('branding.phone')} *
-            </Label>
+          <Field
+            id="setup-phone"
+            label={t('branding.phone')}
+            required
+            error={errors.phone}
+          >
             <Input
               id="setup-phone"
               name="phone"
@@ -130,24 +123,24 @@ export function InstitutionSetupFormSections({
               value={data.phone}
               onChange={(e) => updateField('phone', e.target.value)}
               placeholder={t('branding.phonePlaceholder')}
-              aria-invalid={Boolean(errors.phone)}
             />
-            {errors.phone && (
-              <p className="text-xs text-destructive">{errors.phone}</p>
-            )}
-          </div>
+          </Field>
 
-          <div className="space-y-1.5 sm:col-span-2">
-            <Label htmlFor="setup-website">{t('branding.website')}</Label>
-            <Input
+          <div className="sm:col-span-2">
+            <Field
               id="setup-website"
-              name="website"
-              type="url"
-              className={FORM_INPUT}
-              value={data.website}
-              onChange={(e) => updateField('website', e.target.value)}
-              placeholder="https://www.yourmadrasa.org"
-            />
+              label={t('branding.website')}
+            >
+              <Input
+                id="setup-website"
+                name="website"
+                type="url"
+                className={FORM_INPUT}
+                value={data.website}
+                onChange={(e) => updateField('website', e.target.value)}
+                placeholder="https://www.yourmadrasa.org"
+              />
+            </Field>
           </div>
         </div>
       </SectionCard>

@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { DESIGNATED_FOR_OPTIONS } from '@/lib/data/obligationsData';
 import { FormModal } from "@/components/ui/FormModal";
-import { RequiredMark } from "@/components/ui/FormPrimitives";
+import { Field } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -53,11 +53,6 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
     }
   };
 
-  const errorMessages = [
-    ...Object.values(errors).map((key) => t(key)),
-    ...(submitError ? [submitError] : []),
-  ];
-
   return (
     <FormModal
       open
@@ -68,11 +63,19 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
       onSave={handleSave}
       saving={saving}
       saveDisabled={saving || !form.name?.trim()}
-      error={errorMessages.length > 0 ? errorMessages : undefined}
+      error={submitError || undefined}
+      formId="obligation-type-form-modal"
     >
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="type-name" className={FORM_LABEL}>{t("obligations.types.colName")}<RequiredMark /></label>
+      <form
+        id="obligation-type-form-modal"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!saving && form.name?.trim()) void handleSave();
+        }}
+        className="space-y-4"
+      >
+        <Field id="type-name" label={t("obligations.types.colName")} required error={errors.name ? t(errors.name) : undefined}>
           <Input
             id="type-name"
             name="name"
@@ -88,11 +91,9 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
               setForm({ ...form, name: event.target.value });
             }}
             className={FORM_INPUT}
-            aria-invalid={!!errors.name}
           />
-        </div>
-        <div>
-          <label htmlFor="type-designated" className={FORM_LABEL}>{t("obligations.types.colDesignated")}<RequiredMark /></label>
+        </Field>
+        <Field id="type-designated" label={t("obligations.types.colDesignated")} required>
           <FormSelect
             id="type-designated"
             name="designated_for"
@@ -100,8 +101,8 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
             onChange={(val) => setForm({ ...form, designated_for: val as DesignatedFor })}
             options={designatedOptions}
           />
-        </div>
-        <div className="flex items-center gap-3">
+        </Field>
+        <div className="flex min-h-11 items-center gap-3">
           <Checkbox
             id="qty"
             name="quantity_based"
@@ -110,7 +111,7 @@ export function ObligationTypeFormModal({ initial, onSave, onClose, title }: Obl
           />
           <label htmlFor="qty" className="text-sm font-medium text-foreground cursor-pointer select-none">{t("obligations.types.colQuantity")}</label>
         </div>
-      </div>
+      </form>
     </FormModal>
   );
 }

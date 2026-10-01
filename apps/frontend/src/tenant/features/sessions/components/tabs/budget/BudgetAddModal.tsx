@@ -3,7 +3,7 @@ import { Wallet } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Class } from "@/lib/data/sessionsData";
 
@@ -51,12 +51,18 @@ export function BudgetAddModal({
       onSave={onSave}
       saving={saving}
       saveDisabled={saving || !targetClassId || !amount || amount <= 0}
+      formId="budget-add-form"
     >
-      <div className="space-y-4">
-        <div>
-          <label className={FORM_LABEL} htmlFor="target-class">
-            {t("sessions.classes.fallbackName")}
-          </label>
+      <form
+        id="budget-add-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!saving && targetClassId && amount && amount > 0) void onSave();
+        }}
+        className="space-y-4"
+      >
+        <Field id="target-class" label={t("sessions.classes.fallbackName")} required>
           <FormSelect
             id="target-class"
             name="targetClassId"
@@ -65,12 +71,9 @@ export function BudgetAddModal({
             options={classes.map((c) => ({ value: c.id, label: c.name }))}
             className="w-full"
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className={FORM_LABEL} htmlFor="budget-detail">
-            {t("sessions.budget.form.note")}
-          </label>
+        <Field id="budget-detail" label={t("sessions.budget.form.note")}>
           <Input
             id="budget-detail"
             name="detail"
@@ -78,14 +81,17 @@ export function BudgetAddModal({
             onChange={(e) => onDetailChange(e.target.value)}
             placeholder={t("sessions.budget.detailPlaceholder")}
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className={FORM_LABEL} htmlFor="budget-amount">
-            {currencyLabel
+        <Field
+          id="budget-amount"
+          label={
+            currencyLabel
               ? t("sessions.budget.form.amount", { currency: currencyLabel })
-              : t("sessions.budget.form.amountPlain")}
-          </label>
+              : t("sessions.budget.form.amountPlain")
+          }
+          required
+        >
           <Input
             id="budget-amount"
             name="amount"
@@ -100,9 +106,8 @@ export function BudgetAddModal({
               }
             }}
           />
-        </div>
-      </div>
+        </Field>
+      </form>
     </FormModal>
   );
 }
-

@@ -10,6 +10,7 @@ interface FieldProps {
   hint?: string;
   error?: string;
   id?: string;
+  errorId?: string;
   /**
    * Optional AI-generated context hint. When provided, a sparkle icon button
    * appears beside the label that reveals the hint in an inline disclosure.
@@ -79,7 +80,7 @@ export function RequiredMark(): React.JSX.Element {
   return <span className="text-destructive ms-0.5" aria-hidden="true">*</span>;
 }
 
-export function Field({ label, required = false, hint = undefined, error = undefined, id, aiHint, children }: FieldProps): React.JSX.Element {
+export function Field({ label, required = false, hint = undefined, error = undefined, id, errorId: customErrorId, aiHint, children }: FieldProps): React.JSX.Element {
   const [aiOpen, setAiOpen] = React.useState(false);
   const fallbackId = React.useId();
   const instanceIdSuffix = React.useId().replace(/:/g, "");
@@ -92,7 +93,7 @@ export function Field({ label, required = false, hint = undefined, error = undef
     .find(Boolean);
   const resolvedId = id || existingControl?.id || `${baseId}-${instanceIdSuffix}`;
   const resolvedName = existingControl?.name || id || baseId;
-  const errorId = `${resolvedId}-error`;
+  const errorId = customErrorId || `${resolvedId}-error`;
   const hintId = `${resolvedId}-hint`;
   const describedBy = error ? errorId : (hint ? hintId : undefined);
 
@@ -136,24 +137,29 @@ export function Field({ label, required = false, hint = undefined, error = undef
 
   return (
     <div id={id ? `${id}-container` : undefined} data-field-key={id}>
-      <label htmlFor={resolvedId} className={cn(LABEL, aiHint ? "flex items-center gap-1.5" : "")}>
-        <span>{label}</span>
-        {required && <RequiredMark />}
-        {aiHint && (
-          <>
-            <button
-              type="button"
-              aria-label="AI suggestion"
-              aria-expanded={aiOpen}
-              aria-description="AI-generated"
-              onClick={() => setAiOpen((o) => !o)}
-              className="ms-auto inline-flex items-center justify-center w-5 h-5 rounded text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
-            </button>
-          </>
-        )}
-      </label>
+      {aiHint ? (
+        <div className={cn(LABEL, "flex items-center gap-1.5")}>
+          <label htmlFor={resolvedId} className="cursor-pointer">
+            <span>{label}</span>
+            {required && <RequiredMark />}
+          </label>
+          <button
+            type="button"
+            aria-label="AI suggestion"
+            aria-expanded={aiOpen}
+            aria-description="AI-generated"
+            onClick={() => setAiOpen((o) => !o)}
+            className="ms-auto inline-flex items-center justify-center w-5 h-5 rounded text-primary/60 hover:text-primary hover:bg-primary/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-pointer"
+          >
+            <Sparkles className="w-3.5 h-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      ) : (
+        <label htmlFor={resolvedId} className={LABEL}>
+          <span>{label}</span>
+          {required && <RequiredMark />}
+        </label>
+      )}
       {aiHint && aiOpen && (
         <p
           className="mb-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2 text-xs text-primary/80 leading-relaxed"

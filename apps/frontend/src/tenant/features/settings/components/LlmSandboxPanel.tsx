@@ -167,6 +167,7 @@ export function LlmSandboxPanel({
             <Input
               type="text"
               placeholder={t('settings.llmSandboxInputPlaceholder')}
+              aria-label={t('settings.llmSandboxInputPlaceholder')}
               value={sandboxInput}
               onChange={(event) => setSandboxInput(event.target.value)}
               disabled={sandboxTesting}

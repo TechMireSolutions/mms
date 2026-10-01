@@ -104,8 +104,6 @@ export function StudentRegistrationSection({
                   placeholder={t("students.form.grNumberPlaceholder")}
                   disabled={grInputDisabled}
                   iconPaddingClass={FORM_INPUT}
-                  aria-invalid={Boolean(grError)}
-                  aria-describedby={grError ? "grNumber-error" : undefined}
                   className={cn(
                     "ps-10",
                     isGrAutoAssigned && "pe-24",

@@ -53,7 +53,7 @@ export function WidgetBuilderTypeSelector({
 
   return (
     <div className="space-y-1.5">
-      <SectionLabel as="label" toneClassName="text-foreground/80" tracking="wider" className="block">{t("reports.widgets.builder.focusType")}</SectionLabel>
+      <SectionLabel as="p" toneClassName="text-foreground/80" tracking="wider" className="block">{t("reports.widgets.builder.focusType")}</SectionLabel>
       <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
         {widgetTypeOptions.map((widgetTypeOption) => {
           const isSelectedType = widgetType === widgetTypeOption.id;

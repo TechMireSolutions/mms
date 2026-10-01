@@ -1,5 +1,6 @@
 import React from "react";
-import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
+import { FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/input";
 import { isListSummaryWidgetType } from "@/components/dashboard-widgets/registry";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -97,8 +98,7 @@ export function WidgetBuilderOptionsPanel({
       />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
-        <div className="space-y-1">
-          <label htmlFor="widget-builder-title" className={FORM_LABEL}>{t("reports.widgets.builder.labelTitle")}</label>
+        <Field label={t("reports.widgets.builder.labelTitle")} id="widget-builder-title">
           <Input
             id="widget-builder-title"
             name="widgetTitle"
@@ -108,7 +108,7 @@ export function WidgetBuilderOptionsPanel({
             placeholder={t("reports.widgets.builder.placeholderTitle")}
             className={FORM_INPUT_BUILDER}
           />
-        </div>
+        </Field>
 
         {widgetType === "card" && mode === "dashboard" && (
           <WidgetBuilderCardRoleOptions

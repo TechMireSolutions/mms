@@ -148,8 +148,19 @@ export function QuestionForm({
       saving={saving}
       saveDisabled={!questionDraft.text?.trim() || questionDraft.categoryIds.length === 0}
       footerStart={footerStart}
+      formId="question-form"
     >
-      <div className="space-y-5 pb-6">
+      <form
+        id="question-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (questionDraft.text?.trim() && questionDraft.categoryIds.length > 0 && !saving) {
+            void handleSave();
+          }
+        }}
+        className="space-y-5 pb-6"
+      >
         <div className="relative z-raised">
           <QuestionFormClassificationSection
             questionDraft={questionDraft}
@@ -171,7 +182,7 @@ export function QuestionForm({
             onRemoveBook={handleRemoveSourceBook}
           />
         </div>
-      </div>
+      </form>
     </FormModal>
   );
 }

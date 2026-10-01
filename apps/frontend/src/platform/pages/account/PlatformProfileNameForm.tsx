@@ -63,7 +63,6 @@ export function PlatformProfileNameForm({
             autoComplete="name"
             required
             value={name}
-            aria-invalid={Boolean(nameError)}
             onChange={(event) => {
               setName(event.target.value);
               if (nameError) setNameError(null);

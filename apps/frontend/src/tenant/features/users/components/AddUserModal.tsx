@@ -46,19 +46,32 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
       ) : (
         <>
           <StepIndicator step={step} />
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={step}
-              initial={{ opacity: 0, x: 20 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: -20 }}
-              transition={{ duration: 0.18 }}
-            >
-              {step === 1 && <Step1 form={form} setForm={setForm} errors={errors} />}
-              {step === 2 && <Step2 form={form} setForm={setForm} errors={errors} />}
-              {step === 3 && <Step3 form={form} setForm={setForm} errors={errors} />}
-            </motion.div>
-          </AnimatePresence>
+          <form
+            id="add-user-modal-form"
+            noValidate
+            onSubmit={(event) => {
+              event.preventDefault();
+              if (step < 3) {
+                handleNext();
+              } else {
+                void handleSubmit();
+              }
+            }}
+          >
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={step}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.18 }}
+              >
+                {step === 1 && <Step1 form={form} setForm={setForm} errors={errors} />}
+                {step === 2 && <Step2 form={form} setForm={setForm} errors={errors} />}
+                {step === 3 && <Step3 form={form} setForm={setForm} errors={errors} />}
+              </motion.div>
+            </AnimatePresence>
+          </form>
           <div className="mt-6 flex w-full items-center justify-between gap-2">
             <Button type="button" variant="outline" className="min-h-11" onClick={step === 1 ? onClose : handleBack}>
               {step === 1 ? <X className="h-3.5 w-3.5" /> : <ChevronLeft className="h-3.5 w-3.5" />}
@@ -79,11 +92,28 @@ export function AddUserModal({ onClose, onAdd, existingEmails = [] }: AddUserMod
               ))}
             </div>
             {step < 3 ? (
-              <Button type="button" className="min-h-11" onClick={handleNext}>
+              <Button
+                type="submit"
+                form="add-user-modal-form"
+                className="min-h-11"
+                onClick={(event) => {
+                  event.preventDefault();
+                  handleNext();
+                }}
+              >
                 {t('users.addNext')} <ChevronRight className="h-3.5 w-3.5" />
               </Button>
             ) : (
-              <Button type="button" className="min-h-11" onClick={() => { void handleSubmit(); }} disabled={submitting}>
+              <Button
+                type="submit"
+                form="add-user-modal-form"
+                className="min-h-11"
+                onClick={(event) => {
+                  event.preventDefault();
+                  void handleSubmit();
+                }}
+                disabled={submitting}
+              >
                 {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <UserPlus className="h-3.5 w-3.5" />}
                 {submitting ? t('users.addCreating') : t('users.addCreate')}
               </Button>

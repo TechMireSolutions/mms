@@ -55,7 +55,6 @@ export function ContactExperienceDatesSection({
                 onChange={(dateStr) => onUpdate({ startDate: dateStr })}
                 placeholder={t("contacts.form.startDatePlaceholder")}
                 max={exp.endDate || undefined}
-                aria-invalid={Boolean(startDateError)}
                 className={cn(
                   startDateError &&
                     "border-destructive focus-within:border-destructive focus-within:ring-destructive",
@@ -84,7 +83,6 @@ export function ContactExperienceDatesSection({
                     : t("contacts.form.endDatePlaceholder")
                 }
                 min={exp.startDate || undefined}
-                aria-invalid={Boolean(endDateError)}
                 className={cn(
                   endDateError &&
                     "border-destructive focus-within:border-destructive focus-within:ring-destructive",

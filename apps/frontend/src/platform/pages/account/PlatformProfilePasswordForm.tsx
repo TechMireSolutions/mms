@@ -58,7 +58,7 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
       accentColor="success"
     >
       <form onSubmit={(event) => void handleChangePassword(event)} className="space-y-4 text-start">
-        {passwordError ? <FieldErrorMessage message={passwordError} /> : null}
+        {passwordError ? <FieldErrorMessage id="platform-password-error" message={passwordError} /> : null}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div className="md:col-span-2">
             <PasswordInput
@@ -82,6 +82,7 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
             required
             value={newPassword}
             aria-invalid={Boolean(passwordError)}
+            aria-describedby={passwordError ? "platform-password-error" : undefined}
             onChange={(event) => {
               setNewPassword(event.target.value);
               if (passwordError) setPasswordError(null);
@@ -95,6 +96,7 @@ export function PlatformProfilePasswordForm(): React.JSX.Element {
             required
             value={confirmPassword}
             aria-invalid={Boolean(passwordError)}
+            aria-describedby={passwordError ? "platform-password-error" : undefined}
             onChange={(event) => {
               setConfirmPassword(event.target.value);
               if (passwordError) setPasswordError(null);

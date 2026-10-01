@@ -147,15 +147,31 @@ export function ContactForm({
             t={t}
           />
         }
+        formId="contact-form"
       >
-        <ContactFormTabContent
-          tab={tab}
-          draft={draft}
-          lockGender={lockGender}
-          defaultCountry={effectiveCountry}
-          defaultCity={effectiveCity}
-          defaultProvince={effectiveProvince}
-        />
+        <form
+          id="contact-form"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (
+              !draft.lookupsLoading &&
+              draft.contactDraft.firstName?.trim() &&
+              !(Boolean(contact) && !draft.isDirty)
+            ) {
+              void draft.handleSave();
+            }
+          }}
+        >
+          <ContactFormTabContent
+            tab={tab}
+            draft={draft}
+            lockGender={lockGender}
+            defaultCountry={effectiveCountry}
+            defaultCity={effectiveCity}
+            defaultProvince={effectiveProvince}
+          />
+        </form>
       </FormModal>
 
       <ConfirmAlertDialog

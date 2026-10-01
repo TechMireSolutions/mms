@@ -24,6 +24,7 @@ export const EditableMultiSelectSearchBar = React.memo(function EditableMultiSel
         value={searchQuery}
         onChange={(e) => onSearchChange(e.target.value)}
         placeholder={t("common.search")}
+        aria-label={t("common.search")}
         className="h-8 text-xs bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-1 shadow-none"
       />
       {searchQuery && (

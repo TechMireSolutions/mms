@@ -146,16 +146,26 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
       error={submitError || undefined}
       onSave={handleSave}
       saveDisabled={totalAvailable === 0 || submitting}
+      formId="distribute-modal-form"
     >
-      <DistributeModalFields
-        denoms={denoms}
-        data={data}
-        selectedDenomination={selectedDenomination}
-        totalAvailable={totalAvailable}
-        setData={setData}
-        updateField={updateField}
-        errors={errors}
-      />
+      <form
+        id="distribute-modal-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (totalAvailable > 0 && !submitting) void handleSave();
+        }}
+      >
+        <DistributeModalFields
+          denoms={denoms}
+          data={data}
+          selectedDenomination={selectedDenomination}
+          totalAvailable={totalAvailable}
+          setData={setData}
+          updateField={updateField}
+          errors={errors}
+        />
+      </form>
     </FormModal>
   );
 }

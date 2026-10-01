@@ -54,7 +54,7 @@ export function ChartPrefsControlGroup({
   return (
     <div className={PREFS_GROUP_CLASS}>
       <Select value={chartTypeValue} onValueChange={onChartTypeChange}>
-        <SelectTrigger className={FORM_SELECT_MINI}>
+        <SelectTrigger className={FORM_SELECT_MINI} aria-label={t("reports.visualizer.chartType")}>
           <SelectValue placeholder={t("reports.visualizer.chartType")} />
         </SelectTrigger>
         <SelectContent>
@@ -67,7 +67,7 @@ export function ChartPrefsControlGroup({
       </Select>
 
       <Select value={colorValue} onValueChange={onColorChange}>
-        <SelectTrigger className={FORM_SELECT_MINI}>
+        <SelectTrigger className={FORM_SELECT_MINI} aria-label={t("reports.visualizer.colorPalette")}>
           <SelectValue placeholder={t("reports.visualizer.colorPalette")} />
         </SelectTrigger>
         <SelectContent>

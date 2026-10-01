@@ -58,6 +58,7 @@ export function ClassDetailFeesTab({
                   id={`fee-type-${fee.id}`}
                   name={`fee-type-${fee.id}`}
                   placeholder={t('sessions.classes.detail.fees.typePlaceholder')}
+                  aria-label={t('sessions.classes.detail.fees.typePlaceholder')}
                   value={fee.feeType}
                   onChange={(e) => onUpdateFee(fee.id, { feeType: e.target.value })}
                   className="flex-1 text-xs"
@@ -72,6 +73,7 @@ export function ClassDetailFeesTab({
                     type="text"
                     inputMode="decimal"
                     placeholder={t('sessions.classes.detail.amount')}
+                    aria-label={t('sessions.classes.detail.amount')}
                     value={fee.amount === 0 ? '' : String(fee.amount)}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -121,6 +123,7 @@ export function ClassDetailFeesTab({
                   id={`discount-name-${discount.id}`}
                   name={`discount-name-${discount.id}`}
                   placeholder={t('sessions.classes.detail.discounts.namePlaceholder')}
+                  aria-label={t('sessions.classes.detail.discounts.namePlaceholder')}
                   value={discount.discountType}
                   onChange={(e) => onUpdateDiscount(discount.id, { discountType: e.target.value })}
                   className="flex-1 text-xs"
@@ -132,6 +135,7 @@ export function ClassDetailFeesTab({
                     type="text"
                     inputMode="decimal"
                     placeholder="0"
+                    aria-label={t('sessions.discounts.type.percentage')}
                     value={discount.percentage === 0 ? '' : String(discount.percentage)}
                     onChange={(e) => {
                       const val = e.target.value;
@@ -150,6 +154,7 @@ export function ClassDetailFeesTab({
                   <FormSelect
                     id={`disc-status-${discount.id}`}
                     name="status"
+                    aria-label={t('common.status')}
                     value={discount.status || 'active'}
                     onChange={(val) =>
                       onUpdateDiscount(discount.id, {

@@ -6,6 +6,7 @@ import { useSessionConfig } from '@/hooks/useStandardModuleConfig';
 import { notify } from '@/lib/notify';
 import { type Session, SESSION_TYPES } from '@/lib/data/sessionsData';
 import { SessionSchema, toTitleCase, type AppTranslationKey } from '@mms/shared';
+import { mapZodFormErrors } from '@/lib/forms/mapZodFormErrors';
 import type { SessionSelectOption } from '@/tenant/features/sessions/components/SessionFormSections';
 import {
   SESSION_CURRENCIES,
@@ -100,14 +101,10 @@ export function useSessionFormController({ session, onClose, onSave }: UseSessio
 
       const parsed = SessionSchema.safeParse(payload);
       if (!parsed.success) {
-        const schemaErrors: Record<string, string> = {};
-        for (const issue of parsed.error.issues) {
-          const field = issue.path[0];
-          if (typeof field === 'string' && !schemaErrors[field]) {
-            schemaErrors[field] = issue.message;
-          }
-        }
-        setErrors((prev) => ({ ...prev, ...schemaErrors }));
+        setErrors((prev) => ({
+          ...prev,
+          ...mapZodFormErrors(parsed.error, (message) => t(message as AppTranslationKey)),
+        }));
         notify.error(t('common.formPleaseFixErrors'));
         return false;
       }

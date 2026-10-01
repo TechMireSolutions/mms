@@ -35,8 +35,9 @@ export function WidgetBuilderCardRoleOptions({
 
   return (
     <div className="space-y-1">
-      <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.dashboardRole")}</label>
+      <label htmlFor="builder-role" className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.dashboardRole")}</label>
       <FormSelect
+        id="builder-role"
         value={builderRole}
         onChange={setBuilderRole}
         options={[
@@ -64,8 +65,9 @@ export function WidgetBuilderCardTextOptions({
   return (
     <>
       <div className="space-y-1">
-        <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.subtextStyle")}</label>
+        <label htmlFor="subtext-style" className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.subtextStyle")}</label>
         <FormSelect
+          id="subtext-style"
           value={subTextType}
           onChange={(val) => setSubTextType(val as "fixed" | "dynamic")}
           options={[
@@ -77,8 +79,9 @@ export function WidgetBuilderCardTextOptions({
 
       {subTextType === "fixed" && (
         <div className="space-y-1">
-          <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.fixedSubtitle")}</label>
+          <label htmlFor="fixed-subtitle" className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.fixedSubtitle")}</label>
           <Input
+            id="fixed-subtitle"
             type="text"
             value={fixedSubText}
             onChange={(event) => setFixedSubText(event.target.value)}
@@ -89,7 +92,7 @@ export function WidgetBuilderCardTextOptions({
       )}
 
       <div className="space-y-1 col-span-1 sm:col-span-2 border-t border-border/40 pt-3">
-        <label className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.trendSource")}</label>
+        <p className={`${FORM_LABEL} block`}>{t("reports.widgets.builder.trendSource")}</p>
         <CompactSegmentedControl
           tone="primary"
           ariaLabel={t("reports.widgets.builder.trendSource")}
@@ -111,7 +114,7 @@ export function WidgetBuilderCardTextOptions({
         ) : (
           <>
             <div className="flex justify-between items-center select-none">
-              <SectionLabel as="label" weight="bold" tracking="wider" className="block">{t("reports.widgets.builder.manualTrend")}</SectionLabel>
+              <SectionLabel as="p" weight="bold" tracking="wider" className="block">{t("reports.widgets.builder.manualTrend")}</SectionLabel>
               <Badge
                 pill
                 tone={trend > 0 ? "success" : trend < 0 ? "destructive" : "muted"}

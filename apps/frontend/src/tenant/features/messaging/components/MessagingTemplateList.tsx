@@ -75,6 +75,7 @@ export const MessagingTemplateList = (function MessagingTemplateList({
         <div className="flex flex-wrap items-center gap-2 overflow-x-auto max-w-full">
           <FormSelect
             id="filterCategory"
+            aria-label={t("messaging.category")}
             value={categoryFilter}
             onChange={onCategoryFilter}
             options={categorySelectOptions}

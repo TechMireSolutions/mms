@@ -36,8 +36,8 @@ export function QuestionOrderingFields({
   };
 
   return (
-    <div className="space-y-3 sm:col-span-2">
-      <span className={FORM_LABEL}>{t('questionBank.orderingItems')}</span>
+    <fieldset className="space-y-3 sm:col-span-2 border-0 m-0 p-0">
+      <legend className={FORM_LABEL}>{t('questionBank.orderingItems')}</legend>
       {items.map((item, index) => (
         <div key={index} className="flex items-center gap-2">
           <span className="w-6 flex-shrink-0 text-center text-xs font-bold text-muted-foreground">{index + 1}</span>
@@ -101,6 +101,6 @@ export function QuestionOrderingFields({
         <Plus className="h-3.5 w-3.5" aria-hidden />
         {t('questionBank.addOrderingItem')}
       </Button>
-    </div>
+    </fieldset>
   );
 }

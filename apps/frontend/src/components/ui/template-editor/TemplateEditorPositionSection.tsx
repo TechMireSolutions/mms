@@ -38,7 +38,7 @@ export function TemplateEditorPositionSection<TFieldKey extends string = string>
       <div className="grid grid-cols-2 gap-2">
         <StyleInput
           label={t('templateEditor.positionX')}
-          type="number"
+          numeric
           value={selectedElement.x}
           onChange={(val) => {
             const num = Number(val);
@@ -47,7 +47,7 @@ export function TemplateEditorPositionSection<TFieldKey extends string = string>
         />
         <StyleInput
           label={t('templateEditor.positionY')}
-          type="number"
+          numeric
           value={selectedElement.y}
           onChange={(val) => {
             const num = Number(val);
@@ -56,7 +56,7 @@ export function TemplateEditorPositionSection<TFieldKey extends string = string>
         />
         <StyleInput
           label={t('templateEditor.width')}
-          type="number"
+          numeric
           value={selectedElement.w}
           onChange={(val) => {
             const num = Number(val);
@@ -65,7 +65,7 @@ export function TemplateEditorPositionSection<TFieldKey extends string = string>
         />
         <StyleInput
           label={t('templateEditor.height')}
-          type="number"
+          numeric
           value={selectedElement.h}
           onChange={(val) => {
             const num = Number(val);

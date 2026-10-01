@@ -62,18 +62,20 @@ export function ContactsPreferencesDuplicateSection({
               const checked = detectionFields.includes(option);
               const checkboxId = `dup-field-${option}`;
               return (
-                <label
+                <div
                   key={option}
-                  htmlFor={checkboxId}
-                  className="flex min-h-11 items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm cursor-pointer hover:bg-muted/50 transition-colors"
+                  className="flex min-h-11 items-center gap-2 rounded-lg border border-border/60 px-3 py-2 text-sm hover:bg-muted/50 transition-colors"
                 >
                   <Checkbox
                     id={checkboxId}
                     checked={checked}
                     onCheckedChange={(value) => toggleDetectionField(option, value === true)}
+                    className="cursor-pointer"
                   />
-                  <span>{getDuplicateFieldLabel(option, t)}</span>
-                </label>
+                  <label htmlFor={checkboxId} className="cursor-pointer select-none">
+                    {getDuplicateFieldLabel(option, t)}
+                  </label>
+                </div>
               );
             })}
           </div>
@@ -107,7 +109,7 @@ export function ContactsPreferencesDuplicateSection({
             <Input
               id="dupThresholdHigh"
               name="duplicateDetectionThresholdHigh"
-              type="number"
+              type="text"
               inputMode="numeric"
               min={1}
               max={100}
@@ -126,7 +128,7 @@ export function ContactsPreferencesDuplicateSection({
             <Input
               id="dupThresholdMedium"
               name="duplicateDetectionThresholdMedium"
-              type="number"
+              type="text"
               inputMode="numeric"
               min={1}
               max={100}

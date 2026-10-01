@@ -2,14 +2,16 @@ import React, { useEffect, useState } from "react";
 import { ReceiptText } from "lucide-react";
 import { FormModal } from "@/components/ui/FormModal";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
-import { invoiceTotalsFromLines, type InvoiceCreateInput } from "@mms/shared";
+import { invoiceTotalsFromLines, invoiceRecordInsertSchema, type InvoiceCreateInput, type AppTranslationKey } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import { useFinanceConfig } from "@/hooks/useStandardModuleConfig";
 import { NotifiedMutationError } from "@/lib/notifiedMutationError";
+import { mapZodFormErrors } from "@/lib/forms/mapZodFormErrors";
 import { InvoiceFormFieldsSection } from "@/tenant/features/finance/components/InvoiceFormFieldsSection";
 import { InvoiceFormSummarySection } from "@/tenant/features/finance/components/InvoiceFormSummarySection";
 import {
+  buildInvoiceCreatePayload,
   canSaveInvoiceDraft,
   computeInvoiceAmounts,
   createInitialDraft,
@@ -111,38 +113,29 @@ export const InvoiceForm = (function InvoiceForm({
           return;
         }
 
+        const payload = buildInvoiceCreatePayload(
+          draft,
+          baseFee,
+          discountValue,
+          discountAmt,
+          finalAmt,
+          nextInvoiceId(settings),
+          feeStructures,
+        );
+
+        const parsed = invoiceRecordInsertSchema.safeParse(payload);
+        if (!parsed.success) {
+          setErrors((prev) => ({
+            ...prev,
+            ...mapZodFormErrors(parsed.error, (message) => t(message as AppTranslationKey)),
+          }));
+          setSubmitError(t("finance.fixErrors"));
+          return;
+        }
+
         setSubmitting(true);
         try {
-          await onSave({
-            id: nextInvoiceId(settings),
-            studentId: draft.studentId.trim(),
-            studentName: draft.studentName.trim(),
-            class: draft.class.trim(),
-            session: draft.session.trim(),
-            baseFee,
-            discountType: draft.discountType.trim() || null,
-            discountValue,
-            discountAmt,
-            finalAmt,
-            status: "pending",
-            dueDate: draft.dueDate,
-            paidDate: null,
-            method: null,
-            paidAmt: 0,
-            feeStructureId: draft.feeStructureId || null,
-            lines: (() => {
-              const structure = feeStructures.find((item) => item.id === draft.feeStructureId);
-              if (!structure || structure.items.length === 0) return undefined;
-              return structure.items.map((item, index) => ({
-                id: `il-${index + 1}`,
-                feeItemId: item.id,
-                description: item.name,
-                quantity: 1,
-                amount: item.amount,
-                discountAmt: 0,
-              }));
-            })(),
-          });
+          await onSave(payload);
           notify.success(t("finance.invoiceSaved"));
           resetAndClose();
         } catch (error: unknown) {
@@ -169,8 +162,17 @@ export const InvoiceForm = (function InvoiceForm({
           saving={saving || submitting}
           saveDisabled={!canSave}
           error={submitError}
+          formId="invoice-form"
         >
-          <div className="space-y-5 text-start">
+          <form
+            id="invoice-form"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (canSave && !saving && !submitting) void handleSubmit();
+            }}
+            className="space-y-5 text-start"
+          >
             <InvoiceFormFieldsSection
               t={t}
               draft={draft}
@@ -186,7 +188,7 @@ export const InvoiceForm = (function InvoiceForm({
               finalAmt={finalAmt}
               formatCurrency={formatCurrency}
             />
-          </div>
+          </form>
         </FormModal>
       );
     });

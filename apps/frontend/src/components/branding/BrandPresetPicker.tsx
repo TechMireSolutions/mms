@@ -3,7 +3,6 @@ import { AlertTriangle, Check, Plus } from "lucide-react";
 import { BRANDING_THEME_PRESETS, meetsWcagAaUiContrast, type BrandingThemeMode } from "@mms/shared";
 
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
@@ -79,7 +78,7 @@ export function BrandPresetPicker({
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
-          <Label>{t("theme.palettesTitle")}</Label>
+          <h3 className="text-sm font-semibold text-foreground">{t("theme.palettesTitle")}</h3>
           <p className="mt-0.5 text-xs text-muted-foreground">{t("theme.palettesDesc")}</p>
         </div>
         <Button

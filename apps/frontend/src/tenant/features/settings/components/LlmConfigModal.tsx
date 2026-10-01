@@ -91,38 +91,48 @@ export function LlmConfigModal({
       saveLabel={t('settings.llmModalApplyChanges')}
       onSave={handleSaveModalConfig}
       saveDisabled={!formName.trim()}
+      formId="llm-config-modal-form"
     >
-      <LlmConfigModalBody
-        editingConfig={editingConfig}
-        formName={formName}
-        setFormName={setFormName}
-        formProvider={formProvider}
-        setFormProvider={setFormProvider}
-        formModel={formModel}
-        setFormModel={setFormModel}
-        formBaseUrl={formBaseUrl}
-        setFormBaseUrl={setFormBaseUrl}
-        formApiKey={formApiKey}
-        setFormApiKey={setFormApiKey}
-        formIsDefaultText={formIsDefaultText}
-        setFormIsDefaultText={setFormIsDefaultText}
-        formTemperature={formTemperature}
-        setFormTemperature={setFormTemperature}
-        formMaxTokens={formMaxTokens}
-        setFormMaxTokens={setFormMaxTokens}
-        formTopP={formTopP}
-        setFormTopP={setFormTopP}
-        fetchedModels={fetchedModels}
-        fetchingModels={fetchingModels}
-        showCustomModelInput={showCustomModelInput}
-        setShowCustomModelInput={setShowCustomModelInput}
-        selectedProviderDefaultModel={selectedProviderDefaultModel}
-        modalTestResult={modalTestResult}
-        modalTesting={modalTesting}
-        handleModalTestConnection={handleModalTestConnection}
-        formatLlmSpeed={formatLlmSpeed}
-        t={t}
-      />
+      <form
+        id="llm-config-modal-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (formName.trim()) handleSaveModalConfig();
+        }}
+      >
+        <LlmConfigModalBody
+          editingConfig={editingConfig}
+          formName={formName}
+          setFormName={setFormName}
+          formProvider={formProvider}
+          setFormProvider={setFormProvider}
+          formModel={formModel}
+          setFormModel={setFormModel}
+          formBaseUrl={formBaseUrl}
+          setFormBaseUrl={setFormBaseUrl}
+          formApiKey={formApiKey}
+          setFormApiKey={setFormApiKey}
+          formIsDefaultText={formIsDefaultText}
+          setFormIsDefaultText={setFormIsDefaultText}
+          formTemperature={formTemperature}
+          setFormTemperature={setFormTemperature}
+          formMaxTokens={formMaxTokens}
+          setFormMaxTokens={setFormMaxTokens}
+          formTopP={formTopP}
+          setFormTopP={setFormTopP}
+          fetchedModels={fetchedModels}
+          fetchingModels={fetchingModels}
+          showCustomModelInput={showCustomModelInput}
+          setShowCustomModelInput={setShowCustomModelInput}
+          selectedProviderDefaultModel={selectedProviderDefaultModel}
+          modalTestResult={modalTestResult}
+          modalTesting={modalTesting}
+          handleModalTestConnection={handleModalTestConnection}
+          formatLlmSpeed={formatLlmSpeed}
+          t={t}
+        />
+      </form>
     </FormModal>
   );
 }

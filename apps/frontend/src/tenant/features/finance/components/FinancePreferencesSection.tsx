@@ -57,7 +57,7 @@ export function FinancePreferencesSection({
           <Input
             id="due-days"
             name="dueDays"
-            type="number"
+            type="text"
             inputMode="numeric"
             min="0"
             className={FORM_INPUT}
@@ -96,7 +96,7 @@ export function FinancePreferencesSection({
           <Input
             id="reminder-days"
             name="reminderDaysBefore"
-            type="number"
+            type="text"
             inputMode="numeric"
             min="0"
             className={FORM_INPUT}

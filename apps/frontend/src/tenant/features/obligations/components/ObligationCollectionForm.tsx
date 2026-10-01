@@ -130,16 +130,28 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
       saving={submitting}
       saveDisabled={Object.keys(validate()).length > 0}
       error={errorMessages}
+      formId="obligation-collection-form"
     >
-      <ObligationCollectionFormFields
-        form={form}
-        setForm={setForm}
-        errors={errors}
-        obligationTypes={obligationTypes}
-        eligibleReps={eligibleReps}
-        getMujtahid={getMujtahid}
-        selectedMujtahid={selectedMujtahid}
-      />
+      <form
+        id="obligation-collection-form"
+        noValidate
+        onSubmit={(e) => {
+          e.preventDefault();
+          if (Object.keys(validate()).length === 0 && !submitting) {
+            void handleSave();
+          }
+        }}
+      >
+        <ObligationCollectionFormFields
+          form={form}
+          setForm={setForm}
+          errors={errors}
+          obligationTypes={obligationTypes}
+          eligibleReps={eligibleReps}
+          getMujtahid={getMujtahid}
+          selectedMujtahid={selectedMujtahid}
+        />
+      </form>
     </FormModal>
   );
 }

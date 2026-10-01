@@ -97,8 +97,17 @@ export function CloseFiscalYearModal({
       onSave={handleConfirmCloseFiscalYear}
       saving={closing}
       saveDisabled={!closeAccountId}
+      formId="close-fiscal-year-form"
     >
-      <div className="space-y-4">
+      <form
+        id="close-fiscal-year-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleConfirmCloseFiscalYear();
+        }}
+        className="space-y-4"
+      >
         <WarningCallout
           role="alert"
           tone="destructive"
@@ -121,7 +130,7 @@ export function CloseFiscalYearModal({
             options={equityAccountOptions}
           />
         </Field>
-      </div>
+      </form>
     </FormModal>
   );
 }

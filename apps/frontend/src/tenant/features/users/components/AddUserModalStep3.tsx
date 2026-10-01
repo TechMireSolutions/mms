@@ -9,7 +9,8 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Input as UiInput } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
-import { FieldError, Label } from './AddUserModalFieldHelpers';
+import { Field } from '@/components/ui/FormPrimitives';
+import { FORM_LABEL } from '@/components/ui/formStyles';
 import type { AddUserStepProps } from './addUserModalTypes';
 
 const SETUP_OPTIONS = [
@@ -26,7 +27,7 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
   return (
     <div className="space-y-4">
       <div>
-        <Label>{t('users.addAccountMethod')}</Label>
+        <p className={FORM_LABEL}>{t('users.addAccountMethod')}</p>
         <div className="grid grid-cols-1 gap-2 mt-1 sm:grid-cols-2">
           {SETUP_OPTIONS.map((setupOption) => {
             const Icon = setupOption.icon;
@@ -80,8 +81,13 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
             exit={{ opacity: 0 }}
             className="space-y-3"
           >
-            <div>
-              <Label htmlFor="add-user-temp-password" required>{t('users.addTempPassword')}</Label>
+            <Field
+              id="add-user-temp-password"
+              label={t('users.addTempPassword')}
+              required
+              error={errors.password}
+              hint={passwordHint}
+            >
               <div className="relative">
                 <Lock className="absolute start-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground" />
                 <UiInput
@@ -90,7 +96,6 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
                   type={showPwd ? 'text' : 'password'}
                   placeholder={passwordHint}
                   value={form.password || ''}
-                  aria-invalid={Boolean(errors.password)}
                   onChange={(event) => setForm((previousForm) => ({ ...previousForm, password: event.target.value }))}
                   className="ps-9.5 pe-9"
                 />
@@ -104,33 +109,35 @@ export function Step3({ form, setForm, errors }: AddUserStepProps): JSX.Element 
                   {showPwd ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                 </Button>
               </div>
-              <FieldError msg={errors.password} />
-              <p className="mt-1 text-xs text-muted-foreground">{passwordHint}</p>
-            </div>
+            </Field>
 
-            <label htmlFor="add-user-force-reset" className="flex items-center gap-2 cursor-pointer">
+            <div className="flex items-center gap-2">
               <Checkbox
                 id="add-user-force-reset"
                 checked={form.forceReset !== false}
                 onCheckedChange={(checked) => setForm((previousForm) => ({ ...previousForm, forceReset: !!checked }))}
+                className="cursor-pointer"
               />
-              <span className="text-xs font-medium text-foreground">{t('users.addForceReset')}</span>
-            </label>
+              <label htmlFor="add-user-force-reset" className="cursor-pointer text-xs font-medium text-foreground select-none">
+                {t('users.addForceReset')}
+              </label>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      <label htmlFor="add-user-2fa" className="flex items-center gap-2 cursor-pointer p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors">
+      <div className="flex items-center gap-2 p-3 rounded-xl border border-border hover:bg-muted/50 transition-colors">
         <Checkbox
           id="add-user-2fa"
           checked={!!form.twoFactorEnabled}
           onCheckedChange={(checked) => setForm((previousForm) => ({ ...previousForm, twoFactorEnabled: !!checked }))}
+          className="cursor-pointer"
         />
-        <div>
-          <span className="text-xs font-semibold text-foreground">{t('users.add2faTitle')}</span>
+        <label htmlFor="add-user-2fa" className="cursor-pointer flex-1">
+          <span className="text-xs font-semibold text-foreground block">{t('users.add2faTitle')}</span>
           <p className="text-xs text-muted-foreground">{t('users.add2faDesc')}</p>
-        </div>
-      </label>
+        </label>
+      </div>
     </div>
   );
 }

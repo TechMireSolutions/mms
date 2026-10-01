@@ -131,6 +131,7 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
           name="auditDate"
           value={date}
           onChange={setDate}
+          aria-label={t("attendance.filters.date")}
           className="text-sm"
         />
       </div>

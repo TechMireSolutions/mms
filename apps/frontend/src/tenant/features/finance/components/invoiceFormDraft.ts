@@ -3,6 +3,8 @@ import {
   financeSettingsToSequenceConfig,
   formatDeterministicSequence,
   type FinanceSettings,
+  type FeeStructure,
+  type InvoiceCreateInput,
 } from "@mms/shared";
 
 export interface InvoiceDraft {
@@ -62,4 +64,46 @@ export function canSaveInvoiceDraft(draft: InvoiceDraft, baseFee: number): boole
     draft.dueDate.trim().length > 0 &&
     baseFee > 0
   );
+}
+
+export function buildInvoiceCreatePayload(
+  draft: InvoiceDraft,
+  baseFee: number,
+  discountValue: number,
+  discountAmt: number,
+  finalAmt: number,
+  invoiceId: string,
+  feeStructures: FeeStructure[],
+): InvoiceCreateInput {
+  const structure = feeStructures.find((item) => item.id === draft.feeStructureId);
+  const lines = (!structure || structure.items.length === 0)
+    ? undefined
+    : structure.items.map((item, index) => ({
+        id: `il-${index + 1}`,
+        feeItemId: item.id,
+        description: item.name,
+        quantity: 1,
+        amount: item.amount,
+        discountAmt: 0,
+      }));
+
+  return {
+    id: invoiceId,
+    studentId: draft.studentId.trim(),
+    studentName: draft.studentName.trim(),
+    class: draft.class.trim(),
+    session: draft.session.trim(),
+    baseFee,
+    discountType: draft.discountType.trim() || null,
+    discountValue,
+    discountAmt,
+    finalAmt,
+    status: "pending",
+    dueDate: draft.dueDate,
+    paidDate: null,
+    method: null,
+    paidAmt: 0,
+    feeStructureId: draft.feeStructureId || null,
+    lines,
+  };
 }

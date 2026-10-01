@@ -111,9 +111,10 @@ export function InviteUserModal({
       }}
       saving={submitting}
       saveDisabled={submitting || !watchedContactId || isLoadingContact}
+      formId="invite-user-form"
     >
       <Form {...form}>
-        <form className="space-y-4" onSubmit={handleSave}>
+        <form id="invite-user-form" noValidate className="space-y-4" onSubmit={handleSave}>
           <InviteUserFormFields
             form={form}
             excludeIds={excludeIds}

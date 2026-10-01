@@ -1,13 +1,12 @@
 import { type Dispatch, type SetStateAction } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { FieldErrorMessage, RequiredMark } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
+import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { UserActorSelect } from "@/tenant/components/selectors/UserActorSelect";
 import { useHasanatConfig } from "@/hooks/useStandardModuleConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type Denomination, type Distribution } from "@/lib/data/hasanatData";
-import { cn } from "@/lib/utils";
 import { DistributeDenominationField } from "./DistributeDenominationField";
 import {
   DistributeRecipientClassField,
@@ -92,73 +91,52 @@ export function DistributeModalFields({
 
         if (field.id === "quantity") {
           return (
-            <div key="quantity">
-              <label htmlFor="qty" className={FORM_LABEL}>
-                {t("hasanat.form.quantity")}
-                <RequiredMark />
-              </label>
+            <Field key="quantity" id="qty" label={t("hasanat.form.quantity")} required error={errors?.quantity}>
               <Input
                 id="qty"
                 name="quantity"
-                type="number"
+                type="text"
                 inputMode="numeric"
-                className={cn(FORM_INPUT, errors?.quantity && FORM_INPUT_ERROR)}
+                className={FORM_INPUT}
                 value={data.quantity ?? ""}
-                onChange={(event) =>
+                onChange={(event) => {
+                  const sanitized = event.target.value.replace(/[^0-9]/g, '');
                   updateField(
                     "quantity",
-                    event.target.value === "" ? "" : Math.min(+event.target.value, totalAvailable),
-                  )
-                }
-                min={1}
-                max={totalAvailable}
-                required
-                aria-invalid={Boolean(errors?.quantity)}
-                aria-describedby={errors?.quantity ? "qty-error" : undefined}
+                    sanitized === "" ? "" : Math.min(Number(sanitized), totalAvailable),
+                  );
+                }}
               />
-              <FieldErrorMessage id="qty-error" message={errors?.quantity} />
-            </div>
+            </Field>
           );
         }
 
         if (field.id === "issuedDate") {
           return (
-            <div key="issuedDate">
-              <label htmlFor="issue-date" className={FORM_LABEL}>
-                {t("hasanat.form.issuedDate")}
-                <RequiredMark />
-              </label>
+            <Field key="issuedDate" id="issue-date" label={t("hasanat.form.issuedDate")} required error={errors?.issuedDate}>
               <DatePicker
                 id="issue-date"
                 name="issuedDate"
                 value={data.issuedDate || ""}
                 onChange={(value) => updateField("issuedDate", value)}
-                required
               />
-              <FieldErrorMessage id="issue-date-error" message={errors?.issuedDate} />
-            </div>
+            </Field>
           );
         }
 
         if (field.id === "reason") {
           return (
             <div key="reason" className="sm:col-span-2">
-              <label htmlFor="reason" className={FORM_LABEL}>
-                {t("hasanat.form.reason")}
-                <RequiredMark />
-              </label>
-              <Input
-                id="reason"
-                name="reason"
-                className={cn(FORM_INPUT, errors?.reason && FORM_INPUT_ERROR)}
-                value={data.reason || ""}
-                onChange={(event) => updateField("reason", event.target.value)}
-                placeholder={t("hasanat.form.reasonPlaceholder")}
-                required
-                aria-invalid={Boolean(errors?.reason)}
-                aria-describedby={errors?.reason ? "reason-error" : undefined}
-              />
-              <FieldErrorMessage id="reason-error" message={errors?.reason} />
+              <Field id="reason" label={t("hasanat.form.reason")} required error={errors?.reason}>
+                <Input
+                  id="reason"
+                  name="reason"
+                  className={FORM_INPUT}
+                  value={data.reason || ""}
+                  onChange={(event) => updateField("reason", event.target.value)}
+                  placeholder={t("hasanat.form.reasonPlaceholder")}
+                />
+              </Field>
             </div>
           );
         }

@@ -1,5 +1,6 @@
 import React from "react";
-import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormField";
+import { FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -46,9 +47,9 @@ export function WidgetBuilderSwitchOptions({
 
   return (
     <>
-      <div className="space-y-1">
-        <label className={FORM_LABEL}>{t("reports.widgets.builder.switchTarget")}</label>
+      <Field label={t("reports.widgets.builder.switchTarget")} id="wbs-target">
         <FormSelect
+          id="wbs-target"
           value={switchActionType}
           onChange={(val) => setSwitchActionType(val as "app_setting" | "db_record")}
           options={[
@@ -56,12 +57,12 @@ export function WidgetBuilderSwitchOptions({
             { value: "db_record", label: t("reports.widgets.builder.switchTargetDb") },
           ]}
         />
-      </div>
+      </Field>
 
       {switchActionType === "app_setting" ? (
-        <div className="space-y-1">
-          <label className={FORM_LABEL}>{t("reports.widgets.builder.selectParameter")}</label>
+        <Field label={t("reports.widgets.builder.selectParameter")} id="wbs-param">
           <FormSelect
+            id="wbs-param"
             value={switchStateKey}
             onChange={setSwitchStateKey}
             options={[
@@ -74,12 +75,12 @@ export function WidgetBuilderSwitchOptions({
               { value: "app_setting_mute_notifications", label: t("reports.widgets.builder.paramMuteNotifications") },
             ]}
           />
-        </div>
+        </Field>
       ) : (
         <>
-          <div className="space-y-1">
-            <label className={FORM_LABEL}>{t("reports.widgets.builder.recordCollection")}</label>
+          <Field label={t("reports.widgets.builder.recordCollection")} id="wbs-collection">
             <FormSelect
+              id="wbs-collection"
               value={switchCollection}
               onChange={(val) => {
                 setSwitchCollection(val as CustomWidget["collection"]);
@@ -90,11 +91,11 @@ export function WidgetBuilderSwitchOptions({
                 label: getCollectionLabel(collectionOption.value, collectionOption.label, t),
               }))}
             />
-          </div>
+          </Field>
 
-          <div className="space-y-1">
-            <label className={FORM_LABEL}>{t("reports.widgets.builder.selectRecord")}</label>
+          <Field label={t("reports.widgets.builder.selectRecord")} id="wbs-record">
             <FormSelect
+              id="wbs-record"
               value={switchRecordId}
               onChange={setSwitchRecordId}
               options={
@@ -103,31 +104,31 @@ export function WidgetBuilderSwitchOptions({
                   : dbRecordsList.map((rec) => ({ value: rec.id, label: rec.label }))
               }
             />
-          </div>
+          </Field>
         </>
       )}
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <label className={FORM_LABEL}>{t("reports.widgets.builder.labelOn")}</label>
+        <Field label={t("reports.widgets.builder.labelOn")} id="wbs-label-on">
           <Input
+            id="wbs-label-on"
             type="text"
             value={switchLabelOn}
             onChange={(event) => setSwitchLabelOn(event.target.value)}
             placeholder={t("reports.widgets.builder.placeholderActive")}
             className={FORM_INPUT_BUILDER}
           />
-        </div>
-        <div className="space-y-1">
-          <label className={FORM_LABEL}>{t("reports.widgets.builder.labelOff")}</label>
+        </Field>
+        <Field label={t("reports.widgets.builder.labelOff")} id="wbs-label-off">
           <Input
+            id="wbs-label-off"
             type="text"
             value={switchLabelOff}
             onChange={(event) => setSwitchLabelOff(event.target.value)}
             placeholder={t("reports.widgets.builder.placeholderInactive")}
             className={FORM_INPUT_BUILDER}
           />
-        </div>
+        </Field>
       </div>
     </>
   );

@@ -156,7 +156,7 @@ export default function EmailIntegrationPanel(): React.JSX.Element {
               <Input
                 id="email-smtp-port"
                 name="smtpPort"
-                type="number"
+                type="text"
                 inputMode="numeric"
                 min={1}
                 max={65535}

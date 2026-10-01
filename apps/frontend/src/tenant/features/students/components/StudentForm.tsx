@@ -62,29 +62,41 @@ export const StudentForm = (function StudentForm({
         }
         error={form.validationErrorSummary ?? (form.errorSummary || undefined)}
         footerStart={footerStart}
+        formId={form.formInstanceId}
       >
-        <StudentFormTabContent
-          formInstanceId={form.formInstanceId}
-          studentDraft={form.studentDraft}
-          linkedContact={form.linkedContact}
-          linkedGenderRaw={form.linkedGenderRaw}
-          linkedGenderLabel={form.linkedGenderLabel}
-          linkedDob={form.linkedDob}
-          excludeIds={form.excludeIds}
-          isGrAutoAssigned={form.isGrAutoAssigned}
-          grInputDisabled={form.grInputDisabled}
-          statusSelectOptions={form.statusSelectOptions}
-          statuses={form.statuses}
-          onUpdateStatuses={form.onUpdateStatuses}
-          fields={form.fields}
-          isFieldEnabled={form.isFieldEnabled}
-          isFieldRequired={form.isFieldRequired}
-          getFieldError={form.getFieldError}
-          onContactSelect={form.handleContactSelect}
-          onStudentAvatarChange={form.handleStudentAvatarChange}
-          onGrNumberChange={form.handleGrNumberChange}
-          onDraftChange={form.updateDraft}
-        />
+        <form
+          id={form.formInstanceId}
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!((form.isFieldEnabled("contactId") && !form.studentDraft.contactId) || (Boolean(student?.id) && !form.isDirty))) {
+              void form.handleSave();
+            }
+          }}
+        >
+          <StudentFormTabContent
+            formInstanceId={form.formInstanceId}
+            studentDraft={form.studentDraft}
+            linkedContact={form.linkedContact}
+            linkedGenderRaw={form.linkedGenderRaw}
+            linkedGenderLabel={form.linkedGenderLabel}
+            linkedDob={form.linkedDob}
+            excludeIds={form.excludeIds}
+            isGrAutoAssigned={form.isGrAutoAssigned}
+            grInputDisabled={form.grInputDisabled}
+            statusSelectOptions={form.statusSelectOptions}
+            statuses={form.statuses}
+            onUpdateStatuses={form.onUpdateStatuses}
+            fields={form.fields}
+            isFieldEnabled={form.isFieldEnabled}
+            isFieldRequired={form.isFieldRequired}
+            getFieldError={form.getFieldError}
+            onContactSelect={form.handleContactSelect}
+            onStudentAvatarChange={form.handleStudentAvatarChange}
+            onGrNumberChange={form.handleGrNumberChange}
+            onDraftChange={form.updateDraft}
+          />
+        </form>
       </FormModal>
       <ConfirmAlertDialog
         open={form.duplicateConfirmOpen}

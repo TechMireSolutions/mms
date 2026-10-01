@@ -1,5 +1,6 @@
 import React from "react";
-import { FORM_LABEL, FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormField";
+import { FORM_INPUT_BUILDER } from "@/components/ui/formStyles";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -41,9 +42,9 @@ export function WidgetBuilderMetricOptions({
 
   return (
     <>
-      <div className="space-y-1">
-        <label className={FORM_LABEL}>{t("reports.widgets.builder.dataCollection")}</label>
+      <Field label={t("reports.widgets.builder.dataCollection")} id="wbm-collection">
         <FormSelect
+          id="wbm-collection"
           value={builderCollection}
           onChange={(val) => setBuilderCollection(val as CustomWidget["collection"])}
           options={COLLECTION_OPTIONS.map((collectionOption) => ({
@@ -51,11 +52,11 @@ export function WidgetBuilderMetricOptions({
             label: getCollectionLabel(collectionOption.value, collectionOption.label, t),
           }))}
         />
-      </div>
+      </Field>
 
-      <div className="space-y-1">
-        <label className={FORM_LABEL}>{t("reports.widgets.builder.calcFormula")}</label>
+      <Field label={t("reports.widgets.builder.calcFormula")} id="wbm-formula">
         <FormSelect
+          id="wbm-formula"
           value={builderOperation}
           onChange={(val) => setBuilderOperation(val as CustomWidget["operation"])}
           options={[
@@ -65,13 +66,14 @@ export function WidgetBuilderMetricOptions({
             { value: "avg", label: t("reports.widgets.builder.formulaAvg") },
           ]}
         />
-      </div>
+      </Field>
 
-      <div className="space-y-1">
-        <label className={FORM_LABEL}>
-          {t("reports.widgets.builder.targetField")} {["count", "percentage"].includes(builderOperation) && t("reports.widgets.builder.deactivated")}
-        </label>
+      <Field
+        label={`${t("reports.widgets.builder.targetField")} ${["count", "percentage"].includes(builderOperation) ? t("reports.widgets.builder.deactivated") : ""}`.trim()}
+        id="wbm-target-field"
+      >
         <FormSelect
+          id="wbm-target-field"
           disabled={["count", "percentage"].includes(builderOperation)}
           value={builderTargetField}
           onChange={setBuilderTargetField}
@@ -84,11 +86,11 @@ export function WidgetBuilderMetricOptions({
                 }))
           }
         />
-      </div>
+      </Field>
 
-      <div className="space-y-1">
-        <label className={FORM_LABEL}>{t("reports.widgets.builder.filterField")}</label>
+      <Field label={t("reports.widgets.builder.filterField")} id="wbm-filter-field">
         <FormSelect
+          id="wbm-filter-field"
           value={builderFilterField}
           onChange={setBuilderFilterField}
           options={[
@@ -99,12 +101,12 @@ export function WidgetBuilderMetricOptions({
             })),
           ]}
         />
-      </div>
+      </Field>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        <div className="space-y-1">
-          <label className={FORM_LABEL}>{t("reports.widgets.builder.operator")}</label>
+        <Field label={t("reports.widgets.builder.operator")} id="wbm-operator">
           <FormSelect
+            id="wbm-operator"
             disabled={!builderFilterField}
             value={builderFilterOperator ?? ""}
             onChange={(val) => setBuilderFilterOperator(val as CustomWidget["filterOperator"])}
@@ -115,10 +117,10 @@ export function WidgetBuilderMetricOptions({
               { value: "lt", label: `< ${t("reports.widgets.builder.opLt")}` },
             ]}
           />
-        </div>
-        <div className="space-y-1">
-          <label className={FORM_LABEL}>{t("reports.widgets.builder.matchValue")}</label>
+        </Field>
+        <Field label={t("reports.widgets.builder.matchValue")} id="wbm-match-value">
           <Input
+            id="wbm-match-value"
             type="text"
             disabled={!builderFilterField}
             value={builderFilterValue}
@@ -126,7 +128,7 @@ export function WidgetBuilderMetricOptions({
             placeholder={t("reports.widgets.builder.placeholderValue")}
             className={`${FORM_INPUT_BUILDER} disabled:opacity-40 disabled:cursor-not-allowed`}
           />
-        </div>
+        </Field>
       </div>
 
       {children}

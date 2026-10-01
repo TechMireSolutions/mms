@@ -52,7 +52,6 @@ export function FacultyNotesSection({
             onChange={(event) => onDraftChange({ notes: event.target.value })}
             placeholder={t("faculty.form.notesPlaceholder")}
             className={cn(FORM_TEXTAREA, "min-h-30")}
-            aria-invalid={Boolean(error)}
           />
         </Field>
       </SectionCard>

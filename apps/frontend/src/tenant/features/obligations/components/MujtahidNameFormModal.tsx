@@ -46,21 +46,31 @@ export function NameFormModal({ initial, onSave, onClose, label, title }: NameFo
       saving={saving}
       saveDisabled={saving}
       error={error || undefined}
+      formId="name-form-modal"
     >
-      <Field id="name-form-input" label={label} required error={error || undefined}>
-        <Input
-          id="name-form-input"
-          name="name"
-          value={form.name || ""}
-          onChange={(event) => {
-            if (error) setError("");
-            setForm({ ...form, name: event.target.value });
-          }}
-          disabled={saving}
-          aria-invalid={!!error}
-          required
-        />
-      </Field>
+      <form
+        id="name-form-modal"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!saving) void handleSave();
+        }}
+      >
+        <Field id="name-form-input" label={label} required error={error || undefined}>
+          <Input
+            id="name-form-input"
+            name="name"
+            value={form.name || ""}
+            onChange={(event) => {
+              if (error) setError("");
+              setForm({ ...form, name: event.target.value });
+            }}
+            disabled={saving}
+            required
+            autoFocus
+          />
+        </Field>
+      </form>
     </FormModal>
   );
 }

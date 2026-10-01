@@ -2,8 +2,8 @@ import type React from "react";
 import { AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FieldErrorMessage } from "@/components/ui/FormField";
-import { FORM_ERROR_BOX, FORM_LABEL } from "@/components/ui/formStyles";
+import { Field, FieldErrorMessage } from "@/components/ui/FormField";
+import { FORM_ERROR_BOX } from "@/components/ui/formStyles";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -50,21 +50,15 @@ export function GoogleContactsSetupForm({
       <h4 className="text-xs font-bold text-foreground uppercase tracking-wide">
         {t("contacts.sync.oauthHeader")}
       </h4>
-      <div>
-        <label className={FORM_LABEL} htmlFor="clientId">
-          {t("contacts.sync.clientIdLabel")}
-        </label>
+      <Field id="clientId" label={t("contacts.sync.clientIdLabel")}>
         <Input
           id="clientId"
           value={clientId}
           onChange={(event) => onClientIdChange(event.target.value)}
           placeholder={t("contacts.sync.clientIdPlaceholder")}
         />
-      </div>
-      <div>
-        <label className={FORM_LABEL} htmlFor="clientSecret">
-          {t("contacts.sync.clientSecretLabel")}
-        </label>
+      </Field>
+      <Field id="clientSecret" label={t("contacts.sync.clientSecretLabel")}>
         <Input
           id="clientSecret"
           type="password"
@@ -72,7 +66,7 @@ export function GoogleContactsSetupForm({
           onChange={(event) => onClientSecretChange(event.target.value)}
           placeholder={t("contacts.sync.clientSecretPlaceholder")}
         />
-      </div>
+      </Field>
       <FieldErrorMessage
         message={error || undefined}
         className={FORM_ERROR_BOX}

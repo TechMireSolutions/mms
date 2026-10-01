@@ -42,7 +42,6 @@ export function QuestionFormContentSection({
                 value={questionDraft.text || ""}
                 onChange={(e) => updateDraft({ text: e.target.value })}
                 placeholder={t("questionBank.questionTextPlaceholder")}
-                aria-invalid={Boolean(errors.text)}
               />
             </Field>
           </div>

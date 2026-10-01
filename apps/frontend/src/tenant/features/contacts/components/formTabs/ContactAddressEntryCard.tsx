@@ -114,7 +114,6 @@ export function ContactAddressEntryCard({
               autoComplete="street-address"
               autoCapitalize="words"
               enterKeyHint="next"
-              aria-invalid={Boolean(line1Error)}
               value={addr.line1 || ""}
               onChange={(e) => onUpdateAddress({ line1: e.target.value })}
               placeholder={t("contacts.fields.streetAddress")}
@@ -138,7 +137,6 @@ export function ContactAddressEntryCard({
                   autoComplete="address-level2"
                   autoCapitalize="words"
                   enterKeyHint="next"
-                  aria-invalid={Boolean(cityError)}
                   value={addr.city || ""}
                   onChange={(e) => onUpdateAddress({ city: e.target.value })}
                   placeholder={t("contacts.fields.city")}
@@ -160,7 +158,6 @@ export function ContactAddressEntryCard({
                   autoComplete="address-level1"
                   autoCapitalize="words"
                   enterKeyHint="next"
-                  aria-invalid={Boolean(stateError)}
                   value={addr.state || ""}
                   onChange={(e) => onUpdateAddress({ state: e.target.value })}
                   placeholder={t("contacts.fields.state")}

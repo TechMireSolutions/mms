@@ -13,6 +13,7 @@ export interface FormModalFooterProps {
   saving: boolean;
   saveDisabled: boolean;
   saved: boolean;
+  form?: string;
 }
 
 export const FormModalFooter = (function FormModalFooter({
@@ -25,6 +26,7 @@ export const FormModalFooter = (function FormModalFooter({
   saving,
   saveDisabled,
   saved,
+  form,
 }: FormModalFooterProps): React.JSX.Element {
   return (
     <div
@@ -39,8 +41,9 @@ export const FormModalFooter = (function FormModalFooter({
           {cancelLabel}
         </Button>
         <Button
-          type="button"
-          onClick={() => {
+          type={form ? 'submit' : 'button'}
+          form={form}
+          onClick={form ? undefined : () => {
             void onSave?.();
           }}
           disabled={saving || saveDisabled || saved}

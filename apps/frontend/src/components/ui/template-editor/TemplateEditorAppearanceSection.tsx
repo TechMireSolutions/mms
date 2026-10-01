@@ -89,7 +89,7 @@ export function TemplateEditorAppearanceSection({
       <div className="grid grid-cols-2 gap-2">
         <StyleInput
           label={t('templateEditor.borderWidth')}
-          type="number"
+          numeric
           min={0}
           max={12}
           value={elStyle.borderWidth ?? 0}
@@ -102,7 +102,7 @@ export function TemplateEditorAppearanceSection({
         />
         <StyleInput
           label={t('templateEditor.borderRadius')}
-          type="number"
+          numeric
           min={0}
           max={32}
           value={elStyle.borderRadius ?? 0}

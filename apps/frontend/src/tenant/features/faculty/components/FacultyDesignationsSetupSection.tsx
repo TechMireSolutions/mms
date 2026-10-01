@@ -61,7 +61,7 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
             <Input id="designation-code" name="code" className={FORM_INPUT} value={draft.code} onChange={(event) => setDraft((current) => ({ ...current, code: event.target.value }))} />
           </Field>
           <Field label={t('faculty.form.hierarchyRank')} id="designation-rank" required>
-            <Input id="designation-rank" name="hierarchyRank" className={FORM_INPUT} type="number" inputMode="numeric" min={1} max={99} value={draft.hierarchyRank} onChange={(event) => setDraft((current) => ({ ...current, hierarchyRank: Number(event.target.value) || 1 }))} />
+            <Input id="designation-rank" name="hierarchyRank" className={FORM_INPUT} type="text" inputMode="numeric" min={1} max={99} value={draft.hierarchyRank} onChange={(event) => setDraft((current) => ({ ...current, hierarchyRank: Number(event.target.value) || 1 }))} />
           </Field>
           <Field label={t('faculty.designations.active')} id="designation-active">
             <div className="flex min-h-11 items-center gap-3">
@@ -74,15 +74,17 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
               {workspaceRoles.map((role) => {
                 const checked = draft.assignableRoles.includes(role.id);
                 return (
-                  <label key={role.id} className="flex min-h-11 cursor-pointer items-center gap-2">
-                    <Checkbox checked={checked} onCheckedChange={(next) => setDraft((current) => ({
+                  <div key={role.id} className="flex min-h-11 items-center gap-2">
+                    <Checkbox id={`designation-role-${role.id}`} checked={checked} onCheckedChange={(next) => setDraft((current) => ({
                       ...current,
                       assignableRoles: next === true
                         ? [...new Set([...current.assignableRoles, role.id])]
                         : current.assignableRoles.filter((id) => id !== role.id),
                     }))} />
-                    <span className="text-sm">{workspaceRoleLabel(role, t)}</span>
-                  </label>
+                    <label htmlFor={`designation-role-${role.id}`} className="cursor-pointer text-sm select-none">
+                      {workspaceRoleLabel(role, t)}
+                    </label>
+                  </div>
                 );
               })}
             </div>

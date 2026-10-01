@@ -59,7 +59,6 @@ export function ContactSkillDetailsSection({
               inputMode="numeric"
               spellCheck={false}
               enterKeyHint="next"
-              aria-invalid={Boolean(yearsError)}
               value={skill.yearsOfExperience || ""}
               required={isFieldRequired("skills", "yearsOfExperience")}
               onChange={(e) => updateSkill(idx, { yearsOfExperience: e.target.value })}
@@ -82,7 +81,6 @@ export function ContactSkillDetailsSection({
               name={`cf-${formInstanceId}-skill-issuer-${idx}`}
               autoCapitalize="words"
               enterKeyHint="next"
-              aria-invalid={Boolean(issuerError)}
               value={skill.issuer || ""}
               required={isFieldRequired("skills", "issuer")}
               onChange={(e) => updateSkill(idx, { issuer: e.target.value })}

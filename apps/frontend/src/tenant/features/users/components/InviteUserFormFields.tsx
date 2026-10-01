@@ -102,15 +102,18 @@ export function InviteUserFormFields({
         name="sendEmail"
         render={({ field }) => (
           <FormItem>
-            <label htmlFor={field.name} className="flex cursor-pointer items-center gap-2">
+            <div className="flex min-h-11 items-center gap-2">
               <Checkbox
                 id={field.name}
                 name={field.name}
                 checked={field.value}
                 onCheckedChange={(checked) => field.onChange(checked === true)}
+                className="cursor-pointer"
               />
-              <span className="text-xs font-medium text-foreground">{t('users.inviteSendEmail')}</span>
-            </label>
+              <label htmlFor={field.name} className="cursor-pointer text-xs font-medium text-foreground select-none">
+                {t('users.inviteSendEmail')}
+              </label>
+            </div>
           </FormItem>
         )}
       />

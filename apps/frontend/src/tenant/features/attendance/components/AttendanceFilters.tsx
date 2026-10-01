@@ -5,6 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Field } from "@/components/ui/FormField";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useSessionsCollection } from '@/tenant/hooks/collections/sessions';
 import { useFacultyContractList } from '@/tenant/hooks/collections/faculty';
@@ -137,8 +138,7 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
           >
             <div className="px-4 pb-4 pt-4 border-t border-border grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               {/* Session */}
-              <div className="flex flex-col gap-1">
-                <label htmlFor="filter-session" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.session")}</label>
+              <Field id="filter-session" label={t("attendance.filters.session")}>
                 <FormSelect
                   id="filter-session"
                   name="sessionId"
@@ -147,11 +147,10 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                   placeholder={t("attendance.filters.allSessions")}
                   options={sessions.map((session) => ({ value: session.id, label: session.name }))}
                 />
-              </div>
+              </Field>
 
               {/* Class */}
-              <div className="flex flex-col gap-1">
-                <label htmlFor="filter-class" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.class")}</label>
+              <Field id="filter-class" label={t("attendance.filters.class")}>
                 <FormSelect
                   id="filter-class"
                   name="classId"
@@ -160,11 +159,10 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                   placeholder={t("attendance.filters.allClasses")}
                   options={sessionClasses.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
                 />
-              </div>
+              </Field>
 
               {/* Faculty */}
-              <div className="flex flex-col gap-1">
-                <label htmlFor="filter-faculty" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.faculty") || t("nav.faculty")}</label>
+              <Field id="filter-faculty" label={t("attendance.filters.faculty") || t("nav.faculty")}>
                 <FormSelect
                   id="filter-faculty"
                   name="facultyId"
@@ -173,18 +171,17 @@ export function AttendanceFilters({ filters, onChange }: AttendanceFiltersProps)
                   placeholder={t('attendance.filters.allFaculty')}
                   options={assignableFaculty.map((member) => ({ value: member.id, label: member.name || "Unknown" }))}
                 />
-              </div>
+              </Field>
 
               {/* Date */}
-              <div className="flex flex-col gap-1">
-                <label htmlFor="filter-date" className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{t("attendance.filters.date")}</label>
+              <Field id="filter-date" label={t("attendance.filters.date")}>
                 <DatePicker
                   id="filter-date"
                   name="date"
                   value={filters.date}
                   onChange={(value) => setFilterValue("date", value)}
                 />
-              </div>
+              </Field>
             </div>
           </motion.div>
         )}

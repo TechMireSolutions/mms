@@ -3,7 +3,7 @@ import { Award, Users } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Checkbox } from '@/components/ui/checkbox';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { Field } from '@/components/ui/FormField';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { SessionClassScholarship } from '@/lib/data/sessionsData';
 
@@ -32,10 +32,7 @@ export function ClassDetailScholarshipTab({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className={FORM_LABEL} htmlFor="sch-pct">
-              {t('sessions.classes.detail.scholarship.percentage')}
-            </label>
+          <Field id="sch-pct" label={t('sessions.classes.detail.scholarship.percentage')}>
             <div className="relative">
               <Input
                 id="sch-pct"
@@ -55,12 +52,9 @@ export function ClassDetailScholarshipTab({
               />
               <span className="absolute end-3 top-2.5 text-xs text-muted-foreground">%</span>
             </div>
-          </div>
+          </Field>
 
-          <div>
-            <label className={FORM_LABEL} htmlFor="sch-expiry">
-              {t('sessions.classes.detail.scholarship.expiry')}
-            </label>
+          <Field id="sch-expiry" label={t('sessions.classes.detail.scholarship.expiry')}>
             <Input
               id="sch-expiry"
               name="expiryDate"
@@ -68,7 +62,7 @@ export function ClassDetailScholarshipTab({
               value={scholarship.expiryDate || ''}
               onChange={(e) => onUpdateScholarship({ expiryDate: e.target.value })}
             />
-          </div>
+          </Field>
         </div>
       </div>
 
@@ -80,22 +74,20 @@ export function ClassDetailScholarshipTab({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <label className="flex items-center gap-3 rounded-lg border border-border/60 p-3 hover:bg-muted/30 cursor-pointer">
+          <div className="flex min-h-11 items-center gap-3 rounded-lg border border-border/60 p-3 hover:bg-muted/30">
             <Checkbox
+              id="scholarship-orphan"
               checked={Boolean(eligibility?.orphan)}
               onCheckedChange={(checked) => onUpdateEligibility({ orphan: checked === true })}
               className="h-4 w-4"
             />
-            <div>
+            <label htmlFor="scholarship-orphan" className="cursor-pointer">
               <p className="text-xs font-medium text-foreground">{t('sessions.classes.detail.scholarship.orphan')}</p>
               <p className="text-3xs text-muted-foreground">{t('sessions.classes.detail.scholarship.orphanHint')}</p>
-            </div>
-          </label>
-
-          <div>
-            <label className={FORM_LABEL} htmlFor="residence-type">
-              {t('sessions.classes.detail.scholarship.residence')}
             </label>
+          </div>
+
+          <Field id="residence-type" label={t('sessions.classes.detail.scholarship.residence')}>
             <FormSelect
               id="residence-type"
               name="residence"
@@ -109,14 +101,11 @@ export function ClassDetailScholarshipTab({
               ]}
               className="w-full text-xs"
             />
-          </div>
+          </Field>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div>
-            <label className={FORM_LABEL} htmlFor="family-members">
-              {t('sessions.classes.detail.scholarship.familyMembers')}
-            </label>
+          <Field id="family-members" label={t('sessions.classes.detail.scholarship.familyMembers')}>
             <Input
               id="family-members"
               name="familyMembers"
@@ -132,12 +121,9 @@ export function ClassDetailScholarshipTab({
               }}
               className="text-xs"
             />
-          </div>
+          </Field>
 
-          <div>
-            <label className={FORM_LABEL} htmlFor="earning-members">
-              {t('sessions.classes.detail.scholarship.earningMembers')}
-            </label>
+          <Field id="earning-members" label={t('sessions.classes.detail.scholarship.earningMembers')}>
             <Input
               id="earning-members"
               name="earningMembers"
@@ -153,12 +139,9 @@ export function ClassDetailScholarshipTab({
               }}
               className="text-xs"
             />
-          </div>
+          </Field>
 
-          <div>
-            <label className={FORM_LABEL} htmlFor="studying-siblings">
-              {t('sessions.classes.detail.scholarship.siblings')}
-            </label>
+          <Field id="studying-siblings" label={t('sessions.classes.detail.scholarship.siblings')}>
             <Input
               id="studying-siblings"
               name="studyingSiblings"
@@ -174,7 +157,7 @@ export function ClassDetailScholarshipTab({
               }}
               className="text-xs"
             />
-          </div>
+          </Field>
         </div>
       </div>
     </div>

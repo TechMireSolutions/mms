@@ -79,7 +79,9 @@ export function MessagingFiltersMenuButton({
       />
       <ModuleFilterDivider />
       <div className="p-2 space-y-1">
-        <span className="text-xs font-semibold text-muted-foreground">{t('messaging.category')}</span>
+        <label htmlFor="messagingCategoryFilter" className="text-xs font-semibold text-muted-foreground block">
+          {t('messaging.category')}
+        </label>
         <FormSelect
           id="messagingCategoryFilter"
           value={category}

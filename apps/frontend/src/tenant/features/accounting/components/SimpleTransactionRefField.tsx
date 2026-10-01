@@ -1,5 +1,5 @@
+import { Field } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/input";
-import { FORM_LABEL } from "@/components/ui/formStyles";
 import { NextVoucherNumberHint } from "./NextVoucherNumberHint";
 import { useTranslation } from "@/hooks/useTranslation";
 
@@ -23,10 +23,13 @@ export function SimpleTransactionRefField({
   const { t } = useTranslation();
 
   return (
-    <div>
-      <label htmlFor={`${prefix}-ref`} className={FORM_LABEL}>
-        {t("accounting.journal.dashboard.wizard.refNo")}
-      </label>
+    <Field
+      id={`${prefix}-ref`}
+      label={t("accounting.journal.dashboard.wizard.refNo")}
+      error={isDuplicateRef ? t("accounting.journal.dashboard.wizard.errorRefDuplicate") : undefined}
+      errorId={isDuplicateRef ? `${prefix}-ref-error` : undefined}
+      hint={refValue.trim() ? t("accounting.journal.dashboard.wizard.optional") : undefined}
+    >
       <Input
         id={`${prefix}-ref`}
         name="ref"
@@ -45,15 +48,9 @@ export function SimpleTransactionRefField({
         aria-invalid={isDuplicateRef}
         aria-describedby={isDuplicateRef ? `${prefix}-ref-error` : refValue.trim() ? undefined : `${prefix}-ref-next`}
       />
-      {isDuplicateRef ? (
-        <p id={`${prefix}-ref-error`} className="text-xs text-destructive mt-1" role="alert">
-          {t("accounting.journal.dashboard.wizard.errorRefDuplicate")}
-        </p>
-      ) : refValue.trim() ? (
-        <p className="text-xs text-muted-foreground mt-1">{t("accounting.journal.dashboard.wizard.optional")}</p>
-      ) : (
+      {!isDuplicateRef && !refValue.trim() && (
         <NextVoucherNumberHint id={`${prefix}-ref-next`} date={date} />
       )}
-    </div>
+    </Field>
   );
 }

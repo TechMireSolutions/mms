@@ -102,7 +102,6 @@ export function ContactSkillCardItem({
                 name={`cf-${formInstanceId}-skill-name-${idx}`}
                 autoCapitalize="words"
                 enterKeyHint="next"
-                aria-invalid={Boolean(nameError)}
                 value={skill.name || ""}
                 required={isFieldRequired("skills", "name")}
                 onChange={(e) => updateSkill(idx, { name: e.target.value })}

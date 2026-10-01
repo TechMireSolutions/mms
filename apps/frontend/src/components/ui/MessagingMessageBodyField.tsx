@@ -49,7 +49,6 @@ export function MessagingMessageBodyField({
         placeholder={placeholder}
         rows={4}
         required={required}
-        aria-invalid={Boolean(error)}
         className={cn(error && FORM_INPUT_ERROR)}
       />
       <p className="mt-1 flex items-center gap-1 text-xs italic text-muted-foreground">

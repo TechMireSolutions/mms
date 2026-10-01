@@ -124,6 +124,7 @@ export function EditUserModal({ user, onClose, onSave }: EditUserModalProps): Re
       onSave={() => { void handleSave(); }}
       saving={submitting}
       saveDisabled={!canManageThisUser || !watchedContactId || isLoadingContact || !form.formState.isDirty}
+      formId="edit-user-form"
     >
       <Form {...form}>
         <EditUserModalFields

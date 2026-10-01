@@ -76,8 +76,10 @@ export function ResetUserPasswordModal({
       onSave={handleReset}
       saving={submitting}
       saveDisabled={!temporaryPassword || !confirmation}
+      formId="reset-user-password-form"
     >
       <form
+        id="reset-user-password-form"
         className="space-y-4"
         onSubmit={(event) => {
           event.preventDefault();
@@ -106,7 +108,6 @@ export function ResetUserPasswordModal({
               if (error) setError('');
             }}
             disabled={submitting}
-            aria-label={t('users.resetPasswordTemporaryLabel')}
           />
         </Field>
         <Field
@@ -124,7 +125,6 @@ export function ResetUserPasswordModal({
               if (error) setError('');
             }}
             disabled={submitting}
-            aria-label={t('users.resetPasswordConfirmLabel')}
           />
         </Field>
       </form>

@@ -93,7 +93,6 @@ export function ContactBankDetailCard({
               name={`cf-${formInstanceId}-bank-title-${idx}`}
               autoCapitalize="words"
               enterKeyHint="next"
-              aria-invalid={Boolean(accountTitleError)}
               className={cn(accountTitleError && FORM_INPUT_ERROR)}
               value={bankDetail.accountTitle || ""}
               onChange={(e) => updateBankDetail(idx, { accountTitle: e.target.value })}
@@ -116,7 +115,6 @@ export function ContactBankDetailCard({
               name={`cf-${formInstanceId}-bank-acc-no-${idx}`}
               spellCheck={false}
               enterKeyHint="done"
-              aria-invalid={Boolean(accountNumberError)}
               className={cn("font-mono", accountNumberError && FORM_INPUT_ERROR)}
               value={bankDetail.accountNumber || ""}
               onChange={(e) => updateBankDetail(idx, { accountNumber: e.target.value })}

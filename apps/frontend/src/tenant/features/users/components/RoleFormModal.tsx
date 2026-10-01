@@ -10,7 +10,7 @@ import {
 import { useTranslation } from '@/hooks/useTranslation';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
 import { FormModal } from '@/components/ui/FormModal';
-import { FORM_LABEL } from '@/components/ui/formStyles';
+import { Field } from '@/components/ui/FormPrimitives';
 import { Input } from '@/components/ui/input';
 import { PermissionMatrix } from '@/tenant/features/users/components/PermissionMatrix';
 
@@ -129,29 +129,31 @@ export function RoleFormModal({
         onSave={handleSave}
         saveDisabled={!formDirty || !name.trim()}
         error={error || undefined}
+        formId="role-form"
       >
-        <div className="space-y-5">
+        <form
+          id="role-form"
+          noValidate
+          onSubmit={(event) => {
+            event.preventDefault();
+            if (formDirty && name.trim()) handleSave();
+          }}
+          className="space-y-5"
+        >
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-            <div>
-              <label className={FORM_LABEL} htmlFor="role-name">
-                {t('users.permissions.fieldName')}
-              </label>
+            <Field id="role-name" label={t('users.permissions.fieldName')} required error={error || undefined}>
               <Input
                 id="role-name"
                 name="name"
                 value={name}
-                aria-invalid={Boolean(error)}
                 onChange={(event) => {
                   setName(event.target.value);
                   if (error) setError('');
                 }}
                 placeholder={t('users.permissions.fieldNamePlaceholder')}
               />
-            </div>
-            <div>
-              <label className={FORM_LABEL} htmlFor="role-desc">
-                {t('users.permissions.fieldDescription')}
-              </label>
+            </Field>
+            <Field id="role-desc" label={t('users.permissions.fieldDescription')}>
               <Input
                 id="role-desc"
                 name="description"
@@ -159,7 +161,7 @@ export function RoleFormModal({
                 onChange={(event) => setDesc(event.target.value)}
                 placeholder={t('users.permissions.fieldDescriptionPlaceholder')}
               />
-            </div>
+            </Field>
           </div>
 
           <PermissionMatrix
@@ -170,7 +172,7 @@ export function RoleFormModal({
             onSelectAll={selectAll}
             onClearAll={clearAll}
           />
-        </div>
+        </form>
       </FormModal>
 
       <ConfirmAlertDialog

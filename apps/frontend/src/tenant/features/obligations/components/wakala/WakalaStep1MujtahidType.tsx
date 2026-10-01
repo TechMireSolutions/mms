@@ -2,8 +2,7 @@ import React from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { RequiredMark } from "@/components/ui/FormPrimitives";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Mujtahid, ObligationType } from "@/lib/data/obligationsData";
 
@@ -38,11 +37,7 @@ export function WakalaStep1MujtahidType({
 
   return (
     <div className="space-y-4 animate-in fade-in-50 duration-200">
-      <div>
-        <label htmlFor="wakala-mujtahid" className={FORM_LABEL}>
-          {t("obligations.form.mujtahidLabel")}
-          <RequiredMark />
-        </label>
+      <Field id="wakala-mujtahid" label={t("obligations.form.mujtahidLabel")} required error={errors.mujtahid}>
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <FormSelect
@@ -59,7 +54,7 @@ export function WakalaStep1MujtahidType({
               type="button"
               variant="outline"
               size="icon"
-              className="mb-[0px] h-10 w-10 shrink-0"
+              className="h-10 w-10 shrink-0"
               onClick={onOpenAddMujtahid}
               aria-label={t("obligations.mujtahids.add")}
             >
@@ -67,16 +62,9 @@ export function WakalaStep1MujtahidType({
             </Button>
           )}
         </div>
-        {errors.mujtahid && (
-          <p className="mt-1 text-sm font-medium text-destructive">{errors.mujtahid}</p>
-        )}
-      </div>
+      </Field>
 
-      <div>
-        <label htmlFor="wakala-type" className={FORM_LABEL}>
-          {t("obligations.wakala.obTypeLabel")}
-          <RequiredMark />
-        </label>
+      <Field id="wakala-type" label={t("obligations.wakala.obTypeLabel")} required error={errors.obType}>
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <FormSelect
@@ -93,7 +81,7 @@ export function WakalaStep1MujtahidType({
               type="button"
               variant="outline"
               size="icon"
-              className="mb-[0px] h-10 w-10 shrink-0"
+              className="h-10 w-10 shrink-0"
               onClick={onOpenAddObType}
               aria-label={t("obligations.types.add")}
             >
@@ -101,10 +89,7 @@ export function WakalaStep1MujtahidType({
             </Button>
           )}
         </div>
-        {errors.obType && (
-          <p className="mt-1 text-sm font-medium text-destructive">{errors.obType}</p>
-        )}
-      </div>
+      </Field>
     </div>
   );
 }

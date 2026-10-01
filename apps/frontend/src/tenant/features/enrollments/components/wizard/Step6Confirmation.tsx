@@ -6,6 +6,7 @@ import { type Session, type Class } from '@/lib/data/sessionsData';
 import { type CalculatedFee } from '@/lib/data/enrollmentData';
 import { useFinanceCurrency } from '@/hooks/useCurrency';
 import { useTranslation } from '@/hooks/useTranslation';
+import { Field } from '@/components/ui/FormField';
 import { Step6ConfirmationRow, Step6ConfirmationSection } from '@/tenant/features/enrollments/components/wizard/step6ConfirmationLayout';
 
 
@@ -81,10 +82,7 @@ export function Step6Confirmation({
         </Step6ConfirmationSection>
       </div>
 
-      <div className="space-y-1.5">
-        <label htmlFor="enrollment-notes" className="text-xs font-semibold text-foreground">
-          {t('enrollments.detail.notes')}
-        </label>
+      <Field id="enrollment-notes" label={t('enrollments.detail.notes')}>
         <textarea
           id="enrollment-notes"
           name="notes"
@@ -93,7 +91,7 @@ export function Step6Confirmation({
           onChange={(e) => onNotesChange(e.target.value)}
           placeholder={t('enrollments.detail.notesPlaceholder')}
         />
-      </div>
+      </Field>
 
       <div className="rounded-xl border border-border bg-muted/30 px-4 py-3 space-y-1.5" role="note" aria-label={t('enrollments.wizard.step6NextAria')}>
         <p className="text-xs font-bold text-foreground">{t('enrollments.wizard.step6NextTitle')}</p>

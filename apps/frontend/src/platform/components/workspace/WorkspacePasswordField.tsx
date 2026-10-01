@@ -21,8 +21,7 @@ export function WorkspacePasswordField({ label, placeholder, value, onChange, pe
       <div className="flex flex-wrap items-center gap-2">
         <Input id={id} name="newAdminPassword" type="text" autoComplete="new-password"
           placeholder={placeholder} value={value} onChange={(event) => onChange(event.target.value)}
-          className="font-mono text-sm h-11 flex-1 min-w-0" disabled={pending}
-          aria-invalid={Boolean(error)} />
+          className="font-mono text-sm h-11 flex-1 min-w-0" disabled={pending} />
         <ActionButton type="button" variant="secondary" size="sm" icon={RefreshCw}
           onClick={() => onChange(generateTemporaryPassword())} disabled={pending}
           className="shrink-0 cursor-pointer font-semibold"

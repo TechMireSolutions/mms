@@ -159,7 +159,6 @@ export function ObligationCollectionFormFields({
                   onChange={(event) => setForm({ ...form, amount: event.target.value })}
                   placeholder="0.00"
                   className="ps-10 w-full"
-                  aria-invalid={!!errors.amount}
                 />
               </div>,
             )}

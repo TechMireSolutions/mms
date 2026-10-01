@@ -3,7 +3,7 @@ import { MapPin } from 'lucide-react';
 import type { BrandingSettings } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
+import { Field } from '@/components/ui/FormField';
 import { SectionCard } from '@/components/ui/SectionCard';
 import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from '@/components/ui/formStyles';
 import type { InstitutionSetupFieldErrors } from './InstitutionSetupFormSections';
@@ -32,10 +32,12 @@ export function InstitutionSetupAddressSection({
       className={SETUP_SECTION_CARD_CLASS}
     >
       <div className="space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="setup-addressLine1" className="font-semibold">
-            {t('branding.addressLine1')} *
-          </Label>
+        <Field
+          id="setup-addressLine1"
+          label={t('branding.addressLine1')}
+          required
+          error={errors.addressLine1}
+        >
           <Input
             id="setup-addressLine1"
             name="addressLine1"
@@ -43,15 +45,13 @@ export function InstitutionSetupAddressSection({
             value={data.addressLine1 || ''}
             onChange={(e) => updateField('addressLine1', e.target.value)}
             placeholder={t("branding.addressLine1Placeholder")}
-            aria-invalid={Boolean(errors.addressLine1)}
           />
-          {errors.addressLine1 && (
-            <p className="text-xs text-destructive">{errors.addressLine1}</p>
-          )}
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="setup-addressLine2">{t('branding.addressLine2')}</Label>
+        <Field
+          id="setup-addressLine2"
+          label={t('branding.addressLine2')}
+        >
           <Input
             id="setup-addressLine2"
             name="addressLine2"
@@ -60,13 +60,15 @@ export function InstitutionSetupAddressSection({
             onChange={(e) => updateField('addressLine2', e.target.value)}
             placeholder={t("branding.addressLine2Placeholder")}
           />
-        </div>
+        </Field>
 
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div className="space-y-1.5">
-            <Label htmlFor="setup-city" className="font-semibold">
-              {t('branding.city')} *
-            </Label>
+          <Field
+            id="setup-city"
+            label={t('branding.city')}
+            required
+            error={errors.city}
+          >
             <Input
               id="setup-city"
               name="city"
@@ -74,15 +76,13 @@ export function InstitutionSetupAddressSection({
               value={data.city || ''}
               onChange={(e) => updateField('city', e.target.value)}
               placeholder={t("branding.cityPlaceholder")}
-              aria-invalid={Boolean(errors.city)}
             />
-            {errors.city && (
-              <p className="text-xs text-destructive">{errors.city}</p>
-            )}
-          </div>
+          </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="setup-region">{t('branding.region')}</Label>
+          <Field
+            id="setup-region"
+            label={t('branding.region')}
+          >
             <Input
               id="setup-region"
               name="region"
@@ -91,12 +91,14 @@ export function InstitutionSetupAddressSection({
               onChange={(e) => updateField('region', e.target.value)}
               placeholder={t("branding.regionPlaceholder")}
             />
-          </div>
+          </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="setup-postalCode" className="font-semibold">
-              {t('branding.postalCode')} *
-            </Label>
+          <Field
+            id="setup-postalCode"
+            label={t('branding.postalCode')}
+            required
+            error={errors.postalCode}
+          >
             <Input
               id="setup-postalCode"
               name="postalCode"
@@ -104,17 +106,15 @@ export function InstitutionSetupAddressSection({
               value={data.postalCode || ''}
               onChange={(e) => updateField('postalCode', e.target.value)}
               placeholder={t("branding.postalCodePlaceholder")}
-              aria-invalid={Boolean(errors.postalCode)}
             />
-            {errors.postalCode && (
-              <p className="text-xs text-destructive">{errors.postalCode}</p>
-            )}
-          </div>
+          </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="setup-country" className="font-semibold">
-              {t('branding.country')} *
-            </Label>
+          <Field
+            id="setup-country"
+            label={t('branding.country')}
+            required
+            error={errors.country}
+          >
             <Input
               id="setup-country"
               name="country"
@@ -122,12 +122,8 @@ export function InstitutionSetupAddressSection({
               value={data.country || ''}
               onChange={(e) => updateField('country', e.target.value)}
               placeholder={t('branding.countryPlaceholder')}
-              aria-invalid={Boolean(errors.country)}
             />
-            {errors.country && (
-              <p className="text-xs text-destructive">{errors.country}</p>
-            )}
-          </div>
+          </Field>
         </div>
       </div>
       <p className="text-xs text-muted-foreground pt-1">

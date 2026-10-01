@@ -100,20 +100,32 @@ export function InvoiceCorrectionActions({
         onSave={() => void handleCredit()}
         saving={credit.isPending}
         saveDisabled={!canCreditInvoice(invoice, creditAmt)}
+        formId="invoice-credit-form"
       >
-        <div className="space-y-3">
-          <Field label={t("finance.collect.creditAmount")}>
+        <form
+          id="invoice-credit-form"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (canCreditInvoice(invoice, creditAmt) && !credit.isPending) {
+              void handleCredit();
+            }
+          }}
+          className="space-y-3"
+        >
+          <Field id="credit-amount" label={t("finance.collect.creditAmount")}>
             <Input
+              id="credit-amount"
               className={FORM_INPUT}
               inputMode="decimal"
               value={amount}
               onChange={(event) => setAmount(event.target.value)}
             />
           </Field>
-          <Field label={t("finance.collect.creditReason")}>
-            <Input className={FORM_INPUT} value={reason} onChange={(event) => setReason(event.target.value)} />
+          <Field id="credit-reason" label={t("finance.collect.creditReason")}>
+            <Input id="credit-reason" className={FORM_INPUT} value={reason} onChange={(event) => setReason(event.target.value)} />
           </Field>
-        </div>
+        </form>
       </FormModal>
       <ConfirmAlertDialog
         open={cancelOpen}

@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/button";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormField";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import { parseMoneyInput } from "./simpleTransactionMoney";
@@ -36,50 +36,52 @@ export function SimpleTransactionAmountInput({
     onChange(next % 1 === 0 ? String(next) : next.toFixed(2));
   };
 
+  const errorMessage = showAmountRequired
+    ? t("accounting.journal.dashboard.wizard.errorAmount")
+    : amountIsInvalid
+      ? t("accounting.journal.dashboard.wizard.errorAmountInvalid")
+      : undefined;
+
+
   return (
     <div>
-      <label htmlFor={`${prefix}-amount`} className={FORM_LABEL}>
-        {t("accounting.journal.dashboard.wizard.amount")}
-      </label>
-      <div className="relative">
-        <span
-          className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground pointer-events-none select-none"
-          aria-hidden="true"
-        >
-          {currencySymbol}
-        </span>
-        <Input
-          id={`${prefix}-amount`}
-          name="amount"
-          type="text"
-          inputMode="decimal"
-          autoComplete="off"
-          autoFocus
-          value={amount}
-          onFocus={(event) => event.target.select()}
-          onBlur={onBlur}
-          onChange={(event) => onChange(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === "Enter") {
-              event.preventDefault();
-              onProceed?.();
-            }
-          }}
-          style={{
-            paddingInlineStart:
-              currencySymbol.length > 2 ? "3.5rem" : currencySymbol.length > 1 ? "2.75rem" : "2rem",
-          }}
-          className={`${currencyPaddingClass} text-lg font-bold`}
-          aria-invalid={showAmountRequired || amountIsInvalid}
-          aria-describedby={
-            showAmountRequired
-              ? `${prefix}-amount-required-error`
-              : amountIsInvalid
-                ? `${prefix}-amount-invalid-error`
-                : undefined
-          }
-        />
-      </div>
+      <Field
+        id={`${prefix}-amount`}
+        label={t("accounting.journal.dashboard.wizard.amount")}
+        error={errorMessage}
+      >
+        <div className="relative">
+          <span
+            className="absolute start-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground pointer-events-none select-none"
+            aria-hidden="true"
+          >
+            {currencySymbol}
+          </span>
+          <Input
+            id={`${prefix}-amount`}
+            name="amount"
+            type="text"
+            inputMode="decimal"
+            autoComplete="off"
+            autoFocus
+            value={amount}
+            onFocus={(event) => event.target.select()}
+            onBlur={onBlur}
+            onChange={(event) => onChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                onProceed?.();
+              }
+            }}
+            style={{
+              paddingInlineStart:
+                currencySymbol.length > 2 ? "3.5rem" : currencySymbol.length > 1 ? "2.75rem" : "2rem",
+            }}
+            className={`${currencyPaddingClass} text-lg font-bold`}
+          />
+        </div>
+      </Field>
       <div className="flex flex-wrap items-center gap-1.5 mt-1.5">
         {[100, 500, 1000, 5000].map((inc) => (
           <Button
@@ -88,22 +90,12 @@ export function SimpleTransactionAmountInput({
             variant="outline"
             size="sm"
             onClick={() => handleIncrement(inc)}
-            className="h-6 px-2 text-xs font-semibold text-muted-foreground hover:text-foreground"
+            className="min-h-11 px-2.5 text-xs font-semibold text-muted-foreground hover:text-foreground"
           >
             +{inc.toLocaleString()}
           </Button>
         ))}
       </div>
-      {showAmountRequired && (
-        <p id={`${prefix}-amount-required-error`} className="text-xs text-warning mt-1" role="alert">
-          {t("accounting.journal.dashboard.wizard.errorAmount")}
-        </p>
-      )}
-      {amountIsInvalid && (
-        <p id={`${prefix}-amount-invalid-error`} className="text-xs text-destructive mt-1" role="alert">
-          {t("accounting.journal.dashboard.wizard.errorAmountInvalid")}
-        </p>
-      )}
     </div>
   );
 }

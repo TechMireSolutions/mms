@@ -16,7 +16,7 @@ import { PersonIdentityMeta } from "@/components/ui/PersonIdentityMeta";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FieldError, Label } from "./AddUserModalFieldHelpers";
+import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import type { AddUserStepProps } from "./addUserModalTypes";
 
 export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element {
@@ -56,7 +56,7 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
           searchPlaceholder={t("users.addSearchPlaceholder")}
           emptyTitle={t("users.addNoContacts")}
         />
-        <FieldError msg={errors.contactId} />
+        <FieldErrorMessage message={errors.contactId} />
       </div>
 
       {form.contactId && form.name ? (
@@ -107,20 +107,18 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
                 <span>{form.email}</span>
               </p>
             ) : (
-              <div className="space-y-1 py-1">
+              <Field id="add-user-email" label={t("auth.emailAddress")} error={errors.email}>
                 <Input
                   id="add-user-email"
                   name="email"
                   type="email"
                   placeholder={t("auth.emailAddress")}
                   value={form.email}
-                  aria-invalid={Boolean(errors.email)}
                   onChange={(e) => setForm((prev) => ({ ...prev, email: e.target.value }))}
                   className="h-8 text-xs bg-background"
                 />
                 <p className="text-3xs text-muted-foreground">{t("users.addErrorContactEmail")}</p>
-                <FieldError msg={errors.email} />
-              </div>
+              </Field>
             )}
 
             {form.phone ? (
@@ -133,8 +131,7 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
         </motion.div>
       ) : null}
 
-      <div>
-        <Label htmlFor="add-user-status">{t("users.fieldStatus")}</Label>
+      <Field id="add-user-status" label={t("users.fieldStatus")}>
         <FormSelect
           id="add-user-status"
           name="status"
@@ -142,7 +139,7 @@ export function Step1({ form, setForm, errors }: AddUserStepProps): JSX.Element 
           onChange={(val) => setForm((previousForm) => ({ ...previousForm, status: val as UserStatus }))}
           options={statusOptions}
         />
-      </div>
+      </Field>
     </div>
   );
 }

@@ -58,7 +58,7 @@ export function AttendanceSettingsPreferencesSection({
               <Input
                 id="setting-low-attendance"
                 name="lowAttendanceThreshold"
-                type="number"
+                type="text"
                 inputMode="numeric"
                 min={50}
                 max={100}

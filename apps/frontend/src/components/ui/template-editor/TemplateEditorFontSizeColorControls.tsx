@@ -68,7 +68,8 @@ export function TemplateEditorFontSizeColorControls({
             id={fontSizeId}
             name={fontSizeId}
             aria-label={t("templateEditor.fontSize")}
-            type="number"
+            type="text"
+            inputMode="numeric"
             min={6}
             max={72}
             value={displayFontSize}

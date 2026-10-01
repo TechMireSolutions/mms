@@ -39,7 +39,6 @@ export function InvoiceFormMetadataFields({
             value={draft.class}
             onChange={(event) => onFieldChange("class", event.target.value)}
             required
-            aria-invalid={Boolean(errors.class)}
           />
         </div>
       </Field>
@@ -59,7 +58,6 @@ export function InvoiceFormMetadataFields({
             value={draft.session}
             onChange={(event) => onFieldChange("session", event.target.value)}
             required
-            aria-invalid={Boolean(errors.session)}
           />
         </div>
       </Field>
@@ -82,7 +80,6 @@ export function InvoiceFormMetadataFields({
             value={draft.baseFee}
             onChange={(event) => onFieldChange("baseFee", event.target.value)}
             required
-            aria-invalid={Boolean(errors.baseFee)}
           />
         </div>
       </Field>
@@ -137,7 +134,6 @@ export function InvoiceFormMetadataFields({
             className={cn(`${FORM_INPUT} ps-10`, errors.discountValue && FORM_INPUT_ERROR)}
             value={draft.discountValue}
             onChange={(event) => onFieldChange("discountValue", event.target.value)}
-            aria-invalid={Boolean(errors.discountValue)}
           />
         </div>
       </Field>

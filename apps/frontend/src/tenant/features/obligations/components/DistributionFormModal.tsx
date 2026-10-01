@@ -2,13 +2,12 @@ import React, { useState } from "react";
 import { PieChart } from "lucide-react";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FormModal } from "@/components/ui/FormModal";
-import { FieldErrorMessage, RequiredMark } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import { DISTRIBUTION_TYPES, type ObligationDistribution } from "@/lib/data/obligationsData";
 import { type DistributionType } from "@/tenant/features/obligations/components/WakalaTypeManager";
-import { cn } from "@/lib/utils";
 
 interface DistributionFormModalProps {
   title: string;
@@ -50,11 +49,6 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
     }
   };
 
-  const errorMessages = [
-    ...Object.values(errors),
-    ...(submitError ? [submitError] : []),
-  ];
-
   return (
     <FormModal
       open
@@ -66,11 +60,19 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
       onSave={handleSave}
       saving={saving}
       saveDisabled={saving || !form.name?.trim() || !form.percentage}
-      error={errorMessages.length > 0 ? errorMessages : undefined}
+      error={submitError || undefined}
+      formId="distribution-form-modal"
     >
-      <div className="space-y-4 text-start">
-        <div>
-          <label htmlFor="dist-name" className={FORM_LABEL}>{t("obligations.wakala.distName")}<RequiredMark /></label>
+      <form
+        id="distribution-form-modal"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!saving && form.name?.trim() && form.percentage) void handleSave();
+        }}
+        className="space-y-4 text-start"
+      >
+        <Field id="dist-name" label={t("obligations.wakala.distName")} required error={errors.name}>
           <Input
             id="dist-name"
             name="name"
@@ -85,14 +87,10 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
               }
               setForm({ ...form, name: event.target.value });
             }}
-            className={cn(FORM_INPUT, errors.name && FORM_INPUT_ERROR)}
-            aria-invalid={!!errors.name}
-            aria-describedby={errors.name ? "dist-name-error" : undefined}
+            className={FORM_INPUT}
           />
-          <FieldErrorMessage id="dist-name-error" message={errors.name} />
-        </div>
-        <div>
-          <label htmlFor="dist-type" className={FORM_LABEL}>{t("obligations.wakala.distType")}<RequiredMark /></label>
+        </Field>
+        <Field id="dist-type" label={t("obligations.wakala.distType")} required>
           <FormSelect
             id="dist-type"
             name="type"
@@ -103,9 +101,8 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
               label: type === "Income" ? t("obligations.distribution.income") : t("obligations.distribution.liability"),
             }))}
           />
-        </div>
-        <div>
-          <label htmlFor="dist-pct" className={FORM_LABEL}>{t("obligations.wakala.distPct")}<RequiredMark /></label>
+        </Field>
+        <Field id="dist-pct" label={t("obligations.wakala.distPct")} required error={errors.pct}>
           <Input
             id="dist-pct"
             name="percentage"
@@ -126,14 +123,10 @@ export function DistributionFormModal({ initial, onSave, onClose, title }: Distr
                 setForm({ ...form, percentage: val === "" ? ("" as unknown as number) : parseFloat(val) || 0 });
               }
             }}
-            className={cn(FORM_INPUT, errors.pct && FORM_INPUT_ERROR)}
-            aria-invalid={!!errors.pct}
-            aria-describedby={errors.pct ? "dist-pct-error" : undefined}
+            className={FORM_INPUT}
           />
-          <FieldErrorMessage id="dist-pct-error" message={errors.pct} />
-        </div>
-      </div>
+        </Field>
+      </form>
     </FormModal>
   );
 }
-

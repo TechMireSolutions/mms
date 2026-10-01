@@ -11,6 +11,7 @@ export interface EnrollmentWizardFooterProps {
   canNext: boolean;
   canConfirm: boolean;
   submitting: boolean;
+  form?: string;
   onCancel: () => void;
   onPrevious: () => void;
   onNext: () => void;
@@ -24,6 +25,7 @@ export function EnrollmentWizardFooter({
   canNext,
   canConfirm,
   submitting,
+  form,
   onCancel,
   onPrevious,
   onNext,
@@ -34,6 +36,7 @@ export function EnrollmentWizardFooter({
       <div>
         {step === 0 ? (
           <Button
+            type="button"
             onClick={onCancel}
             variant="outline"
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-muted transition-colors min-h-11 h-auto"
@@ -42,6 +45,7 @@ export function EnrollmentWizardFooter({
           </Button>
         ) : (
           <Button
+            type="button"
             onClick={onPrevious}
             variant="outline"
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold text-foreground hover:bg-muted transition-colors min-h-11 h-auto"
@@ -56,7 +60,12 @@ export function EnrollmentWizardFooter({
         </span>
         {step < steps.length - 1 ? (
           <Button
-            onClick={onNext}
+            type={form ? "submit" : "button"}
+            form={form}
+            onClick={(e) => {
+              if (form) e.preventDefault();
+              onNext();
+            }}
             disabled={!canNext}
             className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors min-h-11 h-auto"
           >
@@ -64,7 +73,12 @@ export function EnrollmentWizardFooter({
           </Button>
         ) : (
           <Button
-            onClick={() => { void onSubmit(); }}
+            type={form ? "submit" : "button"}
+            form={form}
+            onClick={(e) => {
+              if (form) e.preventDefault();
+              void onSubmit();
+            }}
             disabled={!canConfirm || submitting}
             className="flex items-center gap-1.5 px-5 py-2 rounded-xl bg-primary text-primary-foreground text-sm font-semibold hover:bg-primary/90 disabled:opacity-40 disabled:cursor-not-allowed transition-colors min-h-11 h-auto"
           >

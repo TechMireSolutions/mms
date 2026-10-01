@@ -95,6 +95,7 @@ export function ThemeSettingsLogoColourSource({
                     ref={fileInputRef}
                     type="file"
                     accept="image/*"
+                    aria-label={t('theme.testLogoButton')}
                     className="hidden"
                     onChange={handleSampleFile}
                   />
@@ -150,6 +151,7 @@ export function ThemeSettingsLogoColourSource({
               ref={fileInputRef}
               type="file"
               accept="image/*"
+              aria-label={t('theme.testLogoButton')}
               className="hidden"
               onChange={handleSampleFile}
             />

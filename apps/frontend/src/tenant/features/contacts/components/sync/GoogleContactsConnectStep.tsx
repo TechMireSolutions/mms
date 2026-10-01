@@ -2,8 +2,8 @@ import type React from "react";
 import { ExternalLink, Globe, Link2, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FieldErrorMessage } from "@/components/ui/FormField";
-import { FORM_ERROR_BOX, FORM_LABEL } from "@/components/ui/formStyles";
+import { Field, FieldErrorMessage } from "@/components/ui/FormField";
+import { FORM_ERROR_BOX } from "@/components/ui/formStyles";
 import { WarningCallout } from "@/components/ui/WarningCallout";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
@@ -45,15 +45,14 @@ export function GoogleContactsConnectStep({
       {showAuthCode && (
         <WarningCallout tone="info" density="compact" icon={Link2}>
           <div className="space-y-2">
-            <label className={FORM_LABEL} htmlFor="authCode">
-              {t("contacts.sync.pasteAuthCode")}
-            </label>
-            <Input
-              id="authCode"
-              value={authCode}
-              onChange={(event) => onAuthCodeChange(event.target.value)}
-              placeholder={t("contacts.sync.pasteAuthCodePlaceholder")}
-            />
+            <Field id="authCode" label={t("contacts.sync.pasteAuthCode")}>
+              <Input
+                id="authCode"
+                value={authCode}
+                onChange={(event) => onAuthCodeChange(event.target.value)}
+                placeholder={t("contacts.sync.pasteAuthCodePlaceholder")}
+              />
+            </Field>
             <Button
               type="button"
               onClick={onExchangeCode}

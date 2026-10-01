@@ -11,8 +11,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { buttonVariants } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_LABEL } from "@/components/ui/formStyles";
 import { Textarea } from "@/components/ui/textarea";
+import { Field } from "@/components/ui/FormField";
 
 export interface ConfirmAlertDialogOptionalReason {
   label: string;
@@ -91,10 +91,7 @@ export function ConfirmAlertDialog({
           <AlertDialogDescription>{description}</AlertDialogDescription>
         </AlertDialogHeader>
         {optionalReason && (
-          <div className="px-1 pb-1">
-            <label className={FORM_LABEL} htmlFor={reasonInputId}>
-              {optionalReason.label}
-            </label>
+          <Field label={optionalReason.label} id={reasonInputId}>
             <Textarea
               id={reasonInputId}
               rows={2}
@@ -103,7 +100,7 @@ export function ConfirmAlertDialog({
               placeholder={optionalReason.placeholder}
               onChange={(event) => setReason(event.target.value)}
             />
-          </div>
+          </Field>
         )}
         {children}
         <AlertDialogFooter>

@@ -44,7 +44,7 @@ export function WidgetBuilderPreview({
         </div>
 
         <div className="space-y-2 bg-card/30 p-2.5 rounded-xl border border-border/50">
-          <SectionLabel as="label" tracking="wider" className="block">{t("reports.widgets.builder.dragToScale")}</SectionLabel>
+          <SectionLabel as="p" tracking="wider" className="block">{t("reports.widgets.builder.dragToScale")}</SectionLabel>
           <Slider
             min={100}
             max={250}

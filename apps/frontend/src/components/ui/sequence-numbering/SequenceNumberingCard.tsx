@@ -134,7 +134,8 @@ export function SequenceNumberingCard({
                 <Input
                   id="sequence-startSeq"
                   name="sequence-startSeq"
-                  type="number"
+                  type="text"
+                  inputMode="numeric"
                   min="1"
                   className={FORM_INPUT}
                   value={config.startingSequence}

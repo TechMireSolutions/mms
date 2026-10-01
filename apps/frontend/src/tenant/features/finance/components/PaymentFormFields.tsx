@@ -59,7 +59,6 @@ export function PaymentFormFields({
                 value={paymentDraft.amount}
                 onChange={(event) => updateDraft({ amount: event.target.value })}
                 required
-                aria-invalid={Boolean(errors.amount)}
               />
             </div>
             {Number(paymentDraft.amount) < balance && Number(paymentDraft.amount) > 0 && (
@@ -111,7 +110,6 @@ export function PaymentFormFields({
                 value={paymentDraft.note || ""}
                 onChange={(event) => updateDraft({ note: event.target.value })}
                 placeholder={t("finance.paymentNotePlaceholder")}
-                aria-invalid={Boolean(errors.note)}
               />
             </div>
           </Field>

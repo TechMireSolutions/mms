@@ -107,21 +107,19 @@ export function TemplateEditorTypographySection({
       <TemplateEditorTypographyStyleButtons states={states} onPatchStyle={handlePatch} t={t} />
 
       <div className="pt-1">
-        <label
-          htmlFor={rtlToggleId}
-          className="min-h-11 flex items-center gap-2.5 cursor-pointer select-none"
-        >
+        <div className="min-h-11 flex items-center gap-2.5 select-none">
           <Checkbox
             id={rtlToggleId}
             checked={isMixedRtl ? "indeterminate" : allRtl}
             onCheckedChange={(checked) =>
               handlePatch({ direction: checked === true ? "rtl" : "ltr" })
             }
+            className="cursor-pointer"
           />
-          <span className="text-xs font-medium text-foreground">
+          <label htmlFor={rtlToggleId} className="cursor-pointer text-xs font-medium text-foreground">
             {t("templateEditor.rtl")}
-          </span>
-        </label>
+          </label>
+        </div>
       </div>
     </TemplateEditorSection>
   );

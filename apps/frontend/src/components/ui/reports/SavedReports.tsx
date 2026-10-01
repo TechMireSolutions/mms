@@ -153,8 +153,17 @@ export default function SavedReports({
         onSave={() => void handleSave()}
         saving={saving}
         saveDisabled={!name.trim()}
+        formId="save-report-modal-form"
       >
-        <div className="space-y-4">
+        <form
+          id="save-report-modal-form"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (name.trim() && !saving) void handleSave();
+          }}
+          className="space-y-4"
+        >
           <div className="space-y-1.5">
             <Label htmlFor="saved-report-name">{t("reports.saved.nameLabel")}</Label>
             <Input
@@ -164,7 +173,7 @@ export default function SavedReports({
               placeholder={t("reports.saved.namePlaceholder")}
             />
           </div>
-        </div>
+        </form>
       </FormModal>
     </div>
   );

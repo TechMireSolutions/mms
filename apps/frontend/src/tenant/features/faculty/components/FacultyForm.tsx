@@ -108,35 +108,47 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
             t={t}
           />
         }
+        formId={formInstanceId}
       >
-        <FacultyFormTabContent
-          formInstanceId={formInstanceId}
-          activeTab={activeTab}
-          faculty={faculty}
-          facultyDraft={facultyDraft}
-          errors={errors}
-          fields={fieldsMap}
-          defaultSpecialization={defaultSpecialization}
-          linkedFacultyContactIds={linkedFacultyContactIds}
-          specializationOptions={specializationOptions}
-          designationOptions={designationOptions}
-          userAccountDraft={userAccountDraft}
-          onUserAccountDraftChange={setUserAccountDraft}
-          autoGenerateId={autoGenerateId}
-          idPrefix={idPrefix}
-          nextEmployeeId={nextEmployeeId}
-          onRegenerateEmployeeId={handleRegenerateEmployeeId}
-          isFetchingNextEmployeeId={isFetchingNextEmployeeId}
-          statusOptions={statusOptions}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          getFieldError={getFieldError}
-          onDraftChange={updateDraft}
-          linkedContact={linkedContact}
-          linkedUser={linkedUser}
-          supervisorCandidates={supervisorCandidates}
-          hierarchyRankPresets={hierarchyRankPresets}
-        />
+        <form
+          id={formInstanceId}
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (!((requireContactLink && isFieldEnabled("contactId") && !facultyDraft.contactId) || (Boolean(faculty?.id) && !isDirty))) {
+              void onSaveWithTabFocus();
+            }
+          }}
+        >
+          <FacultyFormTabContent
+            formInstanceId={formInstanceId}
+            activeTab={activeTab}
+            faculty={faculty}
+            facultyDraft={facultyDraft}
+            errors={errors}
+            fields={fieldsMap}
+            defaultSpecialization={defaultSpecialization}
+            linkedFacultyContactIds={linkedFacultyContactIds}
+            specializationOptions={specializationOptions}
+            designationOptions={designationOptions}
+            userAccountDraft={userAccountDraft}
+            onUserAccountDraftChange={setUserAccountDraft}
+            autoGenerateId={autoGenerateId}
+            idPrefix={idPrefix}
+            nextEmployeeId={nextEmployeeId}
+            onRegenerateEmployeeId={handleRegenerateEmployeeId}
+            isFetchingNextEmployeeId={isFetchingNextEmployeeId}
+            statusOptions={statusOptions}
+            isFieldEnabled={isFieldEnabled}
+            isFieldRequired={isFieldRequired}
+            getFieldError={getFieldError}
+            onDraftChange={updateDraft}
+            linkedContact={linkedContact}
+            linkedUser={linkedUser}
+            supervisorCandidates={supervisorCandidates}
+            hierarchyRankPresets={hierarchyRankPresets}
+          />
+        </form>
       </FormModal>
       <ConfirmAlertDialog
         open={duplicateConfirmOpen}

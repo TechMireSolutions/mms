@@ -97,16 +97,19 @@ export default function Login(): React.ReactElement {
             />
 
             <div className="flex items-center justify-between gap-3 pt-0.5">
-              <label htmlFor={rememberFieldId} className="flex min-h-11 cursor-pointer items-center gap-2.5 rounded-lg">
+              <div className="flex min-h-11 items-center gap-2.5 rounded-lg">
                 <Checkbox
                   id={rememberFieldId}
                   name="rememberMe"
                   checked={rememberMe}
                   disabled={isBusy}
                   onCheckedChange={handleRememberMeChange}
+                  className="cursor-pointer"
                 />
-                <span className="text-sm text-muted-foreground">{t("auth.rememberMe")}</span>
-              </label>
+                <label htmlFor={rememberFieldId} className="cursor-pointer text-sm text-muted-foreground select-none">
+                  {t("auth.rememberMe")}
+                </label>
+              </div>
 
               <Link
                 to={ROUTES.forgotPassword}

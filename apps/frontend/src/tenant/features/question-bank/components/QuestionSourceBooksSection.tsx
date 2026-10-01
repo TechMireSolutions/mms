@@ -107,10 +107,19 @@ export function QuestionSourceBooksSection({
           saveLabel={t("questionBank.saveSourceBook")}
           onSave={onSaveBook}
           saveDisabled={!draftBook.metadata.bookName?.trim() && !draftBook.name.trim()}
+          formId="question-source-book-form"
         >
-          <div className="space-y-4">
+          <form
+            id="question-source-book-form"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (draftBook.metadata.bookName?.trim() || draftBook.name.trim()) onSaveBook();
+            }}
+            className="space-y-4"
+          >
             <div>
-              <span className={FORM_LABEL}>{t("questionBank.selectBookFields")}</span>
+              <p className={FORM_LABEL}>{t("questionBank.selectBookFields")}</p>
               <div className="flex flex-wrap gap-2">
                 {availableFieldIds.map((fieldId) => {
                   const selected = draftBook.fieldIds.includes(fieldId);
@@ -149,7 +158,7 @@ export function QuestionSourceBooksSection({
                 );
               })}
             </div>
-          </div>
+          </form>
         </FormModal>
       )}
     </section>

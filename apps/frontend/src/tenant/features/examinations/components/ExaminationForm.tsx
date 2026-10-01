@@ -34,15 +34,25 @@ const ExamForm = (function ExamForm({
           onSave={form.handleSave}
           saving={form.saving}
           saveDisabled={form.saving || !form.valid}
+          formId="examination-form"
         >
-          <ExaminationFormFields
-            t={form.t}
-            errors={form.errors}
-            examDraft={form.examDraft}
-            classes={form.classes}
-            updateDraft={form.updateDraft}
-            getFieldError={form.getFieldError}
-          />
+          <form
+            id="examination-form"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (!form.saving && form.valid) void form.handleSave();
+            }}
+          >
+            <ExaminationFormFields
+              t={form.t}
+              errors={form.errors}
+              examDraft={form.examDraft}
+              classes={form.classes}
+              updateDraft={form.updateDraft}
+              getFieldError={form.getFieldError}
+            />
+          </form>
         </FormModal>
       );
     });

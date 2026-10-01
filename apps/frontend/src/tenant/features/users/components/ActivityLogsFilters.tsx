@@ -65,6 +65,7 @@ export function ActivityLogsFilters({
           value={search}
           onChange={(event) => onSearchChange(event.target.value)}
           placeholder={t('users.activitySearch')}
+          aria-label={t('users.activitySearch')}
           className="ps-9.5"
         />
       </div>

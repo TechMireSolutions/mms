@@ -1,12 +1,11 @@
 import React, { type Dispatch, type SetStateAction } from "react";
 import { User, Users2 } from "lucide-react";
 import { RegistryPersonSelect } from "@/tenant/components/selectors/RegistryPersonSelect";
-import { FieldErrorMessage, RequiredMark } from "@/components/ui/FormPrimitives";
-import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from "@/components/ui/formStyles";
+import { Field, FieldErrorMessage, RequiredMark } from "@/components/ui/FormPrimitives";
+import { FORM_INPUT, FORM_LABEL } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
-import { cn } from "@/lib/utils";
 import type { Distribution } from "@/lib/data/hasanatData";
 
 export interface DistributeRecipientTypeFieldProps {
@@ -148,25 +147,24 @@ export function DistributeRecipientClassField({
   const { t } = useTranslation();
 
   return (
-    <div>
-      <label htmlFor="recp-class" className={FORM_LABEL}>
-        {data.recipientType === "student"
+    <Field
+      id="recp-class"
+      label={
+        data.recipientType === "student"
           ? t("hasanat.form.classLabel")
-          : t("hasanat.form.departmentLabel")}
-        {isRequired ? <RequiredMark /> : null}
-      </label>
+          : t("hasanat.form.departmentLabel")
+      }
+      required={isRequired}
+      error={errors?.recipientClass}
+    >
       <Input
         id="recp-class"
         name="recipientClass"
-        className={cn(FORM_INPUT, errors?.recipientClass && FORM_INPUT_ERROR)}
+        className={FORM_INPUT}
         value={data.recipientClass || ""}
         onChange={(event) => updateField("recipientClass", event.target.value)}
         placeholder={t("hasanat.form.recipientClassPlaceholder")}
-        required={isRequired}
-        aria-invalid={Boolean(errors?.recipientClass)}
-        aria-describedby={errors?.recipientClass ? "recp-class-error" : undefined}
       />
-      <FieldErrorMessage id="recp-class-error" message={errors?.recipientClass} />
-    </div>
+    </Field>
   );
 }

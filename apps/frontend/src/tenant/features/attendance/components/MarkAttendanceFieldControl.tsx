@@ -87,15 +87,16 @@ export function MarkAttendanceFieldControl({
 
   if (field.type === "boolean") {
     return (
-      <label htmlFor={inputId} className="flex min-h-11 min-w-11 cursor-pointer items-center justify-center">
-        <span className="sr-only">{field.label}</span>
+      <div className="flex min-h-11 min-w-11 items-center justify-center">
+        <label htmlFor={inputId} className="sr-only">{field.label}</label>
         <Checkbox
           id={inputId}
           name={field.id}
           checked={Boolean(rawValue)}
           onCheckedChange={(checked) => onFieldChange(row.studentId, field.id, !!checked)}
+          className="cursor-pointer"
         />
-      </label>
+      </div>
     );
   }
 
@@ -121,7 +122,8 @@ export function MarkAttendanceFieldControl({
       <Input
         id={inputId}
         name={field.id}
-        type={field.type === "number" ? "number" : "text"}
+        type="text"
+        inputMode={field.type === "number" ? "numeric" : undefined}
         value={stringValue}
         onChange={(event) => onFieldChange(row.studentId, field.id, event.target.value)}
         placeholder={field.placeholder || t("common.enterPlaceholder")}

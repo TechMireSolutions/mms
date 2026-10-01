@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { CreditCard } from 'lucide-react';
 import { type Denomination } from '@/lib/data/hasanatData';
 import { FormModal } from '@/components/ui/FormModal';
-import { FieldErrorMessage, RequiredMark } from '@/components/ui/FormPrimitives';
-import { FORM_INPUT, FORM_INPUT_ERROR, FORM_LABEL } from '@/components/ui/formStyles';
+import { Field } from '@/components/ui/FormPrimitives';
+import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
 import { DEFAULT_DENOMINATION_COLOR, getDenominationPresetColors } from '@/lib/denominationColors';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from '@/hooks/useTranslation';
-import { cn } from '@/lib/utils';
 
 const EMPTY: Denomination = { id: '', name: '', points: 100, color: DEFAULT_DENOMINATION_COLOR, description: '', icon: '⭐', active: true };
 const PRESET_ICONS = ['⭐', '🌟', '✨', '💎', '👑', '🏆', '🎖️', '📿'];
@@ -84,8 +83,17 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
       saveDisabled={submitting}
       error={submitError || undefined}
       onSave={handleSave}
+      formId="denomination-form-modal"
     >
-      <div className="space-y-4">
+      <form
+        id="denomination-form-modal"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (!submitting) void handleSave();
+        }}
+        className="space-y-4"
+      >
         <div className="flex items-center justify-center" aria-hidden="true">
           <div className="w-24 h-14 rounded-xl flex items-center justify-center shadow-md text-white text-2xl" style={{ background: `linear-gradient(135deg, ${data.color}, ${data.color}99)` }}>
             {data.icon}
@@ -93,41 +101,39 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label htmlFor="denom-name" className={FORM_LABEL}>{t('hasanat.denominations.cardName')}<RequiredMark /></label>
+          <Field id="denom-name" label={t('hasanat.denominations.cardName')} required error={errors.name}>
             <Input
               id="denom-name"
               name="name"
-              className={cn(FORM_INPUT, errors.name && FORM_INPUT_ERROR)}
+              className={FORM_INPUT}
               value={data.name}
               onChange={(event) => updateField('name', event.target.value)}
               placeholder={t('hasanat.denominations.cardNamePlaceholder')}
-              aria-invalid={Boolean(errors.name)}
-              aria-describedby={errors.name ? "denom-name-error" : undefined}
             />
-            <FieldErrorMessage id="denom-name-error" message={errors.name} />
-          </div>
-          <div>
-            <label htmlFor="denom-pts" className={FORM_LABEL}>{t('hasanat.denominations.pointsValue')}<RequiredMark /></label>
+          </Field>
+          <Field id="denom-pts" label={t('hasanat.denominations.pointsValue')} required error={errors.points}>
             <Input
               id="denom-pts"
               name="points"
-              type="number"
+              type="text"
               inputMode="numeric"
-              className={cn(FORM_INPUT, errors.points && FORM_INPUT_ERROR)}
+              className={FORM_INPUT}
               value={data.points}
-              onChange={(event) => updateField('points', +event.target.value)}
-              min={1}
-              aria-invalid={Boolean(errors.points)}
-              aria-describedby={errors.points ? "denom-pts-error" : undefined}
+              onChange={(event) => updateField('points', Number(event.target.value) || 0)}
+              placeholder="100"
             />
-            <FieldErrorMessage id="denom-pts-error" message={errors.points} />
-          </div>
+          </Field>
         </div>
-        <div>
-          <label htmlFor="denom-desc" className={FORM_LABEL}>{t('hasanat.denominations.description')}</label>
-          <Input id="denom-desc" name="description" className={FORM_INPUT} value={data.description} onChange={(event) => updateField('description', event.target.value)} placeholder={t('hasanat.denominations.descriptionPlaceholder')} />
-        </div>
+        <Field id="denom-desc" label={t('hasanat.denominations.description')}>
+          <Input
+            id="denom-desc"
+            name="description"
+            className={FORM_INPUT}
+            value={data.description}
+            onChange={(event) => updateField('description', event.target.value)}
+            placeholder={t('hasanat.denominations.descriptionPlaceholder')}
+          />
+        </Field>
 
         <fieldset>
           <legend className={FORM_LABEL}>{t('hasanat.denominations.icon')}</legend>
@@ -165,11 +171,13 @@ export function DenominationModal({ open, denom, onClose, onSave }: Denomination
           </div>
         </fieldset>
 
-        <label htmlFor="denom-active" className="flex items-center gap-2.5 cursor-pointer">
-          <Checkbox id="denom-active" name="active" checked={data.active} onCheckedChange={(checked) => updateField('active', !!checked)} />
-          <span className="text-sm font-medium text-foreground">{t('hasanat.status.active')}</span>
-        </label>
-      </div>
+        <div className="flex items-center gap-2.5">
+          <Checkbox id="denom-active" name="active" checked={data.active} onCheckedChange={(checked) => updateField('active', !!checked)} className="cursor-pointer" />
+          <label htmlFor="denom-active" className="cursor-pointer text-sm font-medium text-foreground select-none">
+            {t('hasanat.status.active')}
+          </label>
+        </div>
+      </form>
     </FormModal>
   );
 }

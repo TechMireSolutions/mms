@@ -82,7 +82,6 @@ export const InvoiceFormFieldsSection = (function InvoiceFormFieldsSection({
                 value={draft.studentName}
                 onChange={(event) => onFieldChange("studentName", event.target.value)}
                 required
-                aria-invalid={Boolean(errors.studentName)}
               />
             </div>
           </Field>
@@ -102,7 +101,6 @@ export const InvoiceFormFieldsSection = (function InvoiceFormFieldsSection({
                 value={draft.studentId}
                 onChange={(event) => onFieldChange("studentId", event.target.value)}
                 required
-                aria-invalid={Boolean(errors.studentId)}
               />
             </div>
           </Field>

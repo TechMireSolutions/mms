@@ -38,7 +38,7 @@ export function AttendanceTimingRulesSection({
               <Input
                 id="setting-late-threshold"
                 name="lateThresholdMins"
-                type="number"
+                type="text"
                 inputMode="numeric"
                 min={1}
                 max={60}
@@ -59,7 +59,7 @@ export function AttendanceTimingRulesSection({
               <Input
                 id="setting-auto-absent"
                 name="autoAbsentAfterMins"
-                type="number"
+                type="text"
                 inputMode="numeric"
                 min={10}
                 max={120}

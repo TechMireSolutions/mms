@@ -71,8 +71,6 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
     }
   };
 
-
-
   const content = (
     <>
       <ActionButton
@@ -97,8 +95,17 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
         saving={addAdmin.isPending}
         dir={dir}
         lang={language}
+        formId="platform-add-admin-form"
       >
-        <div className="space-y-4 text-start">
+        <form
+          id="platform-add-admin-form"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            void handleSave();
+          }}
+          className="space-y-4 text-start"
+        >
           {/* Full Name Field */}
           <Field label={t('platform.adminName')} required id="admin-name">
             <LeadingIconInput
@@ -162,7 +169,7 @@ export function PlatformAddAdminForm({ asTriggerOnly = false }: { asTriggerOnly?
             onChange={setPermissions}
             disabled={addAdmin.isPending}
           />
-        </div>
+        </form>
       </FormModal>
     </>
   );

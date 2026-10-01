@@ -1,6 +1,6 @@
 import type { Dispatch, SetStateAction } from "react";
 import { DatePicker } from "@/components/ui/DatePicker";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormField";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import type { Account, FiscalYear, JournalEntry } from "@/lib/data/accountingData";
@@ -76,19 +76,17 @@ export function StepTransactionForm({
       <SimpleTransactionHeader type={type} onChangeType={onChangeType} />
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-        <div>
-          <label htmlFor={`${prefix}-date`} className={FORM_LABEL}>{t("accounting.columns.journal.date")}</label>
+        <Field id={`${prefix}-date`} label={t("accounting.columns.journal.date")}>
           <DatePicker
             id={`${prefix}-date`}
             name="date"
             value={form.date}
             onChange={(dateValue) => setForm((prev) => ({ ...prev, date: dateValue }))}
           />
-        </div>
+        </Field>
 
         {showFiscalYear && (
-          <div>
-            <label htmlFor={`${prefix}-fiscal-year`} className={FORM_LABEL}>{t("accounting.journal.form.financialYear")}</label>
+          <Field id={`${prefix}-fiscal-year`} label={t("accounting.journal.form.financialYear")}>
             <FormSelect
               id={`${prefix}-fiscal-year`}
               name="fiscalYear"
@@ -105,7 +103,7 @@ export function StepTransactionForm({
               placeholder={t("accounting.journal.form.none")}
               options={fiscalYearOptions}
             />
-          </div>
+          </Field>
         )}
 
         <SimpleTransactionAmountInput
@@ -143,23 +141,24 @@ export function StepTransactionForm({
         />
 
         <div className="sm:col-span-2">
-          <label htmlFor={`${prefix}-description`} className={FORM_LABEL}>{t("accounting.columns.journal.description")}</label>
-          <Input
-            id={`${prefix}-description`}
-            name="description"
-            value={form.description}
-            onChange={(event) => {
-              const val = event.target.value;
-              setForm((prev) => ({ ...prev, description: val }));
-            }}
-            onKeyDown={(event) => {
-              if (event.key === "Enter") {
-                event.preventDefault();
-                onProceed?.();
-              }
-            }}
-            placeholder={t(type.descriptionKey)}
-          />
+          <Field id={`${prefix}-description`} label={t("accounting.columns.journal.description")}>
+            <Input
+              id={`${prefix}-description`}
+              name="description"
+              value={form.description}
+              onChange={(event) => {
+                const val = event.target.value;
+                setForm((prev) => ({ ...prev, description: val }));
+              }}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  onProceed?.();
+                }
+              }}
+              placeholder={t(type.descriptionKey)}
+            />
+          </Field>
         </div>
 
         <SimpleTransactionTagSelector

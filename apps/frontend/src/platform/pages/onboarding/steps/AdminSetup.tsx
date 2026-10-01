@@ -80,21 +80,21 @@ export default function AdminSetup({ data, onChange }: AdminSetupProps) {
         onConfirmPasswordChange={(value) => update("confirmPassword", value)}
       />
 
-      <label
-        htmlFor="terms"
-        className="flex min-h-11 cursor-pointer items-start gap-2.5 rounded-lg pt-1 select-none"
-      >
+      <div className="flex min-h-11 items-start gap-2.5 rounded-lg pt-1 select-none">
         <Checkbox
           id="terms"
           name="terms"
           checked={data.agreedTerms || false}
           onCheckedChange={(checked) => update("agreedTerms", checked === true)}
-          className="mt-0.5"
+          className="mt-0.5 cursor-pointer"
         />
-        <span className="text-xs leading-relaxed text-muted-foreground">
+        <label
+          htmlFor="terms"
+          className="cursor-pointer text-xs leading-relaxed text-muted-foreground flex-1"
+        >
           {t("onboarding.agreeTerms")}
-        </span>
-      </label>
+        </label>
+      </div>
     </div>
   );
 }

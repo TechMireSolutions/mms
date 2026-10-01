@@ -8,7 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { useWorkspaceRoles } from "@/tenant/hooks/useWorkspaceRoles";
 import { filterAssignableRoles, todayISO } from "@mms/shared";
-import { FieldError } from "./AddUserModalFieldHelpers";
+import { FieldErrorMessage } from "@/components/ui/FormPrimitives";
 import { RoleCard } from "./AddUserModalRoleCard";
 import type { AddUserStepProps } from "./addUserModalTypes";
 
@@ -29,20 +29,21 @@ export function Step2({ form, setForm, errors }: AddUserStepProps): JSX.Element 
           <RoleCard key={role.id} role={role} selected={form.role === role.id} onSelect={selectRole} />
         ))}
       </div>
-      <FieldError msg={errors.role} />
+      <FieldErrorMessage message={errors.role} />
 
       <div>
-        <label htmlFor="users-temporary-role" className="flex items-center gap-2 cursor-pointer">
+        <div className="flex items-center gap-2">
           <Checkbox
             id="users-temporary-role"
             checked={!!form.temporaryRole}
             onCheckedChange={(checked) => setForm((previousForm) => ({ ...previousForm, temporaryRole: !!checked, roleExpiry: "" }))}
+            className="cursor-pointer"
           />
-          <div className="flex items-center gap-1.5">
+          <label htmlFor="users-temporary-role" className="flex items-center gap-1.5 cursor-pointer select-none">
             <CalendarClock className="w-3.5 h-3.5 text-muted-foreground" />
             <span className="text-xs font-medium text-foreground">{t("users.addTemporaryRole")}</span>
-          </div>
-        </label>
+          </label>
+        </div>
         <AnimatePresence>
           {form.temporaryRole && (
             <motion.div
@@ -57,6 +58,7 @@ export function Step2({ form, setForm, errors }: AddUserStepProps): JSX.Element 
                 value={form.roleExpiry || ""}
                 min={todayISO()}
                 onChange={(val) => setForm((previousForm) => ({ ...previousForm, roleExpiry: val }))}
+                aria-label={t("users.addTemporaryRole")}
                 className="w-full"
               />
             </motion.div>

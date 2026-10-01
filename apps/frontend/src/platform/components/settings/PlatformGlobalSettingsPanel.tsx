@@ -51,10 +51,11 @@ export function PlatformGlobalSettingsPanel(): React.JSX.Element {
         <CardContent className="space-y-4">
           <div className="flex items-center justify-between p-3 rounded-lg bg-muted/30 border border-border/50">
             <div>
-              <div className="text-xs font-medium">Automatic TLS Sync on Provision</div>
+              <label htmlFor="sync-tls" className="text-xs font-medium cursor-pointer">Automatic TLS Sync on Provision</label>
               <div className="text-3xs text-muted-foreground">Trigger Certbot certificate expansion upon workspace creation</div>
             </div>
             <Switch
+              id="sync-tls"
               checked={syncTls}
               onCheckedChange={setSyncTls}
               aria-label="Automatic TLS Sync"
@@ -62,8 +63,9 @@ export function PlatformGlobalSettingsPanel(): React.JSX.Element {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Certbot Contact Email</label>
+            <label htmlFor="certbot-email" className="text-xs font-medium text-foreground">Certbot Contact Email</label>
             <Input
+              id="certbot-email"
               type="email"
               value={certbotEmail}
               onChange={(e) => setCertbotEmail(e.target.value)}
@@ -74,8 +76,9 @@ export function PlatformGlobalSettingsPanel(): React.JSX.Element {
           </div>
 
           <div className="space-y-1.5">
-            <label className="text-xs font-medium text-foreground">Extra SAN Domains</label>
+            <label htmlFor="tls-extra-sans" className="text-xs font-medium text-foreground">Extra SAN Domains</label>
             <Input
+              id="tls-extra-sans"
               value={tlsExtraSans}
               onChange={(e) => setTlsExtraSans(e.target.value)}
               placeholder="apex.example.com, admin.example.com"

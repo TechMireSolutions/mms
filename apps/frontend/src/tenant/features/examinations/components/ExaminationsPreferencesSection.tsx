@@ -71,7 +71,7 @@ export function ExaminationsPreferencesSection({
           <Input
             id="exams-pass-mark"
             name="passMark"
-            type="number"
+            type="text"
             inputMode="numeric"
             min="0"
             className={FORM_INPUT}
@@ -84,7 +84,7 @@ export function ExaminationsPreferencesSection({
           <Input
             id="exams-max-mark"
             name="maxMark"
-            type="number"
+            type="text"
             inputMode="numeric"
             min="0"
             className={FORM_INPUT}

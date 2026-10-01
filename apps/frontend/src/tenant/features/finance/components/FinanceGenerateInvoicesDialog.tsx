@@ -62,8 +62,17 @@ export function FinanceGenerateInvoicesDialog({
       onSave={handleGenerate}
       saving={generate.isPending}
       saveDisabled={!period || generate.isPending}
+      formId="generate-invoices-form"
     >
-      <div className="space-y-4">
+      <form
+        id="generate-invoices-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (period && !generate.isPending) void handleGenerate();
+        }}
+        className="space-y-4"
+      >
         <Field id="generate-invoice-period" label={t("finance.generate.period")}>
           <Input
             id="generate-invoice-period"
@@ -101,7 +110,7 @@ export function FinanceGenerateInvoicesDialog({
             ]}
           />
         </Field>
-      </div>
+      </form>
     </FormModal>
   );
 }

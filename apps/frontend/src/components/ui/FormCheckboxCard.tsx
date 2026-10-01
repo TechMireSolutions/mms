@@ -35,10 +35,20 @@ export function FormCheckboxCard({
   className,
   labelClassName,
 }: FormCheckboxCardProps): React.JSX.Element {
+  const handleCardClick = (event: React.MouseEvent<HTMLDivElement>): void => {
+    if (disabled) return;
+    const target = event.target as HTMLElement;
+    if (target.closest('button[role="checkbox"]') || target.closest("label")) {
+      return;
+    }
+    onCheckedChange(!checked);
+  };
+
   return (
     <div className={cn("flex flex-col justify-end pt-0.5", className)}>
-      <label
-        htmlFor={id}
+      <div
+        role="presentation"
+        onClick={handleCardClick}
         className={cn(
           "relative overflow-hidden group/card flex min-h-11 items-center gap-3 rounded-xl border p-3 transition-all select-none",
           CARD_STRIPE_INSET,
@@ -66,15 +76,15 @@ export function FormCheckboxCard({
           onCheckedChange={(val) => onCheckedChange(Boolean(val))}
           className="data-[state=checked]:bg-primary data-[state=checked]:border-primary"
         />
-        <div className="flex flex-col min-w-0 flex-1">
+        <label htmlFor={id} className="flex flex-col min-w-0 flex-1 cursor-pointer">
           <span className="text-xs font-semibold leading-tight">{label}</span>
           {description && (
             <span className="mt-0.5 text-3xs text-muted-foreground font-normal leading-tight">
               {description}
             </span>
           )}
-        </div>
-      </label>
+        </label>
+      </div>
       {error && <FieldErrorMessage message={error} />}
     </div>
   );

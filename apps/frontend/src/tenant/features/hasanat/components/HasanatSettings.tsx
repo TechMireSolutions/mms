@@ -49,7 +49,7 @@ export const HasanatSettings = (function HasanatSettings({
               <Input
                 id="points-per-unit"
                 name="pointsPerUnit"
-                type="number"
+                type="text"
                 inputMode="numeric"
                 className={FORM_INPUT}
                 value={settingsDraft.pointsPerUnit || 10}

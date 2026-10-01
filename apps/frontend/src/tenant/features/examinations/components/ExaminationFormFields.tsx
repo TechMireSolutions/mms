@@ -47,7 +47,6 @@ export function ExaminationFormFields({
                       onChange={(event) => updateDraft({ name: event.target.value })}
                       placeholder={t("examinations.form.placeholders.name")}
                       required
-                      aria-invalid={Boolean(errors.name)}
                     />
                   </div>
                 </Field>
@@ -87,7 +86,7 @@ export function ExaminationFormFields({
                   <Input
                     id="exam-total"
                     name="totalMarks"
-                    type="number"
+                    type="text"
                     inputMode="numeric"
                     className={`${FORM_INPUT} ps-10`}
                     value={examDraft.totalMarks ?? 100}
@@ -104,7 +103,7 @@ export function ExaminationFormFields({
                   <Input
                     id="exam-passing"
                     name="passingMarks"
-                    type="number"
+                    type="text"
                     inputMode="numeric"
                     className={`${FORM_INPUT} ps-10`}
                     value={examDraft.passingMarks ?? 50}
@@ -112,7 +111,6 @@ export function ExaminationFormFields({
                     min={1}
                     max={examDraft.totalMarks ?? 100}
                     required
-                    aria-invalid={Boolean(errors.passingMarks)}
                   />
                 </div>
               </Field>
@@ -124,7 +122,7 @@ export function ExaminationFormFields({
                     <Input
                       id="exam-duration"
                       name="duration"
-                      type="number"
+                      type="text"
                       inputMode="numeric"
                       className={`${FORM_INPUT} ps-10`}
                       value={examDraft.duration ?? 60}

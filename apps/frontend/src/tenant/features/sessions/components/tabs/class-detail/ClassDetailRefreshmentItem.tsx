@@ -26,12 +26,14 @@ export function ClassDetailRefreshmentItem({
         type="date"
         value={r.date.slice(0, 10)}
         onChange={(e) => onUpdate(r.id, { date: e.target.value })}
+        aria-label={t('sessions.tabarruk.form.date')}
         className="w-32 text-xs"
       />
       <Input
         id={`refreshment-item-${r.id}`}
         name={`refreshment-item-${r.id}`}
         placeholder={t('sessions.classes.detail.refreshments.itemPlaceholder')}
+        aria-label={t('sessions.classes.detail.refreshments.itemPlaceholder')}
         value={r.item}
         onChange={(e) => onUpdate(r.id, { item: e.target.value })}
         className="flex-1 text-xs"
@@ -42,6 +44,7 @@ export function ClassDetailRefreshmentItem({
         type="text"
         inputMode="numeric"
         placeholder={t('sessions.classes.detail.refreshments.qty')}
+        aria-label={t('sessions.classes.detail.refreshments.qty')}
         value={r.quantity === 0 ? '' : String(r.quantity)}
         onChange={(e) => {
           const val = e.target.value;
@@ -58,6 +61,7 @@ export function ClassDetailRefreshmentItem({
           type="text"
           inputMode="decimal"
           placeholder={t('sessions.classes.detail.refreshments.price')}
+          aria-label={t('sessions.classes.detail.refreshments.price')}
           value={r.pricePerUnit === 0 ? '' : String(r.pricePerUnit)}
           onChange={(e) => {
             const val = e.target.value;
@@ -75,6 +79,7 @@ export function ClassDetailRefreshmentItem({
           type="text"
           inputMode="decimal"
           placeholder={t('sessions.classes.detail.refreshments.paid')}
+          aria-label={t('sessions.classes.detail.refreshments.paid')}
           value={r.paidAmount === 0 ? '' : String(r.paidAmount)}
           onChange={(e) => {
             const val = e.target.value;

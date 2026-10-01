@@ -13,6 +13,7 @@ interface OnboardingWizardFooterProps {
   showSignInLink: boolean;
   conflictSubdomain: string;
   isLastStep: boolean;
+  form?: string;
   onBack: () => void;
   onNext: () => void;
 }
@@ -25,6 +26,7 @@ export function OnboardingWizardFooter({
   showSignInLink,
   conflictSubdomain,
   isLastStep,
+  form = "onboarding-wizard-form",
   onBack,
   onNext,
 }: OnboardingWizardFooterProps) {
@@ -68,10 +70,14 @@ export function OnboardingWizardFooter({
         </ActionButton>
 
         <ActionButton
-          type="button"
+          type={form ? "submit" : "button"}
+          form={form}
           variant="primary"
           size="md"
-          onClick={onNext}
+          onClick={(event) => {
+            event.preventDefault();
+            onNext();
+          }}
           loading={loading}
           className="px-5 font-semibold shadow-md shadow-primary/10"
         >

@@ -30,19 +30,23 @@ export function WidgetBuilderThresholdOptions({
 
   return (
     <div className="p-4 rounded-2xl border border-border bg-card/20 space-y-3">
-      <label className="flex items-center gap-2 cursor-pointer select-none">
+      <div className="flex items-center gap-2">
         <Checkbox
+          id="threshold-enabled"
           checked={thresholdEnabled}
           onCheckedChange={(checked) => setThresholdEnabled(Boolean(checked))}
         />
-        <span className="text-xs font-bold text-foreground">{t("reports.widgets.builder.enableThreshold")}</span>
-      </label>
+        <label htmlFor="threshold-enabled" className="text-xs font-bold text-foreground cursor-pointer select-none">
+          {t("reports.widgets.builder.enableThreshold")}
+        </label>
+      </div>
 
       {thresholdEnabled && (
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 animate-fade-in text-start">
           <div className="space-y-1">
-            <SectionLabel as="label" weight="bold" tracking="wider">{t("reports.widgets.builder.triggerCondition")}</SectionLabel>
+            <SectionLabel as="label" htmlFor="threshold-condition" weight="bold" tracking="wider">{t("reports.widgets.builder.triggerCondition")}</SectionLabel>
             <FormSelect
+              id="threshold-condition"
               value={thresholdCondition}
               onChange={(value) => setThresholdCondition(value as "lt" | "gt" | "equals")}
               className="w-full text-xs"
@@ -54,9 +58,11 @@ export function WidgetBuilderThresholdOptions({
             />
           </div>
           <div className="space-y-1">
-            <SectionLabel as="label" weight="bold" tracking="wider">{t("reports.widgets.builder.thresholdValue")}</SectionLabel>
+            <SectionLabel as="label" htmlFor="threshold-value" weight="bold" tracking="wider">{t("reports.widgets.builder.thresholdValue")}</SectionLabel>
             <Input
-              type="number"
+              id="threshold-value"
+              type="text"
+              inputMode="decimal"
               value={thresholdValue}
               onChange={(event) => setThresholdValue(event.target.value)}
               placeholder={t("reports.widgets.builder.placeholderThreshold")}
@@ -64,8 +70,9 @@ export function WidgetBuilderThresholdOptions({
             />
           </div>
           <div className="space-y-1">
-            <SectionLabel as="label" weight="bold" tracking="wider">{t("reports.widgets.builder.alertColor")}</SectionLabel>
+            <SectionLabel as="label" htmlFor="threshold-color" weight="bold" tracking="wider">{t("reports.widgets.builder.alertColor")}</SectionLabel>
             <FormSelect
+              id="threshold-color"
               value={thresholdColor}
               onChange={(value) => setThresholdColor(value as "red" | "amber" | "yellow")}
               className="w-full text-xs"

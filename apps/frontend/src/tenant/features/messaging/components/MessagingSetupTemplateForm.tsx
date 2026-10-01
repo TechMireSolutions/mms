@@ -70,7 +70,6 @@ export function MessagingSetupTemplateForm({
             onChange={(event) => onLabelChange(event.target.value)}
             placeholder={t('messaging.templateLabelPlaceholder')}
             required
-            aria-invalid={Boolean(errors.label)}
             className={cn(errors.label && FORM_INPUT_ERROR)}
           />
         </Field>

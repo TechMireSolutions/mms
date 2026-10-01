@@ -3,7 +3,7 @@ import { Calendar } from "lucide-react";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FormModal } from "@/components/ui/FormModal";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import { useTranslation } from "@/hooks/useTranslation";
 import { accountingErrorMessage } from "@/tenant/features/accounting/hooks/useAccountingSetupSaveActions";
@@ -107,23 +107,39 @@ export function AccountingFiscalYearModal({
       saveLabel={t("common.save")}
       onSave={handleSave}
       saving={submitting}
+      formId="fiscal-year-modal-form"
     >
-      <div className="space-y-4">
-        <div>
-          <label htmlFor="financial-year-label" className={FORM_LABEL}>{t("accounting.settings.fy.labelField")}</label>
+      <form
+        id="fiscal-year-modal-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          void handleSave();
+        }}
+        className="space-y-4"
+      >
+        <Field
+          id="financial-year-label"
+          label={t("accounting.settings.fy.labelField")}
+          required
+          error={errors.label}
+        >
           <Input
             id="financial-year-label"
             name="label"
             value={form.label || ""}
             onChange={(event) => updateFormField("label", event.target.value)}
             placeholder={t("accounting.settings.fy.labelPlaceholder")}
-            aria-invalid={Boolean(errors.label)}
             required
           />
-        </div>
+        </Field>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="financial-year-start" className={FORM_LABEL}>{t("accounting.settings.fy.startDateField")}</label>
+          <Field
+            id="financial-year-start"
+            label={t("accounting.settings.fy.startDateField")}
+            required
+            error={errors.startDate}
+          >
             <DatePicker
               id="financial-year-start"
               name="startDate"
@@ -133,9 +149,13 @@ export function AccountingFiscalYearModal({
               disabled={isClosed}
               required
             />
-          </div>
-          <div>
-            <label htmlFor="financial-year-end" className={FORM_LABEL}>{t("accounting.settings.fy.endDateField")}</label>
+          </Field>
+          <Field
+            id="financial-year-end"
+            label={t("accounting.settings.fy.endDateField")}
+            required
+            error={errors.endDate}
+          >
             <DatePicker
               id="financial-year-end"
               name="endDate"
@@ -145,10 +165,14 @@ export function AccountingFiscalYearModal({
               disabled={isClosed}
               required
             />
-          </div>
+          </Field>
         </div>
-        <div>
-          <label htmlFor="financial-year-status" className={FORM_LABEL}>{t("accounting.settings.fy.status")}</label>
+        <Field
+          id="financial-year-status"
+          label={t("accounting.settings.fy.status")}
+          error={errors.status}
+          hint={isClosed ? t("accounting.settings.fy.closedLockedHint") : undefined}
+        >
           <FormSelect
             id="financial-year-status"
             name="status"
@@ -164,13 +188,8 @@ export function AccountingFiscalYearModal({
                   ]
             }
           />
-          {isClosed && (
-            <p className="m-0 mt-1 text-xs text-muted-foreground">
-              {t("accounting.settings.fy.closedLockedHint")}
-            </p>
-          )}
-        </div>
-      </div>
+        </Field>
+      </form>
     </FormModal>
   );
 }

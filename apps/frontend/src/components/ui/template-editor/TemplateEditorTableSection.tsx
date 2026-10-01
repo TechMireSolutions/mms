@@ -125,7 +125,8 @@ export function TemplateEditorTableSection<TFieldKey extends string = string>({
                   </label>
                   <Input
                     id={widthId}
-                    type="number"
+                    type="text"
+                    inputMode="numeric"
                     min={20}
                     max={400}
                     value={col.width ?? 80}

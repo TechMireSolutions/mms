@@ -120,39 +120,52 @@ export const EnrollmentWizard = (function EnrollmentWizard({ onComplete, onCance
             <StepIndicator steps={steps} current={step} />
           </div>
 
-          <AnimatePresence mode="wait" custom={direction}>
-            <motion.div
-              key={step}
-              custom={direction}
-              initial={{ opacity: 0, x: direction * 24 }}
-              animate={{ opacity: 1, x: 0 }}
-              exit={{ opacity: 0, x: direction * -24 }}
-              transition={{ duration: 0.22 }}
-            >
-              {step === 0 && <Step1SelectStudent value={student} onChange={setStudent} sessions={sessions} />}
-              {step === 1 && <Step2SelectSession value={session} onChange={(selectedSession) => { setSession(selectedSession); setClassInfo(null); }} sessions={sessions} />}
-              {step === 2 && student && session && (
-                <Step3Eligibility student={student} session={session} suggestedClass={suggested} />
-              )}
-              {step === 3 && session && (
-                <Step4ClassAssignment
-                  session={session} student={student}
-                  suggestedClass={suggested} value={classInfo} onChange={setClassInfo}
-                />
-              )}
-              {step === 4 && student && session && (
-                <Step5FeeCalculation student={student} session={session} feeResult={feeResult} onFeeResult={setFeeResult} />
-              )}
-              {step === 5 && (
-                <Step6Confirmation
-                  student={student} session={session} classInfo={classInfo}
-                  feeResult={feeResult} notes={notes} onNotesChange={setNotes}
-                  customFieldValues={customFieldValues}
-                  onCustomFieldChange={(id, value) => setCustomFieldValues((previousValues) => ({ ...previousValues, [id]: value }))}
-                />
-              )}
-            </motion.div>
-          </AnimatePresence>
+          <form
+            id="enrollment-wizard-form"
+            noValidate
+            onSubmit={(e) => {
+              e.preventDefault();
+              if (step < steps.length - 1) {
+                if (canNext()) handleNext();
+              } else {
+                if (canConfirm() && !submitting) void handleSubmit();
+              }
+            }}
+          >
+            <AnimatePresence mode="wait" custom={direction}>
+              <motion.div
+                key={step}
+                custom={direction}
+                initial={{ opacity: 0, x: direction * 24 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: direction * -24 }}
+                transition={{ duration: 0.22 }}
+              >
+                {step === 0 && <Step1SelectStudent value={student} onChange={setStudent} sessions={sessions} />}
+                {step === 1 && <Step2SelectSession value={session} onChange={(selectedSession) => { setSession(selectedSession); setClassInfo(null); }} sessions={sessions} />}
+                {step === 2 && student && session && (
+                  <Step3Eligibility student={student} session={session} suggestedClass={suggested} />
+                )}
+                {step === 3 && session && (
+                  <Step4ClassAssignment
+                    session={session} student={student}
+                    suggestedClass={suggested} value={classInfo} onChange={setClassInfo}
+                  />
+                )}
+                {step === 4 && student && session && (
+                  <Step5FeeCalculation student={student} session={session} feeResult={feeResult} onFeeResult={setFeeResult} />
+                )}
+                {step === 5 && (
+                  <Step6Confirmation
+                    student={student} session={session} classInfo={classInfo}
+                    feeResult={feeResult} notes={notes} onNotesChange={setNotes}
+                    customFieldValues={customFieldValues}
+                    onCustomFieldChange={(id, value) => setCustomFieldValues((previousValues) => ({ ...previousValues, [id]: value }))}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
+          </form>
 
           <EnrollmentWizardFooter
             t={t}
@@ -161,6 +174,7 @@ export const EnrollmentWizard = (function EnrollmentWizard({ onComplete, onCance
             canNext={canNext()}
             canConfirm={canConfirm()}
             submitting={submitting}
+            form="enrollment-wizard-form"
             onCancel={onCancel}
             onPrevious={() => go(-1)}
             onNext={handleNext}

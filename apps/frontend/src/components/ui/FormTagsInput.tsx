@@ -103,6 +103,7 @@ export function TagsInput({ selected = [], predefined = [], onChange, id, name }
             if (inputVal.trim()) addCustom(inputVal);
           }}
           placeholder={t("contacts.form.typeTagPlaceholder")}
+          aria-label={t("contacts.form.typeTagPlaceholder")}
         />
         {inputVal.trim() && (
           <Button

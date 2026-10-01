@@ -42,10 +42,11 @@ export function ComparisonModeSelectors({
           { label: "B", value: valB, setValue: setValB, color: "text-warning" },
         ].map(({ label, value, setValue, color }) => (
           <div key={label} className="flex flex-col gap-1">
-            <SectionLabel as="label" weight="bold" tracking="wide" toneClassName={color}>
+            <SectionLabel as="label" htmlFor={`comparison-session-${label.toLowerCase()}`} weight="bold" tracking="wide" toneClassName={color}>
               {isContacts ? t("reports.comparison.stage") : t("reports.comparison.session")} {label}
             </SectionLabel>
             <FormSelect
+              id={`comparison-session-${label.toLowerCase()}`}
               value={value}
               onChange={(newValue) => setValue(newValue)}
               options={options.map((option) => ({ value: option.id, label: option.name }))}

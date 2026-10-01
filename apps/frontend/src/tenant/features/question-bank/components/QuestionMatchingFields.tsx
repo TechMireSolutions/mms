@@ -1,6 +1,7 @@
 import React from 'react';
 import { Plus, Trash2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Field } from '@/components/ui/FormField';
 import { Input } from '@/components/ui/input';
 import { joinQuestionCompoundAnswer, splitQuestionCompoundAnswer, type AppTranslationKey } from '@mms/shared';
 import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
@@ -38,12 +39,11 @@ export function QuestionMatchingFields({
   };
 
   return (
-    <div className="space-y-3 sm:col-span-2">
-      <span className={FORM_LABEL}>{t('questionBank.matchingPairs')}</span>
+    <fieldset className="space-y-3 sm:col-span-2 border-0 m-0 p-0">
+      <legend className={FORM_LABEL}>{t('questionBank.matchingPairs')}</legend>
       {pairs.map((pair, index) => (
         <div key={index} className="grid grid-cols-1 gap-2 rounded-lg border border-border/70 bg-muted/10 p-3 sm:grid-row-matching-3">
-          <div>
-            <label htmlFor={`matching-left-${index}`} className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingLeft')}</label>
+          <Field id={`matching-left-${index}`} label={t('questionBank.matchingLeft')}>
             <Input
               id={`matching-left-${index}`}
               name={`matching-left-${index}`}
@@ -56,9 +56,8 @@ export function QuestionMatchingFields({
                 syncPairs(updatedPairs);
               }}
             />
-          </div>
-          <div>
-            <label htmlFor={`matching-right-${index}`} className="mb-1 block text-xs font-medium text-foreground">{t('questionBank.matchingRight')}</label>
+          </Field>
+          <Field id={`matching-right-${index}`} label={t('questionBank.matchingRight')}>
             <Input
               id={`matching-right-${index}`}
               name={`matching-right-${index}`}
@@ -71,7 +70,7 @@ export function QuestionMatchingFields({
                 syncPairs(updatedPairs);
               }}
             />
-          </div>
+          </Field>
           {pairs.length > 2 && (
             <Button
               type="button"
@@ -94,6 +93,6 @@ export function QuestionMatchingFields({
         <Plus className="h-3.5 w-3.5" aria-hidden />
         {t('questionBank.addMatchingPair')}
       </Button>
-    </div>
+    </fieldset>
   );
 }

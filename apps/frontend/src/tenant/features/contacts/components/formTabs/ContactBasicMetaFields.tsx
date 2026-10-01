@@ -57,7 +57,6 @@ export function ContactBasicMetaFields({
             onChange={(dateStr) => updateDraft({ dob: dateStr })}
             required={isFieldRequired("basic", "dob")}
             max={todayISO()}
-            aria-invalid={Boolean(dobError)}
             className={cn(
               dobError &&
                 "border-destructive focus-within:border-destructive focus-within:ring-destructive",
@@ -81,7 +80,6 @@ export function ContactBasicMetaFields({
             autoComplete="off"
             spellCheck={false}
             enterKeyHint="next"
-            aria-invalid={Boolean(getFieldError("cnic"))}
             value={contactDraft.cnic || ""}
             onChange={(e) => {
               const formatted = formatCnic(e.target.value);

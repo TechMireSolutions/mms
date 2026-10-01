@@ -28,27 +28,36 @@ export function DynamicChartVisualizerDisplayFields({
         {t("reports.visualizer.displayCustomizations")}
       </SectionLabel>
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
+        <div className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors text-xs font-semibold text-foreground">
           <Checkbox
+            id="display-show-grid"
             checked={showGrid}
             onCheckedChange={(checked) => setShowGrid(Boolean(checked))}
           />
-          {t("reports.visualizer.gridLines")}
-        </label>
-        <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
+          <label htmlFor="display-show-grid" className="cursor-pointer select-none">
+            {t("reports.visualizer.gridLines")}
+          </label>
+        </div>
+        <div className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors text-xs font-semibold text-foreground">
           <Checkbox
+            id="display-show-legend"
             checked={showLegend}
             onCheckedChange={(checked) => setShowLegend(Boolean(checked))}
           />
-          {t("reports.visualizer.legends")}
-        </label>
-        <label className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors cursor-pointer select-none text-xs font-semibold text-foreground">
+          <label htmlFor="display-show-legend" className="cursor-pointer select-none">
+            {t("reports.visualizer.legends")}
+          </label>
+        </div>
+        <div className="flex items-center gap-2 p-2.5 rounded-xl border border-border bg-card/25 hover:bg-card/45 transition-colors text-xs font-semibold text-foreground">
           <Checkbox
+            id="display-show-tooltip"
             checked={showTooltip}
             onCheckedChange={(checked) => setShowTooltip(Boolean(checked))}
           />
-          {t("reports.visualizer.tooltips")}
-        </label>
+          <label htmlFor="display-show-tooltip" className="cursor-pointer select-none">
+            {t("reports.visualizer.tooltips")}
+          </label>
+        </div>
       </div>
     </div>
   );

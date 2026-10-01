@@ -60,6 +60,7 @@ export function ClassDetailBudgetTab({
                 <FormSelect
                   id={`budget-type-${b.id}`}
                   name="budgetType"
+                  aria-label={t('sessions.classes.detail.budget.title')}
                   value={b.budgetType}
                   onChange={(val) => onUpdateBudget(b.id, { budgetType: val as 'income' | 'expense' })}
                   options={[
@@ -72,6 +73,7 @@ export function ClassDetailBudgetTab({
                   id={`budget-detail-${b.id}`}
                   name={`budget-detail-${b.id}`}
                   placeholder={t('sessions.classes.detail.budget.detailPlaceholder')}
+                  aria-label={t('sessions.classes.detail.budget.detailPlaceholder')}
                   value={b.detail}
                   onChange={(e) => onUpdateBudget(b.id, { detail: e.target.value })}
                   className="flex-1 text-xs"
@@ -83,6 +85,7 @@ export function ClassDetailBudgetTab({
                     type="text"
                     inputMode="decimal"
                     placeholder="0.00"
+                    aria-label={t('sessions.classes.detail.amount')}
                     value={b.amount === 0 ? '' : String(b.amount)}
                     onChange={(e) => {
                       const val = e.target.value;

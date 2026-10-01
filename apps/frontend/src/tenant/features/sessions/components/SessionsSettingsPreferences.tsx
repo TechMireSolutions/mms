@@ -28,7 +28,7 @@ export function SessionsSettingsPreferences({
           <Input
             id="defaultDuration"
             name="defaultDuration"
-            type="number"
+            type="text"
             inputMode="numeric"
             min="1"
             className={FORM_INPUT}

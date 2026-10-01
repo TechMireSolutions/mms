@@ -63,6 +63,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
               placeholder={t("onboarding.madrasa.subdomainPlaceholder")}
               required
               className="border-0 rounded-none focus-visible:ring-0"
+              aria-describedby={data.subdomain ? "onboarding-subdomain-url" : undefined}
               onChange={(event) => handleSubdomainChange(event.target.value)}
             />
             <div className="border-s border-border bg-muted px-3 py-2.5">
@@ -70,7 +71,7 @@ export function CreateMadrasaIdentitySection({ controller }: CreateMadrasaIdenti
             </div>
           </div>
           {data.subdomain && (
-            <p className="flex items-center gap-1 text-xs text-muted-foreground">
+            <p id="onboarding-subdomain-url" className="flex items-center gap-1 text-xs text-muted-foreground">
               <Check className="h-3 w-3 text-primary" aria-hidden />
               {t("onboarding.madrasa.yourUrl")}{" "}
               <span className="font-medium text-foreground">

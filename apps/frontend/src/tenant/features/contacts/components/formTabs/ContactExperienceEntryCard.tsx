@@ -100,7 +100,6 @@ export function ContactExperienceEntryCard({
                 autoComplete="organization-title"
                 autoCapitalize="words"
                 enterKeyHint="next"
-                aria-invalid={Boolean(titleError)}
                 value={exp.title || ""}
                 required={isFieldRequired("experience", "title")}
                 onChange={(e) => onUpdate({ title: e.target.value })}
@@ -124,7 +123,6 @@ export function ContactExperienceEntryCard({
                 autoComplete="organization"
                 autoCapitalize="words"
                 enterKeyHint="next"
-                aria-invalid={Boolean(orgError)}
                 value={exp.organization || ""}
                 required={isFieldRequired("experience", "organization")}
                 onChange={(e) => onUpdate({ organization: e.target.value })}
@@ -148,7 +146,6 @@ export function ContactExperienceEntryCard({
               name={`cf-${formInstanceId}-experience-location-${idx}`}
               autoCapitalize="words"
               enterKeyHint="next"
-              aria-invalid={Boolean(locationError)}
               value={exp.location || ""}
               required={isFieldRequired("experience", "location")}
               onChange={(e) => onUpdate({ location: e.target.value })}

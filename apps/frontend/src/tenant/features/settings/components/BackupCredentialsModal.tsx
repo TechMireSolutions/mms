@@ -62,8 +62,19 @@ export default function BackupCredentialsModal({
       onSave={() => onSubmit(password, email)}
       saving={loading}
       saveDisabled={!password.trim() || !email.trim()}
+      formId="backup-credentials-form"
     >
-      <div className="space-y-4">
+      <form
+        id="backup-credentials-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (password.trim() && email.trim() && !loading) {
+            onSubmit(password, email);
+          }
+        }}
+        className="space-y-4"
+      >
         <SettingsCallout>{t('backup.encryptNote')}</SettingsCallout>
         <div className="space-y-2">
           <Label htmlFor="backup-admin-email">{t('backup.adminEmailLabel')}</Label>
@@ -90,7 +101,7 @@ export default function BackupCredentialsModal({
             disabled={loading}
           />
         </div>
-      </div>
+      </form>
     </FormModal>
   );
 }

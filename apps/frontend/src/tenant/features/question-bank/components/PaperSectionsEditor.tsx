@@ -1,9 +1,10 @@
 import React from "react";
 import { Plus, Trash2, X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, FORM_LABEL, WORK_SURFACE } from "@/components/ui/formStyles";
+import { FORM_INPUT, WORK_SURFACE } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { Field } from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import type { QuestionBankQuestion as Question } from "@mms/shared";
 import type { PaperSection } from "@/tenant/features/question-bank/components/paperBuilderUtils";
@@ -77,8 +78,7 @@ export function PaperSectionsEditor({
                 )}
               </div>
               <div className="grid gap-3 sm:grid-cols-2">
-                <div>
-                  <label htmlFor={`section-title-${section.id}`} className={FORM_LABEL}>{t("questionBank.sectionTitle")}</label>
+                <Field id={`section-title-${section.id}`} label={t("questionBank.sectionTitle")}>
                   <Input
                     id={`section-title-${section.id}`}
                     name={`sections.${section.id}.title`}
@@ -87,9 +87,8 @@ export function PaperSectionsEditor({
                     onChange={(event) => onUpdateSection(section.id, { title: event.target.value })}
                     placeholder={t("questionBank.sectionTitlePlaceholder")}
                   />
-                </div>
-                <div>
-                  <label htmlFor={`section-instructions-${section.id}`} className={FORM_LABEL}>{t("questionBank.sectionInstructions")}</label>
+                </Field>
+                <Field id={`section-instructions-${section.id}`} label={t("questionBank.sectionInstructions")}>
                   <Input
                     id={`section-instructions-${section.id}`}
                     name={`sections.${section.id}.instructions`}
@@ -98,7 +97,7 @@ export function PaperSectionsEditor({
                     onChange={(event) => onUpdateSection(section.id, { instructions: event.target.value })}
                     placeholder={t("questionBank.sectionInstructionsPlaceholder")}
                   />
-                </div>
+                </Field>
               </div>
 
               <div className="mt-3 space-y-2">

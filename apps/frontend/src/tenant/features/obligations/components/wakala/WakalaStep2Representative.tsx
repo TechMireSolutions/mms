@@ -2,8 +2,7 @@ import React from "react";
 import { Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { RequiredMark } from "@/components/ui/FormPrimitives";
-import { FORM_LABEL } from "@/components/ui/formStyles";
+import { Field } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Mujtahid, MujtahidRep, ObligationType } from "@/lib/data/obligationsData";
 
@@ -44,11 +43,7 @@ export function WakalaStep2Representative({
         </div>
       </div>
 
-      <div>
-        <label htmlFor="wakala-rep" className={FORM_LABEL}>
-          {t("obligations.wakala.repLabel")}
-          <RequiredMark />
-        </label>
+      <Field id="wakala-rep" label={t("obligations.wakala.repLabel")} required error={errors.rep}>
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <FormSelect
@@ -68,7 +63,7 @@ export function WakalaStep2Representative({
               type="button"
               variant="outline"
               size="icon"
-              className="mb-[0px] h-10 w-10 shrink-0"
+              className="h-10 w-10 shrink-0"
               onClick={onOpenAddRep}
               aria-label={t("obligations.mujtahids.addRep")}
             >
@@ -76,15 +71,12 @@ export function WakalaStep2Representative({
             </Button>
           )}
         </div>
-        {availableReps.length === 0 && (
-          <p className="mt-1 text-xs text-muted-foreground">
-            {t("obligations.wakala.noRepYet")}
-          </p>
-        )}
-        {errors.rep && (
-          <p className="mt-1 text-sm font-medium text-destructive">{errors.rep}</p>
-        )}
-      </div>
+      </Field>
+      {availableReps.length === 0 && (
+        <p className="mt-1 text-xs text-muted-foreground">
+          {t("obligations.wakala.noRepYet")}
+        </p>
+      )}
     </div>
   );
 }

@@ -24,7 +24,7 @@ export function EnrollmentsPreferencesSection({
           <Input
             id="maxStudentsPerClass"
             name="maxStudentsPerClass"
-            type="number"
+            type="text"
             inputMode="numeric"
             className={FORM_INPUT}
             value={settingsDraft.maxStudentsPerClass || ""}
@@ -35,7 +35,7 @@ export function EnrollmentsPreferencesSection({
           <Input
             id="dropDeadlineDays"
             name="dropDeadlineDays"
-            type="number"
+            type="text"
             inputMode="numeric"
             className={FORM_INPUT}
             value={settingsDraft.dropDeadlineDays || ""}

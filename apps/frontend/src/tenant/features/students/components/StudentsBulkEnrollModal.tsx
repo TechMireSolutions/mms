@@ -71,17 +71,26 @@ export function StudentsBulkEnrollModal({
       onSave={handleSave}
       saving={isPending}
       saveDisabled={isPending || selectedSessionIds.length === 0}
+      formId="students-bulk-enroll-modal-form"
     >
-      <div className="space-y-5 text-start">
+      <form
+        id="students-bulk-enroll-modal-form"
+        noValidate
+        onSubmit={(event) => {
+          event.preventDefault();
+          if (selectedSessionIds.length > 0 && !isPending) void handleSave();
+        }}
+        className="space-y-5 text-start"
+      >
         <p className="text-sm text-muted-foreground m-0">
           {t("students.bulkEnrollDesc", { count: selectedCount })}
         </p>
 
         {/* Action Mode Radio Group */}
         <div className="space-y-2">
-          <label className="text-xs font-semibold text-foreground" id="bulk-enroll-mode-label">
+          <span className="text-xs font-semibold text-foreground" id="bulk-enroll-mode-label">
             {t("students.bulkEnrollMode")}
-          </label>
+          </span>
           <div
             role="radiogroup"
             aria-labelledby="bulk-enroll-mode-label"
@@ -133,7 +142,7 @@ export function StudentsBulkEnrollModal({
           onToggleSession={toggleSession}
           onSelectAll={handleSelectAll}
         />
-      </div>
+      </form>
     </FormModal>
   );
 }

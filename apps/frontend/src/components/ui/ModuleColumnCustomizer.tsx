@@ -111,6 +111,7 @@ export const ModuleColumnCustomizer = (function ModuleColumnCustomizer({
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={resolvedLabels.searchPlaceholder}
+              aria-label={resolvedLabels.searchPlaceholder}
               className="h-8 ps-8 pe-7 text-xs bg-muted/30 border-border/60"
             />
             {searchQuery && (

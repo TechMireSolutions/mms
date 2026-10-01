@@ -43,7 +43,10 @@ export interface StyleInputProps {
   label: string;
   value: string | number;
   onChange: (nextValue: string | number) => void;
+  /** @deprecated Use `numeric` instead — `type="number"` is banned. */
   type?: string;
+  /** When true, treats input as a numeric field (inputMode="numeric"). */
+  numeric?: boolean;
   min?: number;
   max?: number;
   step?: number;
@@ -63,7 +66,8 @@ export function StyleInput({
   label,
   value,
   onChange,
-  type = "text",
+  type,
+  numeric = type === "number",
   min,
   max,
   step,
@@ -73,14 +77,13 @@ export function StyleInput({
   // label, and in Persian "عرض حاشیه" and "شعاع گوشه" both collapsed to the same
   // all-hyphen id, leaving two fields sharing one DOM id in the same panel.
   const inputId = useId();
-  const isNumber = type === "number";
   const [draft, setDraft] = useState<string | null>(null);
   const displayValue = draft ?? String(value ?? "");
 
   const handleChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const raw = event.target.value;
     setDraft(raw);
-    if (!isNumber) {
+    if (!numeric) {
       onChange(raw);
       return;
     }
@@ -92,7 +95,7 @@ export function StyleInput({
 
   const handleBlur = () => {
     if (draft === null) return;
-    if (isNumber && draft.trim() !== "") {
+    if (numeric && draft.trim() !== "") {
       const parsed = Number(draft);
       if (!Number.isNaN(parsed)) onChange(parsed);
     }
@@ -107,8 +110,8 @@ export function StyleInput({
       <Input
         id={inputId}
         name={inputId}
-        type={type}
-        inputMode={isNumber ? "decimal" : undefined}
+        type="text"
+        inputMode={numeric ? "numeric" : undefined}
         value={displayValue}
         onChange={handleChange}
         onBlur={handleBlur}
