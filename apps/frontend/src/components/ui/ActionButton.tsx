@@ -28,6 +28,7 @@ const SIZES = {
  * ActionButton — consistent CTA button used across all pages, composing the base Button primitive.
  */
 export function ActionButton({
+  type = "button",
   variant = "secondary",
   size = "md",
   icon: Icon = null,
@@ -42,6 +43,7 @@ export function ActionButton({
   return (
     <Button
       ref={ref}
+      type={type}
       variant={VARIANT_MAP[variant] ?? "outline"}
       onClick={onClick}
       disabled={disabled || loading}

@@ -91,7 +91,7 @@ export function FormFooterErrorChip({
       role="status"
       title={title}
       className={cn(
-        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive text-destructive-foreground text-xs font-bold shadow-xs",
+        "inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-destructive/10 text-destructive border border-destructive/20 text-xs font-bold",
         className,
       )}
     >

@@ -41,6 +41,7 @@ export function PlatformAdminPermissionsFields({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-border/40 pb-3">
         <div className="flex flex-wrap items-center gap-1.5">
           <ActionButton
+            type="button"
             variant="secondary"
             size="sm"
             icon={CheckCheck}
@@ -50,6 +51,7 @@ export function PlatformAdminPermissionsFields({
             {t('common.selectAll')}
           </ActionButton>
           <ActionButton
+            type="button"
             variant="secondary"
             size="sm"
             icon={Sparkles}
@@ -59,6 +61,7 @@ export function PlatformAdminPermissionsFields({
             {t('platform.permWorkspaces')}
           </ActionButton>
           <ActionButton
+            type="button"
             variant="ghost"
             size="sm"
             icon={XCircle}

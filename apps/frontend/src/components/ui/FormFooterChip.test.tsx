@@ -56,8 +56,9 @@ describe("FormFooterChip Components", () => {
       expect(html).toContain("First name required");
       expect(html).toContain('role="status"');
       expect(html).toContain('title="First name is required"');
-      expect(html).toContain("bg-destructive");
-      expect(html).toContain("text-destructive-foreground");
+      expect(html).toContain("bg-destructive/10");
+      expect(html).toContain("text-destructive");
+      expect(html).toContain("border-destructive/20");
     });
   });
 });
