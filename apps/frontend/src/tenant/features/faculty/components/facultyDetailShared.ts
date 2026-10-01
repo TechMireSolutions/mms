@@ -1,10 +1,12 @@
 import {
   Award,
+  BadgeCheck,
   Briefcase,
   Building,
   Calendar,
   GraduationCap,
   Hash,
+  Network,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -24,6 +26,8 @@ export const SYSTEM_FIELD_ICONS: Record<string, LucideIcon> = {
   status: Briefcase,
   department: Building,
   designation: Award,
+  hierarchyRank: BadgeCheck,
+  reportingFacultyId: Network,
 };
 
 /** Resolve a tab key to its translated section title (Students grouped-fields parity). */

@@ -5,6 +5,7 @@ import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useFacultySetupPanelState } from "@/tenant/features/faculty/hooks/useFacultySetupPanelState";
 import { FacultyPreferencesSection } from "@/tenant/features/faculty/components/FacultyPreferencesSection";
 import { FacultyDesignationsSetupSection } from "@/tenant/features/faculty/components/FacultyDesignationsSetupSection";
+import { FacultyDepartmentsSetupSection } from "@/tenant/features/faculty/components/FacultyDepartmentsSetupSection";
 
 export interface FacultySettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -44,6 +45,8 @@ export const FacultySettings = (function FacultySettings({
         saved={saved}
         onSave={handleSave}
       />
+
+      <FacultyDepartmentsSetupSection />
 
       <FacultyDesignationsSetupSection />
 

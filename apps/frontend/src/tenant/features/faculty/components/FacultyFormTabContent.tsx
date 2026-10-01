@@ -4,7 +4,6 @@ import {
   FacultyEmploymentSection,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
-import { FacultyFormHierarchySection } from "@/tenant/features/faculty/components/FacultyFormHierarchySection";
 import { FacultyNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
 import {
   FacultyUserAccountSection,
@@ -86,16 +85,9 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
           onRegenerateEmployeeId={onRegenerateEmployeeId}
           isFetchingNextEmployeeId={isFetchingNextEmployeeId}
           statusOptions={statusOptions}
-          specializationOptions={specializationOptions}
-          departmentOptions={departmentOptions}
-          designationOptions={designationOptions}
           isFieldEnabled={isFieldEnabled}
           isFieldRequired={isFieldRequired}
           onDraftChange={onDraftChange}
-          supervisorCandidates={supervisorCandidates}
-          hierarchyRankPresets={hierarchyRankPresets}
-          hideDesignation
-          hideHierarchy
         />
         <FacultyCustomFieldsSection fields={fields} draft={effectiveDraft} errors={errors} onDraftChange={onDraftChange} />
       </>
@@ -107,16 +99,7 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
         facultyDraft={effectiveDraft}
         errors={errors}
         designationOptions={designationOptions}
-        isFieldEnabled={isFieldEnabled}
-        isFieldRequired={isFieldRequired}
-        onDraftChange={onDraftChange}
-      />
-    );
-  } else if (activeTab === "hierarchy") {
-    tabBody = (
-      <FacultyFormHierarchySection
-        facultyDraft={effectiveDraft}
-        errors={errors}
+        departmentOptions={departmentOptions}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}

@@ -5,6 +5,9 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FACULTY_DEPARTMENT_VALUES, type FacultyMember } from "@mms/shared";
 
+/**
+ * @deprecated Department has moved to Designation & Hierarchy section; specialization and qualification are contact-derived.
+ */
 export interface FacultyEmploymentAcademicFieldsProps {
   facultyDraft?: Partial<FacultyMember>;
   errors: Record<string, string>;
@@ -20,6 +23,9 @@ export interface FacultyEmploymentAcademicFieldsProps {
   specializationOptions?: string[];
 }
 
+/**
+ * @deprecated Department has moved to Designation & Hierarchy section; specialization and qualification are contact-derived.
+ */
 export function FacultyEmploymentAcademicFields({
   facultyDraft = {},
   errors,

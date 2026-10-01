@@ -12,6 +12,7 @@ import {
   FacultyEmploymentSection,
   type FacultyStatusOption,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
+import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
 import { FacultyNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
 import {
   FacultyUserAccountSection,
@@ -96,9 +97,17 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         onRegenerateEmployeeId={onRegenerateEmployeeId}
         isFetchingNextEmployeeId={isFetchingNextEmployeeId}
         statusOptions={statusOptions}
-        specializationOptions={specializationOptions}
-        departmentOptions={departmentOptions}
+        isFieldEnabled={isFieldEnabled}
+        isFieldRequired={isFieldRequired}
+        onDraftChange={onDraftChange}
+      />
+
+      <FacultyFormDesignationSection
+        faculty={faculty}
+        facultyDraft={facultyDraft}
+        errors={errors}
         designationOptions={designationOptions}
+        departmentOptions={departmentOptions}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}

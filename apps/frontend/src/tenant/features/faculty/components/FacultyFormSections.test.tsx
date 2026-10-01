@@ -6,6 +6,7 @@ import {
   FacultyContactSection,
   FacultyEmploymentSection,
 } from "./FacultyFormSections";
+import { FacultyFormDesignationSection } from "./FacultyFormDesignationSection";
 
 vi.mock("@/components/contactLink/ContactPicker", () => ({
   default: () => <div data-testid="contact-picker">contact-picker</div>,
@@ -83,7 +84,6 @@ describe("FacultyFormSections Components", () => {
   });
 
   it("renders accessible error attributes on employeeId when errors are present", () => {
-
     const empHtml = renderToStaticMarkup(
       <FacultyEmploymentSection
         autoGenerateId={false}
@@ -104,21 +104,16 @@ describe("FacultyFormSections Components", () => {
     expect(empHtml).toContain("border-destructive");
   });
 
-  it("derives hierarchy rank from a dynamic designation and renders the supervisor picker", () => {
+  it("derives hierarchy rank from dynamic designation and renders supervisor picker and department", () => {
     const html = renderToStaticMarkup(
-      <FacultyEmploymentSection
-        autoGenerateId={false}
+      <FacultyFormDesignationSection
         errors={{}}
-        fields={{}}
-        idPrefix="FAC-"
-        statusOptions={[{ value: "active", label: "Active" }]}
         facultyDraft={{
-          employeeId: "FAC-001",
-          status: "active",
           hierarchyRank: 3,
           designationId: "senior-faculty",
           designationStartsOn: "2026-01-01",
           reportingFacultyId: "fac-sup-1",
+          department: "Islamic Jurisprudence",
         }}
         supervisorCandidates={[
           {
@@ -138,6 +133,7 @@ describe("FacultyFormSections Components", () => {
           isActive: true,
           assignableRoles: ["faculty_member"],
         }]}
+        departmentOptions={["Islamic Jurisprudence", "Hifz"]}
         isFieldEnabled={() => true}
         isFieldRequired={() => false}
         onDraftChange={vi.fn()}
@@ -145,16 +141,17 @@ describe("FacultyFormSections Components", () => {
     );
 
     expect(html).toContain('id="designationId"');
-    expect(html).not.toContain('id="hierarchyRank"');
+    expect(html).toContain('id="hierarchyRank"');
     expect(html).toContain('id="reportingFacultyId"');
     expect(html).toContain("Dean Ahmad");
     expect(html).toContain("Rank 1");
-    // Verifies DatePicker was used instead of raw HTML5 date input (type="date" is banned)
     expect(html).not.toContain('type="date"');
     expect(html).toContain('id="designationStartsOn"');
+    expect(html).toContain('id="department"');
+    expect(html).toContain('value="Islamic Jurisprudence"');
   });
 
-  it("renders department as a dynamic dropdown and omits specialization and qualification from employment tab", () => {
+  it("omits department, specialization, and qualification from employment section", () => {
     const html = renderToStaticMarkup(
       <FacultyEmploymentSection
         autoGenerateId={false}
@@ -162,23 +159,14 @@ describe("FacultyFormSections Components", () => {
         fields={{}}
         idPrefix="FAC-"
         statusOptions={[{ value: "active", label: "Active" }]}
-        facultyDraft={{
-          employeeId: "FAC-001",
-          status: "active",
-          department: "Islamic Jurisprudence",
-          specialization: "Fiqh",
-          qualification: "Ph.D. Islamic Law",
-        }}
-        departmentOptions={["Islamic Jurisprudence", "Hifz", "Academics"]}
-        isFieldEnabled={(fieldId) => ["department", "specialization", "qualification"].includes(fieldId)}
+        facultyDraft={{ employeeId: "FAC-001", status: "active" }}
+        isFieldEnabled={() => true}
         isFieldRequired={() => false}
         onDraftChange={vi.fn()}
       />,
     );
 
-    expect(html).toContain('id="department"');
-    expect(html).toContain('value="Islamic Jurisprudence"');
-    expect(html).toContain("Islamic Jurisprudence");
+    expect(html).not.toContain('id="department"');
     expect(html).not.toContain('id="specialization"');
     expect(html).not.toContain('id="qualification"');
   });

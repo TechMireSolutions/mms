@@ -80,4 +80,36 @@ describe("FacultyFormDesignationSection", () => {
     expect(html).toContain("faculty.designations.manageInHistory");
     expect(html).not.toContain("designationStartsOn");
   });
+
+  it("renders department select and embedded hierarchy when fields are enabled", () => {
+    const html = renderToStaticMarkup(
+      <FacultyFormDesignationSection
+        facultyDraft={{
+          department: "Islamic Jurisprudence",
+          hierarchyRank: 3,
+          reportingFacultyId: "fac-sup-1",
+        }}
+        errors={{}}
+        departmentOptions={["Islamic Jurisprudence", "Hifz"]}
+        supervisorCandidates={[
+          {
+            id: "fac-sup-1",
+            contactId: "cnt-sup-1",
+            name: "Dean Ahmad",
+            hierarchyRank: 1,
+            designation: "Dean",
+            status: "active",
+          } as any,
+        ]}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('id="department"');
+    expect(html).toContain('value="Islamic Jurisprudence"');
+    expect(html).toContain('id="reportingFacultyId"');
+    expect(html).toContain("Dean Ahmad");
+  });
 });

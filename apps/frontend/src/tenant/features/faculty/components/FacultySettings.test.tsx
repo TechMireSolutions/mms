@@ -29,6 +29,10 @@ vi.mock("@/tenant/features/faculty/components/FacultyDesignationsSetupSection", 
   FacultyDesignationsSetupSection: () => <div>faculty.designations.setupTitle</div>,
 }));
 
+vi.mock("@/tenant/features/faculty/components/FacultyDepartmentsSetupSection", () => ({
+  FacultyDepartmentsSetupSection: () => <div>faculty.setup.departmentsTitle</div>,
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
@@ -42,5 +46,6 @@ describe("FacultySettings Component", () => {
     expect(html).toContain("faculty.settings.title");
     expect(html).toContain("common.save");
     expect(html).toContain("faculty.designations.setupTitle");
+    expect(html).toContain("faculty.setup.departmentsTitle");
   });
 });

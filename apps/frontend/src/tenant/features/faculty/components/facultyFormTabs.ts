@@ -4,7 +4,6 @@ import {
   Briefcase,
   FileText,
   KeyRound,
-  Network,
   User,
   type LucideIcon,
 } from "lucide-react";
@@ -28,7 +27,6 @@ export type FacultyFormTabKey =
   | "contact"
   | "employment"
   | "designation"
-  | "hierarchy"
   | "account"
   | "notes";
 
@@ -36,16 +34,16 @@ export const FACULTY_FIELD_TAB_MAP: Record<string, FacultyFormTabKey> = {
   contactId: "contact",
   employeeId: "employment",
   status: "employment",
-  department: "employment",
-  specialization: "employment",
-  qualification: "employment",
   joinDate: "employment",
+  department: "designation",
+  specialization: "contact",
+  qualification: "contact",
   designation: "designation",
   customDesignation: "designation",
   designationId: "designation",
   designationStartsOn: "designation",
-  reportingFacultyId: "hierarchy",
-  hierarchyRank: "hierarchy",
+  reportingFacultyId: "designation",
+  hierarchyRank: "designation",
   notes: "notes",
   "user.role": "account",
   "user.email": "account",
@@ -120,11 +118,17 @@ export function useFacultyFormTabs(input: {
       { key: "employment", icon: Briefcase, label: t("faculty.form.tab.employment") },
     ];
 
-    if (isFieldEnabled("designation")) {
-      list.push({ key: "designation", icon: Award, label: t("faculty.form.tab.designation") });
-    }
-    if (isFieldEnabled("reportingFacultyId") || isFieldEnabled("hierarchyRank")) {
-      list.push({ key: "hierarchy", icon: Network, label: t("faculty.form.tab.hierarchy") });
+    if (
+      isFieldEnabled("designation") ||
+      isFieldEnabled("department") ||
+      isFieldEnabled("hierarchyRank") ||
+      isFieldEnabled("reportingFacultyId")
+    ) {
+      list.push({
+        key: "designation",
+        icon: Award,
+        label: t("faculty.form.tab.designationHierarchy"),
+      });
     }
     list.push({ key: "account", icon: KeyRound, label: t("faculty.form.tab.account") });
     if (isFieldEnabled("notes")) {

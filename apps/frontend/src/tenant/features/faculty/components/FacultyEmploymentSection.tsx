@@ -8,15 +8,9 @@ import { useTranslation } from "@/hooks/useTranslation";
 import {
   resolveFacultyStatus,
   type FieldDefinition,
-  type Faculty,
   type FacultyMember,
-  type FacultyHierarchyPreset,
-  type FacultyDesignationDefinition,
 } from "@mms/shared";
-import { FacultyHierarchyFormFields } from "@/tenant/features/faculty/components/FacultyHierarchyFormFields";
 import { resolveFacultyFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
-import { FacultyEmploymentDesignationFields } from "@/tenant/features/faculty/components/FacultyEmploymentDesignationFields";
-import { FacultyEmploymentAcademicFields } from "@/tenant/features/faculty/components/FacultyEmploymentAcademicFields";
 import { FacultyEmploymentEmployeeIdField } from "@/tenant/features/faculty/components/FacultyEmploymentEmployeeIdField";
 
 export interface FacultySectionBaseProps {
@@ -40,20 +34,12 @@ export interface FacultyEmploymentSectionProps extends FacultySectionBaseProps {
   onRegenerateEmployeeId?: () => void;
   isFetchingNextEmployeeId?: boolean;
   statusOptions: FacultyStatusOption[];
-  specializationOptions?: string[];
-  departmentOptions?: string[];
-  designationOptions?: FacultyDesignationDefinition[];
   faculty?: FacultyMember;
-  supervisorCandidates?: Faculty[];
-  hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
-  hideDesignation?: boolean;
-  hideHierarchy?: boolean;
 }
 
 export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): React.JSX.Element | null {
   const {
     autoGenerateId,
-    designationOptions,
     errors,
     fields,
     idPrefix,
@@ -61,26 +47,17 @@ export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): 
     onRegenerateEmployeeId,
     isFetchingNextEmployeeId,
     statusOptions,
-    departmentOptions,
     isFieldEnabled,
     isFieldRequired,
     onDraftChange,
-    supervisorCandidates,
-    hierarchyRankPresets,
-    hideDesignation = false,
-    hideHierarchy = false,
   } = props;
   const faculty = props.faculty;
   const facultyDraft = props.facultyDraft ?? {};
   const { t } = useTranslation();
   const showEmployeeId = isFieldEnabled("employeeId");
-  const showDesignation = !hideDesignation && isFieldEnabled("designation");
-  const showDepartment = isFieldEnabled("department");
   const showStatus = isFieldEnabled("status");
   const showJoinDate = isFieldEnabled("joinDate");
-  const hasVisibleFields = showEmployeeId || showDesignation || showDepartment ||
-    showStatus || showJoinDate ||
-    (!hideHierarchy && (isFieldEnabled("hierarchyRank") || isFieldEnabled("reportingFacultyId")));
+  const hasVisibleFields = showEmployeeId || showStatus || showJoinDate;
   if (!hasVisibleFields) return null;
 
   const lbl = (field: string) => resolveFacultyFieldLabel(fields, "employment", field, t);
@@ -103,40 +80,6 @@ export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): 
               onDraftChange={onDraftChange}
               onRegenerateEmployeeId={onRegenerateEmployeeId}
               t={t}
-            />
-          )}
-
-          {showDesignation && (
-            <FacultyEmploymentDesignationFields
-              faculty={faculty}
-              facultyDraft={facultyDraft}
-              errors={errors}
-              designationOptions={designationOptions}
-              designationLabel={lbl("designation")}
-              isFieldRequired={isFieldRequired}
-              onDraftChange={onDraftChange}
-            />
-          )}
-
-          <FacultyEmploymentAcademicFields
-            facultyDraft={facultyDraft}
-            errors={errors}
-            departmentLabel={lbl("department")}
-            showDepartment={showDepartment}
-            isFieldRequired={isFieldRequired}
-            onDraftChange={onDraftChange}
-            departmentOptions={departmentOptions}
-          />
-
-          {!hideHierarchy && (
-            <FacultyHierarchyFormFields
-              facultyDraft={facultyDraft}
-              errors={errors}
-              isFieldEnabled={isFieldEnabled}
-              isFieldRequired={isFieldRequired}
-              onDraftChange={onDraftChange}
-              supervisorCandidates={supervisorCandidates}
-              hierarchyRankPresets={hierarchyRankPresets}
             />
           )}
 
