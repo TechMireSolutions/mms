@@ -49,11 +49,25 @@ export const FinanceSettings = (function FinanceSettings({
           settingsDraft={settingsDraft}
           upd={upd}
         />
+        <ModuleSetupSaveFooter
+          dirty={isPrefsDirty}
+          saving={saving}
+          saved={saved}
+          saveLabel={saving ? t("global.saving") : t("common.save")}
+          savedLabel={t("settings.savedBadge")}
+          onSave={handleSave}
+          disableUnsavedGuard
+          footerClassName="mt-4 pt-3"
+        />
       </SectionCard>
 
       <FinanceInvoiceNumberingSection
         settingsDraft={settingsDraft}
         upd={upd}
+        isPrefsDirty={isPrefsDirty}
+        saving={saving}
+        saved={saved}
+        onSave={handleSave}
       />
 
       <FinanceFeeStructuresSection />

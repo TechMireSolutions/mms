@@ -88,6 +88,10 @@ export const AccountingSettings = (function AccountingSettings({
         canEditSetup={true}
         onEditFiscalYear={setFyModal}
         onRequestCloseFiscalYear={handleRequestCloseFiscalYear}
+        isPrefsDirty={isPrefsDirty && isPrefsReady}
+        saving={saving}
+        saved={saved}
+        onSave={handleSave}
       />
 
       <ModuleSetupSaveFooter

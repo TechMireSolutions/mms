@@ -8,6 +8,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FORM_INPUT, FORM_LABEL, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { getDuplicateFieldLabel } from "@/lib/contacts/contactI18n";
 
 /** Toggleable duplicate-detection fields (subset of the canonical field-id set). */
@@ -20,12 +21,18 @@ export interface ContactsPreferencesDuplicateSectionProps {
     key: K,
     value: ContactPreferences[K],
   ) => void;
+  saving?: boolean;
+  saved?: boolean;
+  onSave?: () => void | Promise<void>;
 }
 
 export function ContactsPreferencesDuplicateSection({
   prefs,
   isPrefsDirty,
   onUpdatePreference,
+  saving,
+  saved,
+  onSave,
 }: ContactsPreferencesDuplicateSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const detectionFields = prefs.duplicateDetectionFields ?? ["name", "phone", "email", "cnic"];
@@ -145,6 +152,17 @@ export function ContactsPreferencesDuplicateSection({
           </Field>
         </div>
       </div>
+
+      <ModuleSetupSaveFooter
+        dirty={Boolean(isPrefsDirty)}
+        saving={Boolean(saving)}
+        saved={Boolean(saved)}
+        saveLabel={saving ? t("global.saving") : t("contacts.setup.saveAndApply")}
+        savedLabel={t("contacts.form.saved")}
+        onSave={onSave ?? (() => {})}
+        disableUnsavedGuard
+        footerClassName="mt-4 pt-3"
+      />
     </SectionCard>
   );
 }

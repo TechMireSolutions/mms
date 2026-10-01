@@ -7,15 +7,24 @@ import {
   type SequenceNumberingConfig,
 } from "@mms/shared";
 import { SequenceNumberingCard } from "@/components/ui/sequence-numbering";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 
 export interface FacultyIdSettingsCardProps {
   settingsDraft: FacultySettings;
   upd: <K extends keyof FacultySettings>(field: K, value: FacultySettings[K]) => void;
+  isPrefsDirty?: boolean;
+  saving?: boolean;
+  saved?: boolean;
+  onSave?: () => void | Promise<void>;
 }
 
 export function FacultyIdSettingsCard({
   settingsDraft,
   upd,
+  isPrefsDirty,
+  saving,
+  saved,
+  onSave,
 }: FacultyIdSettingsCardProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -59,6 +68,18 @@ export function FacultyIdSettingsCard({
       telemetryLabel={t("faculty.settings.sequenceTelemetry")}
       restartLabel={t("faculty.settings.idRestartAnnually")}
       restartDesc={t("faculty.settings.idRestartAnnuallyDesc")}
+      footer={
+        <ModuleSetupSaveFooter
+          dirty={Boolean(isPrefsDirty)}
+          saving={Boolean(saving)}
+          saved={Boolean(saved)}
+          saveLabel={saving ? t("global.saving") : t("common.save")}
+          savedLabel={t("settings.savedBadge")}
+          onSave={onSave ?? (() => {})}
+          disableUnsavedGuard
+          footerClassName="mt-4 pt-3"
+        />
+      }
     />
   );
 }

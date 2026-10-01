@@ -35,6 +35,10 @@ export const AttendanceSettings = (function AttendanceSettings({
       <AttendanceSettingsPreferencesSection
         settingsDraft={settingsDraft}
         upd={upd}
+        isPrefsDirty={isPrefsDirty}
+        saving={saving}
+        saved={saved}
+        onSave={handleSave}
       />
 
       <ModuleSetupSaveFooter

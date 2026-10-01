@@ -21,6 +21,8 @@ export interface ModuleSetupSaveFooterProps {
    * unsaved changes (P2-5 — unsaved-changes guard). Defaults to a generic prompt.
    */
   navigationBlockMessage?: string;
+  /** When true, skips registering the window beforeunload handler (useful for section-level footers). */
+  disableUnsavedGuard?: boolean;
 }
 
 /** Shared Setup Fields/Preferences unsaved warning + Save footer. */
@@ -35,10 +37,11 @@ export function ModuleSetupSaveFooter({
   footerClassName,
   buttonClassName,
   navigationBlockMessage,
+  disableUnsavedGuard,
 }: ModuleSetupSaveFooterProps): React.JSX.Element {
   // Intercepts browser unload / tab close when dirty (P2-5).
   useUnsavedChangesGuard({
-    isDirty: dirty,
+    isDirty: disableUnsavedGuard ? false : dirty,
     message: navigationBlockMessage,
   });
 

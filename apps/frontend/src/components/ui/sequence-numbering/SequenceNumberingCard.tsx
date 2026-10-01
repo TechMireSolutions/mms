@@ -38,6 +38,7 @@ export interface SequenceNumberingCardProps {
   telemetryLabel?: string;
   restartLabel?: string;
   restartDesc?: string;
+  footer?: React.ReactNode;
 }
 
 export function SequenceNumberingCard({
@@ -62,6 +63,7 @@ export function SequenceNumberingCard({
   telemetryLabel,
   restartLabel,
   restartDesc,
+  footer,
 }: SequenceNumberingCardProps): React.JSX.Element {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
@@ -182,6 +184,7 @@ export function SequenceNumberingCard({
             </div>
           </>
         )}
+        {footer}
       </div>
     </SectionCard>
   );

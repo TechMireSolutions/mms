@@ -5,17 +5,26 @@ import {
   type StudentsSettings,
   type SequenceNumberingConfig,
 } from "@mms/shared";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { SequenceNumberingCard } from "@/components/ui/sequence-numbering";
 
 export interface StudentsPreferencesSectionProps {
   settingsDraft: StudentsSettings;
   upd: <K extends keyof StudentsSettings>(field: K, value: StudentsSettings[K]) => void;
+  isPrefsDirty?: boolean;
+  saving?: boolean;
+  saved?: boolean;
+  onSave?: () => void | Promise<void>;
 }
 
 /** Students Setup Preferences body — Configures deterministic GR Number sequence. */
 export function StudentsPreferencesSection({
   settingsDraft,
   upd,
+  isPrefsDirty = false,
+  saving = false,
+  saved = false,
+  onSave,
 }: StudentsPreferencesSectionProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -56,6 +65,20 @@ export function StudentsPreferencesSection({
         onChange={handleChange}
         allowYearless={true}
         defaultPrefixPlaceholder="GR"
+        footer={
+          onSave ? (
+            <ModuleSetupSaveFooter
+              dirty={isPrefsDirty}
+              saving={saving}
+              saved={saved}
+              saveLabel={saving ? t("global.saving") : t("common.save")}
+              savedLabel={t("settings.savedBadge")}
+              onSave={onSave}
+              disableUnsavedGuard
+              footerClassName="mt-4 pt-3"
+            />
+          ) : undefined
+        }
       />
     </div>
   );

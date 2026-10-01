@@ -31,7 +31,14 @@ export const StudentsSetupPanel = (function StudentsSetupPanel({
 
   return (
     <div className="space-y-6 max-w-3xl text-start">
-      <StudentsPreferencesSection settingsDraft={settingsDraft} upd={upd} />
+      <StudentsPreferencesSection
+        settingsDraft={settingsDraft}
+        upd={upd}
+        isPrefsDirty={isPrefsDirty}
+        saving={saving}
+        saved={saved}
+        onSave={handleSave}
+      />
 
       <ModuleSetupSaveFooter
         dirty={isPrefsDirty}

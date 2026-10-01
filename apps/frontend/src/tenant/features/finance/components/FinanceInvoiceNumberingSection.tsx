@@ -6,15 +6,24 @@ import {
   type SequenceNumberingConfig,
 } from "@mms/shared";
 import { SequenceNumberingCard } from "@/components/ui/sequence-numbering";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 
 export interface FinanceInvoiceNumberingSectionProps {
   settingsDraft: FinanceSettings;
   upd: <K extends keyof FinanceSettings>(field: K, value: FinanceSettings[K]) => void;
+  isPrefsDirty?: boolean;
+  saving?: boolean;
+  saved?: boolean;
+  onSave?: () => void | Promise<void>;
 }
 
 export function FinanceInvoiceNumberingSection({
   settingsDraft,
   upd,
+  isPrefsDirty,
+  saving,
+  saved,
+  onSave,
 }: FinanceInvoiceNumberingSectionProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -44,6 +53,18 @@ export function FinanceInvoiceNumberingSection({
       onChange={handleChange}
       allowYearless={true}
       defaultPrefixPlaceholder="INV"
+      footer={
+        <ModuleSetupSaveFooter
+          dirty={Boolean(isPrefsDirty)}
+          saving={Boolean(saving)}
+          saved={Boolean(saved)}
+          saveLabel={saving ? t("global.saving") : t("common.save")}
+          savedLabel={t("settings.savedBadge")}
+          onSave={onSave ?? (() => {})}
+          disableUnsavedGuard
+          footerClassName="mt-4 pt-3"
+        />
+      }
     />
   );
 }

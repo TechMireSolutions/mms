@@ -8,17 +8,26 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 
 export interface AttendanceTimingRulesSectionProps {
   settingsDraft: AttendanceSettings;
   upd: <K extends keyof AttendanceSettings>(key: K, value: AttendanceSettings[K]) => void;
   t: TranslationFunction;
+  isPrefsDirty?: boolean;
+  saving?: boolean;
+  saved?: boolean;
+  onSave?: () => void | Promise<void>;
 }
 
 export function AttendanceTimingRulesSection({
   settingsDraft,
   upd,
   t,
+  isPrefsDirty,
+  saving,
+  saved,
+  onSave,
 }: AttendanceTimingRulesSectionProps): React.JSX.Element {
   return (
     <SectionCard
@@ -81,6 +90,17 @@ export function AttendanceTimingRulesSection({
           />
         </div>
       </div>
+
+      <ModuleSetupSaveFooter
+        dirty={Boolean(isPrefsDirty)}
+        saving={Boolean(saving)}
+        saved={Boolean(saved)}
+        saveLabel={saving ? t("global.saving") : t("common.save")}
+        savedLabel={t("settings.savedBadge")}
+        onSave={onSave ?? (() => {})}
+        disableUnsavedGuard
+        footerClassName="mt-4 pt-3"
+      />
     </SectionCard>
   );
 }

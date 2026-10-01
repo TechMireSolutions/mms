@@ -66,6 +66,16 @@ export const HasanatSettings = (function HasanatSettings({
             />
           </div>
         </div>
+        <ModuleSetupSaveFooter
+          dirty={isPrefsDirty}
+          saving={saving}
+          saved={saved}
+          saveLabel={saving ? t("global.saving") : t("common.save")}
+          savedLabel={t("settings.savedBadge")}
+          onSave={handleSave}
+          disableUnsavedGuard
+          footerClassName="mt-4 pt-3"
+        />
       </SectionCard>
 
       <ModuleSetupSaveFooter

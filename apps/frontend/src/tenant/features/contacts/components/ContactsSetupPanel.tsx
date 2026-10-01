@@ -36,6 +36,9 @@ export function ContactsSetupPanel({
         prefs={prefs}
         isPrefsDirty={isPrefsDirty}
         onUpdatePreference={updatePreference}
+        saving={isSaving}
+        saved={saved}
+        onSave={handleSave}
       />
 
       <ModuleSetupSaveFooter

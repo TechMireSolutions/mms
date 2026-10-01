@@ -10,6 +10,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { Field } from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { localizedFiscalMonths } from "./accountingSettingsPreferencesShared";
 import { AccountingFiscalYearsTable } from "./AccountingFiscalYearsTable";
 
@@ -26,6 +27,10 @@ export interface AccountingSettingsFiscalYearsSectionProps {
    * and the server rejects a close that has no retained-earnings account.
    */
   onRequestCloseFiscalYear?: (fiscalYearId: string) => void;
+  isPrefsDirty?: boolean;
+  saving?: boolean;
+  saved?: boolean;
+  onSave?: () => void | Promise<void>;
 }
 
 export function AccountingSettingsFiscalYearsSection({
@@ -36,6 +41,10 @@ export function AccountingSettingsFiscalYearsSection({
   canEditSetup,
   onEditFiscalYear,
   onRequestCloseFiscalYear,
+  isPrefsDirty,
+  saving,
+  saved,
+  onSave,
 }: AccountingSettingsFiscalYearsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
   const { viewMode } = useWorkDirectoryViewMode();
@@ -100,6 +109,17 @@ export function AccountingSettingsFiscalYearsSection({
           {t("accounting.settings.fy.deleteNotSupported")}
         </p>
       </div>
+
+      <ModuleSetupSaveFooter
+        dirty={Boolean(isPrefsDirty)}
+        saving={Boolean(saving)}
+        saved={Boolean(saved)}
+        saveLabel={saving ? t("global.saving") : t("common.save")}
+        savedLabel={t("settings.savedBadge")}
+        onSave={onSave ?? (() => {})}
+        disableUnsavedGuard
+        footerClassName="mt-4 pt-3"
+      />
     </SectionCard>
   );
 }

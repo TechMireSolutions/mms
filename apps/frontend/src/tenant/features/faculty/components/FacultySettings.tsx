@@ -39,6 +39,10 @@ export const FacultySettings = (function FacultySettings({
         settingsDraft={settingsDraft}
         upd={upd}
         specializationOptions={specializationOptions}
+        isPrefsDirty={isPrefsDirty}
+        saving={saving}
+        saved={saved}
+        onSave={handleSave}
       />
 
       <FacultyDesignationsSetupSection />

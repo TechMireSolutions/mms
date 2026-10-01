@@ -6,6 +6,8 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 
+import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
+
 export interface ContactsPreferencesGeneralSectionProps {
   prefs: ContactPreferences;
   isPrefsDirty?: boolean;
@@ -13,11 +15,18 @@ export interface ContactsPreferencesGeneralSectionProps {
     key: K,
     value: ContactPreferences[K],
   ) => void;
+  saving?: boolean;
+  saved?: boolean;
+  onSave?: () => void | Promise<void>;
 }
 
 export function ContactsPreferencesGeneralSection({
   prefs,
+  isPrefsDirty,
   onUpdatePreference,
+  saving,
+  saved,
+  onSave,
 }: ContactsPreferencesGeneralSectionProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -48,6 +57,17 @@ export function ContactsPreferencesGeneralSection({
           onChange={(val) => onUpdatePreference("showDetailedLunarAge", val)}
         />
       </div>
+
+      <ModuleSetupSaveFooter
+        dirty={Boolean(isPrefsDirty)}
+        saving={Boolean(saving)}
+        saved={Boolean(saved)}
+        saveLabel={saving ? t("global.saving") : t("contacts.setup.saveAndApply")}
+        savedLabel={t("contacts.form.saved")}
+        onSave={onSave ?? (() => {})}
+        disableUnsavedGuard
+        footerClassName="mt-4 pt-3"
+      />
     </SectionCard>
   );
 }

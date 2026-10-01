@@ -26,6 +26,10 @@ interface AccountingSettingsPreferencesProps {
   canEditSetup: boolean;
   onEditFiscalYear: (fiscalYear: Partial<FiscalYear>) => void;
   onRequestCloseFiscalYear?: (fiscalYearId: string) => void;
+  isPrefsDirty?: boolean;
+  saving?: boolean;
+  saved?: boolean;
+  onSave?: () => void | Promise<void>;
 }
 
 export function AccountingSettingsPreferences({
@@ -40,6 +44,10 @@ export function AccountingSettingsPreferences({
   canEditSetup,
   onEditFiscalYear,
   onRequestCloseFiscalYear,
+  isPrefsDirty,
+  saving,
+  saved,
+  onSave,
 }: AccountingSettingsPreferencesProps): React.JSX.Element {
   return (
     <div className="space-y-6">
@@ -49,6 +57,10 @@ export function AccountingSettingsPreferences({
         currencies={currencies}
         activeCurrency={activeCurrency}
         decimalSeparators={decimalSeparators}
+        isPrefsDirty={isPrefsDirty}
+        saving={saving}
+        saved={saved}
+        onSave={onSave}
       />
 
       <AccountingSettingsFiscalYearsSection
@@ -59,12 +71,20 @@ export function AccountingSettingsPreferences({
         canEditSetup={canEditSetup}
         onEditFiscalYear={onEditFiscalYear}
         onRequestCloseFiscalYear={onRequestCloseFiscalYear}
+        isPrefsDirty={isPrefsDirty}
+        saving={saving}
+        saved={saved}
+        onSave={onSave}
       />
 
       <AccountingSettingsRulesSection
         accounts={accounts}
         settingsDraft={settingsDraft}
         upd={upd}
+        isPrefsDirty={isPrefsDirty}
+        saving={saving}
+        saved={saved}
+        onSave={onSave}
       />
 
       <AccountingSettingsNumberingSection canEdit={canEditSetup} />

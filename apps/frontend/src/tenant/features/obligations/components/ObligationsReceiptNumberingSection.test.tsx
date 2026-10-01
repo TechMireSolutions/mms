@@ -11,5 +11,6 @@ describe("ObligationsReceiptNumberingSection Component", () => {
     expect(html).toContain("obligations.receiptNumbering.entityLabel");
     expect(html).toContain("Live Preview");
     expect(html).toContain("OBL-");
+    expect(html).toContain("common.save");
   });
 });
