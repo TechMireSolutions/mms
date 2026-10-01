@@ -120,6 +120,7 @@ export function ContactForm({
             : t("contacts.form.createNewContact")
         }
         icon={User}
+        size="xl"
         tall
         priority={Boolean(priority || nested)}
         saveOnTabChange={false}

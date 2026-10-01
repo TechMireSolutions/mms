@@ -140,7 +140,7 @@ export function ClassDetailModal({
       onClose={onClose}
       title={classDraft.name ? t('sessions.classes.detail.title', { name: classDraft.name }) : t('sessions.classes.detail.newTitle')}
       icon={GraduationCap}
-      tall
+      tall size="xl"
       tabs={formTabs}
       activeTab={activeTab}
       onTabChange={setActiveTab}
@@ -160,7 +160,7 @@ export function ClassDetailModal({
           event.preventDefault();
           void handleSave();
         }}
-        className="max-w-3xl space-y-4"
+        className="w-full space-y-4"
       >
         <ClassDetailTabBody
           activeTab={activeTab}

@@ -87,6 +87,8 @@ export function Modal<K extends string = string>({
 }: ModalProps<K>): React.JSX.Element | null {
   const { t } = useTranslation();
   const titleId = useId();
+  const hasTabs = Boolean(tabs && tabs.length > 1 && activeTab !== undefined);
+  const effectiveSize = size === "xl" || size === "2xl" || size === "3xl" ? size : hasTabs ? "xl" : size;
 
   const errors = (() => {
     if (!error) return [];
@@ -134,8 +136,8 @@ export function Modal<K extends string = string>({
           aria-labelledby={title ? titleId : undefined}
           data-print-unclamp
           className={cn(
-            "relative bg-card rounded-2xl border border-foreground/12 shadow-surface-lg w-full z-elevated max-h-modal flex flex-col min-w-0",
-            SIZE[size],
+            "relative @container bg-card rounded-2xl border border-foreground/12 shadow-surface-lg w-full z-elevated max-h-modal flex flex-col min-w-0",
+            SIZE[effectiveSize],
             panelClassName,
           )}
         >
@@ -156,7 +158,14 @@ export function Modal<K extends string = string>({
 
           {errors.length > 0 && <FormErrorBanner errors={errors} />}
 
-          <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-6 space-y-4">
+          <div
+            className={cn(
+              "flex-1 overscroll-contain p-4 sm:p-6",
+              tabs && activeTab !== undefined && onTabChange
+                ? "overflow-hidden flex flex-col min-h-0"
+                : "overflow-y-auto space-y-4",
+            )}
+          >
             {tabs && activeTab !== undefined && onTabChange ? (
               <FormModalTabs
                 tabs={tabs}

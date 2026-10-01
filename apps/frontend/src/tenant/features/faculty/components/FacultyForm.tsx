@@ -82,6 +82,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
         title={faculty ? t("faculty.form.editTitle") : t("faculty.form.addTitle")}
         subtitle={t("faculty.form.contactHint")}
         icon={School}
+        size="xl"
         tall
         priority={priority}
         lang={language}

@@ -51,9 +51,10 @@ export function useFormModalLayout<K extends string>({
   const panelClassName = cn(tall ? 'h-modal-tall max-h-modal-tall' : undefined, panelClassNameProp);
 
   const effectiveSize = ((): FormModalSize => {
-    const requested = size ?? 'lg';
-    if (requested === 'xl') return 'xl';
-    if (tall || hasTabs) return 'lg';
+    const requested = size ?? (hasTabs ? 'xl' : 'lg');
+    if (requested === 'xl' || requested === '2xl' || requested === '3xl') return requested;
+    if (hasTabs) return 'xl';
+    if (tall) return 'lg';
     return requested;
   })();
 
