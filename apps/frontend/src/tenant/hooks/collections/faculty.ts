@@ -49,4 +49,22 @@ export {
   useFacultyContractNextEmployeeId,
 } from '@/tenant/features/faculty/hooks/useFacultyTsrHooks';
 
+export {
+  FACULTY_DEPARTMENTS_QUERY_KEY,
+  useFacultyDepartments,
+  useSaveFacultyDepartment,
+  useDeleteFacultyDepartment,
+  departmentEntitiesToNames,
+} from '@/tenant/features/faculty/hooks/useFacultyDepartments';
 
+export {
+  FACULTY_ASSIGNMENTS_QUERY_KEY,
+  ASSIGNMENT_SUBORDINATES_QUERY_KEY,
+  ASSIGNMENT_MANAGERS_QUERY_KEY,
+  useFacultyAssignments,
+  useSaveFacultyAssignment,
+  useCloseFacultyAssignment,
+  useDeleteFacultyAssignment,
+  useAssignmentSubordinates,
+  useAssignmentManagerChain,
+} from '@/tenant/features/faculty/hooks/useFacultyAssignments';

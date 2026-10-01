@@ -8,18 +8,24 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-const mockMutateAsync = vi.fn().mockResolvedValue({ success: true });
-let mockLookupsData: { departments?: string[] } | undefined = {
-  departments: ["Quranic Studies", "Hadith Sciences"],
-};
+const mockSaveMutateAsync = vi.fn().mockResolvedValue({ id: "dept-3", name: "Fiqh & Law", code: "fiqh-law" });
+const mockDeleteMutateAsync = vi.fn().mockResolvedValue(undefined);
+let mockDepartmentsData = [
+  { id: "dept-1", workspaceSubdomain: "tenant", name: "Quranic Studies", code: "quranic-studies" },
+  { id: "dept-2", workspaceSubdomain: "tenant", name: "Hadith Sciences", code: "hadith-sciences" },
+];
 
-vi.mock("@/tenant/features/faculty/hooks/useFacultyLookups", () => ({
-  useFacultyLookupsQuery: () => ({
-    data: mockLookupsData,
+vi.mock("@/tenant/features/faculty/hooks/useFacultyDepartments", () => ({
+  useFacultyDepartments: () => ({
+    data: mockDepartmentsData,
     isLoading: false,
   }),
-  useFacultyLookupMutation: () => ({
-    mutateAsync: mockMutateAsync,
+  useSaveFacultyDepartment: () => ({
+    mutateAsync: mockSaveMutateAsync,
+    isPending: false,
+  }),
+  useDeleteFacultyDepartment: () => ({
+    mutateAsync: mockDeleteMutateAsync,
     isPending: false,
   }),
 }));
@@ -45,8 +51,12 @@ describe("FacultyDepartmentsSetupSection", () => {
     container = document.createElement("div");
     document.body.appendChild(container);
     root = createRoot(container);
-    mockMutateAsync.mockClear();
-    mockLookupsData = { departments: ["Quranic Studies", "Hadith Sciences"] };
+    mockSaveMutateAsync.mockClear();
+    mockDeleteMutateAsync.mockClear();
+    mockDepartmentsData = [
+      { id: "dept-1", workspaceSubdomain: "tenant", name: "Quranic Studies", code: "quranic-studies" },
+      { id: "dept-2", workspaceSubdomain: "tenant", name: "Hadith Sciences", code: "hadith-sciences" },
+    ];
   });
 
   afterEach(async () => {
@@ -65,8 +75,10 @@ describe("FacultyDepartmentsSetupSection", () => {
     expect(container.textContent).toContain("Quranic Studies");
     expect(container.textContent).toContain("Hadith Sciences");
 
-    const input = container.querySelector<HTMLInputElement>("input#new-faculty-department");
-    expect(input).not.toBeNull();
+    const inputName = container.querySelector<HTMLInputElement>("input#new-faculty-department-name");
+    const inputCode = container.querySelector<HTMLInputElement>("input#new-faculty-department-code");
+    expect(inputName).not.toBeNull();
+    expect(inputCode).not.toBeNull();
   });
 
   it("adds a new department when form is submitted", async () => {
@@ -74,7 +86,7 @@ describe("FacultyDepartmentsSetupSection", () => {
       root.render(<FacultyDepartmentsSetupSection />);
     });
 
-    const input = container.querySelector<HTMLInputElement>("input#new-faculty-department")!;
+    const inputName = container.querySelector<HTMLInputElement>("input#new-faculty-department-name")!;
     const form = container.querySelector<HTMLFormElement>("form")!;
 
     await act(async () => {
@@ -82,19 +94,21 @@ describe("FacultyDepartmentsSetupSection", () => {
         window.HTMLInputElement.prototype,
         "value",
       )?.set;
-      nativeInputValueSetter?.call(input, "Fiqh & Law");
-      input.dispatchEvent(new Event("input", { bubbles: true }));
-      input.dispatchEvent(new Event("change", { bubbles: true }));
+      nativeInputValueSetter?.call(inputName, "Fiqh & Law");
+      inputName.dispatchEvent(new Event("input", { bubbles: true }));
+      inputName.dispatchEvent(new Event("change", { bubbles: true }));
     });
 
     await act(async () => {
       form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
     });
 
-    expect(mockMutateAsync).toHaveBeenCalledWith({
-      kind: "departments",
-      items: ["Quranic Studies", "Hadith Sciences", "Fiqh & Law"],
-    });
+    expect(mockSaveMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Fiqh & Law",
+        code: "fiqh-law",
+      }),
+    );
   });
 
   it("removes an existing department when delete button is clicked", async () => {
@@ -111,9 +125,6 @@ describe("FacultyDepartmentsSetupSection", () => {
       deleteBtn!.click();
     });
 
-    expect(mockMutateAsync).toHaveBeenCalledWith({
-      kind: "departments",
-      items: ["Hadith Sciences"],
-    });
+    expect(mockDeleteMutateAsync).toHaveBeenCalledWith("dept-1");
   });
 });

@@ -35,6 +35,7 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
     linkedFacultyContactIds,
     specializationOptions,
     departmentOptions,
+    departmentEntities,
     designationOptions,
     autoGenerateId,
     idPrefix,
@@ -101,6 +102,7 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
         errors={errors}
         designationOptions={designationOptions}
         departmentOptions={departmentOptions}
+        departmentEntities={departmentEntities}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
@@ -155,6 +157,7 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
       linkedFacultyContactIds={effectiveContactIds}
       specializationOptions={specializationOptions}
       departmentOptions={departmentOptions}
+      departmentEntities={departmentEntities}
       designationOptions={designationOptions}
       autoGenerateId={autoGenerateId}
       idPrefix={idPrefix}

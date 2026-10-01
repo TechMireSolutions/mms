@@ -20,6 +20,8 @@ import {
 } from './faculty.contract.schemas.js';
 import { facultyDesignationContractEndpoints } from './faculty.contract.designations.js';
 import { facultySetupContractEndpoints } from './faculty.contract.setup.js';
+import { facultyDepartmentContractEndpoints } from './faculty.contract.departments.js';
+import { facultyAssignmentContractEndpoints } from './faculty.contract.assignments.js';
 
 export {
   facultyListPageResponseSchema,
@@ -174,5 +176,7 @@ export const facultyContract = c.router({
     summary: 'Get widget aggregates',
   },
   ...facultyDesignationContractEndpoints,
+  ...facultyDepartmentContractEndpoints,
+  ...facultyAssignmentContractEndpoints,
   ...facultySetupContractEndpoints,
 });

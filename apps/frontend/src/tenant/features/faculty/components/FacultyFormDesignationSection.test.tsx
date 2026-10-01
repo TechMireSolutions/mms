@@ -99,4 +99,32 @@ describe("FacultyFormDesignationSection", () => {
     expect(html).toContain('value="Islamic Jurisprudence"');
     expect(html).not.toContain('id="reportingFacultyId"');
   });
+
+  it("renders department entities with code when departmentEntities is provided", () => {
+    const html = renderToStaticMarkup(
+      <FacultyFormDesignationSection
+        facultyDraft={{ department: "Hadith Sciences" }}
+        errors={{}}
+        departmentEntities={[
+          {
+            id: "dept-1",
+            workspaceSubdomain: "tenant",
+            name: "Hadith Sciences",
+            code: "hadith",
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+            deletedAt: null,
+            parentId: null,
+            headFacultyId: null,
+          },
+        ]}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain('id="department"');
+    expect(html).toContain("Hadith Sciences (hadith)");
+  });
 });

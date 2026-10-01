@@ -13,6 +13,7 @@ import type {
   Faculty,
   FacultyMember,
   FacultyDesignationDefinition,
+  FacultyDepartmentEntity,
   FacultyHierarchyPreset,
   FieldDefinition,
 } from "@mms/shared";
@@ -38,6 +39,7 @@ export const FACULTY_FIELD_TAB_MAP: Record<string, FacultyFormTabKey> = {
   status: "employment",
   joinDate: "employment",
   department: "designation",
+  departmentId: "designation",
   specialization: "contact",
   qualification: "contact",
   designation: "designation",
@@ -75,7 +77,10 @@ export interface FacultyFormTabContentProps {
   defaultSpecialization: string;
   linkedFacultyContactIds?: Array<string | number>;
   specializationOptions: string[];
+  /** Legacy flat-string department options (from faculty_lookups). */
   departmentOptions?: string[];
+  /** Normalized department catalog entities (from faculty_departments table). */
+  departmentEntities?: FacultyDepartmentEntity[];
   designationOptions?: FacultyDesignationDefinition[];
   autoGenerateId: boolean;
   idPrefix: string;
@@ -120,7 +125,10 @@ export function useFacultyFormTabs(input: {
       { key: "employment", icon: Briefcase, label: t("faculty.form.tab.employment") },
     ];
 
-    if (isFieldEnabled("designation") || isFieldEnabled("department")) {
+    if (
+      isFieldEnabled("designation") || isFieldEnabled("department") ||
+      isFieldEnabled("designationId") || isFieldEnabled("departmentId")
+    ) {
       list.push({
         key: "designation",
         icon: Award,

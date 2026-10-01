@@ -6,6 +6,7 @@ import { useFacultyConfig } from "@/hooks/useStandardModuleConfig";
 import { facultyStatusOptions } from "@/lib/faculty/facultyStatusUi";
 import { useFacultyStatusConfig, useFacultyLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
 import { useFacultyDesignations } from "@/tenant/features/faculty/hooks/useFacultyDesignations";
+import { useFacultyDepartments, departmentEntitiesToNames } from "@/tenant/features/faculty/hooks/useFacultyDepartments";
 import {
   type Faculty,
   DEFAULT_FACULTY_SETTINGS,
@@ -39,6 +40,8 @@ export function useFacultyFormController({
   const { settings, isFieldEnabled, isFieldRequired } = useFacultyConfig();
   const { statusOptions: statusValues, specializationOptions, departmentOptions } = useFacultyLookupOptions();
   const designationDefinitions = useFacultyDesignations();
+  const departmentsQuery = useFacultyDepartments();
+  const departmentEntities = departmentsQuery.data ?? [];
 
   const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_FACULTY_SETTINGS.defaultSpecialization;
   const idPrefix = settings.idPrefix || DEFAULT_FACULTY_SETTINGS.idPrefix;
@@ -146,7 +149,8 @@ export function useFacultyFormController({
     isDirty,
     defaultSpecialization,
     specializationOptions,
-    departmentOptions,
+    departmentOptions: departmentOptions?.length ? departmentOptions : departmentEntitiesToNames(departmentEntities),
+    departmentEntities,
     designationOptions: designationDefinitions.data ?? [],
     statusOptions,
     statusConfig,

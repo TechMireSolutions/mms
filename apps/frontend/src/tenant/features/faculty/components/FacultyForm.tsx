@@ -39,6 +39,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     autoGenerateId,
     requireContactLink,
     fieldsMap,
+    departmentEntities,
     linkedContact,
     linkedFacultyContactIds,
     linkedUser,
@@ -133,6 +134,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
             linkedFacultyContactIds={linkedFacultyContactIds}
             specializationOptions={specializationOptions}
             departmentOptions={departmentOptions}
+            departmentEntities={departmentEntities}
             designationOptions={designationOptions}
             userAccountDraft={userAccountDraft}
             onUserAccountDraftChange={setUserAccountDraft}

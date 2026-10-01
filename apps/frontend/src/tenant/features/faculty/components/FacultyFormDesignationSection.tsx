@@ -9,6 +9,7 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   FACULTY_DEPARTMENT_VALUES,
+  type FacultyDepartmentEntity,
   type FacultyDesignationDefinition,
   type FacultyMember,
 } from "@mms/shared";
@@ -19,6 +20,7 @@ export interface FacultyFormDesignationSectionProps {
   errors: Record<string, string>;
   designationOptions?: FacultyDesignationDefinition[];
   departmentOptions?: string[];
+  departmentEntities?: FacultyDepartmentEntity[];
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
   onDraftChange: (patch: Partial<FacultyMember>) => void;
@@ -31,6 +33,7 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
     errors,
     designationOptions,
     departmentOptions,
+    departmentEntities,
     isFieldEnabled,
     isFieldRequired,
     onDraftChange,
@@ -41,6 +44,16 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
   const showDepartment = isFieldEnabled("department");
 
   const deptOptions = useMemo(() => {
+    if (departmentEntities && departmentEntities.length > 0) {
+      const list = departmentEntities.map((d) => ({
+        value: d.name,
+        label: `${d.name} (${d.code})`,
+      }));
+      if (facultyDraft.department && !departmentEntities.some((d) => d.name === facultyDraft.department)) {
+        list.unshift({ value: facultyDraft.department, label: facultyDraft.department });
+      }
+      return list;
+    }
     const list = departmentOptions && departmentOptions.length > 0
       ? [...departmentOptions]
       : [...FACULTY_DEPARTMENT_VALUES];
@@ -48,7 +61,7 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
       list.unshift(facultyDraft.department);
     }
     return list.map((opt) => ({ value: opt, label: opt }));
-  }, [departmentOptions, facultyDraft.department]);
+  }, [departmentEntities, departmentOptions, facultyDraft.department]);
 
   if (!showDesignation && !showDepartment) return null;
 
@@ -122,7 +135,13 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
                   name="department"
                   value={facultyDraft.department ?? ""}
                   placeholder={t("faculty.form.departmentPlaceholder")}
-                  onChange={(val) => onDraftChange({ department: val })}
+                  onChange={(val) => {
+                    const matched = departmentEntities?.find((d) => d.name === val);
+                    onDraftChange({
+                      department: val,
+                      ...(matched ? { departmentId: matched.id } : {}),
+                    });
+                  }}
                   options={deptOptions}
                 />
               </Field>

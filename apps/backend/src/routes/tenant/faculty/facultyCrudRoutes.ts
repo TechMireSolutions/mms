@@ -26,6 +26,19 @@ import {
   handleDeleteDesignationAssignment,
 } from './facultyDesignationRouteHandlers.js';
 import {
+  handleListDepartments,
+  handleSaveDepartment,
+  handleDeleteDepartment,
+} from './facultyDepartmentRouteHandlers.js';
+import {
+  handleListAssignments,
+  handleSaveAssignment,
+  handleCloseAssignment,
+  handleDeleteAssignment,
+  handleGetSubordinates,
+  handleGetManagers,
+} from './facultyAssignmentRouteHandlers.js';
+import {
   handleCreateFaculty,
   handleUpdateFaculty,
   handleDeleteFaculty,
@@ -132,6 +145,15 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
     listDesignationHistory: handleListDesignationHistory,
     saveDesignationAssignment: handleSaveDesignationAssignment,
     deleteDesignationAssignment: handleDeleteDesignationAssignment,
+    listDepartments: handleListDepartments,
+    saveDepartment: handleSaveDepartment,
+    deleteDepartment: handleDeleteDepartment,
+    listAssignments: handleListAssignments,
+    saveAssignment: handleSaveAssignment,
+    closeAssignment: handleCloseAssignment,
+    deleteAssignment: handleDeleteAssignment,
+    getAssignmentSubordinates: handleGetSubordinates,
+    getAssignmentManagerChain: handleGetManagers,
   } as unknown as RouterImplementation<typeof facultyContract>);
 
   await fastify.register(s.plugin(router), {

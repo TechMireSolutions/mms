@@ -2,6 +2,7 @@ import React from "react";
 import type {
   Contact,
   Faculty,
+  FacultyDepartmentEntity,
   FacultyDesignationDefinition,
   FacultyHierarchyPreset,
   FacultyMember,
@@ -29,6 +30,7 @@ export interface FacultyFormAllSectionsProps {
   linkedFacultyContactIds?: Array<string | number>;
   specializationOptions: string[];
   departmentOptions?: string[];
+  departmentEntities?: FacultyDepartmentEntity[];
   designationOptions?: FacultyDesignationDefinition[];
   autoGenerateId: boolean;
   idPrefix: string;
@@ -56,6 +58,7 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
     fields,
     specializationOptions,
     departmentOptions,
+    departmentEntities,
     designationOptions,
     autoGenerateId,
     idPrefix,
@@ -109,6 +112,7 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         errors={errors}
         designationOptions={designationOptions}
         departmentOptions={departmentOptions}
+        departmentEntities={departmentEntities}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}

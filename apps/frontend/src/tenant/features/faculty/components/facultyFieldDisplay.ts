@@ -119,10 +119,11 @@ export function resolveFacultyFieldDisplayText(
   if (fieldKey === "joinDate") {
     return faculty.joinDate ? formatDate(faculty.joinDate) : missing();
   }
-  if (fieldKey === "department") {
-    return faculty.department || missing();
+  if (fieldKey === "department" || fieldKey === "departmentId") {
+    const dynamic = (faculty as Record<string, unknown>).departmentName;
+    return (typeof dynamic === "string" && dynamic) ? dynamic : faculty.department || missing();
   }
-  if (fieldKey === "designation") {
+  if (fieldKey === "designation" || fieldKey === "designationId") {
     // Prefer the server-projected current designation name (from assignment join),
     // falling back to the legacy static designation string.
     const dynamic = (faculty as Record<string, unknown>).designationName;

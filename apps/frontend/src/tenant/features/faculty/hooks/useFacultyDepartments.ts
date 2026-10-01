@@ -1,0 +1,83 @@
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  facultyDepartmentSchema,
+  type FacultyDepartmentEntity,
+  type FacultyDepartmentWrite,
+} from '@mms/shared';
+import { apiContract } from '@/lib/api';
+import { FACULTY_QUERY_KEY } from './facultyQueryKeys';
+
+export const FACULTY_DEPARTMENTS_QUERY_KEY = [...FACULTY_QUERY_KEY, 'departments'] as const;
+
+/**
+ * Server-authoritative list of faculty departments.
+ * Falls back to an empty array on parse failure so the UI never hard-crashes.
+ */
+export function useFacultyDepartments() {
+  return useQuery({
+    queryKey: FACULTY_DEPARTMENTS_QUERY_KEY,
+    queryFn: async ({ signal }) => {
+      const response = await apiContract.faculty.listDepartments({ fetchOptions: { signal } });
+      if (response.status !== 200) throw new Error('Failed to load faculty departments');
+      const parsed = facultyDepartmentSchema
+        .array()
+        .safeParse((response.body as { departments?: unknown }).departments);
+      if (!parsed.success) throw new Error('Invalid faculty departments response');
+      return parsed.data;
+    },
+    staleTime: 60_000,
+    placeholderData: (prev) => prev,
+  });
+}
+
+/** Saves a department (create or update) and invalidates the departments list. */
+export function useSaveFacultyDepartment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (input: FacultyDepartmentWrite & { id: string }) => {
+      const response = await apiContract.faculty.saveDepartment({
+        params: { id: input.id },
+        body: input,
+      });
+      if (response.status !== 200) {
+        const message =
+          typeof response.body === 'object' && response.body && 'message' in response.body
+            ? String(response.body.message)
+            : 'Failed to save faculty department';
+        throw new Error(message);
+      }
+      return facultyDepartmentSchema.parse(
+        (response.body as { department?: unknown }).department,
+      );
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: FACULTY_DEPARTMENTS_QUERY_KEY }),
+  });
+}
+
+/** Soft-deletes a department. Rejects (409) when active assignments reference it. */
+export function useDeleteFacultyDepartment() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const response = await apiContract.faculty.deleteDepartment({
+        params: { id },
+        body: {},
+      });
+      if (response.status !== 200) {
+        const message =
+          typeof response.body === 'object' && response.body && 'message' in response.body
+            ? String(response.body.message)
+            : 'Failed to delete faculty department';
+        throw new Error(message);
+      }
+    },
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: FACULTY_DEPARTMENTS_QUERY_KEY }),
+  });
+}
+
+/** Convenience: extract department names from entity list (for legacy dropdown compatibility). */
+export function departmentEntitiesToNames(departments: FacultyDepartmentEntity[]): string[] {
+  return departments.map((d) => d.name);
+}

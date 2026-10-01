@@ -918,6 +918,20 @@
       "when": 1791000000000,
       "tag": "0130_faculty_residual_cleanup",
       "breakpoints": true
+    },
+    {
+      "idx": 131,
+      "version": "7",
+      "when": 1791100000000,
+      "tag": "0131_faculty_departments",
+      "breakpoints": true
+    },
+    {
+      "idx": 132,
+      "version": "7",
+      "when": 1791100100000,
+      "tag": "0132_faculty_assignments",
+      "breakpoints": true
     }
   ]
 }

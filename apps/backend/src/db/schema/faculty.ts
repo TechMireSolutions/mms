@@ -5,6 +5,8 @@ import { contacts, tenantUsers } from "./contacts.js";
 import { softDeleteColumns } from "./softDeleteSchema.js";
 
 export * from "./facultyDesignationTables.js";
+export * from "./facultyDepartmentTables.js";
+export * from "./facultyAssignmentTables.js";
 
 /**
  * Faculty entity rows — normalized 3NF relational columns.

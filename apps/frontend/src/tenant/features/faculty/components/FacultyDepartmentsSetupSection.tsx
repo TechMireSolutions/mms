@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Building2, Plus, X } from "lucide-react";
-import { FACULTY_DEPARTMENT_VALUES } from "@mms/shared";
+import { Building2, ChevronRight, Plus, X } from "lucide-react";
+import type { FacultyDepartmentEntity } from "@mms/shared";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { FORM_INPUT } from "@/components/ui/formStyles";
@@ -9,54 +9,73 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
 import {
-  useFacultyLookupsQuery,
-  useFacultyLookupMutation,
-} from "@/tenant/features/faculty/hooks/useFacultyLookups";
+  useFacultyDepartments,
+  useSaveFacultyDepartment,
+  useDeleteFacultyDepartment,
+} from "@/tenant/features/faculty/hooks/useFacultyDepartments";
 
-/** Dynamic department catalog for faculty assignments. */
+/** Normalized department catalog management using the faculty_departments table. */
 export function FacultyDepartmentsSetupSection(): React.JSX.Element {
   const { t } = useTranslation();
-  const { data: lookups, isLoading } = useFacultyLookupsQuery();
-  const mutation = useFacultyLookupMutation();
-  const [newDepartment, setNewDepartment] = useState("");
+  const { data: departments = [], isLoading } = useFacultyDepartments();
+  const saveMutation = useSaveFacultyDepartment();
+  const deleteMutation = useDeleteFacultyDepartment();
+  const [newName, setNewName] = useState("");
+  const [newCode, setNewCode] = useState("");
 
-  const currentDepartments = React.useMemo(() => {
-    if (lookups?.departments && lookups.departments.length > 0) {
-      return lookups.departments;
-    }
-    return [...FACULTY_DEPARTMENT_VALUES];
-  }, [lookups?.departments]);
+  const isPending = saveMutation.isPending || deleteMutation.isPending || isLoading;
 
   const handleAdd = async (e?: React.FormEvent) => {
     e?.preventDefault();
-    const trimmed = newDepartment.trim();
-    if (!trimmed) return;
-    const exists = currentDepartments.some(
-      (dept) => dept.toLowerCase() === trimmed.toLowerCase(),
+    const name = newName.trim();
+    if (!name) return;
+
+    const code = newCode.trim() || slugify(name);
+    const alreadyExists = departments.some(
+      (d) => d.code.toLowerCase() === code.toLowerCase(),
     );
-    if (exists) {
-      setNewDepartment("");
+    if (alreadyExists) {
+      notify.error(t("faculty.setup.departmentCodeDuplicate"));
       return;
     }
-    const nextList = [...currentDepartments, trimmed];
+
     try {
-      await mutation.mutateAsync({ kind: "departments", items: nextList });
+      await saveMutation.mutateAsync({
+        id: crypto.randomUUID(),
+        name,
+        code,
+      });
       notify.success(t("faculty.setup.departmentSaved"));
-      setNewDepartment("");
+      setNewName("");
+      setNewCode("");
     } catch {
       notify.error(t("faculty.setup.lookupsSaveFailed"));
     }
   };
 
-  const handleRemove = async (deptToRemove: string) => {
-    const nextList = currentDepartments.filter((dept) => dept !== deptToRemove);
+  const handleDelete = async (dept: FacultyDepartmentEntity) => {
     try {
-      await mutation.mutateAsync({ kind: "departments", items: nextList });
+      await deleteMutation.mutateAsync(dept.id);
       notify.success(t("faculty.setup.departmentSaved"));
-    } catch {
-      notify.error(t("faculty.setup.lookupsSaveFailed"));
+    } catch (err) {
+      // 409 = active faculty assignments reference this dept
+      const isConflict =
+        err instanceof Error && err.message.toLowerCase().includes("assignment");
+      notify.error(
+        isConflict
+          ? t("faculty.setup.departmentInUse")
+          : t("faculty.setup.lookupsSaveFailed"),
+      );
     }
   };
+
+  /* Render root departments first, then any with a parentId. */
+  const roots = departments.filter((d) => !d.parentId);
+  const children = departments.filter(Boolean);
+  const ordered: FacultyDepartmentEntity[] = [
+    ...roots,
+    ...children.filter((d) => d.parentId && !roots.some((r) => r.id === d.id)),
+  ];
 
   return (
     <SectionCard
@@ -69,19 +88,50 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
           {t("faculty.setup.departmentsHint")}
         </p>
 
-        <form onSubmit={(e) => void handleAdd(e)} className="flex items-center gap-2">
-          <Input
-            id="new-faculty-department"
-            value={newDepartment}
-            onChange={(e) => setNewDepartment(e.target.value)}
-            placeholder={t("faculty.setup.departmentNamePlaceholder")}
-            className={FORM_INPUT}
-            disabled={mutation.isPending || isLoading}
-          />
+        <form
+          onSubmit={(e) => void handleAdd(e)}
+          className="flex flex-col gap-2 sm:flex-row sm:items-end"
+        >
+          <div className="flex-1 space-y-1">
+            <label
+              htmlFor="new-faculty-department-name"
+              className="text-xs text-muted-foreground"
+            >
+              {t("faculty.setup.departmentNamePlaceholder")}
+            </label>
+            <Input
+              id="new-faculty-department-name"
+              value={newName}
+              onChange={(e) => {
+                setNewName(e.target.value);
+                if (!newCode) setNewCode(slugify(e.target.value));
+              }}
+              placeholder={t("faculty.setup.departmentNamePlaceholder")}
+              className={FORM_INPUT}
+              disabled={isPending}
+            />
+          </div>
+          <div className="w-32 space-y-1">
+            <label
+              htmlFor="new-faculty-department-code"
+              className="text-xs text-muted-foreground"
+            >
+              {t("faculty.setup.departmentCodePlaceholder")}
+            </label>
+            <Input
+              id="new-faculty-department-code"
+              value={newCode}
+              onChange={(e) => setNewCode(e.target.value.toLowerCase().replace(/\s+/g, "-"))}
+              placeholder="code"
+              className={FORM_INPUT}
+              maxLength={32}
+              disabled={isPending}
+            />
+          </div>
           <Button
             type="submit"
             className="min-h-11 shrink-0 gap-1.5"
-            disabled={mutation.isPending || isLoading || !newDepartment.trim()}
+            disabled={isPending || !newName.trim()}
           >
             <Plus className="size-4" aria-hidden />
             <span>{t("faculty.setup.addDepartment")}</span>
@@ -89,25 +139,31 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
         </form>
 
         <div className="flex flex-wrap gap-2 pt-1">
-          {currentDepartments.map((dept) => (
+          {ordered.map((dept) => (
             <Badge
-              key={dept}
+              key={dept.id}
               variant="secondary"
               className="py-1.5 px-2.5 text-xs font-medium gap-1.5 bg-muted/60 hover:bg-muted"
             >
-              <span>{dept}</span>
+              {dept.parentId && (
+                <ChevronRight className="size-3 text-muted-foreground" aria-hidden />
+              )}
+              <span>{dept.name}</span>
+              <span className="text-muted-foreground font-mono text-[10px]">
+                ({dept.code})
+              </span>
               <button
                 type="button"
-                onClick={() => void handleRemove(dept)}
-                disabled={mutation.isPending}
+                onClick={() => void handleDelete(dept)}
+                disabled={isPending}
                 className="hover:text-destructive transition-colors focus-visible:outline-none"
-                aria-label={`${t("common.delete")} ${dept}`}
+                aria-label={`${t("common.delete")} ${dept.name}`}
               >
                 <X className="size-3.5" aria-hidden />
               </button>
             </Badge>
           ))}
-          {currentDepartments.length === 0 && !isLoading && (
+          {ordered.length === 0 && !isLoading && (
             <p className="text-xs text-muted-foreground">
               {t("faculty.setup.noDepartments")}
             </p>
@@ -116,4 +172,13 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
       </div>
     </SectionCard>
   );
+}
+
+/** Convert a display name to a URL-safe code slug (max 32 chars). */
+function slugify(name: string): string {
+  return name
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 32);
 }

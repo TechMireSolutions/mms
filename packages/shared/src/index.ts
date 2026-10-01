@@ -226,6 +226,8 @@ export * from './facultyWidgetAggregate.js';
 export * from './demoSeedFaculty.js';
 export * from './demoFaculty.js';
 export { facultyCsvExportBodySchema } from './schemas/csvExport.dto.js';
+export * from './facultyDepartmentTypes.js';
+export * from './moduleFieldSetupFaculty.js';
 
 // ---------------------------------------------------------------------------
 // 8. Sessions & Enrollments Modules
