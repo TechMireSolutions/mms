@@ -73,17 +73,13 @@ ALTER TABLE "faculty_departments" FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY "tenant_isolation_policy" ON "faculty_departments" FOR ALL
   USING (
-    "workspace_subdomain" = NULLIF(current_setting('app.current_tenant', true), '')
+    current_setting('app.rls_bypass', true) = 'on'
+    OR "workspace_subdomain" = NULLIF(current_setting('app.current_tenant', true), '')
   )
   WITH CHECK (
-    "workspace_subdomain" = NULLIF(current_setting('app.current_tenant', true), '')
+    current_setting('app.rls_bypass', true) = 'on'
+    OR "workspace_subdomain" = NULLIF(current_setting('app.current_tenant', true), '')
   );
---> statement-breakpoint
-
-CREATE POLICY "platform_superadmin_policy" ON "faculty_departments" FOR ALL
-  TO "mms_platform"
-  USING (true)
-  WITH CHECK (true);
 --> statement-breakpoint
 
 -- ── updated_at trigger ───────────────────────────────────────────────────────
@@ -116,4 +112,4 @@ SELECT
 FROM "faculty_lookups"
 WHERE "kind" = 'department'
   AND NULLIF(trim("label"), '') IS NOT NULL
-ON CONFLICT ("workspace_subdomain", "code") DO NOTHING;
+ON CONFLICT ("workspace_subdomain", "code") WHERE "deleted_at" IS NULL DO NOTHING;

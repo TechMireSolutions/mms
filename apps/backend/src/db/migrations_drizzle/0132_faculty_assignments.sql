@@ -110,17 +110,13 @@ ALTER TABLE "faculty_assignments" FORCE ROW LEVEL SECURITY;
 
 CREATE POLICY "tenant_isolation_policy" ON "faculty_assignments" FOR ALL
   USING (
-    "workspace_subdomain" = NULLIF(current_setting('app.current_tenant', true), '')
+    current_setting('app.rls_bypass', true) = 'on'
+    OR "workspace_subdomain" = NULLIF(current_setting('app.current_tenant', true), '')
   )
   WITH CHECK (
-    "workspace_subdomain" = NULLIF(current_setting('app.current_tenant', true), '')
+    current_setting('app.rls_bypass', true) = 'on'
+    OR "workspace_subdomain" = NULLIF(current_setting('app.current_tenant', true), '')
   );
---> statement-breakpoint
-
-CREATE POLICY "platform_superadmin_policy" ON "faculty_assignments" FOR ALL
-  TO "mms_platform"
-  USING (true)
-  WITH CHECK (true);
 --> statement-breakpoint
 
 -- ── updated_at trigger ───────────────────────────────────────────────────────
@@ -155,9 +151,10 @@ SELECT DISTINCT
   now(),
   now()
 FROM "faculty_designation_assignments" fda
-ON CONFLICT ("workspace_subdomain", "code") DO NOTHING;
+ON CONFLICT ("workspace_subdomain", "code") WHERE "deleted_at" IS NULL DO NOTHING;
 --> statement-breakpoint
 
+-- ── Backfill from faculty_assignments ────────────────────────────────────────
 -- Step 2: Insert faculty_assignments from designation assignments.
 -- Uses the faculty.department column to resolve department_id; falls back to 'general'.
 INSERT INTO "faculty_assignments" (
@@ -206,4 +203,4 @@ FROM "faculty_designation_assignments" fda
 JOIN "faculty" f
   ON f."workspace_subdomain" = fda."workspace_subdomain"
  AND f."id" = fda."faculty_id"
-ON CONFLICT DO NOTHING;
+ON CONFLICT ("workspace_subdomain", "id") DO NOTHING;
