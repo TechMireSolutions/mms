@@ -9,12 +9,9 @@ import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   FACULTY_DEPARTMENT_VALUES,
-  type Faculty,
   type FacultyDesignationDefinition,
-  type FacultyHierarchyPreset,
   type FacultyMember,
 } from "@mms/shared";
-import { FacultyFormHierarchySection } from "@/tenant/features/faculty/components/FacultyFormHierarchySection";
 
 export interface FacultyFormDesignationSectionProps {
   faculty?: FacultyMember;
@@ -25,8 +22,6 @@ export interface FacultyFormDesignationSectionProps {
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
   onDraftChange: (patch: Partial<FacultyMember>) => void;
-  supervisorCandidates?: Faculty[];
-  hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
 }
 
 export function FacultyFormDesignationSection(props: FacultyFormDesignationSectionProps): React.JSX.Element | null {
@@ -39,14 +34,11 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
     isFieldEnabled,
     isFieldRequired,
     onDraftChange,
-    supervisorCandidates,
-    hierarchyRankPresets,
   } = props;
   const { t } = useTranslation();
 
   const showDesignation = isFieldEnabled("designation");
   const showDepartment = isFieldEnabled("department");
-  const showHierarchy = isFieldEnabled("reportingFacultyId") || isFieldEnabled("hierarchyRank");
 
   const deptOptions = useMemo(() => {
     const list = departmentOptions && departmentOptions.length > 0
@@ -58,7 +50,7 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
     return list.map((opt) => ({ value: opt, label: opt }));
   }, [departmentOptions, facultyDraft.department]);
 
-  if (!showDesignation && !showDepartment && !showHierarchy) return null;
+  if (!showDesignation && !showDepartment) return null;
 
   const currentDefinition = designationOptions?.find(
     (item) => item.id === facultyDraft.designationId,
@@ -172,18 +164,6 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
             ) : null}
           </div>
         </SectionCard>
-      )}
-
-      {showHierarchy && (
-        <FacultyFormHierarchySection
-          facultyDraft={facultyDraft}
-          errors={errors}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-          supervisorCandidates={supervisorCandidates}
-          hierarchyRankPresets={hierarchyRankPresets}
-        />
       )}
     </div>
   );

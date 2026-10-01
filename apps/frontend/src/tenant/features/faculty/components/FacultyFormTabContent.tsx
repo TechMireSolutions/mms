@@ -4,6 +4,7 @@ import {
   FacultyEmploymentSection,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
+import { FacultyFormHierarchySection } from "@/tenant/features/faculty/components/FacultyFormHierarchySection";
 import { FacultyNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
 import {
   FacultyUserAccountSection,
@@ -100,6 +101,16 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
         errors={errors}
         designationOptions={designationOptions}
         departmentOptions={departmentOptions}
+        isFieldEnabled={isFieldEnabled}
+        isFieldRequired={isFieldRequired}
+        onDraftChange={onDraftChange}
+      />
+    );
+  } else if (activeTab === "hierarchy") {
+    tabBody = (
+      <FacultyFormHierarchySection
+        facultyDraft={effectiveDraft}
+        errors={errors}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}

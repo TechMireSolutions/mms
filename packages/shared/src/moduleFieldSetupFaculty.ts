@@ -15,7 +15,8 @@ export function isFacultyLockedEnabledTab(tabKey: string): boolean {
 export const FACULTY_TAB_REGISTRY: TabDefinition[] = [
   { key: "basic", label: "Profile", labelKey: "faculty.form.tab.basic", enabled: true, order: 0, isSystem: true },
   { key: "employment", label: "Employment Details", labelKey: "faculty.form.tab.employment", enabled: true, order: 1, isSystem: true },
-  { key: "designation", label: "Designation & Hierarchy", labelKey: "faculty.form.tab.designationHierarchy", enabled: true, order: 2, isSystem: true },
+  { key: "designation", label: "Designation", labelKey: "faculty.form.tab.designation", enabled: true, order: 2, isSystem: true },
+  { key: "hierarchy", label: "Hierarchy", labelKey: "faculty.form.tab.hierarchy", enabled: true, order: 3, isSystem: true },
 ];
 
 const FACULTY_SEED_FORM_TAB_KEYS = new Set(
@@ -139,13 +140,15 @@ export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
       description: "Academic or administrative department.",
       descriptionKey: "faculty.fields.departmentDesc",
     },
+  ],
+  hierarchy: [
     {
       key: "hierarchyRank",
       label: "Hierarchy Rank",
       labelKey: "faculty.field.hierarchyRank",
       type: "number",
       enabled: true,
-      order: 2,
+      order: 0,
       required: false,
       description: "Seniority / authority level for supervision and task delegation.",
       descriptionKey: "faculty.fields.hierarchyRankDesc",
@@ -156,7 +159,7 @@ export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
       labelKey: "faculty.field.reportingSupervisor",
       type: "select",
       enabled: true,
-      order: 3,
+      order: 1,
       required: false,
       description: "Immediate supervising faculty member.",
       descriptionKey: "faculty.fields.reportingSupervisorDesc",
