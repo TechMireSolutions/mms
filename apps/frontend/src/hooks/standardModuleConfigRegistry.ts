@@ -142,6 +142,7 @@ export type StandardModuleConfigExtraMap = {
     specializations: string[];
     genderFilters: string[];
     designations: string[];
+    departments: string[];
   };
   users: Record<string, never>;
   'question-bank': Record<string, never>;

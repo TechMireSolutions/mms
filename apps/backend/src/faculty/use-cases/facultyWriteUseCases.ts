@@ -5,7 +5,7 @@ import { broadcastCollection } from '../../lib/livePush.js';
 import type { FacultyRepository } from '../repository/facultyRepository.js';
 import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
 import { mergeFacultyPatch, prepareFacultyRecord } from './facultyNormalizeUseCases.js';
-import { ensureFacultyDesignationLookup } from './facultyLookupsService.js';
+import { ensureFacultyDesignationLookup, ensureFacultyDepartmentLookup } from './facultyLookupsService.js';
 import { generateNextFacultyEmployeeId } from './facultyEmployeeIdService.js';
 import {
   HierarchyValidationError,
@@ -54,6 +54,8 @@ export async function createFaculty(
     const customDes = (typeof rawRecord.customDesignation === 'string' ? rawRecord.customDesignation.trim() : '') ||
       (typeof rawRecord.designation === 'string' ? rawRecord.designation.trim() : '');
     if (customDes) await ensureFacultyDesignationLookup(tenant, customDes);
+    const customDept = typeof rawRecord.department === 'string' ? rawRecord.department.trim() : '';
+    if (customDept) await ensureFacultyDepartmentLookup(tenant, customDept);
 
     const normalized = prepareFacultyRecord(record);
 
@@ -103,6 +105,8 @@ export async function updateFacultyById(
     const customDes = (typeof rawRecord.customDesignation === 'string' ? rawRecord.customDesignation.trim() : '') ||
       (typeof rawRecord.designation === 'string' ? rawRecord.designation.trim() : '');
     if (customDes) await ensureFacultyDesignationLookup(tenant, customDes);
+    const customDept = typeof rawRecord.department === 'string' ? rawRecord.department.trim() : '';
+    if (customDept) await ensureFacultyDepartmentLookup(tenant, customDept);
 
     const normalized = prepareFacultyRecord({
       ...mergeFacultyPatch(existing, record),

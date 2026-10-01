@@ -32,6 +32,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     isDirty,
     defaultSpecialization,
     specializationOptions,
+    departmentOptions,
     designationOptions,
     statusOptions,
     statusConfig,
@@ -131,6 +132,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
             defaultSpecialization={defaultSpecialization}
             linkedFacultyContactIds={linkedFacultyContactIds}
             specializationOptions={specializationOptions}
+            departmentOptions={departmentOptions}
             designationOptions={designationOptions}
             userAccountDraft={userAccountDraft}
             onUserAccountDraftChange={setUserAccountDraft}

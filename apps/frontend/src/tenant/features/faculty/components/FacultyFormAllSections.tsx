@@ -26,6 +26,7 @@ export interface FacultyFormAllSectionsProps {
   fields: Record<string, FieldDefinition[]>;
   linkedFacultyContactIds?: Array<string | number>;
   specializationOptions: string[];
+  departmentOptions?: string[];
   designationOptions?: FacultyDesignationDefinition[];
   autoGenerateId: boolean;
   idPrefix: string;
@@ -52,6 +53,7 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
     errors,
     fields,
     specializationOptions,
+    departmentOptions,
     designationOptions,
     autoGenerateId,
     idPrefix,
@@ -95,6 +97,7 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         isFetchingNextEmployeeId={isFetchingNextEmployeeId}
         statusOptions={statusOptions}
         specializationOptions={specializationOptions}
+        departmentOptions={departmentOptions}
         designationOptions={designationOptions}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}

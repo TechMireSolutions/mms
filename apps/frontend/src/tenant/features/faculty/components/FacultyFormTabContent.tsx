@@ -34,6 +34,7 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
     fields,
     linkedFacultyContactIds,
     specializationOptions,
+    departmentOptions,
     designationOptions,
     autoGenerateId,
     idPrefix,
@@ -86,6 +87,7 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
           isFetchingNextEmployeeId={isFetchingNextEmployeeId}
           statusOptions={statusOptions}
           specializationOptions={specializationOptions}
+          departmentOptions={departmentOptions}
           designationOptions={designationOptions}
           isFieldEnabled={isFieldEnabled}
           isFieldRequired={isFieldRequired}
@@ -158,6 +160,7 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
       fields={fields}
       linkedFacultyContactIds={effectiveContactIds}
       specializationOptions={specializationOptions}
+      departmentOptions={departmentOptions}
       designationOptions={designationOptions}
       autoGenerateId={autoGenerateId}
       idPrefix={idPrefix}

@@ -1,4 +1,5 @@
 import type { TabDefinition, FieldDefinition } from "./contactTypes.js";
+import { FACULTY_DEPARTMENT_VALUES } from "./facultyTypes.js";
 
 // ─── Default Faculty Field Setup Constants ────────────────────────────────────
 
@@ -94,7 +95,8 @@ export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
       key: "department",
       label: "Department",
       labelKey: "faculty.field.department",
-      type: "text",
+      type: "select",
+      options: [...FACULTY_DEPARTMENT_VALUES],
       enabled: true,
       order: 2,
       required: false,

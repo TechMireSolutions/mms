@@ -37,7 +37,7 @@ export function useFacultyFormController({
   const { t, dir, language } = useTranslation();
 
   const { settings, isFieldEnabled, isFieldRequired } = useFacultyConfig();
-  const { statusOptions: statusValues, specializationOptions } = useFacultyLookupOptions();
+  const { statusOptions: statusValues, specializationOptions, departmentOptions } = useFacultyLookupOptions();
   const designationDefinitions = useFacultyDesignations();
 
   const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_FACULTY_SETTINGS.defaultSpecialization;
@@ -146,6 +146,7 @@ export function useFacultyFormController({
     isDirty,
     defaultSpecialization,
     specializationOptions,
+    departmentOptions,
     designationOptions: designationDefinitions.data ?? [],
     statusOptions,
     statusConfig,

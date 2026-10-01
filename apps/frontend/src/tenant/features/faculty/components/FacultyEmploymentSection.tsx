@@ -41,6 +41,7 @@ export interface FacultyEmploymentSectionProps extends FacultySectionBaseProps {
   isFetchingNextEmployeeId?: boolean;
   statusOptions: FacultyStatusOption[];
   specializationOptions?: string[];
+  departmentOptions?: string[];
   designationOptions?: FacultyDesignationDefinition[];
   faculty?: FacultyMember;
   supervisorCandidates?: Faculty[];
@@ -60,7 +61,7 @@ export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): 
     onRegenerateEmployeeId,
     isFetchingNextEmployeeId,
     statusOptions,
-    specializationOptions,
+    departmentOptions,
     isFieldEnabled,
     isFieldRequired,
     onDraftChange,
@@ -75,12 +76,10 @@ export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): 
   const showEmployeeId = isFieldEnabled("employeeId");
   const showDesignation = !hideDesignation && isFieldEnabled("designation");
   const showDepartment = isFieldEnabled("department");
-  const showSpecialization = isFieldEnabled("specialization");
-  const showQualification = isFieldEnabled("qualification");
   const showStatus = isFieldEnabled("status");
   const showJoinDate = isFieldEnabled("joinDate");
   const hasVisibleFields = showEmployeeId || showDesignation || showDepartment ||
-    showSpecialization || showQualification || showStatus || showJoinDate ||
+    showStatus || showJoinDate ||
     (!hideHierarchy && (isFieldEnabled("hierarchyRank") || isFieldEnabled("reportingFacultyId")));
   if (!hasVisibleFields) return null;
 
@@ -123,14 +122,10 @@ export function FacultyEmploymentSection(props: FacultyEmploymentSectionProps): 
             facultyDraft={facultyDraft}
             errors={errors}
             departmentLabel={lbl("department")}
-            specializationLabel={lbl("specialization")}
-            qualificationLabel={lbl("qualification")}
             showDepartment={showDepartment}
-            showSpecialization={showSpecialization}
-            showQualification={showQualification}
             isFieldRequired={isFieldRequired}
             onDraftChange={onDraftChange}
-            specializationOptions={specializationOptions}
+            departmentOptions={departmentOptions}
           />
 
           {!hideHierarchy && (

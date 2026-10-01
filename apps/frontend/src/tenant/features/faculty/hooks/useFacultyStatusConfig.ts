@@ -1,4 +1,5 @@
 import {
+  resolveFacultyDepartments,
   resolveFacultyDesignations,
   resolveFacultySpecializations,
   resolveFacultyStatuses,
@@ -23,19 +24,21 @@ export function useFacultyStatusConfig(): Record<string, StatusBadgeConfigItem> 
 }
 
 /**
- * SSOT for faculty status, specialization, and designation option lists, derived from the tenant's
+ * SSOT for faculty status, specialization, designation, and department option lists, derived from the tenant's
  * configured lookups. Consolidates the repeated option derivations across the module.
  */
 export function useFacultyLookupOptions(): {
   statusOptions: string[];
   specializationOptions: string[];
   designationOptions: string[];
+  departmentOptions: string[];
 } {
-  const { statuses, specializations, designations } = useFacultyConfig();
+  const { statuses, specializations, designations, departments } = useFacultyConfig();
   return (() => ({
     statusOptions: [...resolveStatuses(statuses)],
     specializationOptions: [...resolveSpecs(specializations)],
     designationOptions: [...resolveDesignations(designations)],
+    departmentOptions: [...resolveFacultyDepartments(departments)],
   }))();
 }
 

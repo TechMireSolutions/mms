@@ -13,6 +13,7 @@ import {
   type FieldDefinition,
 } from "@mms/shared";
 import { resolveFacultyFieldLabel } from "@/tenant/features/faculty/components/FacultyFormSectionShared";
+import { FacultyContactBackgroundSection } from "@/tenant/features/faculty/components/FacultyContactBackgroundSection";
 
 export interface FacultyContactSectionProps {
   facultyDraft?: Partial<FacultyMember>;
@@ -105,6 +106,7 @@ export function FacultyContactSection(props: FacultyContactSectionProps): React.
             )}
           </div>
         )}
+        {linkedContact && <FacultyContactBackgroundSection contact={linkedContact} />}
       </div>
     </SectionCard>
   );

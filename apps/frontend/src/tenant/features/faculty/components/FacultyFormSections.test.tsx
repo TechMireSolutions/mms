@@ -154,7 +154,7 @@ describe("FacultyFormSections Components", () => {
     expect(html).toContain('id="designationStartsOn"');
   });
 
-  it("renders department, specialization, and qualification when enabled", () => {
+  it("renders department as a dynamic dropdown and omits specialization and qualification from employment tab", () => {
     const html = renderToStaticMarkup(
       <FacultyEmploymentSection
         autoGenerateId={false}
@@ -169,7 +169,7 @@ describe("FacultyFormSections Components", () => {
           specialization: "Fiqh",
           qualification: "Ph.D. Islamic Law",
         }}
-        specializationOptions={["Fiqh", "Hadith", "Tafsir"]}
+        departmentOptions={["Islamic Jurisprudence", "Hifz", "Academics"]}
         isFieldEnabled={(fieldId) => ["department", "specialization", "qualification"].includes(fieldId)}
         isFieldRequired={() => false}
         onDraftChange={vi.fn()}
@@ -178,9 +178,8 @@ describe("FacultyFormSections Components", () => {
 
     expect(html).toContain('id="department"');
     expect(html).toContain('value="Islamic Jurisprudence"');
-    expect(html).toContain('id="specialization"');
-    expect(html).toContain("Fiqh");
-    expect(html).toContain('id="qualification"');
-    expect(html).toContain('value="Ph.D. Islamic Law"');
+    expect(html).toContain("Islamic Jurisprudence");
+    expect(html).not.toContain('id="specialization"');
+    expect(html).not.toContain('id="qualification"');
   });
 });

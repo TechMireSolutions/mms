@@ -75,6 +75,7 @@ export interface FacultyFormTabContentProps {
   defaultSpecialization: string;
   linkedFacultyContactIds?: Array<string | number>;
   specializationOptions: string[];
+  departmentOptions?: string[];
   designationOptions?: FacultyDesignationDefinition[];
   autoGenerateId: boolean;
   idPrefix: string;

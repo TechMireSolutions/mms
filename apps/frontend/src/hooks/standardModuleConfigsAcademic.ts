@@ -48,7 +48,7 @@ import {
 
 const useFacultyConfigImpl = createStandardModuleConfigHook<
   FacultySettings,
-  { statuses: string[]; specializations: string[]; genderFilters: string[]; designations: string[] }
+  { statuses: string[]; specializations: string[]; genderFilters: string[]; designations: string[]; departments: string[] }
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.faculty.defaultSettings as FacultySettings,
   defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.faculty.defaultFieldDefs,
@@ -79,6 +79,7 @@ const useFacultyConfigImpl = createStandardModuleConfigHook<
       specializations: lookups.specializations,
       genderFilters: lookups.genderFilters,
       designations: lookups.designations,
+      departments: lookups.departments,
     };
   },
 });

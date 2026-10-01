@@ -88,3 +88,59 @@ export async function ensureFacultyDesignationLookup(
     await withTenant(tenant, performUpsert);
   }
 }
+
+/**
+ * Ensures a department is persisted in faculty_lookups under kind 'departments'
+ * with case-insensitive matching (LOWER(TRIM(value))).
+ */
+export async function ensureFacultyDepartmentLookup(
+  tenant: string,
+  department: string,
+  tx?: TenantTransaction,
+): Promise<void> {
+  const trimmed = department.trim();
+  if (!trimmed) return;
+
+  const performUpsert = async (client: TenantTransaction) => {
+    if (!client || typeof client.select !== 'function') return;
+    const existing = await client
+      .select({
+        id: facultyLookups.id,
+        label: facultyLookups.label,
+        sortOrder: facultyLookups.sortOrder,
+      })
+      .from(facultyLookups)
+      .where(
+        and(
+          eq(facultyLookups.workspaceSubdomain, tenant),
+          eq(facultyLookups.kind, 'departments'),
+        ),
+      );
+
+    const lower = trimmed.toLowerCase();
+    const found = existing.some((r) => r.label.trim().toLowerCase() === lower);
+    if (!found) {
+      const maxSort = existing.reduce((max, r) => Math.max(max, r.sortOrder ?? 0), -1);
+      await client.insert(facultyLookups).values({
+        id: `dept-${randomUUID()}`,
+        workspaceSubdomain: tenant,
+        kind: 'departments',
+        label: trimmed,
+        sortOrder: maxSort + 1,
+        meta: null,
+      });
+      const tableName = getTableName(facultyLookups);
+      await invalidateMultiTierCache({
+        tenantId: tenant,
+        domain: tableName,
+      });
+    }
+  };
+
+  if (tx) {
+    await performUpsert(tx);
+  } else {
+    await withTenant(tenant, performUpsert);
+  }
+}
+

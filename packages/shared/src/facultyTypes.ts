@@ -69,6 +69,27 @@ export const DEFAULT_FACULTY_SPECIALIZATION: FacultySpecialization =
   FACULTY_SPECIALIZATION_VALUES.find((value) => value === 'General')
   ?? FACULTY_SPECIALIZATION_VALUES[0];
 
+/** Academic and administrative departments for madrasa faculty. */
+export const FACULTY_DEPARTMENT_VALUES = [
+  'Hifz',
+  'Nazira',
+  'Tajweed',
+  'Islamic Studies',
+  'Arabic',
+  'Academics',
+  'Administration',
+] as const;
+export type FacultyDepartment = (typeof FACULTY_DEPARTMENT_VALUES)[number];
+
+/** Prefer configured departments; fall back to the shared default list. */
+export function resolveFacultyDepartments(
+  departments?: readonly string[] | null,
+): readonly string[] {
+  return departments && departments.length > 0
+    ? departments
+    : FACULTY_DEPARTMENT_VALUES;
+}
+
 /** Hierarchy presets for delegation authority (lower number = higher authority). */
 export interface FacultyHierarchyPreset {
   rank: number;
