@@ -11,7 +11,7 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("FacultyDynamicSelectFields", () => {
-  it("renders department field with Add button and options", () => {
+  it("renders dynamic department dropdown without add/edit/delete buttons", () => {
     const html = renderToStaticMarkup(
       <FacultyDepartmentSelectField
         value=""
@@ -32,12 +32,12 @@ describe("FacultyDynamicSelectFields", () => {
     );
 
     expect(html).toContain('id="department"');
-    expect(html).toContain("faculty.setup.addDepartmentSubtitle");
-    expect(html).toContain("common.add");
     expect(html).toContain("Hifz (HIFZ)");
+    expect(html).not.toContain("common.add");
+    expect(html).not.toContain("faculty.setup.addDepartmentSubtitle");
   });
 
-  it("renders department edit and delete action buttons when department is selected", () => {
+  it("does not render edit or delete buttons even when department is selected", () => {
     const html = renderToStaticMarkup(
       <FacultyDepartmentSelectField
         value="Hifz"
@@ -58,8 +58,8 @@ describe("FacultyDynamicSelectFields", () => {
       />,
     );
 
-    expect(html).toContain('title="common.edit"');
-    expect(html).toContain('title="common.delete"');
+    expect(html).not.toContain('title="common.edit"');
+    expect(html).not.toContain('title="common.delete"');
   });
 
   it("renders designation field with Add button and active options", () => {
