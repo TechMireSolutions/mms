@@ -111,6 +111,47 @@ describe("FacultyDepartmentsSetupSection", () => {
     );
   });
 
+  it("edits an existing department when edit button is clicked and form is submitted", async () => {
+    await act(async () => {
+      root.render(<FacultyDepartmentsSetupSection />);
+    });
+
+    const editBtn = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="common.edit Quranic Studies"]',
+    );
+    expect(editBtn).not.toBeNull();
+
+    await act(async () => {
+      editBtn!.click();
+    });
+
+    const inputName = container.querySelector<HTMLInputElement>("input#new-faculty-department-name")!;
+    expect(inputName.value).toBe("Quranic Studies");
+
+    const form = container.querySelector<HTMLFormElement>("form")!;
+    await act(async () => {
+      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
+        window.HTMLInputElement.prototype,
+        "value",
+      )?.set;
+      nativeInputValueSetter?.call(inputName, "Advanced Quranic Studies");
+      inputName.dispatchEvent(new Event("input", { bubbles: true }));
+      inputName.dispatchEvent(new Event("change", { bubbles: true }));
+    });
+
+    await act(async () => {
+      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
+    });
+
+    expect(mockSaveMutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "dept-1",
+        name: "Advanced Quranic Studies",
+        code: "quranic-studies",
+      }),
+    );
+  });
+
   it("removes an existing department when delete button is clicked", async () => {
     await act(async () => {
       root.render(<FacultyDepartmentsSetupSection />);
