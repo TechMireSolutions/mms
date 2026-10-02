@@ -179,12 +179,55 @@ describe("FacultyFormDesignationSection", () => {
     expect(startIdx).toBeGreaterThan(supIdx);
     expect(endIdx).toBeGreaterThan(startIdx);
 
-    // Verify reporting designation / supervisor selector content
-    expect(html).toContain("Dean Qasim");
+    // Verify reporting role selector content (designation dropdown, not person name)
+    expect(html).toContain("faculty.form.reportingRole");
     expect(html).toContain("Dean of Faculty");
     expect(html).toContain("Rank 1");
+    expect(html).not.toContain("Dean Qasim");
 
     // Verify end date value is bound
     expect(html).toContain('value="2026-12-31"');
+  });
+
+  it("filters out the selected designation from reporting role options", () => {
+    const html = renderToStaticMarkup(
+      <FacultyFormDesignationSection
+        facultyDraft={{
+          designationId: "des-prof",
+        }}
+        errors={{}}
+        designationOptions={[
+          {
+            id: "des-prof",
+            code: "PROF",
+            name: "Professor",
+            hierarchyRank: 2,
+            isActive: true,
+            assignableRoles: [],
+          },
+          {
+            id: "des-dean",
+            code: "DEAN",
+            name: "Dean",
+            hierarchyRank: 1,
+            isActive: true,
+            assignableRoles: [],
+          },
+        ]}
+        supervisorCandidates={[]}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
+    // Selected designation (Professor) must be filtered out of the reporting role select
+    // It should only appear once in the document (in the designation dropdown)
+    const matches = html.match(/value="des-prof"/g);
+    expect(matches).toHaveLength(1);
+
+    // Dean must be present in reporting role dropdown
+    expect(html).toContain('value="des-dean"');
+    expect(html).toContain("Dean (Rank 1)");
   });
 });

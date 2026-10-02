@@ -153,6 +153,9 @@ export interface FacultyMember {
   designationAssignableRoles?: string[];
   customDesignation?: string;
   reportingFacultyId?: string | null;
+  reportingRole?: string | null;
+  reportingRoleId?: string | null;
+  reportingDesignationId?: string | null;
   /** Numeric hierarchy rank (1 is highest authority, e.g. Dean; higher numbers denote subordinate tiers). */
   hierarchyRank?: number;
   /** Hydrated supervisory metadata */

@@ -132,7 +132,7 @@ export function useFacultyFormTabs(input: {
       list.push({
         key: "designation",
         icon: Award,
-        label: t("faculty.form.tab.designationHierarchy"),
+        label: t("faculty.form.tab.designation"),
       });
     }
     list.push({ key: "account", icon: KeyRound, label: t("faculty.form.tab.account") });

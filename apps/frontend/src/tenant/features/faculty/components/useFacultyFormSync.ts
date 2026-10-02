@@ -40,13 +40,32 @@ export function useFacultyHierarchyFormSync({
 
   useEffect(() => {
     if (!setDraft) return;
-    if (draft.hierarchyRank === 1 && draft.reportingFacultyId) {
+    if (draft.hierarchyRank === 1 && (draft.reportingFacultyId || draft.reportingRoleId)) {
       setDraft((prev) => ({
         ...prev,
         reportingFacultyId: null,
+        reportingRoleId: null,
+        reportingRole: null,
+        reportingDesignationId: null,
       }));
     }
-  }, [draft.hierarchyRank, draft.reportingFacultyId, setDraft]);
+  }, [draft.hierarchyRank, draft.reportingFacultyId, draft.reportingRoleId, setDraft]);
+
+  useEffect(() => {
+    if (!setDraft) return;
+    if (
+      draft.designationId &&
+      (draft.reportingRoleId === draft.designationId || draft.reportingDesignationId === draft.designationId)
+    ) {
+      setDraft((prev) => ({
+        ...prev,
+        reportingFacultyId: null,
+        reportingRoleId: null,
+        reportingRole: null,
+        reportingDesignationId: null,
+      }));
+    }
+  }, [draft.designationId, draft.reportingRoleId, draft.reportingDesignationId, setDraft]);
 
   useEffect(() => {
     if (!setDraft) return;

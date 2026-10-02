@@ -24,6 +24,7 @@ export const FACULTY_WRITE_SYSTEM_KEYS: readonly string[] = (() => {
   const extra = [
     'customDesignation', 'reportingFacultyId', 'hierarchyRank', 'reportingFacultyName',
     'subordinateCount', 'designationId', 'designationStartsOn', 'designationEndsOn',
+    'reportingRole', 'reportingRoleId', 'reportingDesignationId',
   ];
   const keys = new Set<string>([...FACULTY_WRITE_AUDIT_META_KEYS, ...listFacultySystemFormFieldKeys(), ...extra]);
   return [...keys].sort((left, right) => left.localeCompare(right));
@@ -72,6 +73,9 @@ export function buildDynamicFacultySchema(
     designationEndsOn: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')]).nullable().nullish().transform((v) => (v === '' ? null : v)),
     customDesignation: z.string().trim().optional(),
     reportingFacultyId: z.string().nullable().nullish(),
+    reportingRole: z.string().nullable().nullish(),
+    reportingRoleId: z.string().nullable().nullish(),
+    reportingDesignationId: z.string().nullable().nullish(),
     hierarchyRank: z.coerce.number().int().min(1).max(99).nullish(),
     reportingFacultyName: z.string().nullish(),
     subordinateCount: z.coerce.number().int().min(0).nullish(),
