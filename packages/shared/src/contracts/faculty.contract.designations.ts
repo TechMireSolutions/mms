@@ -22,6 +22,20 @@ export const facultyDesignationContractEndpoints = {
     responses: { 200: z.object({ designation: facultyDesignationSchema }), 400: errorResponse, 403: errorResponse },
     summary: 'Create or update a Faculty designation definition',
   },
+  deleteDesignation: {
+    method: 'DELETE' as const,
+    path: '/api/faculty/designations/:id',
+    body: z.object({}).optional(),
+    responses: {
+      200: z.object({ success: z.literal(true) }),
+      400: errorResponse,
+      403: errorResponse,
+      404: errorResponse,
+      409: errorResponse,
+      500: errorResponse,
+    },
+    summary: 'Soft-delete a Faculty designation definition',
+  },
   listDesignationHistory: {
     method: 'GET' as const,
     path: '/api/faculty/:facultyId/designation-history',

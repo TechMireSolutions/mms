@@ -1,6 +1,5 @@
 import type React from "react";
-import { useMemo } from "react";
-import { Award, BadgeCheck, Info, Shield } from "lucide-react";
+import { Award, BadgeCheck, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { Field } from "@/components/ui/FormPrimitives";
@@ -8,7 +7,6 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
-  FACULTY_DEPARTMENT_VALUES,
   type Faculty,
   type FacultyDepartmentEntity,
   type FacultyDesignationDefinition,
@@ -16,6 +14,8 @@ import {
   type FacultyMember,
   FACULTY_HIERARCHY_RANK_PRESETS,
 } from "@mms/shared";
+import { FacultyDepartmentSelectField } from "./FacultyDepartmentSelectField";
+import { FacultyDesignationSelectField } from "./FacultyDesignationSelectField";
 
 export interface FacultyFormDesignationSectionProps {
   faculty?: FacultyMember;
@@ -36,7 +36,7 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
     faculty,
     facultyDraft = {},
     errors,
-    designationOptions,
+    designationOptions = [],
     departmentOptions,
     departmentEntities,
     isFieldEnabled,
@@ -52,82 +52,39 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
   const showSupervisor = supervisorCandidates !== undefined && isFieldEnabled("reportingFacultyId");
   const showHierarchyRank = supervisorCandidates !== undefined && isFieldEnabled("hierarchyRank");
 
-  const deptOptions = useMemo(() => {
-    if (departmentEntities?.length) {
-      const list = departmentEntities.map((d) => ({ value: d.name, label: `${d.name} (${d.code})` }));
-      if (facultyDraft.department && !departmentEntities.some((d) => d.name === facultyDraft.department)) {
-        list.unshift({ value: facultyDraft.department, label: facultyDraft.department });
-      }
-      return list;
-    }
-    const raw: readonly string[] = departmentOptions?.length ? departmentOptions : FACULTY_DEPARTMENT_VALUES;
-    const exists = facultyDraft.department ? raw.some((val) => val === facultyDraft.department) : true;
-    const list = facultyDraft.department && !exists ? [facultyDraft.department, ...raw] : raw;
-    return list.map((opt) => ({ value: opt, label: opt }));
-  }, [departmentEntities, departmentOptions, facultyDraft.department]);
-
   if (!showDesignation && !showDepartment && !showSupervisor && !showHierarchyRank) return null;
 
-  const currentDefinition = designationOptions?.find((item) => item.id === facultyDraft.designationId);
+  const currentDefinition = designationOptions.find((item) => item.id === facultyDraft.designationId);
   const assignableRoles = currentDefinition?.assignableRoles ?? facultyDraft.designationAssignableRoles ?? [];
-  const activeOptions = (designationOptions ?? []).filter((item) => item.isActive || item.id === facultyDraft.designationId);
 
   return (
     <div className="space-y-4 text-start">
       <SectionCard title={t("faculty.form.tab.designationHierarchy")} icon={Award} accentColor="primary">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {showDepartment && (
-            <Field label={t("faculty.field.department")} id="department" required={isFieldRequired("department")} error={errors.department || errors.departmentId}>
-              <FormSelect
-                id="department"
-                name="department"
-                value={facultyDraft.department ?? ""}
-                placeholder={t("faculty.form.departmentPlaceholder")}
-                onChange={(val) => {
-                  const matched = departmentEntities?.find((d) => d.name === val);
-                  const patch: Partial<FacultyMember> = { department: val, ...(matched ? { departmentId: matched.id } : {}) };
-                  if (matched?.headFacultyId && !facultyDraft.reportingFacultyId && matched.headFacultyId !== faculty?.id) {
-                    patch.reportingFacultyId = matched.headFacultyId;
-                  }
-                  onDraftChange(patch);
-                }}
-                options={deptOptions}
-              />
-            </Field>
+            <FacultyDepartmentSelectField
+              value={facultyDraft.department ?? ""}
+              departmentId={typeof facultyDraft.departmentId === "string" ? facultyDraft.departmentId : undefined}
+              error={errors.department || errors.departmentId}
+              required={isFieldRequired("department")}
+              departmentOptions={departmentOptions}
+              departmentEntities={departmentEntities}
+              facultyId={faculty?.id}
+              reportingFacultyId={facultyDraft.reportingFacultyId}
+              onChange={onDraftChange}
+            />
           )}
 
           {showDesignation && (
-            <Field label={t("faculty.field.designation")} id="designationId" required={isFieldRequired("designation")} error={errors.designationId || errors.designation}>
-              <FormSelect
-                id="designationId"
-                name="designationId"
-                value={facultyDraft.designationId || ""}
-                placeholder={t("faculty.designations.selectPlaceholder")}
-                disabled={Boolean(faculty?.id)}
-                onChange={(value) => {
-                  const definition = designationOptions?.find((item) => item.id === value);
-                  onDraftChange({
-                    designationId: value,
-                    designation: definition?.name ?? "",
-                    hierarchyRank: definition?.hierarchyRank,
-                    designationAssignableRoles: definition?.assignableRoles ?? [],
-                    ...(definition?.hierarchyRank === 1 ? { reportingFacultyId: null } : {}),
-                  });
-                }}
-                options={activeOptions.map((item) => ({ value: item.id, label: item.name }))}
-              />
-              {activeOptions.length === 0 ? (
-                <p role="status" className="mt-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
-                  <Info className="size-3.5 shrink-0" aria-hidden />
-                  {t("faculty.designations.empty")}
-                </p>
-              ) : null}
-              {faculty?.id ? (
-                <p className="mt-1 text-xs text-muted-foreground">{t("faculty.designations.manageInHistory")}</p>
-              ) : !facultyDraft.designationId && facultyDraft.designation ? (
-                <p className="mt-1 text-xs text-muted-foreground">{t("faculty.designations.current")}: {facultyDraft.designation}</p>
-              ) : null}
-            </Field>
+            <FacultyDesignationSelectField
+              designationId={facultyDraft.designationId ?? ""}
+              designationName={facultyDraft.designation ?? ""}
+              error={errors.designationId || errors.designation}
+              required={isFieldRequired("designation")}
+              disabled={Boolean(faculty?.id)}
+              designationOptions={designationOptions}
+              onChange={onDraftChange}
+            />
           )}
 
           {showSupervisor && (

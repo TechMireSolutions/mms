@@ -1,4 +1,4 @@
-import { canWriteCollection, canReadCollection } from '../../../services/rbacService.js';
+import { canWriteCollection, canReadCollection, canDeleteCollection } from '../../../services/rbacService.js';
 import {
   type User,
   FACULTY_MODULE_MANIFEST,
@@ -11,6 +11,7 @@ import {
   listFacultyDesignationAssignments,
   listFacultyDesignations,
   saveFacultyDesignation,
+  softDeleteFacultyDesignation,
   saveFacultyDesignationAssignment,
   deleteFacultyDesignationAssignment,
 } from '../../../db/repositories/facultyDesignationRepository.js';
@@ -162,5 +163,35 @@ export async function handleDeleteDesignationAssignment({
       };
     }
     return { status: 500 as const, body: { type: 'server_error', message: 'Failed to delete designation assignment' } };
+  }
+}
+
+export async function handleDeleteDesignation({
+  params: { id },
+  request,
+}: ContractRouteArgs<typeof facultyContract['deleteDesignation']>): Promise<ContractRouteResponse<typeof facultyContract['deleteDesignation']>> {
+  const user = request.user as User;
+  if (!canDeleteCollection(user, 'faculty') || !roleHasPermission(user.role, FACULTY_MODULE_MANIFEST.permissions.setupWrite)) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+  }
+  const tenantId = request.tenant?.id;
+  if (!tenantId) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
+  }
+  try {
+    await softDeleteFacultyDesignation(String(tenantId), id, user.id);
+    await auditFaculty(
+      user,
+      'faculty.designation.delete',
+      `Deleted faculty designation ${id}`,
+      id,
+    );
+    return { status: 200 as const, body: { success: true as const } };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Failed to delete designation';
+    if (message.includes('dependent')) {
+      return { status: 409 as const, body: { type: 'conflict', message } };
+    }
+    return { status: 400 as const, body: { type: 'validation_error', message } };
   }
 }

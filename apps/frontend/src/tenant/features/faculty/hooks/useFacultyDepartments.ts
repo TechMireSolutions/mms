@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useContext } from 'react';
+import { QueryClient, QueryClientContext, useMutation, useQuery } from '@tanstack/react-query';
 import {
   facultyDepartmentSchema,
   type FacultyDepartmentEntity,
@@ -8,6 +9,8 @@ import { apiContract } from '@/lib/api';
 import { FACULTY_QUERY_KEY } from './facultyQueryKeys';
 
 export const FACULTY_DEPARTMENTS_QUERY_KEY = [...FACULTY_QUERY_KEY, 'departments'] as const;
+
+const fallbackQueryClient = new QueryClient();
 
 /**
  * Server-authoritative list of faculty departments.
@@ -31,50 +34,58 @@ export function useFacultyDepartments() {
 }
 
 /** Saves a department (create or update) and invalidates the departments list. */
-export function useSaveFacultyDepartment() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (input: FacultyDepartmentWrite & { id: string }) => {
-      const response = await apiContract.faculty.saveDepartment({
-        params: { id: input.id },
-        body: input,
-      });
-      if (response.status !== 200) {
-        const message =
-          typeof response.body === 'object' && response.body && 'message' in response.body
-            ? String(response.body.message)
-            : 'Failed to save faculty department';
-        throw new Error(message);
-      }
-      return facultyDepartmentSchema.parse(
-        (response.body as { department?: unknown }).department,
-      );
+export function useSaveFacultyDepartment(customClient?: QueryClient) {
+  const contextClient = useContext(QueryClientContext);
+  const client = customClient ?? contextClient ?? fallbackQueryClient;
+  return useMutation(
+    {
+      mutationFn: async (input: FacultyDepartmentWrite & { id: string }) => {
+        const response = await apiContract.faculty.saveDepartment({
+          params: { id: input.id },
+          body: input,
+        });
+        if (response.status !== 200) {
+          const message =
+            typeof response.body === 'object' && response.body && 'message' in response.body
+              ? String(response.body.message)
+              : 'Failed to save faculty department';
+          throw new Error(message);
+        }
+        return facultyDepartmentSchema.parse(
+          (response.body as { department?: unknown }).department,
+        );
+      },
+      onSuccess: () =>
+        client.invalidateQueries({ queryKey: FACULTY_DEPARTMENTS_QUERY_KEY }),
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: FACULTY_DEPARTMENTS_QUERY_KEY }),
-  });
+    client,
+  );
 }
 
 /** Soft-deletes a department. Rejects (409) when active assignments reference it. */
-export function useDeleteFacultyDepartment() {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: async (id: string) => {
-      const response = await apiContract.faculty.deleteDepartment({
-        params: { id },
-        body: {},
-      });
-      if (response.status !== 200) {
-        const message =
-          typeof response.body === 'object' && response.body && 'message' in response.body
-            ? String(response.body.message)
-            : 'Failed to delete faculty department';
-        throw new Error(message);
-      }
+export function useDeleteFacultyDepartment(customClient?: QueryClient) {
+  const contextClient = useContext(QueryClientContext);
+  const client = customClient ?? contextClient ?? fallbackQueryClient;
+  return useMutation(
+    {
+      mutationFn: async (id: string) => {
+        const response = await apiContract.faculty.deleteDepartment({
+          params: { id },
+          body: {},
+        });
+        if (response.status !== 200) {
+          const message =
+            typeof response.body === 'object' && response.body && 'message' in response.body
+              ? String(response.body.message)
+              : 'Failed to delete faculty department';
+          throw new Error(message);
+        }
+      },
+      onSuccess: () =>
+        client.invalidateQueries({ queryKey: FACULTY_DEPARTMENTS_QUERY_KEY }),
     },
-    onSuccess: () =>
-      queryClient.invalidateQueries({ queryKey: FACULTY_DEPARTMENTS_QUERY_KEY }),
-  });
+    client,
+  );
 }
 
 /** Convenience: extract department names from entity list (for legacy dropdown compatibility). */

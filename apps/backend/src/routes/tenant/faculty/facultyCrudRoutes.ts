@@ -22,6 +22,7 @@ import {
   handleListDesignations,
   handleListDesignationHistory,
   handleSaveDesignation,
+  handleDeleteDesignation,
   handleSaveDesignationAssignment,
   handleDeleteDesignationAssignment,
 } from './facultyDesignationRouteHandlers.js';
@@ -142,6 +143,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
     migrateEmployeeIds: handleMigrateEmployeeIds,
     listDesignations: handleListDesignations,
     saveDesignation: handleSaveDesignation,
+    deleteDesignation: handleDeleteDesignation,
     listDesignationHistory: handleListDesignationHistory,
     saveDesignationAssignment: handleSaveDesignationAssignment,
     deleteDesignationAssignment: handleDeleteDesignationAssignment,
