@@ -127,4 +127,64 @@ describe("FacultyFormDesignationSection", () => {
     expect(html).toContain('id="department"');
     expect(html).toContain("Hadith Sciences (hadith)");
   });
+
+  it("renders department first, designation second, reporting designation selector, and start/end dates", () => {
+    const html = renderToStaticMarkup(
+      <FacultyFormDesignationSection
+        facultyDraft={{
+          department: "Tafseer",
+          designationId: "des-prof",
+          designationStartsOn: "2026-01-01",
+          designationEndsOn: "2026-12-31",
+          reportingFacultyId: "fac-dean",
+        }}
+        errors={{}}
+        departmentOptions={["Tafseer", "Hadith"]}
+        designationOptions={[
+          {
+            id: "des-prof",
+            code: "PROF",
+            name: "Professor",
+            hierarchyRank: 2,
+            isActive: true,
+            assignableRoles: ["academic_lead"],
+          },
+        ]}
+        supervisorCandidates={[
+          {
+            id: "fac-dean",
+            contactId: "cnt-dean",
+            name: "Dean Qasim",
+            hierarchyRank: 1,
+            designation: "Dean of Faculty",
+            status: "active",
+          } as any,
+        ]}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
+    // Verify ordering: Department is first, Designation is second
+    const deptIdx = html.indexOf('id="department"');
+    const desIdx = html.indexOf('id="designationId"');
+    const supIdx = html.indexOf('id="reportingFacultyId"');
+    const startIdx = html.indexOf('id="designationStartsOn"');
+    const endIdx = html.indexOf('id="designationEndsOn"');
+
+    expect(deptIdx).toBeGreaterThan(-1);
+    expect(desIdx).toBeGreaterThan(deptIdx);
+    expect(supIdx).toBeGreaterThan(desIdx);
+    expect(startIdx).toBeGreaterThan(supIdx);
+    expect(endIdx).toBeGreaterThan(startIdx);
+
+    // Verify reporting designation / supervisor selector content
+    expect(html).toContain("Dean Qasim");
+    expect(html).toContain("Dean of Faculty");
+    expect(html).toContain("Rank 1");
+
+    // Verify end date value is bound
+    expect(html).toContain('value="2026-12-31"');
+  });
 });

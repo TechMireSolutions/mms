@@ -14,7 +14,6 @@ import {
   type FacultyStatusOption,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
-import { FacultyFormHierarchySection } from "@/tenant/features/faculty/components/FacultyFormHierarchySection";
 import { FacultyNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
 import {
   FacultyUserAccountSection,
@@ -113,14 +112,6 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         designationOptions={designationOptions}
         departmentOptions={departmentOptions}
         departmentEntities={departmentEntities}
-        isFieldEnabled={isFieldEnabled}
-        isFieldRequired={isFieldRequired}
-        onDraftChange={onDraftChange}
-      />
-
-      <FacultyFormHierarchySection
-        facultyDraft={facultyDraft}
-        errors={errors}
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}

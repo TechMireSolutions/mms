@@ -26,6 +26,9 @@ export async function handleImplicitRestore(
   const restoredStartsOn = typeof rawRecord.designationStartsOn === 'string'
     ? rawRecord.designationStartsOn
     : new Date().toISOString().slice(0, 10);
+  const restoredEndsOn = typeof rawRecord.designationEndsOn === 'string' && rawRecord.designationEndsOn.trim()
+    ? rawRecord.designationEndsOn.trim()
+    : null;
   if (restoredDesignationId) {
     try {
       await saveFacultyDesignationAssignment(tenant, {
@@ -33,7 +36,7 @@ export async function handleImplicitRestore(
         facultyId: String(merged.id),
         designationId: restoredDesignationId,
         startsOn: restoredStartsOn,
-        endsOn: null,
+        endsOn: restoredEndsOn,
         notes: null,
       });
     } catch {
@@ -61,12 +64,16 @@ export async function saveDesignationOnCreate(
       ? normalized.joinDate
       : new Date().toISOString().slice(0, 10);
 
+  const designationEndsOn = typeof rawRecord.designationEndsOn === 'string' && rawRecord.designationEndsOn.trim()
+    ? rawRecord.designationEndsOn.trim()
+    : null;
+
   await saveFacultyDesignationAssignment(tenant, {
     id: `fda-${String(normalized.id)}`,
     facultyId: String(normalized.id),
     designationId,
     startsOn: designationStartsOn,
-    endsOn: null,
+    endsOn: designationEndsOn,
     notes: null,
   });
 }

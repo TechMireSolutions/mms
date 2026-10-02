@@ -4,7 +4,6 @@ import {
   FacultyEmploymentSection,
 } from "@/tenant/features/faculty/components/FacultyFormSections";
 import { FacultyFormDesignationSection } from "@/tenant/features/faculty/components/FacultyFormDesignationSection";
-import { FacultyFormHierarchySection } from "@/tenant/features/faculty/components/FacultyFormHierarchySection";
 import { FacultyNotesSection } from "@/tenant/features/faculty/components/FacultyNotesSection";
 import {
   FacultyUserAccountSection,
@@ -96,28 +95,19 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
     );
   } else if (activeTab === "designation") {
     tabBody = (
-      <>
-        <FacultyFormDesignationSection
-          faculty={effectiveFaculty}
-          facultyDraft={effectiveDraft}
-          errors={errors}
-          designationOptions={designationOptions}
-          departmentOptions={departmentOptions}
-          departmentEntities={departmentEntities}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-        />
-        <FacultyFormHierarchySection
-          facultyDraft={effectiveDraft}
-          errors={errors}
-          isFieldEnabled={isFieldEnabled}
-          isFieldRequired={isFieldRequired}
-          onDraftChange={onDraftChange}
-          supervisorCandidates={supervisorCandidates}
-          hierarchyRankPresets={hierarchyRankPresets}
-        />
-      </>
+      <FacultyFormDesignationSection
+        faculty={effectiveFaculty}
+        facultyDraft={effectiveDraft}
+        errors={errors}
+        designationOptions={designationOptions}
+        departmentOptions={departmentOptions}
+        departmentEntities={departmentEntities}
+        isFieldEnabled={isFieldEnabled}
+        isFieldRequired={isFieldRequired}
+        onDraftChange={onDraftChange}
+        supervisorCandidates={supervisorCandidates}
+        hierarchyRankPresets={hierarchyRankPresets}
+      />
     );
   } else if (activeTab === "account") {
     tabBody = (

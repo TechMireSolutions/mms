@@ -44,6 +44,7 @@ export const FACULTY_FIELD_TAB_MAP: Record<string, FacultyFormTabKey> = {
   customDesignation: "designation",
   designationId: "designation",
   designationStartsOn: "designation",
+  designationEndsOn: "designation",
   reportingFacultyId: "designation",
   hierarchyRank: "designation",
   notes: "notes",
