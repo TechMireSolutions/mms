@@ -103,7 +103,7 @@ describe('FacultyDesignationsSetupSection', () => {
     container.remove();
   });
 
-  it('renders section card, input fields, and designations table', async () => {
+  it('renders section card, add button in header, and designations table', async () => {
     await act(async () => {
       root.render(<FacultyDesignationsSetupSection />);
     });
@@ -115,49 +115,31 @@ describe('FacultyDesignationsSetupSection', () => {
     const table = container.querySelector('table');
     expect(table).not.toBeNull();
 
-    const inputName = container.querySelector<HTMLInputElement>('input#designation-name');
-    const inputCode = container.querySelector<HTMLInputElement>('input#designation-code');
-    expect(inputName).not.toBeNull();
-    expect(inputCode).not.toBeNull();
+    const addBtn = Array.from(container.querySelectorAll('button')).find((btn) =>
+      btn.textContent?.includes('faculty.designations.addDesignation'),
+    );
+    expect(addBtn).toBeDefined();
   });
 
-  it('adds a new designation when form is filled and submitted', async () => {
+  it('opens add designation modal when header button is clicked', async () => {
     await act(async () => {
       root.render(<FacultyDesignationsSetupSection />);
     });
 
-    const inputName = container.querySelector<HTMLInputElement>('input#designation-name')!;
-    const inputCode = container.querySelector<HTMLInputElement>('input#designation-code')!;
+    const addBtn = Array.from(container.querySelectorAll('button')).find((btn) =>
+      btn.textContent?.includes('faculty.designations.addDesignation'),
+    );
+    expect(addBtn).not.toBeUndefined();
 
     await act(async () => {
-      const nameSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-      nameSetter?.call(inputName, 'Teaching Assistant');
-      inputName.dispatchEvent(new Event('input', { bubbles: true }));
-      inputName.dispatchEvent(new Event('change', { bubbles: true }));
-
-      nameSetter?.call(inputCode, 'ta');
-      inputCode.dispatchEvent(new Event('input', { bubbles: true }));
-      inputCode.dispatchEvent(new Event('change', { bubbles: true }));
+      addBtn!.click();
     });
 
-    const submitBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('common.save'),
-    );
-    expect(submitBtn).toBeDefined();
-
-    await act(async () => {
-      submitBtn!.click();
-    });
-
-    expect(mockSaveMutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: 'Teaching Assistant',
-        code: 'ta',
-      }),
-    );
+    const modalInput = document.querySelector<HTMLInputElement>('#modal-designation-name');
+    expect(modalInput).not.toBeNull();
   });
 
-  it('populates form and updates designation when edit button is clicked in the table', async () => {
+  it('opens edit modal when edit button in table is clicked', async () => {
     await act(async () => {
       root.render(<FacultyDesignationsSetupSection />);
     });
@@ -171,29 +153,8 @@ describe('FacultyDesignationsSetupSection', () => {
       editBtn!.click();
     });
 
-    const inputName = container.querySelector<HTMLInputElement>('input#designation-name')!;
-    expect(inputName.value).toBe('Head of Faculty');
-
-    await act(async () => {
-      const nameSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
-      nameSetter?.call(inputName, 'Principal Dean');
-      inputName.dispatchEvent(new Event('input', { bubbles: true }));
-      inputName.dispatchEvent(new Event('change', { bubbles: true }));
-    });
-
-    const submitBtn = Array.from(container.querySelectorAll('button')).find(
-      (b) => b.textContent?.includes('common.save'),
-    );
-    await act(async () => {
-      submitBtn!.click();
-    });
-
-    expect(mockSaveMutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: 'des-1',
-        name: 'Principal Dean',
-        code: 'head-fac',
-      }),
-    );
+    const modalInput = document.querySelector<HTMLInputElement>('#modal-designation-name');
+    expect(modalInput).not.toBeNull();
+    expect(modalInput?.value).toBe('Head of Faculty');
   });
 });

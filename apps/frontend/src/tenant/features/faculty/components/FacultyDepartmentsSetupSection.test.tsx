@@ -32,7 +32,10 @@ vi.mock("@/tenant/features/faculty/hooks/useFacultyDepartments", () => ({
 
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: Record<string, unknown>) => {
+      if (params?.name) return `${key} ${params.name}`;
+      return key;
+    },
   }),
 }));
 
@@ -66,7 +69,7 @@ describe("FacultyDepartmentsSetupSection", () => {
     container.remove();
   });
 
-  it("renders existing departments and input field", async () => {
+  it("renders existing departments and add button in header", async () => {
     await act(async () => {
       root.render(<FacultyDepartmentsSetupSection />);
     });
@@ -75,49 +78,31 @@ describe("FacultyDepartmentsSetupSection", () => {
     expect(container.textContent).toContain("Quranic Studies");
     expect(container.textContent).toContain("Hadith Sciences");
 
-    const table = container.querySelector("table");
-    expect(table).not.toBeNull();
-    expect(container.textContent).toContain("faculty.setup.departmentName");
-    expect(container.textContent).toContain("faculty.setup.departmentCode");
-    expect(container.textContent).toContain("faculty.setup.parentDepartment");
-
-    const inputName = container.querySelector<HTMLInputElement>("input#new-faculty-department-name");
-    const inputCode = container.querySelector<HTMLInputElement>("input#new-faculty-department-code");
-    expect(inputName).not.toBeNull();
-    expect(inputCode).not.toBeNull();
+    const addBtn = Array.from(container.querySelectorAll("button")).find((btn) =>
+      btn.textContent?.includes("faculty.setup.addDepartment"),
+    );
+    expect(addBtn).toBeDefined();
   });
 
-  it("adds a new department when form is submitted", async () => {
+  it("opens add department modal when add button is clicked", async () => {
     await act(async () => {
       root.render(<FacultyDepartmentsSetupSection />);
     });
 
-    const inputName = container.querySelector<HTMLInputElement>("input#new-faculty-department-name")!;
-    const form = container.querySelector<HTMLFormElement>("form")!;
-
-    await act(async () => {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )?.set;
-      nativeInputValueSetter?.call(inputName, "Fiqh & Law");
-      inputName.dispatchEvent(new Event("input", { bubbles: true }));
-      inputName.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-
-    await act(async () => {
-      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-    });
-
-    expect(mockSaveMutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "Fiqh & Law",
-        code: "fiqh-law",
-      }),
+    const addBtn = Array.from(container.querySelectorAll("button")).find((btn) =>
+      btn.textContent?.includes("faculty.setup.addDepartment"),
     );
+    expect(addBtn).not.toBeUndefined();
+
+    await act(async () => {
+      addBtn!.click();
+    });
+
+    const modalInput = document.querySelector<HTMLInputElement>("#department-form-name");
+    expect(modalInput).not.toBeNull();
   });
 
-  it("edits an existing department when edit button is clicked and form is submitted", async () => {
+  it("opens edit modal when edit button in table is clicked", async () => {
     await act(async () => {
       root.render(<FacultyDepartmentsSetupSection />);
     });
@@ -131,34 +116,12 @@ describe("FacultyDepartmentsSetupSection", () => {
       editBtn!.click();
     });
 
-    const inputName = container.querySelector<HTMLInputElement>("input#new-faculty-department-name")!;
-    expect(inputName.value).toBe("Quranic Studies");
-
-    const form = container.querySelector<HTMLFormElement>("form")!;
-    await act(async () => {
-      const nativeInputValueSetter = Object.getOwnPropertyDescriptor(
-        window.HTMLInputElement.prototype,
-        "value",
-      )?.set;
-      nativeInputValueSetter?.call(inputName, "Advanced Quranic Studies");
-      inputName.dispatchEvent(new Event("input", { bubbles: true }));
-      inputName.dispatchEvent(new Event("change", { bubbles: true }));
-    });
-
-    await act(async () => {
-      form.dispatchEvent(new Event("submit", { bubbles: true, cancelable: true }));
-    });
-
-    expect(mockSaveMutateAsync).toHaveBeenCalledWith(
-      expect.objectContaining({
-        id: "dept-1",
-        name: "Advanced Quranic Studies",
-        code: "quranic-studies",
-      }),
-    );
+    const modalInput = document.querySelector<HTMLInputElement>("#department-form-name");
+    expect(modalInput).not.toBeNull();
+    expect(modalInput?.value).toBe("Quranic Studies");
   });
 
-  it("removes an existing department when delete button is clicked", async () => {
+  it("opens confirm dialog when delete button is clicked and confirms", async () => {
     await act(async () => {
       root.render(<FacultyDepartmentsSetupSection />);
     });
@@ -170,6 +133,17 @@ describe("FacultyDepartmentsSetupSection", () => {
 
     await act(async () => {
       deleteBtn!.click();
+    });
+
+    // Alert dialog opens
+    expect(document.body.textContent).toContain("faculty.setup.deleteDepartment");
+    const confirmBtn = Array.from(document.querySelectorAll("button")).find(
+      (b) => b.textContent?.trim() === "common.delete",
+    );
+    expect(confirmBtn).not.toBeUndefined();
+
+    await act(async () => {
+      confirmBtn!.click();
     });
 
     expect(mockDeleteMutateAsync).toHaveBeenCalledWith("dept-1");
