@@ -15,6 +15,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 export interface FacultyDepartmentsTableProps {
   departments: FacultyDepartmentEntity[];
   orderedDepartments: FacultyDepartmentEntity[];
+  facultyMap?: Map<string, string>;
   editingDepartmentId?: string;
   isPending: boolean;
   isLoading: boolean;
@@ -25,6 +26,7 @@ export interface FacultyDepartmentsTableProps {
 export function FacultyDepartmentsTable({
   departments,
   orderedDepartments,
+  facultyMap,
   editingDepartmentId,
   isPending,
   isLoading,
@@ -42,6 +44,7 @@ export function FacultyDepartmentsTable({
             <TableHead className="font-semibold">{t('faculty.setup.departmentName')}</TableHead>
             <TableHead className="font-semibold w-32">{t('faculty.setup.departmentCode')}</TableHead>
             <TableHead className="font-semibold">{t('faculty.setup.parentDepartment')}</TableHead>
+            <TableHead className="font-semibold">{t('faculty.setup.departmentHead')}</TableHead>
             <TableHead className="font-semibold w-24 text-end">{t('common.actions')}</TableHead>
           </TableRow>
         </TableHeader>
@@ -75,6 +78,13 @@ export function FacultyDepartmentsTable({
                 <TableCell className="py-2.5 text-xs text-muted-foreground">
                   {parentName ?? <span className="text-muted-foreground/50">—</span>}
                 </TableCell>
+                <TableCell className="py-2.5 text-xs text-muted-foreground">
+                  {dept.headFacultyId ? (
+                    facultyMap?.get(dept.headFacultyId) ?? dept.headFacultyId
+                  ) : (
+                    <span className="text-muted-foreground/50">—</span>
+                  )}
+                </TableCell>
                 <TableCell className="py-2.5 text-end">
                   <div className="flex items-center justify-end gap-1">
                     <Button
@@ -106,7 +116,7 @@ export function FacultyDepartmentsTable({
           })}
           {orderedDepartments.length === 0 && !isLoading && (
             <TableRow>
-              <TableCell colSpan={4} className="h-24 text-center text-xs text-muted-foreground">
+              <TableCell colSpan={5} className="h-24 text-center text-xs text-muted-foreground">
                 {t('faculty.setup.noDepartments')}
               </TableCell>
             </TableRow>

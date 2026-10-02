@@ -30,6 +30,13 @@ vi.mock("@/tenant/features/faculty/hooks/useFacultyDepartments", () => ({
   }),
 }));
 
+vi.mock("@/tenant/features/faculty/hooks/useFacultyTsrHooks", () => ({
+  useFacultyContractList: () => ({
+    data: { faculty: [{ id: "fac-1", name: "Prof. Tariq" }] },
+    isLoading: false,
+  }),
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, unknown>) => {

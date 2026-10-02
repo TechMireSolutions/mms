@@ -45,21 +45,17 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
 
   const deptOptions = useMemo(() => {
     if (departmentEntities && departmentEntities.length > 0) {
-      const list = departmentEntities.map((d) => ({
-        value: d.name,
-        label: `${d.name} (${d.code})`,
-      }));
+      const list = departmentEntities.map((d) => ({ value: d.name, label: `${d.name} (${d.code})` }));
       if (facultyDraft.department && !departmentEntities.some((d) => d.name === facultyDraft.department)) {
         list.unshift({ value: facultyDraft.department, label: facultyDraft.department });
       }
       return list;
     }
-    const list = departmentOptions && departmentOptions.length > 0
-      ? [...departmentOptions]
-      : [...FACULTY_DEPARTMENT_VALUES];
-    if (facultyDraft.department && !list.includes(facultyDraft.department)) {
-      list.unshift(facultyDraft.department);
-    }
+    const raw = departmentOptions?.length ? departmentOptions : FACULTY_DEPARTMENT_VALUES;
+    const exists = facultyDraft.department ? raw.some((val) => val === facultyDraft.department) : true;
+    const list = facultyDraft.department && !exists
+      ? [facultyDraft.department, ...raw]
+      : [...raw];
     return list.map((opt) => ({ value: opt, label: opt }));
   }, [departmentEntities, departmentOptions, facultyDraft.department]);
 
@@ -137,10 +133,14 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
                   placeholder={t("faculty.form.departmentPlaceholder")}
                   onChange={(val) => {
                     const matched = departmentEntities?.find((d) => d.name === val);
-                    onDraftChange({
+                    const patch: Partial<FacultyMember> = {
                       department: val,
                       ...(matched ? { departmentId: matched.id } : {}),
-                    });
+                    };
+                    if (matched?.headFacultyId && !facultyDraft.reportingFacultyId && matched.headFacultyId !== faculty?.id) {
+                      patch.reportingFacultyId = matched.headFacultyId;
+                    }
+                    onDraftChange(patch);
                   }}
                   options={deptOptions}
                 />

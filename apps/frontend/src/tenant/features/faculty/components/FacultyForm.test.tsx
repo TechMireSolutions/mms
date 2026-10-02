@@ -99,7 +99,7 @@ describe("FacultyForm Component", () => {
     expect(html).toContain("Faculty Tab Content: contact");
   });
 
-  it("provides tabs for contact, employment, designation, hierarchy, account, and notes", () => {
+  it("provides tabs for contact, employment, designation, account, and notes", () => {
     mockControllerState.errors = {};
     mockControllerState.isFieldEnabled = () => true;
 
@@ -110,7 +110,7 @@ describe("FacultyForm Component", () => {
     expect(html).toContain('data-tab-key="contact"');
     expect(html).toContain('data-tab-key="employment"');
     expect(html).toContain('data-tab-key="designation"');
-    expect(html).toContain('data-tab-key="hierarchy"');
+    expect(html).not.toContain('data-tab-key="hierarchy"');
     expect(html).toContain('data-tab-key="account"');
     expect(html).toContain('data-tab-key="notes"');
   });

@@ -3779,6 +3779,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "faculty.setup.updateDepartment": "شعبہ اپ ڈیٹ کریں",
   "faculty.setup.parentDepartment": "بنیادی شعبہ",
   "faculty.setup.noParentDepartment": "کوئی نہیں (سب سے اعلیٰ سطح)",
+  "faculty.setup.departmentHead": "شعبہ کے سربراہ",
+  "faculty.setup.noDepartmentHead": "کوئی نہیں (کوئی سربراہ مقرر نہیں)",
   "faculty.setup.departmentName": "شعبہ کا نام",
   "faculty.setup.departmentCode": "شعبہ کا کوڈ",
   "faculty.setup.fieldUsedInColumn": "یہ فیلڈ ورک کالم لے آؤٹ میں استعمال ہو رہی ہے۔ پہلے کالم غیر فعال کریں۔",

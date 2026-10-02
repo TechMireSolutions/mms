@@ -3779,6 +3779,8 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "faculty.setup.updateDepartment": "تحديث القسم",
   "faculty.setup.parentDepartment": "القسم الرئيسي",
   "faculty.setup.noParentDepartment": "لا يوجد (المستوى الأعلى)",
+  "faculty.setup.departmentHead": "رئيس القسم",
+  "faculty.setup.noDepartmentHead": "لا يوجد (لم يتم تعيين رئيس)",
   "faculty.setup.departmentName": "اسم القسم",
   "faculty.setup.departmentCode": "رمز القسم",
   "faculty.setup.fieldUsedInColumn": "هذا الحقل مستخدم في تخطيط أعمدة العمل. عطّل العمود أولًا.",

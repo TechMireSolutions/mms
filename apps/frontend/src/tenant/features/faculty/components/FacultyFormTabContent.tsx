@@ -96,29 +96,28 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
     );
   } else if (activeTab === "designation") {
     tabBody = (
-      <FacultyFormDesignationSection
-        faculty={effectiveFaculty}
-        facultyDraft={effectiveDraft}
-        errors={errors}
-        designationOptions={designationOptions}
-        departmentOptions={departmentOptions}
-        departmentEntities={departmentEntities}
-        isFieldEnabled={isFieldEnabled}
-        isFieldRequired={isFieldRequired}
-        onDraftChange={onDraftChange}
-      />
-    );
-  } else if (activeTab === "hierarchy") {
-    tabBody = (
-      <FacultyFormHierarchySection
-        facultyDraft={effectiveDraft}
-        errors={errors}
-        isFieldEnabled={isFieldEnabled}
-        isFieldRequired={isFieldRequired}
-        onDraftChange={onDraftChange}
-        supervisorCandidates={supervisorCandidates}
-        hierarchyRankPresets={hierarchyRankPresets}
-      />
+      <>
+        <FacultyFormDesignationSection
+          faculty={effectiveFaculty}
+          facultyDraft={effectiveDraft}
+          errors={errors}
+          designationOptions={designationOptions}
+          departmentOptions={departmentOptions}
+          departmentEntities={departmentEntities}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          onDraftChange={onDraftChange}
+        />
+        <FacultyFormHierarchySection
+          facultyDraft={effectiveDraft}
+          errors={errors}
+          isFieldEnabled={isFieldEnabled}
+          isFieldRequired={isFieldRequired}
+          onDraftChange={onDraftChange}
+          supervisorCandidates={supervisorCandidates}
+          hierarchyRankPresets={hierarchyRankPresets}
+        />
+      </>
     );
   } else if (activeTab === "account") {
     tabBody = (

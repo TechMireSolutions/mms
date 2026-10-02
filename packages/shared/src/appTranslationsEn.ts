@@ -3784,6 +3784,8 @@ export const APP_TRANSLATIONS_EN = {
   "faculty.setup.updateDepartment": "Update Department",
   "faculty.setup.parentDepartment": "Parent Department",
   "faculty.setup.noParentDepartment": "None (Top Level)",
+  "faculty.setup.departmentHead": "Department Head",
+  "faculty.setup.noDepartmentHead": "None (No Head Assigned)",
   "faculty.setup.departmentName": "Department Name",
   "faculty.setup.departmentCode": "Department Code",
   "faculty.setup.fieldUsedInColumn": "This field is used in the Work column layout. Disable the column first.",

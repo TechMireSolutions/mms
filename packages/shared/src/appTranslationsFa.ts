@@ -3783,6 +3783,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "faculty.setup.updateDepartment": "به‌روزرسانی بخش",
   "faculty.setup.parentDepartment": "بخش والد",
   "faculty.setup.noParentDepartment": "هیچ‌کدام (سطح بالا)",
+  "faculty.setup.departmentHead": "مدیر گروه",
+  "faculty.setup.noDepartmentHead": "هیچ‌کدام (مدیری تعیین نشده)",
   "faculty.setup.departmentName": "نام بخش",
   "faculty.setup.departmentCode": "کد بخش",
   "faculty.setup.fieldUsedInColumn": "این فیلد در چیدمان ستون‌های کار استفاده می‌شود. ابتدا ستون را غیرفعال کنید.",
