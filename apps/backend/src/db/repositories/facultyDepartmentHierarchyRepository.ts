@@ -1,3 +1,4 @@
+import { validateHierarchyDepth } from './facultyHierarchySql.js';
 import { sql } from 'drizzle-orm';
 import { withTenantRead } from '../tenant-context.js';
 
@@ -7,6 +8,7 @@ export interface DepartmentAncestor {
   code: string;
   parentId: string | null;
   depth: number;
+  isCycle: boolean;
 }
 
 /**
@@ -22,6 +24,7 @@ export async function findDepartmentAncestorChain(
   departmentId: string,
   maxDepth = 20,
 ): Promise<DepartmentAncestor[]> {
+  validateHierarchyDepth(maxDepth);
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     const rows = await tx.execute<{
@@ -38,7 +41,7 @@ export async function findDepartmentAncestorChain(
           d.name,
           d.code,
           d.parent_id,
-          1                  AS depth,
+          0                  AS depth,
           ARRAY[d.id]        AS path,
           FALSE              AS is_cycle
         FROM faculty_departments d
@@ -60,22 +63,21 @@ export async function findDepartmentAncestorChain(
         INNER JOIN dept_ancestor da ON da.parent_id = p.id
         WHERE p.workspace_subdomain = ${subdomain}
           AND p.deleted_at IS NULL
-          AND NOT (p.id = ANY(da.path))
+          AND NOT da.is_cycle
           AND da.depth < ${maxDepth}
       )
       SELECT id, name, code, parent_id, depth, is_cycle
       FROM dept_ancestor
-      WHERE id <> ${departmentId}
+      WHERE depth > 0
       ORDER BY depth
     `);
-    return (rows as unknown as typeof rows & Array<{
-      id: string; name: string; code: string; parent_id: string | null; depth: number;
-    }>).map((r) => ({
+    return rows.rows.map((r) => ({
       id: r.id,
       name: r.name,
       code: r.code,
       parentId: r.parent_id,
       depth: r.depth,
+      isCycle: r.is_cycle,
     }));
   });
 }

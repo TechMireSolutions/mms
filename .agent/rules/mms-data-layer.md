@@ -16,6 +16,7 @@ description: Data Layer — PostgreSQL, Drizzle schema, migrations, database tra
 5. **Drizzle Guidelines:** Every `pgTable` exports `$inferSelect`, `$inferInsert`, and bidirectional `relations(...)`.
 6. **Shared Zod Contracts:** Strict Zod 4 schemas (`.strict()`) in `packages/shared/src/schemas/*` matching Drizzle tables 1:1.
 7. **Deliverable Trinity:** Entity changes require (1) Drizzle table + relations, (2) Shared Zod DTOs, (3) Forward-only SQL migration.
+8. **Faculty Domain:** `faculty` links personal identity through `contacts`; `faculty_departments`, `faculty_designations`, and `faculty_assignments` own organization and dated roles. Preserve existing text/composite tenant keys through the teacher migration chain. Serialize assignment and department hierarchy mutations per workspace; validate primary date overlap in the same transaction as the write (no unique-primary index). Reporting CTEs emit a cycle marker and stop at a validated depth limit. Enforced by `facultyAssignmentValidation.test.ts`, `facultyHierarchyDb.integration.test.ts`, `facultyAppointmentsDb.integration.test.ts`, and `facultyContactSqlSsot.test.ts`.
 
 ## 2. Database & ORM Architecture (PostgreSQL + Drizzle)
 

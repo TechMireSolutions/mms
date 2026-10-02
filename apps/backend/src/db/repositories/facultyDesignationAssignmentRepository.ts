@@ -134,6 +134,7 @@ export async function saveFacultyDesignationAssignment(
       .where(and(
         eq(facultyDesignations.workspaceSubdomain, workspaceSubdomain),
         eq(facultyDesignations.id, input.designationId),
+        isNull(facultyDesignations.deletedAt),
       )).limit(1);
     if (!designation?.isActive) throw new Error('Designation is missing or inactive');
     await tx.insert(facultyDesignationAssignments).values({

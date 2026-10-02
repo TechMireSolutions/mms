@@ -1,3 +1,6 @@
+import { emitOutboxEvent } from '../../services/outboxEventService.js';
+import { recordModernAuditEvent } from '../../services/auditTrailService.js';
+import { validateFacultyDepartment, validateDepartmentDeletion } from './facultyDepartmentValidation.js';
 import { and, eq, isNull } from 'drizzle-orm';
 import { facultyDepartments } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
@@ -34,11 +37,11 @@ export async function findFacultyDepartmentById(
   id: string,
 ): Promise<FacultyDepartmentRow | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantRead(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select(FACULTY_DEPARTMENT_COLUMNS)
       .from(facultyDepartments)
-      .where(and(eq(facultyDepartments.workspaceSubdomain, subdomain), eq(facultyDepartments.id, id)))
+      .where(and(eq(facultyDepartments.workspaceSubdomain, subdomain), eq(facultyDepartments.id, id), isNull(facultyDepartments.deletedAt)))
       .limit(1);
     return rows[0] ?? null;
   });
@@ -92,6 +95,7 @@ export async function saveFacultyDepartment(
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
+    await validateFacultyDepartment(tx, subdomain, dept);
     await tx
       .insert(facultyDepartments)
       .values({ ...dept, workspaceSubdomain: subdomain })
@@ -106,6 +110,8 @@ export async function saveFacultyDepartment(
           updatedBy: dept.updatedBy ?? null,
         },
       });
+    await recordModernAuditEvent(tx, { workspaceSubdomain: subdomain, tableName: 'faculty_departments',
+      recordId: dept.id, actionType: 'UPDATE', realUserId: dept.updatedBy, newState: dept });
   });
 }
 
@@ -117,15 +123,22 @@ export async function softDeleteFacultyDepartment(
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
-    await tx
+    await validateDepartmentDeletion(tx, subdomain, id);
+    const deletedAt = new Date();
+    const changed = await tx
       .update(facultyDepartments)
-      .set({ deletedAt: new Date(), deletedBy, deletionReason: reason ?? null, updatedAt: new Date() })
+      .set({ deletedAt, deletedBy, deletionReason: reason ?? null, updatedAt: new Date() })
       .where(
         and(
           eq(facultyDepartments.workspaceSubdomain, subdomain),
           eq(facultyDepartments.id, id),
           isNull(facultyDepartments.deletedAt),
         ),
-      );
+      ).returning({ id: facultyDepartments.id });
+    if (!changed.length) return;
+    await recordModernAuditEvent(tx, { workspaceSubdomain: subdomain, tableName: 'faculty_departments',
+      recordId: id, actionType: 'DELETE', realUserId: deletedBy, newState: { reason: reason ?? null } });
+    await emitOutboxEvent(tx, 'entity.soft_deleted', { entityType: 'faculty_departments', entityId: id,
+      tenantId: subdomain, deletedAt: deletedAt.toISOString(), deletedBy, deletionReason: reason, version: deletedAt.getTime() });
   });
 }

@@ -16,7 +16,6 @@ import {
   softDeleteFacultyDepartment,
   findDepartmentAncestorChain,
 } from '../../../db/repositories/facultyDepartmentRepository.js';
-import { auditFaculty } from './facultyRouteHelpers.js';
 
 export async function handleListDepartments({
   request,
@@ -56,7 +55,7 @@ export async function handleSaveDepartment({
         return { status: 400 as const, body: { type: 'validation_error', message: 'Department cannot be its own parent' } };
       }
       const ancestors = await findDepartmentAncestorChain(String(tenantId), body.parentId);
-      if (ancestors.some((a) => a.id === id)) {
+      if (ancestors.some((a) => a.id === id || a.isCycle || (a.depth === 20 && a.parentId !== null))) {
         return { status: 400 as const, body: { type: 'validation_error', message: 'Circular parent relationship detected' } };
       }
     }
@@ -71,12 +70,7 @@ export async function handleSaveDepartment({
     if (!department) {
       return { status: 500 as const, body: { type: 'server_error', message: 'Failed to retrieve saved department' } };
     }
-    await auditFaculty(
-      user,
-      'faculty.department.save',
-      `Saved faculty department ${department.name} (${department.code})`,
-      department.id,
-    );
+
     return { status: 200 as const, body: { department } };
   } catch (error) {
     return {
@@ -123,12 +117,7 @@ export async function handleDeleteDepartment({
     }
 
     await softDeleteFacultyDepartment(String(tenantId), id, user.id, 'User deleted');
-    await auditFaculty(
-      user,
-      'faculty.department.delete',
-      `Deleted faculty department ${existing.name} (${existing.code})`,
-      id,
-    );
+
     return { status: 200 as const, body: { success: true as const } };
   } catch (error) {
     return {

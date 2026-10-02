@@ -25,7 +25,7 @@ export async function handleGetSubordinates({
       return { status: 404 as const, body: { type: 'not_found', message: 'Assignment not found' } };
     }
     const tree = await findAssignmentSubordinateTree(String(tenantId), id);
-    return { status: 200 as const, body: { tree: tree as unknown as Array<Record<string, unknown>> } };
+    return { status: 200 as const, body: { tree: tree } };
   } catch {
     return { status: 500 as const, body: { type: 'server_error', message: 'Failed to retrieve assignment subordinates' } };
   }
@@ -49,7 +49,7 @@ export async function handleGetManagers({
       return { status: 404 as const, body: { type: 'not_found', message: 'Assignment not found' } };
     }
     const chain = await findAssignmentManagerChain(String(tenantId), id);
-    return { status: 200 as const, body: { chain: chain as unknown as Array<Record<string, unknown>> } };
+    return { status: 200 as const, body: { chain: chain } };
   } catch {
     return { status: 500 as const, body: { type: 'server_error', message: 'Failed to retrieve assignment manager chain' } };
   }

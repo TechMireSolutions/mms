@@ -9,7 +9,9 @@ export * from "./facultyDepartmentTables.js";
 export * from "./facultyAssignmentTables.js";
 
 /**
- * Faculty entity rows — normalized 3NF relational columns.
+ * Faculty profile; personal identifiers are owned by contacts.
+ * Legacy teachers were renamed by 0112 and their compatibility view removed in 0122.
+ * Department/designation text remains a compatibility projection during assignment migration.
  */
 export const faculty = pgTable('faculty', {
   id: text('id').notNull(),
@@ -70,6 +72,9 @@ export const faculty = pgTable('faculty', {
   index('faculty_workspace_deleted_records_idx')
     .on(table.workspaceSubdomain, table.deletedAt)
     .where(sql`${table.deletedAt} is not null`),
+  uniqueIndex('faculty_workspace_contact_active_uidx')
+    .on(table.workspaceSubdomain, table.contactId)
+    .where(sql`${table.deletedAt} is null`),
   index('faculty_workspace_contact_active_idx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),

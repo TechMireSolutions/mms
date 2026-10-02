@@ -15,7 +15,6 @@ import {
   softDeleteFacultyAssignment,
 } from '../../../db/repositories/facultyAssignmentRepository.js';
 import { checkAssignmentCycleSafe } from '../../../db/repositories/facultyAssignmentHierarchyRepository.js';
-import { auditFaculty } from './facultyRouteHelpers.js';
 
 export {
   handleGetSubordinates,
@@ -59,6 +58,9 @@ export async function handleListAssignments({
   }
   try {
     const activeOnly = query?.activeOnly === undefined ? true : isQueryFlagTrue(query.activeOnly);
+    if (!activeOnly && !canDeleteCollection(user, 'faculty')) {
+      return { status: 403 as const, body: { type: 'forbidden', message: 'Trash access requires delete permission' } };
+    }
     const rows = await listFacultyAssignments(String(tenantId), facultyId, { activeOnly });
     return { status: 200 as const, body: { assignments: rows.map(toFacultyAssignmentEntity) } };
   } catch {
@@ -101,7 +103,6 @@ export async function handleSaveAssignment({
     if (!saved) {
       return { status: 500 as const, body: { type: 'server_error', message: 'Failed to retrieve saved assignment' } };
     }
-    await auditFaculty(user, 'faculty.assignment.save', `Saved assignment ${id} for faculty ${facultyId}`, saved.id);
     return { status: 200 as const, body: { assignment: toFacultyAssignmentEntity(saved) } };
   } catch (error) {
     return {
@@ -133,12 +134,6 @@ export async function handleCloseAssignment({
       return { status: 400 as const, body: { type: 'validation_error', message: 'End date must not precede start date' } };
     }
     await closeAssignment(String(tenantId), id, body.endDate, user.id);
-    await auditFaculty(
-      user,
-      'faculty.assignment.close',
-      `Closed assignment ${id} for faculty ${facultyId} with end date ${body.endDate}`,
-      id,
-    );
     return { status: 200 as const, body: { success: true as const } };
   } catch (error) {
     return {
@@ -153,7 +148,7 @@ export async function handleDeleteAssignment({
   request,
 }: ContractRouteArgs<typeof facultyContract['deleteAssignment']>): Promise<ContractRouteResponse<typeof facultyContract['deleteAssignment']>> {
   const user = request.user as User;
-  if (!canDeleteCollection(user, 'faculty') && !canWriteCollection(user, 'faculty')) {
+  if (!canDeleteCollection(user, 'faculty')) {
     return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
   }
   const tenantId = request.tenant?.id;
@@ -166,7 +161,6 @@ export async function handleDeleteAssignment({
       return { status: 404 as const, body: { type: 'not_found', message: 'Assignment not found' } };
     }
     await softDeleteFacultyAssignment(String(tenantId), id, user.id, 'User deleted');
-    await auditFaculty(user, 'faculty.assignment.delete', `Deleted assignment ${id} for faculty ${facultyId}`, id);
     return { status: 200 as const, body: { success: true as const } };
   } catch (error) {
     return {

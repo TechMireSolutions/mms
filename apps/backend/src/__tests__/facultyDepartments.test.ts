@@ -107,7 +107,7 @@ describe('facultyDepartmentRouteHandlers', () => {
       expect((res.body as { message: string }).message).toContain('Circular parent');
     });
 
-    it('saves department and audits for valid payload', async () => {
+    it('passes actor to the transactional department save', async () => {
       mockFindDepartmentAncestorChain.mockResolvedValueOnce([]);
       mockFindFacultyDepartmentById.mockResolvedValueOnce({
         id: 'dept-1', name: 'Quranic Studies', code: 'quran',
@@ -120,9 +120,9 @@ describe('facultyDepartmentRouteHandlers', () => {
       expect(res.status).toBe(200);
       expect(mockSaveFacultyDepartment).toHaveBeenCalledWith(
         'demo',
-        expect.objectContaining({ id: 'dept-1', name: 'Quranic Studies', code: 'quran' }),
+        expect.objectContaining({ id: 'dept-1', name: 'Quranic Studies', code: 'quran', updatedBy: 'usr-admin' }),
       );
-      expect(mockAuditFaculty).toHaveBeenCalled();
+      expect(mockAuditFaculty).not.toHaveBeenCalled();
     });
   });
 
@@ -153,7 +153,7 @@ describe('facultyDepartmentRouteHandlers', () => {
       expect(mockSoftDeleteFacultyDepartment).not.toHaveBeenCalled();
     });
 
-    it('soft-deletes unreferenced department and audits', async () => {
+    it('passes actor to transactional department archival', async () => {
       mockFindFacultyDepartmentById.mockResolvedValueOnce({
         id: 'dept-1', name: 'Hadith', code: 'hadith',
       });
@@ -168,7 +168,7 @@ describe('facultyDepartmentRouteHandlers', () => {
       expect(res.status).toBe(200);
       expect(res.body).toEqual({ success: true });
       expect(mockSoftDeleteFacultyDepartment).toHaveBeenCalledWith('demo', 'dept-1', 'usr-admin', 'User deleted');
-      expect(mockAuditFaculty).toHaveBeenCalled();
+      expect(mockAuditFaculty).not.toHaveBeenCalled();
     });
   });
 });

@@ -28,14 +28,14 @@ export const facultyDepartmentWriteSchema = facultyDepartmentSchema
   .extend({
     id: z.string().min(1).max(100).optional(), // optional on create
   })
-  .partial({ id: true, parentId: true, headFacultyId: true });
+  .partial({ id: true, parentId: true, headFacultyId: true }).strict();
 
 export type FacultyDepartmentEntity = z.infer<typeof facultyDepartmentSchema>;
 export type FacultyDepartmentWrite = z.infer<typeof facultyDepartmentWriteSchema>;
 
 // ── Faculty Assignment Entity ─────────────────────────────────────────────────
 
-const isoDate = /^\d{4}-\d{2}-\d{2}$/;
+const isoDate = z.iso.date();
 
 /**
  * Read-model for a `faculty_assignments` row.
@@ -48,8 +48,8 @@ export const facultyAssignmentSchema = z.object({
   designationId: z.string().min(1).max(100),
   reportsToAssignmentId: z.string().min(1).max(100).nullable().optional(),
   isPrimary: z.boolean().default(false),
-  startDate: z.string().regex(isoDate),
-  endDate: z.string().regex(isoDate).nullable().optional(),
+  startDate: isoDate,
+  endDate: isoDate.nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
   /** Hydrated from linked department row — for display only. */
   departmentName: z.string().optional(),
@@ -81,3 +81,16 @@ export const facultyAssignmentWriteSchema = facultyAssignmentSchema
 
 export type FacultyAssignmentEntity = z.infer<typeof facultyAssignmentSchema>;
 export type FacultyAssignmentWrite = z.infer<typeof facultyAssignmentWriteSchema>;
+
+export const facultyAssignmentTreeNodeSchema = facultyAssignmentSchema.pick({
+  id: true, facultyId: true, departmentId: true, designationId: true,
+  reportsToAssignmentId: true, isPrimary: true, startDate: true, endDate: true,
+}).extend({
+  reportsToAssignmentId: z.string().nullable(),
+  endDate: z.iso.date().nullable(),
+  depth: z.number().int().min(1).max(20),
+  path: z.array(z.string()).min(2).max(21),
+  isCycle: z.boolean(),
+}).strict();
+
+export type FacultyAssignmentTreeNode = z.infer<typeof facultyAssignmentTreeNodeSchema>;

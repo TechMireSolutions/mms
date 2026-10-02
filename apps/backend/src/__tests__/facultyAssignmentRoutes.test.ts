@@ -101,7 +101,7 @@ describe('facultyAssignmentRouteHandlers', () => {
       expect((res.body as { message: string }).message).toContain('Circular reporting');
     });
 
-    it('returns 200 and audits on valid save', async () => {
+    it('passes the actor to the transactional repository on valid save', async () => {
       mockCheckAssignmentCycleSafe.mockResolvedValueOnce(true);
       mockFindFacultyAssignmentById.mockResolvedValueOnce({
         id: 'asgn-1', facultyId: 'fac-1', departmentId: 'd1', designationId: 'des1',
@@ -114,7 +114,8 @@ describe('facultyAssignmentRouteHandlers', () => {
       } as never);
       expect(res.status).toBe(200);
       expect(mockSaveFacultyAssignment).toHaveBeenCalled();
-      expect(mockAuditFaculty).toHaveBeenCalledWith(adminUser, 'faculty.assignment.save', expect.any(String), 'asgn-1');
+      expect(mockSaveFacultyAssignment).toHaveBeenCalledWith('demo', expect.objectContaining({ updatedBy: 'usr-admin' }));
+      expect(mockAuditFaculty).not.toHaveBeenCalled();
     });
   });
 

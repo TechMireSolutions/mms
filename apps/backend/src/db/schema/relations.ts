@@ -16,3 +16,5 @@ export * from "./relations/academicRelations.js";
 export * from "./relations/financeRelations.js";
 export * from "./relations/assessmentRelations.js";
 export * from "./relations/messagingRelations.js";
+
+export * from "./relations/facultyRelations.js";

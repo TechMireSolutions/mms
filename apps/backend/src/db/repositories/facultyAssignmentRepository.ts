@@ -1,14 +1,15 @@
-import { and, eq, isNull } from 'drizzle-orm';
+import { facultyAssignmentSchema } from '@mms/shared';
+import { and, eq, isNull, gte, lte, or } from 'drizzle-orm';
 import { facultyAssignments } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import type {
   FacultyAssignmentRow,
-  InsertFacultyAssignmentRow,
 } from '../schema/facultyAssignmentTables.js';
 
 export {
   type AssignmentTreeNode,
   findAssignmentManagerChain,
+  findFacultyManagerChain,
   findAssignmentSubordinateTree,
   checkAssignmentCycleSafe,
 } from './facultyAssignmentHierarchyRepository.js';
@@ -43,11 +44,11 @@ export async function findFacultyAssignmentById(
   id: string,
 ): Promise<FacultyAssignmentRow | null> {
   const subdomain = tenant.trim().toLowerCase();
-  return withTenantRead(subdomain, async (tx) => {
+  return withTenant(subdomain, async (tx) => {
     const rows = await tx
       .select(FACULTY_ASSIGNMENT_COLUMNS)
       .from(facultyAssignments)
-      .where(and(eq(facultyAssignments.workspaceSubdomain, subdomain), eq(facultyAssignments.id, id)))
+      .where(and(eq(facultyAssignments.workspaceSubdomain, subdomain), eq(facultyAssignments.id, id), isNull(facultyAssignments.deletedAt)))
       .limit(1);
     return rows[0] ?? null;
   });
@@ -81,7 +82,9 @@ export async function listFacultyAssignments(
 export async function findPrimaryFacultyAssignment(
   tenant: string,
   facultyId: string,
+  onDate: string,
 ): Promise<FacultyAssignmentRow | null> {
+  facultyAssignmentSchema.shape.startDate.parse(onDate);
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
@@ -93,7 +96,8 @@ export async function findPrimaryFacultyAssignment(
           eq(facultyAssignments.facultyId, facultyId),
           eq(facultyAssignments.isPrimary, true),
           isNull(facultyAssignments.deletedAt),
-          isNull(facultyAssignments.endDate),
+          lte(facultyAssignments.startDate, onDate),
+          or(isNull(facultyAssignments.endDate), gte(facultyAssignments.endDate, onDate)),
         ),
       )
       .limit(1);
@@ -101,72 +105,4 @@ export async function findPrimaryFacultyAssignment(
   });
 }
 
-/* ── Write helpers ────────────────────────────────────────────────────────── */
-
-export async function saveFacultyAssignment(
-  tenant: string,
-  assignment: InsertFacultyAssignmentRow,
-): Promise<void> {
-  const subdomain = tenant.trim().toLowerCase();
-  await withTenant(subdomain, async (tx) => {
-    await tx
-      .insert(facultyAssignments)
-      .values({ ...assignment, workspaceSubdomain: subdomain })
-      .onConflictDoUpdate({
-        target: [facultyAssignments.workspaceSubdomain, facultyAssignments.id],
-        set: {
-          departmentId: assignment.departmentId,
-          designationId: assignment.designationId,
-          reportsToAssignmentId: assignment.reportsToAssignmentId ?? null,
-          isPrimary: assignment.isPrimary,
-          startDate: assignment.startDate,
-          endDate: assignment.endDate ?? null,
-          notes: assignment.notes ?? null,
-          updatedAt: new Date(),
-          updatedBy: assignment.updatedBy ?? null,
-        },
-      });
-  });
-}
-
-export async function closeAssignment(
-  tenant: string,
-  id: string,
-  endDate: string,
-  updatedBy?: string,
-): Promise<void> {
-  const subdomain = tenant.trim().toLowerCase();
-  await withTenant(subdomain, async (tx) => {
-    await tx
-      .update(facultyAssignments)
-      .set({ endDate, isPrimary: false, updatedAt: new Date(), updatedBy: updatedBy ?? null })
-      .where(
-        and(
-          eq(facultyAssignments.workspaceSubdomain, subdomain),
-          eq(facultyAssignments.id, id),
-          isNull(facultyAssignments.deletedAt),
-        ),
-      );
-  });
-}
-
-export async function softDeleteFacultyAssignment(
-  tenant: string,
-  id: string,
-  deletedBy: string,
-  reason?: string,
-): Promise<void> {
-  const subdomain = tenant.trim().toLowerCase();
-  await withTenant(subdomain, async (tx) => {
-    await tx
-      .update(facultyAssignments)
-      .set({ deletedAt: new Date(), deletedBy, deletionReason: reason ?? null, updatedAt: new Date() })
-      .where(
-        and(
-          eq(facultyAssignments.workspaceSubdomain, subdomain),
-          eq(facultyAssignments.id, id),
-          isNull(facultyAssignments.deletedAt),
-        ),
-      );
-  });
-}
+export { saveFacultyAssignment, closeAssignment, softDeleteFacultyAssignment } from './facultyAssignmentWriteRepository.js';

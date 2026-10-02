@@ -1,6 +1,7 @@
 import { pgTable, text, timestamp, uniqueIndex, index, integer, primaryKey, foreignKey, varchar, boolean, date, check } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { workspaces } from './platform.js';
+import { softDeleteColumns } from './softDeleteSchema.js';
 import { faculty } from './faculty.js';
 
 /**
@@ -13,12 +14,17 @@ export const facultyDesignations = pgTable('faculty_designations', {
   name: varchar('name', { length: 150 }).notNull(),
   hierarchyRank: integer('hierarchy_rank').notNull(),
   isActive: boolean('is_active').notNull().default(true),
+  ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 }, (table) => [
   primaryKey({ columns: [table.workspaceSubdomain, table.id] }),
-  uniqueIndex('faculty_designations_workspace_code_uidx').on(table.workspaceSubdomain, table.code),
-  index('faculty_designations_workspace_active_rank_idx').on(table.workspaceSubdomain, table.isActive, table.hierarchyRank),
+  uniqueIndex('faculty_designations_ws_code_active_uidx').on(table.workspaceSubdomain, table.code)
+    .where(sql`${table.deletedAt} is null`),
+  index('faculty_designations_active_rank_idx').on(table.workspaceSubdomain, table.hierarchyRank)
+    .where(sql`${table.deletedAt} is null`),
+  index('faculty_designations_deleted_idx').on(table.workspaceSubdomain, table.deletedAt)
+    .where(sql`${table.deletedAt} is not null`),
   check('faculty_designations_hierarchy_rank_positive_check', sql`${table.hierarchyRank} > 0`),
 ]);
 

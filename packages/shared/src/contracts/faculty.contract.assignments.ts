@@ -1,6 +1,7 @@
 import { z } from 'zod';
 import {
   facultyAssignmentSchema,
+  facultyAssignmentTreeNodeSchema,
   facultyAssignmentWriteSchema,
 } from '../facultyDepartmentTypes.js';
 
@@ -36,8 +37,8 @@ export const facultyAssignmentContractEndpoints = {
     method: 'POST' as const,
     path: '/api/faculty/:facultyId/assignments/:id/close',
     body: z.object({
-      endDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    }),
+      endDate: z.iso.date(),
+    }).strict(),
     responses: {
       200: z.object({ success: z.literal(true) }),
       400: errorResponse,
@@ -62,7 +63,7 @@ export const facultyAssignmentContractEndpoints = {
     method: 'GET' as const,
     path: '/api/faculty/assignments/:id/subordinates',
     responses: {
-      200: z.object({ tree: z.array(z.record(z.string(), z.unknown())) }),
+      200: z.object({ tree: z.array(facultyAssignmentTreeNodeSchema) }),
       403: errorResponse,
       404: errorResponse,
       500: errorResponse,
@@ -73,7 +74,7 @@ export const facultyAssignmentContractEndpoints = {
     method: 'GET' as const,
     path: '/api/faculty/assignments/:id/managers',
     responses: {
-      200: z.object({ chain: z.array(z.record(z.string(), z.unknown())) }),
+      200: z.object({ chain: z.array(facultyAssignmentTreeNodeSchema) }),
       403: errorResponse,
       404: errorResponse,
       500: errorResponse,

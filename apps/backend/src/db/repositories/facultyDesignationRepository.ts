@@ -1,4 +1,7 @@
-import { and, asc, eq } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
+import { lockFacultyHierarchy } from './facultyAssignmentValidation.js';
+import { recordModernAuditEvent } from '../../services/auditTrailService.js';
+import { emitOutboxEvent } from '../../services/outboxEventService.js';
 import type {
   FacultyDesignationDefinition,
   FacultyDesignationWrite,
@@ -35,7 +38,7 @@ export async function listFacultyDesignations(tenant: string): Promise<FacultyDe
         createdAt: facultyDesignations.createdAt,
         updatedAt: facultyDesignations.updatedAt,
       }).from(facultyDesignations)
-        .where(eq(facultyDesignations.workspaceSubdomain, workspaceSubdomain))
+        .where(and(eq(facultyDesignations.workspaceSubdomain, workspaceSubdomain), isNull(facultyDesignations.deletedAt)))
         .orderBy(asc(facultyDesignations.hierarchyRank), asc(facultyDesignations.name)),
       tx.select({ designationId: facultyDesignationRoles.designationId, roleKey: facultyDesignationRoles.roleKey })
         .from(facultyDesignationRoles)
@@ -61,7 +64,12 @@ export async function saveFacultyDesignation(
   input: FacultyDesignationWrite,
 ): Promise<FacultyDesignationDefinition> {
   const workspaceSubdomain = tenant.trim().toLowerCase();
-  await withTenant(workspaceSubdomain, async (tx) => {
+  return withTenant(workspaceSubdomain, async (tx) => {
+    await lockFacultyHierarchy(tx, workspaceSubdomain);
+    const [existing] = await tx.select({ deletedAt: facultyDesignations.deletedAt }).from(facultyDesignations)
+      .where(and(eq(facultyDesignations.workspaceSubdomain, workspaceSubdomain), eq(facultyDesignations.id, input.id)))
+      .limit(1).for('update');
+    if (existing?.deletedAt) throw new Error('Designation is archived');
     await tx.insert(facultyDesignations).values({
       workspaceSubdomain,
       id: input.id,
@@ -71,6 +79,7 @@ export async function saveFacultyDesignation(
       isActive: input.isActive,
     }).onConflictDoUpdate({
       target: [facultyDesignations.workspaceSubdomain, facultyDesignations.id],
+      setWhere: isNull(facultyDesignations.deletedAt),
       set: {
         code: input.code,
         name: input.name,
@@ -88,8 +97,34 @@ export async function saveFacultyDesignation(
         [...new Set(input.assignableRoles)].map((roleKey) => ({ workspaceSubdomain, designationId: input.id, roleKey })),
       );
     }
+    await recordModernAuditEvent(tx, { workspaceSubdomain, tableName: 'faculty_designations',
+      recordId: input.id, actionType: 'UPDATE', newState: input });
+    const saved = (await listFacultyDesignations(workspaceSubdomain)).find((designation) => designation.id === input.id);
+    if (!saved) throw new Error('Designation could not be loaded after save');
+    return saved;
   });
-  const saved = (await listFacultyDesignations(workspaceSubdomain)).find((designation) => designation.id === input.id);
-  if (!saved) throw new Error('Designation could not be loaded after save');
-  return saved;
+}
+
+export async function softDeleteFacultyDesignation(tenant: string, id: string, actor: string): Promise<void> {
+  const workspaceSubdomain = tenant.trim().toLowerCase();
+  await withTenant(workspaceSubdomain, async (tx) => {
+    await lockFacultyHierarchy(tx, workspaceSubdomain);
+    const dependents = await tx.execute(sql`
+      SELECT id FROM faculty_assignments WHERE workspace_subdomain = ${workspaceSubdomain}
+        AND designation_id = ${id} AND deleted_at IS NULL
+      UNION ALL
+      SELECT id FROM faculty_designation_assignments WHERE workspace_subdomain = ${workspaceSubdomain}
+        AND designation_id = ${id} LIMIT 1
+    `);
+    if (dependents.rows.length) throw new Error('Designation has dependent appointments');
+    const deletedAt = new Date();
+    const changed = await tx.update(facultyDesignations).set({ deletedAt, deletedBy: actor, isActive: false })
+      .where(and(eq(facultyDesignations.workspaceSubdomain, workspaceSubdomain), eq(facultyDesignations.id, id),
+        isNull(facultyDesignations.deletedAt))).returning({ id: facultyDesignations.id });
+    if (!changed.length) throw new Error('Designation not found');
+    await recordModernAuditEvent(tx, { workspaceSubdomain, tableName: 'faculty_designations',
+      recordId: id, actionType: 'DELETE', realUserId: actor, newState: { deletedAt } });
+    await emitOutboxEvent(tx, 'entity.soft_deleted', { entityType: 'faculty_designations', entityId: id,
+      tenantId: workspaceSubdomain, deletedAt: deletedAt.toISOString(), deletedBy: actor, version: deletedAt.getTime() });
+  });
 }

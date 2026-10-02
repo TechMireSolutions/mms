@@ -121,7 +121,7 @@ export const facultyAssignments = pgTable('faculty_assignments', {
   foreignKey({
     columns: [table.workspaceSubdomain, table.reportsToAssignmentId],
     foreignColumns: [table.workspaceSubdomain, table.id],
-  }).onDelete('set null'),
+  }).onDelete('restrict'),
 ]);
 
 /* ── Inferred Types ── */
