@@ -69,16 +69,18 @@ export function FacultyIdSettingsCard({
       restartLabel={t("faculty.settings.idRestartAnnually")}
       restartDesc={t("faculty.settings.idRestartAnnuallyDesc")}
       footer={
-        <ModuleSetupSaveFooter
-          dirty={Boolean(isPrefsDirty)}
-          saving={Boolean(saving)}
-          saved={Boolean(saved)}
-          saveLabel={saving ? t("global.saving") : t("common.save")}
-          savedLabel={t("settings.savedBadge")}
-          onSave={onSave ?? (() => {})}
-          disableUnsavedGuard
-          footerClassName="mt-4 pt-3"
-        />
+        onSave ? (
+          <ModuleSetupSaveFooter
+            dirty={Boolean(isPrefsDirty)}
+            saving={Boolean(saving)}
+            saved={Boolean(saved)}
+            saveLabel={saving ? t("global.saving") : t("common.save")}
+            savedLabel={t("settings.savedBadge")}
+            onSave={onSave}
+            disableUnsavedGuard
+            footerClassName="mt-4 pt-3"
+          />
+        ) : undefined
       }
     />
   );

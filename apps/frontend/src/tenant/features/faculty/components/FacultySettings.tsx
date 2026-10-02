@@ -1,7 +1,5 @@
 import React, { useEffect } from "react";
-import { useFacultyLookupOptions } from "@/tenant/features/faculty/hooks/useFacultyStatusConfig";
 import { useTranslation } from "@/hooks/useTranslation";
-import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useFacultySetupPanelState } from "@/tenant/features/faculty/hooks/useFacultySetupPanelState";
 import { FacultyPreferencesSection } from "@/tenant/features/faculty/components/FacultyPreferencesSection";
 import { FacultyDesignationsSetupSection } from "@/tenant/features/faculty/components/FacultyDesignationsSetupSection";
@@ -16,7 +14,6 @@ export const FacultySettings = (function FacultySettings({
   onPrefsDirtyChange,
 }: FacultySettingsProps = {}): React.JSX.Element {
   const { t } = useTranslation();
-  const { specializationOptions } = useFacultyLookupOptions();
   const {
     settingsDraft,
     saved,
@@ -39,26 +36,16 @@ export const FacultySettings = (function FacultySettings({
       <FacultyPreferencesSection
         settingsDraft={settingsDraft}
         upd={upd}
-        specializationOptions={specializationOptions}
         isPrefsDirty={isPrefsDirty}
         saving={saving}
         saved={saved}
+        unsavedWarning={unsavedWarning}
         onSave={handleSave}
       />
 
       <FacultyDepartmentsSetupSection />
 
       <FacultyDesignationsSetupSection />
-
-      <ModuleSetupSaveFooter
-        dirty={isPrefsDirty}
-        saving={saving}
-        saved={saved}
-        unsavedWarning={unsavedWarning}
-        saveLabel={t("common.save")}
-        savedLabel={t("settings.savedBadge")}
-        onSave={handleSave}
-      />
     </div>
   );
 });
