@@ -80,6 +80,7 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
           designation={editingDesignation}
           workspaceRoles={workspaceRoles}
           isPending={save.isPending}
+          designationOptions={query.data ?? []}
           onSave={handleSave}
         />
       </div>

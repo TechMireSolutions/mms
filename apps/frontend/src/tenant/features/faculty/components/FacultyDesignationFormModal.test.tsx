@@ -44,17 +44,28 @@ describe('FacultyDesignationFormModal', () => {
           designation={null}
           workspaceRoles={[]}
           isPending={false}
+          designationOptions={[
+            {
+              id: 'des-dean',
+              name: 'Dean',
+              code: 'dean',
+              hierarchyRank: 1,
+              isActive: true,
+              assignableRoles: [],
+            },
+          ]}
           onSave={onSave}
         />,
       );
     });
 
     const nameInput = document.querySelector<HTMLInputElement>('#modal-designation-name');
-    const codeInput = document.querySelector<HTMLInputElement>('#modal-designation-code');
-    const rankInput = document.querySelector<HTMLInputElement>('#modal-designation-rank');
+    const reportingSelect = document.querySelector<HTMLSelectElement>('#modal-designation-reporting');
     expect(nameInput).not.toBeNull();
-    expect(codeInput).not.toBeNull();
-    expect(rankInput).not.toBeNull();
+    expect(reportingSelect).not.toBeNull();
+    expect(document.querySelector('#modal-designation-code')).toBeNull();
+    expect(document.querySelector('#modal-designation-rank')).toBeNull();
+    expect(document.querySelector('#modal-designation-active')).toBeNull();
     expect(document.body.textContent).toContain('faculty.designations.addDesignation');
   });
 
@@ -99,8 +110,67 @@ describe('FacultyDesignationFormModal', () => {
         name: 'Lecturer',
         code: 'lecturer',
         hierarchyRank: 3,
+        isActive: true,
       }),
     );
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('automatically calculates hierarchy rank based on selected reporting designation', async () => {
+    const designations = [
+      {
+        id: 'des-dean',
+        name: 'Dean of Faculty',
+        code: 'dean',
+        hierarchyRank: 1,
+        isActive: true,
+        assignableRoles: [],
+      },
+    ];
+
+    await act(async () => {
+      root.render(
+        <FacultyDesignationFormModal
+          open={true}
+          onClose={onClose}
+          designation={null}
+          workspaceRoles={[]}
+          isPending={false}
+          designationOptions={designations}
+          onSave={onSave}
+        />,
+      );
+    });
+
+    const nameInput = document.querySelector<HTMLInputElement>('#modal-designation-name')!;
+    const reportingSelect = document.querySelector<HTMLSelectElement>('#modal-designation-reporting')!;
+
+    await act(async () => {
+      const nativeInputSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+      nativeInputSetter?.call(nameInput, 'Head of Department');
+      nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const nativeSelectSetter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value')?.set;
+      nativeSelectSetter?.call(reportingSelect, 'des-dean');
+      reportingSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const saveBtn = Array.from(document.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('faculty.designations.addDesignation'),
+    );
+    expect(saveBtn).toBeDefined();
+
+    await act(async () => {
+      saveBtn!.click();
+    });
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Head of Department',
+        code: 'head-of-department',
+        hierarchyRank: 2,
+        isActive: true,
+      }),
+    );
   });
 });

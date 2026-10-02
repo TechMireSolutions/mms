@@ -177,6 +177,7 @@ export function FacultyDesignationSelectField({
           designation={editingDes}
           workspaceRoles={workspaceRoles}
           isPending={saveMutation.isPending}
+          designationOptions={designationOptions}
           onSave={handleSaveModal}
         />
       )}

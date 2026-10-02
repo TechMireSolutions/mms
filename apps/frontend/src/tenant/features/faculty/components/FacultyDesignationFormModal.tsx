@@ -1,12 +1,12 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Award } from 'lucide-react';
 import { workspaceRoleLabel, type FacultyDesignationDefinition, type WorkspaceRole } from '@mms/shared';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Field } from '@/components/ui/FormPrimitives';
 import { FormModal } from '@/components/ui/FormModal';
 import { FORM_INPUT } from '@/components/ui/formStyles';
+import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
-import { Switch } from '@/components/ui/switch';
 import { useTranslation } from '@/hooks/useTranslation';
 import { slugifyDepartmentCode } from '../hooks/useFacultyDepartmentsController';
 
@@ -16,10 +16,9 @@ export interface FacultyDesignationFormModalProps {
   designation: FacultyDesignationDefinition | null;
   workspaceRoles: readonly WorkspaceRole[];
   isPending: boolean;
+  designationOptions?: readonly FacultyDesignationDefinition[];
   onSave: (payload: Pick<FacultyDesignationDefinition, 'id' | 'code' | 'name' | 'hierarchyRank' | 'isActive' | 'assignableRoles'>) => Promise<void>;
 }
-
-const DEFAULT_DRAFT = { id: '', name: '', code: '', hierarchyRank: 4, isActive: true, assignableRoles: [] as string[] };
 
 export function FacultyDesignationFormModal({
   open,
@@ -27,59 +26,69 @@ export function FacultyDesignationFormModal({
   designation,
   workspaceRoles,
   isPending,
+  designationOptions = [],
   onSave,
 }: FacultyDesignationFormModalProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const [name, setName] = useState('');
-  const [code, setCode] = useState('');
-  const [hierarchyRank, setHierarchyRank] = useState(4);
-  const [isActive, setIsActive] = useState(true);
+  const [reportingDesignationId, setReportingDesignationId] = useState('');
+  const [hierarchyRank, setHierarchyRank] = useState(1);
   const [assignableRoles, setAssignableRoles] = useState<string[]>([]);
-  const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
+
+  const availableDesignations = useMemo(
+    () => designationOptions.filter((d) => d.id !== designation?.id),
+    [designationOptions, designation?.id],
+  );
+
+  const reportingOptions = useMemo(() => [
+    { value: '', label: t('faculty.designations.topLevel') },
+    ...availableDesignations.map((d) => ({
+      value: d.id,
+      label: d.name,
+    })),
+  ], [availableDesignations, t]);
 
   useEffect(() => {
     if (open) {
       if (designation) {
         setName(designation.name);
-        setCode(designation.code);
+        const existingSuperior = availableDesignations
+          .filter((d) => d.hierarchyRank < designation.hierarchyRank)
+          .sort((a, b) => b.hierarchyRank - a.hierarchyRank)[0];
+        setReportingDesignationId(existingSuperior ? existingSuperior.id : '');
         setHierarchyRank(designation.hierarchyRank);
-        setIsActive(designation.isActive);
         setAssignableRoles(designation.assignableRoles ?? []);
-        setCodeManuallyEdited(true);
       } else {
-        setName(DEFAULT_DRAFT.name);
-        setCode(DEFAULT_DRAFT.code);
-        setHierarchyRank(DEFAULT_DRAFT.hierarchyRank);
-        setIsActive(DEFAULT_DRAFT.isActive);
-        setAssignableRoles(DEFAULT_DRAFT.assignableRoles);
-        setCodeManuallyEdited(false);
+        setName('');
+        setReportingDesignationId('');
+        setHierarchyRank(1);
+        setAssignableRoles([]);
       }
     }
-  }, [open, designation]);
+  }, [open, designation, availableDesignations]);
 
-  const handleNameChange = (val: string) => {
-    setName(val);
-    if (!codeManuallyEdited && !designation) {
-      setCode(slugifyDepartmentCode(val));
+  const handleReportingDesignationChange = (val: string) => {
+    setReportingDesignationId(val);
+    if (!val) {
+      setHierarchyRank(1);
+    } else {
+      const parent = availableDesignations.find((d) => d.id === val);
+      setHierarchyRank(parent ? Math.min(99, parent.hierarchyRank + 1) : 2);
     }
-  };
-
-  const handleCodeChange = (val: string) => {
-    setCode(slugifyDepartmentCode(val));
-    setCodeManuallyEdited(true);
   };
 
   const handleSubmit = async () => {
     const trimmedName = name.trim();
-    const trimmedCode = code.trim() || slugifyDepartmentCode(trimmedName);
-    if (!trimmedName || !trimmedCode) return;
+    if (!trimmedName) return;
+
+    const trimmedCode = designation?.code || slugifyDepartmentCode(trimmedName) || `des-${Date.now().toString(36)}`;
 
     await onSave({
       id: designation?.id || crypto.randomUUID(),
       name: trimmedName,
       code: trimmedCode,
       hierarchyRank,
-      isActive,
+      isActive: designation?.isActive ?? true,
       assignableRoles,
     });
     onClose();
@@ -96,7 +105,7 @@ export function FacultyDesignationFormModal({
       cancelLabel={t('common.cancel')}
       saveLabel={designation ? t('common.save') : t('faculty.designations.addDesignation')}
       saving={isPending}
-      saveDisabled={isPending || !name.trim() || !code.trim()}
+      saveDisabled={isPending || !name.trim()}
       onSave={() => void handleSubmit()}
     >
       <div className="space-y-4 py-1 text-start">
@@ -106,52 +115,22 @@ export function FacultyDesignationFormModal({
               id="modal-designation-name"
               name="name"
               value={name}
-              onChange={(e) => handleNameChange(e.target.value)}
+              onChange={(e) => setName(e.target.value)}
               className={FORM_INPUT}
               disabled={isPending}
               autoFocus
             />
           </Field>
 
-          <Field label={t('faculty.designations.code')} id="modal-designation-code" required>
-            <Input
-              id="modal-designation-code"
-              name="code"
-              value={code}
-              onChange={(e) => handleCodeChange(e.target.value)}
-              className={FORM_INPUT}
-              maxLength={32}
+          <Field label={t('faculty.designations.reportingDesignation')} id="modal-designation-reporting">
+            <FormSelect
+              id="modal-designation-reporting"
+              name="reportingDesignationId"
+              value={reportingDesignationId}
+              onChange={handleReportingDesignationChange}
+              options={reportingOptions}
               disabled={isPending}
             />
-          </Field>
-
-          <Field label={t('faculty.form.hierarchyRank')} id="modal-designation-rank" required>
-            <Input
-              id="modal-designation-rank"
-              name="hierarchyRank"
-              type="text"
-              inputMode="numeric"
-              min={1}
-              max={99}
-              value={hierarchyRank}
-              onChange={(e) => setHierarchyRank(Number(e.target.value) || 1)}
-              className={FORM_INPUT}
-              disabled={isPending}
-            />
-          </Field>
-
-          <Field label={t('faculty.designations.active')} id="modal-designation-active">
-            <div className="flex min-h-11 items-center gap-3">
-              <Switch
-                id="modal-designation-active"
-                checked={isActive}
-                onCheckedChange={setIsActive}
-                disabled={isPending}
-              />
-              <span className="text-sm text-muted-foreground">
-                {isActive ? t('faculty.status.active') : t('faculty.status.inactive')}
-              </span>
-            </div>
           </Field>
         </div>
 
