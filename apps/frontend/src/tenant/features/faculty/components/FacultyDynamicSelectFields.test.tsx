@@ -1,7 +1,6 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { FacultyDepartmentDropdownMenu } from "./FacultyDepartmentDropdownMenu";
 import { FacultyDepartmentSelectField } from "./FacultyDepartmentSelectField";
 import { FacultyDesignationSelectField } from "./FacultyDesignationSelectField";
 
@@ -12,7 +11,7 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("FacultyDynamicSelectFields", () => {
-  it("renders department field trigger with placeholder when empty", () => {
+  it("renders dynamic department dropdown without add/edit/delete buttons", () => {
     const html = renderToStaticMarkup(
       <FacultyDepartmentSelectField
         value=""
@@ -33,10 +32,12 @@ describe("FacultyDynamicSelectFields", () => {
     );
 
     expect(html).toContain('id="department"');
-    expect(html).toContain("faculty.form.departmentPlaceholder");
+    expect(html).toContain("Hifz (HIFZ)");
+    expect(html).not.toContain("common.add");
+    expect(html).not.toContain("faculty.setup.addDepartmentSubtitle");
   });
 
-  it("renders department field trigger with selected department name and code", () => {
+  it("does not render edit or delete buttons even when department is selected", () => {
     const html = renderToStaticMarkup(
       <FacultyDepartmentSelectField
         value="Hifz"
@@ -57,29 +58,8 @@ describe("FacultyDynamicSelectFields", () => {
       />,
     );
 
-    expect(html).toContain("Hifz (HIFZ)");
-  });
-
-  it("renders dynamic department dropdown menu with inline add, edit, and delete actions", () => {
-    const html = renderToStaticMarkup(
-      <FacultyDepartmentDropdownMenu
-        items={[
-          { id: "dept-1", name: "Hifz", code: "HIFZ", isEntity: true },
-        ]}
-        selectedValue=""
-        onSelect={vi.fn()}
-        onSaveNew={vi.fn()}
-        onUpdate={vi.fn()}
-        onDeleteRequest={vi.fn()}
-      />,
-    );
-
-    expect(html).toContain('role="listbox"');
-    expect(html).toContain("Hifz");
-    expect(html).toContain("(HIFZ)");
-    expect(html).toContain('title="common.edit"');
-    expect(html).toContain('title="common.delete"');
-    expect(html).toContain("faculty.setup.addDepartment");
+    expect(html).not.toContain('title="common.edit"');
+    expect(html).not.toContain('title="common.delete"');
   });
 
   it("renders designation field with Add button and active options", () => {
