@@ -1,7 +1,6 @@
 import { useState } from 'react';
-import { Award, Plus } from 'lucide-react';
+import { Award, Plus, X } from 'lucide-react';
 import type { FacultyDesignationDefinition } from '@mms/shared';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/FormPrimitives';
 import { FORM_INPUT } from '@/components/ui/formStyles';
@@ -14,6 +13,7 @@ import { notify } from '@/lib/notify';
 import { useFacultyDesignations, useSaveFacultyDesignation } from '../hooks/useFacultyDesignations';
 import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { workspaceRoleLabel } from '@mms/shared';
+import { FacultyDesignationsTable } from './FacultyDesignationsTable';
 
 type Draft = Pick<FacultyDesignationDefinition, 'id' | 'code' | 'name' | 'hierarchyRank' | 'isActive' | 'assignableRoles'>;
 
@@ -51,8 +51,27 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
 
   return (
     <SectionCard title={t('faculty.designations.setupTitle')} icon={Award} accentColor="primary">
-      <div className="space-y-4">
+      <div className="space-y-4 text-start">
         <p className="text-sm text-muted-foreground">{t('faculty.designations.setupHint')}</p>
+
+        {draft.id && (
+          <div className="flex items-center justify-between rounded-md border border-primary/30 bg-primary/5 px-3 py-2 text-xs">
+            <span className="font-medium text-primary">
+              {t('faculty.designations.editTitle')}: {draft.name}
+            </span>
+            <Button
+              type="button"
+              variant="ghost"
+              size="sm"
+              onClick={reset}
+              className="h-6 gap-1 px-1.5 text-xs text-muted-foreground hover:text-foreground"
+            >
+              <X className="size-3" aria-hidden />
+              <span>{t('common.cancel')}</span>
+            </Button>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
           <Field label={t('faculty.designations.name')} id="designation-name" required>
             <Input id="designation-name" name="name" className={FORM_INPUT} value={draft.name} onChange={(event) => setDraft((current) => ({ ...current, name: event.target.value }))} />
@@ -97,47 +116,15 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
             {t('common.save')}
           </Button>
         </div>
-        <div className="divide-y divide-border rounded-md border">
-          {(query.data ?? []).map((designation) => (
-            <button
-              key={designation.id}
-              type="button"
-              className={`flex min-h-11 w-full items-start justify-between gap-3 px-3 py-2.5 text-start hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset rounded-md transition-colors ${
-                designation.isActive ? '' : 'opacity-60'
-              }`}
-              onClick={() => edit(designation)}
-            >
-              <span className="min-w-0">
-                <span className="flex flex-wrap items-center gap-1.5">
-                  <span className="font-medium">{designation.name}</span>
-                  {!designation.isActive && (
-                    <Badge variant="outline" className="text-xs font-normal line-through">
-                      {t('faculty.status.inactive')}
-                    </Badge>
-                  )}
-                </span>
-                <span className="block text-xs text-muted-foreground">
-                  {designation.code} · {t('faculty.form.hierarchyRank')} {designation.hierarchyRank}
-                </span>
-                {designation.assignableRoles.length > 0 && (
-                  <span className="mt-1 flex flex-wrap gap-1">
-                    {designation.assignableRoles.map((role) => (
-                      <Badge key={role} variant="secondary" className="text-xs font-normal">
-                        {role}
-                      </Badge>
-                    ))}
-                  </span>
-                )}
-              </span>
-            </button>
-          ))}
-          {!query.isPending && !query.data?.length && (
-            <div className="flex flex-col items-center gap-2 px-4 py-8 text-center">
-              <Award className="size-8 text-muted-foreground/40" aria-hidden />
-              <p className="text-sm text-muted-foreground">{t('faculty.designations.setupHint')}</p>
-            </div>
-          )}
-        </div>
+
+        <FacultyDesignationsTable
+          designations={query.data ?? []}
+          roles={workspaceRoles}
+          editingDesignationId={draft.id || undefined}
+          isPending={save.isPending}
+          isLoading={query.isLoading}
+          onEdit={edit}
+        />
       </div>
     </SectionCard>
   );
