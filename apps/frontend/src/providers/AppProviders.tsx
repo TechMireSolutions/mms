@@ -6,6 +6,7 @@ import { BrandingPaletteProvider } from '@/lib/contexts/BrandingPaletteContext';
 import { TenantProvider } from '@/lib/contexts/TenantContext';
 import { TranslationProvider } from '@/lib/contexts/TranslationContext';
 import { DirectionProvider } from '@/providers/DirectionProvider';
+import { MotionConfig } from 'framer-motion';
 import { queryClientInstance } from '@/lib/queryClient';
 import RootErrorBoundary from '@/components/routing/RootErrorBoundary';
 import QueryDevtools from '@/components/dev/QueryDevtools';
@@ -29,7 +30,9 @@ export function AppProviders({ children }: AppProvidersProps): React.JSX.Element
               <TenantProvider>
                 <TranslationProvider>
                   <DirectionProvider>
-                    {children}
+                    <MotionConfig reducedMotion="user">
+                      {children}
+                    </MotionConfig>
                   </DirectionProvider>
                 </TranslationProvider>
               </TenantProvider>

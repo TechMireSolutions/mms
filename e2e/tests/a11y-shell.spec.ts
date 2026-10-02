@@ -48,7 +48,8 @@ async function gotoAndSettle(page: Page, origin: string, path: string, ready: st
   await page.locator(ready).first().waitFor({ state: 'visible', timeout: 20_000 }).catch(() => undefined);
   await waitForToastsToClear(page).catch(() => undefined);
   await page.locator('[aria-busy="true"]').waitFor({ state: 'hidden', timeout: 15_000 }).catch(() => undefined);
-  await page.waitForTimeout(300);
+  await page.waitForLoadState('networkidle').catch(() => undefined);
+  await page.waitForTimeout(400);
 }
 
 test.describe('accessibility smoke @smoke', () => {

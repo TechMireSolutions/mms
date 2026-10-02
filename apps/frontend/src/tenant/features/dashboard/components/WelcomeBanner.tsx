@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { formatDayName, formatLongDate, formatHijriDate } from '@mms/shared';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useReducedMotion } from '@/hooks/useReducedMotion';
 import { SectionLabel } from '@/components/ui/SectionLabel';
 import {
   DASHBOARD_ROLE_GREETING_KEYS,
@@ -30,6 +31,7 @@ export function WelcomeBanner({
 }: WelcomeBannerProps): React.JSX.Element {
   const { t } = useTranslation();
   const { user } = useAuth();
+  const reducedMotion = useReducedMotion();
 
   const now = (() => new Date())();
   const dayName = (() => formatDayName(now))();
@@ -47,7 +49,7 @@ export function WelcomeBanner({
 
   return (
     <motion.header
-      initial={{ opacity: 0, y: -8 }}
+      initial={reducedMotion ? false : { opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.2, ease: 'easeOut' }}
       className="relative overflow-hidden rounded-2xl border border-foreground/10 bg-card p-6 md:p-8 text-card-foreground shadow-xs print:bg-none print:border print:border-border print:shadow-none print:p-4"
