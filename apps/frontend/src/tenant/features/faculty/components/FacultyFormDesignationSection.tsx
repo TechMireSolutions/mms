@@ -60,8 +60,9 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
       }
       return list;
     }
-    const raw = departmentOptions?.length ? departmentOptions : FACULTY_DEPARTMENT_VALUES;
-    const list = facultyDraft.department && !raw.includes(facultyDraft.department) ? [facultyDraft.department, ...raw] : raw;
+    const raw: readonly string[] = departmentOptions?.length ? departmentOptions : FACULTY_DEPARTMENT_VALUES;
+    const exists = facultyDraft.department ? raw.some((val) => val === facultyDraft.department) : true;
+    const list = facultyDraft.department && !exists ? [facultyDraft.department, ...raw] : raw;
     return list.map((opt) => ({ value: opt, label: opt }));
   }, [departmentEntities, departmentOptions, facultyDraft.department]);
 
