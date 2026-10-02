@@ -75,6 +75,12 @@ describe("FacultyDepartmentsSetupSection", () => {
     expect(container.textContent).toContain("Quranic Studies");
     expect(container.textContent).toContain("Hadith Sciences");
 
+    const table = container.querySelector("table");
+    expect(table).not.toBeNull();
+    expect(container.textContent).toContain("faculty.setup.departmentName");
+    expect(container.textContent).toContain("faculty.setup.departmentCode");
+    expect(container.textContent).toContain("faculty.setup.parentDepartment");
+
     const inputName = container.querySelector<HTMLInputElement>("input#new-faculty-department-name");
     const inputCode = container.querySelector<HTMLInputElement>("input#new-faculty-department-code");
     expect(inputName).not.toBeNull();

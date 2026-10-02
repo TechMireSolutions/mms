@@ -5,7 +5,7 @@ import { FORM_INPUT } from '@/components/ui/formStyles';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { SectionCard } from '@/components/ui/SectionCard';
-import { FacultyDepartmentRow } from './FacultyDepartmentRow';
+import { FacultyDepartmentsTable } from './FacultyDepartmentsTable';
 import {
   slugifyDepartmentCode,
   useFacultyDepartmentsController,
@@ -126,22 +126,15 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
           </div>
         </form>
 
-        <div className="flex flex-wrap gap-2 pt-1">
-          {orderedDepartments.map((dept) => (
-            <FacultyDepartmentRow
-              key={dept.id}
-              dept={dept}
-              isEditing={editingDepartment?.id === dept.id}
-              isPending={isPending}
-              parentName={dept.parentId ? departments.find((d) => d.id === dept.parentId)?.name : undefined}
-              onEdit={handleStartEdit}
-              onDelete={(d) => void handleDelete(d)}
-            />
-          ))}
-          {orderedDepartments.length === 0 && !isLoading && (
-            <p className="text-xs text-muted-foreground">{t('faculty.setup.noDepartments')}</p>
-          )}
-        </div>
+        <FacultyDepartmentsTable
+          departments={departments}
+          orderedDepartments={orderedDepartments}
+          editingDepartmentId={editingDepartment?.id}
+          isPending={isPending}
+          isLoading={isLoading}
+          onEdit={handleStartEdit}
+          onDelete={(d) => void handleDelete(d)}
+        />
       </div>
     </SectionCard>
   );
