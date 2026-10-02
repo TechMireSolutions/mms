@@ -128,7 +128,7 @@ describe("FacultyFormDesignationSection", () => {
     expect(html).toContain("Hadith Sciences (hadith)");
   });
 
-  it("renders department first, designation second, reporting designation selector, and start/end dates", () => {
+  it("renders department first, designation second, and start/end dates without reporting role", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
         facultyDraft={{
@@ -150,16 +150,6 @@ describe("FacultyFormDesignationSection", () => {
             assignableRoles: ["academic_lead"],
           },
         ]}
-        supervisorCandidates={[
-          {
-            id: "fac-dean",
-            contactId: "cnt-dean",
-            name: "Dean Qasim",
-            hierarchyRank: 1,
-            designation: "Dean of Faculty",
-            status: "active",
-          } as any,
-        ]}
         isFieldEnabled={() => true}
         isFieldRequired={() => false}
         onDraftChange={vi.fn()}
@@ -169,65 +159,19 @@ describe("FacultyFormDesignationSection", () => {
     // Verify ordering: Department is first, Designation is second
     const deptIdx = html.indexOf('id="department"');
     const desIdx = html.indexOf('id="designationId"');
-    const supIdx = html.indexOf('id="reportingFacultyId"');
     const startIdx = html.indexOf('id="designationStartsOn"');
     const endIdx = html.indexOf('id="designationEndsOn"');
 
     expect(deptIdx).toBeGreaterThan(-1);
     expect(desIdx).toBeGreaterThan(deptIdx);
-    expect(supIdx).toBeGreaterThan(desIdx);
-    expect(startIdx).toBeGreaterThan(supIdx);
+    expect(startIdx).toBeGreaterThan(desIdx);
     expect(endIdx).toBeGreaterThan(startIdx);
 
-    // Verify reporting role selector content (designation dropdown, not person name)
-    expect(html).toContain("faculty.form.reportingRole");
-    expect(html).toContain("Dean of Faculty");
-    expect(html).toContain("Rank 1");
-    expect(html).not.toContain("Dean Qasim");
+    // Verify reporting role is not present in designation card
+    expect(html).not.toContain('id="reportingFacultyId"');
+    expect(html).not.toContain("faculty.form.reportingRole");
 
     // Verify end date value is bound
     expect(html).toContain('value="2026-12-31"');
-  });
-
-  it("filters out the selected designation from reporting role options", () => {
-    const html = renderToStaticMarkup(
-      <FacultyFormDesignationSection
-        facultyDraft={{
-          designationId: "des-prof",
-        }}
-        errors={{}}
-        designationOptions={[
-          {
-            id: "des-prof",
-            code: "PROF",
-            name: "Professor",
-            hierarchyRank: 2,
-            isActive: true,
-            assignableRoles: [],
-          },
-          {
-            id: "des-dean",
-            code: "DEAN",
-            name: "Dean",
-            hierarchyRank: 1,
-            isActive: true,
-            assignableRoles: [],
-          },
-        ]}
-        supervisorCandidates={[]}
-        isFieldEnabled={() => true}
-        isFieldRequired={() => false}
-        onDraftChange={vi.fn()}
-      />,
-    );
-
-    // Selected designation (Professor) must be filtered out of the reporting role select
-    // It should only appear once in the document (in the designation dropdown)
-    const matches = html.match(/value="des-prof"/g);
-    expect(matches).toHaveLength(1);
-
-    // Dean must be present in reporting role dropdown
-    expect(html).toContain('value="des-dean"');
-    expect(html).toContain("Dean (Rank 1)");
   });
 });

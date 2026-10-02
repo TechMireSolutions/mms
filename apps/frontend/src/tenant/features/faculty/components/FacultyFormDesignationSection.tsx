@@ -14,7 +14,6 @@ import {
 } from "@mms/shared";
 import { FacultyDepartmentSelectField } from "./FacultyDepartmentSelectField";
 import { FacultyDesignationSelectField } from "./FacultyDesignationSelectField";
-import { FacultyReportingRoleSelectField } from "./FacultyReportingRoleSelectField";
 
 export interface FacultyFormDesignationSectionProps {
   faculty?: FacultyMember;
@@ -41,15 +40,13 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
     isFieldEnabled,
     isFieldRequired,
     onDraftChange,
-    supervisorCandidates,
   } = props;
   const { t } = useTranslation();
 
   const showDesignation = isFieldEnabled("designation");
   const showDepartment = isFieldEnabled("department");
-  const showSupervisor = supervisorCandidates !== undefined && isFieldEnabled("reportingFacultyId");
 
-  if (!showDesignation && !showDepartment && !showSupervisor) return null;
+  if (!showDesignation && !showDepartment) return null;
 
   const currentDefinition = designationOptions.find((item) => item.id === facultyDraft.designationId);
   const assignableRoles = currentDefinition?.assignableRoles ?? facultyDraft.designationAssignableRoles ?? [];
@@ -81,17 +78,6 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
               disabled={Boolean(faculty?.id)}
               designationOptions={designationOptions}
               onChange={onDraftChange}
-            />
-          )}
-
-          {showSupervisor && (
-            <FacultyReportingRoleSelectField
-              facultyDraft={facultyDraft}
-              errors={errors}
-              required={isFieldRequired("reportingFacultyId")}
-              designationOptions={designationOptions}
-              supervisorCandidates={supervisorCandidates}
-              onDraftChange={onDraftChange}
             />
           )}
 
