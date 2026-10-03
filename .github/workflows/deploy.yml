@@ -20,6 +20,10 @@ on:
         description: 'Force Apache vhost re-installation'
         type: boolean
         default: false
+      allow_unverified:
+        description: 'Incident escape hatch — deploy a SHA that is not on main or has no green CI run'
+        type: boolean
+        default: false
 
 permissions:
   contents: read
@@ -35,6 +39,7 @@ jobs:
       github.event_name == 'workflow_dispatch' ||
       (github.event.workflow_run.conclusion == 'success' && github.event.workflow_run.head_branch == 'main')
     runs-on: ubuntu-24.04
+    timeout-minutes: 45
     environment: production
     env:
       PUPPETEER_SKIP_DOWNLOAD: 'true'
@@ -69,8 +74,30 @@ jobs:
           fi
           echo "DEPLOY_SHA=${DEPLOY_SHA}"
 
+      # Manual dispatch must not become a CI bypass: the target has to be on
+      # main and have a green CI push run, unless the incident hatch is set.
+      - name: Verify manual target passed CI
+        if: github.event_name == 'workflow_dispatch' && !inputs.allow_unverified
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          sha="$(gh api "repos/${REPO}/commits/${DEPLOY_SHA}" -q .sha)"
+          status="$(gh api "repos/${REPO}/compare/main...${sha}" -q .status)"
+          if [ "${status}" != "identical" ] && [ "${status}" != "behind" ]; then
+            echo "::error::${sha} is not on main (compare status: ${status})"
+            exit 1
+          fi
+          green="$(gh api "repos/${REPO}/actions/workflows/ci.yml/runs?head_sha=${sha}&event=push&status=success" -q .total_count)"
+          if [ "${green}" = "0" ]; then
+            echo "::error::No successful CI push run for ${sha}"
+            exit 1
+          fi
+          echo "Verified ${sha}: on main with green CI"
+
       - name: Checkout Code
-        uses: actions/checkout@v7
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ env.DEPLOY_SHA }}
 
@@ -97,22 +124,38 @@ jobs:
           sha256sum -c mms-dist.tar.gz.sha256
           ls -lh mms-dist.tar.gz
 
+      # SSH_KNOWN_HOSTS pins the server host key; keyscan at job time is
+      # trust-on-first-use and only kept as a warned fallback until it is set.
       - name: Configure SSH Key
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          SSH_KNOWN_HOSTS: ${{ secrets.SSH_KNOWN_HOSTS }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
+          set -euo pipefail
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
+          printf '%s\n' "${SSH_PRIVATE_KEY}" > ~/.ssh/deploy_key
           chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 22 -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
+          if [ -n "${SSH_KNOWN_HOSTS}" ]; then
+            printf '%s\n' "${SSH_KNOWN_HOSTS}" > ~/.ssh/known_hosts
+          else
+            echo "::warning::SSH_KNOWN_HOSTS secret not set — falling back to unverified ssh-keyscan"
+            ssh-keyscan -p 22 -H "${SERVER_IP}" >> ~/.ssh/known_hosts
+          fi
           chmod 644 ~/.ssh/known_hosts
 
       - name: Copy build tarball to server via SCP
+        env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
         run: |
           scp -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes \
             mms-dist.tar.gz mms-dist.tar.gz.sha256 \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }}:/tmp/
+            "${SERVER_USER}@${SERVER_IP}:/tmp/"
 
       - name: Deploy via SSH
+        id: deploy
         env:
           PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
           PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST }}
@@ -232,8 +275,10 @@ jobs:
 
           echo "Production OK: ${BASE}/ (SHA ${DEPLOY_SHA})"
 
+      # Only roll back once the server was actually touched — a failed build,
+      # checksum, or SCP leaves the running release intact.
       - name: Automated Rollback on Failure
-        if: failure()
+        if: failure() && steps.deploy.outcome != 'skipped'
         run: |
           echo "::error::Deployment or health verification failed — triggering automated rollback..."
           if [ -f ~/.ssh/deploy_key ]; then
