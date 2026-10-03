@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
+import { MODULE_ACCESS_QUERY_KEY } from '@/lib/query/moduleAccessQuery';
 import {
   applyDocumentLanguage,
   mergeGlobalSettings,
@@ -48,6 +50,7 @@ function loadPersistedGlobal(): GlobalSettings {
 export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
   const { t } = useTranslation();
   const { saved, flashSaved, clearSaved } = useSavedFlash();
+  const queryClient = useQueryClient();
   const [baseline, setBaseline] = useState<GlobalSettings>(loadPersistedGlobal);
   const [data, setData] = useState<GlobalSettings>(loadPersistedGlobal);
   const [saving, setSaving] = useState(false);
@@ -130,6 +133,7 @@ export function useGlobalSettingsDraft(): UseGlobalSettingsDraftResult {
         setBaseline(persisted);
         setData(nextData);
         clearGlobalSettingsPreview();
+        void queryClient.invalidateQueries({ queryKey: MODULE_ACCESS_QUERY_KEY });
         flashSaved();
         notify.success(toast?.saveSuccessMessage ?? t('module.system.saved'), {
           description: toast?.saveSuccessDescription ?? t('module.system.savedDesc'),

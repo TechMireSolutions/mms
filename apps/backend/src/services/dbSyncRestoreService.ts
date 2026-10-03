@@ -66,6 +66,8 @@ async function restoreSpecialTenantObject(
     const { upsertWorkspaceGlobalSettings } = await import('../db/repositories/workspaceRepository.js');
     const { mergeGlobalSettings } = await import('@mms/shared');
     await upsertWorkspaceGlobalSettings(tenant, mergeGlobalSettings(record));
+    const { broadcastTenantUpdate } = await import('../lib/livePush.js');
+    broadcastTenantUpdate(tenant, 'object', 'global_settings');
   } else if (key === 'email_integration') {
     const { saveEmailIntegrationConfig } = await import('./email/emailIntegrationService.js');
     const { mergeEmailIntegrationConfig } = await import('@mms/shared');

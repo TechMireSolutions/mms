@@ -170,6 +170,7 @@ export async function apiJson<T>(path: string, init?: RequestInit): Promise<T> {
       requestId,
       errorBody.errors,
       parseRetryAfterSeconds(res.headers.get('retry-after')),
+      errorBody.code,
     );
   }
 

@@ -1,6 +1,6 @@
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { requireTenantModule } from '../../middleware/requireTenantModule.js';
+import { registerModuleAccess } from '../../middleware/requireTenantModule.js';
 import { attendanceUseCases } from '../../attendance/use-cases/attendanceUseCases.js';
 import { ATTENDANCE_MODULE_MANIFEST } from '@mms/shared';
 import { registerStandardExtendedRoutes } from '../../lib/crudRouter.js';
@@ -18,7 +18,7 @@ export default async function attendanceRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
-  fastify.addHook('preHandler', requireTenantModule('attendance'));
+  registerModuleAccess(fastify, 'attendance');
 
   await fastify.register(
     async (sub) => {

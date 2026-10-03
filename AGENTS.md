@@ -54,6 +54,12 @@ Start here in Antigravity: **skill `antigravity-workspace`**.
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
 | `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
 
+## Module access gates — applies to every module-owned surface
+
+Every module-owned route, UI entry point, and backend operation must declare and enforce its module and action-permission requirements. Frontend visibility is not a security boundary. Backend authorization must use authoritative tenant grants, module enablement, and user permissions. Reuse the centralized policy and guards. Explicitly classify non-module routes and add coverage checks so new routes or endpoints cannot silently bypass authorization.
+
+Owners: norm `mms-auth-security` §3 (**Module Access Gates**) · policy `@mms/shared` `moduleAccessPolicy.ts` · backend `registerModuleAccess` + `MODULE_ROUTE_ACTION_RULES` · frontend `TENANT_APP_ROUTE_ACCESS` + `ModuleAccessRoute` · checks `apps/backend/src/__tests__/moduleAccessCoverage.test.ts` and `apps/frontend/src/lib/config/routeAccess.test.ts`.
+
 **Rule → skill map:** every rule carries a **Workflow skills:** line, and the full ownership matrix lives in [.cursor/rules/README.md](.cursor/rules/README.md) (that file is the single owner of the topic→rule→skill index — do not restate it here).
 
 ## Skills (39)

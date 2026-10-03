@@ -9,6 +9,7 @@ export class QueueUnavailableError extends Error {
 }
 import type { BackgroundJobRecord } from '@mms/shared';
 import { runWithTenant } from '../lib/tenantContext.js';
+import { getBackgroundJobModuleDenial } from '../lib/backgroundJobModuleAccess.js';
 import { withTenant } from '../db/tenant-context.js';
 import { backgroundJobs } from '../db/schema.js';
 import {
@@ -160,6 +161,13 @@ export async function executeJob(
 
   if (!runner) {
     await runContext.fail(`No runner registered for ${key}`);
+    return;
+  }
+
+  // Permanent denial: fail without throwing so BullMQ does not retry.
+  const denial = await getBackgroundJobModuleDenial(tenant, userId, moduleId, kind);
+  if (denial) {
+    await runContext.fail(`Module access denied (${denial})`);
     return;
   }
 

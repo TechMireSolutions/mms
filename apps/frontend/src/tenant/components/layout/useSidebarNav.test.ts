@@ -1,8 +1,14 @@
 import { describe, expect, it } from 'vitest';
-import { roleHasPermission } from '@mms/shared';
+import { buildModuleAvailability, evaluateModuleAccess, roleHasPermission, type Permission } from '@mms/shared';
 import { ROUTES } from '@/lib/config/routes';
 import { NAV_ITEMS, type NavItem } from '@/lib/config/navConfig';
-import { filterSidebarNavItems } from './useSidebarNav';
+import { filterSidebarNavItems } from '@/lib/config/navAccess';
+import type { ModuleAccessEvaluator } from '@/lib/config/routeAccess';
+
+function evaluator(enabledModules: Record<string, boolean>, can: (p: Permission) => boolean): ModuleAccessEvaluator {
+  const availability = buildModuleAvailability(null, enabledModules);
+  return (moduleId, action) => evaluateModuleAccess({ moduleId, availability, can, action });
+}
 
 function visiblePaths(items: readonly NavItem[]): string[] {
   return items.flatMap((item) => [
@@ -13,11 +19,7 @@ function visiblePaths(items: readonly NavItem[]): string[] {
 
 describe('filterSidebarNavItems', () => {
   it('omits administrative, financial, and contacts modules for teachers', () => {
-    const items = filterSidebarNavItems(
-      NAV_ITEMS,
-      {},
-      (permission) => roleHasPermission('teacher', permission),
-    );
+    const items = filterSidebarNavItems(NAV_ITEMS, evaluator({}, (permission) => roleHasPermission('teacher', permission)));
     const paths = visiblePaths(items);
 
     expect(paths).toContain(ROUTES.home);
@@ -34,11 +36,7 @@ describe('filterSidebarNavItems', () => {
   });
 
   it('applies the same restrictions to assistant teachers', () => {
-    const items = filterSidebarNavItems(
-      NAV_ITEMS,
-      {},
-      (permission) => roleHasPermission('assistant_teacher', permission),
-    );
+    const items = filterSidebarNavItems(NAV_ITEMS, evaluator({}, (permission) => roleHasPermission('assistant_teacher', permission)));
     const paths = visiblePaths(items);
 
     expect(paths).not.toContain(ROUTES.contacts);
@@ -49,11 +47,7 @@ describe('filterSidebarNavItems', () => {
   });
 
   it('keeps permitted modules visible for administrators', () => {
-    const items = filterSidebarNavItems(
-      NAV_ITEMS,
-      {},
-      (permission) => roleHasPermission('admin', permission),
-    );
+    const items = filterSidebarNavItems(NAV_ITEMS, evaluator({}, (permission) => roleHasPermission('admin', permission)));
     const paths = visiblePaths(items);
 
     expect(paths).toContain(ROUTES.contacts);
@@ -64,13 +58,10 @@ describe('filterSidebarNavItems', () => {
   });
 
   it('also omits modules disabled in workspace settings', () => {
-    const items = filterSidebarNavItems(
-      NAV_ITEMS,
-      { students: false },
-      (permission) => roleHasPermission('admin', permission),
-    );
+    const items = filterSidebarNavItems(NAV_ITEMS, evaluator({ finance: false }, (permission) => roleHasPermission('admin', permission)));
 
-    expect(visiblePaths(items)).not.toContain(ROUTES.students);
+    expect(visiblePaths(items)).not.toContain(ROUTES.finance);
+    expect(visiblePaths(items)).toContain(ROUTES.students);
   });
 
   it('orders academics sub-items in canonical sequence (students, sessions, enrollments, attendance)', () => {

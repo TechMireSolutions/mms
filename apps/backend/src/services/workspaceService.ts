@@ -27,7 +27,7 @@ import {
   getUserModulePreferencesByWorkspace,
   upsertUserModulePreferences,
 } from '../db/repositories/userModulePreferencesRepository.js';
-import { clearModuleAccessCacheForTenant } from '../middleware/requireTenantModule.js';
+import { clearModuleAvailabilityCache } from '../lib/moduleAvailabilityService.js';
 import { broadcastTenantUpdate } from '../lib/livePush.js';
 
 export {
@@ -54,7 +54,7 @@ export async function invalidateWorkspaceCache(subdomain: string): Promise<void>
   const normalized = normalizeSubdomainInput(subdomain);
   if (!normalized) return;
   await redisDel(workspaceCacheKey(normalized));
-  clearModuleAccessCacheForTenant(normalized);
+  clearModuleAvailabilityCache(normalized);
   broadcastTenantUpdate(normalized, 'object', 'workspace');
   broadcastTenantUpdate(normalized, 'object', 'branding');
 }

@@ -184,6 +184,7 @@ export * from './schemas/messaging.dto.js';
 export * from './schemas/api.dto.js';
 export * from './contracts/ai.contract.js';
 export * from './contracts/health.contract.js';
+export * from './contracts/moduleAccess.contract.js';
 export * from './contracts/index.js';
 export * from './studentsExportUtils.js';
 export * from './studentsListQuery.js';
@@ -317,6 +318,7 @@ export * from './questionBankTypes.js';
 // 11. Users & Messaging Modules
 // ---------------------------------------------------------------------------
 export * from './dashboardModuleManifest.js';
+export * from './moduleAccessPolicy.js';
 export * from './messagingModuleManifest.js';
 export * from './messagingPersonalizeUtils.js';
 export * from './messagingSchemas.js';

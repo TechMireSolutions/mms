@@ -113,6 +113,8 @@ Update this table in the same change that adds or removes a check.
 | Platform UI ownership (native controls, duplicate exports/JSX, semantic palette classes) | `apps/frontend/src/platform/platformUiArchitecture.test.ts` | test |
 | Coverage floors (FE 41/39, BE 45/27) | vitest thresholds in each workspace | test |
 | Work directory convergence (selection SSOT, two-layer bulk chrome, no dead adapters) | `pnpm run check:work-directory` | ratchet |
+| Every module-owned API route gated (`registerModuleAccess`), every route classified | `apps/backend/src/__tests__/moduleAccessCoverage.test.ts` | test |
+| Every tenant app-shell route classified in `TENANT_APP_ROUTE_ACCESS` | `apps/frontend/src/lib/config/routeAccess.test.ts` | test |
 | Tier structure, trunk tests, review criteria, UI/UX Pro Max design intelligence | none — **advisory** (review discipline) | advisory |
 
 

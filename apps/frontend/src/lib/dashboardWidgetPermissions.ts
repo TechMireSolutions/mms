@@ -12,6 +12,7 @@ import {
   CONTACTS_MODULE_MANIFEST,
   QUESTION_BANK_MODULE_MANIFEST,
   ACCOUNTING_MODULE_MANIFEST,
+  resolveAccessModuleId,
 } from '@mms/shared';
 
 /**
@@ -20,6 +21,7 @@ import {
  */
 export const DASHBOARD_COLLECTION_MODULE_ID: Partial<Record<ReportCollection, string>> = {
   sessions: SESSIONS_MODULE_MANIFEST.moduleId,
+  enrollments: ENROLLMENTS_MODULE_MANIFEST.moduleId,
   attendance_records: ATTENDANCE_MODULE_MANIFEST.moduleId,
   hasanat_distributions: HASANAT_MODULE_MANIFEST.moduleId,
   finance_invoices: FINANCE_MODULE_MANIFEST.moduleId,
@@ -107,7 +109,8 @@ export function isDashboardWidgetModuleEnabled(
   widget: Pick<CustomWidget, 'id' | 'collection' | 'category' | 'widgetType'>,
   enabledModules: Record<string, boolean | undefined>,
 ): boolean {
-  const isModuleEnabled = (moduleId: string) => enabledModules[moduleId] !== false;
+  // Manifest ids (e.g. `enrollments`) resolve to the system ids the flags are keyed by.
+  const isModuleEnabled = (moduleId: string) => enabledModules[resolveAccessModuleId(moduleId) ?? moduleId] !== false;
 
   if (widget.widgetType === 'hasanat-distribution') {
     return isModuleEnabled(HASANAT_MODULE_MANIFEST.moduleId);

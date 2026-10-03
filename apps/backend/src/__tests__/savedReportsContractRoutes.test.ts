@@ -137,7 +137,7 @@ describe('savedReportsContractRouter', () => {
         headers: authHeaders(viewerToken(app)),
       });
       expect(response.statusCode).toBe(403);
-      expect(response.json()).toEqual({ type: 'forbidden', message: 'Insufficient permissions' });
+      expect(response.json()).toEqual({ type: 'forbidden', code: 'PERMISSION_DENIED', moduleId: 'students', message: 'Insufficient permissions' });
       expect(mockListSavedReportsByOwner).not.toHaveBeenCalled();
     });
   });

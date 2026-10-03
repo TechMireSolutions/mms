@@ -10,7 +10,7 @@ import {
   getQuickActionIconClasses,
 } from '@/lib/dashboardWidgetColors';
 import type { DashboardRole } from '@/lib/dashboardRole';
-import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
+import { useModuleAccess } from '@/tenant/hooks/useModuleAccess';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePermissions } from '@/tenant/hooks/usePermissions';
 import { useReducedMotion } from '@/hooks/useReducedMotion';
@@ -24,16 +24,15 @@ interface QuickActionsPanelProps {
  */
 export function QuickActionsPanel({ dashboardRole }: QuickActionsPanelProps): React.JSX.Element | null {
 
-  const settings = useGlobalSettings();
+  const { evaluate } = useModuleAccess();
   const { t } = useTranslation();
   const { can } = usePermissions();
   const reducedMotion = useReducedMotion();
-  const enabledModules = (() => settings.enabledModules || {})();
 
   const actions = (() =>
       getQuickActionsForRole(dashboardRole).filter(
         (quickAction) =>
-          enabledModules[quickAction.moduleId] !== false && can(quickAction.permission),
+          evaluate(quickAction.moduleId, 'availability').allowed && can(quickAction.permission),
       ))();
 
   if (actions.length === 0) return null;

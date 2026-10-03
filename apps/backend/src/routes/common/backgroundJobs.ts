@@ -17,6 +17,7 @@ import {
 } from '../../services/exportArtifactService.js';
 import { getUserBackgroundJob } from '../../services/backgroundJobWorkerService.js';
 import { readStreamFromStorage } from '../../config/storage.js';
+import { enforceModuleAccess } from '../../middleware/requireTenantModule.js';
 
 export default async function backgroundJobRoutes(
   fastify: FastifyInstance,
@@ -38,6 +39,15 @@ export default async function backgroundJobRoutes(
     const user = request.user as User;
     const params = parseRequest(resourceIdParamsSchema, request.params);
     if (!params.ok) return replyValidationError(reply, params.message);
+    // Artifacts hold module data: re-check the owning module before serving.
+    let job: Awaited<ReturnType<typeof getUserBackgroundJob>>;
+    try {
+      job = await getUserBackgroundJob(String(user.id), params.data.id);
+    } catch {
+      return sendDatabaseError(reply, 'Failed to download export');
+    }
+    if (!job) return sendNotFound(reply, 'Export file not found or expired');
+    if (!(await enforceModuleAccess(request, reply, job.moduleId, 'export'))) return;
     let stream: NodeJS.ReadableStream;
     let contentType: string;
     try {

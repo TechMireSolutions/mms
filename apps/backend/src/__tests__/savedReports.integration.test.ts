@@ -187,7 +187,7 @@ describe('generic saved-reports REST routes', () => {
       },
     });
     expect(response.statusCode).toBe(403);
-    expect(response.json()).toEqual({ type: 'forbidden', message: 'Insufficient permissions' });
+    expect(response.json()).toEqual({ type: 'forbidden', code: 'PERMISSION_DENIED', moduleId: 'finance', message: 'Insufficient permissions' });
     expect(mockListSavedReportsByOwner).not.toHaveBeenCalled();
   });
 

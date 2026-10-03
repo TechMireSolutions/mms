@@ -12,7 +12,7 @@ import { initServer, type RouterImplementation } from '@ts-rest/fastify';
 import { standardRequestValidationErrorHandler } from '../../lib/contractRegistration.js';
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { requireTenantModule } from '../../middleware/requireTenantModule.js';
+import { pickReadableModuleSections, registerModuleAccess } from '../../middleware/requireTenantModule.js';
 import { withTenant } from '../../db/tenant-context.js';
 import { requireTenant } from '../../lib/tenantContext.js';
 import { createCollectionAuditHelper } from '../../lib/createCollectionAuditHelper.js';
@@ -182,10 +182,10 @@ const dashboardRouter = s.router(dashboardContract, {
     }
   },
 
-  getSummary: async ({ query }: ContractRouteArgs<typeof dashboardContract['getSummary']>): Promise<ContractRouteResponse<typeof dashboardContract['getSummary']>> => {
+  getSummary: async ({ query, request }: ContractRouteArgs<typeof dashboardContract['getSummary']>): Promise<ContractRouteResponse<typeof dashboardContract['getSummary']>> => {
     try {
       requireTenant();
-      const summary = await loadDashboardSummary(query?.date, query?.role);
+      const summary = await pickReadableModuleSections(request, await loadDashboardSummary(query?.date, query?.role));
       return { status: 200 as const, body: { summary: summary as Record<string, unknown> } };
     } catch (err) {
       logger.error({ err }, 'Failed to load dashboard summary');
@@ -203,7 +203,7 @@ const dashboardRouter = s.router(dashboardContract, {
  */
 const dashboardRoutes: FastifyPluginAsync = async (fastify) => {
   fastify.addHook('preHandler', authenticateTenant);
-  fastify.addHook('preHandler', requireTenantModule('dashboard'));
+  registerModuleAccess(fastify, 'dashboard');
   await fastify.register(s.plugin(dashboardRouter), {
     requestValidationErrorHandler: standardRequestValidationErrorHandler,
   });

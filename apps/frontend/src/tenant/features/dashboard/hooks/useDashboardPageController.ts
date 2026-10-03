@@ -9,7 +9,7 @@ import { usePermissions } from '@/tenant/hooks/usePermissions';
 import type { CustomWidget } from '@/lib/reports/pinnedWidgetTypes';
 import { useDashboardData } from '@/tenant/features/dashboard/hooks/useDashboardData';
 import { useDashboardMetricCards } from '@/tenant/features/dashboard/hooks/useDashboardMetricCards';
-import { useGlobalSettings } from '@/tenant/hooks/useGlobalSettings';
+import { useModuleAccess } from '@/tenant/hooks/useModuleAccess';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useDashboardConfig } from '@/hooks/useDashboardConfig';
 import { buildDashboardNotifications } from '@/lib/buildDashboardNotifications';
@@ -21,8 +21,8 @@ export function useDashboardPageController() {
   const { formatCurrency } = useFinanceCurrency();
   const { can } = usePermissions();
   const dashboardRole = (() => resolveDashboardRole(can))();
-  const globalSettings = useGlobalSettings();
-  const enabledModules = globalSettings.enabledModules || {};
+  // Server-authoritative grant ∧ enablement; all false while loading, so no module widget fetches early.
+  const { effectiveModules: enabledModules } = useModuleAccess();
 
   const {
     disabledCardIds,

@@ -1,7 +1,7 @@
 import type { FastifyPluginAsync } from 'fastify';
 import type { User } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { requireTenantModule } from '../../middleware/requireTenantModule.js';
+import { registerModuleAccess } from '../../middleware/requireTenantModule.js';
 import { contactUseCases } from '../../contacts/use-cases/contactUseCases.js';
 import {
   registerMetricsRoute,
@@ -27,7 +27,7 @@ export const contactRoutes: FastifyPluginAsync = async (
   _options,
 ) => {
   fastify.addHook('preHandler', authenticateTenant);
-  fastify.addHook('preHandler', requireTenantModule('contacts'));
+  registerModuleAccess(fastify, 'contacts');
 
   await fastify.register(
     async (sub) => {

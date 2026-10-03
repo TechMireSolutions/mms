@@ -15,6 +15,8 @@ import {
   closeAllConnections,
   getActiveConnectionsCount,
 } from './livePushConnections.js';
+import { MODULE_ACCESS_INVALIDATION_KEYS } from '@mms/shared';
+import { clearModuleAvailabilityCache } from './moduleAvailabilityService.js';
 
 export {
   type MinimalWebSocket,
@@ -106,6 +108,10 @@ export function broadcastLocalTenantUpdate(
   key: string
 ): void {
   const normSubdomain = subdomain.trim().toLowerCase();
+  // Runs for local and Redis-relayed updates alike, so every node drops stale module gates.
+  if (type === 'object' && MODULE_ACCESS_INVALIDATION_KEYS.has(key)) {
+    clearModuleAvailabilityCache(normSubdomain);
+  }
   const tenantSet = getTenantConnections(normSubdomain);
   const sseSet = getTenantSseConnections(normSubdomain);
   if ((!tenantSet || tenantSet.size === 0) && (!sseSet || sseSet.size === 0)) return;

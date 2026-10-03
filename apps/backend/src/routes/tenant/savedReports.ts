@@ -1,7 +1,6 @@
 import type { FastifyPluginAsync } from 'fastify';
 import {
   savedReportsContract,
-  roleHasPermission,
   type GenericSavedReportCategory,
   type Permission,
   type User,
@@ -23,6 +22,7 @@ import { standardRequestValidationErrorHandler } from '../../lib/contractRegistr
 import type { ContractRouteArgs, ContractRouteResponse } from '../../lib/contractRouterTypes.js';
 import { createCollectionAuditHelper } from '../../lib/createCollectionAuditHelper.js';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { getModuleAccessDenial } from '../../middleware/requireTenantModule.js';
 import { getRequestTenant } from '../../lib/tenantContext.js';
 import {
   createSavedReportForOwner,
@@ -88,9 +88,8 @@ const savedReportsRouter = s.router(savedReportsContract, {
   list: async ({ query, request }: ContractRouteArgs<typeof savedReportsContract['list']>): Promise<ContractRouteResponse<typeof savedReportsContract['list']>> => {
     const user = request.user as User;
     const gate = CATEGORY_MODULE_MAP[query.category];
-    if (!roleHasPermission(user.role, gate.permissions.read)) {
-      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-    }
+    const denied = await getModuleAccessDenial(request, gate.moduleId, 'read');
+    if (denied) return { status: 403 as const, body: denied };
     const tenantId = getTenantId(request);
     if (!tenantId) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Missing tenant context' } };
@@ -106,9 +105,8 @@ const savedReportsRouter = s.router(savedReportsContract, {
   create: async ({ body, request }: ContractRouteArgs<typeof savedReportsContract['create']>): Promise<ContractRouteResponse<typeof savedReportsContract['create']>> => {
     const user = request.user as User;
     const gate = CATEGORY_MODULE_MAP[body.category];
-    if (!roleHasPermission(user.role, gate.permissions.read)) {
-      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-    }
+    const denied = await getModuleAccessDenial(request, gate.moduleId, 'read');
+    if (denied) return { status: 403 as const, body: denied };
     const tenantId = getTenantId(request);
     if (!tenantId) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Missing tenant context' } };
@@ -129,9 +127,8 @@ const savedReportsRouter = s.router(savedReportsContract, {
   delete: async ({ params: { id }, query, request }: ContractRouteArgs<typeof savedReportsContract['delete']>): Promise<ContractRouteResponse<typeof savedReportsContract['delete']>> => {
     const user = request.user as User;
     const gate = CATEGORY_MODULE_MAP[query.category];
-    if (!roleHasPermission(user.role, gate.permissions.read)) {
-      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-    }
+    const denied = await getModuleAccessDenial(request, gate.moduleId, 'read');
+    if (denied) return { status: 403 as const, body: denied };
     const tenantId = getTenantId(request);
     if (!tenantId) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Missing tenant context' } };
@@ -151,9 +148,8 @@ const savedReportsRouter = s.router(savedReportsContract, {
   run: async ({ params: { id }, query, request }: ContractRouteArgs<typeof savedReportsContract['run']>): Promise<ContractRouteResponse<typeof savedReportsContract['run']>> => {
     const user = request.user as User;
     const gate = CATEGORY_MODULE_MAP[query.category];
-    if (!roleHasPermission(user.role, gate.permissions.read)) {
-      return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
-    }
+    const denied = await getModuleAccessDenial(request, gate.moduleId, 'read');
+    if (denied) return { status: 403 as const, body: denied };
     const tenantId = getTenantId(request);
     if (!tenantId) {
       return { status: 403 as const, body: { type: 'forbidden', message: 'Missing tenant context' } };
@@ -173,7 +169,7 @@ const savedReportsRouter = s.router(savedReportsContract, {
 
 /**
  * Generic saved-report preset routes — @ts-rest contract router.
- * Owner-scoped only: every op is gated on the owning module's read permission
+ * Owner-scoped only: every op is gated on the owning module's grant, enablement and read permission
  * and restricted to the caller's own presets for the category.
  */
 export default async function savedReportsRoutes(

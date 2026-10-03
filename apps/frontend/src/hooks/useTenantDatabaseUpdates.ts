@@ -2,7 +2,8 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { useAuth } from '@/lib/contexts/AuthContext';
 import { connectTenantDatabaseSocket } from '@/lib/tenantWebSocket';
-import type { BackgroundJobEventMessage } from '@mms/shared';
+import { MODULE_ACCESS_INVALIDATION_KEYS, type BackgroundJobEventMessage } from '@mms/shared';
+import { MODULE_ACCESS_QUERY_KEY } from '@/lib/query/moduleAccessQuery';
 import {
   patchLocalBackgroundJobOnly,
   upsertLocalBackgroundJob,
@@ -86,6 +87,10 @@ export function useTenantDatabaseUpdates(): void {
 
     return connectTenantDatabaseSocket({
       onDatabaseUpdate: (message) => {
+        if (message.type === 'object' && MODULE_ACCESS_INVALIDATION_KEYS.has(message.key)) {
+          void queryClient.invalidateQueries({ queryKey: MODULE_ACCESS_QUERY_KEY });
+          return;
+        }
         if (message.type !== 'collection') return;
         scheduleInvalidate(message.key);
       },
@@ -121,5 +126,5 @@ export function useTenantDatabaseUpdates(): void {
         }
       },
     });
-  }, [authChecked, isAuthenticated, scheduleInvalidate]);
+  }, [authChecked, isAuthenticated, queryClient, scheduleInvalidate]);
 }

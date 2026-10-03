@@ -1,4 +1,5 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings as SettingsIcon } from 'lucide-react';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
@@ -34,6 +35,12 @@ export default function Settings(): React.JSX.Element {
   const { can } = usePermissions();
   const reducedMotion = useReducedMotion();
   const [tab, setTab] = usePersistedTabState<SettingsSection>('mms-settings-tab', 'global');
+  const requestedTab = (useLocation().state as { settingsTab?: unknown } | null)?.settingsTab;
+
+  // Deep links (e.g. "Open Settings → Modules" from a disabled-module screen) pick the section.
+  useEffect(() => {
+    if (typeof requestedTab === 'string' && isSettingsSection(requestedTab)) setTab(requestedTab);
+  }, [requestedTab]); // eslint-disable-line react-hooks/exhaustive-deps -- setTab identity changes per render
 
   const handleTabChange = ((id: string) => {
       if (isSettingsSection(id)) {

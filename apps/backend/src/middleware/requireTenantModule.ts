@@ -1,114 +1,154 @@
-import type { FastifyReply, FastifyRequest } from 'fastify';
-import { sendForbidden } from '../lib/httpErrors.js';
-import { getRequestTenant } from '../lib/tenantContext.js';
+import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
 import {
-  getWorkspaceGlobalSettings,
-  getWorkspaceGrantedModulesRepo,
-} from '../db/repositories/workspaceRepository.js';
-import { normalizeEnabledModules, type User } from '@mms/shared';
+  evaluateModuleAccess,
+  resolveAccessModuleId,
+  roleHasPermission,
+  type AccessControlledModuleId,
+  type ModuleAccessDecision,
+  type ModuleAccessDenialCode,
+  type ModuleAccessDeniedBody,
+  type ModuleAction,
+  type User,
+} from '@mms/shared';
+import { getRequestTenant } from '../lib/tenantContext.js';
+import { loadModuleAvailability } from '../lib/moduleAvailabilityService.js';
+import { resolveCurrentTenantRole } from '../lib/currentTenantRole.js';
+import { resolveModuleRouteAction } from '../lib/moduleRouteActions.js';
 import { markRequestDiagnosticStage } from '../lib/requestDiagnostics.js';
 import { logger } from '../lib/logger.js';
 
-type ModuleAccessCacheEntry = {
-  expiresAt: number;
-  globalSettings: unknown;
-  grantedModules: string[];
+declare module 'fastify' {
+  interface FastifyContextConfig {
+    /** Stamped by `registerModuleAccess`; read by `moduleAccessGuard` and the coverage test. */
+    moduleAccess?: { moduleId: AccessControlledModuleId; action: ModuleAction };
+    /** Optional explicit action for a hand-written module route. */
+    moduleAction?: ModuleAction;
+  }
+}
+
+const DENIAL_MESSAGES: Record<ModuleAccessDenialCode, (moduleId: string) => string> = {
+  MODULE_NOT_GRANTED: (id) => `The ${id} module is not permitted by the platform.`,
+  MODULE_DISABLED: (id) => `The ${id} module is disabled for this workspace.`,
+  PERMISSION_DENIED: () => 'Insufficient permissions',
+  MODULE_ACCESS_UNAVAILABLE: () => 'Failed to verify module access',
 };
 
-const moduleAccessCache = new Map<string, ModuleAccessCacheEntry>();
-const CACHE_TTL_MS = 60_000;
-const MAX_CACHE_ENTRIES = 500;
-
-function getCachedModuleAccess(tenant: string): { globalSettings: unknown; grantedModules: string[] } | null {
-  const entry = moduleAccessCache.get(tenant);
-  if (!entry) return null;
-  if (Date.now() > entry.expiresAt) {
-    moduleAccessCache.delete(tenant);
-    return null;
-  }
-  return entry;
-}
-
-function setCachedModuleAccess(tenant: string, globalSettings: unknown, grantedModules: string[]): void {
-  if (moduleAccessCache.size >= MAX_CACHE_ENTRIES) {
-    const oldestKey = moduleAccessCache.keys().next().value;
-    if (oldestKey) moduleAccessCache.delete(oldestKey);
-  }
-  moduleAccessCache.set(tenant, {
-    expiresAt: Date.now() + CACHE_TTL_MS,
-    globalSettings,
-    grantedModules,
-  });
-}
-
-export function clearModuleAccessCacheForTenant(tenant?: string): void {
-  if (tenant) {
-    moduleAccessCache.delete(tenant);
-  } else {
-    moduleAccessCache.clear();
-  }
+export function sendModuleAccessDenied(
+  reply: FastifyReply,
+  code: ModuleAccessDenialCode,
+  moduleId: string,
+): FastifyReply {
+  const body: ModuleAccessDeniedBody = {
+    type: 'forbidden',
+    code,
+    moduleId,
+    message: DENIAL_MESSAGES[code](moduleId),
+  };
+  return reply.status(403).send(body);
 }
 
 /**
- * Creates a Fastify preHandler middleware that restricts access to a route
- * if the specified module is disabled for the current workspace.
+ * Evaluates grant → enablement → action permission from server-side state only:
+ * the auth-verified tenant, the JWT-verified user, and the workspace row.
  */
-export function requireTenantModule(moduleId: string) {
-  return async (request: FastifyRequest, reply: FastifyReply): Promise<void> => {
-    markRequestDiagnosticStage(request, 'module_access');
-    try {
-      const tenant =
-        getRequestTenant() ??
-        (request as unknown as { tenant?: { subdomain?: string; id?: string } }).tenant?.subdomain ??
-        (request.user as User | undefined)?.workspaceSubdomain;
-      if (!tenant) {
-        return;
-      }
+export async function checkModuleAccess(
+  request: FastifyRequest,
+  moduleId: string,
+  action: ModuleAction,
+): Promise<ModuleAccessDecision> {
+  const tenant = request.tenant?.id ?? getRequestTenant();
+  const user = request.user as User | undefined;
+  if (!tenant || !user?.role) return { allowed: false, code: 'MODULE_ACCESS_UNAVAILABLE' };
+  if (user.workspaceSubdomain && user.workspaceSubdomain.toLowerCase() !== tenant.toLowerCase()) {
+    return { allowed: false, code: 'MODULE_ACCESS_UNAVAILABLE' };
+  }
+  try {
+    const availability = await loadModuleAvailability(tenant);
+    const role = user.id ? await resolveCurrentTenantRole(tenant, String(user.id), user.role) : user.role;
+    return evaluateModuleAccess({
+      moduleId,
+      availability,
+      action,
+      can: (permission) => role !== null && roleHasPermission(role, permission),
+    });
+  } catch (err) {
+    logger.error({ err, moduleId, tenant }, 'Failed to load module availability; denying request');
+    return { allowed: false, code: 'MODULE_ACCESS_UNAVAILABLE' };
+  }
+}
 
-      let globalSettings: unknown = null;
-      let grantedModules: string[] = [];
+/** Denial body for contract handlers that return responses instead of using `reply`; null when allowed. */
+export async function getModuleAccessDenial(
+  request: FastifyRequest,
+  moduleId: string,
+  action: ModuleAction,
+): Promise<ModuleAccessDeniedBody | null> {
+  const decision = await checkModuleAccess(request, moduleId, action);
+  if (decision.allowed) return null;
+  const id = resolveAccessModuleId(moduleId) ?? moduleId;
+  return { type: 'forbidden', code: decision.code, moduleId: id, message: DENIAL_MESSAGES[decision.code](id) };
+}
 
-      const cached = getCachedModuleAccess(tenant);
-      if (cached) {
-        globalSettings = cached.globalSettings;
-        grantedModules = cached.grantedModules;
-      } else {
-        try {
-          globalSettings = await getWorkspaceGlobalSettings(tenant);
-          grantedModules = await getWorkspaceGrantedModulesRepo(tenant);
-          setCachedModuleAccess(tenant, globalSettings, grantedModules);
-        } catch (error) {
-          // Tests run without a database and expect default-enabled behaviour.
-          if (process.env.NODE_ENV === 'test' || process.env.VITEST) return;
-          // Fail closed in real environments: a DB outage must not silently
-          // disable module gating.
-          logger.error({ err: error, moduleId }, 'Failed to load module access; denying request');
-          await sendForbidden(reply, 'Failed to verify module access');
-          return;
-        }
-      }
+/**
+ * Keeps only the sections of a cross-module payload (keyed by module id) the
+ * caller may read; unknown keys are dropped so new sections fail closed.
+ */
+export async function pickReadableModuleSections<T extends object>(
+  request: FastifyRequest,
+  sections: T,
+): Promise<Partial<T>> {
+  const entries = Object.entries(sections) as [keyof T & string, T[keyof T & string]][];
+  const decisions = await Promise.all(
+    entries.map(([moduleId]) => checkModuleAccess(request, moduleId, 'read')),
+  );
+  const visible: Partial<T> = {};
+  entries.forEach(([key, value], i) => {
+    if (decisions[i]?.allowed) visible[key] = value;
+  });
+  return visible;
+}
 
-      const enabledModules = normalizeEnabledModules(
-        (globalSettings as { enabledModules?: Record<string, boolean> } | null)?.enabledModules
-      );
+/** In-handler gate for routes whose module is only known per request. Returns false after replying 403. */
+export async function enforceModuleAccess(
+  request: FastifyRequest,
+  reply: FastifyReply,
+  moduleId: string,
+  action: ModuleAction,
+): Promise<boolean> {
+  const denial = await getModuleAccessDenial(request, moduleId, action);
+  if (!denial) return true;
+  await reply.status(403).send(denial);
+  return false;
+}
 
-      if (grantedModules.length > 0) {
-        const hasAccess = grantedModules.includes(moduleId);
-        if (!hasAccess) {
-          await sendForbidden(reply, `The ${moduleId} module is not permitted by the platform.`);
-          return;
-        }
-      }
+export async function moduleAccessGuard(request: FastifyRequest, reply: FastifyReply): Promise<void> {
+  markRequestDiagnosticStage(request, 'module_access');
+  const access = request.routeOptions.config.moduleAccess;
+  if (!access) {
+    await sendModuleAccessDenied(reply, 'MODULE_ACCESS_UNAVAILABLE', 'unknown');
+    return;
+  }
+  await enforceModuleAccess(request, reply, access.moduleId, access.action);
+}
 
-      const isEnabled = enabledModules[moduleId] !== false;
-
-      if (!isEnabled) {
-        await sendForbidden(reply, `The ${moduleId} module is disabled for this workspace.`);
-        return;
-      }
-    } catch (error) {
-      logger.error({ err: error, moduleId }, 'Failed to check module access');
-      await sendForbidden(reply, 'Failed to verify module access');
-    }
-  };
+/**
+ * Declares a Fastify plugin scope as owned by `moduleId`: stamps every route
+ * registered afterwards (including child plugins) with its module and required
+ * action, and gates each request on grant, enablement, and that action's
+ * permission. Call right after `authenticateTenant`, before registering routes.
+ */
+export function registerModuleAccess(fastify: FastifyInstance, moduleId: string): void {
+  const canonical = resolveAccessModuleId(moduleId);
+  if (!canonical) throw new Error(`registerModuleAccess: unknown module "${moduleId}"`);
+  fastify.addHook('onRoute', (route) => {
+    const config = route.config ?? {};
+    route.config = {
+      ...config,
+      moduleAccess: {
+        moduleId: canonical,
+        action: resolveModuleRouteAction(route.method, route.url ?? route.path, canonical, config.moduleAction),
+      },
+    };
+  });
+  fastify.addHook('preHandler', moduleAccessGuard);
 }

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, useEffect, useCallback, Suspense } from "react";
 import { Outlet } from "react-router-dom";
 import { ModuleScaffoldSkeleton } from "@/components/common/ModuleScaffold";
 import { AppShell } from "@/components/common/AppShell";
@@ -20,6 +20,8 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { useGlobalShortcut } from "@/hooks/useGlobalShortcut";
 import { useNavigationState } from '@/hooks/useNavigationState';
 import { useInitializeUiState } from "@/tenant/hooks/useInitializeUiState";
+import { useModuleAccess } from "@/tenant/hooks/useModuleAccess";
+import { canShowRoute } from "@/lib/config/routeAccess";
 
 /**
  * Main authenticated application shell layout. Orchestrates the primary sidebar,
@@ -32,6 +34,11 @@ export default function AppLayout(): React.JSX.Element {
     openCommandPalette, closeCommandPalette, toggleCommandPalette,
   } = useNavigationState();
   const branding = useBranding();
+  const { evaluate } = useModuleAccess();
+  const isCommandPathVisible = useCallback(
+    (path: string) => canShowRoute(new URL(path, "http://app.local").pathname, evaluate),
+    [evaluate],
+  );
   const { t } = useTranslation();
   const sessionTimeoutModal = useSessionTimeout();
   useInitializeUiState();
@@ -103,7 +110,7 @@ export default function AppLayout(): React.JSX.Element {
       commandPalette={
         commandPaletteOpen ? (
           <Suspense fallback={null}>
-            <CommandPalette open={commandPaletteOpen} onClose={closeCommandPalette} />
+            <CommandPalette open={commandPaletteOpen} onClose={closeCommandPalette} isPathVisible={isCommandPathVisible} />
           </Suspense>
         ) : null
       }

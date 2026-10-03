@@ -1,6 +1,6 @@
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { requireTenantModule } from '../../middleware/requireTenantModule.js';
+import { registerModuleAccess } from '../../middleware/requireTenantModule.js';
 import {
   facultySetupConfigRoutes,
   facultyLookupRoutes,
@@ -25,7 +25,7 @@ export default async function facultyRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
-  fastify.addHook('preHandler', requireTenantModule('faculty'));
+  registerModuleAccess(fastify, 'faculty');
 
   // Canonical /api/faculty, /api/tenant/faculty & /api/v1/tenant/faculty
   await fastify.register(facultySetupConfigRoutes, { prefix: '/api/faculty' });
