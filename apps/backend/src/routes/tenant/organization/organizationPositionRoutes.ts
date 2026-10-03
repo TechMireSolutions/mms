@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import {
   organizationPositionInsertSchema,
   organizationPositionUpdateSchema,
+  isQueryFlagTrue,
   type User,
 } from '@mms/shared';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
@@ -15,14 +16,22 @@ import {
 import { getOrganizationPositionTree } from '../../../db/repositories/organizationPositionHierarchyRepository.js';
 
 export async function organizationPositionRoutes(fastify: FastifyInstance): Promise<void> {
-  fastify.get<{ Querystring: { departmentId?: string; locationId?: string } }>(
+  fastify.get<{ Querystring: { departmentId?: string; locationId?: string; includeDeleted?: string } }>(
     '/api/organization/positions',
     async (request, reply) => {
       const user = request.user as User;
       if (!canReadCollection(user, 'faculty')) {
         return reply.status(403).send({ message: 'Forbidden' });
       }
-      const positions = await listOrganizationPositions(String(request.tenant?.id), request.query);
+      const includeDeleted = isQueryFlagTrue(request.query?.includeDeleted);
+      if (includeDeleted && !canDeleteCollection(user, 'faculty')) {
+        return reply.status(403).send({ message: 'Trash access requires delete permission' });
+      }
+      const positions = await listOrganizationPositions(String(request.tenant?.id), {
+        departmentId: request.query.departmentId,
+        locationId: request.query.locationId,
+        includeDeleted,
+      });
       return reply.status(200).send(positions);
     },
   );

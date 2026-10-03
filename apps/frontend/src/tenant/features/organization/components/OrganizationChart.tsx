@@ -12,9 +12,13 @@ import { OrganizationPositionFormModal } from './OrganizationPositionFormModal';
 
 export interface OrganizationChartProps {
   canWrite?: boolean;
+  canDelete?: boolean;
 }
 
-export function OrganizationChart({ canWrite = true }: OrganizationChartProps): React.JSX.Element {
+export function OrganizationChart({
+  canWrite = true,
+  canDelete = false,
+}: OrganizationChartProps): React.JSX.Element {
   const { t } = useTranslation();
   const { data: tree = [], isLoading, refetch } = useOrganizationTree();
   const [blueprintModalOpen, setBlueprintModalOpen] = useState(false);
@@ -114,6 +118,7 @@ export function OrganizationChart({ canWrite = true }: OrganizationChartProps): 
         onClose={() => setPositionModalOpen(false)}
         parent={parentForCreate}
         editNode={editNode}
+        canDelete={canDelete}
       />
     </div>
   );

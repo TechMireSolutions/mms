@@ -83,11 +83,18 @@ export async function handleSaveAssignment({
     return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
   }
   try {
-    if (body.reportsToAssignmentId) {
-      if (body.reportsToAssignmentId === id) {
+    const existing = await findFacultyAssignmentById(String(tenantId), id);
+    // Compatibility-only: ignore reportsToAssignmentId on create; validate only on update when present.
+    const reportsToAssignmentId = existing
+      ? (body.reportsToAssignmentId !== undefined
+        ? body.reportsToAssignmentId
+        : existing.reportsToAssignmentId ?? null)
+      : null;
+    if (reportsToAssignmentId) {
+      if (reportsToAssignmentId === id) {
         return { status: 400 as const, body: { type: 'validation_error', message: 'Assignment cannot report to itself' } };
       }
-      const isSafe = await checkAssignmentCycleSafe(String(tenantId), id, body.reportsToAssignmentId);
+      const isSafe = await checkAssignmentCycleSafe(String(tenantId), id, reportsToAssignmentId);
       if (!isSafe) {
         return { status: 400 as const, body: { type: 'validation_error', message: 'Circular reporting hierarchy detected' } };
       }
@@ -95,6 +102,7 @@ export async function handleSaveAssignment({
 
     await saveFacultyAssignment(String(tenantId), {
       ...body,
+      reportsToAssignmentId,
       id,
       facultyId,
       workspaceSubdomain: String(tenantId),

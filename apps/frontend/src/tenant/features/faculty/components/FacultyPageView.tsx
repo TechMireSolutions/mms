@@ -3,6 +3,7 @@ import { School } from "lucide-react";
 import { ModulePageShell } from "@/components/ui/ModulePageShell";
 import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs";
 import { useTranslation } from "@/hooks/useTranslation";
+import { useIndustryTerminology } from "@/tenant/hooks/useIndustryTerminology";
 import { FacultyCommandMetrics } from "@/tenant/features/faculty/components/FacultyCommandMetrics";
 import { FacultyPageHeaderActions } from "@/tenant/features/faculty/components/FacultyPageHeaderActions";
 import { FacultyPageOverlays } from "@/tenant/features/faculty/components/FacultyPageOverlays";
@@ -40,19 +41,21 @@ export function FacultyPageView({
   pageOverlaysProps,
 }: FacultyPageViewProps): React.JSX.Element {
   const { t } = useTranslation();
+  const terminology = useIndustryTerminology();
 
   return (
     <ModulePageShell
-      seoTitle={t("page.faculty.seoTitle")}
+      seoTitle={`MMS - ${terminology.facultyLabel}`}
       seoDescription={t('page.faculty.subtitle')}
       headerIcon={School}
-      headerTitle={t('nav.faculty')}
+      headerTitle={terminology.facultyLabel}
       headerSubtitle={t('page.faculty.subtitle')}
       headerActions={
         <FacultyPageHeaderActions
           canExport={canExport}
           canWrite={canWrite}
           viewingDeleted={viewingDeleted}
+          staffSingular={terminology.staffSingular}
           onExport={() => {
             void handleExportCSV();
           }}

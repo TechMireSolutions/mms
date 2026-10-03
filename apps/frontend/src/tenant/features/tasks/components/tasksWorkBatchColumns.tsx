@@ -1,6 +1,6 @@
 /**
- * @file tasksWorkColumns.tsx
- * @description Column + filter definitions for Tasks Work directory.
+ * @file tasksWorkBatchColumns.tsx
+ * @description WorkBatchTable column definitions for Tasks Work directory.
  */
 
 import { User as UserIcon } from 'lucide-react';
@@ -8,30 +8,42 @@ import {
   type TaskRecord,
   type TaskStatus,
   type AppTranslationKey,
-  TASK_STATUSES,
-  TASK_PRIORITIES,
 } from '@mms/shared';
-import type { DataTableColumn, DataTableFilter } from '@/components/common/data-table';
+import type { WorkBatchTableColumn } from '@/components/common/work/WorkBatchTable';
 import { TaskPriorityBadge, TaskStatusBadge } from './TaskBadges';
 
-export function buildTasksWorkColumns(
+export const TASK_NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
+  todo: 'in_progress',
+  in_progress: 'in_review',
+  in_review: 'completed',
+  blocked: 'in_progress',
+  completed: 'todo',
+  cancelled: 'todo',
+};
+
+export function buildTasksWorkBatchColumns(
   t: (key: AppTranslationKey) => string,
   canWrite: boolean,
   onCycleStatus: (task: TaskRecord) => void,
-): DataTableColumn<TaskRecord>[] {
+  onView: (task: TaskRecord) => void,
+): WorkBatchTableColumn<TaskRecord>[] {
   return [
     {
       id: 'title',
       label: t('tasks.title'),
-      fixed: true,
-      searchValue: (task) => `${task.title} ${task.description ?? ''}`,
       render: (task) => (
-        <div>
-          <div className="font-medium text-foreground">{task.title}</div>
+        <button
+          type="button"
+          className="min-h-11 w-full text-start"
+          onClick={() => onView(task)}
+        >
+          <div className="font-medium text-foreground hover:text-primary transition-colors">
+            {task.title}
+          </div>
           {task.description ? (
             <div className="text-xs text-muted-foreground line-clamp-1">{task.description}</div>
           ) : null}
-        </div>
+        </button>
       ),
     },
     {
@@ -54,12 +66,10 @@ export function buildTasksWorkColumns(
     {
       id: 'assignees',
       label: t('tasks.assignees'),
-      searchValue: (task) =>
-        task.assignees?.map((a) => a.facultyName || a.positionName).filter(Boolean).join(' ') ?? '',
       render: (task) =>
         task.assignees?.length ? (
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
-            <UserIcon className="h-3.5 w-3.5 shrink-0" />
+            <UserIcon className="h-3.5 w-3.5 shrink-0" aria-hidden />
             <span className="truncate">
               {task.assignees
                 .map((a) => a.facultyName || a.positionName || t('tasks.assigneeFallback'))
@@ -81,7 +91,13 @@ export function buildTasksWorkColumns(
           task.status !== 'cancelled' &&
           new Date(task.dueAt) < new Date();
         return (
-          <span className={isOverdue ? 'text-destructive font-medium text-xs' : 'text-muted-foreground text-xs'}>
+          <span
+            className={
+              isOverdue
+                ? 'text-destructive font-medium text-xs'
+                : 'text-muted-foreground text-xs'
+            }
+          >
             {new Date(task.dueAt).toLocaleDateString()}
           </span>
         );
@@ -89,37 +105,3 @@ export function buildTasksWorkColumns(
     },
   ];
 }
-
-export function buildTasksWorkFilters(
-  t: (key: AppTranslationKey) => string,
-): DataTableFilter<TaskRecord>[] {
-  return [
-    {
-      id: 'status',
-      label: t('tasks.status'),
-      options: TASK_STATUSES.map((s) => ({
-        value: s,
-        label: t(`tasks.status.${s}` as AppTranslationKey),
-      })),
-      getValue: (task) => task.status,
-    },
-    {
-      id: 'priority',
-      label: t('tasks.priority'),
-      options: TASK_PRIORITIES.map((p) => ({
-        value: p,
-        label: t(`tasks.priority.${p}` as AppTranslationKey),
-      })),
-      getValue: (task) => task.priority,
-    },
-  ];
-}
-
-export const TASK_NEXT_STATUS: Record<TaskStatus, TaskStatus> = {
-  todo: 'in_progress',
-  in_progress: 'in_review',
-  in_review: 'completed',
-  blocked: 'in_progress',
-  completed: 'todo',
-  cancelled: 'todo',
-};

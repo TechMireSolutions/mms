@@ -3,7 +3,7 @@
  * @description CRUD operations for tenant organization locations.
  */
 
-import { and, eq, isNull } from 'drizzle-orm';
+import { and, eq, isNull, isNotNull } from 'drizzle-orm';
 import type { OrganizationLocationInsert, OrganizationLocationUpdate } from '@mms/shared';
 import { organizationLocations } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
@@ -41,13 +41,17 @@ const SELECT_COLS = {
 
 export async function listOrganizationLocations(
   tenant: string,
+  options: { includeDeleted?: boolean } = {},
 ): Promise<OrganizationLocationRow[]> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
+    const deletedFilter = options.includeDeleted
+      ? isNotNull(organizationLocations.deletedAt)
+      : isNull(organizationLocations.deletedAt);
     return tx
       .select(SELECT_COLS)
       .from(organizationLocations)
-      .where(and(eq(organizationLocations.workspaceSubdomain, subdomain), isNull(organizationLocations.deletedAt)))
+      .where(and(eq(organizationLocations.workspaceSubdomain, subdomain), deletedFilter))
       .orderBy(organizationLocations.name);
   });
 }

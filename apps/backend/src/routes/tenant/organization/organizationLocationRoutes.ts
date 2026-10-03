@@ -2,6 +2,7 @@ import type { FastifyInstance } from 'fastify';
 import {
   organizationLocationInsertSchema,
   organizationLocationUpdateSchema,
+  isQueryFlagTrue,
   type User,
 } from '@mms/shared';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../../services/rbacService.js';
@@ -14,14 +15,23 @@ import {
 } from '../../../db/repositories/organizationLocationRepository.js';
 
 export async function organizationLocationRoutes(fastify: FastifyInstance): Promise<void> {
-  fastify.get('/api/organization/locations', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'faculty')) {
-      return reply.status(403).send({ message: 'Forbidden' });
-    }
-    const locations = await listOrganizationLocations(String(request.tenant?.id));
-    return reply.status(200).send(locations);
-  });
+  fastify.get<{ Querystring: { includeDeleted?: string } }>(
+    '/api/organization/locations',
+    async (request, reply) => {
+      const user = request.user as User;
+      if (!canReadCollection(user, 'faculty')) {
+        return reply.status(403).send({ message: 'Forbidden' });
+      }
+      const includeDeleted = isQueryFlagTrue(request.query?.includeDeleted);
+      if (includeDeleted && !canDeleteCollection(user, 'faculty')) {
+        return reply.status(403).send({ message: 'Trash access requires delete permission' });
+      }
+      const locations = await listOrganizationLocations(String(request.tenant?.id), {
+        includeDeleted,
+      });
+      return reply.status(200).send(locations);
+    },
+  );
 
   fastify.get<{ Params: { id: string } }>('/api/organization/locations/:id', async (request, reply) => {
     const user = request.user as User;

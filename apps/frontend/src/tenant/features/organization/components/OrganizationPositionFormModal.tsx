@@ -10,27 +10,29 @@ import {
   type OrganizationPositionTreeNode,
 } from '@mms/shared';
 import { FormModal } from '@/components/ui/FormModal';
-import { Field } from '@/components/ui/FormPrimitives';
-import { FormSelect } from '@/components/ui/FormSelect';
-import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { notify } from '@/lib/notify';
 import { useTranslation } from '@/hooks/useTranslation';
 import {
   useCreatePosition,
+  useDeletePosition,
   useOrganizationLocations,
   useOrganizationPositions,
+  useRestorePosition,
   useUpdatePosition,
 } from '@/tenant/hooks/collections/organization';
 import {
   useFacultyDepartments,
   useFacultyDesignations,
 } from '@/tenant/hooks/collections/faculty';
+import { OrganizationPositionFormFields } from './OrganizationPositionFormFields';
 
 export interface OrganizationPositionFormModalProps {
   open: boolean;
   onClose: () => void;
   parent?: OrganizationPositionTreeNode | null;
   editNode?: OrganizationPositionTreeNode | null;
+  canDelete?: boolean;
 }
 
 const EMPTY: OrganizationPositionInsert = {
@@ -50,11 +52,14 @@ export function OrganizationPositionFormModal({
   onClose,
   parent = null,
   editNode = null,
+  canDelete = false,
 }: OrganizationPositionFormModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const [draft, setDraft] = useState<OrganizationPositionInsert>(EMPTY);
   const createMutation = useCreatePosition();
   const updateMutation = useUpdatePosition();
+  const deleteMutation = useDeletePosition();
+  const restoreMutation = useRestorePosition();
   const { data: departments = [] } = useFacultyDepartments();
   const designationsQuery = useFacultyDesignations();
   const { data: locations = [] } = useOrganizationLocations({ enabled: open });
@@ -104,10 +109,18 @@ export function OrganizationPositionFormModal({
     }
   }
 
-  const designationOptions = (designationsQuery.data ?? []).map((d) => ({
-    value: d.id,
-    label: d.name,
-  }));
+  async function handleArchive() {
+    if (!editNode) return;
+    try {
+      await deleteMutation.mutateAsync(editNode.id);
+      notify.archivedWithUndo(t('organization.position.deleted'), () => {
+        void restoreMutation.mutateAsync(editNode.id);
+      });
+      onClose();
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : t('organization.position.deleteFailed'));
+    }
+  }
 
   return (
     <FormModal
@@ -115,83 +128,29 @@ export function OrganizationPositionFormModal({
       onClose={onClose}
       title={editNode ? t('organization.position.editTitle') : t('organization.position.addTitle')}
       onSave={() => void handleSave()}
-      saving={createMutation.isPending || updateMutation.isPending}
+      saving={createMutation.isPending || updateMutation.isPending || deleteMutation.isPending}
+      footerStart={
+        editNode && canDelete ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="min-h-11 text-destructive"
+            onClick={() => void handleArchive()}
+          >
+            {t('common.delete')}
+          </Button>
+        ) : undefined
+      }
     >
-      <div className="space-y-3">
-        <Field id="pos-code" label={t('organization.position.code')} required>
-          <Input
-            id="pos-code"
-            value={draft.code}
-            onChange={(e) => setDraft((d) => ({ ...d, code: e.target.value }))}
-          />
-        </Field>
-        <Field id="pos-name" label={t('organization.position.name')} required>
-          <Input
-            id="pos-name"
-            value={draft.name}
-            onChange={(e) => setDraft((d) => ({ ...d, name: e.target.value }))}
-          />
-        </Field>
-        <Field id="pos-dept" label={t('faculty.form.department')}>
-          <FormSelect
-            id="pos-dept"
-            value={draft.departmentId ?? ''}
-            onChange={(v) => setDraft((d) => ({ ...d, departmentId: v || null }))}
-            options={[
-              { value: '', label: t('common.notSpecified') },
-              ...departments.map((d) => ({ value: d.id, label: d.name })),
-            ]}
-          />
-        </Field>
-        <Field id="pos-desig" label={t('faculty.designations.name')}>
-          <FormSelect
-            id="pos-desig"
-            value={draft.designationId ?? ''}
-            onChange={(v) => setDraft((d) => ({ ...d, designationId: v || null }))}
-            options={[
-              { value: '', label: t('common.notSpecified') },
-              ...designationOptions,
-            ]}
-          />
-        </Field>
-        <Field id="pos-loc" label={t('organization.locations')}>
-          <FormSelect
-            id="pos-loc"
-            value={draft.locationId ?? ''}
-            onChange={(v) => setDraft((d) => ({ ...d, locationId: v || null }))}
-            options={[
-              { value: '', label: t('common.notSpecified') },
-              ...locations.map((l) => ({ value: l.id, label: l.name })),
-            ]}
-          />
-        </Field>
-        <Field id="pos-parent" label={t('organization.position.parent')}>
-          <FormSelect
-            id="pos-parent"
-            value={draft.parentPositionId ?? ''}
-            onChange={(v) => setDraft((d) => ({ ...d, parentPositionId: v || null }))}
-            options={[
-              { value: '', label: t('organization.position.root') },
-              ...positions
-                .filter((p) => p.id !== editNode?.id)
-                .map((p) => ({ value: p.id, label: `${p.name} (${p.code})` })),
-            ]}
-          />
-        </Field>
-        <Field id="pos-cap" label={t('organization.capacity')}>
-          <Input
-            id="pos-cap"
-            inputMode="numeric"
-            value={String(draft.capacity ?? 1)}
-            onChange={(e) =>
-              setDraft((d) => ({
-                ...d,
-                capacity: Math.max(1, Number.parseInt(e.target.value, 10) || 1),
-              }))
-            }
-          />
-        </Field>
-      </div>
+      <OrganizationPositionFormFields
+        draft={draft}
+        editId={editNode?.id}
+        departments={departments}
+        designations={designationsQuery.data ?? []}
+        locations={locations}
+        positions={positions}
+        onDraftChange={(patch) => setDraft((d) => ({ ...d, ...patch }))}
+      />
     </FormModal>
   );
 }

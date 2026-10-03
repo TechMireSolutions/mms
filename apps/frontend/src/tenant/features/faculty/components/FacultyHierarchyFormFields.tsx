@@ -3,6 +3,7 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { FORM_INPUT, FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 import { cn } from "@/lib/utils";
 import {
@@ -35,6 +36,14 @@ export function FacultyHierarchyFormFields({
 
   return (
     <>
+      {showSupervisor ? (
+        <WarningCallout
+          className="mb-2"
+          density="compact"
+          tone="info"
+          title={t("faculty.form.hierarchyDeprecatedNotice")}
+        />
+      ) : null}
       {showDepartment && (
         <Field
           label={t("faculty.form.department")}

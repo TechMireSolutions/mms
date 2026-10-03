@@ -25,11 +25,16 @@ export function invalidateOrganizationQueries(queryClient: ReturnType<typeof use
 }
 
 // ── Locations ───────────────────────────────────────────────────────────────
-export function useOrganizationLocations(options: { enabled?: boolean } = {}) {
+export function useOrganizationLocations(
+  options: { enabled?: boolean; includeDeleted?: boolean } = {},
+) {
+  const includeDeleted = options.includeDeleted === true;
   return useQuery({
-    queryKey: ORGANIZATION_LOCATIONS_QUERY_KEY,
-    queryFn: ({ signal }) =>
-      apiJson<OrganizationLocationRecord[]>('/api/organization/locations', { signal }),
+    queryKey: [...ORGANIZATION_LOCATIONS_QUERY_KEY, { includeDeleted }] as const,
+    queryFn: ({ signal }) => {
+      const qs = includeDeleted ? '?includeDeleted=true' : '';
+      return apiJson<OrganizationLocationRecord[]>(`/api/organization/locations${qs}`, { signal });
+    },
     enabled: options.enabled ?? true,
     staleTime: 30_000,
   });
@@ -54,7 +59,7 @@ export function useUpdateLocation() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: OrganizationLocationUpdate }) =>
       apiJson<OrganizationLocationRecord>(`/api/organization/locations/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         body: JSON.stringify(data),
       }),
     onSuccess: () => {
@@ -77,11 +82,16 @@ export function useDeleteLocation() {
 }
 
 // ── Positions & Tree ───────────────────────────────────────────────────────
-export function useOrganizationPositions(options: { enabled?: boolean } = {}) {
+export function useOrganizationPositions(
+  options: { enabled?: boolean; includeDeleted?: boolean } = {},
+) {
+  const includeDeleted = options.includeDeleted === true;
   return useQuery({
-    queryKey: ORGANIZATION_POSITIONS_QUERY_KEY,
-    queryFn: ({ signal }) =>
-      apiJson<OrganizationPositionRecord[]>('/api/organization/positions', { signal }),
+    queryKey: [...ORGANIZATION_POSITIONS_QUERY_KEY, { includeDeleted }] as const,
+    queryFn: ({ signal }) => {
+      const qs = includeDeleted ? '?includeDeleted=true' : '';
+      return apiJson<OrganizationPositionRecord[]>(`/api/organization/positions${qs}`, { signal });
+    },
     enabled: options.enabled ?? true,
     staleTime: 30_000,
   });
@@ -116,7 +126,7 @@ export function useUpdatePosition() {
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: OrganizationPositionUpdate }) =>
       apiJson<OrganizationPositionRecord>(`/api/organization/positions/${id}`, {
-        method: 'PUT',
+        method: 'PATCH',
         body: JSON.stringify(data),
       }),
     onSuccess: () => {

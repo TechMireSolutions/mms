@@ -116,8 +116,8 @@ export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
     },
     {
       key: "reportingFacultyId", label: "Reporting Supervisor", labelKey: "faculty.field.reportingSupervisor",
-      type: "select", enabled: true, order: 1, required: false,
-      description: "Immediate supervising faculty member.",
+      type: "select", enabled: false, order: 1, required: false,
+      description: "Legacy person-level supervisor. Prefer organization position occupancy on appointments.",
       descriptionKey: "faculty.fields.reportingSupervisorDesc",
     },
   ],

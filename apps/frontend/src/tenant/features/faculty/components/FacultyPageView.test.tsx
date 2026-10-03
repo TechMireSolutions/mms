@@ -36,6 +36,14 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+vi.mock("@/tenant/hooks/useIndustryTerminology", () => ({
+  useIndustryTerminology: () => ({
+    facultyLabel: "Faculty Team",
+    staffSingular: "Teacher",
+    locationLabel: "Campus",
+  }),
+}));
+
 vi.mock("@/tenant/features/faculty/components/FacultyWorkTier", () => ({
   FacultyWorkTier: () => <div data-testid="faculty-work-tier">Faculty Work Tier</div>,
 }));
@@ -73,7 +81,7 @@ describe("FacultyPageView Component", () => {
       />,
     );
 
-    expect(html).toContain("nav.faculty");
+    expect(html).toContain("Faculty Team");
     expect(html).toContain("Faculty Work Tier");
     expect(html).toContain("Faculty Overlays");
   });

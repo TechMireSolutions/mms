@@ -6,6 +6,7 @@ import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { useTrashMode } from '@/hooks/useTrashMode';
+import { useWorkSelection } from '@/hooks/useWorkSelection';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
@@ -29,6 +30,12 @@ export default function TasksPage(): React.JSX.Element {
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
   const [viewingDeleted, setViewingDeleted] = useTrashMode();
+  const {
+    selectedIds,
+    toggleSelected,
+    toggleSelectAll,
+    clearSelection,
+  } = useWorkSelection<string>();
 
   const { canRead, canWrite, canDelete, canEditSetup, canViewSetup } =
     useModulePermissions(TASKS_MODULE_MANIFEST);
@@ -138,7 +145,14 @@ export default function TasksPage(): React.JSX.Element {
                 canWrite={canWrite && !viewingDeleted}
                 canDelete={canDelete}
                 viewingDeleted={viewingDeleted}
-                onToggleTrash={setViewingDeleted}
+                selectedIds={selectedIds}
+                onToggleSelected={toggleSelected}
+                onToggleSelectAll={toggleSelectAll}
+                onClearSelection={clearSelection}
+                onToggleTrash={(next) => {
+                  setViewingDeleted(next);
+                  clearSelection();
+                }}
                 onAddNew={handleOpenCreate}
                 onEdit={handleOpenEdit}
                 onDelete={handleDelete}

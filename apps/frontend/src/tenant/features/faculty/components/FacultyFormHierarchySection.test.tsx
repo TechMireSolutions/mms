@@ -49,6 +49,7 @@ describe("FacultyFormHierarchySection", () => {
     );
 
     expect(html).toContain("faculty.form.tab.hierarchy");
+    expect(html).toContain("faculty.form.hierarchyDeprecatedNotice");
     expect(html).toContain('id="hierarchyRank"');
     expect(html).toContain('id="reportingFacultyId"');
     expect(html).toContain("Dean Qasim");

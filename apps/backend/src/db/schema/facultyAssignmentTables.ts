@@ -28,9 +28,9 @@ import { softDeleteColumns } from './softDeleteSchema.js';
  *   no DB-level partial unique index is used — this allows historical primary
  *   records and explicit lifecycle transitions.
  *
- * - `reports_to_assignment_id` enables org-chart traversal: the supervisor's
- *   assignment row (not the faculty row directly). Recursive CTEs on this column
- *   produce upward/downward hierarchical views.
+ * - `reports_to_assignment_id` is compatibility-only. Canonical structure uses
+ *   `organization_positions.parent_position_id` + `position_id` occupancy.
+ *   New appointments soft-stop writing this column; legacy CTEs may still read it.
  */
 export const facultyAssignments = pgTable('faculty_assignments', {
   id: text('id').notNull(),

@@ -67,6 +67,8 @@ vi.mock('@/tenant/hooks/collections/organization', () => ({
   useOrganizationPositions: () => ({ data: [], isLoading: false }),
   useCreatePosition: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useUpdatePosition: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useDeletePosition: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useRestorePosition: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
 vi.mock('@/tenant/hooks/collections/faculty', () => ({

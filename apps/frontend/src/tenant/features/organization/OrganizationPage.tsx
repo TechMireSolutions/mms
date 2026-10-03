@@ -1,28 +1,35 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Network, Sparkles } from 'lucide-react';
+import { FACULTY_MODULE_MANIFEST } from '@mms/shared';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
+import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
 import { Button } from '@/components/ui/button';
+import { useTrashMode } from '@/hooks/useTrashMode';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useIndustryTerminology } from '@/tenant/hooks/useIndustryTerminology';
+import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import {
   useOrganizationPositions,
   useOrganizationLocations,
 } from '@/tenant/hooks/collections/organization';
 import { OrganizationChart } from './components/OrganizationChart';
 import { OrganizationLocationsPanel } from './components/OrganizationLocationsPanel';
+import { OrganizationArchivedPositions } from './components/OrganizationArchivedPositions';
 import { OrganizationBlueprintModal } from './components/OrganizationBlueprintModal';
 
 export default function OrganizationPage(): React.JSX.Element {
   const { t } = useTranslation();
   const terminology = useIndustryTerminology();
+  const { canWrite, canDelete } = useModulePermissions(FACULTY_MODULE_MANIFEST);
   const [activeTab, setActiveTab] = useState<'chart' | 'locations' | 'setup'>('chart');
   const [blueprintOpen, setBlueprintOpen] = useState(false);
+  const [viewingDeleted, setViewingDeleted] = useTrashMode();
 
-  const { data: positions = [] } = useOrganizationPositions();
-  const { data: locations = [] } = useOrganizationLocations();
+  const { data: positions = [] } = useOrganizationPositions({ includeDeleted: false });
+  const { data: locations = [] } = useOrganizationLocations({ includeDeleted: false });
 
   const pageTabs = [
     { id: 'chart', label: t('organization.tree') },
@@ -37,6 +44,14 @@ export default function OrganizationPage(): React.JSX.Element {
       headerIcon={Network}
       headerTitle={t('nav.organization')}
       headerSubtitle={t('page.organization.subtitle')}
+      headerActions={
+        canDelete ? (
+          <ModuleTrashToggle
+            viewingDeleted={viewingDeleted}
+            onToggle={() => setViewingDeleted(!viewingDeleted)}
+          />
+        ) : undefined
+      }
       metricsStrip={
         <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
           <span>
@@ -58,9 +73,21 @@ export default function OrganizationPage(): React.JSX.Element {
       >
         <AnimatePresence mode="wait">
           <ModuleTierMotion tier={activeTab} className="space-y-4">
-            {activeTab === 'chart' && <OrganizationChart />}
-            {activeTab === 'locations' && <OrganizationLocationsPanel />}
-            {activeTab === 'setup' && (
+            {activeTab === 'chart' && (
+              viewingDeleted ? (
+                <OrganizationArchivedPositions />
+              ) : (
+                <OrganizationChart canWrite={canWrite} canDelete={canDelete} />
+              )
+            )}
+            {activeTab === 'locations' && (
+              <OrganizationLocationsPanel
+                canWrite={canWrite}
+                canDelete={canDelete}
+                viewingDeleted={viewingDeleted}
+              />
+            )}
+            {activeTab === 'setup' && !viewingDeleted ? (
               <div className="rounded-lg border border-border bg-card p-5 space-y-3 max-w-2xl">
                 <h3 className="font-semibold text-foreground text-wrap-balance">
                   {t('organization.blueprints')}
@@ -77,7 +104,7 @@ export default function OrganizationPage(): React.JSX.Element {
                   {t('organization.applyBlueprint')}
                 </Button>
               </div>
-            )}
+            ) : null}
           </ModuleTierMotion>
         </AnimatePresence>
       </ResponsiveAccordionTabs>

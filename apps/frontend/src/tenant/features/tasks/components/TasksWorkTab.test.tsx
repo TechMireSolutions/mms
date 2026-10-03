@@ -6,8 +6,50 @@ import { TasksWorkTab } from './TasksWorkTab';
 
 vi.mock('@/hooks/useTranslation', () => ({
   useTranslation: () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: { count?: number }) =>
+      params?.count !== undefined ? `${key}:${params.count}` : key,
   }),
+}));
+
+vi.mock('./TasksListDesktopTable', () => ({
+  TasksListDesktopTable: ({
+    tasks,
+    emptyAction,
+  }: {
+    tasks: TaskRecord[];
+    emptyAction?: React.ReactNode;
+  }) => (
+    <div data-testid="tasks-table">
+      {tasks.map((task) => (
+        <div key={task.id}>
+          {task.title}
+          <span>{`tasks.priority.${task.priority}`}</span>
+          <span>{`tasks.status.${task.status}`}</span>
+        </div>
+      ))}
+      {tasks.length === 0 ? <div>tasks.emptyTitle</div> : null}
+      {emptyAction}
+    </div>
+  ),
+}));
+
+vi.mock('./TaskDetailDrawer', () => ({
+  TaskDetailDrawer: () => null,
+}));
+
+vi.mock('@/components/common/work/WorkTaskToolbar', () => ({
+  WorkTaskToolbar: ({
+    primaryAction,
+    regionLabel,
+  }: {
+    primaryAction?: React.ReactNode;
+    regionLabel: string;
+  }) => (
+    <div>
+      <span>{regionLabel}</span>
+      {primaryAction}
+    </div>
+  ),
 }));
 
 const mockTask: TaskRecord = {
@@ -35,6 +77,10 @@ describe('TasksWorkTab', () => {
         isLoading={false}
         canWrite={true}
         canDelete={true}
+        selectedIds={[]}
+        onToggleSelected={vi.fn()}
+        onToggleSelectAll={vi.fn()}
+        onClearSelection={vi.fn()}
         onAddNew={vi.fn()}
         onEdit={vi.fn()}
         onDelete={vi.fn()}
@@ -53,6 +99,10 @@ describe('TasksWorkTab', () => {
         isLoading={false}
         canWrite={true}
         canDelete={true}
+        selectedIds={[]}
+        onToggleSelected={vi.fn()}
+        onToggleSelectAll={vi.fn()}
+        onClearSelection={vi.fn()}
         onAddNew={vi.fn()}
         onEdit={vi.fn()}
         onDelete={vi.fn()}

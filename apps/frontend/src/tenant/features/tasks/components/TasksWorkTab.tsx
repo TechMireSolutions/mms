@@ -1,17 +1,17 @@
-import React from 'react';
-import { Plus, Pencil, Trash2, RotateCcw } from 'lucide-react';
-import type { TaskRecord, TaskStatus } from '@mms/shared';
+/**
+ * @file TasksWorkTab.tsx
+ * @description Tasks Work tier — toolbar, selection, WorkBatchTable, detail drawer.
+ */
+
+import React, { useMemo, useState } from 'react';
+import { Plus } from 'lucide-react';
+import { TASK_STATUSES, type TaskRecord, type TaskStatus } from '@mms/shared';
 import { Button } from '@/components/ui/button';
-import { EmptyState } from '@/components/ui/EmptyState';
-import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
-import { DataTable, DataTableRowActions } from '@/components/common/data-table';
+import { WorkTaskToolbar } from '@/components/common/work/WorkTaskToolbar';
 import { useTranslation } from '@/hooks/useTranslation';
-import { TaskCardItem } from './TaskCardItem';
-import {
-  TASK_NEXT_STATUS,
-  buildTasksWorkColumns,
-  buildTasksWorkFilters,
-} from './tasksWorkColumns';
+import { TasksListDesktopTable } from './TasksListDesktopTable';
+import { TaskDetailDrawer } from './TaskDetailDrawer';
+import { TasksBulkActionBar } from './TasksBulkActionBar';
 
 export interface TasksWorkTabProps {
   tasks: TaskRecord[];
@@ -19,6 +19,10 @@ export interface TasksWorkTabProps {
   canWrite: boolean;
   canDelete: boolean;
   viewingDeleted?: boolean;
+  selectedIds: string[];
+  onToggleSelected: (id: string, checked: boolean) => void;
+  onToggleSelectAll: (checked: boolean, visibleIds: string[]) => void;
+  onClearSelection: () => void;
   onToggleTrash?: (next: boolean) => void;
   onAddNew: () => void;
   onEdit: (task: TaskRecord) => void;
@@ -33,6 +37,10 @@ export function TasksWorkTab({
   canWrite,
   canDelete,
   viewingDeleted = false,
+  selectedIds,
+  onToggleSelected,
+  onToggleSelectAll,
+  onClearSelection,
   onToggleTrash,
   onAddNew,
   onEdit,
@@ -41,82 +49,109 @@ export function TasksWorkTab({
   onUpdateStatus,
 }: TasksWorkTabProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string[]>([]);
+  const [viewingTask, setViewingTask] = useState<TaskRecord | null>(null);
 
-  const handleCycleStatus = (task: TaskRecord) => {
-    if (viewingDeleted) return;
-    onUpdateStatus(task.id, TASK_NEXT_STATUS[task.status] || 'todo');
-  };
+  const filteredTasks = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    return tasks.filter((task) => {
+      if (statusFilter.length > 0 && !statusFilter.includes(task.status)) return false;
+      if (!q) return true;
+      const haystack = `${task.title} ${task.description ?? ''} ${
+        task.assignees?.map((a) => a.facultyName || a.positionName).join(' ') ?? ''
+      }`.toLowerCase();
+      return haystack.includes(q);
+    });
+  }, [tasks, search, statusFilter]);
 
-  const trashToggle = onToggleTrash && canDelete ? (
-    <ModuleTrashToggle
-      viewingDeleted={viewingDeleted}
-      onToggle={() => onToggleTrash(!viewingDeleted)}
-    />
-  ) : null;
-
-  const primaryAction = (
-    <div className="flex items-center gap-2">
-      {trashToggle}
-      {canWrite && !viewingDeleted ? (
-        <Button type="button" className="min-h-11 gap-1.5" onClick={onAddNew}>
-          <Plus className="h-4 w-4" />
-          {t('tasks.create')}
-        </Button>
-      ) : null}
-    </div>
-  );
+  const primaryAction =
+    canWrite && !viewingDeleted ? (
+      <Button type="button" className="min-h-11 gap-1.5" onClick={onAddNew}>
+        <Plus className="h-4 w-4" aria-hidden />
+        {t('tasks.create')}
+      </Button>
+    ) : undefined;
 
   return (
-    <DataTable
-      tableId="tasks.work"
-      label={t('nav.tasks')}
-      data={tasks}
-      columns={buildTasksWorkColumns(t, canWrite, handleCycleStatus)}
-      filters={buildTasksWorkFilters(t)}
-      isLoading={isLoading}
-      primaryAction={primaryAction}
-      renderCard={(task) => (
-        <TaskCardItem
-          task={task}
-          onEdit={onEdit}
-          onDelete={onDelete}
-          onStatusCycle={handleCycleStatus}
-          canWrite={canWrite && !viewingDeleted}
-          canDelete={canDelete}
-        />
-      )}
-      renderRowActions={(task) => {
-        const actions = [];
-        if (viewingDeleted && canDelete && onRestore) {
-          actions.push({
-            id: 'restore',
-            label: t('tasks.restore'),
-            icon: RotateCcw,
-            onClick: () => onRestore(task.id),
-          });
-        } else {
-          if (canWrite) {
-            actions.push({ id: 'edit', label: t('common.edit'), icon: Pencil, onClick: () => onEdit(task) });
-          }
-          if (canDelete) {
-            actions.push({
-              id: 'delete',
-              label: t('common.delete'),
-              icon: Trash2,
-              tone: 'destructive' as const,
-              onClick: () => onDelete(task.id),
-            });
-          }
+    <div className="space-y-3">
+      <WorkTaskToolbar
+        regionLabel={t('nav.tasks')}
+        shownCountLabel={t('tasks.shownCount', { count: filteredTasks.length })}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={t('tasks.searchPlaceholder')}
+        statusFilter={{
+          activeIds: statusFilter,
+          options: TASK_STATUSES.map((status) => ({
+            id: status,
+            label: t(`tasks.status.${status}`),
+          })),
+          onToggle: (id) =>
+            setStatusFilter((current) =>
+              current.includes(id) ? current.filter((s) => s !== id) : [...current, id],
+            ),
+          allLabel: t('common.all'),
+          onResetAll: () => setStatusFilter([]),
+        }}
+        trashToggle={
+          onToggleTrash && canDelete
+            ? {
+                canViewDeleted: canDelete,
+                viewingDeleted,
+                onToggle: onToggleTrash,
+                activeLabel: t('tasks.showActive'),
+                deletedLabel: t('tasks.showDeleted'),
+              }
+            : undefined
         }
-        return actions.length > 0 ? <DataTableRowActions actions={actions} /> : null;
-      }}
-      emptyState={
-        <EmptyState
-          title={viewingDeleted ? t('tasks.trashEmptyTitle') : t('tasks.emptyTitle')}
-          description={viewingDeleted ? t('tasks.trashEmptyDescription') : t('tasks.emptyDescription')}
-          action={!viewingDeleted ? primaryAction : undefined}
-        />
-      }
-    />
+        primaryAction={primaryAction}
+      />
+
+      <TasksBulkActionBar
+        selectedCount={selectedIds.length}
+        viewingDeleted={viewingDeleted}
+        canDelete={canDelete}
+        onClearSelection={onClearSelection}
+        onRequestBulkDelete={() => {
+          for (const id of selectedIds) onDelete(id);
+          onClearSelection();
+        }}
+        onRequestBulkRestore={() => {
+          if (!onRestore) return;
+          for (const id of selectedIds) onRestore(id);
+          onClearSelection();
+        }}
+      />
+
+      <TasksListDesktopTable
+        tasks={filteredTasks}
+        selectedIds={selectedIds}
+        viewingDeleted={viewingDeleted}
+        canWrite={canWrite}
+        canDelete={canDelete}
+        isLoading={isLoading}
+        onToggleSelected={onToggleSelected}
+        onToggleSelectAll={onToggleSelectAll}
+        onView={setViewingTask}
+        onEdit={onEdit}
+        onDelete={onDelete}
+        onRestore={onRestore}
+        onUpdateStatus={onUpdateStatus}
+        emptyAction={primaryAction}
+      />
+
+      <TaskDetailDrawer
+        task={viewingTask}
+        canWrite={canWrite && !viewingDeleted}
+        canDelete={canDelete}
+        onClose={() => setViewingTask(null)}
+        onEdit={(task) => {
+          setViewingTask(null);
+          onEdit(task);
+        }}
+        onRestore={onRestore}
+      />
+    </div>
   );
 }
