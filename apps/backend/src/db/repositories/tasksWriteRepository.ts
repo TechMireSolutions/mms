@@ -39,6 +39,7 @@ export async function createTask(tenant: string, data: TaskInsert, recipients: R
     await validateParent(tx, subdomain, id, data.parentTaskId);
     await tx.insert(tasks).values({ id, workspaceSubdomain: subdomain, title: data.title,
       description: data.description ?? null, status: data.status, priority: data.priority,
+      startDate: data.startDate ?? null,
       dueAt: data.dueAt ? new Date(data.dueAt) : null, parentTaskId: data.parentTaskId ?? null,
       createdByUserId: actorUserId ?? 'system', assignedByUserId: recipients.length ? actorUserId : null,
       createdBy: actorUserId, updatedBy: actorUserId, ...lifecycle(data.status, new Date()) });
@@ -67,6 +68,7 @@ export async function updateTask(tenant: string, id: string, data: TaskUpdate,
       if (data.status !== current.status) Object.assign(payload, lifecycle(data.status, new Date()));
     }
     if (data.priority !== undefined) payload.priority = data.priority;
+    if (data.startDate !== undefined) payload.startDate = data.startDate;
     if (data.dueAt !== undefined) payload.dueAt = data.dueAt ? new Date(data.dueAt) : null;
     if (data.parentTaskId !== undefined) payload.parentTaskId = data.parentTaskId;
     if (recipients !== undefined) payload.assignedByUserId = actorUserId;

@@ -13,6 +13,7 @@ import { Field } from '@/components/ui/FormPrimitives';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { DatePicker } from '@/components/ui/DatePicker';
 import { DateTimePicker } from '@/components/ui/DateTimePicker';
 import { TaskFormAssigneePicker } from './TaskFormAssigneePicker';
 import { useTaskFormController } from './useTaskFormController';
@@ -42,8 +43,13 @@ export function TaskFormModal({
     setPriority,
     status,
     setStatus,
+    startDate,
+    setStartDate,
     dueAt,
     setDueAt,
+    parentTaskId,
+    setParentTaskId,
+    parentOptions,
     selectedAssignees,
     eligibleList,
     error,
@@ -114,6 +120,15 @@ export function TaskFormModal({
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Field id="task-start-date" label={t('tasks.startDate')}>
+            <DatePicker
+              id="task-start-date"
+              name="startDate"
+              value={startDate}
+              onChange={(v) => setStartDate(v || null)}
+            />
+          </Field>
+
           <Field id="task-due-at" label={t('tasks.dueAt')}>
             <DateTimePicker
               id="task-due-at"
@@ -122,14 +137,27 @@ export function TaskFormModal({
               onChange={(v) => setDueAt(v)}
             />
           </Field>
-
-          <TaskFormAssigneePicker
-            eligibleList={eligibleList}
-            selectedAssignees={selectedAssignees}
-            onAddAssignee={handleAddAssignee}
-            onRemoveAssignee={handleRemoveAssignee}
-          />
         </div>
+
+        <Field id="task-parent" label={t('tasks.parentTask')}>
+          <FormSelect
+            id="task-parent"
+            name="parentTaskId"
+            value={parentTaskId ?? ''}
+            onChange={(v) => setParentTaskId(v || null)}
+            options={[
+              { value: '', label: t('tasks.parentTaskNone') },
+              ...parentOptions,
+            ]}
+          />
+        </Field>
+
+        <TaskFormAssigneePicker
+          eligibleList={eligibleList}
+          selectedAssignees={selectedAssignees}
+          onAddAssignee={handleAddAssignee}
+          onRemoveAssignee={handleRemoveAssignee}
+        />
       </div>
     </FormModal>
   );

@@ -160,3 +160,14 @@ export function getRecommendedBlueprintForIndustry(industry?: IndustryType | str
 export function getTerminologyForIndustry(industry?: IndustryType | string | null): TerminologyProfile {
   return getIndustryProfile(industry).terminology;
 }
+
+/**
+ * Advisory role labels for onboarding/setup UI only.
+ * These are NOT auto-seeded into `DEFAULT_WORKSPACE_ROLES` — industry catalog IDs
+ * (e.g. `general_manager`) do not map 1:1 to workspace RBAC role IDs.
+ */
+export function getRecommendedRolesForIndustry(
+  industry?: IndustryType | string | null,
+): readonly string[] {
+  return getIndustryProfile(industry).recommendedRoles;
+}

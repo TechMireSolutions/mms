@@ -4,6 +4,7 @@ import {
   getIndustryProfile,
   getRecommendedModulesForIndustry,
   getRecommendedBlueprintForIndustry,
+  getRecommendedRolesForIndustry,
   getTerminologyForIndustry,
 } from '../industryProfiles.js';
 import { INDUSTRY_TYPES } from '../organizationBlueprintTypes.js';
@@ -47,5 +48,12 @@ describe('industryProfiles', () => {
   it('falls back safely to madrasa profile on unknown or empty input', () => {
     const fallback = getIndustryProfile(null);
     expect(fallback.id).toBe('madrasa');
+  });
+
+  it('exposes recommended roles as advisory labels without implying RBAC seeding', () => {
+    const hotelRoles = getRecommendedRolesForIndustry('hotel');
+    expect(hotelRoles).toContain('general_manager');
+    expect(hotelRoles).toContain('admin');
+    expect(getRecommendedRolesForIndustry('madrasa')).toContain('ustad');
   });
 });

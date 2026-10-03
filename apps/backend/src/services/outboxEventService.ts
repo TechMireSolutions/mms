@@ -10,7 +10,9 @@ import { outboxEvents } from '../db/schema/outboxEvents.js';
 export type OutboxEventType =
   | 'entity.soft_deleted'
   | 'entity.restored'
-  | 'entity.hard_purge';
+  | 'entity.hard_purge'
+  | 'task.assigned'
+  | 'task.status_changed';
 
 export type SoftDeletedPayload = {
   entityType: string;
@@ -53,7 +55,24 @@ export type HardPurgePayload = {
   version: number;
 };
 
-export type OutboxPayload = SoftDeletedPayload | RestoredPayload | HardPurgePayload;
+/** Messaging/outbox intent for task assignee or status notifications. */
+export type TaskNotifyPayload = {
+  entityType: 'tasks';
+  entityId: string;
+  tenantId: string;
+  version: number;
+  recipientUserIds: string[];
+  actorUserId?: string;
+  reason: 'assignment' | 'status_change';
+  status?: string;
+  title?: string;
+};
+
+export type OutboxPayload =
+  | SoftDeletedPayload
+  | RestoredPayload
+  | HardPurgePayload
+  | TaskNotifyPayload;
 
 // ---------------------------------------------------------------------------
 // Core emit function — MUST be called inside an existing transaction

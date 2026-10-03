@@ -31,6 +31,10 @@ vi.mock('@/tenant/hooks/collections/tasks', () => ({
     ],
     isLoading: false,
   }),
+  useTasks: () => ({
+    data: { tasks: [{ id: 'parent-1', title: 'Parent task' }], total: 1 },
+    isLoading: false,
+  }),
 }));
 
 describe('TaskFormModal', () => {
@@ -47,6 +51,8 @@ describe('TaskFormModal', () => {
     );
     expect(html).toContain('tasks.create');
     expect(html).toContain('tasks.title');
+    expect(html).toContain('tasks.startDate');
+    expect(html).toContain('tasks.parentTask');
     expect(html).toContain('Ustadh Zaid');
   });
 });

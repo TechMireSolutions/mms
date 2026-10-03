@@ -12,12 +12,12 @@
 
 | Field | Status |
 |---|---|
-| `faculty.reporting_faculty_id` / `hierarchy_rank` | Legacy person-level reporting. Seed defaults `reportingFacultyId` **disabled**; Faculty form shows a deprecation notice when re-enabled. **Soft-stopped on create** (forced `NULL`); updates may preserve an existing value. Not used for task auth. |
-| `faculty_assignments.reports_to_assignment_id` | Compatibility only. **Soft-stopped on create** (forced `NULL`); updates may preserve an existing value. Assignment CTEs/validation still understand it; not org-chart authority. |
+| `faculty.reporting_faculty_id` / `hierarchy_rank` | Legacy person-level reporting. Seed defaults `reportingFacultyId` **disabled**; Faculty form shows a deprecation notice when re-enabled. **Soft-stopped on create and update** (forced `NULL` on write). Not used for task auth. |
+| `faculty_assignments.reports_to_assignment_id` | Compatibility only. **Soft-stopped on create and update** (forced `NULL` on write). Assignment CTEs/validation still understand legacy rows; not org-chart authority. |
 
 ## API notes
 
-- `PUT/POST` faculty assignment: `reportsToAssignmentId` is optional and ignored for new appointment IDs. Prefer `positionId`.
+- `PUT/POST` faculty assignment: `reportsToAssignmentId` is ignored on create and update (forced null). Prefer `positionId`.
 - **New appointments require `positionId`** (backend validation + Faculty appointment UI).
 - **Updates cannot clear `positionId` to null** once set. Legacy nulls may be preserved only when the write payload **omits** `positionId` (do not send `null` to “keep” null).
 - When a tenant already has active organization positions, editing a legacy null-position appointment **requires** selecting a position (UI warning + client gate).
@@ -64,8 +64,8 @@ Creates missing `organization_positions` when needed and sets `faculty_assignmen
 ## End state (later release)
 
 1. Backfill positions from assignment reporting where safe (ops script above).
-2. Cut Faculty writes away from person-level reporting (**done** soft-stop on create; seed already off for new tenants).
-3. Stop writing `reports_to_assignment_id` for new appointments (**done** soft-stop).
+2. Cut Faculty writes away from person-level reporting (**done** soft-stop on create and update; seed already off for new tenants).
+3. Stop writing `reports_to_assignment_id` on create and update (**done** soft-stop).
 4. Require `positionId` on new appointments (**done**); updates cannot clear a set position (**done**); legacy nulls preserved only when omitted until backfill.
 5. Forward-only migration drops legacy columns only after zero dependents.
 
@@ -74,3 +74,17 @@ Until then: dual trees may still diverge for legacy rows without `position_id`�
 ## Applied blueprint metadata (0137+)
 
 Workspaces persist `applied_blueprint_key`, `applied_blueprint_version`, and `blueprint_applied_at` when a blueprint is applied (onboarding or Organization Setup). Industry type remains a separate field (`industry_type`).
+
+## Residual backlog
+
+Prompt ↔ shipped sync and remaining production gaps: [organization-tasks-prompt-sync.md](./organization-tasks-prompt-sync.md).
+
+### Legacy drop gate (ops)
+
+Before any forward-only DROP of `reports_to_assignment_id` / `reporting_faculty_id` / `hierarchy_rank`, run the read-only count gate:
+
+```bash
+pnpm --filter mms-backend exec tsx src/scripts/count-legacy-org-reporting.ts --tenant <subdomain>
+```
+
+All reported counts must be zero (after backfill + soft-stop). Do not DROP while dual-tree rows remain.

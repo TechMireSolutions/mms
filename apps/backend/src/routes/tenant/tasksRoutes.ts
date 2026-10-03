@@ -159,10 +159,21 @@ export default async function tasksRoutes(
     if (!parsed.success) {
       return reply.status(400).send({ message: 'Invalid payload', errors: parsed.error.issues });
     }
-    const updated = await updateTaskStatus(String(request.tenant?.id), request.params.id, parsed.data.status, user.id);
+    const tenant = String(request.tenant?.id);
+    const previous = await findTaskById(tenant, request.params.id);
+    const updated = await updateTaskStatus(tenant, request.params.id, parsed.data.status, user.id);
     if (!updated) {
       return reply.status(404).send({ message: 'Task not found' });
     }
+    const settings = await getTenantTaskSettings();
+    const { emitTaskNotificationIntents } = await import('../../services/taskNotificationService.js');
+    await emitTaskNotificationIntents({
+      tenant,
+      settings,
+      actorUserId: user.id,
+      previous,
+      next: updated,
+    });
     return reply.status(200).send(updated);
   });
 

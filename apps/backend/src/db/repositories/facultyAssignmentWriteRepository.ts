@@ -17,19 +17,15 @@ export async function saveFacultyAssignment(
   await withTenant(subdomain, async (tx) => {
     await lockFacultyHierarchy(tx, subdomain);
     const current = await findFacultyAssignmentById(subdomain, assignment.id);
-    // Soft-stop: new appointments never write reports_to; updates keep existing unless provided.
-    const reportsToAssignmentId = current
-      ? (assignment.reportsToAssignmentId !== undefined
-        ? assignment.reportsToAssignmentId
-        : current.reportsToAssignmentId)
-      : null;
+    // Soft-stop: never write reports_to on create or update (legacy rows remain readable).
     assignment = {
       ...assignment,
-      reportsToAssignmentId,
+      reportsToAssignmentId: null,
       positionId: assignment.positionId === undefined
         ? current?.positionId ?? null
         : assignment.positionId,
     };
+    const reportsToAssignmentId = null;
     await validateFacultyAssignment(tx, subdomain, assignment);
     await tx
       .insert(facultyAssignments)

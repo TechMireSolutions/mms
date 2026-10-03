@@ -39,6 +39,7 @@ export function mapTaskRow(
     description: r.description,
     status: r.status as TaskStatus,
     priority: r.priority as TaskPriority,
+    startDate: r.startDate ?? null,
     dueAt: r.dueAt ? r.dueAt.toISOString() : null,
     parentTaskId: r.parentTaskId,
     createdById: r.createdByUserId,

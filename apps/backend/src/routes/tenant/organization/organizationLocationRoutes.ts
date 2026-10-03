@@ -19,11 +19,11 @@ export async function organizationLocationRoutes(fastify: FastifyInstance): Prom
     '/api/organization/locations',
     async (request, reply) => {
       const user = request.user as User;
-      if (!canReadCollection(user, 'faculty')) {
+      if (!canReadCollection(user, 'organization_locations')) {
         return reply.status(403).send({ message: 'Forbidden' });
       }
       const includeDeleted = isQueryFlagTrue(request.query?.includeDeleted);
-      if (includeDeleted && !canDeleteCollection(user, 'faculty')) {
+      if (includeDeleted && !canDeleteCollection(user, 'organization_locations')) {
         return reply.status(403).send({ message: 'Trash access requires delete permission' });
       }
       const locations = await listOrganizationLocations(String(request.tenant?.id), {
@@ -35,7 +35,7 @@ export async function organizationLocationRoutes(fastify: FastifyInstance): Prom
 
   fastify.get<{ Params: { id: string } }>('/api/organization/locations/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadCollection(user, 'faculty')) {
+    if (!canReadCollection(user, 'organization_locations')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     const location = await findOrganizationLocationById(String(request.tenant?.id), request.params.id);
@@ -47,7 +47,7 @@ export async function organizationLocationRoutes(fastify: FastifyInstance): Prom
 
   fastify.post('/api/organization/locations', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'faculty')) {
+    if (!canWriteCollection(user, 'organization_locations')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     const parsed = organizationLocationInsertSchema.safeParse(request.body);
@@ -60,7 +60,7 @@ export async function organizationLocationRoutes(fastify: FastifyInstance): Prom
 
   fastify.patch<{ Params: { id: string } }>('/api/organization/locations/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'faculty')) {
+    if (!canWriteCollection(user, 'organization_locations')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     const parsed = organizationLocationUpdateSchema.safeParse(request.body);
@@ -76,7 +76,7 @@ export async function organizationLocationRoutes(fastify: FastifyInstance): Prom
 
   fastify.delete<{ Params: { id: string } }>('/api/organization/locations/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canDeleteCollection(user, 'faculty')) {
+    if (!canDeleteCollection(user, 'organization_locations')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     try {

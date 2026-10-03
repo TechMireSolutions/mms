@@ -20,11 +20,11 @@ export async function organizationPositionRoutes(fastify: FastifyInstance): Prom
     '/api/organization/positions',
     async (request, reply) => {
       const user = request.user as User;
-      if (!canReadCollection(user, 'faculty')) {
+      if (!canReadCollection(user, 'organization_positions')) {
         return reply.status(403).send({ message: 'Forbidden' });
       }
       const includeDeleted = isQueryFlagTrue(request.query?.includeDeleted);
-      if (includeDeleted && !canDeleteCollection(user, 'faculty')) {
+      if (includeDeleted && !canDeleteCollection(user, 'organization_positions')) {
         return reply.status(403).send({ message: 'Trash access requires delete permission' });
       }
       const positions = await listOrganizationPositions(String(request.tenant?.id), {
@@ -38,7 +38,7 @@ export async function organizationPositionRoutes(fastify: FastifyInstance): Prom
 
   fastify.get('/api/organization/positions/tree', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadCollection(user, 'faculty')) {
+    if (!canReadCollection(user, 'organization_positions')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     const tree = await getOrganizationPositionTree(String(request.tenant?.id));
@@ -47,7 +47,7 @@ export async function organizationPositionRoutes(fastify: FastifyInstance): Prom
 
   fastify.get<{ Params: { id: string } }>('/api/organization/positions/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadCollection(user, 'faculty')) {
+    if (!canReadCollection(user, 'organization_positions')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     const position = await findOrganizationPositionById(String(request.tenant?.id), request.params.id);
@@ -59,7 +59,7 @@ export async function organizationPositionRoutes(fastify: FastifyInstance): Prom
 
   fastify.post('/api/organization/positions', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'faculty')) {
+    if (!canWriteCollection(user, 'organization_positions')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     const parsed = organizationPositionInsertSchema.safeParse(request.body);
@@ -72,7 +72,7 @@ export async function organizationPositionRoutes(fastify: FastifyInstance): Prom
 
   fastify.patch<{ Params: { id: string } }>('/api/organization/positions/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'faculty')) {
+    if (!canWriteCollection(user, 'organization_positions')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     const parsed = organizationPositionUpdateSchema.safeParse(request.body);
@@ -92,7 +92,7 @@ export async function organizationPositionRoutes(fastify: FastifyInstance): Prom
 
   fastify.delete<{ Params: { id: string } }>('/api/organization/positions/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canDeleteCollection(user, 'faculty')) {
+    if (!canDeleteCollection(user, 'organization_positions')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     const result = await deleteOrganizationPosition(String(request.tenant?.id), request.params.id, user.id);

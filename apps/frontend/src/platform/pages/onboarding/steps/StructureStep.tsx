@@ -9,6 +9,7 @@ import { Building2, Check } from "lucide-react";
 import {
   findBlueprintById,
   getRecommendedBlueprintForIndustry,
+  getRecommendedRolesForIndustry,
 } from "@mms/shared";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -76,6 +77,11 @@ export default function StructureStep({
                 positions: blueprint.positions.length,
                 departments: blueprint.departments.length,
                 locations: blueprint.locations.length,
+              })}
+            </p>
+            <p className="text-muted-foreground">
+              {t("onboarding.structureRecommendedRolesAdvisory", {
+                roles: getRecommendedRolesForIndustry(data.industryType).join(", "),
               })}
             </p>
           </div>

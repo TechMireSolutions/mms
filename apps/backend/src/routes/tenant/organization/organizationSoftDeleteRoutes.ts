@@ -16,7 +16,7 @@ export async function organizationSoftDeleteRoutes(fastify: FastifyInstance): Pr
     '/api/organization/locations/:id/restore',
     async (request, reply) => {
       const user = request.user as User;
-      if (!canDeleteCollection(user, 'faculty')) {
+      if (!canDeleteCollection(user, 'organization_locations')) {
         return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
       }
       try {
@@ -40,7 +40,7 @@ export async function organizationSoftDeleteRoutes(fastify: FastifyInstance): Pr
     '/api/organization/positions/:id/restore',
     async (request, reply) => {
       const user = request.user as User;
-      if (!canDeleteCollection(user, 'faculty')) {
+      if (!canDeleteCollection(user, 'organization_positions')) {
         return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
       }
       try {

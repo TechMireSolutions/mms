@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import type { TaskRecord } from '@mms/shared';
+import { formatDate, formatDateTime, type TaskRecord } from '@mms/shared';
 import { DetailSheet } from '@/components/common/DetailSheet';
 import {
   DetailDrawerArchivedBanner,
@@ -76,9 +76,21 @@ export function TaskDetailDrawer({
         ) : null}
         <dl className="grid gap-2 text-sm">
           <div className="flex justify-between gap-3">
+            <dt className="text-muted-foreground">{t('tasks.startDate')}</dt>
+            <dd className="text-foreground">
+              {task.startDate ? formatDate(task.startDate) : '—'}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-3">
             <dt className="text-muted-foreground">{t('tasks.dueAt')}</dt>
             <dd className="text-foreground">
-              {task.dueAt ? new Date(task.dueAt).toLocaleString() : '—'}
+              {task.dueAt ? formatDateTime(task.dueAt) : '—'}
+            </dd>
+          </div>
+          <div className="flex justify-between gap-3">
+            <dt className="text-muted-foreground">{t('tasks.parentTask')}</dt>
+            <dd className="text-foreground text-end">
+              {task.parentTaskId ?? '—'}
             </dd>
           </div>
           <div className="flex justify-between gap-3">

@@ -24,7 +24,7 @@ export async function organizationBlueprintRoutes(fastify: FastifyInstance): Pro
 
   fastify.post('/api/organization/blueprints/apply', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'faculty')) {
+    if (!canWriteCollection(user, 'organization_positions')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
     const parsed = applyBlueprintRequestSchema.safeParse(request.body);
