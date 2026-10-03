@@ -19,8 +19,8 @@ catalog:
   drizzle-orm: "^0.45.3"
   react: "^19.3.0"
   react-dom: "^19.3.0"
-  vite: "^8.3.0"
-  "@tanstack/react-query": "^5.103.2"
+  vite: "^8.3.1"
+  "@tanstack/react-query": "^5.104.0"
   "@ts-rest/react-query": "3.52.1"
   react-router-dom: "^7.18.4"
 
