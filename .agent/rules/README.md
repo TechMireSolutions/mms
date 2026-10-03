@@ -90,6 +90,8 @@ in the enforcement registry below are how the norm is actually held.
 | Testing, logging, telemetry, resilience | `mms-testing-observability.md` | `mms-testing-e2e` · `mms-error-triage` |
 | Ops, ports, health, CI, deploy | `mms-ops-infrastructure.md` | `mms-ops-deploy` · `mms-incident-response` · `mms-linux-compatibility` |
 | Open migration debt | `mms-migration-status.md` | `mms-migration-fixes` · `mms-release-versioning` |
+| Finance / accounting / ledger | `mms-data-layer.md` · `mms-api-interface.md` | `mms-finance-accounting` |
+| Agent standards corpus (rules/skills/mirrors) | `mms-agent-universal.md` · `mms-core.md` | `mms-agent-standards` |
 
 ## Enforcement registry (norm → how it is actually held)
 
@@ -206,7 +208,7 @@ bash .agent/scripts/sync-all.sh
 - [ ] Auth/write routes: `mms-auth-security.md` (do not OR entity write with `canEditSetup`)
 - [ ] Backup/restore: admin + `canBulkSync`, safety backup + password step-up, sync timeout rollback, strip secrets / exclude credential tables — `mms-settings-i18n.md` / `mms-data-layer.md` / `mms-auth-security.md`
 - [ ] Soft-delete: 3-tier indexes, partial unique indexes `WHERE deleted_at IS NULL`, URL sync `?view=trash`, 23505 conflict trap, session invalidation, outbox CDC — `mms-soft-delete`
-- [ ] New UI: `mms-ui-ux-design.md` keyboard + labels + §7 responsive checklist (375 / 768 / 1440)
+- [ ] New UI: `mms-ui-ux-design.md` keyboard + labels + §4 responsive checklist (375 / 768 / 1440)
 - [ ] New `@mms/shared` pure helpers: unit test per `mms-testing-observability.md`
 
 ## Removed / Merged (History)
@@ -229,4 +231,4 @@ bash .agent/scripts/sync-all.sh
 
 ## Verify in Cursor
 
-**Settings → Rules** — three always-apply rules + 18 file-scoped rules when matching paths are open (**21 total**).
+**Settings → Rules** — 1 always-apply rule (`mms-core`) + 20 scoped rules when matching paths are open (**21 total**).

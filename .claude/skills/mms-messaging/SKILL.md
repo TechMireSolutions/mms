@@ -4,12 +4,17 @@ description: SMS/WhatsApp campaigns, MessageComposer, templates, message logs, a
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-10-04
 ---
 
 # MMS Messaging Workflow
 
 **Rule (norms SSOT):** `mms-messaging.md`. Also `mms-module-architecture.md` §7, `mms-auth-security.md`, `mms-data-layer.md`, `mms-performance.md` §2 (Lean Payloads, Streaming / Background CSV Jobs).
+
+## When to use
+
+- Changing MessagingPage, MessageComposer, templates, campaigns, or logs
+- Touching messaging backend routes/repositories or variable tokens
 
 ## Layout (entry points)
 
@@ -63,3 +68,7 @@ Unknown tokens exit non-zero — the backend rejects them at send time, so catch
 ## Done
 
 `pnpm typecheck` · FE lint · `apps/backend/src/__tests__/messaging.integration.test.ts` when the REST surface changed — `mms-completion-review.md`.
+
+## Related skills
+
+`mms-backend-api`, `mms-background-jobs`, `mms-form-architecture`, `mms-frontend`.

@@ -4,12 +4,17 @@ description: Triages a production error report end to end in MMS — Sentry issu
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-10-04
 ---
 
 # MMS Error Triage
 
 **Rules (norms SSOT):** `mms-testing-observability.mdc` §3–§4 (telemetry fields, correlation, ErrorBoundary) · `mms-api-interface.mdc` (error envelope and echo headers) · `mms-data-layer.mdc` §5 (immutable audit event rows). Audit trail workflow → `mms-audit-trail`.
+
+## When to use
+
+- Investigating a reported bug, error spike, or Sentry alert
+- Tracing a failure from request → audit/outbox → owning fix
 
 ## The correlation chain
 

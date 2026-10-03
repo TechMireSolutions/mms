@@ -4,12 +4,17 @@ description: Triages and responds to a dependency security advisory in MMS — r
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-10-04
 ---
 
 # MMS Vulnerability Response
 
 **Rule (norms SSOT):** `mms-dependencies.mdc` (version/override policy, banned packages) · `mms-performance.mdc` (banned client deps) · `mms-auth-security.mdc` (application-level controls). Auth audit workflow → `mms-backend-security`.
+
+## When to use
+
+- pnpm audit, Dependabot, dependency-review, or gitleaks reports a finding
+- A dependency advisory must be fixed or explicitly accepted
 
 ## Severity decides the response
 

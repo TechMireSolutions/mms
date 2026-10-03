@@ -4,12 +4,18 @@ description: Implements or reviews MMS module command centres and Work tabs — 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-26
+  last-verified: 2026-10-04
 ---
 
 # MMS Module Work Workflow
 
-**Rules (norms SSOT):** `mms-module-architecture.md` §2–§3, §6–§7 · `mms-data-layer.md` §6 · `mms-ui-ux-design.md` §4, §8 · `mms-performance.md`. Soft-delete workflow → `mms-soft-delete`.
+**Rules (norms SSOT):** `mms-module-architecture.md` §2–§3, §6–§7 · `mms-data-layer.md` §6 · `mms-ui-ux-design.md` §4, §8 · `mms-performance.md`. Soft-delete lifecycle detail → `mms-soft-delete`.
+
+## When to use
+
+- Changing Work-tier directories, filters, drawers, bulk bars, or command metrics
+- Wiring trash/restore UX on a module Work tab
+- Aligning table/card chrome to `DataTable` / `WorkBatchTable` / column layout hooks
 
 ## 1. Work Architecture & Command Center
 
@@ -19,22 +25,33 @@ metadata:
 - **Selection SSOT**: Page controller owns row selection via `useWorkSelection`; list-local selection state is banned.
 - **Virtualization**: Mandatory `@tanstack/react-virtual` row virtualization whenever collection items > 30.
 
-## 2. Directory Cards & UI Components
+## 2. Implementation map
 
-- **Card Primitives**: Standardize cards on `<DirectoryEntityCard>` (or `<DirectoryCard>`) with `<DirectoryCardFooterActions>` (min 44×44px touch floor, BiDi logical classes).
-- **Sub-Component Hook**: Extract per-card components and call `useWorkCardAction<TEntity>` for selection, view, edit, and keyboard handling (`Space`/`Enter`).
-- **Metadata Layout**: Use `DirectoryCardMetaGrid` + `DirectoryCardMetaTile` for card key-value pairs (never `<dl>/<dt>/<dd>`).
-- **Design Intelligence**: Query UI/UX Pro Max (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<topic>" --domain ux`) for data table density, card layouts, badge status hierarchy, and filter interactions. Apply semantic HSL tokens and text wrap balance.
+| Concern | Path / symbol |
+|---------|----------------|
+| Tables | `apps/frontend/src/components/common/data-table/DataTable.tsx`, `.../work/WorkBatchTable.tsx` |
+| Column layout | `useModuleColumnLayout` |
+| Cards | `DirectoryEntityCard`, `DirectoryCardFooterActions`, `DirectoryCardMetaGrid` |
+| Card actions | `useWorkCardAction` |
+| Toolbar / trash | `ModuleWorkToolbar`, `ModuleTrashToggle` |
+| Bulk | `ModuleUniversalBulkActionBar`, `ModuleWorkBulkActionBar`, `BulkSelectionDeleteAction`, `BulkSelectionRestoreAction` |
+| Archive chrome | `@/components/ui/DetailDrawerArchiveChrome` (`EntityArchivedBanner`, `DetailDrawerArchivedBanner`) |
 
 ## 3. Soft-Delete Trash & Bulk Operations
 
-- **URL Sync & Preservation**: Bind trash mode to URL search params (`?view=trash`). Toggling `ModuleTrashToggle` must preserve active filters and search terms.
-- **Toolbar Gates**: Place `ModuleTrashToggle` in `ModuleWorkToolbar` (not in Filters dropdown). Hide Create/Add and Export actions in trash mode; guard `Cmd/Ctrl+N`.
-- **Detail Drawer**: When entity has `deletedAt != null`, render `ArchivedBanner` (`WarningCallout` tone="warning"). Hide Edit and communication CTAs; display Restore button.
-- **Bulk Bar**: Two-layer bulk chrome — mount `ModuleUniversalBulkActionBar` (manifest/i18n adapter) over `ModuleWorkBulkActionBar` (presentational dock). Wire `BulkSelectionDeleteAction` (active mode) and `BulkSelectionRestoreAction` (trash mode). Never fork bulk-bar adapters or duplicate selection hooks.
+- Bind trash mode to `?view=trash`; preserve filters/search when toggling `ModuleTrashToggle` in `ModuleWorkToolbar`.
+- Hide Create/Add and Export in trash mode; guard `Cmd/Ctrl+N`.
+- Archived drawers: archive banner + Restore; hide Edit/communication CTAs (full lifecycle → `mms-soft-delete`).
+- Two-layer bulk chrome: `ModuleUniversalBulkActionBar` over `ModuleWorkBulkActionBar`. Never fork adapters or duplicate selection hooks.
 
 ## 4. Verification
 
 ```bash
-cd apps/frontend && pnpm typecheck && pnpm lint
+pnpm --filter mms-frontend typecheck && pnpm --filter mms-frontend lint
+# When directory chrome / WorkBatchTable consumers change:
+pnpm run check:work-directory
 ```
+
+## Related skills
+
+`mms-module-page`, `mms-soft-delete`, `mms-query-factories`, `ui-ux-pro-max`.

@@ -4,13 +4,18 @@ description: Implements static FormModal forms with shared Zod DTOs, React 19 de
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-26
+  last-verified: 2026-10-04
 ---
 
 # MMS Form Architecture Skill
 
 **Rule (norms SSOT):** `mms-form-architecture.mdc` · `mms-core.mdc` · `mms-ui-ux-design.mdc` §4, §8 · `mms-performance.mdc` §2.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
+
+## When to use
+
+- Building or auditing create/edit FormModal flows
+- Wiring DatePicker/TimePicker/phone fields or upload controls
 
 ## Accounting forms
 
@@ -66,3 +71,7 @@ python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<form-topic>" --domain ux
 - [ ] Focus-return restored to opener on dialog close
 - [ ] Run: pnpm typecheck && cd apps/frontend && pnpm lint
 ```
+
+## Related skills
+
+`mms-fields-registry`, `mms-module-page`, `mms-frontend`, `mms-shared-package`.

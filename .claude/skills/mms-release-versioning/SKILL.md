@@ -4,12 +4,17 @@ description: Manages MMS release bookkeeping — version bumps, changelog entrie
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-10-04
 ---
 
 # MMS Release & Versioning
 
 **Rules (norms SSOT):** `mms-ops-infrastructure.md` (CI/deploy flow, `DEPLOY_SHA`) · `mms-migration-status.md` (debt register) · `mms-dependencies.md` (dependency versions) · `mms-agent-universal.md` (git discipline).
+
+## When to use
+
+- Cutting a release, tagging a deploy, or recording a closed migration milestone
+- Updating dependency cadence or debt-register bookkeeping for a ship
 
 ## What "a release" means here
 
@@ -18,7 +23,7 @@ The repository is a private monorepo deployed from `main` via GitHub Actions →
 | Artifact | Source of truth | Update when |
 |---|---|---|
 | Deployed code | `main` + `DEPLOY_SHA` | every deploy |
-| Dependency versions | `pnpm-workspace.yaml` catalog + package manifests | dependency passes (`.claude/skills/mms-dependency-upgrade/scripts/audit-deps.sh`) |
+| Dependency versions | `pnpm-workspace.yaml` catalog + package manifests | dependency passes (`.agent/skills/mms-dependency-upgrade/scripts/audit-deps.sh`) |
 | Migration milestones | `docs/migration-milestones.md` | a documented migration closes |
 | Open debt | `.agent/rules/mms-migration-status.md` | debt is opened, closed, or re-scoped |
 | Agent standards | `AGENTS.md` / rules / skills | conventions change (verify with `node scripts/verify-rules-integrity.mjs`) |

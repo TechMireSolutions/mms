@@ -4,13 +4,18 @@ description: Sets up and runs the MMS monorepo (pnpm matching packageManager, No
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 compatibility: Requires Node >=24.14, pnpm 11.15.1, and reachable PostgreSQL.
 ---
 
 # MMS Dev Setup
 
 **Rules (norms SSOT):** `mms-ops-infrastructure.md` · `mms-core.md` · `mms-api-interface.md` · `mms-completion-review.md`.
+
+## When to use
+
+- Installing dependencies, starting local servers, or fixing env issues
+- Onboarding to the monorepo for the first time
 
 ## 1. Quickstart & Dev Server
 
@@ -38,7 +43,7 @@ Create `apps/backend/.env` (never commit):
 - **Config & Net**: Use `--env-file=.env` or `process.loadEnvFile()`. Native `fetch`, `FormData`, and global `WebSocket`.
 - **FS & Patterns**: `import { glob } from 'node:fs/promises'`. Native `URLPattern` for route matching.
 - **Resource Management**: Use `using` / `await using` for deterministic database/file handle disposal.
-- **Crypto & Tests**: Native `crypto.hash()`. Native runner `node:test` + `node:assert/strict`.
+- **Crypto & Tests**: Native `crypto.hash()`. App tests use Vitest via `pnpm test` (see `mms-testing-e2e`).
 
 ## 4. Verification & Quality Gates
 
@@ -48,3 +53,7 @@ curl http://localhost:3000/health && curl http://localhost:3000/ready
 pnpm typecheck
 pnpm test
 ```
+
+## Related skills
+
+`mms-testing-e2e`, `mms-ops-deploy`, `mms-linux-compatibility`, `mms-agent-standards`.

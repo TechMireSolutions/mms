@@ -4,13 +4,18 @@ description: Reviews a concrete change set (PR or local diff) against MMS rules 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-10-03
-allowed-tools: Read Grep Glob Bash(pnpm typecheck) Bash(pnpm lint) Bash(pnpm test) Bash(bash scripts/pre-pr-review.sh)
+  last-verified: 2026-10-04
+allowed-tools: Read Grep Glob Bash(pnpm typecheck) Bash(pnpm lint) Bash(pnpm test) Bash(bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh)
 ---
 
 # MMS Code Review
 
 **Rule (norms SSOT):** `mms-completion-review.mdc` · `mms-core.mdc` · `mms-structure-naming.mdc` · `mms-performance.mdc`.
+
+## When to use
+
+- A concrete PR or local diff must be accepted or rejected before merge
+- Running the pre-PR gate suite before human review
 
 Agent self-review after edits → also follow always-on `mms-completion-review.mdc`.
 
@@ -90,6 +95,9 @@ E2E when touching auth/routing/onboard: `pnpm test:e2e` (critical path: `e2e/tes
 
 ## References
 
+- Fix-before-done checklist: `references/fix-before-done.md`
+- Route/review checklists also under `references/`
+
 ## Script
 
 `.agent/skills/mms-code-review/scripts/pre-pr-review.sh` runs the deterministic gate set before you review by hand:
@@ -101,5 +109,7 @@ bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh
 It runs the standards verifier, the migration-index and DB-projection ratchets, the code-norms and work-directory ratchets, `pnpm typecheck`, and `pnpm lint`. It does **not** run tests, e2e, or gitleaks — add `pnpm test` / `pnpm test:e2e` for the areas you touched, and remember CI scans the full git history for secrets.
 
 - Rules: `mms-api-interface.mdc`, `mms-data-layer.mdc`, `mms-hooks.mdc`, `mms-ui-ux-design.mdc`, `mms-auth-security.mdc`, `mms-form-architecture.mdc`, `mms-messaging.mdc`, `mms-migration-status.mdc`, `mms-performance.mdc`
-- Skills: `mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-soft-delete`, `mms-audit-trail`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`, `ui-ux-pro-max`
 
+## Related skills
+
+`mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-soft-delete`, `mms-audit-trail`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`, `ui-ux-pro-max`.

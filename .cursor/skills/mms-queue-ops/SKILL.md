@@ -4,13 +4,18 @@ description: Diagnoses and safely operates the MMS BullMQ worker — stuck, retr
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 compatibility: Requires a reachable Redis instance and the worker process for live queue inspection.
 ---
 
 # MMS Queue Ops
 
 **Rules (norms SSOT):** `mms-data-layer.mdc` (queue mechanics, Redis, connections) · `mms-module-architecture.mdc` §5 (job UX contract, worker isolation). Job authoring workflow → `mms-background-jobs`.
+
+## When to use
+
+- A background export/import, PDF, messaging, or settings job never completes
+- The BullMQ worker process is unhealthy and needs safe replay
 
 ## Financial replay decisions
 

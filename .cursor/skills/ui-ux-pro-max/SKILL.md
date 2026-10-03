@@ -1,17 +1,23 @@
 ---
 name: ui-ux-pro-max
-description: AI-powered design intelligence for UI/UX with 79 styles, 192 color palettes, 74 font pairings, 119 UX guidelines, and 25 chart types across 22 stacks. Generates design systems, styles, colors, typography, layout, and UX reviews. Do NOT use for backend Fastify APIs (use mms-backend-api), database migrations (use mms-schema-migrate), or form field schemas (use mms-form-architecture).
+description: AI-powered design intelligence for UI/UX with 79 styles, 192 color palettes, 74 font pairings, 119 UX guidelines, and 25 chart types across 22 stacks. Generates design systems, styles, colors, typography, layout, and UX reviews. Use when generating design systems, selecting styles/palettes/typography, or retrieving UX & chart guidelines. Do NOT use for backend Fastify APIs (use mms-backend-api), database migrations (use mms-schema-migrate), or form field schemas (use mms-form-architecture).
 license: MIT
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-26
+  last-verified: 2026-10-04
 ---
 
 # UI/UX Pro Max — Design Intelligence System
 
 **Rule (norms SSOT):** `mms-ui-ux-design.mdc` · `mms-form-architecture.mdc` · `mms-reports.mdc`
 
-Use this skill when designing, building, reviewing, or styling UI/UX interfaces across the MMS platform. It provides design intelligence backed by BM25 search over 79 UI styles (50 active), 192 industry color palettes, 74 font pairings, 119 UX guidelines, 25 chart types, and 22 technology stacks.
+## When to use
+
+- Generating a design system, style, palette, or typography pairing for a new module/page
+- Looking up UX guidelines, chart types, or stack-specific patterns via the BM25 search scripts
+- Reviewing visual hierarchy before implementing with `mms-ui-ux-design` / FormModal primitives
+
+Design intelligence is backed by BM25 search over 79 UI styles (50 active), 192 industry color palettes, 74 font pairings, 119 UX guidelines, 25 chart types, and 22 technology stacks.
 
 ## Core Scripts & Search Engine
 
@@ -117,3 +123,7 @@ When applying UI/UX Pro Max recommendations inside MMS, enforce the following in
 - [ ] No emojis used as UI icons (Lucide SVG icons only)
 - [ ] Keyboard navigation visible (focus-visible:ring-2) and focus-return verified
 ```
+
+## Related skills
+
+`mms-ui-ux-design`, `mms-form-architecture`, `mms-frontend`, `mms-reports-export`.

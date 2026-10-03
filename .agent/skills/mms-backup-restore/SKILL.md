@@ -4,13 +4,18 @@ description: Implements or audits workspace encrypted backup/export and wipe-res
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Backup & Restore Workflow
 
 **Rule (norms SSOT):** `mms-settings-i18n.md` · `mms-data-layer.md` §6 · `mms-auth-security.md`.
 **Workflows:** `/code-review` · **Manifest:** `.agent/skills-manifest.json`
+
+## When to use
+
+- Changing BackupRestore UI, `/api/db/backup`, or `/api/db/sync`
+- Touching backup crypto or wipe-restore safety gates
 
 ## Accounting restore acceptance
 
@@ -65,3 +70,7 @@ export async function executeWipeRestoreTransaction(tenantSubdomain: string, sna
 - [ ] Audit trail preserved without truncation; RESTORE action appended
 - [ ] Run: pnpm typecheck && cd apps/backend && pnpm test
 ```
+
+## Related skills
+
+`mms-data-sync`, `mms-backend-security`, `mms-ops-deploy`.

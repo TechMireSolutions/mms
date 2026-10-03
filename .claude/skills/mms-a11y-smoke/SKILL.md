@@ -4,7 +4,7 @@ description: Runs accessibility verification for MMS UI work — axe scans, focu
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 compatibility: Requires Playwright browsers for the full axe mode; static mode is dependency-free.
 allowed-tools: Read Grep Glob Bash(bash .agent/skills/mms-a11y-smoke/scripts/smoke-a11y.sh) Bash(pnpm test:e2e)
 ---
@@ -12,6 +12,11 @@ allowed-tools: Read Grep Glob Bash(bash .agent/skills/mms-a11y-smoke/scripts/smo
 # MMS A11y Smoke Workflow
 
 **Rules (norms SSOT):** `mms-testing-observability.md` · `mms-ui-ux-design.md` §3/§4 · `mms-form-architecture.md` (focus-return) · `mms-completion-review.md`.
+
+## When to use
+
+- Proving a11y for a UI change (run axe / smoke-a11y, triage serious/critical)
+- Verifying keyboard, focus-return, or shell a11y after layout/form work
 
 Do **not** use to invent design tokens → `mms-ui-ux-design.md` rule. Do **not** use to build forms → `mms-form-architecture`. Full PR review → `mms-code-review`.
 
@@ -70,3 +75,7 @@ Run `full` for any change to `AppLayout`, `FormModal`, `Table`, or shared primit
 Completion-review a11y row satisfied — `mms-completion-review.md`.
 
 Advisory: automated axe results are partial evidence. Verify 320 CSS-pixel reflow/zoom, keyboard-only use, dialog nesting, focus return when the opener disappears, reduced motion, forced colors and announcements in a real browser. Focus Appearance is WCAG 2.4.13 (AAA), not 2.4.11 (AA Focus Not Obscured). See the [verified UI reference](../mms-ui-ux-design/references/modern-ui-ux-2026.md).
+
+## Related skills
+
+`mms-testing-e2e`, `mms-ui-ux-design`, `mms-form-architecture`, `mms-code-review`.

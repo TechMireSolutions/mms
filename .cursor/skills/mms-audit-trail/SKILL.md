@@ -97,3 +97,7 @@ pnpm --filter mms-backend test
 - [ ] Direct `UPDATE` or `DELETE` on `audit_trail_events` fails with `check_violation`.
 - [ ] Hash chain links verify cleanly via SHA-256 against RFC 8785 canonical JSON.
 - [ ] No passwords, credentials, or raw tokens are stored in `old_state` or `new_state`.
+
+## Related skills
+
+`mms-soft-delete`, `mms-backend-api`, `mms-schema-migrate`, `mms-finance-accounting`.

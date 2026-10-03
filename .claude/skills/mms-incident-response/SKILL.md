@@ -4,13 +4,18 @@ description: Runs the MMS production incident procedure on the Hetzner host — 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-10-04
 compatibility: Requires SSH access to the Hetzner VPS with PM2 and Apache; do not run destructive steps without an explicit instruction.
 ---
 
 # MMS Incident Response
 
 **Rules (norms SSOT):** `mms-ops-infrastructure.md` (ports 5002/3000, health endpoints, PM2/Apache topology, CI deploy flow) · `mms-agent-universal.md` (say "commit" / "push" explicitly).
+
+## When to use
+
+- Production is down, a deploy broke the site, or a release must be reverted
+- Running diagnose → rollback → verify on the host
 
 ## First 5 minutes — stabilise before diagnosing
 

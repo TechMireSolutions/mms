@@ -4,13 +4,18 @@ description: Addresses the open priorities P1–P7 in mms-migration-status.md �
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-10-04
 allowed-tools: Read Grep Glob Bash(pnpm typecheck) Bash(pnpm test)
 ---
 
 # MMS Migration Fixes
 
 **Rule (norms SSOT):** `mms-migration-status.md` · `mms-core.md` · `mms-completion-review.md`.
+
+## When to use
+
+- Working an item listed as open debt in the migration-status register
+- Closing or re-scoping a P1–P7 migration debt item
 
 Only implement items **in scope** for the current task.
 
@@ -83,3 +88,7 @@ After changing standards:
 ```bash
 bash .agent/scripts/sync-all.sh
 ```
+
+## Related skills
+
+Debt register rule (`mms-migration-status.md`), `mms-schema-migrate`, `mms-release-versioning`, `mms-soft-delete`.

@@ -4,12 +4,17 @@ description: Implements or reviews MMS background jobs and queued processing —
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Background Jobs Workflow
 
 **Rule (norms SSOT):** `mms-module-architecture.md` §5 · `mms-auth-security.md` · `mms-performance.md` §2 · `mms-api-interface.md` §6.
+
+## When to use
+
+- Adding or changing BullMQ jobs, export downloads, or job-tray UX
+- Queued sync recovery or background processing for large batches
 
 Source: `mms-module-architecture.md` §5. Rules: `mms-module-architecture.md`, `mms-auth-security.md`, `mms-performance.md` §2 (Zero Memory Buffering & Streaming Background Workers). Retention hard-purge workflow → **`mms-soft-delete`**.
 
@@ -85,3 +90,7 @@ For report packs use a cutoff-consistent dataset and retain evidence per [closin
 - Bypass BullMQ for heavy report generation; do not block Fastify event loop.
 
 Related skills: `mms-module-work`, `mms-module-page`, `mms-reports-export`, `mms-backend-security`, `mms-soft-delete`.
+
+## Related skills
+
+`mms-queue-ops`, `mms-backend-api`, `mms-messaging`, `mms-reports-export`.

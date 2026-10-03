@@ -4,14 +4,30 @@ description: Adds or modifies Fastify routes, middleware (authenticateTenant), s
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Backend API Workflow
 
 **Rules (norms SSOT):** `mms-api-interface.md` · `mms-data-layer.md` §5–§6 · `mms-auth-security.md`. Checklists → `references/new-route-checklist.md` · `references/add-rest-resource.md`.
 
-Operational procedure for authoring Fastify routes, use-cases, repositories, and Zod DTO validation.
+## When to use
+
+- Adding or changing Fastify tenant/platform routes, use-cases, or repositories
+- Wiring Zod validation, RLS tenant context, or standard CRUD/soft-delete factories
+- Registering module access gates for new endpoints
+
+## Implementation map
+
+| Concern | Path |
+|---------|------|
+| Resource CRUD | `apps/backend/src/lib/crudResourceRoutes.ts` (`registerResourceRoutes`) |
+| Bulk trash | `apps/backend/src/lib/crudBulkRouteFactories.ts` (`registerSoftDeletableBulkTrashRoutes`) |
+| Standard routes | `apps/backend/src/lib/crudStandardRoutes.ts` (`registerStandardTenantRoutes`) |
+| Zod parse | `apps/backend/src/lib/zodRequest.ts` (`parseRequest`) |
+| RLS tx | `apps/backend/src/db/tenant-context.ts` (`withTenant`) |
+| Auth | `apps/backend/src/middleware/authenticate.ts` (`authenticateTenant`) |
+| Module gates | `registerModuleAccess` + `MODULE_ROUTE_ACTION_RULES` + `apps/backend/src/__tests__/moduleAccessCoverage.test.ts` |
 
 ## 1. Clean Architecture Layering
 
@@ -38,3 +54,11 @@ cd apps/backend && pnpm typecheck && pnpm test && pnpm lint
 # Verify explicit column projections across all queries
 pnpm run check:db-projections
 ```
+
+## Examples
+
+- Clean architecture route shape: `examples/clean-architecture-route.ts`
+
+## Related skills
+
+`mms-backend-security`, `mms-schema-migrate`, `mms-soft-delete`, `mms-audit-trail`, `mms-shared-package`.

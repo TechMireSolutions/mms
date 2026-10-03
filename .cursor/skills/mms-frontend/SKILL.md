@@ -4,12 +4,17 @@ description: Builds or modifies the MMS React frontend — apiClient, routing, p
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-26
+  last-verified: 2026-10-04
 ---
 
 # MMS Frontend Workflow
 
 **Rules (norms SSOT):** `mms-api-interface.mdc` · `mms-data-layer.mdc` · `mms-hooks.mdc` · `mms-ui-ux-design.mdc` §4, §8 · `mms-structure-naming.mdc`.
+
+## When to use
+
+- Editing `apps/frontend` pages, components, hooks, or Vite config
+- Changing apiClient, providers, routing, or frontend tests
 
 Operational guide for authoring React 19 frontend features, UI components, hooks, and routing.
 
@@ -45,3 +50,11 @@ cd apps/frontend && pnpm typecheck && pnpm lint && pnpm test
 # Run E2E smoke tests
 pnpm test:e2e tests/responsive-shell.spec.ts
 ```
+
+## References
+
+- Review checklist: `references/frontend-review.md`
+
+## Related skills
+
+`mms-query-factories`, `mms-module-page`, `mms-ui-ux-design`, `mms-testing-e2e`, `mms-data-sync`.

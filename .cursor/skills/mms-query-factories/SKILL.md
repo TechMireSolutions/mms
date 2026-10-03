@@ -4,13 +4,18 @@ description: Implements TanStack Query v5 queryOptions/mutationOptions factories
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Query Factories Workflow
 
 **Rule (norms SSOT):** `mms-hooks.mdc` · `mms-data-layer.mdc` §3 · `mms-api-interface.mdc` · `mms-performance.mdc` §5.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
+
+## When to use
+
+- Building TanStack Query factories under `@/tenant/hooks/collections/*`
+- Caching mutations, tuple keys, or optimistic (non-money) updates
 
 ## Financial mutation review
 
@@ -47,3 +52,11 @@ Under the existing no-optimistic-money rule, await persisted success, retain for
 ```
 
 Advisory cache review: inspect both in-memory Query state and IndexedDB persistence during logout, account switch and permission revocation. Auth-gating a query does not erase existing data. Include every response-shaping filter in keys; preserve existing scope conventions and test isolation before extending persistence. See the [frontend review](../mms-frontend/references/frontend-review.md).
+
+## Examples
+
+- Factory template: `examples/templateQueryFactory.ts`
+
+## Related skills
+
+`mms-frontend`, `mms-data-sync`, `mms-module-work`, `mms-backend-api`.

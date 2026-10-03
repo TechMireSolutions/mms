@@ -4,32 +4,57 @@ description: Governs legacy localStorage and /api/db document-store persistence 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Data Sync Workflow
 
 **Rules (norms SSOT):** `mms-data-layer.md` · `mms-core.md` · `mms-migration-status.md`. Modern REST queries → `mms-query-factories`. Full backups → `mms-backup-restore`.
 
-Operational guide for maintaining non-migrated localStorage and `/api/db` document-store entities.
+## When to use
+
+- Changing legacy `db.ts` / `useLiveCollection` keys or document sync behaviour
+- Touching `/api/db` collections, objects, backup, or wipe-restore sync endpoints
+- Narrowing (not expanding) the legacy document-store surface
+
+## Implementation map
+
+| Concern | Path |
+|---------|------|
+| Client store | `apps/frontend/src/lib/db.ts` |
+| Live collection hook | `apps/frontend/src/hooks/useLiveCollection.ts` |
+| Backend routes | `apps/backend/src/routes/common/db.ts` |
+| Helpers | `dbRouteHelpers` / `canReadCollection` / `canWriteCollection` near that route module |
 
 ## 1. Scope & Layer Boundaries
 
 - **Legacy Only**: Restricted to non-migrated document collections. Creating new collections or adding `useLiveCollection` for new or REST-migrated modules is strictly banned.
-- **REST Entities**: Primary entities (Contacts, Students, Faculty, Accounting) use server REST via TanStack Query facades (`@/tenant/hooks/collections/*`). Never dual-write REST entities to `saveCollection`.
-- **Async Saves**: UI must await `saveCollectionAsync` or `mutateAsync` before indicating saved state. Fire-and-forget saves are forbidden.
+- **REST Entities**: Primary entities use TanStack Query facades (`@/tenant/hooks/collections/*`). Never dual-write REST entities to `saveCollection`.
+- **Async Saves**: Await `saveCollectionAsync` or `mutateAsync` before indicating saved state.
 
 ## 2. Document Store APIs (`/api/db`)
 
-- **Endpoints & RBAC**:
-  - `GET/POST /api/db/collections/:name`: `canReadCollection` / `canWriteCollection`.
-  - `GET/POST /api/db/objects/:key`: `canReadObject` / `canWriteObject`. Server-only keys are blocked.
-  - `GET /api/db/backup`: Admin + `canBulkSync` (REPEATABLE READ transaction).
-  - `POST /api/db/sync`: Admin + `canBulkSync` (wipe-restore under `withSyncTimeout` → aborts with 408 on timeout).
-- **Security Invariant**: Never store OAuth tokens or secrets in `objects`; store secrets in tenant FORCE-RLS tables (`mms-auth-security.md`).
+- `GET/POST /api/db/collections/:name`: `canReadCollection` / `canWriteCollection`.
+- `GET/POST /api/db/objects/:key`: `canReadObject` / `canWriteObject`. Server-only keys blocked.
+- `GET /api/db/backup`: Admin + `canBulkSync` (REPEATABLE READ).
+- `POST /api/db/sync`: Admin + `canBulkSync` (wipe-restore under `withSyncTimeout` → 408).
+- Never store OAuth tokens or secrets in `objects` (`mms-auth-security.md`).
 
 ## 3. Data Formatting & Save Intercepts
 
-- **Title Case**: Apply `applyTitleCaseRecursive` on Latin display names; skip non-Latin RTL scripts (Arabic, Urdu, Persian).
-- **Phone Numbers**: Normalize via `parsePhoneNumber` to E.164 on all save paths.
-- **Linked Records**: `db.ts` hydrates students from linked contacts on read; Contact REST manages person profile persistence.
+- Title-case Latin display names via `applyTitleCaseRecursive`; skip non-Latin RTL scripts.
+- Normalize phones via `parsePhoneNumber` to E.164 on save paths.
+- `db.ts` hydrates students from linked contacts on read; Contact REST owns person profiles.
+
+## Verification
+
+```bash
+pnpm typecheck
+# When touching client store or /api/db routes, run the matching FE/BE tests
+pnpm --filter mms-frontend test
+pnpm --filter mms-backend test
+```
+
+## Related skills
+
+`mms-query-factories`, `mms-backup-restore`, `mms-frontend`.

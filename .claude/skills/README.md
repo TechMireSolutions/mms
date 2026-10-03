@@ -22,7 +22,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | [mms-dependency-upgrade](mms-dependency-upgrade/SKILL.md) | Bumping Node/pnpm/React/Vite/Fastify/Drizzle/Zod/Query, enabling Dependabot, or turning on React Compiler |
 | [mms-dev-setup](mms-dev-setup/SKILL.md) | Installing dependencies, starting dev servers, fixing env issues, or onboarding to the project |
 | [mms-error-triage](mms-error-triage/SKILL.md) | Investigating a reported bug, an error spike, or a Sentry alert that needs a root cause and an owning fix |
-| [mms-fields-registry](mms-fields-registry/SKILL.md) | Working with custom fields, system tabs, field types, column registries, field delete guards, or useSortedFields |
+| [mms-fields-registry](mms-fields-registry/SKILL.md) | Working with custom fields, system tabs, field types, column registries, field delete guards, or getSortedFields |
 | [mms-finance-accounting](mms-finance-accounting/SKILL.md) | Modifying finance or accounting features, payment gateways, invoice templates, or ledger entries |
 | [mms-form-architecture](mms-form-architecture/SKILL.md) | Building or auditing create/edit forms, FormModal tabs, DatePicker/TimePicker/DateTimePicker/phone fields, or upload flows |
 | [mms-frontend](mms-frontend/SKILL.md) | Editing apps/frontend, Vite config, frontend hooks, pages, components, or frontend tests |
@@ -54,7 +54,7 @@ Agent skills for Cursor, Antigravity, and Claude Code. Cursor/Claude discover th
 | **Rules** | `.cursor/rules/*.mdc` | Auto-applied (always or by glob) — norms/SSOT |
 | **Skills** | `.cursor/skills/*/SKILL.md` | Invoked when description matches — workflows/checklists that **point** at rules |
 
-Always-on rules: `mms-agent-universal`, `mms-core`, `mms-completion-review`. Scoped examples: `mms-performance`, `mms-migration-status`, `mms-dry`, `mms-dependencies`, `mms-structure-naming` (39 skills; rules: 3 always-on + 18 scoped).
+Always-on rule: `mms-core`. Requestable (not always-on): `mms-agent-universal`, `mms-completion-review`. Scoped examples: `mms-performance`, `mms-migration-status`, `mms-dry`, `mms-dependencies`, `mms-structure-naming` (39 skills; rules: 1 always-on + 20 scoped).
 
 ## Verify setup
 

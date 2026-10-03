@@ -4,18 +4,23 @@ description: Implements, verifies, or audits the MMS Soft-Delete System — colu
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Soft-Delete System Workflow
 
 **Rules (norms SSOT):** `mms-data-layer.mdc` §6 · `mms-module-architecture.mdc` §6–§7 · `mms-core.mdc` · `mms-api-interface.mdc` §7.
 
-Operational procedure for implementing, migrating, and verifying soft-delete lifecycle across database, backend API, and frontend Work tiers. Financial posted ledgers are append-only/reversal-driven; see ledger controls before applying generic undo.
+## When to use
+
+- Adding soft-delete columns, trash/restore APIs, or Work-tier trash UX
+- Auditing deletion indexes, AST filters, or CDC outbox events
+
+Financial posted ledgers are append-only/reversal-driven; see ledger controls before applying generic undo.
 
 ## 1. Database Schema Standards
 
-- **Column Sextuple**: Add `softDeleteColumns` mixin (`deletedAt`, `deletedBy`, `deletionReason`, `restoredAt`, `restoredBy`, `deletedWithCascade`).
+- **Column Sextuple**: Add `softDeleteColumns` from `apps/backend/src/db/schema/softDeleteSchema.ts` (`deletedAt`, `deletedBy`, `deletionReason`, `restoredAt`, `restoredBy`, `deletedWithCascade`).
 - **3-Tier Indexing**:
   - Category A (Trash scan): compound `(tenant_id, deleted_at)`.
   - Category B (Active hot partial): `(tenant_id, ...)` `WHERE deleted_at IS NULL` (mandatory for active list performance).
@@ -50,14 +55,26 @@ Operational procedure for implementing, migrating, and verifying soft-delete lif
 - **URL Sync & Toggle**: Mount `ModuleTrashToggle` in toolbar; sync state to `?view=trash` via `useSearchParams()`. Preserves search and active filters across toggles.
 - **Bulk Actions**: Mount `BulkSelectionRestoreAction` in trash mode via `BulkSelectionBar`.
 - **Optimistic Undo**: Non-financial single-record deletes show instant 5–10s Undo toast calling restore.
-- **Detail Drawer**: Display `ArchivedBanner` (`WarningCallout`) with deletion metadata + Restore CTA; hide Edit and communication buttons.
+- **Detail Drawer**: Display `EntityArchivedBanner` / `DetailDrawerArchivedBanner` (from `@/components/ui/DetailDrawerArchiveChrome`) or a module wrapper (e.g. `StudentArchivedBanner`) with deletion metadata + Restore CTA; hide Edit and communication buttons.
 
 ## 4. Verification
 
 ```bash
 # Verify schema sextuple and Category B partial indexes across tenant tables
-bash scripts/verify-soft-delete-schema.sh
+bash .agent/skills/mms-soft-delete/scripts/verify-soft-delete-schema.sh
 
 # Run backend soft-delete test suite
 pnpm --filter mms-backend test
 ```
+
+## References
+
+| Task | File |
+|------|------|
+| DDL / indexes / triggers | `references/triggers-and-indexes.sql` |
+| Query AST active filter | `references/query-ast-filter.ts` |
+| Outbox CDC | `references/cdc-outbox.ts` |
+
+## Related skills
+
+`mms-module-work`, `mms-backend-api`, `mms-schema-migrate`, `mms-audit-trail`.

@@ -4,7 +4,7 @@ description: Automated testing guide for MMS — Vitest unit/integration tests, 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 compatibility: Requires Node 24+, Playwright browsers (pnpm --filter e2e-tests exec playwright install), and a live PostgreSQL for test:db.
 allowed-tools: Read Grep Glob Bash(pnpm test) Bash(pnpm test:e2e) Bash(pnpm --filter *)
 ---
@@ -13,7 +13,10 @@ allowed-tools: Read Grep Glob Bash(pnpm test) Bash(pnpm test:e2e) Bash(pnpm --fi
 
 **Rules (norms SSOT):** `mms-testing-observability.mdc` · `mms-completion-review.mdc` · `mms-ui-ux-design.mdc` §3–§4. Accessibility smoke → `mms-a11y-smoke`.
 
-Operational guide for writing, running, and debugging automated test suites across the monorepo.
+## When to use
+
+- Writing or debugging Vitest, Fastify `inject()`, or Playwright suites
+- Running responsive/RTL or axe smoke gates for a UI change
 
 ## 1. Monorepo Testing Tiers & Commands
 
@@ -21,8 +24,8 @@ Operational guide for writing, running, and debugging automated test suites acro
 - **Backend API & RBAC**: `pnpm --filter mms-backend test` (Fastify `inject()` + `vi.hoisted()` in-memory repository mocks).
 - **Database Integration**: `pnpm --filter mms-backend test:db` (Real PostgreSQL suite for RLS, transaction locks, and SQL aggregates).
 - **Frontend Components & Hooks**: `pnpm --filter mms-frontend test` (Vitest + happy-dom for TanStack Query facades, modals, and forms).
-- **Playwright E2E**: `pnpm test:e2e` (Full browser user journeys: auth, navigation, directory CRUD).
-- **Responsive & A11y Smoke**: `pnpm test:e2e tests/responsive-shell.spec.ts` (375/768/1440px) and `tests/a11y-shell.spec.ts` (WCAG 2.1 AA via axe-core).
+- **Playwright E2E**: `pnpm test:e2e` (Playwright project root is `e2e/`).
+- **Responsive & A11y Smoke**: Specs live at `e2e/tests/responsive-shell.spec.ts` and `e2e/tests/a11y-shell.spec.ts`; run via `pnpm test:e2e tests/responsive-shell.spec.ts` and `pnpm test:e2e tests/a11y-shell.spec.ts`. Auth bootstrap: `e2e/helpers/tenantBootstrap.ts`.
 
 ## 2. Testing Quality Invariants
 
@@ -41,3 +44,13 @@ Operational guide for writing, running, and debugging automated test suites acro
 - **Auto-Retrying Assertions**: Use `expect(locator).toBeVisible()` and `expect(locator).toBeEnabled()`. Ban hardcoded `page.waitForTimeout()`.
 - **Auth Context Fixtures**: Reuse authenticated storage states (`e2e/helpers/tenantBootstrap.ts`) instead of submitting login forms in each spec.
 - **RTL Mirroring**: Verify Arabic/Urdu (`dir="rtl"`) renders with zero page horizontal overflow (`document.documentElement.scrollWidth <= window.innerWidth`).
+
+## Examples
+
+- Fastify inject: `examples/fastify-inject.test.ts`
+- Playwright smoke: `examples/playwright-smoke.spec.ts`
+- Tenant RLS concurrency: `examples/tenant-rls-concurrency.test.ts`
+
+## Related skills
+
+`mms-a11y-smoke`, `mms-dev-setup`, `mms-code-review`.

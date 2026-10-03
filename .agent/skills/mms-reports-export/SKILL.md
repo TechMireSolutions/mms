@@ -4,13 +4,18 @@ description: Builds MMS module analytics, CustomReportBuilder, Recharts dashboar
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-26
+  last-verified: 2026-10-04
 ---
 
 # MMS Reports & Export Workflow
 
 **Rule (norms SSOT):** `mms-reports.md` · `mms-data-layer.md` · `mms-performance.md` §1-2 · `mms-module-architecture.md`.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
+
+## When to use
+
+- Editing Reports tabs, KPIs, ExportToolbar, drill-down, or saved reports
+- Changing dashboard widgets or analytics charts
 
 Report checklists (accessibility, filters, i18n/formatting, completion): **`references/report-checklists.md`**.
 
@@ -97,3 +102,7 @@ Detailed size gates, background queuing, formula injection protection, and tampe
 ## Done
 
 `pnpm typecheck` · `cd apps/frontend && pnpm lint` — `mms-completion-review.md`.
+
+## Related skills
+
+`mms-module-page`, `mms-background-jobs`, `mms-finance-accounting`, `mms-ui-ux-design`.

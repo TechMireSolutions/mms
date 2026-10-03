@@ -4,12 +4,17 @@ description: Audits and fixes MMS translation coverage across en/ar/ur/fa — mi
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS i18n Completeness
 
 **Rules (norms SSOT):** `mms-settings-i18n.mdc` (key registry, ban on `t(key) || 'English'`, date/money formatting) · `mms-ui-ux-design.mdc` §2–§3 (logical CSS, RTL correctness) · `mms-structure-naming.mdc` (Title Case scope).
+
+## When to use
+
+- Adding user-facing text or when `check:i18n` fails
+- A locale renders English fallbacks or overflows
 
 ## Accounting terminology and exports
 

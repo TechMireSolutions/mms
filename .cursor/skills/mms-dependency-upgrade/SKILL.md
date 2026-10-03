@@ -4,12 +4,17 @@ description: Upgrades MMS workspace dependencies with pnpm catalogs, Dependabot/
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Dependency Upgrade Workflow
 
 **Rule (norms SSOT):** `mms-dependencies.mdc`. Also `mms-performance.mdc` §4 (Client Bundle & Asset Optimization), `mms-ops-infrastructure.mdc` (CI), `mms-agent-universal.mdc` (memo hygiene), `mms-completion-review.mdc`.
+
+## When to use
+
+- Bumping Node/pnpm/React/Vite/Fastify/Drizzle/Zod/Query or catalog entries
+- Enabling Dependabot or turning on React Compiler
 
 Do **not** use for day-to-day install/run → `mms-dev-setup`. Do **not** use for prod host deploy → `mms-ops-deploy`.
 
@@ -56,3 +61,7 @@ A non-zero exit is actionable: fix the version, or add a reviewed exception **wi
 ## Done
 
 `mms-completion-review.mdc`. Sync standards mirrors only if you edited rules/skills.
+
+## Related skills
+
+`mms-vuln-response`, `mms-release-versioning`, `mms-dev-setup`, `mms-testing-e2e`.

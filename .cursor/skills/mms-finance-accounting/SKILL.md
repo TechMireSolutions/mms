@@ -4,12 +4,17 @@ description: Implements or audits MMS finance and accounting workflows — invoi
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Finance & Accounting Workflow
 
 **Rules (norms SSOT):** `mms-core.mdc` (money and boundaries), `mms-data-layer.mdc` (transactions, audit, lifecycle), `mms-auth-security.mdc` (authorization), `mms-api-interface.mdc` (write contracts), `mms-reports.mdc` (report authority).
+
+## When to use
+
+- Changing invoices, payments, ledgers, or accounting posting
+- Working payment gateways, invoice templates, or double-entry rules
 
 Use for ledger posting, fee billing and collections, payroll journals, chart of accounts, periods, reconciliation, and financial statements. This is a software implementation workflow, not an assertion that MMS meets any accounting framework.
 
@@ -50,3 +55,7 @@ The existing journal DTO uses two-decimal **numbers**, `moneyToCents` returns a 
 ## Completion
 
 Use [verification](references/verification.md) for exact scoped commands, then the completion review in `mms-completion-review.mdc`. Standards-only edits use `bash .agent/scripts/sync-all.sh` and `node scripts/verify-rules-integrity.mjs`; they do not by themselves require financial data changes or deployment.
+
+## Related skills
+
+`mms-schema-migrate`, `mms-backend-api`, `mms-audit-trail`, `mms-reports-export`, `mms-soft-delete`.

@@ -4,7 +4,7 @@ description: Creates or modifies MMS module pages per mms-module-architecture.md
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-26
+  last-verified: 2026-10-04
 ---
 
 # MMS Module Page Pattern
@@ -12,7 +12,11 @@ metadata:
 **Rule (norms SSOT):** `mms-module-architecture.mdc` · `mms-ui-ux-design.mdc` §4, §8 · `mms-hooks.mdc` · `mms-performance.mdc`.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
-Gold-standard reference implementation: `apps/frontend/src/tenant/features/accounting/AccountingPage.tsx` (Work | Reports | Setup with sub-tabs, trash mode, and persisted tier state).
+## When to use
+
+- Adding a new tenant module page or aligning an existing page to the three-tier shell
+- Registering module routes / manifests / permission gates at the page level
+- Changing `ModulePageShell` tier loading, persisted tab state, or header command centre
 
 ## Anti-Patterns & Banned Operations
 
@@ -23,15 +27,22 @@ Gold-standard reference implementation: `apps/frontend/src/tenant/features/accou
 - ❌ **NEVER keep tier state in `useState`**: use `usePersistedTabState` so a refresh/reload keeps the user on the same tier.
 - ❌ **NEVER hand-roll the header/tab shell**: `ModulePageShell` (→ `ModuleScaffold`) already owns SEO metadata, `PageHeader`, the metrics strip, and `ResponsiveAccordionTabs`.
 
-## Three-tier scaffold workflow
+## Implementation map
 
-Use `apps/frontend/src/tenant/features/contacts/ContactsPage.tsx` and the module's real manifest as references. `examples/TemplateModulePage.tsx` points to the actual shell contracts instead of exporting fictional manifest symbols.
+| Concern | Path / symbol |
+|---------|----------------|
+| Gold pages | `apps/frontend/src/tenant/features/accounting/AccountingPage.tsx`, `.../contacts/ContactsPage.tsx` |
+| Shell | `apps/frontend/src/components/ui/ModulePageShell.tsx` |
+| Tier tabs | `apps/frontend/src/tenant/hooks/useModuleTierTabs.ts` (`useFilteredModuleTierTabs`) |
+| Permissions | `apps/frontend/src/tenant/hooks/usePermissions.ts` (`useModulePermissions`) |
+| Tab + trash state | `apps/frontend/src/hooks/usePersistedTabState.ts`, `apps/frontend/src/hooks/useTrashMode.ts` |
+| Router | `apps/frontend/src/components/routing/HostRoutes.tsx` |
+| Policy | `packages/shared/src/moduleAccessPolicy.ts` + `ModuleAccessRoute` |
+| Template | `examples/TemplateModulePage.tsx` |
 
-Advisory review: derive allowed tabs with `useFilteredModuleTierTabs`, intersect persisted selection with those tabs before rendering, and gate Reports/Setup content and queries on the corresponding capability. Apply a safe fallback if permission changed or a tab was removed. A hidden tab label alone does not protect its panel. Preserve the module's existing lazy tier boundaries, header actions and metrics permissions.
+Derive allowed tabs with `useFilteredModuleTierTabs`, intersect persisted selection before rendering, and gate Reports/Setup content on capability. A hidden tab label alone does not protect its panel.
 
-Route registration is lazy at the router level too — add the page to `apps/frontend/src/components/routing/HostRoutes.tsx` (tenant) or the equivalent platform routing module. Do not invent an `AppRoutes`/`PlatformRoutes` module; the repo has a single host-aware router.
-
-## Gold-Standard Parity Checklist (§7)
+## Verification
 
 ```
 - [ ] Module manifest registered in @mms/shared and passed to useModulePermissions
@@ -39,8 +50,11 @@ Route registration is lazy at the router level too — add the page to `apps/fro
 - [ ] Tier list from useFilteredModuleTierTabs, active tier from usePersistedTabState
 - [ ] Reports/Setup tiers lazy-loaded behind Suspense + ErrorBoundary + ModuleTierMotion
 - [ ] Work directory virtualizes > 30 rows (@tanstack/react-virtual)
-- [ ] ErrorState carries a retry action and loadFailedHint on fetch error
 - [ ] Trash mode (?view=trash) via useTrashMode, with restore + bulk restore wired
 - [ ] i18n keys added to en/ar/ur/fa (pnpm run check:i18n)
 - [ ] Verify: pnpm typecheck && pnpm --filter mms-frontend lint
 ```
+
+## Related skills
+
+`mms-module-work`, `mms-module-setup`, `mms-reports-export`, `mms-fields-registry`, `mms-form-architecture`.

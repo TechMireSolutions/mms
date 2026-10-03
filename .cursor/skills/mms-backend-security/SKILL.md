@@ -4,14 +4,26 @@ description: Finds and fixes MMS backend auth weaknesses — tenant isolation, R
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Backend Security Workflow
 
-**Rules (norms SSOT):** `mms-auth-security.mdc` · `mms-data-layer.mdc` §5–§6. Route checklist → `references/route-audit-checklist.md`.
+**Rules (norms SSOT):** `mms-auth-security.mdc` · `mms-data-layer.mdc` §5–§6. Route checklist → `references/route-audit-checklist.md`. RBAC surfaces → `references/auth-rbac-matrix.md`.
 
-Operational procedure for auditing, verifying, and hardening authentication, authorization, and tenant isolation controls in Fastify.
+## When to use
+
+- Hardening or auditing auth, CSRF, cookies, Origin, rate limits, or session flows
+- Verifying tenant isolation / RBAC correctness of a control (not general route CRUD)
+
+## Checklists
+
+| Topic | File |
+|-------|------|
+| Route audit | `references/route-audit-checklist.md` |
+| RBAC matrix | `references/auth-rbac-matrix.md` |
+
+Token persistence: `authArtifactService`. Cookie names below are authoritative.
 
 ## 1. Middleware Architecture & Routing Gates
 
@@ -44,3 +56,7 @@ Execute the backend security test matrix when modifying auth or route handlers:
 ```bash
 cd apps/backend && pnpm test -- src/__tests__/app.security.test.ts src/__tests__/auth.integration.test.ts src/__tests__/rbacService.test.ts
 ```
+
+## Related skills
+
+`mms-backend-api`, `mms-backup-restore`, `mms-code-review`.

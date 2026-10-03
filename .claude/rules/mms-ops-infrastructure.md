@@ -21,7 +21,7 @@ paths:
 **Workflow skills:** local install/run → `mms-dev-setup` · production Hetzner/Apache → `mms-ops-deploy` · VPS casing/LF/PM2 → `mms-linux-compatibility`.
 
 ## 1. Prerequisites & Environment Setup
-- **Runtimes & Tooling:** Node.js `>=24.14.0` (native `--env-file=.env` and `--experimental-strip-types`; `dotenv` is banned), Corepack `pnpm@11.15.1`, Turbo `^2.10.9`, PostgreSQL 16.
+- **Runtimes & Tooling:** Node.js `>=24.14.0` (native `--env-file=.env` and `--experimental-strip-types`; `dotenv` is banned), Corepack `pnpm@11.15.1`, Turbo `^2.11.3`, PostgreSQL 16.
 - **Root Commands:** `pnpm dev` (concurrent apps), `pnpm build`, `pnpm typecheck`, `pnpm test`. Local screen session: `./restart_servers.sh [status|stop|--foreground]`.
 
 ## 2. Environment Variables & Ports Configuration

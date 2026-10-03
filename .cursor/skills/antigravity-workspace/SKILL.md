@@ -4,13 +4,18 @@ description: Orients Antigravity agents to the MMS workspace layout — .agent r
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-10-04
 allowed-tools: Read Grep Glob Bash(bash .agent/scripts/sync-all.sh) Bash(node scripts/verify-rules-integrity.mjs)
 ---
 
 # Antigravity Workspace — MMS
 
 **Rule (norms SSOT):** `mms-agent-universal.mdc` · `mms-core.mdc` · `mms-completion-review.mdc`.
+
+## When to use
+
+- Starting work in Antigravity or loading MMS agent-standards context
+- Syncing rules/skills across Antigravity, Cursor, and Claude Code
 
 ## Anti-Patterns & Banned Operations
 
@@ -33,15 +38,15 @@ Claude Code equivalent: `.claude/rules/` + `.claude/skills/` + root `CLAUDE.md`
 
 Keep in sync when editing: `bash .agent/scripts/sync-all.sh`
 
-## Always-on rules (3)
+## Always-on rules (1)
 
 | File | Purpose |
 |------|---------|
-| `rules/mms-agent-universal.mdc` | Universal agent cognition, output economy, security, TS/git standards |
 | `rules/mms-core.mdc` | MMS stack, boundaries, ownership matrix, edit discipline |
-| `rules/mms-completion-review.mdc` | Self-review after code edits — verify, fix bugs, then mark done |
 
-Scoped (18 rules, 21 total): `mms-performance` (compute/virtualization), `mms-migration-status` (active debt register), `mms-data-layer` (Postgres/RLS/Query), `mms-dry`, `mms-dependencies`, `mms-structure-naming`, `mms-hooks`, `mms-module-architecture`, `mms-ui-ux-design`, etc.
+Requestable (not always-on): `rules/mms-agent-universal.mdc` (cognition, output economy, security, TS/git), `rules/mms-completion-review.mdc` (self-review after edits).
+
+Scoped (20 rules, 21 total): `mms-performance` (compute/virtualization), `mms-migration-status` (active debt register), `mms-data-layer` (Postgres/RLS/Query), `mms-dry`, `mms-dependencies`, `mms-structure-naming`, `mms-hooks`, `mms-module-architecture`, `mms-ui-ux-design`, etc.
 
 ## Priority skills (daily)
 
@@ -86,3 +91,7 @@ Skills canonical in `.agent/skills/` → mirrored to `.cursor/skills/` and `.cla
 ## Project root guide
 
 Read `AGENTS.md` at repo root.
+
+## Related skills
+
+`mms-agent-standards` (authoring/sync), `mms-dev-setup` (local env), `mms-code-review` (diff review).

@@ -4,35 +4,53 @@ description: Extends @mms/shared with types, settings defaults, module manifests
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # @mms/shared Package Workflow
 
 **Rules (norms SSOT):** `mms-dry.mdc` · `mms-performance.mdc` §4 · `mms-settings-i18n.mdc` · `mms-structure-naming.mdc`.
 
+## When to use
+
+- Adding shared types, Zod DTOs, manifests, or pure utils used by FE and BE
+- Moving duplicated pure logic into `packages/shared`
+- Changing soft-delete / bulk ID schemas consumed by both apps
+
+## Implementation map
+
+| Concern | Path |
+|---------|------|
+| API DTOs | `packages/shared/src/schemas/api.dto.ts` (`softDeleteBodySchema`, `bulkIdsBodySchema`) |
+| Soft-delete helpers | `packages/shared/src/softDelete.ts` |
+| Manifests | `packages/shared/src/*ModuleManifest.ts` |
+| Barrel | `packages/shared/src/index.ts` (named exports only; no `@mms/shared/*` subpaths) |
+
 ## 1. Architectural Boundaries & Purity
 
-- **Leaf-Package Purity**: Pure TypeScript only. Zero React, DOM (`window`, `document`), Fastify, Drizzle, DB, or Node.js built-ins (`node:*`).
-- **Single Barrel Export**: Named exports only via `packages/shared/src/index.ts`. No subpath imports (`@mms/shared/*` is forbidden).
-- **Erasable Syntax Only**: Union types and `as const` objects only. Zero `enum` or `namespace`. Use native immutable array methods (`toSorted()`, `toReversed()`).
+- Pure TypeScript only — no React, DOM, Fastify, Drizzle, DB, or `node:*`.
+- Named exports via `index.ts` only. Erasable syntax: unions + `as const`; no `enum`/`namespace`.
 
 ## 2. Shared Contracts & DTOs
 
-- **Strict Validation**: All write Zod schemas must enforce `.strict()` to reject unknown keys. Sanitize strings against Unicode RTL spoofing (`safeString`).
-- **Explicit Inferred DTOs**: Always export paired types: `Insert[Entity]Dto`, `Update[Entity]Dto`, and `[Entity]ResponseDto`.
-- **Date Standards**: Use `isoDateSchema` (`YYYY-MM-DD` regex + calendar existence check) or `isoDateOrEmptySchema`. Compare with `compareIsoDates()`.
-- **Soft-Delete Contracts**: Use `softDeleteBodySchema`, `bulkIdsBodySchema` (max 500 IDs, `.strict()`), and `isQueryFlagTrue()` for `includeDeleted` query flags. Strip server-owned audit fields from writes via helpers.
-- **Manifest Contracts**: Modules define `*ModuleManifest.ts` declaring permissions, routes, and `softDelete` configuration.
+- Write Zod schemas use `.strict()`; sanitize with `safeString`.
+- Export paired `Insert*Dto` / `Update*Dto` / `*ResponseDto`.
+- Dates: `isoDateSchema` / `isoDateOrEmptySchema` + `compareIsoDates()`.
+- Soft-delete: `softDeleteBodySchema`, `bulkIdsBodySchema` (max 500), `isQueryFlagTrue()` for `includeDeleted`.
+- Modules declare `*ModuleManifest.ts` (permissions, routes, `softDelete` config).
 
 ## 3. Workflow & Verification
 
-1. Place domain models in `packages/shared/src/*Types.ts` or `*Schemas.ts`.
-2. Add pure utilities to `utils.ts` (e.g., `formatDate`, `formatMoney`, `parsePhoneNumber`).
+1. Place models in `packages/shared/src/*Types.ts` or `*Schemas.ts`.
+2. Add pure utilities to `utils.ts` (e.g. `formatDate`, `formatMoney`, `parsePhoneNumber`).
 3. Export from `index.ts` with JSDoc on public symbols.
-4. Verify leaf-package purity and typing:
+4. Verify:
 
 ```bash
-bash scripts/check-shared-exports.sh
+bash .agent/skills/mms-shared-package/scripts/check-shared-exports.sh
 pnpm typecheck
 ```
+
+## Related skills
+
+`mms-schema-migrate`, `mms-backend-api`, `mms-settings-i18n`.

@@ -4,12 +4,17 @@ description: Triages PostgreSQL performance in MMS — slow queries, missing or 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-10-04
 ---
 
 # MMS Database Performance
 
 **Rules (norms SSOT):** `mms-performance.md` §1 (query discipline, projections, indexes, pagination) · `mms-data-layer.md` §1–§7 (schema, RLS, soft-delete index tiers, autovacuum). Partition upkeep → `mms-audit-trail`.
+
+## When to use
+
+- A list, report, or dashboard is slow or a query plan regressed
+- DB load is climbing and indexes/autovacuum need triage
 
 ## Ratchets that already run in CI
 

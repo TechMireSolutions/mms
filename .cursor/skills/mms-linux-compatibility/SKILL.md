@@ -4,12 +4,17 @@ description: Audits the repository for Linux/Ubuntu VPS portability — CRLF lin
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-15
+  last-verified: 2026-10-04
 ---
 
 # Linux VPS Compatibility Verification Workflow
 
 **Rule (norms SSOT):** `mms-ops-infrastructure.mdc` · `mms-completion-review.mdc`.
+
+## When to use
+
+- Preparing a deploy or chasing an error that only reproduces on the server
+- Auditing path case, line endings, or Linux/VPS portability
 
 ## Anti-Patterns & Banned Operations
 
@@ -78,3 +83,7 @@ bash .agent/skills/mms-linux-compatibility/scripts/check-linux-compat.sh
 ```
 
 Run it before any deploy; it exits non-zero on the first class of failure it finds.
+
+## Related skills
+
+`mms-ops-deploy`, `mms-dev-setup`, `mms-incident-response`.

@@ -4,7 +4,7 @@ description: Governs application-wide settings panels (/settings), settings prev
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-04
 ---
 
 # MMS Settings, Navigation & Internationalization
@@ -12,11 +12,15 @@ metadata:
 **Rule (norms SSOT):** `mms-settings-i18n.md` · `mms-ui-ux-design.md` · `mms-core.md`.
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
+## When to use
+
+- Adding global `/settings` panels or sidebar nav items
+- Adding or syncing user-facing translation keys (en/ar/ur/fa)
+- Fixing RTL/LTR mirroring for settings or shell chrome (with `mms-ui-ux-design`)
+
 ## Accounting localization
 
-Advisory: use [exact-money guidance](../mms-finance-accounting/references/ledger-controls.md). Locale controls presentation, not functional currency, fiscal dates, or stored scale. Preserve ISO accounting dates and stable source/account IDs; parse localized input through an explicit validated boundary.
-
-Check debit/credit signs, negative amounts, separators, currency codes, and mixed RTL identifiers in forms, charts, and PDF/CSV/XLSX output. Formatting must not revalue historical amounts or convert missing data into zero. Translate statement labels according to the selected framework, not by assuming every nonprofit uses company terminology.
+Advisory: use [exact-money guidance](../mms-finance-accounting/references/ledger-controls.md). Locale controls presentation, not functional currency, fiscal dates, or stored scale.
 
 ## Anti-Patterns & Banned Operations
 
@@ -25,18 +29,25 @@ Check debit/credit signs, negative amounts, separators, currency codes, and mixe
 - ❌ **NEVER add RTL locale packs for platform apex**: Platform administration is strictly English/LTR.
 - ❌ **NEVER put module-specific preferences under `/settings`**: Module preferences belong under their respective module Setup tier (`mms-module-setup`).
 
-## Localization and navigation workflow
+## Localization pipeline
 
-Use `useTranslation` from `@/hooks/useTranslation`, with `AppTranslationKey` for application-owned labels. Keep user-authored field labels as data. Internal navigation uses the existing React Router/shared navigation component; avoid a raw anchor that reloads the SPA. Use semantic tokens, typed icons and logical spacing.
+1. Add the key to `packages/shared/src/appTranslationsEn.ts`.
+2. Sync ar/ur/fa packs to match.
+3. Consume via `useTranslation` + `AppTranslationKey` (`@/hooks/useTranslation`).
+4. Verify: `pnpm run check:i18n`.
 
-Advisory: test locale changes while dialogs and queries are active; interpolation, errors and accessible names must update too. Preserve LTR formatting for phone/identifier strings inside RTL text with appropriate isolation. Do not replace theme/font tokens with a copied palette.
+Keep user-authored field labels as data. Use semantic tokens and logical spacing. Preserve LTR isolation for phone/identifier strings inside RTL text.
 
-## Verification Checklist
+## Verification
 
 ```
 - [ ] New keys registered in appTranslationsEn.ts and synced to ar/ur/fa
 - [ ] Zero t('key') || 'English' fallback idioms
 - [ ] Pure logical CSS properties (ps-, pe-, ms-, me-, start-, end-)
 - [ ] Date and currency formatted via formatDate and formatMoney
-- [ ] Run: pnpm typecheck && cd apps/frontend && pnpm lint
+- [ ] Run: pnpm typecheck && pnpm --filter mms-frontend lint && pnpm run check:i18n
 ```
+
+## Related skills
+
+`mms-i18n-completeness`, `mms-ui-ux-design`, `mms-module-setup`, `mms-frontend`.

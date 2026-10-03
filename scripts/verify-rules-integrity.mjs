@@ -9,7 +9,8 @@
  *   4. rule→skill / skill→rule reference integrity
  *   5. backticked path existence, in EVERY skill file (incl. examples/ + references/)
  *   6. import-specifier resolution for skill examples (alias-aware)
- *   7. script reachability + executable bit for skill scripts/
+ *   7. script/references/examples reachability + executable bit for skill scripts/
+ *   8. skill description "Use when" + body "## Related skills" + "## When to use" (fail)
  *   8. section citations (§N must resolve to a real heading number)
  *   9. Cursor `globs:` frontmatter validity (existing base dir, non-empty match)
  *  10. freshness metadata (warn-only)
@@ -395,8 +396,17 @@ for (const skill of diskSkills) {
   if (!/Do not use|Do NOT use/i.test(description)) {
     fail(`Skill ${skill}: description lacks an explicit negative routing boundary ("Do NOT use for…")`);
   }
+  if (!/Use when/i.test(description)) {
+    fail(`Skill ${skill}: description lacks an explicit "Use when…" trigger clause`);
+  }
   if (!body.includes('**Rule (norms SSOT):**') && !body.includes('**Rules (norms SSOT):**')) {
     fail(`Skill ${skill}: missing '**Rule (norms SSOT):**' header`);
+  }
+  if (!/^##+\s*Related skills?\b/m.test(body)) {
+    fail(`Skill ${skill}: missing '## Related skills' section`);
+  }
+  if (!/^##+\s*When to use\b/m.test(body)) {
+    fail(`Skill ${skill}: missing '## When to use' body section`);
   }
 
   // Freshness metadata (warn-only so it never blocks a fix-forward commit).
@@ -473,18 +483,35 @@ for (const skill of diskSkills) {
   }
 
   // Skill scripts must be executable AND reachable from SKILL.md, or they are
-  // dead weight that never runs.
-  const scriptsDir = path.join(skillDir, 'scripts');
-  if (isDir(scriptsDir)) {
-    for (const scriptFile of fs.readdirSync(scriptsDir)) {
-      if (scriptFile === '__pycache__' || scriptFile.startsWith('.')) continue;
-      const scriptPath = path.join(scriptsDir, scriptFile);
-      if (isDir(scriptPath)) continue;
-      if (!isExecutable(scriptPath)) {
-        fail(`Skill ${skill}: script '${scriptFile}' is not executable`);
+  // dead weight that never runs. references/ and examples/ share the
+  // reachability invariant (skip __pycache__, *.pyc, and dotfiles).
+  const assetDirs = [
+    { name: 'scripts', requireExecutable: true },
+    { name: 'references', requireExecutable: false },
+    { name: 'examples', requireExecutable: false },
+  ];
+  const walkAssetFiles = (dir, out = []) => {
+    for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+      if (entry.name === '__pycache__' || entry.name.startsWith('.')) continue;
+      if (entry.name.endsWith('.pyc')) continue;
+      const full = path.join(dir, entry.name);
+      if (entry.isDirectory()) walkAssetFiles(full, out);
+      else out.push(full);
+    }
+    return out;
+  };
+  for (const { name: assetName, requireExecutable } of assetDirs) {
+    const assetDir = path.join(skillDir, assetName);
+    if (!isDir(assetDir)) continue;
+    for (const assetPath of walkAssetFiles(assetDir)) {
+      const basenames = [path.basename(assetPath)];
+      const relFromSkill = path.relative(skillDir, assetPath).split(path.sep).join('/');
+      if (requireExecutable && !isExecutable(assetPath)) {
+        fail(`Skill ${skill}: script '${basenames[0]}' is not executable`);
       }
-      if (!raw.includes(scriptFile)) {
-        fail(`Skill ${skill}: script '${scriptFile}' is never referenced from SKILL.md`);
+      const mentioned = raw.includes(basenames[0]) || raw.includes(relFromSkill);
+      if (!mentioned) {
+        fail(`Skill ${skill}: ${assetName} file '${relFromSkill}' is never referenced from SKILL.md`);
       }
     }
   }

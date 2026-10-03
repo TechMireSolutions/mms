@@ -20,9 +20,9 @@ paths:
 **Workflow skill:** `mms-dependency-upgrade` (catalogs, Dependabot, audits, React Compiler). Day-to-day install/run → `mms-dev-setup`.
 
 ## 1. Baseline & Workspace Catalogs
-- **Runtimes & Tooling:** Node.js `>=24.14.0` (LTS `engines.node`), Corepack `pnpm@11.15.1`, Turborepo `^2.10.9`, TypeScript `~7.0.2` (with `typescript-v6` compatibility alias).
-- **Catalogs (`pnpm-workspace.yaml`):** React/React-DOM `^19.2.8`, React Router `^7.18.3`, Vite `^8.3.0`, Fastify `^5.12.1`, Pino `^10.3.1`, Drizzle ORM `^0.45.2`, Zod `^4.4.3`, TanStack Query `^5.101.4`, `@ts-rest/react-query` `3.52.1`. Apps cannot drift majors.
-- **E2E & Shared:** Playwright `^1.62.1`, axe-core `^4.13.0`, `@ts-rest/core`. Workspace protocol (`workspace:*`) mandatory for `@mms/shared`.
+- **Runtimes & Tooling:** Node.js `>=24.14.0` (LTS `engines.node`), Corepack `pnpm@11.15.1`, Turborepo `^2.11.3`, TypeScript `~7.0.2` (with `typescript-v6` compatibility alias).
+- **Catalogs (`pnpm-workspace.yaml`):** React/React-DOM `^19.3.0`, React Router (`react-router-dom`) `^7.18.4`, Vite `^8.3.0`, Fastify `^5.12.5`, Pino `^10.3.1`, Drizzle ORM `^0.45.3`, Zod `^4.6.5`, TanStack Query `^5.103.2`, `@ts-rest/react-query` `3.52.1`. Apps cannot drift majors.
+- **E2E & Shared:** Playwright (`@playwright/test`) `^1.63.0`, axe-core `^4.13.0`, `@ts-rest/core`. Workspace protocol (`workspace:*`) mandatory for `@mms/shared`.
 
 ## 2. Upgrade Workflow
 - **Dedicated PRs Only:** Never bump dependencies mid-feature.
