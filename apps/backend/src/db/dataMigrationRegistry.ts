@@ -65,4 +65,5 @@ export const dataMigrationsToRun = [
   { id: '085', load: async () => (await import('./migrations/085_grant_obligations_to_existing_workspaces.js')).runMigration085 },
   { id: '086', load: async () => (await import('./migrations/086_backfill_system_modules_access.js')).runMigration086 },
   { id: '087', load: async () => (await import('./migrations/087_backfill_faculty_assignments.js')).runMigration087 },
+  { id: '088', load: async () => (await import('./migrations/088_migrate_organization_blueprints.js')).runMigration088 },
 ];
