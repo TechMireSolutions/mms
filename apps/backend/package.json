@@ -29,8 +29,8 @@
     "audit:dates": "tsx src/scripts/audit-date-formats.ts"
   },
   "dependencies": {
-    "@aws-sdk/client-s3": "^3.1139.0",
-    "@aws-sdk/lib-storage": "^3.1139.0",
+    "@aws-sdk/client-s3": "^3.1141.0",
+    "@aws-sdk/lib-storage": "^3.1141.0",
     "@fastify/compress": "^9.2.0",
     "@fastify/cookie": "^11.1.2",
     "@fastify/cors": "^11.3.0",
@@ -38,13 +38,13 @@
     "@fastify/jwt": "^10.2.2",
     "@fastify/multipart": "^10.1.2",
     "@fastify/rate-limit": "^11.2.0",
-    "@fastify/static": "^10.1.4",
+    "@fastify/static": "^10.1.5",
     "@fastify/websocket": "^11.3.1",
     "@mms/shared": "workspace:*",
     "@ts-rest/core": "^3.52.1",
     "@ts-rest/fastify": "^3.52.1",
     "@ts-rest/open-api": "^3.52.1",
-    "bullmq": "^6.3.8",
+    "bullmq": "^6.3.9",
     "drizzle-orm": "catalog:",
     "exceljs": "^4.4.0",
     "fastify": "catalog:",
@@ -58,18 +58,18 @@
   },
   "devDependencies": {
     "@eslint/js": "^10.0.1",
-    "@types/node": "^26.6.2",
+    "@types/node": "^26.6.3",
     "@types/nodemailer": "^8.0.2",
     "@types/pg": "^8.23.1",
     "@types/ws": "^8.18.1",
-    "@vitest/coverage-v8": "^5.0.1",
+    "@vitest/coverage-v8": "^5.0.2",
     "drizzle-kit": "^0.31.11",
     "eslint": "^10.11.0",
     "globals": "^17.12.0",
     "tsx": "^4.23.15",
     "typescript": "~7.0.2",
     "typescript-eslint": "^8.70.1",
-    "vitest": "^5.0.1",
-    "ws": "^8.21.3"
+    "vitest": "^5.0.2",
+    "ws": "^8.22.0"
   }
 }
