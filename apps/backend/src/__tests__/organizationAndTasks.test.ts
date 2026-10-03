@@ -12,11 +12,12 @@ import {
 import { validateHierarchyDepth } from '../db/repositories/positionHierarchySql.js';
 
 describe('Organization Blueprints Catalog', () => {
-  it('contains all 4 standard industry blueprints', () => {
-    expect(ORGANIZATION_BLUEPRINTS.length).toBe(4);
+  it('contains standard industry blueprints including hotel v2', () => {
+    expect(ORGANIZATION_BLUEPRINTS.length).toBe(5);
     const ids = ORGANIZATION_BLUEPRINTS.map((b) => b.id);
     expect(ids).toContain('madrasa-standard-v1');
     expect(ids).toContain('hotel-standard-v1');
+    expect(ids).toContain('hotel-standard-v2');
     expect(ids).toContain('office-standard-v1');
     expect(ids).toContain('retail-standard-v1');
   });
@@ -33,8 +34,7 @@ describe('Organization Blueprints Catalog', () => {
 
   it('filters blueprints by industry', () => {
     const hotels = getBlueprintsForIndustry('hotel');
-    expect(hotels.length).toBe(1);
-    expect(hotels[0]?.id).toBe('hotel-standard-v1');
+    expect(hotels.map((b) => b.id).sort()).toEqual(['hotel-standard-v1', 'hotel-standard-v2']);
   });
 
   it('ensures all blueprint positions reference valid departments and designations', () => {
@@ -100,6 +100,18 @@ describe('Task Settings & Preferences Schema', () => {
       delegationScope: 'all_users',
     });
     expect(parsed.success).toBe(false);
+  });
+
+  it('accepts non-uuid faculty and user ids on task assignee input', async () => {
+    const { taskAssigneeInputSchema, TASKS_MODULE_MANIFEST } = await import('@mms/shared');
+    const parsed = taskAssigneeInputSchema.safeParse({
+      facultyId: 'fac-legacy-1',
+      userId: 'user-legacy-1',
+      positionId: 'pos-legacy-1',
+    });
+    expect(parsed.success).toBe(true);
+    expect(TASKS_MODULE_MANIFEST.softDelete.workExcludesDeleted).toBe(true);
+    expect(TASKS_MODULE_MANIFEST.work.directoryViews).toEqual(['table', 'cards']);
   });
 });
 

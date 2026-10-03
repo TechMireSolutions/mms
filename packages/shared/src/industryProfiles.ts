@@ -72,7 +72,7 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
     displayNameKey: 'organization.industry.hotel',
     descriptionKey: 'organization.industry.hotelDesc',
     recommendedModules: COMMON_BUSINESS_MODULES,
-    recommendedBlueprintId: 'hotel-standard-v1',
+    recommendedBlueprintId: 'hotel-standard-v2',
     recommendedRoles: ['general_manager', 'department_head', 'supervisor', 'staff', 'admin'],
     terminology: {
       facultyLabel: 'Staff & Team',

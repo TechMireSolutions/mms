@@ -10,6 +10,9 @@ export const workspaces = pgTable('workspaces', {
   tagline: text('tagline'),
   country: text('country'),
   industryType: varchar('industry_type', { length: 50 }).default('madrasa'),
+  appliedBlueprintKey: varchar('applied_blueprint_key', { length: 100 }),
+  appliedBlueprintVersion: integer('applied_blueprint_version'),
+  blueprintAppliedAt: timestamp('blueprint_applied_at', { withTimezone: true, mode: 'date' }),
   enabled: boolean('enabled').notNull().default(true),
   // Branding — theme
   primaryColor: varchar('primary_color', { length: 20 }),

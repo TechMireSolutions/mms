@@ -5,10 +5,9 @@
 
 import { and, eq, isNull } from 'drizzle-orm';
 import type { OrganizationLocationInsert, OrganizationLocationUpdate } from '@mms/shared';
-import { organizationLocations, organizationPositions } from '../schema.js';
+import { organizationLocations } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import { validateOrganizationParent } from './organizationHierarchyValidation.js';
-import { lockFacultyHierarchy } from './facultyAssignmentValidation.js';
 import type { OrganizationLocationRow } from '../schema/organizationLocationTables.js';
 
 const SELECT_COLS = {
@@ -145,24 +144,8 @@ export async function deleteOrganizationLocation(
   id: string,
   userId?: string,
 ): Promise<boolean> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
-    await lockFacultyHierarchy(tx, subdomain);
-    const children = await tx.select({ id: organizationLocations.id }).from(organizationLocations)
-      .where(and(eq(organizationLocations.workspaceSubdomain, subdomain),
-        eq(organizationLocations.parentLocationId, id), isNull(organizationLocations.deletedAt))).limit(1);
-    const positions = await tx.select({ id: organizationPositions.id }).from(organizationPositions)
-      .where(and(eq(organizationPositions.workspaceSubdomain, subdomain),
-        eq(organizationPositions.locationId, id), isNull(organizationPositions.deletedAt))).limit(1);
-    if (children.length || positions.length) throw new Error('Location has active dependents');
-    const [deleted] = await tx
-      .update(organizationLocations)
-      .set({
-        deletedAt: new Date(),
-        deletedBy: userId ?? null,
-      })
-      .where(and(eq(organizationLocations.workspaceSubdomain, subdomain), eq(organizationLocations.id, id), isNull(organizationLocations.deletedAt)))
-      .returning({ id: organizationLocations.id });
-    return Boolean(deleted);
-  });
+  const { archiveOrganizationLocation } = await import('./organizationTrashRepository.js');
+  const result = await archiveOrganizationLocation(tenant, id, userId);
+  if (!result.success && result.reason) throw new Error(result.reason);
+  return result.success;
 }

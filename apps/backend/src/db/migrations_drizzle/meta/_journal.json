@@ -960,6 +960,13 @@
       "when": 1791100300002,
       "tag": "0136_organization_task_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 137,
+      "version": "7",
+      "when": 1791100300003,
+      "tag": "0137_organization_task_hardening",
+      "breakpoints": true
     }
   ]
 }

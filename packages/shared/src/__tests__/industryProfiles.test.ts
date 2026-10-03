@@ -28,7 +28,7 @@ describe('industryProfiles', () => {
   });
 
   it('provides independent recommended blueprint for each industry', () => {
-    expect(getRecommendedBlueprintForIndustry('hotel')).toBe('hotel-standard-v1');
+    expect(getRecommendedBlueprintForIndustry('hotel')).toBe('hotel-standard-v2');
     expect(getRecommendedBlueprintForIndustry('office')).toBe('office-standard-v1');
     expect(getRecommendedBlueprintForIndustry('retail')).toBe('retail-standard-v1');
     expect(getRecommendedBlueprintForIndustry('madrasa')).toBe('madrasa-standard-v1');

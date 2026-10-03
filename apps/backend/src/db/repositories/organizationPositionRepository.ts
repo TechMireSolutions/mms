@@ -5,11 +5,10 @@
 
 import { and, eq, isNull } from 'drizzle-orm';
 import type { OrganizationPositionInsert, OrganizationPositionUpdate } from '@mms/shared';
-import { facultyAssignments, organizationPositions } from '../schema.js';
+import { organizationPositions } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import type { OrganizationPositionRow } from '../schema/organizationPositionTables.js';
 import { validateOrganizationParent } from './organizationHierarchyValidation.js';
-import { lockFacultyHierarchy } from './facultyAssignmentValidation.js';
 
 const SELECT_COLS = {
   id: organizationPositions.id,
@@ -142,43 +141,6 @@ export async function deleteOrganizationPosition(
   id: string,
   userId?: string,
 ): Promise<{ success: boolean; reason?: string }> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
-    await lockFacultyHierarchy(tx, subdomain);
-    const children = await tx.select({ id: organizationPositions.id }).from(organizationPositions)
-      .where(and(eq(organizationPositions.workspaceSubdomain, subdomain),
-        eq(organizationPositions.parentPositionId, id), isNull(organizationPositions.deletedAt))).limit(1);
-    if (children.length) return { success: false, reason: 'Position has active child positions' };
-    // Preserve historical and future appointments until explicitly unlinked.
-    const activeOccupants = await tx
-      .select({ id: facultyAssignments.id })
-      .from(facultyAssignments)
-      .where(
-        and(
-          eq(facultyAssignments.workspaceSubdomain, subdomain),
-          eq(facultyAssignments.positionId, id),
-          isNull(facultyAssignments.deletedAt),
-
-        ),
-      )
-      .limit(1);
-
-    if (activeOccupants.length > 0) {
-      return {
-        success: false,
-        reason: 'Cannot delete position that currently has active staff assignments',
-      };
-    }
-
-    const [deleted] = await tx
-      .update(organizationPositions)
-      .set({
-        deletedAt: new Date(),
-        deletedBy: userId ?? null,
-      })
-      .where(and(eq(organizationPositions.workspaceSubdomain, subdomain), eq(organizationPositions.id, id), isNull(organizationPositions.deletedAt)))
-      .returning({ id: organizationPositions.id });
-
-    return { success: Boolean(deleted) };
-  });
+  const { archiveOrganizationPosition } = await import('./organizationTrashRepository.js');
+  return archiveOrganizationPosition(tenant, id, userId);
 }

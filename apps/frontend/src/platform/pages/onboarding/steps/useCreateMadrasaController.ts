@@ -51,13 +51,6 @@ export function useCreateMadrasaController(
     }));
   };
 
-  const handleBlueprintChange = (blueprintId: string) => {
-    onChange((prev) => ({
-      ...prev,
-      blueprintId,
-    }));
-  };
-
   return {
     t,
     appDomain,
@@ -67,7 +60,6 @@ export function useCreateMadrasaController(
     handleNameChange,
     handleSubdomainChange,
     handleIndustryChange,
-    handleBlueprintChange,
   };
 }
 

@@ -11,6 +11,7 @@ import {
   facultyDesignations,
   organizationLocations,
   organizationPositions,
+  workspaces,
 } from '../db/schema.js';
 import { withTenant } from '../db/tenant-context.js';
 
@@ -18,6 +19,7 @@ export interface ApplyBlueprintResult {
   applied: boolean;
   blueprintId: string;
   industryType: string;
+  blueprintVersion: number;
   counts: {
     departments: number;
     designations: number;
@@ -174,15 +176,22 @@ export async function applyOrganizationBlueprint(
       }
     }
 
+    const now = new Date();
+    await tx.update(workspaces).set({
+      appliedBlueprintKey: blueprint.id,
+      appliedBlueprintVersion: blueprint.version,
+      blueprintAppliedAt: now,
+      updatedAt: now,
+    }).where(eq(workspaces.subdomain, subdomain));
+
     return {
       applied: true,
       blueprintId: blueprint.id,
       industryType: blueprint.industryType,
+      blueprintVersion: blueprint.version,
       counts: {
-        departments: deptMap.size,
-        designations: desigMap.size,
-        locations: locMap.size,
-        positions: posMap.size,
+        departments: deptMap.size, designations: desigMap.size,
+        locations: locMap.size, positions: posMap.size,
       },
     };
   });

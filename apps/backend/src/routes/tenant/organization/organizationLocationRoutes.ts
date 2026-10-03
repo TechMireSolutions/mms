@@ -69,7 +69,16 @@ export async function organizationLocationRoutes(fastify: FastifyInstance): Prom
     if (!canDeleteCollection(user, 'faculty')) {
       return reply.status(403).send({ message: 'Forbidden' });
     }
-    const success = await deleteOrganizationLocation(String(request.tenant?.id), request.params.id, user.id);
-    return reply.status(200).send({ success });
+    try {
+      const success = await deleteOrganizationLocation(
+        String(request.tenant?.id), request.params.id, user.id,
+      );
+      return reply.status(200).send({ success });
+    } catch (err) {
+      return reply.status(409).send({
+        type: 'conflict',
+        message: err instanceof Error ? err.message : 'Could not archive location',
+      });
+    }
   });
 }

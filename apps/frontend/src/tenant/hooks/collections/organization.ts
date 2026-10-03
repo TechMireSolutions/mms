@@ -26,3 +26,8 @@ export {
   invalidateOrganizationQueries,
   type BlueprintPreviewDiff,
 } from '@/tenant/features/organization/hooks/useOrganizationApi';
+
+export {
+  useRestoreLocation,
+  useRestorePosition,
+} from '@/tenant/features/organization/hooks/useOrganizationRestoreApi';

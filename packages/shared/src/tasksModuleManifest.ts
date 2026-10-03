@@ -22,12 +22,12 @@ export const DELEGATION_SCOPES = ['descendants', 'direct_reports'] as const;
 export type DelegationScope = (typeof DELEGATION_SCOPES)[number];
 
 export const taskAssigneeRecordSchema = z.object({
-  id: z.string().uuid(),
-  taskId: z.string().uuid(),
+  id: z.string().min(1),
+  taskId: z.string().min(1),
   facultyId: z.string().min(1),
-  facultyAssignmentId: z.string().uuid().nullable().optional(),
-  positionId: z.string().uuid().nullable().optional(),
-  userId: z.string().uuid(),
+  facultyAssignmentId: z.string().min(1).nullable().optional(),
+  positionId: z.string().min(1).nullable().optional(),
+  userId: z.string().min(1),
   facultyName: z.string().optional(),
   positionName: z.string().optional(),
   userEmail: z.string().optional(),
@@ -37,15 +37,15 @@ export const taskAssigneeRecordSchema = z.object({
 export type TaskAssigneeRecord = z.infer<typeof taskAssigneeRecordSchema>;
 
 export const taskRecordSchema = z.object({
-  id: z.string().uuid(),
+  id: z.string().min(1),
   workspaceSubdomain: z.string(),
   title: z.string().min(1).max(255),
   description: z.string().nullable().optional(),
   status: z.enum(TASK_STATUSES),
   priority: z.enum(TASK_PRIORITIES),
   dueAt: z.string().or(z.date()).nullable().optional(),
-  parentTaskId: z.string().uuid().nullable().optional(),
-  createdById: z.string().uuid().nullable().optional(),
+  parentTaskId: z.string().min(1).nullable().optional(),
+  createdById: z.string().min(1).nullable().optional(),
   creatorName: z.string().optional(),
   assignees: z.array(taskAssigneeRecordSchema).optional().default([]),
   createdAt: z.string().or(z.date()).optional(),
@@ -57,9 +57,9 @@ export type TaskRecord = z.infer<typeof taskRecordSchema>;
 
 export const taskAssigneeInputSchema = z.object({
   facultyId: z.string().min(1),
-  facultyAssignmentId: z.string().uuid().optional(),
-  positionId: z.string().uuid().optional(),
-  userId: z.string().uuid().optional(),
+  facultyAssignmentId: z.string().min(1).optional(),
+  positionId: z.string().min(1).optional(),
+  userId: z.string().min(1).optional(),
 }).strict();
 
 export type TaskAssigneeInput = z.infer<typeof taskAssigneeInputSchema>;
@@ -70,7 +70,7 @@ export const taskInsertSchema = z.object({
   status: z.enum(TASK_STATUSES).default('todo'),
   priority: z.enum(TASK_PRIORITIES).default('medium'),
   dueAt: z.string().datetime().nullable().optional(),
-  parentTaskId: z.string().uuid().nullable().optional(),
+  parentTaskId: z.string().min(1).nullable().optional(),
   assignees: z.array(taskAssigneeInputSchema).max(100).optional().default([]),
 }).strict();
 
@@ -93,8 +93,8 @@ export const taskListQuerySchema = z.object({
   status: z.enum(TASK_STATUSES).optional(),
   priority: z.enum(TASK_PRIORITIES).optional(),
   assignedToFacultyId: z.string().optional(),
-  assignedToUserId: z.string().uuid().optional(),
-  createdById: z.string().uuid().optional(),
+  assignedToUserId: z.string().min(1).optional(),
+  createdById: z.string().min(1).optional(),
   search: z.string().optional(),
   includeDeleted: z
     .union([z.boolean(), z.literal('true'), z.literal('false')])
@@ -142,5 +142,19 @@ export const TASKS_MODULE_MANIFEST = {
     complete: 'tasks.complete',
     setupView: 'configuration.view',
     setupWrite: 'settings.global.write',
+    reports: 'tasks.read',
   },
+  work: {
+    directoryViews: ['table', 'cards'] as const,
+    bulkActions: ['delete'] as const,
+  },
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+    retentionDays: null,
+  },
+  defaultPageSize: 50,
+  maxPageSize: 100,
 } as const;

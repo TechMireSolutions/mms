@@ -146,12 +146,20 @@ export const ORGANIZATION_MODULE_MANIFEST = {
   entityType: 'OrganizationPosition',
   collectionKey: 'organization_positions',
   restBasePath: '/api/organization',
-  tiers: ['work', 'reports', 'setup'] as const,
+  tiers: ['work', 'setup'] as const,
+  setupSubTabs: ['blueprints'] as const,
   permissions: {
     read: 'faculty.read',
     write: 'faculty.write',
     delete: 'faculty.delete',
     setupView: 'configuration.view',
     setupWrite: 'settings.global.write',
+  },
+  softDelete: {
+    workExcludesDeleted: true,
+    reportsIncludeDeleted: false,
+    exportsIncludeDeleted: false,
+    captureDeletionReason: false,
+    retentionDays: null,
   },
 } as const;

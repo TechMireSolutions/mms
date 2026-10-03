@@ -23,3 +23,7 @@
 4. Forward-only migration drops legacy columns only after zero dependents.
 
 Until then: new features must use positions; dual trees may diverge—tasks and org chart follow positions only.
+
+## Applied blueprint metadata (0137+)
+
+Workspaces persist `applied_blueprint_key`, `applied_blueprint_version`, and `blueprint_applied_at` when a blueprint is applied (onboarding or Organization Setup). Industry type remains a separate field (`industry_type`).

@@ -73,4 +73,30 @@ describe('Task recipient authorization', () => {
     expect(result.valid).toBe(false);
     expect(result.resolvedAssignees).toEqual([]);
   });
+
+  it('given a self recipient row, should resolve when present in the eligible set', () => {
+    // Arrange
+    const rows = [recipient({ facultyId: 'me', userId: 'me-user', isSelf: true })];
+
+    // Act
+    const result = resolveTaskRecipients([{ facultyId: 'me', userId: 'me-user' }], rows);
+
+    // Assert
+    expect(result.valid).toBe(true);
+    expect(result.resolvedAssignees).toEqual([{
+      facultyId: 'me', facultyAssignmentId: 'assignment', positionId: 'position', userId: 'me-user',
+    }]);
+  });
+
+  it('given text faculty ids, should accept non-uuid assignee inputs at the resolver boundary', () => {
+    // Arrange
+    const rows = [recipient({ facultyId: 'fac-legacy-1', userId: 'user-legacy-1' })];
+
+    // Act
+    const result = resolveTaskRecipients([{ facultyId: 'fac-legacy-1' }], rows);
+
+    // Assert
+    expect(result.valid).toBe(true);
+    expect(result.resolvedAssignees[0]?.facultyId).toBe('fac-legacy-1');
+  });
 });

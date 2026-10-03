@@ -32,5 +32,6 @@ describe('TasksSetupTab', () => {
     expect(html).toContain('tasks.setup.descendants');
     expect(html).toContain('tasks.setup.directReports');
     expect(html).toContain('tasks.setup.allowSelfAssignment');
+    expect(html).not.toContain('tasks.setup.notifyOnAssignment');
   });
 });
