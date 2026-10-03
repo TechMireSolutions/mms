@@ -125,7 +125,7 @@ describe('module access coverage', () => {
     const modulesSeen = new Set<string>();
 
     for (const route of collected) {
-      const url = route.url ?? route.path;
+      const url = route.url;
       for (const method of [route.method].flat()) {
         const key = `${method} ${url}`;
         const expected = moduleFor(url);

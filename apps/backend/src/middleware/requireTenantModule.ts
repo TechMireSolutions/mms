@@ -146,7 +146,7 @@ export function registerModuleAccess(fastify: FastifyInstance, moduleId: string)
       ...config,
       moduleAccess: {
         moduleId: canonical,
-        action: resolveModuleRouteAction(route.method, route.url ?? route.path, canonical, config.moduleAction),
+        action: resolveModuleRouteAction(route.method, route.url, canonical, config.moduleAction),
       },
     };
   });
