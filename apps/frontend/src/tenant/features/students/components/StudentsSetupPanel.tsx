@@ -3,6 +3,7 @@ import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useTranslation } from "@/hooks/useTranslation";
 import { StudentsPreferencesSection } from "@/tenant/features/students/components/StudentsPreferencesSection";
 import { useStudentsSetupPanelState } from "@/tenant/features/students/hooks/useStudentsSetupPanelState";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface StudentsSetupPanelProps {
   onPrefsDirtyChange?: (isDirty: boolean) => void;
@@ -30,7 +31,7 @@ export const StudentsSetupPanel = (function StudentsSetupPanel({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <StudentsPreferencesSection
         settingsDraft={settingsDraft}
         upd={upd}
@@ -49,7 +50,7 @@ export const StudentsSetupPanel = (function StudentsSetupPanel({
         savedLabel={t("settings.savedBadge")}
         onSave={handleSave}
       />
-    </div>
+    </ModuleSetupContent>
   );
 });
 export default StudentsSetupPanel;

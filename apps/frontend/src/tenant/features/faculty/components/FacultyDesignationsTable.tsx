@@ -1,5 +1,5 @@
 import React, { useMemo } from 'react';
-import { Award, Pencil } from 'lucide-react';
+import { Award, Pencil, Trash2 } from 'lucide-react';
 import type { FacultyDesignationDefinition } from '@mms/shared';
 import { resolveRoleDisplayName, type WorkspaceRole } from '@mms/shared';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ export interface FacultyDesignationsTableProps {
   isPending: boolean;
   isLoading?: boolean;
   onEdit: (designation: FacultyDesignationDefinition) => void;
+  onDelete: (designation: FacultyDesignationDefinition) => void;
   primaryAction?: React.ReactNode;
 }
 
@@ -29,6 +30,7 @@ export function FacultyDesignationsTable({
   isPending,
   isLoading = false,
   onEdit,
+  onDelete,
   primaryAction,
 }: FacultyDesignationsTableProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -122,6 +124,14 @@ export function FacultyDesignationsTable({
         <DataTableRowActions
           actions={[
             { id: 'edit', label: `${t('common.edit')} ${d.name}`, icon: Pencil, onClick: () => onEdit(d), disabled: isPending },
+            {
+              id: 'delete',
+              label: `${t('common.delete')} ${d.name}`,
+              icon: Trash2,
+              tone: 'destructive',
+              onClick: () => onDelete(d),
+              disabled: isPending,
+            },
           ]}
         />
       )}

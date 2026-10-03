@@ -6,6 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { SessionsSettingsPreferences } from "@/tenant/features/sessions/components/SessionsSettingsPreferences";
 import { useSessionsSetupPanelState } from "@/tenant/features/sessions/hooks/useSessionsSetupPanelState";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface SessionsSettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -35,7 +36,7 @@ export const SessionsSettings = (function SessionsSettings({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <SectionCard
         title={t("sessions.settings.title")}
         icon={Calendar}
@@ -68,7 +69,7 @@ export const SessionsSettings = (function SessionsSettings({
         savedLabel={t("settings.savedBadge")}
         onSave={handleSave}
       />
-    </div>
+    </ModuleSetupContent>
   );
 });
 

@@ -7,6 +7,7 @@ import { AccountingFiscalYearModal } from "./AccountingFiscalYearModal";
 import { AccountingSettingsPreferences } from "./AccountingSettingsPreferences";
 import { useAccountingSetupPanelState } from "@/tenant/features/accounting/hooks/useAccountingSetupPanelState";
 import { CloseFiscalYearModal } from "./CloseFiscalYearModal";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface AccountingSettingsProps {
   accounts: Account[];
@@ -63,7 +64,7 @@ export const AccountingSettings = (function AccountingSettings({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       {!isPrefsReady && (
         <WarningCallout
           role="alert"
@@ -123,7 +124,7 @@ export const AccountingSettings = (function AccountingSettings({
         }}
         t={t}
       />
-    </div>
+    </ModuleSetupContent>
   );
 });
 

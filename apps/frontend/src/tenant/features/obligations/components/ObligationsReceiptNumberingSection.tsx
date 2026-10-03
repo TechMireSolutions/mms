@@ -9,6 +9,7 @@ import { SequenceNumberingCard } from "@/components/ui/sequence-numbering";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useObligationsSettings } from "@/tenant/features/obligations/hooks/useObligationsSettings";
 import { notify } from "@/lib/notify";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export function ObligationsReceiptNumberingSection(): React.JSX.Element {
   const { t } = useTranslation();
@@ -53,7 +54,7 @@ export function ObligationsReceiptNumberingSection(): React.JSX.Element {
   }, [draft, updateSettings, t]);
 
   return (
-    <div className="max-w-3xl text-start">
+    <ModuleSetupContent>
       <SequenceNumberingCard
         title={t("obligations.receiptNumbering.title")}
         entityLabel={t("obligations.receiptNumbering.entityLabel")}
@@ -73,7 +74,7 @@ export function ObligationsReceiptNumberingSection(): React.JSX.Element {
           />
         }
       />
-    </div>
+    </ModuleSetupContent>
   );
 }
 

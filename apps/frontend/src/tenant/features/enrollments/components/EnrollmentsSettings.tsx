@@ -6,6 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { EnrollmentsPreferencesSection } from "@/tenant/features/enrollments/components/EnrollmentsPreferencesSection";
 import { useEnrollmentsSetupPanelState } from "@/tenant/features/enrollments/hooks/useEnrollmentsSetupPanelState";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface EnrollmentsSettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -34,7 +35,7 @@ export const EnrollmentsSettings = (function EnrollmentsSettings({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <SectionCard
         title={t("enrollments.settings.title")}
         icon={ClipboardList}
@@ -66,7 +67,7 @@ export const EnrollmentsSettings = (function EnrollmentsSettings({
         savedLabel={t("settings.savedBadge")}
         onSave={handleSave}
       />
-    </div>
+    </ModuleSetupContent>
   );
 });
 

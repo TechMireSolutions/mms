@@ -8,6 +8,7 @@ import { FinancePreferencesSection } from "@/tenant/features/finance/components/
 import { FinanceInvoiceNumberingSection } from "@/tenant/features/finance/components/FinanceInvoiceNumberingSection";
 import { FinanceFeeStructuresSection } from "@/tenant/features/finance/components/FinanceFeeStructuresSection";
 import { useFinanceSetupPanelState } from "@/tenant/features/finance/hooks/useFinanceSetupPanelState";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface FinanceSettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -37,7 +38,7 @@ export const FinanceSettings = (function FinanceSettings({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <SectionCard
         accentColor="primary"
         icon={DollarSign}
@@ -81,7 +82,7 @@ export const FinanceSettings = (function FinanceSettings({
         savedLabel={t("settings.savedBadge")}
         onSave={handleSave}
       />
-    </div>
+    </ModuleSetupContent>
   );
 });
 

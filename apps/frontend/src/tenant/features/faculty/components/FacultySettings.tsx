@@ -4,6 +4,7 @@ import { useFacultySetupPanelState } from "@/tenant/features/faculty/hooks/useFa
 import { FacultyPreferencesSection } from "@/tenant/features/faculty/components/FacultyPreferencesSection";
 import { FacultyDesignationsSetupSection } from "@/tenant/features/faculty/components/FacultyDesignationsSetupSection";
 import { FacultyDepartmentsSetupSection } from "@/tenant/features/faculty/components/FacultyDepartmentsSetupSection";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface FacultySettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -32,7 +33,7 @@ export const FacultySettings = (function FacultySettings({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <FacultyPreferencesSection
         settingsDraft={settingsDraft}
         upd={upd}
@@ -46,7 +47,7 @@ export const FacultySettings = (function FacultySettings({
       <FacultyDepartmentsSetupSection />
 
       <FacultyDesignationsSetupSection />
-    </div>
+    </ModuleSetupContent>
   );
 });
 

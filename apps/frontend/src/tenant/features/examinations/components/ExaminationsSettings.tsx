@@ -6,6 +6,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { ExaminationsPreferencesSection } from "@/tenant/features/examinations/components/ExaminationsPreferencesSection";
 import { useExaminationsSetupPanelState } from "@/tenant/features/examinations/hooks/useExaminationsSetupPanelState";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface ExaminationsSettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -34,7 +35,7 @@ export const ExaminationsSettings = (function ExaminationsSettings({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <SectionCard
         accentColor="primary"
         icon={FileText}
@@ -66,7 +67,7 @@ export const ExaminationsSettings = (function ExaminationsSettings({
         savedLabel={t("settings.savedBadge")}
         onSave={handleSave}
       />
-    </div>
+    </ModuleSetupContent>
   );
 });
 

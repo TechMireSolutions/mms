@@ -38,12 +38,14 @@ describe('FacultyDesignationsTable', () => {
   let container: HTMLDivElement;
   let root: Root;
   const onEdit = vi.fn();
+  const onDelete = vi.fn();
 
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
     root = createRoot(container);
     onEdit.mockClear();
+    onDelete.mockClear();
   });
 
   afterEach(async () => {
@@ -60,6 +62,7 @@ describe('FacultyDesignationsTable', () => {
           designations={mockDesignations}
           isPending={false}
           onEdit={onEdit}
+          onDelete={onDelete}
         />,
       );
     });
@@ -80,6 +83,7 @@ describe('FacultyDesignationsTable', () => {
           designations={mockDesignations}
           isPending={false}
           onEdit={onEdit}
+          onDelete={onDelete}
         />,
       );
     });
@@ -96,6 +100,30 @@ describe('FacultyDesignationsTable', () => {
     expect(onEdit).toHaveBeenCalledWith(mockDesignations[0]);
   });
 
+  it('triggers onDelete when delete action button is clicked', async () => {
+    await act(async () => {
+      root.render(
+        <FacultyDesignationsTable
+          designations={mockDesignations}
+          isPending={false}
+          onEdit={onEdit}
+          onDelete={onDelete}
+        />,
+      );
+    });
+
+    const deleteBtn = container.querySelector<HTMLButtonElement>(
+      'button[aria-label="common.delete Adjunct Professor"]',
+    );
+    expect(deleteBtn).not.toBeNull();
+
+    await act(async () => {
+      deleteBtn!.click();
+    });
+
+    expect(onDelete).toHaveBeenCalledWith(mockDesignations[1]);
+  });
+
   it('highlights currently edited row when editingDesignationId matches', async () => {
     await act(async () => {
       root.render(
@@ -104,6 +132,7 @@ describe('FacultyDesignationsTable', () => {
           editingDesignationId="des-1"
           isPending={false}
           onEdit={onEdit}
+          onDelete={onDelete}
         />,
       );
     });
@@ -119,6 +148,7 @@ describe('FacultyDesignationsTable', () => {
           designations={[]}
           isPending={false}
           onEdit={onEdit}
+          onDelete={onDelete}
         />,
       );
     });

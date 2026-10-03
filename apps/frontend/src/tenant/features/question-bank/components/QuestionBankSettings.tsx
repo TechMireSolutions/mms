@@ -10,6 +10,7 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { CategoryManager } from "@/tenant/features/question-bank/components/CategoryManager";
 import { QuestionBankTaxonomySection } from "@/tenant/features/question-bank/components/QuestionBankTaxonomySection";
 import { useQuestionBankSetupPanelState } from "@/tenant/features/question-bank/hooks/useQuestionBankSetupPanelState";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface QuestionBankSettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -54,7 +55,7 @@ export const QuestionBankSettings = (function QuestionBankSettings({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <SectionCard
         accentColor="primary"
         icon={Library}
@@ -117,7 +118,7 @@ export const QuestionBankSettings = (function QuestionBankSettings({
         savedLabel={t("settings.savedBadge")}
         onSave={handleSave}
       />
-    </div>
+    </ModuleSetupContent>
   );
 });
 

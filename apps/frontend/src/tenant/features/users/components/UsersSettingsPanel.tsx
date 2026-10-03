@@ -8,6 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface UsersSettingsPanelProps {
   settingsDraft: UsersSettings;
@@ -33,7 +34,7 @@ export const UsersSettingsPanel = (function UsersSettingsPanel({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <SectionCard
         accentColor="primary"
         icon={Shield}
@@ -75,6 +76,6 @@ export const UsersSettingsPanel = (function UsersSettingsPanel({
         savedLabel={t("settings.savedBadge")}
         onSave={onSave}
       />
-    </div>
+    </ModuleSetupContent>
   );
 });

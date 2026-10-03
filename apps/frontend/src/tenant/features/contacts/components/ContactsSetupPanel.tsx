@@ -3,6 +3,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { ContactsPreferencesSection } from "@/tenant/features/contacts/components/ContactsPreferencesSection";
 import { useContactsSetupPanelState } from "@/tenant/features/contacts/hooks/useContactsSetupPanelState";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface ContactsSetupPanelProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -31,7 +32,7 @@ export function ContactsSetupPanel({
   const unsavedWarning = isDirty ? t("contacts.setup.unsavedWarning") : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <ContactsPreferencesSection
         prefs={prefs}
         isPrefsDirty={isPrefsDirty}
@@ -52,7 +53,7 @@ export function ContactsSetupPanel({
         footerClassName="sticky bottom-0 bg-background mt-0 pt-2 pb-2 justify-start border-border flex-wrap gap-3"
         buttonClassName="flex items-center gap-2 px-5 min-h-11 ms-0"
       />
-    </div>
+    </ModuleSetupContent>
   );
 }
 

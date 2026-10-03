@@ -5,6 +5,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import type { Contact } from "@mms/shared";
 import { GoogleContactsPanel } from "./sync/GoogleContactsPanel";
 import { AppleContactsPanel } from "./sync/AppleContactsPanel";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface ContactSyncPanelProps {
   onImport: (contacts: Contact[]) => void | Promise<void>;
@@ -22,7 +23,7 @@ export function ContactSyncPanel({
 }: ContactSyncPanelProps): React.JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="max-w-3xl space-y-5 text-start">
+    <ModuleSetupContent className="space-y-5">
       <WarningCallout
         icon={Info}
         tone="info"
@@ -32,7 +33,7 @@ export function ContactSyncPanel({
 
       <GoogleContactsPanel canWrite={canWrite} />
       <AppleContactsPanel onImport={onImport} canWrite={canWrite} />
-    </div>
+    </ModuleSetupContent>
   );
 }
 

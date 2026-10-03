@@ -10,6 +10,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useTaskSettings, useUpdateTaskSettings } from '@/tenant/hooks/collections/tasks';
 import { notify } from '@/lib/notify';
+import { ModuleSetupContent } from '@/components/ui/ModuleSetupContent';
 
 export interface TasksSetupTabProps {
   initialSettings?: TaskSettings;
@@ -49,7 +50,7 @@ export function TasksSetupTab({
   };
 
   return (
-    <div className="max-w-2xl space-y-6">
+    <ModuleSetupContent>
       <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-5">
         <div>
           <h3 className="font-semibold text-base text-foreground mb-1 text-wrap-balance">
@@ -173,6 +174,6 @@ export function TasksSetupTab({
           </div>
         ) : null}
       </div>
-    </div>
+    </ModuleSetupContent>
   );
 }

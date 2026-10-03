@@ -88,7 +88,7 @@ export default function OrganizationPage(): React.JSX.Element {
               />
             )}
             {activeTab === 'setup' && !viewingDeleted ? (
-              <div className="rounded-lg border border-border bg-card p-5 space-y-3 max-w-2xl">
+              <div className="w-full max-w-none rounded-lg border border-border bg-card p-5 space-y-3">
                 <h3 className="font-semibold text-foreground text-wrap-balance">
                   {t('organization.blueprints')}
                 </h3>

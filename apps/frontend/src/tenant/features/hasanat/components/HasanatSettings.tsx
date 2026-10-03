@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input";
 import { ToggleRow } from "@/components/ui/ToggleRow";
 import { Field } from "@/components/ui/FormPrimitives";
 import { useHasanatSetupPanelState } from "@/tenant/features/hasanat/hooks/useHasanatSetupPanelState";
+import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface HasanatSettingsProps {
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
@@ -36,7 +37,7 @@ export const HasanatSettings = (function HasanatSettings({
     : undefined;
 
   return (
-    <div className="space-y-6 max-w-3xl text-start">
+    <ModuleSetupContent>
       <SectionCard
         accentColor="primary"
         icon={Star}
@@ -87,7 +88,7 @@ export const HasanatSettings = (function HasanatSettings({
         savedLabel={t("settings.savedBadge")}
         onSave={handleSave}
       />
-    </div>
+    </ModuleSetupContent>
   );
 });
 

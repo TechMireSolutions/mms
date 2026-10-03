@@ -102,7 +102,7 @@ export default function InstitutionSetup(): React.JSX.Element {
       />
 
       <main className="min-h-screen bg-muted/20 py-8 px-4 sm:px-6 lg:px-8">
-        <div className="mx-auto max-w-5xl space-y-6">
+        <div className="w-full max-w-none space-y-6">
           {/* Header Banner */}
           <div className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/10 via-primary/5 to-transparent p-6 sm:p-8">
             <div className="flex items-start gap-4">
