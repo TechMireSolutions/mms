@@ -31,6 +31,10 @@ vi.mock('@/tenant/hooks/collections/organization', () => ({
     ],
     isLoading: false,
   }),
+  useOrganizationBlueprintPreview: () => ({
+    data: undefined,
+    isLoading: false,
+  }),
   useApplyBlueprint: () => ({
     mutateAsync: vi.fn(),
     isPending: false,

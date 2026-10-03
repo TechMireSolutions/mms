@@ -17,14 +17,16 @@ vi.mock('@/hooks/useTranslation', () => ({
   }),
 }));
 
-vi.mock('@tanstack/react-query', () => ({
-  useQuery: () => ({
+vi.mock('@/tenant/hooks/collections/tasks', () => ({
+  useEligibleTaskAssignees: () => ({
     data: [
       {
-        id: 'fac-1',
+        facultyId: 'fac-1',
         name: 'Ustadh Zaid',
+        positionId: 'pos-1',
+        positionName: 'Senior Lecturer',
         userId: 'usr-1',
-        designationName: 'Senior Lecturer',
+        isSelf: false,
       },
     ],
     isLoading: false,
