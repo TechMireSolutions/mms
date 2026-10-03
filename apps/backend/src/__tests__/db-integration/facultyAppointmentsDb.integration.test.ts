@@ -50,13 +50,13 @@ describe('Faculty appointment integrity', () => {
     expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
   });
 
-  it('rejects descendant reporting links on update; soft-stops reports_to on create', async () => {
-    await expect(saveFacultyAssignment(tenant, appointment('a0', {
-      reportsToAssignmentId: 'a2',
-    }))).rejects.toThrow('Circular');
-    // New appointments soft-stop reports_to (forced null) — create succeeds without cycle check.
+  it('soft-stops reports_to on create and update; still rejects inactive faculty targets', async () => {
+    // Create + update ignore client reports_to (forced null) — no cycle path via this field.
     await expect(saveFacultyAssignment(tenant, appointment('same-person', {
       reportsToAssignmentId: 'a0',
+    }))).resolves.toBeUndefined();
+    await expect(saveFacultyAssignment(tenant, appointment('same-person', {
+      reportsToAssignmentId: 'a2',
     }))).resolves.toBeUndefined();
     await withTenant(tenant, async (tx) => {
       const result = await tx.execute(sql`

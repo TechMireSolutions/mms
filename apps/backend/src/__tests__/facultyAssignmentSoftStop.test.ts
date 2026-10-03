@@ -76,7 +76,7 @@ describe('saveFacultyAssignment soft-stop for reportsToAssignmentId', () => {
     );
   });
 
-  it('preserves existing reportsToAssignmentId on update when omitted', async () => {
+  it('forces reportsToAssignmentId null on update even when legacy value exists', async () => {
     findFacultyAssignmentById.mockResolvedValue({
       id: 'a1',
       positionId: 'p1',
@@ -97,7 +97,7 @@ describe('saveFacultyAssignment soft-stop for reportsToAssignmentId', () => {
       expect.anything(),
       'demo',
       expect.objectContaining({
-        reportsToAssignmentId: 'a-legacy',
+        reportsToAssignmentId: null,
       }),
     );
   });

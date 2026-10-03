@@ -33,15 +33,16 @@ describe('persistFacultyTx soft-stop for reportingFacultyId', () => {
     );
   });
 
-  it('preserves existing reportingFacultyId on update when omitted', async () => {
+  it('forces reportingFacultyId null on update even when legacy value exists', async () => {
     const { tx, values } = makeTx({ reportingFacultyId: 'f-legacy' });
     await persistFacultyTx(tx as never, 'demo', {
       id: 'f1',
       contactId: 'c1',
       status: 'active',
+      reportingFacultyId: 'f-legacy',
     } as never);
     expect(values).toHaveBeenCalledWith(
-      expect.objectContaining({ reportingFacultyId: 'f-legacy' }),
+      expect.objectContaining({ reportingFacultyId: null }),
     );
   });
 });
