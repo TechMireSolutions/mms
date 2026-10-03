@@ -20,15 +20,33 @@
 - `PUT/POST` faculty assignment: `reportsToAssignmentId` is optional and ignored for new appointment IDs. Prefer `positionId`.
 - Faculty person fields: prefer Organization chart + assignment position occupancy over `reportingFacultyId`.
 
-## Backfill helper
+## Backfill helper (ops)
 
-Dry-run proposal script (idempotent; never drops columns):
+Script: `apps/backend/src/scripts/propose-position-backfill.ts`
+
+Idempotent position proposal/apply for active `faculty_assignments` missing `position_id`. Uses the assignment reporting tree only as a **proposal source**; never drops legacy columns and never rewrites person-level reporting.
+
+### Dry-run (required first)
 
 ```bash
 pnpm --filter mms-backend exec tsx src/scripts/propose-position-backfill.ts --tenant <subdomain> --dry-run
 ```
 
-Omit `--dry-run` only after reviewing proposals; the apply path still only writes `position_id` / creates missing positions when safe.
+Prints proposed `code` / `name` / parent links per assignment. Review output before apply. Re-running dry-run after partial apply skips rows that already have `position_id`.
+
+### Apply
+
+```bash
+pnpm --filter mms-backend exec tsx src/scripts/propose-position-backfill.ts --tenant <subdomain>
+```
+
+Creates missing `organization_positions` when needed and sets `faculty_assignments.position_id`. Safe to re-run: assignments that already have `position_id` are skipped.
+
+### Non-goals
+
+- No auto-DDL / no migration generation
+- No drop of `reports_to_assignment_id` or person reporting columns
+- Not a substitute for Organization blueprint apply on empty tenants
 
 ## End state (later release)
 

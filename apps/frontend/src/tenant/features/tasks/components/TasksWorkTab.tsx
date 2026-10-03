@@ -1,6 +1,6 @@
 /**
  * @file TasksWorkTab.tsx
- * @description Tasks Work tier — toolbar, selection, WorkBatchTable, detail drawer.
+ * @description Tasks Work tier — toolbar, selection, directory, detail drawer.
  */
 
 import React, { useMemo, useState } from 'react';
@@ -8,10 +8,12 @@ import { Plus } from 'lucide-react';
 import { TASK_STATUSES, type TaskRecord, type TaskStatus } from '@mms/shared';
 import { Button } from '@/components/ui/button';
 import { WorkTaskToolbar } from '@/components/common/work/WorkTaskToolbar';
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { useTranslation } from '@/hooks/useTranslation';
-import { TasksListDesktopTable } from './TasksListDesktopTable';
+import { useTasksColumnLayout } from '../hooks/useTasksColumnLayout';
 import { TaskDetailDrawer } from './TaskDetailDrawer';
 import { TasksBulkActionBar } from './TasksBulkActionBar';
+import { TasksWorkDirectory } from './TasksWorkDirectory';
 
 export interface TasksWorkTabProps {
   tasks: TaskRecord[];
@@ -52,6 +54,16 @@ export function TasksWorkTab({
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<string[]>([]);
   const [viewingTask, setViewingTask] = useState<TaskRecord | null>(null);
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
+  const {
+    columnRegistry,
+    isColumnVisible,
+    getColumnWidth,
+    setColumnWidth,
+    updateUserColumnLayout,
+    resetColumnLayout,
+    customizerLabels,
+  } = useTasksColumnLayout();
 
   const filteredTasks = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -105,6 +117,13 @@ export function TasksWorkTab({
               }
             : undefined
         }
+        viewModeToggle={{ viewMode, onViewModeChange: setViewMode }}
+        columnCustomizer={{
+          registry: columnRegistry,
+          onUpdate: updateUserColumnLayout,
+          onReset: resetColumnLayout,
+          labels: customizerLabels,
+        }}
         primaryAction={primaryAction}
       />
 
@@ -124,13 +143,17 @@ export function TasksWorkTab({
         }}
       />
 
-      <TasksListDesktopTable
+      <TasksWorkDirectory
+        viewMode={viewMode}
         tasks={filteredTasks}
         selectedIds={selectedIds}
         viewingDeleted={viewingDeleted}
         canWrite={canWrite}
         canDelete={canDelete}
         isLoading={isLoading}
+        isColumnVisible={isColumnVisible}
+        getColumnWidth={getColumnWidth}
+        onColumnResize={setColumnWidth}
         onToggleSelected={onToggleSelected}
         onToggleSelectAll={onToggleSelectAll}
         onView={setViewingTask}

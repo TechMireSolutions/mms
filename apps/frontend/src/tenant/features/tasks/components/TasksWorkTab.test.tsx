@@ -1,8 +1,10 @@
 import React from 'react';
-import { describe, expect, it, vi } from 'vitest';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
 import type { TaskRecord } from '@mms/shared';
 import { TasksWorkTab } from './TasksWorkTab';
+
+const viewModeState = { viewMode: 'table' as 'table' | 'cards' };
 
 vi.mock('@/hooks/useTranslation', () => ({
   useTranslation: () => ({
@@ -11,15 +13,34 @@ vi.mock('@/hooks/useTranslation', () => ({
   }),
 }));
 
-vi.mock('./TasksListDesktopTable', () => ({
-  TasksListDesktopTable: ({
+vi.mock('@/hooks/useWorkDirectoryViewMode', () => ({
+  useWorkDirectoryViewMode: () => ({
+    viewMode: viewModeState.viewMode,
+    setViewMode: vi.fn(),
+  }),
+}));
+
+vi.mock('../hooks/useTasksColumnLayout', () => ({
+  useTasksColumnLayout: () => ({
+    columnRegistry: [],
+    isColumnVisible: () => true,
+    getColumnWidth: () => undefined,
+    setColumnWidth: vi.fn(),
+    updateUserColumnLayout: vi.fn(),
+    resetColumnLayout: vi.fn(),
+    customizerLabels: {},
+  }),
+}));
+
+vi.mock('./TasksWorkDirectory', () => ({
+  TasksWorkDirectory: ({
+    viewMode,
     tasks,
-    emptyAction,
   }: {
+    viewMode: string;
     tasks: TaskRecord[];
-    emptyAction?: React.ReactNode;
   }) => (
-    <div data-testid="tasks-table">
+    <div data-testid={`tasks-directory-${viewMode}`}>
       {tasks.map((task) => (
         <div key={task.id}>
           {task.title}
@@ -28,7 +49,6 @@ vi.mock('./TasksListDesktopTable', () => ({
         </div>
       ))}
       {tasks.length === 0 ? <div>tasks.emptyTitle</div> : null}
-      {emptyAction}
     </div>
   ),
 }));
@@ -41,12 +61,18 @@ vi.mock('@/components/common/work/WorkTaskToolbar', () => ({
   WorkTaskToolbar: ({
     primaryAction,
     regionLabel,
+    viewModeToggle,
+    columnCustomizer,
   }: {
     primaryAction?: React.ReactNode;
     regionLabel: string;
+    viewModeToggle?: { viewMode: string };
+    columnCustomizer?: { registry?: unknown[] };
   }) => (
     <div>
       <span>{regionLabel}</span>
+      <span>{`viewMode:${viewModeToggle?.viewMode ?? 'none'}`}</span>
+      <span>{columnCustomizer ? 'columns:ready' : 'columns:missing'}</span>
       {primaryAction}
     </div>
   ),
@@ -69,46 +95,45 @@ const mockTask: TaskRecord = {
   deletedAt: null,
 };
 
+const baseProps = {
+  tasks: [mockTask],
+  isLoading: false,
+  canWrite: true,
+  canDelete: true,
+  selectedIds: [] as string[],
+  onToggleSelected: vi.fn(),
+  onToggleSelectAll: vi.fn(),
+  onClearSelection: vi.fn(),
+  onAddNew: vi.fn(),
+  onEdit: vi.fn(),
+  onDelete: vi.fn(),
+  onUpdateStatus: vi.fn(),
+};
+
 describe('TasksWorkTab', () => {
-  it('renders tasks table with correct title and priority', () => {
-    const html = renderToStaticMarkup(
-      <TasksWorkTab
-        tasks={[mockTask]}
-        isLoading={false}
-        canWrite={true}
-        canDelete={true}
-        selectedIds={[]}
-        onToggleSelected={vi.fn()}
-        onToggleSelectAll={vi.fn()}
-        onClearSelection={vi.fn()}
-        onAddNew={vi.fn()}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onUpdateStatus={vi.fn()}
-      />,
-    );
+  beforeEach(() => {
+    viewModeState.viewMode = 'table';
+  });
+
+  it('renders table directory with title, priority, and column customizer', () => {
+    const html = renderToStaticMarkup(<TasksWorkTab {...baseProps} />);
     expect(html).toContain('Review Midterm Exams');
     expect(html).toContain('tasks.priority.urgent');
     expect(html).toContain('tasks.status.in_progress');
+    expect(html).toContain('viewMode:table');
+    expect(html).toContain('columns:ready');
+    expect(html).toContain('tasks-directory-table');
   });
 
-  it('renders empty state when tasks list is empty', () => {
-    const html = renderToStaticMarkup(
-      <TasksWorkTab
-        tasks={[]}
-        isLoading={false}
-        canWrite={true}
-        canDelete={true}
-        selectedIds={[]}
-        onToggleSelected={vi.fn()}
-        onToggleSelectAll={vi.fn()}
-        onClearSelection={vi.fn()}
-        onAddNew={vi.fn()}
-        onEdit={vi.fn()}
-        onDelete={vi.fn()}
-        onUpdateStatus={vi.fn()}
-      />,
-    );
+  it('renders empty directory when task list is empty', () => {
+    const html = renderToStaticMarkup(<TasksWorkTab {...baseProps} tasks={[]} />);
     expect(html).toContain('tasks.emptyTitle');
+  });
+
+  it('switches directory to cards when viewMode is cards', () => {
+    viewModeState.viewMode = 'cards';
+    const html = renderToStaticMarkup(<TasksWorkTab {...baseProps} />);
+    expect(html).toContain('tasks-directory-cards');
+    expect(html).toContain('Review Midterm Exams');
   });
 });

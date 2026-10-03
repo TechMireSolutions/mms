@@ -40,7 +40,10 @@ export function TaskStatusBadge({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={(event) => {
+        event.stopPropagation();
+        onClick?.();
+      }}
       disabled={!onClick}
       className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium border transition-colors ${
         STATUS_STYLES[status]

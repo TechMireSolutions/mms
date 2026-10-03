@@ -1,6 +1,7 @@
 import React from 'react';
 import { describe, expect, it, vi } from 'vitest';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { DEFAULT_TASK_SETTINGS } from '@mms/shared';
 import { TasksSetupTab } from './TasksSetupTab';
 
 vi.mock('@/hooks/useTranslation', () => ({
@@ -11,12 +12,7 @@ vi.mock('@/hooks/useTranslation', () => ({
 
 vi.mock('@/tenant/hooks/collections/tasks', () => ({
   useTaskSettings: () => ({
-    data: {
-      defaultPriority: 'medium',
-      delegationScope: 'descendants',
-      allowSelfAssignment: true,
-      allowDirectDelegation: true,
-    },
+    data: { ...DEFAULT_TASK_SETTINGS },
     isLoading: false,
   }),
   useUpdateTaskSettings: () => ({

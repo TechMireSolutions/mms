@@ -4,6 +4,7 @@ import { Field } from '@/components/ui/FormPrimitives';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useIndustryTerminology } from '@/tenant/hooks/useIndustryTerminology';
 
 export interface OrganizationPositionFormFieldsProps {
   draft: OrganizationPositionInsert;
@@ -25,6 +26,7 @@ export function OrganizationPositionFormFields({
   onDraftChange,
 }: OrganizationPositionFormFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
+  const terminology = useIndustryTerminology();
 
   return (
     <div className="space-y-3">
@@ -64,7 +66,7 @@ export function OrganizationPositionFormFields({
           ]}
         />
       </Field>
-      <Field id="pos-loc" label={t('organization.locations')}>
+      <Field id="pos-loc" label={terminology.locationLabel}>
         <FormSelect
           id="pos-loc"
           value={draft.locationId ?? ''}

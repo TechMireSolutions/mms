@@ -41,13 +41,22 @@ describe('Faculty appointment integrity', () => {
     expect(results.filter((r) => r.status === 'rejected')).toHaveLength(1);
   });
 
-  it('rejects descendant reporting links, same-person reporting, and ownership changes', async () => {
+  it('rejects descendant reporting links on update; soft-stops reports_to on create', async () => {
     await expect(saveFacultyAssignment(tenant, appointment('a0', {
       reportsToAssignmentId: 'a2',
     }))).rejects.toThrow('Circular');
+    // New appointments soft-stop reports_to (forced null) — create succeeds without cycle check.
     await expect(saveFacultyAssignment(tenant, appointment('same-person', {
       reportsToAssignmentId: 'a0',
-    }))).rejects.toThrow('Circular');
+    }))).resolves.toBeUndefined();
+    await withTenant(tenant, async (tx) => {
+      const result = await tx.execute(sql`
+        SELECT reports_to_assignment_id
+        FROM faculty_assignments
+        WHERE workspace_subdomain = ${tenant} AND id = 'same-person'
+      `);
+      expect(result.rows[0]?.reports_to_assignment_id ?? null).toBeNull();
+    });
     await expect(saveFacultyAssignment(tenant, appointment('a2'))).rejects.toThrow('belongs');
   });
 

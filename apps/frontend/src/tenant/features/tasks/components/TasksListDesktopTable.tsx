@@ -22,6 +22,9 @@ export interface TasksListDesktopTableProps {
   canWrite: boolean;
   canDelete: boolean;
   isLoading: boolean;
+  isColumnVisible?: (key: string) => boolean;
+  getColumnWidth?: (key: string) => number | undefined;
+  onColumnResize?: (key: string, width: number) => void;
   onToggleSelected: (id: string, checked: boolean) => void;
   onToggleSelectAll: (checked: boolean, visibleIds: string[]) => void;
   onView: (task: TaskRecord) => void;
@@ -39,6 +42,9 @@ export function TasksListDesktopTable({
   canWrite,
   canDelete,
   isLoading,
+  isColumnVisible,
+  getColumnWidth,
+  onColumnResize,
   onToggleSelected,
   onToggleSelectAll,
   onView,
@@ -59,8 +65,12 @@ export function TasksListDesktopTable({
   };
 
   const columns = useMemo(
-    () => buildTasksWorkBatchColumns(t, canWrite && !viewingDeleted, handleCycleStatus, onView),
-    [t, canWrite, viewingDeleted, onView],
+    () =>
+      buildTasksWorkBatchColumns(t, canWrite && !viewingDeleted, handleCycleStatus, onView, {
+        isColumnVisible,
+        getColumnWidth,
+      }),
+    [t, canWrite, viewingDeleted, onView, isColumnVisible, getColumnWidth],
   );
 
   const pageCountLabel = formatDirectoryPageCountLabel(tasks.length, t, {
@@ -75,6 +85,11 @@ export function TasksListDesktopTable({
         columns={columns}
         isLoading={isLoading}
         stickyColumnId="title"
+        columnResize={
+          getColumnWidth || onColumnResize
+            ? { getColumnWidth, onColumnResize }
+            : undefined
+        }
         selection={{
           selectedIds: selectedSet,
           onSelectOne: (id) => onToggleSelected(id, !selectedSet.has(id)),

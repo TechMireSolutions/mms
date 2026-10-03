@@ -10,6 +10,39 @@ vi.mock('@/hooks/useTranslation', () => ({
   }),
 }));
 
+vi.mock('@/hooks/useWorkCardAction', () => ({
+  useWorkCardAction: () => ({
+    isSelected: false,
+    onSelect: vi.fn(),
+    onView: vi.fn(),
+    cardProps: { role: 'article' as const },
+  }),
+}));
+
+vi.mock('@/components/ui/DirectoryEntityCard', () => ({
+  DirectoryEntityCard: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/ui/DirectoryCardHeader', () => ({
+  DirectoryCardHeader: ({ displayName }: { displayName: string }) => <div>{displayName}</div>,
+}));
+
+vi.mock('@/components/ui/DirectoryCardMetaGrid', () => ({
+  DirectoryCardMetaGrid: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/ui/DirectoryCardMetaTile', () => ({
+  DirectoryCardMetaTile: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+}));
+
+vi.mock('@/components/ui/DirectoryCardFooterActions', () => ({
+  DirectoryCardFooterActions: () => null,
+}));
+
+vi.mock('@/components/common/data-table', () => ({
+  DataTableRowActions: () => null,
+}));
+
 const mockTask: TaskRecord = {
   id: 'a0000000-0000-0000-0000-000000000001',
   workspaceSubdomain: 'test',
@@ -38,9 +71,23 @@ const mockTask: TaskRecord = {
 
 describe('TaskCardItem', () => {
   it('renders task title and assignee names', () => {
-    const html = renderToStaticMarkup(<TaskCardItem task={mockTask} />);
+    const html = renderToStaticMarkup(
+      <TaskCardItem
+        task={mockTask}
+        selectedIds={[]}
+        viewingDeleted={false}
+        canWrite={true}
+        canDelete={true}
+        isColumnVisible={() => true}
+        onToggleSelected={vi.fn()}
+        onView={vi.fn()}
+        onEdit={vi.fn()}
+        onDelete={vi.fn()}
+        onUpdateStatus={vi.fn()}
+      />,
+    );
     expect(html).toContain('Prepare Quran Syllabus');
     expect(html).toContain('Sheikh Ahmad');
-    expect(html).toContain('tasks.priority.high');
+    expect(html).toContain('tasks.status.todo');
   });
 });

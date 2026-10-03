@@ -80,7 +80,11 @@ describe('facultyAssignmentRouteHandlers', () => {
       expect(res.status).toBe(403);
     });
 
-    it('returns 400 when assignment reports to itself', async () => {
+    it('returns 400 when an update reports to itself', async () => {
+      mockFindFacultyAssignmentById.mockResolvedValueOnce({
+        id: 'asgn-1', facultyId: 'fac-1', departmentId: 'd1', designationId: 'des1',
+        reportsToAssignmentId: null, isPrimary: true, startDate: '2024-01-01', endDate: null, notes: null, deletedAt: null,
+      });
       const res = await handleSaveAssignment({
         params: { facultyId: 'fac-1', id: 'asgn-1' },
         body: { departmentId: 'd1', designationId: 'des1', reportsToAssignmentId: 'asgn-1', startDate: '2024-01-01', isPrimary: true },
@@ -90,7 +94,11 @@ describe('facultyAssignmentRouteHandlers', () => {
       expect((res.body as { message: string }).message).toContain('report to itself');
     });
 
-    it('returns 400 when cycle is detected in hierarchy', async () => {
+    it('returns 400 when cycle is detected on update', async () => {
+      mockFindFacultyAssignmentById.mockResolvedValueOnce({
+        id: 'asgn-1', facultyId: 'fac-1', departmentId: 'd1', designationId: 'des1',
+        reportsToAssignmentId: null, isPrimary: true, startDate: '2024-01-01', endDate: null, notes: null, deletedAt: null,
+      });
       mockCheckAssignmentCycleSafe.mockResolvedValueOnce(false);
       const res = await handleSaveAssignment({
         params: { facultyId: 'fac-1', id: 'asgn-1' },
@@ -101,12 +109,48 @@ describe('facultyAssignmentRouteHandlers', () => {
       expect((res.body as { message: string }).message).toContain('Circular reporting');
     });
 
-    it('passes the actor to the transactional repository on valid save', async () => {
-      mockCheckAssignmentCycleSafe.mockResolvedValueOnce(true);
-      mockFindFacultyAssignmentById.mockResolvedValueOnce({
+    it('soft-stops reportsToAssignmentId on create and passes the actor', async () => {
+      const savedRow = {
+        id: 'asgn-new', facultyId: 'fac-1', departmentId: 'd1', designationId: 'des1',
+        positionId: null, reportsToAssignmentId: null, isPrimary: true, startDate: '2024-01-01',
+        endDate: null, notes: null, deletedAt: null, createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01'),
+      };
+      mockFindFacultyAssignmentById
+        .mockResolvedValueOnce(null) // create path
+        .mockResolvedValueOnce(savedRow); // reload after save
+      const res = await handleSaveAssignment({
+        params: { facultyId: 'fac-1', id: 'asgn-new' },
+        body: {
+          departmentId: 'd1',
+          designationId: 'des1',
+          reportsToAssignmentId: 'asgn-2',
+          startDate: '2024-01-01',
+          isPrimary: true,
+        },
+        request: { user: adminUser, tenant: { id: 'demo' } },
+      } as never);
+      expect(res.status).toBe(200);
+      expect(mockCheckAssignmentCycleSafe).not.toHaveBeenCalled();
+      expect(mockSaveFacultyAssignment).toHaveBeenCalledWith(
+        'demo',
+        expect.objectContaining({
+          updatedBy: 'usr-admin',
+          reportsToAssignmentId: null,
+        }),
+      );
+      expect(mockAuditFaculty).not.toHaveBeenCalled();
+    });
+
+    it('passes the actor to the transactional repository on valid update', async () => {
+      const existing = {
         id: 'asgn-1', facultyId: 'fac-1', departmentId: 'd1', designationId: 'des1',
-        reportsToAssignmentId: 'asgn-2', isPrimary: true, startDate: '2024-01-01', endDate: null, notes: null, deletedAt: null,
-      });
+        positionId: null, reportsToAssignmentId: 'asgn-2', isPrimary: true, startDate: '2024-01-01',
+        endDate: null, notes: null, deletedAt: null, createdAt: new Date('2024-01-01'), updatedAt: new Date('2024-01-01'),
+      };
+      mockCheckAssignmentCycleSafe.mockResolvedValueOnce(true);
+      mockFindFacultyAssignmentById
+        .mockResolvedValueOnce(existing)
+        .mockResolvedValueOnce(existing);
       const res = await handleSaveAssignment({
         params: { facultyId: 'fac-1', id: 'asgn-1' },
         body: { departmentId: 'd1', designationId: 'des1', reportsToAssignmentId: 'asgn-2', startDate: '2024-01-01', isPrimary: true },

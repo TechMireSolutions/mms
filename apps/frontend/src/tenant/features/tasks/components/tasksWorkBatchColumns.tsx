@@ -26,11 +26,19 @@ export function buildTasksWorkBatchColumns(
   canWrite: boolean,
   onCycleStatus: (task: TaskRecord) => void,
   onView: (task: TaskRecord) => void,
+  options?: {
+    isColumnVisible?: (key: string) => boolean;
+    getColumnWidth?: (key: string) => number | undefined;
+  },
 ): WorkBatchTableColumn<TaskRecord>[] {
-  return [
+  const isVisible = options?.isColumnVisible ?? (() => true);
+  const widthOf = options?.getColumnWidth;
+
+  const columns: WorkBatchTableColumn<TaskRecord>[] = [
     {
       id: 'title',
       label: t('tasks.title'),
+      width: widthOf?.('title'),
       render: (task) => (
         <button
           type="button"
@@ -49,13 +57,13 @@ export function buildTasksWorkBatchColumns(
     {
       id: 'priority',
       label: t('tasks.priority'),
-      width: 120,
+      width: widthOf?.('priority') ?? 120,
       render: (task) => <TaskPriorityBadge priority={task.priority} />,
     },
     {
       id: 'status',
       label: t('tasks.status'),
-      width: 140,
+      width: widthOf?.('status') ?? 140,
       render: (task) => (
         <TaskStatusBadge
           status={task.status}
@@ -66,6 +74,7 @@ export function buildTasksWorkBatchColumns(
     {
       id: 'assignees',
       label: t('tasks.assignees'),
+      width: widthOf?.('assignees'),
       render: (task) =>
         task.assignees?.length ? (
           <div className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -83,7 +92,7 @@ export function buildTasksWorkBatchColumns(
     {
       id: 'dueAt',
       label: t('tasks.dueAt'),
-      width: 120,
+      width: widthOf?.('dueAt') ?? 120,
       render: (task) => {
         if (!task.dueAt) return <span className="text-muted-foreground/60 text-xs">—</span>;
         const isOverdue =
@@ -104,4 +113,6 @@ export function buildTasksWorkBatchColumns(
       },
     },
   ];
+
+  return columns.filter((column) => column.id === 'title' || isVisible(column.id));
 }
