@@ -9,13 +9,42 @@ import { organizationLocations } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import type { OrganizationLocationRow } from '../schema/organizationLocationTables.js';
 
+const SELECT_COLS = {
+  id: organizationLocations.id,
+  workspaceSubdomain: organizationLocations.workspaceSubdomain,
+  code: organizationLocations.code,
+  name: organizationLocations.name,
+  type: organizationLocations.type,
+  parentLocationId: organizationLocations.parentLocationId,
+  addressLine1: organizationLocations.addressLine1,
+  addressLine2: organizationLocations.addressLine2,
+  city: organizationLocations.city,
+  region: organizationLocations.region,
+  country: organizationLocations.country,
+  postalCode: organizationLocations.postalCode,
+  timezone: organizationLocations.timezone,
+  isHeadOffice: organizationLocations.isHeadOffice,
+  isActive: organizationLocations.isActive,
+  sortOrder: organizationLocations.sortOrder,
+  deletedAt: organizationLocations.deletedAt,
+  deletedBy: organizationLocations.deletedBy,
+  deletionReason: organizationLocations.deletionReason,
+  restoredAt: organizationLocations.restoredAt,
+  restoredBy: organizationLocations.restoredBy,
+  deletedWithCascade: organizationLocations.deletedWithCascade,
+  createdAt: organizationLocations.createdAt,
+  updatedAt: organizationLocations.updatedAt,
+  createdBy: organizationLocations.createdBy,
+  updatedBy: organizationLocations.updatedBy,
+} as const;
+
 export async function listOrganizationLocations(
   tenant: string,
 ): Promise<OrganizationLocationRow[]> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     return tx
-      .select()
+      .select(SELECT_COLS)
       .from(organizationLocations)
       .where(and(eq(organizationLocations.workspaceSubdomain, subdomain), isNull(organizationLocations.deletedAt)))
       .orderBy(organizationLocations.name);
@@ -29,7 +58,7 @@ export async function findOrganizationLocationById(
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select(SELECT_COLS)
       .from(organizationLocations)
       .where(and(eq(organizationLocations.workspaceSubdomain, subdomain), eq(organizationLocations.id, id), isNull(organizationLocations.deletedAt)))
       .limit(1);

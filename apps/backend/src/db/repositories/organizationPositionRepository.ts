@@ -10,6 +10,30 @@ import { withTenant, withTenantRead } from '../tenant-context.js';
 import type { OrganizationPositionRow } from '../schema/organizationPositionTables.js';
 import { checkPositionCycleSafe } from './organizationPositionHierarchyRepository.js';
 
+const SELECT_COLS = {
+  id: organizationPositions.id,
+  workspaceSubdomain: organizationPositions.workspaceSubdomain,
+  code: organizationPositions.code,
+  name: organizationPositions.name,
+  departmentId: organizationPositions.departmentId,
+  designationId: organizationPositions.designationId,
+  locationId: organizationPositions.locationId,
+  parentPositionId: organizationPositions.parentPositionId,
+  capacity: organizationPositions.capacity,
+  sortOrder: organizationPositions.sortOrder,
+  isActive: organizationPositions.isActive,
+  deletedAt: organizationPositions.deletedAt,
+  deletedBy: organizationPositions.deletedBy,
+  deletionReason: organizationPositions.deletionReason,
+  restoredAt: organizationPositions.restoredAt,
+  restoredBy: organizationPositions.restoredBy,
+  deletedWithCascade: organizationPositions.deletedWithCascade,
+  createdAt: organizationPositions.createdAt,
+  updatedAt: organizationPositions.updatedAt,
+  createdBy: organizationPositions.createdBy,
+  updatedBy: organizationPositions.updatedBy,
+} as const;
+
 export async function listOrganizationPositions(
   tenant: string,
   filter?: { departmentId?: string; locationId?: string },
@@ -28,7 +52,7 @@ export async function listOrganizationPositions(
     }
 
     return tx
-      .select()
+      .select(SELECT_COLS)
       .from(organizationPositions)
       .where(and(...conditions))
       .orderBy(organizationPositions.name);
@@ -42,7 +66,7 @@ export async function findOrganizationPositionById(
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     const rows = await tx
-      .select()
+      .select(SELECT_COLS)
       .from(organizationPositions)
       .where(and(eq(organizationPositions.workspaceSubdomain, subdomain), eq(organizationPositions.id, id), isNull(organizationPositions.deletedAt)))
       .limit(1);

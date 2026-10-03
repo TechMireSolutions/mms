@@ -1,37 +1,15 @@
 import { getRequestTenant } from './tenantContext.js';
 import { logger } from './logger.js';
 import { redisDel, redisDelPattern, redisKeys } from './redis.js';
+export * from './livePushConnections.js';
 import {
-  type MinimalWebSocket,
-  type MinimalSseResponse,
-  type ActiveSseConnection,
   WS_TELEMETRY_BUFFERED_LIMIT,
   MAX_WS_BUFFERED_AMOUNT,
-  SSE_STREAM_HEADERS,
   getTenantConnections,
   getTenantSseConnections,
-  registerConnection,
-  registerSseConnection,
-  closeAllConnections,
-  getActiveConnectionsCount,
 } from './livePushConnections.js';
 import { MODULE_ACCESS_INVALIDATION_KEYS } from '@mms/shared';
 import { clearModuleAvailabilityCache } from './moduleAvailabilityService.js';
-
-export {
-  type MinimalWebSocket,
-  type MinimalSseResponse,
-  type ActiveSseConnection,
-  WS_TELEMETRY_BUFFERED_LIMIT,
-  MAX_WS_BUFFERED_AMOUNT,
-  SSE_STREAM_HEADERS,
-  getTenantConnections,
-  getTenantSseConnections,
-  registerConnection,
-  registerSseConnection,
-  closeAllConnections,
-  getActiveConnectionsCount,
-};
 
 // Redis Pub/Sub adapter for horizontal multi-node cluster scaling
 let redisPublisher: { publish: (channel: string, message: string) => Promise<unknown> } | null = null;

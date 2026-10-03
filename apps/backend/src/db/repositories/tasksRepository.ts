@@ -9,6 +9,32 @@ import { taskAssignees, tasks } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import { fetchAssigneesByTaskIds, syncTaskAssignees } from './tasksAssigneesRepository.js';
 
+const SELECT_COLS = {
+  id: tasks.id,
+  workspaceSubdomain: tasks.workspaceSubdomain,
+  title: tasks.title,
+  description: tasks.description,
+  status: tasks.status,
+  priority: tasks.priority,
+  startDate: tasks.startDate,
+  dueAt: tasks.dueAt,
+  parentTaskId: tasks.parentTaskId,
+  createdByUserId: tasks.createdByUserId,
+  assignedByUserId: tasks.assignedByUserId,
+  completedAt: tasks.completedAt,
+  cancelledAt: tasks.cancelledAt,
+  deletedAt: tasks.deletedAt,
+  deletedBy: tasks.deletedBy,
+  deletionReason: tasks.deletionReason,
+  restoredAt: tasks.restoredAt,
+  restoredBy: tasks.restoredBy,
+  deletedWithCascade: tasks.deletedWithCascade,
+  createdAt: tasks.createdAt,
+  updatedAt: tasks.updatedAt,
+  createdBy: tasks.createdBy,
+  updatedBy: tasks.updatedBy,
+} as const;
+
 export { getTaskMetrics } from './tasksMetricsRepository.js';
 
 function mapTaskRow(
@@ -79,7 +105,7 @@ export async function listTasks(
       .where(whereClause);
 
     const rows = await tx
-      .select()
+      .select(SELECT_COLS)
       .from(tasks)
       .where(whereClause)
       .orderBy(desc(tasks.createdAt))
@@ -105,7 +131,7 @@ export async function findTaskById(tenant: string, id: string): Promise<TaskReco
   const subdomain = tenant.trim().toLowerCase();
   return withTenantRead(subdomain, async (tx) => {
     const [taskRow] = await tx
-      .select()
+      .select(SELECT_COLS)
       .from(tasks)
       .where(and(eq(tasks.workspaceSubdomain, subdomain), eq(tasks.id, id), isNull(tasks.deletedAt)))
       .limit(1);

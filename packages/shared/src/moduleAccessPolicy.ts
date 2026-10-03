@@ -14,6 +14,7 @@ import { OBLIGATIONS_MODULE_MANIFEST } from './obligationsModuleManifest.js';
 import { QUESTION_BANK_MODULE_MANIFEST } from './questionBankModuleManifest.js';
 import { SESSIONS_MODULE_MANIFEST } from './sessionsModuleManifest.js';
 import { STUDENTS_MODULE_MANIFEST } from './studentsModuleManifest.js';
+import { TASKS_MODULE_MANIFEST } from './tasksModuleManifest.js';
 import { USERS_MODULE_MANIFEST } from './usersModuleManifest.js';
 
 /** Action a request or UI entry point performs inside a module. */
@@ -82,6 +83,7 @@ const MODULE_PERMISSION_SOURCES = {
   finance: FINANCE_MODULE_MANIFEST,
   accounting: ACCOUNTING_MODULE_MANIFEST,
   obligations: OBLIGATIONS_MODULE_MANIFEST,
+  tasks: TASKS_MODULE_MANIFEST,
   users: USERS_MODULE_MANIFEST,
 } as const satisfies Record<string, ModulePermissionSource>;
 

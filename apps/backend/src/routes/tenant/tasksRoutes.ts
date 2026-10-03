@@ -14,6 +14,7 @@ import {
   type User,
 } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
+import { registerModuleAccess } from '../../middleware/requireTenantModule.js';
 import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../services/rbacService.js';
 import {
   createTask,
@@ -31,6 +32,7 @@ export default async function tasksRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
+  registerModuleAccess(fastify, 'tasks');
 
   // ── List & Metrics ────────────────────────────────────────────────────────
   fastify.get('/api/tasks', async (request, reply) => {
