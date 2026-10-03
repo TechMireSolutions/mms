@@ -37,5 +37,6 @@ export interface UsersListProps {
   isColumnVisible?: (key: string) => boolean;
   columnRegistry?: ModuleColumnRegistryEntry[];
   updateUserColumnLayout?: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
+  onResetLayout?: () => void;
   customizerLabels?: ModuleColumnCustomizerLabels;
 }

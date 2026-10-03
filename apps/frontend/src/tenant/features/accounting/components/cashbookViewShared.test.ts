@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Account, JournalEntry, JournalLine } from "@/lib/data/accountingData";
 import {
+  buildCashbookFooterCells,
   buildCashbookRows,
   classifyEntry,
   countCashbookRowsByType,
@@ -163,5 +164,24 @@ describe("cashbook totals", () => {
       { cashAccountIds: CASH_IDS },
     );
     expect(rows).toHaveLength(0);
+  });
+});
+
+describe("buildCashbookFooterCells", () => {
+  it("spans text columns before the totals in default order", () => {
+    expect(buildCashbookFooterCells(["date", "type", "description", "moneyIn", "moneyOut"])).toEqual([
+      { kind: "label", span: 3 },
+      { kind: "moneyIn", span: 1 },
+      { kind: "moneyOut", span: 1 },
+    ]);
+  });
+
+  it("keeps totals under their columns after reorder and hide", () => {
+    expect(buildCashbookFooterCells(["moneyOut", "date", "moneyIn", "description"])).toEqual([
+      { kind: "moneyOut", span: 1 },
+      { kind: "label", span: 1 },
+      { kind: "moneyIn", span: 1 },
+      { kind: "blank", span: 1 },
+    ]);
   });
 });

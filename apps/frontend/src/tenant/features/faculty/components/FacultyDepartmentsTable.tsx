@@ -1,15 +1,13 @@
 import React from 'react';
-import { ChevronRight, Pencil, Trash2 } from 'lucide-react';
+import { Building2, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import type { FacultyDepartmentEntity } from '@mms/shared';
-import { Button } from '@/components/ui/button';
+import { EmptyState } from '@/components/ui/EmptyState';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
+  DataTable,
+  DataTableRowActions,
+  type DataTableColumn,
+  type DataTableFilter,
+} from '@/components/common/data-table';
 import { useTranslation } from '@/hooks/useTranslation';
 
 export interface FacultyDepartmentsTableProps {
@@ -23,6 +21,8 @@ export interface FacultyDepartmentsTableProps {
   onDelete: (dept: FacultyDepartmentEntity) => void;
 }
 
+const Dash = () => <span className="text-muted-foreground/50">—</span>;
+
 export function FacultyDepartmentsTable({
   departments,
   orderedDepartments,
@@ -35,94 +35,78 @@ export function FacultyDepartmentsTable({
 }: FacultyDepartmentsTableProps): React.JSX.Element {
   const { t } = useTranslation();
   const parentMap = new Map(departments.map((d) => [d.id, d.name]));
+  const parentName = (d: FacultyDepartmentEntity) => (d.parentId ? parentMap.get(d.parentId) : undefined);
+  const headName = (d: FacultyDepartmentEntity) =>
+    d.headFacultyId ? (facultyMap?.get(d.headFacultyId) ?? d.headFacultyId) : undefined;
+
+  const columns: DataTableColumn<FacultyDepartmentEntity>[] = [
+    {
+      id: 'name',
+      label: t('faculty.setup.departmentName'),
+      fixed: true,
+      render: (d) => (
+        <div className="flex items-center gap-1.5 font-medium min-w-0">
+          {d.parentId && <ChevronRight className="size-3 text-muted-foreground shrink-0 ms-2" aria-hidden />}
+          <span className="truncate">{d.name}</span>
+        </div>
+      ),
+    },
+    {
+      id: 'code',
+      label: t('faculty.setup.departmentCode'),
+      width: 150,
+      render: (d) => (
+        <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">{d.code}</code>
+      ),
+    },
+    {
+      id: 'parent',
+      label: t('faculty.setup.parentDepartment'),
+      searchValue: parentName,
+      render: (d) => <span className="text-xs text-muted-foreground">{parentName(d) ?? <Dash />}</span>,
+    },
+    {
+      id: 'head',
+      label: t('faculty.setup.departmentHead'),
+      searchValue: headName,
+      render: (d) => <span className="text-xs text-muted-foreground">{headName(d) ?? <Dash />}</span>,
+    },
+  ];
+
+  const parentOptions = departments
+    .filter((d) => orderedDepartments.some((child) => child.parentId === d.id))
+    .map((d) => ({ value: d.id, label: d.name }));
+
+  const filters: DataTableFilter<FacultyDepartmentEntity>[] = [
+    { id: 'parent', label: t('faculty.setup.parentDepartment'), options: parentOptions, getValue: (d) => d.parentId },
+  ];
 
   return (
-    <div className="rounded-md border border-border/80 overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-muted/40">
-            <TableHead className="font-semibold">{t('faculty.setup.departmentName')}</TableHead>
-            <TableHead className="font-semibold w-32">{t('faculty.setup.departmentCode')}</TableHead>
-            <TableHead className="font-semibold">{t('faculty.setup.parentDepartment')}</TableHead>
-            <TableHead className="font-semibold">{t('faculty.setup.departmentHead')}</TableHead>
-            <TableHead className="font-semibold w-24 text-end">{t('common.actions')}</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {orderedDepartments.map((dept) => {
-            const isEditing = editingDepartmentId === dept.id;
-            const parentName = dept.parentId ? parentMap.get(dept.parentId) : undefined;
-
-            return (
-              <TableRow
-                key={dept.id}
-                className={`transition-colors ${
-                  isEditing
-                    ? 'bg-primary/10 border-primary/40 ring-1 ring-inset ring-primary/40'
-                    : 'hover:bg-muted/50'
-                }`}
-              >
-                <TableCell className="py-2.5">
-                  <div className="flex items-center gap-1.5 font-medium">
-                    {dept.parentId && (
-                      <ChevronRight className="size-3 text-muted-foreground shrink-0 ms-2" aria-hidden />
-                    )}
-                    <span>{dept.name}</span>
-                  </div>
-                </TableCell>
-                <TableCell className="py-2.5">
-                  <code className="rounded bg-muted px-1.5 py-0.5 font-mono text-xs text-muted-foreground">
-                    {dept.code}
-                  </code>
-                </TableCell>
-                <TableCell className="py-2.5 text-xs text-muted-foreground">
-                  {parentName ?? <span className="text-muted-foreground/50">—</span>}
-                </TableCell>
-                <TableCell className="py-2.5 text-xs text-muted-foreground">
-                  {dept.headFacultyId ? (
-                    facultyMap?.get(dept.headFacultyId) ?? dept.headFacultyId
-                  ) : (
-                    <span className="text-muted-foreground/50">—</span>
-                  )}
-                </TableCell>
-                <TableCell className="py-2.5 text-end">
-                  <div className="flex items-center justify-end gap-1">
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onEdit(dept)}
-                      disabled={isPending}
-                      className="size-8 p-0 hover:text-primary"
-                      aria-label={`${t('common.edit')} ${dept.name}`}
-                    >
-                      <Pencil className="size-3.5" aria-hidden />
-                    </Button>
-                    <Button
-                      type="button"
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => onDelete(dept)}
-                      disabled={isPending}
-                      className="size-8 p-0 hover:text-destructive hover:bg-destructive/10"
-                      aria-label={`${t('common.delete')} ${dept.name}`}
-                    >
-                      <Trash2 className="size-3.5" aria-hidden />
-                    </Button>
-                  </div>
-                </TableCell>
-              </TableRow>
-            );
-          })}
-          {orderedDepartments.length === 0 && !isLoading && (
-            <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center text-xs text-muted-foreground">
-                {t('faculty.setup.noDepartments')}
-              </TableCell>
-            </TableRow>
-          )}
-        </TableBody>
-      </Table>
-    </div>
+    <DataTable
+      tableId="faculty.departments"
+      label={t('faculty.setup.departmentName')}
+      data={orderedDepartments}
+      columns={columns}
+      filters={filters}
+      isLoading={isLoading}
+      card={{ title: (d) => d.name }}
+      rowClassName={(d) => (d.id === editingDepartmentId ? 'bg-primary/10 ring-1 ring-inset ring-primary/40' : undefined)}
+      renderRowActions={(d) => (
+        <DataTableRowActions
+          actions={[
+            { id: 'edit', label: `${t('common.edit')} ${d.name}`, icon: Pencil, onClick: () => onEdit(d), disabled: isPending },
+            {
+              id: 'delete',
+              label: `${t('common.delete')} ${d.name}`,
+              icon: Trash2,
+              tone: 'destructive',
+              onClick: () => onDelete(d),
+              disabled: isPending,
+            },
+          ]}
+        />
+      )}
+      emptyState={<EmptyState icon={Building2} title={t('faculty.setup.noDepartments')} compact variant="dashed" />}
+    />
   );
 }

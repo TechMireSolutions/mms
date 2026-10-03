@@ -1293,6 +1293,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "common.columns.trigger": "کالمز",
   "common.columns.visibleAndOrder": "نمایاں اور ترتیب",
   "common.columns.visibleCount": "{total} میں سے {visible} نمایاں",
+  "common.dataTable.noMatches": "کوئی قطار آپ کی تلاش یا فلٹرز سے مطابقت نہیں رکھتی",
+  "common.dataTable.shownCount": "{count} قطاریں دکھائی گئیں",
   "common.breadcrumb": "نیویگیشن ٹریل",
   "common.dismiss": "خارج کریں",
   "common.delete": "حذف",

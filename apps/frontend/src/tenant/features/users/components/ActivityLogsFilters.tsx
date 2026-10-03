@@ -1,10 +1,15 @@
 import React from 'react';
-import { Search } from 'lucide-react';
 import { ACTIVITY_ACTION_VALUES, type SystemUser } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { DateRangeFilterBar } from '@/components/ui/DateRangeFilterBar';
-import { Input } from '@/components/ui/input';
-import { FormSelect } from '@/components/ui/FormSelect';
+import { WorkTaskToolbar } from '@/components/common/work';
+import { toColumnCustomizer, type DataTableColumnLayout } from '@/components/common/data-table';
+import {
+  ModuleFilterDivider,
+  ModuleFilterDropdown,
+  ModuleFilterRadioGroup,
+} from '@/components/ui/ModuleFiltersMenuButton';
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { Button } from '@/components/ui/button';
 import { calculateReportDateRange } from '@/lib/reports/reportDateUtils';
 
@@ -20,6 +25,9 @@ export interface ActivityLogsFiltersProps {
   dateTo: string;
   onDateToChange: (value: string) => void;
   users: SystemUser[];
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
+  columnLayout?: DataTableColumnLayout;
 }
 
 export function ActivityLogsFilters({
@@ -34,6 +42,9 @@ export function ActivityLogsFilters({
   dateTo,
   onDateToChange,
   users,
+  viewMode,
+  onViewModeChange,
+  columnLayout,
 }: ActivityLogsFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -57,32 +68,51 @@ export function ActivityLogsFilters({
     onDateToChange(range.to);
   };
 
+  const activeFilterCount =
+    Number(userFilter !== 'all') + Number(actionFilter !== 'all') + Number(Boolean(dateFrom || dateTo));
+  const clearFilters = () => {
+    onSearchChange('');
+    onUserFilterChange('all');
+    onActionFilterChange('all');
+    onDateFromChange('');
+    onDateToChange('');
+  };
+
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="relative min-w-cell-md flex-1">
-        <Search className="absolute start-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-        <Input
-          value={search}
-          onChange={(event) => onSearchChange(event.target.value)}
-          placeholder={t('users.activitySearch')}
-          aria-label={t('users.activitySearch')}
-          className="ps-9.5"
-        />
-      </div>
-      <FormSelect
-        value={userFilter}
-        onChange={onUserFilterChange}
-        options={userOptions}
-        aria-label={t('users.activityFilterUser')}
-        className="w-auto min-w-input-filter"
-      />
-      <FormSelect
-        value={actionFilter}
-        onChange={onActionFilterChange}
-        options={actionOptions}
-        aria-label={t('users.activityFilterAction')}
-        className="w-auto min-w-cell-sm"
-      />
+    <WorkTaskToolbar
+      regionLabel={t('users.activity')}
+      search={search}
+      onSearchChange={onSearchChange}
+      searchPlaceholder={t('users.activitySearch')}
+      searchId="users-activity-search"
+      hasActiveFilters={activeFilterCount > 0 || search.length > 0}
+      onClearFilters={clearFilters}
+      clearFiltersLabel={t('common.clearFilters')}
+      filterButton={
+        <ModuleFilterDropdown
+          label={t('common.filters')}
+          activeCount={activeFilterCount}
+          clearLabel={t('common.clearFilters')}
+          onClear={clearFilters}
+        >
+          <ModuleFilterRadioGroup
+            label={t('users.activityFilterUser')}
+            value={userFilter}
+            onValueChange={onUserFilterChange}
+            options={userOptions}
+          />
+          <ModuleFilterDivider />
+          <ModuleFilterRadioGroup
+            label={t('users.activityFilterAction')}
+            value={actionFilter}
+            onValueChange={onActionFilterChange}
+            options={actionOptions}
+          />
+        </ModuleFilterDropdown>
+      }
+      viewModeToggle={{ viewMode, onViewModeChange }}
+      columnCustomizer={toColumnCustomizer(columnLayout)}
+    >
       <div className="flex items-center gap-1">
         <Button
           type="button"
@@ -129,6 +159,6 @@ export function ActivityLogsFilters({
         onDateToChange={onDateToChange}
         pickerClassName="w-full min-w-0 text-sm sm:w-36"
       />
-    </div>
+    </WorkTaskToolbar>
   );
 }

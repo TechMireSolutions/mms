@@ -1293,6 +1293,8 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "common.columns.trigger": "الأعمدة",
   "common.columns.visibleAndOrder": "المرئي والترتيب",
   "common.columns.visibleCount": "{visible} من {total} مرئي",
+  "common.dataTable.noMatches": "لا توجد صفوف تطابق البحث أو عوامل التصفية",
+  "common.dataTable.shownCount": "عرض {count} صفًا",
   "common.breadcrumb": "مسار التنقل",
   "common.dismiss": "تجاهل",
   "common.delete": "حذف",

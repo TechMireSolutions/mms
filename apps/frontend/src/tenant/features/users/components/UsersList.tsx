@@ -56,6 +56,7 @@ export function UsersList({
   isColumnVisible,
   columnRegistry,
   updateUserColumnLayout,
+  onResetLayout,
   customizerLabels,
 }: UsersListProps): React.JSX.Element {
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
@@ -106,6 +107,7 @@ export function UsersList({
         onClearSelection={() => onSelectedIdsChange([])}
         columnRegistry={columnRegistry}
         updateUserColumnLayout={updateUserColumnLayout}
+        onResetLayout={onResetLayout}
         customizerLabels={customizerLabels}
         primaryAction={
           canWrite && !showDeleted ? (

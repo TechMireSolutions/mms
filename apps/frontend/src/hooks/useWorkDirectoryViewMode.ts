@@ -9,12 +9,12 @@ export type WorkDirectoryViewMode = "table" | "cards";
  * Single resolved Work directory view mode.
  * Default: cards below md, table at md+. Explicit setViewMode overrides until changed.
  */
-export function useWorkDirectoryViewMode(): {
+export function useWorkDirectoryViewMode(initialMode?: WorkDirectoryViewMode): {
   viewMode: WorkDirectoryViewMode;
   setViewMode: (mode: WorkDirectoryViewMode) => void;
 } {
   const isMdUp = useMediaQuery(MEDIA_MD_UP);
-  const [override, setOverride] = useState<WorkDirectoryViewMode | null>(null);
+  const [override, setOverride] = useState<WorkDirectoryViewMode | null>(initialMode ?? null);
   const viewMode: WorkDirectoryViewMode = override ?? (isMdUp ? "table" : "cards");
   return { viewMode, setViewMode: setOverride };
 }

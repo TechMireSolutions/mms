@@ -12,6 +12,7 @@ export interface SessionsListColumnLayout {
   columnRegistry: ModuleColumnRegistryEntry[];
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
   customizerLabels?: ModuleColumnCustomizerLabels;
+  resetColumnLayout?: () => void;
 }
 
 export interface SessionsListFiltersProps {
@@ -116,6 +117,7 @@ export function SessionsListFilters({
       columnCustomizer={{
         registry: columnLayout.columnRegistry,
         onUpdate: columnLayout.updateUserColumnLayout,
+        onReset: columnLayout.resetColumnLayout,
         labels: columnLayout.customizerLabels,
       }}
     />

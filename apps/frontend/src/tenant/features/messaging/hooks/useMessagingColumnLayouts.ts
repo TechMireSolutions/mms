@@ -2,7 +2,6 @@ import {
   MESSAGING_MODULE_MANIFEST,
   buildMessagingRecipientsWorkColumnRegistry,
   buildMessagingHistoryWorkColumnRegistry,
-  buildMessagingTemplatesWorkColumnRegistry,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useModuleColumnLayout } from '@/hooks/useModuleColumnLayout';
@@ -40,24 +39,6 @@ export function useMessagingHistoryColumnLayout() {
     moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_history`,
     tenantRegistry,
     apiPath: `${MESSAGING_MODULE_MANIFEST.restBasePath}/history`,
-    translationPrefix: 'messaging.columns',
-  });
-}
-
-export function useMessagingTemplatesColumnLayout() {
-  const { t } = useTranslation();
-
-  const tenantRegistry = (() =>
-      buildMessagingTemplatesWorkColumnRegistry({
-        label: t('messaging.templateLabel'),
-        category: t('messaging.category'),
-        body: t('messaging.templateCopy'),
-      }))();
-
-  return useModuleColumnLayout({
-    moduleId: `${MESSAGING_MODULE_MANIFEST.moduleId}_templates`,
-    tenantRegistry,
-    apiPath: `${MESSAGING_MODULE_MANIFEST.restBasePath}/templates`,
     translationPrefix: 'messaging.columns',
   });
 }

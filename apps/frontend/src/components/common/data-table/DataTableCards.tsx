@@ -1,0 +1,72 @@
+import React from "react";
+import { EntityCard } from "@/components/ui/EntityCard";
+import { EntityCardsGrid } from "@/components/ui/EntityCardsGrid";
+import { DirectoryCardMetaGrid } from "@/components/ui/DirectoryCardMetaGrid";
+import { DirectoryCardMetaTile } from "@/components/ui/DirectoryCardMetaTile";
+import type { DataTableCardContext, DataTableCardSlots, DataTableColumn } from "./dataTableTypes";
+
+export interface DataTableCardsProps<TData extends { id: string | number }> {
+  rows: readonly TData[];
+  columns: readonly DataTableColumn<TData>[];
+  card?: DataTableCardSlots<TData>;
+  renderCard?: (row: TData, index: number, ctx: DataTableCardContext) => React.ReactNode;
+  isColumnVisible: (columnId: string) => boolean;
+  renderRowActions?: (row: TData, index: number) => React.ReactNode;
+  onRowClick?: (row: TData) => void;
+}
+
+/** Card view for {@link DataTable}: title + visible columns as meta tiles + row actions. */
+export function DataTableCards<TData extends { id: string | number }>({
+  rows,
+  columns,
+  card,
+  renderCard,
+  isColumnVisible,
+  renderRowActions,
+  onRowClick,
+}: DataTableCardsProps<TData>): React.JSX.Element {
+  const [titleColumn, ...restColumns] = columns;
+  const metaColumns = (card?.title ? columns : restColumns).filter((column) => !column.hideInCard);
+
+  const indexById = new Map(rows.map((row, index) => [row.id, index]));
+
+  const renderOne = (row: TData): React.ReactNode => {
+    const index = indexById.get(row.id) ?? 0;
+    if (renderCard) return <React.Fragment key={String(row.id)}>{renderCard(row, index, { isColumnVisible })}</React.Fragment>;
+    return (
+      <EntityCard
+        key={String(row.id)}
+        accentClassName={false}
+        onClick={onRowClick ? () => onRowClick(row) : undefined}
+        className={onRowClick ? "cursor-pointer" : undefined}
+      >
+        <div className="flex items-start justify-between gap-2 min-w-0">
+          <div className="min-w-0 flex-1 text-sm font-semibold text-foreground text-pretty break-words">
+            {card?.title ? card.title(row) : titleColumn?.render(row, index)}
+          </div>
+          {card?.badge ? <div className="shrink-0">{card.badge(row)}</div> : null}
+        </div>
+        {metaColumns.length > 0 ? (
+          <DirectoryCardMetaGrid>
+            {metaColumns.map((column) => (
+              <DirectoryCardMetaTile key={column.id} label={column.label}>
+                {column.render(row, index)}
+              </DirectoryCardMetaTile>
+            ))}
+          </DirectoryCardMetaGrid>
+        ) : null}
+        {renderRowActions ? (
+          <div
+            className="flex justify-end gap-1 border-t border-border/40 pt-2"
+            onClick={(event) => event.stopPropagation()}
+          >
+            {renderRowActions(row, index)}
+          </div>
+        ) : null}
+      </EntityCard>
+    );
+  };
+
+  /** `items` mode lets the grid virtualize past 30 cards (rows of two). */
+  return <EntityCardsGrid cols={2} items={rows} renderItem={renderOne} />;
+}

@@ -54,6 +54,12 @@ Start here in Antigravity: **skill `antigravity-workspace`**.
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
 | `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
 
+## Reuse first (DRY) — applies to every change
+
+Before implementing any feature, look for existing components, hooks, utilities, layouts, forms, dialogs, and patterns that can be reused or extended. Keep shared behaviour in reusable, configurable implementations; never duplicate UI or business logic across pages. Changes to shared components must stay compatible with their existing consumers — find them, run their tests, and verify the affected pages. Follow the project's design conventions and the `ui-ux-pro-max` skill for UI/UX work. Tabular data uses the shared `DataTable` / `WorkBatchTable` stack.
+
+Owners: always-on `mms-agent-universal` §1 (**Reuse First**) · workflow and thresholds `mms-dry` §1–§2 · tables ratchet `pnpm run check:work-directory`.
+
 ## Module access gates — applies to every module-owned surface
 
 Every module-owned route, UI entry point, and backend operation must declare and enforce its module and action-permission requirements. Frontend visibility is not a security boundary. Backend authorization must use authoritative tenant grants, module enablement, and user permissions. Reuse the centralized policy and guards. Explicitly classify non-module routes and add coverage checks so new routes or endpoints cannot silently bypass authorization.

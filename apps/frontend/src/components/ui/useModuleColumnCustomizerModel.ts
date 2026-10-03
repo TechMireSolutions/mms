@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import type { ModuleColumnRegistryEntry } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { descriptorColumnsToRegistry } from '@/hooks/useDescriptorColumnLayout';
 import { getEntityDescriptor } from '@/components/common/entityRegistry';
 import type {
   ModuleColumnCustomizerLabels,
@@ -32,13 +33,7 @@ export function useModuleColumnCustomizerModel({
   const registry = React.useMemo(() => {
     if (columnRegistry && columnRegistry.length > 0) return columnRegistry;
     if (effectiveDescriptor) {
-      return effectiveDescriptor.getTableColumns().map((col) => ({
-        key: col.id,
-        label: col.label,
-        order: col.order,
-        enabled: col.enabled,
-        fixed: col.fixed ?? false,
-      }));
+      return descriptorColumnsToRegistry(effectiveDescriptor.getTableColumns());
     }
     return [];
   }, [columnRegistry, effectiveDescriptor]);
