@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Sparkles, Building2, Check, AlertCircle, Info } from 'lucide-react';
+import { Sparkles, Building2, Check, AlertCircle } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import {

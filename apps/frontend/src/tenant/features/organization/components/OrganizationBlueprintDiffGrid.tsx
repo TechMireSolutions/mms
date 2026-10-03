@@ -23,7 +23,7 @@ export function OrganizationBlueprintDiffGrid({
           <div className="text-muted-foreground text-[11px]">{t('organization.positions')}</div>
           <div className="font-medium text-foreground">
             +{previewDiff.positions.toCreate.length} new
-            <span className="text-muted-foreground text-[10px] ml-1">
+            <span className="text-muted-foreground text-[10px] ms-1">
               ({previewDiff.positions.existing.length} exist)
             </span>
           </div>
@@ -32,7 +32,7 @@ export function OrganizationBlueprintDiffGrid({
           <div className="text-muted-foreground text-[11px]">{t('organization.locations')}</div>
           <div className="font-medium text-foreground">
             +{previewDiff.locations.toCreate.length} new
-            <span className="text-muted-foreground text-[10px] ml-1">
+            <span className="text-muted-foreground text-[10px] ms-1">
               ({previewDiff.locations.existing.length} exist)
             </span>
           </div>
@@ -41,7 +41,7 @@ export function OrganizationBlueprintDiffGrid({
           <div className="text-muted-foreground text-[11px]">Departments</div>
           <div className="font-medium text-foreground">
             +{previewDiff.departments.toCreate.length} new
-            <span className="text-muted-foreground text-[10px] ml-1">
+            <span className="text-muted-foreground text-[10px] ms-1">
               ({previewDiff.departments.existing.length} exist)
             </span>
           </div>
@@ -50,7 +50,7 @@ export function OrganizationBlueprintDiffGrid({
           <div className="text-muted-foreground text-[11px]">Designations</div>
           <div className="font-medium text-foreground">
             +{previewDiff.designations.toCreate.length} new
-            <span className="text-muted-foreground text-[10px] ml-1">
+            <span className="text-muted-foreground text-[10px] ms-1">
               ({previewDiff.designations.existing.length} exist)
             </span>
           </div>
