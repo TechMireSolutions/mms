@@ -14,7 +14,8 @@ for arg in "$@"; do
 done
 
 export MMS_SYNC_DRY_RUN="$DRY_RUN"
-node <<'SCRIPT'
+# `node -` forces script mode: a bare `node <<` starts the REPL under Git Bash on Windows.
+node - <<'SCRIPT'
 const fs = require("fs");
 const path = require("path");
 
@@ -118,7 +119,8 @@ done
 [[ "$DRY_RUN" == "1" ]] || cp "$ROOT/.agent/rules/README.md" "$ROOT/.claude/rules/README.md" 2>/dev/null || true
 if [[ -f "$ROOT/.claude/rules/README.md" ]]; then
   # Tool-specific title/blurb after Agent mirror copy
-  node <<'NODE'
+  # `node -` forces script mode: a bare `node <<` starts the REPL under Git Bash on Windows.
+  node - <<'NODE'
 const fs = require("fs");
 const path = require("path");
 const p = path.join(process.cwd(), ".claude/rules/README.md");
