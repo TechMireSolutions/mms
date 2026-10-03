@@ -1,3 +1,4 @@
+import { validatePositionOccupancy } from './positionOccupancyValidation.js';
 import { assignmentHierarchySql } from './facultyHierarchySql.js';
 import type { AssignmentTreeNode } from './facultyAssignmentHierarchyRepository.js';
 import { sql } from 'drizzle-orm';
@@ -47,6 +48,7 @@ export async function validateFacultyAssignment(
     `);
     if (overlaps.rows.length) throw new Error('Primary assignment overlaps an existing appointment');
   }
+  if (input.positionId) await validatePositionOccupancy(tx, tenant, input);
   if (!input.reportsToAssignmentId) return;
   const parent = await tx.execute<{ id: string; faculty_id: string; reports_to_assignment_id: string | null }>(sql`
     SELECT a.id, a.faculty_id, a.reports_to_assignment_id FROM faculty_assignments a

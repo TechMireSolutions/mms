@@ -15,6 +15,10 @@ export async function saveFacultyAssignment(
 ): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   await withTenant(subdomain, async (tx) => {
+    await lockFacultyHierarchy(tx, subdomain);
+    const current = await findFacultyAssignmentById(subdomain, assignment.id);
+    assignment = { ...assignment, positionId: assignment.positionId === undefined
+      ? current?.positionId ?? null : assignment.positionId };
     await validateFacultyAssignment(tx, subdomain, assignment);
     await tx
       .insert(facultyAssignments)
@@ -24,6 +28,7 @@ export async function saveFacultyAssignment(
         set: {
           departmentId: assignment.departmentId,
           designationId: assignment.designationId,
+          ...(assignment.positionId !== undefined ? { positionId: assignment.positionId } : {}),
           reportsToAssignmentId: assignment.reportsToAssignmentId ?? null,
           isPrimary: assignment.isPrimary,
           startDate: assignment.startDate,

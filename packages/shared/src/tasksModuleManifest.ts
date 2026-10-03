@@ -32,7 +32,7 @@ export const taskAssigneeRecordSchema = z.object({
   positionName: z.string().optional(),
   userEmail: z.string().optional(),
   assignedAt: z.string().or(z.date()).optional(),
-});
+}).strict();
 
 export type TaskAssigneeRecord = z.infer<typeof taskAssigneeRecordSchema>;
 
@@ -51,7 +51,7 @@ export const taskRecordSchema = z.object({
   createdAt: z.string().or(z.date()).optional(),
   updatedAt: z.string().or(z.date()).optional(),
   deletedAt: z.string().or(z.date()).nullable().optional(),
-});
+}).strict();
 
 export type TaskRecord = z.infer<typeof taskRecordSchema>;
 
@@ -60,7 +60,7 @@ export const taskAssigneeInputSchema = z.object({
   facultyAssignmentId: z.string().uuid().optional(),
   positionId: z.string().uuid().optional(),
   userId: z.string().uuid().optional(),
-});
+}).strict();
 
 export type TaskAssigneeInput = z.infer<typeof taskAssigneeInputSchema>;
 
@@ -71,17 +71,21 @@ export const taskInsertSchema = z.object({
   priority: z.enum(TASK_PRIORITIES).default('medium'),
   dueAt: z.string().datetime().nullable().optional(),
   parentTaskId: z.string().uuid().nullable().optional(),
-  assignees: z.array(taskAssigneeInputSchema).optional().default([]),
-});
+  assignees: z.array(taskAssigneeInputSchema).max(100).optional().default([]),
+}).strict();
 
 export type TaskInsert = z.infer<typeof taskInsertSchema>;
 
-export const taskUpdateSchema = taskInsertSchema.partial();
+export const taskUpdateSchema = taskInsertSchema.partial().extend({
+  status: z.enum(TASK_STATUSES).optional(),
+  priority: z.enum(TASK_PRIORITIES).optional(),
+  assignees: z.array(taskAssigneeInputSchema).max(100).optional(),
+});
 export type TaskUpdate = z.infer<typeof taskUpdateSchema>;
 
 export const taskStatusUpdateSchema = z.object({
   status: z.enum(TASK_STATUSES),
-});
+}).strict();
 
 export type TaskStatusUpdate = z.infer<typeof taskStatusUpdateSchema>;
 
@@ -94,7 +98,7 @@ export const taskListQuerySchema = z.object({
   search: z.string().optional(),
   limit: z.coerce.number().int().min(1).max(500).default(50),
   offset: z.coerce.number().int().min(0).default(0),
-});
+}).strict();
 
 export type TaskListQuery = z.infer<typeof taskListQuerySchema>;
 
@@ -103,7 +107,7 @@ export const taskSettingsSchema = z.object({
   allowSelfAssignment: z.boolean().default(true),
   notifyOnAssignment: z.boolean().default(true),
   notifyOnStatusChange: z.boolean().default(true),
-});
+}).strict();
 
 export type TaskSettings = z.infer<typeof taskSettingsSchema>;
 

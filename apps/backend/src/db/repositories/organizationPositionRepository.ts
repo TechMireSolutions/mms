@@ -8,7 +8,8 @@ import type { OrganizationPositionInsert, OrganizationPositionUpdate } from '@mm
 import { facultyAssignments, organizationPositions } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import type { OrganizationPositionRow } from '../schema/organizationPositionTables.js';
-import { checkPositionCycleSafe } from './organizationPositionHierarchyRepository.js';
+import { validateOrganizationParent } from './organizationHierarchyValidation.js';
+import { lockFacultyHierarchy } from './facultyAssignmentValidation.js';
 
 const SELECT_COLS = {
   id: organizationPositions.id,
@@ -81,6 +82,7 @@ export async function createOrganizationPosition(
 ): Promise<OrganizationPositionRow> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    await validateOrganizationParent(tx, subdomain, 'position', '', data.parentPositionId);
     const [inserted] = await tx
       .insert(organizationPositions)
       .values({
@@ -108,14 +110,8 @@ export async function updateOrganizationPosition(
   userId?: string,
 ): Promise<OrganizationPositionRow | null> {
   const subdomain = tenant.trim().toLowerCase();
-  if (data.parentPositionId) {
-    const cycleCheck = await checkPositionCycleSafe(subdomain, id, data.parentPositionId);
-    if (!cycleCheck.safe) {
-      throw new Error(cycleCheck.reason ?? 'Cycle detected in position hierarchy');
-    }
-  }
-
   return withTenant(subdomain, async (tx) => {
+    await validateOrganizationParent(tx, subdomain, 'position', id, data.parentPositionId);
     const updatePayload: Partial<typeof organizationPositions.$inferInsert> = {
       updatedAt: new Date(),
       updatedBy: userId ?? null,
@@ -144,7 +140,12 @@ export async function deleteOrganizationPosition(
 ): Promise<{ success: boolean; reason?: string }> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
-    // Check if any active faculty assignment occupies this position
+    await lockFacultyHierarchy(tx, subdomain);
+    const children = await tx.select({ id: organizationPositions.id }).from(organizationPositions)
+      .where(and(eq(organizationPositions.workspaceSubdomain, subdomain),
+        eq(organizationPositions.parentPositionId, id), isNull(organizationPositions.deletedAt))).limit(1);
+    if (children.length) return { success: false, reason: 'Position has active child positions' };
+    // Preserve historical and future appointments until explicitly unlinked.
     const activeOccupants = await tx
       .select({ id: facultyAssignments.id })
       .from(facultyAssignments)
@@ -153,7 +154,7 @@ export async function deleteOrganizationPosition(
           eq(facultyAssignments.workspaceSubdomain, subdomain),
           eq(facultyAssignments.positionId, id),
           isNull(facultyAssignments.deletedAt),
-          isNull(facultyAssignments.endDate),
+
         ),
       )
       .limit(1);

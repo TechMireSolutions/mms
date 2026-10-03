@@ -3,6 +3,7 @@
  * Their permission mappings live in `COLLECTION_*_PERMISSION` maps.
  */
 export const REST_ONLY_TYPED_COLLECTIONS = new Set([
+  'tasks',
   'attendance',
   'attendance_records',
   'finance_invoices',

@@ -946,6 +946,13 @@
       "when": 1791100300000,
       "tag": "0134_organization_positions_and_tasks",
       "breakpoints": true
+    },
+    {
+      "idx": 135,
+      "version": "7",
+      "when": 1791100300001,
+      "tag": "0135_organization_task_integrity",
+      "breakpoints": true
     }
   ]
 }

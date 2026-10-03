@@ -5,8 +5,10 @@
 
 import { and, eq, isNull } from 'drizzle-orm';
 import type { OrganizationLocationInsert, OrganizationLocationUpdate } from '@mms/shared';
-import { organizationLocations } from '../schema.js';
+import { organizationLocations, organizationPositions } from '../schema.js';
 import { withTenant, withTenantRead } from '../tenant-context.js';
+import { validateOrganizationParent } from './organizationHierarchyValidation.js';
+import { lockFacultyHierarchy } from './facultyAssignmentValidation.js';
 import type { OrganizationLocationRow } from '../schema/organizationLocationTables.js';
 
 const SELECT_COLS = {
@@ -73,6 +75,7 @@ export async function createOrganizationLocation(
 ): Promise<OrganizationLocationRow> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    await validateOrganizationParent(tx, subdomain, 'location', '', data.parentLocationId);
     const [inserted] = await tx
       .insert(organizationLocations)
       .values({
@@ -99,6 +102,7 @@ export async function updateOrganizationLocation(
 ): Promise<OrganizationLocationRow | null> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    await validateOrganizationParent(tx, subdomain, 'location', id, data.parentLocationId);
     const updatePayload: Partial<typeof organizationLocations.$inferInsert> = {
       updatedAt: new Date(),
       updatedBy: userId ?? null,
@@ -125,6 +129,14 @@ export async function deleteOrganizationLocation(
 ): Promise<boolean> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
+    await lockFacultyHierarchy(tx, subdomain);
+    const children = await tx.select({ id: organizationLocations.id }).from(organizationLocations)
+      .where(and(eq(organizationLocations.workspaceSubdomain, subdomain),
+        eq(organizationLocations.parentLocationId, id), isNull(organizationLocations.deletedAt))).limit(1);
+    const positions = await tx.select({ id: organizationPositions.id }).from(organizationPositions)
+      .where(and(eq(organizationPositions.workspaceSubdomain, subdomain),
+        eq(organizationPositions.locationId, id), isNull(organizationPositions.deletedAt))).limit(1);
+    if (children.length || positions.length) throw new Error('Location has active dependents');
     const [deleted] = await tx
       .update(organizationLocations)
       .set({

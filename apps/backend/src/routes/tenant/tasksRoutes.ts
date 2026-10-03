@@ -9,22 +9,19 @@ import {
   taskInsertSchema,
   taskStatusUpdateSchema,
   taskUpdateSchema,
-  roleHasPermission,
   type User,
 } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
 import { registerModuleAccess } from '../../middleware/requireTenantModule.js';
-import { canDeleteCollection, canReadCollection, canWriteCollection } from '../../services/rbacService.js';
+import { canPerformTaskAction } from '../../services/taskPermissionService.js';
+import { mutateTask, TaskDelegationError } from '../../services/taskMutationService.js';
 import {
-  createTask,
   deleteTask,
   findTaskById,
   getTaskMetrics,
   listTasks,
-  updateTask,
   updateTaskStatus,
 } from '../../db/repositories/tasksRepository.js';
-import { validateTaskDelegation } from '../../services/taskDelegationService.js';
 import { getEligibleTaskAssignees } from '../../services/taskEligibleAssigneesService.js';
 import { getTenantTaskSettings, updateTenantTaskSettings } from '../../services/taskSettingsService.js';
 
@@ -37,9 +34,8 @@ export default async function tasksRoutes(
 
   // ── List & Metrics ────────────────────────────────────────────────────────
   fastify.get('/api/tasks', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'tasks')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+    if (!(await canPerformTaskAction(request, 'tasks.read'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     const query = taskListQuerySchema.parse(request.query);
     const result = await listTasks(String(request.tenant?.id), query);
@@ -47,9 +43,8 @@ export default async function tasksRoutes(
   });
 
   fastify.get('/api/tasks/metrics', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'tasks')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+    if (!(await canPerformTaskAction(request, 'tasks.read'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     const metrics = await getTaskMetrics(String(request.tenant?.id));
     return reply.status(200).send(metrics);
@@ -57,12 +52,12 @@ export default async function tasksRoutes(
 
   fastify.get('/api/tasks/eligible-assignees', async (request, reply) => {
     const user = request.user as User;
-    if (!canReadCollection(user, 'tasks')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+    if (!(await canPerformTaskAction(request, 'tasks.read'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     const tenant = String(request.tenant?.id);
     const settings = await getTenantTaskSettings();
-    const canAssignAnywhere = roleHasPermission(user.role, 'tasks.assign_anywhere');
+    const canAssignAnywhere = await canPerformTaskAction(request, 'tasks.assign_anywhere');
     const eligible = await getEligibleTaskAssignees(tenant, user.id, {
       canAssignAnywhere,
       delegationScope: settings.delegationScope,
@@ -72,18 +67,16 @@ export default async function tasksRoutes(
   });
 
   fastify.get('/api/tasks/settings', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'tasks')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+    if (!(await canPerformTaskAction(request, 'tasks.read'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     const settings = await getTenantTaskSettings();
     return reply.status(200).send(settings);
   });
 
-  fastify.put('/api/tasks/settings', async (request, reply) => {
-    const user = request.user as User;
-    if (!canWriteCollection(user, 'tasks')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+  fastify.put('/api/tasks/settings', { config: { moduleAction: 'setupWrite' } }, async (request, reply) => {
+    if (!(await canPerformTaskAction(request, 'settings.global.write'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     try {
       const updated = await updateTenantTaskSettings(request.body);
@@ -94,9 +87,8 @@ export default async function tasksRoutes(
   });
 
   fastify.get<{ Params: { id: string } }>('/api/tasks/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!canReadCollection(user, 'tasks')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+    if (!(await canPerformTaskAction(request, 'tasks.read'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     const task = await findTaskById(String(request.tenant?.id), request.params.id);
     if (!task) {
@@ -108,80 +100,60 @@ export default async function tasksRoutes(
   // ── Mutations ─────────────────────────────────────────────────────────────
   fastify.post('/api/tasks', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'tasks')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+    if (!(await canPerformTaskAction(request, 'tasks.write'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     const parsed = taskInsertSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ message: 'Invalid payload', errors: parsed.error.issues });
     }
 
-    const tenant = String(request.tenant?.id);
-    const settings = await getTenantTaskSettings();
-    const canAssignAnywhere = roleHasPermission(user.role, 'tasks.assign_anywhere');
-
-    const delegation = await validateTaskDelegation(
-      tenant,
-      user.id,
-      parsed.data.assignees ?? [],
-      {
-        canAssignAnywhere,
-        delegationScope: settings.delegationScope,
-        allowSelfAssignment: settings.allowSelfAssignment,
-      },
-    );
-
-    if (!delegation.valid) {
-      return reply.status(403).send({ message: delegation.reason ?? 'Assignment not permitted' });
+    if (parsed.data.assignees.length && !(await canPerformTaskAction(request, 'tasks.assign'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Assignment permission required' });
     }
-
-    const task = await createTask(tenant, parsed.data, delegation.resolvedAssignees, user.id);
-    return reply.status(201).send(task);
+    try {
+      const task = await mutateTask(String(request.tenant?.id), user.id,
+        await canPerformTaskAction(request, 'tasks.assign_anywhere'), { kind: 'create', data: parsed.data });
+      return reply.status(201).send(task);
+    } catch (error) {
+      if (error instanceof TaskDelegationError) {
+        return reply.status(403).send({ type: 'forbidden', message: error.message });
+      }
+      throw error;
+    }
   });
 
   fastify.patch<{ Params: { id: string } }>('/api/tasks/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'tasks')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+    if (!(await canPerformTaskAction(request, 'tasks.write'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     const parsed = taskUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
       return reply.status(400).send({ message: 'Invalid payload', errors: parsed.error.issues });
     }
 
-    const tenant = String(request.tenant?.id);
-    let resolvedAssignees: Array<{ facultyId: string; facultyAssignmentId?: string | null; positionId?: string | null; userId: string }> | undefined;
-
-    if (parsed.data.assignees !== undefined) {
-      const settings = await getTenantTaskSettings();
-      const canAssignAnywhere = roleHasPermission(user.role, 'tasks.assign_anywhere');
-      const delegation = await validateTaskDelegation(
-        tenant,
-        user.id,
-        parsed.data.assignees,
-        {
-          canAssignAnywhere,
-          delegationScope: settings.delegationScope,
-          allowSelfAssignment: settings.allowSelfAssignment,
-        },
-      );
-      if (!delegation.valid) {
-        return reply.status(403).send({ message: delegation.reason ?? 'Assignment not permitted' });
+    if (parsed.data.assignees !== undefined && !(await canPerformTaskAction(request, 'tasks.assign'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Assignment permission required' });
+    }
+    try {
+      const updated = await mutateTask(String(request.tenant?.id), user.id,
+        await canPerformTaskAction(request, 'tasks.assign_anywhere'),
+        { kind: 'update', id: request.params.id, data: parsed.data });
+      if (!updated) return reply.status(404).send({ type: 'not_found', message: 'Task not found' });
+      return reply.status(200).send(updated);
+    } catch (error) {
+      if (error instanceof TaskDelegationError) {
+        return reply.status(403).send({ type: 'forbidden', message: error.message });
       }
-      resolvedAssignees = delegation.resolvedAssignees;
+      throw error;
     }
-
-    const updated = await updateTask(tenant, request.params.id, parsed.data, resolvedAssignees, user.id);
-    if (!updated) {
-      return reply.status(404).send({ message: 'Task not found' });
-    }
-    return reply.status(200).send(updated);
   });
 
   fastify.patch<{ Params: { id: string } }>('/api/tasks/:id/status', async (request, reply) => {
     const user = request.user as User;
-    if (!canWriteCollection(user, 'tasks') && !roleHasPermission(user.role, 'tasks.complete')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+    if (!(await canPerformTaskAction(request, 'tasks.write')) && !(await canPerformTaskAction(request, 'tasks.complete'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     const parsed = taskStatusUpdateSchema.safeParse(request.body);
     if (!parsed.success) {
@@ -196,8 +168,8 @@ export default async function tasksRoutes(
 
   fastify.delete<{ Params: { id: string } }>('/api/tasks/:id', async (request, reply) => {
     const user = request.user as User;
-    if (!canDeleteCollection(user, 'tasks')) {
-      return reply.status(403).send({ message: 'Forbidden' });
+    if (!(await canPerformTaskAction(request, 'tasks.delete'))) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
     }
     const success = await deleteTask(String(request.tenant?.id), request.params.id, user.id);
     return reply.status(200).send({ success });

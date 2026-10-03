@@ -17,11 +17,13 @@ import {
   STUDENTS_MODULE_MANIFEST,
   FACULTY_MODULE_MANIFEST,
   USERS_MODULE_MANIFEST,
+  TASKS_MODULE_MANIFEST,
   type Permission,
 } from '@mms/shared';
 export const WRITE_ROLES = new Set(['admin', 'accountant', 'faculty', 'teacher', 'assistant_teacher']);
 
 export const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
+  tasks: TASKS_MODULE_MANIFEST.permissions.read,
   contacts: CONTACTS_MODULE_MANIFEST.permissions.read,
   students: STUDENTS_MODULE_MANIFEST.permissions.read,
   faculty: FACULTY_MODULE_MANIFEST.permissions.read,
@@ -59,6 +61,7 @@ export const COLLECTION_READ_PERMISSION: Record<string, Permission> = {
 };
 
 export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
+  tasks: TASKS_MODULE_MANIFEST.permissions.write,
   contacts: CONTACTS_MODULE_MANIFEST.permissions.write,
   students: STUDENTS_MODULE_MANIFEST.permissions.write,
   faculty: FACULTY_MODULE_MANIFEST.permissions.write,
@@ -97,6 +100,7 @@ export const COLLECTION_WRITE_PERMISSION: Record<string, Permission> = {
 
 /** Distinct delete permission when the module manifest defines one; else write. */
 export const COLLECTION_DELETE_PERMISSION: Record<string, Permission> = {
+  tasks: TASKS_MODULE_MANIFEST.permissions.delete,
   contacts: CONTACTS_MODULE_MANIFEST.permissions.delete,
   students: STUDENTS_MODULE_MANIFEST.permissions.delete,
   faculty: FACULTY_MODULE_MANIFEST.permissions.delete,

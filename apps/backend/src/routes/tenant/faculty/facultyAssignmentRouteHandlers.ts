@@ -32,6 +32,7 @@ function toFacultyAssignmentEntity(row: FacultyAssignmentRow): FacultyAssignment
     facultyId: row.facultyId,
     departmentId: row.departmentId,
     designationId: row.designationId,
+    positionId: row.positionId,
     reportsToAssignmentId: row.reportsToAssignmentId ?? null,
     isPrimary: Boolean(row.isPrimary),
     startDate: row.startDate,

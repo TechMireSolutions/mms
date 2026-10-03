@@ -3,6 +3,7 @@
  * @description Applies organizational blueprint templates to a tenant workspace.
  */
 
+import { lockFacultyHierarchy } from '../db/repositories/facultyAssignmentValidation.js';
 import { and, eq, isNull } from 'drizzle-orm';
 import { findBlueprintById } from '@mms/shared';
 import {
@@ -10,7 +11,6 @@ import {
   facultyDesignations,
   organizationLocations,
   organizationPositions,
-  workspaces,
 } from '../db/schema.js';
 import { withTenant } from '../db/tenant-context.js';
 
@@ -39,11 +39,7 @@ export async function applyOrganizationBlueprint(
   const subdomain = tenant.trim().toLowerCase();
 
   return withTenant(subdomain, async (tx) => {
-    // 1. Update workspace industry type
-    await tx
-      .update(workspaces)
-      .set({ industryType: blueprint.industryType, updatedAt: new Date() })
-      .where(eq(workspaces.subdomain, subdomain));
+    await lockFacultyHierarchy(tx, subdomain);
 
     // 2. Sync Departments
     const deptMap = new Map<string, string>();
@@ -51,19 +47,17 @@ export async function applyOrganizationBlueprint(
       const existing = await tx
         .select({ id: facultyDepartments.id })
         .from(facultyDepartments)
-        .where(
-          and(
-            eq(facultyDepartments.workspaceSubdomain, subdomain),
-            eq(facultyDepartments.code, d.code),
-            isNull(facultyDepartments.deletedAt),
-          ),
-        )
+        .where(and(
+          eq(facultyDepartments.workspaceSubdomain, subdomain),
+          eq(facultyDepartments.code, d.code),
+          isNull(facultyDepartments.deletedAt),
+        ))
         .limit(1);
 
       if (existing.length > 0 && existing[0]) {
         deptMap.set(d.code, existing[0].id);
       } else {
-        const id = `dept-${d.code.toLowerCase().replace(/[^a-z0-9_-]/g, '')}`;
+        const id = crypto.randomUUID();
         await tx.insert(facultyDepartments).values({
           id,
           workspaceSubdomain: subdomain,
@@ -82,19 +76,17 @@ export async function applyOrganizationBlueprint(
       const existing = await tx
         .select({ id: facultyDesignations.id })
         .from(facultyDesignations)
-        .where(
-          and(
-            eq(facultyDesignations.workspaceSubdomain, subdomain),
-            eq(facultyDesignations.code, dg.code),
-            isNull(facultyDesignations.deletedAt),
-          ),
-        )
+        .where(and(
+          eq(facultyDesignations.workspaceSubdomain, subdomain),
+          eq(facultyDesignations.code, dg.code),
+          isNull(facultyDesignations.deletedAt),
+        ))
         .limit(1);
 
       if (existing.length > 0 && existing[0]) {
         desigMap.set(dg.code, existing[0].id);
       } else {
-        const id = `desig-${dg.code.toLowerCase().replace(/[^a-z0-9_-]/g, '')}`;
+        const id = crypto.randomUUID();
         await tx.insert(facultyDesignations).values({
           id,
           workspaceSubdomain: subdomain,
@@ -112,13 +104,11 @@ export async function applyOrganizationBlueprint(
       const existing = await tx
         .select({ id: organizationLocations.id })
         .from(organizationLocations)
-        .where(
-          and(
-            eq(organizationLocations.workspaceSubdomain, subdomain),
-            eq(organizationLocations.code, loc.code),
-            isNull(organizationLocations.deletedAt),
-          ),
-        )
+        .where(and(
+          eq(organizationLocations.workspaceSubdomain, subdomain),
+          eq(organizationLocations.code, loc.code),
+          isNull(organizationLocations.deletedAt),
+        ))
         .limit(1);
 
       if (existing.length > 0 && existing[0]) {
@@ -138,9 +128,7 @@ export async function applyOrganizationBlueprint(
             updatedBy: userId ?? null,
           })
           .returning({ id: organizationLocations.id });
-        if (inserted) {
-          locMap.set(loc.code, inserted.id);
-        }
+        if (inserted) locMap.set(loc.code, inserted.id);
       }
     }
 
@@ -154,13 +142,11 @@ export async function applyOrganizationBlueprint(
       const existing = await tx
         .select({ id: organizationPositions.id })
         .from(organizationPositions)
-        .where(
-          and(
-            eq(organizationPositions.workspaceSubdomain, subdomain),
-            eq(organizationPositions.code, pos.code),
-            isNull(organizationPositions.deletedAt),
-          ),
-        )
+        .where(and(
+          eq(organizationPositions.workspaceSubdomain, subdomain),
+          eq(organizationPositions.code, pos.code),
+          isNull(organizationPositions.deletedAt),
+        ))
         .limit(1);
 
       if (existing.length > 0 && existing[0]) {
@@ -184,9 +170,7 @@ export async function applyOrganizationBlueprint(
             updatedBy: userId ?? null,
           })
           .returning({ id: organizationPositions.id });
-        if (inserted) {
-          posMap.set(pos.code, inserted.id);
-        }
+        if (inserted) posMap.set(pos.code, inserted.id);
       }
     }
 

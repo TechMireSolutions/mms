@@ -46,6 +46,7 @@ export const facultyAssignmentSchema = z.object({
   facultyId: z.string().min(1).max(100),
   departmentId: z.string().min(1).max(100),
   designationId: z.string().min(1).max(100),
+  positionId: z.string().min(1).max(100).nullable().optional(),
   reportsToAssignmentId: z.string().min(1).max(100).nullable().optional(),
   isPrimary: z.boolean().default(false),
   startDate: isoDate,

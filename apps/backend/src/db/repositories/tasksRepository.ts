@@ -4,59 +4,15 @@
  */
 
 import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
-import type { TaskInsert, TaskListQuery, TaskPriority, TaskRecord, TaskStatus, TaskUpdate } from '@mms/shared';
+import type { TaskListQuery, TaskRecord } from '@mms/shared';
 import { taskAssignees, tasks } from '../schema.js';
-import { withTenant, withTenantRead } from '../tenant-context.js';
-import { fetchAssigneesByTaskIds, syncTaskAssignees } from './tasksAssigneesRepository.js';
-
-const SELECT_COLS = {
-  id: tasks.id,
-  workspaceSubdomain: tasks.workspaceSubdomain,
-  title: tasks.title,
-  description: tasks.description,
-  status: tasks.status,
-  priority: tasks.priority,
-  startDate: tasks.startDate,
-  dueAt: tasks.dueAt,
-  parentTaskId: tasks.parentTaskId,
-  createdByUserId: tasks.createdByUserId,
-  assignedByUserId: tasks.assignedByUserId,
-  completedAt: tasks.completedAt,
-  cancelledAt: tasks.cancelledAt,
-  deletedAt: tasks.deletedAt,
-  deletedBy: tasks.deletedBy,
-  deletionReason: tasks.deletionReason,
-  restoredAt: tasks.restoredAt,
-  restoredBy: tasks.restoredBy,
-  deletedWithCascade: tasks.deletedWithCascade,
-  createdAt: tasks.createdAt,
-  updatedAt: tasks.updatedAt,
-  createdBy: tasks.createdBy,
-  updatedBy: tasks.updatedBy,
-} as const;
+import { withTenantRead } from '../tenant-context.js';
+import { fetchAssigneesByTaskIds } from './tasksAssigneesRepository.js';
 
 export { getTaskMetrics } from './tasksMetricsRepository.js';
-
-function mapTaskRow(
-  r: typeof tasks.$inferSelect,
-  assigneesMap: Map<string, TaskRecord['assignees']>,
-): TaskRecord {
-  return {
-    id: r.id,
-    workspaceSubdomain: r.workspaceSubdomain,
-    title: r.title,
-    description: r.description,
-    status: r.status as TaskStatus,
-    priority: r.priority as TaskPriority,
-    dueAt: r.dueAt ? r.dueAt.toISOString() : null,
-    parentTaskId: r.parentTaskId,
-    createdById: r.createdByUserId,
-    assignees: assigneesMap.get(r.id) ?? [],
-    createdAt: r.createdAt ? r.createdAt.toISOString() : undefined,
-    updatedAt: r.updatedAt ? r.updatedAt.toISOString() : undefined,
-    deletedAt: r.deletedAt ? r.deletedAt.toISOString() : null,
-  };
-}
+export { createTask, updateTask, updateTaskStatus } from './tasksWriteRepository.js';
+export { deleteTask, restoreTask } from './tasksTrashRepository.js';
+import { SELECT_COLS, mapTaskRow } from './tasksRowMapping.js';
 
 export async function listTasks(
   tenant: string,
@@ -143,111 +99,3 @@ export async function findTaskById(tenant: string, id: string): Promise<TaskReco
   });
 }
 
-export async function createTask(
-  tenant: string,
-  data: TaskInsert,
-  resolvedAssignees: Array<{
-    facultyId: string;
-    facultyAssignmentId?: string | null;
-    positionId?: string | null;
-    userId: string;
-  }>,
-  actorUserId?: string,
-): Promise<TaskRecord> {
-  const subdomain = tenant.trim().toLowerCase();
-  const taskId = crypto.randomUUID();
-
-  return withTenant(subdomain, async (tx) => {
-    await tx.insert(tasks).values({
-      id: taskId,
-      workspaceSubdomain: subdomain,
-      title: data.title,
-      description: data.description ?? null,
-      status: data.status ?? 'todo',
-      priority: data.priority ?? 'medium',
-      dueAt: data.dueAt ? new Date(data.dueAt) : null,
-      parentTaskId: data.parentTaskId ?? null,
-      createdByUserId: actorUserId ?? 'system',
-      createdBy: actorUserId ?? null,
-      updatedBy: actorUserId ?? null,
-    });
-
-    if (resolvedAssignees.length > 0) {
-      await syncTaskAssignees(tx, subdomain, taskId, resolvedAssignees, actorUserId);
-    }
-
-    const created = await findTaskById(subdomain, taskId);
-    if (!created) throw new Error('Task creation verification failed');
-    return created;
-  });
-}
-
-export async function updateTask(
-  tenant: string,
-  id: string,
-  data: TaskUpdate,
-  resolvedAssignees?: Array<{
-    facultyId: string;
-    facultyAssignmentId?: string | null;
-    positionId?: string | null;
-    userId: string;
-  }>,
-  actorUserId?: string,
-): Promise<TaskRecord | null> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
-    const payload: Partial<typeof tasks.$inferInsert> = {
-      updatedAt: new Date(),
-      updatedBy: actorUserId ?? null,
-    };
-    if (data.title !== undefined) payload.title = data.title;
-    if (data.description !== undefined) payload.description = data.description ?? null;
-    if (data.status !== undefined) payload.status = data.status;
-    if (data.priority !== undefined) payload.priority = data.priority;
-    if (data.dueAt !== undefined) payload.dueAt = data.dueAt ? new Date(data.dueAt) : null;
-    if (data.parentTaskId !== undefined) payload.parentTaskId = data.parentTaskId ?? null;
-
-    await tx
-      .update(tasks)
-      .set(payload)
-      .where(and(eq(tasks.workspaceSubdomain, subdomain), eq(tasks.id, id), isNull(tasks.deletedAt)));
-
-    if (resolvedAssignees !== undefined) {
-      await syncTaskAssignees(tx, subdomain, id, resolvedAssignees, actorUserId);
-    }
-
-    return findTaskById(subdomain, id);
-  });
-}
-
-export async function updateTaskStatus(
-  tenant: string,
-  id: string,
-  status: TaskStatus,
-  actorUserId?: string,
-): Promise<TaskRecord | null> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
-    await tx
-      .update(tasks)
-      .set({ status, updatedAt: new Date(), updatedBy: actorUserId ?? null })
-      .where(and(eq(tasks.workspaceSubdomain, subdomain), eq(tasks.id, id), isNull(tasks.deletedAt)));
-    return findTaskById(subdomain, id);
-  });
-}
-
-export async function deleteTask(
-  tenant: string,
-  id: string,
-  actorUserId?: string,
-): Promise<boolean> {
-  const subdomain = tenant.trim().toLowerCase();
-  return withTenant(subdomain, async (tx) => {
-    const [deleted] = await tx
-      .update(tasks)
-      .set({ deletedAt: new Date(), deletedBy: actorUserId ?? null })
-      .where(and(eq(tasks.workspaceSubdomain, subdomain), eq(tasks.id, id), isNull(tasks.deletedAt)))
-      .returning({ id: tasks.id });
-    return Boolean(deleted);
-  });
-}

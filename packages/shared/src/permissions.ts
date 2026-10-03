@@ -110,7 +110,7 @@ const PERMISSION_RULES: Readonly<Record<Permission, PermissionRule>> = Object.fr
   "tasks.write": { module: "tasks", requiredActions: ["create", "update"] },
   "tasks.delete": { module: "tasks", requiredActions: ["delete"] },
   "tasks.assign": { module: "tasks", requiredActions: ["create", "update"] },
-  "tasks.assign_anywhere": { module: "tasks", requiredActions: ["create", "update"] },
+  "tasks.assign_anywhere": { module: "tasks.assign_anywhere", requiredActions: ["update"] },
   "tasks.complete": { module: "tasks", requiredActions: ["update"] },
 
   // Users & Administration

@@ -8,9 +8,14 @@ import {
   foreignKey,
   index,
   check,
+  uniqueIndex,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
 import { workspaces } from './platform.js';
+import { faculty } from './faculty.js';
+import { facultyAssignments } from './facultyAssignmentTables.js';
+import { organizationPositions } from './organizationPositionTables.js';
+import { tenantUsers } from './contacts.js';
 import { softDeleteColumns } from './softDeleteSchema.js';
 
 /**
@@ -62,7 +67,7 @@ export const tasks = pgTable('tasks', {
 
   check(
     'tasks_status_check',
-    sql`${table.status} in ('todo', 'in_progress', 'blocked', 'done', 'cancelled')`,
+    sql`${table.status} in ('todo', 'in_progress', 'in_review', 'blocked', 'completed', 'cancelled')`,
   ),
 
   check(
@@ -114,6 +119,24 @@ export const taskAssignees = pgTable('task_assignees', {
     .on(table.workspaceSubdomain, table.deletedAt)
     .where(sql`${table.deletedAt} is not null`),
 
+  uniqueIndex('task_assignees_recipient_active_uidx').on(table.workspaceSubdomain, table.taskId, table.userId)
+    .where(sql`${table.deletedAt} is null`),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.facultyId],
+    foreignColumns: [faculty.workspaceSubdomain, faculty.id],
+  }).onDelete('restrict'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.facultyAssignmentId],
+    foreignColumns: [facultyAssignments.workspaceSubdomain, facultyAssignments.id],
+  }).onDelete('restrict'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.positionId],
+    foreignColumns: [organizationPositions.workspaceSubdomain, organizationPositions.id],
+  }).onDelete('restrict'),
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.userId],
+    foreignColumns: [tenantUsers.workspaceSubdomain, tenantUsers.id],
+  }).onDelete('restrict'),
   foreignKey({
     columns: [table.workspaceSubdomain, table.taskId],
     foreignColumns: [tasks.workspaceSubdomain, tasks.id],

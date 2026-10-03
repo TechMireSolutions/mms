@@ -30,10 +30,14 @@ export async function fetchAssigneesByTaskIds(
       userEmail: tenantUsers.loginEmail,
     })
     .from(taskAssignees)
-    .leftJoin(faculty, eq(taskAssignees.facultyId, faculty.id))
-    .leftJoin(contacts, eq(faculty.contactId, contacts.id))
-    .leftJoin(organizationPositions, eq(taskAssignees.positionId, organizationPositions.id))
-    .leftJoin(tenantUsers, eq(taskAssignees.userId, tenantUsers.id))
+    .leftJoin(faculty, and(eq(taskAssignees.facultyId, faculty.id),
+      eq(faculty.workspaceSubdomain, subdomain), isNull(faculty.deletedAt)))
+    .leftJoin(contacts, and(eq(faculty.contactId, contacts.id),
+      eq(contacts.workspaceSubdomain, subdomain), isNull(contacts.deletedAt)))
+    .leftJoin(organizationPositions, and(eq(taskAssignees.positionId, organizationPositions.id),
+      eq(organizationPositions.workspaceSubdomain, subdomain), isNull(organizationPositions.deletedAt)))
+    .leftJoin(tenantUsers, and(eq(taskAssignees.userId, tenantUsers.id),
+      eq(tenantUsers.workspaceSubdomain, subdomain), isNull(tenantUsers.deletedAt)))
     .where(
       and(
         eq(taskAssignees.workspaceSubdomain, subdomain),
@@ -86,16 +90,10 @@ export async function syncTaskAssignees(
       ),
     );
 
-  for (const a of assignees) {
-    await tx.insert(taskAssignees).values({
-      id: crypto.randomUUID(),
-      workspaceSubdomain: subdomain,
-      taskId,
-      facultyId: a.facultyId,
-      facultyAssignmentId: a.facultyAssignmentId ?? null,
-      positionId: a.positionId ?? null,
-      userId: a.userId,
-      assignedByUserId: actorUserId ?? 'system',
-    });
-  }
+  if (!assignees.length) return;
+  await tx.insert(taskAssignees).values(assignees.map((a) => ({
+    id: crypto.randomUUID(), workspaceSubdomain: subdomain, taskId,
+    facultyId: a.facultyId, facultyAssignmentId: a.facultyAssignmentId ?? null,
+    positionId: a.positionId ?? null, userId: a.userId, assignedByUserId: actorUserId ?? 'system',
+  })));
 }
