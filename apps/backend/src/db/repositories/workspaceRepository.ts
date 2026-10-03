@@ -72,6 +72,7 @@ function rowToWorkspace(ws: {
   madrasaName: string;
   tagline?: string | null;
   country?: string | null;
+  industryType?: string | null;
   enabled: boolean;
   createdAt: Date;
 }): Workspace {
@@ -84,6 +85,7 @@ function rowToWorkspace(ws: {
   };
   if (ws.tagline) item.tagline = ws.tagline;
   if (ws.country) item.country = ws.country;
+  if (ws.industryType) item.industryType = ws.industryType;
   return item;
 }
 

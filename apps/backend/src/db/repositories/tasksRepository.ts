@@ -3,7 +3,7 @@
  * @description Persistence and query operations for tasks.
  */
 
-import { and, desc, eq, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, or, sql } from 'drizzle-orm';
 import type { TaskListQuery, TaskRecord } from '@mms/shared';
 import { taskAssignees, tasks } from '../schema.js';
 import { withTenantRead } from '../tenant-context.js';
@@ -11,7 +11,7 @@ import { fetchAssigneesByTaskIds } from './tasksAssigneesRepository.js';
 
 export { getTaskMetrics } from './tasksMetricsRepository.js';
 export { createTask, updateTask, updateTaskStatus } from './tasksWriteRepository.js';
-export { deleteTask, restoreTask } from './tasksTrashRepository.js';
+export { deleteTask, restoreTask, bulkRestoreTasks } from './tasksTrashRepository.js';
 import { SELECT_COLS, mapTaskRow } from './tasksRowMapping.js';
 
 export async function listTasks(
@@ -22,7 +22,7 @@ export async function listTasks(
   return withTenantRead(subdomain, async (tx) => {
     const conditions = [
       eq(tasks.workspaceSubdomain, subdomain),
-      isNull(tasks.deletedAt),
+      query.includeDeleted ? isNotNull(tasks.deletedAt) : isNull(tasks.deletedAt),
     ];
 
     if (query.status) conditions.push(eq(tasks.status, query.status));

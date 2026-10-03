@@ -54,6 +54,10 @@ vi.mock("@/tenant/features/faculty/components/FacultyDesignationHistory", () => 
   FacultyDesignationHistory: () => <div>faculty.designations.history</div>,
 }));
 
+vi.mock("@/tenant/features/faculty/components/FacultyAssignmentsSection", () => ({
+  FacultyAssignmentsSection: () => <div>faculty.assignments.title</div>,
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string, params?: Record<string, string | number>) => {

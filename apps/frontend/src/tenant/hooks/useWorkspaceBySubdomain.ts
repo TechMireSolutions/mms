@@ -7,6 +7,7 @@ export interface PublicWorkspace {
   madrasaName: string;
   tagline?: string;
   enabled?: boolean;
+  industryType?: string;
 }
 
 export interface WorkspaceLookupResult {

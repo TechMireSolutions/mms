@@ -1,3 +1,5 @@
+import type { IndustryType } from './organizationBlueprintTypes.js';
+
 /** Workspace / tenant record created during onboarding. */
 export interface Workspace {
   id: string;
@@ -5,6 +7,8 @@ export interface Workspace {
   madrasaName: string;
   tagline?: string;
   country?: string;
+  /** Independent industry profile key (modules/blueprint/roles/terminology resolvers). */
+  industryType?: IndustryType | string;
   createdAt: string;
   /** When false, tenant sign-in and app routes are blocked until re-enabled by platform admin. */
   enabled?: boolean;

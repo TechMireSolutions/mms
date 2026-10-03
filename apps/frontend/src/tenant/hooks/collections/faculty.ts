@@ -58,6 +58,11 @@ export {
 } from '@/tenant/features/faculty/hooks/useFacultyDepartments';
 
 export {
+  FACULTY_DESIGNATIONS_QUERY_KEY,
+  useFacultyDesignations,
+} from '@/tenant/features/faculty/hooks/useFacultyDesignations';
+
+export {
   FACULTY_ASSIGNMENTS_QUERY_KEY,
   ASSIGNMENT_SUBORDINATES_QUERY_KEY,
   ASSIGNMENT_MANAGERS_QUERY_KEY,

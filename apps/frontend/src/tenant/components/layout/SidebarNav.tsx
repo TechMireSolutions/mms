@@ -8,6 +8,7 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { isNavPathActive, ROUTES } from "@/lib/config/routes";
 import { prefetchRoute } from "@/lib/routing/routePrefetch";
 import type { NavItem } from "@/lib/config/navConfig";
+import { useIndustryTerminology } from "@/tenant/hooks/useIndustryTerminology";
 
 interface SidebarNavProps {
   collapsed: boolean;
@@ -25,6 +26,14 @@ export function SidebarNav({
   onToggleMenu,
 }: SidebarNavProps): React.JSX.Element {
   const { t } = useTranslation();
+  const terminology = useIndustryTerminology();
+
+  function resolveNavLabel(labelKey: NavItem["labelKey"]): string {
+    if (labelKey === "nav.faculty") return terminology.facultyLabel;
+    if (labelKey === "nav.students") return terminology.studentLabel;
+    // Nav keys are parameter-free; cast avoids union-with-params overload of `t`.
+    return t(labelKey as "nav.dashboard");
+  }
 
   return (
     <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
@@ -56,7 +65,7 @@ export function SidebarNav({
                         exit={{ opacity: 0, width: 0 }}
                         className="text-sm font-medium overflow-hidden whitespace-nowrap"
                       >
-                        {t(item.labelKey)}
+                        {resolveNavLabel(item.labelKey)}
                       </motion.span>
                     )}
                   </AnimatePresence>
@@ -104,7 +113,7 @@ export function SidebarNav({
                           )}
                           <SubIcon className={`w-4 h-4 flex-shrink-0 ${isSubActive ? "text-sidebar-primary" : ""}`} />
                           <span className="text-sm font-medium">
-                            {t(sub.labelKey)}
+                            {resolveNavLabel(sub.labelKey)}
                           </span>
                         </Link>
                       );
@@ -122,7 +131,7 @@ export function SidebarNav({
           <SidebarNavItem
             key={item.path || item.labelKey}
             to={item.path!}
-            label={t(item.labelKey)}
+            label={resolveNavLabel(item.labelKey)}
             icon={item.icon}
             active={isActive}
             showLabel={!collapsed}

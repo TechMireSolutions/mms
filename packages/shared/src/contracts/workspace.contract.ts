@@ -9,6 +9,7 @@ export const workspaceSummarySchema = z.object({
   madrasaName: z.string(),
   tagline: z.string().optional(),
   country: z.string().optional(),
+  industryType: z.string().optional(),
   createdAt: z.string(),
   enabled: z.boolean().optional(),
 });

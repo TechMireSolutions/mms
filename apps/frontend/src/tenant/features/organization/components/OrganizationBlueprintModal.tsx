@@ -24,7 +24,6 @@ export function OrganizationBlueprintModal({
   const { t } = useTranslation();
   const { data: blueprints = [], isLoading } = useOrganizationBlueprints({ enabled: open });
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string>('madrasa-standard-v1');
-  const [replaceExisting, setReplaceExisting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const { data: previewDiff, isLoading: previewLoading } = useOrganizationBlueprintPreview(
@@ -40,12 +39,12 @@ export function OrganizationBlueprintModal({
     try {
       await applyBlueprintMutation.mutateAsync({
         blueprintId: selectedBlueprintId,
-        replaceExisting,
+        replaceExisting: false,
       });
       onApplied?.();
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to apply blueprint');
+      setError(err instanceof Error ? err.message : t('organization.blueprint.applyFailed'));
     }
   };
 
@@ -63,7 +62,7 @@ export function OrganizationBlueprintModal({
             onClick={onClose}
             className="px-3.5 py-1.5 rounded-md border border-input text-sm font-medium hover:bg-muted transition-colors"
           >
-            Cancel
+            {t('common.cancel')}
           </button>
           <button
             type="button"
@@ -72,16 +71,17 @@ export function OrganizationBlueprintModal({
             className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-md bg-primary text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs disabled:opacity-50"
           >
             <Sparkles className="h-4 w-4" />
-            <span>{applyBlueprintMutation.isPending ? 'Applying...' : 'Apply Template'}</span>
+            <span>
+              {applyBlueprintMutation.isPending
+                ? t('organization.blueprint.applying')
+                : t('organization.blueprint.apply')}
+            </span>
           </button>
         </div>
       }
     >
       <div className="space-y-4 py-2">
-        <p className="text-xs text-muted-foreground">
-          Select an industry-standard template to automatically initialize locations, departments,
-          and positions for your organization.
-        </p>
+        <p className="text-xs text-muted-foreground">{t('organization.blueprint.applyHint')}</p>
 
         {error ? (
           <div className="flex items-center gap-2 p-3 rounded-md bg-destructive/10 text-destructive text-xs">
@@ -140,24 +140,9 @@ export function OrganizationBlueprintModal({
           <OrganizationBlueprintDiffGrid previewDiff={previewDiff} />
         ) : null}
 
-        <div className="pt-2 border-t border-border">
-          <label className="flex items-start gap-2.5 cursor-pointer">
-            <input
-              type="checkbox"
-              checked={replaceExisting}
-              onChange={(e) => setReplaceExisting(e.target.checked)}
-              className="mt-0.5 h-4 w-4 rounded border-input text-primary focus:ring-primary"
-            />
-            <div className="text-xs">
-              <span className="font-medium text-foreground">
-                Replace existing unassigned positions and locations
-              </span>
-              <p className="text-muted-foreground">
-                If checked, positions without active assignments will be cleanly refreshed with the new template.
-              </p>
-            </div>
-          </label>
-        </div>
+        <p className="pt-2 border-t border-border text-xs text-muted-foreground">
+          {t('organization.blueprint.applyMissingOnly')}
+        </p>
       </div>
     </Modal>
   );

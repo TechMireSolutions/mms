@@ -1,11 +1,14 @@
 import React, { useState } from 'react';
-import { Sparkles, RefreshCw, ZoomIn, ZoomOut, Maximize2 } from 'lucide-react';
+import { Sparkles, RefreshCw, ZoomIn, ZoomOut, Maximize2, Plus } from 'lucide-react';
+import type { OrganizationPositionTreeNode } from '@mms/shared';
+import { Button } from '@/components/ui/button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useOrganizationTree } from '@/tenant/hooks/collections/organization';
 import { OrganizationPositionNode } from './OrganizationPositionNode';
 import { OrganizationBlueprintModal } from './OrganizationBlueprintModal';
+import { OrganizationPositionFormModal } from './OrganizationPositionFormModal';
 
 export interface OrganizationChartProps {
   canWrite?: boolean;
@@ -16,87 +19,69 @@ export function OrganizationChart({ canWrite = true }: OrganizationChartProps): 
   const { data: tree = [], isLoading, refetch } = useOrganizationTree();
   const [blueprintModalOpen, setBlueprintModalOpen] = useState(false);
   const [scale, setScale] = useState(1);
+  const [parentForCreate, setParentForCreate] = useState<OrganizationPositionTreeNode | null>(null);
+  const [editNode, setEditNode] = useState<OrganizationPositionTreeNode | null>(null);
+  const [positionModalOpen, setPositionModalOpen] = useState(false);
 
-  const handleZoomIn = () => setScale((s) => Math.min(s + 0.1, 1.5));
-  const handleZoomOut = () => setScale((s) => Math.max(s - 0.1, 0.6));
-  const handleResetZoom = () => setScale(1);
+  if (isLoading) return <CardSkeleton count={3} />;
 
-  if (isLoading) {
-    return <CardSkeleton count={3} />;
+  function openCreate(parent: OrganizationPositionTreeNode | null = null) {
+    setEditNode(null);
+    setParentForCreate(parent);
+    setPositionModalOpen(true);
+  }
+
+  function openEdit(node: OrganizationPositionTreeNode) {
+    setParentForCreate(null);
+    setEditNode(node);
+    setPositionModalOpen(true);
   }
 
   return (
     <div className="space-y-4">
-      {/* Chart Control Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-3 p-3 rounded-lg border border-border bg-card shadow-xs">
         <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => void refetch()}
-            className="p-1.5 rounded-md border border-input text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title="Refresh chart"
-          >
+          <Button type="button" variant="outline" size="icon" className="min-h-11 min-w-11" onClick={() => void refetch()} aria-label={t('organization.chart.refresh')}>
             <RefreshCw className="h-4 w-4" />
-          </button>
-
-          <div className="h-4 w-px bg-border mx-1" />
-
-          <button
-            type="button"
-            onClick={handleZoomIn}
-            className="p-1.5 rounded-md border border-input text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title="Zoom in"
-          >
+          </Button>
+          <Button type="button" variant="outline" size="icon" className="min-h-11 min-w-11" onClick={() => setScale((s) => Math.min(s + 0.1, 1.5))} aria-label={t('organization.chart.zoomIn')}>
             <ZoomIn className="h-4 w-4" />
-          </button>
-          <span className="text-xs font-mono text-muted-foreground min-w-[3rem] text-center">
+          </Button>
+          <span className="text-xs font-mono text-muted-foreground min-w-12 text-center">
             {Math.round(scale * 100)}%
           </span>
-          <button
-            type="button"
-            onClick={handleZoomOut}
-            className="p-1.5 rounded-md border border-input text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title="Zoom out"
-          >
+          <Button type="button" variant="outline" size="icon" className="min-h-11 min-w-11" onClick={() => setScale((s) => Math.max(s - 0.1, 0.6))} aria-label={t('organization.chart.zoomOut')}>
             <ZoomOut className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={handleResetZoom}
-            className="p-1.5 rounded-md border border-input text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-            title="Reset zoom"
-          >
+          </Button>
+          <Button type="button" variant="outline" size="icon" className="min-h-11 min-w-11" onClick={() => setScale(1)} aria-label={t('organization.chart.resetZoom')}>
             <Maximize2 className="h-4 w-4" />
-          </button>
+          </Button>
         </div>
 
         {canWrite ? (
-          <button
-            type="button"
-            onClick={() => setBlueprintModalOpen(true)}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs"
-          >
-            <Sparkles className="h-4 w-4" />
-            <span>{t('organization.applyBlueprint')}</span>
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" variant="outline" className="min-h-11 gap-1.5" onClick={() => openCreate(null)}>
+              <Plus className="h-4 w-4" />
+              {t('organization.position.addRoot')}
+            </Button>
+            <Button type="button" className="min-h-11 gap-1.5" onClick={() => setBlueprintModalOpen(true)}>
+              <Sparkles className="h-4 w-4" />
+              {t('organization.applyBlueprint')}
+            </Button>
+          </div>
         ) : null}
       </div>
 
-      {/* Tree Canvas */}
       {tree.length === 0 ? (
         <EmptyState
-          title="No Organization Structure"
-          description="Initialize your organization structure by applying an industry template or creating root positions."
+          title={t('organization.chart.emptyTitle')}
+          description={t('organization.chart.emptyDescription')}
           action={
             canWrite ? (
-              <button
-                type="button"
-                onClick={() => setBlueprintModalOpen(true)}
-                className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-1.5 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs"
-              >
+              <Button type="button" className="min-h-11 gap-1.5" onClick={() => setBlueprintModalOpen(true)}>
                 <Sparkles className="h-4 w-4" />
-                <span>{t('organization.applyBlueprint')}</span>
-              </button>
+                {t('organization.applyBlueprint')}
+              </Button>
             ) : undefined
           }
         />
@@ -111,6 +96,8 @@ export function OrganizationChart({ canWrite = true }: OrganizationChartProps): 
                 key={rootNode.id}
                 node={rootNode}
                 canWrite={canWrite}
+                onSelectPosition={openEdit}
+                onAddChild={(parent) => openCreate(parent)}
               />
             ))}
           </div>
@@ -121,6 +108,12 @@ export function OrganizationChart({ canWrite = true }: OrganizationChartProps): 
         open={blueprintModalOpen}
         onClose={() => setBlueprintModalOpen(false)}
         onApplied={() => void refetch()}
+      />
+      <OrganizationPositionFormModal
+        open={positionModalOpen}
+        onClose={() => setPositionModalOpen(false)}
+        parent={parentForCreate}
+        editNode={editNode}
       />
     </div>
   );

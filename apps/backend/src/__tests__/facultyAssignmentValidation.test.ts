@@ -45,6 +45,40 @@ describe('Faculty assignment production validation', () => {
     tx.execute.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [{ faculty_id: 'f', deleted_at: new Date() }] });
     await expect(validateFacultyAssignment(tx, 'tenant', input)).rejects.toThrow('archived');
   });
+
+  it('rejects position occupancy when department or designation mismatches the position', async () => {
+    assignmentQueries();
+    tx.execute.mockResolvedValueOnce({
+      rows: [{ id: 'pos-1', capacity: 1, department_id: 'other-dept', designation_id: 'g' }],
+    });
+    await expect(
+      validateFacultyAssignment(tx, 'tenant', { ...input, positionId: 'pos-1' }),
+    ).rejects.toThrow('must match its position');
+  });
+
+  it('rejects position occupancy when capacity would be exceeded', async () => {
+    assignmentQueries();
+    tx.execute
+      .mockResolvedValueOnce({
+        rows: [{ id: 'pos-1', capacity: 1, department_id: 'd', designation_id: 'g' }],
+      })
+      .mockResolvedValueOnce({ rows: [{ peak: 2 }] });
+    await expect(
+      validateFacultyAssignment(tx, 'tenant', { ...input, positionId: 'pos-1' }),
+    ).rejects.toThrow('capacity would be exceeded');
+  });
+
+  it('allows a second concurrent assignment for the same faculty on a different position', async () => {
+    assignmentQueries();
+    tx.execute
+      .mockResolvedValueOnce({
+        rows: [{ id: 'pos-2', capacity: 2, department_id: 'd', designation_id: 'g' }],
+      })
+      .mockResolvedValueOnce({ rows: [{ peak: 1 }] });
+    await expect(
+      validateFacultyAssignment(tx, 'tenant', { ...input, id: 'a2', positionId: 'pos-2', isPrimary: false }),
+    ).resolves.toBeUndefined();
+  });
 });
 
 describe('Faculty department production validation', () => {

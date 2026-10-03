@@ -37,7 +37,7 @@ export function invalidateTasksQueries(queryClient: ReturnType<typeof useQueryCl
   return queryClient.invalidateQueries({ queryKey: TASKS_QUERY_KEY });
 }
 
-export function useTasks(query?: TaskListQuery, options: { enabled?: boolean } = {}) {
+export function useTasks(query?: Partial<TaskListQuery>, options: { enabled?: boolean } = {}) {
   const queryParams = new URLSearchParams();
   if (query) {
     if (query.status) queryParams.set('status', query.status);
@@ -46,6 +46,7 @@ export function useTasks(query?: TaskListQuery, options: { enabled?: boolean } =
     if (query.assignedToUserId) queryParams.set('assignedToUserId', query.assignedToUserId);
     if (query.createdById) queryParams.set('createdById', query.createdById);
     if (query.search) queryParams.set('search', query.search);
+    if (query.includeDeleted) queryParams.set('includeDeleted', 'true');
     if (query.limit) queryParams.set('limit', String(query.limit));
     if (query.offset) queryParams.set('offset', String(query.offset));
   }
@@ -128,6 +129,20 @@ export function useDeleteTask() {
     mutationFn: (id: string) =>
       apiJson<{ success: boolean }>(`/api/tasks/${id}`, {
         method: 'DELETE',
+      }),
+    onSuccess: () => {
+      void invalidateTasksQueries(queryClient);
+    },
+  });
+}
+
+export function useRestoreTask() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) =>
+      apiJson<{ success: boolean; task: TaskRecord }>(`/api/tasks/${id}/restore`, {
+        method: 'POST',
+        body: JSON.stringify({}),
       }),
     onSuccess: () => {
       void invalidateTasksQueries(queryClient);

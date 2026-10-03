@@ -4,6 +4,7 @@
  */
 
 import { z } from 'zod';
+import { LOCATION_TYPES } from './organizationModuleManifest.js';
 
 export const INDUSTRY_TYPES = ['madrasa', 'hotel', 'office', 'retail', 'custom', 'general'] as const;
 export type IndustryType = (typeof INDUSTRY_TYPES)[number];
@@ -11,7 +12,7 @@ export type IndustryType = (typeof INDUSTRY_TYPES)[number];
 export const blueprintLocationSchema = z.object({
   code: z.string().min(1).max(64),
   name: z.string().min(1).max(255),
-  type: z.enum(['campus', 'building', 'wing', 'floor', 'hall', 'room', 'facility']).default('building'),
+  type: z.enum(LOCATION_TYPES).default('branch'),
   parentCode: z.string().max(64).optional(),
 });
 
@@ -66,10 +67,10 @@ export const MADRASA_STANDARD_V1_BLUEPRINT: OrganizationBlueprint = {
   description: 'Traditional hierarchy covering Mohtamim, Taleemat, Tarbiyah, Hifz, and Dars-e-Nizami.',
   locations: [
     { code: 'CAMPUS-MAIN', name: 'Main Campus', type: 'campus' },
-    { code: 'ACAD-BLOCK', name: 'Academic Block', type: 'building', parentCode: 'CAMPUS-MAIN' },
-    { code: 'ADMIN-WING', name: 'Administration Wing', type: 'wing', parentCode: 'CAMPUS-MAIN' },
-    { code: 'DAR-UL-IQAMA', name: 'Hostel & Residence', type: 'building', parentCode: 'CAMPUS-MAIN' },
-    { code: 'LIBRARY-HALL', name: 'Central Kutubkhana (Library)', type: 'hall', parentCode: 'ACAD-BLOCK' },
+    { code: 'ACAD-BLOCK', name: 'Academic Block', type: 'site', parentCode: 'CAMPUS-MAIN' },
+    { code: 'ADMIN-WING', name: 'Administration Wing', type: 'site', parentCode: 'CAMPUS-MAIN' },
+    { code: 'DAR-UL-IQAMA', name: 'Hostel & Residence', type: 'site', parentCode: 'CAMPUS-MAIN' },
+    { code: 'LIBRARY-HALL', name: 'Central Kutubkhana (Library)', type: 'site', parentCode: 'ACAD-BLOCK' },
   ],
   departments: [
     { code: 'ADMIN', name: 'General Administration' },
@@ -109,10 +110,10 @@ export const HOTEL_STANDARD_V1_BLUEPRINT: OrganizationBlueprint = {
   version: 1,
   description: 'Hospitality hierarchy covering General Manager, Front Office, Housekeeping, and Food & Beverage.',
   locations: [
-    { code: 'HOTEL-MAIN', name: 'Main Property / Hotel', type: 'facility' },
-    { code: 'TOWER-A', name: 'Guest Tower A', type: 'building', parentCode: 'HOTEL-MAIN' },
-    { code: 'LOBBY-WING', name: 'Lobby & Reception', type: 'wing', parentCode: 'HOTEL-MAIN' },
-    { code: 'RESTAURANT-DINING', name: 'Dining & Kitchen Facility', type: 'hall', parentCode: 'HOTEL-MAIN' },
+    { code: 'HOTEL-MAIN', name: 'Main Property / Hotel', type: 'hotel' },
+    { code: 'TOWER-A', name: 'Guest Tower A', type: 'site', parentCode: 'HOTEL-MAIN' },
+    { code: 'LOBBY-WING', name: 'Lobby & Reception', type: 'site', parentCode: 'HOTEL-MAIN' },
+    { code: 'RESTAURANT-DINING', name: 'Dining & Kitchen Facility', type: 'site', parentCode: 'HOTEL-MAIN' },
   ],
   departments: [
     { code: 'EXECUTIVE', name: 'Executive Management' },
@@ -149,9 +150,9 @@ export const OFFICE_STANDARD_V1_BLUEPRINT: OrganizationBlueprint = {
   version: 1,
   description: 'Enterprise office hierarchy covering Executive, Product, Engineering, and People Ops.',
   locations: [
-    { code: 'HQ', name: 'Corporate Headquarters', type: 'facility' },
-    { code: 'FLOOR-1', name: 'Executive & Admin Floor', type: 'floor', parentCode: 'HQ' },
-    { code: 'FLOOR-2', name: 'Engineering & Product Floor', type: 'floor', parentCode: 'HQ' },
+    { code: 'HQ', name: 'Corporate Headquarters', type: 'head_office' },
+    { code: 'FLOOR-1', name: 'Executive & Admin Floor', type: 'site', parentCode: 'HQ' },
+    { code: 'FLOOR-2', name: 'Engineering & Product Floor', type: 'site', parentCode: 'HQ' },
   ],
   departments: [
     { code: 'EXECUTIVE', name: 'Executive Leadership' },
@@ -184,9 +185,9 @@ export const RETAIL_STANDARD_V1_BLUEPRINT: OrganizationBlueprint = {
   version: 1,
   description: 'Retail organization covering Store Leadership, Floor Operations, Inventory, and Cashiering.',
   locations: [
-    { code: 'STORE-MAIN', name: 'Main Retail Store', type: 'facility' },
-    { code: 'SALES-FLOOR', name: 'Sales Floor', type: 'hall', parentCode: 'STORE-MAIN' },
-    { code: 'WAREHOUSE', name: 'Inventory & Backroom', type: 'wing', parentCode: 'STORE-MAIN' },
+    { code: 'STORE-MAIN', name: 'Main Retail Store', type: 'store' },
+    { code: 'SALES-FLOOR', name: 'Sales Floor', type: 'site', parentCode: 'STORE-MAIN' },
+    { code: 'WAREHOUSE', name: 'Inventory & Backroom', type: 'site', parentCode: 'STORE-MAIN' },
   ],
   departments: [
     { code: 'STORE-OPS', name: 'Store Management' },

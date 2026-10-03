@@ -17,6 +17,7 @@ export {
   useUpdateTask,
   useUpdateTaskStatus,
   useDeleteTask,
+  useRestoreTask,
   useEligibleTaskAssignees,
   useTaskSettings,
   useUpdateTaskSettings,

@@ -45,3 +45,44 @@ export async function restoreTask(tenant: string, id: string, actorUserId: strin
     return findTaskById(tenant, id);
   });
 }
+
+export async function bulkRestoreTasks(
+  tenant: string,
+  ids: string[],
+  actorUserId: string,
+): Promise<{ restoredIds: string[] }> {
+  const restoredIds: string[] = [];
+  for (const id of ids.slice(0, 500)) {
+    const restored = await restoreTask(tenant, id, actorUserId);
+    if (restored) restoredIds.push(id);
+  }
+  return { restoredIds };
+}
+
+/** Soft-delete multiple tasks; skips rows with active subtasks. */
+export async function bulkDeleteTasks(
+  tenant: string,
+  ids: string[],
+  actorUserId: string,
+): Promise<{ deletedIds: string[] }> {
+  return withTenant(tenant, async (tx) => {
+    await lockFacultyHierarchy(tx, tenant);
+    const deletedIds: string[] = [];
+    const now = new Date();
+    for (const id of ids.slice(0, 500)) {
+      const children = await tx.select({ id: tasks.id }).from(tasks).where(and(
+        eq(tasks.workspaceSubdomain, tenant), eq(tasks.parentTaskId, id), isNull(tasks.deletedAt))).limit(1);
+      if (children.length) continue;
+      const [changed] = await tx.update(tasks).set({ deletedAt: now, deletedBy: actorUserId, updatedAt: now })
+        .where(and(eq(tasks.workspaceSubdomain, tenant), eq(tasks.id, id), isNull(tasks.deletedAt)))
+        .returning({ id: tasks.id });
+      if (!changed) continue;
+      deletedIds.push(id);
+      await recordModernAuditEvent(tx, { workspaceSubdomain: tenant, tableName: 'tasks', recordId: id,
+        actionType: 'DELETE', realUserId: actorUserId });
+      await emitOutboxEvent(tx, 'entity.soft_deleted', { entityType: 'tasks', entityId: id, tenantId: tenant,
+        deletedAt: now.toISOString(), deletedBy: actorUserId, version: now.getTime() });
+    }
+    return { deletedIds };
+  });
+}

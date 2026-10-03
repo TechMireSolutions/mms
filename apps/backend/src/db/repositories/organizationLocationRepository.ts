@@ -85,7 +85,16 @@ export async function createOrganizationLocation(
         name: data.name.trim(),
         type: data.type,
         parentLocationId: data.parentLocationId ?? null,
-        addressLine1: data.address?.trim() ?? null,
+        addressLine1: data.addressLine1?.trim() ?? null,
+        addressLine2: data.addressLine2?.trim() ?? null,
+        city: data.city?.trim() ?? null,
+        region: data.region?.trim() ?? null,
+        country: data.country?.trim() ?? null,
+        postalCode: data.postalCode?.trim() ?? null,
+        timezone: data.timezone?.trim() ?? null,
+        isHeadOffice: data.isHeadOffice ?? false,
+        isActive: data.isActive ?? true,
+        sortOrder: data.sortOrder ?? 0,
         createdBy: userId ?? null,
         updatedBy: userId ?? null,
       })
@@ -111,7 +120,16 @@ export async function updateOrganizationLocation(
     if (data.name !== undefined) updatePayload.name = data.name.trim();
     if (data.type !== undefined) updatePayload.type = data.type;
     if (data.parentLocationId !== undefined) updatePayload.parentLocationId = data.parentLocationId ?? null;
-    if (data.address !== undefined) updatePayload.addressLine1 = data.address?.trim() ?? null;
+    if (data.addressLine1 !== undefined) updatePayload.addressLine1 = data.addressLine1?.trim() ?? null;
+    if (data.addressLine2 !== undefined) updatePayload.addressLine2 = data.addressLine2?.trim() ?? null;
+    if (data.city !== undefined) updatePayload.city = data.city?.trim() ?? null;
+    if (data.region !== undefined) updatePayload.region = data.region?.trim() ?? null;
+    if (data.country !== undefined) updatePayload.country = data.country?.trim() ?? null;
+    if (data.postalCode !== undefined) updatePayload.postalCode = data.postalCode?.trim() ?? null;
+    if (data.timezone !== undefined) updatePayload.timezone = data.timezone?.trim() ?? null;
+    if (data.isHeadOffice !== undefined) updatePayload.isHeadOffice = data.isHeadOffice;
+    if (data.isActive !== undefined) updatePayload.isActive = data.isActive;
+    if (data.sortOrder !== undefined) updatePayload.sortOrder = data.sortOrder;
 
     const [updated] = await tx
       .update(organizationLocations)

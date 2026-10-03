@@ -96,6 +96,10 @@ export const taskListQuerySchema = z.object({
   assignedToUserId: z.string().uuid().optional(),
   createdById: z.string().uuid().optional(),
   search: z.string().optional(),
+  includeDeleted: z
+    .union([z.boolean(), z.literal('true'), z.literal('false')])
+    .optional()
+    .transform((v) => v === true || v === 'true'),
   limit: z.coerce.number().int().min(1).max(500).default(50),
   offset: z.coerce.number().int().min(0).default(0),
 }).strict();

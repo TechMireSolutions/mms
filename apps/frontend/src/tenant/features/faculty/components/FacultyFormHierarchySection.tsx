@@ -3,6 +3,7 @@ import { Network, BadgeCheck } from "lucide-react";
 import { Field } from "@/components/ui/FormPrimitives";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { SectionCard } from "@/components/ui/SectionCard";
+import { WarningCallout } from "@/components/ui/WarningCallout";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   type Faculty,
@@ -44,6 +45,12 @@ export function FacultyFormHierarchySection(props: FacultyFormHierarchySectionPr
         icon={Network}
         accentColor="primary"
       >
+        <WarningCallout
+          className="mb-4"
+          density="compact"
+          tone="info"
+          title={t("faculty.form.hierarchyDeprecatedNotice")}
+        />
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
           {showHierarchyRank && (
             <div className="rounded-xl border border-border/60 bg-muted/30 p-3" id="hierarchyRank">

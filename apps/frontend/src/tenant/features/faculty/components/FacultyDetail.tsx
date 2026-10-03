@@ -15,6 +15,7 @@ import { FacultyDetailNotesSection } from "@/tenant/features/faculty/components/
 import { FacultyDetailQuickActions } from "@/tenant/features/faculty/components/FacultyDetailQuickActions";
 import { FacultyDetailSessionsSection } from "@/tenant/features/faculty/components/FacultyDetailSessionsSection";
 import { FacultyDesignationHistory } from "@/tenant/features/faculty/components/FacultyDesignationHistory";
+import { FacultyAssignmentsSection } from "@/tenant/features/faculty/components/FacultyAssignmentsSection";
 import {
   resolveFacultyDisplayName,
 } from "@/tenant/features/faculty/components/facultyFieldDisplay";
@@ -153,6 +154,7 @@ export function FacultyDetail({
         error={sessionsError}
       />
 
+      {!isArchived ? <FacultyAssignmentsSection faculty={effectiveFaculty} canEdit={Boolean(onEdit)} /> : null}
       {!isArchived ? <FacultyDesignationHistory faculty={effectiveFaculty} canEdit={Boolean(onEdit)} /> : null}
 
       {faculty.notes && isFieldEnabled("notes") && (

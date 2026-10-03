@@ -90,11 +90,13 @@ export async function createOrganizationPosition(
         workspaceSubdomain: subdomain,
         code: data.code.trim().toUpperCase(),
         name: data.name.trim(),
-        departmentId: data.departmentId,
-        designationId: data.designationId,
+        departmentId: data.departmentId ?? null,
+        designationId: data.designationId ?? null,
         locationId: data.locationId ?? null,
         parentPositionId: data.parentPositionId ?? null,
         capacity: data.capacity ?? 1,
+        sortOrder: data.sortOrder ?? 0,
+        isActive: data.isActive ?? true,
         createdBy: userId ?? null,
         updatedBy: userId ?? null,
       })
@@ -118,11 +120,13 @@ export async function updateOrganizationPosition(
     };
     if (data.code !== undefined) updatePayload.code = data.code.trim().toUpperCase();
     if (data.name !== undefined) updatePayload.name = data.name.trim();
-    if (data.departmentId !== undefined) updatePayload.departmentId = data.departmentId;
-    if (data.designationId !== undefined) updatePayload.designationId = data.designationId;
+    if (data.departmentId !== undefined) updatePayload.departmentId = data.departmentId ?? null;
+    if (data.designationId !== undefined) updatePayload.designationId = data.designationId ?? null;
     if (data.locationId !== undefined) updatePayload.locationId = data.locationId ?? null;
     if (data.parentPositionId !== undefined) updatePayload.parentPositionId = data.parentPositionId ?? null;
     if (data.capacity !== undefined) updatePayload.capacity = data.capacity;
+    if (data.sortOrder !== undefined) updatePayload.sortOrder = data.sortOrder;
+    if (data.isActive !== undefined) updatePayload.isActive = data.isActive;
 
     const [updated] = await tx
       .update(organizationPositions)

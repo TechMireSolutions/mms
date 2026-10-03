@@ -63,6 +63,15 @@ vi.mock('@/tenant/hooks/collections/organization', () => ({
     mutateAsync: vi.fn(),
     isPending: false,
   }),
+  useOrganizationLocations: () => ({ data: [], isLoading: false }),
+  useOrganizationPositions: () => ({ data: [], isLoading: false }),
+  useCreatePosition: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useUpdatePosition: () => ({ mutateAsync: vi.fn(), isPending: false }),
+}));
+
+vi.mock('@/tenant/hooks/collections/faculty', () => ({
+  useFacultyDepartments: () => ({ data: [] }),
+  useFacultyDesignations: () => ({ data: [] }),
 }));
 
 describe('OrganizationChart', () => {
@@ -77,7 +86,7 @@ describe('OrganizationChart', () => {
     mockTreeData = [];
     mockIsLoading = false;
     const html = renderToStaticMarkup(<OrganizationChart />);
-    expect(html).toContain('No Organization Structure');
+    expect(html).toContain('organization.chart.emptyTitle');
   });
 
   it('renders tree root nodes when tree has items', () => {

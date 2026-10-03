@@ -5,7 +5,9 @@ import { TASKS_MODULE_MANIFEST, type TaskRecord, type TaskInsert, type TaskStatu
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ResponsiveAccordionTabs } from '@/components/ui/ResponsiveAccordionTabs';
+import { useTrashMode } from '@/hooks/useTrashMode';
 import { useTranslation } from '@/hooks/useTranslation';
+import { notify } from '@/lib/notify';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
 import {
   useTasks,
@@ -14,6 +16,7 @@ import {
   useUpdateTask,
   useUpdateTaskStatus,
   useDeleteTask,
+  useRestoreTask,
 } from '@/tenant/hooks/collections/tasks';
 import { TasksWorkTab } from './components/TasksWorkTab';
 import { TasksReportsTab } from './components/TasksReportsTab';
@@ -25,25 +28,32 @@ export default function TasksPage(): React.JSX.Element {
   const [activeTab, setActiveTab] = useState<'work' | 'reports' | 'setup'>('work');
   const [formOpen, setFormOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<TaskRecord | null>(null);
+  const [viewingDeleted, setViewingDeleted] = useTrashMode();
 
-  const { canWrite, canDelete, canEditSetup } = useModulePermissions(TASKS_MODULE_MANIFEST);
+  const { canRead, canWrite, canDelete, canEditSetup, canViewSetup } =
+    useModulePermissions(TASKS_MODULE_MANIFEST);
 
-  const { data: tasksData, isLoading: tasksLoading } = useTasks();
-  const { data: metrics } = useTaskMetrics();
+  const { data: tasksData, isLoading: tasksLoading } = useTasks({
+    includeDeleted: viewingDeleted,
+  });
+  const { data: metrics } = useTaskMetrics({ enabled: !viewingDeleted });
 
   const createTaskMutation = useCreateTask();
   const updateTaskMutation = useUpdateTask();
   const updateStatusMutation = useUpdateTaskStatus();
   const deleteTaskMutation = useDeleteTask();
+  const restoreTaskMutation = useRestoreTask();
 
   const tasks = tasksData?.tasks ?? [];
 
   const handleOpenCreate = () => {
+    if (viewingDeleted) return;
     setEditingTask(null);
     setFormOpen(true);
   };
 
   const handleOpenEdit = (task: TaskRecord) => {
+    if (viewingDeleted) return;
     setEditingTask(task);
     setFormOpen(true);
   };
@@ -57,19 +67,36 @@ export default function TasksPage(): React.JSX.Element {
   };
 
   const handleUpdateStatus = (id: string, status: TaskStatus) => {
+    if (viewingDeleted) return;
     updateStatusMutation.mutate({ id, status });
   };
 
   const handleDelete = (id: string) => {
-    if (window.confirm('Are you sure you want to delete this task?')) {
-      deleteTaskMutation.mutate(id);
-    }
+    deleteTaskMutation.mutate(id, {
+      onSuccess: () => {
+        notify.archivedWithUndo(t('common.recordArchived'), () => {
+          void restoreTaskMutation.mutateAsync(id);
+        });
+      },
+      onError: (err) => {
+        notify.error(err instanceof Error ? err.message : t('tasks.deleteFailed'));
+      },
+    });
+  };
+
+  const handleRestore = (id: string) => {
+    restoreTaskMutation.mutate(id, {
+      onSuccess: () => notify.success(t('tasks.restored')),
+      onError: (err) => {
+        notify.error(err instanceof Error ? err.message : t('tasks.restoreFailed'));
+      },
+    });
   };
 
   const pageTabs = [
     { id: 'work', label: t('nav.tasks') },
-    { id: 'reports', label: 'Reports' },
-    { id: 'setup', label: 'Setup' },
+    ...(canRead ? [{ id: 'reports' as const, label: t('module.reports') }] : []),
+    ...(canViewSetup ? [{ id: 'setup' as const, label: t('module.setup') }] : []),
   ];
 
   return (
@@ -81,9 +108,18 @@ export default function TasksPage(): React.JSX.Element {
       headerSubtitle={t('page.tasks.subtitle')}
       metricsStrip={
         <div className="flex items-center gap-4 text-xs font-medium text-muted-foreground">
-          <span>Total: <strong className="text-foreground">{metrics?.total ?? tasks.length}</strong></span>
-          <span>In Progress: <strong className="text-foreground">{metrics?.inProgress ?? 0}</strong></span>
-          <span>Completed: <strong className="text-foreground">{metrics?.completed ?? 0}</strong></span>
+          <span>
+            {t('tasks.metrics.total')}:{' '}
+            <strong className="text-foreground">{metrics?.total ?? tasks.length}</strong>
+          </span>
+          <span>
+            {t('tasks.metrics.inProgress')}:{' '}
+            <strong className="text-foreground">{metrics?.inProgress ?? 0}</strong>
+          </span>
+          <span>
+            {t('tasks.metrics.completed')}:{' '}
+            <strong className="text-foreground">{metrics?.completed ?? 0}</strong>
+          </span>
         </div>
       }
     >
@@ -99,36 +135,33 @@ export default function TasksPage(): React.JSX.Element {
               <TasksWorkTab
                 tasks={tasks}
                 isLoading={tasksLoading}
-                canWrite={canWrite}
+                canWrite={canWrite && !viewingDeleted}
                 canDelete={canDelete}
+                viewingDeleted={viewingDeleted}
+                onToggleTrash={setViewingDeleted}
                 onAddNew={handleOpenCreate}
                 onEdit={handleOpenEdit}
                 onDelete={handleDelete}
+                onRestore={handleRestore}
                 onUpdateStatus={handleUpdateStatus}
               />
             )}
 
-            {activeTab === 'reports' && <TasksReportsTab />}
+            {activeTab === 'reports' && canRead ? <TasksReportsTab /> : null}
 
-            {activeTab === 'setup' && (
+            {activeTab === 'setup' && canViewSetup ? (
               <TasksSetupTab canEditSetup={canEditSetup} />
-            )}
+            ) : null}
           </ModuleTierMotion>
         </AnimatePresence>
       </ResponsiveAccordionTabs>
 
       <TaskFormModal
         open={formOpen}
-        onClose={() => {
-          setFormOpen(false);
-          setEditingTask(null);
-        }}
+        onClose={() => setFormOpen(false)}
         initialData={editingTask}
         onSave={handleSave}
-        saving={createTaskMutation.isPending || updateTaskMutation.isPending}
       />
     </ModulePageShell>
   );
 }
-
-export { TasksPage };

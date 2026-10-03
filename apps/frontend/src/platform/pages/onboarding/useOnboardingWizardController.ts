@@ -85,7 +85,7 @@ export function useOnboardingWizardController() {
     setLoading(true);
 
     try {
-      await onboard({
+      const result = await onboard({
         madrasaName: data.name.trim(),
         tagline: DEFAULT_BRANDING_SETTINGS.tagline,
         adminName: `${data.firstName} ${data.lastName}`.trim(),
@@ -100,6 +100,11 @@ export function useOnboardingWizardController() {
       notify.success(t("platform.workspaceCreatedToast"), {
         description: data.subdomain,
       });
+      if (result.blueprintApplyWarning) {
+        notify.warning(t("organization.blueprint.applyFailed"), {
+          description: result.blueprintApplyWarning,
+        });
+      }
       void queryClient.invalidateQueries({ queryKey: PLATFORM_QUERY_KEYS.workspaces });
       void queryClient.invalidateQueries({ queryKey: PLATFORM_QUERY_KEYS.workspaceRegistry });
 

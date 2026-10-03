@@ -16,7 +16,6 @@ import { registerModuleAccess } from '../../middleware/requireTenantModule.js';
 import { canPerformTaskAction } from '../../services/taskPermissionService.js';
 import { mutateTask, TaskDelegationError } from '../../services/taskMutationService.js';
 import {
-  deleteTask,
   findTaskById,
   getTaskMetrics,
   listTasks,
@@ -24,6 +23,7 @@ import {
 } from '../../db/repositories/tasksRepository.js';
 import { getEligibleTaskAssignees } from '../../services/taskEligibleAssigneesService.js';
 import { getTenantTaskSettings, updateTenantTaskSettings } from '../../services/taskSettingsService.js';
+import { registerTasksSoftDeleteRoutes } from './tasksSoftDeleteRoutes.js';
 
 export default async function tasksRoutes(
   fastify: FastifyInstance,
@@ -166,12 +166,5 @@ export default async function tasksRoutes(
     return reply.status(200).send(updated);
   });
 
-  fastify.delete<{ Params: { id: string } }>('/api/tasks/:id', async (request, reply) => {
-    const user = request.user as User;
-    if (!(await canPerformTaskAction(request, 'tasks.delete'))) {
-      return reply.status(403).send({ type: 'forbidden', message: 'Forbidden' });
-    }
-    const success = await deleteTask(String(request.tenant?.id), request.params.id, user.id);
-    return reply.status(200).send({ success });
-  });
+  await registerTasksSoftDeleteRoutes(fastify);
 }
