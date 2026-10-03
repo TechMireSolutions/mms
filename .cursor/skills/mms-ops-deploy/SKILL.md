@@ -4,7 +4,7 @@ description: Operates the MMS production deployment on Hetzner — Apache vhost 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-24
+  last-verified: 2026-10-03
 compatibility: Requires SSH access to the Hetzner VPS and PM2/Apache on the server; never run against production without an explicit instruction.
 ---
 
@@ -20,6 +20,9 @@ Operational procedure for deploying, configuring, and verifying the production M
 - **Automated Deployments**: Deploy exclusively via GitHub Actions artifacts (`deploy.yml` → `deploy-on-server.sh`). Never edit code directly on production hosts.
 - **Strict Apache Vhost Isolation**: Foreign domains must never proxy to MMS (`apply-production-host-isolation.sh`).
 - **Database Safety**: Schema migrations run forward-only on server boot (`initDb`). `drizzle-kit push` is strictly banned in production.
+- **Rollback-Compatible Migrations**: `deploy-rollback.sh` restores only `dist/`; migrations already applied stay applied. Every migration must be expand/contract — release N-1 must keep running against release N's schema — or automated rollback leaves a broken site.
+- **Build Once, Promote**: CI's push run on `main` builds, checksums, and attests `mms-dist.tar.gz`; `deploy.yml` downloads that artifact and runs `gh attestation verify` before shipping it. Only manual `workflow_dispatch` rebuilds, and it must target a commit on `main` with green CI unless `allow_unverified` is set.
+- **SSH Trust & Secrets**: Host key is pinned via the `SSH_KNOWN_HOSTS` secret (`.github/actions/ssh-setup`). Remote steps run through `scripts/ci/ssh-exec.sh`, which streams `%q`-quoted env over stdin — never interpolate secrets into the ssh argv. No GitHub token is sent to the server (public repo, anonymous fetch).
 - **Do Not Set MMS_API_URL**: Platform serves unified apex + tenant routes from `https://${MMS_APP_DOMAIN}`. Deploy scripts strip legacy `MMS_API_URL`.
 
 ## 2. Domain & Subdomain Architecture

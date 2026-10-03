@@ -3,6 +3,10 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     target-branch: "main"
+    # Let new releases age before adopting them (supply-chain hygiene);
+    # security updates are not delayed by cooldown.
+    cooldown:
+      default-days: 7
     schedule:
       interval: "weekly"
       day: "sunday"
@@ -24,6 +28,10 @@ updates:
   - package-ecosystem: "npm"
     directory: "/"
     target-branch: "main"
+    # Let new releases age before adopting them (supply-chain hygiene);
+    # security updates are not delayed by cooldown.
+    cooldown:
+      default-days: 7
     schedule:
       interval: "weekly"
       day: "sunday"
@@ -66,6 +74,10 @@ updates:
   - package-ecosystem: "npm"
     directory: "/apps/backend"
     target-branch: "main"
+    # Let new releases age before adopting them (supply-chain hygiene);
+    # security updates are not delayed by cooldown.
+    cooldown:
+      default-days: 7
     schedule:
       interval: "weekly"
       day: "sunday"
@@ -103,6 +115,10 @@ updates:
   - package-ecosystem: "npm"
     directory: "/apps/frontend"
     target-branch: "main"
+    # Let new releases age before adopting them (supply-chain hygiene);
+    # security updates are not delayed by cooldown.
+    cooldown:
+      default-days: 7
     schedule:
       interval: "weekly"
       day: "sunday"
@@ -144,6 +160,10 @@ updates:
   - package-ecosystem: "npm"
     directory: "/packages/shared"
     target-branch: "main"
+    # Let new releases age before adopting them (supply-chain hygiene);
+    # security updates are not delayed by cooldown.
+    cooldown:
+      default-days: 7
     schedule:
       interval: "weekly"
       day: "sunday"
@@ -171,6 +191,10 @@ updates:
   - package-ecosystem: "npm"
     directory: "/e2e"
     target-branch: "main"
+    # Let new releases age before adopting them (supply-chain hygiene);
+    # security updates are not delayed by cooldown.
+    cooldown:
+      default-days: 7
     schedule:
       interval: "weekly"
       day: "sunday"
