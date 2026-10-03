@@ -50,7 +50,7 @@ export const facultyContract = c.router({
     method: 'POST',
     path: '/api/faculty',
     body: facultyWriteSchema,
-    responses: { 200: facultyWrappedResponseSchema, 201: facultyWrappedResponseSchema, 403: errorResponse, 400: errorResponse, 500: errorResponse },
+    responses: { 200: facultyWrappedResponseSchema, 201: facultyWrappedResponseSchema, 403: errorResponse, 400: errorResponse, 409: errorResponse, 500: errorResponse },
     summary: 'Create a faculty member',
   },
   update: {

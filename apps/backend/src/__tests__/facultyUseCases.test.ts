@@ -107,6 +107,7 @@ function createFakeRepo() {
       listActiveMissingEmployeeId: vi.fn(async () => []),
       findRegistrationConflict: vi.fn(async () => null),
       bulkUpdateStatusSql: vi.fn(async () => 0),
+      guardAssignmentDependents: vi.fn().mockResolvedValue(undefined),
       countSubordinates: vi.fn(async (_tenant: string, id: string) => {
         return [...store.values()].filter(
           (s) => (s as { reportingFacultyId?: string }).reportingFacultyId === id && !s.deletedAt,
@@ -177,7 +178,7 @@ describe('createFacultyUseCases (DI composition root)', () => {
     expect(restored).toBe(false);
     expect(typeof record.id).toBe('string');
     expect(String(record.id).length).toBeGreaterThan(0);
-    expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ specialization: 'Qaidah' }));
+    expect(repo.save).toHaveBeenCalledWith('demo', expect.objectContaining({ specialization: 'Qaidah' }), { createOnly: true });
     expect(mockBroadcastCollection).toHaveBeenCalledWith('faculty');
   });
 
@@ -199,7 +200,7 @@ describe('createFacultyUseCases (DI composition root)', () => {
     expect(record).not.toHaveProperty('phone');
     expect(record).not.toHaveProperty('email');
     expect(record).not.toHaveProperty('gender');
-    expect(repo.save).toHaveBeenCalledWith('demo', expect.not.objectContaining({ name: 'Should Strip' }));
+    expect(repo.save).toHaveBeenCalledWith('demo', expect.not.objectContaining({ name: 'Should Strip' }), { createOnly: true });
   });
 
   it('createFaculty restores an archived row with the same contactId and preserves its id', async () => {

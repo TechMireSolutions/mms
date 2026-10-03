@@ -51,12 +51,17 @@ export type FacultyDesignationWrite = z.infer<typeof facultyDesignationWriteSche
 export type FacultyDesignationAssignment = z.infer<typeof facultyDesignationAssignmentSchema>;
 export type FacultyDesignationAssignmentWrite = z.infer<typeof facultyDesignationAssignmentWriteSchema>;
 
-/**
- * Frontend-only transition payload — close the current open assignment
- * (sets `endsOn` to `transitionDate - 1 day`) and open a new one starting
- * `transitionDate`. Composed from two sequential `saveDesignationAssignment`
- * calls; no dedicated server endpoint required.
- */
+/** Atomic transition request; the current assignment ID detects stale edits. */
+export const facultyDesignationTransitionSchema = z.object({
+  currentAssignmentId: z.string().min(1).max(100).nullable(),
+  newDesignationId: z.string().min(1).max(100),
+  transitionDate: z.iso.date(),
+  notes: z.string().max(2000).nullable().optional(),
+}).strict();
+
+export type FacultyDesignationTransitionWrite = z.infer<typeof facultyDesignationTransitionSchema>;
+
+/** Faculty identity and new designation used by the transition form. */
 export interface FacultyDesignationTransition {
   facultyId: string;
   /** The new designation to assign starting `transitionDate`. */

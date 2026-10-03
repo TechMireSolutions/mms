@@ -88,14 +88,21 @@ export async function loadHierarchyTree(
   const tenant = getRequestTenant();
   if (!tenant) return { nodes: [] };
 
-  const pageResult = await repo.listPage(tenant, { limit: 1000 });
+  const pageResult = await repo.listPage(tenant, { limit: 100 });
   if (pageResult.total > 1000) {
     throw new ValidationError(
       `Faculty hierarchy tree is limited to 1000 members but this workspace has ${pageResult.total}. ` +
       `Use the paginated faculty list endpoint instead.`,
     );
   }
-  const sourceList = pageResult.faculty ?? [];
+  const sourceList = [...(pageResult.faculty ?? [])];
+  let hasMore = pageResult.hasMore;
+  for (let page = 2; hasMore; page += 1) {
+    if (page > 10) throw new ValidationError('Faculty hierarchy tree is limited to 1000 members');
+    const next = await repo.listPage(tenant, { page, limit: 100 });
+    sourceList.push(...(next.faculty ?? []));
+    hasMore = next.hasMore;
+  }
   const hydrated = await hydrateFacultyFromContacts(tenant, sourceList);
 
   const nodeMap = new Map<string, FacultyHierarchyNode>();

@@ -4,6 +4,7 @@ import {
   type FacultyListQuery,
 } from '@mms/shared';
 import { faculty } from '../schema.js';
+import { sql } from 'drizzle-orm';
 import { withTenantRead } from '../tenant-context.js';
 import { runListPage } from './listPageHelper.js';
 import { facultyRowToRecord } from './facultyRepositoryColumns.js';
@@ -24,9 +25,14 @@ export const FACULTY_LIST_COLUMNS = {
   hierarchyRank: faculty.hierarchyRank,
   qualification: faculty.qualification,
   joinDate: faculty.joinDate,
+  notes: faculty.notes,
+  customData: faculty.customData,
   deletedAt: faculty.deletedAt,
   deletedBy: faculty.deletedBy,
   deletionReason: faculty.deletionReason,
+  restoredAt: faculty.restoredAt,
+  restoredBy: faculty.restoredBy,
+  deletedWithCascade: faculty.deletedWithCascade,
   createdAt: faculty.createdAt,
   updatedAt: faculty.updatedAt,
   createdBy: faculty.createdBy,
@@ -47,7 +53,7 @@ export async function listFacultyPage(
     const sortDir = query.sortDir === 'desc' ? 'desc' : query.sortDir === 'asc' ? 'asc' : undefined;
     const result = await runListPage(tx, faculty, {
       conditions: buildListConditions(subdomain, query),
-      orderBy: buildOrderBy(query.sortField, sortDir),
+      orderBy: sql`${buildOrderBy(query.sortField, sortDir)}, ${faculty.id} asc`,
       columns: FACULTY_LIST_COLUMNS,
       page: query.page,
       limit: query.limit,
@@ -74,4 +80,3 @@ export async function listFacultyPage(
     };
   });
 }
-

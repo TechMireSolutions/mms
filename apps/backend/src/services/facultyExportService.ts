@@ -56,7 +56,7 @@ const facultyCsv = createModuleCsvExportService<
       ...query,
       page,
       limit,
-      afterId,
+      afterId: query.sortField ? undefined : afterId,
       skipCount: true,
     } as never);
     const sourceList = (pageResult.faculty ?? []) as Faculty[];

@@ -47,6 +47,7 @@ import {
   handleBulkSpecialization,
 } from './facultyMutationRouteHandlers.js';
 import { authenticateTenant } from '../../../middleware/authenticate.js';
+import { handleTransitionDesignation } from './facultyDesignationTransitionRoute.js';
 
 const s = initServer();
 
@@ -146,6 +147,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
     deleteDesignation: handleDeleteDesignation,
     listDesignationHistory: handleListDesignationHistory,
     saveDesignationAssignment: handleSaveDesignationAssignment,
+    transitionDesignation: handleTransitionDesignation,
     deleteDesignationAssignment: handleDeleteDesignationAssignment,
     listDepartments: handleListDepartments,
     saveDepartment: handleSaveDepartment,

@@ -13,6 +13,7 @@ import {
   validateReportingHierarchy,
 } from './facultyHierarchyValidator.js';
 import { handleImplicitRestore, saveDesignationOnCreate } from './facultyWriteHelpers.js';
+import { ConflictError } from '../../lib/httpErrors.js';
 
 export { HierarchyValidationError, HierarchyCycleError, validateReportingHierarchy };
 
@@ -58,6 +59,9 @@ export async function createFaculty(
     if (customDept) await ensureFacultyDepartmentLookup(tenant, customDept);
 
     const normalized = prepareFacultyRecord(record);
+    if (await repo.findById(tenant, String(normalized.id))) {
+      throw new ConflictError('Faculty ID already exists; use the update or restore operation');
+    }
 
     if (!normalized.employeeId || !normalized.employeeId.trim()) {
       const generated = await generateNextFacultyEmployeeId(tenant);
@@ -82,7 +86,7 @@ export async function createFaculty(
       }
     }
 
-    await repo.save(tenant, normalized);
+    await repo.save(tenant, normalized, { createOnly: true });
     await saveDesignationOnCreate(tenant, normalized, rawRecord);
     return { record: normalized, restored: false };
   });

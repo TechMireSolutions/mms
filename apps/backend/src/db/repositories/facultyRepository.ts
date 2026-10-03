@@ -92,10 +92,10 @@ export async function findFacultyByIds(tenant: string, ids: string[]): Promise<F
   });
 }
 
-export async function saveFaculty(tenant: string, member: Faculty): Promise<void> {
+export async function saveFaculty(tenant: string, member: Faculty, options?: { createOnly?: boolean }): Promise<void> {
   const subdomain = tenant.trim().toLowerCase();
   return withTenant(subdomain, async (tx) => {
-    await persistFacultyTx(tx, subdomain, member);
+    await persistFacultyTx(tx, subdomain, member, options);
   });
 }
 

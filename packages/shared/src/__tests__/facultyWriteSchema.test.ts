@@ -71,7 +71,7 @@ describe('facultyWriteSchema and soft-delete helpers', () => {
 
     const cleaned = stripFacultyWriteNoise(raw);
     expect(cleaned.designationAssignableRoles).toBeUndefined();
-    expect(cleaned.designationEndsOn).toBeUndefined();
+    expect(cleaned.designationEndsOn).toBe('2026-12-31');
     expect(cleaned.contact).toBeUndefined();
     expect(cleaned.subordinates).toBeUndefined();
     expect(cleaned.contactId).toBe('c-1');
@@ -100,7 +100,7 @@ describe('facultyWriteSchema and soft-delete helpers', () => {
     if (parsed.success) {
       const data = parsed.data as Record<string, unknown>;
       expect(data).not.toHaveProperty('designationAssignableRoles');
-      expect(data).not.toHaveProperty('designationEndsOn');
+      expect(data.designationEndsOn).toBeNull();
       expect(data).not.toHaveProperty('contact');
       expect(data).not.toHaveProperty('subordinates');
       expect(data.designationStartsOn).toBeUndefined();

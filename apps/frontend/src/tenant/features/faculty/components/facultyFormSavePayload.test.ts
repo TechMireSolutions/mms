@@ -60,7 +60,7 @@ describe("facultyFormSavePayload", () => {
       });
 
       expect((payload as Record<string, unknown>).designationAssignableRoles).toBeUndefined();
-      expect((payload as Record<string, unknown>).designationEndsOn).toBeUndefined();
+      expect(payload.designationEndsOn).toBe("2026-12-31");
       expect((payload as Record<string, unknown>).contact).toBeUndefined();
       expect((payload as Record<string, unknown>).subordinates).toBeUndefined();
     });

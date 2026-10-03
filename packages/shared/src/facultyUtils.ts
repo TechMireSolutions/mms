@@ -31,7 +31,6 @@ export function stripFacultyWriteNoise(
   delete next.avatar;
   delete next.contact;
   delete next.designationAssignableRoles;
-  delete next.designationEndsOn;
   delete next.subordinates;
   return stripRecordFields(next, CONTACT_PROFILE_FIELDS);
 }
@@ -161,5 +160,4 @@ export function hydrateFacultyListFromContacts<T extends FacultyMember>(
 
 export const getFacultyQualification = getContactQualification;
 export const getFacultySpecialization = getContactSpecialization;
-
 

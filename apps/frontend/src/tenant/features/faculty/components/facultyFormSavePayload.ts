@@ -30,7 +30,6 @@ export function buildFacultySavePayload(input: FacultySavePayloadInput): Partial
   };
 
   delete (payload as Record<string, unknown>).designationAssignableRoles;
-  delete (payload as Record<string, unknown>).designationEndsOn;
   delete (payload as Record<string, unknown>).contact;
   delete (payload as Record<string, unknown>).subordinates;
   return payload;

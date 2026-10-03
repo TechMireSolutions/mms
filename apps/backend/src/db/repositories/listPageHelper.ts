@@ -86,7 +86,7 @@ export async function runListPage<Row, Record>(
     .offset(offset);
 
   const items = (rows as Row[]).map(options.rowMapper);
-  const hasMore = isCursorPaging ? items.length === limit : page * limit < total;
+  const hasMore = isCursorPaging || options.skipCount ? items.length === limit : page * limit < total;
   const lastItem = items[items.length - 1] as { id?: unknown } | undefined;
   const nextCursor = isCursorPaging && hasMore && lastItem?.id ? String(lastItem.id) : undefined;
 

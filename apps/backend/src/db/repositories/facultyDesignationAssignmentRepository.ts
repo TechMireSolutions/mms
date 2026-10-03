@@ -11,6 +11,7 @@ import {
 import { withTenant, withTenantRead } from '../tenant-context.js';
 import { syncFacultyCurrentDesignation } from './facultyDesignationSync.js';
 import { listFacultyDesignations } from './facultyDesignationRepository.js';
+import { lockFacultyHierarchy } from './facultyAssignmentValidation.js';
 
 function iso(value: Date): string {
   return value.toISOString();
@@ -129,6 +130,7 @@ export async function saveFacultyDesignationAssignment(
 ): Promise<FacultyDesignationAssignment> {
   const workspaceSubdomain = tenant.trim().toLowerCase();
   await withTenant(workspaceSubdomain, async (tx) => {
+    await lockFacultyHierarchy(tx, workspaceSubdomain);
     const [designation] = await tx.select({ id: facultyDesignations.id, isActive: facultyDesignations.isActive })
       .from(facultyDesignations)
       .where(and(

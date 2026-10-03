@@ -93,6 +93,7 @@ describe('Faculty Hierarchy and Task Management Domain Logic', () => {
           (f) => f.reportingFacultyId === id && !f.deletedAt,
         ),
       ),
+      guardAssignmentDependents: vi.fn().mockResolvedValue(undefined),
       countSubordinates: vi.fn(async (_tenant: string, id: string) =>
         [...store.values()].filter(
           (f) => f.reportingFacultyId === id && !f.deletedAt,

@@ -52,6 +52,7 @@ describe('Faculty Bulk Soft-Delete Hierarchy Protection', () => {
       findByIds: vi.fn(async (_t: string, ids: string[]) =>
         ids.map((id) => store.get(id)).filter((t): t is Faculty => Boolean(t)),
       ),
+      guardAssignmentDependents: vi.fn().mockResolvedValue(undefined),
       countSubordinatesBatch: vi.fn(async (_t: string, ids: string[]) => {
         const counts: Record<string, number> = {};
         ids.forEach((id) => {

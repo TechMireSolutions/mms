@@ -106,7 +106,12 @@ export async function persistFacultyTx(
   tx: AppDb,
   subdomain: string,
   facultyMember: FacultyMember,
+  options?: { createOnly?: boolean },
 ): Promise<void> {
+  if (options?.createOnly) {
+    await tx.insert(faculty).values(facultyWriteValues(subdomain, facultyMember));
+    return;
+  }
   await tx
     .insert(faculty)
     .values(facultyWriteValues(subdomain, facultyMember))

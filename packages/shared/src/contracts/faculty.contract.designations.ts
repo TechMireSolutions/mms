@@ -4,6 +4,7 @@ import {
   facultyDesignationAssignmentWriteSchema,
   facultyDesignationSchema,
   facultyDesignationWriteSchema,
+  facultyDesignationTransitionSchema,
 } from '../facultyDesignationTypes.js';
 
 const errorResponse = z.unknown();
@@ -48,6 +49,16 @@ export const facultyDesignationContractEndpoints = {
     body: facultyDesignationAssignmentWriteSchema,
     responses: { 200: z.object({ assignment: facultyDesignationAssignmentSchema }), 400: errorResponse, 403: errorResponse, 409: errorResponse },
     summary: 'Create or update a dated Faculty designation assignment',
+  },
+  transitionDesignation: {
+    method: 'POST' as const,
+    path: '/api/faculty/:facultyId/designation-transition',
+    body: facultyDesignationTransitionSchema,
+    responses: {
+      200: z.object({ assignment: facultyDesignationAssignmentSchema }),
+      400: errorResponse, 403: errorResponse, 404: errorResponse, 409: errorResponse, 500: errorResponse,
+    },
+    summary: 'Atomically close a designation period and start its replacement',
   },
   deleteDesignationAssignment: {
     method: 'DELETE' as const,

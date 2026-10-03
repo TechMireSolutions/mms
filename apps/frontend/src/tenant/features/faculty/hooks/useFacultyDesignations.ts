@@ -141,13 +141,9 @@ export function useDeleteFacultyDesignationAssignment() {
   });
 }
 
-/**
- * Closes the current open designation period (sets endsOn = transitionDate - 1 day)
- * and opens a new one starting transitionDate — two sequential API calls composed
- * on the frontend.
- */
+/** Closes the previous period and opens its replacement in one server transaction. */
 export function useTransitionFacultyDesignation() {
-  const save = useSaveFacultyDesignationAssignment();
+  const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async ({
       facultyId,
@@ -156,33 +152,23 @@ export function useTransitionFacultyDesignation() {
       transitionDate,
       notes,
     }: FacultyDesignationTransition & { currentAssignment: FacultyDesignationAssignment | null }) => {
-      // Step 1: close the current open period (if any) to the day before transitionDate.
-      if (currentAssignment && !currentAssignment.endsOn) {
-        const endsOn = subtractOneDay(transitionDate);
-        if (endsOn >= currentAssignment.startsOn) {
-          await save.mutateAsync({
-            ...currentAssignment,
-            facultyId,
-            endsOn,
-          });
-        }
-      }
-      // Step 2: open the new period starting transitionDate.
-      await save.mutateAsync({
-        id: crypto.randomUUID(),
-        facultyId,
-        designationId: newDesignationId,
-        startsOn: transitionDate,
-        endsOn: null,
-        notes: notes ?? null,
+      const response = await apiContract.faculty.transitionDesignation({
+        params: { facultyId },
+        body: {
+          currentAssignmentId: currentAssignment?.id ?? null,
+          newDesignationId, transitionDate, notes: notes ?? null,
+        },
       });
+      if (response.status !== 200) {
+        const message = typeof response.body === 'object' && response.body && 'message' in response.body
+          ? String(response.body.message) : 'Failed to transition designation';
+        throw new Error(message);
+      }
+      const body = response.body;
+      return facultyDesignationAssignmentSchema.parse(
+        typeof body === 'object' && body && 'assignment' in body ? body.assignment : undefined,
+      );
     },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: FACULTY_QUERY_KEY }),
   });
-}
-
-/** Returns the ISO date for the day before the given YYYY-MM-DD string. */
-function subtractOneDay(isoDate: string): string {
-  const date = new Date(`${isoDate}T00:00:00Z`);
-  date.setUTCDate(date.getUTCDate() - 1);
-  return date.toISOString().slice(0, 10);
 }

@@ -30,7 +30,8 @@ export interface FacultyRepository {
   findByIds(tenant: string, ids: string[]): Promise<Faculty[]>;
   /** Soft-delete probe for restore-on-create re-registration (Contact SSOT). */
   findSoftDeletedByContactId(tenant: string, contactId: string): Promise<Faculty | null>;
-  save(tenant: string, member: Faculty | FacultyRecord): Promise<void>;
+  save(tenant: string, member: Faculty | FacultyRecord, options?: { createOnly?: boolean }): Promise<void>;
+  guardAssignmentDependents(tenant: string, ids: string[]): Promise<void>;
   bulkSave(tenant: string, members: Array<Faculty | FacultyRecord>): Promise<void>;
   aggregateCommandMetrics(
     tenant: string,

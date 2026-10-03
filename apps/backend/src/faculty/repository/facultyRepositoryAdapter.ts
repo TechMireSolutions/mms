@@ -24,6 +24,7 @@ import {
 } from '../../db/repositories/facultyRepositoryList.js';
 import { aggregateFacultyWidgetQueries } from '../../db/repositories/facultyRepositoryWidgets.js';
 import type { FacultyRepository } from './facultyRepository.js';
+import { guardFacultyAssignmentDependents } from '../../db/repositories/facultyDeleteGuard.js';
 
 /**
  * Drizzle adapter for `FacultyRepository`.
@@ -39,7 +40,8 @@ function createFacultyRepository(): FacultyRepository {
     findByIds: (tenant, ids) => findFacultyByIds(tenant, ids),
     findSoftDeletedByContactId: (tenant, contactId) =>
       findSoftDeletedFacultyByContactIdSql(tenant, contactId),
-    save: (tenant, member) => saveFaculty(tenant, member as Faculty),
+    save: (tenant, member, options) => saveFaculty(tenant, member as Faculty, options),
+    guardAssignmentDependents: guardFacultyAssignmentDependents,
     bulkSave: (tenant, members) => bulkSaveFaculty(tenant, members as Faculty[]),
     aggregateCommandMetrics: (tenant, periodDays) =>
       aggregateFacultyCommandMetrics(tenant, periodDays),

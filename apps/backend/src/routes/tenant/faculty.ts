@@ -13,7 +13,7 @@ import {
 } from './faculty/index.js';
 import { facultyUseCases } from '../../faculty/use-cases/facultyUseCases.js';
 import { withTenant } from '../../db/tenant-context.js';
-import { canReadCollection } from '../../services/rbacService.js';
+import { canReadCollection, canDeleteCollection } from '../../services/rbacService.js';
 import { isQueryFlagTrue, type Faculty, type User } from '@mms/shared';
 
 /**
@@ -52,6 +52,9 @@ export default async function facultyRoutes(
     }
     const query = request.query as Record<string, unknown>;
     const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+    if (includeDeleted && !canDeleteCollection(user, 'faculty')) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Viewing deleted faculty requires delete permissions' });
+    }
     const skipCount = isQueryFlagTrue(query?.skipCount);
     const result = await withTenant(
       String(request.tenant?.id),
@@ -70,6 +73,9 @@ export default async function facultyRoutes(
     }
     const query = request.query as Record<string, unknown>;
     const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+    if (includeDeleted && !canDeleteCollection(user, 'faculty')) {
+      return reply.status(403).send({ type: 'forbidden', message: 'Viewing deleted faculty requires delete permissions' });
+    }
     const item = await withTenant(
       String(request.tenant?.id),
       () => facultyUseCases.loadFacultyById(request.params.id, includeDeleted),

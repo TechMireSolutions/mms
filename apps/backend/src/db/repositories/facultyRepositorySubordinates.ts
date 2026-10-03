@@ -122,6 +122,6 @@ export async function findAncestorChain(
       )
       SELECT ancestor_id FROM ancestor_chain
     `);
-    return (rows as unknown as { ancestor_id: string }[]).map((r) => r.ancestor_id);
+    return rows.rows.map((r) => r.ancestor_id);
   });
 }

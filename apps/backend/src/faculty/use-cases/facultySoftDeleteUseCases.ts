@@ -56,6 +56,7 @@ export async function softDeleteFacultyById(
     const tenant = getRequestTenant();
     if (!tenant) return { succeeded: 0, failed: 1 };
 
+    await repo.guardAssignmentDependents(tenant, [id]);
     await guardSubordinatesOnDelete(tenant, id, reassignSubordinatesTo, repo);
 
     const now = nowIso();
@@ -112,6 +113,7 @@ export async function bulkSoftDeleteFaculty(
   const result = await runInTransaction(async () => {
     if (!tenant) return { succeeded: 0, failed: uniqueIds.length };
 
+    await repo.guardAssignmentDependents(tenant, uniqueIds);
     if (repo.countSubordinatesBatch) {
       const subCounts = await repo.countSubordinatesBatch(tenant, uniqueIds);
       const getCount = (id: string): number => {

@@ -5,6 +5,7 @@ import type { ContractRouteArgs, ContractRouteResponse } from '../../../lib/cont
 import { facultyUseCases } from '../../../faculty/use-cases/facultyUseCases.js';
 import { validateFacultyDynamic } from '../../../services/facultyValidationService.js';
 import { auditFaculty, sanitizeOneFacultyForUser } from './facultyRouteHelpers.js';
+import { isUniqueViolation } from '../../../lib/pgErrors.js';
 
 export async function handleCreateFaculty({
   body,
@@ -48,6 +49,9 @@ export async function handleCreateFaculty({
         };
   } catch (error: unknown) {
     request.log.error({ err: error }, 'Failed to create faculty member');
+    if (isUniqueViolation(error) || (error instanceof Error && 'statusCode' in error && error.statusCode === 409)) {
+      return { status: 409 as const, body: { type: 'conflict', message: 'Faculty ID, contact or employee ID already exists' } };
+    }
     if ((error as { statusCode?: number }).statusCode === 400) {
       return { status: 400 as const, body: { type: 'validation_error', message: error instanceof Error ? error.message : 'Invalid request' } };
     }

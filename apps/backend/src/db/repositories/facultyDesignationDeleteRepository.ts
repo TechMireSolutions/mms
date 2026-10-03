@@ -4,6 +4,7 @@ import {
 } from '../schema.js';
 import { withTenant } from '../tenant-context.js';
 import { syncFacultyCurrentDesignation } from './facultyDesignationSync.js';
+import { lockFacultyHierarchy } from './facultyAssignmentValidation.js';
 
 /**
  * Deletes a designation assignment by id.
@@ -17,6 +18,7 @@ export async function deleteFacultyDesignationAssignment(
 ): Promise<void> {
   const workspaceSubdomain = tenant.trim().toLowerCase();
   await withTenant(workspaceSubdomain, async (tx) => {
+    await lockFacultyHierarchy(tx, workspaceSubdomain);
     const [target] = await tx.select({ id: facultyDesignationAssignments.id })
       .from(facultyDesignationAssignments)
       .where(and(
