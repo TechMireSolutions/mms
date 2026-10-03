@@ -1,7 +1,8 @@
 import type { User } from '@mms/shared';
-import { QueryClient, onlineManager } from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient, onlineManager } from '@tanstack/react-query';
 import { isApiError } from '@/lib/apiClient';
 import { createIdbCachePersister } from '@/lib/query/idbCachePersister';
+import { refreshModuleAccessOnDenial } from '@/lib/query/moduleAccessQuery';
 import { createQueryPersistenceLifecycle } from '@/lib/query/queryPersistenceLifecycle';
 
 import { readQueryCacheSession, resolveQueryCacheSession, revokeQueryCacheSession, tenantCacheIdentity } from '@/lib/query/queryCacheSession';
@@ -59,6 +60,9 @@ export const STATIC_LOOKUP_STALE_TIME = 30 * 60_000; // 30m: branding, static en
  * Features 3-attempt exponential backoff, 24h gcTime for offline readiness, and online-mode pausing.
  */
 export const queryClientInstance = new SessionQueryClient({
+  // A module-gate 403 anywhere means access changed mid-session: refetch the snapshot.
+  queryCache: new QueryCache({ onError: (error) => refreshModuleAccessOnDenial(queryClientInstance, error) }),
+  mutationCache: new MutationCache({ onError: (error) => refreshModuleAccessOnDenial(queryClientInstance, error) }),
   defaultOptions: {
     queries: {
       staleTime: TRANSACTIONAL_STALE_TIME,

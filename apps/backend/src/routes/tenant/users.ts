@@ -1,6 +1,6 @@
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { requireTenantModule } from '../../middleware/requireTenantModule.js';
+import { registerModuleAccess } from '../../middleware/requireTenantModule.js';
 import {
   USERS_MODULE_MANIFEST,
   activityLogListSchema,
@@ -27,7 +27,7 @@ export default async function usersRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
-  fastify.addHook('preHandler', requireTenantModule('users'));
+  registerModuleAccess(fastify, 'users');
 
   await fastify.register(
     async (sub) => {

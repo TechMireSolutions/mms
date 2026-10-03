@@ -83,7 +83,8 @@ async function tsrApiFetcher(args: TsrFetcherArgs): Promise<{
       const message = typeof errorBody.message === 'string' ? errorBody.message : `Authentication error (${res.status})`;
       const type = typeof errorBody.type === 'string' ? errorBody.type : undefined;
       const requestId = res.headers.get('x-request-id') ?? undefined;
-      throw new ApiError(res.status, message, type, requestId, errorBody.errors);
+      const code = typeof errorBody.code === 'string' ? errorBody.code : undefined;
+      throw new ApiError(res.status, message, type, requestId, errorBody.errors, undefined, code);
     }
   }
 

@@ -3,6 +3,8 @@ export interface ApiErrorBody {
   message?: string;
   /** Field-level validation issues (e.g. Contacts unique conflicts). */
   errors?: unknown;
+  /** Stable machine-readable reason, e.g. module-gate denials (`MODULE_DISABLED`). */
+  code?: string;
 }
 
 /** Structured API failure — map `type` to `t('errors.*')` in UI. */
@@ -13,6 +15,7 @@ export class ApiError extends Error {
   readonly errors?: unknown;
   /** Seconds to wait before retrying (from `Retry-After`). */
   readonly retryAfterSeconds?: number;
+  readonly code?: string;
 
   constructor(
     status: number,
@@ -21,6 +24,7 @@ export class ApiError extends Error {
     requestId?: string,
     errors?: unknown,
     retryAfterSeconds?: number,
+    code?: string,
   ) {
     super(message);
     this.name = 'ApiError';
@@ -29,6 +33,7 @@ export class ApiError extends Error {
     this.requestId = requestId;
     this.errors = errors;
     this.retryAfterSeconds = retryAfterSeconds;
+    this.code = code;
   }
 }
 

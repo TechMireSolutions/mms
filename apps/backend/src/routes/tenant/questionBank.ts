@@ -1,6 +1,6 @@
 import { type FastifyInstance, type FastifyPluginOptions } from 'fastify';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { requireTenantModule } from '../../middleware/requireTenantModule.js';
+import { registerModuleAccess } from '../../middleware/requireTenantModule.js';
 import {
   QUESTION_BANK_MODULE_MANIFEST,
   questionBankQuestionListSchema,
@@ -31,7 +31,7 @@ export default async function questionBankRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
-  fastify.addHook('preHandler', requireTenantModule('questionBank'));
+  registerModuleAccess(fastify, 'questionBank');
 
   await fastify.register(
     async (sub) => {

@@ -1,7 +1,7 @@
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import { SESSIONS_MODULE_MANIFEST } from '@mms/shared';
 import { authenticateTenant } from '../../middleware/authenticate.js';
-import { requireTenantModule } from '../../middleware/requireTenantModule.js';
+import { registerModuleAccess } from '../../middleware/requireTenantModule.js';
 import { sessionsUseCases } from '../../sessions/use-cases/sessionsUseCases.js';
 import { registerStandardExtendedRoutes } from '../../lib/crudRouter.js';
 import { sessionContractRouter } from './sessions/sessionContractRouter.js';
@@ -17,7 +17,7 @@ export default async function sessionsRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
-  fastify.addHook('preHandler', requireTenantModule('sessions'));
+  registerModuleAccess(fastify, 'sessions');
 
   // Count + Metrics (not in sessionContract)
   await fastify.register(

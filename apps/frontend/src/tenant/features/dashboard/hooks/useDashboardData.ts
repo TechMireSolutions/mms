@@ -26,6 +26,8 @@ import { useDashboardSummaryQuery } from '@/tenant/hooks/collections/dashboard';
 import {
   todayISO,
   ACCOUNTING_MODULE_MANIFEST,
+  getModuleActionPermission,
+  resolveAccessModuleId,
   type StudentsCommandMetricsSnapshot,
   type FacultyCommandMetricsSnapshot,
   type ContactsCommandMetricsSnapshot,
@@ -72,39 +74,41 @@ export function useDashboardData(
   can?: (permission: Permission) => boolean,
 ): DashboardCollectionData {
   const isModuleEnabled = (mod: string) => !enabledModules || enabledModules[mod] !== false;
-  const hasPermission = (perm: Permission) => !can || can(perm);
+  // Same read permission the backend module gate enforces (shared policy).
+  const canReadModule = (mod: string) => {
+    const moduleId = resolveAccessModuleId(mod);
+    return isModuleEnabled(mod) && (!can || (moduleId !== undefined && can(getModuleActionPermission(moduleId, 'read'))));
+  };
 
   const requiredDashboardCollections = (() =>
     getRequiredDashboardCollections(widgets, dashboardRole, enabledModules, can)
   )();
 
   const shouldLoadContacts =
-    requiredDashboardCollections.has('contacts') && isModuleEnabled('contacts') && hasPermission('contacts.read');
+    requiredDashboardCollections.has('contacts') && canReadModule('contacts');
   const shouldLoadStudents =
     (requiredDashboardCollections.has('students') || isDashboardAdmin(dashboardRole)) &&
-    isModuleEnabled('students') &&
-    hasPermission('students.read');
+    canReadModule('students');
   const shouldLoadFaculty =
     requiredDashboardCollections.has('faculty') &&
-    isModuleEnabled('faculty') &&
-    hasPermission('faculty.read');
+    canReadModule('faculty');
   // Role shell needs: faculty banner (sessions), admin/accountant notifications (finance + attendance).
   const shouldLoadSessions =
     (requiredDashboardCollections.has('sessions') || isDashboardFaculty(dashboardRole)) &&
-    isModuleEnabled('sessions') && hasPermission('sessions.read');
+    canReadModule('sessions');
   const shouldLoadAttendance =
     (requiredDashboardCollections.has('attendance_records') || isDashboardAdminOrAccountant(dashboardRole) || isDashboardFaculty(dashboardRole)) &&
-    isModuleEnabled('attendance') && hasPermission('attendance.read');
+    canReadModule('attendance');
   const shouldLoadFinance =
     (requiredDashboardCollections.has('finance_invoices') || isDashboardAdminOrAccountant(dashboardRole)) &&
-    isModuleEnabled('finance') && hasPermission('finance.read');
+    canReadModule('finance');
   const shouldLoadHasanat =
-    requiredDashboardCollections.has('hasanat_distributions') && isModuleEnabled('hasanat') && hasPermission('hasanat.read');
+    requiredDashboardCollections.has('hasanat_distributions') && canReadModule('hasanat');
   const shouldLoadQuestionBank =
     (requiredDashboardCollections.has('questions') || requiredDashboardCollections.has('tests') || requiredDashboardCollections.has('assessment_results')) &&
-    isModuleEnabled('questionBank') && hasPermission('questionBank.read');
+    canReadModule('questionBank');
   const shouldLoadAccounting =
-    isModuleEnabled('accounting') && hasPermission('accounting.read') &&
+    canReadModule('accounting') &&
     widgets.some((w) => isWidgetActiveForDashboard(w, dashboardRole) && (w.category === ACCOUNTING_MODULE_MANIFEST.moduleId || DASHBOARD_ACCOUNTING_WIDGET_IDS.has(w.id)));
 
   const collectionWidgets = {

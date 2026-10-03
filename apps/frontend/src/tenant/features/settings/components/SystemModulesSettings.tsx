@@ -2,7 +2,7 @@ import React from 'react';
 import { normalizeEnabledModules, SYSTEM_MODULES_BY_ID } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
 import { useSettingsGlobalDraft } from '@/lib/contexts/SettingsGlobalDraftContext';
-import { useLiveObject } from '@/hooks/useLiveObject';
+import { useModuleAccess } from '@/tenant/hooks/useModuleAccess';
 import { SettingsFormActions } from '@/components/ui/SettingsFormActions';
 import ModuleSettingsNavGrid from '@/tenant/features/settings/components/modules/ModuleSettingsNavGrid';
 import { SettingsPanel } from '@/components/ui/SettingsShell';
@@ -27,8 +27,11 @@ export default function SystemModulesSettings(): React.JSX.Element {
     clearSaved,
   } = useSettingsGlobalDraft();
 
-  const platformSettings = useLiveObject<{ grantedModules?: Record<string, boolean> }>('platform_settings', {});
-  const grantedModules = platformSettings?.grantedModules;
+  // Platform grants come from the authoritative access snapshot, not a client-side document.
+  const { availability } = useModuleAccess();
+  const grantedModules = availability
+    ? Object.fromEntries(Object.entries(availability).map(([id, entry]) => [id, entry.granted]))
+    : undefined;
 
   const enabledModules = (() => normalizeEnabledModules(data.enabledModules))();
 

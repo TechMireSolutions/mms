@@ -16,11 +16,17 @@ import {
 export interface CommandPaletteProps {
   open: boolean;
   onClose: () => void;
+  /** Hides destinations the viewer cannot open (module access); all items when omitted. */
+  isPathVisible?: (path: string) => boolean;
 }
 
-export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JSX.Element | null {
+export function CommandPalette({ open, onClose, isPathVisible }: CommandPaletteProps): React.JSX.Element | null {
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const items = useMemo(
+    () => (isPathVisible ? COMMAND_ITEMS.filter((item) => isPathVisible(item.path)) : COMMAND_ITEMS),
+    [isPathVisible],
+  );
 
   const translate = useCallback(
     (key: string) => {
@@ -44,8 +50,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
   );
 
   const filterItems = useCallback(
-    (currentQuery: string) => filterCommandItems(COMMAND_ITEMS, currentQuery, translate),
-    [translate],
+    (currentQuery: string) => filterCommandItems(items, currentQuery, translate),
+    [items, translate],
   );
 
   const {
@@ -63,8 +69,8 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
 
   const recentIds = useMemo(() => (open ? getRecents() : []), [open]);
   const recentItems = useMemo(
-    () => recentIds.map((id) => COMMAND_ITEMS.find((c) => c.id === id)).filter(Boolean) as CommandItem[],
-    [recentIds],
+    () => recentIds.map((id) => items.find((c) => c.id === id)).filter(Boolean) as CommandItem[],
+    [items, recentIds],
   );
 
   const isEmptyQuery = !query.trim();
@@ -82,13 +88,13 @@ export function CommandPalette({ open, onClose }: CommandPaletteProps): React.JS
     }
     const groups = new Map<string, CommandItem[]>();
     if (recentItems.length > 0) groups.set("__recents__", recentItems);
-    for (const item of COMMAND_ITEMS) {
+    for (const item of items) {
       const cat = translate(item.categoryKey) || item.fallbackCategory;
       if (!groups.has(cat)) groups.set(cat, []);
       groups.get(cat)!.push(item);
     }
     return Array.from(groups.entries()).map(([category, items]) => ({ category, items }));
-  }, [isEmptyQuery, activeFilteredItems, recentItems, translate]);
+  }, [isEmptyQuery, activeFilteredItems, recentItems, items, translate]);
 
   // Flat ordered list matching keyboard navigation
   const flatItems = useMemo(() => {

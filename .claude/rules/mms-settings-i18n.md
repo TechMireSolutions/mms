@@ -29,7 +29,7 @@ paths:
 ## 2. Navigation Registry
 
 - **Sidebar SSOT:** Sidebar retrieves navigation links exclusively from `NAV_ITEMS` in `navConfig.tsx`.
-- **Academics Modules:** Submenu `moduleIds` must align with `SYSTEM_MODULE_NAV`: `students`, `faculty`, `sessions`, `attendance`, `enrollment`, `hasanat`, `examination`, `questionBank`.
+- **Academics Modules:** Submenu grouping mirrors `SYSTEM_MODULE_NAV`: `students`, `faculty`, `sessions`, `attendance`, `enrollment`, `hasanat`, `examination`, `questionBank`. Item access comes from `TENANT_APP_ROUTE_ACCESS` (`mms-auth-security.md` §3), not from `NAV_ITEMS`.
 
 ## 3. Live Previews & Settings Drafts
 

@@ -115,6 +115,7 @@ describe('background jobs REST routes', () => {
   });
 
   it('GET /api/background-jobs/:id/download serves export artifact', async () => {
+    mockGetUserBackgroundJob.mockResolvedValueOnce({ ...sampleJob, moduleId: 'students' });
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
@@ -129,6 +130,22 @@ describe('background jobs REST routes', () => {
     expect(res.headers['content-disposition']).toBe('attachment; filename="contacts.csv"');
     expect(res.body).toBe('id,name\n1,Ali');
     expect(mockGetExportArtifact).toHaveBeenCalledWith('u-teacher', 'job-1');
+    await app.close();
+  });
+
+  it('GET /api/background-jobs/:id/download denies an artifact from a module the caller cannot export', async () => {
+    const app = await buildApp();
+    const res = await app.inject({
+      method: 'GET',
+      url: '/api/background-jobs/job-1/download',
+      headers: {
+        host: 'demo.localhost',
+        authorization: `Bearer ${teacherToken(app)}`,
+      },
+    });
+    expect(res.statusCode).toBe(403);
+    expect(res.json()).toMatchObject({ type: 'forbidden', code: 'PERMISSION_DENIED', moduleId: 'contacts' });
+    expect(mockGetExportArtifact).not.toHaveBeenCalled();
     await app.close();
   });
 
