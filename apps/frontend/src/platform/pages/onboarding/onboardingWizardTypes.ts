@@ -1,7 +1,7 @@
 import type React from "react";
 import CreateMadrasa from "@/platform/pages/onboarding/steps/CreateMadrasa";
 import AdminSetup from "@/platform/pages/onboarding/steps/AdminSetup";
-import { SYSTEM_MODULES } from "@mms/shared";
+import { SYSTEM_MODULES, type IndustryType } from "@mms/shared";
 
 export interface OnboardingData {
   name: string;
@@ -14,6 +14,8 @@ export interface OnboardingData {
   confirmPassword: string;
   agreedTerms: boolean;
   modules: string[];
+  industryType: IndustryType;
+  blueprintId: string;
 }
 
 interface OnboardingStep {
@@ -55,4 +57,6 @@ export const ONBOARDING_INITIAL_DATA: OnboardingData = {
   confirmPassword: "",
   agreedTerms: false,
   modules: SYSTEM_MODULES.map((m) => m.id),
+  industryType: "madrasa",
+  blueprintId: "madrasa-standard-v1",
 };

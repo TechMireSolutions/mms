@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import React from 'react';
 import {
   type TaskRecord,
   type TaskInsert,
@@ -10,8 +9,8 @@ import {
   TASK_STATUSES,
 } from '@mms/shared';
 import { FormModal } from '@/components/ui/FormModal';
-import { apiJson } from '@/lib/apiClient';
-import { useTranslation } from '@/hooks/useTranslation';
+import { TaskFormAssigneePicker } from './TaskFormAssigneePicker';
+import { useTaskFormController } from './useTaskFormController';
 
 export interface TaskFormModalProps {
   open: boolean;
@@ -21,14 +20,6 @@ export interface TaskFormModalProps {
   saving?: boolean;
 }
 
-interface FacultyOption {
-  id: string;
-  name: string;
-  userId?: string | null;
-  positionId?: string | null;
-  designationName?: string | null;
-}
-
 export function TaskFormModal({
   open,
   onClose,
@@ -36,79 +27,25 @@ export function TaskFormModal({
   onSave,
   saving = false,
 }: TaskFormModalProps): React.JSX.Element {
-  const { t } = useTranslation();
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [priority, setPriority] = useState<TaskPriority>('medium');
-  const [status, setStatus] = useState<TaskStatus>('todo');
-  const [dueAt, setDueAt] = useState('');
-  const [selectedFacultyId, setSelectedFacultyId] = useState('');
-  const [error, setError] = useState<string | null>(null);
-
-  const { data: facultyList = [] } = useQuery({
-    queryKey: ['faculty', 'selectable-list'],
-    queryFn: async ({ signal }) => {
-      const res = await apiJson<{ faculty: FacultyOption[] }>('/api/faculty?limit=200', { signal });
-      return res.faculty ?? [];
-    },
-    enabled: open,
-    staleTime: 60_000,
-  });
-
-  useEffect(() => {
-    if (initialData) {
-      setTitle(initialData.title);
-      setDescription(initialData.description ?? '');
-      setPriority(initialData.priority);
-      setStatus(initialData.status);
-      setDueAt(initialData.dueAt ? new Date(initialData.dueAt).toISOString().slice(0, 16) : '');
-      const firstAssignee = initialData.assignees?.[0];
-      setSelectedFacultyId(firstAssignee?.facultyId ?? '');
-    } else {
-      setTitle('');
-      setDescription('');
-      setPriority('medium');
-      setStatus('todo');
-      setDueAt('');
-      setSelectedFacultyId('');
-    }
-    setError(null);
-  }, [initialData, open]);
-
-  const handleSubmit = async () => {
-    const trimmedTitle = title.trim();
-    if (!trimmedTitle) {
-      setError('Title is required');
-      return;
-    }
-
-    const assignees = selectedFacultyId
-      ? [
-          {
-            facultyId: selectedFacultyId,
-            ...(facultyList.find((f) => f.id === selectedFacultyId)?.positionId
-              ? { positionId: facultyList.find((f) => f.id === selectedFacultyId)?.positionId ?? undefined }
-              : {}),
-          },
-        ]
-      : [];
-
-    const payload: TaskInsert = {
-      title: trimmedTitle,
-      description: description.trim() || undefined,
-      priority,
-      status,
-      dueAt: dueAt ? new Date(dueAt).toISOString() : null,
-      assignees,
-    };
-
-    try {
-      await onSave(payload);
-      onClose();
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save task');
-    }
-  };
+  const {
+    t,
+    title,
+    setTitle,
+    description,
+    setDescription,
+    priority,
+    setPriority,
+    status,
+    setStatus,
+    dueAt,
+    setDueAt,
+    selectedAssignees,
+    eligibleList,
+    error,
+    handleAddAssignee,
+    handleRemoveAssignee,
+    handleSubmit,
+  } = useTaskFormController({ open, onClose, initialData, onSave });
 
   return (
     <FormModal
@@ -197,23 +134,12 @@ export function TaskFormModal({
             />
           </div>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {t('tasks.assignees')}
-            </label>
-            <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-              value={selectedFacultyId}
-              onChange={(e) => setSelectedFacultyId(e.target.value)}
-            >
-              <option value="">{t('tasks.noAssignees')}</option>
-              {facultyList.map((f) => (
-                <option key={f.id} value={f.id}>
-                  {f.name} {f.designationName ? `(${f.designationName})` : ''}
-                </option>
-              ))}
-            </select>
-          </div>
+          <TaskFormAssigneePicker
+            eligibleList={eligibleList}
+            selectedAssignees={selectedAssignees}
+            onAddAssignee={handleAddAssignee}
+            onRemoveAssignee={handleRemoveAssignee}
+          />
         </div>
       </div>
     </FormModal>

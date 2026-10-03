@@ -9,6 +9,7 @@ import type {
   OrganizationPositionTreeNode,
   OrganizationBlueprint,
   ApplyBlueprintRequest,
+  BlueprintPreviewDiff,
 } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
 import {
@@ -164,3 +165,19 @@ export function useApplyBlueprint() {
     },
   });
 }
+
+export type { BlueprintPreviewDiff };
+
+export function useOrganizationBlueprintPreview(
+  blueprintId?: string | null,
+  options: { enabled?: boolean } = {},
+) {
+  return useQuery({
+    queryKey: [...ORGANIZATION_BLUEPRINTS_QUERY_KEY, 'preview', blueprintId],
+    queryFn: ({ signal }) =>
+      apiJson<BlueprintPreviewDiff>(`/api/organization/blueprints/${blueprintId}/preview`, { signal }),
+    enabled: Boolean(blueprintId) && (options.enabled ?? true),
+    staleTime: 30_000,
+  });
+}
+

@@ -5,6 +5,7 @@ import {
   type TaskInsert,
   type TaskUpdate,
   type TaskStatus,
+  type TaskSettings,
 } from '@mms/shared';
 import { apiJson } from '@/lib/apiClient';
 import {
@@ -12,6 +13,8 @@ import {
   TASKS_LIST_QUERY_KEY,
   TASKS_METRICS_QUERY_KEY,
   TASK_DETAIL_QUERY_KEY,
+  TASKS_ELIGIBLE_ASSIGNEES_QUERY_KEY,
+  TASKS_SETTINGS_QUERY_KEY,
 } from './tasksQueryKeys';
 
 export interface TasksListResponse {
@@ -131,3 +134,48 @@ export function useDeleteTask() {
     },
   });
 }
+
+export interface EligibleAssigneeItem {
+  facultyId: string;
+  name: string;
+  employeeId?: string | null;
+  assignmentId?: string | null;
+  positionId?: string | null;
+  positionName?: string | null;
+  departmentName?: string | null;
+  userId: string;
+  isSelf: boolean;
+}
+
+export function useEligibleTaskAssignees(options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: TASKS_ELIGIBLE_ASSIGNEES_QUERY_KEY,
+    queryFn: ({ signal }) => apiJson<EligibleAssigneeItem[]>('/api/tasks/eligible-assignees', { signal }),
+    enabled: options.enabled ?? true,
+    staleTime: 30_000,
+  });
+}
+
+export function useTaskSettings(options: { enabled?: boolean } = {}) {
+  return useQuery({
+    queryKey: TASKS_SETTINGS_QUERY_KEY,
+    queryFn: ({ signal }) => apiJson<TaskSettings>('/api/tasks/settings', { signal }),
+    enabled: options.enabled ?? true,
+    staleTime: 60_000,
+  });
+}
+
+export function useUpdateTaskSettings() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (settings: TaskSettings) =>
+      apiJson<TaskSettings>('/api/tasks/settings', {
+        method: 'PUT',
+        body: JSON.stringify(settings),
+      }),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: TASKS_SETTINGS_QUERY_KEY });
+    },
+  });
+}
+

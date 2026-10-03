@@ -52,6 +52,8 @@ export interface OnboardInput {
   postalCode?: string;
   socialLinks?: BrandingSocialLink[];
   modules?: string[];
+  industryType?: string;
+  blueprintId?: string;
 }
 
 export interface OnboardResult extends AuthResult {
@@ -151,6 +153,7 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
     madrasaName: input.madrasaName,
     tagline: input.tagline,
     country: input.country,
+    industryType: input.industryType,
   });
 
   await unblockTenant(workspace.subdomain);
@@ -223,6 +226,17 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
   );
   if (!user) {
     throw new Error('Failed to create workspace administrator.');
+  }
+
+  const blueprintToApply =
+    input.blueprintId || (input.industryType ? (await import('@mms/shared')).getRecommendedBlueprintForIndustry(input.industryType) : null);
+  if (blueprintToApply) {
+    const { applyOrganizationBlueprint } = await import('../organizationBlueprintService.js');
+    try {
+      await applyOrganizationBlueprint(workspace.subdomain, blueprintToApply, user.id);
+    } catch {
+      // Non-blocking initialization
+    }
   }
 
   return { user, workspace };

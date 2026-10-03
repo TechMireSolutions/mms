@@ -118,6 +118,8 @@ export const authLoginRoutes: FastifyPluginAsync = async (fastify) => {
             postalCode: body.postalCode,
             socialLinks: body.socialLinks,
             modules: body.modules,
+            industryType: body.industryType,
+            blueprintId: body.blueprintId,
           });
           return reply.send(result);
         } catch (error: unknown) {

@@ -68,3 +68,38 @@ describe('Position Hierarchy Depth Guard', () => {
     expect(() => validateHierarchyDepth(2.5)).toThrow();
   });
 });
+
+describe('Task Settings & Preferences Schema', () => {
+  it('validates default task settings', async () => {
+    const { DEFAULT_TASK_SETTINGS, taskSettingsSchema } = await import('@mms/shared');
+    expect(DEFAULT_TASK_SETTINGS.delegationScope).toBe('descendants');
+    expect(DEFAULT_TASK_SETTINGS.allowSelfAssignment).toBe(true);
+
+    const parsed = taskSettingsSchema.safeParse(DEFAULT_TASK_SETTINGS);
+    expect(parsed.success).toBe(true);
+  });
+
+  it('accepts direct_reports delegation scope', async () => {
+    const { taskSettingsSchema } = await import('@mms/shared');
+    const parsed = taskSettingsSchema.safeParse({
+      delegationScope: 'direct_reports',
+      allowSelfAssignment: false,
+      notifyOnAssignment: true,
+      notifyOnStatusChange: false,
+    });
+    expect(parsed.success).toBe(true);
+    if (parsed.success) {
+      expect(parsed.data.delegationScope).toBe('direct_reports');
+      expect(parsed.data.allowSelfAssignment).toBe(false);
+    }
+  });
+
+  it('rejects invalid delegation scope', async () => {
+    const { taskSettingsSchema } = await import('@mms/shared');
+    const parsed = taskSettingsSchema.safeParse({
+      delegationScope: 'all_users',
+    });
+    expect(parsed.success).toBe(false);
+  });
+});
+

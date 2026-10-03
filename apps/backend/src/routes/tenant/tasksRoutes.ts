@@ -5,7 +5,6 @@
 
 import type { FastifyInstance, FastifyPluginOptions } from 'fastify';
 import {
-  DEFAULT_TASK_SETTINGS,
   taskListQuerySchema,
   taskInsertSchema,
   taskStatusUpdateSchema,
@@ -26,6 +25,8 @@ import {
   updateTaskStatus,
 } from '../../db/repositories/tasksRepository.js';
 import { validateTaskDelegation } from '../../services/taskDelegationService.js';
+import { getEligibleTaskAssignees } from '../../services/taskEligibleAssigneesService.js';
+import { getTenantTaskSettings, updateTenantTaskSettings } from '../../services/taskSettingsService.js';
 
 export default async function tasksRoutes(
   fastify: FastifyInstance,
@@ -54,6 +55,44 @@ export default async function tasksRoutes(
     return reply.status(200).send(metrics);
   });
 
+  fastify.get('/api/tasks/eligible-assignees', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'tasks')) {
+      return reply.status(403).send({ message: 'Forbidden' });
+    }
+    const tenant = String(request.tenant?.id);
+    const settings = await getTenantTaskSettings();
+    const canAssignAnywhere = roleHasPermission(user.role, 'tasks.assign_anywhere');
+    const eligible = await getEligibleTaskAssignees(tenant, user.id, {
+      canAssignAnywhere,
+      delegationScope: settings.delegationScope,
+      allowSelfAssignment: settings.allowSelfAssignment,
+    });
+    return reply.status(200).send(eligible);
+  });
+
+  fastify.get('/api/tasks/settings', async (request, reply) => {
+    const user = request.user as User;
+    if (!canReadCollection(user, 'tasks')) {
+      return reply.status(403).send({ message: 'Forbidden' });
+    }
+    const settings = await getTenantTaskSettings();
+    return reply.status(200).send(settings);
+  });
+
+  fastify.put('/api/tasks/settings', async (request, reply) => {
+    const user = request.user as User;
+    if (!canWriteCollection(user, 'tasks')) {
+      return reply.status(403).send({ message: 'Forbidden' });
+    }
+    try {
+      const updated = await updateTenantTaskSettings(request.body);
+      return reply.status(200).send(updated);
+    } catch (err) {
+      return reply.status(400).send({ message: err instanceof Error ? err.message : 'Invalid settings payload' });
+    }
+  });
+
   fastify.get<{ Params: { id: string } }>('/api/tasks/:id', async (request, reply) => {
     const user = request.user as User;
     if (!canReadCollection(user, 'tasks')) {
@@ -78,6 +117,7 @@ export default async function tasksRoutes(
     }
 
     const tenant = String(request.tenant?.id);
+    const settings = await getTenantTaskSettings();
     const canAssignAnywhere = roleHasPermission(user.role, 'tasks.assign_anywhere');
 
     const delegation = await validateTaskDelegation(
@@ -86,8 +126,8 @@ export default async function tasksRoutes(
       parsed.data.assignees ?? [],
       {
         canAssignAnywhere,
-        delegationScope: DEFAULT_TASK_SETTINGS.delegationScope,
-        allowSelfAssignment: DEFAULT_TASK_SETTINGS.allowSelfAssignment,
+        delegationScope: settings.delegationScope,
+        allowSelfAssignment: settings.allowSelfAssignment,
       },
     );
 
@@ -113,6 +153,7 @@ export default async function tasksRoutes(
     let resolvedAssignees: Array<{ facultyId: string; facultyAssignmentId?: string | null; positionId?: string | null; userId: string }> | undefined;
 
     if (parsed.data.assignees !== undefined) {
+      const settings = await getTenantTaskSettings();
       const canAssignAnywhere = roleHasPermission(user.role, 'tasks.assign_anywhere');
       const delegation = await validateTaskDelegation(
         tenant,
@@ -120,8 +161,8 @@ export default async function tasksRoutes(
         parsed.data.assignees,
         {
           canAssignAnywhere,
-          delegationScope: DEFAULT_TASK_SETTINGS.delegationScope,
-          allowSelfAssignment: DEFAULT_TASK_SETTINGS.allowSelfAssignment,
+          delegationScope: settings.delegationScope,
+          allowSelfAssignment: settings.allowSelfAssignment,
         },
       );
       if (!delegation.valid) {

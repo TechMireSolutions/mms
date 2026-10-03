@@ -368,5 +368,7 @@ export * from './sequenceNumberingAdapters.js';
 export * from './sequenceNumberingUtils.js';
 export * from './obligationsModuleSettings.js';
 export * from './organizationBlueprintTypes.js';
+export * from './organizationBlueprintPreviewTypes.js';
 export * from './organizationModuleManifest.js';
 export * from './tasksModuleManifest.js';
+export * from './industryProfiles.js';

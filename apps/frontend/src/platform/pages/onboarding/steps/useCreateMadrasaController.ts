@@ -1,6 +1,12 @@
 import type { Dispatch, SetStateAction } from "react";
 import { type OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
-import { slugifySubdomain } from "@mms/shared";
+import {
+  slugifySubdomain,
+  SYSTEM_MODULES,
+  getRecommendedModulesForIndustry,
+  getRecommendedBlueprintForIndustry,
+  type IndustryType,
+} from "@mms/shared";
 import { getAppDomain } from "@/lib/config/tenantConfig";
 import { useTranslation } from "@/hooks/useTranslation";
 import { NAME_MAX } from "@/components/branding/BrandingShared";
@@ -32,6 +38,26 @@ export function useCreateMadrasaController(
     }));
   };
 
+  const handleIndustryChange = (industry: IndustryType) => {
+    const recommended = getRecommendedModulesForIndustry(industry);
+    const blueprint = getRecommendedBlueprintForIndustry(industry);
+    const requiredIds = SYSTEM_MODULES.filter((m) => m.required).map((m) => m.id);
+    const combined = Array.from(new Set([...requiredIds, ...recommended]));
+    onChange((prev) => ({
+      ...prev,
+      industryType: industry,
+      blueprintId: blueprint,
+      modules: combined,
+    }));
+  };
+
+  const handleBlueprintChange = (blueprintId: string) => {
+    onChange((prev) => ({
+      ...prev,
+      blueprintId,
+    }));
+  };
+
   return {
     t,
     appDomain,
@@ -40,6 +66,8 @@ export function useCreateMadrasaController(
     updateField,
     handleNameChange,
     handleSubdomainChange,
+    handleIndustryChange,
+    handleBlueprintChange,
   };
 }
 

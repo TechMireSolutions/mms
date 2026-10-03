@@ -93,6 +93,8 @@ export function useOnboardingWizardController() {
         password: data.password,
         subdomain: data.subdomain,
         modules: data.modules,
+        industryType: data.industryType,
+        blueprintId: data.blueprintId,
       });
 
       notify.success(t("platform.workspaceCreatedToast"), {

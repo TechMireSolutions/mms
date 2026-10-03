@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { Sparkles, Building2, Check, AlertCircle } from 'lucide-react';
+import { Sparkles, Building2, Check, AlertCircle, Info } from 'lucide-react';
 import { Modal } from '@/components/ui/Modal';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import {
   useOrganizationBlueprints,
+  useOrganizationBlueprintPreview,
   useApplyBlueprint,
 } from '@/tenant/hooks/collections/organization';
 import { useTranslation } from '@/hooks/useTranslation';
+import { OrganizationBlueprintDiffGrid } from './OrganizationBlueprintDiffGrid';
 
 export interface OrganizationBlueprintModalProps {
   open: boolean;
@@ -24,6 +26,11 @@ export function OrganizationBlueprintModal({
   const [selectedBlueprintId, setSelectedBlueprintId] = useState<string>('madrasa-standard-v1');
   const [replaceExisting, setReplaceExisting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const { data: previewDiff, isLoading: previewLoading } = useOrganizationBlueprintPreview(
+    selectedBlueprintId,
+    { enabled: open && Boolean(selectedBlueprintId) },
+  );
 
   const applyBlueprintMutation = useApplyBlueprint();
 
@@ -127,6 +134,11 @@ export function OrganizationBlueprintModal({
             })}
           </div>
         )}
+
+        {/* Structure Diff Preview */}
+        {previewDiff && !previewLoading ? (
+          <OrganizationBlueprintDiffGrid previewDiff={previewDiff} />
+        ) : null}
 
         <div className="pt-2 border-t border-border">
           <label className="flex items-start gap-2.5 cursor-pointer">

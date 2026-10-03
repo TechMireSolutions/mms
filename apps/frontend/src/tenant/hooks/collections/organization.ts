@@ -21,6 +21,8 @@ export {
   useUpdatePosition,
   useDeletePosition,
   useOrganizationBlueprints,
+  useOrganizationBlueprintPreview,
   useApplyBlueprint,
   invalidateOrganizationQueries,
+  type BlueprintPreviewDiff,
 } from '@/tenant/features/organization/hooks/useOrganizationApi';

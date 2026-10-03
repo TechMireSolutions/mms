@@ -30,6 +30,8 @@ const onboardBodyBaseSchema = z.object({
   postalCode: z.string().optional(),
   socialLinks: z.array(z.object({ platform: z.string(), url: z.string() })).optional(),
   modules: z.array(z.string()).optional(),
+  industryType: z.string().optional(),
+  blueprintId: z.string().optional(),
 }).strict();
 
 export const onboardBodySchema = z.preprocess((raw) => {

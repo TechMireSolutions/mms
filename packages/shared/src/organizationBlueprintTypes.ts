@@ -5,7 +5,7 @@
 
 import { z } from 'zod';
 
-export const INDUSTRY_TYPES = ['madrasa', 'hotel', 'office', 'retail', 'general'] as const;
+export const INDUSTRY_TYPES = ['madrasa', 'hotel', 'office', 'retail', 'custom', 'general'] as const;
 export type IndustryType = (typeof INDUSTRY_TYPES)[number];
 
 export const blueprintLocationSchema = z.object({

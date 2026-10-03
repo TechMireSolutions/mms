@@ -1,5 +1,5 @@
 import type { AuthError } from '@/lib/authErrors';
-import type { TenantLoginResponse, User, Workspace } from '@mms/shared';
+import type { IndustryType, TenantLoginResponse, User, Workspace } from '@mms/shared';
 import { getCurrentSubdomain, isCurrentHostApex } from '@/lib/config/tenantConfig';
 import { reportClientError } from '@/lib/clientErrorReporting';
 
@@ -41,6 +41,8 @@ export interface OnboardPayload {
   city?: string;
   region?: string;
   modules?: string[];
+  industryType?: IndustryType;
+  blueprintId?: string;
 }
 
 export interface AuthContextType {

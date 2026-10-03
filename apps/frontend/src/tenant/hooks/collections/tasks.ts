@@ -17,7 +17,11 @@ export {
   useUpdateTask,
   useUpdateTaskStatus,
   useDeleteTask,
+  useEligibleTaskAssignees,
+  useTaskSettings,
+  useUpdateTaskSettings,
   invalidateTasksQueries,
   type TasksListResponse,
   type TaskMetricsResponse,
+  type EligibleAssigneeItem,
 } from '@/tenant/features/tasks/hooks/useTasksApi';

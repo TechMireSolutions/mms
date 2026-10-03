@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Save, Bell, UserCheck } from 'lucide-react';
 import {
   type TaskSettings,
@@ -6,6 +6,8 @@ import {
   type DelegationScope,
 } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useTaskSettings, useUpdateTaskSettings } from '@/tenant/hooks/collections/tasks';
+import { notify } from '@/lib/notify';
 
 export interface TasksSetupTabProps {
   initialSettings?: TaskSettings;
@@ -17,13 +19,27 @@ export function TasksSetupTab({
   canEditSetup = true,
 }: TasksSetupTabProps): React.JSX.Element {
   const { t } = useTranslation();
+  const { data: serverSettings, isLoading } = useTaskSettings();
+  const updateSettingsMutation = useUpdateTaskSettings();
+
   const [settings, setSettings] = useState<TaskSettings>(initialSettings);
   const [saved, setSaved] = useState(false);
 
-  const handleSave = () => {
-    // In local demo / module setup preference store
-    setSaved(true);
-    setTimeout(() => setSaved(false), 2000);
+  useEffect(() => {
+    if (serverSettings) {
+      setSettings(serverSettings);
+    }
+  }, [serverSettings]);
+
+  const handleSave = async () => {
+    try {
+      await updateSettingsMutation.mutateAsync(settings);
+      setSaved(true);
+      notify.success('Task preferences updated successfully');
+      setTimeout(() => setSaved(false), 2000);
+    } catch (err) {
+      notify.error(err instanceof Error ? err.message : 'Failed to update preferences');
+    }
   };
 
   return (
@@ -46,7 +62,7 @@ export function TasksSetupTab({
               value="descendants"
               checked={settings.delegationScope === 'descendants'}
               onChange={() => setSettings({ ...settings, delegationScope: 'descendants' as DelegationScope })}
-              disabled={!canEditSetup}
+              disabled={!canEditSetup || isLoading}
               className="mt-1 text-primary focus:ring-primary"
             />
             <div>
@@ -66,7 +82,7 @@ export function TasksSetupTab({
               value="direct_reports"
               checked={settings.delegationScope === 'direct_reports'}
               onChange={() => setSettings({ ...settings, delegationScope: 'direct_reports' as DelegationScope })}
-              disabled={!canEditSetup}
+              disabled={!canEditSetup || isLoading}
               className="mt-1 text-primary focus:ring-primary"
             />
             <div>
@@ -97,7 +113,7 @@ export function TasksSetupTab({
               type="checkbox"
               checked={settings.allowSelfAssignment}
               onChange={(e) => setSettings({ ...settings, allowSelfAssignment: e.target.checked })}
-              disabled={!canEditSetup}
+              disabled={!canEditSetup || isLoading}
               className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
             />
           </div>
@@ -118,7 +134,7 @@ export function TasksSetupTab({
               type="checkbox"
               checked={settings.notifyOnAssignment}
               onChange={(e) => setSettings({ ...settings, notifyOnAssignment: e.target.checked })}
-              disabled={!canEditSetup}
+              disabled={!canEditSetup || isLoading}
               className="h-4 w-4 rounded border-input text-primary focus:ring-primary"
             />
           </div>
@@ -129,10 +145,11 @@ export function TasksSetupTab({
             <button
               type="button"
               onClick={handleSave}
-              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs"
+              disabled={updateSettingsMutation.isPending || isLoading}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90 transition-colors shadow-xs disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
-              <span>{saved ? 'Saved!' : 'Save Preferences'}</span>
+              <span>{updateSettingsMutation.isPending ? 'Saving...' : saved ? 'Saved!' : 'Save Preferences'}</span>
             </button>
           </div>
         ) : null}

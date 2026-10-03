@@ -32,7 +32,7 @@ export function positionHierarchySql(
       SELECT p.id, p.code, p.name, p.department_id, p.designation_id,
              p.location_id, p.parent_position_id, p.capacity,
              0 AS depth, ARRAY[p.id] AS path, FALSE AS is_cycle
-      FROM eligible p WHERE p.id = ${positionId}::uuid
+      FROM eligible p WHERE p.id = ${positionId}
       UNION ALL
       SELECT n.id, n.code, n.name, n.department_id, n.designation_id,
              n.location_id, n.parent_position_id, n.capacity,

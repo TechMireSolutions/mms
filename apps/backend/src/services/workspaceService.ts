@@ -169,6 +169,7 @@ export async function createWorkspace(workspaceInput: {
   madrasaName: string;
   tagline?: string;
   country?: string;
+  industryType?: string;
 }): Promise<Workspace> {
   const subdomain = normalizeSubdomainInput(workspaceInput.subdomain);
   if (!isValidSubdomain(subdomain)) {
@@ -192,6 +193,7 @@ export async function createWorkspace(workspaceInput: {
       madrasaName: workspaceInput.madrasaName,
       tagline: workspaceInput.tagline || null,
       country: workspaceInput.country || null,
+      industryType: workspaceInput.industryType || 'madrasa',
       enabled: true,
     };
 
