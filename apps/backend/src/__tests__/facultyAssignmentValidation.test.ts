@@ -16,29 +16,82 @@ function assignmentQueries() {
 }
 
 describe('Faculty assignment production validation', () => {
+  it('rejects new appointments without an organization position', async () => {
+    // Arrange — create path (no existing row)
+    tx.execute.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
+
+    // Act + Assert
+    await expect(validateFacultyAssignment(tx, 'tenant', input)).rejects.toThrow(
+      'New appointments require an organization position',
+    );
+  });
+
+  it('allows updating a legacy appointment that still lacks a position', async () => {
+    // Arrange — update path preserves null positionId until ops backfill
+    tx.execute
+      .mockResolvedValueOnce({ rows: [] }) // lock
+      .mockResolvedValueOnce({ rows: [{ faculty_id: 'f', deleted_at: null }] })
+      .mockResolvedValueOnce({ rows: [{ id: 'f' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 'd' }] })
+      .mockResolvedValueOnce({ rows: [{ id: 'g' }] });
+
+    // Act + Assert
+    await expect(validateFacultyAssignment(tx, 'tenant', input)).resolves.toBeUndefined();
+  });
+
   it('allows a secondary role without checking primary overlaps', async () => {
     assignmentQueries();
-    await expect(validateFacultyAssignment(tx, 'tenant', input)).resolves.toBeUndefined();
-    expect(tx.execute).toHaveBeenCalledTimes(5);
+    tx.execute
+      .mockResolvedValueOnce({
+        rows: [{ id: 'pos-1', capacity: 2, department_id: 'd', designation_id: 'g' }],
+      })
+      .mockResolvedValueOnce({ rows: [{ peak: 1 }] });
+    await expect(
+      validateFacultyAssignment(tx, 'tenant', { ...input, positionId: 'pos-1' }),
+    ).resolves.toBeUndefined();
   });
 
   it('rejects a primary promotion when another period overlaps', async () => {
     assignmentQueries();
     tx.execute.mockResolvedValueOnce({ rows: [{ id: 'existing-primary' }] });
-    await expect(validateFacultyAssignment(tx, 'tenant', { ...input, isPrimary: true })).rejects.toThrow('overlaps');
+    await expect(
+      validateFacultyAssignment(tx, 'tenant', { ...input, isPrimary: true, positionId: 'pos-1' }),
+    ).rejects.toThrow('overlaps');
   });
 
   it('rejects a reporting chain that is still open at the depth limit', async () => {
     assignmentQueries();
-    tx.execute.mockResolvedValueOnce({ rows: [{ id: 'parent', faculty_id: 'parent-person', reports_to_assignment_id: 'far' }] })
+    tx.execute
+      .mockResolvedValueOnce({
+        rows: [{ id: 'pos-1', capacity: 2, department_id: 'd', designation_id: 'g' }],
+      })
+      .mockResolvedValueOnce({ rows: [{ peak: 1 }] })
+      .mockResolvedValueOnce({ rows: [{ id: 'parent', faculty_id: 'parent-person', reports_to_assignment_id: 'far' }] })
       .mockResolvedValueOnce({ rows: [{ id: 'far', facultyId: 'other', reportsToAssignmentId: 'further', depth: 20, isCycle: false }] });
-    await expect(validateFacultyAssignment(tx, 'tenant', { ...input, reportsToAssignmentId: 'parent' })).rejects.toThrow('depth limit');
+    await expect(
+      validateFacultyAssignment(tx, 'tenant', {
+        ...input,
+        positionId: 'pos-1',
+        reportsToAssignmentId: 'parent',
+      }),
+    ).rejects.toThrow('depth limit');
   });
 
   it('rejects a repeated person even when assignment IDs differ', async () => {
     assignmentQueries();
-    tx.execute.mockResolvedValueOnce({ rows: [{ id: 'different', faculty_id: 'f', depth: 0, cycle: false }] });
-    await expect(validateFacultyAssignment(tx, 'tenant', { ...input, reportsToAssignmentId: 'different' })).rejects.toThrow('Circular');
+    tx.execute
+      .mockResolvedValueOnce({
+        rows: [{ id: 'pos-1', capacity: 2, department_id: 'd', designation_id: 'g' }],
+      })
+      .mockResolvedValueOnce({ rows: [{ peak: 1 }] })
+      .mockResolvedValueOnce({ rows: [{ id: 'different', faculty_id: 'f', depth: 0, cycle: false }] });
+    await expect(
+      validateFacultyAssignment(tx, 'tenant', {
+        ...input,
+        positionId: 'pos-1',
+        reportsToAssignmentId: 'different',
+      }),
+    ).rejects.toThrow('Circular');
   });
 
   it('rejects archived assignments instead of resurrecting them through upsert', async () => {

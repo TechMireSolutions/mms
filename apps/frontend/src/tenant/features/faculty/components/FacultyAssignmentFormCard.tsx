@@ -61,15 +61,19 @@ export function FacultyAssignmentFormCard({
             options={designationOptions}
           />
         </Field>
-        <Field id="asgn-position" label={t('faculty.assignments.position')}>
+        <Field id="asgn-position" label={t('faculty.assignments.position')} required={mode === 'add'}>
           <FormSelect
             id="asgn-position"
             value={form.positionId}
             onChange={(v) => onPatchForm({ positionId: v })}
-            options={[
-              { value: '', label: t('faculty.assignments.noPosition') },
-              ...positionOptions,
-            ]}
+            options={
+              mode === 'add'
+                ? positionOptions
+                : [
+                    { value: '', label: t('faculty.assignments.noPosition') },
+                    ...positionOptions,
+                  ]
+            }
           />
         </Field>
         <Field id="asgn-start" label={t('faculty.designations.startsOn')} required>

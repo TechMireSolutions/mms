@@ -32,6 +32,8 @@ export const RBAC_PERMISSION_NAV: readonly RbacPermissionNavEntry[] = [
   { type: 'module', rbacId: 'contacts' },
   { type: 'module', rbacId: 'faculty' },
   { type: 'module', rbacId: 'messaging' },
+  { type: 'module', rbacId: 'tasks' },
+  { type: 'module', rbacId: 'tasks.assign_anywhere' },
   {
     type: 'group',
     groupId: 'academics',

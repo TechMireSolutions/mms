@@ -23,6 +23,12 @@ export async function validateFacultyAssignment(
   if (existing.rows.some((row) => row.faculty_id !== input.facultyId || row.deleted_at !== null)) {
     throw new Error('Assignment is archived or belongs to another faculty member');
   }
+  const isCreate = existing.rows.length === 0;
+  // New appointments must occupy a structural position (org chart + task delegation).
+  // Legacy rows may keep a null positionId until ops backfill; updates preserve that.
+  if (isCreate && !input.positionId) {
+    throw new Error('New appointments require an organization position');
+  }
   const member = await tx.execute(sql`
     SELECT id FROM faculty WHERE workspace_subdomain = ${tenant}
       AND id = ${input.facultyId} AND deleted_at IS NULL FOR UPDATE

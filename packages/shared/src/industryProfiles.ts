@@ -6,11 +6,12 @@
 import type { AppTranslationKey } from './appTranslations.js';
 import { type IndustryType } from './organizationBlueprintTypes.js';
 
+/** Industry terminology as i18n keys (resolved at the UI boundary). */
 export interface TerminologyProfile {
-  facultyLabel: string;
-  staffSingular: string;
-  studentLabel: string;
-  locationLabel: string;
+  facultyLabelKey: AppTranslationKey;
+  staffSingularKey: AppTranslationKey;
+  studentLabelKey: AppTranslationKey;
+  locationLabelKey: AppTranslationKey;
 }
 
 export interface IndustryProfile {
@@ -61,10 +62,10 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
     recommendedBlueprintId: 'madrasa-standard-v1',
     recommendedRoles: ['mohtamim', 'nazim_taleemat', 'ustad', 'accountant', 'admin'],
     terminology: {
-      facultyLabel: 'Faculty & Asatizah',
-      staffSingular: 'Teacher',
-      studentLabel: 'Students & Talaba',
-      locationLabel: 'Campus / Block',
+      facultyLabelKey: 'organization.terminology.madrasa.facultyLabel',
+      staffSingularKey: 'organization.terminology.madrasa.staffSingular',
+      studentLabelKey: 'organization.terminology.madrasa.studentLabel',
+      locationLabelKey: 'organization.terminology.madrasa.locationLabel',
     },
   },
   hotel: {
@@ -75,10 +76,10 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
     recommendedBlueprintId: 'hotel-standard-v2',
     recommendedRoles: ['general_manager', 'department_head', 'supervisor', 'staff', 'admin'],
     terminology: {
-      facultyLabel: 'Staff & Team',
-      staffSingular: 'Employee',
-      studentLabel: 'Guests & Patrons',
-      locationLabel: 'Property / Wing',
+      facultyLabelKey: 'organization.terminology.hotel.facultyLabel',
+      staffSingularKey: 'organization.terminology.hotel.staffSingular',
+      studentLabelKey: 'organization.terminology.hotel.studentLabel',
+      locationLabelKey: 'organization.terminology.hotel.locationLabel',
     },
   },
   office: {
@@ -89,10 +90,10 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
     recommendedBlueprintId: 'office-standard-v1',
     recommendedRoles: ['executive', 'team_lead', 'team_member', 'admin'],
     terminology: {
-      facultyLabel: 'Staff & Personnel',
-      staffSingular: 'Employee',
-      studentLabel: 'Clients & Partners',
-      locationLabel: 'Office / Floor',
+      facultyLabelKey: 'organization.terminology.office.facultyLabel',
+      staffSingularKey: 'organization.terminology.office.staffSingular',
+      studentLabelKey: 'organization.terminology.office.studentLabel',
+      locationLabelKey: 'organization.terminology.office.locationLabel',
     },
   },
   retail: {
@@ -103,10 +104,10 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
     recommendedBlueprintId: 'retail-standard-v1',
     recommendedRoles: ['store_manager', 'inventory_lead', 'cashier', 'admin'],
     terminology: {
-      facultyLabel: 'Store Associates',
-      staffSingular: 'Staff',
-      studentLabel: 'Customers & Shoppers',
-      locationLabel: 'Store / Outlet',
+      facultyLabelKey: 'organization.terminology.retail.facultyLabel',
+      staffSingularKey: 'organization.terminology.retail.staffSingular',
+      studentLabelKey: 'organization.terminology.retail.studentLabel',
+      locationLabelKey: 'organization.terminology.retail.locationLabel',
     },
   },
   custom: {
@@ -117,10 +118,10 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
     recommendedBlueprintId: 'office-standard-v1',
     recommendedRoles: ['manager', 'staff', 'admin'],
     terminology: {
-      facultyLabel: 'Team Members',
-      staffSingular: 'Member',
-      studentLabel: 'Clients',
-      locationLabel: 'Branch / Site',
+      facultyLabelKey: 'organization.terminology.custom.facultyLabel',
+      staffSingularKey: 'organization.terminology.custom.staffSingular',
+      studentLabelKey: 'organization.terminology.custom.studentLabel',
+      locationLabelKey: 'organization.terminology.custom.locationLabel',
     },
   },
   general: {
@@ -131,10 +132,10 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
     recommendedBlueprintId: 'office-standard-v1',
     recommendedRoles: ['manager', 'staff', 'admin'],
     terminology: {
-      facultyLabel: 'Team Members',
-      staffSingular: 'Member',
-      studentLabel: 'Clients',
-      locationLabel: 'Location',
+      facultyLabelKey: 'organization.terminology.general.facultyLabel',
+      staffSingularKey: 'organization.terminology.general.staffSingular',
+      studentLabelKey: 'organization.terminology.general.studentLabel',
+      locationLabelKey: 'organization.terminology.general.locationLabel',
     },
   },
 };

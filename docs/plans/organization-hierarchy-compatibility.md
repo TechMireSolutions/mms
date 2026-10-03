@@ -18,6 +18,7 @@
 ## API notes
 
 - `PUT/POST` faculty assignment: `reportsToAssignmentId` is optional and ignored for new appointment IDs. Prefer `positionId`.
+- **New appointments require `positionId`** (backend validation + Faculty appointment UI). Updates may preserve a legacy null until ops backfill.
 - Faculty person writes: `reportingFacultyId` is forced `NULL` on create via `persistFacultyTx`; prefer Organization chart + assignment `positionId` occupancy.
 
 ## Backfill helper (ops)
@@ -50,12 +51,13 @@ Creates missing `organization_positions` when needed and sets `faculty_assignmen
 
 ## End state (later release)
 
-1. Backfill positions from assignment reporting where safe.
+1. Backfill positions from assignment reporting where safe (ops script above).
 2. Cut Faculty writes away from person-level reporting (**done** soft-stop on create; seed already off for new tenants).
 3. Stop writing `reports_to_assignment_id` for new appointments (**done** soft-stop).
-4. Forward-only migration drops legacy columns only after zero dependents.
+4. Require `positionId` on new appointments (**done** — creates reject without a position; legacy nulls preserved on update until backfill).
+5. Forward-only migration drops legacy columns only after zero dependents.
 
-Until then: new features must use positions; dual trees may diverge—tasks and org chart follow positions only.
+Until then: dual trees may still diverge for legacy rows without `position_id`—tasks and org chart follow positions only.
 
 ## Applied blueprint metadata (0137+)
 

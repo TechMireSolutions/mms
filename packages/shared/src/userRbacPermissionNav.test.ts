@@ -7,6 +7,16 @@ import {
 import { RBAC_MODULE_REGISTRY } from './userRbacModuleRegistry.js';
 
 describe('userRbacPermissionNav', () => {
+  it('groups tasks and assign-anywhere after messaging', () => {
+    const groups = groupRbacModulesForPermissionsNav(RBAC_MODULE_REGISTRY);
+    const messagingIdx = groups.findIndex((g) => g.groupId === 'module-messaging');
+    const tasksIdx = groups.findIndex((g) => g.groupId === 'module-tasks');
+    const elevateIdx = groups.findIndex((g) => g.groupId === 'module-tasks.assign_anywhere');
+    expect(messagingIdx).toBeGreaterThanOrEqual(0);
+    expect(tasksIdx).toBe(messagingIdx + 1);
+    expect(elevateIdx).toBe(tasksIdx + 1);
+  });
+
   it('groups RBAC modules in navigation order', () => {
     const groups = groupRbacModulesForPermissionsNav(RBAC_MODULE_REGISTRY);
     expect(groups.length).toBeGreaterThan(0);

@@ -110,6 +110,11 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
       notify.error(t('faculty.assignments.validationRequired'));
       return;
     }
+    // New appointments must occupy a position; legacy edits may still lack one until backfill.
+    if (mode === 'add' && !form.positionId) {
+      notify.error(t('faculty.assignments.positionRequired'));
+      return;
+    }
     const payload: FacultyAssignmentWrite & { id: string } = {
       id: form.id || crypto.randomUUID(),
       facultyId: faculty.id,

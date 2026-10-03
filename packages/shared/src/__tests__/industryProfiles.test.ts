@@ -34,14 +34,14 @@ describe('industryProfiles', () => {
     expect(getRecommendedBlueprintForIndustry('madrasa')).toBe('madrasa-standard-v1');
   });
 
-  it('provides tailored terminology without breaking canonical internal models', () => {
+  it('provides tailored terminology keys without breaking canonical internal models', () => {
     const hotelTerms = getTerminologyForIndustry('hotel');
-    expect(hotelTerms.staffSingular).toBe('Employee');
-    expect(hotelTerms.studentLabel).toBe('Guests & Patrons');
+    expect(hotelTerms.staffSingularKey).toBe('organization.terminology.hotel.staffSingular');
+    expect(hotelTerms.studentLabelKey).toBe('organization.terminology.hotel.studentLabel');
 
     const madrasaTerms = getTerminologyForIndustry('madrasa');
-    expect(madrasaTerms.staffSingular).toBe('Teacher');
-    expect(madrasaTerms.studentLabel).toBe('Students & Talaba');
+    expect(madrasaTerms.staffSingularKey).toBe('organization.terminology.madrasa.staffSingular');
+    expect(madrasaTerms.studentLabelKey).toBe('organization.terminology.madrasa.studentLabel');
   });
 
   it('falls back safely to madrasa profile on unknown or empty input', () => {

@@ -9,6 +9,11 @@ import {
   TASK_STATUSES,
 } from '@mms/shared';
 import { FormModal } from '@/components/ui/FormModal';
+import { Field } from '@/components/ui/FormPrimitives';
+import { FormSelect } from '@/components/ui/FormSelect';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { DateTimePicker } from '@/components/ui/DateTimePicker';
 import { TaskFormAssigneePicker } from './TaskFormAssigneePicker';
 import { useTaskFormController } from './useTaskFormController';
 
@@ -58,81 +63,65 @@ export function TaskFormModal({
       onSave={handleSubmit}
     >
       <div className="space-y-4 py-2">
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            {t('tasks.title')} *
-          </label>
-          <input
-            type="text"
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+        <Field id="task-title" label={t('tasks.title')} required>
+          <Input
+            id="task-title"
+            name="title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
-            placeholder="Enter task title"
+            placeholder={t('tasks.titlePlaceholder')}
             autoFocus
           />
-        </div>
+        </Field>
 
-        <div>
-          <label className="block text-sm font-medium text-foreground mb-1">
-            {t('tasks.description')}
-          </label>
-          <textarea
+        <Field id="task-description" label={t('tasks.description')}>
+          <Textarea
+            id="task-description"
+            name="description"
             rows={3}
-            className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Optional detailed instructions"
+            placeholder={t('tasks.descriptionPlaceholder')}
           />
-        </div>
+        </Field>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {t('tasks.priority')}
-            </label>
-            <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          <Field id="task-priority" label={t('tasks.priority')}>
+            <FormSelect
+              id="task-priority"
+              name="priority"
               value={priority}
-              onChange={(e) => setPriority(e.target.value as TaskPriority)}
-            >
-              {TASK_PRIORITIES.map((p) => (
-                <option key={p} value={p}>
-                  {t(`tasks.priority.${p}` as AppTranslationKey)}
-                </option>
-              ))}
-            </select>
-          </div>
+              onChange={(v) => setPriority(v as TaskPriority)}
+              options={TASK_PRIORITIES.map((p) => ({
+                value: p,
+                label: t(`tasks.priority.${p}` as AppTranslationKey),
+              }))}
+            />
+          </Field>
 
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {t('tasks.status')}
-            </label>
-            <select
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          <Field id="task-status" label={t('tasks.status')}>
+            <FormSelect
+              id="task-status"
+              name="status"
               value={status}
-              onChange={(e) => setStatus(e.target.value as TaskStatus)}
-            >
-              {TASK_STATUSES.map((s) => (
-                <option key={s} value={s}>
-                  {t(`tasks.status.${s}` as AppTranslationKey)}
-                </option>
-              ))}
-            </select>
-          </div>
+              onChange={(v) => setStatus(v as TaskStatus)}
+              options={TASK_STATUSES.map((s) => ({
+                value: s,
+                label: t(`tasks.status.${s}` as AppTranslationKey),
+              }))}
+            />
+          </Field>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div>
-            <label className="block text-sm font-medium text-foreground mb-1">
-              {t('tasks.dueAt')}
-            </label>
-            <input
-              type="datetime-local"
-              className="w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+          <Field id="task-due-at" label={t('tasks.dueAt')}>
+            <DateTimePicker
+              id="task-due-at"
+              name="dueAt"
               value={dueAt}
-              onChange={(e) => setDueAt(e.target.value)}
+              onChange={(v) => setDueAt(v)}
             />
-          </div>
+          </Field>
 
           <TaskFormAssigneePicker
             eligibleList={eligibleList}

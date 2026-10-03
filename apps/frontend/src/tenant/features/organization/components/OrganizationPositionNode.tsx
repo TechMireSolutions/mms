@@ -50,7 +50,12 @@ export function OrganizationPositionNode({
                 : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-900'
             }`}
           >
-            {occupiedCount} / {node.capacity} {isVacant ? t('organization.vacant') : isFull ? t('organization.full') : 'filled'}
+            {occupiedCount} / {node.capacity}{' '}
+            {isVacant
+              ? t('organization.vacant')
+              : isFull
+                ? t('organization.full')
+                : t('organization.filled')}
           </span>
         </div>
 
@@ -90,7 +95,7 @@ export function OrganizationPositionNode({
           ) : (
             <div className="flex items-center gap-1.5 text-muted-foreground italic text-[11px]">
               <User className="h-3.5 w-3.5" />
-              <span>{t('organization.vacant')} — Position open</span>
+              <span>{t('organization.positionOpen')}</span>
             </div>
           )}
         </div>
@@ -109,17 +114,17 @@ export function OrganizationPositionNode({
               {collapsed ? (
                 <>
                   <ChevronRight className="h-3.5 w-3.5" />
-                  <span>Show {node.children.length} sub-branches</span>
+                  <span>{t('organization.showSubBranches', { count: node.children.length })}</span>
                 </>
               ) : (
                 <>
                   <ChevronDown className="h-3.5 w-3.5" />
-                  <span>Collapse branch</span>
+                  <span>{t('organization.collapseBranch')}</span>
                 </>
               )}
             </button>
           ) : (
-            <span className="text-[11px] text-muted-foreground">Leaf Position</span>
+            <span className="text-[11px] text-muted-foreground">{t('organization.leafPosition')}</span>
           )}
 
           {canWrite && onAddChild ? (
@@ -129,8 +134,9 @@ export function OrganizationPositionNode({
                 e.stopPropagation();
                 onAddChild(node);
               }}
-              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors"
-              title="Add subordinate position"
+              className="p-1 rounded text-muted-foreground hover:text-foreground hover:bg-muted transition-colors min-h-11 min-w-11 inline-flex items-center justify-center"
+              title={t('organization.addSubordinate')}
+              aria-label={t('organization.addSubordinate')}
             >
               <Plus className="h-3.5 w-3.5" />
             </button>

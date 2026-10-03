@@ -6,13 +6,14 @@
 import { SYSTEM_MODULES_BY_ID, normalizeEnabledModules } from './settingsTypes.js';
 import type { RbacModuleDef } from './userEntityTypes.js';
 
-/** Canonical tuple of all 17 RBAC module identifiers. */
+/** Canonical tuple of all 18 RBAC module identifiers (includes Tasks elevate capability). */
 export const RBAC_MODULE_IDS = [
   'dashboard',
   'contacts',
   'faculty',
   'messaging',
   'tasks',
+  'tasks.assign_anywhere',
   'students',
   'sessions',
   'attendance',
@@ -35,6 +36,7 @@ export const RBAC_MODULE_REGISTRY: readonly RbacModuleDef[] = [
   { id: 'faculty', labelKey: 'nav.faculty' },
   { id: 'messaging', labelKey: 'nav.messaging' },
   { id: 'tasks', labelKey: 'nav.tasks' },
+  { id: 'tasks.assign_anywhere', labelKey: 'users.rbac.tasksAssignAnywhere' },
   { id: 'students', labelKey: 'nav.students' },
   { id: 'sessions', labelKey: 'nav.sessions' },
   { id: 'attendance', labelKey: 'nav.attendance' },
@@ -85,6 +87,7 @@ export function isValidRbacModuleId(id: unknown): id is RbacModuleId {
 export const RBAC_SYSTEM_MODULE_ID: Readonly<Record<string, string>> = Object.freeze({
   enrollments: 'enrollment',
   examinations: 'examination',
+  'tasks.assign_anywhere': 'tasks',
 } satisfies Partial<Record<RbacModuleId, string>>);
 
 /** Resolves the system-modules settings key for an RBAC permission row. */

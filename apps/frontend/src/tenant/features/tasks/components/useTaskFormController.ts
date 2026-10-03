@@ -27,7 +27,7 @@ export function useTaskFormController({
   const [description, setDescription] = useState('');
   const [priority, setPriority] = useState<TaskPriority>('medium');
   const [status, setStatus] = useState<TaskStatus>('todo');
-  const [dueAt, setDueAt] = useState('');
+  const [dueAt, setDueAt] = useState<string | null>(null);
   const [selectedAssignees, setSelectedAssignees] = useState<SelectedAssignee[]>([]);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,10 +39,16 @@ export function useTaskFormController({
       setDescription(initialData.description ?? '');
       setPriority(initialData.priority);
       setStatus(initialData.status);
-      setDueAt(initialData.dueAt ? new Date(initialData.dueAt).toISOString().slice(0, 16) : '');
+      setDueAt(
+        initialData.dueAt
+          ? (initialData.dueAt instanceof Date
+            ? initialData.dueAt.toISOString()
+            : String(initialData.dueAt))
+          : null,
+      );
       const current = initialData.assignees?.map((a) => ({
         facultyId: a.facultyId,
-        name: a.facultyName || 'Staff Member',
+        name: a.facultyName || t('tasks.assigneeFallback'),
         positionId: a.positionId ?? undefined,
         positionName: a.positionName ?? undefined,
       })) ?? [];
@@ -52,11 +58,11 @@ export function useTaskFormController({
       setDescription('');
       setPriority('medium');
       setStatus('todo');
-      setDueAt('');
+      setDueAt(null);
       setSelectedAssignees([]);
     }
     setError(null);
-  }, [initialData, open]);
+  }, [initialData, open, t]);
 
   const handleAddAssignee = (facultyId: string) => {
     if (!facultyId) return;
@@ -81,7 +87,7 @@ export function useTaskFormController({
   const handleSubmit = async () => {
     const trimmedTitle = title.trim();
     if (!trimmedTitle) {
-      setError('Title is required');
+      setError(t('tasks.titleRequired'));
       return;
     }
 
@@ -95,7 +101,7 @@ export function useTaskFormController({
       description: description.trim() || undefined,
       priority,
       status,
-      dueAt: dueAt ? new Date(dueAt).toISOString() : null,
+      dueAt: dueAt || null,
       assignees,
     };
 
@@ -103,7 +109,7 @@ export function useTaskFormController({
       await onSave(payload);
       onClose();
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save task');
+      setError(err instanceof Error ? err.message : t('tasks.saveFailed'));
     }
   };
 

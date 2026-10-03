@@ -13,9 +13,9 @@ import {
 } from './userRbacModuleRegistry.js';
 
 describe('userRbacModuleRegistry', () => {
-  it('contains all 17 canonical RBAC modules', () => {
-    expect(RBAC_MODULE_IDS.length).toBe(17);
-    expect(RBAC_MODULE_REGISTRY.length).toBe(17);
+  it('contains all 18 canonical RBAC modules', () => {
+    expect(RBAC_MODULE_IDS.length).toBe(18);
+    expect(RBAC_MODULE_REGISTRY.length).toBe(18);
     for (const id of RBAC_MODULE_IDS) {
       expect(RBAC_MODULES_BY_ID[id]).toBeDefined();
       expect(RBAC_MODULES_BY_ID[id].id).toBe(id);
@@ -37,6 +37,7 @@ describe('userRbacModuleRegistry', () => {
     expect(rbacModuleSystemId('obligations')).toBe('obligations');
     expect(rbacModuleSystemId('students')).toBe('students');
     expect(rbacModuleSystemId('finance')).toBe('finance');
+    expect(rbacModuleSystemId('tasks.assign_anywhere')).toBe('tasks');
     expect(rbacModuleSystemId('unknown_mod')).toBe('unknown_mod');
   });
 
@@ -44,6 +45,7 @@ describe('userRbacModuleRegistry', () => {
     expect(getRbacModuleDef('students')?.labelKey).toBe('nav.students');
     expect(getRbacModuleDef('faculty')?.labelKey).toBe('nav.faculty');
     expect(getRbacModuleDef('teachers')?.labelKey).toBe('nav.faculty');
+    expect(getRbacModuleDef('tasks.assign_anywhere')?.labelKey).toBe('users.rbac.tasksAssignAnywhere');
     expect(getRbacModuleDef('nonexistent')).toBeUndefined();
   });
 
@@ -51,6 +53,7 @@ describe('userRbacModuleRegistry', () => {
     expect(isValidRbacModuleId('students')).toBe(true);
     expect(isValidRbacModuleId('dashboard')).toBe(true);
     expect(isValidRbacModuleId('faculty')).toBe(true);
+    expect(isValidRbacModuleId('tasks.assign_anywhere')).toBe(true);
     expect(isValidRbacModuleId('teachers')).toBe(false);
     expect(isValidRbacModuleId('accounting')).toBe(true);
     expect(isValidRbacModuleId('fake_module')).toBe(false);
@@ -75,9 +78,21 @@ describe('userRbacModuleRegistry', () => {
     expect(visible.some((m) => m.id === 'settings')).toBe(true);
   });
 
+  it('hides tasks.assign_anywhere when the tasks system module is disabled', () => {
+    const visible = filterRbacModulesForSettings({ tasks: false });
+    expect(visible.some((m) => m.id === 'tasks')).toBe(false);
+    expect(visible.some((m) => m.id === 'tasks.assign_anywhere')).toBe(false);
+  });
+
+  it('shows tasks.assign_anywhere when the tasks system module is enabled', () => {
+    const visible = filterRbacModulesForSettings({ tasks: true });
+    expect(visible.some((m) => m.id === 'tasks')).toBe(true);
+    expect(visible.some((m) => m.id === 'tasks.assign_anywhere')).toBe(true);
+  });
+
   it('defaults to all modules enabled when null/undefined settings provided', () => {
     const visible = filterRbacModulesForSettings(null);
-    expect(visible.length).toBe(17);
+    expect(visible.length).toBe(18);
   });
 });
 

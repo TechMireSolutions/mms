@@ -130,6 +130,21 @@ describe('userRbacDefaults', () => {
       }
     });
 
+    it('seeds tasks access without assign-anywhere for operational roles', () => {
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.principal.permissions.tasks).toEqual([
+        'create',
+        'read',
+        'update',
+      ]);
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.teacher.permissions.tasks).toEqual(['read']);
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.registrar.permissions.tasks).toEqual(['read']);
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.assistant_teacher.permissions.tasks).toEqual(['read']);
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.principal.permissions['tasks.assign_anywhere']).toBeUndefined();
+      expect(DEFAULT_WORKSPACE_ROLES_MAP.admin.permissions['tasks.assign_anywhere']).toEqual([
+        ...PERMISSION_ACTIONS,
+      ]);
+    });
+
     it('inspects role module actions safely', () => {
       const teacher = getDefaultRole('teacher');
       expect(getRolePermissionActions(teacher, 'attendance')).toContain('create');

@@ -184,6 +184,7 @@ export const DEFAULT_WORKSPACE_ROLES: readonly WorkspaceRole[] = [
       accounting: ['read'],
       obligations: ['read'],
       messaging: ['create', 'read', 'update'],
+      tasks: ['create', 'read', 'update'],
       users: ['read'],
       settings: ['read'],
     },
@@ -206,6 +207,7 @@ export const DEFAULT_WORKSPACE_ROLES: readonly WorkspaceRole[] = [
       examinations: ['read'],
       obligations: ['read'],
       messaging: ['create', 'read'],
+      tasks: ['read'],
     },
   },
   {
@@ -225,6 +227,7 @@ export const DEFAULT_WORKSPACE_ROLES: readonly WorkspaceRole[] = [
       questionBank: ['create', 'read', 'update'],
       hasanat: ['create', 'read', 'update'],
       messaging: ['create', 'read'],
+      tasks: ['read'],
     },
   },
   {
@@ -242,6 +245,7 @@ export const DEFAULT_WORKSPACE_ROLES: readonly WorkspaceRole[] = [
       enrollments: ['read'],
       hasanat: ['read'],
       messaging: ['read'],
+      tasks: ['read'],
     },
   },
   {
