@@ -12,13 +12,13 @@
 
 | Field | Status |
 |---|---|
-| `faculty.reporting_faculty_id` / `hierarchy_rank` | Legacy person-level reporting. Seed defaults `reportingFacultyId` **disabled**; Faculty form shows a deprecation notice when re-enabled. Not used for task auth. |
+| `faculty.reporting_faculty_id` / `hierarchy_rank` | Legacy person-level reporting. Seed defaults `reportingFacultyId` **disabled**; Faculty form shows a deprecation notice when re-enabled. **Soft-stopped on create** (forced `NULL`); updates may preserve an existing value. Not used for task auth. |
 | `faculty_assignments.reports_to_assignment_id` | Compatibility only. **Soft-stopped on create** (forced `NULL`); updates may preserve an existing value. Assignment CTEs/validation still understand it; not org-chart authority. |
 
 ## API notes
 
 - `PUT/POST` faculty assignment: `reportsToAssignmentId` is optional and ignored for new appointment IDs. Prefer `positionId`.
-- Faculty person fields: prefer Organization chart + assignment position occupancy over `reportingFacultyId`.
+- Faculty person writes: `reportingFacultyId` is forced `NULL` on create via `persistFacultyTx`; prefer Organization chart + assignment `positionId` occupancy.
 
 ## Backfill helper (ops)
 
@@ -51,7 +51,7 @@ Creates missing `organization_positions` when needed and sets `faculty_assignmen
 ## End state (later release)
 
 1. Backfill positions from assignment reporting where safe.
-2. Cut Faculty writes away from person-level reporting (seed already off for new tenants).
+2. Cut Faculty writes away from person-level reporting (**done** soft-stop on create; seed already off for new tenants).
 3. Stop writing `reports_to_assignment_id` for new appointments (**done** soft-stop).
 4. Forward-only migration drops legacy columns only after zero dependents.
 

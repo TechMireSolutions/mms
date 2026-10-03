@@ -81,13 +81,21 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
     await page.locator('a[href="/onboarding"]:visible').first().click();
     await page.waitForURL('**/onboarding');
     await page.waitForSelector('#wizard-step-title');
-    await expect(page.locator('#wizard-step-title')).toContainText('Institution & theme');
+    await expect(page.locator('#wizard-step-title')).toContainText('Organization details');
 
     await page.fill('#onboarding-name', 'Test Madrasa');
     await page.fill('#onboarding-subdomain', subdomain);
     await expect(page.locator('text=Your URL:')).toBeVisible();
 
-    // 4. Onboarding Step 2 (Admin setup)
+    // Step 2 Modules
+    await page.click('button:has-text("Continue")');
+    await expect(page.locator('#wizard-step-title')).toContainText('Modules');
+
+    // Step 3 Structure (keep recommended)
+    await page.click('button:has-text("Continue")');
+    await expect(page.locator('#wizard-step-title')).toContainText('Organization structure');
+
+    // Step 4 Admin
     await page.click('button:has-text("Continue")');
     await page.waitForSelector('#firstName');
 
@@ -97,6 +105,10 @@ test.describe.serial('Platform Onboarding and Tenant Login E2E Flow', { tag: '@l
     await page.fill('#password', adminPassword);
     await page.fill('#confirmPassword', adminPassword);
     await page.check('#terms');
+
+    // Step 5 Complete + create
+    await page.click('button:has-text("Continue")');
+    await expect(page.locator('#wizard-step-title')).toContainText('Review and create');
     await page.click('button:has-text("Create workspace")');
     await page.waitForURL((url) => !url.pathname.includes('/onboarding'), { timeout: 45_000 });
     await expect(platformConsoleLanding.first()).toBeVisible({ timeout: 25_000 });

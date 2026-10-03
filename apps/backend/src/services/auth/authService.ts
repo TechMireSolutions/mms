@@ -230,8 +230,15 @@ export async function onboardUser(input: OnboardInput): Promise<OnboardResult> {
     throw new Error('Failed to create workspace administrator.');
   }
 
+  // Explicit empty blueprintId = start blank (skip apply). Omitted/undefined still
+  // falls back to the industry recommendation for older clients.
   const blueprintToApply =
-    input.blueprintId || (input.industryType ? (await import('@mms/shared')).getRecommendedBlueprintForIndustry(input.industryType) : null);
+    input.blueprintId === ''
+      ? null
+      : input.blueprintId ||
+        (input.industryType
+          ? (await import('@mms/shared')).getRecommendedBlueprintForIndustry(input.industryType)
+          : null);
   let blueprintApplyWarning: string | undefined;
   if (blueprintToApply) {
     const { applyOrganizationBlueprint } = await import('../organizationBlueprintService.js');

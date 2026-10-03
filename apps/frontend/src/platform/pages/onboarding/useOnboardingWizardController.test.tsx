@@ -10,11 +10,13 @@ describe('useOnboardingWizardController Definition & Types', () => {
     expect(ONBOARDING_INITIAL_DATA.subdomain).toBe('');
     expect(ONBOARDING_INITIAL_DATA.email).toBe('');
     expect(ONBOARDING_INITIAL_DATA.agreedTerms).toBe(false);
+    expect(ONBOARDING_INITIAL_DATA.applyRecommendedStructure).toBe(true);
   });
 
-  it('contains mandatory onboarding wizard steps in definition', () => {
-    expect(ONBOARDING_STEP_DEFS.length).toBe(2);
-    expect(ONBOARDING_STEP_DEFS[0]?.id).toBe(1);
-    expect(ONBOARDING_STEP_DEFS[1]?.id).toBe(2);
+  it('contains five onboarding wizard steps', () => {
+    expect(ONBOARDING_STEP_DEFS.length).toBe(5);
+    expect(ONBOARDING_STEP_DEFS.map((step) => step.id)).toEqual([1, 2, 3, 4, 5]);
+    expect(ONBOARDING_STEP_DEFS[0]?.labelKey).toBe('onboarding.stepOrgLabel');
+    expect(ONBOARDING_STEP_DEFS[4]?.labelKey).toBe('onboarding.stepCompleteLabel');
   });
 });

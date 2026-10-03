@@ -1,10 +1,8 @@
 import React from "react";
 import type { Dispatch, SetStateAction } from "react";
-import { type OnboardingData } from "@/platform/pages/onboarding/OnboardingWizard";
-import { useCreateMadrasaController } from "@/platform/pages/onboarding/steps/useCreateMadrasaController";
-import { CreateMadrasaIdentitySection } from "@/platform/pages/onboarding/steps/CreateMadrasaIdentitySection";
-import { CreateMadrasaIndustrySection } from "@/platform/pages/onboarding/steps/CreateMadrasaIndustrySection";
-import { CreateMadrasaModulesSection } from "@/platform/pages/onboarding/steps/CreateMadrasaModulesSection";
+import type { OnboardingData } from "@/platform/pages/onboarding/onboardingWizardTypes";
+import OrganizationDetailsStep from "@/platform/pages/onboarding/steps/OrganizationDetailsStep";
+import ModulesStep from "@/platform/pages/onboarding/steps/ModulesStep";
 
 interface CreateMadrasaProps {
   data: OnboardingData;
@@ -12,17 +10,14 @@ interface CreateMadrasaProps {
 }
 
 /**
- * Institution name + subdomain + industry + module selection.
- * Theme, branding, and contact details are configured by the tenant admin after first login.
+ * Legacy combined step kept for imports/tests — wizard now uses split steps.
+ * Renders organization details + modules for compatibility callers.
  */
 export default function CreateMadrasa({ data, onChange }: CreateMadrasaProps): React.ReactElement {
-  const controller = useCreateMadrasaController(data, onChange);
-
   return (
     <div className="space-y-6">
-      <CreateMadrasaIdentitySection controller={controller} />
-      <CreateMadrasaIndustrySection controller={controller} />
-      <CreateMadrasaModulesSection controller={controller} />
+      <OrganizationDetailsStep data={data} onChange={onChange} />
+      <ModulesStep data={data} onChange={onChange} />
     </div>
   );
 }

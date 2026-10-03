@@ -53,7 +53,10 @@ export function useOnboardingWizardController() {
       if (!data.name.trim()) return t("onboarding.errorMadrasaName");
       if (!data.subdomain || !isValidSubdomain(data.subdomain)) return t("onboarding.errorSubdomain");
     }
-    if (step === 2) {
+    if (step === 2 && data.modules.length === 0) {
+      return t("onboarding.errorModules");
+    }
+    if (step === 4) {
       if (!data.firstName.trim() || !data.lastName.trim()) return t("onboarding.errorAdminName");
       if (!isValidEmail(data.email)) return t("onboarding.errorAdminEmail");
       if (!data.agreedTerms) return t("onboarding.errorTerms");
@@ -94,7 +97,8 @@ export function useOnboardingWizardController() {
         subdomain: data.subdomain,
         modules: data.modules,
         industryType: data.industryType,
-        blueprintId: data.blueprintId,
+        // Empty string means start blank — backend must not fall back to industry default.
+        blueprintId: data.applyRecommendedStructure ? data.blueprintId : "",
       });
 
       notify.success(t("platform.workspaceCreatedToast"), {

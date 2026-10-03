@@ -46,7 +46,7 @@ export function useCreateMadrasaController(
     onChange((prev) => ({
       ...prev,
       industryType: industry,
-      blueprintId: blueprint,
+      blueprintId: prev.applyRecommendedStructure ? blueprint : "",
       modules: combined,
     }));
   };

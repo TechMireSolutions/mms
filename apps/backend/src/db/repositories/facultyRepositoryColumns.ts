@@ -1,3 +1,4 @@
+import { and, eq } from 'drizzle-orm';
 import { faculty } from '../schema.js';
 import type { AppDb } from '../tenant-context.js';
 import type { FacultyMember } from '@mms/shared';
@@ -108,15 +109,37 @@ export async function persistFacultyTx(
   facultyMember: FacultyMember,
   options?: { createOnly?: boolean },
 ): Promise<void> {
+  const memberId = String(facultyMember.id);
+  const existing = options?.createOnly
+    ? null
+    : (
+        await tx
+          .select({ reportingFacultyId: faculty.reportingFacultyId })
+          .from(faculty)
+          .where(and(eq(faculty.workspaceSubdomain, subdomain), eq(faculty.id, memberId)))
+          .limit(1)
+      )[0] ?? null;
+
+  // Soft-stop: new faculty never write person-level reporting; updates preserve unless provided.
+  const reportingFacultyId = existing
+    ? ((facultyMember as { reportingFacultyId?: string | null }).reportingFacultyId !== undefined
+        ? (facultyMember as { reportingFacultyId?: string | null }).reportingFacultyId ?? null
+        : existing.reportingFacultyId)
+    : null;
+  const softStoppedMember = {
+    ...facultyMember,
+    reportingFacultyId,
+  } as FacultyMember;
+
   if (options?.createOnly) {
-    await tx.insert(faculty).values(facultyWriteValues(subdomain, facultyMember));
+    await tx.insert(faculty).values(facultyWriteValues(subdomain, softStoppedMember));
     return;
   }
   await tx
     .insert(faculty)
-    .values(facultyWriteValues(subdomain, facultyMember))
+    .values(facultyWriteValues(subdomain, softStoppedMember))
     .onConflictDoUpdate({
       target: [faculty.workspaceSubdomain, faculty.id],
-      set: facultyUpdateSetValues(subdomain, facultyMember),
+      set: facultyUpdateSetValues(subdomain, softStoppedMember),
     });
 }

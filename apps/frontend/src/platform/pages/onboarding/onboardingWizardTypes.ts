@@ -1,7 +1,10 @@
 import type React from "react";
-import CreateMadrasa from "@/platform/pages/onboarding/steps/CreateMadrasa";
-import AdminSetup from "@/platform/pages/onboarding/steps/AdminSetup";
 import { SYSTEM_MODULES, type IndustryType } from "@mms/shared";
+import OrganizationDetailsStep from "@/platform/pages/onboarding/steps/OrganizationDetailsStep";
+import ModulesStep from "@/platform/pages/onboarding/steps/ModulesStep";
+import StructureStep from "@/platform/pages/onboarding/steps/StructureStep";
+import AdminSetup from "@/platform/pages/onboarding/steps/AdminSetup";
+import CompleteStep from "@/platform/pages/onboarding/steps/CompleteStep";
 
 export interface OnboardingData {
   name: string;
@@ -15,14 +18,37 @@ export interface OnboardingData {
   agreedTerms: boolean;
   modules: string[];
   industryType: IndustryType;
+  /** Empty string = start blank (skip blueprint apply). */
   blueprintId: string;
+  applyRecommendedStructure: boolean;
 }
+
+type OnboardingTitleKey =
+  | "onboarding.stepOrgTitle"
+  | "onboarding.stepModulesTitle"
+  | "onboarding.stepStructureTitle"
+  | "onboarding.stepAdminTitle"
+  | "onboarding.stepCompleteTitle";
+
+type OnboardingSubtitleKey =
+  | "onboarding.stepOrgSubtitle"
+  | "onboarding.stepModulesSubtitle"
+  | "onboarding.stepStructureSubtitle"
+  | "onboarding.stepAdminSubtitle"
+  | "onboarding.stepCompleteSubtitle";
+
+type OnboardingLabelKey =
+  | "onboarding.stepOrgLabel"
+  | "onboarding.stepModulesLabel"
+  | "onboarding.stepStructureLabel"
+  | "onboarding.stepAdminLabel"
+  | "onboarding.stepCompleteLabel";
 
 interface OnboardingStep {
   id: number;
-  titleKey: "onboarding.stepInstitutionTitle" | "onboarding.stepAdminTitle";
-  subtitleKey: "onboarding.stepInstitutionSubtitle" | "onboarding.stepAdminSubtitle";
-  labelKey: "onboarding.stepInstitutionLabel" | "onboarding.stepAdminLabel";
+  titleKey: OnboardingTitleKey;
+  subtitleKey: OnboardingSubtitleKey;
+  labelKey: OnboardingLabelKey;
   component: React.ComponentType<{
     data: OnboardingData;
     onChange: React.Dispatch<React.SetStateAction<OnboardingData>>;
@@ -32,17 +58,38 @@ interface OnboardingStep {
 export const ONBOARDING_STEP_DEFS: OnboardingStep[] = [
   {
     id: 1,
-    titleKey: "onboarding.stepInstitutionTitle",
-    subtitleKey: "onboarding.stepInstitutionSubtitle",
-    labelKey: "onboarding.stepInstitutionLabel",
-    component: CreateMadrasa,
+    titleKey: "onboarding.stepOrgTitle",
+    subtitleKey: "onboarding.stepOrgSubtitle",
+    labelKey: "onboarding.stepOrgLabel",
+    component: OrganizationDetailsStep,
   },
   {
     id: 2,
+    titleKey: "onboarding.stepModulesTitle",
+    subtitleKey: "onboarding.stepModulesSubtitle",
+    labelKey: "onboarding.stepModulesLabel",
+    component: ModulesStep,
+  },
+  {
+    id: 3,
+    titleKey: "onboarding.stepStructureTitle",
+    subtitleKey: "onboarding.stepStructureSubtitle",
+    labelKey: "onboarding.stepStructureLabel",
+    component: StructureStep,
+  },
+  {
+    id: 4,
     titleKey: "onboarding.stepAdminTitle",
     subtitleKey: "onboarding.stepAdminSubtitle",
     labelKey: "onboarding.stepAdminLabel",
     component: AdminSetup,
+  },
+  {
+    id: 5,
+    titleKey: "onboarding.stepCompleteTitle",
+    subtitleKey: "onboarding.stepCompleteSubtitle",
+    labelKey: "onboarding.stepCompleteLabel",
+    component: CompleteStep,
   },
 ];
 
@@ -59,4 +106,5 @@ export const ONBOARDING_INITIAL_DATA: OnboardingData = {
   modules: SYSTEM_MODULES.map((m) => m.id),
   industryType: "madrasa",
   blueprintId: "madrasa-standard-v1",
+  applyRecommendedStructure: true,
 };
