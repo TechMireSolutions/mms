@@ -97,12 +97,18 @@ function StructureChoice({
   onSelect: () => void;
 }): React.JSX.Element {
   return (
-    <button
-      type="button"
+    <div
       role="radio"
+      tabIndex={0}
       aria-checked={selected}
       onClick={onSelect}
-      className={`min-h-11 w-full text-start rounded-lg border p-3 transition-colors ${
+      onKeyDown={(e) => {
+        if (e.key === ' ' || e.key === 'Enter') {
+          e.preventDefault();
+          onSelect();
+        }
+      }}
+      className={`min-h-11 w-full text-start rounded-lg border p-3 cursor-pointer transition-colors ${
         selected
           ? "border-primary bg-primary/5"
           : "border-border bg-background hover:border-primary/40"
@@ -115,6 +121,6 @@ function StructureChoice({
         </div>
         {selected ? <Check className="h-4 w-4 text-primary shrink-0 mt-0.5" aria-hidden /> : null}
       </div>
-    </button>
+    </div>
   );
 }

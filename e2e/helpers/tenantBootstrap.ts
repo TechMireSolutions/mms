@@ -126,6 +126,16 @@ export async function bootstrapAuthenticatedTenant(
   await page.fill('#onboarding-name', 'Responsive Shell Madrasa');
   await page.fill('#onboarding-subdomain', subdomain);
   await expect(page.locator('text=Your URL:')).toBeVisible();
+
+  // Step 2 Modules
+  await page.getByRole('button', { name: /Continue/i }).click();
+  await expect(page.locator('#wizard-step-title')).toContainText(/Modules/i);
+
+  // Step 3 Structure (keep recommended)
+  await page.getByRole('button', { name: /Continue/i }).click();
+  await expect(page.locator('#wizard-step-title')).toContainText(/Organization structure|structure/i);
+
+  // Step 4 Admin
   await page.getByRole('button', { name: /Continue/i }).click();
   await page.waitForSelector('#firstName');
 
@@ -135,6 +145,10 @@ export async function bootstrapAuthenticatedTenant(
   await page.fill('#password', adminPassword);
   await page.fill('#confirmPassword', adminPassword);
   await page.check('#terms');
+
+  // Step 5 Review + create
+  await page.getByRole('button', { name: /Continue/i }).click();
+  await expect(page.locator('#wizard-step-title')).toContainText(/Review|create/i);
 
   const createWorkspaceResponse = page
     .waitForResponse(

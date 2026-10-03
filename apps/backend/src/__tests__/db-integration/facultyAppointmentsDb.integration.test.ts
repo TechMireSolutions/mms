@@ -13,8 +13,17 @@ beforeAll(async () => { await requireDatabaseConnection(); await applyDrizzleMig
 afterAll(async () => { await cleanupFacultyHierarchy(); await closeDatabase(); });
 
 function appointment(id: string, overrides = {}) {
-  return { id, workspaceSubdomain: tenant, facultyId: 'f0', departmentId: 'd', designationId: 'g',
-    startDate: '2025-01-01', isPrimary: false, ...overrides };
+  return {
+    id,
+    workspaceSubdomain: tenant,
+    facultyId: 'f0',
+    departmentId: 'd',
+    designationId: 'g',
+    positionId: 'pos-d-g',
+    startDate: '2025-01-01',
+    isPrimary: false,
+    ...overrides,
+  };
 }
 
 describe('Faculty appointment integrity', () => {

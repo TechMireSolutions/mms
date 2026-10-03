@@ -238,6 +238,16 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
       await page.locator('#onboarding-name').fill(madrasaName);
       await page.locator('#onboarding-subdomain').fill(subdomain);
       await expect(page.locator('text=Your URL:')).toBeVisible();
+
+      // Step 2 Modules
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.locator('#wizard-step-title')).toContainText(/Modules/i);
+
+      // Step 3 Structure (keep recommended)
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.locator('#wizard-step-title')).toContainText(/Organization structure|structure/i);
+
+      // Step 4 Admin
       await page.getByRole('button', { name: 'Continue' }).click();
       await expect(page.locator('#firstName')).toBeVisible({ timeout: 30_000 });
 
@@ -247,6 +257,10 @@ test.describe('Platform Console Critical Workspace Lifecycle', () => {
       await page.locator('#password').fill(tenantOwnerTempPassword);
       await page.locator('#confirmPassword').fill(tenantOwnerTempPassword);
       await page.locator('#terms').check();
+
+      // Step 5 Review + create
+      await page.getByRole('button', { name: 'Continue' }).click();
+      await expect(page.locator('#wizard-step-title')).toContainText(/Review|create/i);
       await page.getByRole('button', { name: 'Create workspace' }).click();
       await page.waitForURL((url) => !url.pathname.includes('/onboarding'), { timeout: 45_000 });
       await expect(platformLanding.first()).toBeVisible({ timeout: 30_000 });

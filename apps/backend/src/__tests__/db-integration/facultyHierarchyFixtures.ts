@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { sql } from 'drizzle-orm';
 import { withGlobalTenant, withTenant } from '../../db/tenant-context.js';
-import { workspaces, contacts, faculty, facultyDepartments, facultyDesignations, facultyAssignments } from '../../db/schema.js';
+import { workspaces, contacts, faculty, facultyDepartments, facultyDesignations, facultyAssignments, organizationPositions } from '../../db/schema.js';
 
 export const facultyTestTenant = `faculty-${randomUUID().slice(0, 8)}`;
 export const facultyOtherTenant = `${facultyTestTenant}-other`;
@@ -12,7 +12,7 @@ export async function seedFacultyHierarchy(): Promise<void> {
     await tx.execute(sql`CREATE ROLE ${sql.identifier(facultyTestRole)} NOLOGIN NOSUPERUSER NOBYPASSRLS`);
     await tx.execute(sql`GRANT USAGE ON SCHEMA public TO ${sql.identifier(facultyTestRole)}`);
     await tx.execute(sql`GRANT SELECT, INSERT, UPDATE ON faculty, faculty_assignments,
-      faculty_departments, faculty_designations TO ${sql.identifier(facultyTestRole)}`);
+      faculty_departments, faculty_designations, organization_positions TO ${sql.identifier(facultyTestRole)}`);
     for (const tenant of [facultyTestTenant, facultyOtherTenant]) {
       await tx.insert(workspaces).values({ id: tenant, subdomain: tenant, madrasaName: tenant });
       await tx.insert(contacts).values(Array.from({ length: 25 }, (_, i) => ({
@@ -25,8 +25,19 @@ export async function seedFacultyHierarchy(): Promise<void> {
       await tx.insert(facultyDesignations).values({
         id: 'g', workspaceSubdomain: tenant, name: 'Professor', code: 'P', hierarchyRank: 1,
       });
+      // Shared structural seat for appointment creates (capacity leaves room for concurrent fixtures).
+      await tx.insert(organizationPositions).values({
+        id: 'pos-d-g',
+        workspaceSubdomain: tenant,
+        code: 'POS-DG',
+        name: 'Department Position',
+        departmentId: 'd',
+        designationId: 'g',
+        capacity: 50,
+      });
       await tx.insert(facultyAssignments).values(Array.from({ length: 25 }, (_, i) => ({
         id: `a${i}`, workspaceSubdomain: tenant, facultyId: `f${i}`, departmentId: 'd', designationId: 'g',
+        positionId: 'pos-d-g',
         reportsToAssignmentId: i ? `a${i - 1}` : null, startDate: '2020-01-01', isPrimary: true,
       })));
     }
@@ -39,6 +50,7 @@ export async function cleanupFacultyHierarchy(): Promise<void> {
     for (const tenant of [facultyTestTenant, facultyOtherTenant]) {
       await tx.execute(sql`UPDATE faculty_assignments SET reports_to_assignment_id = NULL WHERE workspace_subdomain = ${tenant}`);
       await tx.execute(sql`DELETE FROM faculty_assignments WHERE workspace_subdomain = ${tenant}`);
+      await tx.execute(sql`DELETE FROM organization_positions WHERE workspace_subdomain = ${tenant}`);
       await tx.execute(sql`UPDATE faculty_departments SET head_faculty_id = NULL WHERE workspace_subdomain = ${tenant}`);
       await tx.execute(sql`DELETE FROM faculty_departments WHERE workspace_subdomain = ${tenant}`);
       await tx.execute(sql`DELETE FROM faculty_designations WHERE workspace_subdomain = ${tenant}`);
