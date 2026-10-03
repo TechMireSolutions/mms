@@ -2,6 +2,7 @@ import {
   BookOpen,
   Boxes,
   Calendar,
+  CheckSquare,
   ClipboardList,
   DollarSign,
   FileText,
@@ -10,6 +11,7 @@ import {
   Library,
   type LucideIcon,
   MessageSquare,
+  Network,
   Scale,
   School,
   Star,
@@ -38,6 +40,8 @@ export const MODULE_ICONS: Record<string, LucideIcon> = {
   School,
   Library,
   Scale,
+  CheckSquare,
+  Network,
 };
 
 export function resolveModuleIcon(iconName: string, fallback: LucideIcon = Boxes): LucideIcon {

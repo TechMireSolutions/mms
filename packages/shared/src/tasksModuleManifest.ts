@@ -1,0 +1,138 @@
+/**
+ * @file tasksModuleManifest.ts
+ * @description Manifest, DTO schemas, and types for the Tasks management module.
+ */
+
+import { z } from 'zod';
+
+export const TASK_STATUSES = [
+  'todo',
+  'in_progress',
+  'in_review',
+  'blocked',
+  'completed',
+  'cancelled',
+] as const;
+export type TaskStatus = (typeof TASK_STATUSES)[number];
+
+export const TASK_PRIORITIES = ['low', 'medium', 'high', 'urgent'] as const;
+export type TaskPriority = (typeof TASK_PRIORITIES)[number];
+
+export const DELEGATION_SCOPES = ['descendants', 'direct_reports'] as const;
+export type DelegationScope = (typeof DELEGATION_SCOPES)[number];
+
+export const taskAssigneeRecordSchema = z.object({
+  id: z.string().uuid(),
+  taskId: z.string().uuid(),
+  facultyId: z.string().min(1),
+  facultyAssignmentId: z.string().uuid().nullable().optional(),
+  positionId: z.string().uuid().nullable().optional(),
+  userId: z.string().uuid(),
+  facultyName: z.string().optional(),
+  positionName: z.string().optional(),
+  userEmail: z.string().optional(),
+  assignedAt: z.string().or(z.date()).optional(),
+});
+
+export type TaskAssigneeRecord = z.infer<typeof taskAssigneeRecordSchema>;
+
+export const taskRecordSchema = z.object({
+  id: z.string().uuid(),
+  workspaceSubdomain: z.string(),
+  title: z.string().min(1).max(255),
+  description: z.string().nullable().optional(),
+  status: z.enum(TASK_STATUSES),
+  priority: z.enum(TASK_PRIORITIES),
+  dueAt: z.string().or(z.date()).nullable().optional(),
+  parentTaskId: z.string().uuid().nullable().optional(),
+  createdById: z.string().uuid().nullable().optional(),
+  creatorName: z.string().optional(),
+  assignees: z.array(taskAssigneeRecordSchema).optional().default([]),
+  createdAt: z.string().or(z.date()).optional(),
+  updatedAt: z.string().or(z.date()).optional(),
+  deletedAt: z.string().or(z.date()).nullable().optional(),
+});
+
+export type TaskRecord = z.infer<typeof taskRecordSchema>;
+
+export const taskAssigneeInputSchema = z.object({
+  facultyId: z.string().min(1),
+  facultyAssignmentId: z.string().uuid().optional(),
+  positionId: z.string().uuid().optional(),
+  userId: z.string().uuid().optional(),
+});
+
+export type TaskAssigneeInput = z.infer<typeof taskAssigneeInputSchema>;
+
+export const taskInsertSchema = z.object({
+  title: z.string().trim().min(1, 'Title is required').max(255),
+  description: z.string().trim().max(5000).optional(),
+  status: z.enum(TASK_STATUSES).default('todo'),
+  priority: z.enum(TASK_PRIORITIES).default('medium'),
+  dueAt: z.string().datetime().nullable().optional(),
+  parentTaskId: z.string().uuid().nullable().optional(),
+  assignees: z.array(taskAssigneeInputSchema).optional().default([]),
+});
+
+export type TaskInsert = z.infer<typeof taskInsertSchema>;
+
+export const taskUpdateSchema = taskInsertSchema.partial();
+export type TaskUpdate = z.infer<typeof taskUpdateSchema>;
+
+export const taskStatusUpdateSchema = z.object({
+  status: z.enum(TASK_STATUSES),
+});
+
+export type TaskStatusUpdate = z.infer<typeof taskStatusUpdateSchema>;
+
+export const taskListQuerySchema = z.object({
+  status: z.enum(TASK_STATUSES).optional(),
+  priority: z.enum(TASK_PRIORITIES).optional(),
+  assignedToFacultyId: z.string().optional(),
+  assignedToUserId: z.string().uuid().optional(),
+  createdById: z.string().uuid().optional(),
+  search: z.string().optional(),
+  limit: z.coerce.number().int().min(1).max(500).default(50),
+  offset: z.coerce.number().int().min(0).default(0),
+});
+
+export type TaskListQuery = z.infer<typeof taskListQuerySchema>;
+
+export const taskSettingsSchema = z.object({
+  delegationScope: z.enum(DELEGATION_SCOPES).default('descendants'),
+  allowSelfAssignment: z.boolean().default(true),
+  notifyOnAssignment: z.boolean().default(true),
+  notifyOnStatusChange: z.boolean().default(true),
+});
+
+export type TaskSettings = z.infer<typeof taskSettingsSchema>;
+
+export const DEFAULT_TASK_SETTINGS: TaskSettings = {
+  delegationScope: 'descendants',
+  allowSelfAssignment: true,
+  notifyOnAssignment: true,
+  notifyOnStatusChange: true,
+};
+
+export const TASKS_MODULE_MANIFEST = {
+  moduleId: 'tasks',
+  entityType: 'Task',
+  collectionKey: 'tasks',
+  settingsObjectKey: 'tasks_settings',
+  preferencesObjectKey: 'tasks_module_preferences',
+  columnPreferencesObjectKey: 'tasks_user_column_preferences',
+  restBasePath: '/api/tasks',
+  analyticsCategory: 'tasks',
+  tiers: ['work', 'reports', 'setup'] as const,
+  setupSubTabs: ['preferences'] as const,
+  permissions: {
+    read: 'tasks.read',
+    write: 'tasks.write',
+    delete: 'tasks.delete',
+    assign: 'tasks.assign',
+    assignAnywhere: 'tasks.assign_anywhere',
+    complete: 'tasks.complete',
+    setupView: 'configuration.view',
+    setupWrite: 'settings.global.write',
+  },
+} as const;

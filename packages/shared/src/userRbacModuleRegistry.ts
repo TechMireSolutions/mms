@@ -6,12 +6,13 @@
 import { SYSTEM_MODULES_BY_ID, normalizeEnabledModules } from './settingsTypes.js';
 import type { RbacModuleDef } from './userEntityTypes.js';
 
-/** Canonical tuple of all 16 RBAC module identifiers. */
+/** Canonical tuple of all 17 RBAC module identifiers. */
 export const RBAC_MODULE_IDS = [
   'dashboard',
   'contacts',
   'faculty',
   'messaging',
+  'tasks',
   'students',
   'sessions',
   'attendance',
@@ -33,6 +34,7 @@ export const RBAC_MODULE_REGISTRY: readonly RbacModuleDef[] = [
   { id: 'contacts', labelKey: 'nav.contacts' },
   { id: 'faculty', labelKey: 'nav.faculty' },
   { id: 'messaging', labelKey: 'nav.messaging' },
+  { id: 'tasks', labelKey: 'nav.tasks' },
   { id: 'students', labelKey: 'nav.students' },
   { id: 'sessions', labelKey: 'nav.sessions' },
   { id: 'attendance', labelKey: 'nav.attendance' },

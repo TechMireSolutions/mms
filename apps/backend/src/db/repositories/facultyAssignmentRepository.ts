@@ -20,6 +20,7 @@ const FACULTY_ASSIGNMENT_COLUMNS = {
   facultyId: facultyAssignments.facultyId,
   departmentId: facultyAssignments.departmentId,
   designationId: facultyAssignments.designationId,
+  positionId: facultyAssignments.positionId,
   reportsToAssignmentId: facultyAssignments.reportsToAssignmentId,
   isPrimary: facultyAssignments.isPrimary,
   startDate: facultyAssignments.startDate,

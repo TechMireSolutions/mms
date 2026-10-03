@@ -14,6 +14,7 @@ import { workspaces } from './platform.js';
 import { faculty } from './faculty.js';
 import { facultyDepartments } from './facultyDepartmentTables.js';
 import { facultyDesignations } from './facultyDesignationTables.js';
+import { organizationPositions } from './organizationPositionTables.js';
 import { softDeleteColumns } from './softDeleteSchema.js';
 
 /**
@@ -39,6 +40,8 @@ export const facultyAssignments = pgTable('faculty_assignments', {
   facultyId: text('faculty_id').notNull(),
   departmentId: text('department_id').notNull(),
   designationId: text('designation_id').notNull(),
+  /** Canonical structural position occupied by this assignment. */
+  positionId: text('position_id'),
   /** Self-referencing: the assignment of the direct reporting supervisor. */
   reportsToAssignmentId: text('reports_to_assignment_id'),
   isPrimary: boolean('is_primary').notNull().default(false),
@@ -88,6 +91,11 @@ export const facultyAssignments = pgTable('faculty_assignments', {
     .on(table.workspaceSubdomain, table.deletedAt)
     .where(sql`${table.deletedAt} is not null`),
 
+  // Position-scoped listing
+  index('faculty_assignments_position_active_idx')
+    .on(table.workspaceSubdomain, table.positionId)
+    .where(sql`${table.deletedAt} is null`),
+
   // Date-range sanity
   check(
     'faculty_assignments_date_range_check',
@@ -121,6 +129,12 @@ export const facultyAssignments = pgTable('faculty_assignments', {
   foreignKey({
     columns: [table.workspaceSubdomain, table.reportsToAssignmentId],
     foreignColumns: [table.workspaceSubdomain, table.id],
+  }).onDelete('restrict'),
+
+  // FK → organization_positions
+  foreignKey({
+    columns: [table.workspaceSubdomain, table.positionId],
+    foreignColumns: [organizationPositions.workspaceSubdomain, organizationPositions.id],
   }).onDelete('restrict'),
 ]);
 

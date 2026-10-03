@@ -163,6 +163,7 @@ const ALL_WORKSPACE_COLUMNS = {
   madrasaName: workspacesTable.madrasaName,
   tagline: workspacesTable.tagline,
   country: workspacesTable.country,
+  industryType: workspacesTable.industryType,
   enabled: workspacesTable.enabled,
   primaryColor: workspacesTable.primaryColor,
   secondaryColor: workspacesTable.secondaryColor,

@@ -39,3 +39,17 @@ log_info "Backup written: ${OUT_FILE} ($(du -h "$OUT_FILE" | cut -f1))"
 
 find "$BACKUP_DIR" -name 'mms-*.sql.gz' -type f -mtime +"${RETENTION_DAYS}" -delete 2>/dev/null || true
 log_info "Retention cleanup completed (kept last ${RETENTION_DAYS} days)."
+
+OFFSITE_TARGET="${MMS_BACKUP_OFFSITE_TARGET:-}"
+if [[ -n "$OFFSITE_TARGET" ]]; then
+  log_info "Syncing backup to offsite target: ${OFFSITE_TARGET}..."
+  if command -v rsync >/dev/null 2>&1; then
+    rsync -avz "$OUT_FILE" "$OFFSITE_TARGET"
+    log_info "Offsite sync completed successfully."
+  elif command -v scp >/dev/null 2>&1; then
+    scp "$OUT_FILE" "$OFFSITE_TARGET"
+    log_info "Offsite scp completed successfully."
+  else
+    log_warn "Neither rsync nor scp found; skipped offsite sync."
+  fi
+fi

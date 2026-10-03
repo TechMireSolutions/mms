@@ -25,3 +25,6 @@ export * from "./workshops.js";
 export * from "./auditTrail.js";
 export * from "./softDeleteSchema.js";
 export * from "./outboxEvents.js";
+export * from "./organizationLocationTables.js";
+export * from "./organizationPositionTables.js";
+export * from "./tasksTables.js";

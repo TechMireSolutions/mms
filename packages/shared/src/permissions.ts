@@ -8,64 +8,22 @@ import { DEFAULT_WORKSPACE_ROLES_MAP } from './userRbacDefaults.js';
 
 /** Canonical tuple of all available permission keys in MMS. */
 export const ALL_PERMISSIONS = [
-  // Contacts
-  "contacts.read",
-  "contacts.write",
-  "contacts.delete",
-  // Students
-  "students.read",
-  "students.write",
-  "students.delete",
-  // Faculty
-  "faculty.read",
-  "faculty.write",
-  "faculty.delete",
-  // Sessions
-  "sessions.read",
-  "sessions.write",
-  "sessions.delete",
-  // Attendance
-  "attendance.read",
-  "attendance.write",
-  "attendance.delete",
-  // Enrollments
-  "enrollments.read",
-  "enrollments.write",
-  "enrollments.delete",
-  // Hasanat Cards
-  "hasanat.read",
-  "hasanat.write",
-  "hasanat.delete",
-  // Examinations
-  "examinations.read",
-  "examinations.write",
-  "examinations.delete",
-  // Question Bank
-  "questionBank.read",
-  "questionBank.write",
-  "questionBank.delete",
-  // Finance & Accounting
-  "finance.read",
-  "finance.write",
-  "finance.delete",
-  "accounting.read",
-  "accounting.write",
-  "accounting.delete",
-  "obligations.read",
-  "obligations.write",
-  "obligations.delete",
-  // Messaging
-  "messaging.read",
-  "messaging.write",
-  "messaging.clearLogs",
-  // Users & Administration
-  "users.read",
-  "users.manage",
-  // System & Settings
-  "analytics.view",
-  "configuration.view",
-  "settings.global.write",
-  "settings.branding.write",
+  "contacts.read", "contacts.write", "contacts.delete",
+  "students.read", "students.write", "students.delete",
+  "faculty.read", "faculty.write", "faculty.delete",
+  "sessions.read", "sessions.write", "sessions.delete",
+  "attendance.read", "attendance.write", "attendance.delete",
+  "enrollments.read", "enrollments.write", "enrollments.delete",
+  "hasanat.read", "hasanat.write", "hasanat.delete",
+  "examinations.read", "examinations.write", "examinations.delete",
+  "questionBank.read", "questionBank.write", "questionBank.delete",
+  "finance.read", "finance.write", "finance.delete",
+  "accounting.read", "accounting.write", "accounting.delete",
+  "obligations.read", "obligations.write", "obligations.delete",
+  "messaging.read", "messaging.write", "messaging.clearLogs",
+  "tasks.read", "tasks.write", "tasks.delete", "tasks.assign", "tasks.assign_anywhere", "tasks.complete",
+  "users.read", "users.manage",
+  "analytics.view", "configuration.view", "settings.global.write", "settings.branding.write",
 ] as const;
 
 /** Dot-notation permission keys — align with `mms-rbac` registry vocabulary. */
@@ -146,6 +104,14 @@ const PERMISSION_RULES: Readonly<Record<Permission, PermissionRule>> = Object.fr
   "messaging.read": { module: "messaging", requiredActions: ["read"] },
   "messaging.write": { module: "messaging", requiredActions: ["create", "update"] },
   "messaging.clearLogs": { module: "messaging", requiredActions: ["delete"] },
+
+  // Tasks
+  "tasks.read": { module: "tasks", requiredActions: ["read"] },
+  "tasks.write": { module: "tasks", requiredActions: ["create", "update"] },
+  "tasks.delete": { module: "tasks", requiredActions: ["delete"] },
+  "tasks.assign": { module: "tasks", requiredActions: ["create", "update"] },
+  "tasks.assign_anywhere": { module: "tasks", requiredActions: ["create", "update"] },
+  "tasks.complete": { module: "tasks", requiredActions: ["update"] },
 
   // Users & Administration
   "users.read": { module: "users", requiredActions: ["read"] },

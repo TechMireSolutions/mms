@@ -9,6 +9,7 @@ export const workspaces = pgTable('workspaces', {
   madrasaName: text('madrasa_name').notNull(),
   tagline: text('tagline'),
   country: text('country'),
+  industryType: varchar('industry_type', { length: 50 }).default('madrasa'),
   enabled: boolean('enabled').notNull().default(true),
   // Branding — theme
   primaryColor: varchar('primary_color', { length: 20 }),

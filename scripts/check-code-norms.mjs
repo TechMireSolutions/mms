@@ -34,7 +34,7 @@ const BASELINE = {
   anyAnnotations: 1,
   hexColourFiles: 26,
   arbitraryColourExpressions: 0,
-  filesOverHardLimit: 61,
+  filesOverHardLimit: 53,
 };
 
 const SCAN_DIRS = ['apps/frontend/src', 'apps/backend/src', 'packages/shared/src'];

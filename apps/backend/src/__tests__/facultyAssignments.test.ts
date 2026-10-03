@@ -21,6 +21,7 @@ export function makeAssignmentStore(seed: Partial<Assignment>[] = []): Map<strin
       facultyId: '',
       departmentId: 'dept-general',
       designationId: 'des-lecturer',
+      positionId: null,
       reportsToAssignmentId: null,
       isPrimary: false,
       startDate: '2024-01-01',
