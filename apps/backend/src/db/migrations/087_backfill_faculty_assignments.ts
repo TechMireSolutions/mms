@@ -50,7 +50,11 @@ export async function backfillFacultyAssignments(tenant: string): Promise<void> 
         (SELECT d.id FROM faculty_designations d WHERE d.workspace_subdomain = f.workspace_subdomain
           AND lower(d.name) = lower(COALESCE(NULLIF(btrim(f.designation), ''), 'Faculty Member'))
           AND d.deleted_at IS NULL ORDER BY d.id LIMIT 1),
-        true, COALESCE(f.join_date, (f.created_at AT TIME ZONE 'UTC')::date),
+        true, CASE
+          WHEN f.join_date IS NOT NULL AND f.join_date::text ~ '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+          THEN (substring(f.join_date::text from 1 for 10))::date
+          ELSE (f.created_at AT TIME ZONE 'UTC')::date
+        END,
         f.deleted_at, f.deleted_by, f.deletion_reason, f.created_at, f.updated_at
       FROM faculty f WHERE f.workspace_subdomain = ${tenant}
         AND NOT EXISTS (SELECT 1 FROM faculty_assignments a

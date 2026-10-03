@@ -7,9 +7,8 @@ import {
   registerWidgetAggregatesRoute,
   registerResolveRoute,
   registerLinkedContactIdsRoute,
-  registerSingleRestoreRoute,
 } from '../../../lib/crudRouter.js';
-import { auditFaculty, sanitizeFacultyForUser } from './facultyRouteHelpers.js';
+import { sanitizeFacultyForUser } from './facultyRouteHelpers.js';
 
 /** Count, metrics, resolve, widget aggregates, and inline restore routes. */
 export const facultyAggregateRoutes: FastifyPluginAsync = async (sub) => {
@@ -45,14 +44,5 @@ export const facultyAggregateRoutes: FastifyPluginAsync = async (sub) => {
     collection: 'faculty',
     loadLinkedContactIdsFn: (excludeId) => facultyUseCases.loadFacultyLinkedContactIds(excludeId),
     errorMessagePrefix: 'faculty',
-  });
-
-  registerSingleRestoreRoute(sub, {
-    collection: 'faculty',
-    nameSingular: 'faculty',
-    restoreFn: (id, userId) => facultyUseCases.restoreFacultyById(id, userId),
-    onAfterRestore: async (user, id) => {
-      await auditFaculty(user, 'faculty.restore', `Restored faculty member ${id}`, id);
-    },
   });
 };

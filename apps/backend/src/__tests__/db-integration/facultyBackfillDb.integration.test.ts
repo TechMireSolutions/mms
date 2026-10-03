@@ -19,11 +19,14 @@ describe('Faculty legacy backfill', () => {
   it('preserves identity, non-Latin labels, reporting, dates and archived history on replay', async () => {
     await withTenant(tenant, async (tx) => {
       await tx.execute(sql`INSERT INTO contacts (id, workspace_subdomain, first_name, name)
-        VALUES ('legacy-contact', ${tenant}, 'Legacy', 'Legacy'), ('archived-contact', ${tenant}, 'Archived', 'Archived')`);
+        VALUES ('legacy-contact', ${tenant}, 'Legacy', 'Legacy'),
+          ('archived-contact', ${tenant}, 'Archived', 'Archived'),
+          ('joindate-contact', ${tenant}, 'JoinDate', 'JoinDate')`);
       await tx.execute(sql`INSERT INTO faculty (id, workspace_subdomain, contact_id, department, designation,
-        reporting_faculty_id, created_at, deleted_at, deleted_by)
-        VALUES ('legacy', ${tenant}, 'legacy-contact', 'العربية', 'أستاذ', 'f0', '2020-05-06T23:00:00Z', NULL, NULL),
-          ('archived', ${tenant}, 'archived-contact', NULL, NULL, NULL, '2020-01-02T00:00:00Z', '2021-01-01', 'actor')`);
+        reporting_faculty_id, join_date, created_at, deleted_at, deleted_by)
+        VALUES ('legacy', ${tenant}, 'legacy-contact', 'العربية', 'أستاذ', 'f0', NULL, '2020-05-06T23:00:00Z', NULL, NULL),
+          ('archived', ${tenant}, 'archived-contact', NULL, NULL, NULL, NULL, '2020-01-02T00:00:00Z', '2021-01-01', 'actor'),
+          ('with-joindate', ${tenant}, 'joindate-contact', 'Science', 'Lecturer', NULL, '2019-11-12', '2020-01-02T00:00:00Z', NULL, NULL)`);
     });
     await backfillFacultyAssignments(tenant);
     await backfillFacultyAssignments(tenant);
@@ -37,12 +40,14 @@ describe('Faculty legacy backfill', () => {
         FROM faculty_assignments a JOIN faculty f ON f.workspace_subdomain = a.workspace_subdomain AND f.id = a.faculty_id
         JOIN faculty_departments d ON d.workspace_subdomain = a.workspace_subdomain AND d.id = a.department_id
         JOIN faculty_designations g ON g.workspace_subdomain = a.workspace_subdomain AND g.id = a.designation_id
-        WHERE a.workspace_subdomain = ${tenant} AND a.faculty_id IN ('legacy', 'archived') ORDER BY a.faculty_id`);
+        WHERE a.workspace_subdomain = ${tenant} AND a.faculty_id IN ('legacy', 'archived', 'with-joindate') ORDER BY a.faculty_id`);
       expect(result.rows).toEqual([
         { faculty_id: 'archived', start_date: '2020-01-02', deleted_by: 'actor', reports_to_assignment_id: null,
           department: 'General', designation: 'Faculty Member', contact_id: 'archived-contact' },
         { faculty_id: 'legacy', start_date: '2020-05-06', deleted_by: null, reports_to_assignment_id: 'a0',
           department: 'العربية', designation: 'أستاذ', contact_id: 'legacy-contact' },
+        { faculty_id: 'with-joindate', start_date: '2019-11-12', deleted_by: null, reports_to_assignment_id: null,
+          department: 'Science', designation: 'Lecturer', contact_id: 'joindate-contact' },
       ]);
     });
   });

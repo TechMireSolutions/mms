@@ -1,5 +1,6 @@
 import type { FacultyRecord } from '@mms/shared';
 import { saveFacultyDesignationAssignment } from '../../db/repositories/facultyDesignationRepository.js';
+import { saveFacultyAssignment } from '../../db/repositories/facultyAssignmentRepository.js';
 import { prepareFacultyRecord } from './facultyNormalizeUseCases.js';
 
 /**
@@ -23,6 +24,7 @@ export async function handleImplicitRestore(
   await save(tenant, merged);
 
   const restoredDesignationId = typeof rawRecord.designationId === 'string' ? rawRecord.designationId.trim() : '';
+  const restoredDepartmentId = typeof rawRecord.departmentId === 'string' ? rawRecord.departmentId.trim() : '';
   const restoredStartsOn = typeof rawRecord.designationStartsOn === 'string'
     ? rawRecord.designationStartsOn
     : new Date().toISOString().slice(0, 10);
@@ -41,6 +43,23 @@ export async function handleImplicitRestore(
       });
     } catch {
       // Non-fatal: overlap with existing assignment — skip silently.
+    }
+    if (restoredDepartmentId) {
+      try {
+        await saveFacultyAssignment(tenant, {
+          id: `fa-${String(merged.id)}`,
+          workspaceSubdomain: tenant,
+          facultyId: String(merged.id),
+          departmentId: restoredDepartmentId,
+          designationId: restoredDesignationId,
+          startDate: restoredStartsOn,
+          endDate: restoredEndsOn,
+          isPrimary: true,
+          notes: null,
+        });
+      } catch {
+        // Non-fatal: fallback if department constraint fails.
+      }
     }
   }
   return merged;
@@ -76,4 +95,23 @@ export async function saveDesignationOnCreate(
     endsOn: designationEndsOn,
     notes: null,
   });
+
+  const departmentId = typeof rawRecord.departmentId === 'string' ? rawRecord.departmentId.trim() : '';
+  if (departmentId) {
+    try {
+      await saveFacultyAssignment(tenant, {
+        id: `fa-${String(normalized.id)}`,
+        workspaceSubdomain: tenant,
+        facultyId: String(normalized.id),
+        departmentId,
+        designationId,
+        startDate: designationStartsOn,
+        endDate: designationEndsOn,
+        isPrimary: true,
+        notes: null,
+      });
+    } catch {
+      // Non-fatal: fallback if department constraint fails.
+    }
+  }
 }

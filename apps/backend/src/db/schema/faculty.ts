@@ -75,9 +75,6 @@ export const faculty = pgTable('faculty', {
   uniqueIndex('faculty_workspace_contact_active_uidx')
     .on(table.workspaceSubdomain, table.contactId)
     .where(sql`${table.deletedAt} is null`),
-  index('faculty_workspace_contact_active_idx')
-    .on(table.workspaceSubdomain, table.contactId)
-    .where(sql`${table.deletedAt} is null and ${table.contactId} is not null`),
   index('faculty_workspace_reporting_faculty_idx')
     .on(table.workspaceSubdomain, table.reportingFacultyId)
     .where(sql`${table.deletedAt} is null`),
