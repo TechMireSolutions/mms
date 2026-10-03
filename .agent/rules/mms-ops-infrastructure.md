@@ -24,8 +24,9 @@ description: Local dev setup, environment variables, Docker, PM2, ports, Linux c
 - **Structured Logging:** Pino emits structured JSON directly to `stdout`. Host process managers handle rotation.
 
 ## 4. CI/CD & Deploy Procedures
-- **CI DAG (`ci.yml`):** Runs `changes` filter → `lint-and-typecheck` → parallel `test-frontend` (sharded with blob merge) → `test-backend-unit` → conditional `test-backend-db` → `ci-gate` → `e2e` (Playwright) → `build-dist`.
-- **Deployment Flow:** `deploy.yml` triggers on CI pass for `main`, SCPs artifact to VPS, executes `scripts/deploy-on-server.sh` pinned to `DEPLOY_SHA`. Rollback via `scripts/deploy-rollback.sh`. DDL runs on boot via `initDb`.
+- **CI DAG (`ci.yml`):** `changes` path filter, `workflow-lint` (actionlint + zizmor), `lint-and-typecheck` (typecheck, audit, gitleaks, lint, build, ratchets, mirror sync), PR-only `dependency-review`, and path-gated `test-frontend` (sharded, blob merge → `test-frontend-coverage`), `test-backend-unit`, `test-backend-db`, `e2e` (sharded Playwright → `merge-reports`) all feed `ci-gate`. On push to `main`, `lint-and-typecheck` also packages, attests, and uploads the `mms-dist` release artifact.
+- **Deployment Flow:** `deploy.yml` triggers on a successful same-repo CI push run for `main`, downloads and attestation-verifies that run's `mms-dist` artifact (build once, promote), SCPs it to the VPS, and runs `scripts/deploy-on-server.sh` pinned to `DEPLOY_SHA` via `scripts/ci/ssh-exec.sh`. Rollback via `scripts/deploy-rollback.sh` (restores `dist/` only — migrations must be expand/contract). DDL runs before the PM2 swap and on boot via `initDb`.
+- **Workflow Security:** Third-party actions pinned to full commit SHAs; checkouts set `persist-credentials: false`; secrets reach `run:` only through `env:`; the production host key is pinned via `SSH_KNOWN_HOSTS`. Enforced by the `workflow-lint` job.
 - **Health Endpoints:**
   - `GET /health`: 200 liveness check (unauthenticated).
   - `GET /ready`: 200 on DB ping; 503 if PostgreSQL disconnected. PM2 curls `/ready` post-deploy.

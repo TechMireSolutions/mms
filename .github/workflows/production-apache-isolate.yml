@@ -31,12 +31,17 @@ jobs:
     timeout-minutes: 15
     steps:
       - name: Validate configuration
+        env:
+          SERVER_IP: ${{ secrets.SERVER_IP }}
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SSH_PRIVATE_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          MMS_APP_DOMAIN_SECRET: ${{ secrets.MMS_APP_DOMAIN }}
         run: |
           set -euo pipefail
           missing=""
-          [ -z "${{ secrets.SERVER_IP }}" ] && missing="${missing} SERVER_IP"
-          [ -z "${{ secrets.SERVER_USER }}" ] && missing="${missing} SERVER_USER"
-          [ -z "${{ secrets.SSH_PRIVATE_KEY }}" ] && missing="${missing} SSH_PRIVATE_KEY"
+          [ -z "${SERVER_IP}" ] && missing="${missing} SERVER_IP"
+          [ -z "${SERVER_USER}" ] && missing="${missing} SERVER_USER"
+          [ -z "${SSH_PRIVATE_KEY}" ] && missing="${missing} SSH_PRIVATE_KEY"
           if [ -n "${missing}" ]; then
             echo "ERROR: Missing GitHub secrets:${missing}"
             echo "Add them under Settings → Secrets and variables → Actions"
@@ -48,21 +53,26 @@ jobs:
             exit 1
           fi
           echo "Target: https://${MMS_APP_DOMAIN}/"
-          if [ -z "${{ secrets.MMS_APP_DOMAIN }}" ]; then
+          if [ -z "${MMS_APP_DOMAIN_SECRET}" ]; then
             echo "::warning::MMS_APP_DOMAIN secret is not set — using workflow input only. Add the secret for deploy.yml too."
           fi
 
-      - name: Configure SSH Key
-        run: |
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/deploy_key
-          chmod 600 ~/.ssh/deploy_key
-          ssh-keyscan -p 22 -H "${{ secrets.SERVER_IP }}" >> ~/.ssh/known_hosts
-          chmod 644 ~/.ssh/known_hosts
+      - name: Checkout Code
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Configure SSH
+        uses: ./.github/actions/ssh-setup
+        with:
+          private-key: ${{ secrets.SSH_PRIVATE_KEY }}
+          known-hosts: ${{ secrets.SSH_KNOWN_HOSTS }}
+          host: ${{ secrets.SERVER_IP }}
 
       - name: Apply Apache isolation on server
         env:
+          SERVER_USER: ${{ secrets.SERVER_USER }}
+          SERVER_IP: ${{ secrets.SERVER_IP }}
           PLATFORM_APP_URL: ${{ secrets.PLATFORM_APP_URL }}
           PLATFORM_RESEND_API_KEY: ${{ secrets.PLATFORM_RESEND_API_KEY }}
           PLATFORM_SMTP_HOST: ${{ secrets.PLATFORM_SMTP_HOST }}
@@ -77,40 +87,9 @@ jobs:
           PLATFORM_ADMIN_EMAIL: ${{ secrets.PLATFORM_ADMIN_EMAIL }}
           PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
           PLATFORM_ADMIN_NAME: ${{ secrets.PLATFORM_ADMIN_NAME }}
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          ssh -i ~/.ssh/deploy_key -o StrictHostKeyChecking=yes -o BatchMode=yes \
-            -o ConnectTimeout=15 -o ServerAliveInterval=30 \
-            ${{ secrets.SERVER_USER }}@${{ secrets.SERVER_IP }} \
-            "set -e
-             export MMS_APP_DOMAIN=\"${MMS_APP_DOMAIN}\"
-             export PLATFORM_APP_URL=\"${PLATFORM_APP_URL}\"
-             export PLATFORM_RESEND_API_KEY=\"${PLATFORM_RESEND_API_KEY}\"
-             export PLATFORM_SMTP_HOST=\"${PLATFORM_SMTP_HOST}\"
-             export PLATFORM_SMTP_PORT=\"${PLATFORM_SMTP_PORT}\"
-             export PLATFORM_SMTP_SECURE=\"${PLATFORM_SMTP_SECURE}\"
-             export PLATFORM_SMTP_USER=\"${PLATFORM_SMTP_USER}\"
-             export PLATFORM_SMTP_PASS=\"${PLATFORM_SMTP_PASS}\"
-             export PLATFORM_EMAIL_FROM=\"${PLATFORM_EMAIL_FROM}\"
-             export PLATFORM_EMAIL_FROM_NAME=\"${PLATFORM_EMAIL_FROM_NAME}\"
-             export PLATFORM_ALLOW_ENV_BOOTSTRAP=\"${PLATFORM_ALLOW_ENV_BOOTSTRAP}\"
-             export PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART=\"${PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART}\"
-             export PLATFORM_ADMIN_EMAIL=\"${PLATFORM_ADMIN_EMAIL}\"
-             export PLATFORM_ADMIN_PASSWORD=\"${PLATFORM_ADMIN_PASSWORD}\"
-             export PLATFORM_ADMIN_NAME=\"${PLATFORM_ADMIN_NAME}\"
-             export GIT_TERMINAL_PROMPT=0
-
-             cd /var/www/mmsv2
-             GIT_CMD='git'
-             if [ -n \"${GITHUB_TOKEN}\" ]; then
-               AUTH_B64=\"\$(printf 'x-access-token:%s' \"${GITHUB_TOKEN}\" | base64 | tr -d '\n')\"
-               GIT_CMD=\"git -c http.extraheader=\\\"AUTHORIZATION: basic \${AUTH_B64}\\\"\"
-             fi
-
-             eval \"\${GIT_CMD} fetch origin main 2>/dev/null\" || git fetch origin main 2>/dev/null || true
-             git reset --hard origin/main
-             bash scripts/apply-production-host-isolation.sh apps/backend/.env
-            "
+          bash scripts/ci/ssh-exec.sh scripts/ci/remote/apache-isolate.sh \
+            MMS_APP_DOMAIN PLATFORM_APP_URL PLATFORM_RESEND_API_KEY PLATFORM_SMTP_HOST PLATFORM_SMTP_PORT PLATFORM_SMTP_SECURE PLATFORM_SMTP_USER PLATFORM_SMTP_PASS PLATFORM_EMAIL_FROM PLATFORM_EMAIL_FROM_NAME PLATFORM_ALLOW_ENV_BOOTSTRAP PLATFORM_ALLOW_REMOTE_MIGRATE_RESTART PLATFORM_ADMIN_EMAIL PLATFORM_ADMIN_PASSWORD PLATFORM_ADMIN_NAME
 
       - name: Verify MMS apex and foreign domains
         env:
@@ -180,23 +159,25 @@ jobs:
 
       - name: Publish Summary
         if: always()
+        env:
+          FOREIGN_DOMAINS: ${{ inputs.foreign_domains || 'aabtaab.com darulquran.pk' }}
+          RESULT: ${{ job.status == 'success' && '✅ Isolated & Verified' || '❌ Failed' }}
         run: |
-          cat << EOF >> $GITHUB_STEP_SUMMARY
+          cat << EOF >> "$GITHUB_STEP_SUMMARY"
           ### 🛡️ Apache Host Isolation Run
 
           | Check | Result |
           |---|---|
-          | **Host** | \`${{ secrets.SERVER_IP }}\` |
-          | **Apex Domain** | [${{ env.MMS_APP_DOMAIN }}](https://${{ env.MMS_APP_DOMAIN }}) |
-          | **Platform Setup Probe** | HTTP \`${{ env.SETUP_CODE || 'N/A' }}\` |
-          | **Edge Protocol** | \`${{ env.HTTP_VER || 'N/A' }}\` |
-          | **Compression** | \`${{ env.COMPRESSION || 'N/A' }}\` |
-          | **WebSocket Upgrades** | \`/ws\` (\`${{ env.WS_STATUS || 'N/A' }}\`), \`/api/ws\` (\`${{ env.API_WS_STATUS || 'N/A' }}\`) |
-          | **Foreign Hostnames Tested** | \`${{ inputs.foreign_domains || 'aabtaab.com darulquran.pk' }}\` |
-          | **Isolation Status** | ${{ job.status == 'success' && '✅ Isolated & Verified' || '❌ Failed' }} |
+          | **Apex Domain** | [${MMS_APP_DOMAIN}](https://${MMS_APP_DOMAIN}) |
+          | **Platform Setup Probe** | HTTP \`${SETUP_CODE:-N/A}\` |
+          | **Edge Protocol** | \`${HTTP_VER:-N/A}\` |
+          | **Compression** | \`${COMPRESSION:-N/A}\` |
+          | **WebSocket Upgrades** | \`/ws\` (\`${WS_STATUS:-N/A}\`), \`/api/ws\` (\`${API_WS_STATUS:-N/A}\`) |
+          | **Foreign Hostnames Tested** | \`${FOREIGN_DOMAINS}\` |
+          | **Isolation Status** | ${RESULT} |
           EOF
 
       - name: Cleanup SSH Credentials
         if: always()
         run: |
-          rm -f ~/.ssh/deploy_key
+          shred -u ~/.ssh/deploy_key 2>/dev/null || rm -f ~/.ssh/deploy_key
