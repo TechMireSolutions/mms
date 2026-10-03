@@ -54,6 +54,12 @@ Start here in Antigravity: **skill `antigravity-workspace`**.
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
 | `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
 
+## Reuse first (DRY) — applies to every change
+
+Before implementing any feature, look for existing components, hooks, utilities, layouts, forms, dialogs, and patterns that can be reused or extended. Keep shared behaviour in reusable, configurable implementations; never duplicate UI or business logic across pages. Changes to shared components must stay compatible with their existing consumers — find them, run their tests, and verify the affected pages. Follow the project's design conventions and the `ui-ux-pro-max` skill for UI/UX work. Tabular data uses the shared `DataTable` / `WorkBatchTable` stack.
+
+Owners: always-on `mms-agent-universal` §1 (**Reuse First**) · workflow and thresholds `mms-dry` §1–§2 · tables ratchet `pnpm run check:work-directory`.
+
 **Rule → skill map:** every rule carries a **Workflow skills:** line, and the full ownership matrix lives in [.cursor/rules/README.md](.cursor/rules/README.md) (that file is the single owner of the topic→rule→skill index — do not restate it here).
 
 ## Skills (39)

@@ -7,6 +7,8 @@
  * 2. Zero imports of retired useWorkDirectoryController / ModuleWorkDirectoryShell.
  * 3. Zero CSS dual-rendering (e.g. md:hidden / md:block) in directory *List.tsx files.
  * 4. Zero selectedCount: 0 shortcut stubs in converged tenant page controllers.
+ * 5. Zero hand-rolled <Table>/<table> data tables in tenant/platform features outside the
+ *    reviewed allowlist — directories and catalogs use DataTable / WorkBatchTable.
  *
  * Spec: docs/superpowers/specs/2026-09-24-work-directory-convergence-design.md §5
  * Norms: mms-module-architecture.mdc §3/§7, mms-dry.mdc §1.
@@ -44,6 +46,32 @@ const retiredBulkBarImports = [];
 const retiredShellImports = [];
 const cssDualRenderSites = [];
 const stubShortcutSites = [];
+const rawTableSites = [];
+
+/**
+ * Structured report, ledger, editor, matrix, and print tables: rows are not a filterable
+ * directory, so search / card view / column toggles do not apply. Review before adding.
+ */
+const RAW_TABLE_ALLOWLIST = new Set([
+  'apps/frontend/src/tenant/features/accounting/components/AccountingDashboardCharts.tsx',
+  'apps/frontend/src/tenant/features/accounting/components/CashFlowStatementPanel.tsx',
+  'apps/frontend/src/tenant/features/accounting/components/FinancialReportSection.tsx',
+  'apps/frontend/src/tenant/features/accounting/components/JournalEntryDetailLines.tsx',
+  'apps/frontend/src/tenant/features/accounting/components/JournalEntryLinesEditor.tsx',
+  'apps/frontend/src/tenant/features/accounting/components/TrialBalance.tsx',
+  'apps/frontend/src/tenant/features/accounting/components/TrialBalanceTypeGroup.tsx',
+  'apps/frontend/src/tenant/features/attendance/components/MarkAttendanceTableView.tsx',
+  'apps/frontend/src/tenant/features/contacts/components/ContactsSyncConflictDiffBody.tsx',
+  'apps/frontend/src/tenant/features/enrollments/components/EnrollmentReports.tsx',
+  'apps/frontend/src/tenant/features/hasanat/components/RedemptionTable.tsx',
+  'apps/frontend/src/tenant/features/obligations/components/ObligationsRepDuesSection.tsx',
+  'apps/frontend/src/tenant/features/obligations/components/ObligationsWakalaSummarySection.tsx',
+  'apps/frontend/src/tenant/features/obligations/components/detail/ObligationCollectionDistributionsSection.tsx',
+  'apps/frontend/src/tenant/features/question-bank/components/PrintablePaper.tsx',
+  'apps/frontend/src/tenant/features/reports/components/ContactReport.tsx',
+  'apps/frontend/src/tenant/features/reports/components/QuestionBankSummaryDataGrid.tsx',
+  'apps/frontend/src/tenant/features/users/components/PermissionMatrixDesktopTable.tsx',
+]);
 
 const CONVERGED_MODULES = new Set([
   'contacts',
@@ -79,6 +107,14 @@ for (const rel of files) {
     }
   }
 
+  const isFeatureSource =
+    (rel.startsWith('apps/frontend/src/tenant/features/') || rel.startsWith('apps/frontend/src/platform/')) &&
+    rel.endsWith('.tsx') &&
+    !TEST_FILE.test(rel);
+  if (isFeatureSource && /<(Table|table)[\s>]/.test(content) && !RAW_TABLE_ALLOWLIST.has(rel)) {
+    rawTableSites.push(rel);
+  }
+
   // Check tenant feature directory *List.tsx for CSS dual-rendering (table/cards rendered simultaneously via CSS)
   if (rel.startsWith('apps/frontend/src/tenant/features/') && rel.endsWith('List.tsx') && !TEST_FILE.test(rel)) {
     if (/\bmd:hidden\b/.test(content) && (/\bmd:block\b/.test(content) || /\bmd:flex\b/.test(content) || /\bhidden\s+md:/.test(content))) {
@@ -111,6 +147,12 @@ const checks = [
     count: stubShortcutSites.length,
     violators: stubShortcutSites,
     norm: 'mms-module-architecture.mdc §7',
+  },
+  {
+    name: 'Hand-rolled data tables outside the reviewed allowlist (use DataTable / WorkBatchTable)',
+    count: rawTableSites.length,
+    violators: rawTableSites,
+    norm: 'mms-dry.mdc §1 (Data tables)',
   },
 ];
 

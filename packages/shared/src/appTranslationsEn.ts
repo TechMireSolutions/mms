@@ -1291,6 +1291,8 @@ export const APP_TRANSLATIONS_EN = {
   "common.columns.trigger": "Columns",
   "common.columns.visibleAndOrder": "Visible & Order",
   "common.columns.visibleCount": "{visible} of {total} visible",
+  "common.dataTable.noMatches": "No rows match your search or filters",
+  "common.dataTable.shownCount": "{count} rows shown",
   "common.breadcrumb": "Breadcrumb",
   "common.dismiss": "Dismiss",
   "common.delete": "Delete",

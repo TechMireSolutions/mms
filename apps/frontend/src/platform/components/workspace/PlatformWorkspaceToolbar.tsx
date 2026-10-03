@@ -8,6 +8,7 @@ import { PlatformWorkspaceSortMenu } from '@/platform/components/PlatformWorkspa
 import type { WorkspaceSortDirection, WorkspaceSortField } from '@/platform/components/platformWorkspaceListData';
 
 import type { PlatformDensity } from '@/platform/hooks/usePlatformDensity';
+import { toColumnCustomizer, type DataTableColumnLayout } from '@/components/common/data-table';
 import { PlatformWorkspaceDensityToggle } from '@/platform/components/workspace/PlatformWorkspaceDensityToggle';
 
 export interface PlatformWorkspaceToolbarProps {
@@ -31,6 +32,7 @@ export interface PlatformWorkspaceToolbarProps {
   onToggleSort: (field: WorkspaceSortField) => void;
   onRefetch: () => void;
   onExportCsv: () => void;
+  columnLayout?: DataTableColumnLayout;
 }
 
 export function PlatformWorkspaceToolbar({
@@ -54,6 +56,7 @@ export function PlatformWorkspaceToolbar({
   onToggleSort,
   onRefetch,
   onExportCsv,
+  columnLayout,
 }: PlatformWorkspaceToolbarProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -73,6 +76,7 @@ export function PlatformWorkspaceToolbar({
         viewMode,
         onViewModeChange,
       }}
+      columnCustomizer={toColumnCustomizer(columnLayout)}
       filterButton={
         <div className="flex items-center gap-2">
           {onDensityChange && viewMode === 'table' && (

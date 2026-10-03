@@ -71,8 +71,6 @@ describe('UsersWorkTier', () => {
     userColumnRegistry: [],
     updateUserColumnLayout: vi.fn(),
     userColumnCustomizerLabels: {} as any,
-    getActivityColumnWidth: vi.fn(),
-    setActivityColumnWidth: vi.fn(),
     onSubTabChange: vi.fn(),
     onRetryUsers: vi.fn(),
     onRetryLogs: vi.fn(),

@@ -11,7 +11,12 @@ import { WorkBatchTable, type WorkBatchTableColumn } from '@/components/common/w
 import { DirectoryCardsGrid } from '@/components/ui/DirectoryCardsGrid';
 import { DirectoryEntityCard } from '@/components/ui/DirectoryEntityCard';
 import { StatGrid, StatRow } from '@/components/ui/StatGrid';
-import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
+import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
+import {
+  resolveVisibleColumns,
+  toColumnResize,
+  type DataTableColumnLayout,
+} from '@/components/common/data-table';
 
 export interface ActivityLogsListProps {
   paginated: ActivityLog[];
@@ -20,8 +25,8 @@ export interface ActivityLogsListProps {
   pageSize?: number;
   onPageChange: (page: number) => void;
   userNameFor: (log: ActivityLog) => string;
-  getColumnWidth?: (key: string) => number | undefined;
-  onColumnResize?: (key: string, width: number) => void;
+  viewMode: WorkDirectoryViewMode;
+  columnLayout?: DataTableColumnLayout;
 }
 
 function useActivityLogColumns(
@@ -62,7 +67,6 @@ function useActivityLogColumns(
         render: (log) => log.ip,
       },
     ],
-    // eslint-disable-next-line react-hooks/exhaustive-deps
     [t, fmtTs, userNameFor],
   );
 }
@@ -74,11 +78,10 @@ export function ActivityLogsList({
   pageSize = 15,
   onPageChange,
   userNameFor,
-  getColumnWidth,
-  onColumnResize,
+  viewMode,
+  columnLayout,
 }: ActivityLogsListProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { viewMode } = useWorkDirectoryViewMode();
   const globalSettings = useGlobalSettings();
   const fmtTs = React.useCallback(
     (ts: string): string => formatDate(ts, globalSettings.dateFormat, false),
@@ -158,12 +161,8 @@ export function ActivityLogsList({
       ) : (
         <WorkBatchTable<ActivityLog>
           data={paginated}
-          columns={columns}
-          columnResize={
-            getColumnWidth || onColumnResize
-              ? { getColumnWidth, onColumnResize }
-              : undefined
-          }
+          columns={columnLayout ? resolveVisibleColumns(columns, columnLayout.columnRegistry) : columns}
+          columnResize={toColumnResize(columnLayout)}
           bordered={false}
         />
       )}

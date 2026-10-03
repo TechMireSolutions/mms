@@ -1,7 +1,11 @@
 import type { JSX } from 'react';
 import React from 'react';
 import { workspaceRoleLabel, type ModuleColumnRegistryEntry, type WorkspaceRole } from '@mms/shared';
-import { FormSelect } from '@/components/ui/FormSelect';
+import {
+  ModuleFilterDivider,
+  ModuleFilterDropdown,
+  ModuleFilterRadioGroup,
+} from '@/components/ui/ModuleFiltersMenuButton';
 import { WorkTaskToolbar } from '@/components/common/work';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
@@ -24,6 +28,7 @@ interface UsersListFiltersProps {
   onClearSelection: () => void;
   columnRegistry?: ModuleColumnRegistryEntry[];
   updateUserColumnLayout?: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
+  onResetLayout?: () => void;
   customizerLabels?: ModuleColumnCustomizerLabels;
   primaryAction?: React.ReactNode;
 }
@@ -44,11 +49,13 @@ export function UsersListFilters({
   onViewModeChange,
   columnRegistry,
   updateUserColumnLayout,
+  onResetLayout,
   customizerLabels,
   primaryAction,
 }: UsersListFiltersProps): JSX.Element {
   const { t } = useTranslation();
-  const hasActiveFilters = roleFilter !== 'all' || (!showDeleted && statusFilter !== 'all');
+  const activeFilterCount = Number(roleFilter !== 'all') + Number(!showDeleted && statusFilter !== 'all');
+  const hasActiveFilters = activeFilterCount > 0;
   const handleClearFilters = (): void => {
     onRoleFilterChange('all');
     onStatusFilterChange('all');
@@ -73,6 +80,7 @@ export function UsersListFilters({
           ? {
               registry: columnRegistry,
               onUpdate: updateUserColumnLayout,
+              onReset: onResetLayout,
               labels: customizerLabels,
             }
           : undefined
@@ -92,38 +100,43 @@ export function UsersListFilters({
           : undefined
       }
       primaryAction={primaryAction}
-    >
-      <FormSelect
-        id="role-filter"
-        name="role-filter"
-        value={roleFilter}
-        onChange={onRoleFilterChange}
-        options={[
-          { value: 'all', label: t('users.filterAllRoles') },
-          ...workspaceRoles.map((workspaceRole) => ({
-            value: workspaceRole.id,
-            label: workspaceRoleLabel(workspaceRole, t),
-          })),
-        ]}
-        aria-label={t('users.filterRole')}
-        className="w-auto shrink-0"
-      />
-      {!showDeleted ? (
-        <FormSelect
-          id="status-filter"
-          name="status-filter"
-          value={statusFilter}
-          onChange={onStatusFilterChange}
-          options={[
-            { value: 'all', label: t('users.filterAllStatuses') },
-            { value: 'active', label: t('users.status.active') },
-            { value: 'inactive', label: t('users.status.inactive') },
-            { value: 'suspended', label: t('users.status.suspended') },
-          ]}
-          aria-label={t('users.filterStatus')}
-          className="w-auto shrink-0"
-        />
-      ) : null}
-    </WorkTaskToolbar>
+      filterButton={
+        <ModuleFilterDropdown
+          label={t('common.filters')}
+          activeCount={activeFilterCount}
+          clearLabel={t('common.clearFilters')}
+          onClear={handleClearFilters}
+        >
+          <ModuleFilterRadioGroup
+            label={t('users.filterRole')}
+            value={roleFilter}
+            onValueChange={onRoleFilterChange}
+            options={[
+              { value: 'all', label: t('users.filterAllRoles') },
+              ...workspaceRoles.map((workspaceRole) => ({
+                value: workspaceRole.id,
+                label: workspaceRoleLabel(workspaceRole, t),
+              })),
+            ]}
+          />
+          {!showDeleted ? (
+            <>
+              <ModuleFilterDivider />
+              <ModuleFilterRadioGroup
+                label={t('users.filterStatus')}
+                value={statusFilter}
+                onValueChange={onStatusFilterChange}
+                options={[
+                  { value: 'all', label: t('users.filterAllStatuses') },
+                  { value: 'active', label: t('users.status.active') },
+                  { value: 'inactive', label: t('users.status.inactive') },
+                  { value: 'suspended', label: t('users.status.suspended') },
+                ]}
+              />
+            </>
+          ) : null}
+        </ModuleFilterDropdown>
+      }
+    />
   );
 }

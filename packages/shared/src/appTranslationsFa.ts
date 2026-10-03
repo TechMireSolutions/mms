@@ -1297,6 +1297,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "common.columns.trigger": "ستون‌ها",
   "common.columns.visibleAndOrder": "نمایان و ترتیب",
   "common.columns.visibleCount": "{visible} از {total} نمایان",
+  "common.dataTable.noMatches": "هیچ ردیفی با جستجو یا فیلترهای شما مطابقت ندارد",
+  "common.dataTable.shownCount": "{count} ردیف نمایش داده شد",
   "common.breadcrumb": "مسیر ناوبری",
   "common.dismiss": "رد کردن",
   "common.delete": "حذف",

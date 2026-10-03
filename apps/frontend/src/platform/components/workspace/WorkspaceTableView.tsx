@@ -4,6 +4,8 @@ import { tenantUrl } from '@/lib/config/tenantConfig';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { EntityDescriptor } from '@/types/entityRegistry';
 import { WorkBatchTable, type WorkBatchTableColumn } from '@/components/common/work/WorkBatchTable';
+import { toColumnResize, type DataTableColumnLayout } from '@/components/common/data-table';
+import { resolveVisibleDescriptorColumns } from '@/hooks/useDescriptorColumnLayout';
 import { deriveSelectionState, WORK_TABLE_CONTAINER_CLASS } from '@/components/common/work/workBatchTableTypes';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -18,6 +20,7 @@ import type { PlatformDensity } from '@/platform/hooks/usePlatformDensity';
 export interface WorkspaceTableViewProps {
   workspaces: PlatformWorkspaceRowData[];
   descriptor: EntityDescriptor<PlatformWorkspaceRowData>;
+  columnLayout?: DataTableColumnLayout;
   appDomain: string;
   density?: PlatformDensity;
   sortField: WorkspaceSortField;
@@ -43,6 +46,7 @@ type WorkspaceTableRow = PlatformWorkspaceRowData & { id: string };
 export function WorkspaceTableView({
   workspaces,
   descriptor,
+  columnLayout,
   appDomain,
   density = 'standard',
   sortField,
@@ -73,7 +77,7 @@ export function WorkspaceTableView({
   );
 
   const columns: WorkBatchTableColumn<WorkspaceTableRow>[] = React.useMemo(() => {
-    return descriptor.getTableColumns().map((col) => {
+    return resolveVisibleDescriptorColumns(descriptor.getTableColumns(), columnLayout?.columnRegistry).map((col) => {
       const f = descriptor.getField(col.id);
       const labelKey = f?.labelKey as AppTranslationKey | undefined;
       const translated = labelKey ? t(labelKey) : undefined;
@@ -135,7 +139,7 @@ export function WorkspaceTableView({
 
       return { id: col.id, label, sortField: col.id, headerClassName, cellClassName, render };
     });
-  }, [descriptor, t, appDomain, togglePending, deletePending, onToggleEnabled, onToggleEmailVerification, pad, textSz]);
+  }, [descriptor, columnLayout, t, appDomain, togglePending, deletePending, onToggleEnabled, onToggleEmailVerification, pad, textSz]);
 
   return (
     <WorkBatchTable
@@ -158,6 +162,7 @@ export function WorkspaceTableView({
       }
       onRowClick={onInspect ? (w) => onInspect(w) : undefined}
       stickyColumnId="madrasaName"
+      columnResize={toColumnResize(columnLayout)}
       actionsLabel={t('common.actions')}
       actionsHeaderClassName={cn('w-56 min-w-56 text-end', pad)}
       actionsCellClassName={cn('w-56 min-w-56 text-end align-middle', pad)}

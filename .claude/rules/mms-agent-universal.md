@@ -8,7 +8,8 @@ description: Universal agent cognition, behaviour, output economy, security, and
 
 ## 1. Cognition & Behaviour
 
-- **Plan**: Emit concise `<plan>` before structural/multi-file edits. Search `@mms/shared` before authoring new logic (`mms-dry.md`). When coding or refactoring UI components or layouts, query `ui-ux-pro-max` (`mms-ui-ux-design.md` §8) for design systems, palettes, and UX guidelines.
+- **Plan**: Emit concise `<plan>` before structural/multi-file edits. When coding or refactoring UI components or layouts, query `ui-ux-pro-max` (`mms-ui-ux-design.md` §8) for design systems, palettes, and UX guidelines.
+- **Reuse First (DRY)**: Before implementing any feature, search for existing components, hooks, utilities, and patterns (`@mms/shared`, `@/components/ui`, `@/components/common`, `@/hooks`) and reuse or extend them; keep shared behaviour in configurable implementations, never duplicate UI or business logic across pages, keep shared-component changes compatible with existing consumers and verify the affected pages. Workflow and thresholds: `mms-dry.md` §1–§2.
 - **Type-Check**: Validate types against schemas before code generation. Use Context7/official docs over broad web searches for external libraries.
 - **Focus & Style**: Edit in-scope files only. Terse, functional, idiomatic code with zero boilerplate or narrating comments.
 - **Surgical Edits**: Targeted patches with minimal context; never rewrite whole files unless creating new files.

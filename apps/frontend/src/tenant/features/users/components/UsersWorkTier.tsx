@@ -4,6 +4,7 @@ import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { CardSkeleton } from '@/components/ui/LoadingState';
 import type { ModuleColumnCustomizerLabels } from '@/components/ui/ModuleColumnCustomizer';
+import type { DataTableColumnLayout } from '@/components/common/data-table';
 import { useTranslation } from '@/hooks/useTranslation';
 import { ActivityLogs } from '@/tenant/features/users/components/ActivityLogs';
 import { UsersList } from '@/tenant/features/users/components/UsersList';
@@ -43,9 +44,9 @@ export interface UsersWorkTierProps {
   isUserColumnVisible: (key: string) => boolean;
   userColumnRegistry: ModuleColumnRegistryEntry[];
   updateUserColumnLayout: (columnRegistry: ModuleColumnRegistryEntry[]) => void;
+  onResetLayout?: () => void;
   userColumnCustomizerLabels: ModuleColumnCustomizerLabels;
-  getActivityColumnWidth: (key: string) => number | undefined;
-  setActivityColumnWidth: (key: string, width: number) => void;
+  activityColumnLayout?: DataTableColumnLayout;
   onSubTabChange: (subTab: string) => void;
   onRetryUsers: () => void;
   onRetryLogs: () => void;
@@ -92,9 +93,9 @@ export function UsersWorkTier({
   isUserColumnVisible,
   userColumnRegistry,
   updateUserColumnLayout,
+  onResetLayout,
   userColumnCustomizerLabels,
-  getActivityColumnWidth,
-  setActivityColumnWidth,
+  activityColumnLayout,
   onSubTabChange,
   onRetryUsers,
   onRetryLogs,
@@ -162,6 +163,7 @@ export function UsersWorkTier({
             isColumnVisible={isUserColumnVisible}
             columnRegistry={userColumnRegistry}
             updateUserColumnLayout={updateUserColumnLayout}
+            onResetLayout={onResetLayout}
             customizerLabels={userColumnCustomizerLabels}
           />
         )}
@@ -182,8 +184,7 @@ export function UsersWorkTier({
           <ActivityLogs
             logs={logs}
             users={activityUsers ?? users}
-            getColumnWidth={getActivityColumnWidth}
-            onColumnResize={setActivityColumnWidth}
+            columnLayout={activityColumnLayout}
           />
         )}
       </ModuleTierMotion>

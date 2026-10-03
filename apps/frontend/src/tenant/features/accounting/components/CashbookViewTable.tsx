@@ -1,22 +1,16 @@
-import { useMemo } from "react";
 import { formatDate } from "@mms/shared";
-import { TrendingUp, TrendingDown, ArrowUpDown, AlertTriangle } from "lucide-react";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { StatusBadge } from "@/components/ui/StatusBadge";
-import {
-  TableCell,
-  TableFooter,
-  TableRow,
-} from "@/components/ui/table";
+import { TableCell, TableFooter, TableRow } from "@/components/ui/table";
 import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
 import { StatGrid, StatRow } from "@/components/ui/StatGrid";
 import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
 import { DirectoryEntityCard } from "@/components/ui/DirectoryEntityCard";
-import { WorkBatchTable, type WorkBatchTableColumn } from "@/components/common/work/WorkBatchTable";
-import { FLOW_TONE, SEMANTIC_BADGE } from "@/lib/semanticTone";
+import { WorkBatchTable } from "@/components/common/work/WorkBatchTable";
+import { resolveVisibleColumns, toColumnResize, type DataTableColumnLayout } from "@/components/common/data-table";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
-import type { CashbookRow } from "@/tenant/features/accounting/components/cashbookViewShared";
+import { buildCashbookFooterCells, type CashbookRow } from "@/tenant/features/accounting/components/cashbookViewShared";
+import { useCashbookColumns } from "@/tenant/features/accounting/components/useCashbookColumns";
 
 interface CashbookViewTableProps {
   rows: CashbookRow[];
@@ -24,6 +18,8 @@ interface CashbookViewTableProps {
   totalOut: number;
   formatCurrency: (amount: number) => string;
   viewMode?: WorkDirectoryViewMode;
+  /** Page-owned column visibility/order/width (`useModuleColumnLayout`). */
+  columnLayout?: DataTableColumnLayout;
 }
 
 export function CashbookViewTable({
@@ -32,86 +28,12 @@ export function CashbookViewTable({
   totalOut,
   formatCurrency,
   viewMode: propViewMode,
+  columnLayout,
 }: CashbookViewTableProps) {
   const { t } = useTranslation();
   const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
   const viewMode = propViewMode ?? hookViewMode;
-
-
-
-  const flowBadge = (row: CashbookRow) => (
-    <StatusBadge
-      status={row.flowType}
-      size="sm"
-      config={{
-        in: { label: row.flowLabel, cls: FLOW_TONE.in.badge },
-        out: { label: row.flowLabel, cls: FLOW_TONE.out.badge },
-        transfer: { label: row.flowLabel, cls: SEMANTIC_BADGE.infoStrong },
-        // A posted entry with no cash/bank line cannot be reported as money in
-        // or out; the row says "Unclassified" instead of showing "—" in both
-        // money columns with no explanation.
-        unclassified: {
-          label: row.flowLabel || t("accounting.cashbook.unclassified"),
-          cls: SEMANTIC_BADGE.warningStrong,
-        },
-      }}
-    />
-  );
-
-  const flowIcon = (flowType: CashbookRow["flowType"]) => {
-    if (flowType === "in") return <TrendingUp className="w-3.5 h-3.5 text-success shrink-0" aria-hidden="true" />;
-    if (flowType === "out") return <TrendingDown className="w-3.5 h-3.5 text-destructive shrink-0" aria-hidden="true" />;
-    if (flowType === "unclassified") return <AlertTriangle className="w-3.5 h-3.5 text-warning shrink-0" aria-hidden="true" />;
-    return <ArrowUpDown className="w-3.5 h-3.5 text-info shrink-0" aria-hidden="true" />;
-  };
-  
-  const batchColumns = useMemo<WorkBatchTableColumn<CashbookRow>[]>(() => [
-    {
-      id: "date",
-      label: t("accounting.columns.journal.date"),
-      cellClassName: "text-xs text-muted-foreground whitespace-nowrap",
-      render: (row) => formatDate(row.date),
-    },
-    {
-      id: "type",
-      label: t("accounting.columns.journal.type"),
-      render: (row) => (
-        <div className="inline-flex items-center gap-1.5">
-          {flowIcon(row.flowType)}
-          {flowBadge(row)}
-        </div>
-      ),
-    },
-    {
-      id: "description",
-      label: t("accounting.columns.journal.description"),
-      cellClassName: "text-foreground max-w-cell-trunc truncate",
-      render: (row) => (
-        <>
-          <p className="font-medium m-0">{row.description}</p>
-          <p className="text-xs text-muted-foreground font-mono m-0">{row.ref}</p>
-        </>
-      ),
-    },
-    {
-      id: "moneyIn",
-      label: t("accounting.cashbook.moneyIn"),
-      headerClassName: "text-end text-success",
-      cellClassName: "text-end",
-      render: (row) => row.flowType === "in" ? (
-        <span className="font-mono font-bold text-success">{formatCurrency(row.flowAmount)}</span>
-      ) : <span className="text-muted-foreground">—</span>,
-    },
-    {
-      id: "moneyOut",
-      label: t("accounting.cashbook.moneyOut"),
-      headerClassName: "text-end text-destructive",
-      cellClassName: "text-end",
-      render: (row) => row.flowType === "out" ? (
-        <span className="font-mono font-bold text-destructive">{formatCurrency(row.flowAmount)}</span>
-      ) : <span className="text-muted-foreground">—</span>,
-    }
-  ], [t, formatCurrency]);
+  const { columns, flowBadge, flowIcon } = useCashbookColumns(formatCurrency);
 
   if (rows.length === 0) {
     return (
@@ -174,18 +96,31 @@ export function CashbookViewTable({
     );
   }
 
+  const visibleColumns = columnLayout ? resolveVisibleColumns(columns, columnLayout.columnRegistry) : columns;
+  const footerCells = buildCashbookFooterCells(visibleColumns.map((column) => column.id)).map((cell, index) =>
+    cell.kind === "label" || cell.kind === "blank" ? (
+      <TableCell key={index} colSpan={cell.span} className="table-footer-label">
+        {cell.kind === "label" ? t("accounting.cashbook.transactionCount", { count: rows.length }) : null}
+      </TableCell>
+    ) : (
+      <TableCell
+        key={index}
+        className={`table-amount-cell text-xs ${cell.kind === "moneyIn" ? "text-success" : "text-destructive"}`}
+      >
+        {formatCurrency(cell.kind === "moneyIn" ? totalIn : totalOut)}
+      </TableCell>
+    ),
+  );
+
   return (
     <WorkBatchTable
       data={rows}
-      columns={batchColumns}
+      columns={visibleColumns}
       caption={t("accounting.cashbook.tableCaption")}
+      columnResize={toColumnResize(columnLayout)}
       tableFooter={
         <TableFooter>
-          <TableRow>
-            <TableCell colSpan={3} className="table-footer-label">{t("accounting.cashbook.transactionCount", { count: rows.length })}</TableCell>
-            <TableCell className="table-amount-cell text-success text-xs">{formatCurrency(totalIn)}</TableCell>
-            <TableCell className="table-amount-cell text-destructive text-xs">{formatCurrency(totalOut)}</TableCell>
-          </TableRow>
+          <TableRow>{footerCells}</TableRow>
         </TableFooter>
       }
     />

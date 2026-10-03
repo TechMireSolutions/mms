@@ -7,7 +7,6 @@ import { SectionHeader } from "@/components/ui/SectionHeader";
 import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 import { useTranslation } from "@/hooks/useTranslation";
-import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { Field } from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
@@ -47,7 +46,6 @@ export function AccountingSettingsFiscalYearsSection({
   onSave,
 }: AccountingSettingsFiscalYearsSectionProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { viewMode } = useWorkDirectoryViewMode();
   const sortedYears = [...fiscalYears].sort((firstYear, secondYear) =>
     secondYear.startDate.localeCompare(firstYear.startDate),
   );
@@ -101,7 +99,6 @@ export function AccountingSettingsFiscalYearsSection({
           canEditSetup={canEditSetup}
           onEditFiscalYear={onEditFiscalYear}
           onRequestCloseFiscalYear={onRequestCloseFiscalYear}
-          viewMode={viewMode}
           t={t}
         />
 

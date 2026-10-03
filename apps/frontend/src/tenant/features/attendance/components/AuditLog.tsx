@@ -6,23 +6,14 @@ import { Button } from "@/components/ui/button";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { getAuditLog } from "@/tenant/features/attendance/components/MarkAttendance";
 import { useSessionsCollection } from "@/tenant/hooks/collections/sessions";
+import { type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { type AttendanceFilterState } from "@/tenant/features/attendance/components/AttendanceFilters";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FormSelect } from "@/components/ui/FormSelect";
-import { ModuleTableHeaderCell } from "@/components/ui/ModuleTableHeaderCell";
 import { reportClientError } from "@/lib/clientErrorReporting";
 import { SectionHeader } from "@/components/ui/SectionHeader";
 import { StatusBadge } from "@/components/ui/StatusBadge";
-import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { WORK_SURFACE, WORK_SURFACE_INNER } from "@/components/ui/formStyles";
+import { DataTable, type DataTableColumn, type DataTableFilter } from "@/components/common/data-table";
 import { useStudentsByIds } from "@/tenant/hooks/collections/students";
 import { uniqueRegistryIds } from "@/lib/registryResolve";
 import {
@@ -38,16 +29,19 @@ export interface AuditLogProps {
   viewMode?: WorkDirectoryViewMode;
 }
 
+interface AuditLogRow {
+  id: number;
+  entry: AuditEntry;
+}
+
 /**
  * AuditLog
  * 
  * Displays a log of actions taken regarding attendance (e.g., editing, bulk marking).
  * Allows filtering by class and date.
  */
-export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): React.JSX.Element {
+export function AuditLog({ filters, viewMode }: AuditLogProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { viewMode: hookViewMode } = useWorkDirectoryViewMode();
-  const viewMode = propViewMode ?? hookViewMode;
   const sessions = useSessionsCollection();
   const [log, setLog] = useState<AuditEntry[]>([]);
   const studentIds = uniqueRegistryIds(log.map((entry) => entry.studentId));
@@ -93,6 +87,47 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
     if (filters.date) setDate(filters.date);
   }, [filters.classId, filters.date]);
 
+  const rows: AuditLogRow[] = log.map((entry, index) => ({ id: index, entry }));
+  const actionLabel = (row: AuditLogRow) => actionConfig[row.entry.action]?.label ?? row.entry.action;
+  const columns: DataTableColumn<AuditLogRow>[] = [
+    {
+      id: "time",
+      label: t("attendance.audit.colTime"),
+      width: 180,
+      searchValue: (row) => formatDateTime(row.entry.ts),
+      render: (row) => <span className="text-xs font-mono text-muted-foreground whitespace-nowrap">{formatDateTime(row.entry.ts)}</span>,
+    },
+    {
+      id: "action",
+      label: t("attendance.audit.colAction"),
+      searchValue: actionLabel,
+      hideInCard: true,
+      render: (row) => <StatusBadge status={row.entry.action} config={actionConfig} size="sm" />,
+    },
+    {
+      id: "details",
+      label: t("attendance.audit.colDetails"),
+      fixed: true,
+      hideInCard: true,
+      searchValue: (row) => describeAuditEntry(row.entry, studentNameFor, t),
+      render: (row) => <span className="text-xs text-foreground">{describeAuditEntry(row.entry, studentNameFor, t)}</span>,
+    },
+    {
+      id: "by",
+      label: t("attendance.audit.colBy"),
+      searchValue: (row) => row.entry.by,
+      render: (row) => <span className="text-xs font-semibold text-muted-foreground capitalize">{row.entry.by || "—"}</span>,
+    },
+  ];
+  const tableFilters: DataTableFilter<AuditLogRow>[] = [
+    {
+      id: "action",
+      label: t("attendance.audit.colAction"),
+      options: Object.entries(actionConfig).map(([value, item]) => ({ value, label: item.label })),
+      getValue: (row) => row.entry.action,
+    },
+  ];
+
   return (
     <section className="space-y-4">
       <SectionHeader
@@ -114,82 +149,45 @@ export function AuditLog({ filters, viewMode: propViewMode }: AuditLogProps): Re
         }
       />
 
-      {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
-        <label htmlFor="audit-class-select" className="sr-only">{t("attendance.audit.filterClass")}</label>
-        <FormSelect
-          id="audit-class-select"
-          value={classId}
-          onChange={setClassId}
-          placeholder={t("attendance.audit.allClasses")}
-          options={allClasses.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
-          className="text-sm min-w-audit-action"
-        />
-        
-        <DatePicker
-          id="audit-date-select"
-          name="auditDate"
-          value={date}
-          onChange={setDate}
-          aria-label={t("attendance.filters.date")}
-          className="text-sm"
-        />
-      </div>
-
-      {/* Log */}
-      {log.length === 0 ? (
-        <EmptyState
-          variant="dashed"
-          icon={ClipboardList}
-          title={t("attendance.audit.emptyTitle")}
-          description={t("attendance.audit.emptyDesc")}
-          compact
-        />
-      ) : (
-        <div className={WORK_SURFACE}>
-          {viewMode === "cards" ? (
-            <div className="p-3">
-              <DirectoryCardsGrid className="grid-cols-1 sm:grid-cols-2">
-                {log.map((entry, index) => (
-                  <article key={index} className={`${WORK_SURFACE_INNER} space-y-2 p-3 rounded-lg border border-border/60`}>
-                    <div className="flex items-start justify-between gap-2">
-                      <time className="text-xs font-mono text-muted-foreground">{formatDateTime(entry.ts)}</time>
-                      <StatusBadge status={entry.action} config={actionConfig} size="sm" />
-                    </div>
-                    <p className="text-xs text-foreground m-0">{describeAuditEntry(entry, studentNameFor, t)}</p>
-                    {entry.by && (
-                      <p className="text-xs font-semibold text-muted-foreground capitalize m-0">{entry.by}</p>
-                    )}
-                  </article>
-                ))}
-              </DirectoryCardsGrid>
-            </div>
-          ) : (
-            <Table>
-              <TableHeader>
-                <TableRow className="border-b border-border bg-muted/30 hover:bg-muted/30">
-                  <ModuleTableHeaderCell columnKey="time" className="px-3 py-2.5">{t("attendance.audit.colTime")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="action" className="px-3 py-2.5">{t("attendance.audit.colAction")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="details" className="px-3 py-2.5">{t("attendance.audit.colDetails")}</ModuleTableHeaderCell>
-                  <ModuleTableHeaderCell columnKey="by" className="px-3 py-2.5">{t("attendance.audit.colBy")}</ModuleTableHeaderCell>
-                </TableRow>
-              </TableHeader>
-              <TableBody className="divide-y divide-border/50">
-                {log.map((entry, index) => (
-                  <TableRow key={index} className="transition-colors hover:bg-muted/20">
-                    <TableCell className="px-3 py-2.5 text-xs font-mono text-muted-foreground whitespace-nowrap">{formatDateTime(entry.ts)}</TableCell>
-                    <TableCell className="px-3 py-2.5">
-                      <StatusBadge status={entry.action} config={actionConfig} size="sm" />
-                    </TableCell>
-                    <TableCell className="px-3 py-2.5 text-xs text-foreground">{describeAuditEntry(entry, studentNameFor, t)}</TableCell>
-                    <TableCell className="px-3 py-2.5 text-xs font-semibold text-muted-foreground capitalize">{entry.by || "—"}</TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          )}
-        </div>
-      )}
+      <DataTable
+        tableId="attendance.auditLog"
+        defaultViewMode={viewMode}
+        label={t("attendance.audit.title")}
+        data={rows}
+        columns={columns}
+        filters={tableFilters}
+        card={{ title: (row) => describeAuditEntry(row.entry, studentNameFor, t), badge: (row) => <StatusBadge status={row.entry.action} config={actionConfig} size="sm" /> }}
+        toolbarExtras={
+          <>
+            <label htmlFor="audit-class-select" className="sr-only">{t("attendance.audit.filterClass")}</label>
+            <FormSelect
+              id="audit-class-select"
+              value={classId}
+              onChange={setClassId}
+              placeholder={t("attendance.audit.allClasses")}
+              options={allClasses.map((sessionClass) => ({ value: sessionClass.id, label: sessionClass.name }))}
+              className="text-sm min-w-audit-action"
+            />
+            <DatePicker
+              id="audit-date-select"
+              name="auditDate"
+              value={date}
+              onChange={setDate}
+              aria-label={t("attendance.filters.date")}
+              className="text-sm"
+            />
+          </>
+        }
+        emptyState={
+          <EmptyState
+            variant="dashed"
+            icon={ClipboardList}
+            title={t("attendance.audit.emptyTitle")}
+            description={t("attendance.audit.emptyDesc")}
+            compact
+          />
+        }
+      />
     </section>
   );
 }

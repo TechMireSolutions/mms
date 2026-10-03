@@ -5,6 +5,7 @@ import { useTranslation } from '@/hooks/useTranslation';
 import { usePlatformWorkspaces } from '@/platform/hooks/usePlatformWorkspaces';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 import { usePlatformWorkspaceDescriptor } from '@/platform/hooks/usePlatformWorkspaceDescriptor';
+import { useDescriptorColumnLayout } from '@/hooks/useDescriptorColumnLayout';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ModuleWorkListStateShell } from '@/components/ui/ModuleWorkListStateShell';
@@ -35,6 +36,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
   } = usePlatformWorkspaceUrlState();
 
   const descriptor = usePlatformWorkspaceDescriptor();
+  const columnLayout = useDescriptorColumnLayout('platform.workspaces', descriptor);
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const { density, setDensity } = usePlatformDensity();
   const deleteState = useWorkspaceDeleteState();
@@ -89,6 +91,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
         onToggleSort={toggleSort}
         onRefetch={() => void refetch()}
         onExportCsv={() => downloadWorkspacesCsv(sortedItems)}
+        columnLayout={columnLayout}
       />
 
       <ModuleWorkListStateShell
@@ -130,6 +133,7 @@ export default function PlatformWorkspaceList(): React.JSX.Element {
               viewMode={viewMode}
               workspaces={paginatedItems}
               descriptor={descriptor}
+              columnLayout={columnLayout}
               appDomain={appDomain}
               density={density}
               sortField={sortField}

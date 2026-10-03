@@ -16,7 +16,7 @@ import { cn } from '@/lib/utils';
 import type { EntityDescriptor } from '@/types/entityRegistry';
 
 export type WorkspaceListCardsProps = Omit<WorkspaceTableViewProps,
-  'descriptor' | 'density' | 'sortField' | 'sortDirection' | 'onToggleSort' | 'onToggleSelectAll'
+  'descriptor' | 'columnLayout' | 'density' | 'sortField' | 'sortDirection' | 'onToggleSort' | 'onToggleSelectAll'
 > & { descriptor?: EntityDescriptor<PlatformWorkspaceRowData> };
 
 /** Directory list cards view for platform workspaces, aligning with tenant [Entity]ListCards. */

@@ -106,6 +106,7 @@ export function ExaminationsWorkTier({
               columnCustomizer={{
                 columnRegistry: examColumnLayout.columnRegistry,
                 updateUserColumnLayout: examColumnLayout.updateUserColumnLayout,
+                onResetLayout: examColumnLayout.resetColumnLayout,
                 labels: examColumnLayout.customizerLabels,
               }}
             />
@@ -119,6 +120,7 @@ export function ExaminationsWorkTier({
               columnCustomizer={{
                 columnRegistry: resultsColumnLayout.columnRegistry,
                 updateUserColumnLayout: resultsColumnLayout.updateUserColumnLayout,
+                onResetLayout: resultsColumnLayout.resetColumnLayout,
                 labels: resultsColumnLayout.customizerLabels,
               }}
             />

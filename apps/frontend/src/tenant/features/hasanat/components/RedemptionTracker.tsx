@@ -3,32 +3,32 @@ import { Gift, Plus, Star } from "lucide-react";
 import { type Redemption, type Distribution } from "@/lib/data/hasanatData";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useListRowMotion } from "@/hooks/useListRowMotion";
-import { ModuleColumnCustomizer, type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
-import { formatNumber } from "@mms/shared";
+import { formatDate, formatNumber, HASANAT_MODULE_MANIFEST } from "@mms/shared";
 import { useHasanatRedemptionsCollection, useHasanatMutations } from "@/tenant/features/hasanat/hooks/useHasanatApi";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { SectionHeader } from "@/components/ui/SectionHeader";
-import { DirectoryCardsGrid } from "@/components/ui/DirectoryCardsGrid";
-import { WorkViewModeToggle } from "@/components/ui/WorkViewModeToggle";
-import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
+import {
+  DataTable,
+  type DataTableColumn,
+  type DataTableColumnLayout,
+  type DataTableFilter,
+} from "@/components/common/data-table";
 import { RedeemModal } from "@/tenant/features/hasanat/components/RedeemModal";
 import { RedemptionCard } from "./RedemptionCard";
-import { RedemptionTable } from "./RedemptionTable";
 
-const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
+/** Same storage key as `useHasanatRedemptionColumnLayout` so stand-alone use shares prefs. */
+const REDEMPTION_TABLE_ID = `${HASANAT_MODULE_MANIFEST.moduleId}_redemptions`;
 
 export interface RedemptionTrackerProps {
   distributions: Distribution[];
   onUpdateDistribution: (distribution: Distribution) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
-  isColumnVisible?: (key: string) => boolean;
-  getColumnWidth?: (key: string) => number | undefined;
-  onColumnResize?: (key: string, width: number) => void;
-  columnCustomizer?: ModuleColumnCustomizerProps;
+  /** Controller-owned column layout (`useHasanatRedemptionColumnLayout`). */
+  columnLayout?: DataTableColumnLayout;
   viewMode?: WorkDirectoryViewMode;
-  onViewModeChange?: (mode: WorkDirectoryViewMode) => void;
 }
 
 export function RedemptionTracker({
@@ -36,21 +36,14 @@ export function RedemptionTracker({
   onUpdateDistribution,
   onFilteredCountChange,
   canWrite = true,
-  isColumnVisible,
-  getColumnWidth,
-  onColumnResize,
-  columnCustomizer,
-  viewMode: propViewMode,
-  onViewModeChange: propOnViewModeChange,
+  columnLayout,
+  viewMode,
 }: RedemptionTrackerProps): React.JSX.Element {
   const { t } = useTranslation();
   const rowMotion = useListRowMotion({ fade: true, duration: 0.1 });
   const redemptions = useHasanatRedemptionsCollection();
   const { replaceRedemptions } = useHasanatMutations();
   const [showModal, setShowModal] = useState(false);
-  const directoryViewMode = useWorkDirectoryViewMode();
-  const viewMode = propViewMode ?? directoryViewMode.viewMode;
-  const setViewMode = propOnViewModeChange ?? directoryViewMode.setViewMode;
 
   useEffect(() => {
     onFilteredCountChange?.(redemptions.length);
@@ -70,7 +63,45 @@ export function RedemptionTracker({
     setShowModal(false);
   };
 
-  const columnVisible = isColumnVisible ?? ALWAYS_COLUMN_VISIBLE;
+  const columns: DataTableColumn<Redemption>[] = [
+    {
+      id: "student",
+      label: t("hasanat.columns.redemption.student"),
+      fixed: true,
+      searchValue: (r) => r.studentName,
+      render: (r) => <span className="text-sm font-semibold text-foreground">{r.studentName || "—"}</span>,
+    },
+    { id: "reward", label: t("hasanat.columns.redemption.reward"), render: (r) => r.reward },
+    {
+      id: "pointsUsed",
+      label: t("hasanat.columns.redemption.pointsUsed"),
+      render: (r) => (
+        <span className="inline-flex items-center gap-1 text-sm font-bold text-warning">
+          <Star className="w-3 h-3" aria-hidden="true" />
+          {r.pointsUsed}
+        </span>
+      ),
+    },
+    {
+      id: "date",
+      label: t("hasanat.columns.redemption.date"),
+      searchValue: (r) => formatDate(r.date),
+      render: (r) => <span className="text-muted-foreground whitespace-nowrap">{formatDate(r.date)}</span>,
+    },
+    {
+      id: "approvedBy",
+      label: t("hasanat.columns.redemption.approvedBy"),
+      render: (r) => <span className="text-muted-foreground">{r.approvedBy || "—"}</span>,
+    },
+  ];
+
+  const rewardOptions = [...new Set(redemptions.map((r) => r.reward).filter(Boolean))].map((reward) => ({
+    value: reward,
+    label: reward,
+  }));
+  const filters: DataTableFilter<Redemption>[] = [
+    { id: "reward", label: t("hasanat.columns.redemption.reward"), options: rewardOptions, getValue: (r) => r.reward },
+  ];
 
   return (
     <section aria-label={t("hasanat.tabs.redemptions")} className="space-y-4">
@@ -83,19 +114,7 @@ export function RedemptionTracker({
           points: formatNumber(totalPoints),
         })}
         actions={
-          <>
-            <WorkViewModeToggle
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-            />
-            {columnCustomizer && (
-              <ModuleColumnCustomizer
-                columnRegistry={columnCustomizer.columnRegistry}
-                updateUserColumnLayout={columnCustomizer.updateUserColumnLayout}
-                labels={columnCustomizer.labels}
-              />
-            )}
-            {canWrite && (
+          canWrite && (
               <Button
                 type="button"
                 onClick={() => setShowModal(true)}
@@ -103,37 +122,27 @@ export function RedemptionTracker({
               >
                 <Plus className="w-3.5 h-3.5" aria-hidden="true" /> {t("hasanat.recordRedemption")}
               </Button>
-            )}
-          </>
+            )
         }
       />
 
-      {redemptions.length === 0 ? (
-        <EmptyState
-          variant="dashed"
-          icon={Gift}
-          title={t("hasanat.empty.redemptions")}
-        />
-      ) : viewMode === "cards" ? (
-        <DirectoryCardsGrid>
-          {redemptions.map((redemption, index) => (
-            <RedemptionCard
-              key={redemption.id}
-              redemption={redemption}
-              columnVisible={columnVisible}
-              motionProps={rowMotion(index * 0.04)}
-            />
-          ))}
-        </DirectoryCardsGrid>
-      ) : (
-        <RedemptionTable
-          redemptions={redemptions}
-          columnVisible={columnVisible}
-          getColumnWidth={getColumnWidth}
-          onColumnResize={onColumnResize}
-          rowMotion={rowMotion}
-        />
-      )}
+      <DataTable
+        tableId={REDEMPTION_TABLE_ID}
+        label={t("hasanat.tabs.redemptions")}
+        data={redemptions}
+        columns={columns}
+        filters={filters}
+        columnLayout={columnLayout}
+        defaultViewMode={viewMode}
+        renderCard={(redemption, index, ctx) => (
+          <RedemptionCard
+            redemption={redemption}
+            columnVisible={ctx.isColumnVisible}
+            motionProps={rowMotion(index * 0.04)}
+          />
+        )}
+        emptyState={<EmptyState variant="dashed" icon={Gift} title={t("hasanat.empty.redemptions")} />}
+      />
 
       {canWrite && (
         <RedeemModal

@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { TrendingUp, TrendingDown, ArrowUpDown, AlertTriangle } from "lucide-react";
 import { WarningCallout } from "@/components/ui/WarningCallout";
-import { SearchBar } from "@/components/ui/SearchBar";
 import { centsToMoney, type JournalEntry, type Account } from '@/lib/data/accountingData';
 import { ModuleCommandMetricsGrid } from "@/components/ui/ModuleCommandMetricsGrid";
-import { SegmentedPillFilter } from "@/components/ui/SegmentedPillFilter";
+import { WorkTaskToolbar } from "@/components/common/work";
+import { buildDataTableRegistry, toColumnCustomizer } from "@/components/common/data-table";
+import { useModuleColumnLayout } from "@/hooks/useModuleColumnLayout";
+import { useWorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import {
@@ -15,6 +17,7 @@ import {
   type EntryType,
 } from "@/tenant/features/accounting/components/cashbookViewShared";
 import { CashbookViewTable } from "@/tenant/features/accounting/components/CashbookViewTable";
+import { useCashbookColumns } from "@/tenant/features/accounting/components/useCashbookColumns";
 
 interface CashbookViewProps {
   entries: JournalEntry[];
@@ -32,6 +35,10 @@ export function CashbookView({ entries, accounts, configuredCashAccountId, pageS
   const { formatCurrency } = useAccountingCurrency();
   const [search, setSearch] = useState("");
   const [filterType, setFilterType] = useState<EntryType | "all">("all");
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
+  const { columns } = useCashbookColumns(formatCurrency);
+  const tenantRegistry = useMemo(() => buildDataTableRegistry(columns), [columns]);
+  const columnLayout = useModuleColumnLayout({ moduleId: "accounting.cashbook", tenantRegistry });
 
   /**
    * Cash accounts are resolved from the chart itself (Asset accounts whose
@@ -91,22 +98,39 @@ export function CashbookView({ entries, accounts, configuredCashAccountId, pageS
         </p>
       )}
 
-      <nav aria-label={t("accounting.cashbook.filterAria")} className="flex flex-wrap items-center gap-2">
-        <SearchBar value={search} onChange={setSearch} placeholder={t("reports.widgets.searchRecords")} className="flex-1 min-w-search" />
-        <SegmentedPillFilter
-          value={filterType}
-          onChange={setFilterType}
-          options={[
-            { value: "all", label: t("accounting.cashbook.all") },
-            { value: "in", label: t("accounting.cashbook.moneyIn") },
-            { value: "out", label: t("accounting.cashbook.moneyOut") },
-            { value: "transfer", label: t("accounting.cashbook.transfers") },
-            { value: "unclassified", label: t("accounting.cashbook.unclassified") },
-          ]}
-        />
-      </nav>
+      <WorkTaskToolbar
+        regionLabel={t("accounting.cashbook.filterAria")}
+        search={search}
+        onSearchChange={setSearch}
+        searchPlaceholder={t("reports.widgets.searchRecords")}
+        searchId="cashbook-search"
+        hasActiveFilters={search.length > 0 || filterType !== "all"}
+        onClearFilters={() => { setSearch(""); setFilterType("all"); }}
+        clearFiltersLabel={t("common.clearFilters")}
+        statusFilter={{
+          activeIds: filterType === "all" ? [] : [filterType],
+          onToggle: (id) => setFilterType(id === filterType ? "all" : (id as EntryType)),
+          allLabel: t("accounting.cashbook.all"),
+          onResetAll: () => setFilterType("all"),
+          options: [
+            { id: "in", label: t("accounting.cashbook.moneyIn") },
+            { id: "out", label: t("accounting.cashbook.moneyOut") },
+            { id: "transfer", label: t("accounting.cashbook.transfers") },
+            { id: "unclassified", label: t("accounting.cashbook.unclassified") },
+          ],
+        }}
+        viewModeToggle={{ viewMode, onViewModeChange: setViewMode }}
+        columnCustomizer={toColumnCustomizer(columnLayout)}
+      />
 
-      <CashbookViewTable rows={rows} totalIn={totalIn} totalOut={totalOut} formatCurrency={formatCurrency} />
+      <CashbookViewTable
+        rows={rows}
+        totalIn={totalIn}
+        totalOut={totalOut}
+        formatCurrency={formatCurrency}
+        viewMode={viewMode}
+        columnLayout={columnLayout}
+      />
     </div>
   );
 }

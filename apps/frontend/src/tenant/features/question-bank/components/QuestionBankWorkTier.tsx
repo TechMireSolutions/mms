@@ -123,6 +123,7 @@ export function QuestionBankWorkTier({
           columnCustomizer={{
             columnRegistry: columnLayout.columnRegistry,
             updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+            onResetLayout: columnLayout.resetColumnLayout,
             labels: columnLayout.customizerLabels,
           }}
         />

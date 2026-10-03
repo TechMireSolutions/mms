@@ -154,6 +154,7 @@ export default function Accounting() {
                     columnCustomizer: {
                       columnRegistry: journalColumnLayout.columnRegistry,
                       updateUserColumnLayout: journalColumnLayout.updateUserColumnLayout,
+                      onResetLayout: journalColumnLayout.resetColumnLayout,
                       labels: journalColumnLayout.customizerLabels,
                     },
                   }}
@@ -164,6 +165,7 @@ export default function Accounting() {
                     columnCustomizer: {
                       columnRegistry: accountColumnLayout.columnRegistry,
                       updateUserColumnLayout: accountColumnLayout.updateUserColumnLayout,
+                      onResetLayout: accountColumnLayout.resetColumnLayout,
                       labels: accountColumnLayout.customizerLabels,
                     },
                   }}

@@ -26,13 +26,6 @@ vi.mock("../hooks/useMessaging", () => ({
   }),
 }));
 
-vi.mock("../hooks/useMessagingColumnLayouts", () => ({
-  useMessagingTemplatesColumnLayout: () => ({
-    getColumnWidth: () => 150,
-    setColumnWidth: vi.fn(),
-  }),
-}));
-
 vi.mock("../hooks/useMessagingPageOptions", () => ({
   useMessagingPageOptions: () => ({
     categorySelectOptions: [],
