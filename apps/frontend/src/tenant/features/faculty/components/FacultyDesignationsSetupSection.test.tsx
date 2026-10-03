@@ -16,6 +16,7 @@ const mockSaveMutateAsync = vi.fn().mockResolvedValue({
   isActive: true,
   assignableRoles: [],
 });
+const mockDeleteMutateAsync = vi.fn().mockResolvedValue(undefined);
 
 let mockDesignationsData = [
   {
@@ -43,6 +44,10 @@ vi.mock('../hooks/useFacultyDesignations', () => ({
   }),
   useSaveFacultyDesignation: () => ({
     mutateAsync: mockSaveMutateAsync,
+    isPending: false,
+  }),
+  useDeleteFacultyDesignation: () => ({
+    mutateAsync: mockDeleteMutateAsync,
     isPending: false,
   }),
 }));
@@ -76,6 +81,7 @@ describe('FacultyDesignationsSetupSection', () => {
     document.body.appendChild(container);
     root = createRoot(container);
     mockSaveMutateAsync.mockClear();
+    mockDeleteMutateAsync.mockClear();
     mockDesignationsData = [
       {
         id: 'des-1',
