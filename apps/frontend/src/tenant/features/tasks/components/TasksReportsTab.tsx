@@ -1,6 +1,6 @@
 /**
  * @file TasksReportsTab.tsx
- * @description Tasks Reports tier — KPI cards and status breakdown (tokenized copy).
+ * @description Tasks Reports tier — KPI cards, Recharts series, and execution health.
  */
 
 import React from 'react';
@@ -12,10 +12,10 @@ import {
   ListTodo,
   TrendingUp,
 } from 'lucide-react';
-import type { AppTranslationKey } from '@mms/shared';
 import { useTaskMetrics } from '@/tenant/features/tasks/hooks/useTasksApi';
 import { StatsSkeleton } from '@/components/ui/LoadingState';
 import { useTranslation } from '@/hooks/useTranslation';
+import { TasksReportsCharts } from './TasksReportsCharts';
 
 export function TasksReportsTab(): React.JSX.Element {
   const { t } = useTranslation();
@@ -34,6 +34,7 @@ export function TasksReportsTab(): React.JSX.Element {
     completed: 0,
     cancelled: 0,
     overdue: 0,
+    byPriority: { low: 0, medium: 0, high: 0, urgent: 0 },
   };
 
   const completionRate = m.total > 0 ? Math.round((m.completed / m.total) * 100) : 0;
@@ -84,14 +85,6 @@ export function TasksReportsTab(): React.JSX.Element {
     },
   ];
 
-  const statusRows: Array<{ labelKey: AppTranslationKey; count: number; barClass: string }> = [
-    { labelKey: 'tasks.status.todo', count: m.todo, barClass: 'bg-muted-foreground' },
-    { labelKey: 'tasks.status.in_progress', count: m.inProgress, barClass: 'bg-primary' },
-    { labelKey: 'tasks.status.in_review', count: m.inReview, barClass: 'bg-accent-foreground' },
-    { labelKey: 'tasks.status.blocked', count: m.blocked, barClass: 'bg-destructive' },
-    { labelKey: 'tasks.status.completed', count: m.completed, barClass: 'bg-success' },
-  ];
-
   return (
     <div className="space-y-6">
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -112,68 +105,39 @@ export function TasksReportsTab(): React.JSX.Element {
         })}
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
-          <h3 className="font-semibold text-sm text-foreground">
-            {t('tasks.reports.statusDistribution')}
-          </h3>
-          <div className="space-y-3">
-            {statusRows.map((row) => {
-              const pct = m.total > 0 ? Math.round((row.count / m.total) * 100) : 0;
-              return (
-                <div key={row.labelKey} className="space-y-1">
-                  <div className="flex items-center justify-between text-xs">
-                    <span className="font-medium text-foreground">{t(row.labelKey)}</span>
-                    <span className="text-muted-foreground">
-                      {row.count} ({pct}%)
-                    </span>
-                  </div>
-                  <div className="h-2 w-full rounded-full bg-muted overflow-hidden">
-                    <div
-                      className={`h-full rounded-full transition-all ${row.barClass}`}
-                      style={{ width: `${pct}%` }}
-                    />
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-        </div>
+      <TasksReportsCharts metrics={m} />
 
-        <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
-          <div>
-            <h3 className="font-semibold text-sm text-foreground mb-1">
-              {t('tasks.reports.executionHealth')}
-            </h3>
-            <p className="text-xs text-muted-foreground text-wrap-pretty">
-              {t('tasks.reports.executionHealthHint')}
-            </p>
+      <div className="rounded-lg border border-border bg-card p-5 shadow-xs space-y-4">
+        <div>
+          <h3 className="font-semibold text-sm text-foreground mb-1">
+            {t('tasks.reports.executionHealth')}
+          </h3>
+          <p className="text-xs text-muted-foreground text-wrap-pretty">
+            {t('tasks.reports.executionHealthHint')}
+          </p>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          <div className="flex items-center justify-between p-3 rounded-md bg-muted/40 border border-border/50">
+            <span className="text-xs font-medium text-foreground">{t('tasks.reports.onTime')}</span>
+            <span className="text-sm font-bold text-success">{onTimeRate}%</span>
           </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 rounded-md bg-muted/40 border border-border/50">
-              <span className="text-xs font-medium text-foreground">{t('tasks.reports.onTime')}</span>
-              <span className="text-sm font-bold text-success">{onTimeRate}%</span>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-md bg-muted/40 border border-border/50">
-              <span className="text-xs font-medium text-foreground">
-                {t('tasks.metrics.blocked')}
-              </span>
-              <span
-                className={`text-sm font-bold ${
-                  m.blocked > 0 ? 'text-destructive' : 'text-muted-foreground'
-                }`}
-              >
-                {t('tasks.reports.blockedCount', { count: m.blocked })}
-              </span>
-            </div>
-            <div className="flex items-center justify-between p-3 rounded-md bg-muted/40 border border-border/50">
-              <span className="text-xs font-medium text-foreground">
-                {t('tasks.reports.activeWorkload')}
-              </span>
-              <span className="text-sm font-bold text-primary">
-                {t('tasks.reports.inFlight', { count: m.inProgress + m.inReview })}
-              </span>
-            </div>
+          <div className="flex items-center justify-between p-3 rounded-md bg-muted/40 border border-border/50">
+            <span className="text-xs font-medium text-foreground">{t('tasks.metrics.blocked')}</span>
+            <span
+              className={`text-sm font-bold ${
+                m.blocked > 0 ? 'text-destructive' : 'text-muted-foreground'
+              }`}
+            >
+              {t('tasks.reports.blockedCount', { count: m.blocked })}
+            </span>
+          </div>
+          <div className="flex items-center justify-between p-3 rounded-md bg-muted/40 border border-border/50">
+            <span className="text-xs font-medium text-foreground">
+              {t('tasks.reports.activeWorkload')}
+            </span>
+            <span className="text-sm font-bold text-primary">
+              {t('tasks.reports.inFlight', { count: m.inProgress + m.inReview })}
+            </span>
           </div>
         </div>
       </div>

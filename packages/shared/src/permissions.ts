@@ -11,6 +11,7 @@ export const ALL_PERMISSIONS = [
   "contacts.read", "contacts.write", "contacts.delete",
   "students.read", "students.write", "students.delete",
   "faculty.read", "faculty.write", "faculty.delete",
+  "organization.read", "organization.write", "organization.delete",
   "sessions.read", "sessions.write", "sessions.delete",
   "attendance.read", "attendance.write", "attendance.delete",
   "enrollments.read", "enrollments.write", "enrollments.delete",
@@ -58,6 +59,11 @@ const PERMISSION_RULES: Readonly<Record<Permission, PermissionRule>> = Object.fr
   "faculty.read": { module: "faculty", requiredActions: ["read"] },
   "faculty.write": { module: "faculty", requiredActions: ["create", "update"] },
   "faculty.delete": { module: "faculty", requiredActions: ["delete"] },
+
+  // Organization
+  "organization.read": { module: "organization", requiredActions: ["read"] },
+  "organization.write": { module: "organization", requiredActions: ["create", "update"] },
+  "organization.delete": { module: "organization", requiredActions: ["delete"] },
 
   // Sessions
   "sessions.read": { module: "sessions", requiredActions: ["read"] },

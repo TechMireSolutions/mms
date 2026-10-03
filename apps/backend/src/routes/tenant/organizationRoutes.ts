@@ -16,7 +16,7 @@ export default async function organizationRoutes(
   _options: FastifyPluginOptions,
 ): Promise<void> {
   fastify.addHook('preHandler', authenticateTenant);
-  registerModuleAccess(fastify, 'faculty');
+  registerModuleAccess(fastify, 'organization');
 
   await fastify.register(organizationLocationRoutes);
   await fastify.register(organizationPositionRoutes);

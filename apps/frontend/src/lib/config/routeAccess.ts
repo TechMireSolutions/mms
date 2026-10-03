@@ -36,7 +36,7 @@ export const TENANT_APP_ROUTE_ACCESS: Readonly<Record<string, RouteAccessRule>> 
   [ROUTES.accounting]: moduleRoute("accounting"),
   [ROUTES.obligations]: moduleRoute("obligations"),
   [ROUTES.tasks]: moduleRoute("tasks"),
-  [ROUTES.organization]: moduleRoute("faculty"),
+  [ROUTES.organization]: moduleRoute("organization"),
   [ROUTES.users]: moduleRoute("users"),
   [ROUTES.profile]: { kind: "open", reason: "the signed-in user's own account" },
   [ROUTES.settings]: { kind: "open", reason: "workspace settings; each section gates its own permission" },

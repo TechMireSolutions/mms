@@ -30,6 +30,9 @@ export function FacultyAssignmentsSection({
     designationOptions,
     positionOptions,
     positionNameById,
+    requiresPosition,
+    allowEmptyPosition,
+    showLegacyPositionWarning,
     isBusy,
     reset,
     openEdit,
@@ -62,6 +65,9 @@ export function FacultyAssignmentsSection({
           departmentOptions={departmentOptions}
           designationOptions={designationOptions}
           positionOptions={positionOptions}
+          requiresPosition={requiresPosition}
+          allowEmptyPosition={allowEmptyPosition}
+          showLegacyPositionWarning={showLegacyPositionWarning}
           isBusy={isBusy}
           onPatchForm={(patch) => setForm((prev) => ({ ...prev, ...patch }))}
           onSubmit={() => void handleSubmit()}

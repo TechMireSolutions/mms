@@ -31,6 +31,12 @@ export interface TaskMetricsResponse {
   completed: number;
   cancelled: number;
   overdue: number;
+  byPriority: {
+    low: number;
+    medium: number;
+    high: number;
+    urgent: number;
+  };
 }
 
 export function invalidateTasksQueries(queryClient: ReturnType<typeof useQueryClient>) {

@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { AnimatePresence } from 'framer-motion';
 import { Network, Sparkles } from 'lucide-react';
-import { FACULTY_MODULE_MANIFEST } from '@mms/shared';
+import { ORGANIZATION_MODULE_MANIFEST } from '@mms/shared';
 import { ModulePageShell } from '@/components/ui/ModulePageShell';
 import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { ModuleTrashToggle } from '@/components/ui/ModuleTrashToggle';
@@ -23,7 +23,7 @@ import { OrganizationBlueprintModal } from './components/OrganizationBlueprintMo
 export default function OrganizationPage(): React.JSX.Element {
   const { t } = useTranslation();
   const terminology = useIndustryTerminology();
-  const { canWrite, canDelete } = useModulePermissions(FACULTY_MODULE_MANIFEST);
+  const { canWrite, canDelete } = useModulePermissions(ORGANIZATION_MODULE_MANIFEST);
   const [activeTab, setActiveTab] = useState<'chart' | 'locations' | 'setup'>('chart');
   const [blueprintOpen, setBlueprintOpen] = useState(false);
   const [viewingDeleted, setViewingDeleted] = useTrashMode();

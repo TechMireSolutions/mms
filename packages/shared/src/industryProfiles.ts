@@ -28,6 +28,7 @@ const COMMON_BUSINESS_MODULES = [
   'dashboard',
   'contacts',
   'faculty',
+  'organization',
   'tasks',
   'attendance',
   'finance',
@@ -48,6 +49,7 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
       'tasks',
       'students',
       'faculty',
+      'organization',
       'sessions',
       'attendance',
       'enrollment',
@@ -114,7 +116,7 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
     id: 'custom',
     displayNameKey: 'organization.industry.custom',
     descriptionKey: 'organization.industry.customDesc',
-    recommendedModules: ['dashboard', 'contacts', 'messaging', 'tasks', 'faculty', 'users'],
+    recommendedModules: ['dashboard', 'contacts', 'messaging', 'tasks', 'faculty', 'organization', 'users'],
     recommendedBlueprintId: 'office-standard-v1',
     recommendedRoles: ['manager', 'staff', 'admin'],
     terminology: {
@@ -128,7 +130,7 @@ export const INDUSTRY_PROFILES: Record<IndustryType, IndustryProfile> = {
     id: 'general',
     displayNameKey: 'organization.industry.general',
     descriptionKey: 'organization.industry.generalDesc',
-    recommendedModules: ['dashboard', 'contacts', 'messaging', 'tasks', 'faculty', 'users'],
+    recommendedModules: ['dashboard', 'contacts', 'messaging', 'tasks', 'faculty', 'organization', 'users'],
     recommendedBlueprintId: 'office-standard-v1',
     recommendedRoles: ['manager', 'staff', 'admin'],
     terminology: {

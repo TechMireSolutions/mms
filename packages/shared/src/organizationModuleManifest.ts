@@ -149,9 +149,9 @@ export const ORGANIZATION_MODULE_MANIFEST = {
   tiers: ['work', 'setup'] as const,
   setupSubTabs: ['blueprints'] as const,
   permissions: {
-    read: 'faculty.read',
-    write: 'faculty.write',
-    delete: 'faculty.delete',
+    read: 'organization.read',
+    write: 'organization.write',
+    delete: 'organization.delete',
     setupView: 'configuration.view',
     setupWrite: 'settings.global.write',
   },

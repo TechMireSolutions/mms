@@ -19,6 +19,9 @@ interface FacultyAssignmentFormCardProps {
   departmentOptions: Array<{ value: string; label: string }>;
   designationOptions: Array<{ value: string; label: string }>;
   positionOptions: Array<{ value: string; label: string }>;
+  requiresPosition: boolean;
+  allowEmptyPosition: boolean;
+  showLegacyPositionWarning: boolean;
   isBusy: boolean;
   onPatchForm: (patch: Partial<AssignmentFormState>) => void;
   onSubmit: () => void;
@@ -31,6 +34,9 @@ export function FacultyAssignmentFormCard({
   departmentOptions,
   designationOptions,
   positionOptions,
+  requiresPosition,
+  allowEmptyPosition,
+  showLegacyPositionWarning,
   isBusy,
   onPatchForm,
   onSubmit,
@@ -44,6 +50,11 @@ export function FacultyAssignmentFormCard({
         {mode === 'edit' ? t('faculty.assignments.editTitle') : t('faculty.assignments.addTitle')}
       </p>
       <p className="text-xs text-muted-foreground">{t('faculty.assignments.positionHint')}</p>
+      {showLegacyPositionWarning ? (
+        <p className="text-xs text-warning rounded-md border border-warning/40 bg-warning/10 p-2">
+          {t('faculty.assignments.legacyNullPositionWarning')}
+        </p>
+      ) : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <Field id="asgn-dept" label={t('faculty.form.department')} required>
           <FormSelect
@@ -61,18 +72,18 @@ export function FacultyAssignmentFormCard({
             options={designationOptions}
           />
         </Field>
-        <Field id="asgn-position" label={t('faculty.assignments.position')} required={mode === 'add'}>
+        <Field id="asgn-position" label={t('faculty.assignments.position')} required={requiresPosition}>
           <FormSelect
             id="asgn-position"
             value={form.positionId}
             onChange={(v) => onPatchForm({ positionId: v })}
             options={
-              mode === 'add'
-                ? positionOptions
-                : [
+              allowEmptyPosition
+                ? [
                     { value: '', label: t('faculty.assignments.noPosition') },
                     ...positionOptions,
                   ]
+                : positionOptions
             }
           />
         </Field>

@@ -6,11 +6,12 @@
 import { SYSTEM_MODULES_BY_ID, normalizeEnabledModules } from './settingsTypes.js';
 import type { RbacModuleDef } from './userEntityTypes.js';
 
-/** Canonical tuple of all 18 RBAC module identifiers (includes Tasks elevate capability). */
+/** Canonical tuple of all 19 RBAC module identifiers (includes Tasks elevate capability). */
 export const RBAC_MODULE_IDS = [
   'dashboard',
   'contacts',
   'faculty',
+  'organization',
   'messaging',
   'tasks',
   'tasks.assign_anywhere',
@@ -34,6 +35,7 @@ export const RBAC_MODULE_REGISTRY: readonly RbacModuleDef[] = [
   { id: 'dashboard', labelKey: 'nav.dashboard' },
   { id: 'contacts', labelKey: 'nav.contacts' },
   { id: 'faculty', labelKey: 'nav.faculty' },
+  { id: 'organization', labelKey: 'nav.organization' },
   { id: 'messaging', labelKey: 'nav.messaging' },
   { id: 'tasks', labelKey: 'nav.tasks' },
   { id: 'tasks.assign_anywhere', labelKey: 'users.rbac.tasksAssignAnywhere' },

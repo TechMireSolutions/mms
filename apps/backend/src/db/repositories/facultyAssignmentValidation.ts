@@ -16,18 +16,22 @@ export async function validateFacultyAssignment(
   input: InsertFacultyAssignmentRow,
 ): Promise<void> {
   await lockFacultyHierarchy(tx, tenant);
-  const existing = await tx.execute<{ faculty_id: string; deleted_at: Date | null }>(sql`
-    SELECT faculty_id, deleted_at FROM faculty_assignments
+  const existing = await tx.execute<{ faculty_id: string; deleted_at: Date | null; position_id: string | null }>(sql`
+    SELECT faculty_id, deleted_at, position_id FROM faculty_assignments
     WHERE workspace_subdomain = ${tenant} AND id = ${input.id} FOR UPDATE
   `);
   if (existing.rows.some((row) => row.faculty_id !== input.facultyId || row.deleted_at !== null)) {
     throw new Error('Assignment is archived or belongs to another faculty member');
   }
   const isCreate = existing.rows.length === 0;
+  const currentPositionId = existing.rows[0]?.position_id ?? null;
   // New appointments must occupy a structural position (org chart + task delegation).
-  // Legacy rows may keep a null positionId until ops backfill; updates preserve that.
   if (isCreate && !input.positionId) {
     throw new Error('New appointments require an organization position');
+  }
+  // Reject clearing a set position. Legacy nulls may be preserved only by omitting positionId.
+  if (!isCreate && currentPositionId && !input.positionId) {
+    throw new Error('Cannot clear organization position on an appointment');
   }
   const member = await tx.execute(sql`
     SELECT id FROM faculty WHERE workspace_subdomain = ${tenant}

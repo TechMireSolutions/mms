@@ -30,13 +30,23 @@ describe('Faculty assignment production validation', () => {
     // Arrange — update path preserves null positionId until ops backfill
     tx.execute
       .mockResolvedValueOnce({ rows: [] }) // lock
-      .mockResolvedValueOnce({ rows: [{ faculty_id: 'f', deleted_at: null }] })
+      .mockResolvedValueOnce({ rows: [{ faculty_id: 'f', deleted_at: null, position_id: null }] })
       .mockResolvedValueOnce({ rows: [{ id: 'f' }] })
       .mockResolvedValueOnce({ rows: [{ id: 'd' }] })
       .mockResolvedValueOnce({ rows: [{ id: 'g' }] });
 
     // Act + Assert
     await expect(validateFacultyAssignment(tx, 'tenant', input)).resolves.toBeUndefined();
+  });
+
+  it('rejects clearing positionId on update when the appointment already has one', async () => {
+    tx.execute
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ faculty_id: 'f', deleted_at: null, position_id: 'pos-1' }] });
+
+    await expect(
+      validateFacultyAssignment(tx, 'tenant', { ...input, positionId: null }),
+    ).rejects.toThrow('Cannot clear organization position');
   });
 
   it('allows a secondary role without checking primary overlaps', async () => {

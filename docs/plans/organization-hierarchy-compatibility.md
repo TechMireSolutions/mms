@@ -18,7 +18,9 @@
 ## API notes
 
 - `PUT/POST` faculty assignment: `reportsToAssignmentId` is optional and ignored for new appointment IDs. Prefer `positionId`.
-- **New appointments require `positionId`** (backend validation + Faculty appointment UI). Updates may preserve a legacy null until ops backfill.
+- **New appointments require `positionId`** (backend validation + Faculty appointment UI).
+- **Updates cannot clear `positionId` to null** once set. Legacy nulls may be preserved only when the write payload **omits** `positionId` (do not send `null` to “keep” null).
+- When a tenant already has active organization positions, editing a legacy null-position appointment **requires** selecting a position (UI warning + client gate).
 - Faculty person writes: `reportingFacultyId` is forced `NULL` on create via `persistFacultyTx`; prefer Organization chart + assignment `positionId` occupancy.
 
 ## Backfill helper (ops)
@@ -26,6 +28,16 @@
 Script: `apps/backend/src/scripts/propose-position-backfill.ts`
 
 Idempotent position proposal/apply for active `faculty_assignments` missing `position_id`. Uses the assignment reporting tree only as a **proposal source**; never drops legacy columns and never rewrites person-level reporting.
+
+### When to run
+
+Use this when Faculty appointments exist without `position_id` (pre-hardening data). Those rows stay invisible to the Organization chart and task delegation until backfilled or manually assigned in Faculty → Appointments.
+
+Recommended order:
+
+1. Dry-run for the tenant and review proposed codes/names/parents.
+2. Apply for that tenant.
+3. Spot-check Organization chart occupancy and Tasks eligible assignees for a few staff.
 
 ### Dry-run (required first)
 
@@ -54,7 +66,7 @@ Creates missing `organization_positions` when needed and sets `faculty_assignmen
 1. Backfill positions from assignment reporting where safe (ops script above).
 2. Cut Faculty writes away from person-level reporting (**done** soft-stop on create; seed already off for new tenants).
 3. Stop writing `reports_to_assignment_id` for new appointments (**done** soft-stop).
-4. Require `positionId` on new appointments (**done** — creates reject without a position; legacy nulls preserved on update until backfill).
+4. Require `positionId` on new appointments (**done**); updates cannot clear a set position (**done**); legacy nulls preserved only when omitted until backfill.
 5. Forward-only migration drops legacy columns only after zero dependents.
 
 Until then: dual trees may still diverge for legacy rows without `position_id`—tasks and org chart follow positions only.

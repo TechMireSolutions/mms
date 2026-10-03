@@ -24,6 +24,8 @@ export interface AssignmentFormState {
   departmentId: string;
   designationId: string;
   positionId: string;
+  /** Position id present when the edit form opened; empty for legacy null rows. */
+  originalPositionId: string;
   isPrimary: boolean;
   startDate: string;
   endDate: string;
@@ -35,6 +37,7 @@ export const EMPTY_ASSIGNMENT_FORM: AssignmentFormState = {
   departmentId: '',
   designationId: '',
   positionId: '',
+  originalPositionId: '',
   isPrimary: false,
   startDate: '',
   endDate: '',
@@ -88,6 +91,7 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
       departmentId: assignment.departmentId,
       designationId: assignment.designationId,
       positionId: assignment.positionId ?? '',
+      originalPositionId: assignment.positionId ?? '',
       isPrimary: assignment.isPrimary,
       startDate: assignment.startDate,
       endDate: assignment.endDate ?? '',
@@ -105,14 +109,23 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
     });
   }
 
+  const activePositionsExist = positions.some((p) => p.isActive !== false);
+  const requiresPosition =
+    mode === 'add' || Boolean(form.originalPositionId) || activePositionsExist;
+  const allowEmptyPosition = mode === 'edit' && !form.originalPositionId && !activePositionsExist;
+  const showLegacyPositionWarning = mode === 'edit' && !form.originalPositionId;
+
   async function handleSubmit() {
     if (!form.departmentId || !form.designationId || !form.startDate) {
       notify.error(t('faculty.assignments.validationRequired'));
       return;
     }
-    // New appointments must occupy a position; legacy edits may still lack one until backfill.
-    if (mode === 'add' && !form.positionId) {
+    if (requiresPosition && !form.positionId) {
       notify.error(t('faculty.assignments.positionRequired'));
+      return;
+    }
+    if (form.originalPositionId && !form.positionId) {
+      notify.error(t('faculty.assignments.cannotClearPosition'));
       return;
     }
     const payload: FacultyAssignmentWrite & { id: string } = {
@@ -120,11 +133,16 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
       facultyId: faculty.id,
       departmentId: form.departmentId,
       designationId: form.designationId,
-      positionId: form.positionId || null,
       isPrimary: form.isPrimary,
       startDate: form.startDate,
       endDate: form.endDate || null,
       notes: form.notes || null,
+      // Omit positionId on legacy null edits so the backend preserves null until backfill.
+      ...(form.positionId
+        ? { positionId: form.positionId }
+        : mode === 'add'
+          ? { positionId: null }
+          : {}),
     };
     try {
       await saveMutation.mutateAsync(payload);
@@ -146,6 +164,9 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
     designationOptions,
     positionOptions,
     positionNameById,
+    requiresPosition,
+    allowEmptyPosition,
+    showLegacyPositionWarning,
     isBusy: saveMutation.isPending,
     reset,
     openEdit,
