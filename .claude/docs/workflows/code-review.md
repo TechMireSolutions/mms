@@ -14,28 +14,47 @@ This workflow guides the systematic review of codebase changes (e.g., Pull Reque
 
 ## Phase 2: Automated Checks
 
-- [ ] **Run static analysis**: Execute the following commands to catch low-hanging fruit before manual review:
+- [ ] **Run automated quality gates**: Execute the unified MMS pre-PR verification script to validate rules, ratchets, type safety, and linting:
   ```bash
+  bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh
+  ```
+  Or run targeted ratchets independently:
+  ```bash
+  node scripts/verify-rules-integrity.mjs
+  pnpm run check:migration-indexes
+  pnpm run check:db-projections
+  pnpm run check:code-norms
+  pnpm run check:work-directory
   pnpm typecheck
-  cd apps/frontend && pnpm lint
-  cd apps/backend && pnpm lint
+  pnpm lint
   ```
 - [ ] **Run tests**: If applicable, run `pnpm test` for the affected packages or apps. Verify backend tests include `inject()` allow+deny authorization checks.
+- [ ] **Verify module access coverage**: When touching routes, navigation, or module endpoints, run:
+  ```bash
+  pnpm --filter mms-backend test src/__tests__/moduleAccessCoverage.test.ts
+  pnpm --filter mms-frontend test src/lib/config/routeAccess.test.ts
+  ```
 
 ## Phase 3: Diff Analysis & Project Alignment
 
 Audit the diff against the core MMS invariants:
 
-- [ ] **Backend / Data Layer (`mms-backend-api`, `mms-schema-migrate`)**:
+- [ ] **Backend / Data Layer (`mms-backend-api`, `mms-schema-migrate`, `mms-performance`)**:
   - DDL is forward-only with `FORCE RLS` on new tenant tables.
   - Endpoints enforce `authenticateTenant` / `authenticatePlatform`.
+  - Every module-owned route registers module access (`registerModuleAccess` + `MODULE_ROUTE_ACTION_RULES`).
+  - Zero wildcard projections (`SELECT *`), verified via `check:db-projections.mjs`.
+  - Zero queries in loops (N+1); batch with Drizzle relational `with` or `inArray`.
   - Transaction RLS (`SET LOCAL app.current_tenant`) is used appropriately for tenant writes.
   - Zero-trust DTOs validated via `@mms/shared` Zod strict schemas before persistence.
-- [ ] **Frontend Architecture (`mms-frontend`, `mms-query-factories`)**:
+- [ ] **Frontend Architecture (`mms-frontend`, `mms-query-factories`, `mms-module-work`)**:
   - TanStack Query v5 is used for data fetching (no new `useLiveCollection` for REST entities).
+  - Every module route is gated via `TENANT_APP_ROUTE_ACCESS` + `ModuleAccessRoute`.
+  - Work directory uses the shared `DataTable` / `WorkBatchTable` stack (zero hand-rolled tables, verified via `check:work-directory.mjs`).
   - Cross-feature imports are banned (e.g. importing `@/tenant/features/A` from `B`). Shared logic must reside in `@mms/shared` or `@/tenant/hooks/collections/*` facades.
   - Code splits properly at the ~300-line soft ceiling via stable barrels (`mms-structure-naming.md`).
 - [ ] **UI & i18n Parity (`mms-ui-ux-design.md`, `mms-settings-i18n.md`, `ui-ux-pro-max`)**:
+  - Design tokens: zero raw hex colours outside `@theme`, zero Tailwind bracket expressions (`[#...]`), verified via `check:code-norms.mjs`.
   - Semantic HTML (`<main>`, `<nav>`, `<section>`), minimum 44x44px touch targets, BiDi logical classes (`ps-*`, `pe-*`, `start-*`, `end-*`).
   - UI/UX Pro Max design intelligence alignment (`mms-ui-ux-design.md` §8): semantic HSL color mapping, resilient text layout (`text-wrap: balance`), compact labels/inputs, micro-interaction state preservation.
   - No hardcoded English strings. All text uses `t()` with keys in `appTranslationsEn.ts` (and ar/ur/fa packs).

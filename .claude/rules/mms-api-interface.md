@@ -1,8 +1,7 @@
 ---
-description: Client-server REST interface contracts, apiClient fetch wrappers, Fastify router setups, and API payload definitions.
+description: Client-server REST interface contracts, apiClient fetch wrappers, Fastify handlers, and error shapes
 paths:
-  - "apps/frontend/src/lib/apiClient.ts"
-  - "apps/frontend/src/lib/apiClientHelpers.ts"
+  - "apps/frontend/src/lib/apiClient*"
   - "apps/backend/src/routes/**/*.ts"
   - "apps/backend/src/contacts/**/*.ts"
   - "apps/backend/src/lib/**/*.ts"
@@ -16,52 +15,45 @@ paths:
 **Workflow skills:** FE shell/`apiClient` → `mms-frontend` · Fastify routes/`inject()` → `mms-backend-api` · CSRF/cookies → `mms-backend-security`.
 
 ## 1. Client-Server Communication Flow
-
-- **Sanctioned Clients:** All frontend API calls must use `apiClient` (`apiFetch` / `apiJson`) or `@ts-rest/react-query` contracts (`initTsrReactQuery`). Banned: `axios`, `node-fetch`, and `ws` for standard client communication.
-- **Credentials & Cancellation:** Always `credentials: 'include'`. Pass Query `signal` to `apiFetch`; composite signals via `AbortSignal.any([signal, AbortSignal.timeout(ms)])`. Fastify route handlers propagate `request.raw.signal` to abort downstream DB queries on client disconnect.
-- **Contract Boundary (SSOT):** DTOs defined in `packages/shared/src/contracts/*` using Zod 4 (`parseRequest` / `@ts-rest`). Never enable parallel Fastify JSON-Schema validation.
-- **W3C Distributed Tracing:** Frontend generates W3C `traceparent` (v00); Fastify extracts into `AsyncLocalStorage` (`tenantStorage` via `AsyncContextFrame`) and echoes `traceparent` + `x-request-id` in responses.
+- **Sanctioned Clients:** All frontend API calls must use `apiClient` (`apiFetch` / `apiJson`) or `@ts-rest/react-query` contracts (`initTsrReactQuery`). Ban `axios`, `node-fetch`, and raw `ws`.
+- **Credentials & Cancellation:** Always include `credentials: 'include'`. Pass TanStack Query `signal` to `apiFetch`; composite signals via `AbortSignal.any([signal, AbortSignal.timeout(ms)])`. Fastify handlers propagate `request.raw.signal` to abort downstream DB operations on client disconnect.
+- **Contract Boundary (SSOT):** Define DTOs in `packages/shared/src/contracts/*` using Zod (`parseRequest` / `@ts-rest`). Never enable parallel Fastify JSON-Schema validation.
+- **Distributed Tracing:** Frontend generates W3C `traceparent` (v00); Fastify extracts into `tenantStorage` (`AsyncLocalStorage`) and echoes `traceparent` + `x-request-id` headers.
 
 ## 2. Fastify Router & Layering
-
-- **Clean Architecture Hierarchy:** Route/Contract router (`routes/**`) → Use Case (`{module}/use-cases/**`, pure DI) → Repository Interface (`{module}/repository/**`) → Drizzle Adapter. Controllers never import raw DB pools.
-- **Streaming & Request Budgets:** Enforce `bodyLimit` and `requestTimeout`. Never buffer large uploads or datasets into memory (`Buffer.concat` ban); stream uploads via `@fastify/multipart` and exports via `node:stream` (`mms-performance.md`).
-- **Outbound HTTP:** External backend fetches must use `AbortSignal.timeout(ms)`.
+- **Layer Hierarchy:** Route router (`routes/**`) → Use Case (`{module}/use-cases/**`, pure DI) → Repository Interface (`{module}/repository/**`) → Drizzle Adapter. Controllers must never import DB pools directly.
+- **Streaming & Request Budgets:** Enforce `bodyLimit` and `requestTimeout`. Never buffer large uploads or datasets (`Buffer.concat` banned); stream uploads via `@fastify/multipart` and exports via `node:stream` (`mms-performance.md`).
+- **Outbound HTTP:** External backend fetches must enforce `AbortSignal.timeout(ms)`.
 
 ## 3. Auth Middleware & Isolation
-
-- Enforce `authenticateTenant` / `authenticatePlatform`. Raw `jwtVerify()` in route handlers is strictly banned (`mms-auth-security.md`).
+- Enforce `authenticateTenant` or `authenticatePlatform`. Raw `jwtVerify()` calls inside route handlers are banned (`mms-auth-security.md`).
 
 ## 4. API Error Payloads & Status Codes
-
 - **Uniform Error Envelope:** `{ "type": string, "message": string, "details": object }`.
-- **Standard Classifications:** `auth_required` (401), `forbidden` (403), `not_found` (404), `timeout` (408), `conflict` (409), `validation_error` (422), `rate_limit_exceeded` (429), `server_error` (500). Platform routes map against `@mms/shared` `PLATFORM_API_ERROR_TYPES`.
-- **Exception Masking:** Never leak raw database errors, SQL syntax, or stack traces in production responses. Tenant UI maps `type` via `t('errors.{type}')`.
+- **Classifications:** `auth_required` (401), `forbidden` (403), `not_found` (404), `timeout` (408), `conflict` (409), `validation_error` (422), `rate_limit_exceeded` (429), `server_error` (500). Platform routes map against `@mms/shared` `PLATFORM_API_ERROR_TYPES`.
+- **Exception Masking:** Never leak raw database errors, SQL syntax, or stack traces in production. Tenant UI maps `type` via `t('errors.{type}')`.
 
 ## 5. Bulk PUT & Collection Semantics
-
-- **Upsert Semantics:** Workspace bulk writes (`PUT` with arrays) must upsert by composite tenant key (`bulkSave` + `conflictTarget`); never wipe rows missing from the client payload (`replaceForWorkspace` banned on API paths).
+- **Upsert Semantics:** Workspace bulk writes (`PUT` with arrays) must upsert by composite tenant key (`bulkSave` + `conflictTarget`); never wipe rows missing from client payload (`replaceForWorkspace` banned on API paths).
 - **ID Lists:** Use shared `bulkIdsBodySchema` (`.max(500)`). Await mutation resolution before closing modals.
 
 ## 6. Pagination, Idempotency & Concurrency
-
-- **Pagination:** Clients send `page` and `limit` (default 25, max 100 via `baseListQuerySchema`). Unbounded dumps (`loadAllFn`) banned.
+- **Pagination:** Clients send `page` and `limit` (default 25, max 100 via `baseListQuerySchema`). Unbounded list dumps (`loadAllFn`) are banned.
 - **HTTP Caching:** Emit weak `ETag` and `Cache-Control: private, no-cache` on idempotent GETs; return `304 Not Modified` on `If-None-Match`.
 - **Idempotency Standard:** State-changing POSTs accept `Idempotency-Key` bound to SHA-256 canonical body digest in Redis (24h TTL). Replays return `Idempotency-Replay: true`; payload mismatches reject with `409 Conflict`.
 - **Optimistic Concurrency:** Contested single-row updates verify `updated_at` / version checks or return `409 Conflict`.
 
 ## 7. Soft-Delete & Restore REST Contracts
-
-- **Endpoints:** `DELETE /:id` (soft-delete), `POST /:id/restore` (restore), `POST /bulk-delete`, `POST /bulk-restore`, `GET /?includeDeleted=true` (trash list).
-- **Read Semantics:** Standard reads append `isNull(table.deletedAt)`. Detail reads with `?includeDeleted=true` require `canDeleteCollection`.
-- **Query Parsing & Protection:** Parse `includeDeleted` with `isQueryFlagTrue()`. Write schemas must strip or reject client soft-delete fields.
+- **Endpoints & Router Wiring:** `DELETE /:id` (soft-delete), `POST /:id/restore` (restore), `POST /bulk-delete`, `POST /bulk-restore`, `GET /?includeDeleted=true` (trash list). Isolate soft-delete and restore routes in dedicated `<module>SoftDeleteRoutes.ts` plugins (Contacts gold standard).
+- **CRUD & Bulk Factories:** Single restore endpoint uses `registerResourceRoutes(fastify, { collection, schema, restoreFn, onAfterRestore, buildRestoreResponse, mapRestoreError, canDelete })`. Bulk operations use `registerSoftDeletableBulkTrashRoutes(fastify, { collection, bulkBodySchema: bulkIdsBodySchema, canDelete, bulkDeleteFn, bulkRestoreFn, onAfterBulkDelete, onAfterBulkRestore })`.
+- **Restore Sanitization & Error Taxonomy:** `buildRestoreResponse` sanitizes restored entity attributes for the requesting user (`sanitizeOneForUser`). `mapRestoreError` translates domain uniqueness conflicts to HTTP 400 (`type: 'validation_error'`) with structured field errors, while database race conditions trap PostgreSQL error `23505` (`isUniqueViolation`) and map to `409 Conflict`.
+- **Read Semantics & Protection:** Standard reads append `isNull(table.deletedAt)`. Detail reads with `?includeDeleted=true` require `canDeleteCollection`. Parse `includeDeleted` with `isQueryFlagTrue()`. Write schemas must strip or reject client soft-delete fields.
+- **Audit Logging:** Every single or bulk soft-delete or restore operation emits transactional audit logs (`onAfterRestore`, `onAfterBulkDelete` with reason, `onAfterBulkRestore`).
 
 ## 8. Versioning, Deprecation & Contract Discipline
-
 - **Additive by Default:** No `/v2` URL prefixes. Contract changes must be additive and land in the same commit across `@mms/shared`, Fastify, and React.
-- **Deprecation:** Mark deprecated fields in `@mms/shared` before removal in a later release. Never repurpose existing field names.
+- **Deprecation:** Mark deprecated fields in `@mms/shared` before removal in a subsequent release. Never repurpose existing field names.
 
 ## 9. Workflow & Output Speed Rules
-
-- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler and post-code recaps.
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler.
 - **Verification Gates:** Verify with `pnpm typecheck` and scoped tests before marking tasks done. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

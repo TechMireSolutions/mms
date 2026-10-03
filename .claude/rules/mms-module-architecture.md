@@ -1,20 +1,9 @@
 ---
-description: Universal module architecture — manifest schemas, three-tier layout, soft-delete, gold-standard parity (§7), background jobs, and lifecycle rules. Applies to tenant modules and platform pages.
+description: Universal module architecture, three-tier layouts (Work/Reports/Setup), manifests, and soft-delete integration
 paths:
   - "apps/frontend/src/tenant/features/**"
   - "apps/frontend/src/platform/pages/**"
-  - "apps/frontend/src/components/ui/ModuleCommandMetricsGrid.tsx"
-  - "apps/frontend/src/components/ui/PageHeader.tsx"
-  - "apps/frontend/src/components/ui/ResponsiveAccordionTabs.tsx"
-  - "apps/frontend/src/components/ui/SubTabBar.tsx"
-  - "apps/frontend/src/components/ui/DetailDrawerShell.tsx"
-  - "apps/frontend/src/tenant/hooks/useModuleTierTabs.ts"
-  - "apps/frontend/src/hooks/useWorkDirectoryViewMode.ts"
-  - "apps/frontend/src/hooks/useModuleColumnLayout.ts"
-  - "packages/shared/src/settingsTypes.ts"
   - "packages/shared/src/*ModuleManifest.ts"
-  - "apps/backend/src/routes/**/*.ts"
-  - "apps/backend/src/services/backgroundJob*.ts"
 ---
 
 # MMS Universal Module Architecture
@@ -22,50 +11,43 @@ paths:
 **Workflow skills:** new page → `mms-module-page` · Work/trash → `mms-module-work` · Setup → `mms-module-setup` · jobs → `mms-background-jobs` · Reports → `mms-reports-export` · design intelligence → `ui-ux-pro-max`.
 
 ## 1. Monorepo Manifests & Domain Modeling
-
 - **Single Manifest SSOT:** Declare a single manifest in `packages/shared/src/*ModuleManifest.ts` defining `moduleId`, entity types, collection/REST keys, default filters, searchable/filterable fields, `setupSubTabs`, and `softDelete` policies.
-- **Zero Hardcoding:** UI controls, column registries, query keys, layout hooks, and export services import directly from manifest constants; hardcoded entity configurations are strictly banned.
+- **Zero Hardcoding:** UI controls, column registries, query keys, layout hooks, and export services import directly from manifest constants; hardcoded entity configurations are banned.
 
 ## 2. Three-Tier Page Shell & Layout
-
 - **Page Shell Structure:** Standard module pages render `PageHeader` command centre and `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`:
-  1. **Work (Operational Directory):** Daily records, search, filters, views (`table` | `cards`), detail drawers, bulk actions. Banned: charts and KPI dashboards.
+  1. **Work (Operational Directory):** Daily records, search, filters, views (`table` | `cards`), detail drawers, bulk actions. Ban charts and KPI dashboards in Work tier.
   2. **Reports (Analytics):** KPI summary cards, Recharts visualizations, and visual query builders.
   3. **Setup (Configuration):** Gated via `useModulePermissions(manifest)` (`canViewSetup`/`canEditSetup`). Houses Fields customizer and Preferences. Unauthorized tiers are omitted from DOM.
 
 ## 3. Work Directory & Detail Drawer
-
 - **Filters UI SSOT:** Single Filters dropdown owns Work dimensions (presets, status, sort). Duplicate preset pill bars are banned (`ContactsFilterMenuButton` gold standard). `FilterChips` render active removable selections only.
-- **Directory View Mode SSOT:** Single `viewMode` (`table` | `cards`) via `useWorkDirectoryViewMode`. Person directories mandate `directoryViews: ['table','cards']` (never `list`). Default cards `< md`, table `md+`. Dual-rendering via CSS display utilities is strictly banned.
+- **Directory View Mode SSOT:** Single `viewMode` (`table` | `cards`) via `useWorkDirectoryViewMode`. Person directories mandate `directoryViews: ['table','cards']` (never `list`). Default cards `< md`, table `md+`. Dual-rendering via CSS display utilities is banned.
 - **Pagination & Virtualization:** Cards and table share identical server pagination. Virtualize DOM rows via `@tanstack/react-virtual` when rendered items > 30 (`mms-performance.md`). Command KPIs load via `/metrics` endpoint; never compute via client reduction.
 - **Column Layout SSOT:** `useModuleColumnLayout` manages visibility and width. Persist via PUT `/column-preferences` and `localStorage` (`mms_{moduleId}_columns_{userId}`). Local device widths take precedence; debounce server updates. Pass `isColumnVisible` into table/cards; boolean flag bags (`show*`) are banned.
 - **Detail Drawer:** `DetailDrawerShell` renders entity fields in tab/field registry order with enabled custom fields. In trash mode: display `WarningCallout` archive banner + Restore; hide Edit and communication CTAs. Touch targets enforce `min-h-11 min-w-11`.
-- **Selection SSOT:** Selection state is owned by the page controller via shared `useWorkSelection`; list-local selection state is strictly banned. Directory rows, select-all controls, bulk bars, and shortcuts bind to controller selection.
+- **Selection SSOT:** Selection state is owned by the page controller via shared `useWorkSelection`; list-local selection state is banned. Directory rows, select-all controls, bulk bars, and shortcuts bind to controller selection.
 - **Two-Layer Bulk Chrome:** Presentational `ModuleWorkBulkActionBar` dock with manifest/i18n adapter `ModuleUniversalBulkActionBar`. Mount floating or inline. Escape key clears selection. Never place bulk actions inline with toolbar filters.
 
 ## 4. Setup & Module Preferences
-
 - **Dirty-Gated Persistence:** Draft preferences in local editor state; persist only on explicit Save when dirty. Do not mount Save button enabled by default.
 - **Access Control:** Gate editing and Save mutations with `canEditSetup`; render read-only fallback when view-only.
 
 ## 5. Background Jobs & Processing
-
 - **BullMQ Sandboxed Processing:** Long tasks (CSV import/export, bulk messaging, dedup scans, complex reports) offload to BullMQ worker process (`apps/backend/src/worker/index.ts`). Never run in the API request path.
 - **Live Progress Tray:** Stream execution status via global `BackgroundJobsTray` (`running | completed | failed`, percentage progress, error counts, download artifacts).
-- **Worker Job Contracts:** Jobs require idempotency keys, bounded retries with exponential backoff, execution-time tenant/user verification, and concurrency isolation. Auto-retrying message broadcasts or charging payments is strictly banned.
+- **Worker Job Contracts:** Jobs require idempotency keys, bounded retries with exponential backoff, execution-time tenant/user verification, and concurrency isolation. Auto-retrying message broadcasts or charging payments is banned.
 
 ## 6. Security Boundaries & Soft-Delete Standards
-
 - **RLS & RBAC:** Enforce transaction-scoped RLS (`SET LOCAL app.current_tenant`) and `can('module.action')`. Omit unauthorized actions from DOM.
 - **Manifest Soft-Delete Contract:** Declare `softDelete` configuration (`workExcludesDeleted`, `reportsIncludeDeleted`, `captureDeletionReason`, `retentionDays`).
 - **Work Trash UX:** Archived records return 404 on active lookups. Synchronize trash mode via URL param `?view=trash` (`ModuleTrashToggle` in toolbar). Preserve active search and faceted filters. In trash: hide Create/Add, bulk delete, and communication CTAs; display Restore.
 - **Optimistic Recovery:** Single-record deletions trigger optimistic cache hide + 5–10s Undo toast calling `POST /:id/restore`. Trap PostgreSQL 23505 unique constraint conflicts upon restore. Emit outbox CDC events (`entity.soft_deleted`, `entity.restored`).
 
 ## 7. Gold-standard parity (REST tenant modules and platform pages)
-
 Align modules with **Contacts, Students, and Faculty** person-directory standard:
 - **Bulk PUT:** Upsert only per `mms-api-interface.md` §5; never wipe missing records.
-- **Soft-Delete Lifecycle:** `DELETE` + `POST /:id/restore` (batched bulk SQL); URL `?view=trash`; `ModuleTrashToggle` in toolbar; filter state preserved; drawer `WarningCallout` archive banner + Restore; hide create/actions in trash; `Cmd/Ctrl+N` guard; 23505 conflict trap on restore; 5–10s optimistic Undo toast; outbox CDC logging (`mms-data-layer.md` §6).
+- **Soft-Delete Lifecycle:** `DELETE` + `POST /:id/restore` (batched bulk SQL); URL `?view=trash`; `ModuleTrashToggle` in toolbar; filter state preserved; drawer `WarningCallout` archive banner + Restore; hide create/actions in trash; `Cmd/Ctrl+N` guard; 23505 conflict trap on restore; 5–10s optimistic Undo toast; outbox CDC logging (`mms-data-layer.md` §6); backend routes isolate soft-delete in `<module>SoftDeleteRoutes.ts` with `registerResourceRoutes` (custom `restoreFn`, `buildRestoreResponse` viewer sanitization, `mapRestoreError` domain validation) and `registerSoftDeletableBulkTrashRoutes` (`mms-api-interface.md` §7).
 - **Mutations:** Await `mutateAsync` on form `onSave`; close modals only after mutation resolution.
 - **Setup Tier:** Manifest `setupSubTabs` (`preferences` default); `canEditSetup` gates writes; read-only fallback when view-only; Preferences Save dirty-gated.
 - **Work UX:** `ErrorState` with retry + `loadFailedHint`; `EmptyState` (`title` required, `compact` when dense); `Cmd/Ctrl+N` shortcut (`!viewingDeleted && canWrite`); Filters menu SSOT; controller-owned selection via `useWorkSelection`; two-layer bulk-bar chrome; `isColumnVisible` gates; single resolved `viewMode` (`table` | `cards`); desktop tables use `WorkBatchTable`; cards use `DirectoryCard`/`DirectoryEntityCard` + `useWorkCardAction`; identical server pagination; row virtualization over 30 items; `useModuleColumnLayout` column width/visibility persistence; UI/UX Pro Max design intelligence alignment (`mms-ui-ux-design.md` §8) for semantic HSL token mapping, resilient text layout (`text-wrap: balance`), and state preservation.
@@ -73,7 +55,6 @@ Align modules with **Contacts, Students, and Faculty** person-directory standard
 - **i18n & RBAC:** All user-facing copy via `t()`; `useModulePermissions(manifest)` gates CTAs. Intersect persisted tier/sub-tab selections with active permissions before rendering.
 
 ## 8. Workflow & Output Speed Rules
-
-- **Zero Output Bloat:** Emit surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational greetings, polite preambles, and post-code summaries.
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler.
 - **Work Directory Standards:** Enforce controller-owned selection (`useWorkSelection`), unified bulk bar (`ModuleUniversalBulkActionBar`), and single resolved `viewMode`. CI enforces zero regressions via `pnpm run check:work-directory`.
-- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards/rules are altered, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.
+- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

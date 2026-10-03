@@ -9,7 +9,7 @@ metadata:
 
 # MMS Soft-Delete System Workflow
 
-**Rules (norms SSOT):** `mms-data-layer.md` §6 · `mms-module-architecture.md` §6–§7 · `mms-core.md`.
+**Rules (norms SSOT):** `mms-data-layer.md` §6 · `mms-module-architecture.md` §6–§7 · `mms-core.md` · `mms-api-interface.md` §7.
 
 Operational procedure for implementing, migrating, and verifying soft-delete lifecycle across database, backend API, and frontend Work tiers. Financial posted ledgers are append-only/reversal-driven; see ledger controls before applying generic undo.
 
@@ -25,19 +25,25 @@ Operational procedure for implementing, migrating, and verifying soft-delete lif
 
 ## 2. Backend API Implementation
 
-1. **Delete (`DELETE /:id`)**:
+1. **Dedicated Soft-Delete Router**:
+   - Isolate soft-delete and bulk trash endpoints in `<module>SoftDeleteRoutes.ts` (e.g. `contactSoftDeleteRoutes.ts`).
+2. **Delete (`DELETE /:id`)**:
    - Verify `can('delete')` permission and check foreign key restrict guards.
    - For user/faculty accounts, immediately invalidate active sessions and Redis tokens.
    - Update `deletedAt = new Date()`, `deletedBy = user.id`, `deletionReason`.
    - Emit transactional outbox CDC event `entity.soft_deleted`.
-2. **Restore (`POST /:id/restore`)**:
-   - Verify `can('restore')` permission.
-   - Check and trap PostgreSQL 23505 unique constraint collisions against active records.
-   - Update `deletedAt = null`, `restoredAt = new Date()`, `restoredBy = user.id`.
-   - Emit outbox CDC event `entity.restored`.
-3. **List Queries**:
+3. **Single Restore (`POST /:id/restore`)**:
+   - Register via `registerResourceRoutes` with `restoreFn: (id, userId) => useCases.restoreById(id, userId)`.
+   - **Viewer Sanitization**: Provide `buildRestoreResponse: async (restored, user) => ({ success: true, [entity]: await sanitizeOneForUser(restored, user) })`.
+   - **Error Taxonomy**: Use `mapRestoreError` to translate domain uniqueness validation failures to HTTP 400 (`type: 'validation_error'`) with structured field errors. Trap unexpected database race-condition collisions (`isUniqueViolation` / PostgreSQL `23505`) and map to `409 Conflict`.
+   - Audit hook: `onAfterRestore: async (user, id) => audit(...)`.
+4. **Bulk Trash & Restore (`POST /bulk-delete`, `POST /bulk-restore`)**:
+   - Register via `registerSoftDeletableBulkTrashRoutes` with `bulkBodySchema: bulkIdsBodySchema` (capped at 500 IDs).
+   - `bulkDeleteFn` and `bulkRestoreFn` execute single batched SQL `UPDATE ... WHERE id IN (...) AND deleted_at IS NULL/NOT NULL RETURNING id`.
+   - Transactional audit hooks: `onAfterBulkDelete` (recording deletion reason) and `onAfterBulkRestore`.
+5. **List Queries**:
    - Default queries enforce `isNull(table.deletedAt)`.
-   - `?includeDeleted=true` requires explicit delete permission and applies `SET LOCAL app.include_deleted = 'true'`.
+   - `?includeDeleted=true` requires explicit delete permission and applies `isQueryFlagTrue(query.includeDeleted)`.
 
 ## 3. Frontend Work Tier Integration
 

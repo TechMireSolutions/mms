@@ -1,5 +1,5 @@
 ---
-description: Static FormModal architecture — shell chrome, Zod validation, React 19 defaults, decimal-as-string, collection-list save clears, RLS pointer, local multipart uploads. Applies to tenant and platform forms.
+description: FormModal shell, Zod form validation, decimal currency formatting, and form lifecycle hooks
 paths:
   - "apps/frontend/src/components/ui/FormPrimitives.tsx"
   - "apps/frontend/src/components/ui/FormModal.tsx"
@@ -24,7 +24,6 @@ paths:
 **Workflow skills:** form authoring → `mms-form-architecture` · form UX guidelines → `ui-ux-pro-max` · shell a11y & focus-return → `mms-a11y-smoke`.
 
 ## 1. FormModal Shell & Primitives
-
 - **Modal Scoping:** Use `FormModal` for create, edit, and builder flows; raw `Modal` restricted to confirm/preview dialogs. Shell manages header, icon, subtitle, tabs, progress, focus trap, and focus return on dismiss.
 - **Input Primitives & Tokens:** Inputs use `min-h-11 min-w-11` (`FORM_INPUT`). Cards use `FORM_CARD`; builders use `FORM_INPUT_BUILDER`. Inline errors use `FieldErrorMessage` + `FORM_ERROR`.
 - **Field Primitives:** Standardize on `Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `TimePicker`, `DateTimePicker`, `EditableSelect`. Currency requires text `inputMode="decimal"` (ban `type="number"`). Phone uses `type="tel"` with E.164 normalization. Calendar is Gregorian only.
@@ -32,46 +31,38 @@ paths:
 - **Layout & Structure:** Enforce single-column flows (`COLLECTION_BODY`) inside `space-y-3`. Multi-column sections use CSS Subgrid or `@container` queries. Enabled registry fields must render (ban hardcoded allowlists). Client-side dynamic form compilers are banned. Gate entry and save CTAs with `canWrite`.
 
 ## 2. State & React 19 Standards
-
-- **State Management:** Controlled state (or RHF + zodResolver for complex wizards) validated against `@mms/shared` Zod schemas. RSC `"use server"` actions and native `action=` submissions are strictly banned.
+- **State Management:** Controlled state (or RHF + zodResolver for complex wizards) validated against `@mms/shared` Zod schemas. RSC `"use server"` actions and native `action=` submissions are banned.
 - **Form Controls & A11y:** Initialize fields (`""` for strings, `[]` for arrays) to prevent uncontrolled warnings. Controls require `name` and `id` (`useId()` fallback + `<label htmlFor={id}>`). React 19 native `ref` on custom controls (ban `forwardRef`).
 - **Semantic Hints:** Mobile hints mandatory: Currency (`inputMode="decimal"`), Phone (`type="tel" inputMode="tel" autoComplete="tel"`), OTP (`inputMode="numeric" autoComplete="one-time-code"`), Email (`type="email"`).
 - **Zero-Block Paste:** Never block clipboard paste on OTP, 2FA, or password fields (`onPaste` prevention banned).
 
 ## 3. Collection List Tabs (Child & Junction Tables)
-
 - **Authoritative Arrays:** Pre-populate one empty row; strip blanks before save via `cleanContactDraft`. Empty array is authoritative (`[]` clears all child rows, never omitted).
 - **Edit Merge:** Merge on edit save via `mergeContactEditSavePayload`: draft collections + scalar sync win over spread contact. Clear legacy `relationships: []` when `relationshipContacts` is emptied.
 - **Hydration & Sync:** `normalizeContactForEdit` hydrates scalars only when array is omitted; never overwrite explicit `[]`. Offline sync (`mergeContactForSync`) applies arrays as-is.
 
 ### 3.1 Contact-Linked Module Writes (Students & Faculty)
-
 - **Identity Normalization:** When `contactId` exists, strip `CONTACT_PROFILE_FIELDS` and guardian triad writes via `normalizeContactLinkedRecord`. Do not duplicate person profile on module domain table.
 - **Boundary:** Edit forms show hydrated contact fields; save payload links by ID (Contacts owns person identity). Soft-delete and module fields (status, GR) remain on domain row.
 
 ## 4. Write vs Read Zod Schemas
-
 - **Write DTO Hygiene:** Write schemas (POST/PUT) omit server-owned fields (`deletedAt`, `deletedBy`, `deletionReason`). Enforce `.strict()` on all write DTOs.
 - **Active FK Guarding:** Validators and forms assigning foreign keys (`contactId`, `sessionId`, `facultyId`) must verify referenced entities are active (`deleted_at IS NULL`) (`mms-data-layer.md` §6).
 - **Error Mapping & Hydration:** Map Zod issues via shared `mapZodFormErrors` in `@mms/shared` to `t()` keys (ban per-form issue switches). Decimal strings for money, E.164 for phones. Hydrate edit defaults from Query cache to prevent empty flashes.
 
 ## 5. RTL, Styling & Validation UX
-
 - **Logical CSS:** Use logical Tailwind (`start-0`, `border-e`, `ms-auto`, `ps-4`).
 - **Non-Punitive Validation:** Trigger inline errors on `onBlur` or post-submit (`isSubmitted`), not during keystrokes. Use `:user-invalid`/`:user-valid`. Error copy uses `text-wrap: pretty`. Auto-focus first invalid tab and field on submit failure.
 - **Form UX Intelligence:** Query UI/UX Pro Max form guidelines (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py "form validation error" --domain ux`, skill `ui-ux-pro-max`) for accessible error summaries, visible focus rings (`focus-visible:ring-2`), and resilient label wrapping.
 
 ## 6. Security & Upload Boundaries
-
 - **Isolation:** Tenant writes enforce transaction-scoped RLS (`SET LOCAL app.current_tenant`). Platform writes require `authenticatePlatform` + `platformUserCan`.
 - **Multipart Uploads:** Authenticated multipart to `/api/uploads/image` or `/attachment` (disk storage via `resolveApiUrl`). Enforce magic-byte sniff, MIME allowlist, and dimension limits (`mms-auth-security.md`).
 
 ## 7. FormModal vs DetailSheet Boundary
-
 - **FormModal:** Exclusively owns write mutations, create, edit, builder workflows, and data modifications with shared Zod validation.
 - **DetailSheet:** Exclusively owns read-only inspection, archive callouts, quick actions, and audit metadata via `EntityDescriptor<T>` (`mms-ui-ux-design.md` §6). Never embed edit forms in DetailSheet.
 
 ## 8. Workflow & Output Speed Rules
-
-- **Zero Output Bloat:** Emit surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational greetings, polite preambles, and post-code summaries.
-- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards/rules are altered, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler.
+- **Verification Gates:** Verify with `pnpm typecheck` and scoped tests before marking tasks done. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

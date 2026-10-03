@@ -50,9 +50,7 @@ Start here in Antigravity: **skill `antigravity-workspace`**.
 
 | Antigravity | Cursor |
 |-------------|--------|
-| `rules/mms-agent-universal.md` | `rules/mms-agent-universal.mdc` |
 | `rules/mms-core.md` | `rules/mms-core.mdc` |
-| `rules/mms-completion-review.md` | `rules/mms-completion-review.mdc` |
 
 ## Reuse first (DRY) — applies to every change
 
@@ -150,4 +148,4 @@ CI fails if the mirrors are out of sync (`git diff --exit-code -- .agent .cursor
 
 **Enforcement rule** (from `mms-agent-universal.mdc`): a norm is either machine-enforced (lint rule, ratchet script, CI check, hook, test) or explicitly labelled advisory. Land the check with the norm.
 
-**21 rules** (3 always-on + 18 scoped) — index with the per-topic owner: [.cursor/rules/README.md](.cursor/rules/README.md).
+**21 rules** (1 always-on + 20 scoped) — index with the per-topic owner: [.cursor/rules/README.md](.cursor/rules/README.md).

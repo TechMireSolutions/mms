@@ -34,6 +34,11 @@ per-finding remedies and the review criteria.
 | Missing partial unique index on a recyclable key | Add it, then re-check the 23505 restore trap — `mms-data-layer.md` §6 |
 | Missing `ENABLE`/`FORCE ROW LEVEL SECURITY` on a new tenant table | Add both plus the policy (`0076_force_rls_all_tables.sql` pattern) — `mms-data-layer.md` §1 |
 | Write-blocking `CREATE INDEX` in a migration | Move it to the concurrent index script — `mms-data-layer.md` §7 |
+| Missing module access gate (BE or FE) | Register in `MODULE_ROUTE_ACTION_RULES` / `TENANT_APP_ROUTE_ACCESS` and verify with `moduleAccessCoverage.test.ts` / `routeAccess.test.ts` — `mms-auth-security.md` §3 |
+| Hand-rolled data table in directory | Replace with shared `DataTable` / `WorkBatchTable` stack — `mms-dry.md` §1 |
+| Raw hex or arbitrary-colour expression in code | Replace with semantic CSS custom property token from `index.css` `@theme` — `mms-ui-ux-design.md` §2 |
+| Explicit `any` annotation introduced | Replace with strict Zod schema, union type, or `unknown` narrowing — `mms-dry.md` §4 |
+| Missing `AbortSignal` on fetch or query | Pass `signal` from `queryFn` or pass `AbortSignal.timeout()` to `apiFetch` — `mms-agent-universal.md` §3 |
 | Rule/skill edited but mirrors not regenerated | Run `bash .agent/scripts/sync-all.sh` and re-verify |
 | Any other rule violation inside the change boundary | Fix it in the same change |
 

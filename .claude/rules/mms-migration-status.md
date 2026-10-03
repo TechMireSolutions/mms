@@ -1,5 +1,5 @@
 ---
-description: Known gaps between rules (target) and codebase (current) — do not opportunistically fix outside task scope
+description: Active technical debt register and architectural gaps — do not fix outside scope
 paths:
   - "docs/migration-*"
   - "apps/backend/src/db/migrations/**"
@@ -10,14 +10,12 @@ paths:
 **Workflow skill:** `mms-migration-fixes` — prioritized gap list and recipes. Rules describe **target architecture**. Fix open gaps only when in task scope. Historical closed milestones: `docs/migration-milestones.md`.
 
 ## 1. Open Gaps Register (Active Debt)
-
 Only address these residual gaps when explicitly within task scope:
 - **Copy & a11y:** Residual hardcoded strings in secondary modules; niche RTL/contrast checks. Target: full `t()` en/ar/ur/fa + WCAG 2.2 AA (`mms-settings-i18n.md`, `mms-ui-ux-design.md`).
 - **Live Push & Aggregates:** Secondary module WS emit/subscribe and comparison mode dumps. Target: WS `/api/ws` invalidate + SQL `GROUP BY` aggregates (`mms-core.md`, `mms-reports.md`).
 - **Contacts Full Loads:** Niche chart dumps. Target: SQL aggregates across all visualizers (`mms-data-layer.md`, `mms-reports.md`).
 
 ## 2. Forbidden Regressions (Canonical Owners)
-
 - **Data Authority** (`mms-data-layer.md`): `saveCollection` mutation dual-writes; `getCollection` as primary for REST; unpaged `loadAllFn` / `maxPageSize` dumps.
 - **Sessions** (`mms-auth-security.md`): JWTs in `localStorage`; skipping platform `/me` session probe; failing to invalidate tokens when accounts are soft-deleted.
 - **Soft-Delete UX** (`mms-module-architecture.md` §6–§7): Work trash without drawer archive banner; resetting filters on trash toggle; omitting 23505 conflict traps on restore; missing 5–10s Undo toast.
@@ -38,6 +36,5 @@ Only address these residual gaps when explicitly within task scope:
 - **Performance** (`mms-performance.md`): Blocking Redis `KEYS *`; unbuffered heap allocations in worker jobs; write-blocking index builds; unvirtualized client lists > 30 items.
 
 ## 3. Workflow & Output Speed Rules
-
-- **Zero Output Bloat:** Emit surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational greetings, polite preambles, and post-code summaries.
-- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards/rules are altered, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler.
+- **Verification Gates:** Verify with `pnpm typecheck` and scoped tests before marking tasks done. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

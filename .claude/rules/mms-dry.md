@@ -1,5 +1,5 @@
 ---
-description: DRY (Don't Repeat Yourself) guidelines, extraction thresholds, boundaries, and @mms/shared exports standards.
+description: DRY guidelines, duplication thresholds, extraction patterns, and @mms/shared export standards
 paths:
   - "packages/shared/**"
   - "apps/frontend/src/hooks/**"
@@ -15,46 +15,41 @@ paths:
 **Workflow skill:** `mms-shared-package` (extract/export pure helpers and Zod DTOs).
 
 ## 1. Proactive Search & Duplication Audits
-
-- **Search First:** Audit `@mms/shared`, `apps/frontend/src/lib/config/`, `apps/frontend/src/hooks/`, `@/components/ui/`, and `@/components/common/` before authoring new components, layouts, forms, dialogs, utilities, DTOs, or business logic. Extend a suitable shared abstraction (add an optional, configurable prop) rather than forking it; page-specific columns, filters, fields, and actions stay configuration, not copies.
-- **Consumer Compatibility:** Changes to a shared component or hook must stay backward-compatible for every existing consumer (additive optional props, unchanged defaults). Grep its consumers, run their tests, and spot-check the affected pages before marking done.
-- **Right-Sized Abstractions:** Consolidate duplication without changing behaviour, but do not force unrelated functionality into one over-configured component; when two call sites only look alike, compose small primitives instead.
-- **Shared Chrome SSOT:** Reuse central primitives and tokenized design systems:
-  - **Overlays:** `OverlayShell` (portal/backdrop/focus-trap/escape), `Modal` (`Modal.Header`, `Modal.Tabs`, `Modal.Footer`, `Modal.Error`), and `Drawer` (`Drawer.Header`, `Drawer.ArchiveBanner`, `Drawer.RestoreOrEditAction`, responsive bottom sheet + side slide-in).
-  - **Selection Docks:** `BulkActionDock` (`BulkActionDock.Action`, `BulkActionDock.Separator`, `BulkActionDock.Delete`, `BulkActionDock.Restore`, generic selection model, escape dismissal).
-  - **Selects & Dropdowns:** `DropdownSelectBase` & `useDropdownListbox` (popover positioning, keyboard arrow navigation, option highlight, and BiDi alignment).
-  - **Directory Cards & Grids:** `EntityCard` (`EntityCard.Header`, `EntityCard.MetaGrid`, `EntityCard.Footer`), `EntityCardsGrid` (responsive cols, virtualization, select-all bar integration).
-  - **Entity Messaging:** `EntityMessagingActions` (`dropdown`, `icon-row`, `button-group` channel dispatch).
-  - **Data Tables:** Directory and catalog tables use `DataTable` (`@/components/common/data-table`: search across visible columns, facet filters, table/card toggle, column visibility + reset, resizable columns; pages supply `columns`, `filters`, `renderRowActions`). Server-paginated Work directories use `WorkTaskToolbar` + `WorkBatchTable` with `useModuleColumnLayout` (`toColumnCustomizer` / `toColumnResize`). Hand-rolled `<Table>` is limited to the reviewed report/ledger/editor allowlist in `scripts/check-work-directory.mjs`.
-  - Duplicating UI markup, overlay shells, or messaging channels across feature directories is strictly banned.
-- **Entity Descriptors:** Consume declarative `EntityDescriptor<T>` registries (`@/components/common/entityRegistry`, `mms-ui-ux-design.md` §6). Runtime labels mandate `labelKey: AppTranslationKey`.
-- **Node 24 Built-Ins:** Use native `glob`, `crypto.hash()`, `URLPattern`, `using`/`await using`, and `process.loadEnvFile()` instead of introducing third-party packages.
-- **Zod DTO SSOT:** Share request/response contracts in `@mms/shared`. Derive variants via `.pick()`, `.omit()`, or `.extend()`.
+- **Search First:** Audit `@mms/shared`, `apps/frontend/src/lib/config/`, `apps/frontend/src/hooks/`, `@/components/ui/`, and `@/components/common/` before creating components, layouts, forms, dialogs, utilities, or DTOs. Extend existing abstractions via optional props rather than duplicating.
+- **Consumer Compatibility:** Shared component changes must maintain backward compatibility for existing consumers. Verify consumers, run tests, and check affected pages.
+- **Right-Sized Abstractions:** Consolidate identical duplication without changing behavior; do not force unrelated functionality into monolithic abstractions. Compose small primitives when call sites differ.
+- **Shared Chrome SSOT:** Enforce central primitives and design tokens:
+  - Overlays: `OverlayShell`, `Modal` (`Modal.Header`, `Modal.Tabs`, `Modal.Footer`, `Modal.Error`), `Drawer` (`Drawer.Header`, `Drawer.ArchiveBanner`, `Drawer.RestoreOrEditAction`).
+  - Selection Docks: `BulkActionDock` (`BulkActionDock.Action`, `BulkActionDock.Separator`, `BulkActionDock.Delete`, `BulkActionDock.Restore`).
+  - Selects & Dropdowns: `DropdownSelectBase` & `useDropdownListbox`.
+  - Directory Cards & Grids: `EntityCard`, `EntityCardsGrid`.
+  - Entity Messaging: `EntityMessagingActions`.
+  - Data Tables: Standard tables use `DataTable` (`@/components/common/data-table`); server-paginated Work directories use `WorkTaskToolbar` + `WorkBatchTable` with `useModuleColumnLayout`. Hand-rolled `<Table>` is restricted to reviewed allowlist in `scripts/check-work-directory.mjs`.
+  - Ban duplicating UI markup or overlay chrome across features.
+- **Entity Descriptors:** Consume `EntityDescriptor<T>` registries (`@/components/common/entityRegistry`, `mms-ui-ux-design.md` §6). Runtime labels mandate `labelKey: AppTranslationKey`.
+- **Node 24 Built-Ins:** Use native `glob`, `crypto.hash()`, `URLPattern`, `using`/`await using`, and `process.loadEnvFile()`.
+- **Zod DTO SSOT:** Share DTO contracts in `@mms/shared`. Derive variants via `.pick()`, `.omit()`, or `.extend()`.
 
 ## 2. Extraction Thresholds & Strategy
-
-- **Trigger Conditions:** Promote logic to shared layers (`@mms/shared` or central UI/hooks) when:
-  1. Identical logic appears $\ge 2$ times across separate files.
-  2. Logic crosses feature or frontend $\leftrightarrow$ backend boundaries.
-  3. Logic exceeds 15 lines of identical or parametrically identical code.
-  4. Dimension, toast width, or z-index appears $\ge 3$ times (promote to `index.css` `@theme`).
+- **Trigger Conditions:** Promote logic to shared layers when:
+  1. Identical logic appears >= 2 times in separate files.
+  2. Logic crosses feature or frontend <-> backend boundaries.
+  3. Logic exceeds 15 lines of duplicate implementation.
+  4. Dimension, toast width, or z-index appears >= 3 times (promote to `index.css` `@theme`).
 - **File Sizing Decomp:** When single files exceed 200 lines (`mms-structure-naming.md` §3), decompose by concern within the feature folder without modifying barrel exports.
 
 ## 3. Monorepo Layer Boundaries
-
-- **`@mms/shared`:** Pure validation schemas, types, constants, default configs, and I/O-free formatters. Named exports only; subpath imports banned. Zero React, DOM, Fastify, or database dependencies.
-- **`apps/frontend`:** React hooks, UI primitives, providers, and TanStack Query facades. Direct cross-feature imports (`featureA` from `featureB`) are banned; route via `@/tenant/hooks/collections/*` facades or promote to `components/ui`.
+- **`@mms/shared`:** Pure validation schemas, types, constants, default configs, and formatters. Named exports only; subpath imports banned. Zero React, DOM, Fastify, or DB dependencies.
+- **`apps/frontend`:** React hooks, UI primitives, providers, TanStack Query facades. Ban direct cross-feature imports (`featureA` from `featureB`); route via `@/tenant/hooks/collections/*` facades or promote to `components/ui`.
 - **`apps/backend`:** Fastify routes, services, repositories, and Drizzle schemas/queries.
 
 ## 4. Quality Bar & Code Cleanup
-
-- **Strict Type Narrowing:** Strict TypeScript required. Use `unknown` + narrowing. Explicit `any` is strictly banned (`@typescript-eslint/no-explicit-any`, ratcheted via `check:code-norms`).
-- **Documentation & Tests:** JSDoc required on public exports in `packages/shared` only; omit elsewhere. Pure helpers in `@mms/shared` require unit tests.
-- **Dead Code Elimination:** Prune unused imports, dead variables, and legacy shims within your change boundary.
-- **Formatting SSOT:** Format all dates and currency via settings-driven `formatDate` and `formatMoney` from `@mms/shared` (`mms-settings-i18n.md`).
-- **Banned Anti-Patterns:** Per-module bulk-bar forks (use unified `ModuleUniversalBulkActionBar`); per-list selection hooks (use shared `useWorkSelection`).
+- **Strict Typing:** Strict TypeScript required. Use `unknown` + narrowing. Explicit `any` is banned (`@typescript-eslint/no-explicit-any`).
+- **Documentation & Tests:** JSDoc required on public exports in `packages/shared` only. Pure helpers in `@mms/shared` require unit tests.
+- **Dead Code Elimination:** Prune unused imports, dead variables, and legacy shims within change boundary.
+- **Formatting SSOT:** Format all dates and currency via `formatDate` and `formatMoney` from `@mms/shared` (`mms-settings-i18n.md`).
+- **Banned Anti-Patterns:** Per-module bulk-bar forks; per-list selection hooks (use `useWorkSelection`).
 
 ## 5. Workflow & Output Speed Rules
-
-- **Zero Output Bloat:** Emit surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational greetings, polite preambles, and post-code summaries.
-- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards/rules are altered, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler.
+- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

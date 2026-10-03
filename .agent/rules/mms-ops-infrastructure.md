@@ -1,6 +1,6 @@
 ---
 trigger: model_decision
-description: Local dev setup, environment variables, Docker, backend ports, health endpoints, Linux compatibility, and CI expectations.
+description: Local dev setup, environment variables, Docker, PM2, ports, Linux compatibility, and CI workflows
 ---
 
 # MMS Operations & Infrastructure
@@ -8,12 +8,10 @@ description: Local dev setup, environment variables, Docker, backend ports, heal
 **Workflow skills:** local install/run → `mms-dev-setup` · production Hetzner/Apache → `mms-ops-deploy` · VPS casing/LF/PM2 → `mms-linux-compatibility`.
 
 ## 1. Prerequisites & Environment Setup
-
-- **Runtimes & Tooling:** Node.js `>=24.14.0` (native `--env-file=.env` and `--experimental-strip-types`; `dotenv` is strictly banned), Corepack `pnpm@11.15.1`, Turbo `^2.10.9`, PostgreSQL 16.
+- **Runtimes & Tooling:** Node.js `>=24.14.0` (native `--env-file=.env` and `--experimental-strip-types`; `dotenv` is banned), Corepack `pnpm@11.15.1`, Turbo `^2.10.9`, PostgreSQL 16.
 - **Root Commands:** `pnpm dev` (concurrent apps), `pnpm build`, `pnpm typecheck`, `pnpm test`. Local screen session: `./restart_servers.sh [status|stop|--foreground]`.
 
 ## 2. Environment Variables & Ports Configuration
-
 - **Port Bindings:** Production Backend **`5002`** (`MMS_PRODUCTION_BACKEND_PORT`); Local Dev Backend `3000` (`MMS_DEV_BACKEND_PORT`); Local Dev Frontend `5173`. Binding to `3000` or `3001` under `NODE_ENV=production` is strictly forbidden (server must exit).
 - **Subdomain Routing:** Vite dev proxy forwards `X-Forwarded-Host`; resolved via `AsyncLocalStorage` (`AsyncContextFrame`).
 - **Reverse Proxy & Sockets:** Apache terminates TLS HTTP/2, Brotli/gzip, and routes `/ws` & `/api/ws` via `mod_proxy_wstunnel` (timeout 60s, keepalive on). Fastify synchronizes `keepAliveTimeout` (30s) and `headersTimeout` (35s) with TCP Keep-Alive.
@@ -21,13 +19,11 @@ description: Local dev setup, environment variables, Docker, backend ports, heal
 - **Sanctioned Wipes:** Tenant wipe: `deleteWorkspace` → `purgeTenantDataBySubdomain`. Platform reset: `POST /api/platform/settings/reset-database` (super-user only). Ad-hoc `DROP SCHEMA` or client-side wipes are banned.
 
 ## 3. Linux & Ubuntu VPS Compatibility
-
 - **File System & Imports:** Strict case-sensitive paths matching disk. Unix LF line endings for all `.sh` scripts. Never hardcode backslashes; prefix core imports with `node:`.
 - **Process Security:** Run PM2 and Node under non-root users (`node`, `www-data`). Enforce write containment strictly to `/var/www/mmsv2/data`; application code is read-only.
 - **Structured Logging:** Pino emits structured JSON directly to `stdout`. Host process managers handle rotation.
 
 ## 4. CI/CD & Deploy Procedures
-
 - **CI DAG (`ci.yml`):** Runs `changes` filter → `lint-and-typecheck` → parallel `test-frontend` (sharded with blob merge) → `test-backend-unit` → conditional `test-backend-db` → `ci-gate` → `e2e` (Playwright) → `build-dist`.
 - **Deployment Flow:** `deploy.yml` triggers on CI pass for `main`, SCPs artifact to VPS, executes `scripts/deploy-on-server.sh` pinned to `DEPLOY_SHA`. Rollback via `scripts/deploy-rollback.sh`. DDL runs on boot via `initDb`.
 - **Health Endpoints:**
@@ -36,19 +32,16 @@ description: Local dev setup, environment variables, Docker, backend ports, heal
   - `GET /metrics`: Prometheus format; requires `METRICS_ENABLED=true` and `Authorization: Bearer $METRICS_TOKEN`. Labels route patterns, never raw IDs.
 
 ## 5. Audit Operations, Statement Auditing & Storage Tiering
-
 - **Database Auditing (`pgAudit`):** Preload `postgresql-16-pgaudit` (`pgaudit.log = 'write, ddl, role'`) to capture direct console queries and DDL bypassing Fastify.
 - **Scheduled Verification:** Background cron runs `runAuditVerificationJob`, recording results in `audit_verification_runs` and triggering P1 alerts on hash discrepancies.
 - **Storage Tiering:** Cold audit archives (>90 days) export to WORM-locked storage (S3 Object Lock / MinIO) with Merkle roots. Monthly partitions detached via automated lifecycle.
 
 ## 6. Environment Variables & Secret Lifecycle
-
 - **Documentation & Hygiene:** Document variable shape and safe defaults in `apps/backend/.env.example` in the same change. Never commit real `.env` files.
 - **Client Bundle Isolation:** Only `VITE_*` keys reach the browser. Never expose `JWT_SECRET`, `DATABASE_URL`, `REDIS_URL`, or server flags in frontend code or Vite `define`.
 - **Fail Closed:** Fail process startup immediately if required security credentials (`JWT_SECRET`, `DATABASE_URL`) are missing or defaulted.
 - **Zero Echo:** Never log or output secrets into error messages, health endpoints, CI logs, or transcripts.
 
 ## 7. Workflow & Output Speed Rules
-
-- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler and post-code recaps.
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler.
 - **Verification Gates:** Verify with `pnpm typecheck` and scoped tests before marking tasks done. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

@@ -1,35 +1,18 @@
 ---
-description: Core architecture, security invariants, boundaries, and output discipline
+description: MMS core invariants, security, boundaries, and limits
 alwaysApply: true
 ---
 
-# MMS Core Invariants & Standards
+# MMS Core Invariants
 
-**Workflow skills:** orientation → `antigravity-workspace` · install/run → `mms-dev-setup`.
-**Ownership matrix** (topic → owner rule → workflow skill) → `.cursor/rules/README.md`. Rules = norms (SSOT); skills = checklists that point back at them.
+## 1. Critical Invariants
+- **Protected Zones:** Never edit migrations, auth middleware, CI/CD, or root configs without explicit consent.
+- **Tenant Isolation:** Enforce RLS (`SET LOCAL app.current_tenant`) + `can()`. Never trust client IDs.
+- **Data Safety:** RFC 8785 JSON audit outbox; soft-delete (`WHERE deleted_at IS NULL`); forward-only DDL.
 
-## 1. Critical Invariants (Zero-Tolerance)
+## 2. Boundaries & Limits
+- **Layers:** `@mms/shared` = pure types/DTOs. TanStack Query server authority. Zero cross-feature imports.
+- **Limits:** Strict TypeScript (zero `any`, no unsafe casts). 200 LOC hard cap per source file.
 
-- **Protected Zones:** Never modify without explicit logged user authorization: DB migrations, auth middleware/services (`apps/backend/src/middleware/authenticate*.ts`, `apps/backend/src/services/auth/`), CI/CD (`.github/`), Dockerfiles, and root configs (`tsconfig*.json`, `vite.config.ts`, `tailwind.config.js`).
-- **Tenant Isolation:** Enforce `authenticateTenant` + transaction RLS (`SET LOCAL app.current_tenant`) + `can()` permissions on all tenant mutations. Never trust client-supplied `workspaceSubdomain` or `userId`.
-- **Platform Isolation:** Require `authenticatePlatform` + `platformUserCan` / `requirePlatformPermission` + password re-authentication on destructive operations.
-- **Audit & Soft-Delete:** RFC 8785 canonical JSON outbox logging on all entity mutations. Mandatory soft-delete with Category B partial indexing (`WHERE deleted_at IS NULL`).
-- **Database Safety:** Forward-only DDL migrations; zero write-blocking `CREATE INDEX`. Strict 3NF/BCNF normalization; ban untyped JSON/array/EAV blob storage.
-
-## 2. Code Standards & Architectural Boundaries
-
-- **Layer Boundaries:**
-  - `packages/shared`: Pure types, strict Zod DTOs, pure utils. Zero DOM, React, Fastify, or DB dependencies.
-  - `apps/frontend/src/lib/*`: FE-wide logic, query factories, `apiClient`.
-  - `apps/frontend/src/components/ui/*`: Prop-driven UI primitives only; zero domain/feature imports.
-  - `apps/frontend/src/tenant/features/*`: Feature adapters. Zero direct cross-feature imports (`featureA` from `featureB`); route through facades (`@/tenant/hooks/collections/*`) or extract shared chrome to `components/ui`.
-- **Data Authority:** Server-authoritative REST + TanStack Query (`queryOptions`/`mutationOptions` factories). Banned: `useLiveCollection`/`loadAllFn` for REST entities, ad-hoc `setInterval`/`fetch` in `useEffect`. Invalidate via WebSocket `/api/ws`.
-- **Type Safety:** Strict TypeScript. Zero `any`, double casts (`as unknown as T`), or unvalidated payloads. Schema validation via `@mms/shared` Zod contracts.
-- **File Sizing & Modularity:** Hard 200-line cap on `.ts`, `.tsx`, `.js`. Decouple UI presentation from data orchestration (hooks/services).
-- **Domain Primitives:** Decimal strings for currency (`/^\d+(\.\d{1,2})?$/`), sequential UUIDv7 primary keys, E.164 phone formats, React 19 native `ref` (no `forwardRef`), mandatory `useId()` for form controls.
-
-## 3. Workflow & Output Speed Rules
-
-- **Zero Output Bloat:** Lead directly with code or the solution. Zero conversational greetings, polite preambles ("Sure, I can help with that"), restatements of user requests, or post-code summaries.
-- **Surgical Modifications:** Output targeted diffs or surgical snippets only. Never rewrite entire files unless creating a new file from scratch.
-- **Verification Gates:** Non-trivial changes require `pnpm typecheck` before completion. If standards/rules are altered, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.
+## 3. Workflow Discipline
+- **Execution:** Surgical diffs only. Zero filler prose. Never commit/push unless asked. Run `pnpm typecheck`.

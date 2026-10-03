@@ -19,8 +19,17 @@ pnpm run check:migration-indexes
 echo "Step 3: Database Projection Hygiene Check..."
 pnpm run check:db-projections
 
-echo "Step 4: TypeScript Strict Typecheck..."
+echo "Step 4: Code Norms Ratchet (Any, Hex, 300 LOC, @theme)..."
+pnpm run check:code-norms
+
+echo "Step 5: Work Directory Convergence Ratchet (DataTable, viewMode)..."
+pnpm run check:work-directory
+
+echo "Step 6: TypeScript Strict Typecheck..."
 pnpm typecheck
+
+echo "Step 7: Monorepo ESLint Quality Check..."
+pnpm lint
 
 echo "=================================================="
 echo "✨ All automated completion review checks passed!"

@@ -558,9 +558,7 @@
   ],
   "rules": {
     "always_on": [
-      "rules/mms-agent-universal.md",
-      "rules/mms-core.md",
-      "rules/mms-completion-review.md"
+      "rules/mms-core.md"
     ],
     "directory": "rules/"
   },

@@ -4,15 +4,20 @@ Project rules for the Madrasa Management System. Claude Code loads `.md` files f
 
 **Architecture rules:** `mms-module-architecture.md`, `mms-ops-infrastructure.md`, `mms-ui-ux-design.md`, `mms-data-layer.md`.
 
-## Always Applied (3)
+## Always Applied (1)
 
 | Rule | Purpose |
 |------|---------|
-| `mms-agent-universal.md` | Universal agent cognition, output economy, security, TS/git standards |
 | `mms-core.md` | Stack, boundaries, ownership matrix, edit discipline |
-| `mms-completion-review.md` | Self-review after code edits — verify, fix bugs, then mark done |
 
-## Scoped Rules (18)
+## Scoped Rules (20)
+
+### Agent Cognition & Review (On-Demand)
+
+| Rule | Focus / Topic |
+|------|---------------|
+| `mms-agent-universal.md` | Universal agent cognition, output economy, security, TS/git standards |
+| `mms-completion-review.md` | Self-review after code edits — verify, fix bugs, then mark done |
 
 ### Architecture & Platform Standards
 

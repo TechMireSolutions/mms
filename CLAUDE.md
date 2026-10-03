@@ -12,8 +12,8 @@ conventions here, and never add a second copy of the skill list or the always-on
 | Layer | Location | When it loads |
 |---|---|---|
 | Shared guide | `AGENTS.md` (imported above) | every session |
-| Always-on rules | `.claude/rules/{mms-agent-universal,mms-core,mms-completion-review}.md` | every session (no `paths:`) |
-| Scoped rules | `.claude/rules/*.md` with `paths:` | when Claude reads a matching file |
+| Always-on rules | `.claude/rules/mms-core.md` | every session (no `paths:`) |
+| Scoped & on-demand rules | `.claude/rules/*.md` with `paths:` or description | when Claude reads a matching file or invokes on-demand |
 | Skills | `.claude/skills/*/SKILL.md` | when the description matches the task; read `SKILL.md` plus its `references/`/`scripts/` |
 | Subagents | `.claude/agents/*.md` | `mms-reviewer`, `mms-explorer`, `mms-test-triage`, `mms-docs-auditor` — use them for context isolation on large read-heavy tasks |
 | Commands | `.claude/commands/*.md` | `/dev-setup`, `/feature-module`, `/code-review`, `/dry`, `/run-tests`, `/fix-migration-debt` |

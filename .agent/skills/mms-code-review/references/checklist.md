@@ -18,6 +18,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Tenant protected routes use **`authenticateTenant`** — not raw `jwtVerify`
 - [ ] Cookie CSRF / Origin on state-changing cookie-auth routes
 - [ ] `host` / `x-forwarded-host` tested in `inject()` tests for tenant routes
+- [ ] Module access gates: `registerModuleAccess` + `MODULE_ROUTE_ACTION_RULES` on every module endpoint; coverage verified via `moduleAccessCoverage.test.ts` — `mms-auth-security.md` §3
 - [ ] Zod write DTOs (prefer `.strict()`); no parallel Ajv for same shape
 - [ ] `rbacService` on writes; admin-only on sync download/upload
 - [ ] Drizzle migration + journal via **`mms-schema-migrate`** (no `drizzle-kit push` on shared/prod)
@@ -28,10 +29,14 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Explicit Resource Management (`using` / `await using`) for database connections / transactions
 - [ ] Single-shot hashing uses `crypto.hash()` from `node:crypto`
 - [ ] Context propagation via `AsyncLocalStorage` (`AsyncContextFrame`)
+- [ ] Zero wildcard DB projections (`SELECT *`), verified via `check:db-projections.mjs` — `mms-performance.md` §1
+- [ ] Outbound fetch uses `AbortSignal.timeout()`, request `bodyLimit` enforced, and send idempotency digest bound to body — `mms-api-interface.md` §6
 
 ### Frontend API
 - [ ] Internal MMS calls use `apiFetch` / `apiJson` — no raw `fetch('/api/...')`
 - [ ] `credentials: 'include'` via apiClient (cookie session — no new `mms_token` writes)
+- [ ] Module route access: `TENANT_APP_ROUTE_ACCESS` + `ModuleAccessRoute` gates; coverage verified via `routeAccess.test.ts` — `mms-auth-security.md` §3
+- [ ] Concurrency & signals: pass `AbortSignal` into `apiFetch` and `queryFn`; combine signals via `AbortSignal.any()` — `mms-agent-universal.md` §3
 - [ ] Query factories / tuple keys — skill **`mms-query-factories`**
 - [ ] `enabled: isAuthenticated` on tenant REST hooks
 - [ ] Mutations invalidate affected queries (list + count keys; Contacts also messaging resolve)
@@ -42,6 +47,8 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Report widgets/visualizer: `useWidgetCollections` / `useReportCollectionRows` — no `getCollection`/`saveCollection` primary for REST entities
 
 ### UI / config
+- [ ] Code norms held: zero explicit `any` (`check:code-norms.mjs`), zero raw hex colours outside `@theme` (`check:code-norms.mjs`), zero Tailwind arbitrary-colour bracket expressions (`[#...]`), files kept under 300 LOC hard limit — `mms-dry.md` §4, `mms-ui-ux-design.md` §2, `mms-structure-naming.md` §3
+- [ ] Work directory convergence: DataTable / WorkBatchTable stack reused; zero hand-rolled tables outside allowlist; viewMode SSOT (`check:work-directory.mjs`) — `mms-dry.md` §1, `mms-module-architecture.md` §3
 - [ ] No hardcoded labels/colours/status maps — `t()` + registries
 - [ ] No new `uiStrings` keys outside Contacts module
 - [ ] Fields/tabs from config registries
@@ -61,8 +68,10 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] Forbidden actions omitted — not disabled placeholders
 
 ### Soft delete (when entity supports it)
+- [ ] Dedicated `<module>SoftDeleteRoutes.ts` plugin isolates soft-delete and bulk trash endpoints (`mms-api-interface.md` §7)
 - [ ] `DELETE` soft-deletes; `POST :id/restore` restores (atomic conditional latch `WHERE deleted_at IS NULL RETURNING id`)
-- [ ] Restore traps PostgreSQL error `23505` (`unique_violation`) and maps to `409 Conflict` (`docs/soft-delete.md` §4.5)
+- [ ] Single restore wired via `registerResourceRoutes`: `buildRestoreResponse` sanitizes attributes (`sanitizeOneForUser`), `mapRestoreError` maps domain uniqueness validation to HTTP 400 (`validation_error`), and race-condition PostgreSQL `23505` maps to `409 Conflict`
+- [ ] Bulk operations wired via `registerSoftDeletableBulkTrashRoutes` with `bulkIdsBodySchema` (500 max cap) and transactional audit hooks (`onAfterBulkDelete` with reason, `onAfterBulkRestore`)
 - [ ] Single-record `GET /:id` returns `404` for archived rows unless `?includeDeleted=true` is authorized with `canDelete`
 - [ ] Batched single-statement SQL for bulk delete/restore (`WHERE id IN (...) AND deleted_at IS NULL` — no per-row loops)
 - [ ] List supports `includeDeleted`; Work default excludes deleted; BE SQL-filters `deleted_at` via dynamic AST (no parameterized booleans)
@@ -74,7 +83,7 @@ Extracted from `SKILL.md` so the skill body stays loadable in one pass; the owni
 - [ ] FE trash UI: URL param sync (`?view=trash`), filter state preserved on toggle, eligible non-financial optimistic 5–10s Undo toast, drawer `ArchivedBanner` (`WarningCallout`) with single restore
 - [ ] Soft-delete modules: trash toggle + restore omit Add/messaging/exports in archive mode
 - [ ] Work multi-select uses `BulkSelectionBar` + `BulkSelectionActions` (`BulkSelectionDeleteAction` / `BulkSelectionRestoreAction` / Messaging) on list/parent (no forked selection chrome; no toolbar-inline trash)
-- [ ] Entity merge (if any) is atomic server endpoint — not FE dual-write
+- [ ] Entity merge (if any) is atomic server endpoint with foreign key reparenting in a transaction — not FE dual-write
 - [ ] Outbox CDC events emitted with monotonic versioning (`entity.soft_deleted`, `entity.restored`)
 
 ### Gold-standard module parity (`mms-module-architecture.md` §7)

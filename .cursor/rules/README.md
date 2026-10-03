@@ -4,15 +4,20 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 
 **Architecture rules:** `mms-module-architecture.mdc`, `mms-ops-infrastructure.mdc`, `mms-ui-ux-design.mdc`, `mms-data-layer.mdc`.
 
-## Always Applied (3)
+## Always Applied (1)
 
 | Rule | Purpose |
 |------|---------|
-| `mms-agent-universal.mdc` | Universal agent cognition, output economy, security, TS/git standards |
 | `mms-core.mdc` | Stack, boundaries, ownership matrix, edit discipline |
-| `mms-completion-review.mdc` | Self-review after code edits — verify, fix bugs, then mark done |
 
-## Scoped Rules (18)
+## Scoped Rules (20)
+
+### Agent Cognition & Review (On-Demand)
+
+| Rule | Focus / Topic |
+|------|---------------|
+| `mms-agent-universal.mdc` | Universal agent cognition, output economy, security, TS/git standards |
+| `mms-completion-review.mdc` | Self-review after code edits — verify, fix bugs, then mark done |
 
 ### Architecture & Platform Standards
 

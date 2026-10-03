@@ -1,5 +1,5 @@
 ---
-description: App settings configurations, live preview draft states, sidebar/in-page navigation directories, and localized translation keys (en/ar/ur/fa).
+description: App settings, live preview draft states, navigation registries, and i18n translation keys (en/ar/ur/fa)
 paths:
   - "apps/frontend/src/tenant/features/settings/**"
   - "apps/frontend/src/tenant/features/**/*Settings*"
@@ -18,7 +18,6 @@ paths:
 **Workflow skills:** `/settings` + i18n → `mms-settings-i18n` · Backup wipe-restore → `mms-backup-restore` · Module Setup → `mms-module-setup`.
 
 ## 1. App-Wide Settings (`/settings` Scope)
-
 - **Unified Settings Route:** All app-wide settings panels mount under `/settings` tracked via `SettingsTabContext` (`setActiveTab()`). Standalone sub-routes are banned.
 - **Section Allowlist:** Registered sections: `global`, `modules`, `branding`, `theme`, `backup`, `llm`. Module-specific configurations belong strictly in that module's **Setup → Preferences** tab.
 - **Encrypted Backup & Wipe-Restore:**
@@ -27,29 +26,24 @@ paths:
   - Validate backup JSON schema and tenant subdomain match before decrypt prompt; partial restores are banned.
 
 ## 2. Navigation Registry
-
 - **Sidebar SSOT:** Sidebar retrieves navigation links exclusively from `NAV_ITEMS` in `navConfig.tsx`.
 - **Academics Modules:** Submenu grouping mirrors `SYSTEM_MODULE_NAV`: `students`, `faculty`, `sessions`, `attendance`, `enrollment`, `hasanat`, `examination`, `questionBank`. Item access comes from `TENANT_APP_ROUTE_ACCESS` (`mms-auth-security.md` §3), not from `NAV_ITEMS`.
 
 ## 3. Live Previews & Settings Drafts
-
 - **Draft State:** Retain panel changes in component state via `useSettingsDraft` (or `useBrandingDraft`/`useThemeSettingsDraft`). Never commit to database until explicit **Save**.
 - **Dynamic Preview:** Call `onPreview(draft)` on draft mutations for immediate UI surface updates. Revert previews on unmount via `revertSettingsPreviews()`.
 
 ## 4. Internationalization & Locale Dictionary
-
 - **Supported Locales:** English (`en`, SSOT in `appTranslationsEn.ts`), Arabic (`ar`, RTL), Urdu (`ur`, RTL in `appTranslationsUr.ts`), and Persian (`fa`, override in `appTranslationsFa.ts`).
-- **Zero Hardcoded Strings:** All user copy resolves via `t('key')`. English fallback chains (`t(key) || 'Fallback'`) are strictly banned.
+- **Zero Hardcoded Strings:** All user copy resolves via `t('key')`. English fallback chains (`t(key) || 'Fallback'`) are banned.
 - **Key Parity & Types:** Add new keys to `appTranslationsEn.ts` first, then mirror across ar, ur, fa. Settings and fields use `labelKey: AppTranslationKey`. Parameter interpolation matches `TranslationArgs<K>`.
 - **BiDi Layout Tokens:** Logical Tailwind only (`text-start`, `ms-*`, `ps-*`, `border-s-*`, `rtl:*`). Consume `dir`/`isRtl` from `useTranslation()`.
 - **Intl Formatting SSOT:** Format all dates and currency via settings-aware `formatDate`/`formatMoney` from `@mms/shared`. Raw `.toLocaleDateString()` and `.toLocaleString()` are banned.
 
 ## 5. Platform Isolation & Tenant Routing
-
 - **Platform Apex English Lock:** Platform apex (console, onboarding, admins, auth, tenant-not-found) is locked to **English + LTR**. Never consume tenant `settings.language`. Hardcode `dir="ltr"` and `lang="en"`.
 - **Unknown Tenant Gate:** Invalid/missing tenant subdomains trigger immediate hard-redirect (`window.location`) to `ROUTES.tenantNotFound` (`/tenant-not-found?subdomain=...`). Never mount tenant routes or `/settings` on invalid subdomains. Disabled workspaces render `WorkspaceDisabledScreen`.
 
 ## 6. Workflow & Output Speed Rules
-
-- **Zero Output Bloat:** Emit surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational greetings, polite preambles, and post-code summaries.
-- **Verification Gates:** Verify with `pnpm typecheck` and `pnpm test`. If standards/rules are altered, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.
+- **Zero Output Bloat:** Output surgical diffs or targeted snippets only. Never rewrite entire files unless creating a new file from scratch. Omit conversational filler.
+- **Verification Gates:** Verify with `pnpm typecheck` and scoped tests before marking tasks done. If standards are modified, execute `bash .agent/scripts/sync-all.sh` and verify with `node scripts/verify-rules-integrity.mjs`.

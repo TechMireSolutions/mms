@@ -4,7 +4,7 @@ description: Reviews a concrete change set (PR or local diff) against MMS rules 
 license: Proprietary
 metadata:
   owner: mms-platform
-  last-verified: 2026-09-26
+  last-verified: 2026-10-03
 allowed-tools: Read Grep Glob Bash(pnpm typecheck) Bash(pnpm lint) Bash(pnpm test) Bash(bash scripts/pre-pr-review.sh)
 ---
 
@@ -54,23 +54,30 @@ Separate demonstrated controls from capability gaps and framework-dependent poli
 | Active foreign key guarding on writes | `mms-data-layer.mdc` §6 · `mms-form-architecture` · **`mms-soft-delete`** |
 | Outbox CDC tombstones with monotonic versioning | `mms-data-layer.mdc` §6 · **`mms-soft-delete`** |
 | UI/UX Pro Max design intelligence & tokens | `mms-ui-ux-design.mdc` §8 · **`ui-ux-pro-max`** |
+| Module access gates & coverage checks | `mms-auth-security.mdc` §3 · **`mms-backend-api`** / **`mms-frontend`** |
+| Code norms (zero `any`, semantic tokens, 300 LOC) | `mms-dry.mdc` §4 · `mms-ui-ux-design.mdc` §2 · `mms-structure-naming.mdc` §3 |
+| Work directory convergence (DataTable SSOT) | `mms-dry.mdc` §1 · `mms-module-architecture.mdc` §3 · **`mms-module-work`** |
 
 ## Review order
 
-1. Automated gates (`pnpm typecheck`, scoped lint/tests)
-2. Security / tenant / RBAC
-3. Data layer (Query vs legacy, bulk upsert, RLS)
+1. Automated gates (`pre-pr-review.sh`: standards, migration indexes, db projections, code norms, work directory, typecheck, lint)
+2. Security, tenant isolation & module access gates (`authenticateTenant`, `registerModuleAccess`, `TENANT_APP_ROUTE_ACCESS`, RBAC)
+3. Data layer (Query vs legacy, bulk upsert, RLS, zero wildcard projections, soft-delete)
 4. Module §7 gold-standard (+ messaging variants when touched)
-5. i18n / a11y (axe smoke via `mms-a11y-smoke` when shells/primitives change)
-6. Scope creep
+5. UI design tokens & i18n / a11y (semantic HSL tokens, 44×44px touch floor, axe smoke via `mms-a11y-smoke`)
+6. Scope creep & dead code removal
 
 ## Automated checks
 
 ```bash
-pnpm typecheck
+bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh
 pnpm test
-cd apps/frontend && pnpm lint
-cd apps/backend && pnpm lint
+```
+
+Module access verification (when touching routing, navigation, or endpoints):
+```bash
+pnpm --filter mms-backend test src/__tests__/moduleAccessCoverage.test.ts
+pnpm --filter mms-frontend test src/lib/config/routeAccess.test.ts
 ```
 
 E2E when touching auth/routing/onboard: `pnpm test:e2e` (critical path: `e2e/tests/platform-onboarding.spec.ts`)
@@ -78,7 +85,7 @@ E2E when touching auth/routing/onboard: `pnpm test:e2e` (critical path: `e2e/tes
 ## Severity
 
 - **Critical:** security bypass, missing `authenticateTenant`, cross-tenant leak, bulk wipe PUT, data loss, breaking audit hash chains
-- **Major:** missing RBAC on writes, raw `fetch('/api')`, dual data paths, broken migration journal, nested `ContactConfigProvider`
+- **Major:** missing RBAC on writes, missing module access gate, raw `fetch('/api')`, dual data paths, broken migration journal, nested `ContactConfigProvider`
 - **Minor:** style, optional DRY, residual `role ===` in untouched files
 
 ## References
@@ -91,7 +98,7 @@ E2E when touching auth/routing/onboard: `pnpm test:e2e` (critical path: `e2e/tes
 bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh
 ```
 
-It runs the standards verifier, the migration-index and DB-projection ratchets, `pnpm typecheck` and `pnpm lint`. It does **not** run tests, e2e, or gitleaks — add `pnpm test` / `pnpm test:e2e` for the areas you touched, and remember CI scans the full git history for secrets.
+It runs the standards verifier, the migration-index and DB-projection ratchets, the code-norms and work-directory ratchets, `pnpm typecheck`, and `pnpm lint`. It does **not** run tests, e2e, or gitleaks — add `pnpm test` / `pnpm test:e2e` for the areas you touched, and remember CI scans the full git history for secrets.
 
 - Rules: `mms-api-interface.mdc`, `mms-data-layer.mdc`, `mms-hooks.mdc`, `mms-ui-ux-design.mdc`, `mms-auth-security.mdc`, `mms-form-architecture.mdc`, `mms-messaging.mdc`, `mms-migration-status.mdc`, `mms-performance.mdc`
 - Skills: `mms-frontend`, `mms-backend-api`, `mms-backend-security`, `mms-soft-delete`, `mms-audit-trail`, `mms-form-architecture`, `mms-query-factories`, `mms-schema-migrate`, `mms-backup-restore`, `mms-a11y-smoke`, `mms-dependency-upgrade`, `mms-messaging`, `ui-ux-pro-max`
