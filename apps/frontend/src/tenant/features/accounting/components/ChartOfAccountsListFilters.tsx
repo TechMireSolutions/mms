@@ -1,12 +1,18 @@
 import React from "react";
-import { Download, Eye, EyeOff, Plus } from "lucide-react";
+import { Download, Plus } from "lucide-react";
 import { type AppTranslationKey } from "@mms/shared";
-import { FormSelect } from "@/components/ui/FormSelect";
+import {
+  ModuleFilterDivider,
+  ModuleFilterDropdown,
+  ModuleFilterRadioGroup,
+} from "@/components/ui/ModuleFiltersMenuButton";
+import { DropdownMenuCheckboxItem } from "@/components/ui/dropdown-menu";
 import { type ModuleColumnCustomizerProps } from "@/components/ui/ModuleColumnCustomizer";
 import { ModuleWorkToolbar } from "@/components/ui/ModuleWorkToolbar";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "@/hooks/useTranslation";
 import { ACCOUNT_TYPES, type AccountType } from "@/lib/data/accountingData";
+import type { WorkDirectoryViewMode } from "@/hooks/useWorkDirectoryViewMode";
 
 interface ChartOfAccountsListFiltersProps {
   search: string;
@@ -19,6 +25,8 @@ interface ChartOfAccountsListFiltersProps {
   onAddAccount: () => void;
   canWrite: boolean;
   columnCustomizer?: ModuleColumnCustomizerProps;
+  viewMode: WorkDirectoryViewMode;
+  onViewModeChange: (mode: WorkDirectoryViewMode) => void;
 }
 
 export function ChartOfAccountsListFilters({
@@ -32,9 +40,12 @@ export function ChartOfAccountsListFilters({
   onAddAccount,
   canWrite,
   columnCustomizer,
+  viewMode,
+  onViewModeChange,
 }: ChartOfAccountsListFiltersProps): React.JSX.Element {
   const { t } = useTranslation();
-  const hasActiveFilters = typeFilter !== "all" || showInactive;
+  const activeFilterCount = Number(typeFilter !== "all") + Number(showInactive);
+  const hasActiveFilters = activeFilterCount > 0;
   const handleClearFilters = (): void => {
     setTypeFilter("all");
     setShowInactive(false);
@@ -50,6 +61,32 @@ export function ChartOfAccountsListFilters({
       hasActiveFilters={hasActiveFilters}
       onClearFilters={handleClearFilters}
       clearFiltersLabel={t("accounting.clearFilters")}
+      filterButton={
+        <ModuleFilterDropdown
+          label={t("common.filters")}
+          activeCount={activeFilterCount}
+          clearLabel={t("accounting.clearFilters")}
+          onClear={handleClearFilters}
+        >
+          <ModuleFilterRadioGroup
+            label={t("accounting.coa.filterTypeAria")}
+            value={typeFilter}
+            onValueChange={(accountTypeValue) => setTypeFilter(accountTypeValue as AccountType | "all")}
+            options={[
+              { value: "all", label: t("accounting.ledger.allTypes") },
+              ...ACCOUNT_TYPES.map((type) => ({
+                value: type,
+                label: t(`accounting.type.${type}` as AppTranslationKey),
+              })),
+            ]}
+          />
+          <ModuleFilterDivider />
+          <DropdownMenuCheckboxItem checked={showInactive} onCheckedChange={(checked) => setShowInactive(checked === true)}>
+            {t("accounting.coa.showInactive")}
+          </DropdownMenuCheckboxItem>
+        </ModuleFilterDropdown>
+      }
+      viewModeToggle={{ viewMode, onViewModeChange }}
       primaryAction={
         canWrite ? (
           <Button
@@ -69,33 +106,6 @@ export function ChartOfAccountsListFilters({
         labels: columnCustomizer.labels,
       } : undefined}
     >
-      <div className="shrink-0 min-w-filter-xl">
-        <FormSelect
-          id="coa-filter-type"
-          name="typeFilter"
-          aria-label={t("accounting.coa.filterTypeAria")}
-          value={typeFilter}
-          onChange={(accountTypeValue) => setTypeFilter(accountTypeValue as AccountType | "all")}
-          options={[
-            { value: "all", label: t("accounting.ledger.allTypes") },
-            ...ACCOUNT_TYPES.map((type) => ({
-              value: type,
-              label: t(`accounting.type.${type}` as AppTranslationKey),
-            })),
-          ]}
-          className="min-h-11 rounded-xl"
-        />
-      </div>
-      <Button
-        type="button"
-        variant={showInactive ? "secondary" : "outline"}
-        aria-pressed={showInactive}
-        onClick={() => setShowInactive(!showInactive)}
-        className="flex min-h-11 items-center gap-1.5 rounded-xl text-sm font-semibold"
-      >
-        {showInactive ? <Eye className="w-3.5 h-3.5" aria-hidden="true" /> : <EyeOff className="w-3.5 h-3.5" aria-hidden="true" />}
-        {showInactive ? t("accounting.coa.showingAll") : t("accounting.coa.showInactive")}
-      </Button>
       <Button
         type="button"
         variant="outline"

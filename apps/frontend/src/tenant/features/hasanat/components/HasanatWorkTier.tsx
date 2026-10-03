@@ -134,6 +134,7 @@ export function HasanatWorkTier({
               columnCustomizer={{
                 columnRegistry: distributionColumnLayout.columnRegistry,
                 updateUserColumnLayout: distributionColumnLayout.updateUserColumnLayout,
+                onResetLayout: distributionColumnLayout.resetColumnLayout,
                 labels: distributionColumnLayout.customizerLabels,
               }}
               onMessage={canWriteMessaging && !showDeleted ? onMessage : undefined}
@@ -145,14 +146,7 @@ export function HasanatWorkTier({
               onUpdateDistribution={onUpdateDistribution}
               onFilteredCountChange={onFilteredCountChange}
               canWrite={canWrite}
-              isColumnVisible={redemptionColumnLayout.isColumnVisible}
-              getColumnWidth={redemptionColumnLayout.getColumnWidth}
-              onColumnResize={redemptionColumnLayout.setColumnWidth}
-              columnCustomizer={{
-                columnRegistry: redemptionColumnLayout.columnRegistry,
-                updateUserColumnLayout: redemptionColumnLayout.updateUserColumnLayout,
-                labels: redemptionColumnLayout.customizerLabels,
-              }}
+              columnLayout={redemptionColumnLayout}
             />
           )}
         </>

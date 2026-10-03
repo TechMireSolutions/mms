@@ -113,3 +113,33 @@ export function sumCashbookTotals(rows: readonly CashbookRow[]): CashbookTotalsC
   }
   return { totalInCents, totalOutCents, balanceCents: totalInCents - totalOutCents };
 }
+
+export type CashbookFooterCell =
+  | { kind: "label" | "blank"; span: number }
+  | { kind: "moneyIn" | "moneyOut"; span: 1 };
+
+/**
+ * Footer cells for the visible column order: consecutive non-money columns merge into one
+ * spanning cell (the first carries the count label) and totals sit under their money columns.
+ */
+export function buildCashbookFooterCells(visibleColumnIds: readonly string[]): CashbookFooterCell[] {
+  const cells: CashbookFooterCell[] = [];
+  let span = 0;
+  let labelled = false;
+  const flush = () => {
+    if (span === 0) return;
+    cells.push({ kind: labelled ? "blank" : "label", span });
+    labelled = true;
+    span = 0;
+  };
+  for (const id of visibleColumnIds) {
+    if (id === "moneyIn" || id === "moneyOut") {
+      flush();
+      cells.push({ kind: id, span: 1 });
+    } else {
+      span += 1;
+    }
+  }
+  flush();
+  return cells;
+}

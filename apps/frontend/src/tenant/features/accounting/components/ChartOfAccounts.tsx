@@ -17,7 +17,7 @@ import { ChartOfAccountsSeedEmptyState } from "@/tenant/features/accounting/comp
 
 const ALWAYS_COLUMN_VISIBLE = (_key: string): boolean => true;
 import type { StatusBadgeConfigItem } from '@/components/ui/StatusBadge';
-import type { WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
+import { useWorkDirectoryViewMode, type WorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
 
 interface ChartOfAccountsProps {
   accounts: Account[];
@@ -54,6 +54,7 @@ export function ChartOfAccounts({
   viewMode,
 }: ChartOfAccountsProps) {
   const { t } = useTranslation();
+  const directoryView = useWorkDirectoryViewMode(viewMode);
   const [search,      setSearch]     = useState("");
   const deferredSearch = useDeferredValue(search);
   const [typeFilter,  setTypeFilter] = useState<AccountType | "all">("all");
@@ -138,6 +139,8 @@ export function ChartOfAccounts({
         onAddAccount={openAddAccount}
         canWrite={canWrite}
         columnCustomizer={columnCustomizer}
+        viewMode={directoryView.viewMode}
+        onViewModeChange={directoryView.setViewMode}
       />
 
       {accountsLoaded && accounts.length === 0 ? (
@@ -163,7 +166,7 @@ export function ChartOfAccounts({
         onEdit={(account) => setModal({ ...account })}
         onDelete={(id) => setPendingDeactivate(accounts.find((account) => account.id === id) ?? null)}
         onReactivate={handleReactivate}
-        viewMode={viewMode}
+        viewMode={directoryView.viewMode}
       />}
 
       <p className="text-xs text-muted-foreground" aria-live="polite">{t("accounting.coa.accountsShown", { count: filtered.length })}</p>

@@ -14,6 +14,7 @@ interface SessionsColumnLayout {
   columnRegistry: Parameters<typeof SessionsListFilters>[0]["columnLayout"]["columnRegistry"];
   updateUserColumnLayout: Parameters<typeof SessionsListFilters>[0]["columnLayout"]["updateUserColumnLayout"];
   customizerLabels: Parameters<typeof SessionsListFilters>[0]["columnLayout"]["customizerLabels"];
+  resetColumnLayout?: () => void;
 }
 
 interface SessionsWorkTierProps {

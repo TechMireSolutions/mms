@@ -14,12 +14,15 @@ import {
 } from '@/platform/components/admin/PlatformAdminBadges';
 import { PlatformAdminActionButtons } from '@/platform/components/admin/PlatformAdminActionButtons';
 import type { usePlatformUserDescriptor } from '@/platform/hooks/usePlatformUserDescriptor';
+import { toColumnResize, type DataTableColumnLayout } from '@/components/common/data-table';
+import { resolveVisibleDescriptorColumns } from '@/hooks/useDescriptorColumnLayout';
 
 export type DangerMode = 'disable' | 'enable' | 'delete';
 
 export interface PlatformAdminsTableViewProps {
   admins: PlatformUserProfile[];
   descriptor: ReturnType<typeof usePlatformUserDescriptor>;
+  columnLayout?: DataTableColumnLayout;
   onInspect: (admin: PlatformUserProfile) => void;
   onEditAccess: (admin: PlatformUserProfile) => void;
   onToggleStatus: (admin: PlatformUserProfile, mode: DangerMode) => void;
@@ -34,6 +37,7 @@ export interface PlatformAdminsTableViewProps {
 export function PlatformAdminsTableView({
   admins,
   descriptor,
+  columnLayout,
   onInspect,
   onEditAccess,
   onToggleStatus,
@@ -57,7 +61,7 @@ export function PlatformAdminsTableView({
   }, [admins, selectedIds, onToggleSelect, onToggleSelectAll]);
 
   const columns: WorkBatchTableColumn<PlatformUserProfile>[] = React.useMemo(() => {
-    return descriptor.getTableColumns().map((col) => {
+    return resolveVisibleDescriptorColumns(descriptor.getTableColumns(), columnLayout?.columnRegistry).map((col) => {
       if (col.id === 'name') {
         return {
           id: 'name',
@@ -98,7 +102,7 @@ export function PlatformAdminsTableView({
         render: (admin: PlatformUserProfile) => <PlatformAdminPermissionsBadges admin={admin} />,
       };
     });
-  }, [descriptor, t]);
+  }, [descriptor, columnLayout, t]);
 
   return (
     <WorkBatchTable
@@ -122,6 +126,7 @@ export function PlatformAdminsTableView({
       rowClassName={() =>
         'group hover:bg-muted/30 transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary/40 focus-visible:ring-inset'
       }
+      columnResize={toColumnResize(columnLayout)}
       containerClassName={WORK_TABLE_CONTAINER_CLASS}
       bordered={false}
     />

@@ -5,6 +5,8 @@ import {
   type WorkspaceUser,
 } from '@mms/shared';
 import { useLocalPagination } from '@/hooks/useLocalPagination';
+import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
+import type { DataTableColumnLayout } from '@/components/common/data-table';
 import { ActivityLogsFilters } from '@/tenant/features/users/components/ActivityLogsFilters';
 import { ActivityLogsList } from '@/tenant/features/users/components/ActivityLogsList';
 
@@ -13,20 +15,19 @@ const PAGE_SIZE = 15;
 export interface ActivityLogsProps {
   logs: ActivityLog[];
   users: Array<SystemUser | WorkspaceUser>;
-  getColumnWidth?: (key: string) => number | undefined;
-  onColumnResize?: (key: string, width: number) => void;
+  columnLayout?: DataTableColumnLayout;
 }
 
 export function ActivityLogs({
   logs,
   users,
-  getColumnWidth,
-  onColumnResize,
+  columnLayout,
 }: ActivityLogsProps): React.JSX.Element {
   const [userFilter, setUser] = useState('all');
   const [actionFilter, setAct] = useState('all');
   const [dateFrom, setFrom] = useState('');
   const [dateTo, setTo] = useState('');
+  const { viewMode, setViewMode } = useWorkDirectoryViewMode();
 
   const userNamesById = new Map<string, string>();
   for (const user of users) {
@@ -73,6 +74,9 @@ export function ActivityLogs({
         dateTo={dateTo}
         onDateToChange={setTo}
         users={users}
+        viewMode={viewMode}
+        onViewModeChange={setViewMode}
+        columnLayout={columnLayout}
       />
 
       <ActivityLogsList
@@ -82,8 +86,8 @@ export function ActivityLogs({
         pageSize={PAGE_SIZE}
         onPageChange={setPage}
         userNameFor={userNameFor}
-        getColumnWidth={getColumnWidth}
-        onColumnResize={onColumnResize}
+        viewMode={viewMode}
+        columnLayout={columnLayout}
       />
     </div>
   );

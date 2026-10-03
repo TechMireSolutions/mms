@@ -16,6 +16,7 @@ import { PlatformAdminsDialogs } from '@/platform/components/admin/PlatformAdmin
 import { usePlatformAdminSelection } from '@/platform/components/admin/usePlatformAdminSelection';
 import { useVerifyPlatformAdminEmail } from '@/platform/hooks/usePlatformAdmins';
 import { usePlatformUserDescriptor } from '@/platform/hooks/usePlatformUserDescriptor';
+import { useDescriptorColumnLayout } from '@/hooks/useDescriptorColumnLayout';
 
 export type AdminRoleFilter = 'all' | 'super_user' | 'admin';
 
@@ -34,6 +35,7 @@ export function PlatformAdminsList({
 }: PlatformAdminsListProps): React.JSX.Element {
   const { t } = useTranslation();
   const descriptor = usePlatformUserDescriptor();
+  const columnLayout = useDescriptorColumnLayout('platform.admins', descriptor);
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState<AdminRoleFilter>('all');
@@ -120,6 +122,7 @@ export function PlatformAdminsList({
         viewMode={viewMode}
         onViewModeChange={setViewMode}
         onExportCsv={() => exportPlatformAdminsCsv(filteredItems, descriptor)}
+        columnLayout={columnLayout}
       />
 
       <ModuleWorkListStateShell
@@ -153,7 +156,7 @@ export function PlatformAdminsList({
             />
           </div>
         ) : viewMode === 'table' ? (
-          <PlatformAdminsTableView admins={filteredItems} {...actionProps} />
+          <PlatformAdminsTableView admins={filteredItems} columnLayout={columnLayout} {...actionProps} />
         ) : (
           <PlatformAdminsListCards admins={filteredItems} {...actionProps} />
         )}

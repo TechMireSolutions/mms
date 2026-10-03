@@ -9,13 +9,16 @@ description: DRY (Don't Repeat Yourself) guidelines, extraction thresholds, boun
 
 ## 1. Proactive Search & Duplication Audits
 
-- **Search First:** Audit `@mms/shared`, `apps/frontend/src/lib/config/`, `apps/frontend/src/hooks/`, and `@/components/ui/` before authoring new utilities, DTOs, or primitives. Extend existing shared abstractions.
+- **Search First:** Audit `@mms/shared`, `apps/frontend/src/lib/config/`, `apps/frontend/src/hooks/`, `@/components/ui/`, and `@/components/common/` before authoring new components, layouts, forms, dialogs, utilities, DTOs, or business logic. Extend a suitable shared abstraction (add an optional, configurable prop) rather than forking it; page-specific columns, filters, fields, and actions stay configuration, not copies.
+- **Consumer Compatibility:** Changes to a shared component or hook must stay backward-compatible for every existing consumer (additive optional props, unchanged defaults). Grep its consumers, run their tests, and spot-check the affected pages before marking done.
+- **Right-Sized Abstractions:** Consolidate duplication without changing behaviour, but do not force unrelated functionality into one over-configured component; when two call sites only look alike, compose small primitives instead.
 - **Shared Chrome SSOT:** Reuse central primitives and tokenized design systems:
   - **Overlays:** `OverlayShell` (portal/backdrop/focus-trap/escape), `Modal` (`Modal.Header`, `Modal.Tabs`, `Modal.Footer`, `Modal.Error`), and `Drawer` (`Drawer.Header`, `Drawer.ArchiveBanner`, `Drawer.RestoreOrEditAction`, responsive bottom sheet + side slide-in).
   - **Selection Docks:** `BulkActionDock` (`BulkActionDock.Action`, `BulkActionDock.Separator`, `BulkActionDock.Delete`, `BulkActionDock.Restore`, generic selection model, escape dismissal).
   - **Selects & Dropdowns:** `DropdownSelectBase` & `useDropdownListbox` (popover positioning, keyboard arrow navigation, option highlight, and BiDi alignment).
   - **Directory Cards & Grids:** `EntityCard` (`EntityCard.Header`, `EntityCard.MetaGrid`, `EntityCard.Footer`), `EntityCardsGrid` (responsive cols, virtualization, select-all bar integration).
   - **Entity Messaging:** `EntityMessagingActions` (`dropdown`, `icon-row`, `button-group` channel dispatch).
+  - **Data Tables:** Directory and catalog tables use `DataTable` (`@/components/common/data-table`: search across visible columns, facet filters, table/card toggle, column visibility + reset, resizable columns; pages supply `columns`, `filters`, `renderRowActions`). Server-paginated Work directories use `WorkTaskToolbar` + `WorkBatchTable` with `useModuleColumnLayout` (`toColumnCustomizer` / `toColumnResize`). Hand-rolled `<Table>` is limited to the reviewed report/ledger/editor allowlist in `scripts/check-work-directory.mjs`.
   - Duplicating UI markup, overlay shells, or messaging channels across feature directories is strictly banned.
 - **Entity Descriptors:** Consume declarative `EntityDescriptor<T>` registries (`@/components/common/entityRegistry`, `mms-ui-ux-design.md` §6). Runtime labels mandate `labelKey: AppTranslationKey`.
 - **Node 24 Built-Ins:** Use native `glob`, `crypto.hash()`, `URLPattern`, `using`/`await using`, and `process.loadEnvFile()` instead of introducing third-party packages.

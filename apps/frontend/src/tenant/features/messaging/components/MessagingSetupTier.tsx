@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React from "react";
 import {
   MESSAGING_MODULE_MANIFEST,
   mergeMessageTemplates,
@@ -12,7 +12,6 @@ import { useTranslation } from "@/hooks/useTranslation";
 import { ConfirmAlertDialog } from "@/components/ui/ConfirmAlertDialog";
 import { useModuleSetupSubTabs } from "@/lib/setup/useModuleSetupSubTabs";
 import { useMessageTemplates } from "../hooks/useMessaging";
-import { useMessagingTemplatesColumnLayout } from "../hooks/useMessagingColumnLayouts";
 import { useMessagingPageOptions } from "../hooks/useMessagingPageOptions";
 import { useMessagingTemplateEditor } from "../hooks/useMessagingTemplateEditor";
 import { MessagingSetupTemplateForm } from "./MessagingSetupTemplateForm";
@@ -30,14 +29,9 @@ export const MessagingSetupTier = (function MessagingSetupTier({
   onDeleteRequest,
 }: MessagingSetupTierProps): React.JSX.Element {
   const { t } = useTranslation();
-  const { categorySelectOptions, templateCategorySelectOptions, channelSelectOptions, categoryBadgeConfig } =
+  const { templateCategorySelectOptions, channelSelectOptions, categoryBadgeConfig } =
     useMessagingPageOptions();
   const templatesQuery = useMessageTemplates();
-  const { getColumnWidth, setColumnWidth } = useMessagingTemplatesColumnLayout();
-
-  const [search, setSearch] = useState("");
-  const [categoryFilter, setCategoryFilter] = useState("all");
-
   const editor = useMessagingTemplateEditor();
   const {
     editingId,
@@ -66,14 +60,6 @@ export const MessagingSetupTier = (function MessagingSetupTier({
 
   const setupTabs = (() => MESSAGING_MODULE_MANIFEST.setupSubTabs.map((key) => ({ key, label: t("messaging.tabs.templates") })))();
   const templates = (() => mergeMessageTemplates(templatesQuery.templates))();
-  const filteredTemplates = (() =>
-      templates.filter(
-        (template) =>
-          (!search.trim() ||
-            template.label.toLowerCase().includes(search.toLowerCase()) ||
-            template.body.toLowerCase().includes(search.toLowerCase())) &&
-          (categoryFilter === "all" || (template.category || "general") === categoryFilter),
-      ))();
 
   if (templatesQuery.isError) {
     return (
@@ -115,16 +101,10 @@ export const MessagingSetupTier = (function MessagingSetupTier({
                     onChannelChange={setChannel}
                   />
                   <MessagingTemplateList
-                    templates={filteredTemplates}
+                    templates={templates}
                     canWrite={canWrite}
-                    search={search}
-                    categoryFilter={categoryFilter}
-                    categorySelectOptions={categorySelectOptions}
+                    categoryOptions={templateCategorySelectOptions}
                     categoryBadgeConfig={categoryBadgeConfig}
-                    getColumnWidth={getColumnWidth}
-                    setColumnWidth={setColumnWidth}
-                    onSearch={setSearch}
-                    onCategoryFilter={setCategoryFilter}
                     onCopy={(copyBody) => void handleCopy(copyBody)}
                     onDuplicate={(template) => void handleDuplicate(template)}
                     onEdit={handleEdit}

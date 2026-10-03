@@ -117,6 +117,7 @@ export default function Attendance() {
           columnCustomizer: {
             columnRegistry: columnLayout.columnRegistry,
             updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+            onResetLayout: columnLayout.resetColumnLayout,
             labels: columnLayout.customizerLabels,
           },
         }}

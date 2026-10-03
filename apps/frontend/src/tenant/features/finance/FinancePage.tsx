@@ -134,6 +134,7 @@ export default function Finance(): React.JSX.Element {
                   columnCustomizer={{
                     columnRegistry: c.invoiceColumnLayout.columnRegistry,
                     updateUserColumnLayout: c.invoiceColumnLayout.updateUserColumnLayout,
+                    onResetLayout: c.invoiceColumnLayout.resetColumnLayout,
                     labels: c.invoiceColumnLayout.customizerLabels,
                   }}
                 />
@@ -163,6 +164,7 @@ export default function Finance(): React.JSX.Element {
                   columnCustomizer={{
                     columnRegistry: c.paymentColumnLayout.columnRegistry,
                     updateUserColumnLayout: c.paymentColumnLayout.updateUserColumnLayout,
+                    onResetLayout: c.paymentColumnLayout.resetColumnLayout,
                     labels: c.paymentColumnLayout.customizerLabels,
                   }}
                   onRowClick={(id: string) => {

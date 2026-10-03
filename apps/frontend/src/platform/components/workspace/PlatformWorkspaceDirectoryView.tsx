@@ -11,6 +11,7 @@ export function PlatformWorkspaceDirectoryView({
   viewMode,
   workspaces,
   descriptor,
+  columnLayout,
   appDomain,
   density,
   sortField,
@@ -35,6 +36,7 @@ export function PlatformWorkspaceDirectoryView({
       <PlatformWorkspaceVirtualTable
         workspaces={workspaces}
         descriptor={descriptor}
+        columnLayout={columnLayout}
         appDomain={appDomain}
         density={density}
         sortField={sortField}

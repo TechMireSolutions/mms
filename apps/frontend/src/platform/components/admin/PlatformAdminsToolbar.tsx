@@ -5,6 +5,7 @@ import { SubTabBar } from '@/components/ui/SubTabBar';
 import { ActionButton } from '@/components/ui/ActionButton';
 import { WorkTaskToolbar } from '@/components/common/work';
 import type { AdminRoleFilter } from '@/platform/pages/PlatformAdminsList';
+import { toColumnCustomizer, type DataTableColumnLayout } from '@/components/common/data-table';
 
 export interface PlatformAdminsToolbarProps {
   shownCount: number;
@@ -21,6 +22,7 @@ export interface PlatformAdminsToolbarProps {
   viewMode: 'table' | 'cards';
   onViewModeChange: (viewMode: 'table' | 'cards') => void;
   onExportCsv: () => void;
+  columnLayout?: DataTableColumnLayout;
 }
 
 export function PlatformAdminsToolbar({
@@ -38,6 +40,7 @@ export function PlatformAdminsToolbar({
   viewMode,
   onViewModeChange,
   onExportCsv,
+  columnLayout,
 }: PlatformAdminsToolbarProps): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -57,6 +60,7 @@ export function PlatformAdminsToolbar({
         viewMode,
         onViewModeChange,
       }}
+      columnCustomizer={toColumnCustomizer(columnLayout)}
       primaryAction={
         <ActionButton
           variant="secondary"

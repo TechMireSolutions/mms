@@ -100,6 +100,7 @@ export function ObligationsWorkTier({
           columnCustomizer={{
             columnRegistry: columnLayout.columnRegistry,
             updateUserColumnLayout: columnLayout.updateUserColumnLayout,
+            onResetLayout: columnLayout.resetColumnLayout,
             labels: columnLayout.customizerLabels,
           }}
           onMessage={canWriteMessaging && !showDeleted ? onMessage : undefined}
