@@ -32,7 +32,11 @@ export function useFinancePageController() {
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(FINANCE_MODULE_MANIFEST);
-  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const PAGE_TABS = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+    workLabelKey: "nav.finance",
+  });
   const SUB_TABS = [
     { id: "invoices", label: t("finance.invoices"), icon: ReceiptText },
     { id: "payments", label: t("finance.payments"), icon: CreditCard },

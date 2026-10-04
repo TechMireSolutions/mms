@@ -13,7 +13,7 @@ vi.mock("@/tenant/hooks/usePermissions", () => ({
 }));
 
 vi.mock("@/tenant/hooks/useModuleTierTabs", () => ({
-  useFilteredModuleTierTabs: () => [{ id: "work", label: "Work" }],
+  useFilteredModuleTierTabs: () => [{ id: "work", label: "Question Bank" }],
 }));
 
 vi.mock("@/hooks/usePersistedTabState", () => ({

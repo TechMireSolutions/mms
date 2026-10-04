@@ -42,6 +42,7 @@ export function useContactsPageController() {
   const visibleTopTabs = useFilteredModuleTierTabs({
     canViewSetup,
     canViewReports,
+    workLabelKey: "nav.contacts",
   });
   const overlay = useContactsPageOverlayState();
   const { pendingCount, conflictCount, flushing, flush, openConflictReview } =

@@ -34,7 +34,11 @@ export function useQuestionBankPageController() {
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(QUESTION_BANK_MODULE_MANIFEST);
-  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const PAGE_TABS = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+    workLabelKey: "nav.questionBank",
+  });
   const [showDeleted, setShowDeleted] = useTrashMode();
   const questionsResult = useQuestionBankQuestions({ includeDeleted: showDeleted });
   const questions = useQuestionBankQuestionsCollection({ includeDeleted: showDeleted });

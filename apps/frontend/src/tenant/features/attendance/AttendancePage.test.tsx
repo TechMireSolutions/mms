@@ -40,7 +40,7 @@ vi.mock("@/tenant/features/attendance/hooks/useAttendancePageController", () => 
     canWriteAttendance: true,
     canDeleteAttendance: true,
     visibleTopTabs: [
-      { id: "work", label: "Work" },
+      { id: "work", label: "Attendance" },
       { id: "reports", label: "Reports" },
       { id: "setup", label: "Setup" },
     ],

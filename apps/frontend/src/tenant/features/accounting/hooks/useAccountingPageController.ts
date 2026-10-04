@@ -39,7 +39,11 @@ export function useAccountingPageController() {
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(ACCOUNTING_MODULE_MANIFEST);
-  const pageTabs = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const pageTabs = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+    workLabelKey: "nav.accounting",
+  });
   const subTabs = ACCOUNTING_SUB_TAB_IDS.map((subTabId) => ({
     id: subTabId,
     label: t(ACCOUNTING_SUB_TAB_KEYS[subTabId]),

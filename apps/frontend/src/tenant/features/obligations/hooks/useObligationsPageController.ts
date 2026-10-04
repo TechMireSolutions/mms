@@ -43,7 +43,11 @@ export function useObligationsPageController() {
     canViewSetup,
     canEditSetup,
   } = useModulePermissions(OBLIGATIONS_MODULE_MANIFEST);
-  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const PAGE_TABS = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+    workLabelKey: "nav.obligations",
+  });
   const CONFIG_SUB_TABS = (() => OBLIGATIONS_MODULE_MANIFEST.setupSubTabs.map((id) => ({
       id,
       label: t(SETUP_TAB_LABEL_KEYS[id]),

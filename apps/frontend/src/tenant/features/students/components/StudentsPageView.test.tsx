@@ -53,7 +53,7 @@ describe("StudentsPageView Component", () => {
         visibleTabs={[
           {
             id: "work",
-            label: "Work",
+            label: "Students",
             description: "Directory",
             icon: GraduationCap,
           },

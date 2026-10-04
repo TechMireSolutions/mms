@@ -1,4 +1,8 @@
-/** Canonical ids for the standard three-tier module page shell (match UI tier names). */
+/**
+ * Canonical persisted ids for the standard module page shell.
+ * Product UI labels the primary ops tab with the module name (`nav.*`);
+ * `DEFAULT_MODULE_TIER_TAB_LABELS.work` is a seed/fallback string only.
+ */
 export const MODULE_TIER_TAB_IDS = ['work', 'reports', 'setup'] as const;
 
 export type ModuleTierTabId = (typeof MODULE_TIER_TAB_IDS)[number];
@@ -12,7 +16,7 @@ export const LEGACY_MODULE_TIER_TAB_IDS = {
 
 export type LegacyModuleTierTabId = keyof typeof LEGACY_MODULE_TIER_TAB_IDS;
 
-/** English fallbacks for seeds — UI labels use `t('module.work')`, etc. */
+/** English seed/fallback labels — product tabs use `nav.*` for the primary ops tab. */
 export const DEFAULT_MODULE_TIER_TAB_LABELS: Record<ModuleTierTabId, string> = {
   work: 'Work',
   reports: 'Reports',

@@ -32,7 +32,11 @@ export function useExaminationsPageController() {
     canReports: canViewReports,
     canViewSetup,
   } = useModulePermissions(EXAMINATIONS_MODULE_MANIFEST);
-  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const PAGE_TABS = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+    workLabelKey: "nav.examinations",
+  });
   const OPS_SUB_TABS = (() => [
       { id: 'exams', label: t('examinations.exams'), icon: BookOpen },
       { id: 'results', label: t('examinations.results'), icon: FileText },

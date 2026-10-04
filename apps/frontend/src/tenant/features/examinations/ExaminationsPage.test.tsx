@@ -17,7 +17,7 @@ vi.mock("@/tenant/features/examinations/hooks/useExaminationsPageController", ()
     setActiveSubTab: vi.fn(),
     effectiveConfigTab: "preferences",
     setConfigSubTab: vi.fn(),
-    PAGE_TABS: [{ id: "work", label: "Work" }],
+    PAGE_TABS: [{ id: "work", label: "Examinations" }],
     SETUP_TABS: [{ id: "preferences", label: "Preferences" }],
     OPS_SUB_TABS: [{ id: "exams", label: "Exams" }],
     exams: [],

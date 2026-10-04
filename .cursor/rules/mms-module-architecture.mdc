@@ -1,5 +1,5 @@
 ---
-description: Universal module architecture, three-tier layouts (Work/Reports/Setup), manifests, and soft-delete integration
+description: Universal module architecture, page tabs (operational + required Reports/Setup), manifests, and soft-delete integration
 globs: apps/frontend/src/tenant/features/**,apps/frontend/src/platform/pages/**,packages/shared/src/*ModuleManifest.ts
 alwaysApply: false
 ---
@@ -12,11 +12,14 @@ alwaysApply: false
 - **Single Manifest SSOT:** Declare a single manifest in `packages/shared/src/*ModuleManifest.ts` defining `moduleId`, entity types, collection/REST keys, default filters, searchable/filterable fields, `setupSubTabs`, and `softDelete` policies.
 - **Zero Hardcoding:** UI controls, column registries, query keys, layout hooks, and export services import directly from manifest constants; hardcoded entity configurations are banned.
 
-## 2. Three-Tier Page Shell & Layout
-- **Page Shell Structure:** Standard module pages render `PageHeader` command centre and `useFilteredModuleTierTabs({ canViewSetup, canViewReports })`:
-  1. **Work (Operational Directory):** Daily records, search, filters, views (`table` | `cards`), detail drawers, bulk actions. Ban charts and KPI dashboards in Work tier.
-  2. **Reports (Analytics):** KPI summary cards, Recharts visualizations, and visual query builders.
-  3. **Setup (Configuration):** Gated via `useModulePermissions(manifest)` (`canViewSetup`/`canEditSetup`). Houses Fields customizer and Preferences. Unauthorized tiers are omitted from DOM.
+## 2. Page Shell & Tab Layout
+- **Required anchors:** Every tenant module page includes **Reports** and **Setup**, gated via `useModulePermissions(manifest)` (`canViewReports` / `canViewSetup` / `canEditSetup`). Unauthorized anchors are omitted from the DOM.
+- **Operational tabs:** ≥1 primary operational surface (daily records, search, filters, views, drawers, bulk actions). Modules may add more peer operational tabs for day-to-day entities (Faculty: Faculties | Departments | Designations). Ban charts and KPI dashboards on operational tabs.
+- **Primary tab label:** Module name via `nav.{moduleId}` (or a dedicated entity tab key such as `faculty.tabs.faculties`) — never the generic `module.work` product label, and never industry `staffSingular` for the tab.
+- **Internal id:** Standard single-ops modules keep persisted id `"work"` for URL/prefs compat; multi-ops modules use entity ids and migrate legacy `"work"` on read.
+- **Order:** operational tab(s) → Reports → Setup.
+- **Shell wiring:** `PageHeader` command centre + `useFilteredModuleTierTabs({ canViewSetup, canViewReports, workLabelKey })` for standard modules; multi-ops pages build peer tabs explicitly (Faculty pattern).
+- **Setup content:** Fields customizer, Preferences, and other `setupSubTabs` only — not day-to-day peer catalogs unless they are truly rare lookups.
 
 ## 3. Work Directory & Detail Drawer
 - **Filters UI SSOT:** Single Filters dropdown owns Work dimensions (presets, status, sort). Duplicate preset pill bars are banned (`ContactsFilterMenuButton` gold standard). `FilterChips` render active removable selections only.

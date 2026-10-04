@@ -12,7 +12,7 @@ vi.mock("@/tenant/features/sessions/hooks/useSessionsPageController", () => ({
     showDeleted: false,
     shownCount: 0,
     sessions: [],
-    PAGE_TABS: [{ id: "work", label: "Work" }],
+    PAGE_TABS: [{ id: "work", label: "Sessions" }],
     activeTab: "work",
     setActiveTab: vi.fn(),
     handleExportCSV: vi.fn(),

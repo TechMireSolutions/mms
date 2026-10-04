@@ -34,7 +34,6 @@ function EntityTabPanel({
   canWrite,
   canExport,
   viewingDeleted,
-  staffSingular,
   onExportEntity,
   onImportEntity,
   onAdd,
@@ -44,7 +43,6 @@ function EntityTabPanel({
   canWrite: boolean;
   canExport: boolean;
   viewingDeleted: boolean;
-  staffSingular?: string;
   onExportEntity: FacultyPageViewProps["onExportEntity"];
   onImportEntity: FacultyPageViewProps["onImportEntity"];
   onAdd: () => void;
@@ -57,7 +55,6 @@ function EntityTabPanel({
         canExport={canExport}
         canWrite={canWrite}
         viewingDeleted={viewingDeleted}
-        staffSingular={staffSingular}
         onExportEntity={onExportEntity}
         onImportEntity={onImportEntity}
         onAdd={onAdd}
@@ -103,7 +100,6 @@ export function FacultyPageView({
           canExport={canExport}
           canWrite={canWrite}
           viewingDeleted={viewingDeleted}
-          staffSingular={terminology.staffSingular}
           onExportEntity={onExportEntity}
           onImportEntity={onImportEntity}
           onAddFaculty={openCreateForm}
@@ -128,7 +124,6 @@ export function FacultyPageView({
               canWrite={canWrite}
               canExport={canExport}
               viewingDeleted={viewingDeleted}
-              staffSingular={terminology.staffSingular}
               onExportEntity={onExportEntity}
               onImportEntity={onImportEntity}
               onAdd={openCreateForm}

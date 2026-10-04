@@ -24,7 +24,7 @@ vi.mock("@/tenant/hooks/usePermissions", () => ({
 
 vi.mock("@/tenant/hooks/useModuleTierTabs", () => ({
   useFilteredModuleTierTabs: () => [
-    { id: "work", label: "Work" },
+    { id: "work", label: "Examinations" },
     { id: "reports", label: "Reports" },
     { id: "setup", label: "Setup" },
   ],

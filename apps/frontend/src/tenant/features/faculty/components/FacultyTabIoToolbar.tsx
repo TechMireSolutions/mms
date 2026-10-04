@@ -10,8 +10,6 @@ export interface FacultyTabIoToolbarProps {
   canExport: boolean;
   canWrite: boolean;
   viewingDeleted: boolean;
-  /** Industry terminology singular staff label (e.g. Teacher / Employee). */
-  staffSingular?: string;
   onExportEntity: (entity: FacultyIoEntity) => void;
   onImportEntity: (entity: FacultyIoEntity) => void;
   onAdd: () => void;
@@ -23,7 +21,6 @@ export function FacultyTabIoToolbar({
   canExport,
   canWrite,
   viewingDeleted,
-  staffSingular,
   onExportEntity,
   onImportEntity,
   onAdd,
@@ -33,9 +30,7 @@ export function FacultyTabIoToolbar({
 
   const addLabel =
     entity === "faculties"
-      ? staffSingular
-        ? t("action.addNamed", { name: staffSingular })
-        : t("action.addFaculty")
+      ? t("action.addFaculty")
       : entity === "departments"
         ? t("faculty.setup.addDepartment")
         : t("faculty.designations.addDesignation");

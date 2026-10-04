@@ -43,7 +43,10 @@ export default function MessagingPage(): React.JSX.Element {
   const templatesQuery = useMessageTemplates({ enabled: canRead });
   const metricsQuery = useMessagingMetrics({ enabled: canRead });
   const { deleteTemplate, clearLogs } = useMessagingMutations();
-  const visibleTabs = useFilteredModuleTierTabs({ canViewSetup: canViewSetup || canEditSetup });
+  const visibleTabs = useFilteredModuleTierTabs({
+    canViewSetup: canViewSetup || canEditSetup,
+    workLabelKey: "nav.messaging",
+  });
 
   const handleTabChange = ((tab: 'work' | 'reports' | 'setup'): void => {
     setActiveTab(tab);

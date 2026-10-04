@@ -24,7 +24,11 @@ import { toggleFilterValue, useSessionsSelection } from '@/tenant/features/sessi
 export function useSessionsPageController() {
   const { canWrite, canDelete, canExport, canReports: canViewReports, canViewSetup } =
     useModulePermissions(SESSIONS_MODULE_MANIFEST);
-  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const PAGE_TABS = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+    workLabelKey: "nav.sessions",
+  });
   const { t } = useTranslation();
   const {
     createSession,

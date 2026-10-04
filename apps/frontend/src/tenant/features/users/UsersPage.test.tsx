@@ -9,7 +9,7 @@ vi.mock('@/tenant/features/users/hooks/useUsersPageController', () => ({
     effectiveTab: 'work',
     effectiveSubTab: 'users',
     effectiveConfigTab: 'preferences',
-    visibleTopTabs: [{ id: 'work', label: 'Work' }],
+    visibleTopTabs: [{ id: 'work', label: 'Users' }],
     USERS_CONFIG_TABS: [],
     canExport: true,
     canWrite: true,

@@ -30,7 +30,11 @@ export function useHasanatCardsPageController() {
     canViewSetup,
     canEditSetup,
   } = useModulePermissions(HASANAT_MODULE_MANIFEST);
-  const PAGE_TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const PAGE_TABS = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+    workLabelKey: "nav.hasanatCards",
+  });
   const SETUP_TABS = getHasanatSetupTabs(t);
   const SUB_TABS = getHasanatSubTabs(t);
   const [activeTab, setActiveTab] = usePersistedTabState<string>('hasanat_active_tab', 'work');

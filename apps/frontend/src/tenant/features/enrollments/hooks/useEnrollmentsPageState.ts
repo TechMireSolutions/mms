@@ -35,7 +35,11 @@ export function useEnrollmentsPageState() {
     canViewSetup,
   } = permissions;
 
-  const TABS = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const TABS = useFilteredModuleTierTabs({
+    canViewSetup,
+    canViewReports,
+    workLabelKey: "nav.enrollments",
+  });
   const [tab, setTab] = usePersistedTabState<string>("enrollments_active_tab", "work");
   const [activeSubTab, setActiveSubTab] = useState("directory");
   const directoryFilters = useEnrollmentsDirectoryFilters();

@@ -7,7 +7,7 @@ vi.mock("@/tenant/features/enrollments/hooks/useEnrollmentsPageState", () => ({
   useEnrollmentsPageState: () => ({
     t: (key: string) => key,
     SUB_TABS: [{ id: "directory", label: "Directory" }],
-    TABS: [{ key: "work", label: "Work" }],
+    TABS: [{ key: "work", label: "Enrollments" }],
     tab: "work",
     setTab: vi.fn(),
     activeSubTab: "directory",

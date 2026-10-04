@@ -24,8 +24,6 @@ export interface FacultyPageHeaderActionsProps {
   canExport: boolean;
   canWrite: boolean;
   viewingDeleted: boolean;
-  /** Industry terminology singular staff label (e.g. Teacher / Employee). */
-  staffSingular?: string;
   onExportEntity: (entity: FacultyIoEntity) => void;
   onImportEntity: (entity: FacultyIoEntity) => void;
   onAddFaculty?: () => void;
@@ -38,7 +36,6 @@ export function FacultyPageHeaderActions({
   canExport,
   canWrite,
   viewingDeleted,
-  staffSingular,
   onExportEntity,
   onImportEntity,
   onAddFaculty,
@@ -47,10 +44,6 @@ export function FacultyPageHeaderActions({
 }: FacultyPageHeaderActionsProps): React.JSX.Element | null {
   const { t } = useTranslation();
   if (viewingDeleted) return null;
-
-  const addLabel = staffSingular
-    ? t("action.addNamed", { name: staffSingular })
-    : t("action.addFaculty");
 
   const entityLabel = (entity: FacultyIoEntity) => {
     if (entity === "faculties") return t("faculty.tabs.faculties");
@@ -116,7 +109,7 @@ export function FacultyPageHeaderActions({
 
       {canWrite && onAddFaculty ? (
         <ActionButton variant="primary" icon={UserPlus} onClick={onAddFaculty}>
-          {addLabel}
+          {t("action.addFaculty")}
         </ActionButton>
       ) : null}
     </>

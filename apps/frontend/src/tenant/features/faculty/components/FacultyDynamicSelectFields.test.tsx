@@ -96,7 +96,7 @@ describe("FacultyDynamicSelectFields", () => {
     expect(html).not.toContain('title="common.delete"');
   });
 
-  it("renders designation field with Add button and active options", () => {
+  it("renders designation dropdown without add/edit/delete buttons and lists all active options", () => {
     const html = renderToStaticMarkup(
       <FacultyDesignationSelectField
         designationOptions={[
@@ -107,6 +107,22 @@ describe("FacultyDynamicSelectFields", () => {
             hierarchyRank: 1,
             isActive: true,
             assignableRoles: ["admin"],
+          },
+          {
+            id: "des-2",
+            code: "LECT",
+            name: "Lecturer",
+            hierarchyRank: 4,
+            isActive: true,
+            assignableRoles: ["instructor"],
+          },
+          {
+            id: "des-3",
+            code: "ARCH",
+            name: "Archived Title",
+            hierarchyRank: 5,
+            isActive: false,
+            assignableRoles: [],
           },
         ]}
         onChange={vi.fn()}
@@ -114,30 +130,36 @@ describe("FacultyDynamicSelectFields", () => {
     );
 
     expect(html).toContain('id="designationId"');
-    expect(html).toContain("faculty.designations.addDesignation");
-    expect(html).toContain("common.add");
     expect(html).toContain("Principal");
+    expect(html).toContain("Lecturer");
+    expect(html).not.toContain("Archived Title");
+    expect(html).not.toContain("faculty.designations.addDesignation");
+    expect(html).not.toContain("common.add");
+    expect(html).not.toContain('title="common.edit"');
+    expect(html).not.toContain('title="common.delete"');
   });
 
-  it("renders designation edit and delete action buttons when designation is selected", () => {
+  it("keeps the currently selected inactive designation available in the list", () => {
     const html = renderToStaticMarkup(
       <FacultyDesignationSelectField
-        designationId="des-1"
+        designationId="des-3"
         designationOptions={[
           {
-            id: "des-1",
-            code: "PRIN",
-            name: "Principal",
-            hierarchyRank: 1,
-            isActive: true,
-            assignableRoles: ["admin"],
+            id: "des-3",
+            code: "ARCH",
+            name: "Archived Title",
+            hierarchyRank: 5,
+            isActive: false,
+            assignableRoles: [],
           },
         ]}
         onChange={vi.fn()}
       />,
     );
 
-    expect(html).toContain('title="common.edit"');
-    expect(html).toContain('title="common.delete"');
+    expect(html).toContain("Archived Title");
+    expect(html).not.toContain("common.add");
+    expect(html).not.toContain('title="common.edit"');
+    expect(html).not.toContain('title="common.delete"');
   });
 });

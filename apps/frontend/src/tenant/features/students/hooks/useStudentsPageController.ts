@@ -44,6 +44,7 @@ export function useStudentsPageController() {
   const visibleTabs = useFilteredModuleTierTabs({
     canViewSetup,
     canViewReports,
+    workLabelKey: "nav.students",
   });
   const { data: metrics } = useStudentsMetrics();
   const mutations = useStudentMutations();

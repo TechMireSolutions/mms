@@ -90,7 +90,7 @@ export const FACULTY_MODULE_MANIFEST = {
   restBasePath: '/api/faculty',
   analyticsCategory: 'faculty',
   tiers: ['work', 'reports', 'setup'] as const,
-  setupSubTabs: ['preferences', 'departments', 'designations'] as const,
+  setupSubTabs: ['preferences'] as const,
   permissions: {
     read: 'faculty.read',
     write: 'faculty.write',

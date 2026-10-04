@@ -75,7 +75,7 @@ vi.mock("@/tenant/features/contacts/components/ContactsPageHeaderActions", () =>
 const baseProps: React.ComponentProps<typeof ContactsPageView> = {
   t: ((key: string) => key) as never,
   visibleTopTabs: [
-    { id: "work", label: "Work", description: "Directory", icon: Users },
+    { id: "work", label: "Contacts", description: "Directory", icon: Users },
   ],
   effectiveTab: "work",
   setActiveTab: vi.fn(),

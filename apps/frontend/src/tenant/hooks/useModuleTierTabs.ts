@@ -1,5 +1,5 @@
 import { LayoutDashboard, BarChart2, Settings, type LucideIcon } from "lucide-react";
-import type { ModuleTierTabId } from "@mms/shared";
+import type { AppTranslationKey, ModuleTierTabId } from "@mms/shared";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface ModuleTierTab {
@@ -9,19 +9,23 @@ export interface ModuleTierTab {
   icon: LucideIcon;
 }
 
+export interface ModuleTierTabsOptions {
+  /** Product label for the primary operational tab (`nav.*` / entity key — not `module.work`). */
+  workLabelKey: AppTranslationKey;
+}
 
-export interface FilterTabsOptions {
+export interface FilterTabsOptions extends ModuleTierTabsOptions {
   canViewSetup?: boolean;
   canViewReports?: boolean;
 }
 
-/** Standard three-tier module page tabs with localized labels. */
-export function useModuleTierTabs(): ModuleTierTab[] {
+/** Standard module page tabs with a module-named primary operational label. */
+export function useModuleTierTabs(options: ModuleTierTabsOptions): ModuleTierTab[] {
   const { t } = useTranslation();
   return [
     {
       id: "work",
-      label: t("module.work"),
+      label: t(options.workLabelKey),
       description: t("module.workHint"),
       icon: LayoutDashboard,
     },
@@ -44,16 +48,13 @@ export function useModuleTierTabs(): ModuleTierTab[] {
  * Encapsulates the tier tab visibility logic for standard module pages.
  */
 export function useFilteredModuleTierTabs(options: FilterTabsOptions): ModuleTierTab[] {
-  const tabs = useModuleTierTabs();
+  const tabs = useModuleTierTabs({ workLabelKey: options.workLabelKey });
   const canViewSetup = options.canViewSetup ?? true;
   const canViewReports = options.canViewReports ?? true;
 
-  return (() => {
-    return tabs.filter((tab) => {
-      if (tab.id === "setup") return canViewSetup;
-      if (tab.id === "reports") return canViewReports;
-      return true;
-    });
-  })();
+  return tabs.filter((tab) => {
+    if (tab.id === "setup") return canViewSetup;
+    if (tab.id === "reports") return canViewReports;
+    return true;
+  });
 }
-

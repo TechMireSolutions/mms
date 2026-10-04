@@ -48,6 +48,7 @@ export function useUsersTabState({
   const visibleTopTabs = useFilteredModuleTierTabs({
     canViewSetup,
     canViewReports,
+    workLabelKey: "nav.users",
   });
 
   const effectiveTab = resolveModuleTierTab(

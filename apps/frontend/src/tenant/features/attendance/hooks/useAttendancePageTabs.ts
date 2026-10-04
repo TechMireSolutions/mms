@@ -26,6 +26,7 @@ export function useAttendancePageTabs(
   const visibleTopTabs = useFilteredModuleTierTabs({
     canViewSetup,
     canViewReports: canSeeAttendanceAnalytics,
+    workLabelKey: "nav.attendance",
   });
 
   const visibleOperationsTabs = (() => [
