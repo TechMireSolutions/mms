@@ -20,9 +20,11 @@ describe("StudentsPreferencesSection Component", () => {
     );
 
     expect(html).toContain("students.settings.grSectionTitle");
-    expect(html).toContain("students.settings.grEntityLabel");
-    expect(html).toContain("Live Preview");
-    expect(html).toContain("Starting Sequence");
-    expect(html).toContain("Sequence Digits");
+    expect(html).toContain("students.settings.autoGenerateId");
+    expect(html).toContain("students.settings.grDigits");
+    expect(html).toContain("common.sequenceNumbering.preview");
+    expect(html).toContain("common.sequenceNumbering.startLabel");
+    expect(html).toContain("common.sequenceNumbering.lastIssued");
   });
 });
+

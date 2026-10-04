@@ -14,8 +14,10 @@ describe("FinanceInvoiceNumberingSection Component", () => {
     );
 
     expect(html).toContain("finance.invoiceNumbering.title");
-    expect(html).toContain("finance.invoiceNumbering.entityLabel");
-    expect(html).toContain("Live Preview");
+    expect(html).toContain("common.sequenceNumbering.autoGenerate");
+    expect(html).toContain("common.sequenceNumbering.preview");
+    expect(html).toContain("common.sequenceNumbering.lastIssued");
     expect(html).toContain("INV-");
   });
 });
+

@@ -8,9 +8,11 @@ describe("ObligationsReceiptNumberingSection Component", () => {
     const html = renderToStaticMarkup(<ObligationsReceiptNumberingSection />);
 
     expect(html).toContain("obligations.receiptNumbering.title");
-    expect(html).toContain("obligations.receiptNumbering.entityLabel");
-    expect(html).toContain("Live Preview");
+    expect(html).toContain("common.sequenceNumbering.autoGenerate");
+    expect(html).toContain("common.sequenceNumbering.preview");
+    expect(html).toContain("common.sequenceNumbering.lastIssued");
     expect(html).toContain("OBL-");
     expect(html).toContain("common.save");
   });
 });
+
