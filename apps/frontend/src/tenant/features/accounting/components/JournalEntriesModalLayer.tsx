@@ -20,6 +20,7 @@ export interface JournalEntriesModalLayerProps {
   entries: JournalEntry[];
   fiscalYears: FiscalYear[];
   onSave: JournalEntrySave;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
   onCloseModal: () => void;
   onEditSelected: () => void;
   onRequestReverse: (entry: JournalEntry) => void;
@@ -48,6 +49,7 @@ export function JournalEntriesModalLayer({
   entries,
   fiscalYears,
   onSave,
+  onAccountsChange,
   onCloseModal,
   onEditSelected,
   onRequestReverse,
@@ -75,6 +77,7 @@ export function JournalEntriesModalLayer({
             initial={modal === "edit" ? selected : null}
             fiscalYears={fiscalYears}
             onSave={onSave}
+            onAccountsChange={onAccountsChange}
             onClose={onCloseModal}
           />
         )}

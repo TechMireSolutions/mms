@@ -11,7 +11,7 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("FacultyDynamicSelectFields", () => {
-  it("renders dynamic department dropdown without add/edit/delete buttons", () => {
+  it("renders dynamic department dropdown without Plus when canAdd is omitted", () => {
     const html = renderToStaticMarkup(
       <FacultyDepartmentSelectField
         value=""
@@ -33,8 +33,32 @@ describe("FacultyDynamicSelectFields", () => {
 
     expect(html).toContain('id="department"');
     expect(html).toContain("Hifz (HIFZ)");
-    expect(html).not.toContain("common.add");
+    expect(html).not.toContain('aria-label="faculty.setup.addDepartment"');
     expect(html).not.toContain("faculty.setup.addDepartmentSubtitle");
+  });
+
+  it("shows Plus when canAdd and onOpenAdd are set", () => {
+    const html = renderToStaticMarkup(
+      <FacultyDepartmentSelectField
+        value=""
+        canAdd
+        onOpenAdd={vi.fn()}
+        departmentEntities={[
+          {
+            id: "dept-1",
+            workspaceSubdomain: "demo",
+            name: "Hifz",
+            code: "HIFZ",
+            parentId: null,
+            isActive: true,
+            createdAt: "2026-01-01T00:00:00Z",
+            updatedAt: "2026-01-01T00:00:00Z",
+          },
+        ]}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(html).toContain('aria-label="faculty.setup.addDepartment"');
   });
 
   it("omits inactive departments unless they are the current selection", () => {
@@ -133,10 +157,30 @@ describe("FacultyDynamicSelectFields", () => {
     expect(html).toContain("Principal");
     expect(html).toContain("Lecturer");
     expect(html).not.toContain("Archived Title");
-    expect(html).not.toContain("faculty.designations.addDesignation");
-    expect(html).not.toContain("common.add");
+    expect(html).not.toContain('aria-label="faculty.designations.addDesignation"');
     expect(html).not.toContain('title="common.edit"');
     expect(html).not.toContain('title="common.delete"');
+  });
+
+  it("shows designation Plus when canAdd is enabled", () => {
+    const html = renderToStaticMarkup(
+      <FacultyDesignationSelectField
+        canAdd
+        onOpenAdd={vi.fn()}
+        designationOptions={[
+          {
+            id: "des-1",
+            code: "PRIN",
+            name: "Principal",
+            hierarchyRank: 1,
+            isActive: true,
+            assignableRoles: ["admin"],
+          },
+        ]}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(html).toContain('aria-label="faculty.designations.addDesignation"');
   });
 
   it("keeps the currently selected inactive designation available in the list", () => {

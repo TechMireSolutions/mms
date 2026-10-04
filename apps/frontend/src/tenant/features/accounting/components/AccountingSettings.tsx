@@ -15,6 +15,7 @@ export interface AccountingSettingsProps {
   onSaveFiscalYears: (
     fiscalYears: FiscalYear[] | ((prev: FiscalYear[]) => FiscalYear[]),
   ) => void | Promise<void>;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
@@ -23,6 +24,7 @@ export const AccountingSettings = (function AccountingSettings({
   accounts,
   fiscalYears,
   onSaveFiscalYears,
+  onAccountsChange,
   onPrefsDirtyChange,
 }: AccountingSettingsProps) {
   const { t } = useTranslation();
@@ -89,6 +91,7 @@ export const AccountingSettings = (function AccountingSettings({
         canEditSetup={true}
         onEditFiscalYear={setFyModal}
         onRequestCloseFiscalYear={handleRequestCloseFiscalYear}
+        onAccountsChange={onAccountsChange}
         isPrefsDirty={isPrefsDirty && isPrefsReady}
         saving={saving}
         saved={saved}

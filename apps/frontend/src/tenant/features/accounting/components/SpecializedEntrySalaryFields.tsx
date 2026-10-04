@@ -3,20 +3,22 @@ import type { UseFormReturn } from "react-hook-form";
 import type { Account, SalaryEntryInput } from "@mms/shared";
 import { DatePicker } from "@/components/ui/DatePicker";
 import { FORM_INPUT } from "@/components/ui/formStyles";
-import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { FormControl, FormField, FormItem, FormLabel } from "@/components/ui/form";
 import { TranslatedFormMessage } from "@/lib/forms/TranslatedFormMessage";
 import { useTranslation } from "@/hooks/useTranslation";
 import { SpecializedEntryStaffPicker } from "@/tenant/features/accounting/components/SpecializedEntryStaffPicker";
+import { SpecializedEntrySalaryAccountFields } from "./SpecializedEntrySalaryAccountFields";
 
 export function SpecializedEntrySalaryFields({
   form,
   accounts,
+  onAccountsChange,
 }: {
   form: UseFormReturn<SalaryEntryInput>;
   accounts: Account[];
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
 }): React.JSX.Element {
   const { t } = useTranslation();
 
@@ -31,7 +33,7 @@ export function SpecializedEntrySalaryFields({
   );
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       <FormField
         control={form.control}
         name="staffId"
@@ -66,7 +68,7 @@ export function SpecializedEntrySalaryFields({
         )}
       />
 
-      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         <FormField
           control={form.control}
           name="amount"
@@ -115,60 +117,12 @@ export function SpecializedEntrySalaryFields({
         />
       </div>
 
-      <FormField
-        control={form.control}
-        name="expenseAccountId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel htmlFor="specialized-entry-expense-account">
-              {t("accounting.journal.specializedEntry.salary.expenseAccount")}
-            </FormLabel>
-            <FormControl>
-              <FormSelect
-                id="specialized-entry-expense-account"
-                name="expenseAccountId"
-                value={field.value}
-                onChange={field.onChange}
-                options={[
-                  { value: "", label: t("common.none") },
-                  ...expenseAccounts.map((account) => ({
-                    value: account.id,
-                    label: `${account.code} — ${account.name}`,
-                  })),
-                ]}
-              />
-            </FormControl>
-            <TranslatedFormMessage messageKey={form.formState.errors.expenseAccountId?.message} />
-          </FormItem>
-        )}
-      />
-
-      <FormField
-        control={form.control}
-        name="paymentAccountId"
-        render={({ field }) => (
-          <FormItem>
-            <FormLabel htmlFor="specialized-entry-payment-account">
-              {t("accounting.journal.specializedEntry.salary.paymentAccount")}
-            </FormLabel>
-            <FormControl>
-              <FormSelect
-                id="specialized-entry-payment-account"
-                name="paymentAccountId"
-                value={field.value}
-                onChange={field.onChange}
-                options={[
-                  { value: "", label: t("common.none") },
-                  ...paymentAccounts.map((account) => ({
-                    value: account.id,
-                    label: `${account.code} — ${account.name}`,
-                  })),
-                ]}
-              />
-            </FormControl>
-            <TranslatedFormMessage messageKey={form.formState.errors.paymentAccountId?.message} />
-          </FormItem>
-        )}
+      <SpecializedEntrySalaryAccountFields
+        form={form}
+        accounts={accounts}
+        expenseAccounts={expenseAccounts}
+        paymentAccounts={paymentAccounts}
+        onAccountsChange={onAccountsChange}
       />
 
       <FormField

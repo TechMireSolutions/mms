@@ -40,6 +40,7 @@ interface JournalEntriesSimpleModeProps {
   onOpenPrefill: (prefillType: QuickActionType | null) => void;
   onExportCsv: () => void;
   onSave: JournalEntrySave;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
   onCloseSimpleModal: () => void;
   pageScopeLabel: string;
 }
@@ -64,6 +65,7 @@ export function JournalEntriesSimpleMode({
   onOpenPrefill,
   onExportCsv,
   onSave,
+  onAccountsChange,
   onCloseSimpleModal,
   pageScopeLabel,
 }: JournalEntriesSimpleModeProps) {
@@ -117,12 +119,18 @@ export function JournalEntriesSimpleMode({
           prefillAmount={simpleModal?.initialAmount}
           prefillDescription={simpleModal?.initialDescription}
           onSave={onSave}
+          onAccountsChange={onAccountsChange}
           onClose={onCloseSimpleModal}
         />
       )}
 
       {canWrite && specializedType !== null && (
-        <SpecializedEntryModal type={specializedType} accounts={accounts} onClose={onCloseSimpleModal} />
+        <SpecializedEntryModal
+          type={specializedType}
+          accounts={accounts}
+          onClose={onCloseSimpleModal}
+          onAccountsChange={onAccountsChange}
+        />
       )}
     </section>
   );

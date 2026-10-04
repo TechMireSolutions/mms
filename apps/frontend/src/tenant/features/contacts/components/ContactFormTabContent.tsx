@@ -100,7 +100,7 @@ export function ContactFormTabContent({
   if (!body) return null;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {draft.duplicateCount > 0 && (
         <div role="status" aria-live="polite">
           <WarningCallout

@@ -4,9 +4,13 @@ import {
   type Contact,
   type Faculty,
   type FacultyDesignationAssignment,
+  type FacultyDesignationHolding,
 } from '@mms/shared';
 import { loadContactsByIdsForTenant } from '../../services/contactService.js';
-import { listCurrentFacultyDesignationAssignments } from '../../db/repositories/facultyDesignationRepository.js';
+import {
+  listCurrentFacultyDesignationAssignments,
+  listCurrentFacultyDesignationHoldings,
+} from '../../db/repositories/facultyDesignationRepository.js';
 
 /**
  * Single-pass hydrate: loads the linked contacts through the contacts composition
@@ -56,18 +60,25 @@ export async function hydrateFacultyFromContacts(
   }
 
   let currentDesignations = new Map<string, FacultyDesignationAssignment>();
+  let designationHoldings = new Map<string, FacultyDesignationHolding[]>();
   try {
-    currentDesignations = await listCurrentFacultyDesignationAssignments(
-      tenant,
-      rows.map((row) => String(row.id)),
-    );
+    const facultyIds = rows.map((row) => String(row.id));
+    [currentDesignations, designationHoldings] = await Promise.all([
+      listCurrentFacultyDesignationAssignments(tenant, facultyIds),
+      listCurrentFacultyDesignationHoldings(tenant, facultyIds),
+    ]);
   } catch {
     // Legacy databases may be read during the expand phase before migration.
   }
 
   return rows.map((row) => {
     const hydrated = hydrateFacultyFromContact(row, contactMap as never);
-    const currentDesignation = currentDesignations.get(String(row.id));
+    const facultyId = String(row.id);
+    const holdings = designationHoldings.get(facultyId);
+    if (holdings?.length) {
+      hydrated.designations = holdings;
+    }
+    const currentDesignation = currentDesignations.get(facultyId);
     if (currentDesignation) {
       hydrated.designation = currentDesignation.designationName;
       hydrated.designationId = currentDesignation.designationId;
@@ -75,6 +86,15 @@ export async function hydrateFacultyFromContacts(
       hydrated.designationEndsOn = currentDesignation.endsOn ?? null;
       hydrated.designationAssignableRoles = currentDesignation.assignableRoles ?? [];
       hydrated.hierarchyRank = currentDesignation.hierarchyRank ?? hydrated.hierarchyRank;
+    } else if (holdings?.length) {
+      const fallback = holdings.find((h) => h.status === 'active') ?? holdings[0];
+      if (fallback) {
+        hydrated.designation = fallback.designationName;
+        hydrated.designationId = fallback.designationId;
+        hydrated.designationStartsOn = fallback.startsOn;
+        hydrated.designationEndsOn = fallback.endsOn ?? null;
+        hydrated.designationAssignableRoles = fallback.assignableRoles ?? [];
+      }
     }
     if (hydrated.reportingFacultyId && supervisorNameMap.has(String(hydrated.reportingFacultyId))) {
       hydrated.reportingFacultyName = supervisorNameMap.get(String(hydrated.reportingFacultyId));

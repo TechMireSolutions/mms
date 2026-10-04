@@ -26,8 +26,6 @@ export interface ContactLabeledValueSubListTabProps extends ContactSubListTabBas
   resolveLabel: (raw: unknown, options: string[], t: TranslateFn) => string;
   emptyItem: (resolvedLabel: string) => ListItem;
   icon: LucideIcon;
-  accentClass: string;
-  iconClass: string;
   emptyMessage: string;
   addLabel: string;
   removeLabel: (index: number) => string;
@@ -66,8 +64,6 @@ export function ContactLabeledValueSubListTab({
   resolveLabel,
   emptyItem,
   icon: Icon,
-  accentClass,
-  iconClass,
   emptyMessage,
   addLabel,
   removeLabel,
@@ -149,8 +145,6 @@ export function ContactLabeledValueSubListTab({
             onUpdateOptions={onUpdateOptions}
             resolveLabel={resolveLabel}
             icon={Icon}
-            accentClass={accentClass}
-            iconClass={iconClass}
             removeLabel={removeLabel}
             valuePlaceholder={valuePlaceholder}
             valueInputType={valueInputType}

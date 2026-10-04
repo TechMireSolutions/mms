@@ -1,12 +1,11 @@
 import React, { useState } from 'react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { KeyRound } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
+import { FormModal } from '@/components/ui/FormModal';
 import { CredentialsResultCard } from '@/components/ui/CredentialsResultCard';
 import { useTranslation } from '@/hooks/useTranslation';
 import { WorkspaceSummary } from '@/platform/components/workspace/WorkspaceSummary';
 import { WorkspacePasswordField } from '@/platform/components/workspace/WorkspacePasswordField';
-import { WorkspaceAdminDialogFooter } from '@/platform/components/workspace/WorkspaceAdminDialogFooter';
 
 interface PlatformWorkspaceResetPasswordDialogProps {
   open: boolean;
@@ -53,28 +52,29 @@ export function PlatformWorkspaceResetPasswordDialog({
   };
 
   return (
-    <Modal
+    <FormModal
       open={open}
       onClose={handleClose}
-      dismissible={!resetPending}
       title={t('platform.resetPasswordTitle')}
       subtitle={t('platform.createAdminSubtitle', { name: workspace.madrasaName, subdomain: workspace.subdomain })}
       icon={KeyRound}
       size="md"
-      footer={
-        <WorkspaceAdminDialogFooter complete={Boolean(result)} pending={resetPending}
-          confirmLabel={t('platform.resetPasswordBtn')}
-          form="platform-reset-password-form"
-          onClose={handleClose} onConfirm={handleReset} />
-      }
+      error={result ? undefined : (error && error !== t('platform.validationPasswordLength') ? error : undefined)}
+      cancelLabel={result ? undefined : t('common.cancel')}
+      saveLabel={result ? t('common.close') : t('platform.resetPasswordBtn')}
+      onSave={result ? handleClose : handleReset}
+      saving={resetPending}
+      formId={result ? undefined : 'platform-reset-password-form'}
     >
       {result ? (
         <CredentialsResultCard
           title={t('platform.resetPasswordSuccess')}
           fields={[{ label: t('platform.adminEmailValue'), value: result.adminEmail }]}
           passwordLabel={t('platform.newPasswordValue')}
-          password={result.newPassword} copyText={result.newPassword}
-          copyLabel={t('common.copy')} hint={t('platform.sharePasswordHint')}
+          password={result.newPassword}
+          copyText={result.newPassword}
+          copyLabel={t('common.copy')}
+          hint={t('platform.sharePasswordHint')}
         />
       ) : (
         <form
@@ -84,7 +84,7 @@ export function PlatformWorkspaceResetPasswordDialog({
             e.preventDefault();
             void handleReset();
           }}
-          className="space-y-4 py-2"
+          className="space-y-3"
         >
           <WorkspaceSummary workspace={workspace} showAdminEmail />
 
@@ -101,6 +101,6 @@ export function PlatformWorkspaceResetPasswordDialog({
           />
         </form>
       )}
-    </Modal>
+    </FormModal>
   );
 }

@@ -4,7 +4,6 @@ import { CardPrimaryButton } from "@/components/ui/FormPrimitives";
 import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveEmailLabel } from "@/lib/contacts/contactI18n";
-import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 import { isSubListItemPrimary } from "./ContactSubListCards";
 
@@ -32,8 +31,6 @@ export function ContactEmailsTab({
       resolveLabel={(raw, options, translate) => resolveEmailLabel(raw as string | undefined, options, translate)}
       emptyItem={(resolvedLabel) => ({ label: resolvedLabel, address: "" })}
       icon={Mail}
-      accentClass={SUB_LIST_CARD_ACCENTS.emails.accent}
-      iconClass={SUB_LIST_CARD_ACCENTS.emails.icon}
       emptyMessage={t("contacts.form.noEmailAddressesYet")}
       addLabel={t("contacts.form.addEmailAddress")}
       removeLabel={(index) => t("contacts.form.removeEmailAddress", { index })}

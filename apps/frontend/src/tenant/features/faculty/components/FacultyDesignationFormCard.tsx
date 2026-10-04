@@ -2,8 +2,7 @@ import { Plus, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DatePicker } from '@/components/ui/DatePicker';
-import { Field } from '@/components/ui/FormPrimitives';
-import { FormSelect } from '@/components/ui/FormSelect';
+import { Field, FormSelectWithQuickCreate } from '@/components/ui/FormPrimitives';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
 
@@ -23,6 +22,8 @@ interface FacultyDesignationFormCardProps {
   activeDefinitionOptions: Array<{ value: string; label: string }>;
   minTransitionDate?: string;
   isBusy: boolean;
+  canAddCatalog?: boolean;
+  onOpenAddDesignation?: () => void;
   onPatchForm: (patch: Partial<DesignationAssignmentFormState>) => void;
   onSubmit: () => void;
   onCancel: () => void;
@@ -34,6 +35,8 @@ export function FacultyDesignationFormCard({
   activeDefinitionOptions,
   minTransitionDate,
   isBusy,
+  canAddCatalog = false,
+  onOpenAddDesignation,
   onPatchForm,
   onSubmit,
   onCancel,
@@ -57,11 +60,14 @@ export function FacultyDesignationFormCard({
       )}
       <div className="grid gap-3 sm:grid-cols-2">
         <Field id="des-form-id" label={t('faculty.designations.name')} required>
-          <FormSelect
+          <FormSelectWithQuickCreate
             id="des-form-id"
             value={form.designationId}
             onChange={(v) => onPatchForm({ designationId: v })}
             options={activeDefinitionOptions}
+            canAdd={canAddCatalog}
+            onOpenAdd={onOpenAddDesignation}
+            addAriaLabel={t('faculty.designations.addDesignation')}
           />
         </Field>
         <Field
@@ -81,7 +87,7 @@ export function FacultyDesignationFormCard({
             onChange={(dateStr) => onPatchForm({ startsOn: dateStr })}
           />
         </Field>
-        {mode !== 'transition' && (
+        {mode !== 'transition' ? (
           <Field id="des-form-end" label={t('faculty.designations.endsOn')}>
             <DatePicker
               id="des-form-end"
@@ -91,7 +97,7 @@ export function FacultyDesignationFormCard({
               onChange={(dateStr) => onPatchForm({ endsOn: dateStr })}
             />
           </Field>
-        )}
+        ) : null}
         <Field id="des-form-notes" label={t('faculty.designations.notes')}>
           <Input
             id="des-form-notes"

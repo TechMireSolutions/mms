@@ -43,8 +43,8 @@ Project rules for the Madrasa Management System. Cursor loads `.mdc` files from 
 | Rule | Focus / Topic |
 |------|---------------|
 | `mms-ui-ux-design.mdc` | UI primitives, design tokens, tabs, notifications, a11y (RTL / WCAG), and **§4 responsiveness** (FormModal chrome → `mms-form-architecture.mdc`) |
-| `mms-module-architecture.mdc` | Universal module manifest schemas, three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
-| `mms-form-architecture.mdc` | Static FormModal forms, write Zod `.strict()`, React 19 defaults, decimal-as-string, local multipart uploads |
+| `mms-module-architecture.mdc` | Universal module manifest schemas, **§0 surface triad** (directory / DetailSheet / FormModal), three-tier tab layout, Work/Reports/Setup scopes, soft-delete, **gold-standard parity (§7)**, background jobs |
+| `mms-form-architecture.mdc` | Static FormModal forms, **control decision table**, collection chrome (`FormCollectionShell` / `FormListFieldCard` / `FormCardTypeSelect`), write Zod `.strict()`, React 19 defaults, decimal-as-string, local multipart uploads |
 | `mms-hooks.mdc` | Custom React hooks (Query recipes, page controllers / action handlers, Work layout) |
 | `mms-fields.mdc` | Field and tab registry, system vs custom fields, tab enablement SSOT |
 | `mms-settings-i18n.mdc` | Settings hierarchy, preview, navigation, translations, `formatDate` / `formatMoney` |
@@ -77,10 +77,12 @@ in the enforcement registry below are how the norm is actually held.
 | Soft-delete lifecycle and index tiers | `mms-data-layer.mdc` §6 · `mms-module-architecture.mdc` | `mms-soft-delete` |
 | Audit trail, tamper evidence, retention | `mms-data-layer.mdc` §5 | `mms-audit-trail` |
 | Module pages, tiers, background jobs | `mms-module-architecture.mdc` | `mms-module-page` · `mms-background-jobs` · `mms-queue-ops` · `ui-ux-pro-max` |
+| Page surface triad (directory / detail / write) | `mms-module-architecture.mdc` §0 | `mms-module-page` · `mms-module-work` · `mms-form-architecture` |
 | Work directory, drawer, trash UX | `mms-module-architecture.mdc` | `mms-module-work` · `ui-ux-pro-max` |
 | Setup tier, preferences, sub-tabs | `mms-module-architecture.mdc` | `mms-module-setup` |
 | Field/tab registry and guards | `mms-fields.mdc` | `mms-fields-registry` |
 | Forms, FormModal, write schemas, uploads | `mms-form-architecture.mdc` | `mms-form-architecture` · `ui-ux-pro-max` |
+| Form collection rows / catalog quick-create chrome | `mms-form-architecture.mdc` §1, §3 | `mms-form-architecture` |
 | Hooks, page controllers, facades | `mms-hooks.mdc` | `mms-query-factories` · `mms-frontend` |
 | UI primitives, tokens, a11y, responsiveness | `mms-ui-ux-design.mdc` | `mms-ui-ux-design` · `ui-ux-pro-max` · `mms-a11y-smoke` |
 | Settings, navigation, i18n keys | `mms-settings-i18n.mdc` | `mms-settings-i18n` · `mms-i18n-completeness` |

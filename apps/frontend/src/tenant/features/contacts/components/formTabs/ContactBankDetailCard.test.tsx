@@ -16,6 +16,21 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("@/components/ui/FormPrimitives", () => ({
+  TYPE_SELECT_WIDTH: "w-32",
+  FormCardTypeSelect: ({
+    label,
+    children,
+  }: {
+    label: React.ReactNode;
+    children: React.ReactNode;
+  }) => (
+    <div>
+      <span>{label}</span>
+      {children}
+    </div>
+  ),
+  FieldErrorMessage: ({ message }: { message?: string }) =>
+    message ? <span data-testid="field-error">{message}</span> : null,
   Field: ({
     label,
     error,
@@ -74,25 +89,22 @@ vi.mock("@/components/ui/LeadingIconInput", () => ({
 vi.mock("./ContactSubListCards", () => ({
   ListFieldCard: ({
     label,
+    typeSelect,
     removeLabel,
     children,
   }: {
     label?: string;
+    typeSelect?: React.ReactNode;
     removeLabel?: string;
     children: React.ReactNode;
   }) => (
     <div data-testid="list-field-card">
       {label && <div data-testid="card-label">{label}</div>}
+      {typeSelect ? <div data-testid="card-type-select">{typeSelect}</div> : null}
       <div data-testid="card-body">{children}</div>
       {removeLabel && <div data-testid="card-remove-label">{removeLabel}</div>}
     </div>
   ),
-}));
-
-vi.mock("@/lib/semanticTone", () => ({
-  SUB_LIST_CARD_ACCENTS: {
-    bankDetails: { accent: "accent-bank", icon: "icon-bank" },
-  },
 }));
 
 const baseDetail: ContactBankDetail = {
@@ -129,12 +141,28 @@ describe("ContactBankDetailCard", () => {
     expect(html).toContain("contacts.fields.bankAccountNumber");
   });
 
-  it("renders sequence counter in header", () => {
+  it("uses bank name in header typeSelect when enabled", () => {
     const html = renderToStaticMarkup(
       <ContactBankDetailCard {...baseProps} idx={1} bankDetail={baseDetail} />,
     );
 
+    expect(html).toContain("contacts.fields.bankName");
+    expect(html).toContain('data-testid="card-type-select"');
+    expect(html).not.toContain("contacts.form.bankAccountSequence");
+  });
+
+  it("falls back to sequence label when bank name field is disabled", () => {
+    const html = renderToStaticMarkup(
+      <ContactBankDetailCard
+        {...baseProps}
+        idx={1}
+        showBankName={false}
+        bankDetail={baseDetail}
+      />,
+    );
+
     expect(html).toContain("contacts.form.bankAccountSequence:2");
+    expect(html).not.toContain('data-testid="card-type-select"');
   });
 
   it("does not render primary badge or set-primary controls", () => {

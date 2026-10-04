@@ -5,7 +5,12 @@ const assignment = { facultyId: 'f', departmentId: 'd', designationId: 'g', star
 
 describe('Faculty assignment write contract', () => {
   it('accepts leap days and defaults secondary appointments', () => {
-    expect(facultyAssignmentWriteSchema.parse(assignment).isPrimary).toBe(false);
+    const parsed = facultyAssignmentWriteSchema.parse(assignment);
+    expect(parsed.isPrimary).toBe(false);
+    expect(parsed.status).toBe('active');
+  });
+  it('accepts inactive assignment status', () => {
+    expect(facultyAssignmentWriteSchema.parse({ ...assignment, status: 'inactive' }).status).toBe('inactive');
   });
   it.each(['2023-02-29', '2024-02-30', '2024-13-01'])('rejects impossible date %s', (startDate) => {
     expect(facultyAssignmentWriteSchema.safeParse({ ...assignment, startDate }).success).toBe(false);

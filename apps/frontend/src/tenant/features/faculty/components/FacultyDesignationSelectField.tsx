@@ -1,17 +1,19 @@
 import React, { useMemo } from "react";
 import { Info } from "lucide-react";
 import type { FacultyDesignationDefinition } from "@mms/shared";
-import { Field } from "@/components/ui/FormPrimitives";
-import { FormSelect } from "@/components/ui/FormSelect";
+import { Field, FormSelectWithQuickCreate } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface FacultyDesignationSelectFieldProps {
+  id?: string;
   designationId?: string;
   designationName?: string;
   error?: string;
   required?: boolean;
   disabled?: boolean;
   designationOptions?: FacultyDesignationDefinition[];
+  canAdd?: boolean;
+  onOpenAdd?: () => void;
   onChange: (patch: {
     designationId: string;
     designation: string;
@@ -20,12 +22,15 @@ export interface FacultyDesignationSelectFieldProps {
 }
 
 export function FacultyDesignationSelectField({
+  id = "designationId",
   designationId,
   designationName,
   error,
   required,
   disabled,
   designationOptions = [],
+  canAdd = false,
+  onOpenAdd,
   onChange,
 }: FacultyDesignationSelectFieldProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -38,16 +43,19 @@ export function FacultyDesignationSelectField({
   return (
     <Field
       label={t("faculty.field.designation")}
-      id="designationId"
+      id={id}
       required={required}
       error={error}
     >
-      <FormSelect
-        id="designationId"
-        name="designationId"
+      <FormSelectWithQuickCreate
+        id={id}
+        name={id}
         value={designationId || ""}
         placeholder={t("faculty.designations.selectPlaceholder")}
         disabled={disabled}
+        canAdd={canAdd}
+        onOpenAdd={onOpenAdd}
+        addAriaLabel={t("faculty.designations.addDesignation")}
         onChange={(value) => {
           const def = designationOptions.find((item) => item.id === value);
           onChange({
@@ -64,9 +72,7 @@ export function FacultyDesignationSelectField({
           {t("faculty.designations.empty")}
         </p>
       ) : null}
-      {disabled ? (
-        <p className="mt-1 text-xs text-muted-foreground">{t("faculty.designations.manageInHistory")}</p>
-      ) : !designationId && designationName ? (
+      {!designationId && designationName ? (
         <p className="mt-1 text-xs text-muted-foreground">
           {t("faculty.designations.current")}: {designationName}
         </p>

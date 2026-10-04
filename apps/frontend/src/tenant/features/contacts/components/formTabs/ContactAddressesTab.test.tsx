@@ -20,6 +20,19 @@ vi.mock("./ContactSubListCards", () => ({
 }));
 
 vi.mock("@/components/ui/FormPrimitives", () => ({
+  TYPE_SELECT_WIDTH: "w-32",
+  FormCardTypeSelect: ({
+    label,
+    children,
+  }: {
+    label: React.ReactNode;
+    children: React.ReactNode;
+  }) => (
+    <div>
+      <span>{label}</span>
+      {children}
+    </div>
+  ),
   Field: ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div data-testid="field">
       <label>{label}</label>
@@ -29,6 +42,7 @@ vi.mock("@/components/ui/FormPrimitives", () => ({
   EditableSelect: ({ value }: { value?: string }) => (
     <div data-testid="editable-select">{value}</div>
   ),
+  CardPrimaryButton: () => null,
 }));
 
 describe("ContactAddressesTab Component", () => {

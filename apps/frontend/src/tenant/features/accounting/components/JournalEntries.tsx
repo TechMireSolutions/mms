@@ -57,6 +57,7 @@ export function JournalEntries(props: JournalEntriesWithQueryProps) {
         onOpenPrefill={(prefillType) => controller.setSimpleModal({ prefillType })}
         onExportCsv={controller.exportCSV}
         onSave={controller.handleSave}
+        onAccountsChange={props.onAccountsChange}
         onCloseSimpleModal={() => controller.setSimpleModal(null)}
         pageScopeLabel={controller.pageScopeLabel}
       />
@@ -115,6 +116,7 @@ export function JournalEntries(props: JournalEntriesWithQueryProps) {
       onToggleSelectAll={controller.toggleSelectAll}
       onClearSelection={controller.clearSelection}
       onSave={controller.handleSave}
+      onAccountsChange={props.onAccountsChange}
       onCloseModal={() => {
         controller.setModal(null);
         controller.setSelected(null);

@@ -30,13 +30,16 @@ vi.mock("./ContactSubListCards", () => ({
   ),
   ListFieldCard: ({
     label,
+    typeSelect,
     children,
   }: {
     label?: string;
+    typeSelect?: React.ReactNode;
     children: React.ReactNode;
   }) => (
     <div data-testid="list-field-card">
       {label && <div data-testid="card-label">{label}</div>}
+      {typeSelect ? <div data-testid="card-type-select">{typeSelect}</div> : null}
       <div data-testid="card-body">{children}</div>
     </div>
   ),
@@ -44,6 +47,21 @@ vi.mock("./ContactSubListCards", () => ({
 }));
 
 vi.mock("@/components/ui/FormPrimitives", () => ({
+  TYPE_SELECT_WIDTH: "w-32",
+  FormCardTypeSelect: ({
+    label,
+    children,
+  }: {
+    label: React.ReactNode;
+    children: React.ReactNode;
+  }) => (
+    <div>
+      <span>{label}</span>
+      {children}
+    </div>
+  ),
+  FieldErrorMessage: ({ message }: { message?: string }) =>
+    message ? <span data-testid="field-error">{message}</span> : null,
   Field: ({
     label,
     error,
@@ -184,8 +202,9 @@ describe("ContactBankDetailsTab Component", () => {
 
     expect(html).toContain("Meezan Bank");
     expect(html).toContain("HBL");
-    expect(html).toContain("contacts.form.bankAccountSequence:1");
-    expect(html).toContain("contacts.form.bankAccountSequence:2");
+    expect(html).toContain("contacts.fields.bankName");
+    expect(html).toContain('data-testid="card-type-select"');
+    expect(html).not.toContain("contacts.form.bankAccountSequence");
     expect(html).not.toContain("contacts.form.primary");
     expect(html).not.toContain("contacts.form.setPrimary");
   });

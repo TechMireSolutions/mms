@@ -99,6 +99,7 @@ export default function HasanatCards() {
                 onToggleDeleted={() => c.setShowDeleted((prev) => !prev)}
                 onRetry={c.refetchDistributions}
                 onUpdateBatches={(next) => c.runHasanatSave(() => c.replaceBatches.mutateAsync(next))}
+                onUpdateDenoms={(next) => c.runHasanatSave(() => c.replaceDenoms.mutateAsync(next))}
                 onCreateDistribution={(distribution) => c.runHasanatSave(
                   () => c.createDistribution.mutateAsync(distribution),
                 )}

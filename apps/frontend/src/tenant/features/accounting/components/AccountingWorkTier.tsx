@@ -138,6 +138,7 @@ export function AccountingWorkTier({
           settings={settings}
           fiscalYears={fiscalYears}
           onChange={onEntriesChange}
+          onAccountsChange={onAccountsChange}
           onFilteredCountChange={onFilteredCountChange}
           onShortcutStateChange={onShortcutStateChange}
           canWrite={canWrite}

@@ -8,12 +8,19 @@ import {
   resolveSubListAllowAdd,
 } from "./ContactSubListCards";
 
-vi.mock("@/components/ui/FormPrimitives", () => ({
-  CardRemoveButton: ({ label }: { label: string }) => <button data-testid="remove-btn">{label}</button>,
-}));
-
 vi.mock("@/components/ui/EmptyState", () => ({
-  EmptyState: ({ title }: { title: string }) => <div data-testid="empty-state">{title}</div>,
+  EmptyState: ({
+    title,
+    action,
+  }: {
+    title: string;
+    action?: React.ReactNode;
+  }) => (
+    <div>
+      <p>{title}</p>
+      {action}
+    </div>
+  ),
 }));
 
 describe("ContactSubListCards Components", () => {
@@ -23,13 +30,13 @@ describe("ContactSubListCards Components", () => {
     expect(resolveSubListAllowAdd([false, false], 1)).toBe(true);
   });
 
-  it("renders ListFieldCard with header", () => {
+  it("renders ListFieldCard with typeSelect chrome", () => {
     const html = renderToStaticMarkup(
       <ListFieldCard
         id="card-1"
         index={0}
-        label="Type:"
-        typeSelect={<span>Select</span>}
+        label={undefined}
+        typeSelect={<span>Type control</span>}
         onRemove={vi.fn()}
         removeLabel="Remove item"
       >
@@ -37,18 +44,18 @@ describe("ContactSubListCards Components", () => {
       </ListFieldCard>,
     );
 
-    expect(html).toContain("Type:");
-    expect(html).toContain("Select");
+    expect(html).toContain("Type control");
     expect(html).toContain("Content");
+    expect(html).toContain("Remove item");
   });
 
-  it("renders ContactSubListShell when empty", () => {
+  it("renders ContactSubListShell when empty with shared add-another control", () => {
     const html = renderToStaticMarkup(
       <ContactSubListShell
         isEmpty={true}
         emptyIcon={Plus}
         emptyMessage="No items yet"
-        addLabel="Add Item"
+        addLabel="Phone Number"
         onAdd={vi.fn()}
         onEnsureRow={vi.fn()}
       >
@@ -57,6 +64,7 @@ describe("ContactSubListCards Components", () => {
     );
 
     expect(html).toContain("No items yet");
-    expect(html).toContain("Add Item");
+    expect(html).toContain("Phone Number");
+    expect(html).toContain('type="button"');
   });
 });

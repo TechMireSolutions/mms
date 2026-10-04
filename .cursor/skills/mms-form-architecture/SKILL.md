@@ -23,6 +23,22 @@ Advisory: use [ledger controls](../mms-finance-accounting/references/ledger-cont
 
 Keep decimal input lossless until validated against the actual shared contract; do not parse formatted currency text with parseFloat. Preserve an idempotency identity across retry, await server confirmation, and surface period/account/conflict errors without discarding the draft. Client totals are a preview; the server validates the posted journal. Posted records expose correction actions rather than in-place financial edits.
 
+## Control decision table (SSOT)
+
+Pick exactly one control family — see rule `mms-form-architecture` §1:
+
+| Need | Control |
+|------|---------|
+| enum / filter | `FormSelect` |
+| string tenant lookup | `EditableSelect` |
+| entity catalog FK + create modal | `FormSelectWithQuickCreate` |
+| person search | `ContactPicker` / `RegistryPersonSelect` |
+| chips | `CategorySelector` / `FormTagsInput` |
+| row-header discriminative control | `FormCardTypeSelect` in `FormListFieldCard.typeSelect` |
+| repeatable draft rows | `FormCollectionShell` + `FormListFieldCard` + `FormAddAnotherButton` |
+
+Form list cards use default primary stripe/icon — ban per-collection `accentClass` / `iconClass` on form rows.
+
 ## Anti-Patterns & Banned Operations
 
 - ❌ **No RSC Server Actions**: MMS writes use client-side `apiClient` / `apiContract` with cookie authentication. Client `useActionState` is allowed under the owning rule when it preserves Query invalidation and the shared form contract.
@@ -32,6 +48,10 @@ Keep decimal input lossless until validated against the actual shared contract; 
 - ❌ **NEVER accept client soft-delete fields**: Strip `deletedAt`, `deletedBy`, `deletionReason` on create/update schemas.
 - ❌ **NEVER assign soft-deleted foreign keys**: Enforce active foreign key guarding (`deleted_at IS NULL`).
 - ❌ **NEVER buffer uploads into memory**: Stream files directly using Fastify `@fastify/multipart`.
+- ❌ **NEVER invent per-feature “add another” row chrome**: Use `FormCollectionShell` + `FormListFieldCard` (+ `CardRemoveButton`) + `FormAddAnotherButton` from `FormPrimitives` for every repeatable form collection — contacts, faculty designations, QB matching/ordering/citations, Wakala distribution, journal lines, paper sections, class fee/schedule/budget rows, and future lists. Ban one-off `Button`+`Plus`, custom dashed borders, or `SectionCard` wrapping list cards. `ContactSubListShell` is a thin adapter over `FormCollectionShell`.
+- ❌ **NEVER stack duplicate collection titles**: Named FormModal tab → omit shell title. All-sections layout → one plain `FormCollectionShell` title. Row card headers must not repeat the collection noun; wrap the discriminative control in `FormCardTypeSelect` inside `typeSelect` (or a sequence label only when there is no type control).
+- ❌ **NEVER invent per-feature FormSelect + Plus chrome for entity catalogs**: Use `FormSelectWithQuickCreate` + the module’s catalog FormModal/mutation, then auto-select the created entity. Required on write-form entity-catalog FKs that already have a create modal (faculty/org/Wakala/obligation/QB books/accounting accounts). Keep `EditableSelect` for string lookups, `ContactPicker`/`RegistryPersonSelect` for person search, `CategorySelector` for chips, plain `FormSelect` for enums/filters, and do not Plus-wrap cross-module heavy creates.
+- ❌ **NEVER pass per-collection accent/icon classes on form list cards**: Use `FormListFieldCard` primary defaults.
 
 ## Form contract and draft lifecycle
 
@@ -58,6 +78,9 @@ python3 .agent/skills/ui-ux-pro-max/scripts/search.py "<form-topic>" --domain ux
 
 ```
 - [ ] FormModal with React 19 ref-as-prop and useId() accessibility pairs
+- [ ] Control decision table followed (no parallel chrome)
+- [ ] Repeatable rows use FormCollectionShell + FormListFieldCard + FormAddAnotherButton
+- [ ] Discriminative row headers use FormCardTypeSelect; form cards use primary stripe defaults
 - [ ] Virtual keyboard hints provided (inputMode, enterKeyHint, autoComplete)
 - [ ] Paste strictly enabled on all fields including OTP/passwords (WCAG 2.2 3.3.8)
 - [ ] Non-punitive validation UX (validate on blur or submit attempt; text-wrap: pretty)

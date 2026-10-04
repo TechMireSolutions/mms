@@ -22,6 +22,7 @@ interface DistributeModalFieldsProps {
   setData: Dispatch<SetStateAction<Partial<Distribution>>>;
   updateField: (field: string, value: unknown) => void;
   errors?: Record<string, string>;
+  onDenomsChange?: (denoms: Denomination[]) => Promise<void> | void;
 }
 
 export function DistributeModalFields({
@@ -32,6 +33,7 @@ export function DistributeModalFields({
   setData,
   updateField,
   errors,
+  onDenomsChange,
 }: DistributeModalFieldsProps) {
   const { t } = useTranslation();
   const { fields, orderedFields, isFieldEnabled } = useHasanatConfig();
@@ -51,6 +53,7 @@ export function DistributeModalFields({
               totalAvailable={totalAvailable}
               updateField={updateField}
               errors={errors}
+              onDenomsChange={onDenomsChange}
             />
           );
         }

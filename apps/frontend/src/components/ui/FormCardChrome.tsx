@@ -1,11 +1,30 @@
+import type { ReactNode } from "react";
 import { Trash2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { REMOVE_BTN } from "@/components/ui/formPrimitiveStyles";
 import { cn } from "@/lib/utils";
 
-export function CardTypeLabel({ children }: { children: React.ReactNode }): React.JSX.Element {
+export function CardTypeLabel({ children }: { children: ReactNode }): React.JSX.Element {
   return (
     <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wide">{children}</span>
+  );
+}
+
+export interface FormCardTypeSelectProps {
+  label: ReactNode;
+  children: ReactNode;
+}
+
+/** SSOT header chrome: CardTypeLabel + discriminative control for FormListFieldCard.typeSelect. */
+export function FormCardTypeSelect({
+  label,
+  children,
+}: FormCardTypeSelectProps): React.JSX.Element {
+  return (
+    <div className="flex min-w-0 flex-wrap items-center gap-2">
+      <CardTypeLabel>{label}</CardTypeLabel>
+      {children}
+    </div>
   );
 }
 

@@ -1,7 +1,12 @@
 import type React from "react";
 import { Briefcase, Building2, MapPin } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
-import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
+import {
+  EditableSelect,
+  Field,
+  FormCardTypeSelect,
+  TYPE_SELECT_WIDTH,
+} from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
@@ -9,7 +14,6 @@ import { ContactExperienceDatesSection } from "./ContactExperienceDatesSection";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactExperience } from "@mms/shared";
-import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 
 export interface ContactExperienceEntryCardProps
@@ -65,20 +69,22 @@ export function ContactExperienceEntryCard({
     <ListFieldCard
       id={getLocalId("experience", idx)}
       index={idx}
-      accentClass={SUB_LIST_CARD_ACCENTS.experience.accent}
-      label={showEmploymentType ? `${t("contacts.fields.experienceEmploymentType")}:` : undefined}
+      icon={Briefcase}
+      label={undefined}
       typeSelect={
         showEmploymentType ? (
-          <EditableSelect
-            options={employmentTypeOptions}
-            value={exp.employmentType || ""}
-            onChange={(val) => onUpdate({ employmentType: val })}
-            onUpdateOptions={onUpdateEmploymentTypeOptions}
-            className="w-40 @sm:w-52 min-w-0"
-            id={`cf-${formInstanceId}-experience-type-${idx}`}
-            name={`cf-${formInstanceId}-experience-type-${idx}`}
-            placeholder={t("contacts.form.employmentTypePlaceholder")}
-          />
+          <FormCardTypeSelect label={t("contacts.fields.experienceEmploymentType")}>
+            <EditableSelect
+              options={employmentTypeOptions}
+              value={exp.employmentType || ""}
+              onChange={(val) => onUpdate({ employmentType: val })}
+              onUpdateOptions={onUpdateEmploymentTypeOptions}
+              className={TYPE_SELECT_WIDTH}
+              id={`cf-${formInstanceId}-experience-type-${idx}`}
+              name={`cf-${formInstanceId}-experience-type-${idx}`}
+              placeholder={t("contacts.form.employmentTypePlaceholder")}
+            />
+          </FormCardTypeSelect>
         ) : undefined
       }
       onRemove={onRemove}

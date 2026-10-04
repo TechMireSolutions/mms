@@ -35,6 +35,10 @@ export interface ObligationCollectionFormFieldsProps {
   eligibleReps: MujtahidRep[];
   getMujtahid: (repId: string) => Mujtahid | null | undefined;
   selectedMujtahid: Mujtahid | null | undefined;
+  canAddType?: boolean;
+  canAddRep?: boolean;
+  onOpenAddType?: () => void;
+  onOpenAddRep?: () => void;
   currencies?: Array<{ id: string; code: string; name: string; symbol: string }>;
 }
 
@@ -46,6 +50,10 @@ export function ObligationCollectionFormFields({
   eligibleReps,
   getMujtahid,
   selectedMujtahid,
+  canAddType = false,
+  canAddRep = false,
+  onOpenAddType,
+  onOpenAddRep,
   currencies = DEFAULT_CURRENCIES,
 }: ObligationCollectionFormFieldsProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -67,7 +75,7 @@ export function ObligationCollectionFormFields({
   );
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-3">
       <Card accentColor="primary" className={cn("p-4 flex items-center gap-3.5 bg-primary/5 border-primary/25", CARD_STRIPE_INSET)}>
         <Receipt className="w-5 h-5 text-primary" aria-hidden="true" />
         <div>
@@ -184,6 +192,10 @@ export function ObligationCollectionFormFields({
         eligibleReps={eligibleReps}
         getMujtahid={getMujtahid}
         selectedMujtahid={selectedMujtahid}
+        canAddType={canAddType}
+        canAddRep={canAddRep}
+        onOpenAddType={onOpenAddType}
+        onOpenAddRep={onOpenAddRep}
         formField={formField}
       />
     </div>

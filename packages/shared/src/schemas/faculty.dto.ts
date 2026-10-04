@@ -10,6 +10,7 @@ import {
 } from '../facultyFormCustomFields.js';
 import type { FacultySettings } from '../facultyModuleSettings.js';
 import { FACULTY_STATUS_WRITE_MAX, facultyCoreSchema } from '../facultyModuleManifest.js';
+import { facultyDesignationHoldingsSchema } from '../facultyDesignationTypes.js';
 import { stripFacultyWriteNoise } from '../facultyUtils.js';
 import { deepSanitizeStrings } from './sanitize.js';
 
@@ -23,6 +24,7 @@ export const FACULTY_WRITE_SYSTEM_KEYS: readonly string[] = (() => {
   const extra = [
     'customDesignation', 'reportingFacultyId', 'hierarchyRank', 'reportingFacultyName',
     'subordinateCount', 'designationId', 'designationStartsOn', 'designationEndsOn',
+    'designations', 'departmentId',
     'reportingRole', 'reportingRoleId', 'reportingDesignationId',
   ];
   const keys = new Set<string>([...FACULTY_WRITE_AUDIT_META_KEYS, ...listFacultySystemFormFieldKeys(), ...extra]);
@@ -69,6 +71,8 @@ export function buildDynamicFacultySchema(
     designationId: z.string().nullish(),
     designationStartsOn: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')]).nullish().transform((v) => (v === '' ? undefined : v)),
     designationEndsOn: z.union([z.string().regex(/^\d{4}-\d{2}-\d{2}$/), z.literal('')]).nullable().nullish().transform((v) => (v === '' ? null : v)),
+    designations: facultyDesignationHoldingsSchema.optional(),
+    departmentId: z.string().nullish(),
     customDesignation: z.string().trim().optional(),
     reportingFacultyId: z.string().nullable().nullish(),
     reportingRole: z.string().nullable().nullish(),
@@ -144,14 +148,47 @@ export function buildDynamicFacultySchema(
 
   const objectSchema = z.object(schemaObject).strict().superRefine((data, ctx) => {
     const record = data as Record<string, unknown>;
+    const holdings = Array.isArray(record.designations) ? record.designations : null;
+    const filledHoldings = (holdings ?? []).filter((row): row is Record<string, unknown> => {
+      if (!row || typeof row !== 'object') return false;
+      const id = (row as { designationId?: unknown }).designationId;
+      return typeof id === 'string' && id.trim().length > 0;
+    });
+    const hasHolding = filledHoldings.length > 0;
     const designationId = record.designationId;
-    const hasDesignation =
+    const hasLegacyDesignation =
       (typeof designationId === 'string' && designationId.trim().length > 0)
       || (typeof designationId === 'number');
-    const startsOn = record.designationStartsOn;
-    const startsBlank = startsOn == null
-      || (typeof startsOn === 'string' && startsOn.trim() === '');
-    if (hasDesignation && startsBlank) {
+    const hasDesignation = hasHolding || hasLegacyDesignation;
+    const topStartsOn = record.designationStartsOn;
+    const topStartsOk = typeof topStartsOn === 'string' && topStartsOn.trim().length > 0;
+    if (!hasDesignation) return;
+    if (hasHolding) {
+      filledHoldings.forEach((row, index) => {
+        const starts = row.startsOn;
+        const rowStartsOk = typeof starts === 'string' && starts.trim().length > 0;
+        if (!rowStartsOk && !topStartsOk) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['designations', index, 'startsOn'],
+            message: requiredMsg,
+          });
+        }
+        const departmentId = row.departmentId;
+        const rowDeptOk = typeof departmentId === 'string' && departmentId.trim().length > 0;
+        const topDept = record.departmentId;
+        const topDeptOk = typeof topDept === 'string' && topDept.trim().length > 0;
+        if (!rowDeptOk && !topDeptOk) {
+          ctx.addIssue({
+            code: 'custom',
+            path: ['designations', index, 'departmentId'],
+            message: requiredMsg,
+          });
+        }
+      });
+      return;
+    }
+    if (!topStartsOk) {
       ctx.addIssue({
         code: 'custom',
         path: ['designationStartsOn'],

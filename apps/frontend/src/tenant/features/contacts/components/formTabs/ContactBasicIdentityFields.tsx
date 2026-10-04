@@ -1,7 +1,6 @@
 import React, { useMemo } from "react";
 import { User } from "lucide-react";
-import { Field } from "@/components/ui/FormPrimitives";
-import { FormSelect } from "@/components/ui/FormSelect";
+import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactGenderLabel } from "@/lib/contacts/contactI18n";
@@ -31,7 +30,7 @@ export function ContactBasicIdentityFields({
   getFieldError,
   updateDraft,
   genders,
-  onUpdateGenders: _onUpdateGenders,
+  onUpdateGenders,
   tags,
   onUpdateTags,
   lockGender,
@@ -40,11 +39,8 @@ export function ContactBasicIdentityFields({
 
   const genderOptions = useMemo(() => {
     const list = genders && genders.length > 0 ? genders : ["male", "female"];
-    return list.map((g) => ({
-      value: g.toLowerCase(),
-      label: formatContactGenderLabel(g, t),
-    }));
-  }, [genders, t]);
+    return list.map((g) => g.trim()).filter(Boolean);
+  }, [genders]);
 
   return (
     <div className="grid grid-cols-1 gap-4 @md:grid-cols-2">
@@ -109,11 +105,13 @@ export function ContactBasicIdentityFields({
               )}
             </div>
           ) : (
-            <FormSelect
+            <EditableSelect
               id={`cf-${formInstanceId}-gender`}
+              name={`cf-${formInstanceId}-gender`}
               options={genderOptions}
-              value={contactDraft.gender?.toLowerCase() || ""}
-              onChange={(val) => updateDraft({ gender: val ? val.toLowerCase() : undefined })}
+              value={contactDraft.gender || ""}
+              onChange={(val) => updateDraft({ gender: val.trim() ? val : undefined })}
+              onUpdateOptions={onUpdateGenders}
               placeholder={t("contacts.form.selectOption")}
               className="w-full"
             />

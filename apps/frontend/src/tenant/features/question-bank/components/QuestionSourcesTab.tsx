@@ -48,12 +48,14 @@ export function QuestionSourcesTab({
   const [showBookForm, setShowBookForm] = useState(false);
   const [editingBookId, setEditingBookId] = useState<string | null>(null);
   const [draftBook, setDraftBook] = useState<QuestionSourceBook | null>(null);
+  const [pendingCitationIndex, setPendingCitationIndex] = useState<number | null>(null);
 
   const fieldById = (() => new Map(orderedSourceFields.map((field) => [field.id, field])))();
 
   const citationEntries = citations.length > 0 ? citations : [{ bookId: '', citation: {} }];
 
-  const startNewBook = (): void => {
+  const startNewBook = (citationIndex?: number): void => {
+    setPendingCitationIndex(typeof citationIndex === 'number' ? citationIndex : null);
     setEditingBookId(null);
     setDraftBook(createQuestionSourceBook('', sourceBooks));
     setShowBookForm(true);
@@ -98,10 +100,14 @@ export function QuestionSourcesTab({
     if (onPersistBook) {
       await onPersistBook(payload);
     }
+    if (pendingCitationIndex !== null && !editingBookId) {
+      updCitation(pendingCitationIndex, { bookId: payload.id, citation: {} });
+    }
     onBooksUpdated?.();
     setShowBookForm(false);
     setDraftBook(null);
     setEditingBookId(null);
+    setPendingCitationIndex(null);
   };
 
   const deleteBook = async (bookId: string): Promise<void> => {
@@ -162,6 +168,7 @@ export function QuestionSourcesTab({
           setShowBookForm(false);
           setDraftBook(null);
           setEditingBookId(null);
+          setPendingCitationIndex(null);
         }}
       />
 
@@ -171,6 +178,8 @@ export function QuestionSourcesTab({
         fieldById={fieldById}
         fieldLabel={fieldLabel}
         t={t}
+        canAddBook={Boolean(onPersistBook)}
+        onOpenAddBook={(citationIndex) => startNewBook(citationIndex)}
         onUpdateCitation={updCitation}
         onUpdateCitationField={updCitationField}
         onAddCitation={addCitation}

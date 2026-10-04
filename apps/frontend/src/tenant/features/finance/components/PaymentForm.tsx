@@ -4,10 +4,8 @@ import { FormModal } from "@/components/ui/FormModal";
 import { useAuth } from "@/lib/contexts/AuthContext";
 import { notify } from "@/lib/notify";
 import { PAYMENT_METHODS, type Invoice } from '@/lib/data/financeData';
-import { Card } from "@/components/ui/card";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { PaymentFormFields } from "@/tenant/features/finance/components/PaymentFormFields";
-import { cn } from "@/lib/utils";
-import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
 import { useFinanceCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type PaymentCreateInput, paymentRecordInsertSchema, type AppTranslationKey } from "@mms/shared";
@@ -156,10 +154,10 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
             void handleSave();
           }
         }}
-        className="space-y-5 text-start"
+        className="space-y-3 text-start"
       >
         {invoice && (
-          <Card accentColor="primary" className={cn("p-5 space-y-2 shadow-sm", CARD_STRIPE_INSET)}>
+          <SectionCard accentColor="primary" padding="p-5">
             <div className="flex min-w-0 flex-wrap items-center justify-between gap-3">
               <div className="min-w-0">
                 <h4 className="truncate text-sm font-bold text-foreground m-0">{invoice.studentName}</h4>
@@ -170,7 +168,7 @@ export function PaymentForm({ open, invoice, onClose, onSave }: PaymentFormProps
                 <p className="text-sm font-bold text-primary m-0 mt-0.5">{formatCurrency(balance)}</p>
               </div>
             </div>
-          </Card>
+          </SectionCard>
         )}
 
         <PaymentFormFields

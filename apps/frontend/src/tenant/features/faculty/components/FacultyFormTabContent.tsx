@@ -129,7 +129,7 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
   }
 
   if (tabBody) {
-    return <div className="space-y-6 pb-6">{tabBody}</div>;
+    return <div className="space-y-3 pb-6">{tabBody}</div>;
   }
 
   return (

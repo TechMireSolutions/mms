@@ -41,6 +41,9 @@ const isoDate = z.iso.date();
  * Read-model for a `faculty_assignments` row.
  * Returned by GET /api/faculty/:id/assignments.
  */
+export const FACULTY_ASSIGNMENT_STATUSES = ['active', 'inactive'] as const;
+export type FacultyAssignmentStatus = (typeof FACULTY_ASSIGNMENT_STATUSES)[number];
+
 export const facultyAssignmentSchema = z.object({
   id: z.string().min(1).max(100),
   facultyId: z.string().min(1).max(100),
@@ -49,6 +52,7 @@ export const facultyAssignmentSchema = z.object({
   positionId: z.string().min(1).max(100).nullable().optional(),
   reportsToAssignmentId: z.string().min(1).max(100).nullable().optional(),
   isPrimary: z.boolean().default(false),
+  status: z.enum(FACULTY_ASSIGNMENT_STATUSES).default('active'),
   startDate: isoDate,
   endDate: isoDate.nullable().optional(),
   notes: z.string().max(2000).nullable().optional(),
@@ -71,9 +75,11 @@ export const facultyAssignmentWriteSchema = facultyAssignmentSchema
     deletedAt: true,
     createdAt: true,
     updatedAt: true,
+    status: true,
   })
   .extend({
     id: z.string().min(1).max(100).optional(),
+    status: z.enum(FACULTY_ASSIGNMENT_STATUSES).optional().default('active'),
   })
   .refine(
     (a) => !a.endDate || a.endDate >= a.startDate,

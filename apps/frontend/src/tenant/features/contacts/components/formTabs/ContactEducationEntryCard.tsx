@@ -1,11 +1,16 @@
 import type React from "react";
 import { GraduationCap, Building2, BookOpen, Calendar, Award } from "lucide-react";
-import { EditableSelect, Field, FormCheckboxCard } from "@/components/ui/FormPrimitives";
+import {
+  EditableSelect,
+  Field,
+  FormCardTypeSelect,
+  FormCheckboxCard,
+  TYPE_SELECT_WIDTH,
+} from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactEducation } from "@mms/shared";
-import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { cn } from "@/lib/utils";
 
@@ -58,20 +63,21 @@ export function ContactEducationEntryCard({
       id={localId}
       index={idx}
       icon={GraduationCap}
-      accentClass={SUB_LIST_CARD_ACCENTS.education.accent}
-      label={showDegree ? `${t("contacts.fields.educationDegree")}:` : undefined}
+      label={undefined}
       typeSelect={
         showDegree ? (
-          <EditableSelect
-            options={degreeOptions}
-            value={edu.degree || defaultDegree || degreeOptions[0] || ""}
-            onChange={(val) => onUpdateEducation({ degree: val })}
-            onUpdateOptions={onUpdateDegreeOptions}
-            className="w-40 @sm:w-52 min-w-0"
-            id={`cf-${formInstanceId}-education-degree-${idx}`}
-            name={`cf-${formInstanceId}-education-degree-${idx}`}
-            placeholder={t("contacts.form.educationLevelPlaceholder")}
-          />
+          <FormCardTypeSelect label={t("contacts.fields.educationDegree")}>
+            <EditableSelect
+              options={degreeOptions}
+              value={edu.degree || defaultDegree || degreeOptions[0] || ""}
+              onChange={(val) => onUpdateEducation({ degree: val })}
+              onUpdateOptions={onUpdateDegreeOptions}
+              className={TYPE_SELECT_WIDTH}
+              id={`cf-${formInstanceId}-education-degree-${idx}`}
+              name={`cf-${formInstanceId}-education-degree-${idx}`}
+              placeholder={t("contacts.form.educationLevelPlaceholder")}
+            />
+          </FormCardTypeSelect>
         ) : undefined
       }
       onRemove={onRemoveEducation}

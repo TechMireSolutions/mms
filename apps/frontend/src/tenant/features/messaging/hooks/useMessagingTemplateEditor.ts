@@ -1,4 +1,4 @@
-import { useState, type FormEvent } from "react";
+import { useState } from "react";
 import {
   findUnknownPersonalizationTokens,
   type MessageCategory,
@@ -14,6 +14,7 @@ export function useMessagingTemplateEditor() {
   const { user } = useAuth();
   const { saveTemplate } = useMessagingMutations();
 
+  const [formOpen, setFormOpen] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [label, setLabel] = useState("");
   const [body, setBody] = useState("");
@@ -21,15 +22,26 @@ export function useMessagingTemplateEditor() {
   const [channel, setChannel] = useState<"all" | "sms" | "whatsapp" | "email">("all");
   const [errors, setErrors] = useState<Record<string, string>>({});
 
-  const isFormDirty = Boolean(label.trim() || body.trim() || editingId);
+  const isFormDirty = Boolean(formOpen && (label.trim() || body.trim() || editingId));
 
   const resetForm = (): void => {
+    setFormOpen(false);
     setEditingId(null);
     setLabel("");
     setBody("");
     setCategory("general");
     setChannel("all");
     setErrors({});
+  };
+
+  const openCreate = (): void => {
+    setEditingId(null);
+    setLabel("");
+    setBody("");
+    setCategory("general");
+    setChannel("all");
+    setErrors({});
+    setFormOpen(true);
   };
 
   const handleLabelChange = (value: string): void => {
@@ -54,8 +66,7 @@ export function useMessagingTemplateEditor() {
     }
   };
 
-  const save = async (event: FormEvent): Promise<void> => {
-    event.preventDefault();
+  const save = async (): Promise<void> => {
     if (!user) return;
     const newErrors: Record<string, string> = {};
     if (!label.trim()) newErrors.label = t("common.required");
@@ -87,6 +98,8 @@ export function useMessagingTemplateEditor() {
     setBody(template.body);
     setCategory(template.category || "general");
     setChannel(template.channel || "all");
+    setErrors({});
+    setFormOpen(true);
   };
 
   const handleDuplicate = async (template: MessageTemplate): Promise<void> => {
@@ -117,6 +130,7 @@ export function useMessagingTemplateEditor() {
   };
 
   return {
+    formOpen,
     editingId,
     label,
     body,
@@ -126,7 +140,9 @@ export function useMessagingTemplateEditor() {
     setChannel,
     errors,
     isFormDirty,
+    saving: saveTemplate.isPending,
     resetForm,
+    openCreate,
     handleLabelChange,
     handleBodyChange,
     save,

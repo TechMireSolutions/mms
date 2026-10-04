@@ -1,7 +1,12 @@
 import React, { type ReactNode } from "react";
 import type { LucideIcon } from "lucide-react";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
-import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
+import {
+  EditableSelect,
+  Field,
+  FormCardTypeSelect,
+  TYPE_SELECT_WIDTH,
+} from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
 import { cn } from "@/lib/utils";
@@ -23,8 +28,6 @@ export interface ContactLabeledValueItemCardProps {
   onUpdateOptions: (options: string[]) => void;
   resolveLabel: (raw: unknown, options: string[], t: TranslateFn) => string;
   icon: LucideIcon;
-  accentClass: string;
-  iconClass: string;
   removeLabel: (index: number) => string;
   valuePlaceholder: string;
   valueInputType?: React.HTMLInputTypeAttribute;
@@ -59,8 +62,6 @@ export function ContactLabeledValueItemCard({
   onUpdateOptions,
   resolveLabel,
   icon: Icon,
-  accentClass,
-  iconClass,
   removeLabel,
   valuePlaceholder,
   valueInputType = "text",
@@ -128,20 +129,20 @@ export function ContactLabeledValueItemCard({
       id={getLocalId(listKey, idx)}
       index={idx}
       icon={Icon}
-      accentClass={accentClass}
-      iconClass={iconClass}
-      label={`${t("contacts.form.type")}:`}
+      label={undefined}
       typeSelect={
         showLabel ? (
-          <EditableSelect
-            options={options}
-            value={labelValue}
-            onChange={(val) => updateItem(idx, { [labelFieldKey]: val })}
-            onUpdateOptions={onUpdateOptions}
-            className="w-36 @sm:w-48 min-w-0"
-            id={`${labelSelectIdPrefix}-${idx}`}
-            name={`${labelSelectIdPrefix}-${idx}`}
-          />
+          <FormCardTypeSelect label={t("contacts.form.type")}>
+            <EditableSelect
+              options={options}
+              value={labelValue}
+              onChange={(val) => updateItem(idx, { [labelFieldKey]: val })}
+              onUpdateOptions={onUpdateOptions}
+              className={TYPE_SELECT_WIDTH}
+              id={`${labelSelectIdPrefix}-${idx}`}
+              name={`${labelSelectIdPrefix}-${idx}`}
+            />
+          </FormCardTypeSelect>
         ) : undefined
       }
       headerExtras={headerExtras ? headerExtras(fieldCtx) : undefined}

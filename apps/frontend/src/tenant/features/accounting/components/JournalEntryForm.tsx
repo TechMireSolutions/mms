@@ -4,12 +4,14 @@ import { type Account, type JournalEntry, type FiscalYear } from '@/lib/data/acc
 import { FormModal } from "@/components/ui/FormModal";
 import { Button } from "@/components/ui/button";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
+import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
 import { JournalEntryLinesEditor } from "./JournalEntryLinesEditor";
 import {
   JournalEntryFormDetailsSection,
 } from "./JournalEntryFormDetailsSection";
 import { JournalEntryFormTagsSection } from "./JournalEntryFormTagsSection";
 import { useJournalEntryForm } from "./useJournalEntryForm";
+import { useAccountQuickCreate } from "./useAccountQuickCreate";
 import type { JournalEntrySave } from "./journalEntriesTypes";
 
 interface JournalEntryFormProps {
@@ -19,9 +21,18 @@ interface JournalEntryFormProps {
   onClose: () => void;
   initial?: JournalEntry | null;
   fiscalYears: FiscalYear[];
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
 }
 
-export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, fiscalYears }: JournalEntryFormProps) {
+export function JournalEntryForm({
+  accounts,
+  entries,
+  onSave,
+  onClose,
+  initial,
+  fiscalYears,
+  onAccountsChange,
+}: JournalEntryFormProps) {
   const { formatCurrency } = useAccountingCurrency();
   const {
     t,
@@ -44,54 +55,77 @@ export function JournalEntryForm({ accounts, entries, onSave, onClose, initial, 
     errorMessages,
   } = useJournalEntryForm({ accounts, entries, onSave, initial, fiscalYears });
 
-  return (
-    <FormModal
-      open
-      onClose={onClose}
-      title={isEdit ? t("accounting.journal.form.editTitle") : t("accounting.journal.form.newTitle")}
-      subtitle={activeFiscalYear || undefined}
-      icon={BookOpen}
-      size="xl"
-      tall
-      progress={completeness}
-      progressLabel={t("common.formProgress")}
-      cancelLabel={t("accounting.journal.form.cancel")}
-      saveLabel={t("accounting.journal.form.postEntry")}
-      onSave={async () => { await saveEntry("posted"); }}
-      saving={submitting}
-      saveDisabled={!isBalanced || submitting}
-      error={errorMessages}
-      footerStart={
-        <Button type="button" variant="outline" disabled={submitting} onClick={async () => { await saveEntry("draft"); }}>
-          {t("accounting.journal.form.saveDraft")}
-        </Button>
+  const accountQuickCreate = useAccountQuickCreate({
+    accounts,
+    onAccountsChange,
+    onSelectAccount: (target, accountId) => {
+      if (target.kind === 'line') {
+        updateLine(target.lineIndex, 'account_id', accountId);
       }
-    >
-      <form className="space-y-5" onSubmit={(event) => event.preventDefault()}>
-        <JournalEntryFormDetailsSection
-          t={t}
-          form={form}
-          setForm={setForm}
-          errors={errors}
-          fiscalYears={fiscalYears}
-        />
+    },
+  });
 
-        <JournalEntryFormTagsSection t={t} form={form} toggleTag={toggleTag} />
+  return (
+    <>
+      <FormModal
+        open={!accountQuickCreate.open}
+        onClose={onClose}
+        title={isEdit ? t("accounting.journal.form.editTitle") : t("accounting.journal.form.newTitle")}
+        subtitle={activeFiscalYear || undefined}
+        icon={BookOpen}
+        size="xl"
+        tall
+        progress={completeness}
+        progressLabel={t("common.formProgress")}
+        cancelLabel={t("accounting.journal.form.cancel")}
+        saveLabel={t("accounting.journal.form.postEntry")}
+        onSave={async () => { await saveEntry("posted"); }}
+        saving={submitting}
+        saveDisabled={!isBalanced || submitting}
+        error={errorMessages}
+        footerStart={
+          <Button type="button" variant="outline" disabled={submitting} onClick={async () => { await saveEntry("draft"); }}>
+            {t("accounting.journal.form.saveDraft")}
+          </Button>
+        }
+      >
+        <form className="space-y-3" onSubmit={(event) => event.preventDefault()}>
+          <JournalEntryFormDetailsSection
+            t={t}
+            form={form}
+            setForm={setForm}
+            errors={errors}
+            fiscalYears={fiscalYears}
+          />
 
-        <JournalEntryLinesEditor
-          accounts={accounts}
-          accountOptions={flattenedAccountOptions}
-          errors={errors}
-          lines={form.lines}
-          totalDebit={totalDebit}
-          totalCredit={totalCredit}
-          isBalanced={isBalanced}
-          formatCurrency={formatCurrency}
-          onAddLine={addLine}
-          onRemoveLine={removeLine}
-          onUpdateLine={updateLine}
+          <JournalEntryFormTagsSection t={t} form={form} toggleTag={toggleTag} />
+
+          <JournalEntryLinesEditor
+            accounts={accounts}
+            accountOptions={flattenedAccountOptions}
+            errors={errors}
+            lines={form.lines}
+            totalDebit={totalDebit}
+            totalCredit={totalCredit}
+            isBalanced={isBalanced}
+            formatCurrency={formatCurrency}
+            onAddLine={addLine}
+            onRemoveLine={removeLine}
+            onUpdateLine={updateLine}
+            canAddAccount={accountQuickCreate.canAdd}
+            onOpenAddAccount={(lineIndex) => accountQuickCreate.openCreate({ kind: 'line', lineIndex })}
+          />
+        </form>
+      </FormModal>
+
+      {accountQuickCreate.open && (
+        <AccountModal
+          initial={null}
+          onSave={accountQuickCreate.handleSave}
+          onClose={accountQuickCreate.close}
+          existingCodes={accountQuickCreate.existingCodes}
         />
-      </form>
-    </FormModal>
+      )}
+    </>
   );
 }

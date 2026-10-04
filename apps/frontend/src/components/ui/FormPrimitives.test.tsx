@@ -6,6 +6,7 @@ import {
   CardTypeLabel,
   CardRemoveButton,
   Field,
+  FormCardTypeSelect,
   FormCheckboxCard,
   INPUT,
   SELECT,
@@ -24,6 +25,19 @@ describe('FormPrimitives', () => {
       expect(element.type).toBe('span');
       expect(element.props.children).toBe('Contact Type');
       expect(element.props.className).toContain('uppercase');
+    });
+  });
+
+  describe('FormCardTypeSelect', () => {
+    it('wraps CardTypeLabel and the discriminative control', () => {
+      const html = renderToStaticMarkup(
+        <FormCardTypeSelect label="Relationship Type">
+          <span>Parent</span>
+        </FormCardTypeSelect>,
+      );
+      expect(html).toContain('Relationship Type');
+      expect(html).toContain('Parent');
+      expect(html).toContain('uppercase');
     });
   });
 

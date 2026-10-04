@@ -16,14 +16,12 @@ function assignmentQueries() {
 }
 
 describe('Faculty assignment production validation', () => {
-  it('rejects new appointments without an organization position', async () => {
-    // Arrange — create path (no existing row)
-    tx.execute.mockResolvedValueOnce({ rows: [] }).mockResolvedValueOnce({ rows: [] });
+  it('allows faculty-form bootstrap creates without an organization position', async () => {
+    // Arrange — create path (no existing row) with active faculty/dept/designation
+    assignmentQueries();
 
     // Act + Assert
-    await expect(validateFacultyAssignment(tx, 'tenant', input)).rejects.toThrow(
-      'New appointments require an organization position',
-    );
+    await expect(validateFacultyAssignment(tx, 'tenant', input)).resolves.toBeUndefined();
   });
 
   it('allows updating a legacy appointment that still lacks a position', async () => {

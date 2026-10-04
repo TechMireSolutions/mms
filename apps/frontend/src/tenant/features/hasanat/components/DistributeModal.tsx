@@ -27,9 +27,17 @@ export interface DistributeModalProps {
   batches: StockBatch[];
   onClose: () => void;
   onSave: (dist: Distribution) => void | Promise<void>;
+  onDenomsChange?: (denoms: Denomination[]) => Promise<void> | void;
 }
 
-export function DistributeModal({ open, denoms, batches, onClose, onSave }: DistributeModalProps) {
+export function DistributeModal({
+  open,
+  denoms,
+  batches,
+  onClose,
+  onSave,
+  onDenomsChange,
+}: DistributeModalProps) {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const [submitting, setSubmitting] = useState(false);
@@ -164,6 +172,7 @@ export function DistributeModal({ open, denoms, batches, onClose, onSave }: Dist
           setData={setData}
           updateField={updateField}
           errors={errors}
+          onDenomsChange={onDenomsChange}
         />
       </form>
     </FormModal>

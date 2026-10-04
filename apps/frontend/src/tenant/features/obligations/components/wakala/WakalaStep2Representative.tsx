@@ -1,8 +1,5 @@
 import React from "react";
-import { Plus } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { Field } from "@/components/ui/FormPrimitives";
+import { Field, FormSelectWithQuickCreate } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Mujtahid, MujtahidRep, ObligationType } from "@/lib/data/obligationsData";
 
@@ -44,33 +41,20 @@ export function WakalaStep2Representative({
       </div>
 
       <Field id="wakala-rep" label={t("obligations.wakala.repLabel")} required error={errors.rep}>
-        <div className="flex items-end gap-2">
-          <div className="flex-1">
-            <FormSelect
-              id="wakala-rep"
-              name="mujtahid_representative_id"
-              value={selectedRepId}
-              onChange={onSelectRep}
-              placeholder={t("obligations.wakala.repPlaceholder")}
-              options={availableReps.map((rep) => ({
-                value: rep.id,
-                label: rep.name,
-              }))}
-            />
-          </div>
-          {canAddRep && (
-            <Button
-              type="button"
-              variant="outline"
-              size="icon"
-              className="h-10 w-10 shrink-0"
-              onClick={onOpenAddRep}
-              aria-label={t("obligations.mujtahids.addRep")}
-            >
-              <Plus className="h-4 w-4" />
-            </Button>
-          )}
-        </div>
+        <FormSelectWithQuickCreate
+          id="wakala-rep"
+          name="mujtahid_representative_id"
+          value={selectedRepId}
+          onChange={onSelectRep}
+          placeholder={t("obligations.wakala.repPlaceholder")}
+          options={availableReps.map((rep) => ({
+            value: rep.id,
+            label: rep.name,
+          }))}
+          canAdd={canAddRep}
+          onOpenAdd={onOpenAddRep}
+          addAriaLabel={t("obligations.mujtahids.addRep")}
+        />
       </Field>
       {availableReps.length === 0 && (
         <p className="mt-1 text-xs text-muted-foreground">

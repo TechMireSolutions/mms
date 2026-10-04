@@ -50,12 +50,18 @@ export function SpecializedEntryModal({
   type,
   accounts,
   onClose,
+  onAccountsChange,
 }: {
   type: SpecializedEntryType;
   accounts: Account[];
   onClose: () => void;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
 }): React.JSX.Element {
-  return type === "fee" ? <FeeEntryModal onClose={onClose} /> : <SalaryEntryModal accounts={accounts} onClose={onClose} />;
+  return type === "fee" ? (
+    <FeeEntryModal onClose={onClose} />
+  ) : (
+    <SalaryEntryModal accounts={accounts} onClose={onClose} onAccountsChange={onAccountsChange} />
+  );
 }
 
 function FeeEntryModal({ onClose }: { onClose: () => void }): React.JSX.Element {
@@ -122,9 +128,11 @@ function FeeEntryModal({ onClose }: { onClose: () => void }): React.JSX.Element 
 function SalaryEntryModal({
   accounts,
   onClose,
+  onAccountsChange,
 }: {
   accounts: Account[];
   onClose: () => void;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
 }): React.JSX.Element {
   const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
@@ -179,7 +187,11 @@ function SalaryEntryModal({
     >
       <Form {...form}>
         <form onSubmit={handleSave}>
-          <SpecializedEntrySalaryFields form={form} accounts={accounts} />
+          <SpecializedEntrySalaryFields
+            form={form}
+            accounts={accounts}
+            onAccountsChange={onAccountsChange}
+          />
         </form>
       </Form>
     </FormModal>

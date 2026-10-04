@@ -146,11 +146,26 @@ export interface FacultyMember {
   specialization?: string;
   department?: string;
   designation?: string;
-  /** Server-projected designation effective today; writes select a definition by id. */
+  /** Server-projected primary designation effective today; writes select a definition by id. */
   designationId?: string;
   designationStartsOn?: string;
   designationEndsOn?: string | null;
   designationAssignableRoles?: string[];
+  /**
+   * All current designation holdings (create/hydrate).
+   * When present on write, wins over singular designationId.
+   */
+  designations?: Array<{
+    designationId: string;
+    departmentId?: string;
+    status: 'active' | 'inactive';
+    startsOn?: string;
+    endsOn?: string | null;
+    isPrimary?: boolean;
+    designationName?: string;
+    departmentName?: string;
+    assignableRoles?: string[];
+  }>;
   customDesignation?: string;
   reportingFacultyId?: string | null;
   reportingRole?: string | null;

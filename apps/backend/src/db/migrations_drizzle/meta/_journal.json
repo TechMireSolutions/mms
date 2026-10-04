@@ -981,6 +981,20 @@
       "when": 1791100500000,
       "tag": "0139_faculty_department_is_active",
       "breakpoints": true
+    },
+    {
+      "idx": 140,
+      "version": "7",
+      "when": 1791100600000,
+      "tag": "0140_faculty_assignment_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 141,
+      "version": "7",
+      "when": 1791100700000,
+      "tag": "0141_faculty_assignment_dept_designation_uidx",
+      "breakpoints": true
     }
   ]
 }

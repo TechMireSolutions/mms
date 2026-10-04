@@ -69,12 +69,17 @@ vi.mock('@/tenant/hooks/collections/organization', () => ({
   useUpdatePosition: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useDeletePosition: () => ({ mutateAsync: vi.fn(), isPending: false }),
   useRestorePosition: () => ({ mutateAsync: vi.fn(), isPending: false }),
+  useCreateLocation: () => ({ mutateAsync: vi.fn(), isPending: false }),
 }));
 
-vi.mock('@/tenant/hooks/collections/faculty', () => ({
-  useFacultyDepartments: () => ({ data: [] }),
-  useFacultyDesignations: () => ({ data: [] }),
-}));
+vi.mock('@/tenant/hooks/collections/faculty', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@/tenant/hooks/collections/faculty')>();
+  return {
+    ...actual,
+    useFacultyDepartments: () => ({ data: [] }),
+    useFacultyDesignations: () => ({ data: [] }),
+  };
+});
 
 describe('OrganizationChart', () => {
   it('renders loading state when isLoading is true', () => {

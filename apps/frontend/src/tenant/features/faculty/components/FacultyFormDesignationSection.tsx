@@ -1,17 +1,24 @@
 import type React from "react";
+import { useEffect, useState } from "react";
 import { Award, Shield } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { DatePicker } from "@/components/ui/DatePicker";
-import { Field } from "@/components/ui/FormPrimitives";
-import { SectionCard } from "@/components/ui/SectionCard";
+import { FormCollectionShell } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
   type FacultyDepartmentEntity,
   type FacultyDesignationDefinition,
   type FacultyMember,
 } from "@mms/shared";
+import { FacultyCatalogCreateOverlays } from "./FacultyCatalogCreateOverlays";
 import { FacultyDepartmentSelectField } from "./FacultyDepartmentSelectField";
-import { FacultyDesignationSelectField } from "./FacultyDesignationSelectField";
+import { FacultyFormDesignationRows } from "./FacultyFormDesignationRows";
+import { useFacultyFormCatalogQuickCreate } from "../hooks/useFacultyFormCatalogQuickCreate";
+import {
+  createEmptyDesignationRow,
+  getInitialDesignationRows,
+  syncPrimaryDesignationPatch,
+  type FacultyDesignationDraftRow,
+} from "./facultyFormDesignationDraft";
 
 export interface FacultyFormDesignationSectionProps {
   faculty?: FacultyMember;
@@ -20,6 +27,8 @@ export interface FacultyFormDesignationSectionProps {
   designationOptions?: FacultyDesignationDefinition[];
   departmentOptions?: string[];
   departmentEntities?: FacultyDepartmentEntity[];
+  /** True in all-sections layout; false when a FormModal tab already names the area. */
+  showCollectionTitle?: boolean;
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
   onDraftChange: (patch: Partial<FacultyMember>) => void;
@@ -33,75 +42,156 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
     designationOptions = [],
     departmentOptions,
     departmentEntities,
+    showCollectionTitle = false,
     isFieldEnabled,
     isFieldRequired,
     onDraftChange,
   } = props;
   const { t } = useTranslation();
+  const isExisting = Boolean(faculty?.id);
+  const canAddCatalog = !isExisting;
+  const catalogCreate = useFacultyFormCatalogQuickCreate();
 
   const showDesignation = isFieldEnabled("designation") || isFieldEnabled("designationId");
   const showDepartment = isFieldEnabled("department") || isFieldEnabled("departmentId");
 
+  const [rows, setRows] = useState<FacultyDesignationDraftRow[]>(() =>
+    getInitialDesignationRows(faculty ?? facultyDraft),
+  );
+
+  useEffect(() => {
+    setRows(getInitialDesignationRows(faculty ?? facultyDraft));
+    // Re-seed when opening a different faculty record.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- draft identity changes every keystroke
+  }, [faculty?.id]);
+
   if (!showDesignation && !showDepartment) return null;
 
-  const currentDefinition = designationOptions.find((item) => item.id === facultyDraft.designationId);
-  const assignableRoles = currentDefinition?.assignableRoles ?? facultyDraft.designationAssignableRoles ?? [];
+  const commitRows = (nextRows: FacultyDesignationDraftRow[]) => {
+    setRows(nextRows);
+    onDraftChange(syncPrimaryDesignationPatch(nextRows, {
+      designationOptions,
+      departmentEntities,
+    }));
+  };
+
+  const patchRowByKey = (rowKey: string | null, patch: Partial<FacultyDesignationDraftRow>) => {
+    if (!rowKey) {
+      const first = rows[0];
+      if (!first) return;
+      commitRows(rows.map((row, index) => (index === 0 ? { ...row, ...patch } : row)));
+      return;
+    }
+    commitRows(rows.map((row) => (row.key === rowKey ? { ...row, ...patch } : row)));
+  };
+
+  const activeRoleSet = new Set<string>();
+  for (const row of rows) {
+    if (row.status !== "active" || !row.designationId) continue;
+    const def = designationOptions.find((item) => item.id === row.designationId);
+    for (const role of def?.assignableRoles ?? []) activeRoleSet.add(role);
+  }
+  const assignableRoles = [...activeRoleSet];
+
+  const overlays = (
+    <FacultyCatalogCreateOverlays
+      createDepartmentOpen={catalogCreate.createDepartmentOpen}
+      onCloseDepartment={catalogCreate.closeDepartment}
+      createDesignationOpen={catalogCreate.createDesignationOpen}
+      onCloseDesignation={catalogCreate.closeDesignation}
+      onDepartmentCreated={(department) => {
+        catalogCreate.applyDepartmentCreated(department, (rowKey, patch) => {
+          if (!showDesignation) {
+            onDraftChange(patch);
+            return;
+          }
+          patchRowByKey(rowKey, patch);
+        });
+      }}
+      onDesignationCreated={(designation) => {
+        catalogCreate.applyDesignationCreated(designation, (rowKey, patch) => {
+          patchRowByKey(rowKey, {
+            designationId: patch.designationId,
+          });
+        });
+      }}
+    />
+  );
+
+  if (!showDesignation) {
+    return (
+      <>
+        <div className="space-y-3 text-start">
+          {showCollectionTitle ? (
+            <div className="flex items-center gap-2">
+              <Award className="size-4 text-primary" aria-hidden />
+              <h3 className="text-sm font-semibold text-foreground">{t("faculty.form.tab.designation")}</h3>
+            </div>
+          ) : null}
+          <FacultyDepartmentSelectField
+            value={facultyDraft.department ?? ""}
+            departmentId={typeof facultyDraft.departmentId === "string" ? facultyDraft.departmentId : undefined}
+            error={errors.department || errors.departmentId}
+            required={isFieldRequired("department") || isFieldRequired("departmentId")}
+            departmentOptions={departmentOptions}
+            departmentEntities={departmentEntities}
+            canAdd={canAddCatalog}
+            onOpenAdd={() => catalogCreate.openCreateDepartment(null)}
+            onChange={onDraftChange}
+          />
+        </div>
+        {overlays}
+      </>
+    );
+  }
 
   return (
-    <div className="space-y-4 text-start">
-      <SectionCard title={t("faculty.form.tab.designation")} icon={Award} accentColor="primary">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 items-start">
-          {showDepartment && (
-            <FacultyDepartmentSelectField
-              value={facultyDraft.department ?? ""}
-              departmentId={typeof facultyDraft.departmentId === "string" ? facultyDraft.departmentId : undefined}
-              error={errors.department || errors.departmentId}
-              required={isFieldRequired("department") || isFieldRequired("departmentId")}
-              departmentOptions={departmentOptions}
-              departmentEntities={departmentEntities}
-              onChange={onDraftChange}
-            />
-          )}
+    <>
+      <div className="space-y-4 text-start">
+        <FormCollectionShell
+          title={showCollectionTitle ? t("faculty.form.tab.designation") : undefined}
+          icon={showCollectionTitle ? Award : undefined}
+          addLabel={t("faculty.designations.addDesignation")}
+          onAdd={() => commitRows([...rows, createEmptyDesignationRow()])}
+          allowAdd={!isExisting}
+          listKey={faculty?.id ? `faculty-des-${faculty.id}` : "faculty-des-new"}
+        >
+          <FacultyFormDesignationRows
+            rows={rows}
+            designationOptions={designationOptions}
+            departmentOptions={departmentOptions}
+            departmentEntities={departmentEntities}
+            legacyDesignationName={facultyDraft.designation}
+            errors={errors}
+            requiredFirst={isFieldRequired("designation") || isFieldRequired("designationId")}
+            showDepartment={showDepartment}
+            departmentRequired={isFieldRequired("department") || isFieldRequired("departmentId")}
+            disabled={isExisting}
+            canAddCatalog={canAddCatalog}
+            onOpenAddDepartment={catalogCreate.openCreateDepartment}
+            onOpenAddDesignation={catalogCreate.openCreateDesignation}
+            onChangeRows={commitRows}
+          />
+        </FormCollectionShell>
 
-          {showDesignation && (
-            <FacultyDesignationSelectField
-              designationId={facultyDraft.designationId ?? ""}
-              designationName={facultyDraft.designation ?? ""}
-              error={errors.designationId || errors.designation}
-              required={isFieldRequired("designation") || isFieldRequired("designationId")}
-              disabled={Boolean(faculty?.id)}
-              designationOptions={designationOptions}
-              onChange={onDraftChange}
-            />
-          )}
-
-          {showDesignation && !faculty?.id && (
-            <>
-              <Field label={t("faculty.designations.startsOn")} id="designationStartsOn" required error={errors.designationStartsOn}>
-                <DatePicker id="designationStartsOn" name="designationStartsOn" value={facultyDraft.designationStartsOn || undefined} onChange={(dateStr) => onDraftChange({ designationStartsOn: dateStr })} />
-              </Field>
-              <Field label={t("faculty.designations.endsOn")} id="designationEndsOn" error={errors.designationEndsOn}>
-                <DatePicker id="designationEndsOn" name="designationEndsOn" value={facultyDraft.designationEndsOn || undefined} min={facultyDraft.designationStartsOn || undefined} onChange={(dateStr) => onDraftChange({ designationEndsOn: dateStr || null })} />
-              </Field>
-            </>
-          )}
-
-          {showDesignation && currentDefinition && (
-            <div className="md:col-span-2 space-y-1.5 rounded-lg border border-border/60 bg-muted/30 p-3">
-              <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
-                <Shield className="size-3.5 text-primary" aria-hidden />
-                <span>{t("faculty.designations.roles")}</span>
-              </div>
-              <div className="flex flex-wrap gap-1.5">
-                {assignableRoles.map((role) => (
-                  <Badge key={role} variant="secondary" className="text-xs font-normal">{role}</Badge>
-                ))}
-                {!assignableRoles.length && <span className="text-xs text-muted-foreground">{t("faculty.designations.noAssignableRoles")}</span>}
-              </div>
+        {assignableRoles.length > 0 || rows.some((row) => row.designationId) ? (
+          <div className="space-y-1.5">
+            <div className="flex items-center gap-1.5 text-xs font-medium text-foreground">
+              <Shield className="size-3.5 text-primary" aria-hidden />
+              <span>{t("faculty.designations.roles")}</span>
             </div>
-          )}
-        </div>
-      </SectionCard>
-    </div>
+            <div className="flex flex-wrap gap-1.5">
+              {assignableRoles.map((role) => (
+                <Badge key={role} variant="secondary" className="text-xs font-normal">{role}</Badge>
+              ))}
+              {!assignableRoles.length && (
+                <span className="text-xs text-muted-foreground">{t("faculty.designations.noAssignableRoles")}</span>
+              )}
+            </div>
+          </div>
+        ) : null}
+      </div>
+      {overlays}
+    </>
   );
 }

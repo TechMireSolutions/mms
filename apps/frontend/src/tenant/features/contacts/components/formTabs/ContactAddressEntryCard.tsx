@@ -1,13 +1,18 @@
 import type React from "react";
 import { MapPin, Building, Landmark } from "lucide-react";
-import { CardPrimaryButton, EditableSelect, Field } from "@/components/ui/FormPrimitives";
+import {
+  CardPrimaryButton,
+  EditableSelect,
+  Field,
+  FormCardTypeSelect,
+  TYPE_SELECT_WIDTH,
+} from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
 import { cn } from "@/lib/utils";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveAddressLabel } from "@/lib/contacts/contactI18n";
-import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import type { Address } from "@mms/shared";
 
 export interface ContactAddressEntryCardProps {
@@ -68,20 +73,20 @@ export function ContactAddressEntryCard({
       id={localId}
       index={idx}
       icon={MapPin}
-      accentClass={SUB_LIST_CARD_ACCENTS.addresses.accent}
-      iconClass={SUB_LIST_CARD_ACCENTS.addresses.icon}
-      label={`${t("contacts.form.type")}:`}
+      label={undefined}
       typeSelect={
         showLabel ? (
-          <EditableSelect
-            options={addressLabels}
-            value={resolveAddressLabel(addr.label, addressLabels, t)}
-            onChange={(val) => onUpdateAddress({ label: val })}
-            onUpdateOptions={onUpdateAddressLabels}
-            className="w-36 @sm:w-48 min-w-0"
-            id={`cf-${formInstanceId}-address-label-${idx}`}
-            name={`cf-${formInstanceId}-address-label-${idx}`}
-          />
+          <FormCardTypeSelect label={t("contacts.form.type")}>
+            <EditableSelect
+              options={addressLabels}
+              value={resolveAddressLabel(addr.label, addressLabels, t)}
+              onChange={(val) => onUpdateAddress({ label: val })}
+              onUpdateOptions={onUpdateAddressLabels}
+              className={TYPE_SELECT_WIDTH}
+              id={`cf-${formInstanceId}-address-label-${idx}`}
+              name={`cf-${formInstanceId}-address-label-${idx}`}
+            />
+          </FormCardTypeSelect>
         ) : undefined
       }
       headerExtras={

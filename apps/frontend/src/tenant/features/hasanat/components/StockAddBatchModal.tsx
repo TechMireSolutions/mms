@@ -7,20 +7,29 @@ import { Field } from '@/components/ui/FormPrimitives';
 import { UserActorSelect } from '@/tenant/components/selectors/UserActorSelect';
 import { FORM_INPUT } from '@/components/ui/formStyles';
 import { Input } from '@/components/ui/input';
-import { FormSelect } from '@/components/ui/FormSelect';
+import { FormSelectWithQuickCreate } from '@/components/ui/FormPrimitives';
 import { todayISO } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
+import { DenominationModal } from './DenominationModal';
 
 interface StockAddBatchModalProps {
   open: boolean;
   denoms: Denomination[];
   onClose: () => void;
   onSave: (batch: StockBatch) => void | Promise<void>;
+  onDenomsChange?: (denoms: Denomination[]) => void | Promise<void>;
 }
 
-export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBatchModalProps): React.JSX.Element {
+export function StockAddBatchModal({
+  open,
+  denoms,
+  onClose,
+  onSave,
+  onDenomsChange,
+}: StockAddBatchModalProps): React.JSX.Element {
   const { t } = useTranslation();
   const [submitting, setSubmitting] = useState(false);
+  const [createDenomOpen, setCreateDenomOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [data, setData] = useState<Partial<StockBatch>>({
@@ -110,10 +119,10 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
           event.preventDefault();
           if (denoms.length > 0 && !submitting) void handleSave();
         }}
-        className="space-y-4"
+        className="space-y-3"
       >
         <Field id="batch-denom" label={t('hasanat.form.denomination')} required error={errors.denominationId}>
-          <FormSelect
+          <FormSelectWithQuickCreate
             id="batch-denom"
             name="denominationId"
             value={data.denominationId || ''}
@@ -122,6 +131,9 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
               value: denomination.id,
               label: `${denomination.icon} ${denomination.name} (${t('hasanat.form.pointsShort', { points: denomination.points })})`,
             }))}
+            canAdd={typeof onDenomsChange === 'function'}
+            onOpenAdd={() => setCreateDenomOpen(true)}
+            addAriaLabel={t('hasanat.denominations.new')}
           />
         </Field>
         {selectedDenomination && (
@@ -160,6 +172,18 @@ export function StockAddBatchModal({ open, denoms, onClose, onSave }: StockAddBa
           <Input id="batch-note" name="note" className={FORM_INPUT} value={data.note || ''} onChange={(event) => updateField('note', event.target.value)} placeholder={t('hasanat.stock.notePlaceholder')} />
         </Field>
       </form>
+      {typeof onDenomsChange === 'function' ? (
+        <DenominationModal
+          open={createDenomOpen}
+          denom={null}
+          onClose={() => setCreateDenomOpen(false)}
+          onSave={async (denom) => {
+            await onDenomsChange([...denoms, denom]);
+            updateField('denominationId', denom.id);
+            setCreateDenomOpen(false);
+          }}
+        />
+      ) : null}
     </FormModal>
   );
 }

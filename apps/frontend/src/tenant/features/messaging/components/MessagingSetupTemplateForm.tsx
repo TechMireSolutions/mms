@@ -1,17 +1,17 @@
 import type React from 'react';
-import { Check, Edit3, Plus } from 'lucide-react';
+import { Edit3, Plus } from 'lucide-react';
 import type { MessageCategory } from '@mms/shared';
-import { Button } from '@/components/ui/button';
 import { FormSelect } from '@/components/ui/FormSelect';
 import { Field } from '@/components/ui/FormPrimitives';
 import { FORM_INPUT_ERROR } from '@/components/ui/formStyles';
-import { SectionCard } from '@/components/ui/SectionCard';
+import { FormModal } from '@/components/ui/FormModal';
 import { Input } from '@/components/ui/input';
 import { MessagingMessageBodyField } from '@/components/ui/MessagingMessageBodyField';
 import { cn } from '@/lib/utils';
 import { useTranslation } from '@/hooks/useTranslation';
 
 interface MessagingSetupTemplateFormProps {
+  open: boolean;
   editingId: string | null;
   label: string;
   body: string;
@@ -20,8 +20,9 @@ interface MessagingSetupTemplateFormProps {
   templateCategorySelectOptions: Array<{ value: string; label: string }>;
   channelSelectOptions: Array<{ value: string; label: string }>;
   errors?: Record<string, string>;
+  saving?: boolean;
   onReset: () => void;
-  onSave: (event: React.FormEvent) => void;
+  onSave: () => void | Promise<void>;
   onLabelChange: (value: string) => void;
   onBodyChange: (value: string) => void;
   onCategoryChange: (value: MessageCategory) => void;
@@ -29,6 +30,7 @@ interface MessagingSetupTemplateFormProps {
 }
 
 export function MessagingSetupTemplateForm({
+  open,
   editingId,
   label,
   body,
@@ -37,6 +39,7 @@ export function MessagingSetupTemplateForm({
   templateCategorySelectOptions,
   channelSelectOptions,
   errors = {},
+  saving = false,
   onReset,
   onSave,
   onLabelChange,
@@ -47,21 +50,26 @@ export function MessagingSetupTemplateForm({
   const { t } = useTranslation();
 
   return (
-    <SectionCard
-      accentColor="primary"
-      icon={editingId ? Edit3 : Plus}
+    <FormModal
+      open={open}
+      onClose={onReset}
       title={editingId ? t('messaging.editPreset') : t('messaging.createPreset')}
       subtitle={t('messaging.createPresetDesc')}
-      actions={
-        editingId ? (
-          <Button variant="ghost" size="sm" onClick={onReset} className="shrink-0 self-start text-xs min-h-11">
-            {t('common.cancel')}
-          </Button>
-        ) : undefined
-      }
-      className="space-y-4 shadow-sm text-start"
+      icon={editingId ? Edit3 : Plus}
+      cancelLabel={t('common.cancel')}
+      saveLabel={editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
+      onSave={onSave}
+      saving={saving}
+      formId="messaging-setup-template-form"
     >
-      <form onSubmit={onSave} className="space-y-3">
+      <form
+        id="messaging-setup-template-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void onSave();
+        }}
+        className="space-y-3"
+      >
         <Field id="tplLabel" label={t('messaging.templateLabel')} required error={errors.label}>
           <Input
             id="tplLabel"
@@ -101,11 +109,7 @@ export function MessagingSetupTemplateForm({
           required
           error={errors.body}
         />
-        <Button type="submit" className="w-full font-bold min-h-11">
-          <Check className="me-1.5 h-4 w-4" />
-          {editingId ? t('messaging.updateTemplate') : t('messaging.saveTemplate')}
-        </Button>
       </form>
-    </SectionCard>
+    </FormModal>
   );
 }

@@ -16,8 +16,18 @@ vi.mock("@/components/ui/FormPrimitives", () => ({
       {children}
     </div>
   ),
-  EditableSelect: ({ placeholder }: { placeholder?: string }) => (
-    <div data-testid="editable-select">{placeholder}</div>
+  EditableSelect: ({
+    options,
+    value,
+    placeholder,
+  }: {
+    options?: string[];
+    value?: string;
+    placeholder?: string;
+  }) => (
+    <div data-testid="editable-select" data-value={value} data-placeholder={placeholder}>
+      {(options ?? []).join("|")}
+    </div>
   ),
 }));
 
@@ -26,7 +36,7 @@ vi.mock("./ContactBasicMetaFields", () => ({
 }));
 
 describe("ContactBasicIdentityFields Component", () => {
-  it("renders firstName, lastName, and gender fields with configured options", () => {
+  it("renders firstName, lastName, and gender EditableSelect with default options", () => {
     const html = renderToStaticMarkup(
       <ContactBasicIdentityFields
         contactDraft={{ firstName: "Zayd", lastName: "Harith", gender: "male" }}
@@ -35,6 +45,7 @@ describe("ContactBasicIdentityFields Component", () => {
         isFieldRequired={(tab, field) => field === "firstName" || field === "gender"}
         getFieldError={() => undefined}
         updateDraft={vi.fn()}
+        onUpdateGenders={vi.fn()}
         lockGender={false}
       />,
     );
@@ -42,8 +53,8 @@ describe("ContactBasicIdentityFields Component", () => {
     expect(html).toContain("contacts.fields.firstName");
     expect(html).toContain("contacts.fields.lastName");
     expect(html).toContain("contacts.fields.gender *");
-    expect(html).toContain("Male");
-    expect(html).toContain("Female");
+    expect(html).toContain("male|female");
+    expect(html).toContain('data-value="male"');
     expect(html).toContain("Meta Fields");
   });
 
@@ -57,10 +68,12 @@ describe("ContactBasicIdentityFields Component", () => {
         getFieldError={() => undefined}
         updateDraft={vi.fn()}
         genders={["male", "female", "other"]}
+        onUpdateGenders={vi.fn()}
         lockGender={false}
       />,
     );
 
-    expect(html).toContain("Other");
+    expect(html).toContain("male|female|other");
+    expect(html).toContain('data-value="other"');
   });
 });

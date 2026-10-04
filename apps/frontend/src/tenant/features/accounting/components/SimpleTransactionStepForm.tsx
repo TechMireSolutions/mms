@@ -26,6 +26,8 @@ interface StepTransactionFormProps {
   onAmountTouched?: () => void;
   onChangeType?: () => void;
   onProceed?: () => void;
+  canAddAccount?: boolean;
+  onOpenAddAccount?: (field: "debitAcc" | "creditAcc") => void;
 }
 
 export function StepTransactionForm({
@@ -42,6 +44,8 @@ export function StepTransactionForm({
   onAmountTouched,
   onChangeType,
   onProceed,
+  canAddAccount = false,
+  onOpenAddAccount,
 }: StepTransactionFormProps) {
   const {
     t,
@@ -136,6 +140,8 @@ export function StepTransactionForm({
           leg2={leg2}
           form={form}
           onAccountChange={(field, accountId) => setForm((prev) => ({ ...prev, [field]: accountId }))}
+          canAddAccount={canAddAccount}
+          onOpenAddAccount={onOpenAddAccount}
           showLowBalanceWarning={showLowBalanceWarning}
           isSameAccount={isSameAccount}
         />

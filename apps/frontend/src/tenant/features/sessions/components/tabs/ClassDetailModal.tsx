@@ -160,7 +160,7 @@ export function ClassDetailModal({
           event.preventDefault();
           void handleSave();
         }}
-        className="w-full space-y-4"
+        className="w-full space-y-3"
       >
         <ClassDetailTabBody
           activeTab={activeTab}

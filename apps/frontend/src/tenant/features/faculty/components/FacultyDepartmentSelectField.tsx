@@ -1,27 +1,34 @@
 import React, { useMemo } from "react";
 import type { FacultyDepartmentEntity } from "@mms/shared";
 import { FACULTY_DEPARTMENT_VALUES } from "@mms/shared";
-import { Field } from "@/components/ui/FormPrimitives";
-import { FormSelect } from "@/components/ui/FormSelect";
+import { Field, FormSelectWithQuickCreate } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 
 export interface FacultyDepartmentSelectFieldProps {
+  id?: string;
   value: string;
   departmentId?: string;
   error?: string;
   required?: boolean;
+  disabled?: boolean;
   departmentOptions?: string[];
   departmentEntities?: FacultyDepartmentEntity[];
+  canAdd?: boolean;
+  onOpenAdd?: () => void;
   onChange: (patch: { department: string; departmentId?: string }) => void;
 }
 
 export function FacultyDepartmentSelectField({
+  id = "department",
   value,
   departmentId,
   error,
   required,
+  disabled,
   departmentOptions,
   departmentEntities,
+  canAdd = false,
+  onOpenAdd,
   onChange,
 }: FacultyDepartmentSelectFieldProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -46,15 +53,19 @@ export function FacultyDepartmentSelectField({
   return (
     <Field
       label={t("faculty.field.department")}
-      id="department"
+      id={id}
       required={required}
       error={error}
     >
-      <FormSelect
-        id="department"
-        name="department"
+      <FormSelectWithQuickCreate
+        id={id}
+        name={id}
         value={value}
         placeholder={t("faculty.form.departmentPlaceholder")}
+        disabled={disabled}
+        canAdd={canAdd}
+        onOpenAdd={onOpenAdd}
+        addAriaLabel={t("faculty.setup.addDepartment")}
         onChange={(val) => {
           const matched = departmentEntities?.find((d) => d.name === val);
           onChange({

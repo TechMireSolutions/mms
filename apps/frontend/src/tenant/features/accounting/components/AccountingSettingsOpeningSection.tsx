@@ -1,26 +1,36 @@
 import React from "react";
 import type { Account, FiscalYear } from "@mms/shared";
-import { Scale, Trash2 } from "lucide-react";
+import { Scale } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
-import { Field, FieldErrorMessage } from "@/components/ui/FormPrimitives";
+import {
+  Field,
+  FieldErrorMessage,
+  FormCollectionShell,
+  FormListFieldCard,
+  FormSelectWithQuickCreate,
+} from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import type { MoneySeparator } from "@/tenant/features/accounting/hooks/useAccountingLedgerOps";
 import { useAccountingOpeningBalancesState } from "@/tenant/features/accounting/hooks/useAccountingOpeningBalancesState";
+import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
+import { useAccountQuickCreate } from "./useAccountQuickCreate";
 
 interface AccountingSettingsOpeningSectionProps {
   accounts: Account[];
   fiscalYears: FiscalYear[];
   /** `decimalSeparator` preference — money inputs must be parsed with it. */
   decimalSeparator: MoneySeparator;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
 }
 
 export function AccountingSettingsOpeningSection({
   accounts,
   fiscalYears,
   decimalSeparator,
+  onAccountsChange,
 }: AccountingSettingsOpeningSectionProps): React.JSX.Element {
   const {
     t,
@@ -47,6 +57,16 @@ export function AccountingSettingsOpeningSection({
     isError,
   } = useAccountingOpeningBalancesState({ accounts, fiscalYears, decimalSeparator });
 
+  const accountQuickCreate = useAccountQuickCreate({
+    accounts,
+    onAccountsChange,
+    onSelectAccount: (_target, nextId) => setAccountId(nextId),
+  });
+
+  const accountOptions = accounts
+    .filter((account) => account.isActive !== false)
+    .map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }));
+
   return (
     <SectionCard title={t("accounting.settings.secOpening")} icon={Scale} className={SETUP_SECTION_CARD_CLASS}>
       <p className="m-0 mb-3 text-xs text-muted-foreground">{t("accounting.settings.opening.hint")}</p>
@@ -60,16 +80,17 @@ export function AccountingSettingsOpeningSection({
         />
       </Field>
       <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <FormSelect
+        <FormSelectWithQuickCreate
           id="opening-account"
           name="accountId"
           value={accountId}
           onChange={setAccountId}
           placeholder={t("accounting.settings.opening.account")}
           aria-label={t("accounting.settings.opening.account")}
-          options={accounts
-            .filter((account) => account.isActive !== false)
-            .map((account) => ({ value: account.id, label: `${account.code} – ${account.name}` }))}
+          options={accountOptions}
+          canAdd={accountQuickCreate.canAdd}
+          onOpenAdd={() => accountQuickCreate.openCreate({ kind: "field", field: "debitAcc" })}
+          addAriaLabel={t("accounting.coa.addAccount")}
         />
         <Input
           id="opening-debit"
@@ -94,14 +115,6 @@ export function AccountingSettingsOpeningSection({
       <div className="mt-3 flex flex-wrap gap-2">
         <Button
           type="button"
-          className="min-h-11"
-          onClick={async () => { await handleAdd(); }}
-          disabled={!fiscalYearId || !accountId || !rowsReady || savePending}
-        >
-          {t("accounting.settings.opening.add")}
-        </Button>
-        <Button
-          type="button"
           variant="outline"
           className="min-h-11"
           onClick={async () => { await handlePost(); }}
@@ -117,33 +130,31 @@ export function AccountingSettingsOpeningSection({
         </p>
       )}
 
-      {balances.length > 0 && (
-        <ul className="m-0 mt-3 list-none space-y-1 p-0">
-          {balances.map((row) => (
-            <li
-              key={row.id}
-              className="flex items-center justify-between gap-2 rounded-md border border-border/60 px-2 py-1.5"
-            >
-              <span className="min-w-0 truncate text-xs text-foreground">{accountLabel(row.accountId)}</span>
-              <span className="flex shrink-0 items-center gap-3 text-xs tabular-nums text-muted-foreground">
-                <span>{t("accounting.settings.opening.debit")} {row.debit.toFixed(2)}</span>
-                <span>{t("accounting.settings.opening.credit")} {row.credit.toFixed(2)}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={async () => { await handleRemove(row.id); }}
-                  disabled={!rowsReady || savePending}
-                  className="min-h-11 min-w-11 text-destructive hover:text-destructive/80"
-                  aria-label={`${t("accounting.settings.opening.remove")} ${accountLabel(row.accountId)}`}
-                >
-                  <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-                </Button>
-              </span>
-            </li>
-          ))}
-        </ul>
-      )}
+      <FormCollectionShell
+        className="mt-3"
+        isEmpty={balances.length === 0}
+        addLabel={t("accounting.settings.opening.add")}
+        onAdd={() => void handleAdd()}
+        addDisabled={!fiscalYearId || !accountId || !rowsReady || savePending}
+        listKey="opening-balances"
+      >
+        {balances.map((row, index) => (
+          <FormListFieldCard
+            key={row.id}
+            id={row.id}
+            index={index}
+            label={accountLabel(row.accountId)}
+            removeLabel={`${t("accounting.settings.opening.remove")} ${accountLabel(row.accountId)}`}
+            canRemove={rowsReady && !savePending}
+            onRemove={() => void handleRemove(row.id)}
+          >
+            <span className="flex flex-wrap gap-3 text-xs tabular-nums text-muted-foreground">
+              <span>{t("accounting.settings.opening.debit")} {row.debit.toFixed(2)}</span>
+              <span>{t("accounting.settings.opening.credit")} {row.credit.toFixed(2)}</span>
+            </span>
+          </FormListFieldCard>
+        ))}
+      </FormCollectionShell>
 
       <p className="m-0 mt-3 text-xs text-muted-foreground">
         {t("accounting.settings.opening.count", { count: String(balances.length) })}
@@ -164,6 +175,15 @@ export function AccountingSettingsOpeningSection({
           {t("accounting.settings.opening.balanced")}
         </p>
       )}
+
+      {accountQuickCreate.open ? (
+        <AccountModal
+          initial={null}
+          onSave={accountQuickCreate.handleSave}
+          onClose={accountQuickCreate.close}
+          existingCodes={accountQuickCreate.existingCodes}
+        />
+      ) : null}
     </SectionCard>
   );
 }

@@ -1,12 +1,11 @@
 import React, { useId, useState } from 'react';
 import type { PlatformWorkspaceRow as PlatformWorkspaceRowData } from '@mms/shared';
 import { UserPlus, User, Mail } from 'lucide-react';
-import { Modal } from '@/components/ui/Modal';
+import { FormModal } from '@/components/ui/FormModal';
 import { Field, FieldErrorMessage } from '@/components/ui/FormField';
 import { LeadingIconInput } from '@/components/ui/LeadingIconInput';
 import { WorkspaceSummary } from '@/platform/components/workspace/WorkspaceSummary';
 import { WorkspacePasswordField } from '@/platform/components/workspace/WorkspacePasswordField';
-import { WorkspaceAdminDialogFooter } from '@/platform/components/workspace/WorkspaceAdminDialogFooter';
 import { useTranslation } from '@/hooks/useTranslation';
 import { CreateAdminResultCard } from '@/platform/components/workspace/CreateAdminResultCard';
 
@@ -75,21 +74,27 @@ export function PlatformWorkspaceCreateAdminDialog({
     onOpenChange(false);
   };
 
+  const fieldError =
+    error === t('platform.validationEnterName') ||
+    error === t('platform.validationEnterValidEmail') ||
+    error === t('platform.validationPasswordLength')
+      ? undefined
+      : error || undefined;
+
   return (
-    <Modal
+    <FormModal
       open={open}
       onClose={handleClose}
-      dismissible={!createPending}
       title={t('platform.createAdminUser')}
       subtitle={t('platform.createAdminSubtitle', { name: workspace.madrasaName, subdomain: workspace.subdomain })}
       icon={UserPlus}
       size="md"
-      footer={
-        <WorkspaceAdminDialogFooter complete={Boolean(result)} pending={createPending}
-          confirmLabel={t('platform.createAdminBtn')}
-          form="platform-create-admin-form"
-          onClose={handleClose} onConfirm={handleCreate} />
-      }
+      error={result ? undefined : fieldError}
+      cancelLabel={result ? undefined : t('common.cancel')}
+      saveLabel={result ? t('common.close') : t('platform.createAdminBtn')}
+      onSave={result ? handleClose : handleCreate}
+      saving={createPending}
+      formId={result ? undefined : 'platform-create-admin-form'}
     >
       {result ? (
         <CreateAdminResultCard
@@ -105,74 +110,67 @@ export function PlatformWorkspaceCreateAdminDialog({
             e.preventDefault();
             void handleCreate();
           }}
-          className="space-y-4 py-2"
+          className="space-y-3"
         >
           <WorkspaceSummary workspace={workspace} />
 
-          <div className="space-y-3">
-            <Field
+          <Field
+            id={nameId}
+            label={t('platform.adminNameLabel')}
+            required
+            error={error === t('platform.validationEnterName') ? error : undefined}
+          >
+            <LeadingIconInput
+              icon={User}
+              type="text"
               id={nameId}
-              label={t('platform.adminNameLabel')}
-              required
-              error={error === t('platform.validationEnterName') ? error : undefined}
-            >
-              <LeadingIconInput
-                icon={User}
-                type="text"
-                id={nameId}
-                placeholder={t('platform.adminNamePlaceholder')}
-                value={name}
-                onChange={(e) => {
-                  setName(e.target.value);
-                  if (error) setError('');
-                }}
-                className="h-11 text-sm"
-                disabled={createPending}
-              />
-            </Field>
-
-            <Field
-              id={emailId}
-              label={t('platform.adminEmailLabel')}
-              required
-              error={error === t('platform.validationEnterValidEmail') ? error : undefined}
-            >
-              <LeadingIconInput
-                icon={Mail}
-                type="email"
-                id={emailId}
-                placeholder={t('platform.adminEmailPlaceholder')}
-                value={email}
-                onChange={(e) => {
-                  setEmail(e.target.value);
-                  if (error) setError('');
-                }}
-                className="h-11 text-sm"
-                disabled={createPending}
-              />
-            </Field>
-
-            <WorkspacePasswordField
-              label={t('platform.initialPasswordLabel')}
-              placeholder={t('platform.initialPasswordPlaceholder')}
-              value={password}
-              onChange={(val) => {
-                setPassword(val);
+              placeholder={t('platform.adminNamePlaceholder')}
+              value={name}
+              onChange={(e) => {
+                setName(e.target.value);
                 if (error) setError('');
               }}
-              pending={createPending}
-              error={error === t('platform.validationPasswordLength') ? error : undefined}
+              className="h-11 text-sm"
+              disabled={createPending}
             />
+          </Field>
 
-            {error &&
-            error !== t('platform.validationEnterName') &&
-            error !== t('platform.validationEnterValidEmail') &&
-            error !== t('platform.validationPasswordLength') ? (
-              <FieldErrorMessage message={error} />
-            ) : null}
-          </div>
+          <Field
+            id={emailId}
+            label={t('platform.adminEmailLabel')}
+            required
+            error={error === t('platform.validationEnterValidEmail') ? error : undefined}
+          >
+            <LeadingIconInput
+              icon={Mail}
+              type="email"
+              id={emailId}
+              placeholder={t('platform.adminEmailPlaceholder')}
+              value={email}
+              onChange={(e) => {
+                setEmail(e.target.value);
+                if (error) setError('');
+              }}
+              className="h-11 text-sm"
+              disabled={createPending}
+            />
+          </Field>
+
+          <WorkspacePasswordField
+            label={t('platform.initialPasswordLabel')}
+            placeholder={t('platform.initialPasswordPlaceholder')}
+            value={password}
+            onChange={(val) => {
+              setPassword(val);
+              if (error) setError('');
+            }}
+            pending={createPending}
+            error={error === t('platform.validationPasswordLength') ? error : undefined}
+          />
+
+          {fieldError ? <FieldErrorMessage message={fieldError} /> : null}
         </form>
       )}
-    </Modal>
+    </FormModal>
   );
 }

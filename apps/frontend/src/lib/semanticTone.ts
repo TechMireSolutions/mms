@@ -162,7 +162,6 @@ export {
   CARD_STRIPE_COLORS,
   type CardAccentColor,
   getCardStripeClass,
-  SUB_LIST_CARD_ACCENTS,
 } from './cardAccentTokens';
 
 /** Grade badge class mapping by grade tone. */

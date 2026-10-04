@@ -113,6 +113,7 @@ export function JournalEntriesAdvancedMode(props: JournalEntriesAdvancedModeProp
         entries={props.entries}
         fiscalYears={props.fiscalYears}
         onSave={props.onSave}
+        onAccountsChange={props.onAccountsChange}
         onCloseModal={props.onCloseModal}
         onEditSelected={props.onEditSelected}
         onRequestReverse={props.onRequestReverse}

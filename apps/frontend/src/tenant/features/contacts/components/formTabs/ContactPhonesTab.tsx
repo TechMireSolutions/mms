@@ -4,7 +4,6 @@ import { CardPrimaryButton, EditableSelect } from "@/components/ui/FormPrimitive
 import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolvePhoneLabel } from "@/lib/contacts/contactI18n";
-import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { parsePhoneNumber } from "@mms/shared";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 import { isSubListItemPrimary } from "./ContactSubListCards";
@@ -55,8 +54,6 @@ export function ContactPhonesTab({
         countryCode: defaultCountryCode,
       })}
       icon={Phone}
-      accentClass={SUB_LIST_CARD_ACCENTS.phones.accent}
-      iconClass={SUB_LIST_CARD_ACCENTS.phones.icon}
       emptyMessage={t("contacts.form.noPhoneNumbersYet")}
       addLabel={t("contacts.form.addPhoneNumber")}
       removeLabel={(index) => t("contacts.form.removePhoneNumber", { index })}

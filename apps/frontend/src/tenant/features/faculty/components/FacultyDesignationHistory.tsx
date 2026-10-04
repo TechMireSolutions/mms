@@ -4,12 +4,14 @@ import { Card } from '@/components/ui/card';
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 import { Button } from '@/components/ui/button';
 import { useTranslation } from '@/hooks/useTranslation';
+import { FacultyCatalogCreateOverlays } from './FacultyCatalogCreateOverlays';
 import { FacultyDesignationFormCard } from './FacultyDesignationFormCard';
 import { FacultyDesignationHistoryItem } from './FacultyDesignationHistoryItem';
 import {
   EMPTY_DESIGNATION_FORM,
   useFacultyDesignationHistoryController,
 } from '../hooks/useFacultyDesignationHistoryController';
+import { useFacultyFormCatalogQuickCreate } from '../hooks/useFacultyFormCatalogQuickCreate';
 
 /** Fully dynamic designation history with transition, edit, add, and delete flows. */
 export function FacultyDesignationHistory({
@@ -20,6 +22,7 @@ export function FacultyDesignationHistory({
   canEdit?: boolean;
 }): React.JSX.Element {
   const { t } = useTranslation();
+  const catalogCreate = useFacultyFormCatalogQuickCreate();
   const {
     history,
     mode,
@@ -80,6 +83,8 @@ export function FacultyDesignationHistory({
           activeDefinitionOptions={activeDefinitionOptions}
           minTransitionDate={minTransitionDate}
           isBusy={isBusy}
+          canAddCatalog={canEdit}
+          onOpenAddDesignation={() => catalogCreate.openCreateDesignation(null)}
           onPatchForm={patchForm}
           onSubmit={handleSubmit}
           onCancel={reset}
@@ -125,6 +130,18 @@ export function FacultyDesignationHistory({
           </div>
         )}
       </Card>
+
+      <FacultyCatalogCreateOverlays
+        createDepartmentOpen={false}
+        onCloseDepartment={catalogCreate.closeDepartment}
+        createDesignationOpen={catalogCreate.createDesignationOpen}
+        onCloseDesignation={catalogCreate.closeDesignation}
+        onDesignationCreated={(designation) => {
+          catalogCreate.applyDesignationCreated(designation, (_rowKey, patch) => {
+            patchForm({ designationId: patch.designationId });
+          });
+        }}
+      />
     </div>
   );
 }

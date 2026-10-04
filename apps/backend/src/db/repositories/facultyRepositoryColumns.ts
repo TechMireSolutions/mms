@@ -39,6 +39,7 @@ export function facultyWriteValues(subdomain: string, facultyMember: FacultyMemb
   const knownKeys = new Set([
     'id', 'contactId', 'userId', 'employeeId', 'status', 'specialization', 'department',
     'designation', 'designationId', 'designationStartsOn', 'designationEndsOn',
+    'designations', 'departmentId',
     'designationAssignableRoles', 'customDesignation', 'reportingFacultyId',
     'reportingFacultyName', 'subordinateCount', 'subordinates', 'hierarchyRank',
     'qualification', 'joinDate', 'notes', 'name', 'phone', 'email', 'gender', 'avatar',

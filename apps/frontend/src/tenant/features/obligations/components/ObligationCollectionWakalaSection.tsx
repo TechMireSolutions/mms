@@ -3,7 +3,7 @@ import { User } from 'lucide-react';
 import { type Mujtahid, type MujtahidRep, type ObligationType } from '@/lib/data/obligationsData';
 import { type AppTranslationKey } from '@mms/shared';
 import { useTranslation } from '@/hooks/useTranslation';
-import { FormSelect } from '@/components/ui/FormSelect';
+import { FormSelectWithQuickCreate } from '@/components/ui/FormPrimitives';
 import { UserActorSelect } from '@/tenant/components/selectors/UserActorSelect';
 import { SectionCard } from '@/components/ui/SectionCard';
 import type { ObligationCollectionFormState } from './ObligationCollectionFormFields';
@@ -16,6 +16,10 @@ interface ObligationCollectionWakalaSectionProps {
   eligibleReps: MujtahidRep[];
   getMujtahid: (repId: string) => Mujtahid | null | undefined;
   selectedMujtahid: Mujtahid | null | undefined;
+  canAddType?: boolean;
+  canAddRep?: boolean;
+  onOpenAddType?: () => void;
+  onOpenAddRep?: () => void;
   formField: (
     key: keyof ObligationCollectionFormState,
     label: string,
@@ -32,6 +36,10 @@ export function ObligationCollectionWakalaSection({
   eligibleReps,
   getMujtahid,
   selectedMujtahid,
+  canAddType = false,
+  canAddRep = false,
+  onOpenAddType,
+  onOpenAddRep,
   formField,
 }: ObligationCollectionWakalaSectionProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -46,7 +54,7 @@ export function ObligationCollectionWakalaSection({
       <fieldset className="space-y-4 border-0 m-0 p-0 text-start">
         <div className="space-y-4">
           {formField('obligation_type_id', t('obligations.form.obligationType'), true,
-            <FormSelect
+            <FormSelectWithQuickCreate
               id="obligation-obligation_type_id"
               name="obligation_type_id"
               value={form.obligation_type_id}
@@ -57,12 +65,15 @@ export function ObligationCollectionWakalaSection({
                 label: `${obligationType.name} (${obligationType.designated_for})`,
               }))}
               className="w-full"
+              canAdd={canAddType}
+              onOpenAdd={onOpenAddType}
+              addAriaLabel={t('obligations.types.addTitle')}
             />,
           )}
 
           {formField('mujtahid_representative_id', t('obligations.form.representative'), true,
             <div className="space-y-1 w-full">
-              <FormSelect
+              <FormSelectWithQuickCreate
                 id="obligation-mujtahid_representative_id"
                 name="mujtahid_representative_id"
                 value={form.mujtahid_representative_id}
@@ -77,6 +88,9 @@ export function ObligationCollectionWakalaSection({
                   };
                 })}
                 className="w-full"
+                canAdd={canAddRep && Boolean(form.obligation_type_id)}
+                onOpenAdd={onOpenAddRep}
+                addAriaLabel={t('obligations.mujtahids.repAddTitle')}
               />
               {selectedMujtahid && (
                 <p className="text-xs text-muted-foreground mt-1">

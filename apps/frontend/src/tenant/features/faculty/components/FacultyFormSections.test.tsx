@@ -18,6 +18,10 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+vi.mock("./FacultyCatalogCreateOverlays", () => ({
+  FacultyCatalogCreateOverlays: () => null,
+}));
+
 describe("FacultyFormSections Components", () => {
   it("renders FacultyContactSection with contact picker, phone, email, qualification, and specialization pills", () => {
     const html = renderToStaticMarkup(
@@ -104,7 +108,7 @@ describe("FacultyFormSections Components", () => {
     expect(empHtml).toContain("border-destructive");
   });
 
-  it("renders designation and dynamic department dropdown in designation section", () => {
+  it("renders designation holding card with department, designation, and dates", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
         errors={{}}
@@ -112,6 +116,15 @@ describe("FacultyFormSections Components", () => {
           designationId: "senior-faculty",
           designationStartsOn: "2026-01-01",
           department: "Islamic Jurisprudence",
+          departmentId: "dept-1",
+          designations: [{
+            designationId: "senior-faculty",
+            departmentId: "dept-1",
+            departmentName: "Islamic Jurisprudence",
+            status: "active",
+            startsOn: "2026-01-01",
+            isPrimary: true,
+          }],
         }}
         designationOptions={[{
           id: "senior-faculty",
@@ -128,11 +141,13 @@ describe("FacultyFormSections Components", () => {
       />,
     );
 
-    expect(html).toContain('id="designationId"');
+    expect(html).toContain("faculty.field.department");
+    expect(html).toContain("faculty.designations.startsOn");
+    expect(html).toContain("faculty.designations.holdingStatus");
     expect(html).not.toContain('type="date"');
-    expect(html).toContain('id="designationStartsOn"');
-    expect(html).toContain('id="department"');
     expect(html).toContain('value="Islamic Jurisprudence"');
+    expect(html).toContain("faculty.designations.addDesignation");
+    expect(html).not.toContain("faculty.form.tab.designation");
   });
 
   it("omits department, specialization, and qualification from employment section", () => {

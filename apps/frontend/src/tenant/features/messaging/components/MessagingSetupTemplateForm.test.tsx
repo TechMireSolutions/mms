@@ -40,6 +40,7 @@ describe("MessagingSetupTemplateForm Component", () => {
     await act(async () => {
       root.render(
         <MessagingSetupTemplateForm
+          open
           editingId={null}
           label="Welcome"
           body="Welcome {name}"
@@ -57,8 +58,8 @@ describe("MessagingSetupTemplateForm Component", () => {
       );
     });
 
-    const labelInput = container.querySelector("#tplLabel") as HTMLInputElement;
-    const bodyTextarea = container.querySelector("#tplBody") as HTMLTextAreaElement;
+    const labelInput = document.body.querySelector("#tplLabel") as HTMLInputElement;
+    const bodyTextarea = document.body.querySelector("#tplBody") as HTMLTextAreaElement;
 
     expect(labelInput).not.toBeNull();
     expect(labelInput.value).toBe("Welcome");
@@ -70,6 +71,7 @@ describe("MessagingSetupTemplateForm Component", () => {
     await act(async () => {
       root.render(
         <MessagingSetupTemplateForm
+          open
           editingId={null}
           label=""
           body=""
@@ -91,12 +93,12 @@ describe("MessagingSetupTemplateForm Component", () => {
       );
     });
 
-    const labelInput = container.querySelector("#tplLabel") as HTMLInputElement;
-    const bodyTextarea = container.querySelector("#tplBody") as HTMLTextAreaElement;
+    const labelInput = document.body.querySelector("#tplLabel") as HTMLInputElement;
+    const bodyTextarea = document.body.querySelector("#tplBody") as HTMLTextAreaElement;
 
     expect(labelInput.getAttribute("aria-invalid")).toBe("true");
     expect(bodyTextarea.getAttribute("aria-invalid")).toBe("true");
-    expect(container.textContent).toContain("Label is required");
-    expect(container.textContent).toContain("Body is required");
+    expect(document.body.textContent).toContain("Label is required");
+    expect(document.body.textContent).toContain("Body is required");
   });
 });

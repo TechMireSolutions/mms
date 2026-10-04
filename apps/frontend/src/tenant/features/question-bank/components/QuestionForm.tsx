@@ -159,7 +159,7 @@ export function QuestionForm({
             void handleSave();
           }
         }}
-        className="space-y-5 pb-6"
+        className="space-y-3 pb-6"
       >
         <div className="relative z-raised">
           <QuestionFormClassificationSection

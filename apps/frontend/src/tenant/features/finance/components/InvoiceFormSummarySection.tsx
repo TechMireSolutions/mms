@@ -1,7 +1,5 @@
 import React from "react";
-import { Card } from "@/components/ui/card";
-import { cn } from "@/lib/utils";
-import { CARD_STRIPE_INSET } from "@/lib/semanticTone";
+import { SectionCard } from "@/components/ui/SectionCard";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
 
 export interface InvoiceFormSummarySectionProps {
@@ -20,7 +18,7 @@ export function InvoiceFormSummarySection({
   formatCurrency,
 }: InvoiceFormSummarySectionProps): React.JSX.Element {
   return (
-    <Card accentColor="primary" className={cn("p-5 shadow-sm", CARD_STRIPE_INSET)}>
+    <SectionCard accentColor="primary" padding="p-5">
       <div className="grid grid-cols-1 gap-3 text-sm sm:grid-cols-3">
         <div>
           <p className="m-0 text-xs font-bold uppercase text-muted-foreground">{t("finance.columns.baseFee")}</p>
@@ -35,6 +33,6 @@ export function InvoiceFormSummarySection({
           <p className="m-0 mt-0.5 font-extrabold text-primary text-sm">{formatCurrency(finalAmt)}</p>
         </div>
       </div>
-    </Card>
+    </SectionCard>
   );
 }

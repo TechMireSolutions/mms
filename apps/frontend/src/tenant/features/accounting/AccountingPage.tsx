@@ -181,6 +181,7 @@ export default function Accounting() {
                     accounts={accounts}
                     fiscalYears={fiscalYears}
                     onSaveFiscalYears={setFiscalYears}
+                    onAccountsChange={setAccounts}
                   />
                 </React.Suspense>
               )}

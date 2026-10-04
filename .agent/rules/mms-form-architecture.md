@@ -6,11 +6,21 @@ description: FormModal shell, Zod form validation, decimal currency formatting, 
 # MMS Form Architecture
 
 **Workflow skills:** form authoring → `mms-form-architecture` · form UX guidelines → `ui-ux-pro-max` · shell a11y & focus-return → `mms-a11y-smoke`.
+**Page boundary:** Work directory / DetailSheet / FormModal triad → `mms-module-architecture.md` + skill `mms-module-page`.
 
 ## 1. FormModal Shell & Primitives
 - **Modal Scoping:** Use `FormModal` for create, edit, and builder flows; raw `Modal` restricted to confirm/preview dialogs. Shell manages header, icon, subtitle, tabs, progress, focus trap, and focus return on dismiss.
 - **Input Primitives & Tokens:** Inputs use `min-h-11 min-w-11` (`FORM_INPUT`). Cards use `FORM_CARD`; builders use `FORM_INPUT_BUILDER`. Inline errors use `FieldErrorMessage` + `FORM_ERROR`.
-- **Field Primitives:** Standardize on `Input`, `Textarea`, `Checkbox`, `FormSelect`, `DatePicker`, `TimePicker`, `DateTimePicker`, `EditableSelect`. Currency requires text `inputMode="decimal"` (ban `type="number"`). Phone uses `type="tel"` with E.164 normalization. Calendar is Gregorian only.
+- **Field Primitives:** Standardize on `Input`, `Textarea`, `Checkbox`, `FormSelect`, `FormSelectWithQuickCreate`, `DatePicker`, `TimePicker`, `DateTimePicker`, `EditableSelect`. Currency requires text `inputMode="decimal"` (ban `type="number"`). Phone uses `type="tel"` with E.164 normalization. Calendar is Gregorian only.
+- **Control decision table (SSOT):** Pick exactly one control family — do not invent parallel chrome.
+  - enum / filter → `FormSelect`
+  - string tenant lookup → `EditableSelect` + `onUpdateOptions`
+  - entity catalog FK + existing create `FormModal` → `FormSelectWithQuickCreate`
+  - person search → `ContactPicker` / `RegistryPersonSelect`
+  - chips / categories → `CategorySelector` / `FormTagsInput`
+  - discriminative row-header control → `FormCardTypeSelect` (from `FormCardChrome`) wrapping the control in `FormListFieldCard.typeSelect`
+  - repeatable draft rows → `FormCollectionShell` + `FormListFieldCard` + `FormAddAnotherButton`
+- **Catalog create SSOT:** On write forms, every **entity-catalog id** select whose module already has a create `FormModal` + mutation **must** use `FormSelectWithQuickCreate` (Plus → nested catalog modal → auto-select new id). **Required:** faculty dept/designation/position, org position FKs (dept/desig/location/parent), Wakala mujtahid/type/rep, obligation collection type/rep, QB citation `bookId`, accounting journal/simple `account_id` legs (gate Plus with write permission). **Forbidden / keep other SSOTs:** enum & filter-only `FormSelect`; string tenant lookups → `EditableSelect`; person search → `ContactPicker` / `RegistryPersonSelect`; chip/category UI → `CategorySelector`; cross-module heavy creates (e.g. Session→full FacultyForm, Enrollment→Session create). Ban one-off Plus+`FormSelect` chrome.
 - **Scroll & Viewport:** Tabbed forms use `<FormModal tall>` (`max-h-[43.75rem]` + `flex-1 overflow-y-auto`). Use `dvh`/`svh` (+ safe area) over `vh`. Apply `useBodyScrollLock()` + `overscroll-contain` on scrollable modal bodies.
 - **Layout & Structure:** Enforce single-column flows (`COLLECTION_BODY`) inside `space-y-3`. Multi-column sections use CSS Subgrid or `@container` queries. Enabled registry fields must render (ban hardcoded allowlists). Client-side dynamic form compilers are banned. Gate entry and save CTAs with `canWrite`.
 
@@ -24,6 +34,11 @@ description: FormModal shell, Zod form validation, decimal currency formatting, 
 - **Authoritative Arrays:** Pre-populate one empty row; strip blanks before save via `cleanContactDraft`. Empty array is authoritative (`[]` clears all child rows, never omitted).
 - **Edit Merge:** Merge on edit save via `mergeContactEditSavePayload`: draft collections + scalar sync win over spread contact. Clear legacy `relationships: []` when `relationshipContacts` is emptied.
 - **Hydration & Sync:** `normalizeContactForEdit` hydrates scalars only when array is omitted; never overwrite explicit `[]`. Offline sync (`mergeContactForSync`) applies arrays as-is.
+- **Add-another SSOT (required):** Repeatable form collections use `FormCollectionShell` + `FormListFieldCard` (+ `CardRemoveButton`) + `FormAddAnotherButton` from `FormPrimitives`. Applies to contacts phones/emails, faculty designation holdings, question-bank matching/ordering/citations, Wakala distribution rows, journal entry lines, paper sections, class fee/schedule/budget row editors, and any new multi-entry form list. Ban one-off `Button`+`Plus`, ad-hoc dashed borders, or `SectionCard` wrapping list cards. `ContactSubListShell` is a thin adapter over `FormCollectionShell`. Label the append control with a short noun (e.g. “Phone Number”, “Designation”). `SectionCard` remains valid for non-list form *sections* (identity blocks).
+- **Accounting exception:** Journal desktop lines stay a dense **table** inside `FormCollectionShell` (not `FormListFieldCard` rows). Mobile journal lines keep `FormListFieldCard`. Nested paper-section questions may stay compact chips inside a section card; only top-level sections use the collection SSOT.
+- **Collection title hierarchy:** Show exactly one collection identity — (1) named FormModal tab → omit shell title; (2) all-sections / non-tab layout → optional plain `FormCollectionShell` title/icon; (3) row header never repeats the collection noun — prefer `FormCardTypeSelect` in `typeSelect` (contacts Type, faculty holding status) or a sequence label only when there is no type control.
+- **Form list-card chrome:** Use `FormListFieldCard` default primary stripe/icon only — no override props. Ban per-collection accent/icon classes on form rows. Row header density: icon tile → `FormCardTypeSelect` (when discriminative) → optional `headerExtras` → trash when `canRemove`.
+- **Form-root spacing:** Modal/tab bodies use `space-y-3`. Keep `space-y-6` only between peer collection shells on the same surface.
 
 ### 3.1 Contact-Linked Module Writes (Students & Faculty)
 - **Identity Normalization:** When `contactId` exists, strip `CONTACT_PROFILE_FIELDS` and guardian triad writes via `normalizeContactLinkedRecord`. Do not duplicate person profile on module domain table.

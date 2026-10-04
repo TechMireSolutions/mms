@@ -171,7 +171,7 @@ export const InvoiceForm = (function InvoiceForm({
               e.preventDefault();
               if (canSave && !saving && !submitting) void handleSubmit();
             }}
-            className="space-y-5 text-start"
+            className="space-y-3 text-start"
           >
             <InvoiceFormFieldsSection
               t={t}

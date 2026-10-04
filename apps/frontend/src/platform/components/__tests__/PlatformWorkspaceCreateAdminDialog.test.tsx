@@ -11,12 +11,16 @@ vi.mock('@/components/ui/Modal', () => ({
     subtitle,
     children,
     footer,
+    saveLabel,
+    cancelLabel,
   }: {
     open: boolean;
     title: string;
     subtitle?: string;
     children: React.ReactNode;
     footer?: React.ReactNode;
+    saveLabel?: string;
+    cancelLabel?: string;
   }) =>
     open ? (
       <div data-testid="modal">
@@ -24,6 +28,8 @@ vi.mock('@/components/ui/Modal', () => ({
         {subtitle ? <h3>{subtitle}</h3> : null}
         <div>{children}</div>
         {footer ? <div>{footer}</div> : null}
+        {cancelLabel ? <div>{cancelLabel}</div> : null}
+        {saveLabel ? <div>{saveLabel}</div> : null}
       </div>
     ) : null,
 }));

@@ -1,10 +1,14 @@
 import React from "react";
-import { Plus, Trash2, X } from "lucide-react";
+import { Layers, X } from "lucide-react";
 import { useTranslation } from "@/hooks/useTranslation";
-import { FORM_INPUT, WORK_SURFACE } from "@/components/ui/formStyles";
+import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { Field } from "@/components/ui/FormPrimitives";
+import {
+  Field,
+  FormCollectionShell,
+  FormListFieldCard,
+} from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import type { QuestionBankQuestion as Question } from "@mms/shared";
 import type { PaperSection } from "@/tenant/features/question-bank/components/paperBuilderUtils";
@@ -35,107 +39,101 @@ export function PaperSectionsEditor({
   const { t } = useTranslation();
 
   return (
-    <section className={`${WORK_SURFACE} p-3 sm:p-4`}>
-      <div className="mb-3 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+    <FormCollectionShell
+      title={(
         <div>
           <h3 className="m-0 text-sm font-bold text-foreground">{t("questionBank.paperSections")}</h3>
           <p className="m-0 text-xs text-muted-foreground">
             {t("questionBank.selectedQuestionCount", { count: selectedCount })}
           </p>
         </div>
-        <Button type="button" onClick={onAddSection} size="sm" variant="outline" className="w-full sm:w-auto">
-          <Plus className="h-3.5 w-3.5" aria-hidden="true" />
-          {t("questionBank.addSection")}
-        </Button>
-      </div>
-
-      <div className="space-y-3">
-        {sections.map((section, sectionIndex) => {
-          const active = section.id === activeSectionId;
-          return (
-            <div key={section.id} className={`rounded-lg border p-3 ${active ? "border-primary bg-primary/5" : "border-border bg-muted/20"}`}>
-              <div className="mb-3 flex flex-wrap items-start gap-2">
-                <Button
-                  type="button"
-                  onClick={() => onSelectSection(section.id)}
-                  variant={active ? "default" : "outline"}
-                  size="sm"
-                  className="px-3 text-xs"
-                >
-                  {t("questionBank.activeSection", { n: sectionIndex + 1 })}
-                </Button>
-                {sections.length > 1 && (
-                  <Button
-                    type="button"
-                    onClick={() => onRemoveSection(section.id)}
-                    variant="ghost"
-                    size="icon"
-                    aria-label={t("questionBank.removeSectionAria", { title: section.title })}
-                    className="ms-auto text-muted-foreground hover:text-destructive"
-                  >
-                    <Trash2 className="h-3.5 w-3.5" aria-hidden="true" />
-                  </Button>
-                )}
-              </div>
-              <div className="grid gap-3 sm:grid-cols-2">
-                <Field id={`section-title-${section.id}`} label={t("questionBank.sectionTitle")}>
-                  <Input
-                    id={`section-title-${section.id}`}
-                    name={`sections.${section.id}.title`}
-                    className={`${FORM_INPUT} shadow-none`}
-                    value={section.title}
-                    onChange={(event) => onUpdateSection(section.id, { title: event.target.value })}
-                    placeholder={t("questionBank.sectionTitlePlaceholder")}
-                  />
-                </Field>
-                <Field id={`section-instructions-${section.id}`} label={t("questionBank.sectionInstructions")}>
-                  <Input
-                    id={`section-instructions-${section.id}`}
-                    name={`sections.${section.id}.instructions`}
-                    className={`${FORM_INPUT} shadow-none`}
-                    value={section.instructions}
-                    onChange={(event) => onUpdateSection(section.id, { instructions: event.target.value })}
-                    placeholder={t("questionBank.sectionInstructionsPlaceholder")}
-                  />
-                </Field>
-              </div>
-
-              <div className="mt-3 space-y-2">
-                {section.questionIds.length === 0 ? (
-                  <EmptyState
-                    title={t("questionBank.noSectionQuestions")}
-                    variant="dashed"
-                    compact
-                    icon={null}
-                    className="rounded-lg"
-                  />
-                ) : (
-                  section.questionIds.map((questionId, questionIndex) => {
-                    const question = questionsById.get(questionId);
-                    if (!question) return null;
-                    return (
-                      <div key={questionId} className="flex min-w-0 items-start gap-2 rounded-lg border border-border bg-card px-3 py-2">
-                        <span className="mt-0.5 shrink-0 text-xs font-bold text-muted-foreground">{questionIndex + 1}.</span>
-                        <p className="m-0 min-w-0 flex-1 break-words text-xs font-semibold leading-snug text-foreground">{question.text}</p>
-                        <Button
-                          type="button"
-                          onClick={() => onRemoveQuestion(section.id, questionId)}
-                          variant="ghost"
-                          size="icon"
-                          className="shrink-0 text-muted-foreground hover:text-destructive"
-                          aria-label={t("questionBank.removeQuestionAria", { n: questionIndex + 1 })}
-                        >
-                          <X className="h-3.5 w-3.5" aria-hidden="true" />
-                        </Button>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
+      )}
+      icon={Layers}
+      addLabel={t("questionBank.addSection")}
+      onAdd={onAddSection}
+      listKey="paper-sections"
+    >
+      {sections.map((section, sectionIndex) => {
+        const active = section.id === activeSectionId;
+        return (
+          <FormListFieldCard
+            key={section.id}
+            id={section.id}
+            index={sectionIndex}
+            label={undefined}
+            typeSelect={(
+              <Button
+                type="button"
+                onClick={() => onSelectSection(section.id)}
+                variant={active ? "default" : "outline"}
+                size="sm"
+                className="px-3 text-xs"
+              >
+                {t("questionBank.activeSection", { n: sectionIndex + 1 })}
+              </Button>
+            )}
+            removeLabel={t("questionBank.removeSectionAria", { title: section.title })}
+            canRemove={sections.length > 1}
+            onRemove={() => onRemoveSection(section.id)}
+          >
+            <div className="grid gap-3 sm:grid-cols-2">
+              <Field id={`section-title-${section.id}`} label={t("questionBank.sectionTitle")}>
+                <Input
+                  id={`section-title-${section.id}`}
+                  name={`sections.${section.id}.title`}
+                  className={`${FORM_INPUT} shadow-none`}
+                  value={section.title}
+                  onChange={(event) => onUpdateSection(section.id, { title: event.target.value })}
+                  placeholder={t("questionBank.sectionTitlePlaceholder")}
+                />
+              </Field>
+              <Field id={`section-instructions-${section.id}`} label={t("questionBank.sectionInstructions")}>
+                <Input
+                  id={`section-instructions-${section.id}`}
+                  name={`sections.${section.id}.instructions`}
+                  className={`${FORM_INPUT} shadow-none`}
+                  value={section.instructions}
+                  onChange={(event) => onUpdateSection(section.id, { instructions: event.target.value })}
+                  placeholder={t("questionBank.sectionInstructionsPlaceholder")}
+                />
+              </Field>
             </div>
-          );
-        })}
-      </div>
-    </section>
+
+            <div className="mt-3 space-y-2">
+              {section.questionIds.length === 0 ? (
+                <EmptyState
+                  title={t("questionBank.noSectionQuestions")}
+                  variant="dashed"
+                  compact
+                  icon={null}
+                  className="rounded-lg"
+                />
+              ) : (
+                section.questionIds.map((questionId, questionIndex) => {
+                  const question = questionsById.get(questionId);
+                  if (!question) return null;
+                  return (
+                    <div key={questionId} className="flex min-w-0 items-start gap-2 rounded-lg border border-border bg-card px-3 py-2">
+                      <span className="mt-0.5 shrink-0 text-xs font-bold text-muted-foreground">{questionIndex + 1}.</span>
+                      <p className="m-0 min-w-0 flex-1 break-words text-xs font-semibold leading-snug text-foreground">{question.text}</p>
+                      <Button
+                        type="button"
+                        onClick={() => onRemoveQuestion(section.id, questionId)}
+                        variant="ghost"
+                        size="icon"
+                        className="shrink-0 text-muted-foreground hover:text-destructive"
+                        aria-label={t("questionBank.removeQuestionAria", { n: questionIndex + 1 })}
+                      >
+                        <X className="h-3.5 w-3.5" aria-hidden="true" />
+                      </Button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
+          </FormListFieldCard>
+        );
+      })}
+    </FormCollectionShell>
   );
 }

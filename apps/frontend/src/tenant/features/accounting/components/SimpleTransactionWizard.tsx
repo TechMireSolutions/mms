@@ -3,6 +3,7 @@ import { FormModal } from "@/components/ui/FormModal";
 import { useAccountingCurrency } from "@/hooks/useCurrency";
 import { useTranslation } from "@/hooks/useTranslation";
 import { type Account, type FiscalYear, type JournalEntry } from "@/lib/data/accountingData";
+import { AccountModal } from "@/tenant/features/accounting/components/AccountModal";
 import { SimpleTransactionWizardFooter } from "./SimpleTransactionWizardFooter";
 import { SimpleTransactionWizardSteps } from "./SimpleTransactionWizardSteps";
 import { StepTransactionForm } from "./SimpleTransactionStepForm";
@@ -11,6 +12,7 @@ import { StepTypeSelection } from "./SimpleTransactionStepTypeSelection";
 import { type QuickActionType } from "./simpleTransactionWizardTypes";
 import type { JournalEntrySave } from "./journalEntriesTypes";
 import { useSimpleTransactionWizard } from "./useSimpleTransactionWizard";
+import { useAccountQuickCreate } from "./useAccountQuickCreate";
 
 interface SimpleTransactionWizardProps {
   open: boolean;
@@ -19,6 +21,7 @@ interface SimpleTransactionWizardProps {
   fiscalYears: FiscalYear[];
   onSave: JournalEntrySave;
   onClose: () => void;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
   prefillType?: QuickActionType | null;
   prefillAmount?: string;
   prefillDescription?: string;
@@ -31,6 +34,7 @@ export function SimpleTransactionWizard({
   fiscalYears,
   onSave,
   onClose,
+  onAccountsChange,
   prefillType,
   prefillAmount,
   prefillDescription,
@@ -65,9 +69,20 @@ export function SimpleTransactionWizard({
     prefillDescription,
   });
 
+  const accountQuickCreate = useAccountQuickCreate({
+    accounts,
+    onAccountsChange,
+    onSelectAccount: (target, accountId) => {
+      if (target.kind === "field") {
+        setForm((prev) => ({ ...prev, [target.field]: accountId }));
+      }
+    },
+  });
+
   return (
+    <>
     <FormModal
-      open={open}
+      open={open && !accountQuickCreate.open}
       onClose={onClose}
       title={t("accounting.journal.dashboard.recordTransaction")}
       subtitle={stepSubtitle}
@@ -112,6 +127,8 @@ export function SimpleTransactionWizard({
                 onProceed={() => {
                   if (canProceed()) setStep(3);
                 }}
+                canAddAccount={accountQuickCreate.canAdd}
+                onOpenAddAccount={(field) => accountQuickCreate.openCreate({ kind: "field", field })}
               />
             )}
             {step === 3 && selectedType && (
@@ -139,5 +156,14 @@ export function SimpleTransactionWizard({
         />
       </div>
     </FormModal>
+    {accountQuickCreate.open && (
+      <AccountModal
+        initial={null}
+        onSave={accountQuickCreate.handleSave}
+        onClose={accountQuickCreate.close}
+        existingCodes={accountQuickCreate.existingCodes}
+      />
+    )}
+    </>
   );
 }

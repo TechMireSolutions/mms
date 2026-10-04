@@ -24,6 +24,7 @@ export function DistributionsList(props: DistributionsListProps) {
   const {
     denoms,
     batches,
+    onDenomsChange,
     canWrite = true,
     canDelete = false,
     showDeleted = false,
@@ -150,6 +151,7 @@ export function DistributionsList(props: DistributionsListProps) {
           batches={batches}
           onClose={() => list.setShowModal(false)}
           onSave={list.handleDistribute}
+          onDenomsChange={onDenomsChange}
         />
       )}
 

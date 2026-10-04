@@ -11,6 +11,19 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 vi.mock("@/components/ui/FormPrimitives", () => ({
+  TYPE_SELECT_WIDTH: "w-32",
+  FormCardTypeSelect: ({
+    label,
+    children,
+  }: {
+    label: React.ReactNode;
+    children: React.ReactNode;
+  }) => (
+    <div>
+      <span>{label}</span>
+      {children}
+    </div>
+  ),
   Field: ({ label, children }: { label: string; children: React.ReactNode }) => (
     <div data-testid="field">
       <label>{label}</label>
@@ -54,8 +67,6 @@ describe("ContactLabeledValueSubListTab Component", () => {
         resolveLabel={(raw) => String(raw || "personal")}
         emptyItem={(label) => ({ label, address: "" })}
         icon={Mail}
-        accentClass="accent-emails"
-        iconClass="icon-emails"
         emptyMessage="No emails"
         addLabel="Add Email"
         removeLabel={(idx) => `Remove Email ${idx}`}

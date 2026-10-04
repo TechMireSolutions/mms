@@ -9,6 +9,10 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+vi.mock("./FacultyCatalogCreateOverlays", () => ({
+  FacultyCatalogCreateOverlays: () => null,
+}));
+
 describe("FacultyFormDesignationSection", () => {
   it("returns null when designation field is disabled", () => {
     const html = renderToStaticMarkup(
@@ -24,14 +28,39 @@ describe("FacultyFormDesignationSection", () => {
     expect(html).toBe("");
   });
 
-  it("renders designation dropdown and start date for a new faculty member", () => {
+  it("omits collection title in tab mode and puts status in the row header", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
         facultyDraft={{
+          department: "Islamic Jurisprudence",
+          departmentId: "dept-1",
           designationId: "des-1",
           designationStartsOn: "2026-01-01",
+          designationEndsOn: "2026-12-31",
+          designations: [{
+            designationId: "des-1",
+            departmentId: "dept-1",
+            departmentName: "Islamic Jurisprudence",
+            status: "active",
+            startsOn: "2026-01-01",
+            endsOn: "2026-12-31",
+            isPrimary: true,
+          }],
         }}
         errors={{}}
+        departmentEntities={[
+          {
+            id: "dept-1",
+            workspaceSubdomain: "tenant",
+            name: "Islamic Jurisprudence",
+            code: "fiqh",
+            createdAt: "2026-01-01T00:00:00.000Z",
+            updatedAt: "2026-01-01T00:00:00.000Z",
+            deletedAt: null,
+            parentId: null,
+            isActive: true,
+          },
+        ]}
         designationOptions={[
           {
             id: "des-1",
@@ -48,17 +77,49 @@ describe("FacultyFormDesignationSection", () => {
       />,
     );
 
-    expect(html).toContain("faculty.form.tab.designation");
-    expect(html).toContain('id="designationId"');
+    expect(html).not.toContain("<h3");
+    expect(html).not.toContain("faculty.form.tab.designation");
+    expect(html).toContain("faculty.designations.holdingStatus");
+    expect(html).toContain("faculty.designations.startsOn");
+    expect(html).toContain("faculty.designations.endsOn");
+    expect(html).toContain("faculty.designations.addDesignation");
+    expect(html).toContain("border-dashed");
     expect(html).toContain("Head of Department");
-    expect(html).toContain("department_head");
-    expect(html).toContain("designationStartsOn");
+    expect(html).toMatch(/id="designation-status-/);
+    expect(html).not.toMatch(/faculty\.field\.designation \d/);
+    expect(html).toContain('aria-label="faculty.setup.addDepartment"');
+    expect(html).toContain('aria-label="faculty.designations.addDesignation"');
   });
 
-  it("disables designation select and shows history notice for existing faculty member", () => {
+  it("shows collection title only when showCollectionTitle is set", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
-        faculty={{ id: "fac-1", contactId: "cnt-1", status: "active" } as any}
+        showCollectionTitle
+        facultyDraft={{ designationId: "des-1" }}
+        errors={{}}
+        designationOptions={[
+          {
+            id: "des-1",
+            code: "HEAD",
+            name: "Head of Department",
+            hierarchyRank: 2,
+            isActive: true,
+            assignableRoles: [],
+          },
+        ]}
+        isFieldEnabled={() => true}
+        isFieldRequired={() => false}
+        onDraftChange={vi.fn()}
+      />,
+    );
+
+    expect(html).toContain("faculty.form.tab.designation");
+  });
+
+  it("disables designation editing and shows history notice for existing faculty member", () => {
+    const html = renderToStaticMarkup(
+      <FacultyFormDesignationSection
+        faculty={{ id: "fac-1", contactId: "cnt-1", status: "active" } as never}
         facultyDraft={{ designationId: "des-1" }}
         errors={{}}
         designationOptions={[
@@ -78,10 +139,11 @@ describe("FacultyFormDesignationSection", () => {
     );
 
     expect(html).toContain("faculty.designations.manageInHistory");
-    expect(html).not.toContain("designationStartsOn");
+    expect(html).not.toContain("faculty.designations.addDesignation");
+    expect(html).not.toContain("border-dashed");
   });
 
-  it("renders department select when department field is enabled", () => {
+  it("renders department-only select when designation field is disabled", () => {
     const html = renderToStaticMarkup(
       <FacultyFormDesignationSection
         facultyDraft={{
@@ -89,7 +151,7 @@ describe("FacultyFormDesignationSection", () => {
         }}
         errors={{}}
         departmentOptions={["Islamic Jurisprudence", "Hifz"]}
-        isFieldEnabled={() => true}
+        isFieldEnabled={(fieldId) => fieldId === "department" || fieldId === "departmentId"}
         isFieldRequired={() => false}
         onDraftChange={vi.fn()}
       />,
@@ -97,81 +159,6 @@ describe("FacultyFormDesignationSection", () => {
 
     expect(html).toContain('id="department"');
     expect(html).toContain('value="Islamic Jurisprudence"');
-    expect(html).not.toContain('id="reportingFacultyId"');
-  });
-
-  it("renders department entities with code when departmentEntities is provided", () => {
-    const html = renderToStaticMarkup(
-      <FacultyFormDesignationSection
-        facultyDraft={{ department: "Hadith Sciences" }}
-        errors={{}}
-        departmentEntities={[
-          {
-            id: "dept-1",
-            workspaceSubdomain: "tenant",
-            name: "Hadith Sciences",
-            code: "hadith",
-            createdAt: "2026-01-01T00:00:00.000Z",
-            updatedAt: "2026-01-01T00:00:00.000Z",
-            deletedAt: null,
-            parentId: null,
-            isActive: true,
-          },
-        ]}
-        isFieldEnabled={() => true}
-        isFieldRequired={() => false}
-        onDraftChange={vi.fn()}
-      />,
-    );
-
-    expect(html).toContain('id="department"');
-    expect(html).toContain("Hadith Sciences (hadith)");
-  });
-
-  it("renders department first, designation second, and start/end dates without reporting role", () => {
-    const html = renderToStaticMarkup(
-      <FacultyFormDesignationSection
-        facultyDraft={{
-          department: "Tafseer",
-          designationId: "des-prof",
-          designationStartsOn: "2026-01-01",
-          designationEndsOn: "2026-12-31",
-          reportingFacultyId: "fac-dean",
-        }}
-        errors={{}}
-        departmentOptions={["Tafseer", "Hadith"]}
-        designationOptions={[
-          {
-            id: "des-prof",
-            code: "PROF",
-            name: "Professor",
-            hierarchyRank: 2,
-            isActive: true,
-            assignableRoles: ["academic_lead"],
-          },
-        ]}
-        isFieldEnabled={() => true}
-        isFieldRequired={() => false}
-        onDraftChange={vi.fn()}
-      />,
-    );
-
-    // Verify ordering: Department is first, Designation is second
-    const deptIdx = html.indexOf('id="department"');
-    const desIdx = html.indexOf('id="designationId"');
-    const startIdx = html.indexOf('id="designationStartsOn"');
-    const endIdx = html.indexOf('id="designationEndsOn"');
-
-    expect(deptIdx).toBeGreaterThan(-1);
-    expect(desIdx).toBeGreaterThan(deptIdx);
-    expect(startIdx).toBeGreaterThan(desIdx);
-    expect(endIdx).toBeGreaterThan(startIdx);
-
-    // Verify reporting role is not present in designation card
-    expect(html).not.toContain('id="reportingFacultyId"');
-    expect(html).not.toContain("faculty.form.reportingRole");
-
-    // Verify end date value is bound
-    expect(html).toContain('value="2026-12-31"');
+    expect(html).not.toContain("faculty.designations.addDesignation");
   });
 });

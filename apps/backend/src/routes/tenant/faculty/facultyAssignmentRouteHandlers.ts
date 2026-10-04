@@ -35,6 +35,7 @@ function toFacultyAssignmentEntity(row: FacultyAssignmentRow): FacultyAssignment
     positionId: row.positionId,
     reportsToAssignmentId: row.reportsToAssignmentId ?? null,
     isPrimary: Boolean(row.isPrimary),
+    status: row.status === 'inactive' ? 'inactive' : 'active',
     startDate: row.startDate,
     endDate: row.endDate ?? null,
     notes: row.notes ?? null,

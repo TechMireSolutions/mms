@@ -8,7 +8,12 @@ paths:
 
 # MMS Universal Module Architecture
 
-**Workflow skills:** new page → `mms-module-page` · Work/trash → `mms-module-work` · Setup → `mms-module-setup` · jobs → `mms-background-jobs` · Reports → `mms-reports-export` · design intelligence → `ui-ux-pro-max`.
+**Workflow skills:** new page → `mms-module-page` · Work/trash → `mms-module-work` · Setup → `mms-module-setup` · jobs → `mms-background-jobs` · Reports → `mms-reports-export` · write forms → `mms-form-architecture` · design intelligence → `ui-ux-pro-max`.
+
+## 0. Surface triad (page vs form vs directory)
+- **Work directory:** `DataTable` / `WorkBatchTable` + cards via `mms-module-work` — list/search/bulk only.
+- **Read detail:** `DetailSheet` / `DetailDrawerShell` — inspection, archive, quick actions; never embed edit forms.
+- **Write:** `FormModal` (+ form primitives) — create/edit/builder only; repeatable rows and catalog selects follow `mms-form-architecture.md` (control decision table, `FormCollectionShell` / `FormListFieldCard` / `FormCardTypeSelect`).
 
 ## 1. Monorepo Manifests & Domain Modeling
 - **Single Manifest SSOT:** Declare a single manifest in `packages/shared/src/*ModuleManifest.ts` defining `moduleId`, entity types, collection/REST keys, default filters, searchable/filterable fields, `setupSubTabs`, and `softDelete` policies.

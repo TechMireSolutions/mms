@@ -3,6 +3,8 @@ import {
   MESSAGING_MODULE_MANIFEST,
   mergeMessageTemplates,
 } from "@mms/shared";
+import { Plus } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { ErrorBoundary } from "@/components/ui/ErrorBoundary";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { ModuleTierMotion } from "@/components/ui/ModuleTierMotion";
@@ -34,6 +36,7 @@ export const MessagingSetupTier = (function MessagingSetupTier({
   const templatesQuery = useMessageTemplates();
   const editor = useMessagingTemplateEditor();
   const {
+    formOpen,
     editingId,
     label,
     body,
@@ -43,7 +46,9 @@ export const MessagingSetupTier = (function MessagingSetupTier({
     setChannel,
     errors,
     isFormDirty,
+    saving,
     resetForm,
+    openCreate,
     handleLabelChange,
     handleBodyChange,
     save,
@@ -74,7 +79,7 @@ export const MessagingSetupTier = (function MessagingSetupTier({
   return (
     <ModuleTierMotion tier="setup">
       <ErrorBoundary>
-        <div className="space-y-4">
+        <div className="space-y-3">
           {!canEditSetup ? (
             <SetupReadOnlyMessage title={t("messaging.setup.readOnly")} />
           ) : (
@@ -83,23 +88,15 @@ export const MessagingSetupTier = (function MessagingSetupTier({
                 <SubTabBar tabs={setupTabs} value={subTabs.sub} onChange={subTabs.handleSubTabChange} />
               )}
               {subTabs.sub === "templates" && (
-                <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
-                  <MessagingSetupTemplateForm
-                    editingId={editingId}
-                    label={label}
-                    body={body}
-                    category={category}
-                    channel={channel}
-                    templateCategorySelectOptions={templateCategorySelectOptions}
-                    channelSelectOptions={channelSelectOptions}
-                    errors={errors}
-                    onReset={resetForm}
-                    onSave={(event) => void save(event)}
-                    onLabelChange={handleLabelChange}
-                    onBodyChange={handleBodyChange}
-                    onCategoryChange={setCategory}
-                    onChannelChange={setChannel}
-                  />
+                <div className="space-y-3">
+                  {canWrite ? (
+                    <div className="flex justify-end">
+                      <Button type="button" className="min-h-11 gap-1.5" onClick={openCreate}>
+                        <Plus className="h-4 w-4" aria-hidden />
+                        {t("messaging.createPreset")}
+                      </Button>
+                    </div>
+                  ) : null}
                   <MessagingTemplateList
                     templates={templates}
                     canWrite={canWrite}
@@ -109,6 +106,24 @@ export const MessagingSetupTier = (function MessagingSetupTier({
                     onDuplicate={(template) => void handleDuplicate(template)}
                     onEdit={handleEdit}
                     onDeleteRequest={onDeleteRequest}
+                  />
+                  <MessagingSetupTemplateForm
+                    open={formOpen}
+                    editingId={editingId}
+                    label={label}
+                    body={body}
+                    category={category}
+                    channel={channel}
+                    templateCategorySelectOptions={templateCategorySelectOptions}
+                    channelSelectOptions={channelSelectOptions}
+                    errors={errors}
+                    saving={saving}
+                    onReset={resetForm}
+                    onSave={() => void save()}
+                    onLabelChange={handleLabelChange}
+                    onBodyChange={handleBodyChange}
+                    onCategoryChange={setCategory}
+                    onChannelChange={setChannel}
                   />
                 </div>
               )}
@@ -134,4 +149,3 @@ export const MessagingSetupTier = (function MessagingSetupTier({
 });
 
 export default MessagingSetupTier;
-

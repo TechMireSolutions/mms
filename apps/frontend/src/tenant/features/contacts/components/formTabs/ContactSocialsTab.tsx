@@ -4,7 +4,6 @@ import { formatSocialPlatformUrl } from "@mms/shared";
 import type { ContactSubListTabBaseProps } from "./types";
 import { useTranslation } from "@/hooks/useTranslation";
 import { resolveSocialPlatformLabel } from "@/lib/contacts/contactI18n";
-import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { ContactLabeledValueSubListTab } from "./ContactLabeledValueSubListTab";
 
 export interface ContactSocialsTabProps extends ContactSubListTabBaseProps {
@@ -33,8 +32,6 @@ export function ContactSocialsTab({
       }
       emptyItem={(resolvedLabel) => ({ platform: resolvedLabel, url: "" })}
       icon={Share2}
-      accentClass={SUB_LIST_CARD_ACCENTS.socials.accent}
-      iconClass={SUB_LIST_CARD_ACCENTS.socials.icon}
       emptyMessage={t("contacts.form.noSocialLinksYet")}
       addLabel={t("contacts.form.addSocialLink")}
       removeLabel={(index) => t("contacts.form.removeSocialLink", { index })}

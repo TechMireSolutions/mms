@@ -7,8 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
 import { DatePicker } from '@/components/ui/DatePicker';
-import { Field } from '@/components/ui/FormPrimitives';
-import { FormSelect } from '@/components/ui/FormSelect';
+import { Field, FormSelectWithQuickCreate } from '@/components/ui/FormPrimitives';
 import { Input } from '@/components/ui/input';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { AssignmentFormState } from '../hooks/useFacultyAssignmentsController';
@@ -23,6 +22,10 @@ interface FacultyAssignmentFormCardProps {
   allowEmptyPosition: boolean;
   showLegacyPositionWarning: boolean;
   isBusy: boolean;
+  canAddCatalog?: boolean;
+  onOpenAddDepartment?: () => void;
+  onOpenAddDesignation?: () => void;
+  onOpenAddPosition?: () => void;
   onPatchForm: (patch: Partial<AssignmentFormState>) => void;
   onSubmit: () => void;
   onCancel: () => void;
@@ -38,6 +41,10 @@ export function FacultyAssignmentFormCard({
   allowEmptyPosition,
   showLegacyPositionWarning,
   isBusy,
+  canAddCatalog = false,
+  onOpenAddDepartment,
+  onOpenAddDesignation,
+  onOpenAddPosition,
   onPatchForm,
   onSubmit,
   onCancel,
@@ -57,23 +64,29 @@ export function FacultyAssignmentFormCard({
       ) : null}
       <div className="grid gap-3 sm:grid-cols-2">
         <Field id="asgn-dept" label={t('faculty.form.department')} required>
-          <FormSelect
+          <FormSelectWithQuickCreate
             id="asgn-dept"
             value={form.departmentId}
             onChange={(v) => onPatchForm({ departmentId: v, positionId: '' })}
             options={departmentOptions}
+            canAdd={canAddCatalog}
+            onOpenAdd={onOpenAddDepartment}
+            addAriaLabel={t('faculty.setup.addDepartment')}
           />
         </Field>
         <Field id="asgn-desig" label={t('faculty.designations.name')} required>
-          <FormSelect
+          <FormSelectWithQuickCreate
             id="asgn-desig"
             value={form.designationId}
             onChange={(v) => onPatchForm({ designationId: v, positionId: '' })}
             options={designationOptions}
+            canAdd={canAddCatalog}
+            onOpenAdd={onOpenAddDesignation}
+            addAriaLabel={t('faculty.designations.addDesignation')}
           />
         </Field>
         <Field id="asgn-position" label={t('faculty.assignments.position')} required={requiresPosition}>
-          <FormSelect
+          <FormSelectWithQuickCreate
             id="asgn-position"
             value={form.positionId}
             onChange={(v) => onPatchForm({ positionId: v })}
@@ -85,6 +98,9 @@ export function FacultyAssignmentFormCard({
                   ]
                 : positionOptions
             }
+            canAdd={canAddCatalog}
+            onOpenAdd={onOpenAddPosition}
+            addAriaLabel={t('organization.position.addTitle')}
           />
         </Field>
         <Field id="asgn-start" label={t('faculty.designations.startsOn')} required>

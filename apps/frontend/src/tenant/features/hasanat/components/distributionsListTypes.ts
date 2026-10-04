@@ -6,6 +6,7 @@ export interface DistributionsListProps {
   batches: StockBatch[];
   onCreate: (distribution: Distribution) => void | Promise<void>;
   onUpdate: (distribution: Distribution) => void | Promise<void>;
+  onDenomsChange?: (denoms: Denomination[]) => void | Promise<void>;
   onFilteredCountChange?: (count: number) => void;
   canWrite?: boolean;
   canDelete?: boolean;

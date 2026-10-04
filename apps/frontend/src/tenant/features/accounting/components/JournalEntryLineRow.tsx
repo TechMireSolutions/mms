@@ -7,7 +7,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FieldErrorMessage } from '@/components/ui/FormField';
-import { FormSelect } from '@/components/ui/FormSelect';
+import { FormSelectWithQuickCreate } from '@/components/ui/FormPrimitives';
 import { Input } from '@/components/ui/input';
 import { TableCell, TableRow } from '@/components/ui/table';
 import { useTranslation } from '@/hooks/useTranslation';
@@ -20,6 +20,8 @@ interface JournalEntryLineRowProps {
   accountOptions: readonly { value: string; label: string }[];
   errorMessage?: string;
   canRemove: boolean;
+  canAddAccount?: boolean;
+  onOpenAddAccount?: () => void;
   onUpdateLine: (lineIndex: number, field: keyof DraftLine, fieldValue: string | number) => void;
   onRemoveLine: (lineIndex: number) => void;
 }
@@ -31,6 +33,8 @@ export function JournalEntryLineRow({
   accountOptions,
   errorMessage,
   canRemove,
+  canAddAccount = false,
+  onOpenAddAccount,
   onUpdateLine,
   onRemoveLine,
 }: JournalEntryLineRowProps) {
@@ -39,7 +43,7 @@ export function JournalEntryLineRow({
   return (
     <TableRow className="hover:bg-muted/10">
       <TableCell className="px-3 py-2">
-        <FormSelect
+        <FormSelectWithQuickCreate
           id={`line-${lineIndex}-account`}
           name={`lines.${lineIndex}.account_id`}
           aria-label={t("accounting.journal.form.lineAccountAria", { line: lineIndex + 1 })}
@@ -47,6 +51,9 @@ export function JournalEntryLineRow({
           onChange={(accountId) => onUpdateLine(lineIndex, "account_id", accountId)}
           placeholder={t("accounting.journal.form.selectAccount")}
           options={accountOptions}
+          canAdd={canAddAccount}
+          onOpenAdd={onOpenAddAccount}
+          addAriaLabel={t("accounting.coa.addAccount")}
         />
         {account && (
           <Badge pill variant="outline" className={`mt-0.5 px-1.5 font-bold ${ACCOUNT_TYPE_META[account.type]?.color}`}>

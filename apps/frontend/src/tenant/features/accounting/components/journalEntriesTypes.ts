@@ -16,6 +16,7 @@ export interface JournalEntriesProps {
   settings: AccountingSettings;
   fiscalYears: FiscalYear[];
   onChange: JournalEntriesChange;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
   onFilteredCountChange?: (count: number) => void;
   onShortcutStateChange?: (state: {
     mode: 'simple' | 'advanced';

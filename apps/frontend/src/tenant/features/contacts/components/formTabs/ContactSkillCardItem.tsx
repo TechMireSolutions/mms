@@ -1,12 +1,16 @@
 import type React from "react";
 import { Tag } from "lucide-react";
-import { EditableSelect, Field } from "@/components/ui/FormPrimitives";
+import {
+  EditableSelect,
+  Field,
+  FormCardTypeSelect,
+  TYPE_SELECT_WIDTH,
+} from "@/components/ui/FormPrimitives";
 import { LeadingIconInput } from "@/components/ui/LeadingIconInput";
 import { ListFieldCard } from "./ContactSubListCards";
 import { cn } from "@/lib/utils";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { ContactSkill } from "@mms/shared";
-import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { FORM_INPUT_ERROR } from "@/components/ui/formStyles";
 import { ContactSkillDetailsSection } from "./ContactSkillDetailsSection";
 
@@ -67,20 +71,22 @@ export function ContactSkillCardItem({
       key={getLocalId("skills", idx)}
       id={getLocalId("skills", idx)}
       index={idx}
-      accentClass={SUB_LIST_CARD_ACCENTS.skills.accent}
-      label={showCategory ? `${t("contacts.fields.skillCategory")}:` : undefined}
+      icon={Tag}
+      label={undefined}
       typeSelect={
         showCategory ? (
-          <EditableSelect
-            options={categoryOptions}
-            value={skill.category || ""}
-            onChange={(val) => updateSkill(idx, { category: val })}
-            onUpdateOptions={onUpdateCategoryOptions}
-            className="w-40 @sm:w-52 min-w-0"
-            id={`cf-${formInstanceId}-skill-category-${idx}`}
-            name={`cf-${formInstanceId}-skill-category-${idx}`}
-            placeholder={t("contacts.form.skillCategoryPlaceholder")}
-          />
+          <FormCardTypeSelect label={t("contacts.fields.skillCategory")}>
+            <EditableSelect
+              options={categoryOptions}
+              value={skill.category || ""}
+              onChange={(val) => updateSkill(idx, { category: val })}
+              onUpdateOptions={onUpdateCategoryOptions}
+              className={TYPE_SELECT_WIDTH}
+              id={`cf-${formInstanceId}-skill-category-${idx}`}
+              name={`cf-${formInstanceId}-skill-category-${idx}`}
+              placeholder={t("contacts.form.skillCategoryPlaceholder")}
+            />
+          </FormCardTypeSelect>
         ) : undefined
       }
       onRemove={() => removeSkill(idx)}

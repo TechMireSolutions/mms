@@ -1,10 +1,12 @@
 import React from 'react';
-import { Plus, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Field } from '@/components/ui/FormField';
+import {
+  FormCollectionShell,
+  FormListFieldCard,
+} from '@/components/ui/FormPrimitives';
 import { Input } from '@/components/ui/input';
 import { joinQuestionCompoundAnswer, splitQuestionCompoundAnswer, type AppTranslationKey } from '@mms/shared';
-import { FORM_INPUT, FORM_LABEL } from '@/components/ui/formStyles';
+import { FORM_INPUT } from '@/components/ui/formStyles';
 
 type TranslateFn = (key: AppTranslationKey, params?: Record<string, string | number>) => string;
 
@@ -39,60 +41,56 @@ export function QuestionMatchingFields({
   };
 
   return (
-    <fieldset className="space-y-3 sm:col-span-2 border-0 m-0 p-0">
-      <legend className={FORM_LABEL}>{t('questionBank.matchingPairs')}</legend>
-      {pairs.map((pair, index) => (
-        <div key={index} className="grid grid-cols-1 gap-2 rounded-lg border border-border/70 bg-muted/10 p-3 sm:grid-row-matching-3">
-          <Field id={`matching-left-${index}`} label={t('questionBank.matchingLeft')}>
-            <Input
-              id={`matching-left-${index}`}
-              name={`matching-left-${index}`}
-              className={FORM_INPUT}
-              value={pair.left}
-              onChange={(event) => {
-                const updatedPairs = pairs.map((pairCandidate, pairIndex) =>
-                  pairIndex === index ? { ...pairCandidate, left: event.target.value } : pairCandidate,
-                );
-                syncPairs(updatedPairs);
-              }}
-            />
-          </Field>
-          <Field id={`matching-right-${index}`} label={t('questionBank.matchingRight')}>
-            <Input
-              id={`matching-right-${index}`}
-              name={`matching-right-${index}`}
-              className={FORM_INPUT}
-              value={pair.right}
-              onChange={(event) => {
-                const updatedPairs = pairs.map((pairCandidate, pairIndex) =>
-                  pairIndex === index ? { ...pairCandidate, right: event.target.value } : pairCandidate,
-                );
-                syncPairs(updatedPairs);
-              }}
-            />
-          </Field>
-          {pairs.length > 2 && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => syncPairs(pairs.filter((_, i) => i !== index))}
-              className="flex min-h-11 items-center justify-center gap-1 self-end rounded-lg border border-border px-2 text-xs font-semibold text-muted-foreground hover:bg-muted hover:text-destructive"
-              aria-label={t('questionBank.removeMatchingPair', { n: index + 1 })}
-            >
-              <Trash2 className="h-3.5 w-3.5" aria-hidden />
-            </Button>
-          )}
-        </div>
-      ))}
-      <Button
-        type="button"
-        variant="outline"
-        onClick={() => syncPairs([...pairs, { left: '', right: '' }])}
-        className="flex min-h-11 w-full items-center justify-center gap-1.5 rounded-lg border border-dashed border-border text-xs font-semibold text-muted-foreground hover:border-primary/40 hover:text-foreground bg-transparent"
+    <div className="sm:col-span-2">
+      <FormCollectionShell
+        title={t('questionBank.matchingPairs')}
+        addLabel={t('questionBank.addMatchingPair')}
+        onAdd={() => syncPairs([...pairs, { left: '', right: '' }])}
+        listKey="qb-matching"
       >
-        <Plus className="h-3.5 w-3.5" aria-hidden />
-        {t('questionBank.addMatchingPair')}
-      </Button>
-    </fieldset>
+        {pairs.map((pair, index) => (
+          <FormListFieldCard
+            key={index}
+            id={`matching-pair-${index}`}
+            index={index}
+            label={`${index + 1}`}
+            removeLabel={t('questionBank.removeMatchingPair', { n: index + 1 })}
+            canRemove={pairs.length > 2}
+            onRemove={() => syncPairs(pairs.filter((_, i) => i !== index))}
+          >
+            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <Field id={`matching-left-${index}`} label={t('questionBank.matchingLeft')}>
+                <Input
+                  id={`matching-left-${index}`}
+                  name={`matching-left-${index}`}
+                  className={FORM_INPUT}
+                  value={pair.left}
+                  onChange={(event) => {
+                    const updatedPairs = pairs.map((pairCandidate, pairIndex) =>
+                      pairIndex === index ? { ...pairCandidate, left: event.target.value } : pairCandidate,
+                    );
+                    syncPairs(updatedPairs);
+                  }}
+                />
+              </Field>
+              <Field id={`matching-right-${index}`} label={t('questionBank.matchingRight')}>
+                <Input
+                  id={`matching-right-${index}`}
+                  name={`matching-right-${index}`}
+                  className={FORM_INPUT}
+                  value={pair.right}
+                  onChange={(event) => {
+                    const updatedPairs = pairs.map((pairCandidate, pairIndex) =>
+                      pairIndex === index ? { ...pairCandidate, right: event.target.value } : pairCandidate,
+                    );
+                    syncPairs(updatedPairs);
+                  }}
+                />
+              </Field>
+            </div>
+          </FormListFieldCard>
+        ))}
+      </FormCollectionShell>
+    </div>
   );
 }

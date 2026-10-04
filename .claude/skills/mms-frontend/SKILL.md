@@ -32,7 +32,7 @@ Operational guide for authoring React 19 frontend features, UI components, hooks
   - Positioning: `start-*`, `end-*` (never `left-`, `right-`).
   - Alignment: `text-start`, `text-end` (never `text-left`, `text-right`).
   - Borders: `border-s-*`, `border-e-*`.
-- **Shared Chrome Reuse**: Always reuse design system components (`EmptyState`, `FieldErrorMessage`, `WarningCallout`, `BulkSelectionBar`, `DirectoryCard`, `DetailSheet`) and `formStyles` tokens.
+- **Shared Chrome Reuse**: Always reuse design system components (`EmptyState`, `FieldErrorMessage`, `WarningCallout`, `BulkSelectionBar`, `DirectoryCard`, `DetailSheet`) and `formStyles` tokens. Form controls and repeatable rows follow the `mms-form-architecture` control decision table (`FormCollectionShell` / `FormListFieldCard` / `FormCardTypeSelect` / `FormSelectWithQuickCreate`).
 - **Design Intelligence**: Leverage `ui-ux-pro-max` (`python3 .agent/skills/ui-ux-pro-max/scripts/search.py`) for palettes, typography pairings, stack patterns, and UX guidelines conforming to `mms-ui-ux-design.md` §8.
 
 ## 3. Host Isolation & Routing

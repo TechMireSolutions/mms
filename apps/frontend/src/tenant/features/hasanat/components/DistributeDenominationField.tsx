@@ -1,8 +1,8 @@
-import React from "react";
-import { FormSelect } from "@/components/ui/FormSelect";
-import { Field } from "@/components/ui/FormPrimitives";
+import React, { useState } from "react";
+import { Field, FormSelectWithQuickCreate } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { Denomination, Distribution } from "@/lib/data/hasanatData";
+import { DenominationModal } from "./DenominationModal";
 
 export interface DistributeDenominationFieldProps {
   denoms: Denomination[];
@@ -11,6 +11,7 @@ export interface DistributeDenominationFieldProps {
   totalAvailable: number;
   updateField: (field: string, value: unknown) => void;
   errors?: Record<string, string>;
+  onDenomsChange?: (denoms: Denomination[]) => Promise<void> | void;
 }
 
 export function DistributeDenominationField({
@@ -20,13 +21,16 @@ export function DistributeDenominationField({
   totalAvailable,
   updateField,
   errors,
+  onDenomsChange,
 }: DistributeDenominationFieldProps): React.JSX.Element {
   const { t } = useTranslation();
+  const [createOpen, setCreateOpen] = useState(false);
+  const canAdd = typeof onDenomsChange === "function";
 
   return (
     <div className="sm:col-span-2">
       <Field id="denom" label={t("hasanat.form.denomination")} required error={errors?.denominationId}>
-        <FormSelect
+        <FormSelectWithQuickCreate
           id="denom"
           name="denominationId"
           value={data.denominationId || ""}
@@ -37,6 +41,9 @@ export function DistributeDenominationField({
               value: denomination.id,
               label: `${denomination.icon} ${denomination.name} (${t("hasanat.form.pointsShort", { points: denomination.points })})`,
             }))}
+          canAdd={canAdd}
+          onOpenAdd={() => setCreateOpen(true)}
+          addAriaLabel={t("hasanat.denominations.new")}
         />
       </Field>
       {selectedDenomination && (
@@ -57,6 +64,18 @@ export function DistributeDenominationField({
           </span>
         </div>
       )}
+      {canAdd ? (
+        <DenominationModal
+          open={createOpen}
+          denom={null}
+          onClose={() => setCreateOpen(false)}
+          onSave={async (denom) => {
+            await onDenomsChange([...denoms, denom]);
+            updateField("denominationId", denom.id);
+            setCreateOpen(false);
+          }}
+        />
+      ) : null}
     </div>
   );
 }

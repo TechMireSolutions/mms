@@ -13,6 +13,14 @@ import {
   ObligationCollectionFormFields,
   type ObligationCollectionFormState,
 } from "@/tenant/features/obligations/components/ObligationCollectionFormFields";
+import { WakalaQuickCreateModals } from "@/tenant/features/obligations/components/wakala/WakalaQuickCreateModals";
+import { useObligationCollectionCatalogQuickCreate } from "@/tenant/features/obligations/components/useObligationCollectionCatalogQuickCreate";
+import {
+  eligibleRepsForType,
+  resolveMujtahidForRep,
+  toObligationCollectionPayload,
+  validateObligationCollectionForm,
+} from "@/tenant/features/obligations/components/obligationCollectionFormHelpers";
 import { useObligationsSettings } from "@/tenant/features/obligations/hooks/useObligationsSettings";
 
 const EMPTY: ObligationCollectionFormState = {
@@ -36,40 +44,66 @@ export interface ObligationCollectionFormProps {
   reps: MujtahidRep[];
   mujtahids: Mujtahid[];
   existingCollections: ObligationCollection[];
+  onChangeTypes?: (types: ObligationType[]) => Promise<void> | void;
+  onChangeMujtahids?: (mujtahids: Mujtahid[]) => Promise<void> | void;
+  onChangeReps?: (reps: MujtahidRep[]) => Promise<void> | void;
+  onChangeWakala?: (wakala: WakalaType[]) => Promise<void> | void;
 }
 
-export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wakalaTypes, reps, mujtahids, existingCollections }: ObligationCollectionFormProps) {
+export function ObligationCollectionForm({
+  onClose,
+  onSave,
+  obligationTypes,
+  wakalaTypes,
+  reps,
+  mujtahids,
+  existingCollections,
+  onChangeTypes,
+  onChangeMujtahids,
+  onChangeReps,
+  onChangeWakala,
+}: ObligationCollectionFormProps) {
   const { t } = useTranslation();
   const { user: authUser } = useAuth();
   const { settings } = useObligationsSettings();
-  const [form, setForm] = useState<ObligationCollectionFormState>({ 
-    ...EMPTY, 
+  const [form, setForm] = useState<ObligationCollectionFormState>({
+    ...EMPTY,
     receipt_no: generateReceiptNo(existingCollections, settings),
     received_by: authUser?.id || "",
   });
   const [errors, setErrors] = useState<Partial<Record<keyof ObligationCollectionFormState, AppTranslationKey>>>({});
   const [submitting, setSubmitting] = useState(false);
 
+  const catalogCreate = useObligationCollectionCatalogQuickCreate({
+    obligationTypes,
+    mujtahids,
+    reps,
+    wakalaTypes,
+    selectedObligationTypeId: form.obligation_type_id,
+    onChangeTypes,
+    onChangeMujtahids,
+    onChangeReps,
+    onChangeWakala,
+    onSelectType: (obligationTypeId) => setForm((prev) => ({
+      ...prev,
+      obligation_type_id: obligationTypeId,
+      mujtahid_representative_id: "",
+    })),
+    onSelectRep: (repId) => setForm((prev) => ({ ...prev, mujtahid_representative_id: repId })),
+  });
+
   const completeness = (() =>
-      calculateKeyedUnitsCompleteness(form, [
-        { key: "received_date" },
-        { key: "sender_id" },
-        { key: "amount" },
-        { key: "payment_mode" },
-        { key: "obligation_type_id" },
-        { key: "mujtahid_representative_id" },
-        { key: "received_by" },
-      ]))();
+    calculateKeyedUnitsCompleteness(form, [
+      { key: "received_date" },
+      { key: "sender_id" },
+      { key: "amount" },
+      { key: "payment_mode" },
+      { key: "obligation_type_id" },
+      { key: "mujtahid_representative_id" },
+      { key: "received_by" },
+    ]))();
 
-  const eligibleRepIds = wakalaTypes
-    .filter((wakalaType) => wakalaType.obligation_type_id === form.obligation_type_id)
-    .map((wakalaType) => wakalaType.mujtahid_representative_id);
-  const eligibleRepSet = new Set(eligibleRepIds);
-
-  const eligibleReps = form.obligation_type_id
-    ? reps.filter((rep) => eligibleRepSet.has(rep.id))
-    : reps;
-
+  const eligibleReps = eligibleRepsForType(form.obligation_type_id, wakalaTypes, reps);
 
   useEffect(() => {
     if (form.obligation_type_id) {
@@ -77,81 +111,78 @@ export function ObligationCollectionForm({ onClose, onSave, obligationTypes, wak
     }
   }, [form.obligation_type_id]);
 
-  const getMujtahid = (repId: string) => {
-    const rep = reps.find((candidateRep) => candidateRep.id === repId);
-    return rep ? mujtahids.find((mujtahid) => mujtahid.id === rep.mujtahid_id) : null;
-  };
-
-  const validate = (): Partial<Record<keyof ObligationCollectionFormState, AppTranslationKey>> => {
-    const nextErrors: Partial<Record<keyof ObligationCollectionFormState, AppTranslationKey>> = {};
-    if (!form.sender_id) nextErrors.sender_id = "obligations.form.errors.senderRequired";
-    if (!form.amount || parseFloat(form.amount) <= 0) nextErrors.amount = "obligations.form.errors.amountRequired";
-    if (!form.received_date) nextErrors.received_date = "obligations.form.errors.dateRequired";
-    if (!form.obligation_type_id) nextErrors.obligation_type_id = "obligations.form.errors.typeRequired";
-    if (!form.mujtahid_representative_id) nextErrors.mujtahid_representative_id = "obligations.form.errors.repRequired";
-    if (!form.received_by) nextErrors.received_by = "obligations.form.errors.receivedByRequired";
-    if (!form.currency_id) nextErrors.currency_id = "obligations.form.errors.currencyRequired";
-    return nextErrors;
-  };
-
   const handleSave = async (): Promise<void> => {
-    const validationErrors = validate();
+    const validationErrors = validateObligationCollectionForm(form);
     if (Object.keys(validationErrors).length) { setErrors(validationErrors); return; }
     setSubmitting(true);
     try {
-      await onSave({
-        ...form,
-        id: `oc${crypto.randomUUID()}`,
-        amount: parseFloat(form.amount),
-        reference_id: form.reference_id || null,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString(),
-      } as ObligationCollection);
+      await onSave(toObligationCollectionPayload(form));
     } finally {
       setSubmitting(false);
     }
   };
 
   const selectedRep = reps.find((rep) => rep.id === form.mujtahid_representative_id);
-  const selectedMujtahid = selectedRep ? getMujtahid(selectedRep.id) : null;
+  const selectedMujtahid = selectedRep
+    ? resolveMujtahidForRep(selectedRep.id, reps, mujtahids)
+    : null;
   const errorMessages = Object.values(errors).map((key) => t(key));
+  const validationErrors = validateObligationCollectionForm(form);
 
   return (
-    <FormModal
-      open
-      onClose={onClose}
-      title={t("obligations.newCollection")}
-      icon={Receipt}
-      progress={completeness}
-      progressLabel={t("common.formProgress")}
-      cancelLabel={t("common.cancel")}
-      saveLabel={t("obligations.form.save")}
-      onSave={handleSave}
-      saving={submitting}
-      saveDisabled={Object.keys(validate()).length > 0}
-      error={errorMessages}
-      formId="obligation-collection-form"
-    >
-      <form
-        id="obligation-collection-form"
-        noValidate
-        onSubmit={(e) => {
-          e.preventDefault();
-          if (Object.keys(validate()).length === 0 && !submitting) {
-            void handleSave();
-          }
-        }}
+    <>
+      <FormModal
+        open={!catalogCreate.isChildModalOpen}
+        onClose={onClose}
+        title={t("obligations.newCollection")}
+        icon={Receipt}
+        progress={completeness}
+        progressLabel={t("common.formProgress")}
+        cancelLabel={t("common.cancel")}
+        saveLabel={t("obligations.form.save")}
+        onSave={handleSave}
+        saving={submitting}
+        saveDisabled={Object.keys(validationErrors).length > 0}
+        error={errorMessages}
+        formId="obligation-collection-form"
       >
-        <ObligationCollectionFormFields
-          form={form}
-          setForm={setForm}
-          errors={errors}
-          obligationTypes={obligationTypes}
-          eligibleReps={eligibleReps}
-          getMujtahid={getMujtahid}
-          selectedMujtahid={selectedMujtahid}
-        />
-      </form>
-    </FormModal>
+        <form
+          id="obligation-collection-form"
+          noValidate
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (Object.keys(validationErrors).length === 0 && !submitting) {
+              void handleSave();
+            }
+          }}
+        >
+          <ObligationCollectionFormFields
+            form={form}
+            setForm={setForm}
+            errors={errors}
+            obligationTypes={obligationTypes}
+            eligibleReps={eligibleReps}
+            getMujtahid={(repId) => resolveMujtahidForRep(repId, reps, mujtahids)}
+            selectedMujtahid={selectedMujtahid}
+            canAddType={catalogCreate.canAddType}
+            canAddRep={catalogCreate.canAddRep}
+            onOpenAddType={catalogCreate.openAddType}
+            onOpenAddRep={catalogCreate.openAddRep}
+          />
+        </form>
+      </FormModal>
+
+      <WakalaQuickCreateModals
+        isAddMujtahidOpen={catalogCreate.isAddMujtahidOpen}
+        onCloseAddMujtahid={catalogCreate.closeAddMujtahid}
+        onSaveMujtahid={catalogCreate.handleSaveMujtahid}
+        isAddRepOpen={catalogCreate.isAddRepOpen}
+        onCloseAddRep={catalogCreate.closeAddRep}
+        onSaveRep={catalogCreate.handleSaveRep}
+        isAddObTypeOpen={catalogCreate.isAddObTypeOpen}
+        onCloseAddObType={catalogCreate.closeAddObType}
+        onSaveObType={catalogCreate.handleSaveObType}
+      />
+    </>
   );
 }

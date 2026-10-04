@@ -25,10 +25,8 @@ export async function validateFacultyAssignment(
   }
   const isCreate = existing.rows.length === 0;
   const currentPositionId = existing.rows[0]?.position_id ?? null;
-  // New appointments must occupy a structural position (org chart + task delegation).
-  if (isCreate && !input.positionId) {
-    throw new Error('New appointments require an organization position');
-  }
+  // Faculty-form bootstrap may create appointments without an org position yet.
+  // Org/appointment UI creates that supply a position still run occupancy checks below.
   // Reject clearing a set position. Legacy nulls may be preserved only by omitting positionId.
   if (!isCreate && currentPositionId && !input.positionId) {
     throw new Error('Cannot clear organization position on an appointment');

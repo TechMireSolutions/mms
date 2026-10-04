@@ -1,6 +1,10 @@
 import React from "react";
-import { Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import {
+  FormCardTypeSelect,
+  FormCollectionShell,
+  FormListFieldCard,
+  TYPE_SELECT_WIDTH,
+} from "@/components/ui/FormPrimitives";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { useTranslation } from "@/hooks/useTranslation";
@@ -43,66 +47,40 @@ export function WakalaStep3Distribution({
         </div>
       </div>
 
-      <div className="space-y-3">
-        <div className="flex items-center justify-between">
-          <h4 className="m-0 text-xs font-bold uppercase tracking-wider text-muted-foreground">
-            {t("obligations.wakala.initialSplit")}
-          </h4>
-          <span
-            className={cn(
-              "text-xs font-bold px-2 py-0.5 rounded-full border",
-              totalPercentage === 100
-                ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
-                : totalPercentage > 100
-                ? "border-destructive/30 bg-destructive/10 text-destructive"
-                : "border-amber-500/30 bg-amber-500/10 text-amber-600",
-            )}
-          >
-            {t("obligations.wakala.total", { total: String(totalPercentage) })}
-          </span>
-        </div>
-
-        {initialDistributions.length === 0 ? (
-          <p className="text-xs text-muted-foreground italic border border-dashed rounded-lg p-3 text-center">
-            {t("obligations.wakala.noDistYet")}
-          </p>
-        ) : (
-          <div className="space-y-2">
-            {initialDistributions.map((row) => (
-              <div
-                key={row.id}
-                className="flex items-center gap-2 rounded-lg border border-border p-2 bg-background flex-wrap sm:flex-nowrap"
-              >
-                <Input
-                  id={`wakala-dist-name-${row.id}`}
-                  name={`wakala-dist-name-${row.id}`}
-                  placeholder={t("obligations.wakala.namePlaceholder")}
-                  aria-label={t("obligations.wakala.distName")}
-                  value={row.name}
-                  onChange={(e) => onUpdateRow(row.id, { name: e.target.value })}
-                  className="flex-1 text-xs min-h-11"
-                />
-                <div className="w-24">
-                  <Input
-                    id={`wakala-dist-pct-${row.id}`}
-                    name={`wakala-dist-pct-${row.id}`}
-                    type="text"
-                    inputMode="decimal"
-                    placeholder="%"
-                    aria-label={t("obligations.wakala.distPct")}
-                    value={row.percentage === undefined || row.percentage === null ? "" : String(row.percentage)}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      if (val === "" || /^\d*(\.\d{0,2})?$/.test(val)) {
-                        const num = parseFloat(val) || 0;
-                        if (num <= 100) {
-                          onUpdateRow(row.id, { percentage: val === "" ? ("" as unknown as number) : num });
-                        }
-                      }
-                    }}
-                    className="text-xs min-h-11"
-                  />
-                </div>
+      <FormCollectionShell
+        title={(
+          <div className="flex w-full items-center justify-between gap-2">
+            <h3 className="m-0 text-xs font-bold uppercase tracking-wider text-muted-foreground">
+              {t("obligations.wakala.initialSplit")}
+            </h3>
+            <span
+              className={cn(
+                "text-xs font-bold px-2 py-0.5 rounded-full border",
+                totalPercentage === 100
+                  ? "border-emerald-500/30 bg-emerald-500/10 text-emerald-600"
+                  : totalPercentage > 100
+                    ? "border-destructive/30 bg-destructive/10 text-destructive"
+                    : "border-amber-500/30 bg-amber-500/10 text-amber-600",
+              )}
+            >
+              {t("obligations.wakala.total", { total: String(totalPercentage) })}
+            </span>
+          </div>
+        )}
+        addLabel={t("obligations.wakala.addDistribution")}
+        onAdd={onAddRow}
+        isEmpty={initialDistributions.length === 0}
+        emptyMessage={t("obligations.wakala.noDistYet")}
+        listKey="wakala-dist"
+      >
+        {initialDistributions.map((row, index) => (
+          <FormListFieldCard
+            key={row.id}
+            id={`wakala-dist-${row.id}`}
+            index={index}
+            label={undefined}
+            typeSelect={(
+              <FormCardTypeSelect label={t("obligations.wakala.distType")}>
                 <FormSelect
                   id={`wakala-dist-type-${row.id}`}
                   name={`wakala-dist-type-${row.id}`}
@@ -113,33 +91,47 @@ export function WakalaStep3Distribution({
                     { value: "Income", label: t("obligations.distribution.income") },
                     { value: "Liability", label: t("obligations.distribution.liability") },
                   ]}
-                  className="w-28 text-xs min-h-11"
+                  className={cn(TYPE_SELECT_WIDTH, "text-xs min-h-11")}
                 />
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  aria-label={t("common.delete")}
-                  onClick={() => onRemoveRow(row.id)}
-                  className="min-h-11 min-w-11 text-destructive hover:text-destructive flex items-center justify-center"
-                >
-                  <Trash2 className="h-4 w-4" />
-                </Button>
-              </div>
-            ))}
-          </div>
-        )}
-
-        <Button
-          type="button"
-          variant="outline"
-          size="sm"
-          onClick={onAddRow}
-          className="w-full flex items-center justify-center gap-1.5 text-xs min-h-11 border-dashed"
-        >
-          <Plus className="h-3.5 w-3.5" /> {t("obligations.wakala.addDistribution")}
-        </Button>
-      </div>
+              </FormCardTypeSelect>
+            )}
+            removeLabel={t("common.delete")}
+            canRemove
+            onRemove={() => onRemoveRow(row.id)}
+          >
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_6rem] items-start">
+              <Input
+                id={`wakala-dist-name-${row.id}`}
+                name={`wakala-dist-name-${row.id}`}
+                placeholder={t("obligations.wakala.namePlaceholder")}
+                aria-label={t("obligations.wakala.distName")}
+                value={row.name}
+                onChange={(e) => onUpdateRow(row.id, { name: e.target.value })}
+                className="text-xs min-h-11"
+              />
+              <Input
+                id={`wakala-dist-pct-${row.id}`}
+                name={`wakala-dist-pct-${row.id}`}
+                type="text"
+                inputMode="decimal"
+                placeholder="%"
+                aria-label={t("obligations.wakala.distPct")}
+                value={row.percentage === undefined || row.percentage === null ? "" : String(row.percentage)}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val === "" || /^\d*(\.\d{0,2})?$/.test(val)) {
+                    const num = parseFloat(val) || 0;
+                    if (num <= 100) {
+                      onUpdateRow(row.id, { percentage: val === "" ? ("" as unknown as number) : num });
+                    }
+                  }
+                }}
+                className="text-xs min-h-11"
+              />
+            </div>
+          </FormListFieldCard>
+        ))}
+      </FormCollectionShell>
     </div>
   );
 }

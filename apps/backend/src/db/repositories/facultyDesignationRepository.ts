@@ -16,6 +16,7 @@ export {
   listFacultyDesignationAssignments,
   findCurrentFacultyDesignationAssignment,
   listCurrentFacultyDesignationAssignments,
+  listCurrentFacultyDesignationHoldings,
   saveFacultyDesignationAssignment,
   deleteFacultyDesignationAssignment,
 } from './facultyDesignationAssignmentRepository.js';

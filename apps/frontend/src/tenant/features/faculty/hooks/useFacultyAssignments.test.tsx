@@ -77,7 +77,7 @@ describe('useFacultyAssignments hooks', () => {
     render(<Consumer />);
     let saved: unknown;
     await act(async () => {
-      saved = await mutateAsync({ id: 'asgn-1', facultyId: 'fac-1', departmentId: 'dept-1', designationId: 'des-1', isPrimary: true, startDate: '2024-01-01' });
+      saved = await mutateAsync({ id: 'asgn-1', facultyId: 'fac-1', departmentId: 'dept-1', designationId: 'des-1', isPrimary: true, status: 'active', startDate: '2024-01-01' });
     });
     expect(saved).toBeDefined();
     expect(mockSaveAssignment).toHaveBeenCalled();

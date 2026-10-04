@@ -48,7 +48,13 @@ const { getInitialDraft, draftSnapshot } = createModuleFormDraft<FacultyMember>(
     designationStartsOn: faculty?.designationStartsOn ?? todayISO(),
     designationEndsOn: faculty?.designationEndsOn ?? null,
     designationAssignableRoles: faculty?.designationAssignableRoles ?? [],
+    designations: faculty?.designations ?? (
+      faculty?.designationId
+        ? [{ designationId: faculty.designationId, status: "active" as const, isPrimary: true }]
+        : []
+    ),
     department: faculty?.department ?? "",
+    departmentId: (faculty as { departmentId?: string } | undefined)?.departmentId ?? "",
     reportingFacultyId: faculty?.reportingFacultyId ?? null,
     reportingRole: faculty?.reportingRole ?? null,
     reportingRoleId: faculty?.reportingRoleId ?? null,

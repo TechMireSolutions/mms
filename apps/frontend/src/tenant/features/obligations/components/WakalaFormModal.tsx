@@ -46,7 +46,7 @@ export function WakalaFormModal(props: WakalaFormModalProps): React.JSX.Element 
             event.preventDefault();
             void state.handleNextOrSave();
           }}
-          className="space-y-5"
+          className="space-y-3"
         >
           <WakalaStepProgressBar
             step={state.step}

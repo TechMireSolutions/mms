@@ -82,6 +82,26 @@ describe('buildDynamicFacultySchema', () => {
     }
   });
 
+  it('requires per-holding startsOn and departmentId when designations[] is set', () => {
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
+    const result = schema.safeParse({
+      contactId: 'c-1',
+      status: 'active',
+      employeeId: 'FAC-1',
+      joinDate: '2024-01-15',
+      designations: [{ designationId: 'des-1', status: 'active' }],
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) =>
+        issue.path[0] === 'designations' && issue.path[2] === 'startsOn',
+      )).toBe(true);
+      expect(result.error.issues.some((issue) =>
+        issue.path[0] === 'designations' && issue.path[2] === 'departmentId',
+      )).toBe(true);
+    }
+  });
+
   it('requires enabled custom fields and maps tab id', () => {
     const withCustom: Record<string, FieldDefinition[]> = {
       ...fields,

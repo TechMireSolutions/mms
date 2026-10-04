@@ -2,6 +2,34 @@ import { z } from 'zod';
 
 const isoDate = /^\d{4}-\d{2}-\d{2}$/;
 
+/** Per-assignment designation holding status (independent of faculty employment status). */
+export const FACULTY_DESIGNATION_HOLDING_STATUSES = ['active', 'inactive'] as const;
+export type FacultyDesignationHoldingStatus = (typeof FACULTY_DESIGNATION_HOLDING_STATUSES)[number];
+
+/**
+ * One designation holding for a faculty member (create/hydrate payload).
+ * Persisted as one faculty_assignments row (department + designation + dates + status).
+ */
+export const facultyDesignationHoldingSchema = z.object({
+  designationId: z.string().min(1).max(100),
+  departmentId: z.string().min(1).max(100).optional(),
+  status: z.enum(FACULTY_DESIGNATION_HOLDING_STATUSES).default('active'),
+  startsOn: z.string().regex(isoDate).optional(),
+  endsOn: z.string().regex(isoDate).nullable().optional(),
+  isPrimary: z.boolean().optional(),
+  /** Hydrated display names — write payloads omit these. */
+  designationName: z.string().max(150).optional(),
+  departmentName: z.string().max(255).optional(),
+  assignableRoles: z.array(z.string().max(100)).optional(),
+}).strict().refine(
+  (row) => !row.endsOn || !row.startsOn || row.endsOn >= row.startsOn,
+  { path: ['endsOn'], message: 'Designation end date must not precede its start date' },
+);
+
+export const facultyDesignationHoldingsSchema = z.array(facultyDesignationHoldingSchema).max(20);
+
+export type FacultyDesignationHolding = z.infer<typeof facultyDesignationHoldingSchema>;
+
 /** A tenant-defined designation and the roles it permits an assignee to hold. */
 export const facultyDesignationSchema = z.object({
   id: z.string().min(1).max(100),

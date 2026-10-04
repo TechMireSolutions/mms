@@ -2,6 +2,7 @@ import { BookOpen, Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 import { FormModal } from "@/components/ui/FormModal";
+import { SectionCard } from "@/components/ui/SectionCard";
 import { FORM_LABEL } from "@/components/ui/formStyles";
 import {
   QUESTION_SOURCE_FIELD_TO_KEY,
@@ -50,12 +51,11 @@ export function QuestionSourceBooksSection({
   onCloseBookForm,
 }: QuestionSourceBooksSectionProps) {
   return (
-    <section className="space-y-3 rounded-xl border border-border/70 bg-muted/10 p-4">
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex min-w-0 items-center gap-2">
-          <BookOpen className="h-4 w-4 shrink-0 text-primary" aria-hidden />
-          <h3 className="min-w-0 truncate text-sm font-bold text-foreground">{t("questionBank.sourceBooksTitle")}</h3>
-        </div>
+    <SectionCard
+      title={t("questionBank.sourceBooksTitle")}
+      subtitle={t("questionBank.sourceBooksHint")}
+      icon={BookOpen}
+      actions={
         <Button
           type="button"
           variant="outline"
@@ -64,9 +64,8 @@ export function QuestionSourceBooksSection({
         >
           {t("questionBank.addSourceBook")}
         </Button>
-      </div>
-      <p className="text-xs text-muted-foreground">{t("questionBank.sourceBooksHint")}</p>
-
+      }
+    >
       {sourceBooks.length === 0 ? (
         <p className="text-xs text-muted-foreground">{t("questionBank.noSourceBooks")}</p>
       ) : (
@@ -116,7 +115,7 @@ export function QuestionSourceBooksSection({
               e.preventDefault();
               if (draftBook.metadata.bookName?.trim() || draftBook.name.trim()) onSaveBook();
             }}
-            className="space-y-4"
+            className="space-y-3"
           >
             <div>
               <p className={FORM_LABEL}>{t("questionBank.selectBookFields")}</p>
@@ -161,6 +160,6 @@ export function QuestionSourceBooksSection({
           </form>
         </FormModal>
       )}
-    </section>
+    </SectionCard>
   );
 }

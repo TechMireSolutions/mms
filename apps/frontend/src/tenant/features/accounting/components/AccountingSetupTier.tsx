@@ -17,6 +17,7 @@ export interface AccountingSetupTierProps {
   onSaveFiscalYears: (
     updater: FiscalYear[] | ((prev: FiscalYear[]) => FiscalYear[]),
   ) => void | Promise<void>;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
   onPrefsDirtyChange?: (isDirty: boolean) => void;
 }
@@ -25,6 +26,7 @@ export const AccountingSetupTier = (function AccountingSetupTier({
   accounts,
   fiscalYears,
   onSaveFiscalYears,
+  onAccountsChange,
   onPrefsDirtyChange,
 }: AccountingSetupTierProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -42,6 +44,7 @@ export const AccountingSetupTier = (function AccountingSetupTier({
                 accounts={accounts}
                 fiscalYears={fiscalYears}
                 onSaveFiscalYears={onSaveFiscalYears}
+                onAccountsChange={onAccountsChange}
                 onPrefsDirtyChange={onPrefsDirtyChange}
               />
             </Suspense>

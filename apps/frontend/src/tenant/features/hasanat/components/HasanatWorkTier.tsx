@@ -32,6 +32,7 @@ interface HasanatWorkTierProps {
   onSubTabChange: (tab: string) => void;
   onRetry: () => void;
   onUpdateBatches: (batches: StockBatch[]) => void | Promise<void>;
+  onUpdateDenoms?: (denoms: Denomination[]) => void | Promise<void>;
   onCreateDistribution: (distribution: Distribution) => void | Promise<void>;
   onUpdateDistribution: (distribution: Distribution) => void | Promise<void>;
   onFilteredCountChange: (count: number) => void;
@@ -65,6 +66,7 @@ export function HasanatWorkTier({
   onSubTabChange,
   onRetry,
   onUpdateBatches,
+  onUpdateDenoms,
   onCreateDistribution,
   onUpdateDistribution,
   onFilteredCountChange,
@@ -105,7 +107,13 @@ export function HasanatWorkTier({
             <HasanatDashboard denoms={denoms} batches={batches} distributions={distributions} />
           )}
           {activeSubTab === "stock" && (
-            <StockManager batches={batches} denoms={denoms} onUpdate={onUpdateBatches} canWrite={canWrite} />
+            <StockManager
+              batches={batches}
+              denoms={denoms}
+              onUpdate={onUpdateBatches}
+              onUpdateDenoms={onUpdateDenoms}
+              canWrite={canWrite}
+            />
           )}
           {activeSubTab === "distribute" && (
             <DistributionsList
@@ -113,6 +121,7 @@ export function HasanatWorkTier({
               batches={batches}
               onCreate={onCreateDistribution}
               onUpdate={onUpdateDistribution}
+              onDenomsChange={onUpdateDenoms}
               onFilteredCountChange={onFilteredCountChange}
               canWrite={canWrite}
               canDelete={canDelete}

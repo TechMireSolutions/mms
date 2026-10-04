@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 const mocks = vi.hoisted(() => ({
   loadContacts: vi.fn(),
   listCurrent: vi.fn(),
+  listHoldings: vi.fn(),
 }));
 
 vi.mock('../services/contactService.js', () => ({
@@ -11,6 +12,7 @@ vi.mock('../services/contactService.js', () => ({
 
 vi.mock('../db/repositories/facultyDesignationRepository.js', () => ({
   listCurrentFacultyDesignationAssignments: mocks.listCurrent,
+  listCurrentFacultyDesignationHoldings: mocks.listHoldings,
 }));
 
 import { hydrateFacultyFromContacts } from '../faculty/use-cases/facultyHydrateUseCases.js';
@@ -19,6 +21,7 @@ describe('hydrateFacultyFromContacts temporal designations', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.loadContacts.mockResolvedValue([]);
+    mocks.listHoldings.mockResolvedValue(new Map());
   });
 
   it('projects the designation effective today over legacy scalar fields', async () => {
@@ -32,6 +35,15 @@ describe('hydrateFacultyFromContacts temporal designations', () => {
       startsOn: '2026-01-01',
       endsOn: null,
     }]]));
+    mocks.listHoldings.mockResolvedValue(new Map([['fac-1', [{
+      designationId: 'hod',
+      status: 'active',
+      startsOn: '2026-01-01',
+      endsOn: null,
+      isPrimary: true,
+      designationName: 'Head of Department',
+      assignableRoles: ['teacher', 'department_manager'],
+    }]]]));
 
     const [faculty] = await hydrateFacultyFromContacts('demo', [{
       id: 'fac-1',
@@ -48,6 +60,11 @@ describe('hydrateFacultyFromContacts temporal designations', () => {
       designationEndsOn: null,
       designationAssignableRoles: ['teacher', 'department_manager'],
       hierarchyRank: 2,
+      designations: [{
+        designationId: 'hod',
+        status: 'active',
+        isPrimary: true,
+      }],
     });
   });
 });

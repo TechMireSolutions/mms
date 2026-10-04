@@ -69,7 +69,7 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
   } = props;
 
   return (
-    <div className="space-y-6 pb-6">
+    <div className="space-y-3 pb-6">
       <FacultyContactSection
         facultyDraft={facultyDraft}
         linkedContact={linkedContact}
@@ -104,6 +104,7 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         designationOptions={designationOptions}
         departmentOptions={departmentOptions}
         departmentEntities={departmentEntities}
+        showCollectionTitle
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}

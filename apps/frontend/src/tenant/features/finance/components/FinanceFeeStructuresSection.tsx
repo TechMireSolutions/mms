@@ -1,10 +1,13 @@
 import React, { useState } from "react";
-import { Layers, Plus, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Layers } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SectionCard } from "@/components/ui/SectionCard";
-import { Field } from "@/components/ui/FormPrimitives";
-import { FormSelect } from "@/components/ui/FormSelect";
+import {
+  Field,
+  FormCollectionShell,
+  FormListFieldCard,
+  FormSelect,
+} from "@/components/ui/FormPrimitives";
 import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
 import { useTranslation } from "@/hooks/useTranslation";
 import { notify } from "@/lib/notify";
@@ -96,42 +99,38 @@ export function FinanceFeeStructuresSection(): React.JSX.Element {
           </div>
         </Field>
       </div>
-      <Button type="button" className="mt-3 min-h-11" onClick={() => void handleAdd()} disabled={!name.trim() || save.isPending}>
-        <Plus className="me-1 h-4 w-4" aria-hidden="true" />
-        {t("finance.feeStructures.add")}
-      </Button>
-      <ul className="m-0 mt-4 list-none space-y-2 p-0">
-        {structures.map((structure) => (
-          <li key={structure.id} className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2">
-            <div className="min-w-0">
-              <p className="m-0 text-sm font-semibold">{structure.name}</p>
-              <p className="m-0 text-xs text-muted-foreground">
-                {`${[structure.className, structure.session].filter(Boolean).join(" · ") || t("finance.feeStructures.noScope")} · ${
-                  structure.frequency === "once"
-                    ? t("finance.feeStructures.frequencyOnce")
-                    : structure.frequency === "term"
-                      ? t("finance.feeStructures.frequencyTerm")
-                      : t("finance.feeStructures.frequencyMonthly")
-                }`}
-                {structure.items.length > 0 ? ` · ${structure.items.length} ${t("finance.feeStructures.items")}` : ""}
-              </p>
-            </div>
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="min-h-11 min-w-11 text-destructive"
-              aria-label={`${t("common.delete")} ${structure.name}`}
-              onClick={() => void remove.mutateAsync(structure.id)}
-            >
-              <Trash2 className="h-4 w-4" aria-hidden="true" />
-            </Button>
-          </li>
+
+      <FormCollectionShell
+        className="mt-4"
+        isEmpty={structures.length === 0}
+        emptyMessage={t("finance.feeStructures.empty")}
+        addLabel={t("finance.feeStructures.add")}
+        onAdd={() => void handleAdd()}
+        addDisabled={!name.trim() || save.isPending}
+        listKey="fee-structures"
+      >
+        {structures.map((structure, index) => (
+          <FormListFieldCard
+            key={structure.id}
+            id={structure.id}
+            index={index}
+            label={structure.name}
+            removeLabel={`${t("common.delete")} ${structure.name}`}
+            onRemove={() => void remove.mutateAsync(structure.id)}
+          >
+            <p className="m-0 text-xs text-muted-foreground">
+              {`${[structure.className, structure.session].filter(Boolean).join(" · ") || t("finance.feeStructures.noScope")} · ${
+                structure.frequency === "once"
+                  ? t("finance.feeStructures.frequencyOnce")
+                  : structure.frequency === "term"
+                    ? t("finance.feeStructures.frequencyTerm")
+                    : t("finance.feeStructures.frequencyMonthly")
+              }`}
+              {structure.items.length > 0 ? ` · ${structure.items.length} ${t("finance.feeStructures.items")}` : ""}
+            </p>
+          </FormListFieldCard>
         ))}
-        {structures.length === 0 && (
-          <li className="py-4 text-center text-xs text-muted-foreground">{t("finance.feeStructures.empty")}</li>
-        )}
-      </ul>
+      </FormCollectionShell>
     </SectionCard>
   );
 }

@@ -5,12 +5,13 @@ import { getDisplayName, getPrimaryPhone } from "@mms/shared";
 import ContactPicker from "@/components/contactLink/ContactPicker";
 import {
   FieldErrorMessage,
+  FormCardTypeSelect,
   FormSelect,
+  TYPE_SELECT_WIDTH,
   type FormSelectOption,
 } from "@/components/ui/FormPrimitives";
 import { useTranslation } from "@/hooks/useTranslation";
 import { formatContactOptionLabel } from "@/lib/contacts/contactI18n";
-import { SUB_LIST_CARD_ACCENTS } from "@/lib/semanticTone";
 import { ListFieldCard, ContactSubListShell, resolveSubListAllowAdd } from "./ContactSubListCards";
 import type { ContactSubListTabBaseProps } from "./types";
 
@@ -115,21 +116,23 @@ export function ContactRelationshipTab({
                 key={getLocalId("relationship", idx)}
                 id={getLocalId("relationship", idx)}
                 index={idx}
-                accentClass={SUB_LIST_CARD_ACCENTS.relationships.accent}
-                label={showRelationshipType ? `${t("contacts.form.relationshipType")}:` : undefined}
+                icon={Heart}
+                label={undefined}
                 typeSelect={
                   showRelationshipType ? (
-                    <FormSelect
-                      options={selectOptions}
-                      value={typeValue}
-                      onChange={(val) =>
-                        updateSubListItem("relationshipContacts", idx, { relationship: val })
-                      }
-                      className="w-40 @sm:w-52 min-w-0"
-                      id={`cf-${formInstanceId}-relationship-type-${idx}`}
-                      name={`cf-${formInstanceId}-relationship-type-${idx}`}
-                      aria-label={t("contacts.form.relationshipType")}
-                    />
+                    <FormCardTypeSelect label={t("contacts.form.relationshipType")}>
+                      <FormSelect
+                        options={selectOptions}
+                        value={typeValue}
+                        onChange={(val) =>
+                          updateSubListItem("relationshipContacts", idx, { relationship: val })
+                        }
+                        className={TYPE_SELECT_WIDTH}
+                        id={`cf-${formInstanceId}-relationship-type-${idx}`}
+                        name={`cf-${formInstanceId}-relationship-type-${idx}`}
+                        aria-label={t("contacts.form.relationshipType")}
+                      />
+                    </FormCardTypeSelect>
                   ) : undefined
                 }
                 onRemove={() => removeSubListItem("relationshipContacts", idx)}

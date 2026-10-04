@@ -138,6 +138,7 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
       departmentId: form.departmentId,
       designationId: form.designationId,
       isPrimary: form.isPrimary,
+      status: 'active',
       startDate: form.startDate,
       endDate: form.endDate || null,
       notes: form.notes || null,

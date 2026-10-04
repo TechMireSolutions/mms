@@ -130,6 +130,10 @@ export default function Obligations() {
         collections={c.collections}
         messagingTarget={c.messagingTarget}
         onSaveCollection={c.handleSaveCollection}
+        onChangeTypes={c.canEditSetup ? (next) => c.runSetupSave(() => c.replaceTypes.mutateAsync(next)) : undefined}
+        onChangeMujtahids={c.canEditSetup ? (next) => c.runSetupSave(() => c.replaceMujtahids.mutateAsync(next)) : undefined}
+        onChangeReps={c.canEditSetup ? (next) => c.runSetupSave(() => c.replaceReps.mutateAsync(next)) : undefined}
+        onChangeWakala={c.canEditSetup ? (next) => c.runSetupSave(() => c.replaceWakala.mutateAsync(next)) : undefined}
         onRestore={c.handleRestore}
         onCloseForm={() => c.setShowForm(false)}
         onCloseDetail={() => c.setViewCollection(null)}

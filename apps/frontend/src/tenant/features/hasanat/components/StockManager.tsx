@@ -16,10 +16,17 @@ export interface StockManagerProps {
   batches: StockBatch[];
   denoms: Denomination[];
   onUpdate: (batches: StockBatch[]) => void | Promise<void>;
+  onUpdateDenoms?: (denoms: Denomination[]) => void | Promise<void>;
   canWrite?: boolean;
 }
 
-export function StockManager({ batches, denoms, onUpdate, canWrite = true }: StockManagerProps): React.JSX.Element {
+export function StockManager({
+  batches,
+  denoms,
+  onUpdate,
+  onUpdateDenoms,
+  canWrite = true,
+}: StockManagerProps): React.JSX.Element {
   const { t } = useTranslation();
   const [showModal, setShowModal] = useState(false);
 
@@ -110,7 +117,13 @@ export function StockManager({ batches, denoms, onUpdate, canWrite = true }: Sto
       )}
 
       {canWrite && (
-        <StockAddBatchModal open={showModal} denoms={denoms} onClose={() => setShowModal(false)} onSave={handleAdd} />
+        <StockAddBatchModal
+          open={showModal}
+          denoms={denoms}
+          onClose={() => setShowModal(false)}
+          onSave={handleAdd}
+          onDenomsChange={onUpdateDenoms}
+        />
       )}
     </section>
   );

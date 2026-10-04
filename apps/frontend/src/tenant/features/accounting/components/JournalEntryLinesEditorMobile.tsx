@@ -1,12 +1,9 @@
-import { Trash2 } from 'lucide-react';
 import type { AppTranslationKey } from '@mms/shared';
 import { ACCOUNT_TYPE_META, type Account } from '@/lib/data/accountingData';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Field } from '@/components/ui/FormField';
-import { FormSelect } from '@/components/ui/FormSelect';
+import { FormListFieldCard, FormSelectWithQuickCreate } from '@/components/ui/FormPrimitives';
 import { Input } from '@/components/ui/input';
-import { WORK_SURFACE_INNER } from '@/components/ui/formStyles';
 import { StatGrid, StatRow } from '@/components/ui/StatGrid';
 import { useTranslation } from '@/hooks/useTranslation';
 import type { DraftLine } from './journalEntryFormTypes';
@@ -19,6 +16,8 @@ interface JournalEntryLinesEditorMobileProps {
   totalDebit: number;
   totalCredit: number;
   formatCurrency: (amount: number) => string;
+  canAddAccount?: boolean;
+  onOpenAddAccount?: (lineIndex: number) => void;
   onRemoveLine: (lineIndex: number) => void;
   onUpdateLine: (lineIndex: number, field: keyof DraftLine, fieldValue: string | number) => void;
 }
@@ -31,6 +30,8 @@ export function JournalEntryLinesEditorMobile({
   totalDebit,
   totalCredit,
   formatCurrency,
+  canAddAccount = false,
+  onOpenAddAccount,
   onRemoveLine,
   onUpdateLine,
 }: JournalEntryLinesEditorMobileProps) {
@@ -42,89 +43,89 @@ export function JournalEntryLinesEditorMobile({
       {lines.map((line, lineIndex) => {
         const account = accountMap.get(line.account_id);
         return (
-          <article key={line.id} className={`${WORK_SURFACE_INNER} space-y-3 p-3`}>
-            <div className="flex items-center justify-end">
-              <Button
-                type="button"
-                variant="ghost"
-                size="icon"
-                aria-label={t("accounting.journal.form.lineRemoveAria", { line: lineIndex + 1 })}
-                onClick={() => onRemoveLine(lineIndex)}
-                disabled={lines.length <= 2}
-                className="min-h-11 min-w-11 text-muted-foreground hover:text-destructive transition-colors"
-              >
-                <Trash2 className="w-3.5 h-3.5" aria-hidden="true" />
-              </Button>
-            </div>
-            <Field
-              id={`line-mobile-${lineIndex}-account`}
-              label={t("accounting.journal.detail.account")}
-              error={errors[`line${lineIndex}`]}
-            >
-              <FormSelect
+          <FormListFieldCard
+            key={line.id}
+            id={line.id}
+            index={lineIndex}
+            label={`${lineIndex + 1}`}
+            removeLabel={t("accounting.journal.form.lineRemoveAria", { line: lineIndex + 1 })}
+            canRemove={lines.length > 2}
+            onRemove={() => onRemoveLine(lineIndex)}
+          >
+            <div className="space-y-3">
+              <Field
                 id={`line-mobile-${lineIndex}-account`}
-                name={`lines.${lineIndex}.account_id`}
-                aria-label={t("accounting.journal.form.lineAccountAria", { line: lineIndex + 1 })}
-                value={line.account_id}
-                onChange={(accountId) => onUpdateLine(lineIndex, "account_id", accountId)}
-                placeholder={t("accounting.journal.form.selectAccount")}
-                options={accountOptions}
-              />
-              {account && (
-                <Badge pill variant="outline" className={`mt-0.5 px-1.5 font-bold ${ACCOUNT_TYPE_META[account.type]?.color}`}>
-                  {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
-                </Badge>
-              )}
-            </Field>
-            <Field
-              id={`line-mobile-${lineIndex}-description`}
-              label={t("accounting.ledger.columns.lineNote")}
-            >
-              <Input
+                label={t("accounting.journal.detail.account")}
+                error={errors[`line${lineIndex}`]}
+              >
+                <FormSelectWithQuickCreate
+                  id={`line-mobile-${lineIndex}-account`}
+                  name={`lines.${lineIndex}.account_id`}
+                  aria-label={t("accounting.journal.form.lineAccountAria", { line: lineIndex + 1 })}
+                  value={line.account_id}
+                  onChange={(accountId) => onUpdateLine(lineIndex, "account_id", accountId)}
+                  placeholder={t("accounting.journal.form.selectAccount")}
+                  options={accountOptions}
+                  canAdd={canAddAccount}
+                  onOpenAdd={onOpenAddAccount ? () => onOpenAddAccount(lineIndex) : undefined}
+                  addAriaLabel={t("accounting.coa.addAccount")}
+                />
+                {account && (
+                  <Badge pill variant="outline" className={`mt-0.5 px-1.5 font-bold ${ACCOUNT_TYPE_META[account.type]?.color}`}>
+                    {t(`accounting.type.${account.type}` as AppTranslationKey)} · {ACCOUNT_TYPE_META[account.type]?.normalBalance === "debit" ? t("accounting.journal.form.drNormal") : t("accounting.journal.form.crNormal")}
+                  </Badge>
+                )}
+              </Field>
+              <Field
                 id={`line-mobile-${lineIndex}-description`}
-                name={`lines.${lineIndex}.description`}
-                aria-label={t("accounting.journal.form.lineDescriptionAria", { line: lineIndex + 1 })}
-                value={line.description || ""}
-                onChange={(event) => onUpdateLine(lineIndex, "description", event.target.value)}
-                placeholder={t("accounting.journal.form.notePlaceholder")}
-                className="text-xs"
-              />
-            </Field>
-            <div className="grid grid-cols-2 gap-3">
-              <Field
-                id={`line-mobile-${lineIndex}-debit`}
-                label={t("accounting.ledger.columns.debit")}
+                label={t("accounting.ledger.columns.lineNote")}
               >
                 <Input
+                  id={`line-mobile-${lineIndex}-description`}
+                  name={`lines.${lineIndex}.description`}
+                  aria-label={t("accounting.journal.form.lineDescriptionAria", { line: lineIndex + 1 })}
+                  value={line.description || ""}
+                  onChange={(event) => onUpdateLine(lineIndex, "description", event.target.value)}
+                  placeholder={t("accounting.journal.form.notePlaceholder")}
+                  className="text-xs"
+                />
+              </Field>
+              <div className="grid grid-cols-2 gap-3">
+                <Field
                   id={`line-mobile-${lineIndex}-debit`}
-                  name={`lines.${lineIndex}.debit`}
-                  type="text"
-                  inputMode="decimal"
-                  aria-label={t("accounting.journal.form.lineDebitAria", { line: lineIndex + 1 })}
-                  value={line.debit}
-                  placeholder="0.00"
-                  onChange={(event) => onUpdateLine(lineIndex, "debit", event.target.value)}
-                  className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
-                />
-              </Field>
-              <Field
-                id={`line-mobile-${lineIndex}-credit`}
-                label={t("accounting.ledger.columns.credit")}
-              >
-                <Input
+                  label={t("accounting.ledger.columns.debit")}
+                >
+                  <Input
+                    id={`line-mobile-${lineIndex}-debit`}
+                    name={`lines.${lineIndex}.debit`}
+                    type="text"
+                    inputMode="decimal"
+                    aria-label={t("accounting.journal.form.lineDebitAria", { line: lineIndex + 1 })}
+                    value={line.debit}
+                    placeholder="0.00"
+                    onChange={(event) => onUpdateLine(lineIndex, "debit", event.target.value)}
+                    className="bg-info/5 text-end font-mono text-xs focus:ring-info/30"
+                  />
+                </Field>
+                <Field
                   id={`line-mobile-${lineIndex}-credit`}
-                  name={`lines.${lineIndex}.credit`}
-                  type="text"
-                  inputMode="decimal"
-                  aria-label={t("accounting.journal.form.lineCreditAria", { line: lineIndex + 1 })}
-                  value={line.credit}
-                  placeholder="0.00"
-                  onChange={(event) => onUpdateLine(lineIndex, "credit", event.target.value)}
-                  className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
-                />
-              </Field>
+                  label={t("accounting.ledger.columns.credit")}
+                >
+                  <Input
+                    id={`line-mobile-${lineIndex}-credit`}
+                    name={`lines.${lineIndex}.credit`}
+                    type="text"
+                    inputMode="decimal"
+                    aria-label={t("accounting.journal.form.lineCreditAria", { line: lineIndex + 1 })}
+                    value={line.credit}
+                    placeholder="0.00"
+                    onChange={(event) => onUpdateLine(lineIndex, "credit", event.target.value)}
+                    className="bg-success/5 text-end font-mono text-xs focus:ring-success/30"
+                  />
+                </Field>
+              </div>
             </div>
-          </article>
+          </FormListFieldCard>
         );
       })}
       <article className="rounded-xl border border-border bg-muted/30 p-3">

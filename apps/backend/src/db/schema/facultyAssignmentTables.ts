@@ -3,10 +3,12 @@ import {
   text,
   timestamp,
   index,
+  uniqueIndex,
   primaryKey,
   foreignKey,
   boolean,
   date,
+  varchar,
   check,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
@@ -45,6 +47,8 @@ export const facultyAssignments = pgTable('faculty_assignments', {
   /** Self-referencing: the assignment of the direct reporting supervisor. */
   reportsToAssignmentId: text('reports_to_assignment_id'),
   isPrimary: boolean('is_primary').notNull().default(false),
+  /** Holding status for this designation appointment (independent of faculty employment status). */
+  status: varchar('status', { length: 20 }).notNull().default('active'),
   startDate: date('start_date', { mode: 'string' }).notNull(),
   endDate: date('end_date', { mode: 'string' }),
   notes: text('notes'),
@@ -101,11 +105,19 @@ export const facultyAssignments = pgTable('faculty_assignments', {
     'faculty_assignments_date_range_check',
     sql`${table.endDate} is null or ${table.endDate} >= ${table.startDate}`,
   ),
+  check(
+    'faculty_assignments_status_check',
+    sql`${table.status} in ('active', 'inactive')`,
+  ),
   // No self-reporting
   check(
     'faculty_assignments_no_self_reporting_check',
     sql`${table.reportsToAssignmentId} is null or ${table.reportsToAssignmentId} <> ${table.id}`,
   ),
+  // One open active holding of a given department+designation per faculty member
+  uniqueIndex('faculty_assignments_active_dept_designation_uidx')
+    .on(table.workspaceSubdomain, table.facultyId, table.departmentId, table.designationId)
+    .where(sql`${table.deletedAt} is null and ${table.status} = 'active' and ${table.endDate} is null`),
 
   // FK → faculty
   foreignKey({

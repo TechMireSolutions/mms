@@ -1,4 +1,5 @@
 import React from "react";
+import type { FacultyDepartmentEntity, FacultyDesignationDefinition } from "@mms/shared";
 import { notify } from "@/lib/notify";
 import { useTranslation } from "@/hooks/useTranslation";
 import { FacultyDepartmentFormModal } from "@/tenant/features/faculty/components/FacultyDepartmentFormModal";
@@ -16,14 +17,19 @@ export interface FacultyCatalogCreateOverlaysProps {
   onCloseDepartment: () => void;
   createDesignationOpen: boolean;
   onCloseDesignation: () => void;
+  /** Called with the saved entity after a successful create (before close). */
+  onDepartmentCreated?: (department: FacultyDepartmentEntity) => void;
+  onDesignationCreated?: (designation: FacultyDesignationDefinition) => void;
 }
 
-/** Page-header create modals for department / designation catalogs. */
+/** Page-header / in-form create modals for department / designation catalogs. */
 export function FacultyCatalogCreateOverlays({
   createDepartmentOpen,
   onCloseDepartment,
   createDesignationOpen,
   onCloseDesignation,
+  onDepartmentCreated,
+  onDesignationCreated,
 }: FacultyCatalogCreateOverlaysProps): React.JSX.Element {
   const { t } = useTranslation();
   const { departments, parentOptions } = useFacultyDepartmentsController();
@@ -43,7 +49,7 @@ export function FacultyCatalogCreateOverlays({
         isPending={saveDept.isPending}
         onSave={async (payload) => {
           try {
-            await saveDept.mutateAsync({
+            const saved = await saveDept.mutateAsync({
               id: payload.id || crypto.randomUUID(),
               name: payload.name,
               code: payload.code,
@@ -51,6 +57,7 @@ export function FacultyCatalogCreateOverlays({
               isActive: payload.isActive,
             });
             notify.success(t("faculty.setup.departmentSaved"));
+            onDepartmentCreated?.(saved);
             onCloseDepartment();
           } catch {
             notify.error(t("faculty.setup.lookupsSaveFailed"));
@@ -67,11 +74,12 @@ export function FacultyCatalogCreateOverlays({
         isPending={saveDesig.isPending}
         onSave={async (payload) => {
           try {
-            await saveDesig.mutateAsync({
+            const saved = await saveDesig.mutateAsync({
               ...payload,
               id: payload.id || crypto.randomUUID(),
             });
             notify.success(t("faculty.designations.saved"));
+            onDesignationCreated?.(saved);
             onCloseDesignation();
           } catch {
             notify.error(t("faculty.setup.lookupsSaveFailed"));

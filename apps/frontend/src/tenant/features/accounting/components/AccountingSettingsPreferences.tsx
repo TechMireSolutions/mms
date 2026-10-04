@@ -26,6 +26,7 @@ interface AccountingSettingsPreferencesProps {
   canEditSetup: boolean;
   onEditFiscalYear: (fiscalYear: Partial<FiscalYear>) => void;
   onRequestCloseFiscalYear?: (fiscalYearId: string) => void;
+  onAccountsChange?: (updater: Account[] | ((prev: Account[]) => Account[])) => Promise<void> | void;
   isPrefsDirty?: boolean;
   saving?: boolean;
   saved?: boolean;
@@ -44,6 +45,7 @@ export function AccountingSettingsPreferences({
   canEditSetup,
   onEditFiscalYear,
   onRequestCloseFiscalYear,
+  onAccountsChange,
   isPrefsDirty,
   saving,
   saved,
@@ -93,6 +95,7 @@ export function AccountingSettingsPreferences({
         accounts={accounts}
         fiscalYears={fiscalYears}
         decimalSeparator={settingsDraft.decimalSeparator}
+        onAccountsChange={onAccountsChange}
       />
       <AccountingSettingsBankRecSection
         accounts={accounts}

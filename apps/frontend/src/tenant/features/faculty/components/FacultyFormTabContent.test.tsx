@@ -11,6 +11,10 @@ vi.mock("@/tenant/features/faculty/components/FacultyUserAccountSection", () => 
   FacultyUserAccountSection: () => <div data-testid="faculty-user-account-section">user-account-section</div>,
 }));
 
+vi.mock("./FacultyCatalogCreateOverlays", () => ({
+  FacultyCatalogCreateOverlays: () => null,
+}));
+
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => key,

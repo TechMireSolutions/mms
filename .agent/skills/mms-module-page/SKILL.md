@@ -9,7 +9,8 @@ metadata:
 
 # MMS Module Page Pattern
 
-**Rule (norms SSOT):** `mms-module-architecture.md` · `mms-ui-ux-design.md` §4, §8 · `mms-hooks.md` · `mms-performance.md`.
+**Rule (norms SSOT):** `mms-module-architecture.md` §0 triad · `mms-ui-ux-design.md` §4, §8 · `mms-hooks.md` · `mms-performance.md`.
+**Forms:** create/edit collections and catalog selects → `mms-form-architecture` (do not invent page-local form chrome).
 **Workflows:** `/feature-module` · **Manifest:** `.agent/skills-manifest.json`
 
 ## When to use
@@ -17,6 +18,14 @@ metadata:
 - Adding a new tenant module page or aligning an existing page to the module tab shell
 - Registering module routes / manifests / permission gates at the page level
 - Changing `ModulePageShell` tier loading, persisted tab state, or header command centre
+
+## Surface triad
+
+| Surface | Owns | Skill / rule |
+|---------|------|----------------|
+| Work directory | `DataTable` / `WorkBatchTable`, cards, bulk | `mms-module-work` |
+| Detail | `DetailSheet` / `DetailDrawerShell` (read-only) | `mms-module-work` + `mms-ui-ux-design` |
+| Write | `FormModal` + form chrome SSOT | `mms-form-architecture` |
 
 ## Anti-Patterns & Banned Operations
 
@@ -55,6 +64,7 @@ Derive allowed tabs with `useFilteredModuleTierTabs({ workLabelKey: 'nav.<module
 - [ ] Active tier from usePersistedTabState
 - [ ] Work directory virtualizes > 30 rows (@tanstack/react-virtual)
 - [ ] Trash mode (?view=trash) via useTrashMode, with restore + bulk restore wired
+- [ ] Write surfaces use FormModal + mms-form-architecture chrome (not DetailSheet embeds)
 - [ ] i18n keys added to en/ar/ur/fa (pnpm run check:i18n)
 - [ ] Verify: pnpm typecheck && pnpm --filter mms-frontend lint
 ```

@@ -9,8 +9,12 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { DetailSectionTitle } from '@/components/ui/DetailSectionTitle';
 import { useTranslation } from '@/hooks/useTranslation';
+import { useState } from 'react';
+import { OrganizationPositionFormModal } from '@/tenant/components/organization/OrganizationPositionFormModal';
 import { FacultyAssignmentFormCard } from './FacultyAssignmentFormCard';
+import { FacultyCatalogCreateOverlays } from './FacultyCatalogCreateOverlays';
 import { useFacultyAssignmentsController } from '../hooks/useFacultyAssignmentsController';
+import { useFacultyFormCatalogQuickCreate } from '../hooks/useFacultyFormCatalogQuickCreate';
 
 export function FacultyAssignmentsSection({
   faculty,
@@ -20,6 +24,8 @@ export function FacultyAssignmentsSection({
   canEdit?: boolean;
 }): React.JSX.Element {
   const { t } = useTranslation();
+  const catalogCreate = useFacultyFormCatalogQuickCreate();
+  const [createPositionOpen, setCreatePositionOpen] = useState(false);
   const {
     assignments,
     isPending,
@@ -69,6 +75,10 @@ export function FacultyAssignmentsSection({
           allowEmptyPosition={allowEmptyPosition}
           showLegacyPositionWarning={showLegacyPositionWarning}
           isBusy={isBusy}
+          canAddCatalog={canEdit}
+          onOpenAddDepartment={() => catalogCreate.openCreateDepartment(null)}
+          onOpenAddDesignation={() => catalogCreate.openCreateDesignation(null)}
+          onOpenAddPosition={() => setCreatePositionOpen(true)}
           onPatchForm={(patch) => setForm((prev) => ({ ...prev, ...patch }))}
           onSubmit={() => void handleSubmit()}
           onCancel={reset}
@@ -123,6 +133,39 @@ export function FacultyAssignmentsSection({
           </div>
         )}
       </Card>
+
+      <FacultyCatalogCreateOverlays
+        createDepartmentOpen={catalogCreate.createDepartmentOpen}
+        onCloseDepartment={catalogCreate.closeDepartment}
+        createDesignationOpen={catalogCreate.createDesignationOpen}
+        onCloseDesignation={catalogCreate.closeDesignation}
+        onDepartmentCreated={(department) => {
+          catalogCreate.applyDepartmentCreated(department, (_rowKey, patch) => {
+            setForm((prev) => ({
+              ...prev,
+              departmentId: patch.departmentId,
+              positionId: '',
+            }));
+          });
+        }}
+        onDesignationCreated={(designation) => {
+          catalogCreate.applyDesignationCreated(designation, (_rowKey, patch) => {
+            setForm((prev) => ({
+              ...prev,
+              designationId: patch.designationId,
+              positionId: '',
+            }));
+          });
+        }}
+      />
+
+      <OrganizationPositionFormModal
+        open={createPositionOpen}
+        onClose={() => setCreatePositionOpen(false)}
+        onCreated={(positionId) => {
+          setForm((prev) => ({ ...prev, positionId }));
+        }}
+      />
     </div>
   );
 }

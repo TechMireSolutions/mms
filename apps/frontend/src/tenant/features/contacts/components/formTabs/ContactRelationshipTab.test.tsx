@@ -26,6 +26,19 @@ vi.mock("./ContactSubListCards", () => ({
 }));
 
 vi.mock("@/components/ui/FormPrimitives", () => ({
+  TYPE_SELECT_WIDTH: "w-32",
+  FormCardTypeSelect: ({
+    label,
+    children,
+  }: {
+    label: React.ReactNode;
+    children: React.ReactNode;
+  }) => (
+    <div>
+      <span>{label}</span>
+      {children}
+    </div>
+  ),
   FormSelect: ({ value, options, id, name }: {
     value?: string;
     options: readonly ({ value: string; label: string } | string)[];

@@ -38,6 +38,7 @@ export async function saveFacultyAssignment(
           ...(assignment.positionId !== undefined ? { positionId: assignment.positionId } : {}),
           reportsToAssignmentId,
           isPrimary: assignment.isPrimary,
+          status: assignment.status ?? 'active',
           startDate: assignment.startDate,
           endDate: assignment.endDate ?? null,
           notes: assignment.notes ?? null,

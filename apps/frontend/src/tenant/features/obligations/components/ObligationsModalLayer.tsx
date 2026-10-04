@@ -42,6 +42,10 @@ interface ObligationsModalLayerProps {
   collections: ObligationCollection[];
   messagingTarget: MessagingTarget | null;
   onSaveCollection: (collection: ObligationCollection) => Promise<void>;
+  onChangeTypes?: (types: ObligationType[]) => Promise<void> | void;
+  onChangeMujtahids?: (mujtahids: Mujtahid[]) => Promise<void> | void;
+  onChangeReps?: (reps: MujtahidRep[]) => Promise<void> | void;
+  onChangeWakala?: (wakala: WakalaType[]) => Promise<void> | void;
   onRestore?: (id: string) => void | Promise<void>;
   onCloseForm: () => void;
   onCloseDetail: () => void;
@@ -62,6 +66,10 @@ export function ObligationsModalLayer({
   collections,
   messagingTarget,
   onSaveCollection,
+  onChangeTypes,
+  onChangeMujtahids,
+  onChangeReps,
+  onChangeWakala,
   onRestore,
   onCloseForm,
   onCloseDetail,
@@ -79,6 +87,10 @@ export function ObligationsModalLayer({
               wakalaTypes={wakalaTypes}
               existingCollections={collections}
               onSave={onSaveCollection}
+              onChangeTypes={onChangeTypes}
+              onChangeMujtahids={onChangeMujtahids}
+              onChangeReps={onChangeReps}
+              onChangeWakala={onChangeWakala}
               onClose={onCloseForm}
             />
           </React.Suspense>

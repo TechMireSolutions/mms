@@ -10,6 +10,7 @@ metadata:
 # MMS UI/UX Design System & BiDi Layout Contract
 
 **Rules (norms SSOT):** `mms-ui-ux-design.md` · `mms-structure-naming.md` · `mms-performance.md`
+**Form collection / FormModal chrome:** `mms-form-architecture` (control decision table, `FormCollectionShell`, `FormCardTypeSelect`) — do not invent parallel form card systems in this skill.
 
 ## When to use
 

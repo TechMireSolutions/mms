@@ -14,6 +14,7 @@ description: Consolidated UI component primitives, design tokens, navigation tab
   - **Overlays & Drawers:** `FormModal` (portal shell), `DetailSheet` / `DetailDrawerShell` (drawer with archive banner and `WarningCallout`), `Popover`, `Tooltip`, `DropdownMenu`.
   - **Layout & Shells:** `AppShell` (universal frame), `ModulePageShell` / `ModuleScaffold` (page shell), `Table` (mandate `@tanstack/react-virtual` when rows > 30).
   - **Directory & Cards:** `DirectoryCardsGrid`, `DirectoryEntityCard`, `DirectoryCard`, `DirectoryCardFooterActions`, `StatCard`, `ModuleCommandMetricsGrid`, `BulkActionDock` / `BulkSelectionBar`, `ModuleTrashToggle` (`aria-pressed={showDeleted}`).
+  - **Form collection chrome:** `FormCollectionShell`, `FormListFieldCard`, `FormAddAnotherButton`, `FormCardTypeSelect`, `FormSelectWithQuickCreate` — norms and control decision table live in `mms-form-architecture.md` (ban inventing parallel form card systems here).
   - **Feedback & States:** `EmptyState`, `ErrorState`, `FieldErrorMessage`, `WarningCallout`, `StatusBadge` (pair with `t()`, never color alone), `notify.{success,error,warning}` from `lib/notify.ts`.
 
 ## 2. Design Tokens & Surface Styling
