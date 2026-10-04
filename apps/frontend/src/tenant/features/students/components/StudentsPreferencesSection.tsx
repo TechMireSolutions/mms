@@ -65,6 +65,9 @@ export function StudentsPreferencesSection({
         onChange={handleChange}
         allowYearless={true}
         defaultPrefixPlaceholder="GR"
+        autoGenerateLabel={t("students.settings.autoGenerateId")}
+        digitsLabel={t("students.settings.grDigits")}
+        digitsHint={t("students.settings.grDigitsHint")}
         footer={
           onSave ? (
             <ModuleSetupSaveFooter

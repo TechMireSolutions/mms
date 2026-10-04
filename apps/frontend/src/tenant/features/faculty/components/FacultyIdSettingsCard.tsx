@@ -57,15 +57,8 @@ export function FacultyIdSettingsCard({
       onChange={handleChange}
       defaultPrefixPlaceholder="FAC"
       autoGenerateLabel={t("faculty.settings.autoGenerateId")}
-      previewLabel={t("faculty.settings.preview")}
-      templateLabel={t("faculty.settings.idTemplate")}
       prefixLabel={t("faculty.settings.idPrefix")}
       prefixHint={t("faculty.settings.idPrefixHint")}
-      digitsLabel={t("faculty.settings.idDigits")}
-      digitsHint={t("faculty.settings.idDigitsHint")}
-      startSeqLabel={t("faculty.settings.idStartSeq")}
-      startSeqHint={t("faculty.settings.idStartSeqHint")}
-      telemetryLabel={t("faculty.settings.sequenceTelemetry")}
       restartLabel={t("faculty.settings.idRestartAnnually")}
       restartDesc={t("faculty.settings.idRestartAnnuallyDesc")}
       footer={

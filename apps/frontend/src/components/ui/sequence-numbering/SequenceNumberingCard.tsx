@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { Hash } from "lucide-react";
 import { FORM_INPUT, SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
@@ -67,6 +67,13 @@ export function SequenceNumberingCard({
 }: SequenceNumberingCardProps): React.JSX.Element {
   const { t } = useTranslation();
   const currentYear = new Date().getFullYear();
+  const [startText, setStartText] = useState(String(config.startingSequence));
+  const [startError, setStartError] = useState<string | undefined>();
+
+  useEffect(() => {
+    setStartText(String(config.startingSequence));
+    setStartError(undefined);
+  }, [config.startingSequence]);
 
   const livePreview = useMemo(() => {
     const currentSeq = config.currentSequence ?? 0;
@@ -74,32 +81,31 @@ export function SequenceNumberingCard({
     return formatDeterministicSequence(seq, config);
   }, [config]);
 
-  const formulaTemplate = useMemo(() => {
-    return buildSequenceFormulaTemplate(config);
-  }, [config]);
+  const formulaTemplate = useMemo(() => buildSequenceFormulaTemplate(config), [config]);
 
   const updateField = <K extends keyof SequenceNumberingConfig>(
     field: K,
-    val: SequenceNumberingConfig[K]
+    val: SequenceNumberingConfig[K],
   ) => {
     onChange({ ...config, [field]: val });
   };
 
   const isAnnualReset = config.rolloverPolicy !== "never";
+  const prefixPlaceholder = defaultPrefixPlaceholder
+    ? t("common.sequenceNumbering.prefixPlaceholder", { example: defaultPrefixPlaceholder })
+    : undefined;
 
   return (
     <SectionCard title={title} icon={icon} accentColor="primary" className={className}>
       <div className="space-y-4">
-        {/* Master Auto-generation switch */}
         <ToggleRow
-          label={autoGenerateLabel ?? `Auto-generate ${entityLabel}s`}
+          label={autoGenerateLabel ?? t("common.sequenceNumbering.autoGenerate", { entity: entityLabel })}
           value={config.autoGenerate}
           onChange={(value) => updateField("autoGenerate", value)}
         />
 
-        {config.autoGenerate && (
+        {config.autoGenerate ? (
           <>
-            {/* Live Preview Card */}
             <SequenceNumberingPreview
               livePreview={livePreview}
               formulaTemplate={formulaTemplate}
@@ -107,7 +113,6 @@ export function SequenceNumberingCard({
               templateLabel={templateLabel}
             />
 
-            {/* Core Parameters Grid */}
             <SequenceNumberingParametersGrid
               prefix={config.prefix}
               yearFormat={config.yearFormat}
@@ -115,9 +120,9 @@ export function SequenceNumberingCard({
               delimiter={config.delimiter}
               currentYear={currentYear}
               allowYearless={allowYearless}
-              prefixLabel={prefixLabel ?? `${entityLabel} Prefix`}
-              prefixHint={prefixHint ?? `Default prefix used across ${entityLabel}s`}
-              prefixPlaceholder={defaultPrefixPlaceholder ?? "e.g. ID"}
+              prefixLabel={prefixLabel}
+              prefixHint={prefixHint}
+              prefixPlaceholder={prefixPlaceholder}
               digitsLabel={digitsLabel}
               digitsHint={digitsHint}
               onChangePrefix={(val) => updateField("prefix", val)}
@@ -126,24 +131,31 @@ export function SequenceNumberingCard({
               onChangeDelimiter={(val) => updateField("delimiter", val)}
             />
 
-            {/* Starting Sequence & Live Telemetry Box */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+            <div className="grid grid-cols-1 gap-3 pt-1 sm:grid-cols-2">
               <Field
-                label={startSeqLabel ?? (t('common.sequenceNumbering.startLabel') !== 'common.sequenceNumbering.startLabel' ? t('common.sequenceNumbering.startLabel') : 'Starting Sequence')}
-                hint={startSeqHint ?? t('common.sequenceNumbering.startHint')}
+                label={startSeqLabel ?? t("common.sequenceNumbering.startLabel")}
+                hint={startSeqHint ?? t("common.sequenceNumbering.startHint")}
                 id="sequence-startSeq"
+                error={startError}
               >
                 <Input
                   id="sequence-startSeq"
                   name="sequence-startSeq"
                   type="text"
                   inputMode="numeric"
-                  min="1"
                   className={FORM_INPUT}
-                  value={config.startingSequence}
-                  onChange={(event) =>
-                    updateField("startingSequence", Math.max(1, Number(event.target.value) || 1))
-                  }
+                  value={startText}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setStartText(next);
+                    const parsed = Number(next);
+                    if (!Number.isFinite(parsed) || parsed < 1) {
+                      setStartError(t("common.sequenceNumbering.startMinError"));
+                      return;
+                    }
+                    setStartError(undefined);
+                    updateField("startingSequence", Math.floor(parsed));
+                  }}
                 />
               </Field>
 
@@ -154,36 +166,18 @@ export function SequenceNumberingCard({
               />
             </div>
 
-            {/* Annual / Fiscal Rollover Toggle */}
-            <div className="pt-2 border-t border-border/40">
+            <div className="border-t border-border/40 pt-2">
               <ToggleRow
-                label={
-                  restartLabel ??
-                  (allowFiscalRollover
-                    ? "Restart Sequence Every Fiscal Year"
-                    : "Restart Sequence Annually")
-                }
-                description={
-                  restartDesc ??
-                  (allowFiscalRollover
-                    ? `Reset ${entityLabel} sequence at the start of each fiscal year`
-                    : `Reset ${entityLabel} sequence at the beginning of each calendar year`)
-                }
+                label={restartLabel ?? t(allowFiscalRollover ? "common.sequenceNumbering.restartFiscal" : "common.sequenceNumbering.restartAnnually")}
+                description={restartDesc ?? t(allowFiscalRollover ? "common.sequenceNumbering.restartFiscalDesc" : "common.sequenceNumbering.restartAnnuallyDesc", { entity: entityLabel })}
                 value={isAnnualReset}
                 onChange={(enabled) =>
-                  updateField(
-                    "rolloverPolicy",
-                    enabled
-                      ? allowFiscalRollover
-                        ? "annual_fiscal"
-                        : "annual_calendar"
-                      : "never"
-                  )
+                  updateField("rolloverPolicy", enabled ? (allowFiscalRollover ? "annual_fiscal" : "annual_calendar") : "never")
                 }
               />
             </div>
           </>
-        )}
+        ) : null}
         {footer}
       </div>
     </SectionCard>

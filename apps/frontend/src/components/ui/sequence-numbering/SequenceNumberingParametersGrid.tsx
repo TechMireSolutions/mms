@@ -1,13 +1,29 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { FORM_INPUT } from "@/components/ui/formStyles";
 import { Input } from "@/components/ui/input";
 import { FormSelect } from "@/components/ui/FormSelect";
 import { Field } from "@/components/ui/FormPrimitives";
 import { cn } from "@/lib/utils";
+import { useTranslation } from "@/hooks/useTranslation";
 import {
   SEQUENCE_DELIMITER_PRESETS,
   type SequenceYearFormat,
 } from "@mms/shared";
+
+const DELIMITER_LABEL_KEYS = {
+  "": "common.sequenceNumbering.delimiterNone",
+  "-": "common.sequenceNumbering.delimiterHyphen",
+  "/": "common.sequenceNumbering.delimiterSlash",
+  ".": "common.sequenceNumbering.delimiterDot",
+} as const;
+
+/** Compact chip glyphs — full names live on aria-label via i18n. */
+const DELIMITER_SYMBOLS: Record<string, string> = {
+  "": "∅",
+  "-": "-",
+  "/": "/",
+  ".": ".",
+};
 
 export interface SequenceNumberingParametersGridProps {
   prefix: string;
@@ -38,43 +54,73 @@ export function SequenceNumberingParametersGrid({
   delimiter,
   currentYear,
   allowYearless = false,
-  prefixLabel = "Prefix",
-  prefixHint = "Default prefix used across IDs",
-  prefixPlaceholder = "e.g. FAC",
-  yearFormatLabel = "Year Format",
-  yearFormatHint = "Four-digit (YYYY), two-digit (YY), or omit",
-  digitsLabel = "Sequence Digits",
-  digitsHint = "e.g. 4 produces '0001', 3 produces '001'",
-  delimiterLabel = "Delimiter",
-  delimiterHint = "Optional separator (e.g. - or /)",
+  prefixLabel,
+  prefixHint,
+  prefixPlaceholder,
+  yearFormatLabel,
+  yearFormatHint,
+  digitsLabel,
+  digitsHint,
+  delimiterLabel,
+  delimiterHint,
   onChangePrefix,
   onChangeYearFormat,
   onChangeDigits,
   onChangeDelimiter,
 }: SequenceNumberingParametersGridProps): React.JSX.Element {
-  const yearOptions = [
-    { value: "YYYY", label: `YYYY (e.g. ${currentYear})` },
-    { value: "YY", label: `YY (e.g. ${String(currentYear).slice(-2)})` },
-  ];
+  const { t } = useTranslation();
+  const [digitsText, setDigitsText] = useState(String(sequenceDigits));
+  const [digitsError, setDigitsError] = useState<string | undefined>();
 
+  useEffect(() => {
+    setDigitsText(String(sequenceDigits));
+    setDigitsError(undefined);
+  }, [sequenceDigits]);
+
+  const yearOptions = [
+    {
+      value: "YYYY",
+      label: t("common.sequenceNumbering.yearFormatYYYY", { year: currentYear }),
+    },
+    {
+      value: "YY",
+      label: t("common.sequenceNumbering.yearFormatYY", {
+        year: String(currentYear).slice(-2),
+      }),
+    },
+  ];
   if (allowYearless) {
-    yearOptions.push({ value: "NONE", label: "None (Omit Year)" });
+    yearOptions.push({
+      value: "NONE",
+      label: t("common.sequenceNumbering.yearFormatNone"),
+    });
   }
 
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-      <Field label={prefixLabel} hint={prefixHint} id="sequence-prefix">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+      <Field
+        label={prefixLabel ?? t("common.sequenceNumbering.prefix")}
+        hint={prefixHint ?? t("common.sequenceNumbering.prefixHint")}
+        id="sequence-prefix"
+      >
         <Input
           id="sequence-prefix"
           name="sequence-prefix"
           className={FORM_INPUT}
           value={prefix}
           onChange={(event) => onChangePrefix(event.target.value.toUpperCase())}
-          placeholder={prefixPlaceholder}
+          placeholder={
+            prefixPlaceholder ??
+            t("common.sequenceNumbering.prefixPlaceholder", { example: "ID" })
+          }
         />
       </Field>
 
-      <Field label={yearFormatLabel} hint={yearFormatHint} id="sequence-year-format">
+      <Field
+        label={yearFormatLabel ?? t("common.sequenceNumbering.yearFormat")}
+        hint={yearFormatHint ?? t("common.sequenceNumbering.yearFormatHint")}
+        id="sequence-year-format"
+      >
         <FormSelect
           id="sequence-year-format"
           name="sequence-year-format"
@@ -84,50 +130,67 @@ export function SequenceNumberingParametersGrid({
         />
       </Field>
 
-      <Field label={digitsLabel} hint={digitsHint} id="sequence-digits">
+      <Field
+        label={digitsLabel ?? t("common.sequenceNumbering.digits")}
+        hint={digitsHint ?? t("common.sequenceNumbering.digitsHint")}
+        id="sequence-digits"
+        error={digitsError}
+      >
         <Input
           id="sequence-digits"
           name="sequence-digits"
           type="text"
           inputMode="numeric"
-          min="2"
-          max="8"
           className={FORM_INPUT}
-          value={sequenceDigits}
+          value={digitsText}
           onChange={(event) => {
-            const val = Math.max(2, Math.min(8, Number(event.target.value) || 2));
-            onChangeDigits(val);
+            const next = event.target.value;
+            setDigitsText(next);
+            const parsed = Number(next);
+            if (!Number.isFinite(parsed) || parsed < 2 || parsed > 8) {
+              setDigitsError(t("common.sequenceNumbering.digitsRangeError"));
+              return;
+            }
+            setDigitsError(undefined);
+            onChangeDigits(parsed);
           }}
         />
       </Field>
 
-      <Field label={delimiterLabel} hint={delimiterHint} id="sequence-delimiter">
-        <div className="space-y-1.5">
-          <Input
-            id="sequence-delimiter"
-            name="sequence-delimiter"
-            className={FORM_INPUT}
-            value={delimiter}
-            onChange={(event) => onChangeDelimiter(event.target.value)}
-            placeholder="e.g. - or leave empty"
-          />
-          <div className="flex flex-wrap items-center gap-1">
-            {SEQUENCE_DELIMITER_PRESETS.map((preset) => (
+      <Field
+        label={delimiterLabel ?? t("common.sequenceNumbering.delimiter")}
+        hint={delimiterHint ?? t("common.sequenceNumbering.delimiterHint")}
+        id="sequence-delimiter"
+      >
+        <div
+          id="sequence-delimiter"
+          className="flex flex-wrap items-center gap-1.5"
+          role="group"
+          aria-label={t("common.sequenceNumbering.delimiter")}
+        >
+          {SEQUENCE_DELIMITER_PRESETS.map((preset) => {
+            const labelKey = DELIMITER_LABEL_KEYS[preset.value as keyof typeof DELIMITER_LABEL_KEYS];
+            const label = labelKey ? t(labelKey) : preset.label;
+            const symbol = DELIMITER_SYMBOLS[preset.value] ?? preset.label;
+            const selected = delimiter === preset.value;
+            return (
               <button
                 key={preset.label}
                 type="button"
                 onClick={() => onChangeDelimiter(preset.value)}
+                aria-pressed={selected}
+                aria-label={label}
                 className={cn(
-                  "px-2 py-0.5 rounded text-[11px] font-mono transition-colors border cursor-pointer",
-                  delimiter === preset.value
-                    ? "bg-primary text-primary-foreground border-primary font-semibold"
-                    : "bg-muted/40 hover:bg-muted text-muted-foreground border-border/60"
+                  "inline-flex min-h-11 min-w-11 items-center justify-center rounded-md border font-mono text-sm transition-colors cursor-pointer",
+                  selected
+                    ? "border-primary bg-primary font-semibold text-primary-foreground"
+                    : "border-border/60 bg-muted/40 text-muted-foreground hover:bg-muted",
                 )}
               >
-                {preset.label}
+                {symbol}
               </button>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </Field>
     </div>
