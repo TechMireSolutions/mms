@@ -995,6 +995,13 @@
       "when": 1791100700000,
       "tag": "0141_faculty_assignment_dept_designation_uidx",
       "breakpoints": true
+    },
+    {
+      "idx": 142,
+      "version": "7",
+      "when": 1791100800000,
+      "tag": "0142_drop_faculty_assignment_dept_designation_uidx",
+      "breakpoints": true
     }
   ]
 }

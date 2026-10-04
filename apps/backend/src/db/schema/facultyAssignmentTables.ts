@@ -3,7 +3,6 @@ import {
   text,
   timestamp,
   index,
-  uniqueIndex,
   primaryKey,
   foreignKey,
   boolean,
@@ -114,10 +113,6 @@ export const facultyAssignments = pgTable('faculty_assignments', {
     'faculty_assignments_no_self_reporting_check',
     sql`${table.reportsToAssignmentId} is null or ${table.reportsToAssignmentId} <> ${table.id}`,
   ),
-  // One open active holding of a given department+designation per faculty member
-  uniqueIndex('faculty_assignments_active_dept_designation_uidx')
-    .on(table.workspaceSubdomain, table.facultyId, table.departmentId, table.designationId)
-    .where(sql`${table.deletedAt} is null and ${table.status} = 'active' and ${table.endDate} is null`),
 
   // FK → faculty
   foreignKey({
