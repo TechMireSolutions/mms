@@ -6,6 +6,7 @@ export * from './components/FacultySetupTier';
 export * from './components/FacultyDetail';
 export * from './components/FacultyForm';
 export * from './components/FacultyIdCardModal';
+export * from './components/FacultyTabIoToolbar';
 export * from './components/FacultyPageHeaderActions';
 export * from './components/facultyFieldDisplay';
 export * from './components/facultyDetailShared';

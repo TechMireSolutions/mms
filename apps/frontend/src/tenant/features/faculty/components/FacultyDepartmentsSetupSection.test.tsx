@@ -19,6 +19,8 @@ vi.mock("@/tenant/features/faculty/hooks/useFacultyDepartments", () => ({
   useFacultyDepartments: () => ({
     data: mockDepartmentsData,
     isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
   }),
   useSaveFacultyDepartment: () => ({
     mutateAsync: mockSaveMutateAsync,
@@ -76,37 +78,23 @@ describe("FacultyDepartmentsSetupSection", () => {
     container.remove();
   });
 
-  it("renders existing departments and add button in header", async () => {
+  it("renders work-directory departments table without section-header add", async () => {
     await act(async () => {
       root.render(<FacultyDepartmentsSetupSection />);
     });
 
-    expect(container.textContent).toContain("faculty.setup.departmentsTitle");
     expect(container.textContent).toContain("Quranic Studies");
     expect(container.textContent).toContain("Hadith Sciences");
+    expect(container.textContent).toContain("common.filters");
+    expect(container.textContent).toContain("common.columns.trigger");
+    expect(
+      container.querySelector('input[placeholder="faculty.setup.searchDepartments"]'),
+    ).not.toBeNull();
 
     const addBtn = Array.from(container.querySelectorAll("button")).find((btn) =>
       btn.textContent?.includes("faculty.setup.addDepartment"),
     );
-    expect(addBtn).toBeDefined();
-  });
-
-  it("opens add department modal when add button is clicked", async () => {
-    await act(async () => {
-      root.render(<FacultyDepartmentsSetupSection />);
-    });
-
-    const addBtn = Array.from(container.querySelectorAll("button")).find((btn) =>
-      btn.textContent?.includes("faculty.setup.addDepartment"),
-    );
-    expect(addBtn).not.toBeUndefined();
-
-    await act(async () => {
-      addBtn!.click();
-    });
-
-    const modalInput = document.querySelector<HTMLInputElement>("#department-form-name");
-    expect(modalInput).not.toBeNull();
+    expect(addBtn).toBeUndefined();
   });
 
   it("opens edit modal when edit button in table is clicked", async () => {

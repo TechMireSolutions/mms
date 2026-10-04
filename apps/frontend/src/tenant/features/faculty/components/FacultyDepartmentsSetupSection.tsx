@@ -1,47 +1,34 @@
 import React, { useState } from 'react';
-import { Building2, Plus } from 'lucide-react';
 import type { FacultyDepartmentEntity } from '@mms/shared';
-import { Button } from '@/components/ui/button';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import { SectionCard } from '@/components/ui/SectionCard';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { notify } from '@/lib/notify';
 import { FacultyDepartmentsTable } from './FacultyDepartmentsTable';
 import { FacultyDepartmentFormModal } from './FacultyDepartmentFormModal';
 import { useFacultyDepartmentsController } from '../hooks/useFacultyDepartmentsController';
-import { useSaveFacultyDepartment } from '../hooks/useFacultyDepartments';
+import {
+  useFacultyDepartments,
+  useSaveFacultyDepartment,
+} from '../hooks/useFacultyDepartments';
 
-export interface FacultyDepartmentsSetupSectionProps {
-  /** When set, Add opens the page-level create modal instead of a local one. */
-  onRequestAdd?: () => void;
-}
-
-/** Normalized department catalog management using the faculty_departments table. */
-export function FacultyDepartmentsSetupSection({
-  onRequestAdd,
-}: FacultyDepartmentsSetupSectionProps = {}): React.JSX.Element {
+/** Departments work surface — same directory chrome as Faculties (toolbar + table/cards). */
+export function FacultyDepartmentsSetupSection(): React.JSX.Element {
   const {
     t,
     departments,
     orderedDepartments,
     parentOptions,
-    isLoading,
     isPending,
     handleDelete,
   } = useFacultyDepartmentsController();
+  const query = useFacultyDepartments();
   const saveMutation = useSaveFacultyDepartment();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<FacultyDepartmentEntity | null>(null);
   const [deptToDelete, setDeptToDelete] = useState<FacultyDepartmentEntity | null>(null);
-
-  const handleOpenAdd = () => {
-    if (onRequestAdd) {
-      onRequestAdd();
-      return;
-    }
-    setEditingDepartment(null);
-    setModalOpen(true);
-  };
 
   const handleStartEdit = (dept: FacultyDepartmentEntity) => {
     setEditingDepartment(dept);
@@ -81,34 +68,25 @@ export function FacultyDepartmentsSetupSection({
   };
 
   return (
-    <SectionCard
-      title={t('faculty.setup.departmentsTitle')}
-      icon={Building2}
-      accentColor="primary"
-      actions={
-        <Button
-          type="button"
-          size="sm"
-          onClick={handleOpenAdd}
-          className="gap-1.5 min-h-9"
-        >
-          <Plus className="size-4" aria-hidden />
-          <span>{t('faculty.setup.addDepartment')}</span>
-        </Button>
-      }
-    >
-      <div className="space-y-4 text-start">
-        <p className="text-sm text-muted-foreground">{t('faculty.setup.departmentsHint')}</p>
-
-        <FacultyDepartmentsTable
-          departments={departments}
-          orderedDepartments={orderedDepartments}
-          editingDepartmentId={editingDepartment?.id}
-          isPending={isPending || saveMutation.isPending}
-          isLoading={isLoading}
-          onEdit={handleStartEdit}
-          onDelete={(d) => setDeptToDelete(d)}
-        />
+    <ErrorBoundary>
+      <ModuleTierMotion tier="work-departments" className="space-y-5">
+        {query.isError ? (
+          <ErrorState
+            title={t('faculty.setup.departmentsLoadFailed')}
+            description={t('faculty.loadFailedHint')}
+            onRetry={() => void query.refetch()}
+          />
+        ) : (
+          <FacultyDepartmentsTable
+            departments={departments}
+            orderedDepartments={orderedDepartments}
+            editingDepartmentId={editingDepartment?.id}
+            isPending={isPending || saveMutation.isPending}
+            isLoading={query.isLoading}
+            onEdit={handleStartEdit}
+            onDelete={(d) => setDeptToDelete(d)}
+          />
+        )}
 
         <FacultyDepartmentFormModal
           open={modalOpen}
@@ -134,7 +112,7 @@ export function FacultyDepartmentsSetupSection({
           destructive
           onConfirm={handleConfirmDelete}
         />
-      </div>
-    </SectionCard>
+      </ModuleTierMotion>
+    </ErrorBoundary>
   );
 }

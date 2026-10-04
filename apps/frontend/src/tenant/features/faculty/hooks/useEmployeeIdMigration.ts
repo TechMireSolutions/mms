@@ -25,9 +25,9 @@ function markEmployeeIdMigrationDone(): void {
 
 /**
  * One-shot employee-id backfill for legacy faculty/teachers missing an id.
- * Runs once per browser (localStorage gate) when a Setup writer opens the Work
- * tab — matches BE `setupWrite`. The POST goes through a `useMutation` so the
- * outcome surfaces via `notify.*` + `t()` instead of silent console warnings.
+ * Runs once per browser (localStorage gate) when a Setup writer opens the
+ * Faculties tab — matches BE `setupWrite`. The POST goes through a `useMutation`
+ * so the outcome surfaces via `notify.*` + `t()` instead of silent console warnings.
  */
 export function useEmployeeIdMigration(activeTab: string, canEditSetup: boolean): void {
   const queryClient = useQueryClient();
@@ -54,7 +54,7 @@ export function useEmployeeIdMigration(activeTab: string, canEditSetup: boolean)
   });
 
   useEffect(() => {
-    if (!canEditSetup || !needsMigrationScan || activeTab !== "work") return;
+    if (!canEditSetup || !needsMigrationScan || activeTab !== "faculties") return;
     if (migrationAppliedRef.current) return;
     migrationAppliedRef.current = true;
     mutate();

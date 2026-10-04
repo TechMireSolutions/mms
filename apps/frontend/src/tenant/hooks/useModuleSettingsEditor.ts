@@ -39,13 +39,16 @@ export function useModuleSettingsEditor<T extends ModuleSettingsShape>({
   }, [saved, flashSaved, clearSaved]);
 
   // Sync settings draft when persisted content changes
-  const prevSettingsRef = useRef<T | null>(null);
+  const prevSettingsRef = useRef<T | null>(settings);
   const settingsDraftDirtyRef = useRef(false);
   useEffect(() => {
     if (!settings) return;
-    // Simple identity check since Settings is typically from a Query Cache
     if (prevSettingsRef.current === settings) return;
+    const isSameContent =
+      prevSettingsRef.current !== null &&
+      JSON.stringify(prevSettingsRef.current) === JSON.stringify(settings);
     prevSettingsRef.current = settings;
+    if (isSameContent) return;
     if (settingsDraftDirtyRef.current) return;
     setSettingsDraft(settings);
   }, [settings]);

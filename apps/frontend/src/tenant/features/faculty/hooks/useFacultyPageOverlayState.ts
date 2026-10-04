@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { toMessagingRecipient, type Faculty } from "@mms/shared";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
-import type { FacultyIoEntity } from "@/tenant/features/faculty/components/FacultyPageHeaderActions";
+import type { FacultyIoEntity } from "@/tenant/features/faculty/facultyPageWorkSubTabs";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
 

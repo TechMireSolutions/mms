@@ -1,5 +1,9 @@
 import {
-  UserPlus, Download, Upload, Building2, Award,
+  Award,
+  Building2,
+  Download,
+  Upload,
+  UserPlus,
 } from "lucide-react";
 import { ActionButton } from "@/components/ui/ActionButton";
 import {
@@ -9,9 +13,12 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useTranslation } from "@/hooks/useTranslation";
-import type { FacultyWorkSubTabId } from "@/tenant/features/faculty/facultyPageWorkSubTabs";
+import {
+  FACULTY_IO_ENTITY_IDS,
+  type FacultyIoEntity,
+} from "@/tenant/features/faculty/facultyPageWorkSubTabs";
 
-export type FacultyIoEntity = FacultyWorkSubTabId;
+export type { FacultyIoEntity };
 
 export interface FacultyPageHeaderActionsProps {
   canExport: boolean;
@@ -26,8 +33,7 @@ export interface FacultyPageHeaderActionsProps {
   onAddDesignation?: () => void;
 }
 
-const IO_ENTITIES: FacultyIoEntity[] = ["faculties", "departments", "designations"];
-
+/** Module-dashboard IO: Import/Export choosers for all three entities + three Adds. */
 export function FacultyPageHeaderActions({
   canExport,
   canWrite,
@@ -62,7 +68,7 @@ export function FacultyPageHeaderActions({
             </ActionButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
-            {IO_ENTITIES.map((entity) => (
+            {FACULTY_IO_ENTITY_IDS.map((entity) => (
               <DropdownMenuItem
                 key={`export-${entity}`}
                 className="cursor-pointer"
@@ -83,7 +89,7 @@ export function FacultyPageHeaderActions({
             </ActionButton>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-52">
-            {IO_ENTITIES.map((entity) => (
+            {FACULTY_IO_ENTITY_IDS.map((entity) => (
               <DropdownMenuItem
                 key={`import-${entity}`}
                 className="cursor-pointer"

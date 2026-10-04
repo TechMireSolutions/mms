@@ -5,12 +5,16 @@ import { ResponsiveAccordionTabs } from "@/components/ui/ResponsiveAccordionTabs
 import { useTranslation } from "@/hooks/useTranslation";
 import { useIndustryTerminology } from "@/tenant/hooks/useIndustryTerminology";
 import { FacultyCommandMetrics } from "@/tenant/features/faculty/components/FacultyCommandMetrics";
+import { FacultyDepartmentsSetupSection } from "@/tenant/features/faculty/components/FacultyDepartmentsSetupSection";
+import { FacultyDesignationsSetupSection } from "@/tenant/features/faculty/components/FacultyDesignationsSetupSection";
 import { FacultyPageHeaderActions } from "@/tenant/features/faculty/components/FacultyPageHeaderActions";
 import { FacultyPageOverlays } from "@/tenant/features/faculty/components/FacultyPageOverlays";
-import { FacultyWorkShell } from "@/tenant/features/faculty/components/FacultyWorkShell";
+import { FacultyTabIoToolbar } from "@/tenant/features/faculty/components/FacultyTabIoToolbar";
+import { FacultyWorkTier } from "@/tenant/features/faculty/components/FacultyWorkTier";
 import { AnimatePresence } from "framer-motion";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
 import type { useFacultyPageController } from "@/tenant/features/faculty/hooks/useFacultyPageController";
+import type { FacultyIoEntity } from "@/tenant/features/faculty/facultyPageWorkSubTabs";
 
 const FacultyReportsTier = lazy(() =>
   import("@/tenant/features/faculty/components/FacultyReportsTier").then((m) => ({
@@ -25,15 +29,52 @@ const FacultySetupTier = lazy(() =>
 
 export type FacultyPageViewProps = ReturnType<typeof useFacultyPageController>;
 
-/** Presentational Faculty page shell — Faculties / Reports / Setup + work sub-tabs. */
+function EntityTabPanel({
+  entity,
+  canWrite,
+  canExport,
+  viewingDeleted,
+  staffSingular,
+  onExportEntity,
+  onImportEntity,
+  onAdd,
+  children,
+}: {
+  entity: FacultyIoEntity;
+  canWrite: boolean;
+  canExport: boolean;
+  viewingDeleted: boolean;
+  staffSingular?: string;
+  onExportEntity: FacultyPageViewProps["onExportEntity"];
+  onImportEntity: FacultyPageViewProps["onImportEntity"];
+  onAdd: () => void;
+  children: React.ReactNode;
+}): React.JSX.Element {
+  return (
+    <div className="space-y-5">
+      <FacultyTabIoToolbar
+        entity={entity}
+        canExport={canExport}
+        canWrite={canWrite}
+        viewingDeleted={viewingDeleted}
+        staffSingular={staffSingular}
+        onExportEntity={onExportEntity}
+        onImportEntity={onImportEntity}
+        onAdd={onAdd}
+      />
+      {children}
+    </div>
+  );
+}
+
+/**
+ * Faculty page — five peer tabs. Dashboard header has multi-entity IO;
+ * each entity tab also has a scoped Add/Import/Export strip.
+ */
 export function FacultyPageView({
   canWrite,
   canExport,
   visibleTabs,
-  workSubTabs,
-  activeWorkSubTab,
-  setActiveWorkSubTab,
-  showWorkHeaderActions,
   metricsTotal,
   activeTab,
   setActiveTab,
@@ -53,24 +94,22 @@ export function FacultyPageView({
   return (
     <ModulePageShell
       seoTitle={`MMS - ${terminology.facultyLabel}`}
-      seoDescription={t('page.faculty.subtitle')}
+      seoDescription={t("page.faculty.subtitle")}
       headerIcon={School}
       headerTitle={terminology.facultyLabel}
-      headerSubtitle={t('page.faculty.subtitle')}
+      headerSubtitle={t("page.faculty.subtitle")}
       headerActions={
-        showWorkHeaderActions ? (
-          <FacultyPageHeaderActions
-            canExport={canExport}
-            canWrite={canWrite}
-            viewingDeleted={viewingDeleted}
-            staffSingular={terminology.staffSingular}
-            onExportEntity={onExportEntity}
-            onImportEntity={onImportEntity}
-            onAddFaculty={openCreateForm}
-            onAddDepartment={openCreateDepartment}
-            onAddDesignation={openCreateDesignation}
-          />
-        ) : undefined
+        <FacultyPageHeaderActions
+          canExport={canExport}
+          canWrite={canWrite}
+          viewingDeleted={viewingDeleted}
+          staffSingular={terminology.staffSingular}
+          onExportEntity={onExportEntity}
+          onImportEntity={onImportEntity}
+          onAddFaculty={openCreateForm}
+          onAddDepartment={openCreateDepartment}
+          onAddDesignation={openCreateDesignation}
+        />
       }
       metricsStrip={
         <FacultyCommandMetrics total={metricsTotal ?? shownCount} shown={shownCount} />
@@ -83,15 +122,43 @@ export function FacultyPageView({
         panelIdPrefix="faculty-tab"
       >
         <AnimatePresence mode="wait">
-          {activeTab === "work" ? (
-            <FacultyWorkShell
-              subTabs={workSubTabs}
-              activeSubTab={activeWorkSubTab}
-              onSubTabChange={setActiveWorkSubTab}
-              directoryProps={tabPanelProps.workTierProps}
-              onRequestAddDepartment={openCreateDepartment}
-              onRequestAddDesignation={openCreateDesignation}
-            />
+          {activeTab === "faculties" ? (
+            <EntityTabPanel
+              entity="faculties"
+              canWrite={canWrite}
+              canExport={canExport}
+              viewingDeleted={viewingDeleted}
+              staffSingular={terminology.staffSingular}
+              onExportEntity={onExportEntity}
+              onImportEntity={onImportEntity}
+              onAdd={openCreateForm}
+            >
+              <FacultyWorkTier {...tabPanelProps.workTierProps} />
+            </EntityTabPanel>
+          ) : activeTab === "departments" ? (
+            <EntityTabPanel
+              entity="departments"
+              canWrite={canWrite}
+              canExport={canExport}
+              viewingDeleted={viewingDeleted}
+              onExportEntity={onExportEntity}
+              onImportEntity={onImportEntity}
+              onAdd={openCreateDepartment}
+            >
+              <FacultyDepartmentsSetupSection />
+            </EntityTabPanel>
+          ) : activeTab === "designations" ? (
+            <EntityTabPanel
+              entity="designations"
+              canWrite={canWrite}
+              canExport={canExport}
+              viewingDeleted={viewingDeleted}
+              onExportEntity={onExportEntity}
+              onImportEntity={onImportEntity}
+              onAdd={openCreateDesignation}
+            >
+              <FacultyDesignationsSetupSection />
+            </EntityTabPanel>
           ) : activeTab === "reports" ? (
             <Suspense fallback={<RouteStatusFallback />}>
               <FacultyReportsTier />

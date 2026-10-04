@@ -78,7 +78,7 @@ export function useFacultyWorkTierState({
     logExportAudit,
   });
 
-  const useServerWork = effectiveTab === "work";
+  const useServerWork = effectiveTab === "faculties";
   const workPageQuery = useFacultyContractList(
     {
       page: listPage,

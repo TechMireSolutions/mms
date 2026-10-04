@@ -13,13 +13,21 @@ vi.mock("@/components/ui/dropdown-menu", () => ({
   DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
   DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
-  DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
-    <button type="button" onClick={onClick}>{children}</button>
+  DropdownMenuItem: ({
+    children,
+    onClick,
+  }: {
+    children: React.ReactNode;
+    onClick?: () => void;
+  }) => (
+    <button type="button" onClick={onClick}>
+      {children}
+    </button>
   ),
 }));
 
-describe("FacultyPageHeaderActions Component", () => {
-  it("renders import/export choosers and add actions when writable", () => {
+describe("FacultyPageHeaderActions", () => {
+  it("renders import/export choosers and all three add actions", () => {
     const html = renderToStaticMarkup(
       <FacultyPageHeaderActions
         canExport={true}
@@ -35,10 +43,12 @@ describe("FacultyPageHeaderActions Component", () => {
 
     expect(html).toContain("faculty.io.export");
     expect(html).toContain("faculty.io.import");
+    expect(html).toContain("faculty.tabs.faculties");
+    expect(html).toContain("faculty.tabs.departments");
+    expect(html).toContain("faculty.tabs.designations");
     expect(html).toContain("action.addFaculty");
     expect(html).toContain("faculty.setup.addDepartment");
     expect(html).toContain("faculty.designations.addDesignation");
-    expect(html).not.toContain("common.export");
   });
 
   it("hides actions when viewingDeleted is true", () => {

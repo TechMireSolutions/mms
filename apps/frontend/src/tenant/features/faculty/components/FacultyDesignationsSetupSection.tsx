@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import { Award, Plus } from 'lucide-react';
 import type { FacultyDesignationDefinition } from '@mms/shared';
-import { Button } from '@/components/ui/button';
 import { ConfirmAlertDialog } from '@/components/ui/ConfirmAlertDialog';
-import { SectionCard } from '@/components/ui/SectionCard';
+import { ErrorBoundary } from '@/components/ui/ErrorBoundary';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { ModuleTierMotion } from '@/components/ui/ModuleTierMotion';
 import { useTranslation } from '@/hooks/useTranslation';
 import { notify } from '@/lib/notify';
 import {
@@ -15,15 +15,8 @@ import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { FacultyDesignationsTable } from './FacultyDesignationsTable';
 import { FacultyDesignationFormModal } from './FacultyDesignationFormModal';
 
-export interface FacultyDesignationsSetupSectionProps {
-  /** When set, Add opens the page-level create modal instead of a local one. */
-  onRequestAdd?: () => void;
-}
-
-/** Dynamic designation catalog, including authority rank and allowed workspace roles. */
-export function FacultyDesignationsSetupSection({
-  onRequestAdd,
-}: FacultyDesignationsSetupSectionProps = {}): React.JSX.Element {
+/** Designations work surface — same directory chrome as Faculties (toolbar + table/cards). */
+export function FacultyDesignationsSetupSection(): React.JSX.Element {
   const { t } = useTranslation();
   const query = useFacultyDesignations();
   const save = useSaveFacultyDesignation();
@@ -35,15 +28,6 @@ export function FacultyDesignationsSetupSection({
   const [designationToDelete, setDesignationToDelete] = useState<FacultyDesignationDefinition | null>(null);
 
   const isPending = save.isPending || remove.isPending;
-
-  const handleOpenAdd = () => {
-    if (onRequestAdd) {
-      onRequestAdd();
-      return;
-    }
-    setEditingDesignation(null);
-    setModalOpen(true);
-  };
 
   const handleStartEdit = (designation: FacultyDesignationDefinition) => {
     setEditingDesignation(designation);
@@ -81,34 +65,25 @@ export function FacultyDesignationsSetupSection({
   };
 
   return (
-    <SectionCard
-      title={t('faculty.designations.setupTitle')}
-      icon={Award}
-      accentColor="primary"
-      actions={
-        <Button
-          type="button"
-          size="sm"
-          onClick={handleOpenAdd}
-          className="gap-1.5 min-h-9"
-        >
-          <Plus className="size-4" aria-hidden />
-          <span>{t('faculty.designations.addDesignation')}</span>
-        </Button>
-      }
-    >
-      <div className="space-y-4 text-start">
-        <p className="text-sm text-muted-foreground">{t('faculty.designations.setupHint')}</p>
-
-        <FacultyDesignationsTable
-          designations={query.data ?? []}
-          roles={workspaceRoles}
-          editingDesignationId={editingDesignation?.id}
-          isPending={isPending}
-          isLoading={query.isLoading}
-          onEdit={handleStartEdit}
-          onDelete={(d) => setDesignationToDelete(d)}
-        />
+    <ErrorBoundary>
+      <ModuleTierMotion tier="work-designations" className="space-y-5">
+        {query.isError ? (
+          <ErrorState
+            title={t('faculty.designations.loadFailed')}
+            description={t('faculty.loadFailedHint')}
+            onRetry={() => void query.refetch()}
+          />
+        ) : (
+          <FacultyDesignationsTable
+            designations={query.data ?? []}
+            roles={workspaceRoles}
+            editingDesignationId={editingDesignation?.id}
+            isPending={isPending}
+            isLoading={query.isLoading}
+            onEdit={handleStartEdit}
+            onDelete={(d) => setDesignationToDelete(d)}
+          />
+        )}
 
         <FacultyDesignationFormModal
           open={modalOpen}
@@ -134,7 +109,7 @@ export function FacultyDesignationsSetupSection({
           destructive
           onConfirm={handleConfirmDelete}
         />
-      </div>
-    </SectionCard>
+      </ModuleTierMotion>
+    </ErrorBoundary>
   );
 }

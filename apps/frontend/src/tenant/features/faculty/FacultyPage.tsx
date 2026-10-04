@@ -3,7 +3,8 @@ import { FacultyPageView } from "@/tenant/features/faculty/components/FacultyPag
 import { useFacultyPageController } from "@/tenant/features/faculty/hooks/useFacultyPageController";
 
 /**
- * Faculty — faculty roster and profiles. Standard 3-tier layout (Work | Reports | Setup).
+ * Faculty — roster, catalogs, reports, and setup as five peer tabs
+ * (Faculties | Departments | Designations | Reports | Setup).
  */
 export default function FacultyPage(): React.JSX.Element {
   const view = useFacultyPageController();

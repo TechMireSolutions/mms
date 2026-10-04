@@ -82,7 +82,7 @@ export function useFacultyDirectoryFilters({
       if (filter.quickFilter && isFacultyQuickFilter(filter.quickFilter)) {
         setQuickFilter(filter.quickFilter);
       }
-      setActiveTab('work');
+      setActiveTab('faculties');
     },
     [setActiveTab],
   );

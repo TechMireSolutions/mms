@@ -41,6 +41,8 @@ vi.mock('../hooks/useFacultyDesignations', () => ({
   useFacultyDesignations: () => ({
     data: mockDesignationsData,
     isLoading: false,
+    isError: false,
+    refetch: vi.fn(),
   }),
   useSaveFacultyDesignation: () => ({
     mutateAsync: mockSaveMutateAsync,
@@ -109,14 +111,18 @@ describe('FacultyDesignationsSetupSection', () => {
     container.remove();
   });
 
-  it('renders section card, add button in header, and designations table', async () => {
+  it('renders work-directory designations table without section-header add', async () => {
     await act(async () => {
       root.render(<FacultyDesignationsSetupSection />);
     });
 
-    expect(container.textContent).toContain('faculty.designations.setupTitle');
     expect(container.textContent).toContain('Head of Faculty');
     expect(container.textContent).toContain('Senior Scholar');
+    expect(container.textContent).toContain('common.filters');
+    expect(container.textContent).toContain('common.columns.trigger');
+    expect(
+      container.querySelector('input[placeholder="faculty.designations.searchPlaceholder"]'),
+    ).not.toBeNull();
 
     const table = container.querySelector('table');
     expect(table).not.toBeNull();
@@ -124,25 +130,7 @@ describe('FacultyDesignationsSetupSection', () => {
     const addBtn = Array.from(container.querySelectorAll('button')).find((btn) =>
       btn.textContent?.includes('faculty.designations.addDesignation'),
     );
-    expect(addBtn).toBeDefined();
-  });
-
-  it('opens add designation modal when header button is clicked', async () => {
-    await act(async () => {
-      root.render(<FacultyDesignationsSetupSection />);
-    });
-
-    const addBtn = Array.from(container.querySelectorAll('button')).find((btn) =>
-      btn.textContent?.includes('faculty.designations.addDesignation'),
-    );
-    expect(addBtn).not.toBeUndefined();
-
-    await act(async () => {
-      addBtn!.click();
-    });
-
-    const modalInput = document.querySelector<HTMLInputElement>('#modal-designation-name');
-    expect(modalInput).not.toBeNull();
+    expect(addBtn).toBeUndefined();
   });
 
   it('opens edit modal when edit button in table is clicked', async () => {

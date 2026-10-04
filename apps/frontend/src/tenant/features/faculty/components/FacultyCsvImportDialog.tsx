@@ -15,7 +15,7 @@ import {
   startServerFacultyDesignationsImport,
   startServerFacultyMembersImport,
 } from "@/lib/backgroundJobs/startServerFacultyImport";
-import type { FacultyIoEntity } from "@/tenant/features/faculty/components/FacultyPageHeaderActions";
+import type { FacultyIoEntity } from "@/tenant/features/faculty/facultyPageWorkSubTabs";
 
 export interface FacultyCsvImportDialogProps {
   open: boolean;

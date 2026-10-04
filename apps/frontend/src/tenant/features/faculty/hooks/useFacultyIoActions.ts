@@ -4,9 +4,9 @@ import {
   startServerFacultyDepartmentCsvExport,
   startServerFacultyDesignationCsvExport,
 } from "@/lib/backgroundJobs/startServerFacultyCatalogCsvExport";
-import type { FacultyIoEntity } from "@/tenant/features/faculty/components/FacultyPageHeaderActions";
+import type { FacultyIoEntity } from "@/tenant/features/faculty/facultyPageWorkSubTabs";
 
-/** Export/import chooser actions for the Faculty Work header. */
+/** Export/import actions for Faculty entity tab toolbars. */
 export function useFacultyIoActions({
   canExport,
   handleFacultyExport,

@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import {
   FACULTY_MODULE_MANIFEST,
   composeFacultySettings,
@@ -33,6 +34,9 @@ export const useFacultyPreferencesMutation = setupConfigHooks.usePreferencesMuta
 /** Composed FacultySettings from preferences queries. */
 export function useComposedFacultySettings(): FacultySettings {
   const prefsQuery = useFacultyPreferencesQuery();
-  return composeFacultySettings(null, prefsQuery.data ?? DEFAULT_FACULTY_MODULE_PREFERENCES);
+  return useMemo(
+    () => composeFacultySettings(null, prefsQuery.data ?? DEFAULT_FACULTY_MODULE_PREFERENCES),
+    [prefsQuery.data],
+  );
 }
 

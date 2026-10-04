@@ -1,11 +1,17 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { School, Users } from "lucide-react";
+import { School } from "lucide-react";
 import { FacultyPageView } from "./FacultyPageView";
+import type { FacultyPageTabId } from "@/tenant/features/faculty/facultyPageWorkSubTabs";
 
 vi.mock("@/components/ui/ModulePageShell", () => ({
-  ModulePageShell: ({ headerTitle, children, headerActions, metricsStrip }: {
+  ModulePageShell: ({
+    headerTitle,
+    children,
+    headerActions,
+    metricsStrip,
+  }: {
     headerTitle: string;
     children: React.ReactNode;
     headerActions?: React.ReactNode;
@@ -13,7 +19,7 @@ vi.mock("@/components/ui/ModulePageShell", () => ({
   }) => (
     <div data-testid="module-page-shell">
       <h1>{headerTitle}</h1>
-      <div>{headerActions}</div>
+      <div data-testid="header-actions">{headerActions}</div>
       <div>{metricsStrip}</div>
       <div>{children}</div>
     </div>
@@ -44,8 +50,16 @@ vi.mock("@/tenant/hooks/useIndustryTerminology", () => ({
   }),
 }));
 
-vi.mock("@/tenant/features/faculty/components/FacultyWorkShell", () => ({
-  FacultyWorkShell: () => <div data-testid="faculty-work-shell">Faculty Work Shell</div>,
+vi.mock("@/tenant/features/faculty/components/FacultyWorkTier", () => ({
+  FacultyWorkTier: () => <div data-testid="faculty-work-tier">Faculty Directory</div>,
+}));
+
+vi.mock("@/tenant/features/faculty/components/FacultyDepartmentsSetupSection", () => ({
+  FacultyDepartmentsSetupSection: () => <div>Departments Section</div>,
+}));
+
+vi.mock("@/tenant/features/faculty/components/FacultyDesignationsSetupSection", () => ({
+  FacultyDesignationsSetupSection: () => <div>Designations Section</div>,
 }));
 
 vi.mock("@/tenant/features/faculty/components/FacultyPageOverlays", () => ({
@@ -53,53 +67,79 @@ vi.mock("@/tenant/features/faculty/components/FacultyPageOverlays", () => ({
 }));
 
 vi.mock("@/tenant/features/faculty/components/FacultyPageHeaderActions", () => ({
-  FacultyPageHeaderActions: () => <div>Faculty Header Actions</div>,
+  FacultyPageHeaderActions: () => <div data-testid="faculty-dashboard-io">Dashboard IO</div>,
+}));
+
+vi.mock("@/tenant/features/faculty/components/FacultyTabIoToolbar", () => ({
+  FacultyTabIoToolbar: ({ entity }: { entity: string }) => (
+    <div data-testid="faculty-tab-io">Tab IO {entity}</div>
+  ),
 }));
 
 describe("FacultyPageView Component", () => {
-  it("renders faculty page shell with work shell and overlays", () => {
+  const baseProps = {
+    canWrite: true,
+    canExport: true,
+    visibleTabs: (
+      [
+        ["faculties", "Faculties", "Directory"],
+        ["departments", "Departments", "Catalog"],
+        ["designations", "Designations", "Catalog"],
+        ["reports", "Reports", "Analytics"],
+        ["setup", "Setup", "Config"],
+      ] as const
+    ).map(([id, label, description]) => ({
+      id: id as FacultyPageTabId,
+      label,
+      description,
+      icon: School,
+    })),
+    showDirectoryActions: true,
+    metricsTotal: 12,
+    setActiveTab: vi.fn(),
+    viewingDeleted: false,
+    shownCount: 12,
+    openCreateForm: vi.fn(),
+    openCreateDepartment: vi.fn(),
+    openCreateDesignation: vi.fn(),
+    onExportEntity: vi.fn(),
+    onImportEntity: vi.fn(),
+    tabPanelProps: {
+      activeTab: "faculties",
+      workTierProps: {} as never,
+    },
+    pageOverlaysProps: {} as never,
+  };
+
+  it("shows dashboard IO and scoped tab IO on faculties", () => {
     const html = renderToStaticMarkup(
-      <FacultyPageView
-        canWrite={true}
-        canExport={true}
-        visibleTabs={[
-          {
-            id: "work",
-            label: "Faculties",
-            description: "Directory",
-            icon: School,
-          },
-        ]}
-        workSubTabs={[
-          { key: "faculties", label: "Faculties", icon: Users },
-          { key: "departments", label: "Departments", icon: Users },
-          { key: "designations", label: "Designations", icon: Users },
-        ]}
-        activeWorkSubTab="faculties"
-        setActiveWorkSubTab={vi.fn()}
-        showDirectoryActions={true}
-        showWorkHeaderActions={true}
-        metricsTotal={12}
-        activeTab="work"
-        setActiveTab={vi.fn()}
-        viewingDeleted={false}
-        shownCount={12}
-        openCreateForm={vi.fn()}
-        openCreateDepartment={vi.fn()}
-        openCreateDesignation={vi.fn()}
-        onExportEntity={vi.fn()}
-        onImportEntity={vi.fn()}
-        tabPanelProps={{
-          activeTab: "work",
-          workTierProps: {} as never,
-        }}
-        pageOverlaysProps={{} as never}
-      />,
+      <FacultyPageView {...baseProps} activeTab="faculties" />,
     );
 
     expect(html).toContain("Faculty Team");
-    expect(html).toContain("Faculty Work Shell");
+    expect(html).toContain("Dashboard IO");
+    expect(html).toContain("Tab IO faculties");
+    expect(html).toContain("Faculty Directory");
     expect(html).toContain("Faculty Overlays");
-    expect(html).toContain("Faculty Header Actions");
+  });
+
+  it("shows dashboard IO and scoped tab IO on departments", () => {
+    const html = renderToStaticMarkup(
+      <FacultyPageView {...baseProps} activeTab="departments" />,
+    );
+
+    expect(html).toContain("Dashboard IO");
+    expect(html).toContain("Tab IO departments");
+    expect(html).toContain("Departments Section");
+    expect(html).not.toContain("Faculty Directory");
+  });
+
+  it("keeps dashboard IO on reports without scoped tab IO", () => {
+    const html = renderToStaticMarkup(
+      <FacultyPageView {...baseProps} activeTab="reports" />,
+    );
+
+    expect(html).toContain("Dashboard IO");
+    expect(html).not.toContain("Tab IO");
   });
 });

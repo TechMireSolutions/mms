@@ -37,7 +37,7 @@ export type FacultyPageOverlaysProps = {
   onCloseCreateDepartment?: () => void;
   createDesignationOpen?: boolean;
   onCloseCreateDesignation?: () => void;
-  importEntity?: import("@/tenant/features/faculty/components/FacultyPageHeaderActions").FacultyIoEntity | null;
+  importEntity?: import("@/tenant/features/faculty/facultyPageWorkSubTabs").FacultyIoEntity | null;
   onCloseImport?: () => void;
 };
 

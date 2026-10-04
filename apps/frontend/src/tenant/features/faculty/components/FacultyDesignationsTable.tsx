@@ -100,11 +100,12 @@ export function FacultyDesignationsTable({
   return (
     <DataTable
       tableId="faculty.designations"
-      label={t('faculty.designations.setupTitle')}
+      label={t('faculty.tabs.designations')}
       data={designations}
       columns={columns}
       filters={filters}
       isLoading={isLoading}
+      searchPlaceholder={t('faculty.designations.searchPlaceholder')}
       primaryAction={primaryAction}
       card={{ title: (d) => d.name }}
       rowClassName={(d) =>
@@ -130,7 +131,13 @@ export function FacultyDesignationsTable({
         />
       )}
       emptyState={
-        <EmptyState icon={Award} title={t('faculty.designations.setupHint')} compact variant="dashed" />
+        <EmptyState
+          icon={Award}
+          title={t('faculty.designations.emptyCatalog')}
+          description={t('faculty.designations.setupHint')}
+          compact
+          variant="dashed"
+        />
       }
     />
   );

@@ -97,11 +97,12 @@ export function FacultyDepartmentsTable({
   return (
     <DataTable
       tableId="faculty.departments"
-      label={t('faculty.setup.departmentName')}
+      label={t('faculty.tabs.departments')}
       data={orderedDepartments}
       columns={columns}
       filters={filters}
       isLoading={isLoading}
+      searchPlaceholder={t('faculty.setup.searchDepartments')}
       card={{ title: (d) => d.name }}
       rowClassName={(d) =>
         d.id === editingDepartmentId

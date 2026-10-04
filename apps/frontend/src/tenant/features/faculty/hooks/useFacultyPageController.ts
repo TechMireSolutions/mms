@@ -2,9 +2,8 @@ import { useEffect } from 'react';
 import { useTranslation } from '@/hooks/useTranslation';
 import { usePersistedTabState } from '@/hooks/usePersistedTabState';
 import { useWorkDirectoryViewMode } from '@/hooks/useWorkDirectoryViewMode';
-import { useFilteredModuleTierTabs } from '@/tenant/hooks/useModuleTierTabs';
 import { useModulePermissions } from '@/tenant/hooks/usePermissions';
-import { FACULTY_MODULE_MANIFEST, resolveModuleTierTab } from '@mms/shared';
+import { FACULTY_MODULE_MANIFEST } from '@mms/shared';
 import { useFacultyMutations, useFacultyMetrics } from '@/tenant/features/faculty/hooks/useFaculty';
 import { useFacultyDirectoryFilters } from '@/tenant/features/faculty/hooks/useFacultyDirectoryFilters';
 import { useEmployeeIdMigration } from '@/tenant/features/faculty/hooks/useEmployeeIdMigration';
@@ -19,12 +18,13 @@ import { useFacultyConfig } from '@/hooks/useStandardModuleConfig';
 import { useFacultyWorkTierState } from '@/tenant/features/faculty/hooks/useFacultyWorkTierState';
 import { useFacultyWorkPanelProps } from '@/tenant/features/faculty/hooks/useFacultyWorkPanelProps';
 import {
-  FACULTY_WORK_SUB_TAB_DEFAULT,
-  FACULTY_WORK_SUB_TAB_IDS,
-  FACULTY_WORK_SUB_TAB_ICONS,
-  FACULTY_WORK_SUB_TAB_KEYS,
-  resolveFacultyWorkSubTab,
-  type FacultyWorkSubTabId,
+  FACULTY_PAGE_TAB_DEFAULT,
+  FACULTY_PAGE_TAB_HINT_KEYS,
+  FACULTY_PAGE_TAB_ICONS,
+  FACULTY_PAGE_TAB_IDS,
+  FACULTY_PAGE_TAB_KEYS,
+  migrateFacultyPageTab,
+  resolveFacultyPageTab,
 } from '@/tenant/features/faculty/facultyPageWorkSubTabs';
 import { useFacultyIoActions } from '@/tenant/features/faculty/hooks/useFacultyIoActions';
 
@@ -39,30 +39,44 @@ export function useFacultyPageController() {
     canEditSetup,
   } = useModulePermissions(FACULTY_MODULE_MANIFEST);
 
-  const baseTabs = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
-  const visibleTabs = baseTabs.map((tab) =>
-    tab.id === 'work' ? { ...tab, label: t('faculty.tabs.faculties') } : tab,
-  );
-  const workSubTabs = FACULTY_WORK_SUB_TAB_IDS.map((id) => ({
-    key: id,
-    label: t(FACULTY_WORK_SUB_TAB_KEYS[id]),
-    icon: FACULTY_WORK_SUB_TAB_ICONS[id],
+  const visibleTabs = FACULTY_PAGE_TAB_IDS.filter((id) => {
+    if (id === 'reports') return canViewReports;
+    if (id === 'setup') return canViewSetup;
+    return true;
+  }).map((id) => ({
+    id,
+    label: t(FACULTY_PAGE_TAB_KEYS[id]),
+    description: t(FACULTY_PAGE_TAB_HINT_KEYS[id]),
+    icon: FACULTY_PAGE_TAB_ICONS[id],
   }));
+
   const { data: metrics } = useFacultyMetrics();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const config = useFacultyConfig();
   const lookups = useFacultyLookupOptions();
   const columnLayout = useFacultyColumnLayout(config.settings);
 
-  const [activeTab, setActiveTab] = usePersistedTabState<string>('faculty_active_tab', 'work');
-  const [rawWorkSubTab, setActiveWorkSubTab] = usePersistedTabState<string>(
-    'faculty_work_subtab',
-    FACULTY_WORK_SUB_TAB_DEFAULT,
+  const [rawActiveTab, setActiveTab] = usePersistedTabState<string>(
+    'faculty_active_tab',
+    FACULTY_PAGE_TAB_DEFAULT,
   );
-  const activeWorkSubTab = resolveFacultyWorkSubTab(rawWorkSubTab);
-  const effectiveTab = resolveModuleTierTab(activeTab, visibleTabs.map((tab) => tab.id));
-  const showDirectoryActions = effectiveTab === 'work' && activeWorkSubTab === 'faculties';
-  const showWorkHeaderActions = effectiveTab === 'work';
+  const [legacyWorkSubTab] = usePersistedTabState<string>(
+    'faculty_work_subtab',
+    FACULTY_PAGE_TAB_DEFAULT,
+  );
+
+  useEffect(() => {
+    if (rawActiveTab === 'work' || rawActiveTab === 'operations') {
+      setActiveTab(migrateFacultyPageTab(rawActiveTab, legacyWorkSubTab));
+    }
+  }, [rawActiveTab, legacyWorkSubTab, setActiveTab]);
+
+  const effectiveTab = resolveFacultyPageTab(
+    rawActiveTab,
+    visibleTabs.map((tab) => tab.id),
+    legacyWorkSubTab,
+  );
+  const showDirectoryActions = effectiveTab === 'faculties';
 
   useEmployeeIdMigration(effectiveTab, canEditSetup);
 
@@ -151,11 +165,7 @@ export function useFacultyPageController() {
     canWrite,
     canExport,
     visibleTabs,
-    workSubTabs,
-    activeWorkSubTab,
-    setActiveWorkSubTab: (subTab: FacultyWorkSubTabId) => setActiveWorkSubTab(subTab),
     showDirectoryActions,
-    showWorkHeaderActions,
     metricsTotal: metrics?.total,
     activeTab: effectiveTab,
     setActiveTab,

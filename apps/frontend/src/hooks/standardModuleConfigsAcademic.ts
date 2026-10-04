@@ -1,3 +1,4 @@
+import { useMemo } from 'react';
 import type { ModuleCustomField } from '@mms/shared';
 import {
   getSortedFacultyFields,
@@ -46,6 +47,8 @@ import {
   useExaminationPreferencesMutation,
 } from '@/tenant/hooks/collections/examinations';
 
+const DEFAULT_EMPTY_FACULTY_LOOKUPS_MAP = emptyFacultyLookupsMap();
+
 const useFacultyConfigImpl = createStandardModuleConfigHook<
   FacultySettings,
   { statuses: string[]; specializations: string[]; genderFilters: string[]; designations: string[]; departments: string[] }
@@ -73,14 +76,17 @@ const useFacultyConfigImpl = createStandardModuleConfigHook<
     getSortedFacultyFields(fieldOrder, settings.fields),
   lookupsFrom: function useFacultyConfigLookups() {
     const lookupsQuery = useFacultyLookupsQuery();
-    const lookups = lookupsQuery.data ?? emptyFacultyLookupsMap();
-    return {
-      statuses: lookups.statuses,
-      specializations: lookups.specializations,
-      genderFilters: lookups.genderFilters,
-      designations: lookups.designations,
-      departments: lookups.departments,
-    };
+    const lookups = lookupsQuery.data ?? DEFAULT_EMPTY_FACULTY_LOOKUPS_MAP;
+    return useMemo(
+      () => ({
+        statuses: lookups.statuses,
+        specializations: lookups.specializations,
+        genderFilters: lookups.genderFilters,
+        designations: lookups.designations,
+        departments: lookups.departments,
+      }),
+      [lookups],
+    );
   },
 });
 
