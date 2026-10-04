@@ -17,7 +17,7 @@ describe("MarkAttendanceClassBar Component", () => {
   it("renders class name, bulk action buttons and Face AI toggle", () => {
     const html = renderToStaticMarkup(
       <MarkAttendanceClassBar
-        classInfo={{ name: "Class 1A", teacherName: "Ustadh Ali" }}
+        classInfo={{ name: "Class 1A", facultyName: "Ustadh Ali" }}
         sessionInfo={{ name: "2024-2025" }}
         date="2025-01-01"
         submitted={false}

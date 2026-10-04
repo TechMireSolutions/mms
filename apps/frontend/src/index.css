@@ -729,7 +729,7 @@
  * Everything hidden here is hidden for a REASON and by explicit opt-in — never
  * by incidental utility class. An earlier version of this rule hid `.shadow-sm`
  * and `.shadow-xl`, which made printed ID cards invisible: `.id-card-preview`
- * carries `shadow-sm` (StudentIdCardModal.tsx / TeacherIdCardModal.tsx), so the
+ * carries `shadow-sm` (StudentIdCardModal.tsx / FacultyIdCardModal.tsx), so the
  * whole card was `display:none` and the page came out blank. It also hid
  * `[role="group"]`, which Radix uses for legitimate content (checkbox/radio
  * groups, select groups). Do not re-add blanket selectors.

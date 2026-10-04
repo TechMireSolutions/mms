@@ -12,7 +12,12 @@ import {
   DropdownMenuShortcut,
 } from "./dropdown-menu-items"
 
-const DropdownMenu = DropdownMenuPrimitive.Root
+const DropdownMenu = ({
+  modal = false,
+  ...props
+}: React.ComponentPropsWithoutRef<typeof DropdownMenuPrimitive.Root>) => (
+  <DropdownMenuPrimitive.Root modal={modal} {...props} />
+)
 
 const DropdownMenuTrigger = DropdownMenuPrimitive.Trigger
 

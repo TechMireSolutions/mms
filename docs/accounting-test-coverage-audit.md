@@ -78,7 +78,7 @@ was **not** called (and that `tryPostOpeningJournal` returns `null`).
 `apps/backend/src/db/migrations_drizzle/0092_accounting_ledger_integrity.sql:23-25`
 (`accounting_entries_workspace_source_uidx` on `(workspace_subdomain, source_type, source_id)`, `deleted_at IS NULL`).
 No test anywhere mentions the index or a `23505` on `accounting_entries` (grep: `23505` handling exists only for
-contacts/teachers/students — `lib/pgErrors.ts` consumers). Two distinct untested outcomes:
+contacts/faculty/students — `lib/pgErrors.ts` consumers). Two distinct untested outcomes:
 * same entry id (the normal case — ids are deterministic, `ledgerPostingService.ts:45`): `saveEntry`
   (`apps/backend/src/db/repositories/accountingEntriesPersist.ts:85-98`) uses
   `onConflictDoUpdate(target: [workspace, id])`, so the loser of the race silently **overwrites** the winner's lines

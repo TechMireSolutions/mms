@@ -1,6 +1,6 @@
 /**
  * Contact-first person policy: identity fields live on `contacts` only.
- * Module records store `contactId` (or chain via studentId / teacherId) and hydrate display fields on read.
+ * Module records store `contactId` (or chain via studentId / facultyId) and hydrate display fields on read.
  */
 
 /** Profile fields owned by the contacts collection — never persist on linked module rows. */

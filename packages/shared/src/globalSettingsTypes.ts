@@ -173,17 +173,11 @@ export const DEFAULT_GLOBAL_SETTINGS: GlobalSettings = {
 
 /**
  * Merges module visibility flags with defaults; required modules always stay enabled.
- * Legacy key "teachers" is silently promoted to "faculty" for stored settings from older installs.
  */
 export function normalizeEnabledModules(
   partial?: Record<string, boolean> | null
 ): Record<string, boolean> {
   const incoming = { ...(partial ?? {}) };
-  // Backward-compat: promote legacy "teachers" key → "faculty" when no explicit faculty flag.
-  if (incoming.teachers !== undefined && incoming.faculty === undefined) {
-    incoming.faculty = incoming.teachers;
-  }
-  delete incoming.teachers;
 
   const merged: Record<string, boolean> = {
     ...DEFAULT_GLOBAL_SETTINGS.enabledModules,

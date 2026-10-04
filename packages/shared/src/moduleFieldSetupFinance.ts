@@ -25,7 +25,7 @@ export const HASANAT_TAB_REGISTRY: TabDefinition[] = [
 export const INITIAL_HASANAT_FIELD_SEED: Record<string, FieldDefinition[]> = {
   basic: [
     { key: "denominationId", label: "Denomination", type: "text", enabled: true, order: 0, required: true },
-    { key: "recipientType", label: "Recipient Type", type: "select", options: ["student", "teacher"], enabled: true, order: 1, required: true },
+    { key: "recipientType", label: "Recipient Type", type: "select", options: ["student", "faculty"], enabled: true, order: 1, required: true },
     { key: "recipientName", label: "Recipient Name", type: "text", enabled: true, order: 2, required: true },
     { key: "recipientClass", label: "Class / Department", type: "text", enabled: true, order: 3, required: false },
     { key: "quantity", label: "Quantity", type: "number", enabled: true, order: 4, required: true },

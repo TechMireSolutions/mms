@@ -74,12 +74,6 @@ export function compilePreviewFieldExtractor(
       extract: (sourceRow) => String(sourceRow.session || "—"),
     };
   }
-  if (selectedField === "Teacher") {
-    return {
-      label,
-      extract: (sourceRow) => String(sourceRow.teacher || sourceRow.teacherName || "—"),
-    };
-  }
   if (selectedField === "Room") {
     return {
       label,

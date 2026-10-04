@@ -335,10 +335,10 @@ export function seedTestClassAndEnrollment(subdomain: string): void {
 }
 
 /**
- * Creates Teacher record for existing John Doe contact
+ * Creates Faculty record for existing John Doe contact
  */
-export async function createTeacherFromContact(page: Page): Promise<void> {
-  await test.step('Create Teacher record from John Doe contact', async () => {
+export async function createFacultyFromContact(page: Page): Promise<void> {
+  await test.step('Create Faculty record from John Doe contact', async () => {
     await ensureWorkTierActive(page);
     await page.getByRole('button', { name: /^(Teacher|Faculty)$/i }).first().click();
     const teacherDialog = page.getByRole('dialog');
@@ -350,7 +350,7 @@ export async function createTeacherFromContact(page: Page): Promise<void> {
     await expect(johnTeacherOption).toBeVisible({ timeout: 15_000 });
     await johnTeacherOption.click({ force: true });
 
-    await waitForToastOverlayToClear(page, 'before creating teacher');
+    await waitForToastOverlayToClear(page, 'before creating faculty');
 
     const saveBtn = teacherDialog.locator('button').filter({ hasText: /^Add (Teacher|Faculty Member|Faculty)|Save/i }).last();
     await expect(saveBtn).toBeEnabled({ timeout: 15_000 });

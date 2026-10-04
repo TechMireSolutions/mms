@@ -7,7 +7,7 @@ import {
   createMessagingTemplateAndCampaign,
   createSessionAndClass,
   createStudentEnrollment,
-  createTeacherFromContact,
+  createFacultyFromContact,
   createTestContactJaneDoe,
   createTestContactJohnDoe,
   createUserFromContact,
@@ -74,7 +74,7 @@ test.describe.serial('Tenant Operations & Module Flows E2E', { tag: '@local-only
     // 5. Create Faculty from John Doe contact
     await page.goto(`${credentials.tenantOrigin}/faculty`);
     await page.waitForLoadState('domcontentloaded');
-    await createTeacherFromContact(page);
+    await createFacultyFromContact(page);
 
     // 6. Create Finance Invoice for Jane Doe
     await page.goto(`${credentials.tenantOrigin}/finance`);

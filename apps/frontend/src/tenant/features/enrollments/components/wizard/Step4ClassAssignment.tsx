@@ -126,7 +126,7 @@ export function Step4ClassAssignment({ session, student: _student, suggestedClas
                     <div className="flex items-center gap-3 text-xs text-muted-foreground mt-0.5 flex-wrap">
                       <span>{t("enrollments.wizard.step4AgeRange", { min: minAge, max: maxAge })}</span>
                       <span className="capitalize">{sessionClass.gender}</span>
-                      <span>{sessionClass.facultyName || (sessionClass as { teacherName?: string }).teacherName}</span>
+                      <span>{sessionClass.facultyName}</span>
                       {sessionClass.room && <span>{sessionClass.room}</span>}
                     </div>
                   </div>

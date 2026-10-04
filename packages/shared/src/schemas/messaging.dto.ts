@@ -108,11 +108,10 @@ export const messagingLogsQuerySchema = z.object({
 
 export const MESSAGING_RECIPIENT_ROLES = ['all', 'students', 'faculty', 'staff', 'contacts'] as const;
 
-/** Normalize legacy stored campaign filter `teachers` → `faculty`. */
+/** Coerce unknown role query values to a known messaging recipient role. */
 export function normalizeMessagingRecipientRole(
   role: string | undefined,
 ): (typeof MESSAGING_RECIPIENT_ROLES)[number] {
-  if (role === 'teachers') return 'faculty';
   if ((MESSAGING_RECIPIENT_ROLES as readonly string[]).includes(role ?? '')) {
     return role as (typeof MESSAGING_RECIPIENT_ROLES)[number];
   }

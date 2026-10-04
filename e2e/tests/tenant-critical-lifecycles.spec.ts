@@ -7,7 +7,7 @@ import {
   createFinanceInvoice,
   createSessionAndClass,
   createStudentEnrollment,
-  createTeacherFromContact,
+  createFacultyFromContact,
   createTestContactJaneDoe,
   createTestContactJohnDoe,
   recordInvoicePayment,
@@ -57,7 +57,7 @@ test.describe.serial('Phase 10: Critical Path Lifecycles & BiDi E2E', { tag: '@l
 
     await page.goto(`${credentials.tenantOrigin}/faculty`);
     await expect(page.locator('h1').first()).toBeVisible();
-    await createTeacherFromContact(page);
+    await createFacultyFromContact(page);
 
     // 3. Create Session & Class
     await page.goto(`${credentials.tenantOrigin}/sessions`);

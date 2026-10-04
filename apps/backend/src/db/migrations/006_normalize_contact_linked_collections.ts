@@ -21,9 +21,8 @@ import {
   listCollectionStorageNames,
   saveCollection,
 } from '../database.js';
-import { LEGACY_FACULTY_COLLECTION_ALIASES } from '../hydrateFacultySetupFromLegacyBackup.js';
-
-const LEGACY_COLLECTION_KEY = LEGACY_FACULTY_COLLECTION_ALIASES[0][0];
+/** Historical document-store collection key (pre-faculty rename). */
+const LEGACY_COLLECTION_KEY = 'teachers';
 
 type Row = Record<string, unknown>;
 

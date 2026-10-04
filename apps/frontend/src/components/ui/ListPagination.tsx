@@ -11,8 +11,8 @@ export interface ListPaginationProps {
   limit: number;
   hasMore?: boolean;
   onPageChange: (page: number) => void;
-  i18nNamespace: string; // e.g. 'students', 'contacts', 'teachers', 'enrollments', 'attendance'
-  variant?: 'range' | 'summary'; // 'range' (students, contacts, teachers) or 'summary' (enrollments, attendance)
+  i18nNamespace: string; // e.g. 'students', 'contacts', 'faculty', 'enrollments', 'attendance'
+  variant?: 'range' | 'summary'; // 'range' (students, contacts, faculty) or 'summary' (enrollments, attendance)
   className?: string;
 }
 

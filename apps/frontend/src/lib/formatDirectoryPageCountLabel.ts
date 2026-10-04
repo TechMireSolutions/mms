@@ -1,7 +1,7 @@
 import type { AppTranslationKey } from "@mms/shared";
 
 /**
- * Build a Work directory footer count label like `"24 teachers"` /
+ * Build a Work directory footer count label like `"24 faculty"` /
  * `"1 student"` — SSOT for the identical `N + singular|plural` computation
  * shared by person-directory cards and tables.
  */

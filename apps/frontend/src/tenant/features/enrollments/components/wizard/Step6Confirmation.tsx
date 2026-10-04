@@ -60,7 +60,7 @@ export function Step6Confirmation({
 
         <Step6ConfirmationSection icon={Layers} title={t('enrollments.wizard.step6SectionClass')}>
           <Step6ConfirmationRow label={t('enrollments.detail.class')} value={classInfo?.name} />
-          <Step6ConfirmationRow label={t('enrollments.wizard.step6RowTeacher')} value={classInfo?.facultyName || (classInfo as { teacherName?: string })?.teacherName} />
+          <Step6ConfirmationRow label={t('enrollments.wizard.step6RowTeacher')} value={classInfo?.facultyName} />
           {classInfo?.room && <Step6ConfirmationRow label={t('enrollments.wizard.step6RowRoom')} value={classInfo.room} />}
           <Step6ConfirmationRow
             label={t('enrollments.wizard.step6RowAgeRange')}

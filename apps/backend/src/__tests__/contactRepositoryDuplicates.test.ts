@@ -87,7 +87,7 @@ describe('contactRepositoryDuplicates (SQL)', () => {
     expect(mockTxExecute).not.toHaveBeenCalled();
   });
 
-  it('reparentContactReferences executes SQL statements across relationships, students, teachers, users, and message logs', async () => {
+  it('reparentContactReferences executes SQL statements across relationships, students, faculty, users, and message logs', async () => {
     mockWithTenantTransaction.mockImplementation(
       async (_tenant: unknown, fn: (tx: { execute: typeof mockTxExecute }) => Promise<unknown>) =>
         fn({ execute: mockTxExecute }),
@@ -101,7 +101,7 @@ describe('contactRepositoryDuplicates (SQL)', () => {
     // 3. update related_contact_id
     // 3b. update contact_id
     // 4. update students
-    // 5. update teachers
+    // 5. update faculty
     // 6. update tenant_users
     // 7. update message_logs
     expect(mockTxExecute).toHaveBeenCalledTimes(9);

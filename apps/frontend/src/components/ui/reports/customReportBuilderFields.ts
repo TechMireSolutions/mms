@@ -14,7 +14,7 @@ export const ALL_FIELDS: Record<Exclude<DataSource, "contacts">, readonly string
   financial:  ["Invoice ID", "Student Name", "Class", "Base Fee", "Discount", "Tax", "Final Amount", "Status", "Due Date", "Payment Method", "Issued Date"],
   academic:   ["Student Name", "Class", "Subject", "Marks", "Total", "Grade", "Rank", "Exam Name", "Date"],
   hasanat:    ["Student Name", "Class", "Faculty", "Distributed", "Redeemed", "Balance", "Reason", "Last Awarded"],
-  sessions:   ["Session", "Class", "Type", "Teacher", "Room", "Time", "Days", "Enrolled", "Capacity", "Utilisation %", "Status", "Start Date", "End Date"],
+  sessions:   ["Session", "Class", "Type", "Faculty", "Room", "Time", "Days", "Enrolled", "Capacity", "Utilisation %", "Status", "Start Date", "End Date"],
   faculty:    ["Faculty Name", "Classes", "Sessions", "Total Students", "Specialization"],
 };
 
@@ -62,7 +62,6 @@ export const FIELD_KEY_MAP: Record<string, string> = {
   "Reason": "reports.fields.reason",
   "Last Awarded": "reports.fields.lastAwarded",
   "Type": "reports.fields.type",
-  "Teacher": "reports.fields.teacherName",
   "Room": "reports.fields.room",
   "Time": "reports.fields.time",
   "Days": "reports.fields.days",
@@ -101,13 +100,18 @@ export function getInitialDataSource(initialSource?: string): DataSource {
   return "students";
 }
 
+/** Normalize legacy custom-report field ids from older saved configs. */
+export function normalizeCustomReportSelectedFields(fields: readonly string[]): string[] {
+  return fields.map((field) => (field === "Teacher" ? "Faculty" : field));
+}
+
 export function getInitialSelectedFields(initialSource?: string): string[] {
   if (initialSource === "contacts") return ["fullName", "gender", "city"];
   if (initialSource === "financial") return ["Student Name", "Class", "Base Fee", "Discount", "Final Amount", "Status"];
   if (initialSource === "attendance") return ["Student Name", "Class", "Status", "Rate %"];
   if (initialSource === "academic") return ["Student Name", "Class", "Subject", "Marks", "Grade"];
   if (initialSource === "hasanat") return ["Student Name", "Class", "Faculty", "Distributed", "Balance"];
-  if (initialSource === "sessions") return ["Session", "Class", "Teacher", "Enrolled", "Capacity"];
+  if (initialSource === "sessions") return ["Session", "Class", "Faculty", "Enrolled", "Capacity"];
   if (initialSource === "faculty") return ["Faculty Name", "Classes", "Sessions", "Total Students"];
   return ["Name", "Class", "Session", "Status"];
 }
@@ -118,7 +122,7 @@ export function getSelectedFieldsForSource(source: DataSource): string[] {
   if (source === "attendance") return ["Student Name", "Class", "Status", "Rate %"];
   if (source === "academic") return ["Student Name", "Class", "Subject", "Marks", "Grade"];
   if (source === "hasanat") return ["Student Name", "Class", "Distributed", "Balance"];
-  if (source === "sessions") return ["Session", "Class", "Teacher", "Enrolled"];
+  if (source === "sessions") return ["Session", "Class", "Faculty", "Enrolled"];
   if (source === "faculty") return ["Faculty Name", "Classes", "Sessions", "Total Students"];
   return ["Name", "Class", "Session", "Status"];
 }

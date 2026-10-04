@@ -8,7 +8,7 @@ import type { GeoData } from "@/tenant/features/attendance/components/markAttend
 
 export interface AttendanceClassSummary {
   name?: string;
-  teacherName?: string;
+  facultyName?: string;
 }
 
 export interface AttendanceSessionSummary {
@@ -59,7 +59,7 @@ export function MarkAttendanceClassBar({
           )}
         </div>
         <p className="text-sm text-muted-foreground">
-          {sessionInfo?.name} · {classInfo?.teacherName} · {date}
+          {sessionInfo?.name} · {classInfo?.facultyName} · {date}
         </p>
         <div className="flex items-center gap-2 mt-1.5">
           <MarkAttendanceGeoTag geo={geo} onRequest={onRequestGeo} />

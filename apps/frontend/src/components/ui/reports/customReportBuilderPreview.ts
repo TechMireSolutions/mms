@@ -47,11 +47,11 @@ export function getSourceRows(
   > = {};
   collections.sessions.forEach((session) => {
     const classes = session.classes as
-      | { id: string; teacherName?: string; enrolled?: number; subject?: string; specialization?: string }[]
+      | { id: string; facultyName?: string; enrolled?: number; subject?: string; specialization?: string }[]
       | undefined;
     if (classes) {
       classes.forEach((sessionClass) => {
-        const facultyName = sessionClass.teacherName || translate("reports.builder.unassigned");
+        const facultyName = sessionClass.facultyName || translate("reports.builder.unassigned");
         const entry = (workloadByFacultyName[facultyName] ??= {
           classes: new Set(),
           sessions: new Set(),

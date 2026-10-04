@@ -11,7 +11,7 @@ export interface ModuleFormCustomFieldHelpers {
 
 /**
  * Shared form custom-field helpers over a static module field seed.
- * Teachers/Students adapters pass their seed ({@link INITIAL_TEACHERS_FIELD_SEED} /
+ * Faculty/Students adapters pass their seed ({@link INITIAL_FACULTY_FIELD_SEED} /
  * {@link INITIAL_STUDENT_FIELD_SEED}).
  */
 export function createFormCustomFieldHelpers(

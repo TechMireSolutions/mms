@@ -226,15 +226,18 @@ describe('dbSyncService collection persistence', () => {
     expect(savedObjectKeys).not.toContain('faculty_user_column_preferences');
   });
 
-  it('hydrates typed Faculty Setup from historical teachers_settings on full restore and skips re-saving them', async () => {
+  it('does not hydrate Faculty Setup from historical teachers_settings on full restore', async () => {
     await synchronizeData(
       {
         collections: { users: [{ id: 'u-1' }] },
         objects: {
           branding: { madrasaName: 'Demo' },
           teachers_settings: {
-            fields: {},
+            fields: {
+              basic: [{ key: 'specialization', label: 'Spec', type: 'select', enabled: true, order: 0 }],
+            },
             autoGenerateId: false,
+            employeeIdPrefix: 'TCH-LEGACY',
           },
           teacher_user_column_preferences: {
             'u-admin': [{ key: 'specialization', enabled: true, order: 0 }],
@@ -245,25 +248,22 @@ describe('dbSyncService collection persistence', () => {
       true,
     );
 
-    const fieldCall = dbSaveCollection.mock.calls.find((call) => call[0] === 'faculty_field_configs');
     const prefsCall = dbSaveCollection.mock.calls.find(
       (call) => call[0] === 'faculty_module_preferences',
     );
+    const prefsRows = (prefsCall?.[1] as Array<{ preferences?: Record<string, unknown> }> | undefined) ?? [];
+    expect(prefsRows.some((row) => row.preferences?.employeeIdPrefix === 'TCH-LEGACY')).toBe(false);
+
     const columnCall = dbSaveCollection.mock.calls.find(
       (call) => call[0] === 'faculty_user_column_prefs',
     );
-    expect(fieldCall?.[1]).toEqual([expect.objectContaining({ config: expect.any(Object) })]);
-    expect(prefsCall?.[1]).toEqual([
-      expect.objectContaining({ preferences: expect.objectContaining({ autoGenerateId: false }) }),
-    ]);
-    expect(columnCall?.[1]).toEqual([
+    const columnRows = (columnCall?.[1] as unknown[] | undefined) ?? [];
+    expect(columnRows).not.toEqual([
       { userId: 'u-admin', preferences: [{ key: 'specialization', enabled: true, order: 0 }] },
     ]);
 
     const savedObjectKeys = dbSaveObject.mock.calls.map((call) => call[0] as string);
     expect(savedObjectKeys).toContain('branding');
-    expect(savedObjectKeys).not.toContain('teachers_settings');
-    expect(savedObjectKeys).not.toContain('teacher_user_column_preferences');
   });
 
   it('prunes tenant objects the full backup does not carry', async () => {
