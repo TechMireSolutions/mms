@@ -3,6 +3,13 @@ import type { SmsProviderId, SmsProviderPreset } from './smsIntegrationTypes.js'
 /** Supported SMS providers — exactly one may be active per tenant at a time. */
 export const SMS_PROVIDER_PRESETS: readonly SmsProviderPreset[] = [
   {
+    id: 'logiqueues',
+    labelKey: 'sms.providerLogiqueues',
+    hintKey: 'sms.providerLogiqueuesHint',
+    requiresBaseUrl: true,
+    baseUrlPlaceholder: 'https://logiqueues.com/gateway/v1 (blank = default)',
+  },
+  {
     id: 'twilio',
     labelKey: 'sms.providerTwilio',
     hintKey: 'sms.providerTwilioHint',
@@ -25,6 +32,7 @@ export const SMS_PROVIDER_PRESETS: readonly SmsProviderPreset[] = [
     labelKey: 'sms.providerInfobip',
     hintKey: 'sms.providerInfobipHint',
     requiresBaseUrl: true,
+    baseUrlPlaceholder: 'xxxxx.api.infobip.com',
   },
   {
     id: 'telesign',

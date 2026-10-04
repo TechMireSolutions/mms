@@ -134,7 +134,7 @@ export default function SmsIntegrationPanel(): React.JSX.Element {
               name="apiBaseUrl"
               value={form.apiBaseUrl ?? ''}
               onChange={(event) => setField('apiBaseUrl', event.target.value)}
-              placeholder="xxxxx.api.infobip.com"
+              placeholder={selectedPreset.baseUrlPlaceholder}
             />
           </div>
         )}

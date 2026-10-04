@@ -2548,6 +2548,8 @@ export const APP_TRANSLATIONS_AR: Record<AppTranslationKey, string> = {
   "sms.provider": "مزود الرسائل النصية",
   "sms.providerInfobip": "Infobip",
   "sms.providerInfobipHint": "استخدم مفتاح API كسر واجهة البرمجة ورابط حسابك الأساسي أدناه.",
+  "sms.providerLogiqueues": "Logiqueues",
+  "sms.providerLogiqueuesHint": "استخدم مفتاح API الذي يبدأ بـ sgw_live_ كسر واجهة البرمجة؛ اترك رابط القاعدة فارغاً إلا إذا كنت تستضيف خادم البوابة بنفسك.",
   "sms.providerMsg91": "MSG91",
   "sms.providerMsg91Hint": "استخدم مفتاح المصادقة كسر واجهة البرمجة؛ يمكن ترك معرّف الحساب فارغاً.",
   "sms.providerTelesign": "Telesign",

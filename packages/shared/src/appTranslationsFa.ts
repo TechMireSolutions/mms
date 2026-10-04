@@ -2552,6 +2552,8 @@ export const APP_TRANSLATIONS_FA: Partial<Record<AppTranslationKey, string>> = {
   "sms.provider": "ارائه‌دهنده پیامک",
   "sms.providerInfobip": "Infobip",
   "sms.providerInfobipHint": "از API Key به عنوان کلید مخفی و آدرس پایه حساب خود در زیر استفاده کنید.",
+  "sms.providerLogiqueues": "Logiqueues",
+  "sms.providerLogiqueuesHint": "از کلید API خود که با sgw_live_ شروع می‌شود به عنوان کلید مخفی استفاده کنید؛ آدرس پایه را خالی بگذارید مگر اینکه سرور گیت‌وی را خودتان میزبانی کنید.",
   "sms.providerMsg91": "MSG91",
   "sms.providerMsg91Hint": "از Auth Key به عنوان کلید مخفی استفاده کنید؛ شناسه حساب می‌تواند خالی بماند.",
   "sms.providerTelesign": "Telesign",

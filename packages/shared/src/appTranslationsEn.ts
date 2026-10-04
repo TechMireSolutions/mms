@@ -2550,6 +2550,8 @@ export const APP_TRANSLATIONS_EN = {
   "sms.provider": "SMS Provider",
   "sms.providerInfobip": "Infobip",
   "sms.providerInfobipHint": "Use your API Key as the API secret and your account's base URL below.",
+  "sms.providerLogiqueues": "Logiqueues",
+  "sms.providerLogiqueuesHint": "Use your sgw_live_ API key as the API secret; leave the base URL blank unless self-hosting the gateway server.",
   "sms.providerMsg91": "MSG91",
   "sms.providerMsg91Hint": "Use your Auth Key as the API secret; Account ID can be left blank.",
   "sms.providerTelesign": "Telesign",

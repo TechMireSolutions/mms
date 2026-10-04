@@ -2548,6 +2548,8 @@ export const APP_TRANSLATIONS_UR: Record<AppTranslationKey, string> = {
   "sms.provider": "SMS فراہم کنندہ",
   "sms.providerInfobip": "Infobip",
   "sms.providerInfobipHint": "API کلید کو API سیکرٹ کے طور پر اور نیچے اپنے اکاؤنٹ کا بیس یو آر ایل استعمال کریں۔",
+  "sms.providerLogiqueues": "Logiqueues",
+  "sms.providerLogiqueuesHint": "اپنی sgw_live_ API کلید کو API سیکرٹ کے طور پر استعمال کریں؛ بیس یو آر ایل خالی چھوڑیں جب تک کہ آپ خود گیٹ وے سرور ہوسٹ نہ کر رہے ہوں۔",
   "sms.providerMsg91": "MSG91",
   "sms.providerMsg91Hint": "آتھ کلید کو API سیکرٹ کے طور پر استعمال کریں؛ اکاؤنٹ آئی ڈی خالی چھوڑی جا سکتی ہے۔",
   "sms.providerTelesign": "Telesign",

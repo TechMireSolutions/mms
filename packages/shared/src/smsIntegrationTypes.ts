@@ -6,7 +6,7 @@ export const SMS_INTEGRATION_OBJECT_KEY = 'sms_integration' as const;
 /** Backend-only — never synced to the browser. */
 export const SMS_INTEGRATION_SECRETS_KEY = 'sms_integration_secrets' as const;
 
-const SMS_PROVIDERS = ['twilio', 'vonage', 'msg91', 'infobip', 'telesign'] as const;
+const SMS_PROVIDERS = ['twilio', 'vonage', 'msg91', 'infobip', 'telesign', 'logiqueues'] as const;
 
 export type SmsProviderId = typeof SMS_PROVIDERS[number];
 
@@ -20,18 +20,20 @@ export interface SmsProviderPreset {
   id: SmsProviderId;
   labelKey: AppTranslationKey;
   hintKey: AppTranslationKey;
-  /** Only Infobip's REST API requires a per-account base URL; all others hardcode it. */
+  /** Only Infobip and Logiqueues take a per-account/self-host base URL; all others hardcode it. */
   requiresBaseUrl: boolean;
+  /** Shown as the API Base URL field's placeholder when `requiresBaseUrl` is true. */
+  baseUrlPlaceholder?: string;
 }
 
 /** Public integration config (safe to store in tenant sync). */
 export interface SmsIntegrationConfig {
   providerId: SmsProviderId;
-  /** Account SID (Twilio) / API Key (Vonage) / Customer ID (Telesign) — unused by MSG91/Infobip. */
+  /** Account SID (Twilio) / API Key (Vonage) / Customer ID (Telesign) — unused by MSG91/Infobip/Logiqueues. */
   accountId: string;
-  /** Sender ID / From number, meaning varies per provider. */
+  /** Sender ID / From number, meaning varies per provider — unused by Logiqueues (tied to the paired phone's SIM). */
   senderId: string;
-  /** Per-account API base URL — only meaningful when `providerId === 'infobip'`. */
+  /** Per-account API base URL — meaningful for Infobip and optionally Logiqueues (self-hosted override). */
   apiBaseUrl?: string;
   connected: boolean;
   hasCredentials: boolean;

@@ -9,6 +9,7 @@ import { sendVonageSms } from './providers/vonageProvider.js';
 import { sendMsg91Sms } from './providers/msg91Provider.js';
 import { sendInfobipSms } from './providers/infobipProvider.js';
 import { sendTelesignSms } from './providers/telesignProvider.js';
+import { sendLogiqueuesSms } from './providers/logiqueuesProvider.js';
 import type { SmsProviderSender } from './providers/types.js';
 
 export interface SendSmsInput {
@@ -28,6 +29,7 @@ const PROVIDER_SENDERS: Record<string, SmsProviderSender> = {
   msg91: sendMsg91Sms,
   infobip: sendInfobipSms,
   telesign: sendTelesignSms,
+  logiqueues: sendLogiqueuesSms,
 };
 
 async function dispatchViaActiveProvider(to: string, body: string): Promise<SendSmsResult> {
