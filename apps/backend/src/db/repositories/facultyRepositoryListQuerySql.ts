@@ -8,6 +8,10 @@ import {
   type FacultyListQuery,
 } from '@mms/shared';
 import { faculty, contacts } from '../schema.js';
+import {
+  primaryDepartmentNameExpr,
+  primaryDesignationNameExpr,
+} from './facultyPrimaryAppointmentSql.js';
 
 /** Shared status expression for Faculty list filters + metrics. */
 export function facultyStatusExpr(): SQL {
@@ -54,7 +58,8 @@ function buildSearchSql(search: string): SQL | null {
   const pattern = `%${normalized}%`;
   return sql`(
     lower(COALESCE(${faculty.employeeId}, '')) LIKE ${pattern}
-    OR lower(COALESCE(${faculty.designation}, '')) LIKE ${pattern}
+    OR lower(${primaryDesignationNameExpr()}) LIKE ${pattern}
+    OR lower(${primaryDepartmentNameExpr()}) LIKE ${pattern}
     OR lower(COALESCE(${faculty.specialization}, '')) LIKE ${pattern}
     OR lower(COALESCE(${faculty.qualification}, '')) LIKE ${pattern}
     OR EXISTS (
@@ -95,9 +100,16 @@ export function buildOrderBy(sortField: string | undefined, sortDir: 'asc' | 'de
     return dir === 'desc' ? sql`${empSort} desc nulls last` : sql`${empSort} asc nulls last`;
   }
   if (field === 'designation') {
+    const designationSort = primaryDesignationNameExpr();
     return dir === 'desc'
-      ? sql`lower(COALESCE(${faculty.designation}, '')) desc nulls last`
-      : sql`lower(COALESCE(${faculty.designation}, '')) asc nulls last`;
+      ? sql`lower(${designationSort}) desc nulls last`
+      : sql`lower(${designationSort}) asc nulls last`;
+  }
+  if (field === 'department') {
+    const departmentSort = primaryDepartmentNameExpr();
+    return dir === 'desc'
+      ? sql`lower(${departmentSort}) desc nulls last`
+      : sql`lower(${departmentSort}) asc nulls last`;
   }
   if (field === 'specialization') {
     const specSort = specializationExpr();
@@ -139,11 +151,13 @@ export function buildListConditions(subdomain: string, query: FacultyListQuery &
   }
 
   if ((query as { department?: string }).department?.trim()) {
-    conditions.push(sql`lower(trim(COALESCE(${faculty.department}, ''))) = lower(trim(${(query as { department?: string }).department!.trim()}))`);
+    const dept = (query as { department?: string }).department!.trim();
+    conditions.push(sql`lower(trim(${primaryDepartmentNameExpr()})) = lower(trim(${dept}))`);
   }
 
   if ((query as { designation?: string }).designation?.trim()) {
-    conditions.push(sql`lower(trim(COALESCE(${faculty.designation}, ''))) = lower(trim(${(query as { designation?: string }).designation!.trim()}))`);
+    const desig = (query as { designation?: string }).designation!.trim();
+    conditions.push(sql`lower(trim(${primaryDesignationNameExpr()})) = lower(trim(${desig}))`);
   }
 
   if ((query as { reportingFacultyId?: string }).reportingFacultyId?.trim()) {

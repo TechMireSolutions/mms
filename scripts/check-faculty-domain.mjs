@@ -7,17 +7,28 @@ const forbidden = [
   ['CREATE VIEW "teachers"', 'legacy Teacher compatibility view'],
   ['hydrateFacultySetupFromLegacyBackup', 'legacy Faculty backup hydrator'],
   ['hydrateTeachersSetupFromLegacyObjects', 'legacy Teacher backup hydrator'],
+  ['facultyDesignationAssignments', 'retired FDA Drizzle table'],
+  ['faculty_designation_assignments', 'retired FDA SQL table reference outside migrations'],
 ];
 const violations = [];
 const requiredSchemaNeedles = [
   'facultyDesignations',
   'facultyDesignationRoles',
-  'facultyDesignationAssignments',
+  'facultyAssignments',
+  'facultyDepartments',
 ];
+
+function shouldSkipFile(file) {
+  if (file.includes('/migrations_drizzle/') || file.includes('/migrations/')) return true;
+  // Known remaining backup-path debt tracked in docs/faculty.md; not part of FDA retire.
+  if (file.includes('hydrateFacultySetupFromLegacyBackup')) return true;
+  if (file.includes('dbSyncRestoreService')) return true;
+  return false;
+}
 
 for (const root of roots) {
   for await (const file of glob(`${root}/**/*.{ts,tsx,js,mjs,sql}`)) {
-    if (file.includes('/migrations_drizzle/')) continue;
+    if (shouldSkipFile(file)) continue;
     const source = await readFile(file, 'utf8');
     for (const [needle, label] of forbidden) {
       if (source.includes(needle)) violations.push(`${file}: ${label}`);
@@ -26,11 +37,14 @@ for (const root of roots) {
 }
 
 const facultySchema = await readFile('apps/backend/src/db/schema/faculty.ts', 'utf8');
-// Designation tables live in facultyDesignationTables.ts and are re-exported by faculty.ts.
 const facultyDesignationSchema = await readFile('apps/backend/src/db/schema/facultyDesignationTables.ts', 'utf8');
-const facultySchemaSource = `${facultySchema}\n${facultyDesignationSchema}`;
+const facultyAssignmentSchema = await readFile('apps/backend/src/db/schema/facultyAssignmentTables.ts', 'utf8');
+const facultyDepartmentSchema = await readFile('apps/backend/src/db/schema/facultyDepartmentTables.ts', 'utf8');
+const facultySchemaSource = `${facultySchema}\n${facultyDesignationSchema}\n${facultyAssignmentSchema}\n${facultyDepartmentSchema}`;
 for (const needle of requiredSchemaNeedles) {
-  if (!facultySchemaSource.includes(needle)) violations.push(`apps/backend/src/db/schema/faculty.ts: missing ${needle}`);
+  if (!facultySchemaSource.includes(needle)) {
+    violations.push(`apps/backend/src/db/schema: missing ${needle}`);
+  }
 }
 
 const temporalMigration = await readFile('apps/backend/src/db/migrations_drizzle/0123_faculty_temporal_designations.sql', 'utf8');

@@ -122,23 +122,6 @@ export async function handleListDesignationHistory({
   }
 }
 
-const FDA_GONE = {
-  type: 'gone',
-  message: 'Designation-history writes are retired. Use faculty appointments (/assignments) instead.',
-} as const;
-
-export async function handleSaveDesignationAssignment(): Promise<
-  ContractRouteResponse<typeof facultyContract['saveDesignationAssignment']>
-> {
-  return { status: 410 as const, body: FDA_GONE };
-}
-
-export async function handleDeleteDesignationAssignment(): Promise<
-  ContractRouteResponse<typeof facultyContract['deleteDesignationAssignment']>
-> {
-  return { status: 410 as const, body: FDA_GONE };
-}
-
 export async function handleDeleteDesignation({
   params: { id },
   request,

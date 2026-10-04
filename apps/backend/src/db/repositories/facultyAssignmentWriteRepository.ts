@@ -6,6 +6,7 @@ import type { InsertFacultyAssignmentRow } from '../schema/facultyAssignmentTabl
 import { validateFacultyAssignment, lockFacultyHierarchy } from './facultyAssignmentValidation.js';
 import { findFacultyAssignmentById } from './facultyAssignmentRepository.js';
 import { recordModernAuditEvent } from '../../services/auditTrailService.js';
+import { syncFacultyCurrentDesignation } from './facultyDesignationSync.js';
 
 /* ── Write helpers ────────────────────────────────────────────────────────── */
 
@@ -48,6 +49,7 @@ export async function saveFacultyAssignment(
       });
     await recordModernAuditEvent(tx, { workspaceSubdomain: subdomain, tableName: 'faculty_assignments',
       recordId: assignment.id, actionType: 'UPDATE', realUserId: assignment.updatedBy, newState: assignment });
+    await syncFacultyCurrentDesignation(tx, subdomain, assignment.facultyId);
   });
 }
 
@@ -75,6 +77,7 @@ export async function closeAssignment(
       );
     await recordModernAuditEvent(tx, { workspaceSubdomain: subdomain, tableName: 'faculty_assignments',
       recordId: id, actionType: 'UPDATE', realUserId: updatedBy, newState: { endDate } });
+    await syncFacultyCurrentDesignation(tx, subdomain, current.facultyId);
   });
 }
 
@@ -101,11 +104,12 @@ export async function softDeleteFacultyAssignment(
           eq(facultyAssignments.id, id),
           isNull(facultyAssignments.deletedAt),
         ),
-      ).returning({ id: facultyAssignments.id });
+      ).returning({ id: facultyAssignments.id, facultyId: facultyAssignments.facultyId });
     if (!changed.length) return;
     await recordModernAuditEvent(tx, { workspaceSubdomain: subdomain, tableName: 'faculty_assignments',
       recordId: id, actionType: 'DELETE', realUserId: deletedBy, newState: { reason } });
     await emitOutboxEvent(tx, 'entity.soft_deleted', { entityType: 'faculty_assignments', entityId: id,
       tenantId: subdomain, deletedAt: deletedAt.toISOString(), deletedBy, deletionReason: reason, version: deletedAt.getTime() });
+    await syncFacultyCurrentDesignation(tx, subdomain, changed[0].facultyId);
   });
 }

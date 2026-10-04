@@ -79,24 +79,3 @@ export type FacultyDesignationDefinition = z.infer<typeof facultyDesignationSche
 export type FacultyDesignationWrite = z.infer<typeof facultyDesignationWriteSchema>;
 export type FacultyDesignationAssignment = z.infer<typeof facultyDesignationAssignmentSchema>;
 export type FacultyDesignationAssignmentWrite = z.infer<typeof facultyDesignationAssignmentWriteSchema>;
-
-/** Atomic transition request; the current assignment ID detects stale edits. */
-export const facultyDesignationTransitionSchema = z.object({
-  currentAssignmentId: z.string().min(1).max(100).nullable(),
-  newDesignationId: z.string().min(1).max(100),
-  transitionDate: z.iso.date(),
-  notes: z.string().max(2000).nullable().optional(),
-}).strict();
-
-export type FacultyDesignationTransitionWrite = z.infer<typeof facultyDesignationTransitionSchema>;
-
-/** Faculty identity and new designation used by the transition form. */
-export interface FacultyDesignationTransition {
-  facultyId: string;
-  /** The new designation to assign starting `transitionDate`. */
-  newDesignationId: string;
-  /** ISO date `YYYY-MM-DD` — first day of the new designation period. */
-  transitionDate: string;
-  /** Optional note attached to the new assignment. */
-  notes?: string | null;
-}

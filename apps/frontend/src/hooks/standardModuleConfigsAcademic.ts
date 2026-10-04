@@ -51,7 +51,7 @@ const DEFAULT_EMPTY_FACULTY_LOOKUPS_MAP = emptyFacultyLookupsMap();
 
 const useFacultyConfigImpl = createStandardModuleConfigHook<
   FacultySettings,
-  { statuses: string[]; specializations: string[]; genderFilters: string[]; designations: string[]; departments: string[] }
+  { statuses: string[]; specializations: string[]; genderFilters: string[] }
 >({
   defaultSettings: STANDARD_MODULES_CONFIG_REGISTRY.faculty.defaultSettings as FacultySettings,
   defaultFieldDefs: STANDARD_MODULES_CONFIG_REGISTRY.faculty.defaultFieldDefs,
@@ -82,8 +82,6 @@ const useFacultyConfigImpl = createStandardModuleConfigHook<
         statuses: lookups.statuses,
         specializations: lookups.specializations,
         genderFilters: lookups.genderFilters,
-        designations: lookups.designations,
-        departments: lookups.departments,
       }),
       [lookups],
     );

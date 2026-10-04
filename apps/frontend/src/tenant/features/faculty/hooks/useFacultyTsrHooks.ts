@@ -157,17 +157,3 @@ export function useFacultyContractLogSetupAudit() {
   return facultyClient.setupAudit.useMutation({});
 }
 
-
-/** Contract-backed hierarchy tree */
-export function useFacultyHierarchyTree(enabled = true) {
-  // @ts-expect-error - TS union discrimination limit with ts-rest
-  return facultyClient.hierarchyTree.useQuery({
-    queryKey: [...FACULTY_QUERY_KEY, 'hierarchy-tree'],
-    enabled,
-    staleTime: 60_000,
-  });
-}
-
-
-
-

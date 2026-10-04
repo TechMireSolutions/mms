@@ -17,8 +17,6 @@ export {
   findCurrentFacultyDesignationAssignment,
   listCurrentFacultyDesignationAssignments,
   listCurrentFacultyDesignationHoldings,
-  saveFacultyDesignationAssignment,
-  deleteFacultyDesignationAssignment,
 } from './facultyDesignationAssignmentRepository.js';
 
 function iso(value: Date): string {
@@ -125,9 +123,7 @@ export async function softDeleteFacultyDesignation(tenant: string, id: string, a
     const dependents = await tx.execute(sql`
       SELECT id FROM faculty_assignments WHERE workspace_subdomain = ${workspaceSubdomain}
         AND designation_id = ${id} AND deleted_at IS NULL
-      UNION ALL
-      SELECT id FROM faculty_designation_assignments WHERE workspace_subdomain = ${workspaceSubdomain}
-        AND designation_id = ${id} LIMIT 1
+      LIMIT 1
     `);
     if (dependents.rows.length) throw new Error('Designation has dependent appointments');
     const deletedAt = new Date();

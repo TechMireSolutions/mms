@@ -1,6 +1,4 @@
 import {
-  resolveFacultyDepartments,
-  resolveFacultyDesignations,
   resolveFacultySpecializations,
   resolveFacultyStatuses,
 } from "@mms/shared";
@@ -11,7 +9,6 @@ import type { StatusBadgeConfigItem } from "@/components/ui/StatusBadge";
 
 const resolveStatuses = resolveFacultyStatuses;
 const resolveSpecs = resolveFacultySpecializations;
-const resolveDesignations = resolveFacultyDesignations;
 
 /**
  * SSOT for the faculty StatusBadge config, derived from the tenant's configured statuses.
@@ -24,21 +21,16 @@ export function useFacultyStatusConfig(): Record<string, StatusBadgeConfigItem> 
 }
 
 /**
- * SSOT for faculty status, specialization, designation, and department option lists, derived from the tenant's
- * configured lookups. Consolidates the repeated option derivations across the module.
+ * SSOT for faculty status and specialization option lists from tenant lookups.
+ * Departments and designations come from normalized catalogs, not lookups.
  */
 export function useFacultyLookupOptions(): {
   statusOptions: string[];
   specializationOptions: string[];
-  designationOptions: string[];
-  departmentOptions: string[];
 } {
-  const { statuses, specializations, designations, departments } = useFacultyConfig();
+  const { statuses, specializations } = useFacultyConfig();
   return (() => ({
     statusOptions: [...resolveStatuses(statuses)],
     specializationOptions: [...resolveSpecs(specializations)],
-    designationOptions: [...resolveDesignations(designations)],
-    departmentOptions: [...resolveFacultyDepartments(departments)],
   }))();
 }
-

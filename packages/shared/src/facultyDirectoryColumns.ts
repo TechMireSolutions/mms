@@ -142,6 +142,7 @@ export const FACULTY_COLUMN_FIELD_MAPPING: Record<
 export const FACULTY_SORT_FIELDS = [
   'name',
   'employeeId',
+  'department',
   'designation',
   'specialization',
   'qualification',

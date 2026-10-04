@@ -38,10 +38,11 @@ export function useFacultyFormController({
     isFieldEnabled: configIsFieldEnabled,
     isFieldRequired: configIsFieldRequired,
   } = useFacultyConfig();
-  const { statusOptions: statusValues, specializationOptions, departmentOptions } = useFacultyLookupOptions();
+  const { statusOptions: statusValues, specializationOptions } = useFacultyLookupOptions();
   const designationDefinitions = useFacultyDesignations();
   const departmentsQuery = useFacultyDepartments();
   const departmentEntities = departmentsQuery.data ?? [];
+  const departmentOptions = departmentEntitiesToNames(departmentEntities);
 
   const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_FACULTY_SETTINGS.defaultSpecialization;
   const idPrefix = settings.idPrefix || DEFAULT_FACULTY_SETTINGS.idPrefix;
@@ -141,7 +142,7 @@ export function useFacultyFormController({
     isDirty,
     defaultSpecialization,
     specializationOptions,
-    departmentOptions: departmentOptions?.length ? departmentOptions : departmentEntitiesToNames(departmentEntities),
+    departmentOptions,
     departmentEntities,
     designationOptions: designationDefinitions.data ?? [],
     statusOptions,

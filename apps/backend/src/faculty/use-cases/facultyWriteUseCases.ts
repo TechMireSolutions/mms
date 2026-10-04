@@ -5,7 +5,6 @@ import { broadcastCollection } from '../../lib/livePush.js';
 import type { FacultyRepository } from '../repository/facultyRepository.js';
 import { facultyRepository } from '../repository/facultyRepositoryAdapter.js';
 import { mergeFacultyPatch, prepareFacultyRecord } from './facultyNormalizeUseCases.js';
-import { ensureFacultyDesignationLookup, ensureFacultyDepartmentLookup } from './facultyLookupsService.js';
 import { generateNextFacultyEmployeeId } from './facultyEmployeeIdService.js';
 import {
   HierarchyValidationError,
@@ -52,12 +51,6 @@ export async function createFaculty(
     if (!tenant) throw new Error('Tenant context required');
 
     const rawRecord = record as Record<string, unknown>;
-    const customDes = (typeof rawRecord.customDesignation === 'string' ? rawRecord.customDesignation.trim() : '') ||
-      (typeof rawRecord.designation === 'string' ? rawRecord.designation.trim() : '');
-    if (customDes) await ensureFacultyDesignationLookup(tenant, customDes);
-    const customDept = typeof rawRecord.department === 'string' ? rawRecord.department.trim() : '';
-    if (customDept) await ensureFacultyDepartmentLookup(tenant, customDept);
-
     const normalized = prepareFacultyRecord(record);
     if (await repo.findById(tenant, String(normalized.id))) {
       throw new ConflictError('Faculty ID already exists; use the update or restore operation');
@@ -104,13 +97,6 @@ export async function updateFacultyById(
     if (!tenant) return null;
     const existing = await repo.findById(tenant, id);
     if (!existing || existing.deletedAt) return null;
-
-    const rawRecord = record as Record<string, unknown>;
-    const customDes = (typeof rawRecord.customDesignation === 'string' ? rawRecord.customDesignation.trim() : '') ||
-      (typeof rawRecord.designation === 'string' ? rawRecord.designation.trim() : '');
-    if (customDes) await ensureFacultyDesignationLookup(tenant, customDes);
-    const customDept = typeof rawRecord.department === 'string' ? rawRecord.department.trim() : '';
-    if (customDept) await ensureFacultyDepartmentLookup(tenant, customDept);
 
     const normalized = prepareFacultyRecord({
       ...mergeFacultyPatch(existing, record),

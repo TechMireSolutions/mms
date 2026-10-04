@@ -1,10 +1,8 @@
 import { z } from 'zod';
 import {
   facultyDesignationAssignmentSchema,
-  facultyDesignationAssignmentWriteSchema,
   facultyDesignationSchema,
   facultyDesignationWriteSchema,
-  facultyDesignationTransitionSchema,
 } from '../facultyDesignationTypes.js';
 
 const errorResponse = z.unknown();
@@ -58,48 +56,6 @@ export const facultyDesignationContractEndpoints = {
     method: 'GET' as const,
     path: '/api/faculty/:facultyId/designation-history',
     responses: { 200: z.object({ assignments: z.array(facultyDesignationAssignmentSchema) }), 403: errorResponse, 500: errorResponse },
-    summary: 'List dated designation history for a Faculty member',
-  },
-  saveDesignationAssignment: {
-    method: 'PUT' as const,
-    path: '/api/faculty/:facultyId/designation-history/:assignmentId',
-    body: facultyDesignationAssignmentWriteSchema,
-    responses: {
-      200: z.object({ assignment: facultyDesignationAssignmentSchema }),
-      400: errorResponse,
-      403: errorResponse,
-      409: errorResponse,
-      410: errorResponse,
-    },
-    summary: 'Deprecated — use faculty assignments. Returns 410 Gone.',
-  },
-  transitionDesignation: {
-    method: 'POST' as const,
-    path: '/api/faculty/:facultyId/designation-transition',
-    body: facultyDesignationTransitionSchema,
-    responses: {
-      200: z.object({ assignment: facultyDesignationAssignmentSchema }),
-      400: errorResponse,
-      403: errorResponse,
-      404: errorResponse,
-      409: errorResponse,
-      410: errorResponse,
-      500: errorResponse,
-    },
-    summary: 'Deprecated — use faculty assignments. Returns 410 Gone.',
-  },
-  deleteDesignationAssignment: {
-    method: 'DELETE' as const,
-    path: '/api/faculty/:facultyId/designation-history/:assignmentId',
-    body: z.object({}).optional(),
-    responses: {
-      200: z.object({ success: z.literal(true) }),
-      403: errorResponse,
-      404: errorResponse,
-      409: errorResponse,
-      410: errorResponse,
-      500: errorResponse,
-    },
-    summary: 'Deprecated — use faculty assignments. Returns 410 Gone.',
+    summary: 'List designation history projected from faculty_assignments',
   },
 };

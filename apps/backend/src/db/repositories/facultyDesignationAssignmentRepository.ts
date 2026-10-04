@@ -153,5 +153,3 @@ export async function listCurrentFacultyDesignationAssignments(
 }
 
 export { listCurrentFacultyDesignationHoldings } from './facultyDesignationHoldingsRepository.js';
-export { saveFacultyDesignationAssignment } from './facultyDesignationAssignmentWriteLegacy.js';
-export { deleteFacultyDesignationAssignment } from './facultyDesignationDeleteRepository.js';

@@ -1,6 +1,10 @@
 import { and, eq, isNull, sql, type SQL } from 'drizzle-orm';
 import type { FacultyWidgetQuery } from '@mms/shared';
 import { faculty, contacts } from '../schema.js';
+import {
+  primaryDepartmentNameExpr,
+  primaryDesignationNameExpr,
+} from './facultyPrimaryAppointmentSql.js';
 
 export function activeWorkspaceWhere(subdomain: string): SQL {
   return and(eq(faculty.workspaceSubdomain, subdomain), isNull(faculty.deletedAt))!;
@@ -14,8 +18,8 @@ export function resolveFacultyFieldExpr(field: string): SQL {
   if (f === 'qualification') return sql`COALESCE(${faculty.qualification}, '')`;
   if (f === 'joinDate' || f === 'join_date') return sql`COALESCE(${faculty.joinDate}, '')`;
   if (f === 'notes') return sql`COALESCE(${faculty.notes}, '')`;
-  if (f === 'department') return sql`COALESCE(${faculty.department}, '')`;
-  if (f === 'designation') return sql`COALESCE(${faculty.designation}, '')`;
+  if (f === 'department') return primaryDepartmentNameExpr();
+  if (f === 'designation') return primaryDesignationNameExpr();
   if (f === 'hierarchyRank' || f === 'hierarchy_rank') return sql`COALESCE(${faculty.hierarchyRank}::text, '10')`;
   if (f === 'reportingFacultyId' || f === 'reporting_faculty_id') return sql`COALESCE(${faculty.reportingFacultyId}, '')`;
 

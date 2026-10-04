@@ -27,6 +27,32 @@ vi.mock('../db/schema.js', () => ({
   facultyAssignments: {
     workspaceSubdomain: 'workspace_subdomain',
     id: 'id',
+    facultyId: 'faculty_id',
+    designationId: 'designation_id',
+    departmentId: 'department_id',
+    isPrimary: 'is_primary',
+    deletedAt: 'deleted_at',
+    startDate: 'start_date',
+    endDate: 'end_date',
+  },
+  facultyDesignations: {
+    workspaceSubdomain: 'workspace_subdomain',
+    id: 'id',
+    name: 'name',
+    hierarchyRank: 'hierarchy_rank',
+  },
+  facultyDepartments: {
+    workspaceSubdomain: 'workspace_subdomain',
+    id: 'id',
+    name: 'name',
+  },
+  faculty: {
+    workspaceSubdomain: 'workspace_subdomain',
+    id: 'id',
+    designation: 'designation',
+    department: 'department',
+    hierarchyRank: 'hierarchy_rank',
+    updatedAt: 'updated_at',
   },
 }));
 
@@ -37,6 +63,22 @@ describe('saveFacultyAssignment soft-stop for reportsToAssignmentId', () => {
     vi.clearAllMocks();
     withTenant.mockImplementation(async (_tenant: string, fn: (tx: unknown) => Promise<void>) => {
       const tx = {
+        select: vi.fn(() => ({
+          from: vi.fn(() => ({
+            innerJoin: vi.fn(() => ({
+              innerJoin: vi.fn(() => ({
+                where: vi.fn(() => ({
+                  orderBy: vi.fn().mockResolvedValue([]),
+                })),
+              })),
+            })),
+          })),
+        })),
+        update: vi.fn(() => ({
+          set: vi.fn(() => ({
+            where: vi.fn().mockResolvedValue(undefined),
+          })),
+        })),
         insert: vi.fn(() => ({
           values: vi.fn(() => ({
             onConflictDoUpdate: vi.fn().mockResolvedValue(undefined),

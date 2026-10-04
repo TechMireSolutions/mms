@@ -37,6 +37,8 @@ describe('hydrateFacultyFromContacts temporal designations', () => {
     }]]));
     mocks.listHoldings.mockResolvedValue(new Map([['fac-1', [{
       designationId: 'hod',
+      departmentId: 'dept-1',
+      departmentName: 'Islamic Studies',
       status: 'active',
       startsOn: '2026-01-01',
       endsOn: null,
@@ -50,12 +52,15 @@ describe('hydrateFacultyFromContacts temporal designations', () => {
       contactId: 'contact-1',
       status: 'active',
       designation: 'Legacy Teacher',
+      department: 'Legacy Dept',
       hierarchyRank: 4,
     }]);
 
     expect(faculty).toMatchObject({
       designation: 'Head of Department',
       designationId: 'hod',
+      department: 'Islamic Studies',
+      departmentId: 'dept-1',
       designationStartsOn: '2026-01-01',
       designationEndsOn: null,
       designationAssignableRoles: ['teacher', 'department_manager'],

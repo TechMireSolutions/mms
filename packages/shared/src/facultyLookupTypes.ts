@@ -1,14 +1,12 @@
 import { z } from 'zod';
 import { GENDERS } from './contactPreferenceConstants.js';
 import {
-  resolveFacultyDepartments,
-  resolveFacultyDesignations,
   resolveFacultySpecializations,
   resolveFacultyStatuses,
 } from './facultyTypes.js';
 
-/** Faculty Setup option-list kinds migrated off document-store collections. */
-export const FACULTY_LOOKUP_KINDS = ['statuses', 'specializations', 'genderFilters', 'designations', 'departments'] as const;
+/** Faculty Setup option-list kinds (org catalogs own departments/designations). */
+export const FACULTY_LOOKUP_KINDS = ['statuses', 'specializations', 'genderFilters'] as const;
 
 export type FacultyLookupKind = (typeof FACULTY_LOOKUP_KINDS)[number];
 
@@ -28,8 +26,6 @@ export const facultyLookupsMapSchema = z.object({
   statuses: facultyLookupStringItemsSchema,
   specializations: facultyLookupStringItemsSchema,
   genderFilters: facultyLookupStringItemsSchema,
-  designations: facultyLookupStringItemsSchema.default([]),
-  departments: facultyLookupStringItemsSchema.default([]),
 });
 
 export type FacultyLookupsMap = z.infer<typeof facultyLookupsMapSchema>;
@@ -60,10 +56,6 @@ export function defaultFacultyLookupItems(kind: FacultyLookupKind): string[] {
       return [...resolveFacultySpecializations()];
     case 'genderFilters':
       return [...GENDERS];
-    case 'designations':
-      return [...resolveFacultyDesignations()];
-    case 'departments':
-      return [...resolveFacultyDepartments()];
     default: {
       const _exhaustive: never = kind;
       return _exhaustive;
@@ -76,10 +68,5 @@ export function emptyFacultyLookupsMap(): FacultyLookupsMap {
     statuses: defaultFacultyLookupItems('statuses'),
     specializations: defaultFacultyLookupItems('specializations'),
     genderFilters: defaultFacultyLookupItems('genderFilters'),
-    designations: defaultFacultyLookupItems('designations'),
-    departments: defaultFacultyLookupItems('departments'),
   };
 }
-
-
-

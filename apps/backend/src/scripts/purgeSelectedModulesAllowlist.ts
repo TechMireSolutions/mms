@@ -96,7 +96,6 @@ export const PURGE_MODULE_TABLES: readonly string[] = [
   'organization_positions',
   'organization_locations',
   // faculty
-  'faculty_designation_assignments',
   'faculty_designation_roles',
   'faculty_assignments',
   'faculty',

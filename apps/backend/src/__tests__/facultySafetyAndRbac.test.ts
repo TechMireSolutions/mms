@@ -37,8 +37,6 @@ vi.mock('../services/auditTrailService.js', () => ({
 vi.mock('../db/repositories/facultyDesignationRepository.js', () => ({
   listFacultyDesignations: vi.fn().mockResolvedValue([]),
   saveFacultyDesignation: (...args: unknown[]) => mockSaveFacultyDesignation(...args),
-  saveFacultyDesignationAssignment: vi.fn(),
-  deleteFacultyDesignationAssignment: vi.fn(),
   listFacultyDesignationAssignments: vi.fn().mockResolvedValue([]),
 }));
 

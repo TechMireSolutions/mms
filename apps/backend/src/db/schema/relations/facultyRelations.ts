@@ -1,7 +1,7 @@
 import { relations } from 'drizzle-orm';
 import { workspaces } from '../platform.js';
 import { contacts, tenantUsers } from '../contacts.js';
-import { faculty, facultyDesignations, facultyDesignationRoles, facultyDesignationAssignments,
+import { faculty, facultyDesignations, facultyDesignationRoles,
   facultyDepartments, facultyAssignments } from '../faculty.js';
 import { hasanatDistributions } from '../hasanat.js';
 
@@ -12,23 +12,11 @@ export const facultyDesignationsRelations = relations(facultyDesignations, ({ on
   }),
   roles: many(facultyDesignationRoles),
   facultyAssignments: many(facultyAssignments),
-  assignments: many(facultyDesignationAssignments),
 }));
 
 export const facultyDesignationRolesRelations = relations(facultyDesignationRoles, ({ one }) => ({
   designation: one(facultyDesignations, {
     fields: [facultyDesignationRoles.workspaceSubdomain, facultyDesignationRoles.designationId],
-    references: [facultyDesignations.workspaceSubdomain, facultyDesignations.id],
-  }),
-}));
-
-export const facultyDesignationAssignmentsRelations = relations(facultyDesignationAssignments, ({ one }) => ({
-  faculty: one(faculty, {
-    fields: [facultyDesignationAssignments.workspaceSubdomain, facultyDesignationAssignments.facultyId],
-    references: [faculty.workspaceSubdomain, faculty.id],
-  }),
-  designation: one(facultyDesignations, {
-    fields: [facultyDesignationAssignments.workspaceSubdomain, facultyDesignationAssignments.designationId],
     references: [facultyDesignations.workspaceSubdomain, facultyDesignations.id],
   }),
 }));
@@ -55,7 +43,6 @@ export const facultyRelations = relations(faculty, ({ one, many }) => ({
     relationName: 'faculty_reporting',
   }),
   hasanatDistributions: many(hasanatDistributions),
-  designationAssignments: many(facultyDesignationAssignments),
   assignments: many(facultyAssignments),
 }));
 
@@ -101,4 +88,3 @@ export const facultyAssignmentsRelations = relations(facultyAssignments, ({ one,
     relationName: 'assignment_reporting',
   }),
 }));
-

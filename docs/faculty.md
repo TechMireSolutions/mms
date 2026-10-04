@@ -109,10 +109,10 @@ Normalized academic titles and permissions ([`facultyDesignationTables.ts`](file
 - **Primary Key:** `(workspace_subdomain, id)`.
 - **Fields:** `code` (unique among active), `name`, `hierarchy_rank` (> 0), `is_active`, soft-delete fields.
 - **Linked Roles (`faculty_designation_roles`):** Maps a designation to workspace security roles (`role_key`) granted when holding the designation.
-- **Designation History (`faculty_designation_assignments`):** Dated log of designation progression with a partial unique index guaranteeing at most one open-ended record (`ends_on IS NULL`) per faculty member.
+- **Designation history:** Projected from `faculty_assignments` (FA SSOT). Legacy `faculty_designation_assignments` is retired.
 
 #### 4. Multi-Role Temporal Appointments: `faculty_assignments`
-Models multi-role holding, joint appointments, and position occupancy ([`facultyAssignmentTables.ts`](file:///Users/syedaalin/Documents/mms/apps/backend/src/db/schema/facultyAssignmentTables.ts)).
+Models multi-role holding, joint appointments, position occupancy, and designation history ([`facultyAssignmentTables.ts`](file:///Users/syedaalin/Documents/mms/apps/backend/src/db/schema/facultyAssignmentTables.ts)).
 - **Primary Key:** `(workspace_subdomain, id)`.
 - **Foreign Keys:**
   - `faculty_id` → `faculty.id` `ON DELETE CASCADE`.

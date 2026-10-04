@@ -2,12 +2,13 @@ import { and, desc, eq, isNull } from 'drizzle-orm';
 import {
   faculty,
   facultyAssignments,
+  facultyDepartments,
   facultyDesignations,
 } from '../schema.js';
 import type { TenantTransaction } from '../tenant-context.js';
 
 /**
- * Synchronizes the faculty row's cached designation and hierarchy_rank
+ * Synchronizes the faculty row's cached designation, department, and hierarchy_rank
  * with the currently effective primary faculty_assignments row.
  */
 export async function syncFacultyCurrentDesignation(
@@ -17,7 +18,8 @@ export async function syncFacultyCurrentDesignation(
 ): Promise<void> {
   const today = new Date().toISOString().slice(0, 10);
   const rows = await tx.select({
-    name: facultyDesignations.name,
+    designationName: facultyDesignations.name,
+    departmentName: facultyDepartments.name,
     hierarchyRank: facultyDesignations.hierarchyRank,
     startDate: facultyAssignments.startDate,
     endDate: facultyAssignments.endDate,
@@ -25,6 +27,10 @@ export async function syncFacultyCurrentDesignation(
     .innerJoin(facultyDesignations, and(
       eq(facultyDesignations.workspaceSubdomain, facultyAssignments.workspaceSubdomain),
       eq(facultyDesignations.id, facultyAssignments.designationId),
+    ))
+    .innerJoin(facultyDepartments, and(
+      eq(facultyDepartments.workspaceSubdomain, facultyAssignments.workspaceSubdomain),
+      eq(facultyDepartments.id, facultyAssignments.departmentId),
     ))
     .where(and(
       eq(facultyAssignments.workspaceSubdomain, workspaceSubdomain),
@@ -35,14 +41,15 @@ export async function syncFacultyCurrentDesignation(
     .orderBy(desc(facultyAssignments.startDate));
 
   const current = rows.find((r) => r.startDate <= today && (!r.endDate || r.endDate >= today)) ?? rows[0];
-  if (current) {
-    await tx.update(faculty).set({
-      designation: current.name,
-      hierarchyRank: current.hierarchyRank,
-      updatedAt: new Date(),
-    }).where(and(
-      eq(faculty.workspaceSubdomain, workspaceSubdomain),
-      eq(faculty.id, facultyId),
-    ));
-  }
+  if (!current) return;
+
+  await tx.update(faculty).set({
+    designation: current.designationName,
+    department: current.departmentName,
+    hierarchyRank: current.hierarchyRank,
+    updatedAt: new Date(),
+  }).where(and(
+    eq(faculty.workspaceSubdomain, workspaceSubdomain),
+    eq(faculty.id, facultyId),
+  ));
 }

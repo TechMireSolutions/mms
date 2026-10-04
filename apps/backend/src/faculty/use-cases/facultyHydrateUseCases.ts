@@ -96,6 +96,14 @@ export async function hydrateFacultyFromContacts(
         hydrated.designationAssignableRoles = fallback.assignableRoles ?? [];
       }
     }
+    const primaryHolding =
+      holdings?.find((h) => h.isPrimary && h.status === 'active')
+      ?? holdings?.find((h) => h.status === 'active')
+      ?? holdings?.[0];
+    if (primaryHolding) {
+      if (primaryHolding.departmentName) hydrated.department = primaryHolding.departmentName;
+      if (primaryHolding.departmentId) hydrated.departmentId = primaryHolding.departmentId;
+    }
     if (hydrated.reportingFacultyId && supervisorNameMap.has(String(hydrated.reportingFacultyId))) {
       hydrated.reportingFacultyName = supervisorNameMap.get(String(hydrated.reportingFacultyId));
     }

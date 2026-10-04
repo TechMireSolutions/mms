@@ -96,15 +96,22 @@ export interface FacultyHierarchyPreset {
   label: string;
 }
 
+/** Rank presets aligned with i18n scale 1 (highest) … 10 (Lecturer/Staff). */
 export const FACULTY_HIERARCHY_RANK_PRESETS: readonly FacultyHierarchyPreset[] = [
   { rank: 1, label: 'Dean / Principal' },
   { rank: 2, label: 'Head of Department (HoD)' },
   { rank: 3, label: 'Senior Faculty / Professor' },
-  { rank: 4, label: 'Lecturer / Instructor' },
-  { rank: 5, label: 'Assistant / Academic Support' },
+  { rank: 4, label: 'Associate Professor' },
+  { rank: 5, label: 'Assistant Professor' },
+  { rank: 6, label: 'Senior Lecturer' },
+  { rank: 7, label: 'Lecturer / Instructor' },
+  { rank: 8, label: 'Junior Lecturer' },
+  { rank: 9, label: 'Teaching Assistant' },
+  { rank: 10, label: 'Lecturer / Staff' },
 ] as const;
 
-export const DEFAULT_FACULTY_HIERARCHY_RANK = 4;
+/** Matches DB/Zod default (`faculty.hierarchy_rank` DEFAULT 10). */
+export const DEFAULT_FACULTY_HIERARCHY_RANK = 10;
 
 /** Hierarchical tree node for organizational chart and task delegation. */
 export interface FacultyHierarchyNode {
@@ -145,6 +152,8 @@ export interface FacultyMember {
   /** Hydrated from the linked Contact's education or skills — canonical data lives on Contact. */
   specialization?: string;
   department?: string;
+  /** Server-projected primary department from faculty_assignments; writes select catalog by id. */
+  departmentId?: string;
   designation?: string;
   /** Server-projected primary designation effective today; writes select a definition by id. */
   designationId?: string;
