@@ -80,3 +80,8 @@ export const facultyCsvExportBodySchema = csvExportBodySchema(facultyListQuerySc
 export const sessionsCsvExportBodySchema = csvExportBodySchema(sessionsListQuerySchema);
 export const enrollmentsCsvExportBodySchema = csvExportBodySchema(enrollmentsListQuerySchema);
 export const usersCsvExportBodySchema = csvExportBodySchema(usersListQuerySchema);
+
+/** Catalog exports have no list-query filters — accept empty/partial body. */
+const emptyListQuerySchema = z.object({}).passthrough();
+export const facultyDepartmentsCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);
+export const facultyDesignationsCsvExportBodySchema = csvExportBodySchema(emptyListQuerySchema);

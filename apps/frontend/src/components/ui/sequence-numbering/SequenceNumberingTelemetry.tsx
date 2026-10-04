@@ -22,18 +22,16 @@ export function SequenceNumberingTelemetry({
   const rollover = rolloverLabel ?? t("common.sequenceNumbering.rolloverYear");
 
   return (
-    <div className="flex min-h-11 flex-col justify-center rounded-lg border border-border/60 bg-muted/20 p-3">
+    <div className="flex h-full min-h-11 flex-col justify-center rounded-lg border border-border/60 bg-muted/20 px-3 py-2.5">
       <span className="text-xs font-medium text-foreground">{title}</span>
-      <dl className="mt-1.5 space-y-1 text-xs">
-        <div className="flex items-baseline justify-between gap-3">
-          <dt className="text-muted-foreground">{counter}</dt>
-          <dd className="font-mono font-semibold text-foreground">{currentCounter}</dd>
-        </div>
+      <dl className="mt-2 grid grid-cols-[auto_auto] items-center justify-start gap-x-3 gap-y-1.5 text-xs">
+        <dt className="text-muted-foreground">{counter}</dt>
+        <dd className="font-mono font-semibold tabular-nums text-foreground">{currentCounter}</dd>
         {rolloverYear !== undefined ? (
-          <div className="flex items-baseline justify-between gap-3">
+          <>
             <dt className="text-muted-foreground">{rollover}</dt>
-            <dd className="font-mono font-semibold text-foreground">{rolloverYear}</dd>
-          </div>
+            <dd className="font-mono font-semibold tabular-nums text-foreground">{rolloverYear}</dd>
+          </>
         ) : null}
       </dl>
     </div>

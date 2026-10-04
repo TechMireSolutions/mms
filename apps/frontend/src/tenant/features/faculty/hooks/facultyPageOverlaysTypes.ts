@@ -33,6 +33,12 @@ export type FacultyPageOverlaysProps = {
   idCardFaculty?: Faculty[];
   onCloseIdCards?: () => void;
   onPrintIdCard?: (faculty: Faculty) => void;
+  createDepartmentOpen?: boolean;
+  onCloseCreateDepartment?: () => void;
+  createDesignationOpen?: boolean;
+  onCloseCreateDesignation?: () => void;
+  importEntity?: import("@/tenant/features/faculty/components/FacultyPageHeaderActions").FacultyIoEntity | null;
+  onCloseImport?: () => void;
 };
 
 /** Work-tier interaction slice of page-owned overlays (list + bulk bar). */

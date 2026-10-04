@@ -28,11 +28,11 @@ const platformPassword = 'Pa$$w0rd123';
 const MODULE_ROUTES = [
   {
     path: '/contacts',
-    ready: 'button:has-text("Add Contact"), [role="tab"], #main-content',
+    ready: 'button:has-text("Contact"), [role="tab"], #main-content',
   },
   {
     path: '/students',
-    ready: 'button:has-text("Add Student"), [role="tab"], #main-content',
+    ready: 'button:has-text("Student"), [role="tab"], #main-content',
   },
   {
     path: '/attendance',
@@ -44,7 +44,7 @@ const MODULE_ROUTES = [
   },
   {
     path: '/faculty',
-    ready: 'button:has-text("Add Faculty"), button:has-text("Add Teacher"), [role="tab"], #main-content',
+    ready: 'button:has-text("Faculty"), button:has-text("Teacher"), [role="tab"], #main-content',
   },
   {
     path: '/settings',
@@ -68,7 +68,7 @@ const MODULE_ROUTES = [
   },
   {
     path: '/users',
-    ready: 'button:has-text("Add User"), [role="tab"], #main-content',
+    ready: 'button:has-text("User"), [role="tab"], #main-content',
   },
   {
     path: '/hasanat-cards',
@@ -200,7 +200,7 @@ test.describe.serial('Authenticated tenant shell responsive layout', { tag: '@lo
     }) => {
       test.setTimeout(90_000);
       await loginAndSetViewport(page, viewport);
-      await gotoReadyRoute(page, '/contacts', 'button:has-text("Add Contact"), [role="tab"], #main-content');
+      await gotoReadyRoute(page, '/contacts', 'button:has-text("Contact"), [role="tab"], #main-content');
 
       const reportsTab = page.getByRole('tab', { name: /Reports/i }).or(page.getByRole('button', { name: /Reports/i }));
       if (await reportsTab.first().isVisible().catch(() => false)) {

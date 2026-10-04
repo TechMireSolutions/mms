@@ -18,6 +18,15 @@ import { useFacultyLookupOptions } from '@/tenant/features/faculty/hooks/useFacu
 import { useFacultyConfig } from '@/hooks/useStandardModuleConfig';
 import { useFacultyWorkTierState } from '@/tenant/features/faculty/hooks/useFacultyWorkTierState';
 import { useFacultyWorkPanelProps } from '@/tenant/features/faculty/hooks/useFacultyWorkPanelProps';
+import {
+  FACULTY_WORK_SUB_TAB_DEFAULT,
+  FACULTY_WORK_SUB_TAB_IDS,
+  FACULTY_WORK_SUB_TAB_ICONS,
+  FACULTY_WORK_SUB_TAB_KEYS,
+  resolveFacultyWorkSubTab,
+  type FacultyWorkSubTabId,
+} from '@/tenant/features/faculty/facultyPageWorkSubTabs';
+import { useFacultyIoActions } from '@/tenant/features/faculty/hooks/useFacultyIoActions';
 
 export function useFacultyPageController() {
   const { t } = useTranslation();
@@ -30,7 +39,15 @@ export function useFacultyPageController() {
     canEditSetup,
   } = useModulePermissions(FACULTY_MODULE_MANIFEST);
 
-  const visibleTabs = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const baseTabs = useFilteredModuleTierTabs({ canViewSetup, canViewReports });
+  const visibleTabs = baseTabs.map((tab) =>
+    tab.id === 'work' ? { ...tab, label: t('faculty.tabs.faculties') } : tab,
+  );
+  const workSubTabs = FACULTY_WORK_SUB_TAB_IDS.map((id) => ({
+    key: id,
+    label: t(FACULTY_WORK_SUB_TAB_KEYS[id]),
+    icon: FACULTY_WORK_SUB_TAB_ICONS[id],
+  }));
   const { data: metrics } = useFacultyMetrics();
   const { viewMode, setViewMode } = useWorkDirectoryViewMode();
   const config = useFacultyConfig();
@@ -38,7 +55,14 @@ export function useFacultyPageController() {
   const columnLayout = useFacultyColumnLayout(config.settings);
 
   const [activeTab, setActiveTab] = usePersistedTabState<string>('faculty_active_tab', 'work');
+  const [rawWorkSubTab, setActiveWorkSubTab] = usePersistedTabState<string>(
+    'faculty_work_subtab',
+    FACULTY_WORK_SUB_TAB_DEFAULT,
+  );
+  const activeWorkSubTab = resolveFacultyWorkSubTab(rawWorkSubTab);
   const effectiveTab = resolveModuleTierTab(activeTab, visibleTabs.map((tab) => tab.id));
+  const showDirectoryActions = effectiveTab === 'work' && activeWorkSubTab === 'faculties';
+  const showWorkHeaderActions = effectiveTab === 'work';
 
   useEmployeeIdMigration(effectiveTab, canEditSetup);
 
@@ -56,7 +80,7 @@ export function useFacultyPageController() {
     hasActiveFilters: filters.hasActiveFilters,
     clearFilters: filters.clearFilters,
     clearSelection: filters.clearSelection,
-    canWrite,
+    canWrite: canWrite && showDirectoryActions,
     showDeleted: filters.showDeleted,
     onCreate: formState.openCreate,
   });
@@ -117,17 +141,31 @@ export function useFacultyPageController() {
     clearSelection: filters.clearSelection,
   });
 
+  const { onExportEntity, onImportEntity } = useFacultyIoActions({
+    canExport,
+    handleFacultyExport: workTierState.handleExportCSV,
+    setImportEntity: overlays.setImportEntity,
+  });
+
   return {
     canWrite,
     canExport,
     visibleTabs,
+    workSubTabs,
+    activeWorkSubTab,
+    setActiveWorkSubTab: (subTab: FacultyWorkSubTabId) => setActiveWorkSubTab(subTab),
+    showDirectoryActions,
+    showWorkHeaderActions,
     metricsTotal: metrics?.total,
     activeTab: effectiveTab,
     setActiveTab,
     viewingDeleted: filters.showDeleted,
     shownCount: workTierState.shownCount,
     openCreateForm: formState.openCreate,
-    handleExportCSV: workTierState.handleExportCSV,
+    openCreateDepartment: () => overlays.setCreateDepartmentOpen(true),
+    openCreateDesignation: () => overlays.setCreateDesignationOpen(true),
+    onExportEntity,
+    onImportEntity,
     tabPanelProps,
     pageOverlaysProps,
   };

@@ -67,7 +67,7 @@ async function fillContactPhone(dialog: Locator, phone: string): Promise<void> {
   const phoneInput = dialog.locator('[id$="-phone-number-0"]').first();
   const isInputVisible = await phoneInput.isVisible({ timeout: 2000 }).catch(() => false);
   if (!isInputVisible) {
-    const addPhoneBtn = dialog.getByRole('button', { name: 'Add Phone Number' }).first();
+    const addPhoneBtn = dialog.getByRole('button', { name: 'Phone Number' }).first();
     if (await addPhoneBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await addPhoneBtn.click();
     }
@@ -83,7 +83,7 @@ async function fillContactEmail(dialog: Locator, email: string): Promise<void> {
   const emailInput = dialog.locator('[id$="-email-address-0"]').first();
   const isInputVisible = await emailInput.isVisible({ timeout: 2000 }).catch(() => false);
   if (!isInputVisible) {
-    const addEmailBtn = dialog.getByRole('button', { name: 'Add Email Address' }).first();
+    const addEmailBtn = dialog.getByRole('button', { name: 'Email Address' }).first();
     if (await addEmailBtn.isVisible({ timeout: 2000 }).catch(() => false)) {
       await addEmailBtn.click();
     }
@@ -99,7 +99,7 @@ async function fillContactEmail(dialog: Locator, email: string): Promise<void> {
 export async function createContact(page: Page, data: ContactFormData): Promise<void> {
   const fullName = `${data.firstName} ${data.lastName}`.trim();
   await test.step(`Create contact: ${fullName}`, async () => {
-    await page.getByRole('button', { name: 'Add Contact' }).first().click();
+    await page.getByRole('button', { name: 'Contact' }).first().click();
     const dialog = page.getByRole('dialog', { name: new RegExp(`(Add New Contact|Edit ${fullName}|Edit Contact)`, 'i') });
     await expect(dialog).toBeVisible({ timeout: 15_000 });
 
@@ -175,7 +175,7 @@ export async function createTestContactJohnDoe(page: Page): Promise<void> {
  */
 export async function registerStudentJaneDoe(page: Page): Promise<void> {
   await test.step('Register student Jane Doe & link John Doe as Parent', async () => {
-    await page.getByRole('button', { name: 'Add Student' }).first().click();
+    await page.getByRole('button', { name: 'Student' }).first().click();
     const registerDialog = page.getByRole('dialog', { name: /(Register student|Edit student)/i });
     await expect(registerDialog).toBeVisible();
 
@@ -198,7 +198,7 @@ export async function registerStudentJaneDoe(page: Page): Promise<void> {
     // Auto-save on tab switch may have already linked John Doe — check first.
     const alreadyLinked = await editJaneDialog.getByText('John Doe').first().isVisible({ timeout: 2000 }).catch(() => false);
     if (!alreadyLinked) {
-      await editJaneDialog.getByRole('button', { name: /Add relationship/i }).click();
+      await editJaneDialog.getByRole('button', { name: /^Relationship$/i }).click();
       // Fill John Doe in the last (newly added) contact picker row
       const relContactPicker = editJaneDialog.getByRole('combobox', { name: /Link contact/i }).last();
       await relContactPicker.fill('John Doe');
@@ -340,7 +340,7 @@ export function seedTestClassAndEnrollment(subdomain: string): void {
 export async function createTeacherFromContact(page: Page): Promise<void> {
   await test.step('Create Teacher record from John Doe contact', async () => {
     await ensureWorkTierActive(page);
-    await page.getByRole('button', { name: /Add (Teacher|Faculty)/i }).first().click();
+    await page.getByRole('button', { name: /^(Teacher|Faculty)$/i }).first().click();
     const teacherDialog = page.getByRole('dialog');
     await expect(teacherDialog).toBeVisible({ timeout: 15_000 });
 
@@ -451,8 +451,8 @@ export async function createSessionAndClass(page: Page): Promise<void> {
       page.getByRole('heading', { name: 'Afternoon Tajweed 2026' }).first(),
     ).toBeVisible({ timeout: 20_000 });
 
-    await page.getByRole('button', { name: 'Add class' }).first().click();
-    const classDialog = page.getByRole('dialog', { name: /(Add class|New Session Class|Class:)/i });
+    await page.getByRole('button', { name: /^Class$/i }).first().click();
+    const classDialog = page.getByRole('dialog', { name: /(Add class|New Session Class|Class:|^Class$)/i });
     await expect(classDialog).toBeVisible();
 
     await expect(classDialog.locator('#class-teacher')).toContainText('John Doe', { timeout: 15_000 });
@@ -703,8 +703,8 @@ export async function createAccountsAndJournalEntry(page: Page): Promise<void> {
       { code: '1100', name: 'E2E Cash', type: 'Asset' },
       { code: '4100', name: 'E2E Tuition Income', type: 'Revenue' },
     ] as const) {
-      await page.getByRole('button', { name: 'Add Account' }).first().click();
-      const accountDialog = page.getByRole('dialog', { name: 'Add Account' });
+      await page.getByRole('button', { name: 'Account' }).first().click();
+      const accountDialog = page.getByRole('dialog', { name: 'Account' });
       await expect(accountDialog).toBeVisible();
       await accountDialog.locator('#account-type').selectOption(account.type);
       await accountDialog.locator('#account-code').fill(account.code);
@@ -779,7 +779,7 @@ export async function createAccountsAndJournalEntry(page: Page): Promise<void> {
 export async function createUserFromContact(page: Page): Promise<void> {
   await test.step('Create User from John Doe contact with Teacher role', async () => {
     await ensureWorkTierActive(page);
-    await page.getByRole('button', { name: 'Add User' }).first().click();
+    await page.getByRole('button', { name: 'User' }).first().click();
     const userDialog = page.getByRole('dialog', { name: /Add New User/i });
     await expect(userDialog).toBeVisible({ timeout: 15_000 });
 

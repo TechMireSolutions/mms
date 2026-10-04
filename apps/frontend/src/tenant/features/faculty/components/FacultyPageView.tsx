@@ -7,9 +7,9 @@ import { useIndustryTerminology } from "@/tenant/hooks/useIndustryTerminology";
 import { FacultyCommandMetrics } from "@/tenant/features/faculty/components/FacultyCommandMetrics";
 import { FacultyPageHeaderActions } from "@/tenant/features/faculty/components/FacultyPageHeaderActions";
 import { FacultyPageOverlays } from "@/tenant/features/faculty/components/FacultyPageOverlays";
+import { FacultyWorkShell } from "@/tenant/features/faculty/components/FacultyWorkShell";
 import { AnimatePresence } from "framer-motion";
 import RouteStatusFallback from "@/components/routing/RouteStatusFallback";
-import { FacultyWorkTier } from "@/tenant/features/faculty/components/FacultyWorkTier";
 import type { useFacultyPageController } from "@/tenant/features/faculty/hooks/useFacultyPageController";
 
 const FacultyReportsTier = lazy(() =>
@@ -25,18 +25,25 @@ const FacultySetupTier = lazy(() =>
 
 export type FacultyPageViewProps = ReturnType<typeof useFacultyPageController>;
 
-/** Presentational Faculty page shell — Work / Reports / Setup + create form. */
+/** Presentational Faculty page shell — Faculties / Reports / Setup + work sub-tabs. */
 export function FacultyPageView({
   canWrite,
   canExport,
   visibleTabs,
+  workSubTabs,
+  activeWorkSubTab,
+  setActiveWorkSubTab,
+  showWorkHeaderActions,
   metricsTotal,
   activeTab,
   setActiveTab,
   viewingDeleted,
   shownCount,
   openCreateForm,
-  handleExportCSV,
+  openCreateDepartment,
+  openCreateDesignation,
+  onExportEntity,
+  onImportEntity,
   tabPanelProps,
   pageOverlaysProps,
 }: FacultyPageViewProps): React.JSX.Element {
@@ -51,16 +58,19 @@ export function FacultyPageView({
       headerTitle={terminology.facultyLabel}
       headerSubtitle={t('page.faculty.subtitle')}
       headerActions={
-        <FacultyPageHeaderActions
-          canExport={canExport}
-          canWrite={canWrite}
-          viewingDeleted={viewingDeleted}
-          staffSingular={terminology.staffSingular}
-          onExport={() => {
-            void handleExportCSV();
-          }}
-          onAddFaculty={openCreateForm}
-        />
+        showWorkHeaderActions ? (
+          <FacultyPageHeaderActions
+            canExport={canExport}
+            canWrite={canWrite}
+            viewingDeleted={viewingDeleted}
+            staffSingular={terminology.staffSingular}
+            onExportEntity={onExportEntity}
+            onImportEntity={onImportEntity}
+            onAddFaculty={openCreateForm}
+            onAddDepartment={openCreateDepartment}
+            onAddDesignation={openCreateDesignation}
+          />
+        ) : undefined
       }
       metricsStrip={
         <FacultyCommandMetrics total={metricsTotal ?? shownCount} shown={shownCount} />
@@ -74,7 +84,14 @@ export function FacultyPageView({
       >
         <AnimatePresence mode="wait">
           {activeTab === "work" ? (
-            <FacultyWorkTier {...tabPanelProps.workTierProps} />
+            <FacultyWorkShell
+              subTabs={workSubTabs}
+              activeSubTab={activeWorkSubTab}
+              onSubTabChange={setActiveWorkSubTab}
+              directoryProps={tabPanelProps.workTierProps}
+              onRequestAddDepartment={openCreateDepartment}
+              onRequestAddDesignation={openCreateDesignation}
+            />
           ) : activeTab === "reports" ? (
             <Suspense fallback={<RouteStatusFallback />}>
               <FacultyReportsTier />

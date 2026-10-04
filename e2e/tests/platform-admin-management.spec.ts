@@ -200,7 +200,7 @@ test.describe('Platform Admin Creation and Access Management Flow', () => {
 
     // 3. Open Add Administrator modal
     await test.step('3. Create a new platform administrator', async () => {
-      const addAdminBtn = page.getByRole('button', { name: /Add Administrator|Add Admin/i }).first();
+      const addAdminBtn = page.getByRole('button', { name: /^(Administrator|Admin)$/i }).first();
       await expect(addAdminBtn).toBeVisible({ timeout: 20_000 });
       await addAdminBtn.click();
 
@@ -221,7 +221,7 @@ test.describe('Platform Admin Creation and Access Management Flow', () => {
       }
 
       // Submit modal
-      const modalSubmitBtn = page.locator('[role="dialog"]').getByRole('button', { name: /Add Administrator|Add Admin|Save/i });
+      const modalSubmitBtn = page.locator('[role="dialog"]').getByRole('button', { name: /^(Administrator|Admin|Save)$/i });
       await modalSubmitBtn.click();
 
       // Wait for modal to close and new admin to appear in directory

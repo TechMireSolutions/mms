@@ -10,8 +10,15 @@ import { FacultyDepartmentFormModal } from './FacultyDepartmentFormModal';
 import { useFacultyDepartmentsController } from '../hooks/useFacultyDepartmentsController';
 import { useSaveFacultyDepartment } from '../hooks/useFacultyDepartments';
 
+export interface FacultyDepartmentsSetupSectionProps {
+  /** When set, Add opens the page-level create modal instead of a local one. */
+  onRequestAdd?: () => void;
+}
+
 /** Normalized department catalog management using the faculty_departments table. */
-export function FacultyDepartmentsSetupSection(): React.JSX.Element {
+export function FacultyDepartmentsSetupSection({
+  onRequestAdd,
+}: FacultyDepartmentsSetupSectionProps = {}): React.JSX.Element {
   const {
     t,
     departments,
@@ -28,6 +35,10 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
   const [deptToDelete, setDeptToDelete] = useState<FacultyDepartmentEntity | null>(null);
 
   const handleOpenAdd = () => {
+    if (onRequestAdd) {
+      onRequestAdd();
+      return;
+    }
     setEditingDepartment(null);
     setModalOpen(true);
   };

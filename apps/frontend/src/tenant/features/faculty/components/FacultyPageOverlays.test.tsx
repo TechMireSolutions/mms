@@ -3,9 +3,13 @@ import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
 import { FacultyPageOverlays } from "./FacultyPageOverlays";
 
-vi.mock("@/tenant/hooks/collections/sessions", () => ({
-  useSessions: () => ({ data: [] }),
-}));
+vi.mock("@/tenant/hooks/collections/sessions", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/tenant/hooks/collections/sessions")>();
+  return {
+    ...actual,
+    useSessions: () => ({ data: [] }),
+  };
+});
 
 vi.mock("@/tenant/hooks/useBranding", () => ({
   useBranding: () => ({

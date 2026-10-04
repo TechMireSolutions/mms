@@ -16,12 +16,12 @@ globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
 vi.mock('@/hooks/useTranslation', () => {
   const labels: Record<string, string> = {
-    'sessions.classes.detail.fees.add': 'Add Fee Item',
-    'sessions.discounts.add': 'Add Discount',
-    'sessions.classes.detail.schedule.add': 'Add Schedule Block',
-    'sessions.classes.detail.timetable.add': 'Add Period',
-    'sessions.classes.detail.budget.add': 'Add Budget Item',
-    'sessions.classes.detail.refreshments.add': 'Add Refreshment',
+    'sessions.classes.detail.fees.add': 'Fee Item',
+    'sessions.discounts.add': 'Discount',
+    'sessions.classes.detail.schedule.add': 'Schedule Block',
+    'sessions.classes.detail.timetable.add': 'Period',
+    'sessions.classes.detail.budget.add': 'Budget Item',
+    'sessions.classes.detail.refreshments.add': 'Refreshment',
   };
   return {
     useTranslation: () => ({
@@ -106,12 +106,12 @@ describe('ClassDetail Sub-Tabs & Helpers', () => {
 
       const buttons = container.querySelectorAll('button');
       for (const btn of buttons) {
-        if (btn.textContent?.includes('Add Fee Item')) {
+        if (btn.textContent?.includes('Fee Item')) {
           await act(async () => {
             btn.click();
           });
         }
-        if (btn.textContent?.includes('Add Discount')) {
+        if (btn.textContent?.includes('Discount')) {
           await act(async () => {
             btn.click();
           });
@@ -144,12 +144,12 @@ describe('ClassDetail Sub-Tabs & Helpers', () => {
 
       const buttons = container.querySelectorAll('button');
       for (const btn of buttons) {
-        if (btn.textContent?.includes('Add Schedule Block')) {
+        if (btn.textContent?.includes('Schedule Block')) {
           await act(async () => {
             btn.click();
           });
         }
-        if (btn.textContent?.includes('Add Period')) {
+        if (btn.textContent?.includes('Period')) {
           await act(async () => {
             btn.click();
           });
@@ -182,12 +182,12 @@ describe('ClassDetail Sub-Tabs & Helpers', () => {
 
       const buttons = container.querySelectorAll('button');
       for (const btn of buttons) {
-        if (btn.textContent?.includes('Add Budget Item')) {
+        if (btn.textContent?.includes('Budget Item')) {
           await act(async () => {
             btn.click();
           });
         }
-        if (btn.textContent?.includes('Add Refreshment')) {
+        if (btn.textContent?.includes('Refreshment')) {
           await act(async () => {
             btn.click();
           });

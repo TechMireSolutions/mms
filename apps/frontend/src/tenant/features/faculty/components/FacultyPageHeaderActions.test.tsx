@@ -9,34 +9,50 @@ vi.mock("@/hooks/useTranslation", () => ({
   }),
 }));
 
+vi.mock("@/components/ui/dropdown-menu", () => ({
+  DropdownMenu: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuTrigger: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuContent: ({ children }: { children: React.ReactNode }) => <div>{children}</div>,
+  DropdownMenuItem: ({ children, onClick }: { children: React.ReactNode; onClick?: () => void }) => (
+    <button type="button" onClick={onClick}>{children}</button>
+  ),
+}));
+
 describe("FacultyPageHeaderActions Component", () => {
-  it("renders export and add faculty buttons when canExport and canWrite are true", () => {
+  it("renders import/export choosers and add actions when writable", () => {
     const html = renderToStaticMarkup(
       <FacultyPageHeaderActions
         canExport={true}
         canWrite={true}
         viewingDeleted={false}
-        onExport={vi.fn()}
+        onExportEntity={vi.fn()}
+        onImportEntity={vi.fn()}
         onAddFaculty={vi.fn()}
+        onAddDepartment={vi.fn()}
+        onAddDesignation={vi.fn()}
       />,
     );
 
-    expect(html).toContain("common.export");
+    expect(html).toContain("faculty.io.export");
+    expect(html).toContain("faculty.io.import");
     expect(html).toContain("action.addFaculty");
+    expect(html).toContain("faculty.setup.addDepartment");
+    expect(html).toContain("faculty.designations.addDesignation");
+    expect(html).not.toContain("common.export");
   });
 
-  it("hides buttons when viewingDeleted is true", () => {
+  it("hides actions when viewingDeleted is true", () => {
     const html = renderToStaticMarkup(
       <FacultyPageHeaderActions
         canExport={true}
         canWrite={true}
         viewingDeleted={true}
-        onExport={vi.fn()}
+        onExportEntity={vi.fn()}
+        onImportEntity={vi.fn()}
         onAddFaculty={vi.fn()}
       />,
     );
 
-    expect(html).not.toContain("common.export");
-    expect(html).not.toContain("action.addFaculty");
+    expect(html).toBe("");
   });
 });

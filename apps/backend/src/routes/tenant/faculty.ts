@@ -11,6 +11,8 @@ import {
   sanitizeFacultyForUser,
   sanitizeOneFacultyForUser,
 } from './faculty/index.js';
+import { facultyCatalogIoRoutes } from './faculty/facultyCatalogIoRoutes.js';
+import { facultyImportRoutes } from './faculty/facultyImportRoutes.js';
 import { facultyUseCases } from '../../faculty/use-cases/facultyUseCases.js';
 import { withTenant } from '../../db/tenant-context.js';
 import { canReadCollection, canDeleteCollection } from '../../services/rbacService.js';
@@ -37,6 +39,12 @@ export default async function facultyRoutes(
   await fastify.register(facultyExportRoutes, { prefix: '/api/faculty' });
   await fastify.register(facultyExportRoutes, { prefix: '/api/tenant/faculty' });
   await fastify.register(facultyExportRoutes, { prefix: '/api/v1/tenant/faculty' });
+  await fastify.register(facultyImportRoutes, { prefix: '/api/faculty' });
+  await fastify.register(facultyImportRoutes, { prefix: '/api/tenant/faculty' });
+  await fastify.register(facultyImportRoutes, { prefix: '/api/v1/tenant/faculty' });
+  await fastify.register(facultyCatalogIoRoutes, { prefix: '/api/faculty' });
+  await fastify.register(facultyCatalogIoRoutes, { prefix: '/api/tenant/faculty' });
+  await fastify.register(facultyCatalogIoRoutes, { prefix: '/api/v1/tenant/faculty' });
   await fastify.register(facultySoftDeleteRoutes, { prefix: '/api/faculty' });
   await fastify.register(facultySoftDeleteRoutes, { prefix: '/api/tenant/faculty' });
   await fastify.register(facultySoftDeleteRoutes, { prefix: '/api/v1/tenant/faculty' });

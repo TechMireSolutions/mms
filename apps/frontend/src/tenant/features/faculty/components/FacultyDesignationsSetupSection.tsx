@@ -15,8 +15,15 @@ import { useWorkspaceRoles } from '@/tenant/hooks/useWorkspaceRoles';
 import { FacultyDesignationsTable } from './FacultyDesignationsTable';
 import { FacultyDesignationFormModal } from './FacultyDesignationFormModal';
 
+export interface FacultyDesignationsSetupSectionProps {
+  /** When set, Add opens the page-level create modal instead of a local one. */
+  onRequestAdd?: () => void;
+}
+
 /** Dynamic designation catalog, including authority rank and allowed workspace roles. */
-export function FacultyDesignationsSetupSection(): React.JSX.Element {
+export function FacultyDesignationsSetupSection({
+  onRequestAdd,
+}: FacultyDesignationsSetupSectionProps = {}): React.JSX.Element {
   const { t } = useTranslation();
   const query = useFacultyDesignations();
   const save = useSaveFacultyDesignation();
@@ -30,6 +37,10 @@ export function FacultyDesignationsSetupSection(): React.JSX.Element {
   const isPending = save.isPending || remove.isPending;
 
   const handleOpenAdd = () => {
+    if (onRequestAdd) {
+      onRequestAdd();
+      return;
+    }
     setEditingDesignation(null);
     setModalOpen(true);
   };

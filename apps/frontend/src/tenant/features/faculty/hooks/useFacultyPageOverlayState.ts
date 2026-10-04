@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { toMessagingRecipient, type Faculty } from "@mms/shared";
 import { useMessageComposerState } from "@/hooks/useMessageComposerState";
+import type { FacultyIoEntity } from "@/tenant/features/faculty/components/FacultyPageHeaderActions";
 
 type MessageChannel = "whatsapp" | "sms" | "email";
 
@@ -15,6 +16,9 @@ export function useFacultyPageOverlayState() {
   const [deleteTarget, setDeleteTarget] = useState<FacultyDeleteTarget | null>(null);
   const [viewFaculty, setViewFaculty] = useState<Faculty | null>(null);
   const [idCardFaculty, setIdCardFaculty] = useState<Faculty[]>([]);
+  const [createDepartmentOpen, setCreateDepartmentOpen] = useState(false);
+  const [createDesignationOpen, setCreateDesignationOpen] = useState(false);
+  const [importEntity, setImportEntity] = useState<FacultyIoEntity | null>(null);
 
   const openSelectionMessage = (channel: MessageChannel, targets: Faculty[]) => {
     openComposer(
@@ -49,6 +53,12 @@ export function useFacultyPageOverlayState() {
     setIdCardFaculty,
     openIdCardsModal,
     closeIdCardsModal,
+    createDepartmentOpen,
+    setCreateDepartmentOpen,
+    createDesignationOpen,
+    setCreateDesignationOpen,
+    importEntity,
+    setImportEntity,
   };
 }
 

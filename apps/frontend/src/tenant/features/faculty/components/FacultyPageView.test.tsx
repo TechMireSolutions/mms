@@ -1,7 +1,7 @@
 import React from "react";
 import { describe, expect, it, vi } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { School } from "lucide-react";
+import { School, Users } from "lucide-react";
 import { FacultyPageView } from "./FacultyPageView";
 
 vi.mock("@/components/ui/ModulePageShell", () => ({
@@ -44,16 +44,20 @@ vi.mock("@/tenant/hooks/useIndustryTerminology", () => ({
   }),
 }));
 
-vi.mock("@/tenant/features/faculty/components/FacultyWorkTier", () => ({
-  FacultyWorkTier: () => <div data-testid="faculty-work-tier">Faculty Work Tier</div>,
+vi.mock("@/tenant/features/faculty/components/FacultyWorkShell", () => ({
+  FacultyWorkShell: () => <div data-testid="faculty-work-shell">Faculty Work Shell</div>,
 }));
 
 vi.mock("@/tenant/features/faculty/components/FacultyPageOverlays", () => ({
   FacultyPageOverlays: () => <div data-testid="faculty-page-overlays">Faculty Overlays</div>,
 }));
 
+vi.mock("@/tenant/features/faculty/components/FacultyPageHeaderActions", () => ({
+  FacultyPageHeaderActions: () => <div>Faculty Header Actions</div>,
+}));
+
 describe("FacultyPageView Component", () => {
-  it("renders faculty page shell with header actions, metrics, and work tier", () => {
+  it("renders faculty page shell with work shell and overlays", () => {
     const html = renderToStaticMarkup(
       <FacultyPageView
         canWrite={true}
@@ -61,18 +65,30 @@ describe("FacultyPageView Component", () => {
         visibleTabs={[
           {
             id: "work",
-            label: "Work",
+            label: "Faculties",
             description: "Directory",
             icon: School,
           },
         ]}
+        workSubTabs={[
+          { key: "faculties", label: "Faculties", icon: Users },
+          { key: "departments", label: "Departments", icon: Users },
+          { key: "designations", label: "Designations", icon: Users },
+        ]}
+        activeWorkSubTab="faculties"
+        setActiveWorkSubTab={vi.fn()}
+        showDirectoryActions={true}
+        showWorkHeaderActions={true}
         metricsTotal={12}
         activeTab="work"
         setActiveTab={vi.fn()}
         viewingDeleted={false}
         shownCount={12}
         openCreateForm={vi.fn()}
-        handleExportCSV={vi.fn()}
+        openCreateDepartment={vi.fn()}
+        openCreateDesignation={vi.fn()}
+        onExportEntity={vi.fn()}
+        onImportEntity={vi.fn()}
         tabPanelProps={{
           activeTab: "work",
           workTierProps: {} as never,
@@ -82,7 +98,8 @@ describe("FacultyPageView Component", () => {
     );
 
     expect(html).toContain("Faculty Team");
-    expect(html).toContain("Faculty Work Tier");
+    expect(html).toContain("Faculty Work Shell");
     expect(html).toContain("Faculty Overlays");
+    expect(html).toContain("Faculty Header Actions");
   });
 });

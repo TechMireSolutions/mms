@@ -25,14 +25,6 @@ vi.mock("@/tenant/features/faculty/hooks/useFacultySetupPanelState", () => ({
   }),
 }));
 
-vi.mock("@/tenant/features/faculty/components/FacultyDesignationsSetupSection", () => ({
-  FacultyDesignationsSetupSection: () => <div>faculty.designations.setupTitle</div>,
-}));
-
-vi.mock("@/tenant/features/faculty/components/FacultyDepartmentsSetupSection", () => ({
-  FacultyDepartmentsSetupSection: () => <div>faculty.setup.departmentsTitle</div>,
-}));
-
 vi.mock("@/hooks/useTranslation", () => ({
   useTranslation: () => ({
     t: (key: string) => key,
@@ -40,13 +32,13 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("FacultySettings Component", () => {
-  it("renders faculty settings section card and save footer", () => {
+  it("renders preferences only (catalogs live under Work sub-tabs)", () => {
     const html = renderToStaticMarkup(<FacultySettings />);
 
     expect(html).toContain("faculty.settings.idSectionTitle");
     expect(html).not.toContain("faculty.settings.registrationGovernance");
     expect(html).toContain("common.save");
-    expect(html).toContain("faculty.designations.setupTitle");
-    expect(html).toContain("faculty.setup.departmentsTitle");
+    expect(html).not.toContain("faculty.designations.setupTitle");
+    expect(html).not.toContain("faculty.setup.departmentsTitle");
   });
 });

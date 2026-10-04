@@ -2,8 +2,6 @@ import React, { useEffect } from "react";
 import { useTranslation } from "@/hooks/useTranslation";
 import { useFacultySetupPanelState } from "@/tenant/features/faculty/hooks/useFacultySetupPanelState";
 import { FacultyPreferencesSection } from "@/tenant/features/faculty/components/FacultyPreferencesSection";
-import { FacultyDesignationsSetupSection } from "@/tenant/features/faculty/components/FacultyDesignationsSetupSection";
-import { FacultyDepartmentsSetupSection } from "@/tenant/features/faculty/components/FacultyDepartmentsSetupSection";
 import { ModuleSetupContent } from "@/components/ui/ModuleSetupContent";
 
 export interface FacultySettingsProps {
@@ -43,10 +41,6 @@ export const FacultySettings = (function FacultySettings({
         unsavedWarning={unsavedWarning}
         onSave={handleSave}
       />
-
-      <FacultyDepartmentsSetupSection />
-
-      <FacultyDesignationsSetupSection />
     </ModuleSetupContent>
   );
 });

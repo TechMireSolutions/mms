@@ -59,6 +59,7 @@ async function seed() {
   const syncedCount = await syncPlatformSuperUserToTenants();
   console.log(`✅ Synchronized platform super-user to ${syncedCount} tenant workspace(s).`);
   await closeDatabase();
+  process.exit(0);
 }
 
 seed().catch((err) => {

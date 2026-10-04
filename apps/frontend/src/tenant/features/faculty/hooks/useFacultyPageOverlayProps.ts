@@ -99,6 +99,12 @@ export function useFacultyPageOverlayProps({
     idCardFaculty: overlays.idCardFaculty,
     onCloseIdCards: overlays.closeIdCardsModal,
     onPrintIdCard: (faculty: Faculty) => overlays.openIdCardsModal([faculty]),
+    createDepartmentOpen: overlays.createDepartmentOpen,
+    onCloseCreateDepartment: () => overlays.setCreateDepartmentOpen(false),
+    createDesignationOpen: overlays.createDesignationOpen,
+    onCloseCreateDesignation: () => overlays.setCreateDesignationOpen(false),
+    importEntity: overlays.importEntity,
+    onCloseImport: () => overlays.setImportEntity(null),
   };
 }
 

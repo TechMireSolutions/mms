@@ -9,6 +9,8 @@ import {
 import { useSessions } from "@/tenant/hooks/collections/sessions";
 import { useBranding } from "@/tenant/hooks/useBranding";
 import { FacultyPageConfirmDialogs } from "@/tenant/features/faculty/components/FacultyPageConfirmDialogs";
+import { FacultyCatalogCreateOverlays } from "@/tenant/features/faculty/components/FacultyCatalogCreateOverlays";
+import { FacultyCsvImportDialog } from "@/tenant/features/faculty/components/FacultyCsvImportDialog";
 import type { FacultyPageOverlaysProps } from "@/tenant/features/faculty/hooks/facultyPageOverlaysTypes";
 import React from "react";
 
@@ -57,6 +59,12 @@ export const FacultyPageOverlays = (function FacultyPageOverlays({
   idCardFaculty = [],
   onCloseIdCards,
   onPrintIdCard,
+  createDepartmentOpen = false,
+  onCloseCreateDepartment,
+  createDesignationOpen = false,
+  onCloseCreateDesignation,
+  importEntity = null,
+  onCloseImport,
 }: FacultyPageOverlaysProps): React.JSX.Element {
   const configPending = false;
   const branding = useBranding();
@@ -142,6 +150,24 @@ export const FacultyPageOverlays = (function FacultyPageOverlays({
         onBulkRestoreOpenChange={onBulkRestoreOpenChange}
         onConfirmBulkRestore={onConfirmBulkRestore}
       />
+
+      {onCloseCreateDepartment && onCloseCreateDesignation ? (
+        <FacultyCatalogCreateOverlays
+          createDepartmentOpen={createDepartmentOpen}
+          onCloseDepartment={onCloseCreateDepartment}
+          createDesignationOpen={createDesignationOpen}
+          onCloseDesignation={onCloseCreateDesignation}
+        />
+      ) : null}
+
+      {onCloseImport ? (
+        <FacultyCsvImportDialog
+          open={Boolean(importEntity)}
+          entity={importEntity}
+          onClose={onCloseImport}
+          canWrite={canWrite}
+        />
+      ) : null}
     </>
   );
 });
