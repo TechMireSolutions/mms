@@ -25,9 +25,15 @@ function iso(value: Date): string {
 }
 
 /** Lists tenant designation definitions with their assignable roles. */
-export async function listFacultyDesignations(tenant: string): Promise<FacultyDesignationDefinition[]> {
+export async function listFacultyDesignations(
+  tenant: string,
+  options: { includeDeleted?: boolean } = {},
+): Promise<FacultyDesignationDefinition[]> {
   const workspaceSubdomain = tenant.trim().toLowerCase();
   return withTenantRead(workspaceSubdomain, async (tx) => {
+    const definitionWhere = options.includeDeleted
+      ? eq(facultyDesignations.workspaceSubdomain, workspaceSubdomain)
+      : and(eq(facultyDesignations.workspaceSubdomain, workspaceSubdomain), isNull(facultyDesignations.deletedAt));
     const [definitions, roles] = await Promise.all([
       tx.select({
         id: facultyDesignations.id,
@@ -35,10 +41,11 @@ export async function listFacultyDesignations(tenant: string): Promise<FacultyDe
         name: facultyDesignations.name,
         hierarchyRank: facultyDesignations.hierarchyRank,
         isActive: facultyDesignations.isActive,
+        deletedAt: facultyDesignations.deletedAt,
         createdAt: facultyDesignations.createdAt,
         updatedAt: facultyDesignations.updatedAt,
       }).from(facultyDesignations)
-        .where(and(eq(facultyDesignations.workspaceSubdomain, workspaceSubdomain), isNull(facultyDesignations.deletedAt)))
+        .where(definitionWhere)
         .orderBy(asc(facultyDesignations.hierarchyRank), asc(facultyDesignations.name)),
       tx.select({ designationId: facultyDesignationRoles.designationId, roleKey: facultyDesignationRoles.roleKey })
         .from(facultyDesignationRoles)
@@ -50,8 +57,13 @@ export async function listFacultyDesignations(tenant: string): Promise<FacultyDe
       rolesByDesignation.set(role.designationId, [...(rolesByDesignation.get(role.designationId) ?? []), role.roleKey]);
     }
     return definitions.map((definition) => ({
-      ...definition,
+      id: definition.id,
+      code: definition.code,
+      name: definition.name,
+      hierarchyRank: definition.hierarchyRank,
+      isActive: definition.isActive,
       assignableRoles: rolesByDesignation.get(definition.id) ?? [],
+      deletedAt: definition.deletedAt ? iso(definition.deletedAt) : null,
       createdAt: iso(definition.createdAt),
       updatedAt: iso(definition.updatedAt),
     }));

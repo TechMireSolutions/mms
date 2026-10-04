@@ -20,6 +20,7 @@ import {
 } from './facultyRouteHelpers.js';
 import {
   handleListDesignations,
+  handleRestoreDesignation,
   handleListDesignationHistory,
   handleSaveDesignation,
   handleDeleteDesignation,
@@ -28,6 +29,7 @@ import {
 } from './facultyDesignationRouteHandlers.js';
 import {
   handleListDepartments,
+  handleRestoreDepartment,
   handleSaveDepartment,
   handleDeleteDepartment,
 } from './facultyDepartmentRouteHandlers.js';
@@ -143,6 +145,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
     nextEmployeeId: handleNextEmployeeId,
     migrateEmployeeIds: handleMigrateEmployeeIds,
     listDesignations: handleListDesignations,
+    restoreDesignation: handleRestoreDesignation,
     saveDesignation: handleSaveDesignation,
     deleteDesignation: handleDeleteDesignation,
     listDesignationHistory: handleListDesignationHistory,
@@ -150,6 +153,7 @@ export const facultyCrudRoutes: FastifyPluginAsync = async (fastify) => {
     transitionDesignation: handleTransitionDesignation,
     deleteDesignationAssignment: handleDeleteDesignationAssignment,
     listDepartments: handleListDepartments,
+    restoreDepartment: handleRestoreDepartment,
     saveDepartment: handleSaveDepartment,
     deleteDepartment: handleDeleteDepartment,
     listAssignments: handleListAssignments,

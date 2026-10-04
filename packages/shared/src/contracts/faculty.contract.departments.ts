@@ -10,12 +10,29 @@ export const facultyDepartmentContractEndpoints = {
   listDepartments: {
     method: 'GET' as const,
     path: '/api/faculty/departments',
+    query: z.object({
+      includeDeleted: z.union([z.boolean(), z.literal('true'), z.literal('false')]).optional(),
+    }).optional(),
     responses: {
       200: z.object({ departments: z.array(facultyDepartmentSchema) }),
       403: errorResponse,
       500: errorResponse,
     },
     summary: 'List faculty department catalog entries',
+  },
+  restoreDepartment: {
+    method: 'POST' as const,
+    path: '/api/faculty/departments/:id/restore',
+    body: z.object({}).optional(),
+    responses: {
+      200: z.object({ department: facultyDepartmentSchema }),
+      400: errorResponse,
+      403: errorResponse,
+      404: errorResponse,
+      409: errorResponse,
+      500: errorResponse,
+    },
+    summary: 'Restore a soft-deleted faculty department',
   },
   saveDepartment: {
     method: 'PUT' as const,

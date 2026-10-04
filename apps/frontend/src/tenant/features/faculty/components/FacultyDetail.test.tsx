@@ -50,10 +50,6 @@ vi.mock("@/components/ui/DetailDrawerShell", () => ({
   ),
 }));
 
-vi.mock("@/tenant/features/faculty/components/FacultyDesignationHistory", () => ({
-  FacultyDesignationHistory: () => <div>faculty.designations.history</div>,
-}));
-
 vi.mock("@/tenant/features/faculty/components/FacultyAssignmentsSection", () => ({
   FacultyAssignmentsSection: () => <div>faculty.assignments.title</div>,
 }));
@@ -96,6 +92,6 @@ describe("FacultyDetail Component", () => {
     expect(html).toContain("ID: EMP-77");
     expect(html).toContain("Senior instructor note");
     expect(html).toContain("faculty.detail.printIdCard");
-    expect(html).toContain("faculty.designations.history");
+    expect(html).toContain("faculty.assignments.title");
   });
 });

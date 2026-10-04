@@ -3,6 +3,7 @@ import { canDeleteCollection, canReadCollection, canWriteCollection } from '../.
 import {
   type User,
   FACULTY_MODULE_MANIFEST,
+  isQueryFlagTrue,
   roleHasPermission,
   type facultyContract,
 } from '@mms/shared';
@@ -16,8 +17,10 @@ import {
   softDeleteFacultyDepartment,
   findDepartmentAncestorChain,
 } from '../../../db/repositories/facultyDepartmentRepository.js';
+import { restoreFacultyDepartment } from '../../../db/repositories/facultyCatalogTrashRepository.js';
 
 export async function handleListDepartments({
+  query,
   request,
 }: ContractRouteArgs<typeof facultyContract['listDepartments']>): Promise<ContractRouteResponse<typeof facultyContract['listDepartments']>> {
   const user = request.user as User;
@@ -28,11 +31,42 @@ export async function handleListDepartments({
   if (!tenantId) {
     return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
   }
+  const includeDeleted = isQueryFlagTrue(query?.includeDeleted);
+  if (includeDeleted && !canDeleteCollection(user, 'faculty')) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+  }
   try {
-    const departments = await listFacultyDepartments(String(tenantId));
+    const departments = await listFacultyDepartments(String(tenantId), { includeDeleted });
     return { status: 200 as const, body: { departments } };
   } catch {
     return { status: 500 as const, body: { type: 'server_error', message: 'Failed to list faculty departments' } };
+  }
+}
+
+export async function handleRestoreDepartment({
+  params: { id },
+  request,
+}: ContractRouteArgs<typeof facultyContract['restoreDepartment']>): Promise<ContractRouteResponse<typeof facultyContract['restoreDepartment']>> {
+  const user = request.user as User;
+  if (!canDeleteCollection(user, 'faculty') || !roleHasPermission(user.role, FACULTY_MODULE_MANIFEST.permissions.setupWrite)) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Insufficient permissions' } };
+  }
+  const tenantId = request.tenant?.id;
+  if (!tenantId) {
+    return { status: 403 as const, body: { type: 'forbidden', message: 'Tenant context required' } };
+  }
+  try {
+    const department = await restoreFacultyDepartment(String(tenantId), id, user.id);
+    if (!department) {
+      return { status: 404 as const, body: { type: 'not_found', message: 'Department not found in trash' } };
+    }
+    return { status: 200 as const, body: { department } };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : 'Could not restore department';
+    if (message.includes('unique') || message.includes('duplicate')) {
+      return { status: 409 as const, body: { type: 'conflict', message } };
+    }
+    return { status: 400 as const, body: { type: 'validation_error', message } };
   }
 }
 

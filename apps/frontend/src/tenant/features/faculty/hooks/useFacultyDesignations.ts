@@ -16,11 +16,15 @@ export const FACULTY_DESIGNATIONS_QUERY_KEY = [...FACULTY_QUERY_KEY, 'designatio
 const fallbackQueryClient = new QueryClient();
 
 /** Server-authoritative dynamic designation definitions. */
-export function useFacultyDesignations() {
+export function useFacultyDesignations(options: { includeDeleted?: boolean } = {}) {
+  const includeDeleted = Boolean(options.includeDeleted);
   return useQuery({
-    queryKey: FACULTY_DESIGNATIONS_QUERY_KEY,
+    queryKey: [...FACULTY_DESIGNATIONS_QUERY_KEY, { includeDeleted }] as const,
     queryFn: async ({ signal }) => {
-      const response = await apiContract.faculty.listDesignations({ fetchOptions: { signal } });
+      const response = await apiContract.faculty.listDesignations({
+        query: includeDeleted ? { includeDeleted: true } : undefined,
+        fetchOptions: { signal },
+      });
       if (response.status !== 200) throw new Error('Failed to load Faculty designations');
       const parsed = facultyDesignationSchema.array().safeParse((response.body as { designations?: unknown }).designations);
       if (!parsed.success) throw new Error('Invalid Faculty designation response');
@@ -84,6 +88,35 @@ export function useDeleteFacultyDesignation(customClient?: QueryClient) {
               : 'Failed to delete faculty designation';
           throw new Error(message);
         }
+      },
+      onSuccess: () =>
+        client.invalidateQueries({ queryKey: FACULTY_DESIGNATIONS_QUERY_KEY }),
+    },
+    client,
+  );
+}
+
+/** Restores a soft-deleted designation definition. */
+export function useRestoreFacultyDesignation(customClient?: QueryClient) {
+  const contextClient = useContext(QueryClientContext);
+  const client = customClient ?? contextClient ?? fallbackQueryClient;
+  return useMutation(
+    {
+      mutationFn: async (id: string) => {
+        const response = await apiContract.faculty.restoreDesignation({
+          params: { id },
+          body: {},
+        });
+        if (response.status !== 200) {
+          const message =
+            typeof response.body === 'object' && response.body && 'message' in response.body
+              ? String(response.body.message)
+              : 'Failed to restore faculty designation';
+          throw new Error(message);
+        }
+        return facultyDesignationSchema.parse(
+          (response.body as { designation?: unknown }).designation,
+        );
       },
       onSuccess: () =>
         client.invalidateQueries({ queryKey: FACULTY_DESIGNATIONS_QUERY_KEY }),

@@ -16,6 +16,22 @@ export type FacultyPageTabId = (typeof FACULTY_PAGE_TAB_IDS)[number];
 export const FACULTY_IO_ENTITY_IDS = ["faculties", "departments", "designations"] as const;
 export type FacultyIoEntity = (typeof FACULTY_IO_ENTITY_IDS)[number];
 
+/** Setup sub-tabs (preferences + department/designation catalogs). */
+export const FACULTY_SETUP_SUB_TAB_IDS = ["preferences", "departments", "designations"] as const;
+export type FacultySetupSubTabId = (typeof FACULTY_SETUP_SUB_TAB_IDS)[number];
+export const FACULTY_SETUP_SUB_TAB_DEFAULT: FacultySetupSubTabId = "preferences";
+
+export const FACULTY_SETUP_SUB_TAB_KEYS: Record<
+  FacultySetupSubTabId,
+  | "faculty.setup.preferences"
+  | "faculty.tabs.departments"
+  | "faculty.tabs.designations"
+> = {
+  preferences: "faculty.setup.preferences",
+  departments: "faculty.tabs.departments",
+  designations: "faculty.tabs.designations",
+};
+
 export const FACULTY_PAGE_TAB_DEFAULT: FacultyPageTabId = "faculties";
 
 /** @deprecated Use FACULTY_IO_ENTITY_IDS — kept for transitional imports. */

@@ -13,8 +13,25 @@ export const facultyDesignationContractEndpoints = {
   listDesignations: {
     method: 'GET' as const,
     path: '/api/faculty/designations',
+    query: z.object({
+      includeDeleted: z.union([z.boolean(), z.literal('true'), z.literal('false')]).optional(),
+    }).optional(),
     responses: { 200: z.object({ designations: z.array(facultyDesignationSchema) }), 403: errorResponse, 500: errorResponse },
     summary: 'List Faculty designation definitions',
+  },
+  restoreDesignation: {
+    method: 'POST' as const,
+    path: '/api/faculty/designations/:id/restore',
+    body: z.object({}).optional(),
+    responses: {
+      200: z.object({ designation: facultyDesignationSchema }),
+      400: errorResponse,
+      403: errorResponse,
+      404: errorResponse,
+      409: errorResponse,
+      500: errorResponse,
+    },
+    summary: 'Restore a soft-deleted Faculty designation definition',
   },
   saveDesignation: {
     method: 'PUT' as const,
@@ -47,8 +64,14 @@ export const facultyDesignationContractEndpoints = {
     method: 'PUT' as const,
     path: '/api/faculty/:facultyId/designation-history/:assignmentId',
     body: facultyDesignationAssignmentWriteSchema,
-    responses: { 200: z.object({ assignment: facultyDesignationAssignmentSchema }), 400: errorResponse, 403: errorResponse, 409: errorResponse },
-    summary: 'Create or update a dated Faculty designation assignment',
+    responses: {
+      200: z.object({ assignment: facultyDesignationAssignmentSchema }),
+      400: errorResponse,
+      403: errorResponse,
+      409: errorResponse,
+      410: errorResponse,
+    },
+    summary: 'Deprecated — use faculty assignments. Returns 410 Gone.',
   },
   transitionDesignation: {
     method: 'POST' as const,
@@ -56,9 +79,14 @@ export const facultyDesignationContractEndpoints = {
     body: facultyDesignationTransitionSchema,
     responses: {
       200: z.object({ assignment: facultyDesignationAssignmentSchema }),
-      400: errorResponse, 403: errorResponse, 404: errorResponse, 409: errorResponse, 500: errorResponse,
+      400: errorResponse,
+      403: errorResponse,
+      404: errorResponse,
+      409: errorResponse,
+      410: errorResponse,
+      500: errorResponse,
     },
-    summary: 'Atomically close a designation period and start its replacement',
+    summary: 'Deprecated — use faculty assignments. Returns 410 Gone.',
   },
   deleteDesignationAssignment: {
     method: 'DELETE' as const,
@@ -69,8 +97,9 @@ export const facultyDesignationContractEndpoints = {
       403: errorResponse,
       404: errorResponse,
       409: errorResponse,
+      410: errorResponse,
       500: errorResponse,
     },
-    summary: 'Delete a dated Faculty designation assignment (forbidden when it is the sole assignment for the member)',
+    summary: 'Deprecated — use faculty assignments. Returns 410 Gone.',
   },
 };

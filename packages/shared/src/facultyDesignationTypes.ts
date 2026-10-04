@@ -10,13 +10,14 @@ export const facultyDesignationSchema = z.object({
   hierarchyRank: z.coerce.number().int().min(1).max(99),
   isActive: z.boolean().default(true),
   assignableRoles: z.array(z.string().trim().min(1).max(100)).max(100).default([]),
+  deletedAt: z.string().nullable().optional(),
   createdAt: z.string().optional(),
   updatedAt: z.string().optional(),
 }).strict();
 
 /** Write payload for a designation definition. */
 export const facultyDesignationWriteSchema = facultyDesignationSchema
-  .omit({ createdAt: true, updatedAt: true });
+  .omit({ createdAt: true, updatedAt: true, deletedAt: true });
 
 const facultyDesignationAssignmentBaseSchema = z.object({
   id: z.string().min(1).max(100),

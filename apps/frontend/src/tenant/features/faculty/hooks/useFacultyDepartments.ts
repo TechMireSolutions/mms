@@ -16,11 +16,15 @@ const fallbackQueryClient = new QueryClient();
  * Server-authoritative list of faculty departments.
  * Falls back to an empty array on parse failure so the UI never hard-crashes.
  */
-export function useFacultyDepartments() {
+export function useFacultyDepartments(options: { includeDeleted?: boolean } = {}) {
+  const includeDeleted = Boolean(options.includeDeleted);
   return useQuery({
-    queryKey: FACULTY_DEPARTMENTS_QUERY_KEY,
+    queryKey: [...FACULTY_DEPARTMENTS_QUERY_KEY, { includeDeleted }] as const,
     queryFn: async ({ signal }) => {
-      const response = await apiContract.faculty.listDepartments({ fetchOptions: { signal } });
+      const response = await apiContract.faculty.listDepartments({
+        query: includeDeleted ? { includeDeleted: true } : undefined,
+        fetchOptions: { signal },
+      });
       if (response.status !== 200) throw new Error('Failed to load faculty departments');
       const parsed = facultyDepartmentSchema
         .array()
@@ -80,6 +84,35 @@ export function useDeleteFacultyDepartment(customClient?: QueryClient) {
               : 'Failed to delete faculty department';
           throw new Error(message);
         }
+      },
+      onSuccess: () =>
+        client.invalidateQueries({ queryKey: FACULTY_DEPARTMENTS_QUERY_KEY }),
+    },
+    client,
+  );
+}
+
+/** Restores a soft-deleted department. */
+export function useRestoreFacultyDepartment(customClient?: QueryClient) {
+  const contextClient = useContext(QueryClientContext);
+  const client = customClient ?? contextClient ?? fallbackQueryClient;
+  return useMutation(
+    {
+      mutationFn: async (id: string) => {
+        const response = await apiContract.faculty.restoreDepartment({
+          params: { id },
+          body: {},
+        });
+        if (response.status !== 200) {
+          const message =
+            typeof response.body === 'object' && response.body && 'message' in response.body
+              ? String(response.body.message)
+              : 'Failed to restore faculty department';
+          throw new Error(message);
+        }
+        return facultyDepartmentSchema.parse(
+          (response.body as { department?: unknown }).department,
+        );
       },
       onSuccess: () =>
         client.invalidateQueries({ queryKey: FACULTY_DEPARTMENTS_QUERY_KEY }),

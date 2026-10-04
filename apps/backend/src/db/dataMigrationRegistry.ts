@@ -66,4 +66,5 @@ export const dataMigrationsToRun = [
   { id: '086', load: async () => (await import('./migrations/086_backfill_system_modules_access.js')).runMigration086 },
   { id: '087', load: async () => (await import('./migrations/087_backfill_faculty_assignments.js')).runMigration087 },
   { id: '088', load: async () => (await import('./migrations/088_migrate_organization_blueprints.js')).runMigration088 },
+  { id: '089', load: async () => (await import('./migrations/089_gapfill_fda_to_faculty_assignments.js')).runMigration089 },
 ];

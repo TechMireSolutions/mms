@@ -1,14 +1,14 @@
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull } from 'drizzle-orm';
 import {
   faculty,
-  facultyDesignationAssignments,
+  facultyAssignments,
   facultyDesignations,
 } from '../schema.js';
 import type { TenantTransaction } from '../tenant-context.js';
 
 /**
  * Synchronizes the faculty row's cached designation and hierarchy_rank
- * with the currently effective assignment in faculty_designation_assignments.
+ * with the currently effective primary faculty_assignments row.
  */
 export async function syncFacultyCurrentDesignation(
   tx: TenantTransaction,
@@ -19,20 +19,22 @@ export async function syncFacultyCurrentDesignation(
   const rows = await tx.select({
     name: facultyDesignations.name,
     hierarchyRank: facultyDesignations.hierarchyRank,
-    startsOn: facultyDesignationAssignments.startsOn,
-    endsOn: facultyDesignationAssignments.endsOn,
-  }).from(facultyDesignationAssignments)
+    startDate: facultyAssignments.startDate,
+    endDate: facultyAssignments.endDate,
+  }).from(facultyAssignments)
     .innerJoin(facultyDesignations, and(
-      eq(facultyDesignations.workspaceSubdomain, facultyDesignationAssignments.workspaceSubdomain),
-      eq(facultyDesignations.id, facultyDesignationAssignments.designationId),
+      eq(facultyDesignations.workspaceSubdomain, facultyAssignments.workspaceSubdomain),
+      eq(facultyDesignations.id, facultyAssignments.designationId),
     ))
     .where(and(
-      eq(facultyDesignationAssignments.workspaceSubdomain, workspaceSubdomain),
-      eq(facultyDesignationAssignments.facultyId, facultyId),
+      eq(facultyAssignments.workspaceSubdomain, workspaceSubdomain),
+      eq(facultyAssignments.facultyId, facultyId),
+      eq(facultyAssignments.isPrimary, true),
+      isNull(facultyAssignments.deletedAt),
     ))
-    .orderBy(desc(facultyDesignationAssignments.startsOn));
+    .orderBy(desc(facultyAssignments.startDate));
 
-  const current = rows.find((r) => r.startsOn <= today && (!r.endsOn || r.endsOn >= today)) ?? rows[0];
+  const current = rows.find((r) => r.startDate <= today && (!r.endDate || r.endDate >= today)) ?? rows[0];
   if (current) {
     await tx.update(faculty).set({
       designation: current.name,
