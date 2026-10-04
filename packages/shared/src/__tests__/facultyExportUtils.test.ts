@@ -38,12 +38,13 @@ describe('filterFacultyExportColumnsForViewer', () => {
     expect(filtered.some((col) => col.id === 'name')).toBe(true);
   });
 
-  it('drops specialization when the Setup field is disabled', () => {
+  it('drops retired contact-derived specialization/qualification export columns', () => {
     const settings: FacultySettings = {
       ...DEFAULT_FACULTY_SETTINGS,
       fields: {
         basic: [
-          { key: 'specialization', label: 'Specialization', type: 'select', enabled: false, order: 0 },
+          // Product locks force these off even when Setup overlays mark them enabled.
+          { key: 'specialization', label: 'Specialization', type: 'select', enabled: true, order: 0 },
           { key: 'qualification', label: 'Qualification', type: 'text', enabled: true, order: 1 },
         ],
         employment: [
@@ -56,7 +57,8 @@ describe('filterFacultyExportColumnsForViewer', () => {
 
     const filtered = filterFacultyExportColumnsForViewer(ALL_COLUMNS, settings);
     expect(filtered.some((col) => col.id === 'specialization')).toBe(false);
-    expect(filtered.some((col) => col.id === 'qualification')).toBe(true);
+    expect(filtered.some((col) => col.id === 'qualification')).toBe(false);
+    expect(filtered.some((col) => col.id === 'status')).toBe(true);
   });
 
   it('drops custom columns when the draft field is disabled', () => {

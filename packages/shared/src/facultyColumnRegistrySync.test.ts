@@ -9,12 +9,8 @@ import {
 
 describe('syncFacultyColumnRegistryWithFields', () => {
   it('keeps mapped Work columns when seed fields are enabled', () => {
-    const registry = buildFacultyWorkColumnRegistry(
-      DEFAULT_FACULTY_SETTINGS,
-      FACULTY_WORK_COLUMN_PLACEHOLDER_LABELS,
-    );
     const synced = syncFacultyColumnRegistryWithFields(
-      registry,
+      DEFAULT_FACULTY_COLUMN_REGISTRY,
       {
         basic: [
           { key: 'specialization', label: 'Specialization', type: 'select', enabled: true, order: 0 },
