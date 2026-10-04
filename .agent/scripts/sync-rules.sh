@@ -13,7 +13,8 @@ for arg in "$@"; do
 done
 export MMS_SYNC_DRY_RUN="$DRY_RUN"
 
-node <<'SCRIPT'
+# `node -` forces script mode: a bare `node <<` starts the REPL under Git Bash on Windows.
+node - <<'SCRIPT'
 const fs = require("fs");
 const path = require("path");
 
