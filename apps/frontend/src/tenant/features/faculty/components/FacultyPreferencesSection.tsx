@@ -1,8 +1,4 @@
 import React from "react";
-import { ShieldCheck } from "lucide-react";
-import { SETUP_SECTION_CARD_CLASS } from "@/components/ui/formStyles";
-import { ToggleRow } from "@/components/ui/ToggleRow";
-import { SectionCard } from "@/components/ui/SectionCard";
 import { ModuleSetupSaveFooter } from "@/components/ui/ModuleSetupSaveFooter";
 import { useTranslation } from "@/hooks/useTranslation";
 import type { FacultySettings } from "@mms/shared";
@@ -18,7 +14,7 @@ export interface FacultyPreferencesSectionProps {
   onSave?: () => void | Promise<void>;
 }
 
-/** Faculty Setup Preferences body — Employee ID sequence & Registration governance. */
+/** Faculty Setup Preferences body — Employee ID sequence (contact link is always required). */
 export function FacultyPreferencesSection({
   settingsDraft,
   upd,
@@ -32,30 +28,11 @@ export function FacultyPreferencesSection({
 
   return (
     <div className="space-y-4 text-start">
-      {/* Employee ID Format & Generation Card */}
       <FacultyIdSettingsCard
         settingsDraft={settingsDraft}
         upd={upd}
       />
 
-      {/* Registration & Identity Governance Card */}
-      <SectionCard
-        title={t("faculty.settings.registrationGovernance")}
-        icon={ShieldCheck}
-        accentColor="primary"
-        className={SETUP_SECTION_CARD_CLASS}
-      >
-        <div className="space-y-3">
-          <ToggleRow
-            label={t("faculty.settings.requireContactLink")}
-            description={t("faculty.settings.requireContactLinkDesc")}
-            value={settingsDraft.requireContactLink}
-            onChange={(value) => upd("requireContactLink", value)}
-          />
-        </div>
-      </SectionCard>
-
-      {/* Single authoritative Save footer for Faculty Preferences */}
       <ModuleSetupSaveFooter
         dirty={Boolean(isPrefsDirty)}
         saving={Boolean(saving)}

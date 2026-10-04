@@ -35,7 +35,7 @@ describe('FacultyDesignationFormModal', () => {
     container.remove();
   });
 
-  it('renders add designation modal fields when designation is null', async () => {
+  it('renders add designation modal with name, code, parent, and status fields', async () => {
     await act(async () => {
       root.render(
         <FacultyDesignationFormModal
@@ -59,13 +59,13 @@ describe('FacultyDesignationFormModal', () => {
       );
     });
 
-    const nameInput = document.querySelector<HTMLInputElement>('#modal-designation-name');
-    const reportingSelect = document.querySelector<HTMLSelectElement>('#modal-designation-reporting');
-    expect(nameInput).not.toBeNull();
-    expect(reportingSelect).not.toBeNull();
-    expect(document.querySelector('#modal-designation-code')).toBeNull();
+    expect(document.querySelector('#modal-designation-name')).not.toBeNull();
+    expect(document.querySelector('#modal-designation-code')).not.toBeNull();
+    expect(document.querySelector('#modal-designation-parent')).not.toBeNull();
+    expect(document.querySelector('#modal-designation-status')).not.toBeNull();
     expect(document.querySelector('#modal-designation-rank')).toBeNull();
-    expect(document.querySelector('#modal-designation-active')).toBeNull();
+    expect(document.body.textContent).toContain('faculty.designations.parentDesignation');
+    expect(document.body.textContent).not.toContain('faculty.form.hierarchyRank');
     expect(document.body.textContent).toContain('faculty.designations.addDesignation');
   });
 
@@ -93,7 +93,9 @@ describe('FacultyDesignationFormModal', () => {
     });
 
     const nameInput = document.querySelector<HTMLInputElement>('#modal-designation-name')!;
+    const codeInput = document.querySelector<HTMLInputElement>('#modal-designation-code')!;
     expect(nameInput.value).toBe('Lecturer');
+    expect(codeInput.value).toBe('lecturer');
 
     const saveBtn = Array.from(document.querySelectorAll('button')).find((b) =>
       b.textContent?.includes('common.save'),
@@ -116,7 +118,7 @@ describe('FacultyDesignationFormModal', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('automatically calculates hierarchy rank based on selected reporting designation', async () => {
+  it('derives hierarchy rank from selected parent designation without showing rank field', async () => {
     const designations = [
       {
         id: 'des-dean',
@@ -143,7 +145,7 @@ describe('FacultyDesignationFormModal', () => {
     });
 
     const nameInput = document.querySelector<HTMLInputElement>('#modal-designation-name')!;
-    const reportingSelect = document.querySelector<HTMLSelectElement>('#modal-designation-reporting')!;
+    const parentSelect = document.querySelector<HTMLSelectElement>('#modal-designation-parent')!;
 
     await act(async () => {
       const nativeInputSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
@@ -151,8 +153,8 @@ describe('FacultyDesignationFormModal', () => {
       nameInput.dispatchEvent(new Event('input', { bubbles: true }));
 
       const nativeSelectSetter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value')?.set;
-      nativeSelectSetter?.call(reportingSelect, 'des-dean');
-      reportingSelect.dispatchEvent(new Event('change', { bubbles: true }));
+      nativeSelectSetter?.call(parentSelect, 'des-dean');
+      parentSelect.dispatchEvent(new Event('change', { bubbles: true }));
     });
 
     const saveBtn = Array.from(document.querySelectorAll('button')).find((b) =>

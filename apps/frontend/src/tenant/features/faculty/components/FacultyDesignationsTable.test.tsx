@@ -68,12 +68,13 @@ describe('FacultyDesignationsTable', () => {
     });
 
     const headers = container.querySelectorAll('th');
-    expect(headers.length).toBe(6);
+    expect(headers.length).toBe(5);
     expect(container.textContent).toContain('Senior Lecturer');
     expect(container.textContent).toContain('snr-lec');
     expect(container.textContent).toContain('instructor');
     expect(container.textContent).toContain('Adjunct Professor');
     expect(container.textContent).toContain('adj-prof');
+    expect(container.textContent).not.toContain('faculty.form.hierarchyRank');
   });
 
   it('triggers onEdit callback when edit button is clicked', async () => {

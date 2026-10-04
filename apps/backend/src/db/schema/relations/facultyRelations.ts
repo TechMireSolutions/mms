@@ -57,7 +57,6 @@ export const facultyRelations = relations(faculty, ({ one, many }) => ({
   hasanatDistributions: many(hasanatDistributions),
   designationAssignments: many(facultyDesignationAssignments),
   assignments: many(facultyAssignments),
-  headedDepartments: many(facultyDepartments),
 }));
 
 export const facultyDepartmentsRelations = relations(facultyDepartments, ({ one, many }) => ({
@@ -72,10 +71,6 @@ export const facultyDepartmentsRelations = relations(facultyDepartments, ({ one,
   }),
   children: many(facultyDepartments, {
     relationName: 'dept_hierarchy',
-  }),
-  headFaculty: one(faculty, {
-    fields: [facultyDepartments.workspaceSubdomain, facultyDepartments.headFacultyId],
-    references: [faculty.workspaceSubdomain, faculty.id],
   }),
   assignments: many(facultyAssignments),
 }));

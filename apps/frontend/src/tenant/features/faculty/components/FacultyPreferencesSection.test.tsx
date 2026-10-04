@@ -11,7 +11,7 @@ vi.mock("@/hooks/useTranslation", () => ({
 }));
 
 describe("FacultyPreferencesSection Component", () => {
-  it("renders employee ID sequence configuration and registration governance with save footer", () => {
+  it("renders employee ID sequence configuration with save footer", () => {
     const html = renderToStaticMarkup(
       <FacultyPreferencesSection
         settingsDraft={DEFAULT_FACULTY_SETTINGS}
@@ -25,9 +25,8 @@ describe("FacultyPreferencesSection Component", () => {
     expect(html).toContain("faculty.settings.idStartSeq");
     expect(html).toContain("faculty.settings.idPrefix");
     expect(html).toContain("faculty.settings.autoGenerateId");
-    expect(html).toContain("faculty.settings.registrationGovernance");
-    expect(html).toContain("faculty.settings.requireContactLink");
-    expect(html).toContain("faculty.settings.requireContactLinkDesc");
+    expect(html).not.toContain("faculty.settings.registrationGovernance");
+    expect(html).not.toContain("faculty.settings.requireContactLink");
     expect(html).not.toContain("faculty.settings.defaultSpecialization");
     expect(html).toContain("faculty.settings.preview");
     expect(html).toContain("common.save");

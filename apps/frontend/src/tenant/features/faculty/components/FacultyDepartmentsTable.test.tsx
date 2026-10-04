@@ -56,34 +56,12 @@ describe('FacultyDepartmentsTable', () => {
     });
 
     const headers = container.querySelectorAll('th');
-    expect(headers.length).toBe(5);
+    expect(headers.length).toBe(4);
     expect(container.textContent).toContain('Islamic Studies');
     expect(container.textContent).toContain('islamic-studies');
     expect(container.textContent).toContain('Hadith');
     expect(container.textContent).toContain('hadith');
-  });
-
-  it('renders department head name using facultyMap when available', async () => {
-    const deptsWithHead: FacultyDepartmentEntity[] = [
-      { id: 'dept-1', name: 'Quran', code: 'quran', headFacultyId: 'fac-101' },
-    ];
-    const facultyMap = new Map([['fac-101', 'Dr. Farooq']]);
-
-    await act(async () => {
-      root.render(
-        <FacultyDepartmentsTable
-          departments={deptsWithHead}
-          orderedDepartments={deptsWithHead}
-          facultyMap={facultyMap}
-          isPending={false}
-          isLoading={false}
-          onEdit={onEdit}
-          onDelete={onDelete}
-        />,
-      );
-    });
-
-    expect(container.textContent).toContain('Dr. Farooq');
+    expect(container.textContent).not.toContain('faculty.setup.departmentHead');
   });
 
   it('triggers onEdit when edit action button is clicked', async () => {

@@ -100,10 +100,8 @@ export function normalizeFacultyModulePreferences(
         : defaults.employeeIdCurrentSequence,
     autoGenerateId:
       typeof partial.autoGenerateId === 'boolean' ? partial.autoGenerateId : defaults.autoGenerateId,
-    requireContactLink:
-      typeof partial.requireContactLink === 'boolean'
-        ? partial.requireContactLink
-        : defaults.requireContactLink,
+    // Contact link is product-compulsory — never honor a stored false.
+    requireContactLink: true,
     defaultSpecialization:
       typeof partial.defaultSpecialization === 'string' && partial.defaultSpecialization.trim()
         ? partial.defaultSpecialization

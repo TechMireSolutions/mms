@@ -31,7 +31,7 @@ export const facultyFieldConfigPutBodySchema = z.preprocess((raw) => {
   return deepSanitizeStrings(raw);
 }, facultyFieldConfigPutBodyBaseSchema);
 
-/** PUT /api/faculty/preferences — employee ID / contact-link prefs only. */
+/** PUT /api/faculty/preferences — employee ID prefs (contact link is always required). */
 export const facultyPreferencesPutBodySchema = z
   .object({
     idPrefix: z.string().optional(),

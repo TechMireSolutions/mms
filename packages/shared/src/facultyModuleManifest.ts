@@ -13,7 +13,7 @@ export const facultyCoreSchema = z.object({
   /** Optional on create — server assigns `{idPrefix}-{timestamp}` when omitted. */
   id: z.union([z.string(), z.number()]).optional(),
   /**
-   * Nullish on the wire so `requireContactLink: false` can omit a link.
+   * Nullish on the core wire schema; dynamic write schema always requires a link.
    * Empty strings are rejected.
    */
   contactId: z.union([z.string().min(1), z.number()]).nullish().transform((value) =>

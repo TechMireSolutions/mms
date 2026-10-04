@@ -48,7 +48,7 @@ export function collectFacultyWriteExtraFieldKeys(
  * Contact profile dual-write keys are stripped in preprocess (Contacts SSOT).
  */
 export function buildDynamicFacultySchema(
-  settings: FacultySettings,
+  _settings: FacultySettings,
   enabledTabIds: Set<string>,
   fields: Record<string, FieldDefinition[]>,
   language = 'en',
@@ -59,7 +59,8 @@ export function buildDynamicFacultySchema(
   );
   const requiredMsg = translateApp('common.formPleaseFixErrors' as AppTranslationKey, language);
   const systemKeys = listFacultySystemFormFieldKeys();
-  const requireContactLink = settings.requireContactLink !== false;
+  // Contact link is product-compulsory (Setup toggle removed).
+  const requireContactLink = true;
 
   const schemaObject: Record<string, z.ZodTypeAny> = {
     id: z.union([z.string(), z.number()]).optional(),

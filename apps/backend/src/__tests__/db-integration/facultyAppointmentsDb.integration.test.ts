@@ -106,9 +106,6 @@ describe('Faculty department integrity', () => {
       id: 'd', workspaceSubdomain: tenant, parentId: 'child', name: 'Department', code: 'D',
     })).rejects.toThrow('Circular');
     await expect(softDeleteFacultyDepartment(tenant, 'd', 'actor')).rejects.toThrow('active children');
-    await expect(saveFacultyDepartment(tenant, {
-      id: 'missing-head', workspaceSubdomain: tenant, name: 'Invalid', code: 'I', headFacultyId: 'missing',
-    })).rejects.toThrow('head');
   });
 
   it('orders designations by seniority and excludes soft-deleted definitions', async () => {

@@ -12,11 +12,6 @@ export async function validateFacultyDepartment(
       AND id = ${input.id} FOR UPDATE
   `);
   if (existing.rows.some((row) => row.deleted_at !== null)) throw new Error('Department is archived');
-  if (input.headFacultyId) {
-    const head = await tx.execute(sql`SELECT id FROM faculty WHERE workspace_subdomain = ${tenant}
-      AND id = ${input.headFacultyId} AND deleted_at IS NULL FOR SHARE`);
-    if (!head.rows.length) throw new Error('Department head must be active in this workspace');
-  }
   if (!input.parentId) return;
   const result = await tx.execute<{ id: string; parent_id: string | null; depth: number; cycle: boolean }>(sql`
     WITH RECURSIVE ancestors AS (

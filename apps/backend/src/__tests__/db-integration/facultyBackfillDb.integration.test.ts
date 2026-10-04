@@ -52,18 +52,9 @@ describe('Faculty legacy backfill', () => {
     });
   });
 
-  it('has a deferred tenant-scoped department head FK and hard-delete guards', async () => {
-    await withTenant(tenant, async (tx) => {
-      const result = await tx.execute<{ condeferrable: boolean; condeferred: boolean }>(sql`
-        SELECT condeferrable, condeferred FROM pg_constraint WHERE conname = 'faculty_departments_head_faculty_fk'
-      `);
-      expect(result.rows).toEqual([{ condeferrable: true, condeferred: true }]);
-    });
+  it('blocks hard-delete of faculty assignments while forbid_hard_delete is active', async () => {
     await expect(withTenant(tenant, (tx) => tx.execute(sql`
       DELETE FROM faculty_assignments WHERE workspace_subdomain = ${tenant} AND id = 'a24'
-    `))).rejects.toThrow();
-    await expect(withTenant(tenant, (tx) => tx.execute(sql`
-      UPDATE faculty_departments SET head_faculty_id = 'missing' WHERE workspace_subdomain = ${tenant} AND id = 'd'
     `))).rejects.toThrow();
   });
 });

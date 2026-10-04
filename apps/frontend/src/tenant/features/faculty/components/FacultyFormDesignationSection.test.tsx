@@ -115,7 +115,6 @@ describe("FacultyFormDesignationSection", () => {
             updatedAt: "2026-01-01T00:00:00.000Z",
             deletedAt: null,
             parentId: null,
-            headFacultyId: null,
           },
         ]}
         isFieldEnabled={() => true}

@@ -12,9 +12,7 @@ export interface FacultyDepartmentSelectFieldProps {
   required?: boolean;
   departmentOptions?: string[];
   departmentEntities?: FacultyDepartmentEntity[];
-  facultyId?: string;
-  reportingFacultyId?: string | null;
-  onChange: (patch: { department: string; departmentId?: string; reportingFacultyId?: string | null }) => void;
+  onChange: (patch: { department: string; departmentId?: string }) => void;
 }
 
 export function FacultyDepartmentSelectField({
@@ -23,8 +21,6 @@ export function FacultyDepartmentSelectField({
   required,
   departmentOptions,
   departmentEntities,
-  facultyId,
-  reportingFacultyId,
   onChange,
 }: FacultyDepartmentSelectFieldProps): React.JSX.Element {
   const { t } = useTranslation();
@@ -57,14 +53,10 @@ export function FacultyDepartmentSelectField({
         placeholder={t("faculty.form.departmentPlaceholder")}
         onChange={(val) => {
           const matched = departmentEntities?.find((d) => d.name === val);
-          const patch: { department: string; departmentId?: string; reportingFacultyId?: string | null } = {
+          onChange({
             department: val,
             ...(matched ? { departmentId: matched.id } : { departmentId: undefined }),
-          };
-          if (matched?.headFacultyId && !reportingFacultyId && matched.headFacultyId !== facultyId) {
-            patch.reportingFacultyId = matched.headFacultyId;
-          }
-          onChange(patch);
+          });
         }}
         options={deptOptions}
       />

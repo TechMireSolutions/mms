@@ -63,8 +63,6 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
               required={isFieldRequired("department")}
               departmentOptions={departmentOptions}
               departmentEntities={departmentEntities}
-              facultyId={faculty?.id}
-              reportingFacultyId={facultyDraft.reportingFacultyId}
               onChange={onDraftChange}
             />
           )}

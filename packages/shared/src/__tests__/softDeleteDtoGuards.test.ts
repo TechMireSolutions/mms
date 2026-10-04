@@ -141,12 +141,13 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
 
     it('buildDynamicFacultySchema strips client soft-delete fields', () => {
       const facultySchema = buildDynamicFacultySchema(
-        { ...DEFAULT_FACULTY_SETTINGS, requireContactLink: false },
+        { ...DEFAULT_FACULTY_SETTINGS },
         new Set<string>(),
         {},
       );
 
       const payload = {
+        contactId: 'c-1',
         employeeId: 'EMP-001',
         specialization: 'Fiqh',
         deletedAt: '2026-09-10T12:00:00Z',
@@ -155,6 +156,7 @@ describe('Soft-Delete DTO Validation, Write Guards & Query Coercion', () => {
       };
 
       const parsed = facultySchema.parse(payload) as Record<string, unknown>;
+      expect(parsed.contactId).toBe('c-1');
       expect(parsed.employeeId).toBe('EMP-001');
       expect(parsed.specialization).toBe('Fiqh');
       expect(parsed.deletedAt).toBeUndefined();

@@ -50,12 +50,6 @@ export function FacultyDesignationsTable({
       ),
     },
     {
-      id: 'hierarchyRank',
-      label: t('faculty.form.hierarchyRank'),
-      width: 120,
-      render: (d) => <Badge variant="outline" className="font-mono text-xs font-normal">{d.hierarchyRank}</Badge>,
-    },
-    {
       id: 'status',
       label: t('common.status'),
       width: 120,

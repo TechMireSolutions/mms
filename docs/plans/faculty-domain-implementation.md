@@ -135,7 +135,7 @@ authority. UUID RLS must use NULLIF(current_setting(
 - Existing assignment hierarchy integration-named suites simulate in-memory
   traversal; the database suite currently checks Faculty structural migration.
 - Designations lack the requested deleted_at/deleted_by lifecycle.
-- Department headFacultyId has no database foreign key.
+- Department `headFacultyId` was removed (migration 0138).
 - The requested physical UUID schemas and tenant setting are not implemented.
 
 ## Delivered implementation and compatibility boundaries

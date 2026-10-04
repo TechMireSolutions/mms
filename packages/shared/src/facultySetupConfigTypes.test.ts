@@ -55,5 +55,12 @@ describe('facultySetupConfigTypes prefs SSOT', () => {
     expect(typeof settings.fields).toBe('object');
     expect(Array.isArray(settings.fields?.basic)).toBe(true);
   });
+
+  it('forces requireContactLink true even when a stored false is present', () => {
+    const prefs = normalizeFacultyModulePreferences({ requireContactLink: false });
+    expect(prefs.requireContactLink).toBe(true);
+    const settings = normalizeFacultySettings({ requireContactLink: false });
+    expect(settings.requireContactLink).toBe(true);
+  });
 });
 

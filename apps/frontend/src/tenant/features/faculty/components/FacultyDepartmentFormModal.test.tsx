@@ -112,46 +112,22 @@ describe('FacultyDepartmentFormModal', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('saves with selected headFacultyId', async () => {
-    const existingDept = {
-      id: 'dept-1',
-      workspaceSubdomain: 'tenant',
-      name: 'Quran Studies',
-      code: 'quran-studies',
-      parentId: null,
-      headFacultyId: 'fac-99',
-    };
-
+  it('does not render a department head field', async () => {
     await act(async () => {
       root.render(
         <FacultyDepartmentFormModal
           open={true}
           onClose={onClose}
-          department={existingDept}
+          department={null}
           parentOptions={[{ value: '', label: 'None' }]}
-          facultyOptions={[{ value: 'fac-99', label: 'Sheikh Ahmad' }]}
-          existingDepartments={[existingDept]}
+          existingDepartments={[]}
           isPending={false}
           onSave={onSave}
         />,
       );
     });
 
-    const headSelect = document.querySelector<HTMLSelectElement>('#department-form-head');
-    expect(headSelect).not.toBeNull();
-    expect(headSelect?.value).toBe('fac-99');
-
-    const saveBtn = Array.from(document.querySelectorAll('button')).find((b) =>
-      b.textContent?.includes('faculty.setup.updateDepartment'),
-    );
-    await act(async () => {
-      saveBtn!.click();
-    });
-
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        headFacultyId: 'fac-99',
-      }),
-    );
+    expect(document.querySelector('#department-form-head')).toBeNull();
+    expect(document.body.textContent).not.toContain('faculty.setup.departmentHead');
   });
 });

@@ -15,10 +15,9 @@ export interface FacultyDepartmentFormModalProps {
   onClose: () => void;
   department: FacultyDepartmentEntity | null;
   parentOptions: { value: string; label: string }[];
-  facultyOptions?: { value: string; label: string }[];
   existingDepartments: FacultyDepartmentEntity[];
   isPending: boolean;
-  onSave: (payload: { id?: string; name: string; code: string; parentId: string | null; headFacultyId: string | null }) => Promise<void>;
+  onSave: (payload: { id?: string; name: string; code: string; parentId: string | null }) => Promise<void>;
 }
 
 export function FacultyDepartmentFormModal({
@@ -26,7 +25,6 @@ export function FacultyDepartmentFormModal({
   onClose,
   department,
   parentOptions,
-  facultyOptions = [],
   existingDepartments,
   isPending,
   onSave,
@@ -35,7 +33,6 @@ export function FacultyDepartmentFormModal({
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [parentId, setParentId] = useState('');
-  const [headFacultyId, setHeadFacultyId] = useState('');
   const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
 
   useEffect(() => {
@@ -44,13 +41,11 @@ export function FacultyDepartmentFormModal({
         setName(department.name);
         setCode(department.code);
         setParentId(department.parentId || '');
-        setHeadFacultyId(department.headFacultyId || '');
         setCodeManuallyEdited(true);
       } else {
         setName('');
         setCode('');
         setParentId('');
-        setHeadFacultyId('');
         setCodeManuallyEdited(false);
       }
     }
@@ -87,7 +82,6 @@ export function FacultyDepartmentFormModal({
       name: trimmedName,
       code: trimmedCode,
       parentId: parentId.trim() || null,
-      headFacultyId: headFacultyId.trim() || null,
     });
     onClose();
   };
@@ -139,19 +133,6 @@ export function FacultyDepartmentFormModal({
             value={parentId}
             onChange={setParentId}
             options={parentOptions}
-            disabled={isPending}
-          />
-        </Field>
-
-        <Field label={t('faculty.setup.departmentHead')} id="department-form-head">
-          <FormSelect
-            id="department-form-head"
-            value={headFacultyId}
-            onChange={setHeadFacultyId}
-            options={[
-              { value: '', label: t('faculty.setup.noDepartmentHead') },
-              ...facultyOptions,
-            ]}
             disabled={isPending}
           />
         </Field>

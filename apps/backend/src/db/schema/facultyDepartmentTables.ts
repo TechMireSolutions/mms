@@ -10,7 +10,6 @@ import {
   check,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
-import { faculty } from './faculty.js';
 import { workspaces } from './platform.js';
 import { softDeleteColumns } from './softDeleteSchema.js';
 
@@ -19,7 +18,6 @@ import { softDeleteColumns } from './softDeleteSchema.js';
  *
  * Supports unbounded hierarchical nesting via `parent_id` (self-reference).
  * Root departments/faculties/schools have `parent_id = NULL`.
- * `head_faculty_id` is a deferred database reference to the current dept. head.
  */
 export const facultyDepartments = pgTable('faculty_departments', {
   id: text('id').notNull(),
@@ -29,8 +27,6 @@ export const facultyDepartments = pgTable('faculty_departments', {
   parentId: text('parent_id'),
   name: varchar('name', { length: 255 }).notNull(),
   code: varchar('code', { length: 32 }).notNull(),
-  /** Tenant-scoped FK; SQL migration defers validation until transaction commit. */
-  headFacultyId: text('head_faculty_id'),
   ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
@@ -50,20 +46,11 @@ export const facultyDepartments = pgTable('faculty_departments', {
   index('faculty_departments_deleted_idx')
     .on(table.workspaceSubdomain, table.deletedAt)
     .where(sql`${table.deletedAt} is not null`),
-  // Head faculty lookup
-  index('faculty_departments_head_faculty_idx')
-    .on(table.workspaceSubdomain, table.headFacultyId)
-    .where(sql`${table.deletedAt} is null and ${table.headFacultyId} is not null`),
   // Prevent self-parenting
   check(
     'faculty_departments_no_self_parent_check',
     sql`${table.parentId} is null or ${table.parentId} <> ${table.id}`,
   ),
-  foreignKey({
-    name: 'faculty_departments_head_faculty_fk',
-    columns: [table.workspaceSubdomain, table.headFacultyId],
-    foreignColumns: [faculty.workspaceSubdomain, faculty.id],
-  }).onDelete('restrict'),
   // Self-referencing parent FK
   foreignKey({
     columns: [table.workspaceSubdomain, table.parentId],

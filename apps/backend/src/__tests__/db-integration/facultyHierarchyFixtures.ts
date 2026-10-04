@@ -51,7 +51,6 @@ export async function cleanupFacultyHierarchy(): Promise<void> {
       await tx.execute(sql`UPDATE faculty_assignments SET reports_to_assignment_id = NULL WHERE workspace_subdomain = ${tenant}`);
       await tx.execute(sql`DELETE FROM faculty_assignments WHERE workspace_subdomain = ${tenant}`);
       await tx.execute(sql`DELETE FROM organization_positions WHERE workspace_subdomain = ${tenant}`);
-      await tx.execute(sql`UPDATE faculty_departments SET head_faculty_id = NULL WHERE workspace_subdomain = ${tenant}`);
       await tx.execute(sql`DELETE FROM faculty_departments WHERE workspace_subdomain = ${tenant}`);
       await tx.execute(sql`DELETE FROM faculty_designations WHERE workspace_subdomain = ${tenant}`);
       await tx.execute(sql`DELETE FROM faculty WHERE workspace_subdomain = ${tenant}`);

@@ -13,7 +13,6 @@ import { useTranslation } from '@/hooks/useTranslation';
 export interface FacultyDepartmentsTableProps {
   departments: FacultyDepartmentEntity[];
   orderedDepartments: FacultyDepartmentEntity[];
-  facultyMap?: Map<string, string>;
   editingDepartmentId?: string;
   isPending: boolean;
   isLoading: boolean;
@@ -26,7 +25,6 @@ const Dash = () => <span className="text-muted-foreground/50">—</span>;
 export function FacultyDepartmentsTable({
   departments,
   orderedDepartments,
-  facultyMap,
   editingDepartmentId,
   isPending,
   isLoading,
@@ -36,8 +34,6 @@ export function FacultyDepartmentsTable({
   const { t } = useTranslation();
   const parentMap = new Map(departments.map((d) => [d.id, d.name]));
   const parentName = (d: FacultyDepartmentEntity) => (d.parentId ? parentMap.get(d.parentId) : undefined);
-  const headName = (d: FacultyDepartmentEntity) =>
-    d.headFacultyId ? (facultyMap?.get(d.headFacultyId) ?? d.headFacultyId) : undefined;
 
   const columns: DataTableColumn<FacultyDepartmentEntity>[] = [
     {
@@ -64,12 +60,6 @@ export function FacultyDepartmentsTable({
       label: t('faculty.setup.parentDepartment'),
       searchValue: parentName,
       render: (d) => <span className="text-xs text-muted-foreground">{parentName(d) ?? <Dash />}</span>,
-    },
-    {
-      id: 'head',
-      label: t('faculty.setup.departmentHead'),
-      searchValue: headName,
-      render: (d) => <span className="text-xs text-muted-foreground">{headName(d) ?? <Dash />}</span>,
     },
   ];
 

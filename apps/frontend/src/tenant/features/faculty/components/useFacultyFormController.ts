@@ -46,7 +46,7 @@ export function useFacultyFormController({
   const defaultSpecialization = settings.defaultSpecialization || specializationOptions[0] || DEFAULT_FACULTY_SETTINGS.defaultSpecialization;
   const idPrefix = settings.idPrefix || DEFAULT_FACULTY_SETTINGS.idPrefix;
   const autoGenerateId = settings.autoGenerateId !== false;
-  const requireContactLink = settings.requireContactLink !== false;
+  const requireContactLink = true;
   const fieldsMap = resolveFacultyFieldsMapForColumnSync(settings.fields);
   const statusOptions = facultyStatusOptions(t, statusValues) as FacultyStatusOption[];
   const statusConfig = useFacultyStatusConfig();

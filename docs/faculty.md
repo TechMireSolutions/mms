@@ -101,7 +101,6 @@ Defines the institutional profile for an employed instructor or administrator.
 Normalized hierarchical department/faculty tree ([`facultyDepartmentTables.ts`](file:///Users/syedaalin/Documents/mms/apps/backend/src/db/schema/facultyDepartmentTables.ts)).
 - **Primary Key:** `(workspace_subdomain, id)`.
 - **Self-Reference:** `parent_id` references `faculty_departments(id)` `ON DELETE RESTRICT`. Unbounded nesting (Faculty → School → Department → Program).
-- **Head Reference:** `head_faculty_id` references `faculty(id)` `ON DELETE RESTRICT` (deferred validation).
 - **Active Code Uniqueness:** Partial unique index `WHERE deleted_at IS NULL` on `(workspace_subdomain, code)`.
 - **Constraint:** `CHECK (parent_id IS NULL OR parent_id <> id)`.
 
@@ -419,8 +418,6 @@ The Faculty module is covered by automated unit, integration, and database tests
    - *Recommendation:* Keep these legacy references in historical migrations as immutable audit records; update the checker script if historical migrations should be exempt.
 2. **UUID Identifier Migration:**
    - Currently, `workspaces.id` and `contacts.id` use text/nanoid strings. An enterprise roadmap milestone is planned to transition tenant primary keys to sequential UUIDv7. The Faculty schema is prepared with isolated column mapping definitions.
-3. **Department Head Deferred Foreign Key:**
-   - The circular dependency between `faculty_departments.head_faculty_id` and `faculty.id` is resolved via a deferred database foreign key (`DEFERRABLE INITIALLY DEFERRED`). Maintain this invariant during future migration authoring.
 
 ---
 

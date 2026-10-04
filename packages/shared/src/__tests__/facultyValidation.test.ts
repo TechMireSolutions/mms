@@ -32,7 +32,7 @@ describe('buildDynamicFacultySchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('requires contactId when requireContactLink is true', () => {
+  it('requires contactId (contact link is compulsory)', () => {
     const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
     const result = schema.safeParse({
       contactId: '',

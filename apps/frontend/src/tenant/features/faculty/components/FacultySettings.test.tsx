@@ -43,7 +43,8 @@ describe("FacultySettings Component", () => {
   it("renders faculty settings section card and save footer", () => {
     const html = renderToStaticMarkup(<FacultySettings />);
 
-    expect(html).toContain("faculty.settings.registrationGovernance");
+    expect(html).toContain("faculty.settings.idSectionTitle");
+    expect(html).not.toContain("faculty.settings.registrationGovernance");
     expect(html).toContain("common.save");
     expect(html).toContain("faculty.designations.setupTitle");
     expect(html).toContain("faculty.setup.departmentsTitle");

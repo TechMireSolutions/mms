@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react';
+import React, { useState } from 'react';
 import { Building2, Plus } from 'lucide-react';
 import type { FacultyDepartmentEntity } from '@mms/shared';
 import { Button } from '@/components/ui/button';
@@ -9,7 +9,6 @@ import { FacultyDepartmentsTable } from './FacultyDepartmentsTable';
 import { FacultyDepartmentFormModal } from './FacultyDepartmentFormModal';
 import { useFacultyDepartmentsController } from '../hooks/useFacultyDepartmentsController';
 import { useSaveFacultyDepartment } from '../hooks/useFacultyDepartments';
-import { useFacultyContractList } from '../hooks/useFacultyTsrHooks';
 
 /** Normalized department catalog management using the faculty_departments table. */
 export function FacultyDepartmentsSetupSection(): React.JSX.Element {
@@ -23,19 +22,6 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
     handleDelete,
   } = useFacultyDepartmentsController();
   const saveMutation = useSaveFacultyDepartment();
-
-  const facultyListQuery = useFacultyContractList({ limit: 100 });
-  const allFaculty = ((facultyListQuery.data as { faculty?: Array<{ id: string; name: string }> })?.faculty ?? []);
-
-  const facultyOptions = useMemo(
-    () => allFaculty.map((f) => ({ value: f.id, label: f.name })),
-    [allFaculty],
-  );
-
-  const facultyMap = useMemo(
-    () => new Map(allFaculty.map((f) => [f.id, f.name])),
-    [allFaculty],
-  );
 
   const [modalOpen, setModalOpen] = useState(false);
   const [editingDepartment, setEditingDepartment] = useState<FacultyDepartmentEntity | null>(null);
@@ -61,7 +47,6 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
     name: string;
     code: string;
     parentId: string | null;
-    headFacultyId: string | null;
   }) => {
     try {
       await saveMutation.mutateAsync({
@@ -69,7 +54,6 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
         name: payload.name,
         code: payload.code,
         parentId: payload.parentId,
-        headFacultyId: payload.headFacultyId,
       });
       notify.success(t('faculty.setup.departmentSaved'));
     } catch {
@@ -106,7 +90,6 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
         <FacultyDepartmentsTable
           departments={departments}
           orderedDepartments={orderedDepartments}
-          facultyMap={facultyMap}
           editingDepartmentId={editingDepartment?.id}
           isPending={isPending || saveMutation.isPending}
           isLoading={isLoading}
@@ -119,7 +102,6 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
           onClose={handleCloseModal}
           department={editingDepartment}
           parentOptions={parentOptions}
-          facultyOptions={facultyOptions}
           existingDepartments={departments}
           isPending={saveMutation.isPending}
           onSave={handleSave}
