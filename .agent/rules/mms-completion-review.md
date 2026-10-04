@@ -22,7 +22,7 @@ Mandatory self-review before marking tasks done. Change boundary includes edited
    - Responsive & UI/UX: Spot-check 375 / 768 / 1440; run responsive specs (`mms-ui-ux-design.md` §4) when AppLayout or primitives change. Align with `ui-ux-pro-max` (`mms-ui-ux-design.md` §8): semantic HSL tokens, BiDi classes, 44×44px touch floor.
    - Accessibility: Run axe smoke (`mms-testing-observability.md` §1) on AppLayout, FormModal, and Table changes.
    - Standards Edits: Run `bash .agent/scripts/sync-all.sh && node scripts/verify-rules-integrity.mjs` on rule or skill edits.
-   - Pre-PR Gate Suite: Run `bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh` for an all-in-one quality pass.
+   - Local CI before push/PR: Run `pnpm ci:local` (path-aware gates + affected unit tests via `scripts/ci/local-ci.sh`). Agents must not claim ready to push to GitHub without a green run on the touched path buckets. Use `pnpm ci:local:full` for i18n/build/bundle parity; add `--with-db` / `--with-e2e` when those surfaces changed and services are up. Gates-only subset remains `bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh` (invoked by `ci:local`). Do not set `SKIP_LOCAL_CI=1` unless the user explicitly asks.
 4. **Diagnostics & Cleanup:** Remove unused imports, dead variables, and debug logging in changed files.
 
 ## 2. Fix Before Done

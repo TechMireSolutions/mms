@@ -1,0 +1,12 @@
+#!/usr/bin/env bash
+# Git hook: path-aware local CI before push to GitHub.
+set -euo pipefail
+
+if [[ "${SKIP_LOCAL_CI:-}" == "1" ]]; then
+  echo "⚠ SKIP_LOCAL_CI=1 — skipping pnpm ci:local (agents must not set this unless the user asks)."
+  exit 0
+fi
+
+echo "Running local CI before push (pnpm ci:local)..."
+pnpm ci:local
+echo "Local CI passed — proceeding with push."

@@ -88,6 +88,7 @@ in the enforcement registry below are how the norm is actually held.
 | Messaging campaigns and logs | `mms-messaging.mdc` | `mms-messaging` |
 | Performance, caching, virtualization | `mms-performance.mdc` | `mms-db-performance` · `mms-frontend` |
 | Testing, logging, telemetry, resilience | `mms-testing-observability.mdc` | `mms-testing-e2e` · `mms-error-triage` |
+| Local CI before push | `mms-completion-review.mdc` | `mms-code-review` |
 | Ops, ports, health, CI, deploy | `mms-ops-infrastructure.mdc` | `mms-ops-deploy` · `mms-incident-response` · `mms-linux-compatibility` |
 | Open migration debt | `mms-migration-status.mdc` | `mms-migration-fixes` · `mms-release-versioning` |
 | Finance / accounting / ledger | `mms-data-layer.mdc` · `mms-api-interface.mdc` | `mms-finance-accounting` |
@@ -114,6 +115,7 @@ Update this table in the same change that adds or removes a check.
 | Workflow security (SHA pinning, no credential persistence, no template injection, gated triggers) | `workflow-lint` job: actionlint + zizmor `min-severity: medium` (CI) | CI |
 | Deployed bytes match CI's build of the commit | `actions/attest-build-provenance` in CI + `gh attestation verify` in `deploy.yml` | CI |
 | Rule/skill/mirror integrity | `node scripts/verify-rules-integrity.mjs` + sync drift diff (CI) | CI |
+| Local CI before push (gates + path-aware unit tests) | `pnpm ci:local` / `.githooks/pre-push` (`scripts/ci/local-ci.sh`) | hook + script |
 | `drizzle-kit push` / destructive rm / .env reads | `.cursor/hooks/guard-shell.sh` (Claude + Cursor hooks) | hook |
 | Tenant RLS enablement per table | `mms-schema-migrate/scripts/check-migrations.sh` | skill script |
 | Faculty hierarchy, temporal primary integrity, and tenant isolation | `facultyAssignmentValidation.test.ts`, `facultyHierarchyDb.integration.test.ts`, `facultyAppointmentsDb.integration.test.ts` | test |

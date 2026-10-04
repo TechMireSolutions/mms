@@ -5,7 +5,7 @@ license: Proprietary
 metadata:
   owner: mms-platform
   last-verified: 2026-10-04
-allowed-tools: Read Grep Glob Bash(pnpm typecheck) Bash(pnpm lint) Bash(pnpm test) Bash(bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh)
+allowed-tools: Read Grep Glob Bash(pnpm typecheck) Bash(pnpm lint) Bash(pnpm test) Bash(pnpm ci:local) Bash(pnpm ci:local:full) Bash(bash scripts/ci/local-ci.sh) Bash(bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh)
 ---
 
 # MMS Code Review
@@ -65,7 +65,7 @@ Separate demonstrated controls from capability gaps and framework-dependent poli
 
 ## Review order
 
-1. Automated gates (`pre-pr-review.sh`: standards, migration indexes, db projections, code norms, work directory, typecheck, lint)
+1. Automated gates (`pnpm ci:local`: pre-pr gates + path-aware FE/BE/shared unit tests)
 2. Security, tenant isolation & module access gates (`authenticateTenant`, `registerModuleAccess`, `TENANT_APP_ROUTE_ACCESS`, RBAC)
 3. Data layer (Query vs legacy, bulk upsert, RLS, zero wildcard projections, soft-delete)
 4. Module §7 gold-standard (+ messaging variants when touched)
@@ -75,8 +75,9 @@ Separate demonstrated controls from capability gaps and framework-dependent poli
 ## Automated checks
 
 ```bash
-bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh
-pnpm test
+pnpm ci:local
+# broader parity: pnpm ci:local:full
+# opt-in heavy: bash scripts/ci/local-ci.sh --full --with-db --with-e2e
 ```
 
 Module access verification (when touching routing, navigation, or endpoints):
@@ -98,15 +99,17 @@ E2E when touching auth/routing/onboard: `pnpm test:e2e` (critical path: `e2e/tes
 - Fix-before-done checklist: `references/fix-before-done.md`
 - Route/review checklists also under `references/`
 
-## Script
+## Scripts
 
-`.agent/skills/mms-code-review/scripts/pre-pr-review.sh` runs the deterministic gate set before you review by hand:
+Prefer **`pnpm ci:local`** (`scripts/ci/local-ci.sh`) before push/PR: it runs `pre-pr-review.sh` then path-aware unit tests (mirrors `ci.yml` change filters). `.githooks/pre-push` invokes it automatically.
+
+Gates-only (no tests):
 
 ```bash
 bash .agent/skills/mms-code-review/scripts/pre-pr-review.sh
 ```
 
-It runs the standards verifier, the migration-index and DB-projection ratchets, the code-norms and work-directory ratchets, `pnpm typecheck`, and `pnpm lint`. It does **not** run tests, e2e, or gitleaks — add `pnpm test` / `pnpm test:e2e` for the areas you touched, and remember CI scans the full git history for secrets.
+`pre-pr-review.sh` runs the standards verifier, migration-index and DB-projection ratchets, code-norms and work-directory ratchets, `pnpm typecheck`, and `pnpm lint`. Default `ci:local` skips DB/e2e/gitleaks/shard coverage merge — use `--with-db` / `--with-e2e` / `ci:local:full` when needed. CI still scans full git history for secrets.
 
 - Rules: `mms-api-interface.mdc`, `mms-data-layer.mdc`, `mms-hooks.mdc`, `mms-ui-ux-design.mdc`, `mms-auth-security.mdc`, `mms-form-architecture.mdc`, `mms-messaging.mdc`, `mms-migration-status.mdc`, `mms-performance.mdc`
 

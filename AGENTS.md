@@ -9,6 +9,8 @@ pnpm install && pnpm typecheck
 pnpm install && ./restart_servers.sh   # local dev (screen)
 bash .agent/skills/mms-dev-setup/scripts/verify-env.sh   # env + services check
 node scripts/verify-rules-integrity.mjs                  # rules/skills gate
+pnpm ci:local                                            # path-aware local CI before push
+pnpm ci:local:full                                       # + i18n/build/bundle
 ```
 
 ## Layout
