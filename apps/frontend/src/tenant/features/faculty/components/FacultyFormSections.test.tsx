@@ -7,7 +7,6 @@ import {
   FacultyEmploymentSection,
 } from "./FacultyFormSections";
 import { FacultyFormDesignationSection } from "./FacultyFormDesignationSection";
-import { FacultyFormHierarchySection } from "./FacultyFormHierarchySection";
 
 vi.mock("@/components/contactLink/ContactPicker", () => ({
   default: () => <div data-testid="contact-picker">contact-picker</div>,
@@ -134,36 +133,6 @@ describe("FacultyFormSections Components", () => {
     expect(html).toContain('id="designationStartsOn"');
     expect(html).toContain('id="department"');
     expect(html).toContain('value="Islamic Jurisprudence"');
-  });
-
-  it("renders hierarchy rank and supervisor picker in hierarchy section", () => {
-    const html = renderToStaticMarkup(
-      <FacultyFormHierarchySection
-        errors={{}}
-        facultyDraft={{
-          hierarchyRank: 3,
-          reportingFacultyId: "fac-sup-1",
-        }}
-        supervisorCandidates={[
-          {
-            id: "fac-sup-1",
-            contactId: "cnt-sup-1",
-            name: "Dean Ahmad",
-            hierarchyRank: 1,
-            designation: "Dean",
-            status: "active",
-          } as any,
-        ]}
-        isFieldEnabled={() => true}
-        isFieldRequired={() => false}
-        onDraftChange={vi.fn()}
-      />,
-    );
-
-    expect(html).toContain('id="hierarchyRank"');
-    expect(html).toContain('id="reportingFacultyId"');
-    expect(html).toContain("Dean Ahmad");
-    expect(html).toContain("Rank 1");
   });
 
   it("omits department, specialization, and qualification from employment section", () => {

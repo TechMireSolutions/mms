@@ -21,9 +21,7 @@ export interface FacultyDesignationSelectFieldProps {
   onChange: (patch: {
     designationId: string;
     designation: string;
-    hierarchyRank?: number;
     designationAssignableRoles?: string[];
-    reportingFacultyId?: string | null;
   }) => void;
 }
 
@@ -55,15 +53,15 @@ export function FacultyDesignationSelectField({
     [designationOptions, designationId],
   );
 
-  const handleSaveModal = async (payload: Pick<FacultyDesignationDefinition, "id" | "code" | "name" | "hierarchyRank" | "isActive" | "assignableRoles">) => {
+  const handleSaveModal = async (
+    payload: Pick<FacultyDesignationDefinition, "id" | "code" | "name" | "hierarchyRank" | "isActive" | "assignableRoles">,
+  ) => {
     const id = payload.id || crypto.randomUUID();
     const saved = await saveMutation.mutateAsync({ ...payload, id });
     onChange({
       designationId: saved.id,
       designation: saved.name,
-      hierarchyRank: saved.hierarchyRank,
       designationAssignableRoles: saved.assignableRoles ?? [],
-      ...(saved.hierarchyRank === 1 ? { reportingFacultyId: null } : {}),
     });
     notify.success(t("faculty.designations.saved"));
     setModalOpen(false);
@@ -73,7 +71,7 @@ export function FacultyDesignationSelectField({
     if (!selectedDef) return;
     try {
       await deleteMutation.mutateAsync(selectedDef.id);
-      onChange({ designationId: "", designation: "", hierarchyRank: 4, designationAssignableRoles: [] });
+      onChange({ designationId: "", designation: "", designationAssignableRoles: [] });
       notify.success(t("common.recordArchived"));
     } catch (err) {
       notify.error(err instanceof Error ? err.message : t("common.tryAgain"));
@@ -84,61 +82,60 @@ export function FacultyDesignationSelectField({
 
   return (
     <div className="space-y-1">
-      <div className="flex items-center justify-between gap-2">
-        <label htmlFor="designationId" className="text-sm font-medium text-foreground">
-          {t("faculty.field.designation")}
-          {required && <span className="text-destructive ms-0.5">*</span>}
-        </label>
-        {!disabled && (
-          <div className="flex items-center gap-1">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setEditingDes(null);
-                setModalOpen(true);
-              }}
-              className="h-6 px-1.5 text-xs text-primary hover:text-primary gap-1"
-              title={t("faculty.designations.addDesignation")}
-            >
-              <Plus className="size-3.5" aria-hidden />
-              <span>{t("common.add")}</span>
-            </Button>
-            {selectedDef && (
-              <>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => {
-                    setEditingDes(selectedDef);
-                    setModalOpen(true);
-                  }}
-                  className="size-6 p-0 text-muted-foreground hover:text-foreground"
-                  title={t("common.edit")}
-                  aria-label={t("common.edit")}
-                >
-                  <Pencil className="size-3" aria-hidden />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setDeleteConfirmOpen(true)}
-                  className="size-6 p-0 text-muted-foreground hover:text-destructive"
-                  title={t("common.delete")}
-                  aria-label={t("common.delete")}
-                >
-                  <Trash2 className="size-3" aria-hidden />
-                </Button>
-              </>
-            )}
-          </div>
-        )}
-      </div>
+      {!disabled ? (
+        <div className="flex items-center justify-end gap-1">
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => {
+              setEditingDes(null);
+              setModalOpen(true);
+            }}
+            className="min-h-11 px-2.5 text-xs text-primary hover:text-primary gap-1"
+            title={t("faculty.designations.addDesignation")}
+          >
+            <Plus className="size-3.5" aria-hidden />
+            <span>{t("common.add")}</span>
+          </Button>
+          {selectedDef ? (
+            <>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setEditingDes(selectedDef);
+                  setModalOpen(true);
+                }}
+                className="min-h-11 min-w-11 p-0 text-muted-foreground hover:text-foreground"
+                title={t("common.edit")}
+                aria-label={t("common.edit")}
+              >
+                <Pencil className="size-3.5" aria-hidden />
+              </Button>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => setDeleteConfirmOpen(true)}
+                className="min-h-11 min-w-11 p-0 text-muted-foreground hover:text-destructive"
+                title={t("common.delete")}
+                aria-label={t("common.delete")}
+              >
+                <Trash2 className="size-3.5" aria-hidden />
+              </Button>
+            </>
+          ) : null}
+        </div>
+      ) : null}
 
-      <Field label="" id="designationId" error={error}>
+      <Field
+        label={t("faculty.field.designation")}
+        id="designationId"
+        required={required}
+        error={error}
+      >
         <FormSelect
           id="designationId"
           name="designationId"
@@ -150,9 +147,7 @@ export function FacultyDesignationSelectField({
             onChange({
               designationId: value,
               designation: def?.name ?? "",
-              hierarchyRank: def?.hierarchyRank,
               designationAssignableRoles: def?.assignableRoles ?? [],
-              ...(def?.hierarchyRank === 1 ? { reportingFacultyId: null } : {}),
             });
           }}
           options={activeOptions.map((item) => ({ value: item.id, label: item.name }))}

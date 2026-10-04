@@ -17,6 +17,7 @@ export interface FacultyDepartmentSelectFieldProps {
 
 export function FacultyDepartmentSelectField({
   value,
+  departmentId,
   error,
   required,
   departmentOptions,
@@ -27,8 +28,11 @@ export function FacultyDepartmentSelectField({
 
   const deptOptions = useMemo(() => {
     if (departmentEntities?.length) {
-      const list = departmentEntities.map((d) => ({ value: d.name, label: `${d.name} (${d.code})` }));
-      if (value && !departmentEntities.some((d) => d.name === value)) {
+      const activeOrCurrent = departmentEntities.filter(
+        (d) => d.isActive !== false || d.id === departmentId || d.name === value,
+      );
+      const list = activeOrCurrent.map((d) => ({ value: d.name, label: `${d.name} (${d.code})` }));
+      if (value && !activeOrCurrent.some((d) => d.name === value)) {
         list.unshift({ value, label: value });
       }
       return list;
@@ -37,7 +41,7 @@ export function FacultyDepartmentSelectField({
     const exists = value ? raw.some((val) => val === value) : true;
     const list = value && !exists ? [value, ...raw] : raw;
     return list.map((opt) => ({ value: opt, label: opt }));
-  }, [departmentEntities, departmentOptions, value]);
+  }, [departmentEntities, departmentId, departmentOptions, value]);
 
   return (
     <Field

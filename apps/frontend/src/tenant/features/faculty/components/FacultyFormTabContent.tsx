@@ -32,7 +32,6 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
     errors,
     fields,
     linkedFacultyContactIds,
-    specializationOptions,
     departmentOptions,
     departmentEntities,
     designationOptions,
@@ -49,8 +48,6 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
     linkedUser,
     userAccountDraft = DEFAULT_USER_ACCOUNT_DRAFT,
     onUserAccountDraftChange = () => {},
-    supervisorCandidates,
-    hierarchyRankPresets,
   } = props;
 
   const effectiveFaculty = faculty;
@@ -105,8 +102,6 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
-        supervisorCandidates={supervisorCandidates}
-        hierarchyRankPresets={hierarchyRankPresets}
       />
     );
   } else if (activeTab === "account") {
@@ -144,7 +139,6 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
       errors={errors}
       fields={fields}
       linkedFacultyContactIds={effectiveContactIds}
-      specializationOptions={specializationOptions}
       departmentOptions={departmentOptions}
       departmentEntities={departmentEntities}
       designationOptions={designationOptions}
@@ -161,8 +155,6 @@ export const FacultyFormTabContent = (function FacultyFormTabContent(props: Facu
       linkedUser={linkedUser}
       userAccountDraft={userAccountDraft}
       onUserAccountDraftChange={onUserAccountDraftChange}
-      supervisorCandidates={supervisorCandidates}
-      hierarchyRankPresets={hierarchyRankPresets}
     />
   );
 });

@@ -53,7 +53,7 @@ const { getInitialDraft, draftSnapshot } = createModuleFormDraft<FacultyMember>(
     reportingRole: faculty?.reportingRole ?? null,
     reportingRoleId: faculty?.reportingRoleId ?? null,
     reportingDesignationId: faculty?.reportingDesignationId ?? null,
-    hierarchyRank: faculty?.hierarchyRank ?? 4,
+    hierarchyRank: faculty?.hierarchyRank ?? 10,
     status: resolveFacultyStatus(faculty?.status),
     joinDate: faculty?.joinDate ?? todayISO(),
     qualification: faculty?.qualification ?? "",
@@ -118,16 +118,4 @@ export const DEFAULT_USER_ACCOUNT_DRAFT = {
   password: "",
   forceReset: true,
 };
-
-export function filterSupervisorCandidates(
-  allFaculty: import("@mms/shared").Faculty[],
-  currentId: string | null,
-  currentRank: number,
-): import("@mms/shared").Faculty[] {
-  return allFaculty.filter((f) => {
-    if (currentId && String(f.id) === currentId) return false;
-    const rank = typeof f.hierarchyRank === "number" ? f.hierarchyRank : 4;
-    return rank < currentRank;
-  });
-}
 

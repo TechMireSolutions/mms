@@ -1,10 +1,8 @@
 import React from "react";
 import type {
   Contact,
-  Faculty,
   FacultyDepartmentEntity,
   FacultyDesignationDefinition,
-  FacultyHierarchyPreset,
   FacultyMember,
   FieldDefinition,
 } from "@mms/shared";
@@ -27,7 +25,6 @@ export interface FacultyFormAllSectionsProps {
   errors: Record<string, string>;
   fields: Record<string, FieldDefinition[]>;
   linkedFacultyContactIds?: Array<string | number>;
-  specializationOptions: string[];
   departmentOptions?: string[];
   departmentEntities?: FacultyDepartmentEntity[];
   designationOptions?: FacultyDesignationDefinition[];
@@ -44,8 +41,6 @@ export interface FacultyFormAllSectionsProps {
   linkedUser?: LinkedUserInfo | null;
   userAccountDraft: FacultyUserAccountDraft;
   onUserAccountDraftChange: (draft: FacultyUserAccountDraft) => void;
-  supervisorCandidates?: Faculty[];
-  hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
 }
 
 export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): React.JSX.Element {
@@ -55,7 +50,6 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
     linkedFacultyContactIds = [],
     errors,
     fields,
-    specializationOptions,
     departmentOptions,
     departmentEntities,
     designationOptions,
@@ -72,8 +66,6 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
     linkedUser,
     userAccountDraft,
     onUserAccountDraftChange,
-    supervisorCandidates,
-    hierarchyRankPresets,
   } = props;
 
   return (
@@ -115,8 +107,6 @@ export function FacultyFormAllSections(props: FacultyFormAllSectionsProps): Reac
         isFieldEnabled={isFieldEnabled}
         isFieldRequired={isFieldRequired}
         onDraftChange={onDraftChange}
-        supervisorCandidates={supervisorCandidates}
-        hierarchyRankPresets={hierarchyRankPresets}
       />
 
       <FacultyNotesSection

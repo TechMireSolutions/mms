@@ -47,6 +47,7 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
     name: string;
     code: string;
     parentId: string | null;
+    isActive: boolean;
   }) => {
     try {
       await saveMutation.mutateAsync({
@@ -54,6 +55,7 @@ export function FacultyDepartmentsSetupSection(): React.JSX.Element {
         name: payload.name,
         code: payload.code,
         parentId: payload.parentId,
+        isActive: payload.isActive,
       });
       notify.success(t('faculty.setup.departmentSaved'));
     } catch {

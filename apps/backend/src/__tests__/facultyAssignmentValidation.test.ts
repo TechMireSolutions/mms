@@ -109,6 +109,18 @@ describe('Faculty assignment production validation', () => {
     await expect(validateFacultyAssignment(tx, 'tenant', input)).rejects.toThrow('archived');
   });
 
+  it('rejects assignments when the department is inactive', async () => {
+    tx.execute
+      .mockResolvedValueOnce({ rows: [] }) // tenant lock
+      .mockResolvedValueOnce({ rows: [] }) // existing assignment
+      .mockResolvedValueOnce({ rows: [{ id: 'f' }] })
+      .mockResolvedValueOnce({ rows: [] }) // inactive / missing department (is_active filter)
+      .mockResolvedValueOnce({ rows: [{ id: 'g' }] });
+    await expect(
+      validateFacultyAssignment(tx, 'tenant', { ...input, positionId: 'pos-1' }),
+    ).rejects.toThrow('must be active');
+  });
+
   it('rejects position occupancy when department or designation mismatches the position', async () => {
     assignmentQueries();
     tx.execute.mockResolvedValueOnce({

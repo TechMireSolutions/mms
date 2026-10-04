@@ -97,21 +97,16 @@ export async function saveDesignationOnCreate(
   });
 
   const departmentId = typeof rawRecord.departmentId === 'string' ? rawRecord.departmentId.trim() : '';
-  if (departmentId) {
-    try {
-      await saveFacultyAssignment(tenant, {
-        id: `fa-${String(normalized.id)}`,
-        workspaceSubdomain: tenant,
-        facultyId: String(normalized.id),
-        departmentId,
-        designationId,
-        startDate: designationStartsOn,
-        endDate: designationEndsOn,
-        isPrimary: true,
-        notes: null,
-      });
-    } catch {
-      // Non-fatal: fallback if department constraint fails.
-    }
-  }
+  if (!departmentId) return;
+  await saveFacultyAssignment(tenant, {
+    id: `fa-${String(normalized.id)}`,
+    workspaceSubdomain: tenant,
+    facultyId: String(normalized.id),
+    departmentId,
+    designationId,
+    startDate: designationStartsOn,
+    endDate: designationEndsOn,
+    isPrimary: true,
+    notes: null,
+  });
 }

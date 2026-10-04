@@ -17,10 +17,10 @@ const mockSaveMutateAsync = vi.fn().mockResolvedValue({ id: 'dept-3', name: 'Fiq
 const mockDeleteMutateAsync = vi.fn().mockResolvedValue(undefined);
 
 const testDepartments: FacultyDepartmentEntity[] = [
-  { id: 'dept-root-1', workspaceSubdomain: 'tenant', name: 'Islamic Studies', code: 'islamic-studies' },
-  { id: 'dept-child-1', workspaceSubdomain: 'tenant', name: 'Hadith', code: 'hadith', parentId: 'dept-root-1' },
-  { id: 'dept-grandchild-1', workspaceSubdomain: 'tenant', name: 'Hadith Sciences', code: 'hadith-sciences', parentId: 'dept-child-1' },
-  { id: 'dept-root-2', workspaceSubdomain: 'tenant', name: 'Languages', code: 'languages' },
+  { id: 'dept-root-1', workspaceSubdomain: 'tenant', name: 'Islamic Studies', code: 'islamic-studies', isActive: true },
+  { id: 'dept-child-1', workspaceSubdomain: 'tenant', name: 'Hadith', code: 'hadith', parentId: 'dept-root-1', isActive: true },
+  { id: 'dept-grandchild-1', workspaceSubdomain: 'tenant', name: 'Hadith Sciences', code: 'hadith-sciences', parentId: 'dept-child-1', isActive: true },
+  { id: 'dept-root-2', workspaceSubdomain: 'tenant', name: 'Languages', code: 'languages', isActive: true },
 ];
 
 vi.mock('./useFacultyDepartments', () => ({

@@ -7,6 +7,7 @@ import {
   primaryKey,
   foreignKey,
   varchar,
+  boolean,
   check,
 } from 'drizzle-orm/pg-core';
 import { sql } from 'drizzle-orm';
@@ -27,6 +28,7 @@ export const facultyDepartments = pgTable('faculty_departments', {
   parentId: text('parent_id'),
   name: varchar('name', { length: 255 }).notNull(),
   code: varchar('code', { length: 32 }).notNull(),
+  isActive: boolean('is_active').notNull().default(true),
   ...softDeleteColumns,
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),

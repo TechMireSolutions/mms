@@ -39,7 +39,7 @@ export async function validateFacultyAssignment(
   `);
   const department = await tx.execute(sql`
     SELECT id FROM faculty_departments WHERE workspace_subdomain = ${tenant}
-      AND id = ${input.departmentId} AND deleted_at IS NULL FOR SHARE
+      AND id = ${input.departmentId} AND deleted_at IS NULL AND is_active FOR SHARE
   `);
   const designation = await tx.execute(sql`
     SELECT id FROM faculty_designations WHERE workspace_subdomain = ${tenant}

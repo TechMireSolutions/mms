@@ -25,7 +25,7 @@ vi.mock("@/tenant/features/faculty/components/useFacultyFormController", () => {
     statusOptions: [],
     statusConfig: {},
     autoGenerateId: false,
-    requireContactLink: false,
+    requireContactLink: true,
     fieldsMap: {},
     linkedContact: { id: "cnt-1", name: "Ustadh Umar" },
     linkedFacultyContactIds: [],

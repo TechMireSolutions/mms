@@ -59,8 +59,11 @@ describe('FacultyDepartmentFormModal', () => {
 
     const nameInput = document.querySelector<HTMLInputElement>('#department-form-name');
     const codeInput = document.querySelector<HTMLInputElement>('#department-form-code');
+    const statusSelect = document.querySelector<HTMLSelectElement>('#department-form-status');
     expect(nameInput).not.toBeNull();
     expect(codeInput).not.toBeNull();
+    expect(statusSelect).not.toBeNull();
+    expect(statusSelect?.value).toBe('active');
     expect(nameInput?.value).toBe('');
     expect(document.body.textContent).toContain('faculty.setup.addDepartment');
   });
@@ -72,6 +75,7 @@ describe('FacultyDepartmentFormModal', () => {
       name: 'Quran Studies',
       code: 'quran-studies',
       parentId: null,
+      isActive: true,
       createdAt: '2026-01-01',
       updatedAt: '2026-01-01',
     };
@@ -107,9 +111,53 @@ describe('FacultyDepartmentFormModal', () => {
         id: 'dept-1',
         name: 'Quran Studies',
         code: 'quran-studies',
+        isActive: true,
       }),
     );
     expect(onClose).toHaveBeenCalled();
+  });
+
+  it('submits inactive status when selected', async () => {
+    await act(async () => {
+      root.render(
+        <FacultyDepartmentFormModal
+          open={true}
+          onClose={onClose}
+          department={null}
+          parentOptions={[{ value: '', label: 'None' }]}
+          existingDepartments={[]}
+          isPending={false}
+          onSave={onSave}
+        />,
+      );
+    });
+
+    const nameInput = document.querySelector<HTMLInputElement>('#department-form-name')!;
+    const statusSelect = document.querySelector<HTMLSelectElement>('#department-form-status')!;
+
+    await act(async () => {
+      const nativeInputSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value')?.set;
+      nativeInputSetter?.call(nameInput, 'Fiqh');
+      nameInput.dispatchEvent(new Event('input', { bubbles: true }));
+
+      const nativeSelectSetter = Object.getOwnPropertyDescriptor(window.HTMLSelectElement.prototype, 'value')?.set;
+      nativeSelectSetter?.call(statusSelect, 'inactive');
+      statusSelect.dispatchEvent(new Event('change', { bubbles: true }));
+    });
+
+    const saveBtn = Array.from(document.querySelectorAll('button')).find((b) =>
+      b.textContent?.includes('faculty.setup.addDepartment'),
+    );
+    await act(async () => {
+      saveBtn!.click();
+    });
+
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: 'Fiqh',
+        isActive: false,
+      }),
+    );
   });
 
   it('does not render a department head field', async () => {

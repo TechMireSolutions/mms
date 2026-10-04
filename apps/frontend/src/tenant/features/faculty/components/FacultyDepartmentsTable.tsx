@@ -1,6 +1,7 @@
 import React from 'react';
 import { Building2, ChevronRight, Pencil, Trash2 } from 'lucide-react';
 import type { FacultyDepartmentEntity } from '@mms/shared';
+import { Badge } from '@/components/ui/badge';
 import { EmptyState } from '@/components/ui/EmptyState';
 import {
   DataTable,
@@ -34,6 +35,8 @@ export function FacultyDepartmentsTable({
   const { t } = useTranslation();
   const parentMap = new Map(departments.map((d) => [d.id, d.name]));
   const parentName = (d: FacultyDepartmentEntity) => (d.parentId ? parentMap.get(d.parentId) : undefined);
+  const statusLabel = (d: FacultyDepartmentEntity) =>
+    d.isActive !== false ? t('faculty.status.active') : t('faculty.status.inactive');
 
   const columns: DataTableColumn<FacultyDepartmentEntity>[] = [
     {
@@ -61,6 +64,17 @@ export function FacultyDepartmentsTable({
       searchValue: parentName,
       render: (d) => <span className="text-xs text-muted-foreground">{parentName(d) ?? <Dash />}</span>,
     },
+    {
+      id: 'status',
+      label: t('common.status'),
+      width: 120,
+      searchValue: statusLabel,
+      render: (d) => (
+        <Badge variant={d.isActive !== false ? 'default' : 'secondary'} className="text-xs">
+          {statusLabel(d)}
+        </Badge>
+      ),
+    },
   ];
 
   const parentOptions = departments
@@ -69,6 +83,15 @@ export function FacultyDepartmentsTable({
 
   const filters: DataTableFilter<FacultyDepartmentEntity>[] = [
     { id: 'parent', label: t('faculty.setup.parentDepartment'), options: parentOptions, getValue: (d) => d.parentId },
+    {
+      id: 'status',
+      label: t('common.status'),
+      options: [
+        { value: 'active', label: t('faculty.status.active') },
+        { value: 'inactive', label: t('faculty.status.inactive') },
+      ],
+      getValue: (d) => (d.isActive !== false ? 'active' : 'inactive'),
+    },
   ];
 
   return (
@@ -80,7 +103,13 @@ export function FacultyDepartmentsTable({
       filters={filters}
       isLoading={isLoading}
       card={{ title: (d) => d.name }}
-      rowClassName={(d) => (d.id === editingDepartmentId ? 'bg-primary/10 ring-1 ring-inset ring-primary/40' : undefined)}
+      rowClassName={(d) =>
+        d.id === editingDepartmentId
+          ? 'bg-primary/10 ring-1 ring-inset ring-primary/40'
+          : d.isActive !== false
+            ? undefined
+            : 'opacity-70'
+      }
       renderRowActions={(d) => (
         <DataTableRowActions
           actions={[

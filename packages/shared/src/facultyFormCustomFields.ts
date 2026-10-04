@@ -27,6 +27,51 @@ export function cloneFacultyFieldSeed(): Record<string, FieldDefinition[]> {
   return next;
 }
 
+const RETIRED_FACULTY_FORM_FIELDS = new Set([
+  'specialization',
+  'qualification',
+  'hierarchyRank',
+  'reportingFacultyId',
+]);
+
+function fieldKeyRequired(
+  tabbed: Record<string, FieldDefinition[]>,
+  key: string,
+): boolean {
+  return Object.values(tabbed).some((tabFields) =>
+    tabFields.some((field) => field.key === key && field.required),
+  );
+}
+
+/** Product invariants after Setup overlays (contact compulsory; retired fields off; alias required parity). */
+function applyFacultyFieldProductLocks(
+  tabbed: Record<string, FieldDefinition[]>,
+): Record<string, FieldDefinition[]> {
+  for (const tabFields of Object.values(tabbed)) {
+    for (let index = 0; index < tabFields.length; index += 1) {
+      const field = tabFields[index];
+      if (field.key === 'contactId') {
+        tabFields[index] = { ...field, enabled: true, required: true };
+      } else if (RETIRED_FACULTY_FORM_FIELDS.has(field.key)) {
+        tabFields[index] = { ...field, enabled: false, required: false };
+      }
+    }
+  }
+  const syncRequired = (primary: string, alias: string) => {
+    if (!fieldKeyRequired(tabbed, primary) && !fieldKeyRequired(tabbed, alias)) return;
+    for (const tabFields of Object.values(tabbed)) {
+      for (let index = 0; index < tabFields.length; index += 1) {
+        const field = tabFields[index];
+        if (field.key === primary) tabFields[index] = { ...field, required: true };
+        if (field.key === alias) tabFields[index] = { ...field, required: false };
+      }
+    }
+  };
+  syncRequired('designation', 'designationId');
+  syncRequired('department', 'departmentId');
+  return tabbed;
+}
+
 /**
  * Normalize Faculty `settings.fields` to a tabbed Setup Fields map for column sync.
  * Flat legacy `{ fieldId: { enabled } }` overlays onto {@link INITIAL_FACULTY_FIELD_SEED}.
@@ -35,11 +80,15 @@ export function resolveFacultyFieldsMapForColumnSync(
   fields: Record<string, unknown> | undefined,
 ): Readonly<Record<string, FieldDefinition[]>> {
   if (!fields || typeof fields !== 'object') {
-    return cloneFacultyFieldSeed();
+    return applyFacultyFieldProductLocks(cloneFacultyFieldSeed());
   }
   const entries = Object.entries(fields);
   if (entries.length > 0 && entries.every(([, value]) => Array.isArray(value))) {
-    return fields as Record<string, FieldDefinition[]>;
+    const cloned: Record<string, FieldDefinition[]> = {};
+    for (const [tabId, tabFields] of entries) {
+      cloned[tabId] = (tabFields as FieldDefinition[]).map((field) => ({ ...field }));
+    }
+    return applyFacultyFieldProductLocks(cloned);
   }
 
   const flat = getFlatFieldsConfig(fields);
@@ -56,7 +105,7 @@ export function resolveFacultyFieldsMapForColumnSync(
       };
     }
   }
-  return tabbed;
+  return applyFacultyFieldProductLocks(tabbed);
 }
 
 /**

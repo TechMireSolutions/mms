@@ -6,10 +6,8 @@ import { Field } from "@/components/ui/FormPrimitives";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { useTranslation } from "@/hooks/useTranslation";
 import {
-  type Faculty,
   type FacultyDepartmentEntity,
   type FacultyDesignationDefinition,
-  type FacultyHierarchyPreset,
   type FacultyMember,
 } from "@mms/shared";
 import { FacultyDepartmentSelectField } from "./FacultyDepartmentSelectField";
@@ -25,8 +23,6 @@ export interface FacultyFormDesignationSectionProps {
   isFieldEnabled: (fieldId: string) => boolean;
   isFieldRequired: (fieldId: string) => boolean;
   onDraftChange: (patch: Partial<FacultyMember>) => void;
-  supervisorCandidates?: Faculty[];
-  hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
 }
 
 export function FacultyFormDesignationSection(props: FacultyFormDesignationSectionProps): React.JSX.Element | null {
@@ -43,8 +39,8 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
   } = props;
   const { t } = useTranslation();
 
-  const showDesignation = isFieldEnabled("designation");
-  const showDepartment = isFieldEnabled("department");
+  const showDesignation = isFieldEnabled("designation") || isFieldEnabled("designationId");
+  const showDepartment = isFieldEnabled("department") || isFieldEnabled("departmentId");
 
   if (!showDesignation && !showDepartment) return null;
 
@@ -60,7 +56,7 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
               value={facultyDraft.department ?? ""}
               departmentId={typeof facultyDraft.departmentId === "string" ? facultyDraft.departmentId : undefined}
               error={errors.department || errors.departmentId}
-              required={isFieldRequired("department")}
+              required={isFieldRequired("department") || isFieldRequired("departmentId")}
               departmentOptions={departmentOptions}
               departmentEntities={departmentEntities}
               onChange={onDraftChange}
@@ -72,7 +68,7 @@ export function FacultyFormDesignationSection(props: FacultyFormDesignationSecti
               designationId={facultyDraft.designationId ?? ""}
               designationName={facultyDraft.designation ?? ""}
               error={errors.designationId || errors.designation}
-              required={isFieldRequired("designation")}
+              required={isFieldRequired("designation") || isFieldRequired("designationId")}
               disabled={Boolean(faculty?.id)}
               designationOptions={designationOptions}
               onChange={onDraftChange}

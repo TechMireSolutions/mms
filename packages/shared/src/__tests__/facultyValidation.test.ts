@@ -46,6 +46,42 @@ describe('buildDynamicFacultySchema', () => {
     }
   });
 
+  it('requires contactId even when Setup disables the contact field', () => {
+    const disabledContact: Record<string, FieldDefinition[]> = {
+      basic: fields.basic.map((field) =>
+        field.key === 'contactId' ? { ...field, enabled: false, required: false } : field,
+      ),
+      employment: fields.employment,
+    };
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, disabledContact);
+    const result = schema.safeParse({
+      status: 'active',
+      employeeId: 'FAC-1',
+      joinDate: '2024-01-15',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      const formatted = formatFacultyZodIssues(result.error, {}, disabledContact);
+      expect(formatted.some((err) => err.fieldId === 'contactId')).toBe(true);
+    }
+  });
+
+  it('requires designationStartsOn when designationId is set', () => {
+    const schema = buildDynamicFacultySchema(settings, enabledTabs, fields);
+    const result = schema.safeParse({
+      contactId: 'c-1',
+      status: 'active',
+      employeeId: 'FAC-1',
+      joinDate: '2024-01-15',
+      designationId: 'des-1',
+      designationStartsOn: '',
+    });
+    expect(result.success).toBe(false);
+    if (!result.success) {
+      expect(result.error.issues.some((issue) => issue.path[0] === 'designationStartsOn')).toBe(true);
+    }
+  });
+
   it('requires enabled custom fields and maps tab id', () => {
     const withCustom: Record<string, FieldDefinition[]> = {
       ...fields,

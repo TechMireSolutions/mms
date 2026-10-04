@@ -12,6 +12,7 @@ export const facultyDepartmentSchema = z.object({
   parentId: z.string().min(1).max(100).nullable().optional(),
   name: z.string().trim().min(1).max(255),
   code: z.string().trim().min(1).max(32),
+  isActive: z.boolean().default(true),
   /** Depth relative to root (0 = root; hydrated server-side). */
   depth: z.number().int().min(0).optional(),
   /** Child department count; hydrated server-side on list endpoints. */
@@ -23,11 +24,11 @@ export const facultyDepartmentSchema = z.object({
 
 /** Write payload when creating or updating a department. */
 export const facultyDepartmentWriteSchema = facultyDepartmentSchema
-  .pick({ id: true, parentId: true, name: true, code: true })
+  .pick({ id: true, parentId: true, name: true, code: true, isActive: true })
   .extend({
     id: z.string().min(1).max(100).optional(), // optional on create
   })
-  .partial({ id: true, parentId: true }).strict();
+  .partial({ id: true, parentId: true, isActive: true }).strict();
 
 export type FacultyDepartmentEntity = z.infer<typeof facultyDepartmentSchema>;
 export type FacultyDepartmentWrite = z.infer<typeof facultyDepartmentWriteSchema>;

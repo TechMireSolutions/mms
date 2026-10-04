@@ -4,9 +4,14 @@ import {
   FACULTY_TAB_REGISTRY,
 } from './moduleFieldSetupPersons.js';
 
+/** Person-level hierarchy UI retired — never treat as an enabled form tab. */
+const RETIRED_FACULTY_FORM_TABS = new Set(['hierarchy']);
+
 /** Default enabled tab ids from the Faculty tab registry seed. */
 export function defaultFacultyEnabledTabIds(): string[] {
-  return FACULTY_TAB_REGISTRY.filter((tab) => tab.enabled !== false).map((tab) => tab.key);
+  return FACULTY_TAB_REGISTRY
+    .filter((tab) => tab.enabled !== false && !RETIRED_FACULTY_FORM_TABS.has(tab.key))
+    .map((tab) => tab.key);
 }
 
 export type FacultyEnabledTabsInput = {
@@ -16,7 +21,9 @@ export type FacultyEnabledTabsInput = {
 
 function withFacultyLockedEnabledTabs(tabIds: Iterable<string>): string[] {
   const set = new Set(
-    [...tabIds].map((tabId) => tabId.trim()).filter(Boolean),
+    [...tabIds]
+      .map((tabId) => tabId.trim())
+      .filter((tabId) => Boolean(tabId) && !RETIRED_FACULTY_FORM_TABS.has(tabId)),
   );
   for (const locked of FACULTY_LOCKED_ENABLED_TABS) {
     set.add(locked);

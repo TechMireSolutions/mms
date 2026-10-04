@@ -7,6 +7,7 @@ import { FormSelect } from "@/components/ui/FormSelect";
 import { Input } from "@/components/ui/input";
 import { SectionCard } from "@/components/ui/SectionCard";
 import { Textarea } from "@/components/ui/textarea";
+import { resolveRegistryLabel } from "@/lib/contacts/contactI18n";
 import { useTranslation } from "@/hooks/useTranslation";
 import { listEnabledCustomFacultyFormFields, type FacultyMember, type FieldDefinition } from "@mms/shared";
 
@@ -17,7 +18,12 @@ interface FacultyCustomFieldsSectionProps {
   onDraftChange: (patch: Partial<FacultyMember>) => void;
 }
 
-export function FacultyCustomFieldsSection({ fields, draft, errors, onDraftChange }: FacultyCustomFieldsSectionProps): React.JSX.Element | null {
+export function FacultyCustomFieldsSection({
+  fields,
+  draft,
+  errors,
+  onDraftChange,
+}: FacultyCustomFieldsSectionProps): React.JSX.Element | null {
   const { t } = useTranslation();
   const customFields = listEnabledCustomFacultyFormFields(fields);
   if (customFields.length === 0) return null;
@@ -30,9 +36,10 @@ export function FacultyCustomFieldsSection({ fields, draft, errors, onDraftChang
         {customFields.map((field) => {
           const value = values[field.key];
           const error = errors[field.key] || errors[`custom:${field.key}`];
+          const label = resolveRegistryLabel(field, t);
           const common = { id: field.key, name: field.key };
           return (
-            <Field key={field.key} label={field.label} id={field.key} required={Boolean(field.required)} error={error}>
+            <Field key={field.key} label={label} id={field.key} required={Boolean(field.required)} error={error}>
               {field.type === "textarea" ? (
                 <Textarea {...common} value={String(value ?? "")} onChange={(event) => change(field.key, event.target.value)} />
               ) : field.type === "date" ? (
@@ -56,10 +63,23 @@ export function FacultyCustomFieldsSection({ fields, draft, errors, onDraftChang
               ) : field.type === "boolean" ? (
                 <div className="flex min-h-11 items-center gap-3 rounded-md border border-border px-3">
                   <Checkbox {...common} checked={Boolean(value)} onCheckedChange={(next) => change(field.key, Boolean(next))} />
-                  <label htmlFor={field.key} className="cursor-pointer text-sm">{field.label}</label>
+                  <label htmlFor={field.key} className="cursor-pointer text-sm">{label}</label>
                 </div>
+              ) : field.type === "currency" || field.type === "number" ? (
+                <Input
+                  {...common}
+                  type="text"
+                  inputMode="decimal"
+                  value={String(value ?? "")}
+                  onChange={(event) => change(field.key, event.target.value)}
+                />
               ) : (
-                <Input {...common} type={field.type === "number" || field.type === "currency" ? "number" : field.type === "email" ? "email" : field.type === "url" ? "url" : field.type === "datetime" ? "datetime-local" : "text"} value={String(value ?? "")} onChange={(event) => change(field.key, (field.type === "number" || field.type === "currency") && event.target.value !== "" ? Number(event.target.value) : event.target.value)} />
+                <Input
+                  {...common}
+                  type={field.type === "email" ? "email" : field.type === "url" ? "url" : field.type === "datetime" ? "datetime-local" : "text"}
+                  value={String(value ?? "")}
+                  onChange={(event) => change(field.key, event.target.value)}
+                />
               )}
             </Field>
           );

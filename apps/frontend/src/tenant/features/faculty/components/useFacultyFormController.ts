@@ -8,21 +8,17 @@ import { useFacultyStatusConfig, useFacultyLookupOptions } from "@/tenant/featur
 import { useFacultyDesignations } from "@/tenant/features/faculty/hooks/useFacultyDesignations";
 import { useFacultyDepartments, departmentEntitiesToNames } from "@/tenant/features/faculty/hooks/useFacultyDepartments";
 import {
-  type Faculty,
   DEFAULT_FACULTY_SETTINGS,
-  FACULTY_HIERARCHY_RANK_PRESETS,
   resolveFacultyEnabledTabIds,
   resolveFacultyFieldsMapForColumnSync,
 } from "@mms/shared";
-import { useFacultyContractList } from "@/tenant/features/faculty/hooks/useFacultyTsrHooks";
 import {
-  filterSupervisorCandidates,
   type FacultyFormControllerOptions,
   type UseFacultyFormControllerOptions,
 } from "@/tenant/features/faculty/components/facultyFormDraft";
 import { DUPLICATE_ERROR_KEYS } from "@/tenant/features/faculty/components/facultyFormValidation";
 import type { FacultyStatusOption } from "@/tenant/features/faculty/components/FacultyFormSections";
-import { useFacultyHierarchyFormSync } from "@/tenant/features/faculty/components/useFacultyFormSync";
+import { useFacultyAssignableRolesSync } from "@/tenant/features/faculty/components/useFacultyFormSync";
 import { useFacultyDraftState } from "@/tenant/features/faculty/components/useFacultyDraftState";
 import { useFacultyFormSaveActions } from "@/tenant/features/faculty/components/useFacultyFormSaveActions";
 
@@ -37,7 +33,11 @@ export function useFacultyFormController({
   const queryClient = useQueryClient();
   const { t, dir, language } = useTranslation();
 
-  const { settings, isFieldEnabled, isFieldRequired } = useFacultyConfig();
+  const {
+    settings,
+    isFieldEnabled: configIsFieldEnabled,
+    isFieldRequired: configIsFieldRequired,
+  } = useFacultyConfig();
   const { statusOptions: statusValues, specializationOptions, departmentOptions } = useFacultyLookupOptions();
   const designationDefinitions = useFacultyDesignations();
   const departmentsQuery = useFacultyDepartments();
@@ -48,6 +48,10 @@ export function useFacultyFormController({
   const autoGenerateId = settings.autoGenerateId !== false;
   const requireContactLink = true;
   const fieldsMap = resolveFacultyFieldsMapForColumnSync(settings.fields);
+  const isFieldEnabled = (fieldId: string) =>
+    fieldId === "contactId" ? true : configIsFieldEnabled(fieldId);
+  const isFieldRequired = (fieldId: string) =>
+    fieldId === "contactId" ? true : configIsFieldRequired(fieldId);
   const statusOptions = facultyStatusOptions(t, statusValues) as FacultyStatusOption[];
   const statusConfig = useFacultyStatusConfig();
   const formInstanceId = String(currentFaculty?.id ?? "new");
@@ -87,22 +91,10 @@ export function useFacultyFormController({
     ) ?? null;
   }, [existingUsers, facultyDraft.contactId, facultyDraft.userId]);
 
-  const facultyListQuery = useFacultyContractList({ limit: 100 });
-  const allFaculty = ((facultyListQuery.data as { faculty?: Faculty[] })?.faculty ?? []) as Faculty[];
-
-  const currentRank = typeof facultyDraft.hierarchyRank === "number" ? facultyDraft.hierarchyRank : 4;
-  const currentId = currentFaculty?.id ? String(currentFaculty.id) : null;
-  const supervisorCandidates = useMemo(
-    () => filterSupervisorCandidates(allFaculty, currentId, currentRank),
-    [allFaculty, currentId, currentRank],
-  );
-
-  useFacultyHierarchyFormSync({
+  useFacultyAssignableRolesSync({
     facultyDraft,
-    setFacultyDraft,
     userAccountDraft,
     setUserAccountDraft,
-    supervisorCandidates,
   });
 
   const {
@@ -180,7 +172,5 @@ export function useFacultyFormController({
     handleDuplicateDialogOpenChange,
     confirmDuplicateSave,
     duplicateErrorKeys: DUPLICATE_ERROR_KEYS,
-    supervisorCandidates,
-    hierarchyRankPresets: FACULTY_HIERARCHY_RANK_PRESETS,
   };
 }

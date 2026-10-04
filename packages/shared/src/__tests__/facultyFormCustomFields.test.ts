@@ -3,6 +3,7 @@ import {
   isFacultySystemFormField,
   listEnabledCustomFacultyFormFields,
   listFacultySystemFormFieldKeys,
+  resolveFacultyFieldsMapForColumnSync,
 } from '../facultyFormCustomFields.js';
 import { findFacultySeedField } from '../moduleFieldSetupFaculty.js';
 import type { FieldDefinition } from '../contactFieldSchemaTypes.js';
@@ -73,5 +74,43 @@ describe('findFacultySeedField', () => {
 
   it('returns undefined for unknown fields', () => {
     expect(findFacultySeedField('house')).toBeUndefined();
+  });
+});
+
+describe('resolveFacultyFieldsMapForColumnSync product locks', () => {
+  it('forces contact required and retires specialization/hierarchy fields', () => {
+    const fields = resolveFacultyFieldsMapForColumnSync({
+      basic: [
+        field({ key: 'contactId', enabled: false, required: false }),
+        field({ key: 'specialization', enabled: true, required: true }),
+      ],
+      hierarchy: [
+        field({ key: 'hierarchyRank', enabled: true, required: true }),
+        field({ key: 'reportingFacultyId', enabled: true, required: true }),
+      ],
+    });
+    expect(fields.basic.find((f) => f.key === 'contactId')).toMatchObject({
+      enabled: true,
+      required: true,
+    });
+    expect(fields.basic.find((f) => f.key === 'specialization')).toMatchObject({
+      enabled: false,
+      required: false,
+    });
+    expect(fields.hierarchy.find((f) => f.key === 'hierarchyRank')).toMatchObject({
+      enabled: false,
+      required: false,
+    });
+  });
+
+  it('promotes alias designationId required onto designation', () => {
+    const fields = resolveFacultyFieldsMapForColumnSync({
+      designation: [
+        field({ key: 'designation', enabled: true, required: false }),
+        field({ key: 'designationId', enabled: false, required: true }),
+      ],
+    });
+    expect(fields.designation.find((f) => f.key === 'designation')?.required).toBe(true);
+    expect(fields.designation.find((f) => f.key === 'designationId')?.required).toBe(false);
   });
 });

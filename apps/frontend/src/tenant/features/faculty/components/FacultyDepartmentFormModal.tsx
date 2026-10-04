@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Building2 } from 'lucide-react';
 import type { FacultyDepartmentEntity } from '@mms/shared';
 import { Field } from '@/components/ui/FormPrimitives';
@@ -17,7 +17,13 @@ export interface FacultyDepartmentFormModalProps {
   parentOptions: { value: string; label: string }[];
   existingDepartments: FacultyDepartmentEntity[];
   isPending: boolean;
-  onSave: (payload: { id?: string; name: string; code: string; parentId: string | null }) => Promise<void>;
+  onSave: (payload: {
+    id?: string;
+    name: string;
+    code: string;
+    parentId: string | null;
+    isActive: boolean;
+  }) => Promise<void>;
 }
 
 export function FacultyDepartmentFormModal({
@@ -33,7 +39,13 @@ export function FacultyDepartmentFormModal({
   const [name, setName] = useState('');
   const [code, setCode] = useState('');
   const [parentId, setParentId] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [codeManuallyEdited, setCodeManuallyEdited] = useState(false);
+
+  const statusOptions = useMemo(() => [
+    { value: 'active', label: t('faculty.status.active') },
+    { value: 'inactive', label: t('faculty.status.inactive') },
+  ], [t]);
 
   useEffect(() => {
     if (open) {
@@ -41,11 +53,13 @@ export function FacultyDepartmentFormModal({
         setName(department.name);
         setCode(department.code);
         setParentId(department.parentId || '');
+        setIsActive(department.isActive !== false);
         setCodeManuallyEdited(true);
       } else {
         setName('');
         setCode('');
         setParentId('');
+        setIsActive(true);
         setCodeManuallyEdited(false);
       }
     }
@@ -82,6 +96,7 @@ export function FacultyDepartmentFormModal({
       name: trimmedName,
       code: trimmedCode,
       parentId: parentId.trim() || null,
+      isActive,
     });
     onClose();
   };
@@ -133,6 +148,17 @@ export function FacultyDepartmentFormModal({
             value={parentId}
             onChange={setParentId}
             options={parentOptions}
+            disabled={isPending}
+          />
+        </Field>
+
+        <Field label={t('common.status')} id="department-form-status" required>
+          <FormSelect
+            id="department-form-status"
+            name="status"
+            value={isActive ? 'active' : 'inactive'}
+            onChange={(val) => setIsActive(val === 'active')}
+            options={statusOptions}
             disabled={isPending}
           />
         </Field>

@@ -17,6 +17,7 @@ const FACULTY_DEPARTMENT_COLUMNS = {
   parentId: facultyDepartments.parentId,
   name: facultyDepartments.name,
   code: facultyDepartments.code,
+  isActive: facultyDepartments.isActive,
   deletedAt: facultyDepartments.deletedAt,
   deletedBy: facultyDepartments.deletedBy,
   deletionReason: facultyDepartments.deletionReason,
@@ -104,6 +105,7 @@ export async function saveFacultyDepartment(
           parentId: dept.parentId ?? null,
           name: dept.name,
           code: dept.code,
+          isActive: dept.isActive ?? true,
           updatedAt: new Date(),
           updatedBy: dept.updatedBy ?? null,
         },
@@ -125,7 +127,7 @@ export async function softDeleteFacultyDepartment(
     const deletedAt = new Date();
     const changed = await tx
       .update(facultyDepartments)
-      .set({ deletedAt, deletedBy, deletionReason: reason ?? null, updatedAt: new Date() })
+      .set({ deletedAt, deletedBy, deletionReason: reason ?? null, isActive: false, updatedAt: new Date() })
       .where(
         and(
           eq(facultyDepartments.workspaceSubdomain, subdomain),

@@ -47,4 +47,17 @@ describe('resolveFacultyEnabledTabIds', () => {
       expect.arrayContaining(['basic', 'employment']),
     );
   });
+
+  it('never enables the retired hierarchy form tab', () => {
+    const formTabs: TabDefinition[] = [
+      { key: 'basic', label: 'Basic', enabled: true, order: 0 },
+      { key: 'hierarchy', label: 'Hierarchy', enabled: true, order: 3 },
+    ];
+    const resolved = resolveFacultyEnabledTabIds({
+      formTabs,
+      enabledTabs: ['basic', 'hierarchy'],
+    });
+    expect(resolved).not.toContain('hierarchy');
+    expect(defaultFacultyEnabledTabIds()).not.toContain('hierarchy');
+  });
 });

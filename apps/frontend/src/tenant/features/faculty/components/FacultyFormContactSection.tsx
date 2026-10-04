@@ -32,14 +32,10 @@ export function FacultyContactSection(props: FacultyContactSectionProps): React.
     linkedFacultyContactIds = [],
     errors,
     fields,
-    isFieldEnabled,
-    isFieldRequired,
     linkedContact,
     onDraftChange,
   } = props;
   const { t } = useTranslation();
-  const showContact = isFieldEnabled("contactId");
-  if (!showContact) return null;
 
   const contactLabel = resolveFacultyFieldLabel(fields, "basic", "contactId", t);
   const primaryPhone = linkedContact ? getPrimaryPhone(linkedContact) : null;
@@ -66,7 +62,7 @@ export function FacultyContactSection(props: FacultyContactSectionProps): React.
           searchPlaceholder={t("faculty.form.searchContact")}
           emptyTitle={t("faculty.form.noContacts")}
           emptyHint={t("faculty.form.noContactsHint")}
-          required={isFieldRequired("contactId")}
+          required
           error={!!errors.contactId}
           errorMessage={errors.contactId}
         />

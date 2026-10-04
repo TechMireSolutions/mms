@@ -30,8 +30,6 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     errors,
     facultyDraft,
     isDirty,
-    defaultSpecialization,
-    specializationOptions,
     departmentOptions,
     designationOptions,
     statusOptions,
@@ -61,8 +59,6 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
     handleDuplicateDialogOpenChange,
     confirmDuplicateSave,
     duplicateErrorKeys,
-    supervisorCandidates,
-    hierarchyRankPresets,
   } = useFacultyFormController({ faculty, onClose, onSave });
 
   const { activeTab, setActiveTab, visibleTabs } = useFacultyFormTabs({
@@ -99,7 +95,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
         saving={saving}
         error={validationErrorSummary}
         saveDisabled={
-          (requireContactLink && isFieldEnabled("contactId") && !facultyDraft.contactId)
+          (requireContactLink && !facultyDraft.contactId)
           || (Boolean(faculty?.id) && !isDirty)
         }
         footerStart={
@@ -118,7 +114,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
           noValidate
           onSubmit={(e) => {
             e.preventDefault();
-            if (!((requireContactLink && isFieldEnabled("contactId") && !facultyDraft.contactId) || (Boolean(faculty?.id) && !isDirty))) {
+            if (!((requireContactLink && !facultyDraft.contactId) || (Boolean(faculty?.id) && !isDirty))) {
               void onSaveWithTabFocus();
             }
           }}
@@ -130,9 +126,7 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
             facultyDraft={facultyDraft}
             errors={errors}
             fields={fieldsMap}
-            defaultSpecialization={defaultSpecialization}
             linkedFacultyContactIds={linkedFacultyContactIds}
-            specializationOptions={specializationOptions}
             departmentOptions={departmentOptions}
             departmentEntities={departmentEntities}
             designationOptions={designationOptions}
@@ -150,8 +144,6 @@ export const FacultyForm = (function FacultyForm(props: FacultyFormProps): React
             onDraftChange={updateDraft}
             linkedContact={linkedContact}
             linkedUser={linkedUser}
-            supervisorCandidates={supervisorCandidates}
-            hierarchyRankPresets={hierarchyRankPresets}
           />
         </form>
       </FormModal>

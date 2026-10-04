@@ -5,7 +5,6 @@ import type { FieldDefinition } from '../contactTypes.js';
 import { buildCustomFieldSchema } from '../contactValidation.js';
 import { isFacultyLockedEnabledTab } from '../moduleFieldSetupPersons.js';
 import {
-  findFacultyFieldInMap,
   listEnabledCustomFacultyFormFields,
   listFacultySystemFormFieldKeys,
 } from '../facultyFormCustomFields.js';
@@ -59,8 +58,6 @@ export function buildDynamicFacultySchema(
   );
   const requiredMsg = translateApp('common.formPleaseFixErrors' as AppTranslationKey, language);
   const systemKeys = listFacultySystemFormFieldKeys();
-  // Contact link is product-compulsory (Setup toggle removed).
-  const requireContactLink = true;
 
   const schemaObject: Record<string, z.ZodTypeAny> = {
     id: z.union([z.string(), z.number()]).optional(),
@@ -108,63 +105,60 @@ export function buildDynamicFacultySchema(
     for (const field of tabFields) {
       if (!field.enabled) continue;
 
-      if (field.key === 'contactId') {
-        const required = requireContactLink || Boolean(field.required);
-        if (required) {
-          schemaObject.contactId = z
-            .union([z.string(), z.number()], { error: contactRequiredMsg })
-            .refine(
-              (value) => value !== null && value !== undefined && value !== '',
-              { message: contactRequiredMsg },
-            );
-        }
-        continue;
-      }
-
+      if (field.key === 'contactId') continue; // product-compulsory; ignore Setup flags
       if (systemKeys.has(field.key)) {
         if (field.key === 'status') {
           applyRequiredString('status', Boolean(field.required), FACULTY_STATUS_WRITE_MAX);
           continue;
         }
+        if (field.key === 'specialization' || field.key === 'qualification') {
+          applyRequiredString(field.key, false); // contact-derived
+          continue;
+        }
         if (
           field.key === 'employeeId'
-          || field.key === 'specialization'
           || field.key === 'department'
           || field.key === 'designation'
-          || field.key === 'qualification'
           || field.key === 'joinDate'
           || field.key === 'notes'
         ) {
           applyRequiredString(field.key, Boolean(field.required));
-          continue;
         }
         continue;
       }
-
       schemaObject[field.key] = buildCustomFieldSchema(field, language);
     }
   });
 
-  // Customs enabled outside the tab loop (when flat legacy maps omit tab arrays of customs).
   for (const field of listEnabledCustomFacultyFormFields(fields)) {
     if (schemaObject[field.key]) continue;
     schemaObject[field.key] = buildCustomFieldSchema(field, language);
   }
 
-  // When requireContactLink and contactId field is missing/disabled, still enforce link.
-  if (requireContactLink) {
-    const contactField = findFacultyFieldInMap(fields, 'contactId');
-    if (!contactField || contactField.enabled !== false) {
-      schemaObject.contactId = z
-        .union([z.string(), z.number()], { error: contactRequiredMsg })
-        .refine(
-          (value) => value !== null && value !== undefined && value !== '',
-          { message: contactRequiredMsg },
-        );
-    }
-  }
+  schemaObject.contactId = z
+    .union([z.string(), z.number()], { error: contactRequiredMsg })
+    .refine(
+      (value) => value !== null && value !== undefined && value !== '',
+      { message: contactRequiredMsg },
+    );
 
-  const objectSchema = z.object(schemaObject).strict();
+  const objectSchema = z.object(schemaObject).strict().superRefine((data, ctx) => {
+    const record = data as Record<string, unknown>;
+    const designationId = record.designationId;
+    const hasDesignation =
+      (typeof designationId === 'string' && designationId.trim().length > 0)
+      || (typeof designationId === 'number');
+    const startsOn = record.designationStartsOn;
+    const startsBlank = startsOn == null
+      || (typeof startsOn === 'string' && startsOn.trim() === '');
+    if (hasDesignation && startsBlank) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['designationStartsOn'],
+        message: requiredMsg,
+      });
+    }
+  });
 
   return z.preprocess((raw) => {
     if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return raw;

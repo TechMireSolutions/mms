@@ -16,7 +16,8 @@ export const FACULTY_TAB_REGISTRY: TabDefinition[] = [
   { key: "basic", label: "Profile", labelKey: "faculty.form.tab.basic", enabled: true, order: 0, isSystem: true },
   { key: "employment", label: "Employment Details", labelKey: "faculty.form.tab.employment", enabled: true, order: 1, isSystem: true },
   { key: "designation", label: "Designation", labelKey: "faculty.form.tab.designation", enabled: true, order: 2, isSystem: true },
-  { key: "hierarchy", label: "Hierarchy", labelKey: "faculty.form.tab.hierarchy", enabled: true, order: 3, isSystem: true },
+  // Retired person-level hierarchy UI — kept for Setup migration overlays only.
+  { key: "hierarchy", label: "Hierarchy", labelKey: "faculty.form.tab.hierarchy", enabled: false, order: 3, isSystem: true },
 ];
 
 const FACULTY_SEED_FORM_TAB_KEYS = new Set(
@@ -44,14 +45,14 @@ export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
     },
     {
       key: "specialization", label: "Specialization", labelKey: "faculty.field.specialization",
-      type: "select", enabled: true, order: 1, required: false,
-      description: "Teaching or academic specialization (options from faculty specialization lookups).",
+      type: "select", enabled: false, order: 1, required: false,
+      description: "Derived from the linked contact profile (not edited on the faculty form).",
       descriptionKey: "faculty.fields.specializationDesc",
     },
     {
       key: "qualification", label: "Qualification", labelKey: "faculty.field.qualification",
-      type: "text", enabled: true, order: 2, required: false,
-      description: "Highest academic or professional qualification.",
+      type: "text", enabled: false, order: 2, required: false,
+      description: "Derived from the linked contact profile (not edited on the faculty form).",
       descriptionKey: "faculty.fields.qualificationDesc",
     },
   ],
@@ -96,22 +97,22 @@ export const INITIAL_FACULTY_FIELD_SEED: Record<string, FieldDefinition[]> = {
     },
     {
       key: "designationId", label: "Designation (Catalog)", labelKey: "faculty.field.designationCatalog",
-      type: "select", enabled: true, order: 2, required: false,
-      description: "Designation from the tenant's designation catalog (faculty_designations table).",
+      type: "select", enabled: false, order: 2, required: false,
+      description: "Alias of designation — controlled by the Designation / Role field.",
       descriptionKey: "faculty.fields.designationCatalogDesc",
     },
     {
       key: "departmentId", label: "Department (Catalog)", labelKey: "faculty.field.departmentCatalog",
-      type: "select", enabled: true, order: 3, required: false,
-      description: "Department from the normalized faculty_departments catalog. Used in multi-role assignments.",
+      type: "select", enabled: false, order: 3, required: false,
+      description: "Alias of department — controlled by the Department field.",
       descriptionKey: "faculty.fields.departmentCatalogDesc",
     },
   ],
   hierarchy: [
     {
       key: "hierarchyRank", label: "Hierarchy Rank", labelKey: "faculty.field.hierarchyRank",
-      type: "number", enabled: true, order: 0, required: false,
-      description: "Seniority / authority level for supervision and task delegation.",
+      type: "number", enabled: false, order: 0, required: false,
+      description: "Legacy seniority rank (retired from Add Faculty UI).",
       descriptionKey: "faculty.fields.hierarchyRankDesc",
     },
     {

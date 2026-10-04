@@ -9,11 +9,9 @@ import {
 } from "lucide-react";
 import type {
   Contact,
-  Faculty,
   FacultyMember,
   FacultyDesignationDefinition,
   FacultyDepartmentEntity,
-  FacultyHierarchyPreset,
   FieldDefinition,
 } from "@mms/shared";
 import type { TranslationFunction } from "@/lib/contexts/TranslationContext";
@@ -73,9 +71,7 @@ export interface FacultyFormTabContentProps {
   facultyDraft?: Partial<FacultyMember>;
   errors: Record<string, string>;
   fields: Record<string, FieldDefinition[]>;
-  defaultSpecialization: string;
   linkedFacultyContactIds?: Array<string | number>;
-  specializationOptions: string[];
   /** Legacy flat-string department options (from faculty_lookups). */
   departmentOptions?: string[];
   /** Normalized department catalog entities (from faculty_departments table). */
@@ -95,8 +91,6 @@ export interface FacultyFormTabContentProps {
   linkedUser?: LinkedUserInfo | null;
   userAccountDraft?: FacultyUserAccountDraft;
   onUserAccountDraftChange?: (draft: FacultyUserAccountDraft) => void;
-  supervisorCandidates?: Faculty[];
-  hierarchyRankPresets?: readonly FacultyHierarchyPreset[];
 }
 
 export function useFacultyFormTabs(input: {
@@ -126,8 +120,7 @@ export function useFacultyFormTabs(input: {
 
     if (
       isFieldEnabled("designation") || isFieldEnabled("department") ||
-      isFieldEnabled("designationId") || isFieldEnabled("departmentId") ||
-      isFieldEnabled("hierarchyRank") || isFieldEnabled("reportingFacultyId")
+      isFieldEnabled("designationId") || isFieldEnabled("departmentId")
     ) {
       list.push({
         key: "designation",

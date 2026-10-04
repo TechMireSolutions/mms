@@ -16,8 +16,8 @@ vi.mock('@/hooks/useTranslation', () => ({
 }));
 
 const mockDepartments: FacultyDepartmentEntity[] = [
-  { id: 'dept-1', workspaceSubdomain: 'tenant', name: 'Islamic Studies', code: 'islamic-studies' },
-  { id: 'dept-2', workspaceSubdomain: 'tenant', name: 'Hadith', code: 'hadith', parentId: 'dept-1' },
+  { id: 'dept-1', workspaceSubdomain: 'tenant', name: 'Islamic Studies', code: 'islamic-studies', isActive: true },
+  { id: 'dept-2', workspaceSubdomain: 'tenant', name: 'Hadith', code: 'hadith', parentId: 'dept-1', isActive: true },
 ];
 
 describe('FacultyDepartmentsTable', () => {
@@ -56,11 +56,12 @@ describe('FacultyDepartmentsTable', () => {
     });
 
     const headers = container.querySelectorAll('th');
-    expect(headers.length).toBe(4);
+    expect(headers.length).toBe(5);
     expect(container.textContent).toContain('Islamic Studies');
     expect(container.textContent).toContain('islamic-studies');
     expect(container.textContent).toContain('Hadith');
     expect(container.textContent).toContain('hadith');
+    expect(container.textContent).toContain('faculty.status.active');
     expect(container.textContent).not.toContain('faculty.setup.departmentHead');
   });
 

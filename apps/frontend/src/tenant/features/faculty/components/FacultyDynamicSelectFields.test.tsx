@@ -22,6 +22,7 @@ describe("FacultyDynamicSelectFields", () => {
             name: "Hifz",
             code: "HIFZ",
             parentId: null,
+            isActive: true,
             createdAt: "2026-01-01T00:00:00Z",
             updatedAt: "2026-01-01T00:00:00Z",
           },
@@ -36,6 +37,40 @@ describe("FacultyDynamicSelectFields", () => {
     expect(html).not.toContain("faculty.setup.addDepartmentSubtitle");
   });
 
+  it("omits inactive departments unless they are the current selection", () => {
+    const html = renderToStaticMarkup(
+      <FacultyDepartmentSelectField
+        value="Hifz"
+        departmentId="dept-1"
+        departmentEntities={[
+          {
+            id: "dept-1",
+            workspaceSubdomain: "demo",
+            name: "Hifz",
+            code: "HIFZ",
+            parentId: null,
+            isActive: true,
+            createdAt: "2026-01-01T00:00:00Z",
+            updatedAt: "2026-01-01T00:00:00Z",
+          },
+          {
+            id: "dept-2",
+            workspaceSubdomain: "demo",
+            name: "Archived Dept",
+            code: "ARCH",
+            parentId: null,
+            isActive: false,
+            createdAt: "2026-01-01T00:00:00Z",
+            updatedAt: "2026-01-01T00:00:00Z",
+          },
+        ]}
+        onChange={vi.fn()}
+      />,
+    );
+    expect(html).toContain("Hifz (HIFZ)");
+    expect(html).not.toContain("Archived Dept");
+  });
+
   it("does not render edit or delete buttons even when department is selected", () => {
     const html = renderToStaticMarkup(
       <FacultyDepartmentSelectField
@@ -48,6 +83,7 @@ describe("FacultyDynamicSelectFields", () => {
             name: "Hifz",
             code: "HIFZ",
             parentId: null,
+            isActive: true,
             createdAt: "2026-01-01T00:00:00Z",
             updatedAt: "2026-01-01T00:00:00Z",
           },

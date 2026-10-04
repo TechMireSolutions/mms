@@ -59,9 +59,11 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
 
   const assignments = assignmentsQuery.data ?? [];
   const designationOptions = (designationsQuery.data ?? [])
-    .filter((d) => d.isActive !== false)
+    .filter((d) => d.isActive !== false || d.id === form.designationId)
     .map((d) => ({ value: d.id, label: d.name }));
-  const departmentOptions = departments.map((d) => ({ value: d.id, label: d.name }));
+  const departmentOptions = departments
+    .filter((d) => d.isActive !== false || d.id === form.departmentId)
+    .map((d) => ({ value: d.id, label: d.name }));
 
   const positionOptions = useMemo(() => {
     return positions
@@ -101,11 +103,13 @@ export function useFacultyAssignmentsController(faculty: FacultyMember) {
 
   function openAdd() {
     setMode('add');
+    const firstActiveDepartment = departments.find((d) => d.isActive !== false);
+    const firstActiveDesignation = (designationsQuery.data ?? []).find((d) => d.isActive !== false);
     setForm({
       ...EMPTY_ASSIGNMENT_FORM,
       startDate: today,
-      departmentId: departments[0]?.id ?? '',
-      designationId: designationOptions[0]?.value ?? '',
+      departmentId: firstActiveDepartment?.id ?? '',
+      designationId: firstActiveDesignation?.id ?? '',
     });
   }
 
