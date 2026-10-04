@@ -53,7 +53,7 @@ describe('ModuleAccessRoute', () => {
           <Routes>
             <Route element={<ModuleAccessRoute />}>
               <Route path="/finance/*" element={<div>Finance page</div>} />
-              <Route path="/teachers" element={<div>Faculty page</div>} />
+              <Route path="/faculty" element={<div>Faculty page</div>} />
               <Route path="/profile" element={<div>Profile page</div>} />
               <Route path="/" element={<div>Home page</div>} />
             </Route>
@@ -123,10 +123,10 @@ describe('ModuleAccessRoute', () => {
     expect(container.textContent).not.toContain('Finance page');
   });
 
-  it('given a route absent from the sidebar, should still gate it on its module', async () => {
+  it('given a faculty route, should gate it on the faculty module', async () => {
     mockUseModuleAccess.mockReturnValue(accessState(buildModuleAvailability(null, { faculty: false }), 'admin'));
 
-    await renderAt('/teachers');
+    await renderAt('/faculty');
 
     expect(container.textContent).toContain('errors.route.moduleDisabledTitle');
   });

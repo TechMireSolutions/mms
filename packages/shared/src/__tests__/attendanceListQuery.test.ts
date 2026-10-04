@@ -12,7 +12,7 @@ const records: AttendanceRecord[] = [
     rollNo: '001',
     sessionId: 'session-a',
     sessionName: 'Morning Session',
-    teacherId: 'teacher-a',
+    facultyId: 'faculty-a',
     status: 'present',
     timeIn: '07:00',
     timeOut: '08:30',
@@ -27,7 +27,7 @@ const records: AttendanceRecord[] = [
     rollNo: '002',
     sessionId: 'session-b',
     sessionName: 'Evening Session',
-    teacherId: 'teacher-b',
+    facultyId: 'faculty-b',
     status: 'absent',
     timeIn: '',
     timeOut: '',
@@ -60,10 +60,10 @@ describe('paginateAttendance', () => {
     expect(result.hasMore).toBe(true);
   });
 
-  it('filters records by session and teacher', () => {
+  it('filters records by session and faculty', () => {
     const result = paginateAttendance(records, {
       sessionId: 'session-b',
-      teacherId: 'teacher-b',
+      facultyId: 'faculty-b',
     });
 
     expect(result.records.map((record) => record.id)).toEqual(['record-2']);

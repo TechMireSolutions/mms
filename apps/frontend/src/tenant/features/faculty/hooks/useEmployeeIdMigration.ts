@@ -9,7 +9,7 @@ const FACULTY_EMPLOYEE_ID_MIGRATION_KEY = "mms_faculty_employee_id_migration_v1"
 
 function employeeIdMigrationAlreadyDone(): boolean {
   try {
-    return localStorage.getItem(FACULTY_EMPLOYEE_ID_MIGRATION_KEY) === "1" || localStorage.getItem("mms_teachers_employee_id_migration_v1") === "1";
+    return localStorage.getItem(FACULTY_EMPLOYEE_ID_MIGRATION_KEY) === "1";
   } catch {
     return false;
   }
@@ -24,7 +24,7 @@ function markEmployeeIdMigrationDone(): void {
 }
 
 /**
- * One-shot employee-id backfill for legacy faculty/teachers missing an id.
+ * One-shot employee-id backfill for legacy faculty rows missing an id.
  * Runs once per browser (localStorage gate) when a Setup writer opens the
  * Faculties tab — matches BE `setupWrite`. The POST goes through a `useMutation`
  * so the outcome surfaces via `notify.*` + `t()` instead of silent console warnings.

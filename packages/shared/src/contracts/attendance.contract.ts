@@ -66,7 +66,6 @@ export const attendanceContract = c.router({
       sessionId: z.string().max(100).optional(),
       classId: z.string().max(100).optional(),
       facultyId: z.string().max(100).optional(),
-      teacherId: z.string().max(100).optional(),
       date: z.string().max(30).optional(),
       dateFrom: z.string().max(30).optional(),
       dateTo: z.string().max(30).optional(),

@@ -643,13 +643,13 @@ await handleBulkListGet(request, reply, user, collection, {
 
 ### 4.4 Dedicated Soft-Delete Route Files (Gold-Standard Modules)
 
-Contacts, Students, and Teachers use dedicated route files for richer logic (uniqueness validation on restore, sanitized entity response, richer audit messages):
+Contacts, Students, and Faculty use dedicated route files for richer logic (uniqueness validation on restore, sanitized entity response, richer audit messages):
 
 | Module | File |
 |---|---|
 | Contacts | [`contactSoftDeleteRoutes.ts`](../apps/backend/src/routes/tenant/contacts/contactSoftDeleteRoutes.ts) |
 | Students | [`studentSoftDeleteRoutes.ts`](../apps/backend/src/routes/tenant/students/studentSoftDeleteRoutes.ts) |
-| Teachers | [`teacherSoftDeleteRoutes.ts`](../apps/backend/src/routes/tenant/teachers/teacherSoftDeleteRoutes.ts) |
+| Faculty | [`facultySoftDeleteRoutes.ts`](../apps/backend/src/routes/tenant/faculty/facultySoftDeleteRoutes.ts) |
 
 ### 4.5 Uniqueness-on-Restore Contract & Error 23505 Trap
 
@@ -658,7 +658,7 @@ When restoring a record that holds a unique constraint (`email`, `phone`, `emplo
 In addition, under concurrent restore operations, two admins restoring duplicate emails simultaneously can pass the pre-check. The handler must trap PostgreSQL error `23505` (`unique_violation`) and map it cleanly to `409 Conflict`:
 
 ```ts
-// Gold-standard pattern (contacts, students, teachers)
+// Gold-standard pattern (contacts, students, faculty)
 async function restoreContactById(id: string, userId: string) {
   const existing = await db.query.contacts.findFirst({ where: eq(contacts.id, id) });
   if (!existing?.deletedAt) return null;  // not archived

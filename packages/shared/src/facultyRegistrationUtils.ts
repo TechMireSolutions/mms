@@ -1,8 +1,8 @@
-import type { TeachersSettings } from './settingsTypes.js';
-import { DEFAULT_TEACHERS_SETTINGS } from './facultyModuleSettings.js';
+import type { FacultySettings } from './facultyModuleSettings.js';
+import { DEFAULT_FACULTY_SETTINGS } from './facultyModuleSettings.js';
 
-export type TeacherEmployeeIdSettings = Pick<
-  TeachersSettings,
+export type FacultyEmployeeIdSettings = Pick<
+  FacultySettings,
   | 'idPrefix'
   | 'idTemplate'
   | 'idDigits'
@@ -17,7 +17,7 @@ export type TeacherEmployeeIdSettings = Pick<
 >;
 
 /** Format deterministic employee ID matching {PREFIX}{DELIMITER}{YEAR}{DELIMITER}{SEQUENCE}. */
-export function formatDeterministicEmployeeId(
+export function formatDeterministicFacultyEmployeeId(
   seq: number,
   options: {
     prefix?: string;
@@ -43,19 +43,22 @@ export function formatDeterministicEmployeeId(
   return `${prefix}${delimiter}${yearStr}${delimiter}${seqStr}`;
 }
 
+/** @deprecated Use formatDeterministicFacultyEmployeeId */
+export const formatDeterministicEmployeeId = formatDeterministicFacultyEmployeeId;
+
 /** Format employee ID using tokenized template ({PREFIX}, {YYYY}, {YY}, {MM}, {SEQ}) or deterministic config. */
-export function formatTeacherEmployeeId(
+export function formatFacultyEmployeeId(
   seq: number,
-  settings: Partial<TeacherEmployeeIdSettings> = {},
+  settings: Partial<FacultyEmployeeIdSettings> = {},
   dateInput?: Date | string,
 ): string {
   const prefix =
     settings.employeeIdPrefix?.trim() ||
     settings.idPrefix?.trim() ||
-    DEFAULT_TEACHERS_SETTINGS.idPrefix;
+    DEFAULT_FACULTY_SETTINGS.idPrefix;
   let template =
     settings.idTemplate?.trim() ||
-    DEFAULT_TEACHERS_SETTINGS.idTemplate ||
+    DEFAULT_FACULTY_SETTINGS.idTemplate ||
     '{PREFIX}-{SEQ}';
   const digits = Math.max(
     1,
@@ -89,9 +92,9 @@ export function formatTeacherEmployeeId(
 }
 
 /** Next employee id from sequence count + tenant settings (shared FE/BE). */
-export function computeNextTeacherEmployeeIdFromCount(
+export function computeNextFacultyEmployeeIdFromCount(
   count: number,
-  settings: Partial<TeacherEmployeeIdSettings> = {},
+  settings: Partial<FacultyEmployeeIdSettings> = {},
   dateInput?: Date | string,
 ): string {
   const safeCount = Number.isFinite(count) && count > 0 ? Math.floor(count) : 0;
@@ -100,18 +103,18 @@ export function computeNextTeacherEmployeeIdFromCount(
       ? Math.floor(Number(settings.idStartSeq))
       : 1;
   const nextSeq = Math.max(safeCount + 1, startSeq);
-  return formatTeacherEmployeeId(nextSeq, settings, dateInput);
+  return formatFacultyEmployeeId(nextSeq, settings, dateInput);
 }
 
-export type TeacherDuplicateCheckInput = {
+export type FacultyDuplicateCheckInput = {
   excludeId?: string;
   contactId?: string | number;
   employeeId?: string;
 };
 
-export type TeacherDuplicateReason = 'contact' | 'employeeId';
+export type FacultyDuplicateReason = 'contact' | 'employeeId';
 
-type TeacherRow = {
+type FacultyRow = {
   id?: string | number;
   contactId?: string | number;
   employeeId?: string;
@@ -119,14 +122,14 @@ type TeacherRow = {
 };
 
 /** Client-side duplicate guard before save (server authoritative on POST). */
-export function findTeacherRegistrationConflict(
-  teachers: TeacherRow[],
-  input: TeacherDuplicateCheckInput,
-): TeacherDuplicateReason | null {
+export function findFacultyRegistrationConflict(
+  faculty: FacultyRow[],
+  input: FacultyDuplicateCheckInput,
+): FacultyDuplicateReason | null {
   const excludeId = input.excludeId ? String(input.excludeId) : undefined;
   const employeeId = input.employeeId?.trim().toLowerCase();
 
-  for (const row of teachers) {
+  for (const row of faculty) {
     if (row.deletedAt) continue;
     if (excludeId && String(row.id) === excludeId) continue;
 
@@ -149,11 +152,3 @@ export function findTeacherRegistrationConflict(
 
   return null;
 }
-
-export const formatFacultyEmployeeId = formatTeacherEmployeeId;
-export const formatDeterministicFacultyEmployeeId = formatDeterministicEmployeeId;
-export const computeNextFacultyEmployeeIdFromCount = computeNextTeacherEmployeeIdFromCount;
-export const findFacultyRegistrationConflict = findTeacherRegistrationConflict;
-export type FacultyEmployeeIdSettings = TeacherEmployeeIdSettings;
-export type FacultyDuplicateCheckInput = TeacherDuplicateCheckInput;
-export type FacultyDuplicateReason = TeacherDuplicateReason;

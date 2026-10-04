@@ -357,7 +357,7 @@ export async function createTeacherFromContact(page: Page): Promise<void> {
 
     const teacherCreate = page.waitForResponse(
       (response) =>
-        (response.url().includes('/api/faculty') || response.url().includes('/api/teachers')) &&
+        response.url().includes('/api/faculty') &&
         response.request().method() === 'POST' &&
         !response.url().includes('/bulk'),
       { timeout: 30_000 },

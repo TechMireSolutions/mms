@@ -7,7 +7,6 @@ const TENANT_ROUTE_LOADERS: Record<string, () => Promise<unknown>> = {
   [ROUTES.messaging]: () => import('@/tenant/features/messaging/MessagingPage'),
   [ROUTES.students]: () => import('@/tenant/features/students/StudentsPage'),
   [ROUTES.faculty]: () => import('@/tenant/features/faculty/FacultyPage'),
-  [ROUTES.teachers]: () => import('@/tenant/features/faculty/FacultyPage'),
   [ROUTES.enrollments]: () => import('@/tenant/features/enrollments/EnrollmentsPage'),
   [ROUTES.sessions]: () => import('@/tenant/features/sessions/SessionsPage'),
   [ROUTES.attendance]: () => import('@/tenant/features/attendance/AttendancePage'),

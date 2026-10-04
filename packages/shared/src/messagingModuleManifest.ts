@@ -4,7 +4,7 @@ import type { PersonalizeRecipient } from './utils.js';
 import type { AppTranslationKey } from './appTranslations.js';
 import { MESSAGE_CATEGORIES, MESSAGE_CHANNELS, MESSAGE_CATEGORY_OPTIONS, MESSAGE_CHANNEL_OPTIONS } from './messagingSchemas.js';
 
-export const MESSAGING_ROLE_FILTERS = ['all', 'students', 'teachers', 'staff', 'contacts'] as const;
+export const MESSAGING_ROLE_FILTERS = ['all', 'students', 'faculty', 'staff', 'contacts'] as const;
 export const MESSAGING_GENDER_FILTERS = ['all', 'male', 'female', 'unspecified'] as const;
 export const MESSAGING_STATUS_FILTERS = ['all', 'sent', 'delivered', 'failed', 'skipped'] as const;
 

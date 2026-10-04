@@ -1,5 +1,5 @@
 import {
-  DEFAULT_TEACHERS_SETTINGS,
+  DEFAULT_FACULTY_SETTINGS,
   WORKSPACES_COLLECTION,
   parseTenantScopedStorageKey,
   tenantCollectionKey,
@@ -57,7 +57,7 @@ async function seedTenantTeachers(
 
   const settings = await getObjectByStorageKey(settingsKey);
   if (settings === null) {
-    await saveObject(settingsKey, DEFAULT_TEACHERS_SETTINGS);
+    await saveObject(settingsKey, DEFAULT_FACULTY_SETTINGS);
     changed = true;
   }
 

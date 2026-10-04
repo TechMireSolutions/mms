@@ -68,14 +68,14 @@ describe('userRbacPermissionNav', () => {
     expect(customGroup?.modules[0]?.id).toBe('custom_reports');
   });
 
-  it('groups legacy teachers alias into module-faculty group without duplicating', () => {
-    const legacyModules = [
-      { id: 'teachers', labelKey: 'nav.faculty' as const },
+  it('places unknown module ids as standalone rows', () => {
+    const modules = [
+      { id: 'faculty', labelKey: 'nav.faculty' as const },
       { id: 'contacts', labelKey: 'nav.contacts' as const },
     ];
-    const groups = groupRbacModulesForPermissionsNav(legacyModules);
+    const groups = groupRbacModulesForPermissionsNav(modules);
     expect(groups.some((g) => g.groupId === 'module-faculty')).toBe(true);
-    expect(groups.some((g) => g.groupId === 'module-teachers')).toBe(false);
+    expect(groups.some((g) => g.groupId === 'module-contacts')).toBe(true);
   });
 });
 

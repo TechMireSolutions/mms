@@ -100,7 +100,6 @@ export const ACCESS_CONTROLLED_MODULE_IDS = Object.keys(
 const MODULE_ID_ALIASES: Readonly<Record<string, AccessControlledModuleId>> = {
   enrollments: 'enrollment',
   examinations: 'examination',
-  teachers: 'faculty',
 };
 
 /** Canonical system module id for a system, manifest, or legacy id; `undefined` when unknown. */

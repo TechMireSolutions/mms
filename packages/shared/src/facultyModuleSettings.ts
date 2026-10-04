@@ -159,15 +159,3 @@ export function getSortedFacultyFields(
     return left.id.localeCompare(right.id);
   });
 }
-
-/* ========================================================================= */
-/*                    BACKWARD COMPATIBILITY ALIASES                        */
-/* ========================================================================= */
-
-export type TeacherFieldConfig = FacultyFieldConfig;
-export type TeacherCustomField = FacultyCustomField;
-export type TeachersSettings = FacultySettings;
-export const DEFAULT_TEACHERS_SETTINGS = DEFAULT_FACULTY_SETTINGS;
-export type TeacherFieldDef = FacultyFieldDef;
-export const DEFAULT_TEACHER_FIELD_DEFS = DEFAULT_FACULTY_FIELD_DEFS;
-export const getSortedTeacherFields = getSortedFacultyFields;

@@ -128,7 +128,6 @@ function TenantRoutesInner(): React.JSX.Element {
               <Route path={ROUTES.messaging} element={<React.Suspense fallback={<RouteStatusFallback />}><Messaging /></React.Suspense>} />
               <Route path={ROUTES.students} element={<React.Suspense fallback={<RouteStatusFallback />}><Students /></React.Suspense>} />
               <Route path={ROUTES.faculty} element={<React.Suspense fallback={<RouteStatusFallback />}><Faculty /></React.Suspense>} />
-              <Route path={ROUTES.teachers} element={<Navigate to={ROUTES.faculty} replace />} />
               <Route path={ROUTES.enrollments} element={<React.Suspense fallback={<RouteStatusFallback />}><Enrollments /></React.Suspense>} />
               <Route path={ROUTES.sessions} element={<React.Suspense fallback={<RouteStatusFallback />}><Sessions /></React.Suspense>} />
               <Route path={ROUTES.attendance} element={<React.Suspense fallback={<RouteStatusFallback />}><Attendance /></React.Suspense>} />

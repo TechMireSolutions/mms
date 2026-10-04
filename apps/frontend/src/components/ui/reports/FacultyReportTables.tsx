@@ -56,7 +56,7 @@ export const FacultyReportTables = (function FacultyReportTables({
   }
 
   return faculty.length === 0 ? (
-    <EmptyState icon={Users} title={t("faculty.report.noTeachersFound")} description={t("faculty.report.adjustFilters")} compact />
+    <EmptyState icon={Users} title={t("faculty.report.noFacultyFound")} description={t("faculty.report.adjustFilters")} compact />
   ) : (
     <div className={WORK_SURFACE}>
       <div className="space-y-3 p-3 md:hidden">

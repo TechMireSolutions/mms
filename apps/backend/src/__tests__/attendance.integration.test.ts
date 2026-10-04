@@ -134,11 +134,11 @@ describe('attendance REST routes integration', () => {
     await app.close();
   });
 
-  it('GET /api/attendance forwards session and teacher filters', async () => {
+  it('GET /api/attendance forwards session and faculty filters', async () => {
     const app = await buildApp();
     const res = await app.inject({
       method: 'GET',
-      url: '/api/attendance?page=2&sessionId=session-1&teacherId=teacher-1',
+      url: '/api/attendance?page=2&sessionId=session-1&facultyId=teacher-1',
       headers: {
         host: 'demo.localhost',
         authorization: `Bearer ${teacherToken(app)}`,
@@ -149,7 +149,7 @@ describe('attendance REST routes integration', () => {
     expect(mockLoadAttendancePage).toHaveBeenCalledWith(expect.objectContaining({
       page: 2,
       sessionId: 'session-1',
-      teacherId: 'teacher-1',
+      facultyId: 'teacher-1',
     }));
     await app.close();
   });

@@ -62,11 +62,9 @@ export const RBAC_MODULES_BY_ID: Readonly<Record<RbacModuleId, RbacModuleDef>> =
 );
 
 /** Canonical legacy aliases for backwards compatibility with historical permissions and tokens. */
-export const LEGACY_RBAC_MODULE_ALIASES: Readonly<Record<string, RbacModuleId>> = Object.freeze({
-  teachers: 'faculty',
-});
+export const LEGACY_RBAC_MODULE_ALIASES: Readonly<Record<string, RbacModuleId>> = Object.freeze({});
 
-/** Resolves an RBAC module identifier to its canonical name (e.g. 'teachers' -> 'faculty'). */
+/** Resolves an RBAC module identifier to its canonical name. */
 export function canonicalizeRbacModuleId(id: string): RbacModuleId | string {
   return LEGACY_RBAC_MODULE_ALIASES[id] ?? id;
 }

@@ -10,7 +10,7 @@
  *   "sessions_settings"     → SessionsSettings
  *   "enrollments_settings"  → EnrollmentsSettings
  *   "students_settings"     → StudentsSettings
- *   "teachers_settings"     → TeachersSettings
+ *   "faculty_settings"      → FacultySettings
  *   "contact_preferences"   → ContactPreferences (see contactTypes; not ContactPreferencesSettings)
  *   "accounting_settings"   → AccountingSettings
  */

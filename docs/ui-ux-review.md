@@ -147,7 +147,7 @@ Three compounding defects on the same flow:
 
 1. **`.shadow-sm` hides the card itself.** The printable card carries `shadow-sm`:
    - `tenant/features/students/components/StudentIdCardModal.tsx:79`
-   - `tenant/features/teachers/components/TeacherIdCardModal.tsx:81`
+   - `tenant/features/faculty/components/FacultyIdCardModal.tsx:81`
 
    There is no `.id-card-preview` print override anywhere — `src/index.css` is the only
    stylesheet in the app and contains no `id-card` rules. Both modals call

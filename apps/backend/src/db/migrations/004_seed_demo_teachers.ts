@@ -1,5 +1,5 @@
 import {
-  DEFAULT_TEACHERS_SETTINGS,
+  DEFAULT_FACULTY_SETTINGS,
   WORKSPACES_COLLECTION,
   parseTenantScopedStorageKey,
   tenantCollectionKey,
@@ -55,7 +55,7 @@ export async function runMigration004(): Promise<void> {
 
     const objectKeys = await listObjectStorageKeys();
     if (!objectKeys.includes(TEACHERS_SETTINGS_KEY)) {
-      await saveObject(TEACHERS_SETTINGS_KEY, DEFAULT_TEACHERS_SETTINGS);
+      await saveObject(TEACHERS_SETTINGS_KEY, DEFAULT_FACULTY_SETTINGS);
       changed = true;
     }
 
@@ -77,7 +77,7 @@ export async function runMigration004(): Promise<void> {
     const settingsKey = tenantObjectKey(subdomain, TEACHERS_SETTINGS_KEY);
     const settings = await getObjectByStorageKey(settingsKey);
     if (settings === null) {
-      await saveObject(settingsKey, DEFAULT_TEACHERS_SETTINGS);
+      await saveObject(settingsKey, DEFAULT_FACULTY_SETTINGS);
       changed = true;
     }
   }

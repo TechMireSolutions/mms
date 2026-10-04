@@ -20,7 +20,8 @@ describe('moduleAccessPolicy', () => {
   it('resolves manifest and legacy aliases to system ids', () => {
     expect(resolveAccessModuleId('enrollments')).toBe('enrollment');
     expect(resolveAccessModuleId('examinations')).toBe('examination');
-    expect(resolveAccessModuleId('teachers')).toBe('faculty');
+    expect(resolveAccessModuleId('teachers')).toBeUndefined();
+    expect(resolveAccessModuleId('faculty')).toBe('faculty');
     expect(resolveAccessModuleId('finance')).toBe('finance');
     expect(resolveAccessModuleId('settings')).toBeUndefined();
   });

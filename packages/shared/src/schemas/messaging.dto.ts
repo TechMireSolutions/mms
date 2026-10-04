@@ -106,7 +106,18 @@ export const messagingLogsQuerySchema = z.object({
     .transform((value) => value === true || value === 'true'),
 }).strict();
 
-export const MESSAGING_RECIPIENT_ROLES = ['all', 'students', 'faculty', 'teachers', 'staff', 'contacts'] as const;
+export const MESSAGING_RECIPIENT_ROLES = ['all', 'students', 'faculty', 'staff', 'contacts'] as const;
+
+/** Normalize legacy stored campaign filter `teachers` → `faculty`. */
+export function normalizeMessagingRecipientRole(
+  role: string | undefined,
+): (typeof MESSAGING_RECIPIENT_ROLES)[number] {
+  if (role === 'teachers') return 'faculty';
+  if ((MESSAGING_RECIPIENT_ROLES as readonly string[]).includes(role ?? '')) {
+    return role as (typeof MESSAGING_RECIPIENT_ROLES)[number];
+  }
+  return 'all';
+}
 export const MESSAGING_RECIPIENT_GENDERS = ['all', 'male', 'female', 'unspecified'] as const;
 
 /** Cap for Work “select all reachable” match — same ceiling as the retired FE page-walk. */
@@ -120,7 +131,10 @@ export const MESSAGING_CSV_EXPORT_MAX_BYTES = 25 * 1024 * 1024;
 
 /** Work-tab recipient directory query (server-paginated under messaging RBAC). */
 export const messagingRecipientsQuerySchema = z.object({
-  role: z.enum(MESSAGING_RECIPIENT_ROLES).optional().default('all'),
+  role: z.preprocess(
+    (value) => normalizeMessagingRecipientRole(typeof value === 'string' ? value : undefined),
+    z.enum(MESSAGING_RECIPIENT_ROLES),
+  ).optional().default('all'),
   gender: z.enum(MESSAGING_RECIPIENT_GENDERS).optional().default('all'),
   search: z.string().optional(),
   page: z.coerce.number().int().positive().optional().default(1),

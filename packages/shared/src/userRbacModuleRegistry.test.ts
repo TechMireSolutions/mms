@@ -22,16 +22,16 @@ describe('userRbacModuleRegistry', () => {
     }
   });
 
-  it('maps legacy teacher aliases to canonical faculty module', () => {
-    expect(LEGACY_RBAC_MODULE_ALIASES.teachers).toBe('faculty');
-    expect(canonicalizeRbacModuleId('teachers')).toBe('faculty');
+  it('leaves unknown ids unchanged when no legacy aliases remain', () => {
+    expect(Object.keys(LEGACY_RBAC_MODULE_ALIASES)).toEqual([]);
+    expect(canonicalizeRbacModuleId('teachers')).toBe('teachers');
     expect(canonicalizeRbacModuleId('faculty')).toBe('faculty');
     expect(canonicalizeRbacModuleId('students')).toBe('students');
   });
 
-  it('resolves system module IDs correctly including legacy aliases', () => {
+  it('resolves system module IDs correctly', () => {
     expect(rbacModuleSystemId('faculty')).toBe('faculty');
-    expect(rbacModuleSystemId('teachers')).toBe('faculty');
+    expect(rbacModuleSystemId('teachers')).toBe('teachers');
     expect(rbacModuleSystemId('enrollments')).toBe('enrollment');
     expect(rbacModuleSystemId('examinations')).toBe('examination');
     expect(rbacModuleSystemId('obligations')).toBe('obligations');
@@ -41,10 +41,10 @@ describe('userRbacModuleRegistry', () => {
     expect(rbacModuleSystemId('unknown_mod')).toBe('unknown_mod');
   });
 
-  it('getRbacModuleDef returns module definition or undefined, supporting legacy aliases', () => {
+  it('getRbacModuleDef returns module definition or undefined', () => {
     expect(getRbacModuleDef('students')?.labelKey).toBe('nav.students');
     expect(getRbacModuleDef('faculty')?.labelKey).toBe('nav.faculty');
-    expect(getRbacModuleDef('teachers')?.labelKey).toBe('nav.faculty');
+    expect(getRbacModuleDef('teachers')).toBeUndefined();
     expect(getRbacModuleDef('tasks.assign_anywhere')?.labelKey).toBe('users.rbac.tasksAssignAnywhere');
     expect(getRbacModuleDef('nonexistent')).toBeUndefined();
   });
@@ -67,11 +67,10 @@ describe('userRbacModuleRegistry', () => {
 
   it('filters modules according to enabled settings', () => {
     const enabledModules = {
-      teachers: false,
+      faculty: false,
       enrollment: false,
     };
     const visible = filterRbacModulesForSettings(enabledModules);
-    expect(visible.some((m) => m.id === 'teachers')).toBe(false);
     expect(visible.some((m) => m.id === 'faculty')).toBe(false);
     expect(visible.some((m) => m.id === 'enrollments')).toBe(false);
     expect(visible.some((m) => m.id === 'students')).toBe(true);

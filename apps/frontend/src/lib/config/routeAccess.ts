@@ -25,7 +25,6 @@ export const TENANT_APP_ROUTE_ACCESS: Readonly<Record<string, RouteAccessRule>> 
   [ROUTES.messaging]: moduleRoute("messaging"),
   [ROUTES.students]: moduleRoute("students"),
   [ROUTES.faculty]: moduleRoute("faculty"),
-  [ROUTES.teachers]: moduleRoute("faculty"),
   [ROUTES.enrollments]: moduleRoute("enrollment"),
   [ROUTES.sessions]: moduleRoute("sessions"),
   [ROUTES.attendance]: moduleRoute("attendance"),

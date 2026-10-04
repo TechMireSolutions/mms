@@ -1,6 +1,6 @@
 import {
   DEFAULT_STUDENTS_SETTINGS,
-  DEFAULT_TEACHERS_SETTINGS,
+  DEFAULT_FACULTY_SETTINGS,
   WORKSPACES_COLLECTION,
   parseTenantScopedStorageKey,
   tenantCollectionKey,
@@ -73,7 +73,7 @@ async function expandTenantRoster(
   }
 
   if ((await getObjectByStorageKey(teachersSettingsKey)) === null) {
-    await saveObject(teachersSettingsKey, DEFAULT_TEACHERS_SETTINGS);
+    await saveObject(teachersSettingsKey, DEFAULT_FACULTY_SETTINGS);
     changed = true;
   }
 

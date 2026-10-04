@@ -82,11 +82,6 @@ describe('resolveRouteAccess', () => {
     }
   });
 
-  it('gates routes absent from the sidebar (legacy /teachers alias)', () => {
-    expect(resolveRouteAccess(ROUTES.teachers, evaluator(null, { faculty: false }, 'admin')))
-      .toMatchObject({ allowed: false, code: 'MODULE_DISABLED', moduleId: 'faculty' });
-  });
-
   it('keeps Home, Profile, and Settings reachable whatever the module state', () => {
     const evaluate = evaluator({ dashboard: false }, null, 'guardian');
     expect(resolveRouteAccess(ROUTES.home, evaluate)).toEqual({ allowed: true });

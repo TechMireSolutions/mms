@@ -38,7 +38,7 @@ describe('messagingModuleManifest', () => {
       expect.arrayContaining([
         { value: 'all', labelKey: 'messaging.role.all' },
         { value: 'students', labelKey: 'messaging.role.students' },
-        { value: 'teachers', labelKey: 'messaging.role.teachers' },
+        { value: 'faculty', labelKey: 'messaging.role.faculty' },
       ])
     );
 

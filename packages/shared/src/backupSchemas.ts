@@ -7,7 +7,9 @@ export type WorkspaceBackupStatus = 'success';
 export const SETTINGS_KEY_TO_MODULE: Record<string, string> = {
   contact_field_config: 'contacts',
   students_settings: 'students',
-  teachers_settings: 'teachers',
+  faculty_settings: 'faculty',
+  /** Historical backup object key — still maps to the faculty module. */
+  teachers_settings: 'faculty',
   users_settings: 'users',
   attendance_settings: 'attendance',
   sessions_settings: 'sessions',
@@ -27,6 +29,9 @@ export const MODULE_TO_SETTINGS_KEY: Record<string, string> = {};
 for (const [settingsKey, moduleName] of Object.entries(SETTINGS_KEY_TO_MODULE)) {
   MODULE_TO_SETTINGS_KEY[moduleName] = settingsKey;
 }
+
+// Prefer modern faculty_settings when both legacy and modern keys map to faculty
+MODULE_TO_SETTINGS_KEY.faculty = 'faculty_settings';
 
 // Add backward-compatibility singular/alias formats
 MODULE_TO_SETTINGS_KEY['question-bank'] = 'question_bank_settings';
