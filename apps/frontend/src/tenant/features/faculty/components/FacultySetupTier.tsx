@@ -36,19 +36,11 @@ export interface FacultySetupTierProps {
   initialSubTab?: FacultySetupSubTabId;
   /** Reports Preferences draft dirtiness to the Setup shell (leave-guard). */
   onPrefsDirtyChange?: (isDirty: boolean) => void;
-  canWrite?: boolean;
-  canExport?: boolean;
-  onExportEntity?: (entity: "departments" | "designations") => void;
-  onImportEntity?: (entity: "departments" | "designations") => void;
 }
 
 export const FacultySetupTier = function FacultySetupTier({
   initialSubTab = FACULTY_SETUP_SUB_TAB_DEFAULT,
   onPrefsDirtyChange,
-  canWrite = false,
-  canExport = false,
-  onExportEntity,
-  onImportEntity,
 }: FacultySetupTierProps = {}): React.JSX.Element {
   const { t } = useTranslation();
   const { canEditSetup } = useModulePermissions(FACULTY_MODULE_MANIFEST);
@@ -91,22 +83,8 @@ export const FacultySetupTier = function FacultySetupTier({
               {subTabs.sub === "preferences" && (
                 <FacultySettings onPrefsDirtyChange={handlePrefsDirtyChange} />
               )}
-              {subTabs.sub === "departments" && (
-                <FacultyDepartmentsSetupSection
-                  canWrite={canWrite}
-                  canExport={canExport}
-                  onExport={() => onExportEntity?.("departments")}
-                  onImport={() => onImportEntity?.("departments")}
-                />
-              )}
-              {subTabs.sub === "designations" && (
-                <FacultyDesignationsSetupSection
-                  canWrite={canWrite}
-                  canExport={canExport}
-                  onExport={() => onExportEntity?.("designations")}
-                  onImport={() => onImportEntity?.("designations")}
-                />
-              )}
+              {subTabs.sub === "departments" && <FacultyDepartmentsSetupSection />}
+              {subTabs.sub === "designations" && <FacultyDesignationsSetupSection />}
             </Suspense>
           )}
         </div>
